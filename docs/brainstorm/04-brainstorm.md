@@ -273,6 +273,8 @@ All design questions are answered (D1–D11 at the top). Only the go/no-go test 
 
 ## 13. Go/no-go: can a player's button press send group chat during lockdown?
 
+Tracked as [#6](https://github.com/tusharsaxena/QuickComms/issues/6).
+
 **Why it decides everything.** The addon exists for the moments when Midnight locks addon chat: an active M+ key, a boss pull, a PvP match. If a player-pressed button can't send to party or raid then, the addon is not viable (owner's verdict).
 
 **Why a press isn't automatically enough.** Lockdown checks *whose code* sends, not whether a human clicked. A click that runs addon Lua calling `SendChatMessage` is still blocked. What gets through is a click on a **secure action button**, where the *game* runs a macro on the player's behalf. That is still a manual, one-press-one-message action, never automation, and that is what Blizzard allows.
