@@ -314,11 +314,10 @@ footer a{color:var(--muted)}
   <div class="stage-head">
     <div>
       <h2 id="dialH"><small>Surface 1</small>Comms Dial</h2>
-      <p>Modelled on Blizzard's ping wheel. Hold the key, flick toward a wedge, release to send; release on the centre to cancel. Default mode is <b>Categories</b>: groups on the first ring, callouts in the sub-ring (›). Try <i>Arathi Basin</i> to compare <b>Open into</b> and <b>Nest</b> for battleground sets.</p>
+      <p>Modelled on Blizzard's ping wheel. Hold the key, flick toward a wedge, release to send; release on the centre to cancel. Default mode is <b>Categories</b>: groups on the first ring, callouts in the sub-ring (›). In <i>Arathi Basin</i> the dial opens straight on the node ring; the centre button goes back to all groups.</p>
     </div>
     <div class="controls">
       <div class="seg" role="group" aria-label="Dial mode"><span>Mode</span><button data-dmode="flat">Flat</button><button data-dmode="cat">Categories</button></div>
-      <div class="seg" role="group" aria-label="Open into top group"><span>BG sets</span><button data-autoopen="1">Open into</button><button data-autoopen="0">Nest</button></div>
       <div class="seg" role="group" aria-label="Slices"><span>Slices</span><button data-slices="4">4</button><button data-slices="6">6</button><button data-slices="8">8</button></div>
     </div>
   </div>
@@ -896,7 +895,7 @@ function renderCanvas() {
         <div class="field"><span class="flabel">Scale</span><div style="display:flex;gap:10px;align-items:center">${slider(50, '100%')}</div></div><div class="field"><span class="flabel">Overflow</span>${sel('Pages (mouse wheel)')}</div></div>`;
     } else {
       ed = `<div class="grid2"><div class="field"><span class="flabel">Key</span><div class="select mono">G</div></div><div class="field"><span class="flabel">Style</span>${sel('Quick: hold, flick, release')}</div>
-        <div class="field"><span class="flabel">Tap without moving</span>${sel('Send first callout')}</div><div class="field"><span class="flabel">Gamepad</span>${sel('Right stick + RB (pages)')}</div></div>
+        <div class="field"><span class="flabel">Tap without moving</span>${sel('Send first callout')}</div></div>
         <p class="note">The key is bound out of combat and stays bound through combat. While the dial is open, a secure handler grabs mouse buttons and the wheel, the same way OPie does.</p>`;
     }
     body = `<div class="editor">${rail(items)}<div style="display:flex;flex-direction:column;gap:12px;min-width:0">${ed}</div></div>`;

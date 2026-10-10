@@ -13,8 +13,12 @@ This is the thinking stage, not a spec. Every section ends with the questions it
 | D5 | Callout extras (variants, confirm, cooldown, mark, keybind) | **None in the first version.** Filed as future enhancements [#1](https://github.com/tusharsaxena/QuickComms/issues/1)–[#5](https://github.com/tusharsaxena/QuickComms/issues/5). |
 | D6 | Specific dungeon group vs generic M+ | **Alongside**, ordered by each surface's priority list. A specific group never replaces a generic one. |
 | D7 | Built-in sets | **On by default.** Every new profile includes them, and the player can turn them off or customize them. |
+| D8 | Callouts in several groups | **Shared.** A group holds references to callouts in one library. Editing a callout changes it everywhere, and the editor shows "used in N groups". |
+| D9 | Nested built-in sets in Categories mode | **Open into the top group.** When the highest-priority active group is a battleground node set, the dial opens straight on its node ring, and the centre button goes back to all groups. This is a per-group flag, on for battleground node sets. |
+| D10 | Gamepad | **Not in the first version.** Parked in §10. |
+| D11 | Faction-aware battleground wording | **No.** |
 
-Still open: callouts shared by reference vs copied per group (§7), gamepad scope (§12), and how Categories handles nested built-in sets (§4).
+**Nothing is open except the go/no-go test in §13.** The owner's verdict: if a player-pressed button can't send group chat during a key or a boss pull, the addon is not viable.
 
 ---
 
@@ -56,7 +60,7 @@ Design responses:
 4. **There is a visible lockdown chip.** The pad header and the dial centre show a small "LOCKDOWN" chip while restrictions are active, so the behaviour is explained rather than mysterious.
 5. **The encounter throttle is visible.** If Blizzard's macro throttle drops a send, the chip or wedge flashes and the chat frame gets a one-line `[QC]` note instead of failing silently. A full per-callout cooldown with a sweep is future work ([#3](https://github.com/tusharsaxena/QuickComms/issues/3)).
 
-**Spike before anything else:** confirm that secure `macrotext` works in a key and a boss pull. If it turns out to need real macros, the design gets a macro-slot budget (see §11).
+**Go/no-go before anything else:** confirm that a player-pressed secure button can send group chat in a key and a boss pull. The test plan and the fallback (real macros) are in §13.
 
 ## 4. The Comms Dial
 
@@ -76,7 +80,7 @@ It should look like a sibling of the ping wheel, not an addon frame.
 - **Relaxed mode** for accessibility: tap to open, click to send.
 - **About 300 ms delay before drawing** (from marking-menu research). Experts who flick quickly never see the menu at all; their flick just sends.
 - **Number keys 1–8** pick a wedge clockwise from the top. **Mouse wheel** switches pages.
-- **Gamepad:** the stick selects (with a dead zone), a bumper changes pages.
+- **Gamepad** is not in the first version (D10). The later idea: the stick selects (with a dead zone), a bumper changes pages.
 
 ### How groups map onto the dial
 Two modes, chosen per dial. **Categories is the default (D2).**
@@ -86,12 +90,7 @@ Two modes, chosen per dial. **Categories is the default (D2).**
 | **Categories** (default; Rocket League style) | The top ring shows *groups* ("M+", "Windrunner Spire", "Warlock"). Holding over one opens its callouts as a sub-ring. | Players with many groups active at once |
 | **Flat** | The top ring shows *callouts* straight away, filled from the highest-priority group down. A "More ▸" wedge takes the overflow. | Players who want 4–8 favourites on a flick |
 
-**A tension with Categories:** nested built-in sets go three levels deep. In Arathi Basin the path is group, then node, then "INC 2", which research says is hard under pressure. Options:
-- **(a) "Open into top group":** when the highest-priority active group is a nested set, such as a battleground node set, the dial opens straight into it. Other groups are one "Back" away.
-- **(b) "Embed":** a nested group's sub-rings sit directly on the first ring (OPie's embed mode), so its nodes share the top ring with the other groups.
-- **(c)** Accept depth 3 for battleground sets only.
-
-I lean towards **(a)** as a per-group flag that is on for the battleground node sets. This is still open.
+**Nested built-in sets (D9).** In Categories mode a battleground node set would go three levels deep (group, then node, then "INC 2"), which research says is hard under pressure. The decision is **open into the top group**: when the highest-priority active group has the flag (on for battleground node sets), the dial opens straight on its ring, and the centre button goes back to all groups. The rejected options were "embed" (nodes share the first ring with other groups) and accepting depth 3.
 
 ### Limits (from research note 02)
 - **Default 4 wedges.** This matches the ping wheel, uses only on-axis directions, and works on a d-pad.
@@ -206,7 +205,7 @@ It looks like the WeakAuras Load tab because WoW players already know it: one ro
 - **"Why is this showing?"** in the tooltip of every pad header and dial hub, listing the groups and which conditions matched.
 - **Group list badges:** a green "Active now" dot next to groups that match your current situation.
 
-**Question (still open):** should callouts be able to appear in **several groups** (shared by reference), or should each group own copies? I lean towards by reference, with a "used in N groups" note in the editor.
+**Shared callouts (D8).** Callouts live in one library and groups reference them. Editing "Lust here" changes it in every group that uses it, and the editor shows "used in N groups". Built-in sets reference their own read-only callouts. **Customize** copies both the group and its callouts, so a built-in update never changes the player's copy.
 
 ## 8. Predefined sets (shipped with the addon)
 
@@ -228,8 +227,7 @@ Quick Comms comes with ready-made groups so it is useful from the first login. E
 - **The M+ set is generic on purpose.** Per-dungeon sets would be a content treadmill each season. Players can add their own and share them through export strings.
 - **Localization:** built-in text ships in English first (Ka0s rule: enUS locale table, keys are the English text). Other locales can follow.
 
-**Question:**
-- For battleground sets, should Quick Comms track **which side you're on** (Alliance/Horde) to phrase callouts like "our base" or "their base"? This adds complexity for little gain, so I'd leave it out.
+Battleground callouts are faction-neutral: no "our base / their base" wording (D11).
 
 ## 9. Settings structure (Ka0s standard)
 
@@ -255,7 +253,7 @@ Everything persists in one `QuickCommsDB` profile, so a player's setup follows t
 - **Per-dungeon and per-class built-in sets.** Shipping these each season is a content treadmill, so only if players ask for them.
 - **Voice line or sound per channel:** a small "sent" sound, off by default.
 - **Arc layout** for the pad (a half-dial pinned to a screen edge).
-- **ConsolePort integration** for gamepad players.
+- **Gamepad support** (D10): stick selects a wedge, a bumper pages, and ConsolePort integration.
 - **Countdown callout:** `/cd 5` as a callout action, once the lockdown behaviour of the countdown payload is checked.
 - **Callout extras:** variants, confirm, cooldown, mark, keybind ([#1](https://github.com/tusharsaxena/QuickComms/issues/1)–[#5](https://github.com/tusharsaxena/QuickComms/issues/5)).
 
@@ -271,10 +269,40 @@ Everything persists in one `QuickCommsDB` profile, so a player's setup follows t
 
 ## 12. Open questions
 
-Answered: naming, dial default and opening position, several surfaces, extras, specific vs generic groups, and built-ins on by default (see **Decisions** at the top).
+All design questions are answered (D1–D11 at the top). Only the go/no-go test below remains.
 
-Still open:
-1. Should callouts be **shared by reference** across groups, or copied into each group? (I lean towards by reference.)
-2. With Categories as the default, how should nested built-in sets (battleground nodes) avoid going three levels deep: **open into top group**, **embed**, or accept depth 3? (§4; I lean towards open into top group.)
-3. Is gamepad support in scope for the first version?
-4. Battleground sets: track your faction for "our base / their base" wording? (I'd leave it out.)
+## 13. Go/no-go: can a player's button press send group chat during lockdown?
+
+**Why it decides everything.** The addon exists for the moments when Midnight locks addon chat: an active M+ key, a boss pull, a PvP match. If a player-pressed button can't send to party or raid then, the addon is not viable (owner's verdict).
+
+**Why a press isn't automatically enough.** Lockdown checks *whose code* sends, not whether a human clicked. A click that runs addon Lua calling `SendChatMessage` is still blocked. What gets through is a click on a **secure action button**, where the *game* runs a macro on the player's behalf. That is still a manual, one-press-one-message action, never automation, and that is what Blizzard allows.
+
+**Why there is a documented fallback.** Blizzard's published Midnight macro rules (research note 01) state that during encounters macros **can** still send `/p`, `/raid`, `/rw` and instance chat, throttled. So there are two candidate paths:
+
+| Path | How it works | Cost |
+|---|---|---|
+| **A: secure macro text** | A secure button with `type=macro` and `macrotext="/p …"`, set out of combat | None. Unlimited callouts. |
+| **B: real macros** | The addon writes real character or account macros out of combat; secure buttons run them (`type=macro`, `macro=<index>`). MarkerBar works this way in 12.0. | Macro slots (120 account, 30 per character). Budget one per *visible* slot and rewrite them out of combat when the situation changes. |
+
+The addon is dead only if **both** fail, which would contradict Blizzard's published rules. If only A fails, the design survives with B's slot budget.
+
+### Test plan (about 20 minutes in game)
+
+The fastest way to run it is a throwaway test addon, or `/run` lines plus one real macro. It needs one party member, or a follower dungeon for party chat.
+
+1. **Force lockdown without a key.** `/console addonChatRestrictionsForced 1`, then confirm with `/dump C_ChatInfo.InChatMessagingLockdown()`, which should print `true`.
+2. **Baseline, which should fail:** a plain addon button whose OnClick calls `C_ChatInfo.SendChatMessage("test A0", "PARTY")`. Expect `ADDON_ACTION_BLOCKED`. This confirms lockdown is real.
+3. **Path A:** out of combat, create `CreateFrame("Button", "QCTest", UIParent, "SecureActionButtonTemplate")` with `type=macro`, `macrotext="/p test A"` and `RegisterForClicks("AnyDown","AnyUp")`. Bind a key with `SetOverrideBindingClick`, or click it. Does "test A" arrive in party chat?
+4. **Path B:** create a real macro `/p test B` and a secure button with `type=macro`, `macro="<name>"`. Does "test B" arrive?
+5. **Repeat 3 and 4 in the real contexts:**
+   - during an M+ key, on trash and on a boss
+   - in a raid boss pull (LFR is fine)
+   - with `/console secretEncounterRestrictionsForced 1` and `addonChallengeModeRestrictionsForced 1` as a cheaper first pass
+6. **Measure the throttle:** press twice quickly during a boss. How close together can two sends be before the second is dropped?
+7. **Tokens:** do `%t` and `{rt8}` expand in the macro path? Does `{g1}`?
+8. Reset all the console variables to 0 afterwards.
+
+**Reading the results:**
+- **A works:** go, with the design as written.
+- **A fails and B works:** go, and add the macro-slot budget to the design.
+- **Both fail:** stop.
