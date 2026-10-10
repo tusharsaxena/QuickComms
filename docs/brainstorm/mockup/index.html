@@ -1,0 +1,980 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ka0s Quick Comms</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a single dark "in-game" world. Header + situation simulator, then three stages
+   (Comms Dial, Comms Pad, Settings window), each a scene panel with its own controls.
+   Deliberately single-theme: it imitates the WoW client, which is always dark. */
+:root{
+  color-scheme: dark;
+  --bg:#0a0b0f;
+  --panel:rgba(15,15,20,.92);          /* Ka0s window bg 0.06,0.06,0.08,0.92 */
+  --panel-solid:#101117;
+  --edge-in:rgba(61,61,69,.85);        /* Ka0s inner line 0.24,0.24,0.27,0.85 */
+  --edge-out:#000;
+  --gold:#ffd100;                      /* Ka0s title gold 1,0.82,0 */
+  --gold-soft:rgba(255,209,0,.18);
+  --text:#ebe8e1;
+  --muted:#8f8c96;
+  --dim:#5d5b64;
+  --qc:#00ffff;                        /* chat tag colour from the standard */
+  --test:#ff2a2a;
+  --ok:#4ad06a;
+  --lock:#ffb84a;
+  --font-display:"Barlow Semi Condensed","Arial Narrow",system-ui,sans-serif;
+  --font-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.5 var(--font-body);padding-inline:16px;padding-block:0 64px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:36px}
+h1,h2,h3{font-family:var(--font-display);font-weight:700;text-wrap:balance;margin:0;letter-spacing:.01em}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.mono{font-family:var(--font-mono);font-size:.86em}
+
+/* ---------- header ---------- */
+header.top{padding-top:36px;display:flex;flex-direction:column;gap:14px}
+.eyebrow{font:600 12px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.eyebrow .pill{border:1px solid var(--edge-in);padding:4px 8px;color:var(--gold)}
+header.top h1{font-size:clamp(34px,6vw,56px);line-height:1;color:var(--gold)}
+header.top h1 span{color:var(--text);font-weight:500}
+header.top p{max-width:68ch;margin:0;color:#c9c6cf}
+
+/* ---------- situation simulator ---------- */
+.sim{background:var(--panel);border:1px solid var(--edge-out);box-shadow:inset 0 0 0 1px var(--edge-in);padding:14px 16px;display:flex;flex-direction:column;gap:12px;position:sticky;top:env(safe-area-inset-top,0px);z-index:20}
+.sim-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sim-label{font:600 12px/1 var(--font-display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+.ctx{background:#17181f;border:1px solid #2a2b33;padding:6px 11px;cursor:pointer;font:600 14px/1.2 var(--font-display);letter-spacing:.02em;color:#cfcbd6}
+.ctx:hover{border-color:#55545e;color:#fff}
+.ctx[aria-pressed="true"]{border-color:var(--gold);color:var(--gold);background:#1d1a0c}
+.active-groups{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:13px}
+.gchip{display:inline-flex;align-items:center;gap:6px;padding:2px 8px 2px 4px;background:#16171d;border:1px solid #2a2b33;font:600 13px/1.4 var(--font-display)}
+.gchip .dot{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+.gchip .bi{font:600 10px/1 var(--font-display);letter-spacing:.1em;color:var(--muted);border:1px solid #33343c;padding:2px 4px;text-transform:uppercase}
+.lockchip{display:inline-flex;gap:6px;align-items:center;font:700 12px/1 var(--font-display);letter-spacing:.12em;text-transform:uppercase;color:var(--lock);border:1px solid rgba(255,184,74,.5);background:rgba(255,184,74,.08);padding:5px 8px}
+.lockchip.off{color:var(--ok);border-color:rgba(74,208,106,.4);background:rgba(74,208,106,.06)}
+.lockchip svg{width:13px;height:13px}
+
+/* ---------- stage sections ---------- */
+section.stage{display:flex;flex-direction:column;gap:14px}
+.stage-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.stage-head h2{font-size:30px;line-height:1.1}
+.stage-head h2 small{display:block;font:600 12px/1.6 var(--font-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.stage-head p{margin:4px 0 0;color:#bdb9c4;max-width:62ch}
+.controls{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.seg{display:inline-flex;border:1px solid #2a2b33;background:#121319}
+.seg span{font:600 11px/1 var(--font-display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:0 8px;align-self:center}
+.seg button{background:none;border:0;border-left:1px solid #2a2b33;padding:6px 10px;cursor:pointer;font:600 13px/1.2 var(--font-display);color:#bdb9c4}
+.seg button[aria-pressed="true"]{background:#2a2410;color:var(--gold)}
+.seg button:hover{color:#fff}
+
+.scene{position:relative;overflow:hidden;border:1px solid #000;min-height:560px;display:grid;place-items:center}
+.scene.stone{background:
+  radial-gradient(ellipse 60% 55% at 50% 45%,rgba(0,0,0,0) 0,rgba(0,0,0,.35) 70%,rgba(0,0,0,.75) 100%),
+  repeating-linear-gradient(172deg,rgba(60,25,5,.28) 0 2px,rgba(0,0,0,0) 2px 34px),
+  radial-gradient(ellipse at 50% 30%,#c98a46 0,#9a5a26 40%,#5c3214 75%,#2a160a 100%)}
+.scene.dusk{background:
+  radial-gradient(ellipse 70% 60% at 50% 50%,rgba(0,0,0,0) 0,rgba(0,0,0,.6) 100%),
+  repeating-radial-gradient(circle at 30% 120%,rgba(255,255,255,.025) 0 3px,rgba(0,0,0,0) 3px 46px),
+  radial-gradient(ellipse at 40% 70%,#5b3d82 0,#3a2558 45%,#170e26 100%)}
+.scene-note{position:absolute;top:10px;left:12px;font:600 11px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.55)}
+
+/* ---------- chat frame (shared) ---------- */
+.chatlog{position:absolute;left:12px;bottom:12px;width:min(470px,calc(100% - 24px));display:flex;flex-direction:column;gap:2px;font:600 13.5px/1.35 var(--font-body);text-shadow:0 1px 1px #000,0 0 3px #000;pointer-events:none}
+.chatlog .line{animation:fadein .2s ease-out}
+.chatlog .line.old{opacity:.55}
+.chatlog .via{font:500 10.5px/1 var(--font-mono);color:rgba(255,255,255,.45);margin-left:6px;text-shadow:none}
+.rt{display:inline-block;font-weight:700;margin:0 1px}
+@keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ---------- dial ---------- */
+.dial-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;padding:24px 0 120px}
+svg.dial{width:min(520px,100%);height:auto;touch-action:none;cursor:crosshair;user-select:none}
+svg.dial text{font-family:var(--font-display);font-weight:700}
+.dial-caption{min-height:46px;text-align:center;font:500 14px/1.4 var(--font-body);color:#f3efe6;text-shadow:0 1px 2px #000;max-width:56ch;padding:0 12px}
+.dial-caption b{font-family:var(--font-display);letter-spacing:.04em}
+.dial-hint{position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;gap:4px;align-items:flex-end;font:600 12px/1.2 var(--font-display);letter-spacing:.06em;color:rgba(255,255,255,.75);text-shadow:0 1px 2px #000}
+.kbd{display:inline-block;border:1px solid rgba(255,255,255,.4);border-bottom-width:2px;padding:1px 6px;font:600 11px/1.3 var(--font-mono);background:rgba(0,0,0,.35)}
+@media (max-width:640px){.dial-hint{display:none}.dial-wrap{padding-bottom:150px}}
+
+/* ---------- comms pad ---------- */
+.pad{background:var(--panel);border:1px solid #000;box-shadow:inset 0 0 0 1px var(--edge-in),0 10px 30px rgba(0,0,0,.45);display:flex;flex-direction:column;max-width:calc(100% - 24px);margin-bottom:120px}
+.pad-head{display:flex;align-items:center;gap:8px;padding:5px 6px 5px 4px;border-bottom:1px solid #26272e;min-height:30px;flex-wrap:wrap}
+.grip{width:12px;align-self:stretch;background:radial-gradient(circle,#55545e 1px,transparent 1.5px) 0 0/4px 4px;opacity:.8;cursor:move}
+.pad-title{font:700 13px/1 var(--font-display);letter-spacing:.06em;color:var(--gold);text-transform:uppercase}
+.sitchip{font:600 12px/1 var(--font-display);color:#d8d4de;background:#1a1b22;border:1px solid #2c2d35;padding:4px 7px;cursor:help}
+.pad-head .spacer{flex:1}
+.hbtn{width:20px;height:20px;display:grid;place-items:center;color:#8a8792;background:none;border:0;cursor:pointer;padding:0}
+.hbtn:hover{color:#fff}
+.hbtn svg{width:14px;height:14px}
+.pad .lockchip{padding:3px 6px;font-size:10.5px}
+.pad-tabs{display:flex;gap:2px;padding:4px 6px 0;border-bottom:1px solid #26272e;flex-wrap:wrap}
+.pad-tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:4px 8px 5px;font:600 12.5px/1 var(--font-display);color:#8f8c96;cursor:pointer}
+.pad-tabs button[aria-pressed="true"]{color:var(--gold);border-bottom-color:var(--gold)}
+.pad-body{padding:8px;display:flex;gap:10px}
+.pad.h .pad-body{flex-direction:row;flex-wrap:wrap;align-items:flex-start}
+.pad.v .pad-body,.pad.g .pad-body{flex-direction:column}
+.sect{display:flex;flex-direction:column;gap:5px;min-width:0}
+.sect-label{font:700 10.5px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase;color:#7d7a86;display:flex;gap:6px;align-items:center;padding-left:1px}
+.sect-label .bi{color:#5e5c66;border:1px solid #2e2f37;padding:1px 3px;font-size:9px}
+.chips{display:flex;gap:5px}
+.pad.h .chips{flex-direction:row;flex-wrap:wrap}
+.pad.v .chips{flex-direction:column}
+.pad.g .chips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.pad.h .sect + .sect{padding-left:10px;border-left:1px solid #26272e}
+.chip{position:relative;display:flex;align-items:center;gap:7px;min-width:0;height:34px;padding:0 6px 0 3px;background:linear-gradient(#1b1c23,#141519);border:1px solid #2b2c34;cursor:pointer;text-align:left;overflow:hidden;transition:border-color .12s,background .12s}
+.chip:hover{border-color:var(--gold);background:linear-gradient(#24221a,#17160f)}
+.chip:active{transform:translateY(1px)}
+.chip .lbl{font:600 13.5px/1 var(--font-display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;letter-spacing:.01em}
+.pad.h .chip .lbl{flex:none;max-width:130px}
+.chip .tag{flex:none;font:700 10px/1 var(--font-mono);padding:3px 4px;border:1px solid currentColor;opacity:.9;letter-spacing:0}
+.chip.locked{cursor:not-allowed}
+.chip.locked .tile,.chip.locked .lbl{filter:grayscale(1);opacity:.45}
+.chip .lk{position:absolute;left:19px;top:16px;width:14px;height:14px;color:var(--lock);filter:drop-shadow(0 0 2px #000)}
+.chip.flash{animation:flash .5s ease-out}
+@keyframes flash{0%{box-shadow:inset 0 0 0 2px var(--gold),0 0 14px rgba(255,209,0,.6)}100%{box-shadow:none}}
+.tile{flex:none;width:28px;height:28px;display:grid;place-items:center;border:1px solid #000;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);color:#fff;background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--t) 70%,#fff) 0,var(--t) 45%,color-mix(in srgb,var(--t) 45%,#000) 100%)}
+.tile svg{width:18px;height:18px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.7))}
+.pad.icon .chip{width:36px;height:36px;padding:0;justify-content:center}
+.pad.icon .chip .lbl,.pad.icon .chip .tag{display:none}
+.pad.icon .chip .tile{width:32px;height:32px}
+.pad.icon .chips{display:flex;flex-direction:row;flex-wrap:wrap}
+.pad.icon.v .chips{flex-direction:column}
+.pad.icon.g .chips{display:grid;grid-template-columns:repeat(4,36px)}
+.chip .cd{position:absolute;inset:0;pointer-events:none;background:conic-gradient(rgba(0,0,0,.62) var(--a),rgba(0,0,0,0) 0);animation:cd var(--d) linear forwards}
+@property --a{syntax:'<angle>';initial-value:360deg;inherits:false}
+@keyframes cd{from{--a:360deg}to{--a:0deg}}
+.pad-foot{display:flex;justify-content:space-between;gap:8px;padding:4px 8px;border-top:1px solid #1f2026;font:500 11px/1.3 var(--font-mono);color:#6a6873}
+.pad-empty{padding:16px;color:var(--muted);font-size:13px}
+
+/* ---------- settings window ---------- */
+.bliz{background:#0d0e12;border:1px solid #000;box-shadow:inset 0 0 0 1px #3a3328,0 20px 50px rgba(0,0,0,.5);display:flex;flex-direction:column;min-height:640px}
+.bliz-title{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #2b2620;background:linear-gradient(#1a1814,#121110)}
+.bliz-title h3{font-size:16px;color:var(--gold);letter-spacing:.04em}
+.bliz-tabs{display:flex;gap:2px}
+.bliz-tabs span{font:600 12.5px/1 var(--font-display);padding:5px 10px;border:1px solid #2b2620;color:#9b968c}
+.bliz-tabs span.on{color:var(--gold);border-color:#5a4a20;background:#1c1810}
+.bliz-body{display:grid;grid-template-columns:210px minmax(0,1fr);flex:1;min-height:0}
+@media (max-width:760px){.bliz-body{grid-template-columns:1fr}.cats{border-right:0;border-bottom:1px solid #22201c}}
+.cats{border-right:1px solid #22201c;padding:10px 6px;display:flex;flex-direction:column;gap:1px;font:500 14px/1.2 var(--font-display);background:#0b0b0e}
+.cats .grp{color:#6f6b64;font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:8px 8px 4px}
+.cats .muted{color:#55524c;padding:4px 10px}
+.cats button{background:none;border:0;text-align:left;padding:5px 10px 5px 22px;color:#bdb8ae;cursor:pointer}
+.cats button.parent{padding-left:10px;color:#ece6da;font-weight:700}
+.cats button[aria-current="true"]{background:linear-gradient(90deg,rgba(255,209,0,.16),rgba(255,209,0,0));color:var(--gold)}
+.cats button:hover{color:#fff}
+.canvas{padding:14px 18px 18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.crumb{font:700 18px/1.2 var(--font-display);color:var(--gold)}
+.crumb span{color:#d9d4ca;font-weight:600}
+.tabstrip{display:flex;gap:4px;border-bottom:1px solid #2a2b33;flex-wrap:wrap}
+.tabstrip button{background:none;border:0;border-bottom:2px solid transparent;padding:6px 12px 7px;font:600 14px/1 var(--font-display);color:#8f8c96;cursor:pointer}
+.tabstrip button[aria-pressed="true"]{color:var(--gold);border-bottom-color:var(--gold)}
+.editor{display:grid;grid-template-columns:230px minmax(0,1fr);gap:14px;min-height:0}
+@media (max-width:900px){.editor{grid-template-columns:1fr}}
+.rail{border:1px solid #23242b;background:#0f1015;display:flex;flex-direction:column;max-height:470px;min-width:0}
+.rail-top{display:flex;gap:6px;padding:6px;border-bottom:1px solid #23242b}
+.rail-list{overflow:auto;display:flex;flex-direction:column}
+.rail-item{display:flex;align-items:center;gap:8px;padding:5px 8px;background:none;border:0;border-left:2px solid transparent;text-align:left;cursor:pointer;min-width:0;color:#d4d0da}
+.rail-item:hover{background:#16171e}
+.rail-item[aria-current="true"]{background:#1d1a0e;border-left-color:var(--gold)}
+.rail-item .tile{width:22px;height:22px}
+.rail-item .tile svg{width:14px;height:14px}
+.rail-item .nm{flex:1;min-width:0;font:600 13.5px/1.2 var(--font-display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rail-item .meta{font:600 10px/1 var(--font-mono);color:#6a6873}
+.rail-item .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);flex:none}
+.rail-item .dot.off{background:#33343b}
+.rail-sec{font:700 10.5px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase;color:#6a6873;padding:9px 8px 4px}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field > label,.flabel{font:600 12px/1 var(--font-display);letter-spacing:.1em;text-transform:uppercase;color:#a29fa8}
+.input,.select,textarea.input{background:#0a0a0d;border:1px solid #33343c;color:#f1eee8;padding:7px 9px;font:500 14px/1.3 var(--font-body);min-width:0;width:100%}
+textarea.input{resize:vertical;min-height:70px;font-family:var(--font-mono);font-size:13px}
+.select{display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:linear-gradient(#1a1b22,#121318)}
+.select::after{content:"";border:5px solid transparent;border-top-color:var(--gold);margin-top:5px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 18px}
+@media (max-width:560px){.grid2{grid-template-columns:1fr}}
+.tokens{display:flex;gap:4px;flex-wrap:wrap}
+.tok{background:#16171d;border:1px solid #2e2f37;color:#cfcbd6;padding:3px 6px;font:500 11.5px/1.2 var(--font-mono);cursor:pointer}
+.tok:hover{border-color:var(--gold);color:var(--gold)}
+.counter{font:500 11.5px/1 var(--font-mono);color:#6f6c77;text-align:right}
+.counter.warn{color:var(--lock)}
+.preview{background:rgba(0,0,0,.55);border:1px solid #23242b;padding:8px 10px;font:600 13.5px/1.4 var(--font-body)}
+.preview .via{font:500 10.5px/1 var(--font-mono);color:#77747f;margin-left:6px}
+.note{font-size:12.5px;color:#9c98a3;line-height:1.45}
+.note b{color:#d6d2dc}
+.banner{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:#14130d;border:1px solid #3d3518;padding:8px 10px;font-size:13px;color:#d8d0b0}
+.btn{background:linear-gradient(#2b2416,#1b170d);border:1px solid #5a4a20;color:var(--gold);padding:6px 12px;font:700 13px/1 var(--font-display);letter-spacing:.04em;cursor:pointer}
+.btn.ghost{background:#15161c;border-color:#33343c;color:#cfcbd6}
+.btn:hover{filter:brightness(1.2)}
+.reorder{display:flex;flex-direction:column;border:1px solid #23242b}
+.ro{display:flex;align-items:center;gap:8px;padding:5px 8px;border-bottom:1px solid #1b1c22;background:#0f1015;min-width:0}
+.ro:last-child{border-bottom:0}
+.ro .handle{color:#4d4b55;font:700 14px/1 var(--font-mono);cursor:grab}
+.ro .n{font:600 11px/1 var(--font-mono);color:#6a6873;width:16px;text-align:right}
+.ro .nm{flex:1;min-width:0;font:600 13.5px/1.2 var(--font-display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ro .txt{flex:2;min-width:0;font-size:12.5px;color:#8c8994;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ro .tile{width:22px;height:22px}.ro .tile svg{width:14px;height:14px}
+.ro .act{display:flex;gap:2px}
+.ro .act button{background:none;border:1px solid #2a2b33;color:#8f8c96;width:20px;height:20px;cursor:pointer;font:600 11px/1 var(--font-mono);padding:0}
+.ro.off .nm,.ro.off .tile{opacity:.4}
+.tagc{font:700 10px/1 var(--font-mono);padding:3px 4px;border:1px solid currentColor;flex:none}
+.cond{display:grid;grid-template-columns:24px 150px minmax(0,1fr);gap:8px;align-items:start;padding:7px 0;border-bottom:1px solid #1b1c22}
+@media (max-width:560px){.cond{grid-template-columns:24px minmax(0,1fr)}.cond .vals{grid-column:2}}
+.cb{width:16px;height:16px;border:1px solid #4a4a52;background:#0a0a0d;display:grid;place-items:center;margin-top:2px}
+.cb.on{border-color:var(--gold)}
+.cb.on::after{content:"";width:8px;height:8px;background:var(--gold)}
+.cond .cl{font:600 14px/1.3 var(--font-display);color:#d4d0da}
+.cond.off .cl{color:#6a6873}
+.vals{display:flex;gap:4px;flex-wrap:wrap}
+.v{font:600 12px/1 var(--font-display);padding:4px 7px;border:1px solid #2a2b33;color:#6f6c77}
+.v.on{border-color:#8a7420;color:var(--gold);background:#1a160a}
+.cond.off .v{opacity:.5}
+.why{border:1px solid #1f4a2a;background:#0c1510;padding:8px 10px;font-size:13px;color:#bfe6c8}
+.why.no{border-color:#4a2a1f;background:#150e0c;color:#e6c9bf}
+.mc{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 24px}
+@media (max-width:560px){.mc{grid-template-columns:1fr}}
+.mc .row{display:flex;align-items:center;gap:10px;min-width:0}
+.slider{flex:1;height:4px;background:#2a2b33;position:relative;min-width:60px}
+.slider i{position:absolute;left:0;top:0;bottom:0;background:var(--gold)}
+.slider b{position:absolute;top:-5px;width:6px;height:14px;background:#e9e2c8;border:1px solid #000}
+.mini-dial{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.mini-dial svg{width:180px;height:180px;flex:none}
+.warnline{font-size:12.5px;color:var(--lock)}
+.sharebox{font:500 11.5px/1.45 var(--font-mono);background:#08080a;border:1px solid #2a2b33;padding:8px;word-break:break-all;color:#9fd7d7;max-height:90px;overflow:auto}
+.packs{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px}
+.pack{display:flex;gap:8px;align-items:center;border:1px solid #23242b;background:#0f1015;padding:6px 8px;min-width:0}
+.pack .nm{flex:1;min-width:0;font:600 13.5px/1.2 var(--font-display)}
+.pack .nm small{display:block;font:500 11px/1.3 var(--font-body);color:#6f6c77}
+
+/* ---------- notes grid ---------- */
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.notes article{border:1px solid #1f2026;background:#0e0f13;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.notes h3{font-size:16px;color:var(--gold)}
+.notes p{margin:0;font-size:13.5px;color:#bab6c1}
+footer{color:var(--dim);font-size:12.5px;border-top:1px solid #1d1e24;padding-top:14px}
+footer a{color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- icon sprite: simple glyphs standing in for WoW icon art -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="i-sword" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 3.5H20.5V9.5L10.5 19.5L4.5 13.5Z"/><path d="M4 20l3-3M7.5 13.5l3 3"/></g>
+    <g id="i-shield" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l7 3v5c0 5-3.2 8.2-7 10-3.8-1.8-7-5-7-10V6z"/></g>
+    <g id="i-warn" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5L21.5 20h-19z"/><path d="M12 10v4.5M12 17.2v.2"/></g>
+    <g id="i-flag" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4"/><path d="M6 4h12l-2.5 4L18 12H6"/></g>
+    <g id="i-arrow" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13M6.5 10.5L12 16l5.5-5.5"/><ellipse cx="12" cy="20" rx="7" ry="1.6"/></g>
+    <g id="i-skull" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a7 7 0 0 0-7 7c0 2.6 1.3 4.2 3 5.2V19h8v-3.8c1.7-1 3-2.6 3-5.2a7 7 0 0 0-7-7z"/><circle cx="9.3" cy="10.5" r="1.2" fill="currentColor"/><circle cx="14.7" cy="10.5" r="1.2" fill="currentColor"/><path d="M10.5 19v2M13.5 19v2"/></g>
+    <g id="i-hand" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12V5.5a1.5 1.5 0 0 1 3 0V11M11 10.5V4a1.5 1.5 0 0 1 3 0v6.5M14 10.5V5.5a1.5 1.5 0 0 1 3 0V12M17 11V9a1.5 1.5 0 0 1 3 0v4.5c0 4.2-3 7.5-7 7.5-3 0-4.8-1.4-6.4-4L4 13.5A1.4 1.4 0 0 1 6.3 12L8 14"/></g>
+    <g id="i-heart" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 20s-7.5-4.6-7.5-10.2A4.1 4.1 0 0 1 12 7.4a4.1 4.1 0 0 1 7.5 2.4C19.5 15.4 12 20 12 20z"/></g>
+    <g id="i-clock" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></g>
+    <g id="i-drum" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><ellipse cx="12" cy="7" rx="8" ry="3"/><path d="M4 7v9.5c0 1.7 3.6 3 8 3s8-1.3 8-3V7M8 9.6l2 9.8M16 9.6l-2 9.8"/></g>
+    <g id="i-drop" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3s6.5 7.2 6.5 11.3a6.5 6.5 0 0 1-13 0C5.5 10.2 12 3 12 3z"/></g>
+    <g id="i-target" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="2.6"/><path d="M12 2.5v3.5M12 18v3.5M2.5 12H6M18 12h3.5"/></g>
+    <g id="i-chat" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h16v11H10l-5 4v-4H4z"/></g>
+    <g id="i-star" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5l2.6 5.6 6 .7-4.5 4.1 1.3 6-5.4-3.1-5.4 3.1 1.3-6L3.4 9.8l6-.7z"/></g>
+    <g id="i-portal" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="12" rx="6" ry="8.5"/><ellipse cx="12" cy="12" rx="2.8" ry="4.6"/></g>
+    <g id="i-gem" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 4h10l4 5-9 11L3 9z"/><path d="M3 9h18M12 20L9 9l3-5 3 5z"/></g>
+    <g id="i-run" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="14.5" cy="4.5" r="1.8"/><path d="M8 20l3.5-5.5 3 2.5V21M6 11.5l4-3.5h4l2.5 3.5 3 .5M11.5 14.5L13 8"/></g>
+    <g id="i-thumb" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 10.5V20H4v-9.5zM7 10.5L11 3c1.6 0 2.6 1.2 2.2 3L12.5 9.5h6c1.2 0 2 1.1 1.7 2.2l-1.8 6.6c-.3 1-1.1 1.7-2.1 1.7H7"/></g>
+    <g id="i-lock" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="1"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></g>
+    <g id="i-swap" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h15l-3.5-3.5M20 16H5l3.5 3.5"/></g>
+    <g id="i-cup" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 4h12l-2 16H8z"/><path d="M6.6 9h10.8"/></g>
+    <g id="i-more" fill="currentColor"><circle cx="5.5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18.5" cy="12" r="2"/></g>
+    <g id="i-gear" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></g>
+    <g id="i-min" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/></g>
+    <g id="i-pad" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="7" height="7"/><rect x="13" y="4" width="7" height="7"/><rect x="4" y="13" width="7" height="7"/><rect x="13" y="13" width="7" height="7"/></g>
+  </defs>
+</svg>
+
+<div class="wrap">
+
+<header class="top">
+  <div class="eyebrow"><span class="pill">Brainstorm mockup</span><span>Not final UI · nothing is built yet</span></div>
+  <h1>Ka0s Quick Comms <span>· UX mockup</span></h1>
+  <p>Predefined callouts, one keypress away, that change with where you are. Pick a situation below: the Comms Dial, the Comms Pad and the settings all follow it. Click a wedge or a button to "send" a callout and watch the chat frame. In situations where Midnight locks chat for addons, sends go through the secure macro path and some channels show a padlock.</p>
+</header>
+
+<div class="sim" role="region" aria-label="Situation simulator">
+  <div class="sim-row"><span class="sim-label">Preview as</span><div class="sim-row" id="ctxBtns"></div></div>
+  <div class="sim-row"><span class="sim-label">Active groups</span><div class="active-groups" id="activeGroups"></div><span id="lockState"></span></div>
+</div>
+
+<!-- ======================= DIAL ======================= -->
+<section class="stage" aria-labelledby="dialH">
+  <div class="stage-head">
+    <div>
+      <h2 id="dialH"><small>Surface 1</small>Comms Dial</h2>
+      <p>Modelled on Blizzard's ping wheel. Hold the key, flick toward a wedge, release to send; release on the centre to cancel. Wedges marked › open a sub-ring. Mouse wheel changes page.</p>
+    </div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Dial mode"><span>Mode</span><button data-dmode="flat">Flat</button><button data-dmode="cat">Categories</button></div>
+      <div class="seg" role="group" aria-label="Slices"><span>Slices</span><button data-slices="4">4</button><button data-slices="6">6</button><button data-slices="8">8</button></div>
+    </div>
+  </div>
+  <div class="scene stone" id="dialScene">
+    <div class="scene-note">In game · dial opens at cursor</div>
+    <div class="dial-wrap">
+      <svg class="dial" id="dial" viewBox="-260 -230 520 460" tabindex="0" role="application" aria-label="Comms dial. Number keys select a wedge, Escape goes back."></svg>
+      <div class="dial-caption" id="dialCaption"></div>
+    </div>
+    <div class="chatlog" aria-live="polite"></div>
+    <div class="dial-hint">
+      <div><span class="kbd">G</span> hold · flick · release</div>
+      <div><span class="kbd">G</span> tap = first callout</div>
+      <div><span class="kbd">1</span>–<span class="kbd">8</span> pick · <span class="kbd">Esc</span> back</div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= PAD ======================= -->
+<section class="stage" aria-labelledby="padH">
+  <div class="stage-head">
+    <div>
+      <h2 id="padH"><small>Surface 2</small>Comms Pad</h2>
+      <p>Chips instead of buttons: an icon tile, a short label and a channel tag in WoW's own chat colours. The header shows the situation (hover it to see why) and the lockdown state. After a send, a cooldown sweep stops spam.</p>
+    </div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Orientation"><span>Layout</span><button data-orient="h">Horizontal</button><button data-orient="v">Vertical</button><button data-orient="g">Grid</button></div>
+      <div class="seg" role="group" aria-label="Button style"><span>Style</span><button data-pstyle="full">Icon + label</button><button data-pstyle="icon">Icon only</button></div>
+      <div class="seg" role="group" aria-label="Groups"><span>Groups</span><button data-pgroups="sect">Sections</button><button data-pgroups="tabs">Tabs</button></div>
+    </div>
+  </div>
+  <div class="scene dusk" id="padScene">
+    <div class="scene-note">In game · unlocked pads get a drag handle</div>
+    <div class="pad" id="pad"></div>
+    <div class="chatlog" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- ======================= SETTINGS ======================= -->
+<section class="stage" aria-labelledby="setH">
+  <div class="stage-head">
+    <div>
+      <h2 id="setH"><small>Configuration</small>Settings</h2>
+      <p>Lives in Blizzard Settings under AddOns, built the Ka0s way: a landing page, General with Master controls first, then one page per concept. Each page has a breadcrumb, a tab strip, and a nav rail for editing one item out of many.</p>
+    </div>
+  </div>
+  <div class="bliz">
+    <div class="bliz-title"><h3>Options</h3><div class="bliz-tabs"><span>Game</span><span class="on">AddOns</span></div></div>
+    <div class="bliz-body">
+      <nav class="cats" id="cats" aria-label="Settings categories"></nav>
+      <div class="canvas" id="canvas"></div>
+    </div>
+  </div>
+</section>
+
+<section class="stage" aria-labelledby="notesH">
+  <div class="stage-head"><div><h2 id="notesH"><small>Why it looks like this</small>Design notes</h2></div></div>
+  <div class="notes">
+    <article><h3>4 wedges by default, 8 max per ring</h3><p>Marking-menu studies show errors stay low up to 8 wide by 2 deep, and that the 4 compass directions are fastest. The ping wheel uses 4 for the same reason. Rings with 12 slices are allowed only when they have no sub-rings.</p></article>
+    <article><h3>Secure path for group chat</h3><p>In a key, a boss pull or a PvP match, addons can't send chat. Secure macro buttons still can send to party, raid, RW and instance, so callout text is built before combat. <span class="mono">%t</span> and <span class="mono">{rt8}</span> are filled in by the game at send time.</p></article>
+    <article><h3>Locked, not hidden</h3><p>A Say or Yell callout in a boss fight shows a padlock instead of disappearing. Positions stay put, so flick muscle memory keeps working.</p></article>
+    <article><h3>Channel colours you already know</h3><p>Tags use WoW's default chat colours: party lavender, raid orange, RW red-orange, whisper pink, say white and yell red. Smart channels show the channel they resolve to right now.</p></article>
+    <article><h3>Predefined sets</h3><p>Built-in groups ship for M+, raid, arena and each battleground. They're read-only templates; <b>Customize</b> makes an editable copy, so addon updates never overwrite your edits.</p></article>
+    <article><h3>Why is this showing?</h3><p>Every active group can explain itself: the pad header tooltip and each group's When tab show which conditions matched the current situation.</p></article>
+  </div>
+</section>
+
+<footer>Ka0s Quick Comms · brainstorm mockup, 2026-10-11 · Glyphs stand in for WoW icon art · Dungeon, raid and battleground names are examples · <a href="https://github.com/tusharsaxena/QuickComms">github.com/tusharsaxena/QuickComms</a></footer>
+</div>
+
+<script>
+(() => {
+const ME = 'Ka0smage';
+const ICON = (n, cls='') => `<svg viewBox="0 0 24 24" class="${cls}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- channels ---------- */
+const CH = {
+  PARTY:{tag:'P', label:'Party', color:'#aaaaff', pre:'[Party]'},
+  RAID:{tag:'R', label:'Raid', color:'#ff7f00', pre:'[Raid]'},
+  INSTANCE_CHAT:{tag:'I', label:'Instance', color:'#ff7f00', pre:'[Instance]'},
+  RAID_WARNING:{tag:'RW', label:'Raid warning', color:'#ff4800', pre:'[Raid Warning]'},
+  SAY:{tag:'S', label:'Say', color:'#ffffff', pre:'says:'},
+  YELL:{tag:'Y', label:'Yell', color:'#ff4040', pre:'yells:'},
+  WHISPER:{tag:'W', label:'Whisper target', color:'#ff80ff', pre:'To'},
+  SMART:{tag:'⟳', label:'Smart group', color:'#cfcbd6'},
+  LEAD:{tag:'⟳RW', label:'Smart lead', color:'#cfcbd6'},
+};
+const RT = {1:['★','#ffd84a'],2:['●','#ff9a2a'],3:['◆','#c45cff'],4:['▲','#4ae04a'],5:['☾','#c9d4e4'],6:['■','#3a9aff'],7:['✕','#ff4a4a'],8:['☠','#f4f4f4']};
+
+/* ---------- situations ---------- */
+const CTX = [
+  {id:'world', label:'Open world · solo', content:'world', group:'solo', lockdown:false, target:'Gorgonzormu', where:'Eversong Woods'},
+  {id:'heroic', label:'Heroic dungeon · party', content:'dungeon', dungeon:'Pit of Saron', group:'party', lockdown:false, target:'Forgemaster Garfrost', where:'Pit of Saron (Heroic)'},
+  {id:'mplus', label:'M+ · Windrunner Spire +14', content:'mplus', dungeon:'Windrunner Spire', key:14, group:'party', lockdown:true, lockWhy:'Mythic+ key active', target:'Restless Steward', where:'Windrunner Spire +14'},
+  {id:'raid', label:'Raid · Heroic boss pull', content:'raid', group:'raid', lead:false, lockdown:true, encounter:true, lockWhy:'Boss encounter', target:'Velysse', where:'The Voidspire (Heroic)'},
+  {id:'ab', label:'Arathi Basin', content:'bg', map:'Arathi Basin', group:'instance', lockdown:true, lockWhy:'PvP match', target:'Grimtusk', where:'Arathi Basin'},
+  {id:'arena', label:'Arena 3v3', content:'arena', group:'party', lockdown:true, lockWhy:'PvP match', target:'Shadowhex', where:'Nagrand Arena'},
+];
+
+/* ---------- callouts ---------- */
+const C = {};
+const add = (id, name, text, ch, icon, t) => (C[id] = {id, name, text, ch, icon, t});
+add('ready','Ready?','Everyone ready? Pulling in 5.','SMART','clock','#c9a227');
+add('omw','On my way','On my way!','SMART','arrow','#2a7fd4');
+add('wait','Wait','Hold on, one sec.','SMART','hand','#c94a2a');
+add('thanks','Thanks','Thanks all, gg!','SMART','thumb','#3a9a5a');
+add('pull','Pulling','Pulling next pack.','SMART','sword','#c97a2a');
+add('lust','Lust here','Lust on this pack {rt8}','SMART','drum','#c9402a');
+add('mana','Need mana','Wait, need mana before the next pull.','SMART','drop','#2a6fd4');
+add('kick','Kick order','Kick order: {rt1} {rt2} {rt3}','SMART','hand','#d48a2a');
+add('skip','Skip w/ invis','Skipping this pack with invis, stay close.','SMART','run','#6a6aa0');
+add('res','Res me','Res me please.','SMART','heart','#3aa060');
+add('wrs-stack','Stack boss','Stack in front of the boss for the gust.','SMART','warn','#d4b02a');
+add('wrs-skip','Skip bridge','Skipping the bridge pack, hug the left wall.','SMART','run','#2f9a6a');
+add('wrs-adds','Kill adds','Adds up, kill %t first {rt8}','SMART','target','#c9402a');
+add('blust','Bloodlust','Bloodlust now!','LEAD','drum','#c9402a');
+add('brez','B-rez used','Battle rez used on %t.','RAID','heart','#3aa060');
+add('soak','Soak ◆','Soak at {rt3} diamond.','RAID','target','#9a4fd0');
+add('spread','Spread','Spread out for the mechanic!','LEAD','warn','#d4b02a');
+add('pull10','Pull in 10','Pulling in 10, buffs and food!','LEAD','clock','#c97a2a');
+add('wipe','Wipe it','Wipe it, run back.','RAID','skull','#7a7a7a');
+add('trink','Trinket used','Trinket used.','PARTY','star','#c9a227');
+add('cc','CC ★','CC {rt1} now!','PARTY','lock','#2a7fd4');
+add('swap','Swap target','Swap to %t!','PARTY','swap','#c9402a');
+add('incc',"I'm in CC","I'm in CC, can't help!",'PARTY','lock','#8a4fd0');
+add('kill','Go kill','Going for the kill on %t, all in!','PARTY','sword','#c9402a');
+add('drink','Drink','Drinking, reset!','PARTY','cup','#2a6fd4');
+add('pvp-help','Need help','Need help here!','SMART','warn','#d4b02a');
+add('pvp-inc','INC ☠','INC at {rt8}!','SMART','target','#c9402a');
+add('pvp-push','Push now','Push now, all in!','SMART','sword','#c97a2a');
+add('pvp-def','Defend','Hold and defend this point.','SMART','shield','#2a7fd4');
+add('hs','Healthstones','Healthstones are down, grab one.','SMART','gem','#3aa060');
+add('gate','Gateway','Demonic Gateway is up.','SMART','portal','#8a4fd0');
+add('summon','Summoning','Summoning %t, click the portal please.','SMART','portal','#6a3fc0');
+add('ss','Soulstone','Soulstone is on you.','WHISPER','gem','#8a4fd0');
+add('rare','LFG rare','Anyone up for this rare? Inviting.','SAY','chat','#5a8a3a');
+add('buff','Thanks for buff','Thanks for the buff!','SAY','thumb','#3a9a5a');
+add('runaway','Run!','RUN! Train incoming!','YELL','warn','#c9402a');
+// Arathi Basin nodes: nested sub-rings, placed on their map direction (Blacksmith, the centre node, sits at the top)
+const AB_NODES = [['Blacksmith','N'],['Gold Mine','NE'],['Farm','SE'],['General','S'],['Lumber Mill','SW'],['Stables','NW']];
+const abIds = AB_NODES.map(([n, dir]) => {
+  const id = 'ab-' + n.toLowerCase().replace(/\W+/g,'');
+  if (n === 'General') { C[id] = {id, name:'General', icon:'shield', t:'#3f7fd0', dir, children:['pvp-help','pvp-inc','pvp-push','pvp-def']}; return id; }
+  const kids = [
+    ['inc1','INC 1',`INC 1 ${n}!`,'target','#d48a2a'],
+    ['inc2','INC 2',`INC 2 ${n}!`,'target','#d4602a'],
+    ['inc3','INC 3+',`INC 3+ ${n}, need help!`,'warn','#c9402a'],
+    ['clear','Clear',`${n} is clear.`,'shield','#3aa060'],
+    ['cap','Capping',`Capping ${n}.`,'flag','#3f7fd0'],
+    ['help','Need help',`Need help at ${n}!`,'warn','#d4b02a'],
+  ].map(([k,nm,tx,ic,t]) => add(`${id}-${k}`, nm, tx, 'SMART', ic, t).id);
+  C[id] = {id, name:n, icon:'flag', t:'#3f7fd0', dir, children:kids};
+  return id;
+});
+
+/* ---------- groups ---------- */
+const G = [
+  {id:'ab', name:'Arathi Basin', builtin:true, icon:'flag', t:'#3f7fd0', when:c=>c.map==='Arathi Basin', whenTxt:'Battleground is Arathi Basin', items:abIds},
+  {id:'wrs', name:'Windrunner Spire', icon:'run', t:'#2f9a6a', when:c=>c.dungeon==='Windrunner Spire', whenTxt:'Dungeon is Windrunner Spire', items:['wrs-stack','wrs-skip','wrs-adds']},
+  {id:'mplus', name:'Mythic+', builtin:true, icon:'clock', t:'#c9a227', when:c=>c.content==='mplus', whenTxt:'Content is Mythic+', items:['pull','lust','mana','kick','skip','res']},
+  {id:'raid', name:'Raid', builtin:true, icon:'skull', t:'#b0402a', when:c=>c.content==='raid', whenTxt:'Content is Raid', items:['blust','brez','soak','spread','pull10','wipe']},
+  {id:'arena', name:'Arena', builtin:true, icon:'swap', t:'#a03a8a', when:c=>c.content==='arena', whenTxt:'Content is Arena', items:['trink','cc','swap','incc','kill','drink']},
+  {id:'pvp', name:'Battleground', builtin:true, icon:'shield', t:'#3f7fd0', when:c=>c.content==='bg', whenTxt:'Content is Battleground', items:['pvp-help','pvp-inc','pvp-push','pvp-def']},
+  {id:'lock', name:'Warlock', icon:'portal', t:'#8a4fd0', when:()=>true, whenTxt:'Class is Warlock', items:['hs','gate','summon','ss']},
+  {id:'world', name:'Open world', icon:'chat', t:'#5a8a3a', when:c=>c.content==='world', whenTxt:'Content is Open world', items:['rare','buff','runaway']},
+  {id:'ess', name:'Essentials', icon:'thumb', t:'#8a8a8a', when:()=>true, whenTxt:'Always', items:['ready','omw','wait','thanks']},
+];
+const GBY = Object.fromEntries(G.map(g => [g.id, g]));
+
+/* ---------- state ---------- */
+const S = {
+  ctx: CTX[2],
+  dial: {mode:'flat', slices:4, stack:[], sel:-1},
+  pad: {orient:'h', style:'full', groups:'sect', tab:0},
+  set: {page:'groups', tab:0, sel:{callouts:'lust', groups:'mplus', pad:'main', dial:'main'}},
+  cd: {},
+  padOrder: ['wrs','mplus','raid','ab','pvp','arena','lock','world','ess'],
+  dialOrder: ['ab','wrs','mplus','raid','arena','pvp','lock','ess','world'],
+};
+const active = (order) => order.map(id => GBY[id]).filter(g => g.when(S.ctx));
+
+/* ---------- channel resolution ---------- */
+function resolve(ch) {
+  const c = S.ctx;
+  if (ch === 'LEAD') return (c.group === 'raid' && c.lead) ? 'RAID_WARNING' : resolve('SMART');
+  if (ch === 'SMART') return {solo:null, party:'PARTY', raid:'RAID', instance:'INSTANCE_CHAT'}[c.group];
+  return ch;
+}
+function lockInfo(co) {
+  const r = resolve(co.ch);
+  if (r === null) return {locked:true, why:"Smart group: you're not in a group, so nothing would be sent (solo fallback: do nothing)."};
+  if (S.ctx.lockdown && (r === 'SAY' || r === 'YELL')) return {locked:true, why:`${CH[r].label} is blocked for addons during lockdown (${S.ctx.lockWhy}).`};
+  return {locked:false, why: S.ctx.lockdown && r === 'WHISPER' ? 'During lockdown, whispers only reach players inside this instance.' : ''};
+}
+const tagHTML = (co, cls='tag') => {
+  const r = resolve(co.ch);
+  const meta = r ? CH[r] : {tag:'—', color:'#6a6873', label:'Not in a group'};
+  const smart = co.ch === 'SMART' || co.ch === 'LEAD';
+  return `<span class="${cls}" style="color:${meta.color}" title="${esc((smart ? CH[co.ch].label + ' → ' : '') + meta.label)}">${smart ? '⟳' : ''}${meta.tag}</span>`;
+};
+
+/* ---------- token rendering ---------- */
+function bake(text) {
+  const c = S.ctx;
+  return esc(text)
+    .replace(/\{rt([1-8])\}/g, (_, n) => `<span class="rt" style="color:${RT[n][1]}">${RT[n][0]}</span>`)
+    .replace(/%t/g, esc(c.target))
+    .replace(/\{me\}/g, ME)
+    .replace(/\{key\}/g, c.key ? '+' + c.key : '')
+    .replace(/\{dungeon\}/g, esc(c.dungeon || ''));
+}
+function chatLineHTML(co) {
+  const r = resolve(co.ch);
+  const m = CH[r];
+  const body = bake(co.text);
+  let line;
+  if (r === 'SAY' || r === 'YELL') line = `[${ME}] ${m.pre} ${body}`;
+  else if (r === 'WHISPER') line = `${m.pre} [${esc(S.ctx.target)}]: ${body}`;
+  else line = `${m.pre} [${ME}]: ${body}`;
+  const via = S.ctx.lockdown ? 'secure macro · baked before combat' : 'direct send';
+  return `<span style="color:${m.color}">${line}</span><span class="via">${via}</span>`;
+}
+function sysLine(msg) { return `<span style="color:#ffff00"><span style="color:var(--qc)">[QC]</span> ${esc(msg)}</span>`; }
+function pushChat(html) {
+  document.querySelectorAll('.chatlog').forEach(log => {
+    log.querySelectorAll('.line').forEach(l => l.classList.add('old'));
+    const d = document.createElement('div'); d.className = 'line'; d.innerHTML = html; log.appendChild(d);
+    while (log.children.length > 6) log.firstElementChild.remove();
+  });
+}
+
+/* ---------- sending ---------- */
+const CD_MS = () => S.ctx.encounter ? 3000 : 1500;
+function send(co) {
+  const L = lockInfo(co);
+  if (L.locked) { pushChat(sysLine(L.why)); return false; }
+  const now = performance.now();
+  if (S.cd[co.id] && S.cd[co.id] > now) { pushChat(sysLine(`${co.name} is cooling down (${((S.cd[co.id]-now)/1000).toFixed(1)}s). Stops accidental spam.`)); return false; }
+  S.cd[co.id] = now + CD_MS();
+  pushChat(chatLineHTML(co));
+  setTimeout(() => { renderPad(); renderDial(); }, CD_MS() + 30);
+  return true;
+}
+
+/* ---------- top bar ---------- */
+function renderSim() {
+  document.getElementById('ctxBtns').innerHTML = CTX.map(c => `<button class="ctx" data-ctx="${c.id}" aria-pressed="${c === S.ctx}">${esc(c.label)}</button>`).join('');
+  document.getElementById('activeGroups').innerHTML = active(S.padOrder).map(g =>
+    `<span class="gchip" title="${esc(g.whenTxt)}"><span class="dot"></span>${esc(g.name)}${g.builtin ? '<span class="bi">Built-in</span>' : ''}</span>`).join('');
+  document.getElementById('lockState').innerHTML = S.ctx.lockdown
+    ? `<span class="lockchip" title="Addons can't send chat directly right now. Group callouts go through secure macro buttons.">${ICON('lock')}Chat lockdown · ${esc(S.ctx.lockWhy)}</span>`
+    : `<span class="lockchip off">Direct send available</span>`;
+}
+
+/* ---------- DIAL ---------- */
+const R = 150, R0 = 34, HUB = 27;
+const pol = (r, deg) => { const a = deg * Math.PI / 180; return [r * Math.sin(a), -r * Math.cos(a)]; };
+function dialLevel() {
+  const st = S.dial.stack;
+  if (st.length) return st[st.length - 1];
+  const groups = active(S.dialOrder);
+  if (S.dial.mode === 'cat') return {title:'Groups', items:groups.map(g => ({kind:'group', g})), page:0};
+  const seen = new Set(), items = [];
+  groups.forEach(g => g.items.forEach(id => { if (!seen.has(id)) { seen.add(id); items.push({kind:'item', id}); } }));
+  return {title:'Callouts', items, page:0, root:true};
+}
+function pageItems(level) {
+  const n = S.dial.slices, all = level.items;
+  if (all.length <= n) return {items:all, pages:1};
+  const per = n - 1, pages = Math.ceil(all.length / per), p = level.page % pages;
+  return {items:[...all.slice(p * per, p * per + per), {kind:'more', pages, p}], pages};
+}
+function itemMeta(it) {
+  if (it.kind === 'group') return {name:it.g.name, icon:it.g.icon, t:it.g.t, nest:true};
+  if (it.kind === 'more') return {name:`More (${it.p + 1}/${it.pages})`, icon:'more', t:'#55545e', nest:false};
+  const co = C[it.id];
+  return {name:co.name, icon:co.icon, t:co.t, nest:!!co.children, co};
+}
+function placeItems(items, n) {
+  // Arathi Basin: put node wedges on their compass direction when the ring has 6+ slices
+  const dirs = {N:0, NE:1, E:2, SE:3, S:4, SW:5, W:6, NW:7};
+  if (n >= 6 && items.length && items.every(it => it.kind === 'item' && C[it.id].dir)) {
+    const slot = new Array(n).fill(null);
+    const map6 = {N:0, NE:1, SE:2, S:3, SW:4, NW:5};
+    items.forEach(it => { const d = C[it.id].dir; const idx = n === 6 ? map6[d] : Math.round(dirs[d] * n / 8) % n; slot[idx] = it; });
+    return slot;
+  }
+  return items.concat(new Array(Math.max(0, n - items.length)).fill(null)).slice(0, n);
+}
+function renderDial() {
+  const svg = document.getElementById('dial');
+  const n = S.dial.slices, s = 360 / n;
+  const level = dialLevel();
+  const {items, pages} = pageItems(level);
+  const slots = placeItems(items, n);
+  S.dial._slots = slots;
+  const sel = S.dial.sel;
+  const now = performance.now();
+  let h = `<defs>
+    <radialGradient id="fade" cx="0" cy="0" r="215" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#000" stop-opacity=".72"/><stop offset=".62" stop-color="#000" stop-opacity=".5"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+    <radialGradient id="selg" cx="0" cy="0" r="${R+12}" gradientUnits="userSpaceOnUse"><stop offset=".18" stop-color="#ffcc33" stop-opacity=".05"/><stop offset=".6" stop-color="#ffc21a" stop-opacity=".42"/><stop offset="1" stop-color="#ffd44a" stop-opacity=".1"/></radialGradient>
+    <radialGradient id="hubg" cx="0" cy="0" r="${HUB}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#2a2a2e"/><stop offset="1" stop-color="#0c0c0e"/></radialGradient>
+  </defs>
+  <circle r="215" fill="url(#fade)"/>`;
+  // wedges
+  slots.forEach((it, i) => {
+    const a0 = i * s - s / 2, a1 = i * s + s / 2;
+    const [x0, y0] = pol(R0, a0), [x1, y1] = pol(R, a0), [x2, y2] = pol(R, a1), [x3, y3] = pol(R0, a1);
+    const large = s > 180 ? 1 : 0;
+    const d = `M${x0},${y0} L${x1},${y1} A${R},${R} 0 ${large} 1 ${x2},${y2} L${x3},${y3} A${R0},${R0} 0 ${large} 0 ${x0},${y0}Z`;
+    h += `<path d="${d}" fill="${i === sel && it ? 'url(#selg)' : 'rgba(0,0,0,0)'}" ${i === sel && it ? 'stroke="rgba(255,214,90,.55)" stroke-width="1.5"' : ''}/>`;
+  });
+  // spokes
+  for (let i = 0; i < n; i++) { const a = i * s - s / 2; const [x0, y0] = pol(R0 + 2, a), [x1, y1] = pol(R + 34, a); h += `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="rgba(255,255,255,.2)" stroke-width="1.6"/>`; }
+  // icons + labels
+  slots.forEach((it, i) => {
+    if (!it) return;
+    const m = itemMeta(it), on = i === sel;
+    const L = m.co && !m.co.children ? lockInfo(m.co) : {locked:false};
+    const [ix, iy] = pol(R * 0.64, i * s);
+    const sz = on ? 46 : 40;
+    const [lx, ly] = pol(R + 24, i * s);
+    const anchor = lx > 12 ? 'start' : lx < -12 ? 'end' : 'middle';
+    const dy = Math.abs(lx) <= 12 ? (ly < 0 ? -4 : 14) : 5;
+    const cdLeft = m.co && S.cd[m.co.id] ? S.cd[m.co.id] - now : 0;
+    h += `<g transform="translate(${ix},${iy})" opacity="${L.locked ? .45 : 1}">
+      <rect x="${-sz/2}" y="${-sz/2}" width="${sz}" height="${sz}" rx="3" fill="${m.t}" stroke="#000" stroke-width="1.5" ${L.locked ? 'filter="grayscale(1)"' : ''}/>
+      <rect x="${-sz/2+1.5}" y="${-sz/2+1.5}" width="${sz-3}" height="${sz/2}" fill="#fff" opacity=".14"/>
+      <svg x="${-sz*0.33}" y="${-sz*0.33}" width="${sz*0.66}" height="${sz*0.66}" viewBox="0 0 24 24" color="#fff"><use href="#i-${m.icon}"/></svg>
+      ${cdLeft > 0 ? `<circle r="${sz/2+4}" fill="none" stroke="#ffd100" stroke-width="2.5" pathLength="100" stroke-dasharray="100" transform="rotate(-90)" style="animation:dash ${cdLeft}ms linear forwards"/>` : ''}
+    </g>`;
+    if (L.locked) { const [kx, ky] = pol(R * 0.64, i * s); h += `<svg x="${kx+8}" y="${ky+6}" width="16" height="16" viewBox="0 0 24 24" color="#ffb84a"><use href="#i-lock"/></svg>`; }
+    h += `<text x="${lx}" y="${ly + dy}" text-anchor="${anchor}" font-size="${on ? 17 : 15.5}" fill="${L.locked ? '#9a978f' : '#fff'}" stroke="#000" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">${esc(m.name.length > 18 ? m.name.slice(0, 17) + '…' : m.name)}${m.nest ? ' ›' : ''}</text>`;
+  });
+  // pointer
+  if (sel >= 0 && slots[sel]) { const a = sel * s; const [tx, ty] = pol(HUB + 9, a), [bx1, by1] = pol(HUB + 3, a - 9), [bx2, by2] = pol(HUB + 3, a + 9); h += `<path d="M${tx},${ty} L${bx1},${by1} L${bx2},${by2}Z" fill="#ffd100"/>`; }
+  // hub
+  const nested = S.dial.stack.length > 0;
+  h += `<circle r="${HUB}" fill="url(#hubg)" stroke="${sel === -2 ? '#ffe680' : '#b8952a'}" stroke-width="2.5"/>`;
+  h += nested
+    ? `<path d="M7,-6 H-4 M-4,-6 l5,-5 M-4,-6 l5,5 M-4,-6 H3 a6,6 0 0 1 0,12 H-6" fill="none" stroke="#ffd100" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" transform="translate(1,1)"/>`
+    : `<path d="M-8,-8 L8,8 M8,-8 L-8,8" stroke="#e0302a" stroke-width="4" stroke-linecap="round"/>`;
+  if (S.ctx.lockdown) h += `<g transform="translate(0,${R + 62})"><rect x="-58" y="-11" width="116" height="20" fill="rgba(0,0,0,.55)" stroke="rgba(255,184,74,.6)"/><text y="4" text-anchor="middle" font-size="11" letter-spacing="1.5" fill="#ffb84a">SECURE · LOCKDOWN</text></g>`;
+  if (pages > 1) { const p = level.page % pages; for (let k = 0; k < pages; k++) h += `<circle cx="${(k - (pages - 1) / 2) * 12}" cy="${-R - 52}" r="3.5" fill="${k === p ? '#ffd100' : 'rgba(255,255,255,.35)'}"/>`; }
+  svg.innerHTML = h;
+  // caption
+  const cap = document.getElementById('dialCaption');
+  const crumbs = ['Root', ...S.dial.stack.map(l => l.title)].join(' › ');
+  let msg;
+  if (sel >= 0 && slots[sel]) {
+    const it = slots[sel], m = itemMeta(it);
+    if (it.kind === 'more') msg = `<b>More</b>: next page (or scroll the mouse wheel)`;
+    else if (m.nest) msg = `<b>${esc(m.name)}</b>: opens a sub-ring${S.dial.mode === 'cat' && S.dial.stack.length >= 1 ? ' · <span style="color:#ffb84a">3 levels deep, the editor warns about this</span>' : ''}`;
+    else { const L = lockInfo(m.co), r = resolve(m.co.ch); msg = L.locked ? `<span style="color:#ffb84a">${esc(L.why)}</span>` : `Sends to <b style="color:${CH[r].color}">${CH[r].label}</b>: ${bake(m.co.text)}${L.why ? `<br><span style="color:#ffb84a">${esc(L.why)}</span>` : ''}`; }
+  } else if (sel === -2) msg = nested ? '<b>Back</b> to the previous ring' : '<b>Cancel</b>: release here to send nothing';
+  else msg = `<span style="opacity:.75">${crumbs} · move the pointer over a wedge, click to send</span>`;
+  cap.innerHTML = msg;
+}
+const dash = document.createElement('style'); dash.textContent = '@keyframes dash{from{stroke-dashoffset:0}to{stroke-dashoffset:100}}'; document.head.appendChild(dash);
+
+function dialPick(e) {
+  const svg = document.getElementById('dial'), r = svg.getBoundingClientRect();
+  const k = 520 / r.width;
+  const dx = (e.clientX - r.left) * k - 260, dy = (e.clientY - r.top) * k - 230;
+  const dist = Math.hypot(dx, dy);
+  if (dist < HUB + 4) return -2;
+  if (dist > 250) return -1;
+  const s = 360 / S.dial.slices;
+  let ang = Math.atan2(dx, -dy) * 180 / Math.PI; if (ang < 0) ang += 360;
+  return Math.round(ang / s) % S.dial.slices;
+}
+function dialActivate(i) {
+  const it = S.dial._slots[i];
+  const lvl = dialLevel();
+  if (i === -2) { if (S.dial.stack.length) S.dial.stack.pop(); else pushChat(sysLine('Dial cancelled. Nothing sent.')); S.dial.sel = -1; renderDial(); return; }
+  if (!it) return;
+  if (it.kind === 'more') { lvl.page = (lvl.page || 0) + 1; renderDial(); return; }
+  if (it.kind === 'group') { S.dial.stack.push({title:it.g.name, items:it.g.items.map(id => ({kind:'item', id})), page:0}); S.dial.sel = -1; renderDial(); return; }
+  const co = C[it.id];
+  if (co.children) { S.dial.stack.push({title:co.name, items:co.children.map(id => ({kind:'item', id})), page:0}); S.dial.sel = -1; renderDial(); return; }
+  if (send(co)) { S.dial.stack = []; }
+  S.dial.sel = -1; renderDial(); renderPad();
+}
+function bindDial() {
+  const svg = document.getElementById('dial');
+  svg.addEventListener('pointermove', e => { const i = dialPick(e); if (i !== S.dial.sel) { S.dial.sel = i; renderDial(); } });
+  svg.addEventListener('pointerleave', () => { S.dial.sel = -1; renderDial(); });
+  svg.addEventListener('click', e => dialActivate(dialPick(e)));
+  svg.addEventListener('wheel', e => { const lvl = dialLevel(); if (pageItems(lvl).pages > 1) { e.preventDefault(); lvl.page = (lvl.page || 0) + (e.deltaY > 0 ? 1 : -1 + pageItems(lvl).pages); renderDial(); } }, {passive:false});
+  svg.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { e.preventDefault(); dialActivate(-2); return; }
+    const n = parseInt(e.key, 10);
+    if (n >= 1 && n <= S.dial.slices) { e.preventDefault(); S.dial.sel = n - 1; renderDial(); setTimeout(() => dialActivate(n - 1), 140); }
+  });
+}
+
+/* ---------- PAD ---------- */
+function chipHTML(co) {
+  const L = lockInfo(co), now = performance.now(), left = S.cd[co.id] ? S.cd[co.id] - now : 0;
+  const r = resolve(co.ch);
+  const tip = L.locked ? L.why : `${r ? CH[r].label : ''}: ${co.text}${L.why ? ' · ' + L.why : ''}`;
+  return `<button class="chip${L.locked ? ' locked' : ''}" data-send="${co.id}" title="${esc(co.name + ' · ' + tip)}" aria-disabled="${L.locked}">
+    <span class="tile" style="--t:${co.t}">${ICON(co.icon)}</span><span class="lbl">${esc(co.name)}</span>${tagHTML(co)}
+    ${L.locked ? ICON('lock', 'lk') : ''}${left > 0 ? `<span class="cd" style="--d:${left}ms"></span>` : ''}</button>`;
+}
+function flatItems(g) { return g.items.flatMap(id => C[id].children ? [] : [C[id]]); }
+function padGroupsForDisplay() {
+  return active(S.padOrder).map(g => {
+    if (g.id === 'ab') return {...g, list: abIds.filter(id => C[id].name !== 'General').map(id => C[`${id}-inc2`]).concat([C['pvp-help']])};
+    return {...g, list: flatItems(g)};
+  });
+}
+function renderPad() {
+  const p = S.pad, el = document.getElementById('pad');
+  el.className = `pad ${p.orient}${p.style === 'icon' ? ' icon' : ''}`;
+  const groups = padGroupsForDisplay();
+  if (p.tab >= groups.length) p.tab = 0;
+  const why = groups.map(g => `${g.name}: ${g.whenTxt}`).join('\n');
+  let h = `<div class="pad-head"><span class="grip" title="Drag (when unlocked)"></span><span class="pad-title">Quick Comms</span>
+    <span class="sitchip" title="${esc('Why these groups?\n' + why)}">${esc(S.ctx.where)}</span>
+    ${S.ctx.lockdown ? `<span class="lockchip" title="Group channels send via secure macro buttons.">${ICON('lock')}Lockdown</span>` : ''}
+    <span class="spacer"></span>
+    <button class="hbtn" title="Open settings" data-goto="pad">${ICON('gear')}</button><button class="hbtn" title="Lock / unlock">${ICON('lock')}</button><button class="hbtn" title="Collapse">${ICON('min')}</button></div>`;
+  if (p.groups === 'tabs') {
+    h += `<div class="pad-tabs" role="tablist">${groups.map((g, i) => `<button data-ptab="${i}" aria-pressed="${i === p.tab}">${esc(g.name)}</button>`).join('')}</div>`;
+    const g = groups[p.tab];
+    h += `<div class="pad-body"><div class="sect"><div class="chips">${g.list.map(chipHTML).join('')}</div></div></div>`;
+  } else {
+    h += `<div class="pad-body">${groups.map(g => `<div class="sect"><div class="sect-label">${esc(g.name)}${g.builtin ? '<span class="bi">Built-in</span>' : ''}</div><div class="chips">${g.list.map(chipHTML).join('')}</div></div>`).join('')}</div>`;
+  }
+  h += `<div class="pad-foot"><span>${groups.length} groups active</span><span>${S.ctx.id === 'ab' ? 'AB nodes condensed to INC 2 here. The dial has the full INC sub-ring' : 'scroll over the pad to switch tabs'}</span></div>`;
+  el.innerHTML = h;
+}
+
+/* ---------- SETTINGS ---------- */
+const PAGES = [
+  {id:'landing', name:'Ka0s Quick Comms', parent:true},
+  {id:'general', name:'General', tabs:['Master controls','Behaviour']},
+  {id:'callouts', name:'Callouts', tabs:['Message','Extras']},
+  {id:'groups', name:'Groups', tabs:['Callouts','When','Preview']},
+  {id:'pad', name:'Comms Pad', tabs:['Groups','Layout','Look']},
+  {id:'dial', name:'Comms Dial', tabs:['Groups','Wheel','Binding']},
+  {id:'share', name:'Share & built-ins', tabs:['Built-in sets','Export / import']},
+  {id:'profiles', name:'Profiles', tabs:['Profiles']},
+];
+function renderCats() {
+  document.getElementById('cats').innerHTML = `<div class="grp">AddOns</div><div class="muted">BigWigs</div><div class="muted">Details!</div><div class="muted">Ka0s Drop Watcher</div><div class="muted">Ka0s Kick CD</div>` +
+    PAGES.map(p => `<button class="${p.parent ? 'parent' : ''}" data-page="${p.id}" aria-current="${S.set.page === p.id}">${p.parent ? '▾ ' : ''}${esc(p.name)}</button>`).join('') +
+    `<div class="muted">Ka0s Loot History</div><div class="muted">Ka0s Panel Master</div><div class="muted">OPie</div>`;
+}
+const cb = (on) => `<span class="cb${on ? ' on' : ''}"></span>`;
+const sel = (txt) => `<div class="select">${esc(txt)}</div>`;
+const slider = (pct, txt) => `<div class="slider"><i style="width:${pct}%"></i><b style="left:calc(${pct}% - 3px)"></b></div><span class="mono">${txt}</span>`;
+function rail(items, cur, key, top = '') {
+  return `<div class="rail"><div class="rail-top">${top || `<input class="input" placeholder="Search…" aria-label="Search">`}<button class="btn" title="New">+</button></div><div class="rail-list">${items}</div></div>`;
+}
+function renderCanvas() {
+  const st = S.set, page = PAGES.find(p => p.id === st.page);
+  const cv = document.getElementById('canvas');
+  if (page.parent) {
+    cv.innerHTML = `<div class="crumb">Ka0s Quick Comms</div>
+      <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap"><div class="tile" style="--t:#c9a227;width:96px;height:96px">${ICON('chat')}</div>
+      <div><p style="margin:0 0 6px;font-size:15px">Context-aware callouts on a pad or a ping-style dial.</p><p class="note" style="margin:0">Logo, TOC Notes tagline and the slash command list, as on every Ka0s landing page.</p></div></div>
+      <div class="sharebox" style="color:#cfcbd6;max-height:none">/qc · /quickcomms<br>/qc config · open settings<br>/qc pad show|hide · /qc dial bind G<br>/qc send &lt;callout&gt; · send by name (macro friendly)<br>/qc enable | disable | lock | unlock | test<br>/qc get | set | list | reset | resetall<br>/qc version | debug | diagnostics | perf</div>`;
+    return;
+  }
+  const tabs = `<div class="tabstrip" role="tablist">${page.tabs.map((t, i) => `<button data-tab="${i}" aria-pressed="${i === st.tab}">${esc(t)}</button>`).join('')}</div>`;
+  const crumb = `<div class="crumb">Ka0s Quick Comms <span>▸ ${esc(page.name)}</span></div>`;
+  let body = '';
+  if (page.id === 'general') {
+    body = st.tab === 0 ? `<div class="mc">
+      <div class="row">${cb(true)}<span>Enable Quick Comms</span></div><div class="field"><span class="flabel">General visibility</span>${sel('Always')}</div>
+      <div class="row"><span class="flabel" style="width:90px">Master scale</span>${slider(50, '100%')}</div><div class="row"><span class="flabel" style="width:90px">Master alpha</span>${slider(90, '90%')}</div>
+      <div class="row">${cb(true)}<span>Lock frames</span></div><div class="row">${cb(false)}<span>Debug console</span></div>
+      <div class="row">${cb(true)}<span>Minimap button</span></div><div class="row">${cb(false)}<span>Test mode</span></div>
+      <div class="row"><button class="btn ghost">Reset position</button></div><div class="row"><button class="btn ghost">Reset all settings</button></div></div>
+      <p class="note">Standard Ka0s Master controls, in the standard row order.</p>`
+    : `<div class="grid2">
+      <div class="field"><span class="flabel">Solo fallback for smart channels</span>${sel('Do nothing')}<span class="note">Other options: print to self, Say. Never Say by default.</span></div>
+      <div class="field"><span class="flabel">Default cooldown per callout</span><div class="row" style="display:flex;gap:10px;align-items:center">${slider(30, '1.5 s')}</div></div>
+      <div class="row" style="display:flex;gap:8px">${cb(true)}<span>Confirm Raid warning and Yell (second click)</span></div>
+      <div class="row" style="display:flex;gap:8px">${cb(true)}<span>Show lockdown chip on pad and dial</span></div>
+      <div class="row" style="display:flex;gap:8px">${cb(false)}<span>Play a sound on send</span></div>
+      <div class="row" style="display:flex;gap:8px">${cb(true)}<span>Show "Why is this showing?" in tooltips</span></div></div>`;
+  }
+  if (page.id === 'callouts') {
+    const cur = C[st.sel.callouts];
+    const items = Object.values(C).filter(c => !c.children && !c.id.startsWith('ab-')).map(c =>
+      `<button class="rail-item" data-csel="${c.id}" aria-current="${c.id === cur.id}"><span class="tile" style="--t:${c.t}">${ICON(c.icon)}</span><span class="nm">${esc(c.name)}</span>${tagHTML(c, 'tagc')}</button>`).join('');
+    const usedIn = G.filter(g => g.items.includes(cur.id)).map(g => g.name).join(', ') || 'no group yet';
+    const ed = st.tab === 0 ? `<div class="grid2">
+        <div class="field"><label for="cName">Name</label><input id="cName" class="input" value="${esc(cur.name)}"></div>
+        <div class="field"><span class="flabel">Icon</span><div style="display:flex;gap:8px;align-items:center"><span class="tile" style="--t:${cur.t};width:34px;height:34px">${ICON(cur.icon)}</span><button class="btn ghost">Choose icon…</button></div></div>
+        <div class="field"><span class="flabel">Channel</span>${sel(CH[cur.ch].label + (cur.ch === 'SMART' ? ' (instance › raid › party)' : cur.ch === 'LEAD' ? ' (RW if lead/assist)' : ''))}</div>
+        <div class="field"><span class="flabel">Used in</span><div class="note" style="padding-top:6px">${esc(usedIn)}</div></div>
+      </div>
+      <div class="field"><label for="cText">Message</label><textarea id="cText" class="input" maxlength="255">${esc(cur.text)}</textarea>
+        <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><div class="tokens">${['{target}','{focus}','{rt1}','{rt3}','{rt8}','{me}','{key}','{dungeon}','{spell:…}'].map(t => `<button class="tok" data-tok="${t}">${t}</button>`).join('')}</div><span class="counter" id="cCount"></span></div></div>
+      <div class="field"><span class="flabel">Preview · ${esc(S.ctx.where)}</span><div class="preview" id="cPrev"></div></div>
+      <p class="note"><b>{target}</b> becomes <span class="mono">%t</span>, which the game fills in at send time, so it works during lockdown. <b>{key}</b> and <b>{dungeon}</b> are filled in by the addon before combat.</p>`
+    : `<div class="grid2">
+        <div class="field"><span class="flabel">Variants (picked at random)</span><textarea class="input" style="min-height:90px">${esc(cur.text)}\n${esc(cur.text.replace(/!|\./, '!!'))}</textarea></div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;gap:8px">${cb(cur.ch === 'LEAD')}<span>Confirm before sending</span></div>
+          <div class="field"><span class="flabel">Cooldown</span><div style="display:flex;gap:10px;align-items:center">${slider(30, 'default')}</div></div>
+          <div class="field"><span class="flabel">Also mark target</span>${sel(cur.text.includes('{rt8}') ? 'Skull ☠' : 'None')}</div>
+          <div class="field"><span class="flabel">Direct keybind</span>${sel('Not bound')}</div>
+        </div></div>`;
+    body = `<div class="editor">${rail(items)}<div style="display:flex;flex-direction:column;gap:12px;min-width:0">${ed}</div></div>`;
+  }
+  if (page.id === 'groups') {
+    const cur = GBY[st.sel.groups];
+    const isActive = cur.when(S.ctx);
+    const items = `<div class="rail-sec">Your groups</div>` + G.filter(g => !g.builtin).map(gi).join('') + `<div class="rail-sec">Built-in</div>` + G.filter(g => g.builtin).map(gi).join('');
+    function gi(g) { return `<button class="rail-item" data-gsel="${g.id}" aria-current="${g.id === cur.id}"><span class="dot${g.when(S.ctx) ? '' : ' off'}" title="${g.when(S.ctx) ? 'Active now' : 'Not active now'}"></span><span class="tile" style="--t:${g.t}">${ICON(g.icon)}</span><span class="nm">${esc(g.name)}</span><span class="meta">${g.items.length}</span></button>`; }
+    let ed = cur.builtin ? `<div class="banner"><span><b>Built-in set.</b> Read-only, and updated with the addon. Hide single callouts with the checkboxes, or make your own copy.</span><button class="btn">Customize</button></div>` : '';
+    if (st.tab === 0) {
+      ed += `<div class="reorder">${cur.items.map((id, i) => { const c = C[id]; return `<div class="ro"><span class="handle">⋮⋮</span><span class="n">${i + 1}</span><span class="tile" style="--t:${c.t}">${ICON(c.icon)}</span><span class="nm">${esc(c.name)}${c.children ? ' ›' : ''}</span><span class="txt">${c.children ? 'sub-ring: ' + c.children.length + ' callouts' : esc(c.text)}</span>${c.children ? '' : tagHTML(c, 'tagc')}<span class="act">${cur.builtin ? cb(true) : '<button title="Up">▲</button><button title="Down">▼</button><button title="Remove">✕</button>'}</span></div>`; }).join('')}</div>
+        ${cur.builtin ? '' : `<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost">Add callout from library…</button><button class="btn ghost">New callout</button></div>`}
+        <p class="note">Order matters: the first callout takes the top wedge and is what a <b>tap</b> on the dial key sends.</p>`;
+    } else if (st.tab === 1) {
+      const rowsFor = {
+        ab:[['Content',['Battleground'],1],['Battleground',['Arathi Basin'],1]],
+        wrs:[['Content',['Mythic+','Dungeon'],1],['Dungeon',['Windrunner Spire'],1]],
+        mplus:[['Content',['Mythic+'],1]],
+        raid:[['Content',['Raid'],1]],
+        arena:[['Content',['Arena'],1]],
+        pvp:[['Content',['Battleground'],1]],
+        lock:[['Class',['Warlock'],1]],
+        world:[['Content',['Open world'],1]],
+        ess:[],
+      }[cur.id];
+      const all = [['Content',['Open world','Dungeon','Mythic+','Raid','Delve','Battleground','Arena','Housing']],['Dungeon',['Windrunner Spire','Pit of Saron','Magisters\' Terrace','+ search…']],['Battleground',['Arathi Basin','Warsong Gulch','Eye of the Storm','+ search…']],['Difficulty',['Normal','Heroic','Mythic','Keystone 10+']],['Group',['Solo','Party','Raid','Instance group']],['You are',['Leader','Assist']],['Class',['Warlock','Mage','Priest','…']],['Role',['Tank','Healer','Damage']],['Character',['Ka0smage-Ravencrest','…']],['Combat',['In combat','Out of combat']],['Lockdown',['Active','Inactive']]];
+      ed += `<div>${all.map(([label, vals]) => { const r = rowsFor.find(x => x[0] === label); return `<div class="cond${r ? '' : ' off'}">${cb(!!r)}<span class="cl">${label}</span><div class="vals">${vals.map(v => `<span class="v${r && r[1].includes(v) ? ' on' : ''}">${esc(v)}</span>`).join('')}</div></div>`; }).join('')}</div>
+        <div class="why${isActive ? '' : ' no'}"><b>${isActive ? 'Active now' : 'Not active now'}</b> while previewing <i>${esc(S.ctx.label)}</i>: ${esc(cur.whenTxt)} ${isActive ? '✓' : '✗'}</div>
+        <p class="note">Rows are combined with AND; the highlighted values within a row are OR. ${cur.id === 'ess' ? 'No rows ticked means <b>Always</b>.' : ''}</p>`;
+    } else {
+      ed += `<div class="why${isActive ? '' : ' no'}">${isActive ? 'This group is active in the current preview situation. It shows on the pad and dial above.' : 'Pick a situation at the top where this group applies to preview it.'}</div>
+        <div class="chips" style="display:flex;flex-wrap:wrap;gap:5px">${flatItems(cur).map(chipHTML).join('') || '<span class="note">This group is all sub-rings. Preview it on the dial.</span>'}</div>`;
+    }
+    body = `<div class="editor">${rail(items)}<div style="display:flex;flex-direction:column;gap:12px;min-width:0">${ed}</div></div>`;
+  }
+  if (page.id === 'pad' || page.id === 'dial') {
+    const isPad = page.id === 'pad';
+    const order = isPad ? S.padOrder : S.dialOrder;
+    const items = isPad
+      ? `<button class="rail-item" aria-current="true"><span class="tile" style="--t:#55545e">${ICON('pad')}</span><span class="nm">Main pad</span><span class="meta">9</span></button><button class="rail-item"><span class="tile" style="--t:#b0402a">${ICON('skull')}</span><span class="nm">Raid lead pad</span><span class="meta">3</span></button>`
+      : `<button class="rail-item" aria-current="true"><span class="tile" style="--t:#c9a227">${ICON('chat')}</span><span class="nm">Callouts</span><span class="meta mono">G</span></button><button class="rail-item"><span class="tile" style="--t:#c9402a">${ICON('target')}</span><span class="nm">Marks + kicks</span><span class="meta mono">⇧G</span></button>`;
+    let ed = '';
+    if (st.tab === 0) {
+      ed = `<div class="reorder">${order.map((id, i) => { const g = GBY[id]; const on = g.when(S.ctx); return `<div class="ro${on ? '' : ' off'}"><span class="handle">⋮⋮</span><span class="n">${i + 1}</span><span class="tile" style="--t:${g.t}">${ICON(g.icon)}</span><span class="nm">${esc(g.name)}</span><span class="txt">${esc(g.whenTxt)}${on ? ' · active now' : ''}</span><span class="act"><button title="Up">▲</button><button title="Down">▼</button>${cb(true)}</span></div>`; }).join('')}</div>
+        <div style="display:flex;gap:8px;align-items:center">${cb(false)}<span class="note">Auto-promote specific groups (a dungeon or battleground group floats above generic ones)</span></div>
+        <p class="note">Priority list for <b>this ${isPad ? 'pad' : 'dial'}</b>. Every group whose situation matches is shown, in this order; inactive groups are dimmed.</p>`;
+    } else if (isPad && st.tab === 1) {
+      ed = `<div class="grid2"><div class="field"><span class="flabel">Orientation</span><div class="seg"><button aria-pressed="${S.pad.orient === 'h'}">Horizontal</button><button aria-pressed="${S.pad.orient === 'v'}">Vertical</button><button aria-pressed="${S.pad.orient === 'g'}">Grid</button></div></div>
+        <div class="field"><span class="flabel">Grow from anchor</span>${sel('Right, then down')}</div>
+        <div class="field"><span class="flabel">Button style</span>${sel(S.pad.style === 'icon' ? 'Icon only' : 'Icon + label')}</div>
+        <div class="field"><span class="flabel">Groups shown as</span>${sel(S.pad.groups === 'tabs' ? 'Tabs' : 'Sections')}</div>
+        <div class="field"><span class="flabel">Grid columns</span><div style="display:flex;gap:10px;align-items:center">${slider(40, '3')}</div></div>
+        <div class="field"><span class="flabel">Button width</span><div style="display:flex;gap:10px;align-items:center">${slider(55, '130 px')}</div></div></div>
+        <p class="note">These match the Layout, Style and Groups toggles on the pad preview above.</p>`;
+    } else if (isPad) {
+      ed = `<div class="grid2"><div class="field"><span class="flabel">Visibility</span>${sel('Only when a group is active')}</div><div class="field"><span class="flabel">Fade when idle</span><div style="display:flex;gap:10px;align-items:center">${slider(40, '40%')}</div></div>
+        <div class="field"><span class="flabel">Font</span>${sel('Barlow Semi Condensed (LSM)')}</div><div class="field"><span class="flabel">Accent</span><div style="display:flex;gap:8px;align-items:center"><span class="tile" style="--t:#ffd100;width:22px;height:22px"></span>${cb(false)}<span class="note">Use class colour</span></div></div>
+        <div style="display:flex;gap:8px">${cb(true)}<span>Show channel tags</span></div><div style="display:flex;gap:8px">${cb(true)}<span>Show cooldown sweep</span></div></div>`;
+    } else if (st.tab === 1) {
+      const n = S.dial.slices;
+      ed = `<div class="mini-dial">${miniDial(n)}<div style="display:flex;flex-direction:column;gap:10px;min-width:0;flex:1">
+        <div class="field"><span class="flabel">Slices per ring</span><div class="seg">${[4,6,8,12].map(k => `<button data-slices="${k}" aria-pressed="${k === n}">${k}</button>`).join('')}</div></div>
+        <div class="field"><span class="flabel">Mode</span><div class="seg"><button data-dmode="flat" aria-pressed="${S.dial.mode === 'flat'}">Flat</button><button data-dmode="cat" aria-pressed="${S.dial.mode === 'cat'}">Categories</button></div></div>
+        ${n === 12 ? '<div class="warnline">12 slices: allowed only when no wedge opens a sub-ring.</div>' : n === 8 ? '<div class="note">8 is the recommended maximum for use in combat.</div>' : ''}
+        ${S.dial.mode === 'cat' ? '<div class="warnline">Categories + Arathi Basin nodes = 3 levels deep. Hard to use under pressure.</div>' : ''}
+        </div></div>
+        <div class="grid2"><div class="field"><span class="flabel">Open at</span>${sel('Cursor')}</div><div class="field"><span class="flabel">Draw delay (flick without seeing it)</span><div style="display:flex;gap:10px;align-items:center">${slider(30, '300 ms')}</div></div>
+        <div class="field"><span class="flabel">Scale</span><div style="display:flex;gap:10px;align-items:center">${slider(50, '100%')}</div></div><div class="field"><span class="flabel">Overflow</span>${sel('Pages (mouse wheel)')}</div></div>`;
+    } else {
+      ed = `<div class="grid2"><div class="field"><span class="flabel">Key</span><div class="select mono">G</div></div><div class="field"><span class="flabel">Style</span>${sel('Quick: hold, flick, release')}</div>
+        <div class="field"><span class="flabel">Tap without moving</span>${sel('Send first callout')}</div><div class="field"><span class="flabel">Gamepad</span>${sel('Right stick + RB (pages)')}</div></div>
+        <p class="note">The key is bound out of combat and stays bound through combat. While the dial is open, a secure handler grabs mouse buttons and the wheel, the same way OPie does.</p>`;
+    }
+    body = `<div class="editor">${rail(items)}<div style="display:flex;flex-direction:column;gap:12px;min-width:0">${ed}</div></div>`;
+  }
+  if (page.id === 'share') {
+    body = st.tab === 0 ? `<p class="note">Built-in sets ship with the addon and switch on by situation. Turn them off here, or use <b>Customize</b> to get an editable copy.</p>
+      <div class="packs">${[['Mythic+ (generic)','Any Mythic+ key · 6 callouts',1],['Raid (generic)','Any raid · 6 callouts',1],['Arena (generic)','Skirmish, rated, Solo Shuffle · 6',1],['Battleground (generic)','Any battleground · 4',1],['Arathi Basin','Node dial · 5 nodes × 6',1],['Warsong Gulch','Flag calls · 6',1],['Twin Peaks','Flag calls · 6',1],['Eye of the Storm','Nodes + flag · 4 × 6',1],['Battle for Gilneas','Node dial · 3 × 6',1],['Silvershard Mines','Carts · 6',1],['Temple of Kotmogu','Orbs · 6',1],['Deepwind Gorge','Nodes + carts · 6',1],['Seething Shore','Azerite · 6',0],['Deephaul Ravine','Objectives · 6',1],['Alterac Valley','Epic · towers, bosses',1],['Isle of Conquest','Epic · nodes, gates',1],['Ashran','Epic · road calls',0],['Wintergrasp','Epic · siege calls',0]].map(([n, d, on]) =>
+        `<div class="pack">${cb(!!on)}<span class="nm">${esc(n)}<small>${esc(d)}</small></span></div>`).join('')}</div>`
+    : `<div class="field"><span class="flabel">Export · Windrunner Spire group (example string)</span><div class="sharebox">!QC1!nVJdb9owFP0rVp4dJ3ESAuUJrdqkTpq0VZs2rQ+X+JZYOHZkO1BU8d93nRS2vk1Ksn2Pzz0+59wyR7J9FyW7Xr8MvpxPFKe8Z6iTjX1E7qObUGsJXk9z0mI+IMH12x3Z0EF4zEuHuV4h3a6E1cgu0f2dByrXbBwQmXx3aHLHLDN5i+QVm6ICqpu6YQkHzzHxs10bu3sk9V6sQ2IQnxFsFgO1jHxIK5HHLv9Lg8M2cNNLNRhAacbIX3Hi20q5D9tzQRpY7FxYN9Wjk8tnpJ5ZQOh2Yu+Zx0FBgaDFkaobd2dZ2+N12qe5NVQpL5Xu0HoKPN7qD0m6O2Plfp+M4Ju3HO2yQr1ZH6TF8foVNvLrTSWvpx3HcbmMu7YHtKozlNtEvxvP8hNDQumLyDwcaXlE6QkKq4pBzbzQXnZ4bF5TF0R0EOrBgtyzUq3Pxj9oHQOy08A1t0Wk9i/ejpOPRvSrM+SZNVgjMk8ra2QeRK4hR4qUTgmB+sjRbIyX5lB72+N70FxOhb05dB45kvt8djyXGNM7ufqJnDvCs92PzNRAjRhQ6LVRL+fpoNgTXzkU6IKkmQ1D41xmRlrapq9lv81wQ79nIt6VDAJkNZh0lPJqyeK8YHlBe2uV2O8qfqZ9KmL0jIvwZ0w99nAjxnF/BVR92UkRqfY1z5lW/1oRVK/v3kpuUHaWb+oN6jrrGl2V1D9/UPX8+5dn66/AE=</div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn">Copy</button><button class="btn ghost">Export everything</button><button class="btn ghost">Import string…</button></div>
+      <p class="note">LibSerialize + LibDeflate strings in the Ka0s <b>CopyWindow</b>. Importing a group also brings in its callouts and situation rules.</p>`;
+  }
+  if (page.id === 'profiles') body = `<p class="note">The standard AceDBOptions Profiles page. A profile holds every callout, group, pad and dial, so one profile can serve all your characters. The <b>Class</b> and <b>Character</b> situations handle what differs between them.</p>`;
+  cv.innerHTML = crumb + tabs + body;
+  if (page.id === 'callouts' && st.tab === 0) wireCalloutEditor();
+}
+function miniDial(n) {
+  let h = `<svg viewBox="-90 -90 180 180" aria-hidden="true"><circle r="88" fill="rgba(0,0,0,.6)"/>`;
+  const s = 360 / n;
+  for (let i = 0; i < n; i++) { const [x0, y0] = pol(18, i * s - s / 2), [x1, y1] = pol(80, i * s - s / 2); h += `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="rgba(255,255,255,.25)"/>`; const [cx, cy] = pol(52, i * s); h += `<rect x="${cx - 8}" y="${cy - 8}" width="16" height="16" fill="${i % 4 === 0 ? '#ffd100' : '#55545e'}" opacity="${i % 4 === 0 ? 1 : .8}"/>`; }
+  return h + `<circle r="14" fill="#111" stroke="#b8952a" stroke-width="2"/></svg>`;
+}
+function wireCalloutEditor() {
+  const ta = document.getElementById('cText'), cnt = document.getElementById('cCount'), prev = document.getElementById('cPrev');
+  const cur = C[S.set.sel.callouts];
+  const upd = () => {
+    const raw = ta.value.replace(/\{target\}/g, '%t').replace(/\{focus\}/g, 'Focus');
+    const len = raw.length;
+    cnt.textContent = `${len} / 255`; cnt.classList.toggle('warn', len > 200);
+    const L = lockInfo(cur);
+    prev.innerHTML = L.locked ? sysLine(L.why) : chatLineHTML({...cur, text: raw});
+  };
+  ta.addEventListener('input', upd);
+  document.querySelectorAll('[data-tok]').forEach(b => b.addEventListener('click', () => {
+    const t = b.dataset.tok, p = ta.selectionStart ?? ta.value.length;
+    ta.value = ta.value.slice(0, p) + t + ta.value.slice(ta.selectionEnd ?? p); ta.focus(); upd();
+  }));
+  upd();
+}
+
+/* ---------- wiring ---------- */
+function setPressed(sel, val, attr) { document.querySelectorAll(sel).forEach(b => b.setAttribute('aria-pressed', String(b.dataset[attr] === String(val)))); }
+function renderAll() {
+  renderSim(); renderDial(); renderPad(); renderCats(); renderCanvas();
+  setPressed('.stage [data-dmode]', S.dial.mode, 'dmode');
+  setPressed('.stage [data-slices]', S.dial.slices, 'slices');
+  setPressed('[data-orient]', S.pad.orient, 'orient');
+  setPressed('[data-pstyle]', S.pad.style, 'pstyle');
+  setPressed('[data-pgroups]', S.pad.groups, 'pgroups');
+}
+document.addEventListener('click', e => {
+  const t = e.target.closest('button,[data-send]'); if (!t) return;
+  const d = t.dataset;
+  if (d.ctx) { S.ctx = CTX.find(c => c.id === d.ctx); S.dial.stack = []; S.dial.sel = -1;
+    if (S.ctx.id === 'ab' && S.dial.slices < 6) { S.dial.slices = 6; pushChat(sysLine('Arathi Basin set is laid out for 6 slices (nodes on their map direction). Dial switched to 6.')); }
+    pushChat(sysLine(`Situation changed: ${S.ctx.where}. ${active(S.padOrder).length} groups active.`)); renderAll(); return; }
+  if (d.dmode) { S.dial.mode = d.dmode; S.dial.stack = []; renderAll(); return; }
+  if (d.slices) { S.dial.slices = +d.slices; S.dial.stack = []; renderAll(); return; }
+  if (d.orient) { S.pad.orient = d.orient; renderAll(); return; }
+  if (d.pstyle) { S.pad.style = d.pstyle; renderAll(); return; }
+  if (d.pgroups) { S.pad.groups = d.pgroups; renderAll(); return; }
+  if (d.ptab) { S.pad.tab = +d.ptab; renderPad(); return; }
+  if (d.send) { const co = C[d.send]; if (send(co)) { renderPad(); t.closest('.canvas') && renderCanvas(); const nb = document.querySelector(`#pad [data-send="${co.id}"]`); nb && nb.classList.add('flash'); renderDial(); } return; }
+  if (d.page) { S.set.page = d.page; S.set.tab = 0; renderCats(); renderCanvas(); return; }
+  if (d.goto) { S.set.page = d.goto; S.set.tab = 0; renderCats(); renderCanvas(); document.getElementById('setH').scrollIntoView({behavior:'smooth'}); return; }
+  if (d.tab) { S.set.tab = +d.tab; renderCanvas(); return; }
+  if (d.csel) { S.set.sel.callouts = d.csel; renderCanvas(); return; }
+  if (d.gsel) { S.set.sel.groups = d.gsel; renderCanvas(); return; }
+});
+document.getElementById('pad').addEventListener('wheel', e => {
+  if (S.pad.groups !== 'tabs') return; e.preventDefault();
+  const n = padGroupsForDisplay().length; S.pad.tab = (S.pad.tab + (e.deltaY > 0 ? 1 : n - 1)) % n; renderPad();
+}, {passive:false});
+
+bindDial();
+renderAll();
+pushChat(sysLine('Quick Comms loaded. Preview: ' + S.ctx.where + '.'));
+})();
+</script>
+</body>
+</html>
