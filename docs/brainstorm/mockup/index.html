@@ -314,15 +314,16 @@ footer a{color:var(--muted)}
   <div class="stage-head">
     <div>
       <h2 id="dialH"><small>Surface 1</small>Comms Dial</h2>
-      <p>Modelled on Blizzard's ping wheel. Hold the key, flick toward a wedge, release to send; release on the centre to cancel. Wedges marked › open a sub-ring. Mouse wheel changes page.</p>
+      <p>Modelled on Blizzard's ping wheel. Hold the key, flick toward a wedge, release to send; release on the centre to cancel. Default mode is <b>Categories</b>: groups on the first ring, callouts in the sub-ring (›). Try <i>Arathi Basin</i> to compare <b>Open into</b> and <b>Nest</b> for battleground sets.</p>
     </div>
     <div class="controls">
       <div class="seg" role="group" aria-label="Dial mode"><span>Mode</span><button data-dmode="flat">Flat</button><button data-dmode="cat">Categories</button></div>
+      <div class="seg" role="group" aria-label="Open into top group"><span>BG sets</span><button data-autoopen="1">Open into</button><button data-autoopen="0">Nest</button></div>
       <div class="seg" role="group" aria-label="Slices"><span>Slices</span><button data-slices="4">4</button><button data-slices="6">6</button><button data-slices="8">8</button></div>
     </div>
   </div>
   <div class="scene stone" id="dialScene">
-    <div class="scene-note">In game · dial opens at cursor</div>
+    <div class="scene-note">In game · dial opens at screen centre (option: at cursor)</div>
     <div class="dial-wrap">
       <svg class="dial" id="dial" viewBox="-260 -230 520 460" tabindex="0" role="application" aria-label="Comms dial. Number keys select a wedge, Escape goes back."></svg>
       <div class="dial-caption" id="dialCaption"></div>
@@ -341,7 +342,7 @@ footer a{color:var(--muted)}
   <div class="stage-head">
     <div>
       <h2 id="padH"><small>Surface 2</small>Comms Pad</h2>
-      <p>Chips instead of buttons: an icon tile, a short label and a channel tag in WoW's own chat colours. The header shows the situation (hover it to see why) and the lockdown state. After a send, a cooldown sweep stops spam.</p>
+      <p>Chips instead of buttons: an icon tile, a short label and a channel tag in WoW's own chat colours. The header shows the situation (hover it to see why) and the lockdown state. Pads are unlimited: each one has its own position, layout and group priority.</p>
     </div>
     <div class="controls">
       <div class="seg" role="group" aria-label="Orientation"><span>Layout</span><button data-orient="h">Horizontal</button><button data-orient="v">Vertical</button><button data-orient="g">Grid</button></div>
@@ -380,7 +381,7 @@ footer a{color:var(--muted)}
     <article><h3>Secure path for group chat</h3><p>In a key, a boss pull or a PvP match, addons can't send chat. Secure macro buttons still can send to party, raid, RW and instance, so callout text is built before combat. <span class="mono">%t</span> and <span class="mono">{rt8}</span> are filled in by the game at send time.</p></article>
     <article><h3>Locked, not hidden</h3><p>A Say or Yell callout in a boss fight shows a padlock instead of disappearing. Positions stay put, so flick muscle memory keeps working.</p></article>
     <article><h3>Channel colours you already know</h3><p>Tags use WoW's default chat colours: party lavender, raid orange, RW red-orange, whisper pink, say white and yell red. Smart channels show the channel they resolve to right now.</p></article>
-    <article><h3>Predefined sets</h3><p>Built-in groups ship for M+, raid, arena and each battleground. They're read-only templates; <b>Customize</b> makes an editable copy, so addon updates never overwrite your edits.</p></article>
+    <article><h3>Predefined sets</h3><p>Built-in groups ship for M+, raid, arena and each battleground, on by default in every new profile. They're read-only templates; <b>Customize</b> makes an editable copy, so addon updates never overwrite your edits.</p></article>
     <article><h3>Why is this showing?</h3><p>Every active group can explain itself: the pad header tooltip and each group's When tab show which conditions matched the current situation.</p></article>
   </div>
 </section>
@@ -476,7 +477,7 @@ const abIds = AB_NODES.map(([n, dir]) => {
 
 /* ---------- groups ---------- */
 const G = [
-  {id:'ab', name:'Arathi Basin', builtin:true, icon:'flag', t:'#3f7fd0', when:c=>c.map==='Arathi Basin', whenTxt:'Battleground is Arathi Basin', items:abIds},
+  {id:'ab', name:'Arathi Basin', builtin:true, openInto:true, icon:'flag', t:'#3f7fd0', when:c=>c.map==='Arathi Basin', whenTxt:'Battleground is Arathi Basin', items:abIds},
   {id:'wrs', name:'Windrunner Spire', icon:'run', t:'#2f9a6a', when:c=>c.dungeon==='Windrunner Spire', whenTxt:'Dungeon is Windrunner Spire', items:['wrs-stack','wrs-skip','wrs-adds']},
   {id:'mplus', name:'Mythic+', builtin:true, icon:'clock', t:'#c9a227', when:c=>c.content==='mplus', whenTxt:'Content is Mythic+', items:['pull','lust','mana','kick','skip','res']},
   {id:'raid', name:'Raid', builtin:true, icon:'skull', t:'#b0402a', when:c=>c.content==='raid', whenTxt:'Content is Raid', items:['blust','brez','soak','spread','pull10','wipe']},
@@ -491,7 +492,7 @@ const GBY = Object.fromEntries(G.map(g => [g.id, g]));
 /* ---------- state ---------- */
 const S = {
   ctx: CTX[2],
-  dial: {mode:'flat', slices:4, stack:[], sel:-1},
+  dial: {mode:'cat', slices:4, stack:[], sel:-1, autoOpen:true},
   pad: {orient:'h', style:'full', groups:'sect', tab:0},
   set: {page:'groups', tab:0, sel:{callouts:'lust', groups:'mplus', pad:'main', dial:'main'}},
   cd: {},
@@ -551,15 +552,15 @@ function pushChat(html) {
 }
 
 /* ---------- sending ---------- */
-const CD_MS = () => S.ctx.encounter ? 3000 : 1500;
+let lastSend = -Infinity;
 function send(co) {
   const L = lockInfo(co);
   if (L.locked) { pushChat(sysLine(L.why)); return false; }
   const now = performance.now();
-  if (S.cd[co.id] && S.cd[co.id] > now) { pushChat(sysLine(`${co.name} is cooling down (${((S.cd[co.id]-now)/1000).toFixed(1)}s). Stops accidental spam.`)); return false; }
-  S.cd[co.id] = now + CD_MS();
+  // Blizzard throttles macro chat during encounters; simulated here as 1.5 s between sends
+  if (S.ctx.encounter && now - lastSend < 1500) { pushChat(sysLine(`Blizzard throttles chat during encounters, so "${co.name}" was dropped. Try again in a moment.`)); return false; }
+  lastSend = now;
   pushChat(chatLineHTML(co));
-  setTimeout(() => { renderPad(); renderDial(); }, CD_MS() + 30);
   return true;
 }
 
@@ -576,6 +577,12 @@ function renderSim() {
 /* ---------- DIAL ---------- */
 const R = 150, R0 = 34, HUB = 27;
 const pol = (r, deg) => { const a = deg * Math.PI / 180; return [r * Math.sin(a), -r * Math.cos(a)]; };
+function resetDial() {
+  S.dial.stack = []; S.dial.sel = -1;
+  if (S.dial.mode !== 'cat' || !S.dial.autoOpen) return;
+  const top = active(S.dialOrder)[0];
+  if (top && top.openInto) S.dial.stack.push({title:top.name, items:top.items.map(id => ({kind:'item', id})), page:0, auto:true});
+}
 function dialLevel() {
   const st = S.dial.stack;
   if (st.length) return st[st.length - 1];
@@ -671,10 +678,10 @@ function renderDial() {
   if (sel >= 0 && slots[sel]) {
     const it = slots[sel], m = itemMeta(it);
     if (it.kind === 'more') msg = `<b>More</b>: next page (or scroll the mouse wheel)`;
-    else if (m.nest) msg = `<b>${esc(m.name)}</b>: opens a sub-ring${S.dial.mode === 'cat' && S.dial.stack.length >= 1 ? ' · <span style="color:#ffb84a">3 levels deep, the editor warns about this</span>' : ''}`;
+    else if (m.nest) msg = `<b>${esc(m.name)}</b>: opens a sub-ring${S.dial.mode === 'cat' && S.dial.stack.length >= 1 && !S.dial.stack[0].auto ? ' · <span style="color:#ffb84a">3 levels deep, the editor warns about this</span>' : ''}`;
     else { const L = lockInfo(m.co), r = resolve(m.co.ch); msg = L.locked ? `<span style="color:#ffb84a">${esc(L.why)}</span>` : `Sends to <b style="color:${CH[r].color}">${CH[r].label}</b>: ${bake(m.co.text)}${L.why ? `<br><span style="color:#ffb84a">${esc(L.why)}</span>` : ''}`; }
   } else if (sel === -2) msg = nested ? '<b>Back</b> to the previous ring' : '<b>Cancel</b>: release here to send nothing';
-  else msg = `<span style="opacity:.75">${crumbs} · move the pointer over a wedge, click to send</span>`;
+  else msg = `<span style="opacity:.75">${crumbs}${S.dial.stack[0] && S.dial.stack[0].auto ? ' (opened straight into the top group; centre = back to all groups)' : ''} · move the pointer over a wedge, click to send</span>`;
   cap.innerHTML = msg;
 }
 const dash = document.createElement('style'); dash.textContent = '@keyframes dash{from{stroke-dashoffset:0}to{stroke-dashoffset:100}}'; document.head.appendChild(dash);
@@ -699,7 +706,7 @@ function dialActivate(i) {
   if (it.kind === 'group') { S.dial.stack.push({title:it.g.name, items:it.g.items.map(id => ({kind:'item', id})), page:0}); S.dial.sel = -1; renderDial(); return; }
   const co = C[it.id];
   if (co.children) { S.dial.stack.push({title:co.name, items:co.children.map(id => ({kind:'item', id})), page:0}); S.dial.sel = -1; renderDial(); return; }
-  if (send(co)) { S.dial.stack = []; }
+  if (send(co)) { resetDial(); }
   S.dial.sel = -1; renderDial(); renderPad();
 }
 function bindDial() {
@@ -757,7 +764,7 @@ function renderPad() {
 const PAGES = [
   {id:'landing', name:'Ka0s Quick Comms', parent:true},
   {id:'general', name:'General', tabs:['Master controls','Behaviour']},
-  {id:'callouts', name:'Callouts', tabs:['Message','Extras']},
+  {id:'callouts', name:'Callouts', tabs:['Message','Extras (future)']},
   {id:'groups', name:'Groups', tabs:['Callouts','When','Preview']},
   {id:'pad', name:'Comms Pad', tabs:['Groups','Layout','Look']},
   {id:'dial', name:'Comms Dial', tabs:['Groups','Wheel','Binding']},
@@ -798,8 +805,7 @@ function renderCanvas() {
       <p class="note">Standard Ka0s Master controls, in the standard row order.</p>`
     : `<div class="grid2">
       <div class="field"><span class="flabel">Solo fallback for smart channels</span>${sel('Do nothing')}<span class="note">Other options: print to self, Say. Never Say by default.</span></div>
-      <div class="field"><span class="flabel">Default cooldown per callout</span><div class="row" style="display:flex;gap:10px;align-items:center">${slider(30, '1.5 s')}</div></div>
-      <div class="row" style="display:flex;gap:8px">${cb(true)}<span>Confirm Raid warning and Yell (second click)</span></div>
+      <div class="field"><span class="flabel">Built-in sets in new profiles</span>${sel('On (M+, raid, arena, every battleground)')}</div>
       <div class="row" style="display:flex;gap:8px">${cb(true)}<span>Show lockdown chip on pad and dial</span></div>
       <div class="row" style="display:flex;gap:8px">${cb(false)}<span>Play a sound on send</span></div>
       <div class="row" style="display:flex;gap:8px">${cb(true)}<span>Show "Why is this showing?" in tooltips</span></div></div>`;
@@ -819,14 +825,8 @@ function renderCanvas() {
         <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><div class="tokens">${['{target}','{focus}','{rt1}','{rt3}','{rt8}','{me}','{key}','{dungeon}','{spell:…}'].map(t => `<button class="tok" data-tok="${t}">${t}</button>`).join('')}</div><span class="counter" id="cCount"></span></div></div>
       <div class="field"><span class="flabel">Preview · ${esc(S.ctx.where)}</span><div class="preview" id="cPrev"></div></div>
       <p class="note"><b>{target}</b> becomes <span class="mono">%t</span>, which the game fills in at send time, so it works during lockdown. <b>{key}</b> and <b>{dungeon}</b> are filled in by the addon before combat.</p>`
-    : `<div class="grid2">
-        <div class="field"><span class="flabel">Variants (picked at random)</span><textarea class="input" style="min-height:90px">${esc(cur.text)}\n${esc(cur.text.replace(/!|\./, '!!'))}</textarea></div>
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <div style="display:flex;gap:8px">${cb(cur.ch === 'LEAD')}<span>Confirm before sending</span></div>
-          <div class="field"><span class="flabel">Cooldown</span><div style="display:flex;gap:10px;align-items:center">${slider(30, 'default')}</div></div>
-          <div class="field"><span class="flabel">Also mark target</span>${sel(cur.text.includes('{rt8}') ? 'Skull ☠' : 'None')}</div>
-          <div class="field"><span class="flabel">Direct keybind</span>${sel('Not bound')}</div>
-        </div></div>`;
+    : `<div class="banner"><span><b>Not in the first version.</b> These callout extras are filed as future enhancements.</span></div>
+      <div class="reorder">${[['#1','Variants','Several wordings, picked at random'],['#2','Confirm','A second click before sending (Raid warning, Yell)'],['#3','Cooldown','Per-callout spam protection with a sweep'],['#4','Mark','Apply a raid marker to the target when sending'],['#5','Keybind','A direct key for a single callout']].map(([n, nm, d]) => `<div class="ro off"><span class="n" style="width:22px">${n}</span><span class="nm">${nm}</span><span class="txt">${d}</span><a class="mono" style="color:var(--muted)" href="https://github.com/tusharsaxena/QuickComms/issues/${n.slice(1)}">issue</a></div>`).join('')}</div>`;
     body = `<div class="editor">${rail(items)}<div style="display:flex;flex-direction:column;gap:12px;min-width:0">${ed}</div></div>`;
   }
   if (page.id === 'groups') {
@@ -866,7 +866,7 @@ function renderCanvas() {
     const order = isPad ? S.padOrder : S.dialOrder;
     const items = isPad
       ? `<button class="rail-item" aria-current="true"><span class="tile" style="--t:#55545e">${ICON('pad')}</span><span class="nm">Main pad</span><span class="meta">9</span></button><button class="rail-item"><span class="tile" style="--t:#b0402a">${ICON('skull')}</span><span class="nm">Raid lead pad</span><span class="meta">3</span></button>`
-      : `<button class="rail-item" aria-current="true"><span class="tile" style="--t:#c9a227">${ICON('chat')}</span><span class="nm">Callouts</span><span class="meta mono">G</span></button><button class="rail-item"><span class="tile" style="--t:#c9402a">${ICON('target')}</span><span class="nm">Marks + kicks</span><span class="meta mono">⇧G</span></button>`;
+      : `<button class="rail-item" aria-current="true"><span class="tile" style="--t:#c9a227">${ICON('chat')}</span><span class="nm">Callouts</span><span class="meta mono">G</span></button><button class="rail-item"><span class="tile" style="--t:#c9402a">${ICON('skull')}</span><span class="nm">Raid lead</span><span class="meta mono">⇧G</span></button>`;
     let ed = '';
     if (st.tab === 0) {
       ed = `<div class="reorder">${order.map((id, i) => { const g = GBY[id]; const on = g.when(S.ctx); return `<div class="ro${on ? '' : ' off'}"><span class="handle">⋮⋮</span><span class="n">${i + 1}</span><span class="tile" style="--t:${g.t}">${ICON(g.icon)}</span><span class="nm">${esc(g.name)}</span><span class="txt">${esc(g.whenTxt)}${on ? ' · active now' : ''}</span><span class="act"><button title="Up">▲</button><button title="Down">▼</button>${cb(true)}</span></div>`; }).join('')}</div>
@@ -890,9 +890,9 @@ function renderCanvas() {
         <div class="field"><span class="flabel">Slices per ring</span><div class="seg">${[4,6,8,12].map(k => `<button data-slices="${k}" aria-pressed="${k === n}">${k}</button>`).join('')}</div></div>
         <div class="field"><span class="flabel">Mode</span><div class="seg"><button data-dmode="flat" aria-pressed="${S.dial.mode === 'flat'}">Flat</button><button data-dmode="cat" aria-pressed="${S.dial.mode === 'cat'}">Categories</button></div></div>
         ${n === 12 ? '<div class="warnline">12 slices: allowed only when no wedge opens a sub-ring.</div>' : n === 8 ? '<div class="note">8 is the recommended maximum for use in combat.</div>' : ''}
-        ${S.dial.mode === 'cat' ? '<div class="warnline">Categories + Arathi Basin nodes = 3 levels deep. Hard to use under pressure.</div>' : ''}
+        ${S.dial.mode === 'cat' ? `<div style="display:flex;gap:8px;align-items:center">${cb(S.dial.autoOpen)}<span>Open straight into the top group when it's a battleground set</span></div>${S.dial.autoOpen ? '' : '<div class="warnline">Without it, Arathi Basin goes 3 levels deep (group › node › INC). Hard to use under pressure.</div>'}` : ''}
         </div></div>
-        <div class="grid2"><div class="field"><span class="flabel">Open at</span>${sel('Cursor')}</div><div class="field"><span class="flabel">Draw delay (flick without seeing it)</span><div style="display:flex;gap:10px;align-items:center">${slider(30, '300 ms')}</div></div>
+        <div class="grid2"><div class="field"><span class="flabel">Open at</span>${sel('Screen centre (default) · or cursor')}</div><div class="field"><span class="flabel">Draw delay (flick without seeing it)</span><div style="display:flex;gap:10px;align-items:center">${slider(30, '300 ms')}</div></div>
         <div class="field"><span class="flabel">Scale</span><div style="display:flex;gap:10px;align-items:center">${slider(50, '100%')}</div></div><div class="field"><span class="flabel">Overflow</span>${sel('Pages (mouse wheel)')}</div></div>`;
     } else {
       ed = `<div class="grid2"><div class="field"><span class="flabel">Key</span><div class="select mono">G</div></div><div class="field"><span class="flabel">Style</span>${sel('Quick: hold, flick, release')}</div>
@@ -902,7 +902,7 @@ function renderCanvas() {
     body = `<div class="editor">${rail(items)}<div style="display:flex;flex-direction:column;gap:12px;min-width:0">${ed}</div></div>`;
   }
   if (page.id === 'share') {
-    body = st.tab === 0 ? `<p class="note">Built-in sets ship with the addon and switch on by situation. Turn them off here, or use <b>Customize</b> to get an editable copy.</p>
+    body = st.tab === 0 ? `<p class="note">Built-in sets ship with the addon and are <b>on in every new profile</b>. Each switches on by situation. Turn them off here, or use <b>Customize</b> to get an editable copy.</p>
       <div class="packs">${[['Mythic+ (generic)','Any Mythic+ key · 6 callouts',1],['Raid (generic)','Any raid · 6 callouts',1],['Arena (generic)','Skirmish, rated, Solo Shuffle · 6',1],['Battleground (generic)','Any battleground · 4',1],['Arathi Basin','Node dial · 5 nodes × 6',1],['Warsong Gulch','Flag calls · 6',1],['Twin Peaks','Flag calls · 6',1],['Eye of the Storm','Nodes + flag · 4 × 6',1],['Battle for Gilneas','Node dial · 3 × 6',1],['Silvershard Mines','Carts · 6',1],['Temple of Kotmogu','Orbs · 6',1],['Deepwind Gorge','Nodes + carts · 6',1],['Seething Shore','Azerite · 6',0],['Deephaul Ravine','Objectives · 6',1],['Alterac Valley','Epic · towers, bosses',1],['Isle of Conquest','Epic · nodes, gates',1],['Ashran','Epic · road calls',0],['Wintergrasp','Epic · siege calls',0]].map(([n, d, on]) =>
         `<div class="pack">${cb(!!on)}<span class="nm">${esc(n)}<small>${esc(d)}</small></span></div>`).join('')}</div>`
     : `<div class="field"><span class="flabel">Export · Windrunner Spire group (example string)</span><div class="sharebox">!QC1!nVJdb9owFP0rVp4dJ3ESAuUJrdqkTpq0VZs2rQ+X+JZYOHZkO1BU8d93nRS2vk1Ksn2Pzz0+59wyR7J9FyW7Xr8MvpxPFKe8Z6iTjX1E7qObUGsJXk9z0mI+IMH12x3Z0EF4zEuHuV4h3a6E1cgu0f2dByrXbBwQmXx3aHLHLDN5i+QVm6ICqpu6YQkHzzHxs10bu3sk9V6sQ2IQnxFsFgO1jHxIK5HHLv9Lg8M2cNNLNRhAacbIX3Hi20q5D9tzQRpY7FxYN9Wjk8tnpJ5ZQOh2Yu+Zx0FBgaDFkaobd2dZ2+N12qe5NVQpL5Xu0HoKPN7qD0m6O2Plfp+M4Ju3HO2yQr1ZH6TF8foVNvLrTSWvpx3HcbmMu7YHtKozlNtEvxvP8hNDQumLyDwcaXlE6QkKq4pBzbzQXnZ4bF5TF0R0EOrBgtyzUq3Pxj9oHQOy08A1t0Wk9i/ejpOPRvSrM+SZNVgjMk8ra2QeRK4hR4qUTgmB+sjRbIyX5lB72+N70FxOhb05dB45kvt8djyXGNM7ufqJnDvCs92PzNRAjRhQ6LVRL+fpoNgTXzkU6IKkmQ1D41xmRlrapq9lv81wQ79nIt6VDAJkNZh0lPJqyeK8YHlBe2uV2O8qfqZ9KmL0jIvwZ0w99nAjxnF/BVR92UkRqfY1z5lW/1oRVK/v3kpuUHaWb+oN6jrrGl2V1D9/UPX8+5dn66/AE=</div></div>
@@ -943,6 +943,7 @@ function renderAll() {
   renderSim(); renderDial(); renderPad(); renderCats(); renderCanvas();
   setPressed('.stage [data-dmode]', S.dial.mode, 'dmode');
   setPressed('.stage [data-slices]', S.dial.slices, 'slices');
+  setPressed('[data-autoopen]', S.dial.autoOpen ? 1 : 0, 'autoopen');
   setPressed('[data-orient]', S.pad.orient, 'orient');
   setPressed('[data-pstyle]', S.pad.style, 'pstyle');
   setPressed('[data-pgroups]', S.pad.groups, 'pgroups');
@@ -950,11 +951,12 @@ function renderAll() {
 document.addEventListener('click', e => {
   const t = e.target.closest('button,[data-send]'); if (!t) return;
   const d = t.dataset;
-  if (d.ctx) { S.ctx = CTX.find(c => c.id === d.ctx); S.dial.stack = []; S.dial.sel = -1;
+  if (d.ctx) { S.ctx = CTX.find(c => c.id === d.ctx); resetDial();
     if (S.ctx.id === 'ab' && S.dial.slices < 6) { S.dial.slices = 6; pushChat(sysLine('Arathi Basin set is laid out for 6 slices (nodes on their map direction). Dial switched to 6.')); }
     pushChat(sysLine(`Situation changed: ${S.ctx.where}. ${active(S.padOrder).length} groups active.`)); renderAll(); return; }
-  if (d.dmode) { S.dial.mode = d.dmode; S.dial.stack = []; renderAll(); return; }
-  if (d.slices) { S.dial.slices = +d.slices; S.dial.stack = []; renderAll(); return; }
+  if (d.dmode) { S.dial.mode = d.dmode; resetDial(); renderAll(); return; }
+  if (d.autoopen) { S.dial.autoOpen = d.autoopen === '1'; resetDial(); renderAll(); return; }
+  if (d.slices) { S.dial.slices = +d.slices; resetDial(); renderAll(); return; }
   if (d.orient) { S.pad.orient = d.orient; renderAll(); return; }
   if (d.pstyle) { S.pad.style = d.pstyle; renderAll(); return; }
   if (d.pgroups) { S.pad.groups = d.pgroups; renderAll(); return; }
@@ -972,6 +974,7 @@ document.getElementById('pad').addEventListener('wheel', e => {
 }, {passive:false});
 
 bindDial();
+resetDial();
 renderAll();
 pushChat(sysLine('Quick Comms loaded. Preview: ' + S.ctx.where + '.'));
 })();
