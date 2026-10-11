@@ -13,7 +13,7 @@ The brainstorming stage. There is no spec and no implementation plan yet, and no
 
 ## The five things that shape the design
 
-1. **Midnight locks addon chat** during M+ keys, boss pulls and PvP matches. Secure macro buttons can still send to party, raid, RW and instance, so callouts are "baked" before combat. The game's own `%t` and `{rt8}` substitutions handle the live parts. **Go/no-go test in game first** (§13 of the brainstorm has the plan).
+1. **Midnight locks addon chat** during M+ keys, boss pulls and PvP matches. Secure macro buttons can still send to party, raid, RW and instance, so callouts are "baked" before combat. The game's own `%t` and `{rt8}` substitutions handle the live parts. **Go/no-go test: passed (GO)**, in a real M+ key and an LFR boss; see §13 of the brainstorm.
 2. **Dial: 4 wedges by default, 8 max per ring, 2 levels deep.** These numbers come from marking-menu research and Blizzard's ping wheel.
 3. **Groups switch on by situation (union); each surface orders them.** "Why is this showing?" and "Preview as…" make the rules visible.
 4. **Predefined sets ship built in:** M+ (generic), raid (generic), arena (generic), and a set per battleground. They are read-only templates with a Customize button that makes an editable copy.

@@ -273,7 +273,7 @@ All design questions are answered (D1–D11 at the top). Only the go/no-go test 
 
 ## 13. Go/no-go: can a player's button press send group chat during lockdown?
 
-Tracked as [#6](https://github.com/tusharsaxena/QuickComms/issues/6).
+Tracked as [#6](https://github.com/tusharsaxena/QuickComms/issues/6). **Result: GO**: path A works in real M+ and raid encounters (see the results at the end of this section).
 
 **Why it decides everything.** The addon exists for the moments when Midnight locks addon chat: an active M+ key, a boss pull, a PvP match. If a player-pressed button can't send to party or raid then, the addon is not viable (owner's verdict).
 
@@ -344,3 +344,23 @@ All forced settings were 0. The status line showed chat lockdown ON and combat y
 - Not yet tested: a real M+ key.
 
 **Verdict: GO on path A, confirmed in a real encounter.** A real M+ key is the last context still to check.
+
+### Results, round 3: real M+ key, no forced settings (2026-10-11)
+
+Channel `/p`. Once the key started, chat lockdown was ON for the whole run, out of combat as well as on trash.
+
+| Context | 0: addon Lua | A / B / T (clicks about 0.5 s apart) |
+|---|---|---|
+| Out of combat, in the key | blocked | **3 of 3 arrived** |
+| Trash | blocked | **3 of 3 arrived** |
+| Boss | blocked | **2 of 3 arrived** (825.06 and 825.61); the third is not in the log |
+
+- Each message arrived 0.6 s after the click, as in LFR.
+- On the boss, presses 0.5 s apart lost one message. In LFR, presses 0.27 s apart lost one, and presses 0.8 s apart lost none. That fits a boss-only throttle of roughly 0.5–0.8 s; outside a boss, 0.5 s spacing was fine. The design should use a ≈1 s per-button cooldown and show a sent/dropped cue.
+- Tokens in a party: `%t` expands, and a player target also gets their class or role icon. `{rt8}` expands to the skull. `{g1}` stays as the literal `{g1}` because a party has no raid subgroups.
+
+## Verdict: GO
+
+Path A (secure `macrotext` on a `SecureActionButtonTemplate`, pressed by the player by click or key binding) sends to party, instance and raid chat during chat lockdown. It worked in a real M+ key (on trash and on a boss), in a real LFR boss, and under every forced restriction. Plain addon Lua is blocked in all of them. Path B also works, but is not needed. **The design stands as written**, with these additions:
+1. A ≈1 s per-button cooldown with sent/dropped feedback.
+2. `{gN}` is offered only in raids.
