@@ -10,15 +10,16 @@ This is the thinking stage, not a spec. Every section ends with the questions it
 | D2 | Dial default | **Categories** (groups on the first ring, callouts in the sub-ring). |
 | D3 | Where the dial opens | **Screen centre by default**, with an option for **at cursor**. |
 | D4 | Several surfaces | **Yes.** Any number of pads and dials, each with its own group priority list. |
-| D5 | Callout extras (variants, confirm, cooldown, mark, keybind) | **None in the first version.** Filed as future enhancements [#1](https://github.com/tusharsaxena/QuickComms/issues/1)–[#5](https://github.com/tusharsaxena/QuickComms/issues/5). |
+| D5 | Callout extras (variants, confirm, cooldown, mark, keybind) | **None in the first version** (except the global spam guard, D12). Filed as future enhancements [#1](https://github.com/tusharsaxena/QuickComms/issues/1)–[#5](https://github.com/tusharsaxena/QuickComms/issues/5). |
 | D6 | Specific dungeon group vs generic M+ | **Alongside**, ordered by each surface's priority list. A specific group never replaces a generic one. |
 | D7 | Built-in sets | **On by default.** Every new profile includes them, and the player can turn them off or customize them. |
 | D8 | Callouts in several groups | **Shared.** A group holds references to callouts in one library. Editing a callout changes it everywhere, and the editor shows "used in N groups". |
 | D9 | Nested built-in sets in Categories mode | **Open into the top group.** When the highest-priority active group is a battleground node set, the dial opens straight on its node ring, and the centre button goes back to all groups. This is a per-group flag, on for battleground node sets. |
 | D10 | Gamepad | **Not in the first version.** Parked in §10. |
 | D11 | Faction-aware battleground wording | **No.** |
+| D12 | Send path and throttle, after the go/no-go (§13) | **One send path:** every callout on every channel is sent from a secure `macrotext` button. There is no second path for times without lockdown. Path B (real macros) and its macro-slot budget are dropped. **The first version includes a basic spam guard:** a lockout of about 1 s that applies across all of the player's callouts, matching the game's per-player encounter throttle. This partly overrides D5: the full per-callout cooldown with a sweep is still [#3](https://github.com/tusharsaxena/QuickComms/issues/3). |
 
-**Nothing is open except the go/no-go test in §13.** The owner's verdict: if a player-pressed button can't send group chat during a key or a boss pull, the addon is not viable.
+**Nothing is open.** The go/no-go test (§13) **passed**: a player-pressed secure button sends group chat during M+ keys and boss pulls. The remaining in-game checks are build-time spikes, not blockers (§11).
 
 ---
 
@@ -51,16 +52,17 @@ The hierarchy is: callouts belong to groups; groups switch on through situations
 
 Research note 01 explains the details. In short:
 - **During an M+ key, a boss pull or a PvP match**, an addon can't send chat by itself.
-- **Secure macro buttons still can** send to party, raid, rw and instance, using text built *before* combat.
+- **Secure macro buttons still can** send to party, raid, rw and instance, using text built *before* combat. The in-game test proved this (§13).
+- **Lockdown is on for the whole M+ key,** between pulls as well as during them. So in M+ there is never a moment when addon code can send chat.
 
 Design responses:
-1. **All group-channel sends go through secure buttons.** The player never has to think about lockdown for party, raid, rw or instance callouts.
-2. **The text is "baked" before combat.** Addon-resolved tokens (player name, key level, dungeon name) are filled in out of combat. Live tokens use the game's own substitutions: `{target}` becomes `%t`, `{focus}` becomes `%f`, and `{rt8}` stays `{rt8}`.
+1. **Every send goes through a secure button (D12).** That covers every channel, all the time, with no second path for times without lockdown. The player never has to think about lockdown.
+2. **The text is "baked" before combat.** Addon-resolved tokens (player name, key level, dungeon name) are filled in out of combat. Live tokens use the game's own substitutions: `{target}` becomes `%t`, `{focus}` becomes `%f`, and `{rt8}` stays `{rt8}`. In combat, pads and dials can't change what their buttons send. Text is re-baked when combat ends, and on situation changes between pulls. If the situation changes mid-combat, the surface shows a small "updates after combat" hint instead of going stale without a word.
 3. **Callouts that can't send right now look locked, not hidden.** In a boss fight a whisper or SAY callout shows a small padlock and the tooltip "Whispers only reach players in this instance during an encounter" (or "SAY is blocked during encounters"). Hiding them would shift the layout and break muscle memory.
-4. **There is a visible lockdown chip.** The pad header and the dial centre show a small "LOCKDOWN" chip while restrictions are active, so the behaviour is explained rather than mysterious.
-5. **The encounter throttle is visible.** If Blizzard's macro throttle drops a send, the chip or wedge flashes and the chat frame gets a one-line `[QC]` note instead of failing silently. A full per-callout cooldown with a sweep is future work ([#3](https://github.com/tusharsaxena/QuickComms/issues/3)).
+4. **A lockdown chip appears only when it matters.** Lockdown never lifts during a key, so a chip that is always on would tell the player nothing. The pad header and the dial centre show the "LOCKDOWN" chip only when lockdown is actually affecting something on that surface, such as a Say or Whisper callout that is locked right now.
+5. **A spam guard handles the encounter throttle (D12).** In bosses the game silently drops a send that comes within about 0.5–0.8 s of the previous one. The limit is per player, not per button, and the game gives no error. A lockout of about 1 s across all callouts stops this from happening. While the guard is active, wedges and chips dim briefly. A drop that gets through anyway can only be *inferred*: no copy of the player's own message comes back within about 1.5 s. In that case the wedge flashes and the chat frame gets a one-line `[QC]` note. The full per-callout cooldown with a sweep is still future work ([#3](https://github.com/tusharsaxena/QuickComms/issues/3)).
 
-**Go/no-go before anything else:** confirm that a player-pressed secure button can send group chat in a key and a boss pull. The test plan and the fallback (real macros) are in §13.
+**Go/no-go: passed** (§13 and [`go-no-go/`](go-no-go/README.md)).
 
 ## 4. The Comms Dial
 
@@ -152,7 +154,7 @@ None of these are in the first version. They are filed as issues:
 |---|---|
 | **Variants:** several texts for one callout, picked at random | [#1](https://github.com/tusharsaxena/QuickComms/issues/1) |
 | **Confirm:** a second click before sending (for Raid warning and Yell) | [#2](https://github.com/tusharsaxena/QuickComms/issues/2) |
-| **Cooldown:** a per-callout cooldown with a sweep | [#3](https://github.com/tusharsaxena/QuickComms/issues/3) |
+| **Cooldown:** a per-callout cooldown with a sweep. The first version has only the global spam guard (D12). | [#3](https://github.com/tusharsaxena/QuickComms/issues/3) |
 | **Mark:** apply a raid marker to the target when sending (secure `raidtarget`) | [#4](https://github.com/tusharsaxena/QuickComms/issues/4) |
 | **Keybind:** a direct key for a single callout | [#5](https://github.com/tusharsaxena/QuickComms/issues/5) |
 
@@ -163,9 +165,10 @@ Friendly chips that map to engine or baked values:
 
 | Chip | Becomes |
 |---|---|
-| `{target}` | `%t` |
+| `{target}` | `%t` (tested; a player target also gets their class or role icon, and with no target it reads `<no target>`) |
 | `{focus}` | `%f` |
-| `{rt1}`–`{rt8}` | the raid icon |
+| `{rt1}`–`{rt8}` | the raid icon (tested) |
+| `{group1}`–`{group8}` | `{g1}`–`{g8}`: the names of the players in that raid subgroup. It works only in a raid; in a party it is sent as the literal `{g1}`. The picker offers it only when the channel can resolve to Raid. |
 | `{me}` | your name |
 | `{spec}` / `{role}` | your spec / role |
 | `{key}` | the key level |
@@ -261,15 +264,27 @@ Everything persists in one `QuickCommsDB` profile, so a player's setup follows t
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| Secure `macrotext` no longer works for chat | The dial can't send in keys or boss pulls | Spike first. The fallback is real macros, budgeted (one per *visible* slot, rotated out of combat). |
-| Encounter throttle is very tight | Two quick callouts and the second is dropped | Flash and print a `[QC]` note, and queue nothing (a queued send in a boss fight is worse than none). The full cooldown is [#3](https://github.com/tusharsaxena/QuickComms/issues/3). |
+| Blizzard closes the secure `macrotext` path in a later patch | The dial can't send in keys or boss pulls | It works in 12.1 (§13). If it closes, real macros (path B) also worked in testing and are the fallback, with a slot budget. Watch the patch notes. |
+| Encounter throttle drops quick sends (measured) | Sends 0.27–0.5 s apart in a boss lose one in three | The global ≈1 s spam guard (D12). Queue nothing, because a queued send in a boss fight is worse than none. |
 | Smart channel sends somewhere unexpected | Embarrassment, as with MultiMeters' AUTO | Always show the *resolved* channel on the tag; never fall back to Say by default |
 | Too much configuration | Players give up before the first callout | Built-in M+, raid, arena and battleground sets (§8), sensible defaults, and a pad that works out of the box with an "Always" group |
 | Spam reputation | Group members get annoyed | Solo fallback "do nothing" and a visible resolved channel now. Cooldown, variants and confirm later ([#1](https://github.com/tusharsaxena/QuickComms/issues/1)–[#3](https://github.com/tusharsaxena/QuickComms/issues/3)) |
 
+### Build-time checks (in game, early in the build; none of them blocks the design)
+
+| # | Check | Why it matters | If it fails |
+|---|---|---|---|
+| C1 | `/raid` (a premade raid, not LFR) and `/rw` from secure `macrotext` during a boss | Only `/p` and `/i` were sent in the test. Blizzard's rules allow both. | Lock those channels during encounters, with the same padlock as Say. |
+| C2 | Say, Yell and Whisper during lockdown | The design assumes they are locked. Confirm it, and get the exact tooltip text. | n/a; this only adjusts the padlock rules |
+| C3 | A real battleground and arena match | Only the forced PvP lockdown was tested | As C1 |
+| C4 | `SetAttribute("macrotext")` out of combat during an active key | Re-baking between pulls depends on it. Only `InCombatLockdown` should block it. | Bake once at key start; situation changes inside the key wait until it ends. |
+| C5 | A spam guard that works in combat, in a secure snippet (`SecureHandlerWrapScript` pre-click; is `GetTime` available?) | Addon code can't disable a protected button in combat | Use a guard based on attributes alone, such as a click counter reset by a secure timer, or accept the drops and the `[QC]` note. |
+| C6 | Can the copy of the player's own message that comes back during lockdown be read (sender and text)? | This decides whether "dropped" can be detected or only guessed | Fall back to counting: one returning message is expected per click. |
+| C7 | Opening the dial and switching rings in combat through a `SecureHandler` (the OPie approach) | The dial's core interaction | This is a proven pattern (OPie), so the build fixes it rather than redesigning. |
+
 ## 12. Open questions
 
-All design questions are answered (D1–D11 at the top). Only the go/no-go test below remains.
+None. All design questions are answered (D1–D12 at the top), and the go/no-go test passed. The build-time checks C1–C7 (§11) come first in the build.
 
 ## 13. Go/no-go: can a player's button press send group chat during lockdown?
 
