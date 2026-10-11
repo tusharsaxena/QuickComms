@@ -339,7 +339,8 @@ All forced settings were 0. The status line showed chat lockdown ON and combat y
 | T: tokens | sent; `%t` and `{rt8}` expand |
 
 - **`{g1}` correction.** In a raid, `{gN}` expands to the names of the members of raid subgroup N. In round 1 it arrived as `|g|` only because a follower dungeon has no raid subgroups. It is usable in raids, but is noisy and has no use outside a raid.
-- **Throttle.** Three clicks on A, 0.27 s apart (777.24, 777.51 and 777.79), produced only **two** messages, arriving at 777.82 and 778.37. One was dropped silently. Earlier, sends about 0.8 s apart all arrived. So the encounter throttle falls somewhere between 0.27 s and about 0.8 s. The design needs a short per-button cooldown (≈1 s) with a visible "sent / dropped" cue, because the game gives no feedback when it drops a message.
-- Not yet tested: a key binding (`/qct bind`) and a real M+ key.
+- **Key binding works.** The fast presses below came from F6, bound with `SetOverrideBindingClick`, pressed during the boss. Each press sent at most once, so key-down and key-up did not double-fire.
+- **Throttle.** Three F6 presses on A, 0.27 s apart (777.24, 777.51 and 777.79), produced only **two** messages, arriving at 777.82 and 778.37. One was dropped silently. Earlier, sends about 0.8 s apart all arrived. So the encounter throttle falls somewhere between 0.27 s and about 0.8 s. The design needs a short per-button cooldown (≈1 s) with a visible "sent / dropped" cue, because the game gives no feedback when it drops a message.
+- Not yet tested: a real M+ key.
 
 **Verdict: GO on path A, confirmed in a real encounter.** A real M+ key is the last context still to check.
