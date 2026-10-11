@@ -5,6 +5,7 @@ The brainstorming stage. There is no spec and no implementation plan yet, and no
 | File | What's in it |
 |---|---|
 | [`04-brainstorm.md`](04-brainstorm.md) | **Start here.** Owner decisions D1–D11, then how the addon should behave, look and feel: the Midnight constraint, dial, pad, callouts, groups and situations, predefined sets, settings structure, risks, and the go/no-go test plan |
+| [`go-no-go/`](go-no-go/README.md) | Record of the in-game go/no-go test (#6): findings, raw logs exactly as shared, screenshots, and the `QCTest` harness source |
 | [`mockup/index.html`](mockup/index.html) | Clickable UX mockup. Open it in a browser. A situation simulator drives a live Comms Dial, a Comms Pad and a Ka0s-standard settings window |
 | [`01-research-platform.md`](01-research-platform.md) | What the 12.x client allows: chat messaging lockdown, secure vs direct send, tokens, bindings, situation APIs |
 | [`02-research-ux-prior-art.md`](02-research-ux-prior-art.md) | Radial-menu research, game comms wheels, OPie, rule editors, accessibility |

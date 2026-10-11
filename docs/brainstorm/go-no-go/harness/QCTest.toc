@@ -1,0 +1,6 @@
+## Interface: 120100
+## Title: QC Test (throwaway)
+## Notes: Go/no-go harness for QuickComms issue #6. Delete this folder after testing.
+## Author: Ka0s
+
+QCTest.lua

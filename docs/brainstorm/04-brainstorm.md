@@ -273,7 +273,7 @@ All design questions are answered (D1–D11 at the top). Only the go/no-go test 
 
 ## 13. Go/no-go: can a player's button press send group chat during lockdown?
 
-Tracked as [#6](https://github.com/tusharsaxena/QuickComms/issues/6). **Result: GO**: path A works in real M+ and raid encounters (see the results at the end of this section).
+Tracked as [#6](https://github.com/tusharsaxena/QuickComms/issues/6). **Result: GO**: path A works in real M+ and raid encounters (see the results at the end of this section; the full record, raw logs, screenshots and harness source are in [`go-no-go/`](go-no-go/README.md)).
 
 **Why it decides everything.** The addon exists for the moments when Midnight locks addon chat: an active M+ key, a boss pull, a PvP match. If a player-pressed button can't send to party or raid then, the addon is not viable (owner's verdict).
 
