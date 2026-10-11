@@ -102,4 +102,4 @@ Match by **ID**, never by localized name (Ka0s localization rule). DropWatcher's
 4. Does `{gN}` work through the macro path?
 5. How tight is the encounter throttle (messages per second)?
 
-Test switches: `/console addonChatRestrictionsForced 1`, `secretEncounterRestrictionsForced 1`, `addonChallengeModeRestrictionsForced 1`.
+Test switches (names confirmed in game, 12.1): `/console addonChatRestrictionsForced 1`, `addonEncounterRestrictionsForced 1`, `addonChallengeModeRestrictionsForced 1`, `addonPvPMatchRestrictionsForced 1`, `addonCombatRestrictionsForced 1`, `addonMapRestrictionsForced 1`. An earlier draft named `secretEncounterRestrictionsForced`; that setting does not exist.

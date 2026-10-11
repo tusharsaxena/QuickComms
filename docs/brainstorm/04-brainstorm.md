@@ -299,10 +299,10 @@ The fastest way to run it is a throwaway test addon, or `/run` lines plus one re
 5. **Repeat 3 and 4 in the real contexts:**
    - during an M+ key, on trash and on a boss
    - in a raid boss pull (LFR is fine)
-   - with `/console secretEncounterRestrictionsForced 1` and `addonChallengeModeRestrictionsForced 1` as a cheaper first pass
+   - with `/console addonEncounterRestrictionsForced 1`, `addonChallengeModeRestrictionsForced 1`, `addonPvPMatchRestrictionsForced 1` or `addonCombatRestrictionsForced 1` as a cheaper first pass (names confirmed in game, 12.1)
 6. **Measure the throttle:** press twice quickly during a boss. How close together can two sends be before the second is dropped?
 7. **Tokens:** do `%t` and `{rt8}` expand in the macro path? Does `{g1}`?
-8. Reset all the console variables to 0 afterwards.
+8. Reset all the `addon*RestrictionsForced` console variables to 0 afterwards.
 
 **Reading the results:**
 - **A works:** go, with the design as written.
