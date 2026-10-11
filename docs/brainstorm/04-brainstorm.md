@@ -322,7 +322,24 @@ Throwaway harness `QCTest`; channel `/i`; `addonChatRestrictionsForced 1` throug
 
 - Baseline 0 raised `ADDON_ACTION_BLOCKED UNKNOWN()` every time, which confirms lockdown was real.
 - A and B each arrived 0.5–0.75 s after the click, every time.
-- Tokens: `%t` expands to the target's name, or `<no target>` when there is none. `{rt8}` expands to the skull icon. `{g1}` does **not** expand: it arrives as the literal text `|g|`, so drop it from the design.
+- Tokens: `%t` expands to the target's name, or `<no target>` when there is none. `{rt8}` expands to the skull icon. `{g1}` arrives as `|g|` here; see the correction in round 2.
 - Not yet measured: the throttle (clicks were about 1 s apart), a key binding, and a real encounter or key.
 
 **Verdict so far: path A works, so the provisional answer is GO.** It still needs confirming in a real LFR boss and a real M+ key.
+
+### Results, round 2: real LFR boss, no forced settings (2026-10-11)
+
+All forced settings were 0. The status line showed chat lockdown ON and combat yes, so this was the game's own encounter lockdown. The channel was `/i`.
+
+| Button | Result |
+|---|---|
+| 0: addon Lua | blocked (`ADDON_ACTION_BLOCKED UNKNOWN()`) |
+| A: secure macrotext | **sent**, arriving 0.6 s after the click |
+| B: real macro | **sent**, arriving 0.6 s after the click |
+| T: tokens | sent; `%t` and `{rt8}` expand |
+
+- **`{g1}` correction.** In a raid, `{gN}` expands to the names of the members of raid subgroup N. In round 1 it arrived as `|g|` only because a follower dungeon has no raid subgroups. It is usable in raids, but is noisy and has no use outside a raid.
+- **Throttle.** Three clicks on A, 0.27 s apart (777.24, 777.51 and 777.79), produced only **two** messages, arriving at 777.82 and 778.37. One was dropped silently. Earlier, sends about 0.8 s apart all arrived. So the encounter throttle falls somewhere between 0.27 s and about 0.8 s. The design needs a short per-button cooldown (≈1 s) with a visible "sent / dropped" cue, because the game gives no feedback when it drops a message.
+- Not yet tested: a key binding (`/qct bind`) and a real M+ key.
+
+**Verdict: GO on path A, confirmed in a real encounter.** A real M+ key is the last context still to check.
