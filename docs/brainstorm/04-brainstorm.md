@@ -308,3 +308,21 @@ The fastest way to run it is a throwaway test addon, or `/run` lines plus one re
 - **A works:** go, with the design as written.
 - **A fails and B works:** go, and add the macro-slot budget to the design.
 - **Both fail:** stop.
+
+### Results, round 1: forced lockdown in a follower dungeon (2026-10-11)
+
+Throwaway harness `QCTest`; channel `/i`; `addonChatRestrictionsForced 1` throughout. Each forced setting was added on top of the previous one, and every button was tested both out of combat and in combat.
+
+| Forced setting | 0: addon Lua | A: secure macrotext | B: real macro | T: tokens |
+|---|---|---|---|---|
+| `addonEncounterRestrictionsForced` | blocked | **sent** | **sent** | sent |
+| `+ addonChallengeModeRestrictionsForced` | blocked | **sent** | **sent** | sent |
+| `+ addonPvPMatchRestrictionsForced` | blocked | **sent** | **sent** | sent |
+| `+ addonCombatRestrictionsForced` | blocked | **sent** | **sent** | sent |
+
+- Baseline 0 raised `ADDON_ACTION_BLOCKED UNKNOWN()` every time, which confirms lockdown was real.
+- A and B each arrived 0.5–0.75 s after the click, every time.
+- Tokens: `%t` expands to the target's name, or `<no target>` when there is none. `{rt8}` expands to the skull icon. `{g1}` does **not** expand: it arrives as the literal text `|g|`, so drop it from the design.
+- Not yet measured: the throttle (clicks were about 1 s apart), a key binding, and a real encounter or key.
+
+**Verdict so far: path A works, so the provisional answer is GO.** It still needs confirming in a real LFR boss and a real M+ key.
