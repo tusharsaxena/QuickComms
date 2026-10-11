@@ -379,7 +379,7 @@ An unknown token is left as typed and flagged in the editor's preview (the DropW
 
 **Solo fallback** (smart kinds only): `none` (the button shows as inactive), `self` (an insecure local print; nothing is sent), or `say`.
 
-**Whispers.** `whisperTarget` / `whisperFocus` bake as `/w %t <text>`. **C2** must confirm that `%t` resolves in the `/w` name slot. If it doesn't, whisper kinds are cut from v0.1.0.
+**Whispers.** `whisperTarget` / `whisperFocus` bake as `/w %t <text>`. They ship in v0.1.0 regardless (P5, owner). **C2** is a smoke test, not a gate: if `%t` doesn't resolve in the `/w` name slot, the fix goes in a patch.
 
 ### 8.3 Bake and sanitize (`Bake`): anti-pattern #20
 
@@ -736,7 +736,7 @@ Through `LibKa0s-Slash`.
 |---|---|
 | `test` | Toggle test mode. It is the same handler as the checkbox and the launcher entry. |
 | `preview <situation>` | Set "Preview as…" from the command line |
-| `send <calloutId>` | Prints the baked line and the resolved channel. **It does not send.** Addon code can't send during lockdown, and a slash-command send would be a second path (D12). |
+| `check <calloutId>` | Prints the baked line, the resolved channel and any lock reason. **It never sends.** Addon code can't send during lockdown, and a slash-command send would be a second path (D12). It is named `check` rather than `send` (it doesn't send) or `test` (the reserved test-mode toggle). |
 | `why` | Print "Why is this showing?" for every surface |
 
 While the addon is disabled, feature verbs answer with the standard one-line refusal.
@@ -861,7 +861,7 @@ Each phase ends green: `lua tests/run.lua` and `luacheck .` both pass. Each also
 C1–C7 as written there, plus:
 - **C8:** pad tab switching in combat through a secure `OnMouseWheel` wrap.
 - **C9:** does `%f` expand?
-- **C2 is extended:** does `/w %t text` resolve `%t` in the whisper name slot?
+- **C2 is extended:** does `/w %t text` resolve `%t` in the whisper name slot? This is a smoke test only; whispers ship either way (P5).
 
 ## 20. Docs to produce
 
@@ -881,7 +881,9 @@ These follow documentation-§1–§3.
 
 **What happens to the brainstorm:** it stays under `docs/brainstorm/` as history. The spec and plan live under `docs/superpowers/`.
 
-## 21. Decisions this spec proposes (owner to confirm in review)
+## 21. Decisions this spec proposes
+
+Owner review on 2026-10-11 accepted P1, P4, P8 (renamed to `check`) and P9, and changed P5. P2, P3, P6 and P7 were not raised, and are taken as accepted unless the owner says otherwise.
 
 | # | Proposal | Why |
 |---|---|---|
@@ -889,8 +891,8 @@ These follow documentation-§1–§3.
 | P2 | Adding a built-in callout to a user group **copies** it into the library | Keeps built-ins read-only and "used in N groups" exact (§5.2) |
 | P3 | Smart channels are resolved **when baked**, and refresh after combat | Chat commands take no macro conditionals (§8.2) |
 | P4 | In Categories mode, choosing a group keeps the dial open for a **second stroke** (click, or press and release again) instead of a single press with a hover delay | The restricted environment has no timers, and research favors a fresh stroke per level (§11.2) |
-| P5 | Whisper channels ship only if C2 shows `/w %t` works | It hasn't been tested (§8.2) |
+| P5 | **Changed by the owner:** whisper channels ship in v0.1.0, and C2 is a later smoke test | The owner will smoke-test it (§8.2) |
 | P6 | The spam guard is global and set in General ▸ Behavior (0.6–2.0 s, default 1.0) | Adjustable if Blizzard changes the throttle (§9.2) |
 | P7 | A `Bindings.xml` with "Open Comms Dial 1–4", alongside each dial's own key setting | Players can use the game's key bindings menu if they prefer (§9.4) |
-| P8 | `/qc send` prints the baked line and never sends | No second send path (D12) |
+| P8 | `/qc check <id>` prints the baked line and never sends | No second send path (D12). It isn't named `send` because it doesn't send, or `test` because `/qc test` is the test-mode toggle. |
 | P9 | Replace `.gitattributes` with the standard's CRLF body in phase 0 | The standard requires it (line-endings) |
