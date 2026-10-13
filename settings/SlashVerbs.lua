@@ -1,6 +1,6 @@
 local _, NS = ...
 -- settings/SlashVerbs.lua — the bodies of the feature verbs settings/Slash.lua's NS.COMMANDS rows
--- call (spec §14). Today: `check`. The rows are positional triples; the work lives here so it can
+-- call (spec §14). Today: `check`, `lock` and `unlock`. The rows are positional triples; the work lives here so it can
 -- be tested without the dispatcher.
 
 NS.SlashVerbs = NS.SlashVerbs or {}
@@ -47,4 +47,17 @@ end
 --- `/qc check <id>`: print the lines.
 function V.Check(rest)
     for _, line in ipairs(V.CheckLines(rest)) do NS.Print(line) end
+end
+
+--- `/qc lock|unlock` and the launcher's Locked entry: the Lock frame row's stored path through the
+--- one write seam (slash-commands-§8), confirmed on one line in `set`'s shape.
+function V.SetLocked(on)
+    local S = NS.SchemaRuntime
+    local ok, err = S.Set("locked", on and true or false)
+    if ok == false then return NS.Print(tostring(err)) end
+    NS.Print(("locked = %s"):format(tostring(S.Get("locked"))))
+end
+
+function V.ToggleLock()
+    V.SetLocked(NS.Setting("locked") == false)
 end

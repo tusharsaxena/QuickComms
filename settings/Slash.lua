@@ -4,9 +4,9 @@ local _, NS = ...
 -- The dispatcher, help renderer, formatters and value parser are the library's (slash-commands-§1).
 -- What stays here is the ordered verb table (positional triples {name, desc, fn}) and the host verbs
 -- that reach into this addon's own state. Every verb that toggles something calls the same handler
--- its Master controls row and its launcher entry call. The design spec's other verbs (§14: lock,
--- unlock and test with the Comms Pad; preview and why with the features they report on; check is here)
--- arrive with the tasks that own them.
+-- its Master controls row and its launcher entry call. The design spec's other verbs (§14: preview and
+-- why arrive with the features they report on; check, lock, unlock and test are here)
+-- follow the reserved set in the table below.
 
 local QC = NS.addon
 local L  = NS.L
@@ -30,6 +30,10 @@ local COMMANDS = {
         function() runEnabled(true) end},
     {"disable",  L["Disable the addon"],
         function() runEnabled(false) end},
+    {"lock",     L["Lock the Comms Pads in place"],
+        function() NS.SlashVerbs.SetLocked(true) end},
+    {"unlock",   L["Unlock the Comms Pads so they can be dragged"],
+        function() NS.SlashVerbs.SetLocked(false) end},
     {"version",  L["Print the addon version"],
         function() Sl:CliVersion() end},
     {"list",     L["List every setting and its current value"],
@@ -52,6 +56,8 @@ local COMMANDS = {
         function(rest) runPerf(rest) end},
     {"check",    L["Show the line a callout would send here (never sends)"],
         function(rest) NS.SlashVerbs.Check(rest) end},
+    {"test",     L["Turn test mode on or off (placeholder chips; combat ends it)"],
+        function() NS.Preview.ToggleTestMode() end},
 }
 NS.COMMANDS = COMMANDS
 

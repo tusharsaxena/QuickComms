@@ -28,8 +28,8 @@ end
 
 -- ── storage that is not a profile path ──────────────────────────────────────────────────────
 
--- Session-only rows: never SavedVariables. The console's own flag. Test mode joins it with the
--- Comms Pad (design spec §10.4).
+-- Session-only rows: never SavedVariables. The console's own flag. And the test mode (design spec
+-- §10.4).
 local SESSION = {
     ["state.debugConsole"] = {
         get = function()
@@ -43,6 +43,11 @@ local SESSION = {
             local spec = DL and DL.ConsoleCheckbox and DL:ConsoleCheckbox()
             if spec then spec.set(v) end
         end,
+    },
+    -- Test mode (spec §10.4): the one switch is modules/Preview.lua's; the row reads and writes it.
+    ["state.testMode"] = {
+        get = function() return NS.Preview ~= nil and NS.Preview.IsTestMode() end,
+        set = function(v) if NS.Preview then NS.Preview.SetTestMode(v and true or false) end end,
     },
 }
 
@@ -88,10 +93,22 @@ end
 -- the CLI, the launcher or a host verb. settings/Panel.lua binds these as the composed rows'
 -- onChange; on a load where the composers are hollow the same paths are written through
 -- (`writeThrough` below) and `announce` runs the same reaction.
+-- A write that changes what a pad draws asks the surfaces for one rebuild, which waits for the end
+-- of combat on its own (spec §13.1: setters that rebuild secure frames queue through SendEngine).
+local function rebuildSurfaces()
+    if NS.Surfaces and NS.Surfaces.Request then NS.Surfaces.Request("settings") end
+end
+Settings.RebuildSurfaces = rebuildSurfaces
+
 Settings.REACTIONS = {
     enabled = function(v)
         if NS.Lifecycle then NS.Lifecycle:Set(NS.HOLD_DISABLED, v == false) end
     end,
+    visibility = rebuildSurfaces,
+    scale      = rebuildSurfaces,
+    alpha      = rebuildSurfaces,
+    -- The drag strip is not protected: it shows and hides at once, in combat too.
+    locked     = function() if NS.Pad and NS.Pad.ApplyLock then NS.Pad.ApplyLock() end end,
 }
 
 local function announce(row, path, value)

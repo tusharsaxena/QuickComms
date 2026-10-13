@@ -30,14 +30,15 @@ test("schema: the Minimap button row's backing key resolves against the global d
     assertEqual(count, 1)
 end)
 
-test("schema: the Master controls rows are the frameless canonical set, in the canonical order", function()
+test("schema: the Master controls rows are the framed canonical set, in the canonical order", function()
     local NS = T.newAddon()
     local paths = {}
     for i, row in ipairs(NS.addon.Settings.Schema) do paths[i] = row.path end
-    -- red under: drop `frameless = true` from settings/Panel.lua (a lock with no frame to lock)
+    -- red under: put `frameless = true` back in settings/Panel.lua (the pad has a frame to lock)
     -- The Master controls block leads; the Behavior rows (settings/SchemaRows.lua) follow it.
-    assertEqual(table.concat(paths, ",", 1, 3), "enabled,state.debugConsole,global.minimap.shown")
-    assertEqual(paths[4], "behavior.soloFallback")
+    assertEqual(table.concat(paths, ",", 1, 8),
+        "enabled,visibility,scale,alpha,locked,state.debugConsole,global.minimap.shown,state.testMode")
+    assertEqual(paths[9], "behavior.soloFallback")
 end)
 
 test("schema: NS.Setting reads through the seam, and answers the default before the db exists", function()
@@ -104,6 +105,6 @@ end)
 
 test("schema: degraded, a row-less path not in the list is still refused", function()
     local D = T.bootAddon{ skip = NO_LIBKA0S }
-    assertFalse(D.SchemaRuntime.Set("locked", true))
-    assertTrue(D.addon.db.profile.locked == nil, "nothing stored")
+    assertFalse(D.SchemaRuntime.Set("locked", false))
+    assertEqual(D.addon.db.profile.locked, true, "nothing stored: the default stands")
 end)

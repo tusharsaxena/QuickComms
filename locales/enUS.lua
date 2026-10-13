@@ -30,6 +30,7 @@ L["Disable the addon"] = "Disable the addon"
 L["Enable the addon"] = "Enable the addon"
 L["List available commands"] = "List available commands"
 L["List every setting and its current value"] = "List every setting and its current value"
+L["Lock the Comms Pads in place"] = "Lock the Comms Pads in place"
 L["List profiles, or switch to one: profile <name>"] =
     "List profiles, or switch to one: profile <name>"
 L["Measure performance — `/qc perf` opens the step panel"] =
@@ -45,6 +46,9 @@ L["Reset one setting to its default — `/qc reset <path>`"] =
     "Reset one setting to its default — `/qc reset <path>`"
 L["Set a setting — `/qc set <path> <value>` (try /qc list)"] =
     "Set a setting — `/qc set <path> <value>` (try /qc list)"
+L["Turn test mode on or off (placeholder chips; combat ends it)"] =
+    "Turn test mode on or off (placeholder chips; combat ends it)"
+L["Unlock the Comms Pads so they can be dragged"] = "Unlock the Comms Pads so they can be dragged"
 L["Write the diagnostics report to the debug console"] =
     "Write the diagnostics report to the debug console"
 
