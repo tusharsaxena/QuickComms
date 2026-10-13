@@ -69,6 +69,24 @@ test("dial: a refused callout is a dimmed, disarmed wedge; a ring wedge is disar
     assertNil(ringWedge:GetAttribute("type"))
 end)
 
+test("dial: [audit QC-07] the hub's close and a wedge's padlock are catalog marks, with the Blizzard art as the nil fallback", function()
+    local NS, m = live()
+    NS.Dial.Apply(1, "d2", planOf(NS))
+    local h = NS.Dial.Instance("d2").header
+    -- red under: SetTexture(CLOSE_ICON) / SetTexture(LOCK_ICON) unconditionally in modules/Dial_Render.lua
+    assertTrue(NS.Icon("close") ~= nil)
+    assertEqual(h.qcClose.__texture, NS.Icon("close"))
+    local w = NS.Dial.RingWedges("d2", 1)[1]
+    assertEqual(w.qcLock.__texture, NS.Icon("lock"))
+    local real = NS.Icon
+    NS.Icon = function() return nil end
+    local bare = NS.DialRender.DressHub(m.CreateFrame("Frame", "QuickCommsDialProbe", m.UIParent))
+    local wedge = NS.DialRender.DressWedge(m.CreateFrame("Button", "QuickCommsDialProbeWedge", m.UIParent))
+    NS.Icon = real
+    assertEqual(bare.qcClose.__texture, "Interface\\Buttons\\UI-StopButton")
+    assertEqual(wedge.qcLock.__texture, "Interface\\PetBattles\\PetBattle-LockIcon")
+end)
+
 test("dial: the hub shows the lockdown chip, the stale hint and TEST MODE; the pointer runs only while open", function()
     local NS, m = live()
     NS.Dial.Apply(1, "d2", planOf(NS, { lockdown = true, test = true }))

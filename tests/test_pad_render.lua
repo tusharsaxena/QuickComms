@@ -24,6 +24,20 @@ test("render: Dress builds a chip's regions once, each its own object", function
     assertFalse(b.qcFlash:IsShown())
 end)
 
+test("render: [audit QC-07] the chip's padlock is the catalog's lock mark, tinted gold; the Blizzard art is the nil fallback", function()
+    local NS, m = T.enableAddon()
+    local b = chip(NS, m)
+    -- red under: SetTexture(LOCK_ICON) unconditionally in PadRender.Dress
+    assertTrue(NS.Icon("lock") ~= nil)
+    assertEqual(b.qcLock.__texture, NS.Icon("lock"))
+    assertEqual(b.qcLock.__color[1], NS.Constants.GOLD.r)
+    local real = NS.Icon
+    NS.Icon = function() return nil end
+    local b2 = chip(NS, m)
+    NS.Icon = real
+    assertEqual(b2.qcLock.__texture, "Interface\\PetBattles\\PetBattle-LockIcon")
+end)
+
 test("render: an armed chip shows its name, its channel tag in the chat color, no lock, no dim", function()
     local NS, m = T.enableAddon()
     local b = chip(NS, m)

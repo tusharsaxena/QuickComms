@@ -16,6 +16,8 @@ local PL = NS.PadLayout
 local L = NS.L
 
 local DEFAULT_ICON = "Interface\\Icons\\INV_Misc_QuestionMark"
+-- The padlock is the shared catalog's `lock` mark (library-stack-§8), resolved at draw time; this
+-- Blizzard texture is drawn only when the catalog answers nil (the library absent).
 local LOCK_ICON = "Interface\\PetBattles\\PetBattle-LockIcon"
 local DOT = " \194\183 "
 
@@ -128,7 +130,12 @@ function R.Dress(btn, onEnter, onLeave)
     btn.qcLock = btn:CreateTexture(nil, "OVERLAY")
     btn.qcLock:SetSize(12, 12)
     btn.qcLock:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -1, -1)
-    btn.qcLock:SetTexture(LOCK_ICON)
+    local lockMark = NS.Icon("lock")
+    btn.qcLock:SetTexture(lockMark or LOCK_ICON)
+    if lockMark then
+        local gold = NS.Constants.GOLD   -- the catalog art is white; gold as the Blizzard padlock reads
+        btn.qcLock:SetVertexColor(gold.r, gold.g, gold.b, 1)
+    end
     btn.qcDim = veil(btn, 0, 0, 0, 0.55)
     btn.qcCool = veil(btn, 0, 0, 0, 0.35)
     btn.qcFlash = veil(btn, 1.0, 0.82, 0.0, 0.45)

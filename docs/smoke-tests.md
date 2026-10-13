@@ -21,9 +21,9 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | DIAG-1..2 | Diagnostics | The debug console, the report, perf |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
 | SEND-1..5 | Send | Secure sends in keys and on bosses, the spam guard |
-| PAD-1..7 | Pad | The Comms Pad |
+| PAD-1..8 | Pad | The Comms Pad |
 | EDIT-1..8 | Editors | The Callouts, Groups, Comms Pad and Share pages, Preview as…, Why is this showing? |
-| DIAL-1..11 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial |
+| DIAL-1..12 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial |
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
 | LOOK-1..2 | Look | The Comms Pad's font, border and background |
 | ICON-1 | Icons | The icon picker |
@@ -169,6 +169,10 @@ stays until combat ends, then hides. `/qc enable` → it returns with live chips
 **PAD-7. A profile switch in combat.** `/qc profile <another>` during combat → the stale hint
 shows, no error; after combat the pad is the other profile's. Result:
 
+**PAD-8. The padlock mark.** Put a Say callout on the pad and pull an encounter (the chat lockdown) →
+its chip shows a small gold padlock in its top-right corner (the LibKa0s catalog's `lock` mark, not the pet-battle lock). With LibKa0s removed (DEGRADED-1)
+the pet-battle padlock draws instead, with no error. Result:
+
 ## Editors
 
 **EDIT-1. A callout and a group on the pad (the phase 3 exit).** Settings → Callouts → New callout;
@@ -288,6 +292,11 @@ key H; press G, then H → dial 1 closes and dial 2 opens; press 1 → dial 2's 
 1's; close it → 1 fires the action bar again. In Preview as Arathi Basin the ring title sits above
 the N wedge's label, and the NE, SE, SW and NW labels read away from their wedges. With test mode on, close the
 dial with the hub, then change Wedges per ring → it stays closed. Result:
+
+**DIAL-12. The hub's close and the wedge padlock.** Open the dial → the hub carries a red ✕ (the
+LibKa0s catalog's `close` mark, not the round stop button), and during an encounter a Say callout's wedge shows
+the same small gold padlock as a pad chip (PAD-8). With LibKa0s removed (DEGRADED-1) the stop button and the
+pet-battle padlock draw instead, with no error. Result:
 
 ## Share
 
@@ -414,7 +423,7 @@ from the client, so this check needs a non-English client pass. Result:
 | ID | Origin | Why it is owed |
 |---|---|---|
 | INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..2, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet; LOC-1 re-enumerated in phase 5 and owed a non-English client pass |
-| SEND-1..5, PAD-1..7 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet |
+| SEND-1..5, PAD-1..8 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet; PAD-8 added in phase 5 (audit QC-07) |
 | EDIT-1..8 | Phase 3: the editors | No client pass recorded yet |
-| DIAL-1..11 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-4 rewritten in phase 5 for the pinned ring |
+| DIAL-1..12 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
 | SHARE-1..6, LOOK-1..2, ICON-1, BG-1..2, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; LOOK-2's in-combat step goes through `/qc set` |
