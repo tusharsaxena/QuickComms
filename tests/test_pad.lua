@@ -153,6 +153,42 @@ test("pad: the drag saves the point; locked or in combat it does not move; Reset
     assertEqual(p, "CENTER")
 end)
 
+-- Combat can begin while the player is already dragging: canDrag only guards the start. The pad
+-- ends the drag itself on the combat edge, so the strip's OnDragStop never calls the protected
+-- root's StopMovingOrSizing in combat.
+local function startDrag(NS, m)
+    NS.SchemaRuntime.Set("locked", false)
+    local inst = NS.Pad.Instance("p1")
+    inst.handle:__fire("OnDragStart")
+    inst.root:ClearAllPoints()
+    inst.root:SetPoint("TOPLEFT", m.UIParent, "TOPLEFT", 25, -35)
+    return inst
+end
+
+test("pad: [fix 1] combat starting mid-drag ends the drag on the edge; the stop is never blocked", function()
+    local NS, m = applied()
+    local inst = startDrag(NS, m)
+    combat(m, true)
+    -- red under: drop the pad's RESTRICTION_CHANGED receiver (the strip then stops the root in combat)
+    inst.handle:__fire("OnDragStop")
+    assertEqual(#m.blocked, 0)
+    assertEqual(table.concat(NS.db.profile.pads.p1.point, ","), "TOPLEFT,TOPLEFT,25,-35")
+    assertNil(inst.dragging)
+end)
+
+test("pad: [fix 1] a drag caught after lockdown began is stopped and saved when combat ends", function()
+    local NS, m = applied()
+    local inst = startDrag(NS, m)
+    m.__setCombat(true)
+    m.__fire("PLAYER_REGEN_DISABLED")
+    inst.handle:__fire("OnDragStop")
+    assertEqual(#m.blocked, 0)
+    assertNil(NS.db.profile.pads.p1.point, "deferred until combat ends")
+    combat(m, false)
+    assertEqual(#m.blocked, 0)
+    assertEqual(table.concat(NS.db.profile.pads.p1.point, ","), "TOPLEFT,TOPLEFT,25,-35")
+end)
+
 test("pad: tabs show one section; the wheel steps them out of combat and is refused in it", function()
     local NS, m = live(AB)
     NS.db.profile.pads.p1.groupsAs = "tabs"

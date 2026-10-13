@@ -7,7 +7,9 @@ local _, NS = ...
 -- header row (situation chip, lockdown chip, test label, stale hint, collapse) is a plain child;
 -- the LibKa0s drag strip sits above the root and shows only while unlocked (KickCD
 -- modules/IconGrid_Handle.lua `buildHandle` / `IconGrid:ApplyLock`), and its canDrag refuses while
--- locked or in combat.
+-- locked or in combat. canDrag guards only the start: when combat begins mid-drag, the
+-- RESTRICTION_CHANGED edge ends the drag itself (endDrags), so the strip's OnDragStop never stops
+-- the protected root in combat.
 --
 -- PROTECTED WORK IS OUT OF COMBAT ONLY. Apply, Release and ResetPositions' anchoring run through
 -- Surfaces and SendEngine.RunOrQueue; Apply also declines on its own in combat. Visibility is the
@@ -160,7 +162,11 @@ local function build(id)
         label = label,
         moveFrame = root,
         canDrag = function() return not isLocked() and not inCombat() end,
-        onDragStop = function() savePoint(inst) end,
+        onDragStart = function() inst.dragging = true end,
+        onDragStop = function()
+            inst.dragging = nil
+            savePoint(inst)
+        end,
         onRightClick = function() NS.addon:OpenSettings() end,
         tooltip = { title = label, body = { L["Drag to move. Right-click for settings."] } },
     })
@@ -353,10 +359,38 @@ local function onSendResult(_, calloutId, surfaceId, what)
     end
 end
 
+-- The combat edge while a pad is being dragged. The strip forgets the drag first, so its
+-- OnDragStop does nothing; the stop and the save run now when lockdown has not begun yet (the
+-- PLAYER_REGEN_DISABLED edge comes before it), else once combat ends.
+local function endDrags()
+    local dragging = {}
+    for _, inst in pairs(pads) do
+        if inst.dragging then
+            inst.dragging = nil
+            if inst.handle then inst.handle.__dragging = nil end
+            dragging[#dragging + 1] = inst
+        end
+    end
+    if #dragging == 0 then return end
+    NS.SendEngine.RunOrQueue("padDrag", function()
+        for _, inst in ipairs(dragging) do
+            inst.root:StopMovingOrSizing()
+            savePoint(inst)
+        end
+    end)
+end
+
+local function onRestrictionChanged()
+    if NS.Restrictions.InCombat() then endDrags() end
+end
+
 local receiver
 local function listen()
     receiver = receiver or NS.Bus:NewTarget()
-    if receiver then receiver:RegisterMessage(NS.MSG.SEND_RESULT, onSendResult) end
+    if receiver then
+        receiver:RegisterMessage(NS.MSG.SEND_RESULT, onSendResult)
+        receiver:RegisterMessage(NS.MSG.RESTRICTION_CHANGED, onRestrictionChanged)
+    end
 end
 listen()
 
@@ -366,7 +400,10 @@ NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
     if State.padCoolTimer then NS.addon:CancelTimer(State.padCoolTimer) end
     State.padFlashTimers, State.padCoolTimer = nil, nil
     for _, inst in pairs(pads) do inst.hover = 0 end
-    if receiver and not NS.Bus.tracked then receiver:UnregisterMessage(NS.MSG.SEND_RESULT) end
+    if receiver and not NS.Bus.tracked then
+        receiver:UnregisterMessage(NS.MSG.SEND_RESULT)
+        receiver:UnregisterMessage(NS.MSG.RESTRICTION_CHANGED)
+    end
 end
 NS.STAND_UP[#NS.STAND_UP + 1] = function()
     if not NS.Bus.tracked then listen() end
