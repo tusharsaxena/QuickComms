@@ -5,7 +5,8 @@ local _, NS = ...
 --     band      [ Group v (picker; a green dot marks a group active now) ][ New group ]
 --     strip     [ General ][ Callouts ][ When ][ Preview ]
 --     General   Preview as (page-wide, first), then Name, Icon, Enabled, Open the dial on this group,
---               then Duplicate and Delete. A built-in: what it is, its Enabled row, and Customize.
+--               Choose an icon (settings/Editors.lua's picker), then Duplicate and Delete. A built-in:
+--               what it is, its Enabled row, and Customize.
 --     Callouts  a user group's callouts as a drag-to-reorder list with Remove, then Add a callout (a
 --               built-in callout is copied in first, spec P2). A built-in: a Show checkbox per
 --               callout, the hidden-callouts editor (spec §12.2).
@@ -172,6 +173,7 @@ local function renderGeneral(ctx, rows)
         if row.path ~= "state.previewAs" then mine[#mine + 1] = row end
     end
     h.RenderRows(ctx, mine, nil, nil, { noHeadings = true })
+    Ed.IconPicker(ctx, "group.icon", gid)
     h.InlineButtonPair(ctx,
         { text = L["Duplicate"], tooltip = L["Make a copy of this group, with the same callouts and When. The copy is on no pad until you add it under Comms Pad > Groups."],
           onClick = function() G.Duplicate(gid) end },

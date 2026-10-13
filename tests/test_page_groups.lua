@@ -288,3 +288,19 @@ test("groups page: [final 18] Add the instance you are in reads the instance at 
     here:__fire("OnClick")
     assertTrue(NS.db.profile.groups[gid].when.instances[2526])
 end)
+
+test("groups page: [phase 5] Choose an icon sets a user group's icon; a built-in set offers no picker", function()
+    local NS, _, P = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    local Ed = NS.addon.Settings.Editors
+    Ed.Select("group", gid)
+    local w = P.redraw("groups")
+    local wanted = "Interface\\Icons\\Achievement_Boss_Ragnaros"
+    for _, icon in ipairs(P.all(w, "Icon")) do
+        if icon.image and icon.image[1] == wanted then icon:__fire("OnClick") end
+    end
+    assertEqual(NS.db.profile.groups[gid].icon, wanted)
+    Ed.Select("group", "bi.mplus")
+    w = P.redraw("groups")
+    assertEqual(#P.all(w, "Icon"), 0, "built-ins are read-only")
+end)

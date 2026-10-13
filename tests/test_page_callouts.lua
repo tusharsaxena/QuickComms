@@ -239,3 +239,34 @@ test("callouts page: [review 1] a delete popup accepted after the pull deletes; 
     assertFalse(NS.Pad.Instance("p1").header.qcStale:IsShown())
     assertEqual(#m.blocked, 0)
 end)
+
+-- The picker's icon showing `path`, among the widgets `w`.
+local function iconFor(P, w, path)
+    for _, icon in ipairs(P.all(w, "Icon")) do
+        if icon.image and icon.image[1] == path then return icon end
+    end
+    return nil
+end
+
+test("callouts page: [phase 5] Choose an icon: a click on the skull is the callout's icon, through the seam", function()
+    local NS, _, P = open()
+    local id = NS.Library.CreateCallout({ name = "Kill", text = "Kill {skull}", channel = "party" })
+    NS.addon.Settings.Editors.Select("callout", id)
+    local w = P.redraw("callouts")
+    assertTrue(P.find(w, "Heading", "Choose an icon") ~= nil)
+    local skull = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_8"
+    iconFor(P, w, skull):__fire("OnClick")
+    assertEqual(NS.db.profile.callouts[id].icon, skull)
+    -- a LibKa0s mark is offered by its path, as the Icon box takes it
+    local chat = NS.Icon("chat")
+    assertTrue(chat ~= nil and iconFor(P, w, chat) ~= nil)
+    -- the built-in sets' icons are read from NS.BuiltIns: their callouts' too, and nothing they do not wear
+    -- red under: hard-code a list of game icons in settings/Editors.lua that leaves out the callouts'
+    assertTrue(iconFor(P, w, "Interface\\Icons\\Spell_Nature_Bloodlust") ~= nil)
+    assertTrue(iconFor(P, w, "Interface\\Icons\\Spell_Nature_Reincarnation") ~= nil)
+    assertNil(iconFor(P, w, "Interface\\Icons\\INV_Misc_QuestionMark"))
+    assertNil(iconFor(P, w, NS.Icon("close")), "the catalog's window chrome is not offered")
+    local labels = {}
+    for _, e in ipairs(NS.addon.Settings.Editors.IconPalette()) do labels[#labels + 1] = e.label end
+    assertEqual(labels[8], "Skull", "a raid marker carries its localized name")
+end)

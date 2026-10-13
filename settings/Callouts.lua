@@ -4,8 +4,9 @@ local _, NS = ...
 --     band     [ Callout v (picker)        ][ New callout ]
 --     strip    [ General ][ Used by ]
 --     General  Name, Text, Channel, Icon (the member rows, settings/SchemaMembers.lua), Insert a
---              token, then what it sends here (the baked line and its bytes, or why it sends
---              nothing, and any lock), then Duplicate and Delete
+--              token, Choose an icon (settings/Editors.lua's picker), then what it sends here (the
+--              baked line and its bytes, or why it sends nothing, and any lock), then Duplicate and
+--              Delete
 --     Used by  every group that holds it, each a link to the Groups page
 --
 -- The band holds the picker and the create action and nothing else (options-ui-§14); the acts on
@@ -158,6 +159,7 @@ local function renderGeneral(ctx, rows)
     h.RenderGrid(ctx, { Ed.ActionDropdown(L["Insert a token"],
         L["Add a token to the end of the text. Tokens are filled in when the callout is sent."],
         tokenEntries(id), function(token) C.InsertToken(id, token) end, ctx) })
+    Ed.IconPicker(ctx, "callout.icon", id)
     h.Section(ctx, L["What it sends here"])
     -- One label, refreshed in place (Ed.Live) on every write to this callout and every situation change.
     local live = h.TextRow(ctx, table.concat(C.PreviewLines(callout), "\n"))

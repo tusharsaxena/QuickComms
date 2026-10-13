@@ -43,3 +43,11 @@ function NS.MediaFetch(kind, name)
     if ok and type(path) == "string" and path ~= "" then return path end
     return nil
 end
+
+--- The icon catalog's names, in its order (library-stack-§8: a catalog is enumerated, never
+--- hard-coded), or an empty list when the library is absent. The icon picker reads it
+--- (settings/Editors.lua).
+--- @return string[]
+function NS.IconNames()
+    return Media and Media.ICONS or {}
+end
