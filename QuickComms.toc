@@ -87,6 +87,8 @@ modules\Tokens.lua
 modules\Channels.lua
 # Conventional: pure; calls Tokens and Channels at call time
 modules\Bake.lua
+# Conventional: pure
+modules\Resolver.lua
 # Conventional: core\DebugLogSetup.lua's descriptor reads NS.Diagnostics at RUN time.
 modules\Diagnostics.lua
 
