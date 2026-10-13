@@ -83,6 +83,8 @@ modules\Restrictions.lua
 modules\Situation.lua
 # Conventional: pure
 modules\Tokens.lua
+# Conventional: pure
+modules\Channels.lua
 # Conventional: core\DebugLogSetup.lua's descriptor reads NS.Diagnostics at RUN time.
 modules\Diagnostics.lua
 
