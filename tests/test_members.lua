@@ -117,3 +117,121 @@ test("members: member rows are not AceDB defaults, and each resolves against its
     -- red under: drop the instance branch from the validation's defaultsRoot
     assertEqual(NS.addon.Settings.Helpers.ValidateSchema(), 0)
 end)
+
+local MPLUS = { inInstance = true, instanceType = "party", difficultyID = 8, keystoneActive = true,
+    keyLevel = 12, inGroup = true }
+
+local function combat(m, on)
+    if on then
+        m.__setCombat(false)
+        m.__fire("PLAYER_REGEN_DISABLED")
+        m.__setCombat(true)
+    else
+        m.__setCombat(false)
+        m.__fire("PLAYER_REGEN_ENABLED")
+    end
+end
+
+test("members: [review 4] the CLI prints the built-in refusal", function()
+    local NS, m = T.enableAddon()
+    NS.State.editing.group = "bi.mplus"
+    m.prints = {}
+    NS.addon:OnSlashCommand("set group.name Mine")
+    local text = table.concat(m.prints, "\n")
+    assertTrue(text:find("Built-in groups are read-only", 1, true) ~= nil, text)
+end)
+
+test("members: Library's built-in writers and the pad point go through the seam, one announce each", function()
+    local NS, S, Lib = boot()
+    local out = heard(NS)
+    assertTrue(Lib.SetBuiltinEnabled("bi.raid", false))
+    assertFalse(NS.db.profile.builtins["bi.raid"].enabled)
+    assertTrue(Lib.SetBuiltinCalloutHidden("bi.bg.ab.stables", "bi.bg.ab.stables.inc1", true))
+    assertTrue(NS.db.profile.builtins["bi.bg.ab"].hidden["bi.bg.ab.stables.inc1"])
+    assertTrue(Lib.SetSurfacePoint("pad", "p1", { "TOPLEFT", "TOPLEFT", 4, -4 }))
+    assertEqual(table.concat(out, ","), "builtin:bi.raid,builtin:bi.bg.ab,pad:p1")
+    -- a set's hidden list holds only its own callouts
+    assertFalse((S.Set("builtin.hidden", { ["bi.mplus.lust"] = true }, "bi.raid")))
+    -- Each writer reaches the seam, by path and instance argument.
+    local paths = {}
+    local set = S.Set
+    S.Set = function(path, value, id)
+        paths[#paths + 1] = path .. "@" .. tostring(id)
+        return set(path, value, id)
+    end
+    Lib.SetBuiltinEnabled("bi.raid", true)
+    Lib.SetBuiltinCalloutHidden("bi.bg.ab", "bi.bg.ab.stables.inc1", false)
+    Lib.SetSurfacePoint("pad", "p1", nil)
+    Lib.Customize("bi.arena")
+    S.Set = set
+    -- red under: assign the field directly in any of the four writers in modules/Library.lua
+    assertEqual(table.concat(paths, ","),
+        "builtin.enabled@bi.raid,builtin.hidden@bi.bg.ab,pad.point@p1,builtin.enabled@bi.arena")
+end)
+
+test("members: the structured rows are typed and printed on the CLI through the descriptor's parse and format", function()
+    local NS, m = T.enableAddon()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    NS.State.editing.group = gid
+    NS.addon:OnSlashCommand("set group.when content mythicPlus,raid")
+    -- red under: drop `parse` from the descriptor in settings/Slash.lua (the library refuses the type)
+    assertTrue(NS.db.profile.groups[gid].when.content.mythicPlus)
+    assertTrue(NS.db.profile.groups[gid].when.content.raid)
+    NS.addon:OnSlashCommand("set group.when keyLevel 10-")
+    assertEqual(NS.db.profile.groups[gid].when.keyLevel.min, 10)
+    assertNil(NS.db.profile.groups[gid].when.keyLevel.max)
+    m.prints = {}
+    NS.addon:OnSlashCommand("get group.when")
+    local text = table.concat(m.prints, "\n")
+    -- red under: drop `format` from the descriptor (a table address prints)
+    assertTrue(text:find("content=mythicPlus,raid; keyLevel=10..any", 1, true) ~= nil, text)
+    NS.addon:OnSlashCommand("set group.when content")
+    assertNil(NS.db.profile.groups[gid].when.content, "the condition alone clears it")
+    m.prints = {}
+    NS.addon:OnSlashCommand("set group.when keyLevel 12-10")
+    text = table.concat(m.prints, "\n")
+    assertTrue(text:find("The lowest key level is above the highest.", 1, true) ~= nil, text)
+    NS.State.editing.pad = "p1"
+    NS.addon:OnSlashCommand("set pad.point 40 -60")
+    assertEqual(table.concat(NS.db.profile.pads.p1.point, ","), "CENTER,CENTER,40,-60")
+    NS.addon:OnSlashCommand("set pad.point topleft topleft 5 -5")
+    assertEqual(table.concat(NS.db.profile.pads.p1.point, ","), "TOPLEFT,TOPLEFT,5,-5")
+    NS.addon:OnSlashCommand("set pad.point left")
+    assertEqual(table.concat(NS.db.profile.pads.p1.point, ","), "TOPLEFT,TOPLEFT,5,-5", "refused: nothing stored")
+    NS.State.editing.builtin = "bi.mplus"
+    NS.addon:OnSlashCommand("set builtin.hidden bi.mplus.lust")
+    assertTrue(NS.db.profile.builtins["bi.mplus"].hidden["bi.mplus.lust"])
+    NS.addon:OnSlashCommand("set builtin.hidden none")
+    assertTrue(next(NS.db.profile.builtins["bi.mplus"].hidden) == nil)
+    NS.State.editing.builtin = nil
+    m.prints = {}
+    NS.addon:OnSlashCommand("list")
+    text = table.concat(m.prints, "\n")
+    assertTrue(text:find("table: ", 1, true) == nil, "no table address printed")
+    assertTrue(text:find("pad.point", 1, true) ~= nil, "every member row is listed")
+    -- red under: drop the "(nothing to edit)" branch from the descriptor's format (builtin.* print nil)
+    assertTrue(text:find("(nothing to edit)", 1, true) ~= nil, text)
+end)
+
+test("members: [review 1] a callout edited from the CLI in combat waits for combat end, with the stale hint", function()
+    local NS, m = T.enableAddon()
+    NS.Situation.ReadInputs = function() return MPLUS end
+    NS.Situation.RefreshNow("test")
+    local Lib = NS.Library
+    local cid = Lib.CreateCallout({ name = "Inc", text = "Incoming", channel = "party" })
+    local gid = Lib.CreateGroup({ name = "Mine" })
+    Lib.AddToGroup(gid, cid)
+    Lib.AddGroupToSurface("pad", "p1", gid, 1)
+    assertEqual(NS.Pad.ChipsFor("p1", cid)[1]:GetAttribute("macrotext"), "/p Incoming")
+    NS.State.editing.callout = cid
+    combat(m, true)
+    NS.addon:OnSlashCommand("set callout.text Incoming {rt8}")
+    assertEqual(NS.db.profile.callouts[cid].text, "Incoming {rt8}", "the write lands in combat")
+    assertEqual(#m.blocked, 0, "no protected call")
+    assertEqual(NS.Pad.ChipsFor("p1", cid)[1]:GetAttribute("macrotext"), "/p Incoming", "the chip keeps its line")
+    assertTrue(NS.Pad.Instance("p1").header.qcStale:IsShown(), "the stale hint")
+    combat(m, false)
+    assertEqual(NS.Pad.ChipsFor("p1", cid)[1]:GetAttribute("macrotext"), "/p Incoming {rt8}")
+    assertFalse(NS.Pad.Instance("p1").header.qcStale:IsShown())
+    assertEqual(#m.blocked, 0)
+end)

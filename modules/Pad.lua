@@ -18,9 +18,10 @@ local _, NS = ...
 -- cooldown veil and the flashes. Tab switching and collapse are refused in combat with one line
 -- (spec §10.2, the C8 fallback); the wheel is heard over the header, the root and every chip. The
 -- position is `pads[id].point = { point, relativePoint, x, y }`
--- (the named non-setting state, spec §5.1), shaped as DropWatcher modules/Window.lua `savePoint` /
--- `applyPoint`. It is registry data, so the drag and Reset position write it only through
--- Library.SetSurfacePoint (architecture-§5); the active tab and the collapsed state are session
+-- (a member row since phase 3, spec §5.1), shaped as DropWatcher modules/Window.lua `savePoint` /
+-- `applyPoint`. It is the `pad.point` member row (settings/SchemaMembers.lua): the drag and Reset
+-- position write it through Library.SetSurfacePoint, which hands it to the seam (architecture-§5);
+-- the active tab and the collapsed state are session
 -- state in NS.State. Every rebuild re-anchors the root from the active profile (spec §10.4: the
 -- point lives in the profile), so a profile switch, copy or reset moves an existing pad; a frame
 -- being dragged, or whose drag stop is held for combat end, keeps the cursor's place.
@@ -37,6 +38,7 @@ local Perf = NS.Perf
 local TAG = "Pad"
 local FLASH_SECONDS = 0.4
 local DEFAULT_POINT = { "CENTER", "CENTER", 0, -150 }
+Pad.DEFAULT_POINT = DEFAULT_POINT   -- read, never written, by settings/Slash.lua and settings/Pads.lua
 
 local pads = {}   -- [padId] = instance; frames are reused across rebuilds and profiles
 
@@ -60,7 +62,7 @@ local function applyPoint(inst)
     inst.root:SetPoint(pt[1] or "CENTER", UIParent, pt[2] or "CENTER", tonumber(pt[3]) or 0, tonumber(pt[4]) or 0)
 end
 
--- The point is registry data: Library is its only writer (architecture-§5); the pad only asks.
+-- The point is the `pad.point` member row: Library.SetSurfacePoint writes it through the seam; the pad only asks.
 local function savePoint(inst)
     local point, _, relativePoint, x, y = inst.root:GetPoint(1)
     if not point then return end

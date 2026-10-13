@@ -398,20 +398,20 @@ end
 
 -- ── built-ins ───────────────────────────────────────────────────────────────────────────────
 
+--- Turn a built-in set on or off: the `builtin.enabled` member row, through the seam.
 function Lib.SetBuiltinEnabled(id, on)
     local top = topOf(id)
     if not top then return false end
-    overlay(top).enabled = on and true or false
-    announce("builtin", top)
-    return true
+    return (NS.SchemaRuntime.Set("builtin.enabled", on and true or false, top)) == true
 end
 
+--- Hide or show one of a built-in set's callouts: the whole `builtin.hidden` row, through the seam.
 function Lib.SetBuiltinCalloutHidden(groupId, calloutId, hidden)
     local top = topOf(groupId)
     if not top then return false end
-    overlay(top).hidden[calloutId] = hidden and true or nil
-    announce("builtin", top)
-    return true
+    local set = copyTable(overlay(top).hidden) or {}
+    set[calloutId] = hidden and true or nil
+    return (NS.SchemaRuntime.Set("builtin.hidden", set, top)) == true
 end
 
 --- Copy a top-level built-in into an editable user group, swap it into every surface at the same
@@ -447,7 +447,7 @@ function Lib.Customize(builtinId)
             if at then s.groups[at] = id end
         end
     end
-    overlay(builtinId).enabled = false
+    NS.SchemaRuntime.Set("builtin.enabled", false, builtinId)
     overlay(builtinId).customizedAs = id
     announce("builtin", builtinId)
     return id, nil, skipped
@@ -553,23 +553,17 @@ function Lib.MoveGroupOnSurface(kind, sid, from, to)
     return true
 end
 
---- Set, or with nil clear, a pad's or dial's saved anchor (spec §5.1, the named non-setting state).
---- The drag strip and Reset position call it; nothing else writes `point`. A plain copy is stored,
---- so the caller's table never aliases the profile.
+--- Set, or with nil clear, a surface's saved anchor (spec §5.1). A pad's is the `pad.point` member
+--- row, through the seam: the drag, the X/Y boxes and Reset position all write it there. A dial's has
+--- no row until the dial's page (phase 4) and stays Library's write. A plain copy is stored, so the
+--- caller's table never aliases the profile.
 --- @param point table|nil { point, relativePoint, x, y }: two strings, then two numbers
 --- @return boolean
 function Lib.SetSurfacePoint(kind, sid, point)
-    local s = surface(kind, sid)
-    if not s then return false end
-    if point ~= nil then
-        if type(point) ~= "table" or type(point[1]) ~= "string" or type(point[2]) ~= "string"
-            or type(point[3]) ~= "number" or type(point[4]) ~= "number" then
-            return false
-        end
-        s.point = { point[1], point[2], point[3], point[4] }
-    else
-        s.point = nil
-    end
+    if kind == "pad" then return (NS.SchemaRuntime.Set("pad.point", point, sid)) == true end
+    local s = kind == "dial" and surface(kind, sid)
+    if not s or not Lib.ValidPoint(point) then return false end
+    s.point = point and { point[1], point[2], point[3], point[4] } or nil
     announce(kind, sid)
     return true
 end
