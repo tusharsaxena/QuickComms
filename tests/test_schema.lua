@@ -166,6 +166,19 @@ test("schema: [fix wave] the Behavior rows that rebuild the pads resolve Setting
     assertEqual(#heard, 3)
 end)
 
+test("schema: [audit QC-13] the panel's color codec is written out for the stored { r, g, b, a } shape", function()
+    local NS = T.newAddon()
+    local codec = NS.addon.Settings.ColorCodec
+    -- red under: drop colorDecode / colorEncode from the descriptor in settings/OptionsSetup.lua
+    assertTrue(codec ~= nil, "published beside the descriptor that takes it")
+    local r, g, b, a = codec.decode({ r = 0.1, g = 0.2, b = 0.3 })
+    assertEqual(r, 0.1); assertEqual(g, 0.2); assertEqual(b, 0.3); assertEqual(a, 1)
+    r, g, b, a = codec.decode(nil)
+    assertEqual(r + g + b + a, 4, "a missing color reads as opaque white")
+    local c = codec.encode(0.4, 0.5, 0.6)
+    assertEqual(c.r, 0.4); assertEqual(c.g, 0.5); assertEqual(c.b, 0.6); assertEqual(c.a, 1)
+end)
+
 test("schema: [phase 3] a fresh profile has no row off its default; the member rows are not counted", function()
     local NS = T.bootAddon()
     local Settings = NS.addon.Settings
