@@ -63,6 +63,7 @@ end
 -- caches a profile value.
 local function reloadProfile(self)
     self:RunMigrations()
+    NS.Library.Prepare()
     local S = self.Settings
     local H = S and S.Helpers
     if H and H.RefreshAll then H.RefreshAll() end
@@ -107,6 +108,7 @@ function QC:OnInitialize()
 
     -- Before anything reads the profile (savedvariables-§1).
     self:RunMigrations()
+    NS.Library.Prepare()
 
     if self.db.RegisterCallback then
         self.db.RegisterCallback(self, "OnProfileChanged", function(...) self:OnProfileChanged(...) end)

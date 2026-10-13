@@ -99,6 +99,8 @@ modules\Channels.lua
 modules\Bake.lua
 # Conventional: pure
 modules\Resolver.lua
+# Conventional: the registry writer (architecture-§5); Prepare is called from the entry after migrations
+modules\Library.lua
 # Conventional: core\DebugLogSetup.lua's descriptor reads NS.Diagnostics at RUN time.
 modules\Diagnostics.lua
 

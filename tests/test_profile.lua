@@ -15,10 +15,10 @@ test("profile: behavior defaults match spec §5.1", function()
     assertEqual(b.autoPromote, false)
 end)
 
-test("profile: the collections start empty and the id counter at 1", function()
+test("profile: the collections exist and the id counter is 3 after boot (Prepare seeds a pad and a dial)", function()
     local NS = T.bootAddon()
     local p = NS.db.profile
-    assertEqual(p.nextId, 1)
+    assertEqual(p.nextId, 3)
     for _, key in ipairs({ "callouts", "groups", "builtins", "pads", "dials", "padOrder", "dialOrder" }) do
         assertEqual(type(p[key]), "table", key)
     end
