@@ -175,6 +175,31 @@ function Lib.Batch(fn)
     return unpack(r, 2, r.n)
 end
 
+-- A pad's or a dial's ids in the kind's display order (padOrder, dialOrder), skipping a stale entry.
+local function surfaceIds(p, kind)
+    local set = kind == "pad" and p.pads or p.dials
+    local out = {}
+    for _, id in ipairs(kind == "pad" and p.padOrder or p.dialOrder) do
+        if set[id] then out[#out + 1] = id end
+    end
+    return out
+end
+
+-- A set's ids by name (case-insensitive), then by id.
+local function idsByName(source)
+    local list = {}
+    for id, m in pairs(source) do list[#list + 1] = { id = id, key = tostring(m.name or id):lower() } end
+    table.sort(list, function(a, b)
+        if a.key ~= b.key then return a.key < b.key end
+        return a.id < b.id
+    end)
+    local out = {}
+    for i, e in ipairs(list) do out[i] = e.id end
+    return out
+end
+
+local NAMED_SETS = { callout = "callouts", group = "groups" }
+
 --- Every member of a kind, in the order its editor page's picker lists them: user callouts and user
 --- groups by name (case-insensitive, then id), the built-in sets after the user groups in shipped
 --- order, the pads in the pad order, the dials in the dial order. The seam's fallback when a page
@@ -184,23 +209,10 @@ end
 function Lib.MemberIds(kind)
     if not (NS.db and NS.db.profile) then return {} end
     local p = P()
-    local out = {}
-    if kind == "pad" or kind == "dial" then
-        local set = kind == "pad" and p.pads or p.dials
-        for _, id in ipairs(kind == "pad" and p.padOrder or p.dialOrder) do
-            if set[id] then out[#out + 1] = id end
-        end
-        return out
-    end
-    local source = (kind == "callout" and p.callouts) or (kind == "group" and p.groups) or nil
-    if not source then return out end
-    local list = {}
-    for id, m in pairs(source) do list[#list + 1] = { id = id, key = tostring(m.name or id):lower() } end
-    table.sort(list, function(a, b)
-        if a.key ~= b.key then return a.key < b.key end
-        return a.id < b.id
-    end)
-    for i, e in ipairs(list) do out[i] = e.id end
+    if kind == "pad" or kind == "dial" then return surfaceIds(p, kind) end
+    local source = NAMED_SETS[kind] and p[NAMED_SETS[kind]]
+    if not source then return {} end
+    local out = idsByName(source)
     if kind == "group" then
         for _, id in ipairs(NS.BuiltIns.order) do out[#out + 1] = id end
     end
@@ -840,6 +852,57 @@ local function liftNextId(p)
     if type(p.nextId) ~= "number" or p.nextId <= high then p.nextId = high + 1 end
 end
 
+-- A fresh profile's default pad and dial (D7), once.
+local function seed(p, result)
+    if p.seeded then return end
+    if #p.padOrder == 0 then Lib.CreateSurface("pad", L["Comms Pad"]) end
+    if #p.dialOrder == 0 then Lib.CreateSurface("dial", L["Comms Dial"]) end
+    p.seeded = true
+    result.seeded = true
+end
+
+-- Every user group's callout list as a table, its dangling ids dropped.
+local function repairGroups(p, result)
+    for _, g in pairs(p.groups) do
+        g.callouts = type(g.callouts) == "table" and g.callouts or {}
+        for i = #g.callouts, 1, -1 do
+            if not p.callouts[g.callouts[i]] then table.remove(g.callouts, i) result.repaired = result.repaired + 1 end
+        end
+    end
+end
+
+-- One pad or dial: its lists as tables, its dangling groups dropped, and each built-in it has not
+-- been offered yet appended once (seenBuiltins).
+local function repairSurface(s, result)
+    s.seenBuiltins = type(s.seenBuiltins) == "table" and s.seenBuiltins or {}
+    s.groups = type(s.groups) == "table" and s.groups or {}
+    for i = #s.groups, 1, -1 do
+        if not exists(s.groups[i]) then table.remove(s.groups, i) result.repaired = result.repaired + 1 end
+    end
+    for _, gid in ipairs(NS.BuiltIns.order) do
+        if not s.seenBuiltins[gid] then
+            s.seenBuiltins[gid] = true
+            if not indexOf(s.groups, gid) then
+                s.groups[#s.groups + 1] = gid
+                result.appended = result.appended + 1
+            end
+        end
+    end
+end
+
+-- A kind's display order: entries naming no surface dropped, surfaces it misses appended by id.
+local function repairOrder(order, set, result)
+    for i = #order, 1, -1 do
+        if not set[order[i]] then table.remove(order, i) result.repaired = result.repaired + 1 end
+    end
+    local ids = {}
+    for id in pairs(set) do ids[#ids + 1] = id end
+    table.sort(ids)
+    for _, id in ipairs(ids) do
+        if not indexOf(order, id) then order[#order + 1] = id result.repaired = result.repaired + 1 end
+    end
+end
+
 --- Seed, append newly shipped built-ins once per surface, and drop dangling ids. Idempotent.
 --- @return table { seeded, appended, repaired }
 function Lib.Prepare()
@@ -847,47 +910,11 @@ function Lib.Prepare()
     local result = { seeded = false, appended = 0, repaired = 0 }
     normalize(p, result)
     liftNextId(p)
-    if not p.seeded then
-        if #p.padOrder == 0 then Lib.CreateSurface("pad", L["Comms Pad"]) end
-        if #p.dialOrder == 0 then Lib.CreateSurface("dial", L["Comms Dial"]) end
-        p.seeded = true
-        result.seeded = true
-    end
-    for _, g in pairs(p.groups) do
-        g.callouts = type(g.callouts) == "table" and g.callouts or {}
-        for i = #g.callouts, 1, -1 do
-            if not p.callouts[g.callouts[i]] then table.remove(g.callouts, i) result.repaired = result.repaired + 1 end
-        end
-    end
-    for _, set in pairs(surfaces()) do
-        for _, s in pairs(set) do
-            s.seenBuiltins = type(s.seenBuiltins) == "table" and s.seenBuiltins or {}
-            s.groups = type(s.groups) == "table" and s.groups or {}
-            for i = #s.groups, 1, -1 do
-                if not exists(s.groups[i]) then table.remove(s.groups, i) result.repaired = result.repaired + 1 end
-            end
-            for _, gid in ipairs(NS.BuiltIns.order) do
-                if not s.seenBuiltins[gid] then
-                    s.seenBuiltins[gid] = true
-                    if not indexOf(s.groups, gid) then
-                        s.groups[#s.groups + 1] = gid
-                        result.appended = result.appended + 1
-                    end
-                end
-            end
-        end
-    end
+    seed(p, result)
+    repairGroups(p, result)
     for kind, set in pairs(surfaces()) do
-        local order = kind == "pad" and p.padOrder or p.dialOrder
-        for i = #order, 1, -1 do
-            if not set[order[i]] then table.remove(order, i) result.repaired = result.repaired + 1 end
-        end
-        local ids = {}
-        for id in pairs(set) do ids[#ids + 1] = id end
-        table.sort(ids)
-        for _, id in ipairs(ids) do
-            if not indexOf(order, id) then order[#order + 1] = id result.repaired = result.repaired + 1 end
-        end
+        for _, s in pairs(set) do repairSurface(s, result) end
+        repairOrder(kind == "pad" and p.padOrder or p.dialOrder, set, result)
     end
     if result.seeded or result.appended > 0 or result.repaired > 0 then
         NS.Debug(TAG, "prepare seeded=%s appended=%s repaired=%s", result.seeded, result.appended, result.repaired)

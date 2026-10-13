@@ -153,46 +153,58 @@ local function tokenValues(row)
     return out
 end
 
+local function contentValues()
+    local out = {}
+    for i, v in ipairs(NS.Resolver.TOKENS.content) do out[i] = { value = v, text = NS.PadRender.CONTENT[v] or v } end
+    return out
+end
+
+local function classValues()
+    local out = {}
+    for i, cf in ipairs(NS.GameIds.CLASSES) do out[i] = { value = cf, text = NS.Compat.ClassName(cf) or cf } end
+    return out
+end
+
+-- The classes whose specializations the spec row offers: those the class row picked, else the
+-- player's own.
+local function specClasses(when)
+    local classes = {}
+    local picked = type(when) == "table" and when.class or nil
+    if type(picked) == "table" and next(picked) then
+        for cf in pairs(picked) do classes[#classes + 1] = cf end
+        table.sort(classes)
+        return classes
+    end
+    local live = NS.Situation.Current()
+    if live.classFile then classes[1] = live.classFile end
+    return classes
+end
+
+local function specValues(when)
+    local out, seen = {}, {}
+    local function add(specID)
+        if seen[specID] then return end
+        seen[specID] = true
+        out[#out + 1] = { value = specID, text = NS.Compat.SpecInfoByID(specID) or L["Specialization %d"]:format(specID) }
+    end
+    for _, cf in ipairs(specClasses(when)) do
+        for _, specID in ipairs(NS.GameIds.SPECS[cf] or {}) do add(specID) end
+    end
+    local chosen = {}
+    for specID in pairs(type(when) == "table" and when.spec or {}) do chosen[#chosen + 1] = specID end
+    table.sort(chosen)
+    for _, specID in ipairs(chosen) do add(specID) end
+    return out
+end
+
 --- The values a checkbox row offers, in order. The specialization row offers the classes the class
 --- row picked, or the player's own; a spec chosen earlier stays listed so it can be cleared.
 --- @return table { { value, text } }
 function W.Values(row, when)
-    if row == "content" then
-        local out = {}
-        for i, v in ipairs(NS.Resolver.TOKENS.content) do out[i] = { value = v, text = NS.PadRender.CONTENT[v] or v } end
-        return out
-    end
+    if row == "content" then return contentValues() end
     if NS.Resolver.TOKENS[row] then return tokenValues(row) end
-    if row == "class" then
-        local out = {}
-        for i, cf in ipairs(NS.GameIds.CLASSES) do out[i] = { value = cf, text = NS.Compat.ClassName(cf) or cf } end
-        return out
-    end
-    if row == "spec" then
-        local classes = {}
-        local picked = type(when) == "table" and when.class or nil
-        if type(picked) == "table" and next(picked) then
-            for cf in pairs(picked) do classes[#classes + 1] = cf end
-            table.sort(classes)
-        else
-            local live = NS.Situation.Current()
-            if live.classFile then classes[1] = live.classFile end
-        end
-        local out, seen = {}, {}
-        local function add(specID)
-            if seen[specID] then return end
-            seen[specID] = true
-            out[#out + 1] = { value = specID, text = NS.Compat.SpecInfoByID(specID) or L["Specialization %d"]:format(specID) }
-        end
-        for _, cf in ipairs(classes) do
-            for _, specID in ipairs(NS.GameIds.SPECS[cf] or {}) do add(specID) end
-        end
-        local chosen = {}
-        for specID in pairs(type(when) == "table" and when.spec or {}) do chosen[#chosen + 1] = specID end
-        table.sort(chosen)
-        for _, specID in ipairs(chosen) do add(specID) end
-        return out
-    end
+    if row == "class" then return classValues() end
+    if row == "spec" then return specValues(when) end
     return {}
 end
 

@@ -52,24 +52,35 @@ function Ch.Resolve(kind, s, soloFallback)
     return nil, "solo", soloFallback == "self"
 end
 
---- Why a concrete channel can't send right now, or nil (spec §8.4). The slot stays visible.
-function Ch.LockState(concrete, s)
-    s = type(s) == "table" and s or {}
-    local lockdown = s.lockdown or {}
-    if concrete == "raid" then
+-- The lock matrix (spec §8.4), one check per concrete channel: each answers why it can't send under
+-- snapshot `s`, or nothing. A channel with no row is never locked.
+local LOCKS = {
+    raid = function(s)
         if s.group ~= "raid" then return "notInRaid" end
-    elseif concrete == "raidWarning" then
+    end,
+    raidWarning = function(s)
         if s.group == "raid" then
             if not (s.leader or s.assist) then return "notLeader" end
         elseif s.group ~= "party" then
             return "notInGroup"
         end
-    elseif concrete == "party" then
+    end,
+    party = function(s)
         if s.group ~= "party" and s.group ~= "raid" then return "notInGroup" end
-    elseif concrete == "instance" then
+    end,
+    instance = function(s)
         if not s.instanceGroup then return "notInInstanceGroup" end
-    elseif concrete == "say" or concrete == "yell" then
+    end,
+    say = function(_, lockdown)
         if lockdown.encounter or lockdown.pvpMatch then return "lockdown" end
-    end
-    return nil
+    end,
+}
+LOCKS.yell = LOCKS.say
+
+--- Why a concrete channel can't send right now, or nil (spec §8.4). The slot stays visible.
+function Ch.LockState(concrete, s)
+    s = type(s) == "table" and s or {}
+    local check = LOCKS[concrete]
+    if not check then return nil end
+    return check(s, s.lockdown or {})
 end

@@ -213,19 +213,30 @@ local function sortedKeys(set)
     return keys
 end
 
+-- A key-level range as parseWhen reads it: `12` (one level), `10-`, `-15` or `10-15`.
+local function formatRange(v)
+    if v.min and v.min == v.max then return tostring(v.min) end
+    return (v.min and tostring(v.min) or "") .. "-" .. (v.max and tostring(v.max) or "")
+end
+
+-- One When row in parseWhen's syntax, or nil for an empty one.
+local function formatRow(row, v)
+    if type(v) ~= "table" then return nil end
+    if row == "keyLevel" then
+        if v.min or v.max then return "keyLevel " .. formatRange(v) end
+        return nil
+    end
+    if next(v) then return row .. " " .. table.concat(sortedKeys(v), ",") end
+    return nil
+end
+
 -- Printed in parseWhen's own syntax, `content mythicPlus,raid; keyLevel 10-`, so a printed When
 -- types back in.
 local function formatWhen(when)
     local parts = {}
     for _, row in ipairs(NS.Resolver.ROWS) do
-        local v = type(when) == "table" and when[row] or nil
-        if row == "keyLevel" and type(v) == "table" and (v.min or v.max) then
-            local range = (v.min and v.min == v.max) and tostring(v.min)
-                or ((v.min and tostring(v.min) or "") .. "-" .. (v.max and tostring(v.max) or ""))
-            parts[#parts + 1] = "keyLevel " .. range
-        elseif row ~= "keyLevel" and type(v) == "table" and next(v) then
-            parts[#parts + 1] = row .. " " .. table.concat(sortedKeys(v), ",")
-        end
+        local part = formatRow(row, type(when) == "table" and when[row] or nil)
+        if part then parts[#parts + 1] = part end
     end
     if #parts == 0 then return L["always"] end
     return table.concat(parts, "; ")

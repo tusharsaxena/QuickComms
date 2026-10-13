@@ -109,6 +109,43 @@ local function sectionBlock(s, layout, cw, ch, gap, up)
     return { items = items, h = by, trail = trail, cols = cols }
 end
 
+-- The non-empty section blocks, and the widest block's content width.
+local function collectBlocks(sections, layout, cw, ch, gap, up)
+    local blocks, contentW = {}, 0
+    for _, s in ipairs(type(sections) == "table" and sections or {}) do
+        local b = sectionBlock(s, layout, cw, ch, gap, up)
+        if #b.items > 0 then
+            blocks[#blocks + 1] = b
+            if b.cols > 0 then contentW = math.max(contentW, b.cols * cw + (b.cols - 1) * gap) end
+        end
+    end
+    return blocks, contentW
+end
+
+-- Stack the blocks under the header, "up" in reverse order; answers the y below the last one.
+local function stackBlocks(blocks, up)
+    local y, nb = PL.HEADER_H + PL.PAD, #blocks
+    for k = 1, nb do
+        local b = blocks[up and (nb + 1 - k) or k]
+        b.top = y
+        y = y + b.h + b.trail
+    end
+    return y
+end
+
+-- Every block's items in pad coordinates; "left" mirrors each chip across the pad's width.
+local function flattenBlocks(blocks, mirror, width)
+    local items = {}
+    for _, b in ipairs(blocks) do
+        for _, it in ipairs(b.items) do
+            it.y = b.top + it.y
+            if mirror and it.kind == "chip" then it.x = width - it.x - it.w end
+            items[#items + 1] = it
+        end
+    end
+    return items
+end
+
 --- Place every title row and chip. The header stays on top; "up" stacks the section blocks in
 --- reverse order (the first section nearest the anchor), "left" mirrors each chip row.
 --- @param sections table from VisibleSections
@@ -122,31 +159,11 @@ function PL.Compute(sections, layout, opts)
     local gap = math.max(0, tonumber(layout.spacing) or 4)
     local up = layout.growth == "up"
     local blocks, contentW = {}, 0
-    if not opts.collapsed then
-        for _, s in ipairs(type(sections) == "table" and sections or {}) do
-            local b = sectionBlock(s, layout, cw, ch, gap, up)
-            if #b.items > 0 then
-                blocks[#blocks + 1] = b
-                if b.cols > 0 then contentW = math.max(contentW, b.cols * cw + (b.cols - 1) * gap) end
-            end
-        end
-    end
+    if not opts.collapsed then blocks, contentW = collectBlocks(sections, layout, cw, ch, gap, up) end
     local width = math.max(PL.MIN_W, contentW + 2 * PL.PAD)
-    local y, nb = PL.HEADER_H + PL.PAD, #blocks
-    for k = 1, nb do
-        local b = blocks[up and (nb + 1 - k) or k]
-        b.top = y
-        y = y + b.h + b.trail
-    end
-    local items = {}
-    for _, b in ipairs(blocks) do
-        for _, it in ipairs(b.items) do
-            it.y = b.top + it.y
-            if layout.growth == "left" and it.kind == "chip" then it.x = width - it.x - it.w end
-            items[#items + 1] = it
-        end
-    end
-    local height = nb > 0 and (y + PL.PAD) or PL.HEADER_H
+    local y = stackBlocks(blocks, up)
+    local items = flattenBlocks(blocks, layout.growth == "left", width)
+    local height = #blocks > 0 and (y + PL.PAD) or PL.HEADER_H
     return { width = width, height = height, items = items }
 end
 

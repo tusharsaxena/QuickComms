@@ -223,30 +223,23 @@ function S.BuildDialPlan(surfaceId, dial, snap, deps)
     return plan
 end
 
---- "Why is this showing?" for one pad or dial (spec §13.3): the groups it shows, in priority order,
---- each with the When rows that matched (Resolver.Explain), then every lock in effect on its slots.
---- Read from the last plan, so in combat it explains what is on screen.
---- @return string[]
-function S.WhyLines(id)
-    local plan = S.Plans()[id] or S.DialPlans()[id]
-    if not plan then
-        local p = NS.db and NS.db.profile
-        if p and p.dials[id] then return { L["This dial has not been built yet."] } end
-        return { L["This pad has not been built yet."] }
-    end
-    if plan.test and not plan.preview then
-        if plan.kind == "dial" then return { L["Test mode: placeholder wedges that send nothing."] } end
-        return { L["Test mode: placeholder chips that send nothing."] }
-    end
-    local out = {}
-    if plan.preview then out[1] = L["Preview as: %s"]:format(NS.Preview.Label(plan.preview)) end
-    if #plan.order == 0 then out[#out + 1] = L["No group matches this situation."] end
-    for _, gid in ipairs(plan.order) do
-        local g = NS.Library.Group(gid)
-        local name = g and g.name or gid
-        if NS.Library.IsBuiltin(gid) then name = L["%s (built-in)"]:format(name) end
-        out[#out + 1] = NS.Resolver.Explain(name, plan.active and plan.active[gid])
-    end
+-- The answer for a surface with no plan yet.
+local function unbuiltLines(id)
+    local p = NS.db and NS.db.profile
+    if p and p.dials[id] then return { L["This dial has not been built yet."] } end
+    return { L["This pad has not been built yet."] }
+end
+
+-- A group's name as the why lines show it: a built-in says so.
+local function whyName(gid)
+    local g = NS.Library.Group(gid)
+    local name = g and g.name or gid
+    if NS.Library.IsBuiltin(gid) then name = L["%s (built-in)"]:format(name) end
+    return name
+end
+
+-- Every distinct lock on the plan's slots, sorted, as its tooltip line, appended to `out`.
+local function lockLines(plan, out)
     local locks, seen = {}, {}
     S.EachSlot(plan, function(slot)
         if slot.lock and not seen[slot.lock] then
@@ -256,6 +249,26 @@ function S.WhyLines(id)
     end)
     table.sort(locks)
     for _, lock in ipairs(locks) do out[#out + 1] = NS.PadRender.LOCK_TEXT[lock] or tostring(lock) end
+end
+
+--- "Why is this showing?" for one pad or dial (spec §13.3): the groups it shows, in priority order,
+--- each with the When rows that matched (Resolver.Explain), then every lock in effect on its slots.
+--- Read from the last plan, so in combat it explains what is on screen.
+--- @return string[]
+function S.WhyLines(id)
+    local plan = S.Plans()[id] or S.DialPlans()[id]
+    if not plan then return unbuiltLines(id) end
+    if plan.test and not plan.preview then
+        if plan.kind == "dial" then return { L["Test mode: placeholder wedges that send nothing."] } end
+        return { L["Test mode: placeholder chips that send nothing."] }
+    end
+    local out = {}
+    if plan.preview then out[1] = L["Preview as: %s"]:format(NS.Preview.Label(plan.preview)) end
+    if #plan.order == 0 then out[#out + 1] = L["No group matches this situation."] end
+    for _, gid in ipairs(plan.order) do
+        out[#out + 1] = NS.Resolver.Explain(whyName(gid), plan.active and plan.active[gid])
+    end
+    lockLines(plan, out)
     return out
 end
 
