@@ -24,7 +24,7 @@ addon kept as history and never loaded by this one.
 `tests/loader.lua` builds a fresh, isolated addon per case from the TOC's own file list and the
 library files `libs/LibKa0s/LibKa0s.xml` names; `tests/wow_mock.lua` extends the kit's base mock with
 what this addon reads (combat state, the client's addon list, the chat sink and the launcher's two
-libraries). Phase 2 adds the secure-frame half: protected calls refused in combat are recorded in `m.blocked`, a click acts on one edge (`m.__click`), `m.sentMacros` records what a secure click sent, and `m.__setCombat` drives the visibility state drivers.
+libraries). Phase 2 adds the secure-frame half: protected calls refused in combat are recorded in `m.blocked`, a click acts on one edge (`m.__click`), `m.sentMacros` records what a secure click sent, and `m.__setCombat` drives the visibility state drivers. `tests/loader.lua` also loads `libs/LibDeflate` and `libs/LibSerialize` through their `lib.xml`, as the TOC does. A font string under a `QuickComms` root records `SetFont` and `SetShadowOffset` (`__font`, `__shadow`).
 
 Suites reach the harness as `local T = _G.QUICKCOMMS_TEST` and build instances with the three
 factories, each taking an `opts` table (`skip`, `mock`, `inCombat`) and returning `(NS, env, mock)`
@@ -50,7 +50,8 @@ Named suites the standard requires: `test_surface_parity` (testing-§8), `test_v
 `test_sendengine`, `test_preview`, `test_master`, `test_pad_layout`, `test_surfaces`,
 `test_pad_render` and `test_pad`, and phase 3's `test_members`, `test_editors`, `test_page_callouts`,
 `test_groups_when`, `test_page_groups`, `test_page_pads` and `test_page_share`, and phase 4's
-`test_dial_layout`, `test_dial_secure`, `test_dial` and `test_page_dials`. Kit suites, declared by directory:
+`test_dial_layout`, `test_dial_secure`, `test_dial` and `test_page_dials`, and phase 5's `test_share`
+and `test_gameids`. Kit suites, declared by directory:
 `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`, `test_lizard_sighted`.
 Every new `tests/test_*.lua` is added to the `suites` list in `tests/run.lua`; the kit fails the run
 in both directions.
@@ -83,7 +84,8 @@ the change that moves the count (testing-§5).
 | `complexity` | `bash tests/_kit/run-automated-tests.sh --suite complexity` (the sighted shadow) | recorded, never fails a run or blocks a commit | gates, with zero functions above CCN 15 and `blindFiles` 0 |
 
 The release gate is evaluated by `/dev-copilot:bump-version` from the run's `manifest.json`
-(automated-tests-§3). The record itself: [`automated-tests/README.md`](automated-tests/README.md).
+(automated-tests-§3): a bundle whose manifest shows all four suites at `pass`, no function above
+CCN 15 and `blindFiles` 0 (Task 13 of the phase 5 plan records it). It never gates a commit. The record itself: [`automated-tests/README.md`](automated-tests/README.md).
 For long batteries run through the bounded runner, `~/.claude/dev-copilot/bin/ka0s-bounded`.
 
 ## In game

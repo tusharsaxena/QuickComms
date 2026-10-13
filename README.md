@@ -3,41 +3,57 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-598%2F598_passing-green)
+![Tests](https://img.shields.io/badge/Tests-653%2F653_passing-green)
 
 Quick Comms puts your usual group callouts one click or one keypress away. "Kick on me", "Lust
-now", "Inc 2 Lumber Mill": you set them up once, and they sit on a Comms Pad or open from a
-ping-wheel-style Comms Dial. The addon works out where you are, whether that's a Mythic+ key, a raid boss,
-an arena or a battleground, and shows the callouts that fit. Every message goes out through a secure button, the
-only kind of send Midnight still allows mid-pull, so it keeps working in keys and on bosses.
+now", "INC 3 Lumber Mill": set them up once and they sit on a Comms Pad or open from a
+ping-wheel-style Comms Dial. The addon works out where you are, whether that's a Mythic+ key, a raid
+boss, an arena or a battleground, and shows the callouts that fit. Every message goes out through a
+secure button, the only kind of send Midnight still allows mid-pull, so it keeps working in keys and
+on bosses.
 
-**Quick Comms is in development.** The Comms Pad works: it shows the built-in callouts for where you are (Mythic+, raid, arena, battlegrounds) and sends them through secure buttons, with a spam guard and a note when the game drops a message. You can now write your own callouts and groups, say when each group shows, arrange your pads and turn the built-in sets on, off or into editable copies. The Comms Dial works too: give it a key on the Comms Dial page (or in WoW's key bindings menu), press it, and click a wedge to send. In a battleground it opens straight on the map's nodes. The full plan is in the [design spec](docs/superpowers/specs/2026-10-11-quickcomms-v1-design.md).
+It ships with callout sets for Mythic+, raids, arenas and every battleground, all switched on.
+You can write your own callouts, sort them into groups, say when each group shows, style the pad,
+and share any of it with a friend as a string you copy and paste.
 
 ## Usage
 
-Enter a key, a raid, an arena or a battleground and the Comms Pad shows the callouts that fit; click one to send it. `/qc unlock` lets you drag the pad, `/qc lock` fixes it, and `/qc test` shows placeholder chips so you can place it anywhere. `/qc` opens the settings panel; the minimap button's right-click menu has Enabled, Locked and Test mode.
+Enter a key, a raid, an arena or a battleground and the Comms Pad shows the callouts that fit; click
+one to send it. `/qc unlock` lets you drag the pad, `/qc lock` fixes it, and `/qc test` shows
+placeholder chips so you can place it anywhere. The minimap button's right-click menu has Enabled,
+Locked and Test mode.
 
-Settings → Callouts makes a callout; Groups puts callouts in a group and, on its When tab, says where it shows; Comms Pad arranges a pad. "Preview as…" on the Groups page (or `/qc preview`) shows the pads as they would look in a key, a raid, an arena or a battleground; hover a pad's header (or `/qc why`) to see why each group is there.
+The Comms Dial opens on a key. Pick one on Settings → Comms Dial → Binding (or in WoW's key bindings
+menu), press it, click a group, then click a callout to send it. In a battleground the dial opens
+straight on the map's nodes, each where it sits on the map, so INC 3 at the Lumber Mill is two
+clicks. The key again, Escape or a right click closes it; the number keys 1 to 8 pick a wedge.
 
-Settings → Comms Dial → Binding sets the dial's key. Press it to open the dial; click a group to open its callouts, click a callout to send it. The key again, Escape or a right click closes it; the number keys 1 to 8 pick a wedge.
+Settings → Callouts makes a callout and gives it an icon; Groups puts callouts in a group and, on its
+When tab, says where it shows; Comms Pad arranges a pad, and its Look tab sets the font, the border
+and the background, each with a Use class color box. "Preview as…" (or `/qc preview`) shows the pads
+and the dial as they would look somewhere else, and hovering a pad's header or the dial's middle (or
+`/qc why`) tells you why each group is there.
+
+To share, open Settings → Share → Export, tick what you want to send and click Export, then copy the
+string with Ctrl+C. To take one in, paste it on the Import tab and click Accept: Quick Comms lists
+what's in it and anything it left out, and nothing changes until you click Import. Everything
+arrives as a new copy, and a shared pad or dial comes without a key or a screen position.
 
 Everything is configured under **Settings → AddOns → Ka0s Quick Comms**, and `/qc help` (or
 `/quickcomms help`) prints the full command list.
 
 ## How the callouts work
 
-This is the design, in the order it is being built:
-
-- Callouts are short lines of text. You group them, and one callout can belong to several groups.
+- Callouts are short lines of text. You put them in groups, and one callout can be in several.
 - Each group has conditions for when it applies, such as "in a Mythic+ key" or "I'm the tank". The
-  addon checks those against where you are and what you're doing, and shows the groups that match.
+  addon checks those against where you are and shows the groups that match, in the order you set.
 - Text is prepared ahead of time, out of combat, and loaded onto secure buttons. Pressing one sends
   the line to the right channel (say, yell, party, instance, raid or raid warning), even during a boss.
 - After a press, every button dims for about a second. On a boss the game quietly drops anything
-  sent faster than that, so a second press inside that window gets a note in chat if it never
-  arrived.
-- Built-in sets for Mythic+, raids, arenas and battlegrounds come switched on. They're read-only,
-  but you can copy one and edit the copy.
+  sent faster than that, so if a line never arrives you get a note in chat.
+- The built-in sets are read-only, but you can copy one and edit the copy.
+- A shared string is checked before anything is added. A callout whose text starts with a slash
+  command is left out, and the text is checked again every time a line is prepared.
 
 ## FAQ
 
@@ -45,7 +61,8 @@ This is the design, in the order it is being built:
 |---|---|
 | Does it send anything on its own? | No. A callout is only ever sent when you press its button or its key. |
 | Why secure buttons? | In Midnight an addon can't send chat by itself during a boss, a Mythic+ key or a PvP match. A button you press can, so that's the one way Quick Comms sends anything. |
-| Can I use it now? | Yes: the built-in callouts and your own, on the Comms Pad and the Comms Dial. Sharing them as export strings comes later. |
+| Can a shared string run a command? | No. Callout text is always chat text. A shared callout that starts with a slash is left out, and nothing in a string is ever run. |
+| Will importing overwrite my callouts? | No. Everything in a string arrives as a new copy beside what you have. |
 
 ## Troubleshooting
 
@@ -54,6 +71,10 @@ This is the design, in the order it is being built:
 | `/qc` says the addon is disabled | Type `/qc enable`, or tick **Enable Ka0s Quick Comms** on the General page. |
 | The minimap button is gone | Tick **Minimap button** on the General page. |
 | The pad won't move | Type `/qc unlock` and drag the strip above it; it can't move in combat. |
+| The dial's key does nothing | Check Settings → Comms Dial → Binding. The dial opens only where at least one of its groups is active. |
+| An imported dial won't open | Shared dials arrive without a key. Give it one on Settings → Comms Dial → Binding. |
+| The import says the string is damaged | It was cut short when it was copied. Ask for it again and copy all of it; line breaks and spaces in it are fine. |
+| The import says the string is from a newer Quick Comms | Update the addon, then import it again. |
 | A message didn't arrive and chat says it may have been dropped | The game drops messages sent too close together on a boss. Wait for the buttons to brighten before pressing again. |
 | Something looks wrong and I want to report it | Follow [Reporting a bug](#reporting-a-bug) below. |
 
@@ -75,4 +96,4 @@ than in comments, so nothing gets lost.
 
 | Version | Date | Highlights |
 |---|---|---|
-| 0.1.0 | Unreleased | - The settings panel, the minimap button, the `/qc` command and the debug tools<br>- The Comms Pad with the built-in callouts, sent through secure buttons, with the spam guard, drop notes, test mode and the lock |
+| 0.1.0 | Unreleased | - The Comms Pad and the Comms Dial, with built-in callouts for Mythic+, raids, arenas and every battleground, sent through secure buttons<br>- Your own callouts and groups, with conditions for when each group shows, Preview as… and Why is this showing?<br>- The spam guard, drop notes, test mode and the lock<br>- The pad's font, border and background, with class colors<br>- Sharing callouts, groups, pads and dials as a string<br>- The settings panel, the minimap button, the `/qc` command and the debug tools |

@@ -24,6 +24,11 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | PAD-1..7 | Pad | The Comms Pad |
 | EDIT-1..8 | Editors | The Callouts, Groups, Comms Pad and Share pages, Preview as…, Why is this showing? |
 | DIAL-1..11 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial |
+| SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
+| LOOK-1..2 | Look | The Comms Pad's font, border and background |
+| ICON-1 | Icons | The icon picker |
+| BG-1..2 | Battlegrounds | Node winds on the dial; the battleground instance ids |
+| IDS-1 | Instance ids | The Midnight dungeons and raids |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes |
 
 ## Before you start
@@ -228,15 +233,16 @@ your own and M+ in a key): press G → the first ring shows the groups; click on
 a callout → it is sent. Open again, click a group, click the hub → back to the groups; click the hub
 again → the dial closes. Result:
 
-**DIAL-4. The Arathi Basin node dial (the phase 4 exit).** In Arathi Basin: press G → the dial opens
-straight on the nodes (Stables, Lumber Mill, Blacksmith, More); click Lumber Mill, then INC 3 → instance
-chat shows "INC 3 Lumber Mill": two clicks. Open again; click More → Gold Mine and Farm; the hub goes
-back a page. (If it opens on the group ring instead, check the Groups tab: Arathi Basin must sit above
+**DIAL-4. The Arathi Basin node dial (the phase 4 exit; pinned in phase 5).** In Arathi Basin, with
+Wedges per ring at 4: press G → the dial opens straight on the nodes, all five on one ring with no
+More, each on its compass wind (Blacksmith N, Gold Mine NE, Farm SE, Lumber Mill SW, Stables NW);
+click Lumber Mill, then INC 3 → instance chat shows "INC 3 Lumber Mill": two clicks. Open again and
+press 4 → Lumber Mill's ring opens (the number keys count the shown wedges clockwise from N). (If it opens on the group ring instead, check the Groups tab: Arathi Basin must sit above
 Battleground (generic) and every group active there, and the tab's "Three rings deep" warning names the
 cause; a `/reload` after updating runs the migration that moves the generic set. If the dial does not
 show Arathi Basin at all, the instance id may be wrong: run `/qc diagnostics`, copy the `situation`
 section's instanceID into the "Battleground instance IDs seen" table of
-`docs/brainstorm/go-no-go/round-4-build-checks.md`, and file it with this check's ID; phase 5 confirms
+`docs/brainstorm/go-no-go/round-4-build-checks.md`, and file it with this check's ID; BG-2 confirms
 the ids.) Result:
 
 **DIAL-5. Number keys, the wheel and pages.** Wheel → Wedges per ring 4, in a key: open, press 3 → the
@@ -280,8 +286,99 @@ and nothing is sent; on the hub → it closes. A side button (BUTTON4) click on 
 without sending, and the restricted snippet's other-frame `RunAttribute` raises no error. New dial →
 key H; press G, then H → dial 1 closes and dial 2 opens; press 1 → dial 2's first wedge, never dial
 1's; close it → 1 fires the action bar again. In Preview as Arathi Basin the ring title sits above
-the N wedge's label, and the E and W labels read away from their wedges. With test mode on, close the
+the N wedge's label, and the NE, SE, SW and NW labels read away from their wedges. With test mode on, close the
 dial with the hub, then change Wedges per ring → it stays closed. Result:
+
+## Share
+
+**SHARE-1. Export a group.** Settings → Callouts: make `Kick` (`Kick on me {skull}`, Party) and
+`Lust` (`Lust now`, Smart group). Groups → New group `My keys`, add both. Share → Export: tick
+`My keys` → the line under the boxes reads "The string will hold 2 callouts, 1 group."; Export → a
+window opens with a string starting `!QC1!`, already selected; Ctrl+C copies it; Escape closes the
+window. Result:
+
+**SHARE-2. Import it, twice.** Profiles → make a profile `Share test`. Share → Import: paste the
+string and click Accept → "Ready to import: 2 callouts, 1 group."; Import → chat says "Imported 2
+callouts, 1 group." and "An imported group is on no pad or dial yet: add it on the Groups tab of the
+Comms Pad or Comms Dial page.", and Groups lists `My keys` with both callouts. Paste and import it
+again → a second `My keys`, and the first one is untouched. Result:
+
+**SHARE-3. A string that tries a command.** Paste this on Import and click Accept:
+
+```
+!QC1!v4CVUjmmuuaybLPIufQdD2kdOwwqHbeZgPYatnrIz8pxLef7RJSVUuuvx6JsEIS4jcZ6rF6CotojB8U4q4TIMYp)xjmgxKcRkuLfQnEafsdOpZrHfgRTUEGrqG4xAb85kHw7WXVIDQ(9oRnW77qTugrTbstxMlzlNGFOHfhZeMdzwG9RN29xAg)rKx1kqemJbRWthE8K8SBtZVT2hr2GVdP3l)intwJGO)A6LQHm86RF)09)
+```
+
+→ "Ready to import: 1 callout, 1 group.", "Left out the callout 'Sneaky': its text starts with /." and
+"1 reference to something the string does not carry was left out."; Import → the group `Smoke test`
+holds `Kick` only, and nothing ran. Result:
+
+**SHARE-4. Damaged, foreign and newer strings.** On Import, Accept each: the SHARE-1 string with its
+last ten characters deleted → "That string is damaged or cut short. Copy all of it again."; `hello`
+→ "That is not a Quick Comms string: one starts with !QC1!."; and this →
+"That string was made by a newer Quick Comms. Update the addon, then import it.":
+
+```
+!QC1!JXWsk9IYV0ckMRGsmLuYpVffyPzMC2oNFU5wStzNzEPKusLMxk5KAtjNyo5KFPLumxcvgRa(
+```
+
+Clicking Import after any of them prints the same line and adds nothing. Result:
+
+**SHARE-5. A pad and a dial travel unbound.** Give the Comms Dial the key G. Share → Export: tick
+the Comms Pad and the Comms Dial; Export, copy. Switch to `Share test`, import it → chat also says
+"An imported dial has no key yet: give it one on the Comms Dial page."; the new pad sits in the
+default place (not where yours is), the new dial's Binding tab shows no key, and G does nothing on
+this profile until you give one. Switch back → G opens your dial as before. Result:
+
+**SHARE-6. A string that wrapped.** Paste a SHARE-1 string into a chat message or a forum post so it
+breaks across lines, copy it back out with the line breaks, and paste that on Import → Accept reads
+it as before. Result:
+
+## Look
+
+**LOOK-1. Font.** Comms Pad → Look → Font: pick another face, Font size 14, Font flags Outline,
+untick Font shadow → the chip labels and the section titles redraw that way, the titles still gold;
+tick Use class color → both take your class color, and Font color's opacity still applies; untick it
+and set Font color to red → both turn red. Result:
+
+**LOOK-2. Border and background.** Border style: a LibSharedMedia border (Blizzard Tooltip, for one),
+thickness 3, color red → the pad's edge changes; thickness 0 → no edge. Background: dark blue at 50%
+opacity → the body changes; Use class color → your class color at 50%. Change one in combat → no
+error, the header shows "updates after combat", and it lands at combat end. Defaults → the Ka0s look
+again. Result:
+
+## Icons
+
+**ICON-1. The icon picker.** Callouts → a callout → General → Choose an icon: click the skull → the
+Icon box shows its path and the chip shows the skull. Groups → a group of yours → General → click a
+mark → the group's wedge on the Comms Dial shows it. A built-in set's General tab has no picker.
+Result:
+
+## Battlegrounds
+
+**BG-1. Node winds.** In each node battleground you play (Arathi Basin, Eye of the Storm, Battle for
+Gilneas, Deepwind Gorge, Isle of Conquest), open the dial → the nodes sit where they are on the map,
+north up (Arathi Basin: Stables top left, Gold Mine top right, Farm bottom right, Lumber Mill bottom
+left, Blacksmith, the middle node, at the top), and Deepwind Gorge shows five nodes (owner ruling R2).
+Lumber Mill, then INC 3 is still two clicks. A node that points the wrong way is filed with this
+check's ID and its battleground. Result:
+
+**BG-2. Battleground instance ids.** In each battleground you play: `/qc diagnostics` → the
+`situation` section's instanceID is one its set lists (`defaults/BuiltIns_Battlegrounds.lua`), and
+the pad and the dial show that set. Write each id into the "Battleground instance IDs seen" table of
+`docs/brainstorm/go-no-go/round-4-build-checks.md`. Result:
+
+## Instance ids
+
+**IDS-1. The Midnight dungeons and raids.** In each of the eight dungeons and three raids you visit
+(Windrunner Spire 2805, Magisters' Terrace 2811, Nexus-Point Xenas 2915, Maisara Caverns 2874, and
+the four returning dungeons; The Voidspire 2912, The Dreamrift 2939, March on Quel'Danas 2913):
+`/qc diagnostics` → the instanceID matches; a group's When → Instances → "add the one you are in" adds
+that id. Groups → Preview as lists "M+ · Windrunner Spire" and the other seven by name. On a Devourer
+Demon Hunter, `/qc diagnostics` → the Situation line reads `spec=1480`, and a When's Spec row
+offers Devourer. If you can enter Sporefall (map 1592), note whether it is a raid and its instanceID
+(ruling R4 left it out of the shipped raids). Only after this check passes
+does `defaults/GameIds.lua`'s note change from "matched" to "confirmed". Result:
 
 ## Non-English client
 
@@ -304,4 +401,5 @@ section is re-armed by the situation task, whose check replaces this paragraph's
 | INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..2, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet |
 | SEND-1..5, PAD-1..7 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet |
 | EDIT-1..8 | Phase 3: the editors | No client pass recorded yet |
-| DIAL-1..11 | Phase 4: the Comms Dial | No client pass recorded yet |
+| DIAL-1..11 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-4 rewritten in phase 5 for the pinned ring |
+| SHARE-1..6, LOOK-1..2, ICON-1, BG-1..2, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet |

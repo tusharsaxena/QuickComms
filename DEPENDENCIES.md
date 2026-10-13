@@ -59,7 +59,7 @@ Versions are pinned only where a version matters: `lua5.1` is hard, `luacheck` a
 
 ## Release / assets
 
-**One entry: Python 3 with Pillow**, and only for **regenerating** the logo TGAs —
+**Python 3 with Pillow**, and only for **regenerating** the logo TGAs —
 `media/logos/quickcomms.logo.128.tga` and `media/logos/quickcomms.logo.tga` are committed, so
 nothing is generated at package time. The recipe is layout-§4's, run by hand from the committed
 2000×2000 source when the art changes. (The v0.1.0 source is a placeholder drawn with Pillow for the
@@ -73,6 +73,13 @@ python3 -c 'from PIL import Image; Image.open("media/logos/quickcomms.logo.png")
 # verify
 python3 -c 'import PIL; print(PIL.__version__)'
 ```
+
+**Python 3 (standard library only)**, and only for **re-deriving the client-data extractions**:
+`tools/derive-gameids.py` (the instance ids and `tests/test_gameids.lua`'s map table) and
+`tools/derive-winds.py` (the node winds in `defaults/BuiltIns_Battlegrounds.lua`), with their shared
+`tools/client_tables.py`. They download wago.tools' exports of the client's tables and check the
+repository against them; neither is loaded by the client, and `.pkgmeta` ignores `tools/`. How to run
+them: `docs/common-tasks.md` → "Re-derive the client-data extractions".
 
 **None of this group is required to build, run or test the addon.**
 

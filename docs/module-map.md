@@ -1,22 +1,24 @@
 # Module map — Ka0s Quick Comms
 
 Every non-vendored file, its responsibility, and the TOC load order. `libs/` (Ace3, LibSharedMedia,
-LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored and never edited.
+LibDataBroker, LibDBIcon, LibDeflate, LibSerialize, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored and never edited.
 
 ## Load order (the TOC)
+
+The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after LibKa0s; `modules/Share.lua` takes both at load.
 
 | # | File | Kind | Responsibility |
 |---|---|---|---|
 | 1 | `locales/enUS.lua` | data | `NS.L`, the metatable fallback; the key is the English string |
 | 2 | `core/Namespace.lua` | data | name, version, brand, the cyan `[QC]` tag, the slash and its alias |
-| 3 | `core/CoreSetup.lua` | setup | LibKa0s-Core: the printer, the secret-safe stringifier, the SafeRegister family, the skin, the close-button wrapper, the resize grip |
+| 3 | `core/CoreSetup.lua` | setup | LibKa0s-Core: the printer, the secret-safe stringifier, the SafeRegister family, the skin, the close-button wrapper, the resize grip, the class-color resolver |
 | 3a | `core/Compat.lua` | compat | `NS.Compat`: the only caller of version-variant or optional client APIs, and the secret guards ([`compat-layer.md`](compat-layer.md)) |
-| 4 | `core/MediaSetup.lua` | setup | LibKa0s-Media: `NS.Icon`, `NS.MediaFont`, the one RegisterLSM call |
+| 4 | `core/MediaSetup.lua` | setup | LibKa0s-Media: `NS.Icon`, `NS.MediaFont`, the one RegisterLSM call, `NS.MediaFetch` |
 | 5 | `core/Constants.lua` | data | `FONT_MONO`, the Ka0s gold |
 | 6 | `core/State.lua` | state | session-only state (`NS.State`): the debug flag; the modules add their own fields (test mode, plans, the queue, the echo, the pad's tab and collapse) |
 | 7 | `core/EnvSetup.lua` | setup | LibKa0s-Env: `NS.Meta`, `NS.Version` |
 | 8 | `core/PoolSetup.lua` | setup | LibKa0s-Pool: `NS.Pool` (one array pool per pad for its chips; per dial, its ring containers and each container's wedges) |
-| 8a | `core/WidgetsSetup.lua` | setup | LibKa0s-Widgets: the drag-strip seam, `NS.MakeDragHandle` |
+| 8a | `core/WidgetsSetup.lua` | setup | LibKa0s-Widgets: the drag-strip seam, `NS.MakeDragHandle`, and the export window, `NS.MakeCopyWindow` |
 | 9 | `core/Bus.lua` | setup | LibKa0s-Bus: `NS.MSG` (the strict catalog) and `NS.Bus` (tracked receivers) |
 | 10 | `core/LifecycleSetup.lua` | setup | LibKa0s-Lifecycle: the stand-down latch, `NS.IsStoodDown` |
 | 11 | `core/PerfSetup.lua` | setup | LibKa0s-Perf: `NS.Perf`, the declared buckets |
@@ -27,7 +29,7 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 | 16 | `defaults/Profile.lua` | data | every default value (`NS.C`) |
 | 16a | `defaults/BuiltIns.lua` | data | `NS.BuiltIns`: the registry of shipped sets and the declaring helpers |
 | 16b | `defaults/BuiltIns_MythicPlus.lua`, `_Raid.lua`, `_Arena.lua`, `_Battlegrounds.lua` | data | the four shipped sets (spec §12) |
-| 16b2 | `defaults/GameIds.lua` | data | the shipped ids: dungeons, raids, classes, specializations |
+| 16b2 | `defaults/GameIds.lua` | data | the shipped ids: dungeons, raids, classes, specializations (matched against the client's data by `tools/derive-gameids.py` and `tests/test_gameids.lua`; confirmed in game by IDS-1) |
 | 16c | `modules/Restrictions.lua` | edge | what the client's addon restrictions allow; `RESTRICTION_CHANGED` |
 | 16d | `modules/Situation.lua` | classifier + edge | the situation snapshot; `SITUATION_CHANGED` |
 | 16e | `modules/Tokens.lua` | pure | token expansion |
@@ -35,6 +37,7 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 | 16g | `modules/Bake.lua` | pure | callout + snapshot to one macro line |
 | 16h | `modules/Resolver.lua` | pure | When rules to active groups |
 | 16i | `modules/Library.lua` | registry writer | the one writer of the structural registry; `Prepare`; `SetSurfacePoint`; `MoveGenericBattlegroundLast` (migration step 2) |
+| 16i2 | `modules/Share.lua` | pure + edge | the share string: codec, checks, report; Collect, Export, Apply |
 | 16j | `modules/SendEngine_Guard.lua` | pure | `NS.SendGuard`: the soft guard's timing, the acting click edge, the echo tracker, the keyed queue |
 | 16k | `modules/SendEngine.lua` | secure writer | the only secure writer: send buttons, arm and disarm, the combat-end queue, the click hook, the echo events, the held stand-down; the dial headers and rings, the wedge wrap, frame refs, snippet runs and the override bindings (`BindKeys`) |
 | 16l | `modules/Preview.lua` | session state | test mode and "Preview as…": refused in combat, ended at the combat edge; `TEST_MODE_CHANGED` |
@@ -53,13 +56,13 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 | 20a | `settings/SchemaRows.lua` | settings | the hand-written Behavior rows, spliced after the Master controls |
 | 20b | `settings/SchemaMembers.lua` | settings | the member rows (`callout.*`, `group.*`, `pad.*`, `dial.*`, `builtin.*`), addressed through `Library.Member` |
 | 21 | `settings/Panel.lua` | settings | the landing page and the General page (Master controls) |
-| 21a | `settings/Editors.lua` | settings | the editor pages' shared frame: selection, repaint, reorder lists, delete |
+| 21a | `settings/Editors.lua` | settings | the editor pages' shared frame: selection, repaint, reorder lists, delete, the icon picker |
 | 21b | `settings/Callouts.lua` | settings | the Callouts page |
 | 21c | `settings/Groups_When.lua` | settings | the Groups page's When editor |
 | 21d | `settings/Groups.lua` | settings | the Groups page |
 | 21e | `settings/Pads.lua` | settings | the Comms Pad page |
 | 21e2 | `settings/Dials.lua` | settings | the Comms Dial page (General, Groups, Wheel, Binding, Preview) |
-| 21f | `settings/Share.lua` | settings | the Share page (the Built-in tab) |
+| 21f | `settings/Share.lua` | settings | the Share page (Export, Import, Built-in) |
 | 21g | `settings/SlashVerbs.lua` | verbs | `NS.SlashVerbs`: the verb bodies (`check`, `SetLocked` for `lock` / `unlock`, `preview`, `why`) |
 | 22 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |
 | 23 | `settings/Profiles.lua` | settings | the Profiles page (AceDBOptions) |
@@ -68,6 +71,9 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 `CLICK QuickCommsDial<n>:Toggle` binding. The client reads it from the addon's root by name, and the
 standard allows it there (layout-§1, toc-file-§4 (standard v2.80.0)); its labels are set in
 `modules/Dial.lua`.
+
+`tools/` holds the dev-only generators (`derive-gameids.py`, `derive-winds.py` and their shared
+`client_tables.py`): Python, never loaded by the client or the TOC, `.pkgmeta`-ignored (layout-§1).
 
 Why each position is load-bearing or conventional is written on the comment line above its entry in
 `QuickComms.toc` (toc-file-§5); a TOC line carries the file path alone. The planned modules and the
@@ -101,6 +107,8 @@ files they add are listed in design spec §4.2.
 | `tests/test_dial_secure.lua` | `Dial_Secure`: the snippets on a hand-built dial, in and out of combat |
 | `tests/test_dial.lua` | `Dial`: the frames, the rebuild and keys, the three exit paths, `Bindings.xml` |
 | `tests/test_page_dials.lua` | the Comms Dial page |
-| `tests/test_page_share.lua` | the Share page's Built-in tab: Enabled, Customize, Choose callouts per set, and Defaults |
+| `tests/test_page_share.lua` | the Share page: the Export tab (ticks, what they bring, the string in the copy window) and the Import tab (Accept, the report, Import, the combat refusals), and the Built-in tab: Enabled, Customize, Choose callouts per set, and Defaults |
+| `tests/test_share.lua` | `Share`: the codec, the checks, the sanitizer, the report (pure) |
+| `tests/test_gameids.lua` | the shipped instance ids against an extraction of the client's Map tables |
 | `tests/page_helpers.lua` | a helper, not a suite: drives an editor page through the kit's AceGUI recorder |
-| `tests/perf.lua` | the offline scenarios, outside the gate |
+| `tests/perf.lua` | the six offline scenarios, outside the gate |

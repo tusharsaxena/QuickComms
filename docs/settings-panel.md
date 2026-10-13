@@ -11,7 +11,7 @@ eagerly at `OnEnable`; each page's body builds on its first show (options-ui-§1
 | Groups | One group or built-in set: `General`, `Callouts`, `When`, `Preview` |
 | Comms Pad | One pad: `General`, `Groups`, `Layout`, `Look` |
 | Comms Dial | One dial: `General`, `Groups`, `Wheel`, `Binding`, `Preview` |
-| Share | `Built-in` (Export and Import in phase 5) |
+| Share | `Export`, `Import`, `Built-in` |
 | Profiles | AceDBOptions: switch, copy, reset and delete profiles |
 
 ## General → Master controls
@@ -46,8 +46,9 @@ reset is a profile reset and never touches the minimap button (options-ui-§12, 
 band     [ Callout v (picker)        ][ New callout ]
 strip    [ General ][ Used by ]
 General  Name, Text, Channel, Icon (the member rows, settings/SchemaMembers.lua), Insert a
-         token, then what it sends here (the baked line and its bytes, or why it sends
-         nothing, and any lock), then Duplicate and Delete
+         token, Choose an icon (settings/Editors.lua's picker), then what it sends here (the
+         baked line and its bytes, or why it sends nothing, and any lock), then Duplicate and
+         Delete
 Used by  every group that holds it, each a link to the Groups page
 ```
 
@@ -63,7 +64,7 @@ are not listed: a group copies one when it takes it, and the copy is edited here
 band      [ Group v (picker; a green dot marks a group active now) ][ New group ]
 strip     [ General ][ Callouts ][ When ][ Preview ]
 General   Preview as (page-wide, first), then Name, Icon, Enabled, Open the dial on this group,
-          then Duplicate and Delete. A built-in: what it is, its Enabled row, and Customize.
+          Choose an icon (settings/Editors.lua's picker), then Duplicate and Delete. A built-in: what it is, its Enabled row, and Customize.
 Callouts  a user group's callouts as a drag-to-reorder list with Remove, then Add a callout (a
           built-in callout is copied in first). A built-in: a Show checkbox per callout, the
           hidden-callouts editor.
@@ -94,7 +95,10 @@ Groups   Show groups as, then the pad's groups as a drag-to-reorder list with Re
          priority order), then Add a group
 Layout   orientation, grid columns, growth, chip style, scale, spacing, chip width, then
          Position: X and Y and Reset this pad's position
-Look     visibility, fade and faded alpha
+Look     visibility, fade and faded alpha; then Font (face, size, color with Use class color,
+         flags, shadow), Border (style, thickness, color with Use class color) and Background
+         (its color with Use class color), each composed by the options library (options-ui-§16,
+         §17) under its own heading
 ```
 
 X and Y write the whole `pad.point` row, the same one the drag strip writes; a drag on screen
@@ -148,18 +152,23 @@ dial on, in one act (`Library.Batch`); the name, groups, key and position are ke
 
 ## Share
 
-`settings/Share.lua`. Phase 3 ships the Built-in tab; Export and Import join it, ahead of it, in
-phase 5.
+`settings/Share.lua`.
 
 ```
-strip     [ Built-in ]
+strip     [ Export ][ Import ][ Built-in ]
+Export    what travels; a checkbox per callout, group, Comms Pad and Comms Dial, under a heading
+          per kind; what the string will hold; Export (the string opens, selected, in the copy
+          window) and Clear
+Import    a paste box (its Accept checks the string); the report (spec §15 step 5); Import and
+          Clear
 Built-in  one line per shipped set: an Enabled checkbox named after the set, then Customize (or
           Edit the copy) and Choose callouts
 ```
 
-The page edits no single instance, so its band has no picker. Choose callouts opens the set on the
-Groups page's Callouts tab. Defaults turns every set back on and shows all of their callouts.
+The ticks and the checked string are session state, cleared by a profile switch. Export and Import
+refuse in combat with one line (the panel is locked in combat anyway). Defaults resets the Built-in
+tab only.
 
 ## Still to come
 
-Share's Export and Import tabs (phase 5), and Quick mode's delay and tap action with the C7 upgrade.
+Quick mode's delay and tap action with the C7 upgrade.

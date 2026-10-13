@@ -52,6 +52,8 @@ write and the `Prepare` summary), and phase 2's: `Send` (a button, arm or disarm
 `Queue` (an entry queued or replaced, the drain, a drop, the held stand-down) and `Pad` (a pad
 built or moved, a rebuild run or held for combat, test mode on or off), and phase 4's: `Dial` (a dial
 header built, an attribute or header write refused in combat) and `Bind` (the override bindings
-applied, logged only on a change, or refused in combat). The libraries add their
-own: `Cmd`, `Cfg`, `Launcher`, `Lifecycle`, `Perf`. The design's other feature tags (spec §16:
-`Resolver`, `Bake`, `Share`) arrive with their modules.
+applied, logged only on a change, or refused in combat), and phase 5's: `Share` (an export: what it
+held and its length); `Library` also logs each import's tally, and the import's field writes share
+one `[Set] import share: N rows` line. The libraries add their own: `Cmd`, `Cfg`, `Launcher`,
+`Lifecycle`, `Perf`. The design's `Resolver` and `Bake` tags (spec §16) are not used: the resolve
+and the bake run inside a rebuild, which `Pad` logs.

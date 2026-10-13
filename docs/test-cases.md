@@ -72,7 +72,7 @@ Total.
 - parity: the Env seam publishes the same NS members on both paths
 - parity: the Media seam publishes the same NS members on both paths
 
-### test_setup.lua (21)
+### test_setup.lua (24)
 
 - core: NS.Print is NS.Util.print after AceConsole's embed (architecture-§2)
 - core: the printer tags every line with the cyan [QC] prefix
@@ -95,6 +95,9 @@ Total.
 - options: the category registers eagerly, with the General page under it
 - options: the General page's first group is exactly `Master controls`
 - options: the degraded load completes, and the panel says once that it is unavailable
+- libs: [phase 5] LibDeflate and LibSerialize are vendored, TOC-listed and loaded before the addon
+- perf: [phase 5] a refresh notes situation.refresh, and each plan resolver.resolve inside bake.surface
+- perf: [phase 5] the Comms Dial page's Preview notes neither bake.surface nor resolver.resolve
 
 ### test_database.lua (7)
 
@@ -236,7 +239,7 @@ Total.
 - tokens: typed %t and %f count as live, chips are not double counted
 - tokens: non-string text expands to empty
 
-### test_channels.lua (7)
+### test_channels.lua (8)
 
 - channels: smartGroup prefers instance, then raid, then party
 - channels: smartGroup solo follows the fallback
@@ -245,8 +248,9 @@ Total.
 - channels: the whisper kinds are not kinds (owner, issue #7)
 - channels: prefixes and chat types
 - channels: the lock matrix
+- channels: [phase 5] the lock matrix has no row for an unknown channel, and reads a missing snapshot as solo
 
-### test_bake.lua (11)
+### test_bake.lua (12)
 
 - bake: a plain callout bakes to prefix + text
 - bake: [review 1] a leading slash is refused, even after whitespace
@@ -259,6 +263,29 @@ Total.
 - bake: unknown channel and non-table callout refuse
 - bake: baked token values are sanitized; spell links are not
 - bake: a typed %t counts as live
+- bake: [phase 5] CleanText is the sanitizer short of the escape; Sanitize is CleanText, then the escape
+
+### test_share.lua (19)
+
+- share: a string is !QC1! then printable text, and decodes back to the same payload
+- share: [review 1] a pasted string may wrap and carry spaces; a cut-short one is damaged and imports nothing
+- share: a string that is not ours, is empty, is garbage after the prefix or is too large is refused
+- share: a newer version is refused with a line to update; a damaged version is refused
+- share: [review 2] a command or control characters never survive: / is refused, lines are flattened
+- share: ids, channels, names, icons and Whens are checked against the schema
+- share: a pad keeps the shared groups and the built-in sets, and only the fields that travel
+- share: the report counts what arrives, then names each member left out and why
+- share: more members than one string may carry is refused before any is checked
+- share: [review 1] a hand-made string with a NaN reference, a cyclic field or an infinite icon raises nothing
+- share: [review 1] a payload that still raises inside the checks is damaged, never an error
+- share: [review 2] a surface's string fields pass the sanitizer; an empty string is kept for the seam to judge
+- share: SHARE-3's and SHARE-4's strings (docs/smoke-tests.md) read as the checks say
+- share: [review 1] a short string that inflates past MAX_RAW is damaged before it is read
+- share: [fix 1] a shared-reference When or field is refused at once, never expanded
+- share: [fix 1] one table shared across many fields is bounded by MAX_NODES: the string is too large
+- share: [fix 2] one long string referenced 2000 times in a field is refused unread, promptly
+- share: [fix 2] a long name, text or icon is refused unread, promptly
+- share: [fix 2] shared short strings past the payload's text budget make the string too large
 
 ### test_resolver.lua (8)
 
@@ -271,7 +298,7 @@ Total.
 - resolver: Explain names the matched rows
 - resolver: [final] a non-number keyLevel bound is unset, never raises
 
-### test_builtins.lua (6)
+### test_builtins.lua (7)
 
 - builtins: the expected top-level sets exist in order
 - builtins: ids are unique, referenced and well formed
@@ -279,8 +306,14 @@ Total.
 - builtins: node sets open into their ring and nest one level
 - builtins: bake audit, every callout bakes under its set's snapshot
 - builtins: battlegrounds use smart group; arena uses party; raid lead uses smart lead
+- builtins: [phase 5] every node set pins each node to a wind, at most eight, Deepwind Gorge's five included
 
-### test_library.lua (50)
+### test_gameids.lua (2)
+
+- game ids: every battleground set matches only battleground maps, and no map is two sets'
+- game ids: the shipped dungeons are Mythic+ dungeons and the shipped raids are raids
+
+### test_library.lua (55)
 
 - library: Prepare seeds one pad and one dial with every built-in, once
 - library: callouts validate on create
@@ -332,8 +365,13 @@ Total.
 - library: [final 3] a key is one base key with known modifiers, none twice; a bare or dangling modifier is no key
 - library: [final 4] modifiers are stored in the client's order, ALT-CTRL-SHIFT-META
 - library: [phase 4] the generic battleground set moves below the per-battleground sets, once
+- library: [phase 5] Import makes every member under a fresh id, its references pointing at the copies
+- library: [review 3] importing the same string twice makes two copies; nothing that existed changes
+- library: [review 4] an imported pad and dial arrive unbound: no key, the default place, no built-in re-added
+- library: [phase 5] Import is one act: one LIBRARY_CHANGED; a refused result imports nothing
+- library: [phase 5] Prepare gives a pad saved before the Look groups every field it lacks
 
-### test_members.lua (21)
+### test_members.lua (23)
 
 - members: a callout field is written through the seam by instance id, and announced once
 - members: with no id the seam writes the selected member, else the first the page lists, else refuses
@@ -356,6 +394,8 @@ Total.
 - members: [final 3] a bare, dangling, unknown or repeated modifier is refused; [final 4] modifier order is one key
 - members: [phase 4] the CLI types and prints a dial's key and position
 - members: [phase 4] an off-screen dial.point is refused; `/qc reset` brings the dial back and frees its key
+- members: [phase 5] a When's key level prints as it types back in: one level, open below, open above
+- members: [phase 5] a pad's Look rows are composed member rows: checked, clamped, announced
 
 ### test_editors.lua (11)
 
@@ -371,7 +411,7 @@ Total.
 - editors: Scalar keeps the rows the flow engine draws, and CancelReorder cancels once
 - editors: Snapshot is the preview's while Preview as is on
 
-### test_page_callouts.lua (13)
+### test_page_callouts.lua (14)
 
 - callouts page: with no callouts it says how to make one, and New callout makes and selects one
 - callouts page: the rows write the selected callout through the seam
@@ -386,6 +426,7 @@ Total.
 - callouts page: [final 3] Defaults resets the callout as one act: one rebuild
 - callouts page: [final 4] Defaults keeps the icon (its default is only for `/qc reset`)
 - callouts page: [review 1] a delete popup accepted after the pull deletes; the pad catches up at combat end
+- callouts page: [phase 5] Choose an icon: a click on the skull is the callout's icon, through the seam
 
 ### test_groups_when.lua (12)
 
@@ -402,7 +443,7 @@ Total.
 - when: [final 6] a typed character takes the client's case; the Resolver matches one in any case
 - when: [final 2, 11] ResolveValue maps a typed value onto the token or id its row stores, or refuses it
 
-### test_page_groups.lua (15)
+### test_page_groups.lua (16)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists user groups by name, then the built-ins, active ones dotted
@@ -419,8 +460,9 @@ Total.
 - groups page: [final 12] Duplicate says the copy is on no pad yet
 - groups page: [final 20] the Instances row adds a typed id, removes one, and refuses a fraction or a negative
 - groups page: [final 18] Add the instance you are in reads the instance at the click, not at the draw
+- groups page: [phase 5] Choose an icon sets a user group's icon; a built-in set offers no picker
 
-### test_page_pads.lua (10)
+### test_page_pads.lua (11)
 
 - pads page: New pad makes a second pad holding every built-in, selects it, and the pad is built
 - pads page: the Layout rows write the selected pad
@@ -432,6 +474,7 @@ Total.
 - pads page: [final 3, 15] Defaults puts the pad's rows back as one act: one rebuild
 - pads page: [final 4] Defaults keeps the pad's position
 - pads page: [final 26] New pad takes the lowest free number, so a delete never leads to two names alike
+- pads page: [phase 5] Look carries the composed Font, Border and Background groups under their headings
 
 ### test_page_dials.lua (16)
 
@@ -452,12 +495,20 @@ Total.
 - dials page: [final 10] the key line of a dial that is off says the key opens nothing, and warns of no override
 - dials page: [final 11] the page's own plan builds are not timed as a surface's bake
 
-### test_page_share.lua (4)
+### test_page_share.lua (12)
 
 - share page: every shipped set has a line; turning M+ off takes it off the pad
 - share page: [review 4] Customize puts the copy in the set's place, selects it and opens the Groups page
 - share page: Choose callouts opens the set on the Groups page's Callouts tab
 - share page: Defaults turns every set back on and shows all of their callouts, as one act
+- share page: [phase 5] Export ticks a group; its callouts come along, and the string opens in the copy window
+- share page: [phase 5] Export with nothing ticked says so and opens nothing
+- share page: [phase 5] Import checks a pasted string, reports it, then adds it as new members
+- share page: [phase 5] an imported dial says it has no key yet
+- share page: [phase 5] an imported group no shared pad or dial lists says where to add it
+- share page: [phase 5] export and import are refused in combat; nothing is made or added
+- share page: [phase 5] a profile switch forgets the ticks and the checked string
+- share page: [phase 5] the export window is the LibKa0s copy window, built once and named for the addon
 
 ### test_check.lua (6)
 
@@ -569,7 +620,7 @@ Total.
 - layout: the fade follows combat and the mouse, under the master alpha
 - layout: the channel tag names the resolved channel
 
-### test_dial_layout.lua (11)
+### test_dial_layout.lua (14)
 
 - dial layout: four wedges sit on N, E, S and W, clockwise from the top
 - dial layout: slices are 4, 6, 8 or 12, and 12 only on a ring with no children
@@ -582,6 +633,9 @@ Total.
 - dial layout: the pointer follows the cursor outside the dead zone
 - dial layout: [final 6] a label is anchored by its side, clear of its wedge; the ring title clears the N label
 - dial layout: [final 20] past eight wedges each gets its own direction, as a clock position
+- dial layout: [phase 5] a node set's nodes sit on their compass winds; the middle node takes N
+- dial layout: [review 6] [phase 5] nodes that cannot all be pinned keep their shipped order
+- dial layout: [review 6] a pinned ring ignores the dial's slices; Flat keeps its paging
 
 ### test_surfaces.lua (22)
 
@@ -608,7 +662,7 @@ Total.
 - surfaces: [phase 3] WhyLines names each shown group in order, built-ins marked, then the locks
 - surfaces: [phase 3] WhyLines in a key explains the built-in's matched row; a preview says so
 
-### test_pad_render.lua (11)
+### test_pad_render.lua (14)
 
 - render: Dress builds a chip's regions once, each its own object
 - render: an armed chip shows its name, its channel tag in the chat color, no lock, no dim
@@ -621,8 +675,11 @@ Total.
 - render: the header shows the lockdown chip, the stale hint and the test label on demand
 - render: the drag-strip seam builds a hidden strip, and answers nil without the library
 - pad render: [phase 3] a previewed slot's tooltip shows its line and says it sends nothing
+- render: [phase 5] a pad's Look is a font and a skin; the defaults are the skin a pad always wore
+- render: [phase 5] Use class color takes the player's class color and keeps the swatch's alpha
+- render: [phase 5] a section title keeps its gold until the player colors the font
 
-### test_pad.lua (24)
+### test_pad.lua (26)
 
 - pad: the default pad shows the M+ callouts, each chip armed with its baked line
 - pad: [review 5] a refused chip is dimmed and disarmed: a click sends and reports nothing
@@ -648,8 +705,10 @@ Total.
 - pad: [phase 3] a held drag whose stand-down is canceled in the same combat is stopped at combat end
 - pad: [phase 3] a new drag clears a stale held stop, so the next rebuild re-anchors
 - pad: [phase 3] the header's tooltip says why each group shows, unless the player turned it off
+- pad: [phase 5] the pad wears its Look: the chips' font and the edge and body it was given
+- pad: [review 5] a font or border this machine does not have draws the default, with no error
 
-### test_dial.lua (25)
+### test_dial.lua (27)
 
 - dial: Apply builds QuickCommsDial<n> with a ring per page, each callout wedge armed with its baked line
 - dial: a refused callout is a dimmed, disarmed wedge; a ring wedge is disarmed
@@ -676,6 +735,8 @@ Total.
 - dial: the key bindings menu's click opens the dial, even while it is hidden
 - dial: [final 2] two dials: opening the second closes the first, and the number keys go with it
 - dial: [final 5] test mode opens dial 1 once: a rebuild keeps it open, and after the player closes it, closed
+- dial: [phase 5] Arathi Basin's node wedges sit on their winds: Lumber Mill is SW, Blacksmith N
+- dial: [review 6] on a four- or six-slice dial every node shows, and the number keys pick the shown wedges from N
 
 ### test_vendor_sync.lua (3)
 
@@ -753,7 +814,7 @@ Total.
 | test_mock_secure.lua | 24 |
 | test_bus.lua | 2 |
 | test_surface_parity.lua | 15 |
-| test_setup.lua | 21 |
+| test_setup.lua | 24 |
 | test_database.lua | 7 |
 | test_profile.lua | 5 |
 | test_schema.lua | 14 |
@@ -764,19 +825,21 @@ Total.
 | test_restrictions.lua | 16 |
 | test_situation.lua | 15 |
 | test_tokens.lua | 8 |
-| test_channels.lua | 7 |
-| test_bake.lua | 11 |
+| test_channels.lua | 8 |
+| test_bake.lua | 12 |
+| test_share.lua | 19 |
 | test_resolver.lua | 8 |
-| test_builtins.lua | 6 |
-| test_library.lua | 50 |
-| test_members.lua | 21 |
+| test_builtins.lua | 7 |
+| test_gameids.lua | 2 |
+| test_library.lua | 55 |
+| test_members.lua | 23 |
 | test_editors.lua | 11 |
-| test_page_callouts.lua | 13 |
+| test_page_callouts.lua | 14 |
 | test_groups_when.lua | 12 |
-| test_page_groups.lua | 15 |
-| test_page_pads.lua | 10 |
+| test_page_groups.lua | 16 |
+| test_page_pads.lua | 11 |
 | test_page_dials.lua | 16 |
-| test_page_share.lua | 4 |
+| test_page_share.lua | 12 |
 | test_check.lua | 6 |
 | test_send_guard.lua | 10 |
 | test_sendengine.lua | 28 |
@@ -784,11 +847,11 @@ Total.
 | test_preview.lua | 17 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 11 |
-| test_dial_layout.lua | 11 |
+| test_dial_layout.lua | 14 |
 | test_surfaces.lua | 22 |
-| test_pad_render.lua | 11 |
-| test_pad.lua | 24 |
-| test_dial.lua | 25 |
+| test_pad_render.lua | 14 |
+| test_pad.lua | 26 |
+| test_dial.lua | 27 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -796,4 +859,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **598** |
+| **Total** | **653** |

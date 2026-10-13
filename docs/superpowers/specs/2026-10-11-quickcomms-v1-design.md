@@ -86,6 +86,7 @@ These come from the go/no-go test (§13 of the brainstorm) and research note 01.
 - LibStub, CallbackHandler, LibSharedMedia
 - LibDataBroker-1.1, LibDBIcon-1.0
 - **LibSerialize** and **LibDeflate**. Quick Comms is the first Ka0s addon to use these; add them to DEPENDENCIES.md and `standards/ADDONS.md`.
+  *Built (phase 5):* LibDeflate `1.0.2-release` and LibSerialize `v1.2.3`, each copied whole from its tag with its license (`DEPENDENCIES.md`). `standards/ADDONS.md` already carries this addon's row, and the roster has no library column, so the libraries are recorded in `DEPENDENCIES.md` and `docs/ARCHITECTURE.md` (owner ruling, 2026-10-13).
 - **LibKa0s v1.71.0**, copied whole, as one TOC line after Ace3
 - `tests/_kit/`, from LibKa0s `testkit/`
 
@@ -171,6 +172,8 @@ QuickComms/
 ```
 
 *Built (phase 4):* `modules/Dial_Layout.lua` is the dial's pure ring layout (as `Pad_Layout` is the pad's). `Bindings.xml` sits at the root, beside the TOC, and is not a TOC line: the client reads it there, and the standard allows it (layout-§1, toc-file-§4 (standard v2.80.0); owner ruling R1, 2026-10-13).
+
+*Built (phase 5):* `modules/Share.lua` is the share string's codec, checks and edge; `libs/LibDeflate/` and `libs/LibSerialize/` are vendored.
 
 **Where the core files come from:** the core set and its order follow DropWatcher, the most compliant sibling, minus its addon-specific files (SimSeam, ClassData, ItemSetup, TextParse).
 
@@ -410,6 +413,8 @@ An unknown token is left as typed and flagged in the editor's preview (the DropW
 
 **Imported text** goes through the same sanitizer when it's imported, and again at every bake.
 
+*Built (phase 5):* an import stores `Bake.CleanText`'s answer: this sanitizer short of the `|` escape, which every bake still applies, so a stored `|` is escaped once.
+
 ### 8.4 The lock matrix
 
 `Channels.LockState(kind, snapshot) -> nil | reason`.
@@ -572,7 +577,7 @@ If this happens in combat, the secure parts are held in the one permitted pendin
 
 **Hide when no group is active** is evaluated at the last out-of-combat rebuild.
 
-*Built (phase 3):* the pad's Look tab has visibility, fade and the faded alpha; the font group, border group and colors with their class-color companions arrive with phase 5's polish (§19 row 5).
+*Built (phase 3, 5):* the pad's Look tab has visibility, fade and the faded alpha, then the composed Font, Border and Background groups (options-ui-§16, §17) under their own headings. The font draws the chips' labels and the section titles (a title keeps its gold until the player picks a font color or Use class color); the border's style "None" is the flat Ka0s edge and a thickness of 0 is none; the background is a swatch and its class-color companion. The class color is the player's; the defaults are the skin a pad always wore; a font or border this machine does not have draws the default.
 
 ### 10.4 Test mode and position
 
@@ -605,7 +610,9 @@ The Blizzard ping wheel's look (brainstorm §4):
 
 **Wedge geometry.** The wedges sit on compass directions, with on-axis directions first: 4 wedges are N/E/S/W. A battleground node set may pin each node to its real compass direction.
 
-*Built (phase 4):* the paint is insecure regions on the secure frames (the disc and ✕ on the header, spokes and a title per ring, an icon, label, padlock, dim veil and gold hover glow per wedge); the pointer is a plain child whose `OnUpdate` runs only while the dial is open (perf `dial.render`). Node sets are placed clockwise from N in their shipped order; pinning each node to its compass direction moves to phase 5 with the battleground id confirmation (§19 row 5) (owner ruling R4, 2026-10-13).
+*Built (phase 4):* the paint is insecure regions on the secure frames (the disc and ✕ on the header, spokes and a title per ring, an icon, label, padlock, dim veil and gold hover glow per wedge); the pointer is a plain child whose `OnUpdate` runs only while the dial is open (perf `dial.render`).
+
+*Built (phase 5):* node sets are pinned to their compass winds, derived from the client's AreaPOI table by `tools/derive-winds.py` (each node's position against the center of its set's nodes, north up; a node near that center is the middle). A pinned ring has eight wedges, whatever the dial's slices, and is never paged; a middle node takes the first wind left free clockwise from N; a wind with no node has no wedge; the number keys pick the shown wedges clockwise from N. Flat mode is not pinned. Deepwind Gorge's current map has five nodes: Shrine and Ruins joined Market, Farm and Quarry (owner ruling, 2026-10-13; brainstorm §8 listed three).
 
 ### 11.2 Secure structure (`Dial_Secure`)
 
@@ -688,7 +695,9 @@ NS.BuiltIns.callouts["bi.mplus.lust"] = { name = L["Lust"], text = L["Lust on th
 - **Generic battleground:** smartGroup, which resolves to instance chat.
 - **One set per battleground:** matched on the battleground's `instanceID`. Nodes are pinned to compass directions, with `openInto = true`. The battleground list is the 14 from brainstorm §8, and phase 5 confirms their instance IDs.
   *Built (phase 4):* the generic battleground set ships after every per-battleground set (and migration step 2 moves it there on stored profiles): D9 opens into the first active group, so a node set must come first.
-  *Built (phase 4):* the paint is insecure regions on the secure frames (the disc and ✕ on the header, spokes and a title per ring, an icon, label, padlock, dim veil and gold hover glow per wedge); the pointer is a plain child whose `OnUpdate` runs only while the dial is open (perf `dial.render`). Node sets are placed clockwise from N in their shipped order; pinning each node to its compass direction moves to phase 5 with the battleground id confirmation (§19 row 5) (owner ruling R4, 2026-10-13).
+  *Built (phase 4):* the paint is insecure regions on the secure frames (the disc and ✕ on the header, spokes and a title per ring, an icon, label, padlock, dim veil and gold hover glow per wedge); the pointer is a plain child whose `OnUpdate` runs only while the dial is open (perf `dial.render`).
+  *Built (phase 5):* node sets are pinned to their compass winds, derived from the client's AreaPOI table by `tools/derive-winds.py` (each node's position against the center of its set's nodes, north up; a node near that center is the middle). A pinned ring has eight wedges, whatever the dial's slices, and is never paged; a middle node takes the first wind left free clockwise from N; a wind with no node has no wedge; the number keys pick the shown wedges clockwise from N. Flat mode is not pinned. Deepwind Gorge's current map has five nodes: Shrine and Ruins joined Market, Farm and Quarry (owner ruling, 2026-10-13; brainstorm §8 listed three).
+  *Built (phase 5):* every id the fourteen sets list is a battleground map in the client's Map table (build 12.1.5.70340), matched by `tools/derive-gameids.py` and `tests/test_gameids.lua`; none changed. The in-game confirmation is smoke check BG-2, owed until it passes. Midnight's Slayer's Rise (map 2799) is not among the fourteen; the generic battleground set covers it.
 - **Wording** is faction-neutral (D11).
 
 **Battleground node structure** (brainstorm §8): each battleground group has one child group per node, and each node's sub-ring is INC 1 / INC 2 / INC 3 / INC Many / Clear / Help.
@@ -725,11 +734,11 @@ It is one act: the pads rebuild once. A set on no surface is customized onto non
 |---|---|
 | **Landing** | Library `BuildLandingPage`: logo, notes, the slash command list |
 | **General** | Tabs: **Master controls** (the exact standard rows), **Behavior**: solo fallback, spam guard slider, drop notes, why tooltips, lockdown chip, sounds, auto-promote |
-| **Callouts** | Banner: a callout picker and a "Create callout" box. Tabs: **General** has name, text with a token picker and the live line (the baked line and its byte count under the current or previewed situation, or why it sends nothing, and the padlock text), channel, an icon box (a texture id or path; a LibKa0s icon by its path; the visual picker arrives with phase 5's polish, §19 row 5), then Duplicate and Delete (options-ui-§14: a page's acts sit on its first tab, named General). The live line is the byte counter: it follows each committed write (Enter in the Text box), not each keystroke. **Used by** lists the groups that reference it, each a link to the Groups page. |
-| **Groups** | The banner picker (user groups by name, then the built-in sets; a green dot marks a group active now or in the preview) and New group, which puts the group at the top of every pad and dial; no nav rail (options-ui-§14: the rail is not a picker). Tabs: **General** (name, icon, enabled, open-into, delete/duplicate, and Customize for a built-in), **Callouts** (ReorderList, plus add from the library), **When** (§13.2), **Preview**. For a built-in, General has its Enabled row and Customize, and Callouts is the hidden-callouts editor. |
-| **Comms Pad** | The banner picker and New pad; no nav rail. Tabs: **General** (name, enabled, unlock, delete), **Groups** (priority ReorderList, plus groups-as), **Layout**, **Look** (visibility, fade, font group, border group, colors with class-color companions). General also has Preview as, Unlock pads and Delete pad; Layout ends with the X and Y offsets and Reset this pad's position. |
+| **Callouts** | Banner: a callout picker and a "Create callout" box. Tabs: **General** has name, text with a token picker and the live line (the baked line and its byte count under the current or previewed situation, or why it sends nothing, and the padlock text), channel, an icon box (a texture id or path; a LibKa0s icon by its path; under it, Choose an icon: the eight raid markers, the icons the built-in sets wear (read from the sets) and the LibKa0s catalog's marks an allowlist keeps; a click is the icon (built phase 5; any other texture is typed)), then Duplicate and Delete (options-ui-§14: a page's acts sit on its first tab, named General). The live line is the byte counter: it follows each committed write (Enter in the Text box), not each keystroke. **Used by** lists the groups that reference it, each a link to the Groups page. |
+| **Groups** | The banner picker (user groups by name, then the built-in sets; a green dot marks a group active now or in the preview) and New group, which puts the group at the top of every pad and dial; no nav rail (options-ui-§14: the rail is not a picker). Tabs: **General** (name, icon, enabled, open-into, delete/duplicate, and Customize for a built-in), **Callouts** (ReorderList, plus add from the library), **When** (§13.2), **Preview**. For a built-in, General has its Enabled row and Customize, and Callouts is the hidden-callouts editor. A user group's General tab has the same picker as a callout's (Choose an icon; built phase 5). |
+| **Comms Pad** | The banner picker and New pad; no nav rail. Tabs: **General** (name, enabled, unlock, delete), **Groups** (priority ReorderList, plus groups-as), **Layout**, **Look** (visibility, fade, font group, border group, colors with class-color companions) (built phase 5: the background is the one color group). General also has Preview as, Unlock pads and Delete pad; Layout ends with the X and Y offsets and Reset this pad's position. |
 | **Comms Dial** | The banner picker and New dial; no nav rail. Tabs: **General** (Preview as, name, enabled, Delete dial), **Groups** (Categories/Flat, the depth-3 warning, the priority ReorderList, Add a group), **Wheel** (wedges per ring, open at, the X and Y offsets and Reset this dial's position), **Binding** (how Relaxed works; a key capture box; the key's line: what it opens, or the WoW binding it shares, which still binds), **Preview** (each ring wedge by wedge). Quick mode's delay and tap action return with the C7 upgrade. |
-| **Share** | Tabs: **Export** (select callouts, groups, pads and dials → string → `CopyWindow`), **Import** (a paste box → validation report → apply), **Built-in** (the list of built-in sets with an enabled toggle, Customize, and a hidden-callouts editor). *Built (phase 3):* the Built-in tab only, one line per set (Enabled, Customize, Choose callouts, which opens the set's hidden-callouts editor on the Groups page); Export and Import join in phase 5. |
+| **Share** | Tabs: **Export** (select callouts, groups, pads and dials → string → `CopyWindow`), **Import** (a paste box → validation report → apply), **Built-in** (the list of built-in sets with an enabled toggle, Customize, and a hidden-callouts editor). *Built (phase 3, 5):* Export (a checkbox per callout, group, Comms Pad and Comms Dial, under a heading per kind; what is ticked brings what it needs; the string opens selected in the copy window), Import (the paste box; Accept checks, the report shows, Import adds) and Built-in (one line per set). |
 | **Profiles** | AceDBOptions, the one permitted AceConfigDialog page |
 
 **Every page has a tab strip**, and every row has a `group`.
@@ -746,7 +755,7 @@ It looks like the WeakAuras Load tab:
 - The list data comes from a shipped ID table; there is no localized-name matching.
 - A live line reads "Active now ✓ / ✗", with the reason.
 
-*Built (phase 3):* checkbox rows for content, difficulty, group, leadership, class, specialization (the classes picked, else the player's) and role; a lowest and highest box for the key level; the library's IdList for instances, battlegrounds and characters (`Name-Realm`), each with an add-the-one-you-are-in button. The shipped id table (`defaults/GameIds.lua`) lists the season's returning dungeons; the Midnight dungeon and raid ids are confirmed in game in phase 5, with the battleground ids.
+*Built (phase 3):* checkbox rows for content, difficulty, group, leadership, class, specialization (the classes picked, else the player's) and role; a lowest and highest box for the key level; the library's IdList for instances, battlegrounds and characters (`Name-Realm`), each with an add-the-one-you-are-in button. The shipped id table (`defaults/GameIds.lua`) lists the season's returning dungeons; the Midnight dungeons (Windrunner Spire 2805, Magisters' Terrace 2811, Nexus-Point Xenas 2915, Maisara Caverns 2874) and raids (The Voidspire 2912, The Dreamrift 2939, March on Quel'Danas 2913) and spec 1480 are matched against the client's data tables in phase 5 (`tools/derive-gameids.py`); the in-game confirmation is smoke check IDS-1, owed until it passes. Sporefall (1592) is left out by owner ruling R4.
 
 ### 13.3 Preview as… and Why is this showing?
 
@@ -811,6 +820,8 @@ payload = { v = 1, addon = "QuickComms", kind = "bundle",
 
 **UI:** export uses LibKa0s `CopyWindow`. Import uses an AceGUI MultiLineEditBox on the Share page.
 
+*Built (phase 5):* `v = 1` is the first version; `MIGRATIONS` is empty and already walked. The checks: a name is 1 to 32 characters, a callout's text and an icon path at most 255 bytes after sanitizing (bytes, as `Bake` caps a line; the editor's Text box counts characters, so a text that types in may still be refused on import, and could never have baked), a pasted string at most 50,000 characters (whitespace in it ignored), its decompressed payload at most 512 KiB before anything reads it, one string at most 500 members; ids are `c<n>`, `g<n>`, `p<n>`, `d<n>`; every name, text and icon path passes `Bake.CleanText`, and so does every string in a surface's field values, nested ones included; a field value that is not finite, not plain data or nested too deep is left out; a check that still raises reads as a damaged string. A callout travels as `{ name, text, channel, icon }`, a group as `{ name, icon, callouts, when, openInto, enabled }`, a pad or a dial as `{ name, enabled, groups, fields }`, `fields` its portable member rows by path (never its position or key). Ticking a pad or a dial brings its user groups, and a group its callouts; a built-in set travels by id. A reference to something the string does not carry is left out and counted, and so is a field this version does not take. An imported pad or dial is unbound: no key, the default place, the end of its kind's order, every shipped built-in marked seen. `Share.Export` and `Share.Apply` refuse in combat with one line.
+
 ## 16. Launcher, debug, diagnostics, perf
 
 **Launcher** (`LibKa0s-Launcher`):
@@ -855,6 +866,8 @@ Repeating paths log only on change.
 *Built (phase 4):* `dial.render` is bracketed; the dial open/close scenario in `tests/perf.lua` is phase 5.
 
 `tests/perf.lua` covers a 12-chip pad rebuild, a full dial open/close and a zero-overhead scenario.
+
+*Built (phase 5):* all seven buckets are bracketed (`resolver.resolve` inside `bake.surface`). `tests/perf.lua`'s scenarios: `padRebuild12`, `dialOpenClose`, `situationRefresh`, and the zero-overhead pair, the dial pointer's `OnUpdate` with capture off against an instance with no Perf library (`dialPointerCaptureOff`, `dialPointerNoHarness`), beside `bracketCaptureOff`.
 
 ## 17. Message bus
 
@@ -901,7 +914,7 @@ Each phase ends green: `lua tests/run.lua` and `luacheck .` both pass. Each also
 | **2. Send engine and Pad: first usable build** | `SendEngine` (pool, arm, queue, guard, echo, stand-down). `Surfaces`. `Pad*`. Test mode. Default pad seeded with built-ins. | In game: the default pad shows M+ callouts in a key and sends on trash and a boss. A double press inside the guard window is marked guarded (dimmed, noted) and the extra send is reported dropped if the echo doesn't arrive. The stale hint appears and clears. |
 | **3. Editors** | Callouts, Groups (with When and Preview), Pads pages. Preview as…. Why tooltips. Built-in tab (enable, hide, Customize). | Smoke test: create a callout and a group, set When, see it on the pad in the right situation. Customize a built-in. |
 | **4. Comms Dial** | `Dial_Secure` (Relaxed only; C7 skipped), `Dial_Render`, Dial page, Bindings.xml, the battleground node dial with open-into | In game: open the dial, click a wedge and it sends in a boss. The Categories two-stroke works. The Arathi Basin node dial sends "INC 3 Lumber Mill" in two clicks. *Built:* see smoke checks DIAL-1..10. |
-| **5. Share, polish, release** | Share (codec tests, import report). Editor polish: the pad's Look font group, border group and colors with class-color companions (options-ui-§16/§17, the composed controls), and a visual icon picker for callouts and groups. Perf buckets and `tests/perf.lua`. Battleground ID confirmation. Node sets pinned to compass directions, with the battleground id confirmation. Docs set. Automated-test bundle. First audit. README. `ADDONS.md` roster row. | Release gate (complexity ≤ 15, blind files 0). Tag v0.1.0 only on the owner's word. |
+| **5. Share, polish, release** | Share (codec tests, import report). Editor polish: the pad's Look font group, border group and colors with class-color companions (options-ui-§16/§17, the composed controls), and a visual icon picker for callouts and groups. Perf buckets and `tests/perf.lua`. Battleground ID confirmation. Node sets pinned to compass directions, with the battleground id confirmation. Docs set. Automated-test bundle. First audit. README. `ADDONS.md` roster row. | Release gate (complexity ≤ 15, blind files 0). Tag v0.1.0 only on the owner's word. *Built:* see smoke checks SHARE-1..6, LOOK-1..2, ICON-1, BG-1..2, IDS-1; the release gate's bundle is Task 13's. |
 
 ### In-game checks, carried over from brainstorm §11
 
