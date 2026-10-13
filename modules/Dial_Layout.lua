@@ -30,8 +30,11 @@ local L = NS.L
 DL.RADIUS  = 92                                -- a wedge's center from the hub's center
 DL.WEDGE   = 44                                -- a wedge button, square
 DL.HUB     = 40                                -- the hub (the header button)
-DL.LABEL   = 40                                -- a wedge's label, outward from the wedge's center
+DL.LABEL_GAP = 2                               -- a wedge's label starts this far past the wedge's edge
+DL.LINE    = 14                                -- one line of label or title text
 DL.DISC    = 2 * (DL.RADIUS + DL.WEDGE / 2 + 8)
+-- The ring's title, from the ring's center: above the N wedge's label, so the two never overlap.
+DL.TITLE   = DL.RADIUS + DL.WEDGE / 2 + DL.LABEL_GAP + DL.LINE + 4
 DL.POINTER = DL.HUB / 2 + 8                    -- the pointer's distance from the hub's center
 DL.DEAD    = 8                                 -- inside this, the pointer hides
 DL.KEYS    = 8                                 -- the number keys 1-8 pick wedges
@@ -73,14 +76,29 @@ function DL.Paginate(items, size)
     return pages
 end
 
---- Wedge i of n: its angle (radians clockwise from N), its center and its label's offset from it.
+-- A label reads outward from its wedge: a wedge toward the east has its label's LEFT edge just past the
+-- wedge's right edge, toward the west its RIGHT edge past the left one; at N and S (within about 17
+-- degrees of the vertical) its BOTTOM or TOP edge, past the top or bottom. A long name then runs away
+-- from the wedge, never back over its icon.
+local SIDEWAYS = 0.3
+
+local function labelAnchor(sx, sy)
+    local edge = DL.WEDGE / 2 + DL.LABEL_GAP
+    if sx > SIDEWAYS then return "LEFT", edge, 0 end
+    if sx < -SIDEWAYS then return "RIGHT", -edge, 0 end
+    if sy >= 0 then return "BOTTOM", 0, edge end
+    return "TOP", 0, -edge
+end
+
+--- Wedge i of n: its angle (radians clockwise from N), its center, and its label's anchor point
+--- (`anchor`, the label's own point) and offset from the wedge's center (`lx`, `ly`).
 function DL.Wedge(i, n, radius)
     n = math.max(1, tonumber(n) or 4)
     radius = radius or DL.RADIUS
     local a = (i - 1) * 2 * math.pi / n
     local sx, sy = math.sin(a), math.cos(a)
-    return { angle = a, x = round(radius * sx), y = round(radius * sy),
-        lx = round(DL.LABEL * sx), ly = round(DL.LABEL * sy) }
+    local anchor, lx, ly = labelAnchor(sx, sy)
+    return { angle = a, x = round(radius * sx), y = round(radius * sy), anchor = anchor, lx = lx, ly = ly }
 end
 
 --- The spoke between wedge j and wedge j + 1 of n: its center, rotation and length.
@@ -92,10 +110,15 @@ function DL.Spoke(j, n)
     return { x = round(mid * math.sin(a)), y = round(mid * math.cos(a)), rotation = -a, length = outer - inner }
 end
 
---- Wedge i of n as the nearest of the eight compass winds.
+--- Wedge i of n as the nearest of the eight compass winds, or past eight wedges (12) as its clock
+--- position ("12", "1", ... "11"), since the winds would give two wedges one word.
 function DL.Direction(i, n)
     n = math.max(1, tonumber(n) or 4)
     local deg = (i - 1) * 360 / n
+    if n > #WINDS then
+        local hour = math.floor(deg / 30 + 0.5) % 12
+        return tostring(hour == 0 and 12 or hour)
+    end
     return WINDS[math.floor(deg / 45 + 0.5) % 8 + 1]
 end
 

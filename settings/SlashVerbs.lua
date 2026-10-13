@@ -108,7 +108,7 @@ function V.WhyLines()
             end
         end
     end
-    if #out == 0 then out[1] = L["No pad is showing: nothing has been built yet."] end
+    if #out == 0 then out[1] = L["Nothing is showing: no pad or dial has been built yet."] end
     return out
 end
 

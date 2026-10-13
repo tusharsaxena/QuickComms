@@ -39,7 +39,7 @@ test("dial layout: four wedges sit on N, E, S and W, clockwise from the top", fu
         pts[i] = w.x .. "," .. w.y
     end
     assertEqual(table.concat(pts, " "), "0,92 92,0 0,-92 -92,0")
-    assertEqual(L.Wedge(2, 4).lx, 40, "the label sits outward from the wedge")
+    assertEqual(L.Wedge(2, 4).lx, L.WEDGE / 2 + L.LABEL_GAP, "the label sits outward from the wedge")
     assertEqual(L.Direction(1, 4) .. L.Direction(2, 4) .. L.Direction(3, 4) .. L.Direction(4, 4), "NESW")
     assertEqual(L.Direction(2, 8), "NE")
 end)
@@ -145,4 +145,32 @@ test("dial layout: the pointer follows the cursor outside the dead zone", functi
     assertEqual(math.floor(a * 1000 + 0.5), 1571, "east is a quarter turn clockwise")
     assertEqual(x, L.POINTER)
     assertEqual(y, 0)
+end)
+
+test("dial layout: [final 6] a label is anchored by its side, clear of its wedge; the ring title clears the N label", function()
+    local L = DL()
+    local edge = L.WEDGE / 2 + L.LABEL_GAP
+    local want = { { "BOTTOM", 0, edge }, { "LEFT", edge, 0 }, { "TOP", 0, -edge }, { "RIGHT", -edge, 0 } }
+    for i = 1, 4 do
+        local w = L.Wedge(i, 4)
+        -- red under: center every label at DL.LABEL outward
+        assertEqual(w.anchor .. " " .. w.lx .. "," .. w.ly, want[i][1] .. " " .. want[i][2] .. "," .. want[i][3], i)
+    end
+    assertEqual(L.Wedge(2, 12).anchor, "LEFT", "1 o'clock reads to the right")
+    assertEqual(L.Wedge(12, 12).anchor, "RIGHT")
+    T.assertTrue(L.TITLE >= L.RADIUS + edge + L.LINE, "the title sits above the N wedge's label")
+end)
+
+test("dial layout: [final 20] past eight wedges each gets its own direction, as a clock position", function()
+    local L = DL()
+    local seen, words = {}, {}
+    for i = 1, 12 do
+        local d = L.Direction(i, 12)
+        -- red under: round 12 slices onto the eight winds (2 and 3 are both NE)
+        assertNil(seen[d], d)
+        seen[d] = true
+        words[i] = d
+    end
+    assertEqual(table.concat(words, " "), "12 1 2 3 4 5 6 7 8 9 10 11")
+    assertEqual(L.Direction(2, 8), "NE", "eight or fewer keep the winds")
 end)

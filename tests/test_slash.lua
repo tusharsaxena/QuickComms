@@ -124,3 +124,27 @@ test("slash: [phase 4] `why` covers the dials too", function()
     assertTrue(text:find("Comms Pad (p1):", 1, true) ~= nil, text)
     assertTrue(text:find("Comms Dial (d2):", 1, true) ~= nil, text)
 end)
+
+test("slash: [final 16] `why` with nothing built speaks of pads and dials", function()
+    local NS, _, m = T.enableAddon()
+    NS.Surfaces.Plans = function() return {} end
+    NS.Surfaces.DialPlans = function() return {} end
+    m.prints = {}
+    NS.addon:OnSlashCommand("why")
+    -- red under: keep the pads-only empty line in settings/SlashVerbs.lua
+    assertTrue(table.concat(m.prints, "\n"):find("Nothing is showing: no pad or dial has been built yet.", 1, true) ~= nil)
+end)
+
+test("slash: [final 9] test and preview's help, and the Preview as row, speak of the dials too", function()
+    local NS, _, m = T.enableAddon()
+    m.prints = {}
+    NS.addon:OnSlashCommand("help")
+    local text = table.concat(m.prints, "\n")
+    -- red under: keep the pads-and-chips-only lines in settings/Slash.lua
+    assertTrue(text:find("Turn test mode on or off (placeholder chips and wedges; it opens dial 1; combat ends it)", 1, true) ~= nil, text)
+    assertTrue(text:find("Preview the pads and dials as another situation", 1, true) ~= nil, text)
+    local row = NS.SchemaRuntime.FindRow("state.previewAs")
+    do
+        assertEqual(row.desc, "Draw every pad, and open dial 1, as it would look in another situation. Nothing on them sends. It ends when the settings close or combat starts.")
+    end
+end)

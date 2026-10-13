@@ -182,7 +182,8 @@ end
 --- @param dial table profile.dials[surfaceId]
 --- @return table plan
 function S.BuildDialPlan(surfaceId, dial, snap, deps)
-    local t0 = Perf.on and debugprofilestop()
+    -- deps.unmeasured: an editor's look at a plan (settings/Dials.lua), not a surface's bake.
+    local t0 = Perf.on and not deps.unmeasured and debugprofilestop()
     dial = type(dial) == "table" and dial or {}
     local active = NS.Resolver.ActiveGroups(deps.groups, snap)
     local order = NS.Resolver.SurfaceOrder(dial.groups, active, deps.groups, deps.autoPromote)

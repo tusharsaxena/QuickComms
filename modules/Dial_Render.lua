@@ -116,7 +116,7 @@ function R.DressRing(ring)
         ring.qcSpokes[j] = s
     end
     ring.qcTitle = ring:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    ring.qcTitle:SetPoint("BOTTOM", ring, "TOP", 0, 4)
+    ring.qcTitle:SetPoint("BOTTOM", ring, "CENTER", 0, DL.TITLE)   -- above the N wedge's label
     return ring
 end
 
@@ -186,14 +186,15 @@ function R.DressWedge(btn)
     return btn
 end
 
---- Show one ring item on a wedge: its icon, its label outward at `geo.lx, geo.ly`, a padlock when its
+--- Show one ring item on a wedge: its icon, its label outward (its `geo.anchor` point at `geo.lx,
+--- geo.ly`, so it reads away from the wedge), a padlock when its
 --- callout is locked, and the dim veil when it sends nothing here.
 function R.PaintWedge(btn, item, geo)
     btn.qcItem = item
     local slot = item.slot
     btn.qcIcon:SetTexture(item.icon or (item.more and MORE_ICON) or DEFAULT_ICON)
     btn.qcLabel:ClearAllPoints()
-    btn.qcLabel:SetPoint("CENTER", btn, "CENTER", geo.lx, geo.ly)
+    btn.qcLabel:SetPoint(geo.anchor or "CENTER", btn, "CENTER", geo.lx, geo.ly)
     btn.qcLabel:SetText(item.title or "?")
     btn.qcLock:SetShown(slot ~= nil and slot.lock ~= nil)
     local live = slot == nil or slot.line ~= nil or slot.selfText ~= nil or slot.reason == "testMode"

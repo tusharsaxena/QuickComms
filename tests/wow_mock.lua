@@ -29,6 +29,7 @@
 --                  owner's; __bindingStacks keeps every owner's, so a ClearBindings hands the key back)
 --   overrideBindings    [key] = { owner, name, button }: SetOverrideBindingClick (refused in combat)
 --   bindingActions      [key] = the action the player's own WoW binding names (GetBindingAction)
+--   bindingKeys         [command] = the key the player bound to a command in WoW's menu (GetBindingKey)
 --   cursor              { x, y }: GetCursorPosition's answer
 --   __named[name]       every named frame (a binding clicks a frame by its name)
 --   __pressKey(key)     a key press: a snippet's binding first, then an override binding; false if unbound
@@ -260,6 +261,7 @@ local function build()
     M.__bindingStacks    = {}   -- [key] = { entry, ... }: every owner's binding of the key, newest last
     M.overrideBindings   = {}
     M.bindingActions     = {}
+    M.bindingKeys        = {}
     M.cursor             = { x = 0, y = 0 }
     M.__named            = {}
 
@@ -469,6 +471,7 @@ local function build()
     end
 
     M.GetBindingAction = function(key) return M.bindingActions[key] or "" end
+    M.GetBindingKey = function(command) return M.bindingKeys[command] end
     M.GetCursorPosition = function() return M.cursor.x, M.cursor.y end
 
     --- A key press as the client routes it: a snippet's binding first, then an override binding;

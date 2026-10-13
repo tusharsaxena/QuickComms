@@ -118,21 +118,59 @@ local function placeOf(id)
     return nil
 end
 
+-- The key bindings menu's command for the dial at `place` (Bindings.xml), or nil past the fourth.
+local function menuCommand(place)
+    if not place or place > NS.Dial.BINDINGS then return nil end
+    return ("CLICK %s:%s"):format(NS.DialSecure.HEADER:format(place), NS.DialSecure.TOGGLE)
+end
+
+-- Plans the page builds to look at (the depth warning, the Preview listing) are not a surface's bake:
+-- they stay out of the bake.surface perf bucket.
+local function lookDeps(snap)
+    local deps = NS.Surfaces.Deps(snap)
+    deps.unmeasured = true
+    return deps
+end
+
 --- The Binding tab's line: the dial's key and what it does, or the WoW binding it shares (spec §9.4).
+--- A dial that is off, or Quick Comms stood down, binds nothing, and the line says so. With no key of
+--- its own, a key bound to its Open Comms Dial entry in WoW's menu is named.
 function DD.KeyLine(id)
     local dial = NS.db.profile.dials[id]
     local key = dial and dial.key
+    local place = placeOf(id)
+    local own = menuCommand(place)
     if type(key) ~= "string" or key == "" then
+        local menuKey = own and NS.Compat.BindingKey(own)
+        if menuKey then
+            return L["No key here, but %s opens this dial from WoW's key bindings (Open Comms Dial %d)."]:format(menuKey, place)
+        end
         return L["No key yet. Click the box and press one, or bind Open Comms Dial in WoW's key bindings."]
     end
+    if dial.enabled == false then
+        return L["%s is kept for this dial, which is off: it opens nothing until the dial is enabled."]:format(key)
+    end
+    if NS.IsStoodDown() then
+        return L["%s is kept for this dial, but Quick Comms is off: it opens nothing until Quick Comms is enabled."]:format(key)
+    end
     local action = NS.Compat.BindingAction(key)
-    local place = placeOf(id)
-    local own = place and ("CLICK %s:%s"):format(NS.DialSecure.HEADER:format(place), NS.DialSecure.TOGGLE)
     if action and action ~= own then
         return L["%s is also %s in WoW's key bindings. While Quick Comms is enabled, it opens this dial instead."]
-            :format(key, action)
+            :format(key, NS.Compat.BindingLabel(action) or action)
     end
     return L["%s opens and closes this dial."]:format(key)
+end
+
+--- Which Open Comms Dial entry in WoW's key bindings opens this dial: its place in the dial list, so
+--- the number changes when a dial above it is deleted.
+function DD.PlaceLine(id)
+    local place = placeOf(id)
+    if not place then return "" end
+    if menuCommand(place) then
+        return L["In WoW's key bindings, under Ka0s Quick Comms, this dial is Open Comms Dial %d."]:format(place)
+            .. " " .. L["The number is its place in the dial list: it changes when a dial above it is deleted."]
+    end
+    return L["This dial is number %d in the dial list, and WoW's key bindings list Open Comms Dial 1 to 4 only: give it a key above."]:format(place)
 end
 
 --- The Groups tab's warning (spec §11.3: depth 3 is allowed, with the editor warning): the
@@ -150,7 +188,7 @@ function DD.DepthWarning(id)
         local preset = def and def.children and NS.Preview.FindPreset("bg:" .. short)
         if preset and preset.snapshot then
             local snap = preset.snapshot
-            local plan = NS.Surfaces.BuildDialPlan(id, dial, snap, NS.Surfaces.Deps(snap))
+            local plan = NS.Surfaces.BuildDialPlan(id, dial, snap, lookDeps(snap))
             for _, title in ipairs(NS.DialLayout.DeepGroups(plan.rings, plan.openRing)) do names[#names + 1] = title end
         end
     end
@@ -162,7 +200,7 @@ end
 --- @return string[]
 function DD.PreviewLines(id)
     local snap = Ed.Snapshot()
-    local plan = NS.Surfaces.BuildDialPlan(id, NS.db.profile.dials[id], snap, NS.Surfaces.Deps(snap))
+    local plan = NS.Surfaces.BuildDialPlan(id, NS.db.profile.dials[id], snap, lookDeps(snap))
     if #plan.rings == 0 then return { L["Nothing to show: no group on this dial is active here."] } end
     local out = {}
     for r, ring in ipairs(plan.rings) do
@@ -171,7 +209,8 @@ function DD.PreviewLines(id)
         for i, item in ipairs(ring.items) do
             local what = item.title or "?"
             if item.kind == "ring" then what = L["%s, opens a ring"]:format(what) end
-            out[#out + 1] = L["  %d %s: %s"]:format(i, DIRECTION[NS.DialLayout.Direction(i, ring.size)] or "", what)
+            local dir = NS.DialLayout.Direction(i, ring.size)
+            out[#out + 1] = L["  %d %s: %s"]:format(i, DIRECTION[dir] or L["%s o'clock"]:format(dir), what)
         end
     end
     return out
@@ -319,7 +358,8 @@ local function renderBinding(ctx)
     h.RenderGrid(ctx, { keyBox(ctx, id) })
     local line = h.TextRow(ctx, DD.KeyLine(id))
     Ed.Live(ctx, function() if line then line:SetText(DD.KeyLine(id)) end end)
-    h.TextRow(ctx, L["WoW's key bindings menu also lists Open Comms Dial 1 to 4, under Ka0s Quick Comms."])
+    local placeRow = h.TextRow(ctx, DD.PlaceLine(id))
+    Ed.Live(ctx, function() if placeRow then placeRow:SetText(DD.PlaceLine(id)) end end)
 end
 
 local function renderPreview(ctx)

@@ -146,5 +146,6 @@ test("pad render: [phase 3] a previewed slot's tooltip shows its line and says i
     local NS = T.newAddon()
     local lines = NS.PadRender.TooltipLines({ name = "Lust", line = "/p Lust", preview = true })
     assertEqual(lines[2], "/p Lust")
-    assertEqual(lines[#lines], "Preview: this chip sends nothing.")
+    -- [final 9] a previewed wedge shares these lines, so the line names no surface
+    assertEqual(lines[#lines], "Preview: this sends nothing.")
 end)

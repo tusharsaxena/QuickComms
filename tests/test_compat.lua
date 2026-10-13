@@ -144,3 +144,20 @@ test("compat: [phase 4] BindingAction reads the player's WoW binding; none, a se
     m.GetBindingAction = nil
     T.assertNil(NS.Compat.BindingAction("G"))
 end)
+
+test("compat: [final 7] BindingLabel reads the menu's name for an action; [final 8] BindingKey a command's key; secrets are nil", function()
+    local NS, m = T.newAddon()
+    m.BINDING_NAME_MOVEFORWARD = "Move Forward"
+    assertEqual(NS.Compat.BindingLabel("MOVEFORWARD"), "Move Forward")
+    T.assertNil(NS.Compat.BindingLabel("NOPE"))
+    m.bindingKeys["CLICK QuickCommsDial1:Toggle"] = "F"
+    assertEqual(NS.Compat.BindingKey("CLICK QuickCommsDial1:Toggle"), "F")
+    T.assertNil(NS.Compat.BindingKey("CLICK QuickCommsDial2:Toggle"))
+    m.issecretvalue = T.isSecret
+    m.BINDING_NAME_MOVEFORWARD = T.secret("Move Forward")
+    m.bindingKeys["CLICK QuickCommsDial1:Toggle"] = T.secret("F")
+    T.assertNil(NS.Compat.BindingLabel("MOVEFORWARD"))
+    T.assertNil(NS.Compat.BindingKey("CLICK QuickCommsDial1:Toggle"))
+    m.GetBindingKey = nil
+    T.assertNil(NS.Compat.BindingKey("CLICK QuickCommsDial1:Toggle"))
+end)

@@ -178,6 +178,15 @@ test("dials page: Preview lists the rings wedge by wedge, marking the one the di
     assertTrue(P.hasText(w, "  2 E: Lumber Mill, opens a ring"))
 end)
 
+test("dials page: [final 20] at 12 wedges per ring the Preview names each wedge by its clock position", function()
+    local NS, _, P = open()
+    assertTrue(NS.SchemaRuntime.Set("dial.mode", "flat", "d2"))
+    assertTrue(NS.SchemaRuntime.Set("dial.slices", 12, "d2"))
+    local w = P.tab("dials", "preview")
+    assertTrue(P.hasText(w, "  2 1 o'clock: "), "wedge 2 at 1 o'clock")
+    assertTrue(P.hasText(w, "  3 2 o'clock: "))
+end)
+
 test("dials page: Delete dial asks, then the dial is gone, its header released, and the page heals", function()
     local NS, _, P = open()
     local id = NS.addon.Settings.Dials.Create()
@@ -192,4 +201,73 @@ test("dials page: Delete dial asks, then the dial is gone, its header released, 
     P.flush()
     P.redraw("dials")
     assertEqual(NS.State.editing.dial, "d2")
+end)
+
+-- ── final review fixes ──────────────────────────────────────────────────────────────────────
+
+test("dials page: [final 7] a WoW conflict names the action as WoW's key bindings menu shows it", function()
+    local NS, m, P = open()
+    m.BINDING_NAME_TARGETNEARESTENEMY = "Target Nearest Enemy"
+    m.bindingActions.TAB = "TARGETNEARESTENEMY"
+    key(P):__fire("OnKeyChanged", "TAB")
+    -- red under: print the raw token in DD.KeyLine
+    assertTrue(P.hasText(P.tab("dials", "Binding"), "TAB is also Target Nearest Enemy in WoW's key bindings."))
+    m.bindingActions.F = "CLICK QuickCommsDial2:Toggle"
+    key(P):__fire("OnKeyChanged", "F")
+    assertEqual(NS.addon.Settings.Dials.KeyLine("d2"),
+        "F is also Open Comms Dial 2 in WoW's key bindings. While Quick Comms is enabled, it opens this dial instead.")
+    m.bindingActions.J = "SOMETHING_UNNAMED"
+    key(P):__fire("OnKeyChanged", "J")
+    assertTrue(NS.addon.Settings.Dials.KeyLine("d2"):find("J is also SOMETHING_UNNAMED", 1, true) ~= nil, "no label: the token")
+end)
+
+test("dials page: [final 8] the Binding tab names this dial's Open Comms Dial entry and sees a key bound there", function()
+    local NS, m, P = open()
+    local Dials = NS.addon.Settings.Dials
+    -- red under: show the fixed "also lists Open Comms Dial 1 to 4" line
+    assertTrue(P.hasText(P.tab("dials", "Binding"), "In WoW's key bindings, under Ka0s Quick Comms, this dial is Open Comms Dial 1."))
+    m.bindingKeys["CLICK QuickCommsDial1:Toggle"] = "F"
+    -- red under: answer "No key yet" without reading GetBindingKey
+    assertEqual(Dials.KeyLine("d2"), "No key here, but F opens this dial from WoW's key bindings (Open Comms Dial 1).")
+    local ids = {}
+    for i = 1, 4 do ids[i] = Dials.Create() end
+    P.flush()
+    assertEqual(Dials.PlaceLine(ids[4]), "This dial is number 5 in the dial list, and WoW's key bindings list Open Comms Dial 1 to 4 only: give it a key above.")
+    assertEqual(Dials.KeyLine(ids[4]), "No key yet. Click the box and press one, or bind Open Comms Dial in WoW's key bindings.")
+end)
+
+test("dials page: [final 10] the key line of a dial that is off says the key opens nothing, and warns of no override", function()
+    local NS, m, P = open()
+    local Dials = NS.addon.Settings.Dials
+    m.bindingActions.G = "MOVEFORWARD"
+    key(P):__fire("OnKeyChanged", "G")
+    assertTrue(NS.SchemaRuntime.Set("dial.enabled", false, "d2"))
+    -- red under: ignore dial.enabled in DD.KeyLine
+    assertEqual(Dials.KeyLine("d2"), "G is kept for this dial, which is off: it opens nothing until the dial is enabled.")
+    assertNil(m.overrideBindings.G, "and indeed nothing is bound")
+    assertTrue(NS.SchemaRuntime.Set("dial.enabled", true, "d2"))
+    NS.IsStoodDown = function() return true end
+    assertEqual(Dials.KeyLine("d2"), "G is kept for this dial, but Quick Comms is off: it opens nothing until Quick Comms is enabled.")
+end)
+
+test("dials page: [final 11] the page's own plan builds are not timed as a surface's bake", function()
+    local NS = open(AB)
+    local Dials = NS.addon.Settings.Dials
+    local notes = 0
+    NS.Perf.on = true
+    local note = NS.Perf.Note
+    NS.Perf.Note = function(k, ...)
+        if k == "bake.surface" then notes = notes + 1 end
+        return note(k, ...)
+    end
+    local ok, err = pcall(function()
+        NS.Library.MoveGroupOnSurface("dial", "d2", #NS.db.profile.dials.d2.groups, 1)
+        notes = 0
+        Dials.DepthWarning("d2")
+        Dials.PreviewLines("d2")
+    end)
+    NS.Perf.Note, NS.Perf.on = note, false
+    assertTrue(ok, tostring(err))
+    -- red under: build the page's plans through S.BuildDialPlan's bracket
+    assertEqual(notes, 0)
 end)
