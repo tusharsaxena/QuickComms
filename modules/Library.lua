@@ -1,7 +1,9 @@
 local _, NS = ...
--- modules/Library.lua — THE registry writer (architecture-§5, spec §5, §12.2). The only module
--- that creates, deletes, orders or re-references profile.callouts / groups / pads / dials /
--- builtins / padOrder / dialOrder / nextId / seeded, and the surfaces' saved anchors (point).
+-- modules/Library.lua — THE registry writer (architecture-§5, spec §5, §12.2): membership (create,
+-- delete, duplicate, Customize), the order of every list, the references a group and a surface
+-- hold, the ids and the seeding. A member's own fields (a callout's text, a pad's layout) are
+-- schema rows written through the seam (settings/SchemaMembers.lua); Library resolves the member
+-- for the seam (Member) and announces the write (Touch).
 -- Panel pages, slash verbs and (phase 5) import all call it. Built-ins are shipped data (NS.BuiltIns); the profile holds only their overlay.
 -- Prepare runs after migrations on every profile load: it seeds, appends new built-ins once per
 -- surface (seenBuiltins), and drops dangling ids.
@@ -14,9 +16,9 @@ local TAG = "Library"
 
 local function P() return NS.db.profile end
 
-local function announce(kind, id)
-    NS.Debug(TAG, "%s %s", kind, tostring(id))
-    NS.addon:SendMessage(NS.MSG.LIBRARY_CHANGED, kind, id)
+local function announce(kind, id, field)
+    NS.Debug(TAG, "%s %s%s", kind, tostring(id), field and (" " .. field) or "")
+    NS.addon:SendMessage(NS.MSG.LIBRARY_CHANGED, kind, id, field)
 end
 
 local function indexOf(list, value)
@@ -44,6 +46,11 @@ local function topOf(id)
     while def and def.parent do id = def.parent def = NS.BuiltIns.groups[id] end
     return def and id or nil
 end
+
+--- Whether an id names a shipped built-in (a dotted `bi.` id).
+Lib.IsBuiltin = isBuiltin
+--- A built-in id's top-level set (a node resolves to its battleground), or nil.
+Lib.TopOf = topOf
 
 --- A fresh user id: prefix .. n.
 function Lib.NewId(prefix)
@@ -108,6 +115,67 @@ function Lib.UsedBy(calloutId)
     return out
 end
 
+--- The live member a member row addresses (settings/SchemaMembers.lua): a user callout, group, pad
+--- or dial, or the overlay of a built-in set (a node's is its battleground's). A built-in group
+--- answers its merged copy, so its fields read; the group rows refuse to write one. Nil without a
+--- database, an id or such a member.
+--- @param kind string "callout" | "group" | "pad" | "dial" | "builtin"
+--- @return table|nil
+function Lib.Member(kind, id)
+    if id == nil or not (NS.db and NS.db.profile) then return nil end
+    local p = P()
+    if kind == "callout" then return p.callouts[id] end
+    if kind == "group" then
+        if isBuiltin(id) then return Lib.Group(id) end
+        return p.groups[id]
+    end
+    if kind == "pad" then return p.pads[id] end
+    if kind == "dial" then return p.dials[id] end
+    if kind == "builtin" then
+        local top = topOf(id)
+        return top and overlay(top) or nil
+    end
+    return nil
+end
+
+--- A member row's reaction: the seam stored the field; Library, LIBRARY_CHANGED's one sender
+--- (spec §17), announces it, naming the field (the row's path), so a listener can tell a field
+--- write from a membership or order change (settings/Editors.lua repaints only for some fields).
+function Lib.Touch(kind, id, field)
+    announce(kind, id, field)
+end
+
+--- Every member of a kind, in the order its editor page's picker lists them: user callouts and user
+--- groups by name (case-insensitive, then id), the built-in sets after the user groups in shipped
+--- order, the pads in the pad order. The seam's fallback when a page has selected nothing
+--- (settings/Schema.lua Settings.EditingId), and the pages' picker order.
+--- @param kind string "callout" | "group" | "pad"
+--- @return string[]
+function Lib.MemberIds(kind)
+    if not (NS.db and NS.db.profile) then return {} end
+    local p = P()
+    local out = {}
+    if kind == "pad" then
+        for _, id in ipairs(p.padOrder) do
+            if p.pads[id] then out[#out + 1] = id end
+        end
+        return out
+    end
+    local source = (kind == "callout" and p.callouts) or (kind == "group" and p.groups) or nil
+    if not source then return out end
+    local list = {}
+    for id, m in pairs(source) do list[#list + 1] = { id = id, key = tostring(m.name or id):lower() } end
+    table.sort(list, function(a, b)
+        if a.key ~= b.key then return a.key < b.key end
+        return a.id < b.id
+    end)
+    for i, e in ipairs(list) do out[i] = e.id end
+    if kind == "group" then
+        for _, id in ipairs(NS.BuiltIns.order) do out[#out + 1] = id end
+    end
+    return out
+end
+
 -- ── callouts ────────────────────────────────────────────────────────────────────────────────
 
 Lib.NAME_MAX = 32   -- characters, not bytes: a translated built-in name may be multi-byte
@@ -117,13 +185,102 @@ local function chars(s)
     return select(2, s:gsub("[^\128-\191]", ""))
 end
 
+--- Whether `v` is a member name: a string with a visible character, at most NAME_MAX characters.
+--- @return boolean ok, string|nil reason
+function Lib.ValidName(v)
+    if type(v) ~= "string" or not v:match("%S") or chars(v) > Lib.NAME_MAX then return false, "badName" end
+    return true
+end
+
+--- Whether `v` is an icon: none (nil or false), a texture id, or a texture path.
+function Lib.ValidIcon(v)
+    if v == nil or v == false or type(v) == "number" then return true end
+    if type(v) == "string" and v ~= "" then return true end
+    return false, "badIcon"
+end
+
+--- Whether `v` is a surface anchor: nil (the default place) or { point, relativePoint, x, y }.
+function Lib.ValidPoint(v)
+    if v == nil then return true end
+    if type(v) ~= "table" or type(v[1]) ~= "string" or type(v[2]) ~= "string"
+        or type(v[3]) ~= "number" or type(v[4]) ~= "number" then
+        return false, "badPoint"
+    end
+    return true
+end
+
+-- A When's keyLevel: { min, max }, either end a number or absent, the lowest not above the highest.
+local function validRange(v)
+    local lo, hi = v.min, v.max
+    if (lo ~= nil and type(lo) ~= "number") or (hi ~= nil and type(hi) ~= "number") then
+        return false, "badWhen"
+    end
+    if lo and hi and lo > hi then return false, "badRange" end
+    return true
+end
+
+-- Any other When row: a set of ids or tokens, each mapped to true.
+local function validSet(v)
+    for key, on in pairs(v) do
+        if on ~= true or (type(key) ~= "string" and type(key) ~= "number") then return false, "badWhen" end
+    end
+    return true
+end
+
+--- Whether `w` is a When (spec §5.3): rows the Resolver knows, each a set of ids or tokens mapped to
+--- true, and keyLevel a { min, max } range whose lowest is not above its highest.
+--- @return boolean ok, string|nil reason ("badWhen" | "badRange")
+function Lib.ValidWhen(w)
+    if type(w) ~= "table" then return false, "badWhen" end
+    local known = {}
+    for _, row in ipairs(NS.Resolver.ROWS) do known[row] = true end
+    for row, v in pairs(w) do
+        if not known[row] or type(v) ~= "table" then return false, "badWhen" end
+        local ok, why
+        if row == "keyLevel" then ok, why = validRange(v) else ok, why = validSet(v) end
+        if not ok then return false, why end
+    end
+    return true
+end
+
+--- Whether `set` is a hidden-callout set for the top-level built-in `top` (spec §12.2): its own
+--- callouts (a node's included) mapped to true.
+function Lib.ValidHidden(top, set)
+    if type(top) ~= "string" or type(set) ~= "table" then return false, "badHidden" end
+    local prefix = top .. "."
+    for cid, on in pairs(set) do
+        if on ~= true or type(cid) ~= "string" or cid:sub(1, #prefix) ~= prefix or not NS.BuiltIns.callouts[cid] then
+            return false, "badHidden"
+        end
+    end
+    return true
+end
+
 local function validCallout(f)
     if type(f) ~= "table" then return false, "badCallout" end
-    if type(f.name) ~= "string" or f.name == "" or chars(f.name) > Lib.NAME_MAX then return false, "badName" end
+    if not Lib.ValidName(f.name) then return false, "badName" end
     if type(f.text) ~= "string" then return false, "badText" end
     if not NS.Channels.IsKind(f.channel) then return false, "badChannel" end
-    if f.icon ~= nil and type(f.icon) ~= "number" and type(f.icon) ~= "string" then return false, "badIcon" end
+    if not Lib.ValidIcon(f.icon) then return false, "badIcon" end
     return true
+end
+
+-- The first `n` UTF-8 characters of `s`.
+local function firstChars(s, n)
+    local out, count = {}, 0
+    for ch in s:gmatch("[%z\1-\127\192-\253][\128-\191]*") do
+        if count == n then break end
+        count = count + 1
+        out[count] = ch
+    end
+    return table.concat(out)
+end
+
+--- A copy's name: "<name> (copy)", or `<name>` plus `suffix`, the original shortened so the whole
+--- stays within NAME_MAX (counted in characters).
+function Lib.CopyName(name, suffix)
+    suffix = suffix or L[" (copy)"]
+    return firstChars(tostring(name or ""), Lib.NAME_MAX - chars(suffix)) .. suffix
 end
 
 --- Create a user callout.
@@ -147,13 +304,29 @@ function Lib.DeleteCallout(id)
     return true
 end
 
+--- Copy a user callout under a "(copy)" name. The copy is in no group.
+--- @return string|nil id, string|nil reason
+function Lib.DuplicateCallout(id)
+    local c = P().callouts[id]
+    if not c then return nil, "noCallout" end
+    return Lib.CreateCallout({ name = Lib.CopyName(c.name), text = c.text, channel = c.channel, icon = c.icon })
+end
+
 -- ── groups ──────────────────────────────────────────────────────────────────────────────────
 
---- Create a user group.
+--- Create a user group. `fields.callouts` (optional) are user callout ids, copied in order; an id
+--- that is not a user callout is dropped.
+--- @return string|nil id, string|nil reason
 function Lib.CreateGroup(fields)
-    if type(fields) ~= "table" or type(fields.name) ~= "string" or fields.name == "" then return nil, "badName" end
+    if type(fields) ~= "table" or not Lib.ValidName(fields.name) then return nil, "badName" end
+    if fields.when ~= nil and not Lib.ValidWhen(fields.when) then return nil, "badWhen" end
+    local p = P()
+    local callouts = {}
+    for _, cid in ipairs(type(fields.callouts) == "table" and fields.callouts or {}) do
+        if p.callouts[cid] then callouts[#callouts + 1] = cid end
+    end
     local id = Lib.NewId("g")
-    P().groups[id] = { name = fields.name, icon = fields.icon, callouts = {}, when = copyTable(fields.when) or {},
+    p.groups[id] = { name = fields.name, icon = fields.icon, callouts = callouts, when = copyTable(fields.when) or {},
         openInto = fields.openInto == true, enabled = fields.enabled ~= false }
     announce("group", id)
     return id
@@ -174,6 +347,15 @@ function Lib.DeleteGroup(id)
     end
     announce("group", id)
     return true
+end
+
+--- Copy a user group: the same callouts by reference (D8), a copy of its When. On no surface.
+--- @return string|nil id, string|nil reason
+function Lib.DuplicateGroup(id)
+    local g = P().groups[id]
+    if not g then return nil, "noGroup" end
+    return Lib.CreateGroup({ name = Lib.CopyName(g.name), icon = g.icon, when = g.when, openInto = g.openInto,
+        enabled = g.enabled, callouts = g.callouts })
 end
 
 --- Add a callout to a user group at `index` (end by default). A built-in callout is copied first (P2).
@@ -242,15 +424,18 @@ function Lib.Customize(builtinId)
     if not def or def.parent then return nil, "notTopLevel" end
     local prior = overlay(builtinId).customizedAs
     if prior and P().groups[prior] then return nil, "alreadyCustomized" end
-    local id = Lib.CreateGroup({ name = def.name .. " " .. L["(custom)"], icon = def.icon, when = def.when,
-        openInto = def.openInto == true })
+    -- The copy's name is shortened to fit, never refused (a translated set name may run long); a copy
+    -- CreateGroup still refuses changes nothing: no surface loses the set, and the set stays on.
+    local id, why = Lib.CreateGroup({ name = Lib.CopyName(def.name, " " .. L["(custom)"]), icon = def.icon,
+        when = def.when, openInto = def.openInto == true })
+    if not id then return nil, why end
     local skipped = 0
     local function copyFrom(gid)
         for _, cid in ipairs(Lib.Group(gid).callouts) do
-            local added, why = Lib.AddToGroup(id, cid)
+            local added, reason = Lib.AddToGroup(id, cid)
             if not added then
                 skipped = skipped + 1
-                NS.Debug(TAG, "customize %s: skipped %s (%s)", builtinId, cid, tostring(why))
+                NS.Debug(TAG, "customize %s: skipped %s (%s)", builtinId, cid, tostring(reason))
             end
         end
         for _, child in ipairs(NS.BuiltIns.groups[gid].children or {}) do copyFrom(child) end
@@ -276,6 +461,17 @@ local SURFACE_DEFAULTS = {
         look = { visibility = "always", fade = "none", fadeAlpha = 0.4 } },
     dial = { mode = "categories", slices = 4, depth = 2, openAt = "center", delay = 0.3,
         interaction = "quick", key = nil, tapAction = "first" },
+}
+
+--- The shape of one member of each kind: what every member row's path resolves against (the
+--- architecture-§5 boot check) and what a member row resets to. `icon` and `point` are false, not
+--- nil, so the boot check can see the key: false is "none" and "the default place".
+Lib.TEMPLATES = {
+    callout = { name = "", text = "", channel = "smartGroup", icon = false },
+    group = { name = "", icon = false, enabled = true, openInto = false, when = {} },
+    pad = { name = "", enabled = true, groupsAs = SURFACE_DEFAULTS.pad.groupsAs, point = false,
+        layout = copyTable(SURFACE_DEFAULTS.pad.layout), look = copyTable(SURFACE_DEFAULTS.pad.look) },
+    builtin = { enabled = true, hidden = {} },
 }
 
 --- Create a pad or dial holding every built-in group (in BuiltIns.order).
@@ -326,6 +522,33 @@ end
 function Lib.RemoveGroupFromSurface(kind, sid, gid)
     local s = surface(kind, sid)
     if not s or removeAll(s.groups, gid) == 0 then return false end
+    announce(kind, sid)
+    return true
+end
+
+--- Put a new user group at the top of every pad's and dial's list (the editors' New group): the
+--- player's own groups come before the shipped sets. A surface that already lists it is skipped.
+--- @return number surfaces it was added to
+function Lib.OfferGroup(groupId)
+    if not P().groups[groupId] then return 0 end
+    local n = 0
+    for _, kind in ipairs({ "pad", "dial" }) do
+        local ids = {}
+        for sid in pairs(surfaces()[kind]) do ids[#ids + 1] = sid end
+        table.sort(ids)
+        for _, sid in ipairs(ids) do
+            if Lib.AddGroupToSurface(kind, sid, groupId, 1) then n = n + 1 end
+        end
+    end
+    return n
+end
+
+--- Move one of a surface's groups from position `from` to position `to` (clamped to the list).
+function Lib.MoveGroupOnSurface(kind, sid, from, to)
+    local s = surface(kind, sid)
+    if not (s and s.groups[from]) or type(to) ~= "number" then return false end
+    to = math.max(1, math.min(to, #s.groups))
+    table.insert(s.groups, to, table.remove(s.groups, from))
     announce(kind, sid)
     return true
 end

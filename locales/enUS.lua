@@ -322,3 +322,6 @@ L["Tabs switch after combat."] = "Tabs switch after combat."
 L["The pad can be collapsed or expanded after combat."] = "The pad can be collapsed or expanded after combat."
 L["Pad positions reset."] = "Pad positions reset."
 L["Test mode"] = "Test mode"
+
+-- Library (modules/Library.lua)
+L[" (copy)"] = " (copy)"
