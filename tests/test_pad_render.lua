@@ -141,3 +141,10 @@ test("render: the drag-strip seam builds a hidden strip, and answers nil without
     local D = T.newAddon{ skip = T.loadAddon.libFiles }
     assertNil(D.MakeDragHandle(root, { label = "x", moveFrame = root }))
 end)
+
+test("pad render: [phase 3] a previewed slot's tooltip shows its line and says it sends nothing", function()
+    local NS = T.newAddon()
+    local lines = NS.PadRender.TooltipLines({ name = "Lust", line = "/p Lust", preview = true })
+    assertEqual(lines[2], "/p Lust")
+    assertEqual(lines[#lines], "Preview: this chip sends nothing.")
+end)

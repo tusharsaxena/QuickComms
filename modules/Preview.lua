@@ -1,7 +1,8 @@
 local _, NS = ...
 -- modules/Preview.lua — test mode (spec §10.4, preview-mode, options-ui-§15) and the one sender of
--- TEST_MODE_CHANGED (spec §17). Phase 2 owns the switch; "Preview as…" (spec §13.3) joins this file
--- in phase 3. Session-only (NS.State.testMode, never saved): refused while stood down or in combat
+-- TEST_MODE_CHANGED (spec §17). It holds both flavors of test mode: placeholders, and "Preview as…"
+-- (spec §13.3), which builds the pads from a synthetic snapshot. They are one switch at a time.
+-- Session-only (NS.State.testMode, never saved): refused while stood down or in combat
 -- with one line, ended when combat starts (while secure writes are still allowed, so the pads swap
 -- back to live chips at once), and ended by the stand-down. The checkbox, the `test` verb and the
 -- launcher entry all call SetTestMode. Copied from DropWatcher core/DropWatcher.lua `NS.SetTestMode`,
@@ -24,6 +25,12 @@ local function refreshPanel()
     if H and H.RefreshAll then H.RefreshAll() end
 end
 
+-- Both flavors announce through TEST_MODE_CHANGED: `on` is true while either is on.
+local function announce()
+    NS.addon:SendMessage(NS.MSG.TEST_MODE_CHANGED, State.testMode == true or State.previewAs ~= nil)
+    refreshPanel()
+end
+
 function P.IsTestMode()
     return State.testMode == true
 end
@@ -44,9 +51,9 @@ function P.SetTestMode(on)
         end
     end
     State.testMode = on
+    if on then State.previewAs = nil end
     NS.Debug("Pad", "test mode %s", on and "on" or "off")
-    NS.addon:SendMessage(NS.MSG.TEST_MODE_CHANGED, on)
-    refreshPanel()
+    announce()
     return true
 end
 
@@ -54,10 +61,149 @@ function P.ToggleTestMode()
     return P.SetTestMode(not P.IsTestMode())
 end
 
+-- ── Preview as… (spec §13.3) ────────────────────────────────────────────────────────────────
+--
+-- Test mode's second flavor: the pads are built from a synthetic snapshot instead of placeholders,
+-- so they show the groups that situation resolves to (modules/Surfaces.lua marks the plan, and every
+-- previewed chip is disarmed). Only where you are changes: the class, specialization, role and
+-- character are the live ones. Session-only (NS.State.previewAs).
+
+P.CURRENT = "current"
+local DOT = " \194\183 "
+
+local RAID = { { "lfr", 17, L["LFR"] }, { "normal", 14, L["Normal"] }, { "heroic", 15, L["Heroic"] },
+    { "mythic", 16, L["Mythic"] } }
+
+local function base(fields)
+    local live = NS.Situation.Current()
+    local s = { classFile = live.classFile, specID = live.specID, role = live.role, character = live.character,
+        leader = true, assist = false, inCombat = false, lockdown = {} }
+    for k, v in pairs(fields) do s[k] = v end
+    return s
+end
+
+local function mplus(instanceID)
+    return base({ content = "mythicPlus", instanceID = instanceID, difficultyID = 8, difficulty = "keystone",
+        keyLevel = 10, group = "party", instanceGroup = false, lockdown = { challengeMode = true } })
+end
+
+-- One entry per battleground set: its key ("bi.bg.ab" -> "bg:ab"), its name, its lowest instanceID.
+local function battlegrounds()
+    local out = {}
+    for _, gid in ipairs(NS.BuiltIns.order) do
+        local def = NS.BuiltIns.groups[gid]
+        local ids = def.when and def.when.battleground
+        local short = gid:match("^bi%.bg%.(.+)$")
+        if short and type(ids) == "table" then
+            local first
+            for id in pairs(ids) do
+                if not first or id < first then first = id end
+            end
+            out[#out + 1] = { key = "bg:" .. short, label = def.name, instanceID = first }
+        end
+    end
+    return out
+end
+
+--- The "Preview as…" menu, in order (spec §13.3): { key, label, snapshot }; Current has none. Task 4b
+--- adds one M+ entry per shipped dungeon after the generic one.
+function P.Presets()
+    local out = { { key = P.CURRENT, label = L["Current"] } }
+    local spec = NS.Compat.SpecName()
+    out[#out + 1] = { key = "mplus", label = spec and (L["M+"] .. DOT .. spec) or L["M+"], snapshot = mplus(nil) }
+    for _, r in ipairs(RAID) do
+        out[#out + 1] = { key = "raid:" .. r[1], label = L["Raid"] .. DOT .. r[3], snapshot = base({ content = "raid",
+            difficultyID = r[2], difficulty = r[1], group = "raid", instanceGroup = r[1] == "lfr" }) }
+    end
+    out[#out + 1] = { key = "arena", label = L["Arena"], snapshot = base({ content = "arena", group = "party",
+        instanceGroup = false, lockdown = { pvpMatch = true } }) }
+    for _, bg in ipairs(battlegrounds()) do
+        out[#out + 1] = { key = bg.key, label = bg.label, snapshot = base({ content = "battleground",
+            instanceID = bg.instanceID, group = "raid", instanceGroup = true, lockdown = { pvpMatch = true } }) }
+    end
+    out[#out + 1] = { key = "world", label = L["World"] .. DOT .. L["Solo"], snapshot = base({ content = "openWorld",
+        group = "solo", leader = false }) }
+    return out
+end
+
+function P.FindPreset(key)
+    for _, e in ipairs(P.Presets()) do
+        if e.key == key then return e end
+    end
+    return nil
+end
+
+function P.Label(key)
+    local e = P.FindPreset(key)
+    return e and e.label or tostring(key)
+end
+
+--- The menu as a row's `values` list.
+function P.Choices()
+    local out = {}
+    for i, e in ipairs(P.Presets()) do out[i] = { value = e.key, text = e.label } end
+    return out
+end
+
+function P.PreviewAs()
+    return State.previewAs
+end
+
+--- The previewed snapshot, or nil when "Preview as…" is off.
+function P.PreviewSnapshot()
+    local key = State.previewAs
+    if not key then return nil end
+    local e = P.FindPreset(key)
+    return e and e.snapshot or nil
+end
+
+--- Preview the pads as `key`, or turn the preview off (nil, "", "off" or "current"). A start is
+--- refused, with one line, while stood down or in combat.
+--- @return boolean changed
+function P.SetPreviewAs(key)
+    if key == nil or key == "" or key == "off" then key = P.CURRENT end
+    if not P.FindPreset(key) then return false end
+    local want = key ~= P.CURRENT and key or nil
+    if want == State.previewAs then return false end
+    if want then
+        if NS.IsStoodDown() then
+            NS.Print(NS.SlashCommands:DisabledLine())
+            return false
+        end
+        if fighting() then
+            NS.Print(L["Preview is not available in combat."])
+            return false
+        end
+        State.testMode = nil
+    end
+    State.previewAs = want
+    NS.Debug("Pad", "preview %s", want or "off")
+    announce()
+    return true
+end
+
+local watched = setmetatable({}, { __mode = "k" })
+
+--- End the preview when the settings window closes (spec §13.3). settings/Panel.lua hands it the
+--- client's SettingsPanel once; the hook is insecure and runs only when that window hides.
+function P.WatchPanel(frame)
+    if type(frame) ~= "table" or type(frame.HookScript) ~= "function" or watched[frame] then return false end
+    watched[frame] = true
+    frame:HookScript("OnHide", function()
+        if State.previewAs then P.SetPreviewAs(nil) end
+    end)
+    return true
+end
+
 local function onRestrictionChanged()
-    if P.IsTestMode() and NS.Restrictions.InCombat() then
+    if not NS.Restrictions.InCombat() then return end
+    if P.IsTestMode() then
         P.SetTestMode(false)
         NS.Print(L["Test mode ended: you entered combat."])
+    end
+    if State.previewAs then
+        P.SetPreviewAs(nil)
+        NS.Print(L["Preview ended: you entered combat."])
     end
 end
 
@@ -70,7 +216,7 @@ end
 listen()
 
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
-    State.testMode = nil
+    State.testMode, State.previewAs = nil, nil
     if receiver and not NS.Bus.tracked then receiver:UnregisterMessage(NS.MSG.RESTRICTION_CHANGED) end
 end
 NS.STAND_UP[#NS.STAND_UP + 1] = function()

@@ -111,11 +111,14 @@ end
 -- self-print). A refused or placeholder chip carries no chat type, so its click reports nothing.
 -- lockText reads the slot's live lock (RefreshLocks keeps it current in combat), so a press on a
 -- padlocked chip is explained by its lock, never tracked as a send.
+-- A previewed chip (spec §13.3) keeps its line for the tooltip and is disarmed, and carries neither
+-- the solo self-line nor the lock text: a previewed chip sends, prints and reports nothing.
 local function arm(btn, slot)
+    local preview = slot.preview == true
     local meta = { calloutId = slot.calloutId, surfaceId = slot.surfaceId, name = slot.name,
-        chatType = slot.chatType, selfText = slot.selfText,
-        lockText = function() return slot.lock and (R.LOCK_TEXT[slot.lock] or tostring(slot.lock)) end }
-    if slot.line and slot.chatType then
+        chatType = slot.chatType, selfText = (not preview) and slot.selfText or nil,
+        lockText = (not preview) and function() return slot.lock and (R.LOCK_TEXT[slot.lock] or tostring(slot.lock)) end or nil }
+    if slot.line and slot.chatType and not preview then
         NS.SendEngine.Arm(btn, slot.line, meta)
     else
         meta.chatType = nil
@@ -198,7 +201,9 @@ end
 local function headerState(inst, plan)
     local snap = plan.snapshot or {}
     return {
-        situation = plan.test and L["Test mode"] or R.SituationText(snap, NS.Compat.DungeonName(snap.challengeMapID)),
+        situation = plan.preview and L["Preview: %s"]:format(R.SituationText(snap, NS.Compat.DungeonName(snap.challengeMapID)))
+            or plan.test and L["Test mode"] or R.SituationText(snap, NS.Compat.DungeonName(snap.challengeMapID)),
+        testText = plan.preview and L["PREVIEW"] or nil,
         lockdown = plan.lockdownChip == true and NS.Setting("behavior.lockdownChip") ~= false,
         stale = State.surfaceStale ~= nil and State.surfaceStale[inst.id] == true,
         test = plan.test == true,

@@ -7,7 +7,8 @@ local _, NS = ...
 -- with the reason its chip's tooltip shows (Bake, §8.3; §18 "a baked line fails validation"). A
 -- locked slot keeps its line and carries the lock (§8.4). Library, Resolver and Bake are reached
 -- through `deps`, so a test can hand in any snapshot. Test mode's plan is placeholder slots that
--- carry no line, drawn through the same render path (preview-mode).
+-- carry no line, drawn through the same render path (preview-mode). A "Preview as…" plan is a real
+-- plan for the previewed snapshot, marked so every chip is disarmed (spec §13.3).
 --
 -- THE EDGE (below): one entry point, Request, for everything that changes what a pad draws: the
 -- situation, the library, the profile, test mode, a settings write and the stand-up. Out of combat
@@ -131,6 +132,17 @@ function S.TestPlan(surfaceId)
         hasActive = true, test = true }
 end
 
+--- A "Preview as…" plan (spec §13.3): drawn like test mode (always shown, the header says so) but from
+--- the groups the previewed snapshot resolves to. Every slot keeps its line for the tooltip and is
+--- disarmed by the pad, so a previewed chip sends nothing.
+function S.MarkPreview(plan, key)
+    plan.test, plan.preview = true, key
+    for _, sec in ipairs(plan.sections) do
+        for _, slot in ipairs(sec.slots) do slot.preview = true end
+    end
+    return plan
+end
+
 -- ── the edge: one rebuild request, queued in combat (spec §9.1, §18) ────────────────────────
 
 local State = NS.State
@@ -160,14 +172,16 @@ end
 --- @return number pads rebuilt
 function S.ApplyAll(reason)
     if NS.IsStoodDown() or not State.situation then return 0 end
-    local snap = NS.Situation.Current()
+    local preview = NS.Preview.PreviewSnapshot()
+    local snap = preview or NS.Situation.Current()
     local deps = S.Deps(snap)
-    local test = NS.Preview.IsTestMode()
+    local test = preview == nil and NS.Preview.IsTestMode()
     local pads = NS.db.profile.pads
     local plans, n = {}, 0
     State.surfaceOrder = State.surfaceOrder or {}
     for _, id in ipairs(enabledPadIds()) do
         local plan = test and S.TestPlan(id) or S.BuildPlan(id, pads[id], snap, deps)
+        if preview then S.MarkPreview(plan, NS.Preview.PreviewAs()) end
         plans[id] = plan
         n = n + 1
         local sig = table.concat(plan.order, ",")

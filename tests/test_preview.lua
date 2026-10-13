@@ -22,6 +22,21 @@ local function heard(NS)
     return out
 end
 
+local WORLD = { inGroup = false }
+local MPLUS = { inInstance = true, instanceType = "party", difficultyID = 8, keystoneActive = true,
+    keyLevel = 12, inGroup = true }
+
+local function live(inputs)
+    local NS, m = T.enableAddon()
+    NS.Situation.ReadInputs = function() return inputs or WORLD end
+    NS.Situation.RefreshNow("test")
+    return NS, m
+end
+
+local function arenaChip(NS)
+    return NS.Pad.ChipsFor("p1", NS.Library.Group("bi.arena").callouts[1])[1]
+end
+
 test("preview: test mode turns on and off, announcing each edge once", function()
     local NS = T.enableAddon()
     local out = heard(NS)
@@ -74,4 +89,105 @@ test("preview: the stand-down ends test mode silently, and stood down a start is
     assertFalse(NS.Preview.SetTestMode(true))
     assertEqual(#m.prints, 1)
     assertTrue(m.prints[1]:find("is disabled", 1, true) ~= nil, m.prints[1])
+end)
+
+test("preview: [phase 3] Preview as Arena builds the pad from the arena snapshot, every chip disarmed", function()
+    local NS = live()
+    local out = heard(NS)
+    assertTrue(NS.Preview.SetPreviewAs("arena"))
+    assertEqual(table.concat(out, ","), "true")
+    local plan = NS.Surfaces.Plans().p1
+    assertEqual(plan.preview, "arena")
+    assertEqual(plan.order[1], "bi.arena")
+    local chip = arenaChip(NS)
+    assertTrue(chip ~= nil, "the arena set is drawn in the open world")
+    -- red under: drop `and not slot.preview` from Pad's arm (the previewed chip is armed)
+    assertTrue(chip:GetAttribute("macrotext") == nil)
+    local header = NS.Pad.Instance("p1").header
+    assertEqual(header.qcSituation:GetText(), "Preview: Arena")
+    assertTrue(header.qcTest:IsShown())
+    assertEqual(header.qcTest:GetText(), "PREVIEW")
+end)
+
+test("preview: [review 3] a previewed chip sends nothing and reports nothing", function()
+    local NS, m = live()
+    NS.Preview.SetPreviewAs("arena")
+    local results = 0
+    local t = NS.Bus:NewTarget()
+    t:RegisterMessage(NS.MSG.SEND_RESULT, function() results = results + 1 end)
+    local before = #m.sentMacros
+    m.__click(arenaChip(NS))
+    assertEqual(#m.sentMacros, before)
+    assertEqual(results, 0)
+end)
+
+test("preview: [review 3] a previewed solo chip prints nothing, even with the self fallback", function()
+    local NS, m = live()
+    NS.SchemaRuntime.Set("behavior.soloFallback", "self")
+    local Lib = NS.Library
+    local cid = Lib.CreateCallout({ name = "Inc", text = "Incoming", channel = "smartGroup" })
+    local gid = Lib.CreateGroup({ name = "Mine", callouts = { cid } })
+    Lib.AddGroupToSurface("pad", "p1", gid, 1)
+    assertTrue(NS.Preview.SetPreviewAs("world"))
+    local chip = NS.Pad.ChipsFor("p1", cid)[1]
+    assertTrue(chip ~= nil, "the user group (an empty When) shows in the previewed open world")
+    m.prints = {}
+    m.__click(chip)
+    -- red under: keep `slot.selfText` in a previewed chip's meta (modules/Pad.lua arm)
+    assertEqual(#m.prints, 0)
+end)
+
+test("preview: [review 3] combat ends it with one line, and the live chips come back armed", function()
+    local NS, m = live(MPLUS)
+    NS.Preview.SetPreviewAs("arena")
+    m.prints = {}
+    combat(m, true)
+    -- red under: drop the preview branch from Preview's onRestrictionChanged
+    assertTrue(NS.Preview.PreviewAs() == nil)
+    assertEqual(#m.prints, 1)
+    assertTrue(m.prints[1]:find("Preview ended: you entered combat.", 1, true) ~= nil, m.prints[1])
+    assertEqual(NS.Pad.ChipsFor("p1", "bi.mplus.pull")[1]:GetAttribute("macrotext"), "/p Pulling next pack")
+    assertEqual(#m.blocked, 0)
+end)
+
+test("preview: [phase 3] refused in combat and while disabled, with one line each", function()
+    local NS, m = live()
+    combat(m, true)
+    m.prints = {}
+    assertFalse(NS.Preview.SetPreviewAs("arena"))
+    assertEqual(#m.prints, 1)
+    assertTrue(m.prints[1]:find("Preview is not available in combat.", 1, true) ~= nil, m.prints[1])
+    combat(m, false)
+    NS.addon:OnSlashCommand("disable")
+    m.prints = {}
+    assertFalse(NS.Preview.SetPreviewAs("arena"))
+    assertEqual(#m.prints, 1)
+    assertTrue(m.prints[1]:find("is disabled", 1, true) ~= nil, m.prints[1])
+end)
+
+test("preview: [review 3] the stand-down ends it silently, and so does closing the settings window", function()
+    local NS, m = live()
+    NS.Preview.SetPreviewAs("arena")
+    NS.SchemaRuntime.Set("enabled", false)
+    assertTrue(NS.Preview.PreviewAs() == nil)
+    NS.SchemaRuntime.Set("enabled", true)
+    assertTrue(NS.Preview.SetPreviewAs("arena"))
+    -- red under: drop the WatchPanel call from Settings.Register in settings/Panel.lua
+    m.SettingsPanel:__fire("OnHide")
+    assertTrue(NS.Preview.PreviewAs() == nil)
+    assertTrue(arenaChip(NS) == nil, "back to the open world, where the arena set is not active")
+end)
+
+test("preview: [phase 3] test mode and Preview as are one switch at a time", function()
+    local NS = live()
+    local P = NS.Preview
+    P.SetPreviewAs("arena")
+    assertTrue(P.SetTestMode(true))
+    assertTrue(P.PreviewAs() == nil, "test mode replaces the preview")
+    assertTrue(P.SetPreviewAs("world"))
+    assertFalse(P.IsTestMode(), "the preview replaces test mode")
+    assertEqual(NS.Surfaces.Plans().p1.preview, "world")
+    assertTrue(P.SetPreviewAs("current"))
+    assertTrue(P.PreviewAs() == nil)
+    assertFalse(P.SetPreviewAs("nope"))
 end)

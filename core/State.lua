@@ -12,3 +12,7 @@ State.debug = false
 -- A member row written with no instance argument writes this member, else the first member its page
 -- lists (settings/Schema.lua Settings.EditingId).
 State.editing = {}
+
+-- "Preview as…" (modules/Preview.lua, spec §13.3): the preset key the pads are drawn as, or nil.
+-- Session-only; test mode's second flavor, so it is never on with State.testMode.
+State.previewAs = nil

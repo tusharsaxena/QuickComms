@@ -66,6 +66,7 @@ function R.TooltipLines(slot)
         lines[2] = R.REASON_TEXT[slot.reason] or L["Not available here."]
     end
     if slot.lock then lines[#lines + 1] = R.LOCK_TEXT[slot.lock] or tostring(slot.lock) end
+    if slot.preview then lines[#lines + 1] = L["Preview: this chip sends nothing."] end
     return lines
 end
 
@@ -205,6 +206,7 @@ function R.PaintHeader(header, state)
     header.qcSituation:SetText(state.situation or "")
     header.qcLockdown:SetShown(state.lockdown == true)
     header.qcTest:SetShown(state.test == true)
+    header.qcTest:SetText(state.testText or L["TEST MODE"])
     header.qcStale:SetShown(state.stale == true)
     header.qcCollapse.qcText:SetText(state.collapsed and "+" or "-")
 end
