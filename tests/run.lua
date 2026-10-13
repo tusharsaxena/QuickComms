@@ -111,6 +111,7 @@ Kit.run{
         "test_library",
         "test_members",
         "test_editors",
+        "test_page_callouts",
         "test_check",
         "test_send_guard",
         "test_sendengine",
