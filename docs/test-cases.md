@@ -145,7 +145,7 @@ Total.
 - disabled 8: the launcher's Enabled entry stays live while disabled
 - disabled: [final 1] every feature event is declared once (AceEvent keeps one handler per event)
 
-### test_diagnostics.lua (8)
+### test_diagnostics.lua (9)
 
 - diagnostics: the sections are the addon's, in report order
 - diagnostics: the report names the schema, the profile, the holds and the launcher
@@ -155,6 +155,7 @@ Total.
 - diagnostics: [final 1] the restriction section names the active reasons and canSendChat
 - diagnostics: the surfaces and send sections name the pads, the armed chips and the guard
 - diagnostics: [phase 3] the surfaces section names the preview
+- diagnostics: [final 21] the settings section lists no member row
 
 ### test_compat.lua (10)
 
@@ -261,7 +262,7 @@ Total.
 - builtins: bake audit, every callout bakes under its set's snapshot
 - builtins: battlegrounds use smart group; arena uses party; raid lead uses smart lead
 
-### test_library.lua (40)
+### test_library.lua (45)
 
 - library: Prepare seeds one pad and one dial with every built-in, once
 - library: callouts validate on create
@@ -269,7 +270,7 @@ Total.
 - library: [review 4] deleting a shared callout clears every group
 - library: [review 4] deleting a group clears every surface
 - library: adding a built-in callout copies it (P2)
-- library: [review 4] Customize swaps the copy in place, then deleting it leaves neither
+- library: [review 4] Customize swaps the copy in place; deleting the copy puts the set back, on
 - library: hidden built-in callouts drop out of the merged group
 - library: [review 5] a newly shipped built-in is appended once; a removed one stays removed
 - library: Prepare repairs dangling ids
@@ -303,8 +304,13 @@ Total.
 - library: [phase 3] the point, icon and hidden-set validators
 - library: [phase 3] every member template holds a value at every field
 - library: [phase 3] Batch holds the announces and sends one per kind it touched
+- library: [final 8] a set on no surface is customized onto none, and Customize says how many it reached
+- library: [final 24] Customize puts the copy in the set's place on every pad and dial
+- library: [final 1] Customize, AddToGroup with a built-in, and OfferGroup each send one LIBRARY_CHANGED
+- library: [final 1] one Customize click rebuilds the pads once
+- library: [final 2] ValidWhen refuses a value its row can never match, and names the row and value
 
-### test_members.lua (12)
+### test_members.lua (16)
 
 - members: a callout field is written through the seam by instance id, and announced once
 - members: with no id the seam writes the selected member, else the first the page lists, else refuses
@@ -318,6 +324,10 @@ Total.
 - members: the structured rows are typed and printed on the CLI through the descriptor's parse and format
 - members: [review 1] a callout edited from the CLI in combat waits for combat end, with the stale hint
 - members: [fix 1] pad.point refuses an unknown anchor name or a non-finite offset; nothing is stored
+- members: [final 2, 11] the CLI maps When values onto their tokens, and refuses one a row never matches
+- members: [final 7] what `get group.when` prints types back in
+- members: [final 4] an off-screen pad.point is refused; `/qc reset` brings back a pad's place and clears an icon
+- members: [final 5] builtin.hidden with no set selected says to pick one
 
 ### test_editors.lua (11)
 
@@ -333,11 +343,11 @@ Total.
 - editors: Scalar keeps the rows the flow engine draws, and CancelReorder cancels once
 - editors: Snapshot is the preview's while Preview as is on
 
-### test_page_callouts.lua (10)
+### test_page_callouts.lua (13)
 
 - callouts page: with no callouts it says how to make one, and New callout makes and selects one
 - callouts page: the rows write the selected callout through the seam
-- callouts page: [review 5] an empty name is refused and nothing changes
+- callouts page: [review 5] an empty name is refused with its reason and nothing changes
 - callouts page: [phase 3] the token picker offers {group1}-{group8} only when the channel can resolve to Raid
 - callouts page: [phase 3] the live line refreshes in place when the callout changes
 - callouts page: Insert a token adds it to the end of the text
@@ -345,8 +355,11 @@ Total.
 - callouts page: Duplicate selects the copy; Delete asks, then removes it from every group
 - callouts page: [review 2] the selected callout deleted elsewhere: the page heals, writes go to the next
 - callouts page: Used by lists the groups that hold it, and a click opens that group
+- callouts page: [final 3] Defaults resets the callout as one act: one rebuild
+- callouts page: [final 4] Defaults keeps the icon (its default is only for `/qc reset`)
+- callouts page: [review 1] a delete popup accepted after the pull deletes; the pad catches up at combat end
 
-### test_groups_when.lua (10)
+### test_groups_when.lua (12)
 
 - when: Toggle adds and removes one value, drops an emptied row, and never mutates its input
 - when: [review 5] the key-level range refuses lowest above highest; clearing both drops the row
@@ -358,8 +371,10 @@ Total.
 - when: [phase 3] the open rows are session state that a profile switch clears
 - when: Write stores a user group's When through the seam and refuses a built-in with its reason
 - when: the battleground names come from the shipped sets, by instanceID
+- when: [final 6] a typed character takes the client's case; the Resolver matches one in any case
+- when: [final 2, 11] ResolveValue maps a typed value onto the token or id its row stores, or refuses it
 
-### test_page_groups.lua (9)
+### test_page_groups.lua (15)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists user groups by name, then the built-ins, active ones dotted
@@ -370,8 +385,14 @@ Total.
 - groups page: the When tab of a built-in describes it; a user group's edits it; Preview bakes each callout
 - groups page: [phase 3] a built-in's Defaults turns it back on: the Enabled row its General draws
 - groups page: [review 5] the When tab refuses an upside-down key-level range
+- groups page: [final 16] New group rebuilds the pads once, however many pads there are
+- groups page: [final 3, 25] a user group's Defaults: Enabled on, Open the dial off, the rest kept, one rebuild
+- groups page: [final 8] Customize of a set on no pad says the copy is on none
+- groups page: [final 12] Duplicate says the copy is on no pad yet
+- groups page: [final 20] the Instances row adds a typed id, removes one, and refuses a fraction or a negative
+- groups page: [final 18] Add the instance you are in reads the instance at the click, not at the draw
 
-### test_page_pads.lua (7)
+### test_page_pads.lua (10)
 
 - pads page: New pad makes a second pad holding every built-in, selects it, and the pad is built
 - pads page: the Layout rows write the selected pad
@@ -380,6 +401,9 @@ Total.
 - pads page: Groups lists the pad's groups; remove one, add it back at the end, drag to reorder
 - pads page: Delete pad asks, then the pad is gone, its frame released, and the page heals
 - pads page: General's Unlock pads toggles the one lock
+- pads page: [final 3, 15] Defaults puts the pad's rows back as one act: one rebuild
+- pads page: [final 4] Defaults keeps the pad's position
+- pads page: [final 26] New pad takes the lowest free number, so a delete never leads to two names alike
 
 ### test_page_share.lua (4)
 
@@ -437,7 +461,7 @@ Total.
 - send: every echo event is a declared feature event
 - send: the stand-down cancels the echo timers and forgets the presses
 
-### test_preview.lua (15)
+### test_preview.lua (17)
 
 - preview: test mode turns on and off, announcing each edge once
 - preview: a start in combat is refused with one line
@@ -454,6 +478,8 @@ Total.
 - preview: [phase 3] the menu: Current, M+, each dungeon, each raid difficulty, Arena, each battleground, World
 - preview: [phase 3] a dungeon entry reads M+ · <dungeon> · <spec> (spec §13.3)
 - preview: [phase 3] the Preview as row and `/qc preview` drive the same switch
+- preview: [final 13] `/qc preview` reads the situation's name without regard to case
+- preview: [final 10] a dungeon preview fills {dungeon}, and the header names the preview as its menu does
 
 ### test_master.lua (5)
 
@@ -625,7 +651,7 @@ Total.
 | test_schema.lua | 14 |
 | test_slash.lua | 10 |
 | test_disabled.lua | 10 |
-| test_diagnostics.lua | 8 |
+| test_diagnostics.lua | 9 |
 | test_compat.lua | 10 |
 | test_restrictions.lua | 16 |
 | test_situation.lua | 15 |
@@ -634,18 +660,18 @@ Total.
 | test_bake.lua | 11 |
 | test_resolver.lua | 8 |
 | test_builtins.lua | 6 |
-| test_library.lua | 40 |
-| test_members.lua | 12 |
+| test_library.lua | 45 |
+| test_members.lua | 16 |
 | test_editors.lua | 11 |
-| test_page_callouts.lua | 10 |
-| test_groups_when.lua | 10 |
-| test_page_groups.lua | 9 |
-| test_page_pads.lua | 7 |
+| test_page_callouts.lua | 13 |
+| test_groups_when.lua | 12 |
+| test_page_groups.lua | 15 |
+| test_page_pads.lua | 10 |
 | test_page_share.lua | 4 |
 | test_check.lua | 6 |
 | test_send_guard.lua | 10 |
 | test_sendengine.lua | 24 |
-| test_preview.lua | 15 |
+| test_preview.lua | 17 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 11 |
 | test_surfaces.lua | 22 |
@@ -658,4 +684,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **476** |
+| **Total** | **502** |

@@ -73,8 +73,12 @@ Preview   the active-now line, then every callout baked for the current or previ
 **When** (`settings/Groups_When.lua`): one row per condition, each with an enable checkbox. Content,
 difficulty, group, leadership, class, specialization (the classes picked, else the player's) and
 role are checkbox rows; the key level is a lowest and highest box; instances, battlegrounds and
-characters (`Name-Realm`) are the library's IdList, each with an add-the-one-you-are-in button. The
-tab ends with the active-now line. A built-in group is read-only: its group rows refuse every write,
+characters (`Name-Realm`) are the library's IdList, each with an add-the-one-you-are-in button, which
+reads where the player is at the click and says so when that is nowhere; a typed id is a positive
+whole number, and a typed character takes the client's case (`bob` reads `Bob-<your realm>`). The
+tab starts with the active-now line. A refused key level or X/Y offset prints its reason and the box
+goes back to the stored value; a refused Name (any field the library draws) prints its reason too.
+A built-in group is read-only: its group rows refuse every write,
 so the page draws only its overlay and offers Customize.
 
 ## Comms Pad

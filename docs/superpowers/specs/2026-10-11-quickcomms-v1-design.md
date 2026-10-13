@@ -686,6 +686,8 @@ NS.BuiltIns.callouts["bi.mplus.lust"] = { name = L["Lust"], text = L["Lust on th
 - swaps the copy into every surface list at the built-in's position
 - sets the built-in's `enabled = false`
 
+It is one act: the pads rebuild once. A set on no surface is customized onto none, and the chat line says so. **Deleting the copy** undoes it (ruling, phase 3 final fixes): the built-in goes back into the copy's place on every surface that does not list it already, it is turned back on, and it forgets the copy, so Customize can run again.
+
 **Updates.** A new addon version may change built-in text freely. Customized copies never change.
 
 **Bake audit** (a test): every built-in callout must bake under its expected snapshot to a whole line of 255 bytes or fewer, with a valid channel and no `/` start.
