@@ -28,12 +28,15 @@ Exactly two (savedvariables-§4):
 | `callouts` | `{}` | `Library` (membership and order); member fields through the seam (member rows) | user callouts keyed by id: name, text, channel, icon |
 | `groups` | `{}` | `Library` (membership and order); member fields through the seam (member rows) | user groups keyed by id: name, icon, callouts, when, openInto, enabled |
 | `builtins` | `{}` | `Library` (membership and order); member fields through the seam (member rows) | the overlay on the shipped sets, keyed on the top-level built-in id: enabled, hidden |
-| `pads`, `dials` | `{}` | `Library` (membership and order); member fields through the seam (member rows) | surfaces keyed by id: groups (ordered), `seenBuiltins`, and the surface's own settings |
+| `pads` | `{}` | `Library` (membership and order); member fields through the seam (member rows) | surfaces keyed by id: groups (ordered), `seenBuiltins`, and the surface's own settings |
+| `dials` | `{}` | `Library` (membership and order); member fields through the seam (`dial.name\|enabled\|mode\|slices\|openAt\|point\|key`) | surfaces keyed by id: groups (ordered), `seenBuiltins`, and the dial's own settings; a new dial stores `interaction = "relaxed"`, and `delay`, `tapAction` and `depth` are kept but nothing reads them |
 | `pads[id].point` | absent (the pad sits 150 px below the center) | the `pad.point` member row: the drag strip, the X/Y boxes, Reset position | the saved anchor, the positional array `{ point, relativePoint, x, y }` |
+| `dials[id].point` | absent (the dial opens at the center) | the `dial.point` member row: the X/Y boxes, Reset position | the saved anchor, the positional array `{ point, relativePoint, x, y }` |
+| `dials[id].key` | absent (`false`: no key) | the `dial.key` member row: the Comms Dial page's key capture, `/qc set dial.key` | the dial's key, upper-case (`SHIFT-G`); bound as an override binding, never in WoW's own bindings |
 | `padOrder`, `dialOrder` | `{}` | `Library` only | display order of the surfaces |
 | `seeded` | `false` | `Library.Prepare` | true once the default pad and dial exist |
 
-**Member rows** address a member's fields through the seam (`settings/SchemaMembers.lua`): `callout.name|text|channel|icon`, `group.name|icon|enabled|openInto|when`, `pad.name|enabled|groupsAs`, `pad.layout.orientation|columns|growth|style|scale|spacing|width`, `pad.point`, `pad.look.visibility|fade|fadeAlpha`, `builtin.enabled|hidden`. They are not AceDB defaults; `Library.TEMPLATES` is their shape.
+**Member rows** address a member's fields through the seam (`settings/SchemaMembers.lua`): `callout.name|text|channel|icon`, `group.name|icon|enabled|openInto|when`, `pad.name|enabled|groupsAs`, `pad.layout.orientation|columns|growth|style|scale|spacing|width`, `pad.point`, `pad.look.visibility|fade|fadeAlpha`, `dial.name|enabled|mode|slices|openAt|point|key`, `builtin.enabled|hidden`. They are not AceDB defaults; `Library.TEMPLATES` is their shape.
 
 `modules/Library.lua` is the one writer of every structural key above (architecture-§5); built-ins
 are shipped data in `NS.BuiltIns`, never copied into the profile. `Library.Prepare` is the load
@@ -65,6 +68,9 @@ situation), `editing` (each editor page's selected member) and `whenOpen` (the W
 `perProfile = true` for a step that must run once for every stored profile (`db.sv.profiles`), and
 `NS.SCHEMA_VERSION` is the last step's `to`. Step 1 is the stamp itself (0 → 1, nothing to reshape); the phase 1 keys needed no step, because
 `Library.Prepare` makes a profile that predates them whole.
+Step 2 (phase 4, `perProfile`): the generic battleground set below the per-battleground sets on every
+pad and dial (`Library.MoveGenericBattlegroundLast`), so a battleground's node set can be the first
+active group and the dial opens into it. `NS.SCHEMA_VERSION` is 2.
 The runner runs in `OnInitialize` before anything reads the profile, and again on every profile
 event; it advances the stamp only after a step returns. A stored-value type change adds a step and
 raises the target; the default stays `0`.

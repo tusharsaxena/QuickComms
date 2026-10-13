@@ -3,7 +3,8 @@ local _, NS = ...
 -- header (modules/Dial_Secure.lua) named QuickCommsDial<place>, which Bindings.xml and the dial's key
 -- click; a pool of ring containers under it; in each container a pool of wedges, each the slot's send
 -- button (spec §9.1). Frames are never destroyed: a released place keeps its header, closed and
--- emptied, for the next dial that takes it. Bindings.xml's menu labels are set below.
+-- emptied, for the next dial that takes it. Bindings.xml's menu labels are set below; the file sits at
+-- the addon root and is not a TOC line, as the standard allows (layout-§1, toc-file-§4 (standard v2.80.0)).
 --
 -- PROTECTED WORK IS OUT OF COMBAT ONLY. Apply, Release, Sync and HideAll run through Surfaces and
 -- SendEngine.RunOrQueue (and the stand-down's held Teardown), and Apply also declines on its own in

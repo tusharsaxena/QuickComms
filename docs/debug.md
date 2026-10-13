@@ -34,12 +34,13 @@ The addon's sections (`modules/Diagnostics.lua`), in order:
 | `situation` | the snapshot: content, instance, difficulty, key level, group, leadership, class, spec, role, combat, and the active lockdown reasons |
 | `restrictions` | the restriction state: every reason in effect (Map included), the reason the lockdown chip names, `canSendChat`, and the combat flag as Restrictions reads it (the `PLAYER_REGEN` edge first) |
 | `library` | the counts (callouts, groups, pads, dials), `nextId`, `seeded`, and the ids of the active groups under the current situation |
-| `surfaces` | the pads built, whether test mode is on, the previewed situation (`previewAs`, or `off`), and per pad its ordered active groups, its stale hint and its lockdown chip |
-| `send` | the send buttons and how many are armed, each armed one with its pad, callout and escaped line; the combat-end queue's pending keys; the guard (window, last press, time remaining); the echo tracker's counts (pending, sent, dropped, unknown sender, ignored) |
+| `surfaces` | the pads built, whether test mode is on, the previewed situation (`previewAs`, or `off`), and per pad its ordered active groups, its stale hint and its lockdown chip (the pads; the dials have their own section) |
+| `dials` | each built dial: its id, header (`QuickCommsDial<n>`), key, ring count, the ring it opens on, whether it is open, its ordered active groups, its stale hint and its lockdown chip |
+| `bindings` | every override binding the addon holds: the key, and the header and button it clicks |
+| `send` | the send buttons and how many are armed, each armed one with its pad or dial, callout and escaped line; the combat-end queue's pending keys; the guard (window, last press, time remaining); the echo tracker's counts (pending, sent, dropped, unknown sender, ignored) |
 
 The report reads state only: it calls no client API that changes anything, takes no hold, starts no
-timer and registers no event. It reads no chat and no other addon's data. The bindings section
-(spec §16) arrives with the Comms Dial (phase 4).
+timer and registers no event. It reads no chat and no other addon's data.
 
 ## Tags
 
@@ -49,6 +50,8 @@ summary, held until logging is turned on), `Migrate`, and the phase 1 feature ta
 write and the `Prepare` summary), and phase 2's: `Send` (a button, arm or disarm refused in combat),
 `Guard` (a press inside the guard window), `Echo` (a press confirmed `sent` or reported `dropped`),
 `Queue` (an entry queued or replaced, the drain, a drop, the held stand-down) and `Pad` (a pad
-built or moved, a rebuild run or held for combat, test mode on or off). The libraries add their
+built or moved, a rebuild run or held for combat, test mode on or off), and phase 4's: `Dial` (a dial
+header built, an attribute or header write refused in combat) and `Bind` (the override bindings
+applied, logged only on a change, or refused in combat). The libraries add their
 own: `Cmd`, `Cfg`, `Launcher`, `Lifecycle`, `Perf`. The design's other feature tags (spec §16:
-`Resolver`, `Bake`, `Dial`, `Bind`, `Share`) arrive with their modules.
+`Resolver`, `Bake`, `Share`) arrive with their modules.

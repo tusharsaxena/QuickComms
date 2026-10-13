@@ -414,6 +414,7 @@ test("dial: Bindings.xml offers Open Comms Dial 1 to 4, each clicking that dial'
     -- red under: drop the BINDING_HEADER_QUICKCOMMS line from modules/Dial.lua
     assertEqual(rawget(_G, "BINDING_HEADER_QUICKCOMMS"), "Ka0s Quick Comms")
     for _, rel in ipairs(T.loadAddon.tocFiles) do
+        -- a root file, not a TOC line, as the standard allows (layout-§1, toc-file-§4 (standard v2.80.0))
         assertTrue(rel ~= "Bindings.xml", "the client loads it by name, never through the TOC")
     end
 end)

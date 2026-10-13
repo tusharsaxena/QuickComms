@@ -64,6 +64,10 @@ A widget on an editor page (or `/qc set callout.text …`) writes a member row t
 
 `Preview.SetPreviewAs(key)` (the General tab's row, `/qc preview`) turns test mode's second flavor on: `TEST_MODE_CHANGED`, then `Surfaces.ApplyAll` builds each pad from the previewed snapshot and marks the plan, so every chip is disarmed and the header reads `Preview: …`. Combat, the stand-down and the settings window closing end it.
 
+## Today: the Comms Dial
+
+A rebuild (`Surfaces.ApplyAll`, out of combat) builds each enabled dial's plan (`Surfaces.BuildDialPlan`: the active groups in the dial's order, each slot baked, then `Dial_Layout.Rings`), and `Dial.Sync` re-acquires the dial's ring containers and wedges, arms each callout wedge with its baked line, hands the rings to the header (`DialSecure.Load`, through SendEngine) and re-binds every dial's key (`SendEngine.BindKeys`). Pressing the key clicks the header with `Toggle`: its snippet shows the ring the plan opens on and binds Escape, the wheel and 1–8. A group wedge's wrapped click shows that group's ring; a callout wedge's click sends its `macrotext` (the hook tracks it like a chip's) and its post snippet closes the dial. In combat only the snippets run; a change waits for combat end behind the hub's stale hint.
+
 ## The design's callout pipeline (spec §4.1)
 
 ```
@@ -81,5 +85,5 @@ A widget on an editor page (or `/qc set callout.text …`) writes a member row t
 ```
 
 The README's `## How the callouts work` is the same pipeline told for players. Every stage exists
-apart from the Dial and the bindings (phase 4); today `Surfaces` resolves and bakes inside its own
+including the Dial and its bindings; today `Surfaces` resolves and bakes inside its own
 rebuild, and `ACTIVE_GROUPS_CHANGED` is sent from there.
