@@ -103,6 +103,8 @@ modules\Resolver.lua
 modules\Library.lua
 # LOAD-BEARING: publishes NS.SendGuard, which modules\SendEngine.lua takes as a load-time upvalue.
 modules\SendEngine_Guard.lua
+# Conventional: the only secure writer; appends to NS.STAND_DOWN / NS.STAND_UP (and, Task 4, NS.FEATURE_EVENTS)
+modules\SendEngine.lua
 # Conventional: core\DebugLogSetup.lua's descriptor reads NS.Diagnostics at RUN time.
 modules\Diagnostics.lua
 

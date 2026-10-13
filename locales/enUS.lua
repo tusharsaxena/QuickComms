@@ -264,3 +264,6 @@ L["  locked: %s"] = "  locked: %s"
 L["%s -> would print locally, not sent (solo fallback: self)"] = "%s -> would print locally, not sent (solo fallback: self)"
 L["  baked at send time: %s"] = "  baked at send time: %s"
 L["  unknown tokens: %s"] = "  unknown tokens: %s"
+
+-- Send engine (modules/SendEngine.lua)
+L["A deferred update failed (%s): %s"] = "A deferred update failed (%s): %s"

@@ -111,6 +111,7 @@ Kit.run{
         "test_library",
         "test_check",
         "test_send_guard",
+        "test_sendengine",
         "test_vendor_sync",
         { name = "test_eol",                  dir = "tests/_kit/" },   -- line-endings-§7
         { name = "test_prose",                dir = "tests/_kit/" },   -- localization-§5
