@@ -87,6 +87,9 @@ settings\Schema.lua
 # LOAD-BEARING: publishes the LibKa0s-Options instance as Settings.Helpers; settings\Panel.lua calls
 # Helpers.MasterControls at file scope.
 settings\OptionsSetup.lua
+# LOAD-BEARING: reads NS.C and NS.SchemaRuntime.AddRows at file scope; loads before settings\Panel.lua,
+# which splices the Master controls in ahead of these rows.
+settings\SchemaRows.lua
 # LOAD-BEARING: reads NS.C, Settings.Helpers and NS.SchemaRuntime.AddRows at file scope.
 settings\Panel.lua
 # LOAD-BEARING: captures NS.SchemaRuntime.Get/Set/FindRow/ApplyDefault at load.

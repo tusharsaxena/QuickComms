@@ -35,7 +35,9 @@ test("schema: the Master controls rows are the frameless canonical set, in the c
     local paths = {}
     for i, row in ipairs(NS.addon.Settings.Schema) do paths[i] = row.path end
     -- red under: drop `frameless = true` from settings/Panel.lua (a lock with no frame to lock)
-    assertEqual(table.concat(paths, ","), "enabled,state.debugConsole,global.minimap.shown")
+    -- The Master controls block leads; the Behavior rows (settings/SchemaRows.lua) follow it.
+    assertEqual(table.concat(paths, ",", 1, 3), "enabled,state.debugConsole,global.minimap.shown")
+    assertEqual(paths[4], "behavior.soloFallback")
 end)
 
 test("schema: NS.Setting reads through the seam, and answers the default before the db exists", function()

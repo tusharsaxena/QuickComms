@@ -14,6 +14,26 @@ local _, NS = ...
 NS.C = {
     PROFILE = {
         enabled = true,   -- master switch (the `disabled` hold reads it)
+
+        behavior = {
+            soloFallback = "none",   -- "none" | "self" | "say": smart channels when solo (spec §8.2)
+            spamGuard    = 1.0,      -- seconds between any two sends, 0.6-2.0 (spec §9.2, D12)
+            dropNotes    = true,     -- the [QC] chat note when a drop is inferred (spec §9.3)
+            whyTooltips  = true,
+            lockdownChip = true,     -- shown only when lockdown affects a visible callout (spec §8.4)
+            sounds       = false,
+            autoPromote  = false,    -- narrower When floats up within a surface's order (spec §7)
+        },
+        -- The registry (spec §5.1). Library (modules/Library.lua) is the ONLY writer of these keys.
+        nextId    = 1,
+        callouts  = {},   -- empty is deliberate: a fresh profile has no user callouts
+        groups    = {},
+        builtins  = {},   -- overlay on the shipped sets: { [groupId] = { enabled, hidden = {} } }
+        pads      = {},
+        dials     = {},
+        padOrder  = {},
+        dialOrder = {},
+        seeded    = false, -- set by Library.Prepare once the default pad and dial exist
     },
 
     -- schemaVersion is 0, never the current version (savedvariables-§1).

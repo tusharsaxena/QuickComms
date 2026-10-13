@@ -95,6 +95,7 @@ Kit.run{
         "test_surface_parity",
         "test_setup",
         "test_database",
+        "test_profile",
         "test_schema",
         "test_slash",
         "test_disabled",
