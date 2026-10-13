@@ -460,3 +460,49 @@ test("pad: [phase 3] the header's tooltip says why each group shows, unless the 
     header:__fire("OnEnter")
     assertEqual(#shown, 1, "behavior.whyTooltips off: no tooltip")
 end)
+
+-- A LibSharedMedia with one font and one border, loaded before the addon reads it (core/MediaSetup.lua).
+local function withMedia(mm)
+    local lsm = mm.LibStub:NewLibrary("LibSharedMedia-3.0", 1)
+    local media = { font = { Arial = "Fonts\\ARIALN.TTF" }, border = { Tooltip = "Interface\\Tooltips\\UI-Tooltip-Border" } }
+    function lsm.Register() end
+    function lsm.IsValid() return true end
+    function lsm.HashTable(_, kind) return media[kind] or {} end
+    function lsm.Fetch(_, kind, name) return media[kind] and media[kind][name] end
+    lsm.MediaType = {}
+end
+
+test("pad: [phase 5] the pad wears its Look: the chips' font and the edge and body it was given", function()
+    local NS = T.enableAddon{ mock = withMedia }
+    NS.Situation.ReadInputs = function() return MPLUS end
+    NS.Situation.RefreshNow("test")
+    local skins = {}
+    local apply = NS.ApplySkin
+    NS.ApplySkin = function(frame, skin) skins[frame] = skin return apply(frame, skin) end
+    local S = NS.SchemaRuntime
+    assertTrue(S.Set("pad.look.font", "Arial", "p1"))
+    assertTrue(S.Set("pad.look.fontSize", 13, "p1"))
+    assertTrue(S.Set("pad.look.borderStyle", "Tooltip", "p1"))
+    assertTrue(S.Set("pad.look.background", { r = 0.2, g = 0.1, b = 0, a = 1 }, "p1"))
+    local label = NS.Pad.ChipsFor("p1", "bi.mplus.pull")[1].qcLabel
+    assertEqual(label.__font[1] .. "," .. label.__font[2], "Fonts\\ARIALN.TTF,13")
+    local skin = skins[NS.Pad.Instance("p1").root]
+    assertEqual(skin.edgeFile, "Interface\\Tooltips\\UI-Tooltip-Border")
+    assertEqual(table.concat(skin.bg, ","), "0.2,0.1,0,1")
+end)
+
+test("pad: [review 5] a font or border this machine does not have draws the default, with no error", function()
+    local NS, m = T.enableAddon{ mock = withMedia }
+    m.STANDARD_TEXT_FONT = "Fonts\\FRIZQT__.TTF"
+    NS.Situation.ReadInputs = function() return MPLUS end
+    NS.Situation.RefreshNow("test")
+    local skins = {}
+    local apply = NS.ApplySkin
+    NS.ApplySkin = function(frame, skin) skins[frame] = skin return apply(frame, skin) end
+    -- a shared pad, or a media addon since removed: the names are stored, the media is not here
+    assertTrue(NS.SchemaRuntime.Set("pad.look.font", "Gone Font", "p1"))
+    assertTrue(NS.SchemaRuntime.Set("pad.look.borderStyle", "Gone Border", "p1"))
+    local label = NS.Pad.ChipsFor("p1", "bi.mplus.pull")[1].qcLabel
+    assertEqual(label.__font[1], "Fonts\\FRIZQT__.TTF")
+    assertEqual(skins[NS.Pad.Instance("p1").root].edgeFile, "Interface\\Buttons\\WHITE8x8")
+end)

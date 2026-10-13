@@ -729,3 +729,16 @@ test("library: [phase 5] Import is one act: one LIBRARY_CHANGED; a refused resul
     assertNil(Lib.Import({ ok = false, reason = "newer" }))
     assertNil(Lib.Import(nil))
 end)
+
+test("library: [phase 5] Prepare gives a pad saved before the Look groups every field it lacks", function()
+    local NS, Lib, p = boot()
+    local pad = p.pads[p.padOrder[1]]
+    pad.look = { visibility = "never" }
+    pad.layout.width = nil
+    Lib.Prepare()
+    assertEqual(pad.look.visibility, "never", "a stored value is kept")
+    assertEqual(pad.look.font, "Friz Quadrata TT")
+    assertEqual(pad.look.background.a, 0.92)
+    assertEqual(pad.layout.width, 140)
+    assertTrue(pad.look.background ~= NS.Library.TEMPLATES.pad.look.background, "a copy, never the template")
+end)

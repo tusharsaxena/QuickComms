@@ -749,3 +749,9 @@ L["Quick Comms: share string"] = "Quick Comms: share string"
 -- defaults/BuiltIns_Battlegrounds.lua: Deepwind Gorge's two newer nodes (phase 5)
 L["Shrine"] = "Shrine"
 L["Ruins"] = "Ruins"
+
+-- settings/SchemaMembers.lua: a pad's Look groups (phase 5)
+L["A color is red, green and blue, and optionally alpha, each from 0 to 1."] = "A color is red, green and blue, and optionally alpha, each from 0 to 1."
+L["Font"] = "Font"
+L["Border"] = "Border"
+L["Background"] = "Background"

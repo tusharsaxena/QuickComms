@@ -8,7 +8,10 @@ local _, NS = ...
 --              priority order, spec §7), then Add a group
 --     Layout   orientation, grid columns, growth, chip style, scale, spacing, chip width, then
 --              Position: X and Y and Reset this pad's position
---     Look     visibility, fade and faded alpha
+--     Look     visibility, fade and faded alpha; then Font (face, size, color with Use class color,
+--              flags, shadow), Border (style, thickness, color with Use class color) and Background
+--              (its color with Use class color), each composed by the options library (options-ui-§16,
+--              §17) under its own heading
 --
 -- The band holds the picker and the create action (options-ui-§14). Every field is a member row
 -- (settings/SchemaMembers.lua) written to the selected pad; the pad redraws through LIBRARY_CHANGED
@@ -209,13 +212,34 @@ local function renderLayout(ctx, rows)
         tooltip = L["Put this pad back in its default place."], onClick = function() PD.ResetPoint(id) end }, nil)
 end
 
+-- The Look tab's groups after its own rows, each under its heading (options-ui-§16: a tab with more
+-- than one group says where one stops and the next starts). The subgroup is the composed rows' own.
+PD.LOOK_GROUPS = { L["Font"], L["Border"], L["Background"] }
+
+--- The rows of `rows` whose subgroup is `subgroup` (nil: the rows in no group), in order.
+function PD.LookRows(rows, subgroup)
+    local out = {}
+    for _, row in ipairs(rows) do
+        if row.subgroup == subgroup then out[#out + 1] = row end
+    end
+    return out
+end
+
 local function renderLook(ctx, rows)
     local h = H()
     if not selected() then
         h.TextRow(ctx, NONE)
         return
     end
-    h.RenderRows(ctx, Ed.Scalar(rows), nil, nil, { noHeadings = true })
+    local scalar = Ed.Scalar(rows)
+    h.RenderRows(ctx, PD.LookRows(scalar, nil), nil, nil, { noHeadings = true })
+    for _, subgroup in ipairs(PD.LOOK_GROUPS) do
+        local mine = PD.LookRows(scalar, subgroup)
+        if #mine > 0 then
+            h.Section(ctx, subgroup)
+            h.RenderRows(ctx, mine, nil, nil, { noHeadings = true })
+        end
+    end
 end
 
 local function ids(entries)

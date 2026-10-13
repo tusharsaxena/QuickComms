@@ -6,7 +6,9 @@ local _, NS = ...
 -- work, out of combat. A chip shows a square icon tile, its label, the channel tag in WoW's chat
 -- color (a smart kind shows the channel it resolved to), a padlock when locked, a dim veil when its
 -- bake was refused, a dim veil during the spam guard's window, a gold hover and a flash per send
--- result. The tooltip names the line it sends, or why it sends nothing, and any lock.
+-- result. The tooltip names the line it sends, or why it sends nothing, and any lock. The pad's Look
+-- (phase 5) is read here as two plain values, a font (LabelFont) and a skin (SkinFor), which
+-- modules/Pad.lua applies out of combat.
 
 NS.PadRender = NS.PadRender or {}
 local R = NS.PadRender
@@ -168,6 +170,63 @@ end
 
 function R.RefreshLock(btn)
     btn.qcLock:SetShown(btn.qcSlot ~= nil and btn.qcSlot.lock ~= nil)
+end
+
+-- ── the pad's Look (spec §10.3; options-ui-§16, §17) ────────────────────────────────────────
+
+local FLAT_EDGE = "Interface\\Buttons\\WHITE8x8"
+
+--- The font a pad's text is drawn in, from its Look: { path, size, flags, r, g, b, a, shadow, colored }.
+--- A face this machine does not have is the standard one; "Use class color" takes the player's class
+--- color, keeping the swatch's alpha (NS.ResolveColor). `colored` is whether the player chose a color:
+--- Use class color, or a swatch other than the default white.
+function R.LabelFont(look)
+    look = type(look) == "table" and look or {}
+    local r, g, b, a = NS.ResolveColor(look.fontColor, look.useClassColorFont)
+    return { path = NS.MediaFetch("font", look.font) or STANDARD_TEXT_FONT, size = tonumber(look.fontSize) or 10,
+        flags = type(look.fontFlags) == "string" and look.fontFlags or "", r = r, g = g, b = b, a = a,
+        shadow = look.fontShadow ~= false,
+        colored = look.useClassColorFont == true or r ~= 1 or g ~= 1 or b ~= 1 }
+end
+
+-- A section title's own color, the gold of the GameFontNormalSmall it is made with.
+R.TITLE_COLOR = { 1, 0.82, 0, 1 }
+
+--- A section title's font: the pad's face, size, flags and shadow, in the title's own gold unless the
+--- player chose a color for the font (Use class color, or a swatch other than white). The default Look
+--- then changes nothing a pad already showed: gold titles over white chip labels.
+function R.TitleFont(font)
+    if font.colored then return font end
+    local t = {}
+    for k, v in pairs(font) do t[k] = v end
+    t.r, t.g, t.b, t.a = R.TITLE_COLOR[1], R.TITLE_COLOR[2], R.TITLE_COLOR[3], R.TITLE_COLOR[4]
+    return t
+end
+
+--- Draw a font string in a pad's font (R.LabelFont). A face the client refuses falls back to the
+--- standard one.
+function R.ApplyFont(fs, font)
+    if not (fs and font) then return end
+    if not fs:SetFont(font.path, font.size, font.flags) then fs:SetFont(STANDARD_TEXT_FONT, font.size, font.flags) end
+    fs:SetTextColor(font.r, font.g, font.b, font.a)
+    if font.shadow then fs:SetShadowOffset(1, -1) else fs:SetShadowOffset(0, 0) end
+end
+
+--- The skin a pad wears, from its Look: the Ka0s skin (NS.SKIN) with the border's art (a LibSharedMedia
+--- border by name; "None", or one this machine does not have, is the flat edge), its thickness (0 is
+--- no edge) and color, and the background color, each through its class-color companion.
+function R.SkinFor(look)
+    look = type(look) == "table" and look or {}
+    local skin = {}
+    for k, v in pairs(NS.SKIN or {}) do skin[k] = v end
+    local size = math.max(0, math.min(16, tonumber(look.borderSize) or 1))
+    local art = look.borderStyle ~= "None" and NS.MediaFetch("border", look.borderStyle) or nil
+    skin.edgeFile = size > 0 and (art or FLAT_EDGE) or nil
+    skin.edgeSize = size
+    skin.insets = { left = size, right = size, top = size, bottom = size }
+    skin.border = { NS.ResolveColor(look.borderColor, look.useClassColorBorder) }
+    skin.bg = { NS.ResolveColor(look.background, look.useClassColorBackground) }
+    return skin
 end
 
 function R.Flash(btn, what)

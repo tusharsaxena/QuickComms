@@ -35,6 +35,7 @@ local WHY = {
     builtin   = L["Built-in groups are read-only. Customize makes an editable copy."],
     badChoice = L["That is not one of the choices."],
     badKey    = L["A key is one key, with ALT-, CTRL- or SHIFT- in front if you like."],
+    badColor  = L["A color is red, green and blue, and optionally alpha, each from 0 to 1."],
     reservedKey = L["Escape, the left and right mouse buttons, the mouse wheel and 1 to 8 without a modifier cannot open a dial: the open dial uses them."],
 }
 
@@ -286,6 +287,69 @@ local ROWS = {
           return Lib.ValidHidden(Lib.TopOf(id), v)
       end) },
 }
+
+-- ── a pad's Look groups (spec §10.3, §19 row 5; options-ui-§16, §17) ───────────────────────────
+
+-- The font block, the border block and the background swatch with its class-color companion, each
+-- COMPOSED by the options library (a hand-written copy is anti-pattern #73) and then stamped as pad
+-- member rows: the instance, a check per leaf, and the defaults Library ships (Library.TEMPLATES).
+-- The class color is the player's (`classColorSource = "player"`, the composer's default): a pad's
+-- text is about no unit. A background is not a bar, so it takes a swatch and its companion only. On
+-- a degraded load the composers are hollow and these rows are absent.
+
+local function unit01(c) return type(c) == "number" and c >= 0 and c <= 1 end
+
+-- A color as the color picker stores it, keyed ({ r, g, b, a }) or positional, alpha optional.
+local function isColor(v)
+    if type(v) ~= "table" then return false, "badColor" end
+    local a = v.a or v[4] or 1
+    return unit01(v.r or v[1]) and unit01(v.g or v[2]) and unit01(v.b or v[3]) and unit01(a), "badColor"
+end
+
+local function isName(v) return type(v) == "string" and v ~= "", "badChoice" end
+
+local LOOK = "pad.look."
+local LOOK_DEFAULTS = T.pad.look
+
+local function lookChecks(O)
+    local flags = O.FONT_FLAGS or {}
+    return {
+        font = { validate = check(isName) },
+        fontSize = { validate = NUMBER, normalize = clamp(6, 32, true) },
+        fontColor = { validate = check(isColor) },
+        fontFlags = { validate = check(function(v) return type(v) == "string" and flags[v] ~= nil, "badChoice" end) },
+        borderStyle = { validate = check(isName) },
+        borderSize = { validate = NUMBER, normalize = clamp(0, 16, true) },
+        borderColor = { validate = check(isColor) },
+        background = { validate = check(isColor) },
+    }
+end
+
+local function lookSpec(subgroup, extra)
+    local spec = { prefix = LOOK, page = "pads", group = L["Look"], subgroup = subgroup, defaults = LOOK_DEFAULTS }
+    for k, v in pairs(extra or {}) do spec[k] = v end
+    return spec
+end
+
+local function lookRows()
+    local O = NS.addon.Settings.Helpers
+    local checks = lookChecks(O)
+    local out = {}
+    for _, list in ipairs({
+        O.FontGroup(lookSpec(L["Font"])),
+        O.BorderGroup(lookSpec(L["Border"])),
+        O.ColorPair(lookSpec(L["Background"], { key = "background", label = L["Background"] })),
+    }) do
+        for _, row in ipairs(list) do
+            local c = checks[row.path:sub(#LOOK + 1)] or {}
+            row.instance, row.validate, row.normalize = "pad", c.validate, c.normalize
+            out[#out + 1] = row
+        end
+    end
+    return out
+end
+
+for _, row in ipairs(lookRows()) do ROWS[#ROWS + 1] = row end
 
 -- Every member row's reaction: Library.Touch announces the write (LIBRARY_CHANGED, the pads' rebuild),
 -- naming the row's path as the field.

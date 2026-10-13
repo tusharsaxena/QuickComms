@@ -216,9 +216,10 @@ end
 
 -- `point`, `when`, `idset` and `key` are the structured member rows (settings/SchemaMembers.lua): each
 -- drawn by its own control on its editor page (a dial's key by a capture box) and typed and printed on
--- the CLI by settings/Slash.lua's parse and format hooks.
+-- the CLI by settings/Slash.lua's parse and format hooks. `color` is a pad's Look swatches (phase 5),
+-- which the options library draws and its CLI parses and prints itself.
 local VALID_TYPES = { bool = true, number = true, string = true, point = true, when = true, idset = true,
-    key = true }
+    key = true, color = true }
 
 -- A row carrying BOTH its own get and set owns its storage, so there is no defaults entry at its
 -- path: answering nil makes the library skip the resolution check for it (the session rows, and

@@ -580,9 +580,18 @@ end
 -- ── surfaces ────────────────────────────────────────────────────────────────────────────────
 
 local SURFACE_DEFAULTS = {
+    -- look: the Look tab's rows (settings/SchemaMembers.lua). The font, border and background rows
+    -- (phase 5, options-ui-§16/§17) default to the Ka0s skin a pad has always worn: the chip label's
+    -- small white face with its shadow, a flat 1px black edge ("None" is no border art) and the
+    -- 0.06, 0.06, 0.08, 0.92 body (spec §10.1).
     pad = { groupsAs = "sections", layout = { orientation = "horizontal", columns = 4, growth = "right",
         style = "iconLabel", scale = 1.0, spacing = 4, width = 140 },
-        look = { visibility = "always", fade = "none", fadeAlpha = 0.4 } },
+        look = { visibility = "always", fade = "none", fadeAlpha = 0.4,
+            font = "Friz Quadrata TT", fontSize = 10, fontColor = { r = 1, g = 1, b = 1, a = 1 },
+            useClassColorFont = false, fontFlags = "", fontShadow = true,
+            borderStyle = "None", borderSize = 1, borderColor = { r = 0, g = 0, b = 0, a = 1 },
+            useClassColorBorder = false,
+            background = { r = 0.06, g = 0.06, b = 0.08, a = 0.92 }, useClassColorBackground = false } },
     -- Relaxed is the only interaction in v0.1.0 (the C7 fallback, round-4 record). `delay` and
     -- `tapAction` are kept for the hold, flick and release upgrade, and `depth` until owner ruling R5
     -- gives it a meaning; nothing reads them yet.
@@ -871,9 +880,24 @@ local function repairGroups(p, result)
     end
 end
 
--- One pad or dial: its lists as tables, its dangling groups dropped, and each built-in it has not
--- been offered yet appended once (seenBuiltins).
-local function repairSurface(s, result)
+-- A stored surface's settings tables (a pad's layout and look) with every field its kind's defaults
+-- have that it lacks: a pad saved before a field existed (the Look tab's font, border and background,
+-- phase 5) reads like a new one.
+local function fillShape(s, kind)
+    for key, defaults in pairs(SURFACE_DEFAULTS[kind]) do
+        if type(defaults) == "table" then
+            if type(s[key]) ~= "table" then s[key] = {} end
+            for field, v in pairs(defaults) do
+                if s[key][field] == nil then s[key][field] = copyTable(v) end
+            end
+        end
+    end
+end
+
+-- One pad or dial: its lists as tables, its dangling groups dropped, each built-in it has not been
+-- offered yet appended once (seenBuiltins), and its settings tables filled (fillShape).
+local function repairSurface(s, kind, result)
+    fillShape(s, kind)
     s.seenBuiltins = type(s.seenBuiltins) == "table" and s.seenBuiltins or {}
     s.groups = type(s.groups) == "table" and s.groups or {}
     for i = #s.groups, 1, -1 do
@@ -913,7 +937,7 @@ function Lib.Prepare()
     seed(p, result)
     repairGroups(p, result)
     for kind, set in pairs(surfaces()) do
-        for _, s in pairs(set) do repairSurface(s, result) end
+        for _, s in pairs(set) do repairSurface(s, kind, result) end
         repairOrder(kind == "pad" and p.padOrder or p.dialOrder, set, result)
     end
     if result.seeded or result.appended > 0 or result.repaired > 0 then

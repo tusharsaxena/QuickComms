@@ -149,3 +149,49 @@ test("pad render: [phase 3] a previewed slot's tooltip shows its line and says i
     -- [final 9] a previewed wedge shares these lines, so the line names no surface
     assertEqual(lines[#lines], "Preview: this sends nothing.")
 end)
+
+test("render: [phase 5] a pad's Look is a font and a skin; the defaults are the skin a pad always wore", function()
+    local NS, m = T.enableAddon()
+    m.STANDARD_TEXT_FONT = "Fonts\\FRIZQT__.TTF"
+    local R, look = NS.PadRender, NS.Library.TEMPLATES.pad.look
+    local font = R.LabelFont(look)
+    assertEqual(font.path, "Fonts\\FRIZQT__.TTF", "no LibSharedMedia here: the standard face")
+    assertEqual(font.size .. "|" .. font.flags .. "|" .. tostring(font.shadow), "10||true")
+    assertEqual(font.r + font.g + font.b + font.a, 4, "white")
+    local skin = R.SkinFor(look)
+    assertEqual(skin.edgeFile, "Interface\\Buttons\\WHITE8x8", "None is the flat Ka0s edge")
+    assertEqual(skin.edgeSize, 1)
+    assertEqual(table.concat(skin.bg, ","), "0.06,0.06,0.08,0.92")
+    assertEqual(table.concat(skin.border, ","), "0,0,0,1")
+    assertNil(R.SkinFor({ borderSize = 0 }).edgeFile, "thickness 0 is no edge")
+    local fs = chip(NS, m).qcLabel
+    R.ApplyFont(fs, R.LabelFont({ fontSize = 14, fontFlags = "OUTLINE", fontShadow = false,
+        fontColor = { r = 1, g = 0, b = 0, a = 1 } }))
+    assertEqual(table.concat(fs.__font, ","), "Fonts\\FRIZQT__.TTF,14,OUTLINE")
+    assertEqual(table.concat(fs.__color, ","), "1,0,0,1")
+    assertEqual(table.concat(fs.__shadow, ","), "0,0")
+end)
+
+test("render: [phase 5] Use class color takes the player's class color and keeps the swatch's alpha", function()
+    local NS, m = T.enableAddon()
+    m.RAID_CLASS_COLORS = { MAGE = { r = 0.25, g = 0.75, b = 0.5 } }
+    local font = NS.PadRender.LabelFont({ fontColor = { r = 1, g = 1, b = 1, a = 0.5 }, useClassColorFont = true })
+    assertEqual(font.r .. "," .. font.g .. "," .. font.b .. "," .. font.a, "0.25,0.75,0.5,0.5")
+    local skin = NS.PadRender.SkinFor({ background = { r = 0, g = 0, b = 0, a = 0.8 }, useClassColorBackground = true })
+    assertEqual(table.concat(skin.bg, ","), "0.25,0.75,0.5,0.8")
+    assertEqual(table.concat(NS.PadRender.SkinFor({ borderColor = { 0.1, 0.2, 0.3 } }).border, ","), "0.1,0.2,0.3,1",
+        "a positional swatch, alpha 1 by default")
+end)
+
+test("render: [phase 5] a section title keeps its gold until the player colors the font", function()
+    local NS, m = T.enableAddon()
+    m.RAID_CLASS_COLORS = { MAGE = { r = 0.25, g = 0.75, b = 0.5 } }
+    local R = NS.PadRender
+    -- red under: apply the label font to the titles in modules/Pad.lua's place() (they turn white)
+    local t = R.TitleFont(R.LabelFont(NS.Library.TEMPLATES.pad.look))
+    assertEqual(t.r .. "," .. t.g .. "," .. t.b .. "|" .. t.size, "1,0.82,0|10", "the default Look: gold, as before")
+    t = R.TitleFont(R.LabelFont({ fontSize = 12, fontColor = { r = 1, g = 0, b = 0, a = 1 } }))
+    assertEqual(t.r .. "," .. t.g .. "," .. t.b .. "|" .. t.size, "1,0,0|12", "a chosen color reaches the titles")
+    t = R.TitleFont(R.LabelFont({ fontColor = { r = 1, g = 1, b = 1, a = 1 }, useClassColorFont = true }))
+    assertEqual(t.r .. "," .. t.g .. "," .. t.b, "0.25,0.75,0.5", "and so does the class color")
+end)
