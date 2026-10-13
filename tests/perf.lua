@@ -26,11 +26,15 @@
 -- run to run, never with the client). The two captureOff scenarios and bracketCaptureOff are pinned
 -- by rule, not by figure; the rest sit at the measured figure rounded up to the next KiB. Raise a
 -- ceiling only by re-measuring and saying why; a rise is the finding.
+--
+-- Raised 2026-10-14: padRebuild12 68960.4 -> 69960.4 bytes/iter (69632 -> 70656) at e0bb552, where the
+-- chip and title rows started growing with the Look's font size (the final review's fix): the
+-- geometry now reads the size per rebuild. Re-measured; the cost is that fix's, by design.
 
 local BYTE_CEILING = {
     bracketCaptureOff = 0,
     dialPointerCaptureOff = 1024, dialPointerNoHarness = 1024,
-    padRebuild12 = 69632, dialOpenClose = 2048, situationRefresh = 2048,
+    padRebuild12 = 70656, dialOpenClose = 2048, situationRefresh = 2048,
 }
 local NOTES_PER_ITER = {
     bracketCaptureOff = 0, dialPointerCaptureOff = 0, dialPointerNoHarness = 0,

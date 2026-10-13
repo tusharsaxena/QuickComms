@@ -50,7 +50,7 @@ notes per iteration, never time:
 | `bracketCaptureOff` | the gated bracket shape, capture off, notes nothing and allocates nothing | 0 bytes, 0 notes |
 | `dialPointerCaptureOff` | the hottest bracketed path, the open dial's pointer `OnUpdate`, capture off | 1 KiB, 0 notes |
 | `dialPointerNoHarness` | the same path on an instance with no Perf library; the run fails if capture off allocates more (zero overhead, performance-§9) | 1 KiB, 0 notes |
-| `padRebuild12` | a 12-chip pad built from its plan and applied, capture on | 68 KiB, 3 notes |
+| `padRebuild12` | a 12-chip pad built from its plan and applied, capture on | 69 KiB, 3 notes (raised from 68 KiB when the rows began to follow the Look's font size) |
 | `dialOpenClose` | the default dial opened, one pointer frame, closed | 2 KiB, 1 note |
 | `situationRefresh` | a situation read whose signature did not move | 2 KiB, 1 note |
 
