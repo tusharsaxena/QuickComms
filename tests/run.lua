@@ -104,6 +104,7 @@ Kit.run{
         "test_restrictions", "test_situation",
         "test_tokens",
         "test_channels",
+        "test_bake",
         "test_vendor_sync",
         { name = "test_eol",                  dir = "tests/_kit/" },   -- line-endings-§7
         { name = "test_prose",                dir = "tests/_kit/" },   -- localization-§5
