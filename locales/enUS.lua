@@ -782,3 +782,7 @@ L["Person"] = "Person"
 L["Timer"] = "Timer"
 L["Ban"] = "Ban"
 L["Thumbs up"] = "Thumbs up"
+
+-- settings/Editors.lua (audit QC-02: the page jump refused in combat)
+L["cannot open settings during combat \226\128\148 Blizzard's category-switch is protected"] =
+    "cannot open settings during combat \226\128\148 Blizzard's category-switch is protected"

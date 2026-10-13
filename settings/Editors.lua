@@ -430,9 +430,14 @@ function Ed.ConfirmDelete(name, onAccept)
 end
 
 --- Open the settings at another editor page (a "Used by" link, Customize). The page repaints from
---- the selection the caller set.
+--- the selection the caller set. Refused in combat, here rather than at each caller: Blizzard's
+--- category switch is protected (options-ui-§2's page-jump carve-out is combat-gated).
 --- @return boolean opened
 function Ed.Open(pageKey)
+    if NS.Compat.InCombat() then
+        NS.Print("|cffaaaaaa" .. L["cannot open settings during combat \226\128\148 Blizzard's category-switch is protected"] .. "|r")
+        return false
+    end
     Ed.RequestRefresh()
     local category = Ed.categories[pageKey]
     local S = _G.Settings
