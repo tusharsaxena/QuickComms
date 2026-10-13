@@ -112,3 +112,17 @@ test("situation: ReadInputs survives a loading screen", function()
     local s = NS.Situation.Classify(NS.Situation.ReadInputs())
     assertEqual(s.content, "openWorld")
 end)
+
+test("situation: stand-down cancels a pending coalesced refresh", function()
+    local NS = T.enableAddon()
+    local canceled, sent = {}, 0
+    NS.addon.ScheduleTimer = function() return "handle-1" end
+    NS.addon.CancelTimer = function(_, h) canceled[#canceled + 1] = h end
+    NS.addon.SendMessage = function() sent = sent + 1 end
+    NS.Situation.Refresh("GROUP_ROSTER_UPDATE")
+    NS.StandDown()
+    assertEqual(#canceled, 1)
+    assertEqual(canceled[1], "handle-1")
+    assertNil(NS.State.situationTimer)
+    assertEqual(sent, 0)
+end)

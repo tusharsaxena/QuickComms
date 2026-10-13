@@ -130,7 +130,10 @@ end
 function Sit.Refresh(reason)
     if State.situationPending then return end
     State.situationPending = true
-    NS.addon:ScheduleTimer(function() Sit.RefreshNow(reason) end, COALESCE)
+    State.situationTimer = NS.addon:ScheduleTimer(function()
+        State.situationTimer = nil
+        Sit.RefreshNow(reason)
+    end, COALESCE)
 end
 
 --- The current snapshot, classified live (without a message) before the first refresh.
@@ -152,6 +155,8 @@ function NS.addon.OnSituationEvent(_, event)
 end
 
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
+    if State.situationTimer then NS.addon:CancelTimer(State.situationTimer) end
+    State.situationTimer = nil
     State.situation, State.situationSignature, State.situationPending = nil, nil, nil
 end
 NS.STAND_UP[#NS.STAND_UP + 1] = function() Sit.RefreshNow("standUp") end
