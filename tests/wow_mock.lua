@@ -25,6 +25,17 @@
 --   playerGUID     UnitGUID("player")
 --   __click(b[, mouseButton])  a full press: the registered down edge, then the up edge
 --   __setCombat(on)            sets inCombat and re-evaluates every visibility driver
+--   restrictedBindings  [key] = { owner, target, button }: what a header's snippet bound with SetBindingClick
+--   overrideBindings    [key] = { owner, name, button }: SetOverrideBindingClick (refused in combat)
+--   bindingActions      [key] = the action the player's own WoW binding names (GetBindingAction)
+--   cursor              { x, y }: GetCursorPosition's answer
+--   __named[name]       every named frame (a binding clicks a frame by its name)
+--   __pressKey(key)     a key press: a snippet's binding first, then an override binding; false if unbound
+--   __runSnippet(h, params, body, ...)  run restricted source in header h's environment
+-- A frame made from a SecureHandler template runs its `_onclick` attribute as a snippet on a click;
+-- its snippets run in its own environment (`h.__env`, globals persist), where the protected calls
+-- refused in combat are allowed. The restricted handle methods raise outside a snippet; a WrapScript
+-- on a button that already has an OnClick hook raises (the client's wrap discards the hook).
 
 local base = dofile("tests/_kit/mock_base.lua")
 
@@ -141,10 +152,14 @@ local function build()
         M.blocked[#M.blocked + 1] = { frame = frame, call = call }
     end
 
+    -- Inside a restricted snippet (a SecureHandler header's), the protected calls the insecure side is
+    -- refused in combat are allowed: the restricted environment's own privilege.
+    local secureDepth = 0
+
     local PROTECTED_CALLS = { "SetAttribute", "Show", "Hide", "SetShown", "SetPoint", "ClearAllPoints",
         "SetAllPoints", "SetParent", "SetScale", "SetSize", "SetWidth", "SetHeight", "RegisterForClicks",
         "EnableMouse", "StartMoving", "StopMovingOrSizing", "SetFrameStrata", "SetFrameLevel", "SetMovable",
-        "SetClampedToScreen" }
+        "SetClampedToScreen", "Execute", "WrapScript", "SetFrameRef" }
 
     local function protect(frame)
         if frame.__protected then return end
@@ -152,7 +167,7 @@ local function build()
         for _, call in ipairs(PROTECTED_CALLS) do
             local inner = frame[call]
             frame[call] = function(self, ...)
-                if M.inCombat then
+                if M.inCombat and secureDepth == 0 then
                     refuse(self, call)
                     return self
                 end
@@ -217,6 +232,8 @@ local function build()
             return self
         end
         frame.GetAlpha = function(self) return self.__alpha or 1 end
+        frame.GetCenter = function(self) return self.__cx or 0, self.__cy or 0 end
+        frame.GetEffectiveScale = function() return 1 end
         frame.SetSize = function(self, w, h)
             self.__w, self.__h = w, h
             return self
@@ -237,11 +254,133 @@ local function build()
         end
     end
 
+    -- ── secure handlers and key bindings (phase 4: the Comms Dial) ──────────────────────────────
+    M.restrictedBindings = {}
+    M.overrideBindings   = {}
+    M.bindingActions     = {}
+    M.cursor             = { x = 0, y = 0 }
+    M.__named            = {}
+
+    -- What a snippet may reach besides its handles. The client's restricted environment is wider;
+    -- these are the ones this addon's snippets use, so a snippet reaching for anything else fails here.
+    local SNIPPET_GLOBALS = { tonumber = tonumber, tostring = tostring, type = type, select = select,
+        math = math, string = string }
+
+    local makers = {}
+    local function maker(params, body)
+        local key = params .. "\0" .. body
+        local fn = makers[key]
+        if not fn then
+            local chunk, err = loadstring("return function(" .. params .. ")\n" .. body .. "\nend", "=snippet")
+            if not chunk then error("wow_mock: a snippet does not compile: " .. tostring(err), 3) end
+            makers[key], fn = chunk, chunk
+        end
+        return fn
+    end
+
+    -- Run `body` as a function of `params` in `header`'s environment, protected calls allowed.
+    local function runSnippet(header, params, body, ...)
+        header.__env = header.__env or setmetatable({}, { __index = SNIPPET_GLOBALS })
+        local make = maker(params, body)
+        setfenv(make, header.__env)
+        local fn = make()
+        secureDepth = secureDepth + 1
+        local results = { pcall(fn, ...) }
+        secureDepth = secureDepth - 1
+        if not results[1] then error(results[2], 0) end
+        return unpack(results, 2, table.maxn(results))
+    end
+    M.__runSnippet = runSnippet
+
+    local function restricted(name)
+        if secureDepth == 0 then error("wow_mock: " .. name .. " is a restricted-environment call", 3) end
+    end
+
+    -- What a snippet may call on a handle beyond the frame's own methods.
+    local function addHandleMethods(f)
+        f.GetFrameRef = function(self, ref)
+            restricted("GetFrameRef")
+            return self.__frameRefs and self.__frameRefs[ref]
+        end
+        f.SetBindingClick = function(self, _, key, target, button)
+            restricted("SetBindingClick")
+            M.restrictedBindings[key] = { owner = self, target = target, button = button or "LeftButton" }
+        end
+        f.ClearBindings = function(self)
+            restricted("ClearBindings")
+            for key, b in pairs(M.restrictedBindings) do
+                if b.owner == self then M.restrictedBindings[key] = nil end
+            end
+        end
+        f.RunAttribute = function(self, attr, ...)
+            restricted("RunAttribute")
+            local body = self.__attrs[attr]
+            if type(body) ~= "string" then return nil end
+            return runSnippet(self, "self, ...", body, self, ...)
+        end
+    end
+
+    -- The SecureHandler template's insecure-side API (refused in combat by protect()), its click (the
+    -- `_onclick` snippet), and OnShow / OnHide on a change.
+    local function makeHeader(f)
+        f.__frameRefs = {}
+        f.SetFrameRef = function(self, ref, frame)
+            self.__frameRefs[ref] = frame
+            return self
+        end
+        f.Execute = function(self, body)
+            runSnippet(self, "self", body, self)
+            return self
+        end
+        f.WrapScript = function(self, frame, script, pre, post)
+            if script ~= "OnClick" then error("wow_mock: only an OnClick wrap is modeled", 2) end
+            if frame.__hooked then
+                error("wow_mock: WrapScript after HookScript(\"OnClick\"): the client's wrap discards the hook", 2)
+            end
+            local inner, header = frame.__scripts.OnClick, self
+            frame.__scripts.OnClick = function(btn, button, down)
+                local newButton, message
+                if pre then
+                    local r1, r2 = runSnippet(header, "self, button, down, owner", pre, btn, button, down, header)
+                    if r1 == false then return end
+                    newButton, message = r1, r2
+                end
+                if inner then inner(btn, newButton or button, down) end
+                if post and message ~= nil then
+                    runSnippet(header, "self, message, button, down, owner", post, btn, message, button, down, header)
+                end
+            end
+            return self
+        end
+        f.__scripts.OnClick = function(self, button, down)
+            local body = self.__attrs._onclick
+            if type(body) == "string" then runSnippet(self, "self, button, down", body, self, button, down) end
+        end
+        local show, hide = f.Show, f.Hide
+        f.Show = function(self)
+            local was = self.__shown
+            show(self)
+            if not was then self:__fire("OnShow") end
+            return self
+        end
+        f.Hide = function(self)
+            local was = self.__shown
+            hide(self)
+            if was then self:__fire("OnHide") end
+            return self
+        end
+        f.SetShown = function(self, v)
+            if v then return self:Show() end
+            return self:Hide()
+        end
+    end
+
     local secureFrames = {}
     local baseCreateFrame = M.CreateFrame
     M.CreateFrame = function(frameType, name, parent, template)
         local f = baseCreateFrame(frameType, name, parent, template)
         if ours(f) then dress(f) end
+        if type(name) == "string" then M.__named[name] = f end
         if type(template) == "string" and template:find("Secure", 1, true) then
             if M.inCombat then refuse(f, "CreateFrame") end
             f.__attrs, f.__clicks = {}, {}
@@ -256,6 +395,14 @@ local function build()
                 return self
             end
             f.__scripts.OnClick = secureOnClick
+            -- A wrap must come before an OnClick hook (makeHeader's WrapScript checks this flag).
+            local hook = f.HookScript
+            f.HookScript = function(self, script, fn)
+                if script == "OnClick" then self.__hooked = true end
+                return hook(self, script, fn)
+            end
+            addHandleMethods(f)
+            if template:find("SecureHandler", 1, true) then makeHeader(f) end
             protect(f)
             local p = parent
             while type(p) == "table" and p ~= M.UIParent do
@@ -278,6 +425,40 @@ local function build()
         end
         if registered("Down") then button:__fire("OnClick", mouseButton, true) end
         if registered("Up") then button:__fire("OnClick", mouseButton, false) end
+    end
+
+    M.SetOverrideBindingClick = function(owner, _, key, name, button)
+        if M.inCombat then
+            refuse(owner, "SetOverrideBindingClick")
+            return
+        end
+        M.overrideBindings[key] = { owner = owner, name = name, button = button or "LeftButton" }
+    end
+
+    M.ClearOverrideBindings = function(owner)
+        if M.inCombat then
+            refuse(owner, "ClearOverrideBindings")
+            return
+        end
+        for key, b in pairs(M.overrideBindings) do
+            if b.owner == owner then M.overrideBindings[key] = nil end
+        end
+    end
+
+    M.GetBindingAction = function(key) return M.bindingActions[key] or "" end
+    M.GetCursorPosition = function() return M.cursor.x, M.cursor.y end
+
+    --- A key press as the client routes it: a snippet's binding first, then an override binding;
+    --- the target is clicked with the binding's button, down then up as `__click` presses it.
+    --- @return boolean routed
+    M.__pressKey = function(key)
+        local b = M.restrictedBindings[key] or M.overrideBindings[key]
+        if not b then return false end
+        local target = b.target or b.name
+        if type(target) == "string" then target = M.__named[target] end
+        if type(target) ~= "table" then return false end
+        M.__click(target, b.button)
+        return true
     end
 
     -- "[combat] a; [nocombat] b; c" or "a": the first clause whose condition holds. Any other
