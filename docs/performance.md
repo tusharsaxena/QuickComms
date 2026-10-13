@@ -22,7 +22,7 @@ Seven are declared, all of the design's, in `core/PerfSetup.lua`, in report orde
 
 | Bucket | Bracketed in | Measures |
 |---|---|---|
-| `situation.refresh` | `modules/Situation.lua` | one situation read: inputs, classify, signature, and the publish when it moved |
+| `situation.refresh` | `modules/Situation.lua` | one situation read: inputs, classify, signature. The `SITUATION_CHANGED` publish runs after the bracket closes; the rebuild it triggers is in `bake.surface`, `resolver.resolve` and `pad.layout` |
 | `bake.surface` | `modules/Surfaces.lua` | one pad's or dial's plan: resolve, order, bake every slot (and, for a dial, the ring layout); the Comms Dial page's own looks at a plan (`deps.unmeasured`) are not counted |
 | `resolver.resolve` | `modules/Surfaces.lua` | a plan's active groups and their order; declared and noted within `bake.surface` |
 | `send.click` | `modules/SendEngine.lua` | the `OnClick` hook on a send button |

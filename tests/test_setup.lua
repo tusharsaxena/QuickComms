@@ -316,6 +316,28 @@ test("perf: [phase 5] a refresh notes situation.refresh, and each plan resolver.
     assertTrue(text:find("resolver.resolve<bake.surface", 1, true) ~= nil, text)
 end)
 
+test("perf: [review] a refresh whose signature moves notes situation.refresh before the rebuild it publishes", function()
+    local NS = T.enableAddon()
+    local notes = {}
+    local real = NS.Perf.Note
+    NS.Perf.Note = function(key, ms, parent)
+        notes[#notes + 1] = key
+        return real(key, ms, parent)
+    end
+    NS.Situation.ReadInputs = function()
+        return { inInstance = true, instanceType = "party", difficultyID = 8, keystoneActive = true, keyLevel = 12,
+            inGroup = true }
+    end
+    NS.Perf.on = true
+    assertTrue(NS.Situation.RefreshNow("test"), "the signature moved")
+    NS.Perf.on = false
+    local text = table.concat(notes, ",")
+    assertTrue(text:find("bake.surface", 1, true) ~= nil, "the publish rebuilt the surfaces: " .. text)
+    -- red under: Perf.Note("situation.refresh") after the SITUATION_CHANGED send in modules/Situation.lua
+    -- (the whole rebuild timed inside a bucket declared with no children, performance-§3)
+    assertEqual(notes[1], "situation.refresh", text)
+end)
+
 test("perf: [phase 5] the Comms Dial page's Preview notes neither bake.surface nor resolver.resolve", function()
     local NS = T.enableAddon()
     local notes = {}

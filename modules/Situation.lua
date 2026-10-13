@@ -116,6 +116,8 @@ local function withRestrictions(s)
     return s
 end
 
+-- Read, classify and sign; answers whether the signature moved, with the new and the previous
+-- snapshot. Publishes nothing: RefreshNow sends SITUATION_CHANGED after its bracket closes.
 local function refresh(reason)
     State.situationPending = nil
     local snap = withRestrictions(Sit.Classify(Sit.ReadInputs()))
@@ -125,17 +127,20 @@ local function refresh(reason)
     if sig == State.situationSignature then return false end
     State.situationSignature = sig
     NS.Debug(TAG, "%s -> %s/%s (%s)", prev and prev.content or "none", snap.content, snap.group, tostring(reason))
-    NS.addon:SendMessage(NS.MSG.SITUATION_CHANGED, snap, prev)
-    return true
+    return true, snap, prev
 end
 
---- Read, classify, and publish when the signature moved. Bracketed as situation.refresh (spec §16).
+--- Read, classify, and publish when the signature moved. The read, classify and signature are
+--- bracketed as situation.refresh (spec §16); the publish is outside the bracket, because out of
+--- combat it rebuilds every surface at once, and that rebuild is measured by its own buckets
+--- (bake.surface, resolver.resolve, pad.layout), which also run outside a refresh (performance-§3).
 --- @param reason string|nil for the debug line
 --- @return boolean changed
 function Sit.RefreshNow(reason)
     local t0 = Perf.on and debugprofilestop()
-    local changed = refresh(reason)
+    local changed, snap, prev = refresh(reason)
     if t0 then Perf.Note("situation.refresh", debugprofilestop() - t0) end
+    if changed then NS.addon:SendMessage(NS.MSG.SITUATION_CHANGED, snap, prev) end
     return changed
 end
 

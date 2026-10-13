@@ -19,7 +19,9 @@ local lib = LibStub and LibStub("LibKa0s-Perf-1.0", true)
 -- unreached (tests/test_setup.lua). resolver.resolve runs inside bake.surface and says so (`within`,
 -- performance-§3).
 local BUCKETS = {
-    { key = "situation.refresh" }, -- modules/Situation.lua: one read, classify and signature (RefreshNow)
+    -- modules/Situation.lua: one read, classify and signature (RefreshNow); the SITUATION_CHANGED
+    -- publish, and the rebuild it runs, are outside it and measured by their own buckets
+    { key = "situation.refresh" },
     { key = "bake.surface" }, -- modules/Surfaces.lua: one pad's or dial's plan (resolve, order, bake every slot)
     { key = "resolver.resolve", within = "bake.surface" }, -- modules/Surfaces.lua: a plan's active groups and their order
     { key = "send.click" },   -- modules/SendEngine.lua: the OnClick hook
