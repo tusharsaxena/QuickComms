@@ -308,6 +308,22 @@ end
 
 local function isName(v) return type(v) == "string" and v ~= "", "badChoice" end
 
+local BOOL = check(function(v) return type(v) == "boolean", "badChoice" end)
+
+-- A checked color rebuilt as { r, g, b, a } (LibKa0s Core's RGBA reads both shapes, alpha 1 when it
+-- is absent), so a stored color holds its four channels and nothing else: an import's extra keys
+-- never reach SavedVariables.
+local Core = LibStub and LibStub("LibKa0s-Core-1.0", true)
+local function fourChannels(v)
+    local r, g, b, a
+    if Core and Core.RGBA then
+        r, g, b, a = Core.RGBA(v, 1, 1, 1, 1)
+    else
+        r, g, b, a = v.r or v[1], v.g or v[2], v.b or v[3], v.a or v[4] or 1
+    end
+    return { r = r, g = g, b = b, a = a }
+end
+
 local LOOK = "pad.look."
 local LOOK_DEFAULTS = T.pad.look
 
@@ -316,12 +332,16 @@ local function lookChecks(O)
     return {
         font = { validate = check(isName) },
         fontSize = { validate = NUMBER, normalize = clamp(6, 32, true) },
-        fontColor = { validate = check(isColor) },
+        fontColor = { validate = check(isColor), normalize = fourChannels },
+        useClassColorFont = { validate = BOOL },
         fontFlags = { validate = check(function(v) return type(v) == "string" and flags[v] ~= nil, "badChoice" end) },
+        fontShadow = { validate = BOOL },
         borderStyle = { validate = check(isName) },
         borderSize = { validate = NUMBER, normalize = clamp(0, 16, true) },
-        borderColor = { validate = check(isColor) },
-        background = { validate = check(isColor) },
+        borderColor = { validate = check(isColor), normalize = fourChannels },
+        useClassColorBorder = { validate = BOOL },
+        background = { validate = check(isColor), normalize = fourChannels },
+        useClassColorBackground = { validate = BOOL },
     }
 end
 

@@ -12,9 +12,12 @@ local _, NS = ...
 -- THE CHECKS (spec §15 steps 2 to 4). The version first: a newer one is refused, an older one is
 -- lifted through MIGRATIONS (empty while v is 1). Then each member against the schema: its id's shape
 -- (c<n>, g<n>, p<n>, d<n>), its channel kind, its lengths, its When, and every text field through the
--- §8.3 sanitizer (Bake.CleanText): names, callout text, icon paths, and every string in a pad's or a
--- dial's field values, nested ones too (cleanValue, which also refuses a number that is not finite and
--- a table nested past MAX_DEPTH, met twice in one value, or past MAX_NODES). Every string is refused
+-- §8.3 sanitizer (Bake.CleanText): callout text, icon paths, and every string in a pad's or a dial's
+-- field values, nested ones and their keys too (cleanValue, which also refuses a number that is not
+-- finite and a table nested past MAX_DEPTH, met twice in one value, or past MAX_NODES). Names and a
+-- field's strings are drawn, never sent: each is stored with its "|" escapes literal (doubled, as a
+-- typed "|" is), and a name may start with "/". A refused member is reported by its name, or by its
+-- id only when that id is short plain text. Every string is refused
 -- unread past TEXT_MAX bytes, and the payload past MAX_TEXT_BYTES read in all. Check fails closed: a hand-made payload that still raises inside the
 -- checks reads as damaged. A member that fails is refused and listed with its reason; a reference
 -- to something the string does not carry (a group's callout, a surface's group) is left out and
@@ -73,12 +76,22 @@ local function affordable(v, res)
     return res.bytes <= SH.MAX_TEXT_BYTES
 end
 
--- A string, a number or a boolean as cleanValue keeps it, or nil.
+-- Display text with every live "|" escape made literal: a lone "|" doubled to "||", a "||" (what the
+-- game's edit box stores for a typed "|") kept, so it is never doubled again and the answer is
+-- stable. For text that is only ever drawn (names, a field's strings), never sent: Bake escapes a
+-- callout's text at every bake instead. Control characters are already flattened, so "\1" stands in.
+local function literal(s)
+    return (s:gsub("||", "\1"):gsub("|", "||"):gsub("\1", "||"))
+end
+SH.Literal = literal
+
+-- A string, a number or a boolean as cleanValue keeps it, or nil. A field's strings are drawn,
+-- never sent, so they are stored literal.
 local function cleanScalar(v, t, res)
     if t == "string" then
         if not affordable(v, res) then return nil end
         local s, why = NS.Bake.CleanText(v)
-        if s then return s end
+        if s then return literal(s) end
         if why == "empty" then return "" end
         return nil
     elseif t == "number" then
@@ -90,6 +103,15 @@ local function cleanScalar(v, t, res)
     return nil
 end
 
+-- Whether a nested table's key may be stored as it is: a finite number, or a string within the byte
+-- budget that the sanitizer leaves unchanged and that holds no "|". A key is matched, not shown, so
+-- one the sanitizer would change is refused rather than rewritten.
+local function cleanKey(k, res)
+    if type(k) == "number" then return k == k and k ~= math.huge and k ~= -math.huge end
+    if type(k) ~= "string" or not affordable(k, res) then return false end
+    return NS.Bake.CleanText(k) == k and not k:find("|", 1, true)
+end
+
 local function cleanValue(v, depth, seen, res)
     res.nodes = res.nodes + 1
     if res.nodes > SH.MAX_NODES then return nil end
@@ -99,8 +121,9 @@ local function cleanValue(v, depth, seen, res)
     seen[v] = true
     local out = {}
     for k, x in pairs(v) do
+        if not cleanKey(k, res) then return nil end
         local c = cleanValue(x, depth + 1, seen, res)
-        if c == nil or type(k) == "table" then return nil end
+        if c == nil then return nil end
         out[k] = c
     end
     return out
@@ -170,10 +193,19 @@ local function cleanText(v, res)
     return nil, why
 end
 
--- A name: sanitized, then 1 to 32 characters (Library.ValidName).
+-- A name as it is stored and drawn: one line (control characters flattened), whitespace squeezed
+-- and trimmed, every "|" escape literal (literal). A name is never sent, so a leading "/" is a name
+-- like any other (the editor takes one too); nil when nothing visible is left.
+local function nameText(v)
+    local s = v:gsub("%c", " "):gsub("%s+", " "):gsub("^ ", ""):gsub(" $", "")
+    if s == "" then return nil end
+    return literal(s)
+end
+
+-- A name: nameText, then 1 to 32 characters (Library.ValidName).
 local function cleanName(v, res)
     if v ~= nil and type(v) ~= "string" or v and not affordable(v, res) then return nil, "badName" end
-    local s = NS.Bake.CleanText(v)
+    local s = v and nameText(v)
     if not (s and NS.Library.ValidName(s)) then return nil, "badName" end
     return s
 end
@@ -274,10 +306,20 @@ end
 
 local ENTRY = { callout = calloutEntry, group = groupEntry, pad = surfaceEntry, dial = surfaceEntry }
 
+-- A refused member's id as the report may show it: itself when it is short plain text (letters,
+-- digits and dots, at most 32 bytes), else "(unnamed)". A malformed id is whatever a hand-made string
+-- put there, a newline, a texture escape or 200 KB included.
+local function idLabel(id)
+    local s = tostring(id)
+    if #s <= 32 and s:match("^[%w%.]+$") then return s end
+    return L["(unnamed)"]
+end
+
 local function refuse(res, kind, id, entry, why)
     local raw = type(entry) == "table" and entry.name
-    local name = type(raw) == "string" and affordable(raw, res) and NS.Bake.CleanText(raw) or nil
-    res.refused[#res.refused + 1] = { kind = kind, id = tostring(id), name = name or tostring(id), reason = why }
+    local name = type(raw) == "string" and affordable(raw, res) and nameText(raw) or nil
+    local label = idLabel(id)
+    res.refused[#res.refused + 1] = { kind = kind, id = label, name = name or label, reason = why }
 end
 
 local function checkSection(spec, set, res)
@@ -450,7 +492,7 @@ function SH.ReportLines(res)
     local counts = SH.CountText(res)
     local out = { counts ~= "" and L["Ready to import: %s."]:format(counts) or L["Nothing in this string can be imported."] }
     for _, r in ipairs(res.refused) do
-        out[#out + 1] = L["Left out the %s '%s': %s."]:format(KIND_NAME[r.kind] or r.kind, r.name,
+        out[#out + 1] = L["Left out the %s '%s': %s."]:format(KIND_NAME[r.kind] or r.kind, literal(tostring(r.name)),
             SH.MEMBER_REASON[r.reason] or tostring(r.reason))
     end
     if res.dropped > 0 then

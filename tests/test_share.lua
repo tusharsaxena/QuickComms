@@ -335,3 +335,89 @@ test("share: [fix 2] shared short strings past the payload's text budget make th
     assertFalse(res.ok)
     assertEqual(res.reason, "tooLarge")
 end)
+
+test("share: [review] a refused member's malformed id never reaches the report raw: no newline, no live escape", function()
+    local _, SH = boot()
+    local evil = "|TInterface\\Buttons\\WHITE8X8:4000:4000|t\nReady to import: 1 callout."
+    local res = SH.Check(SH.Encode(bundle({ callouts = { c1 = KICK, [evil] = {} } })))
+    assertTrue(res.ok)
+    local lines = SH.ReportLines(res)
+    assertEqual(#lines, 2)
+    -- red under: refuse() in modules/Share.lua labeling the member tostring(id)
+    assertEqual(lines[2], "Left out the callout '(unnamed)': its id is malformed.")
+    for _, line in ipairs(lines) do assertTrue(line:find("\n", 1, true) == nil, "one line each") end
+    -- a plain short id is still named by itself
+    local plain = SH.Validate(bundle({ callouts = { x9 = {} } }))
+    assertEqual(SH.ReportLines(plain)[2], "Left out the callout 'x9': its id is malformed.")
+end)
+
+test("share: [review] a 200 KB malformed id gives a short report line", function()
+    local _, SH = boot()
+    local s = SH.Encode(bundle({ callouts = { [string.rep("k", 200000)] = {} } }))
+    assertTrue(#s < SH.MAX_STRING, "it compresses into a pasteable string")
+    local res = SH.Check(s)
+    assertTrue(res.ok)
+    local line = SH.ReportLines(res)[2]
+    -- red under: refuse() in modules/Share.lua labeling the member tostring(id)
+    assertTrue(#line < 100, "a short line, not " .. #line .. " bytes")
+    assertTrue(#res.refused[1].id < 100, "the refusal's id is bounded too")
+end)
+
+test("share: [review] a name's live | escape is stored and reported as text (||), as a typed | is", function()
+    local _, SH = boot()
+    local res = SH.Validate(bundle({
+        callouts = { c1 = { name = "|T136243:999:999|t", text = "a|cffff0000red", channel = "party" },
+            c2 = { name = "|cffff0000Bad|r", text = "/run x", channel = "party" },
+            c3 = { name = "Typed||pipe", text = "hi", channel = "party" } },
+        groups = { g1 = { name = "|cffff0000Kick|r" } },
+        pads = { p1 = { name = "|Hitem:1|h[x]|h", fields = { ["pad.look.font"] = "|TFont:99|t" } } },
+    }))
+    assertTrue(res.ok)
+    -- red under: cleanName in modules/Share.lua storing Bake.CleanText's answer as it is
+    assertEqual(res.callouts[1].fields.name, "||T136243:999:999||t")
+    assertEqual(res.callouts[1].fields.text, "a|cffff0000red", "text is still left to the bake's one escape")
+    assertEqual(res.callouts[2].fields.name, "Typed||pipe", "an escaped pipe is kept as it is, never doubled again")
+    assertEqual(res.groups[1].fields.name, "||cffff0000Kick||r")
+    assertEqual(res.pads[1].name, "||Hitem:1||h[x]||h")
+    assertEqual(res.pads[1].fields["pad.look.font"], "||TFont:99||t", "a field's string is display text too")
+    -- the refused callout's name in the report
+    assertEqual(SH.ReportLines(res)[2], "Left out the callout '||cffff0000Bad||r': its text starts with /.")
+end)
+
+test("share: [review] a name that starts with / is a name, never sent: it travels and round-trips", function()
+    local NS, SH = boot()
+    local res = SH.Check(SH.Encode(bundle({
+        callouts = { c3 = { name = "/w healer", text = "hi", channel = "party" } },
+        groups = { g4 = { name = "  /raid\tstuff ", callouts = { "c3" } } },
+        pads = { p1 = { name = "/pad", groups = { "g4" } } },
+    })))
+    -- red under: cleanName in modules/Share.lua refusing CleanText's startsWithSlash
+    assertEqual(refusals(res), "")
+    assertEqual(res.callouts[1].fields.name, "/w healer")
+    assertEqual(res.groups[1].fields.name, "/raid stuff", "flattened and trimmed like any name")
+    assertEqual(res.pads[1].name, "/pad")
+    assertEqual(table.concat(res.groups[1].callouts, ","), "c3")
+    assertTrue(NS.Library.ValidName("/w healer"))
+end)
+
+test("share: [review] a nested key in a When or a field passes the sanitizer and the byte budget", function()
+    local _, SH = boot()
+    local res = SH.Check(SH.Encode(bundle({
+        groups = { g1 = { name = "Evil key", when = { characters = { ["Ev\1il|T1:4000:4000|t-Realm"] = true } } },
+            g2 = { name = "Long key", when = { characters = { [string.rep("a", 50) .. "-" .. string.rep("b", 50)] = true } } },
+            g3 = { name = "Fine", when = { characters = { ["Kaos-Silvermoon"] = true } } } },
+        pads = { p1 = { name = "Keys", fields = {
+            ["pad.look.fontColor"] = { r = 1, g = 1, b = 1, ["x\1y"] = 1 },
+            ["pad.look.borderColor"] = { r = 1, g = 1, b = 1, [string.rep("z", 300)] = 1 },
+            ["pad.look.background"] = { r = 1, g = 1, b = 1, [math.huge] = 1 } } } },
+    })))
+    assertTrue(res.ok)
+    -- red under: cleanValue in modules/Share.lua copying keys unchecked, or ValidWhenValue's old pattern
+    assertEqual(refusals(res), "group:g1:badWhen,group:g2:badWhen")
+    assertTrue(res.groups[1].fields.when.characters["Kaos-Silvermoon"])
+    local f = res.pads[1].fields
+    assertNil(f["pad.look.fontColor"], "a control character in a key")
+    assertNil(f["pad.look.borderColor"], "a key past TEXT_MAX")
+    assertNil(f["pad.look.background"], "a key that is not finite")
+    assertEqual(res.ignored, 3)
+end)
