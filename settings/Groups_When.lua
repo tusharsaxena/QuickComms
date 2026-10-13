@@ -29,13 +29,16 @@ local W = Settings.GroupsWhen
 W.ROWS = { "content", "instances", "difficulty", "keyLevel", "group", "leadership", "class", "spec", "role",
     "characters", "battleground" }
 
-local CONTENT = { "openWorld", "dungeon", "mythicPlus", "raid", "delve", "scenario", "battleground", "arena", "housing" }
-local DIFFICULTY = { { "normal", L["Normal"] }, { "heroic", L["Heroic"] }, { "mythic", L["Mythic"] },
-    { "keystone", L["Mythic Keystone"] }, { "lfr", L["LFR"] }, { "story", L["Story"] }, { "follower", L["Follower"] } }
-local GROUP = { { "solo", L["Solo"] }, { "party", L["Party"] }, { "raid", L["Raid"] },
-    { "instance", L["Instance group (LFG, LFR or a battleground)"] } }
-local LEADERSHIP = { { "leader", L["Leader"] }, { "assist", L["Assist"] } }
-local ROLE = { { "TANK", L["Tank"] }, { "HEALER", L["Healer"] }, { "DAMAGER", L["Damage"] } }
+-- The labels of the token rows' values. The tokens themselves, and their order, are
+-- NS.Resolver.TOKENS (read at call time), which Library.ValidWhen checks against too.
+local LABELS = {
+    difficulty = { normal = L["Normal"], heroic = L["Heroic"], mythic = L["Mythic"], keystone = L["Mythic Keystone"],
+        lfr = L["LFR"], story = L["Story"], follower = L["Follower"] },
+    group = { solo = L["Solo"], party = L["Party"], raid = L["Raid"],
+        instance = L["Instance group (LFG, LFR or a battleground)"] },
+    leadership = { leader = L["Leader"], assist = L["Assist"] },
+    role = { TANK = L["Tank"], HEALER = L["Healer"], DAMAGER = L["Damage"] },
+}
 
 W.TIP = {
     content = L["The kind of place you are in."],
@@ -121,20 +124,32 @@ local function battlegroundIds()
     return out
 end
 
---- A typed character as Name-Realm: as typed when it carries a realm, else with the player's realm.
---- @param live table a snapshot (its `character` is the player's Name-Realm)
-function W.CharacterId(text, live)
-    local name = (text or ""):match("^%s*(.-)%s*$")
-    if name == "" or name:find("%s") then return nil end
-    if name:find("-", 1, true) then return name end
-    local realm = live and live.character and live.character:match("%-(.+)$")
-    if not realm then return nil end
-    return name .. "-" .. realm
+-- A character name as the client shows it: the first letter upper case, the rest lower case. Only
+-- ASCII letters change case; a name that starts with a multi-byte letter keeps that letter.
+local function nameCase(name)
+    return name:sub(1, 1):upper() .. name:sub(2):lower()
 end
 
-local function pairsToValues(list)
+--- A typed character as Name-Realm, the name in the client's case: with the typed realm when it
+--- carries one, else with the player's realm. Nil for an empty name, a space, or an empty part.
+--- @param live table a snapshot (its `character` is the player's Name-Realm)
+function W.CharacterId(text, live)
+    local typed = (text or ""):match("^%s*(.-)%s*$")
+    if typed == "" or typed:find("%s") then return nil end
+    local name, realm = typed:match("^([^%-]*)%-(.*)$")
+    if not name then
+        name = typed
+        realm = live and live.character and live.character:match("%-(.+)$")
+    end
+    if not realm or name == "" or realm == "" then return nil end
+    return nameCase(name) .. "-" .. realm
+end
+
+local function tokenValues(row)
     local out = {}
-    for i, p in ipairs(list) do out[i] = { value = p[1], text = p[2] } end
+    for i, token in ipairs(NS.Resolver.TOKENS[row] or {}) do
+        out[i] = { value = token, text = (LABELS[row] and LABELS[row][token]) or token }
+    end
     return out
 end
 
@@ -144,13 +159,10 @@ end
 function W.Values(row, when)
     if row == "content" then
         local out = {}
-        for i, v in ipairs(CONTENT) do out[i] = { value = v, text = NS.PadRender.CONTENT[v] or v } end
+        for i, v in ipairs(NS.Resolver.TOKENS.content) do out[i] = { value = v, text = NS.PadRender.CONTENT[v] or v } end
         return out
     end
-    if row == "difficulty" then return pairsToValues(DIFFICULTY) end
-    if row == "group" then return pairsToValues(GROUP) end
-    if row == "leadership" then return pairsToValues(LEADERSHIP) end
-    if row == "role" then return pairsToValues(ROLE) end
+    if NS.Resolver.TOKENS[row] then return tokenValues(row) end
     if row == "class" then
         local out = {}
         for i, cf in ipairs(NS.GameIds.CLASSES) do out[i] = { value = cf, text = NS.Compat.ClassName(cf) or cf } end
@@ -331,12 +343,19 @@ local function byName(text, candidates, nameFn)
     return nil, "notFound"
 end
 
+-- A typed id: a positive whole number, never a fraction or a negative (which can never match).
+local function wholeId(text)
+    local n = tonumber((text or ""):match("^%s*(%d+)%s*$"))
+    if n and n > 0 then return n end
+    return nil
+end
+
 local function idKind(nameFn, noun, plural)
     return {
         noun = noun, plural = plural,
         info = function(id) return nameFn(id), nil end,
         resolve = function(text, candidates)
-            local n = tonumber(text)
+            local n = wholeId(text)
             if n then return n, nameFn(n) end
             return byName(text, candidates, nameFn)
         end,
@@ -386,6 +405,55 @@ local function here(row)
     return nil
 end
 
+local NOT_HERE = {
+    instances = L["You are not in an instance."],
+    battleground = L["You are not in a battleground."],
+    characters = L["Your character is not known yet."],
+}
+
+--- "Add the instance you are in" (and its battleground and character twins): the one the player is
+--- in at the click, read then, not when the tab was drawn. Out of one, a line says so.
+--- @return boolean stored
+function W.AddHere(gid, row)
+    local now = here(row)
+    if now == nil then
+        NS.Print(NOT_HERE[row])
+        return false
+    end
+    return W.Write(gid, W.Toggle(fresh(gid), row, now, true))
+end
+
+--- One value typed for When row `row` on the command line, as the value the row stores
+--- (localization-§4: ids and tokens, never a name): a token matched without regard to case; an
+--- instance or battleground by its id or its listed name; a specialization by its id; a character
+--- as Name-Realm. Nil and the reason for a value the row can never match.
+--- @return any|nil value, string|nil reason
+function W.ResolveValue(row, text)
+    text = (text or ""):match("^%s*(.-)%s*$")
+    if row == "characters" then
+        local id = W.CharacterId(text, NS.Situation.Current())
+        if id then return id end
+        return nil, L["A character is Name-Realm, or a name on your realm."]
+    end
+    if KIND[row] then
+        local kind = KIND[row]()
+        local id = kind.resolve(text, CANDIDATES[row])
+        if id ~= nil then return id end
+        return nil, L["%s does not take %s. It takes an id, or a listed name."]:format(NS.Resolver.LABEL[row] or row, text)
+    end
+    if row == "spec" then
+        local n = wholeId(text)
+        if n then return n end
+        return nil, L["%s does not take %s. It takes: %s."]:format(NS.Resolver.LABEL[row], text, L["a specialization id (a whole number)"])
+    end
+    local list = row == "class" and NS.GameIds.CLASSES or NS.Resolver.TOKENS[row] or {}
+    local want = text:lower()
+    for _, token in ipairs(list) do
+        if token:lower() == want then return token end
+    end
+    return nil, L["%s does not take %s. It takes: %s."]:format(NS.Resolver.LABEL[row] or row, text, table.concat(list, ", "))
+end
+
 local function renderIdRow(ctx, gid, row)
     local h = H()
     h.IdList(ctx, {
@@ -404,11 +472,9 @@ local function renderIdRow(ctx, gid, row)
         onAdd = function(id) W.Write(gid, W.Toggle(fresh(gid), row, id, true)) end,
         onRemove = function(id) W.Write(gid, W.Toggle(fresh(gid), row, id, false)) end,
     })
-    local now = here(row)
-    if now ~= nil then
-        h.InlineButtonPair(ctx, { text = ADD[row][3], tooltip = ADD[row][2],
-            onClick = function() W.Write(gid, W.Toggle(fresh(gid), row, now, true)) end }, nil)
-    end
+    -- Always drawn, and read at the click (W.AddHere): a zone change does not redraw the tab.
+    h.InlineButtonPair(ctx, { text = ADD[row][3], tooltip = ADD[row][2],
+        onClick = function() W.AddHere(gid, row) end }, nil)
 end
 
 local function renderRow(ctx, gid, row)

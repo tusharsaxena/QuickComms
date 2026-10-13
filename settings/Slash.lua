@@ -87,7 +87,12 @@ end
 -- hand every other row back to it:
 --   pad.point       `x y` (keeps the pad's anchor points) or `POINT RELATIVEPOINT x y`
 --   group.when      `<condition> <value>[,<value>...]` replaces that one condition; the condition
---                   alone clears it; keyLevel takes `min-max`, either end empty, or one level
+--                   alone clears it; keyLevel takes `min-max`, either end empty, or one level.
+--                   Several conditions go in one line separated by `;`, which is also how `get`
+--                   prints them, so a printed When types back in. A value is matched to the token
+--                   the condition takes without regard to case (`role tank` is TANK); an instance or
+--                   battleground by its id or listed name; a value it can never match is refused
+--                   with what it takes (settings/Groups_When.lua W.ResolveValue)
 --   builtin.hidden  callout ids, or `none`
 -- A row is written to the member Settings.EditingId addresses, as every member row is. A member row
 -- with no member to address prints "(nothing to edit)" instead of nil.
@@ -110,38 +115,74 @@ local function parsePoint(text)
     return { base[1], base[2], x, y }
 end
 
+-- The condition a typed name is, without regard to case.
 local function knownCondition(name)
+    local want = (name or ""):lower()
     for _, row in ipairs(NS.Resolver.ROWS) do
-        if row == name then return true end
+        if row:lower() == want then return row end
     end
-    return false
+    return nil
 end
 
--- `min-max`, `min-`, `-max` or one level.
+-- `min-max`, `min-`, `-max` or one level; `..` and `any` (the older printed form) read too.
 local function parseKeyLevel(text)
-    local lo, dash, hi = text:match("^(%d*)%s*(%-?)%s*(%d*)$")
+    text = text:lower():gsub("%s*%.%.%s*", "-"):gsub("any", "")
+    local lo, dash, hi = text:match("^%s*(%d*)%s*(%-?)%s*(%d*)%s*$")
     if not lo or (lo == "" and hi == "") or (dash == "" and hi ~= "") then return nil end
     if dash == "" then hi = lo end
     return { min = tonumber(lo), max = tonumber(hi) }
 end
 
-local function parseWhen(text)
-    local name, rest = (text or ""):match("^%s*(%S+)%s*(.-)%s*$")
-    if not (name and knownCondition(name)) then
+-- The values typed for one condition. An instance or battleground name may hold spaces, so those
+-- two split on commas only.
+local function valuesOf(row, rest)
+    if row == "instances" or row == "battleground" then
+        local out = {}
+        for v in rest:gmatch("[^,]+") do
+            v = trim(v)
+            if v ~= "" then out[#out + 1] = v end
+        end
+        return out
+    end
+    return wordsOf(rest)
+end
+
+-- One `<condition> <values>` (or `<condition>=<values>`) into `when`; nil and a reason on a refusal.
+local function parseCondition(when, text)
+    local typed, rest = text:match("^%s*([%a]+)%s*=?%s*(.-)%s*$")
+    local row = knownCondition(typed)
+    if not row then
         return nil, L["Name a condition: %s."]:format(table.concat(NS.Resolver.ROWS, ", "))
     end
-    local current = NS.SchemaRuntime.Get("group.when")
-    local when = {}
-    for k, v in pairs(type(current) == "table" and current or {}) do when[k] = v end
     if rest == "" then
-        when[name] = nil
-    elseif name == "keyLevel" then
+        when[row] = nil
+    elseif row == "keyLevel" then
         when.keyLevel = parseKeyLevel(rest)
         if not when.keyLevel then return nil, L["A key level is `min-max`; either end may be empty."] end
     else
+        local W = QC.Settings.GroupsWhen
         local set = {}
-        for _, v in ipairs(wordsOf(rest)) do set[tonumber(v) or v] = true end
-        when[name] = set
+        for _, typedValue in ipairs(valuesOf(row, rest)) do
+            local value, why = W.ResolveValue(row, typedValue)
+            if value == nil then return nil, why end
+            set[value] = true
+        end
+        when[row] = set
+    end
+    return when
+end
+
+local function parseWhen(text)
+    text = trim(text)
+    if text:lower() == L["always"]:lower() then return {} end
+    local current = NS.SchemaRuntime.Get("group.when")
+    local when = {}
+    for k, v in pairs(type(current) == "table" and current or {}) do when[k] = v end
+    for part in (text .. ";"):gmatch("([^;]*);") do
+        if trim(part) ~= "" or text == "" then
+            local ok, why = parseCondition(when, part)
+            if not ok then return nil, why end
+        end
     end
     return when
 end
@@ -165,15 +206,18 @@ local function sortedKeys(set)
     return keys
 end
 
+-- Printed in parseWhen's own syntax, `content mythicPlus,raid; keyLevel 10-`, so a printed When
+-- types back in.
 local function formatWhen(when)
     local parts = {}
     for _, row in ipairs(NS.Resolver.ROWS) do
         local v = type(when) == "table" and when[row] or nil
         if row == "keyLevel" and type(v) == "table" and (v.min or v.max) then
-            parts[#parts + 1] = ("keyLevel=%s..%s"):format(v.min and tostring(v.min) or L["any"],
-                v.max and tostring(v.max) or L["any"])
+            local range = (v.min and v.min == v.max) and tostring(v.min)
+                or ((v.min and tostring(v.min) or "") .. "-" .. (v.max and tostring(v.max) or ""))
+            parts[#parts + 1] = "keyLevel " .. range
         elseif row ~= "keyLevel" and type(v) == "table" and next(v) then
-            parts[#parts + 1] = row .. "=" .. table.concat(sortedKeys(v), ",")
+            parts[#parts + 1] = row .. " " .. table.concat(sortedKeys(v), ",")
         end
     end
     if #parts == 0 then return L["always"] end

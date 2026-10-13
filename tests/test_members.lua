@@ -184,7 +184,7 @@ test("members: the structured rows are typed and printed on the CLI through the 
     NS.addon:OnSlashCommand("get group.when")
     local text = table.concat(m.prints, "\n")
     -- red under: drop `format` from the descriptor (a table address prints)
-    assertTrue(text:find("content=mythicPlus,raid; keyLevel=10..any", 1, true) ~= nil, text)
+    assertTrue(text:find("content mythicPlus,raid; keyLevel 10-", 1, true) ~= nil, text)
     NS.addon:OnSlashCommand("set group.when content")
     assertNil(NS.db.profile.groups[gid].when.content, "the condition alone clears it")
     m.prints = {}
@@ -249,4 +249,55 @@ test("members: [fix 1] pad.point refuses an unknown anchor name or a non-finite 
     assertEqual(table.concat(NS.db.profile.pads.p1.point, ","), "TOPLEFT,TOPLEFT,5,-5", "refused: a NaN offset")
     NS.addon:OnSlashCommand("set pad.point 0 inf")
     assertEqual(table.concat(NS.db.profile.pads.p1.point, ","), "TOPLEFT,TOPLEFT,5,-5", "refused: an infinite offset")
+end)
+
+test("members: [final 2, 11] the CLI maps When values onto their tokens, and refuses one a row never matches", function()
+    local NS, m = T.enableAddon()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    NS.State.editing.group = gid
+    -- red under: parseWhen stores each word as typed (role=tank never matches TANK)
+    NS.addon:OnSlashCommand("set group.when role tank")
+    assertTrue(NS.db.profile.groups[gid].when.role.TANK)
+    NS.addon:OnSlashCommand("set group.when class warrior, mage")
+    assertTrue(NS.db.profile.groups[gid].when.class.WARRIOR and NS.db.profile.groups[gid].when.class.MAGE)
+    NS.addon:OnSlashCommand("set group.when instances 2526")
+    assertTrue(NS.db.profile.groups[gid].when.instances[2526])
+    for _, typed in ipairs({ "instances Ara-Kara", "difficulty 16", "spec abc", "content mplus", "role tonk" }) do
+        m.prints = {}
+        NS.addon:OnSlashCommand("set group.when " .. typed)
+        local text = table.concat(m.prints, "\n")
+        assertTrue(text:find("does not take", 1, true) ~= nil, typed .. ": " .. text)
+    end
+    local when = NS.db.profile.groups[gid].when
+    assertNil(when.difficulty, "refused: nothing stored")
+    assertNil(when.spec)
+    assertNil(when.content)
+    assertTrue(when.instances[2526] and when.role.TANK, "the rest is kept")
+    -- the seam refuses one from any writer, with the reason
+    local ok, _, why = NS.SchemaRuntime.Set("group.when", { role = { tank = true } }, gid)
+    assertFalse(ok)
+    assertTrue(tostring(why):find("Role does not take tank", 1, true) ~= nil, tostring(why))
+end)
+
+test("members: [final 7] what `get group.when` prints types back in", function()
+    local NS, m = T.enableAddon()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    NS.State.editing.group = gid
+    NS.addon:OnSlashCommand("set group.when content mythicPlus,raid; role TANK; keyLevel 10-")
+    local stored = NS.db.profile.groups[gid].when
+    assertTrue(stored.content.raid and stored.role.TANK and stored.keyLevel.min == 10)
+    m.prints = {}
+    NS.addon:OnSlashCommand("get group.when")
+    local printed = table.concat(m.prints, "\n"):match("group%.when|r = |cFFFFFFFF(.-)|r") or ""
+    assertEqual(printed, "content mythicPlus,raid; keyLevel 10-; role TANK")
+    NS.addon:OnSlashCommand("set group.when always")
+    assertTrue(next(NS.db.profile.groups[gid].when) == nil, "always: no condition")
+    -- red under: formatWhen prints `row=values; keyLevel=10..any`, which parseWhen refuses
+    NS.addon:OnSlashCommand("set group.when " .. printed)
+    local again = NS.db.profile.groups[gid].when
+    assertTrue(again.content.mythicPlus and again.content.raid and again.role.TANK)
+    assertEqual(again.keyLevel.min, 10)
+    assertNil(again.keyLevel.max)
+    NS.addon:OnSlashCommand("set group.when keyLevel=12..any")
+    assertEqual(NS.db.profile.groups[gid].when.keyLevel.min, 12, "the older printed form reads too")
 end)

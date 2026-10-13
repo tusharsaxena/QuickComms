@@ -235,3 +235,14 @@ test("preview: [phase 3] the Preview as row and `/qc preview` drive the same swi
     NS.addon:OnSlashCommand("preview nope")
     assertTrue(m.prints[1]:find("No situation named nope", 1, true) ~= nil, m.prints[1])
 end)
+
+test("preview: [final 13] `/qc preview` reads the situation's name without regard to case", function()
+    local NS, m = live()
+    -- red under: FindPreset on the key as typed (Arena is not arena)
+    NS.addon:OnSlashCommand("preview Arena")
+    assertEqual(NS.Preview.PreviewAs(), "arena")
+    m.prints = {}
+    NS.addon:OnSlashCommand("preview OFF")
+    assertTrue(NS.Preview.PreviewAs() == nil)
+    assertTrue(m.prints[#m.prints]:find("Preview off.", 1, true) ~= nil, m.prints[#m.prints])
+end)

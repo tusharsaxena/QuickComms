@@ -414,6 +414,10 @@ L["Built-in"] = "Built-in"
 L["Show this built-in set wherever it matches. Off keeps it, and its place on every pad."] = "Show this built-in set wherever it matches. Off keeps it, and its place on every pad."
 L["Hidden callouts"] = "Hidden callouts"
 L["The set's callouts that no pad shows."] = "The set's callouts that no pad shows."
+L["an instance id (a whole number)"] = "an instance id (a whole number)"
+L["a specialization id (a whole number)"] = "a specialization id (a whole number)"
+L["Name-Realm"] = "Name-Realm"
+L["%s does not take %s. It takes: %s."] = "%s does not take %s. It takes: %s."
 
 -- Member rows on the command line (settings/Slash.lua)
 L["A position is `x y` or `POINT RELATIVEPOINT x y`."] = "A position is `x y` or `POINT RELATIVEPOINT x y`."
@@ -538,6 +542,11 @@ L["Add this character"] = "Add this character"
 L["None yet."] = "None yet."
 L["No groups yet. Click New group to make one."] = "No groups yet. Click New group to make one."
 L["A built-in set's conditions are fixed. Customize it to change them."] = "A built-in set's conditions are fixed. Customize it to change them."
+L["You are not in an instance."] = "You are not in an instance."
+L["You are not in a battleground."] = "You are not in a battleground."
+L["Your character is not known yet."] = "Your character is not known yet."
+L["A character is Name-Realm, or a name on your realm."] = "A character is Name-Realm, or a name on your realm."
+L["%s does not take %s. It takes an id, or a listed name."] = "%s does not take %s. It takes an id, or a listed name."
 
 -- Groups page (settings/Groups.lua)
 L["New group"] = "New group"

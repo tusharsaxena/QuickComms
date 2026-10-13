@@ -234,3 +234,53 @@ test("groups page: [final 12] Duplicate says the copy is on no pad yet", functio
     P.find(w, "Button", "Duplicate"):__fire("OnClick")
     assertTrue(table.concat(m.prints, "\n"):find("the copy is on no pad yet", 1, true) ~= nil)
 end)
+
+local DUNGEON = { inInstance = true, instanceType = "party", difficultyID = 2, instanceID = 2526, inGroup = true }
+
+test("groups page: [final 20] the Instances row adds a typed id, removes one, and refuses a fraction or a negative", function()
+    local NS, _, P = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    pick(NS, gid)
+    local w = P.tab("groups", "When")
+    P.find(w, "CheckBox", "Instance"):__fire("OnValueChanged", true)
+    P.flush()
+    w = P.tab("groups", "When")
+    local box = P.find(w, "EditBox", "Add an instance")
+    assertTrue(box ~= nil)
+    -- red under: an IdList onAdd that writes nothing
+    box:__fire("OnEnterPressed", "2526")
+    assertTrue(NS.db.profile.groups[gid].when.instances[2526])
+    for _, typed in ipairs({ "1.5", "-3" }) do
+        w = P.tab("groups", "When")
+        P.find(w, "EditBox", "Add an instance"):__fire("OnEnterPressed", typed)
+    end
+    -- red under: idKind.resolve takes any tonumber (1.5 and -3 are stored and never match)
+    assertNil(NS.db.profile.groups[gid].when.instances[1.5])
+    assertNil(NS.db.profile.groups[gid].when.instances[-3])
+    w = P.tab("groups", "When")
+    local remove = P.find(w, "Button", "Remove")
+    assertTrue(remove ~= nil, "each entry has Remove")
+    -- red under: an IdList onRemove that writes nothing
+    remove:__fire("OnClick")
+    assertNil(NS.db.profile.groups[gid].when.instances, "the emptied row is dropped")
+end)
+
+test("groups page: [final 18] Add the instance you are in reads the instance at the click, not at the draw", function()
+    local NS, m, P = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    pick(NS, gid)
+    NS.State.whenOpen[gid] = { instances = true }
+    local w = P.tab("groups", "When")
+    local here = P.find(w, "Button", "Add the instance you are in")
+    -- red under: draw the button only when the player is in an instance as the tab is drawn
+    assertTrue(here ~= nil, "drawn in the open world too")
+    m.prints = {}
+    here:__fire("OnClick")
+    assertTrue(table.concat(m.prints, "\n"):find("You are not in an instance.", 1, true) ~= nil)
+    assertNil(NS.db.profile.groups[gid].when.instances)
+    NS.Situation.ReadInputs = function() return DUNGEON end
+    NS.Situation.RefreshNow("test")
+    -- red under: capture the instance when the tab is drawn (the button adds nothing, or the old one)
+    here:__fire("OnClick")
+    assertTrue(NS.db.profile.groups[gid].when.instances[2526])
+end)

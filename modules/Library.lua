@@ -260,26 +260,43 @@ local function validRange(v)
     return true
 end
 
--- Any other When row: a set of ids or tokens, each mapped to true.
-local function validSet(v)
+local ID_ROWS = { instances = true, battleground = true, spec = true }
+
+--- Whether `key` is a value the When row `row` can ever match (localization-§4: ids and tokens,
+--- never a name): a token the row lists (NS.Resolver.TOKENS; the class row, NS.GameIds.CLASSES), a
+--- positive whole id (instances, battlegrounds, specializations), or a Name-Realm (characters).
+function Lib.ValidWhenValue(row, key)
+    if ID_ROWS[row] then return type(key) == "number" and key > 0 and key == math.floor(key) end
+    if row == "characters" then return type(key) == "string" and key:match("^[^%s%-]+%-%S+$") ~= nil end
+    local list = row == "class" and NS.GameIds.CLASSES or NS.Resolver.TOKENS[row]
+    for _, token in ipairs(list or {}) do
+        if token == key then return true end
+    end
+    return false
+end
+
+-- Any other When row: a set of ids or tokens, each mapped to true, each one the row can match.
+local function validSet(row, v)
     for key, on in pairs(v) do
         if on ~= true or (type(key) ~= "string" and type(key) ~= "number") then return false, "badWhen" end
+        if not Lib.ValidWhenValue(row, key) then return false, "badValue", key end
     end
     return true
 end
 
---- Whether `w` is a When (spec §5.3): rows the Resolver knows, each a set of ids or tokens mapped to
---- true, and keyLevel a { min, max } range whose lowest is not above its highest.
---- @return boolean ok, string|nil reason ("badWhen" | "badRange")
+--- Whether `w` is a When (spec §5.3): rows the Resolver knows, each a set of values the row can
+--- match (Lib.ValidWhenValue) mapped to true, and keyLevel a { min, max } range whose lowest is not
+--- above its highest. A refused value answers its row and the value too.
+--- @return boolean ok, string|nil reason ("badWhen" | "badRange" | "badValue"), string|nil row, any value
 function Lib.ValidWhen(w)
     if type(w) ~= "table" then return false, "badWhen" end
     local known = {}
     for _, row in ipairs(NS.Resolver.ROWS) do known[row] = true end
     for row, v in pairs(w) do
         if not known[row] or type(v) ~= "table" then return false, "badWhen" end
-        local ok, why
-        if row == "keyLevel" then ok, why = validRange(v) else ok, why = validSet(v) end
-        if not ok then return false, why end
+        local ok, why, value
+        if row == "keyLevel" then ok, why = validRange(v) else ok, why, value = validSet(row, v) end
+        if not ok then return false, why, row, value end
     end
     return true
 end

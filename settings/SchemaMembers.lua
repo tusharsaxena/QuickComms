@@ -78,6 +78,26 @@ end
 
 local function isText(v) return type(v) == "string", "badText" end
 
+-- What a When row takes, for the refusal of a value it can never match (localization-§4).
+local function whenTakes(row)
+    if row == "instances" or row == "battleground" then return L["an instance id (a whole number)"] end
+    if row == "spec" then return L["a specialization id (a whole number)"] end
+    if row == "characters" then return L["Name-Realm"] end
+    local list = row == "class" and NS.GameIds.CLASSES or NS.Resolver.TOKENS[row] or {}
+    return table.concat(list, ", ")
+end
+
+-- group.when: Library.ValidWhen, with a value the row can never match named, and what it takes.
+local function validWhen(v)
+    local ok, code, row, value = Lib.ValidWhen(v)
+    if ok then return true end
+    if code == "badValue" then
+        return false, L["%s does not take %s. It takes: %s."]:format(NS.Resolver.LABEL[row] or tostring(row),
+            tostring(value), whenTakes(row))
+    end
+    return false, code
+end
+
 local CHANNEL_LABEL = {
     smartGroup = L["Smart group (instance, raid or party)"],
     smartLead = L["Smart lead (raid warning when you can)"],
@@ -140,7 +160,7 @@ local ROWS = {
     { path = "group.when", instance = "group", type = "when",
       page = "groups", group = L["When"], label = L["When"],
       desc = L["The conditions under which this group is active. Every condition you turn on must match; within a condition, any value may."],
-      validate = userGroup(Lib.ValidWhen) },
+      validate = userGroup(validWhen) },
 
     -- Comms Pad page (spec §10.2, §10.3, §13.1).
     { path = "pad.name", instance = "pad", type = "string", dialogControl = "EditBox", maxLetters = Lib.NAME_MAX,

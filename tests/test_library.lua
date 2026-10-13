@@ -565,3 +565,25 @@ test("library: [final 1] one Customize click rebuilds the pads once", function()
     NS.Surfaces.ApplyAll = apply
     assertEqual(applied, 2, "one rebuild per Customize")
 end)
+
+test("library: [final 2] ValidWhen refuses a value its row can never match, and names the row and value", function()
+    local _, Lib = boot()
+    -- red under: Lib.ValidWhen checks only that each key is a string or a number
+    local ok, why, row, value = Lib.ValidWhen({ role = { tank = true } })
+    assertFalse(ok)
+    assertEqual(why, "badValue")
+    assertEqual(row, "role")
+    assertEqual(value, "tank")
+    assertFalse(Lib.ValidWhen({ instances = { ["Ara-Kara"] = true } }), "a name, not an instanceID")
+    assertFalse(Lib.ValidWhen({ instances = { [1.5] = true } }), "a fraction")
+    assertFalse(Lib.ValidWhen({ battleground = { [-3] = true } }), "a negative id")
+    assertFalse(Lib.ValidWhen({ class = { warrior = true } }), "a classFile is upper case")
+    assertFalse(Lib.ValidWhen({ difficulty = { [16] = true } }), "a difficulty is a token")
+    assertFalse(Lib.ValidWhen({ content = { mplus = true } }))
+    assertFalse(Lib.ValidWhen({ spec = { abc = true } }))
+    assertFalse(Lib.ValidWhen({ characters = { bob = true } }), "a character is Name-Realm")
+    assertTrue(Lib.ValidWhen({ role = { TANK = true }, class = { WARRIOR = true }, spec = { [71] = true },
+        difficulty = { mythic = true }, group = { instance = true }, leadership = { assist = true },
+        instances = { [2526] = true }, battleground = { [2107] = true }, characters = { ["Bob-Area52"] = true },
+        content = { housing = true } }))
+end)

@@ -73,6 +73,7 @@ function V.PreviewLines(rest)
         for _, e in ipairs(P.Presets()) do out[#out + 1] = L["  %s: %s"]:format(e.key, e.label) end
         return out
     end
+    key = key:lower()   -- as the dispatcher reads verbs; every preset key is lower case
     if key == "off" then key = P.CURRENT end
     if not P.FindPreset(key) then
         return { L["No situation named %s. Type /qc preview for the list."]:format(key) }
