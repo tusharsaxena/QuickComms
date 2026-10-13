@@ -69,7 +69,9 @@ test("diagnostics: the surfaces and send sections name the pads, the armed chips
     NS.Situation.RefreshNow("test")
     local text = report(NS)
     assertTrue(text:find("p1 active=bi.mplus stale=false", 1, true) ~= nil, text)
-    assertTrue(text:find("buttons=8 armed=8", 1, true) ~= nil, text)
+    -- the pad's 8 chips, and the default dial's 11 wedges: 1 group wedge, then 8 callouts on three
+    -- pages of 4 (two More wedges), so 16 armed
+    assertTrue(text:find("buttons=19 armed=16", 1, true) ~= nil, text)
     assertTrue(text:find("p1:bi.mplus.pull /p Pulling next pack", 1, true) ~= nil, text)
     assertTrue(text:find("pending -", 1, true) ~= nil, "no queued keys")
     assertTrue(text:find("window=1", 1, true) ~= nil, "the guard")

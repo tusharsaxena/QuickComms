@@ -362,15 +362,16 @@ function Pad.ToggleCollapsed(id)
     return Pad.Apply(id, inst.plan)
 end
 
---- Master controls' Reset position (spec §10.4): every pad back to its default anchor.
-function Pad.ResetPositions()
+--- The pads' half of Master controls' Reset position (spec §10.4): every pad back to its default
+--- anchor. `quiet`: Surfaces.ResetPositions prints one line for pads and dials together.
+function Pad.ResetPositions(quiet)
     local p = NS.db and NS.db.profile
     if not p then return end
     for id in pairs(p.pads) do NS.Library.SetSurfacePoint("pad", id, nil) end
     NS.SendEngine.RunOrQueue("positions", function()
         for _, inst in pairs(pads) do applyPoint(inst) end
     end)
-    NS.Print(L["Pad positions reset."])
+    if not quiet then NS.Print(L["Pad positions reset."]) end
 end
 
 -- ── reads ───────────────────────────────────────────────────────────────────────────────────

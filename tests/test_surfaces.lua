@@ -176,14 +176,14 @@ test("surfaces: ACTIVE_GROUPS_CHANGED is sent once per real change of a pad's ac
     assertEqual(#heard, 0, "a library write that moves no group")
     NS.Situation.ReadInputs = function() return AB end
     NS.Situation.RefreshNow("test")
-    assertEqual(table.concat(heard, ","), "p1")
+    assertEqual(table.concat(heard, ","), "p1,d2", "the pad, then the dial")
     NS.Surfaces.Request("again")
     NS.Surfaces.Request("and again")
     -- red under: drop the `sig ~= State.surfaceOrder[id]` check in S.ApplyAll
-    assertEqual(table.concat(heard, ","), "p1", "a rebuild with the same groups sends nothing")
+    assertEqual(table.concat(heard, ","), "p1,d2", "a rebuild with the same groups sends nothing")
     NS.Situation.ReadInputs = function() return MPLUS end
     NS.Situation.RefreshNow("test")
-    assertEqual(table.concat(heard, ","), "p1,p1", "back to M+ is a second real change")
+    assertEqual(table.concat(heard, ","), "p1,d2,p1,d2", "back to M+ is a second real change")
 end)
 
 test("surfaces: [review 1] a situation change in combat queues: nothing blocked, stale shows, combat end rebuilds", function()
@@ -198,12 +198,12 @@ test("surfaces: [review 1] a situation change in combat queues: nothing blocked,
     assertEqual(#m.blocked, 0)
     assertEqual(chip:GetAttribute("macrotext"), "/p Pulling next pack", "frozen in combat")
     assertTrue(staleShown(NS))
-    assertEqual(table.concat(rebuilt, ","), "p1:true")
+    assertEqual(table.concat(rebuilt, ","), "p1:true,d2:true")
     combat(m, false)
     -- red under: drop the RunOrQueue in S.Request (the rebuild would run, and be blocked, in combat)
     assertEqual(pull(NS):GetAttribute("macrotext"), "/i Pulling next pack")
     assertFalse(staleShown(NS))
-    assertEqual(table.concat(rebuilt, ","), "p1:true,p1:false")
+    assertEqual(table.concat(rebuilt, ","), "p1:true,d2:true,p1:false,d2:false")
     assertEqual(#m.blocked, 0)
 end)
 

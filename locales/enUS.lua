@@ -633,3 +633,8 @@ L["No dial to edit: make one on the Comms Dial page."] = "No dial to edit: make 
 -- The Comms Dial's paint (modules/Dial_Render.lua)
 L["Click to open."] = "Click to open."
 L["Click for the next page. The mouse wheel turns pages too."] = "Click for the next page. The mouse wheel turns pages too."
+
+-- The Comms Dial's plans and rebuild (modules/Surfaces.lua)
+L["This dial has not been built yet."] = "This dial has not been built yet."
+L["Test mode: placeholder wedges that send nothing."] = "Test mode: placeholder wedges that send nothing."
+L["Pad and dial positions reset."] = "Pad and dial positions reset."

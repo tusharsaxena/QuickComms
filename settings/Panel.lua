@@ -5,7 +5,7 @@ local addonName, NS = ...
 -- draws no tab strip (options-ui-§5/§13). The General page renders through the tabbed renderer, its
 -- first tab `Master controls`, composed from one declaration with the canonical rows in canonical
 -- order (options-ui-§15). The Comms Pad is positionable, so the block is the full framed set: General
--- visibility, Master scale and alpha, Lock frame, Test mode and Reset position (design spec
+-- visibility, Master scale and alpha, Lock frame, Test mode and Reset position (every pad and dial, design spec
 -- §10.3/§10.4). The design's other pages and the
 -- General page's Behavior tab (spec §13.1) are added by the settings tasks.
 
@@ -52,8 +52,8 @@ local MASTER_ROWS, MASTER_TAIL = Helpers.MasterControls{
         enabled = C.PROFILE.enabled, visibility = C.PROFILE.visibility, scale = C.PROFILE.scale,
         alpha = C.PROFILE.alpha, locked = C.PROFILE.locked, debugConsole = false, testMode = false,
     },
-    -- Reset position resets every pad's anchor (spec §10.4); the dials join it in phase 4.
-    onResetPosition  = function() if NS.Pad and NS.Pad.ResetPositions then NS.Pad.ResetPositions() end end,
+    -- Reset position resets every pad and dial anchor (spec §10.4).
+    onResetPosition  = function() if NS.Surfaces and NS.Surfaces.ResetPositions then NS.Surfaces.ResetPositions() end end,
     onResetAll       = showResetPopup,
 }
 
