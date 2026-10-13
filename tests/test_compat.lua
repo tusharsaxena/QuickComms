@@ -132,3 +132,32 @@ test("compat: [phase 3] SpecInfoByID and ClassName read display names; secret or
     assertNil((NS.Compat.SpecInfoByID(265)))
     assertNil(NS.Compat.ClassName("WARLOCK"))
 end)
+
+test("compat: [phase 4] BindingAction reads the player's WoW binding; none, a secret or a missing API is nil", function()
+    local NS, m = T.newAddon()
+    m.bindingActions.G = "MOVEFORWARD"
+    assertEqual(NS.Compat.BindingAction("G"), "MOVEFORWARD")
+    T.assertNil(NS.Compat.BindingAction("H"))
+    m.issecretvalue = T.isSecret
+    m.bindingActions.G = T.secret("MOVEFORWARD")
+    T.assertNil(NS.Compat.BindingAction("G"))
+    m.GetBindingAction = nil
+    T.assertNil(NS.Compat.BindingAction("G"))
+end)
+
+test("compat: [final 7] BindingLabel reads the menu's name for an action; [final 8] BindingKey a command's key; secrets are nil", function()
+    local NS, m = T.newAddon()
+    m.BINDING_NAME_MOVEFORWARD = "Move Forward"
+    assertEqual(NS.Compat.BindingLabel("MOVEFORWARD"), "Move Forward")
+    T.assertNil(NS.Compat.BindingLabel("NOPE"))
+    m.bindingKeys["CLICK QuickCommsDial1:Toggle"] = "F"
+    assertEqual(NS.Compat.BindingKey("CLICK QuickCommsDial1:Toggle"), "F")
+    T.assertNil(NS.Compat.BindingKey("CLICK QuickCommsDial2:Toggle"))
+    m.issecretvalue = T.isSecret
+    m.BINDING_NAME_MOVEFORWARD = T.secret("Move Forward")
+    m.bindingKeys["CLICK QuickCommsDial1:Toggle"] = T.secret("F")
+    T.assertNil(NS.Compat.BindingLabel("MOVEFORWARD"))
+    T.assertNil(NS.Compat.BindingKey("CLICK QuickCommsDial1:Toggle"))
+    m.GetBindingKey = nil
+    T.assertNil(NS.Compat.BindingKey("CLICK QuickCommsDial1:Toggle"))
+end)

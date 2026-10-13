@@ -161,7 +161,10 @@ end)
 -- The firewall's patterns: any Secure* template or handler by name, SetAttribute however it is
 -- called, and every binding or state-driver write.
 local FORBIDDEN = { "SetAttribute%s*%(", "[\"']SetAttribute[\"']", "SetOverrideBinding", "ClearOverrideBindings",
-    "RegisterStateDriver%s*%(", "UnregisterStateDriver%s*%(", "Secure%w*Template", "SecureHandler" }
+    "RegisterStateDriver%s*%(", "UnregisterStateDriver%s*%(", "Secure%w*Template", "SecureHandler",
+    -- phase 4: a header's frame refs, wraps and snippet runs (the restricted side's GetFrameRef,
+    -- RunAttribute, SetBindingClick and ClearBindings are not writes and stay allowed)
+    ":SetFrameRef%s*%(", ":WrapScript%s*%(", ":Execute%s*%(" }
 
 test("sendengine: [firewall] no other shipped file makes a secure call (spec §9)", function()
     for _, rel in ipairs(T.loadAddon.tocFiles) do
@@ -185,10 +188,17 @@ test("sendengine: [fix wave] the firewall's patterns catch every Secure* templat
     end
     for _, src in ipairs({ 'CreateFrame("Button", nil, p, "SecureUnitButtonTemplate")',
         'CreateFrame("Frame", nil, p, "SecureFrameTemplate")', "b.SetAttribute (b, 'type', 'macro')",
-        'b["SetAttribute"](b, "type", "macro")', "RegisterStateDriver (f, 'visibility', 'show')" }) do
+        'b["SetAttribute"](b, "type", "macro")', "RegisterStateDriver (f, 'visibility', 'show')",
+        -- phase 4; red under: drop the three header patterns from FORBIDDEN
+        'h:SetFrameRef("ring1", r)', "h:WrapScript (b, 'OnClick', pre, post)", 'h:Execute([[ x = 1 ]])' }) do
         assertTrue(caught(src), src)
     end
     assertFalse(caught("b:GetAttribute('type')"))
+    -- What Dial_Secure's snippets do inside the restricted environment is not a write.
+    for _, src in ipairs({ 'self:GetFrameRef("ring1"):Show()', 'owner:RunAttribute("qc-close")',
+        'self:SetBindingClick(true, "ESCAPE", self, "Close")', "self:ClearBindings()", "SE.SetFrameRef(h, n, f)" }) do
+        assertFalse(caught(src), src)
+    end
 end)
 
 test("sendengine: [D12] nothing calls SendChatMessage: the secure button is the one send path", function()
@@ -349,4 +359,75 @@ test("send: the stand-down cancels the echo timers and forgets the presses", fun
     NS.SchemaRuntime.Set("enabled", false)
     assertEqual(#m.__timers(), 0)
     assertEqual(NS.SendEngine.EchoState().pending, 0)
+end)
+
+-- ── the Comms Dial's secure frames and the override bindings (phase 4) ──────────────────────
+
+test("sendengine: [phase 4] a dial header is a named click handler for the down edge, hidden; none in combat", function()
+    local NS, m = T.enableAddon()
+    local h = NS.SendEngine.NewDialHeader("QuickCommsDialT")
+    assertEqual(h.__template, "SecureHandlerClickTemplate")
+    assertEqual(h:GetName(), "QuickCommsDialT")
+    assertEqual(table.concat(h.__clicks, ","), "AnyDown")
+    assertFalse(h:IsShown())
+    local ring = NS.SendEngine.NewDialRing(h)
+    assertEqual(ring.__template, "SecureFrameTemplate")
+    assertFalse(ring:IsShown())
+    combat(m, true)
+    assertNil(NS.SendEngine.NewDialHeader("QuickCommsDialU"))
+    assertNil(NS.SendEngine.NewDialRing(h))
+    assertEqual(#m.blocked, 0)
+end)
+
+test("sendengine: [phase 4] a wedge is wrapped before it is hooked, acts on the up edge, and only a left click is a press", function()
+    local NS, m = T.enableAddon()
+    local h = NS.SendEngine.NewDialHeader("QuickCommsDialT")
+    local pre = [[ if down or button == "RightButton" then return false end return button ]]
+    -- red under: hook before wrapping in SE.NewButton (the mock's wrap raises: the client discards the hook)
+    local b = NS.SendEngine.NewButton(h, nil, { header = h, pre = pre })
+    assertEqual(b:GetAttribute("useOnKeyDown"), false)
+    NS.SendEngine.Arm(b, "/p Pulling", META)
+    m.__click(b, "RightButton")
+    assertEqual(#m.sentMacros, 0)
+    -- red under: drop the qcLeftOnly check from SE.OnClick (the hook would track a press nothing sent)
+    assertEqual(NS.SendEngine.EchoState().pending, 0)
+    m.__click(b)
+    assertEqual(#m.sentMacros, 1)
+    assertEqual(NS.SendEngine.EchoState().pending, 1)
+end)
+
+test("sendengine: [phase 4] attributes, frame refs and snippets are written out of combat only, never blocked", function()
+    local NS, m = T.enableAddon()
+    local SE = NS.SendEngine
+    local h = SE.NewDialHeader("QuickCommsDialT")
+    local ring = SE.NewDialRing(h)
+    assertTrue(SE.SetAttributes(h, { ["qc-open"] = [[ opened = true ]], ["qc-rings"] = 1 }))
+    assertTrue(SE.SetFrameRef(h, "ring1", ring))
+    assertTrue(SE.RunSnippet(h, "qc-open"))
+    assertTrue(h.__env.opened)
+    combat(m, true)
+    assertFalse(SE.SetAttributes(h, { ["qc-rings"] = 2 }))
+    assertFalse(SE.SetFrameRef(h, "ring2", ring))
+    assertFalse(SE.RunSnippet(h, "qc-open"))
+    assertEqual(h:GetAttribute("qc-rings"), 1)
+    assertEqual(#m.blocked, 0)
+end)
+
+test("sendengine: [phase 4] BindKeys replaces the whole set, out of combat only; ClearKeys empties it", function()
+    local NS, m = T.enableAddon()
+    local SE = NS.SendEngine
+    assertTrue(SE.BindKeys({ { key = "G", name = "QuickCommsDial1", button = "Toggle" } }))
+    assertEqual(m.overrideBindings.G.name, "QuickCommsDial1")
+    assertEqual(m.overrideBindings.G.button, "Toggle")
+    assertTrue(SE.BindKeys({ { key = "H", name = "QuickCommsDial2", button = "Toggle" } }))
+    assertNil(m.overrideBindings.G, "the earlier set is gone")
+    assertEqual(SE.Bindings()[1].key, "H")
+    combat(m, true)
+    assertFalse(SE.BindKeys({}))
+    assertEqual(m.overrideBindings.H.name, "QuickCommsDial2", "kept until combat ends")
+    assertEqual(#m.blocked, 0)
+    combat(m, false)
+    assertTrue(SE.ClearKeys())
+    assertNil(m.overrideBindings.H)
+    assertEqual(#SE.Bindings(), 0)
 end)

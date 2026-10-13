@@ -23,7 +23,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | SEND-1..5 | Send | Secure sends in keys and on bosses, the spam guard |
 | PAD-1..7 | Pad | The Comms Pad |
 | EDIT-1..8 | Editors | The Callouts, Groups, Comms Pad and Share pages, Preview as…, Why is this showing? |
-| DIAL-1..n | Dial | The Comms Dial and its bindings (reserved, phase 4) |
+| DIAL-1..11 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes |
 
 ## Before you start
@@ -211,8 +211,77 @@ Result:
 
 ## Dial
 
-Reserved for the Comms Dial (phase 4): hold, flick and release in a boss, the two-stroke categories,
-the battleground node dial.
+**DIAL-1. Open and close (Relaxed).** Settings → Comms Dial → Binding: click Key, press G → the line
+reads "G opens and closes this dial." Close the settings. In a key (any content with an active group),
+press G → the dial opens in the middle of the screen: a dark disc, wedges with icons and white labels
+outside the disc, the ✕ hub, and a gold pointer that follows the cursor. Press G → it closes. Open it;
+Escape → it closes and the game menu does not open. Open it; right-click a wedge → it closes and nothing
+is sent. Result:
+
+**DIAL-2. A wedge sends in a boss (the phase 4 exit).** On a raid or M+ boss, press G and click a
+callout wedge → the group sees the line, the dial closes, and there is no "action blocked" error or red
+text. With the dial closed, 1 still fires your action bar's first button. Press G again at once → every
+wedge is dimmed for about a second (the spam guard). Result:
+
+**DIAL-3. The Categories two-stroke (the phase 4 exit).** With two groups active (an always-on group of
+your own and M+ in a key): press G → the first ring shows the groups; click one → its callouts; click
+a callout → it is sent. Open again, click a group, click the hub → back to the groups; click the hub
+again → the dial closes. Result:
+
+**DIAL-4. The Arathi Basin node dial (the phase 4 exit).** In Arathi Basin: press G → the dial opens
+straight on the nodes (Stables, Lumber Mill, Blacksmith, More); click Lumber Mill, then INC 3 → instance
+chat shows "INC 3 Lumber Mill": two clicks. Open again; click More → Gold Mine and Farm; the hub goes
+back a page. (If it opens on the group ring instead, check the Groups tab: Arathi Basin must sit above
+Battleground (generic) and every group active there, and the tab's "Three rings deep" warning names the
+cause; a `/reload` after updating runs the migration that moves the generic set. If the dial does not
+show Arathi Basin at all, the instance id may be wrong: run `/qc diagnostics`, copy the `situation`
+section's instanceID into the "Battleground instance IDs seen" table of
+`docs/brainstorm/go-no-go/round-4-build-checks.md`, and file it with this check's ID; phase 5 confirms
+the ids.) Result:
+
+**DIAL-5. Number keys, the wheel and pages.** Wheel → Wedges per ring 4, in a key: open, press 3 → the
+third wedge's callout is sent; open, scroll down → the next page, up → back; the More wedge does the
+same. After the dial closes, 1–8, Escape and the mouse wheel do what they did before. Result:
+
+**DIAL-6. Key bindings and conflicts.** Escape → Options → Keybindings → AddOns → "Ka0s Quick Comms"
+lists Open Comms Dial 1 to 4; bind Open Comms Dial 1 to F → F opens dial 1 like its own key. On the
+Binding tab set the key to TAB → the line warns that TAB is also a WoW binding, and TAB opens the dial;
+`/qc disable` → TAB targets again; `/qc enable` → TAB opens the dial again. New dial → give it TAB →
+refused with "TAB already opens Comms Dial."; give it 3, or the mouse wheel → refused, saying the open
+dial uses them; ALT-3 is taken. Result:
+
+**DIAL-7. Open at the cursor, the dial's place, Reset position.** Wheel → Open at → At the cursor →
+press G away from the middle → the dial opens centered on the cursor, in combat too (unverified: a
+restricted `SetPoint` to `$cursor`). Back to At its place; set Y to 150 → it opens higher; Reset this
+dial's position → the middle again. General → Master controls → Reset position → pads and dials back,
+one chat line. Result:
+
+**DIAL-8. Edits and disable in combat.** In combat: `/qc set dial.key H` → no error, and the hub shows
+"updates after combat" when G opens it; after combat H opens it and G no longer does. In combat with
+the dial open: `/qc disable` → no error, the dial keeps working until combat ends, then it is gone and
+the key is the game's again. Result:
+
+**DIAL-9. Test mode and Preview as.** Out of combat: `/qc test` → dial 1 opens at its place with
+placeholder wedges and TEST MODE above the hub; clicking sends nothing; 1 still fires the action bar.
+Comms Dial → General → Preview as → Arathi Basin → the dial opens on the nodes with PREVIEW; nothing
+sends; Escape closes the settings window (not the dial), which ends the preview and closes the dial.
+Turn test mode on, then pull a target dummy → test mode ends; the dial closes at once or, if combat
+won the race, at combat end, and in between 1–8 and Escape still do what they always do. Result:
+
+**DIAL-10. The hub and the drop flash.** Hover the hub → "Why is this showing?" lists the groups and their matched rows;
+with a Say callout on the dial during an encounter, LOCKDOWN shows above the hub; Behavior → Explain
+why groups show off → no tooltip. `/qc why` lists the dials too; `/qc diagnostics` has `dials` and
+`bindings` sections naming the key. If a wedge's send is ever reported dropped (the [QC] note), reopen the
+dial within 5 s → that wedge shows red. Result:
+
+**DIAL-11. Mouse-button keys, two dials, labels.** Set the dial's key to BUTTON3 (middle mouse): press it
+over the world → the dial opens; press it again with the cursor on a callout wedge → the dial closes
+and nothing is sent; on the hub → it closes. A side button (BUTTON4) click on a wedge also closes
+without sending, and the restricted snippet's other-frame `RunAttribute` raises no error. New dial →
+key H; press G, then H → dial 1 closes and dial 2 opens; press 1 → dial 2's first wedge, never dial
+1's; close it → 1 fires the action bar again. In Preview as Arathi Basin the ring title sits above
+the N wedge's label, and the E and W labels read away from their wedges. With test mode on, close the
+dial with the hub, then change Wedges per ring → it stays closed. Result:
 
 ## Non-English client
 
@@ -235,3 +304,4 @@ section is re-armed by the situation task, whose check replaces this paragraph's
 | INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..2, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet |
 | SEND-1..5, PAD-1..7 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet |
 | EDIT-1..8 | Phase 3: the editors | No client pass recorded yet |
+| DIAL-1..11 | Phase 4: the Comms Dial | No client pass recorded yet |

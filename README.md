@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-503%2F503_passing-green)
+![Tests](https://img.shields.io/badge/Tests-598%2F598_passing-green)
 
 Quick Comms puts your usual group callouts one click or one keypress away. "Kick on me", "Lust
 now", "Inc 2 Lumber Mill": you set them up once, and they sit on a Comms Pad or open from a
@@ -11,7 +11,7 @@ ping-wheel-style Comms Dial. The addon works out where you are, whether that's a
 an arena or a battleground, and shows the callouts that fit. Every message goes out through a secure button, the
 only kind of send Midnight still allows mid-pull, so it keeps working in keys and on bosses.
 
-**Quick Comms is in development.** The Comms Pad works: it shows the built-in callouts for where you are (Mythic+, raid, arena, battlegrounds) and sends them through secure buttons, with a spam guard and a note when the game drops a message. You can now write your own callouts and groups, say when each group shows, arrange your pads and turn the built-in sets on, off or into editable copies. The Comms Dial comes in a later build. The full plan is in the [design spec](docs/superpowers/specs/2026-10-11-quickcomms-v1-design.md).
+**Quick Comms is in development.** The Comms Pad works: it shows the built-in callouts for where you are (Mythic+, raid, arena, battlegrounds) and sends them through secure buttons, with a spam guard and a note when the game drops a message. You can now write your own callouts and groups, say when each group shows, arrange your pads and turn the built-in sets on, off or into editable copies. The Comms Dial works too: give it a key on the Comms Dial page (or in WoW's key bindings menu), press it, and click a wedge to send. In a battleground it opens straight on the map's nodes. The full plan is in the [design spec](docs/superpowers/specs/2026-10-11-quickcomms-v1-design.md).
 
 ## Usage
 
@@ -19,8 +19,7 @@ Enter a key, a raid, an arena or a battleground and the Comms Pad shows the call
 
 Settings → Callouts makes a callout; Groups puts callouts in a group and, on its When tab, says where it shows; Comms Pad arranges a pad. "Preview as…" on the Groups page (or `/qc preview`) shows the pads as they would look in a key, a raid, an arena or a battleground; hover a pad's header (or `/qc why`) to see why each group is there.
 
-Once the dial lands, it opens on a key you choose, and you flick toward a callout and let go to
-send it.
+Settings → Comms Dial → Binding sets the dial's key. Press it to open the dial; click a group to open its callouts, click a callout to send it. The key again, Escape or a right click closes it; the number keys 1 to 8 pick a wedge.
 
 Everything is configured under **Settings → AddOns → Ka0s Quick Comms**, and `/qc help` (or
 `/quickcomms help`) prints the full command list.
@@ -46,7 +45,7 @@ This is the design, in the order it is being built:
 |---|---|
 | Does it send anything on its own? | No. A callout is only ever sent when you press its button or its key. |
 | Why secure buttons? | In Midnight an addon can't send chat by itself during a boss, a Mythic+ key or a PvP match. A button you press can, so that's the one way Quick Comms sends anything. |
-| Can I use it now? | Yes, with the built-in callouts on the Comms Pad. Your own callouts and the dial come later. |
+| Can I use it now? | Yes: the built-in callouts and your own, on the Comms Pad and the Comms Dial. Sharing them as export strings comes later. |
 
 ## Troubleshooting
 

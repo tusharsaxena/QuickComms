@@ -601,3 +601,56 @@ test("library: [final 2] ValidWhen refuses a value its row can never match, and 
         instances = { [2526] = true }, battleground = { [2107] = true }, characters = { ["Bob-Area52"] = true },
         content = { housing = true } }))
 end)
+
+test("library: [phase 4] keys: upper-cased, none is false; what the open dial uses is reserved", function()
+    local _, Lib = boot()
+    assertEqual(Lib.KeyValue(" shift-g "), "SHIFT-G")
+    assertEqual(Lib.KeyValue("none"), false)
+    assertEqual(Lib.KeyValue(""), false)
+    assertTrue(Lib.ValidKey("SHIFT--"), "the minus key with a modifier")
+    assertTrue(Lib.ValidKey(false))
+    T.assertFalse((Lib.ValidKey("ESCAPE")))
+    T.assertFalse((Lib.ValidKey("ALT-BUTTON2")))
+    -- red under: drop MOUSEWHEELUP from RESERVED_KEYS (the open dial turns its pages with it)
+    T.assertFalse((Lib.ValidKey("SHIFT-MOUSEWHEELUP")))
+    -- red under: drop RESERVED_BARE (an open dial's 1-8 pick its wedges)
+    T.assertFalse((Lib.ValidKey("3")))
+    assertTrue(Lib.ValidKey("CTRL-3"), "a modified number is another key")
+    assertTrue(Lib.ValidKey("9"))
+    T.assertFalse((Lib.ValidKey("SHIFT G")))
+end)
+
+test("library: [final 3] a key is one base key with known modifiers, none twice; a bare or dangling modifier is no key", function()
+    local _, Lib = boot()
+    -- red under: take everything before the last '-' on trust in Lib.ValidKey
+    for _, bad in ipairs({ "SHIFT", "shift-", "CTRL-", "FOO-G", "SHIFT-SHIFT-G", "LSHIFT", "ALT-RCTRL", "-G",
+        "CTRL---", "SHIFT--G" }) do
+        local ok, why = Lib.ValidKey(bad)
+        T.assertFalse(ok, bad)
+        assertEqual(why, "badKey", bad)
+    end
+    assertTrue(Lib.ValidKey("-"), "the minus key")
+    assertTrue(Lib.ValidKey("CTRL--"), "the minus key with a modifier")
+    assertTrue(Lib.ValidKey("META-G"))
+    assertTrue(Lib.ValidKey("ALT-CTRL-SHIFT-F1"))
+end)
+
+test("library: [final 4] modifiers are stored in the client's order, ALT-CTRL-SHIFT-META", function()
+    local _, Lib = boot()
+    -- red under: only trim and upper-case in Lib.KeyValue
+    assertEqual(Lib.KeyValue("shift-ctrl-g"), "CTRL-SHIFT-G")
+    assertEqual(Lib.KeyValue("META-SHIFT-ALT-X"), "ALT-SHIFT-META-X")
+    assertEqual(Lib.KeyValue("shift--"), "SHIFT--")
+    assertEqual(Lib.KeyValue("FOO-G"), "FOO-G", "not a key: kept as typed, for ValidKey to refuse")
+end)
+
+test("library: [phase 4] the generic battleground set moves below the per-battleground sets, once", function()
+    local _, Lib = boot()
+    local profile = { pads = { p1 = { groups = { "g1", "bi.bg", "bi.bg.ab", "bi.mplus", "bi.bg.wsg" } } },
+        dials = { d2 = { groups = { "bi.bg.ab", "bi.bg" } } } }
+    assertEqual(Lib.MoveGenericBattlegroundLast(profile), 1)
+    assertEqual(table.concat(profile.pads.p1.groups, ","), "g1,bi.bg.ab,bi.mplus,bi.bg.wsg,bi.bg")
+    assertEqual(table.concat(profile.dials.d2.groups, ","), "bi.bg.ab,bi.bg", "already below: untouched")
+    assertEqual(Lib.MoveGenericBattlegroundLast(profile), 0, "idempotent")
+    assertEqual(Lib.MoveGenericBattlegroundLast({ pads = "junk" }), 0)
+end)

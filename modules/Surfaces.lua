@@ -10,15 +10,20 @@ local _, NS = ...
 -- carry no line, drawn through the same render path (preview-mode). A "Preview as…" plan is a real
 -- plan for the previewed snapshot, marked so every chip is disarmed (spec §13.3).
 --
--- THE EDGE (below): one entry point, Request, for everything that changes what a pad draws: the
--- situation, the library, the profile, test mode, a settings write and the stand-up. Out of combat
--- it rebuilds every enabled pad from the CURRENT snapshot at once; in combat it files one keyed
--- entry ("surfaces") in SendEngine's combat-end queue, shows each pad's stale hint and sends
+-- A Comms Dial's plan (spec §11) is the same resolve and bake in rings: its active groups in its
+-- order, a node set's children as nodes, each slot baked, then modules/Dial_Layout.lua's Rings.
+--
+-- THE EDGE (below): one entry point, Request, for everything that changes what a pad or a dial
+-- draws: the situation, the library, the profile, test mode, a settings write and the stand-up. Out
+-- of combat it rebuilds every enabled pad and dial from the CURRENT snapshot at once (the dials'
+-- rebuild also re-binds their keys); in combat it files one keyed entry ("surfaces") in
+-- SendEngine's combat-end queue, shows each pad's and dial hub's stale hint and sends
 -- SURFACE_REBUILT (id, true); the drain rebuilds from the snapshot as it is THEN, and
 -- COMBAT_QUEUE_DRAINED clears the hints (spec §9.1, §18). A profile switch first drops the old
--- profile's rebuild and positions entries; a held drag's stop stays queued. RESTRICTION_CHANGED only re-reads the locks, the lockdown chip and the fade,
--- which are insecure and change in combat too. The stand-down hands the secure half (hide every
--- pad, disarm every chip) to SendEngine.Teardown, which holds it to combat end if need be.
+-- profile's rebuild and positions entries; a held drag's stop stays queued. RESTRICTION_CHANGED only
+-- re-reads the locks, the lockdown chip and the fade, which are insecure and change in combat too.
+-- The stand-down hands the secure half (hide every pad, release every dial, disarm every send
+-- button, unbind every key) to SendEngine.Teardown, which holds it to combat end if need be.
 
 NS.Surfaces = NS.Surfaces or {}
 local S = NS.Surfaces
@@ -117,20 +122,38 @@ function S.BuildPlan(surfaceId, pad, snap, deps)
     return plan
 end
 
+-- Test mode's placeholder slots for one section or group: they carry no line and send nothing.
+local function testSlots(surfaceId, s)
+    local slots = {}
+    for i = 1, S.TEST_SLOTS do
+        slots[i] = { calloutId = ("test.%d.%d"):format(s, i), surfaceId = surfaceId,
+            name = L["Callout %d"]:format(i), reason = "testMode",
+            concrete = (i % 2 == 1) and "party" or "raid" }
+    end
+    return slots
+end
+
 --- Test mode's plan: placeholder chips that send nothing (spec §10.4).
 function S.TestPlan(surfaceId)
     local sections = {}
     for s = 1, S.TEST_SECTIONS do
-        local slots = {}
-        for i = 1, S.TEST_SLOTS do
-            slots[i] = { calloutId = ("test.%d.%d"):format(s, i), surfaceId = surfaceId,
-                name = L["Callout %d"]:format(i), reason = "testMode",
-                concrete = (i % 2 == 1) and "party" or "raid" }
-        end
-        sections[s] = { groupId = "test." .. s, title = L["Test group %d"]:format(s), slots = slots }
+        sections[s] = { groupId = "test." .. s, title = L["Test group %d"]:format(s), slots = testSlots(surfaceId, s) }
     end
     return { surfaceId = surfaceId, snapshot = {}, order = {}, sections = sections, lockdownChip = false,
         hasActive = true, test = true }
+end
+
+--- Test mode's dial plan: placeholder groups and wedges that send nothing, laid out as the dial's own
+--- (spec §11.4: test mode shows dial 1 open).
+function S.TestDialPlan(surfaceId, dial)
+    dial = type(dial) == "table" and dial or {}
+    local groups = {}
+    for s = 1, S.TEST_SECTIONS do
+        groups[s] = { id = "test." .. s, title = L["Test group %d"]:format(s), slots = testSlots(surfaceId, s) }
+    end
+    local rings, open = NS.DialLayout.Rings(groups, { mode = dial.mode, slices = dial.slices, title = dial.name })
+    return { kind = "dial", surfaceId = surfaceId, snapshot = {}, order = {}, rings = rings, openRing = open,
+        lockdownChip = false, hasActive = true, test = true }
 end
 
 --- A "Preview as…" plan (spec §13.3): drawn like test mode (always shown, the header says so) but from
@@ -138,20 +161,83 @@ end
 --- disarmed by the pad, so a previewed chip sends nothing.
 function S.MarkPreview(plan, key)
     plan.test, plan.preview = true, key
-    for _, sec in ipairs(plan.sections) do
-        for _, slot in ipairs(sec.slots) do slot.preview = true end
-    end
+    S.EachSlot(plan, function(slot) slot.preview = true end)
     return plan
 end
 
---- "Why is this showing?" for one pad (spec §13.3): the groups it shows, in priority order, each with
---- the When rows that matched (Resolver.Explain), then every lock in effect on its chips. Read from
---- the pad's last plan, so in combat it explains what is on screen.
+--- Every slot of a pad's plan (its sections) or a dial's (its rings' callout items).
+function S.EachSlot(plan, fn)
+    for _, sec in ipairs(plan.sections or {}) do
+        for _, slot in ipairs(sec.slots) do fn(slot) end
+    end
+    for _, ring in ipairs(plan.rings or {}) do
+        for _, item in ipairs(ring.items) do
+            if item.slot then fn(item.slot) end
+        end
+    end
+end
+
+--- One dial's plan (spec §11): its active groups in its order (D6), a node set's children as nodes,
+--- each slot baked, then the rings (Dial_Layout.Rings, Categories or Flat, open-into, pages).
+--- @param dial table profile.dials[surfaceId]
+--- @return table plan
+function S.BuildDialPlan(surfaceId, dial, snap, deps)
+    -- deps.unmeasured: an editor's look at a plan (settings/Dials.lua), not a surface's bake.
+    local t0 = Perf.on and not deps.unmeasured and debugprofilestop()
+    dial = type(dial) == "table" and dial or {}
+    local active = NS.Resolver.ActiveGroups(deps.groups, snap)
+    local order = NS.Resolver.SurfaceOrder(dial.groups, active, deps.groups, deps.autoPromote)
+    local opts = { soloFallback = deps.soloFallback, ctx = deps.ctx }
+    local plan = { kind = "dial", surfaceId = surfaceId, snapshot = snap, order = order, active = active,
+        lockdownChip = false, hasActive = #order > 0 }
+    local function slotsOf(ids)
+        local out = {}
+        for _, cid in ipairs(ids or {}) do
+            local slot = S.Slot(cid, deps.callout(cid), snap, opts)
+            slot.surfaceId = surfaceId
+            if slot.lock == "lockdown" then plan.lockdownChip = true end
+            out[#out + 1] = slot
+        end
+        return out
+    end
+    local groups = {}
+    for _, gid in ipairs(order) do
+        local g = deps.group(gid)
+        local entry = { id = gid, title = g.name, icon = g.icon, openInto = g.openInto == true }
+        if type(g.children) == "table" and #g.children > 0 then
+            entry.children = {}
+            for _, child in ipairs(g.children) do
+                local c = deps.group(child)
+                if c then
+                    entry.children[#entry.children + 1] = { id = child, title = c.name, icon = c.icon,
+                        slots = slotsOf(c.callouts) }
+                end
+            end
+        else
+            entry.slots = slotsOf(g.callouts)
+        end
+        groups[#groups + 1] = entry
+    end
+    plan.rings, plan.openRing = NS.DialLayout.Rings(groups, { mode = dial.mode, slices = dial.slices, title = dial.name })
+    if t0 then Perf.Note("bake.surface", debugprofilestop() - t0) end
+    return plan
+end
+
+--- "Why is this showing?" for one pad or dial (spec §13.3): the groups it shows, in priority order,
+--- each with the When rows that matched (Resolver.Explain), then every lock in effect on its slots.
+--- Read from the last plan, so in combat it explains what is on screen.
 --- @return string[]
 function S.WhyLines(id)
-    local plan = S.Plans()[id]
-    if not plan then return { L["This pad has not been built yet."] } end
-    if plan.test and not plan.preview then return { L["Test mode: placeholder chips that send nothing."] } end
+    local plan = S.Plans()[id] or S.DialPlans()[id]
+    if not plan then
+        local p = NS.db and NS.db.profile
+        if p and p.dials[id] then return { L["This dial has not been built yet."] } end
+        return { L["This pad has not been built yet."] }
+    end
+    if plan.test and not plan.preview then
+        if plan.kind == "dial" then return { L["Test mode: placeholder wedges that send nothing."] } end
+        return { L["Test mode: placeholder chips that send nothing."] }
+    end
     local out = {}
     if plan.preview then out[1] = L["Preview as: %s"]:format(NS.Preview.Label(plan.preview)) end
     if #plan.order == 0 then out[#out + 1] = L["No group matches this situation."] end
@@ -162,14 +248,12 @@ function S.WhyLines(id)
         out[#out + 1] = NS.Resolver.Explain(name, plan.active and plan.active[gid])
     end
     local locks, seen = {}, {}
-    for _, sec in ipairs(plan.sections) do
-        for _, slot in ipairs(sec.slots) do
-            if slot.lock and not seen[slot.lock] then
-                seen[slot.lock] = true
-                locks[#locks + 1] = slot.lock
-            end
+    S.EachSlot(plan, function(slot)
+        if slot.lock and not seen[slot.lock] then
+            seen[slot.lock] = true
+            locks[#locks + 1] = slot.lock
         end
-    end
+    end)
     table.sort(locks)
     for _, lock in ipairs(locks) do out[#out + 1] = NS.PadRender.LOCK_TEXT[lock] or tostring(lock) end
     return out
@@ -180,13 +264,15 @@ end
 local State = NS.State
 local TAG = "Pad"
 
-local function enabledPadIds()
+-- The enabled pads, or dials, in their order.
+local function enabledIds(kind)
     local p = NS.db and NS.db.profile
     local out = {}
     if not p then return out end
-    for _, id in ipairs(p.padOrder) do
-        local pad = p.pads[id]
-        if type(pad) == "table" and pad.enabled ~= false then out[#out + 1] = id end
+    local set = kind == "pad" and p.pads or p.dials
+    for _, id in ipairs(kind == "pad" and p.padOrder or p.dialOrder) do
+        local s = set[id]
+        if type(s) == "table" and s.enabled ~= false then out[#out + 1] = id end
     end
     return out
 end
@@ -200,34 +286,46 @@ function S.Plans()
     return State.surfacePlans or {}
 end
 
---- Rebuild every enabled pad from the current snapshot. Out of combat (RunOrQueue's caller).
---- @return number pads rebuilt
+function S.DialPlans()
+    return State.dialPlans or {}
+end
+
+--- Rebuild every enabled pad and dial from the current snapshot, and re-bind the dials' keys. Out of
+--- combat (RunOrQueue's caller).
+--- @return number surfaces rebuilt
 function S.ApplyAll(reason)
     if NS.IsStoodDown() or not State.situation then return 0 end
     local preview = NS.Preview.PreviewSnapshot()
     local snap = preview or NS.Situation.Current()
     local deps = S.Deps(snap)
     local test = preview == nil and NS.Preview.IsTestMode()
-    local pads = NS.db.profile.pads
-    local plans, n = {}, 0
+    local p = NS.db.profile
+    local plans, dialPlans, n = {}, {}, 0
     State.surfaceOrder = State.surfaceOrder or {}
-    for _, id in ipairs(enabledPadIds()) do
-        local plan = test and S.TestPlan(id) or S.BuildPlan(id, pads[id], snap, deps)
+    local function done(id, plan)
         if preview then S.MarkPreview(plan, NS.Preview.PreviewAs()) end
-        plans[id] = plan
         n = n + 1
         local sig = table.concat(plan.order, ",")
         if sig ~= State.surfaceOrder[id] then
             State.surfaceOrder[id] = sig
             NS.addon:SendMessage(NS.MSG.ACTIVE_GROUPS_CHANGED, id)
         end
+        return plan
     end
-    State.surfacePlans = plans
+    for _, id in ipairs(enabledIds("pad")) do
+        plans[id] = done(id, test and S.TestPlan(id) or S.BuildPlan(id, p.pads[id], snap, deps))
+    end
+    for _, id in ipairs(enabledIds("dial")) do
+        dialPlans[id] = done(id, test and S.TestDialPlan(id, p.dials[id]) or S.BuildDialPlan(id, p.dials[id], snap, deps))
+    end
+    State.surfacePlans, State.dialPlans = plans, dialPlans
     local stale = staleSet()
     for id in pairs(stale) do stale[id] = nil end
     NS.Pad.Sync(plans)
-    for id in pairs(plans) do NS.addon:SendMessage(NS.MSG.SURFACE_REBUILT, id, false) end
-    NS.Debug(TAG, "rebuilt %s pad(s) (%s)", n, tostring(reason))
+    NS.Dial.Sync(dialPlans, p.dialOrder)
+    for _, id in ipairs(enabledIds("pad")) do NS.addon:SendMessage(NS.MSG.SURFACE_REBUILT, id, false) end
+    for _, id in ipairs(enabledIds("dial")) do NS.addon:SendMessage(NS.MSG.SURFACE_REBUILT, id, false) end
+    NS.Debug(TAG, "rebuilt %s surface(s) (%s)", n, tostring(reason))
     return n
 end
 
@@ -238,37 +336,51 @@ function S.Request(reason)
     if NS.IsStoodDown() or not State.situation then return false end
     if NS.SendEngine.RunOrQueue("surfaces", function() S.ApplyAll(reason) end) then return true end
     local stale = staleSet()
-    for _, id in ipairs(NS.Pad.Ids()) do
-        if not stale[id] then
-            stale[id] = true
-            NS.Pad.SetStale(id, true)
-            NS.addon:SendMessage(NS.MSG.SURFACE_REBUILT, id, true)
+    local function mark(ids, setStale)
+        for _, id in ipairs(ids) do
+            if not stale[id] then
+                stale[id] = true
+                setStale(id, true)
+                NS.addon:SendMessage(NS.MSG.SURFACE_REBUILT, id, true)
+            end
         end
     end
+    mark(NS.Pad.Ids(), NS.Pad.SetStale)
+    mark(NS.Dial.Ids(), NS.Dial.SetStale)
     NS.Debug(TAG, "rebuild held for combat (%s)", tostring(reason))
     return false
 end
 
---- Re-read every slot's lock (spec §8.4), the lockdown chip and the fade. Insecure: runs in combat.
+--- Re-read every slot's lock (spec §8.4), the lockdown chip and the pads' fade. Insecure: runs in combat.
 function S.RefreshLocks()
-    local plans = State.surfacePlans
-    if not plans then return end
+    local plans, dialPlans = State.surfacePlans, State.dialPlans
+    if not (plans or dialPlans) then return end
     NS.Situation.Restamp()
     local snap = NS.Situation.Current()
     local showChip = NS.Setting("behavior.lockdownChip") ~= false
-    for id, plan in pairs(plans) do
-        if not plan.test then
-            plan.lockdownChip = false
-            for _, sec in ipairs(plan.sections) do
-                for _, slot in ipairs(sec.slots) do
-                    if slot.concrete then slot.lock = NS.Channels.LockState(slot.concrete, snap) end
-                    if slot.lock == "lockdown" then plan.lockdownChip = true end
-                end
-            end
-            NS.Pad.RefreshLocks(id, plan.lockdownChip and showChip)
-        end
+    local function relock(plan)
+        if plan.test then return false end
+        plan.lockdownChip = false
+        S.EachSlot(plan, function(slot)
+            if slot.concrete then slot.lock = NS.Channels.LockState(slot.concrete, snap) end
+            if slot.lock == "lockdown" then plan.lockdownChip = true end
+        end)
+        return true
+    end
+    for id, plan in pairs(plans or {}) do
+        if relock(plan) then NS.Pad.RefreshLocks(id, plan.lockdownChip and showChip) end
         NS.Pad.ApplyAlpha(id)
     end
+    for id, plan in pairs(dialPlans or {}) do
+        if relock(plan) then NS.Dial.RefreshLocks(id, plan.lockdownChip and showChip) end
+    end
+end
+
+--- Master controls' Reset position (spec §10.4): every pad and every dial back to its default place.
+function S.ResetPositions()
+    NS.Pad.ResetPositions(true)
+    NS.Dial.ResetPositions()
+    NS.Print(L["Pad and dial positions reset."])
 end
 
 local function onDrained()
@@ -277,11 +389,12 @@ local function onDrained()
     for id in pairs(stale) do
         stale[id] = nil
         NS.Pad.SetStale(id, false)
+        NS.Dial.SetStale(id, false)
     end
 end
 
 local function onProfileChanged()
-    NS.SendEngine.Drop("profile", { "surfaces", "positions" })
+    NS.SendEngine.Drop("profile", { "surfaces", "positions", "dialPositions" })
     State.surfaceOrder = nil
     S.Request("profile")
 end
@@ -305,8 +418,11 @@ end
 listen()
 
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
-    State.surfacePlans, State.surfaceOrder, State.surfaceStale = nil, nil, nil
-    NS.SendEngine.Teardown(function() NS.Pad.HideAll() end)
+    State.surfacePlans, State.dialPlans, State.surfaceOrder, State.surfaceStale = nil, nil, nil, nil
+    NS.SendEngine.Teardown(function()
+        NS.Pad.HideAll()
+        NS.Dial.HideAll()
+    end)
     if receiver and not NS.Bus.tracked then
         for _, h in ipairs(HANDLERS) do receiver:UnregisterMessage(h[1]) end
     end

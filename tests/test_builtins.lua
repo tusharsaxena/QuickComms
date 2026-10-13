@@ -10,7 +10,9 @@ test("builtins: the expected top-level sets exist in order", function()
     assertEqual(BI.order[1], "bi.mplus")
     assertEqual(BI.order[2], "bi.raid")
     assertEqual(BI.order[3], "bi.arena")
-    assertEqual(BI.order[4], "bi.bg")
+    -- A battleground's own set comes before the generic one, so the dial opens into it (D9, phase 4).
+    assertEqual(BI.order[4], "bi.bg.ab")
+    assertEqual(BI.order[#BI.order], "bi.bg")
     assertTrue(#BI.order >= 18, "generic sets plus one per battleground")
 end)
 

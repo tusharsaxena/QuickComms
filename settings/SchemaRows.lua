@@ -69,7 +69,7 @@ NS.SchemaRuntime.AddRows({
 local PREVIEW_ROWS = {
     { path = "state.previewAs", type = "string", sessionOnly = true, default = "current",
       page = "groups", group = L["General"], label = L["Preview as"],
-      desc = L["Draw every pad as it would look in another situation. Its chips send nothing. It ends when the settings close or combat starts."],
+      desc = L["Draw every pad, and open dial 1, as it would look in another situation. Nothing on them sends. It ends when the settings close or combat starts."],
       values = function() return NS.Preview.Choices() end,
       validate = function(v) return NS.Preview.FindPreset(v) ~= nil end },
 }

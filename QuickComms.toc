@@ -107,7 +107,7 @@ modules\Resolver.lua
 modules\Library.lua
 # LOAD-BEARING: publishes NS.SendGuard, which modules\SendEngine.lua takes as a load-time upvalue.
 modules\SendEngine_Guard.lua
-# Conventional: the only secure writer; appends to NS.STAND_DOWN / NS.STAND_UP (and, Task 4, NS.FEATURE_EVENTS)
+# LOAD-BEARING: the only secure writer; publishes NS.SendEngine, which modules\Dial_Secure.lua takes as a load-time upvalue; appends to NS.STAND_DOWN / NS.STAND_UP (and, Task 4, NS.FEATURE_EVENTS)
 modules\SendEngine.lua
 # Conventional: test mode, TEST_MODE_CHANGED's sender; appends to NS.STAND_DOWN / NS.STAND_UP
 modules\Preview.lua
@@ -119,6 +119,14 @@ modules\Surfaces.lua
 modules\Pad_Render.lua
 # Conventional: the Comms Pad frames; appends to NS.STAND_DOWN / NS.STAND_UP
 modules\Pad.lua
+# LOAD-BEARING: publishes NS.DialLayout, which modules\Dial_Render.lua and modules\Dial.lua take at load.
+modules\Dial_Layout.lua
+# LOAD-BEARING: publishes NS.DialSecure, which modules\Dial.lua takes as a load-time upvalue.
+modules\Dial_Secure.lua
+# LOAD-BEARING: publishes NS.DialRender, which modules\Dial.lua takes as a load-time upvalue.
+modules\Dial_Render.lua
+# Conventional: the Comms Dial frames; appends to NS.STAND_DOWN / NS.STAND_UP; modules\Surfaces.lua calls it at run time only.
+modules\Dial.lua
 # Conventional: core\DebugLogSetup.lua's descriptor reads NS.Diagnostics at RUN time.
 modules\Diagnostics.lua
 
@@ -151,7 +159,9 @@ settings\Groups_When.lua
 settings\Groups.lua
 # LOAD-BEARING: takes Settings.Editors at load and registers the Comms Pad page (after Groups).
 settings\Pads.lua
-# LOAD-BEARING: takes Settings.Editors at load and registers the Share page (after Comms Pad, before Profiles).
+# LOAD-BEARING: takes Settings.Editors at load and registers the Comms Dial page (after Comms Pad, before Share).
+settings\Dials.lua
+# LOAD-BEARING: takes Settings.Editors at load and registers the Share page (after Comms Dial, before Profiles).
 settings\Share.lua
 # Conventional: the verb bodies settings\Slash.lua's NS.COMMANDS rows call at run time; read modules only inside functions.
 settings\SlashVerbs.lua

@@ -14,7 +14,10 @@ local _, NS = ...
 
 -- The steps, in order. `run(sv)` for a global step, `run(sv, profile)` for a `perProfile` one.
 NS.MIGRATIONS = {
-    { to = 1, run = function() end },   -- 0 -> 1: the stamp itself; v0.1.0 has nothing to reshape
+    { to = 1, run = function() end },   -- 0 -> 1: the stamp itself
+    -- 1 -> 2 (phase 4): the generic battleground set moves below the per-battleground sets on every
+    -- pad and dial, so the dial opens into a node set (D9). Library is the registry writer; it moves.
+    { to = 2, perProfile = true, run = function(_, profile) NS.Library.MoveGenericBattlegroundLast(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.

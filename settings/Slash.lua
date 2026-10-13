@@ -57,11 +57,11 @@ local COMMANDS = {
         function(rest) runPerf(rest) end},
     {"check",    L["Show the line a callout would send here (never sends)"],
         function(rest) NS.SlashVerbs.Check(rest) end},
-    {"test",     L["Turn test mode on or off (placeholder chips; combat ends it)"],
+    {"test",     L["Turn test mode on or off (placeholder chips and wedges; it opens dial 1; combat ends it)"],
         function() NS.Preview.ToggleTestMode() end},
-    {"preview",  L["Preview the pads as another situation — `/qc preview <name>` or `off`; `/qc preview` lists them"],
+    {"preview",  L["Preview the pads and dials as another situation — `/qc preview <name>` or `off`; `/qc preview` lists them"],
         function(rest) NS.SlashVerbs.Preview(rest) end},
-    {"why",      L["Say why each pad shows the groups it shows"],
+    {"why",      L["Say why each pad and dial shows the groups it shows"],
         function() NS.SlashVerbs.Why() end},
 }
 NS.COMMANDS = COMMANDS
@@ -82,10 +82,11 @@ end
 
 -- ── the structured member rows on the command line (slash-commands-§6) ──────────────────────
 --
--- Three member rows hold a table (settings/SchemaMembers.lua). The library parses and prints bool,
--- number, string and color; the descriptor's `parse` and `format` hooks teach it these three and
--- hand every other row back to it:
---   pad.point       `x y` (keeps the pad's anchor points) or `POINT RELATIVEPOINT x y`
+-- Four row types are structured (settings/SchemaMembers.lua): point, when, idset and key. The
+-- library parses and prints bool, number, string and color; the descriptor's `parse` and `format`
+-- hooks teach it these four and hand every other row back to it:
+--   pad.point, dial.point  `x y` (keeps the anchor points) or `POINT RELATIVEPOINT x y`
+--   dial.key        one key, `shift-g` or `SHIFT-G`; `none` clears it
 --   group.when      `<condition> <value>[,<value>...]` replaces that one condition; the condition
 --                   alone clears it; keyLevel takes `min-max`, either end empty, or one level.
 --                   Several conditions go in one line separated by `;`, which is also how `get`
@@ -103,15 +104,16 @@ local function wordsOf(text)
     return out
 end
 
-local function parsePoint(text)
+local function parsePoint(text, row)
     local w = wordsOf(text)
     local x, y = tonumber(w[#w - 1] or ""), tonumber(w[#w] or "")
     if not (x and y) or (#w ~= 2 and #w ~= 4) then
         return nil, L["A position is `x y` or `POINT RELATIVEPOINT x y`."]
     end
     if #w == 4 then return { w[1]:upper(), w[2]:upper(), x, y } end
-    local current = NS.SchemaRuntime.Get("pad.point")
-    local base = type(current) == "table" and current or NS.Pad.DEFAULT_POINT
+    local current = NS.SchemaRuntime.Get(row.path)
+    local fallback = row.instance == "dial" and NS.Library.DIAL_DEFAULT_POINT or NS.Pad.DEFAULT_POINT
+    local base = type(current) == "table" and current or fallback
     return { base[1], base[2], x, y }
 end
 
@@ -197,7 +199,12 @@ local function parseIdSet(text)
     return set
 end
 
-local PARSE = { point = parsePoint, when = parseWhen, idset = parseIdSet }
+-- A key as typed; the row's validate and normalize do the rest (Library.KeyValue).
+local function parseKey(text)
+    return (text or ""):match("^%s*(.-)%s*$")
+end
+
+local PARSE = { point = parsePoint, when = parseWhen, idset = parseIdSet, key = parseKey }
 
 local function sortedKeys(set)
     local keys = {}
@@ -233,6 +240,10 @@ local FORMAT = {
     idset = function(v)
         if type(v) ~= "table" or next(v) == nil then return L["none"] end
         return table.concat(sortedKeys(v), ", ")
+    end,
+    key = function(v)
+        if type(v) ~= "string" then return L["none"] end
+        return v
     end,
 }
 
@@ -330,7 +341,7 @@ else
         -- The structured member rows' text forms; every other row is the library's (see above).
         parse        = function(row, text, textOf)
             local fn = row and PARSE[row.type]
-            if fn then return fn(text) end
+            if fn then return fn(text, row) end
             return lib.ParseValue(row, text, textOf)
         end,
         format       = function(row, value)

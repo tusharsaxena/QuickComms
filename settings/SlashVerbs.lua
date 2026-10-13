@@ -1,6 +1,6 @@
 local _, NS = ...
 -- settings/SlashVerbs.lua — the bodies of the feature verbs settings/Slash.lua's NS.COMMANDS rows
--- call (spec §14). Today: `check`, `lock`, `unlock` and `preview`. The rows are positional triples; the work lives here so it can
+-- call (spec §14). Today: `check`, `lock`, `unlock`, `preview` and `why`. The rows are positional triples; the work lives here so it can
 -- be tested without the dispatcher.
 
 NS.SlashVerbs = NS.SlashVerbs or {}
@@ -88,20 +88,27 @@ function V.Preview(rest)
     for _, line in ipairs(V.PreviewLines(rest)) do NS.Print(line) end
 end
 
---- The lines `/qc why` prints (spec §14): every built pad, in the pad order, then why it shows what it
---- shows (Surfaces.WhyLines).
+--- The lines `/qc why` prints (spec §14): every built pad, in the pad order, then every built dial, in
+--- the dial order, each followed by why it shows what it shows (Surfaces.WhyLines).
 --- @return string[]
 function V.WhyLines()
     local p = NS.db and NS.db.profile
-    local plans = NS.Surfaces.Plans()
     local out = {}
-    for _, id in ipairs(p and p.padOrder or {}) do
-        if plans[id] then
-            out[#out + 1] = L["%s (%s):"]:format(p.pads[id].name or id, id)
-            for _, line in ipairs(NS.Surfaces.WhyLines(id)) do out[#out + 1] = "  " .. line end
+    if p then
+        local kinds = {
+            { set = p.pads, order = p.padOrder, plans = NS.Surfaces.Plans() },
+            { set = p.dials, order = p.dialOrder, plans = NS.Surfaces.DialPlans() },
+        }
+        for _, k in ipairs(kinds) do
+            for _, id in ipairs(k.order) do
+                if k.plans[id] then
+                    out[#out + 1] = L["%s (%s):"]:format(k.set[id].name or id, id)
+                    for _, line in ipairs(NS.Surfaces.WhyLines(id)) do out[#out + 1] = "  " .. line end
+                end
+            end
         end
     end
-    if #out == 0 then out[1] = L["No pad is showing: nothing has been built yet."] end
+    if #out == 0 then out[1] = L["Nothing is showing: no pad or dial has been built yet."] end
     return out
 end
 

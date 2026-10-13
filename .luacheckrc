@@ -19,6 +19,10 @@ globals = {
   "QuickCommsDB",       -- AceDB
   "QuickCommsPerfDB",   -- the diagnostics capture ring (performance-§5)
   "StaticPopupDialogs",
+  -- modules/Dial.lua: the key bindings menu's header for Bindings.xml, which the client reads by this
+  -- name (spec §9.4). Its four entry labels hold a space and a colon, so they are rawset beside a
+  -- comment instead of declared here.
+  "BINDING_HEADER_QUICKCOMMS",
 }
 
 read_globals = {
@@ -35,13 +39,19 @@ read_globals = {
   "C_ChatInfo", "C_RestrictedActions", "Enum",
   -- modules/SendEngine.lua: the secure frame API (the firewall test keeps it in that one file).
   "CreateFrame", "UIParent", "RegisterStateDriver", "UnregisterStateDriver", "GetTime",
+  "SetOverrideBindingClick", "ClearOverrideBindings",
   "C_CVar", "GetCVarBool", "UnitGUID", "UnitName",
   -- modules/Pad_Render.lua and core/Compat.lua: the chip tooltip and the chat colors.
   "GameTooltip", "ChatTypeInfo",
   -- modules/Pad.lua: the sent-chip sound.
   "PlaySound", "SOUNDKIT",
+  -- modules/Dial_Render.lua: the pointer follows the cursor.
+  "GetCursorPosition",
   -- core/Compat.lua: the editors' display names (shown, never matched).
   "GetRealZoneText", "GetSpecializationInfoByID", "LOCALIZED_CLASS_NAMES_MALE",
+  -- core/Compat.lua: the Comms Dial page's warning when a dial's key is also a WoW binding, and the
+  -- key bound to a dial's Open Comms Dial entry in WoW's menu.
+  "GetBindingAction", "GetBindingKey",
 }
 
 -- The harness global, declared for tests/ only so no shipped file can reach for it. The

@@ -15,7 +15,7 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 | 5 | `core/Constants.lua` | data | `FONT_MONO`, the Ka0s gold |
 | 6 | `core/State.lua` | state | session-only state (`NS.State`): the debug flag; the modules add their own fields (test mode, plans, the queue, the echo, the pad's tab and collapse) |
 | 7 | `core/EnvSetup.lua` | setup | LibKa0s-Env: `NS.Meta`, `NS.Version` |
-| 8 | `core/PoolSetup.lua` | setup | LibKa0s-Pool: `NS.Pool` (one array pool per pad for its chips) |
+| 8 | `core/PoolSetup.lua` | setup | LibKa0s-Pool: `NS.Pool` (one array pool per pad for its chips; per dial, its ring containers and each container's wedges) |
 | 8a | `core/WidgetsSetup.lua` | setup | LibKa0s-Widgets: the drag-strip seam, `NS.MakeDragHandle` |
 | 9 | `core/Bus.lua` | setup | LibKa0s-Bus: `NS.MSG` (the strict catalog) and `NS.Bus` (tracked receivers) |
 | 10 | `core/LifecycleSetup.lua` | setup | LibKa0s-Lifecycle: the stand-down latch, `NS.IsStoodDown` |
@@ -34,30 +34,40 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 | 16f | `modules/Channels.lua` | pure | channel kinds, resolution, lock state |
 | 16g | `modules/Bake.lua` | pure | callout + snapshot to one macro line |
 | 16h | `modules/Resolver.lua` | pure | When rules to active groups |
-| 16i | `modules/Library.lua` | registry writer | the one writer of the structural registry; `Prepare`; `SetSurfacePoint` |
+| 16i | `modules/Library.lua` | registry writer | the one writer of the structural registry; `Prepare`; `SetSurfacePoint`; `MoveGenericBattlegroundLast` (migration step 2) |
 | 16j | `modules/SendEngine_Guard.lua` | pure | `NS.SendGuard`: the soft guard's timing, the acting click edge, the echo tracker, the keyed queue |
-| 16k | `modules/SendEngine.lua` | secure writer | the only secure writer: send buttons, arm and disarm, the combat-end queue, the click hook, the echo events, the held stand-down |
+| 16k | `modules/SendEngine.lua` | secure writer | the only secure writer: send buttons, arm and disarm, the combat-end queue, the click hook, the echo events, the held stand-down; the dial headers and rings, the wedge wrap, frame refs, snippet runs and the override bindings (`BindKeys`) |
 | 16l | `modules/Preview.lua` | session state | test mode and "Preview as…": refused in combat, ended at the combat edge; `TEST_MODE_CHANGED` |
 | 16m | `modules/Pad_Layout.lua` | pure | `NS.PadLayout`: pad geometry (upward growth stacks whole sections), visibility, fade |
-| 16n | `modules/Surfaces.lua` | edge | the pads' plans and the one rebuild request, queued in combat with the stale hint |
+| 16n | `modules/Surfaces.lua` | edge | the pads' and dials' plans and the one rebuild request, queued in combat with the stale hint |
 | 16o | `modules/Pad_Render.lua` | render | `NS.PadRender`: insecure chip and header visuals |
 | 16p | `modules/Pad.lua` | frames | the pad's frames: pooled secure chips, header, drag strip and lock, position via `Library`, tabs, collapse, feedback |
-| 17 | `modules/Diagnostics.lua` | sections | the addon's sections of `/qc diagnostics` (identity, settings, registration, integrations, situation, restrictions, library, surfaces, send) |
+| 16q | `modules/Dial_Layout.lua` | pure | `NS.DialLayout`: a dial's rings, pages, open-into, depth (`DeepGroups`) and wedge geometry |
+| 16r | `modules/Dial_Secure.lua` | secure snippets | `NS.DialSecure`: the header's restricted snippets (text) and the ring wiring (`Load`); every write goes through SendEngine |
+| 16s | `modules/Dial_Render.lua` | render | `NS.DialRender`: the dial's insecure paint (disc, hub, spokes, wedges) and the pointer's `OnUpdate` |
+| 16t | `modules/Dial.lua` | frames | `NS.Dial`: the dial's header, ring and wedge pools, arming, `Sync` and the keys, the feedback; the key bindings menu's labels |
+| 17 | `modules/Diagnostics.lua` | sections | the addon's sections of `/qc diagnostics` (identity, settings, registration, integrations, situation, restrictions, library, surfaces, dials, bindings, send) |
 | 18 | `settings/SchemaSetup.lua` | setup | LibKa0s-Schema, or the host's documented stub of it |
 | 19 | `settings/Schema.lua` | settings | the rows, the write seam (`NS.SchemaRuntime`), `NS.Setting`, the shared reactions, the defaults tree, the global reset |
 | 20 | `settings/OptionsSetup.lua` | setup | LibKa0s-Options: the panel descriptor |
 | 20a | `settings/SchemaRows.lua` | settings | the hand-written Behavior rows, spliced after the Master controls |
-| 20b | `settings/SchemaMembers.lua` | settings | the member rows (`callout.*`, `group.*`, `pad.*`, `builtin.*`), addressed through `Library.Member` |
+| 20b | `settings/SchemaMembers.lua` | settings | the member rows (`callout.*`, `group.*`, `pad.*`, `dial.*`, `builtin.*`), addressed through `Library.Member` |
 | 21 | `settings/Panel.lua` | settings | the landing page and the General page (Master controls) |
 | 21a | `settings/Editors.lua` | settings | the editor pages' shared frame: selection, repaint, reorder lists, delete |
 | 21b | `settings/Callouts.lua` | settings | the Callouts page |
 | 21c | `settings/Groups_When.lua` | settings | the Groups page's When editor |
 | 21d | `settings/Groups.lua` | settings | the Groups page |
 | 21e | `settings/Pads.lua` | settings | the Comms Pad page |
+| 21e2 | `settings/Dials.lua` | settings | the Comms Dial page (General, Groups, Wheel, Binding, Preview) |
 | 21f | `settings/Share.lua` | settings | the Share page (the Built-in tab) |
 | 21g | `settings/SlashVerbs.lua` | verbs | `NS.SlashVerbs`: the verb bodies (`check`, `SetLocked` for `lock` / `unlock`, `preview`, `why`) |
 | 22 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |
 | 23 | `settings/Profiles.lua` | settings | the Profiles page (AceDBOptions) |
+
+`Bindings.xml` (root, not a TOC line): Open Comms Dial 1–4 in WoW's key bindings menu, each a
+`CLICK QuickCommsDial<n>:Toggle` binding. The client reads it from the addon's root by name, and the
+standard allows it there (layout-§1, toc-file-§4 (standard v2.80.0)); its labels are set in
+`modules/Dial.lua`.
 
 Why each position is load-bearing or conventional is written on the comment line above its entry in
 `QuickComms.toc` (toc-file-§5); a TOC line carries the file path alone. The planned modules and the
@@ -72,7 +82,7 @@ files they add are listed in design spec §4.2.
 | `tests/wow_mock.lua` | the thin extender over `tests/_kit/mock_base.lua` |
 | `tests/prose_waivers.lua` | the per-file, per-word British-spelling waivers for `docs/brainstorm/` |
 | `tests/test_*.lua` | one suite per subject (phase 1 added `test_compat`, `test_restrictions`, `test_situation`, `test_tokens`, `test_channels`, `test_bake`, `test_resolver`, `test_builtins`, `test_library`, `test_check`) (see [`testing.md`](testing.md)) |
-| `tests/test_mock_secure.lua` | the mock's secure half: protected calls refused in combat are recorded, a click acts on one edge, a visibility driver follows combat |
+| `tests/test_mock_secure.lua` | the mock's secure half: protected calls refused in combat are recorded, a click acts on one edge, a visibility driver follows combat; the secure handlers (snippets, wraps, frame refs) and key bindings |
 | `tests/test_send_guard.lua` | `SendEngine_Guard`: the guard's timing, the acting edge, the echo tracker, the keyed queue (pure) |
 | `tests/test_sendengine.lua` | `SendEngine`: buttons, arm and disarm, the queue, the held stand-down, and the firewall grep (no secure call or `SendChatMessage` elsewhere) |
 | `tests/test_preview.lua` | test mode: session-only, refused in combat, ended at the combat edge, ended by the stand-down |
@@ -87,6 +97,10 @@ files they add are listed in design spec §4.2.
 | `tests/test_groups_when.lua` | the When editor's pure half (toggle, clear, key-level range, the values offered, the active-now line) and its write through the seam |
 | `tests/test_page_groups.lua` | the Groups page: picker and New group, a user group's tabs, a built-in's read-only General with Customize and its hidden-callouts editor |
 | `tests/test_page_pads.lua` | the Comms Pad page: picker and New pad, General's acts, the Groups priority list, Layout with X/Y, Look |
+| `tests/test_dial_layout.lua` | `Dial_Layout`: rings, pages, open-into, geometry |
+| `tests/test_dial_secure.lua` | `Dial_Secure`: the snippets on a hand-built dial, in and out of combat |
+| `tests/test_dial.lua` | `Dial`: the frames, the rebuild and keys, the three exit paths, `Bindings.xml` |
+| `tests/test_page_dials.lua` | the Comms Dial page |
 | `tests/test_page_share.lua` | the Share page's Built-in tab: Enabled, Customize, Choose callouts per set, and Defaults |
 | `tests/page_helpers.lua` | a helper, not a suite: drives an editor page through the kit's AceGUI recorder |
 | `tests/perf.lua` | the offline scenarios, outside the gate |

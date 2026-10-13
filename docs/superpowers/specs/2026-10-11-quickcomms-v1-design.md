@@ -113,6 +113,8 @@ These come from the go/no-go test (§13 of the brainstorm) and research note 01.
 - Phase 0 replaces the file and runs `git add --renormalize .`.
 - The current repo is docs only, so the renormalize diff is small.
 
+**`Bindings.xml` at the root (owner ruling R1, 2026-10-13).** The client reads key bindings only from a file named `Bindings.xml` in the addon's root folder, which the standard's layout rule (source never loose at the root) did not allow. The owner changed the standard upstream rather than accept a deviation: WowAddonStandards v2.80.0 names `Bindings.xml` a client-read root file that is not a TOC line (layout-§1, toc-file-§4 (standard v2.80.0)). It is a standard change, not a deviation; the deviation register in `docs/ARCHITECTURE.md` stays empty.
+
 **Where the standard is silent.** It has no rules on SecureHandlers, restricted snippets, state drivers or key bindings. §10 and §11 set this addon's rules, consistent with events-frames-taint-§2/§4 and slash-commands-§7. They are recorded in `docs/ARCHITECTURE.md → Taint Notes` and proposed upstream as a standard addition after v0.1.0.
 
 ## 4. Architecture
@@ -158,7 +160,7 @@ QuickComms/
                    Tokens.lua, Channels.lua, Bake.lua, SendEngine.lua,
                    SendEngine_Guard.lua, Surfaces.lua,
                    Pad.lua, Pad_Layout.lua, Pad_Render.lua,
-                   Dial.lua, Dial_Secure.lua, Dial_Render.lua,
+                   Dial.lua, Dial_Secure.lua, Dial_Render.lua, Dial_Layout.lua,
                    Share.lua, Preview.lua, Diagnostics.lua
   settings/        Schema.lua, SchemaRows.lua, OptionsSetup.lua, Panel.lua,
                    General.lua, Callouts.lua, Groups.lua, Groups_When.lua,
@@ -167,6 +169,8 @@ QuickComms/
   tests/           run.lua, wow_mock.lua, perf.lua, test_*.lua, _kit/
   docs/            (see §20)
 ```
+
+*Built (phase 4):* `modules/Dial_Layout.lua` is the dial's pure ring layout (as `Pad_Layout` is the pad's). `Bindings.xml` sits at the root, beside the TOC, and is not a TOC line: the client reads it there, and the standard allows it (layout-§1, toc-file-§4 (standard v2.80.0); owner ruling R1, 2026-10-13).
 
 **Where the core files come from:** the core set and its order follow DropWatcher, the most compliant sibling, minus its addon-specific files (SimSeam, ClassData, ItemSetup, TextParse).
 
@@ -192,7 +196,7 @@ DropWatcher's restriction readers are the template.
 | `SendEngine` | edge, **the only secure writer** | Secure button pool, attribute writes, combat-end queue, override bindings, the spam guard, the echo tracker. Stand-down. |
 | `Surfaces` | edge | Pad and Dial instances. Rebuilds on `ACTIVE_GROUPS_CHANGED` / `LIBRARY_CHANGED` (deferred in combat). The stale hint. |
 | `Pad*` | edge | Pad frames, layout math (pure), render, feedback |
-| `Dial*` | edge | The dial's secure header and snippets (`Dial_Secure`, which hands its writes to SendEngine), render, feedback |
+| `Dial*` | edge | The dial's secure header and snippets (`Dial_Secure`, which hands its writes to SendEngine), render, feedback. *Built (phase 4):* `Dial_Layout` (pure: rings, pages, geometry), `Dial_Secure` (the header's snippets; Relaxed only), `Dial_Render` (insecure regions on the secure frames, as `Pad_Render` paints chips), `Dial` (the frames, the pools, the keys). |
 | `Share` | pure codec + edge UI | Export and import strings |
 | `Preview` | edge | "Preview as…": feeds a synthetic snapshot to the Resolver and the surfaces in test mode |
 | `Diagnostics` | edge | Diagnostics sections |
@@ -243,9 +247,11 @@ profile = {
 }
 ```
 
+*Built (phase 4):* the member rows are `dial.name`, `dial.enabled`, `dial.mode`, `dial.slices`, `dial.openAt`, `dial.point` and `dial.key` (`false` is no key, and the default place; a named `/qc reset` reaches both, a page's Defaults keeps them); a new dial stores `interaction = "relaxed"`; `delay` and `tapAction` are kept for the C7 upgrade and `depth` for R5, and nothing reads them.
+
 - **No `char` scope.** Per-character behavior comes from the When conditions **Character** and **Class/Spec** (brainstorm §9).
 - **Sessions only.** Test mode, the debug console, "Preview as…" and the active settings tab are kept in `NS.State` and never saved.
-- **Named non-setting state** (documented in ARCHITECTURE.md): `pads[id].point` is the `pad.point` member row: the drag, the X/Y boxes and Reset position write it through the seam (the drag through `Library.SetSurfacePoint`). It is a preference, not named state, because a control sets it. `global.minimap.minimapPos` is owned by LibDBIcon.
+- **Named non-setting state** (documented in ARCHITECTURE.md): `pads[id].point` is the `pad.point` member row: the drag, the X/Y boxes and Reset position write it through the seam (the drag through `Library.SetSurfacePoint`). It is a preference, not named state, because a control sets it. `dials[id].point` is the `dial.point` member row, written by the Comms Dial page's X/Y boxes and Reset position (through `Library.SetSurfacePoint`). `global.minimap.minimapPos` is owned by LibDBIcon.
 - **The editors' selection** (`NS.State.editing`, session-only) is the member each editor page has selected; a member row written with no instance argument writes it.
 
 ### 5.2 IDs and references
@@ -291,6 +297,8 @@ when = {                     -- a nil or empty row is ignored; rows are ANDed, v
   - repairs dangling ids
   - adds new built-in groups (shipped in a later version) to the **end** of each surface's list. A per-surface `seenBuiltins` sentinel records which ones each surface has already been offered.
 - A global reset is `db:ResetProfile()` followed by the profile-changed handler (options-ui-§12), using the verbatim confirmation text.
+
+*Built (phase 4):* step 2 (`perProfile`) moves the generic battleground set below the per-battleground sets on every pad and dial (`Library.MoveGenericBattlegroundLast`), so a node set can be the first active group (D9); `NS.SCHEMA_VERSION` is 2.
 
 ## 6. Situation engine
 
@@ -443,6 +451,7 @@ A locked callout stays visible with a padlock and a tooltip (brainstorm §3.3).
 **Who owns which buttons:**
 - **Pads:** each pad chip *is* a send button, parented to the pad.
 - **Dials:** each dial owns a set of hidden send buttons, one per slot, which its secure header clicks (§11).
+  *Built (phase 4):* each wedge *is* its slot's send button (as §11.2 says), parented to its ring's protected container; the player clicks it, not the header. The header's snippets wrap each wedge's click before SendEngine's hook (the client's wrap replaces the script). A wedge acts on the up edge, and only a left click (or a number key) is a press.
 
 **Combat-end queue.** It is keyed, and copies WhatGroup and PanelMaster's Unlock:
 - `Queue(key, fn)` replaces any earlier entry under the same key.
@@ -478,6 +487,8 @@ Every rebuild requested in combat goes through this queue and sets the surface's
 
 **C6** checks whether the sender of the returning message can be read. **Unverified (owner, 2026-10-13).** The tracker must tolerate an unreadable (secret) sender: it treats that as unknown and never as dropped. If the sender can be read, it matches on sender and the false "sent" goes away.
 
+*Built (phase 4, §9.2 and §9.3):* a wedge's press dims every chip and every wedge for the guard window, and `SEND_RESULT` flashes the callout's wedges; the dial closes on a send, so both show on the next open, and a drop stays red for 5 s so the player can reopen the dial and see it.
+
 ### 9.4 Key bindings
 
 *Phase 2 ships no binding:* a pad chip has no key in v0.1.0. Override bindings, `Bindings.xml` and their stand-down arrive with the Comms Dial (phase 4).
@@ -490,6 +501,8 @@ Every rebuild requested in combat goes through this queue and sets the surface's
 - A key conflict with an existing WoW binding shows a warning in the dial editor and still binds: an override binding wins only while QuickComms is enabled.
 
 **`Bindings.xml`:** v0.1.0 also ships one, with `BINDING_HEADER_QUICKCOMMS` and "Open Comms Dial 1–4". Players who prefer the game's own key bindings menu can use it. Those bindings click the same named buttons.
+
+*Built (phase 4):* a header is named `QuickCommsDial<n>` for its place in the dial order, and the key clicks it with the button `Toggle`; `Bindings.xml`'s entries are `CLICK QuickCommsDial1:Toggle` … `4`. Escape, the left and right mouse buttons and the mouse wheel cannot be a dial's key whatever the modifiers, nor 1–8 without one, because the open dial uses them; one key opens one dial. A key is one base key with ALT-, CTRL-, SHIFT- or META- in front, none twice; a modifier alone, a dangling or unknown one is refused, and a key is stored with its modifiers in the client's order (SHIFT-CTRL-G is stored CTRL-SHIFT-G), so one chord is one key. Every rebuild re-binds the whole set (`SendEngine.BindKeys`), so a profile switch, the stand-up and a key edit re-bind. `Bindings.xml` sits at the addon root and is not a TOC line, as the standard allows (layout-§1, toc-file-§4 (standard v2.80.0)).
 
 ### 9.5 Stand-down
 
@@ -575,7 +588,7 @@ If this happens in combat, the secure parts are held in the one permitted pendin
 - X and Y rows sit on the pad's Layout tab.
 - Reset position is in Master controls, and resets every pad and dial anchor.
 
-*Built (phase 2):* Reset position resets the pads only; the dials, and their anchors, arrive in phase 4. The per-pad X/Y rows arrive with the Pads page (phase 3).
+*Built (phase 2, 4):* Reset position resets every pad and dial anchor, with one chat line; the per-pad X/Y rows arrived with the Pads page (phase 3), the per-dial ones with the Comms Dial page (phase 4).
 
 ## 11. Comms Dial
 
@@ -591,6 +604,8 @@ The Blizzard ping wheel's look (brainstorm §4):
 **Rendering is insecure** (`Dial_Render`): textures and font strings on a non-protected frame. Insecure code may show and hide it even in combat.
 
 **Wedge geometry.** The wedges sit on compass directions, with on-axis directions first: 4 wedges are N/E/S/W. A battleground node set may pin each node to its real compass direction.
+
+*Built (phase 4):* the paint is insecure regions on the secure frames (the disc and ✕ on the header, spokes and a title per ring, an icon, label, padlock, dim veil and gold hover glow per wedge); the pointer is a plain child whose `OnUpdate` runs only while the dial is open (perf `dial.render`). Node sets are placed clockwise from N in their shipped order; pinning each node to its compass direction moves to phase 5 with the battleground id confirmation (§19 row 5) (owner ruling R4, 2026-10-13).
 
 ### 11.2 Secure structure (`Dial_Secure`)
 
@@ -625,6 +640,8 @@ The Blizzard ping wheel's look (brainstorm §4):
 
 In Relaxed mode the dial is drawn as soon as it opens.
 
+*Built (phase 4):* the header is the hub. The ring on screen lives in the header's restricted environment (a snippet global); no snippet writes an attribute, so every attribute and frame ref is written out of combat through SendEngine. Only a left click (or a number key, which clicks with it) sends from a wedge or goes up a ring from the hub; any other mouse button closes the dial, so a dial whose key is a mouse button (BUTTON3–5) closes, and sends nothing, when its key is pressed again over a wedge or the hub. One dial is open at a time: opening a dial closes any other that is open (each header holds the others as frame refs), so two never overlap or share the number keys. Opened by its key, the snippets bind Escape (close), the mouse wheel (pages) and 1–8 (the shown ring's wedges) with `SetBindingClick`, released on close; opened from the insecure side (test mode, Preview as…) they bind nothing, so the settings window keeps Escape. Open at the cursor re-anchors the hub with a restricted `SetPoint("CENTER", "$cursor")` (unverified until DIAL-7).
+
 ### 11.3 Modes and limits
 
 **Modes:**
@@ -637,11 +654,15 @@ In Relaxed mode the dial is drawn as soon as it opens.
 
 **Open-into** (D9) is a flag per group. It is on for the battleground node sets. When the first active group in the dial's order has the flag, the dial opens on that group's ring, and the hub's ✕ goes up to the group ring instead of cancelling.
 
+*Built (phase 4):* a ring with more items than its wedges is paged on every ring, Categories included: each page but the last holds `slices − 1` items and a More wedge, and the hub and the wheel go back a page. The wedge count is the slices setting, never grown; a ring that holds a ring (a More included) gets 8 on a 12-slice dial. In Flat a node's callout is titled with its node ("INC 3 · Lumber Mill"). Depth counts rings from the one the dial opens on: groups, then callouts, is 2; a node set reached under the group ring is 3, and the Comms Dial page's Groups tab warns, naming the set (`Dial_Layout.DeepGroups`, built under that battleground's preview); open-into skips the group ring, so a set that opens into itself is 2. On the open-into ring the hub's ✕ goes up to the group ring rather than closing the dial. With a single active group, Categories opens straight on its ring, as open-into does; the hub still goes up to it (owner ruling R2, 2026-10-13). Depth is this limit, not a setting: the Wheel tab has no depth control (owner ruling R5, 2026-10-13).
+
 ### 11.4 Other
 
 **Where the dial opens:** `openAt` = `center` (the default) or `cursor` (D3). It is set by the insecure render; the secure maths uses positions relative to the origin, so neither choice affects selection.
 
 **Test mode** shows dial 1 open with placeholder wedges, at the configured position. **The dial editor's Preview tab** renders the dial inside the panel. It is insecure and display only.
+
+*Built (phase 4):* test mode and Preview as… open dial 1 on its first ring (or the open-into ring) at its place, with placeholder or disarmed wedges and TEST MODE or PREVIEW above the hub, taking no key (the settings window may be open: Escape still closes it, and 1–8 stay the action bar's); the hub or the dial's key closes it. It opens when the mode turns on or changes (another Preview as… situation), and a rebuild keeps it open only if it was open: once the player closes it, later edits do not bring it back over the settings window. The Comms Dial page's Preview tab lists the rings wedge by wedge; the drawn dial is the in-game preview (owner ruling R3, 2026-10-13).
 
 **Stale and lockdown:** the hub shows the same stale hint and lockdown chip as a pad.
 
@@ -666,6 +687,8 @@ NS.BuiltIns.callouts["bi.mplus.lust"] = { name = L["Lust"], text = L["Lust on th
 - **Arena:** party.
 - **Generic battleground:** smartGroup, which resolves to instance chat.
 - **One set per battleground:** matched on the battleground's `instanceID`. Nodes are pinned to compass directions, with `openInto = true`. The battleground list is the 14 from brainstorm §8, and phase 5 confirms their instance IDs.
+  *Built (phase 4):* the generic battleground set ships after every per-battleground set (and migration step 2 moves it there on stored profiles): D9 opens into the first active group, so a node set must come first.
+  *Built (phase 4):* the paint is insecure regions on the secure frames (the disc and ✕ on the header, spokes and a title per ring, an icon, label, padlock, dim veil and gold hover glow per wedge); the pointer is a plain child whose `OnUpdate` runs only while the dial is open (perf `dial.render`). Node sets are placed clockwise from N in their shipped order; pinning each node to its compass direction moves to phase 5 with the battleground id confirmation (§19 row 5) (owner ruling R4, 2026-10-13).
 - **Wording** is faction-neutral (D11).
 
 **Battleground node structure** (brainstorm §8): each battleground group has one child group per node, and each node's sub-ring is INC 1 / INC 2 / INC 3 / INC Many / Clear / Help.
@@ -705,7 +728,7 @@ It is one act: the pads rebuild once. A set on no surface is customized onto non
 | **Callouts** | Banner: a callout picker and a "Create callout" box. Tabs: **General** has name, text with a token picker and the live line (the baked line and its byte count under the current or previewed situation, or why it sends nothing, and the padlock text), channel, an icon box (a texture id or path; a LibKa0s icon by its path; the visual picker arrives with phase 5's polish, §19 row 5), then Duplicate and Delete (options-ui-§14: a page's acts sit on its first tab, named General). The live line is the byte counter: it follows each committed write (Enter in the Text box), not each keystroke. **Used by** lists the groups that reference it, each a link to the Groups page. |
 | **Groups** | The banner picker (user groups by name, then the built-in sets; a green dot marks a group active now or in the preview) and New group, which puts the group at the top of every pad and dial; no nav rail (options-ui-§14: the rail is not a picker). Tabs: **General** (name, icon, enabled, open-into, delete/duplicate, and Customize for a built-in), **Callouts** (ReorderList, plus add from the library), **When** (§13.2), **Preview**. For a built-in, General has its Enabled row and Customize, and Callouts is the hidden-callouts editor. |
 | **Comms Pad** | The banner picker and New pad; no nav rail. Tabs: **General** (name, enabled, unlock, delete), **Groups** (priority ReorderList, plus groups-as), **Layout**, **Look** (visibility, fade, font group, border group, colors with class-color companions). General also has Preview as, Unlock pads and Delete pad; Layout ends with the X and Y offsets and Reset this pad's position. |
-| **Comms Dial** | The banner picker and New dial (phase 4); no nav rail. Tabs: **General**, **Groups** (priority ReorderList, plus Categories/Flat), **Wheel** (slices, depth, open at, delay), **Binding** (Relaxed in v0.1.0; Quick returns with the C7 upgrade; a key capture button, tap action, conflict warning), **Preview** |
+| **Comms Dial** | The banner picker and New dial; no nav rail. Tabs: **General** (Preview as, name, enabled, Delete dial), **Groups** (Categories/Flat, the depth-3 warning, the priority ReorderList, Add a group), **Wheel** (wedges per ring, open at, the X and Y offsets and Reset this dial's position), **Binding** (how Relaxed works; a key capture box; the key's line: what it opens, or the WoW binding it shares, which still binds), **Preview** (each ring wedge by wedge). Quick mode's delay and tap action return with the C7 upgrade. |
 | **Share** | Tabs: **Export** (select callouts, groups, pads and dials → string → `CopyWindow`), **Import** (a paste box → validation report → apply), **Built-in** (the list of built-in sets with an enabled toggle, Customize, and a hidden-callouts editor). *Built (phase 3):* the Built-in tab only, one line per set (Enabled, Customize, Choose callouts, which opens the set's hidden-callouts editor on the Groups page); Export and Import join in phase 5. |
 | **Profiles** | AceDBOptions, the one permitted AceConfigDialog page |
 
@@ -728,7 +751,7 @@ It looks like the WeakAuras Load tab:
 ### 13.3 Preview as… and Why is this showing?
 
 **Preview as…:**
-- A session row, `state.previewAs`, drawn first on the General tab of the Groups and Comms Pad pages (and the Dial page in phase 4), and `/qc preview <name>` from the command line, with these entries:
+- A session row, `state.previewAs`, drawn first on the General tab of the Groups and Comms Pad pages and the Comms Dial page, and `/qc preview <name>` from the command line, with these entries:
   - **Current**
   - **M+ · <dungeon> · <spec>**
   - **Raid · <difficulty>**
@@ -818,6 +841,8 @@ Repeating paths log only on change.
 - echo tracker counts
 - `NS.rejectedEvents`
 
+*Built (phase 4):* the `dials` section (each dial's header, key, rings, open ring, open now, active groups, stale, lockdown chip) and the `bindings` section (every override binding).
+
 **Perf buckets:**
 - `situation.refresh`
 - `resolver.resolve`
@@ -826,6 +851,8 @@ Repeating paths log only on change.
 - `dial.render` (the OnUpdate while open)
 - `send.click` (the insecure hook)
 - `echo.match`
+
+*Built (phase 4):* `dial.render` is bracketed; the dial open/close scenario in `tests/perf.lua` is phase 5.
 
 `tests/perf.lua` covers a 12-chip pad rebuild, a full dial open/close and a zero-overhead scenario.
 
@@ -838,12 +865,12 @@ Every name is declared once in `core/Bus.lua` as `Ka0s_QuickComms_*`. Each messa
 | `SITUATION_CHANGED` | Situation | snapshot, previous | Resolver edge (Surfaces), Preview, settings live lines |
 | `RESTRICTION_CHANGED` | Restrictions | reason, canSendChat (consumers read `Restrictions.ActiveSet()`) | Situation (merges into the snapshot), Surfaces (chips, padlocks), SendEngine (drains the combat-end queue), Preview (ends test mode), Pad (ends a drag) |
 | `LIBRARY_CHANGED` | Library (its own writes, and `Library.Touch` for every member row the seam writes) | kind, id, field (the member row's path for a field write; none for membership, order or a batch) | Surfaces, settings pages |
-| `ACTIVE_GROUPS_CHANGED` | Surfaces (the resolver edge) | surfaceId | none in phase 2; Dial, settings dots (Surfaces already rebuilds the pad) |
+| `ACTIVE_GROUPS_CHANGED` | Surfaces (the resolver edge) | surfaceId | none (Surfaces rebuilds pads and dials itself) |
 | `SURFACE_REBUILT` | Surfaces | surfaceId, stale | Diagnostics, settings |
-| `SEND_RESULT` | SendEngine | calloutId, surfaceId, `"guarded"` at the press when inside the guard window, then `"sent"` or `"dropped"` from the echo: one press can yield two results | Pad, Dial (flash) |
+| `SEND_RESULT` | SendEngine | calloutId, surfaceId, `"guarded"` at the press when inside the guard window, then `"sent"` or `"dropped"` from the echo: one press can yield two results | Pad, Dial (the flash; built phase 4) |
 | `COMBAT_QUEUE_DRAINED` | SendEngine | count | Surfaces (clears the stale hint) |
 | `PROFILE_CHANGED` | the entry (`core/QuickComms.lua`, `reloadProfile`) | — | everyone that caches |
-| `TEST_MODE_CHANGED` | Preview | on (true while test mode or Preview as… is on) | Surfaces (rebuilds the pads from the test or preview plan), the editor pages (repaint), Dial |
+| `TEST_MODE_CHANGED` | Preview | on (true while test mode or Preview as… is on) | Surfaces (rebuilds the pads and dials from the test or preview plan, opening dial 1), the editor pages (repaint) |
 
 The count is nine, under the ten-message trigger, so there is no `message-bus.md` until it grows past ten.
 
@@ -873,8 +900,8 @@ Each phase ends green: `lua tests/run.lua` and `luacheck .` both pass. Each also
 | **1. Core data** | Database and migrations. Schema rows. `Library` (writer). `Situation` (with tests). `Restrictions`. `Resolver`. `Tokens`. `Channels`. `Bake` (sanitizer tests). Built-in data files and the bake audit test. | Headless suites cover truth tables, ordering, bake, sanitize and every built-in. |
 | **2. Send engine and Pad: first usable build** | `SendEngine` (pool, arm, queue, guard, echo, stand-down). `Surfaces`. `Pad*`. Test mode. Default pad seeded with built-ins. | In game: the default pad shows M+ callouts in a key and sends on trash and a boss. A double press inside the guard window is marked guarded (dimmed, noted) and the extra send is reported dropped if the echo doesn't arrive. The stale hint appears and clears. |
 | **3. Editors** | Callouts, Groups (with When and Preview), Pads pages. Preview as…. Why tooltips. Built-in tab (enable, hide, Customize). | Smoke test: create a callout and a group, set When, see it on the pad in the right situation. Customize a built-in. |
-| **4. Comms Dial** | `Dial_Secure` (Relaxed only; C7 skipped), `Dial_Render`, Dial page, Bindings.xml, the battleground node dial with open-into | In game: open the dial, click a wedge and it sends in a boss. The Categories two-stroke works. The Arathi Basin node dial sends "INC 3 Lumber Mill" in two clicks. |
-| **5. Share, polish, release** | Share (codec tests, import report). Editor polish: the pad's Look font group, border group and colors with class-color companions (options-ui-§16/§17, the composed controls), and a visual icon picker for callouts and groups. Perf buckets and `tests/perf.lua`. Battleground ID confirmation. Docs set. Automated-test bundle. First audit. README. `ADDONS.md` roster row. | Release gate (complexity ≤ 15, blind files 0). Tag v0.1.0 only on the owner's word. |
+| **4. Comms Dial** | `Dial_Secure` (Relaxed only; C7 skipped), `Dial_Render`, Dial page, Bindings.xml, the battleground node dial with open-into | In game: open the dial, click a wedge and it sends in a boss. The Categories two-stroke works. The Arathi Basin node dial sends "INC 3 Lumber Mill" in two clicks. *Built:* see smoke checks DIAL-1..10. |
+| **5. Share, polish, release** | Share (codec tests, import report). Editor polish: the pad's Look font group, border group and colors with class-color companions (options-ui-§16/§17, the composed controls), and a visual icon picker for callouts and groups. Perf buckets and `tests/perf.lua`. Battleground ID confirmation. Node sets pinned to compass directions, with the battleground id confirmation. Docs set. Automated-test bundle. First audit. README. `ADDONS.md` roster row. | Release gate (complexity ≤ 15, blind files 0). Tag v0.1.0 only on the owner's word. |
 
 ### In-game checks, carried over from brainstorm §11
 
@@ -916,3 +943,15 @@ Owner review on 2026-10-11 accepted P1, P4, P8 (renamed to `check`) and P9, and 
 | P7 | A `Bindings.xml` with "Open Comms Dial 1–4", alongside each dial's own key setting | Players can use the game's key bindings menu if they prefer (§9.4) |
 | P8 | `/qc check <id>` prints the baked line and never sends | No second send path (D12). It isn't named `send` because it doesn't send, or `test` because `/qc test` is the test-mode toggle. |
 | P9 | Replace `.gitattributes` with the standard's CRLF body in phase 0 | The standard requires it (line-endings) |
+
+### Owner rulings for phase 4 (2026-10-13)
+
+The phase 4 plan (`docs/superpowers/plans/2026-10-13-quickcomms-phase-4.md`, pre-flight P2) named five places where the build would depart from binding text. The owner ruled on each on 2026-10-13.
+
+| # | Ruling | What it settles |
+|---|---|---|
+| R1 | `Bindings.xml` ships at the addon root, not as a TOC line. **A change to the standard, not a deviation:** WowAddonStandards v2.80.0 allows it (layout-§1, toc-file-§4 (standard v2.80.0)). | §3, §4.2, §9.4. The deviation register in `docs/ARCHITECTURE.md` stays empty. |
+| R2 | With a single active group, Categories opens straight on that group's ring; the hub still goes up to it | §11.3 ("Choosing a group takes a second click"): a one-wedge first ring would cost a click for nothing |
+| R3 | The Comms Dial page's Preview tab is a listing, each ring wedge by wedge; the drawn dial is the in-game preview (test mode, Preview as…) | §11.4 ("renders the dial inside the panel") |
+| R4 | Battleground node sets are placed clockwise from N in their shipped order; the compass pins move to phase 5 with the battleground id confirmation (§19 row 5) | §11.1, §12.1 ("Nodes are pinned to compass directions") |
+| R5 | No depth control on the Wheel tab: depth is §11.3's limit (2 by construction, 3 allowed with the Groups tab's warning); the stored `depth` field stays inert | §13.1 ("**Wheel** (slices, depth, open at, delay)") |

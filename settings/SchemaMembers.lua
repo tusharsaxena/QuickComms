@@ -1,17 +1,18 @@
 local _, NS = ...
 -- settings/SchemaMembers.lua — the member rows (architecture-§5): every field a player sets on a
--- callout, a group, a Comms Pad or a built-in set's overlay is a schema row whose path starts with
--- the member's kind. settings/Schema.lua resolves the member from the instance argument, or from the
--- one its editor page has selected (NS.State.editing), so the panel, the CLI, the pad's drag and
--- Library's own built-in writers all write through NS.SchemaRuntime.Set. modules/Library.lua keeps
--- what is not a field: membership (create, delete, duplicate, Customize), the order of every list,
--- the references a group and a surface hold, the ids and the seeding. Each row's onChange hands the
--- write to Library.Touch, which sends LIBRARY_CHANGED, so the pads rebuild (in combat, at combat
--- end, with the stale hint), naming the field so the editor pages repaint only when what they draw
--- changes shape. Paths resolve against Library.TEMPLATES at the boot check; member rows are no AceDB
--- default. Three rows hold a table (a pad's point, a group's When, a set's hidden callouts): their
--- pages draw their own controls, and settings/Slash.lua's parse and format hooks type and print them
--- on the command line. Added on every load, the degraded one included: Library's writers need them
+-- callout, a group, a Comms Pad, a Comms Dial or a built-in set's overlay is a schema row whose
+-- path starts with the member's kind. settings/Schema.lua resolves the member from the instance
+-- argument, or from the one its editor page has selected (NS.State.editing), so the panel, the CLI,
+-- the pad's drag and Library's own built-in writers all write through NS.SchemaRuntime.Set.
+-- modules/Library.lua keeps what is not a field: membership (create, delete, duplicate, Customize),
+-- the order of every list, the references a group and a surface hold, the ids and the seeding. Each
+-- row's onChange hands the write to Library.Touch, which sends LIBRARY_CHANGED, so the pads rebuild
+-- (in combat, at combat end, with the stale hint), naming the field so the editor pages repaint
+-- only when what they draw changes shape. Paths resolve against Library.TEMPLATES at the boot
+-- check; member rows are no AceDB default. Four row types are structured (a pad's or a dial's
+-- point, a group's When, a set's hidden callouts, a dial's key): their pages draw their own
+-- controls, and settings/Slash.lua's parse and format hooks type and print them on the command
+-- line. Added on every load, the degraded one included: Library's writers need them
 -- (tests/test_setup.lua pins that a degraded load's schema holds these rows and nothing else).
 
 local L   = NS.L
@@ -33,6 +34,8 @@ local WHY = {
     badHidden = L["Only this set's own callouts can be hidden."],
     builtin   = L["Built-in groups are read-only. Customize makes an editable copy."],
     badChoice = L["That is not one of the choices."],
+    badKey    = L["A key is one key, with ALT-, CTRL- or SHIFT- in front if you like."],
+    reservedKey = L["Escape, the left and right mouse buttons, the mouse wheel and 1 to 8 without a modifier cannot open a dial: the open dial uses them."],
 }
 
 local function check(fn)
@@ -121,6 +124,23 @@ local STYLE = choices({ { "iconLabel", L["Icon and label"] }, { "icon", L["Icon 
 local VISIBILITY = choices({ { "always", L["Always"] }, { "inCombat", L["Only in combat"] },
     { "outOfCombat", L["Only out of combat"] }, { "whenActive", L["When a group is active"] }, { "never", L["Never"] } })
 local FADE = choices({ { "none", L["Never"] }, { "outOfCombat", L["Out of combat"] }, { "mouseover", L["Until the mouse is over it"] } })
+local MODE = choices({ { "categories", L["Categories"] }, { "flat", L["Flat"] } })
+local OPEN_AT = choices({ { "center", L["At its place"] }, { "cursor", L["At the cursor"] } })
+local SLICES = {}
+for i, n in ipairs({ 4, 6, 8, 12 }) do SLICES[i] = { value = n, text = tostring(n) } end
+
+-- A dial's key: none, or a key that is not reserved and that no other dial has (spec §18: the editor
+-- refuses, naming the other dial). The seam then stores it as Library.KeyValue normalizes it.
+local function keyCheck(v, id)
+    local ok, code = Lib.ValidKey(v)
+    if not ok then return false, WHY[code] end
+    local other = Lib.KeyOwner(v, id)
+    if other then
+        local d = NS.db.profile.dials[other]
+        return false, L["%s already opens %s."]:format(Lib.KeyValue(v), tostring(d and d.name or other))
+    end
+    return true
+end
 
 local ROWS = {
     -- Callouts page (spec §13.1). Name and text have no default: a reset never blanks them.
@@ -158,7 +178,7 @@ local ROWS = {
       validate = userGroup() },
     { path = "group.openInto", instance = "group", type = "bool", default = T.group.openInto,
       page = "groups", group = GENERAL, label = L["Open the dial on this group"],
-      desc = L["When this is the first active group on a Comms Dial, the dial opens on its callouts. The Comms Dial arrives in a later build."],
+      desc = L["When this is the first active group on a Comms Dial, the dial opens straight on its ring, and the middle of the dial goes back to the groups."],
       validate = userGroup() },
     { path = "group.when", instance = "group", type = "when",
       page = "groups", group = L["When"], label = L["When"],
@@ -217,6 +237,40 @@ local ROWS = {
     { path = "pad.look.fadeAlpha", instance = "pad", type = "number", default = T.pad.look.fadeAlpha,
       min = 0, max = 1, step = 0.05, page = "pads", group = L["Look"], label = L["Faded alpha"],
       desc = L["How visible a faded pad is."], validate = NUMBER, normalize = clamp(0, 1) },
+
+    -- Comms Dial page (spec §11, §13.1). Relaxed is the only interaction in v0.1.0, so there is no
+    -- interaction, delay or tap-action row (Quick mode brings them with the C7 upgrade), and no depth
+    -- row (owner ruling R5: depth is §11.3's limit, warned about on the Groups tab).
+    { path = "dial.name", instance = "dial", type = "string", dialogControl = "EditBox", maxLetters = Lib.NAME_MAX,
+      page = "dials", group = GENERAL, label = L["Name"],
+      desc = L["What the lists and the dial's first ring call this dial. Press Enter to apply."],
+      validate = check(Lib.ValidName) },
+    { path = "dial.enabled", instance = "dial", type = "bool", default = T.dial.enabled,
+      page = "dials", group = GENERAL, label = L["Enabled"],
+      desc = L["Build this dial and bind its key. A disabled dial keeps its groups, key and settings."] },
+    { path = "dial.mode", instance = "dial", type = "string", default = T.dial.mode, values = MODE,
+      page = "dials", group = L["Groups"], label = L["Show groups as"],
+      desc = L["Categories: the first ring holds your groups and a click opens one. Flat: the first ring holds callouts, highest group first, with More for the rest."],
+      validate = oneOf(MODE) },
+    { path = "dial.slices", instance = "dial", type = "number", default = T.dial.slices, values = SLICES,
+      page = "dials", group = L["Wheel"], label = L["Wedges per ring"],
+      desc = L["How many wedges a ring has. A ring with more puts the rest behind More. 12 applies only to a ring of callouts."],
+      validate = oneOf(SLICES) },
+    { path = "dial.openAt", instance = "dial", type = "string", default = T.dial.openAt, values = OPEN_AT,
+      page = "dials", group = L["Wheel"], label = L["Open at"],
+      desc = L["Where the dial opens: at its place (set below), or wherever the cursor is."],
+      validate = oneOf(OPEN_AT) },
+    -- Position's and Key's default is false (the default place, no key), so `/qc reset dial.point` and
+    -- `/qc reset dial.key` reach them; the page's Defaults keeps both (settings/Schema.lua
+    -- resetExempt), as its tooltip says. As the pad.point row.
+    { path = "dial.point", instance = "dial", type = "point", default = false,
+      page = "dials", group = L["Wheel"], label = L["Position"],
+      desc = L["Where the dial opens at its place. Type an offset from the middle of the screen."],
+      validate = check(Lib.ValidPoint) },
+    { path = "dial.key", instance = "dial", type = "key", default = false,
+      page = "dials", group = L["Binding"], label = L["Key"],
+      desc = L["The key that opens and closes this dial. One key opens one dial. Escape, the left and right mouse buttons, the mouse wheel and 1 to 8 without a modifier cannot be used: the open dial uses them."],
+      validate = keyCheck, normalize = Lib.KeyValue },
 
     -- A built-in set's overlay (spec §12.2): the only writable part of a shipped set.
     { path = "builtin.enabled", instance = "builtin", type = "bool", default = T.builtin.enabled,

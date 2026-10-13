@@ -10,6 +10,7 @@ eagerly at `OnEnable`; each page's body builds on its first show (options-ui-§1
 | Callouts | One callout: `General`, `Used by` |
 | Groups | One group or built-in set: `General`, `Callouts`, `When`, `Preview` |
 | Comms Pad | One pad: `General`, `Groups`, `Layout`, `Look` |
+| Comms Dial | One dial: `General`, `Groups`, `Wheel`, `Binding`, `Preview` |
 | Share | `Built-in` (Export and Import in phase 5) |
 | Profiles | AceDBOptions: switch, copy, reset and delete profiles |
 
@@ -26,7 +27,7 @@ Minimap button, Test mode, then the Reset position and Reset all settings button
 | Master scale (`scale`, 0.5-2) | Master alpha (`alpha`) |
 | Lock frame (`locked`) | Debug console (`state.debugConsole`, session) |
 | Minimap button (`global.minimap.shown`) | Test mode (`state.testMode`, session) |
-| Reset position (button: every pad back to its default place; the dials join in phase 4) | Reset all settings (button, asks first) |
+| Reset position (button: every pad and dial back to its default place, one chat line) | Reset all settings (button, asks first) |
 
 Lock frame, `/qc lock|unlock` and the launcher's Locked entry write the same path; Test mode,
 `/qc test` and the launcher's Test mode entry call the same switch (`Preview.SetTestMode`), which is
@@ -99,6 +100,52 @@ Look     visibility, fade and faded alpha
 X and Y write the whole `pad.point` row, the same one the drag strip writes; a drag on screen
 updates the boxes.
 
+## Comms Dial
+
+`settings/Dials.lua`, one dial at a time.
+
+```
+band     [ Dial v (picker) ][ New dial ]
+strip    [ General ][ Groups ][ Wheel ][ Binding ][ Preview ]
+General  Preview as (page-wide, first), Name, Enabled, then Delete dial
+Groups   Show groups as (Categories or Flat), the depth-3 warning (spec §11.3), then the dial's
+         groups as a drag-to-reorder list with Remove (its priority order, spec §7), then Add a
+         group
+Wheel    wedges per ring, open at, then Position: X and Y and Reset this dial's position
+Binding  how Relaxed mode works, the key capture, and the key's line (what it opens, or the WoW
+         binding it shares, spec §9.4 / §18)
+Preview  each ring as the current or previewed situation builds it, wedge by wedge
+```
+
+- **General:** Preview as… draws dial 1 in another situation (its wedges disarmed); Name and Enabled
+  are the `dial.name` and `dial.enabled` rows; Delete dial asks first, keeps the dial's groups and
+  callouts, and releases its key.
+- **Groups:** Show groups as is `dial.mode` (Categories or Flat). The warning names each battleground
+  node set that would open three rings deep because a group above it is active there too
+  (`Dial_Layout.DeepGroups`, built under that battleground's preview). The list is the dial's
+  priority order; Add a group appends one.
+- **Wheel:** Wedges per ring is `dial.slices` (4, 6, 8 or 12; a ring that holds a ring takes 8 on a
+  12-wedge dial), Open at is `dial.openAt` (its place or the cursor). X and Y write the whole
+  `dial.point` row; a refused offset says why and puts the box back. There is no depth control
+  (owner ruling R5): depth is spec §11.3's limit, warned about on the Groups tab.
+- **Binding:** a line on how Relaxed mode works; the Key capture box (AceGUI's `Keybinding`, the
+  `dial.key` row; Escape in it clears the key); the key's line, which says what the key opens or
+  names the WoW binding it shares by its menu label (`Compat.BindingAction`, then
+  `Compat.BindingLabel`; the dial's key still wins while the addon is enabled); for a dial that is
+  off, or with Quick Comms stood down, it says the key opens nothing; with no key of its own it names
+  a key bound to the dial's Open Comms Dial entry (`Compat.BindingKey`). A place line names which
+  Open Comms Dial entry this dial is (its place in the dial list, so it moves when a dial above it is
+  deleted), or says a dial past the fourth has none.
+  A key another dial has, or one the open dial uses (Escape, the mouse buttons and wheel, 1–8
+  without a modifier), is refused, and the box goes back to the stored key.
+- **Preview:** each ring, wedge by wedge, with its compass word (a clock position past eight
+  wedges), marking the ring the dial opens on
+  and the wedges that open a ring. It is a listing (owner ruling R3); the drawn dial is the
+  in-game preview (test mode, Preview as…).
+
+The page's Defaults puts groups-as, wedges per ring and open at back to their defaults and turns the
+dial on, in one act (`Library.Batch`); the name, groups, key and position are kept.
+
 ## Share
 
 `settings/Share.lua`. Phase 3 ships the Built-in tab; Export and Import join it, ahead of it, in
@@ -115,4 +162,4 @@ Groups page's Callouts tab. Defaults turns every set back on and shows all of th
 
 ## Still to come
 
-The Comms Dial page (phase 4) and Share's Export and Import tabs (phase 5).
+Share's Export and Import tabs (phase 5), and Quick mode's delay and tap action with the C7 upgrade.

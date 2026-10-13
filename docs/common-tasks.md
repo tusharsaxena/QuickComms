@@ -62,6 +62,10 @@ Add the field to `Library.TEMPLATES[kind]` (its shape and default), and a row to
 
 A file under `settings/` that calls `Settings.Editors.RegisterPage(pageKey, title, frameSuffix, render, defaults)`, listed in the TOC above `settings\SlashVerbs.lua`. `render(ctx)` draws `PageBanner` (the picker and the create action), then `Settings.Editors.Tabs(ctx, pageKey, tabs)`. Keep the selection with `Ed.Heal`/`Ed.Select`, draw lists with `Ed.ReorderRows`, delete through `Ed.ConfirmDelete`, and write only through Library or the seam. Drive it in a suite through `tests/page_helpers.lua`.
 
+## Change what the dial does in combat
+
+The dial's in-combat behavior is the restricted snippets in `modules/Dial_Secure.lua` (`ONCLICK`, `OPEN`, `DISPLAY`, `SHOW`, `CLOSE`, `WEDGE_PRE`, `WEDGE_POST`). `DISPLAY` (`qc-display`) is the insecure open test mode and Preview as… use: the same open, but it binds no key, so Escape and 1–8 stay free while the settings window is open; a change to `OPEN` or `SHOW` must keep it so. `OPEN` closes every other open dial first (the `sibling<n>` frame refs `DialSecure.Link` writes), so one dial at a time holds Escape, the wheel and 1–8. A snippet may show, hide, anchor and bind, and reads attributes; it never writes one (the firewall greps the file). Anything it needs to know arrives as an attribute written by `DialSecure.Load` out of combat. Pin the change in `tests/test_dial_secure.lua`, in and out of combat; `tests/wow_mock.lua` runs the snippets in the header's own environment.
+
 ## Regenerate the test inventory
 
 ```sh

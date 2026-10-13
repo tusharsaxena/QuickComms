@@ -256,6 +256,36 @@ function Compat.ClassName(classFile)
     return PlainString(names[classFile])
 end
 
+-- ── The dial's key (spec §9.4) ───────────────────────────────────────────────────────────────
+
+--- The action the player's own WoW binding gives `key` (a binding name such as MOVEFORWARD, or a
+--- CLICK binding), or nil when it has none, it is secret, or the API is absent. Shown, never matched.
+function Compat.BindingAction(key)
+    if not (GetBindingAction and Compat.IsSafeKey(key)) then return nil end
+    local action = PlainString(GetBindingAction(key))
+    if action == nil or action == "" then return nil end
+    return action
+end
+
+--- The name WoW's key bindings menu shows for a binding action (its BINDING_NAME_<action> global,
+--- which the client and each addon's Bindings.xml labels set), or nil when it has none or it is not a
+--- plain string. Shown, never matched.
+function Compat.BindingLabel(action)
+    if not Compat.IsSafeKey(action) then return nil end
+    local label = PlainString(_G["BINDING_NAME_" .. action])
+    if label == nil or label == "" then return nil end
+    return label
+end
+
+--- The first key the player bound to `command` in WoW's key bindings menu (GetBindingKey), or nil
+--- when there is none, it is secret, or the API is absent.
+function Compat.BindingKey(command)
+    if not (GetBindingKey and Compat.IsSafeKey(command)) then return nil end
+    local key = PlainString((GetBindingKey(command)))
+    if key == nil or key == "" then return nil end
+    return key
+end
+
 -- ── The pad (spec §10.1) ─────────────────────────────────────────────────────────────────────
 
 --- UIParent's width and height, or nil while either is unknown or not a positive plain number.

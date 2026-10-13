@@ -5,7 +5,7 @@ local _, NS = ...
 -- and the Add loop are LibKa0s-DebugLog-1.0's. Every section READS state and never acts: no hold,
 -- no event, no timer, safe in combat and while stood down. `out:add` formats %s-only and runs every
 -- argument through safeToString, so raw values are passed, never pre-built strings. The sections
--- cover design spec §16's list; override bindings join with the Dial (phase 4).
+-- cover design spec §16's list, the Comms Dial's and its override bindings included.
 
 NS.Diagnostics = NS.Diagnostics or {}
 
@@ -115,6 +115,28 @@ local function surfaces(out)
     end
 end
 
+-- The dials (spec §16): each built dial's header, key, rings, the ring it opens on, whether it is open
+-- now, its active groups, its stale hint and its lockdown chip.
+local function dials(out)
+    local plans = NS.Surfaces.DialPlans()
+    local stale = NS.State.surfaceStale or {}
+    local p = NS.db.profile
+    out:joined("Dial", "dials built", NS.Dial.Ids())
+    for _, id in ipairs(NS.Dial.Ids()) do
+        local inst, plan, d = NS.Dial.Instance(id), plans[id], p.dials[id]
+        out:add("Dial", "%s %s key=%s rings=%s openRing=%s open=%s active=%s stale=%s lockdownChip=%s", id,
+            inst.header:GetName(), d and d.key, plan and #plan.rings, plan and plan.openRing, NS.Dial.IsOpen(id),
+            plan and table.concat(plan.order, ","), stale[id] == true, plan and plan.lockdownChip)
+    end
+end
+
+-- The override bindings (spec §9.4, §16): every key the addon holds, and the frame and button it clicks.
+local function bindings(out)
+    local list = NS.SendEngine.Bindings()
+    out:add("Bind", "override bindings=%s", #list)
+    for _, b in ipairs(list) do out:add("Bind", "%s -> %s:%s", b.key, b.name, b.button) end
+end
+
 -- The send engine (spec §16): the armed buttons, each with its pad, callout and escaped line; the
 -- combat-end queue's keys; the guard; the echo tracker's counts.
 local function send(out)
@@ -145,6 +167,8 @@ function NS.Diagnostics.Sections()
         { "restrictions", restrictions },
         { "library",      library },
         { "surfaces",     surfaces },
+        { "dials",        dials },
+        { "bindings",     bindings },
         { "send",         send },
     }
 end
