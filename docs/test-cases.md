@@ -96,9 +96,9 @@ Total.
 - options: the General page's first group is exactly `Master controls`
 - options: the degraded load completes, and the panel says once that it is unavailable
 - libs: [phase 5] LibDeflate and LibSerialize are vendored, TOC-listed and loaded before the addon
-- perf: [phase 5] a refresh notes situation.refresh, and each plan resolver.resolve inside bake.surface
-- perf: [review] a refresh whose signature moves notes situation.refresh before the rebuild it publishes
-- perf: [phase 5] the Comms Dial page's Preview notes neither bake.surface nor resolver.resolve
+- perf: [phase 5] a refresh notes situationRefresh, and each plan resolverResolve inside bakeSurface
+- perf: [review] a refresh whose signature moves notes situationRefresh before the rebuild it publishes
+- perf: [phase 5] the Comms Dial page's Preview notes neither bakeSurface nor resolverResolve
 
 ### test_database.lua (7)
 

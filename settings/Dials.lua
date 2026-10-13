@@ -125,7 +125,7 @@ local function menuCommand(place)
 end
 
 -- Plans the page builds to look at (the depth warning, the Preview listing) are not a surface's bake:
--- they stay out of the bake.surface perf bucket.
+-- they stay out of the bakeSurface perf bucket.
 local function lookDeps(snap)
     local deps = NS.Surfaces.Deps(snap)
     deps.unmeasured = true

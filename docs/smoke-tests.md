@@ -103,7 +103,7 @@ Comms and the `identity`, `settings`, `registration`, `integrations`, `situation
 afterwards. `/qc debug diagnostics` writes the same report again below the first. Result:
 
 **DIAG-2. Perf.** `/qc perf` → the step panel opens with its own close mark; run A, B and finish →
-the report prints the `bake.surface`, `send.click`, `pad.layout` and `echo.match` rows and no Lua
+the report prints the `bakeSurface`, `sendClick`, `padLayout` and `echoMatch` rows and no Lua
 error. Result:
 
 ## Degraded

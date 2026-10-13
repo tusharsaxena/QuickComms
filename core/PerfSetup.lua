@@ -16,18 +16,18 @@ local lib = LibStub and LibStub("LibKa0s-Perf-1.0", true)
 
 -- The buckets, in report order: design spec §16's seven, each bracketed by the module named beside
 -- it, and each declared with the bracket that reaches it, so a declared bucket is never left
--- unreached (tests/test_setup.lua). resolver.resolve runs inside bake.surface and says so (`within`,
+-- unreached (tests/test_setup.lua). resolverResolve runs inside bakeSurface and says so (`within`,
 -- performance-§3).
 local BUCKETS = {
     -- modules/Situation.lua: one read, classify and signature (RefreshNow); the SITUATION_CHANGED
     -- publish, and the rebuild it runs, are outside it and measured by their own buckets
-    { key = "situation.refresh" },
-    { key = "bake.surface" }, -- modules/Surfaces.lua: one pad's or dial's plan (resolve, order, bake every slot)
-    { key = "resolver.resolve", within = "bake.surface" }, -- modules/Surfaces.lua: a plan's active groups and their order
-    { key = "send.click" },   -- modules/SendEngine.lua: the OnClick hook
-    { key = "pad.layout" },   -- modules/Pad.lua: one pad's rebuild (geometry, chips, arm)
-    { key = "echo.match" },   -- modules/SendEngine.lua: a CHAT_MSG_* echo while a press waits
-    { key = "dial.render" },  -- modules/Dial_Render.lua: the pointer's OnUpdate while a dial is open
+    { key = "situationRefresh" },
+    { key = "bakeSurface" }, -- modules/Surfaces.lua: one pad's or dial's plan (resolve, order, bake every slot)
+    { key = "resolverResolve", within = "bakeSurface" }, -- modules/Surfaces.lua: a plan's active groups and their order
+    { key = "sendClick" },   -- modules/SendEngine.lua: the OnClick hook
+    { key = "padLayout" },   -- modules/Pad.lua: one pad's rebuild (geometry, chips, arm)
+    { key = "echoMatch" },   -- modules/SendEngine.lua: a CHAT_MSG_* echo while a press waits
+    { key = "dialRender" },  -- modules/Dial_Render.lua: the pointer's OnUpdate while a dial is open
 }
 
 if not (lib and NS.Lifecycle) then

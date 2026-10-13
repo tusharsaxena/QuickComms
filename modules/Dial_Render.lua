@@ -9,7 +9,7 @@ local _, NS = ...
 -- guard's cooling veil, a result flash and a gold glow under the mouse (the selected wedge). The hub carries the stale hint, the lockdown chip and the test
 -- or preview label. The pointer is a plain (unprotected) child of the header that turns toward the
 -- cursor: its OnUpdate is set when the header shows and cleared when it hides, so a closed or
--- stood-down dial runs nothing per frame (perf bucket dial.render).
+-- stood-down dial runs nothing per frame (perf bucket dialRender).
 
 NS.DialRender = NS.DialRender or {}
 local R = NS.DialRender
@@ -62,7 +62,7 @@ function R.PointerUpdate(pointer)
     else
         arrow:Hide()
     end
-    if t0 then Perf.Note("dial.render", debugprofilestop() - t0) end
+    if t0 then Perf.Note("dialRender", debugprofilestop() - t0) end
 end
 
 --- Build the hub's regions and the pointer, once per header. `onEnter(header)` runs on hover.

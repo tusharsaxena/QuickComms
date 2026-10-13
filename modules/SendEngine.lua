@@ -425,7 +425,7 @@ function SE.OnClick(b, mouseButton, down)
     if not G.IsActingEdge(down, useKeyDown(b)) then return end
     local t0 = Perf.on and debugprofilestop()
     press(b)
-    if t0 then Perf.Note("send.click", debugprofilestop() - t0) end
+    if t0 then Perf.Note("sendClick", debugprofilestop() - t0) end
 end
 
 function SE.GuardState()
@@ -451,7 +451,7 @@ function NS.addon.OnSendEcho(_, event, ...)
     local guid = select(12, ...)
     local hit = G.Match(e, G.CHAT_TYPE_BY_EVENT[event], GetTime(), NS.Compat.SenderIsPlayer(sender, guid))
     if hit then result(hit.meta, "sent") end
-    if t0 then Perf.Note("echo.match", debugprofilestop() - t0) end
+    if t0 then Perf.Note("echoMatch", debugprofilestop() - t0) end
 end
 
 -- Stood down, no echo can arrive: the timers are canceled and the presses forgotten.

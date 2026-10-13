@@ -150,6 +150,15 @@ test("perf: every declared bucket has a bracket, and every bracket a declared bu
     for key, rel in pairs(brackets) do assertTrue(declared[key], rel .. " notes undeclared bucket " .. key) end
 end)
 
+test("perf: [audit QC-12] every bucket key is lowerCamelCase, named for the path it times (naming-cheatsheet)", function()
+    local NS = T.enableAddon()
+    assertTrue(#NS.Perf.BUCKET_ORDER == 7)
+    for _, key in ipairs(NS.Perf.BUCKET_ORDER) do
+        -- red under: a dotted key such as "bakeSurface" in core/PerfSetup.lua
+        assertTrue(key:match("^%l[%w]*$") ~= nil, key .. " is not lowerCamelCase")
+    end
+end)
+
 test("perf: the live harness is built, and the stub answers the perf verb", function()
     local NS = T.newAddon()
     assertTrue(NS.Perf.BuildRecord ~= nil, "the live instance, not the stub")
@@ -295,7 +304,7 @@ test("libs: [phase 5] LibDeflate and LibSerialize are vendored, TOC-listed and l
     assertTrue(ok and back.a == 1, "a round trip through both")
 end)
 
-test("perf: [phase 5] a refresh notes situation.refresh, and each plan resolver.resolve inside bake.surface", function()
+test("perf: [phase 5] a refresh notes situationRefresh, and each plan resolverResolve inside bakeSurface", function()
     local NS = T.enableAddon()
     local notes = {}
     local real = NS.Perf.Note
@@ -311,12 +320,12 @@ test("perf: [phase 5] a refresh notes situation.refresh, and each plan resolver.
     NS.Situation.RefreshNow("test")
     NS.Perf.on = false
     local text = table.concat(notes, ",")
-    assertTrue(text:find("situation.refresh", 1, true) ~= nil, text)
-    -- red under: drop the parent argument from the resolver.resolve bracket in modules/Surfaces.lua
-    assertTrue(text:find("resolver.resolve<bake.surface", 1, true) ~= nil, text)
+    assertTrue(text:find("situationRefresh", 1, true) ~= nil, text)
+    -- red under: drop the parent argument from the resolverResolve bracket in modules/Surfaces.lua
+    assertTrue(text:find("resolverResolve<bakeSurface", 1, true) ~= nil, text)
 end)
 
-test("perf: [review] a refresh whose signature moves notes situation.refresh before the rebuild it publishes", function()
+test("perf: [review] a refresh whose signature moves notes situationRefresh before the rebuild it publishes", function()
     local NS = T.enableAddon()
     local notes = {}
     local real = NS.Perf.Note
@@ -332,13 +341,13 @@ test("perf: [review] a refresh whose signature moves notes situation.refresh bef
     assertTrue(NS.Situation.RefreshNow("test"), "the signature moved")
     NS.Perf.on = false
     local text = table.concat(notes, ",")
-    assertTrue(text:find("bake.surface", 1, true) ~= nil, "the publish rebuilt the surfaces: " .. text)
-    -- red under: Perf.Note("situation.refresh") after the SITUATION_CHANGED send in modules/Situation.lua
+    assertTrue(text:find("bakeSurface", 1, true) ~= nil, "the publish rebuilt the surfaces: " .. text)
+    -- red under: Perf.Note("situationRefresh") after the SITUATION_CHANGED send in modules/Situation.lua
     -- (the whole rebuild timed inside a bucket declared with no children, performance-§3)
-    assertEqual(notes[1], "situation.refresh", text)
+    assertEqual(notes[1], "situationRefresh", text)
 end)
 
-test("perf: [phase 5] the Comms Dial page's Preview notes neither bake.surface nor resolver.resolve", function()
+test("perf: [phase 5] the Comms Dial page's Preview notes neither bakeSurface nor resolverResolve", function()
     local NS = T.enableAddon()
     local notes = {}
     local real = NS.Perf.Note

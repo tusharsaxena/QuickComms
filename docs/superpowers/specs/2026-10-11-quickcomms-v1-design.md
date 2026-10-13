@@ -610,7 +610,7 @@ The Blizzard ping wheel's look (brainstorm §4):
 
 **Wedge geometry.** The wedges sit on compass directions, with on-axis directions first: 4 wedges are N/E/S/W. A battleground node set may pin each node to its real compass direction.
 
-*Built (phase 4):* the paint is insecure regions on the secure frames (the disc and ✕ on the header, spokes and a title per ring, an icon, label, padlock, dim veil and gold hover glow per wedge); the pointer is a plain child whose `OnUpdate` runs only while the dial is open (perf `dial.render`).
+*Built (phase 4):* the paint is insecure regions on the secure frames (the disc and ✕ on the header, spokes and a title per ring, an icon, label, padlock, dim veil and gold hover glow per wedge); the pointer is a plain child whose `OnUpdate` runs only while the dial is open (perf `dialRender`).
 
 *Built (phase 5):* node sets are pinned to their compass winds, derived from the client's AreaPOI table by `tools/derive-winds.py` (each node's position against the center of its set's nodes, north up; a node near that center is the middle). A pinned ring has eight wedges, whatever the dial's slices, and is never paged; a middle node takes the first wind left free clockwise from N; a wind with no node has no wedge; the number keys pick the shown wedges clockwise from N. Flat mode is not pinned. Deepwind Gorge's current map has five nodes: Shrine and Ruins joined Market, Farm and Quarry (owner ruling, 2026-10-13; brainstorm §8 listed three).
 
@@ -695,7 +695,7 @@ NS.BuiltIns.callouts["bi.mplus.lust"] = { name = L["Lust"], text = L["Lust on th
 - **Generic battleground:** smartGroup, which resolves to instance chat.
 - **One set per battleground:** matched on the battleground's `instanceID`. Nodes are pinned to compass directions, with `openInto = true`. The battleground list is the 14 from brainstorm §8, and phase 5 confirms their instance IDs.
   *Built (phase 4):* the generic battleground set ships after every per-battleground set (and migration step 2 moves it there on stored profiles): D9 opens into the first active group, so a node set must come first.
-  *Built (phase 4):* the paint is insecure regions on the secure frames (the disc and ✕ on the header, spokes and a title per ring, an icon, label, padlock, dim veil and gold hover glow per wedge); the pointer is a plain child whose `OnUpdate` runs only while the dial is open (perf `dial.render`).
+  *Built (phase 4):* the paint is insecure regions on the secure frames (the disc and ✕ on the header, spokes and a title per ring, an icon, label, padlock, dim veil and gold hover glow per wedge); the pointer is a plain child whose `OnUpdate` runs only while the dial is open (perf `dialRender`).
   *Built (phase 5):* node sets are pinned to their compass winds, derived from the client's AreaPOI table by `tools/derive-winds.py` (each node's position against the center of its set's nodes, north up; a node near that center is the middle). A pinned ring has eight wedges, whatever the dial's slices, and is never paged; a middle node takes the first wind left free clockwise from N; a wind with no node has no wedge; the number keys pick the shown wedges clockwise from N. Flat mode is not pinned. Deepwind Gorge's current map has five nodes: Shrine and Ruins joined Market, Farm and Quarry (owner ruling, 2026-10-13; brainstorm §8 listed three).
   *Built (phase 5):* every id the fourteen sets list is a battleground map in the client's Map table (build 12.1.5.70340), matched by `tools/derive-gameids.py` and `tests/test_gameids.lua`; none changed. The in-game confirmation is smoke check BG-2, owed until it passes. Midnight's Slayer's Rise (map 2799) is not among the fourteen; the generic battleground set covers it.
 - **Wording** is faction-neutral (D11).
@@ -855,19 +855,23 @@ Repeating paths log only on change.
 *Built (phase 4):* the `dials` section (each dial's header, key, rings, open ring, open now, active groups, stale, lockdown chip) and the `bindings` section (every override binding).
 
 **Perf buckets:**
-- `situation.refresh`
-- `resolver.resolve`
-- `bake.surface`
-- `pad.layout`
-- `dial.render` (the OnUpdate while open)
-- `send.click` (the insecure hook)
-- `echo.match`
+- `situationRefresh`
+- `resolverResolve`
+- `bakeSurface`
+- `padLayout`
+- `dialRender` (the OnUpdate while open)
+- `sendClick` (the insecure hook)
+- `echoMatch`
 
-*Built (phase 4):* `dial.render` is bracketed; the dial open/close scenario in `tests/perf.lua` is phase 5.
+*Renamed (phase 5, audit QC-12):* the keys are lowerCamelCase (naming-cheatsheet); this list read
+`situation.refresh`, `resolver.resolve`, `bake.surface`, `pad.layout`, `dial.render`, `send.click`
+and `echo.match` before.
+
+*Built (phase 4):* `dialRender` is bracketed; the dial open/close scenario in `tests/perf.lua` is phase 5.
 
 `tests/perf.lua` covers a 12-chip pad rebuild, a full dial open/close and a zero-overhead scenario.
 
-*Built (phase 5):* all seven buckets are bracketed (`resolver.resolve` inside `bake.surface`). `tests/perf.lua`'s scenarios: `padRebuild12`, `dialOpenClose`, `situationRefresh`, and the zero-overhead pair, the dial pointer's `OnUpdate` with capture off against an instance with no Perf library (`dialPointerCaptureOff`, `dialPointerNoHarness`), beside `bracketCaptureOff`.
+*Built (phase 5):* all seven buckets are bracketed (`resolverResolve` inside `bakeSurface`). `tests/perf.lua`'s scenarios: `padRebuild12`, `dialOpenClose`, `situationRefresh`, and the zero-overhead pair, the dial pointer's `OnUpdate` with capture off against an instance with no Perf library (`dialPointerCaptureOff`, `dialPointerNoHarness`), beside `bracketCaptureOff`.
 
 ## 17. Message bus
 

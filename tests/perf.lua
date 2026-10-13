@@ -11,13 +11,13 @@
 -- THE SCENARIOS (spec §16, performance-§9):
 --   bracketCaptureOff     the bracket shape itself, around no work, capture off: notes and allocates
 --                         nothing.
---   dialPointerCaptureOff the hottest bracketed path, the open dial's pointer OnUpdate (dial.render,
+--   dialPointerCaptureOff the hottest bracketed path, the open dial's pointer OnUpdate (dialRender,
 --   dialPointerNoHarness  every frame while a dial is open), with capture off, and again on an
 --                         instance loaded WITHOUT the LibKa0s-Perf files (core/PerfSetup.lua's
 --                         stub): the zero-overhead pin is that capture off allocates no more than no
 --                         instrumentation at all.
---   padRebuild12          one 12-chip pad rebuilt from its plan, capture on: bake.surface,
---                         resolver.resolve and pad.layout, three notes.
+--   padRebuild12          one 12-chip pad rebuilt from its plan, capture on: bakeSurface,
+--                         resolverResolve and padLayout, three notes.
 --   dialOpenClose         the default dial opened, one pointer frame drawn, closed: one note.
 --   situationRefresh      one situation read whose signature did not move: one note.
 --

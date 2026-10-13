@@ -266,7 +266,7 @@ test("dials page: [final 11] the page's own plan builds are not timed as a surfa
     NS.Perf.on = true
     local note = NS.Perf.Note
     NS.Perf.Note = function(k, ...)
-        if k == "bake.surface" then notes = notes + 1 end
+        if k == "bakeSurface" then notes = notes + 1 end
         return note(k, ...)
     end
     local ok, err = pcall(function()

@@ -22,13 +22,18 @@ Seven are declared, all of the design's, in `core/PerfSetup.lua`, in report orde
 
 | Bucket | Bracketed in | Measures |
 |---|---|---|
-| `situation.refresh` | `modules/Situation.lua` | one situation read: inputs, classify, signature. The `SITUATION_CHANGED` publish runs after the bracket closes; the rebuild it triggers is in `bake.surface`, `resolver.resolve` and `pad.layout` |
-| `bake.surface` | `modules/Surfaces.lua` | one pad's or dial's plan: resolve, order, bake every slot (and, for a dial, the ring layout); the Comms Dial page's own looks at a plan (`deps.unmeasured`) are not counted |
-| `resolver.resolve` | `modules/Surfaces.lua` | a plan's active groups and their order; declared and noted within `bake.surface` |
-| `send.click` | `modules/SendEngine.lua` | the `OnClick` hook on a send button |
-| `pad.layout` | `modules/Pad.lua` | one pad's rebuild: geometry, chips, arm |
-| `echo.match` | `modules/SendEngine.lua` | a `CHAT_MSG_*` echo while a press waits |
-| `dial.render` | `modules/Dial_Render.lua` | the pointer's `OnUpdate` while a dial is open: one cursor read, one angle, one texture move |
+| `situationRefresh` | `modules/Situation.lua` | one situation read: inputs, classify, signature. The `SITUATION_CHANGED` publish runs after the bracket closes; the rebuild it triggers is in `bakeSurface`, `resolverResolve` and `padLayout` |
+| `bakeSurface` | `modules/Surfaces.lua` | one pad's or dial's plan: resolve, order, bake every slot (and, for a dial, the ring layout); the Comms Dial page's own looks at a plan (`deps.unmeasured`) are not counted |
+| `resolverResolve` | `modules/Surfaces.lua` | a plan's active groups and their order; declared and noted within `bakeSurface` |
+| `sendClick` | `modules/SendEngine.lua` | the `OnClick` hook on a send button |
+| `padLayout` | `modules/Pad.lua` | one pad's rebuild: geometry, chips, arm |
+| `echoMatch` | `modules/SendEngine.lua` | a `CHAT_MSG_*` echo while a press waits |
+| `dialRender` | `modules/Dial_Render.lua` | the pointer's `OnUpdate` while a dial is open: one cursor read, one angle, one texture move |
+
+Keys are lowerCamelCase, named for the path they time (naming-cheatsheet); until audit QC-12 they
+were dotted (`situation.refresh`, `bake.surface`, …), and no capture under `docs/perf-analysis/` names
+the old form. The `situationRefresh` scenario below shares its bucket's name because it times that
+bucket's path alone.
 
 Each bucket is declared together with the bracket that reaches it, and `tests/test_setup.lua` fails
 if a declared bucket has no bracket, or a bracket no bucket. Every

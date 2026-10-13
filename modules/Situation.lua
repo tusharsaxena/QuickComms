@@ -131,15 +131,15 @@ local function refresh(reason)
 end
 
 --- Read, classify, and publish when the signature moved. The read, classify and signature are
---- bracketed as situation.refresh (spec §16); the publish is outside the bracket, because out of
+--- bracketed as situationRefresh (spec §16); the publish is outside the bracket, because out of
 --- combat it rebuilds every surface at once, and that rebuild is measured by its own buckets
---- (bake.surface, resolver.resolve, pad.layout), which also run outside a refresh (performance-§3).
+--- (bakeSurface, resolverResolve, padLayout), which also run outside a refresh (performance-§3).
 --- @param reason string|nil for the debug line
 --- @return boolean changed
 function Sit.RefreshNow(reason)
     local t0 = Perf.on and debugprofilestop()
     local changed, snap, prev = refresh(reason)
-    if t0 then Perf.Note("situation.refresh", debugprofilestop() - t0) end
+    if t0 then Perf.Note("situationRefresh", debugprofilestop() - t0) end
     if changed then NS.addon:SendMessage(NS.MSG.SITUATION_CHANGED, snap, prev) end
     return changed
 end

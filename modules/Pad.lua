@@ -259,7 +259,7 @@ function Pad.Apply(id, plan)
     NS.SendEngine.SetVisibility(inst.root,
         PL.VisibilityDriver(NS.Setting("visibility"), look.visibility, plan.hasActive, plan.test == true))
     Pad.ApplyAlpha(id)
-    if t0 then Perf.Note("pad.layout", debugprofilestop() - t0) end
+    if t0 then Perf.Note("padLayout", debugprofilestop() - t0) end
     return true
 end
 

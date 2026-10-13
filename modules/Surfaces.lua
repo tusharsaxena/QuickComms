@@ -94,15 +94,15 @@ function S.Deps(snap)
     }
 end
 
--- A surface's active groups and its order of them (spec §7), bracketed as resolver.resolve inside
--- bake.surface (spec §16), and gated as bake.surface is: an editor's look at a plan
+-- A surface's active groups and its order of them (spec §7), bracketed as resolverResolve inside
+-- bakeSurface (spec §16), and gated as bakeSurface is: an editor's look at a plan
 -- (deps.unmeasured, settings/Dials.lua) notes neither, because a child noted under a parent that was
 -- never noted would skew performance-§3's within-parent figures.
 local function resolve(list, snap, deps)
     local t0 = Perf.on and not deps.unmeasured and debugprofilestop()
     local active = NS.Resolver.ActiveGroups(deps.groups, snap)
     local order = NS.Resolver.SurfaceOrder(list, active, deps.groups, deps.autoPromote)
-    if t0 then Perf.Note("resolver.resolve", debugprofilestop() - t0, "bake.surface") end
+    if t0 then Perf.Note("resolverResolve", debugprofilestop() - t0, "bakeSurface") end
     return active, order
 end
 
@@ -129,7 +129,7 @@ function S.BuildPlan(surfaceId, pad, snap, deps)
             plan.sections[#plan.sections + 1] = { groupId = sec.groupId, title = sec.title, slots = slots }
         end
     end
-    if t0 then Perf.Note("bake.surface", debugprofilestop() - t0) end
+    if t0 then Perf.Note("bakeSurface", debugprofilestop() - t0) end
     return plan
 end
 
@@ -229,7 +229,7 @@ function S.BuildDialPlan(surfaceId, dial, snap, deps)
         groups[#groups + 1] = entry
     end
     plan.rings, plan.openRing = NS.DialLayout.Rings(groups, { mode = dial.mode, slices = dial.slices, title = dial.name })
-    if t0 then Perf.Note("bake.surface", debugprofilestop() - t0) end
+    if t0 then Perf.Note("bakeSurface", debugprofilestop() - t0) end
     return plan
 end
 
