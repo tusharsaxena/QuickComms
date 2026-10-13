@@ -143,6 +143,12 @@ function DD.KeyLine(id)
     if type(key) ~= "string" or key == "" then
         local menuKey = own and NS.Compat.BindingKey(own)
         if menuKey then
+            if dial and dial.enabled == false then
+                return L["%s is bound to Open Comms Dial %d in WoW's key bindings, but this dial is off: it opens nothing until the dial is enabled."]:format(menuKey, place)
+            end
+            if NS.IsStoodDown() then
+                return L["%s is bound to Open Comms Dial %d in WoW's key bindings, but Quick Comms is off: it opens nothing until Quick Comms is enabled."]:format(menuKey, place)
+            end
             return L["No key here, but %s opens this dial from WoW's key bindings (Open Comms Dial %d)."]:format(menuKey, place)
         end
         return L["No key yet. Click the box and press one, or bind Open Comms Dial in WoW's key bindings."]

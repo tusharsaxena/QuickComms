@@ -229,6 +229,14 @@ test("dials page: [final 8] the Binding tab names this dial's Open Comms Dial en
     m.bindingKeys["CLICK QuickCommsDial1:Toggle"] = "F"
     -- red under: answer "No key yet" without reading GetBindingKey
     assertEqual(Dials.KeyLine("d2"), "No key here, but F opens this dial from WoW's key bindings (Open Comms Dial 1).")
+    -- red under: the no-own-key branch skips the dial.enabled and stood-down checks
+    assertTrue(NS.SchemaRuntime.Set("dial.enabled", false, "d2"))
+    assertEqual(Dials.KeyLine("d2"), "F is bound to Open Comms Dial 1 in WoW's key bindings, but this dial is off: it opens nothing until the dial is enabled.")
+    assertTrue(NS.SchemaRuntime.Set("dial.enabled", true, "d2"))
+    local stood = NS.IsStoodDown
+    NS.IsStoodDown = function() return true end
+    assertEqual(Dials.KeyLine("d2"), "F is bound to Open Comms Dial 1 in WoW's key bindings, but Quick Comms is off: it opens nothing until Quick Comms is enabled.")
+    NS.IsStoodDown = stood
     local ids = {}
     for i = 1, 4 do ids[i] = Dials.Create() end
     P.flush()
