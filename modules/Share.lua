@@ -1,7 +1,8 @@
 local _, NS = ...
 -- modules/Share.lua — export and import strings (design spec §15). The codec and the checks are
--- PURE: plain tables and strings in and out, no frame and no client read; the edge (Export, Check,
--- Apply and the copy window) joins below them in Task 5 of the phase 5 plan.
+-- PURE: plain tables and strings in and out, no frame and no client read. The edge is at the end:
+-- Collect and Export (the picked members and what they need, encoded and shown in the LibKa0s copy
+-- window) and Apply (a checked string, through Library.Import), both refused in combat.
 --
 -- THE STRING. "!QC1!" .. LibDeflate:EncodeForPrint(LibDeflate:CompressDeflate(LibSerialize:Serialize
 -- (payload))), payload = { v = 1, addon = "QuickComms", kind = "bundle", callouts, groups, pads?,
@@ -461,4 +462,121 @@ function SH.ReportLines(res)
             L["%d settings this version cannot take were left out."])
     end
     return out
+end
+
+-- ── the edge: export and apply ──────────────────────────────────────────────────────────────
+
+local TAG = "Share"
+
+-- A plain copy of a stored value for a payload. The profile's own data, so no check is needed here:
+-- what comes back in a string is checked by cleanValue above.
+local function copy(t)
+    if type(t) ~= "table" then return t end
+    local out = {}
+    for k, v in pairs(t) do out[k] = copy(v) end
+    return out
+end
+
+-- The picked ids and what they need: a pad's or a dial's user groups, then every picked group's
+-- callouts (spec §15: a group references its callouts, a surface its groups). Built-in sets travel
+-- by id only.
+local function bringGroups(want, surfaces, ids, groups)
+    for sid in pairs(ids) do
+        local s = surfaces[sid]
+        for _, gid in ipairs(s and s.groups or {}) do
+            if groups[gid] then want.group[gid] = true end
+        end
+    end
+end
+
+local function closure(pick, p)
+    local want = { callout = {}, group = {}, pad = {}, dial = {} }
+    for kind, ids in pairs(type(pick) == "table" and pick or {}) do
+        if want[kind] then
+            for id, on in pairs(ids) do want[kind][id] = on and true or nil end
+        end
+    end
+    bringGroups(want, p.pads, want.pad, p.groups)
+    bringGroups(want, p.dials, want.dial, p.groups)
+    for gid in pairs(want.group) do
+        local g = p.groups[gid]
+        for _, cid in ipairs(g and g.callouts or {}) do want.callout[cid] = true end
+    end
+    return want
+end
+
+--- A pad's or a dial's portable fields (SH.Portable), read through the seam: what its payload's
+--- `fields` carries.
+function SH.FieldsOf(kind, id)
+    local out = {}
+    for _, row in ipairs(NS.addon.Settings.Schema) do
+        if row.instance == kind and SH.Portable(kind, row.path) then
+            local v = NS.SchemaRuntime.Get(row.path, id)
+            if v ~= nil then out[row.path] = copy(v) end
+        end
+    end
+    return out
+end
+
+local function exportMember(kind, id, m)
+    if kind == "callout" then
+        return { name = m.name, text = m.text, channel = m.channel, icon = m.icon or nil }
+    end
+    if kind == "group" then
+        return { name = m.name, icon = m.icon or nil, callouts = copy(m.callouts), when = copy(m.when),
+            openInto = m.openInto == true, enabled = m.enabled ~= false }
+    end
+    return { name = m.name, enabled = m.enabled ~= false, groups = copy(m.groups), fields = SH.FieldsOf(kind, id) }
+end
+
+--- The payload for the picked members ({ callout = { [id] = true }, group = …, pad = …, dial = … })
+--- and what they need, or nil when nothing is picked.
+--- @return table|nil payload, number members
+function SH.Collect(pick)
+    local p = NS.db.profile
+    local want = closure(pick, p)
+    local payload, n = { v = SH.VERSION, addon = "QuickComms", kind = "bundle" }, 0
+    for _, spec in ipairs(SH.KINDS) do
+        local set, out = p[spec.key], {}
+        for id in pairs(want[spec.kind]) do
+            if set[id] then
+                out[id] = exportMember(spec.kind, id, set[id])
+                n = n + 1
+            end
+        end
+        payload[spec.key] = out
+    end
+    if n == 0 then return nil, 0 end
+    return payload, n
+end
+
+--- The export window: the LibKa0s copy window (core/WidgetsSetup.lua), built on first use; nil
+--- without the library.
+function SH.Window()
+    SH.window = SH.window or NS.MakeCopyWindow({ name = "QuickCommsShareWindow", scrollName = "QuickCommsShareScroll",
+        title = L["Quick Comms: share string"], width = 560, height = 300 })
+    return SH.window
+end
+
+--- Make the string for the picked members and show it, selected, in the copy window (spec §15).
+--- Refused in combat.
+--- @return string|nil the string, string|nil why there is none
+function SH.Export(pick)
+    if NS.Compat.InCombat() then return nil, "inCombat" end
+    local payload = SH.Collect(pick)
+    if not payload then return nil, "nothing" end
+    local text, why = SH.Encode(payload)
+    if not text then return nil, why end
+    NS.Debug(TAG, "export %s: %d characters", SH.CountText(payload), #text)
+    local win = SH.Window()
+    if win then win:Show(text) end
+    return text
+end
+
+--- Import a checked result through Library.Import (spec §15 step 6). Refused in combat.
+--- @return table|nil Library.Import's tally, string|nil why nothing was imported
+function SH.Apply(res)
+    if NS.Compat.InCombat() then return nil, "inCombat" end
+    if type(res) ~= "table" or not res.ok then return nil, type(res) == "table" and res.reason or "empty" end
+    return NS.Library.Import(res)
 end
