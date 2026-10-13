@@ -15,7 +15,7 @@ test("diagnostics: the sections are the addon's, in report order", function()
     local NS = T.newAddon()
     local names = {}
     for i, s in ipairs(NS.Diagnostics.Sections()) do names[i] = s[1] end
-    assertEqual(table.concat(names, ","), "identity,settings,registration,integrations,situation,library")
+    assertEqual(table.concat(names, ","), "identity,settings,registration,integrations,situation,restrictions,library")
 end)
 
 test("diagnostics: the report names the schema, the profile, the holds and the launcher", function()
@@ -49,4 +49,12 @@ test("diagnostics: the situation and library sections report the snapshot and th
     local text = report(NS)
     assertTrue(text:find("lockdown=", 1, true) ~= nil, "situation")
     assertTrue(text:find("callouts=", 1, true) ~= nil and text:find("active=", 1, true) ~= nil, "library")
+end)
+
+test("diagnostics: [final 1] the restriction section names the active reasons and canSendChat", function()
+    local NS, m = T.enableAddon()
+    m.restrictionStates[m.Enum.AddOnRestrictionType.Encounter] = m.Enum.AddOnRestrictionState.Active
+    m.chatLockdown = true
+    local text = report(NS)
+    assertTrue(text:find("active=chatLockdown,encounter reason=encounter canSendChat=false", 1, true) ~= nil, text)
 end)

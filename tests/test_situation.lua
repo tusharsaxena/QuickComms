@@ -137,3 +137,77 @@ test("situation: snapshot.lockdown mirrors Restrictions.ActiveSet", function()
     assertTrue(s.lockdown.chat)
     assertFalse(s.lockdown.pvpMatch)
 end)
+
+-- Counts every SITUATION_CHANGED while letting each message through, so the bus still runs.
+local function countSituation(NS)
+    local real, n = NS.addon.SendMessage, { 0 }
+    NS.addon.SendMessage = function(self, name, ...)
+        if name == NS.MSG.SITUATION_CHANGED then n[1] = n[1] + 1 end
+        return real(self, name, ...)
+    end
+    return n
+end
+
+test("situation: [final 1] a restriction or combat edge after the refresh reaches Current()", function()
+    local NS, m = T.enableAddon()
+    local RT, RS = m.Enum.AddOnRestrictionType, m.Enum.AddOnRestrictionState
+    m.inCombat = false
+    NS.Situation.RefreshNow("test")
+    local sent = countSituation(NS)
+    local sig = NS.State.situationSignature
+    m.__fire("ADDON_RESTRICTION_STATE_CHANGED", RT.Encounter, RS.Activating)
+    m.__fire("PLAYER_REGEN_DISABLED")
+    local s = NS.Situation.Current()
+    -- red under: drop Situation's RESTRICTION_CHANGED receiver
+    assertTrue(s.lockdown.encounter, "the encounter merged into the snapshot")
+    assertTrue(s.inCombat, "the combat edge merged into the snapshot")
+    assertEqual(sent[1], 0, "lockdown and combat never send SITUATION_CHANGED")
+    assertEqual(NS.State.situationSignature, sig, "the signature did not move")
+    m.__fire("PLAYER_REGEN_ENABLED")
+    m.__fire("ADDON_RESTRICTION_STATE_CHANGED", RT.Encounter, RS.Inactive)
+    s = NS.Situation.Current()
+    assertFalse(s.lockdown.encounter)
+    assertFalse(s.inCombat)
+    assertEqual(sent[1], 0)
+end)
+
+test("situation: [final 1] Current() before the first refresh reads the combat edge", function()
+    local NS, m = T.enableAddon()
+    m.inCombat = false
+    NS.State.situation = nil
+    NS.Restrictions.OnCombatEdge(true)
+    NS.State.situation = nil
+    assertTrue(NS.Situation.Current().inCombat, "the edge wins over the lagging flag")
+end)
+
+test("situation: [final 1] stood down, the receiver is down; stood up, it hears again", function()
+    local NS, m = T.enableAddon()
+    local RT, RS = m.Enum.AddOnRestrictionType, m.Enum.AddOnRestrictionState
+    NS.addon:OnSlashCommand("disable")
+    NS.State.situation = NS.Situation.Classify({})
+    NS.addon:SendMessage(NS.MSG.RESTRICTION_CHANGED, "encounter", false)
+    m.restrictionStates[RT.Encounter] = RS.Active
+    NS.addon:SendMessage(NS.MSG.RESTRICTION_CHANGED, "encounter", false)
+    assertFalse(NS.State.situation.lockdown.encounter == true, "nothing heard while stood down")
+    NS.addon:OnSlashCommand("enable")
+    assertTrue(NS.Situation.Current().lockdown.encounter, "the stand-up merged it")
+    m.restrictionStates[RT.Encounter] = nil
+    NS.Restrictions.Refresh("test")
+    assertFalse(NS.Situation.Current().lockdown.encounter, "heard again after the stand-up")
+end)
+
+test("situation: [final 1] on the degraded bus the module takes its own receiver down and up", function()
+    local NS, m = T.enableAddon{ skip = T.loadAddon.libFiles }
+    assertFalse(NS.Bus.tracked)
+    local RT, RS = m.Enum.AddOnRestrictionType, m.Enum.AddOnRestrictionState
+    NS.Situation.RefreshNow("test")
+    NS.addon:OnSlashCommand("disable")
+    NS.State.situation = NS.Situation.Classify({})
+    m.restrictionStates[RT.Encounter] = RS.Active
+    NS.addon:SendMessage(NS.MSG.RESTRICTION_CHANGED, "encounter", false)
+    assertFalse(NS.State.situation.lockdown.encounter == true, "unregistered by the stand-down")
+    NS.addon:OnSlashCommand("enable")
+    m.restrictionStates[RT.Encounter] = nil
+    NS.addon:SendMessage(NS.MSG.RESTRICTION_CHANGED, nil, true)
+    assertFalse(NS.Situation.Current().lockdown.encounter, "registered again by the stand-up")
+end)

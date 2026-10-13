@@ -65,6 +65,18 @@ local function situation(out)
     out:add("Situation", "lockdown=%s", table.concat(lock, ","))
 end
 
+-- The restriction state (spec §16): every reason in effect, the one the chip names, and whether
+-- a chat message may be sent. Read live, like every Restrictions answer.
+local function restrictions(out)
+    local R = NS.Restrictions
+    local active = {}
+    for reason in pairs(R.ActiveSet()) do active[#active + 1] = tostring(reason) end
+    table.sort(active)
+    local snap = R.Snapshot()
+    out:add("RES", "active=%s reason=%s canSendChat=%s inCombat=%s",
+        table.concat(active, ","), snap.reason, snap.canSendChat, R.InCombat())
+end
+
 local function count(t)
     local c = 0
     for _ in pairs(t) do c = c + 1 end
@@ -91,6 +103,7 @@ function NS.Diagnostics.Sections()
         { "registration", registration },
         { "integrations", integrations },
         { "situation",    situation },
+        { "restrictions", restrictions },
         { "library",      library },
     }
 end

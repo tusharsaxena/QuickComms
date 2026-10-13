@@ -32,6 +32,7 @@ The addon's sections (`modules/Diagnostics.lua`), in order:
 | `registration` | the declared feature events, whether they are registered, the events the client refused |
 | `integrations` | the launcher's registration and button |
 | `situation` | the snapshot: content, instance, difficulty, key level, group, leadership, class, spec, role, combat, and the active lockdown reasons |
+| `restrictions` | the restriction state: every reason in effect (Map included), the reason the lockdown chip names, `canSendChat`, and the combat flag as Restrictions reads it (the `PLAYER_REGEN` edge first) |
 | `library` | the counts (callouts, groups, pads, dials), `nextId`, `seeded`, and the ids of the active groups under the current situation |
 
 The report reads state only: it calls no client API that changes anything, takes no hold, starts no

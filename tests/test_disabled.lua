@@ -167,3 +167,12 @@ test("disabled 8: the launcher's Enabled entry stays live while disabled", funct
     boxes[1].click()
     assertFalse(NS.IsStoodDown(), "and turns the addon back on")
 end)
+
+test("disabled: [final 1] every feature event is declared once (AceEvent keeps one handler per event)", function()
+    local NS = T.newAddon()
+    local seen = {}
+    for _, row in ipairs(NS.FEATURE_EVENTS) do
+        assertTrue(seen[row[1]] == nil, row[1] .. " is declared twice")
+        seen[row[1]] = true
+    end
+end)

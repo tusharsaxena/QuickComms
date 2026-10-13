@@ -3,7 +3,9 @@ local _, NS = ...
 -- snapshot, is PURE: a plain table in, a plain table out, never throws. ReadInputs is the edge:
 -- the only place this module reads the client, all through NS.Compat. Refresh coalesces event
 -- bursts into one read 0.1 s later and sends SITUATION_CHANGED (snapshot, previous) only when the
--- signature moves. inCombat and lockdown ride along for display and never move the signature.
+-- signature moves. inCombat and lockdown ride along for display and never move the signature: they
+-- come from Restrictions (spec §17), stamped on every refresh and refreshed in place, without a
+-- SITUATION_CHANGED, whenever RESTRICTION_CHANGED says the restriction or combat state moved.
 
 NS.Situation = NS.Situation or {}
 local Sit = NS.Situation
@@ -98,7 +100,9 @@ function Sit.ReadInputs()
     }
 end
 
-local function withLockdown(s)
+-- Stamps Restrictions' view on a snapshot, in place: the lockdown reasons and the combat flag
+-- (the PLAYER_REGEN edge when one has been seen, which can lead InCombatLockdown()).
+local function withRestrictions(s)
     local R = NS.Restrictions
     if R and R.ActiveSet then
         local set = R.ActiveSet()
@@ -106,6 +110,7 @@ local function withLockdown(s)
             chat = set.chat == true or set.chatLockdown == true, encounter = set.encounter == true,
             challengeMode = set.challengeMode == true, pvpMatch = set.pvpMatch == true,
         }
+        s.inCombat = R.InCombat() == true
     end
     return s
 end
@@ -115,7 +120,7 @@ end
 --- @return boolean changed
 function Sit.RefreshNow(reason)
     State.situationPending = nil
-    local snap = withLockdown(Sit.Classify(Sit.ReadInputs()))
+    local snap = withRestrictions(Sit.Classify(Sit.ReadInputs()))
     local sig = Sit.Signature(snap)
     local prev = State.situation
     State.situation = snap
@@ -138,7 +143,7 @@ end
 
 --- The current snapshot, classified live (without a message) before the first refresh.
 function Sit.Current()
-    return State.situation or withLockdown(Sit.Classify(Sit.ReadInputs()))
+    return State.situation or withRestrictions(Sit.Classify(Sit.ReadInputs()))
 end
 
 local EVENTS = {
@@ -154,9 +159,30 @@ function NS.addon.OnSituationEvent(_, event)
     Sit.Refresh(event)
 end
 
+-- RESTRICTION_CHANGED: refresh the current snapshot's lockdown and combat in place. Never moves
+-- the signature and never sends SITUATION_CHANGED. Before the first refresh there is nothing to
+-- update: Current() classifies live then.
+local function onRestrictionChanged()
+    local s = State.situation
+    if s then withRestrictions(s) end
+end
+
+-- Its own target (core/Bus.lua). On the tracked bus the stand-down and stand-up take it down and
+-- replay it; on the degraded bus this module does both itself.
+local receiver
+local function listen()
+    receiver = receiver or NS.Bus:NewTarget()
+    if receiver then receiver:RegisterMessage(NS.MSG.RESTRICTION_CHANGED, onRestrictionChanged) end
+end
+listen()
+
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
     if State.situationTimer then NS.addon:CancelTimer(State.situationTimer) end
     State.situationTimer = nil
     State.situation, State.situationSignature, State.situationPending = nil, nil, nil
+    if receiver and not NS.Bus.tracked then receiver:UnregisterMessage(NS.MSG.RESTRICTION_CHANGED) end
 end
-NS.STAND_UP[#NS.STAND_UP + 1] = function() Sit.RefreshNow("standUp") end
+NS.STAND_UP[#NS.STAND_UP + 1] = function()
+    if not NS.Bus.tracked then listen() end
+    Sit.RefreshNow("standUp")
+end

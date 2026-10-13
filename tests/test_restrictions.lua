@@ -1,7 +1,7 @@
--- tests/test_restrictions.lua — modules/Restrictions.lua (spec §8.4 and §9): the four answers
--- (CanSendChat, CanInspect, CanTrade, ActiveReason) from the restriction event's hints, the
--- client's restriction and chat-lockdown answers and the combat edges; RESTRICTION_CHANGED; the
--- secret payloads; and the stand-down.
+-- tests/test_restrictions.lua — modules/Restrictions.lua (spec §8.4 and §9): the answers
+-- (ActiveReason, CanSendChat, InCombat) from the restriction event's hints, the client's
+-- restriction and chat-lockdown answers and the combat edges; RESTRICTION_CHANGED; the secret
+-- payloads; and the stand-down.
 
 local T = _G.QUICKCOMMS_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -27,13 +27,12 @@ local function installSecrets(m)
 end
 
 local function answers(R)
-    return ("%s %s %s %s"):format(tostring(R.ActiveReason()), tostring(R.CanSendChat()),
-        tostring(R.CanInspect()), tostring(R.CanTrade()))
+    return ("%s %s %s"):format(tostring(R.ActiveReason()), tostring(R.CanSendChat()), tostring(R.InCombat()))
 end
 
 test("restrictions: nothing restricted, everything allowed and nothing announced", function()
     local NS, m, heard = live()
-    assertEqual(answers(NS.Restrictions), "nil true true true")
+    assertEqual(answers(NS.Restrictions), "nil true false")
     assertTrue(m.__fire(EVENT, 4, 0) > 0, "the event is registered")
     assertEqual(#heard, 0)
 end)
@@ -41,7 +40,7 @@ end)
 test("restrictions: an encounter stops chat and is the reason; its lift is announced", function()
     local NS, m, heard, RT, RS = live()
     m.__fire(EVENT, RT.Encounter, RS.Activating)
-    assertEqual(answers(NS.Restrictions), "encounter false true true", "Activating counts at once")
+    assertEqual(answers(NS.Restrictions), "encounter false false", "Activating counts at once")
     assertEqual(#heard, 1)
     assertEqual(heard[1][1], "encounter"); assertFalse(heard[1][2])
     m.restrictionStates[RT.Encounter] = RS.Active
@@ -49,7 +48,7 @@ test("restrictions: an encounter stops chat and is the reason; its lift is annou
     assertEqual(#heard, 1, "no change, no message")
     m.restrictionStates[RT.Encounter] = nil
     m.__fire(EVENT, RT.Encounter, RS.Inactive)
-    assertEqual(answers(NS.Restrictions), "nil true true true")
+    assertEqual(answers(NS.Restrictions), "nil true false")
     assertEqual(#heard, 2)
     assertNil(heard[2][1]); assertTrue(heard[2][2], "the lift says chat may be sent")
 end)
@@ -76,12 +75,12 @@ test("restrictions: each type gives its reason; Map blocks nothing", function()
     local NS, m, _, RT, RS = live()
     local R = NS.Restrictions
     local CASES = {
-        { "Encounter", "encounter false true true" },
-        { "ChallengeMode", "challengeMode false true true" },
-        { "PvPMatch", "pvpMatch false true true" },
-        { "Chat", "chat false true true" },
-        { "Combat", "combat true false false" },
-        { "Map", "nil true true true" },
+        { "Encounter", "encounter false false" },
+        { "ChallengeMode", "challengeMode false false" },
+        { "PvPMatch", "pvpMatch false false" },
+        { "Chat", "chat false false" },
+        { "Combat", "combat true false" },
+        { "Map", "nil true false" },
     }
     for _, c in ipairs(CASES) do
         m.restrictionStates = { [RT[c[1]]] = RS.Active }
@@ -110,48 +109,49 @@ test("restrictions: a type the client adds later is reported by name and blocks 
     RT.Housing = 9
     m.restrictionStates[9] = RS.Active
     assertTrue(NS.Restrictions.ActiveSet().Housing)
-    assertEqual(answers(NS.Restrictions), "nil true true true")
+    assertEqual(answers(NS.Restrictions), "nil true false")
 end)
 
 test("restrictions: the chat lockdown stops chat, a secret answer too", function()
     local NS, m = live()
     installSecrets(m)
     m.chatLockdown = true
-    assertEqual(answers(NS.Restrictions), "chatLockdown false true true")
+    assertEqual(answers(NS.Restrictions), "chatLockdown false false")
     m.chatLockdown = T.secret(false)
     assertFalse(NS.Restrictions.CanSendChat(), "a secret lockdown reads as locked")
     m.chatLockdown = false
     assertTrue(NS.Restrictions.CanSendChat())
 end)
 
-test("restrictions: the combat edges stop inspect and trade, ahead of the client's flag", function()
+test("restrictions: the combat edges set InCombat, ahead of the client's flag", function()
     local NS, m, heard = live()
     local R = NS.Restrictions
     m.inCombat = false
     assertTrue(m.__fire("PLAYER_REGEN_DISABLED") > 0)
-    assertEqual(answers(R), "combat true false false", "the edge wins over a lagging flag")
+    assertEqual(answers(R), "combat true true", "the edge wins over a lagging flag")
     assertEqual(#heard, 1)
     assertEqual(heard[1][1], "combat"); assertTrue(heard[1][2], "combat alone leaves chat open")
     m.inCombat = true
     m.__fire("PLAYER_REGEN_ENABLED")
-    assertEqual(answers(R), "nil true true true")
+    assertEqual(answers(R), "nil true false")
     assertEqual(#heard, 2)
 end)
 
 test("restrictions: before any edge, the client's combat flag decides", function()
     local NS, m = live()
     m.inCombat = true
-    assertFalse(NS.Restrictions.CanInspect())
-    assertFalse(NS.Restrictions.CanTrade())
+    assertTrue(NS.Restrictions.InCombat())
+    assertEqual(NS.Restrictions.ActiveReason(), "combat")
 end)
 
 test("restrictions: combat under an encounter announces the change of what is allowed", function()
     local NS, m, heard, RT, RS = live()
     m.__fire(EVENT, RT.Encounter, RS.Active)
     m.__fire("PLAYER_REGEN_DISABLED")
-    assertEqual(#heard, 2, "the reason stays encounter, but inspect and trade closed")
+    -- red under: a signature of the top reason and canSendChat only
+    assertEqual(#heard, 2, "the reason stays encounter, but the set gained combat")
     assertEqual(heard[2][1], "encounter")
-    assertFalse(NS.Restrictions.CanInspect())
+    assertTrue(NS.Restrictions.InCombat())
     m.__fire("PLAYER_REGEN_ENABLED")
     assertEqual(#heard, 3)
 end)
@@ -171,7 +171,7 @@ test("restrictions: a client without the restriction APIs restricts nothing but 
     local NS, m = live()
     m.C_RestrictedActions, m.Enum.AddOnRestrictionType = nil, nil
     m.C_ChatInfo = nil
-    assertEqual(answers(NS.Restrictions), "nil true true true")
+    assertEqual(answers(NS.Restrictions), "nil true false")
     m.__fire("PLAYER_REGEN_DISABLED")
     assertEqual(NS.Restrictions.ActiveReason(), "combat")
 end)
@@ -199,4 +199,15 @@ test("restrictions: stood down, nothing is heard; the stand-up announces what is
     NS.addon:OnSlashCommand("enable")
     assertEqual(#heard, before + 1, "the replayed receiver heard the stand-up")
     assertEqual(heard[#heard][1], "chat")
+end)
+
+test("restrictions: [final 1] a lockdown lifting under a higher one is announced", function()
+    local NS, m, heard, RT, RS = live()
+    m.__fire(EVENT, RT.Encounter, RS.Active)
+    m.__fire(EVENT, RT.ChallengeMode, RS.Active)
+    assertEqual(#heard, 2, "challengeMode joined under encounter")
+    m.__fire(EVENT, RT.ChallengeMode, RS.Inactive)
+    assertEqual(#heard, 3, "and its lift is announced, though the reason stays encounter")
+    assertEqual(heard[3][1], "encounter")
+    assertFalse(NS.Restrictions.ActiveSet().challengeMode == true)
 end)

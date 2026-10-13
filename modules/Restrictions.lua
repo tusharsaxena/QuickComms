@@ -1,7 +1,7 @@
 local _, NS = ...
 -- modules/Restrictions.lua — what Blizzard's 12.0 addon restrictions allow right now (spec §8.4,
--- the lock matrix, and §9, the send engine): whether a chat message may be sent, an inspect asked for, a trade opened, and the reason
--- the surfaces' lockdown chip names.
+-- the lock matrix, and §9, the send engine): whether a chat message may be sent, whether the player
+-- is fighting, and the reason the surfaces' lockdown chip names.
 --
 -- THREE SOURCES, all through core/Compat.lua:
 --   * ADDON_RESTRICTION_STATE_CHANGED (type, state): the type's state as the event said it, kept
@@ -9,20 +9,23 @@ local _, NS = ...
 --     the client's own answer may not say so yet. The state arrives as a number (the
 --     AddOnRestrictionState) or a boolean; a secret one reads as active.
 --   * C_ChatInfo.InChatMessagingLockdown(), polled on every read (a secret answer is locked).
---   * Combat: the PLAYER_REGEN edge when one has been seen (this module's own PLAYER_REGEN rows hand it over,
---     because the flag can lag the edge), else InCombatLockdown(); the Combat type counts too.
+--   * Combat: the PLAYER_REGEN edge when one has been seen (this module's own PLAYER_REGEN rows
+--     hand it over, because the flag can lag the edge), else InCombatLockdown(); the Combat type
+--     counts too.
 --
 -- A type is active when its hint OR the client says so: a restriction is never assumed lifted
 -- until both agree. The answers are read live on every call, so a caller is never behind the
--- client; RESTRICTION_CHANGED (reason, canSendChat) is sent when the four answers move, from the
--- event, both combat edges and the stand-up. A lockdown that lifts with no event of its own is
--- picked up by the next read, and by Refresh, which the messaging edge (phase 2's SendEngine) calls on
--- ENCOUNTER_END and CHALLENGE_MODE_COMPLETED.
+-- client. RESTRICTION_CHANGED (reason, canSendChat) is sent whenever the set of blocking reasons
+-- moves (combat included, so both combat edges announce), from the event, both combat edges and
+-- the stand-up; Situation merges it into the snapshot. A lockdown that lifts with no event of its
+-- own is picked up by the next read, and by Refresh, which the messaging edge (phase 2's
+-- SendEngine) calls on ENCOUNTER_END and CHALLENGE_MODE_COMPLETED.
 --
 -- Reasons, in the chip's priority order: encounter, challengeMode, pvpMatch, chat (the Chat
--- type), chatLockdown, combat. The Map type is tracked and reported but blocks nothing: it is
--- active for the whole of a dungeon (DropWatcher's docs/midnight-quirks.md). A type the client adds later is
--- reported under its own enum name and blocks nothing until it is classified here.
+-- type), chatLockdown, combat. The Map type is tracked and reported but blocks nothing: it goes
+-- active on entering a dungeon and stays so (DropWatcher, docs/midnight-quirks.md, the "restriction
+-- event's payload" row). A type the client adds later is reported under its own enum name and
+-- blocks nothing until it is classified here.
 
 NS.Restrictions = NS.Restrictions or {}
 local R = NS.Restrictions
@@ -95,22 +98,10 @@ function R.CanSendChat()
     return anyOf(R.ActiveSet(), CHAT_BLOCKERS) == nil
 end
 
---- True when an inspect may be asked for now (spec §8: never in combat).
---- @return boolean
-function R.CanInspect()
-    return not R.ActiveSet().combat
-end
-
 --- True while the player is fighting: the PLAYER_REGEN edge, else (before one) the client's flag.
 --- @return boolean
 function R.InCombat()
     return inCombat()
-end
-
---- True when a trade may be opened now (spec §4: the trade helper guards combat).
---- @return boolean
-function R.CanTrade()
-    return not R.ActiveSet().combat
 end
 
 --- The reason that matters most now, for the surfaces' lockdown chip, or nil when nothing the addon does
@@ -120,39 +111,41 @@ function R.ActiveReason()
     return anyOf(R.ActiveSet(), PRIORITY)
 end
 
---- The four answers at once: { reason, canSendChat, canInspect, canTrade }, from one read.
+--- The answers at once, from one read: { reason, canSendChat }.
 --- @return table
 function R.Snapshot()
     local set = R.ActiveSet()
     return {
         reason      = anyOf(set, PRIORITY),
         canSendChat = anyOf(set, CHAT_BLOCKERS) == nil,
-        canInspect  = not set.combat,
-        canTrade    = not set.combat,
     }
 end
 
 -- ── the edge ────────────────────────────────────────────────────────────────────────────────
 
-local UNRESTRICTED = "none|true|true|true"
-
-local function signature(s)
-    return ("%s|%s|%s|%s"):format(s.reason or "none", tostring(s.canSendChat),
-        tostring(s.canInspect), tostring(s.canTrade))
+-- The blocking reasons in effect, in priority order: what RESTRICTION_CHANGED announces a move of.
+-- Every reason, not just the top one, so combat under an encounter (or one lockdown lifting under
+-- another) still reaches the receivers that merge the whole set.
+local function signature(set)
+    local parts = {}
+    for _, reason in ipairs(PRIORITY) do
+        if set[reason] then parts[#parts + 1] = reason end
+    end
+    return table.concat(parts, ",")
 end
 
---- Re-read the client. Sends RESTRICTION_CHANGED (reason, canSendChat) when any of the four
---- answers moved since the last send (before the first, since "nothing restricted").
+--- Re-read the client. Sends RESTRICTION_CHANGED (reason, canSendChat) when the set of blocking
+--- reasons moved since the last send (before the first, since "nothing restricted").
 --- @param cause string|nil the event (or `standUp`) that asked, for the debug line
 --- @return boolean changed
 function R.Refresh(cause)
-    local s = R.Snapshot()
-    local sig = signature(s)
-    local prev = State.restrictionSignature or UNRESTRICTED
+    local set = R.ActiveSet()
+    local sig = signature(set)
+    local prev = State.restrictionSignature or ""
     if sig == prev then return false end
     State.restrictionSignature = sig
-    NS.Debug(TAG, "restrictions %s -> %s (%s)", prev, sig, tostring(cause))
-    NS.addon:SendMessage(NS.MSG.RESTRICTION_CHANGED, s.reason, s.canSendChat)
+    NS.Debug(TAG, "restrictions [%s] -> [%s] (%s)", prev, sig, tostring(cause))
+    NS.addon:SendMessage(NS.MSG.RESTRICTION_CHANGED, anyOf(set, PRIORITY), anyOf(set, CHAT_BLOCKERS) == nil)
     return true
 end
 
