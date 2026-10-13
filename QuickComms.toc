@@ -101,6 +101,8 @@ modules\Bake.lua
 modules\Resolver.lua
 # Conventional: the registry writer (architecture-§5); Prepare is called from the entry after migrations
 modules\Library.lua
+# LOAD-BEARING: publishes NS.SendGuard, which modules\SendEngine.lua takes as a load-time upvalue.
+modules\SendEngine_Guard.lua
 # Conventional: core\DebugLogSetup.lua's descriptor reads NS.Diagnostics at RUN time.
 modules\Diagnostics.lua
 
