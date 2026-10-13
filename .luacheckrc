@@ -49,6 +49,8 @@ read_globals = {
   "GetCursorPosition",
   -- core/Compat.lua: the editors' display names (shown, never matched).
   "GetRealZoneText", "GetSpecializationInfoByID", "LOCALIZED_CLASS_NAMES_MALE",
+  -- core/Compat.lua: the Comms Dial page's warning when a dial's key is also a WoW binding.
+  "GetBindingAction",
 }
 
 -- The harness global, declared for tests/ only so no shipped file can reach for it. The

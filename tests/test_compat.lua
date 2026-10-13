@@ -132,3 +132,15 @@ test("compat: [phase 3] SpecInfoByID and ClassName read display names; secret or
     assertNil((NS.Compat.SpecInfoByID(265)))
     assertNil(NS.Compat.ClassName("WARLOCK"))
 end)
+
+test("compat: [phase 4] BindingAction reads the player's WoW binding; none, a secret or a missing API is nil", function()
+    local NS, m = T.newAddon()
+    m.bindingActions.G = "MOVEFORWARD"
+    assertEqual(NS.Compat.BindingAction("G"), "MOVEFORWARD")
+    T.assertNil(NS.Compat.BindingAction("H"))
+    m.issecretvalue = T.isSecret
+    m.bindingActions.G = T.secret("MOVEFORWARD")
+    T.assertNil(NS.Compat.BindingAction("G"))
+    m.GetBindingAction = nil
+    T.assertNil(NS.Compat.BindingAction("G"))
+end)
