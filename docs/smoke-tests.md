@@ -343,9 +343,10 @@ and set Font color to red → both turn red. Result:
 
 **LOOK-2. Border and background.** Border style: a LibSharedMedia border (Blizzard Tooltip, for one),
 thickness 3, color red → the pad's edge changes; thickness 0 → no edge. Background: dark blue at 50%
-opacity → the body changes; Use class color → your class color at 50%. Change one in combat → no
-error, the header shows "updates after combat", and it lands at combat end. Defaults → the Ka0s look
-again. Result:
+opacity → the body changes; Use class color → your class color at 50%. The settings panel is closed
+and locked in combat, so the in-combat write goes through the command line: in combat,
+`/qc set pad.look.borderSize 3` → no error, the header shows "updates after combat", and the thicker
+edge lands at combat end. Defaults → the Ka0s look again. Result:
 
 ## Icons
 
@@ -383,23 +384,37 @@ does `defaults/GameIds.lua`'s note change from "matched" to "confirmed". Result:
 ## Non-English client
 
 **LOC-1. A deDE or frFR client.** What this build reads that a locale can change, enumerated from the
-code: nothing. It reads no localized `_G` string, parses no tooltip line, keys nothing off a display
-string, and writes no header another tool parses; its own strings are English through `NS.L`, which
-answers the key itself on any client. The checks that will carry locale risk arrive with the
-situation engine (instance and difficulty matched by id, never by name, design spec §6) and the
-callout tokens (spec §8.1). Until then, on a deDE or frFR client: `/reload`, run `/qc help` and
-`/qc diagnostics` → English text throughout, no Lua error, and no stray `%s` or `%d` in any line.
-The failure looks like a raw format token in chat or a missing label. **Signed off without the
-client** while the enumeration above holds: the headless cases `test_slash` and `test_diagnostics`
-cover every line printed today, and the English client's INSTALL and SLASH checks are sufficient. The
-section is re-armed by the situation task, whose check replaces this paragraph's "nothing". Result:
+code (phase 5):
+- **Matched, never by name** (localization-§4): the situation engine keys instances, battlegrounds and
+  specializations by id, difficulty and content by `difficultyID` and tokens, a class by its
+  `classFile` token, a character by Name-Realm (`modules/Situation.lua`, `Library.ValidWhenValue`).
+  Headless: `test_situation`, `test_resolver`, `test_library`.
+- **Shown, never matched**: the editors' display names, read through Compat (`InstanceName` from
+  `GetRealZoneText`, `SpecInfoByID`, `ClassName` from `LOCALIZED_CLASS_NAMES_MALE`, `BindingLabel`
+  from a `BINDING_NAME_*` global). Headless: `test_compat` (a missing or secret name is nil, and the
+  editor falls back to the id).
+- **Sent in chat**: the callout tokens' values (`{me}`, `{spec}`, …) come from the client in its own
+  language and are escaped like any value (`test_tokens`).
+- **The Look's font**: the default face is LibSharedMedia's "Friz Quadrata TT", which LibSharedMedia
+  does not register on koKR, zhCN or zhTW; a face the machine does not have draws `STANDARD_TEXT_FONT`
+  (`Pad_Render.LabelFont`, `test_pad_render`).
+- **Printed**: every chat and report line is English through `NS.L`, the share and import lines
+  included (`test_slash`, `test_diagnostics`, `test_share`, `test_page_share`).
+
+On a deDE or frFR client: `/reload`, run `/qc help` and `/qc diagnostics`; open the Groups page's When
+on an instance and a spec; make a callout with `{spec}`; export a group and import the string → no Lua
+error, no stray `%s` or `%d` in any line, the When's names in the client's language with the ids
+unchanged, and the pad's labels drawn in a font (on koKR, zhCN or zhTW, the client's own). The failure
+looks like a raw format token in chat, a missing label, or a When that stops matching after a locale
+switch. **Owed**: the enumeration above is covered headlessly, but the names and the font fallback come
+from the client, so this check needs a non-English client pass. Result:
 
 ## Pending sign-off
 
 | ID | Origin | Why it is owed |
 |---|---|---|
-| INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..2, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet |
+| INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..2, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet; LOC-1 re-enumerated in phase 5 and owed a non-English client pass |
 | SEND-1..5, PAD-1..7 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet |
 | EDIT-1..8 | Phase 3: the editors | No client pass recorded yet |
 | DIAL-1..11 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-4 rewritten in phase 5 for the pinned ring |
-| SHARE-1..6, LOOK-1..2, ICON-1, BG-1..2, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet |
+| SHARE-1..6, LOOK-1..2, ICON-1, BG-1..2, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; LOOK-2's in-combat step goes through `/qc set` |

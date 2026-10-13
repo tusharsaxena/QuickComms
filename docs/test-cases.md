@@ -72,7 +72,7 @@ Total.
 - parity: the Env seam publishes the same NS members on both paths
 - parity: the Media seam publishes the same NS members on both paths
 
-### test_setup.lua (24)
+### test_setup.lua (25)
 
 - core: NS.Print is NS.Util.print after AceConsole's embed (architecture-§2)
 - core: the printer tags every line with the cyan [QC] prefix
@@ -97,6 +97,7 @@ Total.
 - options: the degraded load completes, and the panel says once that it is unavailable
 - libs: [phase 5] LibDeflate and LibSerialize are vendored, TOC-listed and loaded before the addon
 - perf: [phase 5] a refresh notes situation.refresh, and each plan resolver.resolve inside bake.surface
+- perf: [review] a refresh whose signature moves notes situation.refresh before the rebuild it publishes
 - perf: [phase 5] the Comms Dial page's Preview notes neither bake.surface nor resolver.resolve
 
 ### test_database.lua (7)
@@ -265,7 +266,7 @@ Total.
 - bake: a typed %t counts as live
 - bake: [phase 5] CleanText is the sanitizer short of the escape; Sanitize is CleanText, then the escape
 
-### test_share.lua (19)
+### test_share.lua (24)
 
 - share: a string is !QC1! then printable text, and decodes back to the same payload
 - share: [review 1] a pasted string may wrap and carry spaces; a cut-short one is damaged and imports nothing
@@ -286,6 +287,11 @@ Total.
 - share: [fix 2] one long string referenced 2000 times in a field is refused unread, promptly
 - share: [fix 2] a long name, text or icon is refused unread, promptly
 - share: [fix 2] shared short strings past the payload's text budget make the string too large
+- share: [review] a refused member's malformed id never reaches the report raw: no newline, no live escape
+- share: [review] a 200 KB malformed id gives a short report line
+- share: [review] a name's live | escape is stored and reported as text (||), as a typed | is
+- share: [review] a name that starts with / is a name, never sent: it travels and round-trips
+- share: [review] a nested key in a When or a field passes the sanitizer and the byte budget
 
 ### test_resolver.lua (8)
 
@@ -313,7 +319,7 @@ Total.
 - game ids: every battleground set matches only battleground maps, and no map is two sets'
 - game ids: the shipped dungeons are Mythic+ dungeons and the shipped raids are raids
 
-### test_library.lua (55)
+### test_library.lua (56)
 
 - library: Prepare seeds one pad and one dial with every built-in, once
 - library: callouts validate on create
@@ -368,6 +374,7 @@ Total.
 - library: [phase 5] Import makes every member under a fresh id, its references pointing at the copies
 - library: [review 3] importing the same string twice makes two copies; nothing that existed changes
 - library: [review 4] an imported pad and dial arrive unbound: no key, the default place, no built-in re-added
+- library: [review] an imported Look keeps a bool a bool and a color its four channels
 - library: [phase 5] Import is one act: one LIBRARY_CHANGED; a refused result imports nothing
 - library: [phase 5] Prepare gives a pad saved before the Look groups every field it lacks
 
@@ -495,7 +502,7 @@ Total.
 - dials page: [final 10] the key line of a dial that is off says the key opens nothing, and warns of no override
 - dials page: [final 11] the page's own plan builds are not timed as a surface's bake
 
-### test_page_share.lua (12)
+### test_page_share.lua (13)
 
 - share page: every shipped set has a line; turning M+ off takes it off the pad
 - share page: [review 4] Customize puts the copy in the set's place, selects it and opens the Groups page
@@ -504,6 +511,7 @@ Total.
 - share page: [phase 5] Export ticks a group; its callouts come along, and the string opens in the copy window
 - share page: [phase 5] Export with nothing ticked says so and opens nothing
 - share page: [phase 5] Import checks a pasted string, reports it, then adds it as new members
+- share page: [review] editing the box after Accept forgets the check: Import never adds the old string
 - share page: [phase 5] an imported dial says it has no key yet
 - share page: [phase 5] an imported group no shared pad or dial lists says where to add it
 - share page: [phase 5] export and import are refused in combat; nothing is made or added
@@ -606,12 +614,13 @@ Total.
 - master: /qc test toggles test mode, and in combat says why it will not
 - master: the Test mode row reads and writes the one switch, and Reset all ends it
 
-### test_pad_layout.lua (11)
+### test_pad_layout.lua (12)
 
 - layout: horizontal puts a section's chips on one row under the header
 - layout: a titled section draws its label row first
 - layout: grid wraps at its column count; vertical is one column
 - layout: the style sets the cell
+- layout: [review] a larger Look font grows the chip and title rows; the default size changes nothing
 - layout: leftward growth mirrors the row; collapsed is the header alone
 - layout: upward growth stacks the sections bottom-up, each title above its chips
 - layout: groups-as picks the sections: sections, merged, one tab at a time
@@ -662,7 +671,7 @@ Total.
 - surfaces: [phase 3] WhyLines names each shown group in order, built-ins marked, then the locks
 - surfaces: [phase 3] WhyLines in a key explains the built-in's matched row; a preview says so
 
-### test_pad_render.lua (14)
+### test_pad_render.lua (16)
 
 - render: Dress builds a chip's regions once, each its own object
 - render: an armed chip shows its name, its channel tag in the chat color, no lock, no dim
@@ -676,6 +685,8 @@ Total.
 - render: the drag-strip seam builds a hidden strip, and answers nil without the library
 - pad render: [phase 3] a previewed slot's tooltip shows its line and says it sends nothing
 - render: [phase 5] a pad's Look is a font and a skin; the defaults are the skin a pad always wore
+- render: [review] the skin's 1px inner line is kept only on the default flat 1px edge
+- render: [review] a chip's label stops short of the channel tag, on one line
 - render: [phase 5] Use class color takes the player's class color and keeps the swatch's alpha
 - render: [phase 5] a section title keeps its gold until the player colors the font
 
@@ -814,7 +825,7 @@ Total.
 | test_mock_secure.lua | 24 |
 | test_bus.lua | 2 |
 | test_surface_parity.lua | 15 |
-| test_setup.lua | 24 |
+| test_setup.lua | 25 |
 | test_database.lua | 7 |
 | test_profile.lua | 5 |
 | test_schema.lua | 14 |
@@ -827,11 +838,11 @@ Total.
 | test_tokens.lua | 8 |
 | test_channels.lua | 8 |
 | test_bake.lua | 12 |
-| test_share.lua | 19 |
+| test_share.lua | 24 |
 | test_resolver.lua | 8 |
 | test_builtins.lua | 7 |
 | test_gameids.lua | 2 |
-| test_library.lua | 55 |
+| test_library.lua | 56 |
 | test_members.lua | 23 |
 | test_editors.lua | 11 |
 | test_page_callouts.lua | 14 |
@@ -839,17 +850,17 @@ Total.
 | test_page_groups.lua | 16 |
 | test_page_pads.lua | 11 |
 | test_page_dials.lua | 16 |
-| test_page_share.lua | 12 |
+| test_page_share.lua | 13 |
 | test_check.lua | 6 |
 | test_send_guard.lua | 10 |
 | test_sendengine.lua | 28 |
 | test_dial_secure.lua | 12 |
 | test_preview.lua | 17 |
 | test_master.lua | 5 |
-| test_pad_layout.lua | 11 |
+| test_pad_layout.lua | 12 |
 | test_dial_layout.lua | 14 |
 | test_surfaces.lua | 22 |
-| test_pad_render.lua | 14 |
+| test_pad_render.lua | 16 |
 | test_pad.lua | 26 |
 | test_dial.lua | 27 |
 | test_vendor_sync.lua | 3 |
@@ -859,4 +870,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **653** |
+| **Total** | **664** |
