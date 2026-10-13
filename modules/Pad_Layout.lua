@@ -81,14 +81,36 @@ function PL.Columns(layout, count)
     return math.max(1, count)
 end
 
-local function mirror(items, width, height, growth)
-    for _, it in ipairs(items) do
-        if growth == "left" and it.kind == "chip" then it.x = width - it.x - it.w end
-        if growth == "up" then it.y = PL.HEADER_H + (height - it.y - it.h) end
+-- One section as a block: its title row and chip rows, offsets from the block's top. Upward growth
+-- flips the chip rows inside the block (the first row sits nearest the anchor) but keeps the title
+-- directly above its chips.
+local function sectionBlock(s, layout, cw, ch, gap, up)
+    local items, by = {}, 0
+    if s.title then
+        items[#items + 1] = { kind = "title", text = s.title, tabIndex = s.tabIndex, tabCount = s.tabCount,
+            x = PL.PAD, y = 0, w = 0, h = PL.SECTION_H }
+        by = PL.SECTION_H
     end
+    local list = s.slots or {}
+    local n, cols, trail = #list, 0, 0
+    if n > 0 then
+        cols = math.min(PL.Columns(layout, n), n)
+        local rows = math.ceil(n / cols)
+        for i, slot in ipairs(list) do
+            local r = math.floor((i - 1) / cols)
+            local c = (i - 1) - r * cols
+            local vr = up and (rows - 1 - r) or r
+            items[#items + 1] = { kind = "chip", slot = slot, row = r, col = c,
+                x = PL.PAD + c * (cw + gap), y = by + vr * (ch + gap), w = cw, h = ch }
+        end
+        by = by + rows * ch + (rows - 1) * gap
+        trail = gap
+    end
+    return { items = items, h = by, trail = trail, cols = cols }
 end
 
---- Place every title row and chip.
+--- Place every title row and chip. The header stays on top; "up" stacks the section blocks in
+--- reverse order (the first section nearest the anchor), "left" mirrors each chip row.
 --- @param sections table from VisibleSections
 --- @param layout table the pad's layout table
 --- @param opts table|nil { collapsed = boolean }
@@ -98,36 +120,33 @@ function PL.Compute(sections, layout, opts)
     opts = type(opts) == "table" and opts or {}
     local cw, ch = PL.CellSize(layout)
     local gap = math.max(0, tonumber(layout.spacing) or 4)
-    local items, contentW, used = {}, 0, false
-    local y = PL.HEADER_H + PL.PAD
+    local up = layout.growth == "up"
+    local blocks, contentW = {}, 0
     if not opts.collapsed then
         for _, s in ipairs(type(sections) == "table" and sections or {}) do
-            if s.title then
-                items[#items + 1] = { kind = "title", text = s.title, tabIndex = s.tabIndex, tabCount = s.tabCount,
-                    x = PL.PAD, y = y, w = 0, h = PL.SECTION_H }
-                y = y + PL.SECTION_H
-                used = true
-            end
-            local list = s.slots or {}
-            local n = #list
-            if n > 0 then
-                local cols = math.min(PL.Columns(layout, n), n)
-                local rows = math.ceil(n / cols)
-                for i, slot in ipairs(list) do
-                    local r = math.floor((i - 1) / cols)
-                    local c = (i - 1) - r * cols
-                    items[#items + 1] = { kind = "chip", slot = slot, row = r, col = c,
-                        x = PL.PAD + c * (cw + gap), y = y + r * (ch + gap), w = cw, h = ch }
-                end
-                contentW = math.max(contentW, cols * cw + (cols - 1) * gap)
-                y = y + rows * ch + (rows - 1) * gap + gap
-                used = true
+            local b = sectionBlock(s, layout, cw, ch, gap, up)
+            if #b.items > 0 then
+                blocks[#blocks + 1] = b
+                if b.cols > 0 then contentW = math.max(contentW, b.cols * cw + (b.cols - 1) * gap) end
             end
         end
     end
     local width = math.max(PL.MIN_W, contentW + 2 * PL.PAD)
-    local height = used and (y + PL.PAD) or PL.HEADER_H
-    mirror(items, width, height, layout.growth)
+    local y, nb = PL.HEADER_H + PL.PAD, #blocks
+    for k = 1, nb do
+        local b = blocks[up and (nb + 1 - k) or k]
+        b.top = y
+        y = y + b.h + b.trail
+    end
+    local items = {}
+    for _, b in ipairs(blocks) do
+        for _, it in ipairs(b.items) do
+            it.y = b.top + it.y
+            if layout.growth == "left" and it.kind == "chip" then it.x = width - it.x - it.w end
+            items[#items + 1] = it
+        end
+    end
+    local height = nb > 0 and (y + PL.PAD) or PL.HEADER_H
     return { width = width, height = height, items = items }
 end
 

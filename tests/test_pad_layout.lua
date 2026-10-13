@@ -80,6 +80,33 @@ test("layout: leftward growth mirrors the row; collapsed is the header alone", f
     assertEqual(box.width, 120)
 end)
 
+test("layout: upward growth stacks the sections bottom-up, each title above its chips", function()
+    local pl = PL()
+    local up = { orientation = "grid", columns = 2, growth = "up", style = "iconLabel", spacing = 4, width = 140 }
+    local box = pl.Compute({ { title = "A", slots = slots(3) }, { title = "B", slots = slots(1) } }, up)
+    local byText, chipsOf, cur = {}, {}, nil
+    for _, it in ipairs(box.items) do
+        if it.kind == "title" then
+            cur = it.text
+            byText[cur] = it
+            chipsOf[cur] = {}
+        else
+            table.insert(chipsOf[cur], it)
+        end
+    end
+    for _, name in ipairs({ "A", "B" }) do
+        for _, c in ipairs(chipsOf[name]) do
+            assertTrue(byText[name].y < c.y, name .. "'s title sits above its chips")
+        end
+    end
+    assertEqual(byText["B"].y, 22, "the last section is on top, under the header")
+    assertTrue(byText["A"].y > chipsOf["B"][1].y, "section A sits below section B")
+    local a = chipsOf["A"]
+    assertTrue(a[3].y < a[1].y, "the first chip row sits nearest the anchor")
+    assertEqual(box.height, 22 + 14 + 24 + 4 + 14 + 24 + 4 + 24 + 4 + 4)
+    assertEqual(a[1].y + a[1].h + 4 + 4, box.height, "the first row sits on the bottom edge")
+end)
+
 test("layout: groups-as picks the sections: sections, merged, one tab at a time", function()
     local pl = PL()
     local secs = { { title = "A", slots = slots(2) }, { title = "B", slots = slots(1) } }
