@@ -30,7 +30,8 @@ refresh, the latch re-read from the incoming profile's `enabled`, then `NS.MSG.P
 `ADDON_RESTRICTION_STATE_CHANGED` or a `PLAYER_REGEN` edge → `Restrictions` (it owns both
 `PLAYER_REGEN` rows) → when the set of blocking reasons moves, `RESTRICTION_CHANGED (reason,
 canSendChat)` → Situation refreshes the snapshot's `lockdown` and `inCombat` in place. The signature
-does not move and no `SITUATION_CHANGED` is sent.
+does not move and no `SITUATION_CHANGED` is sent. `PLAYER_REGEN_ENABLED` also drains SendEngine's
+combat-end queue directly, whether or not the restriction set moved.
 
 ## Today: `/qc check <id>`
 

@@ -71,5 +71,5 @@ files they add are listed in design spec §4.2.
 | `tests/test_pad_layout.lua` | `Pad_Layout`: geometry, the sections per groups-as mode, the visibility expression, the fade |
 | `tests/test_surfaces.lua` | `Surfaces`: a pad's plan, and the rebuild queued in combat with the stale hint |
 | `tests/test_pad_render.lua` | `Pad_Render`: what a chip and the header show, and the drag-strip seam |
-| `tests/test_pad.lua` | `Pad`: armed or disarmed chips, the visibility driver, the drag strip only while unlocked and out of combat |
+| `tests/test_pad.lua` | `Pad`: armed or disarmed chips, the visibility driver, the drag strip shown while unlocked (it will not drag while locked or in combat) |
 | `tests/perf.lua` | the offline scenarios, outside the gate |

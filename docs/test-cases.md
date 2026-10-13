@@ -102,7 +102,7 @@ Total.
 - profile: the spam guard clamps to 0.6-2.0 and fallback refuses unknown values
 - profile: schema version target is 1
 
-### test_schema.lua (12)
+### test_schema.lua (13)
 
 - schema: every row validates against the defaults
 - schema: a stored row whose path has no default is counted, not passed vacuously
@@ -116,6 +116,7 @@ Total.
 - schema: Reset all asks first, through the confirmation popup
 - schema: degraded, `enabled` is written through and still reacts
 - schema: degraded, a row-less path not in the list is still refused
+- schema: [fix wave] the Behavior rows that rebuild the pads resolve Settings.RebuildSurfaces when they run
 
 ### test_slash.lua (9)
 
@@ -152,7 +153,7 @@ Total.
 - diagnostics: [final 1] the restriction section names the active reasons and canSendChat
 - diagnostics: the surfaces and send sections name the pads, the armed chips and the guard
 
-### test_compat.lua (7)
+### test_compat.lua (8)
 
 - compat: plain readers pass plain values and drop secrets
 - compat: InstanceInfo with a secret instanceID reads nil, never raises
@@ -160,6 +161,7 @@ Total.
 - compat: [final] an empty-string realm falls back to the normalized realm name
 - compat: UseKeyDown reads the cvar, and defaults on when it cannot
 - compat: SenderIsPlayer answers by GUID, then by name, and nil when it cannot read either
+- compat: [fix wave] SenderIsPlayer: a cross-realm namesake is not the player; an unreadable realm is unknown
 - compat: ChatColor reads the client's chat colors and declines what it cannot read
 
 ### test_restrictions.lua (16)
@@ -304,7 +306,7 @@ Total.
 - echo: Expire drops only presses older than the window, oldest first
 - queue: a key replaces its earlier entry and keeps its place
 
-### test_sendengine.lua (23)
+### test_sendengine.lua (24)
 
 - sendengine: a send button is a named secure button registered for both edges
 - sendengine: Arm sends exactly the line; Disarm clears both attributes and sends nothing
@@ -317,6 +319,7 @@ Total.
 - sendengine: CancelTeardown releases the held registration without running it
 - sendengine: the visibility driver is set out of combat and declined in it
 - sendengine: [firewall] no other shipped file makes a secure call (spec §9)
+- sendengine: [fix wave] the firewall's patterns catch every Secure* template and SetAttribute spelling
 - sendengine: [D12] nothing calls SendChatMessage: the secure button is the one send path
 - send: one press is one send and one pending echo, though the hook hears both edges
 - send: [review 3] a double press in a boss: guarded, then dropped, with one note, never canceled
@@ -360,7 +363,7 @@ Total.
 - layout: the fade follows combat and the mouse, under the master alpha
 - layout: the channel tag names the resolved channel
 
-### test_surfaces.lua (18)
+### test_surfaces.lua (20)
 
 - surfaces: in a key the default pad's plan is the M+ set, baked to /p
 - surfaces: [review 5] a refused callout is a slot with its reason and no line
@@ -374,12 +377,14 @@ Total.
 - surfaces: ACTIVE_GROUPS_CHANGED is sent once per real change of a pad's active groups
 - surfaces: [review 1] a situation change in combat queues: nothing blocked, stale shows, combat end rebuilds
 - surfaces: [review 1] a profile switch in combat queues the new profile's pads
+- surfaces: [fix wave] enabled in combat (a /reload mid-pull): combat end builds the pad, the queue empties
 - surfaces: a setting written in combat waits for combat end, with the stale hint
 - surfaces: an encounter lockdown in combat padlocks a Say chip and lights the chip, nothing blocked
 - surfaces: test mode draws placeholders that send nothing; combat start brings the live chips back
 - surfaces: if lockdown has already begun at the combat edge, test mode's end is queued, not blocked
 - surfaces: disabled out of combat, every pad hides and every chip disarms; enabled, they return
 - surfaces: [review 2] disabled mid-combat: nothing blocked, one held registration, finished at combat end
+- surfaces: [fix wave] disabled then enabled inside one combat: the pad is shown and armed after it
 
 ### test_pad_render.lua (10)
 
@@ -394,7 +399,7 @@ Total.
 - render: the header shows the lockdown chip, the stale hint and the test label on demand
 - render: the drag-strip seam builds a hidden strip, and answers nil without the library
 
-### test_pad.lua (13)
+### test_pad.lua (21)
 
 - pad: the default pad shows the M+ callouts, each chip armed with its baked line
 - pad: [review 5] a refused chip is dimmed and disarmed: a click sends and reports nothing
@@ -409,6 +414,14 @@ Total.
 - pad: a send result flashes its chips; a press dims every chip for the guard window
 - pad: the fade follows the mouse and combat through SetAlpha alone
 - pad: Sync releases a pad no plan names: hidden, its chips disarmed
+- pad: [fix wave] a profile switch, a switch back and a profile reset each move the pad to that profile's point
+- pad: [fix wave] a rebuild during a drag leaves the dragged frame where the cursor has it
+- pad: [fix wave] a held drag survives a profile switch in combat: stopped at combat end, nothing blocked
+- pad: [fix wave] a held drag on a stand-down in combat is stopped by the held teardown
+- pad: [fix wave] a locked chip's press is not tracked: no guard, no drop, one lock note
+- pad: [fix wave] tabs switch on a wheel over a chip or the pad, not only the header
+- pad: [fix wave] in combat Reset position, Apply and Release do no protected work; combat end anchors
+- pad: [review 5] too long, and solo with no fallback: dimmed, disarmed, the reason shown, a click does nothing
 
 ### test_vendor_sync.lua (3)
 
@@ -489,11 +502,11 @@ Total.
 | test_setup.lua | 21 |
 | test_database.lua | 6 |
 | test_profile.lua | 5 |
-| test_schema.lua | 12 |
+| test_schema.lua | 13 |
 | test_slash.lua | 9 |
 | test_disabled.lua | 10 |
 | test_diagnostics.lua | 7 |
-| test_compat.lua | 7 |
+| test_compat.lua | 8 |
 | test_restrictions.lua | 16 |
 | test_situation.lua | 15 |
 | test_tokens.lua | 8 |
@@ -504,13 +517,13 @@ Total.
 | test_library.lua | 25 |
 | test_check.lua | 6 |
 | test_send_guard.lua | 10 |
-| test_sendengine.lua | 23 |
+| test_sendengine.lua | 24 |
 | test_preview.lua | 5 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 11 |
-| test_surfaces.lua | 18 |
+| test_surfaces.lua | 20 |
 | test_pad_render.lua | 10 |
-| test_pad.lua | 13 |
+| test_pad.lua | 21 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -518,4 +531,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **364** |
+| **Total** | **377** |

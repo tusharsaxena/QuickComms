@@ -40,7 +40,7 @@ with a library-absent body and not counted; their contract is LibKa0s
 | `IsRestrictionStateActive(state)` | `Enum.AddOnRestrictionState` (anything but `Inactive` is active, so `Activating` counts; a boolean answers itself) | a secret state is **active** | `false` for nil | `Restrictions` |
 | `IsRestrictionActive(rtype)` | `C_RestrictedActions.IsAddOnRestrictionActive`, else `GetAddOnRestrictionState` | a secret answer is **active** | `false` | `Restrictions` |
 | `UseKeyDown()` | the `ActionButtonUseKeyDown` cvar (`C_CVar.GetCVarBool`, else `GetCVarBool`) | a secret answer is `true` | `true` | `SendEngine` (the acting click edge) |
-| `SenderIsPlayer(sender, guid)` | `UnitGUID`, `UnitName` | a secret GUID or name is unreadable; neither readable answers `nil` (unknown, never a drop) | `nil` | `SendEngine` (the echo tracker) |
+| `SenderIsPlayer(sender, guid)` | `UnitGUID`, `UnitFullName` / `UnitName`, `GetNormalizedRealmName` | a secret GUID or name is unreadable; neither readable answers `nil` (unknown, never a drop). Without the GUID the full name decides: a cross-realm namesake is `false`, and a sender with a realm when the player's realm cannot be read is `nil` | `nil` | `SendEngine` (the echo tracker) |
 | `PlayerName()` | `UnitName` | plain or `nil` | `nil` | `Surfaces` (bakes `{me}`) |
 | `SpecName()` | `C_SpecializationInfo.GetSpecializationInfo`, else `GetSpecializationInfo` | plain or `nil` | `nil` | `Surfaces` (bakes `{spec}`) |
 | `DungeonName(mapID)` | `C_ChallengeMode.GetMapUIInfo` | plain or `nil` | `nil` | `Surfaces` (bakes `{dungeon}`), `Pad` (the situation chip) |

@@ -444,7 +444,9 @@ A locked callout stays visible with a padlock and a tooltip (brainstorm §3.3).
 **Combat-end queue.** It is keyed, and copies WhatGroup and PanelMaster's Unlock:
 - `Queue(key, fn)` replaces any earlier entry under the same key.
 - `Drain()` runs first on `PLAYER_REGEN_ENABLED`.
+  *Built (phase 2, fix wave):* `Restrictions` owns the edge and calls `Drain` from it directly, not only through a `RESTRICTION_CHANGED` that the edge may not send (after a login or `/reload` in combat no signature was seeded, so the end of combat moves nothing).
 - `Drop(reason)` runs on stand-down or a profile switch.
+  *Built (phase 2, fix wave):* stand-down drops every entry; a profile switch drops only what it supersedes (`surfaces`, `positions`) and keeps a held drag's stop (`padDrag`), which saves the point only into the profile it was dragged in.
 - `Snapshot()` feeds diagnostics.
 
 Every rebuild requested in combat goes through this queue and sets the surface's **stale hint**.
@@ -468,6 +470,8 @@ Every rebuild requested in combat goes through this queue and sets the surface's
 - It listens to the `CHAT_MSG_*` events for the player's own channels and **never reads their text**, which may be secret (F7).
 - A click with no matching event of that `chatType` within 1.5 s counts as **dropped**: the wedge or chip flashes red and, if `dropNotes` is on, one `[QC]` line is printed.
 - Other players' messages on the same channel can mask a drop. This is accepted as best effort.
+- *Built (phase 2, fix wave):* a press on a padlocked chip (§8.4; it stays armed) is not tracked: no guard stamp, no dim, no echo awaited, so the game's refusal is never reported as a drop. With `dropNotes` on, one `[QC]` line names the lock instead.
+- *Built (phase 2, fix wave):* without a readable GUID the sender's full name decides. A sender with a realm is the player only on the player's own realm (a cross-realm namesake is not); when the player's realm cannot be read that answer is unknown.
 
 **C6** checks whether the sender of the returning message can be read. **Unverified (owner, 2026-10-13).** The tracker must tolerate an unreadable (secret) sender: it treats that as unknown and never as dropped. If the sender can be read, it matches on sender and the false "sent" goes away.
 
@@ -562,6 +566,7 @@ If this happens in combat, the secure parts are held in the one permitted pendin
 
 **Position:**
 - `point` lives in the profile.
+  *Built (phase 2, fix wave):* every rebuild re-anchors the pad from the active profile, so a profile switch, copy or reset moves an existing pad (in combat, at the drained rebuild). A pad being dragged keeps the cursor's place.
 - X and Y rows sit on the pad's Layout tab.
 - Reset position is in Master controls, and resets every pad and dial anchor.
 
@@ -822,14 +827,14 @@ Every name is declared once in `core/Bus.lua` as `Ka0s_QuickComms_*`. Each messa
 | Constant | Sender | Payload | Consumers |
 |---|---|---|---|
 | `SITUATION_CHANGED` | Situation | snapshot, previous | Resolver edge (Surfaces), Preview, settings live lines |
-| `RESTRICTION_CHANGED` | Restrictions | reason, canSendChat (consumers read `Restrictions.ActiveSet()`) | Situation (merges into the snapshot), Surfaces (chips, padlocks) |
+| `RESTRICTION_CHANGED` | Restrictions | reason, canSendChat (consumers read `Restrictions.ActiveSet()`) | Situation (merges into the snapshot), Surfaces (chips, padlocks), SendEngine (drains the combat-end queue), Preview (ends test mode), Pad (ends a drag) |
 | `LIBRARY_CHANGED` | Library | kind, id | Surfaces, settings pages |
-| `ACTIVE_GROUPS_CHANGED` | Surfaces (the resolver edge) | surfaceId | Pad, Dial, settings dots |
+| `ACTIVE_GROUPS_CHANGED` | Surfaces (the resolver edge) | surfaceId | none in phase 2; Dial, settings dots (Surfaces already rebuilds the pad) |
 | `SURFACE_REBUILT` | Surfaces | surfaceId, stale | Diagnostics, settings |
 | `SEND_RESULT` | SendEngine | calloutId, surfaceId, `"guarded"` at the press when inside the guard window, then `"sent"` or `"dropped"` from the echo: one press can yield two results | Pad, Dial (flash) |
 | `COMBAT_QUEUE_DRAINED` | SendEngine | count | Surfaces (clears the stale hint) |
 | `PROFILE_CHANGED` | the entry (`core/QuickComms.lua`, `reloadProfile`) | — | everyone that caches |
-| `TEST_MODE_CHANGED` | Preview | on | Pad, Dial |
+| `TEST_MODE_CHANGED` | Preview | on | Surfaces (rebuilds the pads from the test plan), Dial |
 
 The count is nine, under the ten-message trigger, so there is no `message-bus.md` until it grows past ten.
 
