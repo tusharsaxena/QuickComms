@@ -1,8 +1,8 @@
 -- tests/test_disabled.lua — disabled means the addon is not running (slash-commands-§7).
 --
 -- Built on T.enableAddon() and the kit recorders (tests/_kit/mock_record.lua): `__registrations`,
--- `__timers()`, `__svWrites` / `__resetSvWrites`, `__fire`. The addon owns no game event yet, so
--- case 1 pins its own list empty, and the latch's machinery is proven with a probe row appended
+-- `__timers()`, `__svWrites` / `__resetSvWrites`, `__fire`. Case 1 pins the addon's own
+-- declared list, and the latch's machinery is proven with a probe row appended
 -- before OnEnable: the same path every feature module's row takes.
 
 local T = _G.QUICKCOMMS_TEST
@@ -10,12 +10,13 @@ local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.asse
 
 -- The game events the addon owns today, pinned as literals (sorted).
 local PINNED = {
-    "CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_RESET", "CHALLENGE_MODE_START", "GROUP_ROSTER_UPDATE",
-    "PARTY_LEADER_CHANGED", "PLAYER_DIFFICULTY_CHANGED", "PLAYER_ENTERING_WORLD", "PLAYER_ROLES_ASSIGNED",
+    "ADDON_RESTRICTION_STATE_CHANGED", "CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_RESET", "CHALLENGE_MODE_START", "GROUP_ROSTER_UPDATE",
+    "PARTY_LEADER_CHANGED", "PLAYER_DIFFICULTY_CHANGED", "PLAYER_ENTERING_WORLD", "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED",
+    "PLAYER_ROLES_ASSIGNED",
     "PLAYER_SPECIALIZATION_CHANGED", "ZONE_CHANGED_NEW_AREA",
 }
 
-local PROBE_EVENT = "PLAYER_REGEN_DISABLED"
+local PROBE_EVENT = "PLAYER_LEAVING_WORLD"
 
 -- What an instance carrying the probe row registers: the pinned events plus the probe, sorted.
 local PROBED = (function()

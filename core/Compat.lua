@@ -110,3 +110,46 @@ end
 function Compat.InCombat()
     return InCombatLockdown ~= nil and InCombatLockdown() == true
 end
+
+-- ── Restrictions (12.0), copied from DropWatcher core/Compat.lua:215-266 ───────────────────
+
+--- True while the chat-messaging lockdown is in effect. A secret answer reads as locked.
+function Compat.InChatMessagingLockdown()
+    local chat = C_ChatInfo
+    if not (chat and chat.InChatMessagingLockdown) then return false end
+    local locked = chat.InChatMessagingLockdown()
+    if Compat.IsSecret(locked) then return true end
+    return locked == true
+end
+
+--- Enum.AddOnRestrictionType (name -> value), or an empty table.
+function Compat.RestrictionTypes()
+    local enum = Enum and Enum.AddOnRestrictionType
+    return type(enum) == "table" and enum or {}
+end
+
+--- True when a restriction STATE is not Inactive. Boolean payloads answer themselves; secret is active.
+function Compat.IsRestrictionStateActive(state)
+    if Compat.IsSecret(state) then return true end
+    if type(state) == "boolean" then return state end
+    local n = PlainNumber(state)
+    if n == nil then return false end
+    local enum = Enum and Enum.AddOnRestrictionState
+    local inactive = enum and PlainNumber(enum.Inactive) or 0
+    return n ~= inactive
+end
+
+--- True while restriction `rtype` is in effect.
+function Compat.IsRestrictionActive(rtype)
+    local ra = C_RestrictedActions
+    if not ra or rtype == nil then return false end
+    if ra.IsAddOnRestrictionActive then
+        local active = ra.IsAddOnRestrictionActive(rtype)
+        if Compat.IsSecret(active) then return true end
+        return active == true
+    end
+    if ra.GetAddOnRestrictionState then
+        return Compat.IsRestrictionStateActive(ra.GetAddOnRestrictionState(rtype))
+    end
+    return false
+end

@@ -12,6 +12,8 @@
 -- Mock fields:
 --   inCombat       InCombatLockdown()'s answer, and UnitAffectingCombat("player")'s
 --   loadedAddons   the names C_AddOns.IsAddOnLoaded answers true for (this addon's own folder is in)
+--   chatLockdown   C_ChatInfo.InChatMessagingLockdown()'s answer
+--   restrictionStates  C_RestrictedActions' state per Enum.AddOnRestrictionType value (absent = 0)
 --   prints         every line handed to the Lua global `print` (the printer's sink)
 --   popupsShown    every StaticPopup_Show(which, ...) call, in order
 --   ldbObjects     LibDataBroker objects by name; minimapButtons LibDBIcon registrations by name
@@ -30,6 +32,25 @@ local function build()
 
     M.InCombatLockdown    = function() return M.inCombat == true end
     M.UnitAffectingCombat = function() return M.inCombat == true end
+
+    M.Enum = {
+        AddOnRestrictionType = { Combat = 0, Encounter = 1, ChallengeMode = 2, PvPMatch = 3, Map = 4,
+            Chat = 5 },
+        AddOnRestrictionState = { Inactive = 0, Activating = 1, Active = 2 },
+    }
+
+    -- C_ChatInfo: chatLockdown is InChatMessagingLockdown's answer.
+    M.chatLockdown = false
+    M.C_ChatInfo = {
+        InChatMessagingLockdown = function() return M.chatLockdown end,
+    }
+
+    -- C_RestrictedActions: restrictionStates[type] is the state; absent means Inactive.
+    M.restrictionStates = {}
+    M.C_RestrictedActions = {
+        GetAddOnRestrictionState = function(rtype) return M.restrictionStates[rtype] or 0 end,
+        IsAddOnRestrictionActive = function(rtype) return (M.restrictionStates[rtype] or 0) ~= 0 end,
+    }
 
     -- The client's addon list; the base leaves C_AddOns out on purpose (its own NOTE).
     M.C_AddOns = {

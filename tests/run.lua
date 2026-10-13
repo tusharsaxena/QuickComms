@@ -101,7 +101,7 @@ Kit.run{
         "test_disabled",
         "test_diagnostics",
         "test_compat",
-        "test_situation",
+        "test_restrictions", "test_situation",
         "test_vendor_sync",
         { name = "test_eol",                  dir = "tests/_kit/" },   -- line-endings-§7
         { name = "test_prose",                dir = "tests/_kit/" },   -- localization-§5

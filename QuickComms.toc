@@ -77,6 +77,8 @@ core\LauncherSetup.lua
 defaults\Profile.lua
 
 # Modules
+# Conventional: read by Situation at call time; appends to NS.FEATURE_EVENTS / STAND_DOWN / STAND_UP
+modules\Restrictions.lua
 # Conventional: feature module; appends to NS.FEATURE_EVENTS / STAND_DOWN / STAND_UP
 modules\Situation.lua
 # Conventional: core\DebugLogSetup.lua's descriptor reads NS.Diagnostics at RUN time.

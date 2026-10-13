@@ -126,3 +126,14 @@ test("situation: stand-down cancels a pending coalesced refresh", function()
     assertNil(NS.State.situationTimer)
     assertEqual(sent, 0)
 end)
+
+test("situation: snapshot.lockdown mirrors Restrictions.ActiveSet", function()
+    local NS = T.enableAddon()
+    NS.Restrictions.ActiveSet = function() return { encounter = true, chatLockdown = true } end
+    NS.Situation.ReadInputs = function() return {} end
+    NS.Situation.RefreshNow("test")
+    local s = NS.Situation.Current()
+    assertTrue(s.lockdown.encounter)
+    assertTrue(s.lockdown.chat)
+    assertFalse(s.lockdown.pvpMatch)
+end)

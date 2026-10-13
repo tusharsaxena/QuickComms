@@ -31,6 +31,8 @@ read_globals = {
   "GetNormalizedRealmName", "GetSpecialization", "GetSpecializationInfo", "IsInGroup", "IsInInstance",
   "IsInRaid", "LE_PARTY_CATEGORY_INSTANCE", "UnitClass", "UnitFullName", "UnitGroupRolesAssigned",
   "UnitIsGroupAssistant", "UnitIsGroupLeader",
+  -- modules/Restrictions.lua via core/Compat.lua: the 12.0 restriction APIs.
+  "C_ChatInfo", "C_RestrictedActions", "Enum",
 }
 
 -- The harness global, declared for tests/ only so no shipped file can reach for it. The

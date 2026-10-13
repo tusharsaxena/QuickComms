@@ -816,7 +816,7 @@ Every name is declared once in `core/Bus.lua` as `Ka0s_QuickComms_*`. Each messa
 | Constant | Sender | Payload | Consumers |
 |---|---|---|---|
 | `SITUATION_CHANGED` | Situation | snapshot, previous | Resolver edge (Surfaces), Preview, settings live lines |
-| `RESTRICTION_CHANGED` | Restrictions | lockdown table | Situation (merges into the snapshot), Surfaces (chips, padlocks) |
+| `RESTRICTION_CHANGED` | Restrictions | reason, canSendChat (consumers read `Restrictions.ActiveSet()`) | Situation (merges into the snapshot), Surfaces (chips, padlocks) |
 | `LIBRARY_CHANGED` | Library | kind, id | Surfaces, settings pages |
 | `ACTIVE_GROUPS_CHANGED` | Surfaces (the resolver edge) | surfaceId | Pad, Dial, settings dots |
 | `SURFACE_REBUILT` | Surfaces | surfaceId, stale | Diagnostics, settings |
