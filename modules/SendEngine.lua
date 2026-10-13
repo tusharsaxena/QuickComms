@@ -271,7 +271,7 @@ end
 -- ── the override bindings (spec §9.4): the dials' keys ──────────────────────────────────────
 
 local bindOwner          -- a plain frame; every override binding this addon holds is its
-local bound, boundSig = {}, nil
+local bound = {}
 
 --- Bind each { key, name, button } as an override click, replacing every binding this addon held.
 --- Out of combat only: the client refuses override bindings in combat. Logged only on a change.
@@ -291,10 +291,8 @@ function SE.BindKeys(list)
         parts[#parts + 1] = b.key .. "=" .. b.name
     end
     local sig = table.concat(parts, ",")
-    if sig ~= boundSig then
-        boundSig = sig
-        NS.Debug("Bind", "bound %s", sig ~= "" and sig or "nothing")
-    end
+    -- Log on change (debug-logging-§9); the library re-arms the key on a console Clear.
+    NS.DebugChanged("bindings", "Bind", "bound %s", sig ~= "" and sig or "nothing")
     return true
 end
 

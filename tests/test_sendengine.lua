@@ -445,6 +445,28 @@ test("sendengine: [phase 4] attributes, frame refs and snippets are written out 
     assertEqual(#m.blocked, 0)
 end)
 
+test("sendengine: [audit QC-11] the bound-keys line logs on change through DebugChanged, re-armed by a console Clear", function()
+    local NS = T.enableAddon()
+    local SE = NS.SendEngine
+    NS.DebugLog:SetEnabled(true)
+    local function bindLines()
+        local n = 0
+        for _, line in ipairs(NS.DebugLog.buffer) do
+            if tostring(line):find("bound G=QuickCommsDial1", 1, true) then n = n + 1 end
+        end
+        return n
+    end
+    local set = { { key = "G", name = "QuickCommsDial1", button = "Toggle" } }
+    NS.DebugLog:Clear()
+    SE.BindKeys(set)
+    SE.BindKeys(set)
+    assertEqual(bindLines(), 1, "an unchanged set logs once")
+    NS.DebugLog:Clear()
+    SE.BindKeys(set)
+    -- red under: put back the hand-rolled boundSig memo in SE.BindKeys (no Clear re-arms it)
+    assertEqual(bindLines(), 1, "a Clear re-arms the line")
+end)
+
 test("sendengine: [phase 4] BindKeys replaces the whole set, out of combat only; ClearKeys empties it", function()
     local NS, m = T.enableAddon()
     local SE = NS.SendEngine
