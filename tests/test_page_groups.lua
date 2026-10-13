@@ -169,3 +169,68 @@ test("groups page: [review 5] the When tab refuses an upside-down key-level rang
     assertTrue(table.concat(m.prints, "\n"):find("The lowest key level is above the highest.", 1, true) ~= nil)
     assertNil(NS.db.profile.groups[gid].when.keyLevel.max)
 end)
+
+local function countApply(NS)
+    local n = { applied = 0 }
+    local apply = NS.Surfaces.ApplyAll
+    NS.Surfaces.ApplyAll = function(...) n.applied = n.applied + 1 return apply(...) end
+    n.stop = function() NS.Surfaces.ApplyAll = apply end
+    return n
+end
+
+test("groups page: [final 16] New group rebuilds the pads once, however many pads there are", function()
+    local NS = open()
+    NS.Library.CreateSurface("pad", "Two")
+    NS.Library.CreateSurface("pad", "Three")
+    local n = countApply(NS)
+    -- red under: drop Library.Batch from G.Create and Lib.OfferGroup (one rebuild per surface, plus one)
+    local gid = NS.addon.Settings.Groups.Create()
+    n.stop()
+    assertEqual(NS.db.profile.pads.p1.groups[1], gid)
+    assertEqual(n.applied, 1)
+end)
+
+test("groups page: [final 3, 25] a user group's Defaults: Enabled on, Open the dial off, the rest kept, one rebuild", function()
+    local NS, _, P = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine", icon = 136012, when = { content = { raid = true } },
+        enabled = false, openInto = true })
+    local other = NS.Library.CreateGroup({ name = "Other", enabled = false })
+    pick(NS, gid)
+    P.redraw("groups")
+    local n = countApply(NS)
+    P.ctx("groups").panel.defaultsOnClick()
+    n.stop()
+    local g = NS.db.profile.groups[gid]
+    assertTrue(g.enabled)
+    assertFalse(g.openInto)
+    -- red under: give group.name, group.icon or group.when a default the page's Defaults reaches
+    assertEqual(g.name, "Mine")
+    assertEqual(g.icon, 136012)
+    assertTrue(g.when.content.raid)
+    assertFalse(NS.db.profile.groups[other].enabled, "another group is untouched")
+    -- red under: drop Library.Batch from G.RestoreDefaults (one rebuild per row)
+    assertEqual(n.applied, 1)
+end)
+
+test("groups page: [final 8] Customize of a set on no pad says the copy is on none", function()
+    local NS, m = open()
+    NS.Library.RemoveGroupFromSurface("pad", "p1", "bi.raid")
+    for _, sid in ipairs(NS.db.profile.dialOrder) do NS.Library.RemoveGroupFromSurface("dial", sid, "bi.raid") end
+    m.prints = {}
+    -- red under: print "took its place on every pad" whatever Library.Customize placed
+    NS.addon.Settings.Groups.Customize("bi.raid")
+    local text = table.concat(m.prints, "\n")
+    assertTrue(text:find("The set was on no pad", 1, true) ~= nil, text)
+    assertTrue(text:find("took its place", 1, true) == nil, text)
+end)
+
+test("groups page: [final 12] Duplicate says the copy is on no pad yet", function()
+    local NS, m, P = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    pick(NS, gid)
+    local w = P.redraw("groups")
+    m.prints = {}
+    -- red under: drop the printed line from G.Duplicate
+    P.find(w, "Button", "Duplicate"):__fire("OnClick")
+    assertTrue(table.concat(m.prints, "\n"):find("the copy is on no pad yet", 1, true) ~= nil)
+end)

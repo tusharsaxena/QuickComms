@@ -221,5 +221,6 @@ end
 
 Ed.RegisterPage(PAGE, L["Callouts"], "CalloutsPanel", render, {
     tooltip = L["Put the selected callout's channel back to Smart group. Its name, text and icon are kept."],
-    onClick = function(ctx) H().RestoreDefaults(PAGE, ctx) end,
+    -- One act (Library.Batch): the pads rebuild once, not once per row.
+    onClick = function(ctx) NS.Library.Batch(function() H().RestoreDefaults(PAGE, ctx) end) end,
 })

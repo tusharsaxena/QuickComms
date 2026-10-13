@@ -50,18 +50,26 @@ function G.Entries()
     return out
 end
 
+--- New group: create it and put it at the top of every pad and dial, as one act (Library.Batch), so
+--- the pads rebuild once.
 function G.Create()
-    local gid = NS.Library.CreateGroup({ name = L["New group"] })
+    local gid = NS.Library.Batch(function()
+        local id = NS.Library.CreateGroup({ name = L["New group"] })
+        if id then NS.Library.OfferGroup(id) end
+        return id
+    end)
     if not gid then return nil end
-    NS.Library.OfferGroup(gid)
     Ed.Select("group", gid)
     Ed.RequestRefresh()
     return gid
 end
 
+--- Duplicate: the copy is on no pad or dial (Library.DuplicateGroup), and the chat line says so and
+--- where to add it.
 function G.Duplicate(id)
     local copy = NS.Library.DuplicateGroup(id)
     if copy then
+        NS.Print(L["%s: the copy is on no pad yet. Add it under Comms Pad > Groups."]:format(NS.db.profile.groups[copy].name))
         Ed.Select("group", copy)
         Ed.RequestRefresh()
     end
@@ -90,10 +98,15 @@ function G.Customize(builtinId)
         Ed.RequestRefresh()
         return existing
     end
-    local copy = NS.Library.Customize(builtinId)
+    local copy, _, _, placed = NS.Library.Customize(builtinId)
     if not copy then return nil end
     Ed.Select("group", copy)
-    NS.Print(L["%s customized: the copy took its place on every pad."]:format(NS.BuiltIns.groups[builtinId].name))
+    local name = NS.BuiltIns.groups[builtinId].name
+    if (placed or 0) > 0 then
+        NS.Print(L["%s customized: the copy took its place on every pad."]:format(name))
+    else
+        NS.Print(L["%s customized. The set was on no pad, so the copy is on none: add it under Comms Pad > Groups."]:format(name))
+    end
     Ed.RequestRefresh()
     return copy
 end
@@ -160,7 +173,7 @@ local function renderGeneral(ctx, rows)
     end
     h.RenderRows(ctx, mine, nil, nil, { noHeadings = true })
     h.InlineButtonPair(ctx,
-        { text = L["Duplicate"], tooltip = L["Make a copy of this group, with the same callouts and When."],
+        { text = L["Duplicate"], tooltip = L["Make a copy of this group, with the same callouts and When. The copy is on no pad until you add it under Comms Pad > Groups."],
           onClick = function() G.Duplicate(gid) end },
         { text = L["Delete"], tooltip = L["Delete this group and take it off every pad. Its callouts are kept. Asks first."],
           onClick = function() G.Delete(gid) end })
@@ -292,11 +305,16 @@ end
 --- the overlay's Enabled row (whose page is share), so those two are what it resets, as one act.
 function G.RestoreDefaults(ctx)
     local h = H()
-    if not isBuiltin(Ed.Selected("group")) then return h.RestoreDefaults(PAGE, ctx) end
+    -- One act (Library.Batch): the pads rebuild once, not once per row.
+    if not isBuiltin(Ed.Selected("group")) then
+        return NS.Library.Batch(function() h.RestoreDefaults(PAGE, ctx) end)
+    end
     local S = NS.SchemaRuntime
-    S.BulkRun("reset", PAGE, function()
-        S.ApplyDefault(Ed.Row("state.previewAs"))
-        S.ApplyDefault(Ed.Row("builtin.enabled"))
+    NS.Library.Batch(function()
+        S.BulkRun("reset", PAGE, function()
+            S.ApplyDefault(Ed.Row("state.previewAs"))
+            S.ApplyDefault(Ed.Row("builtin.enabled"))
+        end)
     end)
     if h.RefreshPanel then h.RefreshPanel(ctx, false) end
 end

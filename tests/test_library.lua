@@ -69,18 +69,27 @@ test("library: adding a built-in callout copies it (P2)", function()
     assertEqual(p.groups[g].callouts[1], added)
 end)
 
-test("library: [review 4] Customize swaps the copy in place, then deleting it leaves neither", function()
-    local _, Lib, p = boot()
+test("library: [review 4] Customize swaps the copy in place; deleting the copy puts the set back, on", function()
+    local NS, Lib, p = boot()
     local pad = p.pads[p.padOrder[1]]
     local pos
     for i, gid in ipairs(pad.groups) do if gid == "bi.mplus" then pos = i end end
-    local copy = Lib.Customize("bi.mplus")
+    local copy, _, skipped, placed = Lib.Customize("bi.mplus")
     assertEqual(pad.groups[pos], copy)
+    assertEqual(skipped, 0)
+    assertEqual(placed, 2, "the pad and the dial")
     assertFalse(Lib.Group("bi.mplus").enabled)
     assertEqual(#p.groups[copy].callouts, 8)
     assertTrue(p.groups[copy].callouts[1]:match("^c%d+$") ~= nil)
     Lib.DeleteGroup(copy)
-    for _, gid in ipairs(pad.groups) do assertTrue(gid ~= copy and gid ~= "bi.mplus") end
+    -- red under: Lib.DeleteGroup only removes the copy (the set is on no pad and stays off)
+    assertEqual(pad.groups[pos], "bi.mplus", "the set is back in the copy's place")
+    for _, gid in ipairs(pad.groups) do assertTrue(gid ~= copy) end
+    assertTrue(Lib.Group("bi.mplus").enabled, "and turned back on")
+    assertNil(NS.db.profile.builtins["bi.mplus"].customizedAs)
+    local again, _, _, placedAgain = Lib.Customize("bi.mplus")
+    assertEqual(pad.groups[pos], again, "a second Customize takes the set's place again")
+    assertEqual(placedAgain, 2)
 end)
 
 test("library: hidden built-in callouts drop out of the merged group", function()
@@ -492,4 +501,67 @@ test("library: [phase 3] Batch holds the announces and sends one per kind it tou
     assertFalse(NS.db.profile.builtins["bi.mplus"].enabled)
     Lib.SetBuiltinEnabled("bi.raid", true)
     assertEqual(#sent - before, 2, "announces flow again after the batch")
+end)
+
+test("library: [final 8] a set on no surface is customized onto none, and Customize says how many it reached", function()
+    local _, Lib, p = boot()
+    for _, sid in ipairs(p.padOrder) do Lib.RemoveGroupFromSurface("pad", sid, "bi.mplus") end
+    for _, sid in ipairs(p.dialOrder) do Lib.RemoveGroupFromSurface("dial", sid, "bi.mplus") end
+    local copy, _, _, placed = Lib.Customize("bi.mplus")
+    assertTrue(p.groups[copy] ~= nil)
+    assertEqual(placed, 0)
+end)
+
+test("library: [final 24] Customize puts the copy in the set's place on every pad and dial", function()
+    local _, Lib, p = boot()
+    local second = Lib.CreateSurface("pad", "Two")
+    Lib.MoveGroupOnSurface("pad", second, #p.pads[second].groups, 1)
+    local where = {}
+    for _, kind in ipairs({ "pad", "dial" }) do
+        local set = kind == "pad" and p.pads or p.dials
+        for _, s in pairs(set) do
+            for i, gid in ipairs(s.groups) do if gid == "bi.mplus" then where[#where + 1] = { s, i } end end
+        end
+    end
+    assertEqual(#where, 3, "two pads and a dial hold the set")
+    local copy = Lib.Customize("bi.mplus")
+    -- red under: narrow the swap loop in Lib.Customize to the first surface
+    for _, w in ipairs(where) do assertEqual(w[1].groups[w[2]], copy) end
+end)
+
+test("library: [final 1] Customize, AddToGroup with a built-in, and OfferGroup each send one LIBRARY_CHANGED", function()
+    local NS, Lib, p, sent = boot()
+    local before = #sent
+    -- red under: drop Lib.Batch from Lib.Customize (19 messages for M+, 63 for a 30-callout battleground)
+    Lib.Customize("bi.mplus")
+    assertEqual(#sent - before, 1)
+    assertEqual(sent[#sent][1], NS.MSG.LIBRARY_CHANGED)
+    assertEqual(sent[#sent][2], "builtin,callout,group", "the kinds it touched")
+    before = #sent
+    Lib.Customize("bi.bg.ab")
+    assertEqual(#sent - before, 1)
+    local g = Lib.CreateGroup({ name = "Mine" })
+    before = #sent
+    -- red under: drop Lib.Batch from Lib.AddToGroup (the copy and the insert announce apart)
+    Lib.AddToGroup(g, "bi.mplus.lust")
+    assertEqual(#sent - before, 1)
+    Lib.CreateSurface("pad", "Two")
+    before = #sent
+    -- red under: drop Lib.Batch from Lib.OfferGroup (one per surface)
+    assertEqual(Lib.OfferGroup(g), #p.padOrder + #p.dialOrder)
+    assertEqual(#sent - before, 1)
+end)
+
+test("library: [final 1] one Customize click rebuilds the pads once", function()
+    local NS = T.enableAddon()
+    NS.Situation.ReadInputs = function() return { inInstance = true, instanceType = "party", difficultyID = 8,
+        keystoneActive = true, keyLevel = 12, inGroup = true } end
+    NS.Situation.RefreshNow("test")
+    local applied = 0
+    local apply = NS.Surfaces.ApplyAll
+    NS.Surfaces.ApplyAll = function(...) applied = applied + 1 return apply(...) end
+    NS.Library.Customize("bi.bg.ab")
+    NS.Library.Customize("bi.mplus")
+    NS.Surfaces.ApplyAll = apply
+    assertEqual(applied, 2, "one rebuild per Customize")
 end)

@@ -119,3 +119,21 @@ test("pads page: General's Unlock pads toggles the one lock", function()
     P.find(w, "Button", "Lock pads"):__fire("OnClick")
     assertTrue(NS.Setting("locked"))
 end)
+
+test("pads page: [final 3, 15] Defaults puts the pad's rows back as one act: one rebuild", function()
+    local NS, _, P = open()
+    local S = NS.SchemaRuntime
+    S.Set("pad.layout.style", "label", "p1")
+    S.Set("pad.layout.scale", 1.5, "p1")
+    S.Set("pad.look.fade", "outOfCombat", "p1")
+    local applied = 0
+    local apply = NS.Surfaces.ApplyAll
+    NS.Surfaces.ApplyAll = function(...) applied = applied + 1 return apply(...) end
+    P.ctx("pads").panel.defaultsOnClick()
+    NS.Surfaces.ApplyAll = apply
+    assertEqual(NS.db.profile.pads.p1.layout.style, "iconLabel")
+    assertEqual(NS.db.profile.pads.p1.layout.scale, 1)
+    assertEqual(NS.db.profile.pads.p1.look.fade, "none")
+    -- red under: drop Library.Batch from the page's Defaults (one rebuild per row)
+    assertEqual(applied, 1)
+end)

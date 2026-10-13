@@ -152,20 +152,26 @@ function Lib.Touch(kind, id, field)
     announce(kind, id, field)
 end
 
---- Run `fn` with Library's announces held, then send one LIBRARY_CHANGED per kind it touched, with no
---- id and no field (several members changed): a bulk act (Share's Defaults) rebuilds the pads and
---- repaints the pages once. A nested call joins the outer batch. An error in `fn` is re-raised after
---- the held announces are sent, so nothing that landed goes unannounced.
+local function pack(...) return { n = select("#", ...), ... } end
+
+--- Run `fn` with Library's announces held, then send ONE LIBRARY_CHANGED for the whole act, with no
+--- id and no field (several members changed): a bulk act (Share's Defaults, Customize, New group, a
+--- page's Defaults) rebuilds the pads and repaints the pages once, however many kinds it touched.
+--- Its kind is the kinds touched, sorted and joined by commas ("builtin", "callout,group,pad").
+--- Nothing is sent when nothing was. A nested call joins the outer batch. Answers what `fn` answers.
+--- An error in `fn` is re-raised after the held announce is sent, so nothing that landed goes
+--- unannounced.
 function Lib.Batch(fn)
     if batched then return fn() end
     batched = {}
-    local ok, err = pcall(fn)
+    local r = pack(pcall(fn))
     local kinds = {}
     for kind in pairs(batched) do kinds[#kinds + 1] = kind end
     batched = nil
     table.sort(kinds)
-    for _, kind in ipairs(kinds) do announce(kind, nil) end
-    if not ok then error(err, 0) end
+    if #kinds > 0 then announce(table.concat(kinds, ","), nil) end
+    if not r[1] then error(r[2], 0) end
+    return unpack(r, 2, r.n)
 end
 
 --- Every member of a kind, in the order its editor page's picker lists them: user callouts and user
@@ -372,15 +378,39 @@ local function surfaces()
     return { pad = p.pads, dial = p.dials }
 end
 
---- Delete a user group and every surface reference to it.
+-- The top-level built-in a user group is the customized copy of, or nil.
+local function customizedFrom(gid)
+    for top, o in pairs(P().builtins) do
+        if type(o) == "table" and o.customizedAs == gid and NS.BuiltIns.groups[top] then return top end
+    end
+    return nil
+end
+
+--- Delete a user group and every surface reference to it. Deleting a built-in's customized copy
+--- undoes the Customize (spec §12.2): the set goes back into the copy's place on every surface that
+--- does not list it already, it is turned back on, and it forgets the copy. One act (Batch).
 function Lib.DeleteGroup(id)
     local p = P()
     if not p.groups[id] then return false end
-    p.groups[id] = nil
-    for _, set in pairs(surfaces()) do
-        for _, s in pairs(set) do removeAll(s.groups, id) end
-    end
-    announce("group", id)
+    Lib.Batch(function()
+        local top = customizedFrom(id)
+        p.groups[id] = nil
+        for _, set in pairs(surfaces()) do
+            for _, s in pairs(set) do
+                local at = indexOf(s.groups, id)
+                if top and at and not indexOf(s.groups, top) then
+                    s.groups[at] = top
+                    s.seenBuiltins[top] = true
+                end
+                removeAll(s.groups, id)
+            end
+        end
+        if top then
+            overlay(top).customizedAs = nil
+            NS.SchemaRuntime.Set("builtin.enabled", true, top)
+        end
+        announce("group", id)
+    end)
     return true
 end
 
@@ -393,11 +423,7 @@ function Lib.DuplicateGroup(id)
         enabled = g.enabled, callouts = g.callouts })
 end
 
---- Add a callout to a user group at `index` (end by default). A built-in callout is copied first (P2).
---- @return string|nil the callout id actually added, string|nil reason
-function Lib.AddToGroup(groupId, calloutId, index)
-    local g = P().groups[groupId]
-    if not g then return nil, "noGroup" end
+local function addToGroup(g, groupId, calloutId, index)
     local id = calloutId
     if isBuiltin(calloutId) then
         local src = NS.BuiltIns.callouts[calloutId]
@@ -412,6 +438,16 @@ function Lib.AddToGroup(groupId, calloutId, index)
     table.insert(g.callouts, index, id)
     announce("group", groupId)
     return id
+end
+
+--- Add a callout to a user group at `index` (end by default). A built-in callout is copied first (P2);
+--- the copy and the insert are one act (Batch).
+--- @return string|nil the callout id actually added, string|nil reason
+function Lib.AddToGroup(groupId, calloutId, index)
+    local g = P().groups[groupId]
+    if not g then return nil, "noGroup" end
+    if not isBuiltin(calloutId) then return addToGroup(g, groupId, calloutId, index) end
+    return Lib.Batch(function() return addToGroup(g, groupId, calloutId, index) end)
 end
 
 function Lib.RemoveFromGroup(groupId, index)
@@ -452,40 +488,47 @@ end
 --- Copy a top-level built-in into an editable user group, swap it into every surface at the same
 --- place, and turn the built-in off (spec §12.2). Node children are flattened: v0.1.0 has no user
 --- nesting, so a customized node battleground keeps every node's callouts in one list. A callout
---- whose copy fails validation is skipped, never inserted as a hole, and counted.
---- @return string|nil id, string|nil reason, number skipped
+--- whose copy fails validation is skipped, never inserted as a hole, and counted. One act (Batch):
+--- the pads rebuild once. `placed` is the number of surfaces the copy took the set's place on (0 when
+--- the set was on none).
+--- @return string|nil id, string|nil reason, number skipped, number placed
 function Lib.Customize(builtinId)
     local def = NS.BuiltIns.groups[builtinId]
     if not def or def.parent then return nil, "notTopLevel" end
     local prior = overlay(builtinId).customizedAs
     if prior and P().groups[prior] then return nil, "alreadyCustomized" end
-    -- The copy's name is shortened to fit, never refused (a translated set name may run long); a copy
-    -- CreateGroup still refuses changes nothing: no surface loses the set, and the set stays on.
-    local id, why = Lib.CreateGroup({ name = Lib.CopyName(def.name, " " .. L["(custom)"]), icon = def.icon,
-        when = def.when, openInto = def.openInto == true })
-    if not id then return nil, why end
-    local skipped = 0
-    local function copyFrom(gid)
-        for _, cid in ipairs(Lib.Group(gid).callouts) do
-            local added, reason = Lib.AddToGroup(id, cid)
-            if not added then
-                skipped = skipped + 1
-                NS.Debug(TAG, "customize %s: skipped %s (%s)", builtinId, cid, tostring(reason))
+    return Lib.Batch(function()
+        -- The copy's name is shortened to fit, never refused (a translated set name may run long); a
+        -- copy CreateGroup still refuses changes nothing: no surface loses the set, and the set stays on.
+        local id, why = Lib.CreateGroup({ name = Lib.CopyName(def.name, " " .. L["(custom)"]), icon = def.icon,
+            when = def.when, openInto = def.openInto == true })
+        if not id then return nil, why end
+        local skipped, placed = 0, 0
+        local function copyFrom(gid)
+            for _, cid in ipairs(Lib.Group(gid).callouts) do
+                local added, reason = Lib.AddToGroup(id, cid)
+                if not added then
+                    skipped = skipped + 1
+                    NS.Debug(TAG, "customize %s: skipped %s (%s)", builtinId, cid, tostring(reason))
+                end
+            end
+            for _, child in ipairs(NS.BuiltIns.groups[gid].children or {}) do copyFrom(child) end
+        end
+        copyFrom(builtinId)
+        for _, set in pairs(surfaces()) do
+            for _, s in pairs(set) do
+                local at = indexOf(s.groups, builtinId)
+                if at then
+                    s.groups[at] = id
+                    placed = placed + 1
+                end
             end
         end
-        for _, child in ipairs(NS.BuiltIns.groups[gid].children or {}) do copyFrom(child) end
-    end
-    copyFrom(builtinId)
-    for _, set in pairs(surfaces()) do
-        for _, s in pairs(set) do
-            local at = indexOf(s.groups, builtinId)
-            if at then s.groups[at] = id end
-        end
-    end
-    NS.SchemaRuntime.Set("builtin.enabled", false, builtinId)
-    overlay(builtinId).customizedAs = id
-    announce("builtin", builtinId)
-    return id, nil, skipped
+        NS.SchemaRuntime.Set("builtin.enabled", false, builtinId)
+        overlay(builtinId).customizedAs = id
+        announce("builtin", builtinId)
+        return id, nil, skipped, placed
+    end)
 end
 
 -- ── surfaces ────────────────────────────────────────────────────────────────────────────────
@@ -563,19 +606,22 @@ end
 
 --- Put a new user group at the top of every pad's and dial's list (the editors' New group): the
 --- player's own groups come before the shipped sets. A surface that already lists it is skipped.
+--- One act (Batch): one LIBRARY_CHANGED however many surfaces there are.
 --- @return number surfaces it was added to
 function Lib.OfferGroup(groupId)
     if not P().groups[groupId] then return 0 end
-    local n = 0
-    for _, kind in ipairs({ "pad", "dial" }) do
-        local ids = {}
-        for sid in pairs(surfaces()[kind]) do ids[#ids + 1] = sid end
-        table.sort(ids)
-        for _, sid in ipairs(ids) do
-            if Lib.AddGroupToSurface(kind, sid, groupId, 1) then n = n + 1 end
+    return Lib.Batch(function()
+        local n = 0
+        for _, kind in ipairs({ "pad", "dial" }) do
+            local ids = {}
+            for sid in pairs(surfaces()[kind]) do ids[#ids + 1] = sid end
+            table.sort(ids)
+            for _, sid in ipairs(ids) do
+                if Lib.AddGroupToSurface(kind, sid, groupId, 1) then n = n + 1 end
+            end
         end
-    end
-    return n
+        return n
+    end)
 end
 
 --- Move one of a surface's groups from position `from` to position `to` (clamped to the list).

@@ -547,7 +547,6 @@ L["Edit the copy"] = "Edit the copy"
 L["Customize"] = "Customize"
 L["This set is already customized: open its copy."] = "This set is already customized: open its copy."
 L["Copy this set into a group you can edit, in its place on every pad, and turn the set off."] = "Copy this set into a group you can edit, in its place on every pad, and turn the set off."
-L["Make a copy of this group, with the same callouts and When."] = "Make a copy of this group, with the same callouts and When."
 L["Delete this group and take it off every pad. Its callouts are kept. Asks first."] = "Delete this group and take it off every pad. Its callouts are kept. Asks first."
 L["Untick a callout to hide it from every pad. A hidden callout stays in the set."] = "Untick a callout to hide it from every pad. A hidden callout stays in the set."
 L["No callouts in this group yet. Add one below."] = "No callouts in this group yet. Add one below."
@@ -560,6 +559,9 @@ L["The callouts this group shows, in order."] = "The callouts this group shows, 
 L["Preview"] = "Preview"
 L["What each callout sends here, or in the preview."] = "What each callout sends here, or in the preview."
 L["Turn the selected group or built-in set back on, stop it opening the dial, and turn Preview as off. Its name, callouts and When are kept."] = "Turn the selected group or built-in set back on, stop it opening the dial, and turn Preview as off. Its name, callouts and When are kept."
+L["%s: the copy is on no pad yet. Add it under Comms Pad > Groups."] = "%s: the copy is on no pad yet. Add it under Comms Pad > Groups."
+L["%s customized. The set was on no pad, so the copy is on none: add it under Comms Pad > Groups."] = "%s customized. The set was on no pad, so the copy is on none: add it under Comms Pad > Groups."
+L["Make a copy of this group, with the same callouts and When. The copy is on no pad until you add it under Comms Pad > Groups."] = "Make a copy of this group, with the same callouts and When. The copy is on no pad until you add it under Comms Pad > Groups."
 
 -- Comms Pad page (settings/Pads.lua)
 L["Comms Pad %d"] = "Comms Pad %d"

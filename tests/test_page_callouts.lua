@@ -180,3 +180,17 @@ test("callouts page: Used by lists the groups that hold it, and a click opens th
     assertEqual(NS.State.editing.group, gid)
     assertEqual(opened, 9)
 end)
+
+test("callouts page: [final 3] Defaults resets the callout as one act: one rebuild", function()
+    local NS, _, P = open()
+    local id = NS.addon.Settings.Callouts.Create()
+    NS.SchemaRuntime.Set("callout.channel", "party", id)
+    P.redraw("callouts")
+    local applied = 0
+    local apply = NS.Surfaces.ApplyAll
+    NS.Surfaces.ApplyAll = function(...) applied = applied + 1 return apply(...) end
+    P.ctx("callouts").panel.defaultsOnClick()
+    NS.Surfaces.ApplyAll = apply
+    assertEqual(NS.db.profile.callouts[id].channel, "smartGroup")
+    assertTrue(applied <= 1, "one rebuild")
+end)
