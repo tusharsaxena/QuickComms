@@ -101,6 +101,14 @@ function R.ShowTooltip(btn)
     GameTooltip:Show()
 end
 
+--- A titled tooltip of plain lines over `owner` (the pad header's "Why is this showing?").
+function R.ShowLines(owner, title, lines)
+    GameTooltip:SetOwner(owner, "ANCHOR_TOP")
+    GameTooltip:SetText(title)
+    for _, line in ipairs(lines or {}) do GameTooltip:AddLine(line, 1, 1, 1, true) end
+    GameTooltip:Show()
+end
+
 --- Build a chip's regions and hover hooks, once per button.
 function R.Dress(btn, onEnter, onLeave)
     if btn.qcDressed then return btn end

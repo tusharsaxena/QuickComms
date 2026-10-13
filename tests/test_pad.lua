@@ -442,3 +442,19 @@ test("pad: [phase 3] a new drag clears a stale held stop, so the next rebuild re
     NS.Pad.Apply("p1", planFor(NS))
     assertEqual(pointOf(inst), "TOPLEFT,TOPLEFT,40,-60")
 end)
+
+test("pad: [phase 3] the header's tooltip says why each group shows, unless the player turned it off", function()
+    local NS = applied()
+    local shown = {}
+    NS.PadRender.ShowLines = function(_, title, lines) shown[#shown + 1] = { title = title, lines = lines } end
+    local header = NS.Pad.Instance("p1").header
+    header:__fire("OnEnter")
+    -- red under: drop the Pad.ShowWhy call from the header's OnEnter
+    assertEqual(#shown, 1)
+    assertEqual(shown[1].title, "Why is this showing?")
+    assertEqual(shown[1].lines[1], "M+ (generic) (built-in): Content")
+    header:__fire("OnLeave")
+    NS.SchemaRuntime.Set("behavior.whyTooltips", false)
+    header:__fire("OnEnter")
+    assertEqual(#shown, 1, "behavior.whyTooltips off: no tooltip")
+end)

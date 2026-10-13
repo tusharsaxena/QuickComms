@@ -86,3 +86,24 @@ end
 function V.Preview(rest)
     for _, line in ipairs(V.PreviewLines(rest)) do NS.Print(line) end
 end
+
+--- The lines `/qc why` prints (spec §14): every built pad, in the pad order, then why it shows what it
+--- shows (Surfaces.WhyLines).
+--- @return string[]
+function V.WhyLines()
+    local p = NS.db and NS.db.profile
+    local plans = NS.Surfaces.Plans()
+    local out = {}
+    for _, id in ipairs(p and p.padOrder or {}) do
+        if plans[id] then
+            out[#out + 1] = L["%s (%s):"]:format(p.pads[id].name or id, id)
+            for _, line in ipairs(NS.Surfaces.WhyLines(id)) do out[#out + 1] = "  " .. line end
+        end
+    end
+    if #out == 0 then out[1] = L["No pad is showing: nothing has been built yet."] end
+    return out
+end
+
+function V.Why()
+    for _, line in ipairs(V.WhyLines()) do NS.Print(line) end
+end

@@ -167,7 +167,10 @@ local function build(id)
     header:EnableMouse(true)
     header:EnableMouseWheel(true)
     header:SetScript("OnMouseWheel", function(_, delta) Pad.Wheel(id, delta) end)
-    header:SetScript("OnEnter", function() Pad.SetHover(id, true) end)
+    header:SetScript("OnEnter", function()
+        Pad.SetHover(id, true)
+        Pad.ShowWhy(id, header)
+    end)
     header:SetScript("OnLeave", function()
         GameTooltip:Hide()
         Pad.SetHover(id, false)
@@ -309,6 +312,14 @@ function Pad.SetHover(id, on)
     if not inst then return end
     inst.hover = math.max(0, inst.hover + (on and 1 or -1))
     Pad.ApplyAlpha(id)
+end
+
+--- "Why is this showing?" (spec §13.3) over the pad's header, unless behavior.whyTooltips is off.
+--- Insecure: a tooltip, shown in combat too.
+function Pad.ShowWhy(id, owner)
+    if NS.Setting("behavior.whyTooltips") == false then return false end
+    R.ShowLines(owner, L["Why is this showing?"], NS.Surfaces.WhyLines(id))
+    return true
 end
 
 -- ── tabs, collapse, position ────────────────────────────────────────────────────────────────

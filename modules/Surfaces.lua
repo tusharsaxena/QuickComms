@@ -99,7 +99,7 @@ function S.BuildPlan(surfaceId, pad, snap, deps)
     local order = NS.Resolver.SurfaceOrder(pad and pad.groups, active, deps.groups, deps.autoPromote)
     local opts = { soloFallback = deps.soloFallback, ctx = deps.ctx }
     local plan = { surfaceId = surfaceId, snapshot = snap, order = order, sections = {},
-        lockdownChip = false, hasActive = #order > 0 }
+        lockdownChip = false, hasActive = #order > 0, active = active }
     for _, gid in ipairs(order) do
         for _, sec in ipairs(S.Sections(gid, deps.group)) do
             local slots = {}
@@ -141,6 +141,37 @@ function S.MarkPreview(plan, key)
         for _, slot in ipairs(sec.slots) do slot.preview = true end
     end
     return plan
+end
+
+--- "Why is this showing?" for one pad (spec §13.3): the groups it shows, in priority order, each with
+--- the When rows that matched (Resolver.Explain), then every lock in effect on its chips. Read from
+--- the pad's last plan, so in combat it explains what is on screen.
+--- @return string[]
+function S.WhyLines(id)
+    local plan = S.Plans()[id]
+    if not plan then return { L["This pad has not been built yet."] } end
+    if plan.test and not plan.preview then return { L["Test mode: placeholder chips that send nothing."] } end
+    local out = {}
+    if plan.preview then out[1] = L["Preview as: %s"]:format(NS.Preview.Label(plan.preview)) end
+    if #plan.order == 0 then out[#out + 1] = L["No group matches this situation."] end
+    for _, gid in ipairs(plan.order) do
+        local g = NS.Library.Group(gid)
+        local name = g and g.name or gid
+        if NS.Library.IsBuiltin(gid) then name = L["%s (built-in)"]:format(name) end
+        out[#out + 1] = NS.Resolver.Explain(name, plan.active and plan.active[gid])
+    end
+    local locks, seen = {}, {}
+    for _, sec in ipairs(plan.sections) do
+        for _, slot in ipairs(sec.slots) do
+            if slot.lock and not seen[slot.lock] then
+                seen[slot.lock] = true
+                locks[#locks + 1] = slot.lock
+            end
+        end
+    end
+    table.sort(locks)
+    for _, lock in ipairs(locks) do out[#out + 1] = NS.PadRender.LOCK_TEXT[lock] or tostring(lock) end
+    return out
 end
 
 -- ── the edge: one rebuild request, queued in combat (spec §9.1, §18) ────────────────────────
