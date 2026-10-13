@@ -33,20 +33,38 @@ SPECS = {1480: 12}     # specID -> ClassID: the Demon Hunter's Devourer
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-def lua_ids(path, start):
-    """The integers listed in the Lua table that opens on the line starting `start`."""
+def block(path, start):
+    """The body of the Lua table that opens on the line starting `start`, comments stripped."""
     text = open(path, encoding="utf-8").read()
     m = re.search(re.escape(start) + r"(.*?)\n\}", text, re.S)
     if not m:
         ct.fail("no '" + start + "' table in " + path)
-    return [int(x) for x in re.findall(r"^\s*(\d+),", m.group(1), re.M)]
+    return re.sub(r"--[^\n]*", "", m.group(1))
+
+
+def lua_ids(path, start):
+    """The integers listed in the Lua table that opens on the line starting `start`. The body must be
+    integers and commas only: anything else fails, so no entry is ever skipped silently."""
+    body = block(path, start)
+    if re.search(r"[^\d,\s]", body):
+        ct.fail("'" + start + "' in " + path + " holds something other than whole ids")
+    return [int(x) for x in re.findall(r"\d+", body)]
+
+
+ROW = r"\[\s*(\d+)\s*\]\s*=\s*\{\s*type\s*=\s*(\d+)\s*,\s*challenge\s*=\s*(true|false)\s*,?\s*\}"
 
 
 def fixture_rows(path):
-    text = open(path, encoding="utf-8").read()
-    rows = re.findall(r"\[(\d+)\] = \{ type = (\d), challenge = (true|false) \}", text)
+    """CLIENT_MAPS's rows. Every `[id] =` entry in the block must parse as a row, however it is
+    spaced or comma'd: one that does not fails, so the derivation never runs over fewer rows."""
+    body = block(path, "local CLIENT_MAPS = {")
+    rows = re.findall(ROW, body)
+    entries = re.findall(r"\[\s*\d+\s*\]\s*=", body)
     if not rows:
         ct.fail("no CLIENT_MAPS rows in " + path)
+    if len(rows) != len(entries):
+        ct.fail("{} of CLIENT_MAPS's {} entries in {} are not {{ type = N, challenge = B }} rows".format(
+            len(entries) - len(rows), len(entries), path))
     return {int(i): (int(t), c == "true") for i, t, c in rows}
 
 
