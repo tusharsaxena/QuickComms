@@ -81,6 +81,8 @@ defaults\Profile.lua
 modules\Restrictions.lua
 # Conventional: feature module; appends to NS.FEATURE_EVENTS / STAND_DOWN / STAND_UP
 modules\Situation.lua
+# Conventional: pure
+modules\Tokens.lua
 # Conventional: core\DebugLogSetup.lua's descriptor reads NS.Diagnostics at RUN time.
 modules\Diagnostics.lua
 
