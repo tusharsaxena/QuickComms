@@ -13,7 +13,8 @@ local _, NS = ...
 -- (c<n>, g<n>, p<n>, d<n>), its channel kind, its lengths, its When, and every text field through the
 -- §8.3 sanitizer (Bake.CleanText): names, callout text, icon paths, and every string in a pad's or a
 -- dial's field values, nested ones too (cleanValue, which also refuses a number that is not finite and
--- a table nested past MAX_DEPTH, met twice in one value, or past MAX_NODES). Check fails closed: a hand-made payload that still raises inside the
+-- a table nested past MAX_DEPTH, met twice in one value, or past MAX_NODES). Every string is refused
+-- unread past TEXT_MAX bytes, and the payload past MAX_TEXT_BYTES read in all. Check fails closed: a hand-made payload that still raises inside the
 -- checks reads as damaged. A member that fails is refused and listed with its reason; a reference
 -- to something the string does not carry (a group's callout, a surface's group) is left out and
 -- counted. A pad or a dial carries its name, Enabled, its groups and its portable fields, keyed by
@@ -37,7 +38,10 @@ SH.MAX_DEPTH = 8         -- nested tables in one field value (a When, a color); 
 SH.MAX_NODES = 65536     -- values cleanValue may visit in one payload, every field and When together;
                          -- past it the string is tooLarge (a few shared tables would else copy F^depth)
 SH.TEXT_MAX = 255        -- bytes of a callout's text and of an icon path: what Bake caps a whole
-                         -- line at (the Text box counts characters; a text over 255 bytes never bakes)
+                         -- line at (the Text box counts characters; a text over 255 bytes never bakes);
+                         -- also the most of any string in a payload, refused unread past it
+SH.MAX_TEXT_BYTES = SH.MAX_RAW   -- string bytes the sanitizer may read in one payload; past it the
+                                 -- string is tooLarge (one shared string would else be read per use)
 
 -- Older payload versions, each lifted one step: MIGRATIONS[v](payload) answers the v + 1 payload.
 local MIGRATIONS = {}
@@ -58,9 +62,20 @@ SH.KINDS = {
 -- references, so a hand-made string can make a tiny DAG, or a cycle, that a walk would expand). Every
 -- value visited counts against res.nodes; past SH.MAX_NODES every value is refused, and Validate
 -- refuses the payload as tooLarge.
+-- Whether a string may go through the sanitizer: at most SH.TEXT_MAX bytes, each one charged to
+-- res.bytes, the payload's budget. LibSerialize keeps one copy of a repeated string, so a short share
+-- string can name one long string thousands of times; this bounds what the sanitizer reads to
+-- SH.MAX_TEXT_BYTES, and Validate refuses a payload past it as tooLarge.
+local function affordable(v, res)
+    if #v > SH.TEXT_MAX then return false end
+    res.bytes = res.bytes + #v
+    return res.bytes <= SH.MAX_TEXT_BYTES
+end
+
 -- A string, a number or a boolean as cleanValue keeps it, or nil.
-local function cleanScalar(v, t)
+local function cleanScalar(v, t, res)
     if t == "string" then
+        if not affordable(v, res) then return nil end
         local s, why = NS.Bake.CleanText(v)
         if s then return s end
         if why == "empty" then return "" end
@@ -78,7 +93,7 @@ local function cleanValue(v, depth, seen, res)
     res.nodes = res.nodes + 1
     if res.nodes > SH.MAX_NODES then return nil end
     local t = type(v)
-    if t ~= "table" then return cleanScalar(v, t) end
+    if t ~= "table" then return cleanScalar(v, t, res) end
     if depth > SH.MAX_DEPTH or seen[v] then return nil end
     seen[v] = true
     local out = {}
@@ -128,7 +143,7 @@ end
 
 local function newResult()
     return { ok = false, callouts = {}, groups = {}, pads = {}, dials = {}, refused = {}, dropped = 0,
-        ignored = 0, known = {}, nodes = 0 }
+        ignored = 0, known = {}, nodes = 0, bytes = 0 }
 end
 
 -- A section's ids in a stable order: by the number they end in, then as text.
@@ -145,20 +160,18 @@ local function sortedIds(set)
 end
 
 -- A text field through the §8.3 sanitizer. Empty is allowed (a callout may have no text yet).
-local function cleanText(v)
+local function cleanText(v, res)
     if v ~= nil and type(v) ~= "string" then return nil, "badText" end
+    if v and not affordable(v, res) then return nil, "tooLong" end
     local s, why = NS.Bake.CleanText(v)
-    if s then
-        if #s > SH.TEXT_MAX then return nil, "tooLong" end
-        return s
-    end
+    if s then return s end
     if why == "empty" then return "" end
     return nil, why
 end
 
 -- A name: sanitized, then 1 to 32 characters (Library.ValidName).
-local function cleanName(v)
-    if v ~= nil and type(v) ~= "string" then return nil, "badName" end
+local function cleanName(v, res)
+    if v ~= nil and type(v) ~= "string" or v and not affordable(v, res) then return nil, "badName" end
     local s = NS.Bake.CleanText(v)
     if not (s and NS.Library.ValidName(s)) then return nil, "badName" end
     return s
@@ -166,27 +179,27 @@ end
 
 -- An icon: none (false), a whole texture id, or a sanitized texture path with no escape character.
 -- Answers the icon, and a reason only when it is refused.
-local function cleanIcon(v)
+local function cleanIcon(v, res)
     if v == nil or v == false then return false end
     if type(v) == "number" then
         if v > 0 and v < 2 ^ 31 and v == math.floor(v) then return v end   -- NaN and inf fail here
         return nil, "badIcon"
     end
-    local s = type(v) == "string" and NS.Bake.CleanText(v) or nil
-    if not s or #s > SH.TEXT_MAX or s:find("|", 1, true) then return nil, "badIcon" end
+    local s = type(v) == "string" and affordable(v, res) and NS.Bake.CleanText(v) or nil
+    if not s or s:find("|", 1, true) then return nil, "badIcon" end
     return s
 end
 
-local function calloutEntry(_, id, c)
+local function calloutEntry(_, id, c, res)
     if type(c) ~= "table" then return nil, "damaged" end
-    local name, why = cleanName(c.name)
+    local name, why = cleanName(c.name, res)
     if not name then return nil, why end
     local text
-    text, why = cleanText(c.text)
+    text, why = cleanText(c.text, res)
     if not text then return nil, why end
     if not NS.Channels.IsKind(c.channel) then return nil, "badChannel" end
     local icon
-    icon, why = cleanIcon(c.icon)
+    icon, why = cleanIcon(c.icon, res)
     if why then return nil, why end
     return { id = id, fields = { name = name, text = text, channel = c.channel, icon = icon } }
 end
@@ -208,10 +221,10 @@ end
 
 local function groupEntry(_, id, g, res)
     if type(g) ~= "table" then return nil, "damaged" end
-    local name, why = cleanName(g.name)
+    local name, why = cleanName(g.name, res)
     if not name then return nil, why end
     local icon
-    icon, why = cleanIcon(g.icon)
+    icon, why = cleanIcon(g.icon, res)
     if why then return nil, why end
     local when = cleanValue(g.when == nil and {} or g.when, 1, {}, res)
     if when == nil or not NS.Library.ValidWhen(when) then return nil, "badWhen" end
@@ -251,7 +264,7 @@ end
 
 local function surfaceEntry(spec, id, s, res)
     if type(s) ~= "table" then return nil, "damaged" end
-    local name, why = cleanName(s.name)
+    local name, why = cleanName(s.name, res)
     if not name then return nil, why end
     local groups = keepRefs(s.groups, function(gid) return res.known[gid] == "group" or topBuiltin(gid) end, res)
     return { id = id, name = name, enabled = s.enabled ~= false, groups = groups,
@@ -261,7 +274,8 @@ end
 local ENTRY = { callout = calloutEntry, group = groupEntry, pad = surfaceEntry, dial = surfaceEntry }
 
 local function refuse(res, kind, id, entry, why)
-    local name = type(entry) == "table" and NS.Bake.CleanText(entry.name) or nil
+    local raw = type(entry) == "table" and entry.name
+    local name = type(raw) == "string" and affordable(raw, res) and NS.Bake.CleanText(raw) or nil
     res.refused[#res.refused + 1] = { kind = kind, id = tostring(id), name = name or tostring(id), reason = why }
 end
 
@@ -339,13 +353,13 @@ function SH.Validate(payload)
     end
     for _, spec in ipairs(SH.KINDS) do checkSection(spec, payload[spec.key] or {}, res) end
     res.known = nil
-    if res.nodes > SH.MAX_NODES then
+    if res.nodes > SH.MAX_NODES or res.bytes > SH.MAX_TEXT_BYTES then
         local out = newResult()
         out.known = nil
         out.reason = "tooLarge"
         return out
     end
-    res.nodes = nil
+    res.nodes, res.bytes = nil, nil
     res.ok = true
     return res
 end

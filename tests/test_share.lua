@@ -275,3 +275,63 @@ test("share: [fix 1] one table shared across many fields is bounded by MAX_NODES
     assertEqual(res.reason, "tooLarge")
     assertEqual(SH.ReportLines(res)[1], "That string is too large to import.")
 end)
+
+test("share: [fix 2] one long string referenced 2000 times in a field is refused unread, promptly", function()
+    local _, SH = boot()
+    local long = string.rep("a", 200000)
+    local refs = {}
+    for i = 1, 2000 do refs[i] = long end
+    local s = SH.Encode(bundle({ pads = { p1 = { name = "Long", fields = { ["pad.layout.columns"] = refs } } } }))
+    assertTrue(#s < 2000, "a short string")
+    local t0 = os.clock()
+    -- red under: drop the #v > SH.TEXT_MAX check from affordable in modules/Share.lua (400 MB through gsub)
+    local res = SH.Check(s)
+    assertTrue(os.clock() - t0 < 1, "promptly")
+    assertTrue(res.ok)
+    assertNil(res.pads[1].fields["pad.layout.columns"])
+    assertEqual(res.ignored, 1)
+end)
+
+test("share: [fix 2] a long name, text or icon is refused unread, promptly", function()
+    local _, SH = boot()
+    local long = string.rep("b", 200000)
+    local callouts, groups = {}, {}
+    for n = 1, 150 do
+        callouts["c" .. n] = { name = long, text = "Hi", channel = "say" }
+        callouts["c" .. (n + 150)] = { name = "Ok", text = long, channel = "say" }
+        groups["g" .. n] = { name = "Ok", icon = long }
+    end
+    local s = SH.Encode(bundle({ callouts = callouts, groups = groups }))
+    local t0 = os.clock()
+    -- red under: drop the affordable pre-checks from cleanName, cleanText, cleanIcon and refuse in
+    -- modules/Share.lua (each one sanitizes 200 KB per member)
+    local res = SH.Check(s)
+    assertTrue(os.clock() - t0 < 1, "promptly")
+    assertTrue(res.ok)
+    assertEqual(#res.refused, 450)
+    local why = {}
+    for _, r in ipairs(res.refused) do
+        why[r.reason] = (why[r.reason] or 0) + 1
+        assertTrue(#r.name < 10, "a refused member is named by its id, not its long name")
+    end
+    assertEqual(why.badName, 150)
+    assertEqual(why.tooLong, 150)
+    assertEqual(why.badIcon, 150)
+end)
+
+test("share: [fix 2] shared short strings past the payload's text budget make the string too large", function()
+    local _, SH = boot()
+    local line = string.rep("c", 250)
+    local refs = {}
+    for i = 1, 1000 do refs[i] = line end
+    local pads = {}
+    for n = 1, 20 do
+        pads["p" .. n] = { name = "Pad " .. n, fields = { ["pad.layout.columns"] = refs, ["pad.layout.rows"] = refs,
+            ["pad.look.visibility"] = refs } }
+    end
+    local s = SH.Encode(bundle({ pads = pads }))
+    -- red under: drop the res.bytes budget from affordable in modules/Share.lua (15 MB sanitized)
+    local res = SH.Check(s)
+    assertFalse(res.ok)
+    assertEqual(res.reason, "tooLarge")
+end)
