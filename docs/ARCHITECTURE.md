@@ -44,7 +44,8 @@ lists the toolchain):
 | Options | `settings/OptionsSetup.lua` | the settings panel |
 | Slash | `settings/Slash.lua` | the `/qc` dispatcher |
 
-`LibKa0s-Compat-1.0` and `LibKa0s-Item-1.0` are vendored and not wired, and of the Widgets major
+`LibKa0s-Compat-1.0` is wired for its two secret guards only (`IsSecret`, `IsSafeKey`, assigned in
+`core/Compat.lua` with a library-absent body); `LibKa0s-Item-1.0` is vendored and not wired; and of the Widgets major
 `DragHandle`, `ReorderList` and `CopyWindow` are used. Each
 setup file holds a descriptor and a degradation stub, and `tests/test_surface_parity.lua` holds every
 stub to the live surface.
@@ -229,7 +230,7 @@ is registered once, as a store, in the Tier 3 table; the documents under it get 
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Not applicable | The addon carries no client-version workaround of its own yet |
-| `compat-layer.md` | Present | `core/Compat.lua` publishes 25 shims, three or more |
+| `compat-layer.md` | Present | `core/Compat.lua` publishes 27 shims, three or more |
 | `message-bus.md` | Not applicable | 9 messages are defined, not more than ten; the table is in this page's Message Bus section |
 
 ### Verification and record (documentation-§3)
