@@ -426,3 +426,38 @@ test("dial: the key bindings menu's click opens the dial, even while it is hidde
     m.__click(h, "Toggle")   -- what "CLICK QuickCommsDial1:Toggle" does
     assertTrue(NS.Dial.IsOpen("d2"))
 end)
+
+-- ── final review fixes ──────────────────────────────────────────────────────────────────────
+
+test("dial: [final 2] two dials: opening the second closes the first, and the number keys go with it", function()
+    local NS, m = live()
+    bindG(NS)
+    local other = NS.Library.CreateSurface("dial", "Lead")
+    assertTrue(NS.SchemaRuntime.Set("dial.key", "H", other))
+    assertTrue(NS.Dial.Instance(other) ~= nil, "the second dial is built")
+    m.__pressKey("G")
+    assertTrue(NS.Dial.IsOpen("d2"))
+    m.__pressKey("H")
+    -- red under: drop DS.Link from Dial.Sync
+    assertFalse(NS.Dial.IsOpen("d2"), "one dial open at a time")
+    assertTrue(NS.Dial.IsOpen(other))
+    m.__pressKey("H")
+    assertNil(next(m.restrictedBindings))
+    assertEqual(#m.blocked, 0)
+end)
+
+test("dial: [final 5] test mode opens dial 1 once: a rebuild keeps it open, and after the player closes it, closed", function()
+    local NS, m = live()
+    NS.Preview.SetTestMode(true)
+    assertTrue(NS.Dial.IsOpen("d2"))
+    assertTrue(NS.SchemaRuntime.Set("dial.slices", 8, "d2"))
+    assertTrue(NS.Dial.IsOpen("d2"), "open before the rebuild: open after it")
+    m.__click(NS.Dial.Instance("d2").header, "RightButton")
+    assertFalse(NS.Dial.IsOpen("d2"))
+    assertTrue(NS.SchemaRuntime.Set("dial.slices", 6, "d2"))
+    -- red under: open the display dial on every Dial.Sync
+    assertFalse(NS.Dial.IsOpen("d2"), "closed by the player: a rebuild leaves it closed")
+    NS.Preview.SetPreviewAs("bg:ab")
+    assertTrue(NS.Dial.IsOpen("d2"), "a new display mode opens it again")
+    assertEqual(#m.blocked, 0)
+end)

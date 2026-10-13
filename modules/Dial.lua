@@ -45,6 +45,8 @@ for i = 1, Dial.BINDINGS do
 end
 
 local byIndex, byId = {}, {}   -- [place] = instance; [dialId] = instance
+local linked = 0               -- how many headers DS.Link last joined
+local displayMode = nil        -- the test or preview mode the last Sync drew dial 1 in ("test", a preview key)
 
 local function profileDial(id)
     local db = NS.db
@@ -178,11 +180,22 @@ function Dial.Release(index)
     return true
 end
 
+-- Every built header knows the others, so opening one closes any other that is open (DS.Link).
+local function link()
+    local headers = {}
+    for _, inst in pairs(byIndex) do headers[#headers + 1] = inst.header end   -- places may have gaps
+    if #headers ~= linked and DS.Link(headers) then linked = #headers end
+end
+
 --- Make the dials match a set of plans: apply each planned dial at its place in `order` (the dial
 --- order), release every other place, bind each built dial's key to its header, and in test mode or a
---- preview open the first one (spec §11.4). Out of combat only.
+--- preview open the first one (spec §11.4): when the mode turns on or changes, or when the dial was open
+--- before this rebuild closed it. A dial the player closed stays closed through later rebuilds, so it
+--- does not come back over the settings window after every edit. Out of combat only.
 function Dial.Sync(plans, order)
     local used, keys, first = {}, {}, nil
+    local wasOpen = {}
+    for index, inst in pairs(byIndex) do wasOpen[index] = inst.header:IsShown() end
     for index, id in ipairs(order or {}) do
         local plan = plans[id]
         if plan and Dial.Apply(index, id, plan) then
@@ -197,14 +210,19 @@ function Dial.Sync(plans, order)
     for index in pairs(byIndex) do
         if not used[index] then Dial.Release(index) end
     end
+    link()
     NS.SendEngine.BindKeys(keys)
-    if first and plans[order[first]].test then DS.Open(byIndex[first].header) end
+    local plan = first and plans[order[first]]
+    local mode = plan and plan.test and (plan.preview or "test") or nil
+    if mode and (mode ~= displayMode or wasOpen[first]) then DS.Open(byIndex[first].header) end
+    displayMode = mode
 end
 
 --- The secure half of the stand-down: every dial released, every key unbound. Out of combat (the
 --- stand-down holds it to combat end).
 function Dial.HideAll()
     for index in pairs(byIndex) do Dial.Release(index) end
+    displayMode = nil
     NS.SendEngine.ClearKeys()
 end
 

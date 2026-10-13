@@ -25,7 +25,8 @@
 --   playerGUID     UnitGUID("player")
 --   __click(b[, mouseButton])  a full press: the registered down edge, then the up edge
 --   __setCombat(on)            sets inCombat and re-evaluates every visibility driver
---   restrictedBindings  [key] = { owner, target, button }: what a header's snippet bound with SetBindingClick
+--   restrictedBindings  [key] = { owner, target, button }: what a header's snippet bound with SetBindingClick (the newest
+--                  owner's; __bindingStacks keeps every owner's, so a ClearBindings hands the key back)
 --   overrideBindings    [key] = { owner, name, button }: SetOverrideBindingClick (refused in combat)
 --   bindingActions      [key] = the action the player's own WoW binding names (GetBindingAction)
 --   cursor              { x, y }: GetCursorPosition's answer
@@ -256,6 +257,7 @@ local function build()
 
     -- ── secure handlers and key bindings (phase 4: the Comms Dial) ──────────────────────────────
     M.restrictedBindings = {}
+    M.__bindingStacks    = {}   -- [key] = { entry, ... }: every owner's binding of the key, newest last
     M.overrideBindings   = {}
     M.bindingActions     = {}
     M.cursor             = { x = 0, y = 0 }
@@ -302,14 +304,26 @@ local function build()
             restricted("GetFrameRef")
             return self.__frameRefs and self.__frameRefs[ref]
         end
+        -- Several owners may bind one key, as the client's override bindings allow: each key keeps a
+        -- stack, one entry per owner, the newest on top; `restrictedBindings[key]` is the top, the one a
+        -- press routes to, and clearing an owner hands the key back to the entry beneath.
         f.SetBindingClick = function(self, _, key, target, button)
             restricted("SetBindingClick")
-            M.restrictedBindings[key] = { owner = self, target = target, button = button or "LeftButton" }
+            local stack = M.__bindingStacks[key] or {}
+            M.__bindingStacks[key] = stack
+            for i = #stack, 1, -1 do
+                if stack[i].owner == self then table.remove(stack, i) end
+            end
+            stack[#stack + 1] = { owner = self, target = target, button = button or "LeftButton" }
+            M.restrictedBindings[key] = stack[#stack]
         end
         f.ClearBindings = function(self)
             restricted("ClearBindings")
-            for key, b in pairs(M.restrictedBindings) do
-                if b.owner == self then M.restrictedBindings[key] = nil end
+            for key, stack in pairs(M.__bindingStacks) do
+                for i = #stack, 1, -1 do
+                    if stack[i].owner == self then table.remove(stack, i) end
+                end
+                M.restrictedBindings[key] = stack[#stack]
             end
         end
         f.RunAttribute = function(self, attr, ...)
@@ -356,17 +370,26 @@ local function build()
             local body = self.__attrs._onclick
             if type(body) == "string" then runSnippet(self, "self, button, down", body, self, button, down) end
         end
+        -- OnShow / OnHide hooks are the addon's insecure code, even when a snippet's Show or Hide fires
+        -- them: the restricted environment's privilege is dropped while they run.
         local show, hide = f.Show, f.Hide
+        local function fireInsecure(self, script)
+            local depth = secureDepth
+            secureDepth = 0
+            local ok, err = pcall(self.__fire, self, script)
+            secureDepth = depth
+            if not ok then error(err, 0) end
+        end
         f.Show = function(self)
             local was = self.__shown
             show(self)
-            if not was then self:__fire("OnShow") end
+            if not was then fireInsecure(self, "OnShow") end
             return self
         end
         f.Hide = function(self)
             local was = self.__shown
             hide(self)
-            if was then self:__fire("OnHide") end
+            if was then fireInsecure(self, "OnHide") end
             return self
         end
         f.SetShown = function(self, v)

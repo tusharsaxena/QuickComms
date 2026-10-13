@@ -14,11 +14,15 @@ local _, NS = ...
 -- DS.Load, through modules/SendEngine.lua, the only secure writer (tests/test_sendengine.lua greps
 -- this file like every other).
 --
--- The header's click (_onclick): Toggle (the dial's key, Bindings.xml) opens or closes; Close (Escape)
--- and RightButton close; Next and Prev (the wheel) turn a page; any other click is the hub: up a ring,
--- or close on the first ring. A wedge's click is wrapped: the down edge does nothing (a wedge acts on
--- the up edge), a right click closes, a ring wedge (attribute qc-target > 0) shows its ring and sends
--- nothing, and a callout wedge lets the click through, then closes the dial.
+-- The header's click (_onclick): Toggle (the dial's key, Bindings.xml) opens or closes; Next and Prev
+-- (the wheel) turn a page; a left click is the hub: up a ring, or close on the first ring; anything
+-- else (Close from Escape, a right, middle or side mouse button) closes. A wedge's click is wrapped:
+-- the down edge does nothing (a wedge acts on the up edge), any button but the left closes (a dial on
+-- a mouse button closes on its own key: the click lands on the wedge, not on the binding; and only a
+-- left click is a press, SendEngine's click hook skips the rest), a ring wedge (attribute
+-- qc-target > 0) shows its ring and sends nothing, and a callout wedge lets the click through, then
+-- closes the dial. Opening a dial closes every other open dial first (its siblings, DS.Link), so only
+-- one holds Escape, the wheel and 1-8.
 
 NS.DialSecure = NS.DialSecure or {}
 local DS = NS.DialSecure
@@ -35,25 +39,29 @@ if button == "Toggle" then
         display = nil
         self:RunAttribute("qc-open")
     end
-elseif button == "Close" or button == "RightButton" then
-    self:RunAttribute("qc-close")
 elseif button == "Next" or button == "Prev" then
     if current then
         local to = self:GetAttribute((button == "Next" and "qc-next-" or "qc-prev-") .. current) or 0
         if to > 0 then self:RunAttribute("qc-show", to) end
     end
-elseif current then
+elseif button == "LeftButton" and current then
     local up = self:GetAttribute("qc-parent-" .. current) or 0
     if up > 0 then
         self:RunAttribute("qc-show", up)
     else
         self:RunAttribute("qc-close")
     end
+else
+    self:RunAttribute("qc-close")
 end
 ]]
 
 local OPEN = [[
 if (self:GetAttribute("qc-rings") or 0) < 1 then return end
+for i = 1, self:GetAttribute("qc-siblings") or 0 do
+    local other = self:GetFrameRef("sibling" .. i)
+    if other then other:RunAttribute("qc-close") end
+end
 if self:GetAttribute("qc-openAt") == "cursor" then
     self:ClearAllPoints()
     self:SetPoint("CENTER", "$cursor")
@@ -107,7 +115,7 @@ self:Hide()
 
 local WEDGE_PRE = [[
 if down then return false end
-if button == "RightButton" then
+if button ~= "LeftButton" then
     owner:RunAttribute("qc-close")
     return false
 end
@@ -168,6 +176,24 @@ function DS.Load(header, rings, opts)
         SE.SetFrameRef(header, "ring" .. r, ring.frame)
     end
     return SE.SetAttributes(header, attrs)
+end
+
+--- Hand each header the others (its siblings), so opening one closes any other that is open: two
+--- open dials would overlap at the same place and both hold the number keys. Out of combat only.
+--- @return boolean linked
+function DS.Link(headers)
+    if NS.Compat.InCombat() then return false end
+    for _, h in ipairs(headers) do
+        local n = 0
+        for _, other in ipairs(headers) do
+            if other ~= h then
+                n = n + 1
+                SE.SetFrameRef(h, "sibling" .. n, other)
+            end
+        end
+        SE.SetAttributes(h, { ["qc-siblings"] = n })
+    end
+    return true
 end
 
 --- Open the dial from the insecure side (test mode, Preview as…), taking no key. Out of combat only.

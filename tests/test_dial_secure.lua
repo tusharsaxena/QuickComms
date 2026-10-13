@@ -153,6 +153,69 @@ test("dial secure: [review 6] Open from the insecure side takes no key; the key 
     assertEqual(#m.blocked, 0)
 end)
 
+test("dial secure: [final 1] a middle or side click on a callout wedge sends nothing and closes; on the hub it closes", function()
+    local NS, m, h, frames, rings = built()
+    for _, b in ipairs({ "MiddleButton", "Button4", "Button5" }) do
+        m.__click(h, "Toggle")
+        -- red under: close only on RightButton in WEDGE_PRE
+        m.__click(rings[1].wedges[2].button, b)
+        assertFalse(h:IsShown(), b)
+        assertEqual(#m.sentMacros, 0, b)
+    end
+    assertEqual(NS.SendEngine.EchoState().pending, 0)
+    m.__click(h, "Toggle")
+    m.__click(rings[1].wedges[1].button, "MiddleButton")
+    assertFalse(h:IsShown(), "a ring wedge too")
+    m.__click(h, "Toggle")
+    m.__click(rings[1].wedges[1].button)
+    assertEqual(shown(frames), 2)
+    -- red under: let any button but Right be the hub in ONCLICK
+    m.__click(h, "MiddleButton")
+    assertFalse(h:IsShown(), "a middle click on the hub closes, never up a ring")
+end)
+
+test("dial secure: [final 12] the down edge alone does nothing: no send, no ring switch, the dial stays open", function()
+    local _, m, h, frames, rings = built()
+    m.__click(h, "Toggle")
+    -- red under: drop `if down then return false end` from WEDGE_PRE
+    rings[1].wedges[2].button:__fire("OnClick", "LeftButton", true)
+    assertTrue(h:IsShown())
+    assertEqual(#m.sentMacros, 0)
+    rings[1].wedges[1].button:__fire("OnClick", "LeftButton", true)
+    assertEqual(shown(frames), 1, "a ring wedge switches on the up edge")
+end)
+
+test("dial secure: [final 13] a page turn releases the number keys the new page has no wedge for", function()
+    local _, m, h = built({ openRing = 2 })
+    m.__click(h, "Toggle")
+    m.__pressKey("MOUSEWHEELDOWN")
+    -- red under: drop the `self:ClearBindings()` before the show snippet's rebinding
+    assertFalse(m.__pressKey("2"), "ring 3 has one wedge")
+    assertEqual(#m.sentMacros, 0)
+end)
+
+test("dial secure: [final 2] opening one dial closes another that is open; closing it leaves no key bound", function()
+    local NS, m, h = built()
+    local DS, SE = NS.DialSecure, NS.SendEngine
+    local h2 = DS.NewHeader(8)
+    local f = DS.NewRing(h2)
+    local b = DS.NewWedge(h2, f)
+    SE.Arm(b, "/p other", { calloutId = "c-o", surfaceId = "d8", chatType = "PARTY", name = "o" })
+    assertTrue(DS.Load(h2, { { frame = f, parent = 0, prev = 0, next = 0, wedges = { { button = b, target = 0 } } } }, {}))
+    assertTrue(DS.Link({ h, h2 }))
+    m.__click(h, "Toggle")
+    m.__click(h2, "Toggle")
+    -- red under: drop the sibling close from the open snippet
+    assertFalse(h:IsShown(), "the first dial closed")
+    assertTrue(h2:IsShown())
+    m.__click(h2, "Toggle")
+    assertNil(next(m.restrictedBindings), "no key left to a closed dial")
+    m.__click(h, "Toggle")
+    assertTrue(h:IsShown())
+    assertTrue(DS.Open(h2))
+    assertFalse(h:IsShown(), "an insecure open closes it too")
+end)
+
 test("dial secure: [firewall] no snippet writes an attribute; the ring on screen lives in the header's environment", function()
     local NS = T.newAddon()
     for name, body in pairs(NS.DialSecure.SNIPPETS) do
