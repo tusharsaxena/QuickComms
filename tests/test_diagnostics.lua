@@ -16,7 +16,7 @@ test("diagnostics: the sections are the addon's, in report order", function()
     local names = {}
     for i, s in ipairs(NS.Diagnostics.Sections()) do names[i] = s[1] end
     assertEqual(table.concat(names, ","),
-        "identity,settings,registration,integrations,situation,restrictions,library,surfaces,send")
+        "identity,settings,registration,integrations,situation,restrictions,library,surfaces,dials,bindings,send")
 end)
 
 test("diagnostics: the report names the schema, the profile, the holds and the launcher", function()
@@ -95,4 +95,19 @@ test("diagnostics: [final 21] the settings section lists no member row", functio
     for _, prefix in ipairs({ "callout.", "group.", "pad.", "builtin." }) do
         assertTrue(text:find(" " .. prefix, 1, true) == nil, prefix .. "\n" .. text)
     end
+end)
+test("diagnostics: [phase 4] the dials and bindings sections name each dial, its key and the override bindings", function()
+    local NS = T.enableAddon()
+    NS.Situation.ReadInputs = function()
+        return { inInstance = true, instanceType = "party", difficultyID = 8, keystoneActive = true,
+            keyLevel = 12, inGroup = true }
+    end
+    NS.Situation.RefreshNow("test")
+    NS.SchemaRuntime.Set("dial.key", "G", "d2")
+    local text = report(NS)
+    assertTrue(text:find("d2 QuickCommsDial1 key=G rings=4 openRing=2 open=false active=bi.mplus stale=false", 1, true)
+        ~= nil, text)
+    assertTrue(text:find("override bindings=1", 1, true) ~= nil, text)
+    assertTrue(text:find("G -> QuickCommsDial1:Toggle", 1, true) ~= nil, text)
+    assertTrue(text:find("d2:bi.mplus.pull /p Pulling next pack", 1, true) ~= nil, "the armed wedges")
 end)

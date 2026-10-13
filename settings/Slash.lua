@@ -61,7 +61,7 @@ local COMMANDS = {
         function() NS.Preview.ToggleTestMode() end},
     {"preview",  L["Preview the pads as another situation — `/qc preview <name>` or `off`; `/qc preview` lists them"],
         function(rest) NS.SlashVerbs.Preview(rest) end},
-    {"why",      L["Say why each pad shows the groups it shows"],
+    {"why",      L["Say why each pad and dial shows the groups it shows"],
         function() NS.SlashVerbs.Why() end},
 }
 NS.COMMANDS = COMMANDS

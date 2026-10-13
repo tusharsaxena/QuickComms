@@ -462,7 +462,7 @@ L["Preview as: %s"] = "Preview as: %s"
 L["No group matches this situation."] = "No group matches this situation."
 L["%s (built-in)"] = "%s (built-in)"
 L["Why is this showing?"] = "Why is this showing?"
-L["Say why each pad shows the groups it shows"] = "Say why each pad shows the groups it shows"
+L["Say why each pad and dial shows the groups it shows"] = "Say why each pad and dial shows the groups it shows"
 L["%s (%s):"] = "%s (%s):"
 L["No pad is showing: nothing has been built yet."] = "No pad is showing: nothing has been built yet."
 
