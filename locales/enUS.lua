@@ -60,8 +60,8 @@ L["General"] = "General"
 L["Profiles"] = "Profiles"
 L["Reset every %s setting to its default. Asks for confirmation."] =
     "Reset every %s setting to its default. Asks for confirmation."
-L["Reset this profile to the addon's defaults? Everything you have configured in it is discarded \226\128\148 your other profiles are not affected."] =
-    "Reset this profile to the addon's defaults? Everything you have configured in it is discarded \226\128\148 your other profiles are not affected."
+L["Reset this profile to the addon's defaults? Everything you have configured or added in it is discarded \226\128\148 your other profiles are not affected."] =
+    "Reset this profile to the addon's defaults? Everything you have configured or added in it is discarded \226\128\148 your other profiles are not affected."
 L["Settings panel is not available."] = "Settings panel is not available."
 L["Slash Commands"] = "Slash Commands"
 L["all settings reset to defaults"] = "all settings reset to defaults"

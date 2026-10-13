@@ -330,7 +330,7 @@ function Settings.EnsureResetPopup()
     if Settings._resetPopupRegistered then return end
     Settings._resetPopupRegistered = true
     StaticPopupDialogs[Settings.RESET_POPUP] = {
-        text         = L["Reset this profile to the addon's defaults? Everything you have configured in it is discarded \226\128\148 your other profiles are not affected."],
+        text         = L["Reset this profile to the addon's defaults? Everything you have configured or added in it is discarded \226\128\148 your other profiles are not affected."],
         button1      = YES or "Yes",
         button2      = NO  or "No",
         timeout      = 0,

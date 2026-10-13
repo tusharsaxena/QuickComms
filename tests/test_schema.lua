@@ -96,6 +96,49 @@ test("schema: Reset all asks first, through the confirmation popup", function()
     assertEqual(popup.preferredIndex, 3)
 end)
 
+test("schema: [audit QC-04] the global reset takes every created member back to a fresh profile, and only this one", function()
+    local NS = T.enableAddon()
+    local Lib, db = NS.Library, NS.addon.db
+    local fresh = {}
+    for _, kind in ipairs({ "callouts", "groups", "pads", "dials" }) do
+        local n = 0
+        for _ in pairs(db.profile[kind]) do n = n + 1 end
+        fresh[kind] = n
+    end
+    local c1 = Lib.CreateCallout({ name = "One", text = "one", channel = "party" })
+    local c2 = Lib.CreateCallout({ name = "Two", text = "two", channel = "party" })
+    assertTrue(Lib.CreateGroup({ name = "Mine", callouts = { c1, c2 } }) ~= nil)
+    assertTrue(Lib.CreateSurface("pad", "Extra") ~= nil)
+    local current = db:GetCurrentProfile()
+    db:SetProfile("Second")
+    db:SetProfile(current)
+    local profiles = table.concat(db:GetProfiles(), ",")
+    NS.SchemaRuntime.Set("state.testMode", true)
+    local target = NS.Bus:NewTarget()
+    local heard = 0
+    target:RegisterMessage(NS.MSG.PROFILE_CHANGED, function() heard = heard + 1 end)
+    -- red under: route RestoreAllDefaults back through the row-by-row walk (no db:ResetProfile())
+    NS.addon.Settings.Helpers.RestoreAllDefaults()
+    for kind, n in pairs(fresh) do
+        local now = 0
+        for _ in pairs(db.profile[kind]) do now = now + 1 end
+        assertEqual(now, n, kind .. " back to a fresh profile's")
+    end
+    assertEqual(table.concat(db:GetProfiles(), ","), profiles, "the profile list is untouched")
+    assertEqual(db:GetCurrentProfile(), current, "the active profile is still active")
+    assertFalse(NS.State.testMode == true, "the session rows are swept")
+    assertEqual(heard, 1, "PROFILE_CHANGED published once")
+end)
+
+test("schema: [audit QC-01] the reset confirmation is options-ui-§12's sentence, verbatim", function()
+    local NS, _, m = T.enableAddon()
+    NS.addon:OnSlashCommand("resetall")
+    local popup = m.StaticPopupDialogs.QUICKCOMMS_RESET_ALL or _G.StaticPopupDialogs.QUICKCOMMS_RESET_ALL
+    -- red under: drop "or added" from the key in locales/enUS.lua and settings/Schema.lua
+    assertEqual(popup.text, "Reset this profile to the addon's defaults? Everything you have configured or added"
+        .. " in it is discarded \226\128\148 your other profiles are not affected.")
+end)
+
 test("schema: degraded, `enabled` is written through and still reacts", function()
     local D = T.enableAddon{ skip = NO_LIBKA0S }
     -- red under: drop `writeThrough` from settings/Schema.lua (the composed rows do not exist here)
