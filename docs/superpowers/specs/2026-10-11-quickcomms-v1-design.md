@@ -407,7 +407,7 @@ A locked callout stays visible with a padlock and a tooltip (brainstorm §3.3).
 
 | Kind | Locked when | Source |
 |---|---|---|
-| say, yell | `lockdown.encounter` or `lockdown.pvpMatch`. Outside an instance, it needs a hardware event, which a click or key press provides. | C2 confirms |
+| say, yell | `lockdown.encounter` or `lockdown.pvpMatch`. Outside an instance, it needs a hardware event, which a click or key press provides. | C2 unverified |
 | raid, raidWarning | Not in a raid (or, for RW, not leader or assist in a raid) | game rule. **C1 unverified** (`/raid` and `/rw` on a premade-raid boss) |
 | party, instance | Not in that kind of group | game rule. **C3 unverified** (battleground `/i`, arena `/p`) |
 | guild, community, custom | Not offered at all in v0.1.0. Lockdown blocks them. | research 01 |
@@ -451,20 +451,13 @@ Every rebuild requested in combat goes through this queue and sets the surface's
 
 **Goal:** never send twice within `behavior.spamGuard` seconds (about 1 s), across every callout and surface. That keeps sends under the boss throttle (F4).
 
-**Secure part.** One shared **guard header** (`SecureHandlerBaseTemplate`) wraps every send button's OnClick with `SecureHandlerWrapScript`:
-- The pre-click snippet reads the last send time from a header attribute and returns `false` to cancel the click if the guard window hasn't passed.
-- Otherwise it stamps the time.
-
-**Plan of record (owner, 2026-10-13): there is no hard guard in combat**, because insecure code can't cancel a secure click. v0.1.0 ships the fallback design:
-- the visual dimming below still discourages a second press
+**There is no hard guard in combat** (owner, 2026-10-13), because insecure code can't cancel a secure click. The guard is soft:
+- **Insecure part.** `HookScript("OnClick")` on each button, which never taints the secure path:
+  - starts the visual cooldown (the chip and wedge dim for the guard window), which discourages a second press
+  - records the click for the echo tracker
 - an actual drop is detected and reported instead (§9.3)
-- the gap is recorded under Known Limitations
 
-**Upgrade, unverified (C5).** If `GetTime()` turns out to be available inside restricted snippets, the pre-click snippet above becomes a hard guard. Try it once it is verified in game.
-
-**Insecure part.** `HookScript("OnClick")` on each button, which never taints the secure path:
-- starts the visual cooldown (the chip and wedge dim for the guard window)
-- records the click for the echo tracker
+**Upgrade once C5 is verified.** If `GetTime()` is available inside restricted snippets, one shared **guard header** (`SecureHandlerBaseTemplate`) wraps every send button's OnClick with `SecureHandlerWrapScript`. Its pre-click snippet reads the last send time from a header attribute and returns `false` to cancel the click if the guard window hasn't passed; otherwise it stamps the time.
 
 ### 9.3 Echo tracker: inferring "dropped"
 
@@ -535,10 +528,9 @@ If this happens in combat, the secure parts are held in the one permitted pendin
 
 **Implementation.** It reuses KickCD `IconGrid_Layout`'s `placeBlock` / `layoutBlock` math, and is tested headlessly.
 
-**Tabs in combat:**
-- Switching tabs means showing and hiding secure children. It is done by a `SecureHandlerWrapScript` on the pad's `OnMouseWheel`, which shows and hides prebuilt per-tab containers in the restricted environment.
-- **Plan of record (owner, 2026-10-13):** tab switching is refused in combat, with a one-line tooltip, and sections are the default. This is the fallback for C8.
-- **Upgrade, unverified (C8):** the secure `OnMouseWheel` wrap above, once it is verified in game.
+**Tabs in combat:** tab switching is refused in combat, with a one-line tooltip, and sections are the default (owner, 2026-10-13).
+
+**Upgrade once C8 is verified.** Switching tabs would show and hide prebuilt per-tab containers of secure children, done by a `SecureHandlerWrapScript` on the pad's `OnMouseWheel` in the restricted environment.
 
 ### 10.3 Visibility and look
 
@@ -587,6 +579,10 @@ The Blizzard ping wheel's look (brainstorm §4):
 - **Send buttons:** one hidden secure send button per slot, armed by SendEngine with the baked line.
 - **Attributes on the header:** the ring layout (slot count, the ring id for each slot, child rings, the open-into flag, `openAt`) and `state` (`closed`, `ring:<id>`).
 
+**Relaxed mode (the v0.1.0 design, owner 2026-10-13).** Pressing the dial's key toggles the dial open and pressing it again closes it. While it is open, the wedges are real secure buttons (each one is that slot's send button, armed with the baked line) and the player clicks one to send; the dial then closes. Escape, a right click or a click in the hub also closes it, and the hub's ✕ goes up a ring when there is one. The insecure render only draws and hides; the secure header holds the ring state.
+
+**Upgrade (C7): hold, flick and release.** This needs restricted `GetMousePosition` / `SetBindingClick` (after OPie's published approach, new to Ka0s) and is tried once C7 is verified in game.
+
 **Key down** (the header's restricted `OnClick` snippet, `down == true`):
 - Record the cursor origin with `self:GetMousePosition()` and set `state=ring:<top>`. If open-into applies, the top ring is the first active group's ring (D9).
 - `SetBindingClick` captures LeftButton, RightButton, Escape and the mouse wheel to the header while the dial is open, as OPie does.
@@ -601,20 +597,18 @@ The Blizzard ping wheel's look (brainstorm §4):
   - `tapAction = "first"` sends the first callout of the highest-priority active group (brainstorm §4).
   - `"none"` cancels.
 
-**Relaxed mode (the v0.1.0 mode):** key down only toggles the dial open; a click selects and sends. The Quick-mode behavior in the key-down and key-up lists above is the C7 upgrade, not part of v0.1.0.
-
 **Number keys 1–8 and the mouse wheel** are captured while the dial is open. The numbers pick wedges clockwise from N; the wheel pages a Flat ring.
 
-**Draw delay of about 300 ms:**
+**Draw delay of about 300 ms (Upgrade, C7):**
 - The insecure render waits `delay` before drawing. A flick within that time sends without the dial ever being drawn.
 - The secure side never waits: selection is purely geometric.
 
-**Plan of record (owner, 2026-10-13): v0.1.0 ships Relaxed mode only.** The wedges are real secure buttons the player clicks, which F2 already proved. The hold-flick-release secure dial described above (restricted `GetMousePosition` / `SetBindingClick`, after OPie's published approach, new to Ka0s) is an upgrade to try once C7 is verified in game.
+In Relaxed mode the dial is drawn as soon as it opens.
 
 ### 11.3 Modes and limits
 
 **Modes:**
-- **Categories** (the default, D2): the top ring holds groups, and each group's sub-ring holds its callouts.
+- **Categories** (the default, D2): the top ring holds groups, and each group's sub-ring holds its callouts. Choosing a group takes a second click in v0.1.0.
 - **Flat:** the top ring holds callouts from the highest-priority group down. Any overflow goes to "More ▸" pages, which the wheel or the More wedge switches between.
 
 **Limits:**
