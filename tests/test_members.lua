@@ -383,6 +383,25 @@ test("members: [review 4] a dial's key is stored upper-case; none clears it; a r
     assertTrue(S.Set("dial.key", "SHIFT-G", other), "free again")
 end)
 
+test("members: [final 3] a bare, dangling, unknown or repeated modifier is refused; [final 4] modifier order is one key", function()
+    local NS, S, Lib = boot()
+    for _, bad in ipairs({ "SHIFT", "SHIFT-", "FOO-G", "SHIFT-SHIFT-G" }) do
+        local ok, _, why = S.Set("dial.key", bad, "d2")
+        assertFalse(ok, bad)
+        assertEqual(why, "A key is one key, with ALT-, CTRL- or SHIFT- in front if you like.", bad)
+    end
+    assertNil(NS.db.profile.dials.d2.key)
+    assertTrue(S.Set("dial.key", "CTRL-SHIFT-G", "d2"))
+    local other = Lib.CreateSurface("dial", "Lead")
+    local ok, _, why = S.Set("dial.key", "shift-ctrl-g", other)
+    assertFalse(ok)
+    -- red under: only trim and upper-case in Lib.KeyValue (KeyOwner compares the strings)
+    assertEqual(why, "CTRL-SHIFT-G already opens Comms Dial.")
+    assertTrue(S.Set("dial.key", "none", "d2"))
+    assertTrue(S.Set("dial.key", "shift-ctrl-g", other))
+    assertEqual(NS.db.profile.dials[other].key, "CTRL-SHIFT-G")
+end)
+
 test("members: [phase 4] the CLI types and prints a dial's key and position", function()
     local NS, _, m = T.enableAddon()
     NS.addon:OnSlashCommand("set dial.key ctrl-f")

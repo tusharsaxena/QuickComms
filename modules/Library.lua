@@ -698,24 +698,65 @@ local RESERVED_KEYS = { ESCAPE = true, BUTTON1 = true, BUTTON2 = true, MOUSEWHEE
 local RESERVED_BARE = { ["1"] = true, ["2"] = true, ["3"] = true, ["4"] = true, ["5"] = true, ["6"] = true,
     ["7"] = true, ["8"] = true }
 
---- A key as stored: trimmed and upper-cased; nil, false, "" and "none" are no key (false).
+-- The modifiers a key may carry, in the order the client spells a chord (ALT-CTRL-SHIFT-META-X), and
+-- the modifier keys themselves, which are no key on their own: the client never sends a bare SHIFT.
+local MODIFIERS = { "ALT", "CTRL", "SHIFT", "META" }
+local IS_MODIFIER = { ALT = true, CTRL = true, SHIFT = true, META = true }
+local MODIFIER_KEYS = { ALT = true, CTRL = true, SHIFT = true, META = true, LALT = true, RALT = true,
+    LCTRL = true, RCTRL = true, LSHIFT = true, RSHIFT = true, LMETA = true, RMETA = true }
+
+-- An upper-cased key split into its modifiers (a set) and its base key, or nil when it is not one key:
+-- an empty or dangling part ("SHIFT-", "-G"), an unknown or repeated modifier ("FOO-G",
+-- "SHIFT-SHIFT-G"), or a modifier as the base ("SHIFT"). A trailing "--" is the minus key ("CTRL--").
+local function splitKey(t)
+    local base, rest
+    if t == "-" then return {}, "-" end
+    if t:sub(-2) == "--" then
+        base, rest = "-", t:sub(1, -3)
+    else
+        base = t:match("([^%-]+)$")
+        if not base or MODIFIER_KEYS[base] then return nil end
+        if #base == #t then return {}, base end
+        rest = t:sub(1, #t - #base - 1)
+    end
+    if rest == "" then return nil end
+    local mods = {}
+    for part in (rest .. "-"):gmatch("([^%-]*)%-") do
+        if not IS_MODIFIER[part] or mods[part] then return nil end
+        mods[part] = true
+    end
+    return mods, base
+end
+
+--- A key as stored: trimmed and upper-cased, its modifiers in the client's order (SHIFT-CTRL-G is
+--- CTRL-SHIFT-G, so one chord is one stored key); nil, false, "" and "none" are no key (false). A
+--- string that is not one key is kept as typed, for ValidKey to refuse.
 --- @return string|false|any
 function Lib.KeyValue(v)
     if v == nil or v == false then return false end
     if type(v) ~= "string" then return v end
     local t = v:match("^%s*(.-)%s*$"):upper()
     if t == "" or t == "NONE" then return false end
-    return t
+    local mods, base = splitKey(t)
+    if not mods then return t end
+    local parts = {}
+    for _, m in ipairs(MODIFIERS) do
+        if mods[m] then parts[#parts + 1] = m end
+    end
+    parts[#parts + 1] = base
+    return table.concat(parts, "-")
 end
 
---- Whether `v` is a key a dial may take: no key, or one key name with optional modifiers (no space,
---- at most 40 characters), not a reserved key.
+--- Whether `v` is a key a dial may take: no key, or one key name with optional ALT-, CTRL-, SHIFT- or
+--- META- modifiers, none twice (no space, at most 40 characters), not a modifier alone, not a reserved
+--- key.
 --- @return boolean ok, string|nil reason ("badKey" | "reservedKey")
 function Lib.ValidKey(v)
     v = Lib.KeyValue(v)
     if v == false then return true end
     if type(v) ~= "string" or #v > 40 or v:find("%s") then return false, "badKey" end
-    local base = v:match("^.*%-(.+)$") or v
+    local mods, base = splitKey(v)
+    if not mods then return false, "badKey" end
     if RESERVED_KEYS[base] or RESERVED_BARE[v] then return false, "reservedKey" end
     return true
 end
