@@ -460,3 +460,8 @@ L["Why is this showing?"] = "Why is this showing?"
 L["Say why each pad shows the groups it shows"] = "Say why each pad shows the groups it shows"
 L["%s (%s):"] = "%s (%s):"
 L["No pad is showing: nothing has been built yet."] = "No pad is showing: nothing has been built yet."
+
+-- Editor pages (settings/Editors.lua)
+L["Drag to reorder"] = "Drag to reorder"
+L["Remove"] = "Remove"
+L["Delete '%s'? This cannot be undone."] = "Delete '%s'? This cannot be undone."

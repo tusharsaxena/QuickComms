@@ -110,6 +110,7 @@ Kit.run{
         "test_builtins",
         "test_library",
         "test_members",
+        "test_editors",
         "test_check",
         "test_send_guard",
         "test_sendengine",
