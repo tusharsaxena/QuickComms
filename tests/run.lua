@@ -106,6 +106,7 @@ Kit.run{
         "test_tokens",
         "test_channels",
         "test_bake",
+        "test_share",
         "test_resolver",
         "test_builtins",
         "test_library",

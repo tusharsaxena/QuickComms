@@ -18,15 +18,25 @@ local function squeeze(s)
     return s
 end
 
---- Clean user text: one line, no leading slash, pipes escaped.
+--- The §8.3 sanitizer short of the escape: one line (every control character flattened to a
+--- space), runs of whitespace collapsed, trimmed, and a leading "/" refused. Imported text is stored
+--- this way (spec §8.3: sanitized when it is imported, and again at every bake); the "|" escape is
+--- left to the bake, so a stored "|" is never escaped twice.
 --- @return string|nil clean, string|nil reason ("empty" | "startsWithSlash")
-function B.Sanitize(text)
+function B.CleanText(text)
     if type(text) ~= "string" then return nil, "empty" end
     local s = squeeze((text:gsub("%c", " ")))
     if s == "" then return nil, "empty" end
     if s:sub(1, 1) == "/" then return nil, "startsWithSlash" end
-    s = s:gsub("|", "||")
     return s
+end
+
+--- Clean user text: one line, no leading slash, pipes escaped.
+--- @return string|nil clean, string|nil reason ("empty" | "startsWithSlash")
+function B.Sanitize(text)
+    local s, why = B.CleanText(text)
+    if not s then return nil, why end
+    return (s:gsub("|", "||"))
 end
 
 --- Bytes the line will take: its text's own bytes plus a nominal 12 for each live token and, with
