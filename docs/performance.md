@@ -18,14 +18,21 @@ exemption will never apply.
 
 ## The buckets
 
-None is declared yet. Phase 1's only event-driven path is `Situation.Refresh`, a pass coalesced to
-one read 0.1 s after a burst of zone, roster, spec and keystone events: it runs a handful of times a
-pull at most and never per frame or per combat-log event, so a bucket on it would read near `0.000`
-(bucket coverage is a SHOULD, performance-§3). `situation.refresh` is declared in phase 2, with the
-resolver edge and the surface bake that run inside the same pass. The design's buckets (spec §16:
-`situation.refresh`, `resolver.resolve`, `bake.surface`, `pad.layout`, `dial.render`, `send.click`,
-`echo.match`) are declared in `core/PerfSetup.lua` together with the bracket that reaches each one,
-and `tests/test_setup.lua` fails if a declared bucket has no bracket, or a bracket no bucket. Every
+Four are declared in `core/PerfSetup.lua`, in report order, each with the file that brackets it:
+
+| Bucket | Bracketed in | Measures |
+|---|---|---|
+| `bake.surface` | `modules/Surfaces.lua` | one pad's plan: resolve, order, bake every slot |
+| `send.click` | `modules/SendEngine.lua` | the `OnClick` hook on a send button |
+| `pad.layout` | `modules/Pad.lua` | one pad's rebuild: geometry, chips, arm |
+| `echo.match` | `modules/SendEngine.lua` | a `CHAT_MSG_*` echo while a press waits |
+
+`Situation.Refresh` has no bucket: a pass coalesced to one read 0.1 s after a burst of zone, roster,
+spec and keystone events runs a handful of times a pull at most, so a bucket on it would read near
+`0.000` (bucket coverage is a SHOULD, performance-§3); the resolver runs inside `bake.surface`. The
+design's other buckets (spec §16: `situation.refresh`, `resolver.resolve`, `dial.render`) are
+declared together with the bracket that reaches each one, and `tests/test_setup.lua` fails if a
+declared bucket has no bracket, or a bracket no bucket. Every
 bracket is the gated form (performance-§2): one upvalue read, one field read and one boolean test
 when capture is off.
 

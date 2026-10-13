@@ -204,14 +204,14 @@ local function openMenu(m)
     return root
 end
 
-test("launcher: the right-click menu is Enabled alone", function()
+test("launcher: the right-click menu is Enabled, Locked and Test mode", function()
     local _, _, m = T.enableAddon()
     local root = openMenu(m)
     assertEqual(root.title, "Ka0s Quick Comms")
     local labels = {}
     for i, box in ipairs(root.boxes) do labels[i] = box.label end
-    -- red under: pass isLocked/toggleLock in core/LauncherSetup.lua before a lock exists
-    assertEqual(table.concat(labels, ","), "Enabled")
+    -- red under: drop isTestMode/toggleTestMode from core/LauncherSetup.lua
+    assertEqual(table.concat(labels, ","), "Enabled,Locked,Test mode")
 end)
 
 test("launcher: Enabled calls the same handler `/qc disable` calls", function()

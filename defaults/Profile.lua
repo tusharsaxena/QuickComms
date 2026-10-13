@@ -13,7 +13,11 @@ local _, NS = ...
 
 NS.C = {
     PROFILE = {
-        enabled = true,   -- master switch (the `disabled` hold reads it)
+        enabled    = true,       -- master switch (the `disabled` hold reads it)
+        visibility = "always",   -- Master controls: General visibility (options-ui-§15)
+        scale      = 1.0,        -- Master scale, multiplied into every pad's own scale
+        alpha      = 1.0,        -- Master alpha, the ceiling of every pad's fade
+        locked     = true,       -- Lock frame: pads start locked (spec §5.1)
 
         behavior = {
             soloFallback = "none",   -- "none" | "self" | "say": smart channels when solo (spec §8.2)

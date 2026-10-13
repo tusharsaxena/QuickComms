@@ -4,9 +4,8 @@ local _, NS = ...
 -- Sections only: the markers, the identity header's library half, the per-section pcall, the cap
 -- and the Add loop are LibKa0s-DebugLog-1.0's. Every section READS state and never acts: no hold,
 -- no event, no timer, safe in combat and while stood down. `out:add` formats %s-only and runs every
--- argument through safeToString, so raw values are passed, never pre-built strings. The feature
--- tasks add their own sections (design spec §16: the snapshot, restrictions, active groups, armed
--- buttons, the combat queue, bindings, the guard, the echo tracker) here.
+-- argument through safeToString, so raw values are passed, never pre-built strings. The sections
+-- cover design spec §16's list; override bindings join with the Dial (phase 4).
 
 NS.Diagnostics = NS.Diagnostics or {}
 
@@ -94,6 +93,40 @@ local function library(out)
     out:add("Library", "active=%s", table.concat(ids, ","))
 end
 
+-- The surfaces (spec §16): each pad's active groups, its stale hint, its lockdown chip.
+local function surfaces(out)
+    local plans = NS.Surfaces.Plans()
+    local stale = NS.State.surfaceStale or {}
+    out:joined("Pad", "pads built", NS.Pad.Ids())
+    out:add("Pad", "testMode=%s", NS.Preview.IsTestMode())
+    local ids = {}
+    for id in pairs(plans) do ids[#ids + 1] = id end
+    table.sort(ids)
+    for _, id in ipairs(ids) do
+        local plan = plans[id]
+        out:add("Pad", "%s active=%s stale=%s lockdownChip=%s", id, table.concat(plan.order, ","),
+            stale[id] == true, plan.lockdownChip)
+    end
+end
+
+-- The send engine (spec §16): the armed buttons, each with its pad, callout and escaped line; the
+-- combat-end queue's keys; the guard; the echo tracker's counts.
+local function send(out)
+    local SE = NS.SendEngine
+    local armed = SE.ArmedButtons()
+    out:add("Send", "buttons=%s armed=%s", SE.ButtonCount(), #armed)
+    for _, b in ipairs(armed) do
+        local meta = b.qcMeta or {}
+        out:add("Send", "%s %s:%s %s", b:GetName(), meta.surfaceId, meta.calloutId, SE.Escaped(b))
+    end
+    out:joined("Queue", "pending", SE.Snapshot())
+    local g = SE.GuardState()
+    out:add("Guard", "window=%s last=%s remaining=%s", g.window, g.last, g.remaining)
+    local e = SE.EchoState()
+    out:add("Echo", "pending=%s sent=%s dropped=%s unknownSender=%s ignored=%s", e.pending, e.sent, e.dropped,
+        e.unknown, e.ignored)
+end
+
 --- The sections, in report order. Read at RUN time by core/DebugLogSetup.lua's descriptor.
 --- @return table
 function NS.Diagnostics.Sections()
@@ -105,5 +138,7 @@ function NS.Diagnostics.Sections()
         { "situation",    situation },
         { "restrictions", restrictions },
         { "library",      library },
+        { "surfaces",     surfaces },
+        { "send",         send },
     }
 end

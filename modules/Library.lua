@@ -1,8 +1,8 @@
 local _, NS = ...
 -- modules/Library.lua — THE registry writer (architecture-§5, spec §5, §12.2). The only module
 -- that creates, deletes, orders or re-references profile.callouts / groups / pads / dials /
--- builtins / padOrder / dialOrder / nextId / seeded. Panel pages, slash verbs and (phase 5) import
--- all call it. Built-ins are shipped data (NS.BuiltIns); the profile holds only their overlay.
+-- builtins / padOrder / dialOrder / nextId / seeded, and the surfaces' saved anchors (point).
+-- Panel pages, slash verbs and (phase 5) import all call it. Built-ins are shipped data (NS.BuiltIns); the profile holds only their overlay.
 -- Prepare runs after migrations on every profile load: it seeds, appends new built-ins once per
 -- surface (seenBuiltins), and drops dangling ids.
 
@@ -326,6 +326,27 @@ end
 function Lib.RemoveGroupFromSurface(kind, sid, gid)
     local s = surface(kind, sid)
     if not s or removeAll(s.groups, gid) == 0 then return false end
+    announce(kind, sid)
+    return true
+end
+
+--- Set, or with nil clear, a pad's or dial's saved anchor (spec §5.1, the named non-setting state).
+--- The drag strip and Reset position call it; nothing else writes `point`. A plain copy is stored,
+--- so the caller's table never aliases the profile.
+--- @param point table|nil { point, relativePoint, x, y }: two strings, then two numbers
+--- @return boolean
+function Lib.SetSurfacePoint(kind, sid, point)
+    local s = surface(kind, sid)
+    if not s then return false end
+    if point ~= nil then
+        if type(point) ~= "table" or type(point[1]) ~= "string" or type(point[2]) ~= "string"
+            or type(point[3]) ~= "number" or type(point[4]) ~= "number" then
+            return false
+        end
+        s.point = { point[1], point[2], point[3], point[4] }
+    else
+        s.point = nil
+    end
     announce(kind, sid)
     return true
 end

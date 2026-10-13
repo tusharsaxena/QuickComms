@@ -9,6 +9,9 @@ local _, NS = ...
 
 local L = NS.L
 local B = NS.C.PROFILE.behavior
+-- Resolved when a row's onChange runs, not captured at load: settings/Schema.lua publishes it, and
+-- a nil captured here would make these rows stop rebuilding the pads without a word.
+local function rebuild(...) return NS.addon.Settings.RebuildSurfaces(...) end
 
 local BEHAVIOR  = L["Behavior"]
 local FALLBACKS = { "none", "self", "say" }
@@ -35,7 +38,7 @@ NS.SchemaRuntime.AddRows({
       desc = L["What a Smart group or Smart lead callout does when you are not in a group."],
       values = { { value = "none", text = L["Do nothing"] }, { value = "self", text = L["Print to me"] },
                  { value = "say", text = L["Send to Say"] } },
-      validate = oneOf(FALLBACKS) },
+      validate = oneOf(FALLBACKS), onChange = rebuild },
     { path = "behavior.spamGuard", type = "number", default = B.spamGuard, page = "general",
       group = BEHAVIOR, label = L["Spam guard (seconds)"],
       desc = L["Shortest time between any two callouts. Bosses silently drop messages sent faster than about a second apart."],
@@ -49,10 +52,12 @@ NS.SchemaRuntime.AddRows({
       desc = L["Show which conditions matched in the pad and dial tooltips."] },
     { path = "behavior.lockdownChip", type = "bool", default = B.lockdownChip, page = "general",
       group = BEHAVIOR, label = L["Show the lockdown chip"],
-      desc = L["Show LOCKDOWN on a pad or dial when lockdown is blocking one of its callouts."] },
+      desc = L["Show LOCKDOWN on a pad or dial when lockdown is blocking one of its callouts."],
+      onChange = rebuild },
     { path = "behavior.sounds", type = "bool", default = B.sounds, page = "general",
       group = BEHAVIOR, label = L["Play a sound on send"], desc = L["A short sound when a callout is sent."] },
     { path = "behavior.autoPromote", type = "bool", default = B.autoPromote, page = "general",
       group = BEHAVIOR, label = L["Promote specific groups"],
-      desc = L["Groups for a specific dungeon or battleground move above general ones on each pad and dial."] },
+      desc = L["Groups for a specific dungeon or battleground move above general ones on each pad and dial."],
+      onChange = rebuild },
 })

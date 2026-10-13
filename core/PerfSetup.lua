@@ -14,12 +14,17 @@ local addonName, NS = ...
 
 local lib = LibStub and LibStub("LibKa0s-Perf-1.0", true)
 
--- The buckets, in report order. Each one is bracketed by the module named beside it. None is
--- declared yet: the scaffold has no hot path. The tasks that add one add its bucket here together
+-- The buckets, in report order. Each one is bracketed by the module named beside it. Phase 2
+-- declares the send engine's and the pad's. The tasks that add one add its bucket here together
 -- with the bracket that reaches it (design spec §16: situation.refresh, resolver.resolve,
 -- bake.surface, pad.layout, dial.render, send.click, echo.match), so a declared bucket is never left
 -- unreached (tests/test_setup.lua).
-local BUCKETS = {}
+local BUCKETS = {
+    { key = "bake.surface" }, -- modules/Surfaces.lua: one pad's plan (resolve, order, bake every slot)
+    { key = "send.click" },   -- modules/SendEngine.lua: the OnClick hook
+    { key = "pad.layout" },   -- modules/Pad.lua: one pad's rebuild (geometry, chips, arm)
+    { key = "echo.match" },   -- modules/SendEngine.lua: a CHAT_MSG_* echo while a press waits
+}
 
 if not (lib and NS.Lifecycle) then
     -- Degrade, never error: the members the addon reaches, and nothing of the harness itself.

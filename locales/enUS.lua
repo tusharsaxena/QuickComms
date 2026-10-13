@@ -30,6 +30,7 @@ L["Disable the addon"] = "Disable the addon"
 L["Enable the addon"] = "Enable the addon"
 L["List available commands"] = "List available commands"
 L["List every setting and its current value"] = "List every setting and its current value"
+L["Lock the Comms Pads in place"] = "Lock the Comms Pads in place"
 L["List profiles, or switch to one: profile <name>"] =
     "List profiles, or switch to one: profile <name>"
 L["Measure performance — `/qc perf` opens the step panel"] =
@@ -45,6 +46,9 @@ L["Reset one setting to its default — `/qc reset <path>`"] =
     "Reset one setting to its default — `/qc reset <path>`"
 L["Set a setting — `/qc set <path> <value>` (try /qc list)"] =
     "Set a setting — `/qc set <path> <value>` (try /qc list)"
+L["Turn test mode on or off (placeholder chips; combat ends it)"] =
+    "Turn test mode on or off (placeholder chips; combat ends it)"
+L["Unlock the Comms Pads so they can be dragged"] = "Unlock the Comms Pads so they can be dragged"
 L["Write the diagnostics report to the debug console"] =
     "Write the diagnostics report to the debug console"
 
@@ -264,3 +268,57 @@ L["  locked: %s"] = "  locked: %s"
 L["%s -> would print locally, not sent (solo fallback: self)"] = "%s -> would print locally, not sent (solo fallback: self)"
 L["  baked at send time: %s"] = "  baked at send time: %s"
 L["  unknown tokens: %s"] = "  unknown tokens: %s"
+
+-- Send engine (modules/SendEngine.lua)
+L["A deferred update failed (%s): %s"] = "A deferred update failed (%s): %s"
+L["%s may have been dropped by the game (sent too soon after another message)."] =
+    "%s may have been dropped by the game (sent too soon after another message)."
+L["%s may not have been sent. %s"] = "%s may not have been sent. %s"
+
+-- Test mode (modules/Preview.lua)
+L["Test mode is not available in combat."] = "Test mode is not available in combat."
+L["Test mode ended: you entered combat."] = "Test mode ended: you entered combat."
+
+-- Surfaces (modules/Surfaces.lua)
+L["Tank"] = "Tank"
+L["Healer"] = "Healer"
+L["Damage"] = "Damage"
+L["Callout %d"] = "Callout %d"
+L["Test group %d"] = "Test group %d"
+
+-- Comms Pad chips and header (modules/Pad_Render.lua)
+L["Callout text cannot start with /."] = "Callout text cannot start with /."
+L["Too long: a chat line holds 255 bytes."] = "Too long: a chat line holds 255 bytes."
+L["This callout has no text."] = "This callout has no text."
+L["You are not in a group."] = "You are not in a group."
+L["This callout has no valid channel."] = "This callout has no valid channel."
+L["This callout is damaged."] = "This callout is damaged."
+L["This callout no longer exists."] = "This callout no longer exists."
+L["Test mode: a placeholder that sends nothing."] = "Test mode: a placeholder that sends nothing."
+L["Locked: you are not in a raid."] = "Locked: you are not in a raid."
+L["Locked: needs raid leader or assist."] = "Locked: needs raid leader or assist."
+L["Locked: you are not in a group."] = "Locked: you are not in a group."
+L["Locked: you are not in an instance group."] = "Locked: you are not in an instance group."
+L["Locked: Say and Yell are blocked during this encounter."] =
+    "Locked: Say and Yell are blocked during this encounter."
+L["Solo: prints to you, sends nothing."] = "Solo: prints to you, sends nothing."
+L["Not available here."] = "Not available here."
+L["%s (%d of %d)"] = "%s (%d of %d)"
+L["M+"] = "M+"
+L["Raid"] = "Raid"
+L["Dungeon"] = "Dungeon"
+L["Arena"] = "Arena"
+L["Delve"] = "Delve"
+L["Scenario"] = "Scenario"
+L["Housing"] = "Housing"
+L["World"] = "World"
+L["LOCKDOWN"] = "LOCKDOWN"
+L["TEST MODE"] = "TEST MODE"
+L["updates after combat"] = "updates after combat"
+
+-- Comms Pad (modules/Pad.lua)
+L["Drag to move. Right-click for settings."] = "Drag to move. Right-click for settings."
+L["Tabs switch after combat."] = "Tabs switch after combat."
+L["The pad can be collapsed or expanded after combat."] = "The pad can be collapsed or expanded after combat."
+L["Pad positions reset."] = "Pad positions reset."
+L["Test mode"] = "Test mode"

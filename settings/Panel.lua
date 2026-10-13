@@ -4,9 +4,9 @@ local addonName, NS = ...
 -- The landing page is the library's BuildLandingPage (logo, TOC notes, the slash command list) and
 -- draws no tab strip (options-ui-§5/§13). The General page renders through the tabbed renderer, its
 -- first tab `Master controls`, composed from one declaration with the canonical rows in canonical
--- order (options-ui-§15). Nothing positionable is drawn yet, so the block is `frameless` (no Master
--- scale, Master alpha, Lock frame or Reset position) and omits General visibility; the Comms Pad
--- brings those rows and Test mode back (design spec §10.3/§10.4). The design's other pages and the
+-- order (options-ui-§15). The Comms Pad is positionable, so the block is the full framed set: General
+-- visibility, Master scale and alpha, Lock frame, Test mode and Reset position (design spec
+-- §10.3/§10.4). The design's other pages and the
 -- General page's Behavior tab (spec §13.1) are added by the settings tasks.
 
 local QC       = NS.addon
@@ -45,11 +45,15 @@ local MASTER_ROWS, MASTER_TAIL = Helpers.MasterControls{
     prefix           = "",
     page             = "general",
     addonName        = NS.BRAND,
-    frameless        = true,
-    omit             = { visibility = true },
     debugConsolePath = "state.debugConsole",
     minimapPath      = Settings.MINIMAP_PATH,
-    defaults         = { enabled = C.PROFILE.enabled, debugConsole = false },
+    testModePath     = "state.testMode",
+    defaults         = {
+        enabled = C.PROFILE.enabled, visibility = C.PROFILE.visibility, scale = C.PROFILE.scale,
+        alpha = C.PROFILE.alpha, locked = C.PROFILE.locked, debugConsole = false, testMode = false,
+    },
+    -- Reset position resets every pad's anchor (spec §10.4); the dials join it in phase 4.
+    onResetPosition  = function() if NS.Pad and NS.Pad.ResetPositions then NS.Pad.ResetPositions() end end,
     onResetAll       = showResetPopup,
 }
 

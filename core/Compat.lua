@@ -85,6 +85,17 @@ local function specInfo(index)
     return PlainNumber(id), PlainString(role)
 end
 
+-- The player's name and normalized realm (the realm as chat senders carry it), each plain or nil.
+local function playerFullName()
+    local name, realm
+    if UnitFullName then name, realm = UnitFullName("player") end
+    name, realm = PlainString(name), PlainString(realm)
+    if not name and UnitName then name = PlainString((UnitName("player"))) end
+    if (not realm or realm == "") and GetNormalizedRealmName then realm = PlainString(GetNormalizedRealmName()) end
+    if realm == "" then realm = nil end
+    return name, realm
+end
+
 --- classFile, specID, role (TANK/HEALER/DAMAGER or nil), character ("Name-Realm" or nil).
 function Compat.PlayerIdentity()
     local classFile = UnitClass and PlainString(select(2, UnitClass("player"))) or nil
@@ -152,4 +163,82 @@ function Compat.IsRestrictionActive(rtype)
         return Compat.IsRestrictionStateActive(ra.GetAddOnRestrictionState(rtype))
     end
     return false
+end
+
+-- ── The send engine (spec §9.2, §9.3) ────────────────────────────────────────────────────────
+
+--- True when secure action buttons act on key DOWN: the ActionButtonUseKeyDown cvar, on by
+--- default in the client, and assumed on when it cannot be read.
+function Compat.UseKeyDown()
+    local cv = C_CVar
+    local get = (cv and cv.GetCVarBool) or GetCVarBool
+    if not get then return true end
+    local v = get("ActionButtonUseKeyDown")
+    if Compat.IsSecret(v) then return true end
+    return v == true
+end
+
+--- Whether a chat line came from the player: true, false, or nil when neither the GUID nor the
+--- name can be read (secret or absent). Never compares a secret. Without the GUID the full name
+--- decides: a sender with a realm is the player only on the player's own realm (a cross-realm
+--- namesake is not), so when that realm cannot be read the answer is unknown; a sender with no
+--- realm is on the player's realm and the bare name decides.
+function Compat.SenderIsPlayer(sender, guid)
+    local g = PlainString(guid)
+    local me = UnitGUID and PlainString(UnitGUID("player")) or nil
+    if g and me then return g == me end
+    local name = PlainString(sender)
+    if not name then return nil end
+    local mine, myRealm = playerFullName()
+    if not mine then return nil end
+    local bare, realm = name:match("^([^%-]+)%-(.+)$")
+    if not bare then return name == mine end
+    if bare ~= mine then return false end
+    if not myRealm then return nil end
+    return realm == myRealm
+end
+
+-- ── The bake context (spec §8.1): the values {me}, {spec}, {dungeon} and {spell:ID} bake from ──
+
+--- The player's name, without the realm.
+function Compat.PlayerName()
+    if not UnitName then return nil end
+    return PlainString((UnitName("player")))
+end
+
+--- The current specialization's display name.
+function Compat.SpecName()
+    local index = specIndex()
+    if not index then return nil end
+    local get = (C_SpecializationInfo and C_SpecializationInfo.GetSpecializationInfo) or GetSpecializationInfo
+    if not get then return nil end
+    local _, name = get(index)
+    return PlainString(name)
+end
+
+--- A Mythic+ dungeon's display name from its challenge map id.
+function Compat.DungeonName(mapID)
+    local cm = C_ChallengeMode
+    if not (PlainNumber(mapID) and cm and cm.GetMapUIInfo) then return nil end
+    return PlainString((cm.GetMapUIInfo(mapID)))
+end
+
+--- A spell's chat link, for {spell:ID}.
+function Compat.SpellLink(id)
+    local sp = C_Spell
+    if not (PlainNumber(id) and sp and sp.GetSpellLink) then return nil end
+    return PlainString(sp.GetSpellLink(id))
+end
+
+-- ── The pad (spec §10.1) ─────────────────────────────────────────────────────────────────────
+
+--- The client's color for a chat type, or nil when it cannot be read.
+function Compat.ChatColor(chatType)
+    local info = ChatTypeInfo
+    if type(info) ~= "table" or not Compat.IsSafeKey(chatType) then return nil end
+    local c = info[chatType]
+    if type(c) ~= "table" then return nil end
+    local r, g, b = PlainNumber(c.r), PlainNumber(c.g), PlainNumber(c.b)
+    if r and g and b then return r, g, b end
+    return nil
 end

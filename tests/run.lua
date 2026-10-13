@@ -91,6 +91,7 @@ Kit.run{
     dir    = "tests/",
     suites = {
         "test_harness",
+        "test_mock_secure",
         "test_bus",
         "test_surface_parity",
         "test_setup",
@@ -109,6 +110,14 @@ Kit.run{
         "test_builtins",
         "test_library",
         "test_check",
+        "test_send_guard",
+        "test_sendengine",
+        "test_preview",
+        "test_master",
+        "test_pad_layout",
+        "test_surfaces",
+        "test_pad_render",
+        "test_pad",
         "test_vendor_sync",
         { name = "test_eol",                  dir = "tests/_kit/" },   -- line-endings-§7
         { name = "test_prose",                dir = "tests/_kit/" },   -- localization-§5

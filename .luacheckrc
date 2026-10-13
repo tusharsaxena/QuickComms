@@ -27,12 +27,19 @@ read_globals = {
   "InCombatLockdown", "debugprofilestop",
   "Settings", "StaticPopup_Show", "YES", "NO",
   -- core/Compat.lua: the client readers, all guarded for absence at call time.
-  "issecretvalue", "C_ChallengeMode", "C_Housing", "C_SpecializationInfo", "GetInstanceInfo",
+  "issecretvalue", "C_ChallengeMode", "C_Spell", "C_Housing", "C_SpecializationInfo", "GetInstanceInfo",
   "GetNormalizedRealmName", "GetSpecialization", "GetSpecializationInfo", "IsInGroup", "IsInInstance",
   "IsInRaid", "LE_PARTY_CATEGORY_INSTANCE", "UnitClass", "UnitFullName", "UnitGroupRolesAssigned",
   "UnitIsGroupAssistant", "UnitIsGroupLeader",
   -- modules/Restrictions.lua via core/Compat.lua: the 12.0 restriction APIs.
   "C_ChatInfo", "C_RestrictedActions", "Enum",
+  -- modules/SendEngine.lua: the secure frame API (the firewall test keeps it in that one file).
+  "CreateFrame", "UIParent", "RegisterStateDriver", "UnregisterStateDriver", "GetTime",
+  "C_CVar", "GetCVarBool", "UnitGUID", "UnitName",
+  -- modules/Pad_Render.lua and core/Compat.lua: the chip tooltip and the chat colors.
+  "GameTooltip", "ChatTypeInfo",
+  -- modules/Pad.lua: the sent-chip sound.
+  "PlaySound", "SOUNDKIT",
 }
 
 -- The harness global, declared for tests/ only so no shipped file can reach for it. The

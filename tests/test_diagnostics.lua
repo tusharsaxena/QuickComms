@@ -15,7 +15,8 @@ test("diagnostics: the sections are the addon's, in report order", function()
     local NS = T.newAddon()
     local names = {}
     for i, s in ipairs(NS.Diagnostics.Sections()) do names[i] = s[1] end
-    assertEqual(table.concat(names, ","), "identity,settings,registration,integrations,situation,restrictions,library")
+    assertEqual(table.concat(names, ","),
+        "identity,settings,registration,integrations,situation,restrictions,library,surfaces,send")
 end)
 
 test("diagnostics: the report names the schema, the profile, the holds and the launcher", function()
@@ -57,4 +58,20 @@ test("diagnostics: [final 1] the restriction section names the active reasons an
     m.chatLockdown = true
     local text = report(NS)
     assertTrue(text:find("active=chatLockdown,encounter reason=encounter canSendChat=false", 1, true) ~= nil, text)
+end)
+
+test("diagnostics: the surfaces and send sections name the pads, the armed chips and the guard", function()
+    local NS = T.enableAddon()
+    NS.Situation.ReadInputs = function()
+        return { inInstance = true, instanceType = "party", difficultyID = 8, keystoneActive = true,
+            keyLevel = 12, inGroup = true }
+    end
+    NS.Situation.RefreshNow("test")
+    local text = report(NS)
+    assertTrue(text:find("p1 active=bi.mplus stale=false", 1, true) ~= nil, text)
+    assertTrue(text:find("buttons=8 armed=8", 1, true) ~= nil, text)
+    assertTrue(text:find("p1:bi.mplus.pull /p Pulling next pack", 1, true) ~= nil, text)
+    assertTrue(text:find("pending -", 1, true) ~= nil, "no queued keys")
+    assertTrue(text:find("window=1", 1, true) ~= nil, "the guard")
+    assertTrue(text:find("sent=0 dropped=0", 1, true) ~= nil, "the echo counts")
 end)

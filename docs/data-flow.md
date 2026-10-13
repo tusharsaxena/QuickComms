@@ -30,7 +30,8 @@ refresh, the latch re-read from the incoming profile's `enabled`, then `NS.MSG.P
 `ADDON_RESTRICTION_STATE_CHANGED` or a `PLAYER_REGEN` edge → `Restrictions` (it owns both
 `PLAYER_REGEN` rows) → when the set of blocking reasons moves, `RESTRICTION_CHANGED (reason,
 canSendChat)` → Situation refreshes the snapshot's `lockdown` and `inCombat` in place. The signature
-does not move and no `SITUATION_CHANGED` is sent.
+does not move and no `SITUATION_CHANGED` is sent. `PLAYER_REGEN_ENABLED` also drains SendEngine's
+combat-end queue directly, whether or not the restriction set moved.
 
 ## Today: `/qc check <id>`
 
@@ -41,8 +42,19 @@ does not move and no `SITUATION_CHANGED` is sent.
                                               line, channel, bytes, lock  ─> NS.Print   (never sends)
 ```
 
-This is the whole phase 1 pipeline: the stages up to the baked line exist, and nothing consumes the
-line but this verb.
+The verb bakes the line the pad would arm, and never sends it.
+
+## Today: a callout is pressed
+
+The chip is a secure button armed with one baked line. The game sends the line (the secure path; nothing in Lua sends). The button's `OnClick` hook runs on the acting edge: `SendEngine` classifies the press against the last one (`guarded` inside `behavior.spamGuard`, reported at once), records it for the echo tracker, and dims every chip for the window. A `CHAT_MSG_*` of the same chat type from the player within 1.5 s makes it `sent`; none makes it `dropped`, with one `[QC]` note. `SEND_RESULT` flashes the chip.
+
+## Today: something changes that a pad draws
+
+`SITUATION_CHANGED`, `LIBRARY_CHANGED`, `PROFILE_CHANGED`, `TEST_MODE_CHANGED` and the settings reactions all call `Surfaces.Request`. Out of combat it rebuilds every enabled pad from the current snapshot (`BuildPlan` → `Pad.Sync`). In combat it files one `surfaces` entry in the combat-end queue, shows the stale hint and sends `SURFACE_REBUILT (id, true)`; at combat end the queue drains, the pads rebuild from the snapshot as it is then, and `COMBAT_QUEUE_DRAINED` clears the hints. `RESTRICTION_CHANGED` re-reads only the padlocks, the lockdown chip and the fade, which change in combat too.
+
+## Today: test mode
+
+The checkbox, `/qc test` and the launcher entry call `Preview.SetTestMode`. It is refused in combat and stood down, and `RESTRICTION_CHANGED` with the combat edge ends it. `TEST_MODE_CHANGED` makes `Surfaces` draw each pad from `TestPlan`: placeholder chips, disarmed, that send nothing.
 
 ## The design's callout pipeline (spec §4.1)
 
@@ -60,5 +72,6 @@ line but this verb.
                                          combat-end queue, bindings, spam guard, echo tracker)
 ```
 
-The README's `## How the callouts work` is the same pipeline told for players. Situation, Resolver, Library and Bake exist; Surfaces and
-SendEngine are phase 2, and this page grows with them.
+The README's `## How the callouts work` is the same pipeline told for players. Every stage exists
+apart from the Dial and the bindings (phase 4); today `Surfaces` resolves and bakes inside its own
+rebuild, and `ACTIVE_GROUPS_CHANGED` is sent from there.

@@ -5,9 +5,8 @@ local addonName, NS = ...
 -- its single OnClick (left-click opens settings, right-click the options menu) and draws the status
 -- tooltip. This file supplies the seams: the logo, the brand label, where LibDBIcon's `hide` lives
 -- (db.global.minimap, shared with the Minimap button row), and one accessor-and-toggle pair per
--- menu entry. Today that is Enabled alone, calling the handler `/qc enable|disable` calls
--- (settings/Slash.lua). Locked and Test mode join it with the Comms Pad, which brings the lock and
--- the preview they toggle (design spec §16).
+-- menu entry. Enabled calls the handler `/qc enable|disable` calls (settings/Slash.lua); Locked
+-- calls `/qc lock|unlock`'s, and Test mode `/qc test`'s (design spec §16).
 
 local lib = LibStub and LibStub("LibKa0s-Launcher-1.0", true)
 
@@ -58,6 +57,13 @@ NS.Launcher = lib:New({
     -- written through the same handler `/qc enable|disable` calls.
     isEnabled  = function() return NS.SchemaRuntime ~= nil and NS.SchemaRuntime.Get("enabled") ~= false end,
     setEnabled = function(on) NS.addon:SlashEnabled(on) end,
+
+    -- The Lock frame row's path and the test-mode switch, each through the handler its verb and its
+    -- Master controls row call (launcher-§2, slash-commands-§8, preview-mode).
+    isLocked       = function() return NS.SchemaRuntime ~= nil and NS.SchemaRuntime.Get("locked") ~= false end,
+    toggleLock     = function() NS.SlashVerbs.ToggleLock() end,
+    isTestMode     = function() return NS.Preview ~= nil and NS.Preview.IsTestMode() end,
+    toggleTestMode = function() NS.Preview.ToggleTestMode() end,
 
     print         = function(line) NS.Print(line) end,
     debug         = function(tag, message) NS.Debug(tag, message) end,

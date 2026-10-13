@@ -171,10 +171,15 @@ function R.OnRestrictionStateChanged(rtype, state)
     return R.Refresh("ADDON_RESTRICTION_STATE_CHANGED")
 end
 
---- A PLAYER_REGEN edge: `fighting` is true on DISABLED and false on ENABLED.
+--- A PLAYER_REGEN edge: `fighting` is true on DISABLED and false on ENABLED. The end of combat
+--- also drains SendEngine's combat-end queue (spec §9.1) directly: after a login or /reload in
+--- combat no signature was seeded, so this edge may move nothing and RESTRICTION_CHANGED (which
+--- drains too) may never be sent. A second drain finds the queue empty and does nothing.
 function R.OnCombatEdge(fighting)
     State.combatEdge = fighting and true or false
-    return R.Refresh(fighting and "PLAYER_REGEN_DISABLED" or "PLAYER_REGEN_ENABLED")
+    local changed = R.Refresh(fighting and "PLAYER_REGEN_DISABLED" or "PLAYER_REGEN_ENABLED")
+    if not fighting and NS.SendEngine then NS.SendEngine.Drain("PLAYER_REGEN_ENABLED") end
+    return changed
 end
 
 -- ── events and the lifecycle ────────────────────────────────────────────────────────────────

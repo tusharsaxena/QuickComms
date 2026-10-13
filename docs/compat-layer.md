@@ -6,8 +6,8 @@
 load, and is read inside functions only. There is one family file; no `core/Compat<Topic>.lua`
 exists.
 
-**Thirteen shims**, counted the way documentation-§3 counts them
-(`cat core/Compat*.lua | grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'` answers `13`). The two
+**Twenty shims**, counted the way documentation-§3 counts them
+(`cat core/Compat*.lua | grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'` answers `20`). The two
 secret guards, `IsSecret` and `IsSafeKey`, are `LibKa0s-Compat-1.0`'s members, wired by assignment
 with a library-absent body and not counted; their contract is LibKa0s
 `docs/api/Compat/version-1-docs.md`.
@@ -34,11 +34,18 @@ with a library-absent body and not counted; their contract is LibKa0s
 | `Leadership()` | `UnitIsGroupLeader`, `UnitIsGroupAssistant` | a secret flag is `false` | `false, false` | `Situation` |
 | `PlayerIdentity()` | `UnitClass`, `C_SpecializationInfo` (else `GetSpecialization*`), `UnitGroupRolesAssigned`, `UnitFullName`, `GetNormalizedRealmName` | each field plain or `nil`; a role of `NONE` falls back to the spec's role | `nil` per field | `Situation` |
 | `InHousing()` | `C_Housing.IsInsideHouseOrPlot` | a secret answer is `false` | `false` | `Situation` |
-| `InCombat()` | `InCombatLockdown` | none (a plain boolean) | `false` | `Situation`, `Restrictions` |
+| `InCombat()` | `InCombatLockdown` | none (a plain boolean) | `false` | `Situation`, `Restrictions`, `SendEngine`, `Preview`, `Pad` |
 | `InChatMessagingLockdown()` | `C_ChatInfo.InChatMessagingLockdown` | a secret answer reads as **locked** | `false` | `Restrictions` |
 | `RestrictionTypes()` | `Enum.AddOnRestrictionType` | none | `{}` | `Restrictions` |
 | `IsRestrictionStateActive(state)` | `Enum.AddOnRestrictionState` (anything but `Inactive` is active, so `Activating` counts; a boolean answers itself) | a secret state is **active** | `false` for nil | `Restrictions` |
 | `IsRestrictionActive(rtype)` | `C_RestrictedActions.IsAddOnRestrictionActive`, else `GetAddOnRestrictionState` | a secret answer is **active** | `false` | `Restrictions` |
+| `UseKeyDown()` | the `ActionButtonUseKeyDown` cvar (`C_CVar.GetCVarBool`, else `GetCVarBool`) | a secret answer is `true` | `true` | `SendEngine` (the acting click edge) |
+| `SenderIsPlayer(sender, guid)` | `UnitGUID`, `UnitFullName` / `UnitName`, `GetNormalizedRealmName` | a secret GUID or name is unreadable; neither readable answers `nil` (unknown, never a drop). Without the GUID the full name decides: a cross-realm namesake is `false`, and a sender with a realm when the player's realm cannot be read is `nil` | `nil` | `SendEngine` (the echo tracker) |
+| `PlayerName()` | `UnitName` | plain or `nil` | `nil` | `Surfaces` (bakes `{me}`) |
+| `SpecName()` | `C_SpecializationInfo.GetSpecializationInfo`, else `GetSpecializationInfo` | plain or `nil` | `nil` | `Surfaces` (bakes `{spec}`) |
+| `DungeonName(mapID)` | `C_ChallengeMode.GetMapUIInfo` | plain or `nil` | `nil` | `Surfaces` (bakes `{dungeon}`), `Pad` (the situation chip) |
+| `SpellLink(id)` | `C_Spell.GetSpellLink` | plain or `nil` | `nil` | `Surfaces` (bakes `{spell:ID}`) |
+| `ChatColor(chatType)` | `ChatTypeInfo` | an unsafe key, or a secret or missing color component, is `nil` | `nil` | `Pad_Render` (the channel tag) |
 
 The restriction shims are copied from DropWatcher's `core/Compat.lua`. `tests/test_compat.lua`
 drives the plain readers (secrets dropped, a secret `instanceID` read as `nil`) and the restriction
