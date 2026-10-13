@@ -34,17 +34,21 @@ The addon's sections (`modules/Diagnostics.lua`), in order:
 | `situation` | the snapshot: content, instance, difficulty, key level, group, leadership, class, spec, role, combat, and the active lockdown reasons |
 | `restrictions` | the restriction state: every reason in effect (Map included), the reason the lockdown chip names, `canSendChat`, and the combat flag as Restrictions reads it (the `PLAYER_REGEN` edge first) |
 | `library` | the counts (callouts, groups, pads, dials), `nextId`, `seeded`, and the ids of the active groups under the current situation |
+| `surfaces` | the pads built, whether test mode is on, and per pad its ordered active groups, its stale hint and its lockdown chip |
+| `send` | the send buttons and how many are armed, each armed one with its pad, callout and escaped line; the combat-end queue's pending keys; the guard (window, last press, time remaining); the echo tracker's counts (pending, sent, dropped, unknown sender, ignored) |
 
 The report reads state only: it calls no client API that changes anything, takes no hold, starts no
-timer and registers no event. It reads no chat and no other addon's data. The design's remaining sections
-(spec §16: armed buttons, the combat queue, bindings, the guard, the echo tracker) arrive with
-their modules.
+timer and registers no event. It reads no chat and no other addon's data. The bindings section
+(spec §16) arrives with the Comms Dial (phase 4).
 
 ## Tags
 
 `Set` (one line per setting written at the seam, one per bulk reset), `Profile`, `Init` (the session
 summary, held until logging is turned on), `Migrate`, and the phase 1 feature tags: `Situation`
 (each snapshot change, with the cause), `RES` (each restriction change), `Library` (each registry
-write and the `Prepare` summary). The libraries add their own: `Cmd`, `Cfg`,
-`Launcher`, `Lifecycle`, `Perf`. The design's other feature tags (spec §16: `Resolver`,
-`Bake`, `Send`, `Guard`, `Echo`, `Queue`, `Pad`, `Dial`, `Bind`, `Share`) arrive with their modules.
+write and the `Prepare` summary), and phase 2's: `Send` (a button, arm or disarm refused in combat),
+`Guard` (a press inside the guard window), `Echo` (a press confirmed `sent` or reported `dropped`),
+`Queue` (an entry queued or replaced, the drain, a drop, the held stand-down) and `Pad` (a pad
+built or moved, a rebuild run or held for combat, test mode on or off). The libraries add their
+own: `Cmd`, `Cfg`, `Launcher`, `Lifecycle`, `Perf`. The design's other feature tags (spec §16:
+`Resolver`, `Bake`, `Dial`, `Bind`, `Share`) arrive with their modules.

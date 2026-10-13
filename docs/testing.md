@@ -24,7 +24,7 @@ addon kept as history and never loaded by this one.
 `tests/loader.lua` builds a fresh, isolated addon per case from the TOC's own file list and the
 library files `libs/LibKa0s/LibKa0s.xml` names; `tests/wow_mock.lua` extends the kit's base mock with
 what this addon reads (combat state, the client's addon list, the chat sink and the launcher's two
-libraries).
+libraries). Phase 2 adds the secure-frame half: protected calls refused in combat are recorded in `m.blocked`, a click acts on one edge (`m.__click`), `m.sentMacros` records what a secure click sent, and `m.__setCombat` drives the visibility state drivers.
 
 Suites reach the harness as `local T = _G.QUICKCOMMS_TEST` and build instances with the three
 factories, each taking an `opts` table (`skip`, `mock`, `inCombat`) and returning `(NS, env, mock)`
@@ -46,7 +46,9 @@ Named suites the standard requires: `test_surface_parity` (testing-§8), `test_v
 `test_harness` (the load and the repository's shape), `test_setup` (each adopted module's wiring),
 `test_database`, `test_schema`, `test_slash`, `test_diagnostics`, and phase 1's `test_compat`,
 `test_restrictions`, `test_situation`, `test_tokens`, `test_channels`, `test_bake`, `test_resolver`,
-`test_builtins`, `test_library` and `test_check`. Kit suites, declared by directory:
+`test_builtins`, `test_library` and `test_check`, and phase 2's `test_mock_secure`, `test_send_guard`,
+`test_sendengine`, `test_preview`, `test_master`, `test_pad_layout`, `test_surfaces`,
+`test_pad_render` and `test_pad`. Kit suites, declared by directory:
 `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`, `test_lizard_sighted`.
 Every new `tests/test_*.lua` is added to the `suites` list in `tests/run.lua`; the kit fails the run
 in both directions.

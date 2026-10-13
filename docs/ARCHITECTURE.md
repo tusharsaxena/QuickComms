@@ -4,20 +4,22 @@ The hub: what this addon is, in ten mandated sections, each a summary with a lin
 The design it is being built to is
 [`superpowers/specs/2026-10-11-quickcomms-v1-design.md`](superpowers/specs/2026-10-11-quickcomms-v1-design.md),
 and the build order is
-[`superpowers/plans/2026-10-11-quickcomms-phase-0-1.md`](superpowers/plans/2026-10-11-quickcomms-phase-0-1.md);
+[`superpowers/plans/2026-10-11-quickcomms-phase-0-1.md`](superpowers/plans/2026-10-11-quickcomms-phase-0-1.md)
+and [`superpowers/plans/2026-10-13-quickcomms-phase-2.md`](superpowers/plans/2026-10-13-quickcomms-phase-2.md);
 this page describes what exists.
 
 ## Overview
 
 A Retail addon that puts context-aware group callouts on a Comms Pad and a Comms Dial and sends them
 through secure buttons, so they work during chat lockdown in Mythic+ keys, boss pulls and PvP
-matches ([`scope.md`](scope.md)). At the end of phase 1 the data layer exists (situation,
-restrictions, tokens, channels, bake, resolver, library, built-ins) and `/qc check` exercises it;
-the surfaces and the send engine are phase 2.
+matches ([`scope.md`](scope.md)). At the end of phase 2 the data layer (situation, restrictions,
+tokens, channels, bake, resolver, library, built-ins) feeds the secure send engine and the default
+Comms Pad, which shows the active built-in sets and sends them; the editors are phase 3 and the
+Comms Dial phase 4.
 
 Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBOptions),
 LibSharedMedia, LibDataBroker and LibDBIcon are vendored under `libs/`, and so is the whole
-LibKa0s v1.71.0 payload, of which twelve majors are wired, one setup file each (`DEPENDENCIES.md`
+LibKa0s v1.71.0 payload, of which thirteen majors are wired, one setup file each (`DEPENDENCIES.md`
 lists the toolchain):
 
 | Major | Setup file | Gives |
@@ -25,7 +27,8 @@ lists the toolchain):
 | Core | `core/CoreSetup.lua` | the `[QC]` printer, secret-safe stringifier, SafeRegister family, the skin, the close mark, the resize grip |
 | Media | `core/MediaSetup.lua` | the icon catalog and the monospace face |
 | Env | `core/EnvSetup.lua` | the addon's own TOC metadata and version |
-| Pool | `core/PoolSetup.lua` | the frame pool (for the pad's chips and the dial's wedges) |
+| Pool | `core/PoolSetup.lua` | the frame pool (one array pool per pad for its chips; the dial's wedges in phase 4) |
+| Widgets | `core/WidgetsSetup.lua` | the drag strip (`NS.MakeDragHandle`) above each pad |
 | Bus | `core/Bus.lua` | the strict message catalog and the tracked receivers |
 | Lifecycle | `core/LifecycleSetup.lua` | the stand-down latch |
 | Perf | `core/PerfSetup.lua` | the performance harness |
@@ -35,20 +38,20 @@ lists the toolchain):
 | Options | `settings/OptionsSetup.lua` | the settings panel |
 | Slash | `settings/Slash.lua` | the `/qc` dispatcher |
 
-`LibKa0s-Compat-1.0`, `LibKa0s-Item-1.0` and the Widgets majors are vendored and not wired. Each
+`LibKa0s-Compat-1.0` and `LibKa0s-Item-1.0` are vendored and not wired, and of the Widgets major
+only `DragHandle` is used. Each
 setup file holds a descriptor and a degradation stub, and `tests/test_surface_parity.lua` holds every
 stub to the live surface.
 
-Nothing is drawn on screen yet apart from the settings panel and the minimap button.
+On screen: the settings panel, the minimap button and the Comms Pad.
 
 ## Module Map
 
 Every file, its kind and its TOC position is in [`module-map.md`](module-map.md). In short: `core/`
-holds the identity, nine of the setup files, the session state, the addon object and its lifecycle,
+holds the identity, ten of the setup files, the session state, the addon object and its lifecycle,
 and the migration runner; `defaults/` the default values and the shipped built-in sets; `modules/`
-the phase 1 modules below plus the diagnostics sections; `settings/` the schema, the panel pages and
-the slash table and its verb bodies. Phase 2 adds Surfaces, SendEngine, Pad and Dial under
-`modules/` (spec §4.3).
+the modules below plus the diagnostics sections; `settings/` the schema, the panel pages and
+the slash table and its verb bodies. The Comms Dial's files arrive in phase 4 (spec §4.3).
 
 | Module | Kind | Does |
 |---|---|---|
@@ -60,13 +63,23 @@ the slash table and its verb bodies. Phase 2 adds Surfaces, SendEngine, Pad and 
 | `Resolver` | pure | When rules to the active group set, surface order, the "why" lines |
 | `Library` | registry writer | the only writer of the profile's callouts, groups, pads, dials, overlay, orders; `Prepare`; sends `LIBRARY_CHANGED` |
 | `BuiltIns` | data | `defaults/BuiltIns*.lua`: the shipped sets, as data, never copied into the profile |
+| `core/WidgetsSetup.lua` | setup | the drag-strip seam: `NS.MakeDragHandle` over LibKa0s-Widgets' `DragHandle`, nil when the library is absent |
+| `modules/SendEngine_Guard.lua` | pure | the soft guard's timing, the acting click edge, the echo tracker and the keyed combat-end queue |
+| `modules/SendEngine.lua` | secure writer | the only secure writer: send buttons, arm and disarm, the combat-end queue, the click hook, the echo events, the held stand-down; sends `SEND_RESULT` and `COMBAT_QUEUE_DRAINED` |
+| `modules/Preview.lua` | session state | test mode: refused in combat, ended at the combat edge; sends `TEST_MODE_CHANGED` |
+| `modules/Pad_Layout.lua` | pure | pad geometry (upward growth stacks whole sections), the sections each groups-as mode draws, the visibility expression, the fade |
+| `modules/Surfaces.lua` | edge | each pad's plan (active groups, sections, baked or refused slots) and the one rebuild request, queued in combat with the stale hint; sends `ACTIVE_GROUPS_CHANGED` and `SURFACE_REBUILT` |
+| `modules/Pad_Render.lua` | render | insecure chip and header visuals: icon, label, channel tag, padlock, guard veil, hover, flashes, the header's chips and hints |
+| `modules/Pad.lua` | frames | the pad's frames: pooled secure chips, the header, the drag strip and lock, the saved position through `Library`, tabs, collapse, the send feedback |
 
 ## Settings Schema
 
 One write seam, `NS.SchemaRuntime.Set` (LibKa0s-Schema), reached by the panel, the CLI, the launcher
 and the host verbs alike; the rows are `settings/Schema.lua`'s `Settings.Schema` array: the composed
 Master controls rows, then the Behavior rows (`behavior.*`, spliced in by `settings/SchemaRows.lua`).
-Every module reads a setting through `NS.Setting(path)`, which answers the row's default before the
+The Master controls rows are `enabled`, `visibility`, `scale`, `alpha` and `locked` (defaults
+`true`, `always`, 1, 1, `true`), the session rows `state.debugConsole` and `state.testMode`, and the
+minimap row. Every module reads a setting through `NS.Setting(path)`, which answers the row's default before the
 database exists. The reactions every surface shares are
 `Settings.REACTIONS`. The path `enabled` is declared `writeThrough` so `/qc enable|disable` still
 lands on a load where the composers are hollow (options-ui-§1 route (a)). Shape, defaults and
@@ -82,6 +95,11 @@ holds only the overlay, keyed on the top-level built-in id. The load pass is `Li
 once, appends newly shipped built-ins once per surface, normalizes malformed shapes and drops
 dangling ids.
 
+**Named non-setting state:** `pads[id].point = { point, relativePoint, x, y }`, written only through
+`Library.SetSurfacePoint` (the registry writer), which the drag strip and Reset position in
+`modules/Pad.lua` call; the per-pad X/Y rows arrive with the Pads page (phase 3). The pad's active
+tab and collapsed state are session-only (`NS.State`).
+
 ## Message Bus
 
 `core/Bus.lua` declares the catalog once, `NS.MSG`, as `Ka0s_QuickComms_<Event>` wire names with one
@@ -91,20 +109,22 @@ tracked registration down and replay it.
 
 | `NS.MSG` key | Wire suffix | Sender | Payload | Consumers |
 |---|---|---|---|---|
-| `PROFILE_CHANGED` | `ProfileChanged` | `core/QuickComms.lua` `reloadProfile` (every AceDB profile event) | none | none yet; every module that caches a profile value |
-| `SITUATION_CHANGED` | `SituationChanged` | `modules/Situation.lua`, only when the signature moves | snapshot, previous | none yet; the resolver edge, Preview, the settings live lines |
-| `RESTRICTION_CHANGED` | `RestrictionChanged` | `modules/Restrictions.lua`, when the set of blocking reasons (combat included) moves | reason, canSendChat | Situation (merges lockdown and combat into the snapshot in place); Surfaces (chips, padlocks) |
-| `LIBRARY_CHANGED` | `LibraryChanged` | `modules/Library.lua`, on every registry write | kind, id | none yet; Surfaces, the settings pages |
-
-Declared and not yet sent (phase 2): `ACTIVE_GROUPS_CHANGED`, `SURFACE_REBUILT` (Surfaces),
-`SEND_RESULT`, `COMBAT_QUEUE_DRAINED` (SendEngine), `TEST_MODE_CHANGED` (Preview). Spec §17 lists
-their payloads.
+| `PROFILE_CHANGED` | `ProfileChanged` | `core/QuickComms.lua` `reloadProfile` (every AceDB profile event) | none | Surfaces (`Request`, after dropping the combat-end queue) |
+| `SITUATION_CHANGED` | `SituationChanged` | `modules/Situation.lua`, only when the signature moves | snapshot, previous | Surfaces (`Request`) |
+| `RESTRICTION_CHANGED` | `RestrictionChanged` | `modules/Restrictions.lua`, when the set of blocking reasons (combat included) moves | reason, canSendChat | Situation (merges lockdown and combat into the snapshot in place); Surfaces (`RefreshLocks`: padlocks, the lockdown chip, the fade); Preview (ends test mode at the combat edge); Pad (ends a drag at the combat edge) |
+| `LIBRARY_CHANGED` | `LibraryChanged` | `modules/Library.lua`, on every registry write | kind, id | Surfaces (`Request`) |
+| `ACTIVE_GROUPS_CHANGED` | `ActiveGroupsChanged` | `modules/Surfaces.lua` `ApplyAll`, when a pad's ordered active groups change | surfaceId | none yet; the settings dots (phase 3) |
+| `SURFACE_REBUILT` | `SurfaceRebuilt` | `modules/Surfaces.lua`: `true` when a rebuild is held for combat, `false` when it ran | surfaceId, stale | none yet; the settings pages (phase 3) |
+| `SEND_RESULT` | `SendResult` | `modules/SendEngine.lua`: `guarded` at the press, then `sent` or `dropped` from the echo, so one press can yield two | calloutId, surfaceId, result | `modules/Pad.lua` (the flash, the sound) |
+| `COMBAT_QUEUE_DRAINED` | `CombatQueueDrained` | `modules/SendEngine.lua` `Drain` | count | `modules/Surfaces.lua` (clears the stale hints) |
+| `TEST_MODE_CHANGED` | `TestModeChanged` | `modules/Preview.lua` `SetTestMode` | on | `modules/Surfaces.lua` (`Request`) |
 
 ## Slash Commands
 
-`/qc`, alias `/quickcomms`. The reserved verbs (`help config enable disable version list get set
-reset resetall profile debug diagnostics perf`) and the feature verb `check <id>`, which prints the
-line a callout would send under the current situation and never sends. The full table, the live-while-disabled set
+`/qc`, alias `/quickcomms`. The reserved verbs (`help config enable disable lock unlock version list
+get set reset resetall profile debug diagnostics perf`; `lock` and `unlock` are slash-commands-§8's,
+the Lock frame row's path through the seam) and the feature verbs `check <id>`, which prints the
+line a callout would send under the current situation and never sends, and `test` (test mode). The full table, the live-while-disabled set
 and the handlers are in [`slash-dispatch.md`](slash-dispatch.md). `enable` and `disable` call the
 same handler as the Master controls row and the launcher entry.
 
@@ -113,7 +133,11 @@ same handler as the Master controls row and the launcher entry.
 Every game event is declared in `NS.FEATURE_EVENTS` and registered through `NS.SafeRegisterEvent`,
 so `OnEnable` and the stand-up register exactly that list and the stand-down unregisters it. The list
 holds the situation and restriction edges' rows (zone, key, group, spec and restriction events, and
-the two combat edges, which `Restrictions` owns).
+the two combat edges, which `Restrictions` owns), and the send engine's nine `CHAT_MSG_*` rows (say,
+yell, party and its leader, raid and its leader, raid warning, instance and its leader), whose
+handler matches an echo to a press without reading the text. The one registration outside
+`NS.FEATURE_EVENTS` is `SendEngine`'s private `PLAYER_REGEN_ENABLED` target, which exists only while
+a stand-down is held in combat and is released when it fires (slash-commands-§7).
 
 AceDB's `OnProfileChanged`, `OnProfileCopied` and `OnProfileReset` callbacks are setup and stay up
 while disabled. Events the client refuses are kept in `NS.rejectedEvents` and reported by the
@@ -121,22 +145,16 @@ while disabled. Events the client refuses are kept in `NS.rejectedEvents` and re
 
 ## Taint Notes
 
-No secure frames exist yet: no secure button, no attribute write, no override binding. Settings
-writes touch no protected frame, and the phase 1 modules only read state and compute strings, in
-or out of combat. Phase 2 builds to the fallbacks recorded in
-[`brainstorm/go-no-go/round-4-build-checks.md`](brainstorm/go-no-go/round-4-build-checks.md): no hard
-spam guard in combat (spec §9.2), pad tabs refused in combat (§10.2), the Dial in Relaxed mode only
-(§11.2). Opening the settings panel is refused in combat by the options
-library, which also locks a page shown in combat; the addon adds no lock of its own and never closes
-Blizzard's settings window (options-ui-§2). The design's secure rules (spec §9–§11: one secure
-writer, baking out of combat, the combat-end queue) are written here when `SendEngine` lands.
+Every secure rule lives in one file. `modules/SendEngine.lua` is the only code that creates a frame from a `Secure*` template, calls `SetAttribute` or registers a state driver; `tests/test_sendengine.lua` greps every other shipped file for those calls and for `SendChatMessage` (D12: the secure button is the one send path). Send buttons are `SecureActionButtonTemplate`, named `QuickCommsSend<n>`, registered for `AnyUp` and `AnyDown`, armed with `type=macro` and one baked `macrotext` line, and only out of combat (`InCombatLockdown()`, events-frames-taint-§2). A pad's root becomes protected in combat because its chips are secure: its visibility is a `visibility` state driver, and its geometry is set only in rebuilds. A rebuild asked for in combat is filed in SendEngine's keyed combat-end queue (one entry per key, the last write winning) and drained on the `RESTRICTION_CHANGED` that follows `PLAYER_REGEN_ENABLED`; `Restrictions` owns both combat edges. The click hook is an insecure `HookScript("OnClick")`: it cannot cancel the secure click, so the spam guard is soft (spec §9.2), and it never reads chat text. A stand-down in combat holds its secure half in one private `PLAYER_REGEN_ENABLED` registration, released when it fires. Tabs and collapse are refused in combat. No override binding exists until the Dial (phase 4). Opening the settings panel stays refused in combat by the options library.
 
 ## Known Limitations
 
-- Phase 1 has no pad, no dial and no send path: callouts exist in the library and are checked with
-  `/qc check`, not yet shown or sent ([`scope.md`](scope.md)).
-- The Master controls tab is frameless (no scale, alpha, lock or Reset position) and has no Test mode
-  until the Comms Pad gives them something to act on.
+- The spam guard is soft: insecure code cannot cancel a secure click, so a press inside the window still reaches the game. A boss may drop it; the echo tracker then reports the drop (spec §9.2, the C5 upgrade).
+- Another player's message on the same channel can mask a drop, and an unreadable sender counts as the player's own echo (spec §9.3, C6).
+- In combat a rebuild waits for combat to end: chips keep the lines baked at the last rebuild out of combat (a stale `/p` after leaving a group, spec §18).
+- Disabled in combat, a pad stays on screen, and its chips still send, until combat ends and the held stand-down finishes.
+- Rebuilding between pulls inside a key assumes `SetAttribute` works out of combat in a key (C4, unverified).
+- There are no editors yet: the pad shows the built-in sets; groups-as tabs, layout and look are profile data until the Pads page lands (phase 3).
 - The Profiles page builds only where AceDBOptions and AceConfigDialog resolve, which the headless
   mock does not model; PROFILE-1 is its in-game check.
 - The logo is a placeholder generated for the scaffold; the owner may replace the art (regenerate
@@ -166,11 +184,11 @@ is registered once, as a store, in the Tier 3 table; the documents under it get 
 | Doc | Status | Trigger |
 |---|---|---|
 | `perf-analysis/README.md` | Present | The performance harness is wired (`core/PerfSetup.lua`) |
-| `slash-dispatch.md` | Present | 15 commands in `NS.COMMANDS` |
+| `slash-dispatch.md` | Present | 18 commands in `NS.COMMANDS` |
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Not applicable | The addon carries no client-version workaround of its own yet |
-| `compat-layer.md` | Present | `core/Compat.lua` publishes 13 shims, three or more |
+| `compat-layer.md` | Present | `core/Compat.lua` publishes 20 shims, three or more |
 | `message-bus.md` | Not applicable | 9 messages are defined, not more than ten; the table is in this page's Message Bus section |
 
 ### Verification and record (documentation-§3)

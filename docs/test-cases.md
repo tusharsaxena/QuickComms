@@ -22,6 +22,22 @@ Total.
 - repo: every authored file opens with the bootstrap and a comment naming its path
 - repo: the .pkgmeta has no externals and ignores the dev-only entries
 
+### test_mock_secure.lua (13)
+
+- mock: a secure button keeps its attributes and answers its name
+- mock: SetAttribute in combat is refused and recorded, never applied
+- mock: a secure child protects its ancestors in combat, and only them
+- mock: a click acts once, on the edge the cvar names, and hooks hear both edges
+- mock: the useOnKeyDown attribute wins over the cvar
+- mock: a button with no macrotext sends nothing
+- mock: a visibility state driver follows combat
+- mock: registering a state driver in combat is refused
+- mock: frames under a QuickComms-named root get regions and points of their own
+- mock: a [nocombat] visibility driver shows out of combat and hides in it
+- mock: a state-driver condition the mock does not model raises, never skips
+- mock: a region answers IsVisible as it answers IsShown
+- mock: moving, levels, movable and clamping are refused in combat on a protected frame
+
 ### test_bus.lua (2)
 
 - bus: every spec §17 message is declared with its exact name
@@ -62,7 +78,7 @@ Total.
 - perf: the `perf` hold stands the addon down, and the verbs keep answering
 - perf: the descriptor's SavedVariables global is declared in the TOC
 - launcher: one object, labeled with the brand, the logo as its icon, registered on enable
-- launcher: the right-click menu is Enabled alone
+- launcher: the right-click menu is Enabled, Locked and Test mode
 - launcher: Enabled calls the same handler `/qc disable` calls
 - launcher: degraded, Register says once that there is no minimap button
 - options: the category registers eagerly, with the General page under it
@@ -91,7 +107,7 @@ Total.
 - schema: every row validates against the defaults
 - schema: a stored row whose path has no default is counted, not passed vacuously
 - schema: the Minimap button row's backing key resolves against the global defaults
-- schema: the Master controls rows are the frameless canonical set, in the canonical order
+- schema: the Master controls rows are the framed canonical set, in the canonical order
 - schema: NS.Setting reads through the seam, and answers the default before the db exists
 - schema: a page's rows are the rows whose page is its key
 - schema: an unknown path is refused and stores nothing
@@ -126,7 +142,7 @@ Total.
 - disabled 8: the launcher's Enabled entry stays live while disabled
 - disabled: [final 1] every feature event is declared once (AceEvent keeps one handler per event)
 
-### test_diagnostics.lua (6)
+### test_diagnostics.lua (7)
 
 - diagnostics: the sections are the addon's, in report order
 - diagnostics: the report names the schema, the profile, the holds and the launcher
@@ -134,13 +150,17 @@ Total.
 - diagnostics: `enabled` is always listed, and a hidden minimap button is listed
 - diagnostics: the situation and library sections report the snapshot and the registry
 - diagnostics: [final 1] the restriction section names the active reasons and canSendChat
+- diagnostics: the surfaces and send sections name the pads, the armed chips and the guard
 
-### test_compat.lua (4)
+### test_compat.lua (7)
 
 - compat: plain readers pass plain values and drop secrets
 - compat: InstanceInfo with a secret instanceID reads nil, never raises
 - compat: InstanceInfo during a loading screen (all nil) reads safely
 - compat: [final] an empty-string realm falls back to the normalized realm name
+- compat: UseKeyDown reads the cvar, and defaults on when it cannot
+- compat: SenderIsPlayer answers by GUID, then by name, and nil when it cannot read either
+- compat: ChatColor reads the client's chat colors and declines what it cannot read
 
 ### test_restrictions.lua (16)
 
@@ -234,7 +254,7 @@ Total.
 - builtins: bake audit, every callout bakes under its set's snapshot
 - builtins: battlegrounds use smart group; arena uses party; raid lead uses smart lead
 
-### test_library.lua (23)
+### test_library.lua (25)
 
 - library: Prepare seeds one pad and one dial with every built-in, once
 - library: callouts validate on create
@@ -259,6 +279,8 @@ Total.
 - library: [final 2] Customize skips a copy that fails and reports it, leaving no hole
 - library: [final minor 2] Prepare lifts a stale nextId above every existing id
 - library: [final minor 3] Prepare repairs corrupt top-level registry keys and builtins entries
+- library: SetSurfacePoint stores a copy of a plain anchor, announces it, and nil clears it
+- library: SetSurfacePoint refuses an unknown surface or a malformed anchor, and stores nothing
 
 ### test_check.lua (6)
 
@@ -268,6 +290,125 @@ Total.
 - check: never calls SendChatMessage
 - check: [final minor 4] unknown and send-time tokens are listed
 - check: [final minor 4] solo with soloFallback=self says it would print locally
+
+### test_send_guard.lua (10)
+
+- guard: Decide is ok outside the window and guarded inside it
+- guard: Remaining counts down to zero
+- guard: the acting edge follows the key-down setting
+- guard: every echo event maps to one chat type
+- echo: our own echo consumes the oldest pending press of its type
+- echo: another player's readable message is ignored
+- echo: an unreadable sender is unknown, counts as the echo, and is never a drop
+- echo: a message of another type or after the window matches nothing
+- echo: Expire drops only presses older than the window, oldest first
+- queue: a key replaces its earlier entry and keeps its place
+
+### test_sendengine.lua (23)
+
+- sendengine: a send button is a named secure button registered for both edges
+- sendengine: Arm sends exactly the line; Disarm clears both attributes and sends nothing
+- sendengine: in combat, building, arming and disarming are declined, so nothing is blocked
+- sendengine: RunOrQueue runs now out of combat
+- sendengine: in combat the queue keeps the last write per key and drains once at combat end
+- sendengine: Drop empties the queue and nothing runs at combat end
+- sendengine: a failing queued entry is reported and the others still run
+- sendengine: Teardown in combat holds one PLAYER_REGEN_ENABLED and releases it when it fires
+- sendengine: CancelTeardown releases the held registration without running it
+- sendengine: the visibility driver is set out of combat and declined in it
+- sendengine: [firewall] no other shipped file makes a secure call (spec §9)
+- sendengine: [D12] nothing calls SendChatMessage: the secure button is the one send path
+- send: one press is one send and one pending echo, though the hook hears both edges
+- send: [review 3] a double press in a boss: guarded, then dropped, with one note, never canceled
+- send: the drop note follows behavior.dropNotes
+- send: presses further apart than the guard are never guarded
+- send: an unreadable sender counts as our echo and is never a drop
+- send: another player's message on the channel is not our echo
+- send: a disarmed button reports nothing and tracks nothing
+- send: a solo self-fallback prints locally and sends nothing
+- send: onPress hears the verdict and the window
+- send: every echo event is a declared feature event
+- send: the stand-down cancels the echo timers and forgets the presses
+
+### test_preview.lua (5)
+
+- preview: test mode turns on and off, announcing each edge once
+- preview: a start in combat is refused with one line
+- preview: the start of combat ends test mode, with one line
+- preview: test mode still ends when lockdown has already begun at the combat edge
+- preview: the stand-down ends test mode silently, and stood down a start is refused
+
+### test_master.lua (5)
+
+- master: the frame defaults are spec §5.1's: always shown, scale and alpha 1, locked
+- master: /qc unlock and /qc lock write the Lock frame row's path and confirm on one line
+- master: the launcher's Locked and Test mode entries call the same handlers
+- master: /qc test toggles test mode, and in combat says why it will not
+- master: the Test mode row reads and writes the one switch, and Reset all ends it
+
+### test_pad_layout.lua (11)
+
+- layout: horizontal puts a section's chips on one row under the header
+- layout: a titled section draws its label row first
+- layout: grid wraps at its column count; vertical is one column
+- layout: the style sets the cell
+- layout: leftward growth mirrors the row; collapsed is the header alone
+- layout: upward growth stacks the sections bottom-up, each title above its chips
+- layout: groups-as picks the sections: sections, merged, one tab at a time
+- layout: the wheel steps tabs and wraps both ways
+- layout: the visibility expression combines the master and the pad
+- layout: the fade follows combat and the mouse, under the master alpha
+- layout: the channel tag names the resolved channel
+
+### test_surfaces.lua (18)
+
+- surfaces: in a key the default pad's plan is the M+ set, baked to /p
+- surfaces: [review 5] a refused callout is a slot with its reason and no line
+- surfaces: a node battleground gives one section per node, baked to /i
+- surfaces: a Say callout locked by an encounter lights the plan's lockdown chip
+- surfaces: solo with the self fallback, a smart callout carries the text to print
+- surfaces: the bake context fills {me} from the client
+- surfaces: a disabled built-in leaves the plan
+- surfaces: the test plan is placeholder chips that carry no line
+- surfaces: the first situation read builds the default pad, armed and shown
+- surfaces: ACTIVE_GROUPS_CHANGED is sent once per real change of a pad's active groups
+- surfaces: [review 1] a situation change in combat queues: nothing blocked, stale shows, combat end rebuilds
+- surfaces: [review 1] a profile switch in combat queues the new profile's pads
+- surfaces: a setting written in combat waits for combat end, with the stale hint
+- surfaces: an encounter lockdown in combat padlocks a Say chip and lights the chip, nothing blocked
+- surfaces: test mode draws placeholders that send nothing; combat start brings the live chips back
+- surfaces: if lockdown has already begun at the combat edge, test mode's end is queued, not blocked
+- surfaces: disabled out of combat, every pad hides and every chip disarms; enabled, they return
+- surfaces: [review 2] disabled mid-combat: nothing blocked, one held registration, finished at combat end
+
+### test_pad_render.lua (10)
+
+- render: Dress builds a chip's regions once, each its own object
+- render: an armed chip shows its name, its channel tag in the chat color, no lock, no dim
+- render: [review 5] a refused chip is dimmed and its tooltip says why
+- render: a locked chip shows the padlock and names the lock; RefreshLock follows the slot
+- render: the style decides icon and label
+- render: a test-mode chip and a solo self-print chip are not dimmed, and say what they do
+- render: flashes take the result's color; the cooldown dims and clears
+- render: the situation chip names the content, the dungeon and the key
+- render: the header shows the lockdown chip, the stale hint and the test label on demand
+- render: the drag-strip seam builds a hidden strip, and answers nil without the library
+
+### test_pad.lua (13)
+
+- pad: the default pad shows the M+ callouts, each chip armed with its baked line
+- pad: [review 5] a refused chip is dimmed and disarmed: a click sends and reports nothing
+- pad: [review 4] a hidden or locked pad still rebuilds; the driver hides; the strip stays hidden
+- pad: a rebuild with fewer chips parks the rest, disarmed, for the next
+- pad: [registry] no file but Library writes a surface's point
+- pad: the drag saves the point; locked or in combat it does not move; Reset position clears it
+- pad: [fix 1] combat starting mid-drag ends the drag on the edge; the stop is never blocked
+- pad: [fix 1] a drag caught after lockdown began is stopped and saved when combat ends
+- pad: tabs show one section; the wheel steps them out of combat and is refused in it
+- pad: collapse hides the chips out of combat and is refused, with one line, in it
+- pad: a send result flashes its chips; a press dims every chip for the guard window
+- pad: the fade follows the mouse and combat through SetAlpha alone
+- pad: Sync releases a pad no plan names: hidden, its chips disarmed
 
 ### test_vendor_sync.lua (3)
 
@@ -342,6 +483,7 @@ Total.
 | Suite | Cases |
 |-------|------:|
 | test_harness.lua | 11 |
+| test_mock_secure.lua | 13 |
 | test_bus.lua | 2 |
 | test_surface_parity.lua | 15 |
 | test_setup.lua | 21 |
@@ -350,8 +492,8 @@ Total.
 | test_schema.lua | 12 |
 | test_slash.lua | 9 |
 | test_disabled.lua | 10 |
-| test_diagnostics.lua | 6 |
-| test_compat.lua | 4 |
+| test_diagnostics.lua | 7 |
+| test_compat.lua | 7 |
 | test_restrictions.lua | 16 |
 | test_situation.lua | 15 |
 | test_tokens.lua | 8 |
@@ -359,8 +501,16 @@ Total.
 | test_bake.lua | 11 |
 | test_resolver.lua | 8 |
 | test_builtins.lua | 6 |
-| test_library.lua | 23 |
+| test_library.lua | 25 |
 | test_check.lua | 6 |
+| test_send_guard.lua | 10 |
+| test_sendengine.lua | 23 |
+| test_preview.lua | 5 |
+| test_master.lua | 5 |
+| test_pad_layout.lua | 11 |
+| test_surfaces.lua | 18 |
+| test_pad_render.lua | 10 |
+| test_pad.lua | 13 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -368,4 +518,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **250** |
+| **Total** | **364** |

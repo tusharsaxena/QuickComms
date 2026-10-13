@@ -16,7 +16,10 @@ Exactly two (savedvariables-§4):
 | Key | Default | Set by | What it is |
 |---|---|---|---|
 | `enabled` | `true` | the Enable row, `/qc enable|disable`, the launcher | the master switch; `false` takes the latch's `disabled` hold |
-
+| `visibility` | `"always"` | the General visibility row | the master visibility, applied on top of each pad's own |
+| `scale` | `1.0` | the Master scale row | multiplied into every pad's own scale |
+| `alpha` | `1.0` | the Master alpha row | the ceiling of every pad's fade |
+| `locked` | `true` | the Lock frame row, `/qc lock|unlock`, the launcher's Locked entry | pads start locked; unlocked, each shows its drag strip |
 | `behavior.soloFallback` | `"none"` | the Behavior rows, `/qc set` | what a smart channel does when solo: `none`, `self` or `say` |
 | `behavior.spamGuard` | `1.0` | Behavior | seconds between sends, 0.6-2.0 (phase 2's send engine; no hard guard in combat, spec §9.2) |
 | `behavior.dropNotes`, `whyTooltips`, `lockdownChip` | `true` | Behavior | the `[QC]` drop note, the why tooltips, the lockdown chip |
@@ -26,6 +29,7 @@ Exactly two (savedvariables-§4):
 | `groups` | `{}` | `Library` only | user groups keyed by id: name, icon, callouts, when, openInto, enabled |
 | `builtins` | `{}` | `Library` only | the overlay on the shipped sets, keyed on the top-level built-in id: enabled, hidden |
 | `pads`, `dials` | `{}` | `Library` only | surfaces keyed by id: groups (ordered), `seenBuiltins`, and the surface's own settings |
+| `pads[id].point` | absent (the pad sits 150 px below the center) | `Library.SetSurfacePoint`, asked by the drag strip and Reset position in `modules/Pad.lua` | the saved anchor, the positional array `{ point, relativePoint, x, y }` |
 | `padOrder`, `dialOrder` | `{}` | `Library` only | display order of the surfaces |
 | `seeded` | `false` | `Library.Prepare` | true once the default pad and dial exist |
 
@@ -45,7 +49,12 @@ built-ins once per surface, normalizes malformed shapes and repairs `padOrder` /
 ## Session-only (never saved)
 
 `NS.State.debug` (the logging flag). The Debug console row is `sessionOnly` and stores through its
-own closure.
+own closure. The phase 2 modules add, all reset by `/reload`: `testMode` (test mode, the Test mode
+row's store), `padTab` and `padCollapsed` (per pad: the active tab, the collapsed state),
+`surfacePlans`, `surfaceOrder` and `surfaceStale` (the plans, the floated order, the stale hints),
+`sendQueue` (the combat-end queue), `sendEcho` (the presses awaiting an echo), `lastSendAt` (the
+guard's last press) and `pendingTeardown` (a stand-down held for combat's end), plus the timer
+handles (`echoTimers`, `padCoolTimer`, `padFlashTimers`).
 
 ## Migrations
 

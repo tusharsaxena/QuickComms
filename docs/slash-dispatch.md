@@ -10,6 +10,7 @@ settings panel.
 | `help` | reserved | yes | the library's index |
 | `config` | reserved | yes | `QC:OpenSettings` |
 | `enable` / `disable` | reserved | yes | `runEnabled`, writing `enabled` through the seam |
+| `lock` / `unlock` | reserved (slash-commands-§8) | no (refused while disabled) | `NS.SlashVerbs.SetLocked`, writing `locked` through the seam; the Lock frame row and the launcher's Locked entry write the same path |
 | `version` | reserved | yes | the library |
 | `list` / `get` / `set` / `reset` / `resetall` | reserved | yes | the library over the schema seam; `reset` takes a path, `resetall` asks first |
 | `profile` | reserved | yes (added to the live list) | the library's profile verb |
@@ -17,13 +18,13 @@ settings panel.
 | `diagnostics` | reserved | yes | `NS.DebugLog:RunDiagnostics` |
 | `perf` | reserved | yes | `NS.Perf.OnCommand`, lines printed by the addon |
 | `check <id>` | feature | no (refused while disabled) | `NS.SlashVerbs.Check` in `settings/SlashVerbs.lua`: prints the callout's baked line under the current situation (`id -> /p text`), then its channel and the whole line's byte count (prefix included, live tokens at a nominal 12), then any lock, then the tokens it leaves out: the baked ones (`{me}`, `{spec}`, ...) as "baked at send time", since check passes no send-time values, and any unknown ones. A refusal prints its reason (`startsWithSlash`, `tooLong`, ...); a smart channel while solo with the `self` fallback says it would print locally; an unknown id says so. It never sends (spec §14, D12). |
+| `test` | feature | no (refused while disabled) | `NS.Preview.ToggleTestMode`; refused in combat with one line; the Test mode row and the launcher entry call the same switch |
 
 While disabled, a verb that is not live prints the one refusal line, `Ka0s Quick Comms is disabled —
 enable it with /qc enable`, and does nothing else. The gate reads the stored `enabled`, not the
 latch, so a perf capture never refuses a verb.
 
-The design's other verbs (spec §14) are added with the tasks that own them: `lock` and `unlock`
-(reserved once a surface can be locked), `test`, `preview` and `why`. The verb bodies live in
+The design's other verbs (spec §14), `preview` and `why`, are added with the tasks that own them. The verb bodies live in
 `settings/SlashVerbs.lua`; the rows in `settings/Slash.lua` only call them.
 
 With the library absent, the stub in `settings/Slash.lua` dispatches the same table, keeps the
