@@ -318,6 +318,14 @@ local function releasePending()
     if pending then pending:UnregisterEvent("PLAYER_REGEN_ENABLED") end
 end
 
+local function onRegenEnabled()
+    releasePending()
+    local held = State.pendingTeardown
+    State.pendingTeardown = nil
+    if held then held() end
+    NS.Debug(TAG_Q, "held stand-down finished")
+end
+
 --- Run the secure half of a stand-down now, or hold it until combat ends.
 --- @return boolean ranNow
 function SE.Teardown(fn)
@@ -327,13 +335,13 @@ function SE.Teardown(fn)
     end
     State.pendingTeardown = fn
     pending = pending or LibStub("AceEvent-3.0"):Embed({})
-    pending:RegisterEvent("PLAYER_REGEN_ENABLED", function()
-        releasePending()
-        local held = State.pendingTeardown
-        State.pendingTeardown = nil
-        if held then held() end
-        NS.Debug(TAG_Q, "held stand-down finished")
-    end)
+    -- Through the SafeRegister family (events-frames-taint-§1). A refusal cannot happen on a real
+    -- client (the event exists); if it did, the event is listed in NS.rejectedEvents (diagnostics)
+    -- and the teardown stays held in State.pendingTeardown, which the next stand-up cancels.
+    if not NS.SafeRegisterEvent(pending, "PLAYER_REGEN_ENABLED", onRegenEnabled, NS.rejectedEvents) then
+        NS.Debug(TAG_Q, "stand-down held, but PLAYER_REGEN_ENABLED was refused")
+        return false
+    end
     NS.Debug(TAG_Q, "stand-down held until combat ends")
     return false
 end

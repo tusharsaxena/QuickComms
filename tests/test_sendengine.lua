@@ -131,6 +131,38 @@ test("sendengine: Teardown in combat holds one PLAYER_REGEN_ENABLED and releases
     assertEqual(held(), 0, "released the moment it fired")
 end)
 
+test("sendengine: [audit QC-06] the held stand-down registers through NS.SafeRegisterEvent, into NS.rejectedEvents", function()
+    local NS, m = T.enableAddon()
+    local real, calls = NS.SafeRegisterEvent, {}
+    NS.SafeRegisterEvent = function(target, event, handler, rejected)
+        calls[#calls + 1] = { event = event, rejected = rejected }
+        return real(target, event, handler, rejected)
+    end
+    combat(m, true)
+    local done = 0
+    NS.SendEngine.Teardown(function() done = done + 1 end)
+    NS.SafeRegisterEvent = real
+    -- red under: register PLAYER_REGEN_ENABLED with a direct pending:RegisterEvent in SE.Teardown
+    assertEqual(#calls, 1)
+    assertEqual(calls[1].event, "PLAYER_REGEN_ENABLED")
+    assertTrue(calls[1].rejected == NS.rejectedEvents, "a refusal is recorded where diagnostics read it")
+    combat(m, false)
+    assertEqual(done, 1)
+end)
+
+test("sendengine: [audit QC-06] a refused hold raises nothing and keeps the teardown held", function()
+    local NS, m = T.enableAddon()
+    local real = NS.SafeRegisterEvent
+    NS.SafeRegisterEvent = function() return false end
+    combat(m, true)
+    local fn = function() end
+    assertFalse(NS.SendEngine.Teardown(fn))
+    NS.SafeRegisterEvent = real
+    assertTrue(NS.State.pendingTeardown == fn, "still held, for the next stand-up to cancel")
+    NS.SendEngine.CancelTeardown()
+    combat(m, false)
+end)
+
 test("sendengine: CancelTeardown releases the held registration without running it", function()
     local NS, m = T.enableAddon()
     combat(m, true)
