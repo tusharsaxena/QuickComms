@@ -143,7 +143,8 @@ local function build()
 
     local PROTECTED_CALLS = { "SetAttribute", "Show", "Hide", "SetShown", "SetPoint", "ClearAllPoints",
         "SetAllPoints", "SetParent", "SetScale", "SetSize", "SetWidth", "SetHeight", "RegisterForClicks",
-        "EnableMouse", "StartMoving", "SetFrameStrata" }
+        "EnableMouse", "StartMoving", "StopMovingOrSizing", "SetFrameStrata", "SetFrameLevel", "SetMovable",
+        "SetClampedToScreen" }
 
     local function protect(frame)
         if frame.__protected then return end
@@ -168,6 +169,7 @@ local function build()
         function r:Hide() self.__shown = false return self end
         function r:SetShown(v) self.__shown = not not v return self end
         function r:IsShown() return self.__shown end
+        function r:IsVisible() return self.__shown end
         function r:SetText(v) self.__text = v return self end
         function r:GetText() return self.__text end
         function r:SetTexture(v) self.__texture = v return self end
@@ -278,13 +280,22 @@ local function build()
         if registered("Up") then button:__fire("OnClick", mouseButton, false) end
     end
 
-    -- "[combat] a; b" or "a": the first clause whose condition holds.
+    -- "[combat] a; [nocombat] b; c" or "a": the first clause whose condition holds. Any other
+    -- bracketed condition raises, so a driver the mock cannot model fails loudly instead of being
+    -- skipped.
+    local CONDITIONS = {
+        combat   = function() return M.inCombat end,
+        nocombat = function() return not M.inCombat end,
+    }
     local function evaluate(expression)
         for clause in (expression .. ";"):gmatch("([^;]*);") do
             local c = clause:match("^%s*(.-)%s*$")
-            local cond, value = c:match("^%[(%w+)%]%s*(%S+)$")
-            if cond then
-                if cond == "combat" and M.inCombat then return value end
+            if c:sub(1, 1) == "[" then
+                local cond, value = c:match("^%[(%w+)%]%s*(%S+)$")
+                if not (cond and CONDITIONS[cond]) then
+                    error("wow_mock: unsupported state-driver condition: " .. c, 2)
+                end
+                if CONDITIONS[cond]() then return value end
             elseif c ~= "" then
                 return c
             end
