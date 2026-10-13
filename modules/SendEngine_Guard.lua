@@ -131,6 +131,20 @@ function G.Take(q)
     return out
 end
 
+--- Forget the entry under `key`, if any.
+--- @return boolean removed
+function G.Remove(q, key)
+    if q.fns[key] == nil then return false end
+    q.fns[key] = nil
+    for i, k in ipairs(q.keys) do
+        if k == key then
+            table.remove(q.keys, i)
+            break
+        end
+    end
+    return true
+end
+
 function G.Keys(q)
     local out = {}
     for i, key in ipairs(q.keys) do out[i] = key end

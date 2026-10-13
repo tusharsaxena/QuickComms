@@ -158,9 +158,12 @@ test("sendengine: the visibility driver is set out of combat and declined in it"
     assertNil(m.stateDrivers[root].visibility)
 end)
 
+-- The firewall's patterns: any Secure* template or handler by name, SetAttribute however it is
+-- called, and every binding or state-driver write.
+local FORBIDDEN = { "SetAttribute%s*%(", "[\"']SetAttribute[\"']", "SetOverrideBinding", "ClearOverrideBindings",
+    "RegisterStateDriver%s*%(", "UnregisterStateDriver%s*%(", "Secure%w*Template", "SecureHandler" }
+
 test("sendengine: [firewall] no other shipped file makes a secure call (spec §9)", function()
-    local FORBIDDEN = { "SetAttribute%(", "SetOverrideBinding", "ClearOverrideBindings", "RegisterStateDriver%(",
-        "UnregisterStateDriver%(", "SecureActionButtonTemplate", "SecureHandler" }
     for _, rel in ipairs(T.loadAddon.tocFiles) do
         if rel ~= "modules/SendEngine.lua" then
             local src = read(rel)
@@ -170,6 +173,22 @@ test("sendengine: [firewall] no other shipped file makes a secure call (spec §9
         end
     end
     assertTrue(read("modules/SendEngine.lua"):find("SetAttribute%(") ~= nil, "the firewall file is the writer")
+end)
+
+test("sendengine: [fix wave] the firewall's patterns catch every Secure* template and SetAttribute spelling", function()
+    -- Each sample is a spelling the earlier list let through.
+    local function caught(src)
+        for _, pat in ipairs(FORBIDDEN) do
+            if src:find(pat) then return true end
+        end
+        return false
+    end
+    for _, src in ipairs({ 'CreateFrame("Button", nil, p, "SecureUnitButtonTemplate")',
+        'CreateFrame("Frame", nil, p, "SecureFrameTemplate")', "b.SetAttribute (b, 'type', 'macro')",
+        'b["SetAttribute"](b, "type", "macro")', "RegisterStateDriver (f, 'visibility', 'show')" }) do
+        assertTrue(caught(src), src)
+    end
+    assertFalse(caught("b:GetAttribute('type')"))
 end)
 
 test("sendengine: [D12] nothing calls SendChatMessage: the secure button is the one send path", function()

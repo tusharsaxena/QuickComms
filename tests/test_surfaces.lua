@@ -209,14 +209,46 @@ end)
 
 test("surfaces: [review 1] a profile switch in combat queues the new profile's pads", function()
     local NS, m = live()
+    -- "Other" differs from Default: a group of its own, first on the pad, and a saved position.
+    NS.addon.db:SetProfile("Other")
+    local cid = userCallout(NS, { name = "Theirs", text = "Other line", channel = "party" })
+    NS.Library.SetSurfacePoint("pad", "p1", { "TOPLEFT", "TOPLEFT", 40, -60 })
+    NS.addon.db:SetProfile("Default")
+    local root = NS.Pad.Instance("p1").root
+    assertEqual(#NS.Pad.ChipsFor("p1", cid), 0, "Default does not carry Other's group")
+    assertEqual((root:GetPoint(1)), "CENTER")
     combat(m, true)
     NS.addon.db:SetProfile("Other")
     assertEqual(#m.blocked, 0)
     assertTrue(staleShown(NS))
+    assertEqual(pull(NS):GetAttribute("macrotext"), "/p Pulling next pack", "the chips keep their old lines")
+    assertEqual(#NS.Pad.ChipsFor("p1", cid), 0, "nothing of the new profile until combat ends")
+    assertEqual((root:GetPoint(1)), "CENTER")
     combat(m, false)
     assertEqual(#m.blocked, 0)
-    assertEqual(pull(NS):GetAttribute("macrotext"), "/p Pulling next pack")
+    assertEqual(NS.Pad.ChipsFor("p1", cid)[1]:GetAttribute("macrotext"), "/p Other line")
+    -- red under: drop the applyPoint in Pad.Apply (the pad keeps Default's place)
+    local p, _, rel, x, y = root:GetPoint(1)
+    assertEqual(table.concat({ p, rel, x, y }, ","), "TOPLEFT,TOPLEFT,40,-60")
     assertFalse(staleShown(NS))
+end)
+
+test("surfaces: [fix wave] enabled in combat (a /reload mid-pull): combat end builds the pad, the queue empties", function()
+    local NS, _, m = T.bootAddon()
+    m.__setCombat(true)
+    NS.addon:OnEnable()
+    m.__fire("PLAYER_ENTERING_WORLD")
+    NS.Situation.ReadInputs = function() return MPLUS end
+    NS.Situation.RefreshNow("test")
+    assertEqual(table.concat(NS.SendEngine.Snapshot(), ","), "surfaces")
+    assertNil(NS.Pad.Instance("p1"))
+    m.__setCombat(false)
+    m.__fire("PLAYER_REGEN_ENABLED")
+    -- red under: drain only on a RESTRICTION_CHANGED (the edge's signature equals the unseeded default)
+    assertEqual(#NS.SendEngine.Snapshot(), 0)
+    assertEqual(pull(NS):GetAttribute("macrotext"), "/p Pulling next pack")
+    assertTrue(NS.Pad.Instance("p1").root:IsShown())
+    assertEqual(#m.blocked, 0)
 end)
 
 test("surfaces: a setting written in combat waits for combat end, with the stale hint", function()
@@ -295,9 +327,41 @@ test("surfaces: [review 2] disabled mid-combat: nothing blocked, one held regist
     assertTrue(inst.root:IsShown(), "held: no protected call in combat")
     -- red under: register the held teardown on NS.addon instead of SendEngine's own target
     assertEqual(nonMessages(m), "PLAYER_REGEN_ENABLED", "the one permitted registration")
+    -- A click on the still-armed pad: the game may send it, the addon tracks and reports nothing.
+    local heard = 0
+    local t = NS.Bus:NewTarget()
+    t:RegisterMessage(NS.MSG.SEND_RESULT, function() heard = heard + 1 end)
+    local timers = #m.__timers
+    m.prints = {}
+    m.__click(pull(NS))
+    -- red under: drop the IsStoodDown check in SendEngine's press
+    assertEqual(#m.__timers, timers, "no timer from a disabled addon")
+    assertEqual(NS.SendEngine.EchoState().pending, 0)
+    assertEqual(heard, 0)
+    assertEqual(#m.prints, 0)
     combat(m, false)
     assertFalse(inst.root:IsShown())
     assertEqual(#NS.SendEngine.ArmedButtons(), 0)
     assertEqual(nonMessages(m), "", "released the moment it fired")
+    assertEqual(#m.blocked, 0)
+end)
+
+test("surfaces: [fix wave] disabled then enabled inside one combat: the pad is shown and armed after it", function()
+    local NS, m = live()
+    local inst = NS.Pad.Instance("p1")
+    combat(m, true)
+    NS.SchemaRuntime.Set("enabled", false)
+    NS.SchemaRuntime.Set("enabled", true)
+    assertEqual(#m.blocked, 0)
+    local regen = 0
+    for ev in nonMessages(m):gmatch("[^,]+") do
+        if ev == "PLAYER_REGEN_ENABLED" then regen = regen + 1 end
+    end
+    -- red under: drop SendEngine.CancelTeardown from the stand-up (the held hide stays registered)
+    assertEqual(regen, 1, "Restrictions' edge only: the held stand-down is released")
+    assertNil(NS.State.pendingTeardown)
+    combat(m, false)
+    assertTrue(inst.root:IsShown())
+    assertEqual(pull(NS):GetAttribute("macrotext"), "/p Pulling next pack")
     assertEqual(#m.blocked, 0)
 end)

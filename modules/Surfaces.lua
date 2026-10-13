@@ -14,8 +14,8 @@ local _, NS = ...
 -- it rebuilds every enabled pad from the CURRENT snapshot at once; in combat it files one keyed
 -- entry ("surfaces") in SendEngine's combat-end queue, shows each pad's stale hint and sends
 -- SURFACE_REBUILT (id, true); the drain rebuilds from the snapshot as it is THEN, and
--- COMBAT_QUEUE_DRAINED clears the hints (spec §9.1, §18). A profile switch first drops whatever the
--- old profile queued. RESTRICTION_CHANGED only re-reads the locks, the lockdown chip and the fade,
+-- COMBAT_QUEUE_DRAINED clears the hints (spec §9.1, §18). A profile switch first drops the old
+-- profile's rebuild and positions entries; a held drag's stop stays queued. RESTRICTION_CHANGED only re-reads the locks, the lockdown chip and the fade,
 -- which are insecure and change in combat too. The stand-down hands the secure half (hide every
 -- pad, disarm every chip) to SendEngine.Teardown, which holds it to combat end if need be.
 
@@ -235,7 +235,7 @@ local function onDrained()
 end
 
 local function onProfileChanged()
-    NS.SendEngine.Drop("profile")
+    NS.SendEngine.Drop("profile", { "surfaces", "positions" })
     State.surfaceOrder = nil
     S.Request("profile")
 end

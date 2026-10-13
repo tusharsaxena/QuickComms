@@ -4,9 +4,10 @@ local _, NS = ...
 -- drivers; tests/test_sendengine.lua greps every other shipped file for those calls. Every write is
 -- made out of combat. A caller asks through RunOrQueue, which runs the work now or, in combat
 -- (InCombatLockdown(), never UnitAffectingCombat), files it under a key in the combat-end queue,
--- replacing an earlier entry under that key. The queue drains when RESTRICTION_CHANGED says the
--- combat edge has passed and InCombatLockdown() agrees (Restrictions owns PLAYER_REGEN_*), then
--- COMBAT_QUEUE_DRAINED (count) is sent. Drop empties it on stand-down and on a profile switch.
+-- replacing an earlier entry under that key. The queue drains on PLAYER_REGEN_ENABLED, which
+-- Restrictions owns and hands over (R.OnCombatEdge calls Drain), and on any RESTRICTION_CHANGED
+-- once InCombatLockdown() agrees combat is over; then COMBAT_QUEUE_DRAINED (count) is sent. Drop
+-- empties it on stand-down; a profile switch drops only the keys it supersedes.
 --
 -- Send buttons (spec §9.1): SecureActionButtonTemplate, RegisterForClicks("AnyUp", "AnyDown") as the
 -- go/no-go test needed for type=macro, named QuickCommsSend<n>. Arm writes type=macro and the baked
@@ -172,12 +173,21 @@ function SE.Drain(cause)
     return #entries
 end
 
---- Forget every queued entry (stand-down, profile switch).
+--- Forget queued entries: every one (stand-down), or only those under `keys` (a profile switch
+--- supersedes the rebuild and the positions, never a held drag's stop).
+--- @param keys table|nil the keys to forget; nil forgets all
 --- @return number dropped
-function SE.Drop(reason)
+function SE.Drop(reason, keys)
     local q = State.sendQueue
-    local n = q and G.Count(q) or 0
-    State.sendQueue = nil
+    local n = 0
+    if q and keys then
+        for _, key in ipairs(keys) do
+            if G.Remove(q, key) then n = n + 1 end
+        end
+    else
+        n = q and G.Count(q) or 0
+        State.sendQueue = nil
+    end
     if n > 0 then NS.Debug(TAG_Q, "dropped %s (%s)", n, tostring(reason)) end
     return n
 end
@@ -271,6 +281,15 @@ local function press(b)
         return
     end
     if not (b.qcArmed and meta.chatType) then return end
+    -- A padlocked chip stays armed (spec §8.4), but the game is expected to refuse it: no echo is
+    -- awaited and no guard stamped, so a refusal is never blamed on the spam guard.
+    local lockText = meta.lockText and meta.lockText()
+    if lockText then
+        if NS.Setting("behavior.dropNotes") then
+            NS.Print(L["%s may not have been sent. %s"]:format(tostring(meta.name), lockText))
+        end
+        return
+    end
     local now = GetTime()
     local window = NS.Setting("behavior.spamGuard")
     local verdict = G.Decide(now, State.lastSendAt, window)

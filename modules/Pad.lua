@@ -16,11 +16,14 @@ local _, NS = ...
 -- SendEngine state driver (spec §10.3), never an insecure Show/Hide on the root. What may change in
 -- combat is insecure: alpha (the fade), the padlocks, the lockdown chip, the stale hint, the
 -- cooldown veil and the flashes. Tab switching and collapse are refused in combat with one line
--- (spec §10.2, the C8 fallback). The position is `pads[id].point = { point, relativePoint, x, y }`
+-- (spec §10.2, the C8 fallback); the wheel is heard over the header, the root and every chip. The
+-- position is `pads[id].point = { point, relativePoint, x, y }`
 -- (the named non-setting state, spec §5.1), shaped as DropWatcher modules/Window.lua `savePoint` /
 -- `applyPoint`. It is registry data, so the drag and Reset position write it only through
 -- Library.SetSurfacePoint (architecture-§5); the active tab and the collapsed state are session
--- state in NS.State.
+-- state in NS.State. Every rebuild re-anchors the root from the active profile (spec §10.4: the
+-- point lives in the profile), so a profile switch, copy or reset moves an existing pad; a frame
+-- being dragged, or whose drag stop is held for combat end, keeps the cursor's place.
 
 NS.Pad = NS.Pad or {}
 local Pad = NS.Pad
@@ -86,6 +89,9 @@ end
 local function newChip(inst)
     local btn = NS.SendEngine.NewButton(inst.root, function(_, _, window) Pad.Cooldown(window) end)
     R.Dress(btn, function() Pad.SetHover(inst.id, true) end, function() Pad.SetHover(inst.id, false) end)
+    -- An insecure hook, as Dress hooks OnEnter: it never touches the secure click path.
+    btn:EnableMouseWheel(true)
+    btn:HookScript("OnMouseWheel", function(_, delta) Pad.Wheel(inst.id, delta) end)
     return btn
 end
 
@@ -100,9 +106,12 @@ end
 
 -- Armed when the slot baked; otherwise disarmed, keeping only what a click may still do (a solo
 -- self-print). A refused or placeholder chip carries no chat type, so its click reports nothing.
+-- lockText reads the slot's live lock (RefreshLocks keeps it current in combat), so a press on a
+-- padlocked chip is explained by its lock, never tracked as a send.
 local function arm(btn, slot)
     local meta = { calloutId = slot.calloutId, surfaceId = slot.surfaceId, name = slot.name,
-        chatType = slot.chatType, selfText = slot.selfText }
+        chatType = slot.chatType, selfText = slot.selfText,
+        lockText = function() return slot.lock and (R.LOCK_TEXT[slot.lock] or tostring(slot.lock)) end }
     if slot.line and slot.chatType then
         NS.SendEngine.Arm(btn, slot.line, meta)
     else
@@ -140,6 +149,8 @@ local function build(id)
     root:SetClampedToScreen(true)
     root:SetMovable(true)
     root:SetFrameStrata("MEDIUM")
+    root:EnableMouseWheel(true)
+    root:SetScript("OnMouseWheel", function(_, delta) Pad.Wheel(id, delta) end)
     NS.ApplySkin(root)
     local inst = { id = id, root = root, chips = NS.Pool.New(), titles = NS.Pool.New(), byCallout = {},
         hover = 0, live = false }
@@ -196,6 +207,7 @@ function Pad.Apply(id, plan)
     if not (pad and plan) then return false end
     local t0 = Perf.on and debugprofilestop()
     local inst = pads[id] or build(id)
+    if not (inst.dragging or inst.dragHeld) then applyPoint(inst) end
     inst.plan, inst.live = plan, true
     NS.Pool.ReleaseAll(inst.chips, releaseChip)
     NS.Pool.ReleaseAll(inst.titles)
@@ -220,6 +232,11 @@ end
 function Pad.Release(id)
     local inst = pads[id]
     if not inst or inCombat() then return false end
+    if inst.dragHeld then
+        -- A drag caught after lockdown began, whose queued stop a stand-down dropped.
+        inst.dragHeld = nil
+        inst.root:StopMovingOrSizing()
+    end
     NS.Pool.ReleaseAll(inst.chips, releaseChip)
     NS.Pool.ReleaseAll(inst.titles)
     inst.byCallout, inst.plan, inst.live = {}, nil, false
@@ -361,21 +378,29 @@ end
 
 -- The combat edge while a pad is being dragged. The strip forgets the drag first, so its
 -- OnDragStop does nothing; the stop and the save run now when lockdown has not begun yet (the
--- PLAYER_REGEN_DISABLED edge comes before it), else once combat ends.
+-- PLAYER_REGEN_DISABLED edge comes before it), else once combat ends. A profile switch meanwhile
+-- keeps this entry: the root is still stopped, and the drop point is saved only into the profile
+-- it was dragged in (another profile's pad goes to that profile's own point). A stand-down drops
+-- the entry, and Release stops the root instead.
 local function endDrags()
     local dragging = {}
     for _, inst in pairs(pads) do
         if inst.dragging then
             inst.dragging = nil
+            inst.dragHeld = true
             if inst.handle then inst.handle.__dragging = nil end
             dragging[#dragging + 1] = inst
         end
     end
     if #dragging == 0 then return end
+    local profile = NS.db and NS.db:GetCurrentProfile()
     NS.SendEngine.RunOrQueue("padDrag", function()
         for _, inst in ipairs(dragging) do
-            inst.root:StopMovingOrSizing()
-            savePoint(inst)
+            if inst.dragHeld then
+                inst.dragHeld = nil
+                inst.root:StopMovingOrSizing()
+                if NS.db and NS.db:GetCurrentProfile() == profile then savePoint(inst) else applyPoint(inst) end
+            end
         end
     end)
 end
