@@ -24,6 +24,7 @@ local _, NS = ...
 -- state in NS.State. Every rebuild re-anchors the root from the active profile (spec §10.4: the
 -- point lives in the profile), so a profile switch, copy or reset moves an existing pad; a frame
 -- being dragged, or whose drag stop is held for combat end, keeps the cursor's place.
+-- A held stop the stand-down dropped is filed again by the stand-up, and a new drag clears it.
 
 NS.Pad = NS.Pad or {}
 local Pad = NS.Pad
@@ -173,7 +174,11 @@ local function build(id)
         label = label,
         moveFrame = root,
         canDrag = function() return not isLocked() and not inCombat() end,
-        onDragStart = function() inst.dragging = true end,
+        -- A new drag supersedes any stop still held for an earlier one (endDrags).
+        onDragStart = function()
+            inst.dragHeld = nil
+            inst.dragging = true
+        end,
         onDragStop = function()
             inst.dragging = nil
             savePoint(inst)
@@ -430,6 +435,29 @@ NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
         receiver:UnregisterMessage(NS.MSG.RESTRICTION_CHANGED)
     end
 end
+-- A held drag whose stop the stand-down dropped (it drops the whole combat-end queue) and whose
+-- teardown the stand-up then canceled inside the same combat would keep `dragHeld` for good, and
+-- Apply would never re-anchor the pad again. The stand-up files the stop again: it runs now out of
+-- combat, else at combat end, and the frame goes back to its saved point, because the player
+-- disabled the addon mid-drag and the drop was never saved.
+local function refileHeldDrags()
+    local held = {}
+    for _, inst in pairs(pads) do
+        if inst.dragHeld then held[#held + 1] = inst end
+    end
+    if #held == 0 then return end
+    NS.SendEngine.RunOrQueue("padDrag", function()
+        for _, inst in ipairs(held) do
+            if inst.dragHeld then
+                inst.dragHeld = nil
+                inst.root:StopMovingOrSizing()
+                applyPoint(inst)
+            end
+        end
+    end)
+end
+
 NS.STAND_UP[#NS.STAND_UP + 1] = function()
     if not NS.Bus.tracked then listen() end
+    refileHeldDrags()
 end
