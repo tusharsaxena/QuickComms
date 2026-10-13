@@ -165,9 +165,13 @@ test("groups page: [review 5] the When tab refuses an upside-down key-level rang
     pick(NS, gid)
     local w = P.tab("groups", "When")
     m.prints = {}
-    P.find(w, "EditBox", "Highest key level"):__fire("OnEnterPressed", "10")
+    local box = P.find(w, "EditBox", "Highest key level")
+    box:SetText("10")   -- as the player's typing leaves it
+    box:__fire("OnEnterPressed", "10")
     assertTrue(table.concat(m.prints, "\n"):find("The lowest key level is above the highest.", 1, true) ~= nil)
     assertNil(NS.db.profile.groups[gid].when.keyLevel.max)
+    -- red under: leave a refused box holding the refused number
+    assertEqual(box.text, "", "[final 27] the box shows the stored end again")
 end)
 
 local function countApply(NS)

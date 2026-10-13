@@ -63,7 +63,8 @@ function PD.Point(id)
     return { pt[1], pt[2], pt[3], pt[4] }
 end
 
---- Move the pad by a typed X or Y offset: the whole `pad.point` row, through the seam.
+--- Move the pad by a typed X or Y offset: the whole `pad.point` row, through the seam. A refusal
+--- prints its reason.
 function PD.SetOffset(id, axis, text)
     local n = tonumber((text or ""):match("^%s*(-?%d+%.?%d*)%s*$"))
     if not n then
@@ -72,7 +73,9 @@ function PD.SetOffset(id, axis, text)
     end
     local pt = PD.Point(id)
     if axis == "x" then pt[3] = n else pt[4] = n end
-    return (NS.SchemaRuntime.Set("pad.point", pt, id)) == true
+    local ok, err, why = NS.SchemaRuntime.Set("pad.point", pt, id)
+    if not ok then NS.Print(tostring(why or err)) end
+    return ok == true
 end
 
 function PD.ResetPoint(id)
@@ -170,7 +173,10 @@ local function offsetBox(ctx, id, label, axis)
             ctx.refreshers[#ctx.refreshers + 1] = function() eb:SetText(tostring(PD.Point(id)[index])) end
         end
         eb:SetRelativeWidth(rel or 0.5)
-        eb:SetCallback("OnEnterPressed", function(_, _, text) PD.SetOffset(id, axis, text) end)
+        eb:SetCallback("OnEnterPressed", function(_, _, text)
+            -- A refusal (its line already printed) puts the box back to the stored offset.
+            if not PD.SetOffset(id, axis, text) then eb:SetText(tostring(PD.Point(id)[index])) end
+        end)
         H().AttachTooltip(eb, label, L["Pixels from the pad's anchor. Press Enter to apply."])
         parent:AddChild(eb)
         return eb

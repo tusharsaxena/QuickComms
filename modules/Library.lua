@@ -239,13 +239,23 @@ local function finite(x)
     return type(x) == "number" and x == x and math.abs(x) ~= math.huge
 end
 
---- Whether `v` is a surface anchor: nil (the default place) or { point, relativePoint, x, y }, the
---- two points region anchor names and the offsets finite numbers.
+--- The largest offset a surface anchor takes while the screen's size is unknown (a headless load).
+Lib.POINT_LIMIT = 4096
+
+--- Whether `v` is a surface anchor: nil or false (the default place) or { point, relativePoint, x,
+--- y }, the two points region anchor names and the offsets finite numbers no larger than the screen
+--- (UIParent's width for x, its height for y), so a typed offset cannot put a pad where it cannot be
+--- dragged back from.
+--- @return boolean ok, string|nil reason ("badPoint" | "offScreen")
 function Lib.ValidPoint(v)
-    if v == nil then return true end
+    if v == nil or v == false then return true end
     if type(v) ~= "table" or not ANCHORS[v[1]] or not ANCHORS[v[2]]
         or not finite(v[3]) or not finite(v[4]) then
         return false, "badPoint"
+    end
+    local w, h = NS.Compat.ScreenSize()
+    if math.abs(v[3]) > (w or Lib.POINT_LIMIT) or math.abs(v[4]) > (h or Lib.POINT_LIMIT) then
+        return false, "offScreen"
     end
     return true
 end

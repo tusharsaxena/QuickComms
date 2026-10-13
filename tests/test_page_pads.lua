@@ -58,9 +58,19 @@ test("pads page: X and Y move the pad through its pad.point row; Reset puts it b
     assertEqual(pointOf(inst), "CENTER,CENTER,40,-60", "the rebuild re-anchors the pad")
     m.prints = {}
     w = P.tab("pads", "Layout")
-    P.find(w, "EditBox", "X offset"):__fire("OnEnterPressed", "left")
+    local xbox = P.find(w, "EditBox", "X offset")
+    xbox:SetText("left")   -- as the player's typing leaves it
+    xbox:__fire("OnEnterPressed", "left")
     assertTrue(table.concat(m.prints, "\n"):find("A position is a number of pixels.", 1, true) ~= nil)
     assertEqual(NS.db.profile.pads.p1.point[3], 40)
+    -- red under: leave a refused box holding the refused text
+    assertEqual(xbox.text, "40", "[final 27] the box shows the stored offset again")
+    m.prints = {}
+    xbox:SetText("90000")
+    xbox:__fire("OnEnterPressed", "90000")
+    assertEqual(NS.db.profile.pads.p1.point[3], 40, "[final 4] off the screen: refused")
+    assertTrue(table.concat(m.prints, "\n"):find("off the screen", 1, true) ~= nil, "with its reason")
+    assertEqual(xbox.text, "40")
     w = P.tab("pads", "Layout")
     P.find(w, "Button", "Reset this pad's position"):__fire("OnClick")
     assertNil(NS.db.profile.pads.p1.point)
@@ -136,4 +146,14 @@ test("pads page: [final 3, 15] Defaults puts the pad's rows back as one act: one
     assertEqual(NS.db.profile.pads.p1.look.fade, "none")
     -- red under: drop Library.Batch from the page's Defaults (one rebuild per row)
     assertEqual(applied, 1)
+end)
+
+test("pads page: [final 4] Defaults keeps the pad's position", function()
+    local NS, _, P = open()
+    NS.SchemaRuntime.Set("pad.point", { "CENTER", "CENTER", 40, -60 }, "p1")
+    NS.SchemaRuntime.Set("pad.layout.style", "label", "p1")
+    P.ctx("pads").panel.defaultsOnClick()
+    assertEqual(NS.db.profile.pads.p1.layout.style, "iconLabel")
+    -- red under: drop pad.point from settings/Schema.lua's resetExempt
+    assertEqual(table.concat(NS.db.profile.pads.p1.point, ","), "CENTER,CENTER,40,-60")
 end)

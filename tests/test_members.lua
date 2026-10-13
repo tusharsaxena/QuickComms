@@ -301,3 +301,39 @@ test("members: [final 7] what `get group.when` prints types back in", function()
     NS.addon:OnSlashCommand("set group.when keyLevel=12..any")
     assertEqual(NS.db.profile.groups[gid].when.keyLevel.min, 12, "the older printed form reads too")
 end)
+
+test("members: [final 4] an off-screen pad.point is refused; `/qc reset` brings back a pad's place and clears an icon", function()
+    local NS, m = T.enableAddon()
+    NS.State.editing.pad = "p1"
+    NS.addon:OnSlashCommand("set pad.point 40 -60")
+    m.prints = {}
+    -- red under: Lib.ValidPoint takes any finite offset
+    NS.addon:OnSlashCommand("set pad.point 90000 -90000")
+    assertEqual(table.concat(NS.db.profile.pads.p1.point, ","), "CENTER,CENTER,40,-60", "refused: nothing stored")
+    assertTrue(table.concat(m.prints, "\n"):find("off the screen", 1, true) ~= nil, table.concat(m.prints, "\n"))
+    m.prints = {}
+    -- red under: pad.point has no default ("has no default to restore")
+    NS.addon:OnSlashCommand("reset pad.point")
+    assertTrue(NS.db.profile.pads.p1.point == false, "the default place")
+    assertEqual(table.concat(NS.addon.Settings.Pads.Point("p1"), ","), "CENTER,CENTER,0,-150")
+    local cid = NS.Library.CreateCallout({ name = "Lust", text = "Lust", channel = "party", icon = 136012 })
+    NS.State.editing.callout = cid
+    -- red under: callout.icon has no default
+    NS.addon:OnSlashCommand("reset callout.icon")
+    assertTrue(NS.db.profile.callouts[cid].icon == false, "no icon")
+    local gid = NS.Library.CreateGroup({ name = "Mine", icon = 136012 })
+    NS.State.editing.group = gid
+    NS.addon:OnSlashCommand("reset group.icon")
+    assertTrue(NS.db.profile.groups[gid].icon == false)
+end)
+
+test("members: [final 5] builtin.hidden with no set selected says to pick one", function()
+    local NS, m = T.enableAddon()
+    NS.State.editing.builtin = nil
+    m.prints = {}
+    NS.addon:OnSlashCommand("set builtin.hidden none")
+    local text = table.concat(m.prints, "\n")
+    -- red under: builtin.hidden's validate refuses every value when no set is addressed
+    assertTrue(text:find("No built-in set is selected", 1, true) ~= nil, text)
+    assertTrue(text:find("Only this set's own callouts", 1, true) == nil, text)
+end)

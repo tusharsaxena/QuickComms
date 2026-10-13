@@ -321,7 +321,13 @@ local function renderKeyLevel(ctx, gid)
             eb:SetLabel(label)
             eb:SetText(kl[field] and tostring(kl[field]) or "")
             eb:SetRelativeWidth(rel or 0.5)
-            eb:SetCallback("OnEnterPressed", function(_, _, text) W.SetKeyField(gid, field, text) end)
+            eb:SetCallback("OnEnterPressed", function(_, _, text)
+                -- A refusal (its line already printed) puts the box back to the stored end.
+                if not W.SetKeyField(gid, field, text) then
+                    local stored = (fresh(gid).keyLevel or {})[field]
+                    eb:SetText(stored and tostring(stored) or "")
+                end
+            end)
             parent:AddChild(eb)
             return eb
         end }

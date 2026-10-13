@@ -23,10 +23,14 @@ return function(NS, m)
 
     function P.ctx(pageKey) return H.__panelFor(pageKey) end
 
-    --- Fire a page's OnShow by its sidebar title; answers the widgets the render drew.
+    --- Show a page by its sidebar title, as the client does when the player opens it: the panel is
+    --- shown (so the library's refreshes run in place rather than only marking the page owed) and its
+    --- OnShow fires. Answers the widgets the render drew.
     function P.show(title)
         local mark = #ace.__created
-        m.__subcategories[title]:__fire("OnShow")
+        local panel = m.__subcategories[title]
+        panel:Show()
+        panel:__fire("OnShow")
         return since(mark)
     end
 

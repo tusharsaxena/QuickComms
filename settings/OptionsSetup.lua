@@ -86,7 +86,13 @@ local O = lib:New({
     print = function(line) NS.Print(line) end,
     debug = function(tag, fmt, ...) NS.Debug(tag, fmt, ...) end,
     get          = NS.SchemaRuntime.Get,
-    set          = NS.SchemaRuntime.Set,
+    -- A refused write says why, as the CLI does (the library drops set's answer); the widget's own
+    -- refresh puts it back to the stored value.
+    set          = function(path, value, id)
+        local ok, err, why = NS.SchemaRuntime.Set(path, value, id)
+        if not ok then NS.Print(tostring(why or err)) end
+        return ok, err, why
+    end,
     applyDefault = NS.SchemaRuntime.ApplyDefault,
     -- A page's rows are those whose `page` is its key; `group` is the tab within it (options-ui-§13).
     rowsForPage = function(pageKey) return Settings.RowsForPage(pageKey) end,

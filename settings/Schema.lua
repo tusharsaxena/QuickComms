@@ -179,8 +179,10 @@ local S = Settings.SchemaLib:New{
     -- options-ui-§1 route (a): the host verbs that write a composed row still land on a load where
     -- the composer is hollow.
     writeThrough = { "enabled" },
-    -- The minimap button is a per-installation display preference: neither reset may touch it.
-    resetExempt  = { [MINIMAP_PATH] = true },
+    -- The minimap button is a per-installation display preference: neither reset may touch it. A
+    -- member's icon and a pad's position have a default only so a named `/qc reset` restores them;
+    -- a page's Defaults (a bracketed sweep) keeps them.
+    resetExempt  = { [MINIMAP_PATH] = true, ["callout.icon"] = true, ["group.icon"] = true, ["pad.point"] = true },
 }
 NS.SchemaRuntime = S
 

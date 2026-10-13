@@ -258,6 +258,15 @@ end
 
 -- ── The pad (spec §10.1) ─────────────────────────────────────────────────────────────────────
 
+--- UIParent's width and height, or nil while either is unknown or not a positive plain number.
+function Compat.ScreenSize()
+    local ui = UIParent
+    if not (ui and ui.GetWidth and ui.GetHeight) then return nil end
+    local w, h = PlainNumber(ui:GetWidth()), PlainNumber(ui:GetHeight())
+    if not (w and h and w > 0 and h > 0) then return nil end
+    return w, h
+end
+
 --- The client's color for a chat type, or nil when it cannot be read.
 function Compat.ChatColor(chatType)
     local info = ChatTypeInfo

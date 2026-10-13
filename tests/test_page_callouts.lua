@@ -44,12 +44,18 @@ test("callouts page: the rows write the selected callout through the seam", func
     assertEqual(c.channel, "party")
 end)
 
-test("callouts page: [review 5] an empty name is refused and nothing changes", function()
-    local NS, _, P = open()
+test("callouts page: [review 5] an empty name is refused with its reason and nothing changes", function()
+    local NS, m, P = open()
     local id = NS.addon.Settings.Callouts.Create()
     local w = P.redraw("callouts")
-    P.find(w, "EditBox", "Name"):__fire("OnEnterPressed", "")
+    m.prints = {}
+    local box = P.find(w, "EditBox", "Name")
+    box:SetText("")   -- as the player's typing leaves it
+    box:__fire("OnEnterPressed", "")
     assertEqual(NS.db.profile.callouts[id].name, "New callout")
+    -- red under: hand NS.SchemaRuntime.Set to the options descriptor unwrapped (the refusal is silent)
+    assertTrue(table.concat(m.prints, "\n"):find("A name is 1 to 32 characters.", 1, true) ~= nil)
+    assertEqual(box.text, "New callout", "the box shows the stored name again")
 end)
 
 test("callouts page: [phase 3] the token picker offers {group1}-{group8} only when the channel can resolve to Raid", function()
@@ -82,9 +88,10 @@ test("callouts page: [phase 3] the live line refreshes in place when the callout
         if label.text and label.text:find("Sends:", 1, true) then line = label end
     end
     assertTrue(line ~= nil)
-    NS.SchemaRuntime.Set("callout.text", "Kick", id)
-    NS.addon.Settings.Editors.RefreshLive()
-    -- red under: draw the live line without its Ed.Live refresher in settings/Callouts.lua
+    NS.State.editing.callout = id
+    NS.addon:OnSlashCommand("set callout.text Kick")   -- a real write: the seam's refresh, nothing by hand
+    -- red under: draw the live line without its Ed.Live refresher in settings/Callouts.lua, or drop
+    -- Ed.Live's append to ctx.refreshers in settings/Editors.lua (the library's scalar refresh)
     assertTrue(line.text:find("Sends: /p Kick", 1, true) ~= nil, line.text)
 end)
 
@@ -193,4 +200,16 @@ test("callouts page: [final 3] Defaults resets the callout as one act: one rebui
     NS.Surfaces.ApplyAll = apply
     assertEqual(NS.db.profile.callouts[id].channel, "smartGroup")
     assertTrue(applied <= 1, "one rebuild")
+end)
+
+test("callouts page: [final 4] Defaults keeps the icon (its default is only for `/qc reset`)", function()
+    local NS, _, P = open()
+    local id = NS.addon.Settings.Callouts.Create()
+    NS.SchemaRuntime.Set("callout.icon", "136012", id)
+    NS.SchemaRuntime.Set("callout.channel", "party", id)
+    P.redraw("callouts")
+    P.ctx("callouts").panel.defaultsOnClick()
+    assertEqual(NS.db.profile.callouts[id].channel, "smartGroup")
+    -- red under: drop callout.icon from settings/Schema.lua's resetExempt
+    assertEqual(NS.db.profile.callouts[id].icon, 136012)
 end)

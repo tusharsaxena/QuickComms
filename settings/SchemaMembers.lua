@@ -27,6 +27,7 @@ local WHY = {
     badChannel = L["That is not a channel Quick Comms sends on."],
     badIcon   = L["An icon is a texture id or a texture path."],
     badPoint  = L["A position is two anchor points and two numbers."],
+    offScreen = L["That position is off the screen: an offset is at most the screen's width or height."],
     badWhen   = L["That condition is not one Quick Comms knows."],
     badRange  = L["The lowest key level is above the highest."],
     badHidden = L["Only this set's own callouts can be hidden."],
@@ -135,20 +136,22 @@ local ROWS = {
       values = CHANNELS, page = "callouts", group = GENERAL, label = L["Channel"],
       desc = L["Where it is sent. Smart group picks instance, raid or party chat for the group you are in when the pad is built."],
       validate = check(function(v) return NS.Channels.IsKind(v), "badChannel" end) },
-    { path = "callout.icon", instance = "callout", type = "string", dialogControl = "EditBox",
+    -- Icon's default is false, "no icon", so `/qc reset callout.icon` clears it; the page's Defaults
+    -- keeps it (settings/Schema.lua resetExempt), as its tooltip says.
+    { path = "callout.icon", instance = "callout", type = "string", dialogControl = "EditBox", default = false,
       page = "callouts", group = GENERAL, label = L["Icon"],
       desc = L["A texture id (a number) or a texture path (a LibKa0s icon by its path). Leave it empty for the default icon. Press Enter to apply."],
-      normalize = iconValue, validate = check(function(v) return type(v) == "string", "badIcon" end) },
+      normalize = iconValue, validate = check(function(v) return v == false or type(v) == "string", "badIcon" end) },
 
     -- Groups page (spec §13.1, §13.2).
     { path = "group.name", instance = "group", type = "string", dialogControl = "EditBox",
       maxLetters = Lib.NAME_MAX, page = "groups", group = GENERAL, label = L["Name"],
       desc = L["What the pad's section and the lists call this group. Press Enter to apply."],
       validate = userGroup(Lib.ValidName) },
-    { path = "group.icon", instance = "group", type = "string", dialogControl = "EditBox",
+    { path = "group.icon", instance = "group", type = "string", dialogControl = "EditBox", default = false,
       page = "groups", group = GENERAL, label = L["Icon"],
       desc = L["A texture id (a number) or a texture path (a LibKa0s icon by its path). Leave it empty for the default icon. Press Enter to apply."],
-      normalize = iconValue, validate = userGroup(function(v) return type(v) == "string", "badIcon" end) },
+      normalize = iconValue, validate = userGroup(function(v) return v == false or type(v) == "string", "badIcon" end) },
     { path = "group.enabled", instance = "group", type = "bool", default = T.group.enabled,
       page = "groups", group = GENERAL, label = L["Enabled"],
       desc = L["Show this group wherever its When matches. Off keeps the group and its place on every pad."],
@@ -197,7 +200,9 @@ local ROWS = {
     { path = "pad.layout.width", instance = "pad", type = "number", default = T.pad.layout.width,
       min = 120, max = 300, step = 10, page = "pads", group = L["Layout"], label = L["Chip width"],
       desc = L["How wide a labeled chip is."], validate = NUMBER, normalize = clamp(120, 300, true) },
-    { path = "pad.point", instance = "pad", type = "point",
+    -- Position's default is false, the default place, so `/qc reset pad.point` brings a pad back; the
+    -- page's Defaults keeps the position (settings/Schema.lua resetExempt), as its tooltip says.
+    { path = "pad.point", instance = "pad", type = "point", default = false,
       page = "pads", group = L["Layout"], label = L["Position"],
       desc = L["Where the pad sits. Drag it while unlocked, or type an offset."],
       validate = check(Lib.ValidPoint) },
@@ -220,7 +225,12 @@ local ROWS = {
     { path = "builtin.hidden", instance = "builtin", type = "idset",
       page = "share", group = L["Built-in"], label = L["Hidden callouts"],
       desc = L["The set's callouts that no pad shows."],
-      validate = check(function(v, id) return Lib.ValidHidden(Lib.TopOf(id), v) end) },
+      -- With no built-in set addressed the value passes, so the seam's missing-member refusal (which
+      -- says to pick a set on the Groups page) is the reason the player reads.
+      validate = check(function(v, id)
+          if Lib.TopOf(id) == nil then return true end
+          return Lib.ValidHidden(Lib.TopOf(id), v)
+      end) },
 }
 
 -- Every member row's reaction: Library.Touch announces the write (LIBRARY_CHANGED, the pads' rebuild),
