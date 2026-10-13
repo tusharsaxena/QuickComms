@@ -72,7 +72,7 @@ Total.
 - parity: the Env seam publishes the same NS members on both paths
 - parity: the Media seam publishes the same NS members on both paths
 
-### test_setup.lua (25)
+### test_setup.lua (26)
 
 - core: NS.Print is NS.Util.print after AceConsole's embed (architecture-§2)
 - core: the printer tags every line with the cyan [QC] prefix
@@ -85,6 +85,7 @@ Total.
 - bus: a tracked target's registrations come down with the stand-down and back with the stand-up
 - bus: a profile switch sends PROFILE_CHANGED once
 - perf: every declared bucket has a bracket, and every bracket a declared bucket
+- perf: [audit QC-12] every bucket key is lowerCamelCase, named for the path it times (naming-cheatsheet)
 - perf: the live harness is built, and the stub answers the perf verb
 - perf: the `perf` hold stands the addon down, and the verbs keep answering
 - perf: the descriptor's SavedVariables global is declared in the TOC
@@ -118,7 +119,7 @@ Total.
 - profile: the spam guard clamps to 0.6-2.0 and fallback refuses unknown values
 - profile: schema version target is 2 (phase 4: the battleground order)
 
-### test_schema.lua (14)
+### test_schema.lua (17)
 
 - schema: every row validates against the defaults
 - schema: a stored row whose path has no default is counted, not passed vacuously
@@ -130,12 +131,15 @@ Total.
 - schema: the Minimap button row inverts onto LibDBIcon's own hide, with no shown key
 - schema: neither reset touches the minimap button (launcher-§3)
 - schema: Reset all asks first, through the confirmation popup
+- schema: [audit QC-04] the global reset takes every created member back to a fresh profile, and only this one
+- schema: [audit QC-01] the reset confirmation is options-ui-§12's sentence, verbatim
 - schema: degraded, `enabled` is written through and still reacts
 - schema: degraded, a row-less path not in the list is still refused
 - schema: [fix wave] the Behavior rows that rebuild the pads resolve Settings.RebuildSurfaces when they run
+- schema: [audit QC-13] the panel's color codec is written out for the stored { r, g, b, a } shape
 - schema: [phase 3] a fresh profile has no row off its default; the member rows are not counted
 
-### test_slash.lua (13)
+### test_slash.lua (14)
 
 - slash: NS.COMMANDS is positional triples, every reserved verb present
 - slash: `diagnostics` has no alias of any kind (debug-logging-§14)
@@ -146,12 +150,13 @@ Total.
 - slash: `reset` with no path explains itself rather than resetting everything
 - slash: `debug on` turns logging on without opening the console
 - slash: degraded, enable and disable still work and the CLI names the missing library
+- slash: [audit QC-05] degraded, `debug on`/`off` flip the flag and ack, and `debug diagnostics` routes
 - slash: [phase 3] `why` prints each built pad and why its groups show
 - slash: [phase 4] `why` covers the dials too
 - slash: [final 16] `why` with nothing built speaks of pads and dials
 - slash: [final 9] test and preview's help, and the Preview as row, speak of the dials too
 
-### test_disabled.lua (10)
+### test_disabled.lua (21)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
 - disabled 2: through /qc disable, nothing is registered, heard or scheduled
@@ -163,6 +168,17 @@ Total.
 - disabled 7: a disabled profile loads stood down, with nothing registered
 - disabled 8: the launcher's Enabled entry stays live while disabled
 - disabled: [final 1] every feature event is declared once (AceEvent keeps one handler per event)
+- disabled [§7 step 1]: enabled, the registration set holds events and messages, and the surfaces are drawn
+- disabled [§7 steps 2-4]: through the seam, nothing stays registered, events or messages, and nothing is armed
+- disabled [§7 step 5]: every surface frame that was drawn is hidden
+- disabled [§7 step 6]: every event and message in R_on, fired anyway, runs nothing, writes, prints and shows nothing
+- disabled [§7 step 7]: every NS.COMMANDS entry and the bare /qc: reserved verbs answer, feature verbs refuse once and write nothing
+- disabled [§7 step 8]: the launcher's left-click opens the panel and its menu grays every entry but Enabled
+- disabled [§7 step 9]: re-enabled, R_on comes back; a setting changed while disabled is what the stand-up builds
+- disabled [§7 step 10]: the library latch: perf, then disabled; perf released first leaves it down
+- disabled [§7 step 10]: the library latch: disabled, then perf; enabled first leaves it down
+- disabled [§7 step 10]: the stand-in latch: perf, then disabled; perf released first leaves it down
+- disabled [§7 step 10]: the stand-in latch: disabled, then perf; enabled first leaves it down
 
 ### test_diagnostics.lua (10)
 
@@ -404,7 +420,7 @@ Total.
 - members: [phase 5] a When's key level prints as it types back in: one level, open below, open above
 - members: [phase 5] a pad's Look rows are composed member rows: checked, clamped, announced
 
-### test_editors.lua (11)
+### test_editors.lua (12)
 
 - editors: [review 2] Select mirrors a built-in group into the built-in selection; Heal keeps a member that exists
 - editors: every membership change asks for one structural repaint, on the next frame
@@ -415,6 +431,7 @@ Total.
 - editors: the stand-down cancels a pending repaint
 - editors: ConfirmDelete asks first, and only the accepted popup runs the act, once
 - editors: Open goes to a page's category by its id
+- editors: [audit QC-02] Open refuses in combat with one gray line and never reaches the category switch
 - editors: Scalar keeps the rows the flow engine draws, and CancelReorder cancels once
 - editors: Snapshot is the preview's while Preview as is on
 
@@ -540,7 +557,7 @@ Total.
 - echo: Expire drops only presses older than the window, oldest first
 - queue: a key replaces its earlier entry and keeps its place
 
-### test_sendengine.lua (28)
+### test_sendengine.lua (31)
 
 - sendengine: a send button is a named secure button registered for both edges
 - sendengine: Arm sends exactly the line; Disarm clears both attributes and sends nothing
@@ -550,6 +567,8 @@ Total.
 - sendengine: Drop empties the queue and nothing runs at combat end
 - sendengine: a failing queued entry is reported and the others still run
 - sendengine: Teardown in combat holds one PLAYER_REGEN_ENABLED and releases it when it fires
+- sendengine: [audit QC-06] the held stand-down registers through NS.SafeRegisterEvent, into NS.rejectedEvents
+- sendengine: [audit QC-06] a refused hold raises nothing and keeps the teardown held
 - sendengine: CancelTeardown releases the held registration without running it
 - sendengine: the visibility driver is set out of combat and declined in it
 - sendengine: [firewall] no other shipped file makes a secure call (spec §9)
@@ -569,6 +588,7 @@ Total.
 - sendengine: [phase 4] a dial header is a named click handler for the down edge, hidden; none in combat
 - sendengine: [phase 4] a wedge is wrapped before it is hooked, acts on the up edge, and only a left click is a press
 - sendengine: [phase 4] attributes, frame refs and snippets are written out of combat only, never blocked
+- sendengine: [audit QC-11] the bound-keys line logs on change through DebugChanged, re-armed by a console Clear
 - sendengine: [phase 4] BindKeys replaces the whole set, out of combat only; ClearKeys empties it
 
 ### test_dial_secure.lua (12)
@@ -671,9 +691,10 @@ Total.
 - surfaces: [phase 3] WhyLines names each shown group in order, built-ins marked, then the locks
 - surfaces: [phase 3] WhyLines in a key explains the built-in's matched row; a preview says so
 
-### test_pad_render.lua (16)
+### test_pad_render.lua (17)
 
 - render: Dress builds a chip's regions once, each its own object
+- render: [audit QC-07] the chip's padlock is the catalog's lock mark, tinted gold; the Blizzard art is the nil fallback
 - render: an armed chip shows its name, its channel tag in the chat color, no lock, no dim
 - render: [review 5] a refused chip is dimmed and its tooltip says why
 - render: a locked chip shows the padlock and names the lock; RefreshLock follows the slot
@@ -719,10 +740,11 @@ Total.
 - pad: [phase 5] the pad wears its Look: the chips' font and the edge and body it was given
 - pad: [review 5] a font or border this machine does not have draws the default, with no error
 
-### test_dial.lua (27)
+### test_dial.lua (28)
 
 - dial: Apply builds QuickCommsDial<n> with a ring per page, each callout wedge armed with its baked line
 - dial: a refused callout is a dimmed, disarmed wedge; a ring wedge is disarmed
+- dial: [audit QC-07] the hub's close and a wedge's padlock are catalog marks, with the Blizzard art as the nil fallback
 - dial: the hub shows the lockdown chip, the stale hint and TEST MODE; the pointer runs only while open
 - dial: a press dims every wedge and chip for the guard window; a drop stays red long enough to reopen and see
 - dial: Release closes, disarms and forgets a dial; HideAll also releases the keys
@@ -825,12 +847,12 @@ Total.
 | test_mock_secure.lua | 24 |
 | test_bus.lua | 2 |
 | test_surface_parity.lua | 15 |
-| test_setup.lua | 25 |
+| test_setup.lua | 26 |
 | test_database.lua | 7 |
 | test_profile.lua | 5 |
-| test_schema.lua | 14 |
-| test_slash.lua | 13 |
-| test_disabled.lua | 10 |
+| test_schema.lua | 17 |
+| test_slash.lua | 14 |
+| test_disabled.lua | 21 |
 | test_diagnostics.lua | 10 |
 | test_compat.lua | 12 |
 | test_restrictions.lua | 16 |
@@ -844,7 +866,7 @@ Total.
 | test_gameids.lua | 2 |
 | test_library.lua | 56 |
 | test_members.lua | 23 |
-| test_editors.lua | 11 |
+| test_editors.lua | 12 |
 | test_page_callouts.lua | 14 |
 | test_groups_when.lua | 12 |
 | test_page_groups.lua | 16 |
@@ -853,16 +875,16 @@ Total.
 | test_page_share.lua | 13 |
 | test_check.lua | 6 |
 | test_send_guard.lua | 10 |
-| test_sendengine.lua | 28 |
+| test_sendengine.lua | 31 |
 | test_dial_secure.lua | 12 |
 | test_preview.lua | 17 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 12 |
 | test_dial_layout.lua | 14 |
 | test_surfaces.lua | 22 |
-| test_pad_render.lua | 16 |
+| test_pad_render.lua | 17 |
 | test_pad.lua | 26 |
-| test_dial.lua | 27 |
+| test_dial.lua | 28 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -870,4 +892,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **664** |
+| **Total** | **686** |
