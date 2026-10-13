@@ -151,6 +151,8 @@ settings\Groups_When.lua
 settings\Groups.lua
 # LOAD-BEARING: takes Settings.Editors at load and registers the Comms Pad page (after Groups).
 settings\Pads.lua
+# LOAD-BEARING: takes Settings.Editors at load and registers the Share page (after Comms Pad, before Profiles).
+settings\Share.lua
 # Conventional: the verb bodies settings\Slash.lua's NS.COMMANDS rows call at run time; read modules only inside functions.
 settings\SlashVerbs.lua
 # LOAD-BEARING: captures NS.SchemaRuntime.Get/Set/FindRow/ApplyDefault at load.

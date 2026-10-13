@@ -115,6 +115,7 @@ Kit.run{
         "test_groups_when",
         "test_page_groups",
         "test_page_pads",
+        "test_page_share",
         "test_check",
         "test_send_guard",
         "test_sendengine",

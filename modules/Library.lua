@@ -16,7 +16,14 @@ local TAG = "Library"
 
 local function P() return NS.db.profile end
 
+-- While Lib.Batch runs, the kinds announced, to send once each when it ends; nil otherwise.
+local batched
+
 local function announce(kind, id, field)
+    if batched then
+        batched[kind] = true
+        return
+    end
     NS.Debug(TAG, "%s %s%s", kind, tostring(id), field and (" " .. field) or "")
     NS.addon:SendMessage(NS.MSG.LIBRARY_CHANGED, kind, id, field)
 end
@@ -143,6 +150,22 @@ end
 --- write from a membership or order change (settings/Editors.lua repaints only for some fields).
 function Lib.Touch(kind, id, field)
     announce(kind, id, field)
+end
+
+--- Run `fn` with Library's announces held, then send one LIBRARY_CHANGED per kind it touched, with no
+--- id and no field (several members changed): a bulk act (Share's Defaults) rebuilds the pads and
+--- repaints the pages once. A nested call joins the outer batch. An error in `fn` is re-raised after
+--- the held announces are sent, so nothing that landed goes unannounced.
+function Lib.Batch(fn)
+    if batched then return fn() end
+    batched = {}
+    local ok, err = pcall(fn)
+    local kinds = {}
+    for kind in pairs(batched) do kinds[#kinds + 1] = kind end
+    batched = nil
+    table.sort(kinds)
+    for _, kind in ipairs(kinds) do announce(kind, nil) end
+    if not ok then error(err, 0) end
 end
 
 --- Every member of a kind, in the order its editor page's picker lists them: user callouts and user

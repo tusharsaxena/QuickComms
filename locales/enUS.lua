@@ -584,3 +584,10 @@ L["Which Comms Pad this page edits."] = "Which Comms Pad this page edits."
 L["New pad"] = "New pad"
 L["Make a new Comms Pad showing every built-in set, and edit it here."] = "Make a new Comms Pad showing every built-in set, and edit it here."
 L["Put the selected pad's groups-as, layout and look back to their defaults, and turn it on. Its name, groups and position are kept."] = "Put the selected pad's groups-as, layout and look back to their defaults, and turn it on. Its name, groups and position are kept."
+
+-- Share page (settings/Share.lua)
+L["The callout sets that ship with Quick Comms. Turn a set off, Customize it into a group you can edit, or choose which of its callouts show."] = "The callout sets that ship with Quick Comms. Turn a set off, Customize it into a group you can edit, or choose which of its callouts show."
+L["Show this set wherever it matches. Off keeps it, and its place on every pad."] = "Show this set wherever it matches. Off keeps it, and its place on every pad."
+L["Choose callouts"] = "Choose callouts"
+L["Share"] = "Share"
+L["Turn every built-in set back on and show all of their callouts. Your customized copies are kept."] = "Turn every built-in set back on and show all of their callouts. Your customized copies are kept."
