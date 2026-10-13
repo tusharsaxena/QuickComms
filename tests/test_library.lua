@@ -126,3 +126,64 @@ test("library: every mutation announces LIBRARY_CHANGED", function()
     assertEqual(sent[#sent][1], NS.MSG.LIBRARY_CHANGED)
     assertEqual(sent[#sent][2], "callout")
 end)
+
+test("library: overlay writers resolve child ids to the top-level overlay", function()
+    local _, Lib, p = boot()
+    local child = "bi.bg.ab.stables"
+    local cid = Lib.Group(child).callouts[1]
+    assertTrue(Lib.SetBuiltinCalloutHidden(child, cid, true))
+    for _, x in ipairs(Lib.Group(child).callouts) do assertTrue(x ~= cid) end
+    assertNil(p.builtins[child])
+    assertTrue(p.builtins["bi.bg.ab"].hidden[cid])
+    assertFalse(Lib.AddGroupToSurface("pad", p.padOrder[1], child))
+end)
+
+test("library: Customize twice is refused until the copy is deleted", function()
+    local _, Lib = boot()
+    local copy = Lib.Customize("bi.raid")
+    assertTrue(copy ~= nil)
+    local again, why = Lib.Customize("bi.raid")
+    assertNil(again)
+    assertEqual(why, "alreadyCustomized")
+    Lib.DeleteGroup(copy)
+    assertTrue(Lib.Customize("bi.raid") ~= nil)
+end)
+
+test("library: Customize copies openInto and flattens node callouts", function()
+    local _, Lib, p = boot()
+    local copy = Lib.Customize("bi.bg.ab")
+    assertTrue(p.groups[copy].openInto)
+    assertEqual(#p.groups[copy].callouts, 30)
+end)
+
+test("library: Prepare survives malformed groups and surfaces", function()
+    local _, Lib, p = boot()
+    local g = Lib.CreateGroup({ name = "Mine" })
+    p.groups[g].callouts = nil
+    p.pads[p.padOrder[1]].groups = nil
+    p.groups.gbad = "junk"
+    local r = Lib.Prepare()
+    assertEqual(#p.groups[g].callouts, 0)
+    assertEqual(type(p.pads[p.padOrder[1]].groups), "table")
+    assertNil(p.groups.gbad)
+    assertTrue(r.repaired >= 1)
+end)
+
+test("library: Prepare repairs the order lists", function()
+    local _, Lib, p = boot()
+    p.padOrder[#p.padOrder + 1] = "p999"
+    local id = p.padOrder[1]
+    p.padOrder = { "p999" }
+    local r = Lib.Prepare()
+    assertEqual(r.repaired, 2)
+    assertEqual(#p.padOrder, 1)
+    assertEqual(p.padOrder[1], id)
+end)
+
+test("library: MoveInGroup with a nil target returns false", function()
+    local _, Lib = boot()
+    local c = Lib.CreateCallout({ name = "A", text = "a", channel = "party" })
+    local g = Lib.CreateGroup({ name = "G" })
+    Lib.AddToGroup(g, c)
+    assertFalse(Lib.MoveInGroup(g, 1, nil))
+end)

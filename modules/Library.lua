@@ -39,6 +39,12 @@ end
 
 local function isBuiltin(id) return type(id) == "string" and id:sub(1, 3) == "bi." end
 
+local function topOf(id)
+    local def = NS.BuiltIns.groups[id]
+    while def and def.parent do id = def.parent def = NS.BuiltIns.groups[id] end
+    return def and id or nil
+end
+
 --- A fresh user id: prefix .. n.
 function Lib.NewId(prefix)
     local p = P()
@@ -192,7 +198,7 @@ end
 
 function Lib.MoveInGroup(groupId, from, to)
     local g = P().groups[groupId]
-    if not (g and g.callouts[from]) then return false end
+    if not (g and g.callouts[from]) or type(to) ~= "number" then return false end
     to = math.max(1, math.min(to, #g.callouts))
     table.insert(g.callouts, to, table.remove(g.callouts, from))
     announce("group", groupId)
@@ -202,16 +208,18 @@ end
 -- ── built-ins ───────────────────────────────────────────────────────────────────────────────
 
 function Lib.SetBuiltinEnabled(id, on)
-    if not NS.BuiltIns.groups[id] then return false end
-    overlay(id).enabled = on and true or false
-    announce("builtin", id)
+    local top = topOf(id)
+    if not top then return false end
+    overlay(top).enabled = on and true or false
+    announce("builtin", top)
     return true
 end
 
 function Lib.SetBuiltinCalloutHidden(groupId, calloutId, hidden)
-    if not NS.BuiltIns.groups[groupId] then return false end
-    overlay(groupId).hidden[calloutId] = hidden and true or nil
-    announce("builtin", groupId)
+    local top = topOf(groupId)
+    if not top then return false end
+    overlay(top).hidden[calloutId] = hidden and true or nil
+    announce("builtin", top)
     return true
 end
 
@@ -221,8 +229,10 @@ end
 function Lib.Customize(builtinId)
     local def = NS.BuiltIns.groups[builtinId]
     if not def or def.parent then return nil, "notTopLevel" end
+    local prior = overlay(builtinId).customizedAs
+    if prior and P().groups[prior] then return nil, "alreadyCustomized" end
     local id = Lib.CreateGroup({ name = def.name .. " " .. L["(custom)"], icon = def.icon, when = def.when,
-        openInto = false })
+        openInto = def.openInto == true })
     local function copyFrom(gid)
         for _, cid in ipairs(Lib.Group(gid).callouts) do Lib.AddToGroup(id, cid) end
         for _, child in ipairs(NS.BuiltIns.groups[gid].children or {}) do copyFrom(child) end
@@ -235,6 +245,7 @@ function Lib.Customize(builtinId)
         end
     end
     overlay(builtinId).enabled = false
+    overlay(builtinId).customizedAs = id
     announce("builtin", builtinId)
     return id
 end
@@ -285,7 +296,8 @@ end
 
 function Lib.AddGroupToSurface(kind, sid, gid, index)
     local s = surface(kind, sid)
-    if not s or not (P().groups[gid] or NS.BuiltIns.groups[gid]) or indexOf(s.groups, gid) then return false end
+    local known = P().groups[gid] or (NS.BuiltIns.groups[gid] and not NS.BuiltIns.groups[gid].parent)
+    if not s or not known or indexOf(s.groups, gid) then return false end
     index = math.max(1, math.min(index or (#s.groups + 1), #s.groups + 1))
     table.insert(s.groups, index, gid)
     if isBuiltin(gid) then s.seenBuiltins[gid] = true end
@@ -315,14 +327,21 @@ function Lib.Prepare()
         p.seeded = true
         result.seeded = true
     end
+    for _, key in ipairs({ "groups", "pads", "dials" }) do
+        for id, v in pairs(p[key]) do
+            if type(v) ~= "table" then p[key][id] = nil result.repaired = result.repaired + 1 end
+        end
+    end
     for _, g in pairs(p.groups) do
+        g.callouts = type(g.callouts) == "table" and g.callouts or {}
         for i = #g.callouts, 1, -1 do
             if not p.callouts[g.callouts[i]] then table.remove(g.callouts, i) result.repaired = result.repaired + 1 end
         end
     end
     for _, set in pairs(surfaces()) do
         for _, s in pairs(set) do
-            s.seenBuiltins = s.seenBuiltins or {}
+            s.seenBuiltins = type(s.seenBuiltins) == "table" and s.seenBuiltins or {}
+            s.groups = type(s.groups) == "table" and s.groups or {}
             for i = #s.groups, 1, -1 do
                 if not exists(s.groups[i]) then table.remove(s.groups, i) result.repaired = result.repaired + 1 end
             end
@@ -335,6 +354,18 @@ function Lib.Prepare()
                     end
                 end
             end
+        end
+    end
+    for kind, set in pairs(surfaces()) do
+        local order = kind == "pad" and p.padOrder or p.dialOrder
+        for i = #order, 1, -1 do
+            if not set[order[i]] then table.remove(order, i) result.repaired = result.repaired + 1 end
+        end
+        local ids = {}
+        for id in pairs(set) do ids[#ids + 1] = id end
+        table.sort(ids)
+        for _, id in ipairs(ids) do
+            if not indexOf(order, id) then order[#order + 1] = id result.repaired = result.repaired + 1 end
         end
     end
     if result.seeded or result.appended > 0 or result.repaired > 0 then

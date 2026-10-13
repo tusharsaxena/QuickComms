@@ -15,7 +15,9 @@ test("profile: behavior defaults match spec §5.1", function()
     assertEqual(b.autoPromote, false)
 end)
 
-test("profile: the collections exist and the id counter is 3 after boot (Prepare seeds a pad and a dial)", function()
+test("profile: collections exist; default nextId is 1, 3 after boot", function()
+    local NS0 = T.newAddon()
+    assertEqual(NS0.C.PROFILE.nextId, 1)
     local NS = T.bootAddon()
     local p = NS.db.profile
     assertEqual(p.nextId, 3)
