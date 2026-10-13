@@ -110,9 +110,16 @@ end
 
 -- ── callouts ────────────────────────────────────────────────────────────────────────────────
 
+Lib.NAME_MAX = 32   -- characters, not bytes: a translated built-in name may be multi-byte
+
+-- UTF-8 characters in `s`: every byte that is not a continuation byte (0x80-0xBF) starts one.
+local function chars(s)
+    return select(2, s:gsub("[^\128-\191]", ""))
+end
+
 local function validCallout(f)
     if type(f) ~= "table" then return false, "badCallout" end
-    if type(f.name) ~= "string" or f.name == "" or #f.name > 32 then return false, "badName" end
+    if type(f.name) ~= "string" or f.name == "" or chars(f.name) > Lib.NAME_MAX then return false, "badName" end
     if type(f.text) ~= "string" then return false, "badText" end
     if not NS.Channels.IsKind(f.channel) then return false, "badChannel" end
     if f.icon ~= nil and type(f.icon) ~= "number" and type(f.icon) ~= "string" then return false, "badIcon" end
@@ -178,7 +185,9 @@ function Lib.AddToGroup(groupId, calloutId, index)
     if isBuiltin(calloutId) then
         local src = NS.BuiltIns.callouts[calloutId]
         if not src then return nil, "noCallout" end
-        id = Lib.CreateCallout({ name = src.name, text = src.text, channel = src.channel, icon = src.icon })
+        local why
+        id, why = Lib.CreateCallout({ name = src.name, text = src.text, channel = src.channel, icon = src.icon })
+        if not id then return nil, why end
     elseif not P().callouts[calloutId] then
         return nil, "noCallout"
     end
@@ -225,7 +234,9 @@ end
 
 --- Copy a top-level built-in into an editable user group, swap it into every surface at the same
 --- place, and turn the built-in off (spec §12.2). Node children are flattened: v0.1.0 has no user
---- nesting, so a customized node battleground keeps every node's callouts in one list.
+--- nesting, so a customized node battleground keeps every node's callouts in one list. A callout
+--- whose copy fails validation is skipped, never inserted as a hole, and counted.
+--- @return string|nil id, string|nil reason, number skipped
 function Lib.Customize(builtinId)
     local def = NS.BuiltIns.groups[builtinId]
     if not def or def.parent then return nil, "notTopLevel" end
@@ -233,8 +244,15 @@ function Lib.Customize(builtinId)
     if prior and P().groups[prior] then return nil, "alreadyCustomized" end
     local id = Lib.CreateGroup({ name = def.name .. " " .. L["(custom)"], icon = def.icon, when = def.when,
         openInto = def.openInto == true })
+    local skipped = 0
     local function copyFrom(gid)
-        for _, cid in ipairs(Lib.Group(gid).callouts) do Lib.AddToGroup(id, cid) end
+        for _, cid in ipairs(Lib.Group(gid).callouts) do
+            local added, why = Lib.AddToGroup(id, cid)
+            if not added then
+                skipped = skipped + 1
+                NS.Debug(TAG, "customize %s: skipped %s (%s)", builtinId, cid, tostring(why))
+            end
+        end
         for _, child in ipairs(NS.BuiltIns.groups[gid].children or {}) do copyFrom(child) end
     end
     copyFrom(builtinId)
@@ -247,7 +265,7 @@ function Lib.Customize(builtinId)
     overlay(builtinId).enabled = false
     overlay(builtinId).customizedAs = id
     announce("builtin", builtinId)
-    return id
+    return id, nil, skipped
 end
 
 -- ── surfaces ────────────────────────────────────────────────────────────────────────────────
@@ -316,21 +334,44 @@ end
 
 local function exists(gid) return P().groups[gid] ~= nil or (NS.BuiltIns.groups[gid] ~= nil and not NS.BuiltIns.groups[gid].parent) end
 
+local REGISTRY = { "callouts", "groups", "builtins", "pads", "dials", "padOrder", "dialOrder" }
+
+-- The registry's top-level keys as tables, and its entries as tables, before anything walks them.
+local function normalize(p, result)
+    for _, key in ipairs(REGISTRY) do
+        if type(p[key]) ~= "table" then p[key] = {} result.repaired = result.repaired + 1 end
+    end
+    for _, key in ipairs({ "callouts", "groups", "builtins", "pads", "dials" }) do
+        for id, v in pairs(p[key]) do
+            if type(v) ~= "table" then p[key][id] = nil result.repaired = result.repaired + 1 end
+        end
+    end
+end
+
+-- nextId above the largest numeric suffix of any user id, so a stale counter never reuses one.
+local function liftNextId(p)
+    local high = 0
+    for _, key in ipairs({ "callouts", "groups", "pads", "dials" }) do
+        for id in pairs(p[key]) do
+            local n = type(id) == "string" and tonumber(id:match("^[cgpd](%d+)$"))
+            if n and n > high then high = n end
+        end
+    end
+    if type(p.nextId) ~= "number" or p.nextId <= high then p.nextId = high + 1 end
+end
+
 --- Seed, append newly shipped built-ins once per surface, and drop dangling ids. Idempotent.
 --- @return table { seeded, appended, repaired }
 function Lib.Prepare()
     local p = P()
     local result = { seeded = false, appended = 0, repaired = 0 }
+    normalize(p, result)
+    liftNextId(p)
     if not p.seeded then
         if #p.padOrder == 0 then Lib.CreateSurface("pad", L["Comms Pad"]) end
         if #p.dialOrder == 0 then Lib.CreateSurface("dial", L["Comms Dial"]) end
         p.seeded = true
         result.seeded = true
-    end
-    for _, key in ipairs({ "groups", "pads", "dials" }) do
-        for id, v in pairs(p[key]) do
-            if type(v) ~= "table" then p[key][id] = nil result.repaired = result.repaired + 1 end
-        end
     end
     for _, g in pairs(p.groups) do
         g.callouts = type(g.callouts) == "table" and g.callouts or {}

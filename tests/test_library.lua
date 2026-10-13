@@ -193,3 +193,64 @@ test("library: MoveInGroup with a nil target returns false", function()
     Lib.AddToGroup(g, c)
     assertFalse(Lib.MoveInGroup(g, 1, nil))
 end)
+
+test("library: [final 2] a built-in whose copy fails validation is refused cleanly, with no hole", function()
+    local NS, Lib, p = boot()
+    NS.BuiltIns.callouts["bi.test.long"] = { name = string.rep("a", 40), text = "x", channel = "party" }
+    local g = Lib.CreateGroup({ name = "G" })
+    local ok = Lib.AddToGroup(g, Lib.CreateCallout({ name = "A", text = "x", channel = "party" }))
+    local id, why = Lib.AddToGroup(g, "bi.test.long", 1)
+    -- red under: `id = Lib.CreateCallout(...)` unchecked in AddToGroup
+    assertNil(id)
+    assertEqual(why, "badName")
+    assertEqual(#p.groups[g].callouts, 1, "nothing inserted")
+    assertEqual(p.groups[g].callouts[1], ok)
+end)
+
+test("library: [final 2] the name cap counts characters, not bytes", function()
+    local _, Lib = boot()
+    local cyrillic = string.rep("\208\150", 20)   -- 20 characters, 40 bytes
+    assertTrue(Lib.CreateCallout({ name = cyrillic, text = "x", channel = "party" }) ~= nil, "20 characters fit")
+    assertTrue(Lib.CreateCallout({ name = string.rep("\208\150", 32), text = "x", channel = "party" }) ~= nil, "32 fit")
+    assertNil((Lib.CreateCallout({ name = string.rep("\208\150", 33), text = "x", channel = "party" })), "33 do not")
+end)
+
+test("library: [final 2] Customize skips a copy that fails and reports it, leaving no hole", function()
+    local NS, Lib, p = boot()
+    local top = NS.BuiltIns.order[1]
+    local first = NS.BuiltIns.groups[top].callouts[1]
+    NS.BuiltIns.callouts[first] = { name = string.rep("a", 40), text = "x", channel = "party" }
+    local id, why, skipped = Lib.Customize(top)
+    assertTrue(id ~= nil, tostring(why))
+    assertEqual(skipped, 1)
+    local list = p.groups[id].callouts
+    for i = 1, #list do assertTrue(p.callouts[list[i]] ~= nil, "slot " .. i) end
+    local n = 0
+    for _ in pairs(list) do n = n + 1 end
+    assertEqual(n, #list, "a sequence, no hole")
+end)
+
+test("library: [final minor 2] Prepare lifts a stale nextId above every existing id", function()
+    local _, Lib, p = boot()
+    p.callouts.c41 = { name = "A", text = "x", channel = "party" }
+    p.groups.g7 = { name = "G", callouts = {}, when = {} }
+    p.nextId = 3
+    Lib.Prepare()
+    -- red under: a Prepare that leaves nextId alone
+    assertTrue(p.nextId >= 42, tostring(p.nextId))
+    assertTrue(Lib.CreateCallout({ name = "B", text = "y", channel = "party" }) ~= "c41")
+    assertEqual(p.callouts.c41.name, "A", "the old callout survived")
+end)
+
+test("library: [final minor 3] Prepare repairs corrupt top-level registry keys and builtins entries", function()
+    local _, Lib, p = boot()
+    p.groups, p.callouts, p.pads, p.padOrder, p.builtins = 5, "x", true, 7, { ["bi.a"] = 3, ["bi.b"] = { enabled = false } }
+    local ok, result = pcall(Lib.Prepare)
+    assertTrue(ok, tostring(result))
+    for _, key in ipairs({ "callouts", "groups", "builtins", "pads", "dials", "padOrder", "dialOrder" }) do
+        assertEqual(type(p[key]), "table", key)
+    end
+    assertNil(p.builtins["bi.a"])
+    assertTrue(p.builtins["bi.b"] ~= nil)
+    assertEqual(result.repaired, 5, "four top-level keys and one builtins entry")
+end)
