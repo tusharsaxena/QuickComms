@@ -18,6 +18,13 @@
 --   popupsShown    every StaticPopup_Show(which, ...) call, in order
 --   ldbObjects     LibDataBroker objects by name; minimapButtons LibDBIcon registrations by name
 --   fireEvent      fireEvent(name, ...) dispatches a game event to AceEvent handlers
+--   blocked        every protected call refused in combat: { frame, call } (ADDON_ACTION_BLOCKED)
+--   sentMacros     every macrotext a secure click ran: { text, at, frame }
+--   stateDrivers   [frame] = { [state] = expression }
+--   cvars          GetCVarBool's answers ("1" is true); ActionButtonUseKeyDown defaults on
+--   playerGUID     UnitGUID("player")
+--   __click(b[, mouseButton])  a full press: the registered down edge, then the up edge
+--   __setCombat(on)            sets inCombat and re-evaluates every visibility driver
 
 local base = dofile("tests/_kit/mock_base.lua")
 
@@ -100,6 +107,225 @@ local function build()
         end,
         GetMinimapButton = function(_, name) return M.minimapButtons[name] end,
     }
+
+    -- ── secure frames (phase 2: the send engine and the Comms Pad) ─────────────────────────────
+    -- The client's protected-frame rules, modeled so a suite sees a refusal instead of trusting
+    -- that none happened (testing-§1, fidelity rules 3 and 5). A frame built from a Secure*
+    -- template is protected, and so is every ancestor below UIParent once it has such a child. In
+    -- combat a PROTECTED call on a protected frame is refused: nothing is applied and the refusal
+    -- is recorded in `blocked`. A click acts on ONE edge, as SecureActionButtonTemplate does: the
+    -- `useOnKeyDown` attribute when set, else the ActionButtonUseKeyDown cvar; hooks still hear
+    -- both edges. Frames under a root whose name starts "QuickComms" get regions of their own (the
+    -- base aliases CreateTexture to the frame itself, its documented divergence) and record
+    -- SetPoint, SetAlpha and SetSize, so a pad's chips, padlocks and flashes can be asserted on.
+    M.blocked      = {}
+    M.sentMacros   = {}
+    M.stateDrivers = {}
+    M.cvars        = { ActionButtonUseKeyDown = "1" }
+    M.playerGUID   = "Player-1-00000001"
+
+    M.GetCVarBool = function(name) return M.cvars[name] == "1" end
+    M.C_CVar      = { GetCVarBool = function(name) return M.cvars[name] == "1" end }
+    M.UnitGUID    = function(unit)
+        if unit == "player" then return M.playerGUID end
+        return nil
+    end
+    M.SOUNDKIT     = { TELL_MESSAGE = 3081 }
+    M.ChatTypeInfo = {
+        PARTY = { r = 0.67, g = 0.67, b = 1.0 }, RAID = { r = 1.0, g = 0.5, b = 0.0 },
+        INSTANCE_CHAT = { r = 1.0, g = 0.5, b = 0.0 }, RAID_WARNING = { r = 1.0, g = 0.28, b = 0.0 },
+        SAY = { r = 1.0, g = 1.0, b = 1.0 }, YELL = { r = 1.0, g = 0.25, b = 0.25 },
+    }
+
+    local function refuse(frame, call)
+        M.blocked[#M.blocked + 1] = { frame = frame, call = call }
+    end
+
+    local PROTECTED_CALLS = { "SetAttribute", "Show", "Hide", "SetShown", "SetPoint", "ClearAllPoints",
+        "SetAllPoints", "SetParent", "SetScale", "SetSize", "SetWidth", "SetHeight", "RegisterForClicks",
+        "EnableMouse", "StartMoving", "SetFrameStrata" }
+
+    local function protect(frame)
+        if frame.__protected then return end
+        frame.__protected = true
+        for _, call in ipairs(PROTECTED_CALLS) do
+            local inner = frame[call]
+            frame[call] = function(self, ...)
+                if M.inCombat then
+                    refuse(self, call)
+                    return self
+                end
+                return inner(self, ...)
+            end
+        end
+    end
+
+    -- A texture or font string of its own. Getters the region does not record answer 0, so a
+    -- library measuring a label gets a number rather than a table.
+    local function region(kind)
+        local r = { __kind = kind, __shown = true }
+        function r:Show() self.__shown = true return self end
+        function r:Hide() self.__shown = false return self end
+        function r:SetShown(v) self.__shown = not not v return self end
+        function r:IsShown() return self.__shown end
+        function r:SetText(v) self.__text = v return self end
+        function r:GetText() return self.__text end
+        function r:SetTexture(v) self.__texture = v return self end
+        function r:SetColorTexture(cr, cg, cb, ca) self.__color = { cr, cg, cb, ca } return self end
+        function r:SetVertexColor(cr, cg, cb, ca) self.__color = { cr, cg, cb, ca } return self end
+        function r:SetTextColor(cr, cg, cb, ca) self.__color = { cr, cg, cb, ca } return self end
+        function r:SetAlpha(a) self.__alpha = a return self end
+        function r:GetAlpha() return self.__alpha or 1 end
+        return setmetatable(r, { __index = function(_, key)
+            if type(key) ~= "string" then return nil end
+            if key:match("^Get") then return function() return 0 end end
+            if key:match("^%u") then return function(self) return self end end
+            return nil
+        end })
+    end
+
+    local function ours(frame)
+        local f = frame
+        while type(f) == "table" do
+            if type(f.__name) == "string" and f.__name:find("^QuickComms") then return true end
+            f = f.__parent
+        end
+        return false
+    end
+
+    local function dress(frame)
+        frame.CreateTexture = function() return region("Texture") end
+        frame.CreateFontString = function() return region("FontString") end
+        frame.__points = {}
+        frame.SetPoint = function(self, point, rel, relPoint, x, y)
+            self.__points[#self.__points + 1] = { point, rel, relPoint, x, y }
+            return self
+        end
+        frame.ClearAllPoints = function(self)
+            self.__points = {}
+            return self
+        end
+        frame.GetPoint = function(self, i)
+            local p = self.__points[i or 1]
+            if not p then return nil end
+            return p[1], p[2], p[3], p[4], p[5]
+        end
+        frame.SetAlpha = function(self, a)
+            self.__alpha = a
+            return self
+        end
+        frame.GetAlpha = function(self) return self.__alpha or 1 end
+        frame.SetSize = function(self, w, h)
+            self.__w, self.__h = w, h
+            return self
+        end
+    end
+
+    local function actsOn(button, down)
+        local useDown = button.__attrs.useOnKeyDown
+        if useDown == nil then useDown = M.cvars.ActionButtonUseKeyDown == "1" end
+        return (down and true or false) == (useDown and true or false)
+    end
+
+    local function secureOnClick(button, _, down)
+        if not actsOn(button, down) then return end
+        local a = button.__attrs
+        if a.type == "macro" and type(a.macrotext) == "string" then
+            M.sentMacros[#M.sentMacros + 1] = { text = a.macrotext, at = M.GetTime(), frame = button }
+        end
+    end
+
+    local secureFrames = {}
+    local baseCreateFrame = M.CreateFrame
+    M.CreateFrame = function(frameType, name, parent, template)
+        local f = baseCreateFrame(frameType, name, parent, template)
+        if ours(f) then dress(f) end
+        if type(template) == "string" and template:find("Secure", 1, true) then
+            if M.inCombat then refuse(f, "CreateFrame") end
+            f.__attrs, f.__clicks = {}, {}
+            f.GetName = function() return name end
+            f.SetAttribute = function(self, key, value)
+                self.__attrs[key] = value
+                return self
+            end
+            f.GetAttribute = function(self, key) return self.__attrs[key] end
+            f.RegisterForClicks = function(self, ...)
+                self.__clicks = { ... }
+                return self
+            end
+            f.__scripts.OnClick = secureOnClick
+            protect(f)
+            local p = parent
+            while type(p) == "table" and p ~= M.UIParent do
+                protect(p)
+                p = p.__parent
+            end
+            secureFrames[#secureFrames + 1] = f
+        end
+        return f
+    end
+    M.__secureFrames = function() return secureFrames end
+
+    M.__click = function(button, mouseButton)
+        mouseButton = mouseButton or "LeftButton"
+        local function registered(edge)
+            for _, c in ipairs(button.__clicks or {}) do
+                if c == "Any" .. edge or c == mouseButton .. edge then return true end
+            end
+            return false
+        end
+        if registered("Down") then button:__fire("OnClick", mouseButton, true) end
+        if registered("Up") then button:__fire("OnClick", mouseButton, false) end
+    end
+
+    -- "[combat] a; b" or "a": the first clause whose condition holds.
+    local function evaluate(expression)
+        for clause in (expression .. ";"):gmatch("([^;]*);") do
+            local c = clause:match("^%s*(.-)%s*$")
+            local cond, value = c:match("^%[(%w+)%]%s*(%S+)$")
+            if cond then
+                if cond == "combat" and M.inCombat then return value end
+            elseif c ~= "" then
+                return c
+            end
+        end
+        return nil
+    end
+
+    -- The driver is the secure environment's own: it shows and hides past the combat refusal.
+    M.__applyStateDrivers = function()
+        for frame, drivers in pairs(M.stateDrivers) do
+            local value = drivers.visibility and evaluate(drivers.visibility)
+            if value == "show" then
+                frame.__shown = true
+            elseif value == "hide" then
+                frame.__shown = false
+            end
+        end
+    end
+
+    M.RegisterStateDriver = function(frame, state, expression)
+        if M.inCombat then
+            refuse(frame, "RegisterStateDriver")
+            return
+        end
+        M.stateDrivers[frame] = M.stateDrivers[frame] or {}
+        M.stateDrivers[frame][state] = expression
+        M.__applyStateDrivers()
+    end
+
+    M.UnregisterStateDriver = function(frame, state)
+        if M.inCombat then
+            refuse(frame, "UnregisterStateDriver")
+            return
+        end
+        if M.stateDrivers[frame] then M.stateDrivers[frame][state] = nil end
+    end
+
+    M.__setCombat = function(on)
+        M.inCombat = on and true or false
+        M.__applyStateDrivers()
+    end
 
     return M
 end

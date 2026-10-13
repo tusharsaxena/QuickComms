@@ -91,6 +91,7 @@ Kit.run{
     dir    = "tests/",
     suites = {
         "test_harness",
+        "test_mock_secure",
         "test_bus",
         "test_surface_parity",
         "test_setup",

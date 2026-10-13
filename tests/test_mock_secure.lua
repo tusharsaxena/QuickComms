@@ -1,0 +1,119 @@
+-- tests/test_mock_secure.lua — the secure-frame half of tests/wow_mock.lua (testing-§1 fidelity):
+-- a protected call refused in combat is RECORDED in m.blocked, never silently applied; a click acts
+-- on one edge, as SecureActionButtonTemplate does; a visibility state driver follows combat.
+
+local T = _G.QUICKCOMMS_TEST
+local test, assertEqual, assertTrue, assertFalse, assertNil =
+    T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
+
+local function secureButton(m, parent)
+    local b = m.CreateFrame("Button", "QCMockSend", parent or m.UIParent, "SecureActionButtonTemplate")
+    b:RegisterForClicks("AnyUp", "AnyDown")
+    return b
+end
+
+test("mock: a secure button keeps its attributes and answers its name", function()
+    local _, m = T.newAddon()
+    local b = secureButton(m)
+    b:SetAttribute("type", "macro")
+    assertEqual(b:GetAttribute("type"), "macro")
+    assertEqual(b:GetName(), "QCMockSend")
+end)
+
+test("mock: SetAttribute in combat is refused and recorded, never applied", function()
+    local _, m = T.newAddon()
+    local b = secureButton(m)
+    m.inCombat = true
+    b:SetAttribute("macrotext", "/p x")
+    assertNil(b:GetAttribute("macrotext"))
+    assertEqual(#m.blocked, 1)
+    assertEqual(m.blocked[1].call, "SetAttribute")
+end)
+
+test("mock: a secure child protects its ancestors in combat, and only them", function()
+    local _, m = T.newAddon()
+    local root = m.CreateFrame("Frame", "QCMockRoot", m.UIParent)
+    local other = m.CreateFrame("Frame", "QCMockOther", m.UIParent)
+    secureButton(m, root)
+    m.inCombat = true
+    root:Hide()
+    other:Hide()
+    assertTrue(root:IsShown(), "the protected parent stays shown")
+    assertFalse(other:IsShown(), "a plain frame still hides in combat")
+    assertEqual(#m.blocked, 1)
+    assertEqual(m.blocked[1].call, "Hide")
+end)
+
+test("mock: a click acts once, on the edge the cvar names, and hooks hear both edges", function()
+    local _, m = T.newAddon()
+    local b = secureButton(m)
+    b:SetAttribute("type", "macro")
+    b:SetAttribute("macrotext", "/p hello")
+    local edges = {}
+    b:HookScript("OnClick", function(_, _, down) edges[#edges + 1] = down end)
+    m.__click(b)
+    assertEqual(#m.sentMacros, 1)
+    assertEqual(m.sentMacros[1].text, "/p hello")
+    assertEqual(#edges, 2, "the hook hears both edges")
+    m.cvars.ActionButtonUseKeyDown = "0"
+    m.__click(b)
+    assertEqual(#m.sentMacros, 2, "acting on key-up also sends once")
+end)
+
+test("mock: the useOnKeyDown attribute wins over the cvar", function()
+    local _, m = T.newAddon()
+    local b = secureButton(m)
+    b:SetAttribute("type", "macro")
+    b:SetAttribute("macrotext", "/p a")
+    b:SetAttribute("useOnKeyDown", false)
+    local acted = {}
+    b:HookScript("OnClick", function(_, _, down) acted[#acted + 1] = #m.sentMacros .. tostring(down) end)
+    m.__click(b)
+    -- red under: drop the attribute branch from actsOn in tests/wow_mock.lua
+    assertEqual(table.concat(acted, ","), "0true,1false", "sent on the up edge")
+end)
+
+test("mock: a button with no macrotext sends nothing", function()
+    local _, m = T.newAddon()
+    m.__click(secureButton(m))
+    assertEqual(#m.sentMacros, 0)
+end)
+
+test("mock: a visibility state driver follows combat", function()
+    local _, m = T.newAddon()
+    local root = m.CreateFrame("Frame", "QCMockRoot", m.UIParent)
+    m.RegisterStateDriver(root, "visibility", "[combat] show; hide")
+    assertFalse(root:IsShown())
+    m.__setCombat(true)
+    assertTrue(root:IsShown())
+    m.__setCombat(false)
+    assertFalse(root:IsShown())
+    m.RegisterStateDriver(root, "visibility", "show")
+    assertTrue(root:IsShown())
+end)
+
+test("mock: registering a state driver in combat is refused", function()
+    local _, m = T.newAddon()
+    local root = m.CreateFrame("Frame", "QCMockRoot", m.UIParent)
+    m.inCombat = true
+    m.RegisterStateDriver(root, "visibility", "hide")
+    assertEqual(#m.blocked, 1)
+    assertTrue(root:IsShown())
+end)
+
+test("mock: frames under a QuickComms-named root get regions and points of their own", function()
+    local _, m = T.newAddon()
+    local root = m.CreateFrame("Frame", "QuickCommsPadTest", m.UIParent)
+    local tex = root:CreateTexture()
+    assertTrue(tex ~= root, "a distinct region")
+    tex:Hide()
+    assertTrue(root:IsShown(), "hiding the region leaves the frame alone")
+    root:SetPoint("TOPLEFT", m.UIParent, "TOPLEFT", 5, -6)
+    local p, _, rp, x, y = root:GetPoint(1)
+    assertEqual(p, "TOPLEFT")
+    assertEqual(rp, "TOPLEFT")
+    assertEqual(x, 5)
+    assertEqual(y, -6)
+    root:SetAlpha(0.4)
+    assertEqual(root:GetAlpha(), 0.4)
+end)
