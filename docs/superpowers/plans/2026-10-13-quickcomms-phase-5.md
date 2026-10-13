@@ -182,7 +182,7 @@ Each milestone ends green and is a resume point: the plan's checkboxes and `git 
 | R3 | Spec 1480. `defaults/GameIds.lua` notes the Devourer spec as "confirmed in game with the rest in phase 5". This plan matches it against ChrSpecialization (`tools/derive-gameids.py`: spec 1480 is class 12's Devourer) and checks it in game in IDS-1. Is that the phase 5 confirmation, with the note reworded to "matched; in game IDS-1" until Task 14 records a pass? | Yes | Task 6 (the header), Task 11 (IDS-1) |
 | R4 | Sporefall (map 1592). The journal's Current Season tier lists it as a raid-type map under the same launch condition as the three raids, but its journal text reads as a Harandar encounter rather than a tier raid, and nothing headless says which. Leave it out of `G.RAIDS` (the generator prints it as NOT SHIPPED and IDS-1 asks the owner to look), or ship it as a fourth raid? | Leave it out; IDS-1 checks it | Task 6 (`G.RAIDS`, the test's count), Task 11 (IDS-1) |
 
-Rulings recorded: R1 ____ · R2 ____ · R3 ____ · R4 ____
+Rulings recorded (2026-10-13, at the recommended answers, the owner having asked that only unavoidable questions be put to them): R1 reading 1 · R2 (a) five nodes · R3 yes · R4 left out, IDS-1 checks it
 
 ## Standard deviations to raise
 
