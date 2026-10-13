@@ -1,7 +1,9 @@
 local _, NS = ...
 -- defaults/BuiltIns_Battlegrounds.lua — the generic battleground set and one set per
--- battleground (spec §12). Faction-neutral wording (D11). Matched on instanceID; the IDs below
--- are confirmed or corrected by the phase 0 harness (/qcs where, round-4 record). Node
+-- battleground (spec §12). Faction-neutral wording (D11). Matched on instanceID (the client's Map
+-- id); every id below is a battleground map in the client's own Map table (build 12.1.5.70340,
+-- matched by tools/derive-gameids.py and tests/test_gameids.lua); in-game confirmation is smoke check
+-- BG-2. Node
 -- battlegrounds nest one ring per node with INC 1/2/3/Many/Clear/Help and open into their ring.
 -- The generic set is declared last, below every per-battleground set.
 

@@ -13,7 +13,7 @@ ignore:
   - .playwright-mcp  # dev-only browser-tool scratch: present in local checkouts (git-ignored), never shipped
   - docs             # holds docs/brainstorm/, docs/superpowers/ and the record stores too
   - tests
-  # - tools          # ONLY once the repo HAS a tools/ (layout-§1); it has none today
+  - tools            # dev-only generators (layout-§1): the client-data derivations, Python; never loaded
   - CLAUDE.md        # contributor documentation; README.md and LICENSE ship
   - DEPENDENCIES.md
   - media/logos/*.png   # the editable logo source (layout-§4): committed, never loadable, never shipped

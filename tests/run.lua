@@ -109,6 +109,7 @@ Kit.run{
         "test_share",
         "test_resolver",
         "test_builtins",
+        "test_gameids",
         "test_library",
         "test_members",
         "test_editors",
