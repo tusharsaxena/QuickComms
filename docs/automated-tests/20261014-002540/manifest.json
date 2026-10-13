@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "addon": "QuickComms",
+  "addonVersion": "0.1.0",
+  "run": "20261014-002540",
+  "startedAt": "2026-10-14T00:25:40+05:30",
+  "durationMs": 16717,
+  "label": "phase-5-release-gate",
+  "release": null,
+  "git": { "sha": "6cc22bebe33c978c686208949fff34e940027f1c", "branch": "feat/phase-5-share-release", "dirty": false },
+  "host": { "lua": "Lua 5.1.5  Copyright (C) 1994-2012 Lua.org, PUC-Rio", "luacheck": "Luacheck: 1.2.0", "lizard": "1.24.0", "timingSource": "date +%s%3N" },
+  "suites": {
+    "lint": { "status": "pass", "durationMs": 1078, "warnings": 0, "errors": 0, "files": 109, "gating": true, "gates": { "commit": true, "release": true } },
+    "tests": { "status": "pass", "durationMs": 11683, "passed": 686, "failed": 0, "skipped": 1, "total": 687, "gating": true, "gates": { "commit": true, "release": true } },
+    "perf": { "status": "pass", "durationMs": 439, "scenarios": 6, "gating": false, "gates": { "commit": false, "release": true } },
+    "complexity": { "status": "pass", "durationMs": 2681, "warnings": 0, "maxCcn": 15, "nloc": 19073, "functions": 2364, "avgCcn": 2.5, "avgNloc": 7.2, "avgToken": 65.1, "warnFunRatio": 0.00, "warnNlocRatio": 0.00, "bandFiles": 1, "overCapFiles": 0, "blindFiles": 0, "gating": false, "gates": { "commit": false, "release": true } }
+  },
+  "verdict": "green"
+}

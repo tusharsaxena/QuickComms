@@ -1,0 +1,689 @@
+  PASS  harness: the addon's file list is the TOC's, Namespace first and Profiles last
+  PASS  harness: every LibKa0s file comes from LibKa0s.xml, in its order
+  PASS  harness: every adopted LibKa0s module is the live library, not its stub
+  PASS  toc: the fixed field order, a single Retail Interface line and the X-Standard field
+  PASS  toc: the icon is the 128x128 logo, and the file exists
+  PASS  toc: OptionalDeps names only vendored libraries, and no hard Dependencies
+  PASS  toc: the landing-page logo exists beside the launcher icon (layout-§4)
+  PASS  repo: no stored copy of the context pack (documentation-§3, anti-pattern #49)
+  PASS  repo: the root doc set is README, the CLAUDE stub, DEPENDENCIES and LICENSE
+  PASS  repo: every authored file opens with the bootstrap and a comment naming its path
+  PASS  repo: the .pkgmeta has no externals and ignores the dev-only entries
+  PASS  mock: a secure button keeps its attributes and answers its name
+  PASS  mock: SetAttribute in combat is refused and recorded, never applied
+  PASS  mock: a secure child protects its ancestors in combat, and only them
+  PASS  mock: a click acts once, on the edge the cvar names, and hooks hear both edges
+  PASS  mock: the useOnKeyDown attribute wins over the cvar
+  PASS  mock: a button with no macrotext sends nothing
+  PASS  mock: a visibility state driver follows combat
+  PASS  mock: registering a state driver in combat is refused
+  PASS  mock: frames under a QuickComms-named root get regions and points of their own
+  PASS  mock: a [nocombat] visibility driver shows out of combat and hides in it
+  PASS  mock: a state-driver condition the mock does not model raises, never skips
+  PASS  mock: a region answers IsVisible as it answers IsShown
+  PASS  mock: moving, levels, movable and clamping are refused in combat on a protected frame
+  PASS  mock: [phase 4] a header's _onclick runs as a snippet, and its globals persist between snippets
+  PASS  mock: [phase 4] in combat a snippet may show a protected frame; insecure code may not
+  PASS  mock: [phase 4] the restricted-only handle calls raise outside a snippet
+  PASS  mock: [phase 4] a wrap's pre snippet can suppress a click, and its message runs the post snippet
+  PASS  mock: [phase 4] a wrap after an OnClick hook raises (the client's wrap discards the hook)
+  PASS  mock: [phase 4] a snippet's key binding routes a key press to a named button until it is cleared
+  PASS  mock: [phase 4] override bindings are refused in combat; a press clicks the bound frame by name
+  PASS  mock: [phase 4] a header's Show and Hide fire OnShow and OnHide on a change; Execute is refused in combat
+  PASS  mock: [phase 4] the cursor and a frame's center are numbers a suite can set
+  PASS  mock: [final 19] a header's OnShow hook runs insecure: a protected call it makes in combat is blocked
+  PASS  mock: [final 2] two owners binding one key: the newest wins, and clearing it hands the key back
+  PASS  bus: every spec §17 message is declared with its exact name
+  PASS  bus: no two constants share a name
+  PASS  parity: the degraded load really is library-absent, and the live one is not
+  PASS  parity: the Core seam's namespace surface survives the library's absence
+  PASS  parity: the DebugLog stub carries the whole live surface
+  PASS  parity: the Slash stub carries the whole live surface
+  PASS  parity: the Slash stub's one library string is the library's, byte for byte
+  PASS  parity: the Options helpers stub carries the whole live surface
+  PASS  parity: the Schema host stub's instance carries the whole live instance surface
+  PASS  parity: the Schema host stub carries the library's own members
+  PASS  parity: the Launcher stub carries the whole live surface
+  PASS  parity: the Lifecycle stand-in carries every member of the live latch
+  PASS  parity: the Bus stand-in carries every member of the live bus
+  PASS  parity: the Pool stub carries the LibKa0s-Pool-1.0 surface this addon calls
+  PASS  parity: the Perf stub carries every Perf member the addon reaches
+  PASS  parity: the Env seam publishes the same NS members on both paths
+  PASS  parity: the Media seam publishes the same NS members on both paths
+  PASS  core: NS.Print is NS.Util.print after AceConsole's embed (architecture-§2)
+  PASS  core: the printer tags every line with the cyan [QC] prefix
+  PASS  core: the degraded printer says the library is missing once, then tags every line
+  PASS  core: the close-button wrapper passes the addon folder as the third argument
+  PASS  core: no file but the wrapper calls a close-button factory directly
+  PASS  media: FONT_MONO is the shipped face live, and a real client font degraded
+  PASS  env: the version falls back to the in-code constant when the TOC cannot be read
+  PASS  bus: every catalog name is Ka0s_QuickComms_<Event>, and the copy is strict
+  PASS  bus: a tracked target's registrations come down with the stand-down and back with the stand-up
+  PASS  bus: a profile switch sends PROFILE_CHANGED once
+  PASS  perf: every declared bucket has a bracket, and every bracket a declared bucket
+  PASS  perf: [audit QC-12] every bucket key is lowerCamelCase, named for the path it times (naming-cheatsheet)
+  PASS  perf: the live harness is built, and the stub answers the perf verb
+  PASS  perf: the `perf` hold stands the addon down, and the verbs keep answering
+  PASS  perf: the descriptor's SavedVariables global is declared in the TOC
+  PASS  launcher: one object, labeled with the brand, the logo as its icon, registered on enable
+  PASS  launcher: the right-click menu is Enabled, Locked and Test mode
+  PASS  launcher: Enabled calls the same handler `/qc disable` calls
+  PASS  launcher: degraded, Register says once that there is no minimap button
+  PASS  options: the category registers eagerly, with the General page under it
+  PASS  options: the General page's first group is exactly `Master controls`
+  PASS  options: the degraded load completes, and the panel says once that it is unavailable
+  PASS  libs: [phase 5] LibDeflate and LibSerialize are vendored, TOC-listed and loaded before the addon
+  PASS  perf: [phase 5] a refresh notes situationRefresh, and each plan resolverResolve inside bakeSurface
+  PASS  perf: [review] a refresh whose signature moves notes situationRefresh before the rebuild it publishes
+  PASS  perf: [phase 5] the Comms Dial page's Preview notes neither bakeSurface nor resolverResolve
+  PASS  database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
+  PASS  database: the target is the last step's `to`, and the steps climb in order
+  PASS  database: the runner is idempotent, and a stored stamp at the target runs no step
+  PASS  database: a step that raises leaves the stamp where it was
+  PASS  database: a perProfile step runs once for every stored profile
+  PASS  database: [phase 4] step 2 moves the generic battleground set below the per-battleground sets
+  PASS  database: the profile defaults carry the Master controls value, and no debug flag
+  PASS  profile: behavior defaults match spec §5.1
+  PASS  profile: collections exist; default nextId is 1, 3 after boot
+  PASS  profile: every behavior row resolves through the seam
+  PASS  profile: the spam guard clamps to 0.6-2.0 and fallback refuses unknown values
+  PASS  profile: schema version target is 2 (phase 4: the battleground order)
+  PASS  schema: every row validates against the defaults
+  PASS  schema: a stored row whose path has no default is counted, not passed vacuously
+  PASS  schema: the Minimap button row's backing key resolves against the global defaults
+  PASS  schema: the Master controls rows are the framed canonical set, in the canonical order
+  PASS  schema: NS.Setting reads through the seam, and answers the default before the db exists
+  PASS  schema: a page's rows are the rows whose page is its key
+  PASS  schema: an unknown path is refused and stores nothing
+  PASS  schema: the Minimap button row inverts onto LibDBIcon's own hide, with no shown key
+  PASS  schema: neither reset touches the minimap button (launcher-§3)
+  PASS  schema: Reset all asks first, through the confirmation popup
+  PASS  schema: [audit QC-04] the global reset takes every created member back to a fresh profile, and only this one
+  PASS  schema: [audit QC-01] the reset confirmation is options-ui-§12's sentence, verbatim
+  PASS  schema: degraded, `enabled` is written through and still reacts
+  PASS  schema: degraded, a row-less path not in the list is still refused
+  PASS  schema: [fix wave] the Behavior rows that rebuild the pads resolve Settings.RebuildSurfaces when they run
+  PASS  schema: [audit QC-13] the panel's color codec is written out for the stored { r, g, b, a } shape
+  PASS  schema: [phase 3] a fresh profile has no row off its default; the member rows are not counted
+  PASS  slash: NS.COMMANDS is positional triples, every reserved verb present
+  PASS  slash: `diagnostics` has no alias of any kind (debug-logging-§14)
+  PASS  slash: both chat commands are registered through AceConsole, and both dispatch
+  PASS  slash: the bare command opens the settings panel
+  PASS  slash: enable and disable write `enabled` through the seam and move the latch
+  PASS  slash: `perf` is the addon's verb and prints the harness's lines
+  PASS  slash: `reset` with no path explains itself rather than resetting everything
+  PASS  slash: `debug on` turns logging on without opening the console
+  PASS  slash: degraded, enable and disable still work and the CLI names the missing library
+  PASS  slash: [audit QC-05] degraded, `debug on`/`off` flip the flag and ack, and `debug diagnostics` routes
+  PASS  slash: [phase 3] `why` prints each built pad and why its groups show
+  PASS  slash: [phase 4] `why` covers the dials too
+  PASS  slash: [final 16] `why` with nothing built speaks of pads and dials
+  PASS  slash: [final 9] test and preview's help, and the Preview as row, speak of the dials too
+  PASS  disabled 1: enabled, the addon registers exactly the events it declares
+  PASS  disabled 2: through /qc disable, nothing is registered, heard or scheduled
+  PASS  disabled 2: through the write seam, nothing is registered, heard or scheduled
+  PASS  disabled 3: no SavedVariables write from a game event while disabled
+  PASS  disabled 4: every reserved verb keeps answering while disabled
+  PASS  disabled 5: a feature verb answers with the one refusal line and does nothing
+  PASS  disabled 6: the stand-up re-registers from current state and replays the receivers
+  PASS  disabled 7: a disabled profile loads stood down, with nothing registered
+  PASS  disabled 8: the launcher's Enabled entry stays live while disabled
+  PASS  disabled: [final 1] every feature event is declared once (AceEvent keeps one handler per event)
+  PASS  disabled [§7 step 1]: enabled, the registration set holds events and messages, and the surfaces are drawn
+  PASS  disabled [§7 steps 2-4]: through the seam, nothing stays registered, events or messages, and nothing is armed
+  PASS  disabled [§7 step 5]: every surface frame that was drawn is hidden
+  PASS  disabled [§7 step 6]: every event and message in R_on, fired anyway, runs nothing, writes, prints and shows nothing
+  PASS  disabled [§7 step 7]: every NS.COMMANDS entry and the bare /qc: reserved verbs answer, feature verbs refuse once and write nothing
+  PASS  disabled [§7 step 8]: the launcher's left-click opens the panel and its menu grays every entry but Enabled
+  PASS  disabled [§7 step 9]: re-enabled, R_on comes back; a setting changed while disabled is what the stand-up builds
+  PASS  disabled [§7 step 10]: the library latch: perf, then disabled; perf released first leaves it down
+  PASS  disabled [§7 step 10]: the library latch: disabled, then perf; enabled first leaves it down
+  PASS  disabled [§7 step 10]: the stand-in latch: perf, then disabled; perf released first leaves it down
+  PASS  disabled [§7 step 10]: the stand-in latch: disabled, then perf; enabled first leaves it down
+  PASS  diagnostics: the sections are the addon's, in report order
+  PASS  diagnostics: the report names the schema, the profile, the holds and the launcher
+  PASS  diagnostics: it runs while stood down and says so, without acting
+  PASS  diagnostics: `enabled` is always listed, and a hidden minimap button is listed
+  PASS  diagnostics: the situation and library sections report the snapshot and the registry
+  PASS  diagnostics: [final 1] the restriction section names the active reasons and canSendChat
+  PASS  diagnostics: the surfaces and send sections name the pads, the armed chips and the guard
+  PASS  diagnostics: [phase 3] the surfaces section names the preview
+  PASS  diagnostics: [final 21] the settings section lists no member row
+  PASS  diagnostics: [phase 4] the dials and bindings sections name each dial, its key and the override bindings
+  PASS  compat: plain readers pass plain values and drop secrets
+  PASS  compat: InstanceInfo with a secret instanceID reads nil, never raises
+  PASS  compat: InstanceInfo during a loading screen (all nil) reads safely
+  PASS  compat: [final] an empty-string realm falls back to the normalized realm name
+  PASS  compat: UseKeyDown reads the cvar, and defaults on when it cannot
+  PASS  compat: SenderIsPlayer answers by GUID, then by name, and nil when it cannot read either
+  PASS  compat: [fix wave] SenderIsPlayer: a cross-realm namesake is not the player; an unreadable realm is unknown
+  PASS  compat: ChatColor reads the client's chat colors and declines what it cannot read
+  PASS  compat: [phase 3] InstanceName reads the client's name; a secret, empty or missing one is nil
+  PASS  compat: [phase 3] SpecInfoByID and ClassName read display names; secret or missing ones are nil
+  PASS  compat: [phase 4] BindingAction reads the player's WoW binding; none, a secret or a missing API is nil
+  PASS  compat: [final 7] BindingLabel reads the menu's name for an action; [final 8] BindingKey a command's key; secrets are nil
+  PASS  restrictions: nothing restricted, everything allowed and nothing announced
+  PASS  restrictions: an encounter stops chat and is the reason; its lift is announced
+  PASS  restrictions: a lift the client does not confirm yet keeps the restriction
+  PASS  restrictions: the event's boolean payload is read too
+  PASS  restrictions: each type gives its reason; Map blocks nothing
+  PASS  restrictions: the reason is the highest in priority
+  PASS  restrictions: a type the client adds later is reported by name and blocks nothing
+  PASS  restrictions: the chat lockdown stops chat, a secret answer too
+  PASS  restrictions: the combat edges set InCombat, ahead of the client's flag
+  PASS  restrictions: before any edge, the client's combat flag decides
+  PASS  restrictions: combat under an encounter announces the change of what is allowed
+  PASS  restrictions: a secret payload never raises; a secret state reads as active
+  PASS  restrictions: a client without the restriction APIs restricts nothing but combat
+  PASS  restrictions: Refresh announces a lift no event reported
+  PASS  restrictions: stood down, nothing is heard; the stand-up announces what is in effect
+  PASS  restrictions: [final 1] a lockdown lifting under a higher one is announced
+  PASS  situation: classifier truth table (content, group)
+  PASS  situation: non-table input classifies as open world solo
+  PASS  situation: difficulty names by id
+  PASS  situation: key level and map only inside M+
+  PASS  situation: signature ignores combat and lockdown
+  PASS  situation: RefreshNow sends SITUATION_CHANGED only when the signature moves
+  PASS  situation: Refresh coalesces a burst into one read
+  PASS  situation: ReadInputs survives a loading screen
+  PASS  situation: stand-down cancels a pending coalesced refresh
+  PASS  situation: snapshot.lockdown mirrors Restrictions.ActiveSet
+  PASS  situation: [final 1] a restriction or combat edge after the refresh reaches Current()
+  PASS  situation: [final 1] Current() before the first refresh reads the combat edge
+  PASS  situation: [final 1] stood down, the receiver is down; stood up, it hears again
+  PASS  situation: [final 1] on the degraded bus the module takes its own receiver down and up
+  PASS  situation: [final 1b] both combat edges reach Current() even under the Combat restriction type
+  PASS  tokens: target and focus become engine tokens and count as live
+  PASS  tokens: raid markers by number and name, any case
+  PASS  tokens: group tokens map to {gN}
+  PASS  tokens: baked values come from ctx; absent ones are missing
+  PASS  tokens: spell links bake through ctx.spellLink; unknown ids are missing
+  PASS  tokens: unknown chips stay as typed and are reported
+  PASS  tokens: typed %t and %f count as live, chips are not double counted
+  PASS  tokens: non-string text expands to empty
+  PASS  channels: smartGroup prefers instance, then raid, then party
+  PASS  channels: smartGroup solo follows the fallback
+  PASS  channels: smartLead is RW for raid leader/assist and in a home party
+  PASS  channels: fixed kinds pass through; unknown kinds refuse
+  PASS  channels: the whisper kinds are not kinds (owner, issue #7)
+  PASS  channels: prefixes and chat types
+  PASS  channels: the lock matrix
+  PASS  channels: [phase 5] the lock matrix has no row for an unknown channel, and reads a missing snapshot as solo
+  PASS  bake: a plain callout bakes to prefix + text
+  PASS  bake: [review 1] a leading slash is refused, even after whitespace
+  PASS  bake: [review 1] newlines and control characters flatten to one line
+  PASS  bake: pipes are escaped, spell links are not
+  PASS  bake: [final minor 5] the 255-byte boundary counts the whole line: prefix, space, text, live tokens
+  PASS  bake: empty or whitespace-only text is refused
+  PASS  bake: solo smart callouts follow the fallback
+  PASS  bake: the lock rides along without blocking the bake
+  PASS  bake: unknown channel and non-table callout refuse
+  PASS  bake: baked token values are sanitized; spell links are not
+  PASS  bake: a typed %t counts as live
+  PASS  bake: [phase 5] CleanText is the sanitizer short of the escape; Sanitize is CleanText, then the escape
+  PASS  share: a string is !QC1! then printable text, and decodes back to the same payload
+  PASS  share: [review 1] a pasted string may wrap and carry spaces; a cut-short one is damaged and imports nothing
+  PASS  share: a string that is not ours, is empty, is garbage after the prefix or is too large is refused
+  PASS  share: a newer version is refused with a line to update; a damaged version is refused
+  PASS  share: [review 2] a command or control characters never survive: / is refused, lines are flattened
+  PASS  share: ids, channels, names, icons and Whens are checked against the schema
+  PASS  share: a pad keeps the shared groups and the built-in sets, and only the fields that travel
+  PASS  share: the report counts what arrives, then names each member left out and why
+  PASS  share: more members than one string may carry is refused before any is checked
+  PASS  share: [review 1] a hand-made string with a NaN reference, a cyclic field or an infinite icon raises nothing
+  PASS  share: [review 1] a payload that still raises inside the checks is damaged, never an error
+  PASS  share: [review 2] a surface's string fields pass the sanitizer; an empty string is kept for the seam to judge
+  PASS  share: SHARE-3's and SHARE-4's strings (docs/smoke-tests.md) read as the checks say
+  PASS  share: [review 1] a short string that inflates past MAX_RAW is damaged before it is read
+  PASS  share: [fix 1] a shared-reference When or field is refused at once, never expanded
+  PASS  share: [fix 1] one table shared across many fields is bounded by MAX_NODES: the string is too large
+  PASS  share: [fix 2] one long string referenced 2000 times in a field is refused unread, promptly
+  PASS  share: [fix 2] a long name, text or icon is refused unread, promptly
+  PASS  share: [fix 2] shared short strings past the payload's text budget make the string too large
+  PASS  share: [review] a refused member's malformed id never reaches the report raw: no newline, no live escape
+  PASS  share: [review] a 200 KB malformed id gives a short report line
+  PASS  share: [review] a name's live | escape is stored and reported as text (||), as a typed | is
+  PASS  share: [review] a name that starts with / is a name, never sent: it travels and round-trips
+  PASS  share: [review] a nested key in a When or a field passes the sanitizer and the byte budget
+  PASS  resolver: an empty When always matches
+  PASS  resolver: each row matches and fails on its own
+  PASS  resolver: rows AND, values OR, empty rows ignored
+  PASS  resolver: keyLevel never matches outside M+
+  PASS  resolver: ActiveGroups unions enabled matches
+  PASS  resolver: SurfaceOrder keeps the surface's order; autoPromote floats narrower groups
+  PASS  resolver: Explain names the matched rows
+  PASS  resolver: [final] a non-number keyLevel bound is unset, never raises
+  PASS  builtins: the expected top-level sets exist in order
+  PASS  builtins: ids are unique, referenced and well formed
+  PASS  builtins: only top-level groups are in the order, and every top-level group is
+  PASS  builtins: node sets open into their ring and nest one level
+  PASS  builtins: bake audit, every callout bakes under its set's snapshot
+  PASS  builtins: battlegrounds use smart group; arena uses party; raid lead uses smart lead
+  PASS  builtins: [phase 5] every node set pins each node to a wind, at most eight, Deepwind Gorge's five included
+  PASS  game ids: every battleground set matches only battleground maps, and no map is two sets'
+  PASS  game ids: the shipped dungeons are Mythic+ dungeons and the shipped raids are raids
+  PASS  library: Prepare seeds one pad and one dial with every built-in, once
+  PASS  library: callouts validate on create
+  PASS  library: whisper channels are refused (owner, issue #7)
+  PASS  library: [review 4] deleting a shared callout clears every group
+  PASS  library: [review 4] deleting a group clears every surface
+  PASS  library: adding a built-in callout copies it (P2)
+  PASS  library: [review 4] Customize swaps the copy in place; deleting the copy puts the set back, on
+  PASS  library: hidden built-in callouts drop out of the merged group
+  PASS  library: [review 5] a newly shipped built-in is appended once; a removed one stays removed
+  PASS  library: Prepare repairs dangling ids
+  PASS  library: AllGroups is top-level only and merges the overlay
+  PASS  library: every mutation announces LIBRARY_CHANGED
+  PASS  library: overlay writers resolve child ids to the top-level overlay
+  PASS  library: Customize twice is refused until the copy is deleted
+  PASS  library: Customize copies openInto and flattens node callouts
+  PASS  library: Prepare survives malformed groups and surfaces
+  PASS  library: Prepare repairs the order lists
+  PASS  library: MoveInGroup with a nil target returns false
+  PASS  library: [final 2] a built-in whose copy fails validation is refused cleanly, with no hole
+  PASS  library: [final 2] the name cap counts characters, not bytes
+  PASS  library: [final 2] Customize skips a copy that fails and reports it, leaving no hole
+  PASS  library: [final minor 2] Prepare lifts a stale nextId above every existing id
+  PASS  library: [final minor 3] Prepare repairs corrupt top-level registry keys and builtins entries
+  PASS  library: SetSurfacePoint stores a copy of a plain anchor, announces it, and nil clears it
+  PASS  library: SetSurfacePoint refuses an unknown surface or a malformed anchor, and stores nothing
+  PASS  library: [phase 3] DuplicateCallout copies every field under a '(copy)' name
+  PASS  library: [phase 3] a copy's name stays within the 32-character cap, counted in characters
+  PASS  library: [phase 3] DuplicateGroup shares the callouts (D8) and copies the When, on no surface
+  PASS  library: [phase 3] CreateGroup keeps only existing user callouts, and validates the When
+  PASS  library: [phase 3] OfferGroup puts a user group first on every pad and dial, once
+  PASS  library: [phase 3] MoveGroupOnSurface reorders a surface's groups and announces it
+  PASS  library: [phase 3] Member answers the live member of each kind, and a built-in group's copy
+  PASS  library: [phase 3] Touch announces the member it is handed, and the field
+  PASS  library: [phase 3] MemberIds lists each kind in its picker's order
+  PASS  library: [phase 3] Customize shortens a long set name instead of refusing it
+  PASS  library: [phase 3] Customize changes nothing when the copy cannot be made
+  PASS  library: [phase 3] ValidWhen accepts every shipped When and refuses bad shapes
+  PASS  library: [final] a surface's offsets are bounded at its smallest scale, not at 1
+  PASS  library: [phase 3] the point, icon and hidden-set validators
+  PASS  library: [phase 3] every member template holds a value at every field
+  PASS  library: [phase 3] Batch holds the announces and sends one per kind it touched
+  PASS  library: [final 8] a set on no surface is customized onto none, and Customize says how many it reached
+  PASS  library: [final 24] Customize puts the copy in the set's place on every pad and dial
+  PASS  library: [final 1] Customize, AddToGroup with a built-in, and OfferGroup each send one LIBRARY_CHANGED
+  PASS  library: [final 1] one Customize click rebuilds the pads once
+  PASS  library: [final 2] ValidWhen refuses a value its row can never match, and names the row and value
+  PASS  library: [phase 4] keys: upper-cased, none is false; what the open dial uses is reserved
+  PASS  library: [final 3] a key is one base key with known modifiers, none twice; a bare or dangling modifier is no key
+  PASS  library: [final 4] modifiers are stored in the client's order, ALT-CTRL-SHIFT-META
+  PASS  library: [phase 4] the generic battleground set moves below the per-battleground sets, once
+  PASS  library: [phase 5] Import makes every member under a fresh id, its references pointing at the copies
+  PASS  library: [review 3] importing the same string twice makes two copies; nothing that existed changes
+  PASS  library: [review 4] an imported pad and dial arrive unbound: no key, the default place, no built-in re-added
+  PASS  library: [review] an imported Look keeps a bool a bool and a color its four channels
+  PASS  library: [phase 5] Import is one act: one LIBRARY_CHANGED; a refused result imports nothing
+  PASS  library: [phase 5] Prepare gives a pad saved before the Look groups every field it lacks
+  PASS  members: a callout field is written through the seam by instance id, and announced once
+  PASS  members: with no id the seam writes the selected member, else the first the page lists, else refuses
+  PASS  members: [review 5] a bad name or channel is refused with its reason and stores nothing
+  PASS  members: an icon typed as digits is stored as a texture id; empty text clears it
+  PASS  members: [review 4] a built-in group's fields read, and every write to them is refused
+  PASS  members: a group's When is one structured row: a valid When stores, a bad one is refused
+  PASS  members: member rows are not AceDB defaults, and each resolves against its template
+  PASS  members: [review 4] the CLI prints the built-in refusal
+  PASS  members: Library's built-in writers and the pad point go through the seam, one announce each
+  PASS  members: the structured rows are typed and printed on the CLI through the descriptor's parse and format
+  PASS  members: [review 1] a callout edited from the CLI in combat waits for combat end, with the stale hint
+  PASS  members: [fix 1] pad.point refuses an unknown anchor name or a non-finite offset; nothing is stored
+  PASS  members: [final 2, 11] the CLI maps When values onto their tokens, and refuses one a row never matches
+  PASS  members: [final 7] what `get group.when` prints types back in
+  PASS  members: [final 4] an off-screen pad.point is refused; `/qc reset` brings back a pad's place and clears an icon
+  PASS  members: [final 5] builtin.hidden with no set selected says to pick one
+  PASS  members: [phase 4] a dial's fields are member rows, and its position goes through SetSurfacePoint
+  PASS  members: [review 4] a dial's key is stored upper-case; none clears it; a reserved key or another dial's is refused
+  PASS  members: [final 3] a bare, dangling, unknown or repeated modifier is refused; [final 4] modifier order is one key
+  PASS  members: [phase 4] the CLI types and prints a dial's key and position
+  PASS  members: [phase 4] an off-screen dial.point is refused; `/qc reset` brings the dial back and frees its key
+  PASS  members: [phase 5] a When's key level prints as it types back in: one level, open below, open above
+  PASS  members: [phase 5] a pad's Look rows are composed member rows: checked, clamped, announced
+  PASS  editors: [review 2] Select mirrors a built-in group into the built-in selection; Heal keeps a member that exists
+  PASS  editors: every membership change asks for one structural repaint, on the next frame
+  PASS  editors: [phase 3] a scalar member write repaints nothing; a name does
+  PASS  editors: [phase 3] a situation change repaints only when the set of active groups changes
+  PASS  editors: [phase 3] with no page body built, no change schedules a repaint
+  PASS  editors: a profile switch clears every selection
+  PASS  editors: the stand-down cancels a pending repaint
+  PASS  editors: ConfirmDelete asks first, and only the accepted popup runs the act, once
+  PASS  editors: Open goes to a page's category by its id
+  PASS  editors: [audit QC-02] Open refuses in combat with one gray line and never reaches the category switch
+  PASS  editors: Scalar keeps the rows the flow engine draws, and CancelReorder cancels once
+  PASS  editors: Snapshot is the preview's while Preview as is on
+  PASS  callouts page: with no callouts it says how to make one, and New callout makes and selects one
+  PASS  callouts page: the rows write the selected callout through the seam
+  PASS  callouts page: [review 5] an empty name is refused with its reason and nothing changes
+  PASS  callouts page: [phase 3] the token picker offers {group1}-{group8} only when the channel can resolve to Raid
+  PASS  callouts page: [phase 3] the live line refreshes in place when the callout changes
+  PASS  callouts page: Insert a token adds it to the end of the text
+  PASS  callouts page: the live line shows what it sends here, or why it sends nothing
+  PASS  callouts page: Duplicate selects the copy; Delete asks, then removes it from every group
+  PASS  callouts page: [review 2] the selected callout deleted elsewhere: the page heals, writes go to the next
+  PASS  callouts page: Used by lists the groups that hold it, and a click opens that group
+  PASS  callouts page: [final 3] Defaults resets the callout as one act: one rebuild
+  PASS  callouts page: [final 4] Defaults keeps the icon (its default is only for `/qc reset`)
+  PASS  callouts page: [review 1] a delete popup accepted after the pull deletes; the pad catches up at combat end
+  PASS  callouts page: [phase 5] Choose an icon: a click on the skull is the callout's icon, through the seam
+  PASS  when: Toggle adds and removes one value, drops an emptied row, and never mutates its input
+  PASS  when: [review 5] the key-level range refuses lowest above highest; clearing both drops the row
+  PASS  when: [review 5] a typed key level is refused when the range would be upside down, and nothing is stored
+  PASS  when: the specialization row offers the player's class, or the classes the class row picked
+  PASS  when: Describe reads a When back as lines, and ActiveLine names the row that does not match
+  PASS  when: [phase 3] a group turned off never reads Active now, as the picker's dot does not
+  PASS  when: CharacterId takes Name-Realm as typed and gives a bare name the player's realm
+  PASS  when: [phase 3] the open rows are session state that a profile switch clears
+  PASS  when: Write stores a user group's When through the seam and refuses a built-in with its reason
+  PASS  when: the battleground names come from the shipped sets, by instanceID
+  PASS  when: [final 6] a typed character takes the client's case; the Resolver matches one in any case
+  PASS  when: [final 2, 11] ResolveValue maps a typed value onto the token or id its row stores, or refuses it
+  PASS  groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
+  PASS  groups page: the picker lists user groups by name, then the built-ins, active ones dotted
+  PASS  groups page: General draws Preview as first, then the group's rows; Duplicate and Delete act
+  PASS  groups page: Callouts drags to reorder, removes, and copies a built-in callout in (P2)
+  PASS  groups page: [review 4] a built-in is read-only; Customize puts the copy in its place and selects it
+  PASS  groups page: a built-in's Callouts tab hides and shows its callouts, a node's named with its node
+  PASS  groups page: the When tab of a built-in describes it; a user group's edits it; Preview bakes each callout
+  PASS  groups page: [phase 3] a built-in's Defaults turns it back on: the Enabled row its General draws
+  PASS  groups page: [review 5] the When tab refuses an upside-down key-level range
+  PASS  groups page: [final 16] New group rebuilds the pads once, however many pads there are
+  PASS  groups page: [final 3, 25] a user group's Defaults: Enabled on, Open the dial off, the rest kept, one rebuild
+  PASS  groups page: [final 8] Customize of a set on no pad says the copy is on none
+  PASS  groups page: [final 12] Duplicate says the copy is on no pad yet
+  PASS  groups page: [final 20] the Instances row adds a typed id, removes one, and refuses a fraction or a negative
+  PASS  groups page: [final 18] Add the instance you are in reads the instance at the click, not at the draw
+  PASS  groups page: [phase 5] Choose an icon sets a user group's icon; a built-in set offers no picker
+  PASS  pads page: New pad makes a second pad holding every built-in, selects it, and the pad is built
+  PASS  pads page: the Layout rows write the selected pad
+  PASS  pads page: X and Y move the pad through its pad.point row; Reset puts it back
+  PASS  pads page: Look's visibility reaches the pad's state driver
+  PASS  pads page: Groups lists the pad's groups; remove one, add it back at the end, drag to reorder
+  PASS  pads page: Delete pad asks, then the pad is gone, its frame released, and the page heals
+  PASS  pads page: General's Unlock pads toggles the one lock
+  PASS  pads page: [final 3, 15] Defaults puts the pad's rows back as one act: one rebuild
+  PASS  pads page: [final 4] Defaults keeps the pad's position
+  PASS  pads page: [final 26] New pad takes the lowest free number, so a delete never leads to two names alike
+  PASS  pads page: [phase 5] Look carries the composed Font, Border and Background groups under their headings
+  PASS  dials page: New dial makes a second dial holding every built-in, selects it, and builds QuickCommsDial2
+  PASS  dials page: New dial takes the lowest free number, so a delete never leads to two names alike
+  PASS  dials page: General has Preview as first; Enabled off takes the dial down
+  PASS  dials page: Wheel writes wedges per ring and where it opens; X and Y move the dial; Reset puts it back
+  PASS  dials page: a refused X or Y says why and puts the box back to the stored offset
+  PASS  dials page: Defaults puts the dial's rows back as one act, and keeps its key and position
+  PASS  dials page: [review 4] the Binding tab binds the key; another dial's is refused naming it; a WoW key warns and binds
+  PASS  dials page: Groups switches Categories and Flat, and reorders the dial's groups
+  PASS  dials page: [phase 4] Groups warns when a node set would open three rings deep, and not once it is first
+  PASS  dials page: Preview lists the rings wedge by wedge, marking the one the dial opens on
+  PASS  dials page: [final 20] at 12 wedges per ring the Preview names each wedge by its clock position
+  PASS  dials page: Delete dial asks, then the dial is gone, its header released, and the page heals
+  PASS  dials page: [final 7] a WoW conflict names the action as WoW's key bindings menu shows it
+  PASS  dials page: [final 8] the Binding tab names this dial's Open Comms Dial entry and sees a key bound there
+  PASS  dials page: [final 10] the key line of a dial that is off says the key opens nothing, and warns of no override
+  PASS  dials page: [final 11] the page's own plan builds are not timed as a surface's bake
+  PASS  share page: every shipped set has a line; turning M+ off takes it off the pad
+  PASS  share page: [review 4] Customize puts the copy in the set's place, selects it and opens the Groups page
+  PASS  share page: Choose callouts opens the set on the Groups page's Callouts tab
+  PASS  share page: Defaults turns every set back on and shows all of their callouts, as one act
+  PASS  share page: [phase 5] Export ticks a group; its callouts come along, and the string opens in the copy window
+  PASS  share page: [phase 5] Export with nothing ticked says so and opens nothing
+  PASS  share page: [phase 5] Import checks a pasted string, reports it, then adds it as new members
+  PASS  share page: [review] editing the box after Accept forgets the check: Import never adds the old string
+  PASS  share page: [phase 5] an imported dial says it has no key yet
+  PASS  share page: [phase 5] an imported group no shared pad or dial lists says where to add it
+  PASS  share page: [phase 5] export and import are refused in combat; nothing is made or added
+  PASS  share page: [phase 5] a profile switch forgets the ticks and the checked string
+  PASS  share page: [phase 5] the export window is the LibKa0s copy window, built once and named for the addon
+  PASS  check: a built-in callout prints its line and channel
+  PASS  check: a refused callout prints the reason
+  PASS  check: an unknown id says so
+  PASS  check: never calls SendChatMessage
+  PASS  check: [final minor 4] unknown and send-time tokens are listed
+  PASS  check: [final minor 4] solo with soloFallback=self says it would print locally
+  PASS  guard: Decide is ok outside the window and guarded inside it
+  PASS  guard: Remaining counts down to zero
+  PASS  guard: the acting edge follows the key-down setting
+  PASS  guard: every echo event maps to one chat type
+  PASS  echo: our own echo consumes the oldest pending press of its type
+  PASS  echo: another player's readable message is ignored
+  PASS  echo: an unreadable sender is unknown, counts as the echo, and is never a drop
+  PASS  echo: a message of another type or after the window matches nothing
+  PASS  echo: Expire drops only presses older than the window, oldest first
+  PASS  queue: a key replaces its earlier entry and keeps its place
+  PASS  sendengine: a send button is a named secure button registered for both edges
+  PASS  sendengine: Arm sends exactly the line; Disarm clears both attributes and sends nothing
+  PASS  sendengine: in combat, building, arming and disarming are declined, so nothing is blocked
+  PASS  sendengine: RunOrQueue runs now out of combat
+  PASS  sendengine: in combat the queue keeps the last write per key and drains once at combat end
+  PASS  sendengine: Drop empties the queue and nothing runs at combat end
+  PASS  sendengine: a failing queued entry is reported and the others still run
+  PASS  sendengine: Teardown in combat holds one PLAYER_REGEN_ENABLED and releases it when it fires
+  PASS  sendengine: [audit QC-06] the held stand-down registers through NS.SafeRegisterEvent, into NS.rejectedEvents
+  PASS  sendengine: [audit QC-06] a refused hold raises nothing and keeps the teardown held
+  PASS  sendengine: CancelTeardown releases the held registration without running it
+  PASS  sendengine: the visibility driver is set out of combat and declined in it
+  PASS  sendengine: [firewall] no other shipped file makes a secure call (spec §9)
+  PASS  sendengine: [fix wave] the firewall's patterns catch every Secure* template and SetAttribute spelling
+  PASS  sendengine: [D12] nothing calls SendChatMessage: the secure button is the one send path
+  PASS  send: one press is one send and one pending echo, though the hook hears both edges
+  PASS  send: [review 3] a double press in a boss: guarded, then dropped, with one note, never canceled
+  PASS  send: the drop note follows behavior.dropNotes
+  PASS  send: presses further apart than the guard are never guarded
+  PASS  send: an unreadable sender counts as our echo and is never a drop
+  PASS  send: another player's message on the channel is not our echo
+  PASS  send: a disarmed button reports nothing and tracks nothing
+  PASS  send: a solo self-fallback prints locally and sends nothing
+  PASS  send: onPress hears the verdict and the window
+  PASS  send: every echo event is a declared feature event
+  PASS  send: the stand-down cancels the echo timers and forgets the presses
+  PASS  sendengine: [phase 4] a dial header is a named click handler for the down edge, hidden; none in combat
+  PASS  sendengine: [phase 4] a wedge is wrapped before it is hooked, acts on the up edge, and only a left click is a press
+  PASS  sendengine: [phase 4] attributes, frame refs and snippets are written out of combat only, never blocked
+  PASS  sendengine: [audit QC-11] the bound-keys line logs on change through DebugChanged, re-armed by a console Clear
+  PASS  sendengine: [phase 4] BindKeys replaces the whole set, out of combat only; ClearKeys empties it
+  PASS  dial secure: the header is QuickCommsDial<n>, hidden until the toggle opens it; open, the dial owns Escape and 1-8
+  PASS  dial secure: [exit] a group wedge opens its ring (the two-stroke); a callout wedge sends once and closes
+  PASS  dial secure: [review 2] right click, Escape and the hub close without sending; the hub goes up a ring first
+  PASS  dial secure: [review 5] the wheel turns pages; the number keys pick the shown ring's wedges
+  PASS  dial secure: [exit] in combat the dial opens, switches rings and sends, with nothing blocked
+  PASS  dial secure: open at the cursor anchors the hub to it; a dial with no ring opens nothing
+  PASS  dial secure: [review 6] Open from the insecure side takes no key; the key still closes it; out of combat only
+  PASS  dial secure: [final 1] a middle or side click on a callout wedge sends nothing and closes; on the hub it closes
+  PASS  dial secure: [final 12] the down edge alone does nothing: no send, no ring switch, the dial stays open
+  PASS  dial secure: [final 13] a page turn releases the number keys the new page has no wedge for
+  PASS  dial secure: [final 2] opening one dial closes another that is open; closing it leaves no key bound
+  PASS  dial secure: [firewall] no snippet writes an attribute; the ring on screen lives in the header's environment
+  PASS  preview: test mode turns on and off, announcing each edge once
+  PASS  preview: a start in combat is refused with one line
+  PASS  preview: the start of combat ends test mode, with one line
+  PASS  preview: test mode still ends when lockdown has already begun at the combat edge
+  PASS  preview: the stand-down ends test mode silently, and stood down a start is refused
+  PASS  preview: [phase 3] Preview as Arena builds the pad from the arena snapshot, every chip disarmed
+  PASS  preview: [review 3] a previewed chip sends nothing and reports nothing
+  PASS  preview: [review 3] a previewed solo chip prints nothing, even with the self fallback
+  PASS  preview: [review 3] combat ends it with one line, and the live chips come back armed
+  PASS  preview: [phase 3] refused in combat and while disabled, with one line each
+  PASS  preview: [review 3] the stand-down ends it silently, and so does closing the settings window
+  PASS  preview: [phase 3] test mode and Preview as are one switch at a time
+  PASS  preview: [phase 3] the menu: Current, M+, each dungeon, each raid difficulty, Arena, each battleground, World
+  PASS  preview: [phase 3] a dungeon entry reads M+ · <dungeon> · <spec> (spec §13.3)
+  PASS  preview: [phase 3] the Preview as row and `/qc preview` drive the same switch
+  PASS  preview: [final 13] `/qc preview` reads the situation's name without regard to case
+  PASS  preview: [final 10] a dungeon preview fills {dungeon}, and the header names the preview as its menu does
+  PASS  master: the frame defaults are spec §5.1's: always shown, scale and alpha 1, locked
+  PASS  master: /qc unlock and /qc lock write the Lock frame row's path and confirm on one line
+  PASS  master: the launcher's Locked and Test mode entries call the same handlers
+  PASS  master: /qc test toggles test mode, and in combat says why it will not
+  PASS  master: the Test mode row reads and writes the one switch, and Reset all ends it
+  PASS  layout: horizontal puts a section's chips on one row under the header
+  PASS  layout: a titled section draws its label row first
+  PASS  layout: grid wraps at its column count; vertical is one column
+  PASS  layout: the style sets the cell
+  PASS  layout: [review] a larger Look font grows the chip and title rows; the default size changes nothing
+  PASS  layout: leftward growth mirrors the row; collapsed is the header alone
+  PASS  layout: upward growth stacks the sections bottom-up, each title above its chips
+  PASS  layout: groups-as picks the sections: sections, merged, one tab at a time
+  PASS  layout: the wheel steps tabs and wraps both ways
+  PASS  layout: the visibility expression combines the master and the pad
+  PASS  layout: the fade follows combat and the mouse, under the master alpha
+  PASS  layout: the channel tag names the resolved channel
+  PASS  dial layout: four wedges sit on N, E, S and W, clockwise from the top
+  PASS  dial layout: slices are 4, 6, 8 or 12, and 12 only on a ring with no children
+  PASS  dial layout: [review 5] more items than wedges go on pages: size-1 each, the rest on the last
+  PASS  dial layout: [exit] Categories in Arathi Basin opens on the node ring; Lumber Mill, then INC 3
+  PASS  dial layout: without the flag first, Categories opens on the group ring; one group opens straight on it
+  PASS  dial layout: [review 5] Flat puts every callout on the first ring, highest group first, with More pages
+  PASS  dial layout: [phase 4] a node set below another active group is three rings deep, and named for the warning
+  PASS  dial layout: nothing to show is no ring at all; an empty group is left out
+  PASS  dial layout: the pointer follows the cursor outside the dead zone
+  PASS  dial layout: [final 6] a label is anchored by its side, clear of its wedge; the ring title clears the N label
+  PASS  dial layout: [final 20] past eight wedges each gets its own direction, as a clock position
+  PASS  dial layout: [phase 5] a node set's nodes sit on their compass winds; the middle node takes N
+  PASS  dial layout: [review 6] [phase 5] nodes that cannot all be pinned keep their shipped order
+  PASS  dial layout: [review 6] a pinned ring ignores the dial's slices; Flat keeps its paging
+  PASS  surfaces: in a key the default pad's plan is the M+ set, baked to /p
+  PASS  surfaces: [review 5] a refused callout is a slot with its reason and no line
+  PASS  surfaces: a node battleground gives one section per node, baked to /i
+  PASS  surfaces: a Say callout locked by an encounter lights the plan's lockdown chip
+  PASS  surfaces: solo with the self fallback, a smart callout carries the text to print
+  PASS  surfaces: the bake context fills {me} from the client
+  PASS  surfaces: a disabled built-in leaves the plan
+  PASS  surfaces: the test plan is placeholder chips that carry no line
+  PASS  surfaces: the first situation read builds the default pad, armed and shown
+  PASS  surfaces: ACTIVE_GROUPS_CHANGED is sent once per real change of a pad's active groups
+  PASS  surfaces: [review 1] a situation change in combat queues: nothing blocked, stale shows, combat end rebuilds
+  PASS  surfaces: [review 1] a profile switch in combat queues the new profile's pads
+  PASS  surfaces: [fix wave] enabled in combat (a /reload mid-pull): combat end builds the pad, the queue empties
+  PASS  surfaces: a setting written in combat waits for combat end, with the stale hint
+  PASS  surfaces: an encounter lockdown in combat padlocks a Say chip and lights the chip, nothing blocked
+  PASS  surfaces: test mode draws placeholders that send nothing; combat start brings the live chips back
+  PASS  surfaces: if lockdown has already begun at the combat edge, test mode's end is queued, not blocked
+  PASS  surfaces: disabled out of combat, every pad hides and every chip disarms; enabled, they return
+  PASS  surfaces: [review 2] disabled mid-combat: nothing blocked, one held registration, finished at combat end
+  PASS  surfaces: [fix wave] disabled then enabled inside one combat: the pad is shown and armed after it
+  PASS  surfaces: [phase 3] WhyLines names each shown group in order, built-ins marked, then the locks
+  PASS  surfaces: [phase 3] WhyLines in a key explains the built-in's matched row; a preview says so
+  PASS  render: Dress builds a chip's regions once, each its own object
+  PASS  render: [audit QC-07] the chip's padlock is the catalog's lock mark, tinted gold; the Blizzard art is the nil fallback
+  PASS  render: an armed chip shows its name, its channel tag in the chat color, no lock, no dim
+  PASS  render: [review 5] a refused chip is dimmed and its tooltip says why
+  PASS  render: a locked chip shows the padlock and names the lock; RefreshLock follows the slot
+  PASS  render: the style decides icon and label
+  PASS  render: a test-mode chip and a solo self-print chip are not dimmed, and say what they do
+  PASS  render: flashes take the result's color; the cooldown dims and clears
+  PASS  render: the situation chip names the content, the dungeon and the key
+  PASS  render: the header shows the lockdown chip, the stale hint and the test label on demand
+  PASS  render: the drag-strip seam builds a hidden strip, and answers nil without the library
+  PASS  pad render: [phase 3] a previewed slot's tooltip shows its line and says it sends nothing
+  PASS  render: [phase 5] a pad's Look is a font and a skin; the defaults are the skin a pad always wore
+  PASS  render: [review] the skin's 1px inner line is kept only on the default flat 1px edge
+  PASS  render: [review] a chip's label stops short of the channel tag, on one line
+  PASS  render: [phase 5] Use class color takes the player's class color and keeps the swatch's alpha
+  PASS  render: [phase 5] a section title keeps its gold until the player colors the font
+  PASS  pad: the default pad shows the M+ callouts, each chip armed with its baked line
+  PASS  pad: [review 5] a refused chip is dimmed and disarmed: a click sends and reports nothing
+  PASS  pad: [review 4] a hidden or locked pad still rebuilds; the driver hides; the strip stays hidden
+  PASS  pad: a rebuild with fewer chips parks the rest, disarmed, for the next
+  PASS  pad: [registry] no file but Library writes a surface's point
+  PASS  pad: the drag saves the point; locked or in combat it does not move; Reset position clears it
+  PASS  pad: [fix 1] combat starting mid-drag ends the drag on the edge; the stop is never blocked
+  PASS  pad: [fix 1] a drag caught after lockdown began is stopped and saved when combat ends
+  PASS  pad: tabs show one section; the wheel steps them out of combat and is refused in it
+  PASS  pad: collapse hides the chips out of combat and is refused, with one line, in it
+  PASS  pad: a send result flashes its chips; a press dims every chip for the guard window
+  PASS  pad: the fade follows the mouse and combat through SetAlpha alone
+  PASS  pad: Sync releases a pad no plan names: hidden, its chips disarmed
+  PASS  pad: [fix wave] a profile switch, a switch back and a profile reset each move the pad to that profile's point
+  PASS  pad: [fix wave] a rebuild during a drag leaves the dragged frame where the cursor has it
+  PASS  pad: [fix wave] a held drag survives a profile switch in combat: stopped at combat end, nothing blocked
+  PASS  pad: [fix wave] a held drag on a stand-down in combat is stopped by the held teardown
+  PASS  pad: [fix wave] a locked chip's press is not tracked: no guard, no drop, one lock note
+  PASS  pad: [fix wave] tabs switch on a wheel over a chip or the pad, not only the header
+  PASS  pad: [fix wave] in combat Reset position, Apply and Release do no protected work; combat end anchors
+  PASS  pad: [review 5] too long, and solo with no fallback: dimmed, disarmed, the reason shown, a click does nothing
+  PASS  pad: [phase 3] a held drag whose stand-down is canceled in the same combat is stopped at combat end
+  PASS  pad: [phase 3] a new drag clears a stale held stop, so the next rebuild re-anchors
+  PASS  pad: [phase 3] the header's tooltip says why each group shows, unless the player turned it off
+  PASS  pad: [phase 5] the pad wears its Look: the chips' font and the edge and body it was given
+  PASS  pad: [review 5] a font or border this machine does not have draws the default, with no error
+  PASS  dial: Apply builds QuickCommsDial<n> with a ring per page, each callout wedge armed with its baked line
+  PASS  dial: a refused callout is a dimmed, disarmed wedge; a ring wedge is disarmed
+  PASS  dial: [audit QC-07] the hub's close and a wedge's padlock are catalog marks, with the Blizzard art as the nil fallback
+  PASS  dial: the hub shows the lockdown chip, the stale hint and TEST MODE; the pointer runs only while open
+  PASS  dial: a press dims every wedge and chip for the guard window; a drop stays red long enough to reopen and see
+  PASS  dial: Release closes, disarms and forgets a dial; HideAll also releases the keys
+  PASS  dial: Sync applies each planned dial at its place in the order, binds its key, and opens dial 1 in test mode
+  PASS  dial: the first situation read builds the default dial, closed; setting its key binds it
+  PASS  dial: [exit] in Arathi Basin the dial opens on the nodes; Lumber Mill, then INC 3, sends in two clicks
+  PASS  dial: [exit] on a raid boss the dial opens and a click on a wedge sends, with nothing blocked
+  PASS  dial: [exit] the Categories two-stroke: a group wedge opens its ring, a callout wedge sends
+  PASS  dial: test mode opens dial 1 with placeholder wedges that send nothing, and takes no key
+  PASS  dial: combat start ends test mode and the live dial comes back closed
+  PASS  dial: [review 6] test mode ended by a combat whose lockdown began first: no key held, closed at combat end
+  PASS  dial: Preview as opens dial 1 on the previewed situation, and its wedges send nothing
+  PASS  dial: [review 3] a key or wedge change in combat waits for combat end, behind the hub's stale hint
+  PASS  dial: [review 1] the key opens nothing where no group is active, and is the game's again while disabled
+  PASS  dial: [review 3] disabled in combat with the dial open: nothing blocked; combat end hides it and frees the key
+  PASS  dial: [review 3] a profile switch in combat waits: the old key still opens the dial, then combat end binds the new
+  PASS  dial: a profile switch binds the new profile's key and releases the old one
+  PASS  dial: Reset position puts every pad and dial back, through their point rows, on one line
+  PASS  dial: the hub's tooltip says why each group shows, unless the player turned it off
+  PASS  dial: Bindings.xml offers Open Comms Dial 1 to 4, each clicking that dial's header with Toggle
+  PASS  dial: the key bindings menu's click opens the dial, even while it is hidden
+  PASS  dial: [final 2] two dials: opening the second closes the first, and the number keys go with it
+  PASS  dial: [final 5] test mode opens dial 1 once: a rebuild keeps it open, and after the player closes it, closed
+  PASS  dial: [phase 5] Arathi Basin's node wedges sit on their winds: Lumber Mill is SW, Blacksmith N
+  PASS  dial: [review 6] on a four- or six-slice dial every node shows, and the number keys pick the shown wedges from N
+  PASS  libs/LibKa0s is the LibKa0s release CLAUDE.md says this addon bundles
+  PASS  tests/_kit is the test kit that shipped with that release
+  PASS  the automated-test runner is recorded executable (100755)
+  PASS  eol: every tracked file carries the terminator .gitattributes declares for it
+  PASS  eol: .gitattributes is line-endings-§5's canonical body for this repo kind
+  PASS  prose: no authored file carries a British spelling from localization-§5's published list
+  PASS  prose: the gate carries localization-§5's two lists whole, and nothing of its own
+  PASS  prose self-test: the carve-out suppresses the named generated folder, and only it
+  PASS  prose self-test: a path the carve-out does not name is not covered by one that looks like it
+  PASS  prose self-test: a carve-out that is not a set of path strings is a failure, not a silence
+  PASS  prose self-test: a TOC's file lines are read as paths, and its directives and comments are not
+  PASS  prose self-test: a .pkgmeta's ignore block is read, and the keys around it are not
+  PASS  prose self-test: an ignore entry covers a path exactly, by folder, and by wildcard
+  PASS  prose self-test: the carve-out admits a generated dump and refuses a file the TOC loads
+  PASS  prose self-test: a waiver-file exclusion meets the same two refusals as the carve-out
+  PASS  prose self-test: each list is refused on the matching rule its own scan uses
+  PASS  prose self-test: the scan and the refusals read the added exclusions through one reader
+  PASS  prose self-test: a narrowing is refused by what it suppresses, not by how it is written
+  PASS  prose self-test: the disclosure names what each entry suppressed, and says when it is bounded
+  PASS  prose self-test: a malformed waived is a failure, not a silence
+  PASS  layoutcap: every authored file over the 1500-line cap is named in the census
+  PASS  layoutcap: no census row outlives the breach it records
+  PASS  layoutcap: every over-cap census row carries one of layout-§1's three terminal states
+  PASS  layoutcap: the census and the exempt set agree about which paths were exempted
+  PASS  layoutcap: an empty census is written as a result rather than left standing empty
+  PASS  layoutcap self-test: the parser reads the census nested under the register, and stops there
+  PASS  layoutcap self-test: a census outside its register, or at the wrong level, is not read
+  PASS  layoutcap self-test: an over-cap file missing from the census is reported, and an exempt one is not
+  PASS  layoutcap self-test: a census row that outlives its breach is reported
+  PASS  layoutcap self-test: an over-cap row that names no terminal state is reported
+  PASS  layoutcap self-test: the census and the exempt set are held to naming the same paths
+  PASS  layoutcap self-test: a census that states nothing is told apart from one that states none
+  PASS  layoutcap self-test: the exempt set takes folders as well as paths
+  PASS  diagnostics contract: both forms run the report
+  PASS  diagnostics contract: the debug word is matched in any case
+  PASS  diagnostics contract: both markers carry the brand and the end counts the report
+  PASS  diagnostics contract: the report appends after what the console already holds
+  PASS  diagnostics contract: the report lands with logging off and turns it on for the session
+  SKIP  diagnostics contract: an addon that opts out lands the report and leaves logging off — this addon keeps the default (Kit.diagnostics.enablesLogging is not false), so its report turns logging on; the case above holds it
+  PASS  diagnostics contract: with logging already on, the report writes no second enable line
+  PASS  diagnostics contract: both forms run while the addon is disabled
+  PASS  diagnostics contract: no other name runs the report
+  PASS  lizard sighted: every hazard lizard loses a function over is neutralized
+  PASS  lizard sighted: fields, strings, comments and look-alike names come through unchanged
+  PASS  lizard sighted: a method definition is rewritten to its dot form with self
+  PASS  lizard sighted: no line is added or removed, CRLF included
+  PASS  lizard sighted: countFunctions counts the keyword, not strings, comments or longer names
+  PASS  lizard sighted: listedCounts reads the per-file table, once per file
+  PASS  lizard sighted: parity names every file whose counts differ, and only those
+  PASS  lizard sighted: lizard lists every function of a hazard fixture once it is sanitized
+
+686 passed, 0 failed, 1 skipped, 687 total

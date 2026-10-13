@@ -1,0 +1,12 @@
+Ka0s Quick Comms — offline perf  (v0.1.0, label 'phase-5-release-gate')
+
+scenario                    iters     ms/iter notes/iter  bytes/iter
+bracketCaptureOff            1000     0.00002       0.00         0.0
+dialPointerCaptureOff        1000     0.00143       0.00       120.0
+dialPointerNoHarness         1000     0.00152       0.00       120.0
+padRebuild12                  200     0.35704       3.00     69960.4
+dialOpenClose                 200     0.01252       1.00      1159.3
+situationRefresh              500     0.00592       1.00      1376.0
+
+timings are for orientation only — compare scenarios within a run, never across machines
+wrote docs/automated-tests/20261014-002540/perf.json
