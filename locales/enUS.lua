@@ -267,3 +267,5 @@ L["  unknown tokens: %s"] = "  unknown tokens: %s"
 
 -- Send engine (modules/SendEngine.lua)
 L["A deferred update failed (%s): %s"] = "A deferred update failed (%s): %s"
+L["%s may have been dropped by the game (sent too soon after another message)."] =
+    "%s may have been dropped by the game (sent too soon after another message)."

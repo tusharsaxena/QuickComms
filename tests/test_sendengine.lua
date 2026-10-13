@@ -177,3 +177,157 @@ test("sendengine: [D12] nothing calls SendChatMessage: the secure button is the 
         assertTrue(not read(rel):find("SendChatMessage", 1, true), rel)
     end
 end)
+
+-- ── the click, the guard and the echo (spec §9.2, §9.3) ─────────────────────────────────────
+
+local META = { calloutId = "c1", surfaceId = "p1", chatType = "PARTY", name = "Pull" }
+
+local function armed(NS, m, meta)
+    local b = NS.SendEngine.NewButton(m.UIParent)
+    NS.SendEngine.Arm(b, "/p Pulling", meta or META)
+    return b
+end
+
+local function results(NS)
+    local out = {}
+    local t = NS.Bus:NewTarget()
+    t:RegisterMessage(NS.MSG.SEND_RESULT, function(_, cid, sid, what) out[#out + 1] = cid .. "@" .. sid .. "=" .. what end)
+    return out
+end
+
+-- A CHAT_MSG_* as the client sends it: text, sender, then nine fields, then the sender's GUID.
+local function echo(m, event, sender, guid)
+    m.__fire(event or "CHAT_MSG_PARTY", "never read", sender or "Testchar-Testrealm", "", "", "", "", 0, 0, "", 0, 1,
+        guid or m.playerGUID)
+end
+
+test("send: one press is one send and one pending echo, though the hook hears both edges", function()
+    local NS, m = T.enableAddon()
+    local out = results(NS)
+    local b = armed(NS, m)
+    m.__now = 100
+    m.__click(b)
+    assertEqual(#m.sentMacros, 1)
+    -- red under: drop the IsActingEdge check from SE.OnClick
+    assertEqual(NS.SendEngine.EchoState().pending, 1)
+    m.__now = 100.6
+    echo(m)
+    assertEqual(table.concat(out, ","), "c1@p1=sent")
+    assertEqual(NS.SendEngine.EchoState().pending, 0)
+end)
+
+test("send: [review 3] a double press in a boss: guarded, then dropped, with one note, never canceled", function()
+    local NS, m = T.enableAddon()
+    local out = results(NS)
+    local b = armed(NS, m)
+    m.__now = 100
+    m.__click(b)
+    m.__now = 100.3
+    m.__click(b)
+    assertEqual(#m.sentMacros, 2, "soft: the guard never cancels a click")
+    assertEqual(table.concat(out, ","), "c1@p1=guarded")
+    m.__now = 100.8
+    echo(m)                               -- the game delivered only the first
+    m.prints = {}
+    m.__now = 102.5
+    m.__fireTimers()
+    assertEqual(table.concat(out, ","), "c1@p1=guarded,c1@p1=sent,c1@p1=dropped")
+    assertEqual(#m.prints, 1, "exactly one note")
+    assertTrue(m.prints[1]:find("Pull", 1, true) ~= nil, m.prints[1])
+end)
+
+test("send: the drop note follows behavior.dropNotes", function()
+    local NS, m = T.enableAddon()
+    NS.SchemaRuntime.Set("behavior.dropNotes", false)
+    local out = results(NS)
+    m.__now = 100
+    m.__click(armed(NS, m))
+    m.prints = {}
+    m.__now = 103
+    m.__fireTimers()
+    assertEqual(table.concat(out, ","), "c1@p1=dropped")
+    assertEqual(#m.prints, 0)
+end)
+
+test("send: presses further apart than the guard are never guarded", function()
+    local NS, m = T.enableAddon()
+    local out = results(NS)
+    local b = armed(NS, m)
+    m.__now = 100
+    m.__click(b)
+    m.__now = 101.2
+    m.__click(b)
+    assertEqual(#out, 0)
+end)
+
+test("send: an unreadable sender counts as our echo and is never a drop", function()
+    local NS, m = T.enableAddon()
+    m.issecretvalue = T.isSecret
+    local out = results(NS)
+    m.__now = 100
+    m.__click(armed(NS, m))
+    echo(m, "CHAT_MSG_PARTY_LEADER", T.secret("Someone"), T.secret("Player-1-2"))
+    m.__now = 103
+    m.__fireTimers()
+    assertEqual(table.concat(out, ","), "c1@p1=sent")
+    assertEqual(NS.SendEngine.EchoState().unknown, 1)
+end)
+
+test("send: another player's message on the channel is not our echo", function()
+    local NS, m = T.enableAddon()
+    local out = results(NS)
+    m.__now = 100
+    m.__click(armed(NS, m))
+    echo(m, "CHAT_MSG_PARTY", "Other-Testrealm", "Player-1-99999999")
+    m.__now = 103
+    m.__fireTimers()
+    assertEqual(table.concat(out, ","), "c1@p1=dropped")
+end)
+
+test("send: a disarmed button reports nothing and tracks nothing", function()
+    local NS, m = T.enableAddon()
+    local out = results(NS)
+    local b = armed(NS, m)
+    NS.SendEngine.Disarm(b)
+    m.__click(b)
+    assertEqual(#out, 0)
+    assertEqual(NS.SendEngine.EchoState().pending, 0)
+end)
+
+test("send: a solo self-fallback prints locally and sends nothing", function()
+    local NS, m = T.enableAddon()
+    local b = NS.SendEngine.NewButton(m.UIParent)
+    NS.SendEngine.Disarm(b, { calloutId = "c1", surfaceId = "p1", selfText = "Lust on this pack" })
+    m.prints = {}
+    m.__click(b)
+    assertEqual(#m.sentMacros, 0)
+    assertEqual(#m.prints, 1)
+    assertTrue(m.prints[1]:find("Lust on this pack", 1, true) ~= nil)
+end)
+
+test("send: onPress hears the verdict and the window", function()
+    local NS, m = T.enableAddon()
+    local heard = {}
+    local b = NS.SendEngine.NewButton(m.UIParent, function(_, verdict, window) heard[#heard + 1] = verdict .. ":" .. window end)
+    NS.SendEngine.Arm(b, "/p a", META)
+    m.__now = 100
+    m.__click(b)
+    m.__now = 100.2
+    m.__click(b)
+    assertEqual(table.concat(heard, ","), "ok:1,guarded:1")
+end)
+
+test("send: every echo event is a declared feature event", function()
+    local NS = T.newAddon()
+    local declared = {}
+    for _, row in ipairs(NS.FEATURE_EVENTS) do declared[row[1]] = row[2] end
+    for _, event in ipairs(NS.SendGuard.ECHO_EVENTS) do assertEqual(declared[event], "OnSendEcho", event) end
+end)
+
+test("send: the stand-down cancels the echo timers and forgets the presses", function()
+    local NS, m = T.enableAddon()
+    m.__click(armed(NS, m))
+    NS.SchemaRuntime.Set("enabled", false)
+    assertEqual(#m.__timers(), 0)
+    assertEqual(NS.SendEngine.EchoState().pending, 0)
+end)

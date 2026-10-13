@@ -47,3 +47,24 @@ test("compat: [final] an empty-string realm falls back to the normalized realm n
     -- red under: `if not realm` alone
     assertEqual(character, "Kaos-Silvermoon")
 end)
+
+test("compat: UseKeyDown reads the cvar, and defaults on when it cannot", function()
+    local NS, env = T.newAddon()
+    assertTrue(NS.Compat.UseKeyDown())
+    env.cvars.ActionButtonUseKeyDown = "0"
+    assertFalse(NS.Compat.UseKeyDown())
+    env.C_CVar, env.GetCVarBool = nil, nil
+    assertTrue(NS.Compat.UseKeyDown())
+end)
+
+test("compat: SenderIsPlayer answers by GUID, then by name, and nil when it cannot read either", function()
+    local NS, env = T.newAddon()
+    env.issecretvalue = T.isSecret
+    local C = NS.Compat
+    assertTrue(C.SenderIsPlayer("Someone", env.playerGUID), "the GUID decides")
+    assertFalse(C.SenderIsPlayer("Testchar", "Player-1-99999999"), "a readable other GUID")
+    assertTrue(C.SenderIsPlayer("Testchar-Testrealm", nil), "the name, realm stripped")
+    assertFalse(C.SenderIsPlayer("Other-Testrealm", nil))
+    assertNil(C.SenderIsPlayer(T.secret("Testchar"), T.secret("guid")), "secret is unknown")
+    assertNil(C.SenderIsPlayer(nil, nil))
+end)

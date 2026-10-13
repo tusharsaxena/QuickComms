@@ -20,12 +20,18 @@ local _, NS = ...
 -- holds it in the one registration a disabled addon may keep: a private AceEvent target listening
 -- for PLAYER_REGEN_ENABLED, released the moment it fires. Its own target, because AceEvent keys a
 -- handler by (event, object) and Restrictions holds PLAYER_REGEN_ENABLED on NS.addon.
+--
+-- The click (spec §9.2, §9.3): every button carries one insecure OnClick HOOK, which never taints the
+-- secure path and cannot cancel it. On the acting edge it runs the soft guard (SEND_RESULT
+-- "guarded" inside the window; onPress dims the pads), records the press for the echo tracker and
+-- schedules its expiry. The CHAT_MSG_* rows below match echoes without reading their text.
 
 NS.SendEngine = NS.SendEngine or {}
 local SE = NS.SendEngine
 local G = NS.SendGuard
 local State = NS.State
 local L = NS.L
+local Perf = NS.Perf
 
 local TAG_Q, TAG_S = "Queue", "Send"
 
@@ -53,6 +59,7 @@ function SE.NewButton(parent, onPress)
     seq = seq + 1
     local b = CreateFrame("Button", "QuickCommsSend" .. seq, parent, "SecureActionButtonTemplate")
     b:RegisterForClicks("AnyUp", "AnyDown")
+    b:HookScript("OnClick", function(...) SE.OnClick(...) end)
     b.qcOnPress = onPress
     b.qcArmed = false
     buttons[#buttons + 1] = b
@@ -214,6 +221,105 @@ function SE.CancelTeardown()
     if State.pendingTeardown == nil then return end
     State.pendingTeardown = nil
     releasePending()
+end
+
+-- ── the click, the soft guard and the echo tracker (spec §9.2, §9.3) ────────────────────────
+
+local function echoState()
+    State.sendEcho = State.sendEcho or G.NewEcho()
+    return State.sendEcho
+end
+
+local function result(meta, what)
+    NS.Debug(what == "guarded" and "Guard" or "Echo", "%s %s on %s", meta.calloutId, what, meta.surfaceId)
+    NS.addon:SendMessage(NS.MSG.SEND_RESULT, meta.calloutId, meta.surfaceId, what)
+end
+
+local function expire()
+    local e = State.sendEcho
+    if not e then return end
+    for _, p in ipairs(G.Expire(e, GetTime())) do
+        result(p.meta, "dropped")
+        if NS.Setting("behavior.dropNotes") then
+            NS.Print(L["%s may have been dropped by the game (sent too soon after another message)."]
+                :format(tostring(p.meta.name)))
+        end
+    end
+end
+
+local function scheduleExpiry()
+    State.echoTimers = State.echoTimers or {}
+    local handle
+    handle = NS.addon:ScheduleTimer(function()
+        State.echoTimers[handle] = nil
+        expire()
+    end, G.ECHO_WINDOW + 0.05)
+    State.echoTimers[handle] = true
+end
+
+local function useKeyDown(b)
+    local v = b:GetAttribute("useOnKeyDown")
+    if v == nil then return NS.Compat.UseKeyDown() end
+    return v == true
+end
+
+local function press(b)
+    local meta = b.qcMeta
+    if not meta or NS.IsStoodDown() then return end
+    if meta.selfText then
+        NS.Print(meta.selfText)
+        return
+    end
+    if not (b.qcArmed and meta.chatType) then return end
+    local now = GetTime()
+    local window = NS.Setting("behavior.spamGuard")
+    local verdict = G.Decide(now, State.lastSendAt, window)
+    State.lastSendAt = now
+    G.Record(echoState(), now, meta.chatType, meta)
+    scheduleExpiry()
+    if verdict == "guarded" then result(meta, "guarded") end
+    if b.qcOnPress then b.qcOnPress(b, verdict, window) end
+end
+
+--- The OnClick hook every send button carries. Acts once per press, on the edge the secure
+--- template acts on.
+function SE.OnClick(b, _, down)
+    if not G.IsActingEdge(down, useKeyDown(b)) then return end
+    local t0 = Perf.on and debugprofilestop()
+    press(b)
+    if t0 then Perf.Note("send.click", debugprofilestop() - t0) end
+end
+
+function SE.GuardState()
+    local window = NS.Setting("behavior.spamGuard")
+    return { window = window, last = State.lastSendAt, remaining = G.Remaining(GetTime(), State.lastSendAt, window) }
+end
+
+function SE.EchoState()
+    local e = State.sendEcho or G.NewEcho()
+    return { pending = #e.pending, sent = e.sent, dropped = e.dropped, unknown = e.unknown, ignored = e.ignored }
+end
+
+for _, event in ipairs(G.ECHO_EVENTS) do
+    NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { event, "OnSendEcho" }
+end
+
+-- CHAT_MSG_* (text, sender, ..., guid as the 12th payload field). The text is never read (F7).
+function NS.addon.OnSendEcho(_, event, ...)
+    local e = State.sendEcho
+    if not (e and e.pending[1]) then return end
+    local t0 = Perf.on and debugprofilestop()
+    local sender = select(2, ...)
+    local guid = select(12, ...)
+    local hit = G.Match(e, G.CHAT_TYPE_BY_EVENT[event], GetTime(), NS.Compat.SenderIsPlayer(sender, guid))
+    if hit then result(hit.meta, "sent") end
+    if t0 then Perf.Note("echo.match", debugprofilestop() - t0) end
+end
+
+-- Stood down, no echo can arrive: the timers are canceled and the presses forgotten.
+NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
+    for handle in pairs(State.echoTimers or {}) do NS.addon:CancelTimer(handle) end
+    State.echoTimers, State.sendEcho, State.lastSendAt = nil, nil, nil
 end
 
 -- ── the edge ────────────────────────────────────────────────────────────────────────────────

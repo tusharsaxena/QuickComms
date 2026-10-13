@@ -35,6 +35,7 @@ read_globals = {
   "C_ChatInfo", "C_RestrictedActions", "Enum",
   -- modules/SendEngine.lua: the secure frame API (the firewall test keeps it in that one file).
   "CreateFrame", "UIParent", "RegisterStateDriver", "UnregisterStateDriver", "GetTime",
+  "C_CVar", "GetCVarBool", "UnitGUID", "UnitName",
 }
 
 -- The harness global, declared for tests/ only so no shipped file can reach for it. The

@@ -153,3 +153,29 @@ function Compat.IsRestrictionActive(rtype)
     end
     return false
 end
+
+-- ── The send engine (spec §9.2, §9.3) ────────────────────────────────────────────────────────
+
+--- True when secure action buttons act on key DOWN: the ActionButtonUseKeyDown cvar, on by
+--- default in the client, and assumed on when it cannot be read.
+function Compat.UseKeyDown()
+    local cv = C_CVar
+    local get = (cv and cv.GetCVarBool) or GetCVarBool
+    if not get then return true end
+    local v = get("ActionButtonUseKeyDown")
+    if Compat.IsSecret(v) then return true end
+    return v == true
+end
+
+--- Whether a chat line came from the player: true, false, or nil when neither the GUID nor the
+--- name can be read (secret or absent). Never compares a secret.
+function Compat.SenderIsPlayer(sender, guid)
+    local g = PlainString(guid)
+    local me = UnitGUID and PlainString(UnitGUID("player")) or nil
+    if g and me then return g == me end
+    local name = PlainString(sender)
+    if not name then return nil end
+    local mine = UnitName and PlainString((UnitName("player"))) or nil
+    if not mine then return nil end
+    return (name:match("^([^%-]+)") or name) == mine
+end
