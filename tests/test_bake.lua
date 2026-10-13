@@ -16,7 +16,7 @@ end)
 
 test("bake: [review 1] a leading slash is refused, even after whitespace", function()
     local B = bake()
-    for _, t in ipairs({ "/run x()", "  /script y", "\t/dump 1", "\n/cast Fireball" }) do
+    for _, t in ipairs({ "/run x()", "  /script y", "\t/dump 1", "\n/cast Fireball", "\1/run x" }) do
         local line, reason = B.Bake(callout(t), PARTY)
         assertNil(line, t)
         assertEqual(reason, "startsWithSlash", t)
@@ -83,4 +83,17 @@ test("bake: unknown channel and non-table callout refuse", function()
     assertNil(line) assertEqual(reason, "badChannel")
     line, reason = B.Bake(nil, PARTY)
     assertNil(line) assertEqual(reason, "badCallout")
+end)
+
+test("bake: baked token values are sanitized; spell links are not", function()
+    local ctx = { me = "a\0b\1c\127d\ne|Hitem:1|h[x]|h",
+        spellLink = function() return "|cff71d5ff|Hspell:2825|h[Bloodlust]|h|r" end }
+    local line = bake().Bake(callout("{me} {spell:2825}"), PARTY, { ctx = ctx })
+    assertEqual(line, "/p a b c d e||Hitem:1||h[x]||h |cff71d5ff|Hspell:2825|h[Bloodlust]|h|r")
+    assertTrue(not line:find("%c"), "no control byte")
+end)
+
+test("bake: a typed %t counts as live", function()
+    local line, reason = bake().Bake(callout(string.rep("a", 241) .. " %t"), PARTY)
+    assertNil(line) assertEqual(reason, "tooLong")
 end)

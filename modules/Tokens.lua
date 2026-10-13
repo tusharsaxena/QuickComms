@@ -15,7 +15,7 @@ local BAKED = { me = true, spec = true, role = true, key = true, dungeon = true 
 
 local function expandOne(raw, ctx, acc)
     local name = raw:lower()
-    if ENGINE[name] then acc.live = acc.live + 1 return ENGINE[name] end
+    if ENGINE[name] then return ENGINE[name] end   -- counted from the output in Expand
     local rt = name:match("^rt([1-8])$") or RT_BY_NAME[name]
     if rt then acc.live = acc.live + 1 return "{rt" .. rt .. "}" end
     local g = name:match("^group([1-8])$") or name:match("^g([1-8])$")
@@ -30,7 +30,8 @@ local function expandOne(raw, ctx, acc)
     if BAKED[name] then
         local v = ctx[name]
         if v == nil or v == "" then acc.missing[#acc.missing + 1] = raw return "" end
-        return tostring(v)
+        -- a baked value is chat text too: flatten control characters, escape stray pipes (spec §8.3)
+        return (tostring(v):gsub("%c", " "):gsub("|", "||"))
     end
     acc.unknown[#acc.unknown + 1] = raw
     return "{" .. raw .. "}"
@@ -45,7 +46,9 @@ function Tok.Expand(text, ctx)
     local acc = { unknown = {}, missing = {}, live = 0 }
     if type(text) ~= "string" then return "", acc.unknown, acc.missing, 0 end
     local out = text:gsub("{([%w:]+)}", function(raw) return expandOne(raw, ctx, acc) end)
-    return out, acc.unknown, acc.missing, acc.live
+    -- the game also expands a typed %t / %f, so count every one in the output (chips included, once)
+    local _, engine = out:gsub("%%[tf]", "")
+    return out, acc.unknown, acc.missing, acc.live + engine
 end
 
 --- True when `text` uses a raid-group token, which expands only in a raid (spec §8.1).

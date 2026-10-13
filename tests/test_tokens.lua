@@ -47,6 +47,12 @@ test("tokens: unknown chips stay as typed and are reported", function()
     assertEqual(unknown[1], "location")
 end)
 
+test("tokens: typed %t and %f count as live, chips are not double counted", function()
+    local Tok = tok()
+    assertEqual(select(4, Tok.Expand("hi %t and %f")), 2)
+    assertEqual(select(4, Tok.Expand("{target} %t")), 2)
+end)
+
 test("tokens: non-string text expands to empty", function()
     assertEqual((tok().Expand(nil)), "")
 end)

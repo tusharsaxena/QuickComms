@@ -2,7 +2,8 @@ local _, NS = ...
 -- modules/Bake.lua — a callout + a snapshot -> exactly one macro line (spec §8.3). PURE.
 -- Anti-pattern #20: callout text is chat text, never a command. The sanitizer flattens control
 -- characters (so there is never a second macro line), refuses a leading "/", and escapes "|"
--- before tokens expand, so only game-made spell links carry escape sequences.
+-- before tokens expand, and Tokens does the same to every baked value ({me}, {spec}, ...), so only
+-- game-made spell links carry escape sequences.
 
 NS.Bake = NS.Bake or {}
 local B = NS.Bake
