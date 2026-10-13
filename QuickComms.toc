@@ -119,6 +119,8 @@ modules\Surfaces.lua
 modules\Pad_Render.lua
 # Conventional: the Comms Pad frames; appends to NS.STAND_DOWN / NS.STAND_UP
 modules\Pad.lua
+# LOAD-BEARING: publishes NS.DialLayout, which modules\Dial_Render.lua and modules\Dial.lua take at load.
+modules\Dial_Layout.lua
 # Conventional: core\DebugLogSetup.lua's descriptor reads NS.Diagnostics at RUN time.
 modules\Diagnostics.lua
 

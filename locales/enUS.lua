@@ -603,3 +603,7 @@ L["Show this set wherever it matches. Off keeps it, and its place on every pad."
 L["Choose callouts"] = "Choose callouts"
 L["Share"] = "Share"
 L["Turn every built-in set back on and show all of their callouts. Your customized copies are kept."] = "Turn every built-in set back on and show all of their callouts. Your customized copies are kept."
+
+-- The Comms Dial's rings (modules/Dial_Layout.lua)
+L["More"] = "More"
+L["%s · %s"] = "%s · %s"

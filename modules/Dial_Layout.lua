@@ -1,0 +1,239 @@
+local _, NS = ...
+-- modules/Dial_Layout.lua — the Comms Dial's rings and geometry (spec §11.1, §11.3). PURE: plain
+-- tables in, plain tables out; no frame and no client read.
+--
+-- THE RINGS. A dial plan's groups, in the dial's order, become a list of rings, each one page of at
+-- most `size` items: a callout (kind "send", its baked slot) or a ring to open (kind "ring", the index
+-- of its target). Categories (D2): the first ring holds the groups; a group's ring holds its callouts;
+-- a battleground node set's ring holds its nodes, and each node's ring its callouts. Flat: the first
+-- ring holds every callout, highest group first. A ring with more items than wedges is paged: each
+-- page but the last holds size - 1 items and a More wedge to the next page, and a later page's parent
+-- and previous are the page before it (the hub and the wheel go back). Open-into (D9): when the first
+-- group has the flag, or is the only group (owner ruling R2), the dial opens on its ring and the hub
+-- goes up to the group ring. The wedge count is the dial's slices, never grown; 12 only on a ring with
+-- no children (spec §11.3), and a More wedge is a child, so such a ring gets 8. In Flat a node's
+-- callout is titled with its node ("INC 3 · Lumber Mill"); the slot keeps its own name.
+--
+-- DEPTH (spec §11.3: depth 2; depth 3 allowed, with the editor warning). Each ring records its depth,
+-- 1 for the first ring, a later page keeping its first page's. DeepGroups names the node sets whose
+-- callouts sit three rings deep: a set's ring at depth 2, holding node rings, that is not the ring the
+-- dial opens on (open-into skips the group ring, so a set it opens into is depth 2).
+--
+-- THE GEOMETRY. Wedges sit clockwise from N, on-axis first: four are N, E, S and W. Offsets are from
+-- the hub's center, y up. A node set's nodes are placed in their shipped order; pinning each node to
+-- its compass direction waits for phase 5's battleground confirmation.
+
+NS.DialLayout = NS.DialLayout or {}
+local DL = NS.DialLayout
+local L = NS.L
+
+DL.RADIUS  = 92                                -- a wedge's center from the hub's center
+DL.WEDGE   = 44                                -- a wedge button, square
+DL.HUB     = 40                                -- the hub (the header button)
+DL.LABEL   = 40                                -- a wedge's label, outward from the wedge's center
+DL.DISC    = 2 * (DL.RADIUS + DL.WEDGE / 2 + 8)
+DL.POINTER = DL.HUB / 2 + 8                    -- the pointer's distance from the hub's center
+DL.DEAD    = 8                                 -- inside this, the pointer hides
+DL.KEYS    = 8                                 -- the number keys 1-8 pick wedges
+
+local SLICE_OK = { [4] = true, [6] = true, [8] = true, [12] = true }
+local WINDS = { "N", "NE", "E", "SE", "S", "SW", "W", "NW" }
+
+local function round(x) return math.floor(x * 100 + 0.5) / 100 end
+
+--- A dial's slices: 4, 6, 8 or 12; anything else is the default 4.
+function DL.ClampSlices(v)
+    if SLICE_OK[v] then return v end
+    return 4
+end
+
+--- A ring's wedge count: the dial's slices, but 8 on a 12-slice dial for a ring that holds a ring.
+function DL.RingSize(slices, hasChildren)
+    slices = DL.ClampSlices(slices)
+    if slices == 12 and hasChildren then return 8 end
+    return slices
+end
+
+--- Split `items` into pages of `size`: every page but the last keeps size - 1 items, leaving the last
+--- wedge for More.
+--- @return table[] pages
+function DL.Paginate(items, size)
+    items = type(items) == "table" and items or {}
+    if #items <= size then return { items } end
+    local pages, i, per = {}, 1, size - 1
+    while #items - i + 1 > size do
+        local page = {}
+        for k = i, i + per - 1 do page[#page + 1] = items[k] end
+        pages[#pages + 1] = page
+        i = i + per
+    end
+    local last = {}
+    for k = i, #items do last[#last + 1] = items[k] end
+    pages[#pages + 1] = last
+    return pages
+end
+
+--- Wedge i of n: its angle (radians clockwise from N), its center and its label's offset from it.
+function DL.Wedge(i, n, radius)
+    n = math.max(1, tonumber(n) or 4)
+    radius = radius or DL.RADIUS
+    local a = (i - 1) * 2 * math.pi / n
+    local sx, sy = math.sin(a), math.cos(a)
+    return { angle = a, x = round(radius * sx), y = round(radius * sy),
+        lx = round(DL.LABEL * sx), ly = round(DL.LABEL * sy) }
+end
+
+--- The spoke between wedge j and wedge j + 1 of n: its center, rotation and length.
+function DL.Spoke(j, n)
+    n = math.max(1, tonumber(n) or 4)
+    local a = (j - 0.5) * 2 * math.pi / n
+    local inner, outer = DL.HUB / 2 + 4, DL.DISC / 2 - 4
+    local mid = (inner + outer) / 2
+    return { x = round(mid * math.sin(a)), y = round(mid * math.cos(a)), rotation = -a, length = outer - inner }
+end
+
+--- Wedge i of n as the nearest of the eight compass winds.
+function DL.Direction(i, n)
+    n = math.max(1, tonumber(n) or 4)
+    local deg = (i - 1) * 360 / n
+    return WINDS[math.floor(deg / 45 + 0.5) % 8 + 1]
+end
+
+--- The pointer from the hub's center (cx, cy) toward the cursor (mx, my), both in screen units: its
+--- angle (clockwise from N) and its offset from the hub's center. Nil inside the dead zone.
+function DL.Pointer(cx, cy, mx, my)
+    local dx, dy = (mx or 0) - (cx or 0), (my or 0) - (cy or 0)
+    local d = math.sqrt(dx * dx + dy * dy)
+    if d < DL.DEAD then return nil end
+    return math.atan2(dx, dy), round(DL.POINTER * dx / d), round(DL.POINTER * dy / d)
+end
+
+-- ── the rings ───────────────────────────────────────────────────────────────────────────────
+
+-- `node`: the node's title, for a Flat ring, where the node's own ring is gone.
+local function sendEntries(slots, node)
+    local out = {}
+    for i, slot in ipairs(slots or {}) do
+        local title = slot.name
+        if node then title = L["%s · %s"]:format(tostring(slot.name), node) end
+        out[i] = { kind = "send", slot = slot, title = title, icon = slot.icon }
+    end
+    return out
+end
+
+local function ringEntry(title, icon, entries)
+    return { kind = "ring", title = title, icon = icon, sub = { title = title, entries = entries } }
+end
+
+-- A group's entry on the first ring (Categories), or nil when nothing under it can be shown.
+local function groupEntry(g)
+    if type(g.children) == "table" then
+        local nodes = {}
+        for _, c in ipairs(g.children) do
+            if #(c.slots or {}) > 0 then nodes[#nodes + 1] = ringEntry(c.title, c.icon, sendEntries(c.slots)) end
+        end
+        if #nodes == 0 then return nil end
+        return ringEntry(g.title, g.icon, nodes)
+    end
+    if #(g.slots or {}) == 0 then return nil end
+    return ringEntry(g.title, g.icon, sendEntries(g.slots))
+end
+
+-- Every callout, highest group first, a node set's nodes in order (Flat).
+local function flatEntries(groups)
+    local out = {}
+    for _, g in ipairs(groups) do
+        local lists = {}
+        if type(g.children) == "table" then
+            for _, c in ipairs(g.children) do lists[#lists + 1] = { slots = c.slots, node = c.title } end
+        else
+            lists[1] = { slots = g.slots }
+        end
+        for _, list in ipairs(lists) do
+            for _, e in ipairs(sendEntries(list.slots, list.node)) do out[#out + 1] = e end
+        end
+    end
+    return out
+end
+
+--- A dial's rings, and the ring it opens on (0: nothing to show).
+--- @param groups table the dial's active groups in its order (see the Interfaces block of Task 3)
+--- @param opts table { mode = "categories"|"flat", slices, title }
+--- @return table rings, number openRing
+function DL.Rings(groups, opts)
+    groups = type(groups) == "table" and groups or {}
+    opts = type(opts) == "table" and opts or {}
+    local slices = DL.ClampSlices(opts.slices)
+    local rings = {}
+
+    -- Add `entries` as one ring (and its pages) under `parent`, at `depth`; then each ring entry's
+    -- own ring, one deeper. Returns the index of the first page.
+    local function addRing(title, entries, parent, depth)
+        local hasChildren = #entries > slices
+        for _, e in ipairs(entries) do
+            if e.kind == "ring" then hasChildren = true end
+        end
+        local size = DL.RingSize(slices, hasChildren)
+        local pages = DL.Paginate(entries, size)
+        local first = #rings + 1
+        for p, items in ipairs(pages) do
+            local idx = #rings + 1
+            rings[idx] = { title = title, page = p, pages = #pages, size = size, items = items, depth = depth,
+                parent = p == 1 and parent or idx - 1, prev = p > 1 and idx - 1 or 0, next = 0 }
+            if p > 1 then
+                local before = rings[idx - 1]
+                before.next = idx
+                before.items[#before.items + 1] = { kind = "ring", target = idx, title = L["More"], more = true }
+            end
+        end
+        for r = first, first + #pages - 1 do
+            for _, item in ipairs(rings[r].items) do
+                if item.sub then
+                    item.target = addRing(item.sub.title, item.sub.entries, r, depth + 1)
+                    item.sub = nil
+                end
+            end
+        end
+        return first
+    end
+
+    local title = opts.title or L["Comms Dial"]
+    if opts.mode == "flat" then
+        local entries = flatEntries(groups)
+        if #entries == 0 then return rings, 0 end
+        addRing(title, entries, 0, 1)
+        return rings, 1
+    end
+    local entries, first = {}, nil
+    for _, g in ipairs(groups) do
+        local e = groupEntry(g)
+        if e then
+            entries[#entries + 1] = e
+            first = first or { entry = e, openInto = g.openInto == true }
+        end
+    end
+    if #entries == 0 then return rings, 0 end
+    addRing(title, entries, 0, 1)
+    -- Owner ruling R2: a single group opens straight on its ring, as open-into does.
+    if first.openInto or #entries == 1 then return rings, first.entry.target end
+    return rings, 1
+end
+
+--- The node sets whose callouts sit three rings deep (spec §11.3: allowed, with the editor
+--- warning): each ring at depth 2, first page only, that holds a ring other than More and is not the
+--- ring the dial opens on. Their titles, in ring order.
+--- @return string[]
+function DL.DeepGroups(rings, openRing)
+    local out = {}
+    for r, ring in ipairs(type(rings) == "table" and rings or {}) do
+        if ring.depth == 2 and ring.page == 1 and r ~= openRing then
+            for _, item in ipairs(ring.items) do
+                if item.kind == "ring" and not item.more then
+                    out[#out + 1] = ring.title
+                    break
+                end
+            end
+        end
+    end
+    return out
+end

@@ -122,6 +122,7 @@ Kit.run{
         "test_preview",
         "test_master",
         "test_pad_layout",
+        "test_dial_layout",
         "test_surfaces",
         "test_pad_render",
         "test_pad",
