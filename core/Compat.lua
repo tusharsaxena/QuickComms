@@ -179,3 +179,35 @@ function Compat.SenderIsPlayer(sender, guid)
     if not mine then return nil end
     return (name:match("^([^%-]+)") or name) == mine
 end
+
+-- ── The bake context (spec §8.1): the values {me}, {spec}, {dungeon} and {spell:ID} bake from ──
+
+--- The player's name, without the realm.
+function Compat.PlayerName()
+    if not UnitName then return nil end
+    return PlainString((UnitName("player")))
+end
+
+--- The current specialization's display name.
+function Compat.SpecName()
+    local index = specIndex()
+    if not index then return nil end
+    local get = (C_SpecializationInfo and C_SpecializationInfo.GetSpecializationInfo) or GetSpecializationInfo
+    if not get then return nil end
+    local _, name = get(index)
+    return PlainString(name)
+end
+
+--- A Mythic+ dungeon's display name from its challenge map id.
+function Compat.DungeonName(mapID)
+    local cm = C_ChallengeMode
+    if not (PlainNumber(mapID) and cm and cm.GetMapUIInfo) then return nil end
+    return PlainString((cm.GetMapUIInfo(mapID)))
+end
+
+--- A spell's chat link, for {spell:ID}.
+function Compat.SpellLink(id)
+    local sp = C_Spell
+    if not (PlainNumber(id) and sp and sp.GetSpellLink) then return nil end
+    return PlainString(sp.GetSpellLink(id))
+end

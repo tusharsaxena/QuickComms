@@ -277,3 +277,10 @@ L["%s may have been dropped by the game (sent too soon after another message)."]
 -- Test mode (modules/Preview.lua)
 L["Test mode is not available in combat."] = "Test mode is not available in combat."
 L["Test mode ended: you entered combat."] = "Test mode ended: you entered combat."
+
+-- Surfaces (modules/Surfaces.lua)
+L["Tank"] = "Tank"
+L["Healer"] = "Healer"
+L["Damage"] = "Damage"
+L["Callout %d"] = "Callout %d"
+L["Test group %d"] = "Test group %d"

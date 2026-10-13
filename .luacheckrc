@@ -27,7 +27,7 @@ read_globals = {
   "InCombatLockdown", "debugprofilestop",
   "Settings", "StaticPopup_Show", "YES", "NO",
   -- core/Compat.lua: the client readers, all guarded for absence at call time.
-  "issecretvalue", "C_ChallengeMode", "C_Housing", "C_SpecializationInfo", "GetInstanceInfo",
+  "issecretvalue", "C_ChallengeMode", "C_Spell", "C_Housing", "C_SpecializationInfo", "GetInstanceInfo",
   "GetNormalizedRealmName", "GetSpecialization", "GetSpecializationInfo", "IsInGroup", "IsInInstance",
   "IsInRaid", "LE_PARTY_CATEGORY_INSTANCE", "UnitClass", "UnitFullName", "UnitGroupRolesAssigned",
   "UnitIsGroupAssistant", "UnitIsGroupLeader",
