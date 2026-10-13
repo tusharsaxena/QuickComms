@@ -211,3 +211,16 @@ function Compat.SpellLink(id)
     if not (PlainNumber(id) and sp and sp.GetSpellLink) then return nil end
     return PlainString(sp.GetSpellLink(id))
 end
+
+-- ── The pad (spec §10.1) ─────────────────────────────────────────────────────────────────────
+
+--- The client's color for a chat type, or nil when it cannot be read.
+function Compat.ChatColor(chatType)
+    local info = ChatTypeInfo
+    if type(info) ~= "table" or not Compat.IsSafeKey(chatType) then return nil end
+    local c = info[chatType]
+    if type(c) ~= "table" then return nil end
+    local r, g, b = PlainNumber(c.r), PlainNumber(c.g), PlainNumber(c.b)
+    if r and g and b then return r, g, b end
+    return nil
+end

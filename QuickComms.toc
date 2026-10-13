@@ -53,6 +53,8 @@ core\State.lua
 core\EnvSetup.lua
 # Conventional: NS.Pool is read inside functions only.
 core\PoolSetup.lua
+# Conventional: NS.MakeDragHandle is read inside functions only (modules\Pad.lua).
+core\WidgetsSetup.lua
 # LOAD-BEARING: publishes NS.MSG (the message catalog) and NS.Bus; every file that names a message
 # takes NS.MSG at load.
 core\Bus.lua
@@ -111,6 +113,8 @@ modules\Preview.lua
 modules\Pad_Layout.lua
 # Conventional: the surfaces' plans and rebuild; calls modules\Pad.lua at run time only
 modules\Surfaces.lua
+# LOAD-BEARING: publishes NS.PadRender, which modules\Pad.lua takes as a load-time upvalue.
+modules\Pad_Render.lua
 # Conventional: core\DebugLogSetup.lua's descriptor reads NS.Diagnostics at RUN time.
 modules\Diagnostics.lua
 

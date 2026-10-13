@@ -68,3 +68,15 @@ test("compat: SenderIsPlayer answers by GUID, then by name, and nil when it cann
     assertNil(C.SenderIsPlayer(T.secret("Testchar"), T.secret("guid")), "secret is unknown")
     assertNil(C.SenderIsPlayer(nil, nil))
 end)
+
+test("compat: ChatColor reads the client's chat colors and declines what it cannot read", function()
+    local NS, env = T.newAddon()
+    local r, g, b = NS.Compat.ChatColor("PARTY")
+    assertEqual(r, 0.67)
+    assertEqual(g, 0.67)
+    assertEqual(b, 1.0)
+    assertNil(NS.Compat.ChatColor("NOPE"))
+    assertNil(NS.Compat.ChatColor(nil))
+    env.ChatTypeInfo = nil
+    assertNil(NS.Compat.ChatColor("PARTY"))
+end)
