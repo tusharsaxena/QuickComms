@@ -16,11 +16,18 @@ local addonName, NS = ...
 
 local lib = LibStub and LibStub("LibKa0s-Bus-1.0", true)
 
--- The catalog. Each line names its one sender; payloads and consumers are in
--- docs/ARCHITECTURE.md -> Message Bus. The rest of design spec §17's catalog lands with the
--- modules that send it.
+-- The catalog of design spec §17. Each line names its one sender. Payloads and consumers:
+-- docs/ARCHITECTURE.md -> Message Bus.
 local MSG = {
-    PROFILE_CHANGED = "Ka0s_QuickComms_ProfileChanged",   -- core/QuickComms.lua (reloadProfile)
+    SITUATION_CHANGED     = "Ka0s_QuickComms_SituationChanged",     -- modules/Situation.lua
+    RESTRICTION_CHANGED   = "Ka0s_QuickComms_RestrictionChanged",   -- modules/Restrictions.lua
+    LIBRARY_CHANGED       = "Ka0s_QuickComms_LibraryChanged",       -- modules/Library.lua
+    ACTIVE_GROUPS_CHANGED = "Ka0s_QuickComms_ActiveGroupsChanged",  -- modules/Surfaces.lua (phase 2)
+    SURFACE_REBUILT       = "Ka0s_QuickComms_SurfaceRebuilt",       -- modules/Surfaces.lua (phase 2)
+    SEND_RESULT           = "Ka0s_QuickComms_SendResult",           -- modules/SendEngine.lua (phase 2)
+    COMBAT_QUEUE_DRAINED  = "Ka0s_QuickComms_CombatQueueDrained",   -- modules/SendEngine.lua (phase 2)
+    PROFILE_CHANGED       = "Ka0s_QuickComms_ProfileChanged",       -- core/QuickComms.lua
+    TEST_MODE_CHANGED     = "Ka0s_QuickComms_TestModeChanged",      -- modules/Preview.lua (phase 2)
 }
 
 if not lib then
