@@ -119,12 +119,54 @@ local function announce(row, path, value)
     if Helpers.RefreshAll then Helpers.RefreshAll() end
 end
 
+-- ── members (architecture-§5) ───────────────────────────────────────────────────────────────
+
+-- A member's own fields are rows whose path starts with the member's kind (settings/SchemaMembers.lua).
+-- The seam addresses the member by the instance argument or, without one, by Settings.EditingId: the
+-- member that kind's editor page has selected, else the first member that page lists, so the panel's
+-- widgets and the CLI write the member the page shows (or would show when opened); the drag and
+-- Library's built-in writers name theirs. Library resolves the id. With no member to address (none
+-- of that kind exists, or a named id is gone) there is no root, and the write is refused with a line
+-- saying where to make one.
+local INSTANCE = { callout = true, group = true, pad = true, builtin = true }
+Settings.INSTANCE_KINDS = INSTANCE
+
+local NO_MEMBER = {
+    callout = L["No callout to edit: make one on the Callouts page."],
+    group   = L["No group to edit: make one on the Groups page."],
+    pad     = L["No pad to edit: make one on the Comms Pad page."],
+    builtin = L["No built-in set is selected: pick one on the Groups page."],
+}
+
+--- The member a kind's rows address when a write names none: the page's selection while it exists,
+--- else the first member the page lists (Library.MemberIds). A built-in set's overlay has no
+--- fallback: it is only ever the set the Groups page shows.
+--- @return string|nil
+function Settings.EditingId(kind)
+    local id = NS.State.editing[kind]
+    if id ~= nil and NS.Library.Member(kind, id) then return id end
+    if kind == "builtin" then return nil end
+    return NS.Library.MemberIds(kind)[1]
+end
+
+local function resolveRoot(parts, id)
+    local kind = parts and parts[1]
+    if INSTANCE[kind] then
+        if not QC.db then return nil, NO_MEMBER[kind] end
+        if id == nil then id = Settings.EditingId(kind) end
+        local member = id ~= nil and NS.Library.Member(kind, id) or nil
+        if member then return member, 2, id end
+        return nil, NO_MEMBER[kind]
+    end
+    return QC.db and QC.db.profile, 1
+end
+
 -- ── the write seam ──────────────────────────────────────────────────────────────────────────
 
 -- The panel checkbox, the CLI, the launcher and the resets all land in S.Set.
 local S = Settings.SchemaLib:New{
     rows         = Schema,
-    resolveRoot  = function() return QC.db and QC.db.profile, 1 end,
+    resolveRoot  = resolveRoot,
     announce     = announce,
     debug        = function(tag, fmt, ...) NS.Debug(tag, fmt, ...) end,
     debugEnabled = function() return NS.State.debug == true end,
@@ -163,7 +205,10 @@ function Settings.RowsForPage(pageKey)
     return out
 end
 
-local VALID_TYPES = { bool = true, number = true, string = true }
+-- `point`, `when` and `idset` are the structured member rows (settings/SchemaMembers.lua): a table
+-- each, drawn by their own controls on the editor pages and typed and printed on the CLI by
+-- settings/Slash.lua's parse and format hooks.
+local VALID_TYPES = { bool = true, number = true, string = true, point = true, when = true, idset = true }
 
 -- A row carrying BOTH its own get and set owns its storage, so there is no defaults entry at its
 -- path: answering nil makes the library skip the resolution check for it (the session rows, and
@@ -172,6 +217,8 @@ local VALID_TYPES = { bool = true, number = true, string = true }
 local function defaultsRootFor(profileDefaults)
     return function(_, row)
         if row and type(row.get) == "function" and type(row.set) == "function" then return nil end
+        -- A member row resolves against its kind's template, from the segment after the kind.
+        if row and row.instance then return NS.Library.TEMPLATES[row.instance], 2 end
         return profileDefaults, 1
     end
 end
@@ -209,6 +256,8 @@ end
 -- ── defaults and the global reset ───────────────────────────────────────────────────────────
 
 --- The AceDB defaults tree: defaults/Profile.lua's two scopes, then every stored schema row.
+--- A member row (`instance`) is no default: its member's fields are written whole when Library
+--- creates it.
 --- @return table
 function Settings.BuildDefaults()
     local out = {
@@ -216,7 +265,7 @@ function Settings.BuildDefaults()
         global  = deepcopy(C.GLOBAL_DEFAULTS),
     }
     for _, def in ipairs(Schema) do
-        if def.path and not def.sessionOnly and not GLOBAL[def.path] then
+        if def.path and not def.sessionOnly and not GLOBAL[def.path] and not def.instance then
             local segs = {}
             for part in string.gmatch(def.path, "[^.]+") do segs[#segs + 1] = part end
             local parent = out.profile
@@ -230,7 +279,10 @@ function Settings.BuildDefaults()
     return out
 end
 
-local function notGlobal(row) return not GLOBAL[row.path] end
+-- The rows a profile reset counts (debug-logging-§10's N): not a global row, and not a member row,
+-- which addresses whichever member is selected and has no profile default of its own.
+local function notGlobal(row) return not GLOBAL[row.path] and not row.instance end
+Settings.CountedByProfileReset = notGlobal
 
 --- The global reset IS a profile reset (options-ui-§12); the walk keeps only session rows.
 --- @param row table

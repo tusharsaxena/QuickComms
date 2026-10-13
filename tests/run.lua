@@ -109,6 +109,7 @@ Kit.run{
         "test_resolver",
         "test_builtins",
         "test_library",
+        "test_members",
         "test_check",
         "test_send_guard",
         "test_sendengine",

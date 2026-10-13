@@ -134,6 +134,8 @@ settings\OptionsSetup.lua
 # only when a row's onChange runs); loads before settings\Panel.lua,
 # which splices the Master controls in ahead of these rows.
 settings\SchemaRows.lua
+# LOAD-BEARING: reads NS.Library.TEMPLATES, NS.Channels.KINDS and NS.SchemaRuntime.AddRows at file scope.
+settings\SchemaMembers.lua
 # LOAD-BEARING: reads NS.C, Settings.Helpers and NS.SchemaRuntime.AddRows at file scope.
 settings\Panel.lua
 # Conventional: the verb bodies settings\Slash.lua's NS.COMMANDS rows call at run time; read modules only inside functions.

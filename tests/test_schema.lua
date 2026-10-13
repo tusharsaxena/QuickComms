@@ -52,7 +52,10 @@ end)
 test("schema: a page's rows are the rows whose page is its key", function()
     local NS = T.newAddon()
     local Settings = NS.addon.Settings
-    assertEqual(#Settings.RowsForPage("general"), #Settings.Schema)
+    local general = Settings.RowsForPage("general")
+    assertTrue(#general > 0)
+    for _, row in ipairs(general) do assertEqual(row.page, "general") end
+    assertTrue(#Settings.RowsForPage("callouts") > 0, "the member rows draw on their own pages")
     assertEqual(#Settings.RowsForPage("nope"), 0)
 end)
 
@@ -118,4 +121,11 @@ test("schema: [fix wave] the Behavior rows that rebuild the pads resolve Setting
     NS.SchemaRuntime.Set("behavior.lockdownChip", false)
     NS.SchemaRuntime.Set("behavior.autoPromote", true)
     assertEqual(#heard, 3)
+end)
+
+test("schema: [phase 3] a fresh profile has no row off its default; the member rows are not counted", function()
+    local NS = T.bootAddon()
+    local Settings = NS.addon.Settings
+    -- red under: drop `and not row.instance` from Settings.CountedByProfileReset (the member rows count)
+    assertEqual(NS.SchemaRuntime.CountOffDefault(Settings.CountedByProfileReset), 0)
 end)

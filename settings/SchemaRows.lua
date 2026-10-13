@@ -28,8 +28,9 @@ end
 local function isNumber(v) return type(v) == "number" and v == v end
 local function clampGuard(v) return math.max(0.6, math.min(2.0, v)) end
 
--- On a load where the Options composers are hollow (LibKa0s absent) the schema stays empty
--- (settings/Panel.lua adds no rows either); the Behavior rows are drawn by that library.
+-- On a load where the Options composers are hollow (LibKa0s absent) this file and settings/Panel.lua
+-- add no rows; the Behavior rows are drawn by that library. The schema then holds only the member
+-- rows (settings/SchemaMembers.lua), which Library's writers need on every load.
 if not NS.addon.Settings.Helpers.MASTER_GROUP then return end
 
 NS.SchemaRuntime.AddRows({
