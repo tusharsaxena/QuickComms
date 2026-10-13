@@ -113,6 +113,7 @@ Kit.run{
         "test_editors",
         "test_page_callouts",
         "test_groups_when",
+        "test_page_groups",
         "test_check",
         "test_send_guard",
         "test_sendengine",
