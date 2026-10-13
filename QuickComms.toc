@@ -107,6 +107,8 @@ modules\SendEngine_Guard.lua
 modules\SendEngine.lua
 # Conventional: test mode, TEST_MODE_CHANGED's sender; appends to NS.STAND_DOWN / NS.STAND_UP
 modules\Preview.lua
+# LOAD-BEARING: publishes NS.PadLayout, which modules\Pad_Render.lua and modules\Pad.lua take at load.
+modules\Pad_Layout.lua
 # Conventional: core\DebugLogSetup.lua's descriptor reads NS.Diagnostics at RUN time.
 modules\Diagnostics.lua
 
