@@ -98,6 +98,21 @@ test("slash: degraded, enable and disable still work and the CLI names the missi
     assertFalse(D.IsStoodDown())
 end)
 
+test("slash: [audit QC-05] degraded, `debug on`/`off` flip the flag and ack, and `debug diagnostics` routes", function()
+    local D, _, m = T.enableAddon{ skip = NO_LIBKA0S }
+    m.prints = {}
+    -- red under: put back the stub's `DebugVerb = function() return false end` in core/DebugLogSetup.lua
+    D.addon:OnSlashCommand("debug on")
+    assertTrue(D.State.debug == true, "the flag flipped")
+    assertTrue(table.concat(m.prints, "\n"):find("debug logging", 1, true) ~= nil, "the ON ack printed")
+    D.addon:OnSlashCommand("debug off")
+    assertTrue(D.State.debug == false)
+    m.prints = {}
+    D.addon:OnSlashCommand("debug diagnostics")
+    assertEqual(#m.prints, 1)
+    assertTrue(m.prints[1]:find("/qc diagnostics is unavailable", 1, true) ~= nil, m.prints[1])
+end)
+
 test("slash: [phase 3] `why` prints each built pad and why its groups show", function()
     local NS, _, m = T.enableAddon()
     NS.Situation.ReadInputs = function()

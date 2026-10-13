@@ -9,6 +9,17 @@ local addonName, NS = ...
 local QC = NS.addon
 local Settings  = QC.Settings
 local lib = LibStub and LibStub("LibKa0s-Options-1.0", true)
+
+-- The color codec, written out (options-ui-§1): every color row stores { r, g, b, a } (a pad's Look
+-- colors), which is also the library's default shape. A missing component reads as 1.
+Settings.ColorCodec = {
+    decode = function(c)
+        if type(c) ~= "table" then c = {} end
+        return c.r or 1, c.g or 1, c.b or 1, c.a or 1
+    end,
+    encode = function(r, g, b, a) return { r = r, g = g, b = b, a = a or 1 } end,
+}
+
 if not lib then
     local missing = NS.L["%s, so the settings panel is unavailable."]:format(NS.LIBKA0S_MISSING)
     local function announcer()
@@ -105,6 +116,8 @@ local O = lib:New({
     scheduleTimer = function(fn, delay) return QC:ScheduleTimer(fn, delay) end,
     resetProfile = function() QC.db:ResetProfile() end,
     profilesPage = true,
+    colorDecode  = Settings.ColorCodec.decode,
+    colorEncode  = Settings.ColorCodec.encode,
     skipRestoreAll = Settings.VetoedFromResetAll,
 })
 for k, v in pairs(host) do

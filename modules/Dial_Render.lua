@@ -9,7 +9,7 @@ local _, NS = ...
 -- guard's cooling veil, a result flash and a gold glow under the mouse (the selected wedge). The hub carries the stale hint, the lockdown chip and the test
 -- or preview label. The pointer is a plain (unprotected) child of the header that turns toward the
 -- cursor: its OnUpdate is set when the header shows and cleared when it hides, so a closed or
--- stood-down dial runs nothing per frame (perf bucket dial.render).
+-- stood-down dial runs nothing per frame (perf bucket dialRender).
 
 NS.DialRender = NS.DialRender or {}
 local R = NS.DialRender
@@ -20,10 +20,20 @@ local Perf = NS.Perf
 local CIRCLE = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
 local DEFAULT_ICON = "Interface\\Icons\\INV_Misc_QuestionMark"
 local MORE_ICON = "Interface\\ChatFrame\\ChatFrameExpandArrow"
+-- The padlock and the hub's close are the shared catalog's `lock` and `close` marks
+-- (library-stack-§8), resolved at draw time; these Blizzard textures are drawn only when the catalog
+-- answers nil (the library absent).
 local LOCK_ICON = "Interface\\PetBattles\\PetBattle-LockIcon"
 local CLOSE_ICON = "Interface\\Buttons\\UI-StopButton"
 local POINTER_ICON = "Interface\\Minimap\\MinimapArrow"
 local SPOKES = 12
+
+-- One catalog mark on `tex`, tinted (the catalog art is white), or the Blizzard fallback untinted.
+local function mark(tex, name, fallback, r, g, b)
+    local path = NS.Icon(name)
+    tex:SetTexture(path or fallback)
+    if path then tex:SetVertexColor(r, g, b, 1) end
+end
 
 -- A round texture: the circular alpha mask, tinted.
 local function circle(frame, layer, size, r, g, b, a)
@@ -52,7 +62,7 @@ function R.PointerUpdate(pointer)
     else
         arrow:Hide()
     end
-    if t0 then Perf.Note("dial.render", debugprofilestop() - t0) end
+    if t0 then Perf.Note("dialRender", debugprofilestop() - t0) end
 end
 
 --- Build the hub's regions and the pointer, once per header. `onEnter(header)` runs on hover.
@@ -62,7 +72,7 @@ function R.DressHub(header, onEnter)
     header.qcDisc = circle(header, "BACKGROUND", DL.DISC, 0.06, 0.06, 0.08, 0.80)
     header.qcHub = circle(header, "BORDER", DL.HUB, 0.12, 0.12, 0.14, 0.95)
     header.qcClose = header:CreateTexture(nil, "ARTWORK")
-    header.qcClose:SetTexture(CLOSE_ICON)
+    mark(header.qcClose, "close", CLOSE_ICON, 1.0, 0.35, 0.35)   -- red, as the stop button reads
     header.qcClose:SetSize(DL.HUB - 16, DL.HUB - 16)
     header.qcClose:SetPoint("CENTER", header, "CENTER", 0, 0)
     header.qcStale = header:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
@@ -172,7 +182,8 @@ function R.DressWedge(btn)
     btn.qcLock = btn:CreateTexture(nil, "OVERLAY")
     btn.qcLock:SetSize(14, 14)
     btn.qcLock:SetPoint("TOPRIGHT", btn, "TOPRIGHT", 0, 0)
-    btn.qcLock:SetTexture(LOCK_ICON)
+    local lockTint = NS.Constants.GOLD
+    mark(btn.qcLock, "lock", LOCK_ICON, lockTint.r, lockTint.g, lockTint.b)
     btn.qcDim = circle(btn, "OVERLAY", DL.WEDGE, 0, 0, 0, 0.55)
     btn.qcDim:Hide()
     btn.qcCool = circle(btn, "OVERLAY", DL.WEDGE, 0, 0, 0, 0.35)

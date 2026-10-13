@@ -15,8 +15,9 @@ NS.addon = QC
 -- NS.Util.print, and the two names must be the same function object (architecture-§2).
 NS.Print = NS.Util.print
 
--- Every game event this addon owns, as { event, handlerMethodName } pairs. None yet: the situation
--- and restriction edges append theirs when they land.
+-- Every game event this addon owns, as { event, handlerMethodName } pairs. Feature modules append
+-- theirs at load (Restrictions, Situation, SendEngine's echo tracker); the latch registers and
+-- unregisters the whole list.
 NS.FEATURE_EVENTS = NS.FEATURE_EVENTS or {}
 
 -- Teardown and rebuild steps feature modules contribute, run by the latch's two callbacks.

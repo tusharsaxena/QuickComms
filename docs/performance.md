@@ -18,22 +18,25 @@ exemption will never apply.
 
 ## The buckets
 
-Five are declared in `core/PerfSetup.lua`, in report order, each with the file that brackets it:
+Seven are declared, all of the design's, in `core/PerfSetup.lua`, in report order, each with the file that brackets it:
 
 | Bucket | Bracketed in | Measures |
 |---|---|---|
-| `bake.surface` | `modules/Surfaces.lua` | one pad's or dial's plan: resolve, order, bake every slot (and, for a dial, the ring layout); the Comms Dial page's own looks at a plan (`deps.unmeasured`) are not counted |
-| `send.click` | `modules/SendEngine.lua` | the `OnClick` hook on a send button |
-| `pad.layout` | `modules/Pad.lua` | one pad's rebuild: geometry, chips, arm |
-| `echo.match` | `modules/SendEngine.lua` | a `CHAT_MSG_*` echo while a press waits |
-| `dial.render` | `modules/Dial_Render.lua` | the pointer's `OnUpdate` while a dial is open: one cursor read, one angle, one texture move |
+| `situationRefresh` | `modules/Situation.lua` | one situation read: inputs, classify, signature. The `SITUATION_CHANGED` publish runs after the bracket closes; the rebuild it triggers is in `bakeSurface`, `resolverResolve` and `padLayout` |
+| `bakeSurface` | `modules/Surfaces.lua` | one pad's or dial's plan: resolve, order, bake every slot (and, for a dial, the ring layout); the Comms Dial page's own looks at a plan (`deps.unmeasured`) are not counted |
+| `resolverResolve` | `modules/Surfaces.lua` | a plan's active groups and their order; declared and noted within `bakeSurface` |
+| `sendClick` | `modules/SendEngine.lua` | the `OnClick` hook on a send button |
+| `padLayout` | `modules/Pad.lua` | one pad's rebuild: geometry, chips, arm |
+| `echoMatch` | `modules/SendEngine.lua` | a `CHAT_MSG_*` echo while a press waits |
+| `dialRender` | `modules/Dial_Render.lua` | the pointer's `OnUpdate` while a dial is open: one cursor read, one angle, one texture move |
 
-`Situation.Refresh` has no bucket: a pass coalesced to one read 0.1 s after a burst of zone, roster,
-spec and keystone events runs a handful of times a pull at most, so a bucket on it would read near
-`0.000` (bucket coverage is a SHOULD, performance-§3); the resolver runs inside `bake.surface`. The
-design's other buckets (spec §16: `situation.refresh`, `resolver.resolve`) are
-declared together with the bracket that reaches each one, and `tests/test_setup.lua` fails if a
-declared bucket has no bracket, or a bracket no bucket. Every
+Keys are lowerCamelCase, named for the path they time (naming-cheatsheet); until audit QC-12 they
+were dotted (`situation.refresh`, `bake.surface`, …), and no capture under `docs/perf-analysis/` names
+the old form. The `situationRefresh` scenario below shares its bucket's name because it times that
+bucket's path alone.
+
+Each bucket is declared together with the bracket that reaches it, and `tests/test_setup.lua` fails
+if a declared bucket has no bracket, or a bracket no bucket. Every
 bracket is the gated form (performance-§2): one upvalue read, one field read and one boolean test
 when capture is off.
 
@@ -44,10 +47,14 @@ notes per iteration, never time:
 
 | Scenario | What it shows | Ceiling |
 |---|---|---|
-| `bracketCaptureOff` | the gated bracket shape, against the live harness with capture off, notes nothing and allocates nothing (zero overhead) | 0 bytes, 0 notes |
+| `bracketCaptureOff` | the gated bracket shape, capture off, notes nothing and allocates nothing | 0 bytes, 0 notes |
+| `dialPointerCaptureOff` | the hottest bracketed path, the open dial's pointer `OnUpdate`, capture off | 1 KiB, 0 notes |
+| `dialPointerNoHarness` | the same path on an instance with no Perf library; the run fails if capture off allocates more (zero overhead, performance-§9) | 1 KiB, 0 notes |
+| `padRebuild12` | a 12-chip pad built from its plan and applied, capture on | 69 KiB, 3 notes (raised from 68 KiB when the rows began to follow the Look's font size) |
+| `dialOpenClose` | the default dial opened, one pointer frame, closed | 2 KiB, 1 note |
+| `situationRefresh` | a situation read whose signature did not move | 2 KiB, 1 note |
 
-The design's scenarios (a 12-chip pad rebuild, a full dial open and close) arrive with phase 5's
-`tests/perf.lua`.
+The ceilings are the headless mock's figures, rounded up to the next KiB; its catch-all methods allocate a closure per call, so compare runs with runs, never with the client.
 
 ## In game
 

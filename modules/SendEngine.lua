@@ -271,7 +271,7 @@ end
 -- ── the override bindings (spec §9.4): the dials' keys ──────────────────────────────────────
 
 local bindOwner          -- a plain frame; every override binding this addon holds is its
-local bound, boundSig = {}, nil
+local bound = {}
 
 --- Bind each { key, name, button } as an override click, replacing every binding this addon held.
 --- Out of combat only: the client refuses override bindings in combat. Logged only on a change.
@@ -291,10 +291,8 @@ function SE.BindKeys(list)
         parts[#parts + 1] = b.key .. "=" .. b.name
     end
     local sig = table.concat(parts, ",")
-    if sig ~= boundSig then
-        boundSig = sig
-        NS.Debug("Bind", "bound %s", sig ~= "" and sig or "nothing")
-    end
+    -- Log on change (debug-logging-§9); the library re-arms the key on a console Clear.
+    NS.DebugChanged("bindings", "Bind", "bound %s", sig ~= "" and sig or "nothing")
     return true
 end
 
@@ -318,6 +316,14 @@ local function releasePending()
     if pending then pending:UnregisterEvent("PLAYER_REGEN_ENABLED") end
 end
 
+local function onRegenEnabled()
+    releasePending()
+    local held = State.pendingTeardown
+    State.pendingTeardown = nil
+    if held then held() end
+    NS.Debug(TAG_Q, "held stand-down finished")
+end
+
 --- Run the secure half of a stand-down now, or hold it until combat ends.
 --- @return boolean ranNow
 function SE.Teardown(fn)
@@ -327,13 +333,13 @@ function SE.Teardown(fn)
     end
     State.pendingTeardown = fn
     pending = pending or LibStub("AceEvent-3.0"):Embed({})
-    pending:RegisterEvent("PLAYER_REGEN_ENABLED", function()
-        releasePending()
-        local held = State.pendingTeardown
-        State.pendingTeardown = nil
-        if held then held() end
-        NS.Debug(TAG_Q, "held stand-down finished")
-    end)
+    -- Through the SafeRegister family (events-frames-taint-§1). A refusal cannot happen on a real
+    -- client (the event exists); if it did, the event is listed in NS.rejectedEvents (diagnostics)
+    -- and the teardown stays held in State.pendingTeardown, which the next stand-up cancels.
+    if not NS.SafeRegisterEvent(pending, "PLAYER_REGEN_ENABLED", onRegenEnabled, NS.rejectedEvents) then
+        NS.Debug(TAG_Q, "stand-down held, but PLAYER_REGEN_ENABLED was refused")
+        return false
+    end
     NS.Debug(TAG_Q, "stand-down held until combat ends")
     return false
 end
@@ -419,7 +425,7 @@ function SE.OnClick(b, mouseButton, down)
     if not G.IsActingEdge(down, useKeyDown(b)) then return end
     local t0 = Perf.on and debugprofilestop()
     press(b)
-    if t0 then Perf.Note("send.click", debugprofilestop() - t0) end
+    if t0 then Perf.Note("sendClick", debugprofilestop() - t0) end
 end
 
 function SE.GuardState()
@@ -445,7 +451,7 @@ function NS.addon.OnSendEcho(_, event, ...)
     local guid = select(12, ...)
     local hit = G.Match(e, G.CHAT_TYPE_BY_EVENT[event], GetTime(), NS.Compat.SenderIsPlayer(sender, guid))
     if hit then result(hit.meta, "sent") end
-    if t0 then Perf.Note("echo.match", debugprofilestop() - t0) end
+    if t0 then Perf.Note("echoMatch", debugprofilestop() - t0) end
 end
 
 -- Stood down, no echo can arrive: the timers are canceled and the presses forgotten.

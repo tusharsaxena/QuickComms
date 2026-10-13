@@ -15,7 +15,7 @@ drop notes; no hard guard in combat, spec §9.2), any number of pads and dials, 
 Mythic+, raid, arena and battlegrounds, the settings panel with *Preview as…* and *Why is this
 showing?*, and export and import strings.
 
-## What exists at the end of phase 4
+## What exists at the end of phase 5
 
 The data layer: the situation snapshot and the restriction state, the token and channel rules, the
 bake (one sanitized macro line per callout), the resolver, the library (the registry writer and its
@@ -25,15 +25,15 @@ buttons, the soft spam guard, the echo tracker, the combat-end queue), the defau
 the active built-in sets, test mode, the lock and the saved position. Phase 3 added the editors: the
 Callouts, Groups (with the When editor and a Preview tab), Comms Pad and Share (Built-in tab) pages,
 "Preview as…" on the pads and `/qc preview`, and "Why is this showing?" on the pad header and
-`/qc why`. Phase 4 added the Comms Dial in Relaxed mode: a key (or WoW's key bindings menu) opens it, a click on a wedge sends, a group wedge opens its ring, battleground node sets open straight on their nodes, and the Comms Dial page sets it up. The frame they plug into: the settings panel's
+`/qc why`. Phase 4 added the Comms Dial in Relaxed mode: a key (or WoW's key bindings menu) opens it, a click on a wedge sends, a group wedge opens its ring, battleground node sets open straight on their nodes, and the Comms Dial page sets it up. Phase 5 added sharing (an export string and an import that checks, reports and adds what a string holds as new, unbound members), the pad's Look font, border and background with class colors, the icon picker, battleground node sets pinned to their compass winds, and the instance ids matched against the client's data (their in-game confirmation is the smoke test's); the release gate is green, and v0.1.0 waits for the owner's word. The frame they plug into: the settings panel's
 landing page, General page (Master controls) and Profiles page, the `/qc` command with the reserved verbs, the launcher, the debug console and
 the diagnostics report, the performance harness, the stand-down latch, the message catalog and the
-migration runner. The surfaces and the rest of the paragraph above arrive with the plan's later
-phases ([`superpowers/plans/2026-10-11-quickcomms-phase-0-1.md`](superpowers/plans/2026-10-11-quickcomms-phase-0-1.md)
+migration runner. The paragraph above was built in the plan's phases ([`superpowers/plans/2026-10-11-quickcomms-phase-0-1.md`](superpowers/plans/2026-10-11-quickcomms-phase-0-1.md)
 for phases 0 and 1, [`superpowers/plans/2026-10-13-quickcomms-phase-2.md`](superpowers/plans/2026-10-13-quickcomms-phase-2.md)
 for phase 2, [`superpowers/plans/2026-10-13-quickcomms-phase-3.md`](superpowers/plans/2026-10-13-quickcomms-phase-3.md)
 for phase 3, [`superpowers/plans/2026-10-13-quickcomms-phase-4.md`](superpowers/plans/2026-10-13-quickcomms-phase-4.md)
-for phase 4).
+for phase 4, [`superpowers/plans/2026-10-13-quickcomms-phase-5.md`](superpowers/plans/2026-10-13-quickcomms-phase-5.md)
+for phase 5).
 
 ## What it deliberately does not do
 

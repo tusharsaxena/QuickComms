@@ -435,3 +435,33 @@ test("members: [phase 4] an off-screen dial.point is refused; `/qc reset` brings
     NS.addon:OnSlashCommand("reset dial.key")
     assertTrue(NS.db.profile.dials.d2.key == false, "no key")
 end)
+
+test("members: [phase 5] a When's key level prints as it types back in: one level, open below, open above", function()
+    local NS, m = T.enableAddon()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    NS.State.editing.group = gid
+    for _, typed in ipairs({ "12", "-15", "10-", "10-15" }) do
+        NS.addon:OnSlashCommand("set group.when keyLevel " .. typed)
+        m.prints = {}
+        NS.addon:OnSlashCommand("get group.when")
+        local text = table.concat(m.prints, "\n")
+        assertTrue(text:find("keyLevel " .. typed, 1, true) ~= nil, typed .. ": " .. text)
+    end
+end)
+
+test("members: [phase 5] a pad's Look rows are composed member rows: checked, clamped, announced", function()
+    local NS, S, Lib = boot()
+    local pid = Lib.CreateSurface("pad", "Mine")
+    local out = heard(NS)
+    assertTrue(S.Set("pad.look.fontSize", 99, pid))
+    assertEqual(NS.db.profile.pads[pid].look.fontSize, 32, "clamped to the row's range")
+    local ok, _, why = S.Set("pad.look.borderColor", { r = 2, g = 0, b = 0 }, pid)
+    assertFalse(ok)
+    assertEqual(why, "A color is red, green and blue, and optionally alpha, each from 0 to 1.")
+    assertFalse((S.Set("pad.look.fontFlags", "SPARKLY", pid)))
+    assertTrue(S.Set("pad.look.fontFlags", "OUTLINE", pid))
+    assertTrue(S.Set("pad.look.useClassColorBorder", true, pid))
+    assertEqual(table.concat(out, ","), "pad:" .. pid .. ",pad:" .. pid .. ",pad:" .. pid)
+    local row = S.FindRow("pad.look.background")
+    assertEqual(row.classColorSource, "player", "a pad's text and chrome describe no unit")
+end)

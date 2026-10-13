@@ -1,5 +1,6 @@
 local addonName, NS = ...
--- core/MediaSetup.lua — NS.Icon / NS.MediaFont from LibKa0s-Media-1.0 and the one RegisterLSM call.
+-- core/MediaSetup.lua — NS.Icon / NS.MediaFont from LibKa0s-Media-1.0, the one RegisterLSM call, and
+-- NS.MediaFetch, a LibSharedMedia entry by its name.
 --
 -- The icon catalog, the monospace face and the bar textures ship inside the vendored payload
 -- (library-stack-§8). Every call passes the addon's own FOLDER name: the library is vendored and
@@ -27,3 +28,26 @@ end
 
 -- At FILE LOAD, not PLAYER_LOGIN: LibSharedMedia is vendored under libs/ and has already run.
 if Media then Media.RegisterLSM(addonName) end
+
+local LSM = LibStub and LibStub("LibSharedMedia-3.0", true)
+
+--- The path of a LibSharedMedia entry by its name (a pad's Look font or border style), or nil: no
+--- LibSharedMedia, no such name on this machine (a media addon removed, a shared pad naming one this
+--- player lacks). Nil is a real answer: the caller draws its default.
+--- @param kind string "font" | "border" | "statusbar" | "background"
+--- @param name string|nil
+--- @return string|nil
+function NS.MediaFetch(kind, name)
+    if not (LSM and type(name) == "string" and name ~= "") then return nil end
+    local ok, path = pcall(LSM.Fetch, LSM, kind, name, true)
+    if ok and type(path) == "string" and path ~= "" then return path end
+    return nil
+end
+
+--- The icon catalog's names, in its order (library-stack-§8: a catalog is enumerated, never
+--- hard-coded), or an empty list when the library is absent. The icon picker reads it
+--- (settings/Editors.lua).
+--- @return string[]
+function NS.IconNames()
+    return Media and Media.ICONS or {}
+end

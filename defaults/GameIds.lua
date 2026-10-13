@@ -2,15 +2,22 @@ local _, NS = ...
 -- defaults/GameIds.lua — the shipped game-id tables "Preview as…" and the When editor list (spec
 -- §13.2, §13.3). DATA ONLY. Every entry is an id or a token, never a name (localization-§4): a name
 -- is read from the client at display time (core/Compat.lua) and never matched.
---   DUNGEONS  the current Mythic+ season's instanceIDs (GetInstanceInfo's 8th return). Only the ids
---             confirmed when this table was written are listed: the season's returning dungeons.
---             The Midnight dungeons and raids join when their ids are confirmed in game (phase 5,
---             with the battleground ids); until then the When editor adds the instance you are in,
---             or a typed id.
---   RAIDS     the current raid tier's instanceIDs (none confirmed yet).
+--   DUNGEONS  the current Mythic+ season's instanceIDs (GetInstanceInfo's 8th return, which is the
+--             client's Map id): the season's four returning dungeons and Midnight's four new ones.
+--   RAIDS     the current raid tier's instanceIDs: Midnight's three launch raids.
 --   CLASSES   classFile tokens, in the client's class order.
---   SPECS     specIDs per classFile. 1480 is the Demon Hunter's Devourer (Midnight), confirmed in
---             game with the rest in phase 5.
+--   SPECS     specIDs per classFile. 1480 is the Demon Hunter's Devourer (Midnight): matched in the
+--             client's ChrSpecialization table (class 12); in game, smoke check IDS-1.
+-- MATCHED (phase 5), NOT YET CONFIRMED IN GAME: matched against the client's own data tables as
+-- exported from build 12.1.5.70340 by wago.tools (2026-10-13). Each dungeon is a map of Mythic+
+-- display season 34 (MythicPlusSeasonTrackedMap, through MapChallengeMode, to a Map row of instance
+-- type 1); each raid a Map row of instance type 2 in the journal's Current Season tier under the
+-- launch season's condition. tools/derive-gameids.py re-derives all of it and checks this file and
+-- tests/test_gameids.lua's extraction. In-game confirmation is smoke check IDS-1 (and BG-2 for the
+-- battlegrounds); this note says CONFIRMED only after the phase 5 smoke test records them as passed.
+-- Not listed: the raids the client gates behind a later season (The Tidebound Grotto, The Venomous
+-- Abyss, The Unbinding of Kith'ix) and Sporefall (1592; owner ruling R4): the When editor adds the
+-- instance you are in, or a typed id.
 
 NS.GameIds = NS.GameIds or {}
 local G = NS.GameIds
@@ -20,8 +27,16 @@ G.DUNGEONS = {
     658,    -- Pit of Saron
     1753,   -- Seat of the Triumvirate
     1209,   -- Skyreach
+    2805,   -- Windrunner Spire
+    2811,   -- Magisters' Terrace
+    2915,   -- Nexus-Point Xenas
+    2874,   -- Maisara Caverns
 }
-G.RAIDS = {}
+G.RAIDS = {
+    2912,   -- The Voidspire
+    2939,   -- The Dreamrift
+    2913,   -- March on Quel'Danas
+}
 
 G.CLASSES = { "WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST", "DEATHKNIGHT", "SHAMAN", "MAGE",
     "WARLOCK", "MONK", "DRUID", "DEMONHUNTER", "EVOKER" }

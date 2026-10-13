@@ -68,6 +68,10 @@ A widget on an editor page (or `/qc set callout.text …`) writes a member row t
 
 A rebuild (`Surfaces.ApplyAll`, out of combat) builds each enabled dial's plan (`Surfaces.BuildDialPlan`: the active groups in the dial's order, each slot baked, then `Dial_Layout.Rings`), and `Dial.Sync` re-acquires the dial's ring containers and wedges, arms each callout wedge with its baked line, hands the rings to the header (`DialSecure.Load`, through SendEngine) and re-binds every dial's key (`SendEngine.BindKeys`). Pressing the key clicks the header with `Toggle`: its snippet shows the ring the plan opens on and binds Escape, the wheel and 1–8. A group wedge's wrapped click shows that group's ring; a callout wedge's click sends its `macrotext` (the hook tracks it like a chip's) and its post snippet closes the dial. In combat only the snippets run; a change waits for combat end behind the hub's stale hint.
 
+## Today: sharing
+
+Export: the ticks (`NS.State.share.pick`) go to `Share.Collect`, which adds what they need (a pad's or a dial's user groups, a group's callouts) and reads each pad's and dial's portable fields through the seam (`Share.FieldsOf`); `Share.Encode` makes the `!QC1!` string, and the copy window shows it selected. Import: the pasted string goes to `Share.Check` (decode, version, schema checks, `Bake.CleanText` over every text field and nested key, names and field strings stored with their `|` escapes literal), the page shows `Share.ReportLines` (an edit to the box forgets the check, so Import needs a fresh Accept), and Import hands the result to `Share.Apply`, which calls `Library.Import`: fresh ids, references remapped, a surface's fields through the seam, no key or position, all in one `Library.Batch`, so one `LIBRARY_CHANGED` rebuilds the surfaces (at combat end, if need be) and repaints the pages.
+
 ## The design's callout pipeline (spec §4.1)
 
 ```

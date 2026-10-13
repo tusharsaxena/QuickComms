@@ -70,7 +70,14 @@ if not lib then
             end
             return 0
         end,
-        DebugVerb       = function() return false end,
+        -- Host routing, not a copy of the library's formatters (debug-logging-§7, §14): the verbs
+        -- still reach their stub members; anything else answers false and the console toggles.
+        DebugVerb       = function(self, rest)
+            local word = (tostring(rest or "")):match("^%s*(%S*)"):lower()
+            if word == "diagnostics" then self:RunDiagnostics(); return true end
+            if word == "on" or word == "off" then self:SetEnabled(word == "on"); return true end
+            return false
+        end,
     }
     NS.Debug         = NS.DebugLog.Debug
     NS.DebugOnce     = NS.DebugLog.DebugOnce

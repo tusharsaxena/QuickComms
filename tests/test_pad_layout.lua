@@ -68,6 +68,29 @@ test("layout: the style sets the cell", function()
     assertEqual(w, 120, "never narrower than MIN_W")
 end)
 
+test("layout: [review] a larger Look font grows the chip and title rows; the default size changes nothing", function()
+    local pl = PL()
+    local sections = { { title = "One", slots = slots(2) }, { title = "Two", slots = slots(1) } }
+    local base = pl.Compute(sections, H)
+    local same = pl.Compute(sections, H, { fontSize = 10 })
+    assertEqual(same.height, base.height, "the default font keeps the shipped geometry")
+    local big = pl.Compute(sections, H, { fontSize = 24 })
+    local title, chip
+    for _, it in ipairs(big.items) do
+        if it.kind == "title" and not title then title = it end
+        if it.kind == "chip" and not chip then chip = it end
+    end
+    -- red under: PL.CellSize and sectionBlock in modules/Pad_Layout.lua ignoring the font size
+    assertTrue(chip.h >= 24 + 8, "a chip holds a 24-point label: " .. chip.h)
+    assertTrue(title.h >= 24, "a title row holds a 24-point title: " .. title.h)
+    assertTrue(chip.y >= title.y + title.h, "the first chip row starts below its title")
+    assertTrue(big.height > base.height)
+    local _, lh = pl.CellSize({ style = "label" }, 32)
+    assertTrue(lh >= 32 + 8, "a label-only chip too")
+    local iw, ih = pl.CellSize({ style = "icon" }, 32)
+    assertEqual(iw .. "x" .. ih, "28x28", "an icon-only chip draws no text")
+end)
+
 test("layout: leftward growth mirrors the row; collapsed is the header alone", function()
     local pl = PL()
     local left = { orientation = "horizontal", growth = "left", style = "iconLabel", spacing = 4, width = 140 }

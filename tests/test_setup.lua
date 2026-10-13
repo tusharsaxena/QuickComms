@@ -150,6 +150,15 @@ test("perf: every declared bucket has a bracket, and every bracket a declared bu
     for key, rel in pairs(brackets) do assertTrue(declared[key], rel .. " notes undeclared bucket " .. key) end
 end)
 
+test("perf: [audit QC-12] every bucket key is lowerCamelCase, named for the path it times (naming-cheatsheet)", function()
+    local NS = T.enableAddon()
+    assertTrue(#NS.Perf.BUCKET_ORDER == 7)
+    for _, key in ipairs(NS.Perf.BUCKET_ORDER) do
+        -- red under: a dotted key such as "bakeSurface" in core/PerfSetup.lua
+        assertTrue(key:match("^%l[%w]*$") ~= nil, key .. " is not lowerCamelCase")
+    end
+end)
+
 test("perf: the live harness is built, and the stub answers the perf verb", function()
     local NS = T.newAddon()
     assertTrue(NS.Perf.BuildRecord ~= nil, "the live instance, not the stub")
@@ -279,4 +288,77 @@ test("options: the degraded load completes, and the panel says once that it is u
         -- red under: a composed or hand-written page row added on the degraded load
         assertTrue(row.instance ~= nil, "only member rows: " .. tostring(row.path))
     end
+end)
+
+test("libs: [phase 5] LibDeflate and LibSerialize are vendored, TOC-listed and loaded before the addon", function()
+    local _, m = T.newAddon()
+    local toc = read("QuickComms.toc")
+    for _, lib in ipairs({ "LibDeflate", "LibSerialize" }) do
+        -- red under: drop the lib's line from QuickComms.toc (the client would never load it)
+        assertTrue(toc:find("libs\\" .. lib .. "\\lib.xml", 1, true) ~= nil, lib .. " has a TOC line")
+        assertTrue(m.LibStub(lib, true) ~= nil, lib .. " registered with LibStub")
+    end
+    local D, S = m.LibStub("LibDeflate"), m.LibStub("LibSerialize")
+    local packed = D:EncodeForPrint(D:CompressDeflate(S:Serialize({ a = 1 })))
+    local ok, back = S:Deserialize(D:DecompressDeflate(D:DecodeForPrint(packed)))
+    assertTrue(ok and back.a == 1, "a round trip through both")
+end)
+
+test("perf: [phase 5] a refresh notes situationRefresh, and each plan resolverResolve inside bakeSurface", function()
+    local NS = T.enableAddon()
+    local notes = {}
+    local real = NS.Perf.Note
+    NS.Perf.Note = function(key, ms, parent)
+        notes[#notes + 1] = key .. (parent and ("<" .. parent) or "")
+        return real(key, ms, parent)
+    end
+    NS.Situation.ReadInputs = function()
+        return { inInstance = true, instanceType = "party", difficultyID = 8, keystoneActive = true, keyLevel = 12,
+            inGroup = true }
+    end
+    NS.Perf.on = true
+    NS.Situation.RefreshNow("test")
+    NS.Perf.on = false
+    local text = table.concat(notes, ",")
+    assertTrue(text:find("situationRefresh", 1, true) ~= nil, text)
+    -- red under: drop the parent argument from the resolverResolve bracket in modules/Surfaces.lua
+    assertTrue(text:find("resolverResolve<bakeSurface", 1, true) ~= nil, text)
+end)
+
+test("perf: [review] a refresh whose signature moves notes situationRefresh before the rebuild it publishes", function()
+    local NS = T.enableAddon()
+    local notes = {}
+    local real = NS.Perf.Note
+    NS.Perf.Note = function(key, ms, parent)
+        notes[#notes + 1] = key
+        return real(key, ms, parent)
+    end
+    NS.Situation.ReadInputs = function()
+        return { inInstance = true, instanceType = "party", difficultyID = 8, keystoneActive = true, keyLevel = 12,
+            inGroup = true }
+    end
+    NS.Perf.on = true
+    assertTrue(NS.Situation.RefreshNow("test"), "the signature moved")
+    NS.Perf.on = false
+    local text = table.concat(notes, ",")
+    assertTrue(text:find("bakeSurface", 1, true) ~= nil, "the publish rebuilt the surfaces: " .. text)
+    -- red under: Perf.Note("situationRefresh") after the SITUATION_CHANGED send in modules/Situation.lua
+    -- (the whole rebuild timed inside a bucket declared with no children, performance-§3)
+    assertEqual(notes[1], "situationRefresh", text)
+end)
+
+test("perf: [phase 5] the Comms Dial page's Preview notes neither bakeSurface nor resolverResolve", function()
+    local NS = T.enableAddon()
+    local notes = {}
+    local real = NS.Perf.Note
+    NS.Perf.Note = function(key, ms, parent)
+        notes[#notes + 1] = key
+        return real(key, ms, parent)
+    end
+    NS.Perf.on = true
+    local lines = NS.addon.Settings.Dials.PreviewLines("d2")
+    NS.Perf.on = false
+    assertTrue(#lines > 0)
+    -- red under: drop `not deps.unmeasured` from resolve() in modules/Surfaces.lua
+    assertEqual(table.concat(notes, ","), "", "an editor's look is not a surface's bake")
 end)

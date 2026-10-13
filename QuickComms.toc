@@ -5,7 +5,7 @@
 ## Version: 0.1.0
 ## IconTexture: Interface\AddOns\QuickComms\media\logos\quickcomms.logo.128.tga
 ## SavedVariables: QuickCommsDB, QuickCommsPerfDB
-## OptionalDeps: Ace3, LibStub, CallbackHandler-1.0, LibSharedMedia-3.0, LibDataBroker-1.1, LibDBIcon-1.0
+## OptionalDeps: Ace3, LibStub, CallbackHandler-1.0, LibSharedMedia-3.0, LibDataBroker-1.1, LibDBIcon-1.0, LibDeflate, LibSerialize
 ## DefaultState: enabled
 ## Category-enUS: Chat
 ## X-License: MIT
@@ -31,6 +31,10 @@ libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
 libs\LibDBIcon-1.0\lib.xml
 # ONE line: the .xml is itself the file list (library-stack-§7). After Ace3.
 libs\LibKa0s\LibKa0s.xml
+# LOAD-BEARING: modules\Share.lua takes LibDeflate at load (the share string's compression, spec §15).
+libs\LibDeflate\lib.xml
+# LOAD-BEARING: modules\Share.lua takes LibSerialize at load (the share string's payload, spec §15).
+libs\LibSerialize\lib.xml
 
 # Locales
 # LOAD-BEARING: publishes NS.L, which every file below reads at load.
@@ -41,13 +45,13 @@ locales\enUS.lua
 core\Namespace.lua
 # LOAD-BEARING: publishes NS.Print / NS.Util.print and NS.LIBKA0S_MISSING, read at load below.
 core\CoreSetup.lua
-# LOAD-BEARING: NS.Compat, read by modules at call time; needs NS.SafeToString (CoreSetup, above) and LibKa0s-Compat (optional)
+# Conventional: publishes NS.Compat, read inside functions only; resolves LibKa0s-Compat-1.0 at load (libraries load first).
 core\Compat.lua
 # LOAD-BEARING: publishes NS.MediaFont, which core\Constants.lua resolves FONT_MONO from at load.
 core\MediaSetup.lua
 # Conventional: data only, apart from FONT_MONO, resolved from the seam above.
 core\Constants.lua
-# Conventional: session-only state (NS.State), read by everything below at call time.
+# Conventional: session-only state (NS.State); modules and settings take NS.State at load, which the folder order (core before modules and settings) pins; within # Core its position is free.
 core\State.lua
 # Conventional: NS.Meta / NS.Version are read inside functions only.
 core\EnvSetup.lua
@@ -105,6 +109,8 @@ modules\Bake.lua
 modules\Resolver.lua
 # Conventional: the registry writer (architecture-§5); Prepare is called from the entry after migrations
 modules\Library.lua
+# Conventional: the share string's codec and checks (pure), and from Task 5 its edge; reads Bake, Library and the seam at run time
+modules\Share.lua
 # LOAD-BEARING: publishes NS.SendGuard, which modules\SendEngine.lua takes as a load-time upvalue.
 modules\SendEngine_Guard.lua
 # LOAD-BEARING: the only secure writer; publishes NS.SendEngine, which modules\Dial_Secure.lua takes as a load-time upvalue; appends to NS.STAND_DOWN / NS.STAND_UP (and, Task 4, NS.FEATURE_EVENTS)

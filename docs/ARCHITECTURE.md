@@ -6,32 +6,35 @@ The design it is being built to is
 and the build order is
 [`superpowers/plans/2026-10-11-quickcomms-phase-0-1.md`](superpowers/plans/2026-10-11-quickcomms-phase-0-1.md),
 [`superpowers/plans/2026-10-13-quickcomms-phase-2.md`](superpowers/plans/2026-10-13-quickcomms-phase-2.md),
-[`superpowers/plans/2026-10-13-quickcomms-phase-3.md`](superpowers/plans/2026-10-13-quickcomms-phase-3.md)
-and [`superpowers/plans/2026-10-13-quickcomms-phase-4.md`](superpowers/plans/2026-10-13-quickcomms-phase-4.md);
+[`superpowers/plans/2026-10-13-quickcomms-phase-3.md`](superpowers/plans/2026-10-13-quickcomms-phase-3.md),
+[`superpowers/plans/2026-10-13-quickcomms-phase-4.md`](superpowers/plans/2026-10-13-quickcomms-phase-4.md)
+and [`superpowers/plans/2026-10-13-quickcomms-phase-5.md`](superpowers/plans/2026-10-13-quickcomms-phase-5.md);
 this page describes what exists.
 
 ## Overview
 
 A Retail addon that puts context-aware group callouts on a Comms Pad and a Comms Dial and sends them
 through secure buttons, so they work during chat lockdown in Mythic+ keys, boss pulls and PvP
-matches ([`scope.md`](scope.md)). At the end of phase 4 the data layer feeds the secure send engine, the
-Comms Pads and the Comms Dials, and the player edits callouts, groups (with their When), pads, dials
-and the built-in sets on the Callouts, Groups, Comms Pad, Comms Dial and Share pages; "Preview as…"
-draws the surfaces in another situation and "Why is this showing?" explains them. A dial opens on its
+matches ([`scope.md`](scope.md)). At the end of phase 5 the data layer feeds the secure send engine, the
+Comms Pads and the Comms Dials, and the player edits callouts, groups (with their When), pads (with
+their Look), dials and the built-in sets on the Callouts, Groups, Comms Pad, Comms Dial and Share
+pages, and shares any of them as a `!QC1!` string; "Preview as…" draws the surfaces in another
+situation and "Why is this showing?" explains them. A dial opens on its
 key (or on WoW's key bindings menu, through `Bindings.xml`) in Relaxed mode: click a wedge to send.
 
 Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBOptions),
-LibSharedMedia, LibDataBroker and LibDBIcon are vendored under `libs/`, and so is the whole
+LibSharedMedia, LibDataBroker, LibDBIcon, LibDeflate and LibSerialize (the share string, spec §15;
+versions and licenses in `DEPENDENCIES.md`) are vendored under `libs/`, and so is the whole
 LibKa0s v1.71.0 payload, of which thirteen majors are wired, one setup file each (`DEPENDENCIES.md`
 lists the toolchain):
 
 | Major | Setup file | Gives |
 |---|---|---|
-| Core | `core/CoreSetup.lua` | the `[QC]` printer, secret-safe stringifier, SafeRegister family, the skin, the close mark, the resize grip |
-| Media | `core/MediaSetup.lua` | the icon catalog and the monospace face |
+| Core | `core/CoreSetup.lua` | the `[QC]` printer, secret-safe stringifier, SafeRegister family, the skin, the close mark, the resize grip, and the class-color resolver (`NS.ResolveColor`) |
+| Media | `core/MediaSetup.lua` | the icon catalog and the monospace face, and `NS.MediaFetch` (a LibSharedMedia entry by name) |
 | Env | `core/EnvSetup.lua` | the addon's own TOC metadata and version |
 | Pool | `core/PoolSetup.lua` | the frame pool (one array pool per pad for its chips; per dial, one for its ring containers and one per container for its wedges) |
-| Widgets | `core/WidgetsSetup.lua` | the drag strip (`NS.MakeDragHandle`) above each pad, and the reorder lists on the editor pages (`ReorderList`) |
+| Widgets | `core/WidgetsSetup.lua` | the drag strip (`NS.MakeDragHandle`) above each pad, and the reorder lists on the editor pages (`ReorderList`), and the Share page's export window (`NS.MakeCopyWindow`, the library's `CopyWindow`) |
 | Bus | `core/Bus.lua` | the strict message catalog and the tracked receivers |
 | Lifecycle | `core/LifecycleSetup.lua` | the stand-down latch |
 | Perf | `core/PerfSetup.lua` | the performance harness |
@@ -41,8 +44,9 @@ lists the toolchain):
 | Options | `settings/OptionsSetup.lua` | the settings panel |
 | Slash | `settings/Slash.lua` | the `/qc` dispatcher |
 
-`LibKa0s-Compat-1.0` and `LibKa0s-Item-1.0` are vendored and not wired, and of the Widgets major
-`DragHandle` and `ReorderList` are used. Each
+`LibKa0s-Compat-1.0` is wired for its two secret guards only (`IsSecret`, `IsSafeKey`, assigned in
+`core/Compat.lua` with a library-absent body); `LibKa0s-Item-1.0` is vendored and not wired; and of the Widgets major
+`DragHandle`, `ReorderList` and `CopyWindow` are used. Each
 setup file holds a descriptor and a degradation stub, and `tests/test_surface_parity.lua` holds every
 stub to the live surface.
 
@@ -65,7 +69,8 @@ line: the client reads it there, and the standard allows it (layout-§1, toc-fil
 | `Channels` | pure | the eight kinds (`smartGroup`, `smartLead`, `party`, `raid`, `instance`, `raidWarning`, `say`, `yell`); `Resolve`, `Prefix`, `LockState` |
 | `Bake` | pure | callout + snapshot to one macro line or a named refusal; sanitizes the text and baked token values, counts typed `%t` / `%f` as live |
 | `Resolver` | pure | When rules to the active group set, surface order, the "why" lines |
-| `Library` | registry writer | membership, order, ids, references and seeding of the profile's callouts, groups, pads, dials and overlay; member fields go through the seam (member rows); `Prepare`; `Batch` (one act, one announce); sends `LIBRARY_CHANGED` |
+| `Library` | registry writer | membership, order, ids, references and seeding of the profile's callouts, groups, pads, dials and overlay; member fields go through the seam (member rows); `Prepare`; `Batch` (one act, one announce); and `Import`, the one writer of what a share string brings; sends `LIBRARY_CHANGED` |
+| `Share` | pure + edge | `modules/Share.lua`: pure codec and checks (the `!QC1!` string, the version gate, the schema checks, the sanitizer over every text field, the report), and the edge: Collect, Export (the copy window), Apply (through `Library.Import`); both acts refused in combat |
 | `BuiltIns` | data | `defaults/BuiltIns*.lua`: the shipped sets, as data, never copied into the profile |
 | `core/WidgetsSetup.lua` | setup | the drag-strip seam: `NS.MakeDragHandle` over LibKa0s-Widgets' `DragHandle`, nil when the library is absent |
 | `modules/SendEngine_Guard.lua` | pure | the soft guard's timing, the acting click edge, the echo tracker and the keyed combat-end queue |
@@ -85,7 +90,7 @@ line: the client reads it there, and the standard allows it (layout-§1, toc-fil
 | `GroupsWhen` | settings page | `settings/Groups_When.lua`: the When editor, one row per condition, the id lists, the active-now line |
 | `Pads` | settings page | `settings/Pads.lua`: the Comms Pad page (General, Groups priority list, Layout with X/Y, Look) |
 | `Dials` | settings page | `settings/Dials.lua`: the Comms Dial page (General, Groups, Wheel with X/Y, Binding, Preview) |
-| `Share` | settings page | `settings/Share.lua`: the Share page's Built-in tab (enable, Customize, choose callouts) |
+| `Share` | settings page | `settings/Share.lua`: the Share page: Export, Import, Built-in |
 
 ## Settings Schema
 
@@ -100,14 +105,16 @@ database exists. The reactions every surface shares are
 lands on a load where the composers are hollow (options-ui-§1 route (a)). Shape, defaults and
 migrations: [`schema.md`](schema.md); the panel: [`settings-panel.md`](settings-panel.md).
 
-**Member rows** (`settings/SchemaMembers.lua`): every field a player sets on a member is a row whose path starts with the member's kind (`callout.*`, `group.*`, `pad.*`, `dial.*`, `builtin.*`). The seam's `resolveRoot` hands it to `Library.Member(kind, id)`; the id is the instance argument, or the member that kind's editor page has selected (`NS.State.editing`). Each row's `onChange` is `Library.Touch`. With nothing selected, the seam addresses the first member the page lists (`Settings.EditingId`). Member rows are no AceDB default: each resolves against `Library.TEMPLATES` at the boot check, and the profile reset's count leaves them out. The structured rows (`pad.point`, `dial.point`, `group.when`, `builtin.hidden`, and `dial.key`, the `key` type) hold tables or a key: their pages draw their own controls, and `settings/Slash.lua`'s descriptor `parse` and `format` hooks type and print them on the CLI.
+**Member rows** (`settings/SchemaMembers.lua`): every field a player sets on a member is a row whose path starts with the member's kind (`callout.*`, `group.*`, `pad.*`, `dial.*`, `builtin.*`). The seam's `resolveRoot` hands it to `Library.Member(kind, id)`; the id is the instance argument, or the member that kind's editor page has selected (`NS.State.editing`). Each row's `onChange` is `Library.Touch`. With nothing selected, the seam addresses the first member the page lists (`Settings.EditingId`). Member rows are no AceDB default: each resolves against `Library.TEMPLATES` at the boot check, and the profile reset's count leaves them out. The structured rows (`pad.point`, `dial.point`, `group.when`, `builtin.hidden`, and `dial.key`, the `key` type) hold tables or a key: their pages draw their own controls, and `settings/Slash.lua`'s descriptor `parse` and `format` hooks type and print them on the CLI. The pad's Look rows, `pad.look.font|fontSize|fontColor|useClassColorFont|fontFlags|fontShadow|borderStyle|borderSize|borderColor|useClassColorBorder|background|useClassColorBackground`, are composed by the options library (its font, border and color groups) and stamped as pad member rows; the colors are the `color` row type.
 
 **State written outside the seam** (architecture-§5): `global.minimap.minimapPos` is LibDBIcon's own
 write into the table the launcher hands it. The structural registry has one writer, `modules/Library.lua`:
 membership (create, delete, duplicate, Customize) of `profile.callouts`, `groups`, `pads`, `dials`
 and the built-in overlay, the order lists (`padOrder`, `dialOrder`, each group's callouts and each
-surface's groups), `nextId`, `seeded` and the overlay's `customizedAs`. Panel pages, slash verbs and
-(phase 5) import call it or the seam; they never write those keys. Built-ins are shipped data in `NS.BuiltIns`; the profile
+surface's groups), `nextId`, `seeded` and the overlay's `customizedAs`. Panel pages and slash verbs call it or the seam; they never write those keys. What a share string
+makes is written by `Library.Import` alone: fresh ids, the order lists, the references remapped,
+every shipped built-in marked seen (`seenBuiltins`) on each imported pad and dial, and the surfaces'
+fields through the seam (`modules/Share.lua` only decodes and checks). Built-ins are shipped data in `NS.BuiltIns`; the profile
 holds only the overlay, keyed on the top-level built-in id. The load pass is `Library.Prepare`:
 `OnInitialize` and `reloadProfile` run it after `RunMigrations`; it seeds the default pad and dial
 once, appends newly shipped built-ins once per surface, normalizes malformed shapes and drops
@@ -115,7 +122,9 @@ dangling ids.
 
 **Named non-setting state:** the pad's active tab and collapsed state are session-only (`NS.State`).
 The editors' selection (`NS.State.editing`) and the When editor's open rows (`NS.State.whenOpen`)
-are session-only.
+are session-only. The Share page's session state, `NS.State.share`: `pick` (the members ticked for
+export, per kind) and `import` (the last checked string's result); a profile switch clears both, and
+neither is ever saved.
 
 ## Message Bus
 
@@ -129,7 +138,7 @@ tracked registration down and replay it.
 | `PROFILE_CHANGED` | `ProfileChanged` | `core/QuickComms.lua` `reloadProfile` (every AceDB profile event) | none | Surfaces (`Request`, after dropping the queued `surfaces` and `positions` entries; a held drag's stop stays); the editor pages (`settings/Editors.lua`, one deferred repaint) |
 | `SITUATION_CHANGED` | `SituationChanged` | `modules/Situation.lua`, only when the signature moves | snapshot, previous | Surfaces (`Request`); the editor pages (`settings/Editors.lua`, one deferred repaint) |
 | `RESTRICTION_CHANGED` | `RestrictionChanged` | `modules/Restrictions.lua`, when the set of blocking reasons (combat included) moves | reason, canSendChat | Situation (merges lockdown and combat into the snapshot in place); Surfaces (`RefreshLocks`: padlocks, the lockdown chip, the fade); Preview (ends test mode at the combat edge); Pad (ends a drag at the combat edge); SendEngine (drains the combat-end queue) |
-| `LIBRARY_CHANGED` | `LibraryChanged` | `modules/Library.lua`, on every registry write, and `Library.Touch` for every member row the seam writes; inside `Library.Batch` (Customize, New group, OfferGroup, a page's Defaults, Share's Defaults) one per act, its kind the kinds touched joined by commas, with no id and no field | kind, id, field | Surfaces (`Request`); the editor pages (`settings/Editors.lua`, one deferred repaint) |
+| `LIBRARY_CHANGED` | `LibraryChanged` | `modules/Library.lua`, on every registry write, and `Library.Touch` for every member row the seam writes; inside `Library.Batch` (Customize, New group, OfferGroup, a page's Defaults, Share's Defaults, an import) one per act, its kind the kinds touched joined by commas, with no id and no field | kind, id, field | Surfaces (`Request`); the editor pages (`settings/Editors.lua`, one deferred repaint) |
 | `ACTIVE_GROUPS_CHANGED` | `ActiveGroupsChanged` | `modules/Surfaces.lua` `ApplyAll`, when a pad's or a dial's ordered active groups change | surfaceId (a pad's or a dial's) | none (Surfaces rebuilds pads and dials itself) |
 | `SURFACE_REBUILT` | `SurfaceRebuilt` | `modules/Surfaces.lua`: `true` when a rebuild is held for combat, `false` when it ran | surfaceId (a pad's or a dial's), stale | none |
 | `SEND_RESULT` | `SendResult` | `modules/SendEngine.lua`: `guarded` at the press, then `sent` or `dropped` from the echo, so one press can yield two | calloutId, surfaceId, result | `modules/Pad.lua` (the flash, the sound); `modules/Dial.lua` (the wedges' flash) |
@@ -162,7 +171,7 @@ while disabled. Events the client refuses are kept in `NS.rejectedEvents` and re
 
 ## Taint Notes
 
-Every secure rule lives in one file. `modules/SendEngine.lua` is the only code that creates a frame from a `Secure*` template, calls `SetAttribute` or registers a state driver; `tests/test_sendengine.lua` greps every other shipped file for `Secure*Template`, `SecureHandler`, `SetAttribute` (called or named as a string), the state-driver and override-binding calls, and for `SendChatMessage` (D12: the secure button is the one send path). Send buttons are `SecureActionButtonTemplate`, named `QuickCommsSend<n>`, registered for `AnyUp` and `AnyDown`, armed with `type=macro` and one baked `macrotext` line, and only out of combat (`InCombatLockdown()`, events-frames-taint-§2). A pad's root becomes protected in combat because its chips are secure: its visibility is a `visibility` state driver, and its geometry is set only out of combat, through `RunOrQueue` (rebuilds, which also re-anchor it from the active profile, the end of a drag, Reset position). A rebuild asked for in combat is filed in SendEngine's keyed combat-end queue (one entry per key, the last write winning) and drained at `PLAYER_REGEN_ENABLED`, which `Restrictions` owns and hands to `SendEngine.Drain`, and on any later `RESTRICTION_CHANGED` out of combat. The click hook is an insecure `HookScript("OnClick")`: it cannot cancel the secure click, so the spam guard is soft (spec §9.2), and it never reads chat text. A stand-down in combat holds its secure half in one private `PLAYER_REGEN_ENABLED` registration, released when it fires. Tabs and collapse are refused in combat. The Comms Dial (Relaxed mode) is one `SecureHandlerClickTemplate` header per dial, `QuickCommsDial<n>`, created by SendEngine; its ring containers are `SecureFrameTemplate` frames and its wedges are send buttons. `modules/Dial_Secure.lua` holds the header's restricted snippets as text and hands them, every attribute and every frame ref to SendEngine out of combat; the snippets themselves write no attribute (the ring on screen is a global in the header's restricted environment; `tests/test_dial_secure.lua`'s firewall case checks the snippet text, and the firewall grep, whose list now includes a header's `SetFrameRef`, `WrapScript` and `Execute`, covers the file). In combat only the snippets act: they show and hide the rings and the hub, anchor the hub at the cursor, and bind Escape, the wheel and 1–8 with `SetBindingClick` while the dial is open from its key, releasing them with `ClearBindings`; an open from the insecure side (test mode, Preview as…, `qc-display`) binds nothing. Each wedge's click is wrapped by the header before SendEngine hooks it (the client's wrap replaces the script, which would drop an earlier hook); a wedge acts on the up edge and only a left click is a press. The dials' keys are override bindings (`SetOverrideBindingClick`) on one SendEngine owner frame, replaced as a set at every rebuild out of combat and cleared by the stand-down (held to combat end if need be). `Bindings.xml` adds `CLICK QuickCommsDial<n>:Toggle` entries to WoW's own key bindings menu; its labels are client-read globals: the header declared in `.luacheckrc` `globals`, the four entry labels (not identifiers) set with `rawset`. Opening the settings panel stays refused in combat by the options library. The editor pages touch no frame of a pad: every write reaches a pad through `LIBRARY_CHANGED` → `Surfaces.Request`, so a write made in combat (a CLI `set`, a popup accepted after the pull) waits for combat end behind the stale hint.
+Every secure rule lives in one file. `modules/SendEngine.lua` is the only code that creates a frame from a `Secure*` template, calls `SetAttribute` or registers a state driver; `tests/test_sendengine.lua` greps every other shipped file for `Secure*Template`, `SecureHandler`, `SetAttribute` (called or named as a string), the state-driver and override-binding calls, and for `SendChatMessage` (D12: the secure button is the one send path). Send buttons are `SecureActionButtonTemplate`, named `QuickCommsSend<n>`, registered for `AnyUp` and `AnyDown`, armed with `type=macro` and one baked `macrotext` line, and only out of combat (`InCombatLockdown()`, events-frames-taint-§2). A pad's root becomes protected in combat because its chips are secure: its visibility is a `visibility` state driver, and its geometry is set only out of combat, through `RunOrQueue` (rebuilds, which also re-anchor it from the active profile, the end of a drag, Reset position). A rebuild asked for in combat is filed in SendEngine's keyed combat-end queue (one entry per key, the last write winning) and drained at `PLAYER_REGEN_ENABLED`, which `Restrictions` owns and hands to `SendEngine.Drain`, and on any later `RESTRICTION_CHANGED` out of combat. The click hook is an insecure `HookScript("OnClick")`: it cannot cancel the secure click, so the spam guard is soft (spec §9.2), and it never reads chat text. A stand-down in combat holds its secure half in one private `PLAYER_REGEN_ENABLED` registration, released when it fires. Tabs and collapse are refused in combat. The Comms Dial (Relaxed mode) is one `SecureHandlerClickTemplate` header per dial, `QuickCommsDial<n>`, created by SendEngine; its ring containers are `SecureFrameTemplate` frames and its wedges are send buttons. `modules/Dial_Secure.lua` holds the header's restricted snippets as text and hands them, every attribute and every frame ref to SendEngine out of combat; the snippets themselves write no attribute (the ring on screen is a global in the header's restricted environment; `tests/test_dial_secure.lua`'s firewall case checks the snippet text, and the firewall grep, whose list now includes a header's `SetFrameRef`, `WrapScript` and `Execute`, covers the file). In combat only the snippets act: they show and hide the rings and the hub, anchor the hub at the cursor, and bind Escape, the wheel and 1–8 with `SetBindingClick` while the dial is open from its key, releasing them with `ClearBindings`; an open from the insecure side (test mode, Preview as…, `qc-display`) binds nothing. Each wedge's click is wrapped by the header before SendEngine hooks it (the client's wrap replaces the script, which would drop an earlier hook); a wedge acts on the up edge and only a left click is a press. The dials' keys are override bindings (`SetOverrideBindingClick`) on one SendEngine owner frame, replaced as a set at every rebuild out of combat and cleared by the stand-down (held to combat end if need be). `Bindings.xml` adds `CLICK QuickCommsDial<n>:Toggle` entries to WoW's own key bindings menu; its labels are client-read globals: the header declared in `.luacheckrc` `globals`, the four entry labels (not identifiers) set with `rawset`. Opening the settings panel stays refused in combat by the options library. The editor pages touch no frame of a pad: every write reaches a pad through `LIBRARY_CHANGED` → `Surfaces.Request`, so a write made in combat (a CLI `set`, a popup accepted after the pull) waits for combat end behind the stale hint. Sharing writes no frame. An export reads the profile and shows a plain copy window; an import is data, written by `Library.Import` through the seam, and reaches the surfaces as any write does (`LIBRARY_CHANGED` → `Surfaces.Request`, queued in combat behind the stale hint). Both acts also refuse in combat. Nothing in a share string is executed: every text field is sanitized when it is checked, and `Bake` refuses a leading `/` again at every bake.
 
 ## Known Limitations
 
@@ -173,17 +182,23 @@ Every secure rule lives in one file. `modules/SendEngine.lua` is the only code t
 - The mouse wheel over a pad belongs to the pad (spec §10.2): with groups as tabs it switches the tab, otherwise it does nothing there, so the camera does not zoom while the cursor is over a pad.
 - Rebuilding between pulls inside a key assumes `SetAttribute` works out of combat in a key (C4, unverified).
 - A member row written from the CLI addresses the member its page has selected, else the first that page lists; the echo does not name which member it was.
-- The instance list ships only the season's returning dungeons; a Midnight dungeon or raid is added with the When editor's add-the-instance-you-are-in button or its id until phase 5 confirms the ids.
-- The pad's Look has visibility and fade; its fonts, border and colors, and an icon picker, arrive with phase 5's polish.
+- The Midnight dungeon and raid ids, spec 1480 and the battleground ids are matched against the client's data tables, not yet confirmed in game (smoke checks IDS-1 and BG-2); Sporefall (1592) is left out (owner ruling R4).
 - The Comms Dial is Relaxed only: the hold, flick and release dial, its draw delay and tap action wait for C7 (spec §11.2).
 - A dial whose groups are all inactive opens nothing when its key is pressed (there is no empty ring).
 - Open at the cursor relies on the restricted `SetPoint` accepting `$cursor` (unverified until DIAL-7); the fallback is opening at the dial's place.
 - A dial closes on a send, so its guard dim and its drop flash show only on the next open: the dim for the guard window, a drop's red for 5 s; the chat note reports a drop either way.
 - Disabled in combat, a dial keeps working (and its key keeps opening it) until combat ends and the held stand-down finishes.
 - Test mode or Preview as… ended by a combat whose lockdown began first leaves dial 1 open, its placeholder wedges sending nothing and holding no key, until combat ends (the hub or its key closes it sooner).
-- Battleground node sets are placed clockwise from N in their shipped order; compass pins come with phase 5's battleground id confirmation (owner ruling R4).
+- Battleground node sets are pinned to compass winds derived from the client's map data, not yet checked in game (smoke check BG-1); Flat mode is not pinned.
 - The Profiles page builds only where AceDBOptions and AceConfigDialog resolve, which the headless
   mock does not model; PROFILE-1 is its in-game check.
+- A share string carries at most 500 members and 50,000 characters; a larger collection is shared in parts.
+- A hostile share string can still make the client inflate up to about 25 MB once when Accept is clicked (LibDeflate has no output cap, so the 50,000-character limit bounds the input, not the output); that is a hitch of about a second, after which the string is refused as damaged because its payload is over 512 KiB, and nothing reads it.
+- An imported callout's text is limited to 255 bytes, while the editor's Text box counts 255 characters: a non-Latin text the box accepts can be refused on import, and could never have baked.
+- Midnight's Slayer's Rise (map 2799) has no battleground set of its own; the generic set covers it.
+- The shipped raids are the current tier's three; a later tier joins `defaults/GameIds.lua` when it is current (the When editor adds the instance you are in meanwhile).
+- Node winds come from the client's map data as of build 12.1.5.70340; a battleground a patch redraws needs its winds re-read (`docs/common-tasks.md`).
+- `tests/perf.lua`'s byte ceilings are the headless mock's figures (its catch-all methods allocate per call); compare them run to run, never with the client.
 - The logo is a placeholder generated for the scaffold; the owner may replace the art (regenerate
   the TGAs with the recipe in `DEPENDENCIES.md`).
 
@@ -215,7 +230,7 @@ is registered once, as a store, in the Tier 3 table; the documents under it get 
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Not applicable | The addon carries no client-version workaround of its own yet |
-| `compat-layer.md` | Present | `core/Compat.lua` publishes 25 shims, three or more |
+| `compat-layer.md` | Present | `core/Compat.lua` publishes 27 shims, three or more |
 | `message-bus.md` | Not applicable | 9 messages are defined, not more than ten; the table is in this page's Message Bus section |
 
 ### Verification and record (documentation-§3)
@@ -245,6 +260,7 @@ None.
 ### Files over the 1500-line cap
 
 The layout-§1 census of authored `.lua` files over the 1500-line cap. Vendored code (`libs/`,
-`tests/_kit/`) is out of scope, and the repository has no generated data.
+`tests/_kit/`) is out of scope; the generators under `tools/` are authored Python, under the cap, and
+the repository has no generated data file.
 
 Nothing is over the cap today.

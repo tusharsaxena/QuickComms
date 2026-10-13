@@ -8,18 +8,38 @@
 -- isolated by a full collect on either side with the collector stopped inside it. Timings are
 -- printed for orientation only: compare scenarios within a run, never across runs or machines.
 --
--- The scenarios grow with the hot paths. The scaffold has none, so the one scenario here is
--- performance-§9's zero-overhead question asked of the bracket shape itself, against the live
--- harness instance: with capture off, the gated form notes nothing and allocates nothing. The
--- design's scenarios (spec §16: a 12-chip pad rebuild, a full dial open and close) arrive with the
--- code they measure, each beside its bucket in core/PerfSetup.lua.
+-- THE SCENARIOS (spec §16, performance-§9):
+--   bracketCaptureOff     the bracket shape itself, around no work, capture off: notes and allocates
+--                         nothing.
+--   dialPointerCaptureOff the hottest bracketed path, the open dial's pointer OnUpdate (dialRender,
+--   dialPointerNoHarness  every frame while a dial is open), with capture off, and again on an
+--                         instance loaded WITHOUT the LibKa0s-Perf files (core/PerfSetup.lua's
+--                         stub): the zero-overhead pin is that capture off allocates no more than no
+--                         instrumentation at all.
+--   padRebuild12          one 12-chip pad rebuilt from its plan, capture on: bakeSurface,
+--                         resolverResolve and padLayout, three notes.
+--   dialOpenClose         the default dial opened, one pointer frame drawn, closed: one note.
+--   situationRefresh      one situation read whose signature did not move: one note.
 --
--- CEILINGS (measured 2026-10-13, Lua 5.1.5). Pinned hard at 0 bytes: the gated bracket must
--- allocate nothing with capture off. Raise one only by re-measuring and saying why; a rise is the
--- finding.
+-- CEILINGS (measured 2026-10-13, Lua 5.1.5, against the headless mock, whose catch-all methods
+-- allocate a closure per call, so the figures are the mock's as much as the addon's; compare them
+-- run to run, never with the client). The two captureOff scenarios and bracketCaptureOff are pinned
+-- by rule, not by figure; the rest sit at the measured figure rounded up to the next KiB. Raise a
+-- ceiling only by re-measuring and saying why; a rise is the finding.
+--
+-- Raised 2026-10-14: padRebuild12 68960.4 -> 69960.4 bytes/iter (69632 -> 70656) at e0bb552, where the
+-- chip and title rows started growing with the Look's font size (the final review's fix): the
+-- geometry now reads the size per rebuild. Re-measured; the cost is that fix's, by design.
 
-local BYTE_CEILING = { bracketCaptureOff = 0 }
-local NOTES_PER_ITER = { bracketCaptureOff = 0 }
+local BYTE_CEILING = {
+    bracketCaptureOff = 0,
+    dialPointerCaptureOff = 1024, dialPointerNoHarness = 1024,
+    padRebuild12 = 70656, dialOpenClose = 2048, situationRefresh = 2048,
+}
+local NOTES_PER_ITER = {
+    bracketCaptureOff = 0, dialPointerCaptureOff = 0, dialPointerNoHarness = 0,
+    padRebuild12 = 3, dialOpenClose = 1, situationRefresh = 1,
+}
 
 local N = 1000
 local USAGE = "usage: lua tests/perf.lua [--out <path>] [--label <text>]\n"
@@ -95,7 +115,75 @@ end
 
 Perf.on = false
 measure("bracketCaptureOff", N, bracketed)
+
+-- In a Mythic+ key, so the default pad and dial have something to show.
+local MPLUS = { inInstance = true, instanceType = "party", difficultyID = 8, keystoneActive = true,
+    keyLevel = 12, inGroup = true }
+local function live(instance)
+    instance.Situation.ReadInputs = function() return MPLUS end
+    instance.Situation.RefreshNow("perf")
+end
+
+-- The zero-overhead pair (performance-§9): the dial's pointer OnUpdate, the hottest bracketed path,
+-- with capture off, and on an instance with no Perf library at all.
+local function pointerFrame(instance, m)
+    local header = instance.Dial.Instance("d2").header
+    instance.DialSecure.Open(header)
+    m.cursor.x, m.cursor.y = 50, 60
+    local pointer = header.qcPointer
+    return function() instance.DialRender.PointerUpdate(pointer) end
+end
+
+live(NS)
+local pointer = pointerFrame(NS, mock)
+measure("dialPointerCaptureOff", N, pointer)
+
+local NO_PERF = {}
+for _, rel in ipairs(loadAddon.libFiles) do
+    if rel:find("/Perf", 1, true) then NO_PERF[#NO_PERF + 1] = rel end
+end
+local bare, bareMock = loadAddon({ skip = NO_PERF })
+bare.addon:OnInitialize()
+bare.addon:OnEnable()
+check(bare.Perf.BuildRecord == nil, "the bare instance still has the Perf library: the pair compares nothing")
+live(bare)
+measure("dialPointerNoHarness", N, pointerFrame(bare, bareMock))
+NS.DialSecure.Close(NS.Dial.Instance("d2").header)
+
+-- A 12-chip pad: twelve callouts in one group of the player's own, the pad's only group.
+local Lib = NS.Library
+local twelve = {}
+for i = 1, 12 do
+    twelve[i] = Lib.CreateCallout({ name = "Callout " .. i, text = "Callout " .. i .. " {rt8}", channel = "party" })
+end
+local group = Lib.CreateGroup({ name = "Twelve", callouts = twelve })
+local p1 = NS.db.profile.pads.p1
+while #p1.groups > 0 do Lib.RemoveGroupFromSurface("pad", "p1", p1.groups[1]) end
+Lib.AddGroupToSurface("pad", "p1", group)
+
+Perf.on = true
+measure("padRebuild12", 200, function()
+    local snap = NS.Situation.Current()
+    NS.Pad.Apply("p1", NS.Surfaces.BuildPlan("p1", p1, snap, NS.Surfaces.Deps(snap)))
+end)
+local header = NS.Dial.Instance("d2").header
+measure("dialOpenClose", 200, function()
+    NS.DialSecure.Open(header)
+    NS.DialRender.PointerUpdate(header.qcPointer)
+    NS.DialSecure.Close(header)
+end)
+measure("situationRefresh", 500, function() NS.Situation.RefreshNow("perf") end)
+Perf.on = false
 NS.Perf.Note = realNote
+
+-- The zero-overhead claim itself: capture off costs no more than no instrumentation.
+local function bytesOf(name)
+    for _, r in ipairs(results) do if r.name == name then return r.bytesPerIter end end
+    return math.huge
+end
+check(bytesOf("dialPointerCaptureOff") <= bytesOf("dialPointerNoHarness"),
+    ("the pointer allocated %.1f bytes/iter with capture off and %.1f with no harness"):format(
+        bytesOf("dialPointerCaptureOff"), bytesOf("dialPointerNoHarness")))
 
 for _, r in ipairs(results) do
     local ceiling = BYTE_CEILING[r.name]

@@ -1,8 +1,10 @@
 local _, NS = ...
 -- modules/Pad.lua — the Comms Pad's frames (spec §10.1, §10.3, §10.4).
 --
--- The root is a plain BackdropTemplate frame wearing the Ka0s skin (NS.ApplySkin); it becomes
--- protected in combat because its chips are secure. Every chip IS a send button (spec §9.1),
+-- The root is a plain BackdropTemplate frame wearing the Ka0s skin (NS.ApplySkin), dressed at every
+-- rebuild by the pad's Look (Pad_Render.SkinFor: border and background; Pad_Render.LabelFont: the
+-- chips' and titles' font); it becomes protected in combat because its chips are secure. Every chip
+-- IS a send button (spec §9.1),
 -- built by SendEngine, dressed by Pad_Render, pooled per pad with NS.Pool and never destroyed. The
 -- header row (situation chip, lockdown chip, test label, stale hint, collapse) is a plain child;
 -- the LibKa0s drag strip sits above the root and shows only while unlocked (KickCD
@@ -135,7 +137,9 @@ end
 -- The dial's callout wedges are armed exactly as a chip is (modules/Dial.lua).
 Pad.ArmSlot = arm
 
-local function place(inst, box, style)
+-- Every chip and section title of the layout, in the pad's font (its Look's font block); a title in
+-- its own variant of it (R.TitleFont).
+local function place(inst, box, style, font, titleFont)
     for _, item in ipairs(box.items) do
         if item.kind == "chip" then
             local btn = NS.Pool.Acquire(inst.chips, function() return newChip(inst) end)
@@ -143,6 +147,7 @@ local function place(inst, box, style)
             btn:SetPoint("TOPLEFT", inst.root, "TOPLEFT", item.x, -item.y)
             btn:SetSize(item.w, item.h)
             R.Paint(btn, item.slot, style)
+            R.ApplyFont(btn.qcLabel, font)
             arm(btn, item.slot)
             local list = inst.byCallout[item.slot.calloutId] or {}
             list[#list + 1] = btn
@@ -152,6 +157,7 @@ local function place(inst, box, style)
             fs:ClearAllPoints()
             fs:SetPoint("TOPLEFT", inst.root, "TOPLEFT", item.x, -item.y)
             fs:SetText(R.SectionTitle(item))
+            R.ApplyFont(fs, titleFont)
         end
     end
 end
@@ -241,16 +247,19 @@ function Pad.Apply(id, plan)
     local layout = type(pad.layout) == "table" and pad.layout or {}
     local look = type(pad.look) == "table" and pad.look or {}
     local sections = PL.VisibleSections(plan.sections, pad.groupsAs, session("padTab")[id])
-    local box = PL.Compute(sections, layout, { collapsed = session("padCollapsed")[id] == true })
+    local box = PL.Compute(sections, layout, { collapsed = session("padCollapsed")[id] == true,
+        fontSize = look.fontSize })
     inst.root:SetScale(math.max(NS.Library.MIN_SURFACE_SCALE, (tonumber(NS.Setting("scale")) or 1) * (tonumber(layout.scale) or 1)))
     inst.root:SetSize(box.width, box.height)
-    place(inst, box, layout.style)
+    NS.ApplySkin(inst.root, R.SkinFor(look))
+    local font = R.LabelFont(look)
+    place(inst, box, layout.style, font, R.TitleFont(font))
     R.PaintHeader(inst.header, headerState(inst, plan))
     Pad.ApplyLock()
     NS.SendEngine.SetVisibility(inst.root,
         PL.VisibilityDriver(NS.Setting("visibility"), look.visibility, plan.hasActive, plan.test == true))
     Pad.ApplyAlpha(id)
-    if t0 then Perf.Note("pad.layout", debugprofilestop() - t0) end
+    if t0 then Perf.Note("padLayout", debugprofilestop() - t0) end
     return true
 end
 

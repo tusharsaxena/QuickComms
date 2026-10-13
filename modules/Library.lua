@@ -4,7 +4,8 @@ local _, NS = ...
 -- hold, the ids and the seeding. A member's own fields (a callout's text, a pad's layout) are
 -- schema rows written through the seam (settings/SchemaMembers.lua); Library resolves the member
 -- for the seam (Member) and announces the write (Touch).
--- Panel pages, slash verbs and (phase 5) import all call it. Built-ins are shipped data (NS.BuiltIns); the profile holds only their overlay.
+-- Panel pages, slash verbs and the share import (Import, spec §15) all call it. Built-ins are shipped
+-- data (NS.BuiltIns); the profile holds only their overlay.
 -- Prepare runs after migrations on every profile load: it seeds, appends new built-ins once per
 -- surface (seenBuiltins), and drops dangling ids.
 
@@ -174,6 +175,31 @@ function Lib.Batch(fn)
     return unpack(r, 2, r.n)
 end
 
+-- A pad's or a dial's ids in the kind's display order (padOrder, dialOrder), skipping a stale entry.
+local function surfaceIds(p, kind)
+    local set = kind == "pad" and p.pads or p.dials
+    local out = {}
+    for _, id in ipairs(kind == "pad" and p.padOrder or p.dialOrder) do
+        if set[id] then out[#out + 1] = id end
+    end
+    return out
+end
+
+-- A set's ids by name (case-insensitive), then by id.
+local function idsByName(source)
+    local list = {}
+    for id, m in pairs(source) do list[#list + 1] = { id = id, key = tostring(m.name or id):lower() } end
+    table.sort(list, function(a, b)
+        if a.key ~= b.key then return a.key < b.key end
+        return a.id < b.id
+    end)
+    local out = {}
+    for i, e in ipairs(list) do out[i] = e.id end
+    return out
+end
+
+local NAMED_SETS = { callout = "callouts", group = "groups" }
+
 --- Every member of a kind, in the order its editor page's picker lists them: user callouts and user
 --- groups by name (case-insensitive, then id), the built-in sets after the user groups in shipped
 --- order, the pads in the pad order, the dials in the dial order. The seam's fallback when a page
@@ -183,23 +209,10 @@ end
 function Lib.MemberIds(kind)
     if not (NS.db and NS.db.profile) then return {} end
     local p = P()
-    local out = {}
-    if kind == "pad" or kind == "dial" then
-        local set = kind == "pad" and p.pads or p.dials
-        for _, id in ipairs(kind == "pad" and p.padOrder or p.dialOrder) do
-            if set[id] then out[#out + 1] = id end
-        end
-        return out
-    end
-    local source = (kind == "callout" and p.callouts) or (kind == "group" and p.groups) or nil
-    if not source then return out end
-    local list = {}
-    for id, m in pairs(source) do list[#list + 1] = { id = id, key = tostring(m.name or id):lower() } end
-    table.sort(list, function(a, b)
-        if a.key ~= b.key then return a.key < b.key end
-        return a.id < b.id
-    end)
-    for i, e in ipairs(list) do out[i] = e.id end
+    if kind == "pad" or kind == "dial" then return surfaceIds(p, kind) end
+    local source = NAMED_SETS[kind] and p[NAMED_SETS[kind]]
+    if not source then return {} end
+    local out = idsByName(source)
     if kind == "group" then
         for _, id in ipairs(NS.BuiltIns.order) do out[#out + 1] = id end
     end
@@ -277,13 +290,18 @@ local function validRange(v)
 end
 
 local ID_ROWS = { instances = true, battleground = true, spec = true }
+Lib.CHARACTER_MAX = 96   -- bytes of a Name-Realm: a 12-character name and a long realm, both multi-byte
 
 --- Whether `key` is a value the When row `row` can ever match (localization-§4: ids and tokens,
 --- never a name): a token the row lists (NS.Resolver.TOKENS; the class row, NS.GameIds.CLASSES), a
---- positive whole id (instances, battlegrounds, specializations), or a Name-Realm (characters).
+--- positive whole id (instances, battlegrounds, specializations), or a Name-Realm (characters: no
+--- control or "|" character, at most CHARACTER_MAX bytes).
 function Lib.ValidWhenValue(row, key)
     if ID_ROWS[row] then return type(key) == "number" and key > 0 and key == math.floor(key) end
-    if row == "characters" then return type(key) == "string" and key:match("^[^%s%-]+%-%S+$") ~= nil end
+    if row == "characters" then
+        return type(key) == "string" and #key <= Lib.CHARACTER_MAX and not key:find("[%c|]")
+            and key:match("^[^%s%-]+%-%S+$") ~= nil
+    end
     local list = row == "class" and NS.GameIds.CLASSES or NS.Resolver.TOKENS[row]
     for _, token in ipairs(list or {}) do
         if token == key then return true end
@@ -567,9 +585,18 @@ end
 -- ── surfaces ────────────────────────────────────────────────────────────────────────────────
 
 local SURFACE_DEFAULTS = {
+    -- look: the Look tab's rows (settings/SchemaMembers.lua). The font, border and background rows
+    -- (phase 5, options-ui-§16/§17) default to the Ka0s skin a pad has always worn: the chip label's
+    -- small white face with its shadow, a flat 1px black edge ("None" is no border art) and the
+    -- 0.06, 0.06, 0.08, 0.92 body (spec §10.1).
     pad = { groupsAs = "sections", layout = { orientation = "horizontal", columns = 4, growth = "right",
         style = "iconLabel", scale = 1.0, spacing = 4, width = 140 },
-        look = { visibility = "always", fade = "none", fadeAlpha = 0.4 } },
+        look = { visibility = "always", fade = "none", fadeAlpha = 0.4,
+            font = "Friz Quadrata TT", fontSize = 10, fontColor = { r = 1, g = 1, b = 1, a = 1 },
+            useClassColorFont = false, fontFlags = "", fontShadow = true,
+            borderStyle = "None", borderSize = 1, borderColor = { r = 0, g = 0, b = 0, a = 1 },
+            useClassColorBorder = false,
+            background = { r = 0.06, g = 0.06, b = 0.08, a = 0.92 }, useClassColorBackground = false } },
     -- Relaxed is the only interaction in v0.1.0 (the C7 fallback, round-4 record). `delay` and
     -- `tapAction` are kept for the hold, flick and release upgrade, and `depth` until owner ruling R5
     -- gives it a meaning; nothing reads them yet.
@@ -596,23 +623,26 @@ Lib.TEMPLATES = {
 --- modules/Dial.lua, the CLI and the Comms Dial page).
 Lib.DIAL_DEFAULT_POINT = { "CENTER", "CENTER", 0, 0 }
 
---- Create a pad or dial holding every built-in group (in BuiltIns.order).
-function Lib.CreateSurface(kind, name)
+-- A new pad or dial: its kind's defaults, `name` and a copy of `groups`, with every shipped built-in
+-- marked seen (so Prepare never appends one the list leaves out), at the end of its kind's order.
+local function newSurface(kind, name, groups)
     local p = P()
-    local set = kind == "pad" and p.pads or kind == "dial" and p.dials
-    if not set then return nil, "badKind" end
+    local set = kind == "pad" and p.pads or p.dials
     local id = Lib.NewId(kind == "pad" and "p" or "d")
     local s = copyTable(SURFACE_DEFAULTS[kind])
-    s.name, s.enabled, s.groups, s.seenBuiltins = name, true, {}, {}
-    for _, gid in ipairs(NS.BuiltIns.order) do
-        s.groups[#s.groups + 1] = gid
-        s.seenBuiltins[gid] = true
-    end
+    s.name, s.enabled, s.groups, s.seenBuiltins = name, true, copyTable(groups), {}
+    for _, gid in ipairs(NS.BuiltIns.order) do s.seenBuiltins[gid] = true end
     set[id] = s
     local order = kind == "pad" and p.padOrder or p.dialOrder
     order[#order + 1] = id
     announce(kind, id)
     return id
+end
+
+--- Create a pad or dial holding every built-in group (in BuiltIns.order).
+function Lib.CreateSurface(kind, name)
+    if kind ~= "pad" and kind ~= "dial" then return nil, "badKind" end
+    return newSurface(kind, name, NS.BuiltIns.order)
 end
 
 function Lib.DeleteSurface(kind, id)
@@ -836,6 +866,72 @@ local function liftNextId(p)
     if type(p.nextId) ~= "number" or p.nextId <= high then p.nextId = high + 1 end
 end
 
+-- A fresh profile's default pad and dial (D7), once.
+local function seed(p, result)
+    if p.seeded then return end
+    if #p.padOrder == 0 then Lib.CreateSurface("pad", L["Comms Pad"]) end
+    if #p.dialOrder == 0 then Lib.CreateSurface("dial", L["Comms Dial"]) end
+    p.seeded = true
+    result.seeded = true
+end
+
+-- Every user group's callout list as a table, its dangling ids dropped.
+local function repairGroups(p, result)
+    for _, g in pairs(p.groups) do
+        g.callouts = type(g.callouts) == "table" and g.callouts or {}
+        for i = #g.callouts, 1, -1 do
+            if not p.callouts[g.callouts[i]] then table.remove(g.callouts, i) result.repaired = result.repaired + 1 end
+        end
+    end
+end
+
+-- A stored surface's settings tables (a pad's layout and look) with every field its kind's defaults
+-- have that it lacks: a pad saved before a field existed (the Look tab's font, border and background,
+-- phase 5) reads like a new one.
+local function fillShape(s, kind)
+    for key, defaults in pairs(SURFACE_DEFAULTS[kind]) do
+        if type(defaults) == "table" then
+            if type(s[key]) ~= "table" then s[key] = {} end
+            for field, v in pairs(defaults) do
+                if s[key][field] == nil then s[key][field] = copyTable(v) end
+            end
+        end
+    end
+end
+
+-- One pad or dial: its lists as tables, its dangling groups dropped, each built-in it has not been
+-- offered yet appended once (seenBuiltins), and its settings tables filled (fillShape).
+local function repairSurface(s, kind, result)
+    fillShape(s, kind)
+    s.seenBuiltins = type(s.seenBuiltins) == "table" and s.seenBuiltins or {}
+    s.groups = type(s.groups) == "table" and s.groups or {}
+    for i = #s.groups, 1, -1 do
+        if not exists(s.groups[i]) then table.remove(s.groups, i) result.repaired = result.repaired + 1 end
+    end
+    for _, gid in ipairs(NS.BuiltIns.order) do
+        if not s.seenBuiltins[gid] then
+            s.seenBuiltins[gid] = true
+            if not indexOf(s.groups, gid) then
+                s.groups[#s.groups + 1] = gid
+                result.appended = result.appended + 1
+            end
+        end
+    end
+end
+
+-- A kind's display order: entries naming no surface dropped, surfaces it misses appended by id.
+local function repairOrder(order, set, result)
+    for i = #order, 1, -1 do
+        if not set[order[i]] then table.remove(order, i) result.repaired = result.repaired + 1 end
+    end
+    local ids = {}
+    for id in pairs(set) do ids[#ids + 1] = id end
+    table.sort(ids)
+    for _, id in ipairs(ids) do
+        if not indexOf(order, id) then order[#order + 1] = id result.repaired = result.repaired + 1 end
+    end
+end
+
 --- Seed, append newly shipped built-ins once per surface, and drop dangling ids. Idempotent.
 --- @return table { seeded, appended, repaired }
 function Lib.Prepare()
@@ -843,50 +939,79 @@ function Lib.Prepare()
     local result = { seeded = false, appended = 0, repaired = 0 }
     normalize(p, result)
     liftNextId(p)
-    if not p.seeded then
-        if #p.padOrder == 0 then Lib.CreateSurface("pad", L["Comms Pad"]) end
-        if #p.dialOrder == 0 then Lib.CreateSurface("dial", L["Comms Dial"]) end
-        p.seeded = true
-        result.seeded = true
-    end
-    for _, g in pairs(p.groups) do
-        g.callouts = type(g.callouts) == "table" and g.callouts or {}
-        for i = #g.callouts, 1, -1 do
-            if not p.callouts[g.callouts[i]] then table.remove(g.callouts, i) result.repaired = result.repaired + 1 end
-        end
-    end
-    for _, set in pairs(surfaces()) do
-        for _, s in pairs(set) do
-            s.seenBuiltins = type(s.seenBuiltins) == "table" and s.seenBuiltins or {}
-            s.groups = type(s.groups) == "table" and s.groups or {}
-            for i = #s.groups, 1, -1 do
-                if not exists(s.groups[i]) then table.remove(s.groups, i) result.repaired = result.repaired + 1 end
-            end
-            for _, gid in ipairs(NS.BuiltIns.order) do
-                if not s.seenBuiltins[gid] then
-                    s.seenBuiltins[gid] = true
-                    if not indexOf(s.groups, gid) then
-                        s.groups[#s.groups + 1] = gid
-                        result.appended = result.appended + 1
-                    end
-                end
-            end
-        end
-    end
+    seed(p, result)
+    repairGroups(p, result)
     for kind, set in pairs(surfaces()) do
-        local order = kind == "pad" and p.padOrder or p.dialOrder
-        for i = #order, 1, -1 do
-            if not set[order[i]] then table.remove(order, i) result.repaired = result.repaired + 1 end
-        end
-        local ids = {}
-        for id in pairs(set) do ids[#ids + 1] = id end
-        table.sort(ids)
-        for _, id in ipairs(ids) do
-            if not indexOf(order, id) then order[#order + 1] = id result.repaired = result.repaired + 1 end
-        end
+        for _, s in pairs(set) do repairSurface(s, kind, result) end
+        repairOrder(kind == "pad" and p.padOrder or p.dialOrder, set, result)
     end
     if result.seeded or result.appended > 0 or result.repaired > 0 then
         NS.Debug(TAG, "prepare seeded=%s appended=%s repaired=%s", result.seeded, result.appended, result.repaired)
     end
     return result
+end
+
+-- ── import (spec §15, §18) ──────────────────────────────────────────────────────────────────
+
+-- A surface's group list from a share result, pointing at the fresh copies: a built-in set stays
+-- itself, an imported group becomes its new id, anything else (gone since the check) is left out.
+local function remapGroups(list, map)
+    local out = {}
+    for _, gid in ipairs(list) do
+        local id = isBuiltin(gid) and gid or map[gid]
+        if id and exists(id) and not indexOf(out, id) then out[#out + 1] = id end
+    end
+    return out
+end
+
+-- One pad or dial: a new member with no key and no position, then each field that travels
+-- (Share.Portable, checked again here, so no key or position is ever written) through the seam, which
+-- refuses what it would refuse a player. A field left out either way is counted as ignored.
+local function importSurface(kind, e, map, tally)
+    local id = newSurface(kind, e.name, remapGroups(e.groups, map))
+    local paths = {}
+    for path in pairs(e.fields) do paths[#paths + 1] = path end
+    table.sort(paths)
+    for _, path in ipairs(paths) do
+        local ok = NS.Share.Portable(kind, path) and NS.SchemaRuntime.Set(path, e.fields[path], id)
+        if not ok then tally.ignored = tally.ignored + 1 end
+    end
+    if e.enabled == false then NS.SchemaRuntime.Set(kind .. ".enabled", false, id) end
+    map[e.id] = id
+    tally[kind .. "s"] = tally[kind .. "s"] + 1
+end
+
+local function importMembers(res, map, tally)
+    for _, e in ipairs(res.callouts) do
+        local id = Lib.CreateCallout(e.fields)
+        if id then map[e.id], tally.callouts = id, tally.callouts + 1 end
+    end
+    for _, e in ipairs(res.groups) do
+        local ids = {}
+        for _, cid in ipairs(e.callouts) do ids[#ids + 1] = map[cid] end
+        local f = e.fields
+        local id = Lib.CreateGroup({ name = f.name, icon = f.icon, when = f.when, openInto = f.openInto,
+            enabled = f.enabled, callouts = ids })
+        if id then map[e.id], tally.groups = id, tally.groups + 1 end
+    end
+    for _, e in ipairs(res.pads) do importSurface("pad", e, map, tally) end
+    for _, e in ipairs(res.dials) do importSurface("dial", e, map, tally) end
+end
+
+--- Apply a checked share result (modules/Share.lua Validate): every member under a fresh id (spec
+--- §18: ids are always re-mapped, names may repeat), each group's callouts and each surface's groups
+--- pointing at the new copies, built-in sets kept by id. A pad or a dial arrives unbound (spec §15): no
+--- key, at the default place, at the end of its kind's order. One act: one LIBRARY_CHANGED, so the
+--- surfaces rebuild once, and one `[Set] import share` line for every field it wrote.
+--- @return table|nil tally { callouts, groups, pads, dials, ignored }, table|string map (old id ->
+--- new id) or the reason nothing was imported
+function Lib.Import(res)
+    if type(res) ~= "table" or res.ok ~= true then return nil, "badImport" end
+    local map, tally = {}, { callouts = 0, groups = 0, pads = 0, dials = 0, ignored = 0 }
+    Lib.Batch(function()
+        NS.SchemaRuntime.BulkRun("import", "share", function() importMembers(res, map, tally) end)
+    end)
+    NS.Debug(TAG, "import %s callouts, %s groups, %s pads, %s dials (%s fields ignored)", tally.callouts,
+        tally.groups, tally.pads, tally.dials, tally.ignored)
+    return tally, map
 end

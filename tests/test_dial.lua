@@ -69,6 +69,24 @@ test("dial: a refused callout is a dimmed, disarmed wedge; a ring wedge is disar
     assertNil(ringWedge:GetAttribute("type"))
 end)
 
+test("dial: [audit QC-07] the hub's close and a wedge's padlock are catalog marks, with the Blizzard art as the nil fallback", function()
+    local NS, m = live()
+    NS.Dial.Apply(1, "d2", planOf(NS))
+    local h = NS.Dial.Instance("d2").header
+    -- red under: SetTexture(CLOSE_ICON) / SetTexture(LOCK_ICON) unconditionally in modules/Dial_Render.lua
+    assertTrue(NS.Icon("close") ~= nil)
+    assertEqual(h.qcClose.__texture, NS.Icon("close"))
+    local w = NS.Dial.RingWedges("d2", 1)[1]
+    assertEqual(w.qcLock.__texture, NS.Icon("lock"))
+    local real = NS.Icon
+    NS.Icon = function() return nil end
+    local bare = NS.DialRender.DressHub(m.CreateFrame("Frame", "QuickCommsDialProbe", m.UIParent))
+    local wedge = NS.DialRender.DressWedge(m.CreateFrame("Button", "QuickCommsDialProbeWedge", m.UIParent))
+    NS.Icon = real
+    assertEqual(bare.qcClose.__texture, "Interface\\Buttons\\UI-StopButton")
+    assertEqual(wedge.qcLock.__texture, "Interface\\PetBattles\\PetBattle-LockIcon")
+end)
+
 test("dial: the hub shows the lockdown chip, the stale hint and TEST MODE; the pointer runs only while open", function()
     local NS, m = live()
     NS.Dial.Apply(1, "d2", planOf(NS, { lockdown = true, test = true }))
@@ -460,4 +478,35 @@ test("dial: [final 5] test mode opens dial 1 once: a rebuild keeps it open, and 
     NS.Preview.SetPreviewAs("bg:ab")
     assertTrue(NS.Dial.IsOpen("d2"), "a new display mode opens it again")
     assertEqual(#m.blocked, 0)
+end)
+
+test("dial: [phase 5] Arathi Basin's node wedges sit on their winds: Lumber Mill is SW, Blacksmith N", function()
+    local NS, m = live(AB)
+    bindG(NS)
+    m.__pressKey("G")
+    local ring = NS.Dial.ShownRing("d2")
+    local function at(title)
+        local _, _, _, x, y = wedgeTitled(NS, ring, title):GetPoint(1)
+        return x .. "," .. y
+    end
+    local sw, n = NS.DialLayout.Wedge(6, 8), NS.DialLayout.Wedge(1, 8)
+    assertEqual(at("Lumber Mill"), sw.x .. "," .. sw.y)
+    assertEqual(at("Blacksmith"), n.x .. "," .. n.y)
+end)
+
+test("dial: [review 6] on a four- or six-slice dial every node shows, and the number keys pick the shown wedges from N", function()
+    for _, slices in ipairs({ 4, 6 }) do
+        local NS, m = live(AB)
+        assertTrue(NS.SchemaRuntime.Set("dial.slices", slices, "d2"))
+        bindG(NS)
+        m.__pressKey("G")
+        local r = NS.Dial.ShownRing("d2")
+        assertEqual(ringTitle(NS), "Arathi Basin")
+        assertEqual(#NS.Dial.RingWedges("d2", r), 5, slices .. " slices: five nodes, no More")
+        -- clockwise from N: Blacksmith (N), Gold Mine (NE), Farm (SE), Lumber Mill (SW), Stables (NW)
+        m.__pressKey("4")
+        assertEqual(ringTitle(NS), "Lumber Mill", slices .. " slices: key 4 is the fourth wedge shown")
+        m.__pressKey("3")
+        assertEqual(m.sentMacros[#m.sentMacros].text, "/i INC 3 Lumber Mill")
+    end
 end)

@@ -1,7 +1,9 @@
 local _, NS = ...
 -- defaults/BuiltIns_Battlegrounds.lua — the generic battleground set and one set per
--- battleground (spec §12). Faction-neutral wording (D11). Matched on instanceID; the IDs below
--- are confirmed or corrected by the phase 0 harness (/qcs where, round-4 record). Node
+-- battleground (spec §12). Faction-neutral wording (D11). Matched on instanceID (the client's Map
+-- id); every id below is a battleground map in the client's own Map table (build 12.1.5.70340,
+-- matched by tools/derive-gameids.py and tests/test_gameids.lua); in-game confirmation is smoke check
+-- BG-2. Node
 -- battlegrounds nest one ring per node with INC 1/2/3/Many/Clear/Help and open into their ring.
 -- The generic set is declared last, below every per-battleground set.
 
@@ -23,7 +25,13 @@ local function idSet(ids)
     return set
 end
 
--- A battleground whose callouts are one ring per node.
+-- A battleground whose callouts are one ring per node. Each node is { key, name, wind }: the wind is
+-- the node's compass direction on the map (N, NE … NW, or "middle"), which pins its wedge on the dial
+-- (spec §12.1; modules/Dial_Layout.lua PinNodes). The winds are derived from the client's own AreaPOI
+-- table (build 12.1.5.70340, via wago.tools, 2026-10-13) by tools/derive-winds.py, which also checks
+-- the lists below: each node's map position against the center of the battleground's nodes, north up;
+-- a node within a third of the farthest node's distance from that center is the middle. Smoke check
+-- BG-1 confirms them in game.
 local function nodeBattleground(key, name, ids, nodes)
     local id = "bi.bg." .. key
     local children = {}
@@ -31,7 +39,8 @@ local function nodeBattleground(key, name, ids, nodes)
         local nodeId = id .. "." .. node[1]
         local rows = {}
         for i, r in ipairs(INC) do rows[i] = { r[1], r[2], r[3]:format(node[2]) } end
-        BI.Group(nodeId, { name = node[2], parent = id, callouts = BI.Callouts(nodeId, "smartGroup", rows) })
+        BI.Group(nodeId, { name = node[2], parent = id, compass = node[3],
+            callouts = BI.Callouts(nodeId, "smartGroup", rows) })
         children[n] = nodeId
     end
     BI.Group(id, { name = name, openInto = true, children = children,
@@ -48,22 +57,25 @@ local function flatBattleground(key, name, ids, rows)
 end
 
 nodeBattleground("ab", L["Arathi Basin"], { 529, 2107, 1681 }, {
-    { "stables", L["Stables"] }, { "lumbermill", L["Lumber Mill"] }, { "blacksmith", L["Blacksmith"] },
-    { "mine", L["Gold Mine"] }, { "farm", L["Farm"] },
+    { "stables", L["Stables"], "NW" }, { "lumbermill", L["Lumber Mill"], "SW" },
+    { "blacksmith", L["Blacksmith"], "middle" }, { "mine", L["Gold Mine"], "NE" }, { "farm", L["Farm"], "SE" },
 })
 nodeBattleground("eots", L["Eye of the Storm"], { 566, 968 }, {
-    { "felreaver", L["Fel Reaver Ruins"] }, { "bloodelf", L["Blood Elf Tower"] },
-    { "draenei", L["Draenei Ruins"] }, { "magetower", L["Mage Tower"] }, { "flag", L["the flag"] },
+    { "felreaver", L["Fel Reaver Ruins"], "SW" }, { "bloodelf", L["Blood Elf Tower"], "SE" },
+    { "draenei", L["Draenei Ruins"], "NE" }, { "magetower", L["Mage Tower"], "NW" }, { "flag", L["the flag"], "middle" },
 })
 nodeBattleground("bfg", L["Battle for Gilneas"], { 761 }, {
-    { "lighthouse", L["Lighthouse"] }, { "waterworks", L["Waterworks"] }, { "mines", L["Mines"] },
+    { "lighthouse", L["Lighthouse"], "W" }, { "waterworks", L["Waterworks"], "SE" }, { "mines", L["Mines"], "NE" },
 })
+-- Deepwind Gorge has five nodes on its current map (2245): Shrine and Ruins joined Market, Farm and
+-- Quarry (the client's AreaPOI table, as above).
 nodeBattleground("dwg", L["Deepwind Gorge"], { 1105, 2245 }, {
-    { "market", L["Market"] }, { "farm", L["Farm"] }, { "quarry", L["Quarry"] },
+    { "market", L["Market"], "middle" }, { "farm", L["Farm"], "NE" }, { "quarry", L["Quarry"], "NW" },
+    { "shrine", L["Shrine"], "SE" }, { "ruins", L["Ruins"], "SW" },
 })
 nodeBattleground("ioc", L["Isle of Conquest"], { 628 }, {
-    { "docks", L["Docks"] }, { "hangar", L["Hangar"] }, { "workshop", L["Workshop"] },
-    { "quarry", L["Quarry"] }, { "refinery", L["Refinery"] },
+    { "docks", L["Docks"], "W" }, { "hangar", L["Hangar"], "E" }, { "workshop", L["Workshop"], "middle" },
+    { "quarry", L["Quarry"], "SE" }, { "refinery", L["Refinery"], "NW" },
 })
 
 flatBattleground("wsg", L["Warsong Gulch"], { 489, 2106 }, {

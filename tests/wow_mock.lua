@@ -193,6 +193,9 @@ local function build()
         function r:SetColorTexture(cr, cg, cb, ca) self.__color = { cr, cg, cb, ca } return self end
         function r:SetVertexColor(cr, cg, cb, ca) self.__color = { cr, cg, cb, ca } return self end
         function r:SetTextColor(cr, cg, cb, ca) self.__color = { cr, cg, cb, ca } return self end
+        -- A font string's face, recorded; true as the client answers for a face it accepts.
+        function r:SetFont(path, size, flags) self.__font = { path, size, flags } return true end
+        function r:SetShadowOffset(x, y) self.__shadow = { x, y } return self end
         function r:SetAlpha(a) self.__alpha = a return self end
         function r:GetAlpha() return self.__alpha or 1 end
         return setmetatable(r, { __index = function(_, key)

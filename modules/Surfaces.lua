@@ -94,6 +94,18 @@ function S.Deps(snap)
     }
 end
 
+-- A surface's active groups and its order of them (spec §7), bracketed as resolverResolve inside
+-- bakeSurface (spec §16), and gated as bakeSurface is: an editor's look at a plan
+-- (deps.unmeasured, settings/Dials.lua) notes neither, because a child noted under a parent that was
+-- never noted would skew performance-§3's within-parent figures.
+local function resolve(list, snap, deps)
+    local t0 = Perf.on and not deps.unmeasured and debugprofilestop()
+    local active = NS.Resolver.ActiveGroups(deps.groups, snap)
+    local order = NS.Resolver.SurfaceOrder(list, active, deps.groups, deps.autoPromote)
+    if t0 then Perf.Note("resolverResolve", debugprofilestop() - t0, "bakeSurface") end
+    return active, order
+end
+
 --- One pad's plan.
 --- @param pad table profile.pads[surfaceId]
 --- @param snap table the situation snapshot
@@ -101,8 +113,7 @@ end
 --- @return table plan
 function S.BuildPlan(surfaceId, pad, snap, deps)
     local t0 = Perf.on and debugprofilestop()
-    local active = NS.Resolver.ActiveGroups(deps.groups, snap)
-    local order = NS.Resolver.SurfaceOrder(pad and pad.groups, active, deps.groups, deps.autoPromote)
+    local active, order = resolve(pad and pad.groups, snap, deps)
     local opts = { soloFallback = deps.soloFallback, ctx = deps.ctx }
     local plan = { surfaceId = surfaceId, snapshot = snap, order = order, sections = {},
         lockdownChip = false, hasActive = #order > 0, active = active }
@@ -118,7 +129,7 @@ function S.BuildPlan(surfaceId, pad, snap, deps)
             plan.sections[#plan.sections + 1] = { groupId = sec.groupId, title = sec.title, slots = slots }
         end
     end
-    if t0 then Perf.Note("bake.surface", debugprofilestop() - t0) end
+    if t0 then Perf.Note("bakeSurface", debugprofilestop() - t0) end
     return plan
 end
 
@@ -185,8 +196,7 @@ function S.BuildDialPlan(surfaceId, dial, snap, deps)
     -- deps.unmeasured: an editor's look at a plan (settings/Dials.lua), not a surface's bake.
     local t0 = Perf.on and not deps.unmeasured and debugprofilestop()
     dial = type(dial) == "table" and dial or {}
-    local active = NS.Resolver.ActiveGroups(deps.groups, snap)
-    local order = NS.Resolver.SurfaceOrder(dial.groups, active, deps.groups, deps.autoPromote)
+    local active, order = resolve(dial.groups, snap, deps)
     local opts = { soloFallback = deps.soloFallback, ctx = deps.ctx }
     local plan = { kind = "dial", surfaceId = surfaceId, snapshot = snap, order = order, active = active,
         lockdownChip = false, hasActive = #order > 0 }
@@ -210,7 +220,7 @@ function S.BuildDialPlan(surfaceId, dial, snap, deps)
                 local c = deps.group(child)
                 if c then
                     entry.children[#entry.children + 1] = { id = child, title = c.name, icon = c.icon,
-                        slots = slotsOf(c.callouts) }
+                        compass = c.compass, slots = slotsOf(c.callouts) }
                 end
             end
         else
@@ -219,34 +229,27 @@ function S.BuildDialPlan(surfaceId, dial, snap, deps)
         groups[#groups + 1] = entry
     end
     plan.rings, plan.openRing = NS.DialLayout.Rings(groups, { mode = dial.mode, slices = dial.slices, title = dial.name })
-    if t0 then Perf.Note("bake.surface", debugprofilestop() - t0) end
+    if t0 then Perf.Note("bakeSurface", debugprofilestop() - t0) end
     return plan
 end
 
---- "Why is this showing?" for one pad or dial (spec §13.3): the groups it shows, in priority order,
---- each with the When rows that matched (Resolver.Explain), then every lock in effect on its slots.
---- Read from the last plan, so in combat it explains what is on screen.
---- @return string[]
-function S.WhyLines(id)
-    local plan = S.Plans()[id] or S.DialPlans()[id]
-    if not plan then
-        local p = NS.db and NS.db.profile
-        if p and p.dials[id] then return { L["This dial has not been built yet."] } end
-        return { L["This pad has not been built yet."] }
-    end
-    if plan.test and not plan.preview then
-        if plan.kind == "dial" then return { L["Test mode: placeholder wedges that send nothing."] } end
-        return { L["Test mode: placeholder chips that send nothing."] }
-    end
-    local out = {}
-    if plan.preview then out[1] = L["Preview as: %s"]:format(NS.Preview.Label(plan.preview)) end
-    if #plan.order == 0 then out[#out + 1] = L["No group matches this situation."] end
-    for _, gid in ipairs(plan.order) do
-        local g = NS.Library.Group(gid)
-        local name = g and g.name or gid
-        if NS.Library.IsBuiltin(gid) then name = L["%s (built-in)"]:format(name) end
-        out[#out + 1] = NS.Resolver.Explain(name, plan.active and plan.active[gid])
-    end
+-- The answer for a surface with no plan yet.
+local function unbuiltLines(id)
+    local p = NS.db and NS.db.profile
+    if p and p.dials[id] then return { L["This dial has not been built yet."] } end
+    return { L["This pad has not been built yet."] }
+end
+
+-- A group's name as the why lines show it: a built-in says so.
+local function whyName(gid)
+    local g = NS.Library.Group(gid)
+    local name = g and g.name or gid
+    if NS.Library.IsBuiltin(gid) then name = L["%s (built-in)"]:format(name) end
+    return name
+end
+
+-- Every distinct lock on the plan's slots, sorted, as its tooltip line, appended to `out`.
+local function lockLines(plan, out)
     local locks, seen = {}, {}
     S.EachSlot(plan, function(slot)
         if slot.lock and not seen[slot.lock] then
@@ -256,6 +259,26 @@ function S.WhyLines(id)
     end)
     table.sort(locks)
     for _, lock in ipairs(locks) do out[#out + 1] = NS.PadRender.LOCK_TEXT[lock] or tostring(lock) end
+end
+
+--- "Why is this showing?" for one pad or dial (spec §13.3): the groups it shows, in priority order,
+--- each with the When rows that matched (Resolver.Explain), then every lock in effect on its slots.
+--- Read from the last plan, so in combat it explains what is on screen.
+--- @return string[]
+function S.WhyLines(id)
+    local plan = S.Plans()[id] or S.DialPlans()[id]
+    if not plan then return unbuiltLines(id) end
+    if plan.test and not plan.preview then
+        if plan.kind == "dial" then return { L["Test mode: placeholder wedges that send nothing."] } end
+        return { L["Test mode: placeholder chips that send nothing."] }
+    end
+    local out = {}
+    if plan.preview then out[1] = L["Preview as: %s"]:format(NS.Preview.Label(plan.preview)) end
+    if #plan.order == 0 then out[#out + 1] = L["No group matches this situation."] end
+    for _, gid in ipairs(plan.order) do
+        out[#out + 1] = NS.Resolver.Explain(whyName(gid), plan.active and plan.active[gid])
+    end
+    lockLines(plan, out)
     return out
 end
 

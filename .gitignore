@@ -17,3 +17,6 @@ Thumbs.db
 # WoW addon packaging
 *.zip
 release/
+
+# Python bytecode (the tools/ generators)
+__pycache__/

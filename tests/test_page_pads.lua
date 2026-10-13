@@ -170,3 +170,17 @@ test("pads page: [final 26] New pad takes the lowest free number, so a delete ne
     assertEqual(NS.db.profile.pads[again].name, "Comms Pad 2")
     assertEqual(NS.db.profile.pads[Pads.Create()].name, "Comms Pad 4")
 end)
+
+test("pads page: [phase 5] Look carries the composed Font, Border and Background groups under their headings", function()
+    local NS, _, P = open()
+    local w = P.tab("pads", "Look")
+    for _, heading in ipairs({ "Font", "Border", "Background" }) do
+        assertTrue(P.find(w, "Heading", heading) ~= nil, heading)
+    end
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 3, "a companion beside each swatch (options-ui-§17)")
+    assertTrue(P.find(w, "ColorPicker", "Font color") ~= nil)
+    assertTrue(P.find(w, "ColorPicker", "Border color") ~= nil)
+    assertTrue(P.find(w, "ColorPicker", "Background") ~= nil)
+    P.find(w, "CheckBox", "Font shadow"):__fire("OnValueChanged", false)
+    assertFalse(NS.db.profile.pads.p1.look.fontShadow)
+end)

@@ -596,6 +596,11 @@ test("library: [final 2] ValidWhen refuses a value its row can never match, and 
     assertFalse(Lib.ValidWhen({ content = { mplus = true } }))
     assertFalse(Lib.ValidWhen({ spec = { abc = true } }))
     assertFalse(Lib.ValidWhen({ characters = { bob = true } }), "a character is Name-Realm")
+    -- [review] red under: ValidWhenValue's old characters pattern (any byte but a space or a minus)
+    assertFalse(Lib.ValidWhen({ characters = { ["Bob|T1:99|t-Area52"] = true } }), "no escape character")
+    assertFalse(Lib.ValidWhen({ characters = { ["Bo\1b-Area52"] = true } }), "no control character")
+    assertFalse(Lib.ValidWhen({ characters = { [string.rep("a", 60) .. "-" .. string.rep("b", 60)] = true } }), "at most 96 bytes")
+    assertTrue(Lib.ValidWhen({ characters = { ["\208\154\208\176\208\190\209\129-\208\147\208\190\209\128\208\180\209\131\208\189\208\189"] = true } }), "a Cyrillic Name-Realm")
     assertTrue(Lib.ValidWhen({ role = { TANK = true }, class = { WARRIOR = true }, spec = { [71] = true },
         difficulty = { mythic = true }, group = { instance = true }, leadership = { assist = true },
         instances = { [2526] = true }, battleground = { [2107] = true }, characters = { ["Bob-Area52"] = true },
@@ -653,4 +658,131 @@ test("library: [phase 4] the generic battleground set moves below the per-battle
     assertEqual(table.concat(profile.dials.d2.groups, ","), "bi.bg.ab,bi.bg", "already below: untouched")
     assertEqual(Lib.MoveGenericBattlegroundLast(profile), 0, "idempotent")
     assertEqual(Lib.MoveGenericBattlegroundLast({ pads = "junk" }), 0)
+end)
+
+-- ── import (phase 5) ────────────────────────────────────────────────────────────────────────
+
+-- A share result for two callouts, a group holding both, a pad and a dial listing the group and a
+-- built-in set, checked by modules/Share.lua as an import is.
+local function shared(NS)
+    return NS.Share.Validate({ v = 1, addon = "QuickComms", kind = "bundle",
+        callouts = { c1 = { name = "Kick", text = "Kick on me", channel = "party" },
+            c2 = { name = "Lust", text = "Lust now", channel = "smartGroup", icon = 136012 } },
+        groups = { g1 = { name = "Mine", callouts = { "c2", "c1" }, when = { content = { mythicPlus = true } } } },
+        pads = { p1 = { name = "Their pad", groups = { "g1", "bi.mplus" },
+            fields = { ["pad.layout.columns"] = 6, ["pad.layout.spacing"] = 999 } } },
+        dials = { d2 = { name = "Their dial", groups = { "g1" }, fields = { ["dial.mode"] = "flat" } } },
+    })
+end
+
+test("library: [phase 5] Import makes every member under a fresh id, its references pointing at the copies", function()
+    local NS, Lib, p = boot()
+    local tally, map = Lib.Import(shared(NS))
+    assertEqual(tally.callouts .. tally.groups .. tally.pads .. tally.dials, "2111")
+    local gid = map.g1
+    assertTrue(gid ~= "g1" and p.groups[gid] ~= nil)
+    assertEqual(p.groups[gid].callouts[1], map.c2, "the group's order is kept, pointing at the new copies")
+    assertEqual(p.groups[gid].callouts[2], map.c1)
+    assertTrue(p.groups[gid].when.content.mythicPlus)
+    assertEqual(p.callouts[map.c2].icon, 136012)
+    local pad = p.pads[map.p1]
+    assertEqual(table.concat(pad.groups, ","), gid .. ",bi.mplus")
+    assertEqual(pad.layout.columns, 6)
+    assertEqual(pad.layout.spacing, 20, "the seam clamps what it would clamp for a player")
+    assertEqual(p.padOrder[#p.padOrder], map.p1, "at the end of the pad order")
+    assertEqual(p.dials[map.d2].mode, "flat")
+end)
+
+test("library: [review 3] importing the same string twice makes two copies; nothing that existed changes", function()
+    local NS, Lib, p = boot()
+    local mine = Lib.CreateCallout({ name = "Kick", text = "Mine", channel = "say" })
+    -- the fixture's p1 and d2 are the ids of this profile's own default pad and dial
+    local pad, dial = p.pads.p1, p.dials.d2
+    assertTrue(pad ~= nil and dial ~= nil, "the seeded pad p1 and dial d2")
+    local function shape(s) return s.name .. "|" .. table.concat(s.groups, ",") end
+    local padBefore, dialBefore, padColumns = shape(pad), shape(dial), pad.layout.columns
+    local orderBefore = table.concat(p.padOrder, ",")
+    local _, first = Lib.Import(shared(NS))
+    local _, second = Lib.Import(shared(NS))
+    assertTrue(first.c1 ~= second.c1 and first.c1 ~= mine and second.c1 ~= mine)
+    assertTrue(first.p1 ~= "p1" and first.d2 ~= "d2" and first.p1 ~= second.p1 and first.d2 ~= second.d2,
+        "an overlapping id is never reused")
+    assertTrue(p.pads.p1 == pad and p.dials.d2 == dial, "the same tables")
+    assertEqual(shape(pad), padBefore, "the default pad p1 is unchanged")
+    assertEqual(pad.layout.columns, padColumns)
+    assertEqual(shape(dial), dialBefore, "the default dial d2 is unchanged")
+    assertEqual(table.concat(p.padOrder, ","), orderBefore .. "," .. first.p1 .. "," .. second.p1, "p1 once in the order")
+    assertEqual(p.callouts[mine].text, "Mine")
+    assertEqual(p.callouts[first.c1].name, "Kick", "a name may repeat")
+    assertEqual(p.callouts[second.c1].name, "Kick")
+    assertEqual(p.groups[second.g1].callouts[1], second.c2, "each copy points at its own callouts")
+end)
+
+test("library: [review 4] an imported pad and dial arrive unbound: no key, the default place, no built-in re-added", function()
+    local NS, Lib, p = boot()
+    local res = shared(NS)
+    -- a hand-made result that slipped a key and a position past the checks is still refused them
+    res.dials[1].fields["dial.key"] = "G"
+    res.pads[1].fields["pad.point"] = { "TOPLEFT", "TOPLEFT", 10, -10 }
+    local tally, map = Lib.Import(res)
+    local dial, pad = p.dials[map.d2], p.pads[map.p1]
+    -- red under: drop the Share.Portable check from importSurface (the seam itself takes a key)
+    assertTrue(dial.key == nil or dial.key == false, "no key: " .. tostring(dial.key))
+    assertTrue(pad.point == nil or pad.point == false, "the default place")
+    assertEqual(tally.ignored, 2)
+    Lib.Prepare()
+    assertEqual(#pad.groups, 2, "every built-in was already marked seen")
+end)
+
+test("library: [review] an imported Look keeps a bool a bool and a color its four channels", function()
+    local NS, Lib, p = boot()
+    local res = NS.Share.Validate({ v = 1, addon = "QuickComms", kind = "bundle",
+        pads = { p1 = { name = "Junk look", fields = {
+            ["pad.look.fontShadow"] = "yes", ["pad.look.useClassColorFont"] = { 1, 2, 3 },
+            ["pad.look.useClassColorBackground"] = 7, ["pad.look.useClassColorBorder"] = true,
+            ["pad.look.fontColor"] = { r = 0.5, g = 0.5, b = 0.5, junk = { a = { b = "x" } } },
+            ["pad.look.background"] = { 0.1, 0.2, 0.3 } } } } })
+    local tally, map = Lib.Import(res)
+    local look = p.pads[map.p1].look
+    -- red under: no validate on the four bool rows in lookChecks (settings/SchemaMembers.lua)
+    assertEqual(look.fontShadow, true, "the default stands")
+    assertEqual(look.useClassColorFont, false)
+    assertEqual(look.useClassColorBackground, false)
+    assertEqual(look.useClassColorBorder, true)
+    assertEqual(tally.ignored, 3)
+    -- red under: no normalize on the color rows (the junk subtree is stored and exported again)
+    local keys = {}
+    for k in pairs(look.fontColor) do keys[#keys + 1] = tostring(k) end
+    table.sort(keys)
+    assertEqual(table.concat(keys, ","), "a,b,g,r")
+    assertEqual(look.fontColor.r, 0.5)
+    assertEqual(look.fontColor.a, 1)
+    assertEqual(look.background.r .. "," .. look.background.b .. "," .. look.background.a, "0.1,0.3,1")
+end)
+
+test("library: [phase 5] Import is one act: one LIBRARY_CHANGED; a refused result imports nothing", function()
+    local NS, Lib, _, sent = boot()
+    local res = shared(NS)
+    for i = #sent, 1, -1 do sent[i] = nil end
+    Lib.Import(res)
+    local n = 0
+    for _, s in ipairs(sent) do if s[1] == NS.MSG.LIBRARY_CHANGED then n = n + 1 end end
+    -- red under: drop Lib.Batch from Lib.Import (one announce per member and per field)
+    assertEqual(n, 1)
+    assertEqual(sent[#sent][2], "callout,dial,group,pad")
+    assertNil(Lib.Import({ ok = false, reason = "newer" }))
+    assertNil(Lib.Import(nil))
+end)
+
+test("library: [phase 5] Prepare gives a pad saved before the Look groups every field it lacks", function()
+    local NS, Lib, p = boot()
+    local pad = p.pads[p.padOrder[1]]
+    pad.look = { visibility = "never" }
+    pad.layout.width = nil
+    Lib.Prepare()
+    assertEqual(pad.look.visibility, "never", "a stored value is kept")
+    assertEqual(pad.look.font, "Friz Quadrata TT")
+    assertEqual(pad.look.background.a, 0.92)
+    assertEqual(pad.layout.width, 140)
+    assertTrue(pad.look.background ~= NS.Library.TEMPLATES.pad.look.background, "a copy, never the template")
 end)

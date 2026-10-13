@@ -174,3 +174,56 @@ test("dial layout: [final 20] past eight wedges each gets its own direction, as 
     assertEqual(table.concat(words, " "), "12 1 2 3 4 5 6 7 8 9 10 11")
     assertEqual(L.Direction(2, 8), "NE", "eight or fewer keep the winds")
 end)
+
+-- Arathi Basin with its nodes' winds, as defaults/BuiltIns_Battlegrounds.lua ships them.
+local AB_WINDS = { "NW", "SW", "middle", "NE", "SE" }
+local function abPinned()
+    local g = ab()
+    for i, c in ipairs(g.children) do c.compass = AB_WINDS[i] end
+    return g
+end
+
+test("dial layout: [phase 5] a node set's nodes sit on their compass winds; the middle node takes N", function()
+    local L = DL()
+    local rings, open = L.Rings({ abPinned() }, { mode = "categories", slices = 4, title = "Comms Dial" })
+    local ring = rings[open]
+    assertEqual(ring.title, "Arathi Basin")
+    assertEqual(ring.size, 8, "eight winds, whatever the dial's slices")
+    assertEqual(ring.pages, 1, "never paged: no More")
+    local at = {}
+    for _, item in ipairs(ring.items) do at[#at + 1] = item.title .. "@" .. L.Direction(item.wedge, ring.size) end
+    assertEqual(table.concat(at, ","), "Blacksmith@N,Gold Mine@NE,Farm@SE,Lumber Mill@SW,Stables@NW")
+    local mill = rings[ring.items[4].target]
+    assertEqual(mill.title, "Lumber Mill")
+    assertEqual(mill.size, 4, "a node's own ring keeps the dial's slices")
+    assertEqual(mill.items[3].slot.line, "/i INC 3 Lumber Mill", "still two clicks to INC 3 Lumber Mill")
+end)
+
+test("dial layout: [review 6] [phase 5] nodes that cannot all be pinned keep their shipped order", function()
+    local L = DL()
+    assertNil(L.PinNodes({ { wind = "N" }, { wind = "N" } }), "two on one wind")
+    assertNil(L.PinNodes({ { wind = "N" }, { wind = "up" } }), "an unknown wind")
+    assertNil(L.PinNodes({ { wind = "N" }, {} }), "a node with none")
+    assertNil(L.PinNodes({}), "none")
+    local g = abPinned()
+    g.children[2].compass = nil
+    local rings, open = L.Rings({ g }, { slices = 4 })
+    assertEqual(titles(rings[open]), "Stables,Lumber Mill,Blacksmith,More")
+    local two = L.PinNodes({ { wind = "middle", name = "mid" }, { wind = "N", name = "north" } })
+    assertEqual(two[1].name .. two[1].wedge .. "," .. two[2].name .. two[2].wedge, "north1,mid2",
+        "N is taken, so the middle node takes NE")
+end)
+
+test("dial layout: [review 6] a pinned ring ignores the dial's slices; Flat keeps its paging", function()
+    local L = DL()
+    for _, slices in ipairs({ 4, 6 }) do
+        local rings, open = L.Rings({ abPinned() }, { mode = "categories", slices = slices })
+        assertEqual(rings[open].size, 8, slices .. " slices: the pinned ring has eight wedges")
+        assertEqual(#rings[open].items, 5, slices .. " slices: every node on the one ring, no More")
+    end
+    -- red under: make shape() answer the pinned shape for every ring in modules/Dial_Layout.lua
+    local rings, open = L.Rings({ abPinned() }, { mode = "flat", slices = 4 })
+    assertEqual(rings[open].size, 4, "Flat lists the callouts on the dial's own slices")
+    assertEqual(rings[open].pages > 1, true, "and pages them behind More")
+    for _, item in ipairs(rings[open].items) do assertNil(item.wedge, "nothing in Flat is pinned") end
+end)

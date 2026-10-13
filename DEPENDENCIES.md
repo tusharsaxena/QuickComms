@@ -14,6 +14,12 @@ marked as such rather than listed as a requirement.
 - **Nothing else.** Every library is vendored under `libs/` and committed (library-stack), so the
   player installs no separate library addon. `## OptionalDeps:` names the vendored libs for load
   ordering, not as things to download.
+- **The share string's two libraries are vendored like the rest** (design spec §15): LibDeflate
+  `1.0.2-release` (commit `6831edca`, zlib license, kept as `libs/LibDeflate/LICENSE.txt`) from
+  <https://github.com/SafeteeWoW/LibDeflate>, and LibSerialize `v1.2.3` (commit `aa6e50dd`, MIT, kept as
+  `libs/LibSerialize/LICENSE`) from <https://github.com/rossnichols/LibSerialize>. Each folder is the
+  tag's `.lua`, `lib.xml` and license, copied whole and never edited; a new version is a re-copy from
+  its tag, in one commit with this line.
 
 ## Development — the contributor toolchain
 
@@ -53,7 +59,7 @@ Versions are pinned only where a version matters: `lua5.1` is hard, `luacheck` a
 
 ## Release / assets
 
-**One entry: Python 3 with Pillow**, and only for **regenerating** the logo TGAs —
+**Python 3 with Pillow**, and only for **regenerating** the logo TGAs —
 `media/logos/quickcomms.logo.128.tga` and `media/logos/quickcomms.logo.tga` are committed, so
 nothing is generated at package time. The recipe is layout-§4's, run by hand from the committed
 2000×2000 source when the art changes. (The v0.1.0 source is a placeholder drawn with Pillow for the
@@ -67,6 +73,13 @@ python3 -c 'from PIL import Image; Image.open("media/logos/quickcomms.logo.png")
 # verify
 python3 -c 'import PIL; print(PIL.__version__)'
 ```
+
+**Python 3 (standard library only)**, and only for **re-deriving the client-data extractions**:
+`tools/derive-gameids.py` (the instance ids and `tests/test_gameids.lua`'s map table) and
+`tools/derive-winds.py` (the node winds in `defaults/BuiltIns_Battlegrounds.lua`), with their shared
+`tools/client_tables.py`. They download wago.tools' exports of the client's tables and check the
+repository against them; neither is loaded by the client, and `.pkgmeta` ignores `tools/`. How to run
+them: `docs/common-tasks.md` → "Re-derive the client-data extractions".
 
 **None of this group is required to build, run or test the addon.**
 

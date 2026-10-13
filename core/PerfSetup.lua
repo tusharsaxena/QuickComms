@@ -14,17 +14,20 @@ local addonName, NS = ...
 
 local lib = LibStub and LibStub("LibKa0s-Perf-1.0", true)
 
--- The buckets, in report order. Each one is bracketed by the module named beside it. Phase 2
--- declares the send engine's and the pad's. The tasks that add one add its bucket here together
--- with the bracket that reaches it (design spec §16: situation.refresh, resolver.resolve,
--- bake.surface, pad.layout, dial.render, send.click, echo.match), so a declared bucket is never left
--- unreached (tests/test_setup.lua).
+-- The buckets, in report order: design spec §16's seven, each bracketed by the module named beside
+-- it, and each declared with the bracket that reaches it, so a declared bucket is never left
+-- unreached (tests/test_setup.lua). resolverResolve runs inside bakeSurface and says so (`within`,
+-- performance-§3).
 local BUCKETS = {
-    { key = "bake.surface" }, -- modules/Surfaces.lua: one pad's or dial's plan (resolve, order, bake every slot)
-    { key = "send.click" },   -- modules/SendEngine.lua: the OnClick hook
-    { key = "pad.layout" },   -- modules/Pad.lua: one pad's rebuild (geometry, chips, arm)
-    { key = "echo.match" },   -- modules/SendEngine.lua: a CHAT_MSG_* echo while a press waits
-    { key = "dial.render" },  -- modules/Dial_Render.lua: the pointer's OnUpdate while a dial is open
+    -- modules/Situation.lua: one read, classify and signature (RefreshNow); the SITUATION_CHANGED
+    -- publish, and the rebuild it runs, are outside it and measured by their own buckets
+    { key = "situationRefresh" },
+    { key = "bakeSurface" }, -- modules/Surfaces.lua: one pad's or dial's plan (resolve, order, bake every slot)
+    { key = "resolverResolve", within = "bakeSurface" }, -- modules/Surfaces.lua: a plan's active groups and their order
+    { key = "sendClick" },   -- modules/SendEngine.lua: the OnClick hook
+    { key = "padLayout" },   -- modules/Pad.lua: one pad's rebuild (geometry, chips, arm)
+    { key = "echoMatch" },   -- modules/SendEngine.lua: a CHAT_MSG_* echo while a press waits
+    { key = "dialRender" },  -- modules/Dial_Render.lua: the pointer's OnUpdate while a dial is open
 }
 
 if not (lib and NS.Lifecycle) then

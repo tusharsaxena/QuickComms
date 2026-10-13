@@ -73,3 +73,22 @@ lua tests/run.lua --list > docs/test-cases.md
 ```
 
 Then update the README's `[tests]` badge to the new Total, in the same commit.
+
+## Re-derive the client-data extractions
+
+`tests/test_gameids.lua`'s `CLIENT_MAPS`, `defaults/GameIds.lua`'s dungeon and raid lists, and the node winds in `defaults/BuiltIns_Battlegrounds.lua` come from the client's own tables, as wago.tools exports them. Two generators re-derive them and check the repository against them (layout-§1: they live under `tools/`, are never loaded, and are `.pkgmeta`-ignored); both need Python 3 and nothing else, download into a new scratch directory, and exit non-zero on any mismatch:
+
+```sh
+D="$(mktemp -d)/tables"
+python3 -I tools/derive-gameids.py --fetch "$D" && python3 -I tools/derive-gameids.py "$D"
+P="$(mktemp -d)/poi"
+python3 -I tools/derive-winds.py --fetch "$P" && python3 -I tools/derive-winds.py "$P"
+```
+
+For a new season or patch: change `SEASON`, `LAUNCH` (and `CURRENT_TIER` if the journal renumbers it) at the top of `tools/derive-gameids.py`, run it, and read every `MISMATCH:` and `NOT SHIPPED:` line; change the shipped lists and the test's rows to match only after reading them, then run it again until it prints `OK`. A new shipped id gets its `CLIENT_MAPS` row from the block the script prints. For a battleground a patch redraws, change its entry in `NODES` at the top of `tools/derive-winds.py` (the AreaPOI id and the name that row must carry) and copy the winds it prints into `defaults/BuiltIns_Battlegrounds.lua`. Update the build named in the headers (`defaults/GameIds.lua`, `defaults/BuiltIns_Battlegrounds.lua`, `tests/test_gameids.lua`) with the build `--fetch` printed. A match is not an in-game confirmation: the headers say "matched" until smoke checks BG-1, BG-2 and IDS-1 pass.
+
+The generators leave a `__pycache__/` beside them; `.gitignore` keeps it out of the repository.
+
+## Change what a share string carries
+
+A new member row of a pad or a dial travels with it on its own (`Share.Portable`: every row of its kind but its name, Enabled, position and key). A new callout or group field needs three places: `exportMember` in `modules/Share.lua`, the kind's entry check above it (`calloutEntry`, `groupEntry`), and `importMembers` in `modules/Library.lua`; pin it in `tests/test_share.lua` and `tests/test_library.lua`. Raise `Share.VERSION` only when an older Quick Comms would misread the new string, and add `MIGRATIONS[old]` lifting an old payload one step.

@@ -19,6 +19,10 @@ PL.ICON_ONLY = 28    -- an icon-only chip is square
 PL.LABEL_H   = 22    -- label-only chip height
 PL.MIN_W     = 120   -- the narrowest pad and the narrowest labeled chip
 PL.DEFAULT_W = 140
+PL.FONT_SIZE = 10    -- the Look's default font size, which the heights above were drawn for
+PL.CHIP_ROOM = 10    -- a labeled chip's height past its font size: CHIP_H at FONT_SIZE and up
+PL.LABEL_ROOM = 8    -- a label-only chip's
+PL.TITLE_ROOM = 4    -- a section title row's
 
 local TAG = { party = "P", raid = "R", instance = "I", raidWarning = "RW", say = "S", yell = "Y" }
 
@@ -64,13 +68,24 @@ function PL.VisibleSections(sections, groupsAs, tab)
     return sections
 end
 
---- One chip's width and height for the pad's style.
-function PL.CellSize(layout)
+-- The Look's font size, or the default.
+local function sizeOf(fontSize)
+    return tonumber(fontSize) or PL.FONT_SIZE
+end
+
+--- One chip's width and height for the pad's style. A labeled chip grows with the Look's font size
+--- (never below its shipped height); an icon-only chip draws no text.
+function PL.CellSize(layout, fontSize)
     layout = type(layout) == "table" and layout or {}
     if layout.style == "icon" then return PL.ICON_ONLY, PL.ICON_ONLY end
     local w = math.max(PL.MIN_W, tonumber(layout.width) or PL.DEFAULT_W)
-    if layout.style == "label" then return w, PL.LABEL_H end
-    return w, PL.CHIP_H
+    if layout.style == "label" then return w, math.max(PL.LABEL_H, sizeOf(fontSize) + PL.LABEL_ROOM) end
+    return w, math.max(PL.CHIP_H, sizeOf(fontSize) + PL.CHIP_ROOM)
+end
+
+--- A section title row's height for the Look's font size (never below SECTION_H).
+function PL.TitleHeight(fontSize)
+    return math.max(PL.SECTION_H, sizeOf(fontSize) + PL.TITLE_ROOM)
 end
 
 --- Columns for a section of `count` chips: one row (horizontal), one column (vertical) or N (grid).
@@ -84,12 +99,12 @@ end
 -- One section as a block: its title row and chip rows, offsets from the block's top. Upward growth
 -- flips the chip rows inside the block (the first row sits nearest the anchor) but keeps the title
 -- directly above its chips.
-local function sectionBlock(s, layout, cw, ch, gap, up)
+local function sectionBlock(s, layout, cw, ch, gap, up, th)
     local items, by = {}, 0
     if s.title then
         items[#items + 1] = { kind = "title", text = s.title, tabIndex = s.tabIndex, tabCount = s.tabCount,
-            x = PL.PAD, y = 0, w = 0, h = PL.SECTION_H }
-        by = PL.SECTION_H
+            x = PL.PAD, y = 0, w = 0, h = th }
+        by = th
     end
     local list = s.slots or {}
     local n, cols, trail = #list, 0, 0
@@ -109,44 +124,63 @@ local function sectionBlock(s, layout, cw, ch, gap, up)
     return { items = items, h = by, trail = trail, cols = cols }
 end
 
---- Place every title row and chip. The header stays on top; "up" stacks the section blocks in
---- reverse order (the first section nearest the anchor), "left" mirrors each chip row.
---- @param sections table from VisibleSections
---- @param layout table the pad's layout table
---- @param opts table|nil { collapsed = boolean }
---- @return table { width, height, items }
-function PL.Compute(sections, layout, opts)
-    layout = type(layout) == "table" and layout or {}
-    opts = type(opts) == "table" and opts or {}
-    local cw, ch = PL.CellSize(layout)
-    local gap = math.max(0, tonumber(layout.spacing) or 4)
-    local up = layout.growth == "up"
+-- The non-empty section blocks, and the widest block's content width.
+local function collectBlocks(sections, layout, cw, ch, gap, up, th)
     local blocks, contentW = {}, 0
-    if not opts.collapsed then
-        for _, s in ipairs(type(sections) == "table" and sections or {}) do
-            local b = sectionBlock(s, layout, cw, ch, gap, up)
-            if #b.items > 0 then
-                blocks[#blocks + 1] = b
-                if b.cols > 0 then contentW = math.max(contentW, b.cols * cw + (b.cols - 1) * gap) end
-            end
+    for _, s in ipairs(type(sections) == "table" and sections or {}) do
+        local b = sectionBlock(s, layout, cw, ch, gap, up, th)
+        if #b.items > 0 then
+            blocks[#blocks + 1] = b
+            if b.cols > 0 then contentW = math.max(contentW, b.cols * cw + (b.cols - 1) * gap) end
         end
     end
-    local width = math.max(PL.MIN_W, contentW + 2 * PL.PAD)
+    return blocks, contentW
+end
+
+-- Stack the blocks under the header, "up" in reverse order; answers the y below the last one.
+local function stackBlocks(blocks, up)
     local y, nb = PL.HEADER_H + PL.PAD, #blocks
     for k = 1, nb do
         local b = blocks[up and (nb + 1 - k) or k]
         b.top = y
         y = y + b.h + b.trail
     end
+    return y
+end
+
+-- Every block's items in pad coordinates; "left" mirrors each chip across the pad's width.
+local function flattenBlocks(blocks, mirror, width)
     local items = {}
     for _, b in ipairs(blocks) do
         for _, it in ipairs(b.items) do
             it.y = b.top + it.y
-            if layout.growth == "left" and it.kind == "chip" then it.x = width - it.x - it.w end
+            if mirror and it.kind == "chip" then it.x = width - it.x - it.w end
             items[#items + 1] = it
         end
     end
-    local height = nb > 0 and (y + PL.PAD) or PL.HEADER_H
+    return items
+end
+
+--- Place every title row and chip. The header stays on top; "up" stacks the section blocks in
+--- reverse order (the first section nearest the anchor), "left" mirrors each chip row.
+--- @param sections table from VisibleSections
+--- @param layout table the pad's layout table
+--- @param opts table|nil { collapsed = boolean, fontSize = number (the Look's; rows grow to hold it) }
+--- @return table { width, height, items }
+function PL.Compute(sections, layout, opts)
+    layout = type(layout) == "table" and layout or {}
+    opts = type(opts) == "table" and opts or {}
+    local cw, ch = PL.CellSize(layout, opts.fontSize)
+    local gap = math.max(0, tonumber(layout.spacing) or 4)
+    local up = layout.growth == "up"
+    local blocks, contentW = {}, 0
+    if not opts.collapsed then
+        blocks, contentW = collectBlocks(sections, layout, cw, ch, gap, up, PL.TitleHeight(opts.fontSize))
+    end
+    local width = math.max(PL.MIN_W, contentW + 2 * PL.PAD)
+    local y = stackBlocks(blocks, up)
+    local items = flattenBlocks(blocks, layout.growth == "left", width)
+    local height = #blocks > 0 and (y + PL.PAD) or PL.HEADER_H
     return { width = width, height = height, items = items }
 end
 

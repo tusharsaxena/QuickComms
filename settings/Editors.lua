@@ -148,6 +148,9 @@ end
 local function onProfileChanged()
     for kind in pairs(State.editing) do State.editing[kind] = nil end
     for gid in pairs(State.whenOpen or {}) do State.whenOpen[gid] = nil end
+    -- The Share page's ticks and checked string name the old profile's ids.
+    State.share.pick = { callout = {}, group = {}, pad = {}, dial = {} }
+    State.share.import = nil
     Ed.RequestRefresh()
 end
 
@@ -219,6 +222,95 @@ function Ed.ActionDropdown(label, tooltip, entries, onPick, ctx)
         parent:AddChild(dd)
         return dd
     end }
+end
+
+-- ── the icon picker (spec §13.1, §19 row 5) ─────────────────────────────────────────────────
+
+-- What the picker offers, in order: the eight raid markers; the game icons the built-in sets wear,
+-- read from NS.BuiltIns when the picker draws (so a set that gains an icon offers it); then the
+-- LibKa0s icon catalog's entries a callout reads well with. The catalog is enumerated (NS.IconNames;
+-- library-stack-§8: never a hard-coded path list), and ICON_MARK_KEEP only picks among its names:
+-- most of the catalog is window chrome (close, sort, align) that means nothing on a callout, and a
+-- name the catalog drops simply stops being offered. Each icon is stored by its texture path, which
+-- is what the Icon box takes; any other texture is typed into the box.
+Ed.ICON_MARKERS = { L["Star"], L["Circle"], L["Diamond"], L["Triangle"], L["Moon"], L["Square"], L["Cross"],
+    L["Skull"] }
+-- Each kept catalog name and its player-facing label (the catalog's keys are not labels).
+Ed.ICON_MARK_KEEP = { chat = L["Chat"], ["speech-bubble"] = L["Speech bubble"], warning = L["Warning"],
+    info = L["Information"], help = L["Help"], target = L["Target"], shield = L["Shield"],
+    heart = L["Heart"], star = L["Star"], ["map-marker"] = L["Map marker"], location = L["Location"],
+    people = L["People"], person = L["Person"], timer = L["Timer"], ban = L["Ban"],
+    ["thumb-up"] = L["Thumbs up"] }
+
+-- The built-in sets' icons, each once, in the sets' order: a set's own, then its callouts'.
+local function builtinIcons(out, seen)
+    local BI = NS.BuiltIns
+    local function add(path, label)
+        if type(path) == "string" and not seen[path] then
+            seen[path] = true
+            out[#out + 1] = { path = path, label = label }
+        end
+    end
+    for _, gid in ipairs(BI.order) do
+        local def = BI.groups[gid]
+        add(def.icon, def.name)
+        for _, cid in ipairs(def.callouts or {}) do
+            local c = BI.callouts[cid]
+            if c then add(c.icon, c.name) end
+        end
+    end
+end
+
+--- The picker's icons, { path, label } in order. The catalog's marks need the library; without it
+--- they are left out.
+function Ed.IconPalette()
+    local out, seen = {}, {}
+    for i, name in ipairs(Ed.ICON_MARKERS) do
+        local path = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_" .. i
+        seen[path] = true
+        out[#out + 1] = { path = path, label = name }
+    end
+    builtinIcons(out, seen)
+    for _, name in ipairs(NS.IconNames()) do
+        local label = Ed.ICON_MARK_KEEP[name]
+        local path = label and NS.Icon(name)
+        if path then out[#out + 1] = { path = path, label = label } end
+    end
+    return out
+end
+
+--- Write a picked icon to the member row `rowPath` (callout.icon, group.icon) for `id`, through the
+--- seam; a refusal prints its reason. The Icon box above refreshes in place.
+--- @return boolean
+function Ed.SetIcon(rowPath, id, path)
+    local ok, err, why = NS.SchemaRuntime.Set(rowPath, path, id)
+    if not ok then NS.Print(tostring(why or err)) end
+    return ok == true
+end
+
+--- The picker: a "Choose an icon" heading over a grid of the palette's icons; a click on one is the
+--- member's icon.
+function Ed.IconPicker(ctx, rowPath, id)
+    local h = H()
+    h.Section(ctx, L["Choose an icon"])
+    h.RenderGrid(ctx, { { wide = true, make = function(_, parent)
+        local AceGUI = h.AceGUI
+        local grid = AceGUI:Create("SimpleGroup")
+        grid:SetLayout("Flow")
+        grid:SetFullWidth(true)
+        for _, e in ipairs(Ed.IconPalette()) do
+            local icon = AceGUI:Create("Icon")
+            icon:SetImage(e.path)
+            icon:SetImageSize(24, 24)
+            icon:SetWidth(36)
+            icon:SetHeight(36)
+            icon:SetCallback("OnClick", function() Ed.SetIcon(rowPath, id, e.path) end)
+            h.AttachTooltip(icon, e.label, L["Click to use this icon."])
+            grid:AddChild(icon)
+        end
+        parent:AddChild(grid)
+        return grid
+    end } })
 end
 
 -- ── the reorder lists (options-ui-§18) ──────────────────────────────────────────────────────
@@ -338,9 +430,14 @@ function Ed.ConfirmDelete(name, onAccept)
 end
 
 --- Open the settings at another editor page (a "Used by" link, Customize). The page repaints from
---- the selection the caller set.
+--- the selection the caller set. Refused in combat, here rather than at each caller: Blizzard's
+--- category switch is protected (options-ui-§2's page-jump carve-out is combat-gated).
 --- @return boolean opened
 function Ed.Open(pageKey)
+    if NS.Compat.InCombat() then
+        NS.Print("|cffaaaaaa" .. L["cannot open settings during combat \226\128\148 Blizzard's category-switch is protected"] .. "|r")
+        return false
+    end
     Ed.RequestRefresh()
     local category = Ed.categories[pageKey]
     local S = _G.Settings

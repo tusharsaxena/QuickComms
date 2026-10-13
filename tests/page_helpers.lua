@@ -13,7 +13,8 @@ return function(NS, m)
     local H = Settings.Helpers
 
     -- AceGUI's Keybinding widget shows the key it was given: the kit's fake records nothing for it,
-    -- so a Keybinding made here gets SetKey/GetKey, recording the shown key as `shownKey`.
+    -- so a Keybinding made here gets SetKey/GetKey, recording the shown key as `shownKey`. Its
+    -- MultiLineEditBox sizes itself by lines: one made here gets SetNumLines, recording `numLines`.
     if not ace.__qcKeyWrapped then
         ace.__qcKeyWrapped = true
         local create = ace.Create
@@ -22,6 +23,9 @@ return function(NS, m)
             if wtype == "Keybinding" and not w.SetKey then
                 function w:SetKey(k) self.shownKey = k; return self end
                 function w:GetKey() return self.shownKey end
+            end
+            if wtype == "MultiLineEditBox" and not w.SetNumLines then
+                function w:SetNumLines(n) self.numLines = n; return self end
             end
             return w
         end

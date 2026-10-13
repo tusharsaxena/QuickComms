@@ -174,8 +174,9 @@ end)
 test("dials page: Preview lists the rings wedge by wedge, marking the one the dial opens on", function()
     local _, _, P = open(AB)
     local w = P.tab("dials", "preview")
-    assertTrue(P.hasText(w, "Arathi Basin (1 of 2) (opens here)"))
-    assertTrue(P.hasText(w, "  2 E: Lumber Mill, opens a ring"))
+    -- phase 5: the nodes are pinned to their winds, on one eight-wedge ring (spec §12.1)
+    assertTrue(P.hasText(w, "Arathi Basin (opens here)"))
+    assertTrue(P.hasText(w, "  4 SW: Lumber Mill, opens a ring"))
 end)
 
 test("dials page: [final 20] at 12 wedges per ring the Preview names each wedge by its clock position", function()
@@ -265,7 +266,7 @@ test("dials page: [final 11] the page's own plan builds are not timed as a surfa
     NS.Perf.on = true
     local note = NS.Perf.Note
     NS.Perf.Note = function(k, ...)
-        if k == "bake.surface" then notes = notes + 1 end
+        if k == "bakeSurface" then notes = notes + 1 end
         return note(k, ...)
     end
     local ok, err = pcall(function()

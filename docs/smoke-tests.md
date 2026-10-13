@@ -21,9 +21,14 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | DIAG-1..2 | Diagnostics | The debug console, the report, perf |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
 | SEND-1..5 | Send | Secure sends in keys and on bosses, the spam guard |
-| PAD-1..7 | Pad | The Comms Pad |
+| PAD-1..8 | Pad | The Comms Pad |
 | EDIT-1..8 | Editors | The Callouts, Groups, Comms Pad and Share pages, Preview as…, Why is this showing? |
-| DIAL-1..11 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial |
+| DIAL-1..12 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial |
+| SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
+| LOOK-1..2 | Look | The Comms Pad's font, border and background |
+| ICON-1 | Icons | The icon picker |
+| BG-1..2 | Battlegrounds | Node winds on the dial; the battleground instance ids |
+| IDS-1 | Instance ids | The Midnight dungeons and raids |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes |
 
 ## Before you start
@@ -98,7 +103,7 @@ Comms and the `identity`, `settings`, `registration`, `integrations`, `situation
 afterwards. `/qc debug diagnostics` writes the same report again below the first. Result:
 
 **DIAG-2. Perf.** `/qc perf` → the step panel opens with its own close mark; run A, B and finish →
-the report prints the `bake.surface`, `send.click`, `pad.layout` and `echo.match` rows and no Lua
+the report prints the `bakeSurface`, `sendClick`, `padLayout` and `echoMatch` rows and no Lua
 error. Result:
 
 ## Degraded
@@ -164,6 +169,10 @@ stays until combat ends, then hides. `/qc enable` → it returns with live chips
 **PAD-7. A profile switch in combat.** `/qc profile <another>` during combat → the stale hint
 shows, no error; after combat the pad is the other profile's. Result:
 
+**PAD-8. The padlock mark.** Put a Say callout on the pad and pull an encounter (the chat lockdown) →
+its chip shows a small gold padlock in its top-right corner (the LibKa0s catalog's `lock` mark, not the pet-battle lock). With LibKa0s removed (DEGRADED-1)
+the pet-battle padlock draws instead, with no error. Result:
+
 ## Editors
 
 **EDIT-1. A callout and a group on the pad (the phase 3 exit).** Settings → Callouts → New callout;
@@ -228,15 +237,16 @@ your own and M+ in a key): press G → the first ring shows the groups; click on
 a callout → it is sent. Open again, click a group, click the hub → back to the groups; click the hub
 again → the dial closes. Result:
 
-**DIAL-4. The Arathi Basin node dial (the phase 4 exit).** In Arathi Basin: press G → the dial opens
-straight on the nodes (Stables, Lumber Mill, Blacksmith, More); click Lumber Mill, then INC 3 → instance
-chat shows "INC 3 Lumber Mill": two clicks. Open again; click More → Gold Mine and Farm; the hub goes
-back a page. (If it opens on the group ring instead, check the Groups tab: Arathi Basin must sit above
+**DIAL-4. The Arathi Basin node dial (the phase 4 exit; pinned in phase 5).** In Arathi Basin, with
+Wedges per ring at 4: press G → the dial opens straight on the nodes, all five on one ring with no
+More, each on its compass wind (Blacksmith N, Gold Mine NE, Farm SE, Lumber Mill SW, Stables NW);
+click Lumber Mill, then INC 3 → instance chat shows "INC 3 Lumber Mill": two clicks. Open again and
+press 4 → Lumber Mill's ring opens (the number keys count the shown wedges clockwise from N). (If it opens on the group ring instead, check the Groups tab: Arathi Basin must sit above
 Battleground (generic) and every group active there, and the tab's "Three rings deep" warning names the
 cause; a `/reload` after updating runs the migration that moves the generic set. If the dial does not
 show Arathi Basin at all, the instance id may be wrong: run `/qc diagnostics`, copy the `situation`
 section's instanceID into the "Battleground instance IDs seen" table of
-`docs/brainstorm/go-no-go/round-4-build-checks.md`, and file it with this check's ID; phase 5 confirms
+`docs/brainstorm/go-no-go/round-4-build-checks.md`, and file it with this check's ID; BG-2 confirms
 the ids.) Result:
 
 **DIAL-5. Number keys, the wheel and pages.** Wheel → Wedges per ring 4, in a key: open, press 3 → the
@@ -280,28 +290,140 @@ and nothing is sent; on the hub → it closes. A side button (BUTTON4) click on 
 without sending, and the restricted snippet's other-frame `RunAttribute` raises no error. New dial →
 key H; press G, then H → dial 1 closes and dial 2 opens; press 1 → dial 2's first wedge, never dial
 1's; close it → 1 fires the action bar again. In Preview as Arathi Basin the ring title sits above
-the N wedge's label, and the E and W labels read away from their wedges. With test mode on, close the
+the N wedge's label, and the NE, SE, SW and NW labels read away from their wedges. With test mode on, close the
 dial with the hub, then change Wedges per ring → it stays closed. Result:
+
+**DIAL-12. The hub's close and the wedge padlock.** Open the dial → the hub carries a red ✕ (the
+LibKa0s catalog's `close` mark, not the round stop button), and during an encounter a Say callout's wedge shows
+the same small gold padlock as a pad chip (PAD-8). With LibKa0s removed (DEGRADED-1) the stop button and the
+pet-battle padlock draw instead, with no error. Result:
+
+## Share
+
+**SHARE-1. Export a group.** Settings → Callouts: make `Kick` (`Kick on me {skull}`, Party) and
+`Lust` (`Lust now`, Smart group). Groups → New group `My keys`, add both. Share → Export: tick
+`My keys` → the line under the boxes reads "The string will hold 2 callouts, 1 group."; Export → a
+window opens with a string starting `!QC1!`, already selected; Ctrl+C copies it; Escape closes the
+window. Result:
+
+**SHARE-2. Import it, twice.** Profiles → make a profile `Share test`. Share → Import: paste the
+string and click Accept → "Ready to import: 2 callouts, 1 group."; Import → chat says "Imported 2
+callouts, 1 group." and "An imported group is on no pad or dial yet: add it on the Groups tab of the
+Comms Pad or Comms Dial page.", and Groups lists `My keys` with both callouts. Paste and import it
+again → a second `My keys`, and the first one is untouched. Result:
+
+**SHARE-3. A string that tries a command.** Paste this on Import and click Accept:
+
+```
+!QC1!v4CVUjmmuuaybLPIufQdD2kdOwwqHbeZgPYatnrIz8pxLef7RJSVUuuvx6JsEIS4jcZ6rF6CotojB8U4q4TIMYp)xjmgxKcRkuLfQnEafsdOpZrHfgRTUEGrqG4xAb85kHw7WXVIDQ(9oRnW77qTugrTbstxMlzlNGFOHfhZeMdzwG9RN29xAg)rKx1kqemJbRWthE8K8SBtZVT2hr2GVdP3l)intwJGO)A6LQHm86RF)09)
+```
+
+→ "Ready to import: 1 callout, 1 group.", "Left out the callout 'Sneaky': its text starts with /." and
+"1 reference to something the string does not carry was left out."; Import → the group `Smoke test`
+holds `Kick` only, and nothing ran. Result:
+
+**SHARE-4. Damaged, foreign and newer strings.** On Import, Accept each: the SHARE-1 string with its
+last ten characters deleted → "That string is damaged or cut short. Copy all of it again."; `hello`
+→ "That is not a Quick Comms string: one starts with !QC1!."; and this →
+"That string was made by a newer Quick Comms. Update the addon, then import it.":
+
+```
+!QC1!JXWsk9IYV0ckMRGsmLuYpVffyPzMC2oNFU5wStzNzEPKusLMxk5KAtjNyo5KFPLumxcvgRa(
+```
+
+Clicking Import after any of them prints the same line and adds nothing. Result:
+
+**SHARE-5. A pad and a dial travel unbound.** Give the Comms Dial the key G. Share → Export: tick
+the Comms Pad and the Comms Dial; Export, copy. Switch to `Share test`, import it → chat also says
+"An imported dial has no key yet: give it one on the Comms Dial page."; the new pad sits in the
+default place (not where yours is), the new dial's Binding tab shows no key, and G does nothing on
+this profile until you give one. Switch back → G opens your dial as before. Result:
+
+**SHARE-6. A string that wrapped.** Paste a SHARE-1 string into a chat message or a forum post so it
+breaks across lines, copy it back out with the line breaks, and paste that on Import → Accept reads
+it as before. Result:
+
+## Look
+
+**LOOK-1. Font.** Comms Pad → Look → Font: pick another face, Font size 14, Font flags Outline,
+untick Font shadow → the chip labels and the section titles redraw that way, the titles still gold;
+tick Use class color → both take your class color, and Font color's opacity still applies; untick it
+and set Font color to red → both turn red. Result:
+
+**LOOK-2. Border and background.** Border style: a LibSharedMedia border (Blizzard Tooltip, for one),
+thickness 3, color red → the pad's edge changes; thickness 0 → no edge. Background: dark blue at 50%
+opacity → the body changes; Use class color → your class color at 50%. The settings panel is closed
+and locked in combat, so the in-combat write goes through the command line: in combat,
+`/qc set pad.look.borderSize 3` → no error, the header shows "updates after combat", and the thicker
+edge lands at combat end. Defaults → the Ka0s look again. Result:
+
+## Icons
+
+**ICON-1. The icon picker.** Callouts → a callout → General → Choose an icon: click the skull → the
+Icon box shows its path and the chip shows the skull. Groups → a group of yours → General → click a
+mark → the group's wedge on the Comms Dial shows it. A built-in set's General tab has no picker.
+Result:
+
+## Battlegrounds
+
+**BG-1. Node winds.** In each node battleground you play (Arathi Basin, Eye of the Storm, Battle for
+Gilneas, Deepwind Gorge, Isle of Conquest), open the dial → the nodes sit where they are on the map,
+north up (Arathi Basin: Stables top left, Gold Mine top right, Farm bottom right, Lumber Mill bottom
+left, Blacksmith, the middle node, at the top), and Deepwind Gorge shows five nodes (owner ruling R2).
+Lumber Mill, then INC 3 is still two clicks. A node that points the wrong way is filed with this
+check's ID and its battleground. Result:
+
+**BG-2. Battleground instance ids.** In each battleground you play: `/qc diagnostics` → the
+`situation` section's instanceID is one its set lists (`defaults/BuiltIns_Battlegrounds.lua`), and
+the pad and the dial show that set. Write each id into the "Battleground instance IDs seen" table of
+`docs/brainstorm/go-no-go/round-4-build-checks.md`. Result:
+
+## Instance ids
+
+**IDS-1. The Midnight dungeons and raids.** In each of the eight dungeons and three raids you visit
+(Windrunner Spire 2805, Magisters' Terrace 2811, Nexus-Point Xenas 2915, Maisara Caverns 2874, and
+the four returning dungeons; The Voidspire 2912, The Dreamrift 2939, March on Quel'Danas 2913):
+`/qc diagnostics` → the instanceID matches; a group's When → Instances → "add the one you are in" adds
+that id. Groups → Preview as lists "M+ · Windrunner Spire" and the other seven by name. On a Devourer
+Demon Hunter, `/qc diagnostics` → the Situation line reads `spec=1480`, and a When's Spec row
+offers Devourer. If you can enter Sporefall (map 1592), note whether it is a raid and its instanceID
+(ruling R4 left it out of the shipped raids). Only after this check passes
+does `defaults/GameIds.lua`'s note change from "matched" to "confirmed". Result:
 
 ## Non-English client
 
 **LOC-1. A deDE or frFR client.** What this build reads that a locale can change, enumerated from the
-code: nothing. It reads no localized `_G` string, parses no tooltip line, keys nothing off a display
-string, and writes no header another tool parses; its own strings are English through `NS.L`, which
-answers the key itself on any client. The checks that will carry locale risk arrive with the
-situation engine (instance and difficulty matched by id, never by name, design spec §6) and the
-callout tokens (spec §8.1). Until then, on a deDE or frFR client: `/reload`, run `/qc help` and
-`/qc diagnostics` → English text throughout, no Lua error, and no stray `%s` or `%d` in any line.
-The failure looks like a raw format token in chat or a missing label. **Signed off without the
-client** while the enumeration above holds: the headless cases `test_slash` and `test_diagnostics`
-cover every line printed today, and the English client's INSTALL and SLASH checks are sufficient. The
-section is re-armed by the situation task, whose check replaces this paragraph's "nothing". Result:
+code (phase 5):
+- **Matched, never by name** (localization-§4): the situation engine keys instances, battlegrounds and
+  specializations by id, difficulty and content by `difficultyID` and tokens, a class by its
+  `classFile` token, a character by Name-Realm (`modules/Situation.lua`, `Library.ValidWhenValue`).
+  Headless: `test_situation`, `test_resolver`, `test_library`.
+- **Shown, never matched**: the editors' display names, read through Compat (`InstanceName` from
+  `GetRealZoneText`, `SpecInfoByID`, `ClassName` from `LOCALIZED_CLASS_NAMES_MALE`, `BindingLabel`
+  from a `BINDING_NAME_*` global). Headless: `test_compat` (a missing or secret name is nil, and the
+  editor falls back to the id).
+- **Sent in chat**: the callout tokens' values (`{me}`, `{spec}`, …) come from the client in its own
+  language and are escaped like any value (`test_tokens`).
+- **The Look's font**: the default face is LibSharedMedia's "Friz Quadrata TT", which LibSharedMedia
+  does not register on koKR, zhCN or zhTW; a face the machine does not have draws `STANDARD_TEXT_FONT`
+  (`Pad_Render.LabelFont`, `test_pad_render`).
+- **Printed**: every chat and report line is English through `NS.L`, the share and import lines
+  included (`test_slash`, `test_diagnostics`, `test_share`, `test_page_share`).
+
+On a deDE or frFR client: `/reload`, run `/qc help` and `/qc diagnostics`; open the Groups page's When
+on an instance and a spec; make a callout with `{spec}`; export a group and import the string → no Lua
+error, no stray `%s` or `%d` in any line, the When's names in the client's language with the ids
+unchanged, and the pad's labels drawn in a font (on koKR, zhCN or zhTW, the client's own). The failure
+looks like a raw format token in chat, a missing label, or a When that stops matching after a locale
+switch. **Owed**: the enumeration above is covered headlessly, but the names and the font fallback come
+from the client, so this check needs a non-English client pass. Result:
 
 ## Pending sign-off
 
 | ID | Origin | Why it is owed |
 |---|---|---|
-| INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..2, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet |
-| SEND-1..5, PAD-1..7 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet |
+| INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..2, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet; LOC-1 re-enumerated in phase 5 and owed a non-English client pass |
+| SEND-1..5, PAD-1..8 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet; PAD-8 added in phase 5 (audit QC-07) |
 | EDIT-1..8 | Phase 3: the editors | No client pass recorded yet |
-| DIAL-1..11 | Phase 4: the Comms Dial | No client pass recorded yet |
+| DIAL-1..12 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
+| SHARE-1..6, LOOK-1..2, ICON-1, BG-1..2, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; LOOK-2's in-combat step goes through `/qc set` |

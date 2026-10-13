@@ -20,8 +20,11 @@ local _, NS = ...
 -- dial opens on (open-into skips the group ring, so a set it opens into is depth 2).
 --
 -- THE GEOMETRY. Wedges sit clockwise from N, on-axis first: four are N, E, S and W. Offsets are from
--- the hub's center, y up. A node set's nodes are placed in their shipped order; pinning each node to
--- its compass direction waits for phase 5's battleground confirmation.
+-- the hub's center, y up. A node set's nodes are pinned to their compass winds (spec §12.1): its ring
+-- takes eight wedges, whatever the dial's slices, and is never paged; each node sits on its own wind
+-- (PinNodes), a middle node on the first wind left free clockwise from N, and a wind with no node has
+-- no wedge. An item carries `wedge`, its place among the ring's `size`; an unpinned item's place is
+-- its index. The number keys pick the shown wedges clockwise from N.
 
 NS.DialLayout = NS.DialLayout or {}
 local DL = NS.DialLayout
@@ -41,6 +44,10 @@ DL.KEYS    = 8                                 -- the number keys 1-8 pick wedge
 
 local SLICE_OK = { [4] = true, [6] = true, [8] = true, [12] = true }
 local WINDS = { "N", "NE", "E", "SE", "S", "SW", "W", "NW" }
+
+--- The eight winds' wedges on a pinned ring; a node in the middle of the map has DL.MIDDLE.
+DL.WIND_INDEX = { N = 1, NE = 2, E = 3, SE = 4, S = 5, SW = 6, W = 7, NW = 8 }
+DL.MIDDLE = "middle"
 
 local function round(x) return math.floor(x * 100 + 0.5) / 100 end
 
@@ -144,19 +151,59 @@ local function sendEntries(slots, node)
     return out
 end
 
-local function ringEntry(title, icon, entries)
-    return { kind = "ring", title = title, icon = icon, sub = { title = title, entries = entries } }
+local function ringEntry(title, icon, entries, pinned)
+    return { kind = "ring", title = title, icon = icon, sub = { title = title, entries = entries, pinned = pinned } }
 end
 
--- A group's entry on the first ring (Categories), or nil when nothing under it can be shown.
+--- A node set's nodes on their compass winds (spec §12.1): each entry's `wind` (N, NE … NW, or
+--- DL.MIDDLE) names its wedge on an eight-wedge ring, and a middle node takes the first wind left free,
+--- clockwise from N. Answers the entries, each given its `wedge`, in wedge order; nil when they cannot
+--- all be pinned (a node with no wind or an unknown one, two on one wind, none, or more than eight).
+--- @return table[]|nil
+function DL.PinNodes(entries)
+    if type(entries) ~= "table" or #entries == 0 or #entries > 8 then return nil end
+    local taken, middle = {}, {}
+    for _, e in ipairs(entries) do
+        local w = DL.WIND_INDEX[e.wind]
+        if w and taken[w] then return nil end
+        if w then
+            taken[w] = e
+        elseif e.wind == DL.MIDDLE then
+            middle[#middle + 1] = e
+        else
+            return nil
+        end
+    end
+    local free = 1
+    for _, e in ipairs(middle) do
+        while taken[free] do free = free + 1 end
+        taken[free] = e
+    end
+    local out = {}
+    for w = 1, 8 do
+        if taken[w] then
+            taken[w].wedge = w
+            out[#out + 1] = taken[w]
+        end
+    end
+    return out
+end
+
+-- A group's entry on the first ring (Categories), or nil when nothing under it can be shown. A node
+-- set's nodes are pinned to their winds when every one of them has one.
 local function groupEntry(g)
     if type(g.children) == "table" then
         local nodes = {}
         for _, c in ipairs(g.children) do
-            if #(c.slots or {}) > 0 then nodes[#nodes + 1] = ringEntry(c.title, c.icon, sendEntries(c.slots)) end
+            if #(c.slots or {}) > 0 then
+                local node = ringEntry(c.title, c.icon, sendEntries(c.slots))
+                node.wind = c.compass
+                nodes[#nodes + 1] = node
+            end
         end
         if #nodes == 0 then return nil end
-        return ringEntry(g.title, g.icon, nodes)
+        local pinned = DL.PinNodes(nodes)
+        return ringEntry(g.title, g.icon, pinned or nodes, pinned ~= nil)
     end
     if #(g.slots or {}) == 0 then return nil end
     return ringEntry(g.title, g.icon, sendEntries(g.slots))
@@ -189,15 +236,22 @@ function DL.Rings(groups, opts)
     local slices = DL.ClampSlices(opts.slices)
     local rings = {}
 
-    -- Add `entries` as one ring (and its pages) under `parent`, at `depth`; then each ring entry's
-    -- own ring, one deeper. Returns the index of the first page.
-    local function addRing(title, entries, parent, depth)
+    -- A ring's wedge count and pages: a pinned ring (a node set's, PinNodes) has eight wedges and one
+    -- page; any other has the dial's slices (RingSize), its items paged behind More.
+    local function shape(entries, pinned)
+        if pinned then return 8, { entries } end
         local hasChildren = #entries > slices
         for _, e in ipairs(entries) do
             if e.kind == "ring" then hasChildren = true end
         end
         local size = DL.RingSize(slices, hasChildren)
-        local pages = DL.Paginate(entries, size)
+        return size, DL.Paginate(entries, size)
+    end
+
+    -- Add `entries` as one ring (and its pages) under `parent`, at `depth`; then each ring entry's
+    -- own ring, one deeper. Returns the index of the first page.
+    local function addRing(title, entries, parent, depth, pinned)
+        local size, pages = shape(entries, pinned)
         local first = #rings + 1
         for p, items in ipairs(pages) do
             local idx = #rings + 1
@@ -212,7 +266,7 @@ function DL.Rings(groups, opts)
         for r = first, first + #pages - 1 do
             for _, item in ipairs(rings[r].items) do
                 if item.sub then
-                    item.target = addRing(item.sub.title, item.sub.entries, r, depth + 1)
+                    item.target = addRing(item.sub.title, item.sub.entries, r, depth + 1, item.sub.pinned)
                     item.sub = nil
                 end
             end
