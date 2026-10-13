@@ -16,6 +16,7 @@ local LABEL = {
     leadership = L["Leader or assist"], class = L["Class"], spec = L["Specialization"], role = L["Role"],
     characters = L["Character"],
 }
+R.LABEL = LABEL   -- the When editor's row labels (settings/Groups_When.lua)
 
 local function isSet(row, v)
     if type(v) ~= "table" then return false end

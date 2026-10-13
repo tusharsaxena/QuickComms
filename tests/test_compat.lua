@@ -112,3 +112,23 @@ test("compat: [phase 3] InstanceName reads the client's name; a secret, empty or
     env.GetRealZoneText = nil
     assertNil(NS.Compat.InstanceName(2526))
 end)
+
+test("compat: [phase 3] SpecInfoByID and ClassName read display names; secret or missing ones are nil", function()
+    local NS, env = T.newAddon()
+    env.issecretvalue = T.isSecret
+    env.GetSpecializationInfoByID = function(id)
+        if id == 265 then return 265, "Affliction", "", 136145, "DAMAGER", "WARLOCK" end
+        return id, T.secret("x")
+    end
+    env.LOCALIZED_CLASS_NAMES_MALE = { WARLOCK = "Warlock", MAGE = T.secret("Mage") }
+    local name, icon = NS.Compat.SpecInfoByID(265)
+    assertEqual(name, "Affliction")
+    assertEqual(icon, 136145)
+    assertNil((NS.Compat.SpecInfoByID(62)))
+    assertEqual(NS.Compat.ClassName("WARLOCK"), "Warlock")
+    assertNil(NS.Compat.ClassName("MAGE"))
+    assertNil(NS.Compat.ClassName("NOPE"))
+    env.GetSpecializationInfoByID, env.LOCALIZED_CLASS_NAMES_MALE = nil, nil
+    assertNil((NS.Compat.SpecInfoByID(265)))
+    assertNil(NS.Compat.ClassName("WARLOCK"))
+end)

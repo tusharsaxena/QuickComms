@@ -240,6 +240,22 @@ function Compat.InstanceName(id)
     return name
 end
 
+--- A specialization's display name and icon from its specID, or nil.
+function Compat.SpecInfoByID(id)
+    if not (PlainNumber(id) and GetSpecializationInfoByID) then return nil end
+    local _, name, _, icon = GetSpecializationInfoByID(id)
+    name = PlainString(name)
+    if not name or name == "" then return nil end
+    return name, PlainNumber(icon)
+end
+
+--- A class's display name from its classFile token, or nil.
+function Compat.ClassName(classFile)
+    local names = LOCALIZED_CLASS_NAMES_MALE
+    if type(names) ~= "table" or not Compat.IsSafeKey(classFile) then return nil end
+    return PlainString(names[classFile])
+end
+
 -- ── The pad (spec §10.1) ─────────────────────────────────────────────────────────────────────
 
 --- The client's color for a chat type, or nil when it cannot be read.

@@ -16,3 +16,7 @@ State.editing = {}
 -- "Preview as…" (modules/Preview.lua, spec §13.3): the preset key the pads are drawn as, or nil.
 -- Session-only; test mode's second flavor, so it is never on with State.testMode.
 State.previewAs = nil
+
+-- The When editor's rows switched on with nothing chosen yet (settings/Groups_When.lua):
+-- { [groupId] = { [row] = true } }. Session-only; a profile switch clears it (settings/Editors.lua).
+State.whenOpen = {}

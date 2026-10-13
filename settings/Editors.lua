@@ -147,6 +147,7 @@ end
 
 local function onProfileChanged()
     for kind in pairs(State.editing) do State.editing[kind] = nil end
+    for gid in pairs(State.whenOpen or {}) do State.whenOpen[gid] = nil end
     Ed.RequestRefresh()
 end
 
