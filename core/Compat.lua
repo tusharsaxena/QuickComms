@@ -6,6 +6,7 @@ NS.Compat = NS.Compat or {}
 local Compat = NS.Compat
 local CompatLib = LibStub and LibStub("LibKa0s-Compat-1.0", true)
 
+-- Library-absent guard arm: LibKa0s docs/api/Compat/version-1-docs.md, "Degradation" (options-ui-§1).
 --- True when `v` is a secret value. Exactly one boolean.
 Compat.IsSecret = CompatLib and CompatLib.IsSecret or function(v)
     return issecretvalue ~= nil and issecretvalue(v) and true or false
