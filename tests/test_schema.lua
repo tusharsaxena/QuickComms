@@ -108,3 +108,14 @@ test("schema: degraded, a row-less path not in the list is still refused", funct
     assertFalse(D.SchemaRuntime.Set("locked", false))
     assertEqual(D.addon.db.profile.locked, true, "nothing stored: the default stands")
 end)
+
+test("schema: [fix wave] the Behavior rows that rebuild the pads resolve Settings.RebuildSurfaces when they run", function()
+    local NS = T.enableAddon()
+    local heard = {}
+    NS.addon.Settings.RebuildSurfaces = function() heard[#heard + 1] = true end
+    -- red under: capture Settings.RebuildSurfaces in a file-scope upvalue in settings/SchemaRows.lua
+    NS.SchemaRuntime.Set("behavior.soloFallback", "say")
+    NS.SchemaRuntime.Set("behavior.lockdownChip", false)
+    NS.SchemaRuntime.Set("behavior.autoPromote", true)
+    assertEqual(#heard, 3)
+end)

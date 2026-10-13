@@ -9,7 +9,9 @@ local _, NS = ...
 
 local L = NS.L
 local B = NS.C.PROFILE.behavior
-local rebuild = NS.addon.Settings.RebuildSurfaces
+-- Resolved when a row's onChange runs, not captured at load: settings/Schema.lua publishes it, and
+-- a nil captured here would make these rows stop rebuilding the pads without a word.
+local function rebuild(...) return NS.addon.Settings.RebuildSurfaces(...) end
 
 local BEHAVIOR  = L["Behavior"]
 local FALLBACKS = { "none", "self", "say" }

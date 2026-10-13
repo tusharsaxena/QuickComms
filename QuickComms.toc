@@ -123,13 +123,15 @@ modules\Diagnostics.lua
 # Settings (last -- depend on everything else being initialized)
 # LOAD-BEARING: publishes Settings.SchemaLib, which settings\Schema.lua calls :New on at file scope.
 settings\SchemaSetup.lua
-# LOAD-BEARING: publishes Settings.Schema, NS.SchemaRuntime and NS.Setting; settings\OptionsSetup.lua,
-# settings\Panel.lua and settings\Slash.lua read NS.SchemaRuntime at load.
+# LOAD-BEARING: publishes Settings.Schema, NS.SchemaRuntime, NS.Setting and Settings.RebuildSurfaces;
+# settings\OptionsSetup.lua, settings\Panel.lua and settings\Slash.lua read NS.SchemaRuntime at load;
+# settings\SchemaRows.lua's rows call Settings.RebuildSurfaces at run time.
 settings\Schema.lua
 # LOAD-BEARING: publishes the LibKa0s-Options instance as Settings.Helpers; settings\Panel.lua calls
 # Helpers.MasterControls at file scope.
 settings\OptionsSetup.lua
-# LOAD-BEARING: reads NS.C and NS.SchemaRuntime.AddRows at file scope; loads before settings\Panel.lua,
+# LOAD-BEARING: reads NS.C and NS.SchemaRuntime.AddRows at file scope (NS.addon.Settings.RebuildSurfaces
+# only when a row's onChange runs); loads before settings\Panel.lua,
 # which splices the Master controls in ahead of these rows.
 settings\SchemaRows.lua
 # LOAD-BEARING: reads NS.C, Settings.Helpers and NS.SchemaRuntime.AddRows at file scope.
