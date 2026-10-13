@@ -19,12 +19,16 @@ settings panel.
 | `perf` | reserved | yes | `NS.Perf.OnCommand`, lines printed by the addon |
 | `check <id>` | feature | no (refused while disabled) | `NS.SlashVerbs.Check` in `settings/SlashVerbs.lua`: prints the callout's baked line under the current situation (`id -> /p text`), then its channel and the whole line's byte count (prefix included, live tokens at a nominal 12), then any lock, then the tokens it leaves out: the baked ones (`{me}`, `{spec}`, ...) as "baked at send time", since check passes no send-time values, and any unknown ones. A refusal prints its reason (`startsWithSlash`, `tooLong`, ...); a smart channel while solo with the `self` fallback says it would print locally; an unknown id says so. It never sends (spec §14, D12). |
 | `test` | feature | no (refused while disabled) | `NS.Preview.ToggleTestMode`; refused in combat with one line; the Test mode row and the launcher entry call the same switch |
+| `preview [name\|off]` | feature | no (refused while disabled) | `NS.SlashVerbs.Preview`: no name lists the menu with the one on now; a name switches "Preview as…" on; `off` (or `current`) switches it off. Refused in combat with one line, as the panel row is. |
+| `why` | feature | no (refused while disabled) | `NS.SlashVerbs.Why`: each built pad, then `Surfaces.WhyLines` (the groups shown, each with the When rows that matched, then the locks) |
+
+The member rows are CLI rows too: `/qc set callout.text …` writes the callout selected on the Callouts page, else the first callout that page lists; with no callout at all the write is refused with a line naming the page, and `get` and `list` print `(nothing to edit)`. A built-in set's rows (`builtin.*`) address only the set the Groups page has selected. The three table-valued rows have text forms (the descriptor's `parse` and `format`, slash-commands-§6): `pad.point` takes `x y` or `POINT RELATIVEPOINT x y`; `group.when` takes `<condition> <value>[,<value>…]` (the condition alone clears it; `keyLevel` takes `min-max`, either end empty) and prints `content=mythicPlus; keyLevel=10..any`; `builtin.hidden` takes callout ids or `none`.
 
 While disabled, a verb that is not live prints the one refusal line, `Ka0s Quick Comms is disabled —
 enable it with /qc enable`, and does nothing else. The gate reads the stored `enabled`, not the
 latch, so a perf capture never refuses a verb.
 
-The design's other verbs (spec §14), `preview` and `why`, are added with the tasks that own them. The verb bodies live in
+Every verb of spec §14 now exists. The verb bodies live in
 `settings/SlashVerbs.lua`; the rows in `settings/Slash.lua` only call them.
 
 With the library absent, the stub in `settings/Slash.lua` dispatches the same table, keeps the

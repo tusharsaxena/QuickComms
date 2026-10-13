@@ -25,13 +25,15 @@ Exactly two (savedvariables-§4):
 | `behavior.dropNotes`, `whyTooltips`, `lockdownChip` | `true` | Behavior | the `[QC]` drop note, the why tooltips, the lockdown chip |
 | `behavior.sounds`, `autoPromote` | `false` | Behavior | sounds; a narrower When floats up within a surface's order |
 | `nextId` | `1` | `Library.NewId` | the id counter for user callouts and groups |
-| `callouts` | `{}` | `Library` only | user callouts keyed by id: name, text, channel, icon |
-| `groups` | `{}` | `Library` only | user groups keyed by id: name, icon, callouts, when, openInto, enabled |
-| `builtins` | `{}` | `Library` only | the overlay on the shipped sets, keyed on the top-level built-in id: enabled, hidden |
-| `pads`, `dials` | `{}` | `Library` only | surfaces keyed by id: groups (ordered), `seenBuiltins`, and the surface's own settings |
-| `pads[id].point` | absent (the pad sits 150 px below the center) | `Library.SetSurfacePoint`, asked by the drag strip and Reset position in `modules/Pad.lua` | the saved anchor, the positional array `{ point, relativePoint, x, y }` |
+| `callouts` | `{}` | `Library` (membership and order); member fields through the seam (member rows) | user callouts keyed by id: name, text, channel, icon |
+| `groups` | `{}` | `Library` (membership and order); member fields through the seam (member rows) | user groups keyed by id: name, icon, callouts, when, openInto, enabled |
+| `builtins` | `{}` | `Library` (membership and order); member fields through the seam (member rows) | the overlay on the shipped sets, keyed on the top-level built-in id: enabled, hidden |
+| `pads`, `dials` | `{}` | `Library` (membership and order); member fields through the seam (member rows) | surfaces keyed by id: groups (ordered), `seenBuiltins`, and the surface's own settings |
+| `pads[id].point` | absent (the pad sits 150 px below the center) | the `pad.point` member row: the drag strip, the X/Y boxes, Reset position | the saved anchor, the positional array `{ point, relativePoint, x, y }` |
 | `padOrder`, `dialOrder` | `{}` | `Library` only | display order of the surfaces |
 | `seeded` | `false` | `Library.Prepare` | true once the default pad and dial exist |
+
+**Member rows** address a member's fields through the seam (`settings/SchemaMembers.lua`): `callout.name|text|channel|icon`, `group.name|icon|enabled|openInto|when`, `pad.name|enabled|groupsAs`, `pad.layout.orientation|columns|growth|style|scale|spacing|width`, `pad.point`, `pad.look.visibility|fade|fadeAlpha`, `builtin.enabled|hidden`. They are not AceDB defaults; `Library.TEMPLATES` is their shape.
 
 `modules/Library.lua` is the one writer of every structural key above (architecture-§5); built-ins
 are shipped data in `NS.BuiltIns`, never copied into the profile. `Library.Prepare` is the load
@@ -54,7 +56,8 @@ row's store), `padTab` and `padCollapsed` (per pad: the active tab, the collapse
 `surfacePlans`, `surfaceOrder` and `surfaceStale` (the plans, the floated order, the stale hints),
 `sendQueue` (the combat-end queue), `sendEcho` (the presses awaiting an echo), `lastSendAt` (the
 guard's last press) and `pendingTeardown` (a stand-down held for combat's end), plus the timer
-handles (`echoTimers`, `padCoolTimer`, `padFlashTimers`).
+handles (`echoTimers`, `padCoolTimer`, `padFlashTimers`). Phase 3 adds `previewAs` (the "Preview as…"
+situation), `editing` (each editor page's selected member) and `whenOpen` (the When editor's open rows).
 
 ## Migrations
 

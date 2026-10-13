@@ -27,6 +27,7 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 | 16 | `defaults/Profile.lua` | data | every default value (`NS.C`) |
 | 16a | `defaults/BuiltIns.lua` | data | `NS.BuiltIns`: the registry of shipped sets and the declaring helpers |
 | 16b | `defaults/BuiltIns_MythicPlus.lua`, `_Raid.lua`, `_Arena.lua`, `_Battlegrounds.lua` | data | the four shipped sets (spec §12) |
+| 16b2 | `defaults/GameIds.lua` | data | the shipped ids: dungeons, raids, classes, specializations |
 | 16c | `modules/Restrictions.lua` | edge | what the client's addon restrictions allow; `RESTRICTION_CHANGED` |
 | 16d | `modules/Situation.lua` | classifier + edge | the situation snapshot; `SITUATION_CHANGED` |
 | 16e | `modules/Tokens.lua` | pure | token expansion |
@@ -36,7 +37,7 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 | 16i | `modules/Library.lua` | registry writer | the one writer of the structural registry; `Prepare`; `SetSurfacePoint` |
 | 16j | `modules/SendEngine_Guard.lua` | pure | `NS.SendGuard`: the soft guard's timing, the acting click edge, the echo tracker, the keyed queue |
 | 16k | `modules/SendEngine.lua` | secure writer | the only secure writer: send buttons, arm and disarm, the combat-end queue, the click hook, the echo events, the held stand-down |
-| 16l | `modules/Preview.lua` | session state | test mode: refused in combat, ended at the combat edge; `TEST_MODE_CHANGED` |
+| 16l | `modules/Preview.lua` | session state | test mode and "Preview as…": refused in combat, ended at the combat edge; `TEST_MODE_CHANGED` |
 | 16m | `modules/Pad_Layout.lua` | pure | `NS.PadLayout`: pad geometry (upward growth stacks whole sections), visibility, fade |
 | 16n | `modules/Surfaces.lua` | edge | the pads' plans and the one rebuild request, queued in combat with the stale hint |
 | 16o | `modules/Pad_Render.lua` | render | `NS.PadRender`: insecure chip and header visuals |
@@ -45,8 +46,16 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 | 18 | `settings/SchemaSetup.lua` | setup | LibKa0s-Schema, or the host's documented stub of it |
 | 19 | `settings/Schema.lua` | settings | the rows, the write seam (`NS.SchemaRuntime`), `NS.Setting`, the shared reactions, the defaults tree, the global reset |
 | 20 | `settings/OptionsSetup.lua` | setup | LibKa0s-Options: the panel descriptor |
+| 20a | `settings/SchemaRows.lua` | settings | the hand-written Behavior rows, spliced after the Master controls |
+| 20b | `settings/SchemaMembers.lua` | settings | the member rows (`callout.*`, `group.*`, `pad.*`, `builtin.*`), addressed through `Library.Member` |
 | 21 | `settings/Panel.lua` | settings | the landing page and the General page (Master controls) |
-| 21a | `settings/SlashVerbs.lua` | verbs | `NS.SlashVerbs`: the verb bodies (`check`, `SetLocked` for `lock` / `unlock`) |
+| 21a | `settings/Editors.lua` | settings | the editor pages' shared frame: selection, repaint, reorder lists, delete |
+| 21b | `settings/Callouts.lua` | settings | the Callouts page |
+| 21c | `settings/Groups_When.lua` | settings | the Groups page's When editor |
+| 21d | `settings/Groups.lua` | settings | the Groups page |
+| 21e | `settings/Pads.lua` | settings | the Comms Pad page |
+| 21f | `settings/Share.lua` | settings | the Share page (the Built-in tab) |
+| 21g | `settings/SlashVerbs.lua` | verbs | `NS.SlashVerbs`: the verb bodies (`check`, `SetLocked` for `lock` / `unlock`, `preview`, `why`) |
 | 22 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |
 | 23 | `settings/Profiles.lua` | settings | the Profiles page (AceDBOptions) |
 
@@ -72,4 +81,12 @@ files they add are listed in design spec §4.2.
 | `tests/test_surfaces.lua` | `Surfaces`: a pad's plan, and the rebuild queued in combat with the stale hint |
 | `tests/test_pad_render.lua` | `Pad_Render`: what a chip and the header show, and the drag-strip seam |
 | `tests/test_pad.lua` | `Pad`: armed or disarmed chips, the visibility driver, the drag strip shown while unlocked (it will not drag while locked or in combat) |
+| `tests/test_members.lua` | the member rows: addressed by instance, selection or the first listed member; built-ins refused; `Library.Touch` announces each write; the CLI text forms |
+| `tests/test_editors.lua` | `settings/Editors.lua`: the selection heals and a profile switch clears it, one structural repaint per frame, none for a scalar write, the delete confirmation, the jump |
+| `tests/test_page_callouts.lua` | the Callouts page: picker and New callout, the General rows, token insert, the live line, the acts, Used by |
+| `tests/test_groups_when.lua` | the When editor's pure half (toggle, clear, key-level range, the values offered, the active-now line) and its write through the seam |
+| `tests/test_page_groups.lua` | the Groups page: picker and New group, a user group's tabs, a built-in's read-only General with Customize and its hidden-callouts editor |
+| `tests/test_page_pads.lua` | the Comms Pad page: picker and New pad, General's acts, the Groups priority list, Layout with X/Y, Look |
+| `tests/test_page_share.lua` | the Share page's Built-in tab: Enabled, Customize, Choose callouts per set, and Defaults |
+| `tests/page_helpers.lua` | a helper, not a suite: drives an editor page through the kit's AceGUI recorder |
 | `tests/perf.lua` | the offline scenarios, outside the gate |

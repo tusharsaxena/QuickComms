@@ -15,21 +15,24 @@ drop notes; no hard guard in combat, spec §9.2), any number of pads and dials, 
 Mythic+, raid, arena and battlegrounds, the settings panel with *Preview as…* and *Why is this
 showing?*, and export and import strings.
 
-## What exists at the end of phase 2
+## What exists at the end of phase 3
 
 The data layer: the situation snapshot and the restriction state, the token and channel rules, the
 bake (one sanitized macro line per callout), the resolver, the library (the registry writer and its
 load pass), the four shipped built-in sets, the Behavior defaults and `/qc check <id>`, which prints
 what a callout would send and never sends. On top of it, phase 2 built the send engine (secure
 buttons, the soft spam guard, the echo tracker, the combat-end queue), the default Comms Pad showing
-the active built-in sets, test mode, the lock and the saved position. The editors are phase 3 and
-the Comms Dial phase 4. The frame they plug into: the settings panel's
+the active built-in sets, test mode, the lock and the saved position. Phase 3 added the editors: the
+Callouts, Groups (with the When editor and a Preview tab), Comms Pad and Share (Built-in tab) pages,
+"Preview as…" on the pads and `/qc preview`, and "Why is this showing?" on the pad header and
+`/qc why`. The Comms Dial is phase 4. The frame they plug into: the settings panel's
 landing page, General page (Master controls) and Profiles page, the `/qc` command with the reserved verbs, the launcher, the debug console and
 the diagnostics report, the performance harness, the stand-down latch, the message catalog and the
 migration runner. The surfaces and the rest of the paragraph above arrive with the plan's later
 phases ([`superpowers/plans/2026-10-11-quickcomms-phase-0-1.md`](superpowers/plans/2026-10-11-quickcomms-phase-0-1.md)
 for phases 0 and 1, [`superpowers/plans/2026-10-13-quickcomms-phase-2.md`](superpowers/plans/2026-10-13-quickcomms-phase-2.md)
-for phase 2).
+for phase 2, [`superpowers/plans/2026-10-13-quickcomms-phase-3.md`](superpowers/plans/2026-10-13-quickcomms-phase-3.md)
+for phase 3).
 
 ## What it deliberately does not do
 

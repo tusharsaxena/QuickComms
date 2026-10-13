@@ -48,10 +48,13 @@ Named suites the standard requires: `test_surface_parity` (testing-§8), `test_v
 `test_restrictions`, `test_situation`, `test_tokens`, `test_channels`, `test_bake`, `test_resolver`,
 `test_builtins`, `test_library` and `test_check`, and phase 2's `test_mock_secure`, `test_send_guard`,
 `test_sendengine`, `test_preview`, `test_master`, `test_pad_layout`, `test_surfaces`,
-`test_pad_render` and `test_pad`. Kit suites, declared by directory:
+`test_pad_render` and `test_pad`, and phase 3's `test_members`, `test_editors`, `test_page_callouts`,
+`test_groups_when`, `test_page_groups`, `test_page_pads` and `test_page_share`. Kit suites, declared by directory:
 `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`, `test_lizard_sighted`.
 Every new `tests/test_*.lua` is added to the `suites` list in `tests/run.lua`; the kit fails the run
 in both directions.
+
+`tests/page_helpers.lua` (not a suite) drives an editor page through the kit's AceGUI recorder: show a page, redraw it, click a tab, find a widget by its label, fire its callback, accept the last popup, and spy on the reorder lists.
 
 `tests/prose_waivers.lua` waives, per file and per word, the British spellings in the frozen
 `docs/brainstorm/` record; nothing written after the scaffold is waived.
