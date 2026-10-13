@@ -1,7 +1,9 @@
 local _, NS = ...
 -- modules/SendEngine.lua — THE ONLY SECURE WRITER (spec §9, events-frames-taint-§2/§4). It alone
--- creates frames from a Secure* template, calls SetAttribute and registers or unregisters state
--- drivers; tests/test_sendengine.lua greps every other shipped file for those calls. Every write is
+-- creates frames from a Secure* template, calls SetAttribute, registers or unregisters state
+-- drivers, sets and clears override bindings, and (phase 4, the Comms Dial) sets a header's frame
+-- refs, wraps a button's click in a header's snippets and runs a header's snippet;
+-- tests/test_sendengine.lua greps every other shipped file for those calls. Every write is
 -- made out of combat. A caller asks through RunOrQueue, which runs the work now or, in combat
 -- (InCombatLockdown(), never UnitAffectingCombat), files it under a key in the combat-end queue,
 -- replacing an earlier entry under that key. The queue drains on PLAYER_REGEN_ENABLED, which
@@ -16,6 +18,13 @@ local _, NS = ...
 -- modules/MacroBarButton.lua `BB.Create` (built once, out of combat), modules/MacroManager.lua
 -- `queueForCombat` / `M.FlushPending` (a keyed, last-write-wins queue flushed after combat), and
 -- core/LifecycleSetup.lua `standDown` for the held teardown below.
+--
+-- The Comms Dial (spec §11.2, Relaxed mode): modules/Dial_Secure.lua holds the snippet text and asks
+-- here for the header (a SecureHandlerClickTemplate button named QuickCommsDial<n>), its ring
+-- containers (SecureFrameTemplate), its wedges (send buttons wrapped by the header's snippets BEFORE
+-- the click hook below, because the client's wrap replaces the script and would drop the hook), and
+-- every attribute, frame ref and snippet run. The dials' keys are override bindings on one owner
+-- frame, replaced as a set at each rebuild and cleared by the stand-down (spec §9.4).
 --
 -- Stand-down (spec §9.5, slash-commands-§7): Teardown(fn) runs the secure half now or, in combat,
 -- holds it in the one registration a disabled addon may keep: a private AceEvent target listening
@@ -49,10 +58,11 @@ end
 -- ── send buttons ────────────────────────────────────────────────────────────────────────────
 
 --- A new secure send button, or nil in combat (building a secure frame is out of combat only).
---- @param parent table the frame it belongs to (a pad's root)
+--- @param parent table the frame it belongs to (a pad's root, a dial's ring)
 --- @param onPress function|nil onPress(button, verdict, window), called by the click hook
+--- @param wrap table|nil a dial wedge: { header, pre, post }, the header's snippets around its click
 --- @return table|nil
-function SE.NewButton(parent, onPress)
+function SE.NewButton(parent, onPress, wrap)
     if inCombat() then
         NS.Debug(TAG_S, "button refused: in combat")
         return nil
@@ -60,6 +70,14 @@ function SE.NewButton(parent, onPress)
     seq = seq + 1
     local b = CreateFrame("Button", "QuickCommsSend" .. seq, parent, "SecureActionButtonTemplate")
     b:RegisterForClicks("AnyUp", "AnyDown")
+    if wrap then
+        -- Wrapped before the hook below: the client's wrap replaces the script, dropping any earlier
+        -- hook. A wedge acts on the up edge, so its pre snippet can tell the edges apart, and only a
+        -- left click (a number key clicks with LeftButton) is a press: a right click closes the dial.
+        wrap.header:WrapScript(b, "OnClick", wrap.pre, wrap.post)
+        b:SetAttribute("useOnKeyDown", false)
+        b.qcLeftOnly = true
+    end
     b:HookScript("OnClick", function(...) SE.OnClick(...) end)
     b.qcOnPress = onPress
     b.qcArmed = false
@@ -138,6 +156,58 @@ function SE.ClearVisibility(frame)
     return true
 end
 
+-- ── the Comms Dial's secure frames (spec §11.2): Dial_Secure asks, this file writes ─────────
+
+--- A dial's header: a named SecureHandlerClickTemplate button (Bindings.xml and the dial's key click
+--- it by name), registered for the down edge only, hidden until its snippet opens it. Nil in combat.
+function SE.NewDialHeader(name)
+    if inCombat() then
+        NS.Debug("Dial", "header refused: in combat")
+        return nil
+    end
+    local h = CreateFrame("Button", name, UIParent, "SecureHandlerClickTemplate")
+    h:RegisterForClicks("AnyDown")
+    h:SetFrameStrata("DIALOG")
+    h:Hide()
+    return h
+end
+
+--- One ring's container under a dial's header: explicitly protected, so the header's snippets can show
+--- and hide it in combat. Hidden. Nil in combat.
+function SE.NewDialRing(header)
+    if inCombat() then return nil end
+    local r = CreateFrame("Frame", nil, header, "SecureFrameTemplate")
+    r:Hide()
+    return r
+end
+
+--- Write several attributes (a header's snippets and ring layout, a wedge's target). Out of combat.
+--- @return boolean written
+function SE.SetAttributes(frame, attrs)
+    if inCombat() then
+        NS.Debug("Dial", "attributes refused: in combat")
+        return false
+    end
+    for k, v in pairs(attrs) do frame:SetAttribute(k, v) end
+    return true
+end
+
+--- Hand a header a frame its snippets reach by name. Out of combat.
+--- @return boolean set
+function SE.SetFrameRef(header, name, frame)
+    if inCombat() then return false end
+    header:SetFrameRef(name, frame)
+    return true
+end
+
+--- Run one of a header's snippets now (a rebuild closes the dial; test mode opens it). Out of combat.
+--- @return boolean ran
+function SE.RunSnippet(header, attr)
+    if inCombat() then return false end
+    header:Execute(("self:RunAttribute(%q)"):format(attr))
+    return true
+end
+
 -- ── the combat-end queue (spec §9.1) ────────────────────────────────────────────────────────
 
 function SE.Queue(key, fn)
@@ -196,6 +266,48 @@ end
 function SE.Snapshot()
     local q = State.sendQueue
     return q and G.Keys(q) or {}
+end
+
+-- ── the override bindings (spec §9.4): the dials' keys ──────────────────────────────────────
+
+local bindOwner          -- a plain frame; every override binding this addon holds is its
+local bound, boundSig = {}, nil
+
+--- Bind each { key, name, button } as an override click, replacing every binding this addon held.
+--- Out of combat only: the client refuses override bindings in combat. Logged only on a change.
+--- @return boolean applied
+function SE.BindKeys(list)
+    if inCombat() then
+        NS.Debug("Bind", "bindings refused: in combat")
+        return false
+    end
+    bindOwner = bindOwner or CreateFrame("Frame")
+    ClearOverrideBindings(bindOwner)
+    bound = {}
+    local parts = {}
+    for _, b in ipairs(list or {}) do
+        SetOverrideBindingClick(bindOwner, true, b.key, b.name, b.button)
+        bound[#bound + 1] = { key = b.key, name = b.name, button = b.button }
+        parts[#parts + 1] = b.key .. "=" .. b.name
+    end
+    local sig = table.concat(parts, ",")
+    if sig ~= boundSig then
+        boundSig = sig
+        NS.Debug("Bind", "bound %s", sig ~= "" and sig or "nothing")
+    end
+    return true
+end
+
+--- Release every key this addon bound. Out of combat only.
+function SE.ClearKeys()
+    return SE.BindKeys({})
+end
+
+--- The bindings in force, for diagnostics and the Binding tab: { key, name, button } each, a copy.
+function SE.Bindings()
+    local out = {}
+    for i, b in ipairs(bound) do out[i] = { key = b.key, name = b.name, button = b.button } end
+    return out
 end
 
 -- ── the held stand-down (spec §9.5) ─────────────────────────────────────────────────────────
@@ -302,7 +414,8 @@ end
 
 --- The OnClick hook every send button carries. Acts once per press, on the edge the secure
 --- template acts on.
-function SE.OnClick(b, _, down)
+function SE.OnClick(b, mouseButton, down)
+    if b.qcLeftOnly and mouseButton ~= "LeftButton" then return end
     if not G.IsActingEdge(down, useKeyDown(b)) then return end
     local t0 = Perf.on and debugprofilestop()
     press(b)

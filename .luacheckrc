@@ -35,6 +35,7 @@ read_globals = {
   "C_ChatInfo", "C_RestrictedActions", "Enum",
   -- modules/SendEngine.lua: the secure frame API (the firewall test keeps it in that one file).
   "CreateFrame", "UIParent", "RegisterStateDriver", "UnregisterStateDriver", "GetTime",
+  "SetOverrideBindingClick", "ClearOverrideBindings",
   "C_CVar", "GetCVarBool", "UnitGUID", "UnitName",
   -- modules/Pad_Render.lua and core/Compat.lua: the chip tooltip and the chat colors.
   "GameTooltip", "ChatTypeInfo",
