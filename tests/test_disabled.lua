@@ -1,9 +1,10 @@
 -- tests/test_disabled.lua — disabled means the addon is not running (slash-commands-§7).
 --
 -- Built on T.enableAddon() and the kit recorders (tests/_kit/mock_record.lua): `__registrations`,
--- `__timers()`, `__svWrites` / `__resetSvWrites`, `__fire`. Case 1 pins the addon's own
--- declared list, and the latch's machinery is proven with a probe row appended
--- before OnEnable: the same path every feature module's row takes.
+-- `__timers()`, `__shownFrames`, `__svWrites` / `__resetSvWrites`, `__fire`. Case 1 pins the addon's
+-- own declared list, and the latch's machinery is proven with a probe row appended before OnEnable:
+-- the same path every feature module's row takes. The `[§7 step N]` cases then walk the standard's
+-- ten steps against the live addon (slash-commands-§7, *The conformance test every addon ships*).
 
 local T = _G.QUICKCOMMS_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
@@ -178,3 +179,259 @@ test("disabled: [final 1] every feature event is declared once (AceEvent keeps o
         seen[row[1]] = true
     end
 end)
+
+-- ── slash-commands-§7's ten steps against the live addon (audit QC-03) ───────────────────────
+--
+-- The cases above prove the latch with a probe row; these drive the real addon, every module's
+-- events, receivers and frames up, in a key so the default pad and dial 1's wedges are built and
+-- shown. Each step is its own case over the same baseline.
+
+local MPLUS = { inInstance = true, instanceType = "party", difficultyID = 8, keystoneActive = true,
+    keyLevel = 12, inGroup = true }
+
+-- The registration set as stable strings: kind, name and the target's identity.
+local function regSet(m)
+    local out = {}
+    for _, r in ipairs(m.__registrations()) do
+        out[#out + 1] = r.kind .. ":" .. r.event .. "@" .. tostring(r.target) .. ":" .. tostring(r.unit)
+    end
+    table.sort(out)
+    return out
+end
+
+-- A frame of the surfaces' family: a pad root (QuickCommsPad<id>), a dial header (QuickCommsDial<n>),
+-- a send button (QuickCommsSend<n>), or anything parented under one. The settings canvases
+-- (QuickComms<Page>Panel) are setup, which stays up while disabled (case 7 above).
+local function surfaceName(n)
+    return type(n) == "string" and not n:find("Panel$")
+        and (n:find("^QuickCommsPad") or n:find("^QuickCommsDial") or n:find("^QuickCommsSend")) ~= nil
+end
+local function ofSurface(f)
+    while type(f) == "table" do
+        if surfaceName(f.__name) then return true end
+        f = f.__parent
+    end
+    return false
+end
+-- Shown here and in every ancestor: what the client draws (the mock's IsShown is the frame's own flag).
+local function drawn(f)
+    while type(f) == "table" do
+        if not f:IsShown() then return false end
+        f = f.__parent
+    end
+    return true
+end
+
+-- Step 1: the addon enabled, in a key, and the three snapshots.
+local function baseline()
+    local NS, _, m = T.enableAddon()
+    NS.Situation.ReadInputs = function() return MPLUS end
+    NS.Situation.RefreshNow("test")
+    local snap = { R = regSet(m), T = #m.__timers(), F = {}, messages = 0 }
+    for _, f in ipairs(m.__shownFrames()) do
+        if ofSurface(f) then snap.F[#snap.F + 1] = f end
+    end
+    for _, r in ipairs(m.__registrations()) do
+        if r.kind == "message" then snap.messages = snap.messages + 1 end
+    end
+    snap.raw = m.__registrations()
+    return NS, m, snap
+end
+
+-- Step 2: through the single write seam, the route the checkbox and the verb take.
+local function disable(NS) NS.SchemaRuntime.Set("enabled", false) end
+
+local function countDrawn(frames)
+    local n = 0
+    for _, f in ipairs(frames) do if drawn(f) then n = n + 1 end end
+    return n
+end
+
+test("disabled [§7 step 1]: enabled, the registration set holds events and messages, and the surfaces are drawn", function()
+    local _, _, snap = baseline()
+    assertTrue(#snap.R > 0, "R_on is not empty")
+    assertTrue(snap.messages > 0, "the bus receivers are in R_on")
+    assertTrue(#snap.F > 0, "F_on is not empty: the pad and its chips are shown")
+    assertTrue(countDrawn(snap.F) > 0)
+end)
+
+test("disabled [§7 steps 2-4]: through the seam, nothing stays registered, events or messages, and nothing is armed", function()
+    local NS, m = baseline()
+    disable(NS)
+    assertTrue(NS.IsStoodDown())
+    local events, messages = 0, 0
+    for _, r in ipairs(m.__registrations()) do
+        if r.kind == "message" then messages = messages + 1 else events = events + 1 end
+    end
+    -- red under: drop the UnregisterEvent loop in NS.StandDown (core/QuickComms.lua)
+    assertEqual(events, 0, "every game event unregistered")
+    -- red under: drop NS.Bus:StandDown() in NS.StandDown
+    assertEqual(messages, 0, "every bus receiver unregistered")
+    assertEqual(table.concat(regSet(m), ","), "", "by name too")
+    assertEqual(#m.__timers(), 0, "no timer, ticker or OnUpdate armed")
+end)
+
+test("disabled [§7 step 5]: every surface frame that was drawn is hidden", function()
+    local NS, _, snap = baseline()
+    disable(NS)
+    -- red under: drop NS.Pad.HideAll() and NS.Dial.HideAll() from the stand-down's Teardown in modules/Surfaces.lua
+    assertEqual(countDrawn(snap.F), 0)
+end)
+
+test("disabled [§7 step 6]: every event and message in R_on, fired anyway, runs nothing, writes, prints and shows nothing", function()
+    local NS, m, snap = baseline()
+    disable(NS)
+    m.__resetSvWrites()
+    m.prints = {}
+    local shown = #m.__shownFrames()
+    local ran = 0
+    for _, r in ipairs(snap.raw) do
+        if r.kind == "message" then NS.addon:SendMessage(r.event) else ran = ran + m.__fire(r.event) end
+    end
+    -- The combat-entry event by name, live and at the addon itself.
+    -- red under: register PLAYER_REGEN_DISABLED outside NS.FEATURE_EVENTS (it survives the stand-down)
+    ran = ran + m.__fire("PLAYER_REGEN_DISABLED")
+    ran = ran + m.__fireUnconditional(NS.addon, "PLAYER_REGEN_DISABLED")
+    assertEqual(ran, 0, "no handler reached")
+    assertEqual(#m.__svWrites(), 0, "no SavedVariables write")
+    assertEqual(#m.prints, 0, "no chat line")
+    assertEqual(#m.__shownFrames(), shown, "no frame shown")
+    assertEqual(countDrawn(snap.F), 0)
+    assertEqual(#m.__timers(), 0, "and still nothing armed (step 4)")
+end)
+
+-- The verbs that act on a running addon (slash-commands-§2's feature-verb SHOULD, taken).
+local FEATURE_VERBS = { lock = true, unlock = true, check = true, test = true, preview = true, why = true }
+
+test("disabled [§7 step 7]: every NS.COMMANDS entry and the bare /qc: reserved verbs answer, feature verbs refuse once and write nothing", function()
+    local NS, m = baseline()
+    disable(NS)
+    local S = NS.SchemaRuntime
+    local realSet, writes = S.Set, 0
+    S.Set = function(...) writes = writes + 1; return realSet(...) end
+    local seen = {}
+    local verbs = { "" }
+    for _, row in ipairs(NS.COMMANDS) do
+        if row[1] ~= "enable" then verbs[#verbs + 1] = row[1] end
+    end
+    for _, verb in ipairs(verbs) do
+        seen[verb] = true
+        m.prints = {}
+        writes = 0
+        NS.addon:OnSlashCommand(verb)
+        local refusals = 0
+        for _, line in ipairs(m.prints) do
+            if line:find("Ka0s Quick Comms is disabled", 1, true) then refusals = refusals + 1 end
+        end
+        if FEATURE_VERBS[verb] then
+            -- red under: add "lock" to liveVerbs in settings/Slash.lua (it then acts while disabled)
+            assertEqual(#m.prints, 1, verb .. ": exactly one line")
+            assertEqual(refusals, 1, verb .. ": the refusal line")
+            assertEqual(writes, 0, verb .. ": no write seam reached")
+        elseif verb ~= "disable" and verb ~= "" and verb ~= "help" then
+            assertEqual(refusals, 0, verb .. " keeps answering")
+        end
+        assertTrue(NS.IsStoodDown(), verb .. " left the addon stood down")
+    end
+    for verb in pairs(FEATURE_VERBS) do assertTrue(seen[verb], verb .. " is a registered verb") end
+    S.Set = realSet
+    m.prints = {}
+    NS.addon:OnSlashCommand("enable")
+    assertFalse(NS.IsStoodDown(), "enable, last, stands the addon up")
+end)
+
+test("disabled [§7 step 8]: the launcher's left-click opens the panel and its menu grays every entry but Enabled", function()
+    local NS, m = baseline()
+    disable(NS)
+    local opened = 0
+    local realOpen = NS.addon.OpenSettings
+    NS.addon.OpenSettings = function() opened = opened + 1 end
+    m.__resetSvWrites()
+    local shown = #m.__shownFrames()
+    m.ldbObjects.QuickComms.OnClick(m.UIParent, "LeftButton")
+    NS.addon.OpenSettings = realOpen
+    assertEqual(opened, 1, "the panel opener was called")
+    local boxes = {}
+    local root = {
+        CreateTitle = function() end,
+        CreateCheckbox = function(_, label, _, onClick)
+            local box = { label = label, click = onClick, calls = 0 }
+            box.SetEnabled = function(self, v) self.enabled = v end
+            boxes[#boxes + 1] = box
+            return box
+        end,
+    }
+    m.MenuUtil = { CreateContextMenu = function(owner, gen) gen(owner, root) end }
+    m.ldbObjects.QuickComms.OnClick(m.UIParent, "RightButton")
+    assertEqual(#boxes, 3)
+    assertEqual(boxes[1].label, "Enabled")
+    assertTrue(boxes[1].enabled == nil, "Enabled stays clickable")
+    assertTrue(boxes[2].label:find("^Locked") ~= nil, boxes[2].label)
+    assertEqual(boxes[2].enabled, false, "Locked is grayed")
+    assertTrue(boxes[3].label:find("^Test mode") ~= nil, boxes[3].label)
+    assertEqual(boxes[3].enabled, false, "Test mode is grayed")
+    assertEqual(#m.__svWrites(), 0, "neither click wrote anything")
+    assertEqual(#m.__shownFrames(), shown, "neither click showed a frame")
+end)
+
+test("disabled [§7 step 9]: re-enabled, R_on comes back; a setting changed while disabled is what the stand-up builds", function()
+    local NS, m, snap = baseline()
+    disable(NS)
+    NS.SchemaRuntime.Set("enabled", true)
+    assertEqual(table.concat(regSet(m), ","), table.concat(snap.R, ","), "the registration set equals R_on")
+    assertTrue(countDrawn(snap.F) > 0, "the surfaces are drawn again")
+    disable(NS)
+    local id = NS.addon.db.profile.padOrder[1]
+    -- While disabled: the only pad turned off through the seam's member row.
+    assertTrue(NS.SchemaRuntime.Set("pad.enabled", false, id))
+    NS.SchemaRuntime.Set("enabled", true)
+    -- red under: stash State.surfacePlans at the stand-down in modules/Surfaces.lua and Pad.Sync it on the stand-up
+    local drawnPads = 0
+    for _, f in ipairs(snap.F) do
+        if type(f.__name) == "string" and f.__name:find("^QuickCommsPad") and drawn(f) then drawnPads = drawnPads + 1 end
+    end
+    assertEqual(drawnPads, 0, "the pad turned off while disabled stays off on the stand-up")
+end)
+
+local function holdsCycle(NS, m, perfFirst)
+    local LC = NS.Lifecycle
+    if perfFirst then
+        LC:Hold(NS.HOLD_PERF)
+        NS.SchemaRuntime.Set("enabled", false)
+        LC:Release(NS.HOLD_PERF)
+    else
+        NS.SchemaRuntime.Set("enabled", false)
+        LC:Hold(NS.HOLD_PERF)
+        NS.SchemaRuntime.Set("enabled", true)
+    end
+    assertTrue(NS.IsStoodDown(), "one hold released, the other still holds")
+    assertEqual(#m.__registrations(), 0, "and the registration set is still empty")
+    if perfFirst then NS.SchemaRuntime.Set("enabled", true) else LC:Release(NS.HOLD_PERF) end
+    assertFalse(NS.IsStoodDown(), "the last hold released stands it up")
+    assertTrue(#m.__registrations() > 0)
+end
+
+-- Both latches: the library's (LibKa0s-Lifecycle-1.0) and the host's library-absent stand-in
+-- (core/LifecycleSetup.lua), which this repo owns and a mutation can reach.
+local LATCHES = {
+    { "the library latch", function() return baseline() end },
+    { "the stand-in latch", function()
+        local NS, _, m = T.enableAddon{ skip = T.loadAddon.libFiles }
+        return NS, m
+    end },
+}
+
+for _, latch in ipairs(LATCHES) do
+    -- red under: (stand-in latch) make Release clear every hold in core/LifecycleSetup.lua (both orders);
+    -- (library latch, the second order) also release the perf hold from the `enabled` reaction in
+    -- settings/Schema.lua. The library's own latch is vendored and is not mutated here.
+    test("disabled [§7 step 10]: " .. latch[1] .. ": perf, then disabled; perf released first leaves it down", function()
+        local NS, m = latch[2]()
+        holdsCycle(NS, m, true)
+    end)
+
+    test("disabled [§7 step 10]: " .. latch[1] .. ": disabled, then perf; enabled first leaves it down", function()
+        local NS, m = latch[2]()
+        holdsCycle(NS, m, false)
+    end)
+end
