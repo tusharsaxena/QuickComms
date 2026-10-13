@@ -231,3 +231,47 @@ test("share: [review 1] a short string that inflates past MAX_RAW is damaged bef
     -- red under: drop the #raw > SH.MAX_RAW check from decodeBody in modules/Share.lua
     assertEqual(select(2, SH.Decode(s)), "damaged")
 end)
+
+-- One table referenced `fanout` times per level, `depth` levels deep: a few bytes in a share string
+-- (LibSerialize keeps shared references), fanout^depth nodes to a walk that follows every reference.
+local function dag(fanout, depth)
+    local node = { 1 }
+    for _ = 1, depth do
+        local parent = {}
+        for j = 1, fanout do parent[j] = node end
+        node = parent
+    end
+    return node
+end
+
+test("share: [fix 1] a shared-reference When or field is refused at once, never expanded", function()
+    local _, SH = boot()
+    local s = SH.Encode(bundle({ groups = { g1 = { name = "Fan", when = { zone = dag(30, 7) } } },
+        pads = { p1 = { name = "Fan", fields = { ["pad.layout.columns"] = dag(30, 7) } } } }))
+    assertTrue(#s < 1000, "a short string")
+    local t0 = os.clock()
+    -- red under: drop the seen set from cleanValue in modules/Share.lua (30^7 nodes; it never returns)
+    local res = SH.Check(s)
+    assertTrue(os.clock() - t0 < 1, "promptly")
+    assertTrue(res.ok)
+    assertEqual(refusals(res), "group:g1:badWhen")
+    assertNil(res.pads[1].fields["pad.layout.columns"])
+    assertEqual(res.ignored, 1)
+end)
+
+test("share: [fix 1] one table shared across many fields is bounded by MAX_NODES: the string is too large", function()
+    local _, SH = boot()
+    local big = {}
+    for i = 1, 4000 do big[i] = i end
+    local pads = {}
+    for n = 1, 20 do
+        pads["p" .. n] = { name = "Pad " .. n, fields = { ["pad.layout.columns"] = big, ["pad.layout.rows"] = big,
+            ["pad.look.visibility"] = big } }
+    end
+    local s = SH.Encode(bundle({ pads = pads }))
+    -- red under: drop the res.nodes budget from cleanValue in modules/Share.lua (240,000 values walked)
+    local res = SH.Check(s)
+    assertFalse(res.ok)
+    assertEqual(res.reason, "tooLarge")
+    assertEqual(SH.ReportLines(res)[1], "That string is too large to import.")
+end)

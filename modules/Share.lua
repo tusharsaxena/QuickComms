@@ -13,7 +13,7 @@ local _, NS = ...
 -- (c<n>, g<n>, p<n>, d<n>), its channel kind, its lengths, its When, and every text field through the
 -- §8.3 sanitizer (Bake.CleanText): names, callout text, icon paths, and every string in a pad's or a
 -- dial's field values, nested ones too (cleanValue, which also refuses a number that is not finite and
--- a table nested past MAX_DEPTH). Check fails closed: a hand-made payload that still raises inside the
+-- a table nested past MAX_DEPTH, met twice in one value, or past MAX_NODES). Check fails closed: a hand-made payload that still raises inside the
 -- checks reads as damaged. A member that fails is refused and listed with its reason; a reference
 -- to something the string does not carry (a group's callout, a surface's group) is left out and
 -- counted. A pad or a dial carries its name, Enabled, its groups and its portable fields, keyed by
@@ -34,6 +34,8 @@ SH.MAX_STRING = 50000    -- characters of a pasted string, before anything is de
 SH.MAX_RAW = 524288      -- bytes of the decompressed payload, before LibSerialize reads any of it
 SH.MAX_MEMBERS = 500     -- callouts, groups, pads and dials in one string
 SH.MAX_DEPTH = 8         -- nested tables in one field value (a When, a color); deeper is damaged
+SH.MAX_NODES = 65536     -- values cleanValue may visit in one payload, every field and When together;
+                         -- past it the string is tooLarge (a few shared tables would else copy F^depth)
 SH.TEXT_MAX = 255        -- bytes of a callout's text and of an icon path: what Bake caps a whole
                          -- line at (the Text box counts characters; a text over 255 bytes never bakes)
 
@@ -51,10 +53,13 @@ SH.KINDS = {
 
 -- A field value as a plain copy with every string in it through the §8.3 sanitizer (an empty string
 -- stays empty), or nil when it cannot be stored: a string the sanitizer refuses, a number that is not
--- finite (NaN, an infinity), a function or other non-data value, or tables nested deeper than
--- MAX_DEPTH (a hand-made cycle among them).
-local function cleanValue(v, depth)
-    local t = type(v)
+-- finite (NaN, an infinity), a function or other non-data value, tables nested deeper than
+-- MAX_DEPTH, or a table met a second time in the same value (`seen`: LibSerialize keeps shared
+-- references, so a hand-made string can make a tiny DAG, or a cycle, that a walk would expand). Every
+-- value visited counts against res.nodes; past SH.MAX_NODES every value is refused, and Validate
+-- refuses the payload as tooLarge.
+-- A string, a number or a boolean as cleanValue keeps it, or nil.
+local function cleanScalar(v, t)
     if t == "string" then
         local s, why = NS.Bake.CleanText(v)
         if s then return s end
@@ -65,12 +70,20 @@ local function cleanValue(v, depth)
         return v
     elseif t == "boolean" then
         return v
-    elseif t ~= "table" or depth > SH.MAX_DEPTH then
-        return nil
     end
+    return nil
+end
+
+local function cleanValue(v, depth, seen, res)
+    res.nodes = res.nodes + 1
+    if res.nodes > SH.MAX_NODES then return nil end
+    local t = type(v)
+    if t ~= "table" then return cleanScalar(v, t) end
+    if depth > SH.MAX_DEPTH or seen[v] then return nil end
+    seen[v] = true
     local out = {}
     for k, x in pairs(v) do
-        local c = cleanValue(x, depth + 1)
+        local c = cleanValue(x, depth + 1, seen, res)
         if c == nil or type(k) == "table" then return nil end
         out[k] = c
     end
@@ -115,7 +128,7 @@ end
 
 local function newResult()
     return { ok = false, callouts = {}, groups = {}, pads = {}, dials = {}, refused = {}, dropped = 0,
-        ignored = 0, known = {} }
+        ignored = 0, known = {}, nodes = 0 }
 end
 
 -- A section's ids in a stable order: by the number they end in, then as text.
@@ -200,7 +213,7 @@ local function groupEntry(_, id, g, res)
     local icon
     icon, why = cleanIcon(g.icon)
     if why then return nil, why end
-    local when = cleanValue(g.when == nil and {} or g.when, 1)
+    local when = cleanValue(g.when == nil and {} or g.when, 1, {}, res)
     if when == nil or not NS.Library.ValidWhen(when) then return nil, "badWhen" end
     local refs = keepRefs(g.callouts, function(cid) return res.known[cid] == "callout" end, res)
     return { id = id, callouts = refs, fields = { name = name, icon = icon, when = when,
@@ -230,7 +243,7 @@ local function surfaceFields(kind, fields, res)
     local out = {}
     for path, value in pairs(type(fields) == "table" and fields or {}) do
         local v = nil
-        if SH.Portable(kind, path) then v = cleanValue(value, 1) end
+        if SH.Portable(kind, path) then v = cleanValue(value, 1, {}, res) end
         if v ~= nil then out[path] = v else res.ignored = res.ignored + 1 end
     end
     return out
@@ -326,6 +339,13 @@ function SH.Validate(payload)
     end
     for _, spec in ipairs(SH.KINDS) do checkSection(spec, payload[spec.key] or {}, res) end
     res.known = nil
+    if res.nodes > SH.MAX_NODES then
+        local out = newResult()
+        out.known = nil
+        out.reason = "tooLarge"
+        return out
+    end
+    res.nodes = nil
     res.ok = true
     return res
 end
