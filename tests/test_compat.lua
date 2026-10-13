@@ -63,10 +63,26 @@ test("compat: SenderIsPlayer answers by GUID, then by name, and nil when it cann
     local C = NS.Compat
     assertTrue(C.SenderIsPlayer("Someone", env.playerGUID), "the GUID decides")
     assertFalse(C.SenderIsPlayer("Testchar", "Player-1-99999999"), "a readable other GUID")
-    assertTrue(C.SenderIsPlayer("Testchar-Testrealm", nil), "the name, realm stripped")
+    env.GetNormalizedRealmName = function() return "Testrealm" end
+    assertTrue(C.SenderIsPlayer("Testchar-Testrealm", nil), "the full name")
+    assertTrue(C.SenderIsPlayer("Testchar", nil), "a same-realm sender carries no realm")
     assertFalse(C.SenderIsPlayer("Other-Testrealm", nil))
     assertNil(C.SenderIsPlayer(T.secret("Testchar"), T.secret("guid")), "secret is unknown")
     assertNil(C.SenderIsPlayer(nil, nil))
+end)
+
+test("compat: [fix wave] SenderIsPlayer: a cross-realm namesake is not the player; an unreadable realm is unknown", function()
+    local NS, env = T.newAddon()
+    local C = NS.Compat
+    env.UnitFullName = function() return "Testchar", "Testrealm" end
+    -- red under: compare the bare name with the realm stripped
+    assertFalse(C.SenderIsPlayer("Testchar-Otherrealm", nil), "a namesake from another realm")
+    assertTrue(C.SenderIsPlayer("Testchar-Testrealm", nil))
+    env.UnitFullName = function() return "Testchar", nil end
+    env.GetNormalizedRealmName = nil
+    assertNil(C.SenderIsPlayer("Testchar-Testrealm", nil), "the realm cannot be read: unknown")
+    assertFalse(C.SenderIsPlayer("Other-Testrealm", nil), "another name is never the player")
+    assertTrue(C.SenderIsPlayer("Testchar", nil))
 end)
 
 test("compat: ChatColor reads the client's chat colors and declines what it cannot read", function()

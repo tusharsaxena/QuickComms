@@ -85,6 +85,17 @@ local function specInfo(index)
     return PlainNumber(id), PlainString(role)
 end
 
+-- The player's name and normalized realm (the realm as chat senders carry it), each plain or nil.
+local function playerFullName()
+    local name, realm
+    if UnitFullName then name, realm = UnitFullName("player") end
+    name, realm = PlainString(name), PlainString(realm)
+    if not name and UnitName then name = PlainString((UnitName("player"))) end
+    if (not realm or realm == "") and GetNormalizedRealmName then realm = PlainString(GetNormalizedRealmName()) end
+    if realm == "" then realm = nil end
+    return name, realm
+end
+
 --- classFile, specID, role (TANK/HEALER/DAMAGER or nil), character ("Name-Realm" or nil).
 function Compat.PlayerIdentity()
     local classFile = UnitClass and PlainString(select(2, UnitClass("player"))) or nil
@@ -168,16 +179,23 @@ function Compat.UseKeyDown()
 end
 
 --- Whether a chat line came from the player: true, false, or nil when neither the GUID nor the
---- name can be read (secret or absent). Never compares a secret.
+--- name can be read (secret or absent). Never compares a secret. Without the GUID the full name
+--- decides: a sender with a realm is the player only on the player's own realm (a cross-realm
+--- namesake is not), so when that realm cannot be read the answer is unknown; a sender with no
+--- realm is on the player's realm and the bare name decides.
 function Compat.SenderIsPlayer(sender, guid)
     local g = PlainString(guid)
     local me = UnitGUID and PlainString(UnitGUID("player")) or nil
     if g and me then return g == me end
     local name = PlainString(sender)
     if not name then return nil end
-    local mine = UnitName and PlainString((UnitName("player"))) or nil
+    local mine, myRealm = playerFullName()
     if not mine then return nil end
-    return (name:match("^([^%-]+)") or name) == mine
+    local bare, realm = name:match("^([^%-]+)%-(.+)$")
+    if not bare then return name == mine end
+    if bare ~= mine then return false end
+    if not myRealm then return nil end
+    return realm == myRealm
 end
 
 -- ── The bake context (spec §8.1): the values {me}, {spec}, {dungeon} and {spell:ID} bake from ──
