@@ -314,3 +314,10 @@ L["World"] = "World"
 L["LOCKDOWN"] = "LOCKDOWN"
 L["TEST MODE"] = "TEST MODE"
 L["updates after combat"] = "updates after combat"
+
+-- Comms Pad (modules/Pad.lua)
+L["Drag to move. Right-click for settings."] = "Drag to move. Right-click for settings."
+L["Tabs switch after combat."] = "Tabs switch after combat."
+L["The pad can be collapsed or expanded after combat."] = "The pad can be collapsed or expanded after combat."
+L["Pad positions reset."] = "Pad positions reset."
+L["Test mode"] = "Test mode"

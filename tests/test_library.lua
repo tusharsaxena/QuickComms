@@ -254,3 +254,30 @@ test("library: [final minor 3] Prepare repairs corrupt top-level registry keys a
     assertTrue(p.builtins["bi.b"] ~= nil)
     assertEqual(result.repaired, 5, "four top-level keys and one builtins entry")
 end)
+
+test("library: SetSurfacePoint stores a copy of a plain anchor, announces it, and nil clears it", function()
+    local NS = T.bootAddon()
+    local heard = {}
+    local t = NS.Bus:NewTarget()
+    t:RegisterMessage(NS.MSG.LIBRARY_CHANGED, function(_, kind, id) heard[#heard + 1] = kind .. ":" .. id end)
+    local pt = { "TOPLEFT", "TOPLEFT", 40, -60 }
+    T.assertTrue(NS.Library.SetSurfacePoint("pad", "p1", pt))
+    pt[3] = 999
+    T.assertEqual(table.concat(NS.db.profile.pads.p1.point, ","), "TOPLEFT,TOPLEFT,40,-60", "a copy")
+    T.assertTrue(NS.Library.SetSurfacePoint("pad", "p1", nil))
+    T.assertNil(NS.db.profile.pads.p1.point)
+    T.assertEqual(table.concat(heard, ","), "pad:p1,pad:p1")
+end)
+
+test("library: SetSurfacePoint refuses an unknown surface or a malformed anchor, and stores nothing", function()
+    local NS = T.bootAddon()
+    local pt = { "CENTER", "CENTER", 0, 0 }
+    T.assertFalse(NS.Library.SetSurfacePoint("pad", "p99", pt))
+    T.assertFalse(NS.Library.SetSurfacePoint("nope", "p1", pt))
+    T.assertFalse(NS.Library.SetSurfacePoint("pad", "d2", pt), "d2 is a dial, not a pad")
+    T.assertFalse(NS.Library.SetSurfacePoint("pad", "p1", { "CENTER" }))
+    T.assertFalse(NS.Library.SetSurfacePoint("pad", "p1", { "CENTER", "CENTER", "0", 0 }))
+    T.assertFalse(NS.Library.SetSurfacePoint("pad", "p1", "CENTER"))
+    T.assertNil(NS.db.profile.pads.p1.point)
+    T.assertTrue(NS.Library.SetSurfacePoint("dial", "d2", pt), "the dial's anchor has the same writer")
+end)

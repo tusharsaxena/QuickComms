@@ -115,6 +115,8 @@ modules\Pad_Layout.lua
 modules\Surfaces.lua
 # LOAD-BEARING: publishes NS.PadRender, which modules\Pad.lua takes as a load-time upvalue.
 modules\Pad_Render.lua
+# Conventional: the Comms Pad frames; appends to NS.STAND_DOWN / NS.STAND_UP
+modules\Pad.lua
 # Conventional: core\DebugLogSetup.lua's descriptor reads NS.Diagnostics at RUN time.
 modules\Diagnostics.lua
 

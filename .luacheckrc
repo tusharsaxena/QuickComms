@@ -38,6 +38,8 @@ read_globals = {
   "C_CVar", "GetCVarBool", "UnitGUID", "UnitName",
   -- modules/Pad_Render.lua and core/Compat.lua: the chip tooltip and the chat colors.
   "GameTooltip", "ChatTypeInfo",
+  -- modules/Pad.lua: the sent-chip sound.
+  "PlaySound", "SOUNDKIT",
 }
 
 -- The harness global, declared for tests/ only so no shipped file can reach for it. The

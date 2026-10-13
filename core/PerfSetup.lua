@@ -22,6 +22,7 @@ local lib = LibStub and LibStub("LibKa0s-Perf-1.0", true)
 local BUCKETS = {
     { key = "bake.surface" }, -- modules/Surfaces.lua: one pad's plan (resolve, order, bake every slot)
     { key = "send.click" },   -- modules/SendEngine.lua: the OnClick hook
+    { key = "pad.layout" },   -- modules/Pad.lua: one pad's rebuild (geometry, chips, arm)
     { key = "echo.match" },   -- modules/SendEngine.lua: a CHAT_MSG_* echo while a press waits
 }
 
