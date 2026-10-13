@@ -286,7 +286,7 @@ when = {                     -- a nil or empty row is ignored; rows are ANDed, v
 - `core/Database.lua` holds `STEPS = { {to = 1, run = noop} }`, with `NS.SCHEMA_VERSION = 1`.
 - The runner runs straight after `AceDB:New`.
 - **A prepare pass on every profile load** does three things:
-  - seeds a fresh profile with one default pad (`p1`) and one default dial (`d1`, unbound), whose group lists hold every built-in group in the default order (D7)
+  - seeds a fresh profile with one default pad (`p1`) and one default dial (`d2`, unbound; pads and dials share one id counter), whose group lists hold every built-in group in the default order (D7)
   - repairs dangling ids
   - adds new built-in groups (shipped in a later version) to the **end** of each surface's list. A per-surface `seenBuiltins` sentinel records which ones each surface has already been offered.
 - A global reset is `db:ResetProfile()` followed by the profile-changed handler (options-ui-§12), using the verbatim confirmation text.
@@ -357,7 +357,7 @@ snapshot = {
 | Chip in the editor | Becomes | When |
 |---|---|---|
 | `{target}` | `%t` | Sent by the game, so it is live in combat |
-| `{focus}` | `%f` | Live. **C9:** confirm it in game (only `%t` was tested). |
+| `{focus}` | `%f` | Live. **C9 unverified:** the owner tests `%f` with real messages. If it fails, remove the `{focus}` chip. |
 | `{rt1}`–`{rt8}`, `{skull}`… | `{rtN}` | Live; each receiver renders it |
 | `{group1}`–`{group8}` | `{gN}` | Live, raid only. The picker offers it only when the channel can resolve to Raid. |
 | `{me}` | the player's name | Baked |
@@ -369,17 +369,18 @@ An unknown token is left as typed and flagged in the editor's preview (the DropW
 
 ### 8.2 Channels (`Channels`)
 
-**Kinds:** `say`, `yell`, `party`, `raid`, `instance`, `raidWarning`, `whisperTarget`, `whisperFocus`, `smartGroup`, `smartLead`.
+**Kinds:** `say`, `yell`, `party`, `raid`, `instance`, `raidWarning`, `smartGroup`, `smartLead`.
 
 **Resolution happens at bake time** from the snapshot (Proposed P3):
 - `smartGroup` → `/i` if in an instance group, else `/raid` if in a raid, else `/p` if in a party, else the solo fallback.
 - `smartLead` → `/rw` if leader or assist in a raid, or in a party (where anyone may send it); otherwise the same as `smartGroup`.
 - Chat slash commands don't accept macro conditionals, so the resolution can't happen live.
 - If the group changes during combat, the baked prefix may be stale until combat ends. It is refreshed then, like everything else.
+- **C4 unverified (owner, 2026-10-13).** Re-baking between pulls during an active key assumes `SetAttribute("macrotext")` works out of combat inside a key (only `InCombatLockdown` should block it). If a real key shows otherwise, the fallback is the switch: bake once at key start, and situation changes inside the key wait until it ends.
 
 **Solo fallback** (smart kinds only): `none` (the button shows as inactive), `self` (an insecure local print; nothing is sent), or `say`.
 
-**Whispers.** `whisperTarget` / `whisperFocus` bake as `/w %t <text>`. They ship in v0.1.0 regardless (P5, owner). **C2** is a smoke test, not a gate: if `%t` doesn't resolve in the `/w` name slot, the fix goes in a patch.
+**Whispers are not in v0.1.0.** The owner's in-game test on 2026-10-13 showed that `%t` expands only in message text, never in the `/w` recipient slot (`No player named '%t' is currently playing.`, while `/s %t` works). `%t` and `%f` in message text work on every channel. Re-evaluation is tracked in [issue #7](https://github.com/tusharsaxena/QuickComms/issues/7).
 
 ### 8.3 Bake and sanitize (`Bake`): anti-pattern #20
 
@@ -407,10 +408,11 @@ A locked callout stays visible with a padlock and a tooltip (brainstorm §3.3).
 | Kind | Locked when | Source |
 |---|---|---|
 | say, yell | `lockdown.encounter` or `lockdown.pvpMatch`. Outside an instance, it needs a hardware event, which a click or key press provides. | C2 confirms |
-| whisper* | Lockdown is active and the target is outside the instance. This can't be known at bake time, so it shows a soft warning, not a lock. | C2 |
-| raid, raidWarning | Not in a raid (or, for RW, not leader or assist in a raid) | game rule |
-| party, instance | Not in that kind of group | game rule |
+| raid, raidWarning | Not in a raid (or, for RW, not leader or assist in a raid) | game rule. **C1 unverified** (`/raid` and `/rw` on a premade-raid boss) |
+| party, instance | Not in that kind of group | game rule. **C3 unverified** (battleground `/i`, arena `/p`) |
 | guild, community, custom | Not offered at all in v0.1.0. Lockdown blocks them. | research 01 |
+
+**Unverified checks C1 and C3 (owner, 2026-10-13).** The owner skipped the in-game checks and tests with real messages instead. The primary design stands: these channels send during encounters. If a real message shows `/raid`, `/rw`, battleground `/i` or arena `/p` fails during an encounter, the fallback is the switch: add that channel to the `lockdown.encounter` (or `pvpMatch`) row above, with the same padlock as Say.
 
 **The lockdown chip** shows on a surface only when at least one of its visible callouts is locked *because of lockdown* (brainstorm §3.4).
 
@@ -453,12 +455,12 @@ Every rebuild requested in combat goes through this queue and sets the surface's
 - The pre-click snippet reads the last send time from a header attribute and returns `false` to cancel the click if the guard window hasn't passed.
 - Otherwise it stamps the time.
 
-**C5** confirms that `GetTime()` is available inside restricted snippets.
-
-**If C5 fails,** there is no hard guard in combat, because insecure code can't cancel a secure click. In that case:
+**Plan of record (owner, 2026-10-13): there is no hard guard in combat**, because insecure code can't cancel a secure click. v0.1.0 ships the fallback design:
 - the visual dimming below still discourages a second press
 - an actual drop is detected and reported instead (§9.3)
 - the gap is recorded under Known Limitations
+
+**Upgrade, unverified (C5).** If `GetTime()` turns out to be available inside restricted snippets, the pre-click snippet above becomes a hard guard. Try it once it is verified in game.
 
 **Insecure part.** `HookScript("OnClick")` on each button, which never taints the secure path:
 - starts the visual cooldown (the chip and wedge dim for the guard window)
@@ -472,7 +474,7 @@ Every rebuild requested in combat goes through this queue and sets the surface's
 - A click with no matching event of that `chatType` within 1.5 s counts as **dropped**: the wedge or chip flashes red and, if `dropNotes` is on, one `[QC]` line is printed.
 - Other players' messages on the same channel can mask a drop. This is accepted as best effort.
 
-**C6** checks whether the sender of the returning message can be read. If it can, the tracker matches on sender and the false "sent" goes away.
+**C6** checks whether the sender of the returning message can be read. **Unverified (owner, 2026-10-13).** The tracker must tolerate an unreadable (secret) sender: it treats that as unknown and never as dropped. If the sender can be read, it matches on sender and the false "sent" goes away.
 
 ### 9.4 Key bindings
 
@@ -535,8 +537,8 @@ If this happens in combat, the secure parts are held in the one permitted pendin
 
 **Tabs in combat:**
 - Switching tabs means showing and hiding secure children. It is done by a `SecureHandlerWrapScript` on the pad's `OnMouseWheel`, which shows and hides prebuilt per-tab containers in the restricted environment.
-- **C8** confirms this.
-- **If C8 fails:** tab switching is refused in combat, with a one-line tooltip, and sections are the default.
+- **Plan of record (owner, 2026-10-13):** tab switching is refused in combat, with a one-line tooltip, and sections are the default. This is the fallback for C8.
+- **Upgrade, unverified (C8):** the secure `OnMouseWheel` wrap above, once it is verified in game.
 
 ### 10.3 Visibility and look
 
@@ -599,7 +601,7 @@ The Blizzard ping wheel's look (brainstorm §4):
   - `tapAction = "first"` sends the first callout of the highest-priority active group (brainstorm §4).
   - `"none"` cancels.
 
-**Relaxed mode:** key down only toggles the dial open; a click selects and sends.
+**Relaxed mode (the v0.1.0 mode):** key down only toggles the dial open; a click selects and sends. The Quick-mode behavior in the key-down and key-up lists above is the C7 upgrade, not part of v0.1.0.
 
 **Number keys 1–8 and the mouse wheel** are captured while the dial is open. The numbers pick wedges clockwise from N; the wheel pages a Flat ring.
 
@@ -607,7 +609,7 @@ The Blizzard ping wheel's look (brainstorm §4):
 - The insecure render waits `delay` before drawing. A flick within that time sends without the dial ever being drawn.
 - The secure side never waits: selection is purely geometric.
 
-**C7** is the spike for all of §11.2. Feasibility comes from OPie's published approach, but it is new to Ka0s. **If restricted `GetMousePosition` / `SetBindingClick` don't behave as expected, the fallback is Relaxed mode only**: the wedges become real secure buttons the player clicks, which F2 already proved.
+**Plan of record (owner, 2026-10-13): v0.1.0 ships Relaxed mode only.** The wedges are real secure buttons the player clicks, which F2 already proved. The hold-flick-release secure dial described above (restricted `GetMousePosition` / `SetBindingClick`, after OPie's published approach, new to Ka0s) is an upgrade to try once C7 is verified in game.
 
 ### 11.3 Modes and limits
 
@@ -649,7 +651,7 @@ NS.BuiltIns.callouts["bi.mplus.lust"] = { name = L["Lust"], text = L["Lust on th
 - **Raid:** raid, with RW only on the lead callouts.
 - **Arena:** party.
 - **Generic battleground:** smartGroup, which resolves to instance chat.
-- **One set per battleground:** matched on the battleground's `instanceID`. Nodes are pinned to compass directions, with `openInto = true`. The battleground list is the 15 from brainstorm §8, and phase 5 confirms their instance IDs.
+- **One set per battleground:** matched on the battleground's `instanceID`. Nodes are pinned to compass directions, with `openInto = true`. The battleground list is the 14 from brainstorm §8, and phase 5 confirms their instance IDs.
 - **Wording** is faction-neutral (D11).
 
 **Battleground node structure** (brainstorm §8): each battleground group has one child group per node, and each node's sub-ring is INC 1 / INC 2 / INC 3 / INC Many / Clear / Help.
@@ -687,7 +689,7 @@ NS.BuiltIns.callouts["bi.mplus.lust"] = { name = L["Lust"], text = L["Lust on th
 | **Callouts** | Banner: a callout picker and a "Create callout" box. Tabs: **Message** has name, text with token chips and a live counter, channel, icon picker (game icon fileID or a LibKa0s icon), and a live preview of the baked line under the current or previewed situation, with a padlock if locked. **Used by** lists the groups that reference it, each with a jump link. Page-wide acts (rename, duplicate, delete) sit on the Message tab. |
 | **Groups** | A nav rail of groups, plus the banner picker, a create box and an active-now dot. Tabs: **General** (name, icon, enabled, open-into, delete/duplicate, and Customize for a built-in), **Callouts** (ReorderList, plus add from the library), **When** (§13.2), **Preview** |
 | **Comms Pad** | A nav rail of pads. Tabs: **General** (name, enabled, unlock, delete), **Groups** (priority ReorderList, plus groups-as), **Layout**, **Look** (visibility, fade, font group, border group, colors with class-color companions) |
-| **Comms Dial** | A nav rail of dials. Tabs: **General**, **Groups** (priority ReorderList, plus Categories/Flat), **Wheel** (slices, depth, open at, delay), **Binding** (Quick/Relaxed, a key capture button, tap action, conflict warning), **Preview** |
+| **Comms Dial** | A nav rail of dials. Tabs: **General**, **Groups** (priority ReorderList, plus Categories/Flat), **Wheel** (slices, depth, open at, delay), **Binding** (Relaxed in v0.1.0; Quick returns with the C7 upgrade; a key capture button, tap action, conflict warning), **Preview** |
 | **Share** | Tabs: **Export** (select callouts, groups, pads and dials → string → `CopyWindow`), **Import** (a paste box → validation report → apply), **Built-in** (the list of built-in sets with an enabled toggle, Customize, and a hidden-callouts editor) |
 | **Profiles** | AceDBOptions, the one permitted AceConfigDialog page |
 
@@ -849,19 +851,19 @@ Each phase ends green: `lua tests/run.lua` and `luacheck .` both pass. Each also
 
 | Phase | Content | Exit |
 |---|---|---|
-| **0. Scaffold and spikes** | `/dev-copilot:wow-new-addon` scaffold. `.gitattributes` fix. Vendoring. Logos. TOC. Setup files. Landing page and Master controls. Launcher. Debug console. Diagnostics stub. `test_disabled`. A dev-only spike file covers C1–C9 in game (not shipped, `.pkgmeta`-ignored `_dev/`). | Scaffold green. **C1–C9 results recorded** in `docs/brainstorm/go-no-go/`, and spec fallbacks applied where a check failed. |
+| **0. Scaffold and spikes** | `/dev-copilot:wow-new-addon` scaffold. `.gitattributes` fix. Vendoring. Logos. TOC. Setup files. Landing page and Master controls. Launcher. Debug console. Diagnostics stub. `test_disabled`. The dev-only spike harness for C1–C9 was built and then deleted when the owner skipped the checks. | Scaffold green. **C1–C9 skipped by the owner (2026-10-13); fallbacks adopted per the round-4 record** in `docs/brainstorm/go-no-go/round-4-build-checks.md`. |
 | **1. Core data** | Database and migrations. Schema rows. `Library` (writer). `Situation` (with tests). `Restrictions`. `Resolver`. `Tokens`. `Channels`. `Bake` (sanitizer tests). Built-in data files and the bake audit test. | Headless suites cover truth tables, ordering, bake, sanitize and every built-in. |
 | **2. Send engine and Pad: first usable build** | `SendEngine` (pool, arm, queue, guard, echo, stand-down). `Surfaces`. `Pad*`. Test mode. Default pad seeded with built-ins. | In game: the default pad shows M+ callouts in a key and sends on trash and a boss. The guard blocks double presses. The stale hint appears and clears. |
 | **3. Editors** | Callouts, Groups (with When and Preview), Pads pages. Preview as…. Why tooltips. Built-in tab (enable, hide, Customize). | Smoke test: create a callout and a group, set When, see it on the pad in the right situation. Customize a built-in. |
-| **4. Comms Dial** | `Dial_Secure` (per the C7 outcome), `Dial_Render`, Dial page, Bindings.xml, the battleground node dial with open-into | In game: hold, flick and release sends in a boss. The Categories two-stroke works. The Arathi Basin node dial sends "INC 3 Lumber Mill" in two flicks. |
+| **4. Comms Dial** | `Dial_Secure` (Relaxed only; C7 skipped), `Dial_Render`, Dial page, Bindings.xml, the battleground node dial with open-into | In game: open the dial, click a wedge and it sends in a boss. The Categories two-stroke works. The Arathi Basin node dial sends "INC 3 Lumber Mill" in two clicks. |
 | **5. Share, polish, release** | Share (codec tests, import report). Perf buckets and `tests/perf.lua`. Battleground ID confirmation. Docs set. Automated-test bundle. First audit. README. `ADDONS.md` roster row. | Release gate (complexity ≤ 15, blind files 0). Tag v0.1.0 only on the owner's word. |
 
 ### In-game checks, carried over from brainstorm §11
 
-C1–C7 as written there, plus:
+These are now the owner's later real-message test list, not a phase gate. C1–C7 as written there, plus:
 - **C8:** pad tab switching in combat through a secure `OnMouseWheel` wrap.
 - **C9:** does `%f` expand?
-- **C2 is extended:** does `/w %t text` resolve `%t` in the whisper name slot? This is a smoke test only; whispers ship either way (P5).
+- **C2, whisper part: answered 2026-10-13.** `/w %t` does not resolve `%t` in the recipient slot, so whispers are not in v0.1.0 (issue #7).
 
 ## 20. Docs to produce
 
@@ -891,7 +893,7 @@ Owner review on 2026-10-11 accepted P1, P4, P8 (renamed to `check`) and P9, and 
 | P2 | Adding a built-in callout to a user group **copies** it into the library | Keeps built-ins read-only and "used in N groups" exact (§5.2) |
 | P3 | Smart channels are resolved **when baked**, and refresh after combat | Chat commands take no macro conditionals (§8.2) |
 | P4 | In Categories mode, choosing a group keeps the dial open for a **second stroke** (click, or press and release again) instead of a single press with a hover delay | The restricted environment has no timers, and research favors a fresh stroke per level (§11.2) |
-| P5 | **Changed by the owner:** whisper channels ship in v0.1.0, and C2 is a later smoke test | The owner will smoke-test it (§8.2) |
+| P5 | **Changed by the owner on 2026-10-11, then reversed on 2026-10-13:** whispers are dropped from v0.1.0 ([issue #7](https://github.com/tusharsaxena/QuickComms/issues/7)) | The owner's in-game test showed `%t` does not expand in the `/w` recipient slot (§8.2) |
 | P6 | The spam guard is global and set in General ▸ Behavior (0.6–2.0 s, default 1.0) | Adjustable if Blizzard changes the throttle (§9.2) |
 | P7 | A `Bindings.xml` with "Open Comms Dial 1–4", alongside each dial's own key setting | Players can use the game's key bindings menu if they prefer (§9.4) |
 | P8 | `/qc check <id>` prints the baked line and never sends | No second send path (D12). It isn't named `send` because it doesn't send, or `test` because `/qc test` is the test-mode toggle. |

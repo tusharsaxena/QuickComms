@@ -1,6 +1,6 @@
 # Go/no-go test record (issue #6)
 
-Run in game on 2026-10-11 (client 12.1, interface 120100) with the throwaway harness in [`harness/`](harness/). Issue: [#6](https://github.com/tusharsaxena/QuickComms/issues/6), closed as done. The plan and summary results are in §13 of [`../04-brainstorm.md`](../04-brainstorm.md).
+Run in game on 2026-10-11 (client 12.1, interface 120100) with the throwaway harness in [`harness/`](harness/). Issue: [#6](https://github.com/tusharsaxena/QuickComms/issues/6), closed as done. The plan and summary results are in §13 of [`../04-brainstorm.md`](../04-brainstorm.md). Round 4, the build-time checks the owner skipped (with the one whisper result), is in [`round-4-build-checks.md`](round-4-build-checks.md).
 
 **Verdict: GO.** A secure button running macro text, pressed by the player with a click or a key binding, sends group chat during Midnight chat lockdown. That held in a real M+ key (trash and boss), a real LFR boss, and under every forced restriction. Addon Lua calling `C_ChatInfo.SendChatMessage` is blocked in all of them.
 
