@@ -176,17 +176,18 @@ end
 
 --- Every member of a kind, in the order its editor page's picker lists them: user callouts and user
 --- groups by name (case-insensitive, then id), the built-in sets after the user groups in shipped
---- order, the pads in the pad order. The seam's fallback when a page has selected nothing
---- (settings/Schema.lua Settings.EditingId), and the pages' picker order.
---- @param kind string "callout" | "group" | "pad"
+--- order, the pads in the pad order, the dials in the dial order. The seam's fallback when a page
+--- has selected nothing (settings/Schema.lua Settings.EditingId), and the pages' picker order.
+--- @param kind string "callout" | "group" | "pad" | "dial"
 --- @return string[]
 function Lib.MemberIds(kind)
     if not (NS.db and NS.db.profile) then return {} end
     local p = P()
     local out = {}
-    if kind == "pad" then
-        for _, id in ipairs(p.padOrder) do
-            if p.pads[id] then out[#out + 1] = id end
+    if kind == "pad" or kind == "dial" then
+        local set = kind == "pad" and p.pads or p.dials
+        for _, id in ipairs(kind == "pad" and p.padOrder or p.dialOrder) do
+            if set[id] then out[#out + 1] = id end
         end
         return out
     end
@@ -569,8 +570,11 @@ local SURFACE_DEFAULTS = {
     pad = { groupsAs = "sections", layout = { orientation = "horizontal", columns = 4, growth = "right",
         style = "iconLabel", scale = 1.0, spacing = 4, width = 140 },
         look = { visibility = "always", fade = "none", fadeAlpha = 0.4 } },
+    -- Relaxed is the only interaction in v0.1.0 (the C7 fallback, round-4 record). `delay` and
+    -- `tapAction` are kept for the hold, flick and release upgrade, and `depth` until owner ruling R5
+    -- gives it a meaning; nothing reads them yet.
     dial = { mode = "categories", slices = 4, depth = 2, openAt = "center", delay = 0.3,
-        interaction = "quick", key = nil, tapAction = "first" },
+        interaction = "relaxed", key = nil, tapAction = "first" },
 }
 
 --- The shape of one member of each kind: what every member row's path resolves against (the
@@ -582,7 +586,15 @@ Lib.TEMPLATES = {
     pad = { name = "", enabled = true, groupsAs = SURFACE_DEFAULTS.pad.groupsAs, point = false,
         layout = copyTable(SURFACE_DEFAULTS.pad.layout), look = copyTable(SURFACE_DEFAULTS.pad.look) },
     builtin = { enabled = true, hidden = {} },
+    -- `key` and `point` are false, not nil, for the same reason as above: false is "no key" and "the
+    -- default place".
+    dial = { name = "", enabled = true, mode = SURFACE_DEFAULTS.dial.mode, slices = SURFACE_DEFAULTS.dial.slices,
+        openAt = SURFACE_DEFAULTS.dial.openAt, key = false, point = false },
 }
+
+--- A dial's place when its `point` is unset: the middle of the screen (read at run time by
+--- modules/Dial.lua, the CLI and the Comms Dial page).
+Lib.DIAL_DEFAULT_POINT = { "CENTER", "CENTER", 0, 0 }
 
 --- Create a pad or dial holding every built-in group (in BuiltIns.order).
 function Lib.CreateSurface(kind, name)
@@ -666,19 +678,58 @@ function Lib.MoveGroupOnSurface(kind, sid, from, to)
     return true
 end
 
---- Set, or with nil clear, a surface's saved anchor (spec §5.1). A pad's is the `pad.point` member
---- row, through the seam: the drag, the X/Y boxes and Reset position all write it there. A dial's has
---- no row until the dial's page (phase 4) and stays Library's write. A plain copy is stored, so the
---- caller's table never aliases the profile.
+--- Set, or with nil clear, a surface's saved anchor (spec §5.1): the `pad.point` or `dial.point`
+--- member row, through the seam (the seam stores a copy, so the caller's table never aliases the
+--- profile). The pad's drag, the X/Y boxes and Reset position all write it here.
 --- @param point table|nil { point, relativePoint, x, y }: two strings, then two numbers
 --- @return boolean
 function Lib.SetSurfacePoint(kind, sid, point)
-    if kind == "pad" then return (NS.SchemaRuntime.Set("pad.point", point, sid)) == true end
-    local s = kind == "dial" and surface(kind, sid)
-    if not s or not Lib.ValidPoint(point) then return false end
-    s.point = point and { point[1], point[2], point[3], point[4] } or nil
-    announce(kind, sid)
+    if kind ~= "pad" and kind ~= "dial" then return false end
+    return (NS.SchemaRuntime.Set(kind .. ".point", point, sid)) == true
+end
+
+-- ── dial keys (spec §9.4, §18) ──────────────────────────────────────────────────────────────
+
+-- Keys a dial may not take, because the open dial uses them. Whatever the modifiers: Escape (the game
+-- menu, and the open dial's close), the left and right mouse buttons, and the mouse wheel (the open
+-- dial turns its pages with it). Without a modifier: 1-8, which pick the open dial's wedges (ALT-1 is
+-- another key, and free).
+local RESERVED_KEYS = { ESCAPE = true, BUTTON1 = true, BUTTON2 = true, MOUSEWHEELUP = true, MOUSEWHEELDOWN = true }
+local RESERVED_BARE = { ["1"] = true, ["2"] = true, ["3"] = true, ["4"] = true, ["5"] = true, ["6"] = true,
+    ["7"] = true, ["8"] = true }
+
+--- A key as stored: trimmed and upper-cased; nil, false, "" and "none" are no key (false).
+--- @return string|false|any
+function Lib.KeyValue(v)
+    if v == nil or v == false then return false end
+    if type(v) ~= "string" then return v end
+    local t = v:match("^%s*(.-)%s*$"):upper()
+    if t == "" or t == "NONE" then return false end
+    return t
+end
+
+--- Whether `v` is a key a dial may take: no key, or one key name with optional modifiers (no space,
+--- at most 40 characters), not a reserved key.
+--- @return boolean ok, string|nil reason ("badKey" | "reservedKey")
+function Lib.ValidKey(v)
+    v = Lib.KeyValue(v)
+    if v == false then return true end
+    if type(v) ~= "string" or #v > 40 or v:find("%s") then return false, "badKey" end
+    local base = v:match("^.*%-(.+)$") or v
+    if RESERVED_KEYS[base] or RESERVED_BARE[v] then return false, "reservedKey" end
     return true
+end
+
+--- The other dial that already has `key` (spec §18: one key opens one dial), or nil.
+function Lib.KeyOwner(key, exceptId)
+    key = Lib.KeyValue(key)
+    if type(key) ~= "string" then return nil end
+    local ids = {}
+    for id, d in pairs(P().dials) do
+        if id ~= exceptId and type(d) == "table" and d.key == key then ids[#ids + 1] = id end
+    end
+    table.sort(ids)
+    return ids[1]
 end
 
 -- ── prepare ─────────────────────────────────────────────────────────────────────────────────

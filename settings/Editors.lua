@@ -87,7 +87,7 @@ local pending, lastActive
 
 --- The member-row paths whose write changes what a page draws, not only a value in place.
 Ed.STRUCTURAL = { ["callout.name"] = true, ["group.name"] = true, ["group.enabled"] = true,
-    ["group.when"] = true, ["pad.name"] = true, ["builtin.enabled"] = true }
+    ["group.when"] = true, ["pad.name"] = true, ["dial.name"] = true, ["builtin.enabled"] = true }
 
 -- The ids of the groups active under the editors' snapshot, as one comparable string.
 local function activeKey()
@@ -185,7 +185,7 @@ function Ed.Row(path)
 end
 
 -- The structured member rows (settings/SchemaMembers.lua): a table each, drawn by the page's own controls.
-local STRUCTURED = { point = true, when = true, idset = true }
+local STRUCTURED = { point = true, when = true, idset = true, key = true }
 
 --- The rows the flow engine draws: a structured row has its own control on its page.
 function Ed.Scalar(rows)

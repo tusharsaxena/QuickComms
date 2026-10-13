@@ -133,13 +133,14 @@ end
 -- Library's built-in writers name theirs. Library resolves the id. With no member to address (none
 -- of that kind exists, or a named id is gone) there is no root, and the write is refused with a line
 -- saying where to make one.
-local INSTANCE = { callout = true, group = true, pad = true, builtin = true }
+local INSTANCE = { callout = true, group = true, pad = true, dial = true, builtin = true }
 Settings.INSTANCE_KINDS = INSTANCE
 
 local NO_MEMBER = {
     callout = L["No callout to edit: make one on the Callouts page."],
     group   = L["No group to edit: make one on the Groups page."],
     pad     = L["No pad to edit: make one on the Comms Pad page."],
+    dial    = L["No dial to edit: make one on the Comms Dial page."],
     builtin = L["No built-in set is selected: pick one on the Groups page."],
 }
 
@@ -180,9 +181,10 @@ local S = Settings.SchemaLib:New{
     -- the composer is hollow.
     writeThrough = { "enabled" },
     -- The minimap button is a per-installation display preference: neither reset may touch it. A
-    -- member's icon and a pad's position have a default only so a named `/qc reset` restores them;
-    -- a page's Defaults (a bracketed sweep) keeps them.
-    resetExempt  = { [MINIMAP_PATH] = true, ["callout.icon"] = true, ["group.icon"] = true, ["pad.point"] = true },
+    -- member's icon, a pad's or dial's position and a dial's key have a default only so a named
+    -- `/qc reset` restores them; a page's Defaults (a bracketed sweep) keeps them.
+    resetExempt  = { [MINIMAP_PATH] = true, ["callout.icon"] = true, ["group.icon"] = true, ["pad.point"] = true,
+        ["dial.point"] = true, ["dial.key"] = true },
 }
 NS.SchemaRuntime = S
 
@@ -212,10 +214,11 @@ function Settings.RowsForPage(pageKey)
     return out
 end
 
--- `point`, `when` and `idset` are the structured member rows (settings/SchemaMembers.lua): a table
--- each, drawn by their own controls on the editor pages and typed and printed on the CLI by
--- settings/Slash.lua's parse and format hooks.
-local VALID_TYPES = { bool = true, number = true, string = true, point = true, when = true, idset = true }
+-- `point`, `when`, `idset` and `key` are the structured member rows (settings/SchemaMembers.lua): each
+-- drawn by its own control on its editor page (a dial's key by a capture box) and typed and printed on
+-- the CLI by settings/Slash.lua's parse and format hooks.
+local VALID_TYPES = { bool = true, number = true, string = true, point = true, when = true, idset = true,
+    key = true }
 
 -- A row carrying BOTH its own get and set owns its storage, so there is no defaults entry at its
 -- path: answering nil makes the library skip the resolution check for it (the session rows, and
