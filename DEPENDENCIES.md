@@ -14,6 +14,12 @@ marked as such rather than listed as a requirement.
 - **Nothing else.** Every library is vendored under `libs/` and committed (library-stack), so the
   player installs no separate library addon. `## OptionalDeps:` names the vendored libs for load
   ordering, not as things to download.
+- **The share string's two libraries are vendored like the rest** (design spec §15): LibDeflate
+  `1.0.2-release` (commit `6831edca`, zlib license, kept as `libs/LibDeflate/LICENSE.txt`) from
+  <https://github.com/SafeteeWoW/LibDeflate>, and LibSerialize `v1.2.3` (commit `aa6e50dd`, MIT, kept as
+  `libs/LibSerialize/LICENSE`) from <https://github.com/rossnichols/LibSerialize>. Each folder is the
+  tag's `.lua`, `lib.xml` and license, copied whole and never edited; a new version is a re-copy from
+  its tag, in one commit with this line.
 
 ## Development — the contributor toolchain
 

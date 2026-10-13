@@ -16,6 +16,14 @@ local ADDON = "QuickComms"
 -- anti-pattern #48).
 local LIBKA0S = Loader.xmlFiles("libs/LibKa0s/LibKa0s.xml")
 
+-- The two libraries modules/Share.lua takes at load (spec §15), each through its own lib.xml as the
+-- TOC loads it. tocFiles skips every libs\ line, so they are named here, and load after LibKa0s as
+-- the TOC orders them.
+local SHARE_LIBS = {}
+for _, xml in ipairs({ "libs/LibDeflate/lib.xml", "libs/LibSerialize/lib.xml" }) do
+    for _, rel in ipairs(Loader.xmlFiles(xml)) do SHARE_LIBS[#SHARE_LIBS + 1] = rel end
+end
+
 -- Mock fields a factory's `opts` may seed before any source loads (see tests/wow_mock.lua).
 local MOCK_OPTS = { "inCombat" }
 
@@ -27,6 +35,7 @@ return function(root, mockBuilder)
 
     local sources = {}
     for _, rel in ipairs(LIBKA0S) do sources[#sources + 1] = { path = rel, lib = true } end
+    for _, rel in ipairs(SHARE_LIBS) do sources[#sources + 1] = { path = rel, lib = true } end
     for _, rel in ipairs(tocFiles) do sources[#sources + 1] = { path = rel, lib = false } end
 
     local compiled = {}

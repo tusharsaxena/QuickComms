@@ -5,7 +5,7 @@
 ## Version: 0.1.0
 ## IconTexture: Interface\AddOns\QuickComms\media\logos\quickcomms.logo.128.tga
 ## SavedVariables: QuickCommsDB, QuickCommsPerfDB
-## OptionalDeps: Ace3, LibStub, CallbackHandler-1.0, LibSharedMedia-3.0, LibDataBroker-1.1, LibDBIcon-1.0
+## OptionalDeps: Ace3, LibStub, CallbackHandler-1.0, LibSharedMedia-3.0, LibDataBroker-1.1, LibDBIcon-1.0, LibDeflate, LibSerialize
 ## DefaultState: enabled
 ## Category-enUS: Chat
 ## X-License: MIT
@@ -31,6 +31,10 @@ libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
 libs\LibDBIcon-1.0\lib.xml
 # ONE line: the .xml is itself the file list (library-stack-§7). After Ace3.
 libs\LibKa0s\LibKa0s.xml
+# LOAD-BEARING: modules\Share.lua takes LibDeflate at load (the share string's compression, spec §15).
+libs\LibDeflate\lib.xml
+# LOAD-BEARING: modules\Share.lua takes LibSerialize at load (the share string's payload, spec §15).
+libs\LibSerialize\lib.xml
 
 # Locales
 # LOAD-BEARING: publishes NS.L, which every file below reads at load.
