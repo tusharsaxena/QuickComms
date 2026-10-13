@@ -10,6 +10,7 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 | 1 | `locales/enUS.lua` | data | `NS.L`, the metatable fallback; the key is the English string |
 | 2 | `core/Namespace.lua` | data | name, version, brand, the cyan `[QC]` tag, the slash and its alias |
 | 3 | `core/CoreSetup.lua` | setup | LibKa0s-Core: the printer, the secret-safe stringifier, the SafeRegister family, the skin, the close-button wrapper, the resize grip |
+| 3a | `core/Compat.lua` | compat | `NS.Compat`: the only caller of version-variant or optional client APIs, and the secret guards |
 | 4 | `core/MediaSetup.lua` | setup | LibKa0s-Media: `NS.Icon`, `NS.MediaFont`, the one RegisterLSM call |
 | 5 | `core/Constants.lua` | data | `FONT_MONO`, the Ka0s gold |
 | 6 | `core/State.lua` | state | session-only state: the debug flag |
@@ -23,11 +24,21 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 | 14 | `core/Database.lua` | data | `NS.MIGRATIONS`, `NS.SCHEMA_VERSION` and the schemaVersion migration runner |
 | 15 | `core/LauncherSetup.lua` | setup | LibKa0s-Launcher: the one LDB object, registered twice |
 | 16 | `defaults/Profile.lua` | data | every default value (`NS.C`) |
-| 17 | `modules/Diagnostics.lua` | sections | the addon's sections of `/qc diagnostics` |
+| 16a | `defaults/BuiltIns.lua` | data | `NS.BuiltIns`: the registry of shipped sets and the declaring helpers |
+| 16b | `defaults/BuiltIns_MythicPlus.lua`, `_Raid.lua`, `_Arena.lua`, `_Battlegrounds.lua` | data | the four shipped sets (spec §12) |
+| 16c | `modules/Restrictions.lua` | edge | what the client's addon restrictions allow; `RESTRICTION_CHANGED` |
+| 16d | `modules/Situation.lua` | classifier + edge | the situation snapshot; `SITUATION_CHANGED` |
+| 16e | `modules/Tokens.lua` | pure | token expansion |
+| 16f | `modules/Channels.lua` | pure | channel kinds, resolution, lock state |
+| 16g | `modules/Bake.lua` | pure | callout + snapshot to one macro line |
+| 16h | `modules/Resolver.lua` | pure | When rules to active groups |
+| 16i | `modules/Library.lua` | registry writer | the one writer of the structural registry; `Prepare` |
+| 17 | `modules/Diagnostics.lua` | sections | the addon's sections of `/qc diagnostics` (identity, settings, registration, integrations, situation, library) |
 | 18 | `settings/SchemaSetup.lua` | setup | LibKa0s-Schema, or the host's documented stub of it |
 | 19 | `settings/Schema.lua` | settings | the rows, the write seam (`NS.SchemaRuntime`), `NS.Setting`, the shared reactions, the defaults tree, the global reset |
 | 20 | `settings/OptionsSetup.lua` | setup | LibKa0s-Options: the panel descriptor |
 | 21 | `settings/Panel.lua` | settings | the landing page and the General page (Master controls) |
+| 21a | `settings/SlashVerbs.lua` | verbs | `NS.SlashVerbs`: the bodies of the feature verbs (`check`) |
 | 22 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |
 | 23 | `settings/Profiles.lua` | settings | the Profiles page (AceDBOptions) |
 
@@ -43,5 +54,5 @@ files they add are listed in design spec §4.2.
 | `tests/loader.lua` | the instance factory: TOC files plus `LibKa0s.xml`'s files, isolated per case |
 | `tests/wow_mock.lua` | the thin extender over `tests/_kit/mock_base.lua` |
 | `tests/prose_waivers.lua` | the per-file, per-word British-spelling waivers for `docs/brainstorm/` |
-| `tests/test_*.lua` | one suite per subject (see [`testing.md`](testing.md)) |
+| `tests/test_*.lua` | one suite per subject (phase 1 added `test_compat`, `test_restrictions`, `test_situation`, `test_tokens`, `test_channels`, `test_bake`, `test_resolver`, `test_builtins`, `test_library`, `test_check`) (see [`testing.md`](testing.md)) |
 | `tests/perf.lua` | the offline scenarios, outside the gate |

@@ -22,6 +22,11 @@ Total.
 - repo: every authored file opens with the bootstrap and a comment naming its path
 - repo: the .pkgmeta has no externals and ignores the dev-only entries
 
+### test_bus.lua (2)
+
+- bus: every spec §17 message is declared with its exact name
+- bus: no two constants share a name
+
 ### test_surface_parity.lua (15)
 
 - parity: the degraded load really is library-absent, and the live one is not
@@ -73,6 +78,14 @@ Total.
 - database: a perProfile step runs once for every stored profile
 - database: the profile defaults carry the Master controls value, and no debug flag
 
+### test_profile.lua (5)
+
+- profile: behavior defaults match spec §5.1
+- profile: collections exist; default nextId is 1, 3 after boot
+- profile: every behavior row resolves through the seam
+- profile: the spam guard clamps to 0.6-2.0 and fallback refuses unknown values
+- profile: schema version target is 1
+
 ### test_schema.lua (12)
 
 - schema: every row validates against the defaults
@@ -112,12 +125,132 @@ Total.
 - disabled 7: a disabled profile loads stood down, with nothing registered
 - disabled 8: the launcher's Enabled entry stays live while disabled
 
-### test_diagnostics.lua (4)
+### test_diagnostics.lua (5)
 
 - diagnostics: the sections are the addon's, in report order
 - diagnostics: the report names the schema, the profile, the holds and the launcher
 - diagnostics: it runs while stood down and says so, without acting
 - diagnostics: `enabled` is always listed, and a hidden minimap button is listed
+- diagnostics: the situation and library sections report the snapshot and the registry
+
+### test_compat.lua (3)
+
+- compat: plain readers pass plain values and drop secrets
+- compat: InstanceInfo with a secret instanceID reads nil, never raises
+- compat: InstanceInfo during a loading screen (all nil) reads safely
+
+### test_restrictions.lua (15)
+
+- restrictions: nothing restricted, everything allowed and nothing announced
+- restrictions: an encounter stops chat and is the reason; its lift is announced
+- restrictions: a lift the client does not confirm yet keeps the restriction
+- restrictions: the event's boolean payload is read too
+- restrictions: each type gives its reason; Map blocks nothing
+- restrictions: the reason is the highest in priority
+- restrictions: a type the client adds later is reported by name and blocks nothing
+- restrictions: the chat lockdown stops chat, a secret answer too
+- restrictions: the combat edges stop inspect and trade, ahead of the client's flag
+- restrictions: before any edge, the client's combat flag decides
+- restrictions: combat under an encounter announces the change of what is allowed
+- restrictions: a secret payload never raises; a secret state reads as active
+- restrictions: a client without the restriction APIs restricts nothing but combat
+- restrictions: Refresh announces a lift no event reported
+- restrictions: stood down, nothing is heard; the stand-up announces what is in effect
+
+### test_situation.lua (10)
+
+- situation: classifier truth table (content, group)
+- situation: non-table input classifies as open world solo
+- situation: difficulty names by id
+- situation: key level and map only inside M+
+- situation: signature ignores combat and lockdown
+- situation: RefreshNow sends SITUATION_CHANGED only when the signature moves
+- situation: Refresh coalesces a burst into one read
+- situation: ReadInputs survives a loading screen
+- situation: stand-down cancels a pending coalesced refresh
+- situation: snapshot.lockdown mirrors Restrictions.ActiveSet
+
+### test_tokens.lua (8)
+
+- tokens: target and focus become engine tokens and count as live
+- tokens: raid markers by number and name, any case
+- tokens: group tokens map to {gN}
+- tokens: baked values come from ctx; absent ones are missing
+- tokens: spell links bake through ctx.spellLink; unknown ids are missing
+- tokens: unknown chips stay as typed and are reported
+- tokens: typed %t and %f count as live, chips are not double counted
+- tokens: non-string text expands to empty
+
+### test_channels.lua (7)
+
+- channels: smartGroup prefers instance, then raid, then party
+- channels: smartGroup solo follows the fallback
+- channels: smartLead is RW for raid leader/assist and in a home party
+- channels: fixed kinds pass through; unknown kinds refuse
+- channels: the whisper kinds are not kinds (owner, issue #7)
+- channels: prefixes and chat types
+- channels: the lock matrix
+
+### test_bake.lua (11)
+
+- bake: a plain callout bakes to prefix + text
+- bake: [review 1] a leading slash is refused, even after whitespace
+- bake: [review 1] newlines and control characters flatten to one line
+- bake: pipes are escaped, spell links are not
+- bake: [review 2] the 255-byte boundary counts bytes and live tokens
+- bake: empty or whitespace-only text is refused
+- bake: solo smart callouts follow the fallback
+- bake: the lock rides along without blocking the bake
+- bake: unknown channel and non-table callout refuse
+- bake: baked token values are sanitized; spell links are not
+- bake: a typed %t counts as live
+
+### test_resolver.lua (7)
+
+- resolver: an empty When always matches
+- resolver: each row matches and fails on its own
+- resolver: rows AND, values OR, empty rows ignored
+- resolver: keyLevel never matches outside M+
+- resolver: ActiveGroups unions enabled matches
+- resolver: SurfaceOrder keeps the surface's order; autoPromote floats narrower groups
+- resolver: Explain names the matched rows
+
+### test_builtins.lua (6)
+
+- builtins: the expected top-level sets exist in order
+- builtins: ids are unique, referenced and well formed
+- builtins: only top-level groups are in the order, and every top-level group is
+- builtins: node sets open into their ring and nest one level
+- builtins: bake audit, every callout bakes under its set's snapshot
+- builtins: battlegrounds use smart group; arena uses party; raid lead uses smart lead
+
+### test_library.lua (18)
+
+- library: Prepare seeds one pad and one dial with every built-in, once
+- library: callouts validate on create
+- library: whisper channels are refused (owner, issue #7)
+- library: [review 4] deleting a shared callout clears every group
+- library: [review 4] deleting a group clears every surface
+- library: adding a built-in callout copies it (P2)
+- library: [review 4] Customize swaps the copy in place, then deleting it leaves neither
+- library: hidden built-in callouts drop out of the merged group
+- library: [review 5] a newly shipped built-in is appended once; a removed one stays removed
+- library: Prepare repairs dangling ids
+- library: AllGroups is top-level only and merges the overlay
+- library: every mutation announces LIBRARY_CHANGED
+- library: overlay writers resolve child ids to the top-level overlay
+- library: Customize twice is refused until the copy is deleted
+- library: Customize copies openInto and flattens node callouts
+- library: Prepare survives malformed groups and surfaces
+- library: Prepare repairs the order lists
+- library: MoveInGroup with a nil target returns false
+
+### test_check.lua (4)
+
+- check: a built-in callout prints its line and channel
+- check: a refused callout prints the reason
+- check: an unknown id says so
+- check: never calls SendChatMessage
 
 ### test_vendor_sync.lua (3)
 
@@ -192,13 +325,25 @@ Total.
 | Suite | Cases |
 |-------|------:|
 | test_harness.lua | 11 |
+| test_bus.lua | 2 |
 | test_surface_parity.lua | 15 |
 | test_setup.lua | 21 |
 | test_database.lua | 6 |
+| test_profile.lua | 5 |
 | test_schema.lua | 12 |
 | test_slash.lua | 9 |
 | test_disabled.lua | 9 |
-| test_diagnostics.lua | 4 |
+| test_diagnostics.lua | 5 |
+| test_compat.lua | 3 |
+| test_restrictions.lua | 15 |
+| test_situation.lua | 10 |
+| test_tokens.lua | 8 |
+| test_channels.lua | 7 |
+| test_bake.lua | 11 |
+| test_resolver.lua | 7 |
+| test_builtins.lua | 6 |
+| test_library.lua | 18 |
+| test_check.lua | 4 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -206,4 +351,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **136** |
+| **Total** | **233** |

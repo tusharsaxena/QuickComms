@@ -16,13 +16,15 @@ settings panel.
 | `debug` | reserved | yes | `DebugVerb` (diagnostics first, then on/off), else the console toggle |
 | `diagnostics` | reserved | yes | `NS.DebugLog:RunDiagnostics` |
 | `perf` | reserved | yes | `NS.Perf.OnCommand`, lines printed by the addon |
+| `check <id>` | feature | no (refused while disabled) | `NS.SlashVerbs.Check` in `settings/SlashVerbs.lua`: prints the callout's baked line under the current situation (`id -> /p text`), then its channel and byte count, then any lock. A refusal prints its reason (`startsWithSlash`, `tooLong`, ...); an unknown id says so. It never sends (spec §14, D12). |
 
 While disabled, a verb that is not live prints the one refusal line, `Ka0s Quick Comms is disabled —
 enable it with /qc enable`, and does nothing else. The gate reads the stored `enabled`, not the
 latch, so a perf capture never refuses a verb.
 
 The design's other verbs (spec §14) are added with the tasks that own them: `lock` and `unlock`
-(reserved once a surface can be locked), `test`, `preview`, `check` and `why`.
+(reserved once a surface can be locked), `test`, `preview` and `why`. The verb bodies live in
+`settings/SlashVerbs.lua`; the rows in `settings/Slash.lua` only call them.
 
 With the library absent, the stub in `settings/Slash.lua` dispatches the same table, keeps the
 same live list, and the schema CLI verbs say the library is missing.

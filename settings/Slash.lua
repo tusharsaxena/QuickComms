@@ -5,7 +5,7 @@ local _, NS = ...
 -- What stays here is the ordered verb table (positional triples {name, desc, fn}) and the host verbs
 -- that reach into this addon's own state. Every verb that toggles something calls the same handler
 -- its Master controls row and its launcher entry call. The design spec's other verbs (§14: lock,
--- unlock and test with the Comms Pad; preview, check and why with the features they report on)
+-- unlock and test with the Comms Pad; preview and why with the features they report on; check is here)
 -- arrive with the tasks that own them.
 
 local QC = NS.addon
@@ -50,6 +50,8 @@ local COMMANDS = {
         function() NS.DebugLog:RunDiagnostics() end},
     {"perf",     L["Measure performance — `/qc perf` opens the step panel"],
         function(rest) runPerf(rest) end},
+    {"check",    L["Show the line a callout would send here (never sends)"],
+        function(rest) NS.SlashVerbs.Check(rest) end},
 }
 NS.COMMANDS = COMMANDS
 

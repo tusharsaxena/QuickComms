@@ -53,6 +53,35 @@ local function integrations(out)
         Lc and read(Lc.IsShown, Lc))
 end
 
+local function situation(out)
+    local s = NS.Situation.Current()
+    out:add("Situation", "content=%s instanceID=%s difficulty=%s key=%s group=%s instanceGroup=%s",
+        s.content, s.instanceID, s.difficulty, s.keyLevel, s.group, s.instanceGroup)
+    out:add("Situation", "leader=%s assist=%s class=%s spec=%s role=%s combat=%s",
+        s.leader, s.assist, s.classFile, s.specID, s.role, s.inCombat)
+    local lock = {}
+    for k, v in pairs(s.lockdown or {}) do if v then lock[#lock + 1] = k end end
+    table.sort(lock)
+    out:add("Situation", "lockdown=%s", table.concat(lock, ","))
+end
+
+local function count(t)
+    local c = 0
+    for _ in pairs(t) do c = c + 1 end
+    return c
+end
+
+local function library(out)
+    local p = NS.db.profile
+    out:add("Library", "callouts=%s groups=%s pads=%s dials=%s nextId=%s seeded=%s",
+        count(p.callouts), count(p.groups), #p.padOrder, #p.dialOrder, p.nextId, p.seeded)
+    local active = NS.Resolver.ActiveGroups(NS.Library.AllGroups(), NS.Situation.Current())
+    local ids = {}
+    for id in pairs(active) do ids[#ids + 1] = id end
+    table.sort(ids)
+    out:add("Library", "active=%s", table.concat(ids, ","))
+end
+
 --- The sections, in report order. Read at RUN time by core/DebugLogSetup.lua's descriptor.
 --- @return table
 function NS.Diagnostics.Sections()
@@ -61,5 +90,7 @@ function NS.Diagnostics.Sections()
         { "settings",     settings },
         { "registration", registration },
         { "integrations", integrations },
+        { "situation",    situation },
+        { "library",      library },
     }
 end

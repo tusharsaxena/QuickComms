@@ -31,16 +31,19 @@ The addon's sections (`modules/Diagnostics.lua`), in order:
 | `settings` | every setting that differs from its default, and `enabled` always |
 | `registration` | the declared feature events, whether they are registered, the events the client refused |
 | `integrations` | the launcher's registration and button |
+| `situation` | the snapshot: content, instance, difficulty, key level, group, leadership, class, spec, role, combat, and the active lockdown reasons |
+| `library` | the counts (callouts, groups, pads, dials), `nextId`, `seeded`, and the ids of the active groups under the current situation |
 
 The report reads state only: it calls no client API that changes anything, takes no hold, starts no
-timer and registers no event. It reads no chat and no other addon's data. The design's sections
-(spec §16: the snapshot, restrictions, active groups, armed buttons, the combat queue, bindings, the
-guard, the echo tracker) arrive with their modules.
+timer and registers no event. It reads no chat and no other addon's data. The design's remaining sections
+(spec §16: armed buttons, the combat queue, bindings, the guard, the echo tracker) arrive with
+their modules.
 
 ## Tags
 
 `Set` (one line per setting written at the seam, one per bulk reset), `Profile`, `Init` (the session
-summary, held until logging is turned on), `Migrate`. The libraries add their own: `Cmd`, `Cfg`,
-`Launcher`, `Lifecycle`, `Perf`. The design's feature tags (spec §16: `Situation`, `Resolver`,
-`Bake`, `Send`, `Guard`, `Echo`, `Queue`, `Pad`, `Dial`, `Bind`, `Share`, `Library`) arrive with
-their modules.
+summary, held until logging is turned on), `Migrate`, and the phase 1 feature tags: `Situation`
+(each snapshot change, with the cause), `RES` (each restriction change), `Library` (each registry
+write and the `Prepare` summary). The libraries add their own: `Cmd`, `Cfg`,
+`Launcher`, `Lifecycle`, `Perf`. The design's other feature tags (spec §16: `Resolver`,
+`Bake`, `Send`, `Guard`, `Echo`, `Queue`, `Pad`, `Dial`, `Bind`, `Share`) arrive with their modules.

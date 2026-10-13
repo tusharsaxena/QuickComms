@@ -15,7 +15,7 @@ test("diagnostics: the sections are the addon's, in report order", function()
     local NS = T.newAddon()
     local names = {}
     for i, s in ipairs(NS.Diagnostics.Sections()) do names[i] = s[1] end
-    assertEqual(table.concat(names, ","), "identity,settings,registration,integrations")
+    assertEqual(table.concat(names, ","), "identity,settings,registration,integrations,situation,library")
 end)
 
 test("diagnostics: the report names the schema, the profile, the holds and the launcher", function()
@@ -42,4 +42,11 @@ test("diagnostics: `enabled` is always listed, and a hidden minimap button is li
     local text = report(NS)
     assertTrue(text:find("enabled", 1, true) ~= nil)
     assertTrue(text:find("global.minimap.shown", 1, true) ~= nil, text)
+end)
+
+test("diagnostics: the situation and library sections report the snapshot and the registry", function()
+    local NS = T.enableAddon()
+    local text = report(NS)
+    assertTrue(text:find("lockdown=", 1, true) ~= nil, "situation")
+    assertTrue(text:find("callouts=", 1, true) ~= nil and text:find("active=", 1, true) ~= nil, "library")
 end)

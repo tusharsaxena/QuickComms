@@ -24,6 +24,18 @@ suspend takes the same latch's `perf` hold.
 AceDB's switch, copy or reset → `reloadProfile` (`core/QuickComms.lua`): the migrations, a panel
 refresh, the latch re-read from the incoming profile's `enabled`, then `NS.MSG.PROFILE_CHANGED`.
 
+## Today: `/qc check <id>`
+
+```
+/qc check ─> Library.Callout(id) ─> Situation.Current() ─> Bake.Bake(callout, snapshot, {soloFallback})
+                                                                 │  tokens, channel, sanitize
+                                                                 ▼
+                                              line, channel, bytes, lock  ─> NS.Print   (never sends)
+```
+
+This is the whole phase 1 pipeline: the stages up to the baked line exist, and nothing consumes the
+line but this verb.
+
 ## The design's callout pipeline (spec §4.1)
 
 ```
@@ -40,5 +52,5 @@ refresh, the latch re-read from the incoming profile's `enabled`, then `NS.MSG.P
                                          combat-end queue, bindings, spam guard, echo tracker)
 ```
 
-The README's `## How the callouts work` is the same pipeline told for players. Each stage lands
-with its plan task, and this page grows with it.
+The README's `## How the callouts work` is the same pipeline told for players. Situation, Resolver, Library and Bake exist; Surfaces and
+SendEngine are phase 2, and this page grows with them.

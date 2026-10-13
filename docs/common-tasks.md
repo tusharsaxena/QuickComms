@@ -14,7 +14,8 @@
 
 Add a positional triple `{ "name", L["description"], function(rest) ... end }` to `NS.COMMANDS` in
 `settings/Slash.lua`, calling the same handler as any other surface that does the same thing. A
-feature verb is refused while disabled by the dispatcher itself. Update `docs/slash-dispatch.md`.
+feature verb is refused while disabled by the dispatcher itself. Put the body in
+`settings/SlashVerbs.lua` (`NS.SlashVerbs`) so a test can call it. Update `docs/slash-dispatch.md`.
 
 ## Add a game event
 

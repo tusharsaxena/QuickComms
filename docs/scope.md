@@ -14,12 +14,16 @@ situation engine and the resolver, the secure send engine with a global spam gua
 second, any number of pads and dials, built-in sets for Mythic+, raid, arena and battlegrounds, the
 settings panel with *Preview as…* and *Why is this showing?*, and export and import strings.
 
-## What exists at the scaffold
+## What exists at the end of phase 1
 
-The frame the features plug into: the settings panel's landing page, General page (Master controls)
+The data layer: the situation snapshot and the restriction state, the token and channel rules, the
+bake (one sanitized macro line per callout), the resolver, the library (the registry writer and its
+load pass), the four shipped built-in sets, the Behavior defaults and `/qc check <id>`, which prints
+what a callout would send and never sends. Nothing is drawn yet and nothing is sent: the Comms Pad,
+the Comms Dial and the send engine are phase 2. The frame they plug into: the settings panel's landing page, General page (Master controls)
 and Profiles page, the `/qc` command with the reserved verbs, the launcher, the debug console and
 the diagnostics report, the performance harness, the stand-down latch, the message catalog and the
-migration runner. Everything in the paragraph above arrives with the plan's later tasks
+migration runner. The surfaces and the rest of the paragraph above arrive with the plan's later phases
 ([`superpowers/plans/2026-10-11-quickcomms-phase-0-1.md`](superpowers/plans/2026-10-11-quickcomms-phase-0-1.md)
 for phases 0 and 1).
 
