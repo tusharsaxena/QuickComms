@@ -41,8 +41,20 @@ function PD.Entries()
     return out
 end
 
+--- A new pad's name: "Comms Pad <n>", the lowest n from 2 that no pad is named, so a delete never
+--- leads to two pads with one name.
+function PD.NewName()
+    local taken = {}
+    for _, pad in pairs(NS.db.profile.pads) do
+        if pad.name then taken[pad.name] = true end
+    end
+    local n = 2
+    while taken[L["Comms Pad %d"]:format(n)] do n = n + 1 end
+    return L["Comms Pad %d"]:format(n)
+end
+
 function PD.Create()
-    local id = NS.Library.CreateSurface("pad", L["Comms Pad %d"]:format(#NS.db.profile.padOrder + 1))
+    local id = NS.Library.CreateSurface("pad", PD.NewName())
     if id then
         Ed.Select("pad", id)
         Ed.RequestRefresh()

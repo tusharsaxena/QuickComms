@@ -30,11 +30,16 @@ local function identity(out)
     out:joined(TAG, "holds", NS.Lifecycle:Holds())
 end
 
+-- The settings rows, member rows left out: a member row read with no instance is whichever member
+-- is selected or listed first, not a setting (the library section counts the members).
 local function settings(out)
     local S = NS.SchemaRuntime
     local Settings = NS.addon and NS.addon.Settings
-    out:nonDefaults(Settings and Settings.Schema, function(row) return S.Get(row.path) end, nil, nil,
-        { always = { "enabled" } })
+    local rows = {}
+    for _, row in ipairs(Settings and Settings.Schema or {}) do
+        if not row.instance then rows[#rows + 1] = row end
+    end
+    out:nonDefaults(rows, function(row) return S.Get(row.path) end, nil, nil, { always = { "enabled" } })
 end
 
 local function registration(out)

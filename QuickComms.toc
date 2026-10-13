@@ -145,7 +145,7 @@ settings\Panel.lua
 settings\Editors.lua
 # LOAD-BEARING: takes Settings.Editors at load and registers the Callouts page (after General).
 settings\Callouts.lua
-# Conventional: the When editor; settings\Groups.lua calls Settings.GroupsWhen at run time only.
+# LOAD-BEARING: takes Settings.Editors at load; settings\Groups.lua calls Settings.GroupsWhen at run time only.
 settings\Groups_When.lua
 # LOAD-BEARING: takes Settings.Editors at load and registers the Groups page (after Callouts).
 settings\Groups.lua

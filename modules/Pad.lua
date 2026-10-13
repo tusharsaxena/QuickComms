@@ -204,7 +204,9 @@ end
 local function headerState(inst, plan)
     local snap = plan.snapshot or {}
     return {
-        situation = plan.preview and L["Preview: %s"]:format(R.SituationText(snap, NS.Compat.DungeonName(snap.challengeMapID)))
+        -- A preview names the situation as its menu does (the dungeon, the raid's difficulty, the
+        -- battleground), not as a live snapshot would read.
+        situation = plan.preview and L["Preview: %s"]:format(NS.Preview.Label(plan.preview))
             or plan.test and L["Test mode"] or R.SituationText(snap, NS.Compat.DungeonName(snap.challengeMapID)),
         testText = plan.preview and L["PREVIEW"] or nil,
         lockdown = plan.lockdownChip == true and NS.Setting("behavior.lockdownChip") ~= false,

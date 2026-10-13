@@ -246,3 +246,23 @@ test("preview: [final 13] `/qc preview` reads the situation's name without regar
     assertTrue(NS.Preview.PreviewAs() == nil)
     assertTrue(m.prints[#m.prints]:find("Preview off.", 1, true) ~= nil, m.prints[#m.prints])
 end)
+
+test("preview: [final 10] a dungeon preview fills {dungeon}, and the header names the preview as its menu does", function()
+    local NS = live()
+    NS.Compat.InstanceName = function(id) return id == 2526 and "Algeth'ar Academy" or nil end
+    local cid = NS.Library.CreateCallout({ name = "Go", text = "Go {dungeon} +{key}", channel = "party" })
+    local gid = NS.Library.CreateGroup({ name = "Mine", callouts = { cid }, when = { content = { mythicPlus = true } } })
+    NS.Library.AddGroupToSurface("pad", "p1", gid, 1)
+    assertTrue(NS.Preview.SetPreviewAs("mplus:2526"))
+    -- red under: Surfaces.BakeContext reads only the challengeMapID, which a preview has none of
+    assertEqual(NS.Surfaces.BakeContext(NS.Preview.PreviewSnapshot()).dungeon, "Algeth'ar Academy")
+    local slot = NS.Surfaces.Plans().p1.sections[1].slots[1]
+    assertEqual(slot.line, "/p Go Algeth'ar Academy +10")
+    local DOT = " \194\183 "
+    -- red under: the preview header reads SituationText (no dungeon, and every raid reads "Raid")
+    local header = NS.Pad.Instance("p1").header.qcSituation:GetText()
+    assertEqual(header, "Preview: " .. NS.Preview.Label("mplus:2526"))
+    assertTrue(header:find("M+" .. DOT .. "Algeth'ar Academy", 1, true) ~= nil, header)
+    NS.Preview.SetPreviewAs("raid:mythic")
+    assertEqual(NS.Pad.Instance("p1").header.qcSituation:GetText(), "Preview: Raid" .. DOT .. "Mythic")
+end)

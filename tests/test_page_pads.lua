@@ -157,3 +157,16 @@ test("pads page: [final 4] Defaults keeps the pad's position", function()
     -- red under: drop pad.point from settings/Schema.lua's resetExempt
     assertEqual(table.concat(NS.db.profile.pads.p1.point, ","), "CENTER,CENTER,40,-60")
 end)
+
+test("pads page: [final 26] New pad takes the lowest free number, so a delete never leads to two names alike", function()
+    local NS = open()
+    local Pads = NS.addon.Settings.Pads
+    local two = Pads.Create()
+    local three = Pads.Create()
+    assertEqual(NS.db.profile.pads[three].name, "Comms Pad 3")
+    NS.Library.DeleteSurface("pad", two)
+    -- red under: name a new pad after the pad count ("Comms Pad 3" twice)
+    local again = Pads.Create()
+    assertEqual(NS.db.profile.pads[again].name, "Comms Pad 2")
+    assertEqual(NS.db.profile.pads[Pads.Create()].name, "Comms Pad 4")
+end)

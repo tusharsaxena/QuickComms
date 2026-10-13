@@ -82,9 +82,12 @@ local function base(fields)
     return s
 end
 
-local function mplus(instanceID)
+-- A dungeon entry carries its display name (`previewDungeon`): a preview has no challengeMapID, so
+-- {dungeon} bakes from it (Surfaces.BakeContext). Shown, never matched.
+local function mplus(instanceID, name)
     return base({ content = "mythicPlus", instanceID = instanceID, difficultyID = 8, difficulty = "keystone",
-        keyLevel = 10, group = "party", instanceGroup = false, lockdown = { challengeMode = true } })
+        keyLevel = 10, group = "party", instanceGroup = false, lockdown = { challengeMode = true },
+        previewDungeon = name })
 end
 
 -- One entry per battleground set: its key ("bi.bg.ab" -> "bg:ab"), its name, its lowest instanceID.
@@ -112,10 +115,11 @@ function P.Presets()
     out[#out + 1] = { key = "mplus", label = spec and (L["M+"] .. DOT .. spec) or L["M+"], snapshot = mplus(nil) }
     -- One entry per shipped dungeon (defaults/GameIds.lua), labeled as spec §13.3 lists it.
     for _, id in ipairs(NS.GameIds.DUNGEONS) do
-        local name = NS.Compat.InstanceName(id) or L["Instance %d"]:format(id)
+        local known = NS.Compat.InstanceName(id)
+        local name = known or L["Instance %d"]:format(id)
         local label = L["M+"] .. DOT .. name
         if spec then label = label .. DOT .. spec end
-        out[#out + 1] = { key = "mplus:" .. id, label = label, snapshot = mplus(id) }
+        out[#out + 1] = { key = "mplus:" .. id, label = label, snapshot = mplus(id, known) }
     end
     for _, r in ipairs(RAID) do
         out[#out + 1] = { key = "raid:" .. r[1], label = L["Raid"] .. DOT .. r[3], snapshot = base({ content = "raid",

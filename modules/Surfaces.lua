@@ -62,7 +62,8 @@ function S.Slot(calloutId, callout, snap, opts)
     return slot
 end
 
---- The baked token values (spec §8.1), read out of combat.
+--- The baked token values (spec §8.1), read out of combat. A previewed dungeon has no challenge map
+--- id; its {dungeon} is the name the preview carries.
 function S.BakeContext(snap)
     snap = type(snap) == "table" and snap or {}
     local C = NS.Compat
@@ -71,7 +72,7 @@ function S.BakeContext(snap)
         spec = C.SpecName(),
         role = ROLE[snap.role],
         key = type(snap.keyLevel) == "number" and tostring(snap.keyLevel) or nil,
-        dungeon = C.DungeonName(snap.challengeMapID),
+        dungeon = C.DungeonName(snap.challengeMapID) or snap.previewDungeon,
         spellLink = C.SpellLink,
     }
 end

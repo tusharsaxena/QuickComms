@@ -83,3 +83,14 @@ test("diagnostics: [phase 3] the surfaces section names the preview", function()
     NS.Preview.SetPreviewAs("arena")
     assertTrue(report(NS):find("previewAs=arena", 1, true) ~= nil)
 end)
+
+test("diagnostics: [final 21] the settings section lists no member row", function()
+    local NS = T.enableAddon()
+    local cid = NS.Library.CreateCallout({ name = "Lust", text = "Lust", channel = "party", icon = 136012 })
+    NS.Library.CreateGroup({ name = "Mine", callouts = { cid } })
+    local text = report(NS)
+    -- red under: run nonDefaults over every schema row (the first member's fields read as settings)
+    for _, prefix in ipairs({ "callout.", "group.", "pad.", "builtin." }) do
+        assertTrue(text:find(" " .. prefix, 1, true) == nil, prefix .. "\n" .. text)
+    end
+end)
