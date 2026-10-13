@@ -4,7 +4,8 @@ local _, NS = ...
 -- hold, the ids and the seeding. A member's own fields (a callout's text, a pad's layout) are
 -- schema rows written through the seam (settings/SchemaMembers.lua); Library resolves the member
 -- for the seam (Member) and announces the write (Touch).
--- Panel pages, slash verbs and (phase 5) import all call it. Built-ins are shipped data (NS.BuiltIns); the profile holds only their overlay.
+-- Panel pages, slash verbs and the share import (Import, spec §15) all call it. Built-ins are shipped
+-- data (NS.BuiltIns); the profile holds only their overlay.
 -- Prepare runs after migrations on every profile load: it seeds, appends new built-ins once per
 -- surface (seenBuiltins), and drops dangling ids.
 
@@ -596,23 +597,26 @@ Lib.TEMPLATES = {
 --- modules/Dial.lua, the CLI and the Comms Dial page).
 Lib.DIAL_DEFAULT_POINT = { "CENTER", "CENTER", 0, 0 }
 
---- Create a pad or dial holding every built-in group (in BuiltIns.order).
-function Lib.CreateSurface(kind, name)
+-- A new pad or dial: its kind's defaults, `name` and a copy of `groups`, with every shipped built-in
+-- marked seen (so Prepare never appends one the list leaves out), at the end of its kind's order.
+local function newSurface(kind, name, groups)
     local p = P()
-    local set = kind == "pad" and p.pads or kind == "dial" and p.dials
-    if not set then return nil, "badKind" end
+    local set = kind == "pad" and p.pads or p.dials
     local id = Lib.NewId(kind == "pad" and "p" or "d")
     local s = copyTable(SURFACE_DEFAULTS[kind])
-    s.name, s.enabled, s.groups, s.seenBuiltins = name, true, {}, {}
-    for _, gid in ipairs(NS.BuiltIns.order) do
-        s.groups[#s.groups + 1] = gid
-        s.seenBuiltins[gid] = true
-    end
+    s.name, s.enabled, s.groups, s.seenBuiltins = name, true, copyTable(groups), {}
+    for _, gid in ipairs(NS.BuiltIns.order) do s.seenBuiltins[gid] = true end
     set[id] = s
     local order = kind == "pad" and p.padOrder or p.dialOrder
     order[#order + 1] = id
     announce(kind, id)
     return id
+end
+
+--- Create a pad or dial holding every built-in group (in BuiltIns.order).
+function Lib.CreateSurface(kind, name)
+    if kind ~= "pad" and kind ~= "dial" then return nil, "badKind" end
+    return newSurface(kind, name, NS.BuiltIns.order)
 end
 
 function Lib.DeleteSurface(kind, id)
@@ -889,4 +893,69 @@ function Lib.Prepare()
         NS.Debug(TAG, "prepare seeded=%s appended=%s repaired=%s", result.seeded, result.appended, result.repaired)
     end
     return result
+end
+
+-- ── import (spec §15, §18) ──────────────────────────────────────────────────────────────────
+
+-- A surface's group list from a share result, pointing at the fresh copies: a built-in set stays
+-- itself, an imported group becomes its new id, anything else (gone since the check) is left out.
+local function remapGroups(list, map)
+    local out = {}
+    for _, gid in ipairs(list) do
+        local id = isBuiltin(gid) and gid or map[gid]
+        if id and exists(id) and not indexOf(out, id) then out[#out + 1] = id end
+    end
+    return out
+end
+
+-- One pad or dial: a new member with no key and no position, then each field that travels
+-- (Share.Portable, checked again here, so no key or position is ever written) through the seam, which
+-- refuses what it would refuse a player. A field left out either way is counted as ignored.
+local function importSurface(kind, e, map, tally)
+    local id = newSurface(kind, e.name, remapGroups(e.groups, map))
+    local paths = {}
+    for path in pairs(e.fields) do paths[#paths + 1] = path end
+    table.sort(paths)
+    for _, path in ipairs(paths) do
+        local ok = NS.Share.Portable(kind, path) and NS.SchemaRuntime.Set(path, e.fields[path], id)
+        if not ok then tally.ignored = tally.ignored + 1 end
+    end
+    if e.enabled == false then NS.SchemaRuntime.Set(kind .. ".enabled", false, id) end
+    map[e.id] = id
+    tally[kind .. "s"] = tally[kind .. "s"] + 1
+end
+
+local function importMembers(res, map, tally)
+    for _, e in ipairs(res.callouts) do
+        local id = Lib.CreateCallout(e.fields)
+        if id then map[e.id], tally.callouts = id, tally.callouts + 1 end
+    end
+    for _, e in ipairs(res.groups) do
+        local ids = {}
+        for _, cid in ipairs(e.callouts) do ids[#ids + 1] = map[cid] end
+        local f = e.fields
+        local id = Lib.CreateGroup({ name = f.name, icon = f.icon, when = f.when, openInto = f.openInto,
+            enabled = f.enabled, callouts = ids })
+        if id then map[e.id], tally.groups = id, tally.groups + 1 end
+    end
+    for _, e in ipairs(res.pads) do importSurface("pad", e, map, tally) end
+    for _, e in ipairs(res.dials) do importSurface("dial", e, map, tally) end
+end
+
+--- Apply a checked share result (modules/Share.lua Validate): every member under a fresh id (spec
+--- §18: ids are always re-mapped, names may repeat), each group's callouts and each surface's groups
+--- pointing at the new copies, built-in sets kept by id. A pad or a dial arrives unbound (spec §15): no
+--- key, at the default place, at the end of its kind's order. One act: one LIBRARY_CHANGED, so the
+--- surfaces rebuild once, and one `[Set] import share` line for every field it wrote.
+--- @return table|nil tally { callouts, groups, pads, dials, ignored }, table|string map (old id ->
+--- new id) or the reason nothing was imported
+function Lib.Import(res)
+    if type(res) ~= "table" or res.ok ~= true then return nil, "badImport" end
+    local map, tally = {}, { callouts = 0, groups = 0, pads = 0, dials = 0, ignored = 0 }
+    Lib.Batch(function()
+        NS.SchemaRuntime.BulkRun("import", "share", function() importMembers(res, map, tally) end)
+    end)
+    NS.Debug(TAG, "import %s callouts, %s groups, %s pads, %s dials (%s fields ignored)", tally.callouts,
+        tally.groups, tally.pads, tally.dials, tally.ignored)
+    return tally, map
 end
