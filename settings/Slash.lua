@@ -1,8 +1,9 @@
 local _, NS = ...
 -- settings/Slash.lua — the ordered NS.COMMANDS table and the LibKa0s-Slash-1.0 descriptor.
 --
--- The dispatcher, help renderer, formatters and value parser are the library's (slash-commands-§1).
--- What stays here is the ordered verb table (positional triples {name, desc, fn}) and the host verbs
+-- The dispatcher, help renderer, formatters and value parser are the library's (slash-commands-§1);
+-- the structured member rows' text forms are this file's, through the descriptor's `parse` and
+-- `format` hooks (slash-commands-§6). What stays here is the ordered verb table (positional triples {name, desc, fn}) and the host verbs
 -- that reach into this addon's own state. Every verb that toggles something calls the same handler
 -- its Master controls row and its launcher entry call. The design spec's other verbs (§14: preview and
 -- why arrive with the features they report on; check, lock, unlock and test are here)
@@ -58,6 +59,10 @@ local COMMANDS = {
         function(rest) NS.SlashVerbs.Check(rest) end},
     {"test",     L["Turn test mode on or off (placeholder chips; combat ends it)"],
         function() NS.Preview.ToggleTestMode() end},
+    {"preview",  L["Preview the pads as another situation — `/qc preview <name>` or `off`; `/qc preview` lists them"],
+        function(rest) NS.SlashVerbs.Preview(rest) end},
+    {"why",      L["Say why each pad shows the groups it shows"],
+        function() NS.SlashVerbs.Why() end},
 }
 NS.COMMANDS = COMMANDS
 
@@ -73,6 +78,167 @@ end
 local function storedEnabled()
     local S = NS.SchemaRuntime
     return not (S and S.Get(ENABLED_PATH) == false)
+end
+
+-- ── the structured member rows on the command line (slash-commands-§6) ──────────────────────
+--
+-- Three member rows hold a table (settings/SchemaMembers.lua). The library parses and prints bool,
+-- number, string and color; the descriptor's `parse` and `format` hooks teach it these three and
+-- hand every other row back to it:
+--   pad.point       `x y` (keeps the pad's anchor points) or `POINT RELATIVEPOINT x y`
+--   group.when      `<condition> <value>[,<value>...]` replaces that one condition; the condition
+--                   alone clears it; keyLevel takes `min-max`, either end empty, or one level.
+--                   Several conditions go in one line separated by `;`, which is also how `get`
+--                   prints them, so a printed When types back in. A value is matched to the token
+--                   the condition takes without regard to case (`role tank` is TANK); an instance or
+--                   battleground by its id or listed name; a value it can never match is refused
+--                   with what it takes (settings/Groups_When.lua W.ResolveValue)
+--   builtin.hidden  callout ids, or `none`
+-- A row is written to the member Settings.EditingId addresses, as every member row is. A member row
+-- with no member to address prints "(nothing to edit)" instead of nil.
+
+local function wordsOf(text)
+    local out = {}
+    for w in (text or ""):gmatch("[^%s,]+") do out[#out + 1] = w end
+    return out
+end
+
+local function parsePoint(text)
+    local w = wordsOf(text)
+    local x, y = tonumber(w[#w - 1] or ""), tonumber(w[#w] or "")
+    if not (x and y) or (#w ~= 2 and #w ~= 4) then
+        return nil, L["A position is `x y` or `POINT RELATIVEPOINT x y`."]
+    end
+    if #w == 4 then return { w[1]:upper(), w[2]:upper(), x, y } end
+    local current = NS.SchemaRuntime.Get("pad.point")
+    local base = type(current) == "table" and current or NS.Pad.DEFAULT_POINT
+    return { base[1], base[2], x, y }
+end
+
+-- The condition a typed name is, without regard to case.
+local function knownCondition(name)
+    local want = (name or ""):lower()
+    for _, row in ipairs(NS.Resolver.ROWS) do
+        if row:lower() == want then return row end
+    end
+    return nil
+end
+
+-- `min-max`, `min-`, `-max` or one level; `..` and `any` (the older printed form) read too.
+local function parseKeyLevel(text)
+    text = text:lower():gsub("%s*%.%.%s*", "-"):gsub("any", "")
+    local lo, dash, hi = text:match("^%s*(%d*)%s*(%-?)%s*(%d*)%s*$")
+    if not lo or (lo == "" and hi == "") or (dash == "" and hi ~= "") then return nil end
+    if dash == "" then hi = lo end
+    return { min = tonumber(lo), max = tonumber(hi) }
+end
+
+-- The values typed for one condition. An instance or battleground name may hold spaces, so those
+-- two split on commas only.
+local function valuesOf(row, rest)
+    if row == "instances" or row == "battleground" then
+        local out = {}
+        for v in rest:gmatch("[^,]+") do
+            v = trim(v)
+            if v ~= "" then out[#out + 1] = v end
+        end
+        return out
+    end
+    return wordsOf(rest)
+end
+
+-- One `<condition> <values>` (or `<condition>=<values>`) into `when`; nil and a reason on a refusal.
+local function parseCondition(when, text)
+    local typed, rest = text:match("^%s*([%a]+)%s*=?%s*(.-)%s*$")
+    local row = knownCondition(typed)
+    if not row then
+        return nil, L["Name a condition: %s."]:format(table.concat(NS.Resolver.ROWS, ", "))
+    end
+    if rest == "" then
+        when[row] = nil
+    elseif row == "keyLevel" then
+        when.keyLevel = parseKeyLevel(rest)
+        if not when.keyLevel then return nil, L["A key level is `min-max`; either end may be empty."] end
+    else
+        local W = QC.Settings.GroupsWhen
+        local set = {}
+        for _, typedValue in ipairs(valuesOf(row, rest)) do
+            local value, why = W.ResolveValue(row, typedValue)
+            if value == nil then return nil, why end
+            set[value] = true
+        end
+        when[row] = set
+    end
+    return when
+end
+
+local function parseWhen(text)
+    text = trim(text)
+    if text:lower() == L["always"]:lower() then return {} end
+    local current = NS.SchemaRuntime.Get("group.when")
+    local when = {}
+    for k, v in pairs(type(current) == "table" and current or {}) do when[k] = v end
+    for part in (text .. ";"):gmatch("([^;]*);") do
+        if trim(part) ~= "" or text == "" then
+            local ok, why = parseCondition(when, part)
+            if not ok then return nil, why end
+        end
+    end
+    return when
+end
+
+local function parseIdSet(text)
+    local w = wordsOf(text)
+    if #w == 0 then return nil, L["Name the callout ids to hide, or none."] end
+    local set = {}
+    if not (#w == 1 and w[1]:lower() == "none") then
+        for _, id in ipairs(w) do set[id] = true end
+    end
+    return set
+end
+
+local PARSE = { point = parsePoint, when = parseWhen, idset = parseIdSet }
+
+local function sortedKeys(set)
+    local keys = {}
+    for k in pairs(set) do keys[#keys + 1] = tostring(k) end
+    table.sort(keys)
+    return keys
+end
+
+-- Printed in parseWhen's own syntax, `content mythicPlus,raid; keyLevel 10-`, so a printed When
+-- types back in.
+local function formatWhen(when)
+    local parts = {}
+    for _, row in ipairs(NS.Resolver.ROWS) do
+        local v = type(when) == "table" and when[row] or nil
+        if row == "keyLevel" and type(v) == "table" and (v.min or v.max) then
+            local range = (v.min and v.min == v.max) and tostring(v.min)
+                or ((v.min and tostring(v.min) or "") .. "-" .. (v.max and tostring(v.max) or ""))
+            parts[#parts + 1] = "keyLevel " .. range
+        elseif row ~= "keyLevel" and type(v) == "table" and next(v) then
+            parts[#parts + 1] = row .. " " .. table.concat(sortedKeys(v), ",")
+        end
+    end
+    if #parts == 0 then return L["always"] end
+    return table.concat(parts, "; ")
+end
+
+local FORMAT = {
+    point = function(v)
+        if type(v) ~= "table" then return L["the default place"] end
+        return ("%s %s %s %s"):format(tostring(v[1]), tostring(v[2]), tostring(v[3]), tostring(v[4]))
+    end,
+    when = formatWhen,
+    idset = function(v)
+        if type(v) ~= "table" or next(v) == nil then return L["none"] end
+        return table.concat(sortedKeys(v), ", ")
+    end,
+}
+
+local function memberExists(kind)
+    local id = QC.Settings.EditingId(kind)
+    return id ~= nil and NS.Library.Member(kind, id) ~= nil
 end
 
 if not lib then
@@ -161,6 +327,20 @@ else
         bulkBegin    = NS.SchemaRuntime.BulkBegin,
         bulkEnd      = NS.SchemaRuntime.BulkEnd,
         groupKey     = function(row) return row.page or "general" end,
+        -- The structured member rows' text forms; every other row is the library's (see above).
+        parse        = function(row, text, textOf)
+            local fn = row and PARSE[row.type]
+            if fn then return fn(text) end
+            return lib.ParseValue(row, text, textOf)
+        end,
+        format       = function(row, value)
+            if row and row.instance and value == nil and not memberExists(row.instance) then
+                return L["(nothing to edit)"]
+            end
+            local fn = row and FORMAT[row.type]
+            if fn then return fn(value) end
+            return lib.FormatValue(row, value)
+        end,
     })
     NS.SlashCommands = Sl
 end

@@ -96,3 +96,39 @@ test("compat: ChatColor reads the client's chat colors and declines what it cann
     env.ChatTypeInfo = nil
     assertNil(NS.Compat.ChatColor("PARTY"))
 end)
+
+test("compat: [phase 3] InstanceName reads the client's name; a secret, empty or missing one is nil", function()
+    local NS, env = T.newAddon()
+    env.issecretvalue = T.isSecret
+    env.GetRealZoneText = function(id)
+        if id == 2526 then return "Algeth'ar Academy" end
+        if id == 2 then return "" end
+        return T.secret("x")
+    end
+    assertEqual(NS.Compat.InstanceName(2526), "Algeth'ar Academy")
+    assertNil(NS.Compat.InstanceName(1))
+    assertNil(NS.Compat.InstanceName(2))
+    assertNil(NS.Compat.InstanceName("2526"))
+    env.GetRealZoneText = nil
+    assertNil(NS.Compat.InstanceName(2526))
+end)
+
+test("compat: [phase 3] SpecInfoByID and ClassName read display names; secret or missing ones are nil", function()
+    local NS, env = T.newAddon()
+    env.issecretvalue = T.isSecret
+    env.GetSpecializationInfoByID = function(id)
+        if id == 265 then return 265, "Affliction", "", 136145, "DAMAGER", "WARLOCK" end
+        return id, T.secret("x")
+    end
+    env.LOCALIZED_CLASS_NAMES_MALE = { WARLOCK = "Warlock", MAGE = T.secret("Mage") }
+    local name, icon = NS.Compat.SpecInfoByID(265)
+    assertEqual(name, "Affliction")
+    assertEqual(icon, 136145)
+    assertNil((NS.Compat.SpecInfoByID(62)))
+    assertEqual(NS.Compat.ClassName("WARLOCK"), "Warlock")
+    assertNil(NS.Compat.ClassName("MAGE"))
+    assertNil(NS.Compat.ClassName("NOPE"))
+    env.GetSpecializationInfoByID, env.LOCALIZED_CLASS_NAMES_MALE = nil, nil
+    assertNil((NS.Compat.SpecInfoByID(265)))
+    assertNil(NS.Compat.ClassName("WARLOCK"))
+end)

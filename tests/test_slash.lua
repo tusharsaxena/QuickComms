@@ -97,3 +97,17 @@ test("slash: degraded, enable and disable still work and the CLI names the missi
     D.addon:OnSlashCommand("enable")
     assertFalse(D.IsStoodDown())
 end)
+
+test("slash: [phase 3] `why` prints each built pad and why its groups show", function()
+    local NS, _, m = T.enableAddon()
+    NS.Situation.ReadInputs = function()
+        return { inInstance = true, instanceType = "party", difficultyID = 8, keystoneActive = true, keyLevel = 12,
+            inGroup = true }
+    end
+    NS.Situation.RefreshNow("test")
+    m.prints = {}
+    NS.addon:OnSlashCommand("why")
+    local text = table.concat(m.prints, "\n")
+    assertTrue(text:find("Comms Pad (p1):", 1, true) ~= nil, text)
+    assertTrue(text:find("  M+ (generic) (built-in): Content", 1, true) ~= nil, text)
+end)

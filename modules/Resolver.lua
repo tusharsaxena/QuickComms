@@ -16,6 +16,30 @@ local LABEL = {
     leadership = L["Leader or assist"], class = L["Class"], spec = L["Specialization"], role = L["Role"],
     characters = L["Character"],
 }
+R.LABEL = LABEL   -- the When editor's row labels (settings/Groups_When.lua)
+
+--- The tokens each token row takes, in the When editor's order: the values modules/Situation.lua
+--- puts in a snapshot. Library.ValidWhen refuses any other; the When editor and the CLI offer these.
+--- The class row takes NS.GameIds.CLASSES; the id rows take ids (spec §5.3).
+R.TOKENS = {
+    content = { "openWorld", "dungeon", "mythicPlus", "raid", "delve", "scenario", "battleground", "arena", "housing" },
+    difficulty = { "normal", "heroic", "mythic", "keystone", "lfr", "story", "follower" },
+    group = { "solo", "party", "raid", "instance" },
+    leadership = { "leader", "assist" },
+    role = { "TANK", "HEALER", "DAMAGER" },
+}
+
+-- A character matches its Name-Realm without regard to case: a name typed in lower case still
+-- names the character UnitFullName reports.
+local function characterMatches(v, character)
+    if type(character) ~= "string" then return false end
+    if v[character] == true then return true end
+    local want = character:lower()
+    for name, on in pairs(v) do
+        if on == true and type(name) == "string" and name:lower() == want then return true end
+    end
+    return false
+end
 
 local function isSet(row, v)
     if type(v) ~= "table" then return false end
@@ -37,7 +61,7 @@ local CHECK = {
     class        = function(v, s) return s.classFile ~= nil and v[s.classFile] == true end,
     spec         = function(v, s) return s.specID ~= nil and v[s.specID] == true end,
     role         = function(v, s) return s.role ~= nil and v[s.role] == true end,
-    characters   = function(v, s) return s.character ~= nil and v[s.character] == true end,
+    characters   = function(v, s) return characterMatches(v, s.character) end,
 }
 
 --- Whether a When matches a snapshot.

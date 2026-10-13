@@ -1,6 +1,6 @@
 local _, NS = ...
 -- settings/SlashVerbs.lua — the bodies of the feature verbs settings/Slash.lua's NS.COMMANDS rows
--- call (spec §14). Today: `check`, `lock` and `unlock`. The rows are positional triples; the work lives here so it can
+-- call (spec §14). Today: `check`, `lock`, `unlock` and `preview`. The rows are positional triples; the work lives here so it can
 -- be tested without the dispatcher.
 
 NS.SlashVerbs = NS.SlashVerbs or {}
@@ -60,4 +60,51 @@ end
 
 function V.ToggleLock()
     V.SetLocked(NS.Setting("locked") == false)
+end
+
+--- The lines `/qc preview [name|off]` prints (spec §14): the menu with the one on now, or the result
+--- of switching. A refused start prints its own line from Preview.SetPreviewAs.
+--- @return string[]
+function V.PreviewLines(rest)
+    local P = NS.Preview
+    local key = (rest or ""):match("^%s*(%S+)")
+    if not key then
+        local out = { L["Preview as (now: %s):"]:format(P.Label(P.PreviewAs() or P.CURRENT)) }
+        for _, e in ipairs(P.Presets()) do out[#out + 1] = L["  %s: %s"]:format(e.key, e.label) end
+        return out
+    end
+    key = key:lower()   -- as the dispatcher reads verbs; every preset key is lower case
+    if key == "off" then key = P.CURRENT end
+    if not P.FindPreset(key) then
+        return { L["No situation named %s. Type /qc preview for the list."]:format(key) }
+    end
+    local want = key ~= P.CURRENT and key or nil
+    if P.PreviewAs() ~= want and not P.SetPreviewAs(key) then return {} end
+    if want then return { L["Previewing: %s"]:format(P.Label(key)) } end
+    return { L["Preview off."] }
+end
+
+function V.Preview(rest)
+    for _, line in ipairs(V.PreviewLines(rest)) do NS.Print(line) end
+end
+
+--- The lines `/qc why` prints (spec §14): every built pad, in the pad order, then why it shows what it
+--- shows (Surfaces.WhyLines).
+--- @return string[]
+function V.WhyLines()
+    local p = NS.db and NS.db.profile
+    local plans = NS.Surfaces.Plans()
+    local out = {}
+    for _, id in ipairs(p and p.padOrder or {}) do
+        if plans[id] then
+            out[#out + 1] = L["%s (%s):"]:format(p.pads[id].name or id, id)
+            for _, line in ipairs(NS.Surfaces.WhyLines(id)) do out[#out + 1] = "  " .. line end
+        end
+    end
+    if #out == 0 then out[1] = L["No pad is showing: nothing has been built yet."] end
+    return out
+end
+
+function V.Why()
+    for _, line in ipairs(V.WhyLines()) do NS.Print(line) end
 end

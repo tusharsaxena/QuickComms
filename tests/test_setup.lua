@@ -272,5 +272,11 @@ test("options: the degraded load completes, and the panel says once that it is u
         if line:find("settings panel is unavailable", 1, true) then again = again + 1 end
     end
     assertEqual(again, 2, "and not again")
-    assertTrue(#D.addon.Settings.Schema == 0, "the composers are hollow ({}), never a host copy")
+    -- The composers are hollow ({}), never a host copy: the degraded schema holds the member rows
+    -- (settings/SchemaMembers.lua, which Library's writers need on every load) and nothing else.
+    assertTrue(#D.addon.Settings.Schema > 0, "the member rows")
+    for _, row in ipairs(D.addon.Settings.Schema) do
+        -- red under: a composed or hand-written page row added on the degraded load
+        assertTrue(row.instance ~= nil, "only member rows: " .. tostring(row.path))
+    end
 end)

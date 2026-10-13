@@ -69,18 +69,27 @@ test("library: adding a built-in callout copies it (P2)", function()
     assertEqual(p.groups[g].callouts[1], added)
 end)
 
-test("library: [review 4] Customize swaps the copy in place, then deleting it leaves neither", function()
-    local _, Lib, p = boot()
+test("library: [review 4] Customize swaps the copy in place; deleting the copy puts the set back, on", function()
+    local NS, Lib, p = boot()
     local pad = p.pads[p.padOrder[1]]
     local pos
     for i, gid in ipairs(pad.groups) do if gid == "bi.mplus" then pos = i end end
-    local copy = Lib.Customize("bi.mplus")
+    local copy, _, skipped, placed = Lib.Customize("bi.mplus")
     assertEqual(pad.groups[pos], copy)
+    assertEqual(skipped, 0)
+    assertEqual(placed, 2, "the pad and the dial")
     assertFalse(Lib.Group("bi.mplus").enabled)
     assertEqual(#p.groups[copy].callouts, 8)
     assertTrue(p.groups[copy].callouts[1]:match("^c%d+$") ~= nil)
     Lib.DeleteGroup(copy)
-    for _, gid in ipairs(pad.groups) do assertTrue(gid ~= copy and gid ~= "bi.mplus") end
+    -- red under: Lib.DeleteGroup only removes the copy (the set is on no pad and stays off)
+    assertEqual(pad.groups[pos], "bi.mplus", "the set is back in the copy's place")
+    for _, gid in ipairs(pad.groups) do assertTrue(gid ~= copy) end
+    assertTrue(Lib.Group("bi.mplus").enabled, "and turned back on")
+    assertNil(NS.db.profile.builtins["bi.mplus"].customizedAs)
+    local again, _, _, placedAgain = Lib.Customize("bi.mplus")
+    assertEqual(pad.groups[pos], again, "a second Customize takes the set's place again")
+    assertEqual(placedAgain, 2)
 end)
 
 test("library: hidden built-in callouts drop out of the merged group", function()
@@ -280,4 +289,315 @@ test("library: SetSurfacePoint refuses an unknown surface or a malformed anchor,
     T.assertFalse(NS.Library.SetSurfacePoint("pad", "p1", "CENTER"))
     T.assertNil(NS.db.profile.pads.p1.point)
     T.assertTrue(NS.Library.SetSurfacePoint("dial", "d2", pt), "the dial's anchor has the same writer")
+end)
+
+test("library: [phase 3] DuplicateCallout copies every field under a '(copy)' name", function()
+    local _, Lib, p = boot()
+    local id = Lib.CreateCallout({ name = "Lust", text = "Lust {rt8}", channel = "party", icon = 136012 })
+    local copy = Lib.DuplicateCallout(id)
+    assertTrue(copy ~= id)
+    local c = p.callouts[copy]
+    assertEqual(c.name, "Lust (copy)")
+    assertEqual(c.text, "Lust {rt8}")
+    assertEqual(c.channel, "party")
+    assertEqual(c.icon, 136012)
+    assertNil((Lib.DuplicateCallout("c999")))
+end)
+
+test("library: [phase 3] a copy's name stays within the 32-character cap, counted in characters", function()
+    local _, Lib = boot()
+    local long = string.rep("\195\169", 30)          -- thirty two-byte characters
+    local name = Lib.CopyName(long)
+    assertEqual(select(2, name:gsub("[^\128-\191]", "")), Lib.NAME_MAX)
+    assertTrue(name:sub(-7) == " (copy)")
+    assertTrue(Lib.ValidName(name))
+end)
+
+test("library: [phase 3] DuplicateGroup shares the callouts (D8) and copies the When, on no surface", function()
+    local _, Lib, p = boot()
+    local cid = Lib.CreateCallout({ name = "A", text = "a", channel = "party" })
+    local gid = Lib.CreateGroup({ name = "Mine", when = { content = { raid = true } } })
+    Lib.AddToGroup(gid, cid)
+    local copy = Lib.DuplicateGroup(gid)
+    assertEqual(p.groups[copy].name, "Mine (copy)")
+    assertEqual(p.groups[copy].callouts[1], cid, "the same callout, by reference")
+    assertTrue(p.groups[copy].when.content.raid)
+    p.groups[copy].when.content.raid = nil
+    assertTrue(p.groups[gid].when.content.raid, "a copy, not an alias")
+    for _, pad in pairs(p.pads) do
+        for _, g in ipairs(pad.groups) do assertTrue(g ~= copy, "not offered to a surface") end
+    end
+    assertNil((Lib.DuplicateGroup("bi.mplus")), "a built-in is customized, never duplicated")
+end)
+
+test("library: [phase 3] CreateGroup keeps only existing user callouts, and validates the When", function()
+    local _, Lib, p = boot()
+    local cid = Lib.CreateCallout({ name = "A", text = "a", channel = "party" })
+    local gid = Lib.CreateGroup({ name = "G", callouts = { cid, "c999", "bi.mplus.lust" } })
+    assertEqual(#p.groups[gid].callouts, 1)
+    assertEqual(p.groups[gid].callouts[1], cid)
+    local bad, why = Lib.CreateGroup({ name = "G", when = { nope = { x = true } } })
+    assertNil(bad)
+    assertEqual(why, "badWhen")
+    assertNil((Lib.CreateGroup({ name = "   " })), "a blank name is no name")
+end)
+
+test("library: [phase 3] OfferGroup puts a user group first on every pad and dial, once", function()
+    local _, Lib, p = boot()
+    local gid = Lib.CreateGroup({ name = "Mine" })
+    assertEqual(Lib.OfferGroup(gid), 2, "the default pad and the default dial")
+    assertEqual(p.pads.p1.groups[1], gid)
+    assertEqual(p.dials.d2.groups[1], gid)
+    assertEqual(Lib.OfferGroup(gid), 0, "already on both")
+    assertEqual(Lib.OfferGroup("bi.mplus"), 0, "built-ins are seeded, never offered")
+    assertEqual(Lib.OfferGroup("g999"), 0)
+end)
+
+test("library: [phase 3] MoveGroupOnSurface reorders a surface's groups and announces it", function()
+    local NS, Lib, p, sent = boot()
+    local first, second = p.pads.p1.groups[1], p.pads.p1.groups[2]
+    assertTrue(Lib.MoveGroupOnSurface("pad", "p1", 1, 2))
+    assertEqual(p.pads.p1.groups[1], second)
+    assertEqual(p.pads.p1.groups[2], first)
+    assertEqual(sent[#sent][1], NS.MSG.LIBRARY_CHANGED)
+    assertEqual(sent[#sent][2], "pad")
+    assertFalse(Lib.MoveGroupOnSurface("pad", "p1", 99, 1))
+    assertFalse(Lib.MoveGroupOnSurface("pad", "p9", 1, 2))
+    assertFalse(Lib.MoveGroupOnSurface("pad", "p1", 1, nil))
+end)
+
+test("library: [phase 3] Member answers the live member of each kind, and a built-in group's copy", function()
+    local NS, Lib, p = boot()
+    local cid = Lib.CreateCallout({ name = "A", text = "a", channel = "party" })
+    assertTrue(Lib.Member("callout", cid) == p.callouts[cid])
+    assertTrue(Lib.Member("pad", "p1") == p.pads.p1)
+    assertTrue(Lib.Member("dial", "d2") == p.dials.d2)
+    local g = Lib.Member("group", "bi.mplus")
+    assertEqual(g.name, NS.BuiltIns.groups["bi.mplus"].name)
+    g.name = "changed"
+    assertTrue(NS.BuiltIns.groups["bi.mplus"].name ~= "changed", "a copy: the shipped set never changes")
+    assertTrue(Lib.Member("builtin", "bi.bg.ab.stables") == p.builtins["bi.bg.ab"], "a node's overlay is its battleground's")
+    assertNil(Lib.Member("callout", nil))
+    assertNil(Lib.Member("pad", "d2"))
+    assertNil(Lib.Member("nope", "p1"))
+end)
+
+test("library: [phase 3] Touch announces the member it is handed, and the field", function()
+    local NS, Lib = boot()
+    local sent = {}   -- boot's recorder keeps three arguments; this one keeps the field too
+    NS.addon.SendMessage = function(_, name, kind, id, field) sent[#sent + 1] = { name, kind, id, field } end
+    Lib.Touch("callout", "c7", "callout.text")
+    assertEqual(sent[#sent][1], NS.MSG.LIBRARY_CHANGED)
+    assertEqual(sent[#sent][2], "callout")
+    assertEqual(sent[#sent][3], "c7")
+    -- red under: drop the `field` argument from Lib.Touch's announce
+    assertEqual(sent[#sent][4], "callout.text")
+    Lib.CreateCallout({ name = "A", text = "a", channel = "party" })
+    assertNil(sent[#sent][4], "a membership change names no field")
+end)
+
+test("library: [phase 3] MemberIds lists each kind in its picker's order", function()
+    local NS, Lib, p = boot()
+    assertEqual(#Lib.MemberIds("callout"), 0)
+    local b = Lib.CreateCallout({ name = "beta", text = "b", channel = "party" })
+    local a = Lib.CreateCallout({ name = "Alpha", text = "a", channel = "party" })
+    assertEqual(table.concat(Lib.MemberIds("callout"), ","), a .. "," .. b, "by name, case-insensitive")
+    local g = Lib.CreateGroup({ name = "Mine" })
+    local groups = Lib.MemberIds("group")
+    assertEqual(groups[1], g, "user groups first")
+    assertEqual(groups[2], NS.BuiltIns.order[1], "then the built-in sets in shipped order")
+    assertEqual(#groups, 1 + #NS.BuiltIns.order)
+    assertEqual(table.concat(Lib.MemberIds("pad"), ","), table.concat(p.padOrder, ","))
+    assertEqual(#Lib.MemberIds("nope"), 0)
+end)
+
+test("library: [phase 3] Customize shortens a long set name instead of refusing it", function()
+    local NS, Lib, p = boot()
+    NS.BuiltIns.groups["bi.mplus"].name = string.rep("x", 30)
+    local id = Lib.Customize("bi.mplus")
+    assertTrue(id ~= nil, "a copy, whatever the set's name")
+    local name = p.groups[id].name
+    assertTrue(Lib.ValidName(name))
+    assertEqual(name:sub(-9), " (custom)")
+end)
+
+test("library: [phase 3] Customize changes nothing when the copy cannot be made", function()
+    local _, Lib, p = boot()
+    local before = table.concat(p.pads.p1.groups, ",")
+    Lib.CreateGroup = function() return nil, "badWhen" end
+    local id, why = Lib.Customize("bi.mplus")
+    -- red under: drop the `if not id then return nil, why end` guard from Lib.Customize
+    assertNil(id)
+    assertEqual(why, "badWhen")
+    assertEqual(table.concat(p.pads.p1.groups, ","), before, "no hole where the set was")
+    local o = p.builtins["bi.mplus"]
+    assertTrue(o == nil or o.enabled ~= false, "the set stays on")
+end)
+
+test("library: [phase 3] ValidWhen accepts every shipped When and refuses bad shapes", function()
+    local NS, Lib = boot()
+    for id, def in pairs(NS.BuiltIns.groups) do
+        if def.when then assertTrue(Lib.ValidWhen(def.when), id) end
+    end
+    assertTrue(Lib.ValidWhen({}))
+    assertTrue(Lib.ValidWhen({ instances = { [2526] = true }, keyLevel = { min = 10 } }))
+    assertFalse(Lib.ValidWhen({ combat = { yes = true } }), "not a v0.1.0 condition (spec P1)")
+    assertFalse(Lib.ValidWhen({ content = { raid = 1 } }))
+    assertFalse(Lib.ValidWhen({ content = "raid" }))
+    local ok, why = Lib.ValidWhen({ keyLevel = { min = 12, max = 10 } })
+    assertFalse(ok)
+    assertEqual(why, "badRange")
+    assertFalse(Lib.ValidWhen("x"))
+end)
+
+test("library: [final] a surface's offsets are bounded at its smallest scale, not at 1", function()
+    local NS, Lib = boot()
+    local real = NS.Compat.ScreenSize
+    NS.Compat.ScreenSize = function() return 1920, 1080 end
+    -- red under: the bound is the bare screen size, so a pad drawn at 0.3 and dragged to the far
+    -- right (its own units: about 1.2x the width) is refused and snaps back
+    local ok = Lib.ValidPoint({ "CENTER", "CENTER", 2304, -1296 })
+    local far, why = Lib.ValidPoint({ "CENTER", "CENTER", 7000, 0 })
+    NS.Compat.ScreenSize = real
+    assertTrue(ok, "an on-screen drag of a scaled-down pad")
+    assertFalse(far, "past the screen at the smallest scale")
+    assertEqual(why, "offScreen")
+end)
+
+test("library: [phase 3] the point, icon and hidden-set validators", function()
+    local _, Lib = boot()
+    assertTrue(Lib.ValidPoint(nil), "nil is the default place")
+    assertTrue(Lib.ValidPoint({ "TOPLEFT", "TOPLEFT", 1, -2 }))
+    assertFalse(Lib.ValidPoint({ "TOPLEFT", "TOPLEFT", "1", -2 }))
+    assertFalse(Lib.ValidPoint("CENTER"))
+    assertFalse(Lib.ValidPoint({ "FOO", "BAR", 1, 2 }), "an unknown anchor name")
+    assertFalse(Lib.ValidPoint({ "CENTER", "CENTER", 0/0, 0 }), "a NaN offset")
+    assertFalse(Lib.ValidPoint({ "CENTER", "CENTER", 0, math.huge }), "an infinite offset")
+    assertTrue(Lib.ValidIcon(nil))
+    assertTrue(Lib.ValidIcon(false))
+    assertTrue(Lib.ValidIcon(136012))
+    assertTrue(Lib.ValidIcon("Interface\\Icons\\Spell_Nature_Bloodlust"))
+    assertFalse(Lib.ValidIcon(""))
+    assertFalse(Lib.ValidIcon({}))
+    assertTrue(Lib.ValidHidden("bi.bg.ab", { ["bi.bg.ab.stables.inc1"] = true }))
+    assertTrue(Lib.ValidHidden("bi.mplus", {}))
+    assertFalse(Lib.ValidHidden("bi.mplus", { ["bi.raid.wipe"] = true }), "another set's callout")
+    assertFalse(Lib.ValidHidden("bi.mplus", { ["bi.mplus.nope"] = true }), "no such callout")
+    assertFalse(Lib.ValidHidden("bi.mplus", { ["bi.mplus.lust"] = 1 }))
+    assertFalse(Lib.ValidHidden(nil, {}))
+end)
+
+test("library: [phase 3] every member template holds a value at every field", function()
+    local _, Lib = boot()
+    assertEqual(Lib.TEMPLATES.callout.channel, "smartGroup")
+    assertEqual(Lib.TEMPLATES.pad.layout.style, "iconLabel")
+    assertEqual(Lib.TEMPLATES.pad.look.visibility, "always")
+    assertTrue(Lib.TEMPLATES.pad.point == false, "false: the default place, and a value the boot check can see")
+    assertTrue(Lib.TEMPLATES.builtin.enabled)
+    assertTrue(Lib.IsBuiltin("bi.raid"))
+    assertFalse(Lib.IsBuiltin("g3"))
+    assertEqual(Lib.TopOf("bi.bg.ab.stables"), "bi.bg.ab")
+end)
+
+test("library: [phase 3] Batch holds the announces and sends one per kind it touched", function()
+    local NS, Lib, _, sent = boot()
+    local before = #sent
+    Lib.Batch(function()
+        Lib.SetBuiltinEnabled("bi.raid", false)
+        Lib.SetBuiltinEnabled("bi.arena", false)
+        Lib.Batch(function() Lib.SetBuiltinEnabled("bi.mplus", false) end)
+    end)
+    -- red under: announce inside Lib.Batch as usual (three messages)
+    assertEqual(#sent - before, 1)
+    assertEqual(sent[#sent][1], NS.MSG.LIBRARY_CHANGED)
+    assertEqual(sent[#sent][2], "builtin")
+    assertNil(sent[#sent][3], "no id: several members changed")
+    assertFalse(NS.db.profile.builtins["bi.mplus"].enabled)
+    Lib.SetBuiltinEnabled("bi.raid", true)
+    assertEqual(#sent - before, 2, "announces flow again after the batch")
+end)
+
+test("library: [final 8] a set on no surface is customized onto none, and Customize says how many it reached", function()
+    local _, Lib, p = boot()
+    for _, sid in ipairs(p.padOrder) do Lib.RemoveGroupFromSurface("pad", sid, "bi.mplus") end
+    for _, sid in ipairs(p.dialOrder) do Lib.RemoveGroupFromSurface("dial", sid, "bi.mplus") end
+    local copy, _, _, placed = Lib.Customize("bi.mplus")
+    assertTrue(p.groups[copy] ~= nil)
+    assertEqual(placed, 0)
+end)
+
+test("library: [final 24] Customize puts the copy in the set's place on every pad and dial", function()
+    local _, Lib, p = boot()
+    local second = Lib.CreateSurface("pad", "Two")
+    Lib.MoveGroupOnSurface("pad", second, #p.pads[second].groups, 1)
+    local where = {}
+    for _, kind in ipairs({ "pad", "dial" }) do
+        local set = kind == "pad" and p.pads or p.dials
+        for _, s in pairs(set) do
+            for i, gid in ipairs(s.groups) do if gid == "bi.mplus" then where[#where + 1] = { s, i } end end
+        end
+    end
+    assertEqual(#where, 3, "two pads and a dial hold the set")
+    local copy = Lib.Customize("bi.mplus")
+    -- red under: narrow the swap loop in Lib.Customize to the first surface
+    for _, w in ipairs(where) do assertEqual(w[1].groups[w[2]], copy) end
+end)
+
+test("library: [final 1] Customize, AddToGroup with a built-in, and OfferGroup each send one LIBRARY_CHANGED", function()
+    local NS, Lib, p, sent = boot()
+    local before = #sent
+    -- red under: drop Lib.Batch from Lib.Customize (19 messages for M+, 63 for a 30-callout battleground)
+    Lib.Customize("bi.mplus")
+    assertEqual(#sent - before, 1)
+    assertEqual(sent[#sent][1], NS.MSG.LIBRARY_CHANGED)
+    assertEqual(sent[#sent][2], "builtin,callout,group", "the kinds it touched")
+    before = #sent
+    Lib.Customize("bi.bg.ab")
+    assertEqual(#sent - before, 1)
+    local g = Lib.CreateGroup({ name = "Mine" })
+    before = #sent
+    -- red under: drop Lib.Batch from Lib.AddToGroup (the copy and the insert announce apart)
+    Lib.AddToGroup(g, "bi.mplus.lust")
+    assertEqual(#sent - before, 1)
+    Lib.CreateSurface("pad", "Two")
+    before = #sent
+    -- red under: drop Lib.Batch from Lib.OfferGroup (one per surface)
+    assertEqual(Lib.OfferGroup(g), #p.padOrder + #p.dialOrder)
+    assertEqual(#sent - before, 1)
+end)
+
+test("library: [final 1] one Customize click rebuilds the pads once", function()
+    local NS = T.enableAddon()
+    NS.Situation.ReadInputs = function() return { inInstance = true, instanceType = "party", difficultyID = 8,
+        keystoneActive = true, keyLevel = 12, inGroup = true } end
+    NS.Situation.RefreshNow("test")
+    local applied = 0
+    local apply = NS.Surfaces.ApplyAll
+    NS.Surfaces.ApplyAll = function(...) applied = applied + 1 return apply(...) end
+    NS.Library.Customize("bi.bg.ab")
+    NS.Library.Customize("bi.mplus")
+    NS.Surfaces.ApplyAll = apply
+    assertEqual(applied, 2, "one rebuild per Customize")
+end)
+
+test("library: [final 2] ValidWhen refuses a value its row can never match, and names the row and value", function()
+    local _, Lib = boot()
+    -- red under: Lib.ValidWhen checks only that each key is a string or a number
+    local ok, why, row, value = Lib.ValidWhen({ role = { tank = true } })
+    assertFalse(ok)
+    assertEqual(why, "badValue")
+    assertEqual(row, "role")
+    assertEqual(value, "tank")
+    assertFalse(Lib.ValidWhen({ instances = { ["Ara-Kara"] = true } }), "a name, not an instanceID")
+    assertFalse(Lib.ValidWhen({ instances = { [1.5] = true } }), "a fraction")
+    assertFalse(Lib.ValidWhen({ battleground = { [-3] = true } }), "a negative id")
+    assertFalse(Lib.ValidWhen({ class = { warrior = true } }), "a classFile is upper case")
+    assertFalse(Lib.ValidWhen({ difficulty = { [16] = true } }), "a difficulty is a token")
+    assertFalse(Lib.ValidWhen({ content = { mplus = true } }))
+    assertFalse(Lib.ValidWhen({ spec = { abc = true } }))
+    assertFalse(Lib.ValidWhen({ characters = { bob = true } }), "a character is Name-Realm")
+    assertTrue(Lib.ValidWhen({ role = { TANK = true }, class = { WARRIOR = true }, spec = { [71] = true },
+        difficulty = { mythic = true }, group = { instance = true }, leadership = { assist = true },
+        instances = { [2526] = true }, battleground = { [2107] = true }, characters = { ["Bob-Area52"] = true },
+        content = { housing = true } }))
 end)

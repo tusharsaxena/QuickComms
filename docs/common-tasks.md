@@ -54,6 +54,14 @@ offline scenario to `tests/perf.lua` when the path is hot.
 Add a `{ "name", function(out) ... end }` entry to `NS.Diagnostics.Sections()`. Read state only and
 pass raw values to `out:add`. Document it in `docs/debug.md`.
 
+## Add a member field
+
+Add the field to `Library.TEMPLATES[kind]` (its shape and default), and a row to `settings/SchemaMembers.lua` with `instance = "<kind>"`, a `page` and a `group` (the tab), a `validate` that names its reason, (the file's closing loop gives it `onChange = Library.Touch(kind, id, path)`). If Library creates or copies the member, write the field there too (a create writes the member whole). If a write to it changes what a page draws (a label, a dot), add its path to `Editors.STRUCTURAL`. The page's tab draws it through `RenderRows`; a table-valued field gets a structured `type`, a bespoke control that writes the whole value with `NS.SchemaRuntime.Set(path, value, id)`, and a text form in `settings/Slash.lua`'s `PARSE` and `FORMAT`.
+
+## Add an editor page
+
+A file under `settings/` that calls `Settings.Editors.RegisterPage(pageKey, title, frameSuffix, render, defaults)`, listed in the TOC above `settings\SlashVerbs.lua`. `render(ctx)` draws `PageBanner` (the picker and the create action), then `Settings.Editors.Tabs(ctx, pageKey, tabs)`. Keep the selection with `Ed.Heal`/`Ed.Select`, draw lists with `Ed.ReorderRows`, delete through `Ed.ConfirmDelete`, and write only through Library or the seam. Drive it in a suite through `tests/page_helpers.lua`.
+
 ## Regenerate the test inventory
 
 ```sh

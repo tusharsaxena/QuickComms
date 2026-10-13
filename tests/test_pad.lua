@@ -411,3 +411,50 @@ test("pad: [review 5] too long, and solo with no fallback: dimmed, disarmed, the
     end
     assertEqual(heard, 0)
 end)
+
+test("pad: [phase 3] a held drag whose stand-down is canceled in the same combat is stopped at combat end", function()
+    local NS, m = applied()
+    local inst = startDrag(NS, m)
+    local stops = countStops(inst)
+    m.__setCombat(true)
+    m.__fire("PLAYER_REGEN_DISABLED")
+    NS.SchemaRuntime.Set("enabled", false)   -- the stand-down drops `padDrag` and holds the teardown
+    NS.SchemaRuntime.Set("enabled", true)    -- the stand-up cancels the held teardown
+    assertTrue(inst.dragHeld == true, "still held while combat lasts")
+    combat(m, false)
+    -- red under: drop refileHeldDrags from Pad's NS.STAND_UP step (dragHeld sticks; the root is never stopped)
+    assertEqual(stops[1], 1)
+    assertNil(inst.dragHeld)
+    assertEqual(#m.blocked, 0)
+    assertEqual(pointOf(inst), "CENTER,CENTER,0,-150", "the drop was never saved: back to the saved point")
+end)
+
+test("pad: [phase 3] a new drag clears a stale held stop, so the next rebuild re-anchors", function()
+    local NS, m = applied()
+    local inst = NS.Pad.Instance("p1")
+    inst.dragHeld = true
+    startDrag(NS, m)
+    -- red under: drop `inst.dragHeld = nil` from the strip's onDragStart in modules/Pad.lua
+    assertNil(inst.dragHeld)
+    inst.handle:__fire("OnDragStop")
+    assertEqual(table.concat(NS.db.profile.pads.p1.point, ","), "TOPLEFT,TOPLEFT,25,-35")
+    NS.Library.SetSurfacePoint("pad", "p1", { "TOPLEFT", "TOPLEFT", 40, -60 })
+    NS.Pad.Apply("p1", planFor(NS))
+    assertEqual(pointOf(inst), "TOPLEFT,TOPLEFT,40,-60")
+end)
+
+test("pad: [phase 3] the header's tooltip says why each group shows, unless the player turned it off", function()
+    local NS = applied()
+    local shown = {}
+    NS.PadRender.ShowLines = function(_, title, lines) shown[#shown + 1] = { title = title, lines = lines } end
+    local header = NS.Pad.Instance("p1").header
+    header:__fire("OnEnter")
+    -- red under: drop the Pad.ShowWhy call from the header's OnEnter
+    assertEqual(#shown, 1)
+    assertEqual(shown[1].title, "Why is this showing?")
+    assertEqual(shown[1].lines[1], "M+ (generic) (built-in): Content")
+    header:__fire("OnLeave")
+    NS.SchemaRuntime.Set("behavior.whyTooltips", false)
+    header:__fire("OnEnter")
+    assertEqual(#shown, 1, "behavior.whyTooltips off: no tooltip")
+end)

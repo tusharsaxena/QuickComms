@@ -7,7 +7,8 @@ local _, NS = ...
 -- with the reason its chip's tooltip shows (Bake, §8.3; §18 "a baked line fails validation"). A
 -- locked slot keeps its line and carries the lock (§8.4). Library, Resolver and Bake are reached
 -- through `deps`, so a test can hand in any snapshot. Test mode's plan is placeholder slots that
--- carry no line, drawn through the same render path (preview-mode).
+-- carry no line, drawn through the same render path (preview-mode). A "Preview as…" plan is a real
+-- plan for the previewed snapshot, marked so every chip is disarmed (spec §13.3).
 --
 -- THE EDGE (below): one entry point, Request, for everything that changes what a pad draws: the
 -- situation, the library, the profile, test mode, a settings write and the stand-up. Out of combat
@@ -61,7 +62,8 @@ function S.Slot(calloutId, callout, snap, opts)
     return slot
 end
 
---- The baked token values (spec §8.1), read out of combat.
+--- The baked token values (spec §8.1), read out of combat. A previewed dungeon has no challenge map
+--- id; its {dungeon} is the name the preview carries.
 function S.BakeContext(snap)
     snap = type(snap) == "table" and snap or {}
     local C = NS.Compat
@@ -70,7 +72,7 @@ function S.BakeContext(snap)
         spec = C.SpecName(),
         role = ROLE[snap.role],
         key = type(snap.keyLevel) == "number" and tostring(snap.keyLevel) or nil,
-        dungeon = C.DungeonName(snap.challengeMapID),
+        dungeon = C.DungeonName(snap.challengeMapID) or snap.previewDungeon,
         spellLink = C.SpellLink,
     }
 end
@@ -98,7 +100,7 @@ function S.BuildPlan(surfaceId, pad, snap, deps)
     local order = NS.Resolver.SurfaceOrder(pad and pad.groups, active, deps.groups, deps.autoPromote)
     local opts = { soloFallback = deps.soloFallback, ctx = deps.ctx }
     local plan = { surfaceId = surfaceId, snapshot = snap, order = order, sections = {},
-        lockdownChip = false, hasActive = #order > 0 }
+        lockdownChip = false, hasActive = #order > 0, active = active }
     for _, gid in ipairs(order) do
         for _, sec in ipairs(S.Sections(gid, deps.group)) do
             local slots = {}
@@ -131,6 +133,48 @@ function S.TestPlan(surfaceId)
         hasActive = true, test = true }
 end
 
+--- A "Preview as…" plan (spec §13.3): drawn like test mode (always shown, the header says so) but from
+--- the groups the previewed snapshot resolves to. Every slot keeps its line for the tooltip and is
+--- disarmed by the pad, so a previewed chip sends nothing.
+function S.MarkPreview(plan, key)
+    plan.test, plan.preview = true, key
+    for _, sec in ipairs(plan.sections) do
+        for _, slot in ipairs(sec.slots) do slot.preview = true end
+    end
+    return plan
+end
+
+--- "Why is this showing?" for one pad (spec §13.3): the groups it shows, in priority order, each with
+--- the When rows that matched (Resolver.Explain), then every lock in effect on its chips. Read from
+--- the pad's last plan, so in combat it explains what is on screen.
+--- @return string[]
+function S.WhyLines(id)
+    local plan = S.Plans()[id]
+    if not plan then return { L["This pad has not been built yet."] } end
+    if plan.test and not plan.preview then return { L["Test mode: placeholder chips that send nothing."] } end
+    local out = {}
+    if plan.preview then out[1] = L["Preview as: %s"]:format(NS.Preview.Label(plan.preview)) end
+    if #plan.order == 0 then out[#out + 1] = L["No group matches this situation."] end
+    for _, gid in ipairs(plan.order) do
+        local g = NS.Library.Group(gid)
+        local name = g and g.name or gid
+        if NS.Library.IsBuiltin(gid) then name = L["%s (built-in)"]:format(name) end
+        out[#out + 1] = NS.Resolver.Explain(name, plan.active and plan.active[gid])
+    end
+    local locks, seen = {}, {}
+    for _, sec in ipairs(plan.sections) do
+        for _, slot in ipairs(sec.slots) do
+            if slot.lock and not seen[slot.lock] then
+                seen[slot.lock] = true
+                locks[#locks + 1] = slot.lock
+            end
+        end
+    end
+    table.sort(locks)
+    for _, lock in ipairs(locks) do out[#out + 1] = NS.PadRender.LOCK_TEXT[lock] or tostring(lock) end
+    return out
+end
+
 -- ── the edge: one rebuild request, queued in combat (spec §9.1, §18) ────────────────────────
 
 local State = NS.State
@@ -160,14 +204,16 @@ end
 --- @return number pads rebuilt
 function S.ApplyAll(reason)
     if NS.IsStoodDown() or not State.situation then return 0 end
-    local snap = NS.Situation.Current()
+    local preview = NS.Preview.PreviewSnapshot()
+    local snap = preview or NS.Situation.Current()
     local deps = S.Deps(snap)
-    local test = NS.Preview.IsTestMode()
+    local test = preview == nil and NS.Preview.IsTestMode()
     local pads = NS.db.profile.pads
     local plans, n = {}, 0
     State.surfaceOrder = State.surfaceOrder or {}
     for _, id in ipairs(enabledPadIds()) do
         local plan = test and S.TestPlan(id) or S.BuildPlan(id, pads[id], snap, deps)
+        if preview then S.MarkPreview(plan, NS.Preview.PreviewAs()) end
         plans[id] = plan
         n = n + 1
         local sig = table.concat(plan.order, ",")

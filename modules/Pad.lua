@@ -18,12 +18,14 @@ local _, NS = ...
 -- cooldown veil and the flashes. Tab switching and collapse are refused in combat with one line
 -- (spec §10.2, the C8 fallback); the wheel is heard over the header, the root and every chip. The
 -- position is `pads[id].point = { point, relativePoint, x, y }`
--- (the named non-setting state, spec §5.1), shaped as DropWatcher modules/Window.lua `savePoint` /
--- `applyPoint`. It is registry data, so the drag and Reset position write it only through
--- Library.SetSurfacePoint (architecture-§5); the active tab and the collapsed state are session
+-- (a member row since phase 3, spec §5.1), shaped as DropWatcher modules/Window.lua `savePoint` /
+-- `applyPoint`. It is the `pad.point` member row (settings/SchemaMembers.lua): the drag and Reset
+-- position write it through Library.SetSurfacePoint, which hands it to the seam (architecture-§5);
+-- the active tab and the collapsed state are session
 -- state in NS.State. Every rebuild re-anchors the root from the active profile (spec §10.4: the
 -- point lives in the profile), so a profile switch, copy or reset moves an existing pad; a frame
 -- being dragged, or whose drag stop is held for combat end, keeps the cursor's place.
+-- A held stop the stand-down dropped is filed again by the stand-up, and a new drag clears it.
 
 NS.Pad = NS.Pad or {}
 local Pad = NS.Pad
@@ -36,6 +38,7 @@ local Perf = NS.Perf
 local TAG = "Pad"
 local FLASH_SECONDS = 0.4
 local DEFAULT_POINT = { "CENTER", "CENTER", 0, -150 }
+Pad.DEFAULT_POINT = DEFAULT_POINT   -- read, never written, by settings/Slash.lua and settings/Pads.lua
 
 local pads = {}   -- [padId] = instance; frames are reused across rebuilds and profiles
 
@@ -59,12 +62,16 @@ local function applyPoint(inst)
     inst.root:SetPoint(pt[1] or "CENTER", UIParent, pt[2] or "CENTER", tonumber(pt[3]) or 0, tonumber(pt[4]) or 0)
 end
 
--- The point is registry data: Library is its only writer (architecture-§5); the pad only asks.
+-- The point is the `pad.point` member row: Library.SetSurfacePoint writes it through the seam; the pad only asks.
 local function savePoint(inst)
     local point, _, relativePoint, x, y = inst.root:GetPoint(1)
     if not point then return end
     if NS.Library.SetSurfacePoint("pad", inst.id, { point, relativePoint, x, y }) then
         NS.Debug(TAG, "%s moved to %s %s,%s", inst.id, point, x, y)
+    else
+        -- Refused: put the pad back on its saved place now, so it never sits where nothing was saved.
+        NS.Debug(TAG, "%s move to %s %s,%s refused", inst.id, point, x, y)
+        applyPoint(inst)
     end
 end
 
@@ -108,11 +115,14 @@ end
 -- self-print). A refused or placeholder chip carries no chat type, so its click reports nothing.
 -- lockText reads the slot's live lock (RefreshLocks keeps it current in combat), so a press on a
 -- padlocked chip is explained by its lock, never tracked as a send.
+-- A previewed chip (spec §13.3) keeps its line for the tooltip and is disarmed, and carries neither
+-- the solo self-line nor the lock text: a previewed chip sends, prints and reports nothing.
 local function arm(btn, slot)
+    local preview = slot.preview == true
     local meta = { calloutId = slot.calloutId, surfaceId = slot.surfaceId, name = slot.name,
-        chatType = slot.chatType, selfText = slot.selfText,
-        lockText = function() return slot.lock and (R.LOCK_TEXT[slot.lock] or tostring(slot.lock)) end }
-    if slot.line and slot.chatType then
+        chatType = slot.chatType, selfText = (not preview) and slot.selfText or nil,
+        lockText = (not preview) and function() return slot.lock and (R.LOCK_TEXT[slot.lock] or tostring(slot.lock)) end or nil }
+    if slot.line and slot.chatType and not preview then
         NS.SendEngine.Arm(btn, slot.line, meta)
     else
         meta.chatType = nil
@@ -161,7 +171,10 @@ local function build(id)
     header:EnableMouse(true)
     header:EnableMouseWheel(true)
     header:SetScript("OnMouseWheel", function(_, delta) Pad.Wheel(id, delta) end)
-    header:SetScript("OnEnter", function() Pad.SetHover(id, true) end)
+    header:SetScript("OnEnter", function()
+        Pad.SetHover(id, true)
+        Pad.ShowWhy(id, header)
+    end)
     header:SetScript("OnLeave", function()
         GameTooltip:Hide()
         Pad.SetHover(id, false)
@@ -173,7 +186,11 @@ local function build(id)
         label = label,
         moveFrame = root,
         canDrag = function() return not isLocked() and not inCombat() end,
-        onDragStart = function() inst.dragging = true end,
+        -- A new drag supersedes any stop still held for an earlier one (endDrags).
+        onDragStart = function()
+            inst.dragHeld = nil
+            inst.dragging = true
+        end,
         onDragStop = function()
             inst.dragging = nil
             savePoint(inst)
@@ -191,7 +208,11 @@ end
 local function headerState(inst, plan)
     local snap = plan.snapshot or {}
     return {
-        situation = plan.test and L["Test mode"] or R.SituationText(snap, NS.Compat.DungeonName(snap.challengeMapID)),
+        -- A preview names the situation as its menu does (the dungeon, the raid's difficulty, the
+        -- battleground), not as a live snapshot would read.
+        situation = plan.preview and L["Preview: %s"]:format(NS.Preview.Label(plan.preview))
+            or plan.test and L["Test mode"] or R.SituationText(snap, NS.Compat.DungeonName(snap.challengeMapID)),
+        testText = plan.preview and L["PREVIEW"] or nil,
         lockdown = plan.lockdownChip == true and NS.Setting("behavior.lockdownChip") ~= false,
         stale = State.surfaceStale ~= nil and State.surfaceStale[inst.id] == true,
         test = plan.test == true,
@@ -216,7 +237,7 @@ function Pad.Apply(id, plan)
     local look = type(pad.look) == "table" and pad.look or {}
     local sections = PL.VisibleSections(plan.sections, pad.groupsAs, session("padTab")[id])
     local box = PL.Compute(sections, layout, { collapsed = session("padCollapsed")[id] == true })
-    inst.root:SetScale(math.max(0.3, (tonumber(NS.Setting("scale")) or 1) * (tonumber(layout.scale) or 1)))
+    inst.root:SetScale(math.max(NS.Library.MIN_SURFACE_SCALE, (tonumber(NS.Setting("scale")) or 1) * (tonumber(layout.scale) or 1)))
     inst.root:SetSize(box.width, box.height)
     place(inst, box, layout.style)
     R.PaintHeader(inst.header, headerState(inst, plan))
@@ -297,6 +318,14 @@ function Pad.SetHover(id, on)
     if not inst then return end
     inst.hover = math.max(0, inst.hover + (on and 1 or -1))
     Pad.ApplyAlpha(id)
+end
+
+--- "Why is this showing?" (spec §13.3) over the pad's header, unless behavior.whyTooltips is off.
+--- Insecure: a tooltip, shown in combat too.
+function Pad.ShowWhy(id, owner)
+    if NS.Setting("behavior.whyTooltips") == false then return false end
+    R.ShowLines(owner, L["Why is this showing?"], NS.Surfaces.WhyLines(id))
+    return true
 end
 
 -- ── tabs, collapse, position ────────────────────────────────────────────────────────────────
@@ -430,6 +459,29 @@ NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
         receiver:UnregisterMessage(NS.MSG.RESTRICTION_CHANGED)
     end
 end
+-- A held drag whose stop the stand-down dropped (it drops the whole combat-end queue) and whose
+-- teardown the stand-up then canceled inside the same combat would keep `dragHeld` for good, and
+-- Apply would never re-anchor the pad again. The stand-up files the stop again: it runs now out of
+-- combat, else at combat end, and the frame goes back to its saved point, because the player
+-- disabled the addon mid-drag and the drop was never saved.
+local function refileHeldDrags()
+    local held = {}
+    for _, inst in pairs(pads) do
+        if inst.dragHeld then held[#held + 1] = inst end
+    end
+    if #held == 0 then return end
+    NS.SendEngine.RunOrQueue("padDrag", function()
+        for _, inst in ipairs(held) do
+            if inst.dragHeld then
+                inst.dragHeld = nil
+                inst.root:StopMovingOrSizing()
+                applyPoint(inst)
+            end
+        end
+    end)
+end
+
 NS.STAND_UP[#NS.STAND_UP + 1] = function()
     if not NS.Bus.tracked then listen() end
+    refileHeldDrags()
 end

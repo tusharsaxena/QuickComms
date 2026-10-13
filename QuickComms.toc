@@ -87,6 +87,8 @@ defaults\BuiltIns_Raid.lua
 defaults\BuiltIns_Arena.lua
 # Conventional: data
 defaults\BuiltIns_Battlegrounds.lua
+# Conventional: data (the editors' and Preview as's shipped ids), read at call time
+defaults\GameIds.lua
 
 # Modules
 # Conventional: read by Situation at call time; appends to NS.FEATURE_EVENTS / STAND_DOWN / STAND_UP
@@ -134,8 +136,23 @@ settings\OptionsSetup.lua
 # only when a row's onChange runs); loads before settings\Panel.lua,
 # which splices the Master controls in ahead of these rows.
 settings\SchemaRows.lua
+# LOAD-BEARING: reads NS.Library.TEMPLATES, NS.Channels.KINDS and NS.SchemaRuntime.AddRows at file scope.
+settings\SchemaMembers.lua
 # LOAD-BEARING: reads NS.C, Settings.Helpers and NS.SchemaRuntime.AddRows at file scope.
 settings\Panel.lua
+# LOAD-BEARING: publishes Settings.Editors, which the four page files below take at load; reads NS.MSG
+# and NS.Bus at load.
+settings\Editors.lua
+# LOAD-BEARING: takes Settings.Editors at load and registers the Callouts page (after General).
+settings\Callouts.lua
+# LOAD-BEARING: takes Settings.Editors at load; settings\Groups.lua calls Settings.GroupsWhen at run time only.
+settings\Groups_When.lua
+# LOAD-BEARING: takes Settings.Editors at load and registers the Groups page (after Callouts).
+settings\Groups.lua
+# LOAD-BEARING: takes Settings.Editors at load and registers the Comms Pad page (after Groups).
+settings\Pads.lua
+# LOAD-BEARING: takes Settings.Editors at load and registers the Share page (after Comms Pad, before Profiles).
+settings\Share.lua
 # Conventional: the verb bodies settings\Slash.lua's NS.COMMANDS rows call at run time; read modules only inside functions.
 settings\SlashVerbs.lua
 # LOAD-BEARING: captures NS.SchemaRuntime.Get/Set/FindRow/ApplyDefault at load.

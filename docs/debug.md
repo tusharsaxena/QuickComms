@@ -28,13 +28,13 @@ The addon's sections (`modules/Diagnostics.lua`), in order:
 | Section | What it reports |
 |---|---|
 | `identity` | schema stored and in code, the profile, `enabled`, whether stood down, the latch's holds |
-| `settings` | every setting that differs from its default, and `enabled` always |
+| `settings` | every setting that differs from its default, and `enabled` always; member rows are left out (the `library` section counts the members) |
 | `registration` | the declared feature events, whether they are registered, the events the client refused |
 | `integrations` | the launcher's registration and button |
 | `situation` | the snapshot: content, instance, difficulty, key level, group, leadership, class, spec, role, combat, and the active lockdown reasons |
 | `restrictions` | the restriction state: every reason in effect (Map included), the reason the lockdown chip names, `canSendChat`, and the combat flag as Restrictions reads it (the `PLAYER_REGEN` edge first) |
 | `library` | the counts (callouts, groups, pads, dials), `nextId`, `seeded`, and the ids of the active groups under the current situation |
-| `surfaces` | the pads built, whether test mode is on, and per pad its ordered active groups, its stale hint and its lockdown chip |
+| `surfaces` | the pads built, whether test mode is on, the previewed situation (`previewAs`, or `off`), and per pad its ordered active groups, its stale hint and its lockdown chip |
 | `send` | the send buttons and how many are armed, each armed one with its pad, callout and escaped line; the combat-end queue's pending keys; the guard (window, last press, time remaining); the echo tracker's counts (pending, sent, dropped, unknown sender, ignored) |
 
 The report reads state only: it calls no client API that changes anything, takes no hold, starts no

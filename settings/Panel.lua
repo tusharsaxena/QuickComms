@@ -91,5 +91,7 @@ function Settings.Register()
         return
     end
     Helpers.CreateOptionsPanel()
+    -- "Preview as…" ends when the settings window closes (spec §13.3).
+    if NS.Preview then NS.Preview.WatchPanel(_G.SettingsPanel) end
     QC._settingsRegistered = true
 end

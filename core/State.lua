@@ -7,3 +7,16 @@ local State = NS.State
 -- The debug-logging flag (debug-logging-§5): default off, independent of the console window.
 -- `/qc debug on|off` and the console's own toggle write it through the DebugLog seam.
 State.debug = false
+
+-- The member each editor page has selected (settings/Editors.lua): { callout, group, pad, builtin }.
+-- A member row written with no instance argument writes this member, else the first member its page
+-- lists (settings/Schema.lua Settings.EditingId).
+State.editing = {}
+
+-- "Preview as…" (modules/Preview.lua, spec §13.3): the preset key the pads are drawn as, or nil.
+-- Session-only; test mode's second flavor, so it is never on with State.testMode.
+State.previewAs = nil
+
+-- The When editor's rows switched on with nothing chosen yet (settings/Groups_When.lua):
+-- { [groupId] = { [row] = true } }. Session-only; a profile switch clears it (settings/Editors.lua).
+State.whenOpen = {}

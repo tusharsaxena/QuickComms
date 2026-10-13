@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-377%2F377_passing-green)
+![Tests](https://img.shields.io/badge/Tests-503%2F503_passing-green)
 
 Quick Comms puts your usual group callouts one click or one keypress away. "Kick on me", "Lust
 now", "Inc 2 Lumber Mill": you set them up once, and they sit on a Comms Pad or open from a
@@ -11,11 +11,13 @@ ping-wheel-style Comms Dial. The addon works out where you are, whether that's a
 an arena or a battleground, and shows the callouts that fit. Every message goes out through a secure button, the
 only kind of send Midnight still allows mid-pull, so it keeps working in keys and on bosses.
 
-**Quick Comms is in development.** The Comms Pad works: it shows the built-in callouts for where you are (Mythic+, raid, arena, battlegrounds) and sends them through secure buttons, with a spam guard and a note when the game drops a message. The editors and the Comms Dial come in later builds. The full plan is in the [design spec](docs/superpowers/specs/2026-10-11-quickcomms-v1-design.md).
+**Quick Comms is in development.** The Comms Pad works: it shows the built-in callouts for where you are (Mythic+, raid, arena, battlegrounds) and sends them through secure buttons, with a spam guard and a note when the game drops a message. You can now write your own callouts and groups, say when each group shows, arrange your pads and turn the built-in sets on, off or into editable copies. The Comms Dial comes in a later build. The full plan is in the [design spec](docs/superpowers/specs/2026-10-11-quickcomms-v1-design.md).
 
 ## Usage
 
 Enter a key, a raid, an arena or a battleground and the Comms Pad shows the callouts that fit; click one to send it. `/qc unlock` lets you drag the pad, `/qc lock` fixes it, and `/qc test` shows placeholder chips so you can place it anywhere. `/qc` opens the settings panel; the minimap button's right-click menu has Enabled, Locked and Test mode.
+
+Settings → Callouts makes a callout; Groups puts callouts in a group and, on its When tab, says where it shows; Comms Pad arranges a pad. "Preview as…" on the Groups page (or `/qc preview`) shows the pads as they would look in a key, a raid, an arena or a battleground; hover a pad's header (or `/qc why`) to see why each group is there.
 
 Once the dial lands, it opens on a key you choose, and you flick toward a callout and let go to
 send it.

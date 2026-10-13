@@ -75,3 +75,22 @@ test("diagnostics: the surfaces and send sections name the pads, the armed chips
     assertTrue(text:find("window=1", 1, true) ~= nil, "the guard")
     assertTrue(text:find("sent=0 dropped=0", 1, true) ~= nil, "the echo counts")
 end)
+
+test("diagnostics: [phase 3] the surfaces section names the preview", function()
+    local NS = T.enableAddon()
+    NS.Situation.RefreshNow("test")
+    assertTrue(report(NS):find("previewAs=off", 1, true) ~= nil)
+    NS.Preview.SetPreviewAs("arena")
+    assertTrue(report(NS):find("previewAs=arena", 1, true) ~= nil)
+end)
+
+test("diagnostics: [final 21] the settings section lists no member row", function()
+    local NS = T.enableAddon()
+    local cid = NS.Library.CreateCallout({ name = "Lust", text = "Lust", channel = "party", icon = 136012 })
+    NS.Library.CreateGroup({ name = "Mine", callouts = { cid } })
+    local text = report(NS)
+    -- red under: run nonDefaults over every schema row (the first member's fields read as settings)
+    for _, prefix in ipairs({ "callout.", "group.", "pad.", "builtin." }) do
+        assertTrue(text:find(" " .. prefix, 1, true) == nil, prefix .. "\n" .. text)
+    end
+end)

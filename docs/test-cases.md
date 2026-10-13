@@ -102,7 +102,7 @@ Total.
 - profile: the spam guard clamps to 0.6-2.0 and fallback refuses unknown values
 - profile: schema version target is 1
 
-### test_schema.lua (13)
+### test_schema.lua (14)
 
 - schema: every row validates against the defaults
 - schema: a stored row whose path has no default is counted, not passed vacuously
@@ -117,8 +117,9 @@ Total.
 - schema: degraded, `enabled` is written through and still reacts
 - schema: degraded, a row-less path not in the list is still refused
 - schema: [fix wave] the Behavior rows that rebuild the pads resolve Settings.RebuildSurfaces when they run
+- schema: [phase 3] a fresh profile has no row off its default; the member rows are not counted
 
-### test_slash.lua (9)
+### test_slash.lua (10)
 
 - slash: NS.COMMANDS is positional triples, every reserved verb present
 - slash: `diagnostics` has no alias of any kind (debug-logging-§14)
@@ -129,6 +130,7 @@ Total.
 - slash: `reset` with no path explains itself rather than resetting everything
 - slash: `debug on` turns logging on without opening the console
 - slash: degraded, enable and disable still work and the CLI names the missing library
+- slash: [phase 3] `why` prints each built pad and why its groups show
 
 ### test_disabled.lua (10)
 
@@ -143,7 +145,7 @@ Total.
 - disabled 8: the launcher's Enabled entry stays live while disabled
 - disabled: [final 1] every feature event is declared once (AceEvent keeps one handler per event)
 
-### test_diagnostics.lua (7)
+### test_diagnostics.lua (9)
 
 - diagnostics: the sections are the addon's, in report order
 - diagnostics: the report names the schema, the profile, the holds and the launcher
@@ -152,8 +154,10 @@ Total.
 - diagnostics: the situation and library sections report the snapshot and the registry
 - diagnostics: [final 1] the restriction section names the active reasons and canSendChat
 - diagnostics: the surfaces and send sections name the pads, the armed chips and the guard
+- diagnostics: [phase 3] the surfaces section names the preview
+- diagnostics: [final 21] the settings section lists no member row
 
-### test_compat.lua (8)
+### test_compat.lua (10)
 
 - compat: plain readers pass plain values and drop secrets
 - compat: InstanceInfo with a secret instanceID reads nil, never raises
@@ -163,6 +167,8 @@ Total.
 - compat: SenderIsPlayer answers by GUID, then by name, and nil when it cannot read either
 - compat: [fix wave] SenderIsPlayer: a cross-realm namesake is not the player; an unreadable realm is unknown
 - compat: ChatColor reads the client's chat colors and declines what it cannot read
+- compat: [phase 3] InstanceName reads the client's name; a secret, empty or missing one is nil
+- compat: [phase 3] SpecInfoByID and ClassName read display names; secret or missing ones are nil
 
 ### test_restrictions.lua (16)
 
@@ -256,7 +262,7 @@ Total.
 - builtins: bake audit, every callout bakes under its set's snapshot
 - builtins: battlegrounds use smart group; arena uses party; raid lead uses smart lead
 
-### test_library.lua (25)
+### test_library.lua (46)
 
 - library: Prepare seeds one pad and one dial with every built-in, once
 - library: callouts validate on create
@@ -264,7 +270,7 @@ Total.
 - library: [review 4] deleting a shared callout clears every group
 - library: [review 4] deleting a group clears every surface
 - library: adding a built-in callout copies it (P2)
-- library: [review 4] Customize swaps the copy in place, then deleting it leaves neither
+- library: [review 4] Customize swaps the copy in place; deleting the copy puts the set back, on
 - library: hidden built-in callouts drop out of the merged group
 - library: [review 5] a newly shipped built-in is appended once; a removed one stays removed
 - library: Prepare repairs dangling ids
@@ -283,6 +289,129 @@ Total.
 - library: [final minor 3] Prepare repairs corrupt top-level registry keys and builtins entries
 - library: SetSurfacePoint stores a copy of a plain anchor, announces it, and nil clears it
 - library: SetSurfacePoint refuses an unknown surface or a malformed anchor, and stores nothing
+- library: [phase 3] DuplicateCallout copies every field under a '(copy)' name
+- library: [phase 3] a copy's name stays within the 32-character cap, counted in characters
+- library: [phase 3] DuplicateGroup shares the callouts (D8) and copies the When, on no surface
+- library: [phase 3] CreateGroup keeps only existing user callouts, and validates the When
+- library: [phase 3] OfferGroup puts a user group first on every pad and dial, once
+- library: [phase 3] MoveGroupOnSurface reorders a surface's groups and announces it
+- library: [phase 3] Member answers the live member of each kind, and a built-in group's copy
+- library: [phase 3] Touch announces the member it is handed, and the field
+- library: [phase 3] MemberIds lists each kind in its picker's order
+- library: [phase 3] Customize shortens a long set name instead of refusing it
+- library: [phase 3] Customize changes nothing when the copy cannot be made
+- library: [phase 3] ValidWhen accepts every shipped When and refuses bad shapes
+- library: [final] a surface's offsets are bounded at its smallest scale, not at 1
+- library: [phase 3] the point, icon and hidden-set validators
+- library: [phase 3] every member template holds a value at every field
+- library: [phase 3] Batch holds the announces and sends one per kind it touched
+- library: [final 8] a set on no surface is customized onto none, and Customize says how many it reached
+- library: [final 24] Customize puts the copy in the set's place on every pad and dial
+- library: [final 1] Customize, AddToGroup with a built-in, and OfferGroup each send one LIBRARY_CHANGED
+- library: [final 1] one Customize click rebuilds the pads once
+- library: [final 2] ValidWhen refuses a value its row can never match, and names the row and value
+
+### test_members.lua (16)
+
+- members: a callout field is written through the seam by instance id, and announced once
+- members: with no id the seam writes the selected member, else the first the page lists, else refuses
+- members: [review 5] a bad name or channel is refused with its reason and stores nothing
+- members: an icon typed as digits is stored as a texture id; empty text clears it
+- members: [review 4] a built-in group's fields read, and every write to them is refused
+- members: a group's When is one structured row: a valid When stores, a bad one is refused
+- members: member rows are not AceDB defaults, and each resolves against its template
+- members: [review 4] the CLI prints the built-in refusal
+- members: Library's built-in writers and the pad point go through the seam, one announce each
+- members: the structured rows are typed and printed on the CLI through the descriptor's parse and format
+- members: [review 1] a callout edited from the CLI in combat waits for combat end, with the stale hint
+- members: [fix 1] pad.point refuses an unknown anchor name or a non-finite offset; nothing is stored
+- members: [final 2, 11] the CLI maps When values onto their tokens, and refuses one a row never matches
+- members: [final 7] what `get group.when` prints types back in
+- members: [final 4] an off-screen pad.point is refused; `/qc reset` brings back a pad's place and clears an icon
+- members: [final 5] builtin.hidden with no set selected says to pick one
+
+### test_editors.lua (11)
+
+- editors: [review 2] Select mirrors a built-in group into the built-in selection; Heal keeps a member that exists
+- editors: every membership change asks for one structural repaint, on the next frame
+- editors: [phase 3] a scalar member write repaints nothing; a name does
+- editors: [phase 3] a situation change repaints only when the set of active groups changes
+- editors: [phase 3] with no page body built, no change schedules a repaint
+- editors: a profile switch clears every selection
+- editors: the stand-down cancels a pending repaint
+- editors: ConfirmDelete asks first, and only the accepted popup runs the act, once
+- editors: Open goes to a page's category by its id
+- editors: Scalar keeps the rows the flow engine draws, and CancelReorder cancels once
+- editors: Snapshot is the preview's while Preview as is on
+
+### test_page_callouts.lua (13)
+
+- callouts page: with no callouts it says how to make one, and New callout makes and selects one
+- callouts page: the rows write the selected callout through the seam
+- callouts page: [review 5] an empty name is refused with its reason and nothing changes
+- callouts page: [phase 3] the token picker offers {group1}-{group8} only when the channel can resolve to Raid
+- callouts page: [phase 3] the live line refreshes in place when the callout changes
+- callouts page: Insert a token adds it to the end of the text
+- callouts page: the live line shows what it sends here, or why it sends nothing
+- callouts page: Duplicate selects the copy; Delete asks, then removes it from every group
+- callouts page: [review 2] the selected callout deleted elsewhere: the page heals, writes go to the next
+- callouts page: Used by lists the groups that hold it, and a click opens that group
+- callouts page: [final 3] Defaults resets the callout as one act: one rebuild
+- callouts page: [final 4] Defaults keeps the icon (its default is only for `/qc reset`)
+- callouts page: [review 1] a delete popup accepted after the pull deletes; the pad catches up at combat end
+
+### test_groups_when.lua (12)
+
+- when: Toggle adds and removes one value, drops an emptied row, and never mutates its input
+- when: [review 5] the key-level range refuses lowest above highest; clearing both drops the row
+- when: [review 5] a typed key level is refused when the range would be upside down, and nothing is stored
+- when: the specialization row offers the player's class, or the classes the class row picked
+- when: Describe reads a When back as lines, and ActiveLine names the row that does not match
+- when: [phase 3] a group turned off never reads Active now, as the picker's dot does not
+- when: CharacterId takes Name-Realm as typed and gives a bare name the player's realm
+- when: [phase 3] the open rows are session state that a profile switch clears
+- when: Write stores a user group's When through the seam and refuses a built-in with its reason
+- when: the battleground names come from the shipped sets, by instanceID
+- when: [final 6] a typed character takes the client's case; the Resolver matches one in any case
+- when: [final 2, 11] ResolveValue maps a typed value onto the token or id its row stores, or refuses it
+
+### test_page_groups.lua (15)
+
+- groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
+- groups page: the picker lists user groups by name, then the built-ins, active ones dotted
+- groups page: General draws Preview as first, then the group's rows; Duplicate and Delete act
+- groups page: Callouts drags to reorder, removes, and copies a built-in callout in (P2)
+- groups page: [review 4] a built-in is read-only; Customize puts the copy in its place and selects it
+- groups page: a built-in's Callouts tab hides and shows its callouts, a node's named with its node
+- groups page: the When tab of a built-in describes it; a user group's edits it; Preview bakes each callout
+- groups page: [phase 3] a built-in's Defaults turns it back on: the Enabled row its General draws
+- groups page: [review 5] the When tab refuses an upside-down key-level range
+- groups page: [final 16] New group rebuilds the pads once, however many pads there are
+- groups page: [final 3, 25] a user group's Defaults: Enabled on, Open the dial off, the rest kept, one rebuild
+- groups page: [final 8] Customize of a set on no pad says the copy is on none
+- groups page: [final 12] Duplicate says the copy is on no pad yet
+- groups page: [final 20] the Instances row adds a typed id, removes one, and refuses a fraction or a negative
+- groups page: [final 18] Add the instance you are in reads the instance at the click, not at the draw
+
+### test_page_pads.lua (10)
+
+- pads page: New pad makes a second pad holding every built-in, selects it, and the pad is built
+- pads page: the Layout rows write the selected pad
+- pads page: X and Y move the pad through its pad.point row; Reset puts it back
+- pads page: Look's visibility reaches the pad's state driver
+- pads page: Groups lists the pad's groups; remove one, add it back at the end, drag to reorder
+- pads page: Delete pad asks, then the pad is gone, its frame released, and the page heals
+- pads page: General's Unlock pads toggles the one lock
+- pads page: [final 3, 15] Defaults puts the pad's rows back as one act: one rebuild
+- pads page: [final 4] Defaults keeps the pad's position
+- pads page: [final 26] New pad takes the lowest free number, so a delete never leads to two names alike
+
+### test_page_share.lua (4)
+
+- share page: every shipped set has a line; turning M+ off takes it off the pad
+- share page: [review 4] Customize puts the copy in the set's place, selects it and opens the Groups page
+- share page: Choose callouts opens the set on the Groups page's Callouts tab
+- share page: Defaults turns every set back on and shows all of their callouts, as one act
 
 ### test_check.lua (6)
 
@@ -333,13 +462,25 @@ Total.
 - send: every echo event is a declared feature event
 - send: the stand-down cancels the echo timers and forgets the presses
 
-### test_preview.lua (5)
+### test_preview.lua (17)
 
 - preview: test mode turns on and off, announcing each edge once
 - preview: a start in combat is refused with one line
 - preview: the start of combat ends test mode, with one line
 - preview: test mode still ends when lockdown has already begun at the combat edge
 - preview: the stand-down ends test mode silently, and stood down a start is refused
+- preview: [phase 3] Preview as Arena builds the pad from the arena snapshot, every chip disarmed
+- preview: [review 3] a previewed chip sends nothing and reports nothing
+- preview: [review 3] a previewed solo chip prints nothing, even with the self fallback
+- preview: [review 3] combat ends it with one line, and the live chips come back armed
+- preview: [phase 3] refused in combat and while disabled, with one line each
+- preview: [review 3] the stand-down ends it silently, and so does closing the settings window
+- preview: [phase 3] test mode and Preview as are one switch at a time
+- preview: [phase 3] the menu: Current, M+, each dungeon, each raid difficulty, Arena, each battleground, World
+- preview: [phase 3] a dungeon entry reads M+ · <dungeon> · <spec> (spec §13.3)
+- preview: [phase 3] the Preview as row and `/qc preview` drive the same switch
+- preview: [final 13] `/qc preview` reads the situation's name without regard to case
+- preview: [final 10] a dungeon preview fills {dungeon}, and the header names the preview as its menu does
 
 ### test_master.lua (5)
 
@@ -363,7 +504,7 @@ Total.
 - layout: the fade follows combat and the mouse, under the master alpha
 - layout: the channel tag names the resolved channel
 
-### test_surfaces.lua (20)
+### test_surfaces.lua (22)
 
 - surfaces: in a key the default pad's plan is the M+ set, baked to /p
 - surfaces: [review 5] a refused callout is a slot with its reason and no line
@@ -385,8 +526,10 @@ Total.
 - surfaces: disabled out of combat, every pad hides and every chip disarms; enabled, they return
 - surfaces: [review 2] disabled mid-combat: nothing blocked, one held registration, finished at combat end
 - surfaces: [fix wave] disabled then enabled inside one combat: the pad is shown and armed after it
+- surfaces: [phase 3] WhyLines names each shown group in order, built-ins marked, then the locks
+- surfaces: [phase 3] WhyLines in a key explains the built-in's matched row; a preview says so
 
-### test_pad_render.lua (10)
+### test_pad_render.lua (11)
 
 - render: Dress builds a chip's regions once, each its own object
 - render: an armed chip shows its name, its channel tag in the chat color, no lock, no dim
@@ -398,8 +541,9 @@ Total.
 - render: the situation chip names the content, the dungeon and the key
 - render: the header shows the lockdown chip, the stale hint and the test label on demand
 - render: the drag-strip seam builds a hidden strip, and answers nil without the library
+- pad render: [phase 3] a previewed slot's tooltip shows its line and says it sends nothing
 
-### test_pad.lua (21)
+### test_pad.lua (24)
 
 - pad: the default pad shows the M+ callouts, each chip armed with its baked line
 - pad: [review 5] a refused chip is dimmed and disarmed: a click sends and reports nothing
@@ -422,6 +566,9 @@ Total.
 - pad: [fix wave] tabs switch on a wheel over a chip or the pad, not only the header
 - pad: [fix wave] in combat Reset position, Apply and Release do no protected work; combat end anchors
 - pad: [review 5] too long, and solo with no fallback: dimmed, disarmed, the reason shown, a click does nothing
+- pad: [phase 3] a held drag whose stand-down is canceled in the same combat is stopped at combat end
+- pad: [phase 3] a new drag clears a stale held stop, so the next rebuild re-anchors
+- pad: [phase 3] the header's tooltip says why each group shows, unless the player turned it off
 
 ### test_vendor_sync.lua (3)
 
@@ -502,11 +649,11 @@ Total.
 | test_setup.lua | 21 |
 | test_database.lua | 6 |
 | test_profile.lua | 5 |
-| test_schema.lua | 13 |
-| test_slash.lua | 9 |
+| test_schema.lua | 14 |
+| test_slash.lua | 10 |
 | test_disabled.lua | 10 |
-| test_diagnostics.lua | 7 |
-| test_compat.lua | 8 |
+| test_diagnostics.lua | 9 |
+| test_compat.lua | 10 |
 | test_restrictions.lua | 16 |
 | test_situation.lua | 15 |
 | test_tokens.lua | 8 |
@@ -514,16 +661,23 @@ Total.
 | test_bake.lua | 11 |
 | test_resolver.lua | 8 |
 | test_builtins.lua | 6 |
-| test_library.lua | 25 |
+| test_library.lua | 46 |
+| test_members.lua | 16 |
+| test_editors.lua | 11 |
+| test_page_callouts.lua | 13 |
+| test_groups_when.lua | 12 |
+| test_page_groups.lua | 15 |
+| test_page_pads.lua | 10 |
+| test_page_share.lua | 4 |
 | test_check.lua | 6 |
 | test_send_guard.lua | 10 |
 | test_sendengine.lua | 24 |
-| test_preview.lua | 5 |
+| test_preview.lua | 17 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 11 |
-| test_surfaces.lua | 20 |
-| test_pad_render.lua | 10 |
-| test_pad.lua | 21 |
+| test_surfaces.lua | 22 |
+| test_pad_render.lua | 11 |
+| test_pad.lua | 24 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -531,4 +685,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **377** |
+| **Total** | **503** |

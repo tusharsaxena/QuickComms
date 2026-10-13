@@ -22,6 +22,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
 | SEND-1..5 | Send | Secure sends in keys and on bosses, the spam guard |
 | PAD-1..7 | Pad | The Comms Pad |
+| EDIT-1..8 | Editors | The Callouts, Groups, Comms Pad and Share pages, Preview as…, Why is this showing? |
 | DIAL-1..n | Dial | The Comms Dial and its bindings (reserved, phase 4) |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes |
 
@@ -163,6 +164,51 @@ stays until combat ends, then hides. `/qc enable` → it returns with live chips
 **PAD-7. A profile switch in combat.** `/qc profile <another>` during combat → the stale hint
 shows, no error; after combat the pad is the other profile's. Result:
 
+## Editors
+
+**EDIT-1. A callout and a group on the pad (the phase 3 exit).** Settings → Callouts → New callout;
+name it `Inc`, text `INC {skull}`, channel Smart group. Groups → New group; on its Callouts tab add
+`Inc`; on its When tab tick Content, then M+. Enter a key → the pad shows the new group first with
+an `Inc` chip; click it → the party sees "INC" with a skull. Leave the key → the group is gone from
+the pad. Result:
+
+**EDIT-2. Customize a built-in (the phase 3 exit).** Groups → pick "M+ (generic) (built-in)" → it
+says it is read-only and offers Customize; click it → a line says the copy took its place, the page
+now edits "M+ (generic) (custom)", and the pad (in a key) shows the copy where the set was. Rename a
+callout in the copy → the chip's label changes. Share → Built-in shows the set's button as "Edit the
+copy". Result:
+
+**EDIT-3. Preview as….** Out of combat, in the open world: Groups → General → Preview as → Arena →
+the pad shows the arena set with PREVIEW on its header and `Preview: Arena`; clicking a chip sends
+nothing; its tooltip says so. Close the settings → the preview ends. `/qc preview raid:heroic` →
+the raid set; pull something → the preview ends with one line and the live chips return. Result:
+
+**EDIT-4. Why is this showing?.** In a key, hover the pad's header → the tooltip lists "M+
+(generic) (built-in): Content" (and any user group, with its rows); with a `/raid` callout on the pad
+outside a raid, the last line names the lock. Behavior → Explain why groups show off → no tooltip.
+`/qc why` prints the same lines per pad. Result:
+
+**EDIT-5. The Comms Pad page.** Comms Pad → Layout: Orientation Vertical, Chip style Label only,
+Scale 1.5 → the pad redraws each time. Type X `200`, Y `-100` → it moves; Reset this pad's position
+→ it returns. Look → Visibility Only out of combat → it hides on the pull with no error. Groups:
+drag a group to the top → it comes first on the pad. New pad → a second pad appears with every
+built-in set; Delete pad (Yes) → it is gone. Result:
+
+**EDIT-6. The Built-in tab.** Share → Built-in: untick "Raid (generic)" → in a raid it is gone from
+the pad. Choose callouts on "M+ (generic)" → the Groups page opens on its Callouts tab; untick
+"Lust" → the chip is gone in a key. Defaults (top right) → every set and callout is back. Result:
+
+**EDIT-7. An edit during combat.** With a user callout on the pad, in combat type `/qc set
+callout.text Incoming now` (the callout selected on the Callouts page, or, if that page was never
+opened this session, the first callout it lists) → no error, the header
+shows "updates after combat"; after combat the chip sends the new text. Opening the settings in
+combat is refused, as before. Result:
+
+**EDIT-8. The selection survives what other pages do.** Select a callout on the Callouts page, then
+`/qc profile Other` and back → the Callouts page shows a callout that exists, never an empty or
+erroring page. Delete the selected group from the Groups page → the page moves to the next group.
+Result:
+
 ## Dial
 
 Reserved for the Comms Dial (phase 4): hold, flick and release in a boss, the two-stroke categories,
@@ -188,3 +234,4 @@ section is re-armed by the situation task, whose check replaces this paragraph's
 |---|---|---|
 | INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..2, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet |
 | SEND-1..5, PAD-1..7 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet |
+| EDIT-1..8 | Phase 3: the editors | No client pass recorded yet |

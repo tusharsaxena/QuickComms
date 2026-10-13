@@ -40,6 +40,8 @@ read_globals = {
   "GameTooltip", "ChatTypeInfo",
   -- modules/Pad.lua: the sent-chip sound.
   "PlaySound", "SOUNDKIT",
+  -- core/Compat.lua: the editors' display names (shown, never matched).
+  "GetRealZoneText", "GetSpecializationInfoByID", "LOCALIZED_CLASS_NAMES_MALE",
 }
 
 -- The harness global, declared for tests/ only so no shipped file can reach for it. The

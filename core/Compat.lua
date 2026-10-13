@@ -230,7 +230,42 @@ function Compat.SpellLink(id)
     return PlainString(sp.GetSpellLink(id))
 end
 
+-- ── Display names for the editors (spec §13.2, §13.3): shown, never matched ─────────────────
+
+--- An instance's display name from its instanceID (GetRealZoneText takes a map id), or nil.
+function Compat.InstanceName(id)
+    if not (PlainNumber(id) and GetRealZoneText) then return nil end
+    local name = PlainString(GetRealZoneText(id))
+    if name == "" then return nil end
+    return name
+end
+
+--- A specialization's display name and icon from its specID, or nil.
+function Compat.SpecInfoByID(id)
+    if not (PlainNumber(id) and GetSpecializationInfoByID) then return nil end
+    local _, name, _, icon = GetSpecializationInfoByID(id)
+    name = PlainString(name)
+    if not name or name == "" then return nil end
+    return name, PlainNumber(icon)
+end
+
+--- A class's display name from its classFile token, or nil.
+function Compat.ClassName(classFile)
+    local names = LOCALIZED_CLASS_NAMES_MALE
+    if type(names) ~= "table" or not Compat.IsSafeKey(classFile) then return nil end
+    return PlainString(names[classFile])
+end
+
 -- ── The pad (spec §10.1) ─────────────────────────────────────────────────────────────────────
+
+--- UIParent's width and height, or nil while either is unknown or not a positive plain number.
+function Compat.ScreenSize()
+    local ui = UIParent
+    if not (ui and ui.GetWidth and ui.GetHeight) then return nil end
+    local w, h = PlainNumber(ui:GetWidth()), PlainNumber(ui:GetHeight())
+    if not (w and h and w > 0 and h > 0) then return nil end
+    return w, h
+end
 
 --- The client's color for a chat type, or nil when it cannot be read.
 function Compat.ChatColor(chatType)

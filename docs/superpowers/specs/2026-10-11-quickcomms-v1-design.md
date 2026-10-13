@@ -184,7 +184,7 @@ DropWatcher's restriction readers are the template.
 |---|---|---|
 | `Situation` | pure classifier + edge | Reads inputs, builds the **snapshot** (§6), coalesces bursts of events, publishes `SITUATION_CHANGED` |
 | `Restrictions` | edge | Lockdown state and per-type restrictions (a copy of DropWatcher's `Restrictions.lua`). Publishes `RESTRICTION_CHANGED`. |
-| `Library` | **the registry writer** (architecture-§5) | Callouts, groups, pads and dials (create, delete, duplicate, order, ids). The built-in overlay. Customize. Import. **The only module that writes those collections.** |
+| `Library` | **the registry writer** (architecture-§5) | Callouts, groups, pads and dials (create, delete, duplicate, order, ids). The built-in overlay. Customize. Import. **The only module that writes those collections.** *Built (phase 3):* membership, the order of every list, the references a group and a surface hold, the ids and the seeding. A member's own fields (a callout's text, a group's When, a pad's layout and position, a built-in's overlay) are schema rows written through the one seam (architecture-§5), resolved by `Library.Member` and announced by `Library.Touch`. |
 | `Resolver` | pure | When evaluation → active group set. The order for each surface. "Why" explanations. |
 | `Tokens` | pure | Friendly token chips → engine tokens and baked values |
 | `Channels` | pure | Channel kind + snapshot → chat prefix (`/p`, `/i`, `/raid`, `/rw`, `/s`, `/y`, `/w name`), or a refusal reason. The lock matrix (§8.4). |
@@ -245,7 +245,8 @@ profile = {
 
 - **No `char` scope.** Per-character behavior comes from the When conditions **Character** and **Class/Spec** (brainstorm §9).
 - **Sessions only.** Test mode, the debug console, "Preview as…" and the active settings tab are kept in `NS.State` and never saved.
-- **Named non-setting state** (documented in ARCHITECTURE.md): `pads[id].point` is written by drag, through `Library.SetSurfacePoint`: `Library` stays the one registry writer, and `Pad` only asks. It is also exposed as X/Y rows, so it is a preference and goes through the seam with an instance argument. `global.minimap.minimapPos` is owned by LibDBIcon.
+- **Named non-setting state** (documented in ARCHITECTURE.md): `pads[id].point` is the `pad.point` member row: the drag, the X/Y boxes and Reset position write it through the seam (the drag through `Library.SetSurfacePoint`). It is a preference, not named state, because a control sets it. `global.minimap.minimapPos` is owned by LibDBIcon.
+- **The editors' selection** (`NS.State.editing`, session-only) is the member each editor page has selected; a member row written with no instance argument writes it.
 
 ### 5.2 IDs and references
 
@@ -346,7 +347,7 @@ snapshot = {
 - The surface's own list is filtered to the active groups, keeping the player's order.
 - With `autoPromote` on, a stable sort moves narrower groups up within that order. Narrowness counts the non-empty rows, and a specific instance or battleground outweighs everything else. A badge records this.
 
-**`Resolver.Explain(...)`** produces the lines for the "why" tooltip: "M+ (built-in): Content = Mythic+ ✓".
+**`Resolver.Explain(...)`** produces the lines for the "why" tooltip: "M+ (built-in): Content = Mythic+ ✓". *Built (phases 1, 3):* `Explain` names the When rows that matched (`M+ (generic) (built-in): Content`), not their values (`Content = Mythic+ ✓`): the row is what a player changes on the When tab, and the values are on that tab.
 
 **Testing.** The Resolver is pure, so the When truth tables, the ordering and the explanations are all tested headlessly.
 
@@ -364,6 +365,8 @@ snapshot = {
 | `{spec}`, `{role}` | spec name, role | Baked |
 | `{key}`, `{dungeon}` | key level, dungeon name | Baked. Empty outside M+, and the preview warns. |
 | `{spell:ID}` | `C_Spell.GetSpellLink(ID)` | Baked. A fixed ID only. |
+
+*Built (phase 3):* the Callouts page's picker offers `{target}`, `{focus}`, the eight markers by name (`{star}`…`{skull}`; a typed `{rt1}`…`{rt8}` works the same), `{me}`, `{spec}`, `{role}`, `{key}` and `{dungeon}`, plus `{group1}`…`{group8}` only when the callout's channel can resolve to Raid (raid, raid warning, smart group, smart lead). `{spell:ID}` needs an id, so it is typed, never picked; the Text row's tooltip names it.
 
 An unknown token is left as typed and flagged in the editor's preview (the DropWatcher `Messaging.Expand` contract).
 
@@ -556,6 +559,8 @@ If this happens in combat, the secure parts are held in the one permitted pendin
 
 **Hide when no group is active** is evaluated at the last out-of-combat rebuild.
 
+*Built (phase 3):* the pad's Look tab has visibility, fade and the faded alpha; the font group, border group and colors with their class-color companions arrive with phase 5's polish (§19 row 5).
+
 ### 10.4 Test mode and position
 
 **Test mode** (preview-mode) fills every pad with placeholder chips through the same render path, and shows a "TEST MODE" label. It:
@@ -681,6 +686,8 @@ NS.BuiltIns.callouts["bi.mplus.lust"] = { name = L["Lust"], text = L["Lust on th
 - swaps the copy into every surface list at the built-in's position
 - sets the built-in's `enabled = false`
 
+It is one act: the pads rebuild once. A set on no surface is customized onto none, and the chat line says so. **Deleting the copy** undoes it (ruling, phase 3 final fixes): the built-in goes back into the copy's place on every surface that does not list it already, it is turned back on, and it forgets the copy, so Customize can run again.
+
 **Updates.** A new addon version may change built-in text freely. Customized copies never change.
 
 **Bake audit** (a test): every built-in callout must bake under its expected snapshot to a whole line of 255 bytes or fewer, with a valid channel and no `/` start.
@@ -695,11 +702,11 @@ NS.BuiltIns.callouts["bi.mplus.lust"] = { name = L["Lust"], text = L["Lust on th
 |---|---|
 | **Landing** | Library `BuildLandingPage`: logo, notes, the slash command list |
 | **General** | Tabs: **Master controls** (the exact standard rows), **Behavior**: solo fallback, spam guard slider, drop notes, why tooltips, lockdown chip, sounds, auto-promote |
-| **Callouts** | Banner: a callout picker and a "Create callout" box. Tabs: **Message** has name, text with token chips and a live counter, channel, icon picker (game icon fileID or a LibKa0s icon), and a live preview of the baked line under the current or previewed situation, with a padlock if locked. **Used by** lists the groups that reference it, each with a jump link. Page-wide acts (rename, duplicate, delete) sit on the Message tab. |
-| **Groups** | A nav rail of groups, plus the banner picker, a create box and an active-now dot. Tabs: **General** (name, icon, enabled, open-into, delete/duplicate, and Customize for a built-in), **Callouts** (ReorderList, plus add from the library), **When** (§13.2), **Preview** |
-| **Comms Pad** | A nav rail of pads. Tabs: **General** (name, enabled, unlock, delete), **Groups** (priority ReorderList, plus groups-as), **Layout**, **Look** (visibility, fade, font group, border group, colors with class-color companions) |
-| **Comms Dial** | A nav rail of dials. Tabs: **General**, **Groups** (priority ReorderList, plus Categories/Flat), **Wheel** (slices, depth, open at, delay), **Binding** (Relaxed in v0.1.0; Quick returns with the C7 upgrade; a key capture button, tap action, conflict warning), **Preview** |
-| **Share** | Tabs: **Export** (select callouts, groups, pads and dials → string → `CopyWindow`), **Import** (a paste box → validation report → apply), **Built-in** (the list of built-in sets with an enabled toggle, Customize, and a hidden-callouts editor) |
+| **Callouts** | Banner: a callout picker and a "Create callout" box. Tabs: **General** has name, text with a token picker and the live line (the baked line and its byte count under the current or previewed situation, or why it sends nothing, and the padlock text), channel, an icon box (a texture id or path; a LibKa0s icon by its path; the visual picker arrives with phase 5's polish, §19 row 5), then Duplicate and Delete (options-ui-§14: a page's acts sit on its first tab, named General). The live line is the byte counter: it follows each committed write (Enter in the Text box), not each keystroke. **Used by** lists the groups that reference it, each a link to the Groups page. |
+| **Groups** | The banner picker (user groups by name, then the built-in sets; a green dot marks a group active now or in the preview) and New group, which puts the group at the top of every pad and dial; no nav rail (options-ui-§14: the rail is not a picker). Tabs: **General** (name, icon, enabled, open-into, delete/duplicate, and Customize for a built-in), **Callouts** (ReorderList, plus add from the library), **When** (§13.2), **Preview**. For a built-in, General has its Enabled row and Customize, and Callouts is the hidden-callouts editor. |
+| **Comms Pad** | The banner picker and New pad; no nav rail. Tabs: **General** (name, enabled, unlock, delete), **Groups** (priority ReorderList, plus groups-as), **Layout**, **Look** (visibility, fade, font group, border group, colors with class-color companions). General also has Preview as, Unlock pads and Delete pad; Layout ends with the X and Y offsets and Reset this pad's position. |
+| **Comms Dial** | The banner picker and New dial (phase 4); no nav rail. Tabs: **General**, **Groups** (priority ReorderList, plus Categories/Flat), **Wheel** (slices, depth, open at, delay), **Binding** (Relaxed in v0.1.0; Quick returns with the C7 upgrade; a key capture button, tap action, conflict warning), **Preview** |
+| **Share** | Tabs: **Export** (select callouts, groups, pads and dials → string → `CopyWindow`), **Import** (a paste box → validation report → apply), **Built-in** (the list of built-in sets with an enabled toggle, Customize, and a hidden-callouts editor). *Built (phase 3):* the Built-in tab only, one line per set (Enabled, Customize, Choose callouts, which opens the set's hidden-callouts editor on the Groups page); Export and Import join in phase 5. |
 | **Profiles** | AceDBOptions, the one permitted AceConfigDialog page |
 
 **Every page has a tab strip**, and every row has a `group`.
@@ -716,10 +723,12 @@ It looks like the WeakAuras Load tab:
 - The list data comes from a shipped ID table; there is no localized-name matching.
 - A live line reads "Active now ✓ / ✗", with the reason.
 
+*Built (phase 3):* checkbox rows for content, difficulty, group, leadership, class, specialization (the classes picked, else the player's) and role; a lowest and highest box for the key level; the library's IdList for instances, battlegrounds and characters (`Name-Realm`), each with an add-the-one-you-are-in button. The shipped id table (`defaults/GameIds.lua`) lists the season's returning dungeons; the Midnight dungeon and raid ids are confirmed in game in phase 5, with the battleground ids.
+
 ### 13.3 Preview as… and Why is this showing?
 
 **Preview as…:**
-- A banner dropdown on the Groups, Pad and Dial pages, with these entries:
+- A session row, `state.previewAs`, drawn first on the General tab of the Groups and Comms Pad pages (and the Dial page in phase 4), and `/qc preview <name>` from the command line, with these entries:
   - **Current**
   - **M+ · <dungeon> · <spec>**
   - **Raid · <difficulty>**
@@ -727,7 +736,7 @@ It looks like the WeakAuras Load tab:
   - one entry per battleground
   - **World solo**
 - It builds a synthetic snapshot and turns on test mode for the surfaces, so they render the resolved groups live.
-- It is session-only, and switches off when the panel closes or combat starts.
+- It is session-only, and switches off when the panel closes or combat starts. *Built (phase 3):* it is test mode's second flavor: one switch at a time with the placeholders, refused in combat and while disabled, ended at the start of combat, by the stand-down and when the settings window closes. Every previewed chip is disarmed (it sends, prints and reports nothing) and its tooltip says so; the header reads `Preview: <situation>` and shows PREVIEW. The dungeon entries are the shipped ids (`defaults/GameIds.lua`), each `M+ · <dungeon> · <spec>` as listed above (`M+ · <dungeon>` when the spec is unknown), after a generic `M+ · <spec>`.
 
 **Why is this showing?** is the tooltip on the pad header and the dial hub. It lists the groups shown in priority order, with `Resolver.Explain` lines, plus any locks.
 
@@ -828,13 +837,13 @@ Every name is declared once in `core/Bus.lua` as `Ka0s_QuickComms_*`. Each messa
 |---|---|---|---|
 | `SITUATION_CHANGED` | Situation | snapshot, previous | Resolver edge (Surfaces), Preview, settings live lines |
 | `RESTRICTION_CHANGED` | Restrictions | reason, canSendChat (consumers read `Restrictions.ActiveSet()`) | Situation (merges into the snapshot), Surfaces (chips, padlocks), SendEngine (drains the combat-end queue), Preview (ends test mode), Pad (ends a drag) |
-| `LIBRARY_CHANGED` | Library | kind, id | Surfaces, settings pages |
+| `LIBRARY_CHANGED` | Library (its own writes, and `Library.Touch` for every member row the seam writes) | kind, id, field (the member row's path for a field write; none for membership, order or a batch) | Surfaces, settings pages |
 | `ACTIVE_GROUPS_CHANGED` | Surfaces (the resolver edge) | surfaceId | none in phase 2; Dial, settings dots (Surfaces already rebuilds the pad) |
 | `SURFACE_REBUILT` | Surfaces | surfaceId, stale | Diagnostics, settings |
 | `SEND_RESULT` | SendEngine | calloutId, surfaceId, `"guarded"` at the press when inside the guard window, then `"sent"` or `"dropped"` from the echo: one press can yield two results | Pad, Dial (flash) |
 | `COMBAT_QUEUE_DRAINED` | SendEngine | count | Surfaces (clears the stale hint) |
 | `PROFILE_CHANGED` | the entry (`core/QuickComms.lua`, `reloadProfile`) | — | everyone that caches |
-| `TEST_MODE_CHANGED` | Preview | on | Surfaces (rebuilds the pads from the test plan), Dial |
+| `TEST_MODE_CHANGED` | Preview | on (true while test mode or Preview as… is on) | Surfaces (rebuilds the pads from the test or preview plan), the editor pages (repaint), Dial |
 
 The count is nine, under the ten-message trigger, so there is no `message-bus.md` until it grows past ten.
 
@@ -865,7 +874,7 @@ Each phase ends green: `lua tests/run.lua` and `luacheck .` both pass. Each also
 | **2. Send engine and Pad: first usable build** | `SendEngine` (pool, arm, queue, guard, echo, stand-down). `Surfaces`. `Pad*`. Test mode. Default pad seeded with built-ins. | In game: the default pad shows M+ callouts in a key and sends on trash and a boss. A double press inside the guard window is marked guarded (dimmed, noted) and the extra send is reported dropped if the echo doesn't arrive. The stale hint appears and clears. |
 | **3. Editors** | Callouts, Groups (with When and Preview), Pads pages. Preview as…. Why tooltips. Built-in tab (enable, hide, Customize). | Smoke test: create a callout and a group, set When, see it on the pad in the right situation. Customize a built-in. |
 | **4. Comms Dial** | `Dial_Secure` (Relaxed only; C7 skipped), `Dial_Render`, Dial page, Bindings.xml, the battleground node dial with open-into | In game: open the dial, click a wedge and it sends in a boss. The Categories two-stroke works. The Arathi Basin node dial sends "INC 3 Lumber Mill" in two clicks. |
-| **5. Share, polish, release** | Share (codec tests, import report). Perf buckets and `tests/perf.lua`. Battleground ID confirmation. Docs set. Automated-test bundle. First audit. README. `ADDONS.md` roster row. | Release gate (complexity ≤ 15, blind files 0). Tag v0.1.0 only on the owner's word. |
+| **5. Share, polish, release** | Share (codec tests, import report). Editor polish: the pad's Look font group, border group and colors with class-color companions (options-ui-§16/§17, the composed controls), and a visual icon picker for callouts and groups. Perf buckets and `tests/perf.lua`. Battleground ID confirmation. Docs set. Automated-test bundle. First audit. README. `ADDONS.md` roster row. | Release gate (complexity ≤ 15, blind files 0). Tag v0.1.0 only on the owner's word. |
 
 ### In-game checks, carried over from brainstorm §11
 
