@@ -49,6 +49,11 @@ local SESSION = {
         get = function() return NS.Preview ~= nil and NS.Preview.IsTestMode() end,
         set = function(v) if NS.Preview then NS.Preview.SetTestMode(v and true or false) end end,
     },
+    -- Preview as… (spec §13.3): modules/Preview.lua owns the switch; "current" is off.
+    ["state.previewAs"] = {
+        get = function() return NS.Preview ~= nil and NS.Preview.PreviewAs() or "current" end,
+        set = function(v) if NS.Preview then NS.Preview.SetPreviewAs(v) end end,
+    },
 }
 
 -- The Minimap button row reads and writes LibDBIcon's own `hide` in the GLOBAL store, inverted

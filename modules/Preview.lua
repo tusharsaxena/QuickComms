@@ -105,12 +105,18 @@ local function battlegrounds()
     return out
 end
 
---- The "Preview as…" menu, in order (spec §13.3): { key, label, snapshot }; Current has none. Task 4b
---- adds one M+ entry per shipped dungeon after the generic one.
+--- The "Preview as…" menu, in order (spec §13.3): { key, label, snapshot }; Current has none.
 function P.Presets()
     local out = { { key = P.CURRENT, label = L["Current"] } }
     local spec = NS.Compat.SpecName()
     out[#out + 1] = { key = "mplus", label = spec and (L["M+"] .. DOT .. spec) or L["M+"], snapshot = mplus(nil) }
+    -- One entry per shipped dungeon (defaults/GameIds.lua), labeled as spec §13.3 lists it.
+    for _, id in ipairs(NS.GameIds.DUNGEONS) do
+        local name = NS.Compat.InstanceName(id) or L["Instance %d"]:format(id)
+        local label = L["M+"] .. DOT .. name
+        if spec then label = label .. DOT .. spec end
+        out[#out + 1] = { key = "mplus:" .. id, label = label, snapshot = mplus(id) }
+    end
     for _, r in ipairs(RAID) do
         out[#out + 1] = { key = "raid:" .. r[1], label = L["Raid"] .. DOT .. r[3], snapshot = base({ content = "raid",
             difficultyID = r[2], difficulty = r[1], group = "raid", instanceGroup = r[1] == "lfr" }) }

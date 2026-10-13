@@ -99,6 +99,7 @@ local function surfaces(out)
     local stale = NS.State.surfaceStale or {}
     out:joined("Pad", "pads built", NS.Pad.Ids())
     out:add("Pad", "testMode=%s", NS.Preview.IsTestMode())
+    out:add("Pad", "previewAs=%s", NS.Preview.PreviewAs() or "off")
     local ids = {}
     for id in pairs(plans) do ids[#ids + 1] = id end
     table.sort(ids)

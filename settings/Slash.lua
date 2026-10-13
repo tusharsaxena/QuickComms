@@ -59,6 +59,8 @@ local COMMANDS = {
         function(rest) NS.SlashVerbs.Check(rest) end},
     {"test",     L["Turn test mode on or off (placeholder chips; combat ends it)"],
         function() NS.Preview.ToggleTestMode() end},
+    {"preview",  L["Preview the pads as another situation — `/qc preview <name>` or `off`; `/qc preview` lists them"],
+        function(rest) NS.SlashVerbs.Preview(rest) end},
 }
 NS.COMMANDS = COMMANDS
 

@@ -62,3 +62,16 @@ NS.SchemaRuntime.AddRows({
       desc = L["Groups for a specific dungeon or battleground move above general ones on each pad and dial."],
       onChange = rebuild },
 })
+
+-- Preview as… (spec §13.3): a session row, never saved, read and written through modules/Preview.lua
+-- (settings/Schema.lua SESSION). The Groups and Comms Pad pages draw it first on their General tab:
+-- the band above the strip holds only each page's picker and its create action (options-ui-§14).
+local PREVIEW_ROWS = {
+    { path = "state.previewAs", type = "string", sessionOnly = true, default = "current",
+      page = "groups", group = L["General"], label = L["Preview as"],
+      desc = L["Draw every pad as it would look in another situation. Its chips send nothing. It ends when the settings close or combat starts."],
+      values = function() return NS.Preview.Choices() end,
+      validate = function(v) return NS.Preview.FindPreset(v) ~= nil end },
+}
+NS.addon.Settings.StampClosureRows(PREVIEW_ROWS)
+NS.SchemaRuntime.AddRows(PREVIEW_ROWS)

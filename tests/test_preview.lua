@@ -191,3 +191,47 @@ test("preview: [phase 3] test mode and Preview as are one switch at a time", fun
     assertTrue(P.PreviewAs() == nil)
     assertFalse(P.SetPreviewAs("nope"))
 end)
+
+test("preview: [phase 3] the menu: Current, M+, each dungeon, each raid difficulty, Arena, each battleground, World", function()
+    local NS = live()
+    local P = NS.Preview
+    assertEqual(P.Presets()[1].key, "current")
+    for _, key in ipairs({ "mplus", "mplus:2526", "raid:lfr", "raid:normal", "raid:heroic", "raid:mythic",
+        "arena", "bg:ab", "bg:wsg", "world" }) do
+        assertTrue(P.FindPreset(key) ~= nil, key)
+    end
+    assertEqual(P.FindPreset("bg:ab").snapshot.instanceID, 529, "the battleground's lowest id")
+    assertEqual(P.FindPreset("raid:heroic").snapshot.difficulty, "heroic")
+    assertEqual(P.FindPreset("mplus:2526").snapshot.instanceID, 2526)
+    assertTrue(P.FindPreset("nope") == nil)
+end)
+
+test("preview: [phase 3] a dungeon entry reads M+ · <dungeon> · <spec> (spec §13.3)", function()
+    local NS = live()
+    NS.Compat.SpecName = function() return "Frost" end
+    NS.Compat.InstanceName = function(id) return id == 2526 and "Algeth'ar Academy" or nil end
+    local DOT = " \194\183 "
+    assertEqual(NS.Preview.FindPreset("mplus:2526").label, "M+" .. DOT .. "Algeth'ar Academy" .. DOT .. "Frost")
+end)
+
+test("preview: [phase 3] the Preview as row and `/qc preview` drive the same switch", function()
+    local NS, m = live()
+    local S = NS.SchemaRuntime
+    assertEqual(S.Get("state.previewAs"), "current")
+    assertTrue(S.Set("state.previewAs", "arena"))
+    assertEqual(NS.Preview.PreviewAs(), "arena")
+    assertFalse((S.Set("state.previewAs", "nope")), "not a situation")
+    m.prints = {}
+    NS.addon:OnSlashCommand("preview off")
+    assertTrue(NS.Preview.PreviewAs() == nil)
+    assertTrue(m.prints[#m.prints]:find("Preview off.", 1, true) ~= nil, m.prints[#m.prints])
+    m.prints = {}
+    NS.addon:OnSlashCommand("preview")
+    local text = table.concat(m.prints, "\n")
+    assertTrue(text:find("raid:heroic", 1, true) ~= nil, text)
+    NS.addon:OnSlashCommand("preview bg:ab")
+    assertEqual(NS.Preview.PreviewAs(), "bg:ab")
+    m.prints = {}
+    NS.addon:OnSlashCommand("preview nope")
+    assertTrue(m.prints[1]:find("No situation named nope", 1, true) ~= nil, m.prints[1])
+end)

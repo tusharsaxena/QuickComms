@@ -96,3 +96,19 @@ test("compat: ChatColor reads the client's chat colors and declines what it cann
     env.ChatTypeInfo = nil
     assertNil(NS.Compat.ChatColor("PARTY"))
 end)
+
+test("compat: [phase 3] InstanceName reads the client's name; a secret, empty or missing one is nil", function()
+    local NS, env = T.newAddon()
+    env.issecretvalue = T.isSecret
+    env.GetRealZoneText = function(id)
+        if id == 2526 then return "Algeth'ar Academy" end
+        if id == 2 then return "" end
+        return T.secret("x")
+    end
+    assertEqual(NS.Compat.InstanceName(2526), "Algeth'ar Academy")
+    assertNil(NS.Compat.InstanceName(1))
+    assertNil(NS.Compat.InstanceName(2))
+    assertNil(NS.Compat.InstanceName("2526"))
+    env.GetRealZoneText = nil
+    assertNil(NS.Compat.InstanceName(2526))
+end)

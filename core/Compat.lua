@@ -230,6 +230,16 @@ function Compat.SpellLink(id)
     return PlainString(sp.GetSpellLink(id))
 end
 
+-- ── Display names for the editors (spec §13.2, §13.3): shown, never matched ─────────────────
+
+--- An instance's display name from its instanceID (GetRealZoneText takes a map id), or nil.
+function Compat.InstanceName(id)
+    if not (PlainNumber(id) and GetRealZoneText) then return nil end
+    local name = PlainString(GetRealZoneText(id))
+    if name == "" then return nil end
+    return name
+end
+
 -- ── The pad (spec §10.1) ─────────────────────────────────────────────────────────────────────
 
 --- The client's color for a chat type, or nil when it cannot be read.
