@@ -83,8 +83,10 @@ local function forEachChip(fn)
     end
 end
 
---- The spam guard is global (D12): one press dims every chip on every pad for the window.
+--- The spam guard is global (D12): one press dims every chip on every pad, and every wedge on every
+--- dial (modules/Dial.lua, which a wedge's press reaches through here too), for the window.
 function Pad.Cooldown(window)
+    if NS.Dial and NS.Dial.Cooldown then NS.Dial.Cooldown(window) end
     forEachChip(function(btn) R.SetCooling(btn, true) end)
     if State.padCoolTimer then NS.addon:CancelTimer(State.padCoolTimer) end
     State.padCoolTimer = NS.addon:ScheduleTimer(function()
@@ -129,6 +131,9 @@ local function arm(btn, slot)
         NS.SendEngine.Disarm(btn, meta)
     end
 end
+
+-- The dial's callout wedges are armed exactly as a chip is (modules/Dial.lua).
+Pad.ArmSlot = arm
 
 local function place(inst, box, style)
     for _, item in ipairs(box.items) do

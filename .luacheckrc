@@ -41,6 +41,8 @@ read_globals = {
   "GameTooltip", "ChatTypeInfo",
   -- modules/Pad.lua: the sent-chip sound.
   "PlaySound", "SOUNDKIT",
+  -- modules/Dial_Render.lua: the pointer follows the cursor.
+  "GetCursorPosition",
   -- core/Compat.lua: the editors' display names (shown, never matched).
   "GetRealZoneText", "GetSpecializationInfoByID", "LOCALIZED_CLASS_NAMES_MALE",
 }

@@ -629,3 +629,7 @@ L["Binding"] = "Binding"
 L["Key"] = "Key"
 L["The key that opens and closes this dial. One key opens one dial. Escape, the left and right mouse buttons, the mouse wheel and 1 to 8 without a modifier cannot be used: the open dial uses them."] = "The key that opens and closes this dial. One key opens one dial. Escape, the left and right mouse buttons, the mouse wheel and 1 to 8 without a modifier cannot be used: the open dial uses them."
 L["No dial to edit: make one on the Comms Dial page."] = "No dial to edit: make one on the Comms Dial page."
+
+-- The Comms Dial's paint (modules/Dial_Render.lua)
+L["Click to open."] = "Click to open."
+L["Click for the next page. The mouse wheel turns pages too."] = "Click for the next page. The mouse wheel turns pages too."
