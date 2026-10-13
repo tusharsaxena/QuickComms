@@ -162,9 +162,16 @@ end
 -- RESTRICTION_CHANGED: refresh the current snapshot's lockdown and combat in place. Never moves
 -- the signature and never sends SITUATION_CHANGED. Before the first refresh there is nothing to
 -- update: Current() classifies live then.
-local function onRestrictionChanged()
+--- Refresh the current snapshot's lockdown and combat in place; never moves the signature. A
+--- module that reads the lockdown on RESTRICTION_CHANGED calls this first, so the order in which
+--- receivers hear the message never matters.
+function Sit.Restamp()
     local s = State.situation
     if s then withRestrictions(s) end
+end
+
+local function onRestrictionChanged()
+    Sit.Restamp()
 end
 
 -- Its own target (core/Bus.lua). On the tracked bus the stand-down and stand-up take it down and

@@ -8,6 +8,16 @@ local _, NS = ...
 -- locked slot keeps its line and carries the lock (§8.4). Library, Resolver and Bake are reached
 -- through `deps`, so a test can hand in any snapshot. Test mode's plan is placeholder slots that
 -- carry no line, drawn through the same render path (preview-mode).
+--
+-- THE EDGE (below): one entry point, Request, for everything that changes what a pad draws: the
+-- situation, the library, the profile, test mode, a settings write and the stand-up. Out of combat
+-- it rebuilds every enabled pad from the CURRENT snapshot at once; in combat it files one keyed
+-- entry ("surfaces") in SendEngine's combat-end queue, shows each pad's stale hint and sends
+-- SURFACE_REBUILT (id, true); the drain rebuilds from the snapshot as it is THEN, and
+-- COMBAT_QUEUE_DRAINED clears the hints (spec §9.1, §18). A profile switch first drops whatever the
+-- old profile queued. RESTRICTION_CHANGED only re-reads the locks, the lockdown chip and the fade,
+-- which are insecure and change in combat too. The stand-down hands the secure half (hide every
+-- pad, disarm every chip) to SendEngine.Teardown, which holds it to combat end if need be.
 
 NS.Surfaces = NS.Surfaces or {}
 local S = NS.Surfaces
@@ -119,4 +129,143 @@ function S.TestPlan(surfaceId)
     end
     return { surfaceId = surfaceId, snapshot = {}, order = {}, sections = sections, lockdownChip = false,
         hasActive = true, test = true }
+end
+
+-- ── the edge: one rebuild request, queued in combat (spec §9.1, §18) ────────────────────────
+
+local State = NS.State
+local TAG = "Pad"
+
+local function enabledPadIds()
+    local p = NS.db and NS.db.profile
+    local out = {}
+    if not p then return out end
+    for _, id in ipairs(p.padOrder) do
+        local pad = p.pads[id]
+        if type(pad) == "table" and pad.enabled ~= false then out[#out + 1] = id end
+    end
+    return out
+end
+
+local function staleSet()
+    State.surfaceStale = State.surfaceStale or {}
+    return State.surfaceStale
+end
+
+function S.Plans()
+    return State.surfacePlans or {}
+end
+
+--- Rebuild every enabled pad from the current snapshot. Out of combat (RunOrQueue's caller).
+--- @return number pads rebuilt
+function S.ApplyAll(reason)
+    if NS.IsStoodDown() or not State.situation then return 0 end
+    local snap = NS.Situation.Current()
+    local deps = S.Deps(snap)
+    local test = NS.Preview.IsTestMode()
+    local pads = NS.db.profile.pads
+    local plans, n = {}, 0
+    State.surfaceOrder = State.surfaceOrder or {}
+    for _, id in ipairs(enabledPadIds()) do
+        local plan = test and S.TestPlan(id) or S.BuildPlan(id, pads[id], snap, deps)
+        plans[id] = plan
+        n = n + 1
+        local sig = table.concat(plan.order, ",")
+        if sig ~= State.surfaceOrder[id] then
+            State.surfaceOrder[id] = sig
+            NS.addon:SendMessage(NS.MSG.ACTIVE_GROUPS_CHANGED, id)
+        end
+    end
+    State.surfacePlans = plans
+    local stale = staleSet()
+    for id in pairs(stale) do stale[id] = nil end
+    NS.Pad.Sync(plans)
+    for id in pairs(plans) do NS.addon:SendMessage(NS.MSG.SURFACE_REBUILT, id, false) end
+    NS.Debug(TAG, "rebuilt %s pad(s) (%s)", n, tostring(reason))
+    return n
+end
+
+--- Ask for a rebuild: now, or at the end of combat with the stale hint showing meanwhile.
+--- Nothing is built before the first situation read, or while stood down.
+--- @return boolean ranNow
+function S.Request(reason)
+    if NS.IsStoodDown() or not State.situation then return false end
+    if NS.SendEngine.RunOrQueue("surfaces", function() S.ApplyAll(reason) end) then return true end
+    local stale = staleSet()
+    for _, id in ipairs(NS.Pad.Ids()) do
+        if not stale[id] then
+            stale[id] = true
+            NS.Pad.SetStale(id, true)
+            NS.addon:SendMessage(NS.MSG.SURFACE_REBUILT, id, true)
+        end
+    end
+    NS.Debug(TAG, "rebuild held for combat (%s)", tostring(reason))
+    return false
+end
+
+--- Re-read every slot's lock (spec §8.4), the lockdown chip and the fade. Insecure: runs in combat.
+function S.RefreshLocks()
+    local plans = State.surfacePlans
+    if not plans then return end
+    NS.Situation.Restamp()
+    local snap = NS.Situation.Current()
+    local showChip = NS.Setting("behavior.lockdownChip") ~= false
+    for id, plan in pairs(plans) do
+        if not plan.test then
+            plan.lockdownChip = false
+            for _, sec in ipairs(plan.sections) do
+                for _, slot in ipairs(sec.slots) do
+                    if slot.concrete then slot.lock = NS.Channels.LockState(slot.concrete, snap) end
+                    if slot.lock == "lockdown" then plan.lockdownChip = true end
+                end
+            end
+            NS.Pad.RefreshLocks(id, plan.lockdownChip and showChip)
+        end
+        NS.Pad.ApplyAlpha(id)
+    end
+end
+
+local function onDrained()
+    local stale = State.surfaceStale
+    if not stale then return end
+    for id in pairs(stale) do
+        stale[id] = nil
+        NS.Pad.SetStale(id, false)
+    end
+end
+
+local function onProfileChanged()
+    NS.SendEngine.Drop("profile")
+    State.surfaceOrder = nil
+    S.Request("profile")
+end
+
+local HANDLERS = {
+    { NS.MSG.SITUATION_CHANGED, function() S.Request("situation") end },
+    { NS.MSG.LIBRARY_CHANGED, function() S.Request("library") end },
+    { NS.MSG.TEST_MODE_CHANGED, function() S.Request("testMode") end },
+    { NS.MSG.PROFILE_CHANGED, onProfileChanged },
+    { NS.MSG.RESTRICTION_CHANGED, function() S.RefreshLocks() end },
+    { NS.MSG.COMBAT_QUEUE_DRAINED, onDrained },
+}
+
+-- Its own target (core/Bus.lua); one target holds several different messages.
+local receiver
+local function listen()
+    receiver = receiver or NS.Bus:NewTarget()
+    if not receiver then return end
+    for _, h in ipairs(HANDLERS) do receiver:RegisterMessage(h[1], h[2]) end
+end
+listen()
+
+NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
+    State.surfacePlans, State.surfaceOrder, State.surfaceStale = nil, nil, nil
+    NS.SendEngine.Teardown(function() NS.Pad.HideAll() end)
+    if receiver and not NS.Bus.tracked then
+        for _, h in ipairs(HANDLERS) do receiver:UnregisterMessage(h[1]) end
+    end
+end
+NS.STAND_UP[#NS.STAND_UP + 1] = function()
+    if not NS.Bus.tracked then listen() end
+    S.Request("standUp")
 end

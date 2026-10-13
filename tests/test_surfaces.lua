@@ -126,3 +126,178 @@ test("surfaces: the test plan is placeholder chips that carry no line", function
         end
     end
 end)
+
+-- ── the rebuild edge (Task 11) ──────────────────────────────────────────────────────────────
+
+local function combat(m, on)
+    if on then
+        m.__setCombat(false)
+        m.__fire("PLAYER_REGEN_DISABLED")
+        m.__setCombat(true)
+    else
+        m.__setCombat(false)
+        m.__fire("PLAYER_REGEN_ENABLED")
+    end
+end
+
+local function pull(NS) return NS.Pad.ChipsFor("p1", "bi.mplus.pull")[1] end
+local function staleShown(NS) return NS.Pad.Instance("p1").header.qcStale:IsShown() end
+
+local function nonMessages(m)
+    local out = {}
+    for _, r in ipairs(m.__registrations()) do
+        if r.kind ~= "message" then out[#out + 1] = r.event end
+    end
+    table.sort(out)
+    return table.concat(out, ",")
+end
+
+local function withInputs(base, extra)
+    local i = {}
+    for k, v in pairs(base) do i[k] = v end
+    for k, v in pairs(extra) do i[k] = v end
+    return i
+end
+
+test("surfaces: the first situation read builds the default pad, armed and shown", function()
+    local NS = live()
+    local inst = NS.Pad.Instance("p1")
+    assertTrue(inst ~= nil)
+    assertTrue(inst.root:IsShown())
+    assertEqual(pull(NS):GetAttribute("macrotext"), "/p Pulling next pack")
+end)
+
+test("surfaces: ACTIVE_GROUPS_CHANGED is sent once per real change of a pad's active groups", function()
+    local NS = live()
+    local heard = {}
+    local t = NS.Bus:NewTarget()
+    t:RegisterMessage(NS.MSG.ACTIVE_GROUPS_CHANGED, function(_, id) heard[#heard + 1] = id end)
+    NS.Library.CreateCallout({ name = "Loose", text = "hi", channel = "party" })
+    assertEqual(#heard, 0, "a library write that moves no group")
+    NS.Situation.ReadInputs = function() return AB end
+    NS.Situation.RefreshNow("test")
+    assertEqual(table.concat(heard, ","), "p1")
+    NS.Surfaces.Request("again")
+    NS.Surfaces.Request("and again")
+    -- red under: drop the `sig ~= State.surfaceOrder[id]` check in S.ApplyAll
+    assertEqual(table.concat(heard, ","), "p1", "a rebuild with the same groups sends nothing")
+    NS.Situation.ReadInputs = function() return MPLUS end
+    NS.Situation.RefreshNow("test")
+    assertEqual(table.concat(heard, ","), "p1,p1", "back to M+ is a second real change")
+end)
+
+test("surfaces: [review 1] a situation change in combat queues: nothing blocked, stale shows, combat end rebuilds", function()
+    local NS, m = live()
+    local chip = pull(NS)
+    local rebuilt = {}
+    local t = NS.Bus:NewTarget()
+    t:RegisterMessage(NS.MSG.SURFACE_REBUILT, function(_, id, stale) rebuilt[#rebuilt + 1] = id .. ":" .. tostring(stale) end)
+    combat(m, true)
+    NS.Situation.ReadInputs = function() return withInputs(MPLUS, { inInstanceGroup = true }) end
+    NS.Situation.RefreshNow("test")
+    assertEqual(#m.blocked, 0)
+    assertEqual(chip:GetAttribute("macrotext"), "/p Pulling next pack", "frozen in combat")
+    assertTrue(staleShown(NS))
+    assertEqual(table.concat(rebuilt, ","), "p1:true")
+    combat(m, false)
+    -- red under: drop the RunOrQueue in S.Request (the rebuild would run, and be blocked, in combat)
+    assertEqual(pull(NS):GetAttribute("macrotext"), "/i Pulling next pack")
+    assertFalse(staleShown(NS))
+    assertEqual(table.concat(rebuilt, ","), "p1:true,p1:false")
+    assertEqual(#m.blocked, 0)
+end)
+
+test("surfaces: [review 1] a profile switch in combat queues the new profile's pads", function()
+    local NS, m = live()
+    combat(m, true)
+    NS.addon.db:SetProfile("Other")
+    assertEqual(#m.blocked, 0)
+    assertTrue(staleShown(NS))
+    combat(m, false)
+    assertEqual(#m.blocked, 0)
+    assertEqual(pull(NS):GetAttribute("macrotext"), "/p Pulling next pack")
+    assertFalse(staleShown(NS))
+end)
+
+test("surfaces: a setting written in combat waits for combat end, with the stale hint", function()
+    local NS, m = live()
+    combat(m, true)
+    NS.SchemaRuntime.Set("behavior.autoPromote", true)
+    assertTrue(staleShown(NS))
+    combat(m, false)
+    assertFalse(staleShown(NS))
+    assertEqual(#m.blocked, 0)
+end)
+
+test("surfaces: an encounter lockdown in combat padlocks a Say chip and lights the chip, nothing blocked", function()
+    local NS, m = live()
+    local cid = userCallout(NS, { name = "Shout", text = "Go go", channel = "say" })
+    local chip = NS.Pad.ChipsFor("p1", cid)[1]
+    assertFalse(chip.qcLock:IsShown())
+    combat(m, true)
+    local enc = m.Enum.AddOnRestrictionType.Encounter
+    m.restrictionStates[enc] = m.Enum.AddOnRestrictionState.Active
+    m.__fire("ADDON_RESTRICTION_STATE_CHANGED", enc, m.Enum.AddOnRestrictionState.Active)
+    assertTrue(chip.qcLock:IsShown())
+    assertTrue(NS.Pad.Instance("p1").header.qcLockdown:IsShown())
+    assertEqual(chip:GetAttribute("macrotext"), "/s Go go", "a lock never disarms")
+    assertEqual(#m.blocked, 0)
+end)
+
+test("surfaces: test mode draws placeholders that send nothing; combat start brings the live chips back", function()
+    local NS, m = live()
+    NS.Preview.SetTestMode(true)
+    local inst = NS.Pad.Instance("p1")
+    assertTrue(inst.header.qcTest:IsShown())
+    assertEqual(#NS.SendEngine.ArmedButtons(), 0, "placeholders are disarmed")
+    m.__click(NS.Pad.ChipsFor("p1", "test.1.1")[1])
+    assertEqual(#m.sentMacros, 0)
+    combat(m, true)
+    assertFalse(NS.Preview.IsTestMode())
+    assertFalse(inst.header.qcTest:IsShown())
+    assertEqual(pull(NS):GetAttribute("macrotext"), "/p Pulling next pack")
+    assertEqual(#m.blocked, 0)
+end)
+
+test("surfaces: if lockdown has already begun at the combat edge, test mode's end is queued, not blocked", function()
+    local NS, m = live()
+    NS.Preview.SetTestMode(true)
+    m.__setCombat(true)                    -- InCombatLockdown() is already true when the edge fires
+    m.__fire("PLAYER_REGEN_DISABLED")
+    assertFalse(NS.Preview.IsTestMode())
+    assertEqual(#m.blocked, 0)
+    assertTrue(staleShown(NS))
+    assertEqual(#NS.SendEngine.ArmedButtons(), 0, "the placeholders stay, disarmed, until combat ends")
+    combat(m, false)
+    assertEqual(pull(NS):GetAttribute("macrotext"), "/p Pulling next pack")
+    assertFalse(staleShown(NS))
+    assertFalse(NS.Pad.Instance("p1").header.qcTest:IsShown())
+end)
+
+test("surfaces: disabled out of combat, every pad hides and every chip disarms; enabled, they return", function()
+    local NS = live()
+    local inst = NS.Pad.Instance("p1")
+    NS.SchemaRuntime.Set("enabled", false)
+    assertFalse(inst.root:IsShown())
+    assertEqual(#NS.SendEngine.ArmedButtons(), 0)
+    NS.SchemaRuntime.Set("enabled", true)
+    assertTrue(inst.root:IsShown())
+    assertEqual(pull(NS):GetAttribute("macrotext"), "/p Pulling next pack")
+end)
+
+test("surfaces: [review 2] disabled mid-combat: nothing blocked, one held registration, finished at combat end", function()
+    local NS, m = live()
+    local inst = NS.Pad.Instance("p1")
+    combat(m, true)
+    NS.SchemaRuntime.Set("enabled", false)
+    assertTrue(NS.IsStoodDown())
+    assertEqual(#m.blocked, 0)
+    assertTrue(inst.root:IsShown(), "held: no protected call in combat")
+    -- red under: register the held teardown on NS.addon instead of SendEngine's own target
+    assertEqual(nonMessages(m), "PLAYER_REGEN_ENABLED", "the one permitted registration")
+    combat(m, false)
+    assertFalse(inst.root:IsShown())
+    assertEqual(#NS.SendEngine.ArmedButtons(), 0)
+    assertEqual(nonMessages(m), "", "released the moment it fired")
+    assertEqual(#m.blocked, 0)
+end)
