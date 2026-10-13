@@ -294,3 +294,40 @@ test("libs: [phase 5] LibDeflate and LibSerialize are vendored, TOC-listed and l
     local ok, back = S:Deserialize(D:DecompressDeflate(D:DecodeForPrint(packed)))
     assertTrue(ok and back.a == 1, "a round trip through both")
 end)
+
+test("perf: [phase 5] a refresh notes situation.refresh, and each plan resolver.resolve inside bake.surface", function()
+    local NS = T.enableAddon()
+    local notes = {}
+    local real = NS.Perf.Note
+    NS.Perf.Note = function(key, ms, parent)
+        notes[#notes + 1] = key .. (parent and ("<" .. parent) or "")
+        return real(key, ms, parent)
+    end
+    NS.Situation.ReadInputs = function()
+        return { inInstance = true, instanceType = "party", difficultyID = 8, keystoneActive = true, keyLevel = 12,
+            inGroup = true }
+    end
+    NS.Perf.on = true
+    NS.Situation.RefreshNow("test")
+    NS.Perf.on = false
+    local text = table.concat(notes, ",")
+    assertTrue(text:find("situation.refresh", 1, true) ~= nil, text)
+    -- red under: drop the parent argument from the resolver.resolve bracket in modules/Surfaces.lua
+    assertTrue(text:find("resolver.resolve<bake.surface", 1, true) ~= nil, text)
+end)
+
+test("perf: [phase 5] the Comms Dial page's Preview notes neither bake.surface nor resolver.resolve", function()
+    local NS = T.enableAddon()
+    local notes = {}
+    local real = NS.Perf.Note
+    NS.Perf.Note = function(key, ms, parent)
+        notes[#notes + 1] = key
+        return real(key, ms, parent)
+    end
+    NS.Perf.on = true
+    local lines = NS.addon.Settings.Dials.PreviewLines("d2")
+    NS.Perf.on = false
+    assertTrue(#lines > 0)
+    -- red under: drop `not deps.unmeasured` from resolve() in modules/Surfaces.lua
+    assertEqual(table.concat(notes, ","), "", "an editor's look is not a surface's bake")
+end)

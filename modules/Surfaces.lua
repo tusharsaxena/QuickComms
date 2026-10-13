@@ -94,6 +94,18 @@ function S.Deps(snap)
     }
 end
 
+-- A surface's active groups and its order of them (spec §7), bracketed as resolver.resolve inside
+-- bake.surface (spec §16), and gated as bake.surface is: an editor's look at a plan
+-- (deps.unmeasured, settings/Dials.lua) notes neither, because a child noted under a parent that was
+-- never noted would skew performance-§3's within-parent figures.
+local function resolve(list, snap, deps)
+    local t0 = Perf.on and not deps.unmeasured and debugprofilestop()
+    local active = NS.Resolver.ActiveGroups(deps.groups, snap)
+    local order = NS.Resolver.SurfaceOrder(list, active, deps.groups, deps.autoPromote)
+    if t0 then Perf.Note("resolver.resolve", debugprofilestop() - t0, "bake.surface") end
+    return active, order
+end
+
 --- One pad's plan.
 --- @param pad table profile.pads[surfaceId]
 --- @param snap table the situation snapshot
@@ -101,8 +113,7 @@ end
 --- @return table plan
 function S.BuildPlan(surfaceId, pad, snap, deps)
     local t0 = Perf.on and debugprofilestop()
-    local active = NS.Resolver.ActiveGroups(deps.groups, snap)
-    local order = NS.Resolver.SurfaceOrder(pad and pad.groups, active, deps.groups, deps.autoPromote)
+    local active, order = resolve(pad and pad.groups, snap, deps)
     local opts = { soloFallback = deps.soloFallback, ctx = deps.ctx }
     local plan = { surfaceId = surfaceId, snapshot = snap, order = order, sections = {},
         lockdownChip = false, hasActive = #order > 0, active = active }
@@ -185,8 +196,7 @@ function S.BuildDialPlan(surfaceId, dial, snap, deps)
     -- deps.unmeasured: an editor's look at a plan (settings/Dials.lua), not a surface's bake.
     local t0 = Perf.on and not deps.unmeasured and debugprofilestop()
     dial = type(dial) == "table" and dial or {}
-    local active = NS.Resolver.ActiveGroups(deps.groups, snap)
-    local order = NS.Resolver.SurfaceOrder(dial.groups, active, deps.groups, deps.autoPromote)
+    local active, order = resolve(dial.groups, snap, deps)
     local opts = { soloFallback = deps.soloFallback, ctx = deps.ctx }
     local plan = { kind = "dial", surfaceId = surfaceId, snapshot = snap, order = order, active = active,
         lockdownChip = false, hasActive = #order > 0 }

@@ -14,13 +14,14 @@ local addonName, NS = ...
 
 local lib = LibStub and LibStub("LibKa0s-Perf-1.0", true)
 
--- The buckets, in report order. Each one is bracketed by the module named beside it. Phase 2
--- declares the send engine's and the pad's. The tasks that add one add its bucket here together
--- with the bracket that reaches it (design spec §16: situation.refresh, resolver.resolve,
--- bake.surface, pad.layout, dial.render, send.click, echo.match), so a declared bucket is never left
--- unreached (tests/test_setup.lua).
+-- The buckets, in report order: design spec §16's seven, each bracketed by the module named beside
+-- it, and each declared with the bracket that reaches it, so a declared bucket is never left
+-- unreached (tests/test_setup.lua). resolver.resolve runs inside bake.surface and says so (`within`,
+-- performance-§3).
 local BUCKETS = {
+    { key = "situation.refresh" }, -- modules/Situation.lua: one read, classify and signature (RefreshNow)
     { key = "bake.surface" }, -- modules/Surfaces.lua: one pad's or dial's plan (resolve, order, bake every slot)
+    { key = "resolver.resolve", within = "bake.surface" }, -- modules/Surfaces.lua: a plan's active groups and their order
     { key = "send.click" },   -- modules/SendEngine.lua: the OnClick hook
     { key = "pad.layout" },   -- modules/Pad.lua: one pad's rebuild (geometry, chips, arm)
     { key = "echo.match" },   -- modules/SendEngine.lua: a CHAT_MSG_* echo while a press waits

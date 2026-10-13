@@ -10,6 +10,7 @@ local _, NS = ...
 NS.Situation = NS.Situation or {}
 local Sit = NS.Situation
 local State = NS.State
+local Perf = NS.Perf
 
 local TAG = "Situation"
 local COALESCE = 0.1
@@ -115,10 +116,7 @@ local function withRestrictions(s)
     return s
 end
 
---- Read, classify, and publish when the signature moved.
---- @param reason string|nil for the debug line
---- @return boolean changed
-function Sit.RefreshNow(reason)
+local function refresh(reason)
     State.situationPending = nil
     local snap = withRestrictions(Sit.Classify(Sit.ReadInputs()))
     local sig = Sit.Signature(snap)
@@ -129,6 +127,16 @@ function Sit.RefreshNow(reason)
     NS.Debug(TAG, "%s -> %s/%s (%s)", prev and prev.content or "none", snap.content, snap.group, tostring(reason))
     NS.addon:SendMessage(NS.MSG.SITUATION_CHANGED, snap, prev)
     return true
+end
+
+--- Read, classify, and publish when the signature moved. Bracketed as situation.refresh (spec §16).
+--- @param reason string|nil for the debug line
+--- @return boolean changed
+function Sit.RefreshNow(reason)
+    local t0 = Perf.on and debugprofilestop()
+    local changed = refresh(reason)
+    if t0 then Perf.Note("situation.refresh", debugprofilestop() - t0) end
+    return changed
 end
 
 --- Coalesced refresh: a burst of events within 0.1 s gives one read.
