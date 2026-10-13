@@ -64,8 +64,8 @@ the slash table and its verb bodies. Phase 2 adds Surfaces, SendEngine, Pad and 
 ## Settings Schema
 
 One write seam, `NS.SchemaRuntime.Set` (LibKa0s-Schema), reached by the panel, the CLI, the launcher
-and the host verbs alike; the rows are `settings/Schema.lua`'s `Settings.Schema` array, today the
-composed Master controls rows. Every module reads a setting through `NS.Setting(path)`, which answers
+and the host verbs alike; the rows are `settings/Schema.lua`'s `Settings.Schema` array: the composed Master controls rows, then
+the Behavior rows (`behavior.*`, spliced in by `settings/SchemaRows.lua`). Every module reads a setting through `NS.Setting(path)`, which answers
 the row's default before the database exists. The reactions every surface shares are
 `Settings.REACTIONS`. The path `enabled` is declared `writeThrough` so `/qc enable|disable` still
 lands on a load where the composers are hollow (options-ui-§1 route (a)). Shape, defaults and
@@ -92,7 +92,7 @@ tracked registration down and replay it.
 |---|---|---|---|---|
 | `PROFILE_CHANGED` | `ProfileChanged` | `core/QuickComms.lua` `reloadProfile` (every AceDB profile event) | none | none yet; every module that caches a profile value |
 | `SITUATION_CHANGED` | `SituationChanged` | `modules/Situation.lua`, only when the signature moves | snapshot, previous | none yet; the resolver edge, Preview, the settings live lines |
-| `RESTRICTION_CHANGED` | `RestrictionChanged` | `modules/Restrictions.lua`, when its four answers move | reason, canSendChat | none yet; Surfaces (chips, padlocks) |
+| `RESTRICTION_CHANGED` | `RestrictionChanged` | `modules/Restrictions.lua`, when the set of blocking reasons (combat included) moves | reason, canSendChat | Situation (merges lockdown and combat into the snapshot in place); Surfaces (chips, padlocks) |
 | `LIBRARY_CHANGED` | `LibraryChanged` | `modules/Library.lua`, on every registry write | kind, id | none yet; Surfaces, the settings pages |
 
 Declared and not yet sent (phase 2): `ACTIVE_GROUPS_CHANGED`, `SURFACE_REBUILT` (Surfaces),

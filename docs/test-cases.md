@@ -113,7 +113,7 @@ Total.
 - slash: `debug on` turns logging on without opening the console
 - slash: degraded, enable and disable still work and the CLI names the missing library
 
-### test_disabled.lua (9)
+### test_disabled.lua (10)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
 - disabled 2: through /qc disable, nothing is registered, heard or scheduled
@@ -124,22 +124,25 @@ Total.
 - disabled 6: the stand-up re-registers from current state and replays the receivers
 - disabled 7: a disabled profile loads stood down, with nothing registered
 - disabled 8: the launcher's Enabled entry stays live while disabled
+- disabled: [final 1] every feature event is declared once (AceEvent keeps one handler per event)
 
-### test_diagnostics.lua (5)
+### test_diagnostics.lua (6)
 
 - diagnostics: the sections are the addon's, in report order
 - diagnostics: the report names the schema, the profile, the holds and the launcher
 - diagnostics: it runs while stood down and says so, without acting
 - diagnostics: `enabled` is always listed, and a hidden minimap button is listed
 - diagnostics: the situation and library sections report the snapshot and the registry
+- diagnostics: [final 1] the restriction section names the active reasons and canSendChat
 
-### test_compat.lua (3)
+### test_compat.lua (4)
 
 - compat: plain readers pass plain values and drop secrets
 - compat: InstanceInfo with a secret instanceID reads nil, never raises
 - compat: InstanceInfo during a loading screen (all nil) reads safely
+- compat: [final] an empty-string realm falls back to the normalized realm name
 
-### test_restrictions.lua (15)
+### test_restrictions.lua (16)
 
 - restrictions: nothing restricted, everything allowed and nothing announced
 - restrictions: an encounter stops chat and is the reason; its lift is announced
@@ -149,15 +152,16 @@ Total.
 - restrictions: the reason is the highest in priority
 - restrictions: a type the client adds later is reported by name and blocks nothing
 - restrictions: the chat lockdown stops chat, a secret answer too
-- restrictions: the combat edges stop inspect and trade, ahead of the client's flag
+- restrictions: the combat edges set InCombat, ahead of the client's flag
 - restrictions: before any edge, the client's combat flag decides
 - restrictions: combat under an encounter announces the change of what is allowed
 - restrictions: a secret payload never raises; a secret state reads as active
 - restrictions: a client without the restriction APIs restricts nothing but combat
 - restrictions: Refresh announces a lift no event reported
 - restrictions: stood down, nothing is heard; the stand-up announces what is in effect
+- restrictions: [final 1] a lockdown lifting under a higher one is announced
 
-### test_situation.lua (10)
+### test_situation.lua (14)
 
 - situation: classifier truth table (content, group)
 - situation: non-table input classifies as open world solo
@@ -169,6 +173,10 @@ Total.
 - situation: ReadInputs survives a loading screen
 - situation: stand-down cancels a pending coalesced refresh
 - situation: snapshot.lockdown mirrors Restrictions.ActiveSet
+- situation: [final 1] a restriction or combat edge after the refresh reaches Current()
+- situation: [final 1] Current() before the first refresh reads the combat edge
+- situation: [final 1] stood down, the receiver is down; stood up, it hears again
+- situation: [final 1] on the degraded bus the module takes its own receiver down and up
 
 ### test_tokens.lua (8)
 
@@ -197,7 +205,7 @@ Total.
 - bake: [review 1] a leading slash is refused, even after whitespace
 - bake: [review 1] newlines and control characters flatten to one line
 - bake: pipes are escaped, spell links are not
-- bake: [review 2] the 255-byte boundary counts bytes and live tokens
+- bake: [final minor 5] the 255-byte boundary counts the whole line: prefix, space, text, live tokens
 - bake: empty or whitespace-only text is refused
 - bake: solo smart callouts follow the fallback
 - bake: the lock rides along without blocking the bake
@@ -205,7 +213,7 @@ Total.
 - bake: baked token values are sanitized; spell links are not
 - bake: a typed %t counts as live
 
-### test_resolver.lua (7)
+### test_resolver.lua (8)
 
 - resolver: an empty When always matches
 - resolver: each row matches and fails on its own
@@ -214,6 +222,7 @@ Total.
 - resolver: ActiveGroups unions enabled matches
 - resolver: SurfaceOrder keeps the surface's order; autoPromote floats narrower groups
 - resolver: Explain names the matched rows
+- resolver: [final] a non-number keyLevel bound is unset, never raises
 
 ### test_builtins.lua (6)
 
@@ -224,7 +233,7 @@ Total.
 - builtins: bake audit, every callout bakes under its set's snapshot
 - builtins: battlegrounds use smart group; arena uses party; raid lead uses smart lead
 
-### test_library.lua (18)
+### test_library.lua (23)
 
 - library: Prepare seeds one pad and one dial with every built-in, once
 - library: callouts validate on create
@@ -244,13 +253,20 @@ Total.
 - library: Prepare survives malformed groups and surfaces
 - library: Prepare repairs the order lists
 - library: MoveInGroup with a nil target returns false
+- library: [final 2] a built-in whose copy fails validation is refused cleanly, with no hole
+- library: [final 2] the name cap counts characters, not bytes
+- library: [final 2] Customize skips a copy that fails and reports it, leaving no hole
+- library: [final minor 2] Prepare lifts a stale nextId above every existing id
+- library: [final minor 3] Prepare repairs corrupt top-level registry keys and builtins entries
 
-### test_check.lua (4)
+### test_check.lua (6)
 
 - check: a built-in callout prints its line and channel
 - check: a refused callout prints the reason
 - check: an unknown id says so
 - check: never calls SendChatMessage
+- check: [final minor 4] unknown and send-time tokens are listed
+- check: [final minor 4] solo with soloFallback=self says it would print locally
 
 ### test_vendor_sync.lua (3)
 
@@ -332,18 +348,18 @@ Total.
 | test_profile.lua | 5 |
 | test_schema.lua | 12 |
 | test_slash.lua | 9 |
-| test_disabled.lua | 9 |
-| test_diagnostics.lua | 5 |
-| test_compat.lua | 3 |
-| test_restrictions.lua | 15 |
-| test_situation.lua | 10 |
+| test_disabled.lua | 10 |
+| test_diagnostics.lua | 6 |
+| test_compat.lua | 4 |
+| test_restrictions.lua | 16 |
+| test_situation.lua | 14 |
 | test_tokens.lua | 8 |
 | test_channels.lua | 7 |
 | test_bake.lua | 11 |
-| test_resolver.lua | 7 |
+| test_resolver.lua | 8 |
 | test_builtins.lua | 6 |
-| test_library.lua | 18 |
-| test_check.lua | 4 |
+| test_library.lua | 23 |
+| test_check.lua | 6 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -351,4 +367,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **233** |
+| **Total** | **249** |

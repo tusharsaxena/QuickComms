@@ -21,8 +21,16 @@ suspend takes the same latch's `perf` hold.
 
 ## Today: a profile event
 
-AceDB's switch, copy or reset → `reloadProfile` (`core/QuickComms.lua`): the migrations, a panel
+AceDB's switch, copy or reset → `reloadProfile` (`core/QuickComms.lua`): the migrations,
+`Library.Prepare()` (seed, append newly shipped built-ins, repair the registry, lift `nextId`), a panel
 refresh, the latch re-read from the incoming profile's `enabled`, then `NS.MSG.PROFILE_CHANGED`.
+
+## Today: a restriction or combat edge
+
+`ADDON_RESTRICTION_STATE_CHANGED` or a `PLAYER_REGEN` edge → `Restrictions` (it owns both
+`PLAYER_REGEN` rows) → when the set of blocking reasons moves, `RESTRICTION_CHANGED (reason,
+canSendChat)` → Situation refreshes the snapshot's `lockdown` and `inCombat` in place. The signature
+does not move and no `SITUATION_CHANGED` is sent.
 
 ## Today: `/qc check <id>`
 

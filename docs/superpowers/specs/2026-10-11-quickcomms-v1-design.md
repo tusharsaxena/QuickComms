@@ -373,7 +373,7 @@ An unknown token is left as typed and flagged in the editor's preview (the DropW
 
 **Resolution happens at bake time** from the snapshot (Proposed P3):
 - `smartGroup` → `/i` if in an instance group, else `/raid` if in a raid, else `/p` if in a party, else the solo fallback.
-- `smartLead` → `/rw` if leader or assist in a raid, or in a party (where anyone may send it); otherwise the same as `smartGroup`.
+- `smartLead` → `/rw` if leader or assist in a raid, or in a party (where anyone may send it); otherwise the same as `smartGroup`. An instance group (LFG, LFR, a battleground) gets `/i`, never `/rw`: its leader is assigned, so a warning there is noise (ruling, phase 1).
 - Chat slash commands don't accept macro conditionals, so the resolution can't happen live.
 - If the group changes during combat, the baked prefix may be stale until combat ends. It is refreshed then, like everything else.
 - **C4 unverified (owner, 2026-10-13).** Re-baking between pulls during an active key assumes `SetAttribute("macrotext")` works out of combat inside a key (only `InCombatLockdown` should block it). If a real key shows otherwise, the fallback is the switch: bake once at key start, and situation changes inside the key wait until it ends.
@@ -394,7 +394,7 @@ An unknown token is left as typed and flagged in the editor's preview (the DropW
    - Collapse runs of whitespace and trim.
    - **Refuse** text whose first non-space character is `/`. Callout text is chat text, never a command, so `/run`, `/script`, `/dump`, `/cast` and friends can never reach `macrotext`.
    - Escape a stray `|` as `||`, except inside a game-generated `{spell:ID}` link.
-4. Check the length: at most 255 bytes once baked. Live tokens are counted at a nominal 12 bytes, and the editor's counter shows that.
+4. Check the length: at most 255 bytes for the **whole** baked line, prefix and space included, because `macrotext` runs through the edit-box path whose cap counts the line as typed. Live tokens are counted at a nominal 12 bytes, and the editor's counter shows that.
 5. Output `"<prefix> <text>"`.
 
 **Imported text** goes through the same sanitizer when it's imported, and again at every bake.
@@ -668,7 +668,7 @@ NS.BuiltIns.callouts["bi.mplus.lust"] = { name = L["Lust"], text = L["Lust on th
 
 **Updates.** A new addon version may change built-in text freely. Customized copies never change.
 
-**Bake audit** (a test): every built-in callout must bake under its expected snapshot to 255 bytes or fewer, with a valid channel and no `/` start.
+**Bake audit** (a test): every built-in callout must bake under its expected snapshot to a whole line of 255 bytes or fewer, with a valid channel and no `/` start.
 
 ## 13. Settings panel
 
@@ -818,7 +818,7 @@ Every name is declared once in `core/Bus.lua` as `Ka0s_QuickComms_*`. Each messa
 | `SURFACE_REBUILT` | Surfaces | surfaceId, stale | Diagnostics, settings |
 | `SEND_RESULT` | SendEngine | calloutId, surfaceId, `"sent"` or `"dropped"` or `"guarded"` | Pad, Dial (flash) |
 | `COMBAT_QUEUE_DRAINED` | SendEngine | count | Surfaces (clears the stale hint) |
-| `PROFILE_CHANGED` | Database | — | everyone that caches |
+| `PROFILE_CHANGED` | the entry (`core/QuickComms.lua`, `reloadProfile`) | — | everyone that caches |
 | `TEST_MODE_CHANGED` | Preview | on | Pad, Dial |
 
 The count is nine, under the ten-message trigger, so there is no `message-bus.md` until it grows past ten.

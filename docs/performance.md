@@ -18,7 +18,11 @@ exemption will never apply.
 
 ## The buckets
 
-None is declared yet: the scaffold has no hot path. The design's buckets (spec §16:
+None is declared yet. Phase 1's only event-driven path is `Situation.Refresh`, a pass coalesced to
+one read 0.1 s after a burst of zone, roster, spec and keystone events: it runs a handful of times a
+pull at most and never per frame or per combat-log event, so a bucket on it would read near `0.000`
+(bucket coverage is a SHOULD, performance-§3). `situation.refresh` is declared in phase 2, with the
+resolver edge and the surface bake that run inside the same pass. The design's buckets (spec §16:
 `situation.refresh`, `resolver.resolve`, `bake.surface`, `pad.layout`, `dial.render`, `send.click`,
 `echo.match`) are declared in `core/PerfSetup.lua` together with the bracket that reaches each one,
 and `tests/test_setup.lua` fails if a declared bucket has no bracket, or a bracket no bucket. Every
