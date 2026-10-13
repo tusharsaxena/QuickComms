@@ -119,6 +119,7 @@ Kit.run{
         "test_check",
         "test_send_guard",
         "test_sendengine",
+        "test_dial_secure",
         "test_preview",
         "test_master",
         "test_pad_layout",

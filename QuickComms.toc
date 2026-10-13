@@ -107,7 +107,7 @@ modules\Resolver.lua
 modules\Library.lua
 # LOAD-BEARING: publishes NS.SendGuard, which modules\SendEngine.lua takes as a load-time upvalue.
 modules\SendEngine_Guard.lua
-# Conventional: the only secure writer; appends to NS.STAND_DOWN / NS.STAND_UP (and, Task 4, NS.FEATURE_EVENTS)
+# LOAD-BEARING: the only secure writer; publishes NS.SendEngine, which modules\Dial_Secure.lua takes as a load-time upvalue; appends to NS.STAND_DOWN / NS.STAND_UP (and, Task 4, NS.FEATURE_EVENTS)
 modules\SendEngine.lua
 # Conventional: test mode, TEST_MODE_CHANGED's sender; appends to NS.STAND_DOWN / NS.STAND_UP
 modules\Preview.lua
@@ -121,6 +121,8 @@ modules\Pad_Render.lua
 modules\Pad.lua
 # LOAD-BEARING: publishes NS.DialLayout, which modules\Dial_Render.lua and modules\Dial.lua take at load.
 modules\Dial_Layout.lua
+# LOAD-BEARING: publishes NS.DialSecure, which modules\Dial.lua takes as a load-time upvalue.
+modules\Dial_Secure.lua
 # Conventional: core\DebugLogSetup.lua's descriptor reads NS.Diagnostics at RUN time.
 modules\Diagnostics.lua
 
