@@ -3,7 +3,7 @@ local _, NS = ...
 -- header (modules/Dial_Secure.lua) named QuickCommsDial<place>, which Bindings.xml and the dial's key
 -- click; a pool of ring containers under it; in each container a pool of wedges, each the slot's send
 -- button (spec §9.1). Frames are never destroyed: a released place keeps its header, closed and
--- emptied, for the next dial that takes it.
+-- emptied, for the next dial that takes it. Bindings.xml's menu labels are set below.
 --
 -- PROTECTED WORK IS OUT OF COMBAT ONLY. Apply, Release, Sync and HideAll run through Surfaces and
 -- SendEngine.RunOrQueue (and the stand-down's held Teardown), and Apply also declines on its own in
@@ -30,6 +30,18 @@ local L = NS.L
 local TAG = "Dial"
 local FLASH_SECONDS = 0.4
 Dial.DROP_SECONDS = 5          -- a drop stays red long enough to reopen the dial and see it
+
+-- Bindings.xml's "Open Comms Dial 1-4" (spec §9.4). The key bindings menu reads its header and its
+-- entries' labels from these globals by name; the client requires them, so they are the one place
+-- this addon writes a global that is not a frame. The header is an identifier, declared in
+-- .luacheckrc `globals` with its reason. An entry's label is named after its binding, which holds a
+-- space and a colon ("BINDING_NAME_CLICK QuickCommsDial1:Toggle"): no identifier can spell it, so it
+-- cannot be declared there, and rawset writes it.
+Dial.BINDINGS = 4
+BINDING_HEADER_QUICKCOMMS = NS.BRAND
+for i = 1, Dial.BINDINGS do
+    rawset(_G, ("BINDING_NAME_CLICK %s:%s"):format(DS.HEADER:format(i), DS.TOGGLE), L["Open Comms Dial %d"]:format(i))
+end
 
 local byIndex, byId = {}, {}   -- [place] = instance; [dialId] = instance
 

@@ -1,0 +1,9 @@
+<Bindings>
+	<!-- Ka0s Quick Comms: Open Comms Dial 1-4 (design spec §9.4, P7). Each clicks the dial header at that
+	     place in the dial order (modules/Dial_Secure.lua names them QuickCommsDial<n>) with the Toggle
+	     button, as the dial's own key does. The labels are set in modules/Dial.lua. -->
+	<Binding name="CLICK QuickCommsDial1:Toggle" header="QUICKCOMMS" category="ADDONS"/>
+	<Binding name="CLICK QuickCommsDial2:Toggle" category="ADDONS"/>
+	<Binding name="CLICK QuickCommsDial3:Toggle" category="ADDONS"/>
+	<Binding name="CLICK QuickCommsDial4:Toggle" category="ADDONS"/>
+</Bindings>

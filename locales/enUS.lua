@@ -638,3 +638,6 @@ L["Click for the next page. The mouse wheel turns pages too."] = "Click for the 
 L["This dial has not been built yet."] = "This dial has not been built yet."
 L["Test mode: placeholder wedges that send nothing."] = "Test mode: placeholder wedges that send nothing."
 L["Pad and dial positions reset."] = "Pad and dial positions reset."
+
+-- The key bindings menu (modules/Dial.lua, Bindings.xml)
+L["Open Comms Dial %d"] = "Open Comms Dial %d"

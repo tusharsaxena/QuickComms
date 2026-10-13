@@ -386,3 +386,42 @@ test("dial: the hub's tooltip says why each group shows, unless the player turne
     NS.Preview.SetTestMode(true)
     assertEqual(NS.Surfaces.WhyLines("d2")[1], "Test mode: placeholder wedges that send nothing.")
 end)
+
+-- ── Bindings.xml (Task 8) ───────────────────────────────────────────────────────────────────
+
+local function readFile(rel)
+    local fh = assert(io.open(T.root .. "/" .. rel, "rb"))
+    local s = fh:read("*a")
+    fh:close()
+    return s
+end
+
+test("dial: Bindings.xml offers Open Comms Dial 1 to 4, each clicking that dial's header with Toggle", function()
+    -- A plain global write leaves the chunk's environment for the process's _G (tests/_kit/loader.lua
+    -- makeEnv's __newindex), so the header is read there; cleared first so this load is the writer.
+    rawset(_G, "BINDING_HEADER_QUICKCOMMS", nil)
+    local NS, m = T.newAddon()
+    local xml = readFile("Bindings.xml")
+    local names = {}
+    for name in xml:gmatch('<Binding name="([^"]+)"') do names[#names + 1] = name end
+    assertEqual(#names, NS.Dial.BINDINGS)
+    for i, name in ipairs(names) do
+        assertEqual(name, ("CLICK QuickCommsDial%d:Toggle"):format(i))
+        -- red under: drop the rawset loop from modules/Dial.lua (the menu would show the raw name)
+        assertEqual(m["BINDING_NAME_" .. name], ("Open Comms Dial %d"):format(i))
+    end
+    assertTrue(xml:find('header="QUICKCOMMS"', 1, true) ~= nil)
+    -- red under: drop the BINDING_HEADER_QUICKCOMMS line from modules/Dial.lua
+    assertEqual(rawget(_G, "BINDING_HEADER_QUICKCOMMS"), "Ka0s Quick Comms")
+    for _, rel in ipairs(T.loadAddon.tocFiles) do
+        assertTrue(rel ~= "Bindings.xml", "the client loads it by name, never through the TOC")
+    end
+end)
+
+test("dial: the key bindings menu's click opens the dial, even while it is hidden", function()
+    local NS, m = live()
+    local h = NS.Dial.Instance("d2").header
+    assertFalse(h:IsShown())
+    m.__click(h, "Toggle")   -- what "CLICK QuickCommsDial1:Toggle" does
+    assertTrue(NS.Dial.IsOpen("d2"))
+end)

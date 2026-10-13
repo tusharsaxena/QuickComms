@@ -19,6 +19,10 @@ globals = {
   "QuickCommsDB",       -- AceDB
   "QuickCommsPerfDB",   -- the diagnostics capture ring (performance-§5)
   "StaticPopupDialogs",
+  -- modules/Dial.lua: the key bindings menu's header for Bindings.xml, which the client reads by this
+  -- name (spec §9.4). Its four entry labels hold a space and a colon, so they are rawset beside a
+  -- comment instead of declared here.
+  "BINDING_HEADER_QUICKCOMMS",
 }
 
 read_globals = {
