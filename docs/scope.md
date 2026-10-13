@@ -45,5 +45,8 @@ for phase 4).
 - In v0.1.0: callout variants, confirmations, per-callout cooldowns, marks, a key per callout,
   gamepad support, countdown callouts, an arc layout for pads, analytics, faction-aware wording,
   per-dungeon built-in sets, and any locale beyond enUS (design spec §1), and the hold, flick and
-  release dial (C7). Each is a GitHub issue
-  rather than a silent omission.
+  release dial (C7). Each is recorded here and in the design spec rather than left as a silent
+  omission; those with a GitHub issue so far are callout variants (#1), confirmations (#2),
+  per-callout cooldowns (#3), marks (#4) and a key per callout (#5). The C7 upgrade has no issue
+  yet: its record is the design spec §11.2 (*Upgrade (C7)*) and
+  `docs/brainstorm/go-no-go/round-4-build-checks.md`.

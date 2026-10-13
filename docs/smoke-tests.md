@@ -23,7 +23,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | SEND-1..5 | Send | Secure sends in keys and on bosses, the spam guard |
 | PAD-1..7 | Pad | The Comms Pad |
 | EDIT-1..8 | Editors | The Callouts, Groups, Comms Pad and Share pages, Preview as…, Why is this showing? |
-| DIAL-1..10 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial |
+| DIAL-1..11 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes |
 
 ## Before you start
@@ -274,6 +274,15 @@ why groups show off → no tooltip. `/qc why` lists the dials too; `/qc diagnost
 `bindings` sections naming the key. If a wedge's send is ever reported dropped (the [QC] note), reopen the
 dial within 5 s → that wedge shows red. Result:
 
+**DIAL-11. Mouse-button keys, two dials, labels.** Set the dial's key to BUTTON3 (middle mouse): press it
+over the world → the dial opens; press it again with the cursor on a callout wedge → the dial closes
+and nothing is sent; on the hub → it closes. A side button (BUTTON4) click on a wedge also closes
+without sending, and the restricted snippet's other-frame `RunAttribute` raises no error. New dial →
+key H; press G, then H → dial 1 closes and dial 2 opens; press 1 → dial 2's first wedge, never dial
+1's; close it → 1 fires the action bar again. In Preview as Arathi Basin the ring title sits above
+the N wedge's label, and the E and W labels read away from their wedges. With test mode on, close the
+dial with the hub, then change Wedges per ring → it stays closed. Result:
+
 ## Non-English client
 
 **LOC-1. A deDE or frFR client.** What this build reads that a locale can change, enumerated from the
@@ -295,4 +304,4 @@ section is re-armed by the situation task, whose check replaces this paragraph's
 | INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..2, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet |
 | SEND-1..5, PAD-1..7 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet |
 | EDIT-1..8 | Phase 3: the editors | No client pass recorded yet |
-| DIAL-1..10 | Phase 4: the Comms Dial | No client pass recorded yet |
+| DIAL-1..11 | Phase 4: the Comms Dial | No client pass recorded yet |

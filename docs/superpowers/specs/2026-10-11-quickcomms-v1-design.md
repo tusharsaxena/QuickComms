@@ -502,7 +502,7 @@ Every rebuild requested in combat goes through this queue and sets the surface's
 
 **`Bindings.xml`:** v0.1.0 also ships one, with `BINDING_HEADER_QUICKCOMMS` and "Open Comms Dial 1–4". Players who prefer the game's own key bindings menu can use it. Those bindings click the same named buttons.
 
-*Built (phase 4):* a header is named `QuickCommsDial<n>` for its place in the dial order, and the key clicks it with the button `Toggle`; `Bindings.xml`'s entries are `CLICK QuickCommsDial1:Toggle` … `4`. Escape, the left and right mouse buttons and the mouse wheel cannot be a dial's key whatever the modifiers, nor 1–8 without one, because the open dial uses them; one key opens one dial. Every rebuild re-binds the whole set (`SendEngine.BindKeys`), so a profile switch, the stand-up and a key edit re-bind. `Bindings.xml` sits at the addon root and is not a TOC line, as the standard allows (layout-§1, toc-file-§4 (standard v2.80.0)).
+*Built (phase 4):* a header is named `QuickCommsDial<n>` for its place in the dial order, and the key clicks it with the button `Toggle`; `Bindings.xml`'s entries are `CLICK QuickCommsDial1:Toggle` … `4`. Escape, the left and right mouse buttons and the mouse wheel cannot be a dial's key whatever the modifiers, nor 1–8 without one, because the open dial uses them; one key opens one dial. A key is one base key with ALT-, CTRL-, SHIFT- or META- in front, none twice; a modifier alone, a dangling or unknown one is refused, and a key is stored with its modifiers in the client's order (SHIFT-CTRL-G is stored CTRL-SHIFT-G), so one chord is one key. Every rebuild re-binds the whole set (`SendEngine.BindKeys`), so a profile switch, the stand-up and a key edit re-bind. `Bindings.xml` sits at the addon root and is not a TOC line, as the standard allows (layout-§1, toc-file-§4 (standard v2.80.0)).
 
 ### 9.5 Stand-down
 
@@ -640,7 +640,7 @@ The Blizzard ping wheel's look (brainstorm §4):
 
 In Relaxed mode the dial is drawn as soon as it opens.
 
-*Built (phase 4):* the header is the hub. The ring on screen lives in the header's restricted environment (a snippet global); no snippet writes an attribute, so every attribute and frame ref is written out of combat through SendEngine. Opened by its key, the snippets bind Escape (close), the mouse wheel (pages) and 1–8 (the shown ring's wedges) with `SetBindingClick`, released on close; opened from the insecure side (test mode, Preview as…) they bind nothing, so the settings window keeps Escape. Open at the cursor re-anchors the hub with a restricted `SetPoint("CENTER", "$cursor")` (unverified until DIAL-7).
+*Built (phase 4):* the header is the hub. The ring on screen lives in the header's restricted environment (a snippet global); no snippet writes an attribute, so every attribute and frame ref is written out of combat through SendEngine. Only a left click (or a number key, which clicks with it) sends from a wedge or goes up a ring from the hub; any other mouse button closes the dial, so a dial whose key is a mouse button (BUTTON3–5) closes, and sends nothing, when its key is pressed again over a wedge or the hub. One dial is open at a time: opening a dial closes any other that is open (each header holds the others as frame refs), so two never overlap or share the number keys. Opened by its key, the snippets bind Escape (close), the mouse wheel (pages) and 1–8 (the shown ring's wedges) with `SetBindingClick`, released on close; opened from the insecure side (test mode, Preview as…) they bind nothing, so the settings window keeps Escape. Open at the cursor re-anchors the hub with a restricted `SetPoint("CENTER", "$cursor")` (unverified until DIAL-7).
 
 ### 11.3 Modes and limits
 
@@ -662,7 +662,7 @@ In Relaxed mode the dial is drawn as soon as it opens.
 
 **Test mode** shows dial 1 open with placeholder wedges, at the configured position. **The dial editor's Preview tab** renders the dial inside the panel. It is insecure and display only.
 
-*Built (phase 4):* test mode and Preview as… open dial 1 on its first ring (or the open-into ring) at its place, with placeholder or disarmed wedges and TEST MODE or PREVIEW above the hub, taking no key (the settings window may be open: Escape still closes it, and 1–8 stay the action bar's); the hub or the dial's key closes it. The Comms Dial page's Preview tab lists the rings wedge by wedge; the drawn dial is the in-game preview (owner ruling R3, 2026-10-13).
+*Built (phase 4):* test mode and Preview as… open dial 1 on its first ring (or the open-into ring) at its place, with placeholder or disarmed wedges and TEST MODE or PREVIEW above the hub, taking no key (the settings window may be open: Escape still closes it, and 1–8 stay the action bar's); the hub or the dial's key closes it. It opens when the mode turns on or changes (another Preview as… situation), and a rebuild keeps it open only if it was open: once the player closes it, later edits do not bring it back over the settings window. The Comms Dial page's Preview tab lists the rings wedge by wedge; the drawn dial is the in-game preview (owner ruling R3, 2026-10-13).
 
 **Stale and lockdown:** the hub shows the same stale hint and lockdown chip as a pad.
 

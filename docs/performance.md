@@ -22,7 +22,7 @@ Five are declared in `core/PerfSetup.lua`, in report order, each with the file t
 
 | Bucket | Bracketed in | Measures |
 |---|---|---|
-| `bake.surface` | `modules/Surfaces.lua` | one pad's or dial's plan: resolve, order, bake every slot (and, for a dial, the ring layout) |
+| `bake.surface` | `modules/Surfaces.lua` | one pad's or dial's plan: resolve, order, bake every slot (and, for a dial, the ring layout); the Comms Dial page's own looks at a plan (`deps.unmeasured`) are not counted |
 | `send.click` | `modules/SendEngine.lua` | the `OnClick` hook on a send button |
 | `pad.layout` | `modules/Pad.lua` | one pad's rebuild: geometry, chips, arm |
 | `echo.match` | `modules/SendEngine.lua` | a `CHAT_MSG_*` echo while a press waits |

@@ -130,11 +130,16 @@ Preview  each ring as the current or previewed situation builds it, wedge by wed
   (owner ruling R5): depth is spec §11.3's limit, warned about on the Groups tab.
 - **Binding:** a line on how Relaxed mode works; the Key capture box (AceGUI's `Keybinding`, the
   `dial.key` row; Escape in it clears the key); the key's line, which says what the key opens or
-  names the WoW binding it shares (read through `Compat.BindingAction`; the dial's key still wins
-  while the addon is enabled); and a line naming Open Comms Dial 1 to 4 in WoW's key bindings menu.
+  names the WoW binding it shares by its menu label (`Compat.BindingAction`, then
+  `Compat.BindingLabel`; the dial's key still wins while the addon is enabled); for a dial that is
+  off, or with Quick Comms stood down, it says the key opens nothing; with no key of its own it names
+  a key bound to the dial's Open Comms Dial entry (`Compat.BindingKey`). A place line names which
+  Open Comms Dial entry this dial is (its place in the dial list, so it moves when a dial above it is
+  deleted), or says a dial past the fourth has none.
   A key another dial has, or one the open dial uses (Escape, the mouse buttons and wheel, 1–8
   without a modifier), is refused, and the box goes back to the stored key.
-- **Preview:** each ring, wedge by wedge, with its compass word, marking the ring the dial opens on
+- **Preview:** each ring, wedge by wedge, with its compass word (a clock position past eight
+  wedges), marking the ring the dial opens on
   and the wedges that open a ring. It is a listing (owner ruling R3); the drawn dial is the
   in-game preview (test mode, Preview as…).
 

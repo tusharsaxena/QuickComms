@@ -22,7 +22,7 @@ Total.
 - repo: every authored file opens with the bootstrap and a comment naming its path
 - repo: the .pkgmeta has no externals and ignores the dev-only entries
 
-### test_mock_secure.lua (22)
+### test_mock_secure.lua (24)
 
 - mock: a secure button keeps its attributes and answers its name
 - mock: SetAttribute in combat is refused and recorded, never applied
@@ -46,6 +46,8 @@ Total.
 - mock: [phase 4] override bindings are refused in combat; a press clicks the bound frame by name
 - mock: [phase 4] a header's Show and Hide fire OnShow and OnHide on a change; Execute is refused in combat
 - mock: [phase 4] the cursor and a frame's center are numbers a suite can set
+- mock: [final 19] a header's OnShow hook runs insecure: a protected call it makes in combat is blocked
+- mock: [final 2] two owners binding one key: the newest wins, and clearing it hands the key back
 
 ### test_bus.lua (2)
 
@@ -129,7 +131,7 @@ Total.
 - schema: [fix wave] the Behavior rows that rebuild the pads resolve Settings.RebuildSurfaces when they run
 - schema: [phase 3] a fresh profile has no row off its default; the member rows are not counted
 
-### test_slash.lua (11)
+### test_slash.lua (13)
 
 - slash: NS.COMMANDS is positional triples, every reserved verb present
 - slash: `diagnostics` has no alias of any kind (debug-logging-§14)
@@ -142,6 +144,8 @@ Total.
 - slash: degraded, enable and disable still work and the CLI names the missing library
 - slash: [phase 3] `why` prints each built pad and why its groups show
 - slash: [phase 4] `why` covers the dials too
+- slash: [final 16] `why` with nothing built speaks of pads and dials
+- slash: [final 9] test and preview's help, and the Preview as row, speak of the dials too
 
 ### test_disabled.lua (10)
 
@@ -169,7 +173,7 @@ Total.
 - diagnostics: [final 21] the settings section lists no member row
 - diagnostics: [phase 4] the dials and bindings sections name each dial, its key and the override bindings
 
-### test_compat.lua (11)
+### test_compat.lua (12)
 
 - compat: plain readers pass plain values and drop secrets
 - compat: InstanceInfo with a secret instanceID reads nil, never raises
@@ -182,6 +186,7 @@ Total.
 - compat: [phase 3] InstanceName reads the client's name; a secret, empty or missing one is nil
 - compat: [phase 3] SpecInfoByID and ClassName read display names; secret or missing ones are nil
 - compat: [phase 4] BindingAction reads the player's WoW binding; none, a secret or a missing API is nil
+- compat: [final 7] BindingLabel reads the menu's name for an action; [final 8] BindingKey a command's key; secrets are nil
 
 ### test_restrictions.lua (16)
 
@@ -275,7 +280,7 @@ Total.
 - builtins: bake audit, every callout bakes under its set's snapshot
 - builtins: battlegrounds use smart group; arena uses party; raid lead uses smart lead
 
-### test_library.lua (48)
+### test_library.lua (50)
 
 - library: Prepare seeds one pad and one dial with every built-in, once
 - library: callouts validate on create
@@ -324,9 +329,11 @@ Total.
 - library: [final 1] one Customize click rebuilds the pads once
 - library: [final 2] ValidWhen refuses a value its row can never match, and names the row and value
 - library: [phase 4] keys: upper-cased, none is false; what the open dial uses is reserved
+- library: [final 3] a key is one base key with known modifiers, none twice; a bare or dangling modifier is no key
+- library: [final 4] modifiers are stored in the client's order, ALT-CTRL-SHIFT-META
 - library: [phase 4] the generic battleground set moves below the per-battleground sets, once
 
-### test_members.lua (20)
+### test_members.lua (21)
 
 - members: a callout field is written through the seam by instance id, and announced once
 - members: with no id the seam writes the selected member, else the first the page lists, else refuses
@@ -346,6 +353,7 @@ Total.
 - members: [final 5] builtin.hidden with no set selected says to pick one
 - members: [phase 4] a dial's fields are member rows, and its position goes through SetSurfacePoint
 - members: [review 4] a dial's key is stored upper-case; none clears it; a reserved key or another dial's is refused
+- members: [final 3] a bare, dangling, unknown or repeated modifier is refused; [final 4] modifier order is one key
 - members: [phase 4] the CLI types and prints a dial's key and position
 - members: [phase 4] an off-screen dial.point is refused; `/qc reset` brings the dial back and frees its key
 
@@ -425,7 +433,7 @@ Total.
 - pads page: [final 4] Defaults keeps the pad's position
 - pads page: [final 26] New pad takes the lowest free number, so a delete never leads to two names alike
 
-### test_page_dials.lua (11)
+### test_page_dials.lua (16)
 
 - dials page: New dial makes a second dial holding every built-in, selects it, and builds QuickCommsDial2
 - dials page: New dial takes the lowest free number, so a delete never leads to two names alike
@@ -437,7 +445,12 @@ Total.
 - dials page: Groups switches Categories and Flat, and reorders the dial's groups
 - dials page: [phase 4] Groups warns when a node set would open three rings deep, and not once it is first
 - dials page: Preview lists the rings wedge by wedge, marking the one the dial opens on
+- dials page: [final 20] at 12 wedges per ring the Preview names each wedge by its clock position
 - dials page: Delete dial asks, then the dial is gone, its header released, and the page heals
+- dials page: [final 7] a WoW conflict names the action as WoW's key bindings menu shows it
+- dials page: [final 8] the Binding tab names this dial's Open Comms Dial entry and sees a key bound there
+- dials page: [final 10] the key line of a dial that is off says the key opens nothing, and warns of no override
+- dials page: [final 11] the page's own plan builds are not timed as a surface's bake
 
 ### test_page_share.lua (4)
 
@@ -499,7 +512,7 @@ Total.
 - sendengine: [phase 4] attributes, frame refs and snippets are written out of combat only, never blocked
 - sendengine: [phase 4] BindKeys replaces the whole set, out of combat only; ClearKeys empties it
 
-### test_dial_secure.lua (8)
+### test_dial_secure.lua (12)
 
 - dial secure: the header is QuickCommsDial<n>, hidden until the toggle opens it; open, the dial owns Escape and 1-8
 - dial secure: [exit] a group wedge opens its ring (the two-stroke); a callout wedge sends once and closes
@@ -508,6 +521,10 @@ Total.
 - dial secure: [exit] in combat the dial opens, switches rings and sends, with nothing blocked
 - dial secure: open at the cursor anchors the hub to it; a dial with no ring opens nothing
 - dial secure: [review 6] Open from the insecure side takes no key; the key still closes it; out of combat only
+- dial secure: [final 1] a middle or side click on a callout wedge sends nothing and closes; on the hub it closes
+- dial secure: [final 12] the down edge alone does nothing: no send, no ring switch, the dial stays open
+- dial secure: [final 13] a page turn releases the number keys the new page has no wedge for
+- dial secure: [final 2] opening one dial closes another that is open; closing it leaves no key bound
 - dial secure: [firewall] no snippet writes an attribute; the ring on screen lives in the header's environment
 
 ### test_preview.lua (17)
@@ -552,7 +569,7 @@ Total.
 - layout: the fade follows combat and the mouse, under the master alpha
 - layout: the channel tag names the resolved channel
 
-### test_dial_layout.lua (9)
+### test_dial_layout.lua (11)
 
 - dial layout: four wedges sit on N, E, S and W, clockwise from the top
 - dial layout: slices are 4, 6, 8 or 12, and 12 only on a ring with no children
@@ -563,6 +580,8 @@ Total.
 - dial layout: [phase 4] a node set below another active group is three rings deep, and named for the warning
 - dial layout: nothing to show is no ring at all; an empty group is left out
 - dial layout: the pointer follows the cursor outside the dead zone
+- dial layout: [final 6] a label is anchored by its side, clear of its wedge; the ring title clears the N label
+- dial layout: [final 20] past eight wedges each gets its own direction, as a clock position
 
 ### test_surfaces.lua (22)
 
@@ -630,7 +649,7 @@ Total.
 - pad: [phase 3] a new drag clears a stale held stop, so the next rebuild re-anchors
 - pad: [phase 3] the header's tooltip says why each group shows, unless the player turned it off
 
-### test_dial.lua (23)
+### test_dial.lua (25)
 
 - dial: Apply builds QuickCommsDial<n> with a ring per page, each callout wedge armed with its baked line
 - dial: a refused callout is a dimmed, disarmed wedge; a ring wedge is disarmed
@@ -655,6 +674,8 @@ Total.
 - dial: the hub's tooltip says why each group shows, unless the player turned it off
 - dial: Bindings.xml offers Open Comms Dial 1 to 4, each clicking that dial's header with Toggle
 - dial: the key bindings menu's click opens the dial, even while it is hidden
+- dial: [final 2] two dials: opening the second closes the first, and the number keys go with it
+- dial: [final 5] test mode opens dial 1 once: a rebuild keeps it open, and after the player closes it, closed
 
 ### test_vendor_sync.lua (3)
 
@@ -729,17 +750,17 @@ Total.
 | Suite | Cases |
 |-------|------:|
 | test_harness.lua | 11 |
-| test_mock_secure.lua | 22 |
+| test_mock_secure.lua | 24 |
 | test_bus.lua | 2 |
 | test_surface_parity.lua | 15 |
 | test_setup.lua | 21 |
 | test_database.lua | 7 |
 | test_profile.lua | 5 |
 | test_schema.lua | 14 |
-| test_slash.lua | 11 |
+| test_slash.lua | 13 |
 | test_disabled.lua | 10 |
 | test_diagnostics.lua | 10 |
-| test_compat.lua | 11 |
+| test_compat.lua | 12 |
 | test_restrictions.lua | 16 |
 | test_situation.lua | 15 |
 | test_tokens.lua | 8 |
@@ -747,27 +768,27 @@ Total.
 | test_bake.lua | 11 |
 | test_resolver.lua | 8 |
 | test_builtins.lua | 6 |
-| test_library.lua | 48 |
-| test_members.lua | 20 |
+| test_library.lua | 50 |
+| test_members.lua | 21 |
 | test_editors.lua | 11 |
 | test_page_callouts.lua | 13 |
 | test_groups_when.lua | 12 |
 | test_page_groups.lua | 15 |
 | test_page_pads.lua | 10 |
-| test_page_dials.lua | 11 |
+| test_page_dials.lua | 16 |
 | test_page_share.lua | 4 |
 | test_check.lua | 6 |
 | test_send_guard.lua | 10 |
 | test_sendengine.lua | 28 |
-| test_dial_secure.lua | 8 |
+| test_dial_secure.lua | 12 |
 | test_preview.lua | 17 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 11 |
-| test_dial_layout.lua | 9 |
+| test_dial_layout.lua | 11 |
 | test_surfaces.lua | 22 |
 | test_pad_render.lua | 11 |
 | test_pad.lua | 24 |
-| test_dial.lua | 23 |
+| test_dial.lua | 25 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -775,4 +796,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **577** |
+| **Total** | **598** |
