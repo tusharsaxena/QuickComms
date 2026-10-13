@@ -32,6 +32,12 @@ test("library: callouts validate on create", function()
     assertTrue(id:match("^c%d+$") ~= nil)
 end)
 
+test("library: whisper channels are refused (owner, issue #7)", function()
+    local _, Lib = boot()
+    local id, err = Lib.CreateCallout({ name = "W", text = "x", channel = "whisperTarget" })
+    assertNil(id) assertEqual(err, "badChannel")
+end)
+
 test("library: [review 4] deleting a shared callout clears every group", function()
     local _, Lib, p = boot()
     local c = Lib.CreateCallout({ name = "Lust", text = "Lust", channel = "party" })

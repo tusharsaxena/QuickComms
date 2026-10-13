@@ -38,7 +38,7 @@ This is the design, in the order it is being built:
 - Each group has conditions for when it applies, such as "in a Mythic+ key" or "I'm the tank". The
   addon checks those against where you are and what you're doing, and shows the groups that match.
 - Text is prepared ahead of time, out of combat, and loaded onto secure buttons. Pressing one sends
-  the line to the right channel (party, instance, raid or a whisper), even during a boss.
+  the line to the right channel (say, yell, party, instance, raid or raid warning), even during a boss.
 - A spam guard of about a second stops a double press from sending twice. On a boss the game quietly
   drops anything sent faster than that anyway, so you lose nothing.
 - Built-in sets for Mythic+, raids, arenas and battlegrounds come switched on. They're read-only,

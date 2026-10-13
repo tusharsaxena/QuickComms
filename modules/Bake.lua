@@ -55,6 +55,5 @@ function B.Bake(callout, s, opts)
     info.length = B.Length(text, live)
     if info.length > B.MAX_BYTES then return nil, "tooLong", info end
     info.lock = NS.Channels.LockState(concrete, s)
-    info.warning = NS.Channels.SoftWarning(concrete, s)
     return NS.Channels.Prefix(concrete) .. " " .. text, nil, info
 end

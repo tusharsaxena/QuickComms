@@ -6,16 +6,14 @@ local _, NS = ...
 NS.Channels = NS.Channels or {}
 local Ch = NS.Channels
 
-Ch.KINDS = { "smartGroup", "smartLead", "party", "raid", "instance", "raidWarning", "say", "yell",
-    "whisperTarget", "whisperFocus" }
+Ch.KINDS = { "smartGroup", "smartLead", "party", "raid", "instance", "raidWarning", "say", "yell" }
 
 local PREFIX = {
     say = "/s", yell = "/y", party = "/p", raid = "/raid", instance = "/i", raidWarning = "/rw",
-    whisperTarget = "/w %t", whisperFocus = "/w %f",
 }
 local CHAT_TYPE = {
     say = "SAY", yell = "YELL", party = "PARTY", raid = "RAID", instance = "INSTANCE_CHAT",
-    raidWarning = "RAID_WARNING", whisperTarget = "WHISPER", whisperFocus = "WHISPER",
+    raidWarning = "RAID_WARNING",
 }
 local IS_KIND = {}
 for _, k in ipairs(Ch.KINDS) do IS_KIND[k] = true end
@@ -72,15 +70,6 @@ function Ch.LockState(concrete, s)
         if not s.instanceGroup then return "notInInstanceGroup" end
     elseif concrete == "say" or concrete == "yell" then
         if lockdown.encounter or lockdown.pvpMatch then return "lockdown" end
-    end
-    return nil
-end
-
---- A non-blocking caution (whispers reach only players in the instance during lockdown).
-function Ch.SoftWarning(concrete, s)
-    if (concrete == "whisperTarget" or concrete == "whisperFocus") and type(s) == "table"
-        and s.lockdown and s.lockdown.chat then
-        return "whisperInstanceOnly"
     end
     return nil
 end
