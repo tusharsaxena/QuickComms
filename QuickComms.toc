@@ -45,13 +45,13 @@ locales\enUS.lua
 core\Namespace.lua
 # LOAD-BEARING: publishes NS.Print / NS.Util.print and NS.LIBKA0S_MISSING, read at load below.
 core\CoreSetup.lua
-# LOAD-BEARING: NS.Compat, read by modules at call time; needs NS.SafeToString (CoreSetup, above) and LibKa0s-Compat (optional)
+# Conventional: publishes NS.Compat, read inside functions only; resolves LibKa0s-Compat-1.0 at load (libraries load first).
 core\Compat.lua
 # LOAD-BEARING: publishes NS.MediaFont, which core\Constants.lua resolves FONT_MONO from at load.
 core\MediaSetup.lua
 # Conventional: data only, apart from FONT_MONO, resolved from the seam above.
 core\Constants.lua
-# Conventional: session-only state (NS.State), read by everything below at call time.
+# Conventional: session-only state (NS.State); modules and settings take NS.State at load, which the folder order (core before modules and settings) pins; within # Core its position is free.
 core\State.lua
 # Conventional: NS.Meta / NS.Version are read inside functions only.
 core\EnvSetup.lua
