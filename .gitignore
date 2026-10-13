@@ -1,1 +1,19 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Claude Code
+.claude/
+
+# Browser tooling (Playwright MCP scratch)
 .playwright-mcp/
+
+# WoW addon packaging
+*.zip
+release/

@@ -1,0 +1,21 @@
+package-as: QuickComms
+
+# Every library is vendored under libs/ and committed to git: NO externals: block (packaging,
+# library-stack-§3). The packager ships the repo as-is, minus the dev-only entries below.
+
+ignore:
+  - .luacheckrc
+  - .pkgmeta         # dev-only: this file configures the packager; it is not part of the package
+  - .gitignore
+  - .gitattributes   # dev-only: the repo's line-ending policy (line-endings)
+  # - .claude        # ONLY once the repo HAS a .claude/ (packaging); it has none today
+  - .superpowers     # dev-only agent tooling: present in local checkouts (git-excluded), never shipped
+  - .playwright-mcp  # dev-only browser-tool scratch: present in local checkouts (git-ignored), never shipped
+  - docs             # holds docs/brainstorm/, docs/superpowers/ and the record stores too
+  - tests
+  # - tools          # ONLY once the repo HAS a tools/ (layout-§1); it has none today
+  - CLAUDE.md        # contributor documentation; README.md and LICENSE ship
+  - DEPENDENCIES.md
+  - media/logos/*.png   # the editable logo source (layout-§4): committed, never loadable, never shipped
+  - _dev
+  - "*.bak"
