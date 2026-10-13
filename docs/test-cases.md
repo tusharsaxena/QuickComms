@@ -161,7 +161,7 @@ Total.
 - restrictions: stood down, nothing is heard; the stand-up announces what is in effect
 - restrictions: [final 1] a lockdown lifting under a higher one is announced
 
-### test_situation.lua (14)
+### test_situation.lua (15)
 
 - situation: classifier truth table (content, group)
 - situation: non-table input classifies as open world solo
@@ -177,6 +177,7 @@ Total.
 - situation: [final 1] Current() before the first refresh reads the combat edge
 - situation: [final 1] stood down, the receiver is down; stood up, it hears again
 - situation: [final 1] on the degraded bus the module takes its own receiver down and up
+- situation: [final 1b] both combat edges reach Current() even under the Combat restriction type
 
 ### test_tokens.lua (8)
 
@@ -352,7 +353,7 @@ Total.
 | test_diagnostics.lua | 6 |
 | test_compat.lua | 4 |
 | test_restrictions.lua | 16 |
-| test_situation.lua | 14 |
+| test_situation.lua | 15 |
 | test_tokens.lua | 8 |
 | test_channels.lua | 7 |
 | test_bake.lua | 11 |
@@ -367,4 +368,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **249** |
+| **Total** | **250** |

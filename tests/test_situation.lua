@@ -211,3 +211,17 @@ test("situation: [final 1] on the degraded bus the module takes its own receiver
     NS.addon:SendMessage(NS.MSG.RESTRICTION_CHANGED, nil, true)
     assertFalse(NS.Situation.Current().lockdown.encounter, "registered again by the stand-up")
 end)
+
+test("situation: [final 1b] both combat edges reach Current() even under the Combat restriction type", function()
+    local NS, m = T.enableAddon()
+    local RT, RS = m.Enum.AddOnRestrictionType, m.Enum.AddOnRestrictionState
+    m.inCombat = false
+    NS.Situation.RefreshNow("test")
+    m.__fire("ADDON_RESTRICTION_STATE_CHANGED", RT.Combat, RS.Activating)
+    assertFalse(NS.Situation.Current().inCombat, "the type alone is not the edge")
+    m.__fire("PLAYER_REGEN_DISABLED")
+    -- red under: an announce signature built from the active set alone
+    assertTrue(NS.Situation.Current().inCombat, "REGEN_DISABLED under the Combat type")
+    m.__fire("PLAYER_REGEN_ENABLED")
+    assertFalse(NS.Situation.Current().inCombat, "REGEN_ENABLED under the Combat type")
+end)

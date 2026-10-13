@@ -64,9 +64,10 @@ the slash table and its verb bodies. Phase 2 adds Surfaces, SendEngine, Pad and 
 ## Settings Schema
 
 One write seam, `NS.SchemaRuntime.Set` (LibKa0s-Schema), reached by the panel, the CLI, the launcher
-and the host verbs alike; the rows are `settings/Schema.lua`'s `Settings.Schema` array: the composed Master controls rows, then
-the Behavior rows (`behavior.*`, spliced in by `settings/SchemaRows.lua`). Every module reads a setting through `NS.Setting(path)`, which answers
-the row's default before the database exists. The reactions every surface shares are
+and the host verbs alike; the rows are `settings/Schema.lua`'s `Settings.Schema` array: the composed
+Master controls rows, then the Behavior rows (`behavior.*`, spliced in by `settings/SchemaRows.lua`).
+Every module reads a setting through `NS.Setting(path)`, which answers the row's default before the
+database exists. The reactions every surface shares are
 `Settings.REACTIONS`. The path `enabled` is declared `writeThrough` so `/qc enable|disable` still
 lands on a load where the composers are hollow (options-ui-§1 route (a)). Shape, defaults and
 migrations: [`schema.md`](schema.md); the panel: [`settings-panel.md`](settings-panel.md).

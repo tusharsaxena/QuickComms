@@ -16,8 +16,10 @@ local _, NS = ...
 -- A type is active when its hint OR the client says so: a restriction is never assumed lifted
 -- until both agree. The answers are read live on every call, so a caller is never behind the
 -- client. RESTRICTION_CHANGED (reason, canSendChat) is sent whenever the set of blocking reasons
--- moves (combat included, so both combat edges announce), from the event, both combat edges and
--- the stand-up; Situation merges it into the snapshot. A lockdown that lifts with no event of its
+-- or the combat flag (InCombat: the edge, else the client's flag) moves, from the event, both
+-- combat edges and the stand-up; Situation merges it into the snapshot. The flag is in the
+-- signature on its own because the Combat type can put `combat` in the set before the edge does,
+-- and the edge must still announce then. A lockdown that lifts with no event of its
 -- own is picked up by the next read, and by Refresh, which the messaging edge (phase 2's
 -- SendEngine) calls on ENCOUNTER_END and CHALLENGE_MODE_COMPLETED.
 --
@@ -123,15 +125,16 @@ end
 
 -- ── the edge ────────────────────────────────────────────────────────────────────────────────
 
--- The blocking reasons in effect, in priority order: what RESTRICTION_CHANGED announces a move of.
--- Every reason, not just the top one, so combat under an encounter (or one lockdown lifting under
--- another) still reaches the receivers that merge the whole set.
+-- The blocking reasons in effect, in priority order, then the combat flag: what RESTRICTION_CHANGED
+-- announces a move of. Every reason, not just the top one, so combat under an encounter (or one
+-- lockdown lifting under another) still reaches the receivers that merge the whole set; and the
+-- flag, so both PLAYER_REGEN edges announce even while the Combat type already holds `combat`.
 local function signature(set)
     local parts = {}
     for _, reason in ipairs(PRIORITY) do
         if set[reason] then parts[#parts + 1] = reason end
     end
-    return table.concat(parts, ",")
+    return table.concat(parts, ",") .. "|" .. tostring(inCombat() == true)
 end
 
 --- Re-read the client. Sends RESTRICTION_CHANGED (reason, canSendChat) when the set of blocking
@@ -141,7 +144,7 @@ end
 function R.Refresh(cause)
     local set = R.ActiveSet()
     local sig = signature(set)
-    local prev = State.restrictionSignature or ""
+    local prev = State.restrictionSignature or "|false"
     if sig == prev then return false end
     State.restrictionSignature = sig
     NS.Debug(TAG, "restrictions [%s] -> [%s] (%s)", prev, sig, tostring(cause))
