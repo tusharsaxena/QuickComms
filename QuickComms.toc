@@ -41,6 +41,8 @@ locales\enUS.lua
 core\Namespace.lua
 # LOAD-BEARING: publishes NS.Print / NS.Util.print and NS.LIBKA0S_MISSING, read at load below.
 core\CoreSetup.lua
+# LOAD-BEARING: NS.Compat, read by modules at call time; needs NS.SafeToString (CoreSetup, above) and LibKa0s-Compat (optional)
+core\Compat.lua
 # LOAD-BEARING: publishes NS.MediaFont, which core\Constants.lua resolves FONT_MONO from at load.
 core\MediaSetup.lua
 # Conventional: data only, apart from FONT_MONO, resolved from the seam above.
@@ -75,6 +77,8 @@ core\LauncherSetup.lua
 defaults\Profile.lua
 
 # Modules
+# Conventional: feature module; appends to NS.FEATURE_EVENTS / STAND_DOWN / STAND_UP
+modules\Situation.lua
 # Conventional: core\DebugLogSetup.lua's descriptor reads NS.Diagnostics at RUN time.
 modules\Diagnostics.lua
 

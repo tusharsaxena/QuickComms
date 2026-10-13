@@ -26,6 +26,11 @@ read_globals = {
   "STANDARD_TEXT_FONT",
   "InCombatLockdown", "debugprofilestop",
   "Settings", "StaticPopup_Show", "YES", "NO",
+  -- core/Compat.lua: the client readers, all guarded for absence at call time.
+  "issecretvalue", "C_ChallengeMode", "C_Housing", "C_SpecializationInfo", "GetInstanceInfo",
+  "GetNormalizedRealmName", "GetSpecialization", "GetSpecializationInfo", "IsInGroup", "IsInInstance",
+  "IsInRaid", "LE_PARTY_CATEGORY_INSTANCE", "UnitClass", "UnitFullName", "UnitGroupRolesAssigned",
+  "UnitIsGroupAssistant", "UnitIsGroupLeader",
 }
 
 -- The harness global, declared for tests/ only so no shipped file can reach for it. The

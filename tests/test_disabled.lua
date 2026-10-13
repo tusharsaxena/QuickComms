@@ -9,9 +9,21 @@ local T = _G.QUICKCOMMS_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
 
 -- The game events the addon owns today, pinned as literals (sorted).
-local PINNED = {}
+local PINNED = {
+    "CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_RESET", "CHALLENGE_MODE_START", "GROUP_ROSTER_UPDATE",
+    "PARTY_LEADER_CHANGED", "PLAYER_DIFFICULTY_CHANGED", "PLAYER_ENTERING_WORLD", "PLAYER_ROLES_ASSIGNED",
+    "PLAYER_SPECIALIZATION_CHANGED", "ZONE_CHANGED_NEW_AREA",
+}
 
 local PROBE_EVENT = "PLAYER_REGEN_DISABLED"
+
+-- What an instance carrying the probe row registers: the pinned events plus the probe, sorted.
+local PROBED = (function()
+    local all = { PROBE_EVENT }
+    for _, e in ipairs(PINNED) do all[#all + 1] = e end
+    table.sort(all)
+    return table.concat(all, ",")
+end)()
 
 -- Game-event registrations only; bus receivers are asserted by what they hear.
 local function registered(m)
@@ -61,7 +73,7 @@ end)
 for _, way in ipairs(DISABLES) do
     test("disabled 2: through " .. way[1] .. ", nothing is registered, heard or scheduled", function()
         local NS, m, probe = probed()
-        assertEqual(registered(m), PROBE_EVENT)
+        assertEqual(registered(m), PROBED)
         way[2](NS)
         assertTrue(NS.IsStoodDown())
         assertFalse(NS.addon.db.profile.enabled, "the stored setting is the source")
@@ -118,7 +130,7 @@ test("disabled 6: the stand-up re-registers from current state and replays the r
     NS.addon:OnSlashCommand("disable")
     NS.addon:OnSlashCommand("enable")
     assertFalse(NS.IsStoodDown())
-    assertEqual(registered(m), PROBE_EVENT)
+    assertEqual(registered(m), PROBED)
     assertEqual(probe.ups, 1, "the module's rebuild ran once")
     NS.addon:SendMessage(NS.MSG.PROFILE_CHANGED)
     assertEqual(probe.messages, 1, "the tracked receiver is back")
