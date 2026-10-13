@@ -12,6 +12,28 @@ return function(NS, m)
     local Settings = NS.addon.Settings
     local H = Settings.Helpers
 
+    -- AceGUI's Keybinding widget shows the key it was given: the kit's fake records nothing for it,
+    -- so a Keybinding made here gets SetKey/GetKey, recording the shown key as `shownKey`.
+    if not ace.__qcKeyWrapped then
+        ace.__qcKeyWrapped = true
+        local create = ace.Create
+        ace.Create = function(fake, wtype, ...)
+            local w = create(fake, wtype, ...)
+            if wtype == "Keybinding" and not w.SetKey then
+                function w:SetKey(k) self.shownKey = k; return self end
+                function w:GetKey() return self.shownKey end
+            end
+            return w
+        end
+    end
+
+    --- A key pressed in a Keybinding box, in the real widget's order: it shows the key first
+    --- (SetKey), then fires OnKeyChanged.
+    function P.pressKey(kb, k)
+        kb:SetKey(k)
+        return kb:__fire("OnKeyChanged", k)
+    end
+
     local function since(mark)
         local out = {}
         for i = mark + 1, #ace.__created do

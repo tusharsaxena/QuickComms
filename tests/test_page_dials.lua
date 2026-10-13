@@ -118,10 +118,16 @@ test("dials page: [review 4] the Binding tab binds the key; another dial's is re
     local id = NS.addon.Settings.Dials.Create()
     P.flush()
     m.prints = {}
-    key(P):__fire("OnKeyChanged", "SHIFT-G")
+    local kb = key(P)
+    P.pressKey(kb, "SHIFT-G")
     assertNil(NS.db.profile.dials[id].key)
     local text = table.concat(m.prints, "\n")
     assertTrue(text:find("SHIFT-G already opens Comms Dial.", 1, true) ~= nil, text)
+    assertEqual(kb.shownKey, "", "a refused key: the box goes back to the stored (no) key")
+    kb = key(P)
+    P.pressKey(kb, "1")
+    assertNil(NS.db.profile.dials[id].key)
+    assertEqual(kb.shownKey, "", "an unmodified 1 is refused, and the box goes back too")
     m.bindingActions.TAB = "TARGETNEARESTENEMY"
     key(P):__fire("OnKeyChanged", "TAB")
     assertEqual(NS.db.profile.dials[id].key, "TAB")

@@ -283,8 +283,10 @@ local function renderWheel(ctx, rows)
         tooltip = L["Put this dial back in the middle of the screen."], onClick = function() DD.ResetPoint(id) end }, nil)
 end
 
--- The key capture: AceGUI's Keybinding widget. Its refresher puts it back to the stored key after a
--- refused write. (The headless recorder has no SetKey; the guard keeps the page drawable there.)
+-- The key capture: AceGUI's Keybinding widget. The widget shows a pressed key before it fires
+-- OnKeyChanged, and a refused write changes nothing (no refresh runs), so the callback itself puts
+-- the box back to the stored key; the refresher follows writes made elsewhere. (The kit's AceGUI
+-- fake has no SetKey; the guard keeps the page drawable there.)
 local function keyBox(ctx, id)
     local function show(kb)
         local k = NS.db.profile.dials[id] and NS.db.profile.dials[id].key
@@ -296,7 +298,10 @@ local function keyBox(ctx, id)
         show(kb)
         if ctx.refreshers then ctx.refreshers[#ctx.refreshers + 1] = function() show(kb) end end
         kb:SetRelativeWidth(rel or 0.5)
-        kb:SetCallback("OnKeyChanged", function(_, _, value) DD.SetKey(id, value) end)
+        kb:SetCallback("OnKeyChanged", function(_, _, value)
+            -- A refusal (its line already printed) puts the box back to the stored key.
+            if not DD.SetKey(id, value) then show(kb) end
+        end)
         H().AttachTooltip(kb, L["Key"], L["Click, then press the key you want, with Alt, Ctrl or Shift if you like. Escape clears it."])
         parent:AddChild(kb)
         return kb
