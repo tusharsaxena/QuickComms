@@ -269,4 +269,9 @@ test("callouts page: [phase 5] Choose an icon: a click on the skull is the callo
     local labels = {}
     for _, e in ipairs(NS.addon.Settings.Editors.IconPalette()) do labels[#labels + 1] = e.label end
     assertEqual(labels[8], "Skull", "a raid marker carries its localized name")
+    -- [review] red under: IconPalette labeling a catalog mark with its raw catalog key ("speech-bubble")
+    local byPath = {}
+    for _, e in ipairs(NS.addon.Settings.Editors.IconPalette()) do byPath[e.path] = e.label end
+    assertEqual(byPath[NS.Icon("speech-bubble")], "Speech bubble", "a catalog mark carries a localized label")
+    assertEqual(byPath[NS.Icon("thumb-up")], "Thumbs up")
 end)

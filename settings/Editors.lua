@@ -235,9 +235,12 @@ end
 -- is what the Icon box takes; any other texture is typed into the box.
 Ed.ICON_MARKERS = { L["Star"], L["Circle"], L["Diamond"], L["Triangle"], L["Moon"], L["Square"], L["Cross"],
     L["Skull"] }
-Ed.ICON_MARK_KEEP = { chat = true, ["speech-bubble"] = true, warning = true, info = true, help = true,
-    target = true, shield = true, heart = true, star = true, ["map-marker"] = true, location = true,
-    people = true, person = true, timer = true, ban = true, ["thumb-up"] = true }
+-- Each kept catalog name and its player-facing label (the catalog's keys are not labels).
+Ed.ICON_MARK_KEEP = { chat = L["Chat"], ["speech-bubble"] = L["Speech bubble"], warning = L["Warning"],
+    info = L["Information"], help = L["Help"], target = L["Target"], shield = L["Shield"],
+    heart = L["Heart"], star = L["Star"], ["map-marker"] = L["Map marker"], location = L["Location"],
+    people = L["People"], person = L["Person"], timer = L["Timer"], ban = L["Ban"],
+    ["thumb-up"] = L["Thumbs up"] }
 
 -- The built-in sets' icons, each once, in the sets' order: a set's own, then its callouts'.
 local function builtinIcons(out, seen)
@@ -269,8 +272,9 @@ function Ed.IconPalette()
     end
     builtinIcons(out, seen)
     for _, name in ipairs(NS.IconNames()) do
-        local path = Ed.ICON_MARK_KEEP[name] and NS.Icon(name)
-        if path then out[#out + 1] = { path = path, label = name } end
+        local label = Ed.ICON_MARK_KEEP[name]
+        local path = label and NS.Icon(name)
+        if path then out[#out + 1] = { path = path, label = label } end
     end
     return out
 end
