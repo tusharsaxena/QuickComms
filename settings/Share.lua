@@ -186,6 +186,14 @@ local function renderImport(ctx)
             SH.Check(text)
             refresh()
         end)
+        -- An edit forgets the last check, so Import never adds a string the box no longer holds
+        -- (and the report never describes one); Accept checks the new text.
+        box:SetCallback("OnTextChanged", function()
+            if NS.State.share.import then
+                SH.ClearImport()
+                refresh()
+            end
+        end)
         parent:AddChild(box)
         return box
     end } })

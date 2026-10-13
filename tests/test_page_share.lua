@@ -134,6 +134,28 @@ test("share page: [phase 5] Import checks a pasted string, reports it, then adds
     assertNil(NS.State.share.import, "the checked string is spent")
 end)
 
+test("share page: [review] editing the box after Accept forgets the check: Import never adds the old string", function()
+    local NS, m, P = open()
+    local gid = mine(NS)
+    local text = NS.Share.Encode(NS.Share.Collect({ group = { [gid] = true } }))
+    local w = P.tab("share", "Import")
+    local box = P.find(w, "MultiLineEditBox", "Share string")
+    box:__fire("OnEnterPressed", text)
+    assertTrue(P.hasText(w, "Ready to import: 2 callouts, 1 group."))
+    local before = 0
+    for _ in pairs(NS.db.profile.groups) do before = before + 1 end
+    -- a different string pasted over it, Accept not clicked
+    box:__fire("OnTextChanged", "!QC1!somethingElse")
+    -- red under: no OnTextChanged callback on the box in settings/Share.lua
+    assertNil(NS.State.share.import, "the old check is forgotten")
+    assertTrue(P.hasText(w, "click Accept to check it"), "the report asks for Accept again")
+    m.prints = {}
+    P.find(w, "Button", "Import"):__fire("OnClick")
+    local after = 0
+    for _ in pairs(NS.db.profile.groups) do after = after + 1 end
+    assertEqual(after, before, "the old string's members never arrive")
+end)
+
 test("share page: [phase 5] an imported dial says it has no key yet", function()
     local NS, m, P = open()
     NS.SchemaRuntime.Set("dial.key", "G", "d2")
