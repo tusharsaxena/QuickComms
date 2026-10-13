@@ -247,7 +247,8 @@ function Pad.Apply(id, plan)
     local layout = type(pad.layout) == "table" and pad.layout or {}
     local look = type(pad.look) == "table" and pad.look or {}
     local sections = PL.VisibleSections(plan.sections, pad.groupsAs, session("padTab")[id])
-    local box = PL.Compute(sections, layout, { collapsed = session("padCollapsed")[id] == true })
+    local box = PL.Compute(sections, layout, { collapsed = session("padCollapsed")[id] == true,
+        fontSize = look.fontSize })
     inst.root:SetScale(math.max(NS.Library.MIN_SURFACE_SCALE, (tonumber(NS.Setting("scale")) or 1) * (tonumber(layout.scale) or 1)))
     inst.root:SetSize(box.width, box.height)
     NS.ApplySkin(inst.root, R.SkinFor(look))

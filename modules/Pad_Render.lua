@@ -159,6 +159,9 @@ function R.Paint(btn, slot, style)
     else
         btn.qcLabel:SetPoint("LEFT", btn.qcIcon, "RIGHT", 4, 0)
     end
+    -- One line that stops short of the channel tag, whatever the Look's font size.
+    btn.qcLabel:SetPoint("RIGHT", btn.qcTag, "LEFT", -2, 0)
+    btn.qcLabel:SetWordWrap(false)
     btn.qcLabel:SetText(style == "icon" and "" or (slot.name or "?"))
     btn.qcTag:SetText(PL.Tag(slot.concrete) or "")
     btn.qcTag:SetTextColor(tagColor(slot.chatType or NS.Channels.ChatType(slot.concrete)))
@@ -212,9 +215,16 @@ function R.ApplyFont(fs, font)
     if font.shadow then fs:SetShadowOffset(1, -1) else fs:SetShadowOffset(0, 0) end
 end
 
+-- The inner line, made clear: the frame keeps the child LibKa0s built at its first skin, so a skin
+-- with no innerBorder would leave it drawn; this one hides it.
+local NO_INNER = { 0, 0, 0, 0 }
+
 --- The skin a pad wears, from its Look: the Ka0s skin (NS.SKIN) with the border's art (a LibSharedMedia
 --- border by name; "None", or one this machine does not have, is the flat edge), its thickness (0 is
---- no edge) and color, and the background color, each through its class-color companion.
+--- no edge) and color, and the background color, each through its class-color companion. The Ka0s
+--- 1px inner line belongs to the flat 1px edge only: at thickness 0 it would be an edge after all, and
+--- over a thicker edge or border art it is a gray line that ignores the border's color. Art insets the
+--- background by a quarter of its size, so the body reaches under the art's soft inner edge.
 function R.SkinFor(look)
     look = type(look) == "table" and look or {}
     local skin = {}
@@ -223,7 +233,9 @@ function R.SkinFor(look)
     local art = look.borderStyle ~= "None" and NS.MediaFetch("border", look.borderStyle) or nil
     skin.edgeFile = size > 0 and (art or FLAT_EDGE) or nil
     skin.edgeSize = size
-    skin.insets = { left = size, right = size, top = size, bottom = size }
+    local inset = art and math.floor(size / 4 + 0.5) or size
+    skin.insets = { left = inset, right = inset, top = inset, bottom = inset }
+    if art or size ~= 1 then skin.innerBorder = NO_INNER end
     skin.border = { NS.ResolveColor(look.borderColor, look.useClassColorBorder) }
     skin.bg = { NS.ResolveColor(look.background, look.useClassColorBackground) }
     return skin

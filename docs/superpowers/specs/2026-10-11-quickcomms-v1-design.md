@@ -577,7 +577,7 @@ If this happens in combat, the secure parts are held in the one permitted pendin
 
 **Hide when no group is active** is evaluated at the last out-of-combat rebuild.
 
-*Built (phase 3, 5):* the pad's Look tab has visibility, fade and the faded alpha, then the composed Font, Border and Background groups (options-ui-§16, §17) under their own headings. The font draws the chips' labels and the section titles (a title keeps its gold until the player picks a font color or Use class color); the border's style "None" is the flat Ka0s edge and a thickness of 0 is none; the background is a swatch and its class-color companion. The class color is the player's; the defaults are the skin a pad always wore; a font or border this machine does not have draws the default.
+*Built (phase 3, 5):* the pad's Look tab has visibility, fade and the faded alpha, then the composed Font, Border and Background groups (options-ui-§16, §17) under their own headings. The font draws the chips' labels and the section titles (a title keeps its gold until the player picks a font color or Use class color); the border's style "None" is the flat Ka0s edge and a thickness of 0 is none (the Ka0s 1px inner line is worn only on the default flat 1px edge, never at 0, over a thicker edge or over border art, which insets the background by a quarter of its size); the background is a swatch and its class-color companion. A larger font size grows the labeled chips and the title rows to hold it (the default 10 keeps the shipped 24/22/14 heights), and a chip's label is one line that stops short of the channel tag. The class color is the player's; the defaults are the skin a pad always wore; a font or border this machine does not have draws the default.
 
 ### 10.4 Test mode and position
 

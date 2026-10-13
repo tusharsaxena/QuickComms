@@ -172,6 +172,43 @@ test("render: [phase 5] a pad's Look is a font and a skin; the defaults are the 
     assertEqual(table.concat(fs.__shadow, ","), "0,0")
 end)
 
+test("render: [review] the skin's 1px inner line is kept only on the default flat 1px edge", function()
+    local NS = T.enableAddon()
+    local R = NS.PadRender
+    local function alpha(skin) return skin.innerBorder and skin.innerBorder[4] end
+    assertEqual(table.concat(R.SkinFor(NS.Library.TEMPLATES.pad.look).innerBorder, ","),
+        table.concat(NS.SKIN.innerBorder, ","), "the default Look wears the Ka0s inner line")
+    -- red under: SkinFor copying NS.SKIN's innerBorder whatever the border (a gray line at thickness 0)
+    assertEqual(alpha(R.SkinFor({ borderSize = 0 })), 0, "thickness 0 is no edge at all")
+    assertEqual(alpha(R.SkinFor({ borderSize = 4 })), 0, "no gray line over a thick edge")
+    local fetch = NS.MediaFetch
+    NS.MediaFetch = function(kind, name)
+        if kind == "border" and name == "Tooltip" then return "Interface\\Tooltips\\UI-Tooltip-Border" end
+        return fetch(kind, name)
+    end
+    local art = R.SkinFor({ borderStyle = "Tooltip", borderSize = 16 })
+    assertEqual(art.edgeFile, "Interface\\Tooltips\\UI-Tooltip-Border")
+    assertEqual(alpha(art), 0, "no gray line over border art")
+    assertEqual(art.insets.left, 4, "the background reaches under the art's soft inner edge")
+    assertEqual(R.SkinFor({ borderSize = 3 }).insets.left, 3, "a flat edge insets by its thickness")
+end)
+
+test("render: [review] a chip's label stops short of the channel tag, on one line", function()
+    local NS, m = T.enableAddon()
+    local b = chip(NS, m)
+    local points, wrap = {}, nil
+    b.qcLabel.ClearAllPoints = function(self) points = {} return self end
+    b.qcLabel.SetPoint = function(self, ...) points[#points + 1] = { ... } return self end
+    b.qcLabel.SetWordWrap = function(self, v) wrap = v return self end
+    NS.PadRender.Paint(b, { name = "A very long callout name indeed", calloutId = "c1" }, "iconLabel")
+    assertEqual(wrap, false, "one line")
+    local right
+    for _, pt in ipairs(points) do if pt[1] == "RIGHT" then right = pt end end
+    -- red under: R.Paint anchoring the label LEFT only (a large font runs under the tag and off the chip)
+    assertTrue(right ~= nil, "a right edge")
+    assertTrue(right[2] == b.qcTag, "bounded by the tag")
+end)
+
 test("render: [phase 5] Use class color takes the player's class color and keeps the swatch's alpha", function()
     local NS, m = T.enableAddon()
     m.RAID_CLASS_COLORS = { MAGE = { r = 0.25, g = 0.75, b = 0.5 } }
