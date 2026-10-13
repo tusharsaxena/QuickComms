@@ -215,7 +215,7 @@ function DD.PreviewLines(id)
         for i, item in ipairs(ring.items) do
             local what = item.title or "?"
             if item.kind == "ring" then what = L["%s, opens a ring"]:format(what) end
-            local dir = NS.DialLayout.Direction(i, ring.size)
+            local dir = NS.DialLayout.Direction(item.wedge or i, ring.size)
             out[#out + 1] = L["  %d %s: %s"]:format(i, DIRECTION[dir] or L["%s o'clock"]:format(dir), what)
         end
     end

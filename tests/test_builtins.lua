@@ -74,3 +74,22 @@ test("builtins: battlegrounds use smart group; arena uses party; raid lead uses 
     end
     assertEqual(BI.callouts["bi.raid.pull10"].channel, "smartLead")
 end)
+
+test("builtins: [phase 5] every node set pins each node to a wind, at most eight, Deepwind Gorge's five included", function()
+    local NS, BI = bi()
+    local sets = 0
+    for _, gid in ipairs(BI.order) do
+        local def = BI.groups[gid]
+        if def.children then
+            sets = sets + 1
+            local nodes = {}
+            for i, child in ipairs(def.children) do nodes[i] = { wind = BI.groups[child].compass } end
+            -- red under: drop one node's wind from defaults/BuiltIns_Battlegrounds.lua
+            assertTrue(NS.DialLayout.PinNodes(nodes) ~= nil, gid .. " pins every node")
+        end
+    end
+    assertEqual(sets, 5)
+    assertEqual(BI.groups["bi.bg.ab.lumbermill"].compass, "SW")
+    assertEqual(#BI.groups["bi.bg.dwg"].children, 5)
+    assertEqual(BI.callouts["bi.bg.dwg.shrine.inc2"].text, "INC 2 Shrine")
+end)

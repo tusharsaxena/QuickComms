@@ -745,3 +745,7 @@ L["Forget the checked string."] = "Forget the checked string."
 L["Make a string of your callouts, groups, pads or dials to share."] = "Make a string of your callouts, groups, pads or dials to share."
 L["Add what someone shared with you, from their string."] = "Add what someone shared with you, from their string."
 L["Quick Comms: share string"] = "Quick Comms: share string"
+
+-- defaults/BuiltIns_Battlegrounds.lua: Deepwind Gorge's two newer nodes (phase 5)
+L["Shrine"] = "Shrine"
+L["Ruins"] = "Ruins"

@@ -116,12 +116,13 @@ local function hubState(inst, plan)
     }
 end
 
--- One ring's wedges: placed on their compass points, painted, armed, indexed by callout.
+-- One ring's wedges: placed on their compass points (a pinned node on its own wind, Dial_Layout's
+-- `wedge`), painted, armed, indexed by callout.
 local function placeWedges(inst, ring, spec)
     local wedges = {}
     for i, item in ipairs(spec.items) do
         local w = NS.Pool.Acquire(ring.qcWedges, function() return newWedge(inst, ring) end)
-        local geo = DL.Wedge(i, spec.size)
+        local geo = DL.Wedge(item.wedge or i, spec.size)
         w:ClearAllPoints()
         w:SetPoint("CENTER", ring, "CENTER", geo.x, geo.y)
         w:SetSize(DL.WEDGE, DL.WEDGE)
