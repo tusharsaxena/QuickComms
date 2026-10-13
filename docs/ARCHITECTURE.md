@@ -12,8 +12,8 @@ this page describes what exists.
 A Retail addon that puts context-aware group callouts on a Comms Pad and a Comms Dial and sends them
 through secure buttons, so they work during chat lockdown in Mythic+ keys, boss pulls and PvP
 matches ([`scope.md`](scope.md)). At the end of phase 1 the data layer exists (situation,
-restrictions, tokens, channels, bake, resolver, library, built-ins) and `/qc check` exercises it; the surfaces and the send engine are
-phase 2.
+restrictions, tokens, channels, bake, resolver, library, built-ins) and `/qc check` exercises it;
+the surfaces and the send engine are phase 2.
 
 Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBOptions),
 LibSharedMedia, LibDataBroker and LibDBIcon are vendored under `libs/`, and so is the whole
@@ -92,7 +92,7 @@ tracked registration down and replay it.
 |---|---|---|---|---|
 | `PROFILE_CHANGED` | `ProfileChanged` | `core/QuickComms.lua` `reloadProfile` (every AceDB profile event) | none | none yet; every module that caches a profile value |
 | `SITUATION_CHANGED` | `SituationChanged` | `modules/Situation.lua`, only when the signature moves | snapshot, previous | none yet; the resolver edge, Preview, the settings live lines |
-| `RESTRICTION_CHANGED` | `RestrictionChanged` | `modules/Restrictions.lua`, when its four answers move | reason, canSendChat (spec §17 says the same; read `Restrictions` for the full set) | none yet; Surfaces (chips, padlocks) |
+| `RESTRICTION_CHANGED` | `RestrictionChanged` | `modules/Restrictions.lua`, when its four answers move | reason, canSendChat | none yet; Surfaces (chips, padlocks) |
 | `LIBRARY_CHANGED` | `LibraryChanged` | `modules/Library.lua`, on every registry write | kind, id | none yet; Surfaces, the settings pages |
 
 Declared and not yet sent (phase 2): `ACTIVE_GROUPS_CHANGED`, `SURFACE_REBUILT` (Surfaces),
@@ -169,7 +169,7 @@ is registered once, as a store, in the Tier 3 table; the documents under it get 
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Not applicable | The addon carries no client-version workaround of its own yet |
-| `compat-layer.md` | Not applicable | `core/Compat.lua` ships, but no `docs/compat-layer.md` has been written yet; the file's header comment is its contract until the doc is |
+| `compat-layer.md` | Present | `core/Compat.lua` publishes 13 shims, three or more |
 | `message-bus.md` | Not applicable | 9 messages are defined, not more than ten; the table is in this page's Message Bus section |
 
 ### Verification and record (documentation-§3)

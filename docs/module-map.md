@@ -10,7 +10,7 @@ LibDataBroker, LibDBIcon, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored 
 | 1 | `locales/enUS.lua` | data | `NS.L`, the metatable fallback; the key is the English string |
 | 2 | `core/Namespace.lua` | data | name, version, brand, the cyan `[QC]` tag, the slash and its alias |
 | 3 | `core/CoreSetup.lua` | setup | LibKa0s-Core: the printer, the secret-safe stringifier, the SafeRegister family, the skin, the close-button wrapper, the resize grip |
-| 3a | `core/Compat.lua` | compat | `NS.Compat`: the only caller of version-variant or optional client APIs, and the secret guards |
+| 3a | `core/Compat.lua` | compat | `NS.Compat`: the only caller of version-variant or optional client APIs, and the secret guards ([`compat-layer.md`](compat-layer.md)) |
 | 4 | `core/MediaSetup.lua` | setup | LibKa0s-Media: `NS.Icon`, `NS.MediaFont`, the one RegisterLSM call |
 | 5 | `core/Constants.lua` | data | `FONT_MONO`, the Ka0s gold |
 | 6 | `core/State.lua` | state | session-only state: the debug flag |
