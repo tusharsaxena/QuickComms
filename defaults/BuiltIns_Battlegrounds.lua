@@ -3,23 +3,10 @@ local _, NS = ...
 -- battleground (spec §12). Faction-neutral wording (D11). Matched on instanceID; the IDs below
 -- are confirmed or corrected by the phase 0 harness (/qcs where, round-4 record). Node
 -- battlegrounds nest one ring per node with INC 1/2/3/Many/Clear/Help and open into their ring.
+-- The generic set is declared last, below every per-battleground set.
 
 local BI, L = NS.BuiltIns, NS.L
 local BG = { content = "battleground", group = "raid", instanceGroup = true, lockdown = { pvpMatch = true } }
-
-BI.Group("bi.bg", {
-    name = L["Battleground (generic)"], icon = "Interface\\Icons\\Achievement_BG_winWSG",
-    when = { content = { battleground = true } },
-    callouts = BI.Callouts("bi.bg", "smartGroup", {
-        { "help",    L["Need help"],  L["Need help here"] },
-        { "inc",     L["INC"],        L["INC {rt8}"] },
-        { "hold",    L["Hold"],       L["Hold this"] },
-        { "capping", L["Capping"],    L["Capping"] },
-        { "defend",  L["Defend"],     L["Defend"] },
-        { "push",    L["Push"],       L["Push now"] },
-    }),
-})
-BI.SNAPSHOTS["bi.bg"] = BG
 
 local INC = {
     { "inc1",  L["INC 1"],    L["INC 1 %s"] },
@@ -130,3 +117,20 @@ flatBattleground("wg", L["Wintergrasp"], { 2118 }, {
     { "siege",    L["Siege"],          L["Siege engine incoming"] },
     { "workshop", L["Workshop"],       L["Take the workshop"] },
 })
+
+-- The generic set comes last (phase 4): a battleground's own set is then the first active group on a
+-- default dial, so the dial opens straight on its nodes (D9). Migration step 2 moves it on stored
+-- profiles (modules/Library.lua MoveGenericBattlegroundLast).
+BI.Group("bi.bg", {
+    name = L["Battleground (generic)"], icon = "Interface\\Icons\\Achievement_BG_winWSG",
+    when = { content = { battleground = true } },
+    callouts = BI.Callouts("bi.bg", "smartGroup", {
+        { "help",    L["Need help"],  L["Need help here"] },
+        { "inc",     L["INC"],        L["INC {rt8}"] },
+        { "hold",    L["Hold"],       L["Hold this"] },
+        { "capping", L["Capping"],    L["Capping"] },
+        { "defend",  L["Defend"],     L["Defend"] },
+        { "push",    L["Push"],       L["Push now"] },
+    }),
+})
+BI.SNAPSHOTS["bi.bg"] = BG

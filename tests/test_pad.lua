@@ -193,13 +193,14 @@ test("pad: tabs show one section; the wheel steps them out of combat and is refu
     local NS, m = live(AB)
     NS.db.profile.pads.p1.groupsAs = "tabs"
     NS.Pad.Apply("p1", planFor(NS))
-    assertEqual(#NS.Pad.ChipsFor("p1", "bi.bg.help"), 1)
-    assertEqual(#NS.Pad.ChipsFor("p1", "bi.bg.ab.stables.inc1"), 0)
-    assertTrue(NS.Pad.Wheel("p1", -1))
+    -- Arathi Basin's own set comes first (phase 4), so its first node is the first tab.
     assertEqual(#NS.Pad.ChipsFor("p1", "bi.bg.ab.stables.inc1"), 1)
+    assertEqual(#NS.Pad.ChipsFor("p1", "bi.bg.ab.lumbermill.inc1"), 0)
+    assertTrue(NS.Pad.Wheel("p1", -1))
+    assertEqual(#NS.Pad.ChipsFor("p1", "bi.bg.ab.lumbermill.inc1"), 1)
     combat(m, true)
     assertFalse(NS.Pad.Wheel("p1", -1))
-    assertEqual(#NS.Pad.ChipsFor("p1", "bi.bg.ab.stables.inc1"), 1, "unchanged in combat")
+    assertEqual(#NS.Pad.ChipsFor("p1", "bi.bg.ab.lumbermill.inc1"), 1, "unchanged in combat")
     assertEqual(#m.blocked, 0)
 end)
 
@@ -362,12 +363,12 @@ test("pad: [fix wave] tabs switch on a wheel over a chip or the pad, not only th
     local NS = live(AB)
     NS.db.profile.pads.p1.groupsAs = "tabs"
     NS.Pad.Apply("p1", planFor(NS))
-    local chip = NS.Pad.ChipsFor("p1", "bi.bg.help")[1]
+    local chip = NS.Pad.ChipsFor("p1", "bi.bg.ab.stables.inc1")[1]
     -- red under: enable the wheel on the header alone
     chip:__fire("OnMouseWheel", -1)
-    assertEqual(#NS.Pad.ChipsFor("p1", "bi.bg.ab.stables.inc1"), 1)
+    assertEqual(#NS.Pad.ChipsFor("p1", "bi.bg.ab.lumbermill.inc1"), 1)
     NS.Pad.Instance("p1").root:__fire("OnMouseWheel", 1)
-    assertEqual(#NS.Pad.ChipsFor("p1", "bi.bg.help"), 1)
+    assertEqual(#NS.Pad.ChipsFor("p1", "bi.bg.ab.stables.inc1"), 1, "back to Stables")
 end)
 
 test("pad: [fix wave] in combat Reset position, Apply and Release do no protected work; combat end anchors", function()

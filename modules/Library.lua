@@ -732,6 +732,39 @@ function Lib.KeyOwner(key, exceptId)
     return ids[1]
 end
 
+-- ── migrations (core/Database.lua calls these; Library writes the lists) ────────────────────
+
+--- Schema step 2 for one stored profile: on every pad and dial, the generic battleground set moves to
+--- just below the last per-battleground set, so a node set can be the first active group and the dial
+--- opens into it (D9). The shipped order changed the same way (defaults/BuiltIns_Battlegrounds.lua).
+--- A raw SavedVariables profile: anything missing or malformed is skipped. Idempotent.
+--- @return number the lists changed
+function Lib.MoveGenericBattlegroundLast(profile)
+    local n = 0
+    for _, key in ipairs({ "pads", "dials" }) do
+        local set = type(profile) == "table" and profile[key]
+        for _, s in pairs(type(set) == "table" and set or {}) do
+            local list = type(s) == "table" and s.groups
+            if type(list) == "table" then
+                local at, last
+                for i, gid in ipairs(list) do
+                    if gid == "bi.bg" then
+                        at = i
+                    elseif type(gid) == "string" and gid:find("^bi%.bg%.") then
+                        last = i
+                    end
+                end
+                if at and last and at < last then
+                    table.remove(list, at)
+                    table.insert(list, last, "bi.bg")
+                    n = n + 1
+                end
+            end
+        end
+    end
+    return n
+end
+
 -- ── prepare ─────────────────────────────────────────────────────────────────────────────────
 
 local function exists(gid) return P().groups[gid] ~= nil or (NS.BuiltIns.groups[gid] ~= nil and not NS.BuiltIns.groups[gid].parent) end

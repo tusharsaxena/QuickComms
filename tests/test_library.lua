@@ -619,3 +619,14 @@ test("library: [phase 4] keys: upper-cased, none is false; what the open dial us
     assertTrue(Lib.ValidKey("9"))
     T.assertFalse((Lib.ValidKey("SHIFT G")))
 end)
+
+test("library: [phase 4] the generic battleground set moves below the per-battleground sets, once", function()
+    local _, Lib = boot()
+    local profile = { pads = { p1 = { groups = { "g1", "bi.bg", "bi.bg.ab", "bi.mplus", "bi.bg.wsg" } } },
+        dials = { d2 = { groups = { "bi.bg.ab", "bi.bg" } } } }
+    assertEqual(Lib.MoveGenericBattlegroundLast(profile), 1)
+    assertEqual(table.concat(profile.pads.p1.groups, ","), "g1,bi.bg.ab,bi.mplus,bi.bg.wsg,bi.bg")
+    assertEqual(table.concat(profile.dials.d2.groups, ","), "bi.bg.ab,bi.bg", "already below: untouched")
+    assertEqual(Lib.MoveGenericBattlegroundLast(profile), 0, "idempotent")
+    assertEqual(Lib.MoveGenericBattlegroundLast({ pads = "junk" }), 0)
+end)

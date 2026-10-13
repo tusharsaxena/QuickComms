@@ -49,14 +49,25 @@ end)
 test("database: a perProfile step runs once for every stored profile", function()
     local NS = T.bootAddon()
     NS.addon.db:SetProfile("Second")
-    NS.addon.db.global.schemaVersion = 1
+    local target = NS.SCHEMA_VERSION + 1
+    NS.addon.db.global.schemaVersion = NS.SCHEMA_VERSION
     local seen = {}
-    NS.MIGRATIONS[#NS.MIGRATIONS + 1] = { to = 2, perProfile = true,
+    NS.MIGRATIONS[#NS.MIGRATIONS + 1] = { to = target, perProfile = true,
         run = function(_, profile) seen[#seen + 1] = profile end }
     NS.addon:RunMigrations()
     NS.MIGRATIONS[#NS.MIGRATIONS] = nil
     assertEqual(#seen, 2, "Default and Second")
+    assertEqual(NS.addon.db.global.schemaVersion, target)
+end)
+
+test("database: [phase 4] step 2 moves the generic battleground set below the per-battleground sets", function()
+    local NS = T.bootAddon()
+    local p = NS.addon.db.profile
+    p.pads[p.padOrder[1]].groups = { "bi.mplus", "bi.bg", "bi.bg.ab", "bi.bg.wsg" }
+    NS.addon.db.global.schemaVersion = 1
+    NS.addon:RunMigrations()
     assertEqual(NS.addon.db.global.schemaVersion, 2)
+    assertEqual(table.concat(p.pads[p.padOrder[1]].groups, ","), "bi.mplus,bi.bg.ab,bi.bg.wsg,bi.bg")
 end)
 
 test("database: the profile defaults carry the Master controls value, and no debug flag", function()
