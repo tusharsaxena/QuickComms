@@ -269,3 +269,7 @@ L["  unknown tokens: %s"] = "  unknown tokens: %s"
 L["A deferred update failed (%s): %s"] = "A deferred update failed (%s): %s"
 L["%s may have been dropped by the game (sent too soon after another message)."] =
     "%s may have been dropped by the game (sent too soon after another message)."
+
+-- Test mode (modules/Preview.lua)
+L["Test mode is not available in combat."] = "Test mode is not available in combat."
+L["Test mode ended: you entered combat."] = "Test mode ended: you entered combat."
