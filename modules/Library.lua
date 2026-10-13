@@ -199,11 +199,23 @@ function Lib.ValidIcon(v)
     return false, "badIcon"
 end
 
---- Whether `v` is a surface anchor: nil (the default place) or { point, relativePoint, x, y }.
+-- The nine region anchor names SetPoint accepts.
+local ANCHORS = {
+    TOPLEFT = true, TOP = true, TOPRIGHT = true, LEFT = true, CENTER = true, RIGHT = true,
+    BOTTOMLEFT = true, BOTTOM = true, BOTTOMRIGHT = true,
+}
+
+-- A finite number: not NaN (which is not equal to itself) and not either infinity.
+local function finite(x)
+    return type(x) == "number" and x == x and math.abs(x) ~= math.huge
+end
+
+--- Whether `v` is a surface anchor: nil (the default place) or { point, relativePoint, x, y }, the
+--- two points region anchor names and the offsets finite numbers.
 function Lib.ValidPoint(v)
     if v == nil then return true end
-    if type(v) ~= "table" or type(v[1]) ~= "string" or type(v[2]) ~= "string"
-        or type(v[3]) ~= "number" or type(v[4]) ~= "number" then
+    if type(v) ~= "table" or not ANCHORS[v[1]] or not ANCHORS[v[2]]
+        or not finite(v[3]) or not finite(v[4]) then
         return false, "badPoint"
     end
     return true

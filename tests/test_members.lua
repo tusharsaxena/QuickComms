@@ -235,3 +235,18 @@ test("members: [review 1] a callout edited from the CLI in combat waits for comb
     assertFalse(NS.Pad.Instance("p1").header.qcStale:IsShown())
     assertEqual(#m.blocked, 0)
 end)
+
+test("members: [fix 1] pad.point refuses an unknown anchor name or a non-finite offset; nothing is stored", function()
+    local NS = T.enableAddon()
+    NS.State.editing.pad = "p1"
+    NS.addon:OnSlashCommand("set pad.point topleft topleft 5 -5")
+    assertEqual(table.concat(NS.db.profile.pads.p1.point, ","), "TOPLEFT,TOPLEFT,5,-5")
+    -- red under: Lib.ValidPoint checks only that the two anchors are strings
+    NS.addon:OnSlashCommand("set pad.point foo bar 1 2")
+    assertEqual(table.concat(NS.db.profile.pads.p1.point, ","), "TOPLEFT,TOPLEFT,5,-5", "refused: unknown anchors")
+    -- red under: Lib.ValidPoint checks only that the offsets are numbers
+    NS.addon:OnSlashCommand("set pad.point nan 0")
+    assertEqual(table.concat(NS.db.profile.pads.p1.point, ","), "TOPLEFT,TOPLEFT,5,-5", "refused: a NaN offset")
+    NS.addon:OnSlashCommand("set pad.point 0 inf")
+    assertEqual(table.concat(NS.db.profile.pads.p1.point, ","), "TOPLEFT,TOPLEFT,5,-5", "refused: an infinite offset")
+end)
