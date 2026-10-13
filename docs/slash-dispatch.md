@@ -16,7 +16,7 @@ settings panel.
 | `debug` | reserved | yes | `DebugVerb` (diagnostics first, then on/off), else the console toggle |
 | `diagnostics` | reserved | yes | `NS.DebugLog:RunDiagnostics` |
 | `perf` | reserved | yes | `NS.Perf.OnCommand`, lines printed by the addon |
-| `check <id>` | feature | no (refused while disabled) | `NS.SlashVerbs.Check` in `settings/SlashVerbs.lua`: prints the callout's baked line under the current situation (`id -> /p text`), then its channel and byte count, then any lock. A refusal prints its reason (`startsWithSlash`, `tooLong`, ...); an unknown id says so. It never sends (spec §14, D12). |
+| `check <id>` | feature | no (refused while disabled) | `NS.SlashVerbs.Check` in `settings/SlashVerbs.lua`: prints the callout's baked line under the current situation (`id -> /p text`), then its channel and the whole line's byte count (prefix included, live tokens at a nominal 12), then any lock, then the tokens it leaves out: the baked ones (`{me}`, `{spec}`, ...) as "baked at send time", since check passes no send-time values, and any unknown ones. A refusal prints its reason (`startsWithSlash`, `tooLong`, ...); a smart channel while solo with the `self` fallback says it would print locally; an unknown id says so. It never sends (spec §14, D12). |
 
 While disabled, a verb that is not live prints the one refusal line, `Ka0s Quick Comms is disabled —
 enable it with /qc enable`, and does nothing else. The gate reads the stored `enabled`, not the

@@ -38,3 +38,12 @@ test("compat: InstanceInfo during a loading screen (all nil) reads safely", func
     assertFalse(inInstance)
     assertNil(itype) assertNil(diff) assertNil(id)
 end)
+
+test("compat: [final] an empty-string realm falls back to the normalized realm name", function()
+    local NS, env = T.newAddon()
+    env.UnitFullName = function() return "Kaos", "" end
+    env.GetNormalizedRealmName = function() return "Silvermoon" end
+    local _, _, _, character = NS.Compat.PlayerIdentity()
+    -- red under: `if not realm` alone
+    assertEqual(character, "Kaos-Silvermoon")
+end)

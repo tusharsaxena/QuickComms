@@ -19,7 +19,7 @@ local LABEL = {
 
 local function isSet(row, v)
     if type(v) ~= "table" then return false end
-    if row == "keyLevel" then return v.min ~= nil or v.max ~= nil end
+    if row == "keyLevel" then return type(v.min) == "number" or type(v.max) == "number" end
     return next(v) ~= nil
 end
 
@@ -30,7 +30,7 @@ local CHECK = {
     difficulty   = function(v, s) return s.difficulty ~= nil and v[s.difficulty] == true end,
     keyLevel     = function(v, s)
         if s.content ~= "mythicPlus" or type(s.keyLevel) ~= "number" then return false end
-        return (v.min == nil or s.keyLevel >= v.min) and (v.max == nil or s.keyLevel <= v.max)
+        return (type(v.min) ~= "number" or s.keyLevel >= v.min) and (type(v.max) ~= "number" or s.keyLevel <= v.max)
     end,
     group        = function(v, s) return (v.instance == true and s.instanceGroup == true) or v[s.group] == true end,
     leadership   = function(v, s) return (v.leader == true and s.leader == true) or (v.assist == true and s.assist == true) end,

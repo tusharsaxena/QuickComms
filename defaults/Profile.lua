@@ -8,8 +8,8 @@ local _, NS = ...
 --
 -- The Master controls rows are composed by LibKa0s-Options-1.0, so their values live here too: with
 -- the library absent the schema has no `enabled` row, and a schema-only defaults tree would hand
--- AceDB a profile whose `enabled` reads nil. The design's data model (spec §5.1) is added here by
--- the profile task.
+-- AceDB a profile whose `enabled` reads nil. The design's data model (spec §5.1) lives here too:
+-- the Behavior values and the registry, whose only writer is modules/Library.lua.
 
 NS.C = {
     PROFILE = {

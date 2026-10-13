@@ -41,3 +41,20 @@ test("check: never calls SendChatMessage", function()
     NS.SlashVerbs.Check("bi.mplus.lust")
     assertTrue(not called, "check must not send")
 end)
+
+test("check: [final minor 4] unknown and send-time tokens are listed", function()
+    local NS = boot()
+    local id = NS.Library.CreateCallout({ name = "T", text = "{me} on {bogus}", channel = "party" })
+    local text = table.concat(NS.SlashVerbs.CheckLines(id), "\n")
+    -- red under: a CheckLines that ignores info.missing / info.unknown
+    assertTrue(text:find("baked at send time: {me}", 1, true) ~= nil, text)
+    assertTrue(text:find("unknown tokens: {bogus}", 1, true) ~= nil, text)
+end)
+
+test("check: [final minor 4] solo with soloFallback=self says it would print locally", function()
+    local NS = T.enableAddon()
+    NS.Situation.Current = function() return { content = "openWorld", group = "solo", lockdown = {} } end
+    NS.SchemaRuntime.Set("behavior.soloFallback", "self")
+    local lines = NS.SlashVerbs.CheckLines("bi.mplus.lust")
+    assertTrue(lines[1]:find("would print locally", 1, true) ~= nil, lines[1])
+end)

@@ -35,18 +35,29 @@ test("bake: pipes are escaped, spell links are not", function()
     assertEqual(line, "/p a||b |cff71d5ff|Hspell:2825|h[Bloodlust]|h|r")
 end)
 
-test("bake: [review 2] the 255-byte boundary counts bytes and live tokens", function()
+test("bake: [final minor 5] the 255-byte boundary counts the whole line: prefix, space, text, live tokens", function()
     local B = bake()
     local e = "\195\169"                                   -- é is two bytes
-    local ok = callout(string.rep(e, 127) .. "x")          -- 255 bytes
-    local over = callout(string.rep(e, 128))               -- 256 bytes
-    assertTrue(B.Bake(ok, PARTY) ~= nil, "255 passes")
-    local line, reason = B.Bake(over, PARTY)
+    local ok = callout(string.rep(e, 126))                 -- "/p " + 252 bytes = 255
+    local over = callout(string.rep(e, 126) .. "x")        -- "/p " + 253 bytes = 256
+    local line, _, info = B.Bake(ok, PARTY)
+    assertTrue(line ~= nil, "255 passes")
+    assertEqual(#line, 255)
+    assertEqual(info.length, 255)
+    -- red under: a check that counts the text alone
+    local reason
+    line, reason = B.Bake(over, PARTY)
     assertNil(line) assertEqual(reason, "tooLong")
-    local live = callout(string.rep("a", 241) .. " {target}")  -- 244 bytes + 12 nominal = 256
-    line, reason = B.Bake(live, PARTY)
+    local liveOk = callout(string.rep("a", 237) .. " {target}")    -- "/p " + 240 bytes + 12 nominal = 255
+    local liveOver = callout(string.rep("a", 238) .. " {target}")  -- 256
+    assertTrue(B.Bake(liveOk, PARTY) ~= nil, "255 with a live token passes")
+    line, reason = B.Bake(liveOver, PARTY)
     assertNil(line) assertEqual(reason, "tooLong")
+    local rw = { group = "raid", leader = true, instanceGroup = false, lockdown = {} }
+    assertTrue(B.Bake(callout(string.rep("a", 251), "raidWarning"), rw) ~= nil, "/rw + 251 = 255")
+    assertNil((B.Bake(callout(string.rep("a", 252), "raidWarning"), rw)), "/rw + 252 = 256")
     assertEqual(B.Length("abc", 2), 3 + 2 * 12)
+    assertEqual(B.Length("abc", 0, "/p"), 2 + 1 + 3)
 end)
 
 test("bake: empty or whitespace-only text is refused", function()

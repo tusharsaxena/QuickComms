@@ -1,5 +1,6 @@
 local _, NS = ...
--- modules/Bake.lua — a callout + a snapshot -> exactly one macro line (spec §8.3). PURE.
+-- modules/Bake.lua — a callout + a snapshot -> exactly one macro line of at most 255 bytes,
+-- prefix included (spec §8.3). PURE.
 -- Anti-pattern #20: callout text is chat text, never a command. The sanitizer flattens control
 -- characters (so there is never a second macro line), refuses a leading "/", and escapes "|"
 -- before tokens expand, and Tokens does the same to every baked value ({me}, {spec}, ...), so only
@@ -28,9 +29,16 @@ function B.Sanitize(text)
     return s
 end
 
---- Bytes the line's text will take: its own bytes plus a nominal 12 for each live token.
-function B.Length(text, live)
-    return #text + (live or 0) * NS.Tokens.LIVE_NOMINAL
+--- Bytes the line will take: its text's own bytes plus a nominal 12 for each live token and, with
+--- a prefix, the prefix and its space too. The 255-byte cap covers the WHOLE macro line, because
+--- macrotext runs through the edit-box path, whose cap counts the line as typed (spec §8.3).
+--- @param text string
+--- @param live number|nil live tokens in the text
+--- @param prefix string|nil the channel's slash prefix ("/p")
+--- @return number
+function B.Length(text, live, prefix)
+    local head = prefix and (#prefix + 1) or 0
+    return head + #text + (live or 0) * NS.Tokens.LIVE_NOMINAL
 end
 
 --- Bake one callout.
@@ -52,8 +60,9 @@ function B.Bake(callout, s, opts)
     info.concrete, info.unknown, info.missing, info.text = concrete, unknown, missing, text
     if text == "" then return nil, "empty", info end
     if text:sub(1, 1) == "/" then return nil, "startsWithSlash", info end
-    info.length = B.Length(text, live)
+    local prefix = NS.Channels.Prefix(concrete)
+    info.length = B.Length(text, live, prefix)
     if info.length > B.MAX_BYTES then return nil, "tooLong", info end
     info.lock = NS.Channels.LockState(concrete, s)
-    return NS.Channels.Prefix(concrete) .. " " .. text, nil, info
+    return prefix .. " " .. text, nil, info
 end

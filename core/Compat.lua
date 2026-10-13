@@ -94,7 +94,7 @@ function Compat.PlayerIdentity()
     local name, realm
     if UnitFullName then name, realm = UnitFullName("player") end
     name, realm = PlainString(name), PlainString(realm)
-    if not realm and GetNormalizedRealmName then realm = PlainString(GetNormalizedRealmName()) end
+    if (not realm or realm == "") and GetNormalizedRealmName then realm = PlainString(GetNormalizedRealmName()) end
     local character = name and realm and (name .. "-" .. realm) or nil
     return classFile, specID, role, character
 end
