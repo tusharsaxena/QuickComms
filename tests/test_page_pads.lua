@@ -1,0 +1,121 @@
+-- tests/test_page_pads.lua — settings/Pads.lua (spec §10.2-§10.4, §13.1): the pad picker and New pad,
+-- General's acts, the Groups priority list, Layout with the X/Y position, and Look. Driven headlessly
+-- through tests/page_helpers.lua.
+
+local T = _G.QUICKCOMMS_TEST
+local test, assertEqual, assertTrue, assertFalse, assertNil =
+    T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
+
+local MPLUS = { inInstance = true, instanceType = "party", difficultyID = 8, keystoneActive = true,
+    keyLevel = 12, inGroup = true }
+
+local function open(inputs)
+    local NS, m = T.enableAddon()
+    NS.Situation.ReadInputs = function() return inputs or MPLUS end
+    NS.Situation.RefreshNow("test")
+    local P = dofile("tests/page_helpers.lua")(NS, m)
+    P.show("Comms Pad")
+    NS.addon.Settings.Editors.Select("pad", "p1")
+    return NS, m, P
+end
+
+local function pointOf(inst)
+    local p, _, rel, x, y = inst.root:GetPoint(1)
+    return table.concat({ tostring(p), tostring(rel), tostring(x), tostring(y) }, ",")
+end
+
+test("pads page: New pad makes a second pad holding every built-in, selects it, and the pad is built", function()
+    local NS, _, P = open()
+    P.bannerAction(P.ctx("pads")):__fire("OnClick")
+    P.flush()
+    local id = NS.State.editing.pad
+    assertTrue(id ~= "p1" and NS.db.profile.pads[id] ~= nil)
+    assertEqual(NS.db.profile.pads[id].name, "Comms Pad 2")
+    assertEqual(#NS.db.profile.pads[id].groups, #NS.BuiltIns.order)
+    assertTrue(NS.Pad.Instance(id) ~= nil, "built by the rebuild LIBRARY_CHANGED asked for")
+end)
+
+test("pads page: the Layout rows write the selected pad", function()
+    local NS, _, P = open()
+    local w = P.tab("pads", "Layout")
+    P.find(w, "Dropdown", "Orientation"):__fire("OnValueChanged", "vertical")
+    P.find(w, "Dropdown", "Chip style"):__fire("OnValueChanged", "label")
+    P.find(w, "Slider", "Scale"):__fire("OnMouseUp", 1.5)
+    local layout = NS.db.profile.pads.p1.layout
+    assertEqual(layout.orientation, "vertical")
+    assertEqual(layout.style, "label")
+    assertEqual(layout.scale, 1.5)
+end)
+
+test("pads page: X and Y move the pad through its pad.point row; Reset puts it back", function()
+    local NS, m, P = open()
+    local inst = NS.Pad.Instance("p1")
+    local w = P.tab("pads", "Layout")
+    P.find(w, "EditBox", "X offset"):__fire("OnEnterPressed", "40")
+    assertEqual(table.concat(NS.db.profile.pads.p1.point, ","), "CENTER,CENTER,40,-150")
+    w = P.tab("pads", "Layout")
+    P.find(w, "EditBox", "Y offset"):__fire("OnEnterPressed", "-60")
+    assertEqual(pointOf(inst), "CENTER,CENTER,40,-60", "the rebuild re-anchors the pad")
+    m.prints = {}
+    w = P.tab("pads", "Layout")
+    P.find(w, "EditBox", "X offset"):__fire("OnEnterPressed", "left")
+    assertTrue(table.concat(m.prints, "\n"):find("A position is a number of pixels.", 1, true) ~= nil)
+    assertEqual(NS.db.profile.pads.p1.point[3], 40)
+    w = P.tab("pads", "Layout")
+    P.find(w, "Button", "Reset this pad's position"):__fire("OnClick")
+    assertNil(NS.db.profile.pads.p1.point)
+    assertEqual(pointOf(inst), "CENTER,CENTER,0,-150")
+end)
+
+test("pads page: Look's visibility reaches the pad's state driver", function()
+    local NS, m, P = open()
+    local w = P.tab("pads", "Look")
+    P.find(w, "Dropdown", "Visibility"):__fire("OnValueChanged", "never")
+    assertEqual(NS.db.profile.pads.p1.look.visibility, "never")
+    assertEqual(m.stateDrivers[NS.Pad.Instance("p1").root].visibility, "hide")
+end)
+
+test("pads page: Groups lists the pad's groups; remove one, add it back at the end, drag to reorder", function()
+    local NS, _, P = open()
+    local lists = P.reorderSpy()
+    local groups = NS.db.profile.pads.p1.groups
+    local first, count = groups[1], #groups
+    local w = P.tab("pads", "Groups")
+    assertEqual(lists[#lists].rows, count)
+    P.all(w, "Button", "Remove")[1]:__fire("OnClick")
+    assertEqual(#NS.db.profile.pads.p1.groups, count - 1)
+    w = P.tab("pads", "Groups")
+    P.find(w, "Dropdown", "Add a group"):__fire("OnValueChanged", first)
+    assertEqual(NS.db.profile.pads.p1.groups[count], first, "added back at the end")
+    P.tab("pads", "Groups")
+    lists[#lists].opts.onMove(count, 1)
+    assertEqual(NS.db.profile.pads.p1.groups[1], first, "dragged to the top")
+end)
+
+test("pads page: Delete pad asks, then the pad is gone, its frame released, and the page heals", function()
+    local NS, _, P = open()
+    local id = NS.addon.Settings.Pads.Create()
+    P.flush()
+    assertTrue(NS.Pad.Instance(id).live)
+    local w = P.redraw("pads")
+    P.find(w, "Button", "Delete pad"):__fire("OnClick")
+    assertTrue(NS.db.profile.pads[id] ~= nil, "asks first")
+    P.accept()
+    assertNil(NS.db.profile.pads[id])
+    assertFalse(NS.Pad.Instance(id).live, "released by Pad.Sync")
+    P.flush()
+    P.redraw("pads")
+    assertEqual(NS.State.editing.pad, "p1")
+end)
+
+test("pads page: General's Unlock pads toggles the one lock", function()
+    local NS, _, P = open()
+    local w = P.redraw("pads")
+    assertTrue(P.find(w, "Dropdown", "Preview as") ~= nil, "Preview as is page-wide, first")
+    P.find(w, "Button", "Unlock pads"):__fire("OnClick")
+    assertFalse(NS.Setting("locked"))
+    P.flush()
+    w = P.redraw("pads")
+    P.find(w, "Button", "Lock pads"):__fire("OnClick")
+    assertTrue(NS.Setting("locked"))
+end)
