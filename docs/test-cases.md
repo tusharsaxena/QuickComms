@@ -262,7 +262,7 @@ Total.
 - builtins: bake audit, every callout bakes under its set's snapshot
 - builtins: battlegrounds use smart group; arena uses party; raid lead uses smart lead
 
-### test_library.lua (45)
+### test_library.lua (46)
 
 - library: Prepare seeds one pad and one dial with every built-in, once
 - library: callouts validate on create
@@ -301,6 +301,7 @@ Total.
 - library: [phase 3] Customize shortens a long set name instead of refusing it
 - library: [phase 3] Customize changes nothing when the copy cannot be made
 - library: [phase 3] ValidWhen accepts every shipped When and refuses bad shapes
+- library: [final] a surface's offsets are bounded at its smallest scale, not at 1
 - library: [phase 3] the point, icon and hidden-set validators
 - library: [phase 3] every member template holds a value at every field
 - library: [phase 3] Batch holds the announces and sends one per kind it touched
@@ -660,7 +661,7 @@ Total.
 | test_bake.lua | 11 |
 | test_resolver.lua | 8 |
 | test_builtins.lua | 6 |
-| test_library.lua | 45 |
+| test_library.lua | 46 |
 | test_members.lua | 16 |
 | test_editors.lua | 11 |
 | test_page_callouts.lua | 13 |
@@ -684,4 +685,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **502** |
+| **Total** | **503** |

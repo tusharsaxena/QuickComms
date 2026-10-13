@@ -418,7 +418,7 @@ L["an instance id (a whole number)"] = "an instance id (a whole number)"
 L["a specialization id (a whole number)"] = "a specialization id (a whole number)"
 L["Name-Realm"] = "Name-Realm"
 L["%s does not take %s. It takes: %s."] = "%s does not take %s. It takes: %s."
-L["That position is off the screen: an offset is at most the screen's width or height."] = "That position is off the screen: an offset is at most the screen's width or height."
+L["That position is too far off the screen."] = "That position is too far off the screen."
 
 -- Member rows on the command line (settings/Slash.lua)
 L["A position is `x y` or `POINT RELATIVEPOINT x y`."] = "A position is `x y` or `POINT RELATIVEPOINT x y`."

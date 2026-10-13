@@ -450,6 +450,20 @@ test("library: [phase 3] ValidWhen accepts every shipped When and refuses bad sh
     assertFalse(Lib.ValidWhen("x"))
 end)
 
+test("library: [final] a surface's offsets are bounded at its smallest scale, not at 1", function()
+    local NS, Lib = boot()
+    local real = NS.Compat.ScreenSize
+    NS.Compat.ScreenSize = function() return 1920, 1080 end
+    -- red under: the bound is the bare screen size, so a pad drawn at 0.3 and dragged to the far
+    -- right (its own units: about 1.2x the width) is refused and snaps back
+    local ok = Lib.ValidPoint({ "CENTER", "CENTER", 2304, -1296 })
+    local far, why = Lib.ValidPoint({ "CENTER", "CENTER", 7000, 0 })
+    NS.Compat.ScreenSize = real
+    assertTrue(ok, "an on-screen drag of a scaled-down pad")
+    assertFalse(far, "past the screen at the smallest scale")
+    assertEqual(why, "offScreen")
+end)
+
 test("library: [phase 3] the point, icon and hidden-set validators", function()
     local _, Lib = boot()
     assertTrue(Lib.ValidPoint(nil), "nil is the default place")

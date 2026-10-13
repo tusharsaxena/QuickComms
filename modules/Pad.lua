@@ -68,6 +68,10 @@ local function savePoint(inst)
     if not point then return end
     if NS.Library.SetSurfacePoint("pad", inst.id, { point, relativePoint, x, y }) then
         NS.Debug(TAG, "%s moved to %s %s,%s", inst.id, point, x, y)
+    else
+        -- Refused: put the pad back on its saved place now, so it never sits where nothing was saved.
+        NS.Debug(TAG, "%s move to %s %s,%s refused", inst.id, point, x, y)
+        applyPoint(inst)
     end
 end
 
@@ -233,7 +237,7 @@ function Pad.Apply(id, plan)
     local look = type(pad.look) == "table" and pad.look or {}
     local sections = PL.VisibleSections(plan.sections, pad.groupsAs, session("padTab")[id])
     local box = PL.Compute(sections, layout, { collapsed = session("padCollapsed")[id] == true })
-    inst.root:SetScale(math.max(0.3, (tonumber(NS.Setting("scale")) or 1) * (tonumber(layout.scale) or 1)))
+    inst.root:SetScale(math.max(NS.Library.MIN_SURFACE_SCALE, (tonumber(NS.Setting("scale")) or 1) * (tonumber(layout.scale) or 1)))
     inst.root:SetSize(box.width, box.height)
     place(inst, box, layout.style)
     R.PaintHeader(inst.header, headerState(inst, plan))
