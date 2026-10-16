@@ -1,6 +1,6 @@
 # Ka0s Quick Comms
 
-![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
+![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
 ![Tests](https://img.shields.io/badge/Tests-686%2F686_passing-green)

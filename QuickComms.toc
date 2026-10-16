@@ -1,4 +1,4 @@
-## Interface: 120100
+## Interface: 120105
 ## Title: Ka0s Quick Comms
 ## Notes: Context-aware quick callouts on a Comms Pad and a ping-wheel-style Comms Dial, sent through secure buttons so they work in M+ keys and boss pulls
 ## Author: add1kted2ka0s
