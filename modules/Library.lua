@@ -138,16 +138,6 @@ function Lib.OwnerOf(calloutId)
     return ids[1]
 end
 
---- The user groups that reference a callout.
-function Lib.UsedBy(calloutId)
-    local out = {}
-    for gid, g in pairs(P().groups) do
-        if indexOf(g.callouts or {}, calloutId) then out[#out + 1] = gid end
-    end
-    table.sort(out)
-    return out
-end
-
 --- The live member a member row addresses (settings/SchemaMembers.lua): a user callout, group, pad
 --- or dial, or the overlay of a built-in set (a node's is its battleground's). A built-in group
 --- answers its merged copy, so its fields read; the group rows refuse to write one. Nil without a
@@ -420,14 +410,6 @@ function Lib.DeleteCallout(id)
     for _, g in pairs(p.groups) do removeAll(g.callouts, id) end
     announce("callout", id)
     return true
-end
-
---- Copy a user callout under a "(copy)" name. The copy is in no group.
---- @return string|nil id, string|nil reason
-function Lib.DuplicateCallout(id)
-    local c = P().callouts[id]
-    if not c then return nil, "noCallout" end
-    return Lib.CreateCallout({ name = Lib.CopyName(c.name), text = c.text, channel = c.channel, icon = c.icon })
 end
 
 -- ── groups ──────────────────────────────────────────────────────────────────────────────────

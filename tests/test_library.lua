@@ -290,19 +290,6 @@ test("library: SetSurfacePoint refuses an unknown surface or a malformed anchor,
     T.assertTrue(NS.Library.SetSurfacePoint("dial", "d2", pt), "the dial's anchor has the same writer")
 end)
 
-test("library: [phase 3] DuplicateCallout copies every field under a '(copy)' name", function()
-    local _, Lib, p = boot()
-    local id = Lib.CreateCallout({ name = "Lust", text = "Lust {rt8}", channel = "party", icon = 136012 })
-    local copy = Lib.DuplicateCallout(id)
-    assertTrue(copy ~= id)
-    local c = p.callouts[copy]
-    assertEqual(c.name, "Lust (copy)")
-    assertEqual(c.text, "Lust {rt8}")
-    assertEqual(c.channel, "party")
-    assertEqual(c.icon, 136012)
-    assertNil((Lib.DuplicateCallout("c999")))
-end)
-
 test("library: [phase 3] a copy's name stays within the 32-character cap, counted in characters", function()
     local _, Lib = boot()
     local long = string.rep("\195\169", 30)          -- thirty two-byte characters

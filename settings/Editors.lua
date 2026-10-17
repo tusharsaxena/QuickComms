@@ -221,7 +221,7 @@ function Ed.Bound(rows, id)
     return out
 end
 
---- A dropdown that acts on the choice at once ("Add a callout", "Insert a token"), as a RenderGrid item.
+--- A dropdown that acts on the choice at once ("Add a group", "Insert a token"), as a RenderGrid item.
 --- `entries` is a list, or a function; with `ctx`, a function is re-read in place (Ed.Live), so a
 --- list that depends on a field (the token list on the callout's channel) follows it without a repaint.
 function Ed.ActionDropdown(label, tooltip, entries, onPick, ctx)
@@ -468,10 +468,10 @@ local DELETE_POPUP = "QUICKCOMMS_DELETE_MEMBER"
 
 --- Ask before deleting `name`; `onAccept` runs only when the player accepts. It is the popup's data,
 --- so a popup accepted after combat started still runs it: a delete is a data write, and the pads
---- pick it up at combat end.
-function Ed.ConfirmDelete(name, onAccept)
+--- pick it up at combat end. `text` (optional, with one %s for the name) says more than the plain
+--- question, as a group's delete does about its callouts; each ask sets the text afresh.
+function Ed.ConfirmDelete(name, onAccept, text)
     StaticPopupDialogs[DELETE_POPUP] = StaticPopupDialogs[DELETE_POPUP] or {
-        text         = L["Delete '%s'? This cannot be undone."],
         button1      = YES or "Yes",
         button2      = NO or "No",
         timeout      = 0,
@@ -480,10 +480,11 @@ function Ed.ConfirmDelete(name, onAccept)
         preferredIndex = 3,
         OnAccept     = function(_, data) if type(data) == "function" then data() end end,
     }
+    StaticPopupDialogs[DELETE_POPUP].text = text or L["Delete '%s'? This cannot be undone."]
     StaticPopup_Show(DELETE_POPUP, name, nil, onAccept)
 end
 
---- Open the settings at another editor page (a "Used by" link, Customize). The page repaints from
+--- Open the settings at another editor page (Customize, Choose callouts). The page repaints from
 --- the selection the caller set. Refused in combat, here rather than at each caller: Blizzard's
 --- category switch is protected (options-ui-§2's page-jump carve-out is combat-gated).
 --- @return boolean opened

@@ -343,7 +343,7 @@ Total.
 - game ids: every battleground set matches only battleground maps, and no map is two sets'
 - game ids: the shipped dungeons are Mythic+ dungeons and the shipped raids are raids
 
-### test_library.lua (62)
+### test_library.lua (61)
 
 - library: Prepare seeds one pad and one dial with every built-in, once
 - library: callouts validate on create
@@ -370,7 +370,6 @@ Total.
 - library: [final minor 3] Prepare repairs corrupt top-level registry keys and builtins entries
 - library: SetSurfacePoint stores a copy of a plain anchor, announces it, and nil clears it
 - library: SetSurfacePoint refuses an unknown surface or a malformed anchor, and stores nothing
-- library: [phase 3] DuplicateCallout copies every field under a '(copy)' name
 - library: [phase 3] a copy's name stays within the 32-character cap, counted in characters
 - library: duplicating a group copies its callouts
 - library: [phase 3] CreateGroup keeps only existing user callouts, and validates the When
@@ -486,12 +485,19 @@ Total.
 - when: [final 6] a typed character takes the client's case; the Resolver matches one in any case
 - when: [final 2, 11] ResolveValue maps a typed value onto the token or id its row stores, or refuses it
 
-### test_page_groups.lua (16)
+### test_page_groups.lua (23)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists user groups by name, then the built-ins, active ones dotted
 - groups page: General draws Preview as first, then the group's rows; Duplicate and Delete act
 - groups page: Callouts drags to reorder, removes, and copies a built-in callout in (P2)
+- groups page: Add callout opens the popup for this group
+- groups page: Reuse lists callouts as <group>: <callout> and built-ins as <set>: <callout>
+- groups page: Reuse + Add puts an independent copy at the end
+- groups page: picking in Reuse alone adds nothing
+- groups page: the edit glyph opens the popup filled in
+- groups page: [review 3] the remove glyph asks, then deletes the callout
+- groups page: deleting a group deletes its callouts
 - groups page: [review 4] a built-in is read-only; Customize puts the copy in its place and selects it
 - groups page: a built-in's Callouts tab hides and shows its callouts, a node's named with its node
 - groups page: the When tab of a built-in describes it; a user group's edits it; Preview bakes each callout
@@ -886,12 +892,12 @@ Total.
 | test_resolver.lua | 8 |
 | test_builtins.lua | 7 |
 | test_gameids.lua | 2 |
-| test_library.lua | 62 |
+| test_library.lua | 61 |
 | test_members.lua | 23 |
 | test_editors.lua | 14 |
 | test_callout_popup.lua | 17 |
 | test_groups_when.lua | 12 |
-| test_page_groups.lua | 16 |
+| test_page_groups.lua | 23 |
 | test_page_pads.lua | 12 |
 | test_page_dials.lua | 17 |
 | test_page_share.lua | 14 |
@@ -914,4 +920,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **708** |
+| **Total** | **714** |
