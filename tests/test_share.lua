@@ -1,7 +1,8 @@
 -- tests/test_share.lua — modules/Share.lua's codec and checks (spec §15, §8.3): the string's shape,
 -- decoding what a player actually pastes, the version gate, the schema checks, the sanitizer over every
 -- text field and the import report. Pure: no frame is touched. Library.Import is tested in
--- tests/test_library.lua, the page in tests/test_page_share.lua.
+-- tests/test_library.lua (here only for the one-owner rule: a callout travels inside its group), the
+-- page in tests/test_page_share.lua.
 
 local T = _G.QUICKCOMMS_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -83,7 +84,7 @@ test("share: [review 2] a command or control characters never survive: / is refu
         c2 = { name = "Two\nlines", text = "Kick\r\n/script x\tnow", channel = "say" },
         c3 = { name = "Pipe", text = "a|cffff0000red", channel = "party" },
         c4 = { name = "Long", text = string.rep("x", 256), channel = "party" },
-    } }))
+    }, groups = { g1 = { name = "Holds them", callouts = { "c1", "c2", "c3", "c4" } } } }))
     assertTrue(res.ok)
     assertEqual(refusals(res), "callout:c1:startsWithSlash,callout:c4:tooLong")
     assertEqual(res.callouts[1].fields.name, "Two lines")
@@ -106,14 +107,14 @@ test("share: ids, channels, names, icons and Whens are checked against the schem
         },
         groups = {
             g1 = { name = "Bad When", when = { content = { moon = true } } },
-            g2 = { name = "Good", when = { content = { mythicPlus = true } }, callouts = { "c5", "c2", "bi.mplus.lust", "c5" } },
+            g2 = { name = "Good", when = { content = { mythicPlus = true } }, callouts = { "c5", "c2", "bi.mplus.lust", "c5", "c6" } },
         },
     }))
     assertEqual(refusals(res), "callout:c2:badChannel,callout:c3:badName,callout:c4:badIcon,callout:x9:badId,group:g1:badWhen")
     assertEqual(#res.callouts, 2)
     assertEqual(res.callouts[1].fields.icon, 136012)
     assertEqual(res.callouts[2].fields.text, "", "a callout may have no text yet")
-    assertEqual(table.concat(res.groups[1].callouts, ","), "c5", "refused, built-in and repeated references are left out")
+    assertEqual(table.concat(res.groups[1].callouts, ","), "c5,c6", "refused, built-in and repeated references are left out")
     assertEqual(res.dropped, 2)
     assertTrue(res.groups[1].fields.when.content.mythicPlus)
 end)
@@ -339,7 +340,7 @@ end)
 test("share: [review] a refused member's malformed id never reaches the report raw: no newline, no live escape", function()
     local _, SH = boot()
     local evil = "|TInterface\\Buttons\\WHITE8X8:4000:4000|t\nReady to import: 1 callout."
-    local res = SH.Check(SH.Encode(bundle({ callouts = { c1 = KICK, [evil] = {} } })))
+    local res = SH.Check(SH.Encode(bundle({ callouts = { c1 = KICK, [evil] = {} }, groups = { g1 = { name = "Mine", callouts = { "c1" } } } })))
     assertTrue(res.ok)
     local lines = SH.ReportLines(res)
     assertEqual(#lines, 2)
@@ -369,7 +370,7 @@ test("share: [review] a name's live | escape is stored and reported as text (||)
         callouts = { c1 = { name = "|T136243:999:999|t", text = "a|cffff0000red", channel = "party" },
             c2 = { name = "|cffff0000Bad|r", text = "/run x", channel = "party" },
             c3 = { name = "Typed||pipe", text = "hi", channel = "party" } },
-        groups = { g1 = { name = "|cffff0000Kick|r" } },
+        groups = { g1 = { name = "|cffff0000Kick|r", callouts = { "c1", "c3" } } },
         pads = { p1 = { name = "|Hitem:1|h[x]|h", fields = { ["pad.look.font"] = "|TFont:99|t" } } },
     }))
     assertTrue(res.ok)
@@ -420,4 +421,41 @@ test("share: [review] a nested key in a When or a field passes the sanitizer and
     assertNil(f["pad.look.borderColor"], "a key past TEXT_MAX")
     assertNil(f["pad.look.background"], "a key that is not finite")
     assertEqual(res.ignored, 3)
+end)
+
+-- ── one owner per callout (2026-10-17-callouts-owned-by-groups-design.md) ──────────────────
+
+test("share import: groups sharing a callout each get their own copy", function()
+    local NS, SH = boot()
+    local res = SH.Validate(bundle({ callouts = { c1 = KICK },
+        groups = { g1 = { name = "One", callouts = { "c1" } }, g2 = { name = "Two", callouts = { "c1" } } } }))
+    local tally, map = NS.Library.Import(res)
+    local p = NS.db.profile
+    local a, b = p.groups[map.g1].callouts[1], p.groups[map.g2].callouts[1]
+    -- red under: importMembers pointing every group at the one imported callout
+    assertTrue(a ~= nil and b ~= nil and a ~= b, "one copy per group")
+    assertEqual(p.callouts[a].text, KICK.text)
+    assertEqual(p.callouts[b].text, KICK.text)
+    assertEqual(p.callouts[b].name, KICK.name, "the name kept")
+    assertEqual(tally.callouts, 2)
+end)
+
+test("share import: a callout in no imported group is not imported", function()
+    local NS, SH = boot()
+    local res = SH.Validate(bundle({ callouts = { c1 = KICK, c2 = { name = "Loose", text = "x", channel = "party" } },
+        groups = { g1 = { name = "One", callouts = { "c1" } } } }))
+    -- red under: drop the loose-callout pass from SH.Validate
+    assertEqual(#res.callouts, 1)
+    assertEqual(res.callouts[1].id, "c1")
+    assertEqual(res.loose, 1)
+    local lines = SH.ReportLines(res)
+    assertEqual(lines[1], "Ready to import: 1 callout, 1 group.")
+    assertEqual(lines[2], "1 callout in no group was left out.")
+    assertEqual(SH.ReportLines(SH.Validate(bundle({ callouts = { c1 = KICK, c2 = KICK } })))[2],
+        "2 callouts in no group were left out.")
+    -- a hand-made result that slipped a loose callout past the checks still imports only the held one
+    res.callouts[#res.callouts + 1] = { id = "c7", fields = { name = "Slipped", text = "x", channel = "party" } }
+    local tally = NS.Library.Import(res)
+    assertEqual(tally.callouts, 1)
+    for _, c in pairs(NS.db.profile.callouts) do assertTrue(c.name ~= "Slipped" and c.name ~= "Loose") end
 end)

@@ -30,7 +30,10 @@ test("groups page: [exit] a new group with a callout and a When shows first on t
     assertEqual(NS.db.profile.pads.p1.groups[1], gid, "offered to the top of the pad")
     local w = P.tab("groups", "callouts")
     P.find(w, "Dropdown", "Add a callout"):__fire("OnValueChanged", cid)
-    assertEqual(NS.db.profile.groups[gid].callouts[1], cid)
+    local added = NS.db.profile.groups[gid].callouts[1]
+    assertTrue(added ~= nil and added ~= cid, "the group holds its own copy")
+    assertEqual(NS.db.profile.callouts[added].text, "Incoming")
+    cid = added
     w = P.tab("groups", "When")
     P.find(w, "CheckBox", "Content"):__fire("OnValueChanged", true)
     P.flush()

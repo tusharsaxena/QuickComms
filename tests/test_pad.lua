@@ -63,7 +63,7 @@ test("pad: [review 5] a refused chip is dimmed and disarmed: a click sends and r
     local NS, m = live()
     local cid = NS.Library.CreateCallout({ name = "Bad", text = "/run x", channel = "party" })
     local gid = NS.Library.CreateGroup({ name = "Mine" })
-    NS.Library.AddToGroup(gid, cid)
+    cid = NS.Library.AddToGroup(gid, cid)
     NS.Library.AddGroupToSurface("pad", "p1", gid, 1)
     NS.Pad.Apply("p1", planFor(NS))
     local chip = NS.Pad.ChipsFor("p1", cid)[1]
@@ -267,7 +267,7 @@ end
 local function userGroup(NS, fields)
     local cid = assert(NS.Library.CreateCallout(fields))
     local gid = NS.Library.CreateGroup({ name = "Mine" })
-    NS.Library.AddToGroup(gid, cid)
+    cid = NS.Library.AddToGroup(gid, cid)
     NS.Library.AddGroupToSurface("pad", "p1", gid, 1)
     return cid
 end

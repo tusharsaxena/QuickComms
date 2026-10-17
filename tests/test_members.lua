@@ -220,7 +220,7 @@ test("members: [review 1] a callout edited from the CLI in combat waits for comb
     local Lib = NS.Library
     local cid = Lib.CreateCallout({ name = "Inc", text = "Incoming", channel = "party" })
     local gid = Lib.CreateGroup({ name = "Mine" })
-    Lib.AddToGroup(gid, cid)
+    cid = Lib.AddToGroup(gid, cid)
     Lib.AddGroupToSurface("pad", "p1", gid, 1)
     assertEqual(NS.Pad.ChipsFor("p1", cid)[1]:GetAttribute("macrotext"), "/p Incoming")
     NS.State.editing.callout = cid

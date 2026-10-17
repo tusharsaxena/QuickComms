@@ -38,16 +38,15 @@ test("library: whisper channels are refused (owner, issue #7)", function()
     assertNil(id) assertEqual(err, "badChannel")
 end)
 
-test("library: [review 4] deleting a shared callout clears every group", function()
+test("library: [review 4] deleting a callout clears its group", function()
     local _, Lib, p = boot()
-    local c = Lib.CreateCallout({ name = "Lust", text = "Lust", channel = "party" })
     local g1 = Lib.CreateGroup({ name = "One" })
     local g2 = Lib.CreateGroup({ name = "Two" })
-    Lib.AddToGroup(g1, c) Lib.AddToGroup(g2, c)
-    assertEqual(#Lib.UsedBy(c), 2)
+    local c = Lib.CreateCalloutIn(g1, { name = "Lust", text = "Lust", channel = "party" })
+    local other = Lib.CreateCalloutIn(g2, { name = "Kick", text = "Kick", channel = "party" })
     assertTrue(Lib.DeleteCallout(c))
     assertEqual(#p.groups[g1].callouts, 0)
-    assertEqual(#p.groups[g2].callouts, 0)
+    assertEqual(table.concat(p.groups[g2].callouts, ","), other)
     assertNil(p.callouts[c])
 end)
 
@@ -242,7 +241,7 @@ end)
 test("library: [final minor 2] Prepare lifts a stale nextId above every existing id", function()
     local _, Lib, p = boot()
     p.callouts.c41 = { name = "A", text = "x", channel = "party" }
-    p.groups.g7 = { name = "G", callouts = {}, when = {} }
+    p.groups.g7 = { name = "G", callouts = { "c41" }, when = {} }
     p.nextId = 3
     Lib.Prepare()
     -- red under: a Prepare that leaves nextId alone
@@ -313,14 +312,23 @@ test("library: [phase 3] a copy's name stays within the 32-character cap, counte
     assertTrue(Lib.ValidName(name))
 end)
 
-test("library: [phase 3] DuplicateGroup shares the callouts (D8) and copies the When, on no surface", function()
+test("library: duplicating a group copies its callouts", function()
     local _, Lib, p = boot()
-    local cid = Lib.CreateCallout({ name = "A", text = "a", channel = "party" })
     local gid = Lib.CreateGroup({ name = "Mine", when = { content = { raid = true } } })
-    Lib.AddToGroup(gid, cid)
+    Lib.CreateCalloutIn(gid, { name = "A", text = "a", channel = "party" })
+    Lib.CreateCalloutIn(gid, { name = "B", text = "b", channel = "say", icon = 136012 })
     local copy = Lib.DuplicateGroup(gid)
     assertEqual(p.groups[copy].name, "Mine (copy)")
-    assertEqual(p.groups[copy].callouts[1], cid, "the same callout, by reference")
+    local ids, srcs = p.groups[copy].callouts, p.groups[gid].callouts
+    assertEqual(#ids, 2)
+    for i, cid in ipairs(ids) do
+        -- red under: DuplicateGroup passing the callouts by reference (the old D8)
+        assertTrue(cid ~= srcs[i], "no id is shared between the two groups")
+        local c, src = p.callouts[cid], p.callouts[srcs[i]]
+        assertEqual(c.name .. "|" .. c.text .. "|" .. c.channel, src.name .. "|" .. src.text .. "|" .. src.channel,
+            "equal fields, the name kept")
+    end
+    assertEqual(p.callouts[ids[2]].icon, 136012)
     assertTrue(p.groups[copy].when.content.raid)
     p.groups[copy].when.content.raid = nil
     assertTrue(p.groups[gid].when.content.raid, "a copy, not an alias")
@@ -340,6 +348,19 @@ test("library: [phase 3] CreateGroup keeps only existing user callouts, and vali
     assertNil(bad)
     assertEqual(why, "badWhen")
     assertNil((Lib.CreateGroup({ name = "   " })), "a blank name is no name")
+end)
+
+test("library: CreateGroup takes a callout no group holds, and copies one a group holds", function()
+    local _, Lib, p = boot()
+    local loose = Lib.CreateCallout({ name = "A", text = "a", channel = "party" })
+    local g1 = Lib.CreateGroup({ name = "One", callouts = { loose, loose } })
+    local held = p.groups[g1].callouts
+    assertEqual(held[1], loose, "a callout in no group is taken as it is")
+    -- red under: CreateGroup copying a list by reference (one callout in two places)
+    assertTrue(held[2] ~= loose and p.callouts[held[2]].name == "A", "a repeat is a copy")
+    local g2 = Lib.CreateGroup({ name = "Two", callouts = { loose } })
+    assertTrue(p.groups[g2].callouts[1] ~= loose, "a callout another group holds is copied")
+    assertEqual(Lib.OwnerOf(loose), g1)
 end)
 
 test("library: [phase 3] OfferGroup puts a user group first on every pad and dial, once", function()
@@ -785,4 +806,85 @@ test("library: [phase 5] Prepare gives a pad saved before the Look groups every 
     assertEqual(pad.look.background.a, 0.92)
     assertEqual(pad.layout.width, 140)
     assertTrue(pad.look.background ~= NS.Library.TEMPLATES.pad.look.background, "a copy, never the template")
+end)
+
+-- ── one owner per callout (2026-10-17-callouts-owned-by-groups-design.md) ──────────────────
+
+test("library: adding a user callout to a group adds a copy", function()
+    local NS, Lib, p, sent = boot()
+    local g1 = Lib.CreateGroup({ name = "One" })
+    local g2 = Lib.CreateGroup({ name = "Two" })
+    local src = Lib.CreateCalloutIn(g1, { name = "Kick", text = "Kick {rt8}", channel = "party", icon = 136012 })
+    local before = #sent
+    local copy = Lib.AddToGroup(g2, src)
+    -- red under: addToGroup inserting a user callout by reference
+    assertTrue(copy ~= nil and copy ~= src, "a fresh id")
+    assertEqual(p.groups[g2].callouts[1], copy)
+    local c = p.callouts[copy]
+    assertEqual(c.name .. "|" .. c.text .. "|" .. c.channel .. "|" .. c.icon, "Kick|Kick {rt8}|party|136012",
+        "equal fields, the name kept with no (copy)")
+    c.text = "changed"
+    assertEqual(p.callouts[src].text, "Kick {rt8}", "the source is untouched")
+    assertEqual(table.concat(p.groups[g1].callouts, ","), src)
+    assertEqual(#sent - before, 1, "the copy and the insert are one act")
+    assertEqual(sent[#sent][1], NS.MSG.LIBRARY_CHANGED)
+    assertNil((Lib.AddToGroup(g2, "c999")))
+end)
+
+test("library: removing a callout from its group deletes it", function()
+    local _, Lib, p = boot()
+    local g = Lib.CreateGroup({ name = "Mine" })
+    local a = Lib.CreateCalloutIn(g, { name = "A", text = "a", channel = "party" })
+    local b = Lib.CreateCalloutIn(g, { name = "B", text = "b", channel = "party" })
+    assertTrue(Lib.RemoveFromGroup(g, 1))
+    -- red under: RemoveFromGroup only taking the id out of the list
+    assertNil(p.callouts[a])
+    assertEqual(table.concat(p.groups[g].callouts, ","), b)
+    assertFalse(Lib.RemoveFromGroup(g, 5))
+    assertTrue(p.callouts[b] ~= nil)
+end)
+
+test("library: deleting a group deletes its callouts", function()
+    local _, Lib, p = boot()
+    local g = Lib.CreateGroup({ name = "Mine" })
+    local keep = Lib.CreateGroup({ name = "Other" })
+    local a = Lib.CreateCalloutIn(g, { name = "A", text = "a", channel = "party" })
+    local b = Lib.CreateCalloutIn(keep, { name = "B", text = "b", channel = "party" })
+    assertTrue(Lib.DeleteGroup(g))
+    -- red under: DeleteGroup leaving its callouts in profile.callouts
+    assertNil(p.callouts[a])
+    assertTrue(p.callouts[b] ~= nil, "another group's callout stays")
+end)
+
+test("library: CreateCalloutIn makes and places a callout in one act", function()
+    local NS, Lib, p, sent = boot()
+    local g = Lib.CreateGroup({ name = "Mine" })
+    local first = Lib.CreateCalloutIn(g, { name = "A", text = "a", channel = "party" })
+    local before = #sent
+    local id = Lib.CreateCalloutIn(g, { name = "B", text = "b", channel = "smartGroup" })
+    -- red under: drop Lib.Batch from Lib.CreateCalloutIn (the create and the insert announce apart)
+    assertEqual(#sent - before, 1)
+    assertEqual(sent[#sent][1], NS.MSG.LIBRARY_CHANGED)
+    assertEqual(table.concat(p.groups[g].callouts, ","), first .. "," .. id, "at the end by default")
+    local front = Lib.CreateCalloutIn(g, { name = "C", text = "c", channel = "say" }, 1)
+    assertEqual(p.groups[g].callouts[1], front)
+    local nextId = p.nextId
+    local none, why = Lib.CreateCalloutIn(g, { name = "", text = "x", channel = "party" })
+    assertNil(none)
+    assertEqual(why, "badName")
+    none, why = Lib.CreateCalloutIn("g999", { name = "D", text = "d", channel = "party" })
+    assertNil(none)
+    assertEqual(why, "noGroup")
+    assertNil((Lib.CreateCalloutIn("bi.mplus", { name = "D", text = "d", channel = "party" })), "a built-in is read-only")
+    assertEqual(p.nextId, nextId, "a refusal consumes no id")
+end)
+
+test("library: OwnerOf names the one group", function()
+    local _, Lib = boot()
+    local g = Lib.CreateGroup({ name = "Mine" })
+    local cid = Lib.CreateCalloutIn(g, { name = "A", text = "a", channel = "party" })
+    assertEqual(Lib.OwnerOf(cid), g)
+    assertNil(Lib.OwnerOf(Lib.CreateCallout({ name = "B", text = "b", channel = "party" })), "a callout in no group")
+    assertNil(Lib.OwnerOf("bi.mplus.lust"), "a built-in callout has no user owner")
+    assertNil(Lib.OwnerOf("c999"))
 end)

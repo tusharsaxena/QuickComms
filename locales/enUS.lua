@@ -722,6 +722,8 @@ L["Left out the %s '%s': %s."] = "Left out the %s '%s': %s."
 L["(unnamed)"] = "(unnamed)"
 L["1 reference to something the string does not carry was left out."] = "1 reference to something the string does not carry was left out."
 L["%d references to things the string does not carry were left out."] = "%d references to things the string does not carry were left out."
+L["1 callout in no group was left out."] = "1 callout in no group was left out."
+L["%d callouts in no group were left out."] = "%d callouts in no group were left out."
 L["1 setting this version cannot take was left out."] = "1 setting this version cannot take was left out."
 L["%d settings this version cannot take were left out."] = "%d settings this version cannot take were left out."
 

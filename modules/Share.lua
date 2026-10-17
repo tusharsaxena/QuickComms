@@ -21,8 +21,8 @@ local _, NS = ...
 -- unread past TEXT_MAX bytes, and the payload past MAX_TEXT_BYTES read in all. Check fails closed: a hand-made payload that still raises inside the
 -- checks reads as damaged. A member that fails is refused and listed with its reason; a reference
 -- to something the string does not carry (a group's callout, a surface's group) is left out and
--- counted. A pad or a dial carries its name, Enabled, its groups and its portable fields, keyed by
--- member-row path; never its key or its position (spec §15: it arrives unbound). Nothing in a string
+-- counted, and so is a callout no imported group holds (a callout travels inside its group). A pad
+-- or a dial carries its name, Enabled, its groups and its portable fields, keyed by member-row path; never its key or its position (spec §15: it arrives unbound). Nothing in a string
 -- is ever run (anti-pattern #20): a leading "/" is refused here, and Bake refuses one again at every
 -- bake. The result is a plan that Library.Import, the registry writer, applies.
 
@@ -167,7 +167,7 @@ end
 
 local function newResult()
     return { ok = false, callouts = {}, groups = {}, pads = {}, dials = {}, refused = {}, dropped = 0,
-        ignored = 0, known = {}, nodes = 0, bytes = 0 }
+        loose = 0, ignored = 0, known = {}, nodes = 0, bytes = 0 }
 end
 
 -- A section's ids in a stable order: by the number they end in, then as text.
@@ -364,6 +364,21 @@ local function migrate(payload)
     return payload
 end
 
+-- Each callout no checked group holds, left out and counted: each user callout belongs to one group
+-- (Library's rule), so a callout travels inside its group and a loose one has nowhere to go.
+local function dropLoose(res)
+    local held = {}
+    for _, g in ipairs(res.groups) do
+        for _, cid in ipairs(g.callouts) do held[cid] = true end
+    end
+    for i = #res.callouts, 1, -1 do
+        if not held[res.callouts[i].id] then
+            table.remove(res.callouts, i)
+            res.loose = res.loose + 1
+        end
+    end
+end
+
 -- The members a payload holds, or nil when a section is not a table.
 local function memberCount(payload)
     local n = 0
@@ -377,8 +392,8 @@ end
 
 --- Check a decoded payload (spec §15 steps 2 to 4). On success `ok` is true and the four lists hold
 --- what Library.Import will make; `refused` lists { kind, id, name, reason } for each member left out,
---- `dropped` counts references to members the string does not carry, `ignored` the fields that do not
---- travel. On a refusal of the whole string `ok` is false and `reason` says why.
+--- `dropped` counts references to members the string does not carry, `loose` the callouts no group in
+--- it holds, `ignored` the fields that do not travel. On a refusal of the whole string `ok` is false and `reason` says why.
 --- @return table result
 function SH.Validate(payload)
     local res = newResult()
@@ -395,6 +410,7 @@ function SH.Validate(payload)
         return res
     end
     for _, spec in ipairs(SH.KINDS) do checkSection(spec, payload[spec.key] or {}, res) end
+    dropLoose(res)
     res.known = nil
     if res.nodes > SH.MAX_NODES or res.bytes > SH.MAX_TEXT_BYTES then
         local out = newResult()
@@ -498,6 +514,10 @@ function SH.ReportLines(res)
     if res.dropped > 0 then
         out[#out + 1] = plural(res.dropped, L["1 reference to something the string does not carry was left out."],
             L["%d references to things the string does not carry were left out."])
+    end
+    if res.loose > 0 then
+        out[#out + 1] = plural(res.loose, L["1 callout in no group was left out."],
+            L["%d callouts in no group were left out."])
     end
     if res.ignored > 0 then
         out[#out + 1] = plural(res.ignored, L["1 setting this version cannot take was left out."],

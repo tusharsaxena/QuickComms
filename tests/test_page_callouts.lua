@@ -135,7 +135,7 @@ test("callouts page: Duplicate selects the copy; Delete asks, then removes it fr
     local C = NS.addon.Settings.Callouts
     local id = C.Create()
     local gid = NS.Library.CreateGroup({ name = "Mine" })
-    NS.Library.AddToGroup(gid, id)
+    id = NS.Library.AddToGroup(gid, id)
     local w = P.redraw("callouts")
     P.find(w, "Button", "Duplicate"):__fire("OnClick")
     local copy = NS.State.editing.callout
@@ -176,7 +176,8 @@ test("callouts page: Used by lists the groups that hold it, and a click opens th
     local w = P.tab("callouts", "usedBy")
     assertTrue(P.hasText(w, "No group holds this callout yet"))
     local gid = NS.Library.CreateGroup({ name = "Mine" })
-    NS.Library.AddToGroup(gid, id)
+    id = NS.Library.AddToGroup(gid, id)
+    NS.addon.Settings.Editors.Select("callout", id)   -- the group holds a copy (one owner)
     local opened
     m.Settings.OpenToCategory = function(cid) opened = cid end
     NS.addon.Settings.Editors.categories.groups = { GetID = function() return 9 end }

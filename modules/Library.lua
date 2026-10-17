@@ -6,8 +6,12 @@ local _, NS = ...
 -- for the seam (Member) and announces the write (Touch).
 -- Panel pages, slash verbs and the share import (Import, spec §15) all call it. Built-ins are shipped
 -- data (NS.BuiltIns); the profile holds only their overlay.
+-- ONE OWNER (2026-10-17-callouts-owned-by-groups-design.md): each user callout id sits in exactly
+-- one user group's list. Adding a callout to a group adds a copy, removing one deletes it, and a
+-- deleted group takes its callouts with it.
 -- Prepare runs after migrations on every profile load: it seeds, appends new built-ins once per
--- surface (seenBuiltins), and drops dangling ids.
+-- surface (seenBuiltins), splits a callout two groups hold into copies, drops dangling ids and
+-- drops callouts no group holds.
 
 NS.Library = NS.Library or {}
 local Lib = NS.Library
@@ -111,6 +115,27 @@ function Lib.AllGroups()
     for id, g in pairs(P().groups) do all[id] = g end
     for _, id in ipairs(NS.BuiltIns.order) do all[id] = Lib.Group(id) end
     return all
+end
+
+-- Whether any user group's list holds `calloutId`.
+local function held(calloutId)
+    for _, g in pairs(P().groups) do
+        if indexOf(g.callouts or {}, calloutId) then return true end
+    end
+    return false
+end
+
+--- The one user group that holds a callout, or nil (a built-in callout, a callout in no group or no
+--- such callout). Should a hand-edited profile hold it twice before Prepare splits it, the first group
+--- by id answers, the one Prepare leaves holding the original.
+--- @return string|nil gid
+function Lib.OwnerOf(calloutId)
+    local ids = {}
+    for gid, g in pairs(P().groups) do
+        if indexOf(g.callouts or {}, calloutId) then ids[#ids + 1] = gid end
+    end
+    table.sort(ids)
+    return ids[1]
 end
 
 --- The user groups that reference a callout.
@@ -406,22 +431,43 @@ end
 
 -- ── groups ──────────────────────────────────────────────────────────────────────────────────
 
---- Create a user group. `fields.callouts` (optional) are user callout ids, copied in order; an id
---- that is not a user callout is dropped.
+-- A new user callout with `src`'s four fields and its name unchanged (the copy lives in another
+-- group, or the player renames it), checked as any new callout is.
+local function copyCallout(src)
+    return Lib.CreateCallout({ name = src.name, text = src.text, channel = src.channel, icon = src.icon })
+end
+
+--- Create a user group. `fields.callouts` (optional) are user callout ids, in order; an id that is
+--- not a user callout is dropped. One owner: a callout no group holds is taken as it is, and one a
+--- group holds (or that the list repeats) is copied, the copies and the group made as one act (Batch).
 --- @return string|nil id, string|nil reason
 function Lib.CreateGroup(fields)
     if type(fields) ~= "table" or not Lib.ValidName(fields.name) then return nil, "badName" end
     if fields.when ~= nil and not Lib.ValidWhen(fields.when) then return nil, "badWhen" end
     local p = P()
-    local callouts = {}
+    local wanted, take, copies = {}, {}, false
     for _, cid in ipairs(type(fields.callouts) == "table" and fields.callouts or {}) do
-        if p.callouts[cid] then callouts[#callouts + 1] = cid end
+        if p.callouts[cid] then
+            local n = #wanted + 1
+            wanted[n] = cid
+            take[n] = not (held(cid) or indexOf(wanted, cid) < n)
+            copies = copies or not take[n]
+        end
     end
-    local id = Lib.NewId("g")
-    p.groups[id] = { name = fields.name, icon = fields.icon, callouts = callouts, when = copyTable(fields.when) or {},
-        openInto = fields.openInto == true, enabled = fields.enabled ~= false }
-    announce("group", id)
-    return id
+    local function make()
+        local callouts = {}
+        for n, cid in ipairs(wanted) do
+            local id = take[n] and cid or copyCallout(p.callouts[cid])
+            if id then callouts[#callouts + 1] = id end
+        end
+        local id = Lib.NewId("g")
+        p.groups[id] = { name = fields.name, icon = fields.icon, callouts = callouts, when = copyTable(fields.when) or {},
+            openInto = fields.openInto == true, enabled = fields.enabled ~= false }
+        announce("group", id)
+        return id
+    end
+    if copies then return Lib.Batch(make) end
+    return make()
 end
 
 local function surfaces()
@@ -437,15 +483,23 @@ local function customizedFrom(gid)
     return nil
 end
 
---- Delete a user group and every surface reference to it. Deleting a built-in's customized copy
---- undoes the Customize (spec §12.2): the set goes back into the copy's place on every surface that
---- does not list it already, it is turned back on, and it forgets the copy. One act (Batch).
+--- Delete a user group, its callouts (nothing else holds them) and every surface reference to it.
+--- Deleting a built-in's customized copy undoes the Customize (spec §12.2): the set goes back into
+--- the copy's place on every surface that does not list it already, it is turned back on, and it
+--- forgets the copy. One act (Batch).
 function Lib.DeleteGroup(id)
     local p = P()
     if not p.groups[id] then return false end
     Lib.Batch(function()
         local top = customizedFrom(id)
+        local callouts = p.groups[id].callouts or {}
         p.groups[id] = nil
+        for _, cid in ipairs(callouts) do
+            if p.callouts[cid] and not held(cid) then
+                p.callouts[cid] = nil
+                announce("callout", cid)
+            end
+        end
         for _, set in pairs(surfaces()) do
             for _, s in pairs(set) do
                 local at = indexOf(s.groups, id)
@@ -465,7 +519,8 @@ function Lib.DeleteGroup(id)
     return true
 end
 
---- Copy a user group: the same callouts by reference (D8), a copy of its When. On no surface.
+--- Copy a user group: fresh copies of its callouts (one owner; CreateGroup copies a held callout),
+--- a copy of its When. On no surface.
 --- @return string|nil id, string|nil reason
 function Lib.DuplicateGroup(id)
     local g = P().groups[id]
@@ -474,38 +529,59 @@ function Lib.DuplicateGroup(id)
         enabled = g.enabled, callouts = g.callouts })
 end
 
-local function addToGroup(g, groupId, calloutId, index)
-    local id = calloutId
-    if isBuiltin(calloutId) then
-        local src = NS.BuiltIns.callouts[calloutId]
-        if not src then return nil, "noCallout" end
-        local why
-        id, why = Lib.CreateCallout({ name = src.name, text = src.text, channel = src.channel, icon = src.icon })
-        if not id then return nil, why end
-    elseif not P().callouts[calloutId] then
-        return nil, "noCallout"
-    end
+-- Put callout `id` into group `g` at `index`, clamped (end by default).
+local function insertAt(g, groupId, id, index)
     index = math.max(1, math.min(index or (#g.callouts + 1), #g.callouts + 1))
     table.insert(g.callouts, index, id)
     announce("group", groupId)
     return id
 end
 
---- Add a callout to a user group at `index` (end by default). A built-in callout is copied first (P2);
---- the copy and the insert are one act (Batch).
+local function addToGroup(g, groupId, calloutId, index)
+    local src
+    if isBuiltin(calloutId) then src = NS.BuiltIns.callouts[calloutId] else src = P().callouts[calloutId] end
+    if not src then return nil, "noCallout" end
+    local id, why = copyCallout(src)
+    if not id then return nil, why end
+    return insertAt(g, groupId, id, index)
+end
+
+--- Add a callout to a user group at `index` (end by default). It is always a copy, a built-in's (P2)
+--- or a user callout's (one owner: the source stays in its own group), under the same name; the copy
+--- and the insert are one act (Batch).
 --- @return string|nil the callout id actually added, string|nil reason
 function Lib.AddToGroup(groupId, calloutId, index)
     local g = P().groups[groupId]
     if not g then return nil, "noGroup" end
-    if not isBuiltin(calloutId) then return addToGroup(g, groupId, calloutId, index) end
     return Lib.Batch(function() return addToGroup(g, groupId, calloutId, index) end)
 end
 
-function Lib.RemoveFromGroup(groupId, index)
+--- Create a user callout straight into a user group at `index` (end by default): the create and the
+--- insert are one act (Batch). A refusal (no such user group, a field that fails) makes nothing and
+--- consumes no id.
+--- @return string|nil id, string|nil reason
+function Lib.CreateCalloutIn(groupId, fields, index)
     local g = P().groups[groupId]
+    if not g then return nil, "noGroup" end
+    local ok, why = validCallout(fields)
+    if not ok then return nil, why end
+    return Lib.Batch(function() return insertAt(g, groupId, Lib.CreateCallout(fields), index) end)
+end
+
+--- Take the callout at `index` out of a user group and delete it: nothing else holds it (one owner).
+--- One act (Batch).
+function Lib.RemoveFromGroup(groupId, index)
+    local p = P()
+    local g = p.groups[groupId]
     if not (g and g.callouts[index]) then return false end
-    table.remove(g.callouts, index)
-    announce("group", groupId)
+    Lib.Batch(function()
+        local cid = table.remove(g.callouts, index)
+        announce("group", groupId)
+        if p.callouts[cid] and not held(cid) then
+            p.callouts[cid] = nil
+            announce("callout", cid)
+        end
+    end)
     return true
 end
 
@@ -875,6 +951,42 @@ local function seed(p, result)
     result.seeded = true
 end
 
+-- One owner: a callout held a second time (by another group, or again in the same list) is replaced
+-- there by a fresh copy, the groups walked by id so the first keeps the original. A plain copy of the
+-- stored fields, checked by nothing: a repair, never a refusal. Before the dangling-id repair.
+local function splitShared(p, result)
+    local gids = {}
+    for gid in pairs(p.groups) do gids[#gids + 1] = gid end
+    table.sort(gids, function(a, b) return tostring(a) < tostring(b) end)
+    local seen = {}
+    for _, gid in ipairs(gids) do
+        local list = p.groups[gid].callouts
+        for i, cid in ipairs(type(list) == "table" and list or {}) do
+            local c = p.callouts[cid]
+            if c and seen[cid] then
+                local copy = Lib.NewId("c")
+                p.callouts[copy] = copyTable(c)
+                list[i] = copy
+                result.repaired = result.repaired + 1
+            elseif c then
+                seen[cid] = true
+            end
+        end
+    end
+end
+
+-- One owner: a callout no group holds is deleted (owner ruling, 2026-10-17). After the dangling-id
+-- repair, so every list is a table.
+local function dropLoose(p, result)
+    local kept = {}
+    for _, g in pairs(p.groups) do
+        for _, cid in ipairs(g.callouts) do kept[cid] = true end
+    end
+    for cid in pairs(p.callouts) do
+        if not kept[cid] then p.callouts[cid] = nil result.repaired = result.repaired + 1 end
+    end
+end
+
 -- Every user group's callout list as a table, its dangling ids dropped.
 local function repairGroups(p, result)
     for _, g in pairs(p.groups) do
@@ -932,7 +1044,8 @@ local function repairOrder(order, set, result)
     end
 end
 
---- Seed, append newly shipped built-ins once per surface, and drop dangling ids. Idempotent.
+--- Seed, append newly shipped built-ins once per surface, split shared callouts, drop dangling ids
+--- and loose callouts. Idempotent. `repaired` counts every split, drop and fix.
 --- @return table { seeded, appended, repaired }
 function Lib.Prepare()
     local p = P()
@@ -940,7 +1053,9 @@ function Lib.Prepare()
     normalize(p, result)
     liftNextId(p)
     seed(p, result)
+    splitShared(p, result)
     repairGroups(p, result)
+    dropLoose(p, result)
     for kind, set in pairs(surfaces()) do
         for _, s in pairs(set) do repairSurface(s, kind, result) end
         repairOrder(kind == "pad" and p.padOrder or p.dialOrder, set, result)
@@ -981,14 +1096,21 @@ local function importSurface(kind, e, map, tally)
     tally[kind .. "s"] = tally[kind .. "s"] + 1
 end
 
+-- One owner: each group makes its own copy of each callout it lists, so groups that share a callout
+-- id get one copy each, and a callout no group lists is never made. `map` keeps an old callout id's
+-- first copy.
 local function importMembers(res, map, tally)
-    for _, e in ipairs(res.callouts) do
-        local id = Lib.CreateCallout(e.fields)
-        if id then map[e.id], tally.callouts = id, tally.callouts + 1 end
-    end
+    local entries = {}
+    for _, e in ipairs(res.callouts) do entries[e.id] = e end
     for _, e in ipairs(res.groups) do
         local ids = {}
-        for _, cid in ipairs(e.callouts) do ids[#ids + 1] = map[cid] end
+        for _, cid in ipairs(e.callouts) do
+            local id = entries[cid] and Lib.CreateCallout(entries[cid].fields)
+            if id then
+                ids[#ids + 1] = id
+                map[cid], tally.callouts = map[cid] or id, tally.callouts + 1
+            end
+        end
         local f = e.fields
         local id = Lib.CreateGroup({ name = f.name, icon = f.icon, when = f.when, openInto = f.openInto,
             enabled = f.enabled, callouts = ids })
@@ -1000,7 +1122,8 @@ end
 
 --- Apply a checked share result (modules/Share.lua Validate): every member under a fresh id (spec
 --- §18: ids are always re-mapped, names may repeat), each group's callouts and each surface's groups
---- pointing at the new copies, built-in sets kept by id. A pad or a dial arrives unbound (spec §15): no
+--- pointing at the new copies, built-in sets kept by id. Each group gets its own copy of each callout
+--- it lists, and a callout no group lists is not imported (one owner). A pad or a dial arrives unbound (spec §15): no
 --- key, at the default place, at the end of its kind's order. One act: one LIBRARY_CHANGED, so the
 --- surfaces rebuild once, and one `[Set] import share` line for every field it wrote.
 --- @return table|nil tally { callouts, groups, pads, dials, ignored }, table|string map (old id ->

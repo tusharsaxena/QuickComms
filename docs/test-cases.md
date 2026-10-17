@@ -111,13 +111,16 @@ Total.
 - database: [phase 4] step 2 moves the generic battleground set below the per-battleground sets
 - database: the profile defaults carry the Master controls value, and no debug flag
 
-### test_profile.lua (5)
+### test_profile.lua (8)
 
 - profile: behavior defaults match spec §5.1
 - profile: collections exist; default nextId is 1, 3 after boot
 - profile: every behavior row resolves through the seam
 - profile: the spam guard clamps to 0.6-2.0 and fallback refuses unknown values
 - profile: schema version target is 2 (phase 4: the battleground order)
+- prepare: a callout held by two groups is split into a copy
+- prepare: a callout held by no group is dropped
+- prepare: is idempotent after a split
 
 ### test_schema.lua (17)
 
@@ -282,7 +285,7 @@ Total.
 - bake: a typed %t counts as live
 - bake: [phase 5] CleanText is the sanitizer short of the escape; Sanitize is CleanText, then the escape
 
-### test_share.lua (24)
+### test_share.lua (26)
 
 - share: a string is !QC1! then printable text, and decodes back to the same payload
 - share: [review 1] a pasted string may wrap and carry spaces; a cut-short one is damaged and imports nothing
@@ -308,6 +311,8 @@ Total.
 - share: [review] a name's live | escape is stored and reported as text (||), as a typed | is
 - share: [review] a name that starts with / is a name, never sent: it travels and round-trips
 - share: [review] a nested key in a When or a field passes the sanitizer and the byte budget
+- share import: groups sharing a callout each get their own copy
+- share import: a callout in no imported group is not imported
 
 ### test_resolver.lua (8)
 
@@ -335,12 +340,12 @@ Total.
 - game ids: every battleground set matches only battleground maps, and no map is two sets'
 - game ids: the shipped dungeons are Mythic+ dungeons and the shipped raids are raids
 
-### test_library.lua (56)
+### test_library.lua (62)
 
 - library: Prepare seeds one pad and one dial with every built-in, once
 - library: callouts validate on create
 - library: whisper channels are refused (owner, issue #7)
-- library: [review 4] deleting a shared callout clears every group
+- library: [review 4] deleting a callout clears its group
 - library: [review 4] deleting a group clears every surface
 - library: adding a built-in callout copies it (P2)
 - library: [review 4] Customize swaps the copy in place; deleting the copy puts the set back, on
@@ -364,8 +369,9 @@ Total.
 - library: SetSurfacePoint refuses an unknown surface or a malformed anchor, and stores nothing
 - library: [phase 3] DuplicateCallout copies every field under a '(copy)' name
 - library: [phase 3] a copy's name stays within the 32-character cap, counted in characters
-- library: [phase 3] DuplicateGroup shares the callouts (D8) and copies the When, on no surface
+- library: duplicating a group copies its callouts
 - library: [phase 3] CreateGroup keeps only existing user callouts, and validates the When
+- library: CreateGroup takes a callout no group holds, and copies one a group holds
 - library: [phase 3] OfferGroup puts a user group first on every pad and dial, once
 - library: [phase 3] MoveGroupOnSurface reorders a surface's groups and announces it
 - library: [phase 3] Member answers the live member of each kind, and a built-in group's copy
@@ -393,6 +399,11 @@ Total.
 - library: [review] an imported Look keeps a bool a bool and a color its four channels
 - library: [phase 5] Import is one act: one LIBRARY_CHANGED; a refused result imports nothing
 - library: [phase 5] Prepare gives a pad saved before the Look groups every field it lacks
+- library: adding a user callout to a group adds a copy
+- library: removing a callout from its group deletes it
+- library: deleting a group deletes its callouts
+- library: CreateCalloutIn makes and places a callout in one act
+- library: OwnerOf names the one group
 
 ### test_members.lua (23)
 
@@ -849,7 +860,7 @@ Total.
 | test_surface_parity.lua | 15 |
 | test_setup.lua | 26 |
 | test_database.lua | 7 |
-| test_profile.lua | 5 |
+| test_profile.lua | 8 |
 | test_schema.lua | 17 |
 | test_slash.lua | 14 |
 | test_disabled.lua | 21 |
@@ -860,11 +871,11 @@ Total.
 | test_tokens.lua | 8 |
 | test_channels.lua | 8 |
 | test_bake.lua | 12 |
-| test_share.lua | 24 |
+| test_share.lua | 26 |
 | test_resolver.lua | 8 |
 | test_builtins.lua | 7 |
 | test_gameids.lua | 2 |
-| test_library.lua | 56 |
+| test_library.lua | 62 |
 | test_members.lua | 23 |
 | test_editors.lua | 12 |
 | test_page_callouts.lua | 14 |
@@ -892,4 +903,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **686** |
+| **Total** | **697** |
