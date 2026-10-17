@@ -237,6 +237,6 @@ Record each task's commit hash in the ledger below as it lands. To resume, read 
 | 4 Popup | done | af1f4ee |
 | 5 Groups tab | done | 3988226 |
 | 6 Share | done | b386e33 |
-| 7 Docs | pending | |
+| 7 Docs | done | 5e2b7ac |
 
 Order: Tasks 1, 2, 3 and 6 are independent. Task 4 needs Task 1. Task 5 needs Tasks 1, 3 and 4. Task 7 comes last. Push to origin after Task 4 and after Task 7. Do not merge.
