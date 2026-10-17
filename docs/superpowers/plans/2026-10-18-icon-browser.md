@@ -25,7 +25,7 @@
 
 | Task | What | Status | Commit |
 |---|---|---|---|
-| T1 | Data model: `iconColor` on callouts and groups (validator, member rows, Prepare, Share, popup draft) + tests | todo | |
+| T1 | Data model: `iconColor` on callouts and groups (validator, member rows, Prepare, Share, popup draft) + tests | done | a437c65 |
 | T2 | Tint drawn everywhere the icon is drawn (pads, dials, settings lists, previews) + tests | todo | |
 | T3 | Icon browser window (tabs, virtualized grid, Spell/Item filter, swatch + ColorPickerFrame, Choose/Cancel, stacking, combat); editors show icon + Choose icon… + swatch; inline grid removed + tests | todo | |
 | T4 | Docs: ARCHITECTURE, settings-panel, schema, data-flow, smoke-tests (new EDIT steps), test-cases + badge, locales | todo | |
