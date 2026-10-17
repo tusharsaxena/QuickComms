@@ -255,9 +255,9 @@ enabled, EllesmereUI's third-party skinning on and QuickComms on in its Third-Pa
 `/reload` → open the callout popup (EDIT-9) → its window wears the same EllesmereUI shell, border
 and close X as the settings window behind it, and the page's controls look as they do on the
 settings pages. `/qc diagnostics` → the integrations section reads `ellesmereui: suite=true
-master=true entry=true facade=true applied=true failed=false`. Turn QuickComms off in EllesmereUI's
-Third-Party Addons list and `/reload` → the popup is Blizzard's settings window again (`entry=false
-facade=false applied=false`). Disable EllesmereUI → the popup opens in Blizzard's look and no Lua
+facade=true enabled=true applied=true failed=false`. Turn QuickComms off in EllesmereUI's
+Third-Party Addons list and `/reload` → the popup is Blizzard's settings window again (EllesmereUI
+does not call back: `facade=false enabled=n/a applied=false`). Disable EllesmereUI → the popup opens in Blizzard's look and no Lua
 error appears. Result:
 
 ## Dial

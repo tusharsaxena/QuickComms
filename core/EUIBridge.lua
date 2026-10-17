@@ -13,10 +13,11 @@ local addonName, NS = ...
 --   eui     the EllesmereUI global with RegisterSkin, and its Blizzard Skin child
 --           (EllesmereUIBlizzardSkin) loaded: the child holds the dispatcher, and without it
 --           RegisterSkin only queues;
---   master  EllesmereUI's third-party skinning on (EllesmereUIDB.thirdPartySkinsOff not truthy);
---   own     this addon's entry in its Third-Party Addons list on
---           (EllesmereUIDB.thirdPartySkinAddons.QuickComms not false).
--- The two switch reads mirror the dispatcher's own MasterOn / AddonOn: nil is on.
+--   enabled the facade's S.IsEnabled() (SKINNING_API.md, "State and theme queries"): true while
+--           EllesmereUI's third-party skinning AND this addon's entry in its Third-Party Addons list
+--           are on. Read at paint time, so a switch turned off after the callback is honored.
+-- This addon never reads EllesmereUI's SavedVariables (library-stack-§6, anti-patterns #29): the
+-- facade is the only window onto its switches, and it arrives with the callback the paint waits on.
 
 local Bridge = NS.EUIBridge or {}
 NS.EUIBridge = Bridge
@@ -36,11 +37,6 @@ local function loaded(name)
     return ok and isLoaded == true
 end
 
-local function db()
-    local d = EllesmereUIDB
-    return type(d) == "table" and d or nil
-end
-
 local function suite()
     local eui = EllesmereUI
     return type(eui) == "table" and type(eui.RegisterSkin) == "function" and eui or nil
@@ -51,27 +47,24 @@ function Bridge.IsSuiteReady()
     return suite() ~= nil and loaded(SKIN_CHILD)
 end
 
---- EllesmereUI's third-party skinning switch (nil is on; any truthy value is off, as the
---- dispatcher reads it).
-function Bridge.IsMasterOn()
-    local d = db()
-    return not (d and d.thirdPartySkinsOff)
+--- EllesmereUI's own answer, through the facade it handed over: are its third-party skinning and
+--- this addon's entry both on? A facade without IsEnabled, or one whose IsEnabled raises, reads as
+--- off.
+--- @param S table|nil  the facade
+--- @return boolean
+function Bridge.IsEnabled(S)
+    if type(S) ~= "table" or type(S.IsEnabled) ~= "function" then return false end
+    local ok, on = pcall(S.IsEnabled)
+    return ok and on == true
 end
 
---- This addon's entry in EllesmereUI's Third-Party Addons list (nil is on; only false is off).
-function Bridge.IsEntryOn()
-    local d = db()
-    local t = d and d.thirdPartySkinAddons
-    return not (type(t) == "table" and t[Bridge.SKIN_NAME] == false)
-end
-
---- Every condition holds?
+--- Every condition holds for facade `S`?
+--- @param S table|nil  the facade
 --- @return boolean open
---- @return string|nil failing  the first failing condition: "eui", "master" or "own"
-function Bridge.GateOpen()
+--- @return string|nil failing  the first failing condition: "eui" or "enabled"
+function Bridge.GateOpen(S)
     if not Bridge.IsSuiteReady() then return false, "eui" end
-    if not Bridge.IsMasterOn() then return false, "master" end
-    if not Bridge.IsEntryOn() then return false, "own" end
+    if not Bridge.IsEnabled(S) then return false, "enabled" end
     return true
 end
 

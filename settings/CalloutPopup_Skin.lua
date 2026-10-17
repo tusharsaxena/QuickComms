@@ -27,7 +27,7 @@ local Pop = Settings.CalloutPopup
 local TAG = "Skin"
 -- Every facade member the paint calls. A facade missing one is refused before anything is painted,
 -- so a changed EllesmereUI API leaves the popup stock rather than half-skinned.
-local REQUIRED = { "Shell", "FadeNineSlice", "CloseButton" }
+local REQUIRED = { "Shell", "FadeNineSlice", "CloseButton", "IsEnabled" }
 
 local S              -- the facade, once EllesmereUI has called back
 local applied = false
@@ -41,7 +41,7 @@ local function blocked()
     for _, name in ipairs(REQUIRED) do
         if type(S[name]) ~= "function" then return "facade lacks " .. name end
     end
-    local open, failing = NS.EUIBridge.GateOpen()
+    local open, failing = NS.EUIBridge.GateOpen(S)
     if not open then return "condition '" .. tostring(failing) .. "' not met" end
     if not Pop.chrome then return "popup not built yet" end
     if not Pop.chrome.template then return "no settings-window template (the fallback window)" end
@@ -79,13 +79,16 @@ function Skin.TryApply()
     return true
 end
 
---- One line for the diagnostics report: the gate, the facade and the paint.
+--- One line for the diagnostics report: the gate, the facade and the paint. `enabled` is the
+--- facade's S.IsEnabled() (EllesmereUI's third-party skinning and this addon's entry together), and
+--- reads n/a until EllesmereUI has called back: its switches are not read any other way.
 --- @return string
 function Skin.Describe()
     local B = NS.EUIBridge
-    return ("ellesmereui: suite=%s master=%s entry=%s facade=%s applied=%s failed=%s"):format(
-        tostring(B.IsSuiteReady()), tostring(B.IsMasterOn()), tostring(B.IsEntryOn()),
-        tostring(S ~= nil), tostring(applied), tostring(paintFailed ~= nil))
+    local enabled = S and tostring(B.IsEnabled(S)) or "n/a"
+    return ("ellesmereui: suite=%s facade=%s enabled=%s applied=%s failed=%s"):format(
+        tostring(B.IsSuiteReady()), tostring(S ~= nil), enabled,
+        tostring(applied), tostring(paintFailed ~= nil))
 end
 
 -- A paint that waited out a stand-down happens on the way back up.

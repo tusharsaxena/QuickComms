@@ -1,13 +1,13 @@
 -- tests/test_eui_skin.lua — settings/CalloutPopup_Skin.lua and core/EUIBridge.lua: the callout
 -- popup painted the way EllesmereUI paints Blizzard's settings window, when EllesmereUI, its Blizzard
--- Skin module, its third-party skinning and this addon's entry are all on. EllesmereUI is mocked:
--- RegisterSkin keeps the callback, and the facade records every primitive it is handed.
+-- Skin module are loaded and the facade's S.IsEnabled() says its third-party skinning and this addon's
+-- entry are on. EllesmereUI is mocked: RegisterSkin keeps the callback, and the facade records every
+-- primitive it is handed. No EllesmereUIDB is mocked: the addon never reads it.
 
 local T = _G.QUICKCOMMS_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
 
--- A mocked EllesmereUI on mock `mk`, before any source loads. `opts.db` is EllesmereUIDB,
--- `opts.noChild` leaves the Blizzard Skin module unloaded, `opts.noRegister` drops RegisterSkin.
+-- A mocked EllesmereUI on mock `mk`, before any source loads. `opts.noChild` leaves the Blizzard Skin module unloaded, `opts.noRegister` drops RegisterSkin.
 local function withEUI(opts)
     opts = opts or {}
     local eui = { registered = {} }
@@ -16,16 +16,21 @@ local function withEUI(opts)
         if not opts.noRegister then
             mk.EllesmereUI.RegisterSkin = function(name, fn) eui.registered[name] = fn end
         end
-        mk.EllesmereUIDB = opts.db or {}
         if not opts.noChild then mk.loadedAddons.EllesmereUIBlizzardSkin = true end
     end
 end
 
--- A facade that records each call as { primitive, frame }.
-local function facade()
+-- A facade that records each paint call as { primitive, frame }. `enabled` is what S.IsEnabled()
+-- answers (true unless given), or a function that stands in for it.
+local function facade(enabled)
     local S, calls = { apiVersion = 3 }, {}
     for _, name in ipairs({ "Shell", "FadeNineSlice", "CloseButton", "Button", "EditBox" }) do
         S[name] = function(frame) calls[#calls + 1] = { name, frame } end
+    end
+    if type(enabled) == "function" then
+        S.IsEnabled = enabled
+    else
+        S.IsEnabled = function() return enabled ~= false end
     end
     return S, calls
 end
@@ -101,25 +106,22 @@ end)
 
 test("eui skin: not painted when any condition fails", function()
     local cases = {
-        { "the Blizzard Skin module is not loaded", { noChild = true } },
-        { "third-party skinning is off", { db = { thirdPartySkinsOff = true } } },
-        { "this addon's entry is off", { db = { thirdPartySkinAddons = { QuickComms = false } } } },
+        { "the Blizzard Skin module is not loaded", { noChild = true }, true },
+        -- a switch turned off after the callback: S.IsEnabled() is read at paint time
+        { "S.IsEnabled() says skinning or this addon's entry is off", {}, false },
+        { "S.IsEnabled() raises", {}, function() error("changed API") end },
+        { "S.IsEnabled() answers something other than true", {}, function() return 1 end },
     }
     for _, case in ipairs(cases) do
         local NS, _, Pop, gid, eui = openWith(case[2])
-        local S, calls = facade()
+        local S, calls = facade(case[3])
         eui.registered.QuickComms(S)   -- as if EllesmereUI called back anyway
         Pop.Open(gid)
-        -- red under: drop that condition from NS.EUIBridge.GateOpen
+        -- red under: drop that condition from NS.EUIBridge.GateOpen (or the pcall in IsEnabled)
         assertFalse(applied(NS), case[1])
         assertEqual(#calls, 0, case[1])
         assertEqual(Pop.frame.Bg:GetAlpha(), 1, case[1])
     end
-    -- another addon's entry being off is not this one's
-    local NS, _, Pop, gid, eui = openWith({ db = { thirdPartySkinAddons = { Other = false } } })
-    eui.registered.QuickComms((facade()))
-    Pop.Open(gid)
-    assertTrue(applied(NS))
 end)
 
 test("eui skin: never raises without EllesmereUI, or with one that has no RegisterSkin", function()
@@ -190,8 +192,12 @@ test("eui skin: the fallback window (no settings-window template) keeps its olde
 end)
 
 test("eui skin: the diagnostics report names its state", function()
-    local NS = openWith()
+    local NS, _, _, _, eui = openWith()
     -- red under: drop the skin line from modules/Diagnostics.lua's integrations section
     local text = report(NS)
-    assertTrue(text:find("ellesmereui: suite=true master=true entry=true facade=false applied=false", 1, true) ~= nil, text)
+    assertTrue(text:find("ellesmereui: suite=true facade=false enabled=n/a applied=false failed=false", 1, true) ~= nil, text)
+    -- red under: read the switches anywhere but the facade's S.IsEnabled()
+    eui.registered.QuickComms((facade(false)))
+    text = report(NS)
+    assertTrue(text:find("ellesmereui: suite=true facade=true enabled=false applied=false", 1, true) ~= nil, text)
 end)

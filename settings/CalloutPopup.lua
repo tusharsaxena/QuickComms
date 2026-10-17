@@ -52,9 +52,10 @@ local INSET_PLAIN = { left = 0, top = 0, right = 0, bottom = 0 }
 -- plus its 8 (Options.lua, CreatePanel). The laid-out body sits CHROME_GAP under that, as a page's
 -- scroll does, CONTENT_X in from both sides (the pages' left inset, CONTENT_LEFT; there is no
 -- scrollbar gutter), with BODY_BOTTOM under it. HEADER_HEIGHT and CONTENT_LEFT are LibKa0s
--- INTERNAL layout keys, restated here because the library publishes neither (an upstream
--- candidate: a published body offset, or a no-scroll body); tests/test_callout_popup.lua derives
--- both from lib.LAYOUT, so a re-vendor that moves them turns it red.
+-- INTERNAL layout keys, and the 8 is not a key at all, restated here because the library publishes
+-- none of them (an upstream candidate: a published body offset, or a no-scroll body);
+-- tests/test_callout_popup.lua reads BODY_TOP off the body anchor of the panel CreatePanel builds
+-- and CONTENT_X from lib.LAYOUT, so a re-vendor that moves any of them turns it red.
 local BODY_TOP, CONTENT_X, BODY_BOTTOM = 62, 12, 12
 local DIM = { 0, 0, 0, 0.45 }
 -- The catcher's frame level in its strata. Above it, in order: the template's Bg (LEVEL + 1; the

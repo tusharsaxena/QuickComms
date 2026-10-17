@@ -68,7 +68,7 @@ files["tests/"] = {
 
 -- EllesmereUI (## OptionalDeps), read only by its bridge: lint keeps every other file off it.
 files["core/EUIBridge.lua"] = {
-  read_globals = { "EllesmereUI", "EllesmereUIDB" },
+  read_globals = { "EllesmereUI" },
 }
 
 -- Compat.HasTemplate: whether the client has an XML template (the callout popup's window). Scoped

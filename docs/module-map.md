@@ -13,7 +13,7 @@ The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after Li
 | 2 | `core/Namespace.lua` | data | name, version, brand, the cyan `[QC]` tag, the slash and its alias |
 | 3 | `core/CoreSetup.lua` | setup | LibKa0s-Core: the printer, the secret-safe stringifier, the SafeRegister family, the skin, the close-button wrapper, the resize grip, the class-color resolver |
 | 3a | `core/Compat.lua` | compat | `NS.Compat`: the only caller of version-variant or optional client APIs, and the secret guards ([`compat-layer.md`](compat-layer.md)) |
-| 3b | `core/EUIBridge.lua` | bridge | `NS.EUIBridge`: the only reader of EllesmereUI's state (an optional suite): the skin's three conditions and its presence-guarded `RegisterSkin`; every read at call time |
+| 3b | `core/EUIBridge.lua` | bridge | `NS.EUIBridge`: the only reader of EllesmereUI's state (an optional suite): the skin's two conditions (the suite and its Blizzard Skin child present; the facade's `S.IsEnabled()`, never EllesmereUI's SavedVariables) and its presence-guarded `RegisterSkin`; every read at call time |
 | 4 | `core/MediaSetup.lua` | setup | LibKa0s-Media: `NS.Icon`, `NS.MediaFont`, the one RegisterLSM call, `NS.MediaFetch` |
 | 5 | `core/Constants.lua` | data | `FONT_MONO`, the Ka0s gold |
 | 6 | `core/State.lua` | state | session-only state (`NS.State`): the debug flag; the modules add their own fields (test mode, plans, the queue, the echo, the pad's tab and collapse) |

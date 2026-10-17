@@ -453,6 +453,28 @@ test("popup: the template's background sits over the catcher's dim and under the
     -- so the popup's background is darker than the settings window's)
     assertTrue(bg > dim, ("Bg %d over the catcher %d"):format(bg, dim))
     assertTrue(bg < window, ("Bg %d under the window's border %d"):format(bg, window))
+    -- red under: drop the close X's re-level in build() (the page, whose top edge it overlaps, would
+    -- draw over it)
+    local page, close = m.__named.QuickCommsCalloutPopupPage:GetFrameLevel(), Pop.frame.ClosePanelButton:GetFrameLevel()
+    assertTrue(close > page, ("close X %d over the page %d"):format(close, page))
+end)
+
+test("popup: a settings-window template without its close X falls back to the dialog look", function()
+    local NS, m, _, Pop = open()
+    local create = m.CreateFrame
+    m.CreateFrame = function(frameType, name, parent, template)
+        local f = create(frameType, name, parent, template)
+        if template == "SettingsFrameTemplate" then f.ClosePanelButton = nil end
+        return f
+    end
+    local made, seen = closeMarks(NS), templates(m)
+    -- red under: drop the ClosePanelButton check in makeWindow (build() calls SetScript on nil)
+    assertTrue(Pop.Open(NS.Library.CreateGroup({ name = "Mine" })))
+    assertFalse(Pop.chrome.template, "the template's parts are not all there")
+    assertTrue(listed(seen, "BackdropTemplate"), "the fallback's dialog edge")
+    assertEqual(#made, 1, "the fallback's close mark")
+    made[1].onClick()
+    assertFalse(Pop.IsOpen(), "the close mark cancels")
 end)
 
 test("popup: a client whose C_XMLUtil says it lacks the template is not asked for it", function()
@@ -510,12 +532,18 @@ test("popup: no scrollbar; the window's height follows the laid-out body", funct
     P.find(w, "EditBox", "Text"):__fire("OnEnterPressed", "Pull")
     assertTrue((body.layoutCount or 0) > laid, "laid out again before it is measured")
     local first = heights[#heights]
-    -- The window: the template's title bar (24) and bottom inset (5), the library's header and its 8
-    -- (where CreatePanel starts the body), the chrome gap, the body and its 12 under it. The library
-    -- keys are its INTERNAL ones the popup restates (settings/CalloutPopup.lua, BODY_TOP and
-    -- CONTENT_X): red under a re-vendor that moves either.
+    -- The window: the template's title bar (24) and bottom inset (5), where the library's
+    -- CreatePanel starts the page's body (read off the panel it built: its header plus its own
+    -- offset), the chrome gap, the body and its 12 under it. The popup restates the body's start as
+    -- BODY_TOP and the pages' inset as CONTENT_X (settings/CalloutPopup.lua): red under a re-vendor
+    -- that moves the header, the body's offset under it, or the inset.
     local LAYOUT = m.LibStub("LibKa0s-Options-1.0").LAYOUT
-    assertEqual(first, 24 + LAYOUT.HEADER_HEIGHT + 8 + LAYOUT.CHROME_GAP + 300 + 12 + 5,
+    local panel = m.__named.QuickCommsCalloutPopupPage
+    local point, rel, relPoint, _, y = panel.body:GetPoint(1)
+    assertEqual(point, "TOPLEFT")
+    assertEqual(rel, panel)
+    assertEqual(relPoint, "TOPLEFT")
+    assertEqual(first, 24 + (-y) + LAYOUT.CHROME_GAP + 300 + 12 + 5,
         "the body plus the chrome around it")
     assertEqual(LAYOUT.CONTENT_LEFT, 12, "the pages' left inset, restated as CONTENT_X")
     -- the error line grows the body: the window follows it

@@ -123,7 +123,8 @@ body     Name, Text, Channel, Icon (the callout.* member rows' labels and help),
 - **Fully modal:** a full-screen click-catcher in the `DIALOG` strata covers the settings window, so
   the page underneath cannot change while a draft is open. Only one popup exists.
 - **EllesmereUI.** With EllesmereUI and its Blizzard Skin module loaded, its third-party skinning on
-  and Quick Comms on in its Third-Party Addons list, `settings/CalloutPopup_Skin.lua` paints the
+  and Quick Comms on in its Third-Party Addons list (as the facade's `S.IsEnabled()` reports them;
+  Quick Comms never reads EllesmereUI's SavedVariables), `settings/CalloutPopup_Skin.lua` paints the
   window as EllesmereUI paints the settings window: its shell, the border faded, the background
   hidden and its close X; the page's controls stay stock, as the settings window's do. Quick Comms
   has no switch of its own for it: EllesmereUI's per-addon entry is the switch, and a skin comes off

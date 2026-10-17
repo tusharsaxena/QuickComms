@@ -451,7 +451,7 @@ Total.
 - editors: a row with edit shows the edit glyph and fires it
 - editors: Snapshot is the preview's while Preview as is on
 
-### test_callout_popup.lua (24)
+### test_callout_popup.lua (25)
 
 - popup: Add opens blank with Smart group
 - popup: edit opens filled in
@@ -470,6 +470,7 @@ Total.
 - popup: Choose an icon writes the draft's icon
 - popup: the window is Blizzard's settings-window template, and its own close X cancels
 - popup: the template's background sits over the catcher's dim and under the border
+- popup: a settings-window template without its close X falls back to the dialog look
 - popup: a client whose C_XMLUtil says it lacks the template is not asked for it
 - popup: a client whose C_XMLUtil knows the template gets it
 - popup: without the template it keeps the dialog look and the shared close mark
@@ -915,7 +916,7 @@ Total.
 | test_library.lua | 60 |
 | test_members.lua | 23 |
 | test_editors.lua | 14 |
-| test_callout_popup.lua | 24 |
+| test_callout_popup.lua | 25 |
 | test_eui_skin.lua | 8 |
 | test_groups_when.lua | 12 |
 | test_page_groups.lua | 24 |
@@ -941,4 +942,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **731** |
+| **Total** | **732** |
