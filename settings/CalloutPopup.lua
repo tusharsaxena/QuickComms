@@ -50,11 +50,17 @@ local INSET_TEMPLATE = { left = 8, top = 24, right = 4, bottom = 5 }
 local INSET_PLAIN = { left = 0, top = 0, right = 0, bottom = 0 }
 -- The page's body starts this far under the panel's top: the library's header (HEADER_HEIGHT, 54)
 -- plus its 8 (Options.lua, CreatePanel). The laid-out body sits CHROME_GAP under that, as a page's
--- scroll does, CONTENT_X in from both sides (the pages' left inset; there is no scrollbar gutter),
--- with BODY_BOTTOM under it.
+-- scroll does, CONTENT_X in from both sides (the pages' left inset, CONTENT_LEFT; there is no
+-- scrollbar gutter), with BODY_BOTTOM under it. HEADER_HEIGHT and CONTENT_LEFT are LibKa0s
+-- INTERNAL layout keys, restated here because the library publishes neither (an upstream
+-- candidate: a published body offset, or a no-scroll body); tests/test_callout_popup.lua derives
+-- both from lib.LAYOUT, so a re-vendor that moves them turns it red.
 local BODY_TOP, CONTENT_X, BODY_BOTTOM = 62, 12, 12
 local DIM = { 0, 0, 0, 0.45 }
-local LEVEL = 10    -- the catcher's frame level in its strata; the backdrop and the popup sit above it
+-- The catcher's frame level in its strata. Above it, in order: the template's Bg (LEVEL + 1; the
+-- template declares it at absolute level 0, which would put it under the catcher's dim), the window
+-- with its border (LEVEL + 2), the page (LEVEL + 3) and the close X (LEVEL + 5).
+local LEVEL = 10
 local ERROR_COLOR = "|cffff4040"
 
 -- The open popup's state: the group, the callout (nil for Add), the draft and its baseline.
@@ -249,22 +255,14 @@ end
 
 local function isTable(v) return type(v) == "table" end
 
--- Does the client know the template? Asked where C_XMLUtil can answer; elsewhere CreateFrame is
--- tried, under pcall.
-local function templateKnown()
-    local x = C_XMLUtil
-    if not (isTable(x) and type(x.GetTemplateInfo) == "function") then return true end
-    local ok, info = pcall(x.GetTemplateInfo, TEMPLATE)
-    return ok and info ~= nil
-end
-
 -- The window: SettingsFrameTemplate when the client has it and it still has the parts used here
 -- (NineSlice with its title, Bg, ClosePanelButton), else a plain frame. Answers the window and its
 -- chrome: what the skin paints, and whether the template drew it.
 local function makeWindow(parent)
     local name = addonName .. "CalloutPopup"
     local f
-    if templateKnown() then
+    -- A client that says it lacks the template is not asked; one that cannot say is, under pcall.
+    if NS.Compat.HasTemplate(TEMPLATE) ~= false then
         local ok, made = pcall(CreateFrame, "Frame", name, parent, TEMPLATE)
         if ok then f = made end
     end
@@ -334,7 +332,7 @@ local function build()
     inset = chrome.template and INSET_TEMPLATE or INSET_PLAIN
     -- The strata again: a template may name its own, and the window must stay above the catcher.
     window:SetFrameStrata("DIALOG")
-    window:SetFrameLevel(LEVEL + 1)
+    window:SetFrameLevel(LEVEL + 2)
     window:SetSize(WIDTH, HEIGHT)
     window:ClearAllPoints()
     window:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
@@ -347,12 +345,15 @@ local function build()
     panel:ClearAllPoints()
     panel:SetPoint("TOPLEFT", window, "TOPLEFT", inset.left, -inset.top)
     panel:SetPoint("BOTTOMRIGHT", window, "BOTTOMRIGHT", -inset.right, inset.bottom)
-    panel:SetFrameLevel(LEVEL + 2)
+    panel:SetFrameLevel(LEVEL + 3)
     if chrome.template then
+        -- The template's Bg, over the catcher's dim and under the border: at its declared level 0
+        -- the dim would draw over it, and the popup would be darker than the settings window.
+        if chrome.bg then chrome.bg:SetFrameLevel(LEVEL + 1) end
         -- The template's close X (an accepted deviation, docs/ARCHITECTURE.md): a click is a
         -- Cancel, and it sits above the page, whose top edge it overlaps.
         chrome.close:SetScript("OnClick", function() Pop.Cancel() end)
-        chrome.close:SetFrameLevel(LEVEL + 4)
+        chrome.close:SetFrameLevel(LEVEL + 5)
     else
         plainChrome(window, panel, chrome)
     end
@@ -364,7 +365,7 @@ local function build()
     if settingsWindow and settingsWindow.HookScript then
         settingsWindow:HookScript("OnHide", function() if draft then Pop.Cancel() end end)
     end
-    Pop.frame, Pop.chrome, Pop.body = window, chrome, body
+    Pop.frame, Pop.chrome = window, chrome
     local skin = Settings.CalloutPopupSkin
     if skin then skin.TryApply() end
 end

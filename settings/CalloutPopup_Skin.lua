@@ -15,8 +15,9 @@ local _, NS = ...
 -- removes it), and every primitive is idempotent and alpha-only (no Hide, no SetParent), on the
 -- popup's own frames.
 --
--- Effective skin = S held AND every gate condition (core/EUIBridge.lua) AND the popup built AND
--- not stood down.
+-- Effective skin = S held AND every gate condition (core/EUIBridge.lua) AND the popup built from
+-- the settings-window template AND not stood down. The fallback window (a client without the
+-- template) keeps its older look: the skin is the settings window's, and that window is not it.
 
 local Settings = NS.addon.Settings
 Settings.CalloutPopupSkin = Settings.CalloutPopupSkin or {}
@@ -32,9 +33,6 @@ local S              -- the facade, once EllesmereUI has called back
 local applied = false
 local paintFailed    -- the error of a paint that raised: no retry, a reload drops the partial paint
 
-function Skin.IsApplied() return applied end
-function Skin.HasFacade() return S ~= nil end
-
 -- Why the paint does not happen now, or nil when it can.
 local function blocked()
     if NS.IsStoodDown() then return "stood down" end
@@ -46,11 +44,11 @@ local function blocked()
     local open, failing = NS.EUIBridge.GateOpen()
     if not open then return "condition '" .. tostring(failing) .. "' not met" end
     if not Pop.chrome then return "popup not built yet" end
+    if not Pop.chrome.template then return "no settings-window template (the fallback window)" end
     return nil
 end
 
--- The settings window's chrome pass, on the popup's window: what the template drew, or the
--- fallback's dialog edge and close mark.
+-- The settings window's chrome pass, on what the template drew.
 local function paint(chrome)
     S.Shell(chrome.window)
     if chrome.nineSlice then S.FadeNineSlice(chrome.nineSlice) end
@@ -94,7 +92,7 @@ end
 NS.STAND_UP[#NS.STAND_UP + 1] = function() Skin.TryApply() end
 
 -- EllesmereUI's callback (it pcalls it): keep S and paint if everything holds.
-Skin.registered = NS.EUIBridge.Register(function(facade)
+NS.EUIBridge.Register(function(facade)
     S = facade
     Skin.TryApply()
 end)

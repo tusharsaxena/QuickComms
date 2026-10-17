@@ -427,8 +427,9 @@ local function build()
     -- SettingsFrameTemplate's parentKeys, as Blizzard_SettingsPanelTemplates.xml declares them: Bg
     -- (FlatPanelBackgroundTemplate), NineSlice with its Text (the window title, GameFontNormal), and
     -- ClosePanelButton (UIPanelCloseButtonDefaultAnchors, whose own click hides the window). The
-    -- title records what it is set to (`text`), and Bg answers its alpha (GetAlpha). A template named in
-    -- `missingTemplates` raises, as CreateFrame does in a client without it.
+    -- title records what it is set to (`text`), and Bg answers its alpha (GetAlpha) and its frame level:
+    -- 0 until set, as the template declares it (frameLevel="0", an absolute level, not the parent's
+    -- plus one). A template named in `missingTemplates` raises, as CreateFrame does in a client without it.
     M.missingTemplates = {}
     local function dressSettingsFrame(f)
         local nine = M.CreateFrame("Frame", nil, f)
@@ -440,6 +441,8 @@ local function build()
         local bg = M.CreateFrame("Frame", nil, f)
         function bg.SetAlpha(b, v) b.__alpha = v; return b end
         function bg.GetAlpha(b) return b.__alpha or 1 end
+        function bg.SetFrameLevel(b, v) b.__level = v; return b end
+        function bg.GetFrameLevel(b) return b.__level or 0 end
         f.Bg = bg
         local close = M.CreateFrame("Button", nil, f)
         close:SetScript("OnClick", function() f:Hide() end)

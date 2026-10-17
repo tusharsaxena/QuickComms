@@ -308,3 +308,16 @@ function Compat.ChatColor(chatType)
     if r and g and b then return r, g, b end
     return nil
 end
+
+-- ── The callout popup's window (settings/CalloutPopup.lua) ───────────────────────────────────
+
+--- Whether the client knows XML template `name`: true or false where C_XMLUtil.GetTemplateInfo
+--- answers, nil (unknown) where the API is absent, so the caller tries CreateFrame under pcall.
+function Compat.HasTemplate(name)
+    local x = C_XMLUtil
+    if type(name) ~= "string" or type(x) ~= "table" or type(x.GetTemplateInfo) ~= "function" then
+        return nil
+    end
+    local ok, info = pcall(x.GetTemplateInfo, name)
+    return ok and type(info) == "table"
+end

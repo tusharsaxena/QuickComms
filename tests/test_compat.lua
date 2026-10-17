@@ -85,6 +85,21 @@ test("compat: [fix wave] SenderIsPlayer: a cross-realm namesake is not the playe
     assertTrue(C.SenderIsPlayer("Testchar", nil))
 end)
 
+test("compat: HasTemplate answers where C_XMLUtil can, and nil where it cannot", function()
+    local NS, env = T.newAddon()
+    local C = NS.Compat
+    -- red under: answer false (or true) without C_XMLUtil; the popup then never tries CreateFrame
+    assertNil(C.HasTemplate("SettingsFrameTemplate"), "no C_XMLUtil: unknown")
+    env.C_XMLUtil = { GetTemplateInfo = function(name)
+        if name == "SettingsFrameTemplate" then return { type = "Frame" } end
+    end }
+    assertTrue(C.HasTemplate("SettingsFrameTemplate"))
+    assertFalse(C.HasTemplate("NoSuchTemplate"), "GetTemplateInfo answers nil: the client lacks it")
+    assertNil(C.HasTemplate(nil))
+    env.C_XMLUtil.GetTemplateInfo = function() error("changed API") end
+    assertFalse(C.HasTemplate("SettingsFrameTemplate"), "a raising API never escapes")
+end)
+
 test("compat: ChatColor reads the client's chat colors and declines what it cannot read", function()
     local NS, env = T.newAddon()
     local r, g, b = NS.Compat.ChatColor("PARTY")

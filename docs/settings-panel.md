@@ -92,8 +92,9 @@ scrollbar**, and the window's height follows the laid-out body, measured again a
 write, situation change and error line. The settings pages keep their always-visible scrollbar.
 A client without the template gets the popup's old look: a plain frame with Blizzard's dialog edge
 and the shared close mark (`NS.MakeCloseButton`). The template's own close X instead of the shared
-mark, its edge and the missing scrollbar are owner-decided deviations (`ARCHITECTURE.md` →
-Documented deviations).
+mark is a documented deviation (`ARCHITECTURE.md` → Documented deviations). The window's border,
+title bar and background come from the template, and its `Bg` is lifted over the click-catcher's dim (the
+template declares it at absolute frame level 0), so the popup is as bright as the settings window.
 
 ```
 window   Blizzard's settings window, titled Ka0s Quick Comms                 (its close X)
@@ -126,7 +127,8 @@ body     Name, Text, Channel, Icon (the callout.* member rows' labels and help),
   window as EllesmereUI paints the settings window: its shell, the border faded, the background
   hidden and its close X; the page's controls stay stock, as the settings window's do. Quick Comms
   has no switch of its own for it: EllesmereUI's per-addon entry is the switch, and a skin comes off
-  only with a reload.
+  only with a reload. The fallback window (a client without the template) is not painted: the skin
+  is the settings window's, and that window is not it.
 
 ## Comms Pad
 

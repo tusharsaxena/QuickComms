@@ -223,7 +223,8 @@ longer lists them). Result:
 **EDIT-9. The callout popup: look, Save and a refused field.** Groups → a group of yours → Callouts →
 a row's edit glyph (the edit mark; its tooltip is headed Edit) → the popup opens filled in, over a dimmed
 settings window, and looks like the settings window itself: the same background and border, the
-window title "Ka0s Quick Comms" in the top bar and Blizzard's close X at its top right, then the gold
+window title "Ka0s Quick Comms" in the top bar and Blizzard's close X at its top right (its
+background as bright as the settings window's, not darkened by the dim around it), then the gold
 "Edit callout" header and rule, red Save and Cancel buttons. There is **no scrollbar**: the window is
 exactly as tall as its content, with no empty band under the error line and nothing cut off at the
 bottom. Clicking the page behind it does nothing. Type more text and press Enter → What it sends here follows the edit, while the chip on

@@ -54,8 +54,6 @@ read_globals = {
   -- core/Compat.lua: the Comms Dial page's warning when a dial's key is also a WoW binding, and the
   -- key bound to a dial's Open Comms Dial entry in WoW's menu.
   "GetBindingAction", "GetBindingKey",
-  -- settings/CalloutPopup.lua: whether the client has Blizzard's settings-window template.
-  "C_XMLUtil",
 }
 
 -- The harness global, declared for tests/ only so no shipped file can reach for it. The
@@ -71,6 +69,12 @@ files["tests/"] = {
 -- EllesmereUI (## OptionalDeps), read only by its bridge: lint keeps every other file off it.
 files["core/EUIBridge.lua"] = {
   read_globals = { "EllesmereUI", "EllesmereUIDB" },
+}
+
+-- Compat.HasTemplate: whether the client has an XML template (the callout popup's window). Scoped
+-- here so no feature file reads it directly (compat).
+files["core/Compat.lua"] = {
+  read_globals = { "C_XMLUtil" },
 }
 
 -- QC:SlashEnabled and QC:OnSlashCommand are methods on the addon object by calling convention;

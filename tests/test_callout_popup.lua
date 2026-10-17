@@ -395,6 +395,20 @@ local function templates(m)
     return seen
 end
 
+-- Record the frame level each frame created from here on is set to (0 until set). A frame that
+-- answers its own level (the template's Bg, in tests/wow_mock.lua) keeps its answer.
+local function levels(m)
+    local create = m.CreateFrame
+    m.CreateFrame = function(...)
+        local f = create(...)
+        if rawget(f, "GetFrameLevel") == nil then
+            rawset(f, "SetFrameLevel", function(self, v) rawset(self, "__level", v); return self end)
+            rawset(f, "GetFrameLevel", function(self) return rawget(self, "__level") or 0 end)
+        end
+        return f
+    end
+end
+
 local function listed(list, value)
     for _, v in ipairs(list) do if v == value then return true end end
     return false
@@ -430,6 +444,38 @@ test("popup: the window is Blizzard's settings-window template, and its own clos
     assertEqual(#made, 0, "one popup, built once")
 end)
 
+test("popup: the template's background sits over the catcher's dim and under the border", function()
+    local NS, m, _, Pop = open()
+    levels(m)
+    Pop.Open(NS.Library.CreateGroup({ name = "Mine" }))
+    local dim, bg, window = Pop.catcher:GetFrameLevel(), Pop.frame.Bg:GetFrameLevel(), Pop.frame:GetFrameLevel()
+    -- red under: drop the Bg re-level in build() (the template's absolute level 0 sits under the dim,
+    -- so the popup's background is darker than the settings window's)
+    assertTrue(bg > dim, ("Bg %d over the catcher %d"):format(bg, dim))
+    assertTrue(bg < window, ("Bg %d under the window's border %d"):format(bg, window))
+end)
+
+test("popup: a client whose C_XMLUtil says it lacks the template is not asked for it", function()
+    local NS, m, _, Pop = open()
+    m.C_XMLUtil = { GetTemplateInfo = function() return nil end }
+    local made, seen = closeMarks(NS), templates(m)
+    assertTrue(Pop.Open(NS.Library.CreateGroup({ name = "Mine" })))
+    -- red under: ignore Compat.HasTemplate's false and create the window from the template anyway
+    assertFalse(listed(seen, "SettingsFrameTemplate"), "the template is not tried")
+    assertTrue(listed(seen, "BackdropTemplate"), "the fallback's dialog edge")
+    assertEqual(#made, 1, "the fallback's close mark")
+end)
+
+test("popup: a client whose C_XMLUtil knows the template gets it", function()
+    local NS, m, _, Pop = open()
+    m.C_XMLUtil = { GetTemplateInfo = function(name)
+        if name == "SettingsFrameTemplate" then return { type = "Frame" } end
+    end }
+    Pop.Open(NS.Library.CreateGroup({ name = "Mine" }))
+    -- red under: read GetTemplateInfo's answer the wrong way round in Compat.HasTemplate
+    assertEqual(Pop.frame.__template, "SettingsFrameTemplate")
+end)
+
 test("popup: without the template it keeps the dialog look and the shared close mark", function()
     local NS, m, _, Pop = open()
     m.missingTemplates.SettingsFrameTemplate = true
@@ -448,23 +494,32 @@ test("popup: without the template it keeps the dialog look and the shared close 
 end)
 
 test("popup: no scrollbar; the window's height follows the laid-out body", function()
-    local NS, _, P, Pop = open()
+    local NS, m, P, Pop = open()
     local gid = NS.Library.CreateGroup({ name = "Mine" })
     local w = P.during(function() Pop.Open(gid) end)
     -- red under: draw the body into the library's ScrollFrame (EnsureScroll)
     assertNil(P.find(w, "ScrollFrame"), "no scroll frame, no scrollbar")
-    assertEqual(Pop.body.type, "SimpleGroup")
+    -- the plain container, built before any row (the first SimpleGroup the Open draws)
+    local body = P.find(w, "SimpleGroup")
+    assertTrue(body ~= nil, "the body is a plain AceGUI container")
     assertTrue(P.find(w, "EditBox", "Name") ~= nil, "the rows are drawn into the plain container")
     local heights = {}
     rawset(Pop.frame, "SetHeight", function(_, v) heights[#heights + 1] = v end)
-    Pop.body.frame:__setGeom(520, 300)
-    local laid = Pop.body.layoutCount or 0
+    body.frame:__setGeom(520, 300)
+    local laid = body.layoutCount or 0
     P.find(w, "EditBox", "Text"):__fire("OnEnterPressed", "Pull")
-    assertTrue((Pop.body.layoutCount or 0) > laid, "laid out again before it is measured")
+    assertTrue((body.layoutCount or 0) > laid, "laid out again before it is measured")
     local first = heights[#heights]
-    assertTrue(first ~= nil and first > 300, "the body plus the chrome around it")
+    -- The window: the template's title bar (24) and bottom inset (5), the library's header and its 8
+    -- (where CreatePanel starts the body), the chrome gap, the body and its 12 under it. The library
+    -- keys are its INTERNAL ones the popup restates (settings/CalloutPopup.lua, BODY_TOP and
+    -- CONTENT_X): red under a re-vendor that moves either.
+    local LAYOUT = m.LibStub("LibKa0s-Options-1.0").LAYOUT
+    assertEqual(first, 24 + LAYOUT.HEADER_HEIGHT + 8 + LAYOUT.CHROME_GAP + 300 + 12 + 5,
+        "the body plus the chrome around it")
+    assertEqual(LAYOUT.CONTENT_LEFT, 12, "the pages' left inset, restated as CONTENT_X")
     -- the error line grows the body: the window follows it
-    Pop.body.frame:__setGeom(520, 340)
+    body.frame:__setGeom(520, 340)
     assertFalse((Pop.Save()))
     assertEqual(heights[#heights] - first, 40)
 end)

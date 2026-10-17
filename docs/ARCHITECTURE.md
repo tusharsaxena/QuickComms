@@ -213,7 +213,7 @@ Every secure rule lives in one file. `modules/SendEngine.lua` is the only code t
 - Node winds come from the client's map data as of build 12.1.5.70340; a battleground a patch redraws needs its winds re-read (`docs/common-tasks.md`).
 - `tests/perf.lua`'s byte ceilings are the headless mock's figures (its catch-all methods allocate per call); compare them run to run, never with the client.
 - The callout popup has no scrollbar: its window is as tall as its content, so on a screen too short for it (a very large UI scale) it runs past the top and bottom edges, Save and Cancel included; Escape still cancels.
-- The callout popup's EllesmereUI skin is one-way, as EllesmereUI's skins are: turning it off in EllesmereUI takes effect after a reload. A client without `SettingsFrameTemplate` gets the popup's older look (a plain frame with Blizzard's dialog edge and the shared close mark) instead of the settings window's.
+- The callout popup's EllesmereUI skin is one-way, as EllesmereUI's skins are: turning it off in EllesmereUI takes effect after a reload. A client without `SettingsFrameTemplate` gets the popup's older look (a plain frame with Blizzard's dialog edge and the shared close mark) instead of the settings window's, and the EllesmereUI skin leaves that fallback window as it is.
 - The logo is a placeholder generated for the scaffold; the owner may replace the art (regenerate
   the TGAs with the recipe in `DEPENDENCIES.md`).
 
@@ -245,7 +245,7 @@ is registered once, as a store, in the Tier 3 table; the documents under it get 
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Not applicable | The addon carries no client-version workaround of its own yet |
-| `compat-layer.md` | Present | `core/Compat.lua` publishes 27 shims, three or more |
+| `compat-layer.md` | Present | `core/Compat.lua` publishes 28 shims, three or more |
 | `message-bus.md` | Not applicable | 9 messages are defined, not more than ten; the table is in this page's Message Bus section |
 
 ### Verification and record (documentation-§3)
@@ -272,9 +272,7 @@ deviation not in this table is not ratified.
 
 | Rule | What differs | Why | Decided | Re-check trigger |
 |---|---|---|---|---|
-| standalone-windows: one wrapper, and every close control goes through it | The callout popup closes with the X of Blizzard's `SettingsFrameTemplate` (`ClosePanelButton`), not with `NS.MakeCloseButton`; its click is a Cancel. The wrapper stays in `core/CoreSetup.lua`, because the same section requires it, and the popup's fallback window (a client without the template) still draws the shared mark through it, so `grep -rn 'MakeCloseButton(' --include='*.lua' \| grep -v '/libs/'` returns the wrapper and that one caller | The popup is built from Blizzard's `SettingsFrameTemplate` to match the settings window exactly, and that template brings its own close | owner, 2026-10-17 | The standard ruling on Blizzard-template windows, or the popup leaving the template |
-| standalone-windows: the Ka0s window edge | The callout popup's window is Blizzard's `SettingsFrameTemplate` (its flat background, its `ButtonFrameTemplateNoPortrait` border and the window title "Ka0s Quick Comms"), not the edge `Core.ApplySkin` draws; the fallback window keeps Blizzard's dialog edge, the look the popup had before | The popup is a modal over Blizzard's settings window and is to look exactly like it (owner request) | owner, 2026-10-17 | The standard ruling on Blizzard-template windows, or the popup leaving the template |
-| options-ui-§10: always-visible scrollbar | The callout popup's body has no scroll frame and no scrollbar: it is laid out in a plain AceGUI container and the window's height follows it. The settings pages keep their always-visible scrollbar | The popup sizes itself to its content (owner request); the rule is written for a page's body, and the popup is not a page | owner, 2026-10-17 | The standard ruling on popups drawn with the options library, or the popup's content outgrowing the screen |
+| `standalone-windows` | One wrapper, and every close control goes through it: the callout popup closes with the X of Blizzard's `SettingsFrameTemplate` (`ClosePanelButton`), not with `NS.MakeCloseButton`; its click is a Cancel. The wrapper stays in `core/CoreSetup.lua`, because the same section requires it, and the popup's fallback window (a client without the template) still draws the shared mark through it, so `grep -rn 'MakeCloseButton(' --include='*.lua' \| grep -v '/libs/'` returns the wrapper and that one caller | The popup is built from Blizzard's `SettingsFrameTemplate` to match the settings window exactly, and that template brings its own close; decided by the owner | 2026-10-17 | The standard ruling on Blizzard-template windows, or the popup leaving the template |
 
 ### Files over the 1500-line cap
 

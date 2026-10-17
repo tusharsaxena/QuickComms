@@ -30,6 +30,21 @@ local function facade()
     return S, calls
 end
 
+-- The skin's state as the diagnostics report reads it: applied, and whether EllesmereUI called back.
+local function applied(NS)
+    return NS.addon.Settings.CalloutPopupSkin.Describe():find("applied=true", 1, true) ~= nil
+end
+
+local function hasFacade(NS)
+    return NS.addon.Settings.CalloutPopupSkin.Describe():find("facade=true", 1, true) ~= nil
+end
+
+local function report(NS)
+    NS.DebugLog:Clear()
+    NS.addon:OnSlashCommand("diagnostics")
+    return table.concat(NS.DebugLog.buffer, "\n")
+end
+
 local function called(calls, name, frame)
     for _, c in ipairs(calls) do
         if c[1] == name and c[2] == frame then return true end
@@ -49,17 +64,16 @@ end
 
 test("eui skin: the popup is painted as EllesmereUI paints the settings window when every condition holds", function()
     local NS, _, Pop, gid, eui = openWith()
-    local Skin = NS.addon.Settings.CalloutPopupSkin
     local register = eui.registered.QuickComms
     -- red under: drop the RegisterSkin call (or register under another name than the folder's)
     assertTrue(register ~= nil, "registered at file load under the folder name")
     local S, calls = facade()
     register(S)                    -- PLAYER_LOGIN: the popup is not built yet, so S is kept
-    assertFalse(Skin.IsApplied())
-    assertTrue(Skin.HasFacade())
+    assertFalse(applied(NS))
+    assertTrue(hasFacade(NS))
     Pop.Open(gid)                  -- the build paints
     local f = Pop.frame
-    assertTrue(Skin.IsApplied())
+    assertTrue(applied(NS))
     assertTrue(called(calls, "Shell", f), "the shell")
     assertTrue(called(calls, "FadeNineSlice", f.NineSlice), "the border faded")
     assertEqual(f.Bg:GetAlpha(), 0, "the background at alpha 0")
@@ -81,7 +95,7 @@ test("eui skin: a callback that comes after the popup was built paints it at onc
     Pop.Open(gid)
     local S, calls = facade()
     eui.registered.QuickComms(S)
-    assertTrue(NS.addon.Settings.CalloutPopupSkin.IsApplied())
+    assertTrue(applied(NS))
     assertTrue(called(calls, "Shell", Pop.frame))
 end)
 
@@ -97,7 +111,7 @@ test("eui skin: not painted when any condition fails", function()
         eui.registered.QuickComms(S)   -- as if EllesmereUI called back anyway
         Pop.Open(gid)
         -- red under: drop that condition from NS.EUIBridge.GateOpen
-        assertFalse(NS.addon.Settings.CalloutPopupSkin.IsApplied(), case[1])
+        assertFalse(applied(NS), case[1])
         assertEqual(#calls, 0, case[1])
         assertEqual(Pop.frame.Bg:GetAlpha(), 1, case[1])
     end
@@ -105,25 +119,24 @@ test("eui skin: not painted when any condition fails", function()
     local NS, _, Pop, gid, eui = openWith({ db = { thirdPartySkinAddons = { Other = false } } })
     eui.registered.QuickComms((facade()))
     Pop.Open(gid)
-    assertTrue(NS.addon.Settings.CalloutPopupSkin.IsApplied())
+    assertTrue(applied(NS))
 end)
 
 test("eui skin: never raises without EllesmereUI, or with one that has no RegisterSkin", function()
+    -- red under: call EllesmereUI.RegisterSkin unguarded at file load (the load raises)
     local NS, m = T.enableAddon()
     m.SettingsPanel:Show()
-    local Skin = NS.addon.Settings.CalloutPopupSkin
-    -- red under: call EllesmereUI.RegisterSkin unguarded at file load (the load raises)
-    assertFalse(Skin.registered)
     local Pop = NS.addon.Settings.CalloutPopup
     assertTrue(Pop.Open(NS.Library.CreateGroup({ name = "Mine" })))
-    assertFalse(Skin.IsApplied())
+    assertFalse(applied(NS))
     assertFalse((NS.EUIBridge.GateOpen()))
     local _, failing = NS.EUIBridge.GateOpen()
     assertEqual(failing, "eui")
+    -- red under: call a RegisterSkin that is not there (the load raises)
     local NS2, _, Pop2, gid2 = openWith({ noRegister = true })
-    assertFalse(NS2.addon.Settings.CalloutPopupSkin.registered)
     assertTrue(Pop2.Open(gid2))
-    assertFalse(NS2.addon.Settings.CalloutPopupSkin.IsApplied())
+    assertFalse(applied(NS2))
+    assertFalse(hasFacade(NS2))
 end)
 
 test("eui skin: a facade missing a primitive, or one that raises, leaves the popup stock", function()
@@ -132,15 +145,17 @@ test("eui skin: a facade missing a primitive, or one that raises, leaves the pop
     S.CloseButton = nil
     eui.registered.QuickComms(S)
     Pop.Open(gid)
-    local Skin = NS.addon.Settings.CalloutPopupSkin
-    assertFalse(Skin.IsApplied())
+    -- red under: drop the REQUIRED facade check in blocked() (Shell and FadeNineSlice would paint)
+    assertFalse(applied(NS))
     assertEqual(#calls, 0, "refused before anything is painted")
     local NS2, _, Pop2, gid2, eui2 = openWith()
     local S2 = facade()
     S2.FadeNineSlice = function() error("changed API") end
     eui2.registered.QuickComms(S2)
+    -- red under: drop the pcall around paint() in TryApply (the raise escapes Open)
     Pop2.Open(gid2)                 -- the build's try raises inside its pcall: no error escapes
-    assertFalse(NS2.addon.Settings.CalloutPopupSkin.IsApplied())
+    assertFalse(applied(NS2))
+    assertTrue(NS2.addon.Settings.CalloutPopupSkin.Describe():find("failed=true", 1, true) ~= nil)
 end)
 
 test("eui skin: waits out a stand-down and paints on the way back up", function()
@@ -150,15 +165,33 @@ test("eui skin: waits out a stand-down and paints on the way back up", function(
     NS.SchemaRuntime.Set("enabled", false)
     local S, calls = facade()
     eui.registered.QuickComms(S)
-    local Skin = NS.addon.Settings.CalloutPopupSkin
-    assertFalse(Skin.IsApplied(), "nothing is painted while stood down")
+    -- red under: drop the NS.IsStoodDown() check in blocked()
+    assertFalse(applied(NS), "nothing is painted while stood down")
+    assertEqual(#calls, 0)
+    -- red under: drop the NS.STAND_UP entry
     NS.SchemaRuntime.Set("enabled", true)
-    assertTrue(Skin.IsApplied())
+    assertTrue(applied(NS))
     assertTrue(called(calls, "Shell", Pop.frame))
+end)
+
+test("eui skin: the fallback window (no settings-window template) keeps its older look", function()
+    local eui, mock = withEUI()
+    local NS, m = T.enableAddon({ mock = mock })
+    m.missingTemplates.SettingsFrameTemplate = true
+    m.SettingsPanel:Show()
+    local Pop = NS.addon.Settings.CalloutPopup
+    local S, calls = facade()
+    eui.registered.QuickComms(S)
+    assertTrue(Pop.Open(NS.Library.CreateGroup({ name = "Mine" })))
+    -- red under: drop the chrome.template check in blocked() (the dialog edge goes to alpha 0)
+    assertFalse(applied(NS))
+    assertEqual(#calls, 0, "nothing painted on the fallback")
+    assertEqual(Pop.chrome.bg:GetAlpha(), 1, "the dialog edge and its fill stay")
 end)
 
 test("eui skin: the diagnostics report names its state", function()
     local NS = openWith()
-    local line = NS.addon.Settings.CalloutPopupSkin.Describe()
-    assertTrue(line:find("ellesmereui: suite=true master=true entry=true facade=false applied=false", 1, true) ~= nil, line)
+    -- red under: drop the skin line from modules/Diagnostics.lua's integrations section
+    local text = report(NS)
+    assertTrue(text:find("ellesmereui: suite=true master=true entry=true facade=false applied=false", 1, true) ~= nil, text)
 end)

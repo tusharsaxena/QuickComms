@@ -6,8 +6,8 @@
 load, and is read inside functions only. There is one family file; no `core/Compat<Topic>.lua`
 exists.
 
-**Twenty-seven shims**, counted the way documentation-§3 counts them
-(`cat core/Compat*.lua | grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'` answers `27`). The two
+**Twenty-eight shims**, counted the way documentation-§3 counts them
+(`cat core/Compat*.lua | grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'` answers `28`). The two
 secret guards, `IsSecret` and `IsSafeKey`, are `LibKa0s-Compat-1.0`'s members, wired by assignment
 with a library-absent body and not counted; their contract is LibKa0s
 `docs/api/Compat/version-1-docs.md`.
@@ -53,6 +53,7 @@ with a library-absent body and not counted; their contract is LibKa0s
 | `BindingKey(command)` | `GetBindingKey` | an unsafe command, or a secret or empty key, is `nil` | `nil` | `settings/Dials.lua` (the key bound in WoW's menu) |
 | `ScreenSize()` | `UIParent:GetWidth`, `GetHeight` | either one secret, unknown or not positive is `nil` | `nil` | `Library` (an offset off the screen is refused) |
 | `ChatColor(chatType)` | `ChatTypeInfo` | an unsafe key, or a secret or missing color component, is `nil` | `nil` | `Pad_Render` (the channel tag) |
+| `HasTemplate(name)` | `C_XMLUtil.GetTemplateInfo` | `type()` only: a table answer is `true`, anything else (or a raise) `false` | `nil` (unknown: the caller tries `CreateFrame` under `pcall`) | `settings/CalloutPopup.lua` (whether to build the window from `SettingsFrameTemplate`) |
 
 The restriction shims are copied from DropWatcher's `core/Compat.lua`. `tests/test_compat.lua`
 drives the plain readers (secrets dropped, a secret `instanceID` read as `nil`) and the restriction
