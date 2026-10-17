@@ -9,8 +9,10 @@ local addonName, NS = ...
 --
 -- THE DRAFT is a plain copy of the callout's four fields (blank for Add: an empty name and text,
 -- Smart group, no icon), and every control writes it, never the profile. The preview and the token
--- list bake the draft, so they follow each edit before anything is saved. Save checks the draft with
--- the member rows' own validators, then writes it as ONE act (Library.Batch): an edit writes each
+-- list bake the draft, so they follow each edit before anything is saved. A text box commits to the
+-- draft on Enter, and what a box shows that Enter did not commit is taken into the draft before any
+-- other write and by Save, so a typed name is never lost to a pick or to a click on Save. Save checks
+-- the draft with the member rows' own validators, then writes it as ONE act (Library.Batch): an edit writes each
 -- field that differs from the copy taken when the popup opened, through the seam, by id; Add is
 -- Library.CreateCalloutIn at the end of the group. A slash write to the same callout meanwhile is not
 -- merged: Save writes only what the draft changed. Cancel, the close mark and Escape drop the draft,
@@ -41,6 +43,8 @@ local ERROR_COLOR = "|cffff4040"
 -- The open popup's state: the group, the callout (nil for Add), the draft and its baseline.
 local gid, cid, draft, baseline
 local ctx, errorRow
+-- The popup's text boxes by field, and the text each last showed of the draft (see flush).
+local boxes, shown = {}, {}
 
 local function H() return Settings.Helpers end
 
@@ -62,11 +66,31 @@ local function refresh()
     for _, fn in ipairs(ctx and ctx.refreshers or {}) do pcall(fn) end
 end
 
-local function setField(field, value, row)
-    if not draft then return end
+local function put(field, value, row)
     if row and type(row.normalize) == "function" then value = row.normalize(value) end
     if field == "icon" and value == false then value = nil end
     draft[field] = value
+end
+
+-- Take into the draft what the player typed in a box and did not commit with Enter: a box whose
+-- text is not what it last showed of the draft. Clicking Save is the commit gesture here, and any
+-- other draft write, or a seam write (it refreshes the popup with every rendered panel), would
+-- otherwise put each box back over the typed text.
+local function flush()
+    if not draft then return end
+    for field, box in pairs(boxes) do
+        local text = box:GetText() or ""
+        if text ~= tostring(shown[field] or "") then
+            put(field, text, Ed.Row("callout." .. field))
+            shown[field] = text
+        end
+    end
+end
+
+local function setField(field, value, row)
+    if not draft then return end
+    flush()
+    put(field, value, row)
     refresh()
 end
 
@@ -80,7 +104,10 @@ local function draftRows()
         local copy = {}
         for k, v in pairs(row) do copy[k] = v end
         copy.path, copy.validate, copy.onChange = nil, nil, nil
-        copy.get = function() return draft and draft[field] end
+        copy.get = function()
+            shown[field] = draft and draft[field]
+            return shown[field]
+        end
         copy.set = function(value) setField(field, value, row) end
         out[i] = copy
     end
@@ -120,16 +147,39 @@ end
 
 local function insertToken(token)
     if not draft then return end
+    flush()
     local text = draft.text or ""
     local sep = (text == "" or text:sub(-1) == " ") and "" or " "
     setField("text", text .. sep .. token)
+end
+
+-- The AceGUI EditBoxes under widget `w`, in the order they were drawn.
+local function editBoxes(w, out)
+    for _, child in ipairs(w and w.children or {}) do
+        if child.type == "EditBox" then out[#out + 1] = child end
+        editBoxes(child, out)
+    end
+    return out
 end
 
 local function render()
     local h = H()
     h.ClearScroll(ctx)
     ctx.qcLive = {}
-    h.RenderRows(ctx, draftRows(), nil, nil, { noHeadings = true })
+    boxes, shown = {}, {}
+    -- First, so every refresh (the popup's own and a seam write's) takes the typed text in before
+    -- the boxes' refreshers put the draft back into them.
+    ctx.refreshers[#ctx.refreshers + 1] = flush
+    local rows = draftRows()
+    h.RenderRows(ctx, rows, nil, nil, { noHeadings = true })
+    -- The member rows are the scroll's only content yet, so its boxes are theirs, in row order.
+    local drawn, n = editBoxes(ctx.scroll, {}), 0
+    for i, row in ipairs(rows) do
+        if row.dialogControl == "EditBox" then
+            n = n + 1
+            boxes[FIELDS[i]] = drawn[n]
+        end
+    end
     h.RenderGrid(ctx, { Ed.ActionDropdown(L["Insert a token"],
         L["Add a token to the end of the text. Tokens are filled in when the callout is sent."],
         tokenEntries, insertToken, ctx) })
@@ -153,6 +203,7 @@ end
 local function close()
     gid, cid, draft, baseline = nil, nil, nil, nil
     errorRow = nil
+    boxes, shown = {}, {}
     if ctx then
         H().ClearScroll(ctx)
         ctx.qcLive = {}
@@ -257,6 +308,7 @@ function Pop.Save()
         Pop.Cancel()
         return false, "noCallout"
     end
+    flush()
     local field, label, why = check(draft)
     if field then
         showError(L["%s: %s"]:format(label, tostring(why)))

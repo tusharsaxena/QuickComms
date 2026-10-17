@@ -97,8 +97,10 @@ body     Name, Text, Channel, Icon (the callout.* member rows' labels and help),
 
 - **The draft.** The popup edits a plain copy of the callout's four fields (blank for Add). Every
   control writes the draft, never the profile, and the token list and What it sends here bake the
-  draft, so both follow each edit before anything is saved. A text box commits on Enter (or its Okay
-  button), as on every page. The token picker offers
+  draft, so both follow each edit before anything is saved. A text box commits to the draft on Enter
+  (or its Okay button), as on every page; what a box shows that Enter did not commit is taken into
+  the draft before any other draft write, before a seam write's refresh and by Save, so clicking
+  Save commits it and a pick or a token never wipes it. The token picker offers
   `{group1}`…`{group8}` only when the draft's channel can resolve to Raid.
 - **Save** checks the draft with the member rows' own validators (the name, the text and its
   length, the channel, the icon). A field that fails keeps the popup open and names the field;

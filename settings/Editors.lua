@@ -199,28 +199,6 @@ function Ed.Scalar(rows)
     return out
 end
 
---- Rows bound to one member by its id, for a kind the seam addresses by id alone (a callout,
---- Settings.BY_ID_KINDS). Each is a copy with no path and its own get and set (LibKa0s draws a
---- path-less row through them), which read and write the member through the seam; a refused write
---- says why, as the panel's descriptor does (settings/OptionsSetup.lua).
-function Ed.Bound(rows, id)
-    local S = NS.SchemaRuntime
-    local out = {}
-    for i, row in ipairs(rows or {}) do
-        local copy, path = {}, row.path
-        for k, v in pairs(row) do copy[k] = v end
-        copy.path = nil
-        copy.get = function(key) return S.Get(key or path, id) end
-        copy.set = function(value)
-            local ok, err, why = S.Set(path, value, id)
-            if not ok then NS.Print(tostring(why or err)) end
-            return ok, err, why
-        end
-        out[i] = copy
-    end
-    return out
-end
-
 --- A dropdown that acts on the choice at once ("Add a group", "Insert a token"), as a RenderGrid item.
 --- `entries` is a list, or a function; with `ctx`, a function is re-read in place (Ed.Live), so a
 --- list that depends on a field (the token list on the callout's channel) follows it without a repaint.
