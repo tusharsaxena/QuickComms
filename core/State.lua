@@ -21,7 +21,7 @@ State.previewAs = nil
 -- { [groupId] = { [row] = true } }. Session-only; a profile switch clears it (settings/Editors.lua).
 State.whenOpen = {}
 
--- The Share page (settings/Share.lua, spec §15): the members ticked for export, { callout, group,
--- pad, dial } each { [id] = true }, and the last checked import string's result (modules/Share.lua
--- Check), or nil. Session-only; a profile switch clears both (settings/Editors.lua).
-State.share = { pick = { callout = {}, group = {}, pad = {}, dial = {} }, import = nil }
+-- The Share page (settings/Share.lua, spec §15): the members ticked for export, { group, pad, dial }
+-- each { [id] = true } (a callout travels inside its group), and the last checked import string's
+-- result (modules/Share.lua Check), or nil. Session-only; a profile switch clears both (settings/Editors.lua).
+State.share = { pick = { group = {}, pad = {}, dial = {} }, import = nil }

@@ -106,6 +106,24 @@ test("share page: [phase 5] Export ticks a group; its callouts come along, and t
     assertEqual(#payload.groups[gid].callouts, 2)
 end)
 
+test("share page: Export lists groups, pads and dials, and no callouts; a ticked group brings its callouts", function()
+    local NS, _, P = open()
+    local gid = mine(NS)
+    local w = P.tab("share", "Export")
+    -- red under: the callout row back in KINDS in settings/Share.lua
+    assertNil(P.find(w, "Heading", "Callouts"), "no Callouts heading")
+    assertNil(P.find(w, "CheckBox", "Kick"), "no checkbox for a callout")
+    assertNil(P.find(w, "CheckBox", "Lust"), "no checkbox for a callout")
+    assertTrue(P.find(w, "Heading", "Groups") ~= nil)
+    assertTrue(P.find(w, "Heading", "Comms Pads") ~= nil)
+    assertTrue(P.find(w, "Heading", "Comms Dials") ~= nil)
+    assertNil(NS.State.share.pick.callout, "the ticks hold no callout kind")
+    P.find(w, "CheckBox", "My keys"):__fire("OnValueChanged", true)
+    assertTrue(P.hasText(w, "The string will hold 2 callouts, 1 group."), "the group brings its callouts")
+    local payload = NS.Share.Collect(NS.State.share.pick)
+    assertEqual(#payload.groups[gid].callouts, 2)
+end)
+
 test("share page: [phase 5] Export with nothing ticked says so and opens nothing", function()
     local NS, m, P = open()
     local shown = spyWindow(NS)
@@ -113,7 +131,7 @@ test("share page: [phase 5] Export with nothing ticked says so and opens nothing
     m.prints = {}
     P.find(w, "Button", "Export"):__fire("OnClick")
     assertNil(shown.text)
-    assertTrue(table.concat(m.prints, "\n"):find("Tick at least one callout", 1, true) ~= nil)
+    assertTrue(table.concat(m.prints, "\n"):find("Tick at least one group, pad or dial", 1, true) ~= nil)
 end)
 
 test("share page: [phase 5] Import checks a pasted string, reports it, then adds it as new members", function()

@@ -287,7 +287,7 @@ Total.
 - bake: a typed %t counts as live
 - bake: [phase 5] CleanText is the sanitizer short of the escape; Sanitize is CleanText, then the escape
 
-### test_share.lua (26)
+### test_share.lua (27)
 
 - share: a string is !QC1! then printable text, and decodes back to the same payload
 - share: [review 1] a pasted string may wrap and carry spaces; a cut-short one is damaged and imports nothing
@@ -315,6 +315,7 @@ Total.
 - share: [review] a nested key in a When or a field passes the sanitizer and the byte budget
 - share import: groups sharing a callout each get their own copy
 - share import: a callout in no imported group is not imported
+- share: Collect takes a callout only inside its group; a picked callout alone is nothing
 
 ### test_resolver.lua (8)
 
@@ -536,13 +537,14 @@ Total.
 - dials page: [final 10] the key line of a dial that is off says the key opens nothing, and warns of no override
 - dials page: [final 11] the page's own plan builds are not timed as a surface's bake
 
-### test_page_share.lua (13)
+### test_page_share.lua (14)
 
 - share page: every shipped set has a line; turning M+ off takes it off the pad
 - share page: [review 4] Customize puts the copy in the set's place, selects it and opens the Groups page
 - share page: Choose callouts opens the set on the Groups page's Callouts tab
 - share page: Defaults turns every set back on and shows all of their callouts, as one act
 - share page: [phase 5] Export ticks a group; its callouts come along, and the string opens in the copy window
+- share page: Export lists groups, pads and dials, and no callouts; a ticked group brings its callouts
 - share page: [phase 5] Export with nothing ticked says so and opens nothing
 - share page: [phase 5] Import checks a pasted string, reports it, then adds it as new members
 - share page: [review] editing the box after Accept forgets the check: Import never adds the old string
@@ -877,7 +879,7 @@ Total.
 | test_tokens.lua | 8 |
 | test_channels.lua | 8 |
 | test_bake.lua | 12 |
-| test_share.lua | 26 |
+| test_share.lua | 27 |
 | test_resolver.lua | 8 |
 | test_builtins.lua | 7 |
 | test_gameids.lua | 2 |
@@ -889,7 +891,7 @@ Total.
 | test_page_groups.lua | 16 |
 | test_page_pads.lua | 12 |
 | test_page_dials.lua | 17 |
-| test_page_share.lua | 13 |
+| test_page_share.lua | 14 |
 | test_check.lua | 6 |
 | test_send_guard.lua | 10 |
 | test_sendengine.lua | 31 |
@@ -909,4 +911,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **703** |
+| **Total** | **705** |

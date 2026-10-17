@@ -449,7 +449,7 @@ SH.REASON_TEXT = {
     newer = L["That string was made by a newer Quick Comms. Update the addon, then import it."],
     tooLarge = L["That string is too large to import."],
     unavailable = L["Sharing is unavailable: LibDeflate or LibSerialize did not load."],
-    nothing = L["Tick at least one callout, group, pad or dial to export."],
+    nothing = L["Tick at least one group, pad or dial to export."],
     inCombat = L["Export and import are not available in combat."],
 }
 
@@ -541,7 +541,8 @@ end
 
 -- The picked ids and what they need: a pad's or a dial's user groups, then every picked group's
 -- callouts (spec §15: a group references its callouts, a surface its groups). Built-in sets travel
--- by id only.
+-- by id only. A callout is never picked on its own: it travels inside the group that owns it
+-- (2026-10-17-callouts-owned-by-groups-design.md), so a `callout` pick is ignored.
 local function bringGroups(want, surfaces, ids, groups)
     for sid in pairs(ids) do
         local s = surfaces[sid]
@@ -554,7 +555,7 @@ end
 local function closure(pick, p)
     local want = { callout = {}, group = {}, pad = {}, dial = {} }
     for kind, ids in pairs(type(pick) == "table" and pick or {}) do
-        if want[kind] then
+        if want[kind] and kind ~= "callout" then
             for id, on in pairs(ids) do want[kind][id] = on and true or nil end
         end
     end
@@ -591,8 +592,8 @@ local function exportMember(kind, id, m)
     return { name = m.name, enabled = m.enabled ~= false, groups = copy(m.groups), fields = SH.FieldsOf(kind, id) }
 end
 
---- The payload for the picked members ({ callout = { [id] = true }, group = …, pad = …, dial = … })
---- and what they need, or nil when nothing is picked.
+--- The payload for the picked members ({ group = { [id] = true }, pad = …, dial = … }) and what they
+--- need (a group's callouts), or nil when nothing is picked.
 --- @return table|nil payload, number members
 function SH.Collect(pick)
     local p = NS.db.profile

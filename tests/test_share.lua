@@ -459,3 +459,16 @@ test("share import: a callout in no imported group is not imported", function()
     assertEqual(tally.callouts, 1)
     for _, c in pairs(NS.db.profile.callouts) do assertTrue(c.name ~= "Slipped" and c.name ~= "Loose") end
 end)
+
+test("share: Collect takes a callout only inside its group; a picked callout alone is nothing", function()
+    local NS, SH = boot()
+    local Lib = NS.Library
+    local gid = Lib.CreateGroup({ name = "My keys" })
+    local cid = Lib.CreateCalloutIn(gid, KICK)
+    -- red under: closure in modules/Share.lua honoring pick.callout
+    assertNil(SH.Collect({ callout = { [cid] = true } }), "a callout travels inside its group")
+    local payload = SH.Collect({ callout = { [cid] = true }, group = { [gid] = true } })
+    assertEqual(payload.groups[gid].callouts[1], cid)
+    assertEqual(payload.callouts[cid].text, KICK.text)
+    assertEqual(SH.REASON_TEXT.nothing, "Tick at least one group, pad or dial to export.")
+end)

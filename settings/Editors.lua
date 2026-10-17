@@ -149,7 +149,7 @@ local function onProfileChanged()
     for kind in pairs(State.editing) do State.editing[kind] = nil end
     for gid in pairs(State.whenOpen or {}) do State.whenOpen[gid] = nil end
     -- The Share page's ticks and checked string name the old profile's ids.
-    State.share.pick = { callout = {}, group = {}, pad = {}, dial = {} }
+    State.share.pick = { group = {}, pad = {}, dial = {} }
     State.share.import = nil
     Ed.RequestRefresh()
 end
