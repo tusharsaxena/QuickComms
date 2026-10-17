@@ -89,7 +89,7 @@ line: the client reads it there, and the standard allows it (layout-§1, toc-fil
 | `DialRender` | render | `modules/Dial_Render.lua`: the dial's insecure paint and pointer |
 | `Dial` | frames | `modules/Dial.lua`: the dial's frames, pools and keys |
 | `Editors` | settings | `settings/Editors.lua`: the pages' shared frame: the selection, the one deferred repaint, the reorder lists (each row's edit and remove glyphs), the delete popup, the icon picker |
-| `Callouts` | settings | `settings/Callouts.lua`: the callout helpers the editors share: the token picker's list for a channel, and what a callout sends here |
+| `Callouts` | settings | `settings/Callouts.lua`: the callout helpers the editors share: the tokens a channel offers and one line of help for each, and what a callout sends here |
 | `CalloutPopup` | settings | `settings/CalloutPopup.lua`: the callout popup, modal over the settings window: one user group's callout, new or listed, edited as a draft and written on Save as one act; its window is Blizzard's `SettingsFrameTemplate`, sized to its body, with no scrollbar ([`settings-panel.md`](settings-panel.md)) |
 | `CalloutPopupSkin` | settings | `settings/CalloutPopup_Skin.lua`: the popup's optional EllesmereUI skin, painted as EllesmereUI paints the settings window when EllesmereUI, its Blizzard Skin module, its third-party skinning and this addon's entry are all on |
 | `EUIBridge` | bridge | `core/EUIBridge.lua`: the only reader of EllesmereUI's state (optional, in `## OptionalDeps`): the skin's conditions (the suite and its Blizzard Skin child present, and the facade's `S.IsEnabled()`; never EllesmereUI's SavedVariables) and its presence-guarded `RegisterSkin`, every read at call time |
