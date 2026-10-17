@@ -22,7 +22,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
 | SEND-1..5 | Send | Secure sends in keys and on bosses, the spam guard |
 | PAD-1..8 | Pad | The Comms Pad |
-| EDIT-1..12 | Editors | The Groups (with the callout popup, Reuse and the glyph lists), Comms Pad and Share pages, Preview as…, Why is this showing? |
+| EDIT-1..13 | Editors | The Groups (with the callout popup and its EllesmereUI look, Reuse and the glyph lists), Comms Pad and Share pages, Preview as…, Why is this showing? |
 | DIAL-1..12 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial |
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
 | LOOK-1..2 | Look | The Comms Pad's font, border and background |
@@ -222,16 +222,19 @@ longer lists them). Result:
 
 **EDIT-9. The callout popup: look, Save and a refused field.** Groups → a group of yours → Callouts →
 a row's edit glyph (the edit mark; its tooltip is headed Edit) → the popup opens filled in, over a dimmed
-settings window, with the panel's gold header rule, red Save and Cancel buttons and the shared close
-mark; it reads like the settings panel, not like the debug console. Clicking the page behind it does
-nothing. Type more text and press Enter → What it sends here follows the edit, while the chip on
-the pad still sends the old line. Clear the Name and click Save → the popup stays open and a red line names Name;
-nothing changed on the pad. Type a name back, pick an icon under Choose an icon, Save → the popup
+settings window, and looks like the settings window itself: the same background and border, the
+window title "Ka0s Quick Comms" in the top bar and Blizzard's close X at its top right, then the gold
+"Edit callout" header and rule, red Save and Cancel buttons. There is **no scrollbar**: the window is
+exactly as tall as its content, with no empty band under the error line and nothing cut off at the
+bottom. Clicking the page behind it does nothing. Type more text and press Enter → What it sends here follows the edit, while the chip on
+the pad still sends the old line; type text long enough that What it sends here wraps onto another
+line → the window grows with it. Clear the Name and click Save → the popup stays open and a red line names Name;
+nothing changed on the pad, and the window grew to show the red line. Type a name back, pick an icon under Choose an icon, Save → the popup
 closes, the row and the chip show the new name, text and icon. Result:
 
 **EDIT-10. Cancel leaves nothing behind.** Add callout → type a name and text → Cancel → no new row,
 and `/reload` shows none either. Edit a callout, change its text → press Escape → the old text
-stands. Edit again, change it → click the close mark → the old text stands. Edit again → close the
+stands. Edit again, change it → click the close X → the old text stands. Edit again → close the
 settings window (or `/qc profile Other`) → the popup is gone with it, nothing saved. Result:
 
 **EDIT-11. Reuse makes a copy.** On group A's Callouts tab, open Reuse existing callout → your
@@ -245,6 +248,16 @@ sign; its tooltip reads Remove, "Delete this callout. Asks first.") → the conf
 No keeps it, Yes deletes it, and Reuse no longer offers it. On Comms Pad → Groups, a row's remove
 glyph (its tooltip: the group itself is kept) → the group leaves that pad at once, with no question, and is still on the Groups page; the
 same on Comms Dial → Groups. Neither list has an edit glyph. Result:
+
+**EDIT-13. The callout popup in EllesmereUI's look.** With EllesmereUI and EllesmereUI Blizzard Skin
+enabled, EllesmereUI's third-party skinning on and QuickComms on in its Third-Party Addons list,
+`/reload` → open the callout popup (EDIT-9) → its window wears the same EllesmereUI shell, border
+and close X as the settings window behind it, and the page's controls look as they do on the
+settings pages. `/qc diagnostics` → the integrations section reads `ellesmereui: suite=true
+master=true entry=true facade=true applied=true failed=false`. Turn QuickComms off in EllesmereUI's
+Third-Party Addons list and `/reload` → the popup is Blizzard's settings window again (`entry=false
+facade=false applied=false`). Disable EllesmereUI → the popup opens in Blizzard's look and no Lua
+error appears. Result:
 
 ## Dial
 
@@ -453,6 +466,6 @@ from the client, so this check needs a non-English client pass. Result:
 |---|---|---|
 | INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..2, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet; LOC-1 re-enumerated in phase 5 and owed a non-English client pass |
 | SEND-1..5, PAD-1..8 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet; PAD-8 added in phase 5 (audit QC-07) |
-| EDIT-1..12 | Phase 3: the editors | No client pass recorded yet; EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them |
+| EDIT-1..13 | Phase 3: the editors | No client pass recorded yet; EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17) |
 | DIAL-1..12 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
 | SHARE-1..6, LOOK-1..2, ICON-1, BG-1..2, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; LOOK-2's in-combat step goes through `/qc set` |

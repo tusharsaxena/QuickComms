@@ -66,6 +66,7 @@ Everything is configured under **Settings → AddOns → Ka0s Quick Comms**, and
 | Why secure buttons? | In Midnight an addon can't send chat by itself during a boss, a Mythic+ key or a PvP match. A button you press can, so that's the one way Quick Comms sends anything. |
 | Can a shared string run a command? | No. Callout text is always chat text. A shared callout that starts with a slash is left out, and nothing in a string is ever run. |
 | Will importing overwrite my callouts? | No. Everything in a string arrives as a new copy beside what you have. |
+| Does it work with EllesmereUI? | Yes. With EllesmereUI's Blizzard skins on (and Quick Comms on in its Third-Party Addons list), the callout editor takes the same look as your settings window. Turn it off there, then reload. |
 
 ## Troubleshooting
 

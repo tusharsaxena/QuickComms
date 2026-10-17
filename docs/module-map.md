@@ -13,6 +13,7 @@ The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after Li
 | 2 | `core/Namespace.lua` | data | name, version, brand, the cyan `[QC]` tag, the slash and its alias |
 | 3 | `core/CoreSetup.lua` | setup | LibKa0s-Core: the printer, the secret-safe stringifier, the SafeRegister family, the skin, the close-button wrapper, the resize grip, the class-color resolver |
 | 3a | `core/Compat.lua` | compat | `NS.Compat`: the only caller of version-variant or optional client APIs, and the secret guards ([`compat-layer.md`](compat-layer.md)) |
+| 3b | `core/EUIBridge.lua` | bridge | `NS.EUIBridge`: the only reader of EllesmereUI's state (an optional suite): the skin's three conditions and its presence-guarded `RegisterSkin`; every read at call time |
 | 4 | `core/MediaSetup.lua` | setup | LibKa0s-Media: `NS.Icon`, `NS.MediaFont`, the one RegisterLSM call, `NS.MediaFetch` |
 | 5 | `core/Constants.lua` | data | `FONT_MONO`, the Ka0s gold |
 | 6 | `core/State.lua` | state | session-only state (`NS.State`): the debug flag; the modules add their own fields (test mode, plans, the queue, the echo, the pad's tab and collapse) |
@@ -58,7 +59,8 @@ The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after Li
 | 21 | `settings/Panel.lua` | settings | the landing page and the General page (Master controls) |
 | 21a | `settings/Editors.lua` | settings | the editor pages' shared frame: selection, repaint, reorder lists (with their edit and remove glyphs), delete, the icon picker |
 | 21b | `settings/Callouts.lua` | settings | the callout helpers (`Settings.Callouts`): the token picker's list for a channel, and what a callout sends here |
-| 21b2 | `settings/CalloutPopup.lua` | settings | the callout popup (`Settings.CalloutPopup`): a user group's callout, new or listed, edited as a draft, saved as one act, modal over the settings window |
+| 21b2 | `settings/CalloutPopup.lua` | settings | the callout popup (`Settings.CalloutPopup`): a user group's callout, new or listed, edited as a draft, saved as one act, modal over the settings window; Blizzard's `SettingsFrameTemplate` window, sized to its body, with no scrollbar |
+| 21b3 | `settings/CalloutPopup_Skin.lua` | settings | `Settings.CalloutPopupSkin`: the popup's optional EllesmereUI skin, registered at file load, painted when the popup is built and every condition holds |
 | 21c | `settings/Groups_When.lua` | settings | the Groups page's When editor |
 | 21d | `settings/Groups.lua` | settings | the Groups page (a user group's Callouts tab: Add callout, Reuse existing callout, the glyph list) |
 | 21e | `settings/Pads.lua` | settings | the Comms Pad page |
@@ -100,7 +102,8 @@ files they add are listed in design spec §4.2.
 | `tests/test_pad.lua` | `Pad`: armed or disarmed chips, the visibility driver, the drag strip shown while unlocked (it will not drag while locked or in combat) |
 | `tests/test_members.lua` | the member rows: addressed by instance, selection or the first listed member (a callout by its id alone); built-ins refused; `Library.Touch` announces each write; the CLI text forms |
 | `tests/test_editors.lua` | `settings/Editors.lua`: the selection heals and a profile switch clears it, one structural repaint per frame, none for a scalar write, the delete confirmation, the jump, the reorder rows' edit and remove glyphs |
-| `tests/test_callout_popup.lua` | the callout popup: Add and Edit, the draft rows, token insert and the preview on the draft, Save's checks and its one act, Cancel and what else closes it, the shared close mark, no Callouts page, and the helpers' token list and preview lines |
+| `tests/test_callout_popup.lua` | the callout popup: Add and Edit, the draft rows, token insert and the preview on the draft, Save's checks and its one act, Cancel and what else closes it, the settings-window template and its close X, the fallback window and its close mark, no scrollbar and the height that follows the body, no Callouts page, and the helpers' token list and preview lines |
+| `tests/test_eui_skin.lua` | the popup's EllesmereUI skin on a mocked EllesmereUI: painted as the settings window is when every condition holds, at the build or at a late callback, once; not when any condition fails; never raising without EllesmereUI; a changed facade left stock; a stand-down waited out; the diagnostics line |
 | `tests/test_groups_when.lua` | the When editor's pure half (toggle, clear, key-level range, the values offered, the active-now line) and its write through the seam |
 | `tests/test_page_groups.lua` | the Groups page: picker and New group, a user group's tabs (the Callouts tab's Add callout, Reuse and glyph list), a built-in's read-only General with Customize and its hidden-callouts editor |
 | `tests/test_page_pads.lua` | the Comms Pad page: picker and New pad, General's acts, the Groups priority list, Layout with X/Y, Look |
