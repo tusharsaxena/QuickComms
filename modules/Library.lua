@@ -292,6 +292,20 @@ function Lib.IconTint(icon, color)
     return tonumber(color:sub(1, 2), 16) / 255, tonumber(color:sub(3, 4), 16) / 255, tonumber(color:sub(5, 6), 16) / 255
 end
 
+--- The stored glyph color for a picked r, g, b (0..1, as the color picker answers): six lowercase
+--- hex digits, or false (none) for white, which is how an untinted glyph is drawn. A channel out of
+--- range is clamped.
+--- @return string|false
+function Lib.IconColorFrom(r, g, b)
+    local function byte(v)
+        v = tonumber(v) or 1
+        return math.floor(math.max(0, math.min(1, v)) * 255 + 0.5)
+    end
+    local hex = ("%02x%02x%02x"):format(byte(r), byte(g), byte(b))
+    if hex == "ffffff" then return false end
+    return hex
+end
+
 -- The color a member made with `icon` and `color` keeps: the color only when the icon is a glyph,
 -- else none (a malformed color is refused before this).
 local function glyphColor(icon, color)

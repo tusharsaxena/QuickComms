@@ -13,6 +13,7 @@
 --   inCombat       InCombatLockdown()'s answer, and UnitAffectingCombat("player")'s
 --   loadedAddons   the names C_AddOns.IsAddOnLoaded answers true for (this addon's own folder is in)
 --   chatLockdown   C_ChatInfo.InChatMessagingLockdown()'s answer
+--   macroIcons, macroItemIcons  what GetMacroIcons / GetMacroItemIcons fill the handed table with
 --   restrictionStates  C_RestrictedActions' state per Enum.AddOnRestrictionType value (absent = 0)
 --   prints         every line handed to the Lua global `print` (the printer's sink)
 --   popupsShown    every StaticPopup_Show(which, ...) call, in order
@@ -92,6 +93,17 @@ local function build()
 
     M.StaticPopup_Show = function(which, ...) M.popupsShown[#M.popupsShown + 1] = { which, ... } end
 
+    -- The macro icon selector's lists: each reader fills the table it is handed, as the client's do.
+    -- A list left empty is a client whose icon list has not loaded yet.
+    M.macroIcons     = { 136243, 136116, 132089 }
+    M.macroItemIcons = { 134400, 133784, 136243 }
+    M.GetMacroIcons = function(t)
+        for _, v in ipairs(M.macroIcons) do t[#t + 1] = v end
+    end
+    M.GetMacroItemIcons = function(t)
+        for _, v in ipairs(M.macroItemIcons) do t[#t + 1] = v end
+    end
+
     M.fireEvent = function(event, ...) return M.__fireEvent(event, ...) end
 
     -- The launcher's two libraries (launcher-§1), present by default because both are vendored and
@@ -125,12 +137,13 @@ local function build()
 
     -- AceGUI's Icon carries its texture as `image` from the moment it is made, as the real widget
     -- does, so a glyph dressed in an atlas (`image:SetAtlas`, recorded as `image.atlas`) has a
-    -- texture to dress. SetImage still records its arguments at `image[1..n]`, the base's shape, and
+    -- texture to dress, and a tint (SetVertexColor, recorded as `image.vertexColor`, white until set). SetImage still records its arguments at `image[1..n]`, the base's shape, and
     -- a new path replaces the atlas, as SetTexture does in the client.
     M.__libs["AceGUI-3.0"]:RegisterWidgetType("Icon", function()
         local w = M.__makeAceGUIWidget("Icon")
-        local texture = {}
+        local texture = { vertexColor = { 1, 1, 1 } }
         function texture.SetAtlas(tex, name) tex.atlas = name; return tex end
+        function texture.SetVertexColor(tex, r, g, b) tex.vertexColor = { r, g, b }; return tex end
         w.image = texture
         function w:SetImage(...)
             for k in pairs(texture) do if type(k) == "number" then texture[k] = nil end end

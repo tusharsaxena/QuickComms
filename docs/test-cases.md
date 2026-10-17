@@ -465,7 +465,7 @@ Total.
 - editors: Snapshot is the preview's while Preview as is on
 - editors: [icons] a row's glyph is drawn in its color; a row with none is white
 
-### test_callout_popup.lua (28)
+### test_callout_popup.lua (29)
 
 - popup: Add opens blank with Smart group
 - popup: edit opens filled in
@@ -481,7 +481,8 @@ Total.
 - popup: closing the settings window cancels
 - popup: Escape and a profile change cancel
 - popup: Insert a token appends to the draft's text
-- popup: Choose an icon writes the draft's icon
+- popup: [icons] Choose icon… opens the browser; its Choose writes the draft's icon, not the callout
+- popup: [icons] a glyph chosen with a color: the draft carries both; the swatch writes the draft's color
 - popup: the window is Blizzard's settings-window template, and its own close X cancels
 - popup: the template's background sits over the catcher's dim and under the border
 - popup: a settings-window template without its close X falls back to the dialog look
@@ -496,9 +497,30 @@ Total.
 - popup: [icons] an icon typed in that is no glyph drops the draft's color, and Save clears it
 - popup: [icons] Add saves a glyph with its color; a malformed color stays open and names the field
 
-### test_eui_skin.lua (8)
+### test_icon_browser.lua (17)
+
+- icon browser: the window is the popup's chrome, stacked above the popup and its catcher
+- icon browser: tabs in order; the stored icon is preselected and its tab opened
+- icon browser: a click selects, a double-click chooses; Choose hands the opener the icon
+- icon browser: hovering an icon names it, or gives a game icon's texture id
+- icon browser: Suggested is the markers, the built-in sets' icons and the curated glyphs; Markers the eight
+- icon browser: Glyphs is every catalog icon, labeled from its key
+- icon browser: Game icons is both macro lists, filtered All / Spells / Items
+- icon browser: the game list not loaded yet says so, and loads on a later visit
+- icon browser: the grid is virtualized: a fixed set of cells re-dressed as it scrolls
+- icon browser: the swatch tints every glyph; Choose hands a glyph its color, white as none
+- icon browser: Escape over the popup closes the browser only; the popup's Escape comes back after
+- icon browser: the popup closing closes it as Cancel
+- icon browser: a popup that closes leaves a browser opened by another owner alone
+- icon browser: Choose is refused in combat; nothing is written
+- icon browser: a stand-down closes it
+- icon browser: Compat.MacroIcons reads both lists, plain texture ids only, never raising
+- icon browser: Library.IconColorFrom stores a picked color as hex, white as none
+
+### test_eui_skin.lua (9)
 
 - eui skin: the popup is painted as EllesmereUI paints the settings window when every condition holds
+- eui skin: the icon browser's window is painted the same way, once, when it is built
 - eui skin: a callback that comes after the popup was built paints it at once
 - eui skin: not painted when any condition fails
 - eui skin: never raises without EllesmereUI, or with one that has no RegisterSkin
@@ -522,7 +544,7 @@ Total.
 - when: [final 6] a typed character takes the client's case; the Resolver matches one in any case
 - when: [final 2, 11] ResolveValue maps a typed value onto the token or id its row stores, or refuses it
 
-### test_page_groups.lua (25)
+### test_page_groups.lua (27)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists user groups by name, then the built-ins, active ones dotted
@@ -547,7 +569,9 @@ Total.
 - groups page: [final 12] Duplicate says the copy is on no pad yet
 - groups page: [final 20] the Instances row adds a typed id, removes one, and refuses a fraction or a negative
 - groups page: [final 18] Add the instance you are in reads the instance at the click, not at the draw
-- groups page: [phase 5] Choose an icon sets a user group's icon; a built-in set offers no picker
+- groups page: [icons] General shows the icon, Choose icon… and the swatch; the browser's Choose writes the group's icon
+- groups page: [icons] a glyph's swatch writes the group's color; a game icon chosen clears it in the same act
+- groups page: [icons] the browser closes as Cancel when the settings window hides or the group is deleted
 - groups page: [icons] a callout row in the Callouts tab draws its glyph in the callout's color
 
 ### test_page_pads.lua (12)
@@ -938,10 +962,11 @@ Total.
 | test_library.lua | 66 |
 | test_members.lua | 28 |
 | test_editors.lua | 15 |
-| test_callout_popup.lua | 28 |
-| test_eui_skin.lua | 8 |
+| test_callout_popup.lua | 29 |
+| test_icon_browser.lua | 17 |
+| test_eui_skin.lua | 9 |
 | test_groups_when.lua | 12 |
-| test_page_groups.lua | 25 |
+| test_page_groups.lua | 27 |
 | test_page_pads.lua | 12 |
 | test_page_dials.lua | 17 |
 | test_page_share.lua | 14 |
@@ -964,4 +989,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **754** |
+| **Total** | **775** |

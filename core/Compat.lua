@@ -321,3 +321,32 @@ function Compat.HasTemplate(name)
     local ok, info = pcall(x.GetTemplateInfo, name)
     return ok and type(info) == "table"
 end
+
+-- ── The icon browser (settings/IconBrowser_Sources.lua) ─────────────────────────────────────
+
+-- The macro icon selector's two readers, read at call time: each fills the table it is handed
+-- (and may return it).
+local function macroReader(kind)
+    if kind == "spells" then return GetMacroIcons end
+    if kind == "items" then return GetMacroItemIcons end
+    return nil
+end
+
+--- The icons the macro icon selector offers, `kind` "spells" (GetMacroIcons) or "items"
+--- (GetMacroItemIcons): a list of texture ids (plain numbers only). Empty when the reader is absent,
+--- raises, or the client's list has not loaded yet.
+--- @return number[]
+function Compat.MacroIcons(kind)
+    local reader = macroReader(kind)
+    if type(reader) ~= "function" then return {} end
+    local filled = {}
+    local ok, returned = pcall(reader, filled)
+    if not ok then return {} end
+    if #filled == 0 and type(returned) == "table" then filled = returned end
+    local out = {}
+    for _, v in ipairs(filled) do
+        v = PlainNumber(v)
+        if v then out[#out + 1] = v end
+    end
+    return out
+end

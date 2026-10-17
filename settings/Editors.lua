@@ -224,94 +224,72 @@ function Ed.ActionDropdown(label, tooltip, entries, onPick, ctx)
     end }
 end
 
--- ── the icon picker (spec §13.1, §19 row 5) ─────────────────────────────────────────────────
+-- ── the icon (icon browser spec, "Goals") ───────────────────────────────────────────────────
 
--- What the picker offers, in order: the eight raid markers; the game icons the built-in sets wear,
--- read from NS.BuiltIns when the picker draws (so a set that gains an icon offers it); then the
--- LibKa0s icon catalog's entries a callout reads well with. The catalog is enumerated (NS.IconNames;
--- library-stack-§8: never a hard-coded path list), and ICON_MARK_KEEP only picks among its names:
--- most of the catalog is window chrome (close, sort, align) that means nothing on a callout, and a
--- name the catalog drops simply stops being offered. Each icon is stored by its texture path, which
--- is what the Icon box takes; any other texture is typed into the box.
-Ed.ICON_MARKERS = { L["Star"], L["Circle"], L["Diamond"], L["Triangle"], L["Moon"], L["Square"], L["Cross"],
-    L["Skull"] }
--- Each kept catalog name and its player-facing label (the catalog's keys are not labels).
-Ed.ICON_MARK_KEEP = { chat = L["Chat"], ["speech-bubble"] = L["Speech bubble"], warning = L["Warning"],
-    info = L["Information"], help = L["Help"], target = L["Target"], shield = L["Shield"],
-    heart = L["Heart"], star = L["Star"], ["map-marker"] = L["Map marker"], location = L["Location"],
-    people = L["People"], person = L["Person"], timer = L["Timer"], ban = L["Ban"],
-    ["thumb-up"] = L["Thumbs up"] }
+-- Where an editor's icon is chosen (the callout popup, a user group's General tab), under its Icon
+-- box: the icon as it is drawn (a glyph in its color; a question mark for none), Choose icon…, which
+-- opens the icon browser (settings/IconBrowser.lua) over whatever opened it, and the glyph's color
+-- swatch, live only while the icon is a glyph (no other icon takes a color). Every control writes
+-- through `spec`, never the profile itself, and the row is put back in place (Ed.Live) after any write.
+Ed.NO_ICON = "Interface\\Icons\\INV_Misc_QuestionMark"
+local CHOOSER_ICON = 32
 
--- The built-in sets' icons, each once, in the sets' order: a set's own, then its callouts'.
-local function builtinIcons(out, seen)
-    local BI = NS.BuiltIns
-    local function add(path, label)
-        if type(path) == "string" and not seen[path] then
-            seen[path] = true
-            out[#out + 1] = { path = path, label = label }
-        end
-    end
-    for _, gid in ipairs(BI.order) do
-        local def = BI.groups[gid]
-        add(def.icon, def.name)
-        for _, cid in ipairs(def.callouts or {}) do
-            local c = BI.callouts[cid]
-            if c then add(c.icon, c.name) end
-        end
-    end
+--- Open the icon browser on what `spec.get()` answers (see Ed.IconChooser).
+--- @return boolean opened
+function Ed.OpenIconBrowser(spec)
+    local icon, color = spec.get()
+    return Settings.IconBrowser.Open({ icon = icon, color = color, onChoose = spec.choose,
+        owner = spec.owner, lift = spec.lift, valid = spec.valid })
 end
 
---- The picker's icons, { path, label } in order. The catalog's marks need the library; without it
---- they are left out.
-function Ed.IconPalette()
-    local out, seen = {}, {}
-    for i, name in ipairs(Ed.ICON_MARKERS) do
-        local path = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_" .. i
-        seen[path] = true
-        out[#out + 1] = { path = path, label = name }
-    end
-    builtinIcons(out, seen)
-    for _, name in ipairs(NS.IconNames()) do
-        local label = Ed.ICON_MARK_KEEP[name]
-        local path = label and NS.Icon(name)
-        if path then out[#out + 1] = { path = path, label = label } end
-    end
-    return out
+-- The swatch's write: the picked color as stored (white is none), only when it changed (the picker
+-- confirms its old color on Cancel).
+local function swatchWrite(spec, r, g, b)
+    local _, current = spec.get()
+    local picked = NS.Library.IconColorFrom(r, g, b) or nil
+    if picked ~= (current or nil) then spec.setColor(picked) end
 end
 
---- Write a picked icon to the member row `rowPath` (callout.icon, group.icon) for `id`, through the
---- seam; a refusal prints its reason. The Icon box above refreshes in place.
---- @return boolean
-function Ed.SetIcon(rowPath, id, path)
-    local ok, err, why = NS.SchemaRuntime.Set(rowPath, path, id)
-    if not ok then NS.Print(tostring(why or err)) end
-    return ok == true
-end
-
---- The picker: a "Choose an icon" heading over a grid of the palette's icons; a click on one is the
---- member's icon. `target` is the member row (callout.icon, group.icon) written for `id` through the
---- seam, or a function that takes the picked path instead (the callout popup's draft).
-function Ed.IconPicker(ctx, target, id)
+--- The chooser, as one row. `spec` = { get() -> icon, color; choose(icon, color) (the browser's
+--- Choose); setColor(color|nil) (the swatch); owner, lift, valid (handed to the browser) }.
+function Ed.IconChooser(ctx, spec)
     local h = H()
-    local pick = type(target) == "function" and target or function(path) Ed.SetIcon(target, id, path) end
-    h.Section(ctx, L["Choose an icon"])
     h.RenderGrid(ctx, { { wide = true, make = function(_, parent)
         local AceGUI = h.AceGUI
-        local grid = AceGUI:Create("SimpleGroup")
-        grid:SetLayout("Flow")
-        grid:SetFullWidth(true)
-        for _, e in ipairs(Ed.IconPalette()) do
-            local icon = AceGUI:Create("Icon")
-            icon:SetImage(e.path)
-            icon:SetImageSize(24, 24)
-            icon:SetWidth(36)
-            icon:SetHeight(36)
-            icon:SetCallback("OnClick", function() pick(e.path) end)
-            h.AttachTooltip(icon, e.label, L["Click to use this icon."])
-            grid:AddChild(icon)
+        local preview = AceGUI:Create("Icon")
+        preview:SetImageSize(CHOOSER_ICON, CHOOSER_ICON)
+        preview:SetWidth(48)
+        preview:SetHeight(44)
+        preview:SetCallback("OnClick", function() Ed.OpenIconBrowser(spec) end)
+        h.AttachTooltip(preview, L["Icon"], L["Click to choose another icon."])
+        local choose = AceGUI:Create("Button")
+        choose:SetText(L["Choose icon…"])
+        choose:SetRelativeWidth(0.4)
+        choose:SetCallback("OnClick", function() Ed.OpenIconBrowser(spec) end)
+        h.AttachTooltip(choose, L["Choose icon…"], L["Pick from the raid markers, the game's icons and the LibKa0s glyphs."])
+        local swatch = AceGUI:Create("ColorPicker")
+        swatch:SetLabel(L["Icon color"])
+        swatch:SetHasAlpha(false)
+        swatch:SetRelativeWidth(0.4)
+        swatch:SetCallback("OnValueConfirmed", function(_, _, r, g, b) swatchWrite(spec, r, g, b) end)
+        h.AttachTooltip(swatch, L["Icon color"], L["The color a LibKa0s glyph is drawn in. Only a glyph takes a color; white is none."])
+        local function paint()
+            local icon, color = spec.get()
+            preview:SetImage(icon or Ed.NO_ICON)
+            Ed.Tint(preview.image, icon, color)
+            swatch:SetColor(NS.Library.IconTint(icon, color))
+            swatch:SetDisabled(not NS.Library.IsGlyph(icon))
         end
-        parent:AddChild(grid)
-        return grid
+        paint()
+        Ed.Live(ctx, paint)
+        local row = AceGUI:Create("SimpleGroup")
+        row:SetLayout("Flow")
+        row:SetFullWidth(true)
+        row:AddChild(preview)
+        row:AddChild(choose)
+        row:AddChild(swatch)
+        parent:AddChild(row)
+        return row
     end } })
 end
 

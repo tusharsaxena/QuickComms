@@ -114,6 +114,7 @@ Kit.run{
         "test_members",
         "test_editors",
         "test_callout_popup",
+        "test_icon_browser",
         "test_eui_skin",
         "test_groups_when",
         "test_page_groups",
