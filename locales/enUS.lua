@@ -327,7 +327,7 @@ L["Test mode"] = "Test mode"
 L[" (copy)"] = " (copy)"
 
 -- Member rows (settings/SchemaMembers.lua, settings/Schema.lua)
-L["No callout to edit: make one on the Callouts page."] = "No callout to edit: make one on the Callouts page."
+L["Name the callout id: /qc set callout.<field> <id> <value>."] = "Name the callout id: /qc set callout.<field> <id> <value>."
 L["No group to edit: make one on the Groups page."] = "No group to edit: make one on the Groups page."
 L["No pad to edit: make one on the Comms Pad page."] = "No pad to edit: make one on the Comms Pad page."
 L["No built-in set is selected: pick one on the Groups page."] = "No built-in set is selected: pick one on the Groups page."

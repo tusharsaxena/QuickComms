@@ -20,7 +20,7 @@ local function trim(s) return (s or ""):gsub("^%s+", ""):gsub("%s+$", "") end
 local ENABLED_PATH = "enabled"
 
 local Sl   -- forward-declared: the handlers below reach it at call time
-local runConfig, runDebug, runReset, runResetAll, runEnabled, runPerf
+local runConfig, runDebug, runReset, runResetAll, runEnabled, runPerf, byId
 
 local COMMANDS = {
     {"help",     L["List available commands"],
@@ -40,9 +40,9 @@ local COMMANDS = {
     {"list",     L["List every setting and its current value"],
         function() Sl:CliList() end},
     {"get",      L["Print a setting's current value — `/qc get <path>`"],
-        function(rest) Sl:CliGet(rest) end},
+        function(rest) byId("CliGet", rest) end},
     {"set",      L["Set a setting — `/qc set <path> <value>` (try /qc list)"],
-        function(rest) Sl:CliSet(rest) end},
+        function(rest) byId("CliSet", rest) end},
     {"reset",    L["Reset one setting to its default — `/qc reset <path>`"],
         function(rest) runReset(rest) end},
     {"resetall", L["Reset every setting to defaults"],
@@ -95,8 +95,10 @@ end
 --                   battleground by its id or listed name; a value it can never match is refused
 --                   with what it takes (settings/Groups_When.lua W.ResolveValue)
 --   builtin.hidden  callout ids, or `none`
--- A row is written to the member Settings.EditingId addresses, as every member row is. A member row
--- with no member to address prints "(nothing to edit)" instead of nil.
+-- A row is written to the member Settings.EditingId addresses, as every member row is. A callout's
+-- rows name the callout instead, by its id after the path (`set callout.text <id> <value>`,
+-- `get callout.name <id>`, `reset callout.icon <id>`; byId below): no page selects a callout. A
+-- member row with no member to address prints "(nothing to edit)" instead of nil.
 
 local function wordsOf(text)
     local out = {}
@@ -258,9 +260,33 @@ local FORMAT = {
     end,
 }
 
+-- The callout the running get, set or reset names (byId), or nil: the descriptor's get, set and
+-- applyDefault address it, so the library's verbs run unchanged on the rest of the line.
+local addressed
+
 local function memberExists(kind)
-    local id = QC.Settings.EditingId(kind)
+    local id = QC.Settings.BY_ID_KINDS[kind] and addressed or QC.Settings.EditingId(kind)
     return id ~= nil and NS.Library.Member(kind, id) ~= nil
+end
+
+--- `get`, `set` and `reset`: a row addressed by id alone (Settings.BY_ID_KINDS) takes the word after
+--- its path as the member's id, and the verb runs on the path and what follows the id. A write or a
+--- reset that names no id is refused with the line naming the form, and one that names a gone id
+--- says so, before the library would read either as a value or as a row with no default.
+function byId(verb, rest)
+    local S = NS.SchemaRuntime
+    local path, tail = trim(rest):match("^(%S+)%s*(.*)$")
+    local row = path and S and S.FindRow(path)
+    if not (row and QC.Settings.BY_ID_KINDS[row.instance]) then return Sl[verb](Sl, rest) end
+    local id, value = tail:match("^(%S+)%s*(.*)$")
+    if verb ~= "CliGet" then
+        if id == nil then return NS.Print(L["Name the callout id: /qc set callout.<field> <id> <value>."]) end
+        if not NS.Library.Member(row.instance, id) then return NS.Print(L["No callout with id %s."]:format(id)) end
+    end
+    addressed = id
+    local ok, err = pcall(Sl[verb], Sl, path .. " " .. (value or ""))
+    addressed = nil
+    if not ok then error(err, 0) end
 end
 
 if not lib then
@@ -341,11 +367,12 @@ else
         print        = function(line) NS.Print(line) end,
         debug        = function(tag, message) NS.Debug(tag, message) end,
         version      = NS.Version,
-        get          = NS.SchemaRuntime.Get,
-        set          = NS.SchemaRuntime.Set,           -- the single write seam
+        -- The single write seam, addressed to the callout a `get`/`set`/`reset` names (byId).
+        get          = function(path) return NS.SchemaRuntime.Get(path, addressed) end,
+        set          = function(path, value) return NS.SchemaRuntime.Set(path, value, addressed) end,
         findRow      = NS.SchemaRuntime.FindRow,
         allRows      = function() return QC.Settings.Schema end,
-        applyDefault = NS.SchemaRuntime.ApplyDefault,
+        applyDefault = function(row) return NS.SchemaRuntime.ApplyDefault(row, addressed) end,
         bulkBegin    = NS.SchemaRuntime.BulkBegin,
         bulkEnd      = NS.SchemaRuntime.BulkEnd,
         groupKey     = function(row) return row.page or "general" end,
@@ -395,7 +422,7 @@ function runReset(rest)
             :format(SLASH .. " reset", SLASH .. " reset <path>", SLASH .. " list", SLASH .. " resetall"))
         return
     end
-    Sl:CliReset(rest)
+    byId("CliReset", rest)
 end
 
 function runResetAll()

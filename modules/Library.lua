@@ -228,7 +228,8 @@ local NAMED_SETS = { callout = "callouts", group = "groups" }
 --- Every member of a kind, in the order its editor page's picker lists them: user callouts and user
 --- groups by name (case-insensitive, then id), the built-in sets after the user groups in shipped
 --- order, the pads in the pad order, the dials in the dial order. The seam's fallback when a page
---- has selected nothing (settings/Schema.lua Settings.EditingId), and the pages' picker order.
+--- has selected nothing (settings/Schema.lua Settings.EditingId; never for a callout, which a write
+--- names by id), and the pages' picker order.
 --- @param kind string "callout" | "group" | "pad" | "dial"
 --- @return string[]
 function Lib.MemberIds(kind)

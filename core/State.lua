@@ -10,7 +10,7 @@ State.debug = false
 
 -- The member each editor page has selected (settings/Editors.lua): { callout, group, pad, builtin }.
 -- A member row written with no instance argument writes this member, else the first member its page
--- lists (settings/Schema.lua Settings.EditingId).
+-- lists (settings/Schema.lua Settings.EditingId); a callout row never does, it names its callout.
 State.editing = {}
 
 -- "Preview as…" (modules/Preview.lua, spec §13.3): the preset key the pads are drawn as, or nil.

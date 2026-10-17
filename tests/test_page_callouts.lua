@@ -88,8 +88,7 @@ test("callouts page: [phase 3] the live line refreshes in place when the callout
         if label.text and label.text:find("Sends:", 1, true) then line = label end
     end
     assertTrue(line ~= nil)
-    NS.State.editing.callout = id
-    NS.addon:OnSlashCommand("set callout.text Kick")   -- a real write: the seam's refresh, nothing by hand
+    NS.addon:OnSlashCommand("set callout.text " .. id .. " Kick")   -- a real write: the seam's refresh, nothing by hand
     -- red under: draw the live line without its Ed.Live refresher in settings/Callouts.lua, or drop
     -- Ed.Live's append to ctx.refreshers in settings/Editors.lua (the library's scalar refresh)
     assertTrue(line.text:find("Sends: /p Kick", 1, true) ~= nil, line.text)
@@ -164,7 +163,7 @@ test("callouts page: [review 2] the selected callout deleted elsewhere: the page
     local w = P.redraw("callouts")
     assertEqual(NS.State.editing.callout, first)
     assertEqual(P.find(w, "EditBox", "Name").text, "Alpha")
-    assertTrue(NS.SchemaRuntime.Set("callout.text", "x"))
+    P.find(w, "EditBox", "Text"):__fire("OnEnterPressed", "x")   -- the page's rows carry the healed id
     assertEqual(NS.db.profile.callouts[first].text, "x")
     assertNil(NS.db.profile.callouts[second])
 end)

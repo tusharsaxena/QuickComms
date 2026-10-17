@@ -122,7 +122,7 @@ Total.
 - prepare: a callout held by no group is dropped
 - prepare: is idempotent after a split
 
-### test_schema.lua (17)
+### test_schema.lua (18)
 
 - schema: every row validates against the defaults
 - schema: a stored row whose path has no default is counted, not passed vacuously
@@ -140,9 +140,10 @@ Total.
 - schema: degraded, a row-less path not in the list is still refused
 - schema: [fix wave] the Behavior rows that rebuild the pads resolve Settings.RebuildSurfaces when they run
 - schema: [audit QC-13] the panel's color codec is written out for the stored { r, g, b, a } shape
+- schema: a callout write that names no id is refused, even with callouts present
 - schema: [phase 3] a fresh profile has no row off its default; the member rows are not counted
 
-### test_slash.lua (14)
+### test_slash.lua (15)
 
 - slash: NS.COMMANDS is positional triples, every reserved verb present
 - slash: `diagnostics` has no alias of any kind (debug-logging-§14)
@@ -157,6 +158,7 @@ Total.
 - slash: [phase 3] `why` prints each built pad and why its groups show
 - slash: [phase 4] `why` covers the dials too
 - slash: [final 16] `why` with nothing built speaks of pads and dials
+- slash: a callout's rows take its id after the path; with none the write is refused and names the form
 - slash: [final 9] test and preview's help, and the Preview as row, speak of the dials too
 
 ### test_disabled.lua (21)
@@ -861,8 +863,8 @@ Total.
 | test_setup.lua | 26 |
 | test_database.lua | 7 |
 | test_profile.lua | 8 |
-| test_schema.lua | 17 |
-| test_slash.lua | 14 |
+| test_schema.lua | 18 |
+| test_slash.lua | 15 |
 | test_disabled.lua | 21 |
 | test_diagnostics.lua | 10 |
 | test_compat.lua | 12 |
@@ -903,4 +905,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **697** |
+| **Total** | **699** |

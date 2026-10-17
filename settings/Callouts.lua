@@ -11,7 +11,8 @@ local _, NS = ...
 --
 -- The band holds the picker and the create action and nothing else (options-ui-§14); the acts on
 -- the selected callout are the General tab's, which is first. Every field writes through the seam to
--- the selected callout (NS.State.editing.callout). A name change repaints the page (the picker's
+-- the selected callout, by its id (Ed.Bound: the seam reads no callout selection, settings/Schema.lua),
+-- and so does the page's Defaults. A name change repaints the page (the picker's
 -- label, settings/Editors.lua); any other field refreshes in place, the baked line and the token list
 -- with it (Ed.Live), so the byte count follows each committed write (Enter), not each keystroke.
 -- Built-in callouts are not listed: a group copies one when it takes it (spec P2), and the copy is
@@ -155,7 +156,7 @@ local function renderGeneral(ctx, rows)
         h.TextRow(ctx, NONE)
         return
     end
-    h.RenderRows(ctx, Ed.Scalar(rows), nil, nil, { noHeadings = true })
+    h.RenderRows(ctx, Ed.Bound(Ed.Scalar(rows), id), nil, nil, { noHeadings = true })
     h.RenderGrid(ctx, { Ed.ActionDropdown(L["Insert a token"],
         L["Add a token to the end of the text. Tokens are filled in when the callout is sent."],
         tokenEntries(id), function(token) C.InsertToken(id, token) end, ctx) })
@@ -221,8 +222,25 @@ local function render(ctx)
     })
 end
 
+-- The page's Defaults, on the callout it shows. The library's page walk names no member, and the seam
+-- addresses a callout by id alone, so the rows are reset by id inside the seam's bulk bracket, which
+-- keeps the icon (resetExempt holds while a bracket is open). The button is refused in combat before
+-- this runs (LibKa0s Options).
+local function restoreDefaults(ctx)
+    local id = Ed.Selected("callout")
+    if not (id and NS.db.profile.callouts[id]) then return end
+    local S = NS.SchemaRuntime
+    S.BulkBegin("reset", PAGE)
+    local ok, err = pcall(function()
+        for _, row in ipairs(Settings.RowsForPage(PAGE)) do S.ApplyDefault(row, id) end
+    end)
+    S.BulkEnd("reset", PAGE, 0, not ok and err or nil, { profileReset = false })
+    if not ok then error(err, 0) end
+    for _, fn in ipairs(ctx and ctx.refreshers or {}) do pcall(fn) end
+end
+
 Ed.RegisterPage(PAGE, L["Callouts"], "CalloutsPanel", render, {
     tooltip = L["Put the selected callout's channel back to Smart group. Its name, text and icon are kept."],
     -- One act (Library.Batch): the pads rebuild once, not once per row.
-    onClick = function(ctx) NS.Library.Batch(function() H().RestoreDefaults(PAGE, ctx) end) end,
+    onClick = function(ctx) NS.Library.Batch(function() restoreDefaults(ctx) end) end,
 })

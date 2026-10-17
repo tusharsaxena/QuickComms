@@ -179,6 +179,29 @@ test("schema: [audit QC-13] the panel's color codec is written out for the store
     assertEqual(c.r, 0.4); assertEqual(c.g, 0.5); assertEqual(c.b, 0.6); assertEqual(c.a, 1)
 end)
 
+test("schema: a callout write that names no id is refused, even with callouts present", function()
+    local NS = T.bootAddon()
+    local S, Lib = NS.SchemaRuntime, NS.Library
+    local a = Lib.CreateCallout({ name = "Alpha", text = "a", channel = "party" })
+    local b = Lib.CreateCallout({ name = "Beta", text = "b", channel = "party" })
+    NS.State.editing.callout = b   -- a selection left in session state is not read either
+    -- red under: put the Library.MemberIds fallback, or the NS.State.editing read, back in
+    -- Settings.EditingId for callouts (settings/Schema.lua)
+    assertEqual(NS.addon.Settings.EditingId("callout"), nil)
+    local ok, err = S.Set("callout.text", "lands nowhere")
+    assertFalse(ok)
+    assertEqual(err, "Name the callout id: /qc set callout.<field> <id> <value>.")
+    assertEqual(NS.db.profile.callouts[a].text, "a")
+    assertEqual(NS.db.profile.callouts[b].text, "b")
+    assertEqual(S.Get("callout.text"), nil, "a read with no id addresses nothing")
+    -- By id it still lands, and a gone id is named.
+    assertTrue(S.Set("callout.text", "by id", b))
+    assertEqual(NS.db.profile.callouts[b].text, "by id")
+    ok, err = S.Set("callout.text", "x", "c999")
+    assertFalse(ok)
+    assertEqual(err, "No callout with id c999.")
+end)
+
 test("schema: [phase 3] a fresh profile has no row off its default; the member rows are not counted", function()
     local NS = T.bootAddon()
     local Settings = NS.addon.Settings

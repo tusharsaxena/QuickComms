@@ -1,8 +1,8 @@
 -- tests/test_members.lua — the member rows (architecture-§5, settings/SchemaMembers.lua). Every field a
 -- player sets on a callout, a group, a Comms Pad or a built-in set goes through the one seam, addressed
 -- by an instance argument, by the member its editor page has selected (NS.State.editing), or by the
--- first member that page lists. Library keeps membership and announces every field write; the pads
--- pick a write up through Surfaces.Request, queued in combat.
+-- first member that page lists. A callout is addressed by its id alone. Library keeps membership and
+-- announces every field write; the pads pick a write up through Surfaces.Request, queued in combat.
 
 local T = _G.QUICKCOMMS_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -33,22 +33,23 @@ end)
 
 test("members: with no id the seam writes the selected member, else the first the page lists, else refuses", function()
     local NS, S, Lib = boot()
-    local ok, err = S.Set("callout.name", "Other")
+    for id in pairs(NS.db.profile.pads) do Lib.DeleteSurface("pad", id) end
+    local ok, err = S.Set("pad.name", "Other")
     assertFalse(ok)
-    assertTrue(tostring(err):find("No callout to edit", 1, true) ~= nil, tostring(err))
-    local b = Lib.CreateCallout({ name = "Beta", text = "b", channel = "party" })
-    local a = Lib.CreateCallout({ name = "Alpha", text = "a", channel = "party" })
+    assertTrue(tostring(err):find("No pad to edit", 1, true) ~= nil, tostring(err))
+    local b = Lib.CreateGroup({ name = "Beta" })
+    local a = Lib.CreateGroup({ name = "Alpha" })
     -- red under: drop the Library.MemberIds fallback from Settings.EditingId (nothing selected is a refusal)
-    assertTrue(S.Set("callout.text", "first"))
-    assertEqual(NS.db.profile.callouts[a].text, "first", "the first callout the page lists, by name")
-    NS.State.editing.callout = b
-    assertTrue(S.Set("callout.name", "Hero"))
-    assertEqual(NS.db.profile.callouts[b].name, "Hero")
-    assertEqual(S.Get("callout.name"), "Hero")
-    NS.State.editing.callout = "c999"   -- a stale selection falls back too; nothing lands on it
-    assertTrue(S.Set("callout.text", "again"))
-    assertEqual(NS.db.profile.callouts[a].text, "again")
-    assertNil(NS.db.profile.callouts.c999)
+    assertTrue(S.Set("group.name", "First"))
+    assertEqual(NS.db.profile.groups[a].name, "First", "the first group the page lists, by name")
+    NS.State.editing.group = b
+    assertTrue(S.Set("group.name", "Hero"))
+    assertEqual(NS.db.profile.groups[b].name, "Hero")
+    assertEqual(S.Get("group.name"), "Hero")
+    NS.State.editing.group = "g999"   -- a stale selection falls back too; nothing lands on it
+    assertTrue(S.Set("group.name", "Again"))
+    assertEqual(NS.db.profile.groups[a].name, "Again")
+    assertNil(NS.db.profile.groups.g999)
     assertNil(NS.addon.Settings.EditingId("builtin"), "a built-in overlay is never a fallback")
 end)
 
@@ -223,9 +224,8 @@ test("members: [review 1] a callout edited from the CLI in combat waits for comb
     cid = Lib.AddToGroup(gid, cid)
     Lib.AddGroupToSurface("pad", "p1", gid, 1)
     assertEqual(NS.Pad.ChipsFor("p1", cid)[1]:GetAttribute("macrotext"), "/p Incoming")
-    NS.State.editing.callout = cid
     combat(m, true)
-    NS.addon:OnSlashCommand("set callout.text Incoming {rt8}")
+    NS.addon:OnSlashCommand("set callout.text " .. cid .. " Incoming {rt8}")
     assertEqual(NS.db.profile.callouts[cid].text, "Incoming {rt8}", "the write lands in combat")
     assertEqual(#m.blocked, 0, "no protected call")
     assertEqual(NS.Pad.ChipsFor("p1", cid)[1]:GetAttribute("macrotext"), "/p Incoming", "the chip keeps its line")
@@ -317,9 +317,8 @@ test("members: [final 4] an off-screen pad.point is refused; `/qc reset` brings 
     assertTrue(NS.db.profile.pads.p1.point == false, "the default place")
     assertEqual(table.concat(NS.addon.Settings.Pads.Point("p1"), ","), "CENTER,CENTER,0,-150")
     local cid = NS.Library.CreateCallout({ name = "Lust", text = "Lust", channel = "party", icon = 136012 })
-    NS.State.editing.callout = cid
     -- red under: callout.icon has no default
-    NS.addon:OnSlashCommand("reset callout.icon")
+    NS.addon:OnSlashCommand("reset callout.icon " .. cid)
     assertTrue(NS.db.profile.callouts[cid].icon == false, "no icon")
     local gid = NS.Library.CreateGroup({ name = "Mine", icon = 136012 })
     NS.State.editing.group = gid
