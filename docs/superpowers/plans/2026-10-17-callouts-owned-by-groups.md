@@ -235,7 +235,7 @@ Record each task's commit hash in the ledger below as it lands. To resume, read 
 | 2 Seam/slash | done | 82914ad |
 | 3 Glyphs | done | cb1da26 |
 | 4 Popup | done | af1f4ee |
-| 5 Groups tab | pending | |
+| 5 Groups tab | done | 3988226 |
 | 6 Share | done | b386e33 |
 | 7 Docs | pending | |
 
