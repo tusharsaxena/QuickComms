@@ -347,7 +347,7 @@ test("library: CreateGroup takes a callout no group holds, and copies one a grou
     assertTrue(held[2] ~= loose and p.callouts[held[2]].name == "A", "a repeat is a copy")
     local g2 = Lib.CreateGroup({ name = "Two", callouts = { loose } })
     assertTrue(p.groups[g2].callouts[1] ~= loose, "a callout another group holds is copied")
-    assertEqual(Lib.OwnerOf(loose), g1)
+    assertEqual(p.groups[g1].callouts[1], loose, "the first group still holds the original")
 end)
 
 test("library: [phase 3] OfferGroup puts a user group first on every pad and dial, once", function()
@@ -866,12 +866,3 @@ test("library: CreateCalloutIn makes and places a callout in one act", function(
     assertEqual(p.nextId, nextId, "a refusal consumes no id")
 end)
 
-test("library: OwnerOf names the one group", function()
-    local _, Lib = boot()
-    local g = Lib.CreateGroup({ name = "Mine" })
-    local cid = Lib.CreateCalloutIn(g, { name = "A", text = "a", channel = "party" })
-    assertEqual(Lib.OwnerOf(cid), g)
-    assertNil(Lib.OwnerOf(Lib.CreateCallout({ name = "B", text = "b", channel = "party" })), "a callout in no group")
-    assertNil(Lib.OwnerOf("bi.mplus.lust"), "a built-in callout has no user owner")
-    assertNil(Lib.OwnerOf("c999"))
-end)

@@ -287,7 +287,7 @@ Total.
 - bake: a typed %t counts as live
 - bake: [phase 5] CleanText is the sanitizer short of the escape; Sanitize is CleanText, then the escape
 
-### test_share.lua (27)
+### test_share.lua (28)
 
 - share: a string is !QC1! then printable text, and decodes back to the same payload
 - share: [review 1] a pasted string may wrap and carry spaces; a cut-short one is damaged and imports nothing
@@ -314,6 +314,7 @@ Total.
 - share: [review] a name that starts with / is a name, never sent: it travels and round-trips
 - share: [review] a nested key in a When or a field passes the sanitizer and the byte budget
 - share import: groups sharing a callout each get their own copy
+- share import: the report counts a shared callout once per group, as the import makes it
 - share import: a callout in no imported group is not imported
 - share: Collect takes a callout only inside its group; a picked callout alone is nothing
 
@@ -343,7 +344,7 @@ Total.
 - game ids: every battleground set matches only battleground maps, and no map is two sets'
 - game ids: the shipped dungeons are Mythic+ dungeons and the shipped raids are raids
 
-### test_library.lua (61)
+### test_library.lua (60)
 
 - library: Prepare seeds one pad and one dial with every built-in, once
 - library: callouts validate on create
@@ -405,7 +406,6 @@ Total.
 - library: removing a callout from its group deletes it
 - library: deleting a group deletes its callouts
 - library: CreateCalloutIn makes and places a callout in one act
-- library: OwnerOf names the one group
 
 ### test_members.lua (23)
 
@@ -450,7 +450,7 @@ Total.
 - editors: a row with edit shows the edit glyph and fires it
 - editors: Snapshot is the preview's while Preview as is on
 
-### test_callout_popup.lua (17)
+### test_callout_popup.lua (19)
 
 - popup: Add opens blank with Smart group
 - popup: edit opens filled in
@@ -460,6 +460,8 @@ Total.
 - popup: Save on edit writes only the changed fields through the seam
 - popup: Cancel on edit writes nothing
 - popup: Save with an empty name stays open and writes nothing
+- popup: Save takes the text typed into a box without Enter
+- popup: a pick, a token or a seam write keeps the text typed without Enter
 - popup: the callout deleted under an open popup closes it; a late Save writes nothing
 - popup: closing the settings window cancels
 - popup: Escape and a profile change cancel
@@ -485,7 +487,7 @@ Total.
 - when: [final 6] a typed character takes the client's case; the Resolver matches one in any case
 - when: [final 2, 11] ResolveValue maps a typed value onto the token or id its row stores, or refuses it
 
-### test_page_groups.lua (23)
+### test_page_groups.lua (24)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists user groups by name, then the built-ins, active ones dotted
@@ -493,6 +495,7 @@ Total.
 - groups page: Callouts drags to reorder, removes, and copies a built-in callout in (P2)
 - groups page: Add callout opens the popup for this group
 - groups page: Reuse lists callouts as <group>: <callout> and built-ins as <set>: <callout>
+- groups page: Reuse numbers same-named copies so each entry is unambiguous
 - groups page: Reuse + Add puts an independent copy at the end
 - groups page: picking in Reuse alone adds nothing
 - groups page: the edit glyph opens the popup filled in
@@ -888,16 +891,16 @@ Total.
 | test_tokens.lua | 8 |
 | test_channels.lua | 8 |
 | test_bake.lua | 12 |
-| test_share.lua | 27 |
+| test_share.lua | 28 |
 | test_resolver.lua | 8 |
 | test_builtins.lua | 7 |
 | test_gameids.lua | 2 |
-| test_library.lua | 61 |
+| test_library.lua | 60 |
 | test_members.lua | 23 |
 | test_editors.lua | 14 |
-| test_callout_popup.lua | 17 |
+| test_callout_popup.lua | 19 |
 | test_groups_when.lua | 12 |
-| test_page_groups.lua | 23 |
+| test_page_groups.lua | 24 |
 | test_page_pads.lua | 12 |
 | test_page_dials.lua | 17 |
 | test_page_share.lua | 14 |
@@ -920,4 +923,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **714** |
+| **Total** | **717** |

@@ -166,6 +166,17 @@ test("groups page: Reuse lists callouts as <group>: <callout> and built-ins as <
     assertEqual(dd.list[lust], "Other: Lust")
 end)
 
+test("groups page: Reuse numbers same-named copies so each entry is unambiguous", function()
+    local NS = open()
+    local gid, kick = withCallouts(NS)
+    local copy = NS.Library.AddToGroup(gid, kick)
+    local labels = {}
+    for _, e in ipairs(NS.addon.Settings.Groups.ReusableCallouts(gid)) do labels[e.id] = e.label end
+    -- red under: drop the repeat numbering in G.ReusableCallouts
+    assertEqual(labels[kick], "Mine: Kick")
+    assertEqual(labels[copy], "Mine: Kick (2)")
+end)
+
 test("groups page: Reuse + Add puts an independent copy at the end", function()
     local NS, _, P = open()
     local gid, kick, _, lust = withCallouts(NS)

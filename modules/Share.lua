@@ -505,7 +505,14 @@ function SH.ReportLines(res)
     if type(res) ~= "table" or not res.ok then
         return { SH.REASON_TEXT[type(res) == "table" and res.reason or "empty"] or tostring(res and res.reason) }
     end
-    local counts = SH.CountText(res)
+    -- A callout two of the string's groups list arrives once per group (Library.Import), so the
+    -- preview counts the groups' references to carried callouts, as the import's tally will.
+    local carried, refs = {}, 0
+    for _, e in ipairs(res.callouts) do carried[e.id] = true end
+    for _, g in ipairs(res.groups) do
+        for _, cid in ipairs(g.callouts or {}) do if carried[cid] then refs = refs + 1 end end
+    end
+    local counts = SH.CountText(setmetatable({ callouts = refs }, { __index = res }))
     local out = { counts ~= "" and L["Ready to import: %s."]:format(counts) or L["Nothing in this string can be imported."] }
     for _, r in ipairs(res.refused) do
         out[#out + 1] = L["Left out the %s '%s': %s."]:format(KIND_NAME[r.kind] or r.kind, literal(tostring(r.name)),

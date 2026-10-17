@@ -440,6 +440,14 @@ test("share import: groups sharing a callout each get their own copy", function(
     assertEqual(tally.callouts, 2)
 end)
 
+test("share import: the report counts a shared callout once per group, as the import makes it", function()
+    local _, SH = boot()
+    local res = SH.Validate(bundle({ callouts = { c1 = KICK },
+        groups = { g1 = { name = "One", callouts = { "c1" } }, g2 = { name = "Two", callouts = { "c1" } } } }))
+    -- red under: ReportLines counting res.callouts (one per id) instead of the groups' references
+    assertEqual(SH.ReportLines(res)[1], "Ready to import: 2 callouts, 2 groups.")
+end)
+
 test("share import: a callout in no imported group is not imported", function()
     local NS, SH = boot()
     local res = SH.Validate(bundle({ callouts = { c1 = KICK, c2 = { name = "Loose", text = "x", channel = "party" } },

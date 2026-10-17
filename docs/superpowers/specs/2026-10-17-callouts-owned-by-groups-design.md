@@ -140,9 +140,8 @@ id. Builder calls:
 ## Standard check
 
 - No rule of the Ka0s standard governs a modal editor inside the settings panel. It stays within the
-  panel's rules: raw AceGUI, writes through the single seam, combat-gated like the panel (a Save in
-  combat is a data write and is allowed, the same as `Ed.ConfirmDelete`'s accept; it rebuilds pads at
-  combat end).
+  panel's rules: raw AceGUI, writes through the single seam, combat-gated like the panel. *Built:* the popup's ctx is a panel ctx, so the library's
+  combat cover lies over it and refuses Save and every draft write; Escape still cancels.
 - library-stack-§8 leaves the settings panel out of scope for catalog marks; the glyph buttons follow
   Consumable Master's precedent (catalog mark first, with the Blizzard mark where the catalog has none).
 - options-ui-§14's banner rule covers pages; the popup is not a page, so it carries no banner.

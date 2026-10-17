@@ -125,19 +125,6 @@ local function held(calloutId)
     return false
 end
 
---- The one user group that holds a callout, or nil (a built-in callout, a callout in no group or no
---- such callout). Should a hand-edited profile hold it twice before Prepare splits it, the first group
---- by id answers, the one Prepare leaves holding the original.
---- @return string|nil gid
-function Lib.OwnerOf(calloutId)
-    local ids = {}
-    for gid, g in pairs(P().groups) do
-        if indexOf(g.callouts or {}, calloutId) then ids[#ids + 1] = gid end
-    end
-    table.sort(ids)
-    return ids[1]
-end
-
 --- The live member a member row addresses (settings/SchemaMembers.lua): a user callout, group, pad
 --- or dial, or the overlay of a built-in set (a node's is its battleground's). A built-in group
 --- answers its merged copy, so its fields read; the group rows refuse to write one. Nil without a

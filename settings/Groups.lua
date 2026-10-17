@@ -141,6 +141,13 @@ function G.ReusableCallouts()
         if la ~= lb then return la < lb end
         return a.id < b.id
     end)
+    -- A same-named copy (Reuse keeps the name) would list twice alike: number the repeats.
+    local seen = {}
+    for _, e in ipairs(out) do
+        local key = e.label:lower()
+        seen[key] = (seen[key] or 0) + 1
+        if seen[key] > 1 then e.label = L["%s (%d)"]:format(e.label, seen[key]) end
+    end
     local function addSet(gidB, prefix)
         local def = NS.BuiltIns.groups[gidB]
         for _, cid in ipairs(def.callouts or {}) do
