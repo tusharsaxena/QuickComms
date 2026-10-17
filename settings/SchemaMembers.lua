@@ -27,6 +27,8 @@ local WHY = {
     badText   = L["Callout text must be text."],
     badChannel = L["That is not a channel Quick Comms sends on."],
     badIcon   = L["An icon is a texture id or a texture path."],
+    badIconColor = L["An icon color is six hex digits (rrggbb), or empty for none."],
+    notGlyph  = L["Only a LibKa0s glyph takes a color: choose one as the icon first."],
     badPoint  = L["A position is two anchor points and two numbers."],
     offScreen = L["That position is too far off the screen."],
     badWhen   = L["That condition is not one Quick Comms knows."],
@@ -82,6 +84,20 @@ local function iconValue(v)
 end
 
 local function isText(v) return type(v) == "string", "badText" end
+
+-- callout.iconColor, group.iconColor: none, or six hex digits (Library.IconColorValue reads typed
+-- text) on a member whose icon is a LibKa0s glyph. With no member addressed the value passes, so the
+-- seam's missing-member refusal is the reason the player reads.
+local function iconColorCheck(kind)
+    return function(v, id)
+        local c = Lib.IconColorValue(v)
+        local ok, code = Lib.ValidIconColor(c)
+        if not ok then return false, code end
+        local m = Lib.Member(kind, id)
+        if c and m and not Lib.IsGlyph(m.icon) then return false, "notGlyph" end
+        return true
+    end
+end
 
 -- What a When row takes, for the refusal of a value it can never match (localization-§4).
 local function whenTakes(row)
@@ -165,6 +181,14 @@ local ROWS = {
       page = "callouts", group = GENERAL, label = L["Icon"],
       desc = L["A texture id (a number) or a texture path (a LibKa0s icon by its path). Leave it empty for the default icon. Press Enter to apply."],
       normalize = iconValue, validate = check(function(v) return v == false or type(v) == "string", "badIcon" end) },
+    -- A glyph's color. Its default is false, none (white), so `/qc reset callout.iconColor <id>` clears
+    -- it; the page's Defaults keeps it with the icon (settings/Schema.lua resetExempt). Only a glyph
+    -- takes one, and an icon write that is no glyph clears it (the onChange loop below). The icon
+    -- browser's swatch draws it, never a text box.
+    { path = "callout.iconColor", instance = "callout", type = "string", default = false,
+      page = "callouts", group = GENERAL, label = L["Icon color"],
+      desc = L["The color a LibKa0s glyph icon is drawn in: six hex digits (rrggbb). Leave it empty for white."],
+      normalize = Lib.IconColorValue, validate = check(iconColorCheck("callout")) },
 
     -- Groups page (spec §13.1, §13.2).
     { path = "group.name", instance = "group", type = "string", dialogControl = "EditBox",
@@ -175,6 +199,11 @@ local ROWS = {
       page = "groups", group = GENERAL, label = L["Icon"],
       desc = L["A texture id (a number) or a texture path (a LibKa0s icon by its path). Leave it empty for the default icon. Press Enter to apply."],
       normalize = iconValue, validate = userGroup(function(v) return v == false or type(v) == "string", "badIcon" end) },
+    -- As callout.iconColor. The General tab leaves it out of its rows (settings/Groups.lua).
+    { path = "group.iconColor", instance = "group", type = "string", default = false,
+      page = "groups", group = GENERAL, label = L["Icon color"],
+      desc = L["The color a LibKa0s glyph icon is drawn in: six hex digits (rrggbb). Leave it empty for white."],
+      normalize = Lib.IconColorValue, validate = userGroup(iconColorCheck("group")) },
     { path = "group.enabled", instance = "group", type = "bool", default = T.group.enabled,
       page = "groups", group = GENERAL, label = L["Enabled"],
       desc = L["Show this group wherever its When matches. Off keeps the group and its place on every pad."],
@@ -374,10 +403,23 @@ end
 for _, row in ipairs(lookRows()) do ROWS[#ROWS + 1] = row end
 
 -- Every member row's reaction: Library.Touch announces the write (LIBRARY_CHANGED, the pads' rebuild),
--- naming the row's path as the field.
+-- naming the row's path as the field. A color stays only on a glyph: an icon write that leaves a
+-- colored member without one clears its color through the seam in the same act (Library.Batch, one
+-- LIBRARY_CHANGED).
+local ICON_ROWS = { ["callout.icon"] = true, ["group.icon"] = true }
 for _, row in ipairs(ROWS) do
     local kind, path = row.instance, row.path
     row.onChange = function(_, id) Lib.Touch(kind, id, path) end
+    if ICON_ROWS[path] then
+        row.onChange = function(value, id)
+            local m = Lib.Member(kind, id)
+            if not (m and m.iconColor and not Lib.IsGlyph(value)) then return Lib.Touch(kind, id, path) end
+            Lib.Batch(function()
+                NS.SchemaRuntime.Set(kind .. ".iconColor", false, id)
+                Lib.Touch(kind, id, path)
+            end)
+        end
+    end
 end
 
 NS.SchemaRuntime.AddRows(ROWS)

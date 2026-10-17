@@ -201,9 +201,10 @@ local function renderGeneral(ctx, rows)
         }, nil)
         return
     end
+    -- The icon's color is drawn with the icon (the browser's swatch), not as a text box.
     local mine = {}
     for _, row in ipairs(Ed.Scalar(rows)) do
-        if row.path ~= "state.previewAs" then mine[#mine + 1] = row end
+        if row.path ~= "state.previewAs" and row.path ~= "group.iconColor" then mine[#mine + 1] = row end
     end
     h.RenderRows(ctx, mine, nil, nil, { noHeadings = true })
     Ed.IconPicker(ctx, "group.icon", gid)

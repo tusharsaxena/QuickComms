@@ -8,8 +8,9 @@ local addonName, NS = ...
 --              Insert a token, Choose an icon, What it sends here, then Save and Cancel, and under
 --              them the line that names a field Save refused
 --
--- THE DRAFT is a plain copy of the callout's four fields (blank for Add: an empty name and text,
--- Smart group, no icon), and every control writes it, never the profile. The preview and the token
+-- THE DRAFT is a plain copy of the callout's four fields and its icon's glyph color (blank for Add:
+-- an empty name and text, Smart group, no icon, no color), and every control writes it, never the
+-- profile. An icon that is no glyph drops the draft's color, as the stored callout would. The preview and the token
 -- list bake the draft, so they follow each edit before anything is saved. A text box commits to the
 -- draft on Enter, and what a box shows that Enter did not commit is taken into the draft before any
 -- other write and by Save, so a typed name is never lost to a pick or to a click on Save. Save checks
@@ -41,7 +42,10 @@ local L = NS.L
 Settings.CalloutPopup = Settings.CalloutPopup or {}
 local Pop = Settings.CalloutPopup
 
+-- The member rows the popup draws, in order, and every field the draft carries (the icon's color
+-- is drawn with the icon, not as a row of its own).
 local FIELDS = { "name", "text", "channel", "icon" }
+local DRAFT = { "name", "text", "channel", "icon", "iconColor" }
 local WIDTH, HEIGHT = 560, 640   -- HEIGHT until the first fit
 local TEMPLATE = "SettingsFrameTemplate"
 -- Where the page sits in the window: inside the template's background (its Bg is inset 7,-18 /
@@ -76,8 +80,9 @@ local function H() return Settings.Helpers end
 
 local function copyFields(c)
     local out = {}
-    for _, f in ipairs(FIELDS) do out[f] = c[f] end
+    for _, f in ipairs(DRAFT) do out[f] = c[f] end
     if out.icon == false then out.icon = nil end
+    if out.iconColor == false then out.iconColor = nil end
     return out
 end
 
@@ -94,8 +99,9 @@ end
 
 local function put(field, value, row)
     if row and type(row.normalize) == "function" then value = row.normalize(value) end
-    if field == "icon" and value == false then value = nil end
+    if (field == "icon" or field == "iconColor") and value == false then value = nil end
     draft[field] = value
+    if field == "icon" and not NS.Library.IsGlyph(value) then draft.iconColor = nil end
 end
 
 -- Take into the draft what the player typed in a box and did not commit with Enter: a box whose
@@ -156,6 +162,9 @@ local function check(d)
     if not ok then return "channel", channel.label, why end
     if not NS.Library.ValidIcon(d.icon) then
         return "icon", Ed.Row("callout.icon").label, L["An icon is a texture id or a texture path."]
+    end
+    if not NS.Library.ValidIconColor(d.iconColor) then
+        return "iconColor", Ed.Row("callout.iconColor").label, L["An icon color is six hex digits (rrggbb), or empty for none."]
     end
     return nil
 end
@@ -386,7 +395,7 @@ function Pop.Open(groupId, calloutId)
         draft = copyFields(baseline)
     else
         baseline = nil
-        draft = { name = "", text = "", channel = "smartGroup", icon = nil }
+        draft = { name = "", text = "", channel = "smartGroup", icon = nil, iconColor = nil }
     end
     local title = calloutId and L["Edit callout"] or L["New callout"]
     ctx.panel.title:SetText(title)
@@ -399,9 +408,9 @@ function Pop.Open(groupId, calloutId)
 end
 
 -- The value the seam row takes for a draft field: an icon as text (the row's normalize turns a
--- texture id back into a number) or false for none.
+-- texture id back into a number), and an icon or its color false for none.
 local function seamValue(field, value)
-    if field ~= "icon" then return value end
+    if field ~= "icon" and field ~= "iconColor" then return value end
     if value == nil then return false end
     return tostring(value)
 end
@@ -426,7 +435,8 @@ function Pop.Save()
     if cid then
         local S, id, d, base = NS.SchemaRuntime, cid, draft, baseline
         ok, reason = NS.Library.Batch(function()
-            for _, f in ipairs(FIELDS) do
+            -- DRAFT's order: the icon lands before its color, which the color row checks against.
+            for _, f in ipairs(DRAFT) do
                 if d[f] ~= base[f] then
                     local done, err, w = S.Set("callout." .. f, seamValue(f, d[f]), id)
                     if not done then return false, tostring(w or err) end

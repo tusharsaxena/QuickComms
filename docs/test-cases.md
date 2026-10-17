@@ -288,7 +288,7 @@ Total.
 - bake: a typed %t counts as live
 - bake: [phase 5] CleanText is the sanitizer short of the escape; Sanitize is CleanText, then the escape
 
-### test_share.lua (28)
+### test_share.lua (30)
 
 - share: a string is !QC1! then printable text, and decodes back to the same payload
 - share: [review 1] a pasted string may wrap and carry spaces; a cut-short one is damaged and imports nothing
@@ -318,6 +318,8 @@ Total.
 - share import: the report counts a shared callout once per group, as the import makes it
 - share import: a callout in no imported group is not imported
 - share: Collect takes a callout only inside its group; a picked callout alone is nothing
+- share: [icons] a glyph's color travels; an old string arrives untinted; a bad color is dropped and counted
+- share: [icons] an export carries each member's color, and the string round-trips it
 
 ### test_resolver.lua (8)
 
@@ -345,7 +347,7 @@ Total.
 - game ids: every battleground set matches only battleground maps, and no map is two sets'
 - game ids: the shipped dungeons are Mythic+ dungeons and the shipped raids are raids
 
-### test_library.lua (60)
+### test_library.lua (65)
 
 - library: Prepare seeds one pad and one dial with every built-in, once
 - library: callouts validate on create
@@ -407,8 +409,13 @@ Total.
 - library: removing a callout from its group deletes it
 - library: deleting a group deletes its callouts
 - library: CreateCalloutIn makes and places a callout in one act
+- library: [icons] IsGlyph names a catalog icon by its path; ValidIconColor takes none or rrggbb
+- library: [icons] a new member keeps a glyph's color, drops it on any other icon, refuses a bad one
+- library: [icons] a copy keeps the color: AddToGroup, DuplicateGroup and a held callout's copy
+- library: [icons] Prepare drops a malformed stored color and keeps a good one
+- library: [icons] an import carries a glyph's color into the fresh copies
 
-### test_members.lua (23)
+### test_members.lua (28)
 
 - members: a callout field is written through the seam by instance id, and announced once
 - members: with no id the seam writes the selected member, else the first the page lists, else refuses
@@ -433,6 +440,11 @@ Total.
 - members: [phase 4] an off-screen dial.point is refused; `/qc reset` brings the dial back and frees its key
 - members: [phase 5] a When's key level prints as it types back in: one level, open below, open above
 - members: [phase 5] a pad's Look rows are composed member rows: checked, clamped, announced
+- members: [icons] a glyph's color is written through the seam by id, typed text read as rrggbb
+- members: [icons] a malformed color, a color on no glyph and a built-in's color are refused
+- members: [icons] an icon that is no glyph clears the color in the same act; a glyph keeps it
+- members: [icons] Library.SetIcon writes the icon and its color as one act
+- members: [icons] `/qc reset` clears a color; a group page's Defaults keeps it with the icon
 
 ### test_editors.lua (14)
 
@@ -451,7 +463,7 @@ Total.
 - editors: a row with edit shows the edit glyph and fires it
 - editors: Snapshot is the preview's while Preview as is on
 
-### test_callout_popup.lua (25)
+### test_callout_popup.lua (28)
 
 - popup: Add opens blank with Smart group
 - popup: edit opens filled in
@@ -478,6 +490,9 @@ Total.
 - settings: there is no Callouts page
 - callout helpers: [phase 3] the token picker offers {group1}-{group8} only when the channel can resolve to Raid
 - callout helpers: PreviewLines says what a callout sends here, or why it sends nothing
+- popup: [icons] the draft carries the icon's color; Save writes icon and color in one act
+- popup: [icons] an icon typed in that is no glyph drops the draft's color, and Save clears it
+- popup: [icons] Add saves a glyph with its color; a malformed color stays open and names the field
 
 ### test_eui_skin.lua (8)
 
@@ -909,14 +924,14 @@ Total.
 | test_tokens.lua | 8 |
 | test_channels.lua | 8 |
 | test_bake.lua | 12 |
-| test_share.lua | 28 |
+| test_share.lua | 30 |
 | test_resolver.lua | 8 |
 | test_builtins.lua | 7 |
 | test_gameids.lua | 2 |
-| test_library.lua | 60 |
-| test_members.lua | 23 |
+| test_library.lua | 65 |
+| test_members.lua | 28 |
 | test_editors.lua | 14 |
-| test_callout_popup.lua | 25 |
+| test_callout_popup.lua | 28 |
 | test_eui_skin.lua | 8 |
 | test_groups_when.lua | 12 |
 | test_page_groups.lua | 24 |
@@ -942,4 +957,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **732** |
+| **Total** | **747** |

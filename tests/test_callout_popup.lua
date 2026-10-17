@@ -606,3 +606,59 @@ test("callout helpers: PreviewLines says what a callout sends here, or why it se
     assertFalse(lines("Stack", "raid"):find("Locked: you are not in a raid.", 1, true) ~= nil)
     assertTrue(lines("Stack", "raid"):find("Previewing: Raid", 1, true) ~= nil)
 end)
+
+-- ── a glyph's color (icon browser spec, "Data model") ───────────────────────────────────────
+
+test("popup: [icons] the draft carries the icon's color; Save writes icon and color in one act", function()
+    local NS, _, P, Pop = open()
+    local gid, cid = withKick(NS)
+    local star = NS.Icon("star")
+    NS.Library.SetIcon("callout", cid, star, "ff0000")
+    P.during(function() Pop.Open(gid, cid) end)
+    -- red under: copyFields reading FIELDS (the rows drawn), not DRAFT
+    assertEqual(Pop.Draft().iconColor, "ff0000")
+    Pop.Draft().icon, Pop.Draft().iconColor = NS.Icon("heart"), "00ff00"
+    local writes = seamWrites(NS)
+    local seen = libraryChanges(NS)
+    assertTrue(Pop.Save())
+    assertEqual(#writes, 2)
+    assertEqual(writes[1][1] .. "," .. writes[2][1], "callout.icon,callout.iconColor", "the icon lands first")
+    assertEqual(seen.n, 1, "one act")
+    assertEqual(NS.db.profile.callouts[cid].iconColor, "00ff00")
+end)
+
+test("popup: [icons] an icon typed in that is no glyph drops the draft's color, and Save clears it", function()
+    local NS, _, P, Pop = open()
+    local gid, cid = withKick(NS)
+    NS.Library.SetIcon("callout", cid, NS.Icon("star"), "ff0000")
+    local w = P.during(function() Pop.Open(gid, cid) end)
+    P.find(w, "EditBox", "Icon"):__fire("OnEnterPressed", "136012")
+    -- red under: drop the glyph check from put in settings/CalloutPopup.lua
+    assertNil(Pop.Draft().iconColor)
+    assertTrue(Pop.Save())
+    local c = NS.db.profile.callouts[cid]
+    assertEqual(c.icon, 136012)
+    assertTrue(not c.iconColor)
+end)
+
+test("popup: [icons] Add saves a glyph with its color; a malformed color stays open and names the field", function()
+    local NS, _, P, Pop = open()
+    local gid = withKick(NS)
+    local p = NS.db.profile
+    local w = P.during(function() Pop.Open(gid) end)
+    assertNil(Pop.Draft().iconColor)
+    P.find(w, "EditBox", "Name"):__fire("OnEnterPressed", "Mark")
+    Pop.Draft().icon, Pop.Draft().iconColor = NS.Icon("star"), "zz"
+    local before = count(p.callouts)
+    local ok, why = Pop.Save()
+    assertFalse(ok)
+    assertEqual(why, "iconColor")
+    assertTrue(Pop.IsOpen(), "the popup stays open")
+    assertEqual(count(p.callouts), before, "nothing written")
+    -- red under: drop the iconColor check from check in settings/CalloutPopup.lua
+    assertTrue(labelWith(P, w, "Icon color: An icon color is six hex digits (rrggbb), or empty for none.") ~= nil)
+    Pop.Draft().iconColor = "0000ff"
+    assertTrue(Pop.Save())
+    local list = p.groups[gid].callouts
+    assertEqual(p.callouts[list[#list]].iconColor, "0000ff")
+end)

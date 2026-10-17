@@ -223,6 +223,20 @@ local function cleanIcon(v, res)
     return s
 end
 
+-- A glyph's color: six hex digits as Library stores them (Library.IconColorValue reads "#FF8000"), or
+-- nil for none. A color that is not one is a bad field, not a bad member: it is dropped and counted
+-- with the ignored fields, and the member arrives untinted. Library keeps a color only on a glyph.
+local function cleanIconColor(v, res)
+    if v == nil or v == false then return nil end
+    if type(v) == "string" and #v <= 16 then
+        local c = NS.Library.IconColorValue(v)
+        if c == false then return nil end
+        if NS.Library.ValidIconColor(c) then return c end
+    end
+    res.ignored = res.ignored + 1
+    return nil
+end
+
 local function calloutEntry(_, id, c, res)
     if type(c) ~= "table" then return nil, "damaged" end
     local name, why = cleanName(c.name, res)
@@ -234,7 +248,8 @@ local function calloutEntry(_, id, c, res)
     local icon
     icon, why = cleanIcon(c.icon, res)
     if why then return nil, why end
-    return { id = id, fields = { name = name, text = text, channel = c.channel, icon = icon } }
+    return { id = id, fields = { name = name, text = text, channel = c.channel, icon = icon,
+        iconColor = cleanIconColor(c.iconColor, res) } }
 end
 
 -- The ids in `list` that `ok(id)` accepts, each once, in order; every other entry (one that is not a
@@ -262,8 +277,8 @@ local function groupEntry(_, id, g, res)
     local when = cleanValue(g.when == nil and {} or g.when, 1, {}, res)
     if when == nil or not NS.Library.ValidWhen(when) then return nil, "badWhen" end
     local refs = keepRefs(g.callouts, function(cid) return res.known[cid] == "callout" end, res)
-    return { id = id, callouts = refs, fields = { name = name, icon = icon, when = when,
-        openInto = g.openInto == true, enabled = g.enabled ~= false } }
+    return { id = id, callouts = refs, fields = { name = name, icon = icon, iconColor = cleanIconColor(g.iconColor, res),
+        when = when, openInto = g.openInto == true, enabled = g.enabled ~= false } }
 end
 
 -- The member rows whose value travels with a pad or a dial: every one of its kind but its name and
@@ -590,11 +605,11 @@ end
 
 local function exportMember(kind, id, m)
     if kind == "callout" then
-        return { name = m.name, text = m.text, channel = m.channel, icon = m.icon or nil }
+        return { name = m.name, text = m.text, channel = m.channel, icon = m.icon or nil, iconColor = m.iconColor or nil }
     end
     if kind == "group" then
-        return { name = m.name, icon = m.icon or nil, callouts = copy(m.callouts), when = copy(m.when),
-            openInto = m.openInto == true, enabled = m.enabled ~= false }
+        return { name = m.name, icon = m.icon or nil, iconColor = m.iconColor or nil, callouts = copy(m.callouts),
+            when = copy(m.when), openInto = m.openInto == true, enabled = m.enabled ~= false }
     end
     return { name = m.name, enabled = m.enabled ~= false, groups = copy(m.groups), fields = SH.FieldsOf(kind, id) }
 end
