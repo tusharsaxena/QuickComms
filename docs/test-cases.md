@@ -450,7 +450,7 @@ Total.
 - editors: a row with edit shows the edit glyph and fires it
 - editors: Snapshot is the preview's while Preview as is on
 
-### test_callout_popup.lua (19)
+### test_callout_popup.lua (21)
 
 - popup: Add opens blank with Smart group
 - popup: edit opens filled in
@@ -467,7 +467,9 @@ Total.
 - popup: Escape and a profile change cancel
 - popup: Insert a token appends to the draft's text
 - popup: Choose an icon writes the draft's icon
-- popup: its close control is the shared close mark
+- popup: the window is Blizzard's settings-window template, and its own close X cancels
+- popup: without the template it keeps the dialog look and the shared close mark
+- popup: no scrollbar; the window's height follows the laid-out body
 - settings: there is no Callouts page
 - callout helpers: [phase 3] the token picker offers {group1}-{group8} only when the channel can resolve to Raid
 - callout helpers: PreviewLines says what a callout sends here, or why it sends nothing
@@ -898,7 +900,7 @@ Total.
 | test_library.lua | 60 |
 | test_members.lua | 23 |
 | test_editors.lua | 14 |
-| test_callout_popup.lua | 19 |
+| test_callout_popup.lua | 21 |
 | test_groups_when.lua | 12 |
 | test_page_groups.lua | 24 |
 | test_page_pads.lua | 12 |
@@ -923,4 +925,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **717** |
+| **Total** | **719** |

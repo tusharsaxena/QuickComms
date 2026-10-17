@@ -54,6 +54,8 @@ read_globals = {
   -- core/Compat.lua: the Comms Dial page's warning when a dial's key is also a WoW binding, and the
   -- key bound to a dial's Open Comms Dial entry in WoW's menu.
   "GetBindingAction", "GetBindingKey",
+  -- settings/CalloutPopup.lua: whether the client has Blizzard's settings-window template.
+  "C_XMLUtil",
 }
 
 -- The harness global, declared for tests/ only so no shipped file can reach for it. The

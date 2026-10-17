@@ -32,6 +32,8 @@
 --   bindingKeys         [command] = the key the player bound to a command in WoW's menu (GetBindingKey)
 --   cursor              { x, y }: GetCursorPosition's answer
 --   __named[name]       every named frame (a binding clicks a frame by its name)
+--   missingTemplates    [template] = true makes CreateFrame raise on it, as a client without it does;
+--                  a SettingsFrameTemplate frame gets the template's Bg, NineSlice.Text and ClosePanelButton
 --   __pressKey(key)     a key press: a snippet's binding first, then an override binding; false if unbound
 --   __runSnippet(h, params, body, ...)  run restricted source in header h's environment
 -- A frame made from a SecureHandler template runs its `_onclick` attribute as a snippet on a click;
@@ -421,10 +423,37 @@ local function build()
         end
     end
 
+    -- ── Blizzard's settings-window template (settings/CalloutPopup.lua's window) ─────────────────
+    -- SettingsFrameTemplate's parentKeys, as Blizzard_SettingsPanelTemplates.xml declares them: Bg
+    -- (FlatPanelBackgroundTemplate), NineSlice with its Text (the window title, GameFontNormal), and
+    -- ClosePanelButton (UIPanelCloseButtonDefaultAnchors, whose own click hides the window). The
+    -- title records what it is set to (`text`), and Bg answers its alpha (GetAlpha). A template named in
+    -- `missingTemplates` raises, as CreateFrame does in a client without it.
+    M.missingTemplates = {}
+    local function dressSettingsFrame(f)
+        local nine = M.CreateFrame("Frame", nil, f)
+        local title = {}
+        function title.SetText(t, v) t.text = v; return t end
+        function title.GetText(t) return t.text end
+        nine.Text = title
+        f.NineSlice = nine
+        local bg = M.CreateFrame("Frame", nil, f)
+        function bg.SetAlpha(b, v) b.__alpha = v; return b end
+        function bg.GetAlpha(b) return b.__alpha or 1 end
+        f.Bg = bg
+        local close = M.CreateFrame("Button", nil, f)
+        close:SetScript("OnClick", function() f:Hide() end)
+        f.ClosePanelButton = close
+    end
+
     local secureFrames = {}
     local baseCreateFrame = M.CreateFrame
     M.CreateFrame = function(frameType, name, parent, template)
+        if type(template) == "string" and M.missingTemplates[template] then
+            error("CreateFrame: Couldn't find inherited node \"" .. template .. "\"", 2)
+        end
         local f = baseCreateFrame(frameType, name, parent, template)
+        if template == "SettingsFrameTemplate" then dressSettingsFrame(f) end
         if ours(f) then dress(f) end
         if type(name) == "string" then M.__named[name] = f end
         if type(template) == "string" and template:find("Secure", 1, true) then

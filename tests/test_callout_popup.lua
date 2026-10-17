@@ -384,23 +384,89 @@ test("popup: Choose an icon writes the draft's icon", function()
     assertEqual(byPath[NS.Icon("speech-bubble")], "Speech bubble", "a catalog mark carries a localized label")
 end)
 
-test("popup: its close control is the shared close mark", function()
-    local NS, _, _, Pop = open()
+-- Record every CreateFrame template from here on (nil for none); the frame is still made.
+local function templates(m)
+    local seen = {}
+    local create = m.CreateFrame
+    m.CreateFrame = function(frameType, name, parent, template, ...)
+        seen[#seen + 1] = template or false
+        return create(frameType, name, parent, template, ...)
+    end
+    return seen
+end
+
+local function listed(list, value)
+    for _, v in ipairs(list) do if v == value then return true end end
+    return false
+end
+
+-- Count the NS.MakeCloseButton calls from here on, as { parent, onClick }.
+local function closeMarks(NS)
     local made = {}
     local make = NS.MakeCloseButton
     NS.MakeCloseButton = function(parent, onClick)
         made[#made + 1] = { parent = parent, onClick = onClick }
         return make(parent, onClick)
     end
+    return made
+end
+
+test("popup: the window is Blizzard's settings-window template, and its own close X cancels", function()
+    local NS, m, _, Pop = open()
+    local made, seen = closeMarks(NS), templates(m)
     local gid = NS.Library.CreateGroup({ name = "Mine" })
     Pop.Open(gid)
-    -- red under: build the popup's close control by hand instead of through NS.MakeCloseButton
+    -- red under: build the window as a plain frame with the dialog backdrop
+    assertEqual(Pop.frame.__template, "SettingsFrameTemplate")
+    assertEqual(Pop.frame.NineSlice.Text.text, "Ka0s Quick Comms", "the window title is the addon's")
+    assertFalse(listed(seen, "BackdropTemplate"), "no UI-DialogBox-Border backdrop over the template")
+    assertEqual(#made, 0, "the template brings its own close (a documented deviation)")
+    assertEqual(Pop.frame.__parent, Pop.catcher, "above the click-catcher")
+    Pop.frame.ClosePanelButton:__fire("OnClick")
+    assertFalse(Pop.IsOpen(), "the close X cancels")
+    assertFalse(Pop.catcher:IsShown())
+    Pop.Open(gid)
+    assertTrue(Pop.frame:IsShown(), "a closed window opens again")
+    assertEqual(#made, 0, "one popup, built once")
+end)
+
+test("popup: without the template it keeps the dialog look and the shared close mark", function()
+    local NS, m, _, Pop = open()
+    m.missingTemplates.SettingsFrameTemplate = true
+    local made, seen = closeMarks(NS), templates(m)
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    -- red under: create the window from the template unguarded (Open raises)
+    assertTrue(Pop.Open(gid))
+    assertTrue(listed(seen, "BackdropTemplate"), "the dialog edge over a dark fill")
     assertEqual(#made, 1)
-    assertTrue(made[1].parent == Pop.frame)
     made[1].onClick()
     assertFalse(Pop.IsOpen(), "the close mark cancels")
     Pop.Open(gid)
-    assertEqual(#made, 1, "one popup, built once")
+    Pop.frame:Hide()
+    Pop.frame:__fire("OnHide")   -- what Escape does to a special frame
+    assertFalse(Pop.IsOpen(), "Escape still cancels")
+end)
+
+test("popup: no scrollbar; the window's height follows the laid-out body", function()
+    local NS, _, P, Pop = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    local w = P.during(function() Pop.Open(gid) end)
+    -- red under: draw the body into the library's ScrollFrame (EnsureScroll)
+    assertNil(P.find(w, "ScrollFrame"), "no scroll frame, no scrollbar")
+    assertEqual(Pop.body.type, "SimpleGroup")
+    assertTrue(P.find(w, "EditBox", "Name") ~= nil, "the rows are drawn into the plain container")
+    local heights = {}
+    rawset(Pop.frame, "SetHeight", function(_, v) heights[#heights + 1] = v end)
+    Pop.body.frame:__setGeom(520, 300)
+    local laid = Pop.body.layoutCount or 0
+    P.find(w, "EditBox", "Text"):__fire("OnEnterPressed", "Pull")
+    assertTrue((Pop.body.layoutCount or 0) > laid, "laid out again before it is measured")
+    local first = heights[#heights]
+    assertTrue(first ~= nil and first > 300, "the body plus the chrome around it")
+    -- the error line grows the body: the window follows it
+    Pop.body.frame:__setGeom(520, 340)
+    assertFalse((Pop.Save()))
+    assertEqual(heights[#heights] - first, 40)
 end)
 
 test("settings: there is no Callouts page", function()

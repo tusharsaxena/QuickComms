@@ -266,7 +266,11 @@ is registered once, as a store, in the Tier 3 table; the documents under it get 
 The single home for a ratified deviation from the Ka0s WoW Addon Standard (documentation-§3). A
 deviation not in this table is not ratified.
 
-None.
+| Rule | What differs | Why | Decided | Re-check trigger |
+|---|---|---|---|---|
+| standalone-windows: one wrapper, and every close control goes through it | The callout popup closes with the X of Blizzard's `SettingsFrameTemplate` (`ClosePanelButton`), not with `NS.MakeCloseButton`; its click is a Cancel. The wrapper stays in `core/CoreSetup.lua`, because the same section requires it, and the popup's fallback window (a client without the template) still draws the shared mark through it, so `grep -rn 'MakeCloseButton(' --include='*.lua' \| grep -v '/libs/'` returns the wrapper and that one caller | The popup is built from Blizzard's `SettingsFrameTemplate` to match the settings window exactly, and that template brings its own close | owner, 2026-10-17 | The standard ruling on Blizzard-template windows, or the popup leaving the template |
+| standalone-windows: the Ka0s window edge | The callout popup's window is Blizzard's `SettingsFrameTemplate` (its flat background, its `ButtonFrameTemplateNoPortrait` border and the window title "Ka0s Quick Comms"), not the edge `Core.ApplySkin` draws; the fallback window keeps Blizzard's dialog edge, the look the popup had before | The popup is a modal over Blizzard's settings window and is to look exactly like it (owner request) | owner, 2026-10-17 | The standard ruling on Blizzard-template windows, or the popup leaving the template |
+| options-ui-§10: always-visible scrollbar | The callout popup's body has no scroll frame and no scrollbar: it is laid out in a plain AceGUI container and the window's height follows it. The settings pages keep their always-visible scrollbar | The popup sizes itself to its content (owner request); the rule is written for a page's body, and the popup is not a page | owner, 2026-10-17 | The standard ruling on popups drawn with the options library, or the popup's content outgrowing the screen |
 
 ### Files over the 1500-line cap
 
