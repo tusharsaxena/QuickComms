@@ -271,6 +271,102 @@ test("icon browser: the grid is virtualized: a fixed set of cells re-dressed as 
     assertTrue(cellFor(B, 100001 + 40 * B.COLS).selected:IsShown())
 end)
 
+test("icon browser: the wheel over the scrollbar scrolls the grid too", function()
+    local _, m, _, B = boot()
+    local spells = {}
+    for i = 1, 500 do spells[i] = 200000 + i end
+    m.macroIcons, m.macroItemIcons = spells, {}
+    openOn(B, nil)
+    B.SetTab("game")
+    local slider = B.Widgets().slider
+    -- red under: enable the wheel on the grid alone (the scrollbar is its sibling, not its child)
+    assertTrue(slider.__scripts.OnMouseWheel ~= nil, "the scrollbar takes the wheel")
+    slider:__fire("OnMouseWheel", -2)
+    assertEqual(B.State().offset, 2)
+    slider:__fire("OnMouseWheel", 1)
+    assertEqual(B.State().offset, 1)
+end)
+
+test("icon browser: a filtered game list holds each icon once (the loose lists overlap the full ones)", function()
+    local _, m, _, B, Src = boot()
+    m.macroIcons, m.macroItemIcons = { 1, 2 }, { 4 }
+    m.GetLooseMacroIcons = function(t) t[#t + 1] = 9; t[#t + 1] = 1 end
+    -- red under: hand the Spells filter source("spells") as it is
+    assertEqual(table.concat(Src.GameIcons("spells"), ","), "9,1,2")
+    assertEqual(table.concat(Src.GameIcons("all"), ","), "9,1,2,4")
+    openOn(B, nil)
+    B.SetTab("game")
+    B.SetFilter("spells")
+    assertEqual(B.State().count, 3, "the count is of distinct icons")
+    m.GetLooseMacroIcons = nil
+end)
+
+-- A stand-in for Blizzard's ColorPickerFrame (its OnHide runs when a shown frame hides), and a click
+-- on `swatch` that opens it, as AceGUI's does.
+local function picker(m)
+    local f = m.CreateFrame("Frame")
+    local hide = f.Hide
+    rawset(f, "Hide", function(self)
+        local was = self:IsShown()
+        hide(self)
+        if was then self:__fire("OnHide") end
+        return self
+    end)
+    f:Hide()
+    m.ColorPickerFrame = f
+    return f
+end
+
+local function openPicker(f, swatch)
+    f:Hide()
+    f:Show()
+    swatch.frame:__fire("OnClick")
+end
+
+test("icon browser: the color picker its swatch opened closes with the browser, and only that one", function()
+    local _, m, _, B = boot()
+    local f = picker(m)
+    openOn(B, nil)
+    B.SetTab("glyphs")
+    openPicker(f, B.Widgets().swatch)
+    B.Cancel()
+    -- red under: leave ColorPickerFrame up in close()
+    assertFalse(f:IsShown(), "the picker goes with the browser")
+    -- a picker the swatch did not open (another addon's) is left alone
+    openOn(B, nil)
+    f:Show()
+    B.Cancel()
+    assertTrue(f:IsShown())
+    f:Hide()
+    -- the picker closed by its own OK/Cancel first: nothing is left to hide later
+    openOn(B, nil)
+    B.SetTab("glyphs")
+    openPicker(f, B.Widgets().swatch)
+    f:Hide()
+    f:Show()                 -- someone else's, now
+    B.Cancel()
+    assertTrue(f:IsShown(), "the OnHide forgot the swatch")
+    m.ColorPickerFrame = nil
+end)
+
+test("icon browser: a chooser's swatch released with the picker up hides it and lets the swatch go", function()
+    local NS, m, P = boot()
+    local f = picker(m)
+    local gid = NS.Library.CreateGroup({ name = "Mine", icon = NS.Icon("star"), iconColor = "ff0000" })
+    local AceGUI = NS.addon.Settings.Helpers.AceGUI
+    local Ed = NS.addon.Settings.Editors
+    local Pop = NS.addon.Settings.CalloutPopup
+    local w = P.during(function() Pop.Open(gid) end)
+    Pop.SetIcon(NS.Icon("star"), "ff8000")
+    local swatch = P.find(w, "ColorPicker", "Icon color")
+    openPicker(f, swatch)
+    AceGUI:Release(swatch)
+    -- red under: no OnRelease on the chooser's swatch
+    assertFalse(f:IsShown(), "the picker goes with its swatch")
+    assertFalse(Ed.PickerTracked(swatch), "the pooled swatch is no longer ours")
+    m.ColorPickerFrame = nil
+end)
+
 -- ── the glyph color ─────────────────────────────────────────────────────────────────────────
 
 test("icon browser: the swatch tints every glyph; Choose hands a glyph its color, white as none", function()

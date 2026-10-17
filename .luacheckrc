@@ -46,6 +46,8 @@ read_globals = {
   "C_CVar", "GetCVarBool", "UnitGUID", "UnitName",
   -- modules/Pad_Render.lua and core/Compat.lua: the chip tooltip and the chat colors.
   "GameTooltip", "ChatTypeInfo",
+  -- settings/Editors.lua: the color picker a swatch of ours opened goes with the swatch.
+  "ColorPickerFrame",
   -- modules/Pad.lua: the sent-chip sound.
   "PlaySound", "SOUNDKIT",
   -- modules/Dial_Render.lua: the pointer follows the cursor.

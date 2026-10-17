@@ -23,7 +23,8 @@ local addonName, NS = ...
 -- STACKING. The catcher and the window are in the FULLSCREEN strata, above the popup and its catcher
 -- (DIALOG), so the browser is modal to whatever opened it. The swatch is AceGUI's ColorPicker, which
 -- raises Blizzard's ColorPickerFrame to FULLSCREEN_DIALOG, above the browser; the filter's pull-out
--- is there too. ESCAPE hides every shown special frame, so while the browser is open the opener's
+-- is there too. The picker is not modal, so one the swatch opened is hidden when the browser closes
+-- (Ed.ReleasePicker). ESCAPE hides every shown special frame, so while the browser is open the opener's
 -- own special frame (the popup's, `lift`) is taken out of UISpecialFrames and put back on the next
 -- frame after the browser closes (never while the client walks the list): Escape closes the browser
 -- only.
@@ -284,6 +285,9 @@ local function buildGrid()
     track:SetAllPoints(slider)
     track:SetColorTexture(0, 0, 0, 0.35)
     slider:SetScript("OnValueChanged", function(_, v) if not drawing then setOffset(v) end end)
+    -- The scrollbar sits beside the grid, not in it: it scrolls on the wheel too.
+    slider:EnableMouseWheel(true)
+    slider:SetScript("OnMouseWheel", function(_, delta) setOffset(offset - delta) end)
 end
 
 -- An AceGUI widget placed by hand in the area, kept for the browser's life (never released).
@@ -310,6 +314,7 @@ local function buildToolbar(AceGUI)
     local function pick(_, _, r, g, b) B.SetColor(NS.Library.IconColorFrom(r, g, b) or nil) end
     swatch:SetCallback("OnValueChanged", pick)
     swatch:SetCallback("OnValueConfirmed", pick)
+    Settings.Editors.TrackPicker(swatch)
     H().AttachTooltip(swatch, L["Icon color"], L["The color a glyph is drawn in. White is none."])
     place(swatch, "TOPLEFT", 0, 0)
     count = area:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
@@ -363,6 +368,7 @@ local function close()
     request = nil
     putBack()
     if GameTooltip then GameTooltip:Hide() end
+    if swatch then Settings.Editors.ReleasePicker(swatch) end   -- the picker goes with the browser
     if ctx then ctx.panel:Hide() end
     if B.frame then B.frame:Hide() end
     if B.catcher then B.catcher:Hide() end

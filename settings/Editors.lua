@@ -252,6 +252,47 @@ local function swatchWrite(spec, r, g, b)
     if picked ~= (current or nil) then spec.setColor(picked) end
 end
 
+-- THE COLOR PICKER OUTLIVES ITS SWATCH. Blizzard's ColorPickerFrame is not modal, and AceGUI's
+-- ColorPicker binds it to the widget that opened it. Left up when that widget goes (the icon
+-- browser closing, the popup closing, a page redraw giving the row back to AceGUI's shared pool),
+-- it would drive the next owner of the swatch, another addon's included. So a swatch of ours is
+-- tracked (Ed.TrackPicker) and, when it goes, hides the picker if it opened it (Ed.ReleasePicker).
+-- AceGUI pools the frame, so its OnClick is hooked once and answers only while it is ours.
+local swatchOf = setmetatable({}, { __mode = "k" })   -- swatch frame -> our widget, while ours
+local hooked = setmetatable({}, { __mode = "k" })
+local pickerOwner                                     -- the swatch of ours that opened the picker
+
+--- Track `swatch` (an AceGUI ColorPicker): from now on, a click that opens the picker on it is noted.
+function Ed.TrackPicker(swatch)
+    local frame = swatch.frame
+    swatchOf[frame] = swatch
+    if hooked[frame] or not frame.HookScript then return end
+    hooked[frame] = true
+    frame:HookScript("OnClick", function(self)
+        local w, picker = swatchOf[self], ColorPickerFrame
+        if not (w and picker and picker:IsShown()) then return end
+        pickerOwner = w
+        if not hooked[picker] and picker.HookScript then
+            hooked[picker] = true
+            picker:HookScript("OnHide", function() pickerOwner = nil end)
+        end
+    end)
+end
+
+--- Whether `swatch` is still tracked (its picks are still ours to write).
+function Ed.PickerTracked(swatch)
+    return swatchOf[swatch.frame] == swatch
+end
+
+--- Hide the picker if `swatch` opened it; `untrack` also lets the swatch go (it is being released).
+function Ed.ReleasePicker(swatch, untrack)
+    if untrack then swatchOf[swatch.frame] = nil end
+    if pickerOwner ~= swatch then return end
+    pickerOwner = nil
+    local picker = ColorPickerFrame
+    if picker and picker:IsShown() then picker:Hide() end
+end
+
 --- The chooser, as one row. `spec` = { get() -> icon, color; choose(icon, color) (the browser's
 --- Choose); setColor(color|nil) (the swatch); owner, lift, valid (handed to the browser) }.
 function Ed.IconChooser(ctx, spec)
@@ -273,9 +314,13 @@ function Ed.IconChooser(ctx, spec)
         swatch:SetLabel(L["Icon color"])
         swatch:SetHasAlpha(false)
         swatch:SetRelativeWidth(0.4)
-        local function pick(_, _, r, g, b) swatchWrite(spec, r, g, b) end
+        local function pick(_, _, r, g, b)
+            if Ed.PickerTracked(swatch) then swatchWrite(spec, r, g, b) end
+        end
         swatch:SetCallback("OnValueChanged", pick)
         swatch:SetCallback("OnValueConfirmed", pick)
+        Ed.TrackPicker(swatch)
+        swatch:SetCallback("OnRelease", function() Ed.ReleasePicker(swatch, true) end)
         h.AttachTooltip(swatch, L["Icon color"], L["The color a LibKa0s glyph is drawn in. Only a glyph takes a color; white is none."])
         local function paint()
             local icon, color = spec.get()

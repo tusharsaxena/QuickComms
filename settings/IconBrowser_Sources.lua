@@ -131,21 +131,22 @@ end
 --- once. Second value: false while the client's list has not loaded (it answered with none).
 --- @return table icons, boolean loaded
 function Src.GameIcons(filter)
-    if filter == "spells" or filter == "items" then
-        local list = source(filter)
-        return list, #list > 0
-    end
-    if cache.all then return cache.all, true end
-    local out, seen = {}, {}
-    for _, kind in ipairs({ "spells", "items" }) do
+    local kinds = { "spells", "items" }
+    if filter == "spells" or filter == "items" then kinds = { filter } else filter = "all" end
+    local key = "once:" .. filter
+    if cache[key] then return cache[key], true end
+    -- The loose lists and the full ones overlap, and so may the two kinds: each icon once.
+    local out, seen, loaded = {}, {}, true
+    for _, kind in ipairs(kinds) do
         for _, v in ipairs(source(kind)) do
             if not seen[v] then
                 seen[v] = true
                 out[#out + 1] = v
             end
         end
+        if not cache[kind] then loaded = false end
     end
-    if cache.spells and cache.items then cache.all = out end
+    if loaded then cache[key] = out end
     return out, #out > 0
 end
 
