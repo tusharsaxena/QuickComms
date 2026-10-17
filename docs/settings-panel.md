@@ -7,7 +7,6 @@ eagerly at `OnEnable`; each page's body builds on its first show (options-ui-§1
 |---|---|
 | Ka0s Quick Comms (landing) | The logo, the TOC notes line and the slash command list, drawn by the library's `BuildLandingPage` |
 | General | `Master controls`, `Behavior` |
-| Callouts | One callout: `General`, `Used by` |
 | Groups | One group or built-in set: `General`, `Callouts`, `When`, `Preview` |
 | Comms Pad | One pad: `General`, `Groups`, `Layout`, `Look` |
 | Comms Dial | One dial: `General`, `Groups`, `Wheel`, `Binding`, `Preview` |
@@ -38,24 +37,6 @@ the CLI, the launcher and the host verbs trigger (`Settings.REACTIONS` in `setti
 The header's Defaults button and Reset all settings both open the confirmation popup; the global
 reset is a profile reset and never touches the minimap button (options-ui-§12, launcher-§3).
 
-## Callouts
-
-`settings/Callouts.lua`, one callout at a time.
-
-```
-band     [ Callout v (picker)        ][ New callout ]
-strip    [ General ][ Used by ]
-General  Name, Text, Channel, Icon (the member rows, settings/SchemaMembers.lua), Insert a
-         token, Choose an icon (settings/Editors.lua's picker), then what it sends here (the
-         baked line and its bytes, or why it sends nothing, and any lock), then Duplicate and
-         Delete
-Used by  every group that holds it, each a link to the Groups page
-```
-
-The token picker offers `{group1}`…`{group8}` only when the channel can resolve to Raid. The byte
-count follows each committed write (Enter in the Text box), not each keystroke. Built-in callouts
-are not listed: a group copies one when it takes it, and the copy is edited here.
-
 ## Groups
 
 `settings/Groups.lua`, one group at a time, a user group or a built-in set.
@@ -65,9 +46,10 @@ band      [ Group v (picker; a green dot marks a group active now) ][ New group 
 strip     [ General ][ Callouts ][ When ][ Preview ]
 General   Preview as (page-wide, first), then Name, Icon, Enabled, Open the dial on this group,
           Choose an icon (settings/Editors.lua's picker), then Duplicate and Delete. A built-in: what it is, its Enabled row, and Customize.
-Callouts  a user group's callouts as a drag-to-reorder list with Remove, then Add a callout (a
-          built-in callout is copied in first). A built-in: a Show checkbox per callout, the
-          hidden-callouts editor.
+Callouts  a user group's: Add callout (the callout popup, blank), Reuse existing callout with
+          Add, then its callouts as a drag-to-reorder list, each row the handle, the icon, the
+          name and channel, an edit glyph and a remove glyph. A built-in: a Show checkbox per
+          callout, the hidden-callouts editor.
 When      settings/Groups_When.lua
 Preview   the active-now line, then every callout baked for the current or previewed situation
 ```
@@ -83,6 +65,54 @@ goes back to the stored value; a refused Name (any field the library draws) prin
 A built-in group is read-only: its group rows refuse every write,
 so the page draws only its overlay and offers Customize.
 
+**Callouts** (a user group): the group owns its callouts. Each user callout sits in exactly one
+user group, so there is no Callouts page and no shared callout.
+
+- **Add callout** opens the callout popup with blank fields (an empty name and text, Smart group,
+  no icon). Save puts the new callout at the end of the group; Cancel makes nothing.
+- **Reuse existing callout** is a dropdown of every callout the player could copy: the user
+  callouts as `<group>: <callout>` (this group's own included), then the built-in ones as
+  `<set>: <callout>` or `<set>: <child>: <callout>`. Picking alone adds nothing; **Add** puts an
+  independent copy at the end of this group (`Library.AddToGroup` always copies), so editing the
+  copy leaves the original as it is.
+- **The list** is the drag-to-reorder list (`Ed.ReorderRows`). The edit glyph (the catalog's `edit`
+  mark) opens the popup filled in; the remove glyph (the `transmog-icon-remove` atlas) asks first,
+  then deletes the callout, since nothing else holds it. Both carry a tooltip.
+- Delete (General) deletes the group's callouts with it, and Duplicate gives the copy copies of them.
+
+## The callout popup
+
+`settings/CalloutPopup.lua`: one callout of one user group, new or listed. It is not a page (no
+sidebar entry, no banner, no Defaults); it is drawn with the pages' own building blocks (the
+library's panel factory for the header and its gold rule, the Helpers' rows and red button pair,
+`Ed.IconPicker`), over a dark backdrop, with the one close-button wrapper (`NS.MakeCloseButton`).
+
+```
+header   New callout / Edit callout                                          (close mark)
+body     Name, Text, Channel, Icon (the callout.* member rows' labels and help), Insert a
+         token, Choose an icon, What it sends here (the baked line and its bytes, or why it
+         sends nothing, and any lock), then Save and Cancel, and under them the line that names
+         a field Save refused
+```
+
+- **The draft.** The popup edits a plain copy of the callout's four fields (blank for Add). Every
+  control writes the draft, never the profile, and the token list and What it sends here bake the
+  draft, so both follow each edit before anything is saved. A text box commits to the draft on Enter
+  (or its Okay button), as on every page; what a box shows that Enter did not commit is taken into
+  the draft before any other draft write, before a seam write's refresh and by Save, so clicking
+  Save commits it and a pick or a token never wipes it. The token picker offers
+  `{group1}`…`{group8}` only when the draft's channel can resolve to Raid.
+- **Save** checks the draft with the member rows' own validators (the name, the text and its
+  length, the channel, the icon). A field that fails keeps the popup open and names the field;
+  otherwise Save writes one act (`Library.Batch`): for a listed callout, each field that differs
+  from the copy taken when the popup opened, through the seam by id; for Add,
+  `Library.CreateCalloutIn` at the end of the group. Then the popup closes.
+- **Cancel**, the close mark and Escape drop the draft and write nothing; so do the settings window
+  hiding, a profile change, the stand-down, and the callout or its group ceasing to exist (a `/qc`
+  write or an import under it), after which a late Save writes nothing.
+- **Fully modal:** a full-screen click-catcher in the `DIALOG` strata covers the settings window, so
+  the page underneath cannot change while a draft is open. Only one popup exists.
+
 ## Comms Pad
 
 `settings/Pads.lua`, one pad at a time.
@@ -91,8 +121,8 @@ so the page draws only its overlay and offers Customize.
 band     [ Pad v (picker) ][ New pad ]
 strip    [ General ][ Groups ][ Layout ][ Look ]
 General  Preview as (page-wide, first), Name, Enabled, then Unlock (or Lock) pads and Delete pad
-Groups   Show groups as, then the pad's groups as a drag-to-reorder list with Remove (its
-         priority order), then Add a group
+Groups   Show groups as, then the pad's groups as a drag-to-reorder list with a remove glyph
+         (its priority order; it takes the group off the pad and asks nothing), then Add a group
 Layout   orientation, grid columns, growth, chip style, scale, spacing, chip width, then
          Position: X and Y and Reset this pad's position
 Look     visibility, fade and faded alpha; then Font (face, size, color with Use class color,
@@ -113,8 +143,8 @@ band     [ Dial v (picker) ][ New dial ]
 strip    [ General ][ Groups ][ Wheel ][ Binding ][ Preview ]
 General  Preview as (page-wide, first), Name, Enabled, then Delete dial
 Groups   Show groups as (Categories or Flat), the depth-3 warning (spec §11.3), then the dial's
-         groups as a drag-to-reorder list with Remove (its priority order, spec §7), then Add a
-         group
+         groups as a drag-to-reorder list with a remove glyph (its priority order, spec §7; it
+         takes the group off the dial and asks nothing), then Add a group
 Wheel    wedges per ring, open at, then Position: X and Y and Reset this dial's position
 Binding  how Relaxed mode works, the key capture, and the key's line (what it opens, or the WoW
          binding it shares, spec §9.4 / §18)
@@ -156,8 +186,8 @@ dial on, in one act (`Library.Batch`); the name, groups, key and position are ke
 
 ```
 strip     [ Export ][ Import ][ Built-in ]
-Export    what travels; a checkbox per callout, group, Comms Pad and Comms Dial, under a heading
-          per kind; what the string will hold; Export (the string opens, selected, in the copy
+Export    what travels; a checkbox per group, Comms Pad and Comms Dial, under a heading per
+          kind (a callout travels inside its group); what the string will hold; Export (the string opens, selected, in the copy
           window) and Clear
 Import    a paste box (its Accept checks the string); the report (spec §15 step 5); Import and
           Clear

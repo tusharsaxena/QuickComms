@@ -2,9 +2,9 @@ local _, NS = ...
 -- settings/Share.lua — the Share page (design spec §13.1, §15, §12.2): three tabs.
 --
 --     strip     [ Export ][ Import ][ Built-in ]
---     Export    what travels; a checkbox per callout, group, Comms Pad and Comms Dial, under a heading
---               per kind; what the string will hold; Export (the string opens, selected, in the copy
---               window) and Clear
+--     Export    what travels; a checkbox per group, Comms Pad and Comms Dial, under a heading per kind
+--               (a callout travels inside its group, so it has none); what the string will hold;
+--               Export (the string opens, selected, in the copy window) and Clear
 --     Import    a paste box (its Accept checks the string); the report (spec §15 step 5); Import and
 --               Clear
 --     Built-in  one line per shipped set: an Enabled checkbox named after the set, then Customize (or
@@ -37,7 +37,6 @@ local function H() return Settings.Helpers end
 -- ── Export ──────────────────────────────────────────────────────────────────────────────────
 
 local KINDS = {
-    { kind = "callout", title = L["Callouts"], set = "callouts" },
     { kind = "group", title = L["Groups"], set = "groups" },
     { kind = "pad", title = L["Comms Pads"], set = "pads" },
     { kind = "dial", title = L["Comms Dials"], set = "dials" },
@@ -56,7 +55,7 @@ function SH.Picked(kind, id)
 end
 
 function SH.ClearPicks()
-    NS.State.share.pick = { callout = {}, group = {}, pad = {}, dial = {} }
+    NS.State.share.pick = { group = {}, pad = {}, dial = {} }
     Ed.RequestRefresh()
 end
 

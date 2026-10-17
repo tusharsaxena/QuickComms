@@ -113,7 +113,7 @@ Kit.run{
         "test_library",
         "test_members",
         "test_editors",
-        "test_page_callouts",
+        "test_callout_popup",
         "test_groups_when",
         "test_page_groups",
         "test_page_pads",

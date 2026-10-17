@@ -1,6 +1,6 @@
 local addonName, NS = ...
--- settings/Editors.lua — what the editor pages share (design spec §13.1): Callouts, Groups, Comms Pad
--- and Share each register here, keep their selection here and repaint through here.
+-- settings/Editors.lua — what the editor pages share (design spec §13.1): Groups, Comms Pad, Comms
+-- Dial and Share each register here, keep their selection here and repaint through here.
 --
 -- THE SELECTION is session state (NS.State.editing[kind], never saved): the member each page edits.
 -- The band's picker sets it (options-ui-§14: the banner is the ONLY picker), and the member rows
@@ -149,7 +149,7 @@ local function onProfileChanged()
     for kind in pairs(State.editing) do State.editing[kind] = nil end
     for gid in pairs(State.whenOpen or {}) do State.whenOpen[gid] = nil end
     -- The Share page's ticks and checked string name the old profile's ids.
-    State.share.pick = { callout = {}, group = {}, pad = {}, dial = {} }
+    State.share.pick = { group = {}, pad = {}, dial = {} }
     State.share.import = nil
     Ed.RequestRefresh()
 end
@@ -199,7 +199,7 @@ function Ed.Scalar(rows)
     return out
 end
 
---- A dropdown that acts on the choice at once ("Add a callout", "Insert a token"), as a RenderGrid item.
+--- A dropdown that acts on the choice at once ("Add a group", "Insert a token"), as a RenderGrid item.
 --- `entries` is a list, or a function; with `ctx`, a function is re-read in place (Ed.Live), so a
 --- list that depends on a field (the token list on the callout's channel) follows it without a repaint.
 function Ed.ActionDropdown(label, tooltip, entries, onPick, ctx)
@@ -289,9 +289,11 @@ function Ed.SetIcon(rowPath, id, path)
 end
 
 --- The picker: a "Choose an icon" heading over a grid of the palette's icons; a click on one is the
---- member's icon.
-function Ed.IconPicker(ctx, rowPath, id)
+--- member's icon. `target` is the member row (callout.icon, group.icon) written for `id` through the
+--- seam, or a function that takes the picked path instead (the callout popup's draft).
+function Ed.IconPicker(ctx, target, id)
     local h = H()
+    local pick = type(target) == "function" and target or function(path) Ed.SetIcon(target, id, path) end
     h.Section(ctx, L["Choose an icon"])
     h.RenderGrid(ctx, { { wide = true, make = function(_, parent)
         local AceGUI = h.AceGUI
@@ -304,7 +306,7 @@ function Ed.IconPicker(ctx, rowPath, id)
             icon:SetImageSize(24, 24)
             icon:SetWidth(36)
             icon:SetHeight(36)
-            icon:SetCallback("OnClick", function() Ed.SetIcon(rowPath, id, e.path) end)
+            icon:SetCallback("OnClick", function() pick(e.path) end)
             h.AttachTooltip(icon, e.label, L["Click to use this icon."])
             grid:AddChild(icon)
         end
@@ -334,9 +336,38 @@ local function newReorder(pageKey, onMove)
     return r
 end
 
---- One uniform row per entry ({ id, label, remove = fn|nil }): the library's handle in the gutter at
---- the left, the label, and Remove at the right. With `onMove(from, to)` the rows drag; the list's one
---- write and one repaint are the host's (Library, then LIBRARY_CHANGED).
+-- The row's glyph buttons (Consumable Master's precedent: the catalog's mark first, Blizzard's where
+-- the catalog has none): a 22px clickable icon with a tooltip, tagged in `userdata.qcGlyph` so a test
+-- finds it. `atlas` dresses the Icon's own texture after it is made; `texture` is a plain path.
+local GLYPH, GLYPH_W, ROW_ICON = 22, 32, 18
+local GLYPHS = {
+    edit   = { texture = function() return NS.Icon("edit") end, title = function() return L["Edit"] end },
+    remove = { atlas = "transmog-icon-remove", title = function() return L["Remove"] end },
+}
+
+local function addGlyph(h, into, kind, onClick, tooltip)
+    local spec = GLYPHS[kind]
+    local g = h.AceGUI:Create("Icon")
+    g:SetImageSize(GLYPH, GLYPH)
+    if spec.atlas then
+        g.image:SetAtlas(spec.atlas)
+    else
+        g:SetImage(spec.texture())
+    end
+    g:SetWidth(GLYPH_W)
+    g:SetHeight(Ed.ROW_H)
+    g.userdata.qcGlyph = kind
+    g:SetCallback("OnClick", function() onClick() end)
+    h.AttachTooltip(g, spec.title(), tooltip)
+    into:AddChild(g)
+    return g
+end
+
+--- One uniform row per entry ({ id, label, icon = texture|nil, edit = fn|nil, editTooltip = string|nil,
+--- remove = fn|nil, removeTooltip = string|nil }): the library's handle in the gutter at the left, the
+--- entry's icon (when set) and its label, then the edit and remove glyphs at the right. With
+--- `onMove(from, to)` the rows drag; the list's one write and one repaint are the host's (Library,
+--- then LIBRARY_CHANGED).
 function Ed.ReorderRows(ctx, pageKey, entries, onMove)
     local h = H()
     local scroll = h.EnsureScroll(ctx)
@@ -352,17 +383,18 @@ function Ed.ReorderRows(ctx, pageKey, entries, onMove)
             gutter:SetText("")
             gutter:SetWidth(Ed.HANDLE_W)
             into:AddChild(gutter)
+            -- The label takes what the glyphs leave; AceGUI's Label draws its image left of its text.
+            local glyphs = (e.edit and 1 or 0) + (e.remove and 1 or 0)
             local label = AceGUI:Create("Label")
             label:SetText(e.label)
-            label:SetRelativeWidth(e.remove and 0.62 or 0.85)
-            into:AddChild(label)
-            if e.remove then
-                local b = AceGUI:Create("Button")
-                b:SetText(L["Remove"])
-                b:SetRelativeWidth(0.25)
-                b:SetCallback("OnClick", function() e.remove() end)
-                into:AddChild(b)
+            if e.icon then
+                label:SetImage(e.icon)
+                label:SetImageSize(ROW_ICON, ROW_ICON)
             end
+            label:SetRelativeWidth(0.85 - 0.06 * glyphs)
+            into:AddChild(label)
+            if e.edit then addGlyph(h, into, "edit", e.edit, e.editTooltip) end
+            if e.remove then addGlyph(h, into, "remove", e.remove, e.removeTooltip) end
             built[#built + 1] = { group = into, entry = e }
             return true
         end }
@@ -414,10 +446,10 @@ local DELETE_POPUP = "QUICKCOMMS_DELETE_MEMBER"
 
 --- Ask before deleting `name`; `onAccept` runs only when the player accepts. It is the popup's data,
 --- so a popup accepted after combat started still runs it: a delete is a data write, and the pads
---- pick it up at combat end.
-function Ed.ConfirmDelete(name, onAccept)
+--- pick it up at combat end. `text` (optional, with one %s for the name) says more than the plain
+--- question, as a group's delete does about its callouts; each ask sets the text afresh.
+function Ed.ConfirmDelete(name, onAccept, text)
     StaticPopupDialogs[DELETE_POPUP] = StaticPopupDialogs[DELETE_POPUP] or {
-        text         = L["Delete '%s'? This cannot be undone."],
         button1      = YES or "Yes",
         button2      = NO or "No",
         timeout      = 0,
@@ -426,10 +458,11 @@ function Ed.ConfirmDelete(name, onAccept)
         preferredIndex = 3,
         OnAccept     = function(_, data) if type(data) == "function" then data() end end,
     }
+    StaticPopupDialogs[DELETE_POPUP].text = text or L["Delete '%s'? This cannot be undone."]
     StaticPopup_Show(DELETE_POPUP, name, nil, onAccept)
 end
 
---- Open the settings at another editor page (a "Used by" link, Customize). The page repaints from
+--- Open the settings at another editor page (Customize, Choose callouts). The page repaints from
 --- the selection the caller set. Refused in combat, here rather than at each caller: Blizzard's
 --- category switch is protected (options-ui-§2's page-jump carve-out is combat-gated).
 --- @return boolean opened

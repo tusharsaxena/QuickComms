@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-686%2F686_passing-green)
+![Tests](https://img.shields.io/badge/Tests-717%2F717_passing-green)
 
 Quick Comms puts your usual group callouts one click or one keypress away. "Kick on me", "Lust
 now", "INC 3 Lumber Mill": set them up once and they sit on a Comms Pad or open from a
@@ -28,8 +28,10 @@ menu), press it, click a group, then click a callout to send it. In a battlegrou
 straight on the map's nodes, each where it sits on the map, so INC 3 at the Lumber Mill is two
 clicks. The key again, Escape or a right click closes it; the number keys 1 to 8 pick a wedge.
 
-Settings → Callouts makes a callout and gives it an icon; Groups puts callouts in a group and, on its
-When tab, says where it shows; Comms Pad arranges a pad, and its Look tab sets the font, the border
+Settings → Groups makes a group and, on its Callouts tab, its callouts: Add callout opens a small
+editor for the name, text, channel and icon (Save keeps it, Cancel drops it), Reuse existing
+callout copies one of your other callouts or a built-in one into the group, and each row has an
+edit and a remove button. The group's When tab says where it shows; Comms Pad arranges a pad, and its Look tab sets the font, the border
 and the background, each with a Use class color box. "Preview as…" (or `/qc preview`) shows the pads
 and the dial as they would look somewhere else, and hovering a pad's header or the dial's middle (or
 `/qc why`) tells you why each group is there.
@@ -44,7 +46,8 @@ Everything is configured under **Settings → AddOns → Ka0s Quick Comms**, and
 
 ## How the callouts work
 
-- Callouts are short lines of text. You put them in groups, and one callout can be in several.
+- Callouts are short lines of text, and each one lives in a group. To use a callout in a second
+  group, reuse it there: that makes a copy you can change on its own.
 - Each group has conditions for when it applies, such as "in a Mythic+ key" or "I'm the tank". The
   addon checks those against where you are and shows the groups that match, in the order you set.
 - Text is prepared ahead of time, out of combat, and loaded onto secure buttons. Pressing one sends
@@ -96,4 +99,4 @@ than in comments, so nothing gets lost.
 
 | Version | Date | Highlights |
 |---|---|---|
-| 0.1.0 | Unreleased | - The Comms Pad and the Comms Dial, with built-in callouts for Mythic+, raids, arenas and every battleground, sent through secure buttons<br>- Your own callouts and groups, with conditions for when each group shows, Preview as… and Why is this showing?<br>- The spam guard, drop notes, test mode and the lock<br>- The pad's font, border and background, with class colors<br>- Sharing callouts, groups, pads and dials as a string<br>- The settings panel, the minimap button, the `/qc` command and the debug tools |
+| 0.1.0 | Unreleased | - The Comms Pad and the Comms Dial, with built-in callouts for Mythic+, raids, arenas and every battleground, sent through secure buttons<br>- Your own callouts and groups, with conditions for when each group shows, Preview as… and Why is this showing?<br>- The spam guard, drop notes, test mode and the lock<br>- The pad's font, border and background, with class colors<br>- Sharing groups (with their callouts), pads and dials as a string<br>- The settings panel, the minimap button, the `/qc` command and the debug tools |

@@ -28,7 +28,7 @@ end
 local function userCallout(NS, fields)
     local cid = assert(NS.Library.CreateCallout(fields))
     local gid = NS.Library.CreateGroup({ name = "Mine" })
-    NS.Library.AddToGroup(gid, cid)
+    cid = NS.Library.AddToGroup(gid, cid)
     NS.Library.AddGroupToSurface("pad", "p1", gid, 1)
     return cid, gid
 end

@@ -14,11 +14,13 @@ exclude_files = { "libs/", "docs/audits/", "docs/reviews/", "docs/revendor/", "d
 
 -- No top-level `ignore`: a blanket suppression reaches every file (lint).
 
--- The SavedVariables write targets and the one Blizzard table the addon writes to.
+-- The SavedVariables write targets and the Blizzard tables the addon writes to.
 globals = {
   "QuickCommsDB",       -- AceDB
   "QuickCommsPerfDB",   -- the diagnostics capture ring (performance-§5)
   "StaticPopupDialogs",
+  -- settings/CalloutPopup.lua: Escape closes the callout popup first (a special frame, by name).
+  "UISpecialFrames",
   -- modules/Dial.lua: the key bindings menu's header for Bindings.xml, which the client reads by this
   -- name (spec §9.4). Its four entry labels hold a space and a colon, so they are rawset beside a
   -- comment instead of declared here.

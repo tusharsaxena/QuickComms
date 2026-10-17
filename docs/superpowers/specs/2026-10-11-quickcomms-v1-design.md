@@ -259,6 +259,8 @@ profile = {
 
 ### 5.2 IDs and references
 
+*Superseded 2026-10-17 by 2026-10-17-callouts-owned-by-groups-design.md: each user callout belongs to exactly one user group; adding any callout to a group copies it, and Prepare and Import split a shared callout and drop a loose one.*
+
 - **User ids:** `c<n>`, `g<n>`, `p<n>`, `d<n>`, taken from `profile.nextId`.
 - **Built-in ids:** stable dotted strings: `bi.mplus`, `bi.mplus.lust`, `bi.bg.ab`, `bi.bg.ab.lumbermill.inc3`. They never change once shipped. Renaming one requires a migration.
 - **What groups can contain:** a user group holds user callout ids only. Adding a built-in callout to a user group **copies** it into the library first (Proposed P2). This keeps built-ins read-only and makes "used in N groups" exact.
@@ -728,6 +730,8 @@ It is one act: the pads rebuild once. A set on no surface is customized onto non
 
 ### 13.1 Pages
 
+*Superseded 2026-10-17 by 2026-10-17-callouts-owned-by-groups-design.md: there is no Callouts page; a user group's Callouts tab makes, edits (in a Save/Cancel popup), reuses (as a copy) and removes its callouts.*
+
 **Blizzard Settings ▸ AddOns ▸ Ka0s Quick Comms**, built with LibKa0s-Options. The body is built lazily, and a library breadcrumb sits on every page.
 
 | Page | Structure |
@@ -794,6 +798,8 @@ Through `LibKa0s-Slash`.
 While the addon is disabled, feature verbs answer with the standard one-line refusal.
 
 ## 15. Share (export and import)
+
+*Superseded 2026-10-17 by 2026-10-17-callouts-owned-by-groups-design.md: Export has no callout checkboxes, a callout travels inside its group, and an import gives each group its own copy and leaves out a callout no group holds; the payload format is unchanged.*
 
 **Format:** `!QC1!` + `LibDeflate:EncodeForPrint(LibDeflate:CompressDeflate(LibSerialize:Serialize(payload)))`.
 

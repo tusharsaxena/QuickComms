@@ -121,6 +121,24 @@ local function build()
         GetMinimapButton = function(_, name) return M.minimapButtons[name] end,
     }
 
+    -- AceGUI's Icon carries its texture as `image` from the moment it is made, as the real widget
+    -- does, so a glyph dressed in an atlas (`image:SetAtlas`, recorded as `image.atlas`) has a
+    -- texture to dress. SetImage still records its arguments at `image[1..n]`, the base's shape, and
+    -- a new path replaces the atlas, as SetTexture does in the client.
+    M.__libs["AceGUI-3.0"]:RegisterWidgetType("Icon", function()
+        local w = M.__makeAceGUIWidget("Icon")
+        local texture = {}
+        function texture.SetAtlas(tex, name) tex.atlas = name; return tex end
+        w.image = texture
+        function w:SetImage(...)
+            for k in pairs(texture) do if type(k) == "number" then texture[k] = nil end end
+            texture.atlas = nil
+            for i = 1, select("#", ...) do texture[i] = (select(i, ...)) end
+            return self
+        end
+        return w
+    end)
+
     -- ── secure frames (phase 2: the send engine and the Comms Pad) ─────────────────────────────
     -- The client's protected-frame rules, modeled so a suite sees a refusal instead of trusting
     -- that none happened (testing-§1, fidelity rules 3 and 5). A frame built from a Secure*

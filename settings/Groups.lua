@@ -7,9 +7,11 @@ local _, NS = ...
 --     General   Preview as (page-wide, first), then Name, Icon, Enabled, Open the dial on this group,
 --               Choose an icon (settings/Editors.lua's picker), then Duplicate and Delete. A built-in:
 --               what it is, its Enabled row, and Customize.
---     Callouts  a user group's callouts as a drag-to-reorder list with Remove, then Add a callout (a
---               built-in callout is copied in first, spec P2). A built-in: a Show checkbox per
---               callout, the hidden-callouts editor (spec §12.2).
+--     Callouts  a user group's: Add callout (the callout popup, settings/CalloutPopup.lua), Reuse
+--               existing callout with Add (an independent copy, of a user or a built-in callout, spec
+--               P2), then its callouts as a drag-to-reorder list with an edit and a remove glyph each.
+--               The group owns its callouts, so remove deletes the callout (asking first). A
+--               built-in: a Show checkbox per callout, the hidden-callouts editor (spec §12.2).
 --     When      settings/Groups_When.lua
 --     Preview   the active-now line, then every callout baked for the current or previewed situation
 --
@@ -77,10 +79,12 @@ function G.Duplicate(id)
     return copy
 end
 
+--- Delete asks first, and says the group's callouts go with it (the group owns them).
 function G.Delete(id)
     local g = NS.db.profile.groups[id]
     if not g then return end
-    Ed.ConfirmDelete(g.name, function() NS.Library.DeleteGroup(id) end)
+    Ed.ConfirmDelete(g.name, function() NS.Library.DeleteGroup(id) end,
+        L["Delete '%s' and its callouts? This cannot be undone."])
 end
 
 --- The user group a built-in was customized into, while it still exists.
@@ -118,17 +122,32 @@ local function calloutLabel(cid)
     return ("%s  |cff808080%s|r"):format(c.name or cid, c.channel or "")
 end
 
---- What "Add a callout" offers: the user callouts not in the group, by name, then every built-in
---- callout as "<set>: <name>" (adding one copies it, spec P2).
-function G.AddableCallouts(gid)
-    local have = {}
-    for _, cid in ipairs((NS.db.profile.groups[gid] or {}).callouts or {}) do have[cid] = true end
-    local user = {}
-    for id, c in pairs(NS.db.profile.callouts) do
-        if not have[id] then user[#user + 1] = { id = id, label = c.name or id } end
+--- What Reuse existing callout offers: every user callout as "<its group>: <name>", sorted by that
+--- label (the selected group's own included: copying within a group is fine), then every built-in
+--- callout as "<set>: <name>" (a node's "<set>: <node>: <name>"). Add copies the pick (spec P2).
+function G.ReusableCallouts()
+    local p = NS.db.profile
+    local owner = {}
+    for gid, g in pairs(p.groups) do
+        for _, cid in ipairs(g.callouts or {}) do owner[cid] = owner[cid] or g.name or gid end
     end
-    table.sort(user, function(a, b) return a.label:lower() < b.label:lower() end)
-    local out = user
+    local out = {}
+    for id, c in pairs(p.callouts) do
+        local name = c.name or id
+        out[#out + 1] = { id = id, label = owner[id] and L["%s: %s"]:format(owner[id], name) or name }
+    end
+    table.sort(out, function(a, b)
+        local la, lb = a.label:lower(), b.label:lower()
+        if la ~= lb then return la < lb end
+        return a.id < b.id
+    end)
+    -- A same-named copy (Reuse keeps the name) would list twice alike: number the repeats.
+    local seen = {}
+    for _, e in ipairs(out) do
+        local key = e.label:lower()
+        seen[key] = (seen[key] or 0) + 1
+        if seen[key] > 1 then e.label = L["%s (%d)"]:format(e.label, seen[key]) end
+    end
     local function addSet(gidB, prefix)
         local def = NS.BuiltIns.groups[gidB]
         for _, cid in ipairs(def.callouts or {}) do
@@ -142,8 +161,22 @@ function G.AddableCallouts(gid)
     return out
 end
 
-function G.AddCallout(gid, cid) return NS.Library.AddToGroup(gid, cid) end
+--- Reuse's Add: an independent copy of `cid` at the end of the group (Library.AddToGroup copies).
+function G.ReuseCallout(gid, cid) return NS.Library.AddToGroup(gid, cid) end
 function G.MoveCallout(gid, from, to) return NS.Library.MoveInGroup(gid, from, to) end
+
+--- The remove glyph: asks first, then takes `cid` out of the group, which deletes it (the group
+--- owns it). Found by id when the player answers, so a list that moved meanwhile loses the right one.
+function G.RemoveCallout(gid, cid)
+    local c = NS.Library.Callout(cid)
+    if not c then return end
+    Ed.ConfirmDelete(c.name or cid, function()
+        local g = NS.db.profile.groups[gid]
+        for i, id in ipairs(g and g.callouts or {}) do
+            if id == cid then return NS.Library.RemoveFromGroup(gid, i) end
+        end
+    end)
+end
 
 local NONE = L["No groups yet. Click New group to make one."]
 
@@ -175,9 +208,9 @@ local function renderGeneral(ctx, rows)
     h.RenderRows(ctx, mine, nil, nil, { noHeadings = true })
     Ed.IconPicker(ctx, "group.icon", gid)
     h.InlineButtonPair(ctx,
-        { text = L["Duplicate"], tooltip = L["Make a copy of this group, with the same callouts and When. The copy is on no pad until you add it under Comms Pad > Groups."],
+        { text = L["Duplicate"], tooltip = L["Make a copy of this group, with copies of its callouts and the same When. The copy is on no pad until you add it under Comms Pad > Groups."],
           onClick = function() G.Duplicate(gid) end },
-        { text = L["Delete"], tooltip = L["Delete this group and take it off every pad. Its callouts are kept. Asks first."],
+        { text = L["Delete"], tooltip = L["Delete this group and its callouts, and take it off every pad. Asks first."],
           onClick = function() G.Delete(gid) end })
 end
 
@@ -211,6 +244,42 @@ local function renderBuiltinCallouts(ctx, gid)
     h.RenderGrid(ctx, items)
 end
 
+-- Reuse existing callout and its Add, on one row: the dropdown only picks (its prompt stands in for
+-- a label, so the button lines up with it), and Add, idle until a pick, copies the pick in.
+local function reuseRow(gid)
+    return { wide = true, make = function(_, parent)
+        local AceGUI = H().AceGUI
+        local prompt, picked = L["Reuse existing callout"], nil
+        local dd = AceGUI:Create("Dropdown")
+        local list, order = Ed.PickerList(G.ReusableCallouts())
+        dd:SetList(list, order)
+        dd:SetText(prompt)
+        dd:SetRelativeWidth(0.62)
+        local add = AceGUI:Create("Button")
+        add:SetText(L["Add"])
+        add:SetRelativeWidth(0.3)
+        add:SetDisabled(true)
+        dd:SetCallback("OnValueChanged", function(_, _, key)
+            picked = key
+            add:SetDisabled(key == nil)
+        end)
+        add:SetCallback("OnClick", function()
+            if picked == nil then return end
+            local cid = picked
+            picked = nil
+            dd:SetValue(nil)
+            dd:SetText(prompt)
+            add:SetDisabled(true)
+            G.ReuseCallout(gid, cid)
+        end)
+        H().AttachTooltip(dd, prompt, L["Pick a callout to copy into this group: one of your groups' or a built-in set's. Add puts the copy at the end."])
+        H().AttachTooltip(add, L["Add"], L["Add a copy of the picked callout to the end of this group. Editing the copy leaves the original as it is."])
+        parent:AddChild(dd)
+        parent:AddChild(add)
+        return true
+    end }
+end
+
 local function renderCallouts(ctx)
     local h = H()
     local gid = Ed.Selected("group")
@@ -219,20 +288,25 @@ local function renderCallouts(ctx)
         return
     end
     if isBuiltin(gid) then return renderBuiltinCallouts(ctx, gid) end
+    h.InlineButtonPair(ctx, { text = L["Add callout"],
+        tooltip = L["Make a new callout at the end of this group: its name, text, channel and icon, saved when you click Save."],
+        onClick = function() Settings.CalloutPopup.Open(gid) end }, nil)
+    h.RenderGrid(ctx, { reuseRow(gid) })
     local list = NS.db.profile.groups[gid].callouts
     if #list == 0 then
-        h.TextRow(ctx, L["No callouts in this group yet. Add one below."])
-    else
-        local entries = {}
-        for i, cid in ipairs(list) do
-            entries[i] = { id = cid, label = calloutLabel(cid),
-                remove = function() NS.Library.RemoveFromGroup(gid, i) end }
-        end
-        Ed.ReorderRows(ctx, PAGE, entries, function(from, to) G.MoveCallout(gid, from, to) end)
+        h.TextRow(ctx, L["No callouts in this group yet. Add one above."])
+        return
     end
-    h.RenderGrid(ctx, { Ed.ActionDropdown(L["Add a callout"],
-        L["Add a callout to the end of this group. A built-in callout is copied into your callouts first."],
-        G.AddableCallouts(gid), function(cid) G.AddCallout(gid, cid) end) })
+    local entries = {}
+    for i, cid in ipairs(list) do
+        local c = NS.Library.Callout(cid)
+        entries[i] = { id = cid, label = calloutLabel(cid), icon = c and c.icon or nil,
+            edit = function() Settings.CalloutPopup.Open(gid, cid) end,
+            editTooltip = L["Edit this callout: its name, text, channel and icon."],
+            remove = function() G.RemoveCallout(gid, cid) end,
+            removeTooltip = L["Delete this callout. Asks first."] }
+    end
+    Ed.ReorderRows(ctx, PAGE, entries, function(from, to) G.MoveCallout(gid, from, to) end)
 end
 
 local function renderPreview(ctx)

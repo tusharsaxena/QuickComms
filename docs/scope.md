@@ -9,7 +9,8 @@ during chat lockdown, so it works for the whole of a Mythic+ key, a boss pull an
 (design spec §1, in
 [`superpowers/specs/2026-10-11-quickcomms-v1-design.md`](superpowers/specs/2026-10-11-quickcomms-v1-design.md)).
 
-v0.1.0's design carries the callout library (callouts shared between groups by reference), the
+v0.1.0's design carries the callout library (each callout owned by one group, a reuse making a copy;
+the 2026-10-17 amendment, which retired callouts shared between groups by reference), the
 situation engine and the resolver, the secure send engine with a soft spam guard (dimming and
 drop notes; no hard guard in combat, spec §9.2), any number of pads and dials, built-in sets for
 Mythic+, raid, arena and battlegrounds, the settings panel with *Preview as…* and *Why is this
@@ -23,7 +24,9 @@ load pass), the four shipped built-in sets, the Behavior defaults and `/qc check
 what a callout would send and never sends. On top of it, phase 2 built the send engine (secure
 buttons, the soft spam guard, the echo tracker, the combat-end queue), the default Comms Pad showing
 the active built-in sets, test mode, the lock and the saved position. Phase 3 added the editors: the
-Callouts, Groups (with the When editor and a Preview tab), Comms Pad and Share (Built-in tab) pages,
+Callouts, Groups (with the When editor and a Preview tab), Comms Pad and Share (Built-in tab) pages
+(since 2026-10-17 a group owns its callouts, and the callout popup on its Callouts tab replaces the
+Callouts page),
 "Preview as…" on the pads and `/qc preview`, and "Why is this showing?" on the pad header and
 `/qc why`. Phase 4 added the Comms Dial in Relaxed mode: a key (or WoW's key bindings menu) opens it, a click on a wedge sends, a group wedge opens its ring, battleground node sets open straight on their nodes, and the Comms Dial page sets it up. Phase 5 added sharing (an export string and an import that checks, reports and adds what a string holds as new, unbound members), the pad's Look font, border and background with class colors, the icon picker, battleground node sets pinned to their compass winds, and the instance ids matched against the client's data (their in-game confirmation is the smoke test's); the release gate is green, and v0.1.0 waits for the owner's word. The frame they plug into: the settings panel's
 landing page, General page (Master controls) and Profiles page, the `/qc` command with the reserved verbs, the launcher, the debug console and

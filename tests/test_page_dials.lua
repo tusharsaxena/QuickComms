@@ -151,6 +151,23 @@ test("dials page: Groups switches Categories and Flat, and reorders the dial's g
     assertEqual(NS.db.profile.dials.d2.groups[1], last)
 end)
 
+test("dials page: the remove glyph takes a group off the dial without asking and keeps the group", function()
+    local NS, m, P = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    NS.Library.AddGroupToSurface("dial", "d2", gid)
+    P.flush()
+    local groups = NS.db.profile.dials.d2.groups
+    local count, asked = #groups, #m.popupsShown
+    local w = P.tab("dials", "Groups")
+    assertNil(P.find(w, "Button", "Remove"), "no red button remains")
+    assertNil(P.glyph(w, "edit"), "a dial's group row has no edit glyph")
+    -- red under: draw the remove as the red L["Remove"] Button in Ed.ReorderRows
+    P.glyph(w, "remove", count):__fire("OnClick")
+    assertEqual(#NS.db.profile.dials.d2.groups, count - 1)
+    assertEqual(#m.popupsShown, asked, "it does not ask first")
+    assertTrue(NS.Library.Group(gid) ~= nil, "the group is kept")
+end)
+
 test("dials page: [phase 4] Groups warns when a node set would open three rings deep, and not once it is first", function()
     local NS, _, P = open()
     local Dials = NS.addon.Settings.Dials

@@ -92,7 +92,7 @@ test("pads page: Groups lists the pad's groups; remove one, add it back at the e
     local first, count = groups[1], #groups
     local w = P.tab("pads", "Groups")
     assertEqual(lists[#lists].rows, count)
-    P.all(w, "Button", "Remove")[1]:__fire("OnClick")
+    P.glyph(w, "remove", 1):__fire("OnClick")
     assertEqual(#NS.db.profile.pads.p1.groups, count - 1)
     w = P.tab("pads", "Groups")
     P.find(w, "Dropdown", "Add a group"):__fire("OnValueChanged", first)
@@ -100,6 +100,23 @@ test("pads page: Groups lists the pad's groups; remove one, add it back at the e
     P.tab("pads", "Groups")
     lists[#lists].opts.onMove(count, 1)
     assertEqual(NS.db.profile.pads.p1.groups[1], first, "dragged to the top")
+end)
+
+test("pads page: the remove glyph takes a group off the pad without asking and keeps the group", function()
+    local NS, m, P = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    NS.Library.AddGroupToSurface("pad", "p1", gid)
+    P.flush()
+    local groups = NS.db.profile.pads.p1.groups
+    local count, asked = #groups, #m.popupsShown
+    local w = P.tab("pads", "Groups")
+    assertNil(P.find(w, "Button", "Remove"), "no red button remains")
+    assertNil(P.glyph(w, "edit"), "a pad's group row has no edit glyph")
+    -- red under: draw the remove as the red L["Remove"] Button in Ed.ReorderRows
+    P.glyph(w, "remove", count):__fire("OnClick")
+    assertEqual(#NS.db.profile.pads.p1.groups, count - 1)
+    assertEqual(#m.popupsShown, asked, "it does not ask first")
+    assertTrue(NS.Library.Group(gid) ~= nil, "the group is kept")
 end)
 
 test("pads page: Delete pad asks, then the pad is gone, its frame released, and the page heals", function()

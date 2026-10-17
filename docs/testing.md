@@ -48,7 +48,7 @@ Named suites the standard requires: `test_surface_parity` (testing-§8), `test_v
 `test_restrictions`, `test_situation`, `test_tokens`, `test_channels`, `test_bake`, `test_resolver`,
 `test_builtins`, `test_library` and `test_check`, and phase 2's `test_mock_secure`, `test_send_guard`,
 `test_sendengine`, `test_preview`, `test_master`, `test_pad_layout`, `test_surfaces`,
-`test_pad_render` and `test_pad`, and phase 3's `test_members`, `test_editors`, `test_page_callouts`,
+`test_pad_render` and `test_pad`, and phase 3's `test_members`, `test_editors`, `test_callout_popup` (the callout popup, which replaced `test_page_callouts`),
 `test_groups_when`, `test_page_groups`, `test_page_pads` and `test_page_share`, and phase 4's
 `test_dial_layout`, `test_dial_secure`, `test_dial` and `test_page_dials`, and phase 5's `test_share`
 and `test_gameids`. Kit suites, declared by directory:

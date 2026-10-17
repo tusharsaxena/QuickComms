@@ -150,6 +150,41 @@ test("slash: [final 16] `why` with nothing built speaks of pads and dials", func
     assertTrue(table.concat(m.prints, "\n"):find("Nothing is showing: no pad or dial has been built yet.", 1, true) ~= nil)
 end)
 
+test("slash: a callout's rows take its id after the path; with none the write is refused and names the form", function()
+    local NS, _, m = T.enableAddon()
+    local Lib = NS.Library
+    local a = Lib.CreateCallout({ name = "Alpha", text = "a", channel = "party" })
+    local b = Lib.CreateCallout({ name = "Beta", text = "b", channel = "party", icon = 136012 })
+    m.prints = {}
+    -- red under: route `set` straight to Sl:CliSet in settings/Slash.lua (the id is read as text)
+    NS.addon:OnSlashCommand("set callout.text " .. b .. " Lust now {rt8}")
+    assertEqual(NS.db.profile.callouts[b].text, "Lust now {rt8}")
+    assertEqual(NS.db.profile.callouts[a].text, "a")
+    local text = table.concat(m.prints, "\n")
+    assertTrue(text:find("Lust now {rt8}", 1, true) ~= nil, "the echo reads the callout it wrote: " .. text)
+    m.prints = {}
+    NS.addon:OnSlashCommand("get callout.name " .. b)
+    text = table.concat(m.prints, "\n")
+    assertTrue(text:find("Beta", 1, true) ~= nil, text)
+    NS.addon:OnSlashCommand("reset callout.icon " .. b)
+    assertTrue(NS.db.profile.callouts[b].icon == false, "reset by id")
+    m.prints = {}
+    NS.addon:OnSlashCommand("set callout.text")
+    text = table.concat(m.prints, "\n")
+    assertTrue(text:find("Name the callout id: /qc set callout.<field> <id> <value>.", 1, true) ~= nil, text)
+    m.prints = {}
+    NS.addon:OnSlashCommand("set callout.text Lust now")   -- no id: "Lust" is not a callout
+    assertEqual(NS.db.profile.callouts[a].text, "a")
+    assertEqual(NS.db.profile.callouts[b].text, "Lust now {rt8}")
+    text = table.concat(m.prints, "\n")
+    assertTrue(text:find("No callout with id Lust.", 1, true) ~= nil, text)
+    -- The other kinds keep the page's selection: a group row takes no id.
+    local gid = Lib.CreateGroup({ name = "Mine" })
+    NS.State.editing.group = gid
+    NS.addon:OnSlashCommand("set group.name Two words")
+    assertEqual(NS.db.profile.groups[gid].name, "Two words")
+end)
+
 test("slash: [final 9] test and preview's help, and the Preview as row, speak of the dials too", function()
     local NS, _, m = T.enableAddon()
     m.prints = {}

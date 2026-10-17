@@ -111,15 +111,18 @@ Total.
 - database: [phase 4] step 2 moves the generic battleground set below the per-battleground sets
 - database: the profile defaults carry the Master controls value, and no debug flag
 
-### test_profile.lua (5)
+### test_profile.lua (8)
 
 - profile: behavior defaults match spec §5.1
 - profile: collections exist; default nextId is 1, 3 after boot
 - profile: every behavior row resolves through the seam
 - profile: the spam guard clamps to 0.6-2.0 and fallback refuses unknown values
 - profile: schema version target is 2 (phase 4: the battleground order)
+- prepare: a callout held by two groups is split into a copy
+- prepare: a callout held by no group is dropped
+- prepare: is idempotent after a split
 
-### test_schema.lua (17)
+### test_schema.lua (18)
 
 - schema: every row validates against the defaults
 - schema: a stored row whose path has no default is counted, not passed vacuously
@@ -137,9 +140,10 @@ Total.
 - schema: degraded, a row-less path not in the list is still refused
 - schema: [fix wave] the Behavior rows that rebuild the pads resolve Settings.RebuildSurfaces when they run
 - schema: [audit QC-13] the panel's color codec is written out for the stored { r, g, b, a } shape
+- schema: a callout write that names no id is refused, even with callouts present
 - schema: [phase 3] a fresh profile has no row off its default; the member rows are not counted
 
-### test_slash.lua (14)
+### test_slash.lua (15)
 
 - slash: NS.COMMANDS is positional triples, every reserved verb present
 - slash: `diagnostics` has no alias of any kind (debug-logging-§14)
@@ -154,6 +158,7 @@ Total.
 - slash: [phase 3] `why` prints each built pad and why its groups show
 - slash: [phase 4] `why` covers the dials too
 - slash: [final 16] `why` with nothing built speaks of pads and dials
+- slash: a callout's rows take its id after the path; with none the write is refused and names the form
 - slash: [final 9] test and preview's help, and the Preview as row, speak of the dials too
 
 ### test_disabled.lua (21)
@@ -282,7 +287,7 @@ Total.
 - bake: a typed %t counts as live
 - bake: [phase 5] CleanText is the sanitizer short of the escape; Sanitize is CleanText, then the escape
 
-### test_share.lua (24)
+### test_share.lua (28)
 
 - share: a string is !QC1! then printable text, and decodes back to the same payload
 - share: [review 1] a pasted string may wrap and carry spaces; a cut-short one is damaged and imports nothing
@@ -308,6 +313,10 @@ Total.
 - share: [review] a name's live | escape is stored and reported as text (||), as a typed | is
 - share: [review] a name that starts with / is a name, never sent: it travels and round-trips
 - share: [review] a nested key in a When or a field passes the sanitizer and the byte budget
+- share import: groups sharing a callout each get their own copy
+- share import: the report counts a shared callout once per group, as the import makes it
+- share import: a callout in no imported group is not imported
+- share: Collect takes a callout only inside its group; a picked callout alone is nothing
 
 ### test_resolver.lua (8)
 
@@ -335,12 +344,12 @@ Total.
 - game ids: every battleground set matches only battleground maps, and no map is two sets'
 - game ids: the shipped dungeons are Mythic+ dungeons and the shipped raids are raids
 
-### test_library.lua (56)
+### test_library.lua (60)
 
 - library: Prepare seeds one pad and one dial with every built-in, once
 - library: callouts validate on create
 - library: whisper channels are refused (owner, issue #7)
-- library: [review 4] deleting a shared callout clears every group
+- library: [review 4] deleting a callout clears its group
 - library: [review 4] deleting a group clears every surface
 - library: adding a built-in callout copies it (P2)
 - library: [review 4] Customize swaps the copy in place; deleting the copy puts the set back, on
@@ -362,10 +371,10 @@ Total.
 - library: [final minor 3] Prepare repairs corrupt top-level registry keys and builtins entries
 - library: SetSurfacePoint stores a copy of a plain anchor, announces it, and nil clears it
 - library: SetSurfacePoint refuses an unknown surface or a malformed anchor, and stores nothing
-- library: [phase 3] DuplicateCallout copies every field under a '(copy)' name
 - library: [phase 3] a copy's name stays within the 32-character cap, counted in characters
-- library: [phase 3] DuplicateGroup shares the callouts (D8) and copies the When, on no surface
+- library: duplicating a group copies its callouts
 - library: [phase 3] CreateGroup keeps only existing user callouts, and validates the When
+- library: CreateGroup takes a callout no group holds, and copies one a group holds
 - library: [phase 3] OfferGroup puts a user group first on every pad and dial, once
 - library: [phase 3] MoveGroupOnSurface reorders a surface's groups and announces it
 - library: [phase 3] Member answers the live member of each kind, and a built-in group's copy
@@ -393,6 +402,10 @@ Total.
 - library: [review] an imported Look keeps a bool a bool and a color its four channels
 - library: [phase 5] Import is one act: one LIBRARY_CHANGED; a refused result imports nothing
 - library: [phase 5] Prepare gives a pad saved before the Look groups every field it lacks
+- library: adding a user callout to a group adds a copy
+- library: removing a callout from its group deletes it
+- library: deleting a group deletes its callouts
+- library: CreateCalloutIn makes and places a callout in one act
 
 ### test_members.lua (23)
 
@@ -420,7 +433,7 @@ Total.
 - members: [phase 5] a When's key level prints as it types back in: one level, open below, open above
 - members: [phase 5] a pad's Look rows are composed member rows: checked, clamped, announced
 
-### test_editors.lua (12)
+### test_editors.lua (14)
 
 - editors: [review 2] Select mirrors a built-in group into the built-in selection; Heal keeps a member that exists
 - editors: every membership change asks for one structural repaint, on the next frame
@@ -433,24 +446,31 @@ Total.
 - editors: Open goes to a page's category by its id
 - editors: [audit QC-02] Open refuses in combat with one gray line and never reaches the category switch
 - editors: Scalar keeps the rows the flow engine draws, and CancelReorder cancels once
+- editors: a row's remove is a glyph, not a button
+- editors: a row with edit shows the edit glyph and fires it
 - editors: Snapshot is the preview's while Preview as is on
 
-### test_page_callouts.lua (14)
+### test_callout_popup.lua (19)
 
-- callouts page: with no callouts it says how to make one, and New callout makes and selects one
-- callouts page: the rows write the selected callout through the seam
-- callouts page: [review 5] an empty name is refused with its reason and nothing changes
-- callouts page: [phase 3] the token picker offers {group1}-{group8} only when the channel can resolve to Raid
-- callouts page: [phase 3] the live line refreshes in place when the callout changes
-- callouts page: Insert a token adds it to the end of the text
-- callouts page: the live line shows what it sends here, or why it sends nothing
-- callouts page: Duplicate selects the copy; Delete asks, then removes it from every group
-- callouts page: [review 2] the selected callout deleted elsewhere: the page heals, writes go to the next
-- callouts page: Used by lists the groups that hold it, and a click opens that group
-- callouts page: [final 3] Defaults resets the callout as one act: one rebuild
-- callouts page: [final 4] Defaults keeps the icon (its default is only for `/qc reset`)
-- callouts page: [review 1] a delete popup accepted after the pull deletes; the pad catches up at combat end
-- callouts page: [phase 5] Choose an icon: a click on the skull is the callout's icon, through the seam
+- popup: Add opens blank with Smart group
+- popup: edit opens filled in
+- popup: typing changes the draft only, and the preview follows
+- popup: Save on Add creates the callout at the end of the group, one LIBRARY_CHANGED
+- popup: Cancel on Add creates nothing and consumes no id
+- popup: Save on edit writes only the changed fields through the seam
+- popup: Cancel on edit writes nothing
+- popup: Save with an empty name stays open and writes nothing
+- popup: Save takes the text typed into a box without Enter
+- popup: a pick, a token or a seam write keeps the text typed without Enter
+- popup: the callout deleted under an open popup closes it; a late Save writes nothing
+- popup: closing the settings window cancels
+- popup: Escape and a profile change cancel
+- popup: Insert a token appends to the draft's text
+- popup: Choose an icon writes the draft's icon
+- popup: its close control is the shared close mark
+- settings: there is no Callouts page
+- callout helpers: [phase 3] the token picker offers {group1}-{group8} only when the channel can resolve to Raid
+- callout helpers: PreviewLines says what a callout sends here, or why it sends nothing
 
 ### test_groups_when.lua (12)
 
@@ -467,12 +487,20 @@ Total.
 - when: [final 6] a typed character takes the client's case; the Resolver matches one in any case
 - when: [final 2, 11] ResolveValue maps a typed value onto the token or id its row stores, or refuses it
 
-### test_page_groups.lua (16)
+### test_page_groups.lua (24)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists user groups by name, then the built-ins, active ones dotted
 - groups page: General draws Preview as first, then the group's rows; Duplicate and Delete act
 - groups page: Callouts drags to reorder, removes, and copies a built-in callout in (P2)
+- groups page: Add callout opens the popup for this group
+- groups page: Reuse lists callouts as <group>: <callout> and built-ins as <set>: <callout>
+- groups page: Reuse numbers same-named copies so each entry is unambiguous
+- groups page: Reuse + Add puts an independent copy at the end
+- groups page: picking in Reuse alone adds nothing
+- groups page: the edit glyph opens the popup filled in
+- groups page: [review 3] the remove glyph asks, then deletes the callout
+- groups page: deleting a group deletes its callouts
 - groups page: [review 4] a built-in is read-only; Customize puts the copy in its place and selects it
 - groups page: a built-in's Callouts tab hides and shows its callouts, a node's named with its node
 - groups page: the When tab of a built-in describes it; a user group's edits it; Preview bakes each callout
@@ -486,13 +514,14 @@ Total.
 - groups page: [final 18] Add the instance you are in reads the instance at the click, not at the draw
 - groups page: [phase 5] Choose an icon sets a user group's icon; a built-in set offers no picker
 
-### test_page_pads.lua (11)
+### test_page_pads.lua (12)
 
 - pads page: New pad makes a second pad holding every built-in, selects it, and the pad is built
 - pads page: the Layout rows write the selected pad
 - pads page: X and Y move the pad through its pad.point row; Reset puts it back
 - pads page: Look's visibility reaches the pad's state driver
 - pads page: Groups lists the pad's groups; remove one, add it back at the end, drag to reorder
+- pads page: the remove glyph takes a group off the pad without asking and keeps the group
 - pads page: Delete pad asks, then the pad is gone, its frame released, and the page heals
 - pads page: General's Unlock pads toggles the one lock
 - pads page: [final 3, 15] Defaults puts the pad's rows back as one act: one rebuild
@@ -500,7 +529,7 @@ Total.
 - pads page: [final 26] New pad takes the lowest free number, so a delete never leads to two names alike
 - pads page: [phase 5] Look carries the composed Font, Border and Background groups under their headings
 
-### test_page_dials.lua (16)
+### test_page_dials.lua (17)
 
 - dials page: New dial makes a second dial holding every built-in, selects it, and builds QuickCommsDial2
 - dials page: New dial takes the lowest free number, so a delete never leads to two names alike
@@ -510,6 +539,7 @@ Total.
 - dials page: Defaults puts the dial's rows back as one act, and keeps its key and position
 - dials page: [review 4] the Binding tab binds the key; another dial's is refused naming it; a WoW key warns and binds
 - dials page: Groups switches Categories and Flat, and reorders the dial's groups
+- dials page: the remove glyph takes a group off the dial without asking and keeps the group
 - dials page: [phase 4] Groups warns when a node set would open three rings deep, and not once it is first
 - dials page: Preview lists the rings wedge by wedge, marking the one the dial opens on
 - dials page: [final 20] at 12 wedges per ring the Preview names each wedge by its clock position
@@ -519,13 +549,14 @@ Total.
 - dials page: [final 10] the key line of a dial that is off says the key opens nothing, and warns of no override
 - dials page: [final 11] the page's own plan builds are not timed as a surface's bake
 
-### test_page_share.lua (13)
+### test_page_share.lua (14)
 
 - share page: every shipped set has a line; turning M+ off takes it off the pad
 - share page: [review 4] Customize puts the copy in the set's place, selects it and opens the Groups page
 - share page: Choose callouts opens the set on the Groups page's Callouts tab
 - share page: Defaults turns every set back on and shows all of their callouts, as one act
 - share page: [phase 5] Export ticks a group; its callouts come along, and the string opens in the copy window
+- share page: Export lists groups, pads and dials, and no callouts; a ticked group brings its callouts
 - share page: [phase 5] Export with nothing ticked says so and opens nothing
 - share page: [phase 5] Import checks a pasted string, reports it, then adds it as new members
 - share page: [review] editing the box after Accept forgets the check: Import never adds the old string
@@ -849,9 +880,9 @@ Total.
 | test_surface_parity.lua | 15 |
 | test_setup.lua | 26 |
 | test_database.lua | 7 |
-| test_profile.lua | 5 |
-| test_schema.lua | 17 |
-| test_slash.lua | 14 |
+| test_profile.lua | 8 |
+| test_schema.lua | 18 |
+| test_slash.lua | 15 |
 | test_disabled.lua | 21 |
 | test_diagnostics.lua | 10 |
 | test_compat.lua | 12 |
@@ -860,19 +891,19 @@ Total.
 | test_tokens.lua | 8 |
 | test_channels.lua | 8 |
 | test_bake.lua | 12 |
-| test_share.lua | 24 |
+| test_share.lua | 28 |
 | test_resolver.lua | 8 |
 | test_builtins.lua | 7 |
 | test_gameids.lua | 2 |
-| test_library.lua | 56 |
+| test_library.lua | 60 |
 | test_members.lua | 23 |
-| test_editors.lua | 12 |
-| test_page_callouts.lua | 14 |
+| test_editors.lua | 14 |
+| test_callout_popup.lua | 19 |
 | test_groups_when.lua | 12 |
-| test_page_groups.lua | 16 |
-| test_page_pads.lua | 11 |
-| test_page_dials.lua | 16 |
-| test_page_share.lua | 13 |
+| test_page_groups.lua | 24 |
+| test_page_pads.lua | 12 |
+| test_page_dials.lua | 17 |
+| test_page_share.lua | 14 |
 | test_check.lua | 6 |
 | test_send_guard.lua | 10 |
 | test_sendengine.lua | 31 |
@@ -892,4 +923,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **686** |
+| **Total** | **717** |

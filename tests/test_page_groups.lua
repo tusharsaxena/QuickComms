@@ -22,15 +22,21 @@ local function pick(NS, gid) NS.addon.Settings.Editors.Select("group", gid) end
 
 test("groups page: [exit] a new group with a callout and a When shows first on the pad in that situation", function()
     local NS, _, P = open(MPLUS)
-    local cid = NS.Library.CreateCallout({ name = "Inc", text = "Incoming", channel = "smartGroup" })
     P.bannerAction(P.ctx("groups")):__fire("OnClick")
     P.flush()
     local gid = NS.State.editing.group
     assertTrue(NS.db.profile.groups[gid] ~= nil)
     assertEqual(NS.db.profile.pads.p1.groups[1], gid, "offered to the top of the pad")
     local w = P.tab("groups", "callouts")
-    P.find(w, "Dropdown", "Add a callout"):__fire("OnValueChanged", cid)
-    assertEqual(NS.db.profile.groups[gid].callouts[1], cid)
+    local pop = P.during(function() P.find(w, "Button", "Add callout"):__fire("OnClick") end)
+    P.find(pop, "EditBox", "Name"):__fire("OnEnterPressed", "Inc")
+    P.find(pop, "EditBox", "Text"):__fire("OnEnterPressed", "Incoming")
+    P.find(pop, "Dropdown", "Channel"):__fire("OnValueChanged", "party")
+    P.find(pop, "Button", "Save"):__fire("OnClick")
+    P.flush()
+    local cid = NS.db.profile.groups[gid].callouts[1]
+    assertTrue(cid ~= nil, "the popup's Save put the callout in the group")
+    assertEqual(NS.db.profile.callouts[cid].text, "Incoming")
     w = P.tab("groups", "When")
     P.find(w, "CheckBox", "Content"):__fire("OnValueChanged", true)
     P.flush()
@@ -82,9 +88,9 @@ end)
 test("groups page: Callouts drags to reorder, removes, and copies a built-in callout in (P2)", function()
     local NS, _, P = open()
     local lists = P.reorderSpy()
-    local a = NS.Library.CreateCallout({ name = "A", text = "a", channel = "party" })
-    local b = NS.Library.CreateCallout({ name = "B", text = "b", channel = "party" })
-    local gid = NS.Library.CreateGroup({ name = "Mine", callouts = { a, b } })
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    local a = NS.Library.CreateCalloutIn(gid, { name = "A", text = "a", channel = "party" })
+    local b = NS.Library.CreateCalloutIn(gid, { name = "B", text = "b", channel = "party" })
     pick(NS, gid)
     P.tab("groups", "callouts")
     local list = lists[#lists]
@@ -92,13 +98,180 @@ test("groups page: Callouts drags to reorder, removes, and copies a built-in cal
     list.opts.onMove(1, 2)
     assertEqual(table.concat(NS.db.profile.groups[gid].callouts, ","), b .. "," .. a)
     local w = P.tab("groups", "callouts")
-    P.all(w, "Button", "Remove")[1]:__fire("OnClick")
+    P.glyph(w, "remove", 1):__fire("OnClick")
+    P.accept()
     assertEqual(table.concat(NS.db.profile.groups[gid].callouts, ","), a)
     w = P.tab("groups", "callouts")
-    P.find(w, "Dropdown", "Add a callout"):__fire("OnValueChanged", "bi.mplus.lust")
+    P.find(w, "Dropdown", "Reuse existing callout"):__fire("OnValueChanged", "bi.mplus.lust")
+    P.find(w, "Button", "Add"):__fire("OnClick")
     local copied = NS.db.profile.groups[gid].callouts[2]
     assertTrue(copied:match("^c%d+$") ~= nil, "a copy, never the built-in id")
     assertEqual(NS.db.profile.callouts[copied].name, "Lust")
+end)
+
+local function withCallouts(NS)
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    local kick = NS.Library.CreateCalloutIn(gid, { name = "Kick", text = "Kick it", channel = "party" })
+    local other = NS.Library.CreateGroup({ name = "Other" })
+    local lust = NS.Library.CreateCalloutIn(other, { name = "Lust", text = "Lust now", channel = "raid" })
+    return gid, kick, other, lust
+end
+
+local function count(t)
+    local n = 0
+    for _ in pairs(t) do n = n + 1 end
+    return n
+end
+
+test("groups page: Add callout opens the popup for this group", function()
+    local NS, _, P = open()
+    local Pop = NS.addon.Settings.CalloutPopup
+    local gid = withCallouts(NS)
+    pick(NS, gid)
+    local w = P.tab("groups", "callouts")
+    local add = P.find(w, "Button", "Add callout")
+    -- red under: draw no Add callout button on a user group's Callouts tab
+    assertTrue(add ~= nil)
+    local before = count(NS.db.profile.callouts)
+    local pop = P.during(function() add:__fire("OnClick") end)
+    assertTrue(Pop.IsOpen())
+    assertEqual(Pop.Draft().name, "", "blank, as Add")
+    assertEqual(Pop.Draft().channel, "smartGroup")
+    assertEqual(count(NS.db.profile.callouts), before, "opening creates nothing")
+    P.find(pop, "EditBox", "Name"):__fire("OnEnterPressed", "Pull")
+    P.find(pop, "EditBox", "Text"):__fire("OnEnterPressed", "Pulling")
+    assertTrue(Pop.Save())
+    local list = NS.db.profile.groups[gid].callouts
+    assertEqual(#list, 2)
+    assertEqual(NS.db.profile.callouts[list[2]].name, "Pull", "saved into this group, at the end")
+end)
+
+test("groups page: Reuse lists callouts as <group>: <callout> and built-ins as <set>: <callout>", function()
+    local NS, _, P = open()
+    local gid, kick, _, lust = withCallouts(NS)
+    local entries = NS.addon.Settings.Groups.ReusableCallouts(gid)
+    -- red under: label a user callout by its name alone, or leave out the group's own callouts
+    assertEqual(entries[1].id, kick)
+    assertEqual(entries[1].label, "Mine: Kick", "the group's own callouts are offered too")
+    assertEqual(entries[2].id, lust)
+    assertEqual(entries[2].label, "Other: Lust")
+    local lustBi
+    for _, e in ipairs(entries) do if e.id == "bi.mplus.lust" then lustBi = e end end
+    assertTrue(lustBi ~= nil and lustBi.label == NS.BuiltIns.groups["bi.mplus"].name .. ": Lust")
+    pick(NS, gid)
+    local w = P.tab("groups", "callouts")
+    local dd = P.find(w, "Dropdown", "Reuse existing callout")
+    assertTrue(dd ~= nil)
+    assertEqual(dd.list[kick], "Mine: Kick")
+    assertEqual(dd.list[lust], "Other: Lust")
+end)
+
+test("groups page: Reuse numbers same-named copies so each entry is unambiguous", function()
+    local NS = open()
+    local gid, kick = withCallouts(NS)
+    local copy = NS.Library.AddToGroup(gid, kick)
+    local labels = {}
+    for _, e in ipairs(NS.addon.Settings.Groups.ReusableCallouts(gid)) do labels[e.id] = e.label end
+    -- red under: drop the repeat numbering in G.ReusableCallouts
+    assertEqual(labels[kick], "Mine: Kick")
+    assertEqual(labels[copy], "Mine: Kick (2)")
+end)
+
+test("groups page: Reuse + Add puts an independent copy at the end", function()
+    local NS, _, P = open()
+    local gid, kick, _, lust = withCallouts(NS)
+    pick(NS, gid)
+    local w = P.tab("groups", "callouts")
+    P.find(w, "Dropdown", "Reuse existing callout"):__fire("OnValueChanged", lust)
+    P.find(w, "Button", "Add"):__fire("OnClick")
+    local list = NS.db.profile.groups[gid].callouts
+    assertEqual(#list, 2)
+    assertEqual(list[1], kick)
+    local copy = list[2]
+    -- red under: put the picked id itself in this group (a shared callout)
+    assertTrue(copy ~= lust, "a copy, not the callout itself")
+    assertEqual(NS.db.profile.callouts[copy].name, "Lust")
+    assertEqual(NS.db.profile.callouts[copy].text, "Lust now")
+    NS.SchemaRuntime.Set("callout.text", "Changed", copy)
+    assertEqual(NS.db.profile.callouts[lust].text, "Lust now", "the source is untouched")
+    -- copying within the group is allowed too
+    w = P.tab("groups", "callouts")
+    P.find(w, "Dropdown", "Reuse existing callout"):__fire("OnValueChanged", kick)
+    P.find(w, "Button", "Add"):__fire("OnClick")
+    assertEqual(#NS.db.profile.groups[gid].callouts, 3)
+end)
+
+test("groups page: picking in Reuse alone adds nothing", function()
+    local NS, _, P = open()
+    local gid, _, _, lust = withCallouts(NS)
+    pick(NS, gid)
+    local w = P.tab("groups", "callouts")
+    local add = P.find(w, "Button", "Add")
+    -- red under: leave Add enabled with nothing picked
+    assertTrue(add.disabled, "Add waits for a pick")
+    local before = count(NS.db.profile.callouts)
+    -- red under: act on the pick (Ed.ActionDropdown) instead of on Add
+    P.find(w, "Dropdown", "Reuse existing callout"):__fire("OnValueChanged", lust)
+    assertEqual(#NS.db.profile.groups[gid].callouts, 1)
+    assertEqual(count(NS.db.profile.callouts), before)
+    assertFalse(add.disabled, "a pick enables Add")
+end)
+
+test("groups page: the edit glyph opens the popup filled in", function()
+    local NS, _, P = open()
+    local Pop = NS.addon.Settings.CalloutPopup
+    local gid, kick = withCallouts(NS)
+    pick(NS, gid)
+    local w = P.tab("groups", "callouts")
+    local edit = P.glyph(w, "edit", 1)
+    -- red under: pass no edit to the callout list's entries
+    assertTrue(edit ~= nil)
+    edit:__fire("OnClick")
+    assertTrue(Pop.IsOpen())
+    assertEqual(Pop.Draft().name, "Kick")
+    assertEqual(Pop.Draft().text, "Kick it")
+    Pop.Draft().text = "Kick now"
+    assertTrue(Pop.Save())
+    assertEqual(NS.db.profile.callouts[kick].text, "Kick now", "the edit saves to the listed callout")
+end)
+
+test("groups page: [review 3] the remove glyph asks, then deletes the callout", function()
+    local NS, m, P = open()
+    local gid, kick = withCallouts(NS)
+    local second = NS.Library.CreateCalloutIn(gid, { name = "Stun", text = "Stun", channel = "party" })
+    pick(NS, gid)
+    local w = P.tab("groups", "callouts")
+    local shown = #m.popupsShown
+    P.glyph(w, "remove", 1):__fire("OnClick")
+    -- red under: remove at once, without Ed.ConfirmDelete
+    assertEqual(#m.popupsShown, shown + 1, "asks first")
+    assertTrue(NS.db.profile.callouts[kick] ~= nil, "nothing is removed before the answer")
+    assertEqual(m.popupsShown[#m.popupsShown][2], "Kick")
+    -- the list moves under the open question: the answer still removes the callout it asked about
+    NS.Library.MoveInGroup(gid, 1, 2)
+    P.accept()
+    -- red under: remove by the index the row was drawn at
+    assertEqual(table.concat(NS.db.profile.groups[gid].callouts, ","), second)
+    assertNil(NS.db.profile.callouts[kick], "the callout is deleted, as nothing else holds it")
+end)
+
+test("groups page: deleting a group deletes its callouts", function()
+    local NS, m, P = open()
+    local gid, kick, _, lust = withCallouts(NS)
+    pick(NS, gid)
+    local w = P.redraw("groups")
+    local delete = P.find(w, "Button", "Delete")
+    delete:__fire("OnClick")
+    -- red under: keep the confirmation's "This cannot be undone." alone (it says nothing of the callouts)
+    local which = m.popupsShown[#m.popupsShown][1]
+    assertTrue(m.StaticPopupDialogs[which].text:find("and its callouts", 1, true) ~= nil)
+    P.accept()
+    assertNil(NS.db.profile.groups[gid])
+    assertNil(NS.db.profile.callouts[kick])
+    assertTrue(NS.db.profile.callouts[lust] ~= nil, "another group's callouts are kept")
+    -- and a plain delete elsewhere still asks with the plain text
+    NS.addon.Settings.Editors.ConfirmDelete("x", function() end)
+    assertEqual(m.StaticPopupDialogs[which].text, "Delete '%s'? This cannot be undone.")
 end)
 
 test("groups page: [review 4] a built-in is read-only; Customize puts the copy in its place and selects it", function()

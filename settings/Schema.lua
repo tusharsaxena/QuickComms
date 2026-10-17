@@ -130,14 +130,20 @@ end
 -- The seam addresses the member by the instance argument or, without one, by Settings.EditingId: the
 -- member that kind's editor page has selected, else the first member that page lists, so the panel's
 -- widgets and the CLI write the member the page shows (or would show when opened); the drag and
--- Library's built-in writers name theirs. Library resolves the id. With no member to address (none
--- of that kind exists, or a named id is gone) there is no root, and the write is refused with a line
--- saying where to make one.
+-- Library's built-in writers name theirs. Library resolves the id. A callout is addressed by its id
+-- alone (BY_ID): no page selects one, since a callout is edited in its group's popup, so a write that
+-- names none would land on an arbitrary callout. With no member to address (none of that kind
+-- exists, a callout write names no id, or a named id is gone) there is no root, and the write is
+-- refused with a line saying where to make one, or how to name it.
 local INSTANCE = { callout = true, group = true, pad = true, dial = true, builtin = true }
 Settings.INSTANCE_KINDS = INSTANCE
 
+-- The kinds whose rows are addressed by id alone; the CLI reads the id after the path (settings/Slash.lua).
+local BY_ID = { callout = true }
+Settings.BY_ID_KINDS = BY_ID
+
 local NO_MEMBER = {
-    callout = L["No callout to edit: make one on the Callouts page."],
+    callout = L["Name the callout id: /qc set callout.<field> <id> <value>."],
     group   = L["No group to edit: make one on the Groups page."],
     pad     = L["No pad to edit: make one on the Comms Pad page."],
     dial    = L["No dial to edit: make one on the Comms Dial page."],
@@ -146,9 +152,11 @@ local NO_MEMBER = {
 
 --- The member a kind's rows address when a write names none: the page's selection while it exists,
 --- else the first member the page lists (Library.MemberIds). A built-in set's overlay has no
---- fallback: it is only ever the set the Groups page shows.
+--- fallback: it is only ever the set the Groups page shows. A callout has neither: it is only ever
+--- the one a write names.
 --- @return string|nil
 function Settings.EditingId(kind)
+    if BY_ID[kind] then return nil end
     local id = NS.State.editing[kind]
     if id ~= nil and NS.Library.Member(kind, id) then return id end
     if kind == "builtin" then return nil end
@@ -162,6 +170,7 @@ local function resolveRoot(parts, id)
         if id == nil then id = Settings.EditingId(kind) end
         local member = id ~= nil and NS.Library.Member(kind, id) or nil
         if member then return member, 2, id end
+        if BY_ID[kind] and id ~= nil then return nil, L["No callout with id %s."]:format(tostring(id)) end
         return nil, NO_MEMBER[kind]
     end
     return QC.db and QC.db.profile, 1
