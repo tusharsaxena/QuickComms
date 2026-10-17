@@ -465,7 +465,7 @@ Total.
 - editors: Snapshot is the preview's while Preview as is on
 - editors: [icons] a row's glyph is drawn in its color; a row with none is white
 
-### test_callout_popup.lua (29)
+### test_callout_popup.lua (30)
 
 - popup: Add opens blank with Smart group
 - popup: edit opens filled in
@@ -483,6 +483,7 @@ Total.
 - popup: Insert a token appends to the draft's text
 - popup: [icons] Choose icon… opens the browser; its Choose writes the draft's icon, not the callout
 - popup: [icons] a glyph chosen with a color: the draft carries both; the swatch writes the draft's color
+- popup: [icons] the swatch writes the draft on a drag tick (OnValueChanged) with no confirm, as OK leaves it
 - popup: the window is Blizzard's settings-window template, and its own close X cancels
 - popup: the template's background sits over the catcher's dim and under the border
 - popup: a settings-window template without its close X falls back to the dialog look
@@ -497,7 +498,7 @@ Total.
 - popup: [icons] an icon typed in that is no glyph drops the draft's color, and Save clears it
 - popup: [icons] Add saves a glyph with its color; a malformed color stays open and names the field
 
-### test_icon_browser.lua (17)
+### test_icon_browser.lua (19)
 
 - icon browser: the window is the popup's chrome, stacked above the popup and its catcher
 - icon browser: tabs in order; the stored icon is preselected and its tab opened
@@ -515,6 +516,8 @@ Total.
 - icon browser: Choose is refused in combat; nothing is written
 - icon browser: a stand-down closes it
 - icon browser: Compat.MacroIcons reads both lists, plain texture ids only, never raising
+- icon browser: the area follows the tab band when the chrome learns its width (first open)
+- icon browser: Compat.MacroIcons reads the loose lists first, as the macro icon selector does
 - icon browser: Library.IconColorFrom stores a picked color as hex, white as none
 
 ### test_eui_skin.lua (9)
@@ -544,7 +547,7 @@ Total.
 - when: [final 6] a typed character takes the client's case; the Resolver matches one in any case
 - when: [final 2, 11] ResolveValue maps a typed value onto the token or id its row stores, or refuses it
 
-### test_page_groups.lua (27)
+### test_page_groups.lua (29)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists user groups by name, then the built-ins, active ones dotted
@@ -573,6 +576,8 @@ Total.
 - groups page: [icons] a glyph's swatch writes the group's color; a game icon chosen clears it in the same act
 - groups page: [icons] the browser closes as Cancel when the settings window hides or the group is deleted
 - groups page: [icons] a callout row in the Callouts tab draws its glyph in the callout's color
+- groups page: [icons] a tinted callout row puts its image back to white when released (AceGUI's shared pool)
+- groups page: [icons] the swatch writes on a drag tick (OnValueChanged) with no confirm, as OK leaves it
 
 ### test_page_pads.lua (12)
 
@@ -962,11 +967,11 @@ Total.
 | test_library.lua | 66 |
 | test_members.lua | 28 |
 | test_editors.lua | 15 |
-| test_callout_popup.lua | 29 |
-| test_icon_browser.lua | 17 |
+| test_callout_popup.lua | 30 |
+| test_icon_browser.lua | 19 |
 | test_eui_skin.lua | 9 |
 | test_groups_when.lua | 12 |
-| test_page_groups.lua | 27 |
+| test_page_groups.lua | 29 |
 | test_page_pads.lua | 12 |
 | test_page_dials.lua | 17 |
 | test_page_share.lua | 14 |
@@ -989,4 +994,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **775** |
+| **Total** | **780** |

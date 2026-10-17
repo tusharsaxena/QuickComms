@@ -187,15 +187,29 @@ local function drawToolbar()
     swatch:SetColor(tonumber(hex:sub(1, 2), 16) / 255, tonumber(hex:sub(3, 4), 16) / 255, tonumber(hex:sub(5, 6), 16) / 255)
 end
 
--- The strip, then the area under the band it reserved (a strip that wraps reserves more).
+-- The area under the band the strip reserved (a strip that wraps reserves more).
+local function anchorArea()
+    area:ClearAllPoints()
+    area:SetPoint("TOPLEFT", ctx.body, "TOPLEFT", CONTENT_X, -((H().CHROME_GAP or 8) + (ctx.chromeHeight or 0)))
+    area:SetPoint("BOTTOMRIGHT", ctx.body, "BOTTOMRIGHT", -CONTENT_X, BODY_BOTTOM)
+end
+
+-- The strip, then the area. On the first open the chrome has no width yet, so the strip wraps every
+-- tab onto its own row; the library re-places it from the chrome's OnSizeChanged once the width
+-- arrives (SetChromeHeight), and the area follows from a hook on the same script. Hooked, not set,
+-- and only after the first strip: the library installs its handler with SetScript, which would
+-- wipe a hook made before it.
+local areaHooked = false
 local function drawTabs()
     local h = H()
     if h.TabStrip then
         h.TabStrip(ctx, { tabs = B.TABS, value = tab, onSelect = function(key) B.SetTab(key) end })
     end
-    area:ClearAllPoints()
-    area:SetPoint("TOPLEFT", ctx.body, "TOPLEFT", CONTENT_X, -((h.CHROME_GAP or 8) + (ctx.chromeHeight or 0)))
-    area:SetPoint("BOTTOMRIGHT", ctx.body, "BOTTOMRIGHT", -CONTENT_X, BODY_BOTTOM)
+    if not areaHooked and ctx.chrome and ctx.chrome.HookScript then
+        areaHooked = true
+        ctx.chrome:HookScript("OnSizeChanged", anchorArea)
+    end
+    anchorArea()
 end
 
 -- Show tab `key` from the top, or scrolled to `icon` when the tab holds it.
@@ -449,7 +463,7 @@ end
 --- The toolbar's and the footer's widgets (for tests).
 function B.Widgets()
     return { filter = filterDD, swatch = swatch, choose = chooseBtn, cancel = cancelBtn, slider = slider,
-        grid = grid, status = status, count = count, preview = preview, name = nameText }
+        grid = grid, status = status, count = count, preview = preview, name = nameText, area = area }
 end
 
 -- ── what closes it ──────────────────────────────────────────────────────────────────────────

@@ -403,6 +403,19 @@ test("popup: [icons] a glyph chosen with a color: the draft carries both; the sw
     assertNil(Pop.Draft().iconColor, "no color on a game icon")
 end)
 
+test("popup: [icons] the swatch writes the draft on a drag tick (OnValueChanged) with no confirm, as OK leaves it", function()
+    local NS, _, P, Pop = open()
+    local gid, cid = withKick(NS)
+    local w = P.during(function() Pop.Open(gid, cid) end)
+    Pop.SetIcon(NS.Icon("star"), "ff8000")
+    local swatch = P.find(w, "ColorPicker", "Icon color")
+    swatch:__fire("OnValueChanged", 0, 1, 0, 1)
+    -- red under: listen for OnValueConfirmed alone in Ed.IconChooser
+    assertEqual(Pop.Draft().iconColor, "00ff00")
+    swatch:__fire("OnValueConfirmed", 1, 128 / 255, 0, 1)   -- Cancel confirms the old color
+    assertEqual(Pop.Draft().iconColor, "ff8000", "Cancel puts the old color back")
+end)
+
 -- Record every CreateFrame template from here on (nil for none); the frame is still made.
 local function templates(m)
     local seen = {}

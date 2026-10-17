@@ -568,3 +568,33 @@ test("groups page: [icons] a callout row in the Callouts tab draws its glyph in 
     -- red under: the Callouts tab's entries without iconColor
     assertEqual(table.concat(row.image.vertexColor, ","), "0,1,0")
 end)
+
+test("groups page: [icons] a tinted callout row puts its image back to white when released (AceGUI's shared pool)", function()
+    local NS, m, P = open()
+    local star = NS.Icon("star")
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    NS.Library.CreateCalloutIn(gid, { name = "Star", text = "go", channel = "party", icon = star, iconColor = "00ff00" })
+    pick(NS, gid)
+    local w = P.tab("groups", "callouts")
+    local row
+    for _, label in ipairs(P.all(w, "Label")) do
+        if label.image and label.image[1] == star then row = label end
+    end
+    assertEqual(table.concat(row.image.vertexColor, ","), "0,1,0")
+    m.LibStub("AceGUI-3.0"):Release(row)
+    -- red under: drop the row label's OnRelease in Ed.ReorderRows
+    assertEqual(table.concat(row.image.vertexColor, ","), "1,1,1", "the pooled image is white for its next owner")
+end)
+
+test("groups page: [icons] the swatch writes on a drag tick (OnValueChanged) with no confirm, as OK leaves it", function()
+    local NS, _, P = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine", icon = NS.Icon("star"), iconColor = "ff0000" })
+    pick(NS, gid)
+    local w = P.redraw("groups")
+    local swatch = P.find(w, "ColorPicker", "Icon color")
+    swatch:__fire("OnValueChanged", 0, 0, 1, 1)
+    -- red under: listen for OnValueConfirmed alone in Ed.IconChooser
+    assertEqual(NS.db.profile.groups[gid].iconColor, "0000ff")
+    swatch:__fire("OnValueConfirmed", 1, 0, 0, 1)   -- Cancel confirms the old color
+    assertEqual(NS.db.profile.groups[gid].iconColor, "ff0000", "Cancel puts the old color back")
+end)

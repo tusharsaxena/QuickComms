@@ -171,8 +171,8 @@ footer   the selected icon (a glyph in the color) and its name, then Choose and 
 
 - **Suggested**: the eight raid markers, the built-in sets' icons and the curated LibKa0s glyphs
   (what the old inline grid offered). **Markers**: the eight raid target markers. **Game icons**: every
-  icon the macro icon selector offers (`GetMacroIcons`, then `GetMacroItemIcons`, through
-  `Compat.MacroIcons`), as texture ids, each once, filtered All / Spells / Items; until the client has
+  icon the macro icon selector offers (the loose lists and then `GetMacroIcons` for spells, the
+  same for items, through `Compat.MacroIcons`), as texture ids, each once, filtered All / Spells / Items; until the client has
   loaded its own icon list the tab says so, and the list is read again on the next visit. **Glyphs**:
   every icon of the LibKa0s catalog (`NS.IconNames`), named from its catalog key ("arrow-circle-down"
   reads "Arrow circle down"; the curated glyphs keep their localized labels).

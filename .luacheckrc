@@ -76,7 +76,8 @@ files["core/EUIBridge.lua"] = {
 -- here so no feature file reads it directly (compat).
 -- Compat.MacroIcons: the macro icon selector's lists (the icon browser's Game icons tab).
 files["core/Compat.lua"] = {
-  read_globals = { "C_XMLUtil", "GetMacroIcons", "GetMacroItemIcons" },
+  read_globals = { "C_XMLUtil", "GetMacroIcons", "GetMacroItemIcons", "GetLooseMacroIcons",
+    "GetLooseMacroItemIcons" },
 }
 
 -- QC:SlashEnabled and QC:OnSlashCommand are methods on the addon object by calling convention;

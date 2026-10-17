@@ -324,29 +324,38 @@ end
 
 -- ── The icon browser (settings/IconBrowser_Sources.lua) ─────────────────────────────────────
 
--- The macro icon selector's two readers, read at call time: each fills the table it is handed
--- (and may return it).
-local function macroReader(kind)
-    if kind == "spells" then return GetMacroIcons end
-    if kind == "items" then return GetMacroItemIcons end
-    return nil
+-- The macro icon selector's readers for `kind`, in the order Blizzard's IconDataProvider calls
+-- them (the loose icons first), read at call time: each fills the table it is handed (and may
+-- return it).
+local function macroReaders(kind)
+    if kind == "spells" then return { GetLooseMacroIcons, GetMacroIcons } end
+    if kind == "items" then return { GetLooseMacroItemIcons, GetMacroItemIcons } end
+    return {}
 end
 
---- The icons the macro icon selector offers, `kind` "spells" (GetMacroIcons) or "items"
---- (GetMacroItemIcons): a list of texture ids (plain numbers only). Empty when the reader is absent,
---- raises, or the client's list has not loaded yet.
---- @return number[]
-function Compat.MacroIcons(kind)
-    local reader = macroReader(kind)
-    if type(reader) ~= "function" then return {} end
+-- One reader's list, appended to `out` as plain texture ids. Nothing when the reader is absent,
+-- raises, or its list has not loaded yet.
+local function readInto(reader, out)
+    if type(reader) ~= "function" then return end
     local filled = {}
     local ok, returned = pcall(reader, filled)
-    if not ok then return {} end
+    if not ok then return end
     if #filled == 0 and type(returned) == "table" then filled = returned end
-    local out = {}
     for _, v in ipairs(filled) do
         v = PlainNumber(v)
         if v then out[#out + 1] = v end
     end
+end
+
+--- The icons the macro icon selector offers, `kind` "spells" (GetLooseMacroIcons, then
+--- GetMacroIcons) or "items" (GetLooseMacroItemIcons, then GetMacroItemIcons): a list of texture
+--- ids (plain numbers only), repeats kept (the browser dedups). A reader that is absent, raises, or
+--- has not loaded yet adds nothing.
+--- @return number[]
+function Compat.MacroIcons(kind)
+    local out = {}
+    -- A list with holes (an absent reader) is walked by index, not ipairs.
+    local readers = macroReaders(kind)
+    for i = 1, 2 do readInto(readers[i], out) end
     return out
 end

@@ -242,8 +242,10 @@ function Ed.OpenIconBrowser(spec)
         owner = spec.owner, lift = spec.lift, valid = spec.valid })
 end
 
--- The swatch's write: the picked color as stored (white is none), only when it changed (the picker
--- confirms its old color on Cancel).
+-- The swatch's write: the picked color as stored (white is none), only when it changed. AceGUI's
+-- ColorPicker sends OnValueChanged on every drag tick while the picker is open, and OK confirms
+-- nothing new (its color is the last tick's), so the swatch writes on both callbacks, as
+-- AceConfigDialog does; Cancel confirms the old color, which puts it back.
 local function swatchWrite(spec, r, g, b)
     local _, current = spec.get()
     local picked = NS.Library.IconColorFrom(r, g, b) or nil
@@ -271,7 +273,9 @@ function Ed.IconChooser(ctx, spec)
         swatch:SetLabel(L["Icon color"])
         swatch:SetHasAlpha(false)
         swatch:SetRelativeWidth(0.4)
-        swatch:SetCallback("OnValueConfirmed", function(_, _, r, g, b) swatchWrite(spec, r, g, b) end)
+        local function pick(_, _, r, g, b) swatchWrite(spec, r, g, b) end
+        swatch:SetCallback("OnValueChanged", pick)
+        swatch:SetCallback("OnValueConfirmed", pick)
         h.AttachTooltip(swatch, L["Icon color"], L["The color a LibKa0s glyph is drawn in. Only a glyph takes a color; white is none."])
         local function paint()
             local icon, color = spec.get()
@@ -376,6 +380,11 @@ function Ed.ReorderRows(ctx, pageKey, entries, onMove)
                 label:SetImageSize(ROW_ICON, ROW_ICON)
             end
             Ed.Tint(label.image, e.icon, e.iconColor)
+            -- AceGUI's Label never resets its image's color on acquire, and its pool is shared with
+            -- every addon: put the tint back to white when the row is released (options-ui-§19).
+            label:SetCallback("OnRelease", function(w)
+                if w.image then w.image:SetVertexColor(1, 1, 1, 1) end
+            end)
             label:SetRelativeWidth(0.85 - 0.06 * glyphs)
             into:AddChild(label)
             if e.edit then addGlyph(h, into, "edit", e.edit, e.editTooltip) end

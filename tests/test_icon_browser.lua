@@ -419,6 +419,33 @@ test("icon browser: Compat.MacroIcons reads both lists, plain texture ids only, 
     assertEqual(#NS.Compat.MacroIcons("other"), 0)
 end)
 
+test("icon browser: the area follows the tab band when the chrome learns its width (first open)", function()
+    local NS, _, _, B = boot()
+    openOn(B, nil)
+    local area = B.Widgets().area
+    local before = area.__points[1][5]
+    local gap = NS.addon.Settings.Helpers.CHROME_GAP or 8
+    -- the chrome had no width, so every tab took its own row; the width arrives and the library
+    -- re-places the strip on one row (SetChromeHeight)
+    B.ctx.chrome:__fire("OnSizeChanged", 700, B.ctx.chromeHeight)
+    -- red under: anchor the area once in drawTabs with no OnSizeChanged hook on the chrome
+    assertEqual(area.__points[1][5], -(gap + B.ctx.chromeHeight), "the area sits under the new band")
+    assertTrue(area.__points[1][5] > before, "the band got shorter, so the area moved up")
+end)
+
+test("icon browser: Compat.MacroIcons reads the loose lists first, as the macro icon selector does", function()
+    local NS, m = boot()
+    m.macroIcons = { 1, 2 }
+    m.GetLooseMacroIcons = function(t) t[#t + 1] = 9; t[#t + 1] = 1 end
+    -- red under: read GetMacroIcons alone, or the loose list after it
+    assertEqual(table.concat(NS.Compat.MacroIcons("spells"), ","), "9,1,1,2")
+    m.GetLooseMacroItemIcons = function() return { 5 } end
+    assertEqual(table.concat(NS.Compat.MacroIcons("items"), ","), "5,134400,133784,136243")
+    m.GetLooseMacroIcons = function() error("changed API") end
+    assertEqual(table.concat(NS.Compat.MacroIcons("spells"), ","), "1,2", "a raising loose reader adds nothing")
+    m.GetLooseMacroIcons, m.GetLooseMacroItemIcons = nil, nil
+end)
+
 test("icon browser: Library.IconColorFrom stores a picked color as hex, white as none", function()
     local NS = boot()
     local From = NS.Library.IconColorFrom
