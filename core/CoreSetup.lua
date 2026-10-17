@@ -96,8 +96,11 @@ NS.MakeResizable = lib.MakeResizable
 -- companion, the swatch's alpha kept, an unresolvable class falling through to the swatch.
 NS.ResolveColor  = lib.ResolveColor
 
--- WRAPPED, TO SAY WHO IS ASKING (standalone-windows, a MUST). Every close control in the addon is
--- built through here, because a two-argument call to the factory silently draws the fallback glyph:
+-- WRAPPED, TO SAY WHO IS ASKING (standalone-windows, a MUST). Every close control the addon draws
+-- is built through here, because a two-argument call to the factory silently draws the fallback
+-- glyph. The one close control it does not draw is the callout popup's on Blizzard's settings-window
+-- template, which brings its own X (an accepted deviation, docs/ARCHITECTURE.md); the popup's
+-- fallback window, for a client without the template, draws its mark through here.
 --   grep -rn 'MakeCloseButton(' --include='*.lua' | grep -v '/libs/'
 -- returns this definition and calls to NS.MakeCloseButton, and nothing else.
 NS.MakeCloseButton = function(parent, onClick)

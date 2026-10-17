@@ -384,23 +384,183 @@ test("popup: Choose an icon writes the draft's icon", function()
     assertEqual(byPath[NS.Icon("speech-bubble")], "Speech bubble", "a catalog mark carries a localized label")
 end)
 
-test("popup: its close control is the shared close mark", function()
-    local NS, _, _, Pop = open()
+-- Record every CreateFrame template from here on (nil for none); the frame is still made.
+local function templates(m)
+    local seen = {}
+    local create = m.CreateFrame
+    m.CreateFrame = function(frameType, name, parent, template, ...)
+        seen[#seen + 1] = template or false
+        return create(frameType, name, parent, template, ...)
+    end
+    return seen
+end
+
+-- Record the frame level each frame created from here on is set to (0 until set). A frame that
+-- answers its own level (the template's Bg, in tests/wow_mock.lua) keeps its answer.
+local function levels(m)
+    local create = m.CreateFrame
+    m.CreateFrame = function(...)
+        local f = create(...)
+        if rawget(f, "GetFrameLevel") == nil then
+            rawset(f, "SetFrameLevel", function(self, v) rawset(self, "__level", v); return self end)
+            rawset(f, "GetFrameLevel", function(self) return rawget(self, "__level") or 0 end)
+        end
+        return f
+    end
+end
+
+local function listed(list, value)
+    for _, v in ipairs(list) do if v == value then return true end end
+    return false
+end
+
+-- Count the NS.MakeCloseButton calls from here on, as { parent, onClick }.
+local function closeMarks(NS)
     local made = {}
     local make = NS.MakeCloseButton
     NS.MakeCloseButton = function(parent, onClick)
         made[#made + 1] = { parent = parent, onClick = onClick }
         return make(parent, onClick)
     end
+    return made
+end
+
+test("popup: the window is Blizzard's settings-window template, and its own close X cancels", function()
+    local NS, m, _, Pop = open()
+    local made, seen = closeMarks(NS), templates(m)
     local gid = NS.Library.CreateGroup({ name = "Mine" })
     Pop.Open(gid)
-    -- red under: build the popup's close control by hand instead of through NS.MakeCloseButton
+    -- red under: build the window as a plain frame with the dialog backdrop
+    assertEqual(Pop.frame.__template, "SettingsFrameTemplate")
+    assertEqual(Pop.frame.NineSlice.Text.text, "Ka0s Quick Comms", "the window title is the addon's")
+    assertFalse(listed(seen, "BackdropTemplate"), "no UI-DialogBox-Border backdrop over the template")
+    assertEqual(#made, 0, "the template brings its own close (a documented deviation)")
+    assertEqual(Pop.frame.__parent, Pop.catcher, "above the click-catcher")
+    Pop.frame.ClosePanelButton:__fire("OnClick")
+    assertFalse(Pop.IsOpen(), "the close X cancels")
+    assertFalse(Pop.catcher:IsShown())
+    Pop.Open(gid)
+    assertTrue(Pop.frame:IsShown(), "a closed window opens again")
+    assertEqual(#made, 0, "one popup, built once")
+end)
+
+test("popup: the template's background sits over the catcher's dim and under the border", function()
+    local NS, m, _, Pop = open()
+    levels(m)
+    Pop.Open(NS.Library.CreateGroup({ name = "Mine" }))
+    local dim, bg, window = Pop.catcher:GetFrameLevel(), Pop.frame.Bg:GetFrameLevel(), Pop.frame:GetFrameLevel()
+    -- red under: drop the Bg re-level in build() (the template's absolute level 0 sits under the dim,
+    -- so the popup's background is darker than the settings window's)
+    assertTrue(bg > dim, ("Bg %d over the catcher %d"):format(bg, dim))
+    assertTrue(bg < window, ("Bg %d under the window's border %d"):format(bg, window))
+    -- red under: drop the close X's re-level in build() (the page, whose top edge it overlaps, would
+    -- draw over it)
+    local page, close = m.__named.QuickCommsCalloutPopupPage:GetFrameLevel(), Pop.frame.ClosePanelButton:GetFrameLevel()
+    assertTrue(close > page, ("close X %d over the page %d"):format(close, page))
+end)
+
+test("popup: a settings-window template without its close X falls back to the dialog look", function()
+    local NS, m, _, Pop = open()
+    local create = m.CreateFrame
+    m.CreateFrame = function(frameType, name, parent, template)
+        local f = create(frameType, name, parent, template)
+        if template == "SettingsFrameTemplate" then f.ClosePanelButton = nil end
+        return f
+    end
+    local made, seen = closeMarks(NS), templates(m)
+    -- red under: drop the ClosePanelButton check in makeWindow (build() calls SetScript on nil)
+    assertTrue(Pop.Open(NS.Library.CreateGroup({ name = "Mine" })))
+    assertFalse(Pop.chrome.template, "the template's parts are not all there")
+    assertTrue(listed(seen, "BackdropTemplate"), "the fallback's dialog edge")
+    assertEqual(#made, 1, "the fallback's close mark")
+    made[1].onClick()
+    assertFalse(Pop.IsOpen(), "the close mark cancels")
+end)
+
+test("popup: a client whose C_XMLUtil says it lacks the template is not asked for it", function()
+    local NS, m, _, Pop = open()
+    m.C_XMLUtil = { GetTemplateInfo = function() return nil end }
+    local made, seen = closeMarks(NS), templates(m)
+    assertTrue(Pop.Open(NS.Library.CreateGroup({ name = "Mine" })))
+    -- red under: ignore Compat.HasTemplate's false and create the window from the template anyway
+    assertFalse(listed(seen, "SettingsFrameTemplate"), "the template is not tried")
+    assertTrue(listed(seen, "BackdropTemplate"), "the fallback's dialog edge")
+    assertEqual(#made, 1, "the fallback's close mark")
+end)
+
+test("popup: a client whose C_XMLUtil knows the template gets it", function()
+    local NS, m, _, Pop = open()
+    m.C_XMLUtil = { GetTemplateInfo = function(name)
+        if name == "SettingsFrameTemplate" then return { type = "Frame" } end
+    end }
+    Pop.Open(NS.Library.CreateGroup({ name = "Mine" }))
+    -- red under: read GetTemplateInfo's answer the wrong way round in Compat.HasTemplate
+    assertEqual(Pop.frame.__template, "SettingsFrameTemplate")
+end)
+
+test("popup: without the template it keeps the dialog look and the shared close mark", function()
+    local NS, m, _, Pop = open()
+    m.missingTemplates.SettingsFrameTemplate = true
+    local made, seen = closeMarks(NS), templates(m)
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    -- red under: create the window from the template unguarded (Open raises)
+    assertTrue(Pop.Open(gid))
+    assertTrue(listed(seen, "BackdropTemplate"), "the dialog edge over a dark fill")
     assertEqual(#made, 1)
-    assertTrue(made[1].parent == Pop.frame)
     made[1].onClick()
     assertFalse(Pop.IsOpen(), "the close mark cancels")
     Pop.Open(gid)
-    assertEqual(#made, 1, "one popup, built once")
+    Pop.frame:Hide()
+    Pop.frame:__fire("OnHide")   -- what Escape does to a special frame
+    assertFalse(Pop.IsOpen(), "Escape still cancels")
+end)
+
+test("popup: no scrollbar; the window's height follows the laid-out body", function()
+    local NS, m, P, Pop = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    local w = P.during(function() Pop.Open(gid) end)
+    -- red under: draw the body into the library's ScrollFrame (EnsureScroll)
+    assertNil(P.find(w, "ScrollFrame"), "no scroll frame, no scrollbar")
+    -- the plain container, built before any row (the first SimpleGroup the Open draws)
+    local body = P.find(w, "SimpleGroup")
+    assertTrue(body ~= nil, "the body is a plain AceGUI container")
+    assertTrue(P.find(w, "EditBox", "Name") ~= nil, "the rows are drawn into the plain container")
+    local heights = {}
+    rawset(Pop.frame, "SetHeight", function(_, v) heights[#heights + 1] = v end)
+    body.frame:__setGeom(520, 300)
+    local laid = body.layoutCount or 0
+    P.find(w, "EditBox", "Text"):__fire("OnEnterPressed", "Pull")
+    assertTrue((body.layoutCount or 0) > laid, "laid out again before it is measured")
+    local first = heights[#heights]
+    -- The window: the template's title bar (24) and bottom inset (5), where the library's
+    -- CreatePanel starts the page's body (read off the panel it built: its header plus its own
+    -- offset), the chrome gap, the body and its 12 under it. The popup restates the body's start as
+    -- BODY_TOP and the pages' inset as CONTENT_X (settings/CalloutPopup.lua): red under a re-vendor
+    -- that moves the header, the body's offset under it, or the inset.
+    local LAYOUT = m.LibStub("LibKa0s-Options-1.0").LAYOUT
+    local panel = m.__named.QuickCommsCalloutPopupPage
+    local point, rel, relPoint, _, y = panel.body:GetPoint(1)
+    assertEqual(point, "TOPLEFT")
+    assertEqual(rel, panel)
+    assertEqual(relPoint, "TOPLEFT")
+    assertEqual(first, 24 + (-y) + LAYOUT.CHROME_GAP + 300 + 12 + 5,
+        "the body plus the chrome around it")
+    assertEqual(LAYOUT.CONTENT_LEFT, 12, "the pages' left inset, restated as CONTENT_X")
+    -- the error line grows the body: the window follows it
+    body.frame:__setGeom(520, 340)
+    assertFalse((Pop.Save()))
+    assertEqual(heights[#heights] - first, 40)
+    -- a situation change re-bakes the preview lines (joining a group changes the channel): the
+    -- window is measured again
+    -- red under: drop the fit() at the end of refreshLive in settings/CalloutPopup.lua
+    body.frame:__setGeom(520, 370)
+    local before = #heights
+    NS.addon:SendMessage(NS.MSG.SITUATION_CHANGED)
+    assertTrue(#heights > before, "a situation change measures the window again")
+    assertEqual(heights[#heights] - first, 70)
+    body.frame:__setGeom(520, 390)
+    NS.addon:SendMessage(NS.MSG.TEST_MODE_CHANGED)
+    assertEqual(heights[#heights] - first, 90, "so does test mode turning on or off")
 end)
 
 test("settings: there is no Callouts page", function()

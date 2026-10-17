@@ -14,6 +14,12 @@ marked as such rather than listed as a requirement.
 - **Nothing else.** Every library is vendored under `libs/` and committed (library-stack), so the
   player installs no separate library addon. `## OptionalDeps:` names the vendored libs for load
   ordering, not as things to download.
+- **EllesmereUI, optional and never vendored.** `## OptionalDeps:` also names EllesmereUI, an
+  optional suite (library-stack-§6), so it loads first when installed. With it, its Blizzard Skin
+  module (EllesmereUIBlizzardSkin), its third-party skinning and Quick Comms' entry in its
+  Third-Party Addons list all on, the callout popup takes EllesmereUI's look through its public
+  skinning API (`EllesmereUI.RegisterSkin`, read against its `SKINNING_API.md`, apiVersion 3).
+  Without it the popup keeps Blizzard's settings-window look and nothing else changes.
 - **The share string's two libraries are vendored like the rest** (design spec §15): LibDeflate
   `1.0.2-release` (commit `6831edca`, zlib license, kept as `libs/LibDeflate/LICENSE.txt`) from
   <https://github.com/SafeteeWoW/LibDeflate>, and LibSerialize `v1.2.3` (commit `aa6e50dd`, MIT, kept as

@@ -15,7 +15,7 @@ Total.
 - harness: every adopted LibKa0s module is the live library, not its stub
 - toc: the fixed field order, a single Retail Interface line and the X-Standard field
 - toc: the icon is the 128x128 logo, and the file exists
-- toc: OptionalDeps names only vendored libraries, and no hard Dependencies
+- toc: OptionalDeps names only vendored libraries and the optional suites, and no hard Dependencies
 - toc: the landing-page logo exists beside the launcher icon (layout-§4)
 - repo: no stored copy of the context pack (documentation-§3, anti-pattern #49)
 - repo: the root doc set is README, the CLAUDE stub, DEPENDENCIES and LICENSE
@@ -198,7 +198,7 @@ Total.
 - diagnostics: [final 21] the settings section lists no member row
 - diagnostics: [phase 4] the dials and bindings sections name each dial, its key and the override bindings
 
-### test_compat.lua (12)
+### test_compat.lua (13)
 
 - compat: plain readers pass plain values and drop secrets
 - compat: InstanceInfo with a secret instanceID reads nil, never raises
@@ -207,6 +207,7 @@ Total.
 - compat: UseKeyDown reads the cvar, and defaults on when it cannot
 - compat: SenderIsPlayer answers by GUID, then by name, and nil when it cannot read either
 - compat: [fix wave] SenderIsPlayer: a cross-realm namesake is not the player; an unreadable realm is unknown
+- compat: HasTemplate answers where C_XMLUtil can, and nil where it cannot
 - compat: ChatColor reads the client's chat colors and declines what it cannot read
 - compat: [phase 3] InstanceName reads the client's name; a secret, empty or missing one is nil
 - compat: [phase 3] SpecInfoByID and ClassName read display names; secret or missing ones are nil
@@ -450,7 +451,7 @@ Total.
 - editors: a row with edit shows the edit glyph and fires it
 - editors: Snapshot is the preview's while Preview as is on
 
-### test_callout_popup.lua (19)
+### test_callout_popup.lua (25)
 
 - popup: Add opens blank with Smart group
 - popup: edit opens filled in
@@ -467,10 +468,27 @@ Total.
 - popup: Escape and a profile change cancel
 - popup: Insert a token appends to the draft's text
 - popup: Choose an icon writes the draft's icon
-- popup: its close control is the shared close mark
+- popup: the window is Blizzard's settings-window template, and its own close X cancels
+- popup: the template's background sits over the catcher's dim and under the border
+- popup: a settings-window template without its close X falls back to the dialog look
+- popup: a client whose C_XMLUtil says it lacks the template is not asked for it
+- popup: a client whose C_XMLUtil knows the template gets it
+- popup: without the template it keeps the dialog look and the shared close mark
+- popup: no scrollbar; the window's height follows the laid-out body
 - settings: there is no Callouts page
 - callout helpers: [phase 3] the token picker offers {group1}-{group8} only when the channel can resolve to Raid
 - callout helpers: PreviewLines says what a callout sends here, or why it sends nothing
+
+### test_eui_skin.lua (8)
+
+- eui skin: the popup is painted as EllesmereUI paints the settings window when every condition holds
+- eui skin: a callback that comes after the popup was built paints it at once
+- eui skin: not painted when any condition fails
+- eui skin: never raises without EllesmereUI, or with one that has no RegisterSkin
+- eui skin: a facade missing a primitive, or one that raises, leaves the popup stock
+- eui skin: waits out a stand-down and paints on the way back up
+- eui skin: the fallback window (no settings-window template) keeps its older look
+- eui skin: the diagnostics report names its state
 
 ### test_groups_when.lua (12)
 
@@ -885,7 +903,7 @@ Total.
 | test_slash.lua | 15 |
 | test_disabled.lua | 21 |
 | test_diagnostics.lua | 10 |
-| test_compat.lua | 12 |
+| test_compat.lua | 13 |
 | test_restrictions.lua | 16 |
 | test_situation.lua | 15 |
 | test_tokens.lua | 8 |
@@ -898,7 +916,8 @@ Total.
 | test_library.lua | 60 |
 | test_members.lua | 23 |
 | test_editors.lua | 14 |
-| test_callout_popup.lua | 19 |
+| test_callout_popup.lua | 25 |
+| test_eui_skin.lua | 8 |
 | test_groups_when.lua | 12 |
 | test_page_groups.lua | 24 |
 | test_page_pads.lua | 12 |
@@ -923,4 +942,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **717** |
+| **Total** | **732** |

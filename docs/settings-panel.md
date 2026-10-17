@@ -83,12 +83,22 @@ user group, so there is no Callouts page and no shared callout.
 ## The callout popup
 
 `settings/CalloutPopup.lua`: one callout of one user group, new or listed. It is not a page (no
-sidebar entry, no banner, no Defaults); it is drawn with the pages' own building blocks (the
-library's panel factory for the header and its gold rule, the Helpers' rows and red button pair,
-`Ed.IconPicker`), over a dark backdrop, with the one close-button wrapper (`NS.MakeCloseButton`).
+sidebar entry, no banner, no Defaults). It looks like the settings window: the window is Blizzard's
+own `SettingsFrameTemplate` (its background, its border with the window title "Ka0s Quick Comms",
+and its close X), and inside it the pages' own building blocks draw the rest (the library's panel
+factory for the header and its gold rule, the Helpers' rows and red button pair, `Ed.IconPicker`).
+The body is laid out in a plain AceGUI container, not a scroll frame: the popup has **no
+scrollbar**, and the window's height follows the laid-out body, measured again after every draft
+write, situation change and error line. The settings pages keep their always-visible scrollbar.
+A client without the template gets the popup's old look: a plain frame with Blizzard's dialog edge
+and the shared close mark (`NS.MakeCloseButton`). The template's own close X instead of the shared
+mark is a documented deviation (`ARCHITECTURE.md` → Documented deviations). The window's border,
+title bar and background come from the template, and its `Bg` is lifted over the click-catcher's dim (the
+template declares it at absolute frame level 0), so the popup is as bright as the settings window.
 
 ```
-header   New callout / Edit callout                                          (close mark)
+window   Blizzard's settings window, titled Ka0s Quick Comms                 (its close X)
+header   New callout / Edit callout, the gold rule under it
 body     Name, Text, Channel, Icon (the callout.* member rows' labels and help), Insert a
          token, Choose an icon, What it sends here (the baked line and its bytes, or why it
          sends nothing, and any lock), then Save and Cancel, and under them the line that names
@@ -107,11 +117,24 @@ body     Name, Text, Channel, Icon (the callout.* member rows' labels and help),
   otherwise Save writes one act (`Library.Batch`): for a listed callout, each field that differs
   from the copy taken when the popup opened, through the seam by id; for Add,
   `Library.CreateCalloutIn` at the end of the group. Then the popup closes.
-- **Cancel**, the close mark and Escape drop the draft and write nothing; so do the settings window
+- **Cancel**, the close X and Escape drop the draft and write nothing; so do the settings window
   hiding, a profile change, the stand-down, and the callout or its group ceasing to exist (a `/qc`
   write or an import under it), after which a late Save writes nothing.
 - **Fully modal:** a full-screen click-catcher in the `DIALOG` strata covers the settings window, so
   the page underneath cannot change while a draft is open. Only one popup exists.
+- **EllesmereUI.** With EllesmereUI and its Blizzard Skin module loaded, its third-party skinning on
+  and Quick Comms on in its Third-Party Addons list (as the facade's `S.IsEnabled()` reports them;
+  Quick Comms never reads EllesmereUI's SavedVariables), `settings/CalloutPopup_Skin.lua` paints the
+  window in EllesmereUI's third-party look: its shell, the border faded, the background
+  hidden and its close X; the page's controls stay stock, as the settings window's do. Quick Comms
+  has no switch of its own for it: EllesmereUI's per-addon entry is the switch, and a skin comes off
+  only with a reload. The fallback window (a client without the template) is not painted: the skin
+  is the settings window's, and that window is not it.
+  The skin follows EllesmereUI's third-party switches and its third-party style (a majority vote
+  over all its window styles), not its Settings-window skin or its window-skin kill switch, which
+  its public API does not expose. So the popup matches the settings window behind it only when
+  EllesmereUI's Settings window skin is on and its style is the third-party style; otherwise the
+  two can differ (a known limitation, `ARCHITECTURE.md` -> `## Known Limitations`).
 
 ## Comms Pad
 

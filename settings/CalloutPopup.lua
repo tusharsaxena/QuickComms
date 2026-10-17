@@ -2,7 +2,8 @@ local addonName, NS = ...
 -- settings/CalloutPopup.lua — the callout popup (callouts-owned-by-groups spec, "The callout popup"):
 -- one user group's callout, new or listed, edited as a draft and saved as one act.
 --
---     header   New callout / Edit callout                                   (close mark)
+--     window   Blizzard's settings window (title "Ka0s Quick Comms")             (its close X)
+--     header   New callout / Edit callout, the gold rule under it
 --     body     Name, Text, Channel, Icon (the member rows' labels, read and written on the draft),
 --              Insert a token, Choose an icon, What it sends here, then Save and Cancel, and under
 --              them the line that names a field Save refused
@@ -19,11 +20,17 @@ local addonName, NS = ...
 -- and so do the settings window hiding, a profile change and the callout ceasing to exist, so a
 -- Cancel never leaves a half-saved or empty callout behind.
 --
--- THE LOOK is the settings panel's: the library's panel factory draws the header (title and gold
--- rule) and the body is drawn with the same Helpers, picker and button pair as a page. It is not a
--- page (no sidebar entry, no banner, no Defaults). FULLY MODAL: a full-screen click-catcher under it
--- covers the settings window, so the page underneath cannot change while a draft is open. Only one
--- popup exists, built on its first Open.
+-- THE LOOK is the settings window's. The window is Blizzard's own SettingsFrameTemplate (its
+-- background, its border with the window title, its close X), and inside it the library's panel
+-- factory draws a page's header (title and gold rule); the body is drawn with the same Helpers,
+-- picker and button pair as a page, into a plain AceGUI container rather than a scroll frame: the
+-- popup has no scrollbar, and the window's height follows the laid-out body (fit, after every
+-- refresh and every error line). It is not a page (no sidebar entry, no banner, no Defaults). A
+-- client without the template gets the old look: a plain frame, Blizzard's dialog edge and the
+-- shared close mark. With EllesmereUI's skin on, settings/CalloutPopup_Skin.lua paints the window's
+-- chrome (Pop.chrome) as EllesmereUI paints the settings window. FULLY MODAL: a full-screen
+-- click-catcher under it covers the settings window, so the page underneath cannot change while a
+-- draft is open. Only one popup exists, built on its first Open.
 
 local QC = NS.addon
 local Settings = QC.Settings
@@ -35,14 +42,33 @@ Settings.CalloutPopup = Settings.CalloutPopup or {}
 local Pop = Settings.CalloutPopup
 
 local FIELDS = { "name", "text", "channel", "icon" }
-local WIDTH, HEIGHT = 560, 640
+local WIDTH, HEIGHT = 560, 640   -- HEIGHT until the first fit
+local TEMPLATE = "SettingsFrameTemplate"
+-- Where the page sits in the window: inside the template's background (its Bg is inset 7,-18 /
+-- -3,3), under the title bar; the fallback window is the page alone.
+local INSET_TEMPLATE = { left = 8, top = 24, right = 4, bottom = 5 }
+local INSET_PLAIN = { left = 0, top = 0, right = 0, bottom = 0 }
+-- The page's body starts this far under the panel's top: the library's header (HEADER_HEIGHT, 54)
+-- plus its 8 (Options.lua, CreatePanel). The laid-out body sits CHROME_GAP under that, as a page's
+-- scroll does, CONTENT_X in from both sides (the pages' left inset, CONTENT_LEFT; there is no
+-- scrollbar gutter), with BODY_BOTTOM under it. HEADER_HEIGHT and CONTENT_LEFT are LibKa0s
+-- INTERNAL layout keys, and the 8 is not a key at all, restated here because the library publishes
+-- none of them (an upstream candidate: a published body offset, or a no-scroll body);
+-- tests/test_callout_popup.lua reads BODY_TOP off the body anchor of the panel CreatePanel builds
+-- and CONTENT_X from lib.LAYOUT, so a re-vendor that moves any of them turns it red.
+local BODY_TOP, CONTENT_X, BODY_BOTTOM = 62, 12, 12
 local DIM = { 0, 0, 0, 0.45 }
-local LEVEL = 10    -- the catcher's frame level in its strata; the backdrop and the popup sit above it
+-- The catcher's frame level in its strata. Above it, in order: the template's Bg (LEVEL + 1; the
+-- template declares it at absolute level 0, which would put it under the catcher's dim), the window
+-- with its border (LEVEL + 2), the page (LEVEL + 3) and the close X (LEVEL + 5).
+local LEVEL = 10
 local ERROR_COLOR = "|cffff4040"
 
 -- The open popup's state: the group, the callout (nil for Add), the draft and its baseline.
 local gid, cid, draft, baseline
 local ctx, errorRow
+-- The plain container the body is laid out in (ctx.scroll), and where the page sits in the window.
+local body, inset
 -- The popup's text boxes by field, and the text each last showed of the draft (see flush).
 local boxes, shown = {}, {}
 
@@ -134,8 +160,20 @@ local function check(d)
     return nil
 end
 
+-- Size the window to the body: lay it out (AceGUI's List layout sets the container's height to its
+-- children's), then measure it. Run after every refresh and every error line, so a preview that
+-- gains a line or an error that appears grows the window rather than spilling out of it.
+local function fit()
+    if not (body and Pop.frame) then return end
+    if body.DoLayout then body:DoLayout() end
+    local h = body.frame:GetHeight() or 0
+    local gap = H().CHROME_GAP or 8
+    Pop.frame:SetHeight(inset.top + BODY_TOP + gap + h + BODY_BOTTOM + inset.bottom)
+end
+
 local function showError(text)
     if errorRow then errorRow:SetText(text and (ERROR_COLOR .. text .. "|r") or "") end
+    fit()
 end
 
 -- The token picker's entries for the draft's channel as it is now.
@@ -172,8 +210,8 @@ local function render()
     ctx.refreshers[#ctx.refreshers + 1] = flush
     local rows = draftRows()
     h.RenderRows(ctx, rows, nil, nil, { noHeadings = true })
-    -- The member rows are the scroll's only content yet, so its boxes are theirs, in row order.
-    local drawn, n = editBoxes(ctx.scroll, {}), 0
+    -- The member rows are the body's only content yet, so its boxes are theirs, in row order.
+    local drawn, n = editBoxes(body, {}), 0
     for i, row in ipairs(rows) do
         if row.dialogControl == "EditBox" then
             n = n + 1
@@ -196,6 +234,9 @@ local function render()
         { text = L["Cancel"], tooltip = L["Close without saving. Nothing changes."],
           onClick = function() Pop.Cancel() end })
     errorRow = h.TextRow(ctx, "")
+    -- Last, so it measures what every refresher before it has just redrawn.
+    ctx.refreshers[#ctx.refreshers + 1] = fit
+    fit()
 end
 
 -- Hide the popup and drop the draft. The state is cleared first, so the frame's own OnHide (Escape)
@@ -209,12 +250,70 @@ local function close()
         ctx.qcLive = {}
         ctx.panel:Hide()
     end
+    if Pop.frame then Pop.frame:Hide() end
     if Pop.catcher then Pop.catcher:Hide() end
+end
+
+local function isTable(v) return type(v) == "table" end
+
+-- The window: SettingsFrameTemplate when the client has it and it still has the parts used here
+-- (NineSlice with its title, Bg, ClosePanelButton), else a plain frame. Answers the window and its
+-- chrome: what the skin paints, and whether the template drew it.
+local function makeWindow(parent)
+    local name = addonName .. "CalloutPopup"
+    local f
+    -- A client that says it lacks the template is not asked; one that cannot say is, under pcall.
+    if NS.Compat.HasTemplate(TEMPLATE) ~= false then
+        local ok, made = pcall(CreateFrame, "Frame", name, parent, TEMPLATE)
+        if ok then f = made end
+    end
+    if f and isTable(f.NineSlice) and isTable(f.ClosePanelButton) then
+        if isTable(f.NineSlice.Text) then f.NineSlice.Text:SetText(NS.BRAND) end
+        return f, { template = true, window = f, nineSlice = f.NineSlice,
+            bg = isTable(f.Bg) and f.Bg or nil, close = f.ClosePanelButton }
+    end
+    return f or CreateFrame("Frame", name, parent), { template = false }
+end
+
+-- The fallback's chrome, as the popup looked before the template: Blizzard's dialog edge over a
+-- dark fill under the page, and the shared close mark.
+local function plainChrome(window, panel, chrome)
+    local bg = CreateFrame("Frame", nil, window, "BackdropTemplate")
+    bg:SetAllPoints(window)
+    bg:SetFrameLevel(LEVEL + 1)
+    if bg.SetBackdrop then
+        bg:SetBackdrop({
+            bgFile = "Interface\\Buttons\\WHITE8X8",
+            edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+            edgeSize = 32,
+            insets = { left = 11, right = 11, top = 11, bottom = 11 },
+        })
+        bg:SetBackdropColor(0.05, 0.05, 0.05, 0.96)
+    end
+    local closeButton = NS.MakeCloseButton(panel, function() Pop.Cancel() end)
+    if closeButton then closeButton:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -12, -12) end
+    chrome.window, chrome.bg, chrome.close = window, bg, closeButton
+end
+
+-- The body: a plain AceGUI container in the page's body, where a page has its scroll frame. The
+-- library draws a page's rows into ctx.scroll and builds a scroll frame only when there is none
+-- (EnsureScroll), so this one is laid out with no scroll frame and no scrollbar.
+local function makeBody(h)
+    local group = h.AceGUI and h.AceGUI:Create("SimpleGroup")
+    if not group then return nil end
+    group:SetLayout("List")
+    group.frame:SetParent(ctx.body)
+    group.frame:ClearAllPoints()
+    group.frame:SetPoint("TOPLEFT", ctx.body, "TOPLEFT", CONTENT_X, -(h.CHROME_GAP or 8))
+    group:SetWidth(WIDTH - inset.left - inset.right - 2 * CONTENT_X)
+    group.frame:Show()
+    ctx.scroll = group
+    return group
 end
 
 -- The popup and its click-catcher, built once, on the first Open. The catcher is a full-screen
 -- button in the DIALOG strata (above the settings window) that swallows every click and wheel; the
--- popup is its child, so it draws above it and its dropdowns' pull-outs above both.
+-- window is its child, so it draws above it and its dropdowns' pull-outs above both.
 local function build()
     local h = H()
     local catcher = CreateFrame("Button", nil, UIParent)
@@ -230,38 +329,46 @@ local function build()
     catcher:Hide()
     Pop.catcher = catcher
 
+    local window, chrome = makeWindow(catcher)
+    inset = chrome.template and INSET_TEMPLATE or INSET_PLAIN
+    -- The strata again: a template may name its own, and the window must stay above the catcher.
+    window:SetFrameStrata("DIALOG")
+    window:SetFrameLevel(LEVEL + 2)
+    window:SetSize(WIDTH, HEIGHT)
+    window:ClearAllPoints()
+    window:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    window:EnableMouse(true)
+
     -- The library's panel factory: the settings pages' header, body and refresh registry.
-    ctx = h.CreatePanel(addonName .. "CalloutPopup", L["Edit callout"], { isMain = true })
+    ctx = h.CreatePanel(addonName .. "CalloutPopupPage", L["Edit callout"], { isMain = true })
     local panel = ctx.panel
-    panel:SetParent(catcher)
-    panel:SetSize(WIDTH, HEIGHT)
+    panel:SetParent(window)
     panel:ClearAllPoints()
-    panel:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-    panel:SetFrameLevel(LEVEL + 2)
-    panel:EnableMouse(true)
-    -- Blizzard's dialog edge over a dark fill, between the catcher and the popup's own content.
-    local bg = CreateFrame("Frame", nil, catcher, "BackdropTemplate")
-    bg:SetAllPoints(panel)
-    bg:SetFrameLevel(LEVEL + 1)
-    if bg.SetBackdrop then
-        bg:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8X8",
-            edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-            edgeSize = 32,
-            insets = { left = 11, right = 11, top = 11, bottom = 11 },
-        })
-        bg:SetBackdropColor(0.05, 0.05, 0.05, 0.96)
+    panel:SetPoint("TOPLEFT", window, "TOPLEFT", inset.left, -inset.top)
+    panel:SetPoint("BOTTOMRIGHT", window, "BOTTOMRIGHT", -inset.right, inset.bottom)
+    panel:SetFrameLevel(LEVEL + 3)
+    if chrome.template then
+        -- The template's Bg, over the catcher's dim and under the border: at its declared level 0
+        -- the dim would draw over it, and the popup would be darker than the settings window.
+        if chrome.bg then chrome.bg:SetFrameLevel(LEVEL + 1) end
+        -- The template's close X (an accepted deviation, docs/ARCHITECTURE.md): a click is a
+        -- Cancel, and it sits above the page, whose top edge it overlaps.
+        chrome.close:SetScript("OnClick", function() Pop.Cancel() end)
+        chrome.close:SetFrameLevel(LEVEL + 5)
+    else
+        plainChrome(window, panel, chrome)
     end
-    local closeButton = NS.MakeCloseButton(panel, function() Pop.Cancel() end)
-    if closeButton then closeButton:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -12, -12) end
+    body = makeBody(h)
     -- Escape hides a special frame; hidden with a draft still open is a Cancel.
     if UISpecialFrames then UISpecialFrames[#UISpecialFrames + 1] = addonName .. "CalloutPopup" end
-    panel:HookScript("OnHide", function() if draft then Pop.Cancel() end end)
-    local window = _G.SettingsPanel
-    if window and window.HookScript then
-        window:HookScript("OnHide", function() if draft then Pop.Cancel() end end)
+    window:HookScript("OnHide", function() if draft then Pop.Cancel() end end)
+    local settingsWindow = _G.SettingsPanel
+    if settingsWindow and settingsWindow.HookScript then
+        settingsWindow:HookScript("OnHide", function() if draft then Pop.Cancel() end end)
     end
-    Pop.frame = panel
+    Pop.frame, Pop.chrome = window, chrome
+    local skin = Settings.CalloutPopupSkin
+    if skin then skin.TryApply() end
 end
 
 --- Open the popup on user group `groupId`: on callout `calloutId`, filled in, or with no callout
@@ -285,6 +392,7 @@ function Pop.Open(groupId, calloutId)
     ctx.panel.title:SetText(title)
     ctx.panel.titleText = title
     Pop.catcher:Show()
+    Pop.frame:Show()
     ctx.panel:Show()
     render()
     return true
@@ -363,6 +471,7 @@ end
 local function refreshLive()
     if not (draft and ctx) then return end
     for _, fn in ipairs(ctx.qcLive or {}) do pcall(fn) end
+    fit()
 end
 
 local HANDLERS = {

@@ -55,6 +55,9 @@ local function integrations(out)
     local Lc = NS.Launcher
     out:add(TAG, "launcher: registered=%s shown=%s", Lc and read(Lc.IsRegistered, Lc),
         Lc and read(Lc.IsShown, Lc))
+    -- The callout popup's optional EllesmereUI skin: its gate, the facade and the paint.
+    local skin = NS.addon.Settings and NS.addon.Settings.CalloutPopupSkin
+    if skin and skin.Describe then out:add(TAG, "%s", skin.Describe()) end
 end
 
 local function situation(out)
