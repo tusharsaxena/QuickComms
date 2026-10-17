@@ -942,3 +942,18 @@ test("library: [icons] an import carries a glyph's color into the fresh copies",
     assertEqual(p.groups[map.g1].iconColor, "00ff00")
     assertEqual(p.callouts[map.c1].iconColor, "ff0000")
 end)
+
+test("library: [icons] IconTint draws a glyph's color as r, g, b; no color, a bad one or no glyph is white", function()
+    local NS, Lib = boot()
+    local star = NS.Icon("star")
+    local r, g, b = Lib.IconTint(star, "ff8000")
+    -- red under: IconTint answering white for every color
+    assertEqual(r .. "," .. g .. "," .. b, "1," .. (128 / 255) .. ",0")
+    assertEqual(table.concat({ Lib.IconTint(star, nil) }, ","), "1,1,1", "untinted")
+    assertEqual(table.concat({ Lib.IconTint(star, false) }, ","), "1,1,1", "false is none")
+    assertEqual(table.concat({ Lib.IconTint(star, "#zz0000") }, ","), "1,1,1", "a malformed color draws white")
+    -- red under: tint any icon that carries a color, glyph or not
+    assertEqual(table.concat({ Lib.IconTint(136012, "ff0000") }, ","), "1,1,1", "a game icon is never tinted")
+    assertEqual(table.concat({ Lib.IconTint("Interface\\TargetingFrame\\UI-RaidTargetingIcon_8", "ff0000") }, ","),
+        "1,1,1", "nor a raid marker")
+end)

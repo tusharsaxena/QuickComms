@@ -178,8 +178,10 @@ test("editors: Scalar keeps the rows the flow engine draws, and CancelReorder ca
 end)
 
 -- One probe list drawn on the pads page's scroll: answers the widgets it drew.
+-- `entries` may be a function of NS, for entries that name a catalog path.
 local function probeRows(entries)
     local NS, m, Ed = enabled()
+    if type(entries) == "function" then entries = entries(NS) end
     local P = dofile("tests/page_helpers.lua")(NS, m)
     P.show("Comms Pad")
     local w = P.during(function() Ed.ReorderRows(P.ctx("pads"), "probe", entries) end)
@@ -225,4 +227,16 @@ test("editors: Snapshot is the preview's while Preview as is on", function()
     assertEqual(Ed.Snapshot().content, NS.Situation.Current().content)
     NS.Preview.SetPreviewAs("arena")
     assertEqual(Ed.Snapshot().content, "arena")
+end)
+
+test("editors: [icons] a row's glyph is drawn in its color; a row with none is white", function()
+    local _, P, w = probeRows(function(NS)
+        local star = NS.Icon("star")
+        return { { id = "a", label = "A", icon = star, iconColor = "ff0000" }, { id = "b", label = "B", icon = star } }
+    end)
+    local a, b = P.find(w, "Label", "A"), P.find(w, "Label", "B")
+    -- red under: Ed.ReorderRows setting the image only
+    assertEqual(table.concat(a.image.vertexColor, ","), "1,0,0")
+    -- red under: tint only a row with a color (AceGUI pools the Label, so a white row must be set white)
+    assertEqual(table.concat(b.image.vertexColor, ","), "1,1,1")
 end)

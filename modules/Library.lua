@@ -283,6 +283,15 @@ function Lib.ValidIconColor(v)
     return false, "badIconColor"
 end
 
+--- The tint icon `icon` is drawn with, as r, g, b (0..1): its glyph color, or white (1, 1, 1) for
+--- none, a malformed color or an icon that is no glyph. Every place a member's icon is drawn sets
+--- this, white included, since a pooled texture keeps the last tint it was given.
+--- @return number r, number g, number b
+function Lib.IconTint(icon, color)
+    if type(color) ~= "string" or not Lib.ValidIconColor(color) or not Lib.IsGlyph(icon) then return 1, 1, 1 end
+    return tonumber(color:sub(1, 2), 16) / 255, tonumber(color:sub(3, 4), 16) / 255, tonumber(color:sub(5, 6), 16) / 255
+end
+
 -- The color a member made with `icon` and `color` keeps: the color only when the icon is a glyph,
 -- else none (a malformed color is refused before this).
 local function glyphColor(icon, color)

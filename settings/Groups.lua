@@ -301,7 +301,7 @@ local function renderCallouts(ctx)
     local entries = {}
     for i, cid in ipairs(list) do
         local c = NS.Library.Callout(cid)
-        entries[i] = { id = cid, label = calloutLabel(cid), icon = c and c.icon or nil,
+        entries[i] = { id = cid, label = calloutLabel(cid), icon = c and c.icon or nil, iconColor = c and c.iconColor or nil,
             edit = function() Settings.CalloutPopup.Open(gid, cid) end,
             editTooltip = L["Edit this callout: its name, text, channel and icon."],
             remove = function() G.RemoveCallout(gid, cid) end,

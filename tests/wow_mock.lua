@@ -141,6 +141,23 @@ local function build()
         return w
     end)
 
+    -- AceGUI's Label likewise carries its image texture from the start, and the real widget's pool
+    -- hands it back with the last vertex color it was given, so a row drawn white must say so. The
+    -- texture records SetVertexColor at `image.vertexColor` (white until set); SetImage records its
+    -- arguments at `image[1..n]`, as the base's Label does.
+    M.__libs["AceGUI-3.0"]:RegisterWidgetType("Label", function()
+        local w = M.__makeAceGUIWidget("Label")
+        local texture = { vertexColor = { 1, 1, 1 } }
+        function texture.SetVertexColor(tex, r, g, b) tex.vertexColor = { r, g, b }; return tex end
+        w.image = texture
+        function w:SetImage(...)
+            for k in pairs(texture) do if type(k) == "number" then texture[k] = nil end end
+            for i = 1, select("#", ...) do texture[i] = (select(i, ...)) end
+            return self
+        end
+        return w
+    end)
+
     -- ── secure frames (phase 2: the send engine and the Comms Pad) ─────────────────────────────
     -- The client's protected-frame rules, modeled so a suite sees a refusal instead of trusting
     -- that none happened (testing-§1, fidelity rules 3 and 5). A frame built from a Secure*

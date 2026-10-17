@@ -363,9 +363,15 @@ local function addGlyph(h, into, kind, onClick, tooltip)
     return g
 end
 
---- One uniform row per entry ({ id, label, icon = texture|nil, edit = fn|nil, editTooltip = string|nil,
+--- Draw `texture` (an AceGUI widget's image) in icon `icon`'s glyph color, or white: AceGUI pools its
+--- widgets and a pooled texture keeps the last tint it was given, so an untinted icon is set white.
+function Ed.Tint(texture, icon, color)
+    if texture then texture:SetVertexColor(NS.Library.IconTint(icon, color)) end
+end
+
+--- One uniform row per entry ({ id, label, icon = texture|nil, iconColor = "rrggbb"|nil, edit = fn|nil, editTooltip = string|nil,
 --- remove = fn|nil, removeTooltip = string|nil }): the library's handle in the gutter at the left, the
---- entry's icon (when set) and its label, then the edit and remove glyphs at the right. With
+--- entry's icon (when set, a glyph in its color) and its label, then the edit and remove glyphs at the right. With
 --- `onMove(from, to)` the rows drag; the list's one write and one repaint are the host's (Library,
 --- then LIBRARY_CHANGED).
 function Ed.ReorderRows(ctx, pageKey, entries, onMove)
@@ -391,6 +397,7 @@ function Ed.ReorderRows(ctx, pageKey, entries, onMove)
                 label:SetImage(e.icon)
                 label:SetImageSize(ROW_ICON, ROW_ICON)
             end
+            Ed.Tint(label.image, e.icon, e.iconColor)
             label:SetRelativeWidth(0.85 - 0.06 * glyphs)
             into:AddChild(label)
             if e.edit then addGlyph(h, into, "edit", e.edit, e.editTooltip) end

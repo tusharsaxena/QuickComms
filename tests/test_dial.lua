@@ -510,3 +510,18 @@ test("dial: [review 6] on a four- or six-slice dial every node shows, and the nu
         assertEqual(m.sentMacros[#m.sentMacros].text, "/i INC 3 Lumber Mill")
     end
 end)
+
+test("dial: [icons] a wedge draws its glyph in its color; repainted untinted, it is white again", function()
+    local NS, m = live()
+    local R = NS.DialRender
+    local w = R.DressWedge(m.CreateFrame("Button", "QuickCommsDialTintProbe", m.UIParent))
+    local star = NS.Icon("star")
+    local geo = { anchor = "CENTER", lx = 0, ly = 0 }
+    R.PaintWedge(w, { kind = "ring", title = "Mine", icon = star, iconColor = "00ff00" }, geo)
+    assertEqual(w.qcIcon.__texture, star)
+    -- red under: PaintWedge setting the texture only
+    assertEqual(table.concat(w.qcIcon.__color, ","), "0,1,0")
+    R.PaintWedge(w, { kind = "ring", title = "Other", icon = star }, geo)
+    -- red under: tint only when the item carries a color (a reused wedge keeps the old one)
+    assertEqual(table.concat(w.qcIcon.__color, ","), "1,1,1")
+end)

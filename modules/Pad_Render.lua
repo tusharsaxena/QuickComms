@@ -3,9 +3,9 @@ local _, NS = ...
 -- visuals only: textures and font strings on the chips and the header, their text, color and
 -- visibility, which the client allows in combat too. It never touches a secure attribute, a
 -- protected frame's geometry or a protected frame's Show/Hide; modules/Pad.lua does the protected
--- work, out of combat. A chip shows a square icon tile, its label, the channel tag in WoW's chat
--- color (a smart kind shows the channel it resolved to), a padlock when locked, a dim veil when its
--- bake was refused, a dim veil during the spam guard's window, a gold hover and a flash per send
+-- work, out of combat. A chip shows a square icon tile (a glyph in its color), its label, the
+-- channel tag in WoW's chat color (a smart kind shows the channel it resolved to), a padlock when
+-- locked, a dim veil when its bake was refused, a dim veil during the spam guard's window, a gold hover and a flash per send
 -- result. The tooltip names the line it sends, or why it sends nothing, and any lock. The pad's Look
 -- (phase 5) is read here as two plain values, a font (LabelFont) and a skin (SkinFor), which
 -- modules/Pad.lua applies out of combat.
@@ -159,6 +159,7 @@ function R.Paint(btn, slot, style)
     btn.qcSlot = slot
     local live = slot.line ~= nil or slot.selfText ~= nil or slot.reason == "testMode"
     btn.qcIcon:SetTexture(slot.icon or DEFAULT_ICON)
+    btn.qcIcon:SetVertexColor(NS.Library.IconTint(slot.icon, slot.iconColor))
     btn.qcIcon:SetShown(style ~= "label")
     btn.qcLabel:ClearAllPoints()
     if style == "label" then

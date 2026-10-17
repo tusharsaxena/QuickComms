@@ -5,7 +5,7 @@ local _, NS = ...
 -- header's snippets show and hide the rings; modules/Dial.lua sizes and places the frames, out of
 -- combat). As modules/Pad_Render.lua dresses a pad's secure chips, this dresses the dial's secure
 -- frames: the dark disc and the hub's close mark on the header, spokes and a title on each ring, and
--- on each wedge an icon, its label outside the disc, a padlock, a dim veil when it sends nothing, the
+-- on each wedge an icon (a glyph in its color), its label outside the disc, a padlock, a dim veil when it sends nothing, the
 -- guard's cooling veil, a result flash and a gold glow under the mouse (the selected wedge). The hub carries the stale hint, the lockdown chip and the test
 -- or preview label. The pointer is a plain (unprotected) child of the header that turns toward the
 -- cursor: its OnUpdate is set when the header shows and cleared when it hides, so a closed or
@@ -204,6 +204,7 @@ function R.PaintWedge(btn, item, geo)
     btn.qcItem = item
     local slot = item.slot
     btn.qcIcon:SetTexture(item.icon or (item.more and MORE_ICON) or DEFAULT_ICON)
+    btn.qcIcon:SetVertexColor(NS.Library.IconTint(item.icon, item.iconColor))
     btn.qcLabel:ClearAllPoints()
     btn.qcLabel:SetPoint(geo.anchor or "CENTER", btn, "CENTER", geo.lx, geo.ly)
     btn.qcLabel:SetText(item.title or "?")

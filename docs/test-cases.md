@@ -347,7 +347,7 @@ Total.
 - game ids: every battleground set matches only battleground maps, and no map is two sets'
 - game ids: the shipped dungeons are Mythic+ dungeons and the shipped raids are raids
 
-### test_library.lua (65)
+### test_library.lua (66)
 
 - library: Prepare seeds one pad and one dial with every built-in, once
 - library: callouts validate on create
@@ -414,6 +414,7 @@ Total.
 - library: [icons] a copy keeps the color: AddToGroup, DuplicateGroup and a held callout's copy
 - library: [icons] Prepare drops a malformed stored color and keeps a good one
 - library: [icons] an import carries a glyph's color into the fresh copies
+- library: [icons] IconTint draws a glyph's color as r, g, b; no color, a bad one or no glyph is white
 
 ### test_members.lua (28)
 
@@ -446,7 +447,7 @@ Total.
 - members: [icons] Library.SetIcon writes the icon and its color as one act
 - members: [icons] `/qc reset` clears a color; a group page's Defaults keeps it with the icon
 
-### test_editors.lua (14)
+### test_editors.lua (15)
 
 - editors: [review 2] Select mirrors a built-in group into the built-in selection; Heal keeps a member that exists
 - editors: every membership change asks for one structural repaint, on the next frame
@@ -462,6 +463,7 @@ Total.
 - editors: a row's remove is a glyph, not a button
 - editors: a row with edit shows the edit glyph and fires it
 - editors: Snapshot is the preview's while Preview as is on
+- editors: [icons] a row's glyph is drawn in its color; a row with none is white
 
 ### test_callout_popup.lua (28)
 
@@ -520,7 +522,7 @@ Total.
 - when: [final 6] a typed character takes the client's case; the Resolver matches one in any case
 - when: [final 2, 11] ResolveValue maps a typed value onto the token or id its row stores, or refuses it
 
-### test_page_groups.lua (24)
+### test_page_groups.lua (25)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists user groups by name, then the built-ins, active ones dotted
@@ -546,6 +548,7 @@ Total.
 - groups page: [final 20] the Instances row adds a typed id, removes one, and refuses a fraction or a negative
 - groups page: [final 18] Add the instance you are in reads the instance at the click, not at the draw
 - groups page: [phase 5] Choose an icon sets a user group's icon; a built-in set offers no picker
+- groups page: [icons] a callout row in the Callouts tab draws its glyph in the callout's color
 
 ### test_page_pads.lua (12)
 
@@ -713,7 +716,7 @@ Total.
 - layout: the fade follows combat and the mouse, under the master alpha
 - layout: the channel tag names the resolved channel
 
-### test_dial_layout.lua (14)
+### test_dial_layout.lua (15)
 
 - dial layout: four wedges sit on N, E, S and W, clockwise from the top
 - dial layout: slices are 4, 6, 8 or 12, and 12 only on a ring with no children
@@ -729,8 +732,9 @@ Total.
 - dial layout: [phase 5] a node set's nodes sit on their compass winds; the middle node takes N
 - dial layout: [review 6] [phase 5] nodes that cannot all be pinned keep their shipped order
 - dial layout: [review 6] a pinned ring ignores the dial's slices; Flat keeps its paging
+- dial layout: [icons] a ring entry carries its group's icon color, a send entry its callout's
 
-### test_surfaces.lua (22)
+### test_surfaces.lua (23)
 
 - surfaces: in a key the default pad's plan is the M+ set, baked to /p
 - surfaces: [review 5] a refused callout is a slot with its reason and no line
@@ -754,8 +758,9 @@ Total.
 - surfaces: [fix wave] disabled then enabled inside one combat: the pad is shown and armed after it
 - surfaces: [phase 3] WhyLines names each shown group in order, built-ins marked, then the locks
 - surfaces: [phase 3] WhyLines in a key explains the built-in's matched row; a preview says so
+- surfaces: [icons] a slot carries its callout's icon color, a dial's group entry its group's
 
-### test_pad_render.lua (17)
+### test_pad_render.lua (18)
 
 - render: Dress builds a chip's regions once, each its own object
 - render: [audit QC-07] the chip's padlock is the catalog's lock mark, tinted gold; the Blizzard art is the nil fallback
@@ -774,6 +779,7 @@ Total.
 - render: [review] a chip's label stops short of the channel tag, on one line
 - render: [phase 5] Use class color takes the player's class color and keeps the swatch's alpha
 - render: [phase 5] a section title keeps its gold until the player colors the font
+- render: [icons] a glyph chip is drawn in its color; the chip repainted with another icon is white again
 
 ### test_pad.lua (26)
 
@@ -804,7 +810,7 @@ Total.
 - pad: [phase 5] the pad wears its Look: the chips' font and the edge and body it was given
 - pad: [review 5] a font or border this machine does not have draws the default, with no error
 
-### test_dial.lua (28)
+### test_dial.lua (29)
 
 - dial: Apply builds QuickCommsDial<n> with a ring per page, each callout wedge armed with its baked line
 - dial: a refused callout is a dimmed, disarmed wedge; a ring wedge is disarmed
@@ -834,6 +840,7 @@ Total.
 - dial: [final 5] test mode opens dial 1 once: a rebuild keeps it open, and after the player closes it, closed
 - dial: [phase 5] Arathi Basin's node wedges sit on their winds: Lumber Mill is SW, Blacksmith N
 - dial: [review 6] on a four- or six-slice dial every node shows, and the number keys pick the shown wedges from N
+- dial: [icons] a wedge draws its glyph in its color; repainted untinted, it is white again
 
 ### test_vendor_sync.lua (3)
 
@@ -928,13 +935,13 @@ Total.
 | test_resolver.lua | 8 |
 | test_builtins.lua | 7 |
 | test_gameids.lua | 2 |
-| test_library.lua | 65 |
+| test_library.lua | 66 |
 | test_members.lua | 28 |
-| test_editors.lua | 14 |
+| test_editors.lua | 15 |
 | test_callout_popup.lua | 28 |
 | test_eui_skin.lua | 8 |
 | test_groups_when.lua | 12 |
-| test_page_groups.lua | 24 |
+| test_page_groups.lua | 25 |
 | test_page_pads.lua | 12 |
 | test_page_dials.lua | 17 |
 | test_page_share.lua | 14 |
@@ -945,11 +952,11 @@ Total.
 | test_preview.lua | 17 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 12 |
-| test_dial_layout.lua | 14 |
-| test_surfaces.lua | 22 |
-| test_pad_render.lua | 17 |
+| test_dial_layout.lua | 15 |
+| test_surfaces.lua | 23 |
+| test_pad_render.lua | 18 |
 | test_pad.lua | 26 |
-| test_dial.lua | 28 |
+| test_dial.lua | 29 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -957,4 +964,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **747** |
+| **Total** | **754** |

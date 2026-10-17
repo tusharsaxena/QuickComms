@@ -477,3 +477,19 @@ test("groups page: [phase 5] Choose an icon sets a user group's icon; a built-in
     w = P.redraw("groups")
     assertEqual(#P.all(w, "Icon"), 0, "built-ins are read-only")
 end)
+
+test("groups page: [icons] a callout row in the Callouts tab draws its glyph in the callout's color", function()
+    local NS, _, P = open()
+    local star = NS.Icon("star")
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    NS.Library.CreateCalloutIn(gid, { name = "Star", text = "go", channel = "party", icon = star, iconColor = "00ff00" })
+    pick(NS, gid)
+    local w = P.tab("groups", "callouts")
+    local row
+    for _, label in ipairs(P.all(w, "Label")) do
+        if label.image and label.image[1] == star then row = label end
+    end
+    assertTrue(row ~= nil, "the callout's row shows its icon")
+    -- red under: the Callouts tab's entries without iconColor
+    assertEqual(table.concat(row.image.vertexColor, ","), "0,1,0")
+end)
