@@ -550,6 +550,17 @@ test("popup: no scrollbar; the window's height follows the laid-out body", funct
     body.frame:__setGeom(520, 340)
     assertFalse((Pop.Save()))
     assertEqual(heights[#heights] - first, 40)
+    -- a situation change re-bakes the preview lines (joining a group changes the channel): the
+    -- window is measured again
+    -- red under: drop the fit() at the end of refreshLive in settings/CalloutPopup.lua
+    body.frame:__setGeom(520, 370)
+    local before = #heights
+    NS.addon:SendMessage(NS.MSG.SITUATION_CHANGED)
+    assertTrue(#heights > before, "a situation change measures the window again")
+    assertEqual(heights[#heights] - first, 70)
+    body.frame:__setGeom(520, 390)
+    NS.addon:SendMessage(NS.MSG.TEST_MODE_CHANGED)
+    assertEqual(heights[#heights] - first, 90, "so does test mode turning on or off")
 end)
 
 test("settings: there is no Callouts page", function()

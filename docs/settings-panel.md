@@ -125,11 +125,16 @@ body     Name, Text, Channel, Icon (the callout.* member rows' labels and help),
 - **EllesmereUI.** With EllesmereUI and its Blizzard Skin module loaded, its third-party skinning on
   and Quick Comms on in its Third-Party Addons list (as the facade's `S.IsEnabled()` reports them;
   Quick Comms never reads EllesmereUI's SavedVariables), `settings/CalloutPopup_Skin.lua` paints the
-  window as EllesmereUI paints the settings window: its shell, the border faded, the background
+  window in EllesmereUI's third-party look: its shell, the border faded, the background
   hidden and its close X; the page's controls stay stock, as the settings window's do. Quick Comms
   has no switch of its own for it: EllesmereUI's per-addon entry is the switch, and a skin comes off
   only with a reload. The fallback window (a client without the template) is not painted: the skin
   is the settings window's, and that window is not it.
+  The skin follows EllesmereUI's third-party switches and its third-party style (a majority vote
+  over all its window styles), not its Settings-window skin or its window-skin kill switch, which
+  its public API does not expose. So the popup matches the settings window behind it only when
+  EllesmereUI's Settings window skin is on and its style is the third-party style; otherwise the
+  two can differ (a known limitation, `ARCHITECTURE.md` -> `## Known Limitations`).
 
 ## Comms Pad
 

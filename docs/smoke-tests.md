@@ -252,8 +252,9 @@ same on Comms Dial → Groups. Neither list has an edit glyph. Result:
 
 **EDIT-13. The callout popup in EllesmereUI's look.** With EllesmereUI and EllesmereUI Blizzard Skin
 enabled, EllesmereUI's third-party skinning on and QuickComms on in its Third-Party Addons list,
-`/reload` → open the callout popup (EDIT-9) → its window wears the same EllesmereUI shell, border
-and close X as the settings window behind it, and the page's controls look as they do on the
+its window skins not killed, its Settings window skin on and set to the style its other windows
+mostly use (the third-party style), `/reload` → open the callout popup (EDIT-9) → its window wears
+the same EllesmereUI shell, border and close X as the settings window behind it, and the page's controls look as they do on the
 settings pages. `/qc diagnostics` → the integrations section reads `ellesmereui: suite=true
 facade=true enabled=true applied=true failed=false`. Turn QuickComms off in EllesmereUI's
 Third-Party Addons list and `/reload` → the popup is Blizzard's settings window again (EllesmereUI
