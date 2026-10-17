@@ -88,14 +88,18 @@ test("toc: the icon is the 128x128 logo, and the file exists", function()
     assertEqual(tga:byte(17), 32, "32-bit")
 end)
 
-test("toc: OptionalDeps names only vendored libraries, and no hard Dependencies", function()
+-- The optional suites the addon integrates with when present (library-stack-§6): OptionalDeps so
+-- they load first, never Dependencies, and the addon whole without them.
+local OPTIONAL_SUITES = { EllesmereUI = true }   -- settings/CalloutPopup_Skin.lua
+
+test("toc: OptionalDeps names only vendored libraries and the optional suites, and no hard Dependencies", function()
     local fields = tocFields()
     local deps = field(fields, "OptionalDeps")
     for name in deps:gmatch("[^,%s]+") do
-        -- red under: add an addon that is not vendored under libs/ to OptionalDeps
-        local vendored = name == "Ace3" or read("libs/" .. name .. "/" .. name .. ".lua") ~= nil
+        -- red under: add an addon that is neither vendored under libs/ nor an optional suite to OptionalDeps
+        local vendored = name == "Ace3" or OPTIONAL_SUITES[name] or read("libs/" .. name .. "/" .. name .. ".lua") ~= nil
             or read("libs/" .. name .. "/" .. name .. ".xml") ~= nil or read("libs/" .. name .. "/lib.xml") ~= nil
-        assertTrue(vendored, "OptionalDeps names " .. name .. ", which is not vendored")
+        assertTrue(vendored, "OptionalDeps names " .. name .. ", which is neither vendored nor an optional suite")
     end
     assertTrue(field(fields, "Dependencies") == nil, "no hard dependency (library-stack-§6)")
 end)

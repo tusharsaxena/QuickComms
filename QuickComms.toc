@@ -5,7 +5,7 @@
 ## Version: 0.1.0
 ## IconTexture: Interface\AddOns\QuickComms\media\logos\quickcomms.logo.128.tga
 ## SavedVariables: QuickCommsDB, QuickCommsPerfDB
-## OptionalDeps: Ace3, LibStub, CallbackHandler-1.0, LibSharedMedia-3.0, LibDataBroker-1.1, LibDBIcon-1.0, LibDeflate, LibSerialize
+## OptionalDeps: Ace3, LibStub, CallbackHandler-1.0, LibSharedMedia-3.0, LibDataBroker-1.1, LibDBIcon-1.0, LibDeflate, LibSerialize, EllesmereUI
 ## DefaultState: enabled
 ## Category-enUS: Chat
 ## X-License: MIT
@@ -47,6 +47,9 @@ core\Namespace.lua
 core\CoreSetup.lua
 # Conventional: publishes NS.Compat, read inside functions only; resolves LibKa0s-Compat-1.0 at load (libraries load first).
 core\Compat.lua
+# LOAD-BEARING: publishes NS.EUIBridge, which settings\CalloutPopup_Skin.lua calls at load; every
+# EllesmereUI read happens at call time (EllesmereUI is an OptionalDep, never required).
+core\EUIBridge.lua
 # LOAD-BEARING: publishes NS.MediaFont, which core\Constants.lua resolves FONT_MONO from at load.
 core\MediaSetup.lua
 # Conventional: data only, apart from FONT_MONO, resolved from the seam above.
@@ -160,9 +163,13 @@ settings\Editors.lua
 # LOAD-BEARING: takes Settings.Editors at load; publishes Settings.Callouts (the token list and the
 # preview lines), which settings\CalloutPopup.lua takes at load and settings\Groups.lua reads at run time.
 settings\Callouts.lua
-# LOAD-BEARING: takes Settings.Editors and Settings.Callouts at load and publishes Settings.CalloutPopup;
-# settings\Groups.lua opens it at run time only.
+# LOAD-BEARING: takes Settings.Editors and Settings.Callouts at load and publishes Settings.CalloutPopup,
+# which settings\CalloutPopup_Skin.lua takes at load; settings\Groups.lua opens it at run time only.
 settings\CalloutPopup.lua
+# LOAD-BEARING: takes Settings.CalloutPopup and NS.EUIBridge at load and registers with EllesmereUI at
+# file load (an OptionalDep, so loaded first when present); settings\CalloutPopup.lua calls
+# Settings.CalloutPopupSkin.TryApply at run time only.
+settings\CalloutPopup_Skin.lua
 # LOAD-BEARING: takes Settings.Editors at load; settings\Groups.lua calls Settings.GroupsWhen at run time only.
 settings\Groups_When.lua
 # LOAD-BEARING: takes Settings.Editors at load and registers the Groups page (after General).

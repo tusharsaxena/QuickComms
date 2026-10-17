@@ -15,7 +15,7 @@ Total.
 - harness: every adopted LibKa0s module is the live library, not its stub
 - toc: the fixed field order, a single Retail Interface line and the X-Standard field
 - toc: the icon is the 128x128 logo, and the file exists
-- toc: OptionalDeps names only vendored libraries, and no hard Dependencies
+- toc: OptionalDeps names only vendored libraries and the optional suites, and no hard Dependencies
 - toc: the landing-page logo exists beside the launcher icon (layout-§4)
 - repo: no stored copy of the context pack (documentation-§3, anti-pattern #49)
 - repo: the root doc set is README, the CLAUDE stub, DEPENDENCIES and LICENSE
@@ -474,6 +474,16 @@ Total.
 - callout helpers: [phase 3] the token picker offers {group1}-{group8} only when the channel can resolve to Raid
 - callout helpers: PreviewLines says what a callout sends here, or why it sends nothing
 
+### test_eui_skin.lua (7)
+
+- eui skin: the popup is painted as EllesmereUI paints the settings window when every condition holds
+- eui skin: a callback that comes after the popup was built paints it at once
+- eui skin: not painted when any condition fails
+- eui skin: never raises without EllesmereUI, or with one that has no RegisterSkin
+- eui skin: a facade missing a primitive, or one that raises, leaves the popup stock
+- eui skin: waits out a stand-down and paints on the way back up
+- eui skin: the diagnostics report names its state
+
 ### test_groups_when.lua (12)
 
 - when: Toggle adds and removes one value, drops an emptied row, and never mutates its input
@@ -901,6 +911,7 @@ Total.
 | test_members.lua | 23 |
 | test_editors.lua | 14 |
 | test_callout_popup.lua | 21 |
+| test_eui_skin.lua | 7 |
 | test_groups_when.lua | 12 |
 | test_page_groups.lua | 24 |
 | test_page_pads.lua | 12 |
@@ -925,4 +936,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **719** |
+| **Total** | **726** |

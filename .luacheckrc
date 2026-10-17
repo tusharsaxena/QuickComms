@@ -68,6 +68,11 @@ files["tests/"] = {
   },
 }
 
+-- EllesmereUI (## OptionalDeps), read only by its bridge: lint keeps every other file off it.
+files["core/EUIBridge.lua"] = {
+  read_globals = { "EllesmereUI", "EllesmereUIDB" },
+}
+
 -- QC:SlashEnabled and QC:OnSlashCommand are methods on the addon object by calling convention;
 -- neither body reads the receiver.
 files["settings/Slash.lua"] = {
