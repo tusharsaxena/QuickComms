@@ -285,6 +285,7 @@ local function renderGroups(ctx, rows)
         local entries = {}
         for i, gid in ipairs(list) do
             entries[i] = { id = gid, label = groupLabel(gid, active),
+                removeTooltip = L["Take this group off the dial. The group itself is kept."],
                 remove = function() NS.Library.RemoveGroupFromSurface("dial", id, gid) end }
         end
         Ed.ReorderRows(ctx, PAGE, entries, function(from, to) NS.Library.MoveGroupOnSurface("dial", id, from, to) end)

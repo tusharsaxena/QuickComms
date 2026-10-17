@@ -98,6 +98,19 @@ return function(NS, m)
         return out
     end
 
+    --- A reorder row's glyph button: the `n`th (default 1) Icon Ed.ReorderRows tagged `kind`
+    --- ("edit" or "remove"), in draw order, so one per row.
+    function P.glyph(widgets, kind, n)
+        local seen = 0
+        for _, w in ipairs(widgets) do
+            if w.type == "Icon" and w.userdata and w.userdata.qcGlyph == kind then
+                seen = seen + 1
+                if seen == (n or 1) then return w end
+            end
+        end
+        return nil
+    end
+
     --- The texts of the Label and InteractiveLabel widgets, in draw order.
     function P.texts(widgets)
         local out = {}

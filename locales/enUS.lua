@@ -469,6 +469,7 @@ L["Nothing is showing: no pad or dial has been built yet."] = "Nothing is showin
 -- Editor pages (settings/Editors.lua)
 L["Drag to reorder"] = "Drag to reorder"
 L["Remove"] = "Remove"
+L["Edit"] = "Edit"
 L["Delete '%s'? This cannot be undone."] = "Delete '%s'? This cannot be undone."
 
 -- Callouts page (settings/Callouts.lua)
@@ -584,6 +585,7 @@ L["Delete pad"] = "Delete pad"
 L["Delete this pad. Its groups and callouts are kept. Asks first."] = "Delete this pad. Its groups and callouts are kept. Asks first."
 L["This pad lists no group. Add one below."] = "This pad lists no group. Add one below."
 L["Higher groups come first on the pad. Drag to reorder."] = "Higher groups come first on the pad. Drag to reorder."
+L["Take this group off the pad. The group itself is kept."] = "Take this group off the pad. The group itself is kept."
 L["Add a group"] = "Add a group"
 L["Add a group to the end of this pad's list."] = "Add a group to the end of this pad's list."
 L["Pixels from the pad's anchor. Press Enter to apply."] = "Pixels from the pad's anchor. Press Enter to apply."
@@ -666,6 +668,7 @@ L["Delete dial"] = "Delete dial"
 L["Delete this dial. Its groups and callouts are kept, and its key is released. Asks first."] = "Delete this dial. Its groups and callouts are kept, and its key is released. Asks first."
 L["This dial lists no group. Add one below."] = "This dial lists no group. Add one below."
 L["Higher groups come first on the dial. Drag to reorder."] = "Higher groups come first on the dial. Drag to reorder."
+L["Take this group off the dial. The group itself is kept."] = "Take this group off the dial. The group itself is kept."
 L["Add a group to the end of this dial's list."] = "Add a group to the end of this dial's list."
 L["Pixels from the middle of the screen. Press Enter to apply."] = "Pixels from the middle of the screen. Press Enter to apply."
 L["Reset this dial's position"] = "Reset this dial's position"

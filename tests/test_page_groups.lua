@@ -95,7 +95,7 @@ test("groups page: Callouts drags to reorder, removes, and copies a built-in cal
     list.opts.onMove(1, 2)
     assertEqual(table.concat(NS.db.profile.groups[gid].callouts, ","), b .. "," .. a)
     local w = P.tab("groups", "callouts")
-    P.all(w, "Button", "Remove")[1]:__fire("OnClick")
+    P.glyph(w, "remove", 1):__fire("OnClick")
     assertEqual(table.concat(NS.db.profile.groups[gid].callouts, ","), a)
     w = P.tab("groups", "callouts")
     P.find(w, "Dropdown", "Add a callout"):__fire("OnValueChanged", "bi.mplus.lust")

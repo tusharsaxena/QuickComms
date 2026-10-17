@@ -177,6 +177,48 @@ test("editors: Scalar keeps the rows the flow engine draws, and CancelReorder ca
     assertEqual(n, 1)
 end)
 
+-- One probe list drawn on the pads page's scroll: answers the widgets it drew.
+local function probeRows(entries)
+    local NS, m, Ed = enabled()
+    local P = dofile("tests/page_helpers.lua")(NS, m)
+    P.show("Comms Pad")
+    local w = P.during(function() Ed.ReorderRows(P.ctx("pads"), "probe", entries) end)
+    return NS, P, w
+end
+
+test("editors: a row's remove is a glyph, not a button", function()
+    local removed = 0
+    local _, P, w = probeRows({ { id = "a", label = "A", removeTooltip = "Take A off.",
+        remove = function() removed = removed + 1 end } })
+    -- red under: draw the remove as the red L["Remove"] Button in Ed.ReorderRows
+    assertNil(P.find(w, "Button", "Remove"), "no red button remains")
+    local glyph = P.glyph(w, "remove")
+    assertTrue(glyph ~= nil, "the remove glyph")
+    assertEqual(glyph.image.atlas, "transmog-icon-remove")
+    assertEqual(glyph.imageSize[1], 22)
+    assertTrue(glyph.callbacks.OnEnter ~= nil, "it carries a tooltip")
+    assertNil(P.glyph(w, "edit"), "no edit glyph without edit")
+    glyph:__fire("OnClick")
+    assertEqual(removed, 1)
+end)
+
+test("editors: a row with edit shows the edit glyph and fires it", function()
+    local edited = 0
+    local NS, P, w = probeRows({ { id = "a", label = "A", icon = "Interface\\Icons\\Ability_Hunter_Pet_Bear",
+        edit = function() edited = edited + 1 end, editTooltip = "Edit A.", remove = function() end } })
+    local glyph = P.glyph(w, "edit")
+    -- red under: drop the edit glyph from Ed.ReorderRows
+    assertTrue(glyph ~= nil, "the edit glyph")
+    assertEqual(glyph.image[1], NS.Icon("edit"))
+    assertTrue(glyph.callbacks.OnEnter ~= nil, "it carries a tooltip")
+    assertTrue(P.glyph(w, "remove") ~= nil, "remove sits beside it")
+    glyph:__fire("OnClick")
+    assertEqual(edited, 1)
+    local label = P.find(w, "Label", "A")
+    -- red under: ignore the entry's icon
+    assertEqual(label.image and label.image[1], "Interface\\Icons\\Ability_Hunter_Pet_Bear")
+end)
+
 test("editors: Snapshot is the preview's while Preview as is on", function()
     local NS, _, Ed = enabled()
     NS.Situation.RefreshNow("test")

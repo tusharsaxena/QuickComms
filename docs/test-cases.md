@@ -433,7 +433,7 @@ Total.
 - members: [phase 5] a When's key level prints as it types back in: one level, open below, open above
 - members: [phase 5] a pad's Look rows are composed member rows: checked, clamped, announced
 
-### test_editors.lua (12)
+### test_editors.lua (14)
 
 - editors: [review 2] Select mirrors a built-in group into the built-in selection; Heal keeps a member that exists
 - editors: every membership change asks for one structural repaint, on the next frame
@@ -446,6 +446,8 @@ Total.
 - editors: Open goes to a page's category by its id
 - editors: [audit QC-02] Open refuses in combat with one gray line and never reaches the category switch
 - editors: Scalar keeps the rows the flow engine draws, and CancelReorder cancels once
+- editors: a row's remove is a glyph, not a button
+- editors: a row with edit shows the edit glyph and fires it
 - editors: Snapshot is the preview's while Preview as is on
 
 ### test_page_callouts.lua (14)
@@ -499,13 +501,14 @@ Total.
 - groups page: [final 18] Add the instance you are in reads the instance at the click, not at the draw
 - groups page: [phase 5] Choose an icon sets a user group's icon; a built-in set offers no picker
 
-### test_page_pads.lua (11)
+### test_page_pads.lua (12)
 
 - pads page: New pad makes a second pad holding every built-in, selects it, and the pad is built
 - pads page: the Layout rows write the selected pad
 - pads page: X and Y move the pad through its pad.point row; Reset puts it back
 - pads page: Look's visibility reaches the pad's state driver
 - pads page: Groups lists the pad's groups; remove one, add it back at the end, drag to reorder
+- pads page: the remove glyph takes a group off the pad without asking and keeps the group
 - pads page: Delete pad asks, then the pad is gone, its frame released, and the page heals
 - pads page: General's Unlock pads toggles the one lock
 - pads page: [final 3, 15] Defaults puts the pad's rows back as one act: one rebuild
@@ -513,7 +516,7 @@ Total.
 - pads page: [final 26] New pad takes the lowest free number, so a delete never leads to two names alike
 - pads page: [phase 5] Look carries the composed Font, Border and Background groups under their headings
 
-### test_page_dials.lua (16)
+### test_page_dials.lua (17)
 
 - dials page: New dial makes a second dial holding every built-in, selects it, and builds QuickCommsDial2
 - dials page: New dial takes the lowest free number, so a delete never leads to two names alike
@@ -523,6 +526,7 @@ Total.
 - dials page: Defaults puts the dial's rows back as one act, and keeps its key and position
 - dials page: [review 4] the Binding tab binds the key; another dial's is refused naming it; a WoW key warns and binds
 - dials page: Groups switches Categories and Flat, and reorders the dial's groups
+- dials page: the remove glyph takes a group off the dial without asking and keeps the group
 - dials page: [phase 4] Groups warns when a node set would open three rings deep, and not once it is first
 - dials page: Preview lists the rings wedge by wedge, marking the one the dial opens on
 - dials page: [final 20] at 12 wedges per ring the Preview names each wedge by its clock position
@@ -879,12 +883,12 @@ Total.
 | test_gameids.lua | 2 |
 | test_library.lua | 62 |
 | test_members.lua | 23 |
-| test_editors.lua | 12 |
+| test_editors.lua | 14 |
 | test_page_callouts.lua | 14 |
 | test_groups_when.lua | 12 |
 | test_page_groups.lua | 16 |
-| test_page_pads.lua | 11 |
-| test_page_dials.lua | 16 |
+| test_page_pads.lua | 12 |
+| test_page_dials.lua | 17 |
 | test_page_share.lua | 13 |
 | test_check.lua | 6 |
 | test_send_guard.lua | 10 |
@@ -905,4 +909,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **699** |
+| **Total** | **703** |

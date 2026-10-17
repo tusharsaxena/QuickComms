@@ -356,9 +356,38 @@ local function newReorder(pageKey, onMove)
     return r
 end
 
---- One uniform row per entry ({ id, label, remove = fn|nil }): the library's handle in the gutter at
---- the left, the label, and Remove at the right. With `onMove(from, to)` the rows drag; the list's one
---- write and one repaint are the host's (Library, then LIBRARY_CHANGED).
+-- The row's glyph buttons (Consumable Master's precedent: the catalog's mark first, Blizzard's where
+-- the catalog has none): a 22px clickable icon with a tooltip, tagged in `userdata.qcGlyph` so a test
+-- finds it. `atlas` dresses the Icon's own texture after it is made; `texture` is a plain path.
+local GLYPH, GLYPH_W, ROW_ICON = 22, 32, 18
+local GLYPHS = {
+    edit   = { texture = function() return NS.Icon("edit") end, title = function() return L["Edit"] end },
+    remove = { atlas = "transmog-icon-remove", title = function() return L["Remove"] end },
+}
+
+local function addGlyph(h, into, kind, onClick, tooltip)
+    local spec = GLYPHS[kind]
+    local g = h.AceGUI:Create("Icon")
+    g:SetImageSize(GLYPH, GLYPH)
+    if spec.atlas then
+        g.image:SetAtlas(spec.atlas)
+    else
+        g:SetImage(spec.texture())
+    end
+    g:SetWidth(GLYPH_W)
+    g:SetHeight(Ed.ROW_H)
+    g.userdata.qcGlyph = kind
+    g:SetCallback("OnClick", function() onClick() end)
+    h.AttachTooltip(g, spec.title(), tooltip)
+    into:AddChild(g)
+    return g
+end
+
+--- One uniform row per entry ({ id, label, icon = texture|nil, edit = fn|nil, editTooltip = string|nil,
+--- remove = fn|nil, removeTooltip = string|nil }): the library's handle in the gutter at the left, the
+--- entry's icon (when set) and its label, then the edit and remove glyphs at the right. With
+--- `onMove(from, to)` the rows drag; the list's one write and one repaint are the host's (Library,
+--- then LIBRARY_CHANGED).
 function Ed.ReorderRows(ctx, pageKey, entries, onMove)
     local h = H()
     local scroll = h.EnsureScroll(ctx)
@@ -374,17 +403,18 @@ function Ed.ReorderRows(ctx, pageKey, entries, onMove)
             gutter:SetText("")
             gutter:SetWidth(Ed.HANDLE_W)
             into:AddChild(gutter)
+            -- The label takes what the glyphs leave; AceGUI's Label draws its image left of its text.
+            local glyphs = (e.edit and 1 or 0) + (e.remove and 1 or 0)
             local label = AceGUI:Create("Label")
             label:SetText(e.label)
-            label:SetRelativeWidth(e.remove and 0.62 or 0.85)
-            into:AddChild(label)
-            if e.remove then
-                local b = AceGUI:Create("Button")
-                b:SetText(L["Remove"])
-                b:SetRelativeWidth(0.25)
-                b:SetCallback("OnClick", function() e.remove() end)
-                into:AddChild(b)
+            if e.icon then
+                label:SetImage(e.icon)
+                label:SetImageSize(ROW_ICON, ROW_ICON)
             end
+            label:SetRelativeWidth(0.85 - 0.06 * glyphs)
+            into:AddChild(label)
+            if e.edit then addGlyph(h, into, "edit", e.edit, e.editTooltip) end
+            if e.remove then addGlyph(h, into, "remove", e.remove, e.removeTooltip) end
             built[#built + 1] = { group = into, entry = e }
             return true
         end }
