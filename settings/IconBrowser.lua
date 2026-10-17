@@ -158,6 +158,28 @@ local function drawStatus()
     status:Show()
 end
 
+-- A cell's hover tooltip: its icon's name and what a click does.
+local function tooltip(cell)
+    if cell.qcIcon == nil or not GameTooltip then return end
+    GameTooltip:SetOwner(cell, "ANCHOR_RIGHT")
+    GameTooltip:SetText(Src.Label(cell.qcIcon))
+    GameTooltip:AddLine(L["Click to select it, double-click to choose it."], 1, 1, 1, true)
+    GameTooltip:Show()
+end
+
+-- The grid is virtualized: a scroll re-dresses the cell under the pointer without a new OnEnter,
+-- so the tooltip a cell owns is re-said for its new icon, or hidden when the cell went empty.
+local function refreshTooltip()
+    if not GameTooltip or not GameTooltip:IsShown() then return end
+    local owner = GameTooltip:GetOwner()
+    for _, cell in ipairs(B.cells) do
+        if cell == owner then
+            if cell.qcIcon ~= nil and cell:IsShown() then tooltip(cell) else GameTooltip:Hide() end
+            return
+        end
+    end
+end
+
 -- Re-dress every cell from the list at the offset, and the scrollbar, the count and the footer.
 local function draw()
     drawing = true
@@ -169,6 +191,7 @@ local function draw()
     count:SetText(L["%d icons"]:format(#list))
     drawStatus()
     drawFooter()
+    refreshTooltip()
     drawing = false
 end
 
@@ -230,14 +253,6 @@ local function showTab(key, icon)
 end
 
 -- ── the window's parts ──────────────────────────────────────────────────────────────────────
-
-local function tooltip(cell)
-    if cell.qcIcon == nil or not GameTooltip then return end
-    GameTooltip:SetOwner(cell, "ANCHOR_RIGHT")
-    GameTooltip:SetText(Src.Label(cell.qcIcon))
-    GameTooltip:AddLine(L["Click to select it, double-click to choose it."], 1, 1, 1, true)
-    GameTooltip:Show()
-end
 
 local function makeCell(i)
     local cell = CreateFrame("Button", nil, grid)
@@ -327,12 +342,16 @@ local function buildFooter(AceGUI)
     preview:SetPoint("BOTTOMLEFT", area, "BOTTOMLEFT", 0, 0)
     nameText = area:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     nameText:SetPoint("LEFT", preview, "RIGHT", 8, 0)
+    nameText:SetJustifyH("LEFT")
+    nameText:SetWordWrap(false)
     chooseBtn = AceGUI:Create("Button")
     chooseBtn:SetText(L["Choose"])
     chooseBtn:SetWidth(110)
     chooseBtn:SetCallback("OnClick", function() B.Choose() end)
     H().AttachTooltip(chooseBtn, L["Choose"], L["Use the selected icon and close."])
     place(chooseBtn, "BOTTOMRIGHT", -116, 0)
+    -- A long name (a typed texture path has no label) is cut short before the buttons.
+    nameText:SetPoint("RIGHT", chooseBtn.frame, "LEFT", -8, 0)
     cancelBtn = AceGUI:Create("Button")
     cancelBtn:SetText(L["Cancel"])
     cancelBtn:SetWidth(110)

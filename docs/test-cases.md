@@ -498,7 +498,7 @@ Total.
 - popup: [icons] an icon typed in that is no glyph drops the draft's color, and Save clears it
 - popup: [icons] Add saves a glyph with its color; a malformed color stays open and names the field
 
-### test_icon_browser.lua (23)
+### test_icon_browser.lua (25)
 
 - icon browser: the window is the popup's chrome, stacked above the popup and its catcher
 - icon browser: tabs in order; the stored icon is preselected and its tab opened
@@ -509,6 +509,8 @@ Total.
 - icon browser: Game icons is both macro lists, filtered All / Spells / Items
 - icon browser: the game list not loaded yet says so, and loads on a later visit
 - icon browser: the grid is virtualized: a fixed set of cells re-dressed as it scrolls
+- icon browser: a scroll under the pointer re-says the hovered cell's tooltip, or hides it
+- icon browser: a long name in the footer stops at the Choose button, on one line
 - icon browser: the wheel over the scrollbar scrolls the grid too
 - icon browser: a filtered game list holds each icon once (the loose lists overlap the full ones)
 - icon browser: the color picker its swatch opened closes with the browser, and only that one
@@ -972,7 +974,7 @@ Total.
 | test_members.lua | 28 |
 | test_editors.lua | 15 |
 | test_callout_popup.lua | 30 |
-| test_icon_browser.lua | 23 |
+| test_icon_browser.lua | 25 |
 | test_eui_skin.lua | 9 |
 | test_groups_when.lua | 12 |
 | test_page_groups.lua | 29 |
@@ -998,4 +1000,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **784** |
+| **Total** | **786** |

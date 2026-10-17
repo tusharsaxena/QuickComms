@@ -271,6 +271,58 @@ test("icon browser: the grid is virtualized: a fixed set of cells re-dressed as 
     assertTrue(cellFor(B, 100001 + 40 * B.COLS).selected:IsShown())
 end)
 
+test("icon browser: a scroll under the pointer re-says the hovered cell's tooltip, or hides it", function()
+    local _, m, _, B = boot()
+    local spells = {}
+    for i = 1, 500 do spells[i] = 300000 + i end
+    m.macroIcons, m.macroItemIcons = spells, {}
+    local tip, said, owner = m.GameTooltip, {}, nil
+    rawset(tip, "SetOwner", function(_, o) owner = o end)
+    rawset(tip, "GetOwner", function() return owner end)
+    rawset(tip, "SetText", function(_, text) said[#said + 1] = text end)
+    openOn(B, nil)
+    B.SetTab("game")
+    local cell = B.cells[#B.cells]
+    cell:__fire("OnEnter")
+    assertEqual(said[#said], "Texture id " .. cell.qcIcon)
+    B.Widgets().grid:__fire("OnMouseWheel", -1)
+    -- red under: leave the tooltip as OnEnter said it (draw() not refreshing the owner's tooltip)
+    assertEqual(said[#said], "Texture id " .. cell.qcIcon, "the tooltip follows the cell's new icon")
+    assertTrue(tip:IsShown())
+    -- the last page leaves the last cell empty (500 is not a whole number of rows): the tooltip goes
+    assertTrue(500 % B.COLS ~= 0, "the fixture leaves the last row short")
+    B.Widgets().slider:__fire("OnValueChanged", 99999)
+    assertFalse(cell:IsShown())
+    assertFalse(tip:IsShown(), "an emptied cell keeps no tooltip")
+end)
+
+test("icon browser: a long name in the footer stops at the Choose button, on one line", function()
+    local _, m, _, B = boot()
+    -- Record what the browser asks of its font strings (the harness does not record their points).
+    local create = m.CreateFrame
+    m.CreateFrame = function(...)
+        local f = create(...)
+        local make = f.CreateFontString
+        f.CreateFontString = function(...)
+            local fs = make(...)
+            fs.__pts = {}
+            fs.SetPoint = function(self, ...) self.__pts[#self.__pts + 1] = { ... }; return self end
+            fs.SetWordWrap = function(self, v) self.__wrap = v; return self end
+            return fs
+        end
+        return f
+    end
+    openOn(B, "Interface\\Icons\\Ability_Warrior_BattleShout")
+    m.CreateFrame = create
+    local w = B.Widgets()
+    local right
+    for _, p in ipairs(w.name.__pts or {}) do if p[1] == "RIGHT" then right = p end end
+    -- red under: anchor the name on its left side only
+    assertTrue(right ~= nil, "the name has a right edge")
+    assertEqual(right[2], w.choose.frame, "at the Choose button")
+    assertEqual(w.name.__wrap, false, "a long name is cut, not wrapped")
+end)
+
 test("icon browser: the wheel over the scrollbar scrolls the grid too", function()
     local _, m, _, B = boot()
     local spells = {}

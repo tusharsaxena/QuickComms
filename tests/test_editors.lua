@@ -181,7 +181,7 @@ end)
 -- `entries` may be a function of NS, for entries that name a catalog path.
 local function probeRows(entries)
     local NS, m, Ed = enabled()
-    if type(entries) == "function" then entries = entries(NS) end
+    if type(entries) == "function" then entries = entries(NS, m) end
     local P = dofile("tests/page_helpers.lua")(NS, m)
     P.show("Comms Pad")
     local w = P.during(function() Ed.ReorderRows(P.ctx("pads"), "probe", entries) end)
@@ -230,7 +230,16 @@ test("editors: Snapshot is the preview's while Preview as is on", function()
 end)
 
 test("editors: [icons] a row's glyph is drawn in its color; a row with none is white", function()
-    local _, P, w = probeRows(function(NS)
+    local _, P, w = probeRows(function(NS, m)
+        -- AceGUI's pool hands a Label back with the tint it last had: model that by giving every
+        -- new Label a red image, so the white row passes only if the row sets it white itself.
+        local AceGUI = m.LibStub("AceGUI-3.0")
+        local create = AceGUI.Create
+        AceGUI.Create = function(self, wtype)
+            local w = create(self, wtype)
+            if wtype == "Label" and w.image then w.image:SetVertexColor(1, 0, 0) end
+            return w
+        end
         local star = NS.Icon("star")
         return { { id = "a", label = "A", icon = star, iconColor = "ff0000" }, { id = "b", label = "B", icon = star } }
     end)
