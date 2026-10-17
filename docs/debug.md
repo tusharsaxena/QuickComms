@@ -30,7 +30,7 @@ The addon's sections (`modules/Diagnostics.lua`), in order:
 | `identity` | schema stored and in code, the profile, `enabled`, whether stood down, the latch's holds |
 | `settings` | every setting that differs from its default, and `enabled` always; member rows are left out (the `library` section counts the members) |
 | `registration` | the declared feature events, whether they are registered, the events the client refused |
-| `integrations` | the launcher's registration and button; the callout popup's EllesmereUI skin (`ellesmereui: suite= facade= enabled= applied= failed=`): whether the suite and its Blizzard Skin child are loaded, whether EllesmereUI called back, its `S.IsEnabled()`, whether it painted or failed |
+| `integrations` | the launcher's registration and button; the callout popup's EllesmereUI skin (`ellesmereui: suite= facade= enabled= applied= failed= browser=`): whether the suite and its Blizzard Skin child are loaded, whether EllesmereUI called back, its `S.IsEnabled()`, whether it painted the popup or failed, and whether it painted the icon browser |
 | `situation` | the snapshot: content, instance, difficulty, key level, group, leadership, class, spec, role, combat, and the active lockdown reasons |
 | `restrictions` | the restriction state: every reason in effect (Map included), the reason the lockdown chip names, `canSendChat`, and the combat flag as Restrictions reads it (the `PLAYER_REGEN` edge first) |
 | `library` | the counts (callouts, groups, pads, dials), `nextId`, `seeded`, and the ids of the active groups under the current situation |

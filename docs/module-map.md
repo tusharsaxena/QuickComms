@@ -12,7 +12,7 @@ The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after Li
 | 1 | `locales/enUS.lua` | data | `NS.L`, the metatable fallback; the key is the English string |
 | 2 | `core/Namespace.lua` | data | name, version, brand, the cyan `[QC]` tag, the slash and its alias |
 | 3 | `core/CoreSetup.lua` | setup | LibKa0s-Core: the printer, the secret-safe stringifier, the SafeRegister family, the skin, the close-button wrapper, the resize grip, the class-color resolver |
-| 3a | `core/Compat.lua` | compat | `NS.Compat`: the only caller of version-variant or optional client APIs, and the secret guards ([`compat-layer.md`](compat-layer.md)) |
+| 3a | `core/Compat.lua` | compat | `NS.Compat`: the only caller of version-variant or optional client APIs (the macro icon lists among them), and the secret guards ([`compat-layer.md`](compat-layer.md)) |
 | 3b | `core/EUIBridge.lua` | bridge | `NS.EUIBridge`: the only reader of EllesmereUI's state (an optional suite): the skin's two conditions (the suite and its Blizzard Skin child present; the facade's `S.IsEnabled()`, never EllesmereUI's SavedVariables) and its presence-guarded `RegisterSkin`; every read at call time |
 | 4 | `core/MediaSetup.lua` | setup | LibKa0s-Media: `NS.Icon`, `NS.MediaFont`, the one RegisterLSM call, `NS.MediaFetch` |
 | 5 | `core/Constants.lua` | data | `FONT_MONO`, the Ka0s gold |
@@ -37,7 +37,7 @@ The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after Li
 | 16f | `modules/Channels.lua` | pure | channel kinds, resolution, lock state |
 | 16g | `modules/Bake.lua` | pure | callout + snapshot to one macro line |
 | 16h | `modules/Resolver.lua` | pure | When rules to active groups |
-| 16i | `modules/Library.lua` | registry writer | the one writer of the structural registry; `Prepare`; `SetSurfacePoint`; `MoveGenericBattlegroundLast` (migration step 2) |
+| 16i | `modules/Library.lua` | registry writer | the one writer of the structural registry; `Prepare`; `SetSurfacePoint`; `SetIcon` (a member's icon and its glyph color, one act); the glyph helpers (`IsGlyph`, `ValidIconColor`, `IconTint`, `IconColorFrom`); `MoveGenericBattlegroundLast` (migration step 2) |
 | 16i2 | `modules/Share.lua` | pure + edge | the share string: codec, checks, report; Collect, Export, Apply |
 | 16j | `modules/SendEngine_Guard.lua` | pure | `NS.SendGuard`: the soft guard's timing, the acting click edge, the echo tracker, the keyed queue |
 | 16k | `modules/SendEngine.lua` | secure writer | the only secure writer: send buttons, arm and disarm, the combat-end queue, the click hook, the echo events, the held stand-down; the dial headers and rings, the wedge wrap, frame refs, snippet runs and the override bindings (`BindKeys`) |
@@ -57,10 +57,13 @@ The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after Li
 | 20a | `settings/SchemaRows.lua` | settings | the hand-written Behavior rows, spliced after the Master controls |
 | 20b | `settings/SchemaMembers.lua` | settings | the member rows (`callout.*`, `group.*`, `pad.*`, `dial.*`, `builtin.*`), addressed through `Library.Member` |
 | 21 | `settings/Panel.lua` | settings | the landing page and the General page (Master controls) |
-| 21a | `settings/Editors.lua` | settings | the editor pages' shared frame: selection, repaint, reorder lists (with their edit and remove glyphs), delete, the icon picker |
+| 21a | `settings/Editors.lua` | settings | the editor pages' shared frame: selection, repaint, reorder lists (with their edit and remove glyphs, a glyph drawn in its color), delete, the icon chooser (`Ed.IconChooser`: the icon as drawn, Choose icon…, the glyph's color swatch) |
 | 21b | `settings/Callouts.lua` | settings | the callout helpers (`Settings.Callouts`): the token picker's list for a channel, and what a callout sends here |
-| 21b2 | `settings/CalloutPopup.lua` | settings | the callout popup (`Settings.CalloutPopup`): a user group's callout, new or listed, edited as a draft, saved as one act, modal over the settings window; Blizzard's `SettingsFrameTemplate` window, sized to its body, with no scrollbar |
-| 21b3 | `settings/CalloutPopup_Skin.lua` | settings | `Settings.CalloutPopupSkin`: the popup's optional EllesmereUI skin, registered at file load, painted when the popup is built and every condition holds |
+| 21b2 | `settings/ModalWindow.lua` | settings | `Settings.ModalWindow`: the modal window (click-catcher and dim, Blizzard's `SettingsFrameTemplate` or the fallback window, a page's header and body) the callout popup and the icon browser are each built in |
+| 21b3 | `settings/IconBrowser_Sources.lua` | settings | `Settings.IconBrowserSources`: each icon browser tab's list (Suggested, Markers, Game icons, Glyphs) and each icon's name |
+| 21b4 | `settings/IconBrowser.lua` | settings | the icon browser (`Settings.IconBrowser`): modal over its opener, four tabs, a virtualized grid, the Game icons filter, the glyph color swatch, Choose and Cancel |
+| 21b5 | `settings/CalloutPopup.lua` | settings | the callout popup (`Settings.CalloutPopup`): a user group's callout, new or listed, edited as a draft, saved as one act, modal over the settings window; Blizzard's `SettingsFrameTemplate` window, sized to its body, with no scrollbar |
+| 21b6 | `settings/CalloutPopup_Skin.lua` | settings | `Settings.CalloutPopupSkin`: the optional EllesmereUI skin of the popup's window and the icon browser's, registered at file load, each painted when it is built and every condition holds |
 | 21c | `settings/Groups_When.lua` | settings | the Groups page's When editor |
 | 21d | `settings/Groups.lua` | settings | the Groups page (a user group's Callouts tab: Add callout, Reuse existing callout, the glyph list) |
 | 21e | `settings/Pads.lua` | settings | the Comms Pad page |
@@ -102,10 +105,11 @@ files they add are listed in design spec §4.2.
 | `tests/test_pad.lua` | `Pad`: armed or disarmed chips, the visibility driver, the drag strip shown while unlocked (it will not drag while locked or in combat) |
 | `tests/test_members.lua` | the member rows: addressed by instance, selection or the first listed member (a callout by its id alone); built-ins refused; `Library.Touch` announces each write; the CLI text forms |
 | `tests/test_editors.lua` | `settings/Editors.lua`: the selection heals and a profile switch clears it, one structural repaint per frame, none for a scalar write, the delete confirmation, the jump, the reorder rows' edit and remove glyphs |
-| `tests/test_callout_popup.lua` | the callout popup: Add and Edit, the draft rows, token insert and the preview on the draft, Save's checks and its one act, Cancel and what else closes it, the settings-window template and its close X, its background over the catcher's dim, the template asked of `C_XMLUtil` where it can answer, the fallback window and its close mark, no scrollbar and the height that follows the body (pinned to the library's layout keys), no Callouts page, and the helpers' token list and preview lines |
-| `tests/test_eui_skin.lua` | the popup's EllesmereUI skin on a mocked EllesmereUI: painted as the settings window is when every condition holds, at the build or at a late callback, once; not when any condition fails; never raising without EllesmereUI; a changed facade left stock; a stand-down waited out; the fallback window left unpainted; the diagnostics report's line |
+| `tests/test_icon_browser.lua` | the icon browser: its chrome and stacking above the popup, the tabs and what each offers, select, double-click and Choose, the hover names, the game list's filter and its not-loaded state, the virtualized grid, the glyph color swatch, Escape over the popup, what closes it (the popup, a stand-down), Choose refused in combat, `Compat.MacroIcons` and `Library.IconColorFrom` |
+| `tests/test_callout_popup.lua` | the callout popup: Add and Edit, the draft rows (the icon's glyph color with them), Choose icon… and the browser's Choose on the draft, token insert and the preview on the draft, Save's checks and its one act, Cancel and what else closes it, the settings-window template and its close X, its background over the catcher's dim, the template asked of `C_XMLUtil` where it can answer, the fallback window and its close mark, no scrollbar and the height that follows the body (pinned to the library's layout keys), no Callouts page, and the helpers' token list and preview lines |
+| `tests/test_eui_skin.lua` | the popup's EllesmereUI skin on a mocked EllesmereUI: painted as the settings window is when every condition holds, at the build or at a late callback, once (the icon browser's window too); not when any condition fails; never raising without EllesmereUI; a changed facade left stock; a stand-down waited out; the fallback window left unpainted; the diagnostics report's line |
 | `tests/test_groups_when.lua` | the When editor's pure half (toggle, clear, key-level range, the values offered, the active-now line) and its write through the seam |
-| `tests/test_page_groups.lua` | the Groups page: picker and New group, a user group's tabs (the Callouts tab's Add callout, Reuse and glyph list), a built-in's read-only General with Customize and its hidden-callouts editor |
+| `tests/test_page_groups.lua` | the Groups page: picker and New group, a user group's tabs (General's icon chooser and the browser's writes, the Callouts tab's Add callout, Reuse and glyph list), a built-in's read-only General with Customize and its hidden-callouts editor |
 | `tests/test_page_pads.lua` | the Comms Pad page: picker and New pad, General's acts, the Groups priority list, Layout with X/Y, Look |
 | `tests/test_dial_layout.lua` | `Dial_Layout`: rings, pages, open-into, geometry |
 | `tests/test_dial_secure.lua` | `Dial_Secure`: the snippets on a hand-built dial, in and out of combat |

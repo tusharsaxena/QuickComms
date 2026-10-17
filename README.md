@@ -29,7 +29,9 @@ straight on the map's nodes, each where it sits on the map, so INC 3 at the Lumb
 clicks. The key again, Escape or a right click closes it; the number keys 1 to 8 pick a wedge.
 
 Settings → Groups makes a group and, on its Callouts tab, its callouts: Add callout opens a small
-editor for the name, text, channel and icon (Save keeps it, Cancel drops it), Reuse existing
+editor for the name, text, channel and icon (Save keeps it, Cancel drops it). Choose icon… opens
+a browser with the raid markers, every icon the macro icon picker has and the LibKa0s glyphs, which
+you can color. Reuse existing
 callout copies one of your other callouts or a built-in one into the group, and each row has an
 edit and a remove button. The group's When tab says where it shows; Comms Pad arranges a pad, and its Look tab sets the font, the border
 and the background, each with a Use class color box. "Preview as…" (or `/qc preview`) shows the pads

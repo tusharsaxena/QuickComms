@@ -22,11 +22,11 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
 | SEND-1..5 | Send | Secure sends in keys and on bosses, the spam guard |
 | PAD-1..8 | Pad | The Comms Pad |
-| EDIT-1..13 | Editors | The Groups (with the callout popup and its EllesmereUI look, Reuse and the glyph lists), Comms Pad and Share pages, Preview as…, Why is this showing? |
+| EDIT-1..17 | Editors | The Groups (with the callout popup and its EllesmereUI look, the icon browser and glyph colors, Reuse and the glyph lists), Comms Pad and Share pages, Preview as…, Why is this showing? |
 | DIAL-1..12 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial |
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
 | LOOK-1..2 | Look | The Comms Pad's font, border and background |
-| ICON-1 | Icons | The icon picker |
+| ICON-1 | Icons | Choosing an icon, for a callout and for a group |
 | BG-1..2 | Battlegrounds | Node winds on the dial; the battleground instance ids |
 | IDS-1 | Instance ids | The Midnight dungeons and raids |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes |
@@ -230,7 +230,7 @@ exactly as tall as its content, with no empty band under the error line and noth
 bottom. Clicking the page behind it does nothing. Type more text and press Enter → What it sends here follows the edit, while the chip on
 the pad still sends the old line; type text long enough that What it sends here wraps onto another
 line → the window grows with it. Clear the Name and click Save → the popup stays open and a red line names Name;
-nothing changed on the pad, and the window grew to show the red line. Type a name back, pick an icon under Choose an icon, Save → the popup
+nothing changed on the pad, and the window grew to show the red line. Type a name back, click Choose icon… and double-click an icon in the browser, Save → the popup
 closes, the row and the chip show the new name, text and icon. Result:
 
 **EDIT-10. Cancel leaves nothing behind.** Add callout → type a name and text → Cancel → no new row,
@@ -256,10 +256,50 @@ its window skins not killed, its Settings window skin on and set to the style it
 mostly use (the third-party style), `/reload` → open the callout popup (EDIT-9) → its window wears
 the same EllesmereUI shell, border and close X as the settings window behind it, and the page's controls look as they do on the
 settings pages. `/qc diagnostics` → the integrations section reads `ellesmereui: suite=true
-facade=true enabled=true applied=true failed=false`. Turn QuickComms off in EllesmereUI's
+facade=true enabled=true applied=true failed=false browser=false`; click Choose icon… → the icon
+browser wears the same shell, border and close X, and `/qc diagnostics` now ends `browser=true`. Turn QuickComms off in EllesmereUI's
 Third-Party Addons list and `/reload` → the popup is Blizzard's settings window again (EllesmereUI
 does not call back: `facade=false enabled=n/a applied=false`). Disable EllesmereUI → the popup opens in Blizzard's look and no Lua
 error appears. Result:
+
+**EDIT-14. The icon browser: look, tabs and a pick.** Open a callout of yours in the popup (EDIT-9) →
+under Insert a token, the callout's icon (a question mark for none), Choose icon… and Icon color.
+Click Choose icon… → the icon browser opens **over** the popup, which is dimmed behind it (a click on
+the popup does nothing), and looks like it: the settings window's background and border, "Ka0s
+Quick Comms" in the top bar, Blizzard's close X, the gold "Choose an icon" header. The tabs read
+Suggested, Markers, Game icons, Glyphs; the callout's icon is selected (gold behind it) on its own
+tab, scrolled into view, and named in the footer. Markers shows the eight markers; Glyphs every
+LibKa0s glyph, white, each named on hover (`Arrow circle down`-style names); the count at the right
+follows the tab. Click an icon → it is selected and named in the footer, nothing else changes; Cancel
+→ the popup's icon is unchanged. Choose icon… again, double-click the skull → the browser closes and
+the popup shows the skull (the chip on the pad does not change until Save). Result:
+
+**EDIT-15. The Game icons tab.** In the browser, Game icons → thousands of icons (the count reads in
+the thousands), the same ones the macro icon selector offers. Scroll with the wheel and drag the
+scrollbar from top to bottom → it keeps up without a hitch, and each icon draws (no blank or green
+square). Hover one → "Texture id N". Show → Spells, then Items → each list is smaller, and All is
+both. Choose a game icon, Save → the chip and the row show it. If the tab says the game's icon list
+has not loaded yet on the first open after a login, open it again a moment later → the icons are
+there. Result:
+
+**EDIT-16. A glyph's color, everywhere.** Choose a glyph for one of your callouts (Glyphs tab), then
+Icon color → Blizzard's color picker opens **above** the browser; pick orange → every glyph in the
+grid and the footer turns orange. Choose, Save → the chip on the pad, the wedge on the Comms Dial
+(test mode) and the callout's row on the Callouts tab show the glyph in orange; the popup's icon too
+when it is opened again. On a group of yours, General → Choose icon… → a glyph, Choose → then Icon
+color → green → the group's wedge on the dial is green at once. Now choose a raid marker for that
+group → the marker is drawn in its own colors, the swatch grays out, and choosing a glyph again
+shows it white (the color went with the marker). Export the orange callout's group (Share → Export),
+import the string → the copy's glyph is orange too. `/reload` → every color is still there. Result:
+
+**EDIT-17. What closes the browser.** Open the browser from the popup and press Escape → the browser
+closes and the popup stays open; press Escape again → the popup closes, nothing saved. Open the
+browser from the popup, click its close X → the same as Cancel. Open it again and close the settings
+window (or `/qc profile Other`) → the browser and the popup are both gone and nothing is saved; no
+Lua error. Open it from a group's General tab and `/qc profile Other` → it closes the same way, and
+the group's icon is unchanged when you switch back. In combat, the settings panel cannot be opened; with the browser
+open on the pull, the panel's combat cover lies over it and Choose (a double-click too) prints one
+line and changes nothing. Result:
 
 ## Dial
 
@@ -402,11 +442,11 @@ edge lands at combat end. Defaults → the Ka0s look again. Result:
 
 ## Icons
 
-**ICON-1. The icon picker.** Groups → a group of yours → Callouts → a row's edit glyph → Choose an
-icon: click the skull → the popup's Icon box shows its path; Save → the row and the chip show the
-skull. Groups → a group of yours → General → click a
-mark → the group's wedge on the Comms Dial shows it. A built-in set's General tab has no picker.
-Result:
+**ICON-1. Choosing an icon.** Groups → a group of yours → Callouts → a row's edit glyph → Choose
+icon… → double-click the skull → the popup's Icon box shows its path and the icon beside Choose
+icon… is the skull; Save → the row and the chip show the skull. Groups → a group of yours → General
+→ Choose icon… → Suggested → double-click a glyph → the group's wedge on the Comms Dial shows it, and
+the General tab's icon follows. A built-in set's General tab has no Choose icon…. Result:
 
 ## Battlegrounds
 
@@ -468,6 +508,6 @@ from the client, so this check needs a non-English client pass. Result:
 |---|---|---|
 | INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..2, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet; LOC-1 re-enumerated in phase 5 and owed a non-English client pass |
 | SEND-1..5, PAD-1..8 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet; PAD-8 added in phase 5 (audit QC-07) |
-| EDIT-1..13 | Phase 3: the editors | No client pass recorded yet; EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17) |
+| EDIT-1..17 | Phase 3: the editors | No client pass recorded yet; EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17); EDIT-9, 13 and ICON-1 rewritten and EDIT-14..17 added with the icon browser and glyph colors (2026-10-18) |
 | DIAL-1..12 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
 | SHARE-1..6, LOOK-1..2, ICON-1, BG-1..2, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; LOOK-2's in-combat step goes through `/qc set` |

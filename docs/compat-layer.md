@@ -6,8 +6,8 @@
 load, and is read inside functions only. There is one family file; no `core/Compat<Topic>.lua`
 exists.
 
-**Twenty-eight shims**, counted the way documentation-§3 counts them
-(`cat core/Compat*.lua | grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'` answers `28`). The two
+**Twenty-nine shims**, counted the way documentation-§3 counts them
+(`cat core/Compat*.lua | grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'` answers `29`). The two
 secret guards, `IsSecret` and `IsSafeKey`, are `LibKa0s-Compat-1.0`'s members, wired by assignment
 with a library-absent body and not counted; their contract is LibKa0s
 `docs/api/Compat/version-1-docs.md`.
@@ -34,7 +34,7 @@ with a library-absent body and not counted; their contract is LibKa0s
 | `Leadership()` | `UnitIsGroupLeader`, `UnitIsGroupAssistant` | a secret flag is `false` | `false, false` | `Situation` |
 | `PlayerIdentity()` | `UnitClass`, `C_SpecializationInfo` (else `GetSpecialization*`), `UnitGroupRolesAssigned`, `UnitFullName`, `GetNormalizedRealmName` | each field plain or `nil`; a role of `NONE` falls back to the spec's role | `nil` per field | `Situation` |
 | `InHousing()` | `C_Housing.IsInsideHouseOrPlot` | a secret answer is `false` | `false` | `Situation` |
-| `InCombat()` | `InCombatLockdown` | none (a plain boolean) | `false` | `Situation`, `Restrictions`, `SendEngine`, `Preview`, `Pad` |
+| `InCombat()` | `InCombatLockdown` | none (a plain boolean) | `false` | `Situation`, `Restrictions`, `SendEngine`, `Preview`, `Pad`, `IconBrowser` (Choose is refused in combat) |
 | `InChatMessagingLockdown()` | `C_ChatInfo.InChatMessagingLockdown` | a secret answer reads as **locked** | `false` | `Restrictions` |
 | `RestrictionTypes()` | `Enum.AddOnRestrictionType` | none | `{}` | `Restrictions` |
 | `IsRestrictionStateActive(state)` | `Enum.AddOnRestrictionState` (anything but `Inactive` is active, so `Activating` counts; a boolean answers itself) | a secret state is **active** | `false` for nil | `Restrictions` |
@@ -53,7 +53,8 @@ with a library-absent body and not counted; their contract is LibKa0s
 | `BindingKey(command)` | `GetBindingKey` | an unsafe command, or a secret or empty key, is `nil` | `nil` | `settings/Dials.lua` (the key bound in WoW's menu) |
 | `ScreenSize()` | `UIParent:GetWidth`, `GetHeight` | either one secret, unknown or not positive is `nil` | `nil` | `Library` (an offset off the screen is refused) |
 | `ChatColor(chatType)` | `ChatTypeInfo` | an unsafe key, or a secret or missing color component, is `nil` | `nil` | `Pad_Render` (the channel tag) |
-| `HasTemplate(name)` | `C_XMLUtil.GetTemplateInfo` | `type()` only: a table answer is `true`, anything else (or a raise) `false` | `nil` (unknown: the caller tries `CreateFrame` under `pcall`) | `settings/CalloutPopup.lua` (whether to build the window from `SettingsFrameTemplate`) |
+| `HasTemplate(name)` | `C_XMLUtil.GetTemplateInfo` | `type()` only: a table answer is `true`, anything else (or a raise) `false` | `nil` (unknown: the caller tries `CreateFrame` under `pcall`) | `settings/ModalWindow.lua` (whether to build the callout popup's and the icon browser's window from `SettingsFrameTemplate`) |
+| `MacroIcons(kind)` | `GetMacroIcons` (`"spells"`), `GetMacroItemIcons` (`"items"`), each filling the table it is handed (or returning one) | each entry through `PlainNumber`: a secret or non-number entry is dropped | `{}` (the reader absent or raising, an unknown kind, or the client's list not loaded yet) | `settings/IconBrowser_Sources.lua` (the Game icons tab) |
 
 The restriction shims are copied from DropWatcher's `core/Compat.lua`. `tests/test_compat.lua`
 drives the plain readers (secrets dropped, a secret `instanceID` read as `nil`) and the restriction
