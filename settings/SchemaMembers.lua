@@ -144,7 +144,9 @@ local function keyCheck(v, id)
 end
 
 local ROWS = {
-    -- Callouts page (spec §13.1). Name and text have no default: a reset never blanks them.
+    -- A callout's rows (spec §13.1, as amended 2026-10-17): addressed by id alone, drawn by the callout
+    -- popup against its draft; `page` is only their /qc list heading. Name and text have no default: a
+    -- reset never blanks them.
     { path = "callout.name", instance = "callout", type = "string", dialogControl = "EditBox",
       maxLetters = Lib.NAME_MAX, page = "callouts", group = GENERAL, label = L["Name"],
       desc = L["What the chip and the lists call this callout. Press Enter to apply."],

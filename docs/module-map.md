@@ -56,10 +56,11 @@ The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after Li
 | 20a | `settings/SchemaRows.lua` | settings | the hand-written Behavior rows, spliced after the Master controls |
 | 20b | `settings/SchemaMembers.lua` | settings | the member rows (`callout.*`, `group.*`, `pad.*`, `dial.*`, `builtin.*`), addressed through `Library.Member` |
 | 21 | `settings/Panel.lua` | settings | the landing page and the General page (Master controls) |
-| 21a | `settings/Editors.lua` | settings | the editor pages' shared frame: selection, repaint, reorder lists, delete, the icon picker |
-| 21b | `settings/Callouts.lua` | settings | the Callouts page |
+| 21a | `settings/Editors.lua` | settings | the editor pages' shared frame: selection, repaint, reorder lists (with their edit and remove glyphs), delete, the icon picker |
+| 21b | `settings/Callouts.lua` | settings | the callout helpers (`Settings.Callouts`): the token picker's list for a channel, and what a callout sends here |
+| 21b2 | `settings/CalloutPopup.lua` | settings | the callout popup (`Settings.CalloutPopup`): a user group's callout, new or listed, edited as a draft, saved as one act, modal over the settings window |
 | 21c | `settings/Groups_When.lua` | settings | the Groups page's When editor |
-| 21d | `settings/Groups.lua` | settings | the Groups page |
+| 21d | `settings/Groups.lua` | settings | the Groups page (a user group's Callouts tab: Add callout, Reuse existing callout, the glyph list) |
 | 21e | `settings/Pads.lua` | settings | the Comms Pad page |
 | 21e2 | `settings/Dials.lua` | settings | the Comms Dial page (General, Groups, Wheel, Binding, Preview) |
 | 21f | `settings/Share.lua` | settings | the Share page (Export, Import, Built-in) |
@@ -97,11 +98,11 @@ files they add are listed in design spec §4.2.
 | `tests/test_surfaces.lua` | `Surfaces`: a pad's plan, and the rebuild queued in combat with the stale hint |
 | `tests/test_pad_render.lua` | `Pad_Render`: what a chip and the header show, and the drag-strip seam |
 | `tests/test_pad.lua` | `Pad`: armed or disarmed chips, the visibility driver, the drag strip shown while unlocked (it will not drag while locked or in combat) |
-| `tests/test_members.lua` | the member rows: addressed by instance, selection or the first listed member; built-ins refused; `Library.Touch` announces each write; the CLI text forms |
-| `tests/test_editors.lua` | `settings/Editors.lua`: the selection heals and a profile switch clears it, one structural repaint per frame, none for a scalar write, the delete confirmation, the jump |
-| `tests/test_page_callouts.lua` | the Callouts page: picker and New callout, the General rows, token insert, the live line, the acts, Used by |
+| `tests/test_members.lua` | the member rows: addressed by instance, selection or the first listed member (a callout by its id alone); built-ins refused; `Library.Touch` announces each write; the CLI text forms |
+| `tests/test_editors.lua` | `settings/Editors.lua`: the selection heals and a profile switch clears it, one structural repaint per frame, none for a scalar write, the delete confirmation, the jump, the reorder rows' edit and remove glyphs |
+| `tests/test_callout_popup.lua` | the callout popup: Add and Edit, the draft rows, token insert and the preview on the draft, Save's checks and its one act, Cancel and what else closes it, the shared close mark, no Callouts page, and the helpers' token list and preview lines |
 | `tests/test_groups_when.lua` | the When editor's pure half (toggle, clear, key-level range, the values offered, the active-now line) and its write through the seam |
-| `tests/test_page_groups.lua` | the Groups page: picker and New group, a user group's tabs, a built-in's read-only General with Customize and its hidden-callouts editor |
+| `tests/test_page_groups.lua` | the Groups page: picker and New group, a user group's tabs (the Callouts tab's Add callout, Reuse and glyph list), a built-in's read-only General with Customize and its hidden-callouts editor |
 | `tests/test_page_pads.lua` | the Comms Pad page: picker and New pad, General's acts, the Groups priority list, Layout with X/Y, Look |
 | `tests/test_dial_layout.lua` | `Dial_Layout`: rings, pages, open-into, geometry |
 | `tests/test_dial_secure.lua` | `Dial_Secure`: the snippets on a hand-built dial, in and out of combat |

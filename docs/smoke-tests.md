@@ -22,7 +22,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
 | SEND-1..5 | Send | Secure sends in keys and on bosses, the spam guard |
 | PAD-1..8 | Pad | The Comms Pad |
-| EDIT-1..8 | Editors | The Callouts, Groups, Comms Pad and Share pages, Preview as…, Why is this showing? |
+| EDIT-1..12 | Editors | The Groups (with the callout popup, Reuse and the glyph lists), Comms Pad and Share pages, Preview as…, Why is this showing? |
 | DIAL-1..12 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial |
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
 | LOOK-1..2 | Look | The Comms Pad's font, border and background |
@@ -175,9 +175,10 @@ the pet-battle padlock draws instead, with no error. Result:
 
 ## Editors
 
-**EDIT-1. A callout and a group on the pad (the phase 3 exit).** Settings → Callouts → New callout;
-name it `Inc`, text `INC {skull}`, channel Smart group. Groups → New group; on its Callouts tab add
-`Inc`; on its When tab tick Content, then M+. Enter a key → the pad shows the new group first with
+**EDIT-1. A callout and a group on the pad (the phase 3 exit).** Settings → Groups → New group; on
+its Callouts tab click Add callout → the callout popup opens blank (Smart group, no icon); name it
+`Inc`, text `INC {skull}`, Save → the popup closes and `Inc` is the list's last row. On the group's
+When tab tick Content, then M+. Enter a key → the pad shows the new group first with
 an `Inc` chip; click it → the party sees "INC" with a skull. Leave the key → the group is gone from
 the pad. Result:
 
@@ -207,16 +208,43 @@ built-in set; Delete pad (Yes) → it is gone. Result:
 the pad. Choose callouts on "M+ (generic)" → the Groups page opens on its Callouts tab; untick
 "Lust" → the chip is gone in a key. Defaults (top right) → every set and callout is back. Result:
 
-**EDIT-7. An edit during combat.** With a user callout on the pad, in combat type `/qc set
-callout.text Incoming now` (the callout selected on the Callouts page, or, if that page was never
-opened this session, the first callout it lists) → no error, the header
-shows "updates after combat"; after combat the chip sends the new text. Opening the settings in
-combat is refused, as before. Result:
+**EDIT-7. An edit during combat.** With a user callout on the pad (its id is `c<n>`: `/qc get
+callout.name c1` names the first), in combat type `/qc set callout.text c1 Incoming now` → no error,
+the header shows "updates after combat"; after combat the chip sends the new text. `/qc set
+callout.text Incoming now` (no id) is refused with a line naming the id form and writes nothing.
+Opening the settings in combat is refused, as before. Result:
 
-**EDIT-8. The selection survives what other pages do.** Select a callout on the Callouts page, then
-`/qc profile Other` and back → the Callouts page shows a callout that exists, never an empty or
-erroring page. Delete the selected group from the Groups page → the page moves to the next group.
-Result:
+**EDIT-8. The selection survives what other pages do.** Select a group of yours on the Groups page,
+then `/qc profile Other` and back → the Groups page shows a group that exists, never an empty or
+erroring page. Delete the selected group (Yes; the line says its callouts go too) → the page moves
+to the next group, and the deleted group's callouts are offered nowhere (Reuse existing callout no
+longer lists them). Result:
+
+**EDIT-9. The callout popup: look, Save and a refused field.** Groups → a group of yours → Callouts →
+a row's edit glyph (the edit mark; its tooltip is headed Edit) → the popup opens filled in, over a dimmed
+settings window, with the panel's gold header rule, red Save and Cancel buttons and the shared close
+mark; it reads like the settings panel, not like the debug console. Clicking the page behind it does
+nothing. Type more text and press Enter → What it sends here follows the edit, while the chip on
+the pad still sends the old line. Clear the Name and click Save → the popup stays open and a red line names Name;
+nothing changed on the pad. Type a name back, pick an icon under Choose an icon, Save → the popup
+closes, the row and the chip show the new name, text and icon. Result:
+
+**EDIT-10. Cancel leaves nothing behind.** Add callout → type a name and text → Cancel → no new row,
+and `/reload` shows none either. Edit a callout, change its text → press Escape → the old text
+stands. Edit again, change it → click the close mark → the old text stands. Edit again → close the
+settings window (or `/qc profile Other`) → the popup is gone with it, nothing saved. Result:
+
+**EDIT-11. Reuse makes a copy.** On group A's Callouts tab, open Reuse existing callout → your
+callouts read `<group>: <callout>` (this group's own included), then the built-in ones as
+`<set>: <callout>`. Pick one of group B's callouts → nothing is added yet; click Add → it is A's
+last row. Edit the copy's text and Save → B's original is unchanged (check its row or its chip).
+Reuse a built-in callout → a copy you can edit. Result:
+
+**EDIT-12. The remove glyphs.** On a group's Callouts tab, a row's remove glyph (the red no-entry
+sign; its tooltip reads Remove, "Delete this callout. Asks first.") → the confirmation names the callout;
+No keeps it, Yes deletes it, and Reuse no longer offers it. On Comms Pad → Groups, a row's remove
+glyph (its tooltip: the group itself is kept) → the group leaves that pad at once, with no question, and is still on the Groups page; the
+same on Comms Dial → Groups. Neither list has an edit glyph. Result:
 
 ## Dial
 
@@ -300,9 +328,9 @@ pet-battle padlock draw instead, with no error. Result:
 
 ## Share
 
-**SHARE-1. Export a group.** Settings → Callouts: make `Kick` (`Kick on me {skull}`, Party) and
-`Lust` (`Lust now`, Smart group). Groups → New group `My keys`, add both. Share → Export: tick
-`My keys` → the line under the boxes reads "The string will hold 2 callouts, 1 group."; Export → a
+**SHARE-1. Export a group.** Settings → Groups → New group `My keys`; on its Callouts tab, Add
+callout `Kick` (`Kick on me {skull}`, Party) and `Lust` (`Lust now`, Smart group). Share → Export:
+there are no callout checkboxes, only groups, pads and dials; tick `My keys` → the line under the boxes reads "The string will hold 2 callouts, 1 group."; Export → a
 window opens with a string starting `!QC1!`, already selected; Ctrl+C copies it; Escape closes the
 window. Result:
 
@@ -359,8 +387,9 @@ edge lands at combat end. Defaults → the Ka0s look again. Result:
 
 ## Icons
 
-**ICON-1. The icon picker.** Callouts → a callout → General → Choose an icon: click the skull → the
-Icon box shows its path and the chip shows the skull. Groups → a group of yours → General → click a
+**ICON-1. The icon picker.** Groups → a group of yours → Callouts → a row's edit glyph → Choose an
+icon: click the skull → the popup's Icon box shows its path; Save → the row and the chip show the
+skull. Groups → a group of yours → General → click a
 mark → the group's wedge on the Comms Dial shows it. A built-in set's General tab has no picker.
 Result:
 
@@ -424,6 +453,6 @@ from the client, so this check needs a non-English client pass. Result:
 |---|---|---|
 | INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..2, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet; LOC-1 re-enumerated in phase 5 and owed a non-English client pass |
 | SEND-1..5, PAD-1..8 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet; PAD-8 added in phase 5 (audit QC-07) |
-| EDIT-1..8 | Phase 3: the editors | No client pass recorded yet |
+| EDIT-1..12 | Phase 3: the editors | No client pass recorded yet; EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them |
 | DIAL-1..12 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
 | SHARE-1..6, LOOK-1..2, ICON-1, BG-1..2, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; LOOK-2's in-combat step goes through `/qc set` |
