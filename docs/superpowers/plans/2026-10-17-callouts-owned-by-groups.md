@@ -231,7 +231,7 @@ Record each task's commit hash in the ledger below as it lands. To resume, read 
 
 | Task | Status | Commit |
 |---|---|---|
-| 1 Library | pending | |
+| 1 Library | done | ee7688a |
 | 2 Seam/slash | pending | |
 | 3 Glyphs | pending | |
 | 4 Popup | pending | |
