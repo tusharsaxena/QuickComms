@@ -154,14 +154,18 @@ settings\SchemaRows.lua
 settings\SchemaMembers.lua
 # LOAD-BEARING: reads NS.C, Settings.Helpers and NS.SchemaRuntime.AddRows at file scope.
 settings\Panel.lua
-# LOAD-BEARING: publishes Settings.Editors, which the four page files below take at load; reads NS.MSG
+# LOAD-BEARING: publishes Settings.Editors, which the settings files below take at load; reads NS.MSG
 # and NS.Bus at load.
 settings\Editors.lua
-# LOAD-BEARING: takes Settings.Editors at load and registers the Callouts page (after General).
+# LOAD-BEARING: takes Settings.Editors at load; publishes Settings.Callouts (the token list and the
+# preview lines), which settings\CalloutPopup.lua takes at load and settings\Groups.lua reads at run time.
 settings\Callouts.lua
+# LOAD-BEARING: takes Settings.Editors and Settings.Callouts at load and publishes Settings.CalloutPopup;
+# settings\Groups.lua opens it at run time only.
+settings\CalloutPopup.lua
 # LOAD-BEARING: takes Settings.Editors at load; settings\Groups.lua calls Settings.GroupsWhen at run time only.
 settings\Groups_When.lua
-# LOAD-BEARING: takes Settings.Editors at load and registers the Groups page (after Callouts).
+# LOAD-BEARING: takes Settings.Editors at load and registers the Groups page (after General).
 settings\Groups.lua
 # LOAD-BEARING: takes Settings.Editors at load and registers the Comms Pad page (after Groups).
 settings\Pads.lua

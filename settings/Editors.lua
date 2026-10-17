@@ -1,6 +1,6 @@
 local addonName, NS = ...
--- settings/Editors.lua — what the editor pages share (design spec §13.1): Callouts, Groups, Comms Pad
--- and Share each register here, keep their selection here and repaint through here.
+-- settings/Editors.lua — what the editor pages share (design spec §13.1): Groups, Comms Pad, Comms
+-- Dial and Share each register here, keep their selection here and repaint through here.
 --
 -- THE SELECTION is session state (NS.State.editing[kind], never saved): the member each page edits.
 -- The band's picker sets it (options-ui-§14: the banner is the ONLY picker), and the member rows
@@ -311,9 +311,11 @@ function Ed.SetIcon(rowPath, id, path)
 end
 
 --- The picker: a "Choose an icon" heading over a grid of the palette's icons; a click on one is the
---- member's icon.
-function Ed.IconPicker(ctx, rowPath, id)
+--- member's icon. `target` is the member row (callout.icon, group.icon) written for `id` through the
+--- seam, or a function that takes the picked path instead (the callout popup's draft).
+function Ed.IconPicker(ctx, target, id)
     local h = H()
+    local pick = type(target) == "function" and target or function(path) Ed.SetIcon(target, id, path) end
     h.Section(ctx, L["Choose an icon"])
     h.RenderGrid(ctx, { { wide = true, make = function(_, parent)
         local AceGUI = h.AceGUI
@@ -326,7 +328,7 @@ function Ed.IconPicker(ctx, rowPath, id)
             icon:SetImageSize(24, 24)
             icon:SetWidth(36)
             icon:SetHeight(36)
-            icon:SetCallback("OnClick", function() Ed.SetIcon(rowPath, id, e.path) end)
+            icon:SetCallback("OnClick", function() pick(e.path) end)
             h.AttachTooltip(icon, e.label, L["Click to use this icon."])
             grid:AddChild(icon)
         end

@@ -451,22 +451,25 @@ Total.
 - editors: a row with edit shows the edit glyph and fires it
 - editors: Snapshot is the preview's while Preview as is on
 
-### test_page_callouts.lua (14)
+### test_callout_popup.lua (17)
 
-- callouts page: with no callouts it says how to make one, and New callout makes and selects one
-- callouts page: the rows write the selected callout through the seam
-- callouts page: [review 5] an empty name is refused with its reason and nothing changes
-- callouts page: [phase 3] the token picker offers {group1}-{group8} only when the channel can resolve to Raid
-- callouts page: [phase 3] the live line refreshes in place when the callout changes
-- callouts page: Insert a token adds it to the end of the text
-- callouts page: the live line shows what it sends here, or why it sends nothing
-- callouts page: Duplicate selects the copy; Delete asks, then removes it from every group
-- callouts page: [review 2] the selected callout deleted elsewhere: the page heals, writes go to the next
-- callouts page: Used by lists the groups that hold it, and a click opens that group
-- callouts page: [final 3] Defaults resets the callout as one act: one rebuild
-- callouts page: [final 4] Defaults keeps the icon (its default is only for `/qc reset`)
-- callouts page: [review 1] a delete popup accepted after the pull deletes; the pad catches up at combat end
-- callouts page: [phase 5] Choose an icon: a click on the skull is the callout's icon, through the seam
+- popup: Add opens blank with Smart group
+- popup: edit opens filled in
+- popup: typing changes the draft only, and the preview follows
+- popup: Save on Add creates the callout at the end of the group, one LIBRARY_CHANGED
+- popup: Cancel on Add creates nothing and consumes no id
+- popup: Save on edit writes only the changed fields through the seam
+- popup: Cancel on edit writes nothing
+- popup: Save with an empty name stays open and writes nothing
+- popup: the callout deleted under an open popup closes it; a late Save writes nothing
+- popup: closing the settings window cancels
+- popup: Escape and a profile change cancel
+- popup: Insert a token appends to the draft's text
+- popup: Choose an icon writes the draft's icon
+- popup: its close control is the shared close mark
+- settings: there is no Callouts page
+- callout helpers: [phase 3] the token picker offers {group1}-{group8} only when the channel can resolve to Raid
+- callout helpers: PreviewLines says what a callout sends here, or why it sends nothing
 
 ### test_groups_when.lua (12)
 
@@ -886,7 +889,7 @@ Total.
 | test_library.lua | 62 |
 | test_members.lua | 23 |
 | test_editors.lua | 14 |
-| test_page_callouts.lua | 14 |
+| test_callout_popup.lua | 17 |
 | test_groups_when.lua | 12 |
 | test_page_groups.lua | 16 |
 | test_page_pads.lua | 12 |
@@ -911,4 +914,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **705** |
+| **Total** | **708** |
