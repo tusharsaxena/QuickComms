@@ -5,12 +5,14 @@ local addonName, NS = ...
 --     window   Blizzard's settings window (title "Ka0s Quick Comms")             (its close X)
 --     header   New callout / Edit callout, the gold rule under it
 --     body     Name, Text, Channel, Icon (the member rows' labels, read and written on the draft),
---              Insert a token, Choose an icon, What it sends here, then Save and Cancel, and under
---              them the line that names a field Save refused
+--              with an info glyph beside the Text label whose tooltip lists the tokens; Choose an
+--              icon, Preview, then Cancel and Save, and under them the line that names a field
+--              Save refused
 --
 -- THE DRAFT is a plain copy of the callout's four fields (blank for Add: an empty name and text,
--- Smart group, no icon), and every control writes it, never the profile. The preview and the token
--- list bake the draft, so they follow each edit before anything is saved. A text box commits to the
+-- Smart group, no icon), and every control writes it, never the profile. The preview bakes the
+-- draft, and the token tooltip reads its channel when it shows, so both follow each edit before
+-- anything is saved. A text box commits to the
 -- draft on Enter, and what a box shows that Enter did not commit is taken into the draft before any
 -- other write and by Save, so a typed name is never lost to a pick or to a click on Save. Save checks
 -- the draft with the member rows' own validators, then writes it as ONE act (Library.Batch): an edit writes each
@@ -63,6 +65,11 @@ local DIM = { 0, 0, 0, 0.45 }
 -- with its border (LEVEL + 2), the page (LEVEL + 3) and the close X (LEVEL + 5).
 local LEVEL = 10
 local ERROR_COLOR = "|cffff4040"
+-- The gap between the preview and the button pair, a section's worth (two row gaps).
+local BUTTONS_GAP = 16
+-- The token glyph: GLYPH_GAP right of the Text label's last letter, sized to the label's font
+-- (its size plus 4, kept within GLYPH_MIN to GLYPH_MAX).
+local GLYPH_GAP, GLYPH_MIN, GLYPH_MAX = 4, 14, 16
 
 -- The open popup's state: the group, the callout (nil for Add), the draft and its baseline.
 local gid, cid, draft, baseline
@@ -176,19 +183,55 @@ local function showError(text)
     fit()
 end
 
--- The token picker's entries for the draft's channel as it is now.
-local function tokenEntries()
-    local out = {}
-    for i, token in ipairs(C.TokensFor(draft and draft.channel)) do out[i] = { id = token, label = token } end
-    return out
+-- The token tooltip: every token the draft's channel offers, one line each (C.TokenHelp), read
+-- when it shows, so a channel picked since the render is the one it lists.
+local function showTokenHelp(owner)
+    if not GameTooltip then return end
+    GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
+    GameTooltip:SetText(L["Tokens"], 1, 1, 1)
+    GameTooltip:AddLine(L["Type a token into the text. It is filled in when the callout is sent."], nil, nil, nil,
+        true)
+    for _, line in ipairs(C.TokenHelp(draft and draft.channel)) do
+        GameTooltip:AddDoubleLine(line[1], line[2], 1, 0.82, 0, 1, 1, 1)
+    end
+    GameTooltip:Show()
 end
 
-local function insertToken(token)
-    if not draft then return end
-    flush()
-    local text = draft.text or ""
-    local sep = (text == "" or text:sub(-1) == " ") and "" or " "
-    setField("text", text .. sep .. token)
+local function hideTooltip()
+    if GameTooltip then GameTooltip:Hide() end
+end
+
+-- The info glyph beside the Text box's label (the library's catalog "info" mark). As the library
+-- keeps its landing logo (OptionsWidgets.lua, landingLogo): the glyph is kept ON the box's frame
+-- and reused, so a frame that comes back for the Text box again cannot gain a second one, and it
+-- is hidden when the box is released, so a frame AceGUI hands to any other EditBox does not show
+-- it. The release callback is set fresh on every render (AceGUI clears callbacks on release), and
+-- the anchor is set again each time, on the label as it is now.
+local function tokenGlyph(box)
+    local frame, label = box and box.frame, box and box.label
+    if not (frame and label) then return nil end
+    local glyph = frame.qcTokenGlyph
+    if not glyph then
+        glyph = CreateFrame("Button", nil, frame)
+        glyph.icon = glyph:CreateTexture(nil, "ARTWORK")
+        glyph.icon:SetAllPoints(glyph)
+        glyph:EnableMouse(true)
+        glyph:SetScript("OnEnter", showTokenHelp)
+        glyph:SetScript("OnLeave", hideTooltip)
+        frame.qcTokenGlyph = glyph
+    end
+    glyph.icon:SetTexture(NS.Icon("info"))
+    local _, fontSize = label:GetFont()
+    local size = math.max(GLYPH_MIN, math.min(GLYPH_MAX, (tonumber(fontSize) or 0) + 4))
+    glyph:SetSize(size, size)
+    glyph:ClearAllPoints()
+    glyph:SetPoint("LEFT", label, "LEFT", (tonumber(label:GetStringWidth()) or 0) + GLYPH_GAP, 0)
+    glyph:Show()
+    box:SetCallback("OnRelease", function()
+        hideTooltip()
+        glyph:Hide()
+    end)
+    return glyph
 end
 
 -- The AceGUI EditBoxes under widget `w`, in the order they were drawn.
@@ -218,21 +261,20 @@ local function render()
             boxes[FIELDS[i]] = drawn[n]
         end
     end
-    h.RenderGrid(ctx, { Ed.ActionDropdown(L["Insert a token"],
-        L["Add a token to the end of the text. Tokens are filled in when the callout is sent."],
-        tokenEntries, insertToken, ctx) })
+    Pop.tokenGlyph = tokenGlyph(boxes.text)
     Ed.IconPicker(ctx, function(path) setField("icon", path) end)
-    h.Section(ctx, L["What it sends here"])
+    h.Section(ctx, L["Preview"])
     -- One label, refreshed in place on every draft write and every situation change.
     local live = h.TextRow(ctx, table.concat(C.PreviewLines(draft), "\n"))
     Ed.Live(ctx, function()
         if draft and live then live:SetText(table.concat(C.PreviewLines(draft), "\n")) end
     end)
+    h.AddSpacer(ctx.scroll, BUTTONS_GAP)
     h.InlineButtonPair(ctx,
-        { text = L["Save"], tooltip = L["Save this callout to the group and close."],
-          onClick = function() Pop.Save() end },
         { text = L["Cancel"], tooltip = L["Close without saving. Nothing changes."],
-          onClick = function() Pop.Cancel() end })
+          onClick = function() Pop.Cancel() end },
+        { text = L["Save"], tooltip = L["Save this callout to the group and close."],
+          onClick = function() Pop.Save() end })
     errorRow = h.TextRow(ctx, "")
     -- Last, so it measures what every refresher before it has just redrawn.
     ctx.refreshers[#ctx.refreshers + 1] = fit
@@ -244,6 +286,7 @@ end
 local function close()
     gid, cid, draft, baseline = nil, nil, nil, nil
     errorRow = nil
+    Pop.tokenGlyph = nil
     boxes, shown = {}, {}
     if ctx then
         H().ClearScroll(ctx)

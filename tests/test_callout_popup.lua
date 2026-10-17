@@ -1,6 +1,6 @@
 -- tests/test_callout_popup.lua — settings/CalloutPopup.lua (callouts-owned-by-groups spec, "The
 -- callout popup"): the Save/Cancel draft editor a user group's Callouts tab opens, and what
--- settings/Callouts.lua keeps for it (the token list, the preview lines). Driven headlessly through
+-- settings/Callouts.lua keeps for it (the token list and its help, the preview lines). Driven headlessly through
 -- tests/page_helpers.lua.
 
 local T = _G.QUICKCOMMS_TEST
@@ -254,7 +254,7 @@ test("popup: Save takes the text typed into a box without Enter", function()
     assertEqual(NS.db.profile.callouts[cid].name, "Interrupt")
 end)
 
-test("popup: a pick, a token or a seam write keeps the text typed without Enter", function()
+test("popup: a pick or a seam write keeps the text typed without Enter", function()
     local NS, _, P, Pop = open()
     local gid, cid = withKick(NS)
     local w = P.during(function() Pop.Open(gid, cid) end)
@@ -265,9 +265,8 @@ test("popup: a pick, a token or a seam write keeps the text typed without Enter"
     -- red under: every draft write runs every box's refresher over the typed text
     assertEqual(name:GetText(), "Interrupt")
     assertEqual(Pop.Draft().name, "Interrupt")
-    P.find(w, "Dropdown", "Insert a token"):__fire("OnValueChanged", "{target}")
-    assertEqual(Pop.Draft().text, "Kick {focus} {target}", "the token follows the typed text")
-    assertEqual(text:GetText(), "Kick {focus} {target}")
+    assertEqual(Pop.Draft().text, "Kick {focus}", "the pick took the typed text in")
+    assertEqual(text:GetText(), "Kick {focus}")
     -- a seam write elsewhere refreshes every rendered panel, the popup's among them
     name:SetText("Stop")
     NS.addon:OnSlashCommand("set callout.text " .. cid .. " Slashed")
@@ -275,7 +274,7 @@ test("popup: a pick, a token or a seam write keeps the text typed without Enter"
     assertTrue(Pop.Save())
     local c = NS.db.profile.callouts[cid]
     assertEqual(c.name, "Stop")
-    assertEqual(c.text, "Kick {focus} {target}")
+    assertEqual(c.text, "Kick {focus}")
     assertEqual(c.channel, "smartGroup")
 end)
 
@@ -337,18 +336,119 @@ test("popup: Escape and a profile change cancel", function()
     assertFalse(Pop.IsOpen(), "the draft named the old profile's ids")
 end)
 
-test("popup: Insert a token appends to the draft's text", function()
+-- The token tooltip's lines as shown: hover the glyph, read the mock GameTooltip's record.
+local function hoverGlyph(m, glyph)
+    glyph:__fire("OnEnter")
+    local out = {}
+    for i, line in ipairs(m.GameTooltip.__lines) do out[i] = line end
+    return out
+end
+
+local function tooltipHas(lines, left)
+    for _, line in ipairs(lines) do
+        if line[1] == left then return line end
+    end
+    return nil
+end
+
+test("popup: there is no token dropdown; an info glyph sits right of the Text label", function()
     local NS, _, P, Pop = open()
     local gid, cid = withKick(NS)
     local w = P.during(function() Pop.Open(gid, cid) end)
-    P.find(w, "Dropdown", "Insert a token"):__fire("OnValueChanged", "{target}")
-    assertEqual(Pop.Draft().text, "Kick {target}")
-    assertEqual(NS.db.profile.callouts[cid].text, "Kick", "the stored text waits for Save")
-    -- the token list follows the draft's channel: {group1} only where it can resolve to Raid
-    local tokens = P.find(w, "Dropdown", "Insert a token")
-    assertNil(tokens.list["{group1}"])
+    -- red under: keep the Insert a token dropdown
+    assertNil(P.find(w, "Dropdown", "Insert a token"))
+    local text = P.find(w, "EditBox", "Text")
+    local glyph = Pop.tokenGlyph
+    assertTrue(glyph ~= nil, "the glyph is drawn")
+    assertTrue(glyph.__parent == text.frame, "on the Text box's own frame")
+    assertTrue(text.frame.qcTokenGlyph == glyph, "kept on that frame for reuse")
+    assertTrue(glyph:IsShown())
+    assertEqual(glyph.icon.__texture, NS.Icon("info"), "the catalog's info mark")
+    -- vertically centered on the label, GLYPH_GAP past its last letter ("Text": 4 letters at 6)
+    local point, rel, relPoint, x, y = glyph:GetPoint(1)
+    assertEqual(point, "LEFT")
+    assertTrue(rel == text.label, "anchored to the label")
+    assertEqual(relPoint, "LEFT")
+    assertEqual(x, 4 * 6 + 4)
+    assertEqual(y, 0)
+    assertEqual(glyph.__w, 14, "sized to the label's 10-point face, within 14 to 16")
+    assertEqual(glyph.__h, 14)
+    -- a render again re-anchors the same glyph, once
+    w = P.during(function() Pop.Open(gid, cid) end)
+    local again = P.find(w, "EditBox", "Text")
+    assertTrue(Pop.tokenGlyph.__parent == again.frame)
+    assertEqual(#Pop.tokenGlyph.__points, 1, "one anchor, set afresh")
+    -- released with its box: hidden, so a frame reused by another EditBox does not show it
+    local shown = Pop.tokenGlyph
+    again:__fire("OnRelease")
+    -- red under: drop the box's OnRelease callback in settings/CalloutPopup.lua
+    assertFalse(shown:IsShown())
+end)
+
+test("popup: the info glyph's tooltip lists the tokens, {group1} to {group8} only for a raid channel", function()
+    local NS, m, P, Pop = open()
+    local gid, cid = withKick(NS)   -- Kick is a party callout
+    local w = P.during(function() Pop.Open(gid, cid) end)
+    local lines = hoverGlyph(m, Pop.tokenGlyph)
+    assertTrue(m.GameTooltip.__owner == Pop.tokenGlyph)
+    assertEqual(lines[1][1], "Tokens")
+    for _, token in ipairs({ "{target}", "{focus}", "{skull}", "{star}", "{me}", "{spec}", "{role}", "{key}",
+        "{dungeon}", "{spell:ID}" }) do
+        local line = tooltipHas(lines, token)
+        assertTrue(line ~= nil and type(line[2]) == "string" and line[2] ~= "", token .. " is explained")
+    end
+    assertEqual(tooltipHas(lines, "{skull}")[2], "The Skull raid marker.")
+    -- red under: drop the RAID_CAPABLE branch from C.TokensFor
+    assertNil(tooltipHas(lines, "{group1} … {group8}"), "a party channel cannot resolve to Raid")
+    -- the channel picked since the render is the one the tooltip reads
     P.find(w, "Dropdown", "Channel"):__fire("OnValueChanged", "raid")
-    assertEqual(tokens.list["{group1}"], "{group1}")
+    lines = hoverGlyph(m, Pop.tokenGlyph)
+    assertTrue(tooltipHas(lines, "{group1} … {group8}") ~= nil, "the eight raid groups on one line")
+    assertNil(tooltipHas(lines, "{group1}"), "never one line per group")
+    assertNil(tooltipHas(lines, "{group8}"))
+    Pop.tokenGlyph:__fire("OnLeave")
+    assertFalse(m.GameTooltip:IsShown())
+    assertEqual(NS.db.profile.callouts[cid].channel, "party", "hovering writes nothing")
+end)
+
+test("popup: the preview is headed Preview, a gap above Cancel then Save", function()
+    local NS, _, P, Pop = open()
+    local gid, cid = withKick(NS)
+    local w = P.during(function() Pop.Open(gid, cid) end)
+    -- red under: keep the What it sends here heading
+    assertTrue(P.find(w, "Heading", "Preview") ~= nil)
+    assertNil(P.find(w, "Heading", "What it sends here"))
+    local order = {}
+    for i, b in ipairs(P.all(w, "Button")) do order[b.text] = i end
+    -- red under: hand InlineButtonPair Save first
+    assertTrue(order.Cancel ~= nil and order.Save ~= nil and order.Cancel < order.Save, "Cancel left, Save right")
+    -- the body: ... the preview line, a section's gap, then the pair's row
+    local body = P.find(w, "SimpleGroup")
+    local kids = body.children
+    local pairAt
+    for i, kid in ipairs(kids) do
+        for _, b in ipairs(kid.children or {}) do
+            if b.type == "Button" and b.text == "Cancel" then pairAt = i end
+        end
+    end
+    assertTrue(pairAt ~= nil and pairAt > 2)
+    local gap = kids[pairAt - 1]
+    assertEqual(gap.type, "SimpleGroup")
+    assertEqual(gap.height, 16, "the gap between the preview and the buttons")
+    assertEqual(kids[pairAt - 2].type, "Label", "under the preview line")
+    P.find(w, "Button", "Cancel"):__fire("OnClick")
+    assertFalse(Pop.IsOpen(), "Cancel still cancels")
+end)
+
+test("callout helpers: TokenHelp folds {group1}-{group8} into one line and names {spell:ID}", function()
+    local NS = open()
+    local C = NS.addon.Settings.Callouts
+    local party, raid = C.TokenHelp("party"), C.TokenHelp("smartGroup")
+    assertEqual(#party, #C.TOKENS + 1, "each offered token, then {spell:ID}")
+    assertEqual(party[#party][1], "{spell:ID}")
+    assertEqual(#raid, #C.TOKENS + 2, "the eight groups are one line")
+    assertEqual(raid[#C.TOKENS + 1][1], "{group1} … {group8}")
+    for _, line in ipairs(raid) do assertTrue(line[2] ~= "", line[1] .. " has its help") end
 end)
 
 -- The picker's icon showing `path`, among the widgets `w`.
