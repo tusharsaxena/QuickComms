@@ -573,6 +573,28 @@ test("groups page: [final 12] Duplicate says the copy is on no pad yet", functio
     assertTrue(table.concat(m.prints, "\n"):find("the copy is on no pad yet", 1, true) ~= nil)
 end)
 
+test("groups page: [nesting] a child's Duplicate tooltip says the copy sits in the same parent", function()
+    local NS, m, P = open()
+    local a = NS.Library.CreateGroup({ name = "Parent" })
+    local c = NS.Library.CreateGroup({ name = "Child" })
+    NS.SchemaRuntime.Set("group.parent", a, c)
+    pick(NS, c)
+    local w = P.redraw("groups")
+    P.find(w, "Button", "Duplicate"):__fire("OnEnter")
+    local said = {}
+    for _, line in ipairs(m.GameTooltip.__lines) do said[#said + 1] = line[1] end
+    said = table.concat(said, "\n")
+    -- red under: the top-level group's tooltip on a child
+    assertTrue(said:find("sits in the same parent group", 1, true) ~= nil, said)
+    assertTrue(said:find("on no pad", 1, true) == nil, said)
+    pick(NS, a)
+    w = P.redraw("groups")
+    P.find(w, "Button", "Duplicate"):__fire("OnEnter")
+    said = {}
+    for _, line in ipairs(m.GameTooltip.__lines) do said[#said + 1] = line[1] end
+    assertTrue(table.concat(said, "\n"):find("on no pad", 1, true) ~= nil, "a top-level group's is unchanged")
+end)
+
 local DUNGEON = { inInstance = true, instanceType = "party", difficultyID = 2, instanceID = 2526, inGroup = true }
 
 test("groups page: [final 20] the Instances row adds a typed id, removes one, and refuses a fraction or a negative", function()

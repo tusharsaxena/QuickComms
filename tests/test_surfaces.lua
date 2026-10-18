@@ -466,3 +466,28 @@ test("surfaces: [nesting] a dial draws a parent's own callouts and a ring per ch
     assertEqual(sends["Own"], "Raid night", "the parent's own callout sits in its ring")
     assertEqual(sends["Go"], "Keyed")
 end)
+
+test("surfaces: [nesting] a parent that draws nothing leaves its surface with nothing active", function()
+    local NS = live()
+    local Lib, p = NS.Library, NS.db.profile
+    p.pads.p1.groups, p.dials.d2.groups = {}, {}
+    local parent = Lib.CreateGroup({ name = "Empty parent" })
+    local arena = Lib.CreateGroup({ name = "Arena only", when = { content = { arena = true } } })
+    Lib.CreateCalloutIn(arena, { name = "Swap", text = "swap", channel = "party" })
+    NS.SchemaRuntime.Set("group.parent", parent, arena)
+    Lib.AddGroupToSurface("pad", "p1", parent, 1)
+    Lib.AddGroupToSurface("dial", "d2", parent, 1)
+    local snap = NS.Situation.Current()
+    local plan = planFor(NS, snap)
+    assertEqual(table.concat(plan.order, ","), parent, "the parent is active")
+    assertEqual(#plan.sections, 0, "and draws nothing in a key")
+    -- red under: hasActive counted from the order (#order > 0)
+    assertFalse(plan.hasActive)
+    assertEqual(NS.PadLayout.VisibilityDriver("always", "whenActive", plan.hasActive, false), "hide",
+        "a whenActive pad hides")
+    local dial = NS.Surfaces.BuildDialPlan("d2", p.dials.d2, snap, NS.Surfaces.Deps(snap))
+    assertEqual(#dial.rings, 0)
+    assertFalse(dial.hasActive)
+    Lib.CreateCalloutIn(parent, { name = "Own", text = "own", channel = "party" })
+    assertTrue(planFor(NS, snap).hasActive, "a callout of its own draws a section")
+end)

@@ -36,7 +36,7 @@ local Ed = Settings.Editors
 Ed.ROW_H = 30       -- one reorderable row; the drop arithmetic's stride
 Ed.HANDLE_W = 30    -- the library's handle gutter (LibKa0s-Widgets ROW_BOX.HANDLE_W)
 Ed.ACTIVE_DOT = "|TInterface\\COMMON\\Indicator-Green:12|t "
-Ed.pages, Ed.built, Ed.categories, Ed.reorders, Ed.redraw = {}, {}, {}, {}, {}
+Ed.pages, Ed.built, Ed.reorders, Ed.redraw = {}, {}, {}, {}
 
 local function H() return Settings.Helpers end
 
@@ -591,6 +591,10 @@ end
 -- One table row's two labels into `into`, laid out by Ed.TABLE_LAYOUT.
 local function tableRow(h, into, name, text)
     into:SetLayout(Ed.TABLE_LAYOUT)
+    -- The row is a pooled SimpleGroup (RenderGrid's), and AceGUI's Release keeps a container's
+    -- layout: give the pool back the constructor's "List", not this two-cell layout. OnRelease
+    -- fires after PauseLayout, so this lays nothing out; Release clears the callback after.
+    into:SetCallback("OnRelease", function(w) w:SetLayout("List") end)
     local a, b = h.AceGUI:Create("Label"), h.AceGUI:Create("Label")
     a:SetText(name)
     b:SetText(text)
@@ -687,9 +691,7 @@ function Ed.RegisterPage(pageKey, title, frameSuffix, render, defaults)
         ctx.panel.defaultsOnClick = function() defaults.onClick(ctx) end
         h.SetRenderer(ctx, redraw)
         Ed.pages[pageKey] = ctx
-        local category = _G.Settings.RegisterCanvasLayoutSubcategory(parentCategory, ctx.panel, title)
-        Ed.categories[pageKey] = category
-        return category
+        return _G.Settings.RegisterCanvasLayoutSubcategory(parentCategory, ctx.panel, title)
     end)
 end
 
@@ -713,21 +715,4 @@ function Ed.ConfirmDelete(name, onAccept, text)
     }
     StaticPopupDialogs[DELETE_POPUP].text = text or L["Delete '%s'? This cannot be undone."]
     StaticPopup_Show(DELETE_POPUP, name, nil, onAccept)
-end
-
---- Open the settings at another editor page. The page repaints from
---- the selection the caller set. Refused in combat, here rather than at each caller: Blizzard's
---- category switch is protected (options-ui-§2's page-jump carve-out is combat-gated).
---- @return boolean opened
-function Ed.Open(pageKey)
-    if NS.Compat.InCombat() then
-        NS.Print("|cffaaaaaa" .. L["cannot open settings during combat \226\128\148 Blizzard's category-switch is protected"] .. "|r")
-        return false
-    end
-    Ed.RequestRefresh()
-    local category = Ed.categories[pageKey]
-    local S = _G.Settings
-    if not (category and type(category.GetID) == "function" and S and S.OpenToCategory) then return false end
-    S.OpenToCategory(category:GetID())
-    return true
 end

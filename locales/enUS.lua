@@ -582,6 +582,7 @@ L["Restore built-in groups: %d groups and %d callouts came back. A set that came
 L["Pick a callout to copy into this group, from any of your other groups. Add puts the copy at the end."] = "Pick a callout to copy into this group, from any of your other groups. Add puts the copy at the end."
 L["Turn the selected group back on, stop it opening the dial, and turn Preview as off. Its name, callouts and When are kept."] = "Turn the selected group back on, stop it opening the dial, and turn Preview as off. Its name, callouts and When are kept."
 L["Make a copy of this group, with copies of its callouts and the same When. The copy is on no pad until you add it under Comms Pad > Groups."] = "Make a copy of this group, with copies of its callouts and the same When. The copy is on no pad until you add it under Comms Pad > Groups."
+L["Make a copy of this group, with copies of its callouts and the same When. The copy sits in the same parent group, beside this one."] = "Make a copy of this group, with copies of its callouts and the same When. The copy sits in the same parent group, beside this one."
 
 -- Comms Pad page (settings/Pads.lua)
 L["Comms Pad %d"] = "Comms Pad %d"
@@ -823,7 +824,3 @@ L["Person"] = "Person"
 L["Timer"] = "Timer"
 L["Ban"] = "Ban"
 L["Thumbs up"] = "Thumbs up"
-
--- settings/Editors.lua (audit QC-02: the page jump refused in combat)
-L["cannot open settings during combat \226\128\148 Blizzard's category-switch is protected"] =
-    "cannot open settings during combat \226\128\148 Blizzard's category-switch is protected"

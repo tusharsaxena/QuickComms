@@ -131,39 +131,6 @@ test("editors: ConfirmDelete asks first, and only the accepted popup runs the ac
     assertTrue(m.StaticPopupDialogs[shown[1]].text:find("%s", 1, true) ~= nil, "names what is deleted")
 end)
 
-test("editors: Open goes to a page's category by its id", function()
-    local _, m, Ed = enabled()
-    local opened
-    m.Settings.OpenToCategory = function(id) opened = id end
-    Ed.categories.probe = { GetID = function() return 42 end }
-    assertTrue(Ed.Open("probe"))
-    assertEqual(opened, 42)
-    assertFalse(Ed.Open("nope"))
-    Ed.categories.probe = nil
-end)
-
-test("editors: [audit QC-02] Open refuses in combat with one gray line and never reaches the category switch", function()
-    local _, m, Ed = enabled()
-    local opened, refreshed = 0, 0
-    m.Settings.OpenToCategory = function() opened = opened + 1 end
-    Ed.categories.probe = { GetID = function() return 42 end }
-    local realRefresh = Ed.RequestRefresh
-    Ed.RequestRefresh = function() refreshed = refreshed + 1 end
-    m.__setCombat(true)
-    m.prints = {}
-    -- red under: drop the InCombat gate from Ed.Open in settings/Editors.lua
-    assertFalse(Ed.Open("probe"))
-    assertEqual(opened, 0, "Settings.OpenToCategory is protected: never called in combat")
-    assertEqual(#m.prints, 1)
-    assertTrue(m.prints[1]:find("cannot open settings during combat", 1, true) ~= nil, m.prints[1])
-    assertEqual(refreshed, 0, "a refused jump queues no repaint")
-    m.__setCombat(false)
-    assertTrue(Ed.Open("probe"))
-    assertEqual(opened, 1)
-    Ed.RequestRefresh = realRefresh
-    Ed.categories.probe = nil
-end)
-
 test("editors: Scalar keeps the rows the flow engine draws, and CancelReorder cancels once", function()
     local _, _, Ed = enabled()
     local rows = Ed.Scalar({ { path = "a", type = "string" }, { path = "b", type = "when" }, { path = "c", type = "number" } })

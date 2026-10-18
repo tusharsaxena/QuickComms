@@ -138,7 +138,7 @@ function S.BuildPlan(surfaceId, pad, snap, deps)
     local active, order = resolve(pad and pad.groups, snap, deps)
     local opts = { soloFallback = deps.soloFallback, ctx = deps.ctx }
     local plan = { surfaceId = surfaceId, snapshot = snap, order = order, sections = {},
-        lockdownChip = false, hasActive = #order > 0, active = active }
+        lockdownChip = false, hasActive = false, active = active }
     local nest = { children = deps.children, active = active, groups = deps.groups }
     for _, gid in ipairs(order) do
         for _, sec in ipairs(S.Sections(gid, deps.group, nest)) do
@@ -152,6 +152,9 @@ function S.BuildPlan(surfaceId, pad, snap, deps)
             plan.sections[#plan.sections + 1] = { groupId = sec.groupId, title = sec.title, slots = slots }
         end
     end
+    -- What is drawn, not what is active: a parent with no callouts of its own whose children all
+    -- fail their When is in the order and yields no section, and a "whenActive" pad hides for it.
+    plan.hasActive = #plan.sections > 0
     if t0 then Perf.Note("bakeSurface", debugprofilestop() - t0) end
     return plan
 end
@@ -223,7 +226,7 @@ function S.BuildDialPlan(surfaceId, dial, snap, deps)
     local active, order = resolve(dial.groups, snap, deps)
     local opts = { soloFallback = deps.soloFallback, ctx = deps.ctx }
     local plan = { kind = "dial", surfaceId = surfaceId, snapshot = snap, order = order, active = active,
-        lockdownChip = false, hasActive = #order > 0 }
+        lockdownChip = false, hasActive = false }
     local function slotsOf(ids)
         local out = {}
         for _, cid in ipairs(ids or {}) do
@@ -256,6 +259,8 @@ function S.BuildDialPlan(surfaceId, dial, snap, deps)
         groups[#groups + 1] = entry
     end
     plan.rings, plan.openRing = NS.DialLayout.Rings(groups, { mode = dial.mode, slices = dial.slices, title = dial.name })
+    -- As a pad's: what is drawn (a ring), not what is active.
+    plan.hasActive = #plan.rings > 0
     if t0 then Perf.Note("bakeSurface", debugprofilestop() - t0) end
     return plan
 end

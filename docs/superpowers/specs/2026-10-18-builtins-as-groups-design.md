@@ -150,8 +150,8 @@ Recorded as each task makes them (plan ledger task in brackets).
   `builtin.hidden`), the `idset` row type and its CLI parse and format, Customize, the "(built-in)"
   tag (picker, Add a group, the why lines), Reuse's built-in section, the built-ins' read-only
   General, Callouts and When branches on the Groups page, and Groups_When's W.Describe (only the
-  built-in When tab used it). Settings.Editors.Open stays (a tested, combat-gated page jump), with
-  no caller now.
+  built-in When tab used it). Settings.Editors.Open (the combat-gated page jump) lost its last
+  caller with Customize and was removed in review round 2, with its tests and its locale line.
 - [T2] **The dial's three-rings-deep warning** knows a seeded battleground set by its origin
   (`bi.bg.<key>`, read through Library.SeededBattleground) while it holds groups.
 - [T3] **Groups page parity needed no new code in T3**: T2 already removed every built-in branch

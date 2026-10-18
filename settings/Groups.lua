@@ -294,7 +294,9 @@ local function renderGeneral(ctx, rows)
     h.RenderGrid(ctx, { parentItem(gid) })
     Ed.IconChooser(ctx, G.IconSpec(gid))
     h.InlineButtonPair(ctx,
-        { text = L["Duplicate"], tooltip = L["Make a copy of this group, with copies of its callouts and the same When. The copy is on no pad until you add it under Comms Pad > Groups."],
+        { text = L["Duplicate"], tooltip = NS.Library.IsChild(gid)
+            and L["Make a copy of this group, with copies of its callouts and the same When. The copy sits in the same parent group, beside this one."]
+            or L["Make a copy of this group, with copies of its callouts and the same When. The copy is on no pad until you add it under Comms Pad > Groups."],
           onClick = function() G.Duplicate(gid) end },
         { text = L["Delete"], tooltip = L["Delete this group and its callouts, and take it off every pad. Asks first."],
           onClick = function() G.Delete(gid) end })

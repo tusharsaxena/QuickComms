@@ -114,7 +114,7 @@ Total.
 - database: step 3 leaves a profile never prepared to Prepare, which seeds it once
 - database: the profile defaults carry the Master controls value, and no debug flag
 
-### test_profile.lua (8)
+### test_profile.lua (9)
 
 - profile: behavior defaults match spec §5.1
 - profile: collections exist; default nextId is 1, past every seeded id after boot
@@ -122,6 +122,7 @@ Total.
 - profile: the spam guard clamps to 0.6-2.0 and fallback refuses unknown values
 - profile: schema version target is 3 (the built-in sets as seeded groups)
 - prepare: a callout held by two groups is split into a copy
+- prepare: a split copy of a seeded callout keeps no origin
 - prepare: a callout held by no group is dropped
 - prepare: is idempotent after a split
 
@@ -458,7 +459,7 @@ Total.
 - members: [icons] Library.SetIcon writes the icon and its color as one act
 - members: [icons] `/qc reset` clears a color; a group page's Defaults keeps it with the icon
 
-### test_editors.lua (19)
+### test_editors.lua (17)
 
 - editors: [review 2] Select keeps the selection, and nothing else; Heal keeps a member that exists
 - editors: every membership change asks for one structural repaint, on the next frame
@@ -468,8 +469,6 @@ Total.
 - editors: a profile switch clears every selection
 - editors: the stand-down cancels a pending repaint
 - editors: ConfirmDelete asks first, and only the accepted popup runs the act, once
-- editors: Open goes to a page's category by its id
-- editors: [audit QC-02] Open refuses in combat with one gray line and never reaches the category switch
 - editors: Scalar keeps the rows the flow engine draws, and CancelReorder cancels once
 - editors: a row's remove is a glyph, not a button
 - editors: a row with edit shows the edit glyph and fires it
@@ -578,7 +577,7 @@ Total.
 - when: [final 6] a typed character takes the client's case; the Resolver matches one in any case
 - when: [final 2, 11] ResolveValue maps a typed value onto the token or id its row stores, or refuses it
 
-### test_page_groups.lua (47)
+### test_page_groups.lua (48)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists every group by name, a seeded set among them, active ones dotted
@@ -607,6 +606,7 @@ Total.
 - groups page: [restore] Restore built-in groups brings back a deleted set and says so; again, nothing is missing
 - groups page: [restore] with every group deleted, General still offers Restore built-in groups
 - groups page: [final 12] Duplicate says the copy is on no pad yet
+- groups page: [nesting] a child's Duplicate tooltip says the copy sits in the same parent
 - groups page: [final 20] the Instances row adds a typed id, removes one, and refuses a fraction or a negative
 - groups page: [final 18] Add the instance you are in reads the instance at the click, not at the draw
 - groups page: [icons] General shows the icon, Choose icon… and the swatch; the browser's Choose writes the group's icon
@@ -811,7 +811,7 @@ Total.
 - dial layout: [review 6] a pinned ring ignores the dial's slices; Flat keeps its paging
 - dial layout: [icons] a ring entry carries its group's icon color, a send entry its callout's
 
-### test_surfaces.lua (25)
+### test_surfaces.lua (26)
 
 - surfaces: in a key the default pad's plan is the M+ set, baked to /p
 - surfaces: [review 5] a refused callout is a slot with its reason and no line
@@ -838,6 +838,7 @@ Total.
 - surfaces: [icons] a slot carries its callout's icon color, a dial's group entry its group's
 - surfaces: [nesting] a parent draws its own section, then one per child whose When matches
 - surfaces: [nesting] a dial draws a parent's own callouts and a ring per child whose When matches
+- surfaces: [nesting] a parent that draws nothing leaves its surface with nothing active
 
 ### test_pad_render.lua (18)
 
@@ -999,7 +1000,7 @@ Total.
 | test_surface_parity.lua | 15 |
 | test_setup.lua | 26 |
 | test_database.lua | 10 |
-| test_profile.lua | 8 |
+| test_profile.lua | 9 |
 | test_schema.lua | 18 |
 | test_slash.lua | 15 |
 | test_disabled.lua | 21 |
@@ -1016,12 +1017,12 @@ Total.
 | test_gameids.lua | 2 |
 | test_library.lua | 73 |
 | test_members.lua | 26 |
-| test_editors.lua | 19 |
+| test_editors.lua | 17 |
 | test_callout_popup.lua | 38 |
 | test_icon_browser.lua | 26 |
 | test_eui_skin.lua | 10 |
 | test_groups_when.lua | 12 |
-| test_page_groups.lua | 47 |
+| test_page_groups.lua | 48 |
 | test_page_pads.lua | 13 |
 | test_page_dials.lua | 17 |
 | test_page_share.lua | 12 |
@@ -1033,7 +1034,7 @@ Total.
 | test_master.lua | 5 |
 | test_pad_layout.lua | 12 |
 | test_dial_layout.lua | 15 |
-| test_surfaces.lua | 25 |
+| test_surfaces.lua | 26 |
 | test_pad_render.lua | 18 |
 | test_pad.lua | 26 |
 | test_dial.lua | 29 |
@@ -1044,4 +1045,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **830** |
+| **Total** | **831** |

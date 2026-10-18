@@ -1226,7 +1226,10 @@ local function splitShared(p, result)
             local c = p.callouts[cid]
             if c and seen[cid] then
                 local copy = Lib.NewId("c")
-                p.callouts[copy] = copyTable(c)
+                -- A copy keeps no provenance (docs/schema.md): only the original claims its origin.
+                local fresh = copyTable(c)
+                fresh.origin = nil
+                p.callouts[copy] = fresh
                 list[i] = copy
                 result.repaired = result.repaired + 1
             elseif c then

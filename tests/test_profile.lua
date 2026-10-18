@@ -96,6 +96,17 @@ test("prepare: a callout held by two groups is split into a copy", function()
     assertTrue(result.repaired >= 1)
 end)
 
+test("prepare: a split copy of a seeded callout keeps no origin", function()
+    local NS, p = broken()
+    p.callouts.c1.origin = "bi.mplus.lust"
+    NS.Library.Prepare()
+    local b = p.groups.g2.callouts[1]
+    assertEqual(p.callouts.c1.origin, "bi.mplus.lust", "the original keeps it")
+    -- red under: splitShared copying the callout with its origin
+    assertTrue(b ~= "c1" and p.callouts[b] ~= nil)
+    assertNil(p.callouts[b].origin)
+end)
+
 test("prepare: a callout held by no group is dropped", function()
     local NS = T.bootAddon()
     local p = NS.db.profile
