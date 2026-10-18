@@ -564,6 +564,25 @@ test("groups page: [icons] General shows the icon, Choose icon… and the swatch
     assertNil(P.find(w, "Button", "Choose icon…"), "built-ins are read-only")
 end)
 
+test("groups page: [icons] General has no Icon box: the icon is chosen under an Icon label alone", function()
+    local NS, _, P = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine", icon = NS.Icon("star") })
+    NS.addon.Settings.Editors.Select("group", gid)
+    local w = P.redraw("groups")
+    -- red under: drop group.icon from UNDRAWN in settings/Groups.lua
+    assertNil(P.find(w, "EditBox", "Icon"), "no Icon text box")
+    assertTrue(P.find(w, "EditBox", "Name") ~= nil, "the other rows still draw")
+    local label = P.find(w, "Label", "Icon")
+    assertTrue(label ~= nil, "the chooser's own Icon label")
+    assertEqual(label.fontObject, _G.GameFontNormalSmall)
+    assertTrue(label.fullWidth, "no inset on a page: its labels sit at the left edge")
+    assertEqual(P.find(w, "Icon").image[1], NS.Icon("star"), "the stored path still draws")
+    assertEqual(P.find(w, "Button", "Choose icon…").relativeWidth, 0.4, "a page's relative widths")
+    -- the row stays for /qc
+    assertTrue(NS.SchemaRuntime.Set("group.icon", "136012", gid))
+    assertEqual(NS.db.profile.groups[gid].icon, 136012)
+end)
+
 test("groups page: [icons] a glyph's swatch writes the group's color; a game icon chosen clears it in the same act", function()
     local NS, _, P = open()
     local star = NS.Icon("star")

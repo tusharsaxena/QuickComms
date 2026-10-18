@@ -776,8 +776,9 @@ L["A color is red, green and blue, and optionally alpha, each from 0 to 1."] = "
 L["Font"] = "Font"
 L["Border"] = "Border"
 L["Background"] = "Background"
--- settings/Editors.lua: the icon chooser under an editor's Icon box (icon browser spec)
+-- settings/Editors.lua: an editor's icon chooser, under its Icon label (icon browser spec)
 L["Choose icon…"] = "Choose icon…"
+L["That is not a texture. Click Choose icon… and pick another."] = "That is not a texture. Click Choose icon… and pick another."
 L["Click to choose another icon."] = "Click to choose another icon."
 L["Pick from the raid markers, the game's icons and the LibKa0s glyphs."] = "Pick from the raid markers, the game's icons and the LibKa0s glyphs."
 L["The color a LibKa0s glyph is drawn in. Only a glyph takes a color; white is none."] = "The color a LibKa0s glyph is drawn in. Only a glyph takes a color; white is none."

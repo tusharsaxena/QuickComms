@@ -218,13 +218,46 @@ end
 
 -- ── the icon (icon browser spec, "Goals") ───────────────────────────────────────────────────
 
--- Where an editor's icon is chosen (the callout popup, a user group's General tab), under its Icon
--- box: the icon as it is drawn (a glyph in its color; a question mark for none), Choose icon…, which
--- opens the icon browser (settings/IconBrowser.lua) over whatever opened it, and the glyph's color
--- swatch, live only while the icon is a glyph (no other icon takes a color). Every control writes
--- through `spec`, never the profile itself, and the row is put back in place (Ed.Live) after any write.
+-- Where an editor's icon is chosen (the callout popup, a user group's General tab): an "Icon" label
+-- over one row holding the icon as it is drawn (a glyph in its color; a question mark for none),
+-- Choose icon…, which opens the icon browser (settings/IconBrowser.lua) over whatever opened it, and
+-- the glyph's color swatch, live only while the icon is a glyph (no other icon takes a color). There
+-- is no Icon text box: the icon is stored as a texture path or id (the member's icon row, which /qc
+-- still reaches), and picked only here. Every control writes through `spec`, never the profile
+-- itself, and the row is put back in place (Ed.Live) after any write.
 Ed.NO_ICON = "Interface\\Icons\\INV_Misc_QuestionMark"
 local CHOOSER_ICON = 32
+-- The preview is the icon plus CHOOSER_EDGE on each side, so the icon sits CHOOSER_EDGE in from the
+-- row's left edge, where an EditBox's and a Button's own art begins; CHOOSER_GAP clears it from
+-- Choose icon….
+local CHOOSER_EDGE, CHOOSER_GAP = 2, 8
+
+--- An empty AceGUI Label `width` wide: the horizontal gap in a Flow row.
+function Ed.Gap(width)
+    local gap = H().AceGUI:Create("Label")
+    gap:SetText("")
+    gap:SetWidth(width)
+    return gap
+end
+
+-- The chooser's "Icon" label, in the gold small face the field labels above an EditBox use, `inset`
+-- in from the left (a Flow row with a gap first: an AceGUI Label anchors its own text to its left).
+local function chooserLabel(AceGUI, inset)
+    local label = AceGUI:Create("Label")
+    label:SetText(L["Icon"])
+    if label.SetFontObject and _G.GameFontNormalSmall then label:SetFontObject(_G.GameFontNormalSmall) end
+    if not (inset and inset > 0) then
+        label:SetFullWidth(true)
+        return label
+    end
+    local row = AceGUI:Create("SimpleGroup")
+    row:SetLayout("Flow")
+    row:SetFullWidth(true)
+    row:AddChild(Ed.Gap(inset))
+    label:SetRelativeWidth(0.9)
+    row:AddChild(label)
+    return row
+end
 
 --- Open the icon browser on what `spec.get()` answers (see Ed.IconChooser).
 --- @return boolean opened
@@ -285,27 +318,39 @@ function Ed.ReleasePicker(swatch, untrack)
     if picker and picker:IsShown() then picker:Hide() end
 end
 
---- The chooser, as one row. `spec` = { get() -> icon, color; choose(icon, color) (the browser's
---- Choose); setColor(color|nil) (the swatch); owner, lift, valid (handed to the browser) }.
+--- The chooser: its label, then one row. `spec` = { get() -> icon, color; choose(icon, color) (the
+--- browser's Choose); setColor(color|nil) (the swatch); owner, lift, valid (handed to the browser);
+--- columns (optional) = { col, gutter, inset } }. With `columns` (the callout popup) the row keeps to
+--- the editor's two columns: Choose icon… ends where the left column does, `col` wide from the row's
+--- left edge, and the swatch starts the right column, `gutter` further on; the label is `inset` in.
+--- Without it the widths are relative, as on a page.
 function Ed.IconChooser(ctx, spec)
     local h = H()
+    local columns = spec.columns
     h.RenderGrid(ctx, { { wide = true, make = function(_, parent)
         local AceGUI = h.AceGUI
+        parent:AddChild(chooserLabel(AceGUI, columns and columns.inset))
         local preview = AceGUI:Create("Icon")
         preview:SetImageSize(CHOOSER_ICON, CHOOSER_ICON)
-        preview:SetWidth(48)
+        preview:SetWidth(CHOOSER_ICON + 2 * CHOOSER_EDGE)
         preview:SetHeight(44)
         preview:SetCallback("OnClick", function() Ed.OpenIconBrowser(spec) end)
         h.AttachTooltip(preview, L["Icon"], L["Click to choose another icon."])
         local choose = AceGUI:Create("Button")
         choose:SetText(L["Choose icon…"])
-        choose:SetRelativeWidth(0.4)
         choose:SetCallback("OnClick", function() Ed.OpenIconBrowser(spec) end)
         h.AttachTooltip(choose, L["Choose icon…"], L["Pick from the raid markers, the game's icons and the LibKa0s glyphs."])
         local swatch = AceGUI:Create("ColorPicker")
         swatch:SetLabel(L["Icon color"])
         swatch:SetHasAlpha(false)
-        swatch:SetRelativeWidth(0.4)
+        if columns then
+            choose:SetWidth(columns.col - CHOOSER_ICON - 2 * CHOOSER_EDGE - CHOOSER_GAP)
+            -- Half a pixel short: a Flow row that sums to exactly its width can wrap its last widget.
+            swatch:SetWidth(columns.col - 0.5)
+        else
+            choose:SetRelativeWidth(0.4)
+            swatch:SetRelativeWidth(0.4)
+        end
         local function pick(_, _, r, g, b)
             if Ed.PickerTracked(swatch) then swatchWrite(spec, r, g, b) end
         end
@@ -327,7 +372,9 @@ function Ed.IconChooser(ctx, spec)
         row:SetLayout("Flow")
         row:SetFullWidth(true)
         row:AddChild(preview)
+        row:AddChild(Ed.Gap(CHOOSER_GAP))
         row:AddChild(choose)
+        if columns then row:AddChild(Ed.Gap(columns.gutter)) end
         row:AddChild(swatch)
         parent:AddChild(row)
         return row

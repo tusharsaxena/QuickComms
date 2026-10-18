@@ -57,7 +57,7 @@ The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after Li
 | 20a | `settings/SchemaRows.lua` | settings | the hand-written Behavior rows, spliced after the Master controls |
 | 20b | `settings/SchemaMembers.lua` | settings | the member rows (`callout.*`, `group.*`, `pad.*`, `dial.*`, `builtin.*`), addressed through `Library.Member` |
 | 21 | `settings/Panel.lua` | settings | the landing page and the General page (Master controls) |
-| 21a | `settings/Editors.lua` | settings | the editor pages' shared frame: selection, repaint, reorder lists (with their edit and remove glyphs, a glyph drawn in its color), delete, the icon chooser (`Ed.IconChooser`: the icon as drawn, Choose icon…, the glyph's color swatch) |
+| 21a | `settings/Editors.lua` | settings | the editor pages' shared frame: selection, repaint, reorder lists (with their edit and remove glyphs, a glyph drawn in its color), delete, the icon chooser (`Ed.IconChooser`: under its Icon label, the icon as drawn, Choose icon…, the glyph's color swatch) |
 | 21b | `settings/Callouts.lua` | settings | the callout helpers (`Settings.Callouts`): the tokens a channel offers and one line of help for each, and what a callout sends here |
 | 21b2 | `settings/ModalWindow.lua` | settings | `Settings.ModalWindow`: the modal window (click-catcher and dim, Blizzard's `SettingsFrameTemplate` or the fallback window, a page's header and body) the callout popup and the icon browser are each built in |
 | 21b3 | `settings/IconBrowser_Sources.lua` | settings | `Settings.IconBrowserSources`: each icon browser tab's list (Markers, Game icons, Glyphs) and each icon's name |

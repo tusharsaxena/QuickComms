@@ -371,8 +371,9 @@ test("popup: there is no token dropdown; an info glyph sits right of the Text la
     assertEqual(relPoint, "LEFT")
     assertEqual(x, 4 * 6 + 4)
     assertEqual(y, 0)
-    assertEqual(glyph.__w, 14, "sized to the label's 10-point face, within 14 to 16")
-    assertEqual(glyph.__h, 14)
+    -- red under: size it to the font plus 4 (the old 14 to 16)
+    assertEqual(glyph.__w, 10, "as tall as the label's 10-point letters, within 10 to 12")
+    assertEqual(glyph.__h, 10)
     -- a render again re-anchors the same glyph, once
     w = P.during(function() Pop.Open(gid, cid) end)
     local again = P.find(w, "EditBox", "Text")
@@ -435,7 +436,10 @@ test("popup: the preview is headed Preview, a gap above Cancel then Save", funct
     local gap = kids[pairAt - 1]
     assertEqual(gap.type, "SimpleGroup")
     assertEqual(gap.height, 16, "the gap between the preview and the buttons")
-    assertEqual(kids[pairAt - 2].type, "Label", "under the preview line")
+    local under = kids[pairAt - 2]
+    assertEqual(under.type, "SimpleGroup", "under the preview line's own line")
+    assertEqual(under.children[1].width, 2, "the preview is drawn 2 in, on the boxes' edge")
+    assertEqual(under.children[2].type, "Label")
     P.find(w, "Button", "Cancel"):__fire("OnClick")
     assertFalse(Pop.IsOpen(), "Cancel still cancels")
 end)
@@ -469,7 +473,6 @@ test("popup: [icons] Choose icon… opens the browser; its Choose writes the dra
     -- red under: hand the browser a seam write (it would write the stored callout at once)
     assertEqual(Pop.Draft().icon, SKULL)
     assertNil(NS.db.profile.callouts[cid].icon, "the stored icon waits for Save")
-    assertEqual(P.find(w, "EditBox", "Icon").text, SKULL, "the Icon box shows the pick")
     assertEqual(P.find(w, "Icon").image[1], SKULL, "the chooser's icon shows the pick")
     assertTrue(Pop.Save())
     assertEqual(NS.db.profile.callouts[cid].icon, SKULL)
@@ -759,12 +762,12 @@ test("popup: [icons] the draft carries the icon's color; Save writes icon and co
     assertEqual(NS.db.profile.callouts[cid].iconColor, "00ff00")
 end)
 
-test("popup: [icons] an icon typed in that is no glyph drops the draft's color, and Save clears it", function()
+test("popup: [icons] an icon chosen that is no glyph drops the draft's color, and Save clears it", function()
     local NS, _, P, Pop = open()
     local gid, cid = withKick(NS)
     NS.Library.SetIcon("callout", cid, NS.Icon("star"), "ff0000")
-    local w = P.during(function() Pop.Open(gid, cid) end)
-    P.find(w, "EditBox", "Icon"):__fire("OnEnterPressed", "136012")
+    P.during(function() Pop.Open(gid, cid) end)
+    Pop.SetIcon(136012, "00ff00")
     -- red under: drop the glyph check from put in settings/CalloutPopup.lua
     assertNil(Pop.Draft().iconColor)
     assertTrue(Pop.Save())
@@ -793,4 +796,126 @@ test("popup: [icons] Add saves a glyph with its color; a malformed color stays o
     assertTrue(Pop.Save())
     local list = p.groups[gid].callouts
     assertEqual(p.callouts[list[#list]].iconColor, "0000ff")
+end)
+
+-- ── the layout (owner feedback, 2026-10-18) ──────────────────────────────────────────────────
+
+-- The body's width with the template's insets (settings/ModalWindow.lua, 8 and 4) and CONTENT_X
+-- (12) each side: 560 - 12 - 24. A column is the button pair's width (BUTTON_PAIR_REL, 0.492 of
+-- it), and the gutter the whole pixels the pair leaves.
+local BODY_W = 524
+local COL = BODY_W * 0.492
+local GUTTER = math.floor(BODY_W - 2 * COL)
+
+local function near(a, b) return math.abs(a - b) < 1e-9 end
+
+test("popup: Name and Channel share a line, Text spans both, the icon has no box and sits under an Icon label", function()
+    local NS, _, P, Pop = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    local w = P.during(function() Pop.Open(gid) end)
+    -- red under: draw the callout.icon row's box again in renderFields (settings/CalloutPopup.lua)
+    assertNil(P.find(w, "EditBox", "Icon"), "the icon is chosen with the chooser alone")
+    local body = P.find(w, "SimpleGroup")
+    local first, second = body.children[1], body.children[3]
+    local name, channel = P.find(w, "EditBox", "Name"), P.find(w, "Dropdown", "Channel")
+    local text = P.find(w, "EditBox", "Text")
+    -- red under: draw Text into the first line, beside Name (the old order: name, text, channel)
+    assertEqual(#first.children, 3, "Name, the gutter, Channel")
+    assertTrue(first.children[1] == name and first.children[3] == channel)
+    local gap = first.children[2]
+    assertEqual(gap.type, "Label")
+    assertEqual(gap.width, GUTTER, "the columns' gutter")
+    assertEqual(GUTTER, 8)
+    assertEqual(name.relativeWidth, 0.492, "Name is the left column, the button pair's width")
+    assertEqual(channel.relativeWidth, 0.492, "Channel the right one")
+    assertTrue(name.relativeWidth * BODY_W + GUTTER + channel.relativeWidth * BODY_W < BODY_W, "one line, no wrap")
+    assertEqual(#second.children, 1, "Text alone on its line")
+    assertTrue(second.children[1] == text)
+    assertTrue(text.fullWidth, "across both columns")
+    assertNil(text.relativeWidth)
+    -- the chooser: an "Icon" label in the field labels' face, then the icon, Choose icon…, the swatch
+    local label = P.find(w, "Label", "Icon")
+    assertTrue(label ~= nil, "an Icon label above the chooser")
+    assertEqual(label.fontObject, _G.GameFontNormalSmall, "the gold small face of a field label")
+    local preview, choose = P.find(w, "Icon"), P.find(w, "Button", "Choose icon…")
+    local swatch = P.find(w, "ColorPicker", "Icon color")
+    assertEqual(preview.width, 36, "the icon 2 in from the left, where a box's art begins")
+    -- red under: keep Choose icon… and the swatch at 0.4 of the row in the popup
+    assertTrue(near(choose.width, COL - 36 - 8), "Choose icon… ends where the left column does")
+    assertTrue(near(swatch.width, COL - 0.5), "the swatch is the right column, half a pixel short")
+    local row
+    for _, kid in ipairs(body.children) do
+        for _, k in ipairs(kid.children or {}) do
+            for _, c in ipairs(k.children or {}) do if c == choose then row = k end end
+        end
+    end
+    assertTrue(row ~= nil)
+    local order = {}
+    for i, c in ipairs(row.children) do order[i] = c.type end
+    assertEqual(table.concat(order, ","), "Icon,Label,Button,Label,ColorPicker")
+    assertEqual(row.children[2].width, 8, "a gap clears the icon from Choose icon…")
+    assertEqual(row.children[4].width, GUTTER, "the columns' gutter before the swatch")
+end)
+
+test("popup: every field's label and control share a left edge; Preview's rule and the buttons the columns' edges", function()
+    local NS, _, P, Pop = open()
+    local gid, cid = withKick(NS)
+    local w = P.during(function() Pop.Open(gid, cid) end)
+    local name, text = P.find(w, "EditBox", "Name"), P.find(w, "EditBox", "Text")
+    local channel = P.find(w, "Dropdown", "Channel")
+    -- red under: drop alignField in settings/CalloutPopup.lua
+    for _, box in ipairs({ name, text, channel }) do
+        local point, rel, _, x, y = box.label:GetPoint(1)
+        assertEqual(point, "TOPLEFT")
+        assertTrue(rel == box.frame)
+        assertEqual(x, 2, box.labelText .. "'s label sits over its box's art, 2 in")
+        assertEqual(y, box.type == "EditBox" and -2 or 0, "and keeps its height")
+    end
+    local point, _, _, x, y = channel.dropdown:GetPoint(1)
+    assertEqual(point, "TOPLEFT")
+    assertEqual(x, -17, "the dropdown's art moved 2 left, onto the boxes' edge")
+    assertEqual(y, -14)
+    local heading = P.find(w, "Heading", "Preview")
+    assertEqual(select(4, heading.left:GetPoint(1)), 2, "the rule starts at the boxes' edge")
+    assertEqual(select(4, heading.right:GetPoint(1)), -2, "and ends at it")
+    -- red under: drop alignButtons (InlineButtonPair's two buttons, no gutter)
+    local cancel, save = P.find(w, "Button", "Cancel"), P.find(w, "Button", "Save")
+    assertEqual(cancel.relativeWidth, 0.492, "Cancel keeps the library's pair width: the left column")
+    assertEqual(save.relativeWidth, 0.492, "Save the right one")
+    local pair
+    for _, kid in ipairs(P.find(w, "SimpleGroup").children) do
+        if kid.children and kid.children[1] == cancel then pair = kid end
+    end
+    assertEqual(#pair.children, 3)
+    assertEqual(pair.children[2].width, GUTTER, "the gutter between them")
+    assertTrue(pair.children[3] == save)
+    -- what the popup moved, AceGUI gets back as it made it
+    name:__fire("OnRelease")
+    channel:__fire("OnRelease")
+    heading:__fire("OnRelease")
+    -- red under: drop the restore in nudge (settings/CalloutPopup.lua)
+    assertEqual(select(4, name.label:GetPoint(1)), 0, "the label back at 0")
+    assertEqual(select(4, channel.label:GetPoint(1)), 0)
+    assertEqual(select(4, channel.dropdown:GetPoint(1)), -15)
+    assertEqual(select(4, heading.left:GetPoint(1)), 3)
+    assertEqual(select(4, heading.right:GetPoint(1)), -3)
+    -- the Text box's release puts its label back and still hides the token glyph
+    local glyph = Pop.tokenGlyph
+    text:__fire("OnRelease")
+    assertEqual(select(4, text.label:GetPoint(1)), 0)
+    assertFalse(glyph:IsShown())
+end)
+
+test("popup: [icons] an icon that is no texture stays open and names the icon chooser", function()
+    local NS, _, P, Pop = open()
+    local gid, cid = withKick(NS)
+    local w = P.during(function() Pop.Open(gid, cid) end)
+    Pop.Draft().icon = true
+    local ok, why = Pop.Save()
+    assertFalse(ok)
+    assertEqual(why, "icon")
+    assertTrue(Pop.IsOpen())
+    -- red under: name the icon row's text box ("An icon is a texture id or a texture path.")
+    assertTrue(labelWith(P, w, "Icon: That is not a texture. Click Choose icon… and pick another.") ~= nil)
+    assertNil(NS.db.profile.callouts[cid].icon, "nothing written")
 end)

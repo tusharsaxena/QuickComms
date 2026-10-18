@@ -225,9 +225,16 @@ a row's edit glyph (the edit mark; its tooltip is headed Edit) → the popup ope
 settings window, and looks like the settings window itself: the same background and border, the
 window title "Ka0s Quick Comms" in the top bar and Blizzard's close X at its top right (its
 background as bright as the settings window's, not darkened by the dim around it), then the gold
-"Edit callout" header and rule, then the icon with Choose icon… and Icon color, the Preview heading over the baked line,
+"Edit callout" header and rule, then Name and Channel side by side, Text on a line of its own across
+the whole width, an "Icon" label over the icon with Choose icon… and Icon color (there is **no Icon
+text box**), the Preview heading over the baked line,
 a clear gap (about a section's) under that line, and the red Cancel and Save buttons, Cancel on the
-left; there is no Insert a token dropdown. There is **no scrollbar**: the window is
+left; there is no Insert a token dropdown. **Alignment:** every label starts exactly over the left
+edge of its box (Name, Channel, Text), the Channel dropdown's left edge meets the Name box's line,
+the icon and the Icon label start on that same line, and so do the Preview rule, the preview line
+and Cancel; in the right column the Channel label, its dropdown, the Icon color swatch and Save all
+start on one line, a clear gap right of the Name box; the right edges of the Channel dropdown, the
+Text box, the Preview rule and Save line up, as do the Name box's, Choose icon…'s and Cancel's. There is **no scrollbar**: the window is
 exactly as tall as its content, with no empty band under the error line and nothing cut off at the
 bottom. Clicking the page behind it does nothing. Type more text and press Enter → Preview follows the edit, while the chip on
 the pad still sends the old line; type text long enough that Preview wraps onto another
@@ -316,8 +323,8 @@ open on the pull, the panel's combat cover lies over it and Choose (a double-cli
 line and changes nothing. Result:
 
 **EDIT-18. The token glyph beside Text.** Edit a party callout (EDIT-9) → a small white "i" sits
-just right of the Text label, about the label's height, centered on it and clear of the box under
-it. Hover it → a tooltip headed Tokens lists each token with one line of help ({target}, {focus},
+just right of the Text label, no taller than the label's letters, centered on them and clear of the
+box under it. Hover it → a tooltip headed Tokens lists each token with one line of help ({target}, {focus},
 the eight markers, {me}, {spec}, {role}, {key}, {dungeon}, then {spell:ID}), with no
 {group1} … {group8} line, and fits on screen without wrapping each line. Pick Raid as the Channel
 and hover again → one {group1} … {group8} line appears (no Save needed). Move off → the tooltip
@@ -467,10 +474,11 @@ edge lands at combat end. Defaults → the Ka0s look again. Result:
 ## Icons
 
 **ICON-1. Choosing an icon.** Groups → a group of yours → Callouts → a row's edit glyph → Choose
-icon… → double-click the skull → the popup's Icon box shows its path and the icon beside Choose
-icon… is the skull; Save → the row and the chip show the skull. Groups → a group of yours → General
-→ Choose icon… → Glyphs → double-click a glyph → the group's wedge on the Comms Dial shows it, and
-the General tab's icon follows. A built-in set's General tab has no Choose icon…. Result:
+icon… → double-click the skull → the icon beside Choose icon… is the skull (the popup has no Icon
+box); Save → the row and the chip show the skull. Groups → a group of yours → General → no Icon text
+box, an "Icon" label over the icon and Choose icon… → Glyphs → double-click a glyph → the group's
+wedge on the Comms Dial shows it, and the General tab's icon follows. With that group selected,
+`/qc set group.icon 136012` still sets it. A built-in set's General tab has no Choose icon…. Result:
 
 ## Battlegrounds
 
@@ -532,6 +540,6 @@ from the client, so this check needs a non-English client pass. Result:
 |---|---|---|
 | INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..2, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet; LOC-1 re-enumerated in phase 5 and owed a non-English client pass |
 | SEND-1..5, PAD-1..8 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet; PAD-8 added in phase 5 (audit QC-07) |
-| EDIT-1..18 | Phase 3: the editors | No client pass recorded yet; EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17); EDIT-9, 13 and ICON-1 rewritten and EDIT-14..17 added with the icon browser and glyph colors (2026-10-18); EDIT-9 rewritten and EDIT-18 added when the token dropdown became the Text label's info glyph (2026-10-18); EDIT-13, 14 and ICON-1 rewritten when the Suggested tab went and the skin stopped waiting for the addon to be enabled (2026-10-18) |
+| EDIT-1..18 | Phase 3: the editors | No client pass recorded yet; EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17); EDIT-9, 13 and ICON-1 rewritten and EDIT-14..17 added with the icon browser and glyph colors (2026-10-18); EDIT-9 rewritten and EDIT-18 added when the token dropdown became the Text label's info glyph (2026-10-18); EDIT-13, 14 and ICON-1 rewritten when the Suggested tab went and the skin stopped waiting for the addon to be enabled (2026-10-18); EDIT-9, 18 and ICON-1 rewritten when the Icon boxes went and the popup took its two-column layout (2026-10-18) |
 | DIAL-1..12 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
 | SHARE-1..6, LOOK-1..2, ICON-1, BG-1..2, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; LOOK-2's in-combat step goes through `/qc set` |

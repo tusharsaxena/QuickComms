@@ -218,6 +218,9 @@ function G.IconSpec(gid)
 end
 
 local NONE = L["No groups yet. Click New group to make one."]
+-- The General tab's rows it leaves out of its RenderRows: Preview as (drawn first, alone) and the
+-- icon's two rows (the chooser draws them).
+local UNDRAWN = { ["state.previewAs"] = true, ["group.icon"] = true, ["group.iconColor"] = true }
 
 local function renderGeneral(ctx, rows)
     local h = H()
@@ -240,10 +243,11 @@ local function renderGeneral(ctx, rows)
         }, nil)
         return
     end
-    -- The icon's color is drawn with the icon (the browser's swatch), not as a text box.
+    -- The icon and its color are chosen with the icon chooser (Choose icon… and the browser's
+    -- swatch), never typed: neither row is drawn as a text box (/qc still reaches both).
     local mine = {}
     for _, row in ipairs(Ed.Scalar(rows)) do
-        if row.path ~= "state.previewAs" and row.path ~= "group.iconColor" then mine[#mine + 1] = row end
+        if not UNDRAWN[row.path] then mine[#mine + 1] = row end
     end
     h.RenderRows(ctx, mine, nil, nil, { noHeadings = true })
     Ed.IconChooser(ctx, G.IconSpec(gid))

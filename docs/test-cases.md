@@ -466,7 +466,7 @@ Total.
 - editors: Snapshot is the preview's while Preview as is on
 - editors: [icons] a row's glyph is drawn in its color; a row with none is white
 
-### test_callout_popup.lua (33)
+### test_callout_popup.lua (36)
 
 - popup: Add opens blank with Smart group
 - popup: edit opens filled in
@@ -499,8 +499,11 @@ Total.
 - callout helpers: [phase 3] the token picker offers {group1}-{group8} only when the channel can resolve to Raid
 - callout helpers: PreviewLines says what a callout sends here, or why it sends nothing
 - popup: [icons] the draft carries the icon's color; Save writes icon and color in one act
-- popup: [icons] an icon typed in that is no glyph drops the draft's color, and Save clears it
+- popup: [icons] an icon chosen that is no glyph drops the draft's color, and Save clears it
 - popup: [icons] Add saves a glyph with its color; a malformed color stays open and names the field
+- popup: Name and Channel share a line, Text spans both, the icon has no box and sits under an Icon label
+- popup: every field's label and control share a left edge; Preview's rule and the buttons the columns' edges
+- popup: [icons] an icon that is no texture stays open and names the icon chooser
 
 ### test_icon_browser.lua (26)
 
@@ -559,7 +562,7 @@ Total.
 - when: [final 6] a typed character takes the client's case; the Resolver matches one in any case
 - when: [final 2, 11] ResolveValue maps a typed value onto the token or id its row stores, or refuses it
 
-### test_page_groups.lua (33)
+### test_page_groups.lua (34)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists user groups by name, then the built-ins, active ones dotted
@@ -589,6 +592,7 @@ Total.
 - groups page: [final 20] the Instances row adds a typed id, removes one, and refuses a fraction or a negative
 - groups page: [final 18] Add the instance you are in reads the instance at the click, not at the draw
 - groups page: [icons] General shows the icon, Choose icon… and the swatch; the browser's Choose writes the group's icon
+- groups page: [icons] General has no Icon box: the icon is chosen under an Icon label alone
 - groups page: [icons] a glyph's swatch writes the group's color; a game icon chosen clears it in the same act
 - groups page: [icons] the browser closes as Cancel when the settings window hides or the group is deleted
 - groups page: [icons] a callout row in the Callouts tab draws its glyph in the callout's color
@@ -983,11 +987,11 @@ Total.
 | test_library.lua | 66 |
 | test_members.lua | 28 |
 | test_editors.lua | 16 |
-| test_callout_popup.lua | 33 |
+| test_callout_popup.lua | 36 |
 | test_icon_browser.lua | 26 |
 | test_eui_skin.lua | 10 |
 | test_groups_when.lua | 12 |
-| test_page_groups.lua | 33 |
+| test_page_groups.lua | 34 |
 | test_page_pads.lua | 12 |
 | test_page_dials.lua | 17 |
 | test_page_share.lua | 14 |
@@ -1010,4 +1014,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **796** |
+| **Total** | **800** |

@@ -66,13 +66,16 @@ goes back to the stored value; a refused Name (any field the library draws) prin
 A built-in group is read-only: its group rows refuse every write,
 so the page draws only its overlay and offers Customize.
 
-**The icon** (General, a user group): under the Icon box, the icon as the pad and the dial draw it (a
-glyph in its color, a question mark for none), **Choose icon…** and the **Icon color** swatch. A
+**The icon** (General, a user group): under an **Icon** label, the icon as the pad and the dial draw
+it (a glyph in its color, a question mark for none), **Choose icon…** and the **Icon color** swatch.
+There is no Icon text box: the icon is picked only here, and stored as a texture path or id
+(`group.icon`, which `/qc set` still reaches). A
 click on the icon or on Choose icon… opens the icon browser (below) over the settings window; its
 Choose writes the group's icon and color as one act (`Library.SetIcon`), so a game icon or a marker
 chosen over a colored glyph clears the color in the same write. The swatch opens Blizzard's color
 picker and writes `group.iconColor` through the seam; it is live only while the icon is a glyph
-(white is none). The color is drawn with the icon, never as a text box of its own.
+(white is none). The color is drawn with the icon, never as a text box of its own. The callout popup
+draws the same chooser (`Ed.IconChooser`).
 
 **Callouts** (a user group): the group owns its callouts. Each user callout sits in exactly one
 user group, so there is no Callouts page and no shared callout.
@@ -119,24 +122,44 @@ template declares it at absolute frame level 0), so the popup is as bright as th
 ```
 window   Blizzard's settings window, titled Ka0s Quick Comms                 (its close X)
 header   New callout / Edit callout, the gold rule under it
-body     Name, Text, Channel, Icon (the callout.* member rows' labels and help), an info
-         glyph right of the Text label (its tooltip lists the tokens), the icon (as drawn) with
-         Choose icon… and its color swatch, Preview (the baked line and its bytes, or why it
-         sends nothing, and any lock), a gap, then Cancel and Save, and under them the line
-         that names a field Save refused
+body     [Name          ] [Channel       ]   the callout.* member rows' labels and help
+         [Text  (i)                       ]   across both columns; (i) is the token glyph
+         Icon                                 the chooser's label
+         [icon] [Choose icon…] [x] Icon color the icon as drawn, the button, the color swatch
+         ---------- Preview ----------         the baked line and its bytes, or why it sends
+                                              nothing, and any lock
+         (a gap)
+         [Cancel        ] [Save          ]
+         the line that names a field Save refused
 ```
+
+- **The layout.** Two columns, each the library's button-pair width (`Helpers.BUTTON_PAIR_REL` of
+  the body, the width `InlineButtonPair` gives Cancel and Save, options-ui-§8), with the whole pixels
+  the pair leaves (8 px) as the gutter between them: Name and Channel, Choose icon… and the swatch,
+  Cancel and Save each fill one, so their outer edges meet the Text box's and the Preview rule's,
+  and the right column starts at the same place on every line. The pair keeps its width; the popup
+  only puts the gutter between its two buttons. The fields are
+  drawn by the library's field maker (`RenderField`) into the popup's own lines, not by
+  `RenderRows`' half-and-half lines, so the gutter exists. AceGUI draws an EditBox's box and a
+  Button's art 2 px in from the widget's edges, so 2 px in is where every visible left edge sits:
+  each field's label is moved 2 px in, the Channel dropdown's art 2 px left, the icon 2 px in, the
+  Preview rule 2 px in from both sides (AceGUI's Heading draws it 3 in), and the preview and error
+  lines 2 px in. Every anchor the popup moves is put back when AceGUI takes the widget back (an
+  `OnRelease` callback per widget), so a pooled frame reaches another addon as AceGUI made it.
+- **No Icon box.** The icon is chosen only with the chooser; the draft still carries it as a
+  texture path or id, Save writes it to `callout.icon`, and that row still answers `/qc`.
 
 - **The draft.** The popup edits a plain copy of the callout's four fields and its icon's glyph
   color (blank for Add). Choose icon… opens the icon browser over the popup; its Choose writes the
-  draft's icon and color, and the swatch writes the draft's color. An icon that is no glyph (chosen,
-  or typed in the Icon box) drops the draft's color. Every control writes the draft, never the
+  draft's icon and color, and the swatch writes the draft's color. An icon that is no glyph drops
+  the draft's color. Every control writes the draft, never the
   profile, and Preview bakes the draft, so it follows each edit before anything is saved. A text
   box commits to the draft on Enter
   (or its Okay button), as on every page; what a box shows that Enter did not commit is taken into
   the draft before any other draft write, before a seam write's refresh and by Save, so clicking
   Save commits it and a pick never wipes it.
-- **The token glyph.** The library catalog's `info` mark, right of the Text label, sized to the
-  label's font (14 to 16 px) and vertically centered on it. Its tooltip lists every token the
+- **The token glyph.** The library catalog's `info` mark, right of the Text label, as tall as the
+  label's letters (its font's size, 10 to 12 px) and vertically centered on it. Its tooltip lists every token the
   draft's channel offers, one line each (`Settings.Callouts.TokenHelp`), read when it shows, so it
   follows a channel picked since: `{group1} … {group8}` is one line, only when the channel can
   resolve to Raid, and `{spell:ID}` is last. Tokens are typed into the text; nothing inserts them.
@@ -144,7 +167,8 @@ body     Name, Text, Channel, Icon (the callout.* member rows' labels and help),
   when the box is released (an `OnRelease` callback, the library's landing-logo pattern), so a
   frame AceGUI hands to another EditBox never shows it.
 - **Save** checks the draft with the member rows' own validators (the name, the text and its
-  length, the channel, the icon, the icon's color). A field that fails keeps the popup open and names the field;
+  length, the channel, the icon, the icon's color). A field that fails keeps the popup open and names the field
+  (an icon that is no texture names the chooser: "Icon: … Click Choose icon… and pick another.");
   otherwise Save writes one act (`Library.Batch`): for a listed callout, each field that differs
   from the copy taken when the popup opened, through the seam by id; for Add,
   `Library.CreateCalloutIn` at the end of the group. Then the popup closes.
