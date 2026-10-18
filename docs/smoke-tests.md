@@ -217,7 +217,7 @@ Opening the settings in combat is refused, as before. Result:
 **EDIT-8. The selection survives what other pages do.** Select a group of yours on the Groups page,
 then `/qc profile Other` and back → the Groups page shows a group that exists, never an empty or
 erroring page. Delete the selected group (Yes; the line says its callouts go too) → the page moves
-to the next group, and the deleted group's callouts are offered nowhere (Reuse existing callout no
+to the next group, and the deleted group's callouts are offered nowhere (Reuse callout no
 longer lists them). Result:
 
 **EDIT-9. The callout popup: look, Save and a refused field.** Groups → a group of yours → Callouts →
@@ -240,9 +240,14 @@ and `/reload` shows none either. Edit a callout, change its text → press Escap
 stands. Edit again, change it → click the close X → the old text stands. Edit again → close the
 settings window (or `/qc profile Other`) → the popup is gone with it, nothing saved. Result:
 
-**EDIT-11. Reuse makes a copy.** On group A's Callouts tab, open Reuse existing callout → your
-callouts read `<group>: <callout>` (this group's own included), then the built-in ones as
-`<set>: <callout>`. Pick one of group B's callouts → nothing is added yet; click Add → it is A's
+**EDIT-11. Reuse makes a copy.** On group A's Callouts tab, open Reuse callout → your
+callouts read `<group>: <callout>` (this group's own included) and the built-in ones
+`<set>: <callout>`, all in one alphabetical list (by group, then callout); the group part is a
+muted gold, the callout's name white. The dropdown runs across the row with Add at its right
+edge, Add as tall as the dropdown, and Add callout above spans the same width: the right edges of
+Add callout, Add and the list's boxes line up. In the list, every row's handle, icon, name and
+glyphs sit centered in its box, and the edit and remove glyphs are small and close to the box's
+right edge (the same on Comms Pad → Groups and Comms Dial → Groups). Pick one of group B's callouts → nothing is added yet; click Add → it is A's
 last row. Edit the copy's text and Save → B's original is unchanged (check its row or its chip).
 Reuse a built-in callout → a copy you can edit. Result:
 

@@ -447,7 +447,7 @@ Total.
 - members: [icons] Library.SetIcon writes the icon and its color as one act
 - members: [icons] `/qc reset` clears a color; a group page's Defaults keeps it with the icon
 
-### test_editors.lua (15)
+### test_editors.lua (16)
 
 - editors: [review 2] Select mirrors a built-in group into the built-in selection; Heal keeps a member that exists
 - editors: every membership change asks for one structural repaint, on the next frame
@@ -462,6 +462,7 @@ Total.
 - editors: Scalar keeps the rows the flow engine draws, and CancelReorder cancels once
 - editors: a row's remove is a glyph, not a button
 - editors: a row with edit shows the edit glyph and fires it
+- editors: a row centers its widgets and puts the glyphs at its right edge
 - editors: Snapshot is the preview's while Preview as is on
 - editors: [icons] a row's glyph is drawn in its color; a row with none is white
 
@@ -558,7 +559,7 @@ Total.
 - when: [final 6] a typed character takes the client's case; the Resolver matches one in any case
 - when: [final 2, 11] ResolveValue maps a typed value onto the token or id its row stores, or refuses it
 
-### test_page_groups.lua (29)
+### test_page_groups.lua (33)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists user groups by name, then the built-ins, active ones dotted
@@ -566,7 +567,11 @@ Total.
 - groups page: Callouts drags to reorder, removes, and copies a built-in callout in (P2)
 - groups page: Add callout opens the popup for this group
 - groups page: Reuse lists callouts as <group>: <callout> and built-ins as <set>: <callout>
+- groups page: Reuse draws the group part in muted gold and the callout name in white
+- groups page: Reuse sorts the whole list by group, then callout, ignoring case
 - groups page: Reuse numbers same-named copies so each entry is unambiguous
+- groups page: the Reuse row stretches the dropdown and puts Add at the right edge, as tall as it
+- groups page: Add callout spans the row to the list's right edge
 - groups page: Reuse + Add puts an independent copy at the end
 - groups page: picking in Reuse alone adds nothing
 - groups page: the edit glyph opens the popup filled in
@@ -977,12 +982,12 @@ Total.
 | test_gameids.lua | 2 |
 | test_library.lua | 66 |
 | test_members.lua | 28 |
-| test_editors.lua | 15 |
+| test_editors.lua | 16 |
 | test_callout_popup.lua | 33 |
 | test_icon_browser.lua | 26 |
 | test_eui_skin.lua | 10 |
 | test_groups_when.lua | 12 |
-| test_page_groups.lua | 29 |
+| test_page_groups.lua | 33 |
 | test_page_pads.lua | 12 |
 | test_page_dials.lua | 17 |
 | test_page_share.lua | 14 |
@@ -1005,4 +1010,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **791** |
+| **Total** | **796** |

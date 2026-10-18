@@ -9,7 +9,7 @@ local _, NS = ...
 --               icon browser writes icon and color as one act), then Duplicate and Delete. A built-in:
 --               what it is, its Enabled row, and Customize.
 --     Callouts  a user group's: Add callout (the callout popup, settings/CalloutPopup.lua), Reuse
---               existing callout with Add (an independent copy, of a user or a built-in callout, spec
+--               callout with Add (an independent copy, of a user or a built-in callout, spec
 --               P2), then its callouts as a drag-to-reorder list with an edit and a remove glyph each.
 --               The group owns its callouts, so remove deletes the callout (asking first). A
 --               built-in: a Show checkbox per callout, the hidden-callouts editor (spec §12.2).
@@ -123,9 +123,17 @@ local function calloutLabel(cid)
     return ("%s  |cff808080%s|r"):format(c.name or cid, c.channel or "")
 end
 
---- What Reuse existing callout offers: every user callout as "<its group>: <name>", sorted by that
---- label (the selected group's own included: copying within a group is fine), then every built-in
---- callout as "<set>: <name>" (a node's "<set>: <node>: <name>"). Add copies the pick (spec P2).
+-- The group part of a Reuse entry ("<group>:", a set's "<set>: <child>:") is drawn in the muted
+-- gold LibKa0s gives a debug line's tag (DebugLog's c9a66b), the callout's name in white.
+local MUTED_GOLD = "|cffc9a66b"
+G.MUTED_GOLD = MUTED_GOLD
+
+--- What Reuse callout offers: every user callout ("<its group>: <name>"; the selected group's own
+--- included: copying within a group is fine) and every built-in callout ("<set>: <name>", a node's
+--- "<set>: <node>: <name>"), as one list sorted by group, then name, case-insensitively, on the plain
+--- text. Entries that would read alike are numbered ("<name> (2)") so each is unambiguous. Each entry
+--- is { id, label (the group part in MUTED_GOLD), plain (the label without color) }. Add copies the
+--- pick (spec P2).
 function G.ReusableCallouts()
     local p = NS.db.profile
     local owner = {}
@@ -134,31 +142,37 @@ function G.ReusableCallouts()
     end
     local out = {}
     for id, c in pairs(p.callouts) do
-        local name = c.name or id
-        out[#out + 1] = { id = id, label = owner[id] and L["%s: %s"]:format(owner[id], name) or name }
-    end
-    table.sort(out, function(a, b)
-        local la, lb = a.label:lower(), b.label:lower()
-        if la ~= lb then return la < lb end
-        return a.id < b.id
-    end)
-    -- A same-named copy (Reuse keeps the name) would list twice alike: number the repeats.
-    local seen = {}
-    for _, e in ipairs(out) do
-        local key = e.label:lower()
-        seen[key] = (seen[key] or 0) + 1
-        if seen[key] > 1 then e.label = L["%s (%d)"]:format(e.label, seen[key]) end
+        out[#out + 1] = { id = id, group = owner[id], name = c.name or id }
     end
     local function addSet(gidB, prefix)
         local def = NS.BuiltIns.groups[gidB]
         for _, cid in ipairs(def.callouts or {}) do
-            out[#out + 1] = { id = cid, label = L["%s: %s"]:format(prefix, NS.BuiltIns.callouts[cid].name) }
+            out[#out + 1] = { id = cid, group = prefix, name = NS.BuiltIns.callouts[cid].name, builtin = true }
         end
         for _, child in ipairs(def.children or {}) do
             addSet(child, L["%s: %s"]:format(prefix, NS.BuiltIns.groups[child].name))
         end
     end
     for _, top in ipairs(NS.BuiltIns.order) do addSet(top, NS.BuiltIns.groups[top].name) end
+    -- Ties: a user callout before a built-in one, then by id, so the numbering below is stable.
+    table.sort(out, function(x, y)
+        local gx, gy = (x.group or ""):lower(), (y.group or ""):lower()
+        if gx ~= gy then return gx < gy end
+        local nx, ny = x.name:lower(), y.name:lower()
+        if nx ~= ny then return nx < ny end
+        if (x.builtin or false) ~= (y.builtin or false) then return not x.builtin end
+        return x.id < y.id
+    end)
+    local seen = {}
+    for _, e in ipairs(out) do
+        local plain = e.group and L["%s: %s"]:format(e.group, e.name) or e.name
+        local key = plain:lower()
+        seen[key] = (seen[key] or 0) + 1
+        local name = seen[key] > 1 and L["%s (%d)"]:format(e.name, seen[key]) or e.name
+        e.plain = e.group and L["%s: %s"]:format(e.group, name) or name
+        e.label = e.group and L["%s: %s"]:format(MUTED_GOLD .. e.group .. "|r", name) or name
+        e.group, e.name, e.builtin = nil, nil, nil
+    end
     return out
 end
 
@@ -270,20 +284,25 @@ local function renderBuiltinCallouts(ctx, gid)
     h.RenderGrid(ctx, items)
 end
 
--- Reuse existing callout and its Add, on one row: the dropdown only picks (its prompt stands in for
--- a label, so the button lines up with it), and Add, idle until a pick, copies the pick in.
+-- Reuse callout and its Add, on one row (AceGUI's Table layout): the dropdown takes the width Add
+-- leaves, Add sits at the right edge, the two the same height (the dropdown with no label is 26px
+-- tall, AceGUI's Button 24). The dropdown only picks (its prompt stands in for a label), and Add,
+-- idle until a pick, copies the pick in.
+G.REUSE_ADD_W, G.REUSE_H, G.REUSE_GAP = 120, 26, 6
 local function reuseRow(gid)
     return { wide = true, make = function(_, parent)
         local AceGUI = H().AceGUI
-        local prompt, picked = L["Reuse existing callout"], nil
+        local prompt, picked = L["Reuse callout"], nil
+        parent:SetLayout("Table")
+        parent.userdata.table = { columns = { { weight = 1, alignH = "fill" }, G.REUSE_ADD_W }, spaceH = G.REUSE_GAP }
         local dd = AceGUI:Create("Dropdown")
         local list, order = Ed.PickerList(G.ReusableCallouts())
         dd:SetList(list, order)
         dd:SetText(prompt)
-        dd:SetRelativeWidth(0.62)
         local add = AceGUI:Create("Button")
         add:SetText(L["Add"])
-        add:SetRelativeWidth(0.3)
+        add:SetWidth(G.REUSE_ADD_W)
+        add:SetHeight(G.REUSE_H)
         add:SetDisabled(true)
         dd:SetCallback("OnValueChanged", function(_, _, key)
             picked = key
@@ -314,9 +333,13 @@ local function renderCallouts(ctx)
         return
     end
     if isBuiltin(gid) then return renderBuiltinCallouts(ctx, gid) end
-    h.InlineButtonPair(ctx, { text = L["Add callout"],
+    -- One button across the row, to the list's right edge: AceGUI's Flow anchors a "fill" widget to
+    -- the content's right, so it ends where the list's boxes do (no relative-width spill to clip).
+    local addRow = h.InlineButtonPair(ctx, { text = L["Add callout"],
         tooltip = L["Make a new callout at the end of this group: its name, text, channel and icon, saved when you click Save."],
         onClick = function() Settings.CalloutPopup.Open(gid) end }, nil)
+    local addBtn = addRow and addRow.children[1]
+    if addBtn then addBtn:SetFullWidth(true) end
     h.RenderGrid(ctx, { reuseRow(gid) })
     local list = NS.db.profile.groups[gid].callouts
     if #list == 0 then

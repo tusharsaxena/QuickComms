@@ -197,7 +197,8 @@ test("editors: a row's remove is a glyph, not a button", function()
     local glyph = P.glyph(w, "remove")
     assertTrue(glyph ~= nil, "the remove glyph")
     assertEqual(glyph.image.atlas, "transmog-icon-remove")
-    assertEqual(glyph.imageSize[1], 22)
+    -- red under: keep the 22px glyphs
+    assertEqual(glyph.imageSize[1], 16)
     assertTrue(glyph.callbacks.OnEnter ~= nil, "it carries a tooltip")
     assertNil(P.glyph(w, "edit"), "no edit glyph without edit")
     glyph:__fire("OnClick")
@@ -219,6 +220,36 @@ test("editors: a row with edit shows the edit glyph and fires it", function()
     local label = P.find(w, "Label", "A")
     -- red under: ignore the entry's icon
     assertEqual(label.image and label.image[1], "Interface\\Icons\\Ability_Hunter_Pet_Bear")
+end)
+
+test("editors: a row centers its widgets and puts the glyphs at its right edge", function()
+    local NS, P, w = probeRows({ { id = "a", label = "A", edit = function() end, remove = function() end },
+        { id = "b", label = "B", remove = function() end } })
+    local Ed = NS.addon.Settings.Editors
+    local label = P.find(w, "Label", "A")
+    local row
+    for _, x in ipairs(w) do
+        for _, c in ipairs(x.children or {}) do if c == label then row = x end end
+    end
+    assertTrue(row ~= nil, "the label's row")
+    -- red under: lay the row out in Flow (its 3px row offset sets everything low)
+    assertEqual(row.layout, "Table")
+    local t = row.userdata.table
+    assertEqual(t.alignV, Ed.RowAlignV)
+    assertEqual(Ed.RowAlignV(26), (Ed.ROW_H - 26) / 2, "a glyph is centered in the row")
+    assertEqual(Ed.RowAlignV(18), (Ed.ROW_H - 18) / 2, "an icon label is centered in the row")
+    -- the handle's gutter, the label filling what is left, a cell per glyph, then a small pad
+    local cols = t.columns
+    assertEqual(#cols, 5)
+    assertEqual(cols[1], Ed.HANDLE_W)
+    assertEqual(cols[2].weight, 1)
+    assertEqual(cols[2].alignH, "fill")
+    assertEqual(cols[3], 24)
+    assertEqual(cols[4], 24)
+    assertTrue(cols[5] > 0 and cols[5] <= 8, "the glyphs sit close to the right edge")
+    assertEqual(#Ed.RowColumns(1), 4, "one glyph, one cell")
+    -- red under: force the glyph to the row's height (its art then sits at the top of a taller frame)
+    assertNil(P.glyph(w, "edit").height, "the glyph keeps its own height, its art centered in it")
 end)
 
 test("editors: Snapshot is the preview's while Preview as is on", function()

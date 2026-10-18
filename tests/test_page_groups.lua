@@ -102,7 +102,7 @@ test("groups page: Callouts drags to reorder, removes, and copies a built-in cal
     P.accept()
     assertEqual(table.concat(NS.db.profile.groups[gid].callouts, ","), a)
     w = P.tab("groups", "callouts")
-    P.find(w, "Dropdown", "Reuse existing callout"):__fire("OnValueChanged", "bi.mplus.lust")
+    P.find(w, "Dropdown", "Reuse callout"):__fire("OnValueChanged", "bi.mplus.lust")
     P.find(w, "Button", "Add"):__fire("OnClick")
     local copied = NS.db.profile.groups[gid].callouts[2]
     assertTrue(copied:match("^c%d+$") ~= nil, "a copy, never the built-in id")
@@ -149,32 +149,108 @@ end)
 test("groups page: Reuse lists callouts as <group>: <callout> and built-ins as <set>: <callout>", function()
     local NS, _, P = open()
     local gid, kick, _, lust = withCallouts(NS)
-    local entries = NS.addon.Settings.Groups.ReusableCallouts(gid)
+    local byId = {}
+    for _, e in ipairs(NS.addon.Settings.Groups.ReusableCallouts(gid)) do byId[e.id] = e end
     -- red under: label a user callout by its name alone, or leave out the group's own callouts
-    assertEqual(entries[1].id, kick)
-    assertEqual(entries[1].label, "Mine: Kick", "the group's own callouts are offered too")
-    assertEqual(entries[2].id, lust)
-    assertEqual(entries[2].label, "Other: Lust")
-    local lustBi
-    for _, e in ipairs(entries) do if e.id == "bi.mplus.lust" then lustBi = e end end
-    assertTrue(lustBi ~= nil and lustBi.label == NS.BuiltIns.groups["bi.mplus"].name .. ": Lust")
+    assertEqual(byId[kick].plain, "Mine: Kick", "the group's own callouts are offered too")
+    assertEqual(byId[lust].plain, "Other: Lust")
+    assertEqual(byId["bi.mplus.lust"].plain, NS.BuiltIns.groups["bi.mplus"].name .. ": Lust")
     pick(NS, gid)
     local w = P.tab("groups", "callouts")
-    local dd = P.find(w, "Dropdown", "Reuse existing callout")
-    assertTrue(dd ~= nil)
-    assertEqual(dd.list[kick], "Mine: Kick")
-    assertEqual(dd.list[lust], "Other: Lust")
+    local dd = P.find(w, "Dropdown", "Reuse callout")
+    -- red under: keep the old "Reuse existing callout" prompt
+    assertTrue(dd ~= nil, "the dropdown reads Reuse callout")
+    assertEqual(dd.list[kick], byId[kick].label)
+end)
+
+test("groups page: Reuse draws the group part in muted gold and the callout name in white", function()
+    local NS = open()
+    local gid, kick = withCallouts(NS)
+    local G = NS.addon.Settings.Groups
+    local byId = {}
+    for _, e in ipairs(G.ReusableCallouts(gid)) do byId[e.id] = e end
+    -- red under: leave the Reuse labels uncolored
+    assertEqual(G.MUTED_GOLD, "|cffc9a66b")
+    assertEqual(byId[kick].label, "|cffc9a66bMine|r: Kick")
+    -- a node's whole "<set>: <node>" prefix is the group part
+    local node
+    for _, e in ipairs(G.ReusableCallouts(gid)) do
+        if e.id:match("^bi%.") and select(2, e.plain:gsub(": ", "")) == 2 then node = e break end
+    end
+    assertTrue(node ~= nil, "a built-in node's callout is offered")
+    local prefix, name = node.plain:match("^(.*): ([^:]*)$")
+    assertEqual(node.label, "|cffc9a66b" .. prefix .. "|r: " .. name)
+end)
+
+test("groups page: Reuse sorts the whole list by group, then callout, ignoring case", function()
+    local NS = open()
+    local L = NS.Library
+    local zed = L.CreateGroup({ name = "zed" })
+    L.CreateCalloutIn(zed, { name = "b", text = "b", channel = "party" })
+    L.CreateCalloutIn(zed, { name = "A", text = "a", channel = "party" })
+    local alpha = L.CreateGroup({ name = "Alpha" })
+    L.CreateCalloutIn(alpha, { name = "Zulu", text = "z", channel = "party" })
+    local entries = NS.addon.Settings.Groups.ReusableCallouts(zed)
+    -- red under: list the user callouts first, then the built-ins in their own order
+    local function key(e)
+        local group, name = e.plain:match("^(.*): ([^:]*)$")
+        return (group or ""):lower(), (name or e.plain):lower()
+    end
+    for i = 2, #entries do
+        local g1, n1 = key(entries[i - 1])
+        local g2, n2 = key(entries[i])
+        assertTrue(g1 < g2 or (g1 == g2 and n1 <= n2),
+            ("sorted: %q before %q"):format(entries[i - 1].plain, entries[i].plain))
+    end
+    assertEqual(entries[1].plain, "Alpha: Zulu")
+    assertEqual(entries[#entries - 1].plain, "zed: A")
+    assertEqual(entries[#entries].plain, "zed: b")
 end)
 
 test("groups page: Reuse numbers same-named copies so each entry is unambiguous", function()
     local NS = open()
     local gid, kick = withCallouts(NS)
     local copy = NS.Library.AddToGroup(gid, kick)
-    local labels = {}
-    for _, e in ipairs(NS.addon.Settings.Groups.ReusableCallouts(gid)) do labels[e.id] = e.label end
+    local labels, colored = {}, {}
+    for _, e in ipairs(NS.addon.Settings.Groups.ReusableCallouts(gid)) do labels[e.id], colored[e.id] = e.plain, e.label end
     -- red under: drop the repeat numbering in G.ReusableCallouts
     assertEqual(labels[kick], "Mine: Kick")
     assertEqual(labels[copy], "Mine: Kick (2)")
+    assertEqual(colored[copy], "|cffc9a66bMine|r: Kick (2)")
+end)
+
+test("groups page: the Reuse row stretches the dropdown and puts Add at the right edge, as tall as it", function()
+    local NS, _, P = open()
+    local G = NS.addon.Settings.Groups
+    local gid = withCallouts(NS)
+    pick(NS, gid)
+    local w = P.tab("groups", "callouts")
+    local dd, add = P.find(w, "Dropdown", "Reuse callout"), P.find(w, "Button", "Add")
+    local row
+    for _, x in ipairs(w) do
+        if x.children and x.children[1] == dd then row = x end
+    end
+    assertTrue(row ~= nil, "the dropdown and Add share a row")
+    -- red under: lay the row out in Flow with relative widths
+    assertEqual(row.layout, "Table")
+    local cols = row.userdata.table.columns
+    assertEqual(#cols, 2)
+    assertEqual(cols[1].weight, 1)
+    assertEqual(cols[1].alignH, "fill", "the dropdown fills what Add leaves")
+    assertEqual(cols[2], G.REUSE_ADD_W, "Add's fixed cell is the last, at the right edge")
+    assertEqual(row.children[2], add)
+    assertEqual(add.width, G.REUSE_ADD_W)
+    -- red under: leave Add at AceGUI's 24px Button height
+    assertEqual(add.height, 26, "as tall as a label-less dropdown")
+end)
+
+test("groups page: Add callout spans the row to the list's right edge", function()
+    local NS, _, P = open()
+    pick(NS, (withCallouts(NS)))
+    local w = P.tab("groups", "callouts")
+    local add = P.find(w, "Button", "Add callout")
+    -- red under: leave Add callout at the button pair's half width
+    assertTrue(add.fullWidth, "full width (Flow anchors it to the content's right)")
 end)
 
 test("groups page: Reuse + Add puts an independent copy at the end", function()
@@ -182,7 +258,7 @@ test("groups page: Reuse + Add puts an independent copy at the end", function()
     local gid, kick, _, lust = withCallouts(NS)
     pick(NS, gid)
     local w = P.tab("groups", "callouts")
-    P.find(w, "Dropdown", "Reuse existing callout"):__fire("OnValueChanged", lust)
+    P.find(w, "Dropdown", "Reuse callout"):__fire("OnValueChanged", lust)
     P.find(w, "Button", "Add"):__fire("OnClick")
     local list = NS.db.profile.groups[gid].callouts
     assertEqual(#list, 2)
@@ -196,7 +272,7 @@ test("groups page: Reuse + Add puts an independent copy at the end", function()
     assertEqual(NS.db.profile.callouts[lust].text, "Lust now", "the source is untouched")
     -- copying within the group is allowed too
     w = P.tab("groups", "callouts")
-    P.find(w, "Dropdown", "Reuse existing callout"):__fire("OnValueChanged", kick)
+    P.find(w, "Dropdown", "Reuse callout"):__fire("OnValueChanged", kick)
     P.find(w, "Button", "Add"):__fire("OnClick")
     assertEqual(#NS.db.profile.groups[gid].callouts, 3)
 end)
@@ -211,7 +287,7 @@ test("groups page: picking in Reuse alone adds nothing", function()
     assertTrue(add.disabled, "Add waits for a pick")
     local before = count(NS.db.profile.callouts)
     -- red under: act on the pick (Ed.ActionDropdown) instead of on Add
-    P.find(w, "Dropdown", "Reuse existing callout"):__fire("OnValueChanged", lust)
+    P.find(w, "Dropdown", "Reuse callout"):__fire("OnValueChanged", lust)
     assertEqual(#NS.db.profile.groups[gid].callouts, 1)
     assertEqual(count(NS.db.profile.callouts), before)
     assertFalse(add.disabled, "a pick enables Add")

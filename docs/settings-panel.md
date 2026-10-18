@@ -47,9 +47,9 @@ strip     [ General ][ Callouts ][ When ][ Preview ]
 General   Preview as (page-wide, first), then Name, Icon, Enabled, Open the dial on this group,
           the icon with Choose icon… and its color swatch (settings/Editors.lua's chooser), then
           Duplicate and Delete. A built-in: what it is, its Enabled row, and Customize.
-Callouts  a user group's: Add callout (the callout popup, blank), Reuse existing callout with
-          Add, then its callouts as a drag-to-reorder list, each row the handle, the icon, the
-          name and channel, an edit glyph and a remove glyph. A built-in: a Show checkbox per
+Callouts  a user group's: Add callout (the callout popup, blank; full width), Reuse callout with
+          Add at the right edge, then its callouts as a drag-to-reorder list, each row the handle,
+          the icon, the name and channel, then an edit glyph and a remove glyph at the right edge. A built-in: a Show checkbox per
           callout, the hidden-callouts editor.
 When      settings/Groups_When.lua
 Preview   the active-now line, then every callout baked for the current or previewed situation
@@ -78,15 +78,25 @@ picker and writes `group.iconColor` through the seam; it is live only while the 
 user group, so there is no Callouts page and no shared callout.
 
 - **Add callout** opens the callout popup with blank fields (an empty name and text, Smart group,
-  no icon). Save puts the new callout at the end of the group; Cancel makes nothing.
-- **Reuse existing callout** is a dropdown of every callout the player could copy: the user
-  callouts as `<group>: <callout>` (this group's own included), then the built-in ones as
-  `<set>: <callout>` or `<set>: <child>: <callout>`. Picking alone adds nothing; **Add** puts an
-  independent copy at the end of this group (`Library.AddToGroup` always copies), so editing the
-  copy leaves the original as it is.
-- **The list** is the drag-to-reorder list (`Ed.ReorderRows`). The edit glyph (the catalog's `edit`
-  mark) opens the popup filled in; the remove glyph (the `transmog-icon-remove` atlas) asks first,
-  then deletes the callout, since nothing else holds it. Both carry a tooltip.
+  no icon). Save puts the new callout at the end of the group; Cancel makes nothing. The button
+  spans the row (AceGUI's Flow anchors a full-width widget to the content's right), so it ends
+  where the list's boxes and the Reuse row end.
+- **Reuse callout** is a dropdown of every callout the player could copy: the user callouts as
+  `<group>: <callout>` (this group's own included) and the built-in ones as `<set>: <callout>` or
+  `<set>: <child>: <callout>`, as one list sorted by group, then callout, ignoring case (on the
+  plain text). The group part is drawn in a muted gold (`c9a66b`, LibKa0s' debug-tag tone), the
+  callout's name in white; entries that would read alike are numbered (`<callout> (2)`). Picking
+  alone adds nothing; **Add** puts an independent copy at the end of this group
+  (`Library.AddToGroup` always copies), so editing the copy leaves the original as it is. The row
+  is an AceGUI Table layout: the dropdown fills what Add's fixed 120px cell (at the right edge,
+  6px after it) leaves, and Add is 26px tall, the label-less dropdown's height.
+- **The list** is the drag-to-reorder list (`Ed.ReorderRows`, shared with Comms Pad → Groups and
+  Comms Dial → Groups). The edit glyph (the catalog's `edit` mark) opens the popup filled in; the
+  remove glyph (the `transmog-icon-remove` atlas) asks first, then deletes the callout, since
+  nothing else holds it. Both carry a tooltip. Each row is an AceGUI Table layout
+  (`Ed.RowColumns`): the handle's gutter, the label filling what is left, a 24px cell per 16px
+  glyph and a 3px pad, so the glyphs sit at the box's right edge (the last one's art 7px in);
+  `Ed.RowAlignV` centers every widget in the 30px row.
 - Delete (General) deletes the group's callouts with it, and Duplicate gives the copy copies of them.
 
 ## The callout popup
