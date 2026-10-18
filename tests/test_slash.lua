@@ -124,7 +124,7 @@ test("slash: [phase 3] `why` prints each built pad and why its groups show", fun
     NS.addon:OnSlashCommand("why")
     local text = table.concat(m.prints, "\n")
     assertTrue(text:find("Comms Pad (p1):", 1, true) ~= nil, text)
-    assertTrue(text:find("  M+ (generic) (built-in): Content", 1, true) ~= nil, text)
+    assertTrue(text:find("  M+ (generic): Content", 1, true) ~= nil, text)
 end)
 test("slash: [phase 4] `why` covers the dials too", function()
     local NS, _, m = T.enableAddon()

@@ -7,10 +7,10 @@ eagerly at `OnEnable`; each page's body builds on its first show (options-ui-§1
 |---|---|
 | Ka0s Quick Comms (landing) | The logo, the TOC notes line and the slash command list, drawn by the library's `BuildLandingPage` |
 | General | `Master controls`, `Behavior` |
-| Groups | One group or built-in set: `General`, `Callouts`, `When`, `Preview` |
+| Groups | One group (a seeded built-in set is one too): `General`, `Callouts`, `When`, `Preview` |
 | Comms Pad | One pad: `General`, `Groups`, `Layout`, `Look` |
 | Comms Dial | One dial: `General`, `Groups`, `Wheel`, `Binding`, `Preview` |
-| Share | `Export`, `Import`, `Built-in` |
+| Share | `Export`, `Import` |
 | Profiles | AceDBOptions: switch, copy, reset and delete profiles |
 
 ## General → Master controls
@@ -39,22 +39,58 @@ reset is a profile reset and never touches the minimap button (options-ui-§12, 
 
 ## Groups
 
-`settings/Groups.lua`, one group at a time, a user group or a built-in set.
+`settings/Groups.lua`, one group at a time. Every group draws the same tabs: a seeded built-in set
+is an ordinary group (2026-10-18-builtins-as-groups-design.md), with no tag, no lock and no
+read-only branch.
 
 ```
-band      [ Group v (picker; a green dot marks a group active now) ][ New group ]
+band      [ Group v (picker; a green dot marks a group active now; a group inside another is
+          listed, indented, right after it) ][ New group ]
 strip     [ General ][ Callouts ][ When ][ Preview ]
 General   Preview as (page-wide, first), then Name, Enabled, Open the dial on this group, then
-          the icon under an Icon label with Choose icon…, the clear glyph and its color swatch
-          (settings/Editors.lua's chooser, no Icon text box), then Duplicate and Delete. A
-          built-in: what it is, its Enabled row, and Customize.
-Callouts  a user group's: Add callout (the callout popup, blank; across the row), Reuse callout
+          Parent group (None, or a top-level group), then the icon under an Icon label with
+          Choose icon…, the clear glyph and its color swatch (settings/Editors.lua's chooser, no
+          Icon text box), then Duplicate and Delete, then Restore built-in groups (page-wide)
+Callouts  Add callout (the callout popup, blank; across the row), Reuse callout
           with Add at the right edge (both 2px short of it), then its callouts as a drag-to-reorder list, each row the handle,
-          the icon, the name and channel, then an edit glyph and a remove glyph at the right edge. A built-in: a Show checkbox per
-          callout, the hidden-callouts editor.
+          the icon, the name and channel, then an edit glyph and a remove glyph at the right edge
 When      settings/Groups_When.lua
-Preview   the active-now line, then every callout baked for the current or previewed situation
+Preview   the active-now line, then a table: a gold header row (Callout, What it sends here), then
+          one boxed row per callout, its icon and name beside its first preview line
 ```
+
+**Parent group** (General, the `group.parent` row): a dropdown of None, then every top-level group
+but this one, in the picker's order. A group inside another shows wherever that group is placed (a
+pad draws a section for it, a dial a node ring), gated by its own When and Enabled, while the
+parent's gate the whole; it is never placed on a pad or a dial itself, so picking a parent takes it
+off every pad and dial in the same act, and None does not put it back (Comms Pad → Groups → Add a
+group does). Groups go one level deep: the dropdown is idle while this group holds groups, and its
+tooltip names them. A group's children are listed in the order they were made in. Delete on a
+parent asks first and says what happens: the groups inside it become top-level groups, in its place
+on every pad and dial. Duplicate of a child puts the copy in the same parent (the chat line says
+so); a parent's copy holds no children. The page's Defaults keeps the parent, as it keeps the icon.
+
+**Restore built-in groups** (General's last row, page-wide, and on the empty "No groups yet"
+General): puts back every shipped set, node and callout the profile no longer has, as new ordinary
+members: a set at the end of every pad and dial, a node inside its set's group (while that group is
+top-level), a callout at the end of its seeded group. It never changes, moves or overwrites what the
+player has, so it does not ask first, and a second click adds nothing; one chat line says how many
+groups and callouts came back, or that nothing was missing. There is no per-set reset to stock:
+delete the group, then restore. It is not under the header's Defaults, which resets the selected
+group (options-ui-§13).
+
+**Preview** (`Ed.TableRows`, shared with no other page yet): the active-now line, then a table. A
+gold header row, "Callout" and "What it sends here", sits outside the boxes; each callout's row is a
+box like the Callouts tab's (the same fill, border and left and right edges; a reorder list's row
+with no handle), its icon (in its color) and name in a 220px cell, and its first preview line (what
+it sends under the current or previewed situation, or why it sends nothing) filling the rest. A row
+is never shorter than the Callouts tab's 30px and grows with a wrapped line, both cells centered in
+it; it has its own AceGUI layout (`Ed.LayoutTableRow`), since AceGUI's Table does not set a filling
+cell's text width before reading its height. A group holding groups shows a titled table for its
+own callouts (when it has any), then one per child; a group with no callouts keeps the one line
+"This group has no callouts yet." and draws no table. A situation change rewrites each row's text in
+place and lays the page out again, so a row resizes. The bytes, the lock and the token notes stay in
+the callout popup's preview.
 
 **When** (`settings/Groups_When.lua`): one row per condition, each with an enable checkbox. Content,
 difficulty, group, leadership, class, specialization (the classes picked, else the player's) and
@@ -64,10 +100,9 @@ reads where the player is at the click and says so when that is nowhere; a typed
 whole number, and a typed character takes the client's case (`bob` reads `Bob-<your realm>`). The
 tab starts with the active-now line. A refused key level or X/Y offset prints its reason and the box
 goes back to the stored value; a refused Name (any field the library draws) prints its reason too.
-A built-in group is read-only: its group rows refuse every write,
-so the page draws only its overlay and offers Customize.
+A seeded set's When is edited as any group's.
 
-**The icon** (General, a user group): under an **Icon** label, the icon as the pad and the dial draw
+**The icon** (General): under an **Icon** label, the icon as the pad and the dial draw
 it (a glyph in its color, a question mark for none), **Choose icon…**, a **clear** glyph (the
 `transmog-icon-remove` atlas, tooltip *Clear icon*) and the **Icon color** swatch.
 There is no Icon text box: the icon is picked only here, and stored as a texture path or id
@@ -82,7 +117,7 @@ icon and no color, so the group's icon and color go as one act (`Library.SetIcon
 is idle while there is no icon. The callout popup draws the same chooser (`Ed.IconChooser`), where
 the clear glyph empties the draft's icon and color and Save stores none.
 
-**Callouts** (a user group): the group owns its callouts. Each user callout sits in exactly one
+**Callouts**: the group owns its callouts. Each user callout sits in exactly one
 user group, so there is no Callouts page and no shared callout.
 
 - **Add callout** opens the callout popup with blank fields (an empty name and text, Smart group,
@@ -91,11 +126,13 @@ user group, so there is no Callouts page and no shared callout.
   ends where Reuse's Add does, 2px short of the content's right edge: the scroll content fills the
   ScrollFrame's clip rect exactly, and options-ui-§8 insets a cell-filling button so its right
   border is not shaved.
-- **Reuse callout** is a dropdown of every callout the player could copy: the user callouts as
-  `<group>: <callout>` and the built-in ones as `<set>: <callout>` or
-  `<set>: <child>: <callout>`, less what this group already holds (its own callouts, and the
-  built-in set it was customized from: owner, 2026-10-18), as one list sorted by group, then callout, ignoring case (on the
-  plain text). The group part is drawn in a muted gold (`c9a66b`, LibKa0s' debug-tag tone), the
+- **Reuse callout** is a dropdown of every callout the player could copy, each as
+  `<group>: <callout>` (a group inside another as `<parent>: <group>: <callout>`, so two
+  battlegrounds' same-named nodes read apart; a seeded set's callouts among them; there is no
+  built-in section), less
+  this group's own callouts, as one list sorted by group, then callout, ignoring case (on the
+  plain text). A stock callout the player deleted comes back through Restore built-in groups, not
+  here. The group part is drawn in a muted gold (`c9a66b`, LibKa0s' debug-tag tone), the
   callout's name in white; entries that would read alike are numbered (`<callout> (2)`). Picking
   alone adds nothing; **Add** puts an independent copy at the end of this group
   (`Library.AddToGroup` always copies), so editing the copy leaves the original as it is. The row
@@ -212,7 +249,7 @@ body     [Name          ] [Channel       ]   the callout.* member rows' labels a
 ## The icon browser
 
 `settings/IconBrowser.lua`: where an icon is picked, opened by Choose icon… (or a click on the icon)
-in the callout popup and on a user group's General tab. It is not a page. Its window is the popup's
+in the callout popup and on a group's General tab. It is not a page. Its window is the popup's
 (`settings/ModalWindow.lua`: Blizzard's `SettingsFrameTemplate`, titled "Ka0s Quick Comms", its close
 X, the gold header), 560 × 550, with its own full-screen catcher in the `FULLSCREEN` strata, above the
 popup and the popup's catcher (`DIALOG`): it is modal to whatever opened it. Only one browser exists,
@@ -238,7 +275,7 @@ footer   the selected icon (a glyph in the color) and its name, then Choose and 
   scrolls, so the thousands of game icons cost no more frames than a short tab.
 - **Pick**: hovering an icon names it (its label, or "Texture id N" for a game icon); a click selects
   it (gold behind it, named in the footer); a double-click or **Choose** chooses it. The stored icon
-  is preselected, and its tab opened and scrolled to it. No icon, or one no tab lists (a built-in
+  is preselected, and its tab opened and scrolled to it. No icon, or one no tab lists (a seeded
   set's spell icon, a typed texture path), opens Markers, the first tab, with nothing selected: no
   cell could show such an icon selected, and Choose waits for a click.
 - **Icon color**: the swatch opens Blizzard's color picker (above the browser); every glyph in the
@@ -261,6 +298,7 @@ strip    [ General ][ Groups ][ Layout ][ Look ]
 General  Preview as (page-wide, first), Name, Enabled, then Unlock (or Lock) pads and Delete pad
 Groups   Show groups as, then the pad's groups as a drag-to-reorder list with a remove glyph
          (its priority order; it takes the group off the pad and asks nothing), then Add a group
+         (the top-level groups the pad does not hold: a group inside another shows with it)
 Layout   orientation, grid columns, growth, chip style, scale, spacing, chip width, then
          Position: X and Y and Reset this pad's position
 Look     visibility, fade and faded alpha; then Font (face, size, color with Use class color,
@@ -270,7 +308,8 @@ Look     visibility, fade and faded alpha; then Font (face, size, color with Use
 ```
 
 X and Y write the whole `pad.point` row, the same one the drag strip writes; a drag on screen
-updates the boxes.
+updates the boxes. A new pad holds the seeded sets the profile still has as top-level groups, in
+shipped order.
 
 ## Comms Dial
 
@@ -282,7 +321,7 @@ strip    [ General ][ Groups ][ Wheel ][ Binding ][ Preview ]
 General  Preview as (page-wide, first), Name, Enabled, then Delete dial
 Groups   Show groups as (Categories or Flat), the depth-3 warning (spec §11.3), then the dial's
          groups as a drag-to-reorder list with a remove glyph (its priority order, spec §7; it
-         takes the group off the dial and asks nothing), then Add a group
+         takes the group off the dial and asks nothing), then Add a group (top-level groups only)
 Wheel    wedges per ring, open at, then Position: X and Y and Reset this dial's position
 Binding  how Relaxed mode works, the key capture, and the key's line (what it opens, or the WoW
          binding it shares, spec §9.4 / §18)
@@ -294,7 +333,8 @@ Preview  each ring as the current or previewed situation builds it, wedge by wed
   callouts, and releases its key.
 - **Groups:** Show groups as is `dial.mode` (Categories or Flat). The warning names each battleground
   node set that would open three rings deep because a group above it is active there too
-  (`Dial_Layout.DeepGroups`, built under that battleground's preview). The list is the dial's
+  (`Dial_Layout.DeepGroups`, built under that battleground's preview); it knows a seeded
+  battleground set by its origin (`bi.bg.<key>`) while the set holds groups. The list is the dial's
   priority order; Add a group appends one.
 - **Wheel:** Wedges per ring is `dial.slices` (4, 6, 8 or 12; a ring that holds a ring takes 8 on a
   12-wedge dial), Open at is `dial.openAt` (its place or the cursor). X and Y write the whole
@@ -323,19 +363,19 @@ dial on, in one act (`Library.Batch`); the name, groups, key and position are ke
 `settings/Share.lua`.
 
 ```
-strip     [ Export ][ Import ][ Built-in ]
+strip     [ Export ][ Import ]
 Export    what travels; a checkbox per group, Comms Pad and Comms Dial, under a heading per
           kind (a callout travels inside its group); what the string will hold; Export (the string opens, selected, in the copy
           window) and Clear
 Import    a paste box (its Accept checks the string); the report (spec §15 step 5); Import and
           Clear
-Built-in  one line per shipped set: an Enabled checkbox named after the set, then Customize (or
-          Edit the copy) and Choose callouts
 ```
 
 The ticks and the checked string are session state, cleared by a profile switch. Export and Import
-refuse in combat with one line (the panel is locked in combat anyway). Defaults resets the Built-in
-tab only.
+refuse in combat with one line (the panel is locked in combat anyway). Defaults unticks everything
+and forgets the checked string; nothing in the profile changes. A seeded set is ticked and exported
+as any group; ticking a parent (directly, or through a pad or a dial) brings its children, and a
+child ticked alone travels without its parent and arrives top-level.
 
 ## Still to come
 

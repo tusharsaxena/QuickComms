@@ -1,6 +1,7 @@
--- tests/test_page_groups.lua — settings/Groups.lua (spec §13.1, §13.2, §12.2): the picker and New group,
--- a user group's General, Callouts, When and Preview tabs, and a built-in's read-only General with
--- Customize and its hidden-callouts editor. Driven headlessly through tests/page_helpers.lua.
+-- tests/test_page_groups.lua — settings/Groups.lua (spec §13.1, §13.2): the picker and New group, a
+-- group's General, Callouts, When and Preview tabs (a seeded built-in set's the same as any group's,
+-- 2026-10-18-builtins-as-groups-design.md), and Restore built-in groups. Driven headlessly through
+-- tests/page_helpers.lua.
 
 local T = _G.QUICKCOMMS_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -19,6 +20,16 @@ local function open(inputs)
 end
 
 local function pick(NS, gid) NS.addon.Settings.Editors.Select("group", gid) end
+
+-- The seeded groups and callouts taken away (and so off every surface), for a case about the
+-- player's own groups alone. seededSets stays, so nothing is seeded back.
+local function bare(NS)
+    local p = NS.db.profile
+    for id in pairs(p.groups) do p.groups[id] = nil end
+    for id in pairs(p.callouts) do p.callouts[id] = nil end
+    for _, s in pairs(p.pads) do s.groups = {} end
+    for _, s in pairs(p.dials) do s.groups = {} end
+end
 
 test("groups page: [exit] a new group with a callout and a When shows first on the pad in that situation", function()
     local NS, _, P = open(MPLUS)
@@ -52,18 +63,21 @@ test("groups page: [exit] a new group with a callout and a When shows first on t
     assertTrue(NS.Pad.ChipsFor("p1", cid)[1] == nil)
 end)
 
-test("groups page: the picker lists user groups by name, then the built-ins, active ones dotted", function()
+test("groups page: the picker lists every group by name, a seeded set among them, active ones dotted", function()
     local NS = open(MPLUS)
-    NS.Library.CreateGroup({ name = "Zed" })
-    NS.Library.CreateGroup({ name = "Alpha" })
+    local zed = NS.Library.CreateGroup({ name = "Zed" })
+    local alpha = NS.Library.CreateGroup({ name = "Alpha" })
     local entries = NS.addon.Settings.Groups.Entries()
-    assertTrue(entries[1].label:find("Alpha", 1, true) ~= nil)
-    assertTrue(entries[2].label:find("Zed", 1, true) ~= nil)
-    assertEqual(entries[3].id, NS.BuiltIns.order[1])
-    local mplus
-    for _, e in ipairs(entries) do if e.id == "bi.mplus" then mplus = e end end
-    assertTrue(mplus.label:find("Indicator-Green", 1, true) ~= nil, "active in a key")
-    assertTrue(mplus.label:find("(built-in)", 1, true) ~= nil)
+    local at = {}
+    for i, e in ipairs(entries) do at[e.id] = i end
+    local mplus = T.seeded(NS, "bi.mplus")
+    -- red under: list the seeded sets after the user groups, as the built-ins were
+    assertTrue(at[alpha] < at[mplus] and at[mplus] < at[zed], "one list, by name")
+    local label = entries[at[mplus]].label
+    assertTrue(label:find("Indicator-Green", 1, true) ~= nil, "active in a key")
+    assertTrue(label:find("M+ (generic)", 1, true) ~= nil)
+    assertTrue(label:find("(built-in)", 1, true) == nil, "no built-in tag")
+    for _, e in ipairs(entries) do assertTrue(e.id:match("^bi%.") == nil, "no shipped id: " .. e.id) end
 end)
 
 test("groups page: General draws Preview as first, then the group's rows; Duplicate and Delete act", function()
@@ -85,7 +99,7 @@ test("groups page: General draws Preview as first, then the group's rows; Duplic
     assertNil(NS.db.profile.groups[copy])
 end)
 
-test("groups page: Callouts drags to reorder, removes, and copies a built-in callout in (P2)", function()
+test("groups page: Callouts drags to reorder, removes, and copies a seeded callout in (P2)", function()
     local NS, _, P = open()
     local lists = P.reorderSpy()
     local gid = NS.Library.CreateGroup({ name = "Mine" })
@@ -102,10 +116,11 @@ test("groups page: Callouts drags to reorder, removes, and copies a built-in cal
     P.accept()
     assertEqual(table.concat(NS.db.profile.groups[gid].callouts, ","), a)
     w = P.tab("groups", "callouts")
-    P.find(w, "Dropdown", "Reuse callout"):__fire("OnValueChanged", "bi.mplus.lust")
+    local lust = T.seeded(NS, "bi.mplus.lust")
+    P.find(w, "Dropdown", "Reuse callout"):__fire("OnValueChanged", lust)
     P.find(w, "Button", "Add"):__fire("OnClick")
     local copied = NS.db.profile.groups[gid].callouts[2]
-    assertTrue(copied:match("^c%d+$") ~= nil, "a copy, never the built-in id")
+    assertTrue(copied:match("^c%d+$") ~= nil and copied ~= lust, "a copy, never the seeded callout itself")
     assertEqual(NS.db.profile.callouts[copied].name, "Lust")
 end)
 
@@ -146,14 +161,15 @@ test("groups page: Add callout opens the popup for this group", function()
     assertEqual(NS.db.profile.callouts[list[2]].name, "Pull", "saved into this group, at the end")
 end)
 
-test("groups page: Reuse lists callouts as <group>: <callout> and built-ins as <set>: <callout>", function()
+test("groups page: Reuse lists every callout as <group>: <callout>, a seeded one too", function()
     local NS, _, P = open()
     local gid, kick, _, lust = withCallouts(NS)
     local byId = {}
     for _, e in ipairs(NS.addon.Settings.Groups.ReusableCallouts(gid)) do byId[e.id] = e end
     -- red under: label a user callout by its name alone
     assertEqual(byId[lust].plain, "Other: Lust")
-    assertEqual(byId["bi.mplus.lust"].plain, NS.BuiltIns.groups["bi.mplus"].name .. ": Lust")
+    assertEqual(byId[T.seeded(NS, "bi.mplus.lust")].plain, NS.BuiltIns.groups["bi.mplus"].name .. ": Lust")
+    assertNil(byId["bi.mplus.lust"], "no shipped id is offered")
     pick(NS, gid)
     local w = P.tab("groups", "callouts")
     local dd = P.find(w, "Dropdown", "Reuse callout")
@@ -165,19 +181,17 @@ test("groups page: Reuse lists callouts as <group>: <callout> and built-ins as <
     assertEqual(dd.list[kick], nil)
 end)
 
-test("groups page: Reuse leaves out the built-in set the group was customized from", function()
+test("groups page: Reuse on a seeded group leaves out its own callouts; another group offers them", function()
     local NS = open()
     local G = NS.addon.Settings.Groups
-    local copy = NS.Library.Customize("bi.mplus")
-    assertTrue(copy ~= nil, "customized")
+    local mplus, lust = T.seeded(NS, "bi.mplus"), T.seeded(NS, "bi.mplus.lust")
     local function offered(gid, id)
         for _, e in ipairs(G.ReusableCallouts(gid)) do if e.id == id then return true end end
         return false
     end
-    -- red under: drop the CustomizedAs check in G.ReusableCallouts
-    assertFalse(offered(copy, "bi.mplus.lust"), "the set's own callouts are already the copy's")
+    assertFalse(offered(mplus, lust), "the set's own callouts are already its")
     local other = NS.Library.CreateGroup({ name = "Other" })
-    assertTrue(offered(other, "bi.mplus.lust"), "another group still offers them")
+    assertTrue(offered(other, lust), "another group still offers them")
 end)
 
 test("groups page: Reuse draws the group part in muted gold and the callout name in white", function()
@@ -189,14 +203,8 @@ test("groups page: Reuse draws the group part in muted gold and the callout name
     -- red under: leave the Reuse labels uncolored
     assertEqual(G.MUTED_GOLD, "|cffc9a66b")
     assertEqual(byId[kick].label, "|cffc9a66bMine|r: Kick")
-    -- a node's whole "<set>: <node>" prefix is the group part
-    local node
-    for _, e in ipairs(G.ReusableCallouts(other)) do
-        if e.id:match("^bi%.") and select(2, e.plain:gsub(": ", "")) == 2 then node = e break end
-    end
-    assertTrue(node ~= nil, "a built-in node's callout is offered")
-    local prefix, name = node.plain:match("^(.*): ([^:]*)$")
-    assertEqual(node.label, "|cffc9a66b" .. prefix .. "|r: " .. name)
+    -- a seeded node is a group like any other: its own name is the group part
+    assertEqual(byId[T.seeded(NS, "bi.bg.ab.stables.inc1")].label, "|cffc9a66bArathi Basin: Stables|r: INC 1")
 end)
 
 test("groups page: Reuse sorts the whole list by group, then callout, ignoring case", function()
@@ -234,6 +242,20 @@ test("groups page: Reuse numbers same-named copies so each entry is unambiguous"
     assertEqual(labels[kick], "Mine: Kick")
     assertEqual(labels[copy], "Mine: Kick (2)")
     assertEqual(colored[copy], "|cffc9a66bMine|r: Kick (2)")
+end)
+
+test("groups page: [review] Reuse names a node's callout with its battleground, so two sets' Farm nodes read apart", function()
+    local NS = open()
+    local abFarm, dwgFarm = T.seeded(NS, "bi.bg.ab.farm"), T.seeded(NS, "bi.bg.dwg.farm")
+    local a, d = NS.Library.Group(abFarm).callouts[1], NS.Library.Group(dwgFarm).callouts[1]
+    local mine = NS.Library.CreateGroup({ name = "Mine" })
+    local labels = {}
+    for _, e in ipairs(NS.addon.Settings.Groups.ReusableCallouts(mine)) do labels[e.id] = e.plain end
+    local name = NS.Library.Callout(a).name
+    -- red under: label a child group's callouts with the child's name alone in G.ReusableCallouts
+    assertEqual(labels[a], "Arathi Basin: Farm: " .. name)
+    assertEqual(labels[d], "Deepwind Gorge: Farm: " .. NS.Library.Callout(d).name)
+    assertTrue(labels[a] ~= labels[d])
 end)
 
 test("groups page: the Reuse row stretches the dropdown and puts Add at the right edge, as tall as it", function()
@@ -388,62 +410,63 @@ test("groups page: deleting a group deletes its callouts", function()
     assertEqual(m.StaticPopupDialogs[which].text, "Delete '%s'? This cannot be undone.")
 end)
 
-test("groups page: [review 4] a built-in is read-only; Customize puts the copy in its place and selects it", function()
+test("groups page: a seeded set's General is any group's: Name, Enabled, Parent group, the icon, Duplicate, Delete", function()
     local NS, _, P = open()
-    pick(NS, "bi.raid")
+    local raid = T.seeded(NS, "bi.raid")
+    pick(NS, raid)
     local w = P.redraw("groups")
-    assertTrue(P.hasText(w, "is a built-in set"))
-    assertNil(P.find(w, "EditBox", "Name"), "no name box for a built-in")
-    local enabled = P.find(w, "CheckBox", "Enabled")
-    enabled:__fire("OnValueChanged", false)
-    assertFalse(NS.db.profile.builtins["bi.raid"].enabled, "the overlay row, through the seam")
-    enabled:__fire("OnValueChanged", true)
-    local at
-    for i, g in ipairs(NS.db.profile.pads.p1.groups) do if g == "bi.raid" then at = i end end
-    w = P.redraw("groups")
-    P.find(w, "Button", "Customize"):__fire("OnClick")
-    local copy = NS.State.editing.group
-    assertTrue(copy ~= "bi.raid" and NS.db.profile.groups[copy] ~= nil)
-    assertEqual(NS.db.profile.pads.p1.groups[at], copy, "in the built-in's place")
-    assertFalse(NS.db.profile.builtins["bi.raid"].enabled)
-    w = P.redraw("groups")
-    assertTrue(P.find(w, "EditBox", "Name") ~= nil, "the copy is editable")
+    -- red under: draw a seeded group's General as the built-ins' read-only one
+    assertTrue(not P.hasText(w, "is a built-in set"))
+    assertNil(P.find(w, "Button", "Customize"))
+    P.find(w, "EditBox", "Name"):__fire("OnEnterPressed", "Raid night")
+    assertEqual(NS.db.profile.groups[raid].name, "Raid night")
+    P.find(w, "CheckBox", "Enabled"):__fire("OnValueChanged", false)
+    assertFalse(NS.db.profile.groups[raid].enabled)
+    assertTrue(P.find(w, "Dropdown", "Parent group") ~= nil)
+    assertTrue(P.find(w, "Button", "Choose icon…") ~= nil)
+    assertTrue(P.find(w, "Button", "Duplicate") ~= nil)
+    P.find(w, "Button", "Delete"):__fire("OnClick")
+    P.accept()
+    assertNil(NS.db.profile.groups[raid], "a seeded group is deleted as any other")
 end)
 
-test("groups page: a built-in's Callouts tab hides and shows its callouts, a node's named with its node", function()
+test("groups page: a seeded set's Callouts tab is the callout table: Add callout, Reuse, a row per callout", function()
     local NS, _, P = open()
-    pick(NS, "bi.bg.ab")
+    local lists = P.reorderSpy()
+    local mplus = T.seeded(NS, "bi.mplus")
+    pick(NS, mplus)
     local w = P.tab("groups", "callouts")
-    local box = P.find(w, "CheckBox", "Stables: INC 1")
-    assertTrue(box ~= nil and box.value == true)
-    box:__fire("OnValueChanged", false)
-    assertTrue(NS.db.profile.builtins["bi.bg.ab"].hidden["bi.bg.ab.stables.inc1"])
-    for _, cid in ipairs(NS.Library.Group("bi.bg.ab.stables").callouts) do
-        assertTrue(cid ~= "bi.bg.ab.stables.inc1", "hidden from the merged set")
-    end
+    -- red under: draw a seeded group's Callouts tab as the built-ins' show/hide checkboxes
+    assertNil(P.find(w, "CheckBox", "Pulling"), "no show/hide checkboxes")
+    assertTrue(P.find(w, "Button", "Add callout") ~= nil)
+    assertTrue(P.find(w, "Dropdown", "Reuse callout") ~= nil)
+    assertEqual(lists[#lists].rows, #NS.BuiltIns.groups["bi.mplus"].callouts)
+    lists[#lists].opts.onMove(1, 2)
+    assertEqual(NS.db.profile.groups[mplus].callouts[2], T.seeded(NS, "bi.mplus.pull"), "dragged")
+    w = P.tab("groups", "callouts")
+    P.glyph(w, "remove", 1):__fire("OnClick")
+    P.accept()
+    assertEqual(#NS.db.profile.groups[mplus].callouts, #NS.BuiltIns.groups["bi.mplus"].callouts - 1)
 end)
 
-test("groups page: the When tab of a built-in describes it; a user group's edits it; Preview bakes each callout", function()
+test("groups page: a seeded set's When tab edits it as any group's; Preview bakes each callout", function()
     local NS, _, P = open(MPLUS)
-    pick(NS, "bi.mplus")
+    local mplus = T.seeded(NS, "bi.mplus")
+    pick(NS, mplus)
     local w = P.tab("groups", "When")
-    assertTrue(P.hasText(w, "Content: M+"))
     assertTrue(P.hasText(w, "Active now."))
+    -- red under: describe a seeded group's When as read-only text, as the built-ins' was
+    assertTrue(not P.hasText(w, "conditions are fixed"))
+    local raid = P.find(w, "CheckBox", "Raid")
+    assertTrue(raid ~= nil, "the Content row's choices, as a user group's")
+    raid:__fire("OnValueChanged", true)
+    assertTrue(NS.db.profile.groups[mplus].when.content.raid)
+    assertTrue(NS.db.profile.groups[mplus].when.content.mythicPlus)
     local cid = NS.Library.CreateCallout({ name = "Pull", text = "Pulling", channel = "party" })
     local gid = NS.Library.CreateGroup({ name = "Mine", callouts = { cid } })
     pick(NS, gid)
     w = P.tab("groups", "preview")
-    assertTrue(P.hasText(w, "Pull: Sends: /p Pulling"))
-end)
-
-test("groups page: [phase 3] a built-in's Defaults turns it back on: the Enabled row its General draws", function()
-    local NS, _, P = open()
-    pick(NS, "bi.raid")
-    P.redraw("groups")
-    NS.Library.SetBuiltinEnabled("bi.raid", false)
-    P.ctx("groups").panel.defaultsOnClick()
-    -- red under: make the Groups page's Defaults plain RestoreDefaults("groups") (builtin.enabled's page is share)
-    assertTrue(NS.db.profile.builtins["bi.raid"].enabled)
+    assertTrue(P.find(w, "Label", "Sends: /p Pulling") ~= nil)
 end)
 
 test("groups page: [review 5] the When tab refuses an upside-down key-level range", function()
@@ -503,16 +526,54 @@ test("groups page: [final 3, 25] a user group's Defaults: Enabled on, Open the d
     assertEqual(n.applied, 1)
 end)
 
-test("groups page: [final 8] Customize of a set on no pad says the copy is on none", function()
-    local NS, m = open()
-    NS.Library.RemoveGroupFromSurface("pad", "p1", "bi.raid")
-    for _, sid in ipairs(NS.db.profile.dialOrder) do NS.Library.RemoveGroupFromSurface("dial", sid, "bi.raid") end
+test("groups page: [review] a child's Defaults keeps it inside its parent; a named reset takes it out", function()
+    local NS, _, P = open()
+    local a = NS.Library.CreateGroup({ name = "Raid night" })
+    local b = NS.Library.CreateGroup({ name = "Boss 1" })
+    assertTrue(NS.SchemaRuntime.Set("group.parent", a, b))
+    pick(NS, b)
+    P.redraw("groups")
+    -- red under: drop group.parent from settings/Schema.lua resetExempt
+    P.ctx("groups").panel.defaultsOnClick()
+    assertEqual(NS.db.profile.groups[b].parent, a, "the page's Defaults keeps the parent, as it keeps the icon")
+    NS.addon:OnSlashCommand("reset group.parent " .. b)
+    assertFalse(NS.Library.IsChild(b), "a named reset makes it top-level")
+end)
+
+test("groups page: [restore] Restore built-in groups brings back a deleted set and says so; again, nothing is missing", function()
+    local NS, m, P = open()
+    local old = T.seeded(NS, "bi.raid")
+    NS.Library.DeleteGroup(old)
+    pick(NS, T.seeded(NS, "bi.mplus"))
+    local w = P.redraw("groups")
+    local restore = P.find(w, "Button", "Restore built-in groups")
+    -- red under: no Restore built-in groups button on General
+    assertTrue(restore ~= nil)
     m.prints = {}
-    -- red under: print "took its place on every pad" whatever Library.Customize placed
-    NS.addon.Settings.Groups.Customize("bi.raid")
+    restore:__fire("OnClick")
+    local raid = T.seeded(NS, "bi.raid")
+    assertTrue(raid ~= nil and raid ~= old)
+    local pad = NS.db.profile.pads.p1.groups
+    assertEqual(pad[#pad], raid, "at the end of the pad")
     local text = table.concat(m.prints, "\n")
-    assertTrue(text:find("The set was on no pad", 1, true) ~= nil, text)
-    assertTrue(text:find("took its place", 1, true) == nil, text)
+    assertTrue(text:find("1 groups and 8 callouts came back", 1, true) ~= nil, text)
+    m.prints = {}
+    P.flush()
+    P.find(P.redraw("groups"), "Button", "Restore built-in groups"):__fire("OnClick")
+    assertTrue(table.concat(m.prints, "\n"):find("nothing to restore", 1, true) ~= nil)
+end)
+
+test("groups page: [restore] with every group deleted, General still offers Restore built-in groups", function()
+    local NS, _, P = open()
+    for id in pairs(NS.db.profile.groups) do
+        if NS.db.profile.groups[id] then NS.Library.DeleteGroup(id) end
+    end
+    assertTrue(next(NS.db.profile.groups) == nil)
+    local w = P.redraw("groups")
+    assertTrue(P.hasText(w, "No groups yet"))
+    P.find(w, "Button", "Restore built-in groups"):__fire("OnClick")
+    assertEqual(#NS.db.profile.pads.p1.groups, #NS.BuiltIns.order, "every set is back on the pad")
+    assertTrue(T.seeded(NS, "bi.bg.ab.stables") ~= nil, "nodes too")
 end)
 
 test("groups page: [final 12] Duplicate says the copy is on no pad yet", function()
@@ -524,6 +585,28 @@ test("groups page: [final 12] Duplicate says the copy is on no pad yet", functio
     -- red under: drop the printed line from G.Duplicate
     P.find(w, "Button", "Duplicate"):__fire("OnClick")
     assertTrue(table.concat(m.prints, "\n"):find("the copy is on no pad yet", 1, true) ~= nil)
+end)
+
+test("groups page: [nesting] a child's Duplicate tooltip says the copy sits in the same parent", function()
+    local NS, m, P = open()
+    local a = NS.Library.CreateGroup({ name = "Parent" })
+    local c = NS.Library.CreateGroup({ name = "Child" })
+    NS.SchemaRuntime.Set("group.parent", a, c)
+    pick(NS, c)
+    local w = P.redraw("groups")
+    P.find(w, "Button", "Duplicate"):__fire("OnEnter")
+    local said = {}
+    for _, line in ipairs(m.GameTooltip.__lines) do said[#said + 1] = line[1] end
+    said = table.concat(said, "\n")
+    -- red under: the top-level group's tooltip on a child
+    assertTrue(said:find("sits in the same parent group", 1, true) ~= nil, said)
+    assertTrue(said:find("on no pad", 1, true) == nil, said)
+    pick(NS, a)
+    w = P.redraw("groups")
+    P.find(w, "Button", "Duplicate"):__fire("OnEnter")
+    said = {}
+    for _, line in ipairs(m.GameTooltip.__lines) do said[#said + 1] = line[1] end
+    assertTrue(table.concat(said, "\n"):find("on no pad", 1, true) ~= nil, "a top-level group's is unchanged")
 end)
 
 local DUNGEON = { inInstance = true, instanceType = "party", difficultyID = 2, instanceID = 2526, inGroup = true }
@@ -597,9 +680,9 @@ test("groups page: [icons] General shows the icon, Choose icon… and the swatch
     assertTrue(B.Choose())
     assertEqual(NS.db.profile.groups[gid].icon, wanted)
     assertEqual(preview.image[1], wanted, "the chooser's icon is put back in place")
-    Ed.Select("group", "bi.mplus")
+    Ed.Select("group", T.seeded(NS, "bi.mplus"))
     w = P.redraw("groups")
-    assertNil(P.find(w, "Button", "Choose icon…"), "built-ins are read-only")
+    assertTrue(P.find(w, "Button", "Choose icon…") ~= nil, "a seeded group's icon is chosen as any group's")
 end)
 
 test("groups page: [icons] General's clear glyph takes the group's icon and color off; idle with no icon", function()
@@ -749,4 +832,204 @@ test("groups page: [icons] the swatch writes on a drag tick (OnValueChanged) wit
     assertEqual(NS.db.profile.groups[gid].iconColor, "0000ff")
     swatch:__fire("OnValueConfirmed", 1, 0, 0, 1)   -- Cancel confirms the old color
     assertEqual(NS.db.profile.groups[gid].iconColor, "ff0000", "Cancel puts the old color back")
+end)
+
+-- ── nested groups (2026-10-18-builtins-as-groups-design.md, goal 2) ──────────────────────────
+
+test("groups page: [nesting] General's Parent group offers the top-level groups but itself; a pick nests the group", function()
+    local NS, _, P = open()
+    bare(NS)
+    local Lib = NS.Library
+    local a = Lib.CreateGroup({ name = "Alpha" })
+    local b = Lib.CreateGroup({ name = "Bravo" })
+    local c = Lib.CreateGroup({ name = "Charlie" })
+    NS.SchemaRuntime.Set("group.parent", a, c)
+    pick(NS, b)
+    local w = P.redraw("groups")
+    local dd = P.find(w, "Dropdown", "Parent group")
+    -- red under: no Parent group dropdown on General
+    assertTrue(dd ~= nil)
+    local G = NS.addon.Settings.Groups
+    assertEqual(table.concat(dd.order, ","), G.NO_PARENT .. "," .. a, "none, then Alpha: not itself, not a child")
+    assertEqual(dd.list[G.NO_PARENT], "None")
+    assertEqual(dd.value, G.NO_PARENT)
+    assertFalse(dd.disabled)
+    dd:__fire("OnValueChanged", a)
+    assertEqual(NS.db.profile.groups[b].parent, a)
+    P.flush()
+    w = P.redraw("groups")
+    dd = P.find(w, "Dropdown", "Parent group")
+    assertEqual(dd.value, a)
+    dd:__fire("OnValueChanged", G.NO_PARENT)
+    assertFalse(NS.db.profile.groups[b].parent, "None takes it out again")
+end)
+
+test("groups page: [nesting] a group that holds groups cannot take a parent: the dropdown is idle and says why", function()
+    local NS, _, P = open()
+    local Lib = NS.Library
+    local a = Lib.CreateGroup({ name = "Alpha" })
+    local c = Lib.CreateGroup({ name = "Charlie" })
+    NS.SchemaRuntime.Set("group.parent", a, c)
+    pick(NS, a)
+    local w = P.redraw("groups")
+    local dd = P.find(w, "Dropdown", "Parent group")
+    -- red under: the dropdown live on a parent
+    assertTrue(dd.disabled)
+    assertTrue(NS.addon.Settings.Groups.ParentTooltip(a):find("Charlie", 1, true) ~= nil, "names the groups it holds")
+end)
+
+test("groups page: [nesting] the picker lists each child indented under its parent", function()
+    local NS = open()
+    bare(NS)
+    local Lib = NS.Library
+    local z = Lib.CreateGroup({ name = "Zed" })
+    local a = Lib.CreateGroup({ name = "Alpha" })
+    local k = Lib.CreateGroup({ name = "Kid" })
+    NS.SchemaRuntime.Set("group.parent", z, k)
+    local entries = NS.addon.Settings.Groups.Entries()
+    assertEqual(entries[1].id, a)
+    assertEqual(entries[2].id, z)
+    assertEqual(entries[3].id, k)
+    local indent = NS.addon.Settings.Groups.CHILD_INDENT
+    -- red under: Entries drawing a child's label like a top-level group's
+    assertEqual(entries[3].label:sub(1, #indent), indent)
+    assertTrue(entries[3].label:find("Kid", 1, true) ~= nil)
+    assertTrue(entries[2].label:sub(1, #indent) ~= indent, "a top-level group is not indented")
+end)
+
+test("groups page: [nesting] deleting a parent asks, saying its groups become top-level groups in its place", function()
+    local NS, m, P = open()
+    local Lib = NS.Library
+    local a = Lib.CreateGroup({ name = "Alpha" })
+    local c = Lib.CreateGroup({ name = "Charlie" })
+    NS.SchemaRuntime.Set("group.parent", a, c)
+    pick(NS, a)
+    local w = P.redraw("groups")
+    P.find(w, "Button", "Delete"):__fire("OnClick")
+    local which = m.popupsShown[#m.popupsShown][1]
+    -- red under: G.Delete asking with the plain group text
+    assertTrue(m.StaticPopupDialogs[which].text:find("top-level", 1, true) ~= nil)
+    P.accept()
+    assertNil(NS.db.profile.groups[a])
+    assertFalse(NS.db.profile.groups[c].parent)
+end)
+
+test("groups page: [nesting] a pad's and a dial's Add a group leave out a child", function()
+    local NS = open()
+    local Lib = NS.Library
+    local a = Lib.CreateGroup({ name = "Alpha" })
+    local c = Lib.CreateGroup({ name = "Charlie" })
+    NS.SchemaRuntime.Set("group.parent", a, c)
+    local S = NS.addon.Settings
+    local function has(list, id)
+        for _, e in ipairs(list) do if e.id == id then return true end end
+        return false
+    end
+    -- red under: AddableGroups listing every user group
+    assertFalse(has(S.Pads.AddableGroups("p1"), c))
+    assertFalse(has(S.Dials.AddableGroups("d2"), c))
+    assertTrue(has(S.Pads.AddableGroups("p1"), a))
+end)
+
+-- ── the Preview table (2026-10-18-builtins-as-groups-design.md, goal 3) ──────────────────────
+
+-- The widget among `widgets` whose children hold `child`.
+local function rowOf(widgets, child)
+    for _, x in ipairs(widgets) do
+        for _, c in ipairs(x.children or {}) do if c == child then return x end end
+    end
+    return nil
+end
+
+test("groups page: [preview table] Preview is the active-now line, then a table: each callout's name beside what it sends", function()
+    local NS, _, P = open(MPLUS)
+    local lists = P.reorderSpy()
+    local pull = NS.Library.CreateCallout({ name = "Pull", text = "Pulling", channel = "party" })
+    local lust = NS.Library.CreateCallout({ name = "Lust", text = "Lust now", channel = "party" })
+    local gid = NS.Library.CreateGroup({ name = "Mine", callouts = { pull, lust } })
+    pick(NS, gid)
+    local w = P.tab("groups", "preview")
+    assertTrue(P.hasText(w, "Active now."))
+    -- red under: one "<name>: <preview>" line per callout, as before
+    assertFalse(P.hasText(w, "Pull: Sends"))
+    assertTrue(P.find(w, "Label", "Callout") ~= nil, "the name column's header")
+    assertTrue(P.find(w, "Label", "What it sends here") ~= nil, "the preview column's header")
+    local name, sends = P.find(w, "Label", "Pull"), P.find(w, "Label", "Sends: /p Pulling")
+    assertTrue(name ~= nil and sends ~= nil)
+    local row = rowOf(w, name)
+    assertEqual(row.children[2], sends, "one row: the name, then what it sends")
+    assertTrue(P.find(w, "Label", "Lust") ~= nil)
+    assertTrue(P.find(w, "Label", "Sends: /p Lust now") ~= nil)
+    assertEqual(lists[#lists].rows, 2, "a boxed row per callout")
+    assertEqual(lists[#lists].specs[1].draggable, false, "nothing to drag")
+end)
+
+test("groups page: [preview table] a group holding groups shows a titled table for its own callouts, then one per child", function()
+    local NS, _, P = open(MPLUS)
+    local function callout(name) return NS.Library.CreateCallout({ name = name, text = name, channel = "party" }) end
+    local top = NS.Library.CreateGroup({ name = "Top", callouts = { callout("Own") } })
+    local a = NS.Library.CreateGroup({ name = "Node A", callouts = { callout("A1") } })
+    local b = NS.Library.CreateGroup({ name = "Node B", callouts = { callout("B1"), callout("B2") } })
+    NS.SchemaRuntime.Set("group.parent", top, a)
+    NS.SchemaRuntime.Set("group.parent", top, b)
+    pick(NS, top)
+    local lists = P.reorderSpy()
+    local w = P.tab("groups", "preview")
+    for _, title in ipairs({ "Top", "Node A", "Node B" }) do
+        assertTrue(P.find(w, "Heading", title) ~= nil, "a section for " .. title)
+    end
+    assertEqual(#P.all(w, "Label", "Callout"), 3, "each table has its header")
+    assertTrue(P.find(w, "Label", "Sends: /p B2") ~= nil)
+    -- red under: a list per table (the page keeps one, so the others' boxes would never be reclaimed)
+    assertEqual(#lists, 1, "one box list for the tab")
+    assertEqual(lists[1].rows, 4, "a box per callout, across the tables")
+end)
+
+test("groups page: [review] a parent with no callouts of its own and one child titles the child's table", function()
+    local NS, _, P = open(MPLUS)
+    local top = NS.Library.CreateGroup({ name = "Top" })
+    local kid = NS.Library.CreateGroup({ name = "Only child",
+        callouts = { NS.Library.CreateCallout({ name = "K1", text = "K1", channel = "party" }) } })
+    NS.SchemaRuntime.Set("group.parent", top, kid)
+    pick(NS, top)
+    local w = P.tab("groups", "preview")
+    -- red under: title a block only when there are several sections (G.PreviewBlocks)
+    assertTrue(P.find(w, "Heading", "Only child") ~= nil, "the one table is the child's, and says so")
+    assertTrue(P.find(w, "Label", "K1") ~= nil)
+    pick(NS, kid)
+    w = P.tab("groups", "preview")
+    assertNil(P.find(w, "Heading", "Only child"), "a group's own table has no title")
+end)
+
+test("groups page: [preview table] a situation change rewrites a row's text in place and lays the table out again", function()
+    local NS, _, P = open(MPLUS)
+    local pull = NS.Library.CreateCallout({ name = "Pull", text = "Pulling", channel = "smartGroup" })
+    local gid = NS.Library.CreateGroup({ name = "Mine", callouts = { pull } })
+    pick(NS, gid)
+    local w = P.tab("groups", "preview")
+    local sends = P.find(w, "Label", "Sends: /p Pulling")
+    local scroll = NS.addon.Settings.Helpers.EnsureScroll(P.ctx("groups"))
+    local before = scroll.layoutCount or 0
+    local solo = {}
+    for k, v in pairs(MPLUS) do solo[k] = v end
+    solo.inGroup = false
+    NS.Situation.ReadInputs = function() return solo end
+    NS.Situation.RefreshNow("test")
+    NS.addon.Settings.Editors.RefreshLive()
+    -- red under: no Ed.Live for the rows (the text would stay what it was when drawn)
+    assertTrue(sends.text ~= "Sends: /p Pulling", "the row says what it sends now")
+    assertTrue(sends.text:find("Sends nothing here", 1, true) ~= nil)
+    -- red under: set the text without a layout (a taller text would spill out of its box)
+    assertTrue((scroll.layoutCount or 0) > before, "the table laid out again")
+end)
+
+test("groups page: [preview table] a group with no callouts says so, with no table", function()
+    local NS, _, P = open()
+    local lists = P.reorderSpy()
+    local gid = NS.Library.CreateGroup({ name = "Empty" })
+    pick(NS, gid)
+    local w = P.tab("groups", "preview")
+    assertTrue(P.hasText(w, "This group has no callouts yet."))
+    assertNil(P.find(w, "Label", "Callout"), "no header for an empty table")
+    assertEqual(#lists, 0, "no box list")
 end)

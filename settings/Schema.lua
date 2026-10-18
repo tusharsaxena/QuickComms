@@ -130,12 +130,12 @@ end
 -- The seam addresses the member by the instance argument or, without one, by Settings.EditingId: the
 -- member that kind's editor page has selected, else the first member that page lists, so the panel's
 -- widgets and the CLI write the member the page shows (or would show when opened); the drag and
--- Library's built-in writers name theirs. Library resolves the id. A callout is addressed by its id
+-- Library's own writers name theirs. Library resolves the id. A callout is addressed by its id
 -- alone (BY_ID): no page selects one, since a callout is edited in its group's popup, so a write that
 -- names none would land on an arbitrary callout. With no member to address (none of that kind
 -- exists, a callout write names no id, or a named id is gone) there is no root, and the write is
 -- refused with a line saying where to make one, or how to name it.
-local INSTANCE = { callout = true, group = true, pad = true, dial = true, builtin = true }
+local INSTANCE = { callout = true, group = true, pad = true, dial = true }
 Settings.INSTANCE_KINDS = INSTANCE
 
 -- The kinds whose rows are addressed by id alone; the CLI reads the id after the path (settings/Slash.lua).
@@ -147,19 +147,16 @@ local NO_MEMBER = {
     group   = L["No group to edit: make one on the Groups page."],
     pad     = L["No pad to edit: make one on the Comms Pad page."],
     dial    = L["No dial to edit: make one on the Comms Dial page."],
-    builtin = L["No built-in set is selected: pick one on the Groups page."],
 }
 
 --- The member a kind's rows address when a write names none: the page's selection while it exists,
---- else the first member the page lists (Library.MemberIds). A built-in set's overlay has no
---- fallback: it is only ever the set the Groups page shows. A callout has neither: it is only ever
+--- else the first member the page lists (Library.MemberIds). A callout has neither: it is only ever
 --- the one a write names.
 --- @return string|nil
 function Settings.EditingId(kind)
     if BY_ID[kind] then return nil end
     local id = NS.State.editing[kind]
     if id ~= nil and NS.Library.Member(kind, id) then return id end
-    if kind == "builtin" then return nil end
     return NS.Library.MemberIds(kind)[1]
 end
 
@@ -190,11 +187,12 @@ local S = Settings.SchemaLib:New{
     -- the composer is hollow.
     writeThrough = { "enabled" },
     -- The minimap button is a per-installation display preference: neither reset may touch it. A
-    -- member's icon and its glyph color, a pad's or dial's position and a dial's key have a default
-    -- only so a named `/qc reset` restores them; a page's Defaults (a bracketed sweep) keeps them.
+    -- member's icon and its glyph color, a group's parent, a pad's or dial's position and a dial's
+    -- key have a default only so a named `/qc reset` restores them; a page's Defaults (a bracketed
+    -- sweep) keeps them.
     resetExempt  = { [MINIMAP_PATH] = true, ["callout.icon"] = true, ["callout.iconColor"] = true,
-        ["group.icon"] = true, ["group.iconColor"] = true, ["pad.point"] = true, ["dial.point"] = true,
-        ["dial.key"] = true },
+        ["group.icon"] = true, ["group.iconColor"] = true, ["group.parent"] = true, ["pad.point"] = true,
+        ["dial.point"] = true, ["dial.key"] = true },
 }
 NS.SchemaRuntime = S
 
@@ -224,12 +222,12 @@ function Settings.RowsForPage(pageKey)
     return out
 end
 
--- `point`, `when`, `idset` and `key` are the structured member rows (settings/SchemaMembers.lua): each
+-- `point`, `when` and `key` are the structured member rows (settings/SchemaMembers.lua): each
 -- drawn by its own control on its editor page (a dial's key by a capture box) and typed and printed on
 -- the CLI by settings/Slash.lua's parse and format hooks. `color` is a pad's Look swatches (phase 5),
 -- which the options library draws and its CLI parses and prints itself.
-local VALID_TYPES = { bool = true, number = true, string = true, point = true, when = true, idset = true,
-    key = true, color = true }
+local VALID_TYPES = { bool = true, number = true, string = true, point = true, when = true, key = true,
+    color = true }
 
 -- A row carrying BOTH its own get and set owns its storage, so there is no defaults entry at its
 -- path: answering nil makes the library skip the resolution check for it (the session rows, and

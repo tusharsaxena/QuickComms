@@ -5,7 +5,7 @@ local T = _G.QUICKCOMMS_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 
--- A keyed dungeon in a party: the M+ built-in is active and smart channels resolve to /p.
+-- A keyed dungeon in a party: the seeded M+ set is active and smart channels resolve to /p.
 local MPLUS = { inInstance = true, instanceType = "party", difficultyID = 8, keystoneActive = true,
     keyLevel = 12, inGroup = true }
 -- Arathi Basin (instanceID 2107) in its instance group: the generic battleground set and the node set.
@@ -45,12 +45,12 @@ end
 test("surfaces: in a key the default pad's plan is the M+ set, baked to /p", function()
     local NS = live()
     local plan = planFor(NS)
-    assertEqual(table.concat(plan.order, ","), "bi.mplus")
+    assertEqual(table.concat(plan.order, ","), T.seeded(NS, "bi.mplus"))
     assertTrue(plan.hasActive)
     assertEqual(plan.sections[1].title, "M+ (generic)")
     assertEqual(#plan.sections[1].slots, 8)
     local pull = plan.sections[1].slots[1]
-    assertEqual(pull.calloutId, "bi.mplus.pull")
+    assertEqual(pull.calloutId, T.seeded(NS, "bi.mplus.pull"))
     assertEqual(pull.line, "/p Pulling next pack")
     assertEqual(pull.chatType, "PARTY")
     assertEqual(pull.surfaceId, "p1")
@@ -64,13 +64,13 @@ test("surfaces: [review 5] a refused callout is a slot with its reason and no li
     assertNil(slot.line)
     assertNil(slot.chatType)
     assertEqual(slot.reason, "startsWithSlash")
-    assertEqual(slotOf(planFor(NS), "bi.mplus.pull").line, "/p Pulling next pack", "the others still bake")
+    assertEqual(slotOf(planFor(NS), T.seeded(NS, "bi.mplus.pull")).line, "/p Pulling next pack", "the others still bake")
 end)
 
 test("surfaces: a node battleground gives one section per node, baked to /i", function()
     local NS = live(AB)
     local plan = planFor(NS)
-    assertEqual(table.concat(plan.order, ","), "bi.bg.ab,bi.bg")
+    assertEqual(table.concat(plan.order, ","), T.seeded(NS, "bi.bg.ab") .. "," .. T.seeded(NS, "bi.bg"))
     assertEqual(#plan.sections, 6)
     assertEqual(plan.sections[2].title, "Lumber Mill")
     assertEqual(plan.sections[2].slots[3].line, "/i INC 3 Lumber Mill")
@@ -103,9 +103,9 @@ test("surfaces: the bake context fills {me} from the client", function()
     assertEqual(slotOf(planFor(NS), cid).line, "/p Testchar pulling")
 end)
 
-test("surfaces: a disabled built-in leaves the plan", function()
+test("surfaces: a disabled seeded set leaves the plan", function()
     local NS = live()
-    NS.Library.SetBuiltinEnabled("bi.mplus", false)
+    NS.SchemaRuntime.Set("group.enabled", false, T.seeded(NS, "bi.mplus"))
     local plan = planFor(NS)
     assertEqual(#plan.order, 0)
     assertFalse(plan.hasActive)
@@ -140,7 +140,7 @@ local function combat(m, on)
     end
 end
 
-local function pull(NS) return NS.Pad.ChipsFor("p1", "bi.mplus.pull")[1] end
+local function pull(NS) return NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.mplus.pull"))[1] end
 local function staleShown(NS) return NS.Pad.Instance("p1").header.qcStale:IsShown() end
 
 local function nonMessages(m)
@@ -366,7 +366,7 @@ test("surfaces: [fix wave] disabled then enabled inside one combat: the pad is s
     assertEqual(#m.blocked, 0)
 end)
 
-test("surfaces: [phase 3] WhyLines names each shown group in order, built-ins marked, then the locks", function()
+test("surfaces: [phase 3] WhyLines names each shown group in order, then the locks", function()
     local NS = live({})
     local cid = userCallout(NS, { name = "Ask", text = "Raid stack", channel = "raid" })
     local lines = NS.Surfaces.WhyLines("p1")
@@ -376,13 +376,13 @@ test("surfaces: [phase 3] WhyLines names each shown group in order, built-ins ma
     assertTrue(cid ~= nil)
 end)
 
-test("surfaces: [phase 3] WhyLines in a key explains the built-in's matched row; a preview says so", function()
+test("surfaces: [phase 3] WhyLines in a key explains the seeded set's matched row; a preview says so", function()
     local NS = live()
-    assertEqual(NS.Surfaces.WhyLines("p1")[1], "M+ (generic) (built-in): Content")
+    assertEqual(NS.Surfaces.WhyLines("p1")[1], "M+ (generic): Content")
     NS.Preview.SetPreviewAs("arena")
     local lines = NS.Surfaces.WhyLines("p1")
     assertEqual(lines[1], "Preview as: Arena")
-    assertEqual(lines[2], "Arena (generic) (built-in): Content")
+    assertEqual(lines[2], "Arena (generic): Content")
     NS.Preview.SetPreviewAs("current")
     NS.Preview.SetTestMode(true)
     assertEqual(NS.Surfaces.WhyLines("p1")[1], "Test mode: placeholder chips that send nothing.")
@@ -408,4 +408,86 @@ test("surfaces: [icons] a slot carries its callout's icon color, a dial's group 
     end
     -- red under: the dial's group entry built without iconColor
     assertEqual(ring and ring.iconColor, "0000ff")
+end)
+
+-- ── nested groups (2026-10-18-builtins-as-groups-design.md, goal 2) ──────────────────────────
+
+-- A parent with a callout of its own on the default pad and dial, a child active in a key and a
+-- child for arenas only, each with one callout.
+local function family(NS)
+    local Lib = NS.Library
+    local parent = Lib.CreateGroup({ name = "Raid night" })
+    Lib.CreateCalloutIn(parent, { name = "Own", text = "own", channel = "party" })
+    local keyed = Lib.CreateGroup({ name = "Keyed", when = { content = { mythicPlus = true } } })
+    Lib.CreateCalloutIn(keyed, { name = "Go", text = "go", channel = "party" })
+    local arena = Lib.CreateGroup({ name = "Arena only", when = { content = { arena = true } } })
+    Lib.CreateCalloutIn(arena, { name = "Swap", text = "swap", channel = "party" })
+    NS.SchemaRuntime.Set("group.parent", parent, keyed)
+    NS.SchemaRuntime.Set("group.parent", parent, arena)
+    Lib.AddGroupToSurface("pad", "p1", parent, 1)
+    Lib.AddGroupToSurface("dial", "d2", parent, 1)
+    return parent, keyed, arena
+end
+
+test("surfaces: [nesting] a parent draws its own section, then one per child whose When matches", function()
+    local NS = live()
+    local parent, keyed = family(NS)
+    local plan = planFor(NS)
+    assertEqual(plan.order[1], parent, "the parent is the surface's group")
+    -- red under: S.Sections reading only a built-in's children
+    assertEqual(plan.sections[1].groupId, parent)
+    assertEqual(plan.sections[1].title, "Raid night")
+    assertEqual(plan.sections[2].groupId, keyed)
+    assertEqual(plan.sections[2].slots[1].line, "/p go")
+    assertEqual(plan.sections[3].groupId, T.seeded(NS, "bi.mplus"), "the arena child is not active in a key")
+    NS.SchemaRuntime.Set("group.enabled", false, keyed)
+    plan = planFor(NS)
+    assertEqual(plan.sections[2].groupId, T.seeded(NS, "bi.mplus"), "a disabled child leaves the plan")
+    NS.SchemaRuntime.Set("group.enabled", false, parent)
+    assertTrue(planFor(NS).order[1] ~= parent, "the parent's own gate is the whole family's")
+end)
+
+test("surfaces: [nesting] a dial draws a parent's own callouts and a ring per child whose When matches", function()
+    local NS = live()
+    family(NS)
+    local snap = NS.Situation.Current()
+    local plan = NS.Surfaces.BuildDialPlan("d2", NS.db.profile.dials.d2, snap, NS.Surfaces.Deps(snap))
+    local titles, sends = {}, {}
+    for _, r in ipairs(plan.rings) do
+        for _, item in ipairs(r.items) do
+            if item.kind == "ring" then titles[item.title] = true end
+            if item.kind == "send" then sends[item.title] = r.title end
+        end
+    end
+    assertTrue(titles["Raid night"], "the parent's ring")
+    -- red under: S.BuildDialPlan reading only a built-in's children
+    assertTrue(titles["Keyed"], "the active child's ring")
+    assertNil(titles["Arena only"], "no ring for the child that is not active")
+    assertEqual(sends["Own"], "Raid night", "the parent's own callout sits in its ring")
+    assertEqual(sends["Go"], "Keyed")
+end)
+
+test("surfaces: [nesting] a parent that draws nothing leaves its surface with nothing active", function()
+    local NS = live()
+    local Lib, p = NS.Library, NS.db.profile
+    p.pads.p1.groups, p.dials.d2.groups = {}, {}
+    local parent = Lib.CreateGroup({ name = "Empty parent" })
+    local arena = Lib.CreateGroup({ name = "Arena only", when = { content = { arena = true } } })
+    Lib.CreateCalloutIn(arena, { name = "Swap", text = "swap", channel = "party" })
+    NS.SchemaRuntime.Set("group.parent", parent, arena)
+    Lib.AddGroupToSurface("pad", "p1", parent, 1)
+    Lib.AddGroupToSurface("dial", "d2", parent, 1)
+    local snap = NS.Situation.Current()
+    local plan = planFor(NS, snap)
+    assertEqual(table.concat(plan.order, ","), parent, "the parent is active")
+    assertEqual(#plan.sections, 0, "and draws nothing in a key")
+    -- red under: hasActive counted from the order (#order > 0)
+    assertFalse(plan.hasActive)
+    assertEqual(NS.PadLayout.VisibilityDriver("always", "whenActive", plan.hasActive, false), "hide",
+        "a whenActive pad hides")
+    local dial = NS.Surfaces.BuildDialPlan("d2", p.dials.d2, snap, NS.Surfaces.Deps(snap))
+    assertEqual(#dial.rings, 0)
+    assertFalse(dial.hasActive)
+    Lib.CreateCalloutIn(parent, { name = "Own", text = "own", channel = "party" })
+    assertTrue(planFor(NS, snap).hasActive, "a callout of its own draws a section")
 end)

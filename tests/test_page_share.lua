@@ -1,6 +1,6 @@
--- tests/test_page_share.lua — settings/Share.lua (spec §13.1, §15, §12.2): the Export and Import tabs
--- (phase 5) and the Built-in tab. Each shipped set is one line: Enabled, Customize, Choose callouts.
--- Defaults turns every set back on. Driven headlessly through tests/page_helpers.lua.
+-- tests/test_page_share.lua — settings/Share.lua (spec §13.1, §15): the Export and Import tabs
+-- (phase 5); a seeded built-in set is exported as any group is (2026-10-18-builtins-as-groups-design.md).
+-- Defaults clears the page's own session state. Driven headlessly through tests/page_helpers.lua.
 
 local T = _G.QUICKCOMMS_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -18,60 +18,36 @@ local function open()
     return NS, m, P
 end
 
-test("share page: every shipped set has a line; turning M+ off takes it off the pad", function()
+test("share page: two tabs, and a seeded set is ticked and exported as any group, its nodes with it", function()
     local NS, _, P = open()
-    local w = P.tab("share", "Built-in")
-    assertEqual(#P.all(w, "Button", "Customize"), #NS.BuiltIns.order)
-    local box = P.find(w, "CheckBox", "M+ (generic)")
-    assertTrue(box ~= nil and box.value == true)
-    box:__fire("OnValueChanged", false)
-    assertFalse(NS.db.profile.builtins["bi.mplus"].enabled)
-    assertTrue(NS.Pad.ChipsFor("p1", "bi.mplus.pull")[1] == nil, "the pad dropped the set")
+    local w = P.tab("share", "Export")
+    local box = P.find(w, "CheckBox", "Arathi Basin")
+    -- red under: leave the seeded sets off the Export tab, as the built-ins were
+    assertTrue(box ~= nil)
+    box:__fire("OnValueChanged", true)
+    local payload = NS.Share.Collect(NS.State.share.pick)
+    local ab = T.seeded(NS, "bi.bg.ab")
+    assertTrue(payload.groups[ab] ~= nil)
+    assertEqual(payload.groups[ab].origin, nil, "no origin travels")
+    local n = 0
+    for _ in pairs(payload.groups) do n = n + 1 end
+    assertEqual(n, 1 + #NS.Library.Children(ab), "its nodes come with it")
 end)
 
-test("share page: [review 4] Customize puts the copy in the set's place, selects it and opens the Groups page", function()
-    local NS, m, P = open()
-    local opened
-    m.Settings.OpenToCategory = function(id) opened = id end
-    NS.addon.Settings.Editors.categories.groups = { GetID = function() return 3 end }
-    local w = P.tab("share", "Built-in")
-    local buttons = P.all(w, "Button", "Customize")
-    local index
-    for i, gid in ipairs(NS.BuiltIns.order) do if gid == "bi.mplus" then index = i end end
-    buttons[index]:__fire("OnClick")
-    local copy = NS.State.editing.group
-    assertTrue(NS.db.profile.groups[copy] ~= nil)
-    assertEqual(NS.db.profile.pads.p1.groups[1], copy, "bi.mplus was first; the copy is first")
-    assertFalse(NS.db.profile.builtins["bi.mplus"].enabled)
-    assertEqual(opened, 3)
-    w = P.tab("share", "Built-in")
-    assertTrue(P.find(w, "Button", "Edit the copy") ~= nil)
-end)
-
-test("share page: Choose callouts opens the set on the Groups page's Callouts tab", function()
+test("share page: Defaults unticks everything and forgets the checked string; nothing in the profile changes", function()
     local NS, _, P = open()
-    local w = P.tab("share", "Built-in")
-    P.all(w, "Button", "Choose callouts")[1]:__fire("OnClick")
-    assertEqual(NS.State.editing.group, NS.BuiltIns.order[1])
-    assertEqual(NS.addon.Settings.Editors.pages.groups.activeTab, "callouts")
-end)
-
-test("share page: Defaults turns every set back on and shows all of their callouts, as one act", function()
-    local NS, _, P = open()
-    NS.Library.SetBuiltinEnabled("bi.raid", false)
-    NS.Library.SetBuiltinCalloutHidden("bi.mplus", "bi.mplus.lust", true)
-    local changes, rebuilds = 0, 0
+    local SHP = NS.addon.Settings.Share
+    local gid = T.seeded(NS, "bi.mplus")
+    SHP.Pick("group", gid, true)
+    SHP.Check(NS.Share.Encode(NS.Share.Collect({ group = { [gid] = true } })))
+    local changes = 0
     local t = NS.Bus:NewTarget()
     t:RegisterMessage(NS.MSG.LIBRARY_CHANGED, function() changes = changes + 1 end)
-    local request = NS.Surfaces.Request
-    NS.Surfaces.Request = function(...) rebuilds = rebuilds + 1 return request(...) end
+    -- red under: keep SH.RestoreAll (the built-in overlay's reset) as the page's Defaults
     P.ctx("share").panel.defaultsOnClick()
-    NS.Surfaces.Request = request
-    assertTrue(NS.db.profile.builtins["bi.raid"].enabled)
-    assertTrue(next(NS.db.profile.builtins["bi.mplus"].hidden) == nil)
-    -- red under: drop Lib.Batch from SH.RestoreAll (one announce, and one rebuild, per set and field)
-    assertEqual(changes, 1)
-    assertTrue(rebuilds <= 1, "one pad rebuild")
+    assertFalse(SHP.Picked("group", gid))
+    assertNil(NS.State.share.import)
+    assertEqual(changes, 0, "session state only")
 end)
 
 -- ── Export and Import (phase 5) ─────────────────────────────────────────────────────────────

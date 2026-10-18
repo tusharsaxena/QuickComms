@@ -179,19 +179,19 @@ function DD.PlaceLine(id)
     return L["This dial is number %d in the dial list, and WoW's key bindings list Open Comms Dial 1 to 4 only: give it a key above."]:format(place)
 end
 
---- The Groups tab's warning (spec §11.3: depth 3 is allowed, with the editor warning): the
---- battleground node sets on this dial that would open three rings deep in their own battleground,
---- because a group listed above is active there too (built under that battleground's Preview as…
---- snapshot). Nil when there is none, or in Flat, which has no depth.
+--- The Groups tab's warning (spec §11.3: depth 3 is allowed, with the editor warning): the seeded
+--- battleground sets with nodes on this dial (a group seeded from a `bi.bg.` set that holds groups)
+--- that would open three rings deep in their own battleground, because a group listed above is
+--- active there too (built under that battleground's Preview as… snapshot). Nil when there is none,
+--- or in Flat, which has no depth.
 --- @return string|nil
 function DD.DepthWarning(id)
     local dial = NS.db.profile.dials[id]
     if not dial or dial.mode == "flat" then return nil end
     local names = {}
     for _, gid in ipairs(dial.groups) do
-        local short = type(gid) == "string" and gid:match("^bi%.bg%.([^.]+)$")
-        local def = short and NS.BuiltIns.groups[gid]
-        local preset = def and def.children and NS.Preview.FindPreset("bg:" .. short)
+        local short = NS.Library.SeededBattleground(gid)
+        local preset = short and #NS.Library.Children(gid) > 0 and NS.Preview.FindPreset("bg:" .. short)
         if preset and preset.snapshot then
             local snap = preset.snapshot
             local plan = NS.Surfaces.BuildDialPlan(id, dial, snap, lookDeps(snap))
@@ -224,23 +224,19 @@ end
 
 local function groupLabel(gid, active)
     local g = NS.Library.Group(gid)
-    local name = g and g.name or gid
-    if NS.Library.IsBuiltin(gid) then name = L["%s (built-in)"]:format(name) end
-    return ((active and active[gid]) and Ed.ACTIVE_DOT or "") .. name
+    return ((active and active[gid]) and Ed.ACTIVE_DOT or "") .. (g and g.name or gid)
 end
 
---- The groups the dial does not list: user groups by name, then the top-level built-ins in order.
+--- The groups the dial does not list: top-level user groups by name (a group inside another shows
+--- with it, never by itself).
 function DD.AddableGroups(id)
     local on = {}
     for _, gid in ipairs(NS.db.profile.dials[id].groups) do on[gid] = true end
     local out = {}
     for gid, g in pairs(NS.db.profile.groups) do
-        if not on[gid] then out[#out + 1] = { id = gid, label = g.name or gid } end
+        if not on[gid] and not NS.Library.IsChild(gid) then out[#out + 1] = { id = gid, label = g.name or gid } end
     end
     table.sort(out, function(a, b) return a.label:lower() < b.label:lower() end)
-    for _, gid in ipairs(NS.BuiltIns.order) do
-        if not on[gid] then out[#out + 1] = { id = gid, label = groupLabel(gid) } end
-    end
     return out
 end
 
@@ -398,7 +394,7 @@ local function render(ctx)
             Ed.Select("dial", v)
             Ed.RequestRefresh()
         end,
-        action = { text = L["New dial"], tooltip = L["Make a new Comms Dial showing every built-in set, and edit it here."],
+        action = { text = L["New dial"], tooltip = L["Make a new Comms Dial holding the built-in groups, and edit it here."],
             onClick = DD.Create },
     })
     Ed.Tabs(ctx, PAGE, {

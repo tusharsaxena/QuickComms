@@ -10,7 +10,11 @@ as amended by
 and by
 [`superpowers/specs/2026-10-18-icon-browser-design.md`](superpowers/specs/2026-10-18-icon-browser-design.md)
 (the icon browser, the game icons and the tinted glyphs; built by
-[`superpowers/plans/2026-10-18-icon-browser.md`](superpowers/plans/2026-10-18-icon-browser.md)),
+[`superpowers/plans/2026-10-18-icon-browser.md`](superpowers/plans/2026-10-18-icon-browser.md))
+and by
+[`superpowers/specs/2026-10-18-builtins-as-groups-design.md`](superpowers/specs/2026-10-18-builtins-as-groups-design.md)
+(the built-in sets seeded as ordinary groups, groups nested one level, the Preview tab as a table;
+built by [`superpowers/plans/2026-10-18-builtins-as-groups.md`](superpowers/plans/2026-10-18-builtins-as-groups.md)),
 and the build order is
 [`superpowers/plans/2026-10-11-quickcomms-phase-0-1.md`](superpowers/plans/2026-10-11-quickcomms-phase-0-1.md),
 [`superpowers/plans/2026-10-13-quickcomms-phase-2.md`](superpowers/plans/2026-10-13-quickcomms-phase-2.md),
@@ -24,9 +28,11 @@ this page describes what exists.
 A Retail addon that puts context-aware group callouts on a Comms Pad and a Comms Dial and sends them
 through secure buttons, so they work during chat lockdown in Mythic+ keys, boss pulls and PvP
 matches ([`scope.md`](scope.md)). At the end of phase 5 the data layer feeds the secure send engine, the
-Comms Pads and the Comms Dials, and the player edits groups (with their When and their callouts, each group owning its own), pads (with
-their Look), dials and the built-in sets on the Groups, Comms Pad, Comms Dial and Share
-pages, and shares any of them as a `!QC1!` string; "Preview as…" draws the surfaces in another
+Comms Pads and the Comms Dials, and the player edits groups (with their When, their callouts, each group owning its own, and an
+optional parent group, one level deep), pads (with their Look) and dials on the Groups, Comms Pad, Comms Dial and Share
+pages, and shares any of them as a `!QC1!` string. The shipped built-in sets are seed data: each
+profile is given them once as ordinary groups, a battleground's nodes as groups inside its set, and
+Restore built-in groups brings back any the player deleted; "Preview as…" draws the surfaces in another
 situation and "Why is this showing?" explains them. A dial opens on its
 key (or on WoW's key bindings menu, through `Bindings.xml`) in Relaxed mode: click a wedge to send.
 
@@ -64,7 +70,7 @@ On screen: the settings panel, the editor pages, the minimap button, the Comms P
 
 Every file, its kind and its TOC position is in [`module-map.md`](module-map.md). In short: `core/`
 holds the identity, ten of the setup files, the session state, the addon object and its lifecycle,
-and the migration runner; `defaults/` the default values and the shipped built-in sets; `modules/`
+and the migration runner; `defaults/` the default values and the shipped built-in sets (seed data); `modules/`
 the modules below plus the diagnostics sections; `settings/` the schema, the panel pages and
 the slash table and its verb bodies. `Bindings.xml` sits at the root, beside the TOC, and is not a TOC
 line: the client reads it there, and the standard allows it (layout-§1, toc-file-§4 (standard v2.80.0)).
@@ -77,9 +83,9 @@ line: the client reads it there, and the standard allows it (layout-§1, toc-fil
 | `Channels` | pure | the eight kinds (`smartGroup`, `smartLead`, `party`, `raid`, `instance`, `raidWarning`, `say`, `yell`); `Resolve`, `Prefix`, `LockState` |
 | `Bake` | pure | callout + snapshot to one macro line or a named refusal; sanitizes the text and baked token values, counts typed `%t` / `%f` as live |
 | `Resolver` | pure | When rules to the active group set, surface order, the "why" lines |
-| `Library` | registry writer | membership, order, ids, references and seeding of the profile's callouts, groups, pads, dials and overlay; member fields go through the seam (member rows); `Prepare`; `Batch` (one act, one announce); and `Import`, the one writer of what a share string brings; sends `LIBRARY_CHANGED` |
+| `Library` | registry writer | membership, order, ids, references and seeding of the profile's callouts, groups, pads and dials: the shipped sets seeded once per profile as ordinary groups (`SeedFromOverlay` for migration step 3), `RestoreBuiltins`, and the one-level nesting rules (`ValidParent`, `SettleParent`, `Children`); member fields go through the seam (member rows); `Prepare`; `Batch` (one act, one announce); and `Import`, the one writer of what a share string brings; sends `LIBRARY_CHANGED` |
 | `Share` | pure + edge | `modules/Share.lua`: pure codec and checks (the `!QC1!` string, the version gate, the schema checks, the sanitizer over every text field, the report), and the edge: Collect, Export (the copy window), Apply (through `Library.Import`); both acts refused in combat |
-| `BuiltIns` | data | `defaults/BuiltIns*.lua`: the shipped sets, as data, never copied into the profile |
+| `BuiltIns` | data | `defaults/BuiltIns*.lua`: the shipped sets, as seed data: `Library` copies them into each profile once as ordinary groups and callouts, and after that they are read only for names (the Preview as menu's battlegrounds, the When editor's battleground list) |
 | `core/WidgetsSetup.lua` | setup | the drag-strip seam: `NS.MakeDragHandle` over LibKa0s-Widgets' `DragHandle`, nil when the library is absent |
 | `modules/SendEngine_Guard.lua` | pure | the soft guard's timing, the acting click edge, the echo tracker and the keyed combat-end queue |
 | `modules/SendEngine.lua` | secure writer | the only secure writer: send buttons, arm and disarm, the combat-end queue, the click hook, the echo events, the held stand-down; and the dial headers and rings, the wedge wrap, frame refs, snippet runs and the override bindings; sends `SEND_RESULT` and `COMBAT_QUEUE_DRAINED` |
@@ -92,19 +98,19 @@ line: the client reads it there, and the standard allows it (layout-§1, toc-fil
 | `DialSecure` | secure snippets | `modules/Dial_Secure.lua`: the header's restricted snippets and the ring wiring; asks SendEngine for every write |
 | `DialRender` | render | `modules/Dial_Render.lua`: the dial's insecure paint and pointer |
 | `Dial` | frames | `modules/Dial.lua`: the dial's frames, pools and keys |
-| `Editors` | settings | `settings/Editors.lua`: the pages' shared frame: the selection, the one deferred repaint, the reorder lists (each row's edit and remove glyphs, a glyph drawn in its color), the delete popup, the icon chooser (under its Icon label: the icon as drawn, Choose icon… and the glyph's color swatch; no Icon text box) |
+| `Editors` | settings | `settings/Editors.lua`: the pages' shared frame: the selection, the one deferred repaint, the reorder lists (each row's edit and remove glyphs, a glyph drawn in its color), the table rows (`Ed.TableRows`: a header, then a boxed row per entry, its name beside its text; the Groups page's Preview), the delete popup, the icon chooser (under its Icon label: the icon as drawn, Choose icon… and the glyph's color swatch; no Icon text box) |
 | `Callouts` | settings | `settings/Callouts.lua`: the callout helpers the editors share: the tokens a channel offers and one line of help for each, and what a callout sends here |
 | `ModalWindow` | settings | `settings/ModalWindow.lua`: the modal window the callout popup and the icon browser are each built in: a full-screen click-catcher with a dim, Blizzard's `SettingsFrameTemplate` window (or the fallback window) in the caller's strata, and a settings page's header and body inside it |
 | `IconBrowserSources` | settings | `settings/IconBrowser_Sources.lua`: what each icon browser tab offers (Markers, Game icons through `Compat.MacroIcons`, every LibKa0s glyph through `NS.IconNames`) and what each icon is called |
-| `IconBrowser` | settings | `settings/IconBrowser.lua`: the icon browser, modal over whatever opened it (the callout popup, a user group's General tab): three tabs (Markers, Game icons, Glyphs), a virtualized grid, the Game icons filter, the glyph color swatch, Choose and Cancel ([`settings-panel.md`](settings-panel.md)) |
+| `IconBrowser` | settings | `settings/IconBrowser.lua`: the icon browser, modal over whatever opened it (the callout popup, a group's General tab): three tabs (Markers, Game icons, Glyphs), a virtualized grid, the Game icons filter, the glyph color swatch, Choose and Cancel ([`settings-panel.md`](settings-panel.md)) |
 | `CalloutPopup` | settings | `settings/CalloutPopup.lua`: the callout popup, modal over the settings window: one user group's callout, new or listed, edited as a draft and written on Save as one act; Name and Channel, then Text across both columns, then the icon chooser, laid out in two aligned columns; its window is Blizzard's `SettingsFrameTemplate`, sized to its body, with no scrollbar ([`settings-panel.md`](settings-panel.md)) |
 | `CalloutPopupSkin` | settings | `settings/CalloutPopup_Skin.lua`: the optional EllesmereUI skin of the popup's window and the icon browser's, each painted as EllesmereUI paints the settings window when EllesmereUI, its Blizzard Skin module, its third-party skinning and this addon's entry are all on |
 | `EUIBridge` | bridge | `core/EUIBridge.lua`: the only reader of EllesmereUI's state (optional, in `## OptionalDeps`): the skin's conditions (the suite and its Blizzard Skin child present, and the facade's `S.IsEnabled()`; never EllesmereUI's SavedVariables) and its presence-guarded `RegisterSkin`, every read at call time |
-| `Groups` | settings page | `settings/Groups.lua`: the Groups page (General, Callouts with Add callout, Reuse and the glyph list, When, Preview; built-ins read-only with Customize) |
+| `Groups` | settings page | `settings/Groups.lua`: the Groups page, the same tabs for every group, a seeded built-in set among them (General with Parent group and Restore built-in groups, Callouts with Add callout, Reuse and the glyph list, When, Preview as a table) |
 | `GroupsWhen` | settings page | `settings/Groups_When.lua`: the When editor, one row per condition, the id lists, the active-now line |
 | `Pads` | settings page | `settings/Pads.lua`: the Comms Pad page (General, Groups priority list, Layout with X/Y, Look) |
 | `Dials` | settings page | `settings/Dials.lua`: the Comms Dial page (General, Groups, Wheel with X/Y, Binding, Preview) |
-| `Share` | settings page | `settings/Share.lua`: the Share page: Export, Import, Built-in |
+| `Share` | settings page | `settings/Share.lua`: the Share page: Export, Import |
 
 ## Settings Schema
 
@@ -119,22 +125,34 @@ database exists. The reactions every surface shares are
 lands on a load where the composers are hollow (options-ui-§1 route (a)). Shape, defaults and
 migrations: [`schema.md`](schema.md); the panel: [`settings-panel.md`](settings-panel.md).
 
-**Member rows** (`settings/SchemaMembers.lua`): every field a player sets on a member is a row whose path starts with the member's kind (`callout.*`, `group.*`, `pad.*`, `dial.*`, `builtin.*`). The seam's `resolveRoot` hands it to `Library.Member(kind, id)`; the id is the instance argument, or the member that kind's editor page has selected (`NS.State.editing`). Each row's `onChange` is `Library.Touch`. With nothing selected, the seam addresses the first member the page lists (`Settings.EditingId`). A callout is addressed by its id alone (`Settings.BY_ID_KINDS`): no page selects one, so a `callout.*` write that names no id is refused with a line naming the id form (`/qc set callout.<field> <id> <value>`). The `callout.*` rows keep `page = "callouts"`, which no registered page renders: it is the heading `/qc list` groups them under, and the popup draws them against its draft. Member rows are no AceDB default: each resolves against `Library.TEMPLATES` at the boot check, and the profile reset's count leaves them out. The structured rows (`pad.point`, `dial.point`, `group.when`, `builtin.hidden`, and `dial.key`, the `key` type) hold tables or a key: their pages draw their own controls, and `settings/Slash.lua`'s descriptor `parse` and `format` hooks type and print them on the CLI. The pad's Look rows, `pad.look.font|fontSize|fontColor|useClassColorFont|fontFlags|fontShadow|borderStyle|borderSize|borderColor|useClassColorBorder|background|useClassColorBackground`, are composed by the options library (its font, border and color groups) and stamped as pad member rows; the colors are the `color` row type. A glyph's color is the `callout.iconColor` and `group.iconColor` rows (six lowercase hex digits, `false` for none; only a member whose icon is a LibKa0s glyph takes one, and an icon write that leaves a colored member without a glyph clears its color in the same act); `Library.SetIcon` writes a member's icon and its color as one act, through the seam. The two rows are reset-exempt, like the icon rows: a named `/qc reset` clears a color, a page's Defaults keeps it.
+**Member rows** (`settings/SchemaMembers.lua`): every field a player sets on a member is a row whose path starts with the member's kind (`callout.*`, `group.*`, `pad.*`, `dial.*`). The seam's `resolveRoot` hands it to `Library.Member(kind, id)`; the id is the instance argument, or the member that kind's editor page has selected (`NS.State.editing`). Each row's `onChange` is `Library.Touch`. With nothing selected, the seam addresses the first member the page lists (`Settings.EditingId`). A callout is addressed by its id alone (`Settings.BY_ID_KINDS`): no page selects one, so a `callout.*` write that names no id is refused with a line naming the id form (`/qc set callout.<field> <id> <value>`). The `callout.*` rows keep `page = "callouts"`, which no registered page renders: it is the heading `/qc list` groups them under, and the popup draws them against its draft. Member rows are no AceDB default: each resolves against `Library.TEMPLATES` at the boot check, and the profile reset's count leaves them out. The structured rows (`pad.point`, `dial.point`, `group.when`, and `dial.key`, the `key` type) hold tables or a key: their pages draw their own controls, and `settings/Slash.lua`'s descriptor `parse` and `format` hooks type and print them on the CLI. The pad's Look rows, `pad.look.font|fontSize|fontColor|useClassColorFont|fontFlags|fontShadow|borderStyle|borderSize|borderColor|useClassColorBorder|background|useClassColorBackground`, are composed by the options library (its font, border and color groups) and stamped as pad member rows; the colors are the `color` row type. A glyph's color is the `callout.iconColor` and `group.iconColor` rows (six lowercase hex digits, `false` for none; only a member whose icon is a LibKa0s glyph takes one, and an icon write that leaves a colored member without a glyph clears its color in the same act); `Library.SetIcon` writes a member's icon and its color as one act, through the seam. The two rows are reset-exempt, like the icon rows: a named `/qc reset` clears a color, a page's Defaults keeps it. `group.parent` (a group id, `false` for none; `/qc` also takes `none`) is the one-level nesting: its validator is `Library.ValidParent` (a top-level user group other than the group itself, and none for a group that holds groups), its `onChange` takes the group off every pad and dial in the same act (`Library.SettleParent`), and it is reset-exempt too.
 
 **State written outside the seam** (architecture-§5): `global.minimap.minimapPos` is LibDBIcon's own
 write into the table the launcher hands it. The structural registry has one writer, `modules/Library.lua`:
-membership (create, delete, duplicate, Customize) of `profile.callouts`, `groups`, `pads`, `dials`
-and the built-in overlay, with the ownership rule that each user callout sits in exactly one user
-group's `callouts` list (adding a callout to a group copies it, removing it or deleting the group
-deletes it, duplicating a group copies its callouts), the order lists (`padOrder`, `dialOrder`, each group's callouts and each
-surface's groups), `nextId`, `seeded` and the overlay's `customizedAs`. Panel pages and slash verbs call it or the seam; they never write those keys. What a share string
-makes is written by `Library.Import` alone: fresh ids, the order lists, the references remapped,
-every shipped built-in marked seen (`seenBuiltins`) on each imported pad and dial, and the surfaces'
-fields through the seam (`modules/Share.lua` only decodes and checks). Built-ins are shipped data in `NS.BuiltIns`; the profile
-holds only the overlay, keyed on the top-level built-in id. The load pass is `Library.Prepare`:
-`OnInitialize` and `reloadProfile` run it after `RunMigrations`; it seeds the default pad and dial
-once, appends newly shipped built-ins once per surface, normalizes malformed shapes, drops
-dangling ids and malformed glyph colors, and keeps the ownership rule: a callout a second group holds is replaced there by a
+membership (create, delete, duplicate, restore) of `profile.callouts`, `groups`, `pads` and `dials`,
+with the ownership rule that each user callout sits in exactly one user group's `callouts` list
+(adding a callout to a group copies it, removing it or deleting the group deletes it, duplicating a
+group copies its callouts), the order lists (`padOrder`, `dialOrder`, each group's callouts and each
+surface's groups), `nextId`, `seeded`, `seededSets` and the seeded members' `origin` and `compass`.
+A child group is never on a surface itself (it shows wherever its parent is), so taking a parent
+takes the group off every pad and dial, and deleting a parent puts its children, as top-level groups,
+in its place on every pad and dial. Panel pages and slash verbs call it or the seam; they never write those keys. What a share string
+makes is written by `Library.Import` alone: fresh ids, the order lists, the references remapped (a
+parent is kept only when the string carries it and it is top-level there), and the surfaces'
+fields through the seam (`modules/Share.lua` only decodes and checks). The shipped sets
+(`NS.BuiltIns`) are seed data: each profile is given them once as ordinary user groups and callouts
+under fresh ids, a battleground's nodes as groups inside its set, each seeded member keeping its
+shipped id as `origin` (neither a tag nor a lock; only Library reads it: Restore, and
+`Library.SeededBattleground` for the dial's depth warning) and a node its compass
+wind; `profile.seededSets` records the shipped sets and nodes the profile was given. Restore
+built-in groups (`Library.RestoreBuiltins`, one act) puts back, as fresh members, every seeded set,
+node and callout whose origin the profile no longer has, and changes nothing the player has. The
+load pass is `Library.Prepare`: `OnInitialize` and `reloadProfile` run it after `RunMigrations`; it
+makes the default pad and dial once and then seeds the sets into them, seeds a set a later version
+ships at the end of every pad and dial (a node shipped after its set goes inside the set's group),
+never seeds again a set the player deleted (that is Restore's), normalizes malformed shapes, drops
+dangling ids, malformed glyph colors and a parent that breaks the one-level rule, takes any child off
+every surface, and keeps the ownership rule: a callout a second group holds is replaced there by a
 fresh copy, and a callout no group holds is deleted, each counted as a repair. `Library.Import`
 does the same for a string (one copy per group, a loose callout left out and reported).
 
@@ -159,7 +177,7 @@ tracked registration down and replay it.
 | `PROFILE_CHANGED` | `ProfileChanged` | `core/QuickComms.lua` `reloadProfile` (every AceDB profile event) | none | Surfaces (`Request`, after dropping the queued `surfaces` and `positions` entries; a held drag's stop stays); the editor pages (`settings/Editors.lua`, one deferred repaint); the icon browser (closes as Cancel) |
 | `SITUATION_CHANGED` | `SituationChanged` | `modules/Situation.lua`, only when the signature moves | snapshot, previous | Surfaces (`Request`); the editor pages (`settings/Editors.lua`, one deferred repaint) |
 | `RESTRICTION_CHANGED` | `RestrictionChanged` | `modules/Restrictions.lua`, when the set of blocking reasons (combat included) moves | reason, canSendChat | Situation (merges lockdown and combat into the snapshot in place); Surfaces (`RefreshLocks`: padlocks, the lockdown chip, the fade); Preview (ends test mode at the combat edge); Pad (ends a drag at the combat edge); SendEngine (drains the combat-end queue) |
-| `LIBRARY_CHANGED` | `LibraryChanged` | `modules/Library.lua`, on every registry write, and `Library.Touch` for every member row the seam writes; inside `Library.Batch` (Customize, New group, OfferGroup, a page's Defaults, Share's Defaults, an import) one per act, its kind the kinds touched joined by commas, with no id and no field | kind, id, field | Surfaces (`Request`); the editor pages (`settings/Editors.lua`, one deferred repaint); the icon browser (closes as Cancel when its opener's member is gone) |
+| `LIBRARY_CHANGED` | `LibraryChanged` | `modules/Library.lua`, on every registry write, and `Library.Touch` for every member row the seam writes; inside `Library.Batch` (New group, OfferGroup, Restore built-in groups, a Parent group write and the surfaces it leaves, an icon with its color, the callout popup's Save, a page's Defaults, an import) one per act, its kind the kinds touched joined by commas, with no id and no field | kind, id, field | Surfaces (`Request`); the editor pages (`settings/Editors.lua`, one deferred repaint); the icon browser (closes as Cancel when its opener's member is gone) |
 | `ACTIVE_GROUPS_CHANGED` | `ActiveGroupsChanged` | `modules/Surfaces.lua` `ApplyAll`, when a pad's or a dial's ordered active groups change | surfaceId (a pad's or a dial's) | none (Surfaces rebuilds pads and dials itself) |
 | `SURFACE_REBUILT` | `SurfaceRebuilt` | `modules/Surfaces.lua`: `true` when a rebuild is held for combat, `false` when it ran | surfaceId (a pad's or a dial's), stale | none |
 | `SEND_RESULT` | `SendResult` | `modules/SendEngine.lua`: `guarded` at the press, then `sent` or `dropped` from the echo, so one press can yield two | calloutId, surfaceId, result | `modules/Pad.lua` (the flash, the sound); `modules/Dial.lua` (the wedges' flash) |
@@ -226,6 +244,9 @@ Every secure rule lives in one file. `modules/SendEngine.lua` is the only code t
 - The callout popup's EllesmereUI skin (and the icon browser's, the same skin on the same window) is one-way, as EllesmereUI's skins are: turning it off in EllesmereUI takes effect after a reload. It is painted whether or not Quick Comms is enabled: both windows belong to the settings panel, which stays up while the addon is disabled (slash-commands-§7, "What MUST survive"); until 2026-10-18 a disabled addon left them stock. A client without `SettingsFrameTemplate` gets the popup's older look (a plain frame with Blizzard's dialog edge and the shared close mark) instead of the settings window's, and the EllesmereUI skin leaves that fallback window as it is.
 - The icon browser cannot search: the client gives the game icons as texture ids, with no names, so a game icon is named by its id. Its game icon lists are read once the client has loaded its own; on a first open before that the Game icons tab says so and fills on a later visit.
 - A glyph's color applies to LibKa0s glyphs only (white on transparent); a raid marker, a game icon or a typed texture is drawn as it is, and choosing one clears the member's color.
+- Groups nest one level only: a group inside another cannot hold groups, and a group that holds groups cannot go inside another. A group's children are drawn, listed and offered in the order they were made in; there is no control to reorder them yet.
+- A battleground set's ring is pinned to the compass winds only while every group inside it is a seeded node (the wind is not a member field) and the set holds no callouts of its own: a group the player puts inside it, or a callout added to the set itself, unpins the ring, and a set that arrives in a share string brings its nodes unpinned.
+- Restore built-in groups puts back only what is missing (a seeded set, node or callout no member keeps the origin of); it never resets a seeded group the player changed. To get a stock set back, delete its group and restore. A copy (Duplicate, Reuse, an import) keeps no origin, so it never stands in for the stock set.
 - The logo is a placeholder generated for the scaffold; the owner may replace the art (regenerate
   the TGAs with the recipe in `DEPENDENCIES.md`).
 

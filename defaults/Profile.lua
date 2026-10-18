@@ -30,9 +30,9 @@ NS.C = {
         },
         -- The registry (spec §5.1). Library (modules/Library.lua) is the ONLY writer of these keys.
         nextId    = 1,
-        callouts  = {},   -- empty is deliberate: a fresh profile has no user callouts
+        callouts  = {},   -- empty here: Library.Prepare seeds the shipped sets into callouts and groups
         groups    = {},
-        builtins  = {},   -- overlay on the shipped sets: { [groupId] = { enabled, hidden = {} } }
+        seededSets = {},  -- the shipped set and node ids this profile was given as groups: { [id] = true }
         pads      = {},
         dials     = {},
         padOrder  = {},

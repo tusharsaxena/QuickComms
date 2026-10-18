@@ -40,7 +40,7 @@ local function applied(inputs)
     return NS, m
 end
 
-local function pull(NS) return NS.Pad.ChipsFor("p1", "bi.mplus.pull")[1] end
+local function pull(NS) return NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.mplus.pull"))[1] end
 
 test("pad: the default pad shows the M+ callouts, each chip armed with its baked line", function()
     local NS, m = applied()
@@ -108,13 +108,13 @@ test("pad: a rebuild with fewer chips parks the rest, disarmed, for the next", f
     local NS = applied()
     local inst = NS.Pad.Instance("p1")
     local before = NS.SendEngine.ButtonCount()   -- the pad's eight chips and the default dial's wedges
-    NS.Library.SetBuiltinEnabled("bi.mplus", false)
+    NS.SchemaRuntime.Set("group.enabled", false, T.seeded(NS, "bi.mplus"))
     NS.Pad.Apply("p1", planFor(NS))
     local free, active = NS.Pool.Counts(inst.chips)
     assertEqual(active, 0)
     assertEqual(free, 8)
     assertEqual(#NS.SendEngine.ArmedButtons(), 0)
-    NS.Library.SetBuiltinEnabled("bi.mplus", true)
+    NS.SchemaRuntime.Set("group.enabled", true, T.seeded(NS, "bi.mplus"))
     NS.Pad.Apply("p1", planFor(NS))
     assertEqual(NS.SendEngine.ButtonCount(), before, "the same buttons, reused")
 end)
@@ -195,20 +195,20 @@ test("pad: tabs show one section; the wheel steps them out of combat and is refu
     NS.db.profile.pads.p1.groupsAs = "tabs"
     NS.Pad.Apply("p1", planFor(NS))
     -- Arathi Basin's own set comes first (phase 4), so its first node is the first tab.
-    assertEqual(#NS.Pad.ChipsFor("p1", "bi.bg.ab.stables.inc1"), 1)
-    assertEqual(#NS.Pad.ChipsFor("p1", "bi.bg.ab.lumbermill.inc1"), 0)
+    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.stables.inc1")), 1)
+    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.lumbermill.inc1")), 0)
     assertTrue(NS.Pad.Wheel("p1", -1))
-    assertEqual(#NS.Pad.ChipsFor("p1", "bi.bg.ab.lumbermill.inc1"), 1)
+    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.lumbermill.inc1")), 1)
     combat(m, true)
     assertFalse(NS.Pad.Wheel("p1", -1))
-    assertEqual(#NS.Pad.ChipsFor("p1", "bi.bg.ab.lumbermill.inc1"), 1, "unchanged in combat")
+    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.lumbermill.inc1")), 1, "unchanged in combat")
     assertEqual(#m.blocked, 0)
 end)
 
 test("pad: collapse hides the chips out of combat and is refused, with one line, in it", function()
     local NS, m = applied()
     assertTrue(NS.Pad.ToggleCollapsed("p1"))
-    assertEqual(#NS.Pad.ChipsFor("p1", "bi.mplus.pull"), 0)
+    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.mplus.pull")), 0)
     assertEqual(NS.Pad.Instance("p1").header.qcCollapse.qcText:GetText(), "+")
     assertTrue(NS.Pad.ToggleCollapsed("p1"))
     combat(m, true)
@@ -221,12 +221,12 @@ end)
 test("pad: a send result flashes its chips; a press dims every chip for the guard window", function()
     local NS, m = applied()
     local chip = pull(NS)
-    NS.addon:SendMessage(NS.MSG.SEND_RESULT, "bi.mplus.pull", "p1", "dropped")
+    NS.addon:SendMessage(NS.MSG.SEND_RESULT, T.seeded(NS, "bi.mplus.pull"), "p1", "dropped")
     assertTrue(chip.qcFlash:IsShown())
     m.__fireTimers()
     assertFalse(chip.qcFlash:IsShown())
     m.__click(chip)
-    local other = NS.Pad.ChipsFor("p1", "bi.mplus.lust")[1]
+    local other = NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.mplus.lust"))[1]
     assertTrue(other.qcCool:IsShown(), "the guard is global: every chip dims")
     m.__fireTimers()
     assertFalse(other.qcCool:IsShown())
@@ -364,12 +364,12 @@ test("pad: [fix wave] tabs switch on a wheel over a chip or the pad, not only th
     local NS = live(AB)
     NS.db.profile.pads.p1.groupsAs = "tabs"
     NS.Pad.Apply("p1", planFor(NS))
-    local chip = NS.Pad.ChipsFor("p1", "bi.bg.ab.stables.inc1")[1]
+    local chip = NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.stables.inc1"))[1]
     -- red under: enable the wheel on the header alone
     chip:__fire("OnMouseWheel", -1)
-    assertEqual(#NS.Pad.ChipsFor("p1", "bi.bg.ab.lumbermill.inc1"), 1)
+    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.lumbermill.inc1")), 1)
     NS.Pad.Instance("p1").root:__fire("OnMouseWheel", 1)
-    assertEqual(#NS.Pad.ChipsFor("p1", "bi.bg.ab.stables.inc1"), 1, "back to Stables")
+    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.stables.inc1")), 1, "back to Stables")
 end)
 
 test("pad: [fix wave] in combat Reset position, Apply and Release do no protected work; combat end anchors", function()
@@ -454,7 +454,7 @@ test("pad: [phase 3] the header's tooltip says why each group shows, unless the 
     -- red under: drop the Pad.ShowWhy call from the header's OnEnter
     assertEqual(#shown, 1)
     assertEqual(shown[1].title, "Why is this showing?")
-    assertEqual(shown[1].lines[1], "M+ (generic) (built-in): Content")
+    assertEqual(shown[1].lines[1], "M+ (generic): Content")
     header:__fire("OnLeave")
     NS.SchemaRuntime.Set("behavior.whyTooltips", false)
     header:__fire("OnEnter")
@@ -484,7 +484,7 @@ test("pad: [phase 5] the pad wears its Look: the chips' font and the edge and bo
     assertTrue(S.Set("pad.look.fontSize", 13, "p1"))
     assertTrue(S.Set("pad.look.borderStyle", "Tooltip", "p1"))
     assertTrue(S.Set("pad.look.background", { r = 0.2, g = 0.1, b = 0, a = 1 }, "p1"))
-    local label = NS.Pad.ChipsFor("p1", "bi.mplus.pull")[1].qcLabel
+    local label = NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.mplus.pull"))[1].qcLabel
     assertEqual(label.__font[1] .. "," .. label.__font[2], "Fonts\\ARIALN.TTF,13")
     local skin = skins[NS.Pad.Instance("p1").root]
     assertEqual(skin.edgeFile, "Interface\\Tooltips\\UI-Tooltip-Border")
@@ -502,7 +502,7 @@ test("pad: [review 5] a font or border this machine does not have draws the defa
     -- a shared pad, or a media addon since removed: the names are stored, the media is not here
     assertTrue(NS.SchemaRuntime.Set("pad.look.font", "Gone Font", "p1"))
     assertTrue(NS.SchemaRuntime.Set("pad.look.borderStyle", "Gone Border", "p1"))
-    local label = NS.Pad.ChipsFor("p1", "bi.mplus.pull")[1].qcLabel
+    local label = NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.mplus.pull"))[1].qcLabel
     assertEqual(label.__font[1], "Fonts\\FRIZQT__.TTF")
     assertEqual(skins[NS.Pad.Instance("p1").root].edgeFile, "Interface\\Buttons\\WHITE8x8")
 end)

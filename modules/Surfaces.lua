@@ -2,8 +2,9 @@ local _, NS = ...
 -- modules/Surfaces.lua — the surfaces' plans and their rebuild (spec §4.3, §7, §10).
 --
 -- THE PLAN (this half): for one pad and one snapshot, the active groups in the pad's own order
--- (Resolver, D6), one section per group (a built-in with children, the node battlegrounds, gives
--- one section per child), and one slot per callout: baked to its single macro line, or refused
+-- (Resolver, D6), one section per group (a parent, a seeded battleground's set among them, gives
+-- its own callouts' section when it has any, then one section per child whose When matches; the
+-- parent's When gates the whole), and one slot per callout: baked to its single macro line, or refused
 -- with the reason its chip's tooltip shows (Bake, §8.3; §18 "a baked line fails validation"). A
 -- locked slot keeps its line and carries the lock (§8.4). Library, Resolver and Bake are reached
 -- through `deps`, so a test can hand in any snapshot. Test mode's plan is placeholder slots that
@@ -11,7 +12,8 @@ local _, NS = ...
 -- plan for the previewed snapshot, marked so every chip is disarmed (spec §13.3).
 --
 -- A Comms Dial's plan (spec §11) is the same resolve and bake in rings: its active groups in its
--- order, a node set's children as nodes, each slot baked, then modules/Dial_Layout.lua's Rings.
+-- order, a group's children as nodes (each gated by its own When, as on a pad), each slot baked,
+-- then modules/Dial_Layout.lua's Rings.
 --
 -- THE EDGE (below): one entry point, Request, for everything that changes what a pad or a dial
 -- draws: the situation, the library, the profile, test mode, a settings write and the stand-up. Out
@@ -34,19 +36,38 @@ local ROLE = { TANK = L["Tank"], HEALER = L["Healer"], DAMAGER = L["Damage"] }
 
 S.TEST_SECTIONS, S.TEST_SLOTS = 2, 4
 
---- A group's sections: itself, or one per child for a built-in with children.
+-- A group's children: `opts.children` (Library.Children) when given, else the group's own
+-- `children` list (a test's hand-made group).
+local function childrenOf(groupId, g, opts)
+    if opts and opts.children then return opts.children(groupId) end
+    return type(g.children) == "table" and g.children or {}
+end
+
+-- Whether a child shows: always without `opts.active`; else a child the Resolver judged (one of
+-- `opts.groups`, a user group) only while it is active, its own When and Enabled. A child the
+-- Resolver was not handed (a test's hand-made group) always shows.
+local function childShown(child, opts)
+    if not (opts and opts.active) then return true end
+    if not (opts.groups and opts.groups[child]) then return true end
+    return opts.active[child] ~= nil
+end
+
+--- A group's sections: itself; or, for a group with children, its own callouts' section when it has
+--- any, then one per child that shows (childShown).
 --- @param groupOf function Library.Group
-function S.Sections(groupId, groupOf)
+--- @param opts table|nil { children = Library.Children, active = Resolver.ActiveGroups' answer,
+--- groups = the Resolver's input }
+function S.Sections(groupId, groupOf, opts)
     local g = groupOf(groupId)
     if not g then return {} end
+    local own = { groupId = groupId, title = g.name, callouts = g.callouts or {} }
+    local kids = childrenOf(groupId, g, opts)
+    if #kids == 0 then return { own } end
     local out = {}
-    if type(g.children) == "table" and #g.children > 0 then
-        for _, child in ipairs(g.children) do
-            local c = groupOf(child)
-            if c then out[#out + 1] = { groupId = child, title = c.name, callouts = c.callouts or {} } end
-        end
-    else
-        out[1] = { groupId = groupId, title = g.name, callouts = g.callouts or {} }
+    if #own.callouts > 0 then out[1] = own end
+    for _, child in ipairs(kids) do
+        local c = childShown(child, opts) and groupOf(child)
+        if c then out[#out + 1] = { groupId = child, title = c.name, callouts = c.callouts or {} } end
     end
     return out
 end
@@ -87,6 +108,7 @@ function S.Deps(snap)
     return {
         groups = NS.Library.AllGroups(),
         group = NS.Library.Group,
+        children = NS.Library.Children,
         callout = NS.Library.Callout,
         soloFallback = NS.Setting("behavior.soloFallback"),
         autoPromote = NS.Setting("behavior.autoPromote"),
@@ -116,9 +138,10 @@ function S.BuildPlan(surfaceId, pad, snap, deps)
     local active, order = resolve(pad and pad.groups, snap, deps)
     local opts = { soloFallback = deps.soloFallback, ctx = deps.ctx }
     local plan = { surfaceId = surfaceId, snapshot = snap, order = order, sections = {},
-        lockdownChip = false, hasActive = #order > 0, active = active }
+        lockdownChip = false, hasActive = false, active = active }
+    local nest = { children = deps.children, active = active, groups = deps.groups }
     for _, gid in ipairs(order) do
-        for _, sec in ipairs(S.Sections(gid, deps.group)) do
+        for _, sec in ipairs(S.Sections(gid, deps.group, nest)) do
             local slots = {}
             for _, cid in ipairs(sec.callouts) do
                 local slot = S.Slot(cid, deps.callout(cid), snap, opts)
@@ -129,6 +152,9 @@ function S.BuildPlan(surfaceId, pad, snap, deps)
             plan.sections[#plan.sections + 1] = { groupId = sec.groupId, title = sec.title, slots = slots }
         end
     end
+    -- What is drawn, not what is active: a parent with no callouts of its own whose children all
+    -- fail their When is in the order and yields no section, and a "whenActive" pad hides for it.
+    plan.hasActive = #plan.sections > 0
     if t0 then Perf.Note("bakeSurface", debugprofilestop() - t0) end
     return plan
 end
@@ -188,8 +214,9 @@ function S.EachSlot(plan, fn)
     end
 end
 
---- One dial's plan (spec §11): its active groups in its order (D6), a node set's children as nodes,
---- each slot baked, then the rings (Dial_Layout.Rings, Categories or Flat, open-into, pages).
+--- One dial's plan (spec §11): its active groups in its order (D6), a group's children as nodes (each
+--- one that shows, childShown) after its own callouts, each slot baked, then the rings
+--- (Dial_Layout.Rings, Categories or Flat, open-into, pages).
 --- @param dial table profile.dials[surfaceId]
 --- @return table plan
 function S.BuildDialPlan(surfaceId, dial, snap, deps)
@@ -199,7 +226,7 @@ function S.BuildDialPlan(surfaceId, dial, snap, deps)
     local active, order = resolve(dial.groups, snap, deps)
     local opts = { soloFallback = deps.soloFallback, ctx = deps.ctx }
     local plan = { kind = "dial", surfaceId = surfaceId, snapshot = snap, order = order, active = active,
-        lockdownChip = false, hasActive = #order > 0 }
+        lockdownChip = false, hasActive = false }
     local function slotsOf(ids)
         local out = {}
         for _, cid in ipairs(ids or {}) do
@@ -210,25 +237,30 @@ function S.BuildDialPlan(surfaceId, dial, snap, deps)
         end
         return out
     end
+    local nest = { children = deps.children, active = active, groups = deps.groups }
     local groups = {}
     for _, gid in ipairs(order) do
         local g = deps.group(gid)
         local entry = { id = gid, title = g.name, icon = g.icon, iconColor = g.iconColor, openInto = g.openInto == true }
-        if type(g.children) == "table" and #g.children > 0 then
+        local kids = childrenOf(gid, g, nest)
+        if #kids > 0 then
             entry.children = {}
-            for _, child in ipairs(g.children) do
-                local c = deps.group(child)
+            for _, child in ipairs(kids) do
+                local c = childShown(child, nest) and deps.group(child)
                 if c then
                     entry.children[#entry.children + 1] = { id = child, title = c.name, icon = c.icon,
                         iconColor = c.iconColor, compass = c.compass, slots = slotsOf(c.callouts) }
                 end
             end
+            if #(g.callouts or {}) > 0 then entry.slots = slotsOf(g.callouts) end
         else
             entry.slots = slotsOf(g.callouts)
         end
         groups[#groups + 1] = entry
     end
     plan.rings, plan.openRing = NS.DialLayout.Rings(groups, { mode = dial.mode, slices = dial.slices, title = dial.name })
+    -- As a pad's: what is drawn (a ring), not what is active.
+    plan.hasActive = #plan.rings > 0
     if t0 then Perf.Note("bakeSurface", debugprofilestop() - t0) end
     return plan
 end
@@ -240,12 +272,10 @@ local function unbuiltLines(id)
     return { L["This pad has not been built yet."] }
 end
 
--- A group's name as the why lines show it: a built-in says so.
+-- A group's name as the why lines show it.
 local function whyName(gid)
     local g = NS.Library.Group(gid)
-    local name = g and g.name or gid
-    if NS.Library.IsBuiltin(gid) then name = L["%s (built-in)"]:format(name) end
-    return name
+    return g and g.name or gid
 end
 
 -- Every distinct lock on the plan's slots, sorted, as its tooltip line, appended to `out`.

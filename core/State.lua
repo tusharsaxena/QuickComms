@@ -8,7 +8,7 @@ local State = NS.State
 -- `/qc debug on|off` and the console's own toggle write it through the DebugLog seam.
 State.debug = false
 
--- The member each editor page has selected (settings/Editors.lua): { group, pad, dial, builtin }.
+-- The member each editor page has selected (settings/Editors.lua): { group, pad, dial }.
 -- A member row written with no instance argument writes this member, else the first member its page
 -- lists (settings/Schema.lua Settings.EditingId); a callout row never does, it names its callout.
 State.editing = {}

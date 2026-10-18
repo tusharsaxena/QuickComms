@@ -114,12 +114,12 @@ test("share: ids, channels, names, icons and Whens are checked against the schem
     assertEqual(#res.callouts, 2)
     assertEqual(res.callouts[1].fields.icon, 136012)
     assertEqual(res.callouts[2].fields.text, "", "a callout may have no text yet")
-    assertEqual(table.concat(res.groups[1].callouts, ","), "c5,c6", "refused, built-in and repeated references are left out")
+    assertEqual(table.concat(res.groups[1].callouts, ","), "c5,c6", "refused, shipped and repeated references are left out")
     assertEqual(res.dropped, 2)
     assertTrue(res.groups[1].fields.when.content.mythicPlus)
 end)
 
-test("share: a pad keeps the shared groups and the built-in sets, and only the fields that travel", function()
+test("share: a pad keeps the shared groups, and only the fields that travel; a shipped id is a dropped reference", function()
     local NS, SH = boot()
     local res = SH.Validate(bundle({
         groups = { g1 = { name = "Mine" } },
@@ -133,7 +133,8 @@ test("share: a pad keeps the shared groups and the built-in sets, and only the f
     local pad = res.pads[1]
     assertEqual(pad.name, "Theirs")
     assertFalse(pad.enabled)
-    assertEqual(table.concat(pad.groups, ","), "g1,bi.mplus", "a node is not a top-level set; an unknown set is left out")
+    -- red under: keep a top-level shipped id on an imported surface, as built-in sets were
+    assertEqual(table.concat(pad.groups, ","), "g1", "a shipped id (a set, a node, a stale one) is left out")
     assertEqual(pad.fields["pad.layout.columns"], 6)
     assertNil(pad.fields["pad.point"], "a position never travels")
     assertNil(pad.fields["pad.name"])
@@ -142,7 +143,7 @@ test("share: a pad keeps the shared groups and the built-in sets, and only the f
     assertNil(dial.fields["dial.point"])
     assertEqual(dial.fields["dial.mode"], "flat")
     assertEqual(res.ignored, 6)
-    assertEqual(res.dropped, 3)
+    assertEqual(res.dropped, 5)
     assertTrue(NS.Share.Portable("pad", "pad.look.visibility"))
     assertFalse(NS.Share.Portable("pad", "dial.mode"))
 end)
@@ -521,4 +522,82 @@ test("share: [icons] an export carries each member's color, and the string round
     assertNil(payload.callouts[plain].iconColor)
     local back = SH.Validate(SH.Decode(SH.Encode(payload)))
     assertEqual(back.groups[1].fields.iconColor, "00ff00")
+end)
+
+-- ── nested groups (2026-10-18-builtins-as-groups-design.md, goal 2) ──────────────────────────
+
+test("share: [nesting] a picked parent brings its children, and the import nests them under the new copy", function()
+    local NS, SH = boot()
+    local Lib = NS.Library
+    local parent = Lib.CreateGroup({ name = "Raid night" })
+    local child = Lib.CreateGroup({ name = "Boss 1" })
+    Lib.CreateCalloutIn(child, KICK)
+    NS.SchemaRuntime.Set("group.parent", parent, child)
+    -- red under: closure in modules/Share.lua not bringing a picked group's children
+    local payload = SH.Collect({ group = { [parent] = true } })
+    assertTrue(payload.groups[child] ~= nil, "the child travels with its parent")
+    assertEqual(payload.groups[child].parent, parent)
+    assertNil(payload.groups[parent].parent)
+    local res = SH.Validate(payload)
+    local tally, map = Lib.Import(res)
+    assertEqual(tally.groups, 2)
+    local p = NS.db.profile
+    -- red under: Library.Import not setting the parent on the fresh copies
+    assertEqual(p.groups[map[child]].parent, map[parent], "remapped to the new parent")
+    assertTrue(map[parent] ~= parent)
+end)
+
+test("share: [review] a child picked alone travels without its parent: nothing dropped, and it arrives top-level", function()
+    local NS, SH = boot()
+    local Lib = NS.Library
+    local parent = Lib.CreateGroup({ name = "Raid night" })
+    local child = Lib.CreateGroup({ name = "Boss 1" })
+    Lib.CreateCalloutIn(child, KICK)
+    NS.SchemaRuntime.Set("group.parent", parent, child)
+    local payload = SH.Collect({ group = { [child] = true } })
+    assertNil(payload.groups[parent], "the parent stays home")
+    -- red under: exportMember writing `parent` for a parent the payload does not carry
+    assertNil(payload.groups[child].parent)
+    local res = SH.Validate(SH.Decode(SH.Encode(payload)))
+    assertEqual(res.dropped, 0, "the addon's own string reports nothing dropped")
+    local _, map = Lib.Import(res)
+    assertNil(NS.db.profile.groups[map[child]].parent, "the copy is top-level")
+end)
+
+test("share: [nesting] a parent the string does not carry, itself, or one inside another is dropped and counted", function()
+    local NS, SH = boot()
+    local res = SH.Validate(bundle({ groups = {
+        g1 = { name = "Deep", parent = "g2" }, g2 = { name = "Mid", parent = "g3" }, g3 = { name = "Top" },
+        g4 = { name = "Self", parent = "g4" }, g5 = { name = "Lost", parent = "g99" }, g6 = { name = "Odd", parent = 7 },
+    } }))
+    assertTrue(res.ok)
+    local parents = {}
+    for _, e in ipairs(res.groups) do parents[e.id] = e.parent or "-" end
+    -- red under: groupEntry passing `parent` through unchecked
+    assertEqual(parents.g2, "g3", "a top-level parent the string carries is kept")
+    assertEqual(parents.g1, "-", "g2 is inside g3: one level only")
+    assertEqual(parents.g4, "-")
+    assertEqual(parents.g5, "-")
+    assertEqual(parents.g6, "-")
+    assertEqual(res.dropped, 4)
+    local _, map = NS.Library.Import(res)
+    local p = NS.db.profile
+    assertEqual(p.groups[map.g2].parent, map.g3)
+    assertNil(p.groups[map.g1].parent)
+end)
+
+test("share: [review] a pad's or dial's reference to a group the string nests is dropped and counted", function()
+    local NS, SH = boot()
+    local res = SH.Validate(bundle({ groups = { g1 = { name = "Top" }, g2 = { name = "Inside", parent = "g1" } },
+        pads = { p3 = { name = "Theirs", groups = { "g1", "g2" } } },
+        dials = { d4 = { name = "Theirs", groups = { "g2" } } } }))
+    assertTrue(res.ok)
+    -- red under: drop dropNested(res) from SH.Validate (the report counts g2 as arriving on both)
+    assertEqual(table.concat(res.pads[1].groups, ","), "g1", "the child is left off the pad")
+    assertEqual(#res.dials[1].groups, 0)
+    assertEqual(res.dropped, 2, "each left-out reference is counted")
+    local _, map = NS.Library.Import(res)
+    local p = NS.db.profile
+    assertEqual(table.concat(p.pads[map.p3].groups, ","), map.g1, "the import matches the report")
+    assertEqual(p.groups[map.g2].parent, map.g1)
 end)

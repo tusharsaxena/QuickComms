@@ -14,8 +14,9 @@ local _, NS = ...
 -- Every change writes the group's WHOLE When through the seam (`group.when`, a structured member
 -- row, settings/SchemaMembers.lua), read fresh from the profile at the click, so two clicks before a
 -- repaint never lose one. A row switched on with nothing chosen yet stays open for the session
--- (NS.State.whenOpen); switched off, its values are cleared. A built-in group's When is fixed: the
--- tab describes it. The pure half is tested headlessly in tests/test_groups_when.lua.
+-- (NS.State.whenOpen); switched off, its values are cleared. A seeded built-in set's When is edited
+-- as any group's (2026-10-18-builtins-as-groups-design.md). The pure half is tested headlessly in
+-- tests/test_groups_when.lua.
 
 local QC = NS.addon
 local Settings = QC.Settings
@@ -208,42 +209,7 @@ function W.Values(row, when)
     return {}
 end
 
-local function nameOf(row, value)
-    if row == "instances" then return W.InstanceName(value) end
-    if row == "battleground" then return W.BattlegroundName(value) end
-    if row == "characters" then return tostring(value) end
-    for _, v in ipairs(W.Values(row, {})) do
-        if v.value == value then return v.text end
-    end
-    if row == "spec" then return NS.Compat.SpecInfoByID(value) or L["Specialization %d"]:format(value) end
-    return tostring(value)
-end
-
---- A When read back as lines: "Content: M+, Raid", "Key level: 10 to any". A built-in's When tab
---- shows these.
---- @return string[]
-function W.Describe(when)
-    local out = {}
-    for _, row in ipairs(W.ROWS) do
-        if W.IsSet(when, row) then
-            local label = NS.Resolver.LABEL[row] or row
-            if row == "keyLevel" then
-                local kl = when.keyLevel
-                out[#out + 1] = L["%s: %s to %s"]:format(label, kl.min and tostring(kl.min) or L["any"],
-                    kl.max and tostring(kl.max) or L["any"])
-            else
-                local names = {}
-                for value in pairs(when[row]) do names[#names + 1] = nameOf(row, value) end
-                table.sort(names)
-                out[#out + 1] = L["%s: %s"]:format(label, table.concat(names, ", "))
-            end
-        end
-    end
-    if #out == 0 then out[1] = L["Always: this group has no conditions."] end
-    return out
-end
-
---- The live line (spec §13.2) for a group (user or merged built-in): off when the group is turned
+--- The live line (spec §13.2) for a group: off when the group is turned
 --- off (Resolver.ActiveGroups skips it, so the picker's dot agrees), else active now or the row that
 --- does not match; prefixed with the preview when "Preview as…" is on.
 function W.ActiveLine(group, snap, previewLabel)
@@ -542,10 +508,5 @@ function W.Render(ctx, gid)
     -- Refreshed in place (Ed.Live): a write to this group or a situation change re-reads it.
     local active = h.TextRow(ctx, W.ActiveText(gid))
     Ed.Live(ctx, function() if active then active:SetText(W.ActiveText(gid)) end end)
-    if NS.Library.IsBuiltin(gid) then
-        h.TextRow(ctx, L["A built-in set's conditions are fixed. Customize it to change them."])
-        for _, line in ipairs(W.Describe(g.when)) do h.TextRow(ctx, line) end
-        return
-    end
     for _, row in ipairs(W.ROWS) do renderRow(ctx, gid, row) end
 end

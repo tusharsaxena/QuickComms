@@ -1,26 +1,28 @@
 local _, NS = ...
--- settings/Groups.lua — the Groups page (design spec §13.1, §12.2): one group at a time, a user group
--- or a built-in set.
+-- settings/Groups.lua — the Groups page (design spec §13.1): one group at a time. A seeded built-in
+-- set is an ordinary group here (2026-10-18-builtins-as-groups-design.md, goal 1).
 --
---     band      [ Group v (picker; a green dot marks a group active now) ][ New group ]
+--     band      [ Group v (picker; a green dot marks a group active now; a group inside another is
+--               listed indented under it) ][ New group ]
 --     strip     [ General ][ Callouts ][ When ][ Preview ]
 --     General   Preview as (page-wide, first), then Name, Enabled, Open the dial on this group, then
+--               Parent group (none, or a top-level group; idle while the group holds groups), then
 --               the icon under an Icon label with Choose icon…, the clear glyph and its color swatch
 --               (settings/Editors.lua's chooser, no Icon text box; the icon browser writes icon and
---               color as one act), then Duplicate and Delete. A built-in: what it is, its Enabled row,
---               and Customize.
---     Callouts  a user group's: Add callout (the callout popup, settings/CalloutPopup.lua), Reuse
---               callout with Add (an independent copy, of a user or a built-in callout, spec
---               P2), then its callouts as a drag-to-reorder list with an edit and a remove glyph each.
---               The group owns its callouts, so remove deletes the callout (asking first). A
---               built-in: a Show checkbox per callout, the hidden-callouts editor (spec §12.2).
+--               color as one act), then Duplicate and Delete, then Restore built-in groups (page-wide:
+--               every shipped set, node and callout the profile no longer has comes back).
+--     Callouts  Add callout (the callout popup, settings/CalloutPopup.lua), Reuse callout with Add (an
+--               independent copy of another group's callout, spec P2), then its callouts as a
+--               drag-to-reorder list with an edit and a remove glyph each. The group owns its
+--               callouts, so remove deletes the callout (asking first).
 --     When      settings/Groups_When.lua
---     Preview   the active-now line, then every callout baked for the current or previewed situation
+--     Preview   the active-now line, then a table (Ed.TableRows): one boxed row per callout, its name
+--               beside what it sends under the current or previewed situation, or why it sends nothing;
+--               a group holding groups has a titled table for its own callouts, then one per child
 --
 -- The band holds the picker and the create action (options-ui-§14); the acts are General's, which
--- is first. A built-in group is read-only: its group rows refuse every write (settings/SchemaMembers.lua),
--- so the page draws only what may change, its overlay. A new group goes to the top of every pad and
--- dial (Library.OfferGroup), so it shows as soon as its When matches.
+-- is first. A new group goes to the top of every pad and dial (Library.OfferGroup), so it shows as
+-- soon as its When matches.
 
 local QC = NS.addon
 local Settings = QC.Settings
@@ -36,21 +38,20 @@ local G = Settings.Groups
 G.PAGE = PAGE
 
 local function H() return Settings.Helpers end
-local function isBuiltin(id) return NS.Library.IsBuiltin(id) end
 
---- Picker entries in the page's order (Library.MemberIds: the user groups by name, then the built-in
---- sets in shipped order); a group active under the current or previewed situation carries a green dot.
+-- What a child's picker entry starts with: it reads as inside the group listed above it.
+G.CHILD_INDENT = "    "
+
+--- Picker entries in the page's order (Library.MemberIds: the groups by name, each with its
+--- children under it, indented by CHILD_INDENT); a group active under the current or previewed
+--- situation carries a green dot.
 function G.Entries()
     local active = NS.Resolver.ActiveGroups(NS.Library.AllGroups(), Ed.Snapshot())
     local out = {}
     for _, id in ipairs(NS.Library.MemberIds("group")) do
-        local text
-        if isBuiltin(id) then
-            text = L["%s (built-in)"]:format(NS.BuiltIns.groups[id].name)
-        else
-            text = NS.db.profile.groups[id].name or id
-        end
-        out[#out + 1] = { id = id, label = (active[id] and Ed.ACTIVE_DOT or "") .. text }
+        local text = NS.db.profile.groups[id].name or id
+        local indent = NS.Library.IsChild(id) and G.CHILD_INDENT or ""
+        out[#out + 1] = { id = id, label = indent .. (active[id] and Ed.ACTIVE_DOT or "") .. text }
     end
     return out
 end
@@ -70,52 +71,106 @@ function G.Create()
 end
 
 --- Duplicate: the copy is on no pad or dial (Library.DuplicateGroup), and the chat line says so and
---- where to add it.
+--- where to add it; a child's copy sits in the same parent, and the line says that instead.
 function G.Duplicate(id)
     local copy = NS.Library.DuplicateGroup(id)
     if copy then
-        NS.Print(L["%s: the copy is on no pad yet. Add it under Comms Pad > Groups."]:format(NS.db.profile.groups[copy].name))
+        local g = NS.db.profile.groups[copy]
+        if NS.Library.IsChild(copy) then
+            NS.Print(L["%s: the copy is inside %s, beside the original."]:format(g.name, NS.db.profile.groups[g.parent].name))
+        else
+            NS.Print(L["%s: the copy is on no pad yet. Add it under Comms Pad > Groups."]:format(g.name))
+        end
         Ed.Select("group", copy)
         Ed.RequestRefresh()
     end
     return copy
 end
 
---- Delete asks first, and says the group's callouts go with it (the group owns them).
+--- Delete asks first, and says the group's callouts go with it (the group owns them), and, for a
+--- parent, that the groups inside it stay, as top-level groups in its place (Library.DeleteGroup).
 function G.Delete(id)
     local g = NS.db.profile.groups[id]
     if not g then return end
-    Ed.ConfirmDelete(g.name, function() NS.Library.DeleteGroup(id) end,
-        L["Delete '%s' and its callouts? This cannot be undone."])
-end
-
---- The user group a built-in was customized into, while it still exists.
-function G.CustomizedAs(builtinId)
-    local o = NS.db.profile.builtins[builtinId]
-    local copy = o and o.customizedAs
-    return (copy and NS.db.profile.groups[copy]) and copy or nil
-end
-
---- Customize a built-in (spec §12.2): the copy takes its place on every pad and dial, the built-in
---- is turned off, and the page selects the copy. A set already customized selects its copy.
-function G.Customize(builtinId)
-    local existing = G.CustomizedAs(builtinId)
-    if existing then
-        Ed.Select("group", existing)
-        Ed.RequestRefresh()
-        return existing
+    local text = L["Delete '%s' and its callouts? This cannot be undone."]
+    if #NS.Library.Children(id) > 0 then
+        text = L["Delete '%s' and its callouts? The groups inside it become top-level groups, in its place on every pad and dial. This cannot be undone."]
     end
-    local copy, _, _, placed = NS.Library.Customize(builtinId)
-    if not copy then return nil end
-    Ed.Select("group", copy)
-    local name = NS.BuiltIns.groups[builtinId].name
-    if (placed or 0) > 0 then
-        NS.Print(L["%s customized: the copy took its place on every pad."]:format(name))
+    Ed.ConfirmDelete(g.name, function() NS.Library.DeleteGroup(id) end, text)
+end
+
+-- Parent group's choice for no parent: a value the group.parent row reads as none (never a group id).
+G.NO_PARENT = "none"
+
+--- What Parent group offers user group `gid`: none, then every top-level user group but `gid`, in
+--- the picker's order.
+function G.ParentChoices(gid)
+    local out = { { id = G.NO_PARENT, label = L["None"] } }
+    for _, id in ipairs(NS.Library.MemberIds("group")) do
+        if id ~= gid and not NS.Library.IsChild(id) then
+            out[#out + 1] = { id = id, label = NS.db.profile.groups[id].name or id }
+        end
+    end
+    return out
+end
+
+--- Parent group's tooltip: the row's own text, or, for a group that holds groups (the dropdown is
+--- idle then), which groups it holds and why it cannot go inside another.
+function G.ParentTooltip(gid)
+    local kids = NS.Library.Children(gid)
+    if #kids == 0 then return Ed.Row("group.parent").desc end
+    local names = {}
+    for i, kid in ipairs(kids) do names[i] = NS.db.profile.groups[kid].name or kid end
+    return L["%s holds %s, so it cannot go inside another group: groups go one level deep."]
+        :format(NS.db.profile.groups[gid].name, table.concat(names, ", "))
+end
+
+-- The General tab's Parent group dropdown for user group `gid` (a RenderGrid item, half the row as
+-- a schema row is): a pick writes the group.parent row through the seam, whose refusal is printed.
+local function parentItem(gid)
+    return { make = function(_, parent, rel)
+        local h = H()
+        local dd = h.AceGUI:Create("Dropdown")
+        local label = Ed.Row("group.parent").label
+        dd:SetLabel(label)
+        local list, order = Ed.PickerList(G.ParentChoices(gid))
+        dd:SetList(list, order)
+        local g = NS.db.profile.groups[gid]
+        dd:SetValue(NS.Library.IsChild(gid) and g.parent or G.NO_PARENT)
+        dd:SetDisabled(#NS.Library.Children(gid) > 0)
+        dd:SetRelativeWidth(rel or 0.5)
+        dd:SetCallback("OnValueChanged", function(_, _, key)
+            local ok, err, why = NS.SchemaRuntime.Set("group.parent", key, gid)
+            if not ok then NS.Print(tostring(why or err)) end
+        end)
+        h.AttachTooltip(dd, label, G.ParentTooltip(gid))
+        parent:AddChild(dd)
+        return dd
+    end }
+end
+
+--- Restore built-in groups (Library.RestoreBuiltins): every shipped set, node and callout this
+--- profile no longer has comes back as a new group or callout, a set at the end of every pad and
+--- dial. It changes nothing the player has, so it does not ask first. One chat line says what came
+--- back, or that nothing was missing.
+--- @return table what came back { groups, callouts }
+function G.RestoreBuiltins()
+    local n = NS.Library.RestoreBuiltins()
+    if n.groups + n.callouts == 0 then
+        NS.Print(L["Every built-in group and callout is here already: nothing to restore."])
     else
-        NS.Print(L["%s customized. The set was on no pad, so the copy is on none: add it under Comms Pad > Groups."]:format(name))
+        NS.Print(L["Restore built-in groups: %d groups and %d callouts came back. A set that came back is at the end of every pad and dial."]
+            :format(n.groups, n.callouts))
     end
     Ed.RequestRefresh()
-    return copy
+    return n
+end
+
+-- General's last row: Restore built-in groups, alone on its row.
+local function restoreRow(ctx)
+    H().InlineButtonPair(ctx, { text = L["Restore built-in groups"],
+        tooltip = L["Bring back every built-in group, and every built-in callout, you deleted, as new ones: a group at the end of every pad and dial. Nothing you have is changed."],
+        onClick = function() G.RestoreBuiltins() end }, nil)
 end
 
 local function calloutLabel(cid)
@@ -129,19 +184,22 @@ end
 local MUTED_GOLD = "|cffc9a66b"
 G.MUTED_GOLD = MUTED_GOLD
 
---- What Reuse callout offers group `gid`: every user callout ("<its group>: <name>") and every
---- built-in callout ("<set>: <name>", a node's "<set>: <node>: <name>"), less the ones already
---- `gid`'s: its own callouts, and the built-in set it was customized from (owner, 2026-10-18), as
---- one list sorted by group, then name, case-insensitively, on the plain
---- text. Entries that would read alike are numbered ("<name> (2)") so each is unambiguous. Each entry
---- is { id, label (the group part in MUTED_GOLD), plain (the label without color) }. Add copies the
---- pick (spec P2).
+--- What Reuse callout offers group `gid`: every callout ("<its group>: <name>", a child group as
+--- "<its parent>: <it>", so two battlegrounds' same-named nodes read apart) but `gid`'s own (a
+--- seeded set's among them, 2026-10-18-builtins-as-groups-design.md), as one list sorted by group,
+--- then name, case-insensitively, on the plain text. Entries that would read alike are numbered
+--- ("<name> (2)") so each is unambiguous. Each entry is { id, label (the group part in MUTED_GOLD),
+--- plain (the label without color) }. Add copies the pick (spec P2).
 function G.ReusableCallouts(gid)
     local p = NS.db.profile
     local owner, own = {}, {}
     for id, g in pairs(p.groups) do
         for _, cid in ipairs(g.callouts or {}) do
-            owner[cid] = owner[cid] or g.name or id
+            if not owner[cid] then
+                local name = g.name or id
+                local parent = NS.Library.IsChild(id) and p.groups[g.parent]
+                owner[cid] = parent and L["%s: %s"]:format(parent.name or g.parent, name) or name
+            end
             if id == gid then own[cid] = true end
         end
     end
@@ -149,24 +207,12 @@ function G.ReusableCallouts(gid)
     for id, c in pairs(p.callouts) do
         if not own[id] then out[#out + 1] = { id = id, group = owner[id], name = c.name or id } end
     end
-    local function addSet(gidB, prefix)
-        local def = NS.BuiltIns.groups[gidB]
-        if gid and G.CustomizedAs(gidB) == gid then return end
-        for _, cid in ipairs(def.callouts or {}) do
-            out[#out + 1] = { id = cid, group = prefix, name = NS.BuiltIns.callouts[cid].name, builtin = true }
-        end
-        for _, child in ipairs(def.children or {}) do
-            addSet(child, L["%s: %s"]:format(prefix, NS.BuiltIns.groups[child].name))
-        end
-    end
-    for _, top in ipairs(NS.BuiltIns.order) do addSet(top, NS.BuiltIns.groups[top].name) end
-    -- Ties: a user callout before a built-in one, then by id, so the numbering below is stable.
+    -- Ties by id, so the numbering below is stable.
     table.sort(out, function(x, y)
         local gx, gy = (x.group or ""):lower(), (y.group or ""):lower()
         if gx ~= gy then return gx < gy end
         local nx, ny = x.name:lower(), y.name:lower()
         if nx ~= ny then return nx < ny end
-        if (x.builtin or false) ~= (y.builtin or false) then return not x.builtin end
         return x.id < y.id
     end)
     local seen = {}
@@ -177,7 +223,7 @@ function G.ReusableCallouts(gid)
         local name = seen[key] > 1 and L["%s (%d)"]:format(e.name, seen[key]) or e.name
         e.plain = e.group and L["%s: %s"]:format(e.group, name) or name
         e.label = e.group and L["%s: %s"]:format(MUTED_GOLD .. e.group .. "|r", name) or name
-        e.group, e.name, e.builtin = nil, nil, nil
+        e.group, e.name = nil, nil
     end
     return out
 end
@@ -224,9 +270,10 @@ function G.IconSpec(gid)
 end
 
 local NONE = L["No groups yet. Click New group to make one."]
--- The General tab's rows it leaves out of its RenderRows: Preview as (drawn first, alone) and the
--- icon's two rows (the chooser draws them).
-local UNDRAWN = { ["state.previewAs"] = true, ["group.icon"] = true, ["group.iconColor"] = true }
+-- The General tab's rows it leaves out of its RenderRows: Preview as (drawn first, alone), Parent
+-- group (its own dropdown, parentItem) and the icon's two rows (the chooser draws them).
+local UNDRAWN = { ["state.previewAs"] = true, ["group.parent"] = true, ["group.icon"] = true,
+    ["group.iconColor"] = true }
 
 local function renderGeneral(ctx, rows)
     local h = H()
@@ -234,19 +281,7 @@ local function renderGeneral(ctx, rows)
     h.RenderRows(ctx, { Ed.Row("state.previewAs") }, nil, nil, { noHeadings = true })
     if not (gid and NS.Library.Group(gid)) then
         h.TextRow(ctx, NONE)
-        return
-    end
-    if isBuiltin(gid) then
-        h.TextRow(ctx, L["%s is a built-in set: read-only, and updated with the addon. Customize makes an editable copy in its place on every pad."]
-            :format(NS.BuiltIns.groups[gid].name))
-        h.RenderRows(ctx, { Ed.Row("builtin.enabled") }, nil, nil, { noHeadings = true })
-        local copy = G.CustomizedAs(gid)
-        h.InlineButtonPair(ctx, {
-            text = copy and L["Edit the copy"] or L["Customize"],
-            tooltip = copy and L["This set is already customized: open its copy."]
-                or L["Copy this set into a group you can edit, in its place on every pad, and turn the set off."],
-            onClick = function() G.Customize(gid) end,
-        }, nil)
+        restoreRow(ctx)
         return
     end
     -- The icon and its color are chosen with the icon chooser (Choose icon… and the browser's
@@ -256,42 +291,16 @@ local function renderGeneral(ctx, rows)
         if not UNDRAWN[row.path] then mine[#mine + 1] = row end
     end
     h.RenderRows(ctx, mine, nil, nil, { noHeadings = true })
+    h.RenderGrid(ctx, { parentItem(gid) })
     Ed.IconChooser(ctx, G.IconSpec(gid))
     h.InlineButtonPair(ctx,
-        { text = L["Duplicate"], tooltip = L["Make a copy of this group, with copies of its callouts and the same When. The copy is on no pad until you add it under Comms Pad > Groups."],
+        { text = L["Duplicate"], tooltip = NS.Library.IsChild(gid)
+            and L["Make a copy of this group, with copies of its callouts and the same When. The copy sits in the same parent group, beside this one."]
+            or L["Make a copy of this group, with copies of its callouts and the same When. The copy is on no pad until you add it under Comms Pad > Groups."],
           onClick = function() G.Duplicate(gid) end },
         { text = L["Delete"], tooltip = L["Delete this group and its callouts, and take it off every pad. Asks first."],
           onClick = function() G.Delete(gid) end })
-end
-
-local function renderBuiltinCallouts(ctx, gid)
-    local h = H()
-    h.TextRow(ctx, L["Untick a callout to hide it from every pad. A hidden callout stays in the set."])
-    local hidden = (NS.db.profile.builtins[gid] or {}).hidden or {}
-    local items = {}
-    local function add(cid, prefix)
-        local c = NS.BuiltIns.callouts[cid]
-        local label = prefix and L["%s: %s"]:format(prefix, c.name) or c.name
-        items[#items + 1] = { make = function(_, parent, rel)
-            local cb = h.AceGUI:Create("CheckBox")
-            cb:SetLabel(label)
-            cb:SetValue(not hidden[cid])
-            cb:SetRelativeWidth(rel or 0.5)
-            cb:SetCallback("OnValueChanged", function(_, _, v)
-                NS.Library.SetBuiltinCalloutHidden(gid, cid, not v)
-            end)
-            h.AttachTooltip(cb, c.name, c.text)
-            parent:AddChild(cb)
-            return cb
-        end }
-    end
-    local def = NS.BuiltIns.groups[gid]
-    for _, cid in ipairs(def.callouts or {}) do add(cid) end
-    for _, child in ipairs(def.children or {}) do
-        local node = NS.BuiltIns.groups[child]
-        for _, cid in ipairs(node.callouts or {}) do add(cid, node.name) end
-    end
-    h.RenderGrid(ctx, items)
+    restoreRow(ctx)
 end
 
 -- THE RIGHT EDGE. Add callout and Reuse's Add end G.EDGE_INSET short of the content's right edge (a
@@ -356,7 +365,7 @@ local function reuseRow(gid)
             add:SetDisabled(true)
             G.ReuseCallout(gid, cid)
         end)
-        H().AttachTooltip(dd, prompt, L["Pick a callout to copy into this group: one of your groups' or a built-in set's. Add puts the copy at the end."])
+        H().AttachTooltip(dd, prompt, L["Pick a callout to copy into this group, from any of your other groups. Add puts the copy at the end."])
         H().AttachTooltip(add, L["Add"], L["Add a copy of the picked callout to the end of this group. Editing the copy leaves the original as it is."])
         parent:AddChild(dd)
         parent:AddChild(Ed.Gap(G.REUSE_GAP))
@@ -373,7 +382,6 @@ local function renderCallouts(ctx)
         h.TextRow(ctx, NONE)
         return
     end
-    if isBuiltin(gid) then return renderBuiltinCallouts(ctx, gid) end
     h.RenderGrid(ctx, { addCalloutRow(gid) })
     h.RenderGrid(ctx, { reuseRow(gid) })
     local list = NS.db.profile.groups[gid].callouts
@@ -393,6 +401,38 @@ local function renderCallouts(ctx)
     Ed.ReorderRows(ctx, PAGE, entries, function(from, to) G.MoveCallout(gid, from, to) end)
 end
 
+-- The Preview table's column headings.
+local PREVIEW_HEADER = { name = L["Callout"], text = L["What it sends here"] }
+
+--- What the Preview tab tabulates for group `gid` (Surfaces.Sections: the group; or, for a group
+--- holding groups, its own callouts when it has any, then each child): one block per section,
+--- titled when there are several or the one is a child's, each row a callout's name and icon and its first preview line
+--- (Callouts.PreviewLines), read when drawn and again on each live refresh.
+function G.PreviewBlocks(gid)
+    local sections = NS.Surfaces.Sections(gid, NS.Library.Group, { children = NS.Library.Children })
+    local blocks = {}
+    for _, sec in ipairs(sections) do
+        local rows = {}
+        for _, cid in ipairs(sec.callouts) do
+            local c = NS.Library.Callout(cid)
+            if c then
+                rows[#rows + 1] = { label = c.name or cid, icon = c.icon, iconColor = c.iconColor,
+                    text = function()
+                        local now = NS.Library.Callout(cid)
+                        return now and Settings.Callouts.PreviewLines(now)[1] or ""
+                    end }
+            end
+        end
+        -- Titled when there are several, or when the one section is a child's (a parent with no
+        -- callouts of its own and one child), so the table never reads as the parent's own.
+        local titled = #sections > 1 or sec.groupId ~= gid
+        blocks[#blocks + 1] = { title = titled and sec.title or nil, rows = rows }
+    end
+    return blocks
+end
+
+-- The Preview tab: the active-now line, then the table (Ed.TableRows), or a line saying the group
+-- has no callouts.
 local function renderPreview(ctx)
     local h = H()
     local gid = Ed.Selected("group")
@@ -401,31 +441,18 @@ local function renderPreview(ctx)
         h.TextRow(ctx, NONE)
         return
     end
-    -- Every line here is refreshed in place (Ed.Live) on a write or a situation change.
+    -- The active-now line and the table's texts are refreshed in place (Ed.Live) on a write or a
+    -- situation change.
     local W = Settings.GroupsWhen
     local active = h.TextRow(ctx, W.ActiveText(gid))
     Ed.Live(ctx, function() if active then active:SetText(W.ActiveText(gid)) end end)
-    local sections = NS.Surfaces.Sections(gid, NS.Library.Group)
-    local any = false
-    for _, sec in ipairs(sections) do
-        if #sections > 1 then h.Section(ctx, sec.title) end
-        local ids = sec.callouts
-        local function lines()
-            local out = {}
-            for _, cid in ipairs(ids) do
-                local c = NS.Library.Callout(cid)
-                if c then out[#out + 1] = L["%s: %s"]:format(c.name, Settings.Callouts.PreviewLines(c)[1]) end
-            end
-            return out
-        end
-        local now = lines()
-        if #now > 0 then
-            any = true
-            local label = h.TextRow(ctx, table.concat(now, "\n"))
-            Ed.Live(ctx, function() if label then label:SetText(table.concat(lines(), "\n")) end end)
-        end
+    local blocks, any = G.PreviewBlocks(gid), false
+    for _, b in ipairs(blocks) do any = any or #b.rows > 0 end
+    if not any then
+        h.TextRow(ctx, L["This group has no callouts yet."])
+        return
     end
-    if not any then h.TextRow(ctx, L["This group has no callouts yet."]) end
+    Ed.TableRows(ctx, PAGE, blocks, PREVIEW_HEADER)
 end
 
 local function ids(entries)
@@ -438,7 +465,7 @@ local function render(ctx)
     local h = H()
     local entries = G.Entries()
     local selected = Ed.Heal("group", ids(entries))
-    Ed.Select("group", selected)   -- keeps the built-in selection in step after a heal
+    Ed.Select("group", selected)   -- keeps the selection in step after a heal
     local list, order = Ed.PickerList(entries)
     h.PageBanner(ctx, {
         label = L["Group"], list = list, order = order, value = selected,
@@ -460,26 +487,14 @@ local function render(ctx)
     })
 end
 
---- The page's Defaults (options-ui-§13: page-wide, what the page draws). A user group: every row of
---- the page. A built-in set: its group rows refuse every write, and its General draws Preview as and
---- the overlay's Enabled row (whose page is share), so those two are what it resets, as one act.
+--- The page's Defaults (options-ui-§13: page-wide, what the page draws): every row of the page, for
+--- the selected group.
 function G.RestoreDefaults(ctx)
-    local h = H()
     -- One act (Library.Batch): the pads rebuild once, not once per row.
-    if not isBuiltin(Ed.Selected("group")) then
-        return NS.Library.Batch(function() h.RestoreDefaults(PAGE, ctx) end)
-    end
-    local S = NS.SchemaRuntime
-    NS.Library.Batch(function()
-        S.BulkRun("reset", PAGE, function()
-            S.ApplyDefault(Ed.Row("state.previewAs"))
-            S.ApplyDefault(Ed.Row("builtin.enabled"))
-        end)
-    end)
-    if h.RefreshPanel then h.RefreshPanel(ctx, false) end
+    return NS.Library.Batch(function() H().RestoreDefaults(PAGE, ctx) end)
 end
 
 Ed.RegisterPage(PAGE, L["Groups"], "GroupsPanel", render, {
-    tooltip = L["Turn the selected group or built-in set back on, stop it opening the dial, and turn Preview as off. Its name, callouts and When are kept."],
+    tooltip = L["Turn the selected group back on, stop it opening the dial, and turn Preview as off. Its name, callouts and When are kept."],
     onClick = function(ctx) G.RestoreDefaults(ctx) end,
 })

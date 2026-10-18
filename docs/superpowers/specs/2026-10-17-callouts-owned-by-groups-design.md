@@ -129,6 +129,7 @@ id. Builder calls:
 
 - No change to built-in sets: a built-in's Callouts tab stays the Show-checkbox editor, and built-ins
   stay read-only.
+  *Superseded 2026-10-18 by 2026-10-18-builtins-as-groups-design.md: the built-in sets are seeded as ordinary, editable groups, with the same Callouts tab as any group.*
 - No change to pads, dials, the When editor, or the bake/send path.
 - No new share format version.
 

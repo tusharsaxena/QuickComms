@@ -34,6 +34,7 @@ end)
 test("members: with no id the seam writes the selected member, else the first the page lists, else refuses", function()
     local NS, S, Lib = boot()
     for id in pairs(NS.db.profile.pads) do Lib.DeleteSurface("pad", id) end
+    for id in pairs(NS.db.profile.groups) do NS.db.profile.groups[id] = nil end   -- the seeded groups
     local ok, err = S.Set("pad.name", "Other")
     assertFalse(ok)
     assertTrue(tostring(err):find("No pad to edit", 1, true) ~= nil, tostring(err))
@@ -50,7 +51,6 @@ test("members: with no id the seam writes the selected member, else the first th
     assertTrue(S.Set("group.name", "Again"))
     assertEqual(NS.db.profile.groups[a].name, "Again")
     assertNil(NS.db.profile.groups.g999)
-    assertNil(NS.addon.Settings.EditingId("builtin"), "a built-in overlay is never a fallback")
 end)
 
 test("members: [review 5] a bad name or channel is refused with its reason and stores nothing", function()
@@ -79,20 +79,19 @@ test("members: an icon typed as digits is stored as a texture id; empty text cle
     assertTrue(NS.db.profile.callouts[cid].icon == false)
 end)
 
-test("members: [review 4] a built-in group's fields read, and every write to them is refused", function()
+test("members: a seeded group's fields read and write as any group's; the shipped set never changes", function()
     local NS, S = boot()
-    NS.State.editing.group = "bi.mplus"
+    local gid = T.seeded(NS, "bi.mplus")
+    NS.State.editing.group = gid
     assertEqual(S.Get("group.name"), NS.BuiltIns.groups["bi.mplus"].name)
-    local ok, _, why = S.Set("group.name", "Mine")
-    assertFalse(ok)
-    -- red under: drop the built-in refusal from the group rows' validate
-    assertEqual(why, "Built-in groups are read-only. Customize makes an editable copy.")
-    assertFalse((S.Set("group.enabled", false, "bi.mplus")))
-    assertFalse((S.Set("group.when", { content = { raid = true } }, "bi.mplus")))
-    assertEqual(NS.BuiltIns.groups["bi.mplus"].name, "M+ (generic)")
+    -- red under: a group row refusing a group that carries an origin
+    assertTrue((S.Set("group.name", "Mine")))
+    assertTrue((S.Set("group.enabled", false, gid)))
+    assertTrue((S.Set("group.when", { content = { raid = true } }, gid)))
+    assertEqual(NS.db.profile.groups[gid].name, "Mine")
+    assertEqual(NS.BuiltIns.groups["bi.mplus"].name, "M+ (generic)", "the seed data is untouched")
     assertTrue(NS.BuiltIns.groups["bi.mplus"].when.content.mythicPlus)
-    local o = NS.db.profile.builtins["bi.mplus"]
-    assertTrue(o == nil or o.enabled ~= false, "the overlay is untouched")
+    assertFalse((S.Set("group.name", "Mine", "bi.mplus")), "a shipped id is no group")
 end)
 
 test("members: a group's When is one structured row: a valid When stores, a bad one is refused", function()
@@ -133,26 +132,13 @@ local function combat(m, on)
     end
 end
 
-test("members: [review 4] the CLI prints the built-in refusal", function()
-    local NS, m = T.enableAddon()
-    NS.State.editing.group = "bi.mplus"
-    m.prints = {}
-    NS.addon:OnSlashCommand("set group.name Mine")
-    local text = table.concat(m.prints, "\n")
-    assertTrue(text:find("Built-in groups are read-only", 1, true) ~= nil, text)
-end)
-
-test("members: Library's built-in writers and the pad point go through the seam, one announce each", function()
+test("members: Library's own writers (the pad point, an icon) go through the seam, one announce each", function()
     local NS, S, Lib = boot()
+    local gid = Lib.CreateGroup({ name = "Mine" })
     local out = heard(NS)
-    assertTrue(Lib.SetBuiltinEnabled("bi.raid", false))
-    assertFalse(NS.db.profile.builtins["bi.raid"].enabled)
-    assertTrue(Lib.SetBuiltinCalloutHidden("bi.bg.ab.stables", "bi.bg.ab.stables.inc1", true))
-    assertTrue(NS.db.profile.builtins["bi.bg.ab"].hidden["bi.bg.ab.stables.inc1"])
     assertTrue(Lib.SetSurfacePoint("pad", "p1", { "TOPLEFT", "TOPLEFT", 4, -4 }))
-    assertEqual(table.concat(out, ","), "builtin:bi.raid,builtin:bi.bg.ab,pad:p1")
-    -- a set's hidden list holds only its own callouts
-    assertFalse((S.Set("builtin.hidden", { ["bi.mplus.lust"] = true }, "bi.raid")))
+    assertTrue(Lib.SetIcon("group", gid, NS.Icon("star"), "ff0000"))
+    assertEqual(table.concat(out, ","), "pad:p1,group:nil", "the icon and its color are one act")
     -- Each writer reaches the seam, by path and instance argument.
     local paths = {}
     local set = S.Set
@@ -160,14 +146,11 @@ test("members: Library's built-in writers and the pad point go through the seam,
         paths[#paths + 1] = path .. "@" .. tostring(id)
         return set(path, value, id)
     end
-    Lib.SetBuiltinEnabled("bi.raid", true)
-    Lib.SetBuiltinCalloutHidden("bi.bg.ab", "bi.bg.ab.stables.inc1", false)
     Lib.SetSurfacePoint("pad", "p1", nil)
-    Lib.Customize("bi.arena")
+    Lib.SetIcon("group", gid, NS.Icon("heart"), false)
     S.Set = set
-    -- red under: assign the field directly in any of the four writers in modules/Library.lua
-    assertEqual(table.concat(paths, ","),
-        "builtin.enabled@bi.raid,builtin.hidden@bi.bg.ab,pad.point@p1,builtin.enabled@bi.arena")
+    -- red under: assign the field directly in either writer in modules/Library.lua
+    assertEqual(table.concat(paths, ","), "pad.point@p1,group.icon@" .. gid .. ",group.iconColor@" .. gid)
 end)
 
 test("members: the structured rows are typed and printed on the CLI through the descriptor's parse and format", function()
@@ -199,18 +182,12 @@ test("members: the structured rows are typed and printed on the CLI through the 
     assertEqual(table.concat(NS.db.profile.pads.p1.point, ","), "TOPLEFT,TOPLEFT,5,-5")
     NS.addon:OnSlashCommand("set pad.point left")
     assertEqual(table.concat(NS.db.profile.pads.p1.point, ","), "TOPLEFT,TOPLEFT,5,-5", "refused: nothing stored")
-    NS.State.editing.builtin = "bi.mplus"
-    NS.addon:OnSlashCommand("set builtin.hidden bi.mplus.lust")
-    assertTrue(NS.db.profile.builtins["bi.mplus"].hidden["bi.mplus.lust"])
-    NS.addon:OnSlashCommand("set builtin.hidden none")
-    assertTrue(next(NS.db.profile.builtins["bi.mplus"].hidden) == nil)
-    NS.State.editing.builtin = nil
     m.prints = {}
     NS.addon:OnSlashCommand("list")
     text = table.concat(m.prints, "\n")
     assertTrue(text:find("table: ", 1, true) == nil, "no table address printed")
     assertTrue(text:find("pad.point", 1, true) ~= nil, "every member row is listed")
-    -- red under: drop the "(nothing to edit)" branch from the descriptor's format (builtin.* print nil)
+    -- red under: drop the "(nothing to edit)" branch from the descriptor's format (callout.* print nil)
     assertTrue(text:find("(nothing to edit)", 1, true) ~= nil, text)
 end)
 
@@ -324,17 +301,6 @@ test("members: [final 4] an off-screen pad.point is refused; `/qc reset` brings 
     NS.State.editing.group = gid
     NS.addon:OnSlashCommand("reset group.icon")
     assertTrue(NS.db.profile.groups[gid].icon == false)
-end)
-
-test("members: [final 5] builtin.hidden with no set selected says to pick one", function()
-    local NS, m = T.enableAddon()
-    NS.State.editing.builtin = nil
-    m.prints = {}
-    NS.addon:OnSlashCommand("set builtin.hidden none")
-    local text = table.concat(m.prints, "\n")
-    -- red under: builtin.hidden's validate refuses every value when no set is addressed
-    assertTrue(text:find("No built-in set is selected", 1, true) ~= nil, text)
-    assertTrue(text:find("Only this set's own callouts", 1, true) == nil, text)
 end)
 
 -- ── the Comms Dial's member rows (phase 4) ──────────────────────────────────────────────────
@@ -485,7 +451,7 @@ test("members: [icons] a glyph's color is written through the seam by id, typed 
     assertEqual(NS.db.profile.groups[gid].iconColor, "00ff00")
 end)
 
-test("members: [icons] a malformed color, a color on no glyph and a built-in's color are refused", function()
+test("members: [icons] a malformed color, a color on no glyph and a shipped id's color are refused", function()
     local NS, S, Lib = boot()
     local cid = Lib.CreateCallout({ name = "Lust", text = "Lust", channel = "party", icon = NS.Icon("star") })
     for _, bad in ipairs({ "ff80", "gg8000", "ff80001", 16744448, { 1, 0, 0 } }) do
@@ -500,9 +466,7 @@ test("members: [icons] a malformed color, a color on no glyph and a built-in's c
     assertFalse(ok)
     assertEqual(why, "Only a LibKa0s glyph takes a color: choose one as the icon first.")
     assertTrue(S.Set("callout.iconColor", false, plain), "clearing is always allowed")
-    ok, _, why = S.Set("group.iconColor", "ff0000", "bi.mplus")
-    assertFalse(ok)
-    assertEqual(why, "Built-in groups are read-only. Customize makes an editable copy.")
+    assertFalse((S.Set("group.iconColor", "ff0000", "bi.mplus")), "a shipped id is no group")
 end)
 
 test("members: [icons] an icon that is no glyph clears the color in the same act; a glyph keeps it", function()
@@ -539,7 +503,7 @@ test("members: [icons] Library.SetIcon writes the icon and its color as one act"
     assertFalse(ok)
     assertEqual(why, "badIconColor")
     assertEqual(c.icon, 136012, "a malformed color writes nothing")
-    assertFalse((Lib.SetIcon("group", "bi.mplus", star, false)), "a built-in is read-only")
+    assertFalse((Lib.SetIcon("group", "bi.mplus", star, false)), "a shipped id is no group")
     assertFalse((Lib.SetIcon("pad", "p1", star, false)))
 end)
 

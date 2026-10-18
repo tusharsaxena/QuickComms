@@ -1,4 +1,5 @@
--- tests/test_library.lua — modules/Library.lua (spec §5, §12.2): the only writer of the registry.
+-- tests/test_library.lua — modules/Library.lua (spec §5): the only writer of the registry, and the
+-- seeding of the shipped sets (2026-10-18-builtins-as-groups-design.md, goal 1).
 
 local T = _G.QUICKCOMMS_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -11,16 +12,89 @@ local function boot()
     return NS, NS.Library, NS.db.profile, sent
 end
 
-test("library: Prepare seeds one pad and one dial with every built-in, once", function()
+-- A booted profile with its seeded groups and callouts taken away (and so off every surface), for a
+-- case about the player's own members alone. seededSets stays, so Prepare seeds nothing back.
+local function bare()
+    local NS, Lib, p, sent = boot()
+    for id in pairs(p.groups) do p.groups[id] = nil end
+    for id in pairs(p.callouts) do p.callouts[id] = nil end
+    for _, s in pairs(p.pads) do s.groups = {} end
+    for _, s in pairs(p.dials) do s.groups = {} end
+    return NS, Lib, p, sent
+end
+
+local function count(t)
+    local n = 0
+    for _ in pairs(t) do n = n + 1 end
+    return n
+end
+
+test("library: Prepare seeds every shipped set as a group, on one pad and one dial, once", function()
     local NS, Lib, p = boot()
     assertTrue(p.seeded)
     assertEqual(#p.padOrder, 1)
     assertEqual(#p.dialOrder, 1)
+    assertEqual(p.padOrder[1] .. p.dialOrder[1], "p1d2", "made before the sets: the first ids")
     local pad = p.pads[p.padOrder[1]]
     assertEqual(#pad.groups, #NS.BuiltIns.order)
+    for i, gid in ipairs(pad.groups) do
+        -- red under: seed the pad with NS.BuiltIns.order (the shipped ids) as before
+        assertTrue(gid:match("^g%d+$") ~= nil, "a user group: " .. gid)
+        assertEqual(p.groups[gid].origin, NS.BuiltIns.order[i], "in shipped order")
+    end
+    assertEqual(table.concat(p.dials.d2.groups, ","), table.concat(pad.groups, ","))
+    assertEqual(count(p.groups), count(NS.BuiltIns.groups), "a group per set and per node")
+    assertEqual(count(p.callouts), count(NS.BuiltIns.callouts))
+    local groups = count(p.groups)
     local again = Lib.Prepare()
     assertFalse(again.seeded)
+    assertEqual(again.appended, 0)
     assertEqual(#p.padOrder, 1)
+    assertEqual(count(p.groups), groups, "seeded once")
+end)
+
+test("library: a seeded group is an ordinary group: its fields, When, callouts and origin", function()
+    local NS, Lib, p = boot()
+    local gid = T.seeded(NS, "bi.mplus")
+    local g, def = p.groups[gid], NS.BuiltIns.groups["bi.mplus"]
+    assertEqual(g.name, def.name)
+    assertEqual(g.icon, def.icon)
+    assertTrue(g.when.content.mythicPlus)
+    assertTrue(g.when ~= def.when, "a copy of the shipped When")
+    assertTrue(g.enabled)
+    assertEqual(#g.callouts, #def.callouts)
+    local lust = T.seeded(NS, "bi.mplus.lust")
+    assertEqual(g.callouts[2], lust, "the shipped order")
+    assertEqual(p.callouts[lust].text, "Lust on this pack {rt8}")
+    assertEqual(p.callouts[lust].channel, "smartGroup")
+    assertEqual(p.callouts[lust].origin, "bi.mplus.lust")
+    -- every write a user group takes, through the seam
+    assertTrue((NS.SchemaRuntime.Set("group.name", "Keys", gid)))
+    assertTrue((NS.SchemaRuntime.Set("group.when", { content = { raid = true } }, gid)))
+    assertTrue(Lib.CreateCalloutIn(gid, { name = "Mine", text = "x", channel = "party" }) ~= nil)
+    assertTrue(Lib.RemoveFromGroup(gid, 1))
+    assertEqual(g.name, "Keys")
+    assertTrue(Lib.DeleteGroup(gid))
+    assertNil(p.groups[gid])
+end)
+
+test("library: a seeded battleground set holds its nodes as groups inside it, in shipped order, with their winds", function()
+    local NS, Lib, p = boot()
+    local ab = T.seeded(NS, "bi.bg.ab")
+    assertTrue(p.groups[ab].openInto)
+    assertEqual(#p.groups[ab].callouts, 0)
+    local kids = Lib.Children(ab)
+    local def = NS.BuiltIns.groups["bi.bg.ab"]
+    assertEqual(#kids, #def.children)
+    for i, kid in ipairs(kids) do
+        -- red under: seed a node before its set (the node then holds a lower id than its parent)
+        assertEqual(p.groups[kid].origin, def.children[i])
+        assertEqual(p.groups[kid].parent, ab)
+        assertEqual(p.groups[kid].compass, NS.BuiltIns.groups[def.children[i]].compass)
+        assertTrue(Lib.IsChild(kid))
+    end
+    assertEqual(p.callouts[p.groups[kids[1]].callouts[3]].text, "INC 3 Stables")
+    assertFalse(Lib.AddGroupToSurface("pad", "p1", kids[1]), "a node shows with its set, never by itself")
 end)
 
 test("library: callouts validate on create", function()
@@ -59,60 +133,78 @@ test("library: [review 4] deleting a group clears every surface", function()
     for _, gid in ipairs(p.pads[pad].groups) do assertTrue(gid ~= g) end
 end)
 
-test("library: adding a built-in callout copies it (P2)", function()
-    local _, Lib, p = boot()
-    local g = Lib.CreateGroup({ name = "Mine" })
-    local added = Lib.AddToGroup(g, "bi.mplus.lust")
-    assertTrue(added:match("^c%d+$") ~= nil)
-    assertEqual(p.callouts[added].text, "Lust on this pack {rt8}")
-    assertEqual(p.groups[g].callouts[1], added)
-end)
-
-test("library: [review 4] Customize swaps the copy in place; deleting the copy puts the set back, on", function()
+test("library: adding a seeded callout copies it (P2); the copy keeps no origin", function()
     local NS, Lib, p = boot()
-    local pad = p.pads[p.padOrder[1]]
-    local pos
-    for i, gid in ipairs(pad.groups) do if gid == "bi.mplus" then pos = i end end
-    local copy, _, skipped, placed = Lib.Customize("bi.mplus")
-    assertEqual(pad.groups[pos], copy)
-    assertEqual(skipped, 0)
-    assertEqual(placed, 2, "the pad and the dial")
-    assertFalse(Lib.Group("bi.mplus").enabled)
-    assertEqual(#p.groups[copy].callouts, 8)
-    assertTrue(p.groups[copy].callouts[1]:match("^c%d+$") ~= nil)
-    Lib.DeleteGroup(copy)
-    -- red under: Lib.DeleteGroup only removes the copy (the set is on no pad and stays off)
-    assertEqual(pad.groups[pos], "bi.mplus", "the set is back in the copy's place")
-    for _, gid in ipairs(pad.groups) do assertTrue(gid ~= copy) end
-    assertTrue(Lib.Group("bi.mplus").enabled, "and turned back on")
-    assertNil(NS.db.profile.builtins["bi.mplus"].customizedAs)
-    local again, _, _, placedAgain = Lib.Customize("bi.mplus")
-    assertEqual(pad.groups[pos], again, "a second Customize takes the set's place again")
-    assertEqual(placedAgain, 2)
+    local g = Lib.CreateGroup({ name = "Mine" })
+    local lust = T.seeded(NS, "bi.mplus.lust")
+    local added = Lib.AddToGroup(g, lust)
+    assertTrue(added:match("^c%d+$") ~= nil and added ~= lust)
+    assertEqual(p.callouts[added].text, "Lust on this pack {rt8}")
+    assertNil(p.callouts[added].origin, "a copy is the player's, not a seeded callout")
+    assertEqual(p.groups[g].callouts[1], added)
+    assertEqual(T.seeded(NS, "bi.mplus.lust"), lust)
 end)
 
-test("library: hidden built-in callouts drop out of the merged group", function()
-    local _, Lib = boot()
-    Lib.SetBuiltinCalloutHidden("bi.mplus", "bi.mplus.gg", true)
-    local g = Lib.Group("bi.mplus")
-    for _, cid in ipairs(g.callouts) do assertTrue(cid ~= "bi.mplus.gg") end
-    assertTrue(Lib.Callout("bi.mplus.gg").builtin)
-end)
-
-test("library: [review 5] a newly shipped built-in is appended once; a removed one stays removed", function()
+test("library: [review 5] a newly shipped set is seeded once, at the end of every surface; a deleted one stays deleted", function()
     local NS, Lib, p = boot()
     local pad = p.pads[p.padOrder[1]]
     NS.BuiltIns.Group("bi.test", { name = "New set", when = {} })
     local r = Lib.Prepare()
     assertEqual(r.appended, 2)                        -- the pad and the dial
-    assertEqual(pad.groups[#pad.groups], "bi.test")
+    local new = T.seeded(NS, "bi.test")
+    assertEqual(pad.groups[#pad.groups], new)
+    assertEqual(p.groups[new].name, "New set")
     Lib.Prepare()
-    local count = 0
-    for _, gid in ipairs(pad.groups) do if gid == "bi.test" then count = count + 1 end end
-    assertEqual(count, 1)
-    Lib.RemoveGroupFromSurface("pad", p.padOrder[1], "bi.arena")
+    local n = 0
+    for _, g in pairs(p.groups) do if g.origin == "bi.test" then n = n + 1 end end
+    assertEqual(n, 1)
+    local arena = T.seeded(NS, "bi.arena")
+    Lib.RemoveGroupFromSurface("pad", p.padOrder[1], arena)
     Lib.Prepare()
-    for _, gid in ipairs(pad.groups) do assertTrue(gid ~= "bi.arena") end
+    for _, gid in ipairs(pad.groups) do assertTrue(gid ~= arena, "a set taken off a pad stays off") end
+    Lib.DeleteGroup(arena)
+    Lib.Prepare()
+    -- red under: seedNew judging by origin (Restore's test) instead of seededSets
+    assertNil(T.seeded(NS, "bi.arena"), "a deleted set is not seeded again")
+end)
+
+test("library: a node shipped after its set was seeded goes inside the set's group", function()
+    local NS, Lib, p = boot()
+    local ab = T.seeded(NS, "bi.bg.ab")
+    NS.BuiltIns.Group("bi.bg.ab.new", { name = "New node", parent = "bi.bg.ab", compass = "N",
+        callouts = NS.BuiltIns.Callouts("bi.bg.ab.new", "smartGroup", { { "inc1", "INC 1", "INC 1 New" } }) })
+    table.insert(NS.BuiltIns.groups["bi.bg.ab"].children, "bi.bg.ab.new")
+    Lib.Prepare()
+    local node = T.seeded(NS, "bi.bg.ab.new")
+    assertEqual(p.groups[node].parent, ab)
+    local kids = Lib.Children(ab)
+    assertEqual(kids[#kids], node, "after the nodes already there")
+    Lib.Prepare()
+    assertEqual(#Lib.Children(ab), #kids, "once")
+end)
+
+test("library: [review] a set whose stored parent dangles still takes a node shipped after it", function()
+    local NS, Lib, p = boot()
+    local ab = T.seeded(NS, "bi.bg.ab")
+    p.groups[ab].parent = "g999"
+    NS.BuiltIns.Group("bi.bg.ab.new", { name = "New node", parent = "bi.bg.ab", compass = "N",
+        callouts = NS.BuiltIns.Callouts("bi.bg.ab.new", "smartGroup", { { "inc1", "INC 1", "INC 1 New" } }) })
+    table.insert(NS.BuiltIns.groups["bi.bg.ab"].children, "bi.bg.ab.new")
+    Lib.Prepare()
+    -- red under: seedNew judging the set by its truthy stored parent, with repairParents after it
+    local node = T.seeded(NS, "bi.bg.ab.new")
+    assertTrue(node ~= nil, "the node is seeded, not only marked given")
+    assertEqual(p.groups[node].parent, ab)
+    assertFalse(Lib.IsChild(ab), "the dangling parent is dropped")
+end)
+
+test("library: [review] ValidParent takes a parent whose own stored parent dangles", function()
+    local _, Lib, p = boot()
+    local a = Lib.CreateGroup({ name = "Top" })
+    local b = Lib.CreateGroup({ name = "Inside" })
+    p.groups[a].parent = "g999"
+    -- red under: ValidParent testing groups[parent].parent instead of IsChild(parent)
+    assertTrue((Lib.ValidParent(a, b)), "a parent that is no child is top-level")
 end)
 
 test("library: Prepare repairs dangling ids", function()
@@ -125,13 +217,12 @@ test("library: Prepare repairs dangling ids", function()
     assertEqual(#p.groups[g].callouts, 0)
 end)
 
-test("library: AllGroups is top-level only and merges the overlay", function()
-    local _, Lib = boot()
-    Lib.SetBuiltinEnabled("bi.raid", false)
+test("library: AllGroups is every user group, a seeded node among them", function()
+    local NS, Lib, p = boot()
     local all = Lib.AllGroups()
-    assertTrue(all["bi.bg.ab"] ~= nil)
-    assertNil(all["bi.bg.ab.stables"])
-    assertFalse(all["bi.raid"].enabled)
+    assertEqual(count(all), count(p.groups))
+    assertTrue(all[T.seeded(NS, "bi.bg.ab.stables")] ~= nil)
+    assertNil(all["bi.bg.ab"], "no shipped id")
 end)
 
 test("library: every mutation announces LIBRARY_CHANGED", function()
@@ -141,33 +232,13 @@ test("library: every mutation announces LIBRARY_CHANGED", function()
     assertEqual(sent[#sent][2], "callout")
 end)
 
-test("library: overlay writers resolve child ids to the top-level overlay", function()
+test("library: no shipped id is a member any more", function()
     local _, Lib, p = boot()
-    local child = "bi.bg.ab.stables"
-    local cid = Lib.Group(child).callouts[1]
-    assertTrue(Lib.SetBuiltinCalloutHidden(child, cid, true))
-    for _, x in ipairs(Lib.Group(child).callouts) do assertTrue(x ~= cid) end
-    assertNil(p.builtins[child])
-    assertTrue(p.builtins["bi.bg.ab"].hidden[cid])
-    assertFalse(Lib.AddGroupToSurface("pad", p.padOrder[1], child))
-end)
-
-test("library: Customize twice is refused until the copy is deleted", function()
-    local _, Lib = boot()
-    local copy = Lib.Customize("bi.raid")
-    assertTrue(copy ~= nil)
-    local again, why = Lib.Customize("bi.raid")
-    assertNil(again)
-    assertEqual(why, "alreadyCustomized")
-    Lib.DeleteGroup(copy)
-    assertTrue(Lib.Customize("bi.raid") ~= nil)
-end)
-
-test("library: Customize copies openInto and flattens node callouts", function()
-    local _, Lib, p = boot()
-    local copy = Lib.Customize("bi.bg.ab")
-    assertTrue(p.groups[copy].openInto)
-    assertEqual(#p.groups[copy].callouts, 30)
+    assertNil(Lib.Group("bi.mplus"))
+    assertNil(Lib.Callout("bi.mplus.lust"))
+    assertNil(Lib.Member("group", "bi.mplus"))
+    assertFalse(Lib.AddGroupToSurface("pad", p.padOrder[1], "bi.mplus"))
+    assertNil((Lib.AddToGroup(Lib.CreateGroup({ name = "G" }), "bi.mplus.lust")))
 end)
 
 test("library: Prepare survives malformed groups and surfaces", function()
@@ -202,12 +273,12 @@ test("library: MoveInGroup with a nil target returns false", function()
     assertFalse(Lib.MoveInGroup(g, 1, nil))
 end)
 
-test("library: [final 2] a built-in whose copy fails validation is refused cleanly, with no hole", function()
-    local NS, Lib, p = boot()
-    NS.BuiltIns.callouts["bi.test.long"] = { name = string.rep("a", 40), text = "x", channel = "party" }
+test("library: [final 2] a callout whose copy fails validation is refused cleanly, with no hole", function()
+    local _, Lib, p = boot()
+    p.callouts.c9001 = { name = string.rep("a", 40), text = "x", channel = "party" }
     local g = Lib.CreateGroup({ name = "G" })
     local ok = Lib.AddToGroup(g, Lib.CreateCallout({ name = "A", text = "x", channel = "party" }))
-    local id, why = Lib.AddToGroup(g, "bi.test.long", 1)
+    local id, why = Lib.AddToGroup(g, "c9001", 1)
     -- red under: `id = Lib.CreateCallout(...)` unchecked in AddToGroup
     assertNil(id)
     assertEqual(why, "badName")
@@ -223,44 +294,28 @@ test("library: [final 2] the name cap counts characters, not bytes", function()
     assertNil((Lib.CreateCallout({ name = string.rep("\208\150", 33), text = "x", channel = "party" })), "33 do not")
 end)
 
-test("library: [final 2] Customize skips a copy that fails and reports it, leaving no hole", function()
-    local NS, Lib, p = boot()
-    local top = NS.BuiltIns.order[1]
-    local first = NS.BuiltIns.groups[top].callouts[1]
-    NS.BuiltIns.callouts[first] = { name = string.rep("a", 40), text = "x", channel = "party" }
-    local id, why, skipped = Lib.Customize(top)
-    assertTrue(id ~= nil, tostring(why))
-    assertEqual(skipped, 1)
-    local list = p.groups[id].callouts
-    for i = 1, #list do assertTrue(p.callouts[list[i]] ~= nil, "slot " .. i) end
-    local n = 0
-    for _ in pairs(list) do n = n + 1 end
-    assertEqual(n, #list, "a sequence, no hole")
-end)
-
 test("library: [final minor 2] Prepare lifts a stale nextId above every existing id", function()
     local _, Lib, p = boot()
-    p.callouts.c41 = { name = "A", text = "x", channel = "party" }
-    p.groups.g7 = { name = "G", callouts = { "c41" }, when = {} }
+    p.callouts.c4100 = { name = "A", text = "x", channel = "party" }
+    p.groups.g700 = { name = "G", callouts = { "c4100" }, when = {} }
     p.nextId = 3
     Lib.Prepare()
     -- red under: a Prepare that leaves nextId alone
-    assertTrue(p.nextId >= 42, tostring(p.nextId))
-    assertTrue(Lib.CreateCallout({ name = "B", text = "y", channel = "party" }) ~= "c41")
-    assertEqual(p.callouts.c41.name, "A", "the old callout survived")
+    assertTrue(p.nextId >= 4101, tostring(p.nextId))
+    assertTrue(Lib.CreateCallout({ name = "B", text = "y", channel = "party" }) ~= "c4100")
+    assertEqual(p.callouts.c4100.name, "A", "the old callout survived")
 end)
 
-test("library: [final minor 3] Prepare repairs corrupt top-level registry keys and builtins entries", function()
-    local _, Lib, p = boot()
-    p.groups, p.callouts, p.pads, p.padOrder, p.builtins = 5, "x", true, 7, { ["bi.a"] = 3, ["bi.b"] = { enabled = false } }
+test("library: [final minor 3] Prepare repairs corrupt top-level registry keys", function()
+    local NS, Lib, p = boot()
+    p.groups, p.callouts, p.pads, p.padOrder, p.seededSets = 5, "x", true, 7, "junk"
     local ok, result = pcall(Lib.Prepare)
     assertTrue(ok, tostring(result))
-    for _, key in ipairs({ "callouts", "groups", "builtins", "pads", "dials", "padOrder", "dialOrder" }) do
+    for _, key in ipairs({ "callouts", "groups", "seededSets", "pads", "dials", "padOrder", "dialOrder" }) do
         assertEqual(type(p[key]), "table", key)
     end
-    assertNil(p.builtins["bi.a"])
-    assertTrue(p.builtins["bi.b"] ~= nil)
-    assertEqual(result.repaired, 5, "four top-level keys and one builtins entry")
+    assertEqual(result.repaired, 5 + #NS.BuiltIns.order, "five top-level keys, and the dial's references to the lost groups")
+    assertTrue(T.seeded(NS, "bi.mplus") ~= nil, "with seededSets lost, the sets are seeded again")
 end)
 
 test("library: SetSurfacePoint stores a copy of a plain anchor, announces it, and nil clears it", function()
@@ -322,13 +377,13 @@ test("library: duplicating a group copies its callouts", function()
     for _, pad in pairs(p.pads) do
         for _, g in ipairs(pad.groups) do assertTrue(g ~= copy, "not offered to a surface") end
     end
-    assertNil((Lib.DuplicateGroup("bi.mplus")), "a built-in is customized, never duplicated")
+    assertNil((Lib.DuplicateGroup("bi.mplus")), "a shipped id is no group")
 end)
 
 test("library: [phase 3] CreateGroup keeps only existing user callouts, and validates the When", function()
     local _, Lib, p = boot()
     local cid = Lib.CreateCallout({ name = "A", text = "a", channel = "party" })
-    local gid = Lib.CreateGroup({ name = "G", callouts = { cid, "c999", "bi.mplus.lust" } })
+    local gid = Lib.CreateGroup({ name = "G", callouts = { cid, "c9999", "bi.mplus.lust" } })
     assertEqual(#p.groups[gid].callouts, 1)
     assertEqual(p.groups[gid].callouts[1], cid)
     local bad, why = Lib.CreateGroup({ name = "G", when = { nope = { x = true } } })
@@ -357,7 +412,7 @@ test("library: [phase 3] OfferGroup puts a user group first on every pad and dia
     assertEqual(p.pads.p1.groups[1], gid)
     assertEqual(p.dials.d2.groups[1], gid)
     assertEqual(Lib.OfferGroup(gid), 0, "already on both")
-    assertEqual(Lib.OfferGroup("bi.mplus"), 0, "built-ins are seeded, never offered")
+    assertEqual(Lib.OfferGroup("bi.mplus"), 0, "a shipped id is no group")
     assertEqual(Lib.OfferGroup("g999"), 0)
 end)
 
@@ -374,17 +429,15 @@ test("library: [phase 3] MoveGroupOnSurface reorders a surface's groups and anno
     assertFalse(Lib.MoveGroupOnSurface("pad", "p1", 1, nil))
 end)
 
-test("library: [phase 3] Member answers the live member of each kind, and a built-in group's copy", function()
+test("library: [phase 3] Member answers the live member of each kind", function()
     local NS, Lib, p = boot()
     local cid = Lib.CreateCallout({ name = "A", text = "a", channel = "party" })
     assertTrue(Lib.Member("callout", cid) == p.callouts[cid])
     assertTrue(Lib.Member("pad", "p1") == p.pads.p1)
     assertTrue(Lib.Member("dial", "d2") == p.dials.d2)
-    local g = Lib.Member("group", "bi.mplus")
-    assertEqual(g.name, NS.BuiltIns.groups["bi.mplus"].name)
-    g.name = "changed"
-    assertTrue(NS.BuiltIns.groups["bi.mplus"].name ~= "changed", "a copy: the shipped set never changes")
-    assertTrue(Lib.Member("builtin", "bi.bg.ab.stables") == p.builtins["bi.bg.ab"], "a node's overlay is its battleground's")
+    local gid = T.seeded(NS, "bi.mplus")
+    assertTrue(Lib.Member("group", gid) == p.groups[gid], "a seeded group is the live table")
+    assertNil(Lib.Member("builtin", "bi.mplus"), "no overlay kind")
     assertNil(Lib.Member("callout", nil))
     assertNil(Lib.Member("pad", "d2"))
     assertNil(Lib.Member("nope", "p1"))
@@ -405,41 +458,17 @@ test("library: [phase 3] Touch announces the member it is handed, and the field"
 end)
 
 test("library: [phase 3] MemberIds lists each kind in its picker's order", function()
-    local NS, Lib, p = boot()
+    local _, Lib, p = bare()
     assertEqual(#Lib.MemberIds("callout"), 0)
     local b = Lib.CreateCallout({ name = "beta", text = "b", channel = "party" })
     local a = Lib.CreateCallout({ name = "Alpha", text = "a", channel = "party" })
     assertEqual(table.concat(Lib.MemberIds("callout"), ","), a .. "," .. b, "by name, case-insensitive")
-    local g = Lib.CreateGroup({ name = "Mine" })
-    local groups = Lib.MemberIds("group")
-    assertEqual(groups[1], g, "user groups first")
-    assertEqual(groups[2], NS.BuiltIns.order[1], "then the built-in sets in shipped order")
-    assertEqual(#groups, 1 + #NS.BuiltIns.order)
+    local m = Lib.CreateGroup({ name = "Mine" })
+    local k = Lib.CreateGroup({ name = "keys" })
+    -- red under: MemberIds appending the shipped ids after the user groups
+    assertEqual(table.concat(Lib.MemberIds("group"), ","), k .. "," .. m, "by name, and nothing else")
     assertEqual(table.concat(Lib.MemberIds("pad"), ","), table.concat(p.padOrder, ","))
     assertEqual(#Lib.MemberIds("nope"), 0)
-end)
-
-test("library: [phase 3] Customize shortens a long set name instead of refusing it", function()
-    local NS, Lib, p = boot()
-    NS.BuiltIns.groups["bi.mplus"].name = string.rep("x", 30)
-    local id = Lib.Customize("bi.mplus")
-    assertTrue(id ~= nil, "a copy, whatever the set's name")
-    local name = p.groups[id].name
-    assertTrue(Lib.ValidName(name))
-    assertEqual(name:sub(-9), " (custom)")
-end)
-
-test("library: [phase 3] Customize changes nothing when the copy cannot be made", function()
-    local _, Lib, p = boot()
-    local before = table.concat(p.pads.p1.groups, ",")
-    Lib.CreateGroup = function() return nil, "badWhen" end
-    local id, why = Lib.Customize("bi.mplus")
-    -- red under: drop the `if not id then return nil, why end` guard from Lib.Customize
-    assertNil(id)
-    assertEqual(why, "badWhen")
-    assertEqual(table.concat(p.pads.p1.groups, ","), before, "no hole where the set was")
-    local o = p.builtins["bi.mplus"]
-    assertTrue(o == nil or o.enabled ~= false, "the set stays on")
 end)
 
 test("library: [phase 3] ValidWhen accepts every shipped When and refuses bad shapes", function()
@@ -472,7 +501,7 @@ test("library: [final] a surface's offsets are bounded at its smallest scale, no
     assertEqual(why, "offScreen")
 end)
 
-test("library: [phase 3] the point, icon and hidden-set validators", function()
+test("library: [phase 3] the point and icon validators", function()
     local _, Lib = boot()
     assertTrue(Lib.ValidPoint(nil), "nil is the default place")
     assertTrue(Lib.ValidPoint({ "TOPLEFT", "TOPLEFT", 1, -2 }))
@@ -487,12 +516,6 @@ test("library: [phase 3] the point, icon and hidden-set validators", function()
     assertTrue(Lib.ValidIcon("Interface\\Icons\\Spell_Nature_Bloodlust"))
     assertFalse(Lib.ValidIcon(""))
     assertFalse(Lib.ValidIcon({}))
-    assertTrue(Lib.ValidHidden("bi.bg.ab", { ["bi.bg.ab.stables.inc1"] = true }))
-    assertTrue(Lib.ValidHidden("bi.mplus", {}))
-    assertFalse(Lib.ValidHidden("bi.mplus", { ["bi.raid.wipe"] = true }), "another set's callout")
-    assertFalse(Lib.ValidHidden("bi.mplus", { ["bi.mplus.nope"] = true }), "no such callout")
-    assertFalse(Lib.ValidHidden("bi.mplus", { ["bi.mplus.lust"] = 1 }))
-    assertFalse(Lib.ValidHidden(nil, {}))
 end)
 
 test("library: [phase 3] every member template holds a value at every field", function()
@@ -501,71 +524,42 @@ test("library: [phase 3] every member template holds a value at every field", fu
     assertEqual(Lib.TEMPLATES.pad.layout.style, "iconLabel")
     assertEqual(Lib.TEMPLATES.pad.look.visibility, "always")
     assertTrue(Lib.TEMPLATES.pad.point == false, "false: the default place, and a value the boot check can see")
-    assertTrue(Lib.TEMPLATES.builtin.enabled)
-    assertTrue(Lib.IsBuiltin("bi.raid"))
-    assertFalse(Lib.IsBuiltin("g3"))
-    assertEqual(Lib.TopOf("bi.bg.ab.stables"), "bi.bg.ab")
+    assertNil(Lib.TEMPLATES.builtin, "no overlay kind")
 end)
 
 test("library: [phase 3] Batch holds the announces and sends one per kind it touched", function()
     local NS, Lib, _, sent = boot()
     local before = #sent
+    local S = NS.SchemaRuntime
     Lib.Batch(function()
-        Lib.SetBuiltinEnabled("bi.raid", false)
-        Lib.SetBuiltinEnabled("bi.arena", false)
-        Lib.Batch(function() Lib.SetBuiltinEnabled("bi.mplus", false) end)
+        S.Set("group.enabled", false, T.seeded(NS, "bi.raid"))
+        S.Set("group.enabled", false, T.seeded(NS, "bi.arena"))
+        Lib.Batch(function() S.Set("group.enabled", false, T.seeded(NS, "bi.mplus")) end)
     end)
     -- red under: announce inside Lib.Batch as usual (three messages)
     assertEqual(#sent - before, 1)
     assertEqual(sent[#sent][1], NS.MSG.LIBRARY_CHANGED)
-    assertEqual(sent[#sent][2], "builtin")
+    assertEqual(sent[#sent][2], "group")
     assertNil(sent[#sent][3], "no id: several members changed")
-    assertFalse(NS.db.profile.builtins["bi.mplus"].enabled)
-    Lib.SetBuiltinEnabled("bi.raid", true)
+    assertFalse(NS.db.profile.groups[T.seeded(NS, "bi.mplus")].enabled)
+    S.Set("group.enabled", true, T.seeded(NS, "bi.raid"))
     assertEqual(#sent - before, 2, "announces flow again after the batch")
 end)
 
-test("library: [final 8] a set on no surface is customized onto none, and Customize says how many it reached", function()
-    local _, Lib, p = boot()
-    for _, sid in ipairs(p.padOrder) do Lib.RemoveGroupFromSurface("pad", sid, "bi.mplus") end
-    for _, sid in ipairs(p.dialOrder) do Lib.RemoveGroupFromSurface("dial", sid, "bi.mplus") end
-    local copy, _, _, placed = Lib.Customize("bi.mplus")
-    assertTrue(p.groups[copy] ~= nil)
-    assertEqual(placed, 0)
-end)
-
-test("library: [final 24] Customize puts the copy in the set's place on every pad and dial", function()
-    local _, Lib, p = boot()
-    local second = Lib.CreateSurface("pad", "Two")
-    Lib.MoveGroupOnSurface("pad", second, #p.pads[second].groups, 1)
-    local where = {}
-    for _, kind in ipairs({ "pad", "dial" }) do
-        local set = kind == "pad" and p.pads or p.dials
-        for _, s in pairs(set) do
-            for i, gid in ipairs(s.groups) do if gid == "bi.mplus" then where[#where + 1] = { s, i } end end
-        end
-    end
-    assertEqual(#where, 3, "two pads and a dial hold the set")
-    local copy = Lib.Customize("bi.mplus")
-    -- red under: narrow the swap loop in Lib.Customize to the first surface
-    for _, w in ipairs(where) do assertEqual(w[1].groups[w[2]], copy) end
-end)
-
-test("library: [final 1] Customize, AddToGroup with a built-in, and OfferGroup each send one LIBRARY_CHANGED", function()
+test("library: [final 1] Restore, AddToGroup and OfferGroup each send one LIBRARY_CHANGED", function()
     local NS, Lib, p, sent = boot()
+    Lib.DeleteGroup(T.seeded(NS, "bi.mplus"))
+    Lib.DeleteGroup(T.seeded(NS, "bi.bg.ab"))
     local before = #sent
-    -- red under: drop Lib.Batch from Lib.Customize (19 messages for M+, 63 for a 30-callout battleground)
-    Lib.Customize("bi.mplus")
+    -- red under: drop Lib.Batch from Lib.RestoreBuiltins (one message per group, callout and surface)
+    Lib.RestoreBuiltins()
     assertEqual(#sent - before, 1)
     assertEqual(sent[#sent][1], NS.MSG.LIBRARY_CHANGED)
-    assertEqual(sent[#sent][2], "builtin,callout,group", "the kinds it touched")
-    before = #sent
-    Lib.Customize("bi.bg.ab")
-    assertEqual(#sent - before, 1)
+    assertEqual(sent[#sent][2], "callout,dial,group,pad", "the kinds it touched")
     local g = Lib.CreateGroup({ name = "Mine" })
     before = #sent
     -- red under: drop Lib.Batch from Lib.AddToGroup (the copy and the insert announce apart)
-    Lib.AddToGroup(g, "bi.mplus.lust")
+    Lib.AddToGroup(g, T.seeded(NS, "bi.mplus.lust"))
     assertEqual(#sent - before, 1)
     Lib.CreateSurface("pad", "Two")
     before = #sent
@@ -574,18 +568,19 @@ test("library: [final 1] Customize, AddToGroup with a built-in, and OfferGroup e
     assertEqual(#sent - before, 1)
 end)
 
-test("library: [final 1] one Customize click rebuilds the pads once", function()
+test("library: [final 1] one Restore click rebuilds the pads once", function()
     local NS = T.enableAddon()
     NS.Situation.ReadInputs = function() return { inInstance = true, instanceType = "party", difficultyID = 8,
         keystoneActive = true, keyLevel = 12, inGroup = true } end
     NS.Situation.RefreshNow("test")
+    NS.Library.DeleteGroup(T.seeded(NS, "bi.bg.ab"))
+    NS.Library.DeleteGroup(T.seeded(NS, "bi.mplus"))
     local applied = 0
     local apply = NS.Surfaces.ApplyAll
     NS.Surfaces.ApplyAll = function(...) applied = applied + 1 return apply(...) end
-    NS.Library.Customize("bi.bg.ab")
-    NS.Library.Customize("bi.mplus")
+    NS.Library.RestoreBuiltins()
     NS.Surfaces.ApplyAll = apply
-    assertEqual(applied, 2, "one rebuild per Customize")
+    assertEqual(applied, 1, "one rebuild for the whole restore")
 end)
 
 test("library: [final 2] ValidWhen refuses a value its row can never match, and names the row and value", function()
@@ -670,8 +665,9 @@ end)
 
 -- ── import (phase 5) ────────────────────────────────────────────────────────────────────────
 
--- A share result for two callouts, a group holding both, a pad and a dial listing the group and a
--- built-in set, checked by modules/Share.lua as an import is.
+-- A share result for two callouts, a group holding both, a pad and a dial listing the group (the pad
+-- a shipped id too, as strings made before the sets were seeded may), checked by modules/Share.lua
+-- as an import is.
 local function shared(NS)
     return NS.Share.Validate({ v = 1, addon = "QuickComms", kind = "bundle",
         callouts = { c1 = { name = "Kick", text = "Kick on me", channel = "party" },
@@ -694,7 +690,7 @@ test("library: [phase 5] Import makes every member under a fresh id, its referen
     assertTrue(p.groups[gid].when.content.mythicPlus)
     assertEqual(p.callouts[map.c2].icon, 136012)
     local pad = p.pads[map.p1]
-    assertEqual(table.concat(pad.groups, ","), gid .. ",bi.mplus")
+    assertEqual(table.concat(pad.groups, ","), gid, "a shipped id is no group: left out")
     assertEqual(pad.layout.columns, 6)
     assertEqual(pad.layout.spacing, 20, "the seam clamps what it would clamp for a player")
     assertEqual(p.padOrder[#p.padOrder], map.p1, "at the end of the pad order")
@@ -726,7 +722,7 @@ test("library: [review 3] importing the same string twice makes two copies; noth
     assertEqual(p.groups[second.g1].callouts[1], second.c2, "each copy points at its own callouts")
 end)
 
-test("library: [review 4] an imported pad and dial arrive unbound: no key, the default place, no built-in re-added", function()
+test("library: [review 4] an imported pad and dial arrive unbound: no key, the default place, no set added", function()
     local NS, Lib, p = boot()
     local res = shared(NS)
     -- a hand-made result that slipped a key and a position past the checks is still refused them
@@ -739,7 +735,7 @@ test("library: [review 4] an imported pad and dial arrive unbound: no key, the d
     assertTrue(pad.point == nil or pad.point == false, "the default place")
     assertEqual(tally.ignored, 2)
     Lib.Prepare()
-    assertEqual(#pad.groups, 2, "every built-in was already marked seen")
+    assertEqual(#pad.groups, 1, "Prepare puts no seeded set on it")
 end)
 
 test("library: [review] an imported Look keeps a bool a bool and a color its four channels", function()
@@ -862,7 +858,7 @@ test("library: CreateCalloutIn makes and places a callout in one act", function(
     none, why = Lib.CreateCalloutIn("g999", { name = "D", text = "d", channel = "party" })
     assertNil(none)
     assertEqual(why, "noGroup")
-    assertNil((Lib.CreateCalloutIn("bi.mplus", { name = "D", text = "d", channel = "party" })), "a built-in is read-only")
+    assertNil((Lib.CreateCalloutIn("bi.mplus", { name = "D", text = "d", channel = "party" })), "a shipped id is no group")
     assertEqual(p.nextId, nextId, "a refusal consumes no id")
 end)
 
@@ -957,3 +953,231 @@ test("library: [icons] IconTint draws a glyph's color as r, g, b; no color, a ba
     assertEqual(table.concat({ Lib.IconTint("Interface\\TargetingFrame\\UI-RaidTargetingIcon_8", "ff0000") }, ","),
         "1,1,1", "nor a raid marker")
 end)
+
+-- ── nested groups (2026-10-18-builtins-as-groups-design.md, goal 2) ──────────────────────────
+
+local function setParent(NS, gid, parent)
+    return NS.SchemaRuntime.Set("group.parent", parent, gid)
+end
+
+test("library: [nesting] a group takes a top-level group as its parent and leaves every surface", function()
+    local NS, Lib, p = boot()
+    local parent = Lib.CreateGroup({ name = "Raid night" })
+    local child = Lib.CreateGroup({ name = "Boss 1" })
+    assertTrue(Lib.AddGroupToSurface("pad", p.padOrder[1], child, 1))
+    assertTrue(Lib.AddGroupToSurface("dial", p.dialOrder[1], child, 1))
+    local ok = setParent(NS, child, parent)
+    assertTrue(ok)
+    assertEqual(p.groups[child].parent, parent)
+    assertEqual(table.concat(Lib.Children(parent), ","), child)
+    -- red under: the group.parent row's onChange only announcing (no Lib.SettleParent)
+    for _, gid in ipairs(p.pads[p.padOrder[1]].groups) do assertTrue(gid ~= child, "off the pad") end
+    for _, gid in ipairs(p.dials[p.dialOrder[1]].groups) do assertTrue(gid ~= child, "off the dial") end
+    assertFalse(Lib.AddGroupToSurface("pad", p.padOrder[1], child), "a child is never placed by itself")
+    assertTrue(Lib.IsChild(child))
+    assertFalse(Lib.IsChild(parent))
+end)
+
+test("library: [nesting] one level only: self, a child, a parent with children, a stranger and a shipped id are refused", function()
+    local NS, Lib, p = boot()
+    local a = Lib.CreateGroup({ name = "A" })
+    local b = Lib.CreateGroup({ name = "B" })
+    local c = Lib.CreateGroup({ name = "C" })
+    assertTrue((setParent(NS, b, a)))
+    assertFalse((setParent(NS, a, a)), "not itself")
+    assertEqual(select(2, Lib.ValidParent(a, a)), "selfParent")
+    -- red under: ValidParent not checking the parent's own parent
+    assertFalse((setParent(NS, c, b)), "b is inside a")
+    assertEqual(select(2, Lib.ValidParent(b, c)), "parentIsChild")
+    assertFalse((setParent(NS, a, c)), "a holds b")
+    assertEqual(select(2, Lib.ValidParent(c, a)), "hasChildren")
+    assertFalse((setParent(NS, c, "g999")), "no such group")
+    assertFalse((setParent(NS, c, "bi.mplus")), "a shipped id is no parent")
+    assertEqual(select(2, Lib.ValidParent("bi.mplus", c)), "badParent")
+    assertFalse((setParent(NS, "bi.mplus", a)), "a shipped id takes no parent")
+    assertNil(p.groups[c].parent)
+    assertNil(p.groups[a].parent)
+end)
+
+test("library: [nesting] none clears the parent: false, empty text and 'none' all do", function()
+    local NS, Lib, p = boot()
+    local a = Lib.CreateGroup({ name = "A" })
+    local b = Lib.CreateGroup({ name = "B" })
+    for _, none in ipairs({ false, "", " none ", "NONE" }) do
+        assertTrue((setParent(NS, b, a)))
+        assertTrue((setParent(NS, b, none)), tostring(none))
+        assertFalse(p.groups[b].parent, tostring(none))
+        assertEqual(#Lib.Children(a), 0)
+    end
+end)
+
+test("library: [nesting] a group's children are in the order they were made; MemberIds lists them under it", function()
+    local NS, Lib = bare()
+    local z = Lib.CreateGroup({ name = "Zed" })
+    local a = Lib.CreateGroup({ name = "Alpha" })
+    local y = Lib.CreateGroup({ name = "Yak" })
+    local b = Lib.CreateGroup({ name = "Bee" })
+    setParent(NS, y, z)
+    setParent(NS, b, z)
+    assertEqual(table.concat(Lib.Children(z), ","), y .. "," .. b, "made order, not names")
+    local ids = Lib.MemberIds("group")
+    -- red under: MemberIds sorting every user group by name, children among them
+    assertEqual(table.concat(ids, ","), a .. "," .. z .. "," .. y .. "," .. b)
+end)
+
+test("library: [nesting] deleting a parent makes its children top-level groups in its place on every surface", function()
+    local NS, Lib, p = boot()
+    local parent = Lib.CreateGroup({ name = "Raid night" })
+    local c1 = Lib.CreateGroup({ name = "Boss 1" })
+    local c2 = Lib.CreateGroup({ name = "Boss 2" })
+    setParent(NS, c1, parent)
+    setParent(NS, c2, parent)
+    local pad = p.pads[p.padOrder[1]]
+    Lib.AddGroupToSurface("pad", p.padOrder[1], parent, 2)
+    local before = pad.groups[1]
+    assertTrue(Lib.DeleteGroup(parent))
+    -- red under: DeleteGroup leaving the children's parent pointing at the deleted group
+    assertFalse(p.groups[c1].parent)
+    assertFalse(p.groups[c2].parent)
+    assertEqual(pad.groups[1], before)
+    assertEqual(pad.groups[2], c1, "in the parent's place")
+    assertEqual(pad.groups[3], c2)
+    local dial = p.dials[p.dialOrder[1]]
+    for _, gid in ipairs(dial.groups) do assertTrue(gid ~= c1, "the parent was on no dial") end
+end)
+
+test("library: [nesting] Duplicate keeps a child inside its parent; a parent's copy holds no children", function()
+    local NS, Lib, p = boot()
+    local parent = Lib.CreateGroup({ name = "Raid night" })
+    local child = Lib.CreateGroup({ name = "Boss 1" })
+    setParent(NS, child, parent)
+    local copy = Lib.DuplicateGroup(child)
+    assertEqual(p.groups[copy].parent, parent)
+    local pcopy = Lib.DuplicateGroup(parent)
+    assertFalse(p.groups[pcopy].parent)
+    assertEqual(#Lib.Children(pcopy), 0)
+    assertEqual(#Lib.Children(parent), 2)
+end)
+
+test("library: [nesting] Prepare drops a bad parent (gone, itself, a chain, a cycle) and takes a child off every surface", function()
+    local _, Lib, p = boot()
+    local function raw(name, parent) local id = Lib.CreateGroup({ name = name }) p.groups[id].parent = parent return id end
+    local top = raw("Top")
+    local kid = raw("Kid", top)
+    local gone = raw("Gone", "g999")
+    local self = raw("Self")
+    p.groups[self].parent = self
+    local deep = raw("Deep", kid)
+    local x = raw("X")
+    local y = raw("Y", x)
+    p.groups[x].parent = y
+    local num = raw("Num", 5)
+    local pad = p.pads[p.padOrder[1]]
+    table.insert(pad.groups, 1, kid)
+    local r = Lib.Prepare()
+    assertEqual(p.groups[kid].parent, top, "a good parent stays")
+    -- red under: Prepare without the parent repair
+    assertNil(p.groups[gone].parent)
+    assertNil(p.groups[self].parent)
+    assertNil(p.groups[deep].parent, "kid is inside top: no chain")
+    assertNil(p.groups[x].parent, "a cycle is no nesting")
+    assertNil(p.groups[y].parent)
+    assertNil(p.groups[num].parent)
+    for _, gid in ipairs(pad.groups) do assertTrue(gid ~= kid, "a child is off the pad") end
+    assertTrue(r.repaired >= 7)
+    assertEqual(Lib.Prepare().repaired, 0, "idempotent")
+end)
+
+-- ── restore built-in groups (2026-10-18-builtins-as-groups-design.md, goal 1) ────────────────
+
+test("library: [restore] a deleted set comes back once, as fresh groups at the end of every surface", function()
+    local NS, Lib, p = boot()
+    local old = T.seeded(NS, "bi.mplus")
+    Lib.DeleteGroup(old)
+    local n = Lib.RestoreBuiltins()
+    local new = T.seeded(NS, "bi.mplus")
+    assertTrue(new ~= nil and new ~= old, "a fresh group")
+    assertEqual(n.groups, 1)
+    assertEqual(n.callouts, #NS.BuiltIns.groups["bi.mplus"].callouts)
+    assertEqual(p.pads.p1.groups[#p.pads.p1.groups], new, "at the end of the pad")
+    assertEqual(p.dials.d2.groups[#p.dials.d2.groups], new, "and of the dial")
+    local again = Lib.RestoreBuiltins()
+    -- red under: RestoreBuiltins re-seeding every set, present or not
+    assertEqual(again.groups + again.callouts, 0, "a second run adds nothing")
+    assertEqual(#p.pads.p1.groups, #NS.BuiltIns.order)
+end)
+
+test("library: [restore] a deleted node comes back inside its set; a deleted callout at the end of its group", function()
+    local NS, Lib, p = boot()
+    local ab = T.seeded(NS, "bi.bg.ab")
+    local mine = T.seeded(NS, "bi.bg.ab.mine")
+    Lib.DeleteGroup(mine)
+    local mplus = T.seeded(NS, "bi.mplus")
+    Lib.RemoveFromGroup(mplus, 2)   -- Lust
+    NS.SchemaRuntime.Set("callout.text", "Pulling NOW", T.seeded(NS, "bi.mplus.pull"))
+    local n = Lib.RestoreBuiltins()
+    assertEqual(n.groups, 1)
+    assertEqual(n.callouts, 1 + #NS.BuiltIns.groups["bi.bg.ab.mine"].callouts)
+    local node = T.seeded(NS, "bi.bg.ab.mine")
+    assertEqual(p.groups[node].parent, ab, "inside its set")
+    local list = p.groups[mplus].callouts
+    assertEqual(p.callouts[list[#list]].origin, "bi.mplus.lust", "at the end of its group")
+    assertEqual(p.callouts[T.seeded(NS, "bi.mplus.pull")].text, "Pulling NOW", "an edited callout is kept as it is")
+    for _, gid in ipairs(p.pads.p1.groups) do assertTrue(gid ~= node, "a node is placed on no surface") end
+    assertEqual(Lib.RestoreBuiltins().groups, 0)
+end)
+
+test("library: [restore] a set deleted with its nodes kept brings back only what is missing", function()
+    local NS, Lib, p = boot()
+    local ab = T.seeded(NS, "bi.bg.ab")
+    local stables = T.seeded(NS, "bi.bg.ab.stables")
+    Lib.DeleteGroup(ab)   -- its nodes become top-level groups
+    assertTrue(not p.groups[stables].parent)
+    local n = Lib.RestoreBuiltins()
+    assertEqual(n.groups, 1, "the set alone: its nodes are still the player's")
+    local new = T.seeded(NS, "bi.bg.ab")
+    assertEqual(#Lib.Children(new), 0)
+    assertTrue(not p.groups[stables].parent, "a group the player has is not moved")
+end)
+
+test("library: [restore] a set nested in another group keeps its place; its nodes stay out", function()
+    local NS, Lib, p = boot()
+    local ab = T.seeded(NS, "bi.bg.ab")
+    for _, kid in ipairs(Lib.Children(ab)) do Lib.DeleteGroup(kid) end
+    local mine = Lib.CreateGroup({ name = "Mine" })
+    assertTrue((NS.SchemaRuntime.Set("group.parent", mine, ab)))
+    local n = Lib.RestoreBuiltins()
+    -- red under: drop the ValidParent check before a node is seeded into its set
+    assertEqual(n.groups, 0, "a node cannot go inside a group that is inside another")
+    assertEqual(p.groups[ab].parent, mine)
+    assertEqual(#Lib.Children(ab), 0)
+end)
+
+test("library: [restore] a new pad holds the seeded sets still top-level, in shipped order", function()
+    local NS, Lib, p = boot()
+    Lib.DeleteGroup(T.seeded(NS, "bi.raid"))
+    local mine = Lib.CreateGroup({ name = "Mine" })
+    NS.SchemaRuntime.Set("group.parent", mine, T.seeded(NS, "bi.arena"))
+    local id = Lib.CreateSurface("pad", "Two")
+    local want = {}
+    for _, top in ipairs(NS.BuiltIns.order) do
+        local gid = T.seeded(NS, top)
+        if gid and not Lib.IsChild(gid) then want[#want + 1] = gid end
+    end
+    assertEqual(#want, #NS.BuiltIns.order - 2)
+    assertEqual(table.concat(p.pads[id].groups, ","), table.concat(want, ","))
+end)
+
+test("library: [restore] SeededBattleground names a seeded battleground set's key; a node, another set and a copy have none", function()
+    local NS, Lib = boot()
+    local ab = T.seeded(NS, "bi.bg.ab")
+    -- red under: answer nil from Library.SeededBattleground (the dial's depth warning reads it)
+    assertEqual(Lib.SeededBattleground(ab), "ab")
+    assertNil(Lib.SeededBattleground(T.seeded(NS, "bi.bg.ab.farm")), "a node is not a set")
+    assertNil(Lib.SeededBattleground(T.seeded(NS, "bi.mplus")), "not a battleground")
+    local copy = Lib.DuplicateGroup(ab)
+    assertNil(Lib.Group(copy).origin, "a duplicate is the player's own")
+    assertNil(Lib.SeededBattleground(copy))
+    assertNil(Lib.SeededBattleground("g999"))
+end)
+

@@ -21,7 +21,10 @@ local _, NS = ...
 -- unread past TEXT_MAX bytes, and the payload past MAX_TEXT_BYTES read in all. Check fails closed: a hand-made payload that still raises inside the
 -- checks reads as damaged. A member that fails is refused and listed with its reason; a reference
 -- to something the string does not carry (a group's callout, a surface's group) is left out and
--- counted, and so is a callout no imported group holds (a callout travels inside its group). A pad
+-- counted, and so is a callout no imported group holds (a callout travels inside its group). A
+-- group's `parent` (nesting, one level) is kept only when it names another group the string carries
+-- that has no parent of its own; any other is a dropped reference, and the group arrives top-level. A
+-- surface's reference to a group the string nests is a dropped reference too. A pad
 -- or a dial carries its name, Enabled, its groups and its portable fields, keyed by member-row path; never its key or its position (spec §15: it arrives unbound). Nothing in a string
 -- is ever run (anti-pattern #20): a leading "/" is refused here, and Bake refuses one again at every
 -- bake. The result is a plan that Library.Import, the registry writer, applies.
@@ -277,8 +280,47 @@ local function groupEntry(_, id, g, res)
     local when = cleanValue(g.when == nil and {} or g.when, 1, {}, res)
     if when == nil or not NS.Library.ValidWhen(when) then return nil, "badWhen" end
     local refs = keepRefs(g.callouts, function(cid) return res.known[cid] == "callout" end, res)
-    return { id = id, callouts = refs, fields = { name = name, icon = icon, iconColor = cleanIconColor(g.iconColor, res),
-        when = when, openInto = g.openInto == true, enabled = g.enabled ~= false } }
+    -- `parent` as the string has it; checkParents keeps it or drops it once every group is read.
+    return { id = id, callouts = refs, parent = g.parent, fields = { name = name, icon = icon,
+        iconColor = cleanIconColor(g.iconColor, res), when = when, openInto = g.openInto == true,
+        enabled = g.enabled ~= false } }
+end
+
+-- Each checked group's parent kept only when it names another checked group whose own parent, as the
+-- string has it, is none (one level, so no chain and no cycle survives); any other is dropped and
+-- counted with the dropped references, and the group arrives top-level.
+local function checkParents(res)
+    local stored = {}
+    for _, e in ipairs(res.groups) do stored[e.id] = e.parent end
+    for _, e in ipairs(res.groups) do
+        local v = e.parent
+        if v ~= nil and v ~= false then
+            if not (type(v) == "string" and v ~= e.id and res.known[v] == "group" and not stored[v]) then
+                res.dropped = res.dropped + 1
+                v = nil
+            end
+        end
+        e.parent = v or nil
+    end
+end
+
+-- A pad's or dial's reference to a group the string nests (its checked parent is kept) is dropped and
+-- counted: Library.Import puts that group inside its parent, and a surface never lists a child.
+local function dropNested(res)
+    local nested = {}
+    for _, e in ipairs(res.groups) do
+        if e.parent then nested[e.id] = true end
+    end
+    for _, list in ipairs({ res.pads, res.dials }) do
+        for _, e in ipairs(list) do
+            for i = #e.groups, 1, -1 do
+                if nested[e.groups[i]] then
+                    table.remove(e.groups, i)
+                    res.dropped = res.dropped + 1
+                end
+            end
+        end
+    end
 end
 
 -- The member rows whose value travels with a pad or a dial: every one of its kind but its name and
@@ -290,11 +332,6 @@ function SH.Portable(kind, path)
     local row = NS.SchemaRuntime and type(path) == "string" and NS.SchemaRuntime.FindRow(path)
     if not (row and row.instance == kind) or NOT_PORTABLE[row.type] then return false end
     return path ~= kind .. ".name" and path ~= kind .. ".enabled"
-end
-
-local function topBuiltin(gid)
-    local def = NS.BuiltIns.groups[gid]
-    return def ~= nil and def.parent == nil
 end
 
 -- A surface's portable fields, every string in each value sanitized, nested ones included
@@ -314,7 +351,7 @@ local function surfaceEntry(spec, id, s, res)
     if type(s) ~= "table" then return nil, "damaged" end
     local name, why = cleanName(s.name, res)
     if not name then return nil, why end
-    local groups = keepRefs(s.groups, function(gid) return res.known[gid] == "group" or topBuiltin(gid) end, res)
+    local groups = keepRefs(s.groups, function(gid) return res.known[gid] == "group" end, res)
     return { id = id, name = name, enabled = s.enabled ~= false, groups = groups,
         fields = surfaceFields(spec.kind, s.fields, res) }
 end
@@ -425,6 +462,8 @@ function SH.Validate(payload)
         return res
     end
     for _, spec in ipairs(SH.KINDS) do checkSection(spec, payload[spec.key] or {}, res) end
+    checkParents(res)
+    dropNested(res)
     dropLoose(res)
     res.known = nil
     if res.nodes > SH.MAX_NODES or res.bytes > SH.MAX_TEXT_BYTES then
@@ -561,9 +600,10 @@ local function copy(t)
     return out
 end
 
--- The picked ids and what they need: a pad's or a dial's user groups, then every picked group's
--- callouts (spec §15: a group references its callouts, a surface its groups). Built-in sets travel
--- by id only. A callout is never picked on its own: it travels inside the group that owns it
+-- The picked ids and what they need: a pad's or a dial's user groups, every picked group's children
+-- (they show with it), then every picked group's callouts (spec §15: a group references its
+-- callouts, a surface its groups). A child picked alone travels without its parent, and so arrives
+-- top-level. A seeded group travels as any group does, without its origin. A callout is never picked on its own: it travels inside the group that owns it
 -- (2026-10-17-callouts-owned-by-groups-design.md), so a `callout` pick is ignored.
 local function bringGroups(want, surfaces, ids, groups)
     for sid in pairs(ids) do
@@ -571,6 +611,13 @@ local function bringGroups(want, surfaces, ids, groups)
         for _, gid in ipairs(s and s.groups or {}) do
             if groups[gid] then want.group[gid] = true end
         end
+    end
+end
+
+-- Every child of a wanted group is wanted too.
+local function bringChildren(want, groups)
+    for gid, g in pairs(groups) do
+        if g.parent and want.group[g.parent] and NS.Library.IsChild(gid) then want.group[gid] = true end
     end
 end
 
@@ -583,6 +630,7 @@ local function closure(pick, p)
     end
     bringGroups(want, p.pads, want.pad, p.groups)
     bringGroups(want, p.dials, want.dial, p.groups)
+    bringChildren(want, p.groups)
     for gid in pairs(want.group) do
         local g = p.groups[gid]
         for _, cid in ipairs(g and g.callouts or {}) do want.callout[cid] = true end
@@ -603,13 +651,16 @@ function SH.FieldsOf(kind, id)
     return out
 end
 
-local function exportMember(kind, id, m)
+-- A member's payload entry. A child's `parent` travels only when the parent is picked too (`want`),
+-- so a child picked alone arrives top-level with nothing dropped.
+local function exportMember(kind, id, m, want)
     if kind == "callout" then
         return { name = m.name, text = m.text, channel = m.channel, icon = m.icon or nil, iconColor = m.iconColor or nil }
     end
     if kind == "group" then
         return { name = m.name, icon = m.icon or nil, iconColor = m.iconColor or nil, callouts = copy(m.callouts),
-            when = copy(m.when), openInto = m.openInto == true, enabled = m.enabled ~= false }
+            when = copy(m.when), openInto = m.openInto == true, enabled = m.enabled ~= false,
+            parent = NS.Library.IsChild(id) and want.group[m.parent] and m.parent or nil }
     end
     return { name = m.name, enabled = m.enabled ~= false, groups = copy(m.groups), fields = SH.FieldsOf(kind, id) }
 end
@@ -625,7 +676,7 @@ function SH.Collect(pick)
         local set, out = p[spec.key], {}
         for id in pairs(want[spec.kind]) do
             if set[id] then
-                out[id] = exportMember(spec.kind, id, set[id])
+                out[id] = exportMember(spec.kind, id, set[id], want)
                 n = n + 1
             end
         end

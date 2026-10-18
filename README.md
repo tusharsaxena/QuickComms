@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-806%2F806_passing-green)
+![Tests](https://img.shields.io/badge/Tests-837%2F837_passing-green)
 
 Quick Comms puts your usual group callouts one click or one keypress away. "Kick on me", "Lust
 now", "INC 3 Lumber Mill": set them up once and they sit on a Comms Pad or open from a
@@ -32,8 +32,10 @@ Settings → Groups makes a group and, on its Callouts tab, its callouts: Add ca
 editor for the name, text, channel and icon (Save keeps it, Cancel drops it). Choose icon… opens
 a browser with the raid markers, every icon the macro icon picker has and the LibKa0s glyphs, which
 you can color. Reuse
-callout copies one of your other callouts or a built-in one into the group, and each row has an
-edit and a remove button. The group's When tab says where it shows; Comms Pad arranges a pad, and its Look tab sets the font, the border
+callout copies a callout from any of your other groups into this one, and each row has an
+edit and a remove button. A group's Parent group setting puts it inside another group: it then
+shows wherever that group does, in a section (or a dial ring) of its own, while its own conditions
+match. The Preview tab lists each callout beside what it would send where you are. The group's When tab says where it shows; Comms Pad arranges a pad, and its Look tab sets the font, the border
 and the background, each with a Use class color box. "Preview as…" (or `/qc preview`) shows the pads
 and the dial as they would look somewhere else, and hovering a pad's header or the dial's middle (or
 `/qc why`) tells you why each group is there.
@@ -56,7 +58,8 @@ Everything is configured under **Settings → AddOns → Ka0s Quick Comms**, and
   the line to the right channel (say, yell, party, instance, raid or raid warning), even during a boss.
 - After a press, every button dims for about a second. On a boss the game quietly drops anything
   sent faster than that, so if a line never arrives you get a note in chat.
-- The built-in sets are read-only, but you can copy one and edit the copy.
+- The built-in sets arrive as ordinary groups: change, rename or delete them like your own. Restore
+  built-in groups (Settings → Groups → General) brings back any built-in group or callout you deleted.
 - A shared string is checked before anything is added. A callout whose text starts with a slash
   command is left out, and the text is checked again every time a line is prepared.
 
@@ -102,4 +105,4 @@ than in comments, so nothing gets lost.
 
 | Version | Date | Highlights |
 |---|---|---|
-| 0.1.0 | Unreleased | - The Comms Pad and the Comms Dial, with built-in callouts for Mythic+, raids, arenas and every battleground, sent through secure buttons<br>- Your own callouts and groups, with conditions for when each group shows, Preview as… and Why is this showing?<br>- The spam guard, drop notes, test mode and the lock<br>- The pad's font, border and background, with class colors<br>- Sharing groups (with their callouts), pads and dials as a string<br>- The settings panel, the minimap button, the `/qc` command and the debug tools |
+| 0.1.0 | Unreleased | - The Comms Pad and the Comms Dial, with built-in callouts for Mythic+, raids, arenas and every battleground, sent through secure buttons<br>- Your own callouts and groups (the built-in sets among them, as groups you can edit, and groups inside groups), with conditions for when each group shows, Preview as… and Why is this showing?<br>- The spam guard, drop notes, test mode and the lock<br>- The pad's font, border and background, with class colors<br>- Sharing groups (with their callouts), pads and dials as a string<br>- The settings panel, the minimap button, the `/qc` command and the debug tools |

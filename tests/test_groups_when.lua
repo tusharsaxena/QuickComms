@@ -66,12 +66,8 @@ test("when: the specialization row offers the player's class, or the classes the
     assertEqual(W.Values("role", {})[1].value, "TANK")
 end)
 
-test("when: Describe reads a When back as lines, and ActiveLine names the row that does not match", function()
+test("when: ActiveLine names the row that does not match", function()
     local NS, W = boot()
-    assertEqual(W.Describe({})[1], "Always: this group has no conditions.")
-    local lines = W.Describe({ content = { mythicPlus = true }, keyLevel = { min = 10 } })
-    assertEqual(lines[1], "Content: M+")
-    assertEqual(lines[2], "Key level: 10 to any")
     local snap = NS.Situation.Classify({ inInstance = true, instanceType = "raid", difficultyID = 15 })
     assertTrue(W.ActiveLine({ when = { content = { raid = true } } }, snap):find("Active now", 1, true) ~= nil)
     local line = W.ActiveLine({ when = { content = { mythicPlus = true } } }, snap)
@@ -86,8 +82,9 @@ test("when: [phase 3] a group turned off never reads Active now, as the picker's
     -- red under: drop the `enabled == false` branch from W.ActiveLine
     local line = W.ActiveLine({ enabled = false, when = { content = { raid = true } } }, snap)
     assertTrue(line:find("Off: this group is turned off.", 1, true) ~= nil, line)
-    NS.Library.SetBuiltinEnabled("bi.raid", false)
-    line = W.ActiveLine(NS.Library.Group("bi.raid"), snap)
+    local raid = T.seeded(NS, "bi.raid")
+    NS.SchemaRuntime.Set("group.enabled", false, raid)
+    line = W.ActiveLine(NS.Library.Group(raid), snap)
     assertTrue(line:find("Active now", 1, true) == nil, line)
 end)
 
@@ -109,11 +106,15 @@ test("when: [phase 3] the open rows are session state that a profile switch clea
     assertNil(NS.State.whenOpen.g1)
 end)
 
-test("when: Write stores a user group's When through the seam and refuses a built-in with its reason", function()
+test("when: Write stores a group's When through the seam, a seeded one's too, and refuses a shipped id", function()
     local NS, W = boot()
     local gid = NS.Library.CreateGroup({ name = "Mine" })
     assertTrue(W.Write(gid, { content = { arena = true } }))
     assertTrue(NS.db.profile.groups[gid].when.content.arena)
+    local mplus = T.seeded(NS, "bi.mplus")
+    -- red under: W.Write refusing a group that carries an origin
+    assertTrue(W.Write(mplus, { content = { arena = true } }))
+    assertTrue(NS.db.profile.groups[mplus].when.content.arena)
     assertFalse(W.Write("bi.mplus", { content = { arena = true } }))
     assertTrue(NS.BuiltIns.groups["bi.mplus"].when.content.mythicPlus)
 end)

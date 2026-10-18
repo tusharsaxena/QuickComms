@@ -1,24 +1,20 @@
 local _, NS = ...
--- settings/Share.lua — the Share page (design spec §13.1, §15, §12.2): three tabs.
+-- settings/Share.lua — the Share page (design spec §13.1, §15): two tabs.
 --
---     strip     [ Export ][ Import ][ Built-in ]
+--     strip     [ Export ][ Import ]
 --     Export    what travels; a checkbox per group, Comms Pad and Comms Dial, under a heading per kind
 --               (a callout travels inside its group, so it has none); what the string will hold;
 --               Export (the string opens, selected, in the copy window) and Clear
 --     Import    a paste box (its Accept checks the string); the report (spec §15 step 5); Import and
 --               Clear
---     Built-in  one line per shipped set: an Enabled checkbox named after the set, then Customize (or
---               Edit the copy) and Choose callouts
 --
 -- The ticks and the checked string are session state (NS.State.share), never saved; a profile switch
 -- clears them (settings/Editors.lua). The codec, the checks, the export and the apply are
 -- modules/Share.lua's, and Library.Import is the one writer of what arrives; both acts are refused in
 -- combat. A tick and a check refresh their own lines in place; an import repaints every page.
--- Enabled is the set's `builtin.enabled` member row, written through the seam with the set's id.
--- Customize is Library's (the copy takes the set's place on every pad and dial, and the set is turned
--- off) and opens the Groups page on the copy. Choose callouts opens the set on the Groups page's
--- Callouts tab, the one hidden-callouts editor. The page edits no single instance, so its band has no
--- picker. Defaults turns every set back on and shows all of their callouts.
+-- A seeded built-in set is an ordinary group here (2026-10-18-builtins-as-groups-design.md): it is
+-- ticked and exported as any group is. The page edits no single instance, so its band has no picker.
+-- Its Defaults is its own session state: every tick cleared and the checked string forgotten.
 
 local QC = NS.addon
 local Settings = QC.Settings
@@ -26,7 +22,6 @@ local Ed = Settings.Editors
 local L = NS.L
 
 local PAGE = "share"
-local BUILTIN = L["Built-in"]
 local EXPORT, IMPORT = L["Export"], L["Import"]
 
 Settings.Share = Settings.Share or {}
@@ -128,8 +123,9 @@ function SH.ReportText()
     return table.concat(NS.Share.ReportLines(res), "\n")
 end
 
--- How many of a checked string's groups no shared pad or dial lists: they arrive on no surface
--- (Library.Import adds a group to no pad, unlike the Groups page's New group).
+-- How many of a checked string's top-level groups no shared pad or dial lists: they arrive on no
+-- surface (Library.Import adds a group to no pad, unlike the Groups page's New group). A group the
+-- string nests (its checked `parent`) shows wherever its parent does, so it is never counted.
 local function looseGroups(res)
     local listed = {}
     for _, key in ipairs({ "pads", "dials" }) do
@@ -139,7 +135,7 @@ local function looseGroups(res)
     end
     local n = 0
     for _, g in ipairs(res.groups) do
-        if not listed[g.id] then n = n + 1 end
+        if not listed[g.id] and not g.parent then n = n + 1 end
     end
     return n
 end
@@ -209,75 +205,11 @@ local function renderImport(ctx)
           end })
 end
 
--- ── Built-in ────────────────────────────────────────────────────────────────────────────────
-
-function SH.Customize(id)
-    local copy = Settings.Groups.Customize(id)
-    if copy then Ed.Open(Settings.Groups.PAGE) end
-    return copy
-end
-
-function SH.ChooseCallouts(id)
-    Ed.Select("group", id)
-    local groups = Ed.pages[Settings.Groups.PAGE]
-    if groups then groups.activeTab = "callouts" end
-    return Ed.Open(Settings.Groups.PAGE)
-end
-
---- Every set back on, every callout shown (the page's Defaults; its blast radius is the whole list).
---- One act: one bulk bracket (debug-logging-§10: one `[Set] reset share: N rows` line) and one
---- coalesced LIBRARY_CHANGED (Lib.Batch), so the pads rebuild once and the pages repaint once. The
---- Defaults button is refused in combat by the options library, at the control.
-function SH.RestoreAll()
-    local S = NS.SchemaRuntime
-    S.BulkRun("reset", PAGE, function()
-        NS.Library.Batch(function()
-            for _, id in ipairs(NS.BuiltIns.order) do
-                S.Set("builtin.enabled", true, id)
-                S.Set("builtin.hidden", {}, id)
-            end
-        end)
-    end)
-end
-
-local function renderBuiltIn(ctx)
-    local h = H()
-    h.TextRow(ctx, L["The callout sets that ship with Quick Comms. Turn a set off, Customize it into a group you can edit, or choose which of its callouts show."])
-    local items = {}
-    for _, id in ipairs(NS.BuiltIns.order) do
-        local def = NS.BuiltIns.groups[id]
-        local group = NS.Library.Group(id)
-        items[#items + 1] = { make = function(_, parent, rel)
-            local cb = h.AceGUI:Create("CheckBox")
-            cb:SetLabel(def.name)
-            cb:SetValue(group and group.enabled ~= false)
-            cb:SetRelativeWidth(rel or 0.5)
-            cb:SetCallback("OnValueChanged", function(_, _, v) NS.Library.SetBuiltinEnabled(id, v and true or false) end)
-            h.AttachTooltip(cb, def.name, L["Show this set wherever it matches. Off keeps it, and its place on every pad."])
-            parent:AddChild(cb)
-            return cb
-        end }
-        items[#items + 1] = { make = function(_, parent, rel)
-            local AceGUI = h.AceGUI
-            local row = AceGUI:Create("SimpleGroup")
-            row:SetLayout("Flow")
-            row:SetRelativeWidth(rel or 0.5)
-            local copy = Settings.Groups.CustomizedAs(id)
-            local customize = AceGUI:Create("Button")
-            customize:SetText(copy and L["Edit the copy"] or L["Customize"])
-            customize:SetRelativeWidth(0.48)
-            customize:SetCallback("OnClick", function() SH.Customize(id) end)
-            row:AddChild(customize)
-            local choose = AceGUI:Create("Button")
-            choose:SetText(L["Choose callouts"])
-            choose:SetRelativeWidth(0.48)
-            choose:SetCallback("OnClick", function() SH.ChooseCallouts(id) end)
-            row:AddChild(choose)
-            parent:AddChild(row)
-            return row
-        end }
-    end
-    h.RenderGrid(ctx, items)
+--- The page's Defaults (options-ui-§13: what the page draws): every tick cleared and the checked
+--- string forgotten. Session state only, so no member is written.
+function SH.RestoreDefaults()
+    SH.ClearImport()
+    SH.ClearPicks()
 end
 
 local function render(ctx)
@@ -286,11 +218,10 @@ local function render(ctx)
           render = renderExport },
         { key = IMPORT, label = IMPORT, tooltip = L["Add what someone shared with you, from their string."],
           render = renderImport },
-        { key = BUILTIN, render = renderBuiltIn },
     })
 end
 
 Ed.RegisterPage(PAGE, L["Share"], "SharePanel", render, {
-    tooltip = L["Turn every built-in set back on and show all of their callouts. Your customized copies are kept."],
-    onClick = function() SH.RestoreAll() end,
+    tooltip = L["Untick everything on Export and forget the string checked on Import. Nothing in your profile changes."],
+    onClick = function() SH.RestoreDefaults() end,
 })

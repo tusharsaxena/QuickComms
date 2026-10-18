@@ -82,9 +82,9 @@ end
 
 -- ── the structured member rows on the command line (slash-commands-§6) ──────────────────────
 --
--- Four row types are structured (settings/SchemaMembers.lua): point, when, idset and key. The
--- library parses and prints bool, number, string and color; the descriptor's `parse` and `format`
--- hooks teach it these four and hand every other row back to it:
+-- Three row types are structured (settings/SchemaMembers.lua): point, when and key. The library
+-- parses and prints bool, number, string and color; the descriptor's `parse` and `format` hooks
+-- teach it these three and hand every other row back to it:
 --   pad.point, dial.point  `x y` (keeps the anchor points) or `POINT RELATIVEPOINT x y`
 --   dial.key        one key, `shift-g` or `SHIFT-G`; `none` clears it
 --   group.when      `<condition> <value>[,<value>...]` replaces that one condition; the condition
@@ -94,7 +94,6 @@ end
 --                   the condition takes without regard to case (`role tank` is TANK); an instance or
 --                   battleground by its id or listed name; a value it can never match is refused
 --                   with what it takes (settings/Groups_When.lua W.ResolveValue)
---   builtin.hidden  callout ids, or `none`
 -- A row is written to the member Settings.EditingId addresses, as every member row is. A callout's
 -- rows name the callout instead, by its id after the path (`set callout.text <id> <value>`,
 -- `get callout.name <id>`, `reset callout.icon <id>`; byId below): no page selects a callout. A
@@ -191,22 +190,12 @@ local function parseWhen(text)
     return when
 end
 
-local function parseIdSet(text)
-    local w = wordsOf(text)
-    if #w == 0 then return nil, L["Name the callout ids to hide, or none."] end
-    local set = {}
-    if not (#w == 1 and w[1]:lower() == "none") then
-        for _, id in ipairs(w) do set[id] = true end
-    end
-    return set
-end
-
 -- A key as typed; the row's validate and normalize do the rest (Library.KeyValue).
 local function parseKey(text)
     return (text or ""):match("^%s*(.-)%s*$")
 end
 
-local PARSE = { point = parsePoint, when = parseWhen, idset = parseIdSet, key = parseKey }
+local PARSE = { point = parsePoint, when = parseWhen, key = parseKey }
 
 local function sortedKeys(set)
     local keys = {}
@@ -250,10 +239,6 @@ local FORMAT = {
         return ("%s %s %s %s"):format(tostring(v[1]), tostring(v[2]), tostring(v[3]), tostring(v[4]))
     end,
     when = formatWhen,
-    idset = function(v)
-        if type(v) ~= "table" or next(v) == nil then return L["none"] end
-        return table.concat(sortedKeys(v), ", ")
-    end,
     key = function(v)
         if type(v) ~= "string" then return L["none"] end
         return v

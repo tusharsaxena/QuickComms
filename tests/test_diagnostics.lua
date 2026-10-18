@@ -22,7 +22,7 @@ end)
 test("diagnostics: the report names the schema, the profile, the holds and the launcher", function()
     local NS = T.enableAddon()
     local text = report(NS)
-    assertTrue(text:find("schema stored=2 code=2", 1, true) ~= nil, "identity")
+    assertTrue(text:find("schema stored=3 code=3", 1, true) ~= nil, "identity")
     assertTrue(text:find("profile=Default", 1, true) ~= nil, text)
     assertTrue(text:find("feature events registered=true", 1, true) ~= nil, "registration")
     assertTrue(text:find("launcher: registered=true", 1, true) ~= nil, "integrations")
@@ -68,11 +68,11 @@ test("diagnostics: the surfaces and send sections name the pads, the armed chips
     end
     NS.Situation.RefreshNow("test")
     local text = report(NS)
-    assertTrue(text:find("p1 active=bi.mplus stale=false", 1, true) ~= nil, text)
+    assertTrue(text:find("p1 active=" .. T.seeded(NS, "bi.mplus") .. " stale=false", 1, true) ~= nil, text)
     -- the pad's 8 chips, and the default dial's 11 wedges: 1 group wedge, then 8 callouts on three
     -- pages of 4 (two More wedges), so 16 armed
     assertTrue(text:find("buttons=19 armed=16", 1, true) ~= nil, text)
-    assertTrue(text:find("p1:bi.mplus.pull /p Pulling next pack", 1, true) ~= nil, text)
+    assertTrue(text:find("p1:" .. T.seeded(NS, "bi.mplus.pull") .. " /p Pulling next pack", 1, true) ~= nil, text)
     assertTrue(text:find("pending -", 1, true) ~= nil, "no queued keys")
     assertTrue(text:find("window=1", 1, true) ~= nil, "the guard")
     assertTrue(text:find("sent=0 dropped=0", 1, true) ~= nil, "the echo counts")
@@ -92,7 +92,7 @@ test("diagnostics: [final 21] the settings section lists no member row", functio
     NS.Library.CreateGroup({ name = "Mine", callouts = { cid } })
     local text = report(NS)
     -- red under: run nonDefaults over every schema row (the first member's fields read as settings)
-    for _, prefix in ipairs({ "callout.", "group.", "pad.", "builtin." }) do
+    for _, prefix in ipairs({ "callout.", "group.", "pad.", "dial." }) do
         assertTrue(text:find(" " .. prefix, 1, true) == nil, prefix .. "\n" .. text)
     end
 end)
@@ -105,9 +105,9 @@ test("diagnostics: [phase 4] the dials and bindings sections name each dial, its
     NS.Situation.RefreshNow("test")
     NS.SchemaRuntime.Set("dial.key", "G", "d2")
     local text = report(NS)
-    assertTrue(text:find("d2 QuickCommsDial1 key=G rings=4 openRing=2 open=false active=bi.mplus stale=false", 1, true)
+    assertTrue(text:find("d2 QuickCommsDial1 key=G rings=4 openRing=2 open=false active=" .. T.seeded(NS, "bi.mplus") .. " stale=false", 1, true)
         ~= nil, text)
     assertTrue(text:find("override bindings=1", 1, true) ~= nil, text)
     assertTrue(text:find("G -> QuickCommsDial1:Toggle", 1, true) ~= nil, text)
-    assertTrue(text:find("d2:bi.mplus.pull /p Pulling next pack", 1, true) ~= nil, "the armed wedges")
+    assertTrue(text:find("d2:" .. T.seeded(NS, "bi.mplus.pull") .. " /p Pulling next pack", 1, true) ~= nil, "the armed wedges")
 end)

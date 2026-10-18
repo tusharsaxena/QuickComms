@@ -21,15 +21,15 @@ end
 local function planOf(NS, opts)
     opts = opts or {}
     local snap = NS.Situation.Current()
-    local group = { id = "bi.mplus", title = "M+ (generic)", slots = {} }
-    for i, cid in ipairs(NS.BuiltIns.groups["bi.mplus"].callouts) do
+    local group = { id = T.seeded(NS, "bi.mplus"), title = "M+ (generic)", slots = {} }
+    for i, cid in ipairs(NS.Library.Group(T.seeded(NS, "bi.mplus")).callouts) do
         if i > (opts.n or 8) then break end
         local slot = NS.Surfaces.Slot(cid, NS.Library.Callout(cid), snap, { soloFallback = "none", ctx = {} })
         slot.surfaceId = "d2"
         group.slots[#group.slots + 1] = slot
     end
     local rings, open = NS.DialLayout.Rings({ group }, { slices = opts.slices or 4, title = "Comms Dial" })
-    return { kind = "dial", surfaceId = "d2", snapshot = snap, order = { "bi.mplus" }, active = {}, rings = rings,
+    return { kind = "dial", surfaceId = "d2", snapshot = snap, order = { T.seeded(NS, "bi.mplus") }, active = {}, rings = rings,
         openRing = open, lockdownChip = opts.lockdown == true, test = opts.test }
 end
 
@@ -41,7 +41,7 @@ test("dial: Apply builds QuickCommsDial<n> with a ring per page, each callout we
     assertFalse(inst.header:IsShown(), "closed until its key opens it")
     local _, rings = NS.Pool.Counts(inst.rings)
     assertEqual(rings, 4, "the group ring, then three pages of eight callouts on four wedges")
-    local w = NS.Dial.WedgesFor("d2", "bi.mplus.pull")[1]
+    local w = NS.Dial.WedgesFor("d2", T.seeded(NS, "bi.mplus.pull"))[1]
     assertEqual(w:GetAttribute("macrotext"), "/p Pulling next pack")
     assertEqual(w.qcLabel:GetText(), "Pulling")
     assertEqual(NS.DialRender.WedgeLines(w.qcItem)[2], "/p Pulling next pack")
@@ -114,9 +114,9 @@ test("dial: a press dims every wedge and chip for the guard window; a drop stays
     local NS, m = live()
     NS.Dial.Apply(1, "d2", planOf(NS))
     local h = NS.Dial.Instance("d2").header
-    local w = NS.Dial.WedgesFor("d2", "bi.mplus.pull")[1]
-    local other = NS.Dial.WedgesFor("d2", "bi.mplus.lust")[1]
-    NS.addon:SendMessage(NS.MSG.SEND_RESULT, "bi.mplus.pull", "d2", "dropped")
+    local w = NS.Dial.WedgesFor("d2", T.seeded(NS, "bi.mplus.pull"))[1]
+    local other = NS.Dial.WedgesFor("d2", T.seeded(NS, "bi.mplus.lust"))[1]
+    NS.addon:SendMessage(NS.MSG.SEND_RESULT, T.seeded(NS, "bi.mplus.pull"), "d2", "dropped")
     assertTrue(w.qcFlash:IsShown())
     -- red under: flash a drop for the pad's 0.4 s (gone before the closed dial can be reopened)
     assertEqual(m.__timers[#m.__timers].delay, NS.Dial.DROP_SECONDS)
@@ -126,7 +126,7 @@ test("dial: a press dims every wedge and chip for the guard window; a drop stays
     m.__click(w)
     -- red under: drop the NS.Dial.Cooldown call from Pad.Cooldown
     assertTrue(other.qcCool:IsShown(), "the guard is global: every wedge dims")
-    assertTrue(NS.Pad.ChipsFor("p1", "bi.mplus.lust")[1].qcCool:IsShown(), "and every chip")
+    assertTrue(NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.mplus.lust"))[1].qcCool:IsShown(), "and every chip")
     m.__fireTimers()
     assertFalse(other.qcCool:IsShown())
 end)
@@ -396,7 +396,7 @@ test("dial: the hub's tooltip says why each group shows, unless the player turne
     h:__fire("OnEnter")
     assertEqual(#shown, 1)
     assertEqual(shown[1].title, "Why is this showing?")
-    assertEqual(shown[1].lines[1], "Arathi Basin (built-in): Content, Battleground")
+    assertEqual(shown[1].lines[1], "Arathi Basin: Content, Battleground")
     NS.SchemaRuntime.Set("behavior.whyTooltips", false)
     h:__fire("OnEnter")
     assertEqual(#shown, 1)

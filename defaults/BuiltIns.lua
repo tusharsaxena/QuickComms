@@ -1,7 +1,8 @@
 local _, NS = ...
--- defaults/BuiltIns.lua — the shipped, read-only callout sets (spec §12): the registry table and
--- the helpers the four data files use. Shipped data, not registry members (architecture-§5): the
--- profile stores only the overlay (profile.builtins). Built-in ids are stable once shipped.
+-- defaults/BuiltIns.lua — the shipped callout sets (spec §12): the seed table and the helpers the
+-- four data files use. Seed data, not registry members (architecture-§5): Library gives each profile
+-- these sets once as ordinary user groups and callouts (2026-10-18-builtins-as-groups-design.md),
+-- each keeping its shipped id as its `origin`, so a shipped id is stable once shipped.
 
 NS.BuiltIns = NS.BuiltIns or { groups = {}, callouts = {}, order = {}, SNAPSHOTS = {} }
 local BI = NS.BuiltIns
