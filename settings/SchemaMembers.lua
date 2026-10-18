@@ -209,7 +209,7 @@ local ROWS = {
       normalize = Lib.IconColorValue, validate = check(iconColorCheck("group")) },
     { path = "group.enabled", instance = "group", type = "bool", default = T.group.enabled,
       page = "groups", group = GENERAL, label = L["Enabled"],
-      desc = L["Show this group wherever its When matches. Off keeps the group and its place on every pad."] },
+      desc = L["Show this group wherever its When matches (its parent's, while Inherit when conditions is ticked). Off keeps the group and its place on every pad."] },
     { path = "group.openInto", instance = "group", type = "bool", default = T.group.openInto,
       page = "groups", group = GENERAL, label = L["Open the dial on this group"],
       desc = L["When this is the first active group on a Comms Dial, the dial opens straight on its ring, and the middle of the dial goes back to the groups."] },
@@ -219,11 +219,18 @@ local ROWS = {
     -- surface (Library.SettleParent, below). A page's Defaults keeps it (settings/Schema.lua resetExempt).
     { path = "group.parent", instance = "group", type = "string", dialogControl = "EditBox", default = false,
       page = "groups", group = GENERAL, label = L["Parent group"],
-      desc = L["The group this one sits inside. It shows wherever that group does, in a section (or a ring) of its own, while its When matches. None makes it a group of its own."],
+      desc = L["The group this one sits inside. It shows wherever that group does, in a section (or a ring) of its own, while its conditions match (its parent's, while Inherit when conditions is ticked). None makes it a group of its own."],
       normalize = parentValue, validate = check(function(v, id) return Lib.ValidParent(parentValue(v), id) end) },
+    -- Inherit when conditions (2026-10-18-when-drawers-design.md §3): a child judged by its parent's
+    -- When instead of its own (Resolver.WhenOf), which is kept. On by default; an absent field reads as
+    -- on. The General tab draws it as its own checkbox beside Parent group (settings/Groups.lua).
+    { path = "group.inheritWhen", instance = "group", type = "bool", default = T.group.inheritWhen,
+      page = "groups", group = GENERAL, label = L["Inherit when conditions"],
+      validate = check(function(v) return type(v) == "boolean", "badChoice" end),
+      desc = L["Use the parent group's When instead of this group's own. This group's own conditions are kept for when you untick it. Only a group inside another group inherits."] },
     { path = "group.when", instance = "group", type = "when",
       page = "groups", group = L["When"], label = L["When"],
-      desc = L["The conditions under which this group is active. Every condition you turn on must match; within a condition, any value may."],
+      desc = L["The conditions under which this group is active. Every condition you set must match; a condition left as Any does not limit the group; within a condition, any value may."],
       validate = check(validWhen) },
 
     -- Comms Pad page (spec §10.2, §10.3, §13.1).

@@ -22,7 +22,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
 | SEND-1..5 | Send | Secure sends in keys and on bosses, the spam guard |
 | PAD-1..8 | Pad | The Comms Pad |
-| EDIT-1..21 | Editors | The Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser and glyph colors, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups, the Preview table), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
+| EDIT-1..24 | Editors | The Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search and glyph colors, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
 | DIAL-1..12 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial |
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
 | LOOK-1..2 | Look | The Comms Pad's font, border and background |
@@ -178,7 +178,7 @@ the pet-battle padlock draws instead, with no error. Result:
 **EDIT-1. A callout and a group on the pad (the phase 3 exit).** Settings → Groups → New group; on
 its Callouts tab click Add callout → the callout popup opens blank (Smart group, no icon); name it
 `Inc`, text `INC {skull}`, Save → the popup closes and `Inc` is the list's last row. On the group's
-When tab tick Content, then M+. Enter a key → the pad shows the new group first with
+When tab click the Content header and tick M+ in its drawer. Enter a key → the pad shows the new group first with
 an `Inc` chip; click it → the party sees "INC" with a skull. Leave the key → the group is gone from
 the pad. Result:
 
@@ -188,8 +188,8 @@ group of yours, nothing read-only. General: Name, Enabled, Open the dial on this
 the icon with Choose icon…, Duplicate and Delete, then Restore built-in groups; no Customize and no
 read-only line. Callouts: the callout table, exactly as a group of yours draws it (Add callout, Reuse
 callout with Add, a boxed row per callout with its handle, icon, name and channel, edit and remove
-glyphs); no Show checkboxes. When: the editable condition rows, each with its checkbox, Content →
-M+ ticked; not read-only text. Rename a callout in the popup and Save → in a key, the chip's label
+glyphs); no Show checkboxes. When: the editable condition drawers (EDIT-22), Content's summary
+reading M+ in gold; not read-only text. Rename a callout in the popup and Save → in a key, the chip's label
 changes. Untick Enabled → in a key the set is gone from the pad; tick it again. Result:
 
 **EDIT-3. Preview as….** Out of combat, in the open world: Groups → General → Preview as → Arena →
@@ -351,10 +351,11 @@ exactly one. Result:
 callout and a When that matches where you are) and `Kicks`. On Kicks' General tab, Parent group →
 the dropdown lists None and the top-level groups, not Kicks itself; pick My keys → Kicks leaves every
 pad's and dial's Groups list, Add a group there does not offer it, and the Groups picker lists it
-indented right under My keys. Give Kicks a callout and a When that matches → the pad shows My keys'
-own section, then a section titled Kicks; the dial (test mode or its key) shows My keys' callouts,
-then a Kicks wedge that opens its ring. Change Kicks' When so it does not match → its section and
-ring go, My keys stays. On My keys' General tab, Parent group is grayed out; its tooltip names
+indented right under My keys, and Inherit when conditions beside Parent group is ticked and no
+longer grayed out. Give Kicks a callout → the pad shows My keys' own section, then a section titled
+Kicks; the dial (test mode or its key) shows My keys' callouts, then a Kicks wedge that opens its
+ring. Untick Inherit when conditions and give Kicks a When that does not match → its section and
+ring go, My keys stays (EDIT-23 covers inheriting). On My keys' General tab, Parent group is grayed out; its tooltip names
 Kicks. Duplicate Kicks → the chat line says the copy is inside My keys. Delete My keys → the question
 says the groups inside it become top-level groups in its place; Yes → Kicks and its copy are
 top-level, on every pad and dial where My keys was. `/qc set group.parent none` on a selected child
@@ -379,6 +380,65 @@ the same places as before; the unticked set is a group with Enabled unticked; th
 missing from its group (Restore built-in groups brings it back); the customized copy is there with
 your edits, in its place, with no stock set beside it. `/reload` again → nothing changes and nothing
 is added. Result:
+
+**EDIT-22. The When drawers.** Groups → a group of yours → When → the active-now line, then the gray
+line "Every condition you set must match. A condition left as Any does not limit the group.", then
+eleven header bars, closed, in this order: Content, Instance, Difficulty, Key level, Group, Leader
+or assist, Class, Specialization, Role, Character, Battleground. Each has a right-pointing chevron,
+its name in white and "Any" in gray at its right edge; there is no enable checkbox anywhere. They
+look like the settings panel (its fonts, gold, dark fills and thin borders), not like another
+addon's cards. Hover a header → its tooltip. Click Content → the chevron points down, the header's
+edge turns gold and its bottom corners square off, and a box joins under it holding the content
+types in three columns (World, Dungeon, M+ on the first line), lined up under the name, with Select
+all and Clear (Any) at its bottom right. Tick M+, then Raid → the name turns gold and the summary
+reads "M+, Raid"; in a key the group shows. Click Difficulty → both drawers are open. Select all →
+every difficulty is ticked and the summary lists them, cut with an ellipsis before the edge. Clear
+(Any) → all unticked, the name white, the summary "Any", the drawer still open. Key level: Lowest
+`10` → "10 or higher"; Highest `15` → "10 to 15"; Highest `5` is refused with a line and the box goes
+back. Instance: an add box and Add the instance you are in, no Select all; add two dungeons → "2
+instances"; Clear (Any) empties the list. Specialization with a class picked → Select all ticks that
+class's specs only. Open every drawer, scroll to the bottom, open Battleground and tick a box in
+it, then Select all and Clear (Any) → the page stays where you scrolled each time, never jumping to
+the top. Click an open header → its drawer closes and its summary stays. Pick another
+group and come back → the drawers you left open are still open, and the other group's are its own;
+`/qc profile Other` and back → all closed; `/reload` → all closed, every condition kept. In combat
+the panel cannot be opened; with it open on the pull, the combat cover lies over the tab and no
+header opens. Result:
+
+**EDIT-23. Inherit when conditions.** Out of a key, in the open world: Groups → "Arathi Basin" →
+pick a node inside it ("Lumber Mill") → General → Inherit when conditions beside Parent group is
+ticked; its tooltip says it uses the parent group's When. The Group picker shows **no green dot** on
+Arathi Basin's nodes (nor on any seeded battleground's), and none on the set itself. When → the gold
+line "Uses Arathi Basin's conditions. Untick Inherit when conditions on the General tab to set this
+group's own.", then the drawers with Arathi Basin's conditions: Content's summary reads Battleground
+in gold; a drawer opens and closes, its checkboxes are grayed out and there is no Select all or
+Clear (Any). Enter Arathi Basin (or Preview as → Arathi Basin) → the node's wedge is on the dial and
+its section on the pad. Untick Inherit when conditions → the When tab is editable and shows the
+node's own (empty) When, every summary "Any", and the picker's dot is back in the open world (an
+empty When matches anywhere); give it a When of its own (Content → Arena) → in Arathi Basin its
+wedge and section are gone, the other nodes stay. Tick it again → back to the parent's
+conditions, and the node's own Arena is still there when you untick it once more. On a top-level
+group of yours the box is grayed out. `/qc set group.inheritWhen false` on a selected child unticks
+it; the page's Defaults ticks it again. Export a group with a child that does not inherit (Share →
+Export), import the string → the copy's child does not inherit either. Result:
+
+**EDIT-24. The icon browser's search.** Open the icon browser (EDIT-14) → the toolbar holds a search
+box with a gold magnifier inside its left edge, beside Show on Game icons, beside Icon color on
+Glyphs, at the left on Markers; hover it → "Markers by name, glyphs by name, game icons by texture
+id. Not case-sensitive." Markers → type `sk` → the skull alone, and the count reads "1 of 8 icons".
+A gray clear mark shows at the box's right; click it → the box empties and the eight markers are
+back ("8 icons"). Glyphs → type `arrow` → only arrow glyphs; `Arrow Circle` finds the same as
+`arrow-circle`. Game icons → type `1320` → only icons whose texture id holds those digits, the
+count "N of M icons", the grid from the top; hover one → its texture id holds `1320`. Type `zzz` →
+"No icon matches your search.". Under the grid, a box reads "Search by texture id. To find an icon
+by its name (e.g. ability_cheapshot), look it up on Wowhead and type its id here." beside **Copy
+wowhead.com/icons**; click it → a small window titled "Quick Comms: Wowhead icons" opens **above**
+the browser, holding `https://www.wowhead.com/icons` selected; Ctrl+C copies it. Look up
+ability_cheapshot there, type its id `132092` → its icon is in the grid; double-click it → chosen.
+The hint box is gone on Markers and Glyphs. Switch tabs with text in the box → the new tab is
+filtered by it; Cancel and open the browser again → the text is still there; `/reload` → the box is
+empty. Escape with the Wowhead window's box focused closes that window alone; close the browser →
+the Wowhead window closes with it. Result:
 
 ## Dial
 
@@ -551,10 +611,10 @@ the pad and the dial show that set. Write each id into the "Battleground instanc
 **IDS-1. The Midnight dungeons and raids.** In each of the eight dungeons and three raids you visit
 (Windrunner Spire 2805, Magisters' Terrace 2811, Nexus-Point Xenas 2915, Maisara Caverns 2874, and
 the four returning dungeons; The Voidspire 2912, The Dreamrift 2939, March on Quel'Danas 2913):
-`/qc diagnostics` → the instanceID matches; a group's When → Instances → "add the one you are in" adds
-that id. Groups → Preview as lists "M+ · Windrunner Spire" and the other seven by name. On a Devourer
-Demon Hunter, `/qc diagnostics` → the Situation line reads `spec=1480`, and a When's Spec row
-offers Devourer. If you can enter Sporefall (map 1592), note whether it is a raid and its instanceID
+`/qc diagnostics` → the instanceID matches; a group's When → the Instance drawer → Add the instance
+you are in adds that id. Groups → Preview as lists "M+ · Windrunner Spire" and the other seven by name. On a Devourer
+Demon Hunter, `/qc diagnostics` → the Situation line reads `spec=1480`, and a When's Specialization
+drawer offers Devourer. If you can enter Sporefall (map 1592), note whether it is a raid and its instanceID
 (ruling R4 left it out of the shipped raids). Only after this check passes
 does `defaults/GameIds.lua`'s note change from "matched" to "confirmed". Result:
 
@@ -592,6 +652,6 @@ from the client, so this check needs a non-English client pass. Result:
 |---|---|---|
 | INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..2, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet; LOC-1 re-enumerated in phase 5 and owed a non-English client pass |
 | SEND-1..5, PAD-1..8 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet; PAD-8 added in phase 5 (audit QC-07) |
-| EDIT-1..21 | Phase 3: the editors | No client pass recorded yet; EDIT-2, 4, 5, 6, 11, 14 and ICON-1 rewritten and EDIT-19..21 added when the built-in sets became seeded groups, groups nested and the Preview tab became a table (2026-10-18); EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17); EDIT-9, 13 and ICON-1 rewritten and EDIT-14..17 added with the icon browser and glyph colors (2026-10-18); EDIT-9 rewritten and EDIT-18 added when the token dropdown became the Text label's info glyph (2026-10-18); EDIT-13, 14 and ICON-1 rewritten when the Suggested tab went and the skin stopped waiting for the addon to be enabled (2026-10-18); EDIT-9, 18 and ICON-1 rewritten when the Icon boxes went and the popup took its two-column layout (2026-10-18); EDIT-9, 11 and ICON-1 rewritten with the clear glyph, the Preview gap and the buttons' 2 px inset (2026-10-18) |
+| EDIT-1..24 | Phase 3: the editors | No client pass recorded yet; EDIT-1, 2 and 19 rewritten and EDIT-22..24 added with the When drawers, Inherit when conditions and the icon browser's search (2026-10-18); EDIT-2, 4, 5, 6, 11, 14 and ICON-1 rewritten and EDIT-19..21 added when the built-in sets became seeded groups, groups nested and the Preview tab became a table (2026-10-18); EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17); EDIT-9, 13 and ICON-1 rewritten and EDIT-14..17 added with the icon browser and glyph colors (2026-10-18); EDIT-9 rewritten and EDIT-18 added when the token dropdown became the Text label's info glyph (2026-10-18); EDIT-13, 14 and ICON-1 rewritten when the Suggested tab went and the skin stopped waiting for the addon to be enabled (2026-10-18); EDIT-9, 18 and ICON-1 rewritten when the Icon boxes went and the popup took its two-column layout (2026-10-18); EDIT-9, 11 and ICON-1 rewritten with the clear glyph, the Preview gap and the buttons' 2 px inset (2026-10-18) |
 | DIAL-1..12 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
 | SHARE-1..6, LOOK-1..2, ICON-1, BG-1..2, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; LOOK-2's in-combat step goes through `/qc set` |

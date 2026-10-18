@@ -49,8 +49,7 @@ test("groups page: [exit] a new group with a callout and a When shows first on t
     assertTrue(cid ~= nil, "the popup's Save put the callout in the group")
     assertEqual(NS.db.profile.callouts[cid].text, "Incoming")
     w = P.tab("groups", "When")
-    P.find(w, "CheckBox", "Content"):__fire("OnValueChanged", true)
-    P.flush()
+    P.drawer(w, "Content"):__fire("OnClick")
     w = P.tab("groups", "When")
     P.find(w, "CheckBox", "M+"):__fire("OnValueChanged", true)
     assertTrue(NS.db.profile.groups[gid].when.content.mythicPlus)
@@ -457,6 +456,8 @@ test("groups page: a seeded set's When tab edits it as any group's; Preview bake
     assertTrue(P.hasText(w, "Active now."))
     -- red under: describe a seeded group's When as read-only text, as the built-ins' was
     assertTrue(not P.hasText(w, "conditions are fixed"))
+    P.drawer(w, "Content"):__fire("OnClick")
+    w = P.tab("groups", "When")
     local raid = P.find(w, "CheckBox", "Raid")
     assertTrue(raid ~= nil, "the Content row's choices, as a user group's")
     raid:__fire("OnValueChanged", true)
@@ -473,6 +474,7 @@ test("groups page: [review 5] the When tab refuses an upside-down key-level rang
     local NS, m, P = open()
     local gid = NS.Library.CreateGroup({ name = "Mine", when = { keyLevel = { min = 12 } } })
     pick(NS, gid)
+    NS.State.whenOpen[gid] = { keyLevel = true }
     local w = P.tab("groups", "When")
     m.prints = {}
     local box = P.find(w, "EditBox", "Highest key level")
@@ -538,6 +540,23 @@ test("groups page: [review] a child's Defaults keeps it inside its parent; a nam
     assertEqual(NS.db.profile.groups[b].parent, a, "the page's Defaults keeps the parent, as it keeps the icon")
     NS.addon:OnSlashCommand("reset group.parent " .. b)
     assertFalse(NS.Library.IsChild(b), "a named reset makes it top-level")
+end)
+
+test("groups page: [inherit] a child's Defaults ticks Inherit when conditions again and keeps its own When", function()
+    local NS, _, P = open()
+    local a = NS.Library.CreateGroup({ name = "Raid night", when = { content = { raid = true } } })
+    local b = NS.Library.CreateGroup({ name = "Boss 1", when = { role = { TANK = true } } })
+    assertTrue(NS.SchemaRuntime.Set("group.parent", a, b))
+    assertTrue(NS.SchemaRuntime.Set("group.inheritWhen", false, b))
+    pick(NS, b)
+    P.redraw("groups")
+    -- red under: exempt group.inheritWhen from the page's Defaults
+    P.ctx("groups").panel.defaultsOnClick()
+    local g = NS.db.profile.groups[b]
+    assertTrue(g.inheritWhen == true, "the page's Defaults turns Inherit when conditions back on")
+    assertTrue(g.when.role.TANK, "the child's own When is kept")
+    assertNil(g.when.content, "and not replaced by the parent's")
+    assertEqual(g.parent, a, "still inside its parent")
 end)
 
 test("groups page: [restore] Restore built-in groups brings back a deleted set and says so; again, nothing is missing", function()
@@ -609,6 +628,97 @@ test("groups page: [nesting] a child's Duplicate tooltip says the copy sits in t
     assertTrue(table.concat(said, "\n"):find("on no pad", 1, true) ~= nil, "a top-level group's is unchanged")
 end)
 
+test("groups page: [drawers] the When tab draws one drawer per condition, closed, each with its summary", function()
+    local NS, _, P = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine", when = { content = { raid = true, dungeon = true } } })
+    pick(NS, gid)
+    local w = P.tab("groups", "When")
+    assertTrue(P.hasText(w, "Not active now"), "the live line stays on top")
+    assertTrue(P.hasText(w, "Every condition you set must match. A condition left as Any does not limit the group."))
+    -- red under: keep the enable checkbox per condition
+    assertNil(P.find(w, "CheckBox", "Content"), "no enable checkbox")
+    assertEqual(table.concat(P.drawers(w), ","),
+        "Content,Instance,Difficulty,Key level,Group,Leader or assist,Class,Specialization,Role,Character,Battleground")
+    local content = P.drawer(w, "Content")
+    assertTrue(content.__ka0sDrawerSet, "a set condition reads gold")
+    assertEqual(content.__ka0sDrawerSummary, "Dungeon, Raid")
+    assertFalse(content.__ka0sDrawerOpen)
+    local role = P.drawer(w, "Role")
+    assertFalse(role.__ka0sDrawerSet)
+    assertEqual(role.__ka0sDrawerSummary, "Any")
+    -- red under: draw the choices of a set condition with its drawer closed
+    assertNil(P.find(w, "CheckBox", "Raid"), "closed: the choices are not drawn")
+end)
+
+test("groups page: [drawers] a header opens and closes its drawer; the open set is per group and survives a repaint", function()
+    local NS, _, P = open()
+    local a = NS.Library.CreateGroup({ name = "A" })
+    local b = NS.Library.CreateGroup({ name = "B" })
+    pick(NS, a)
+    local w = P.tab("groups", "When")
+    P.drawer(w, "Content"):__fire("OnClick")
+    P.drawer(w, "Role"):__fire("OnClick")
+    -- red under: an onToggle that stores nothing in NS.State.whenOpen
+    assertTrue(NS.State.whenOpen[a].content)
+    w = P.redraw("groups")
+    assertTrue(P.drawer(w, "Content").__ka0sDrawerOpen, "still open after a repaint")
+    assertTrue(P.drawer(w, "Role").__ka0sDrawerOpen, "several open at once")
+    assertTrue(P.find(w, "CheckBox", "Raid") ~= nil, "the Content choices")
+    assertTrue(P.find(w, "CheckBox", "Healer") ~= nil, "the Role choices")
+    assertEqual(#P.all(w, "Button", "Select all"), 2)
+    assertEqual(#P.all(w, "Button", "Clear (Any)"), 2)
+    pick(NS, b)
+    w = P.tab("groups", "When")
+    assertFalse(P.drawer(w, "Content").__ka0sDrawerOpen, "another group's drawers are its own")
+    pick(NS, a)
+    w = P.tab("groups", "When")
+    P.drawer(w, "Content"):__fire("OnClick")
+    w = P.tab("groups", "When")
+    assertFalse(P.drawer(w, "Content").__ka0sDrawerOpen)
+    assertNil(P.find(w, "CheckBox", "Raid"))
+end)
+
+test("groups page: [drawers] Select all ticks every value; Clear (Any) unsets the condition and keeps the drawer open", function()
+    local NS, _, P = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine", when = { content = { raid = true } } })
+    pick(NS, gid)
+    NS.State.whenOpen[gid] = { content = true }
+    local w = P.tab("groups", "When")
+    -- red under: a Select all that writes nothing
+    P.find(w, "Button", "Select all"):__fire("OnClick")
+    for _, token in ipairs(NS.Resolver.TOKENS.content) do
+        assertTrue(NS.db.profile.groups[gid].when.content[token], token)
+    end
+    w = P.tab("groups", "When")
+    -- red under: a Clear (Any) that writes nothing
+    P.find(w, "Button", "Clear (Any)"):__fire("OnClick")
+    assertNil(NS.db.profile.groups[gid].when.content, "unset")
+    assertTrue(NS.State.whenOpen[gid].content, "the drawer stays open")
+    w = P.tab("groups", "When")
+    assertEqual(P.drawer(w, "Content").__ka0sDrawerSummary, "Any")
+end)
+
+test("groups page: [drawers] an id or key-level drawer has Clear (Any) alone, and Clear unsets it", function()
+    local NS, _, P = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine",
+        when = { instances = { [2526] = true }, keyLevel = { min = 10 } } })
+    pick(NS, gid)
+    NS.State.whenOpen[gid] = { instances = true }
+    local w = P.tab("groups", "When")
+    -- red under: offer Select all on an id list
+    assertNil(P.find(w, "Button", "Select all"))
+    assertTrue(P.find(w, "EditBox", "Add an instance") ~= nil, "the id list is in the drawer")
+    assertEqual(P.drawer(w, "Key level").__ka0sDrawerSummary, "10 or higher")
+    P.find(w, "Button", "Clear (Any)"):__fire("OnClick")
+    assertNil(NS.db.profile.groups[gid].when.instances)
+    NS.State.whenOpen[gid] = { keyLevel = true }
+    w = P.tab("groups", "When")
+    assertTrue(P.find(w, "EditBox", "Lowest key level") ~= nil)
+    assertNil(P.find(w, "Button", "Select all"))
+    P.find(w, "Button", "Clear (Any)"):__fire("OnClick")
+    assertNil(NS.db.profile.groups[gid].when.keyLevel)
+end)
+
 local DUNGEON = { inInstance = true, instanceType = "party", difficultyID = 2, instanceID = 2526, inGroup = true }
 
 test("groups page: [final 20] the Instances row adds a typed id, removes one, and refuses a fraction or a negative", function()
@@ -616,8 +726,7 @@ test("groups page: [final 20] the Instances row adds a typed id, removes one, an
     local gid = NS.Library.CreateGroup({ name = "Mine" })
     pick(NS, gid)
     local w = P.tab("groups", "When")
-    P.find(w, "CheckBox", "Instance"):__fire("OnValueChanged", true)
-    P.flush()
+    P.drawer(w, "Instance"):__fire("OnClick")
     w = P.tab("groups", "When")
     local box = P.find(w, "EditBox", "Add an instance")
     assertTrue(box ~= nil)
@@ -1032,4 +1141,77 @@ test("groups page: [preview table] a group with no callouts says so, with no tab
     assertTrue(P.hasText(w, "This group has no callouts yet."))
     assertNil(P.find(w, "Label", "Callout"), "no header for an empty table")
     assertEqual(#lists, 0, "no box list")
+end)
+
+-- ── Inherit when conditions (2026-10-18-when-drawers-design.md §3) ─────────────────────────
+
+test("groups page: [inherit] a seeded battleground's nodes carry no green dot in the open world", function()
+    local NS = open()
+    local ab = T.seeded(NS, "bi.bg.ab")
+    local kids = NS.Library.Children(ab)
+    assertTrue(#kids > 0)
+    local dotted = {}
+    for _, e in ipairs(NS.addon.Settings.Groups.Entries()) do
+        dotted[e.id] = e.label:find("Indicator-Green", 1, true) ~= nil
+    end
+    -- red under: R.ActiveGroups judging a node by its own empty When (active everywhere)
+    for _, kid in ipairs(kids) do assertFalse(dotted[kid], NS.db.profile.groups[kid].name) end
+    assertFalse(dotted[ab])
+end)
+
+test("groups page: [inherit] General's Inherit when conditions sits beside Parent group, grayed out with no parent", function()
+    local NS, _, P = open()
+    bare(NS)
+    local Lib = NS.Library
+    local top = Lib.CreateGroup({ name = "Raid night" })
+    local kid = Lib.CreateGroup({ name = "Boss 1" })
+    pick(NS, top)
+    local w = P.redraw("groups")
+    local cb = P.find(w, "CheckBox", "Inherit when conditions")
+    -- red under: no Inherit when conditions checkbox on General
+    assertTrue(cb ~= nil)
+    assertTrue(cb.disabled, "a group with no parent has nothing to inherit")
+    assertTrue(cb.value, "on by default")
+    NS.SchemaRuntime.Set("group.parent", top, kid)
+    pick(NS, kid)
+    w = P.redraw("groups")
+    cb = P.find(w, "CheckBox", "Inherit when conditions")
+    assertFalse(cb.disabled)
+    assertTrue(cb.value)
+    NS.db.profile.groups[kid].inheritWhen = nil   -- a profile from before the setting
+    w = P.redraw("groups")
+    assertTrue(P.find(w, "CheckBox", "Inherit when conditions").value, "absent reads as on")
+    P.find(w, "CheckBox", "Inherit when conditions"):__fire("OnValueChanged", false)
+    assertEqual(NS.db.profile.groups[kid].inheritWhen, false, "unticking stores false")
+    assertTrue(NS.addon.Settings.Editors.STRUCTURAL["group.inheritWhen"], "the When tab and the dots repaint")
+end)
+
+test("groups page: [inherit] an inheriting group's When tab shows its parent's conditions, read-only", function()
+    local NS, _, P = open()
+    bare(NS)
+    local Lib = NS.Library
+    local top = Lib.CreateGroup({ name = "Raid night", when = { content = { raid = true } } })
+    local kid = Lib.CreateGroup({ name = "Boss 1", when = { role = { TANK = true } } })
+    NS.SchemaRuntime.Set("group.parent", top, kid)
+    pick(NS, kid)
+    NS.State.whenOpen[kid] = { content = true, role = true }
+    local w = P.tab("groups", "When")
+    -- red under: draw the group's own When for an inheriting group
+    assertTrue(P.hasText(w, "Uses Raid night's conditions. Untick Inherit when conditions on the General tab to set this group's own."))
+    assertEqual(P.drawer(w, "Content").__ka0sDrawerSummary, "Raid", "the parent's")
+    assertEqual(P.drawer(w, "Role").__ka0sDrawerSummary, "Any", "its own is kept but not shown")
+    assertTrue(P.find(w, "CheckBox", "Raid").value)
+    assertTrue(P.find(w, "CheckBox", "Raid").disabled, "read-only")
+    assertNil(P.find(w, "Button", "Select all"))
+    assertNil(P.find(w, "Button", "Clear (Any)"))
+    assertTrue(P.hasText(w, "Not active now"), "judged by the parent's raid When")
+    P.drawer(w, "Content"):__fire("OnClick")
+    assertNil(NS.State.whenOpen[kid].content, "the drawers still open and close")
+    NS.SchemaRuntime.Set("group.inheritWhen", false, kid)
+    w = P.tab("groups", "When")
+    assertTrue(not P.hasText(w, "Uses Raid night's conditions"))
+    assertEqual(P.drawer(w, "Role").__ka0sDrawerSummary, "Tank", "its own again")
+    assertFalse(P.find(w, "CheckBox", "Tank").disabled)
+    assertTrue(P.find(w, "Button", "Select all") ~= nil)
+    assertTrue(NS.db.profile.groups[kid].when.role.TANK, "its own When was kept")
 end)

@@ -182,7 +182,7 @@ Total.
 - disabled [§7 step 1]: enabled, the registration set holds events and messages, and the surfaces are drawn
 - disabled [§7 steps 2-4]: through the seam, nothing stays registered, events or messages, and nothing is armed
 - disabled [§7 step 5]: every surface frame that was drawn is hidden
-- disabled [§7 step 6]: every event and message in R_on, fired anyway, runs nothing, writes, prints and shows nothing
+- disabled [§7 step 6]: every event and message in R_on, fired anyway, runs nothing live; the combat handler, reached directly, writes, prints and shows nothing
 - disabled [§7 step 7]: every NS.COMMANDS entry and the bare /qc: reserved verbs answer, feature verbs refuse once and write nothing
 - disabled [§7 step 8]: the launcher's left-click opens the panel and its menu grays every entry but Enabled
 - disabled [§7 step 9]: re-enabled, R_on comes back; a setting changed while disabled is what the stand-up builds
@@ -294,7 +294,7 @@ Total.
 - bake: a typed %t counts as live
 - bake: [phase 5] CleanText is the sanitizer short of the escape; Sanitize is CleanText, then the escape
 
-### test_share.lua (34)
+### test_share.lua (35)
 
 - share: a string is !QC1! then printable text, and decodes back to the same payload
 - share: [review 1] a pasted string may wrap and carry spaces; a cut-short one is damaged and imports nothing
@@ -330,8 +330,9 @@ Total.
 - share: [review] a child picked alone travels without its parent: nothing dropped, and it arrives top-level
 - share: [nesting] a parent the string does not carry, itself, or one inside another is dropped and counted
 - share: [review] a pad's or dial's reference to a group the string nests is dropped and counted
+- share: [inherit] a child's Inherit when conditions travels; an old string's child inherits
 
-### test_resolver.lua (8)
+### test_resolver.lua (11)
 
 - resolver: an empty When always matches
 - resolver: each row matches and fails on its own
@@ -341,6 +342,9 @@ Total.
 - resolver: SurfaceOrder keeps the surface's order; autoPromote floats narrower groups
 - resolver: Explain names the matched rows
 - resolver: [final] a non-number keyLevel bound is unset, never raises
+- resolver: [inherit] a child that inherits is judged by its parent's When, not its own
+- resolver: [inherit] WhenOf names the When that judges a group, and whose it is
+- resolver: [inherit] SurfaceOrder's narrowness reads the When that judges the group
 
 ### test_builtins.lua (7)
 
@@ -357,7 +361,7 @@ Total.
 - game ids: every battleground set matches only battleground maps, and no map is two sets'
 - game ids: the shipped dungeons are Mythic+ dungeons and the shipped raids are raids
 
-### test_library.lua (75)
+### test_library.lua (76)
 
 - library: Prepare seeds every shipped set as a group, on one pad and one dial, once
 - library: a seeded group is an ordinary group: its fields, When, callouts and origin
@@ -434,8 +438,9 @@ Total.
 - library: [restore] a set nested in another group keeps its place; its nodes stay out
 - library: [restore] a new pad holds the seeded sets still top-level, in shipped order
 - library: [restore] SeededBattleground names a seeded battleground set's key; a node, another set and a copy have none
+- library: [inherit] a new or seeded group inherits its parent's When; Duplicate and an untick keep false
 
-### test_members.lua (26)
+### test_members.lua (28)
 
 - members: a callout field is written through the seam by instance id, and announced once
 - members: with no id the seam writes the selected member, else the first the page lists, else refuses
@@ -463,6 +468,8 @@ Total.
 - members: [icons] an icon that is no glyph clears the color in the same act; a glyph keeps it
 - members: [icons] Library.SetIcon writes the icon and its color as one act
 - members: [icons] `/qc reset` clears a color; a group page's Defaults keeps it with the icon
+- members: [inherit] group.inheritWhen is a member row: a bool stores and announces, anything else is refused
+- members: [inherit] the Enabled tooltip names whose When a sub-group is shown by
 
 ### test_editors.lua (17)
 
@@ -525,7 +532,7 @@ Total.
 - popup: every field's label and control share a left edge; Preview's rule and the buttons the columns' edges
 - popup: [icons] an icon that is no texture stays open and names the icon chooser
 
-### test_icon_browser.lua (26)
+### test_icon_browser.lua (32)
 
 - icon browser: the window is the popup's chrome, stacked above the popup and its catcher
 - icon browser: tabs in order; the stored icon is preselected and its tab opened
@@ -553,6 +560,12 @@ Total.
 - icon browser: the area follows the tab band when the chrome learns its width (first open)
 - icon browser: Compat.MacroIcons reads the loose lists first, as the macro icon selector does
 - icon browser: Library.IconColorFrom stores a picked color as hex, white as none
+- icon browser: Src.Search matches a marker by name, a glyph by key or label, a game icon by id
+- icon browser: the search box filters the tab as you type; the count says N of M
+- icon browser: the search box keeps its text inset clear of the magnifier after AceGUI resets it
+- icon browser: Src.Search narrows its last results, and stays correct when the query widens or the list grows
+- icon browser: the search is kept across tabs and the session's opens, and re-filters each tab
+- icon browser: Game icons carries the Wowhead hint; its button shows the address in a copy window
 
 ### test_eui_skin.lua (10)
 
@@ -567,7 +580,7 @@ Total.
 - eui skin: the diagnostics report names its state
 - eui skin: the diagnostics line says, in words, why the skin is or is not on
 
-### test_groups_when.lua (12)
+### test_groups_when.lua (16)
 
 - when: Toggle adds and removes one value, drops an emptied row, and never mutates its input
 - when: [review 5] the key-level range refuses lowest above highest; clearing both drops the row
@@ -581,8 +594,12 @@ Total.
 - when: the battleground names come from the shipped sets, by instanceID
 - when: [final 6] a typed character takes the client's case; the Resolver matches one in any case
 - when: [final 2, 11] ResolveValue maps a typed value onto the token or id its row stores, or refuses it
+- when: [drawers] Summary reads Any while a row is unset, else its values in the row's order
+- when: [drawers] Summary gives the key level and the id rows a short phrase
+- when: [drawers] SelectAll ticks every value the row offers, and never mutates its input
+- when: [inherit] ActiveText judges an inheriting group by its parent's When
 
-### test_page_groups.lua (49)
+### test_page_groups.lua (57)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists every group by name, a seeded set among them, active ones dotted
@@ -609,10 +626,15 @@ Total.
 - groups page: [final 16] New group rebuilds the pads once, however many pads there are
 - groups page: [final 3, 25] a user group's Defaults: Enabled on, Open the dial off, the rest kept, one rebuild
 - groups page: [review] a child's Defaults keeps it inside its parent; a named reset takes it out
+- groups page: [inherit] a child's Defaults ticks Inherit when conditions again and keeps its own When
 - groups page: [restore] Restore built-in groups brings back a deleted set and says so; again, nothing is missing
 - groups page: [restore] with every group deleted, General still offers Restore built-in groups
 - groups page: [final 12] Duplicate says the copy is on no pad yet
 - groups page: [nesting] a child's Duplicate tooltip says the copy sits in the same parent
+- groups page: [drawers] the When tab draws one drawer per condition, closed, each with its summary
+- groups page: [drawers] a header opens and closes its drawer; the open set is per group and survives a repaint
+- groups page: [drawers] Select all ticks every value; Clear (Any) unsets the condition and keeps the drawer open
+- groups page: [drawers] an id or key-level drawer has Clear (Any) alone, and Clear unsets it
 - groups page: [final 20] the Instances row adds a typed id, removes one, and refuses a fraction or a negative
 - groups page: [final 18] Add the instance you are in reads the instance at the click, not at the draw
 - groups page: [icons] General shows the icon, Choose icon… and the swatch; the browser's Choose writes the group's icon
@@ -633,6 +655,9 @@ Total.
 - groups page: [review] a parent with no callouts of its own and one child titles the child's table
 - groups page: [preview table] a situation change rewrites a row's text in place and lays the table out again
 - groups page: [preview table] a group with no callouts says so, with no table
+- groups page: [inherit] a seeded battleground's nodes carry no green dot in the open world
+- groups page: [inherit] General's Inherit when conditions sits beside Parent group, grayed out with no parent
+- groups page: [inherit] an inheriting group's When tab shows its parent's conditions, read-only
 
 ### test_page_pads.lua (13)
 
@@ -817,7 +842,7 @@ Total.
 - dial layout: [review 6] a pinned ring ignores the dial's slices; Flat keeps its paging
 - dial layout: [icons] a ring entry carries its group's icon color, a send entry its callout's
 
-### test_surfaces.lua (26)
+### test_surfaces.lua (27)
 
 - surfaces: in a key the default pad's plan is the M+ set, baked to /p
 - surfaces: [review 5] a refused callout is a slot with its reason and no line
@@ -845,6 +870,7 @@ Total.
 - surfaces: [nesting] a parent draws its own section, then one per child whose When matches
 - surfaces: [nesting] a dial draws a parent's own callouts and a ring per child whose When matches
 - surfaces: [nesting] a parent that draws nothing leaves its surface with nothing active
+- surfaces: [inherit] a child that inherits shows wherever its parent's When matches, whatever its own says
 
 ### test_pad_render.lua (18)
 
@@ -1017,18 +1043,18 @@ Total.
 | test_tokens.lua | 8 |
 | test_channels.lua | 8 |
 | test_bake.lua | 12 |
-| test_share.lua | 34 |
-| test_resolver.lua | 8 |
+| test_share.lua | 35 |
+| test_resolver.lua | 11 |
 | test_builtins.lua | 7 |
 | test_gameids.lua | 2 |
-| test_library.lua | 75 |
-| test_members.lua | 26 |
+| test_library.lua | 76 |
+| test_members.lua | 28 |
 | test_editors.lua | 17 |
 | test_callout_popup.lua | 38 |
-| test_icon_browser.lua | 26 |
+| test_icon_browser.lua | 32 |
 | test_eui_skin.lua | 10 |
-| test_groups_when.lua | 12 |
-| test_page_groups.lua | 49 |
+| test_groups_when.lua | 16 |
+| test_page_groups.lua | 57 |
 | test_page_pads.lua | 13 |
 | test_page_dials.lua | 17 |
 | test_page_share.lua | 12 |
@@ -1040,7 +1066,7 @@ Total.
 | test_master.lua | 5 |
 | test_pad_layout.lua | 12 |
 | test_dial_layout.lua | 15 |
-| test_surfaces.lua | 26 |
+| test_surfaces.lua | 27 |
 | test_pad_render.lua | 18 |
 | test_pad.lua | 26 |
 | test_dial.lua | 29 |
@@ -1051,4 +1077,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **837** |
+| **Total** | **863** |

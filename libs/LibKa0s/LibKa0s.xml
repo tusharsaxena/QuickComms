@@ -29,6 +29,7 @@
 	<Script file="OptionsCompose.lua"/>
 	<Script file="OptionsScroll.lua"/>
 	<Script file="OptionsNav.lua"/>
+	<Script file="OptionsDrawer.lua"/>
 	<Script file="Perf.lua"/>
 	<Script file="PerfSampler.lua"/>
 	<Script file="PerfCommands.lua"/>

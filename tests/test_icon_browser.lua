@@ -626,3 +626,168 @@ test("icon browser: Library.IconColorFrom stores a picked color as hex, white as
     -- red under: store white as "ffffff"
     assertEqual(From(1, 1, 1), false)
 end)
+
+-- ── search ──────────────────────────────────────────────────────────────────────────────────
+
+test("icon browser: Src.Search matches a marker by name, a glyph by key or label, a game icon by id", function()
+    local NS, _, _, _, Src = boot()
+    local markers = Src.Markers()
+    -- red under: no Src.Search in settings/IconBrowser_Sources.lua
+    assertEqual(table.concat(Src.Search(markers, "markers", "sk"), ","), SKULL)
+    assertEqual(table.concat(Src.Search(markers, "markers", "SKULL"), ","), SKULL, "case-insensitive")
+    assertEqual(#Src.Search(markers, "markers", "  "), 8, "a blank search keeps every icon")
+    assertEqual(#Src.Search(markers, "markers", nil), 8)
+    local glyphs, thumb = Src.Glyphs(), NS.Icon("thumb-up")
+    -- red under: match a glyph by its shown label alone ("Thumbs up" holds no "thumb-up")
+    assertTrue(listed(Src.Search(glyphs, "glyphs", "thumb-up"), thumb), "by its catalog key")
+    -- red under: match a glyph by its catalog key alone ("thumb-up" holds no "thumbs up")
+    assertTrue(listed(Src.Search(glyphs, "glyphs", "Thumbs up"), thumb), "by its shown label")
+    assertTrue(#Src.Search(glyphs, "glyphs", "thumb") < #glyphs)
+    local game = { 132092, 99, 51320, "Interface\\Icons\\Ability_CheapShot" }
+    -- red under: compare the typed text with the whole id (no substring)
+    assertEqual(table.concat(Src.Search(game, "game", "132"), ","), "132092,51320", "by the id's digits")
+    assertEqual(table.concat(Src.Search(game, "game", " 99 "), ","), "99", "trimmed")
+    assertEqual(Src.Search(game, "game", "cheapshot")[1], game[4], "a texture path by its name")
+    assertEqual(#Src.Search(game, "game", "icons"), 0, "the name only, not the folder")
+    assertEqual(#Src.Search(game, "game", "%["), 0, "plain text, never a pattern")
+end)
+
+test("icon browser: the search box filters the tab as you type; the count says N of M", function()
+    local _, m, _, B = boot()
+    local spells = { 132092, 99, 51320, 136116 }
+    for i = 1, 2000 do
+        if not tostring(700000 + i):find("132", 1, true) then spells[#spells + 1] = 700000 + i end
+    end
+    m.macroIcons, m.macroItemIcons = spells, {}
+    openOn(B, nil)
+    B.SetTab("game")
+    local w = B.Widgets()
+    -- red under: no search box on the toolbar
+    assertTrue(w.search ~= nil and w.search.frame:IsShown(), "the search box")
+    assertTrue(w.search.buttonDisabled, "no Okay button: it filters as you type")
+    assertEqual(w.count:GetText(), #spells .. " icons", "unfiltered, the count is the tab's")
+    assertFalse(w.clear:IsShown(), "no clear mark while empty")
+    B.ScrollTo(10)
+    w.search:__fire("OnTextChanged", "132")
+    assertEqual(B.State().search, "132")
+    assertEqual(B.State().count, 2)
+    assertEqual(B.State().total, #spells)
+    -- red under: keep "%d icons" while a search narrows the tab
+    assertEqual(w.count:GetText(), "2 of " .. #spells .. " icons")
+    assertEqual(B.State().offset, 0, "the results from the top")
+    assertTrue(cellFor(B, 51320) ~= nil)
+    assertNil(cellFor(B, 99))
+    -- the clear mark empties the box and the search
+    assertTrue(w.clear:IsShown())
+    w.clear:__fire("OnClick")
+    assertEqual(B.State().search, "")
+    assertEqual(w.search.text, "", "the box is emptied")
+    assertFalse(w.clear:IsShown())
+    assertEqual(B.State().count, #spells)
+    -- nothing matches: the grid says so
+    B.SetSearch("zzz")
+    assertEqual(shownCells(B), 0)
+    assertTrue(w.status:IsShown())
+    assertEqual(w.status:GetText(), "No icon matches your search.")
+end)
+
+test("icon browser: the search box keeps its text inset clear of the magnifier after AceGUI resets it", function()
+    local _, _, _, B = boot()
+    openOn(B, nil)
+    B.SetTab("glyphs")
+    local w = B.Widgets()
+    local input = w.search.editbox or w.search.frame
+    local left
+    input.SetTextInsets = function(_, l) left = l end
+    -- AceGUI's EditBox runs HideButton (insets 0, 0, 3, 3) from SetText, Enter and a drop
+    local setText = w.search.SetText
+    w.search.SetText = function(self, ...)
+        setText(self, ...)
+        input:SetTextInsets(0, 0, 3, 3)
+    end
+    B.SetSearch("x")
+    B.SetSearch("")
+    -- red under: set the insets once in buildSearch
+    assertEqual(left, 14 + 4, "after the clear mark's SetText")
+    for _, script in ipairs({ "OnEnterPressed", "OnReceiveDrag" }) do
+        input:SetTextInsets(0, 0, 3, 3)
+        input:__fire(script)
+        assertEqual(left, 14 + 4, "after " .. script)
+    end
+end)
+
+test("icon browser: Src.Search narrows its last results, and stays correct when the query widens or the list grows", function()
+    local Src = select(5, boot())
+    -- A query that holds the last one reads the last results, not the list: an entry swapped in
+    -- place (same length) after the first search is not seen by the narrower one.
+    local swapped = { 132092, 99, 51320 }
+    assertEqual(table.concat(Src.Search(swapped, "game", "13"), ","), "132092,51320")
+    swapped[2] = 1399
+    -- red under: drop the last-results narrowing
+    assertEqual(#Src.Search(swapped, "game", "139"), 0, "narrowed from the last results")
+    local list = { 132092, 99, 51320, 136116, 13209 }
+    assertEqual(table.concat(Src.Search(list, "game", "13"), ","), "132092,51320,136116,13209")
+    assertEqual(table.concat(Src.Search(list, "game", "1320"), ","), "132092,51320,13209", "narrowed")
+    assertEqual(table.concat(Src.Search(list, "game", "2"), ","), "132092,51320,13209", "widened again: the whole list")
+    list[#list + 1] = 1320
+    assertEqual(table.concat(Src.Search(list, "game", "1320"), ","), "132092,51320,13209,1320", "a grown list")
+end)
+
+test("icon browser: the search is kept across tabs and the session's opens, and re-filters each tab", function()
+    local NS, _, _, B, Src = boot()
+    openOn(B, nil)
+    B.SetSearch("star")
+    assertEqual(B.State().count, 1, "Markers: the Star")
+    assertTrue(cellFor(B, Src.MarkerPath(1)) ~= nil)
+    B.SetTab("glyphs")
+    -- red under: clear the search on a tab switch
+    assertEqual(B.State().search, "star")
+    assertEqual(B.State().count, #Src.Search(Src.Glyphs(), "glyphs", "star"))
+    assertTrue(cellFor(B, NS.Icon("star")) ~= nil)
+    B.Cancel()
+    openOn(B, nil)
+    -- red under: reset the search in B.Open
+    assertEqual(B.State().search, "star", "kept for the session")
+    assertEqual(B.Widgets().search.text, "star", "and shown in the box")
+    assertEqual(B.State().count, 1)
+end)
+
+test("icon browser: Game icons carries the Wowhead hint; its button shows the address in a copy window", function()
+    local _, m, _, B = boot()
+    strata(m)
+    openOn(B, nil)
+    local w = B.Widgets()
+    -- red under: no hint row
+    assertTrue(w.hint ~= nil)
+    assertFalse(w.hint:IsShown(), "not on Markers")
+    B.SetTab("game")
+    assertTrue(w.hint:IsShown(), "on Game icons")
+    local said = w.hintText:GetText()
+    assertTrue(said:find("Search by texture id.", 1, true) ~= nil)
+    assertTrue(said:find("ability_cheapshot", 1, true) ~= nil)
+    assertTrue(said:find("Wowhead", 1, true) ~= nil)
+    -- between the grid and the footer
+    local point, rel, relPoint = w.hint:GetPoint(1)
+    assertEqual(point, "TOPLEFT")
+    assertEqual(rel, w.grid)
+    assertEqual(relPoint, "BOTTOMLEFT")
+    B.SetTab("glyphs")
+    assertFalse(w.hint:IsShown())
+    B.SetTab("game")
+    local win = B.LinkWindow()
+    local shown
+    local show = win.Show
+    win.Show = function(self, text)
+        shown = text
+        return show(self, text)
+    end
+    w.link:__fire("OnClick")
+    -- red under: a link button that shows nothing
+    assertEqual(shown, "https://www.wowhead.com/icons")
+    local f = m.__named.QuickCommsIconLinkWindow
+    assertTrue(f ~= nil and f:IsShown())
+    -- red under: leave the copy window in FULLSCREEN, under the browser's catcher
+    assertEqual(f.__strata, "FULLSCREEN_DIALOG", "above the browser")
+    B.Cancel()
+    assertFalse(f:IsShown(), "it goes with the browser")
+end)

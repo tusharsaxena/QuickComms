@@ -1,7 +1,7 @@
 # Module map — Ka0s Quick Comms
 
 Every non-vendored file, its responsibility, and the TOC load order. `libs/` (Ace3, LibSharedMedia,
-LibDataBroker, LibDBIcon, LibDeflate, LibSerialize, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored and never edited.
+LibDataBroker, LibDBIcon, LibDeflate, LibSerialize, LibKa0s v1.73.0 whole) and `tests/_kit/` are vendored and never edited.
 
 ## Load order (the TOC)
 
@@ -36,7 +36,7 @@ The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after Li
 | 16e | `modules/Tokens.lua` | pure | token expansion |
 | 16f | `modules/Channels.lua` | pure | channel kinds, resolution, lock state |
 | 16g | `modules/Bake.lua` | pure | callout + snapshot to one macro line |
-| 16h | `modules/Resolver.lua` | pure | When rules to active groups |
+| 16h | `modules/Resolver.lua` | pure | When rules to active groups; `WhenOf` (a child that inherits is judged by its parent's When) |
 | 16i | `modules/Library.lua` | registry writer | the one writer of the structural registry; `Prepare`; `SetSurfacePoint`; `SetIcon` (a member's icon and its glyph color, one act); the glyph helpers (`IsGlyph`, `ValidIconColor`, `IconTint`, `IconColorFrom`); seeding the shipped sets as ordinary groups, `RestoreBuiltins` and `SeededBattleground`; nesting (`ValidParent`, `SettleParent`, `Children`, `IsChild`); `MoveGenericBattlegroundLast` (migration step 2) and `SeedFromOverlay` (migration step 3) |
 | 16i2 | `modules/Share.lua` | pure + edge | the share string: codec, checks, report; Collect, Export, Apply |
 | 16j | `modules/SendEngine_Guard.lua` | pure | `NS.SendGuard`: the soft guard's timing, the acting click edge, the echo tracker, the keyed queue |
@@ -55,17 +55,17 @@ The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after Li
 | 19 | `settings/Schema.lua` | settings | the rows, the write seam (`NS.SchemaRuntime`), `NS.Setting`, the shared reactions, the defaults tree, the global reset |
 | 20 | `settings/OptionsSetup.lua` | setup | LibKa0s-Options: the panel descriptor |
 | 20a | `settings/SchemaRows.lua` | settings | the hand-written Behavior rows, spliced after the Master controls |
-| 20b | `settings/SchemaMembers.lua` | settings | the member rows (`callout.*`, `group.*`, `pad.*`, `dial.*`; `group.parent` among them), addressed through `Library.Member` |
+| 20b | `settings/SchemaMembers.lua` | settings | the member rows (`callout.*`, `group.*`, `pad.*`, `dial.*`; `group.parent` and `group.inheritWhen` among them), addressed through `Library.Member` |
 | 21 | `settings/Panel.lua` | settings | the landing page and the General page (Master controls) |
 | 21a | `settings/Editors.lua` | settings | the editor pages' shared frame: selection, repaint, reorder lists (with their edit and remove glyphs, a glyph drawn in its color), the table rows (`Ed.TableRows`, the Groups page's Preview, with its own AceGUI row layout, `Ed.TABLE_LAYOUT` / `Ed.LayoutTableRow`), delete, the icon chooser (`Ed.IconChooser`: under its Icon label, the icon as drawn, Choose icon…, the glyph's color swatch) |
 | 21b | `settings/Callouts.lua` | settings | the callout helpers (`Settings.Callouts`): the tokens a channel offers and one line of help for each, and what a callout sends here |
 | 21b2 | `settings/ModalWindow.lua` | settings | `Settings.ModalWindow`: the modal window (click-catcher and dim, Blizzard's `SettingsFrameTemplate` or the fallback window, a page's header and body) the callout popup and the icon browser are each built in |
 | 21b3 | `settings/IconBrowser_Sources.lua` | settings | `Settings.IconBrowserSources`: each icon browser tab's list (Markers, Game icons, Glyphs) and each icon's name |
-| 21b4 | `settings/IconBrowser.lua` | settings | the icon browser (`Settings.IconBrowser`): modal over its opener, three tabs (Markers, Game icons, Glyphs), a virtualized grid, the Game icons filter, the glyph color swatch, Choose and Cancel |
+| 21b4 | `settings/IconBrowser.lua` | settings | the icon browser (`Settings.IconBrowser`): modal over its opener, three tabs (Markers, Game icons, Glyphs), a virtualized grid, the search box, the Game icons filter and its Wowhead hint (a copy window), the glyph color swatch, Choose and Cancel |
 | 21b5 | `settings/CalloutPopup.lua` | settings | the callout popup (`Settings.CalloutPopup`): a user group's callout, new or listed, edited as a draft, saved as one act, modal over the settings window; Blizzard's `SettingsFrameTemplate` window, sized to its body, with no scrollbar |
 | 21b6 | `settings/CalloutPopup_Skin.lua` | settings | `Settings.CalloutPopupSkin`: the optional EllesmereUI skin of the popup's window and the icon browser's, registered at file load, each painted when it is built and every condition holds |
-| 21c | `settings/Groups_When.lua` | settings | the Groups page's When editor |
-| 21d | `settings/Groups.lua` | settings | the Groups page, the same for every group, a seeded built-in set among them (General: Parent group, Restore built-in groups; Callouts: Add callout, Reuse callout, the glyph list; Preview as a table) |
+| 21c | `settings/Groups_When.lua` | settings | the Groups page's When editor: a drawer per condition (`H.Drawer`), Select all and Clear (Any), an inheriting group's read-only view |
+| 21d | `settings/Groups.lua` | settings | the Groups page, the same for every group, a seeded built-in set among them (General: Parent group, Inherit when conditions, Restore built-in groups; Callouts: Add callout, Reuse callout, the glyph list; Preview as a table) |
 | 21e | `settings/Pads.lua` | settings | the Comms Pad page |
 | 21e2 | `settings/Dials.lua` | settings | the Comms Dial page (General, Groups, Wheel, Binding, Preview) |
 | 21f | `settings/Share.lua` | settings | the Share page (Export, Import) |
@@ -105,11 +105,11 @@ files they add are listed in design spec §4.2.
 | `tests/test_pad.lua` | `Pad`: armed or disarmed chips, the visibility driver, the drag strip shown while unlocked (it will not drag while locked or in combat) |
 | `tests/test_members.lua` | the member rows: addressed by instance, selection or the first listed member (a callout by its id alone); a seeded group read and written as any group, a shipped id refused; `Library.Touch` announces each write; the CLI text forms |
 | `tests/test_editors.lua` | `settings/Editors.lua`: the selection heals and a profile switch clears it, one structural repaint per frame, none for a scalar write, the delete confirmation, the jump, the reorder rows' edit and remove glyphs, the table rows (the Preview table) |
-| `tests/test_icon_browser.lua` | the icon browser: its chrome and stacking above the popup, the tabs and what each offers, select, double-click and Choose, the hover names, the game list's filter and its not-loaded state, the virtualized grid, the glyph color swatch, Escape over the popup, what closes it (the popup, a stand-down), Choose refused in combat, `Compat.MacroIcons` and `Library.IconColorFrom` |
+| `tests/test_icon_browser.lua` | the icon browser: its chrome and stacking above the popup, the tabs and what each offers, select, double-click and Choose, the hover names, the game list's filter and its not-loaded state, the search (`Src.Search`, the box, the count, the session text) and the Wowhead hint and its copy window, the virtualized grid, the glyph color swatch, Escape over the popup, what closes it (the popup, a stand-down), Choose refused in combat, `Compat.MacroIcons` and `Library.IconColorFrom` |
 | `tests/test_callout_popup.lua` | the callout popup: Add and Edit, the draft rows (the icon's glyph color with them), the token glyph and its tooltip, Choose icon… and the browser's Choose on the draft, the Preview heading and the Cancel-then-Save pair, the preview on the draft, Save's checks and its one act, Cancel and what else closes it, the settings-window template and its close X, its background over the catcher's dim, the template asked of `C_XMLUtil` where it can answer, the fallback window and its close mark, no scrollbar and the height that follows the body (pinned to the library's layout keys), no Callouts page, and the helpers' token list, token help and preview lines |
 | `tests/test_eui_skin.lua` | the popup's EllesmereUI skin on a mocked EllesmereUI: painted as the settings window is when every condition holds, at the build or at a late callback, once (the icon browser's window too); not when any condition fails; never raising without EllesmereUI; a changed facade left stock; painted while the addon is disabled; the fallback window left unpainted; the diagnostics report's line and its `why=` reason |
-| `tests/test_groups_when.lua` | the When editor's pure half (toggle, clear, key-level range, the values offered, the active-now line) and its write through the seam |
-| `tests/test_page_groups.lua` | the Groups page: picker (children indented) and New group, a group's tabs, a seeded set's the same as any (General's Parent group, icon chooser and the browser's writes, Restore built-in groups; the Callouts tab's Add callout, Reuse and glyph list; the editable When; the Preview table), deleting a parent |
+| `tests/test_groups_when.lua` | the When editor's pure half (toggle, clear, select all, key-level range, the values offered, the summary, the active-now line, an inheriting group's) and its write through the seam |
+| `tests/test_page_groups.lua` | the Groups page: picker (children indented) and New group, a group's tabs, a seeded set's the same as any (General's Parent group, icon chooser and the browser's writes, Restore built-in groups; Inherit when conditions beside Parent group; the Callouts tab's Add callout, Reuse and glyph list; the When drawers, Select all and Clear (Any), and an inheriting group's read-only When; no green dot on a seeded battleground's nodes in the open world; the Preview table), deleting a parent |
 | `tests/test_page_pads.lua` | the Comms Pad page: picker and New pad, General's acts, the Groups priority list, Layout with X/Y, Look |
 | `tests/test_dial_layout.lua` | `Dial_Layout`: rings, pages, open-into, geometry |
 | `tests/test_dial_secure.lua` | `Dial_Secure`: the snippets on a hand-built dial, in and out of combat |

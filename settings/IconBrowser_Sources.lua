@@ -15,6 +15,12 @@ local _, NS = ...
 -- THE GAME LIST is read on first use and kept only once the client answers with icons: until its
 -- own icon list has loaded the client answers with none, so an empty answer is asked again next
 -- time (GameIcons' second value says whether it is loaded).
+--
+-- SEARCH (Search) is a case-insensitive plain substring over what an icon is called on its tab: a
+-- marker's name, a glyph's catalog key and its shown label, a game icon's texture id (its digits;
+-- a texture path, should the client's list carry one, by its file name). The client has no API that
+-- names a game icon from its texture id, so a game icon cannot be found by name here (the browser's
+-- hint points at Wowhead for that).
 
 local Settings = NS.addon.Settings
 local L = NS.L
@@ -61,16 +67,19 @@ function Src.Glyphs()
     return out
 end
 
--- path -> label, for every icon the named tabs carry; built on the first ask (the catalog is
--- fixed for the session).
-local labels
+-- path -> label, and a glyph's path -> its catalog key, for every icon the named tabs carry; built
+-- on the first ask (the catalog is fixed for the session).
+local labels, keys
 local function labelMap()
     if labels then return labels end
-    labels = {}
+    labels, keys = {}, {}
     for i, path in ipairs(Src.Markers()) do labels[path] = Src.MARKER_NAMES[i] end
     for _, name in ipairs(NS.IconNames()) do
         local path = NS.Icon(name)
-        if path then labels[path] = Src.GlyphLabel(name) end
+        if path then
+            labels[path] = Src.GlyphLabel(name)
+            keys[path] = name
+        end
     end
     return labels
 end
@@ -133,4 +142,46 @@ function Src.List(tab, filter)
     if tab == "glyphs" then return Src.Glyphs(), true end
     if tab == "game" then return Src.GameIcons(filter) end
     return Src.Markers(), true
+end
+
+-- What a search on `tab` reads of `icon`, lowercased.
+local function searchText(tab, icon)
+    if type(icon) == "number" then return tostring(icon) end
+    icon = tostring(icon or "")
+    if tab == "game" then return (icon:match("([^\\/]+)$") or icon):lower() end
+    local label = labelMap()[icon] or icon
+    return ((keys[icon] or "") .. "\n" .. label):lower()
+end
+
+-- Each list's icons' search text, built the first time a search reads it (a list is searched once
+-- per keystroke, and the game list is ~30k icons), weak so a list the tabs drop is collected. And
+-- the last search, so a query that holds the last one narrows its results instead of the list.
+local textOf = setmetatable({}, { __mode = "k" })
+local last = setmetatable({}, { __mode = "k" })
+
+--- The icons of `list` (a tab's, as List answers it) whose name on `tab` holds `query`: case-
+--- insensitive, plain text, trimmed. A blank or nil query answers `list` itself.
+--- @return table icons
+function Src.Search(list, tab, query)
+    local q = tostring(query or ""):match("^%s*(.-)%s*$"):lower()
+    if q == "" then return list end
+    local memo = textOf[list]
+    if not (memo and memo.tab == tab) then
+        memo = { tab = tab, text = {} }
+        textOf[list] = memo
+    end
+    local text, from = memo.text, list
+    local prev = last[list]
+    if prev and prev.tab == tab and prev.n == #list and q:find(prev.q, 1, true) then from = prev.out end
+    local out = {}
+    for _, v in ipairs(from) do
+        local t = text[v]
+        if t == nil then
+            t = searchText(tab, v)
+            text[v] = t
+        end
+        if t:find(q, 1, true) then out[#out + 1] = v end
+    end
+    last[list] = { tab = tab, n = #list, q = q, out = out }
+    return out
 end

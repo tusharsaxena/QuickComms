@@ -18,6 +18,8 @@ local _, NS = ...
 -- top-level, and a group holding groups takes no parent (ValidParent). A child is never placed on a
 -- surface itself: it shows wherever its parent is (modules/Surfaces.lua), so taking a parent takes
 -- it off every surface (SettleParent), and deleting a parent puts its children in its place.
+-- A child takes its parent's When unless its inheritWhen is false (2026-10-18-when-drawers-design.md
+-- §3; absent is on): modules/Resolver.lua's WhenOf.
 -- Prepare runs after migrations on every profile load: it seeds (a shipped set the profile was never
 -- given, once, at the end of every pad and dial), splits a callout two groups hold into copies,
 -- drops dangling ids, drops callouts no group holds, and drops a parent that breaks the one-level
@@ -505,7 +507,8 @@ end
 --- (optional) are user callout ids, in order; an id that is not a user callout is dropped. One owner:
 --- a callout no group holds is taken as it is, and one a group holds (or that the list repeats) is
 --- copied, the copies and the group made as one act (Batch). `fields.parent` (optional) puts it
---- inside a top-level group (ValidParent); a new group is on no surface either way.
+--- inside a top-level group (ValidParent); a new group is on no surface either way. It inherits its
+--- parent's When (inheritWhen, Resolver.WhenOf) unless `fields.inheritWhen` is false.
 --- @return string|nil id, string|nil reason
 function Lib.CreateGroup(fields)
     local ok, why = validGroup(fields)
@@ -529,7 +532,7 @@ function Lib.CreateGroup(fields)
         local id = Lib.NewId("g")
         p.groups[id] = { name = fields.name, icon = fields.icon, iconColor = glyphColor(fields.icon, fields.iconColor),
             callouts = callouts, when = copyTable(fields.when) or {}, openInto = fields.openInto == true,
-            enabled = fields.enabled ~= false, parent = fields.parent or nil }
+            enabled = fields.enabled ~= false, parent = fields.parent or nil, inheritWhen = fields.inheritWhen ~= false }
         announce("group", id)
         return id
     end
@@ -588,7 +591,8 @@ function Lib.DuplicateGroup(id)
     local g = P().groups[id]
     if not g then return nil, "noGroup" end
     return Lib.CreateGroup({ name = Lib.CopyName(g.name), icon = g.icon, iconColor = g.iconColor, when = g.when,
-        openInto = g.openInto, enabled = g.enabled, callouts = g.callouts, parent = isChild(id) and g.parent or nil })
+        openInto = g.openInto, enabled = g.enabled, callouts = g.callouts, parent = isChild(id) and g.parent or nil,
+        inheritWhen = g.inheritWhen })
 end
 
 --- The group.parent row's reaction (settings/SchemaMembers.lua): a group that now sits inside another
@@ -735,7 +739,8 @@ local function seedGroup(p, gid, parent, hidden)
     end
     local id = takeId(p, "g")
     p.groups[id] = { name = def.name, icon = def.icon, callouts = callouts, when = copyTable(def.when) or {},
-        openInto = def.openInto == true, enabled = true, parent = parent, compass = def.compass, origin = gid }
+        openInto = def.openInto == true, enabled = true, parent = parent, inheritWhen = true, compass = def.compass,
+        origin = gid }
     p.seededSets[gid] = true
     return id
 end
@@ -887,7 +892,8 @@ local SURFACE_DEFAULTS = {
 --- false, not nil, so the boot check can see the key: false is "none" and "the default place".
 Lib.TEMPLATES = {
     callout = { name = "", text = "", channel = "smartGroup", icon = false, iconColor = false },
-    group = { name = "", icon = false, iconColor = false, enabled = true, openInto = false, when = {}, parent = false },
+    group = { name = "", icon = false, iconColor = false, enabled = true, openInto = false, when = {}, parent = false,
+        inheritWhen = true },
     pad = { name = "", enabled = true, groupsAs = SURFACE_DEFAULTS.pad.groupsAs, point = false,
         layout = copyTable(SURFACE_DEFAULTS.pad.layout), look = copyTable(SURFACE_DEFAULTS.pad.look) },
     -- `key` and `point` are false, not nil, for the same reason as above: false is "no key" and "the
@@ -1412,7 +1418,7 @@ local function importMembers(res, map, tally)
         end
         local f = e.fields
         local id = Lib.CreateGroup({ name = f.name, icon = f.icon, iconColor = f.iconColor, when = f.when,
-            openInto = f.openInto, enabled = f.enabled, callouts = ids })
+            openInto = f.openInto, enabled = f.enabled, inheritWhen = f.inheritWhen, callouts = ids })
         if id then map[e.id], tally.groups = id, tally.groups + 1 end
     end
     nestImported(res, map, tally)

@@ -278,7 +278,7 @@ test("disabled [§7 step 5]: every surface frame that was drawn is hidden", func
     assertEqual(countDrawn(snap.F), 0)
 end)
 
-test("disabled [§7 step 6]: every event and message in R_on, fired anyway, runs nothing, writes, prints and shows nothing", function()
+test("disabled [§7 step 6]: every event and message in R_on, fired anyway, runs nothing live; the combat handler, reached directly, writes, prints and shows nothing", function()
     local NS, m, snap = baseline()
     disable(NS)
     m.__resetSvWrites()
@@ -288,11 +288,15 @@ test("disabled [§7 step 6]: every event and message in R_on, fired anyway, runs
     for _, r in ipairs(snap.raw) do
         if r.kind == "message" then NS.addon:SendMessage(r.event) else ran = ran + m.__fire(r.event) end
     end
-    -- The combat-entry event by name, live and at the addon itself.
+    -- The combat-entry event by name, live: nothing is registered to hear it.
     -- red under: register PLAYER_REGEN_DISABLED outside NS.FEATURE_EVENTS (it survives the stand-down)
     ran = ran + m.__fire("PLAYER_REGEN_DISABLED")
-    ran = ran + m.__fireUnconditional(NS.addon, "PLAYER_REGEN_DISABLED")
-    assertEqual(ran, 0, "no handler reached")
+    assertEqual(ran, 0, "no live handler reached")
+    -- And at the addon itself: kit 39's __fireUnconditional reaches the method the registration
+    -- named (OnRestrictionRegenDisabled) after the stand-down and answers 1, so reach is proven
+    -- rather than read off a silence; what it runs must still write, print and show nothing.
+    -- red under: re-vendor kit 38 (its __fireUnconditional cannot reach a method-name handler, so 0)
+    assertEqual(m.__fireUnconditional(NS.addon, "PLAYER_REGEN_DISABLED"), 1, "the combat handler reached")
     assertEqual(#m.__svWrites(), 0, "no SavedVariables write")
     assertEqual(#m.prints, 0, "no chat line")
     assertEqual(#m.__shownFrames(), shown, "no frame shown")

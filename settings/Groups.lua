@@ -6,7 +6,8 @@ local _, NS = ...
 --               listed indented under it) ][ New group ]
 --     strip     [ General ][ Callouts ][ When ][ Preview ]
 --     General   Preview as (page-wide, first), then Name, Enabled, Open the dial on this group, then
---               Parent group (none, or a top-level group; idle while the group holds groups), then
+--               Parent group (none, or a top-level group; idle while the group holds groups) beside
+--               Inherit when conditions (grayed out with no parent), then
 --               the icon under an Icon label with Choose icon…, the clear glyph and its color swatch
 --               (settings/Editors.lua's chooser, no Icon text box; the icon browser writes icon and
 --               color as one act), then Duplicate and Delete, then Restore built-in groups (page-wide:
@@ -149,6 +150,37 @@ local function parentItem(gid)
     end }
 end
 
+--- Inherit when conditions' state for user group `gid`: ticked unless it stores false (absent is
+--- on, 2026-10-18-when-drawers-design.md §3), and live only while the group sits inside another.
+--- @return boolean checked, boolean disabled
+function G.InheritState(gid)
+    local g = NS.db.profile.groups[gid]
+    return not (g and g.inheritWhen == false), not NS.Library.IsChild(gid)
+end
+
+-- The General tab's Inherit when conditions checkbox, beside Parent group (a RenderGrid item): drawn
+-- by hand as Parent group is, since the seam reads an absent field as nil and the box reads it as on.
+-- A click writes the group.inheritWhen row through the seam, whose refusal is printed.
+local function inheritItem(gid)
+    return { make = function(_, parent, rel)
+        local h = H()
+        local row = Ed.Row("group.inheritWhen")
+        local cb = h.AceGUI:Create("CheckBox")
+        cb:SetLabel(row.label)
+        local checked, disabled = G.InheritState(gid)
+        cb:SetValue(checked)
+        cb:SetDisabled(disabled)
+        cb:SetRelativeWidth(rel or 0.5)
+        cb:SetCallback("OnValueChanged", function(_, _, v)
+            local ok, err, why = NS.SchemaRuntime.Set("group.inheritWhen", v and true or false, gid)
+            if not ok then NS.Print(tostring(why or err)) end
+        end)
+        h.AttachTooltip(cb, row.label, row.desc)
+        parent:AddChild(cb)
+        return cb
+    end }
+end
+
 --- Restore built-in groups (Library.RestoreBuiltins): every shipped set, node and callout this
 --- profile no longer has comes back as a new group or callout, a set at the end of every pad and
 --- dial. It changes nothing the player has, so it does not ask first. One chat line says what came
@@ -271,9 +303,10 @@ end
 
 local NONE = L["No groups yet. Click New group to make one."]
 -- The General tab's rows it leaves out of its RenderRows: Preview as (drawn first, alone), Parent
--- group (its own dropdown, parentItem) and the icon's two rows (the chooser draws them).
-local UNDRAWN = { ["state.previewAs"] = true, ["group.parent"] = true, ["group.icon"] = true,
-    ["group.iconColor"] = true }
+-- group (its own dropdown, parentItem), Inherit when conditions (its own checkbox, inheritItem) and
+-- the icon's two rows (the chooser draws them).
+local UNDRAWN = { ["state.previewAs"] = true, ["group.parent"] = true, ["group.inheritWhen"] = true,
+    ["group.icon"] = true, ["group.iconColor"] = true }
 
 local function renderGeneral(ctx, rows)
     local h = H()
@@ -291,7 +324,7 @@ local function renderGeneral(ctx, rows)
         if not UNDRAWN[row.path] then mine[#mine + 1] = row end
     end
     h.RenderRows(ctx, mine, nil, nil, { noHeadings = true })
-    h.RenderGrid(ctx, { parentItem(gid) })
+    h.RenderGrid(ctx, { parentItem(gid), inheritItem(gid) })
     Ed.IconChooser(ctx, G.IconSpec(gid))
     h.InlineButtonPair(ctx,
         { text = L["Duplicate"], tooltip = NS.Library.IsChild(gid)
@@ -495,6 +528,6 @@ function G.RestoreDefaults(ctx)
 end
 
 Ed.RegisterPage(PAGE, L["Groups"], "GroupsPanel", render, {
-    tooltip = L["Turn the selected group back on, stop it opening the dial, and turn Preview as off. Its name, callouts and When are kept."],
+    tooltip = L["Turn the selected group back on, stop it opening the dial, turn Preview as off, and turn Inherit when conditions back on. Its name, callouts and own When are kept."],
     onClick = function(ctx) G.RestoreDefaults(ctx) end,
 })
