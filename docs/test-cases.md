@@ -604,10 +604,11 @@ Total.
 - groups page: [icons] a tinted callout row puts its image back to white when released (AceGUI's shared pool)
 - groups page: [icons] the swatch writes on a drag tick (OnValueChanged) with no confirm, as OK leaves it
 
-### test_page_pads.lua (12)
+### test_page_pads.lua (13)
 
 - pads page: New pad makes a second pad holding every built-in, selects it, and the pad is built
 - pads page: the Layout rows write the selected pad
+- pads page: Grid columns is grayed out unless the orientation is Grid
 - pads page: X and Y move the pad through its pad.point row; Reset puts it back
 - pads page: Look's visibility reaches the pad's state driver
 - pads page: Groups lists the pad's groups; remove one, add it back at the end, drag to reorder
@@ -997,7 +998,7 @@ Total.
 | test_eui_skin.lua | 10 |
 | test_groups_when.lua | 12 |
 | test_page_groups.lua | 36 |
-| test_page_pads.lua | 12 |
+| test_page_pads.lua | 13 |
 | test_page_dials.lua | 17 |
 | test_page_share.lua | 14 |
 | test_check.lua | 6 |
@@ -1019,4 +1020,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **805** |
+| **Total** | **806** |

@@ -235,6 +235,7 @@ local ROWS = {
     { path = "pad.layout.columns", instance = "pad", type = "number", default = T.pad.layout.columns,
       min = 1, max = 12, step = 1, page = "pads", group = L["Layout"], label = L["Grid columns"],
       desc = L["Chips per row when the orientation is Grid."],
+      disabledIf = function() return NS.SchemaRuntime.Get("pad.layout.orientation") ~= "grid" end,
       validate = NUMBER, normalize = clamp(1, 12, true) },
     { path = "pad.layout.growth", instance = "pad", type = "string", default = T.pad.layout.growth,
       values = GROWTH, page = "pads", group = L["Layout"], label = L["Growth"],

@@ -47,6 +47,18 @@ test("pads page: the Layout rows write the selected pad", function()
     assertEqual(layout.scale, 1.5)
 end)
 
+test("pads page: Grid columns is grayed out unless the orientation is Grid", function()
+    local NS, _, P = open()
+    assertEqual(NS.db.profile.pads.p1.layout.orientation, "grid", "a new pad is a grid")
+    local w = P.tab("pads", "Layout")
+    assertFalse(P.find(w, "Slider", "Grid columns").disabled)
+    P.find(w, "Dropdown", "Orientation"):__fire("OnValueChanged", "horizontal")
+    -- red under: drop the columns row's disabledIf
+    assertTrue(P.find(w, "Slider", "Grid columns").disabled, "the write's refresh grays it in place")
+    w = P.tab("pads", "Layout")
+    assertTrue(P.find(w, "Slider", "Grid columns").disabled, "and a fresh draw does too")
+end)
+
 test("pads page: X and Y move the pad through its pad.point row; Reset puts it back", function()
     local NS, m, P = open()
     local inst = NS.Pad.Instance("p1")

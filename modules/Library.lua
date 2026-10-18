@@ -735,7 +735,7 @@ local SURFACE_DEFAULTS = {
     -- (phase 5, options-ui-§16/§17) default to the Ka0s skin a pad has always worn: the chip label's
     -- small white face with its shadow, a flat 1px black edge ("None" is no border art) and the
     -- 0.06, 0.06, 0.08, 0.92 body (spec §10.1).
-    pad = { groupsAs = "sections", layout = { orientation = "horizontal", columns = 4, growth = "right",
+    pad = { groupsAs = "sections", layout = { orientation = "grid", columns = 4, growth = "right",
         style = "iconLabel", scale = 1.0, spacing = 4, width = 140 },
         look = { visibility = "always", fade = "none", fadeAlpha = 0.4,
             font = "Friz Quadrata TT", fontSize = 10, fontColor = { r = 1, g = 1, b = 1, a = 1 },
