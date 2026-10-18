@@ -311,6 +311,15 @@ local function checkLine(cells)
             cb:SetRelativeWidth(CHECK_REL)
             if ctx.__renderDisabled then cb:SetDisabled(true) end
             cb:SetCallback("OnValueChanged", function(_, _, v) c.onChange(v and true or false) end)
+            if c.tooltip then
+                cb:SetCallback("OnEnter", function(w)
+                    GameTooltip:SetOwner(w.frame, "ANCHOR_RIGHT")
+                    GameTooltip:SetText(c.text, 1, 1, 1)
+                    GameTooltip:AddLine(c.tooltip, nil, nil, nil, true)
+                    GameTooltip:Show()
+                end)
+                cb:SetCallback("OnLeave", function() GameTooltip:Hide() end)
+            end
             parent:AddChild(cb)
         end
     end }
@@ -406,6 +415,26 @@ local ADD = {
         L["Add this character"] },
 }
 
+-- The id rows with a whole-kind checkbox on top of their drawer (NS.Resolver.ALL), and its label and
+-- tooltip. The character row has none: every character is what Any already means.
+local ALL = {
+    instances = { L["All dungeons and raids"],
+        L["Match in any dungeon, Mythic+ key or raid. The instances listed below are kept, unused, until you untick this."] },
+    battleground = { L["All battlegrounds"],
+        L["Match in any battleground. The battlegrounds listed below are kept, unused, until you untick this."] },
+}
+
+--- Whether id row `row` offers the whole-kind checkbox.
+function W.HasAll(row)
+    return ALL[row] ~= nil
+end
+
+--- A copy of `when` with id row `row`'s whole kind on or off; its listed ids are kept either way, and
+--- a row left empty is dropped.
+function W.SetAll(when, row, on)
+    return W.Toggle(when, row, NS.Resolver.ALL, on)
+end
+
 -- An id row's summary for several entries.
 local COUNT = {
     instances = L["%d instances"], battleground = L["%d battlegrounds"], characters = L["%d characters"],
@@ -426,8 +455,11 @@ function W.Summary(row, when)
         return L["%d or lower"]:format(v.max)
     end
     if KIND[row] then
+        if ALL[row] and v[NS.Resolver.ALL] == true then return ALL[row][1] end
         local only, n = nil, 0
-        for id in pairs(v) do only, n = id, n + 1 end
+        for id in pairs(v) do
+            if id ~= NS.Resolver.ALL then only, n = id, n + 1 end
+        end
         if n == 1 then return (KIND[row]().info(only)) end
         return COUNT[row]:format(n)
     end
@@ -487,6 +519,7 @@ function W.ResolveValue(row, text)
         if id then return id end
         return nil, L["A character is Name-Realm, or a name on your realm."]
     end
+    if ALL[row] and text:lower() == NS.Resolver.ALL then return NS.Resolver.ALL end
     if KIND[row] then
         local kind = KIND[row]()
         local id = kind.resolve(text, CANDIDATES[row])
@@ -506,7 +539,25 @@ function W.ResolveValue(row, text)
     return nil, L["%s does not take %s. It takes: %s."]:format(NS.Resolver.LABEL[row] or row, text, table.concat(list, ", "))
 end
 
+local renderIdList
+
 local function renderIdRow(ctx, gid, row)
+    local h = H()
+    -- The whole-kind checkbox, on top; while it is ticked the list under it is drawn dimmed and inert
+    -- (the page's render-disabled flag, put back after), and keeps its entries for an untick.
+    local all = ALL[row] and type(fresh(gid)[row]) == "table" and fresh(gid)[row][NS.Resolver.ALL] == true
+    if ALL[row] then
+        h.RenderGrid(ctx, { checkLine({ { text = ALL[row][1], tooltip = ALL[row][2], value = all,
+            onChange = function(x) W.Write(gid, W.SetAll(fresh(gid), row, x)) end } }) })
+    end
+    local outer = ctx.__renderDisabled
+    if all then ctx.__renderDisabled = true end
+    local ok, err = pcall(renderIdList, ctx, gid, row)
+    ctx.__renderDisabled = outer
+    if not ok then error(err, 0) end
+end
+
+renderIdList = function(ctx, gid, row)
     local h = H()
     h.IdList(ctx, {
         kind = KIND[row](),
@@ -515,7 +566,9 @@ local function renderIdRow(ctx, gid, row)
         emptyText = L["None yet."],
         entries = function()
             local list = {}
-            for id in pairs(fresh(gid)[row] or {}) do list[#list + 1] = id end
+            for id in pairs(fresh(gid)[row] or {}) do
+                if id ~= NS.Resolver.ALL then list[#list + 1] = id end
+            end
             table.sort(list, function(a, b) return tostring(a) < tostring(b) end)
             local out = {}
             for i, id in ipairs(list) do out[i] = { id = id } end
@@ -602,5 +655,6 @@ function W.Render(ctx, gid)
             :format(parent.name or from))
     end
     h.TextRow(ctx, L["|cffa0a0a0Every condition you set must match. A condition left as Any does not limit the group.|r"])
+    h.AddSpacer(h.EnsureScroll(ctx), h.ROW_VSPACER)
     for _, row in ipairs(W.ROWS) do renderDrawer(ctx, gid, row, from) end
 end

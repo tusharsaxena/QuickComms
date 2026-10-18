@@ -105,7 +105,7 @@ place and lays the page out again, so a row resizes. The bytes, the lock and the
 the callout popup's preview.
 
 **When** (`settings/Groups_When.lua`): the active-now line, then the gray line "Every condition you
-set must match. A condition left as Any does not limit the group.", then one drawer per condition
+set must match. A condition left as Any does not limit the group.", a row's gap, then one drawer per condition
 (the library's `O.Drawer`, LibKa0s `OptionsDrawer.lua` since v1.73.0), in this order: Content,
 Instance, Difficulty, Key level, Group, Leader or assist, Class, Specialization, Role, Character,
 Battleground.
@@ -123,7 +123,8 @@ header   > Key level                                               10 to 15
 - **The header**: a chevron (right while closed, down while open), the condition's name (gold while
   it is set, white otherwise) and, at the right, a summary on one line: "Any" in gray while unset,
   else the chosen values in list order, comma-separated and cut with an ellipsis; an id list names
-  its one entry or counts several ("2 instances", "2 battlegrounds", "2 characters"); the key level
+  its one entry or counts several ("2 instances", "2 battlegrounds", "2 characters"), or reads "All
+  dungeons and raids" / "All battlegrounds" while its whole-kind checkbox is ticked; the key level
   reads "10 or higher", "15 or lower", "10 to 15", or "12" when both ends are equal. Hovering it
   shows the condition's tooltip. A click opens or closes its drawer (refused in combat).
 - **The drawer**: a box joined under the header (the header's bottom corners square off and its
@@ -134,6 +135,12 @@ header   > Key level                                               10 to 15
   add-the-one-you-are-in button, which reads where the player is at the click and says so when that
   is nowhere; a typed id is a positive whole number, and a typed character takes the client's case
   (`bob` reads `Bob-<your realm>`).
+- **The whole-kind checkbox**, on top of the Instance drawer ("All dungeons and raids": any dungeon,
+  Mythic+ key or raid) and the Battleground drawer ("All battlegrounds": any battleground). While it
+  is ticked the list and its buttons under it are drawn dimmed and inert, and keep their entries,
+  unused, for an untick; it stores `all` in the row beside the ids (`Resolver.ALL`), which
+  `/qc set group.when battleground all` types too. The Character drawer has none: every character
+  is what Any already means. Clear (Any) unticks it with the rest.
 - **Select all and Clear (Any)**, right-aligned under the choices: Select all (checkbox conditions
   only) ticks every value the drawer lists (the specialization row, the specs it offers); Clear (Any)
   unsets the condition and leaves the drawer open. Both read the profile at the click.

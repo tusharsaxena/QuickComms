@@ -1215,3 +1215,44 @@ test("groups page: [inherit] an inheriting group's When tab shows its parent's c
     assertTrue(P.find(w, "Button", "Select all") ~= nil)
     assertTrue(NS.db.profile.groups[kid].when.role.TANK, "its own When was kept")
 end)
+
+test("groups page: [all] the battleground drawer's All battlegrounds dims and locks the list, which it keeps", function()
+    local NS, _, P = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine", when = { battleground = { [2107] = true } } })
+    pick(NS, gid)
+    NS.State.whenOpen[gid] = { battleground = true, instances = true, characters = true }
+    local w = P.tab("groups", "When")
+    -- red under: an id drawer with no whole-kind checkbox
+    local all = P.find(w, "CheckBox", "All battlegrounds")
+    assertTrue(all ~= nil, "the checkbox, on top of the drawer")
+    assertFalse(all.value and true or false)
+    assertFalse(P.find(w, "EditBox", "Add a battleground").disabled and true or false)
+    assertTrue(P.find(w, "CheckBox", "All dungeons and raids") ~= nil, "the instance drawer has one")
+    assertNil(P.find(w, "CheckBox", "All characters"), "the character drawer has none")
+    all:__fire("OnValueChanged", true)
+    assertTrue(NS.db.profile.groups[gid].when.battleground.all)
+    assertTrue(NS.db.profile.groups[gid].when.battleground[2107], "the pick is kept")
+    w = P.tab("groups", "When")
+    assertTrue(P.find(w, "CheckBox", "All battlegrounds").value)
+    assertEqual(P.drawer(w, "Battleground").__ka0sDrawerSummary, "All battlegrounds")
+    assertTrue(P.find(w, "EditBox", "Add a battleground").disabled, "the list is locked")
+    assertTrue(P.find(w, "Button", "Add the battleground you are in").disabled)
+    assertFalse(P.find(w, "EditBox", "Add an instance").disabled and true or false, "the other drawers are not")
+    assertFalse(P.find(w, "CheckBox", "All battlegrounds").disabled and true or false, "the checkbox itself stays live")
+end)
+
+test("groups page: [all] a gap separates the Every condition line from the first drawer", function()
+    local NS, _, P = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    pick(NS, gid)
+    local w = P.tab("groups", "When")
+    local after
+    for i, x in ipairs(w) do
+        if (x.type == "Label" or x.type == "InteractiveLabel") and x.text and x.text:find("Every condition", 1, true) then
+            after = w[i + 1]
+        end
+    end
+    -- red under: the first drawer straight under the line
+    assertTrue(after ~= nil and after.type == "SimpleGroup" and after.height == NS.addon.Settings.Helpers.ROW_VSPACER,
+        "a row spacer comes first")
+end)
