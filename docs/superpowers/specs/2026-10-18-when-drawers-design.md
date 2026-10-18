@@ -235,3 +235,41 @@ LibKa0s change follows `docs/releasing.md`; `libs/` is only ever re-vendored, ne
   parent, absent read as on, untick stores false; the read-only When tab and back). The three
   existing Surfaces nesting cases whose children carry their own When now create them with
   `inheritWhen = false`. Mutation-checked: each change reverted turns its case red.
+- **[Q4] The match is `Src.Search(list, tab, query)`** (settings/IconBrowser_Sources.lua, pure,
+  tested): trimmed, lowercased, plain substring (`find(q, 1, true)`, so `%` or `[` is text), a blank
+  or nil query answers the list itself. A marker reads its name; a glyph its catalog key and its
+  shown label (the label map now keeps path -> key beside path -> label); a game icon its texture
+  id's digits, and a texture path in the game list its file name only (not the folder).
+- **[Q4] The box** is an AceGUI `EditBox` with no label and its Okay button off (`DisableButton`),
+  kept for the browser's life like the filter and the swatch; `OnTextChanged` calls the new
+  `B.SetSearch(text)`. The LibKa0s `search` glyph (muted gold `c9a66b`) sits inside its left edge
+  and a `close` glyph button (gray) inside its right, shown while there is text, which empties it;
+  the input's text insets clear both (on AceGUI's `editbox` when present). It sits after the filter
+  (Game icons) or the swatch (Glyphs), both now 180 wide, at x=190, 190 wide; at the left edge on
+  Markers. Tooltip: "Markers by name, glyphs by name, game icons by texture id. Not case-sensitive."
+- **[Q4] Session text.** `search` is module-local and not reset by `B.Open`: a tab switch and a
+  later open in the session keep it and filter again (the box shows it). A search change shows the
+  results from the top; it does not scroll to the selection (a tab switch or an open still does,
+  when the searched list holds it). A stored icon the search hides stays selected in the footer.
+- **[Q4] The count** reads "N of M icons" while a non-blank search narrows the tab and "N icons"
+  otherwise (the unsearched wording kept). With no match the grid says "No icon matches your
+  search."; a list the client has not loaded keeps its own line first. `B.State()` gains `search`
+  and `total`; `B.Widgets()` gains `search`, `clear`, `hint`, `hintText`, `link`.
+- **[Q4] The hint row** is a box under the grid (`HINT_GAP` 8, `HINT_H` 36, the grid's and the
+  scrollbar's width, the drawer box's fill and edge colors), shown on Game icons only, with the
+  spec's words and a "Copy wowhead.com/icons" button. HEIGHT 550 -> 594 to fit it above the footer;
+  on Markers and Glyphs the band is empty.
+- **[Q4] The copy window.** "The addon's existing copy box" is read as its maker,
+  `NS.MakeCopyWindow` (the LibKa0s CopyWindow the Share page's export window is), as its own handle
+  `B.LinkWindow()` (`QuickCommsIconLinkWindow`, title "Quick Comms: Wowhead icons", 420 x 120,
+  anchored on the browser), not the Share window itself (its title names a share string). The
+  library builds it in FULLSCREEN, the browser's own strata, where the browser's catcher would lie
+  over it, so the browser sets its frame to FULLSCREEN_DIALOG once at build (the filter's pull-out
+  and the color picker live there too). It hides when the browser closes. It is in UISpecialFrames:
+  an Escape while its box has focus closes it alone; with no focus Escape closes it and the browser.
+- **[Q4] Tests (Total 855 -> 859)** in tests/test_icon_browser.lua: Src.Search (marker, glyph key
+  and label, game id digits, a path's name, plain text), the box (filters as typed, N of M, from the
+  top, the clear mark, no match), the session text (across tabs and opens), the hint and the copy
+  window (Game icons only, under the grid, the address, FULLSCREEN_DIALOG, closed with the browser).
+  Mutation-checked: label-only or key-only glyph match, the old count, a reset in Open, the strata
+  and the hide each turn a case red.

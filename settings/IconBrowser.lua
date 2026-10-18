@@ -6,10 +6,13 @@ local addonName, NS = ...
 --     window   settings/ModalWindow.lua's (the callout popup's chrome), title "Ka0s Quick Comms"
 --     header   Choose an icon, the gold rule under it
 --     tabs     [ Markers ][ Game icons ][ Glyphs ]   (the library's tab strip)
---     toolbar  Game icons: Show All / Spells / Items. Glyphs: the glyph color swatch. At the
---              right, how many icons the tab holds.
+--     toolbar  Game icons: Show All / Spells / Items. Glyphs: the glyph color swatch. Then the
+--              search box (a magnifier, a clear mark), and at the right how many icons the tab
+--              holds, or "N of M icons" while a search narrows it.
 --     grid     COLS x ROWS icons and a scrollbar, GRID_GAP under the toolbar; the mouse wheel
 --              scrolls too
+--     hint     Game icons only: search by texture id, Wowhead for a name, and a button that shows
+--              Wowhead's icon address in a copy window (the client cannot open a web page)
 --     footer   the selected icon (a glyph in the color) and its name, then Choose and Cancel
 --
 -- A click on an icon selects it, a double-click chooses it, and hovering one names it (its label,
@@ -19,6 +22,10 @@ local addonName, NS = ...
 -- tab opened and scrolled to it. An icon no tab lists (a built-in set's spell icon, a typed texture
 -- path), or none, opens on Markers, the first tab, with nothing selected: the footer asks for a
 -- click, and Choose waits for one.
+--
+-- SEARCH filters the shown tab as it is typed (IconBrowser_Sources.lua's Search: a marker by name,
+-- a glyph by catalog key or label, a game icon by texture id), from the top. The text is the
+-- session's: a tab switch and a later open keep it and filter again.
 --
 -- THE GRID IS VIRTUALIZED: COLS x ROWS cell buttons are built once and re-dressed from the tab's
 -- list at the scroll offset, so the Game icons tab's thousands of entries cost a few dozen frames.
@@ -48,17 +55,26 @@ local B = Settings.IconBrowser
 B.COLS, B.ROWS = 12, 7
 local COLS, ROWS = B.COLS, B.ROWS
 local CELL, ICON = 40, 32           -- a cell's pitch, and the icon in it
-local WIDTH, HEIGHT = 560, 550
+local WIDTH, HEIGHT = 560, 594
 local STRATA = "FULLSCREEN"
 -- As settings/CalloutPopup.lua restates them: the pages' left inset and the gap under the body.
 local CONTENT_X, BODY_BOTTOM = 12, 12
 -- The toolbar's band over the grid, and the gap between them (the swatch's row would touch the
--- grid's first row). HEIGHT leaves the footer (34) its band under the grid, below the header, a
--- one-row tab strip and the gaps.
+-- grid's first row). HEIGHT leaves the hint (HINT_GAP + HINT_H) and the footer (34) their bands
+-- under the grid, below the header, a one-row tab strip and the gaps.
 local TOOLBAR_H, GRID_GAP = 30, 10
+local HINT_GAP, HINT_H = 8, 36
 B.GRID_TOP = TOOLBAR_H + GRID_GAP
+-- The filter and the swatch are TOOL_W wide; the search box sits SEARCH_GAP after them (at the
+-- left edge on Markers, which has neither), SEARCH_W wide.
+local TOOL_W, SEARCH_GAP, SEARCH_W, SEARCH_GLYPH = 180, 10, 190, 14
 local GOLD = { 1, 0.82, 0, 0.7 }
 local GRAY = "|cffaaaaaa"
+-- The magnifier's muted gold and the clear mark's gray (the approved mockup's), and the hint's box:
+-- the fill and edge of a LibKa0s drawer's box, so it reads as the settings panel does.
+local MUTED_GOLD, MARK_GRAY = { 0.79, 0.65, 0.42 }, { 0.54, 0.54, 0.54 }
+local HINT_FILL, HINT_EDGE = { 0.08, 0.07, 0.05, 0.9 }, { 0.24, 0.2, 0.13, 1 }
+B.WOWHEAD_ICONS = "https://www.wowhead.com/icons"
 
 B.TABS = {
     { key = "markers", label = L["Markers"], tooltip = L["The eight raid target markers."] },
@@ -74,11 +90,14 @@ local TAB_KEYS = {}
 for _, t in ipairs(B.TABS) do TAB_KEYS[t.key] = true end
 
 -- The open request ({ icon, color, onChoose, owner, lift, valid }), nil while closed, and what the
--- browser shows: the tab, the game filter, the tab's list, the selection, the glyph color, the
--- first visible row.
+-- browser shows: the tab, the game filter, the tab's list (searched) and how many the tab holds, the
+-- selection, the glyph color, the first visible row. `search` is the session's typed text, kept
+-- while closed.
 local request
-local tab, filter, list, loaded, selected, color, offset = FIRST_TAB, "all", {}, true, nil, nil, 0
+local tab, filter, list, total, loaded, selected, color, offset = FIRST_TAB, "all", {}, 0, true, nil, nil, 0
+local search = ""
 local ctx, area, grid, slider, status, count, filterDD, swatch, preview, nameText, chooseBtn, cancelBtn
+local searchBox, clearMark, hint, hintText, linkBtn, linkWin
 local drawing = false
 B.cells = {}
 
@@ -155,13 +174,23 @@ local function drawFooter()
     chooseBtn:SetDisabled(selected == nil)
 end
 
+-- Whether the typed text narrows the tab (Search ignores a blank one).
+local function searching()
+    return search:match("%S") ~= nil
+end
+
 local function drawStatus()
     if #list > 0 then
         status:Hide()
         return
     end
-    status:SetText(loaded and L["Nothing to show here."]
-        or L["The game's icon list has not loaded yet. Open this tab again in a moment."])
+    local text = L["Nothing to show here."]
+    if not loaded then
+        text = L["The game's icon list has not loaded yet. Open this tab again in a moment."]
+    elseif searching() and total > 0 then
+        text = L["No icon matches your search."]
+    end
+    status:SetText(text)
     status:Show()
 end
 
@@ -195,7 +224,7 @@ local function draw()
     slider:SetMinMaxValues(0, maxOffset())
     slider:SetValue(offset)
     slider:SetShown(maxOffset() > 0)
-    count:SetText(L["%d icons"]:format(#list))
+    count:SetText(searching() and L["%d of %d icons"]:format(#list, total) or L["%d icons"]:format(#list))
     drawStatus()
     drawFooter()
     refreshTooltip()
@@ -209,13 +238,24 @@ local function setOffset(v)
     draw()
 end
 
--- The toolbar's controls for the tab, and the swatch's color.
+-- The search box after the tab's own control (none on Markers), its text and its clear mark.
+local function drawSearch()
+    local x = (tab == "game" or SWATCH_TABS[tab]) and (TOOL_W + SEARCH_GAP) or 0
+    searchBox.frame:ClearAllPoints()
+    searchBox.frame:SetPoint("TOPLEFT", area, "TOPLEFT", x, 0)
+    if searchBox:GetText() ~= search then searchBox:SetText(search) end
+    clearMark:SetShown(search ~= "")
+end
+
+-- The toolbar's controls for the tab, the swatch's color, the search box and the hint row.
 local function drawToolbar()
     filterDD.frame:SetShown(tab == "game")
     filterDD:SetValue(filter)
     swatch.frame:SetShown(SWATCH_TABS[tab] == true)
     local hex = color or "ffffff"
     swatch:SetColor(tonumber(hex:sub(1, 2), 16) / 255, tonumber(hex:sub(3, 4), 16) / 255, tonumber(hex:sub(5, 6), 16) / 255)
+    drawSearch()
+    hint:SetShown(tab == "game")
 end
 
 -- The area under the band the strip reserved (a strip that wraps reserves more).
@@ -243,17 +283,26 @@ local function drawTabs()
     anchorArea()
 end
 
--- Show tab `key` from the top, or scrolled to `icon` when the tab holds it.
-local function showTab(key, icon)
-    tab = key
-    list, loaded = Src.List(tab, filter)
+-- The tab's list, searched, from the top, or scrolled to `icon` when the list holds it.
+local function fill(icon)
+    local all
+    all, loaded = Src.List(tab, filter)
+    total = #all
+    list = Src.Search(all, tab, search)
     offset = 0
+    if icon == nil then return end
     for i, v in ipairs(list) do
         if v == icon then
             offset = math.floor((i - 1) / COLS)
             break
         end
     end
+end
+
+-- Show tab `key`, as fill does.
+local function showTab(key, icon)
+    tab = key
+    fill(icon)
     drawTabs()
     drawToolbar()
     draw()
@@ -325,14 +374,14 @@ local function buildToolbar(AceGUI)
     filterDD = AceGUI:Create("Dropdown")
     filterDD:SetLabel("")
     filterDD:SetList(FILTERS, FILTER_ORDER)
-    filterDD:SetWidth(180)
+    filterDD:SetWidth(TOOL_W)
     filterDD:SetCallback("OnValueChanged", function(_, _, key) B.SetFilter(key) end)
     H().AttachTooltip(filterDD, L["Show"], L["All the game's icons, or only the spell or the item icons."])
     place(filterDD, "TOPLEFT", 0, 0)
     swatch = AceGUI:Create("ColorPicker")
     swatch:SetLabel(L["Icon color"])
     swatch:SetHasAlpha(false)
-    swatch:SetWidth(200)
+    swatch:SetWidth(TOOL_W)
     local function pick(_, _, r, g, b) B.SetColor(NS.Library.IconColorFrom(r, g, b) or nil) end
     swatch:SetCallback("OnValueChanged", pick)
     swatch:SetCallback("OnValueConfirmed", pick)
@@ -341,6 +390,98 @@ local function buildToolbar(AceGUI)
     place(swatch, "TOPLEFT", 0, 0)
     count = area:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     count:SetPoint("TOPRIGHT", area, "TOPRIGHT", 0, -6)
+end
+
+-- A LibKa0s glyph drawn on `parent` in `rgb`, SEARCH_GLYPH square; no texture without the library.
+local function glyph(parent, name, rgb)
+    local t = parent:CreateTexture(nil, "OVERLAY")
+    t:SetSize(SEARCH_GLYPH, SEARCH_GLYPH)
+    t:SetTexture(NS.Icon and NS.Icon(name) or nil)
+    t:SetVertexColor(rgb[1], rgb[2], rgb[3])
+    return t
+end
+
+-- The search box: an EditBox with its Okay button off (it filters as it is typed), a magnifier
+-- inside its left edge and a clear mark inside its right, the text inset between them. AceGUI's
+-- input frame (`editbox`) takes the art and the insets when it is there.
+local function buildSearch(AceGUI)
+    searchBox = AceGUI:Create("EditBox")
+    searchBox:SetLabel("")
+    searchBox:SetWidth(SEARCH_W)
+    searchBox:DisableButton(true)
+    searchBox:SetCallback("OnTextChanged", function(_, _, text) B.SetSearch(text) end)
+    H().AttachTooltip(searchBox, L["Search"],
+        L["Markers by name, glyphs by name, game icons by texture id. Not case-sensitive."])
+    place(searchBox, "TOPLEFT", TOOL_W + SEARCH_GAP, 0)
+    local input = searchBox.editbox or searchBox.frame
+    if input.SetTextInsets then input:SetTextInsets(SEARCH_GLYPH + 4, SEARCH_GLYPH + 6, 3, 3) end
+    local mag = glyph(input, "search", MUTED_GOLD)
+    mag:SetPoint("LEFT", input, "LEFT", 0, 0)
+    clearMark = CreateFrame("Button", nil, input)
+    clearMark:SetSize(SEARCH_GLYPH, SEARCH_GLYPH)
+    clearMark:SetPoint("RIGHT", input, "RIGHT", -2, 0)
+    glyph(clearMark, "close", MARK_GRAY):SetPoint("CENTER", clearMark, "CENTER", 0, 0)
+    clearMark:SetScript("OnClick", function() B.SetSearch("") end)
+    clearMark:Hide()
+end
+
+-- A 1px line along `side` of `f`, in `rgba`.
+local function edge(f, side, rgba)
+    local t = f:CreateTexture(nil, "BORDER")
+    t:SetColorTexture(rgba[1], rgba[2], rgba[3], rgba[4])
+    if side == "TOP" or side == "BOTTOM" then
+        t:SetPoint(side .. "LEFT", f, side .. "LEFT", 0, 0)
+        t:SetPoint(side .. "RIGHT", f, side .. "RIGHT", 0, 0)
+        t:SetHeight(1)
+    else
+        t:SetPoint("TOP" .. side, f, "TOP" .. side, 0, 0)
+        t:SetPoint("BOTTOM" .. side, f, "BOTTOM" .. side, 0, 0)
+        t:SetWidth(1)
+    end
+end
+
+-- The copy window the hint's button shows Wowhead's address in (core/WidgetsSetup.lua's maker, the
+-- Share page's export window's), above the browser: FULLSCREEN_DIALOG, over the browser's catcher.
+-- Built on first use; nil without the library.
+function B.LinkWindow()
+    if linkWin then return linkWin end
+    linkWin = NS.MakeCopyWindow({ name = addonName .. "IconLinkWindow", scrollName = addonName .. "IconLinkScroll",
+        title = L["Quick Comms: Wowhead icons"], width = 420, height = 120,
+        anchorTo = function() return B.frame end })
+    if linkWin then linkWin:GetFrame():SetFrameStrata("FULLSCREEN_DIALOG") end
+    return linkWin
+end
+
+-- The hint row under the grid (Game icons only): the words, then the button, in a box.
+local function buildHint(AceGUI)
+    hint = CreateFrame("Frame", nil, area)
+    hint:SetPoint("TOPLEFT", grid, "BOTTOMLEFT", 0, -HINT_GAP)
+    hint:SetPoint("TOPRIGHT", slider, "BOTTOMRIGHT", 0, -HINT_GAP)
+    hint:SetHeight(HINT_H)
+    local bg = hint:CreateTexture(nil, "BACKGROUND")
+    bg:SetAllPoints(hint)
+    bg:SetColorTexture(HINT_FILL[1], HINT_FILL[2], HINT_FILL[3], HINT_FILL[4])
+    for _, side in ipairs({ "TOP", "BOTTOM", "LEFT", "RIGHT" }) do edge(hint, side, HINT_EDGE) end
+    linkBtn = AceGUI:Create("Button")
+    linkBtn:SetText(L["Copy wowhead.com/icons"])
+    linkBtn:SetWidth(170)
+    linkBtn:SetCallback("OnClick", function()
+        local win = B.LinkWindow()
+        if win then win:Show(B.WOWHEAD_ICONS) end
+    end)
+    H().AttachTooltip(linkBtn, L["Copy wowhead.com/icons"],
+        L["Shows Wowhead's icon search address in a box to copy it from (Ctrl+C). The game cannot open a web page."])
+    linkBtn.frame:SetParent(hint)
+    linkBtn.frame:ClearAllPoints()
+    linkBtn.frame:SetPoint("RIGHT", hint, "RIGHT", -6, 0)
+    linkBtn.frame:Show()
+    hintText = hint:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    hintText:SetPoint("LEFT", hint, "LEFT", 10, 0)
+    hintText:SetPoint("RIGHT", linkBtn.frame, "LEFT", -10, 0)
+    hintText:SetJustifyH("LEFT")
+    hintText:SetWordWrap(true)
+    hintText:SetText(L["Search by texture id. To find an icon by its name (e.g. ability_cheapshot), look it up on Wowhead and type its id here."])
+    hint:Hide()
 end
 
 local function buildFooter(AceGUI)
@@ -377,6 +518,8 @@ local function build()
     area = CreateFrame("Frame", nil, ctx.body)
     buildGrid()
     buildToolbar(h.AceGUI)
+    buildSearch(h.AceGUI)
+    buildHint(h.AceGUI)
     buildFooter(h.AceGUI)
     -- Hidden while open (Escape) is a Cancel.
     w.frame:HookScript("OnHide", function() if request then B.Cancel() end end)
@@ -395,6 +538,7 @@ local function close()
     putBack()
     if GameTooltip then GameTooltip:Hide() end
     if swatch then Settings.Editors.ReleasePicker(swatch) end   -- the picker goes with the browser
+    if linkWin then linkWin:Hide() end                          -- and so does the address
     if ctx then ctx.panel:Hide() end
     if B.frame then B.frame:Hide() end
     if B.catcher then B.catcher:Hide() end
@@ -445,6 +589,18 @@ function B.SetFilter(key)
     if tab == "game" then showTab("game", selected) end
 end
 
+--- Search the shown tab for `text` (nil or blank shows it whole), as the search box does as it is
+--- typed; from the top. The text is kept for the session, across tabs and opens.
+function B.SetSearch(text)
+    if not request then return end
+    text = tostring(text or "")
+    if text == search then return end
+    search = text
+    fill(nil)
+    drawSearch()
+    draw()
+end
+
 --- The glyph color ("rrggbb", or nil for white): every glyph in the grid and the footer is drawn in it.
 function B.SetColor(hex)
     if not request then return end
@@ -491,13 +647,14 @@ end
 function B.State()
     if not request then return nil end
     return { tab = tab, filter = filter, selected = selected, color = color, offset = offset, count = #list,
-        loaded = loaded, owner = request.owner }
+        total = total, search = search, loaded = loaded, owner = request.owner }
 end
 
 --- The toolbar's and the footer's widgets (for tests).
 function B.Widgets()
     return { filter = filterDD, swatch = swatch, choose = chooseBtn, cancel = cancelBtn, slider = slider,
-        grid = grid, status = status, count = count, preview = preview, name = nameText, area = area }
+        grid = grid, status = status, count = count, preview = preview, name = nameText, area = area,
+        search = searchBox, clear = clearMark, hint = hint, hintText = hintText, link = linkBtn }
 end
 
 -- ── what closes it ──────────────────────────────────────────────────────────────────────────
