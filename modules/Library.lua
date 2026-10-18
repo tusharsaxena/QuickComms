@@ -9,9 +9,14 @@ local _, NS = ...
 -- ONE OWNER (2026-10-17-callouts-owned-by-groups-design.md): each user callout id sits in exactly
 -- one user group's list. Adding a callout to a group adds a copy, removing one deletes it, and a
 -- deleted group takes its callouts with it.
+-- NESTING (2026-10-18-builtins-as-groups-design.md, goal 2): a user group may sit inside one
+-- top-level user group (its `parent`, the group.parent member row). One level only: a parent is
+-- top-level, and a group holding groups takes no parent (ValidParent). A child is never placed on a
+-- surface itself: it shows wherever its parent is (modules/Surfaces.lua), so taking a parent takes
+-- it off every surface (SettleParent), and deleting a parent puts its children in its place.
 -- Prepare runs after migrations on every profile load: it seeds, appends new built-ins once per
--- surface (seenBuiltins), splits a callout two groups hold into copies, drops dangling ids and
--- drops callouts no group holds.
+-- surface (seenBuiltins), splits a callout two groups hold into copies, drops dangling ids, drops
+-- callouts no group holds, and drops a parent that breaks the one-level rule.
 
 NS.Library = NS.Library or {}
 local Lib = NS.Library
@@ -63,6 +68,37 @@ end
 Lib.IsBuiltin = isBuiltin
 --- A built-in id's top-level set (a node resolves to its battleground), or nil.
 Lib.TopOf = topOf
+
+-- The number a user id ends in ("g12" -> 12), for the order the ids were made in.
+local function idNumber(id) return tonumber(tostring(id):match("(%d+)$")) or 0 end
+
+--- Whether `id` is a user group inside another (its parent is a user group).
+function Lib.IsChild(id)
+    local groups = NS.db and NS.db.profile and NS.db.profile.groups
+    local g = groups and groups[id]
+    return g ~= nil and type(g.parent) == "string" and groups[g.parent] ~= nil
+end
+local isChild = Lib.IsChild
+
+--- The groups inside group `id`, in the order they show on a pad and a dial: a built-in set's nodes
+--- in shipped order, a user group's children in the order they were made (their ids).
+--- @return string[]
+function Lib.Children(id)
+    local def = NS.BuiltIns.groups[id]
+    local out = {}
+    if def then
+        for i, child in ipairs(def.children or {}) do out[i] = child end
+        return out
+    end
+    for gid, g in pairs(P().groups) do
+        if g.parent == id and gid ~= id then out[#out + 1] = gid end
+    end
+    table.sort(out, function(a, b)
+        if idNumber(a) ~= idNumber(b) then return idNumber(a) < idNumber(b) end
+        return a < b
+    end)
+    return out
+end
 
 --- A fresh user id: prefix .. n.
 function Lib.NewId(prefix)
@@ -203,8 +239,9 @@ end
 local NAMED_SETS = { callout = "callouts", group = "groups" }
 
 --- Every member of a kind, in the order its editor page's picker lists them: user callouts and user
---- groups by name (case-insensitive, then id), the built-in sets after the user groups in shipped
---- order, the pads in the pad order, the dials in the dial order. The seam's fallback when a page
+--- groups by name (case-insensitive, then id), each group's children right after it (Children's
+--- order), the built-in sets after the user groups in shipped order, the pads in the pad order, the
+--- dials in the dial order. The seam's fallback when a page
 --- has selected nothing (settings/Schema.lua Settings.EditingId; never for a callout, which a write
 --- names by id), and the pages' picker order.
 --- @param kind string "callout" | "group" | "pad" | "dial"
@@ -215,10 +252,15 @@ function Lib.MemberIds(kind)
     if kind == "pad" or kind == "dial" then return surfaceIds(p, kind) end
     local source = NAMED_SETS[kind] and p[NAMED_SETS[kind]]
     if not source then return {} end
-    local out = idsByName(source)
-    if kind == "group" then
-        for _, id in ipairs(NS.BuiltIns.order) do out[#out + 1] = id end
+    if kind ~= "group" then return idsByName(source) end
+    local out = {}
+    for _, id in ipairs(idsByName(source)) do
+        if not isChild(id) then
+            out[#out + 1] = id
+            for _, child in ipairs(Lib.Children(id)) do out[#out + 1] = child end
+        end
     end
+    for _, id in ipairs(NS.BuiltIns.order) do out[#out + 1] = id end
     return out
 end
 
@@ -419,6 +461,20 @@ function Lib.ValidHidden(top, set)
     return true
 end
 
+--- Whether user group `id` may sit inside `parent` (nesting, one level): none (nil or false), or
+--- another top-level user group, while `id` holds no groups of its own. `id` may be nil (a group not
+--- made yet holds none).
+--- @return boolean ok, string|nil reason ("badParent" | "selfParent" | "parentIsChild" | "hasChildren")
+function Lib.ValidParent(parent, id)
+    if parent == nil or parent == false then return true end
+    local groups = P().groups
+    if type(parent) ~= "string" or not groups[parent] then return false, "badParent" end
+    if parent == id then return false, "selfParent" end
+    if groups[parent].parent then return false, "parentIsChild" end
+    if id ~= nil and #Lib.Children(id) > 0 then return false, "hasChildren" end
+    return true
+end
+
 local function validCallout(f)
     if type(f) ~= "table" then return false, "badCallout" end
     if not Lib.ValidName(f.name) then return false, "badName" end
@@ -478,15 +534,23 @@ local function copyCallout(src)
         iconColor = src.iconColor })
 end
 
+-- Whether a new group's fields pass: its name, When, glyph color and parent.
+local function validGroup(fields)
+    if type(fields) ~= "table" or not Lib.ValidName(fields.name) then return false, "badName" end
+    if fields.when ~= nil and not Lib.ValidWhen(fields.when) then return false, "badWhen" end
+    if not Lib.ValidIconColor(fields.iconColor) then return false, "badIconColor" end
+    return Lib.ValidParent(fields.parent)
+end
+
 --- Create a user group, its `iconColor` kept only when its icon is a glyph. `fields.callouts`
 --- (optional) are user callout ids, in order; an id that is not a user callout is dropped. One owner:
 --- a callout no group holds is taken as it is, and one a group holds (or that the list repeats) is
---- copied, the copies and the group made as one act (Batch).
+--- copied, the copies and the group made as one act (Batch). `fields.parent` (optional) puts it
+--- inside a top-level group (ValidParent); a new group is on no surface either way.
 --- @return string|nil id, string|nil reason
 function Lib.CreateGroup(fields)
-    if type(fields) ~= "table" or not Lib.ValidName(fields.name) then return nil, "badName" end
-    if fields.when ~= nil and not Lib.ValidWhen(fields.when) then return nil, "badWhen" end
-    if not Lib.ValidIconColor(fields.iconColor) then return nil, "badIconColor" end
+    local ok, why = validGroup(fields)
+    if not ok then return nil, why end
     local p = P()
     local wanted, take, copies = {}, {}, false
     for _, cid in ipairs(type(fields.callouts) == "table" and fields.callouts or {}) do
@@ -506,7 +570,7 @@ function Lib.CreateGroup(fields)
         local id = Lib.NewId("g")
         p.groups[id] = { name = fields.name, icon = fields.icon, iconColor = glyphColor(fields.icon, fields.iconColor),
             callouts = callouts, when = copyTable(fields.when) or {}, openInto = fields.openInto == true,
-            enabled = fields.enabled ~= false }
+            enabled = fields.enabled ~= false, parent = fields.parent or nil }
         announce("group", id)
         return id
     end
@@ -527,15 +591,34 @@ local function customizedFrom(gid)
     return nil
 end
 
+-- One surface's list as group `id` leaves it: the set it was customized from (`top`) back in its
+-- place, or its children (`kids`) there, each the list does not hold already; then `id` taken out.
+local function vacate(s, id, top, kids)
+    local at = indexOf(s.groups, id)
+    if at and top and not indexOf(s.groups, top) then
+        s.groups[at] = top
+        s.seenBuiltins[top] = true
+    elseif at then
+        for i = #kids, 1, -1 do
+            if not indexOf(s.groups, kids[i]) then table.insert(s.groups, at + 1, kids[i]) end
+        end
+    end
+    removeAll(s.groups, id)
+end
+
 --- Delete a user group, its callouts (nothing else holds them) and every surface reference to it.
 --- Deleting a built-in's customized copy undoes the Customize (spec §12.2): the set goes back into
 --- the copy's place on every surface that does not list it already, it is turned back on, and it
---- forgets the copy. One act (Batch).
+--- forgets the copy. Deleting a parent keeps its children: each becomes a top-level group (its
+--- group.parent row cleared through the seam) in the parent's place on every surface the parent was
+--- on, in Children's order. One act (Batch).
 function Lib.DeleteGroup(id)
     local p = P()
     if not p.groups[id] then return false end
     Lib.Batch(function()
         local top = customizedFrom(id)
+        local kids = Lib.Children(id)
+        for _, kid in ipairs(kids) do NS.SchemaRuntime.Set("group.parent", false, kid) end
         local callouts = p.groups[id].callouts or {}
         p.groups[id] = nil
         for _, cid in ipairs(callouts) do
@@ -545,14 +628,7 @@ function Lib.DeleteGroup(id)
             end
         end
         for _, set in pairs(surfaces()) do
-            for _, s in pairs(set) do
-                local at = indexOf(s.groups, id)
-                if top and at and not indexOf(s.groups, top) then
-                    s.groups[at] = top
-                    s.seenBuiltins[top] = true
-                end
-                removeAll(s.groups, id)
-            end
+            for _, s in pairs(set) do vacate(s, id, top, kids) end
         end
         if top then
             overlay(top).customizedAs = nil
@@ -564,13 +640,31 @@ function Lib.DeleteGroup(id)
 end
 
 --- Copy a user group: fresh copies of its callouts (one owner; CreateGroup copies a held callout),
---- a copy of its When. On no surface.
+--- a copy of its When, and its parent: a child's copy sits beside it in the same parent. A parent's
+--- copy holds no groups (its children are not copied). On no surface.
 --- @return string|nil id, string|nil reason
 function Lib.DuplicateGroup(id)
     local g = P().groups[id]
     if not g then return nil, "noGroup" end
     return Lib.CreateGroup({ name = Lib.CopyName(g.name), icon = g.icon, iconColor = g.iconColor, when = g.when,
-        openInto = g.openInto, enabled = g.enabled, callouts = g.callouts })
+        openInto = g.openInto, enabled = g.enabled, callouts = g.callouts, parent = isChild(id) and g.parent or nil })
+end
+
+--- The group.parent row's reaction (settings/SchemaMembers.lua): a group that now sits inside another
+--- leaves every surface, as one act with the announce (Batch). A top-level group stays where it is.
+--- @return number the surfaces it left
+function Lib.SettleParent(id)
+    if not isChild(id) then return 0 end
+    local n = 0
+    for kind, set in pairs(surfaces()) do
+        for sid, s in pairs(set) do
+            if removeAll(s.groups, id) > 0 then
+                n = n + 1
+                announce(kind, sid)
+            end
+        end
+    end
+    return n
 end
 
 -- Put callout `id` into group `g` at `index`, clamped (end by default).
@@ -755,7 +849,7 @@ local SURFACE_DEFAULTS = {
 --- false, not nil, so the boot check can see the key: false is "none" and "the default place".
 Lib.TEMPLATES = {
     callout = { name = "", text = "", channel = "smartGroup", icon = false, iconColor = false },
-    group = { name = "", icon = false, iconColor = false, enabled = true, openInto = false, when = {} },
+    group = { name = "", icon = false, iconColor = false, enabled = true, openInto = false, when = {}, parent = false },
     pad = { name = "", enabled = true, groupsAs = SURFACE_DEFAULTS.pad.groupsAs, point = false,
         layout = copyTable(SURFACE_DEFAULTS.pad.layout), look = copyTable(SURFACE_DEFAULTS.pad.look) },
     builtin = { enabled = true, hidden = {} },
@@ -806,9 +900,11 @@ local function surface(kind, sid)
     return s and s[sid]
 end
 
+--- Put a top-level group (a user group or a built-in set) on a pad or a dial at `index` (end by
+--- default). A group inside another is refused: it shows wherever its parent does.
 function Lib.AddGroupToSurface(kind, sid, gid, index)
     local s = surface(kind, sid)
-    local known = P().groups[gid] or (NS.BuiltIns.groups[gid] and not NS.BuiltIns.groups[gid].parent)
+    local known = (P().groups[gid] and not isChild(gid)) or (NS.BuiltIns.groups[gid] and not NS.BuiltIns.groups[gid].parent)
     if not s or not known or indexOf(s.groups, gid) then return false end
     index = math.max(1, math.min(index or (#s.groups + 1), #s.groups + 1))
     table.insert(s.groups, index, gid)
@@ -984,7 +1080,11 @@ end
 
 -- ── prepare ─────────────────────────────────────────────────────────────────────────────────
 
-local function exists(gid) return P().groups[gid] ~= nil or (NS.BuiltIns.groups[gid] ~= nil and not NS.BuiltIns.groups[gid].parent) end
+-- Whether a surface may list `gid`: a top-level user group or a top-level built-in set.
+local function exists(gid)
+    if P().groups[gid] ~= nil then return not isChild(gid) end
+    return NS.BuiltIns.groups[gid] ~= nil and not NS.BuiltIns.groups[gid].parent
+end
 
 local REGISTRY = { "callouts", "groups", "builtins", "pads", "dials", "padOrder", "dialOrder" }
 
@@ -1077,6 +1177,22 @@ local function repairGroups(p, result)
     end
 end
 
+-- Nesting, one level: a stored parent that is no user group, is the group itself, or itself has a
+-- parent (a chain, or a cycle) is dropped, so the group is top-level again. Judged on the parents as
+-- stored, so the answer does not hang on the order the groups are walked in. Before the surfaces'
+-- repair, which then takes every child off every surface.
+local function repairParents(p, result)
+    local stored = {}
+    for gid, g in pairs(p.groups) do stored[gid] = g.parent end
+    for gid, g in pairs(p.groups) do
+        local v = stored[gid]
+        if v ~= nil and v ~= false and not (type(v) == "string" and v ~= gid and p.groups[v] and not stored[v]) then
+            g.parent = nil
+            result.repaired = result.repaired + 1
+        end
+    end
+end
+
 -- A stored surface's settings tables (a pad's layout and look) with every field its kind's defaults
 -- have that it lacks: a pad saved before a field existed (the Look tab's font, border and background,
 -- phase 5) reads like a new one.
@@ -1125,7 +1241,8 @@ local function repairOrder(order, set, result)
 end
 
 --- Seed, append newly shipped built-ins once per surface, split shared callouts, drop dangling ids,
---- loose callouts and malformed glyph colors. Idempotent. `repaired` counts every split, drop and fix.
+--- loose callouts, malformed glyph colors and bad parents, and take a child off every surface.
+--- Idempotent. `repaired` counts every split, drop and fix.
 --- @return table { seeded, appended, repaired }
 function Lib.Prepare()
     local p = P()
@@ -1137,6 +1254,7 @@ function Lib.Prepare()
     splitShared(p, result)
     repairGroups(p, result)
     dropLoose(p, result)
+    repairParents(p, result)
     for kind, set in pairs(surfaces()) do
         for _, s in pairs(set) do repairSurface(s, kind, result) end
         repairOrder(kind == "pad" and p.padOrder or p.dialOrder, set, result)
@@ -1177,6 +1295,18 @@ local function importSurface(kind, e, map, tally)
     tally[kind .. "s"] = tally[kind .. "s"] + 1
 end
 
+-- Each imported group the string nests (Share's checked `parent`, one level) goes inside its parent's
+-- fresh copy, through the seam, which refuses what it would refuse a player; a refusal is counted as
+-- ignored. Before the surfaces, so an imported pad never lists a child.
+local function nestImported(res, map, tally)
+    for _, e in ipairs(res.groups) do
+        local id, parent = map[e.id], e.parent and map[e.parent]
+        if id and parent and not NS.SchemaRuntime.Set("group.parent", parent, id) then
+            tally.ignored = tally.ignored + 1
+        end
+    end
+end
+
 -- One owner: each group makes its own copy of each callout it lists, so groups that share a callout
 -- id get one copy each, and a callout no group lists is never made. `map` keeps an old callout id's
 -- first copy.
@@ -1197,13 +1327,15 @@ local function importMembers(res, map, tally)
             openInto = f.openInto, enabled = f.enabled, callouts = ids })
         if id then map[e.id], tally.groups = id, tally.groups + 1 end
     end
+    nestImported(res, map, tally)
     for _, e in ipairs(res.pads) do importSurface("pad", e, map, tally) end
     for _, e in ipairs(res.dials) do importSurface("dial", e, map, tally) end
 end
 
 --- Apply a checked share result (modules/Share.lua Validate): every member under a fresh id (spec
 --- §18: ids are always re-mapped, names may repeat), each group's callouts and each surface's groups
---- pointing at the new copies, built-in sets kept by id. Each group gets its own copy of each callout
+--- pointing at the new copies, built-in sets kept by id, a nested group inside its parent's copy.
+--- Each group gets its own copy of each callout
 --- it lists, and a callout no group lists is not imported (one owner). A pad or a dial arrives unbound (spec §15): no
 --- key, at the default place, at the end of its kind's order. One act: one LIBRARY_CHANGED, so the
 --- surfaces rebuild once, and one `[Set] import share` line for every field it wrote.

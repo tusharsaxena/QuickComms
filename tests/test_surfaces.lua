@@ -409,3 +409,60 @@ test("surfaces: [icons] a slot carries its callout's icon color, a dial's group 
     -- red under: the dial's group entry built without iconColor
     assertEqual(ring and ring.iconColor, "0000ff")
 end)
+
+-- ── nested groups (2026-10-18-builtins-as-groups-design.md, goal 2) ──────────────────────────
+
+-- A parent with a callout of its own on the default pad and dial, a child active in a key and a
+-- child for arenas only, each with one callout.
+local function family(NS)
+    local Lib = NS.Library
+    local parent = Lib.CreateGroup({ name = "Raid night" })
+    Lib.CreateCalloutIn(parent, { name = "Own", text = "own", channel = "party" })
+    local keyed = Lib.CreateGroup({ name = "Keyed", when = { content = { mythicPlus = true } } })
+    Lib.CreateCalloutIn(keyed, { name = "Go", text = "go", channel = "party" })
+    local arena = Lib.CreateGroup({ name = "Arena only", when = { content = { arena = true } } })
+    Lib.CreateCalloutIn(arena, { name = "Swap", text = "swap", channel = "party" })
+    NS.SchemaRuntime.Set("group.parent", parent, keyed)
+    NS.SchemaRuntime.Set("group.parent", parent, arena)
+    Lib.AddGroupToSurface("pad", "p1", parent, 1)
+    Lib.AddGroupToSurface("dial", "d2", parent, 1)
+    return parent, keyed, arena
+end
+
+test("surfaces: [nesting] a parent draws its own section, then one per child whose When matches", function()
+    local NS = live()
+    local parent, keyed = family(NS)
+    local plan = planFor(NS)
+    assertEqual(plan.order[1], parent, "the parent is the surface's group")
+    -- red under: S.Sections reading only a built-in's children
+    assertEqual(plan.sections[1].groupId, parent)
+    assertEqual(plan.sections[1].title, "Raid night")
+    assertEqual(plan.sections[2].groupId, keyed)
+    assertEqual(plan.sections[2].slots[1].line, "/p go")
+    assertEqual(plan.sections[3].groupId, "bi.mplus", "the arena child is not active in a key")
+    NS.SchemaRuntime.Set("group.enabled", false, keyed)
+    plan = planFor(NS)
+    assertEqual(plan.sections[2].groupId, "bi.mplus", "a disabled child leaves the plan")
+    NS.SchemaRuntime.Set("group.enabled", false, parent)
+    assertTrue(planFor(NS).order[1] ~= parent, "the parent's own gate is the whole family's")
+end)
+
+test("surfaces: [nesting] a dial draws a parent's own callouts and a ring per child whose When matches", function()
+    local NS = live()
+    family(NS)
+    local snap = NS.Situation.Current()
+    local plan = NS.Surfaces.BuildDialPlan("d2", NS.db.profile.dials.d2, snap, NS.Surfaces.Deps(snap))
+    local titles, sends = {}, {}
+    for _, r in ipairs(plan.rings) do
+        for _, item in ipairs(r.items) do
+            if item.kind == "ring" then titles[item.title] = true end
+            if item.kind == "send" then sends[item.title] = r.title end
+        end
+    end
+    assertTrue(titles["Raid night"], "the parent's ring")
+    -- red under: S.BuildDialPlan reading only a built-in's children
+    assertTrue(titles["Keyed"], "the active child's ring")
+    assertNil(titles["Arena only"], "no ring for the child that is not active")
+    assertEqual(sends["Own"], "Raid night", "the parent's own callout sits in its ring")
+    assertEqual(sends["Go"], "Keyed")
+end)

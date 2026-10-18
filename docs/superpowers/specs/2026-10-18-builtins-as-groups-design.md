@@ -69,3 +69,42 @@ the standard's migration mechanism (`NS.MIGRATIONS`).
 
 Ids for seeded groups and callouts, the origin key's shape, where Restore lives (a button on the
 Groups page, or under its Defaults), migration vs Prepare, the Preview table's widget composition.
+
+## Builder calls
+
+Recorded as each task makes them (plan ledger task in brackets).
+
+- [T1] **Delete a parent: its children become top-level groups** (not deleted with it), each put
+  in the parent's place on every pad and dial the parent was on, in the children's order; the
+  confirm says so ("The groups inside it become top-level groups, in its place on every pad and
+  dial").
+- [T1] **Child order** on a pad, a dial and the Group dropdown is the order the children were made
+  in (their id numbers), so a seeded set keeps its shipped node order; there is no reorder control
+  for children yet.
+- [T1] **A parent may hold callouts of its own.** On a pad they are a section titled with the parent's
+  name, before the children's sections; on a dial they come first in the parent's ring, before the
+  child rings (such a ring is not pinned to compass winds). A parent with neither own callouts nor a
+  child whose When matches draws nothing.
+- [T1] **Taking a parent takes the group off every pad and dial** (Library.SettleParent, in the same
+  act as the write); clearing the parent does not put it back, the player adds it under Comms Pad >
+  Groups. Prepare also takes any child off every surface, and Add a group (pads, dials) lists only
+  top-level groups.
+- [T1] **Children gate on their own When and Enabled**: a child's section or ring shows only while
+  the Resolver finds it active; the parent's When and Enabled gate the whole family. A built-in node
+  has no When of its own and always shows with its set.
+- [T1] **group.parent is a member row** (`/qc` takes a group id, or `none` / empty for none; default
+  none; a page's Defaults keeps it, as it keeps the icon). The General tab draws it as its own
+  dropdown (None, then the top-level user groups but itself, in picker order), idle while the group
+  holds groups, with a tooltip naming them. Built-in sets are neither parents nor children in T1
+  (T2 seeds them as user groups).
+- [T1] **Duplicate**: a child's copy sits in the same parent (the chat line says so); a parent's copy
+  holds no children (they are not copied).
+- [T1] **Share**: picking a parent (directly or through a pad or dial) brings its children; a child
+  picked alone travels without its parent and arrives top-level. On import a parent is kept only
+  when the string carries it and it has no parent of its own (judged on the string as written, so a
+  chain or cycle keeps nothing); any other is counted with the dropped references.
+- [T1] **Prepare's parent repair** is judged on the parents as stored, not in walk order: a parent
+  that is no user group, the group itself, or a group with a parent of its own is dropped. No
+  migration step: a group without `parent` is top-level, so old profiles need nothing.
+- [T1] **Group dropdown indent**: a child's entry starts with four spaces (Groups.CHILD_INDENT),
+  listed right after its parent (Library.MemberIds), which also orders the Share page's group list.

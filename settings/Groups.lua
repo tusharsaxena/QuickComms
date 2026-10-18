@@ -2,9 +2,11 @@ local _, NS = ...
 -- settings/Groups.lua — the Groups page (design spec §13.1, §12.2): one group at a time, a user group
 -- or a built-in set.
 --
---     band      [ Group v (picker; a green dot marks a group active now) ][ New group ]
+--     band      [ Group v (picker; a green dot marks a group active now; a group inside another is
+--               listed indented under it) ][ New group ]
 --     strip     [ General ][ Callouts ][ When ][ Preview ]
 --     General   Preview as (page-wide, first), then Name, Enabled, Open the dial on this group, then
+--               Parent group (none, or a top-level group; idle while the group holds groups), then
 --               the icon under an Icon label with Choose icon…, the clear glyph and its color swatch
 --               (settings/Editors.lua's chooser, no Icon text box; the icon browser writes icon and
 --               color as one act), then Duplicate and Delete. A built-in: what it is, its Enabled row,
@@ -38,8 +40,12 @@ G.PAGE = PAGE
 local function H() return Settings.Helpers end
 local function isBuiltin(id) return NS.Library.IsBuiltin(id) end
 
---- Picker entries in the page's order (Library.MemberIds: the user groups by name, then the built-in
---- sets in shipped order); a group active under the current or previewed situation carries a green dot.
+-- What a child's picker entry starts with: it reads as inside the group listed above it.
+G.CHILD_INDENT = "    "
+
+--- Picker entries in the page's order (Library.MemberIds: the user groups by name, each with its
+--- children under it, indented by CHILD_INDENT, then the built-in sets in shipped order); a group
+--- active under the current or previewed situation carries a green dot.
 function G.Entries()
     local active = NS.Resolver.ActiveGroups(NS.Library.AllGroups(), Ed.Snapshot())
     local out = {}
@@ -50,7 +56,8 @@ function G.Entries()
         else
             text = NS.db.profile.groups[id].name or id
         end
-        out[#out + 1] = { id = id, label = (active[id] and Ed.ACTIVE_DOT or "") .. text }
+        local indent = NS.Library.IsChild(id) and G.CHILD_INDENT or ""
+        out[#out + 1] = { id = id, label = indent .. (active[id] and Ed.ACTIVE_DOT or "") .. text }
     end
     return out
 end
@@ -70,23 +77,82 @@ function G.Create()
 end
 
 --- Duplicate: the copy is on no pad or dial (Library.DuplicateGroup), and the chat line says so and
---- where to add it.
+--- where to add it; a child's copy sits in the same parent, and the line says that instead.
 function G.Duplicate(id)
     local copy = NS.Library.DuplicateGroup(id)
     if copy then
-        NS.Print(L["%s: the copy is on no pad yet. Add it under Comms Pad > Groups."]:format(NS.db.profile.groups[copy].name))
+        local g = NS.db.profile.groups[copy]
+        if NS.Library.IsChild(copy) then
+            NS.Print(L["%s: the copy is inside %s, beside the original."]:format(g.name, NS.db.profile.groups[g.parent].name))
+        else
+            NS.Print(L["%s: the copy is on no pad yet. Add it under Comms Pad > Groups."]:format(g.name))
+        end
         Ed.Select("group", copy)
         Ed.RequestRefresh()
     end
     return copy
 end
 
---- Delete asks first, and says the group's callouts go with it (the group owns them).
+--- Delete asks first, and says the group's callouts go with it (the group owns them), and, for a
+--- parent, that the groups inside it stay, as top-level groups in its place (Library.DeleteGroup).
 function G.Delete(id)
     local g = NS.db.profile.groups[id]
     if not g then return end
-    Ed.ConfirmDelete(g.name, function() NS.Library.DeleteGroup(id) end,
-        L["Delete '%s' and its callouts? This cannot be undone."])
+    local text = L["Delete '%s' and its callouts? This cannot be undone."]
+    if #NS.Library.Children(id) > 0 then
+        text = L["Delete '%s' and its callouts? The groups inside it become top-level groups, in its place on every pad and dial. This cannot be undone."]
+    end
+    Ed.ConfirmDelete(g.name, function() NS.Library.DeleteGroup(id) end, text)
+end
+
+-- Parent group's choice for no parent: a value the group.parent row reads as none (never a group id).
+G.NO_PARENT = "none"
+
+--- What Parent group offers user group `gid`: none, then every top-level user group but `gid`, in
+--- the picker's order.
+function G.ParentChoices(gid)
+    local out = { { id = G.NO_PARENT, label = L["None"] } }
+    for _, id in ipairs(NS.Library.MemberIds("group")) do
+        if id ~= gid and not isBuiltin(id) and not NS.Library.IsChild(id) then
+            out[#out + 1] = { id = id, label = NS.db.profile.groups[id].name or id }
+        end
+    end
+    return out
+end
+
+--- Parent group's tooltip: the row's own text, or, for a group that holds groups (the dropdown is
+--- idle then), which groups it holds and why it cannot go inside another.
+function G.ParentTooltip(gid)
+    local kids = NS.Library.Children(gid)
+    if #kids == 0 then return Ed.Row("group.parent").desc end
+    local names = {}
+    for i, kid in ipairs(kids) do names[i] = NS.db.profile.groups[kid].name or kid end
+    return L["%s holds %s, so it cannot go inside another group: groups go one level deep."]
+        :format(NS.db.profile.groups[gid].name, table.concat(names, ", "))
+end
+
+-- The General tab's Parent group dropdown for user group `gid` (a RenderGrid item, half the row as
+-- a schema row is): a pick writes the group.parent row through the seam, whose refusal is printed.
+local function parentItem(gid)
+    return { make = function(_, parent, rel)
+        local h = H()
+        local dd = h.AceGUI:Create("Dropdown")
+        local label = Ed.Row("group.parent").label
+        dd:SetLabel(label)
+        local list, order = Ed.PickerList(G.ParentChoices(gid))
+        dd:SetList(list, order)
+        local g = NS.db.profile.groups[gid]
+        dd:SetValue(NS.Library.IsChild(gid) and g.parent or G.NO_PARENT)
+        dd:SetDisabled(#NS.Library.Children(gid) > 0)
+        dd:SetRelativeWidth(rel or 0.5)
+        dd:SetCallback("OnValueChanged", function(_, _, key)
+            local ok, err, why = NS.SchemaRuntime.Set("group.parent", key, gid)
+            if not ok then NS.Print(tostring(why or err)) end
+        end)
+        h.AttachTooltip(dd, label, G.ParentTooltip(gid))
+        parent:AddChild(dd)
+        return dd
+    end }
 end
 
 --- The user group a built-in was customized into, while it still exists.
@@ -224,9 +290,10 @@ function G.IconSpec(gid)
 end
 
 local NONE = L["No groups yet. Click New group to make one."]
--- The General tab's rows it leaves out of its RenderRows: Preview as (drawn first, alone) and the
--- icon's two rows (the chooser draws them).
-local UNDRAWN = { ["state.previewAs"] = true, ["group.icon"] = true, ["group.iconColor"] = true }
+-- The General tab's rows it leaves out of its RenderRows: Preview as (drawn first, alone), Parent
+-- group (its own dropdown, parentItem) and the icon's two rows (the chooser draws them).
+local UNDRAWN = { ["state.previewAs"] = true, ["group.parent"] = true, ["group.icon"] = true,
+    ["group.iconColor"] = true }
 
 local function renderGeneral(ctx, rows)
     local h = H()
@@ -256,6 +323,7 @@ local function renderGeneral(ctx, rows)
         if not UNDRAWN[row.path] then mine[#mine + 1] = row end
     end
     h.RenderRows(ctx, mine, nil, nil, { noHeadings = true })
+    h.RenderGrid(ctx, { parentItem(gid) })
     Ed.IconChooser(ctx, G.IconSpec(gid))
     h.InlineButtonPair(ctx,
         { text = L["Duplicate"], tooltip = L["Make a copy of this group, with copies of its callouts and the same When. The copy is on no pad until you add it under Comms Pad > Groups."],
@@ -405,7 +473,7 @@ local function renderPreview(ctx)
     local W = Settings.GroupsWhen
     local active = h.TextRow(ctx, W.ActiveText(gid))
     Ed.Live(ctx, function() if active then active:SetText(W.ActiveText(gid)) end end)
-    local sections = NS.Surfaces.Sections(gid, NS.Library.Group)
+    local sections = NS.Surfaces.Sections(gid, NS.Library.Group, { children = NS.Library.Children })
     local any = false
     for _, sec in ipairs(sections) do
         if #sections > 1 then h.Section(ctx, sec.title) end

@@ -750,3 +750,98 @@ test("groups page: [icons] the swatch writes on a drag tick (OnValueChanged) wit
     swatch:__fire("OnValueConfirmed", 1, 0, 0, 1)   -- Cancel confirms the old color
     assertEqual(NS.db.profile.groups[gid].iconColor, "ff0000", "Cancel puts the old color back")
 end)
+
+-- ── nested groups (2026-10-18-builtins-as-groups-design.md, goal 2) ──────────────────────────
+
+test("groups page: [nesting] General's Parent group offers the top-level groups but itself; a pick nests the group", function()
+    local NS, _, P = open()
+    local Lib = NS.Library
+    local a = Lib.CreateGroup({ name = "Alpha" })
+    local b = Lib.CreateGroup({ name = "Bravo" })
+    local c = Lib.CreateGroup({ name = "Charlie" })
+    NS.SchemaRuntime.Set("group.parent", a, c)
+    pick(NS, b)
+    local w = P.redraw("groups")
+    local dd = P.find(w, "Dropdown", "Parent group")
+    -- red under: no Parent group dropdown on General
+    assertTrue(dd ~= nil)
+    local G = NS.addon.Settings.Groups
+    assertEqual(table.concat(dd.order, ","), G.NO_PARENT .. "," .. a, "none, then Alpha: not itself, not a child")
+    assertEqual(dd.list[G.NO_PARENT], "None")
+    assertEqual(dd.value, G.NO_PARENT)
+    assertFalse(dd.disabled)
+    dd:__fire("OnValueChanged", a)
+    assertEqual(NS.db.profile.groups[b].parent, a)
+    P.flush()
+    w = P.redraw("groups")
+    dd = P.find(w, "Dropdown", "Parent group")
+    assertEqual(dd.value, a)
+    dd:__fire("OnValueChanged", G.NO_PARENT)
+    assertFalse(NS.db.profile.groups[b].parent, "None takes it out again")
+end)
+
+test("groups page: [nesting] a group that holds groups cannot take a parent: the dropdown is idle and says why", function()
+    local NS, _, P = open()
+    local Lib = NS.Library
+    local a = Lib.CreateGroup({ name = "Alpha" })
+    local c = Lib.CreateGroup({ name = "Charlie" })
+    NS.SchemaRuntime.Set("group.parent", a, c)
+    pick(NS, a)
+    local w = P.redraw("groups")
+    local dd = P.find(w, "Dropdown", "Parent group")
+    -- red under: the dropdown live on a parent
+    assertTrue(dd.disabled)
+    assertTrue(NS.addon.Settings.Groups.ParentTooltip(a):find("Charlie", 1, true) ~= nil, "names the groups it holds")
+end)
+
+test("groups page: [nesting] the picker lists each child indented under its parent", function()
+    local NS = open()
+    local Lib = NS.Library
+    local z = Lib.CreateGroup({ name = "Zed" })
+    local a = Lib.CreateGroup({ name = "Alpha" })
+    local k = Lib.CreateGroup({ name = "Kid" })
+    NS.SchemaRuntime.Set("group.parent", z, k)
+    local entries = NS.addon.Settings.Groups.Entries()
+    assertEqual(entries[1].id, a)
+    assertEqual(entries[2].id, z)
+    assertEqual(entries[3].id, k)
+    local indent = NS.addon.Settings.Groups.CHILD_INDENT
+    -- red under: Entries drawing a child's label like a top-level group's
+    assertEqual(entries[3].label:sub(1, #indent), indent)
+    assertTrue(entries[3].label:find("Kid", 1, true) ~= nil)
+    assertTrue(entries[2].label:sub(1, #indent) ~= indent, "a top-level group is not indented")
+end)
+
+test("groups page: [nesting] deleting a parent asks, saying its groups become top-level groups in its place", function()
+    local NS, m, P = open()
+    local Lib = NS.Library
+    local a = Lib.CreateGroup({ name = "Alpha" })
+    local c = Lib.CreateGroup({ name = "Charlie" })
+    NS.SchemaRuntime.Set("group.parent", a, c)
+    pick(NS, a)
+    local w = P.redraw("groups")
+    P.find(w, "Button", "Delete"):__fire("OnClick")
+    local which = m.popupsShown[#m.popupsShown][1]
+    -- red under: G.Delete asking with the plain group text
+    assertTrue(m.StaticPopupDialogs[which].text:find("top-level", 1, true) ~= nil)
+    P.accept()
+    assertNil(NS.db.profile.groups[a])
+    assertFalse(NS.db.profile.groups[c].parent)
+end)
+
+test("groups page: [nesting] a pad's and a dial's Add a group leave out a child", function()
+    local NS = open()
+    local Lib = NS.Library
+    local a = Lib.CreateGroup({ name = "Alpha" })
+    local c = Lib.CreateGroup({ name = "Charlie" })
+    NS.SchemaRuntime.Set("group.parent", a, c)
+    local S = NS.addon.Settings
+    local function has(list, id)
+        for _, e in ipairs(list) do if e.id == id then return true end end
+        return false
+    end
+    -- red under: AddableGroups listing every user group
+    assertFalse(has(S.Pads.AddableGroups("p1"), c))
+    assertFalse(has(S.Dials.AddableGroups("d2"), c))
+    assertTrue(has(S.Pads.AddableGroups("p1"), a))
+end)

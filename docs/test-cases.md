@@ -288,7 +288,7 @@ Total.
 - bake: a typed %t counts as live
 - bake: [phase 5] CleanText is the sanitizer short of the escape; Sanitize is CleanText, then the escape
 
-### test_share.lua (30)
+### test_share.lua (32)
 
 - share: a string is !QC1! then printable text, and decodes back to the same payload
 - share: [review 1] a pasted string may wrap and carry spaces; a cut-short one is damaged and imports nothing
@@ -320,6 +320,8 @@ Total.
 - share: Collect takes a callout only inside its group; a picked callout alone is nothing
 - share: [icons] a glyph's color travels; an old string arrives untinted; a bad color is dropped and counted
 - share: [icons] an export carries each member's color, and the string round-trips it
+- share: [nesting] a picked parent brings its children, and the import nests them under the new copy
+- share: [nesting] a parent the string does not carry, itself, or one inside another is dropped and counted
 
 ### test_resolver.lua (8)
 
@@ -347,7 +349,7 @@ Total.
 - game ids: every battleground set matches only battleground maps, and no map is two sets'
 - game ids: the shipped dungeons are Mythic+ dungeons and the shipped raids are raids
 
-### test_library.lua (66)
+### test_library.lua (73)
 
 - library: Prepare seeds one pad and one dial with every built-in, once
 - library: callouts validate on create
@@ -415,6 +417,13 @@ Total.
 - library: [icons] Prepare drops a malformed stored color and keeps a good one
 - library: [icons] an import carries a glyph's color into the fresh copies
 - library: [icons] IconTint draws a glyph's color as r, g, b; no color, a bad one or no glyph is white
+- library: [nesting] a group takes a top-level group as its parent and leaves every surface
+- library: [nesting] one level only: self, a child, a parent with children, a stranger and a built-in are refused
+- library: [nesting] none clears the parent: false, empty text and 'none' all do
+- library: [nesting] a group's children are in the order they were made; MemberIds lists them under it
+- library: [nesting] deleting a parent makes its children top-level groups in its place on every surface
+- library: [nesting] Duplicate keeps a child inside its parent; a parent's copy holds no children
+- library: [nesting] Prepare drops a bad parent (gone, itself, a chain, a cycle) and takes a child off every surface
 
 ### test_members.lua (28)
 
@@ -565,7 +574,7 @@ Total.
 - when: [final 6] a typed character takes the client's case; the Resolver matches one in any case
 - when: [final 2, 11] ResolveValue maps a typed value onto the token or id its row stores, or refuses it
 
-### test_page_groups.lua (36)
+### test_page_groups.lua (41)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists user groups by name, then the built-ins, active ones dotted
@@ -603,6 +612,11 @@ Total.
 - groups page: [icons] a callout row in the Callouts tab draws its glyph in the callout's color
 - groups page: [icons] a tinted callout row puts its image back to white when released (AceGUI's shared pool)
 - groups page: [icons] the swatch writes on a drag tick (OnValueChanged) with no confirm, as OK leaves it
+- groups page: [nesting] General's Parent group offers the top-level groups but itself; a pick nests the group
+- groups page: [nesting] a group that holds groups cannot take a parent: the dropdown is idle and says why
+- groups page: [nesting] the picker lists each child indented under its parent
+- groups page: [nesting] deleting a parent asks, saying its groups become top-level groups in its place
+- groups page: [nesting] a pad's and a dial's Add a group leave out a child
 
 ### test_page_pads.lua (13)
 
@@ -789,7 +803,7 @@ Total.
 - dial layout: [review 6] a pinned ring ignores the dial's slices; Flat keeps its paging
 - dial layout: [icons] a ring entry carries its group's icon color, a send entry its callout's
 
-### test_surfaces.lua (23)
+### test_surfaces.lua (25)
 
 - surfaces: in a key the default pad's plan is the M+ set, baked to /p
 - surfaces: [review 5] a refused callout is a slot with its reason and no line
@@ -814,6 +828,8 @@ Total.
 - surfaces: [phase 3] WhyLines names each shown group in order, built-ins marked, then the locks
 - surfaces: [phase 3] WhyLines in a key explains the built-in's matched row; a preview says so
 - surfaces: [icons] a slot carries its callout's icon color, a dial's group entry its group's
+- surfaces: [nesting] a parent draws its own section, then one per child whose When matches
+- surfaces: [nesting] a dial draws a parent's own callouts and a ring per child whose When matches
 
 ### test_pad_render.lua (18)
 
@@ -986,18 +1002,18 @@ Total.
 | test_tokens.lua | 8 |
 | test_channels.lua | 8 |
 | test_bake.lua | 12 |
-| test_share.lua | 30 |
+| test_share.lua | 32 |
 | test_resolver.lua | 8 |
 | test_builtins.lua | 7 |
 | test_gameids.lua | 2 |
-| test_library.lua | 66 |
+| test_library.lua | 73 |
 | test_members.lua | 28 |
 | test_editors.lua | 17 |
 | test_callout_popup.lua | 38 |
 | test_icon_browser.lua | 26 |
 | test_eui_skin.lua | 10 |
 | test_groups_when.lua | 12 |
-| test_page_groups.lua | 36 |
+| test_page_groups.lua | 41 |
 | test_page_pads.lua | 13 |
 | test_page_dials.lua | 17 |
 | test_page_share.lua | 14 |
@@ -1009,7 +1025,7 @@ Total.
 | test_master.lua | 5 |
 | test_pad_layout.lua | 12 |
 | test_dial_layout.lua | 15 |
-| test_surfaces.lua | 23 |
+| test_surfaces.lua | 25 |
 | test_pad_render.lua | 18 |
 | test_pad.lua | 26 |
 | test_dial.lua | 29 |
@@ -1020,4 +1036,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **806** |
+| **Total** | **822** |

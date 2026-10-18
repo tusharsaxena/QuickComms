@@ -229,13 +229,14 @@ local function groupLabel(gid, active)
     return ((active and active[gid]) and Ed.ACTIVE_DOT or "") .. name
 end
 
---- The groups the dial does not list: user groups by name, then the top-level built-ins in order.
+--- The groups the dial does not list: top-level user groups by name (a group inside another shows
+--- with it, never by itself), then the top-level built-ins in order.
 function DD.AddableGroups(id)
     local on = {}
     for _, gid in ipairs(NS.db.profile.dials[id].groups) do on[gid] = true end
     local out = {}
     for gid, g in pairs(NS.db.profile.groups) do
-        if not on[gid] then out[#out + 1] = { id = gid, label = g.name or gid } end
+        if not on[gid] and not NS.Library.IsChild(gid) then out[#out + 1] = { id = gid, label = g.name or gid } end
     end
     table.sort(out, function(a, b) return a.label:lower() < b.label:lower() end)
     for _, gid in ipairs(NS.BuiltIns.order) do

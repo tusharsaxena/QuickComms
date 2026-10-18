@@ -35,6 +35,10 @@ local WHY = {
     badRange  = L["The lowest key level is above the highest."],
     badHidden = L["Only this set's own callouts can be hidden."],
     builtin   = L["Built-in groups are read-only. Customize makes an editable copy."],
+    badParent = L["A parent group is one of your groups, or none."],
+    selfParent = L["A group cannot be inside itself."],
+    parentIsChild = L["That group is inside another group: groups go one level deep."],
+    hasChildren = L["This group holds groups of its own, so it cannot go inside another: groups go one level deep."],
     badChoice = L["That is not one of the choices."],
     badKey    = L["A key is one key, with ALT-, CTRL- or SHIFT- in front if you like."],
     badColor  = L["A color is red, green and blue, and optionally alpha, each from 0 to 1."],
@@ -84,6 +88,16 @@ local function iconValue(v)
 end
 
 local function isText(v) return type(v) == "string", "badText" end
+
+-- A parent group typed on the command line: empty text and "none" (any case) are no parent (false,
+-- a value the seam stores), anything else the group id as typed, for Library.ValidParent to judge.
+-- The seam checks the value as given, so the check reads it through this too.
+local function parentValue(v)
+    if type(v) ~= "string" then return v end
+    local trimmed = v:match("^%s*(.-)%s*$")
+    if trimmed == "" or trimmed:lower() == "none" then return false end
+    return trimmed
+end
 
 -- callout.iconColor, group.iconColor: none, or six hex digits (Library.IconColorValue reads typed
 -- text) on a member whose icon is a LibKa0s glyph. With no member addressed the value passes, so the
@@ -212,6 +226,14 @@ local ROWS = {
       page = "groups", group = GENERAL, label = L["Open the dial on this group"],
       desc = L["When this is the first active group on a Comms Dial, the dial opens straight on its ring, and the middle of the dial goes back to the groups."],
       validate = userGroup() },
+    -- Nesting (2026-10-18-builtins-as-groups-design.md, goal 2): the top-level group this one sits
+    -- inside, or none (false). The General tab draws it as its own dropdown of the groups it may take
+    -- (settings/Groups.lua); /qc takes a group id or none. Taking a parent takes the group off every
+    -- surface (Library.SettleParent, below). A page's Defaults keeps it (settings/Schema.lua resetExempt).
+    { path = "group.parent", instance = "group", type = "string", dialogControl = "EditBox", default = false,
+      page = "groups", group = GENERAL, label = L["Parent group"],
+      desc = L["The group this one sits inside. It shows wherever that group does, in a section (or a ring) of its own, while its When matches. None makes it a group of its own."],
+      normalize = parentValue, validate = userGroup(function(v, id) return Lib.ValidParent(parentValue(v), id) end) },
     { path = "group.when", instance = "group", type = "when",
       page = "groups", group = L["When"], label = L["When"],
       desc = L["The conditions under which this group is active. Every condition you turn on must match; within a condition, any value may."],
@@ -407,10 +429,19 @@ for _, row in ipairs(lookRows()) do ROWS[#ROWS + 1] = row end
 -- naming the row's path as the field. A color stays only on a glyph: an icon write that leaves a
 -- colored member without one clears its color through the seam in the same act (Library.Batch, one
 -- LIBRARY_CHANGED).
+-- A group that takes a parent leaves every surface in the same act (Library.SettleParent).
 local ICON_ROWS = { ["callout.icon"] = true, ["group.icon"] = true }
 for _, row in ipairs(ROWS) do
     local kind, path = row.instance, row.path
     row.onChange = function(_, id) Lib.Touch(kind, id, path) end
+    if path == "group.parent" then
+        row.onChange = function(_, id)
+            Lib.Batch(function()
+                Lib.SettleParent(id)
+                Lib.Touch(kind, id, path)
+            end)
+        end
+    end
     if ICON_ROWS[path] then
         row.onChange = function(value, id)
             local m = Lib.Member(kind, id)

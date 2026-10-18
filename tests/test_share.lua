@@ -522,3 +522,48 @@ test("share: [icons] an export carries each member's color, and the string round
     local back = SH.Validate(SH.Decode(SH.Encode(payload)))
     assertEqual(back.groups[1].fields.iconColor, "00ff00")
 end)
+
+-- ── nested groups (2026-10-18-builtins-as-groups-design.md, goal 2) ──────────────────────────
+
+test("share: [nesting] a picked parent brings its children, and the import nests them under the new copy", function()
+    local NS, SH = boot()
+    local Lib = NS.Library
+    local parent = Lib.CreateGroup({ name = "Raid night" })
+    local child = Lib.CreateGroup({ name = "Boss 1" })
+    Lib.CreateCalloutIn(child, KICK)
+    NS.SchemaRuntime.Set("group.parent", parent, child)
+    -- red under: closure in modules/Share.lua not bringing a picked group's children
+    local payload = SH.Collect({ group = { [parent] = true } })
+    assertTrue(payload.groups[child] ~= nil, "the child travels with its parent")
+    assertEqual(payload.groups[child].parent, parent)
+    assertNil(payload.groups[parent].parent)
+    local res = SH.Validate(payload)
+    local tally, map = Lib.Import(res)
+    assertEqual(tally.groups, 2)
+    local p = NS.db.profile
+    -- red under: Library.Import not setting the parent on the fresh copies
+    assertEqual(p.groups[map[child]].parent, map[parent], "remapped to the new parent")
+    assertTrue(map[parent] ~= parent)
+end)
+
+test("share: [nesting] a parent the string does not carry, itself, or one inside another is dropped and counted", function()
+    local NS, SH = boot()
+    local res = SH.Validate(bundle({ groups = {
+        g1 = { name = "Deep", parent = "g2" }, g2 = { name = "Mid", parent = "g3" }, g3 = { name = "Top" },
+        g4 = { name = "Self", parent = "g4" }, g5 = { name = "Lost", parent = "g99" }, g6 = { name = "Odd", parent = 7 },
+    } }))
+    assertTrue(res.ok)
+    local parents = {}
+    for _, e in ipairs(res.groups) do parents[e.id] = e.parent or "-" end
+    -- red under: groupEntry passing `parent` through unchecked
+    assertEqual(parents.g2, "g3", "a top-level parent the string carries is kept")
+    assertEqual(parents.g1, "-", "g2 is inside g3: one level only")
+    assertEqual(parents.g4, "-")
+    assertEqual(parents.g5, "-")
+    assertEqual(parents.g6, "-")
+    assertEqual(res.dropped, 4)
+    local _, map = NS.Library.Import(res)
+    local p = NS.db.profile
+    assertEqual(p.groups[map.g2].parent, map.g3)
+    assertNil(p.groups[map.g1].parent)
+end)

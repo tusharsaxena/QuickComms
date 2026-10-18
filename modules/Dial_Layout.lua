@@ -5,8 +5,9 @@ local _, NS = ...
 -- THE RINGS. A dial plan's groups, in the dial's order, become a list of rings, each one page of at
 -- most `size` items: a callout (kind "send", its baked slot) or a ring to open (kind "ring", the index
 -- of its target). Categories (D2): the first ring holds the groups; a group's ring holds its callouts;
--- a battleground node set's ring holds its nodes, and each node's ring its callouts. Flat: the first
--- ring holds every callout, highest group first. A ring with more items than wedges is paged: each
+-- a group with children (a battleground node set, a user parent) holds its own callouts first, then
+-- its nodes, and each node's ring its callouts. Flat: the first ring holds every callout, highest
+-- group first, a parent's own before its nodes'. A ring with more items than wedges is paged: each
 -- page but the last holds size - 1 items and a More wedge to the next page, and a later page's parent
 -- and previous are the page before it (the hub and the wheel go back). Open-into (D9): when the first
 -- group has the flag, or is the only group (owner ruling R2), the dial opens on its ring and the hub
@@ -192,7 +193,8 @@ function DL.PinNodes(entries)
 end
 
 -- A group's entry on the first ring (Categories), or nil when nothing under it can be shown. A node
--- set's nodes are pinned to their winds when every one of them has one.
+-- set's nodes are pinned to their winds when every one of them has one and the group has no callouts
+-- of its own; a parent's own callouts come first, then its nodes, on a ring of the dial's slices.
 local function groupEntry(g)
     if type(g.children) == "table" then
         local nodes = {}
@@ -202,6 +204,11 @@ local function groupEntry(g)
                 node.wind = c.compass
                 nodes[#nodes + 1] = node
             end
+        end
+        local own = sendEntries(g.slots)
+        if #own > 0 then
+            for _, node in ipairs(nodes) do own[#own + 1] = node end
+            return ringEntry(g, own)
         end
         if #nodes == 0 then return nil end
         local pinned = DL.PinNodes(nodes)
@@ -215,11 +222,9 @@ end
 local function flatEntries(groups)
     local out = {}
     for _, g in ipairs(groups) do
-        local lists = {}
+        local lists = { { slots = g.slots } }
         if type(g.children) == "table" then
             for _, c in ipairs(g.children) do lists[#lists + 1] = { slots = c.slots, node = c.title } end
-        else
-            lists[1] = { slots = g.slots }
         end
         for _, list in ipairs(lists) do
             for _, e in ipairs(sendEntries(list.slots, list.node)) do out[#out + 1] = e end

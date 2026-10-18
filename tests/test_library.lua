@@ -957,3 +957,139 @@ test("library: [icons] IconTint draws a glyph's color as r, g, b; no color, a ba
     assertEqual(table.concat({ Lib.IconTint("Interface\\TargetingFrame\\UI-RaidTargetingIcon_8", "ff0000") }, ","),
         "1,1,1", "nor a raid marker")
 end)
+
+-- ── nested groups (2026-10-18-builtins-as-groups-design.md, goal 2) ──────────────────────────
+
+local function setParent(NS, gid, parent)
+    return NS.SchemaRuntime.Set("group.parent", parent, gid)
+end
+
+test("library: [nesting] a group takes a top-level group as its parent and leaves every surface", function()
+    local NS, Lib, p = boot()
+    local parent = Lib.CreateGroup({ name = "Raid night" })
+    local child = Lib.CreateGroup({ name = "Boss 1" })
+    assertTrue(Lib.AddGroupToSurface("pad", p.padOrder[1], child, 1))
+    assertTrue(Lib.AddGroupToSurface("dial", p.dialOrder[1], child, 1))
+    local ok = setParent(NS, child, parent)
+    assertTrue(ok)
+    assertEqual(p.groups[child].parent, parent)
+    assertEqual(table.concat(Lib.Children(parent), ","), child)
+    -- red under: the group.parent row's onChange only announcing (no Lib.SettleParent)
+    for _, gid in ipairs(p.pads[p.padOrder[1]].groups) do assertTrue(gid ~= child, "off the pad") end
+    for _, gid in ipairs(p.dials[p.dialOrder[1]].groups) do assertTrue(gid ~= child, "off the dial") end
+    assertFalse(Lib.AddGroupToSurface("pad", p.padOrder[1], child), "a child is never placed by itself")
+    assertTrue(Lib.IsChild(child))
+    assertFalse(Lib.IsChild(parent))
+end)
+
+test("library: [nesting] one level only: self, a child, a parent with children, a stranger and a built-in are refused", function()
+    local NS, Lib, p = boot()
+    local a = Lib.CreateGroup({ name = "A" })
+    local b = Lib.CreateGroup({ name = "B" })
+    local c = Lib.CreateGroup({ name = "C" })
+    assertTrue((setParent(NS, b, a)))
+    assertFalse((setParent(NS, a, a)), "not itself")
+    assertEqual(select(2, Lib.ValidParent(a, a)), "selfParent")
+    -- red under: ValidParent not checking the parent's own parent
+    assertFalse((setParent(NS, c, b)), "b is inside a")
+    assertEqual(select(2, Lib.ValidParent(b, c)), "parentIsChild")
+    assertFalse((setParent(NS, a, c)), "a holds b")
+    assertEqual(select(2, Lib.ValidParent(c, a)), "hasChildren")
+    assertFalse((setParent(NS, c, "g999")), "no such group")
+    assertFalse((setParent(NS, c, "bi.mplus")), "a built-in set is no parent")
+    assertEqual(select(2, Lib.ValidParent("bi.mplus", c)), "badParent")
+    assertFalse((setParent(NS, "bi.mplus", a)), "a built-in takes no parent")
+    assertNil(p.groups[c].parent)
+    assertNil(p.groups[a].parent)
+end)
+
+test("library: [nesting] none clears the parent: false, empty text and 'none' all do", function()
+    local NS, Lib, p = boot()
+    local a = Lib.CreateGroup({ name = "A" })
+    local b = Lib.CreateGroup({ name = "B" })
+    for _, none in ipairs({ false, "", " none ", "NONE" }) do
+        assertTrue((setParent(NS, b, a)))
+        assertTrue((setParent(NS, b, none)), tostring(none))
+        assertFalse(p.groups[b].parent, tostring(none))
+        assertEqual(#Lib.Children(a), 0)
+    end
+end)
+
+test("library: [nesting] a group's children are in the order they were made; MemberIds lists them under it", function()
+    local NS, Lib = boot()
+    local z = Lib.CreateGroup({ name = "Zed" })
+    local a = Lib.CreateGroup({ name = "Alpha" })
+    local y = Lib.CreateGroup({ name = "Yak" })
+    local b = Lib.CreateGroup({ name = "Bee" })
+    setParent(NS, y, z)
+    setParent(NS, b, z)
+    assertEqual(table.concat(Lib.Children(z), ","), y .. "," .. b, "made order, not names")
+    local ids = Lib.MemberIds("group")
+    -- red under: MemberIds sorting every user group by name, children among them
+    assertEqual(table.concat(ids, ",", 1, 4), a .. "," .. z .. "," .. y .. "," .. b)
+    assertEqual(ids[5], NS.BuiltIns.order[1])
+    assertEqual(table.concat(Lib.Children("bi.bg.ab"), ","), table.concat(NS.BuiltIns.groups["bi.bg.ab"].children, ","))
+end)
+
+test("library: [nesting] deleting a parent makes its children top-level groups in its place on every surface", function()
+    local NS, Lib, p = boot()
+    local parent = Lib.CreateGroup({ name = "Raid night" })
+    local c1 = Lib.CreateGroup({ name = "Boss 1" })
+    local c2 = Lib.CreateGroup({ name = "Boss 2" })
+    setParent(NS, c1, parent)
+    setParent(NS, c2, parent)
+    local pad = p.pads[p.padOrder[1]]
+    Lib.AddGroupToSurface("pad", p.padOrder[1], parent, 2)
+    local before = pad.groups[1]
+    assertTrue(Lib.DeleteGroup(parent))
+    -- red under: DeleteGroup leaving the children's parent pointing at the deleted group
+    assertFalse(p.groups[c1].parent)
+    assertFalse(p.groups[c2].parent)
+    assertEqual(pad.groups[1], before)
+    assertEqual(pad.groups[2], c1, "in the parent's place")
+    assertEqual(pad.groups[3], c2)
+    local dial = p.dials[p.dialOrder[1]]
+    for _, gid in ipairs(dial.groups) do assertTrue(gid ~= c1, "the parent was on no dial") end
+end)
+
+test("library: [nesting] Duplicate keeps a child inside its parent; a parent's copy holds no children", function()
+    local NS, Lib, p = boot()
+    local parent = Lib.CreateGroup({ name = "Raid night" })
+    local child = Lib.CreateGroup({ name = "Boss 1" })
+    setParent(NS, child, parent)
+    local copy = Lib.DuplicateGroup(child)
+    assertEqual(p.groups[copy].parent, parent)
+    local pcopy = Lib.DuplicateGroup(parent)
+    assertFalse(p.groups[pcopy].parent)
+    assertEqual(#Lib.Children(pcopy), 0)
+    assertEqual(#Lib.Children(parent), 2)
+end)
+
+test("library: [nesting] Prepare drops a bad parent (gone, itself, a chain, a cycle) and takes a child off every surface", function()
+    local _, Lib, p = boot()
+    local function raw(name, parent) local id = Lib.CreateGroup({ name = name }) p.groups[id].parent = parent return id end
+    local top = raw("Top")
+    local kid = raw("Kid", top)
+    local gone = raw("Gone", "g999")
+    local self = raw("Self")
+    p.groups[self].parent = self
+    local deep = raw("Deep", kid)
+    local x = raw("X")
+    local y = raw("Y", x)
+    p.groups[x].parent = y
+    local num = raw("Num", 5)
+    local pad = p.pads[p.padOrder[1]]
+    table.insert(pad.groups, 1, kid)
+    local r = Lib.Prepare()
+    assertEqual(p.groups[kid].parent, top, "a good parent stays")
+    -- red under: Prepare without the parent repair
+    assertNil(p.groups[gone].parent)
+    assertNil(p.groups[self].parent)
+    assertNil(p.groups[deep].parent, "kid is inside top: no chain")
+    assertNil(p.groups[x].parent, "a cycle is no nesting")
+    assertNil(p.groups[y].parent)
+    assertNil(p.groups[num].parent)
+    for _, gid in ipairs(pad.groups) do assertTrue(gid ~= kid, "a child is off the pad") end
+    assertTrue(r.repaired >= 7)
+    assertEqual(Lib.Prepare().repaired, 0, "idempotent")
+end)
