@@ -28,6 +28,6 @@ before each change (mutation-check: the test fails without the fix).
 | Q2 | When tab as drawers (settings/Groups_When.lua): header + summary + drawer per condition, Select all / Clear (Any), no enable checkbox, open state per group per session, the explanatory line; tests in tests/test_groups_when.lua / test_page_groups.lua | done | `8341da0` |
 | Q3 | Inherit when conditions: `group.inheritWhen` member row (default on when absent), General tab checkbox beside Parent group (greyed with no parent), Resolver uses the parent's When, read-only When tab for an inheriting group, Share carries the field; tests | done | `ded13e5` |
 | Q4 | Icon browser search (settings/IconBrowser*.lua): search box + count, per-tab matching, Game icons hint row + copy-box button; tests | done | `c338596` |
-| Q5 | Docs: settings-panel.md, schema.md, ARCHITECTURE.md (LibKa0s version, any deviation), smoke-tests.md (rewrite the When steps; new steps for inherit and search), test-cases.md, README | todo | |
+| Q5 | Docs: settings-panel.md, schema.md, ARCHITECTURE.md (LibKa0s version, any deviation), smoke-tests.md (rewrite the When steps; new steps for inherit and search), test-cases.md, README | done | `4e654d9` |
 
 Order: L1, Q1, Q2, Q3, Q4, Q5. Mark each row done with its commit in a separate ledger commit.
