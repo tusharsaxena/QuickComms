@@ -185,20 +185,26 @@ test("eui skin: a facade missing a primitive, or one that raises, leaves the pop
     assertTrue(NS2.addon.Settings.CalloutPopupSkin.Describe():find("failed=true", 1, true) ~= nil)
 end)
 
-test("eui skin: waits out a stand-down and paints on the way back up", function()
+test("eui skin: paints while the addon is disabled (the popup and the browser are the settings panel's)", function()
+    -- The owner's case: Quick Comms switched off, EllesmereUI calling back at login, then the popup
+    -- and the browser opened from the settings panel, which stays up while disabled.
     local NS, _, Pop, gid, eui = openWith()
-    Pop.Open(gid)
-    Pop.Cancel()
     NS.SchemaRuntime.Set("enabled", false)
+    assertTrue(NS.IsStoodDown())
     local S, calls = facade()
     eui.registered.QuickComms(S)
-    -- red under: drop the NS.IsStoodDown() check in blocked()
-    assertFalse(applied(NS), "nothing is painted while stood down")
-    assertEqual(#calls, 0)
-    -- red under: drop the NS.STAND_UP entry
-    NS.SchemaRuntime.Set("enabled", true)
-    assertTrue(applied(NS))
+    assertTrue(Pop.Open(gid), "the popup opens while disabled")
+    -- red under: refuse the paint while stood down (an NS.IsStoodDown() check in blocked())
+    assertTrue(applied(NS), "painted while disabled")
     assertTrue(called(calls, "Shell", Pop.frame))
+    local B = NS.addon.Settings.IconBrowser
+    assertTrue(B.Open({ owner = "test", onChoose = function() end }))
+    assertTrue(called(calls, "Shell", B.frame), "the browser too")
+    -- a paint made while disabled is not repeated by the stand-up
+    local n = #calls
+    B.Cancel()
+    NS.SchemaRuntime.Set("enabled", true)
+    assertEqual(#calls, n)
 end)
 
 test("eui skin: the fallback window (no settings-window template) keeps its older look", function()
@@ -225,4 +231,27 @@ test("eui skin: the diagnostics report names its state", function()
     eui.registered.QuickComms((facade(false)))
     text = report(NS)
     assertTrue(text:find("ellesmereui: suite=true facade=true enabled=false applied=false", 1, true) ~= nil, text)
+end)
+
+test("eui skin: the diagnostics line says, in words, why the skin is or is not on", function()
+    local Skin = function(NS) return NS.addon.Settings.CalloutPopupSkin end
+    local function why(NS) return Skin(NS).Describe():match("why=(.*)$") end
+    -- red under: drop why= from Describe (or Skin.Why)
+    local NS = T.enableAddon()
+    assertEqual(why(NS), "EllesmereUI is not loaded")
+    NS = openWith({ noChild = true })
+    assertTrue(why(NS):find("EllesmereUIBlizzardSkin) is not loaded", 1, true) ~= nil, why(NS))
+    NS = openWith({ noRegister = true })
+    assertTrue(why(NS):find("no RegisterSkin", 1, true) ~= nil, why(NS))
+    local _, Pop, gid, eui
+    NS, _, _, _, eui = openWith()
+    assertTrue(why(NS):find("has not called back", 1, true) ~= nil, why(NS))
+    assertTrue(why(NS):find("Third-Party Addons", 1, true) ~= nil, "names where to turn it on")
+    eui.registered.QuickComms((facade(false)))
+    assertTrue(why(NS):find("EllesmereUI says off", 1, true) ~= nil, why(NS))
+    NS, _, Pop, gid, eui = openWith()
+    eui.registered.QuickComms((facade()))
+    assertEqual(why(NS), "popup not built yet (painted when it is first opened); browser not built yet (painted when it is first opened)")
+    Pop.Open(gid)
+    assertEqual(why(NS), "popup painted; browser not built yet (painted when it is first opened)")
 end)

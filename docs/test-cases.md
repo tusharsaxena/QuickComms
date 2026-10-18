@@ -447,7 +447,7 @@ Total.
 - members: [icons] Library.SetIcon writes the icon and its color as one act
 - members: [icons] `/qc reset` clears a color; a group page's Defaults keeps it with the icon
 
-### test_editors.lua (15)
+### test_editors.lua (17)
 
 - editors: [review 2] Select mirrors a built-in group into the built-in selection; Heal keeps a member that exists
 - editors: every membership change asks for one structural repaint, on the next frame
@@ -462,10 +462,12 @@ Total.
 - editors: Scalar keeps the rows the flow engine draws, and CancelReorder cancels once
 - editors: a row's remove is a glyph, not a button
 - editors: a row with edit shows the edit glyph and fires it
+- editors: a row centers its widgets and puts the glyphs at its right edge
+- editors: [layout] under AceGUI's column rule only the label's column is weighted
 - editors: Snapshot is the preview's while Preview as is on
 - editors: [icons] a row's glyph is drawn in its color; a row with none is white
 
-### test_callout_popup.lua (33)
+### test_callout_popup.lua (38)
 
 - popup: Add opens blank with Smart group
 - popup: edit opens filled in
@@ -486,6 +488,8 @@ Total.
 - callout helpers: TokenHelp folds {group1}-{group8} into one line and names {spell:ID}
 - popup: [icons] Choose icon… opens the browser; its Choose writes the draft's icon, not the callout
 - popup: [icons] a glyph chosen with a color: the draft carries both; the swatch writes the draft's color
+- popup: [icons] the clear glyph takes the draft's icon and color off; Save stores no icon
+- popup: a section's gap sits above Preview: the fields count as a drawn group
 - popup: [icons] the swatch writes the draft on a drag tick (OnValueChanged) with no confirm, as OK leaves it
 - popup: the window is Blizzard's settings-window template, and its own close X cancels
 - popup: the template's background sits over the catcher's dim and under the border
@@ -498,16 +502,20 @@ Total.
 - callout helpers: [phase 3] the token picker offers {group1}-{group8} only when the channel can resolve to Raid
 - callout helpers: PreviewLines says what a callout sends here, or why it sends nothing
 - popup: [icons] the draft carries the icon's color; Save writes icon and color in one act
-- popup: [icons] an icon typed in that is no glyph drops the draft's color, and Save clears it
+- popup: [icons] an icon chosen that is no glyph drops the draft's color, and Save clears it
 - popup: [icons] Add saves a glyph with its color; a malformed color stays open and names the field
+- popup: Name and Channel share a line, Text spans both, the icon has no box and sits under an Icon label
+- popup: every field's label and control share a left edge; Preview's rule and the buttons the columns' edges
+- popup: [icons] an icon that is no texture stays open and names the icon chooser
 
-### test_icon_browser.lua (25)
+### test_icon_browser.lua (26)
 
 - icon browser: the window is the popup's chrome, stacked above the popup and its catcher
 - icon browser: tabs in order; the stored icon is preselected and its tab opened
 - icon browser: a click selects, a double-click chooses; Choose hands the opener the icon
 - icon browser: hovering an icon names it, or gives a game icon's texture id
-- icon browser: Suggested is the markers, the built-in sets' icons and the curated glyphs; Markers the eight
+- icon browser: Markers is the eight raid markers, in order; no Suggested list is left
+- icon browser: the grid sits a section gap under the toolbar's row
 - icon browser: Glyphs is every catalog icon, labeled from its key
 - icon browser: Game icons is both macro lists, filtered All / Spells / Items
 - icon browser: the game list not loaded yet says so, and loads on a later visit
@@ -529,7 +537,7 @@ Total.
 - icon browser: Compat.MacroIcons reads the loose lists first, as the macro icon selector does
 - icon browser: Library.IconColorFrom stores a picked color as hex, white as none
 
-### test_eui_skin.lua (9)
+### test_eui_skin.lua (10)
 
 - eui skin: the popup is painted as EllesmereUI paints the settings window when every condition holds
 - eui skin: the icon browser's window is painted the same way, once, when it is built
@@ -537,9 +545,10 @@ Total.
 - eui skin: not painted when any condition fails
 - eui skin: never raises without EllesmereUI, or with one that has no RegisterSkin
 - eui skin: a facade missing a primitive, or one that raises, leaves the popup stock
-- eui skin: waits out a stand-down and paints on the way back up
+- eui skin: paints while the addon is disabled (the popup and the browser are the settings panel's)
 - eui skin: the fallback window (no settings-window template) keeps its older look
 - eui skin: the diagnostics report names its state
+- eui skin: the diagnostics line says, in words, why the skin is or is not on
 
 ### test_groups_when.lua (12)
 
@@ -556,7 +565,7 @@ Total.
 - when: [final 6] a typed character takes the client's case; the Resolver matches one in any case
 - when: [final 2, 11] ResolveValue maps a typed value onto the token or id its row stores, or refuses it
 
-### test_page_groups.lua (29)
+### test_page_groups.lua (36)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists user groups by name, then the built-ins, active ones dotted
@@ -564,7 +573,12 @@ Total.
 - groups page: Callouts drags to reorder, removes, and copies a built-in callout in (P2)
 - groups page: Add callout opens the popup for this group
 - groups page: Reuse lists callouts as <group>: <callout> and built-ins as <set>: <callout>
+- groups page: Reuse leaves out the built-in set the group was customized from
+- groups page: Reuse draws the group part in muted gold and the callout name in white
+- groups page: Reuse sorts the whole list by group, then callout, ignoring case
 - groups page: Reuse numbers same-named copies so each entry is unambiguous
+- groups page: the Reuse row stretches the dropdown and puts Add at the right edge, as tall as it
+- groups page: Add callout spans the row to EDGE_INSET short of the right edge, as Reuse's Add
 - groups page: Reuse + Add puts an independent copy at the end
 - groups page: picking in Reuse alone adds nothing
 - groups page: the edit glyph opens the popup filled in
@@ -582,6 +596,8 @@ Total.
 - groups page: [final 20] the Instances row adds a typed id, removes one, and refuses a fraction or a negative
 - groups page: [final 18] Add the instance you are in reads the instance at the click, not at the draw
 - groups page: [icons] General shows the icon, Choose icon… and the swatch; the browser's Choose writes the group's icon
+- groups page: [icons] General's clear glyph takes the group's icon and color off; idle with no icon
+- groups page: [icons] General has no Icon box: the icon is chosen under an Icon label alone
 - groups page: [icons] a glyph's swatch writes the group's color; a game icon chosen clears it in the same act
 - groups page: [icons] the browser closes as Cancel when the settings window hides or the group is deleted
 - groups page: [icons] a callout row in the Callouts tab draws its glyph in the callout's color
@@ -975,12 +991,12 @@ Total.
 | test_gameids.lua | 2 |
 | test_library.lua | 66 |
 | test_members.lua | 28 |
-| test_editors.lua | 15 |
-| test_callout_popup.lua | 33 |
-| test_icon_browser.lua | 25 |
-| test_eui_skin.lua | 9 |
+| test_editors.lua | 17 |
+| test_callout_popup.lua | 38 |
+| test_icon_browser.lua | 26 |
+| test_eui_skin.lua | 10 |
 | test_groups_when.lua | 12 |
-| test_page_groups.lua | 29 |
+| test_page_groups.lua | 36 |
 | test_page_pads.lua | 12 |
 | test_page_dials.lua | 17 |
 | test_page_share.lua | 14 |
@@ -1003,4 +1019,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **789** |
+| **Total** | **805** |

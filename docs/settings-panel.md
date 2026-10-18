@@ -44,12 +44,13 @@ reset is a profile reset and never touches the minimap button (options-ui-§12, 
 ```
 band      [ Group v (picker; a green dot marks a group active now) ][ New group ]
 strip     [ General ][ Callouts ][ When ][ Preview ]
-General   Preview as (page-wide, first), then Name, Icon, Enabled, Open the dial on this group,
-          the icon with Choose icon… and its color swatch (settings/Editors.lua's chooser), then
-          Duplicate and Delete. A built-in: what it is, its Enabled row, and Customize.
-Callouts  a user group's: Add callout (the callout popup, blank), Reuse existing callout with
-          Add, then its callouts as a drag-to-reorder list, each row the handle, the icon, the
-          name and channel, an edit glyph and a remove glyph. A built-in: a Show checkbox per
+General   Preview as (page-wide, first), then Name, Enabled, Open the dial on this group, then
+          the icon under an Icon label with Choose icon…, the clear glyph and its color swatch
+          (settings/Editors.lua's chooser, no Icon text box), then Duplicate and Delete. A
+          built-in: what it is, its Enabled row, and Customize.
+Callouts  a user group's: Add callout (the callout popup, blank; across the row), Reuse callout
+          with Add at the right edge (both 2px short of it), then its callouts as a drag-to-reorder list, each row the handle,
+          the icon, the name and channel, then an edit glyph and a remove glyph at the right edge. A built-in: a Show checkbox per
           callout, the hidden-callouts editor.
 When      settings/Groups_When.lua
 Preview   the active-now line, then every callout baked for the current or previewed situation
@@ -66,27 +67,51 @@ goes back to the stored value; a refused Name (any field the library draws) prin
 A built-in group is read-only: its group rows refuse every write,
 so the page draws only its overlay and offers Customize.
 
-**The icon** (General, a user group): under the Icon box, the icon as the pad and the dial draw it (a
-glyph in its color, a question mark for none), **Choose icon…** and the **Icon color** swatch. A
+**The icon** (General, a user group): under an **Icon** label, the icon as the pad and the dial draw
+it (a glyph in its color, a question mark for none), **Choose icon…**, a **clear** glyph (the
+`transmog-icon-remove` atlas, tooltip *Clear icon*) and the **Icon color** swatch.
+There is no Icon text box: the icon is picked only here, and stored as a texture path or id
+(`group.icon`, which `/qc set` still reaches). A
 click on the icon or on Choose icon… opens the icon browser (below) over the settings window; its
 Choose writes the group's icon and color as one act (`Library.SetIcon`), so a game icon or a marker
 chosen over a colored glyph clears the color in the same write. The swatch opens Blizzard's color
 picker and writes `group.iconColor` through the seam; it is live only while the icon is a glyph
-(white is none). The color is drawn with the icon, never as a text box of its own.
+(white is none). The color is drawn with the icon, never as a text box of its own. The clear glyph
+is the one way back to no icon (the browser has no "none" cell): it calls the spec's choose with no
+icon and no color, so the group's icon and color go as one act (`Library.SetIcon` with `false`); it
+is idle while there is no icon. The callout popup draws the same chooser (`Ed.IconChooser`), where
+the clear glyph empties the draft's icon and color and Save stores none.
 
 **Callouts** (a user group): the group owns its callouts. Each user callout sits in exactly one
 user group, so there is no Callouts page and no shared callout.
 
 - **Add callout** opens the callout popup with blank fields (an empty name and text, Smart group,
-  no icon). Save puts the new callout at the end of the group; Cancel makes nothing.
-- **Reuse existing callout** is a dropdown of every callout the player could copy: the user
-  callouts as `<group>: <callout>` (this group's own included), then the built-in ones as
-  `<set>: <callout>` or `<set>: <child>: <callout>`. Picking alone adds nothing; **Add** puts an
-  independent copy at the end of this group (`Library.AddToGroup` always copies), so editing the
-  copy leaves the original as it is.
-- **The list** is the drag-to-reorder list (`Ed.ReorderRows`). The edit glyph (the catalog's `edit`
-  mark) opens the popup filled in; the remove glyph (the `transmog-icon-remove` atlas) asks first,
-  then deletes the callout, since nothing else holds it. Both carry a tooltip.
+  no icon). Save puts the new callout at the end of the group; Cancel makes nothing. The button
+  spans the row (an AceGUI Table layout: a filling cell, then a 2px cell, `G.EDGE_INSET`), so it
+  ends where Reuse's Add does, 2px short of the content's right edge: the scroll content fills the
+  ScrollFrame's clip rect exactly, and options-ui-§8 insets a cell-filling button so its right
+  border is not shaved.
+- **Reuse callout** is a dropdown of every callout the player could copy: the user callouts as
+  `<group>: <callout>` and the built-in ones as `<set>: <callout>` or
+  `<set>: <child>: <callout>`, less what this group already holds (its own callouts, and the
+  built-in set it was customized from: owner, 2026-10-18), as one list sorted by group, then callout, ignoring case (on the
+  plain text). The group part is drawn in a muted gold (`c9a66b`, LibKa0s' debug-tag tone), the
+  callout's name in white; entries that would read alike are numbered (`<callout> (2)`). Picking
+  alone adds nothing; **Add** puts an independent copy at the end of this group
+  (`Library.AddToGroup` always copies), so editing the copy leaves the original as it is. The row
+  is an AceGUI Table layout: the dropdown fills what a 6px gap cell, Add's fixed 120px cell and the
+  2px inset cell (`G.EDGE_INSET`, as under Add callout) leave, and Add is 26px tall, the label-less
+  dropdown's height. The gap is a cell rather than the layout's `spaceH`, which would also fall
+  between Add and the inset cell.
+- **The list** is the drag-to-reorder list (`Ed.ReorderRows`, shared with Comms Pad → Groups and
+  Comms Dial → Groups). The edit glyph (the catalog's `edit` mark) opens the popup filled in; the
+  remove glyph (the `transmog-icon-remove` atlas) asks first, then deletes the callout, since
+  nothing else holds it. Both carry a tooltip. Each row is an AceGUI Table layout
+  (`Ed.RowColumns`): the handle's gutter, the label filling what is left, a 24px cell per 16px
+  glyph and a 3px pad, so the glyphs sit at the box's right edge (the last one's art 7px in).
+  Every fixed column is an explicit `{ width = n }`, since the layout reads a bare number from 1 to
+  under 10 as a weight;
+  `Ed.RowAlignV` centers every widget in the 30px row.
 - Delete (General) deletes the group's callouts with it, and Duplicate gives the copy copies of them.
 
 ## The callout popup
@@ -109,24 +134,46 @@ template declares it at absolute frame level 0), so the popup is as bright as th
 ```
 window   Blizzard's settings window, titled Ka0s Quick Comms                 (its close X)
 header   New callout / Edit callout, the gold rule under it
-body     Name, Text, Channel, Icon (the callout.* member rows' labels and help), an info
-         glyph right of the Text label (its tooltip lists the tokens), the icon (as drawn) with
-         Choose icon… and its color swatch, Preview (the baked line and its bytes, or why it
-         sends nothing, and any lock), a gap, then Cancel and Save, and under them the line
-         that names a field Save refused
+body     [Name          ] [Channel       ]   the callout.* member rows' labels and help
+         [Text  (i)                       ]   across both columns; (i) is the token glyph
+         Icon                                 the chooser's label
+         [icon] [Choose icon…] [x] Icon color the icon as drawn, the button, the color swatch
+         ---------- Preview ----------         the baked line and its bytes, or why it sends
+                                              nothing, and any lock
+         (a gap)
+         [Cancel        ] [Save          ]
+         the line that names a field Save refused
 ```
+
+- **The layout.** Two columns, each the library's button-pair width (`Helpers.BUTTON_PAIR_REL` of
+  the body, the width `InlineButtonPair` gives Cancel and Save, options-ui-§8), with the whole pixels
+  the pair leaves (8 px) as the gutter between them: Name and Channel, the icon with Choose icon…
+  and the clear glyph, and the swatch, Cancel and Save each fill one, so their outer edges meet the Text box's and the Preview rule's,
+  and the right column starts at the same place on every line. The pair keeps its width; the popup
+  only puts the gutter between its two buttons. The fields are
+  drawn by the library's field maker (`RenderField`) into the popup's own lines, not by
+  `RenderRows`' half-and-half lines, so the gutter exists. AceGUI draws an EditBox's box and a
+  Button's art 2 px in from the widget's edges, so 2 px in is where every visible left edge sits:
+  each field's label is moved 2 px in, the Channel dropdown's art 2 px left, the icon 2 px in, the
+  Preview rule 2 px in from both sides (AceGUI's Heading draws it 3 in), and the preview and error
+  lines 2 px in. Every anchor the popup moves is put back when AceGUI takes the widget back (an
+  `OnRelease` callback per widget), so a pooled frame reaches another addon as AceGUI made it. The
+  Preview heading keeps a section's gap above it (`O.Section`'s 10 px): the popup sets
+  `ctx.lastGroup` to the fields' group after drawing them, as `RenderRows` would.
+- **No Icon box.** The icon is chosen only with the chooser; the draft still carries it as a
+  texture path or id, Save writes it to `callout.icon`, and that row still answers `/qc`.
 
 - **The draft.** The popup edits a plain copy of the callout's four fields and its icon's glyph
   color (blank for Add). Choose icon… opens the icon browser over the popup; its Choose writes the
-  draft's icon and color, and the swatch writes the draft's color. An icon that is no glyph (chosen,
-  or typed in the Icon box) drops the draft's color. Every control writes the draft, never the
+  draft's icon and color, the clear glyph empties both, and the swatch writes the draft's color.
+  An icon that is no glyph drops the draft's color. Every control writes the draft, never the
   profile, and Preview bakes the draft, so it follows each edit before anything is saved. A text
   box commits to the draft on Enter
   (or its Okay button), as on every page; what a box shows that Enter did not commit is taken into
   the draft before any other draft write, before a seam write's refresh and by Save, so clicking
   Save commits it and a pick never wipes it.
-- **The token glyph.** The library catalog's `info` mark, right of the Text label, sized to the
-  label's font (14 to 16 px) and vertically centered on it. Its tooltip lists every token the
+- **The token glyph.** The library catalog's `info` mark, right of the Text label, as tall as the
+  label's letters (its font's size, 10 to 12 px) and vertically centered on it. Its tooltip lists every token the
   draft's channel offers, one line each (`Settings.Callouts.TokenHelp`), read when it shows, so it
   follows a channel picked since: `{group1} … {group8}` is one line, only when the channel can
   resolve to Raid, and `{spell:ID}` is last. Tokens are typed into the text; nothing inserts them.
@@ -134,7 +181,8 @@ body     Name, Text, Channel, Icon (the callout.* member rows' labels and help),
   when the box is released (an `OnRelease` callback, the library's landing-logo pattern), so a
   frame AceGUI hands to another EditBox never shows it.
 - **Save** checks the draft with the member rows' own validators (the name, the text and its
-  length, the channel, the icon, the icon's color). A field that fails keeps the popup open and names the field;
+  length, the channel, the icon, the icon's color). A field that fails keeps the popup open and names the field
+  (an icon that is no texture names the chooser: "Icon: … Click Choose icon… and pick another.");
   otherwise Save writes one act (`Library.Batch`): for a listed callout, each field that differs
   from the copy taken when the popup opened, through the seam by id; for Add,
   `Library.CreateCalloutIn` at the end of the group. Then the popup closes.
@@ -151,7 +199,10 @@ body     Name, Text, Channel, Icon (the callout.* member rows' labels and help),
   hidden and its close X; the page's controls stay stock, as the settings window's do. Quick Comms
   has no switch of its own for it: EllesmereUI's per-addon entry is the switch, and a skin comes off
   only with a reload. The fallback window (a client without the template) is not painted: the skin
-  is the settings window's, and that window is not it.
+  is the settings window's, and that window is not it. The skin does not wait for Quick Comms to
+  be enabled: the popup and the browser are the settings panel's, which stays up while the addon is
+  disabled (slash-commands-§7), so they open in EllesmereUI's look either way. `/qc diagnostics`
+  says why the skin is or is not on (its `why=`, `docs/debug.md`).
   The skin follows EllesmereUI's third-party switches and its third-party style (a majority vote
   over all its window styles), not its Settings-window skin or its window-skin kill switch, which
   its public API does not expose. So the popup matches the settings window behind it only when
@@ -163,22 +214,21 @@ body     Name, Text, Channel, Icon (the callout.* member rows' labels and help),
 `settings/IconBrowser.lua`: where an icon is picked, opened by Choose icon… (or a click on the icon)
 in the callout popup and on a user group's General tab. It is not a page. Its window is the popup's
 (`settings/ModalWindow.lua`: Blizzard's `SettingsFrameTemplate`, titled "Ka0s Quick Comms", its close
-X, the gold header), 560 × 540, with its own full-screen catcher in the `FULLSCREEN` strata, above the
+X, the gold header), 560 × 550, with its own full-screen catcher in the `FULLSCREEN` strata, above the
 popup and the popup's catcher (`DIALOG`): it is modal to whatever opened it. Only one browser exists,
 built on its first open. The EllesmereUI skin paints it as it paints the popup.
 
 ```
 window   Blizzard's settings window, titled Ka0s Quick Comms                 (its close X)
 header   Choose an icon, the gold rule under it
-tabs     [ Suggested ][ Markers ][ Game icons ][ Glyphs ]   (the library's tab strip)
-toolbar  Game icons: Show (All / Spells / Items). Suggested and Glyphs: Icon color (the
-         swatch). At the right, how many icons the tab holds.
-grid     12 × 7 icons and a scrollbar; the mouse wheel scrolls it
+tabs     [ Markers ][ Game icons ][ Glyphs ]   (the library's tab strip)
+toolbar  Game icons: Show (All / Spells / Items). Glyphs: Icon color (the swatch). At the
+         right, how many icons the tab holds.
+grid     12 × 7 icons and a scrollbar, 10px under the toolbar; the mouse wheel scrolls it
 footer   the selected icon (a glyph in the color) and its name, then Choose and Cancel
 ```
 
-- **Suggested**: the eight raid markers, the built-in sets' icons and the curated LibKa0s glyphs
-  (what the old inline grid offered). **Markers**: the eight raid target markers. **Game icons**: every
+- **Markers**: the eight raid target markers. **Game icons**: every
   icon the macro icon selector offers (the loose lists and then `GetMacroIcons` for spells, the
   same for items, through `Compat.MacroIcons`), as texture ids, each once, filtered All / Spells / Items; until the client has
   loaded its own icon list the tab says so, and the list is read again on the next visit. **Glyphs**:
@@ -188,7 +238,9 @@ footer   the selected icon (a glyph in the color) and its name, then Choose and 
   scrolls, so the thousands of game icons cost no more frames than a short tab.
 - **Pick**: hovering an icon names it (its label, or "Texture id N" for a game icon); a click selects
   it (gold behind it, named in the footer); a double-click or **Choose** chooses it. The stored icon
-  is preselected, and its tab opened and scrolled to it.
+  is preselected, and its tab opened and scrolled to it. No icon, or one no tab lists (a built-in
+  set's spell icon, a typed texture path), opens Markers, the first tab, with nothing selected: no
+  cell could show such an icon selected, and Choose waits for a click.
 - **Icon color**: the swatch opens Blizzard's color picker (above the browser); every glyph in the
   grid and the footer is drawn in the color. Choose hands a glyph its color (white is none) and any
   other icon none.

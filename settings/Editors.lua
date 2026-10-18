@@ -218,13 +218,48 @@ end
 
 -- ── the icon (icon browser spec, "Goals") ───────────────────────────────────────────────────
 
--- Where an editor's icon is chosen (the callout popup, a user group's General tab), under its Icon
--- box: the icon as it is drawn (a glyph in its color; a question mark for none), Choose icon…, which
--- opens the icon browser (settings/IconBrowser.lua) over whatever opened it, and the glyph's color
--- swatch, live only while the icon is a glyph (no other icon takes a color). Every control writes
--- through `spec`, never the profile itself, and the row is put back in place (Ed.Live) after any write.
+-- Where an editor's icon is chosen (the callout popup, a user group's General tab): an "Icon" label
+-- over one row holding the icon as it is drawn (a glyph in its color; a question mark for none),
+-- Choose icon…, which opens the icon browser (settings/IconBrowser.lua) over whatever opened it, and
+-- a clear glyph that takes the icon off (the member draws none; idle while there is no icon to take),
+-- and the glyph's color swatch, live only while the icon is a glyph (no other icon takes a color).
+-- There is no Icon text box: the icon is stored as a texture path or id (the member's icon row, which /qc
+-- still reaches), and picked only here. Every control writes through `spec`, never the profile
+-- itself, and the row is put back in place (Ed.Live) after any write.
 Ed.NO_ICON = "Interface\\Icons\\INV_Misc_QuestionMark"
 local CHOOSER_ICON = 32
+-- The preview is the icon plus CHOOSER_EDGE on each side, so the icon sits CHOOSER_EDGE in from the
+-- row's left edge, where an EditBox's and a Button's own art begins; CHOOSER_GAP clears it from
+-- Choose icon…. The clear glyph is CLEAR_GLYPH art in a CLEAR_W cell, right after Choose icon….
+local CHOOSER_EDGE, CHOOSER_GAP = 2, 8
+local CLEAR_GLYPH, CLEAR_W = 16, 24
+
+--- An empty AceGUI Label `width` wide: the horizontal gap in a Flow row.
+function Ed.Gap(width)
+    local gap = H().AceGUI:Create("Label")
+    gap:SetText("")
+    gap:SetWidth(width)
+    return gap
+end
+
+-- The chooser's "Icon" label, in the gold small face the field labels above an EditBox use, `inset`
+-- in from the left (a Flow row with a gap first: an AceGUI Label anchors its own text to its left).
+local function chooserLabel(AceGUI, inset)
+    local label = AceGUI:Create("Label")
+    label:SetText(L["Icon"])
+    if label.SetFontObject and _G.GameFontNormalSmall then label:SetFontObject(_G.GameFontNormalSmall) end
+    if not (inset and inset > 0) then
+        label:SetFullWidth(true)
+        return label
+    end
+    local row = AceGUI:Create("SimpleGroup")
+    row:SetLayout("Flow")
+    row:SetFullWidth(true)
+    row:AddChild(Ed.Gap(inset))
+    label:SetRelativeWidth(0.9)
+    row:AddChild(label)
+    return row
+end
 
 --- Open the icon browser on what `spec.get()` answers (see Ed.IconChooser).
 --- @return boolean opened
@@ -285,27 +320,49 @@ function Ed.ReleasePicker(swatch, untrack)
     if picker and picker:IsShown() then picker:Hide() end
 end
 
---- The chooser, as one row. `spec` = { get() -> icon, color; choose(icon, color) (the browser's
---- Choose); setColor(color|nil) (the swatch); owner, lift, valid (handed to the browser) }.
+--- The chooser: its label, then one row. `spec` = { get() -> icon, color; choose(icon, color) (the
+--- browser's Choose, and the clear glyph's choose(nil, nil)); setColor(color|nil) (the swatch); owner, lift, valid (handed to the browser);
+--- columns (optional) = { col, gutter, inset } }. With `columns` (the callout popup) the row keeps to
+--- the editor's two columns: Choose icon… and the clear glyph end where the left column does, `col` wide from the row's
+--- left edge, and the swatch starts the right column, `gutter` further on; the label is `inset` in.
+--- Without it the widths are relative, as on a page.
 function Ed.IconChooser(ctx, spec)
     local h = H()
+    local columns = spec.columns
     h.RenderGrid(ctx, { { wide = true, make = function(_, parent)
         local AceGUI = h.AceGUI
+        parent:AddChild(chooserLabel(AceGUI, columns and columns.inset))
         local preview = AceGUI:Create("Icon")
         preview:SetImageSize(CHOOSER_ICON, CHOOSER_ICON)
-        preview:SetWidth(48)
+        preview:SetWidth(CHOOSER_ICON + 2 * CHOOSER_EDGE)
         preview:SetHeight(44)
         preview:SetCallback("OnClick", function() Ed.OpenIconBrowser(spec) end)
         h.AttachTooltip(preview, L["Icon"], L["Click to choose another icon."])
         local choose = AceGUI:Create("Button")
         choose:SetText(L["Choose icon…"])
-        choose:SetRelativeWidth(0.4)
         choose:SetCallback("OnClick", function() Ed.OpenIconBrowser(spec) end)
         h.AttachTooltip(choose, L["Choose icon…"], L["Pick from the raid markers, the game's icons and the LibKa0s glyphs."])
+        -- The one way back to no icon (the browser has no "none" cell): choose nothing, as one act.
+        local clear = AceGUI:Create("Icon")
+        clear:SetImageSize(CLEAR_GLYPH, CLEAR_GLYPH)
+        if clear.image and clear.image.SetAtlas then clear.image:SetAtlas("transmog-icon-remove") end
+        clear:SetWidth(CLEAR_W)
+        clear.userdata.qcGlyph = "clear"
+        clear:SetCallback("OnClick", function()
+            if spec.get() ~= nil then spec.choose(nil, nil) end
+        end)
+        h.AttachTooltip(clear, L["Clear icon"], L["Remove the icon, so none is drawn."])
         local swatch = AceGUI:Create("ColorPicker")
         swatch:SetLabel(L["Icon color"])
         swatch:SetHasAlpha(false)
-        swatch:SetRelativeWidth(0.4)
+        if columns then
+            choose:SetWidth(columns.col - CHOOSER_ICON - 2 * CHOOSER_EDGE - CHOOSER_GAP - CLEAR_W)
+            -- Half a pixel short: a Flow row that sums to exactly its width can wrap its last widget.
+            swatch:SetWidth(columns.col - 0.5)
+        else
+            choose:SetRelativeWidth(0.4)
+            swatch:SetRelativeWidth(0.4)
+        end
         local function pick(_, _, r, g, b)
             if Ed.PickerTracked(swatch) then swatchWrite(spec, r, g, b) end
         end
@@ -320,6 +377,7 @@ function Ed.IconChooser(ctx, spec)
             Ed.Tint(preview.image, icon, color)
             swatch:SetColor(NS.Library.IconTint(icon, color))
             swatch:SetDisabled(not NS.Library.IsGlyph(icon))
+            clear:SetDisabled(icon == nil)
         end
         paint()
         Ed.Live(ctx, paint)
@@ -327,7 +385,10 @@ function Ed.IconChooser(ctx, spec)
         row:SetLayout("Flow")
         row:SetFullWidth(true)
         row:AddChild(preview)
+        row:AddChild(Ed.Gap(CHOOSER_GAP))
         row:AddChild(choose)
+        row:AddChild(clear)
+        if columns then row:AddChild(Ed.Gap(columns.gutter)) end
         row:AddChild(swatch)
         parent:AddChild(row)
         return row
@@ -356,9 +417,14 @@ local function newReorder(pageKey, onMove)
 end
 
 -- The row's glyph buttons (Consumable Master's precedent: the catalog's mark first, Blizzard's where
--- the catalog has none): a 22px clickable icon with a tooltip, tagged in `userdata.qcGlyph` so a test
--- finds it. `atlas` dresses the Icon's own texture after it is made; `texture` is a plain path.
-local GLYPH, GLYPH_W, ROW_ICON = 22, 32, 18
+-- the catalog has none): a 16px clickable icon with a tooltip, tagged in `userdata.qcGlyph` so a test
+-- finds it. `atlas` dresses the Icon's own texture after it is made; `texture` is a plain path. The
+-- Icon keeps its own height (the image plus AceGUI's 5px above and below), so its art is centered in
+-- its frame and the row's vertical alignment centers it in the row.
+local GLYPH, GLYPH_W, GLYPH_PAD, ROW_ICON = 16, 24, 3, 18
+-- The label's width as made: wide enough that AceGUI's Label keeps its image left of the text (it
+-- stacks them under 200px of text room). Its cell's anchors decide what it shows.
+local LABEL_W = 400
 local GLYPHS = {
     edit   = { texture = function() return NS.Icon("edit") end, title = function() return L["Edit"] end },
     remove = { atlas = "transmog-icon-remove", title = function() return L["Remove"] end },
@@ -374,12 +440,43 @@ local function addGlyph(h, into, kind, onClick, tooltip)
         g:SetImage(spec.texture())
     end
     g:SetWidth(GLYPH_W)
-    g:SetHeight(Ed.ROW_H)
     g.userdata.qcGlyph = kind
     g:SetCallback("OnClick", function() onClick() end)
     h.AttachTooltip(g, spec.title(), tooltip)
     into:AddChild(g)
     return g
+end
+
+--- A reorder row's vertical alignment (AceGUI's Table layout, alignV): each widget's offset from the
+--- row's top that centers it in the ROW_H box, whatever its own height (the handle, which the library
+--- centers on the row, is the line they meet).
+function Ed.RowAlignV(childH)
+    return (Ed.ROW_H - childH) / 2
+end
+
+--- A reorder row's columns (AceGUI's Table layout): the handle's gutter, the label taking what is
+--- left, one GLYPH_W cell per glyph and GLYPH_PAD at the right, so the glyphs sit at the box's right
+--- edge on every list (the last one's art GLYPH_PAD + (GLYPH_W - GLYPH) / 2 = 7px in from it). Every
+--- fixed column is an explicit { width = n }: the Table layout reads a bare number from 1 to under 10
+--- as a weight, so a bare GLYPH_PAD (3) would take 3/4 of the free width and push the glyphs inward.
+function Ed.RowColumns(glyphs)
+    local cols = { { width = Ed.HANDLE_W }, { weight = 1, alignH = "fill" } }
+    for _ = 1, glyphs do cols[#cols + 1] = { width = GLYPH_W } end
+    cols[#cols + 1] = { width = GLYPH_PAD }
+    return cols
+end
+
+-- The label's text to its cell's right edge: the Table layout anchors the label's frame but never
+-- calls SetWidth, so the text would keep the width it was made with and run under the glyphs. Pool-
+-- safe: AceGUI's Label clears and re-anchors its text on every acquire, SetText and width change.
+local function textToCellEdge(label)
+    local fs = label.label
+    if not (fs and fs.SetPoint) then return end
+    if label.imageshown then
+        fs:SetPoint("RIGHT", label.frame, "RIGHT")
+    else
+        fs:SetPoint("TOPRIGHT", label.frame, "TOPRIGHT")
+    end
 end
 
 --- Draw `texture` (an AceGUI widget's image) in icon `icon`'s glyph color, or white: AceGUI pools its
@@ -390,7 +487,8 @@ end
 
 --- One uniform row per entry ({ id, label, icon = texture|nil, iconColor = "rrggbb"|nil, edit = fn|nil, editTooltip = string|nil,
 --- remove = fn|nil, removeTooltip = string|nil }): the library's handle in the gutter at the left, the
---- entry's icon (when set, a glyph in its color) and its label, then the edit and remove glyphs at the right. With
+--- entry's icon (when set, a glyph in its color) and its label, then the edit and remove glyphs at the
+--- right edge, every widget centered in the row (a Table layout: Ed.RowColumns, Ed.RowAlignV). With
 --- `onMove(from, to)` the rows drag; the list's one write and one repaint are the host's (Library,
 --- then LIBRARY_CHANGED).
 function Ed.ReorderRows(ctx, pageKey, entries, onMove)
@@ -401,28 +499,32 @@ function Ed.ReorderRows(ctx, pageKey, entries, onMove)
     for i, e in ipairs(entries) do
         items[i] = { wide = true, make = function(_, into)
             local AceGUI = h.AceGUI
-            into:SetLayout("Flow")
+            local glyphs = (e.edit and 1 or 0) + (e.remove and 1 or 0)
+            -- A fresh table per row: the layout turns its number columns into tables, and AceGUI
+            -- clears userdata when the row goes back to the pool (Create resets the layout).
+            into:SetLayout("Table")
+            into.userdata.table = { columns = Ed.RowColumns(glyphs), alignV = Ed.RowAlignV }
             into:SetAutoAdjustHeight(false)
             into:SetHeight(Ed.ROW_H)
             local gutter = AceGUI:Create("Label")
             gutter:SetText("")
             gutter:SetWidth(Ed.HANDLE_W)
             into:AddChild(gutter)
-            -- The label takes what the glyphs leave; AceGUI's Label draws its image left of its text.
-            local glyphs = (e.edit and 1 or 0) + (e.remove and 1 or 0)
+            -- AceGUI's Label draws its image left of its text.
             local label = AceGUI:Create("Label")
             label:SetText(e.label)
             if e.icon then
                 label:SetImage(e.icon)
                 label:SetImageSize(ROW_ICON, ROW_ICON)
             end
+            label:SetWidth(LABEL_W)
+            textToCellEdge(label)
             Ed.Tint(label.image, e.icon, e.iconColor)
             -- AceGUI's Label never resets its image's color on acquire, and its pool is shared with
             -- every addon: put the tint back to white when the row is released (options-ui-§19).
             label:SetCallback("OnRelease", function(w)
                 if w.image then w.image:SetVertexColor(1, 1, 1, 1) end
             end)
-            label:SetRelativeWidth(0.85 - 0.06 * glyphs)
             into:AddChild(label)
             if e.edit then addGlyph(h, into, "edit", e.edit, e.editTooltip) end
             if e.remove then addGlyph(h, into, "remove", e.remove, e.removeTooltip) end

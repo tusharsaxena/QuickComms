@@ -160,6 +160,8 @@ local function build()
     -- arguments at `image[1..n]`, as the base's Label does.
     M.__libs["AceGUI-3.0"]:RegisterWidgetType("Label", function()
         local w = M.__makeAceGUIWidget("Label")
+        -- The face it was given, recorded as `fontObject`.
+        function w:SetFontObject(font) self.fontObject = font; return self end
         local texture = { vertexColor = { 1, 1, 1 } }
         function texture.SetVertexColor(tex, r, g, b) tex.vertexColor = { r, g, b }; return tex end
         w.image = texture
@@ -296,14 +298,42 @@ local function build()
         end
     end
 
+    -- A region's anchors, as the client keeps them: SetPoint replaces the anchor of the same point,
+    -- GetPoint(i) and GetNumPoints read them. `points` are the anchors AceGUI's constructor sets,
+    -- each { point, relativeTo, relativePoint, x, y }.
+    local function anchored(r, points)
+        r.__anchors = {}
+        function r.SetPoint(self, point, rel, relPoint, x, y)
+            for _, a in ipairs(self.__anchors) do
+                if a[1] == point then
+                    a[2], a[3], a[4], a[5] = rel, relPoint, x, y
+                    return self
+                end
+            end
+            self.__anchors[#self.__anchors + 1] = { point, rel, relPoint, x, y }
+            return self
+        end
+        function r.GetNumPoints(self) return #self.__anchors end
+        function r.GetPoint(self, i)
+            local a = self.__anchors[i]
+            if not a then return nil end
+            return a[1], a[2], a[3], a[4], a[5]
+        end
+        for _, p in ipairs(points) do r:SetPoint(p[1], p[2], p[3], p[4], p[5]) end
+        return r
+    end
+    M.__anchored = anchored
+
     -- AceGUI's EditBox draws its label as a font string of its own (`w.label`, GameFontNormalSmall,
     -- anchored across the top of the widget): the kit's fake keeps only the label's text. Here the
     -- label is a region that shows what SetLabel gave it, answers a face of size 10 (GetFont) and a
     -- width of 6 per letter (GetStringWidth), and frames made on the box's frame are dressed, so a
-    -- glyph anchored beside the label (settings/CalloutPopup.lua) records its points and size.
+    -- glyph anchored beside the label (settings/CalloutPopup.lua) records its points and size. The
+    -- label keeps its anchors (AceGUI's: TOPLEFT and TOPRIGHT of the widget, 2 down).
     M.__libs["AceGUI-3.0"]:RegisterWidgetType("EditBox", function()
         local w = M.__makeAceGUIWidget("EditBox")
-        local label = region("FontString")
+        local label = anchored(region("FontString"), {
+            { "TOPLEFT", w.frame, "TOPLEFT", 0, -2 }, { "TOPRIGHT", w.frame, "TOPRIGHT", 0, -2 } })
         function label.GetFont() return "Fonts\\FRIZQT__.TTF", 10, "" end
         function label.GetStringWidth(r) return 6 * #(r.__text or "") end
         w.label = label
@@ -315,6 +345,56 @@ local function build()
         end
         return w
     end)
+
+    -- AceGUI's Dropdown: its label (`w.label`, anchored across the top of the widget) and the
+    -- dropdown frame (`w.dropdown`, 15 left of the widget and 14 down under a label, its art inset
+    -- in it), with the anchors AceGUI sets. SetLabel puts the dropdown's TOPLEFT back, as AceGUI's
+    -- does on every acquire.
+    M.__libs["AceGUI-3.0"]:RegisterWidgetType("Dropdown", function()
+        local w = M.__makeAceGUIWidget("Dropdown")
+        w.label = anchored(region("FontString"), {
+            { "TOPLEFT", w.frame, "TOPLEFT", 0, 0 }, { "TOPRIGHT", w.frame, "TOPRIGHT", 0, 0 } })
+        w.dropdown = anchored(region("Frame"), {
+            { "TOPLEFT", w.frame, "TOPLEFT", -15, 0 }, { "BOTTOMRIGHT", w.frame, "BOTTOMRIGHT", 17, 0 } })
+        function w:SetLabel(v)
+            self.labelText = v
+            self.label:SetText(v)
+            self.dropdown:SetPoint("TOPLEFT", self.frame, "TOPLEFT", -15, v and -14 or 0)
+            return self
+        end
+        return w
+    end)
+
+    -- AceGUI's Heading: its two rule textures (`w.left`, `w.right`), 3 in from the widget's sides.
+    M.__libs["AceGUI-3.0"]:RegisterWidgetType("Heading", function()
+        local w = M.__makeAceGUIWidget("Heading")
+        w.left = anchored(region("Texture"), { { "LEFT", w.frame, "LEFT", 3, 0 } })
+        w.right = anchored(region("Texture"), { { "RIGHT", w.frame, "RIGHT", -3, 0 } })
+        return w
+    end)
+
+    -- AceGUI's AddChild takes the widget to insert the child before, as its second argument (the
+    -- callout popup puts its column gap between two widgets this way); the kit's fake appends.
+    do
+        local gui = M.__libs["AceGUI-3.0"]
+        local create = gui.Create
+        gui.Create = function(self, wtype, ...)
+            local w = create(self, wtype, ...)
+            local add = w.AddChild
+            function w.AddChild(widget, child, before)
+                if before then
+                    for i, sibling in ipairs(widget.children) do
+                        if sibling == before then
+                            table.insert(widget.children, i, child)
+                            return widget
+                        end
+                    end
+                end
+                return add(widget, child)
+            end
+            return w
+        end
+    end
 
     -- GameTooltip, recorded (fidelity rule 3): the owner and anchor SetOwner names, and the lines
     -- since, each { left, right } (SetText and AddLine have no right side). SetOwner starts a new

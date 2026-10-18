@@ -4,11 +4,12 @@ local addonName, NS = ...
 --
 --     window   Blizzard's settings window (title "Ka0s Quick Comms")             (its close X)
 --     header   New callout / Edit callout, the gold rule under it
---     body     Name, Text, Channel, Icon (the member rows' labels, read and written on the draft),
---              with an info glyph beside the Text label whose tooltip lists the tokens; the icon
---              (Choose icon… opens the icon browser over the popup, and a glyph's color swatch),
---              Preview, then Cancel and Save, and under them the line that names a field Save
---              refused
+--     body     Name and Channel side by side, then Text across both columns (the member rows'
+--              labels, read and written on the draft), with an info glyph beside the Text label
+--              whose tooltip lists the tokens; then the icon under its "Icon" label (the icon as
+--              drawn, Choose icon…, which opens the icon browser over the popup, and a glyph's color
+--              swatch: there is no Icon text box), Preview, then Cancel and Save, and under them the
+--              line that names a field Save refused
 --
 -- THE DRAFT is a plain copy of the callout's four fields and its icon's glyph color (blank for Add:
 -- an empty name and text, Smart group, no icon, no color), and every control writes it, never the
@@ -45,9 +46,9 @@ local L = NS.L
 Settings.CalloutPopup = Settings.CalloutPopup or {}
 local Pop = Settings.CalloutPopup
 
--- The member rows the popup draws, in order, and every field the draft carries (the icon's color
--- is drawn with the icon, not as a row of its own).
-local FIELDS = { "name", "text", "channel", "icon" }
+-- The member rows the popup draws, in order, and every field the draft carries (the icon and its
+-- color are drawn by the icon chooser, not as rows: the callout.icon row stays, for /qc).
+local FIELDS = { "name", "channel", "text" }
 local DRAFT = { "name", "text", "channel", "icon", "iconColor" }
 local WIDTH, HEIGHT = 560, 640   -- HEIGHT until the first fit
 -- The page's body starts this far under the panel's top: the library's header (HEADER_HEIGHT, 54)
@@ -62,9 +63,19 @@ local BODY_TOP, CONTENT_X, BODY_BOTTOM = 62, 12, 12
 local ERROR_COLOR = "|cffff4040"
 -- The gap between the preview and the button pair, a section's worth (two row gaps).
 local BUTTONS_GAP = 16
--- The token glyph: GLYPH_GAP right of the Text label's last letter, sized to the label's font
--- (its size plus 4, kept within GLYPH_MIN to GLYPH_MAX).
-local GLYPH_GAP, GLYPH_MIN, GLYPH_MAX = 4, 14, 16
+-- The token glyph: GLYPH_GAP right of the Text label's last letter, as tall as the label's letters
+-- (its font's size, kept within GLYPH_MIN to GLYPH_MAX).
+local GLYPH_GAP, GLYPH_MIN, GLYPH_MAX = 4, 10, 12
+-- THE COLUMNS. Name and Channel, the icon's Choose icon… and its swatch, and Cancel and Save share
+-- two columns, each the library's button-pair width (Helpers.BUTTON_PAIR_REL of the body, the width
+-- InlineButtonPair gives Cancel and Save, options-ui-§8), and the gutter between them is the room
+-- the pair leaves (column and gutter, below); Text and the Preview rule span both. AceGUI draws an
+-- EditBox's box and a Button's art EDGE in from the widget's left and right edges, so EDGE is where
+-- every visible left edge sits: each field's label is moved EDGE in (AceGUI puts it at 0), the
+-- Channel dropdown DROPDOWN_NUDGE left (its art starts that much further in than an EditBox's), the
+-- icon EDGE in (Ed.IconChooser), the Preview rule EDGE in from both sides (AceGUI's Heading draws it
+-- 3 in), and the preview and error lines EDGE in (textLine).
+local EDGE, DROPDOWN_NUDGE = 2, 2
 
 -- The open popup's state: the group, the callout (nil for Add), the draft and its baseline.
 local gid, cid, draft, baseline
@@ -73,6 +84,8 @@ local ctx, errorRow
 local body, inset
 -- The popup's text boxes by field, and the text each last showed of the draft (see flush).
 local boxes, shown = {}, {}
+-- What each widget the popup moved puts back when AceGUI takes it back (see onRelease).
+local releasing = setmetatable({}, { __mode = "k" })
 
 local function H() return Settings.Helpers end
 
@@ -124,12 +137,12 @@ local function setField(field, value, row)
     refresh()
 end
 
---- The four member rows, bound to the draft: each a copy with no path and its own get and set
+--- The member rows, by field, bound to the draft: each a copy with no path and its own get and set
 --- (LibKa0s draws a path-less row through them), so the popup shows the rows' own labels, help and
 --- channel list and writes nothing until Save.
 local function draftRows()
     local out = {}
-    for i, field in ipairs(FIELDS) do
+    for _, field in ipairs(FIELDS) do
         local row = Ed.Row("callout." .. field)
         local copy = {}
         for k, v in pairs(row) do copy[k] = v end
@@ -139,7 +152,7 @@ local function draftRows()
             return shown[field]
         end
         copy.set = function(value) setField(field, value, row) end
-        out[i] = copy
+        out[field] = copy
     end
     return out
 end
@@ -158,8 +171,9 @@ local function check(d)
     local channel = Ed.Row("callout.channel")
     ok, why = channel.validate(d.channel)
     if not ok then return "channel", channel.label, why end
+    -- The icon has no box to name: the error names the chooser under its "Icon" label.
     if not NS.Library.ValidIcon(d.icon) then
-        return "icon", Ed.Row("callout.icon").label, L["An icon is a texture id or a texture path."]
+        return "icon", L["Icon"], L["That is not a texture. Click Choose icon… and pick another."]
     end
     if not NS.Library.ValidIconColor(d.iconColor) then
         return "iconColor", Ed.Row("callout.iconColor").label, L["An icon color is six hex digits (rrggbb), or empty for none."]
@@ -207,6 +221,7 @@ end
 -- is hidden when the box is released, so a frame AceGUI hands to any other EditBox does not show
 -- it. The release callback is set fresh on every render (AceGUI clears callbacks on release), and
 -- the anchor is set again each time, on the label as it is now.
+local onRelease
 local function tokenGlyph(box)
     local frame, label = box and box.frame, box and box.label
     if not (frame and label) then return nil end
@@ -222,25 +237,131 @@ local function tokenGlyph(box)
     end
     glyph.icon:SetTexture(NS.Icon("info"))
     local _, fontSize = label:GetFont()
-    local size = math.max(GLYPH_MIN, math.min(GLYPH_MAX, (tonumber(fontSize) or 0) + 4))
+    local size = math.max(GLYPH_MIN, math.min(GLYPH_MAX, tonumber(fontSize) or 0))
     glyph:SetSize(size, size)
     glyph:ClearAllPoints()
     glyph:SetPoint("LEFT", label, "LEFT", (tonumber(label:GetStringWidth()) or 0) + GLYPH_GAP, 0)
     glyph:Show()
-    box:SetCallback("OnRelease", function()
+    onRelease(box, function()
         hideTooltip()
         glyph:Hide()
     end)
     return glyph
 end
 
--- The AceGUI EditBoxes under widget `w`, in the order they were drawn.
-local function editBoxes(w, out)
-    for _, child in ipairs(w and w.children or {}) do
-        if child.type == "EditBox" then out[#out + 1] = child end
-        editBoxes(child, out)
+-- Run `fn` when AceGUI takes widget `w` back: one OnRelease callback per widget per render, set on
+-- the first call (AceGUI clears callbacks on release), running every `fn` given since. A widget the
+-- popup moves a part of puts it back this way, so the frame AceGUI hands to any other addon's
+-- widget next is as AceGUI made it.
+function onRelease(w, fn)
+    local list = releasing[w]
+    if not list then
+        list = {}
+        releasing[w] = list
+        w:SetCallback("OnRelease", function()
+            releasing[w] = nil
+            for _, f in ipairs(list) do pcall(f) end
+        end)
     end
+    list[#list + 1] = fn
+end
+
+-- Move font string or texture `region`'s `point` anchor `dx` right, and put it back on release.
+local function nudge(w, region, point, dx)
+    if not (region and region.GetNumPoints and region.SetPoint) then return end
+    for i = 1, region:GetNumPoints() do
+        local p, rel, relPoint, x, y = region:GetPoint(i)
+        if p == point then
+            region:SetPoint(p, rel, relPoint, (x or 0) + dx, y or 0)
+            onRelease(w, function() region:SetPoint(p, rel, relPoint, x or 0, y or 0) end)
+            return
+        end
+    end
+end
+
+-- A field's label EDGE in, over its box; the dropdown's art DROPDOWN_NUDGE left, onto the same edge.
+-- AceGUI's SetLabel sets the dropdown's TOPLEFT afresh, but nothing resets the label's anchor.
+local function alignField(w)
+    if not w then return end
+    nudge(w, w.label, "TOPLEFT", EDGE)
+    if w.type == "Dropdown" then nudge(w, w.dropdown, "TOPLEFT", -DROPDOWN_NUDGE) end
+end
+
+-- The body's width, one column's, and the gutter between the two (see THE COLUMNS): the whole
+-- pixels the button pair leaves, so the two columns and the gutter never sum past the body's width
+-- (a Flow line that does wraps its last widget).
+local function bodyWidth()
+    return WIDTH - inset.left - inset.right - 2 * CONTENT_X
+end
+local function column()
+    return bodyWidth() * H().BUTTON_PAIR_REL
+end
+local function gutter()
+    return math.floor(bodyWidth() - 2 * column())
+end
+
+-- One full-width Flow line of the body.
+local function line(h)
+    local row = h.AceGUI:Create("SimpleGroup")
+    row:SetLayout("Flow")
+    row:SetFullWidth(true)
+    return row
+end
+
+-- The two-column split of an AceGUI Flow line holding widgets `a` and `b`, each a column wide: the
+-- gutter put between them.
+local function split(lineWidget, b)
+    lineWidget:AddChild(Ed.Gap(gutter()), b)
+end
+
+-- Name and Channel side by side, then Text across both columns: the member rows drawn by the
+-- library's own field maker, into lines of the popup's columns. Answers the widgets by field.
+local function renderFields(h, rows)
+    local out = {}
+    local first = line(h)
+    out.name = h.RenderField(ctx, rows.name, first, h.BUTTON_PAIR_REL)
+    out.channel = h.RenderField(ctx, rows.channel, first, h.BUTTON_PAIR_REL)
+    if out.name and out.channel then split(first, out.channel) end
+    ctx.scroll:AddChild(first)
+    h.AddSpacer(ctx.scroll, h.ROW_VSPACER)
+    local second = line(h)
+    out.text = h.RenderField(ctx, rows.text, second)
+    ctx.scroll:AddChild(second)
+    h.AddSpacer(ctx.scroll, h.ROW_VSPACER)
+    for _, field in ipairs(FIELDS) do alignField(out[field]) end
+    -- The rows' group, as RenderRows would leave it: O.Section puts its 10px gap above Preview only
+    -- once a group has been drawn (ctx.lastGroup), and ClearScroll resets it to nil.
+    ctx.lastGroup = rows.name.group or true
     return out
+end
+
+-- The Preview rule EDGE in from both sides, where the boxes' and the buttons' art ends.
+local function alignHeading(heading)
+    if not heading then return end
+    nudge(heading, heading.left, "LEFT", EDGE - 3)
+    nudge(heading, heading.right, "RIGHT", 3 - EDGE)
+end
+
+-- A line of text on the boxes' edge, EDGE in (a gap first: an AceGUI Label anchors its own text
+-- to its left), left-justified as TextRow draws one. Answers the Label.
+local function textLine(h, text)
+    local row = line(h)
+    row:AddChild(Ed.Gap(EDGE))
+    local label = h.AceGUI:Create("Label")
+    label:SetText(text)
+    label:SetRelativeWidth((bodyWidth() - EDGE - 0.5) / bodyWidth())
+    if label.label and label.label.SetJustifyH then label.label:SetJustifyH("LEFT") end
+    row:AddChild(label)
+    ctx.scroll:AddChild(row)
+    return label
+end
+
+-- Cancel the left column and Save the right one: InlineButtonPair already sizes each a column
+-- wide (BUTTON_PAIR_REL); the gutter goes between them, so Save ends where Text and the rule do.
+local function alignButtons(pair)
+    local kids = pair and pair.children
+    if not (kids and kids[1] and kids[2]) then return end
+    split(pair, kids[2])
 end
 
 local function render()
@@ -251,36 +372,29 @@ local function render()
     -- First, so every refresh (the popup's own and a seam write's) takes the typed text in before
     -- the boxes' refreshers put the draft back into them.
     ctx.refreshers[#ctx.refreshers + 1] = flush
-    local rows = draftRows()
-    h.RenderRows(ctx, rows, nil, nil, { noHeadings = true })
-    -- The member rows are the body's only content yet, so its boxes are theirs, in row order.
-    local drawn, n = editBoxes(body, {}), 0
-    for i, row in ipairs(rows) do
-        if row.dialogControl == "EditBox" then
-            n = n + 1
-            boxes[FIELDS[i]] = drawn[n]
-        end
-    end
+    local drawn = renderFields(h, draftRows())
+    boxes.name, boxes.text = drawn.name, drawn.text
     Pop.tokenGlyph = tokenGlyph(boxes.text)
     Ed.IconChooser(ctx, {
         get = function() return draft and draft.icon, draft and draft.iconColor end,
         choose = function(icon, color) Pop.SetIcon(icon, color) end,
         setColor = function(color) setField("iconColor", color) end,
         owner = "popup", lift = { addonName .. "CalloutPopup" },
+        columns = { col = column(), gutter = gutter(), inset = EDGE },
     })
-    h.Section(ctx, L["Preview"])
+    alignHeading(h.Section(ctx, L["Preview"]))
     -- One label, refreshed in place on every draft write and every situation change.
-    local live = h.TextRow(ctx, table.concat(C.PreviewLines(draft), "\n"))
+    local live = textLine(h, table.concat(C.PreviewLines(draft), "\n"))
     Ed.Live(ctx, function()
         if draft and live then live:SetText(table.concat(C.PreviewLines(draft), "\n")) end
     end)
     h.AddSpacer(ctx.scroll, BUTTONS_GAP)
-    h.InlineButtonPair(ctx,
+    alignButtons(h.InlineButtonPair(ctx,
         { text = L["Cancel"], tooltip = L["Close without saving. Nothing changes."],
           onClick = function() Pop.Cancel() end },
         { text = L["Save"], tooltip = L["Save this callout to the group and close."],
-          onClick = function() Pop.Save() end })
-    errorRow = h.TextRow(ctx, "")
+          onClick = function() Pop.Save() end }))
+    errorRow = textLine(h, "")
     -- Last, so it measures what every refresher before it has just redrawn.
     ctx.refreshers[#ctx.refreshers + 1] = fit
     fit()

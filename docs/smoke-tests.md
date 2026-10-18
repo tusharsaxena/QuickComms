@@ -217,7 +217,7 @@ Opening the settings in combat is refused, as before. Result:
 **EDIT-8. The selection survives what other pages do.** Select a group of yours on the Groups page,
 then `/qc profile Other` and back → the Groups page shows a group that exists, never an empty or
 erroring page. Delete the selected group (Yes; the line says its callouts go too) → the page moves
-to the next group, and the deleted group's callouts are offered nowhere (Reuse existing callout no
+to the next group, and the deleted group's callouts are offered nowhere (Reuse callout no
 longer lists them). Result:
 
 **EDIT-9. The callout popup: look, Save and a refused field.** Groups → a group of yours → Callouts →
@@ -225,9 +225,17 @@ a row's edit glyph (the edit mark; its tooltip is headed Edit) → the popup ope
 settings window, and looks like the settings window itself: the same background and border, the
 window title "Ka0s Quick Comms" in the top bar and Blizzard's close X at its top right (its
 background as bright as the settings window's, not darkened by the dim around it), then the gold
-"Edit callout" header and rule, then the icon with Choose icon… and Icon color, the Preview heading over the baked line,
+"Edit callout" header and rule, then Name and Channel side by side, Text on a line of its own across
+the whole width, an "Icon" label over the icon with Choose icon…, a small red clear glyph and Icon
+color (there is **no Icon text box**), a section's gap (about 18 px) under that row, the Preview
+heading over the baked line,
 a clear gap (about a section's) under that line, and the red Cancel and Save buttons, Cancel on the
-left; there is no Insert a token dropdown. There is **no scrollbar**: the window is
+left; there is no Insert a token dropdown. **Alignment:** every label starts exactly over the left
+edge of its box (Name, Channel, Text), the Channel dropdown's left edge meets the Name box's line,
+the icon and the Icon label start on that same line, and so do the Preview rule, the preview line
+and Cancel; in the right column the Channel label, its dropdown, the Icon color swatch and Save all
+start on one line, a clear gap right of the Name box; the right edges of the Channel dropdown, the
+Text box, the Preview rule and Save line up, as do the Name box's, the clear glyph's cell's and Cancel's. There is **no scrollbar**: the window is
 exactly as tall as its content, with no empty band under the error line and nothing cut off at the
 bottom. Clicking the page behind it does nothing. Type more text and press Enter → Preview follows the edit, while the chip on
 the pad still sends the old line; type text long enough that Preview wraps onto another
@@ -240,9 +248,15 @@ and `/reload` shows none either. Edit a callout, change its text → press Escap
 stands. Edit again, change it → click the close X → the old text stands. Edit again → close the
 settings window (or `/qc profile Other`) → the popup is gone with it, nothing saved. Result:
 
-**EDIT-11. Reuse makes a copy.** On group A's Callouts tab, open Reuse existing callout → your
-callouts read `<group>: <callout>` (this group's own included), then the built-in ones as
-`<set>: <callout>`. Pick one of group B's callouts → nothing is added yet; click Add → it is A's
+**EDIT-11. Reuse makes a copy.** On group A's Callouts tab, open Reuse callout → your
+callouts read `<group>: <callout>` (none of group A's own: they are left out) and the built-in ones
+`<set>: <callout>`, all in one alphabetical list (by group, then callout); the group part is a
+muted gold, the callout's name white. The dropdown runs across the row with Add at its right
+edge, Add as tall as the dropdown, and Add callout above spans the same width: the right edges of
+Add callout and Add line up, a hair (2 px) short of the list's boxes, and **both buttons' right
+borders are whole** (not shaved by the page's edge). In the list, every row's handle, icon, name and
+glyphs sit centered in its box, and the edit and remove glyphs are small and close to the box's
+right edge (the same on Comms Pad → Groups and Comms Dial → Groups). Pick one of group B's callouts → nothing is added yet; click Add → it is A's
 last row. Edit the copy's text and Save → B's original is unchanged (check its row or its chip).
 Reuse a built-in callout → a copy you can edit. Result:
 
@@ -258,19 +272,26 @@ its window skins not killed, its Settings window skin on and set to the style it
 mostly use (the third-party style), `/reload` → open the callout popup (EDIT-9) → its window wears
 the same EllesmereUI shell, border and close X as the settings window behind it, and the page's controls look as they do on the
 settings pages. `/qc diagnostics` → the integrations section reads `ellesmereui: suite=true
-facade=true enabled=true applied=true failed=false browser=false`; click Choose icon… → the icon
-browser wears the same shell, border and close X, and `/qc diagnostics` now ends `browser=true`. Turn QuickComms off in EllesmereUI's
+facade=true enabled=true applied=true failed=false browser=false why=popup painted; browser not built
+yet (painted when it is first opened)`; click Choose icon… → the icon
+browser wears the same shell, border and close X, and `/qc diagnostics` now reads `browser=true why=popup painted; browser painted`. Turn QuickComms off in EllesmereUI's
 Third-Party Addons list and `/reload` → the popup is Blizzard's settings window again (EllesmereUI
-does not call back: `facade=false enabled=n/a applied=false`). Disable EllesmereUI → the popup opens in Blizzard's look and no Lua
-error appears. Result:
+does not call back: `facade=false enabled=n/a applied=false`, and `why=` says EllesmereUI has not
+called back because its third-party skinning or QuickComms' entry was off at login). Turn it back on
+and `/reload`; `/qc disable` → open the popup and the icon browser from the settings window → both
+still wear EllesmereUI's look (the skin does not wait for the addon to be enabled); `/qc enable`.
+Disable EllesmereUI → the popup opens in Blizzard's look, `why=EllesmereUI is not loaded`, and no
+Lua error appears. Result:
 
 **EDIT-14. The icon browser: look, tabs and a pick.** Open a callout of yours in the popup (EDIT-9) →
 under the Icon row, the callout's icon (a question mark for none), Choose icon… and Icon color.
 Click Choose icon… → the icon browser opens **over** the popup, which is dimmed behind it (a click on
 the popup does nothing), and looks like it: the settings window's background and border, "Ka0s
 Quick Comms" in the top bar, Blizzard's close X, the gold "Choose an icon" header. The tabs read
-Suggested, Markers, Game icons, Glyphs; the callout's icon is selected (gold behind it) on its own
-tab, scrolled into view, and named in the footer. Markers shows the eight markers; Glyphs every
+Markers, Game icons, Glyphs (no Suggested); the callout's icon is selected (gold behind it) on its
+own tab, scrolled into view, and named in the footer; a callout with no icon, or a built-in's spell
+icon, opens on Markers with nothing selected. On Glyphs, the Icon color row sits clear of the first
+row of icons (a gap between them), and it is gone on Markers. Markers shows the eight markers; Glyphs every
 LibKa0s glyph, white, each named on hover (`Arrow circle down`-style names); the count at the right
 follows the tab. Click an icon → it is selected and named in the footer, nothing else changes; Cancel
 → the popup's icon is unchanged. Choose icon… again, double-click the skull → the browser closes and
@@ -304,8 +325,8 @@ open on the pull, the panel's combat cover lies over it and Choose (a double-cli
 line and changes nothing. Result:
 
 **EDIT-18. The token glyph beside Text.** Edit a party callout (EDIT-9) → a small white "i" sits
-just right of the Text label, about the label's height, centered on it and clear of the box under
-it. Hover it → a tooltip headed Tokens lists each token with one line of help ({target}, {focus},
+just right of the Text label, no taller than the label's letters, centered on them and clear of the
+box under it. Hover it → a tooltip headed Tokens lists each token with one line of help ({target}, {focus},
 the eight markers, {me}, {spec}, {role}, {key}, {dungeon}, then {spell:ID}), with no
 {group1} … {group8} line, and fits on screen without wrapping each line. Pick Raid as the Channel
 and hover again → one {group1} … {group8} line appears (no Save needed). Move off → the tooltip
@@ -455,10 +476,14 @@ edge lands at combat end. Defaults → the Ka0s look again. Result:
 ## Icons
 
 **ICON-1. Choosing an icon.** Groups → a group of yours → Callouts → a row's edit glyph → Choose
-icon… → double-click the skull → the popup's Icon box shows its path and the icon beside Choose
-icon… is the skull; Save → the row and the chip show the skull. Groups → a group of yours → General
-→ Choose icon… → Suggested → double-click a glyph → the group's wedge on the Comms Dial shows it, and
-the General tab's icon follows. A built-in set's General tab has no Choose icon…. Result:
+icon… → double-click the skull → the icon beside Choose icon… is the skull (the popup has no Icon
+box); Save → the row and the chip show the skull. Groups → a group of yours → General → no Icon text
+box, an "Icon" label over the icon and Choose icon… → Glyphs → double-click a glyph → the group's
+wedge on the Comms Dial shows it, and the General tab's icon follows. With that group selected,
+`/qc set group.icon 136012` still sets it. Click the red clear glyph beside Choose icon… → the
+General tab's icon is the question mark, the wedge shows no icon, and the clear glyph goes idle; in
+the popup, a callout with an icon → clear glyph → the icon is the question mark, Save → the row and
+the chip show no icon. A built-in set's General tab has no Choose icon…. Result:
 
 ## Battlegrounds
 
@@ -520,6 +545,6 @@ from the client, so this check needs a non-English client pass. Result:
 |---|---|---|
 | INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..2, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet; LOC-1 re-enumerated in phase 5 and owed a non-English client pass |
 | SEND-1..5, PAD-1..8 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet; PAD-8 added in phase 5 (audit QC-07) |
-| EDIT-1..18 | Phase 3: the editors | No client pass recorded yet; EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17); EDIT-9, 13 and ICON-1 rewritten and EDIT-14..17 added with the icon browser and glyph colors (2026-10-18); EDIT-9 rewritten and EDIT-18 added when the token dropdown became the Text label's info glyph (2026-10-18) |
+| EDIT-1..18 | Phase 3: the editors | No client pass recorded yet; EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17); EDIT-9, 13 and ICON-1 rewritten and EDIT-14..17 added with the icon browser and glyph colors (2026-10-18); EDIT-9 rewritten and EDIT-18 added when the token dropdown became the Text label's info glyph (2026-10-18); EDIT-13, 14 and ICON-1 rewritten when the Suggested tab went and the skin stopped waiting for the addon to be enabled (2026-10-18); EDIT-9, 18 and ICON-1 rewritten when the Icon boxes went and the popup took its two-column layout (2026-10-18); EDIT-9, 11 and ICON-1 rewritten with the clear glyph, the Preview gap and the buttons' 2 px inset (2026-10-18) |
 | DIAL-1..12 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
 | SHARE-1..6, LOOK-1..2, ICON-1, BG-1..2, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; LOOK-2's in-combat step goes through `/qc set` |

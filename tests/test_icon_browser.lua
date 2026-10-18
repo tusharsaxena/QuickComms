@@ -43,11 +43,6 @@ local function shownCells(B)
     return n
 end
 
-local function indexOf(list, v)
-    for i, x in ipairs(list) do if x == v then return i end end
-    return nil
-end
-
 -- Record the strata each frame created from here on is set to.
 local function strata(m)
     local create = m.CreateFrame
@@ -93,19 +88,33 @@ test("icon browser: tabs in order; the stored icon is preselected and its tab op
     local NS, _, _, B = boot()
     local keys = {}
     for i, t in ipairs(B.TABS) do keys[i] = t.key end
-    assertEqual(table.concat(keys, ","), "suggested,markers,game,glyphs")
+    -- red under: keep the Suggested tab in B.TABS
+    assertEqual(table.concat(keys, ","), "markers,game,glyphs")
     local cases = {
-        { nil, "suggested" }, { SKULL, "markers" }, { NS.Icon("star"), "glyphs" }, { 136116, "game" },
-        { "Interface\\Icons\\Spell_Nature_Bloodlust", "suggested" },
+        { nil, "markers" }, { SKULL, "markers" }, { NS.Icon("star"), "glyphs" }, { 136116, "game" },
     }
     for _, case in ipairs(cases) do
         openOn(B, case[1])
-        -- red under: open every browser on Suggested
+        -- red under: open every browser on the first tab
         assertEqual(B.State().tab, case[2], tostring(case[1]))
         assertEqual(B.State().selected, case[1])
         if case[1] then assertTrue(cellFor(B, case[1]).selected:IsShown(), "drawn selected") end
         B.Cancel()
     end
+    -- an icon no tab lists (a built-in set's spell icon, a typed path): Markers, nothing selected
+    for _, icon in ipairs({ "Interface\\Icons\\Spell_Nature_Bloodlust", "Interface\\Icons\\Whatever" }) do
+        openOn(B, icon)
+        assertEqual(B.State().tab, "markers", icon)
+        -- red under: keep req.icon as the selection when Src.TabFor finds no tab for it
+        assertNil(B.State().selected, icon)
+        assertTrue(B.Widgets().choose.disabled, "Choose waits for a click")
+        B.Cancel()
+    end
+    -- a key that is not a tab is refused
+    openOn(B, nil)
+    B.SetTab("suggested")
+    assertEqual(B.State().tab, "markers")
+    B.Cancel()
     -- the strip is the library's: a tab click shows that tab
     openOn(B, nil)
     local clicked
@@ -170,18 +179,31 @@ end)
 
 -- ── the tabs' icons ─────────────────────────────────────────────────────────────────────────
 
-test("icon browser: Suggested is the markers, the built-in sets' icons and the curated glyphs; Markers the eight", function()
+test("icon browser: Markers is the eight raid markers, in order; no Suggested list is left", function()
     local NS, _, _, _, Src = boot()
-    local list = Src.Suggested()
+    local list = Src.Markers()
     assertEqual(list[1], "Interface\\TargetingFrame\\UI-RaidTargetingIcon_1")
     assertEqual(list[8], SKULL)
-    assertTrue(indexOf(list, "Interface\\Icons\\Spell_Nature_Bloodlust") ~= nil, "a built-in set's own icon")
-    assertTrue(indexOf(list, NS.Icon("chat")) ~= nil, "a curated glyph")
-    assertNil(indexOf(list, NS.Icon("close")), "the catalog's window chrome is not suggested")
-    assertNil(indexOf(list, "Interface\\Icons\\INV_Misc_QuestionMark"))
-    assertEqual(#Src.Markers(), 8)
+    assertEqual(#list, 8)
+    -- red under: keep Src.Suggested in settings/IconBrowser_Sources.lua
+    assertNil(Src.Suggested)
+    assertNil(Src.TabFor("Interface\\Icons\\Spell_Nature_Bloodlust"), "a built-in set's spell icon is on no tab")
     assertEqual(Src.Label(SKULL), "Skull", "a raid marker carries its localized name")
     assertEqual(Src.Label(NS.Icon("speech-bubble")), "Speech bubble", "a curated glyph its localized label")
+end)
+
+test("icon browser: the grid sits a section gap under the toolbar's row", function()
+    local _, _, _, B = boot()
+    openOn(B, nil)
+    local grid, area = B.Widgets().grid, B.Widgets().area
+    local point, rel, relPoint, x, y = grid:GetPoint(1)
+    assertEqual(point, "TOPLEFT")
+    assertEqual(rel, area)
+    assertEqual(relPoint, "TOPLEFT")
+    assertEqual(x, 0)
+    -- red under: put the grid straight under the 30px toolbar band (the swatch row touched it)
+    assertTrue(-y >= 30 + 8, "at least 8px between the toolbar band and the grid, got " .. tostring(-y))
+    assertEqual(-y, B.GRID_TOP)
 end)
 
 test("icon browser: Glyphs is every catalog icon, labeled from its key", function()
@@ -433,10 +455,11 @@ test("icon browser: the swatch tints every glyph; Choose hands a glyph its color
     -- red under: draw every cell white (no IconTint in dressCell)
     assertEqual(table.concat(cell.icon.__color, ",", 1, 3), "0,1,0")
     assertEqual(table.concat(w.preview.__color, ",", 1, 3), "0,1,0", "the selection is drawn in it")
-    B.SetTab("suggested")
-    assertTrue(w.swatch.frame:IsShown(), "Suggested holds glyphs too")
-    assertEqual(table.concat(cellFor(B, NS.Icon("chat")).icon.__color, ",", 1, 3), "0,1,0")
+    B.SetTab("markers")
+    -- red under: show the swatch on Markers (SWATCH_TABS)
+    assertFalse(w.swatch.frame:IsShown(), "Markers holds no glyph")
     assertEqual(table.concat(cellFor(B, SKULL).icon.__color, ",", 1, 3), "1,1,1", "a marker stays white")
+    B.SetTab("glyphs")
     B.Choose()
     assertEqual(chosen[1][1], star)
     assertEqual(chosen[1][2], "00ff00")
