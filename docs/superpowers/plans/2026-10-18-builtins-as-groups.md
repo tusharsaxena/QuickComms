@@ -24,7 +24,7 @@
 
 | Task | What | Status | Commit |
 |---|---|---|---|
-| T1 | Nested groups: `parent` member field, Library rules, Prepare, Share, surfaces (pad sections / dial node rings from user children), Groups page Parent dropdown + indented Group list, delete-parent behaviour + tests | todo | |
+| T1 | Nested groups: `parent` member field, Library rules, Prepare, Share, surfaces (pad sections / dial node rings from user children), Groups page Parent dropdown + indented Group list, delete-parent behaviour + tests | done | 9f0785d |
 | T2 | Seeding: built-ins become seed data; seed on new/reset profile; convert existing profiles (surface refs, hidden, customizedAs) once; remove overlay, Customize, "(built-in)", built-in Reuse section and Share built-in tab; Restore built-in groups + tests | todo | |
 | T3 | Groups page parity: one tab set for every group; Preview tab as a two-column table (name, preview) matching the Callouts table's rows + tests | todo | |
 | T4 | Docs: ARCHITECTURE (module map, schema, data flow, limitations), schema.md, settings-panel.md, data-flow.md, scope.md, smoke-tests (rewrite built-in steps, new nesting/restore/preview steps), README, superseded notes in older specs, test-cases + badge | todo | |
