@@ -92,8 +92,9 @@ user group, so there is no Callouts page and no shared callout.
   ScrollFrame's clip rect exactly, and options-ui-§8 insets a cell-filling button so its right
   border is not shaved.
 - **Reuse callout** is a dropdown of every callout the player could copy: the user callouts as
-  `<group>: <callout>` (this group's own included) and the built-in ones as `<set>: <callout>` or
-  `<set>: <child>: <callout>`, as one list sorted by group, then callout, ignoring case (on the
+  `<group>: <callout>` and the built-in ones as `<set>: <callout>` or
+  `<set>: <child>: <callout>`, less what this group already holds (its own callouts, and the
+  built-in set it was customized from: owner, 2026-10-18), as one list sorted by group, then callout, ignoring case (on the
   plain text). The group part is drawn in a muted gold (`c9a66b`, LibKa0s' debug-tag tone), the
   callout's name in white; entries that would read alike are numbered (`<callout> (2)`). Picking
   alone adds nothing; **Add** puts an independent copy at the end of this group

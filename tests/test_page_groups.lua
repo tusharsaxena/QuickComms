@@ -151,8 +151,7 @@ test("groups page: Reuse lists callouts as <group>: <callout> and built-ins as <
     local gid, kick, _, lust = withCallouts(NS)
     local byId = {}
     for _, e in ipairs(NS.addon.Settings.Groups.ReusableCallouts(gid)) do byId[e.id] = e end
-    -- red under: label a user callout by its name alone, or leave out the group's own callouts
-    assertEqual(byId[kick].plain, "Mine: Kick", "the group's own callouts are offered too")
+    -- red under: label a user callout by its name alone
     assertEqual(byId[lust].plain, "Other: Lust")
     assertEqual(byId["bi.mplus.lust"].plain, NS.BuiltIns.groups["bi.mplus"].name .. ": Lust")
     pick(NS, gid)
@@ -160,21 +159,39 @@ test("groups page: Reuse lists callouts as <group>: <callout> and built-ins as <
     local dd = P.find(w, "Dropdown", "Reuse callout")
     -- red under: keep the old "Reuse existing callout" prompt
     assertTrue(dd ~= nil, "the dropdown reads Reuse callout")
-    assertEqual(dd.list[kick], byId[kick].label)
+    assertEqual(dd.list[lust], byId[lust].label)
+    -- red under: offer the selected group's own callouts in its Reuse list
+    assertEqual(byId[kick], nil, "the group's own callouts are not offered")
+    assertEqual(dd.list[kick], nil)
+end)
+
+test("groups page: Reuse leaves out the built-in set the group was customized from", function()
+    local NS = open()
+    local G = NS.addon.Settings.Groups
+    local copy = NS.Library.Customize("bi.mplus")
+    assertTrue(copy ~= nil, "customized")
+    local function offered(gid, id)
+        for _, e in ipairs(G.ReusableCallouts(gid)) do if e.id == id then return true end end
+        return false
+    end
+    -- red under: drop the CustomizedAs check in G.ReusableCallouts
+    assertFalse(offered(copy, "bi.mplus.lust"), "the set's own callouts are already the copy's")
+    local other = NS.Library.CreateGroup({ name = "Other" })
+    assertTrue(offered(other, "bi.mplus.lust"), "another group still offers them")
 end)
 
 test("groups page: Reuse draws the group part in muted gold and the callout name in white", function()
     local NS = open()
-    local gid, kick = withCallouts(NS)
+    local _, kick, other = withCallouts(NS)
     local G = NS.addon.Settings.Groups
     local byId = {}
-    for _, e in ipairs(G.ReusableCallouts(gid)) do byId[e.id] = e end
+    for _, e in ipairs(G.ReusableCallouts(other)) do byId[e.id] = e end
     -- red under: leave the Reuse labels uncolored
     assertEqual(G.MUTED_GOLD, "|cffc9a66b")
     assertEqual(byId[kick].label, "|cffc9a66bMine|r: Kick")
     -- a node's whole "<set>: <node>" prefix is the group part
     local node
-    for _, e in ipairs(G.ReusableCallouts(gid)) do
+    for _, e in ipairs(G.ReusableCallouts(other)) do
         if e.id:match("^bi%.") and select(2, e.plain:gsub(": ", "")) == 2 then node = e break end
     end
     assertTrue(node ~= nil, "a built-in node's callout is offered")
@@ -190,7 +207,7 @@ test("groups page: Reuse sorts the whole list by group, then callout, ignoring c
     L.CreateCalloutIn(zed, { name = "A", text = "a", channel = "party" })
     local alpha = L.CreateGroup({ name = "Alpha" })
     L.CreateCalloutIn(alpha, { name = "Zulu", text = "z", channel = "party" })
-    local entries = NS.addon.Settings.Groups.ReusableCallouts(zed)
+    local entries = NS.addon.Settings.Groups.ReusableCallouts()
     -- red under: list the user callouts first, then the built-ins in their own order
     local function key(e)
         local group, name = e.plain:match("^(.*): ([^:]*)$")
@@ -209,10 +226,10 @@ end)
 
 test("groups page: Reuse numbers same-named copies so each entry is unambiguous", function()
     local NS = open()
-    local gid, kick = withCallouts(NS)
+    local gid, kick, other = withCallouts(NS)
     local copy = NS.Library.AddToGroup(gid, kick)
     local labels, colored = {}, {}
-    for _, e in ipairs(NS.addon.Settings.Groups.ReusableCallouts(gid)) do labels[e.id], colored[e.id] = e.plain, e.label end
+    for _, e in ipairs(NS.addon.Settings.Groups.ReusableCallouts(other)) do labels[e.id], colored[e.id] = e.plain, e.label end
     -- red under: drop the repeat numbering in G.ReusableCallouts
     assertEqual(labels[kick], "Mine: Kick")
     assertEqual(labels[copy], "Mine: Kick (2)")

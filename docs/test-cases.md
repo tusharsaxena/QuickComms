@@ -565,7 +565,7 @@ Total.
 - when: [final 6] a typed character takes the client's case; the Resolver matches one in any case
 - when: [final 2, 11] ResolveValue maps a typed value onto the token or id its row stores, or refuses it
 
-### test_page_groups.lua (35)
+### test_page_groups.lua (36)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists user groups by name, then the built-ins, active ones dotted
@@ -573,6 +573,7 @@ Total.
 - groups page: Callouts drags to reorder, removes, and copies a built-in callout in (P2)
 - groups page: Add callout opens the popup for this group
 - groups page: Reuse lists callouts as <group>: <callout> and built-ins as <set>: <callout>
+- groups page: Reuse leaves out the built-in set the group was customized from
 - groups page: Reuse draws the group part in muted gold and the callout name in white
 - groups page: Reuse sorts the whole list by group, then callout, ignoring case
 - groups page: Reuse numbers same-named copies so each entry is unambiguous
@@ -995,7 +996,7 @@ Total.
 | test_icon_browser.lua | 26 |
 | test_eui_skin.lua | 10 |
 | test_groups_when.lua | 12 |
-| test_page_groups.lua | 35 |
+| test_page_groups.lua | 36 |
 | test_page_pads.lua | 12 |
 | test_page_dials.lua | 17 |
 | test_page_share.lua | 14 |
@@ -1018,4 +1019,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **804** |
+| **Total** | **805** |

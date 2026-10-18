@@ -129,24 +129,29 @@ end
 local MUTED_GOLD = "|cffc9a66b"
 G.MUTED_GOLD = MUTED_GOLD
 
---- What Reuse callout offers: every user callout ("<its group>: <name>"; the selected group's own
---- included: copying within a group is fine) and every built-in callout ("<set>: <name>", a node's
---- "<set>: <node>: <name>"), as one list sorted by group, then name, case-insensitively, on the plain
+--- What Reuse callout offers group `gid`: every user callout ("<its group>: <name>") and every
+--- built-in callout ("<set>: <name>", a node's "<set>: <node>: <name>"), less the ones already
+--- `gid`'s: its own callouts, and the built-in set it was customized from (owner, 2026-10-18), as
+--- one list sorted by group, then name, case-insensitively, on the plain
 --- text. Entries that would read alike are numbered ("<name> (2)") so each is unambiguous. Each entry
 --- is { id, label (the group part in MUTED_GOLD), plain (the label without color) }. Add copies the
 --- pick (spec P2).
-function G.ReusableCallouts()
+function G.ReusableCallouts(gid)
     local p = NS.db.profile
-    local owner = {}
-    for gid, g in pairs(p.groups) do
-        for _, cid in ipairs(g.callouts or {}) do owner[cid] = owner[cid] or g.name or gid end
+    local owner, own = {}, {}
+    for id, g in pairs(p.groups) do
+        for _, cid in ipairs(g.callouts or {}) do
+            owner[cid] = owner[cid] or g.name or id
+            if id == gid then own[cid] = true end
+        end
     end
     local out = {}
     for id, c in pairs(p.callouts) do
-        out[#out + 1] = { id = id, group = owner[id], name = c.name or id }
+        if not own[id] then out[#out + 1] = { id = id, group = owner[id], name = c.name or id } end
     end
     local function addSet(gidB, prefix)
         local def = NS.BuiltIns.groups[gidB]
+        if gid and G.CustomizedAs(gidB) == gid then return end
         for _, cid in ipairs(def.callouts or {}) do
             out[#out + 1] = { id = cid, group = prefix, name = NS.BuiltIns.callouts[cid].name, builtin = true }
         end
@@ -330,7 +335,7 @@ local function reuseRow(gid)
         parent.userdata.table = { columns = { { weight = 1, alignH = "fill" }, { width = G.REUSE_GAP },
             G.REUSE_ADD_W, { width = G.EDGE_INSET } } }
         local dd = AceGUI:Create("Dropdown")
-        local list, order = Ed.PickerList(G.ReusableCallouts())
+        local list, order = Ed.PickerList(G.ReusableCallouts(gid))
         dd:SetList(list, order)
         dd:SetText(prompt)
         local add = AceGUI:Create("Button")
