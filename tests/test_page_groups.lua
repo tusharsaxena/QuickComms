@@ -542,6 +542,23 @@ test("groups page: [review] a child's Defaults keeps it inside its parent; a nam
     assertFalse(NS.Library.IsChild(b), "a named reset makes it top-level")
 end)
 
+test("groups page: [inherit] a child's Defaults ticks Inherit when conditions again and keeps its own When", function()
+    local NS, _, P = open()
+    local a = NS.Library.CreateGroup({ name = "Raid night", when = { content = { raid = true } } })
+    local b = NS.Library.CreateGroup({ name = "Boss 1", when = { role = { TANK = true } } })
+    assertTrue(NS.SchemaRuntime.Set("group.parent", a, b))
+    assertTrue(NS.SchemaRuntime.Set("group.inheritWhen", false, b))
+    pick(NS, b)
+    P.redraw("groups")
+    -- red under: exempt group.inheritWhen from the page's Defaults
+    P.ctx("groups").panel.defaultsOnClick()
+    local g = NS.db.profile.groups[b]
+    assertTrue(g.inheritWhen == true, "the page's Defaults turns Inherit when conditions back on")
+    assertTrue(g.when.role.TANK, "the child's own When is kept")
+    assertNil(g.when.content, "and not replaced by the parent's")
+    assertEqual(g.parent, a, "still inside its parent")
+end)
+
 test("groups page: [restore] Restore built-in groups brings back a deleted set and says so; again, nothing is missing", function()
     local NS, m, P = open()
     local old = T.seeded(NS, "bi.raid")

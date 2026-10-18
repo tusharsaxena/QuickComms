@@ -306,3 +306,16 @@ LibKa0s change follows `docs/releasing.md`; `libs/` is only ever re-vendored, ne
   (LibKa0s `docs/releasing.md`: no tag without a bundle naming it), and LibKa0s `CHANGELOG.md` and
   `docs/releasing.md` still say "not tagged". Delete it (the two vendor-pair cases go red until the
   real release) or keep it as a recorded provisional, unpushed tag: the owner's call.
+- **[R3] Review fixes (round 3).** The `group.when` and Parent group tooltips describe the drawer
+  model and Inherit when conditions. A new `[inherit]` case pins that a page's Defaults ticks
+  Inherit when conditions back on and keeps the child's own When. Tests 861 -> 862. In LibKa0s
+  (`145c7c8` on `feat/drawer-widget`, v1.73.0 still unreleased, no minor moved): a drawer toggle
+  keeps the page's scroll offset across its re-render, and a drawer's actions honor the page's
+  render-disabled flag.
+- **[R3] Open for the owner.** That LibKa0s fix is copied into `libs/LibKa0s/OptionsDrawer.lua`
+  but not committed here: the local v1.73.0 tag still names `4d1c8d1`, so the two vendor-pair cases
+  are red against the new bytes until the tag is moved to `145c7c8` (or cut for real), the same
+  owner call as R1's. A write inside a drawer (a checkbox, Select all, Clear) still re-renders the
+  page through `Ed.RequestRefresh` on the next frame and loses the scroll offset; keeping it there
+  means carrying the offset in every structural render (`renderCtx`), which would also keep it
+  across tab switches on every host: a library design call.

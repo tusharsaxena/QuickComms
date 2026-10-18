@@ -598,7 +598,7 @@ Total.
 - when: [drawers] SelectAll ticks every value the row offers, and never mutates its input
 - when: [inherit] ActiveText judges an inheriting group by its parent's When
 
-### test_page_groups.lua (56)
+### test_page_groups.lua (57)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists every group by name, a seeded set among them, active ones dotted
@@ -625,6 +625,7 @@ Total.
 - groups page: [final 16] New group rebuilds the pads once, however many pads there are
 - groups page: [final 3, 25] a user group's Defaults: Enabled on, Open the dial off, the rest kept, one rebuild
 - groups page: [review] a child's Defaults keeps it inside its parent; a named reset takes it out
+- groups page: [inherit] a child's Defaults ticks Inherit when conditions again and keeps its own When
 - groups page: [restore] Restore built-in groups brings back a deleted set and says so; again, nothing is missing
 - groups page: [restore] with every group deleted, General still offers Restore built-in groups
 - groups page: [final 12] Duplicate says the copy is on no pad yet
@@ -1052,7 +1053,7 @@ Total.
 | test_icon_browser.lua | 32 |
 | test_eui_skin.lua | 10 |
 | test_groups_when.lua | 16 |
-| test_page_groups.lua | 56 |
+| test_page_groups.lua | 57 |
 | test_page_pads.lua | 13 |
 | test_page_dials.lua | 17 |
 | test_page_share.lua | 12 |
@@ -1075,4 +1076,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **861** |
+| **Total** | **862** |
