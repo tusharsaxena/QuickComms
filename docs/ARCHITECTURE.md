@@ -39,7 +39,7 @@ key (or on WoW's key bindings menu, through `Bindings.xml`) in Relaxed mode: cli
 Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBOptions),
 LibSharedMedia, LibDataBroker, LibDBIcon, LibDeflate and LibSerialize (the share string, spec §15;
 versions and licenses in `DEPENDENCIES.md`) are vendored under `libs/`, and so is the whole
-LibKa0s v1.71.0 payload, of which thirteen majors are wired, one setup file each (`DEPENDENCIES.md`
+LibKa0s v1.73.0 payload, of which thirteen majors are wired, one setup file each (`DEPENDENCIES.md`
 lists the toolchain):
 
 | Major | Setup file | Gives |

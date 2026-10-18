@@ -182,7 +182,7 @@ Total.
 - disabled [§7 step 1]: enabled, the registration set holds events and messages, and the surfaces are drawn
 - disabled [§7 steps 2-4]: through the seam, nothing stays registered, events or messages, and nothing is armed
 - disabled [§7 step 5]: every surface frame that was drawn is hidden
-- disabled [§7 step 6]: every event and message in R_on, fired anyway, runs nothing, writes, prints and shows nothing
+- disabled [§7 step 6]: every event and message in R_on, fired anyway, runs nothing live; the combat handler, reached directly, writes, prints and shows nothing
 - disabled [§7 step 7]: every NS.COMMANDS entry and the bare /qc: reserved verbs answer, feature verbs refuse once and write nothing
 - disabled [§7 step 8]: the launcher's left-click opens the panel and its menu grays every entry but Enabled
 - disabled [§7 step 9]: re-enabled, R_on comes back; a setting changed while disabled is what the stand-up builds

@@ -74,6 +74,7 @@ if not lib then
     H.ID_NAME_HINT         = {}
     H.SelectTab            = function() end
     H.NavRail              = function() end
+    H.Drawer               = function() end
     H.SetRenderer          = function() end
     H.RegisterOptionsPage  = function() end
     H.RefreshAllPanels     = function() end

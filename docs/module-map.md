@@ -1,7 +1,7 @@
 # Module map — Ka0s Quick Comms
 
 Every non-vendored file, its responsibility, and the TOC load order. `libs/` (Ace3, LibSharedMedia,
-LibDataBroker, LibDBIcon, LibDeflate, LibSerialize, LibKa0s v1.71.0 whole) and `tests/_kit/` are vendored and never edited.
+LibDataBroker, LibDBIcon, LibDeflate, LibSerialize, LibKa0s v1.73.0 whole) and `tests/_kit/` are vendored and never edited.
 
 ## Load order (the TOC)
 

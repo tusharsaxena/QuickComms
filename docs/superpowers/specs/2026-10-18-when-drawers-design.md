@@ -147,3 +147,20 @@ LibKa0s change follows `docs/releasing.md`; `libs/` is only ever re-vendored, ne
   calls `O.Drawer`; the standard's `library-stack-§7` counts (fifteen majors across thirty-four
   files, ten Options files) need an upstream recount for the thirty-fifth file. LibKa0s README's
   standard pointer moved v2.81.0 -> v2.83.0 (neither v2.82.0 nor v2.83.0 binds the payload).
+- **[Q1] The re-vendor.** Both payloads copied whole from the LibKa0s worktree at `4d1c8d1`
+  (v1.73.0, unreleased): `libs/LibKa0s/` gains `OptionsDrawer.lua` and moves `Options.lua`,
+  `Perf.lua` and `LibKa0s.xml`; `tests/_kit/` moves to kit revision 39 (`latch.lua` added). Every
+  blob matches `4d1c8d1` (`git hash-object` against the sibling's tree, 0 mismatches). The
+  provenance line (CLAUDE.md), `docs/ARCHITECTURE.md`, `docs/module-map.md` and `docs/testing.md`
+  (kit revision 39) say so. No `docs/revendor/` record: this repo has never kept one.
+- **[Q1] The Options stub** (`settings/OptionsSetup.lua`) gains `H.Drawer = function() end` beside
+  `H.NavRail`; `tests/test_surface_parity.lua` was red without it.
+- **[Q1] Kit 39 and step 6.** Kit revision 39's `__fireUnconditional` now reaches a method-name
+  handler after a stand-down, so `tests/test_disabled.lua`'s step-6 case went red on
+  `OnRestrictionRegenDisabled` (it answered 1, the case asserted 0). The case now asserts the live
+  fires reach nothing and the direct fire reaches the handler (1) while nothing is written, printed
+  or shown, as DropWatcher's step-6 case does; it is renamed, so `docs/test-cases.md` moves by that
+  one line (Total 837 unchanged).
+- **[Q1] The vendor gate stays red until v1.73.0 is tagged.** `tests/test_vendor_sync.lua`
+  resolves the provenance line's tag in `../LibKa0s`; v1.73.0 is not tagged and tagging is the
+  owner's, so its two pair cases fail on the missing tag alone.
