@@ -526,6 +526,20 @@ test("groups page: [final 3, 25] a user group's Defaults: Enabled on, Open the d
     assertEqual(n.applied, 1)
 end)
 
+test("groups page: [review] a child's Defaults keeps it inside its parent; a named reset takes it out", function()
+    local NS, _, P = open()
+    local a = NS.Library.CreateGroup({ name = "Raid night" })
+    local b = NS.Library.CreateGroup({ name = "Boss 1" })
+    assertTrue(NS.SchemaRuntime.Set("group.parent", a, b))
+    pick(NS, b)
+    P.redraw("groups")
+    -- red under: drop group.parent from settings/Schema.lua resetExempt
+    P.ctx("groups").panel.defaultsOnClick()
+    assertEqual(NS.db.profile.groups[b].parent, a, "the page's Defaults keeps the parent, as it keeps the icon")
+    NS.addon:OnSlashCommand("reset group.parent " .. b)
+    assertFalse(NS.Library.IsChild(b), "a named reset makes it top-level")
+end)
+
 test("groups page: [restore] Restore built-in groups brings back a deleted set and says so; again, nothing is missing", function()
     local NS, m, P = open()
     local old = T.seeded(NS, "bi.raid")

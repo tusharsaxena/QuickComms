@@ -585,3 +585,19 @@ test("share: [nesting] a parent the string does not carry, itself, or one inside
     assertEqual(p.groups[map.g2].parent, map.g3)
     assertNil(p.groups[map.g1].parent)
 end)
+
+test("share: [review] a pad's or dial's reference to a group the string nests is dropped and counted", function()
+    local NS, SH = boot()
+    local res = SH.Validate(bundle({ groups = { g1 = { name = "Top" }, g2 = { name = "Inside", parent = "g1" } },
+        pads = { p3 = { name = "Theirs", groups = { "g1", "g2" } } },
+        dials = { d4 = { name = "Theirs", groups = { "g2" } } } }))
+    assertTrue(res.ok)
+    -- red under: drop dropNested(res) from SH.Validate (the report counts g2 as arriving on both)
+    assertEqual(table.concat(res.pads[1].groups, ","), "g1", "the child is left off the pad")
+    assertEqual(#res.dials[1].groups, 0)
+    assertEqual(res.dropped, 2, "each left-out reference is counted")
+    local _, map = NS.Library.Import(res)
+    local p = NS.db.profile
+    assertEqual(table.concat(p.pads[map.p3].groups, ","), map.g1, "the import matches the report")
+    assertEqual(p.groups[map.g2].parent, map.g1)
+end)

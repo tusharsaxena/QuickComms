@@ -74,14 +74,16 @@ end)
 -- A profile as builds before step 3 stored it: built-in references on its pad and dial, an overlay
 -- with one set off and a callout hidden, a customized set whose copy took its place, a node and a
 -- stale id on the pad, and no seeded groups.
-local function overlayProfile()
+local function overlayProfile(NS)
+    local seen = {}
+    for _, top in ipairs(NS.BuiltIns.order) do seen[top] = true end
     return {
         seeded = true, nextId = 6,
         callouts = { c3 = { name = "Bloodlust", text = "Bloodlust now", channel = "raid" } },
         groups = { g4 = { name = "Raid (custom)", callouts = { "c3" }, when = {} } },
         builtins = { ["bi.arena"] = { enabled = false, hidden = { ["bi.arena.cc"] = true } },
                      ["bi.raid"] = { enabled = false, hidden = {}, customizedAs = "g4" } },
-        pads = { p1 = { name = "Comms Pad", seenBuiltins = { ["bi.mplus"] = true },
+        pads = { p1 = { name = "Comms Pad", seenBuiltins = seen,
             groups = { "g4", "bi.arena", "bi.bg.ab", "bi.bg.ab.stables", "bi.gone" } } },
         dials = { d2 = { name = "Comms Dial", groups = { "bi.mplus", "bi.raid" } } },
         padOrder = { "p1" }, dialOrder = { "d2" },
@@ -103,7 +105,7 @@ end
 test("database: step 3 turns the built-in overlay into seeded groups, each in its set's place", function()
     local NS = T.bootAddon()
     local db = NS.addon.db
-    db.sv.profiles.Old = overlayProfile()
+    db.sv.profiles.Old = overlayProfile(NS)
     db.global.schemaVersion = 2
     NS.addon:RunMigrations()
     assertEqual(db.global.schemaVersion, 3)
@@ -128,10 +130,47 @@ test("database: step 3 turns the built-in overlay into seeded groups, each in it
     assertTrue(p.nextId > 6 and p.callouts.c3.name == "Bloodlust", "fresh ids: nothing stored is overwritten")
 end)
 
+test("database: [review] step 3 puts a set the pad has not seen at the pad's end", function()
+    local NS = T.bootAddon()
+    local db = NS.addon.db
+    local old = overlayProfile(NS)
+    old.pads.p1.seenBuiltins["bi.mplus"] = nil
+    db.sv.profiles.Old = old
+    db.global.schemaVersion = 2
+    NS.addon:RunMigrations()
+    local p = db.sv.profiles.Old
+    local mplus = originOf(p, "bi.mplus")
+    -- red under: drop the seenBuiltins append from Lib.SeedFromOverlay
+    assertEqual(p.pads.p1.groups[#p.pads.p1.groups], mplus, "a set shipped after the pad last loaded")
+    assertEqual(#p.pads.p1.groups, 4, "and only that one: every other set was seen")
+    assertNil(p.pads.p1.seenBuiltins)
+    assertEqual(table.concat(p.dials.d2.groups, ","), mplus, "a surface with no seenBuiltins gets nothing more")
+end)
+
+test("database: [review] step 3 lifts a stale id counter before it seeds", function()
+    local NS = T.bootAddon()
+    local db = NS.addon.db
+    local old = overlayProfile(NS)
+    old.nextId = 2
+    db.sv.profiles.Old = old
+    db.global.schemaVersion = 2
+    NS.addon:RunMigrations()
+    local p = db.sv.profiles.Old
+    -- red under: drop liftNextId from Lib.SeedFromOverlay
+    assertEqual(p.callouts.c3.name, "Bloodlust", "a stored callout is not overwritten")
+    assertEqual(p.callouts.c3.origin, nil)
+    assertEqual(p.groups.g4.name, "Raid (custom)", "a stored group is not overwritten")
+    for _, key in ipairs({ "callouts", "groups" }) do
+        for id, m in pairs(p[key]) do
+            if m.origin then assertTrue(tonumber(id:match("%d+")) > 4, "seeded id " .. id .. " is above 4") end
+        end
+    end
+end)
+
 test("database: step 3 runs once, and the profile loads without duplicates", function()
     local NS = T.bootAddon()
     local db = NS.addon.db
-    db.sv.profiles.Old = overlayProfile()
+    db.sv.profiles.Old = overlayProfile(NS)
     db.global.schemaVersion = 2
     NS.addon:RunMigrations()
     local p = db.sv.profiles.Old

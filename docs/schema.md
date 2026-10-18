@@ -87,8 +87,9 @@ groups. On a stored profile that has its surfaces (`seeded`) and no `seededSets`
 seeded as an ordinary group and takes the set's place on every pad and dial that listed it; a set
 that was off is a group that is off; its hidden callouts are left out (Restore built-in groups brings
 them back); a customized set is not seeded (its copy, a user group already, keeps its place) and
-counts as given; a node or stale `bi.` reference on a surface is dropped; `profile.builtins` and every
-surface's `seenBuiltins` go. A profile never prepared is left to `Library.Prepare`, which seeds it as a
+counts as given; a node or stale `bi.` reference on a surface is dropped; a seeded set a surface's
+`seenBuiltins` lacks (shipped after the surface last loaded) goes at that surface's end, as `Prepare`
+put such a set before; `profile.builtins` and every surface's `seenBuiltins` go. A profile never prepared is left to `Library.Prepare`, which seeds it as a
 new one, and one that already has `seededSets` is left alone, so the step runs once.
 `NS.SCHEMA_VERSION` is 3.
 No schema step for nested groups (2026-10-18): a group without `parent` is top-level, and

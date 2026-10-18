@@ -101,7 +101,7 @@ Total.
 - perf: [review] a refresh whose signature moves notes situationRefresh before the rebuild it publishes
 - perf: [phase 5] the Comms Dial page's Preview notes neither bakeSurface nor resolverResolve
 
-### test_database.lua (10)
+### test_database.lua (12)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the target is the last step's `to`, and the steps climb in order
@@ -110,6 +110,8 @@ Total.
 - database: a perProfile step runs once for every stored profile
 - database: [phase 4] step 2 moves the generic battleground set below the per-battleground sets
 - database: step 3 turns the built-in overlay into seeded groups, each in its set's place
+- database: [review] step 3 puts a set the pad has not seen at the pad's end
+- database: [review] step 3 lifts a stale id counter before it seeds
 - database: step 3 runs once, and the profile loads without duplicates
 - database: step 3 leaves a profile never prepared to Prepare, which seeds it once
 - database: the profile defaults carry the Master controls value, and no debug flag
@@ -292,7 +294,7 @@ Total.
 - bake: a typed %t counts as live
 - bake: [phase 5] CleanText is the sanitizer short of the escape; Sanitize is CleanText, then the escape
 
-### test_share.lua (33)
+### test_share.lua (34)
 
 - share: a string is !QC1! then printable text, and decodes back to the same payload
 - share: [review 1] a pasted string may wrap and carry spaces; a cut-short one is damaged and imports nothing
@@ -327,6 +329,7 @@ Total.
 - share: [nesting] a picked parent brings its children, and the import nests them under the new copy
 - share: [review] a child picked alone travels without its parent: nothing dropped, and it arrives top-level
 - share: [nesting] a parent the string does not carry, itself, or one inside another is dropped and counted
+- share: [review] a pad's or dial's reference to a group the string nests is dropped and counted
 
 ### test_resolver.lua (8)
 
@@ -354,7 +357,7 @@ Total.
 - game ids: every battleground set matches only battleground maps, and no map is two sets'
 - game ids: the shipped dungeons are Mythic+ dungeons and the shipped raids are raids
 
-### test_library.lua (73)
+### test_library.lua (75)
 
 - library: Prepare seeds every shipped set as a group, on one pad and one dial, once
 - library: a seeded group is an ordinary group: its fields, When, callouts and origin
@@ -366,6 +369,8 @@ Total.
 - library: adding a seeded callout copies it (P2); the copy keeps no origin
 - library: [review 5] a newly shipped set is seeded once, at the end of every surface; a deleted one stays deleted
 - library: a node shipped after its set was seeded goes inside the set's group
+- library: [review] a set whose stored parent dangles still takes a node shipped after it
+- library: [review] ValidParent takes a parent whose own stored parent dangles
 - library: Prepare repairs dangling ids
 - library: AllGroups is every user group, a seeded node among them
 - library: every mutation announces LIBRARY_CHANGED
@@ -577,7 +582,7 @@ Total.
 - when: [final 6] a typed character takes the client's case; the Resolver matches one in any case
 - when: [final 2, 11] ResolveValue maps a typed value onto the token or id its row stores, or refuses it
 
-### test_page_groups.lua (48)
+### test_page_groups.lua (49)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists every group by name, a seeded set among them, active ones dotted
@@ -603,6 +608,7 @@ Total.
 - groups page: [review 5] the When tab refuses an upside-down key-level range
 - groups page: [final 16] New group rebuilds the pads once, however many pads there are
 - groups page: [final 3, 25] a user group's Defaults: Enabled on, Open the dial off, the rest kept, one rebuild
+- groups page: [review] a child's Defaults keeps it inside its parent; a named reset takes it out
 - groups page: [restore] Restore built-in groups brings back a deleted set and says so; again, nothing is missing
 - groups page: [restore] with every group deleted, General still offers Restore built-in groups
 - groups page: [final 12] Duplicate says the copy is on no pad yet
@@ -999,7 +1005,7 @@ Total.
 | test_bus.lua | 2 |
 | test_surface_parity.lua | 15 |
 | test_setup.lua | 26 |
-| test_database.lua | 10 |
+| test_database.lua | 12 |
 | test_profile.lua | 9 |
 | test_schema.lua | 18 |
 | test_slash.lua | 15 |
@@ -1011,18 +1017,18 @@ Total.
 | test_tokens.lua | 8 |
 | test_channels.lua | 8 |
 | test_bake.lua | 12 |
-| test_share.lua | 33 |
+| test_share.lua | 34 |
 | test_resolver.lua | 8 |
 | test_builtins.lua | 7 |
 | test_gameids.lua | 2 |
-| test_library.lua | 73 |
+| test_library.lua | 75 |
 | test_members.lua | 26 |
 | test_editors.lua | 17 |
 | test_callout_popup.lua | 38 |
 | test_icon_browser.lua | 26 |
 | test_eui_skin.lua | 10 |
 | test_groups_when.lua | 12 |
-| test_page_groups.lua | 48 |
+| test_page_groups.lua | 49 |
 | test_page_pads.lua | 13 |
 | test_page_dials.lua | 17 |
 | test_page_share.lua | 12 |
@@ -1045,4 +1051,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **831** |
+| **Total** | **837** |

@@ -429,7 +429,7 @@ function Lib.ValidParent(parent, id)
     local groups = P().groups
     if type(parent) ~= "string" or not groups[parent] then return false, "badParent" end
     if parent == id then return false, "selfParent" end
-    if groups[parent].parent then return false, "parentIsChild" end
+    if isChild(parent) then return false, "parentIsChild" end
     if id ~= nil and #Lib.Children(id) > 0 then return false, "hasChildren" end
     return true
 end
@@ -793,7 +793,7 @@ local function seedNew(p, result)
             local set = byOrigin(p.groups, top)
             for _, child in ipairs(NS.BuiltIns.groups[top].children or {}) do
                 if not p.seededSets[child] then
-                    if set and not p.groups[set].parent then seedGroup(p, child, set) else p.seededSets[child] = true end
+                    if set and not isChild(set) then seedGroup(p, child, set) else p.seededSets[child] = true end
                 end
             end
         end
@@ -1131,7 +1131,8 @@ end
 --- shipped set as seeded groups (seedSet), each in the set's place on every pad and dial that listed
 --- it: a set that was off is a group that is off, and its hidden callouts are left out. A customized
 --- set is not seeded: its copy, a user group already, keeps its place, and Restore brings the set
---- back. Any other `bi.` reference is dropped (convertRefs), and the overlay (`builtins`) and every
+--- back. A set a surface's seenBuiltins lacks (shipped after it last loaded) goes at that surface's
+--- end. Any other `bi.` reference is dropped (convertRefs), and the overlay (`builtins`) and every
 --- surface's seenBuiltins go. A profile never prepared is left to Prepare, which seeds it, and one
 --- already given its sets (seededSets) is left as it is. A raw SavedVariables profile: a missing or
 --- malformed registry key is made empty. Idempotent.
@@ -1163,8 +1164,18 @@ function Lib.SeedFromOverlay(profile)
     for _, key in ipairs({ "pads", "dials" }) do
         for _, s in pairs(profile[key]) do
             if type(s) == "table" then
+                local seen = type(s.seenBuiltins) == "table" and s.seenBuiltins or nil
+                if type(s.groups) == "table" then
+                    s.groups = convertRefs(s.groups, map)
+                    -- A set shipped after the surface last loaded (not in its seenBuiltins) goes at
+                    -- its end, as Prepare would have put it there before the overlay went.
+                    for _, top in ipairs(NS.BuiltIns.order) do
+                        if seen and not seen[top] and map[top] and not indexOf(s.groups, map[top]) then
+                            s.groups[#s.groups + 1] = map[top]
+                        end
+                    end
+                end
                 s.seenBuiltins = nil
-                if type(s.groups) == "table" then s.groups = convertRefs(s.groups, map) end
             end
         end
     end
@@ -1263,8 +1274,9 @@ end
 
 -- Nesting, one level: a stored parent that is no user group, is the group itself, or itself has a
 -- parent (a chain, or a cycle) is dropped, so the group is top-level again. Judged on the parents as
--- stored, so the answer does not hang on the order the groups are walked in. Before the surfaces'
--- repair, which then takes every child off every surface.
+-- stored, so the answer does not hang on the order the groups are walked in. Before seedNew, which
+-- judges whether a set's group is top-level, and before the surfaces' repair, which then takes every
+-- child off every surface.
 local function repairParents(p, result)
     local stored = {}
     for gid, g in pairs(p.groups) do stored[gid] = g.parent end
@@ -1326,11 +1338,11 @@ function Lib.Prepare()
     dropBadColors(p, result)
     liftNextId(p)
     seedSurfaces(p, result)
+    repairParents(p, result)
     seedNew(p, result)
     splitShared(p, result)
     repairGroups(p, result)
     dropLoose(p, result)
-    repairParents(p, result)
     for kind, set in pairs(surfaces()) do
         for _, s in pairs(set) do repairSurface(s, kind, result) end
         repairOrder(kind == "pad" and p.padOrder or p.dialOrder, set, result)

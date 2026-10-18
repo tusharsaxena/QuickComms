@@ -23,7 +23,8 @@ local _, NS = ...
 -- to something the string does not carry (a group's callout, a surface's group) is left out and
 -- counted, and so is a callout no imported group holds (a callout travels inside its group). A
 -- group's `parent` (nesting, one level) is kept only when it names another group the string carries
--- that has no parent of its own; any other is a dropped reference, and the group arrives top-level. A pad
+-- that has no parent of its own; any other is a dropped reference, and the group arrives top-level. A
+-- surface's reference to a group the string nests is a dropped reference too. A pad
 -- or a dial carries its name, Enabled, its groups and its portable fields, keyed by member-row path; never its key or its position (spec §15: it arrives unbound). Nothing in a string
 -- is ever run (anti-pattern #20): a leading "/" is refused here, and Bake refuses one again at every
 -- bake. The result is a plan that Library.Import, the registry writer, applies.
@@ -303,6 +304,25 @@ local function checkParents(res)
     end
 end
 
+-- A pad's or dial's reference to a group the string nests (its checked parent is kept) is dropped and
+-- counted: Library.Import puts that group inside its parent, and a surface never lists a child.
+local function dropNested(res)
+    local nested = {}
+    for _, e in ipairs(res.groups) do
+        if e.parent then nested[e.id] = true end
+    end
+    for _, list in ipairs({ res.pads, res.dials }) do
+        for _, e in ipairs(list) do
+            for i = #e.groups, 1, -1 do
+                if nested[e.groups[i]] then
+                    table.remove(e.groups, i)
+                    res.dropped = res.dropped + 1
+                end
+            end
+        end
+    end
+end
+
 -- The member rows whose value travels with a pad or a dial: every one of its kind but its name and
 -- Enabled (carried beside the fields), its position and its key (spec §15: it arrives unbound).
 local NOT_PORTABLE = { point = true, key = true }
@@ -443,6 +463,7 @@ function SH.Validate(payload)
     end
     for _, spec in ipairs(SH.KINDS) do checkSection(spec, payload[spec.key] or {}, res) end
     checkParents(res)
+    dropNested(res)
     dropLoose(res)
     res.known = nil
     if res.nodes > SH.MAX_NODES or res.bytes > SH.MAX_TEXT_BYTES then

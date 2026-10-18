@@ -183,6 +183,30 @@ test("library: a node shipped after its set was seeded goes inside the set's gro
     assertEqual(#Lib.Children(ab), #kids, "once")
 end)
 
+test("library: [review] a set whose stored parent dangles still takes a node shipped after it", function()
+    local NS, Lib, p = boot()
+    local ab = T.seeded(NS, "bi.bg.ab")
+    p.groups[ab].parent = "g999"
+    NS.BuiltIns.Group("bi.bg.ab.new", { name = "New node", parent = "bi.bg.ab", compass = "N",
+        callouts = NS.BuiltIns.Callouts("bi.bg.ab.new", "smartGroup", { { "inc1", "INC 1", "INC 1 New" } }) })
+    table.insert(NS.BuiltIns.groups["bi.bg.ab"].children, "bi.bg.ab.new")
+    Lib.Prepare()
+    -- red under: seedNew judging the set by its truthy stored parent, with repairParents after it
+    local node = T.seeded(NS, "bi.bg.ab.new")
+    assertTrue(node ~= nil, "the node is seeded, not only marked given")
+    assertEqual(p.groups[node].parent, ab)
+    assertFalse(Lib.IsChild(ab), "the dangling parent is dropped")
+end)
+
+test("library: [review] ValidParent takes a parent whose own stored parent dangles", function()
+    local _, Lib, p = boot()
+    local a = Lib.CreateGroup({ name = "Top" })
+    local b = Lib.CreateGroup({ name = "Inside" })
+    p.groups[a].parent = "g999"
+    -- red under: ValidParent testing groups[parent].parent instead of IsChild(parent)
+    assertTrue((Lib.ValidParent(a, b)), "a parent that is no child is top-level")
+end)
+
 test("library: Prepare repairs dangling ids", function()
     local _, Lib, p = boot()
     local g = Lib.CreateGroup({ name = "Mine" })
