@@ -691,6 +691,41 @@ test("icon browser: the search box filters the tab as you type; the count says N
     assertEqual(w.status:GetText(), "No icon matches your search.")
 end)
 
+test("icon browser: the search box keeps its text inset clear of the magnifier after AceGUI resets it", function()
+    local _, _, _, B = boot()
+    openOn(B, nil)
+    B.SetTab("glyphs")
+    local w = B.Widgets()
+    local input = w.search.editbox or w.search.frame
+    local left
+    input.SetTextInsets = function(_, l) left = l end
+    -- AceGUI's EditBox runs HideButton (insets 0, 0, 3, 3) from SetText, Enter and a drop
+    local setText = w.search.SetText
+    w.search.SetText = function(self, ...)
+        setText(self, ...)
+        input:SetTextInsets(0, 0, 3, 3)
+    end
+    B.SetSearch("x")
+    B.SetSearch("")
+    -- red under: set the insets once in buildSearch
+    assertEqual(left, 14 + 4, "after the clear mark's SetText")
+    for _, script in ipairs({ "OnEnterPressed", "OnReceiveDrag" }) do
+        input:SetTextInsets(0, 0, 3, 3)
+        input:__fire(script)
+        assertEqual(left, 14 + 4, "after " .. script)
+    end
+end)
+
+test("icon browser: Src.Search narrows its last results and memoizes each icon's text", function()
+    local Src = select(5, boot())
+    local list = { 132092, 99, 51320, 136116, 13209 }
+    assertEqual(table.concat(Src.Search(list, "game", "13"), ","), "132092,51320,136116,13209")
+    assertEqual(table.concat(Src.Search(list, "game", "1320"), ","), "132092,51320,13209", "narrowed")
+    assertEqual(table.concat(Src.Search(list, "game", "2"), ","), "132092,51320,13209", "widened again: the whole list")
+    list[#list + 1] = 1320
+    assertEqual(table.concat(Src.Search(list, "game", "1320"), ","), "132092,51320,13209,1320", "a grown list")
+end)
+
 test("icon browser: the search is kept across tabs and the session's opens, and re-filters each tab", function()
     local NS, _, _, B, Src = boot()
     openOn(B, nil)

@@ -238,12 +238,22 @@ local function setOffset(v)
     draw()
 end
 
+-- The search box's text inset between its magnifier and its clear mark. AceGUI's EditBox resets
+-- its input's insets to 0 (HideButton) on SetText, Enter and a drop, so each of those re-applies it.
+local function applyInsets()
+    local input = searchBox and (searchBox.editbox or searchBox.frame)
+    if input and input.SetTextInsets then input:SetTextInsets(SEARCH_GLYPH + 4, SEARCH_GLYPH + 6, 3, 3) end
+end
+
 -- The search box after the tab's own control (none on Markers), its text and its clear mark.
 local function drawSearch()
     local x = (tab == "game" or SWATCH_TABS[tab]) and (TOOL_W + SEARCH_GAP) or 0
     searchBox.frame:ClearAllPoints()
     searchBox.frame:SetPoint("TOPLEFT", area, "TOPLEFT", x, 0)
-    if searchBox:GetText() ~= search then searchBox:SetText(search) end
+    if searchBox:GetText() ~= search then
+        searchBox:SetText(search)
+        applyInsets()
+    end
     clearMark:SetShown(search ~= "")
 end
 
@@ -414,7 +424,12 @@ local function buildSearch(AceGUI)
         L["Markers by name, glyphs by name, game icons by texture id. Not case-sensitive."])
     place(searchBox, "TOPLEFT", TOOL_W + SEARCH_GAP, 0)
     local input = searchBox.editbox or searchBox.frame
-    if input.SetTextInsets then input:SetTextInsets(SEARCH_GLYPH + 4, SEARCH_GLYPH + 6, 3, 3) end
+    applyInsets()
+    if input.HookScript then
+        input:HookScript("OnEnterPressed", applyInsets)
+        input:HookScript("OnReceiveDrag", applyInsets)
+        input:HookScript("OnMouseDown", applyInsets)
+    end
     local mag = glyph(input, "search", MUTED_GOLD)
     mag:SetPoint("LEFT", input, "LEFT", 0, 0)
     clearMark = CreateFrame("Button", nil, input)

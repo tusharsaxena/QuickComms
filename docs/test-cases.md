@@ -531,7 +531,7 @@ Total.
 - popup: every field's label and control share a left edge; Preview's rule and the buttons the columns' edges
 - popup: [icons] an icon that is no texture stays open and names the icon chooser
 
-### test_icon_browser.lua (30)
+### test_icon_browser.lua (32)
 
 - icon browser: the window is the popup's chrome, stacked above the popup and its catcher
 - icon browser: tabs in order; the stored icon is preselected and its tab opened
@@ -561,6 +561,8 @@ Total.
 - icon browser: Library.IconColorFrom stores a picked color as hex, white as none
 - icon browser: Src.Search matches a marker by name, a glyph by key or label, a game icon by id
 - icon browser: the search box filters the tab as you type; the count says N of M
+- icon browser: the search box keeps its text inset clear of the magnifier after AceGUI resets it
+- icon browser: Src.Search narrows its last results and memoizes each icon's text
 - icon browser: the search is kept across tabs and the session's opens, and re-filters each tab
 - icon browser: Game icons carries the Wowhead hint; its button shows the address in a copy window
 
@@ -1047,7 +1049,7 @@ Total.
 | test_members.lua | 27 |
 | test_editors.lua | 17 |
 | test_callout_popup.lua | 38 |
-| test_icon_browser.lua | 30 |
+| test_icon_browser.lua | 32 |
 | test_eui_skin.lua | 10 |
 | test_groups_when.lua | 16 |
 | test_page_groups.lua | 56 |
@@ -1073,4 +1075,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **859** |
+| **Total** | **861** |

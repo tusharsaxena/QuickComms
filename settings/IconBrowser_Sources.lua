@@ -153,15 +153,35 @@ local function searchText(tab, icon)
     return ((keys[icon] or "") .. "\n" .. label):lower()
 end
 
+-- Each list's icons' search text, built the first time a search reads it (a list is searched once
+-- per keystroke, and the game list is ~30k icons), weak so a list the tabs drop is collected. And
+-- the last search, so a query that holds the last one narrows its results instead of the list.
+local textOf = setmetatable({}, { __mode = "k" })
+local last = setmetatable({}, { __mode = "k" })
+
 --- The icons of `list` (a tab's, as List answers it) whose name on `tab` holds `query`: case-
 --- insensitive, plain text, trimmed. A blank or nil query answers `list` itself.
 --- @return table icons
 function Src.Search(list, tab, query)
     local q = tostring(query or ""):match("^%s*(.-)%s*$"):lower()
     if q == "" then return list end
-    local out = {}
-    for _, v in ipairs(list) do
-        if searchText(tab, v):find(q, 1, true) then out[#out + 1] = v end
+    local memo = textOf[list]
+    if not (memo and memo.tab == tab) then
+        memo = { tab = tab, text = {} }
+        textOf[list] = memo
     end
+    local text, from = memo.text, list
+    local prev = last[list]
+    if prev and prev.tab == tab and prev.n == #list and q:find(prev.q, 1, true) then from = prev.out end
+    local out = {}
+    for _, v in ipairs(from) do
+        local t = text[v]
+        if t == nil then
+            t = searchText(tab, v)
+            text[v] = t
+        end
+        if t:find(q, 1, true) then out[#out + 1] = v end
+    end
+    last[list] = { tab = tab, n = #list, q = q, out = out }
     return out
 end

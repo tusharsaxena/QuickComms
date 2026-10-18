@@ -298,3 +298,11 @@ LibKa0s change follows `docs/releasing.md`; `libs/` is only ever re-vendored, ne
   turn on must match" (`locales/enUS.lua`), wording from the enable checkbox the drawers removed. The
   LibKa0s `docs/api/CONSUMERS.md` census keeps its v1.71.0 stamp (L1's follow-up): Quick Comms now
   calls `O.Drawer`, but the census is a collection-wide re-run.
+- **[R1] Review fixes (round 1).** The search box re-applies its text insets after every AceGUI
+  reset (EditBox HideButton runs from SetText, Enter and a drop), so typed text stays clear of the
+  magnifier and the clear mark. `Src.Search` memoizes each icon's search text per list and narrows
+  the last results when the new query holds the last one. Tests 859 -> 861.
+- **[R1] Open for the owner.** The local v1.73.0 tag at LibKa0s `4d1c8d1` predates any release run
+  (LibKa0s `docs/releasing.md`: no tag without a bundle naming it), and LibKa0s `CHANGELOG.md` and
+  `docs/releasing.md` still say "not tagged". Delete it (the two vendor-pair cases go red until the
+  real release) or keep it as a recorded provisional, unpushed tag: the owner's call.
