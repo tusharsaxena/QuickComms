@@ -255,6 +255,22 @@ function lib.__AttachDrawer(O)
     head:Show()
   end
 
+  --- Run `fn`, a structural re-render of `page`, with the page's scroll offset carried across it.
+  --- ClearScroll releases the page's rows, and the render's first AddChild runs the ScrollFrame's
+  --- LayoutFinished -> FixScroll synchronously while the content is one row tall, which sets the
+  --- offset to 0 (OptionsScroll.lua's FixScroll, the "content fits" branch). A toggle is
+  --- navigation, so the player stays where they were; FixScroll clamps an offset past the new end.
+  local function keepScroll(page, fn)
+    local sc = page.scroll
+    local st = sc and (sc.status or sc.localstatus)
+    local off = st and st.offset
+    fn()
+    if st and off then
+      st.offset = off
+      if sc.FixScroll then sc:FixScroll() end
+    end
+  end
+
   local function wireHead(head, ctx, spec, open)
     local page = rawget(ctx, "__drawerPage") or ctx
     head:SetScript("OnClick", function()
@@ -267,7 +283,7 @@ function lib.__AttachDrawer(O)
         print(lib.STRINGS.BUTTON_FAILED:format(tostring(err)))
         return
       end
-      O.RefreshPanel(page, true)
+      keepScroll(page, function() O.RefreshPanel(page, true) end)
     end)
     head:SetScript("OnEnter", function()
       if not (GameTooltip and spec.tooltip) then return end
@@ -335,7 +351,9 @@ function lib.__AttachDrawer(O)
 
   --- The box, filled: the host's body under the render-disabled flag when `spec.disabled`, then the
   --- actions. The flag is the PAGE's and is put back on the way out, a raise included, as
-  --- RenderRows puts back its own.
+  --- RenderRows puts back its own. A drawer drawn while the page is already render-disabled (a
+  --- disabled tab, RenderRows' `opts.disabled`) draws its actions disabled too, as
+  --- InlineButtonPair and IdList honor the same flag.
   local function drawBody(group, ctx, spec)
     local body = O.AceGUI:Create("SimpleGroup")
     body:SetLayout("Flow")
@@ -355,7 +373,7 @@ function lib.__AttachDrawer(O)
       end
     end
     page.__renderDisabled = outer
-    local actions = drawActions(body, spec, spec.disabled)
+    local actions = drawActions(body, spec, spec.disabled or outer)
     if body.DoLayout then body:DoLayout() end
     return body, view, actions
   end
@@ -373,8 +391,9 @@ function lib.__AttachDrawer(O)
   ---   tooltip   string               the header's tooltip body, under the name.
   ---   open      boolean              the box is drawn.
   ---   onToggle  function(open)       a header click hands the host the other state; the library
-  ---                                  then re-renders the page (O.RefreshPanel(page, true)). A
-  ---                                  raise is reported and nothing is redrawn. Refused in combat.
+  ---                                  then re-renders the page (O.RefreshPanel(page, true)),
+  ---                                  keeping the page's scroll offset. A raise is reported and
+  ---                                  nothing is redrawn. Refused in combat.
   ---   body      function(ctx, box)   fills the box. `ctx` draws into the box and is the page's
   ---                                  for every other field; never ClearScroll it. pcall'd and
   ---                                  reported, so a raise costs the box, not the page.
@@ -383,6 +402,8 @@ function lib.__AttachDrawer(O)
   ---   disabled  boolean              the body is drawn under the render-disabled flag the
   ---                                  library's own rows honor (a host's `make` widget reads
   ---                                  `ctx.__renderDisabled` itself), and every action is disabled.
+  ---                                  A drawer drawn while the page's flag is already set is
+  ---                                  drawn the same way.
   ---
   --- Returns `{ group, header, head, body, ctx, actions, open }` (body, ctx and actions nil while
   --- closed), or nil having drawn nothing with no AceGUI.
