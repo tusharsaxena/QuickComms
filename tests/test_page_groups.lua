@@ -234,23 +234,44 @@ test("groups page: the Reuse row stretches the dropdown and puts Add at the righ
     -- red under: lay the row out in Flow with relative widths
     assertEqual(row.layout, "Table")
     local cols = row.userdata.table.columns
-    assertEqual(#cols, 2)
+    assertEqual(#cols, 4)
     assertEqual(cols[1].weight, 1)
     assertEqual(cols[1].alignH, "fill", "the dropdown fills what Add leaves")
-    assertEqual(cols[2], G.REUSE_ADD_W, "Add's fixed cell is the last, at the right edge")
-    assertEqual(row.children[2], add)
+    assertEqual(cols[2].width, G.REUSE_GAP, "the gap is a cell, not spaceH")
+    assertNil(row.userdata.table.spaceH, "no spaceH: it would also sit between Add and the inset")
+    assertEqual(cols[3], G.REUSE_ADD_W, "Add's fixed cell")
+    -- red under: end Add's cell on the content's right edge (options-ui-§8's clip)
+    assertEqual(cols[4].width, G.EDGE_INSET, "Add ends EDGE_INSET short of the right edge")
+    assertEqual(G.EDGE_INSET, 2)
+    assertEqual(row.children[3], add)
+    assertEqual(row.children[2].width, G.REUSE_GAP)
+    assertEqual(row.children[4].width, G.EDGE_INSET, "the inset cell's filler")
     assertEqual(add.width, G.REUSE_ADD_W)
     -- red under: leave Add at AceGUI's 24px Button height
     assertEqual(add.height, 26, "as tall as a label-less dropdown")
 end)
 
-test("groups page: Add callout spans the row to the list's right edge", function()
+test("groups page: Add callout spans the row to EDGE_INSET short of the right edge, as Reuse's Add", function()
     local NS, _, P = open()
+    local G = NS.addon.Settings.Groups
     pick(NS, (withCallouts(NS)))
     local w = P.tab("groups", "callouts")
     local add = P.find(w, "Button", "Add callout")
-    -- red under: leave Add callout at the button pair's half width
-    assertTrue(add.fullWidth, "full width (Flow anchors it to the content's right)")
+    local row
+    for _, x in ipairs(w) do
+        if x.children and x.children[1] == add then row = x end
+    end
+    assertTrue(row ~= nil)
+    -- red under: leave Add callout at the button pair's half width, or full width on the clip edge
+    assertEqual(row.layout, "Table")
+    local cols = row.userdata.table.columns
+    assertEqual(#cols, 2)
+    assertEqual(cols[1].alignH, "fill", "the button fills the row")
+    assertEqual(cols[2].width, G.EDGE_INSET, "and ends where Reuse's Add does")
+    assertNil(row.userdata.table.spaceH)
+    assertEqual(row.children[2].width, G.EDGE_INSET)
+    assertNil(add.fullWidth, "not anchored to the content's right edge")
+    assertNil(add.relativeWidth)
 end)
 
 test("groups page: Reuse + Add puts an independent copy at the end", function()
@@ -562,6 +583,25 @@ test("groups page: [icons] General shows the icon, Choose icon… and the swatch
     Ed.Select("group", "bi.mplus")
     w = P.redraw("groups")
     assertNil(P.find(w, "Button", "Choose icon…"), "built-ins are read-only")
+end)
+
+test("groups page: [icons] General's clear glyph takes the group's icon and color off; idle with no icon", function()
+    local NS, _, P = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    local Ed = NS.addon.Settings.Editors
+    assertTrue(NS.Library.SetIcon("group", gid, NS.Icon("star"), "ff8000"))
+    Ed.Select("group", gid)
+    local w = P.redraw("groups")
+    local clear = P.glyph(w, "clear")
+    -- red under: draw no clear glyph in Ed.IconChooser (only /qc set could take an icon off)
+    assertTrue(clear ~= nil, "a clear glyph beside Choose icon…")
+    assertFalse(clear.disabled, "an icon to take off")
+    assertEqual(clear.image.atlas, "transmog-icon-remove")
+    clear:__fire("OnClick")
+    assertTrue(not NS.db.profile.groups[gid].icon, "the icon is gone")
+    assertTrue(not NS.db.profile.groups[gid].iconColor, "and its color with it")
+    assertEqual(P.find(w, "Icon").image[1], Ed.NO_ICON, "the chooser shows the question mark")
+    assertTrue(clear.disabled, "nothing left to take off")
 end)
 
 test("groups page: [icons] General has no Icon box: the icon is chosen under an Icon label alone", function()

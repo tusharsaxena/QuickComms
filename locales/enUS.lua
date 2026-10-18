@@ -780,6 +780,8 @@ L["Background"] = "Background"
 L["Choose icon…"] = "Choose icon…"
 L["That is not a texture. Click Choose icon… and pick another."] = "That is not a texture. Click Choose icon… and pick another."
 L["Click to choose another icon."] = "Click to choose another icon."
+L["Clear icon"] = "Clear icon"
+L["Remove the icon, so none is drawn."] = "Remove the icon, so none is drawn."
 L["Pick from the raid markers, the game's icons and the LibKa0s glyphs."] = "Pick from the raid markers, the game's icons and the LibKa0s glyphs."
 L["The color a LibKa0s glyph is drawn in. Only a glyph takes a color; white is none."] = "The color a LibKa0s glyph is drawn in. Only a glyph takes a color; white is none."
 -- settings/IconBrowser.lua: the icon browser (icon browser spec)

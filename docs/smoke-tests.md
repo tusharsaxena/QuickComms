@@ -226,15 +226,16 @@ settings window, and looks like the settings window itself: the same background 
 window title "Ka0s Quick Comms" in the top bar and Blizzard's close X at its top right (its
 background as bright as the settings window's, not darkened by the dim around it), then the gold
 "Edit callout" header and rule, then Name and Channel side by side, Text on a line of its own across
-the whole width, an "Icon" label over the icon with Choose icon… and Icon color (there is **no Icon
-text box**), the Preview heading over the baked line,
+the whole width, an "Icon" label over the icon with Choose icon…, a small red clear glyph and Icon
+color (there is **no Icon text box**), a section's gap (about 18 px) under that row, the Preview
+heading over the baked line,
 a clear gap (about a section's) under that line, and the red Cancel and Save buttons, Cancel on the
 left; there is no Insert a token dropdown. **Alignment:** every label starts exactly over the left
 edge of its box (Name, Channel, Text), the Channel dropdown's left edge meets the Name box's line,
 the icon and the Icon label start on that same line, and so do the Preview rule, the preview line
 and Cancel; in the right column the Channel label, its dropdown, the Icon color swatch and Save all
 start on one line, a clear gap right of the Name box; the right edges of the Channel dropdown, the
-Text box, the Preview rule and Save line up, as do the Name box's, Choose icon…'s and Cancel's. There is **no scrollbar**: the window is
+Text box, the Preview rule and Save line up, as do the Name box's, the clear glyph's cell's and Cancel's. There is **no scrollbar**: the window is
 exactly as tall as its content, with no empty band under the error line and nothing cut off at the
 bottom. Clicking the page behind it does nothing. Type more text and press Enter → Preview follows the edit, while the chip on
 the pad still sends the old line; type text long enough that Preview wraps onto another
@@ -252,7 +253,8 @@ callouts read `<group>: <callout>` (this group's own included) and the built-in 
 `<set>: <callout>`, all in one alphabetical list (by group, then callout); the group part is a
 muted gold, the callout's name white. The dropdown runs across the row with Add at its right
 edge, Add as tall as the dropdown, and Add callout above spans the same width: the right edges of
-Add callout, Add and the list's boxes line up. In the list, every row's handle, icon, name and
+Add callout and Add line up, a hair (2 px) short of the list's boxes, and **both buttons' right
+borders are whole** (not shaved by the page's edge). In the list, every row's handle, icon, name and
 glyphs sit centered in its box, and the edit and remove glyphs are small and close to the box's
 right edge (the same on Comms Pad → Groups and Comms Dial → Groups). Pick one of group B's callouts → nothing is added yet; click Add → it is A's
 last row. Edit the copy's text and Save → B's original is unchanged (check its row or its chip).
@@ -478,7 +480,10 @@ icon… → double-click the skull → the icon beside Choose icon… is the sku
 box); Save → the row and the chip show the skull. Groups → a group of yours → General → no Icon text
 box, an "Icon" label over the icon and Choose icon… → Glyphs → double-click a glyph → the group's
 wedge on the Comms Dial shows it, and the General tab's icon follows. With that group selected,
-`/qc set group.icon 136012` still sets it. A built-in set's General tab has no Choose icon…. Result:
+`/qc set group.icon 136012` still sets it. Click the red clear glyph beside Choose icon… → the
+General tab's icon is the question mark, the wedge shows no icon, and the clear glyph goes idle; in
+the popup, a callout with an icon → clear glyph → the icon is the question mark, Save → the row and
+the chip show no icon. A built-in set's General tab has no Choose icon…. Result:
 
 ## Battlegrounds
 
@@ -540,6 +545,6 @@ from the client, so this check needs a non-English client pass. Result:
 |---|---|---|
 | INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..2, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet; LOC-1 re-enumerated in phase 5 and owed a non-English client pass |
 | SEND-1..5, PAD-1..8 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet; PAD-8 added in phase 5 (audit QC-07) |
-| EDIT-1..18 | Phase 3: the editors | No client pass recorded yet; EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17); EDIT-9, 13 and ICON-1 rewritten and EDIT-14..17 added with the icon browser and glyph colors (2026-10-18); EDIT-9 rewritten and EDIT-18 added when the token dropdown became the Text label's info glyph (2026-10-18); EDIT-13, 14 and ICON-1 rewritten when the Suggested tab went and the skin stopped waiting for the addon to be enabled (2026-10-18); EDIT-9, 18 and ICON-1 rewritten when the Icon boxes went and the popup took its two-column layout (2026-10-18) |
+| EDIT-1..18 | Phase 3: the editors | No client pass recorded yet; EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17); EDIT-9, 13 and ICON-1 rewritten and EDIT-14..17 added with the icon browser and glyph colors (2026-10-18); EDIT-9 rewritten and EDIT-18 added when the token dropdown became the Text label's info glyph (2026-10-18); EDIT-13, 14 and ICON-1 rewritten when the Suggested tab went and the skin stopped waiting for the addon to be enabled (2026-10-18); EDIT-9, 18 and ICON-1 rewritten when the Icon boxes went and the popup took its two-column layout (2026-10-18); EDIT-9, 11 and ICON-1 rewritten with the clear glyph, the Preview gap and the buttons' 2 px inset (2026-10-18) |
 | DIAL-1..12 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
 | SHARE-1..6, LOOK-1..2, ICON-1, BG-1..2, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; LOOK-2's in-combat step goes through `/qc set` |

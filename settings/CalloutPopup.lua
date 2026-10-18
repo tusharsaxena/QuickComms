@@ -329,6 +329,9 @@ local function renderFields(h, rows)
     ctx.scroll:AddChild(second)
     h.AddSpacer(ctx.scroll, h.ROW_VSPACER)
     for _, field in ipairs(FIELDS) do alignField(out[field]) end
+    -- The rows' group, as RenderRows would leave it: O.Section puts its 10px gap above Preview only
+    -- once a group has been drawn (ctx.lastGroup), and ClearScroll resets it to nil.
+    ctx.lastGroup = rows.name.group or true
     return out
 end
 

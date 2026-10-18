@@ -4,10 +4,11 @@ local _, NS = ...
 --
 --     band      [ Group v (picker; a green dot marks a group active now) ][ New group ]
 --     strip     [ General ][ Callouts ][ When ][ Preview ]
---     General   Preview as (page-wide, first), then Name, Icon, Enabled, Open the dial on this group,
---               the icon with Choose icon… and its color swatch (settings/Editors.lua's chooser; the
---               icon browser writes icon and color as one act), then Duplicate and Delete. A built-in:
---               what it is, its Enabled row, and Customize.
+--     General   Preview as (page-wide, first), then Name, Enabled, Open the dial on this group, then
+--               the icon under an Icon label with Choose icon…, the clear glyph and its color swatch
+--               (settings/Editors.lua's chooser, no Icon text box; the icon browser writes icon and
+--               color as one act), then Duplicate and Delete. A built-in: what it is, its Enabled row,
+--               and Customize.
 --     Callouts  a user group's: Add callout (the callout popup, settings/CalloutPopup.lua), Reuse
 --               callout with Add (an independent copy, of a user or a built-in callout, spec
 --               P2), then its callouts as a drag-to-reorder list with an edit and a remove glyph each.
@@ -288,17 +289,46 @@ local function renderBuiltinCallouts(ctx, gid)
     h.RenderGrid(ctx, items)
 end
 
+-- THE RIGHT EDGE. Add callout and Reuse's Add end G.EDGE_INSET short of the content's right edge (a
+-- trailing cell that wide, AceGUI's Table layout), not on it: the scroll content fills the
+-- ScrollFrame's clip rect exactly, and a cell-filling button's right border on that edge is the one
+-- options-ui-§8 insets so it is not shaved.
+G.EDGE_INSET = 2
+
+-- A Table row's trailing inset cell: an explicit { width = n } (a bare number under 10 is a weight).
+local function insetCell(parent)
+    parent:AddChild(Ed.Gap(G.EDGE_INSET))
+end
+
+-- Add callout across the row, to G.EDGE_INSET short of the right edge.
+local function addCalloutRow(gid)
+    return { wide = true, make = function(_, parent)
+        parent:SetLayout("Table")
+        parent.userdata.table = { columns = { { weight = 1, alignH = "fill" }, { width = G.EDGE_INSET } } }
+        local btn = H().AceGUI:Create("Button")
+        btn:SetText(L["Add callout"])
+        btn:SetCallback("OnClick", function() Settings.CalloutPopup.Open(gid) end)
+        H().AttachTooltip(btn, L["Add callout"], L["Make a new callout at the end of this group: its name, text, channel and icon, saved when you click Save."])
+        parent:AddChild(btn)
+        insetCell(parent)
+        return true
+    end }
+end
+
 -- Reuse callout and its Add, on one row (AceGUI's Table layout): the dropdown takes the width Add
--- leaves, Add sits at the right edge, the two the same height (the dropdown with no label is 26px
--- tall, AceGUI's Button 24). The dropdown only picks (its prompt stands in for a label), and Add,
--- idle until a pick, copies the pick in.
+-- leaves, Add sits at the right edge (G.EDGE_INSET short of it), the two the same height (the
+-- dropdown with no label is 26px tall, AceGUI's Button 24). The dropdown only picks (its prompt
+-- stands in for a label), and Add, idle until a pick, copies the pick in.
 G.REUSE_ADD_W, G.REUSE_H, G.REUSE_GAP = 120, 26, 6
 local function reuseRow(gid)
     return { wide = true, make = function(_, parent)
         local AceGUI = H().AceGUI
         local prompt, picked = L["Reuse callout"], nil
         parent:SetLayout("Table")
-        parent.userdata.table = { columns = { { weight = 1, alignH = "fill" }, G.REUSE_ADD_W }, spaceH = G.REUSE_GAP }
+        -- The gap is a cell of its own, not the layout's spaceH, which would also come between Add
+        -- and the inset cell and leave Add short of Add callout's right edge.
+        parent.userdata.table = { columns = { { weight = 1, alignH = "fill" }, { width = G.REUSE_GAP },
+            G.REUSE_ADD_W, { width = G.EDGE_INSET } } }
         local dd = AceGUI:Create("Dropdown")
         local list, order = Ed.PickerList(G.ReusableCallouts())
         dd:SetList(list, order)
@@ -324,7 +354,9 @@ local function reuseRow(gid)
         H().AttachTooltip(dd, prompt, L["Pick a callout to copy into this group: one of your groups' or a built-in set's. Add puts the copy at the end."])
         H().AttachTooltip(add, L["Add"], L["Add a copy of the picked callout to the end of this group. Editing the copy leaves the original as it is."])
         parent:AddChild(dd)
+        parent:AddChild(Ed.Gap(G.REUSE_GAP))
         parent:AddChild(add)
+        insetCell(parent)
         return true
     end }
 end
@@ -337,13 +369,7 @@ local function renderCallouts(ctx)
         return
     end
     if isBuiltin(gid) then return renderBuiltinCallouts(ctx, gid) end
-    -- One button across the row, to the list's right edge: AceGUI's Flow anchors a "fill" widget to
-    -- the content's right, so it ends where the list's boxes do (no relative-width spill to clip).
-    local addRow = h.InlineButtonPair(ctx, { text = L["Add callout"],
-        tooltip = L["Make a new callout at the end of this group: its name, text, channel and icon, saved when you click Save."],
-        onClick = function() Settings.CalloutPopup.Open(gid) end }, nil)
-    local addBtn = addRow and addRow.children[1]
-    if addBtn then addBtn:SetFullWidth(true) end
+    h.RenderGrid(ctx, { addCalloutRow(gid) })
     h.RenderGrid(ctx, { reuseRow(gid) })
     local list = NS.db.profile.groups[gid].callouts
     if #list == 0 then

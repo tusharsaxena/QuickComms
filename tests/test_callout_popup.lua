@@ -506,6 +506,43 @@ test("popup: [icons] a glyph chosen with a color: the draft carries both; the sw
     assertNil(Pop.Draft().iconColor, "no color on a game icon")
 end)
 
+test("popup: [icons] the clear glyph takes the draft's icon and color off; Save stores no icon", function()
+    local NS, _, P, Pop = open()
+    local gid, cid = withKick(NS)
+    Pop.Open(gid, cid)
+    Pop.SetIcon(NS.Icon("star"), "ff8000")
+    assertTrue(Pop.Save())
+    assertEqual(NS.db.profile.callouts[cid].icon, NS.Icon("star"))
+    local w = P.during(function() Pop.Open(gid, cid) end)
+    local clear = P.glyph(w, "clear")
+    -- red under: draw no clear glyph in Ed.IconChooser (only /qc set could take an icon off)
+    assertTrue(clear ~= nil)
+    assertFalse(clear.disabled)
+    clear:__fire("OnClick")
+    assertNil(Pop.Draft().icon, "the draft has no icon")
+    assertNil(Pop.Draft().iconColor, "nor a color")
+    assertTrue(clear.disabled, "idle with no icon")
+    assertEqual(NS.db.profile.callouts[cid].icon, NS.Icon("star"), "the stored icon waits for Save")
+    assertTrue(Pop.Save())
+    assertTrue(not NS.db.profile.callouts[cid].icon, "Save stores no icon")
+    assertTrue(not NS.db.profile.callouts[cid].iconColor)
+end)
+
+test("popup: a section's gap sits above Preview: the fields count as a drawn group", function()
+    local NS, _, P, Pop = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    local w = P.during(function() Pop.Open(gid) end)
+    local body = P.find(w, "SimpleGroup")
+    local heading = P.find(w, "Heading", "Preview")
+    local at
+    for i, kid in ipairs(body.children) do if kid == heading then at = i end end
+    assertTrue(at ~= nil and at > 2)
+    local before = body.children[at - 1]
+    -- red under: leave ctx.lastGroup nil after renderFields (O.Section then skips its top spacer)
+    assertEqual(before.type, "SimpleGroup", "a spacer right above the Preview heading")
+    assertEqual(before.height, 10, "SECTION_TOP_SPACER")
+end)
+
 test("popup: [icons] the swatch writes the draft on a drag tick (OnValueChanged) with no confirm, as OK leaves it", function()
     local NS, _, P, Pop = open()
     local gid, cid = withKick(NS)
@@ -841,7 +878,7 @@ test("popup: Name and Channel share a line, Text spans both, the icon has no box
     local swatch = P.find(w, "ColorPicker", "Icon color")
     assertEqual(preview.width, 36, "the icon 2 in from the left, where a box's art begins")
     -- red under: keep Choose icon… and the swatch at 0.4 of the row in the popup
-    assertTrue(near(choose.width, COL - 36 - 8), "Choose icon… ends where the left column does")
+    assertTrue(near(choose.width, COL - 36 - 8 - 24), "Choose icon… and the clear glyph end where the left column does")
     assertTrue(near(swatch.width, COL - 0.5), "the swatch is the right column, half a pixel short")
     local row
     for _, kid in ipairs(body.children) do
@@ -852,9 +889,11 @@ test("popup: Name and Channel share a line, Text spans both, the icon has no box
     assertTrue(row ~= nil)
     local order = {}
     for i, c in ipairs(row.children) do order[i] = c.type end
-    assertEqual(table.concat(order, ","), "Icon,Label,Button,Label,ColorPicker")
+    assertEqual(table.concat(order, ","), "Icon,Label,Button,Icon,Label,ColorPicker")
     assertEqual(row.children[2].width, 8, "a gap clears the icon from Choose icon…")
-    assertEqual(row.children[4].width, GUTTER, "the columns' gutter before the swatch")
+    assertTrue(row.children[4] == P.glyph(w, "clear"), "the clear glyph right after Choose icon…")
+    assertEqual(row.children[4].width, 24)
+    assertEqual(row.children[5].width, GUTTER, "the columns' gutter before the swatch")
 end)
 
 test("popup: every field's label and control share a left edge; Preview's rule and the buttons the columns' edges", function()

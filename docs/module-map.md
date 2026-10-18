@@ -61,7 +61,7 @@ The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after Li
 | 21b | `settings/Callouts.lua` | settings | the callout helpers (`Settings.Callouts`): the tokens a channel offers and one line of help for each, and what a callout sends here |
 | 21b2 | `settings/ModalWindow.lua` | settings | `Settings.ModalWindow`: the modal window (click-catcher and dim, Blizzard's `SettingsFrameTemplate` or the fallback window, a page's header and body) the callout popup and the icon browser are each built in |
 | 21b3 | `settings/IconBrowser_Sources.lua` | settings | `Settings.IconBrowserSources`: each icon browser tab's list (Markers, Game icons, Glyphs) and each icon's name |
-| 21b4 | `settings/IconBrowser.lua` | settings | the icon browser (`Settings.IconBrowser`): modal over its opener, four tabs, a virtualized grid, the Game icons filter, the glyph color swatch, Choose and Cancel |
+| 21b4 | `settings/IconBrowser.lua` | settings | the icon browser (`Settings.IconBrowser`): modal over its opener, three tabs (Markers, Game icons, Glyphs), a virtualized grid, the Game icons filter, the glyph color swatch, Choose and Cancel |
 | 21b5 | `settings/CalloutPopup.lua` | settings | the callout popup (`Settings.CalloutPopup`): a user group's callout, new or listed, edited as a draft, saved as one act, modal over the settings window; Blizzard's `SettingsFrameTemplate` window, sized to its body, with no scrollbar |
 | 21b6 | `settings/CalloutPopup_Skin.lua` | settings | `Settings.CalloutPopupSkin`: the optional EllesmereUI skin of the popup's window and the icon browser's, registered at file load, each painted when it is built and every condition holds |
 | 21c | `settings/Groups_When.lua` | settings | the Groups page's When editor |

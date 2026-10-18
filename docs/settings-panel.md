@@ -44,11 +44,12 @@ reset is a profile reset and never touches the minimap button (options-ui-§12, 
 ```
 band      [ Group v (picker; a green dot marks a group active now) ][ New group ]
 strip     [ General ][ Callouts ][ When ][ Preview ]
-General   Preview as (page-wide, first), then Name, Icon, Enabled, Open the dial on this group,
-          the icon with Choose icon… and its color swatch (settings/Editors.lua's chooser), then
-          Duplicate and Delete. A built-in: what it is, its Enabled row, and Customize.
-Callouts  a user group's: Add callout (the callout popup, blank; full width), Reuse callout with
-          Add at the right edge, then its callouts as a drag-to-reorder list, each row the handle,
+General   Preview as (page-wide, first), then Name, Enabled, Open the dial on this group, then
+          the icon under an Icon label with Choose icon…, the clear glyph and its color swatch
+          (settings/Editors.lua's chooser, no Icon text box), then Duplicate and Delete. A
+          built-in: what it is, its Enabled row, and Customize.
+Callouts  a user group's: Add callout (the callout popup, blank; across the row), Reuse callout
+          with Add at the right edge (both 2px short of it), then its callouts as a drag-to-reorder list, each row the handle,
           the icon, the name and channel, then an edit glyph and a remove glyph at the right edge. A built-in: a Show checkbox per
           callout, the hidden-callouts editor.
 When      settings/Groups_When.lua
@@ -67,23 +68,29 @@ A built-in group is read-only: its group rows refuse every write,
 so the page draws only its overlay and offers Customize.
 
 **The icon** (General, a user group): under an **Icon** label, the icon as the pad and the dial draw
-it (a glyph in its color, a question mark for none), **Choose icon…** and the **Icon color** swatch.
+it (a glyph in its color, a question mark for none), **Choose icon…**, a **clear** glyph (the
+`transmog-icon-remove` atlas, tooltip *Clear icon*) and the **Icon color** swatch.
 There is no Icon text box: the icon is picked only here, and stored as a texture path or id
 (`group.icon`, which `/qc set` still reaches). A
 click on the icon or on Choose icon… opens the icon browser (below) over the settings window; its
 Choose writes the group's icon and color as one act (`Library.SetIcon`), so a game icon or a marker
 chosen over a colored glyph clears the color in the same write. The swatch opens Blizzard's color
 picker and writes `group.iconColor` through the seam; it is live only while the icon is a glyph
-(white is none). The color is drawn with the icon, never as a text box of its own. The callout popup
-draws the same chooser (`Ed.IconChooser`).
+(white is none). The color is drawn with the icon, never as a text box of its own. The clear glyph
+is the one way back to no icon (the browser has no "none" cell): it calls the spec's choose with no
+icon and no color, so the group's icon and color go as one act (`Library.SetIcon` with `false`); it
+is idle while there is no icon. The callout popup draws the same chooser (`Ed.IconChooser`), where
+the clear glyph empties the draft's icon and color and Save stores none.
 
 **Callouts** (a user group): the group owns its callouts. Each user callout sits in exactly one
 user group, so there is no Callouts page and no shared callout.
 
 - **Add callout** opens the callout popup with blank fields (an empty name and text, Smart group,
   no icon). Save puts the new callout at the end of the group; Cancel makes nothing. The button
-  spans the row (AceGUI's Flow anchors a full-width widget to the content's right), so it ends
-  where the list's boxes and the Reuse row end.
+  spans the row (an AceGUI Table layout: a filling cell, then a 2px cell, `G.EDGE_INSET`), so it
+  ends where Reuse's Add does, 2px short of the content's right edge: the scroll content fills the
+  ScrollFrame's clip rect exactly, and options-ui-§8 insets a cell-filling button so its right
+  border is not shaved.
 - **Reuse callout** is a dropdown of every callout the player could copy: the user callouts as
   `<group>: <callout>` (this group's own included) and the built-in ones as `<set>: <callout>` or
   `<set>: <child>: <callout>`, as one list sorted by group, then callout, ignoring case (on the
@@ -91,8 +98,10 @@ user group, so there is no Callouts page and no shared callout.
   callout's name in white; entries that would read alike are numbered (`<callout> (2)`). Picking
   alone adds nothing; **Add** puts an independent copy at the end of this group
   (`Library.AddToGroup` always copies), so editing the copy leaves the original as it is. The row
-  is an AceGUI Table layout: the dropdown fills what Add's fixed 120px cell (at the right edge,
-  6px after it) leaves, and Add is 26px tall, the label-less dropdown's height.
+  is an AceGUI Table layout: the dropdown fills what a 6px gap cell, Add's fixed 120px cell and the
+  2px inset cell (`G.EDGE_INSET`, as under Add callout) leave, and Add is 26px tall, the label-less
+  dropdown's height. The gap is a cell rather than the layout's `spaceH`, which would also fall
+  between Add and the inset cell.
 - **The list** is the drag-to-reorder list (`Ed.ReorderRows`, shared with Comms Pad → Groups and
   Comms Dial → Groups). The edit glyph (the catalog's `edit` mark) opens the popup filled in; the
   remove glyph (the `transmog-icon-remove` atlas) asks first, then deletes the callout, since
@@ -137,8 +146,8 @@ body     [Name          ] [Channel       ]   the callout.* member rows' labels a
 
 - **The layout.** Two columns, each the library's button-pair width (`Helpers.BUTTON_PAIR_REL` of
   the body, the width `InlineButtonPair` gives Cancel and Save, options-ui-§8), with the whole pixels
-  the pair leaves (8 px) as the gutter between them: Name and Channel, Choose icon… and the swatch,
-  Cancel and Save each fill one, so their outer edges meet the Text box's and the Preview rule's,
+  the pair leaves (8 px) as the gutter between them: Name and Channel, the icon with Choose icon…
+  and the clear glyph, and the swatch, Cancel and Save each fill one, so their outer edges meet the Text box's and the Preview rule's,
   and the right column starts at the same place on every line. The pair keeps its width; the popup
   only puts the gutter between its two buttons. The fields are
   drawn by the library's field maker (`RenderField`) into the popup's own lines, not by
@@ -147,14 +156,16 @@ body     [Name          ] [Channel       ]   the callout.* member rows' labels a
   each field's label is moved 2 px in, the Channel dropdown's art 2 px left, the icon 2 px in, the
   Preview rule 2 px in from both sides (AceGUI's Heading draws it 3 in), and the preview and error
   lines 2 px in. Every anchor the popup moves is put back when AceGUI takes the widget back (an
-  `OnRelease` callback per widget), so a pooled frame reaches another addon as AceGUI made it.
+  `OnRelease` callback per widget), so a pooled frame reaches another addon as AceGUI made it. The
+  Preview heading keeps a section's gap above it (`O.Section`'s 10 px): the popup sets
+  `ctx.lastGroup` to the fields' group after drawing them, as `RenderRows` would.
 - **No Icon box.** The icon is chosen only with the chooser; the draft still carries it as a
   texture path or id, Save writes it to `callout.icon`, and that row still answers `/qc`.
 
 - **The draft.** The popup edits a plain copy of the callout's four fields and its icon's glyph
   color (blank for Add). Choose icon… opens the icon browser over the popup; its Choose writes the
-  draft's icon and color, and the swatch writes the draft's color. An icon that is no glyph drops
-  the draft's color. Every control writes the draft, never the
+  draft's icon and color, the clear glyph empties both, and the swatch writes the draft's color.
+  An icon that is no glyph drops the draft's color. Every control writes the draft, never the
   profile, and Preview bakes the draft, so it follows each edit before anything is saved. A text
   box commits to the draft on Enter
   (or its Okay button), as on every page; what a box shows that Enter did not commit is taken into
