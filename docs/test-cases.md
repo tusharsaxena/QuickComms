@@ -447,7 +447,7 @@ Total.
 - members: [icons] Library.SetIcon writes the icon and its color as one act
 - members: [icons] `/qc reset` clears a color; a group page's Defaults keeps it with the icon
 
-### test_editors.lua (16)
+### test_editors.lua (17)
 
 - editors: [review 2] Select mirrors a built-in group into the built-in selection; Heal keeps a member that exists
 - editors: every membership change asks for one structural repaint, on the next frame
@@ -463,6 +463,7 @@ Total.
 - editors: a row's remove is a glyph, not a button
 - editors: a row with edit shows the edit glyph and fires it
 - editors: a row centers its widgets and puts the glyphs at its right edge
+- editors: [layout] under AceGUI's column rule only the label's column is weighted
 - editors: Snapshot is the preview's while Preview as is on
 - editors: [icons] a row's glyph is drawn in its color; a row with none is white
 
@@ -986,7 +987,7 @@ Total.
 | test_gameids.lua | 2 |
 | test_library.lua | 66 |
 | test_members.lua | 28 |
-| test_editors.lua | 16 |
+| test_editors.lua | 17 |
 | test_callout_popup.lua | 36 |
 | test_icon_browser.lua | 26 |
 | test_eui_skin.lua | 10 |
@@ -1014,4 +1015,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **800** |
+| **Total** | **801** |

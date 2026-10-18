@@ -98,7 +98,9 @@ user group, so there is no Callouts page and no shared callout.
   remove glyph (the `transmog-icon-remove` atlas) asks first, then deletes the callout, since
   nothing else holds it. Both carry a tooltip. Each row is an AceGUI Table layout
   (`Ed.RowColumns`): the handle's gutter, the label filling what is left, a 24px cell per 16px
-  glyph and a 3px pad, so the glyphs sit at the box's right edge (the last one's art 7px in);
+  glyph and a 3px pad, so the glyphs sit at the box's right edge (the last one's art 7px in).
+  Every fixed column is an explicit `{ width = n }`, since the layout reads a bare number from 1 to
+  under 10 as a weight;
   `Ed.RowAlignV` centers every widget in the 30px row.
 - Delete (General) deletes the group's callouts with it, and Duplicate gives the copy copies of them.
 

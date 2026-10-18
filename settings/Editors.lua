@@ -442,11 +442,13 @@ end
 
 --- A reorder row's columns (AceGUI's Table layout): the handle's gutter, the label taking what is
 --- left, one GLYPH_W cell per glyph and GLYPH_PAD at the right, so the glyphs sit at the box's right
---- edge on every list (the last one's art GLYPH_PAD + (GLYPH_W - GLYPH) / 2 = 7px in from it).
+--- edge on every list (the last one's art GLYPH_PAD + (GLYPH_W - GLYPH) / 2 = 7px in from it). Every
+--- fixed column is an explicit { width = n }: the Table layout reads a bare number from 1 to under 10
+--- as a weight, so a bare GLYPH_PAD (3) would take 3/4 of the free width and push the glyphs inward.
 function Ed.RowColumns(glyphs)
-    local cols = { Ed.HANDLE_W, { weight = 1, alignH = "fill" } }
-    for _ = 1, glyphs do cols[#cols + 1] = GLYPH_W end
-    cols[#cols + 1] = GLYPH_PAD
+    local cols = { { width = Ed.HANDLE_W }, { weight = 1, alignH = "fill" } }
+    for _ = 1, glyphs do cols[#cols + 1] = { width = GLYPH_W } end
+    cols[#cols + 1] = { width = GLYPH_PAD }
     return cols
 end
 

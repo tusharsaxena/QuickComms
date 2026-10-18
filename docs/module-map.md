@@ -65,7 +65,7 @@ The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after Li
 | 21b5 | `settings/CalloutPopup.lua` | settings | the callout popup (`Settings.CalloutPopup`): a user group's callout, new or listed, edited as a draft, saved as one act, modal over the settings window; Blizzard's `SettingsFrameTemplate` window, sized to its body, with no scrollbar |
 | 21b6 | `settings/CalloutPopup_Skin.lua` | settings | `Settings.CalloutPopupSkin`: the optional EllesmereUI skin of the popup's window and the icon browser's, registered at file load, each painted when it is built and every condition holds |
 | 21c | `settings/Groups_When.lua` | settings | the Groups page's When editor |
-| 21d | `settings/Groups.lua` | settings | the Groups page (a user group's Callouts tab: Add callout, Reuse existing callout, the glyph list) |
+| 21d | `settings/Groups.lua` | settings | the Groups page (a user group's Callouts tab: Add callout, Reuse callout, the glyph list) |
 | 21e | `settings/Pads.lua` | settings | the Comms Pad page |
 | 21e2 | `settings/Dials.lua` | settings | the Comms Dial page (General, Groups, Wheel, Binding, Preview) |
 | 21f | `settings/Share.lua` | settings | the Share page (Export, Import, Built-in) |
