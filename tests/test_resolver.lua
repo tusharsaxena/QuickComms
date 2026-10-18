@@ -1,7 +1,8 @@
 -- tests/test_resolver.lua — modules/Resolver.lua (spec §5.3, §7).
 
 local T = _G.QUICKCOMMS_TEST
-local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
+local test, assertEqual, assertTrue, assertFalse, assertNil =
+    T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 
 local function res() return T.newAddon().Resolver end
 local MPLUS = { content = "mythicPlus", instanceID = 2526, difficulty = "keystone", keyLevel = 14,
@@ -93,4 +94,59 @@ test("resolver: [final] a non-number keyLevel bound is unset, never raises", fun
     assertTrue((R.Matches({ keyLevel = { min = "x", max = 15 } }, s)), "the number bound still applies")
     assertFalse((R.Matches({ keyLevel = { min = "x", max = 12 } }, s)))
     assertEqual(R.Narrowness({ keyLevel = { min = {} } }), 0)
+end)
+
+-- ── Inherit when conditions (2026-10-18-when-drawers-design.md §3) ─────────────────────────
+
+local RAID = { content = "raid", group = "raid", classFile = "WARLOCK", role = "DAMAGER" }
+
+test("resolver: [inherit] a child that inherits is judged by its parent's When, not its own", function()
+    local R = res()
+    local groups = {
+        top = { enabled = true, when = { content = { raid = true } } },
+        kid = { enabled = true, parent = "top", when = { content = { mythicPlus = true } } },
+        own = { enabled = true, parent = "top", inheritWhen = false, when = { content = { mythicPlus = true } } },
+        bare = { enabled = true, parent = "top", inheritWhen = true, when = {} },
+    }
+    -- red under: R.ActiveGroups reading g.when for a child that inherits
+    local active = R.ActiveGroups(groups, MPLUS)
+    assertNil(active.kid, "absent means on: the parent's raid When, so not in M+")
+    assertNil(active.bare, "an empty When of its own no longer matches everywhere")
+    assertTrue(active.own ~= nil, "unticked: its own M+ When")
+    active = R.ActiveGroups(groups, RAID)
+    assertTrue(active.kid ~= nil) assertTrue(active.bare ~= nil)
+    assertNil(active.own)
+    assertEqual(active.kid.matched[1], "content", "the parent's rows are the ones matched")
+end)
+
+test("resolver: [inherit] WhenOf names the When that judges a group, and whose it is", function()
+    local R = res()
+    local groups = {
+        top = { when = { content = { raid = true } } },
+        kid = { parent = "top", when = { role = { TANK = true } } },
+        mine = { parent = "top", inheritWhen = false, when = { role = { TANK = true } } },
+        lost = { parent = "ghost", when = { role = { HEALER = true } } },
+    }
+    local when, from = R.WhenOf(groups, "kid")
+    assertTrue(when.content.raid) assertEqual(from, "top")
+    when, from = R.WhenOf(groups, "mine")
+    assertTrue(when.role.TANK) assertEqual(from, "mine")
+    when, from = R.WhenOf(groups, "lost")
+    assertTrue(when.role.HEALER, "a parent that is gone: its own") assertEqual(from, "lost")
+    when, from = R.WhenOf(groups, "top")
+    assertTrue(when.content.raid) assertEqual(from, "top")
+    assertNil((R.WhenOf(groups, "nobody")))
+end)
+
+test("resolver: [inherit] SurfaceOrder's narrowness reads the When that judges the group", function()
+    local R = res()
+    local groups = {
+        top = { enabled = true, when = { content = { raid = true }, instances = { [1] = true } } },
+        kid = { enabled = true, parent = "top", when = {} },
+        wide = { enabled = true, when = { content = { raid = true } } },
+    }
+    local s = { content = "raid", instanceID = 1 }
+    local active = R.ActiveGroups(groups, s)
+    -- red under: Narrowness of the child's own (empty) When
+    assertEqual(table.concat(R.SurfaceOrder({ "wide", "kid" }, active, groups, true), ","), "kid,wide")
 end)

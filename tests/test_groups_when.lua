@@ -192,3 +192,16 @@ test("when: [drawers] SelectAll ticks every value the row offers, and never muta
     assertTrue(w2.spec[62] and w2.spec[63] and w2.spec[64])
     assertNil(w2.spec[71])
 end)
+
+test("when: [inherit] ActiveText judges an inheriting group by its parent's When", function()
+    local NS = T.bootAddon()
+    local W = NS.addon.Settings.GroupsWhen
+    local Lib = NS.Library
+    local top = Lib.CreateGroup({ name = "Raid night", when = { content = { raid = true } } })
+    local kid = Lib.CreateGroup({ name = "Boss 1", when = {} })
+    NS.SchemaRuntime.Set("group.parent", top, kid)
+    -- red under: W.ActiveText reading the group's own (empty, always-on) When
+    assertTrue(W.ActiveText(kid):find("Content does not match", 1, true) ~= nil, W.ActiveText(kid))
+    NS.SchemaRuntime.Set("group.inheritWhen", false, kid)
+    assertTrue(W.ActiveText(kid):find("Active now", 1, true) ~= nil)
+end)

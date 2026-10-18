@@ -193,3 +193,45 @@ LibKa0s change follows `docs/releasing.md`; `libs/` is only ever re-vendored, ne
 - **[Q2] Not committed.** The Q1 re-vendor sits uncommitted in the worktree and the gate's two
   vendor-pair cases stay red on the untagged v1.73.0 alone (Q1's note), so Q2 is left uncommitted
   on top of it rather than committed against a red gate or without the drawer it calls.
+- **[Q3] Q1 and Q2 committed first.** v1.73.0 is now tagged in the LibKa0s worktree (not by this
+  task), so the vendor-pair cases pass and the gate is green. Q1 and Q2 were committed as their own
+  commits (`77a6ef2` re-vendor, `8341da0` drawers), each gated green on its own tree
+  (`docs/test-cases.md` and the badge regenerated per commit: 837, then 844), before Q3 on top.
+- **[Q3] One seam: `Resolver.WhenOf(groups, id)`.** It answers the When that judges a group and
+  whose it is: the parent's while the group's `parent` names one of `groups` and its `inheritWhen`
+  is not false (absent is on), else its own. `ActiveGroups` and `SurfaceOrder`'s narrowness read
+  it, so the pad, the dial, the Group picker's dot, Preview as, the diagnostics and every "why" line
+  follow without their own change. The parent's Enabled and its place on the surface still gate the
+  family (modules/Surfaces.lua unchanged).
+- **[Q3] Stored true on create, absent read as on.** `Library.TEMPLATES.group.inheritWhen = true`
+  (the row's default); `CreateGroup` stores `fields.inheritWhen ~= false` (so `DuplicateGroup` and
+  an import pass it on), and `seedGroup` stores `true`, so `/qc get group.inheritWhen` prints a
+  value for every group made from now on. A profile from before the setting has no field, which
+  the Resolver and the checkbox read as on; the CLI prints nil for such a group until it is written.
+  Top-level groups carry `true` too; it is idle until the group takes a parent.
+- **[Q3] The member row.** `group.inheritWhen` (bool, default `T.group.inheritWhen`, page groups,
+  tab General) in settings/SchemaMembers.lua, validated as a boolean (`badChoice`), announced through
+  Library.Touch like any field. It is not reset-exempt: a page's Defaults turns it back on.
+  `Ed.STRUCTURAL` gains it, so a write repaints the When tab, the picker's dots and the grayed-out box.
+- **[Q3] The checkbox** is drawn by hand beside Parent group (`inheritItem`, one RenderGrid line
+  with `parentItem`), as Parent group is, because the seam reads an absent field as nil and the box
+  must read it as on (`G.InheritState`: checked unless false; disabled while `Library.IsChild` is
+  false). The row is in `UNDRAWN` so RenderRows does not draw it twice. Tooltip: the row's desc.
+- **[Q3] The read-only When tab.** `W.Source(gid)` (WhenOf through Library.AllGroups) names the
+  group whose When the tab shows. For an inheriting group: the live line, then the line "Uses
+  <parent>'s conditions. Untick Inherit when conditions on the General tab to set this group's
+  own." in the muted gold `c9a66b` (the approved mockup's color, Groups.lua's MUTED_GOLD), then the
+  gray line, then the drawers with `summary` / `set` / `body` read from the parent's When,
+  `disabled = true` and no `actions`. The open set stays the viewed group's. `W.ActiveText` judges
+  by the same When (`W.ActiveLine` itself is unchanged and pure).
+- **[Q3] Share.** An export writes `inheritWhen = m.inheritWhen ~= false` on every group; the check
+  keeps `g.inheritWhen ~= false` (an older string without it arrives on); Library.Import hands it to
+  CreateGroup.
+- **[Q3] Tests (Total 844 -> 855).** Resolver (three: the child judged by the parent's When, WhenOf,
+  narrowness), Library (seeded nodes, create, untick, Duplicate, the template), members (the row,
+  its refusal, the CLI), Share (round trip; an old string), Surfaces (a child with its own arena When
+  shows in a key under an M+ parent), When (`ActiveText`), page (no green dot on a seeded
+  battleground's nodes in the open world; the checkbox beside Parent group, grayed out with no
+  parent, absent read as on, untick stores false; the read-only When tab and back). The three
+  existing Surfaces nesting cases whose children carry their own When now create them with
+  `inheritWhen = false`. Mutation-checked: each change reverted turns its case red.

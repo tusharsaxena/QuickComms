@@ -11,7 +11,8 @@ local _, NS = ...
 -- specializations by specID, characters by Name-Realm; a name is shown, never matched. The list
 -- data is shipped (defaults/GameIds.lua and the battleground sets); "Add the instance you are in"
 -- covers an id the table does not list yet. A live line says whether the group is active now, or in
--- the previewed situation, and which row stops it.
+-- the previewed situation, and which row stops it. A group inside another that inherits its When
+-- conditions (group.inheritWhen) shows its parent's When here, read-only, under a line that says so.
 --
 -- Every change writes the group's WHOLE When through the seam (`group.when`, a structured member
 -- row, settings/SchemaMembers.lua), read fresh from the profile at the click, so two clicks before a
@@ -229,12 +230,24 @@ function W.ActiveLine(group, snap, previewLabel)
     return line
 end
 
---- The live line for group `gid` as it is now, under the editors' snapshot and the preview.
+--- The group whose When judges group `gid` (Resolver.WhenOf), and whether that is another's: a group
+--- inside another that inherits shows and is judged by its parent's (2026-10-18-when-drawers-design.md
+--- §3).
+--- @return string id, boolean inherited
+function W.Source(gid)
+    local _, from = NS.Resolver.WhenOf(NS.Library.AllGroups(), gid)
+    from = from or gid
+    return from, from ~= gid
+end
+
+--- The live line for group `gid` as it is now, under the editors' snapshot and the preview, judged by
+--- the When that judges it (W.Source).
 function W.ActiveText(gid)
     local g = gid and NS.Library.Group(gid)
     if not g then return "" end
+    local src = NS.Library.Group(W.Source(gid))
     local key = NS.Preview.PreviewAs()
-    return W.ActiveLine(g, Ed.Snapshot(), key and NS.Preview.Label(key))
+    return W.ActiveLine({ enabled = g.enabled, when = src and src.when }, Ed.Snapshot(), key and NS.Preview.Label(key))
 end
 
 -- ── the edge ────────────────────────────────────────────────────────────────────────────────
@@ -551,18 +564,23 @@ local function actions(gid, row)
     return out
 end
 
-local function renderDrawer(ctx, gid, row)
+-- One condition's drawer for group `gid`, showing the When of group `from` (gid itself, or the parent
+-- it inherits from). An inherited When is read-only: the choices are drawn disabled (the drawer's
+-- `disabled`) and there is no Select all or Clear (Any). The open set is gid's either way.
+local function renderDrawer(ctx, gid, row, from)
     local label = NS.Resolver.LABEL[row] or row
+    local readOnly = from ~= gid
     H().Drawer(ctx, {
         label = label,
         tooltip = W.TIP[row],
-        summary = function() return W.Summary(row, fresh(gid)) end,
-        set = function() return W.IsSet(fresh(gid), row) end,
+        summary = function() return W.Summary(row, fresh(from)) end,
+        set = function() return W.IsSet(fresh(from), row) end,
         -- The library re-renders the page after the toggle; nothing else to refresh here.
         open = openRows(gid)[row] == true,
         onToggle = function(open) openRows(gid)[row] = open or nil end,
-        body = function(c) renderChoices(c, gid, row) end,
-        actions = actions(gid, row),
+        body = function(c) renderChoices(c, from, row) end,
+        actions = not readOnly and actions(gid, row) or nil,
+        disabled = readOnly,
     })
 end
 
@@ -577,6 +595,12 @@ function W.Render(ctx, gid)
     -- Refreshed in place (Ed.Live): a write to this group or a situation change re-reads it.
     local active = h.TextRow(ctx, W.ActiveText(gid))
     Ed.Live(ctx, function() if active then active:SetText(W.ActiveText(gid)) end end)
+    local from, inherited = W.Source(gid)
+    if inherited then
+        local parent = NS.Library.Group(from)
+        h.TextRow(ctx, L["|cffc9a66bUses %s's conditions. Untick Inherit when conditions on the General tab to set this group's own.|r"]
+            :format(parent.name or from))
+    end
     h.TextRow(ctx, L["|cffa0a0a0Every condition you set must match. A condition left as Any does not limit the group.|r"])
-    for _, row in ipairs(W.ROWS) do renderDrawer(ctx, gid, row) end
+    for _, row in ipairs(W.ROWS) do renderDrawer(ctx, gid, row, from) end
 end

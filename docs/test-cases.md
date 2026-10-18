@@ -294,7 +294,7 @@ Total.
 - bake: a typed %t counts as live
 - bake: [phase 5] CleanText is the sanitizer short of the escape; Sanitize is CleanText, then the escape
 
-### test_share.lua (34)
+### test_share.lua (35)
 
 - share: a string is !QC1! then printable text, and decodes back to the same payload
 - share: [review 1] a pasted string may wrap and carry spaces; a cut-short one is damaged and imports nothing
@@ -330,8 +330,9 @@ Total.
 - share: [review] a child picked alone travels without its parent: nothing dropped, and it arrives top-level
 - share: [nesting] a parent the string does not carry, itself, or one inside another is dropped and counted
 - share: [review] a pad's or dial's reference to a group the string nests is dropped and counted
+- share: [inherit] a child's Inherit when conditions travels; an old string's child inherits
 
-### test_resolver.lua (8)
+### test_resolver.lua (11)
 
 - resolver: an empty When always matches
 - resolver: each row matches and fails on its own
@@ -341,6 +342,9 @@ Total.
 - resolver: SurfaceOrder keeps the surface's order; autoPromote floats narrower groups
 - resolver: Explain names the matched rows
 - resolver: [final] a non-number keyLevel bound is unset, never raises
+- resolver: [inherit] a child that inherits is judged by its parent's When, not its own
+- resolver: [inherit] WhenOf names the When that judges a group, and whose it is
+- resolver: [inherit] SurfaceOrder's narrowness reads the When that judges the group
 
 ### test_builtins.lua (7)
 
@@ -357,7 +361,7 @@ Total.
 - game ids: every battleground set matches only battleground maps, and no map is two sets'
 - game ids: the shipped dungeons are Mythic+ dungeons and the shipped raids are raids
 
-### test_library.lua (75)
+### test_library.lua (76)
 
 - library: Prepare seeds every shipped set as a group, on one pad and one dial, once
 - library: a seeded group is an ordinary group: its fields, When, callouts and origin
@@ -434,8 +438,9 @@ Total.
 - library: [restore] a set nested in another group keeps its place; its nodes stay out
 - library: [restore] a new pad holds the seeded sets still top-level, in shipped order
 - library: [restore] SeededBattleground names a seeded battleground set's key; a node, another set and a copy have none
+- library: [inherit] a new or seeded group inherits its parent's When; Duplicate and an untick keep false
 
-### test_members.lua (26)
+### test_members.lua (27)
 
 - members: a callout field is written through the seam by instance id, and announced once
 - members: with no id the seam writes the selected member, else the first the page lists, else refuses
@@ -463,6 +468,7 @@ Total.
 - members: [icons] an icon that is no glyph clears the color in the same act; a glyph keeps it
 - members: [icons] Library.SetIcon writes the icon and its color as one act
 - members: [icons] `/qc reset` clears a color; a group page's Defaults keeps it with the icon
+- members: [inherit] group.inheritWhen is a member row: a bool stores and announces, anything else is refused
 
 ### test_editors.lua (17)
 
@@ -567,7 +573,7 @@ Total.
 - eui skin: the diagnostics report names its state
 - eui skin: the diagnostics line says, in words, why the skin is or is not on
 
-### test_groups_when.lua (15)
+### test_groups_when.lua (16)
 
 - when: Toggle adds and removes one value, drops an emptied row, and never mutates its input
 - when: [review 5] the key-level range refuses lowest above highest; clearing both drops the row
@@ -584,8 +590,9 @@ Total.
 - when: [drawers] Summary reads Any while a row is unset, else its values in the row's order
 - when: [drawers] Summary gives the key level and the id rows a short phrase
 - when: [drawers] SelectAll ticks every value the row offers, and never mutates its input
+- when: [inherit] ActiveText judges an inheriting group by its parent's When
 
-### test_page_groups.lua (53)
+### test_page_groups.lua (56)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists every group by name, a seeded set among them, active ones dotted
@@ -640,6 +647,9 @@ Total.
 - groups page: [review] a parent with no callouts of its own and one child titles the child's table
 - groups page: [preview table] a situation change rewrites a row's text in place and lays the table out again
 - groups page: [preview table] a group with no callouts says so, with no table
+- groups page: [inherit] a seeded battleground's nodes carry no green dot in the open world
+- groups page: [inherit] General's Inherit when conditions sits beside Parent group, grayed out with no parent
+- groups page: [inherit] an inheriting group's When tab shows its parent's conditions, read-only
 
 ### test_page_pads.lua (13)
 
@@ -824,7 +834,7 @@ Total.
 - dial layout: [review 6] a pinned ring ignores the dial's slices; Flat keeps its paging
 - dial layout: [icons] a ring entry carries its group's icon color, a send entry its callout's
 
-### test_surfaces.lua (26)
+### test_surfaces.lua (27)
 
 - surfaces: in a key the default pad's plan is the M+ set, baked to /p
 - surfaces: [review 5] a refused callout is a slot with its reason and no line
@@ -852,6 +862,7 @@ Total.
 - surfaces: [nesting] a parent draws its own section, then one per child whose When matches
 - surfaces: [nesting] a dial draws a parent's own callouts and a ring per child whose When matches
 - surfaces: [nesting] a parent that draws nothing leaves its surface with nothing active
+- surfaces: [inherit] a child that inherits shows wherever its parent's When matches, whatever its own says
 
 ### test_pad_render.lua (18)
 
@@ -1024,18 +1035,18 @@ Total.
 | test_tokens.lua | 8 |
 | test_channels.lua | 8 |
 | test_bake.lua | 12 |
-| test_share.lua | 34 |
-| test_resolver.lua | 8 |
+| test_share.lua | 35 |
+| test_resolver.lua | 11 |
 | test_builtins.lua | 7 |
 | test_gameids.lua | 2 |
-| test_library.lua | 75 |
-| test_members.lua | 26 |
+| test_library.lua | 76 |
+| test_members.lua | 27 |
 | test_editors.lua | 17 |
 | test_callout_popup.lua | 38 |
 | test_icon_browser.lua | 26 |
 | test_eui_skin.lua | 10 |
-| test_groups_when.lua | 15 |
-| test_page_groups.lua | 53 |
+| test_groups_when.lua | 16 |
+| test_page_groups.lua | 56 |
 | test_page_pads.lua | 13 |
 | test_page_dials.lua | 17 |
 | test_page_share.lua | 12 |
@@ -1047,7 +1058,7 @@ Total.
 | test_master.lua | 5 |
 | test_pad_layout.lua | 12 |
 | test_dial_layout.lua | 15 |
-| test_surfaces.lua | 26 |
+| test_surfaces.lua | 27 |
 | test_pad_render.lua | 18 |
 | test_pad.lua | 26 |
 | test_dial.lua | 29 |
@@ -1058,4 +1069,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **844** |
+| **Total** | **855** |

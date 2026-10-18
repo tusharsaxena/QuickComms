@@ -221,6 +221,13 @@ local ROWS = {
       page = "groups", group = GENERAL, label = L["Parent group"],
       desc = L["The group this one sits inside. It shows wherever that group does, in a section (or a ring) of its own, while its When matches. None makes it a group of its own."],
       normalize = parentValue, validate = check(function(v, id) return Lib.ValidParent(parentValue(v), id) end) },
+    -- Inherit when conditions (2026-10-18-when-drawers-design.md §3): a child judged by its parent's
+    -- When instead of its own (Resolver.WhenOf), which is kept. On by default; an absent field reads as
+    -- on. The General tab draws it as its own checkbox beside Parent group (settings/Groups.lua).
+    { path = "group.inheritWhen", instance = "group", type = "bool", default = T.group.inheritWhen,
+      page = "groups", group = GENERAL, label = L["Inherit when conditions"],
+      validate = check(function(v) return type(v) == "boolean", "badChoice" end),
+      desc = L["Use the parent group's When instead of this group's own. This group's own conditions are kept for when you untick it. Only a group inside another group inherits."] },
     { path = "group.when", instance = "group", type = "when",
       page = "groups", group = L["When"], label = L["When"],
       desc = L["The conditions under which this group is active. Every condition you turn on must match; within a condition, any value may."],

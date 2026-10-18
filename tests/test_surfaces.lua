@@ -413,14 +413,15 @@ end)
 -- ── nested groups (2026-10-18-builtins-as-groups-design.md, goal 2) ──────────────────────────
 
 -- A parent with a callout of its own on the default pad and dial, a child active in a key and a
--- child for arenas only, each with one callout.
+-- child for arenas only, each with one callout. Each child keeps its own When (inheritWhen false,
+-- 2026-10-18-when-drawers-design.md §3), so its own gates it.
 local function family(NS)
     local Lib = NS.Library
     local parent = Lib.CreateGroup({ name = "Raid night" })
     Lib.CreateCalloutIn(parent, { name = "Own", text = "own", channel = "party" })
-    local keyed = Lib.CreateGroup({ name = "Keyed", when = { content = { mythicPlus = true } } })
+    local keyed = Lib.CreateGroup({ name = "Keyed", when = { content = { mythicPlus = true } }, inheritWhen = false })
     Lib.CreateCalloutIn(keyed, { name = "Go", text = "go", channel = "party" })
-    local arena = Lib.CreateGroup({ name = "Arena only", when = { content = { arena = true } } })
+    local arena = Lib.CreateGroup({ name = "Arena only", when = { content = { arena = true } }, inheritWhen = false })
     Lib.CreateCalloutIn(arena, { name = "Swap", text = "swap", channel = "party" })
     NS.SchemaRuntime.Set("group.parent", parent, keyed)
     NS.SchemaRuntime.Set("group.parent", parent, arena)
@@ -472,7 +473,7 @@ test("surfaces: [nesting] a parent that draws nothing leaves its surface with no
     local Lib, p = NS.Library, NS.db.profile
     p.pads.p1.groups, p.dials.d2.groups = {}, {}
     local parent = Lib.CreateGroup({ name = "Empty parent" })
-    local arena = Lib.CreateGroup({ name = "Arena only", when = { content = { arena = true } } })
+    local arena = Lib.CreateGroup({ name = "Arena only", when = { content = { arena = true } }, inheritWhen = false })
     Lib.CreateCalloutIn(arena, { name = "Swap", text = "swap", channel = "party" })
     NS.SchemaRuntime.Set("group.parent", parent, arena)
     Lib.AddGroupToSurface("pad", "p1", parent, 1)
@@ -490,4 +491,19 @@ test("surfaces: [nesting] a parent that draws nothing leaves its surface with no
     assertFalse(dial.hasActive)
     Lib.CreateCalloutIn(parent, { name = "Own", text = "own", channel = "party" })
     assertTrue(planFor(NS, snap).hasActive, "a callout of its own draws a section")
+end)
+
+test("surfaces: [inherit] a child that inherits shows wherever its parent's When matches, whatever its own says", function()
+    local NS = live()
+    local Lib = NS.Library
+    local parent = Lib.CreateGroup({ name = "Keys", when = { content = { mythicPlus = true } } })
+    local kid = Lib.CreateGroup({ name = "Arena-only node", when = { content = { arena = true } } })
+    Lib.CreateCalloutIn(kid, { name = "Go", text = "go", channel = "party" })
+    NS.SchemaRuntime.Set("group.parent", parent, kid)
+    Lib.AddGroupToSurface("pad", "p1", parent, 1)
+    local plan = planFor(NS)
+    local shown = false
+    for _, sec in ipairs(plan.sections) do shown = shown or sec.groupId == kid end
+    -- red under: R.ActiveGroups judging the child by its own arena When
+    assertTrue(shown, "in a key, by its parent's When")
 end)

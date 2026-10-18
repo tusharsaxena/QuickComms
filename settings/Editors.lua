@@ -83,7 +83,8 @@ local pending, lastActive
 
 --- The member-row paths whose write changes what a page draws, not only a value in place.
 Ed.STRUCTURAL = { ["callout.name"] = true, ["group.name"] = true, ["group.enabled"] = true,
-    ["group.when"] = true, ["group.parent"] = true, ["pad.name"] = true, ["dial.name"] = true }
+    ["group.when"] = true, ["group.parent"] = true, ["group.inheritWhen"] = true, ["pad.name"] = true,
+    ["dial.name"] = true }
 
 -- The ids of the groups active under the editors' snapshot, as one comparable string.
 local function activeKey()

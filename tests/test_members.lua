@@ -519,3 +519,20 @@ test("members: [icons] `/qc reset` clears a color; a group page's Defaults keeps
     NS.addon.Settings.Helpers.RestoreDefaults("groups")
     assertEqual(NS.db.profile.groups[gid].iconColor, "ff0000")
 end)
+
+test("members: [inherit] group.inheritWhen is a member row: a bool stores and announces, anything else is refused", function()
+    local NS, S, Lib = boot()
+    local parent = Lib.CreateGroup({ name = "Raid night" })
+    local child = Lib.CreateGroup({ name = "Boss 1" })
+    assertTrue(S.Set("group.parent", parent, child))
+    local out = heard(NS)
+    -- red under: no group.inheritWhen row in settings/SchemaMembers.lua
+    assertTrue(S.Set("group.inheritWhen", false, child))
+    assertEqual(NS.db.profile.groups[child].inheritWhen, false)
+    assertEqual(table.concat(out, ","), "group:" .. child)
+    assertFalse((S.Set("group.inheritWhen", "maybe", child)), "not a bool")
+    assertEqual(NS.db.profile.groups[child].inheritWhen, false)
+    NS.State.editing.group = child
+    NS.addon:OnSlashCommand("set group.inheritWhen true")
+    assertTrue(NS.db.profile.groups[child].inheritWhen, "the CLI reaches it")
+end)

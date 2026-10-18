@@ -1181,3 +1181,22 @@ test("library: [restore] SeededBattleground names a seeded battleground set's ke
     assertNil(Lib.SeededBattleground("g999"))
 end)
 
+
+-- ── Inherit when conditions (2026-10-18-when-drawers-design.md §3) ─────────────────────────
+
+test("library: [inherit] a new or seeded group inherits its parent's When; Duplicate and an untick keep false", function()
+    local NS, Lib, p = boot()
+    local ab = T.seeded(NS, "bi.bg.ab")
+    -- red under: seedGroup storing no inheritWhen (or false) on a node
+    for _, kid in ipairs(Lib.Children(ab)) do assertTrue(p.groups[kid].inheritWhen, "a seeded node inherits") end
+    local parent = Lib.CreateGroup({ name = "Raid night", when = { content = { raid = true } } })
+    local child = Lib.CreateGroup({ name = "Boss 1" })
+    setParent(NS, child, parent)
+    assertTrue(p.groups[child].inheritWhen, "default on")
+    assertTrue(NS.SchemaRuntime.Set("group.inheritWhen", false, child))
+    assertEqual(p.groups[child].inheritWhen, false, "unticking stores false")
+    local copy = Lib.DuplicateGroup(child)
+    -- red under: DuplicateGroup not passing inheritWhen on
+    assertEqual(p.groups[copy].inheritWhen, false, "the copy keeps the untick")
+    assertTrue(Lib.TEMPLATES.group.inheritWhen, "the row's default is on")
+end)

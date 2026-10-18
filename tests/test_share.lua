@@ -601,3 +601,27 @@ test("share: [review] a pad's or dial's reference to a group the string nests is
     assertEqual(table.concat(p.pads[map.p3].groups, ","), map.g1, "the import matches the report")
     assertEqual(p.groups[map.g2].parent, map.g1)
 end)
+
+-- ── Inherit when conditions (2026-10-18-when-drawers-design.md §3) ─────────────────────────
+
+test("share: [inherit] a child's Inherit when conditions travels; an old string's child inherits", function()
+    local NS, SH = boot()
+    local Lib = NS.Library
+    local parent = Lib.CreateGroup({ name = "Raid night", when = { content = { raid = true } } })
+    local mine = Lib.CreateGroup({ name = "Boss 1", when = { role = { TANK = true } } })
+    local kept = Lib.CreateGroup({ name = "Boss 2" })
+    NS.SchemaRuntime.Set("group.parent", parent, mine)
+    NS.SchemaRuntime.Set("group.parent", parent, kept)
+    NS.SchemaRuntime.Set("group.inheritWhen", false, mine)
+    local payload = SH.Collect({ group = { [parent] = true } })
+    -- red under: exportMember leaving inheritWhen out
+    assertEqual(payload.groups[mine].inheritWhen, false)
+    assertTrue(payload.groups[kept].inheritWhen)
+    payload.groups[kept].inheritWhen = nil   -- a string made before the field
+    local _, map = Lib.Import(SH.Validate(SH.Decode(SH.Encode(payload))))
+    local p = NS.db.profile
+    -- red under: groupEntry / importMembers dropping the field
+    assertEqual(p.groups[map[mine]].inheritWhen, false, "the untick arrives")
+    assertTrue(p.groups[map[mine]].when.role.TANK, "with its own When")
+    assertTrue(p.groups[map[kept]].inheritWhen, "absent reads as on")
+end)

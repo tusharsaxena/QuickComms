@@ -1,7 +1,8 @@
 local _, NS = ...
 -- modules/Resolver.lua — When rules -> the active group set, each surface's order, and the "why"
 -- lines (spec §5.3, §7). PURE. Rows AND; values inside a row OR; an empty or absent row is ignored,
--- so an empty When is "always on" (D6: every matching group is active, a union).
+-- so an empty When is "always on" (D6: every matching group is active, a union). A group inside
+-- another that inherits its When conditions is judged by its parent's When (R.WhenOf).
 
 NS.Resolver = NS.Resolver or {}
 local R = NS.Resolver
@@ -80,14 +81,27 @@ function R.Matches(when, s)
     return true, matched
 end
 
---- Every enabled group whose When matches (D6 union).
---- @param groups table { [id] = { enabled, when } }
+--- The When that judges group `id` (2026-10-18-when-drawers-design.md §3, Inherit when
+--- conditions): its parent's while it sits inside one of `groups` and inheritWhen is not false (an
+--- absent field is on), else its own. Its own stored When is kept, only not read.
+--- @param groups table { [id] = { parent, inheritWhen, when } }
+--- @return table|nil when, string|nil the id whose When it is
+function R.WhenOf(groups, id)
+    local g = type(groups) == "table" and groups[id] or nil
+    if type(g) ~= "table" then return nil, nil end
+    local top = type(g.parent) == "string" and groups[g.parent] or nil
+    if g.inheritWhen ~= false and type(top) == "table" and g.parent ~= id then return top.when, g.parent end
+    return g.when, id
+end
+
+--- Every enabled group whose When (R.WhenOf: a child that inherits, its parent's) matches (D6 union).
+--- @param groups table { [id] = { enabled, when, parent, inheritWhen } }
 --- @return table { [id] = { matched = rows } }
 function R.ActiveGroups(groups, s)
     local active = {}
     for id, g in pairs(type(groups) == "table" and groups or {}) do
         if type(g) == "table" and g.enabled ~= false then
-            local ok, matched = R.Matches(g.when, s)
+            local ok, matched = R.Matches((R.WhenOf(groups, id)), s)
             if ok then active[id] = { matched = matched } end
         end
     end
@@ -116,7 +130,7 @@ function R.SurfaceOrder(list, active, groups, autoPromote)
     end
     if autoPromote then
         local narrow = {}
-        for _, e in ipairs(out) do narrow[e.id] = R.Narrowness(groups[e.id] and groups[e.id].when) end
+        for _, e in ipairs(out) do narrow[e.id] = R.Narrowness((R.WhenOf(groups, e.id))) end
         table.sort(out, function(a, b)
             if narrow[a.id] ~= narrow[b.id] then return narrow[a.id] > narrow[b.id] end
             return a.i < b.i

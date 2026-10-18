@@ -1125,3 +1125,76 @@ test("groups page: [preview table] a group with no callouts says so, with no tab
     assertNil(P.find(w, "Label", "Callout"), "no header for an empty table")
     assertEqual(#lists, 0, "no box list")
 end)
+
+-- ── Inherit when conditions (2026-10-18-when-drawers-design.md §3) ─────────────────────────
+
+test("groups page: [inherit] a seeded battleground's nodes carry no green dot in the open world", function()
+    local NS = open()
+    local ab = T.seeded(NS, "bi.bg.ab")
+    local kids = NS.Library.Children(ab)
+    assertTrue(#kids > 0)
+    local dotted = {}
+    for _, e in ipairs(NS.addon.Settings.Groups.Entries()) do
+        dotted[e.id] = e.label:find("Indicator-Green", 1, true) ~= nil
+    end
+    -- red under: R.ActiveGroups judging a node by its own empty When (active everywhere)
+    for _, kid in ipairs(kids) do assertFalse(dotted[kid], NS.db.profile.groups[kid].name) end
+    assertFalse(dotted[ab])
+end)
+
+test("groups page: [inherit] General's Inherit when conditions sits beside Parent group, grayed out with no parent", function()
+    local NS, _, P = open()
+    bare(NS)
+    local Lib = NS.Library
+    local top = Lib.CreateGroup({ name = "Raid night" })
+    local kid = Lib.CreateGroup({ name = "Boss 1" })
+    pick(NS, top)
+    local w = P.redraw("groups")
+    local cb = P.find(w, "CheckBox", "Inherit when conditions")
+    -- red under: no Inherit when conditions checkbox on General
+    assertTrue(cb ~= nil)
+    assertTrue(cb.disabled, "a group with no parent has nothing to inherit")
+    assertTrue(cb.value, "on by default")
+    NS.SchemaRuntime.Set("group.parent", top, kid)
+    pick(NS, kid)
+    w = P.redraw("groups")
+    cb = P.find(w, "CheckBox", "Inherit when conditions")
+    assertFalse(cb.disabled)
+    assertTrue(cb.value)
+    NS.db.profile.groups[kid].inheritWhen = nil   -- a profile from before the setting
+    w = P.redraw("groups")
+    assertTrue(P.find(w, "CheckBox", "Inherit when conditions").value, "absent reads as on")
+    P.find(w, "CheckBox", "Inherit when conditions"):__fire("OnValueChanged", false)
+    assertEqual(NS.db.profile.groups[kid].inheritWhen, false, "unticking stores false")
+    assertTrue(NS.addon.Settings.Editors.STRUCTURAL["group.inheritWhen"], "the When tab and the dots repaint")
+end)
+
+test("groups page: [inherit] an inheriting group's When tab shows its parent's conditions, read-only", function()
+    local NS, _, P = open()
+    bare(NS)
+    local Lib = NS.Library
+    local top = Lib.CreateGroup({ name = "Raid night", when = { content = { raid = true } } })
+    local kid = Lib.CreateGroup({ name = "Boss 1", when = { role = { TANK = true } } })
+    NS.SchemaRuntime.Set("group.parent", top, kid)
+    pick(NS, kid)
+    NS.State.whenOpen[kid] = { content = true, role = true }
+    local w = P.tab("groups", "When")
+    -- red under: draw the group's own When for an inheriting group
+    assertTrue(P.hasText(w, "Uses Raid night's conditions. Untick Inherit when conditions on the General tab to set this group's own."))
+    assertEqual(P.drawer(w, "Content").__ka0sDrawerSummary, "Raid", "the parent's")
+    assertEqual(P.drawer(w, "Role").__ka0sDrawerSummary, "Any", "its own is kept but not shown")
+    assertTrue(P.find(w, "CheckBox", "Raid").value)
+    assertTrue(P.find(w, "CheckBox", "Raid").disabled, "read-only")
+    assertNil(P.find(w, "Button", "Select all"))
+    assertNil(P.find(w, "Button", "Clear (Any)"))
+    assertTrue(P.hasText(w, "Not active now"), "judged by the parent's raid When")
+    P.drawer(w, "Content"):__fire("OnClick")
+    assertNil(NS.State.whenOpen[kid].content, "the drawers still open and close")
+    NS.SchemaRuntime.Set("group.inheritWhen", false, kid)
+    w = P.tab("groups", "When")
+    assertTrue(not P.hasText(w, "Uses Raid night's conditions"))
+    assertEqual(P.drawer(w, "Role").__ka0sDrawerSummary, "Tank", "its own again")
+    assertFalse(P.find(w, "CheckBox", "Tank").disabled)
+    assertTrue(P.find(w, "Button", "Select all") ~= nil)
+    assertTrue(NS.db.profile.groups[kid].when.role.TANK, "its own When was kept")
+end)
