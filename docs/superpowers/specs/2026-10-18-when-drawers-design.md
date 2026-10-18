@@ -273,3 +273,28 @@ LibKa0s change follows `docs/releasing.md`; `libs/` is only ever re-vendored, ne
   window (Game icons only, under the grid, the address, FULLSCREEN_DIALOG, closed with the browser).
   Mutation-checked: label-only or key-only glyph match, the old count, a reset in Open, the strata
   and the hide each turn a case red.
+- **[Q5] The docs.** `docs/settings-panel.md` (the General diagram and an Inherit when conditions
+  paragraph; the When tab rewritten as drawers, with a diagram; the icon browser at 594 high, its
+  search box, count, hint row and copy window), `docs/schema.md` (`inheritWhen` on the groups row,
+  the `group.inheritWhen` member row, `whenOpen` as open drawers, the browser's session search text,
+  "no schema step for Inherit when conditions"), `docs/ARCHITECTURE.md` (this spec and plan in the
+  amended-by list; the Options, Widgets, Resolver, Groups, GroupsWhen and IconBrowser rows; the
+  member-rows paragraph; the session-state lines; the "cannot search" limitation rewritten as search
+  by texture id only, and a new one: inheriting is all or nothing, an old group reads as on and the
+  CLI prints nil), `docs/smoke-tests.md` (EDIT-1, 2 and 19 rewritten for the drawers and the default
+  inherit; EDIT-22 the drawers, EDIT-23 Inherit when conditions, EDIT-24 the search; IDS-1's two
+  When steps; the index and the sign-off row), README (the browser's search, a child's conditions,
+  the drawers). The LibKa0s version mentions were Q1's (v1.73.0).
+- **[Q5] Beyond the listed files.** `docs/data-flow.md` (the family's gate names inheriting; the
+  structural writes list Parent group and Inherit when conditions) and `docs/module-map.md` (the
+  Resolver, Groups_When, Groups, SchemaMembers, IconBrowser and test rows) drifted with Q2-Q4 and
+  are brought in line.
+- **[Q5] No Quick Comms deviation.** Nothing in Q1-Q4 departs from the standard beyond what this
+  spec records; the one-consumer drawer (`library-stack-§7`) is ratified in LibKa0s `CLAUDE.md`, not
+  here, so `## Documented deviations` is unchanged.
+- **[Q5] `docs/test-cases.md` and the badge** already matched (`--list` equal after CRLF; Total 859,
+  badge 859/859): Q5 adds no test.
+- **[Q5] Not done (code, not docs).** The `group.when` row's tooltip still says "Every condition you
+  turn on must match" (`locales/enUS.lua`), wording from the enable checkbox the drawers removed. The
+  LibKa0s `docs/api/CONSUMERS.md` census keeps its v1.71.0 stamp (L1's follow-up): Quick Comms now
+  calls `O.Drawer`, but the census is a collection-wide re-run.

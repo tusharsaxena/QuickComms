@@ -48,9 +48,10 @@ band      [ Group v (picker; a green dot marks a group active now; a group insid
           listed, indented, right after it) ][ New group ]
 strip     [ General ][ Callouts ][ When ][ Preview ]
 General   Preview as (page-wide, first), then Name, Enabled, Open the dial on this group, then
-          Parent group (None, or a top-level group), then the icon under an Icon label with
-          Choose icon…, the clear glyph and its color swatch (settings/Editors.lua's chooser, no
-          Icon text box), then Duplicate and Delete, then Restore built-in groups (page-wide)
+          Parent group (None, or a top-level group) beside Inherit when conditions (grayed out
+          with no parent), then the icon under an Icon label with Choose icon…, the clear glyph
+          and its color swatch (settings/Editors.lua's chooser, no Icon text box), then
+          Duplicate and Delete, then Restore built-in groups (page-wide)
 Callouts  Add callout (the callout popup, blank; across the row), Reuse callout
           with Add at the right edge (both 2px short of it), then its callouts as a drag-to-reorder list, each row the handle,
           the icon, the name and channel, then an edit glyph and a remove glyph at the right edge
@@ -61,14 +62,25 @@ Preview   the active-now line, then a table: a gold header row (Callout, What it
 
 **Parent group** (General, the `group.parent` row): a dropdown of None, then every top-level group
 but this one, in the picker's order. A group inside another shows wherever that group is placed (a
-pad draws a section for it, a dial a node ring), gated by its own When and Enabled, while the
-parent's gate the whole; it is never placed on a pad or a dial itself, so picking a parent takes it
-off every pad and dial in the same act, and None does not put it back (Comms Pad → Groups → Add a
+pad draws a section for it, a dial a node ring), gated by its own Enabled and its When (its
+parent's while it inherits, below), while the parent's gate the whole; it is never placed on a pad
+or a dial itself, so picking a parent takes it off every pad and dial in the same act, and None does not put it back (Comms Pad → Groups → Add a
 group does). Groups go one level deep: the dropdown is idle while this group holds groups, and its
 tooltip names them. A group's children are listed in the order they were made in. Delete on a
 parent asks first and says what happens: the groups inside it become top-level groups, in its place
 on every pad and dial. Duplicate of a child puts the copy in the same parent (the chat line says
 so); a parent's copy holds no children. The page's Defaults keeps the parent, as it keeps the icon.
+
+**Inherit when conditions** (General, beside Parent group, the `group.inheritWhen` row): while it is
+ticked, a group inside another is judged by its parent's When instead of its own
+(`Resolver.WhenOf`); its own stored When is kept, unused, for when it is unticked. It is on for every
+group, a seeded battleground node or one of yours, and a group stored before the setting (no field)
+reads as on; unticking stores `false`. The box is grayed out while Parent group is None, since a
+top-level group has no parent to take a When from. The Group picker's dot, the pad, the dial,
+Preview as, the Preview tab and every "why" line follow it. A write repaints the page (the row is
+structural), and the page's Defaults ticks it again. Tooltip: "Use the parent group's When instead
+of this group's own. This group's own conditions are kept for when you untick it. Only a group
+inside another group inherits."
 
 **Restore built-in groups** (General's last row, page-wide, and on the empty "No groups yet"
 General): puts back every shipped set, node and callout the profile no longer has, as new ordinary
@@ -92,15 +104,52 @@ own callouts (when it has any), then one per child; a group with no callouts kee
 place and lays the page out again, so a row resizes. The bytes, the lock and the token notes stay in
 the callout popup's preview.
 
-**When** (`settings/Groups_When.lua`): one row per condition, each with an enable checkbox. Content,
-difficulty, group, leadership, class, specialization (the classes picked, else the player's) and
-role are checkbox rows; the key level is a lowest and highest box; instances, battlegrounds and
-characters (`Name-Realm`) are the library's IdList, each with an add-the-one-you-are-in button, which
-reads where the player is at the click and says so when that is nowhere; a typed id is a positive
-whole number, and a typed character takes the client's case (`bob` reads `Bob-<your realm>`). The
-tab starts with the active-now line. A refused key level or X/Y offset prints its reason and the box
-goes back to the stored value; a refused Name (any field the library draws) prints its reason too.
-A seeded set's When is edited as any group's.
+**When** (`settings/Groups_When.lua`): the active-now line, then the gray line "Every condition you
+set must match. A condition left as Any does not limit the group.", then one drawer per condition
+(the library's `O.Drawer`, LibKa0s `OptionsDrawer.lua` since v1.73.0), in this order: Content,
+Instance, Difficulty, Key level, Group, Leader or assist, Class, Specialization, Role, Character,
+Battleground.
+
+```
+header   > Content                                                      Any
+header   v Difficulty                                        Heroic, Mythic
+drawer     [ ] Normal          [x] Heroic          [x] Mythic
+           [ ] Mythic Keystone [ ] LFR             [ ] Story
+           [ ] Follower
+                                               [ Select all ][ Clear (Any) ]
+header   > Key level                                               10 to 15
+```
+
+- **The header**: a chevron (right while closed, down while open), the condition's name (gold while
+  it is set, white otherwise) and, at the right, a summary on one line: "Any" in gray while unset,
+  else the chosen values in list order, comma-separated and cut with an ellipsis; an id list names
+  its one entry or counts several ("2 instances", "2 battlegrounds", "2 characters"); the key level
+  reads "10 or higher", "15 or lower", "10 to 15", or "12" when both ends are equal. Hovering it
+  shows the condition's tooltip. A click opens or closes its drawer (refused in combat).
+- **The drawer**: a box joined under the header (the header's bottom corners square off and its
+  edge goes gold while it is open), its rows lined up under the condition's name. Content,
+  difficulty, group, leadership, class, specialization (the classes picked, else the player's) and
+  role are checkboxes in three columns; the key level is a Lowest and a Highest box; instances,
+  battlegrounds and characters (`Name-Realm`) are the library's IdList, each with an
+  add-the-one-you-are-in button, which reads where the player is at the click and says so when that
+  is nowhere; a typed id is a positive whole number, and a typed character takes the client's case
+  (`bob` reads `Bob-<your realm>`).
+- **Select all and Clear (Any)**, right-aligned under the choices: Select all (checkbox conditions
+  only) ticks every value the drawer lists (the specialization row, the specs it offers); Clear (Any)
+  unsets the condition and leaves the drawer open. Both read the profile at the click.
+- **No enable checkbox**: a condition is set while it has values. Drawers start closed, a set
+  condition's too (its summary says what is set), and several can be open at once; which are open is
+  per group and per session (`NS.State.whenOpen`): it survives the repaint a write brings and
+  switching groups, and a profile switch closes them all.
+- **An inheriting group** (Inherit when conditions, above) shows its parent's conditions here,
+  read-only: the active-now line, then the muted gold line "Uses <parent>'s conditions. Untick
+  Inherit when conditions on the General tab to set this group's own.", then the gray line, then the
+  parent's When in the same drawers. They open and close (the open set is this group's own), the
+  choices are grayed out, and there is no Select all or Clear (Any).
+
+A refused key level or X/Y offset prints its reason and the box goes back to the stored value; a
+refused Name (any field the library draws) prints its reason too. A seeded set's When is edited as
+any group's.
 
 **The icon** (General): under an **Icon** label, the icon as the pad and the dial draw
 it (a glyph in its color, a question mark for none), **Choose icon…**, a **clear** glyph (the
@@ -251,7 +300,7 @@ body     [Name          ] [Channel       ]   the callout.* member rows' labels a
 `settings/IconBrowser.lua`: where an icon is picked, opened by Choose icon… (or a click on the icon)
 in the callout popup and on a group's General tab. It is not a page. Its window is the popup's
 (`settings/ModalWindow.lua`: Blizzard's `SettingsFrameTemplate`, titled "Ka0s Quick Comms", its close
-X, the gold header), 560 × 550, with its own full-screen catcher in the `FULLSCREEN` strata, above the
+X, the gold header), 560 × 594, with its own full-screen catcher in the `FULLSCREEN` strata, above the
 popup and the popup's catcher (`DIALOG`): it is modal to whatever opened it. Only one browser exists,
 built on its first open. The EllesmereUI skin paints it as it paints the popup.
 
@@ -259,9 +308,12 @@ built on its first open. The EllesmereUI skin paints it as it paints the popup.
 window   Blizzard's settings window, titled Ka0s Quick Comms                 (its close X)
 header   Choose an icon, the gold rule under it
 tabs     [ Markers ][ Game icons ][ Glyphs ]   (the library's tab strip)
-toolbar  Game icons: Show (All / Spells / Items). Glyphs: Icon color (the swatch). At the
-         right, how many icons the tab holds.
+toolbar  Game icons: Show (All / Spells / Items). Glyphs: Icon color (the swatch). Then the
+         search box (a magnifier inside its left edge, a clear mark at its right while it holds
+         text). At the right, how many icons the tab holds, or "N of M icons" while a search
+         narrows it.
 grid     12 × 7 icons and a scrollbar, 10px under the toolbar; the mouse wheel scrolls it
+hint     Game icons only: the search hint and Copy wowhead.com/icons, in a box under the grid
 footer   the selected icon (a glyph in the color) and its name, then Choose and Cancel
 ```
 
@@ -273,6 +325,21 @@ footer   the selected icon (a glyph in the color) and its name, then Choose and 
   reads "Arrow circle down"; the curated glyphs keep their localized labels).
 - **The grid is virtualized**: 84 cells are built once and re-dressed from the tab's list as it
   scrolls, so the thousands of game icons cost no more frames than a short tab.
+- **Search**: the box filters the shown tab as you type, not case-sensitive, as plain text (`%` or
+  `[` is a letter): Markers by name; Glyphs by catalog key or shown label (`arrow-circle` and
+  `arrow circle` both find "Arrow circle down"); Game icons by the texture id's digits (a texture
+  path the macro list gives, by its file name). The results show from the top; with nothing matching
+  the grid says "No icon matches your search.". The text lasts the session: a tab switch and a later
+  open keep it (the box shows it) and filter again, and the clear mark empties it. A stored icon the
+  search hides stays selected in the footer. Tooltip: "Markers by name, glyphs by name, game icons
+  by texture id. Not case-sensitive."
+- **The Wowhead hint** (Game icons only): the client has no API that names a game icon from its file
+  id, so the tab searches by id alone and says so: "Search by texture id. To find an icon by its name
+  (e.g. ability_cheapshot), look it up on Wowhead and type its id here." Its button, **Copy
+  wowhead.com/icons**, shows `https://www.wowhead.com/icons` in a small copy window (the library's
+  `CopyWindow`, as the Share page's export is: `QuickCommsIconLinkWindow`, titled "Quick Comms:
+  Wowhead icons", 420 × 120, over the browser), selected for Ctrl+C; the game cannot open a web
+  page. It closes with the browser; Escape with its box focused closes it alone.
 - **Pick**: hovering an icon names it (its label, or "Texture id N" for a game icon); a click selects
   it (gold behind it, named in the footer); a double-click or **Choose** chooses it. The stored icon
   is preselected, and its tab opened and scrolled to it. No icon, or one no tab lists (a seeded

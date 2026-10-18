@@ -56,7 +56,9 @@ surface lists it: `Surfaces.BuildPlan` gives a pad a section for the parent's ow
 has any), then one section per child that the Resolver finds active, in `Library.Children`'s order;
 `Surfaces.BuildDialPlan` gives a dial the parent's own callouts first, then a node ring per active
 child (pinned to the compass winds when every child has one and the parent has no callouts of its
-own). The parent's When and Enabled gate the whole family. Deleting a parent (`Library.DeleteGroup`)
+own). The parent's When and Enabled gate the whole family, and a child that inherits its When
+conditions (`group.inheritWhen`, on unless stored `false`) is judged by the parent's When instead of
+its own (`Resolver.WhenOf`). Deleting a parent (`Library.DeleteGroup`)
 makes its children top-level groups, in its place on every pad and dial, in one act.
 
 ## Today: a restriction or combat edge
@@ -92,7 +94,7 @@ The checkbox, `/qc test` and the launcher entry call `Preview.SetTestMode`. It i
 
 ## Today: an editor writes a member
 
-A widget on an editor page (or `/qc set group.name …`) writes a member row through the seam: `resolveRoot` finds the member (`Library.Member`) by the instance argument or the page's selection (a callout only by its id: `/qc set callout.text <id> …`), the row validates and stores the field, and its `onChange` calls `Library.Touch`, which sends `LIBRARY_CHANGED`. `Surfaces.Request` rebuilds the pads (in combat: queued, with the stale hint). A name, Enabled or When write (`Editors.STRUCTURAL`), or a membership change, repaints every editor page once on the next frame; any other field write refreshes the widgets and the live lines in place. Creating, deleting, duplicating, reordering and restoring are Library's own operations and end the same way. An act of several writes (New group, Restore built-in groups, a Parent group write with the surfaces it leaves, a page's Defaults) runs inside `Library.Batch`, which sends one `LIBRARY_CHANGED` for the whole act, so the pads rebuild once.
+A widget on an editor page (or `/qc set group.name …`) writes a member row through the seam: `resolveRoot` finds the member (`Library.Member`) by the instance argument or the page's selection (a callout only by its id: `/qc set callout.text <id> …`), the row validates and stores the field, and its `onChange` calls `Library.Touch`, which sends `LIBRARY_CHANGED`. `Surfaces.Request` rebuilds the pads (in combat: queued, with the stale hint). A name, Enabled, When, Parent group or Inherit when conditions write (`Editors.STRUCTURAL`), or a membership change, repaints every editor page once on the next frame; any other field write refreshes the widgets and the live lines in place. Creating, deleting, duplicating, reordering and restoring are Library's own operations and end the same way. An act of several writes (New group, Restore built-in groups, a Parent group write with the surfaces it leaves, a page's Defaults) runs inside `Library.Batch`, which sends one `LIBRARY_CHANGED` for the whole act, so the pads rebuild once.
 
 ## Today: the callout popup saves
 
