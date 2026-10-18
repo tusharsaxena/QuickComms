@@ -225,10 +225,12 @@ a row's edit glyph (the edit mark; its tooltip is headed Edit) → the popup ope
 settings window, and looks like the settings window itself: the same background and border, the
 window title "Ka0s Quick Comms" in the top bar and Blizzard's close X at its top right (its
 background as bright as the settings window's, not darkened by the dim around it), then the gold
-"Edit callout" header and rule, red Save and Cancel buttons. There is **no scrollbar**: the window is
+"Edit callout" header and rule, then Choose an icon and the Preview heading over the baked line,
+a clear gap (about a section's) under that line, and the red Cancel and Save buttons, Cancel on the
+left; there is no Insert a token dropdown. There is **no scrollbar**: the window is
 exactly as tall as its content, with no empty band under the error line and nothing cut off at the
-bottom. Clicking the page behind it does nothing. Type more text and press Enter → What it sends here follows the edit, while the chip on
-the pad still sends the old line; type text long enough that What it sends here wraps onto another
+bottom. Clicking the page behind it does nothing. Type more text and press Enter → Preview follows the edit, while the chip on
+the pad still sends the old line; type text long enough that Preview wraps onto another
 line → the window grows with it. Clear the Name and click Save → the popup stays open and a red line names Name;
 nothing changed on the pad, and the window grew to show the red line. Type a name back, pick an icon under Choose an icon, Save → the popup
 closes, the row and the chip show the new name, text and icon. Result:
@@ -260,6 +262,16 @@ facade=true enabled=true applied=true failed=false`. Turn QuickComms off in Elle
 Third-Party Addons list and `/reload` → the popup is Blizzard's settings window again (EllesmereUI
 does not call back: `facade=false enabled=n/a applied=false`). Disable EllesmereUI → the popup opens in Blizzard's look and no Lua
 error appears. Result:
+
+**EDIT-14. The token glyph beside Text.** Edit a party callout (EDIT-9) → a small white "i" sits
+just right of the Text label, about the label's height, centered on it and clear of the box under
+it. Hover it → a tooltip headed Tokens lists each token with one line of help ({target}, {focus},
+the eight markers, {me}, {spec}, {role}, {key}, {dungeon}, then {spell:ID}), with no
+{group1} … {group8} line, and fits on screen without wrapping each line. Pick Raid as the Channel
+and hover again → one {group1} … {group8} line appears (no Save needed). Move off → the tooltip
+hides. Cancel, then open another settings page with text boxes (a group's General tab) and open
+the popup again a few times → no stray "i" appears beside any other box, and the popup shows
+exactly one. Result:
 
 ## Dial
 
@@ -468,6 +480,6 @@ from the client, so this check needs a non-English client pass. Result:
 |---|---|---|
 | INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..2, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet; LOC-1 re-enumerated in phase 5 and owed a non-English client pass |
 | SEND-1..5, PAD-1..8 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet; PAD-8 added in phase 5 (audit QC-07) |
-| EDIT-1..13 | Phase 3: the editors | No client pass recorded yet; EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17) |
+| EDIT-1..14 | Phase 3: the editors | No client pass recorded yet; EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17); EDIT-9 rewritten and EDIT-14 added when the token dropdown became the Text label's info glyph (2026-10-18) |
 | DIAL-1..12 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
 | SHARE-1..6, LOOK-1..2, ICON-1, BG-1..2, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; LOOK-2's in-combat step goes through `/qc set` |

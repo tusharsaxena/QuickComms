@@ -1,7 +1,8 @@
 local _, NS = ...
 -- settings/Callouts.lua — the callout helpers the editors share (callouts-owned-by-groups spec): the
--- token picker's list for a channel, and what a callout sends here. settings/CalloutPopup.lua draws
--- both against its draft, and settings/Groups.lua's Preview tab names each callout's line. There is
+-- tokens a channel offers and one line of help for each, and what a callout sends here.
+-- settings/CalloutPopup.lua draws both against its draft (the help is the tooltip on the Text
+-- label's info glyph), and settings/Groups.lua's Preview tab names each callout's line. There is
 -- no Callouts page: a callout is made, edited and removed on its group's Callouts tab.
 
 local QC = NS.addon
@@ -12,22 +13,62 @@ local L = NS.L
 Settings.Callouts = Settings.Callouts or {}
 local C = Settings.Callouts
 
--- The picker's tokens (spec §8.1). The eight raid markers are offered by name ({star} to {skull});
--- a typed {rt1} to {rt8} works the same. {spell:ID} needs an id, so it is typed, never picked.
+-- The tokens a callout's text offers (spec §8.1). The eight raid markers are named ({star} to
+-- {skull}); a typed {rt1} to {rt8} works the same. {spell:ID} needs an id, so it is not in the
+-- list: the help names it after the list.
 C.TOKENS = { "{target}", "{focus}", "{skull}", "{cross}", "{square}", "{moon}", "{triangle}", "{diamond}",
     "{circle}", "{star}", "{me}", "{spec}", "{role}", "{key}", "{dungeon}" }
 
 -- The channels that can resolve to Raid (spec §8.2), where {group1} to {group8} expand.
 local RAID_CAPABLE = { raid = true, raidWarning = true, smartGroup = true, smartLead = true }
 
---- The tokens the picker offers for a channel: C.TOKENS, plus {group1} to {group8} only when the
---- channel can resolve to Raid (spec §8.1).
+--- The tokens offered for a channel: C.TOKENS, plus {group1} to {group8} only when the channel can
+--- resolve to Raid (spec §8.1).
 function C.TokensFor(channel)
     local out = {}
     for i, token in ipairs(C.TOKENS) do out[i] = token end
     if RAID_CAPABLE[channel] then
         for n = 1, 8 do out[#out + 1] = "{group" .. n .. "}" end
     end
+    return out
+end
+
+-- What each token is filled in with (spec §8.1; modules/Tokens.lua expands them). The markers are
+-- worded from their names, so they have no entry here.
+local MARKER_NAMES = { skull = L["Skull"], cross = L["Cross"], square = L["Square"], moon = L["Moon"],
+    triangle = L["Triangle"], diamond = L["Diamond"], circle = L["Circle"], star = L["Star"] }
+local TOKEN_HELP = {
+    ["{target}"]  = L["Your target's name, filled in by the game as it sends."],
+    ["{focus}"]   = L["Your focus's name, filled in by the game as it sends."],
+    ["{me}"]      = L["Your character's name."],
+    ["{spec}"]    = L["Your specialization."],
+    ["{role}"]    = L["Your role: tank, healer or damage."],
+    ["{key}"]     = L["The keystone level. Empty outside Mythic+."],
+    ["{dungeon}"] = L["The keystone dungeon's name. Empty outside Mythic+."],
+}
+local GROUP_TOKENS = "{group1} … {group8}"
+local SPELL_TOKEN = "{spell:ID}"
+
+--- One line of help per token offered for `channel`, as { token, text } in C.TokensFor's order:
+--- {group1} to {group8} folded into one line (only where the channel can resolve to Raid), then
+--- {spell:ID}, which is typed with its id.
+--- @return table[]
+function C.TokenHelp(channel)
+    local out, grouped = {}, false
+    for _, token in ipairs(C.TokensFor(channel)) do
+        local marker = MARKER_NAMES[token:match("^{(%a+)}$") or ""]
+        if token:find("^{group%d}$") then
+            if not grouped then
+                grouped = true
+                out[#out + 1] = { GROUP_TOKENS, L["That raid group, filled in by the game. Raid only."] }
+            end
+        elseif marker then
+            out[#out + 1] = { token, L["The %s raid marker."]:format(marker) }
+        else
+            out[#out + 1] = { token, TOKEN_HELP[token] or "" }
+        end
+    end
+    out[#out + 1] = { SPELL_TOKEN, L["A link to the spell with that id."] }
     return out
 end
 

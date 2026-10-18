@@ -99,19 +99,26 @@ template declares it at absolute frame level 0), so the popup is as bright as th
 ```
 window   Blizzard's settings window, titled Ka0s Quick Comms                 (its close X)
 header   New callout / Edit callout, the gold rule under it
-body     Name, Text, Channel, Icon (the callout.* member rows' labels and help), Insert a
-         token, Choose an icon, What it sends here (the baked line and its bytes, or why it
-         sends nothing, and any lock), then Save and Cancel, and under them the line that names
-         a field Save refused
+body     Name, Text, Channel, Icon (the callout.* member rows' labels and help), an info
+         glyph right of the Text label (its tooltip lists the tokens), Choose an icon, Preview
+         (the baked line and its bytes, or why it sends nothing, and any lock), a gap, then
+         Cancel and Save, and under them the line that names a field Save refused
 ```
 
 - **The draft.** The popup edits a plain copy of the callout's four fields (blank for Add). Every
-  control writes the draft, never the profile, and the token list and What it sends here bake the
-  draft, so both follow each edit before anything is saved. A text box commits to the draft on Enter
+  control writes the draft, never the profile, and Preview bakes the draft, so it follows each
+  edit before anything is saved. A text box commits to the draft on Enter
   (or its Okay button), as on every page; what a box shows that Enter did not commit is taken into
   the draft before any other draft write, before a seam write's refresh and by Save, so clicking
-  Save commits it and a pick or a token never wipes it. The token picker offers
-  `{group1}`…`{group8}` only when the draft's channel can resolve to Raid.
+  Save commits it and a pick never wipes it.
+- **The token glyph.** The library catalog's `info` mark, right of the Text label, sized to the
+  label's font (14 to 16 px) and vertically centered on it. Its tooltip lists every token the
+  draft's channel offers, one line each (`Settings.Callouts.TokenHelp`), read when it shows, so it
+  follows a channel picked since: `{group1} … {group8}` is one line, only when the channel can
+  resolve to Raid, and `{spell:ID}` is last. Tokens are typed into the text; nothing inserts them.
+  The glyph is kept on the Text box's frame and reused, re-anchored on every render, and hidden
+  when the box is released (an `OnRelease` callback, the library's landing-logo pattern), so a
+  frame AceGUI hands to another EditBox never shows it.
 - **Save** checks the draft with the member rows' own validators (the name, the text and its
   length, the channel, the icon). A field that fails keeps the popup open and names the field;
   otherwise Save writes one act (`Library.Batch`): for a listed callout, each field that differs

@@ -451,7 +451,7 @@ Total.
 - editors: a row with edit shows the edit glyph and fires it
 - editors: Snapshot is the preview's while Preview as is on
 
-### test_callout_popup.lua (25)
+### test_callout_popup.lua (28)
 
 - popup: Add opens blank with Smart group
 - popup: edit opens filled in
@@ -462,11 +462,14 @@ Total.
 - popup: Cancel on edit writes nothing
 - popup: Save with an empty name stays open and writes nothing
 - popup: Save takes the text typed into a box without Enter
-- popup: a pick, a token or a seam write keeps the text typed without Enter
+- popup: a pick or a seam write keeps the text typed without Enter
 - popup: the callout deleted under an open popup closes it; a late Save writes nothing
 - popup: closing the settings window cancels
 - popup: Escape and a profile change cancel
-- popup: Insert a token appends to the draft's text
+- popup: there is no token dropdown; an info glyph sits right of the Text label
+- popup: the info glyph's tooltip lists the tokens, {group1} to {group8} only for a raid channel
+- popup: the preview is headed Preview, a gap above Cancel then Save
+- callout helpers: TokenHelp folds {group1}-{group8} into one line and names {spell:ID}
 - popup: Choose an icon writes the draft's icon
 - popup: the window is Blizzard's settings-window template, and its own close X cancels
 - popup: the template's background sits over the catcher's dim and under the border
@@ -916,7 +919,7 @@ Total.
 | test_library.lua | 60 |
 | test_members.lua | 23 |
 | test_editors.lua | 14 |
-| test_callout_popup.lua | 25 |
+| test_callout_popup.lua | 28 |
 | test_eui_skin.lua | 8 |
 | test_groups_when.lua | 12 |
 | test_page_groups.lua | 24 |
@@ -942,4 +945,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **732** |
+| **Total** | **735** |

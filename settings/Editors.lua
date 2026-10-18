@@ -199,23 +199,15 @@ function Ed.Scalar(rows)
     return out
 end
 
---- A dropdown that acts on the choice at once ("Add a group", "Insert a token"), as a RenderGrid item.
---- `entries` is a list, or a function; with `ctx`, a function is re-read in place (Ed.Live), so a
---- list that depends on a field (the token list on the callout's channel) follows it without a repaint.
-function Ed.ActionDropdown(label, tooltip, entries, onPick, ctx)
-    local function current()
-        if type(entries) == "function" then return entries() end
-        return entries
-    end
+--- A dropdown that acts on the choice at once ("Add a group"), as a RenderGrid item, over the list
+--- `entries`.
+function Ed.ActionDropdown(label, tooltip, entries, onPick)
     return { make = function(_, parent, rel)
         local h = H()
         local dd = h.AceGUI:Create("Dropdown")
         dd:SetLabel(label)
-        local list, order = Ed.PickerList(current())
+        local list, order = Ed.PickerList(entries)
         dd:SetList(list, order)
-        if ctx and type(entries) == "function" then
-            Ed.Live(ctx, function() dd:SetList(Ed.PickerList(current())) end)
-        end
         dd:SetRelativeWidth(rel or 0.5)
         dd:SetCallback("OnValueChanged", function(_, _, key) onPick(key) end)
         h.AttachTooltip(dd, label, tooltip)
