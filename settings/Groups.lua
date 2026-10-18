@@ -528,6 +528,6 @@ function G.RestoreDefaults(ctx)
 end
 
 Ed.RegisterPage(PAGE, L["Groups"], "GroupsPanel", render, {
-    tooltip = L["Turn the selected group back on, stop it opening the dial, and turn Preview as off. Its name, callouts and When are kept."],
+    tooltip = L["Turn the selected group back on, stop it opening the dial, turn Preview as off, and turn Inherit when conditions back on. Its name, callouts and own When are kept."],
     onClick = function(ctx) G.RestoreDefaults(ctx) end,
 })

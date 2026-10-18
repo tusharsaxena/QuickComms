@@ -716,8 +716,15 @@ test("icon browser: the search box keeps its text inset clear of the magnifier a
     end
 end)
 
-test("icon browser: Src.Search narrows its last results and memoizes each icon's text", function()
+test("icon browser: Src.Search narrows its last results, and stays correct when the query widens or the list grows", function()
     local Src = select(5, boot())
+    -- A query that holds the last one reads the last results, not the list: an entry swapped in
+    -- place (same length) after the first search is not seen by the narrower one.
+    local swapped = { 132092, 99, 51320 }
+    assertEqual(table.concat(Src.Search(swapped, "game", "13"), ","), "132092,51320")
+    swapped[2] = 1399
+    -- red under: drop the last-results narrowing
+    assertEqual(#Src.Search(swapped, "game", "139"), 0, "narrowed from the last results")
     local list = { 132092, 99, 51320, 136116, 13209 }
     assertEqual(table.concat(Src.Search(list, "game", "13"), ","), "132092,51320,136116,13209")
     assertEqual(table.concat(Src.Search(list, "game", "1320"), ","), "132092,51320,13209", "narrowed")

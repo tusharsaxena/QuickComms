@@ -562,7 +562,7 @@ Total.
 - icon browser: Src.Search matches a marker by name, a glyph by key or label, a game icon by id
 - icon browser: the search box filters the tab as you type; the count says N of M
 - icon browser: the search box keeps its text inset clear of the magnifier after AceGUI resets it
-- icon browser: Src.Search narrows its last results and memoizes each icon's text
+- icon browser: Src.Search narrows its last results, and stays correct when the query widens or the list grows
 - icon browser: the search is kept across tabs and the session's opens, and re-filters each tab
 - icon browser: Game icons carries the Wowhead hint; its button shows the address in a copy window
 
