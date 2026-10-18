@@ -49,8 +49,7 @@ test("groups page: [exit] a new group with a callout and a When shows first on t
     assertTrue(cid ~= nil, "the popup's Save put the callout in the group")
     assertEqual(NS.db.profile.callouts[cid].text, "Incoming")
     w = P.tab("groups", "When")
-    P.find(w, "CheckBox", "Content"):__fire("OnValueChanged", true)
-    P.flush()
+    P.drawer(w, "Content"):__fire("OnClick")
     w = P.tab("groups", "When")
     P.find(w, "CheckBox", "M+"):__fire("OnValueChanged", true)
     assertTrue(NS.db.profile.groups[gid].when.content.mythicPlus)
@@ -457,6 +456,8 @@ test("groups page: a seeded set's When tab edits it as any group's; Preview bake
     assertTrue(P.hasText(w, "Active now."))
     -- red under: describe a seeded group's When as read-only text, as the built-ins' was
     assertTrue(not P.hasText(w, "conditions are fixed"))
+    P.drawer(w, "Content"):__fire("OnClick")
+    w = P.tab("groups", "When")
     local raid = P.find(w, "CheckBox", "Raid")
     assertTrue(raid ~= nil, "the Content row's choices, as a user group's")
     raid:__fire("OnValueChanged", true)
@@ -473,6 +474,7 @@ test("groups page: [review 5] the When tab refuses an upside-down key-level rang
     local NS, m, P = open()
     local gid = NS.Library.CreateGroup({ name = "Mine", when = { keyLevel = { min = 12 } } })
     pick(NS, gid)
+    NS.State.whenOpen[gid] = { keyLevel = true }
     local w = P.tab("groups", "When")
     m.prints = {}
     local box = P.find(w, "EditBox", "Highest key level")
@@ -609,6 +611,97 @@ test("groups page: [nesting] a child's Duplicate tooltip says the copy sits in t
     assertTrue(table.concat(said, "\n"):find("on no pad", 1, true) ~= nil, "a top-level group's is unchanged")
 end)
 
+test("groups page: [drawers] the When tab draws one drawer per condition, closed, each with its summary", function()
+    local NS, _, P = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine", when = { content = { raid = true, dungeon = true } } })
+    pick(NS, gid)
+    local w = P.tab("groups", "When")
+    assertTrue(P.hasText(w, "Not active now"), "the live line stays on top")
+    assertTrue(P.hasText(w, "Every condition you set must match. A condition left as Any does not limit the group."))
+    -- red under: keep the enable checkbox per condition
+    assertNil(P.find(w, "CheckBox", "Content"), "no enable checkbox")
+    assertEqual(table.concat(P.drawers(w), ","),
+        "Content,Instance,Difficulty,Key level,Group,Leader or assist,Class,Specialization,Role,Character,Battleground")
+    local content = P.drawer(w, "Content")
+    assertTrue(content.__ka0sDrawerSet, "a set condition reads gold")
+    assertEqual(content.__ka0sDrawerSummary, "Dungeon, Raid")
+    assertFalse(content.__ka0sDrawerOpen)
+    local role = P.drawer(w, "Role")
+    assertFalse(role.__ka0sDrawerSet)
+    assertEqual(role.__ka0sDrawerSummary, "Any")
+    -- red under: draw the choices of a set condition with its drawer closed
+    assertNil(P.find(w, "CheckBox", "Raid"), "closed: the choices are not drawn")
+end)
+
+test("groups page: [drawers] a header opens and closes its drawer; the open set is per group and survives a repaint", function()
+    local NS, _, P = open()
+    local a = NS.Library.CreateGroup({ name = "A" })
+    local b = NS.Library.CreateGroup({ name = "B" })
+    pick(NS, a)
+    local w = P.tab("groups", "When")
+    P.drawer(w, "Content"):__fire("OnClick")
+    P.drawer(w, "Role"):__fire("OnClick")
+    -- red under: an onToggle that stores nothing in NS.State.whenOpen
+    assertTrue(NS.State.whenOpen[a].content)
+    w = P.redraw("groups")
+    assertTrue(P.drawer(w, "Content").__ka0sDrawerOpen, "still open after a repaint")
+    assertTrue(P.drawer(w, "Role").__ka0sDrawerOpen, "several open at once")
+    assertTrue(P.find(w, "CheckBox", "Raid") ~= nil, "the Content choices")
+    assertTrue(P.find(w, "CheckBox", "Healer") ~= nil, "the Role choices")
+    assertEqual(#P.all(w, "Button", "Select all"), 2)
+    assertEqual(#P.all(w, "Button", "Clear (Any)"), 2)
+    pick(NS, b)
+    w = P.tab("groups", "When")
+    assertFalse(P.drawer(w, "Content").__ka0sDrawerOpen, "another group's drawers are its own")
+    pick(NS, a)
+    w = P.tab("groups", "When")
+    P.drawer(w, "Content"):__fire("OnClick")
+    w = P.tab("groups", "When")
+    assertFalse(P.drawer(w, "Content").__ka0sDrawerOpen)
+    assertNil(P.find(w, "CheckBox", "Raid"))
+end)
+
+test("groups page: [drawers] Select all ticks every value; Clear (Any) unsets the condition and keeps the drawer open", function()
+    local NS, _, P = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine", when = { content = { raid = true } } })
+    pick(NS, gid)
+    NS.State.whenOpen[gid] = { content = true }
+    local w = P.tab("groups", "When")
+    -- red under: a Select all that writes nothing
+    P.find(w, "Button", "Select all"):__fire("OnClick")
+    for _, token in ipairs(NS.Resolver.TOKENS.content) do
+        assertTrue(NS.db.profile.groups[gid].when.content[token], token)
+    end
+    w = P.tab("groups", "When")
+    -- red under: a Clear (Any) that writes nothing
+    P.find(w, "Button", "Clear (Any)"):__fire("OnClick")
+    assertNil(NS.db.profile.groups[gid].when.content, "unset")
+    assertTrue(NS.State.whenOpen[gid].content, "the drawer stays open")
+    w = P.tab("groups", "When")
+    assertEqual(P.drawer(w, "Content").__ka0sDrawerSummary, "Any")
+end)
+
+test("groups page: [drawers] an id or key-level drawer has Clear (Any) alone, and Clear unsets it", function()
+    local NS, _, P = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine",
+        when = { instances = { [2526] = true }, keyLevel = { min = 10 } } })
+    pick(NS, gid)
+    NS.State.whenOpen[gid] = { instances = true }
+    local w = P.tab("groups", "When")
+    -- red under: offer Select all on an id list
+    assertNil(P.find(w, "Button", "Select all"))
+    assertTrue(P.find(w, "EditBox", "Add an instance") ~= nil, "the id list is in the drawer")
+    assertEqual(P.drawer(w, "Key level").__ka0sDrawerSummary, "10 or higher")
+    P.find(w, "Button", "Clear (Any)"):__fire("OnClick")
+    assertNil(NS.db.profile.groups[gid].when.instances)
+    NS.State.whenOpen[gid] = { keyLevel = true }
+    w = P.tab("groups", "When")
+    assertTrue(P.find(w, "EditBox", "Lowest key level") ~= nil)
+    assertNil(P.find(w, "Button", "Select all"))
+    P.find(w, "Button", "Clear (Any)"):__fire("OnClick")
+    assertNil(NS.db.profile.groups[gid].when.keyLevel)
+end)
+
 local DUNGEON = { inInstance = true, instanceType = "party", difficultyID = 2, instanceID = 2526, inGroup = true }
 
 test("groups page: [final 20] the Instances row adds a typed id, removes one, and refuses a fraction or a negative", function()
@@ -616,8 +709,7 @@ test("groups page: [final 20] the Instances row adds a typed id, removes one, an
     local gid = NS.Library.CreateGroup({ name = "Mine" })
     pick(NS, gid)
     local w = P.tab("groups", "When")
-    P.find(w, "CheckBox", "Instance"):__fire("OnValueChanged", true)
-    P.flush()
+    P.drawer(w, "Instance"):__fire("OnClick")
     w = P.tab("groups", "When")
     local box = P.find(w, "EditBox", "Add an instance")
     assertTrue(box ~= nil)

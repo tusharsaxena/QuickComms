@@ -164,3 +164,32 @@ LibKa0s change follows `docs/releasing.md`; `libs/` is only ever re-vendored, ne
 - **[Q1] The vendor gate stays red until v1.73.0 is tagged.** `tests/test_vendor_sync.lua`
   resolves the provenance line's tag in `../LibKa0s`; v1.73.0 is not tagged and tagging is the
   owner's, so its two pair cases fail on the missing tag alone.
+- **[Q2] The drawers.** `W.Render` draws the live line, the grey line ("Every condition you set
+  must match. A condition left as Any does not limit the group."), then one `H.Drawer` per `W.ROWS`
+  entry: `label` the Resolver's label, `tooltip` `W.TIP`, `summary` / `set` functions read fresh
+  from the profile at draw, `open` from `NS.State.whenOpen[gid][row]`, `onToggle` storing it (nil
+  when closed), `body` the row's choices. No refresh of its own on a toggle (the library's
+  `RefreshPanel`); a write still repaints through `group.when` being structural (Ed.STRUCTURAL), so
+  the summary follows the next frame. The enable checkbox and its `Ed.RequestRefresh` are gone.
+- **[Q2] Closed by default.** A drawer is open only while the player opened it this session, a set
+  condition included (its summary says what is set); the open set is per group, survives a repaint
+  and is cleared on a profile switch (Editors' existing `whenOpen` loop).
+- **[Q2] The summary** is `W.Summary(row, when)` (pure, tested): "Any" while unset; checkbox rows
+  list the chosen labels in `W.Values` order joined by ", " (the drawer cuts it with an ellipsis);
+  an id row names its one entry (`KIND.info`) or counts several ("2 instances", "2 battlegrounds",
+  "2 characters"); the key level reads "10 or higher", "15 or lower", "10 to 15", or "12" when both
+  ends are equal.
+- **[Q2] Three columns** are one wide `RenderGrid` item per line of up to three `CheckBox`es at
+  relative width 0.32 (RenderGrid pairs its cells two to a line; 0.32 keeps a line under 1 for the
+  ScrollFrame's clip). The checkboxes and the key-level boxes call `SetDisabled(true)` under
+  `ctx.__renderDisabled`, so Q3's read-only drawer (`spec.disabled`) needs nothing more from them.
+- **[Q2] Select all / Clear (Any)** are the drawer's `actions`: Select all (checkbox rows only)
+  writes `W.SelectAll` (pure, tested: every value `W.Values` lists, so the specialization row ticks
+  the specs it offers and no other); Clear (Any) writes `W.ClearRow` on every row and leaves the
+  drawer open. Both read the profile at the click. Neither is disabled while it would do nothing.
+- **[Q2] Tests.** `tests/page_helpers.lua` gains `P.drawer(widgets, label)` (the header button,
+  for `__fire("OnClick")` and its `__ka0sDrawer*` dress) and `P.drawers(widgets)`; the four page
+  cases that switched a row on through its enable checkbox now open its drawer. Total 837 -> 844.
+- **[Q2] Not committed.** The Q1 re-vendor sits uncommitted in the worktree and the gate's two
+  vendor-pair cases stay red on the untagged v1.73.0 alone (Q1's note), so Q2 is left uncommitted
+  on top of it rather than committed against a red gate or without the drawer it calls.

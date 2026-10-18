@@ -154,3 +154,41 @@ test("when: [final 2, 11] ResolveValue maps a typed value onto the token or id i
     assertNil((W.ResolveValue("instances", "Nowhere")))
     assertNil((W.ResolveValue("spec", "abc")))
 end)
+
+test("when: [drawers] Summary reads Any while a row is unset, else its values in the row's order", function()
+    local _, W = boot()
+    assertEqual(W.Summary("content", {}), "Any")
+    assertEqual(W.Summary("content", { content = {} }), "Any", "an emptied row is unset")
+    -- red under: list the chosen values in pairs() order rather than W.Values order
+    assertEqual(W.Summary("content", { content = { mythicPlus = true, dungeon = true } }), "Dungeon, M+")
+    assertEqual(W.Summary("role", { role = { DAMAGER = true, TANK = true } }), "Tank, Damage")
+    local NS = T.bootAddon()
+    assertEqual(W.Summary("class", { class = { MAGE = true } }), NS.Compat.ClassName("MAGE") or "MAGE")
+end)
+
+test("when: [drawers] Summary gives the key level and the id rows a short phrase", function()
+    local _, W = boot()
+    assertEqual(W.Summary("keyLevel", { keyLevel = { min = 10 } }), "10 or higher")
+    assertEqual(W.Summary("keyLevel", { keyLevel = { max = 15 } }), "15 or lower")
+    assertEqual(W.Summary("keyLevel", { keyLevel = { min = 10, max = 15 } }), "10 to 15")
+    assertEqual(W.Summary("keyLevel", { keyLevel = { min = 12, max = 12 } }), "12")
+    assertEqual(W.Summary("keyLevel", {}), "Any")
+    -- one entry by its name, several by their count
+    assertEqual(W.Summary("battleground", { battleground = { [2107] = true } }), "Arathi Basin")
+    assertEqual(W.Summary("instances", { instances = { [2526] = true, [2527] = true } }), "2 instances")
+    assertEqual(W.Summary("characters", { characters = { ["Bob-Area52"] = true } }), "Bob-Area52")
+    assertEqual(W.Summary("characters", { characters = { ["Bob-Area52"] = true, ["Al-Area52"] = true } }), "2 characters")
+end)
+
+test("when: [drawers] SelectAll ticks every value the row offers, and never mutates its input", function()
+    local NS, W = boot()
+    NS.Situation.Current = function() return { classFile = "MAGE" } end
+    local w0 = { content = { raid = true } }
+    local w1 = W.SelectAll(w0, "content")
+    for _, token in ipairs(NS.Resolver.TOKENS.content) do assertTrue(w1.content[token], token) end
+    assertNil(w0.content.dungeon, "a copy")
+    -- the spec row offers the player's class: those three, and no other
+    local w2 = W.SelectAll({}, "spec")
+    assertTrue(w2.spec[62] and w2.spec[63] and w2.spec[64])
+    assertNil(w2.spec[71])
+end)

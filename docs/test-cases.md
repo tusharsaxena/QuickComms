@@ -567,7 +567,7 @@ Total.
 - eui skin: the diagnostics report names its state
 - eui skin: the diagnostics line says, in words, why the skin is or is not on
 
-### test_groups_when.lua (12)
+### test_groups_when.lua (15)
 
 - when: Toggle adds and removes one value, drops an emptied row, and never mutates its input
 - when: [review 5] the key-level range refuses lowest above highest; clearing both drops the row
@@ -581,8 +581,11 @@ Total.
 - when: the battleground names come from the shipped sets, by instanceID
 - when: [final 6] a typed character takes the client's case; the Resolver matches one in any case
 - when: [final 2, 11] ResolveValue maps a typed value onto the token or id its row stores, or refuses it
+- when: [drawers] Summary reads Any while a row is unset, else its values in the row's order
+- when: [drawers] Summary gives the key level and the id rows a short phrase
+- when: [drawers] SelectAll ticks every value the row offers, and never mutates its input
 
-### test_page_groups.lua (49)
+### test_page_groups.lua (53)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists every group by name, a seeded set among them, active ones dotted
@@ -613,6 +616,10 @@ Total.
 - groups page: [restore] with every group deleted, General still offers Restore built-in groups
 - groups page: [final 12] Duplicate says the copy is on no pad yet
 - groups page: [nesting] a child's Duplicate tooltip says the copy sits in the same parent
+- groups page: [drawers] the When tab draws one drawer per condition, closed, each with its summary
+- groups page: [drawers] a header opens and closes its drawer; the open set is per group and survives a repaint
+- groups page: [drawers] Select all ticks every value; Clear (Any) unsets the condition and keeps the drawer open
+- groups page: [drawers] an id or key-level drawer has Clear (Any) alone, and Clear unsets it
 - groups page: [final 20] the Instances row adds a typed id, removes one, and refuses a fraction or a negative
 - groups page: [final 18] Add the instance you are in reads the instance at the click, not at the draw
 - groups page: [icons] General shows the icon, Choose icon… and the swatch; the browser's Choose writes the group's icon
@@ -1027,8 +1034,8 @@ Total.
 | test_callout_popup.lua | 38 |
 | test_icon_browser.lua | 26 |
 | test_eui_skin.lua | 10 |
-| test_groups_when.lua | 12 |
-| test_page_groups.lua | 49 |
+| test_groups_when.lua | 15 |
+| test_page_groups.lua | 53 |
 | test_page_pads.lua | 13 |
 | test_page_dials.lua | 17 |
 | test_page_share.lua | 12 |
@@ -1051,4 +1058,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **837** |
+| **Total** | **844** |

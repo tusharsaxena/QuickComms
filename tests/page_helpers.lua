@@ -111,6 +111,27 @@ return function(NS, m)
         return nil
     end
 
+    --- A drawer's header button (LibKa0s O.Drawer) by its label, or nil: the button the library
+    --- hangs on the header SimpleGroup's frame, which records its dress (`__ka0sDrawer*`) and takes
+    --- the click (`:__fire("OnClick")`).
+    function P.drawer(widgets, label)
+        for _, w in ipairs(widgets) do
+            local head = w.type == "SimpleGroup" and w.frame and w.frame.__ka0sDrawerHead
+            if head and not w.__released and head.__ka0sDrawerLabel == label then return head end
+        end
+        return nil
+    end
+
+    --- Every drawer header's label, in draw order.
+    function P.drawers(widgets)
+        local out = {}
+        for _, w in ipairs(widgets) do
+            local head = w.type == "SimpleGroup" and w.frame and w.frame.__ka0sDrawerHead
+            if head and not w.__released then out[#out + 1] = head.__ka0sDrawerLabel end
+        end
+        return out
+    end
+
     --- The texts of the Label and InteractiveLabel widgets, in draw order.
     function P.texts(widgets)
         local out = {}

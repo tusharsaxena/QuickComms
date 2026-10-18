@@ -1,10 +1,12 @@
 local _, NS = ...
 -- settings/Groups_When.lua — the When editor (design spec §5.3, §13.2), the Groups page's When tab.
 --
--- Shaped after the WeakAuras Load tab: one row per condition, each an enable checkbox and, while on,
--- its values: checkboxes for a short list, a lowest and highest box for the key level, and an id list
--- (the library's IdList: an add box with suggestions, one line per entry with Remove) for instances,
--- battlegrounds and characters. Values are ids and tokens, never localized names
+-- One drawer per condition (LibKa0s O.Drawer, 2026-10-18-when-drawers-design.md §1): a header bar
+-- with the condition's name (gold while it is set) and a summary of its values ("Any" while unset),
+-- which opens a box holding its choices: checkboxes in three columns for a short list, a lowest and
+-- highest box for the key level, and an id list (the library's IdList: an add box with suggestions,
+-- one line per entry with Remove) for instances, battlegrounds and characters; under them Select all
+-- (a checkbox list) and Clear (Any). Values are ids and tokens, never localized names
 -- (localization-§4): instances and battlegrounds by instanceID, classes by classFile,
 -- specializations by specID, characters by Name-Realm; a name is shown, never matched. The list
 -- data is shipped (defaults/GameIds.lua and the battleground sets); "Add the instance you are in"
@@ -13,8 +15,9 @@ local _, NS = ...
 --
 -- Every change writes the group's WHOLE When through the seam (`group.when`, a structured member
 -- row, settings/SchemaMembers.lua), read fresh from the profile at the click, so two clicks before a
--- repaint never lose one. A row switched on with nothing chosen yet stays open for the session
--- (NS.State.whenOpen); switched off, its values are cleared. A seeded built-in set's When is edited
+-- repaint never lose one. There is no enable checkbox: a condition is set while it has values. Which
+-- drawers are open is session state, per group (NS.State.whenOpen), so an open drawer survives the
+-- repaint a write brings and a profile switch closes them all. A seeded built-in set's When is edited
 -- as any group's (2026-10-18-builtins-as-groups-design.md). The pure half is tested headlessly in
 -- tests/test_groups_when.lua.
 
@@ -277,28 +280,38 @@ end
 
 local function H() return Settings.Helpers end
 
-local function checkbox(label, value, tooltip, onChange)
-    return { make = function(_, parent, rel)
+-- A checkbox list's columns, and each cell's share of its line: under a third, so a line never sums
+-- to 1 (the ScrollFrame's clip, options-ui-§8).
+local CHECK_COLUMNS = 3
+local CHECK_REL = 0.32
+
+-- One line of up to CHECK_COLUMNS checkboxes, as one wide RenderGrid item (RenderGrid pairs its
+-- cells two to a line). `cells`: { { text, value, onChange } }. Drawn disabled under the page's
+-- render-disabled flag (the drawer's `disabled`), which a bespoke widget reads itself.
+local function checkLine(cells)
+    return { wide = true, make = function(ctx, parent)
         local h = H()
-        local cb = h.AceGUI:Create("CheckBox")
-        cb:SetLabel(label)
-        cb:SetValue(value and true or false)
-        cb:SetRelativeWidth(rel or 0.5)
-        cb:SetCallback("OnValueChanged", function(_, _, v) onChange(v and true or false) end)
-        if tooltip then h.AttachTooltip(cb, label, tooltip) end
-        parent:AddChild(cb)
-        return cb
+        for _, c in ipairs(cells) do
+            local cb = h.AceGUI:Create("CheckBox")
+            cb:SetLabel(c.text)
+            cb:SetValue(c.value and true or false)
+            cb:SetRelativeWidth(CHECK_REL)
+            if ctx.__renderDisabled then cb:SetDisabled(true) end
+            cb:SetCallback("OnValueChanged", function(_, _, v) c.onChange(v and true or false) end)
+            parent:AddChild(cb)
+        end
     end }
 end
 
 local function renderKeyLevel(ctx, gid)
     local kl = fresh(gid).keyLevel or {}
     local function box(label, field)
-        return { make = function(_, parent, rel)
+        return { make = function(c, parent, rel)
             local eb = H().AceGUI:Create("EditBox")
             eb:SetLabel(label)
             eb:SetText(kl[field] and tostring(kl[field]) or "")
             eb:SetRelativeWidth(rel or 0.5)
+            if c.__renderDisabled then eb:SetDisabled(true) end
             eb:SetCallback("OnEnterPressed", function(_, _, text)
                 -- A refusal (its line already printed) puts the box back to the stored end.
                 if not W.SetKeyField(gid, field, text) then
@@ -379,6 +392,48 @@ local ADD = {
     characters = { L["Add a character"], L["Type Name-Realm, or a name on your realm, then press Enter or Add."],
         L["Add this character"] },
 }
+
+-- An id row's summary for several entries.
+local COUNT = {
+    instances = L["%d instances"], battleground = L["%d battlegrounds"], characters = L["%d characters"],
+}
+
+--- A drawer's summary (spec §1): "Any" while the row is unset; else the chosen values in the row's
+--- own order, comma-separated (the drawer cuts a long one with an ellipsis); an id row's one entry by
+--- its name and several by their count; the key level as a short phrase.
+function W.Summary(row, when)
+    if not W.IsSet(when, row) then return L["Any"] end
+    local v = when[row]
+    if row == "keyLevel" then
+        if v.min and v.max then
+            if v.min == v.max then return tostring(v.min) end
+            return L["%d to %d"]:format(v.min, v.max)
+        end
+        if v.min then return L["%d or higher"]:format(v.min) end
+        return L["%d or lower"]:format(v.max)
+    end
+    if KIND[row] then
+        local only, n = nil, 0
+        for id in pairs(v) do only, n = id, n + 1 end
+        if n == 1 then return (KIND[row]().info(only)) end
+        return COUNT[row]:format(n)
+    end
+    local out = {}
+    for _, item in ipairs(W.Values(row, when)) do
+        if v[item.value] == true then out[#out + 1] = item.text end
+    end
+    return table.concat(out, ", ")
+end
+
+--- A copy of `when` with every value checkbox row `row` offers ticked (W.Values, so the
+--- specialization row ticks the classes it lists, and no other).
+function W.SelectAll(when, row)
+    local w = copy(when or {})
+    local set = {}
+    for _, v in ipairs(W.Values(row, when)) do set[v.value] = true end
+    w[row] = next(set) ~= nil and set or nil
+    return w
+end
 
 -- The one the player is in now (the live snapshot, never the preview).
 local function here(row)
@@ -461,40 +516,54 @@ local function renderIdRow(ctx, gid, row)
         onClick = function() W.AddHere(gid, row) end }, nil)
 end
 
-local function renderRow(ctx, gid, row)
+local function renderChecks(ctx, gid, row)
     local when = fresh(gid)
-    local on = W.IsSet(when, row) or openRows(gid)[row] == true
-    local label = NS.Resolver.LABEL[row] or row
-    H().RenderGrid(ctx, { { wide = true, make = function(_, parent)
-        local h = H()
-        local cb = h.AceGUI:Create("CheckBox")
-        cb:SetLabel(label)
-        cb:SetValue(on)
-        cb:SetFullWidth(true)
-        cb:SetCallback("OnValueChanged", function(_, _, v)
-            if v then
-                openRows(gid)[row] = true
-                Ed.RequestRefresh()
-            else
-                openRows(gid)[row] = nil
-                W.Write(gid, W.ClearRow(fresh(gid), row))
-            end
-        end)
-        h.AttachTooltip(cb, label, W.TIP[row])
-        parent:AddChild(cb)
-        return cb
-    end } })
-    if not on then return end
+    local items, cells = {}, {}
+    for _, v in ipairs(W.Values(row, when)) do
+        cells[#cells + 1] = { text = v.text, value = type(when[row]) == "table" and when[row][v.value] == true,
+            onChange = function(x) W.Write(gid, W.Toggle(fresh(gid), row, v.value, x)) end }
+        if #cells == CHECK_COLUMNS then
+            items[#items + 1] = checkLine(cells)
+            cells = {}
+        end
+    end
+    if #cells > 0 then items[#items + 1] = checkLine(cells) end
+    H().RenderGrid(ctx, items)
+end
+
+-- What a drawer holds: its choices, by the kind of row.
+local function renderChoices(ctx, gid, row)
     if row == "keyLevel" then return renderKeyLevel(ctx, gid) end
     if KIND[row] then return renderIdRow(ctx, gid, row) end
-    local items = {}
-    for _, v in ipairs(W.Values(row, when)) do
-        local chosen = type(when[row]) == "table" and when[row][v.value] == true
-        items[#items + 1] = checkbox(v.text, chosen, nil, function(x)
-            W.Write(gid, W.Toggle(fresh(gid), row, v.value, x))
-        end)
+    return renderChecks(ctx, gid, row)
+end
+
+-- A drawer's buttons: Select all on a checkbox list, then Clear (Any) on every row, which unsets the
+-- condition and leaves the drawer open. Both read the profile at the click.
+local function actions(gid, row)
+    local out = {}
+    if row ~= "keyLevel" and not KIND[row] then
+        out[1] = { text = L["Select all"], tooltip = L["Tick every choice listed here."],
+            onClick = function() W.Write(gid, W.SelectAll(fresh(gid), row)) end }
     end
-    H().RenderGrid(ctx, items)
+    out[#out + 1] = { text = L["Clear (Any)"], tooltip = L["Untick every choice, so this condition does not limit the group."],
+        onClick = function() W.Write(gid, W.ClearRow(fresh(gid), row)) end }
+    return out
+end
+
+local function renderDrawer(ctx, gid, row)
+    local label = NS.Resolver.LABEL[row] or row
+    H().Drawer(ctx, {
+        label = label,
+        tooltip = W.TIP[row],
+        summary = function() return W.Summary(row, fresh(gid)) end,
+        set = function() return W.IsSet(fresh(gid), row) end,
+        -- The library re-renders the page after the toggle; nothing else to refresh here.
+        open = openRows(gid)[row] == true,
+        onToggle = function(open) openRows(gid)[row] = open or nil end,
+        body = function(c) renderChoices(c, gid, row) end,
+        actions = actions(gid, row),
+    })
 end
 
 --- The When tab for group `gid` (spec §13.2).
@@ -508,5 +577,6 @@ function W.Render(ctx, gid)
     -- Refreshed in place (Ed.Live): a write to this group or a situation change re-reads it.
     local active = h.TextRow(ctx, W.ActiveText(gid))
     Ed.Live(ctx, function() if active then active:SetText(W.ActiveText(gid)) end end)
-    for _, row in ipairs(W.ROWS) do renderRow(ctx, gid, row) end
+    h.TextRow(ctx, L["|cffa0a0a0Every condition you set must match. A condition left as Any does not limit the group.|r"])
+    for _, row in ipairs(W.ROWS) do renderDrawer(ctx, gid, row) end
 end
