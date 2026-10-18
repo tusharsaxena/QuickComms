@@ -34,7 +34,7 @@ local function live(inputs)
 end
 
 local function arenaChip(NS)
-    return NS.Pad.ChipsFor("p1", NS.Library.Group("bi.arena").callouts[1])[1]
+    return NS.Pad.ChipsFor("p1", NS.Library.Group(T.seeded(NS, "bi.arena")).callouts[1])[1]
 end
 
 test("preview: test mode turns on and off, announcing each edge once", function()
@@ -98,7 +98,7 @@ test("preview: [phase 3] Preview as Arena builds the pad from the arena snapshot
     assertEqual(table.concat(out, ","), "true")
     local plan = NS.Surfaces.Plans().p1
     assertEqual(plan.preview, "arena")
-    assertEqual(plan.order[1], "bi.arena")
+    assertEqual(plan.order[1], T.seeded(NS, "bi.arena"))
     local chip = arenaChip(NS)
     assertTrue(chip ~= nil, "the arena set is drawn in the open world")
     -- red under: drop `and not slot.preview` from Pad's arm (the previewed chip is armed)
@@ -146,7 +146,7 @@ test("preview: [review 3] combat ends it with one line, and the live chips come 
     assertTrue(NS.Preview.PreviewAs() == nil)
     assertEqual(#m.prints, 1)
     assertTrue(m.prints[1]:find("Preview ended: you entered combat.", 1, true) ~= nil, m.prints[1])
-    assertEqual(NS.Pad.ChipsFor("p1", "bi.mplus.pull")[1]:GetAttribute("macrotext"), "/p Pulling next pack")
+    assertEqual(NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.mplus.pull"))[1]:GetAttribute("macrotext"), "/p Pulling next pack")
     assertEqual(#m.blocked, 0)
 end)
 

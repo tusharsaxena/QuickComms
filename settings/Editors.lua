@@ -11,9 +11,9 @@ local addonName, NS = ...
 -- write). A member changes from a widget's own callback, a popup, a slash verb, the pad's drag or a
 -- profile switch. A structural refresh of every built page, ONE, on the next frame and coalesced (so
 -- no page is torn down under the widget whose callback is running; a hidden page is only marked
--- owed), follows: a LIBRARY_CHANGED with no field (membership, order, Customize) or naming a field in
--- STRUCTURAL (a name is a picker label; a group's Enabled and When, and a set's Enabled, move the
--- active-now dot and the When tab's rows); a SITUATION_CHANGED that changes the set of active
+-- owed), follows: a LIBRARY_CHANGED with no field (membership, order, Restore) or naming a field in
+-- STRUCTURAL (a name is a picker label; a group's Enabled and When move the active-now dot and the
+-- When tab's rows); a SITUATION_CHANGED that changes the set of active
 -- groups; TEST_MODE_CHANGED (Preview as…); PROFILE_CHANGED. Any other member-row write is a scalar:
 -- the seam's announce refreshes the widgets in place (Helpers.RefreshAll), and the lines a page draws
 -- itself (Ed.Live) with them. A SITUATION_CHANGED that leaves the active groups alone re-runs only
@@ -46,13 +46,9 @@ function Ed.Selected(kind)
     return State.editing[kind]
 end
 
---- Select the member a page edits. A built-in group is also the built-in overlay's selection, so the
---- `builtin.*` rows address the set the Groups page shows.
+--- Select the member a page edits.
 function Ed.Select(kind, id)
     State.editing[kind] = id
-    if kind == "group" then
-        State.editing.builtin = (id ~= nil and NS.Library.IsBuiltin(id)) and id or nil
-    end
 end
 
 --- Keep a page's selection on a member that exists: the current one, else the first of `ids`.
@@ -87,8 +83,7 @@ local pending, lastActive
 
 --- The member-row paths whose write changes what a page draws, not only a value in place.
 Ed.STRUCTURAL = { ["callout.name"] = true, ["group.name"] = true, ["group.enabled"] = true,
-    ["group.when"] = true, ["group.parent"] = true, ["pad.name"] = true, ["dial.name"] = true,
-    ["builtin.enabled"] = true }
+    ["group.when"] = true, ["group.parent"] = true, ["pad.name"] = true, ["dial.name"] = true }
 
 -- The ids of the groups active under the editors' snapshot, as one comparable string.
 local function activeKey()
@@ -189,7 +184,7 @@ function Ed.Row(path)
 end
 
 -- The structured member rows (settings/SchemaMembers.lua): a table each, drawn by the page's own controls.
-local STRUCTURED = { point = true, when = true, idset = true, key = true }
+local STRUCTURED = { point = true, when = true, key = true }
 
 --- The rows the flow engine draws: a structured row has its own control on its page.
 function Ed.Scalar(rows)
@@ -596,7 +591,7 @@ function Ed.ConfirmDelete(name, onAccept, text)
     StaticPopup_Show(DELETE_POPUP, name, nil, onAccept)
 end
 
---- Open the settings at another editor page (Customize, Choose callouts). The page repaints from
+--- Open the settings at another editor page. The page repaints from
 --- the selection the caller set. Refused in combat, here rather than at each caller: Blizzard's
 --- category switch is protected (options-ui-§2's page-jump carve-out is combat-gated).
 --- @return boolean opened

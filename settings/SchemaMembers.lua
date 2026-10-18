@@ -1,16 +1,16 @@
 local _, NS = ...
 -- settings/SchemaMembers.lua — the member rows (architecture-§5): every field a player sets on a
--- callout, a group, a Comms Pad, a Comms Dial or a built-in set's overlay is a schema row whose
--- path starts with the member's kind. settings/Schema.lua resolves the member from the instance
--- argument, or from the one its editor page has selected (NS.State.editing), so the panel, the CLI,
--- the pad's drag and Library's own built-in writers all write through NS.SchemaRuntime.Set.
--- modules/Library.lua keeps what is not a field: membership (create, delete, duplicate, Customize),
+-- callout, a group, a Comms Pad or a Comms Dial is a schema row whose path starts with the member's
+-- kind. settings/Schema.lua resolves the member from the instance argument, or from the one its
+-- editor page has selected (NS.State.editing), so the panel, the CLI, the pad's drag and Library's
+-- own writers all write through NS.SchemaRuntime.Set.
+-- modules/Library.lua keeps what is not a field: membership (create, delete, duplicate, restore),
 -- the order of every list, the references a group and a surface hold, the ids and the seeding. Each
 -- row's onChange hands the write to Library.Touch, which sends LIBRARY_CHANGED, so the pads rebuild
 -- (in combat, at combat end, with the stale hint), naming the field so the editor pages repaint
 -- only when what they draw changes shape. Paths resolve against Library.TEMPLATES at the boot
--- check; member rows are no AceDB default. Four row types are structured (a pad's or a dial's
--- point, a group's When, a set's hidden callouts, a dial's key): their pages draw their own
+-- check; member rows are no AceDB default. Three row types are structured (a pad's or a dial's
+-- point, a group's When, a dial's key): their pages draw their own
 -- controls, and settings/Slash.lua's parse and format hooks type and print them on the command
 -- line. Added on every load, the degraded one included: Library's writers need them
 -- (tests/test_setup.lua pins that a degraded load's schema holds these rows and nothing else).
@@ -33,8 +33,6 @@ local WHY = {
     offScreen = L["That position is too far off the screen."],
     badWhen   = L["That condition is not one Quick Comms knows."],
     badRange  = L["The lowest key level is above the highest."],
-    badHidden = L["Only this set's own callouts can be hidden."],
-    builtin   = L["Built-in groups are read-only. Customize makes an editable copy."],
     badParent = L["A parent group is one of your groups, or none."],
     selfParent = L["A group cannot be inside itself."],
     parentIsChild = L["That group is inside another group: groups go one level deep."],
@@ -51,15 +49,6 @@ local function check(fn)
         if ok then return true end
         return false, WHY[code] or tostring(code)
     end
-end
-
--- Built-ins are read-only (spec §12.2): every group row refuses a built-in id, whatever the value.
-local function userGroup(inner)
-    return check(function(v, id)
-        if Lib.IsBuiltin(id) then return false, "builtin" end
-        if inner then return inner(v, id) end
-        return true
-    end)
 end
 
 local function oneOf(list)
@@ -208,24 +197,22 @@ local ROWS = {
     { path = "group.name", instance = "group", type = "string", dialogControl = "EditBox",
       maxLetters = Lib.NAME_MAX, page = "groups", group = GENERAL, label = L["Name"],
       desc = L["What the pad's section and the lists call this group. Press Enter to apply."],
-      validate = userGroup(Lib.ValidName) },
+      validate = check(Lib.ValidName) },
     { path = "group.icon", instance = "group", type = "string", dialogControl = "EditBox", default = false,
       page = "groups", group = GENERAL, label = L["Icon"],
       desc = L["A texture id (a number) or a texture path (a LibKa0s icon by its path). Leave it empty for the default icon. Press Enter to apply."],
-      normalize = iconValue, validate = userGroup(function(v) return v == false or type(v) == "string", "badIcon" end) },
+      normalize = iconValue, validate = check(function(v) return v == false or type(v) == "string", "badIcon" end) },
     -- As callout.iconColor. The General tab leaves it out of its rows (settings/Groups.lua).
     { path = "group.iconColor", instance = "group", type = "string", default = false,
       page = "groups", group = GENERAL, label = L["Icon color"],
       desc = L["The color a LibKa0s glyph icon is drawn in: six hex digits (rrggbb). Leave it empty for white."],
-      normalize = Lib.IconColorValue, validate = userGroup(iconColorCheck("group")) },
+      normalize = Lib.IconColorValue, validate = check(iconColorCheck("group")) },
     { path = "group.enabled", instance = "group", type = "bool", default = T.group.enabled,
       page = "groups", group = GENERAL, label = L["Enabled"],
-      desc = L["Show this group wherever its When matches. Off keeps the group and its place on every pad."],
-      validate = userGroup() },
+      desc = L["Show this group wherever its When matches. Off keeps the group and its place on every pad."] },
     { path = "group.openInto", instance = "group", type = "bool", default = T.group.openInto,
       page = "groups", group = GENERAL, label = L["Open the dial on this group"],
-      desc = L["When this is the first active group on a Comms Dial, the dial opens straight on its ring, and the middle of the dial goes back to the groups."],
-      validate = userGroup() },
+      desc = L["When this is the first active group on a Comms Dial, the dial opens straight on its ring, and the middle of the dial goes back to the groups."] },
     -- Nesting (2026-10-18-builtins-as-groups-design.md, goal 2): the top-level group this one sits
     -- inside, or none (false). The General tab draws it as its own dropdown of the groups it may take
     -- (settings/Groups.lua); /qc takes a group id or none. Taking a parent takes the group off every
@@ -233,11 +220,11 @@ local ROWS = {
     { path = "group.parent", instance = "group", type = "string", dialogControl = "EditBox", default = false,
       page = "groups", group = GENERAL, label = L["Parent group"],
       desc = L["The group this one sits inside. It shows wherever that group does, in a section (or a ring) of its own, while its When matches. None makes it a group of its own."],
-      normalize = parentValue, validate = userGroup(function(v, id) return Lib.ValidParent(parentValue(v), id) end) },
+      normalize = parentValue, validate = check(function(v, id) return Lib.ValidParent(parentValue(v), id) end) },
     { path = "group.when", instance = "group", type = "when",
       page = "groups", group = L["When"], label = L["When"],
       desc = L["The conditions under which this group is active. Every condition you turn on must match; within a condition, any value may."],
-      validate = userGroup(validWhen) },
+      validate = check(validWhen) },
 
     -- Comms Pad page (spec §10.2, §10.3, §13.1).
     { path = "pad.name", instance = "pad", type = "string", dialogControl = "EditBox", maxLetters = Lib.NAME_MAX,
@@ -326,20 +313,6 @@ local ROWS = {
       page = "dials", group = L["Binding"], label = L["Key"],
       desc = L["The key that opens and closes this dial. One key opens one dial. Escape, the left and right mouse buttons, the mouse wheel and 1 to 8 without a modifier cannot be used: the open dial uses them."],
       validate = keyCheck, normalize = Lib.KeyValue },
-
-    -- A built-in set's overlay (spec §12.2): the only writable part of a shipped set.
-    { path = "builtin.enabled", instance = "builtin", type = "bool", default = T.builtin.enabled,
-      page = "share", group = L["Built-in"], label = L["Enabled"],
-      desc = L["Show this built-in set wherever it matches. Off keeps it, and its place on every pad."] },
-    { path = "builtin.hidden", instance = "builtin", type = "idset",
-      page = "share", group = L["Built-in"], label = L["Hidden callouts"],
-      desc = L["The set's callouts that no pad shows."],
-      -- With no built-in set addressed the value passes, so the seam's missing-member refusal (which
-      -- says to pick a set on the Groups page) is the reason the player reads.
-      validate = check(function(v, id)
-          if Lib.TopOf(id) == nil then return true end
-          return Lib.ValidHidden(Lib.TopOf(id), v)
-      end) },
 }
 
 -- ── a pad's Look groups (spec §10.3, §19 row 5; options-ui-§16, §17) ───────────────────────────

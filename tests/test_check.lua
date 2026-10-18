@@ -11,10 +11,11 @@ local function boot()
     return NS, env
 end
 
-test("check: a built-in callout prints its line and channel", function()
+test("check: a seeded callout prints its line and channel", function()
     local NS = boot()
-    local lines = NS.SlashVerbs.CheckLines("bi.mplus.lust")
-    assertEqual(lines[1], "bi.mplus.lust -> /p Lust on this pack {rt8}")
+    local lust = T.seeded(NS, "bi.mplus.lust")
+    local lines = NS.SlashVerbs.CheckLines(lust)
+    assertEqual(lines[1], lust .. " -> /p Lust on this pack {rt8}")
     assertTrue(lines[2]:find("party", 1, true) ~= nil)
 end)
 
@@ -38,7 +39,7 @@ test("check: never calls SendChatMessage", function()
     env.C_ChatInfo = env.C_ChatInfo or {}
     env.C_ChatInfo.SendChatMessage = function() called = true end
     env.SendChatMessage = function() called = true end
-    NS.SlashVerbs.Check("bi.mplus.lust")
+    NS.SlashVerbs.Check(T.seeded(NS, "bi.mplus.lust"))
     assertTrue(not called, "check must not send")
 end)
 
@@ -55,6 +56,6 @@ test("check: [final minor 4] solo with soloFallback=self says it would print loc
     local NS = T.enableAddon()
     NS.Situation.Current = function() return { content = "openWorld", group = "solo", lockdown = {} } end
     NS.SchemaRuntime.Set("behavior.soloFallback", "self")
-    local lines = NS.SlashVerbs.CheckLines("bi.mplus.lust")
+    local lines = NS.SlashVerbs.CheckLines(T.seeded(NS, "bi.mplus.lust"))
     assertTrue(lines[1]:find("would print locally", 1, true) ~= nil, lines[1])
 end)

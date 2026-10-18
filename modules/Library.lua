@@ -1,11 +1,15 @@
 local _, NS = ...
--- modules/Library.lua — THE registry writer (architecture-§5, spec §5, §12.2): membership (create,
--- delete, duplicate, Customize), the order of every list, the references a group and a surface
--- hold, the ids and the seeding. A member's own fields (a callout's text, a pad's layout) are
--- schema rows written through the seam (settings/SchemaMembers.lua); Library resolves the member
--- for the seam (Member) and announces the write (Touch).
--- Panel pages, slash verbs and the share import (Import, spec §15) all call it. Built-ins are shipped
--- data (NS.BuiltIns); the profile holds only their overlay.
+-- modules/Library.lua — THE registry writer (architecture-§5, spec §5): membership (create, delete,
+-- duplicate, restore), the order of every list, the references a group and a surface hold, the ids
+-- and the seeding. A member's own fields (a callout's text, a pad's layout) are schema rows written
+-- through the seam (settings/SchemaMembers.lua); Library resolves the member for the seam (Member)
+-- and announces the write (Touch).
+-- Panel pages, slash verbs and the share import (Import, spec §15) all call it.
+-- SEEDING (2026-10-18-builtins-as-groups-design.md, goal 1): the shipped sets (NS.BuiltIns) are
+-- seed data. Each profile is given them once as ordinary user groups and callouts under fresh ids,
+-- a battleground's nodes as groups inside its set; each seeded member keeps the shipped id it came
+-- from (`origin`), and a node its compass wind (`compass`). Neither is a tag or a lock: only Library
+-- reads `origin` (which shipped sets a profile was given, seededSets, and what Restore puts back).
 -- ONE OWNER (2026-10-17-callouts-owned-by-groups-design.md): each user callout id sits in exactly
 -- one user group's list. Adding a callout to a group adds a copy, removing one deletes it, and a
 -- deleted group takes its callouts with it.
@@ -14,9 +18,10 @@ local _, NS = ...
 -- top-level, and a group holding groups takes no parent (ValidParent). A child is never placed on a
 -- surface itself: it shows wherever its parent is (modules/Surfaces.lua), so taking a parent takes
 -- it off every surface (SettleParent), and deleting a parent puts its children in its place.
--- Prepare runs after migrations on every profile load: it seeds, appends new built-ins once per
--- surface (seenBuiltins), splits a callout two groups hold into copies, drops dangling ids, drops
--- callouts no group holds, and drops a parent that breaks the one-level rule.
+-- Prepare runs after migrations on every profile load: it seeds (a shipped set the profile was never
+-- given, once, at the end of every pad and dial), splits a callout two groups hold into copies,
+-- drops dangling ids, drops callouts no group holds, and drops a parent that breaks the one-level
+-- rule.
 
 NS.Library = NS.Library or {}
 local Lib = NS.Library
@@ -56,19 +61,6 @@ local function copyTable(t)
     return out
 end
 
-local function isBuiltin(id) return type(id) == "string" and id:sub(1, 3) == "bi." end
-
-local function topOf(id)
-    local def = NS.BuiltIns.groups[id]
-    while def and def.parent do id = def.parent def = NS.BuiltIns.groups[id] end
-    return def and id or nil
-end
-
---- Whether an id names a shipped built-in (a dotted `bi.` id).
-Lib.IsBuiltin = isBuiltin
---- A built-in id's top-level set (a node resolves to its battleground), or nil.
-Lib.TopOf = topOf
-
 -- The number a user id ends in ("g12" -> 12), for the order the ids were made in.
 local function idNumber(id) return tonumber(tostring(id):match("(%d+)$")) or 0 end
 
@@ -80,16 +72,11 @@ function Lib.IsChild(id)
 end
 local isChild = Lib.IsChild
 
---- The groups inside group `id`, in the order they show on a pad and a dial: a built-in set's nodes
---- in shipped order, a user group's children in the order they were made (their ids).
+--- The groups inside group `id`, in the order they show on a pad and a dial: the order they were
+--- made in (their ids), so a seeded set keeps its shipped node order.
 --- @return string[]
 function Lib.Children(id)
-    local def = NS.BuiltIns.groups[id]
     local out = {}
-    if def then
-        for i, child in ipairs(def.children or {}) do out[i] = child end
-        return out
-    end
     for gid, g in pairs(P().groups) do
         if g.parent == id and gid ~= id then out[#out + 1] = gid end
     end
@@ -100,57 +87,53 @@ function Lib.Children(id)
     return out
 end
 
---- A fresh user id: prefix .. n.
-function Lib.NewId(prefix)
-    local p = P()
-    local n = p.nextId or 1
+-- A fresh user id in profile `p` (the live one, or a stored one a migration step converts).
+local function takeId(p, prefix)
+    local n = type(p.nextId) == "number" and p.nextId or 1
     p.nextId = n + 1
     return prefix .. n
 end
 
--- ── reads ───────────────────────────────────────────────────────────────────────────────────
-
-local function overlay(id)
-    local p = P()
-    p.builtins[id] = p.builtins[id] or { enabled = true, hidden = {} }
-    return p.builtins[id]
+--- A fresh user id: prefix .. n.
+function Lib.NewId(prefix)
+    return takeId(P(), prefix)
 end
 
---- A callout by id (user or built-in); built-ins carry builtin = true. Read-only use.
+-- ── reads ───────────────────────────────────────────────────────────────────────────────────
+
+--- A user callout by id. Read-only use.
 function Lib.Callout(id)
-    if isBuiltin(id) then
-        local c = NS.BuiltIns.callouts[id]
-        if not c then return nil end
-        local out = copyTable(c)
-        out.builtin = true
-        return out
-    end
     return P().callouts[id]
 end
 
---- A group by id; built-ins are merged with their overlay (enabled, hidden callouts filtered out).
+--- A user group by id.
 function Lib.Group(id)
-    if not isBuiltin(id) then return P().groups[id] end
-    local def = NS.BuiltIns.groups[id]
-    if not def then return nil end
-    local top = id
-    while NS.BuiltIns.groups[top].parent do top = NS.BuiltIns.groups[top].parent end
-    local o = P().builtins[top] or {}
-    local hidden = o.hidden or {}
-    local g = copyTable(def)
-    g.builtin = true
-    g.enabled = o.enabled ~= false
-    g.callouts = {}
-    for _, cid in ipairs(def.callouts or {}) do if not hidden[cid] then g.callouts[#g.callouts + 1] = cid end end
-    return g
+    return P().groups[id]
 end
 
---- Every top-level group (user and built-in), merged, keyed by id: the Resolver's input.
+--- Every user group, keyed by id: the Resolver's input.
 function Lib.AllGroups()
     local all = {}
     for id, g in pairs(P().groups) do all[id] = g end
-    for _, id in ipairs(NS.BuiltIns.order) do all[id] = Lib.Group(id) end
     return all
+end
+
+-- The id of the member of `set` (a profile's callouts or groups) seeded from shipped id `origin`,
+-- the lowest when several are; nil when none is.
+local function byOrigin(set, origin)
+    local found
+    for id, m in pairs(set) do
+        if type(m) == "table" and m.origin == origin and (not found or tostring(id) < tostring(found)) then found = id end
+    end
+    return found
+end
+
+--- The user group, else the user callout, seeded from shipped id `origin` ("bi.mplus",
+--- "bi.mplus.lust"), or nil when the profile has none (never seeded, or deleted since).
+--- @return string|nil
+function Lib.ByOrigin(origin)
+    local p = P()
+    return byOrigin(p.groups, origin) or byOrigin(p.callouts, origin)
 end
 
 -- Whether any user group's list holds `calloutId`.
@@ -162,25 +145,16 @@ local function held(calloutId)
 end
 
 --- The live member a member row addresses (settings/SchemaMembers.lua): a user callout, group, pad
---- or dial, or the overlay of a built-in set (a node's is its battleground's). A built-in group
---- answers its merged copy, so its fields read; the group rows refuse to write one. Nil without a
---- database, an id or such a member.
---- @param kind string "callout" | "group" | "pad" | "dial" | "builtin"
+--- or dial. Nil without a database, an id or such a member.
+--- @param kind string "callout" | "group" | "pad" | "dial"
 --- @return table|nil
 function Lib.Member(kind, id)
     if id == nil or not (NS.db and NS.db.profile) then return nil end
     local p = P()
     if kind == "callout" then return p.callouts[id] end
-    if kind == "group" then
-        if isBuiltin(id) then return Lib.Group(id) end
-        return p.groups[id]
-    end
+    if kind == "group" then return p.groups[id] end
     if kind == "pad" then return p.pads[id] end
     if kind == "dial" then return p.dials[id] end
-    if kind == "builtin" then
-        local top = topOf(id)
-        return top and overlay(top) or nil
-    end
     return nil
 end
 
@@ -194,9 +168,9 @@ end
 local function pack(...) return { n = select("#", ...), ... } end
 
 --- Run `fn` with Library's announces held, then send ONE LIBRARY_CHANGED for the whole act, with no
---- id and no field (several members changed): a bulk act (Share's Defaults, Customize, New group, a
---- page's Defaults) rebuilds the pads and repaints the pages once, however many kinds it touched.
---- Its kind is the kinds touched, sorted and joined by commas ("builtin", "callout,group,pad").
+--- id and no field (several members changed): a bulk act (Restore, New group, an import, a page's
+--- Defaults) rebuilds the pads and repaints the pages once, however many kinds it touched.
+--- Its kind is the kinds touched, sorted and joined by commas ("group", "callout,group,pad").
 --- Nothing is sent when nothing was. A nested call joins the outer batch. Answers what `fn` answers.
 --- An error in `fn` is re-raised after the held announce is sent, so nothing that landed goes
 --- unannounced.
@@ -240,8 +214,7 @@ local NAMED_SETS = { callout = "callouts", group = "groups" }
 
 --- Every member of a kind, in the order its editor page's picker lists them: user callouts and user
 --- groups by name (case-insensitive, then id), each group's children right after it (Children's
---- order), the built-in sets after the user groups in shipped order, the pads in the pad order, the
---- dials in the dial order. The seam's fallback when a page
+--- order), the pads in the pad order, the dials in the dial order. The seam's fallback when a page
 --- has selected nothing (settings/Schema.lua Settings.EditingId; never for a callout, which a write
 --- names by id), and the pages' picker order.
 --- @param kind string "callout" | "group" | "pad" | "dial"
@@ -260,7 +233,6 @@ function Lib.MemberIds(kind)
             for _, child in ipairs(Lib.Children(id)) do out[#out + 1] = child end
         end
     end
-    for _, id in ipairs(NS.BuiltIns.order) do out[#out + 1] = id end
     return out
 end
 
@@ -448,19 +420,6 @@ function Lib.ValidWhen(w)
     return true
 end
 
---- Whether `set` is a hidden-callout set for the top-level built-in `top` (spec §12.2): its own
---- callouts (a node's included) mapped to true.
-function Lib.ValidHidden(top, set)
-    if type(top) ~= "string" or type(set) ~= "table" then return false, "badHidden" end
-    local prefix = top .. "."
-    for cid, on in pairs(set) do
-        if on ~= true or type(cid) ~= "string" or cid:sub(1, #prefix) ~= prefix or not NS.BuiltIns.callouts[cid] then
-            return false, "badHidden"
-        end
-    end
-    return true
-end
-
 --- Whether user group `id` may sit inside `parent` (nesting, one level): none (nil or false), or
 --- another top-level user group, while `id` holds no groups of its own. `id` may be nil (a group not
 --- made yet holds none).
@@ -583,22 +542,11 @@ local function surfaces()
     return { pad = p.pads, dial = p.dials }
 end
 
--- The top-level built-in a user group is the customized copy of, or nil.
-local function customizedFrom(gid)
-    for top, o in pairs(P().builtins) do
-        if type(o) == "table" and o.customizedAs == gid and NS.BuiltIns.groups[top] then return top end
-    end
-    return nil
-end
-
--- One surface's list as group `id` leaves it: the set it was customized from (`top`) back in its
--- place, or its children (`kids`) there, each the list does not hold already; then `id` taken out.
-local function vacate(s, id, top, kids)
+-- One surface's list as group `id` leaves it: its children (`kids`) in its place, each the list does
+-- not hold already; then `id` taken out.
+local function vacate(s, id, kids)
     local at = indexOf(s.groups, id)
-    if at and top and not indexOf(s.groups, top) then
-        s.groups[at] = top
-        s.seenBuiltins[top] = true
-    elseif at then
+    if at then
         for i = #kids, 1, -1 do
             if not indexOf(s.groups, kids[i]) then table.insert(s.groups, at + 1, kids[i]) end
         end
@@ -607,16 +555,13 @@ local function vacate(s, id, top, kids)
 end
 
 --- Delete a user group, its callouts (nothing else holds them) and every surface reference to it.
---- Deleting a built-in's customized copy undoes the Customize (spec §12.2): the set goes back into
---- the copy's place on every surface that does not list it already, it is turned back on, and it
---- forgets the copy. Deleting a parent keeps its children: each becomes a top-level group (its
---- group.parent row cleared through the seam) in the parent's place on every surface the parent was
---- on, in Children's order. One act (Batch).
+--- A seeded group is deleted as any other is (Restore puts it back). Deleting a parent keeps its
+--- children: each becomes a top-level group (its group.parent row cleared through the seam) in the
+--- parent's place on every surface the parent was on, in Children's order. One act (Batch).
 function Lib.DeleteGroup(id)
     local p = P()
     if not p.groups[id] then return false end
     Lib.Batch(function()
-        local top = customizedFrom(id)
         local kids = Lib.Children(id)
         for _, kid in ipairs(kids) do NS.SchemaRuntime.Set("group.parent", false, kid) end
         local callouts = p.groups[id].callouts or {}
@@ -628,11 +573,7 @@ function Lib.DeleteGroup(id)
             end
         end
         for _, set in pairs(surfaces()) do
-            for _, s in pairs(set) do vacate(s, id, top, kids) end
-        end
-        if top then
-            overlay(top).customizedAs = nil
-            NS.SchemaRuntime.Set("builtin.enabled", true, top)
+            for _, s in pairs(set) do vacate(s, id, kids) end
         end
         announce("group", id)
     end)
@@ -676,17 +617,16 @@ local function insertAt(g, groupId, id, index)
 end
 
 local function addToGroup(g, groupId, calloutId, index)
-    local src
-    if isBuiltin(calloutId) then src = NS.BuiltIns.callouts[calloutId] else src = P().callouts[calloutId] end
+    local src = P().callouts[calloutId]
     if not src then return nil, "noCallout" end
     local id, why = copyCallout(src)
     if not id then return nil, why end
     return insertAt(g, groupId, id, index)
 end
 
---- Add a callout to a user group at `index` (end by default). It is always a copy, a built-in's (P2)
---- or a user callout's (one owner: the source stays in its own group), under the same name; the copy
---- and the insert are one act (Batch).
+--- Add a callout to a user group at `index` (end by default). It is always a copy (P2; one owner:
+--- the source stays in its own group), under the same name; a seeded callout's copy keeps no
+--- origin. The copy and the insert are one act (Batch).
 --- @return string|nil the callout id actually added, string|nil reason
 function Lib.AddToGroup(groupId, calloutId, index)
     local g = P().groups[groupId]
@@ -758,67 +698,165 @@ function Lib.SetIcon(kind, id, icon, color)
     end)
 end
 
--- ── built-ins ───────────────────────────────────────────────────────────────────────────────
+-- ── seeding (2026-10-18-builtins-as-groups-design.md, goal 1) ──────────────────────────────
+--
+-- Raw writes to a profile `p`: the live one (Prepare, Restore) or a stored one migration step 3
+-- converts (SeedFromOverlay). Shipped data is trusted, so nothing here is checked, and nothing here
+-- announces: its callers do.
 
---- Turn a built-in set on or off: the `builtin.enabled` member row, through the seam.
-function Lib.SetBuiltinEnabled(id, on)
-    local top = topOf(id)
-    if not top then return false end
-    return (NS.SchemaRuntime.Set("builtin.enabled", on and true or false, top)) == true
+-- nextId above the largest numeric suffix of any user id, so a stale counter never reuses one.
+local function liftNextId(p)
+    local high = 0
+    for _, key in ipairs({ "callouts", "groups", "pads", "dials" }) do
+        for id in pairs(p[key]) do
+            local n = type(id) == "string" and tonumber(id:match("^[cgpd](%d+)$"))
+            if n and n > high then high = n end
+        end
+    end
+    if type(p.nextId) ~= "number" or p.nextId <= high then p.nextId = high + 1 end
 end
 
---- Hide or show one of a built-in set's callouts: the whole `builtin.hidden` row, through the seam.
-function Lib.SetBuiltinCalloutHidden(groupId, calloutId, hidden)
-    local top = topOf(groupId)
-    if not top then return false end
-    local set = copyTable(overlay(top).hidden) or {}
-    set[calloutId] = hidden and true or nil
-    return (NS.SchemaRuntime.Set("builtin.hidden", set, top)) == true
+-- A user callout copied from shipped callout `cid`, which it keeps as its origin.
+local function seedCallout(p, cid)
+    local c = NS.BuiltIns.callouts[cid]
+    local id = takeId(p, "c")
+    p.callouts[id] = { name = c.name, text = c.text, channel = c.channel, icon = c.icon, origin = cid }
+    return id
 end
 
---- Copy a top-level built-in into an editable user group, swap it into every surface at the same
---- place, and turn the built-in off (spec §12.2). Node children are flattened: v0.1.0 has no user
---- nesting, so a customized node battleground keeps every node's callouts in one list. A callout
---- whose copy fails validation is skipped, never inserted as a hole, and counted. One act (Batch):
---- the pads rebuild once. `placed` is the number of surfaces the copy took the set's place on (0 when
---- the set was on none).
---- @return string|nil id, string|nil reason, number skipped, number placed
-function Lib.Customize(builtinId)
-    local def = NS.BuiltIns.groups[builtinId]
-    if not def or def.parent then return nil, "notTopLevel" end
-    local prior = overlay(builtinId).customizedAs
-    if prior and P().groups[prior] then return nil, "alreadyCustomized" end
+-- A user group copied from shipped group `gid` (a set, or a node inside `parent`, its set's group),
+-- with copies of its callouts but the ones `hidden` names; `gid` is marked seeded (seededSets). Its
+-- callouts take their ids before it, and a set's nodes after it, so Children keeps the shipped order.
+local function seedGroup(p, gid, parent, hidden)
+    local def = NS.BuiltIns.groups[gid]
+    local callouts = {}
+    for _, cid in ipairs(def.callouts or {}) do
+        if not (hidden and hidden[cid]) then callouts[#callouts + 1] = seedCallout(p, cid) end
+    end
+    local id = takeId(p, "g")
+    p.groups[id] = { name = def.name, icon = def.icon, callouts = callouts, when = copyTable(def.when) or {},
+        openInto = def.openInto == true, enabled = true, parent = parent, compass = def.compass, origin = gid }
+    p.seededSets[gid] = true
+    return id
+end
+
+-- A shipped set and each of its nodes, as a top-level group with its nodes inside it.
+local function seedSet(p, top, hidden)
+    local id = seedGroup(p, top, nil, hidden)
+    for _, child in ipairs(NS.BuiltIns.groups[top].children or {}) do seedGroup(p, child, id, hidden) end
+    return id
+end
+
+-- `ids`, in order, at the end of every pad's and dial's list that does not hold them; `notify`
+-- announces each surface that changed. Answers the lists changed.
+local function placeEverywhere(p, ids, notify)
+    local n = 0
+    for _, kind in ipairs({ "pad", "dial" }) do
+        for sid, s in pairs(kind == "pad" and p.pads or p.dials) do
+            local changed = false
+            for _, gid in ipairs(type(s.groups) == "table" and ids or {}) do
+                if not indexOf(s.groups, gid) then
+                    s.groups[#s.groups + 1] = gid
+                    changed = true
+                end
+            end
+            if changed then
+                n = n + 1
+                if notify then announce(kind, sid) end
+            end
+        end
+    end
+    return n
+end
+
+-- The seeded sets a new pad or dial holds: each shipped set's group while it is a top-level group,
+-- in shipped order.
+local function seededTops(p)
+    local out = {}
+    for _, top in ipairs(NS.BuiltIns.order) do
+        local id = byOrigin(p.groups, top)
+        if id and not isChild(id) then out[#out + 1] = id end
+    end
+    return out
+end
+
+-- Prepare's seeding: each shipped set the profile was never given (seededSets) is seeded and put at
+-- the end of every pad and dial; a node shipped after its set was given goes inside the set's group
+-- while that is a top-level group. A seeded member the player deleted is not seeded again: that is
+-- Restore's. `appended` counts the surfaces a set was put on.
+local function seedNew(p, result)
+    local placed = {}
+    for _, top in ipairs(NS.BuiltIns.order) do
+        if not p.seededSets[top] then
+            placed[#placed + 1] = seedSet(p, top)
+        else
+            local set = byOrigin(p.groups, top)
+            for _, child in ipairs(NS.BuiltIns.groups[top].children or {}) do
+                if not p.seededSets[child] then
+                    if set and not p.groups[set].parent then seedGroup(p, child, set) else p.seededSets[child] = true end
+                end
+            end
+        end
+    end
+    result.appended = result.appended + placeEverywhere(p, placed, false)
+end
+
+-- The stock callouts of shipped group `origin` that seeded group `gid` lacks (none of its callouts
+-- keeps their origin), each put back at its end. Answers how many.
+local function restoreCallouts(p, gid, origin)
+    local g = p.groups[gid]
+    local have, n = {}, 0
+    for _, cid in ipairs(g.callouts) do
+        local c = p.callouts[cid]
+        if c and c.origin then have[c.origin] = true end
+    end
+    for _, cid in ipairs(NS.BuiltIns.groups[origin].callouts or {}) do
+        if not have[cid] then
+            g.callouts[#g.callouts + 1] = seedCallout(p, cid)
+            n = n + 1
+        end
+    end
+    if n > 0 then announce("group", gid) end
+    return n
+end
+
+--- Restore built-in groups (the Groups page): every shipped set, node and callout the profile no
+--- longer has (no member keeps its origin) comes back as a fresh ordinary member: a set as a
+--- top-level group at the end of every pad and dial, a node inside its set's group while that is a
+--- top-level group, a callout at the end of its seeded group. What the player still has is never
+--- changed, moved or overwritten, so a second run adds nothing. One act (Batch).
+--- @return table { groups = n, callouts = n }: what came back
+function Lib.RestoreBuiltins()
+    local p = P()
     return Lib.Batch(function()
-        -- The copy's name is shortened to fit, never refused (a translated set name may run long); a
-        -- copy CreateGroup still refuses changes nothing: no surface loses the set, and the set stays on.
-        local id, why = Lib.CreateGroup({ name = Lib.CopyName(def.name, " " .. L["(custom)"]), icon = def.icon,
-            when = def.when, openInto = def.openInto == true })
-        if not id then return nil, why end
-        local skipped, placed = 0, 0
-        local function copyFrom(gid)
-            for _, cid in ipairs(Lib.Group(gid).callouts) do
-                local added, reason = Lib.AddToGroup(id, cid)
-                if not added then
-                    skipped = skipped + 1
-                    NS.Debug(TAG, "customize %s: skipped %s (%s)", builtinId, cid, tostring(reason))
-                end
-            end
-            for _, child in ipairs(NS.BuiltIns.groups[gid].children or {}) do copyFrom(child) end
+        local n, placed = { groups = 0, callouts = 0 }, {}
+        local function seed(gid, parent)
+            local id = seedGroup(p, gid, parent)
+            n.groups, n.callouts = n.groups + 1, n.callouts + #p.groups[id].callouts
+            announce("group", id)
+            return id
         end
-        copyFrom(builtinId)
-        for _, set in pairs(surfaces()) do
-            for _, s in pairs(set) do
-                local at = indexOf(s.groups, builtinId)
-                if at then
-                    s.groups[at] = id
-                    placed = placed + 1
+        for _, top in ipairs(NS.BuiltIns.order) do
+            local set = byOrigin(p.groups, top)
+            if set then
+                n.callouts = n.callouts + restoreCallouts(p, set, top)
+            else
+                set = seed(top)
+                placed[#placed + 1] = set
+            end
+            for _, child in ipairs(NS.BuiltIns.groups[top].children or {}) do
+                local node = byOrigin(p.groups, child)
+                if node then
+                    n.callouts = n.callouts + restoreCallouts(p, node, child)
+                elseif Lib.ValidParent(set) then
+                    seed(child, set)
                 end
             end
         end
-        NS.SchemaRuntime.Set("builtin.enabled", false, builtinId)
-        overlay(builtinId).customizedAs = id
-        announce("builtin", builtinId)
-        return id, nil, skipped, placed
+        placeEverywhere(p, placed, true)
+        if n.callouts > 0 then announce("callout", nil) end
+        NS.Debug(TAG, "restore built-ins: %s groups, %s callouts", n.groups, n.callouts)
+        return n
     end)
 end
 
@@ -852,7 +890,6 @@ Lib.TEMPLATES = {
     group = { name = "", icon = false, iconColor = false, enabled = true, openInto = false, when = {}, parent = false },
     pad = { name = "", enabled = true, groupsAs = SURFACE_DEFAULTS.pad.groupsAs, point = false,
         layout = copyTable(SURFACE_DEFAULTS.pad.layout), look = copyTable(SURFACE_DEFAULTS.pad.look) },
-    builtin = { enabled = true, hidden = {} },
     -- `key` and `point` are false, not nil, for the same reason as above: false is "no key" and "the
     -- default place".
     dial = { name = "", enabled = true, mode = SURFACE_DEFAULTS.dial.mode, slices = SURFACE_DEFAULTS.dial.slices,
@@ -863,15 +900,14 @@ Lib.TEMPLATES = {
 --- modules/Dial.lua, the CLI and the Comms Dial page).
 Lib.DIAL_DEFAULT_POINT = { "CENTER", "CENTER", 0, 0 }
 
--- A new pad or dial: its kind's defaults, `name` and a copy of `groups`, with every shipped built-in
--- marked seen (so Prepare never appends one the list leaves out), at the end of its kind's order.
+-- A new pad or dial: its kind's defaults, `name` and a copy of `groups`, at the end of its kind's
+-- order.
 local function newSurface(kind, name, groups)
     local p = P()
     local set = kind == "pad" and p.pads or p.dials
     local id = Lib.NewId(kind == "pad" and "p" or "d")
     local s = copyTable(SURFACE_DEFAULTS[kind])
-    s.name, s.enabled, s.groups, s.seenBuiltins = name, true, copyTable(groups), {}
-    for _, gid in ipairs(NS.BuiltIns.order) do s.seenBuiltins[gid] = true end
+    s.name, s.enabled, s.groups = name, true, copyTable(groups)
     set[id] = s
     local order = kind == "pad" and p.padOrder or p.dialOrder
     order[#order + 1] = id
@@ -879,10 +915,11 @@ local function newSurface(kind, name, groups)
     return id
 end
 
---- Create a pad or dial holding every built-in group (in BuiltIns.order).
+--- Create a pad or dial holding the seeded sets the profile still has as top-level groups, in
+--- shipped order (where the built-in sets went on a new surface; seededTops).
 function Lib.CreateSurface(kind, name)
     if kind ~= "pad" and kind ~= "dial" then return nil, "badKind" end
-    return newSurface(kind, name, NS.BuiltIns.order)
+    return newSurface(kind, name, seededTops(P()))
 end
 
 function Lib.DeleteSurface(kind, id)
@@ -900,15 +937,14 @@ local function surface(kind, sid)
     return s and s[sid]
 end
 
---- Put a top-level group (a user group or a built-in set) on a pad or a dial at `index` (end by
---- default). A group inside another is refused: it shows wherever its parent does.
+--- Put a top-level user group on a pad or a dial at `index` (end by default). A group inside another
+--- is refused: it shows wherever its parent does.
 function Lib.AddGroupToSurface(kind, sid, gid, index)
     local s = surface(kind, sid)
-    local known = (P().groups[gid] and not isChild(gid)) or (NS.BuiltIns.groups[gid] and not NS.BuiltIns.groups[gid].parent)
+    local known = P().groups[gid] and not isChild(gid)
     if not s or not known or indexOf(s.groups, gid) then return false end
     index = math.max(1, math.min(index or (#s.groups + 1), #s.groups + 1))
     table.insert(s.groups, index, gid)
-    if isBuiltin(gid) then s.seenBuiltins[gid] = true end
     announce(kind, sid)
     return true
 end
@@ -921,7 +957,7 @@ function Lib.RemoveGroupFromSurface(kind, sid, gid)
 end
 
 --- Put a new user group at the top of every pad's and dial's list (the editors' New group): the
---- player's own groups come before the shipped sets. A surface that already lists it is skipped.
+--- new group comes before the seeded sets. A surface that already lists it is skipped.
 --- One act (Batch): one LIBRARY_CHANGED however many surfaces there are.
 --- @return number surfaces it was added to
 function Lib.OfferGroup(groupId)
@@ -1078,42 +1114,87 @@ function Lib.MoveGenericBattlegroundLast(profile)
     return n
 end
 
--- ── prepare ─────────────────────────────────────────────────────────────────────────────────
-
--- Whether a surface may list `gid`: a top-level user group or a top-level built-in set.
-local function exists(gid)
-    if P().groups[gid] ~= nil then return not isChild(gid) end
-    return NS.BuiltIns.groups[gid] ~= nil and not NS.BuiltIns.groups[gid].parent
+-- A converted surface list: each `bi.` set reference as the group `map` seeded for it, any other
+-- `bi.` id (a node, a set seeded for no one, a stale id) left out, no id twice.
+local function convertRefs(list, map)
+    local out = {}
+    for _, gid in ipairs(list) do
+        local id = gid
+        if type(gid) == "string" and gid:sub(1, 3) == "bi." then id = map[gid] end
+        if id ~= nil and not indexOf(out, id) then out[#out + 1] = id end
+    end
+    return out
 end
 
-local REGISTRY = { "callouts", "groups", "builtins", "pads", "dials", "padOrder", "dialOrder" }
+--- Schema step 3 for one stored profile (2026-10-18-builtins-as-groups-design.md, goal 1): the
+--- built-in overlay becomes seeded groups. A profile that has its surfaces (`seeded`) is given every
+--- shipped set as seeded groups (seedSet), each in the set's place on every pad and dial that listed
+--- it: a set that was off is a group that is off, and its hidden callouts are left out. A customized
+--- set is not seeded: its copy, a user group already, keeps its place, and Restore brings the set
+--- back. Any other `bi.` reference is dropped (convertRefs), and the overlay (`builtins`) and every
+--- surface's seenBuiltins go. A profile never prepared is left to Prepare, which seeds it, and one
+--- already given its sets (seededSets) is left as it is. A raw SavedVariables profile: a missing or
+--- malformed registry key is made empty. Idempotent.
+--- @return number the sets seeded
+function Lib.SeedFromOverlay(profile)
+    if type(profile) ~= "table" then return 0 end
+    local overlays = type(profile.builtins) == "table" and profile.builtins or {}
+    profile.builtins = nil
+    if profile.seeded ~= true or (type(profile.seededSets) == "table" and next(profile.seededSets) ~= nil) then
+        return 0
+    end
+    for _, key in ipairs({ "callouts", "groups", "pads", "dials" }) do
+        if type(profile[key]) ~= "table" then profile[key] = {} end
+    end
+    profile.seededSets = {}
+    liftNextId(profile)
+    local map, n = {}, 0
+    for _, top in ipairs(NS.BuiltIns.order) do
+        local o = type(overlays[top]) == "table" and overlays[top] or {}
+        if type(o.customizedAs) == "string" and type(profile.groups[o.customizedAs]) == "table" then
+            profile.seededSets[top] = true
+            for _, child in ipairs(NS.BuiltIns.groups[top].children or {}) do profile.seededSets[child] = true end
+        else
+            map[top] = seedSet(profile, top, type(o.hidden) == "table" and o.hidden or nil)
+            if o.enabled == false then profile.groups[map[top]].enabled = false end
+            n = n + 1
+        end
+    end
+    for _, key in ipairs({ "pads", "dials" }) do
+        for _, s in pairs(profile[key]) do
+            if type(s) == "table" then
+                s.seenBuiltins = nil
+                if type(s.groups) == "table" then s.groups = convertRefs(s.groups, map) end
+            end
+        end
+    end
+    return n
+end
+
+-- ── prepare ─────────────────────────────────────────────────────────────────────────────────
+
+-- Whether a surface may list `gid`: a top-level user group.
+local function exists(gid)
+    return P().groups[gid] ~= nil and not isChild(gid)
+end
+
+local REGISTRY = { "callouts", "groups", "pads", "dials", "padOrder", "dialOrder", "seededSets" }
 
 -- The registry's top-level keys as tables, and its entries as tables, before anything walks them.
 local function normalize(p, result)
     for _, key in ipairs(REGISTRY) do
         if type(p[key]) ~= "table" then p[key] = {} result.repaired = result.repaired + 1 end
     end
-    for _, key in ipairs({ "callouts", "groups", "builtins", "pads", "dials" }) do
+    for _, key in ipairs({ "callouts", "groups", "pads", "dials" }) do
         for id, v in pairs(p[key]) do
             if type(v) ~= "table" then p[key][id] = nil result.repaired = result.repaired + 1 end
         end
     end
 end
 
--- nextId above the largest numeric suffix of any user id, so a stale counter never reuses one.
-local function liftNextId(p)
-    local high = 0
-    for _, key in ipairs({ "callouts", "groups", "pads", "dials" }) do
-        for id in pairs(p[key]) do
-            local n = type(id) == "string" and tonumber(id:match("^[cgpd](%d+)$"))
-            if n and n > high then high = n end
-        end
-    end
-    if type(p.nextId) ~= "number" or p.nextId <= high then p.nextId = high + 1 end
-end
-
--- A fresh profile's default pad and dial (D7), once.
-local function seed(p, result)
+-- A fresh profile's default pad and dial (D7), once. Made before the sets are seeded (seedNew puts
+-- them on every surface), so the two keep the first ids, p1 and d2.
+local function seedSurfaces(p, result)
     if p.seeded then return end
     if #p.padOrder == 0 then Lib.CreateSurface("pad", L["Comms Pad"]) end
     if #p.dialOrder == 0 then Lib.CreateSurface("dial", L["Comms Dial"]) end
@@ -1207,23 +1288,13 @@ local function fillShape(s, kind)
     end
 end
 
--- One pad or dial: its lists as tables, its dangling groups dropped, each built-in it has not been
--- offered yet appended once (seenBuiltins), and its settings tables filled (fillShape).
+-- One pad or dial: its list as a table, its dangling groups dropped (a child among them), and its
+-- settings tables filled (fillShape).
 local function repairSurface(s, kind, result)
     fillShape(s, kind)
-    s.seenBuiltins = type(s.seenBuiltins) == "table" and s.seenBuiltins or {}
     s.groups = type(s.groups) == "table" and s.groups or {}
     for i = #s.groups, 1, -1 do
         if not exists(s.groups[i]) then table.remove(s.groups, i) result.repaired = result.repaired + 1 end
-    end
-    for _, gid in ipairs(NS.BuiltIns.order) do
-        if not s.seenBuiltins[gid] then
-            s.seenBuiltins[gid] = true
-            if not indexOf(s.groups, gid) then
-                s.groups[#s.groups + 1] = gid
-                result.appended = result.appended + 1
-            end
-        end
     end
 end
 
@@ -1240,9 +1311,10 @@ local function repairOrder(order, set, result)
     end
 end
 
---- Seed, append newly shipped built-ins once per surface, split shared callouts, drop dangling ids,
---- loose callouts, malformed glyph colors and bad parents, and take a child off every surface.
---- Idempotent. `repaired` counts every split, drop and fix.
+--- Seed (a fresh profile's pad and dial, then the shipped sets the profile was never given), split
+--- shared callouts, drop dangling ids, loose callouts, malformed glyph colors and bad parents, and
+--- take a child off every surface. Idempotent. `appended` counts the surfaces a newly seeded set
+--- was put on, `repaired` every split, drop and fix.
 --- @return table { seeded, appended, repaired }
 function Lib.Prepare()
     local p = P()
@@ -1250,7 +1322,8 @@ function Lib.Prepare()
     normalize(p, result)
     dropBadColors(p, result)
     liftNextId(p)
-    seed(p, result)
+    seedSurfaces(p, result)
+    seedNew(p, result)
     splitShared(p, result)
     repairGroups(p, result)
     dropLoose(p, result)
@@ -1267,12 +1340,12 @@ end
 
 -- ── import (spec §15, §18) ──────────────────────────────────────────────────────────────────
 
--- A surface's group list from a share result, pointing at the fresh copies: a built-in set stays
--- itself, an imported group becomes its new id, anything else (gone since the check) is left out.
+-- A surface's group list from a share result, pointing at the fresh copies: an imported group
+-- becomes its new id, anything else (gone since the check) is left out.
 local function remapGroups(list, map)
     local out = {}
     for _, gid in ipairs(list) do
-        local id = isBuiltin(gid) and gid or map[gid]
+        local id = map[gid]
         if id and exists(id) and not indexOf(out, id) then out[#out + 1] = id end
     end
     return out
@@ -1334,7 +1407,8 @@ end
 
 --- Apply a checked share result (modules/Share.lua Validate): every member under a fresh id (spec
 --- §18: ids are always re-mapped, names may repeat), each group's callouts and each surface's groups
---- pointing at the new copies, built-in sets kept by id, a nested group inside its parent's copy.
+--- pointing at the new copies, a nested group inside its parent's copy. Nothing arrives seeded: an
+--- import carries no origin.
 --- Each group gets its own copy of each callout
 --- it lists, and a callout no group lists is not imported (one owner). A pad or a dial arrives unbound (spec §15): no
 --- key, at the default place, at the end of its kind's order. One act: one LIBRARY_CHANGED, so the

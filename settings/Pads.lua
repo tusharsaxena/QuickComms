@@ -99,13 +99,11 @@ end
 
 local function groupLabel(gid, active)
     local g = NS.Library.Group(gid)
-    local name = g and g.name or gid
-    if NS.Library.IsBuiltin(gid) then name = L["%s (built-in)"]:format(name) end
-    return ((active and active[gid]) and Ed.ACTIVE_DOT or "") .. name
+    return ((active and active[gid]) and Ed.ACTIVE_DOT or "") .. (g and g.name or gid)
 end
 
 --- The groups the pad does not list: top-level user groups by name (a group inside another shows
---- with it, never by itself), then the top-level built-ins in order.
+--- with it, never by itself).
 function PD.AddableGroups(id)
     local on = {}
     for _, gid in ipairs(NS.db.profile.pads[id].groups) do on[gid] = true end
@@ -114,9 +112,6 @@ function PD.AddableGroups(id)
         if not on[gid] and not NS.Library.IsChild(gid) then user[#user + 1] = { id = gid, label = g.name or gid } end
     end
     table.sort(user, function(a, b) return a.label:lower() < b.label:lower() end)
-    for _, gid in ipairs(NS.BuiltIns.order) do
-        if not on[gid] then user[#user + 1] = { id = gid, label = groupLabel(gid) } end
-    end
     return user
 end
 
@@ -262,7 +257,7 @@ local function render(ctx)
             Ed.Select("pad", v)
             Ed.RequestRefresh()
         end,
-        action = { text = L["New pad"], tooltip = L["Make a new Comms Pad showing every built-in set, and edit it here."],
+        action = { text = L["New pad"], tooltip = L["Make a new Comms Pad holding the built-in groups, and edit it here."],
             onClick = PD.Create },
     })
     Ed.Tabs(ctx, PAGE, {

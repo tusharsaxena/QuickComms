@@ -31,12 +31,11 @@ local function probe(NS, Ed)
     end
 end
 
-test("editors: [review 2] Select mirrors a built-in group into the built-in selection; Heal keeps a member that exists", function()
+test("editors: [review 2] Select keeps the selection, and nothing else; Heal keeps a member that exists", function()
     local NS, _, Ed = enabled()
-    Ed.Select("group", "bi.mplus")
-    assertEqual(NS.State.editing.builtin, "bi.mplus")
     Ed.Select("group", "g9")
-    assertNil(NS.State.editing.builtin)
+    assertEqual(NS.State.editing.group, "g9")
+    assertNil(NS.State.editing.builtin, "no overlay selection")
     Ed.Select("callout", "c5")
     assertEqual(Ed.Heal("callout", { "c1", "c5" }), "c5")
     assertEqual(Ed.Heal("callout", { "c1" }), "c1")

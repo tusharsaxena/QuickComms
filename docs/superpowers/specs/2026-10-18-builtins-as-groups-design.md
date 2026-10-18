@@ -108,3 +108,48 @@ Recorded as each task makes them (plan ledger task in brackets).
   migration step: a group without `parent` is top-level, so old profiles need nothing.
 - [T1] **Group dropdown indent**: a child's entry starts with four spaces (Groups.CHILD_INDENT),
   listed right after its parent (Library.MemberIds), which also orders the Share page's group list.
+- [T2] **Seeded ids are ordinary user ids** (`c<n>`, `g<n>`, from the profile's `nextId`). A fresh
+  profile makes its default pad and dial first (so they keep `p1` and `d2`), then seeds the sets in
+  shipped order: each group's callouts take their ids before it, a set's nodes after it, so the
+  nodes keep their shipped order (Library.Children sorts by id).
+- [T2] **Origin key: `origin`, the shipped id** (`"bi.mplus"`, `"bi.mplus.lust"`), on every seeded
+  group and callout; a seeded node also keeps its `compass` wind, so the dial still pins node
+  wedges to their winds. Neither is a member row, a tag or a lock: Library writes them when it
+  seeds and only Library reads `origin` (Library.ByOrigin). A Duplicate, a Reuse copy and an
+  import keep neither, and Share does not carry them (an exported set's nodes arrive unpinned).
+- [T2] **`profile.seededSets`** (`{ [shipped id] = true }`, sets and nodes) replaces the overlay
+  (`profile.builtins`) and every surface's `seenBuiltins`. Prepare seeds a shipped set the profile
+  was never given at the end of every pad and dial (a set a later version ships), and a node
+  shipped after its set inside the set's group while that is top-level; a seeded group the player
+  deleted is never seeded again by Prepare (that is Restore's).
+- [T2] **Both a migration and Prepare.** Schema step 3 (`NS.MIGRATIONS`, per profile,
+  Library.SeedFromOverlay) converts a stored profile that has its surfaces: every set is seeded and
+  takes the set's place on every pad and dial that listed it; a set that was off is a group that is
+  off; its hidden callouts are left out (Restore brings them back); a customized set is not seeded,
+  its copy (a user group already) keeps its place and the set counts as given; a node or stale
+  `bi.` reference on a surface is dropped; the overlay and `seenBuiltins` go. A profile never
+  prepared is left to Prepare (which seeds it as a new one), and one that already has `seededSets`
+  is left alone, so the step runs once and is idempotent.
+- [T2] **Restore built-in groups lives on the Groups page's General tab**, as its last row (and on
+  the empty "No groups yet" General), not under Defaults, which stays the selected group's reset
+  (options-ui-§13). It does not ask first: it changes nothing the player has. It puts back every
+  shipped set, node and callout whose origin the profile no longer has: a set as a top-level group
+  at the end of every pad and dial, a node inside its set's group while that is top-level (else it
+  stays out), a callout at the end of its seeded group. A set deleted while its nodes were kept
+  (they became top-level groups) comes back without them. One chat line says how many groups and
+  callouts came back, or that nothing was missing. **No "reset to stock"** per set: deleting the
+  group and restoring does it.
+- [T2] **A new pad or dial** holds the seeded sets the profile still has as top-level groups, in
+  shipped order (what a new surface held as built-ins before).
+- [T2] **Share's Built-in tab is removed**; the page's Defaults now unticks everything and forgets
+  the checked string (session state only). A `bi.` reference in a string (one made before the sets
+  were seeded) is a dropped reference. An imported group the string nests is no longer counted as
+  "on no pad or dial" (it shows with its parent).
+- [T2] **Removed with the overlay**: the `builtin` member kind and its rows (`builtin.enabled`,
+  `builtin.hidden`), the `idset` row type and its CLI parse and format, Customize, the "(built-in)"
+  tag (picker, Add a group, the why lines), Reuse's built-in section, the built-ins' read-only
+  General, Callouts and When branches on the Groups page, and Groups_When's W.Describe (only the
+  built-in When tab used it). Settings.Editors.Open stays (a tested, combat-gated page jump), with
+  no caller now.
+- [T2] **The dial's three-rings-deep warning** knows a seeded battleground set by its origin
+  (`bi.bg.<key>`) while it holds groups.

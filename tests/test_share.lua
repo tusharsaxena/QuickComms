@@ -114,12 +114,12 @@ test("share: ids, channels, names, icons and Whens are checked against the schem
     assertEqual(#res.callouts, 2)
     assertEqual(res.callouts[1].fields.icon, 136012)
     assertEqual(res.callouts[2].fields.text, "", "a callout may have no text yet")
-    assertEqual(table.concat(res.groups[1].callouts, ","), "c5,c6", "refused, built-in and repeated references are left out")
+    assertEqual(table.concat(res.groups[1].callouts, ","), "c5,c6", "refused, shipped and repeated references are left out")
     assertEqual(res.dropped, 2)
     assertTrue(res.groups[1].fields.when.content.mythicPlus)
 end)
 
-test("share: a pad keeps the shared groups and the built-in sets, and only the fields that travel", function()
+test("share: a pad keeps the shared groups, and only the fields that travel; a shipped id is a dropped reference", function()
     local NS, SH = boot()
     local res = SH.Validate(bundle({
         groups = { g1 = { name = "Mine" } },
@@ -133,7 +133,8 @@ test("share: a pad keeps the shared groups and the built-in sets, and only the f
     local pad = res.pads[1]
     assertEqual(pad.name, "Theirs")
     assertFalse(pad.enabled)
-    assertEqual(table.concat(pad.groups, ","), "g1,bi.mplus", "a node is not a top-level set; an unknown set is left out")
+    -- red under: keep a top-level shipped id on an imported surface, as built-in sets were
+    assertEqual(table.concat(pad.groups, ","), "g1", "a shipped id (a set, a node, a stale one) is left out")
     assertEqual(pad.fields["pad.layout.columns"], 6)
     assertNil(pad.fields["pad.point"], "a position never travels")
     assertNil(pad.fields["pad.name"])
@@ -142,7 +143,7 @@ test("share: a pad keeps the shared groups and the built-in sets, and only the f
     assertNil(dial.fields["dial.point"])
     assertEqual(dial.fields["dial.mode"], "flat")
     assertEqual(res.ignored, 6)
-    assertEqual(res.dropped, 3)
+    assertEqual(res.dropped, 5)
     assertTrue(NS.Share.Portable("pad", "pad.look.visibility"))
     assertFalse(NS.Share.Portable("pad", "dial.mode"))
 end)

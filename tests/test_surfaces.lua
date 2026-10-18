@@ -5,7 +5,7 @@ local T = _G.QUICKCOMMS_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 
--- A keyed dungeon in a party: the M+ built-in is active and smart channels resolve to /p.
+-- A keyed dungeon in a party: the seeded M+ set is active and smart channels resolve to /p.
 local MPLUS = { inInstance = true, instanceType = "party", difficultyID = 8, keystoneActive = true,
     keyLevel = 12, inGroup = true }
 -- Arathi Basin (instanceID 2107) in its instance group: the generic battleground set and the node set.
@@ -45,12 +45,12 @@ end
 test("surfaces: in a key the default pad's plan is the M+ set, baked to /p", function()
     local NS = live()
     local plan = planFor(NS)
-    assertEqual(table.concat(plan.order, ","), "bi.mplus")
+    assertEqual(table.concat(plan.order, ","), T.seeded(NS, "bi.mplus"))
     assertTrue(plan.hasActive)
     assertEqual(plan.sections[1].title, "M+ (generic)")
     assertEqual(#plan.sections[1].slots, 8)
     local pull = plan.sections[1].slots[1]
-    assertEqual(pull.calloutId, "bi.mplus.pull")
+    assertEqual(pull.calloutId, T.seeded(NS, "bi.mplus.pull"))
     assertEqual(pull.line, "/p Pulling next pack")
     assertEqual(pull.chatType, "PARTY")
     assertEqual(pull.surfaceId, "p1")
@@ -64,13 +64,13 @@ test("surfaces: [review 5] a refused callout is a slot with its reason and no li
     assertNil(slot.line)
     assertNil(slot.chatType)
     assertEqual(slot.reason, "startsWithSlash")
-    assertEqual(slotOf(planFor(NS), "bi.mplus.pull").line, "/p Pulling next pack", "the others still bake")
+    assertEqual(slotOf(planFor(NS), T.seeded(NS, "bi.mplus.pull")).line, "/p Pulling next pack", "the others still bake")
 end)
 
 test("surfaces: a node battleground gives one section per node, baked to /i", function()
     local NS = live(AB)
     local plan = planFor(NS)
-    assertEqual(table.concat(plan.order, ","), "bi.bg.ab,bi.bg")
+    assertEqual(table.concat(plan.order, ","), T.seeded(NS, "bi.bg.ab") .. "," .. T.seeded(NS, "bi.bg"))
     assertEqual(#plan.sections, 6)
     assertEqual(plan.sections[2].title, "Lumber Mill")
     assertEqual(plan.sections[2].slots[3].line, "/i INC 3 Lumber Mill")
@@ -103,9 +103,9 @@ test("surfaces: the bake context fills {me} from the client", function()
     assertEqual(slotOf(planFor(NS), cid).line, "/p Testchar pulling")
 end)
 
-test("surfaces: a disabled built-in leaves the plan", function()
+test("surfaces: a disabled seeded set leaves the plan", function()
     local NS = live()
-    NS.Library.SetBuiltinEnabled("bi.mplus", false)
+    NS.SchemaRuntime.Set("group.enabled", false, T.seeded(NS, "bi.mplus"))
     local plan = planFor(NS)
     assertEqual(#plan.order, 0)
     assertFalse(plan.hasActive)
@@ -140,7 +140,7 @@ local function combat(m, on)
     end
 end
 
-local function pull(NS) return NS.Pad.ChipsFor("p1", "bi.mplus.pull")[1] end
+local function pull(NS) return NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.mplus.pull"))[1] end
 local function staleShown(NS) return NS.Pad.Instance("p1").header.qcStale:IsShown() end
 
 local function nonMessages(m)
@@ -366,7 +366,7 @@ test("surfaces: [fix wave] disabled then enabled inside one combat: the pad is s
     assertEqual(#m.blocked, 0)
 end)
 
-test("surfaces: [phase 3] WhyLines names each shown group in order, built-ins marked, then the locks", function()
+test("surfaces: [phase 3] WhyLines names each shown group in order, then the locks", function()
     local NS = live({})
     local cid = userCallout(NS, { name = "Ask", text = "Raid stack", channel = "raid" })
     local lines = NS.Surfaces.WhyLines("p1")
@@ -376,13 +376,13 @@ test("surfaces: [phase 3] WhyLines names each shown group in order, built-ins ma
     assertTrue(cid ~= nil)
 end)
 
-test("surfaces: [phase 3] WhyLines in a key explains the built-in's matched row; a preview says so", function()
+test("surfaces: [phase 3] WhyLines in a key explains the seeded set's matched row; a preview says so", function()
     local NS = live()
-    assertEqual(NS.Surfaces.WhyLines("p1")[1], "M+ (generic) (built-in): Content")
+    assertEqual(NS.Surfaces.WhyLines("p1")[1], "M+ (generic): Content")
     NS.Preview.SetPreviewAs("arena")
     local lines = NS.Surfaces.WhyLines("p1")
     assertEqual(lines[1], "Preview as: Arena")
-    assertEqual(lines[2], "Arena (generic) (built-in): Content")
+    assertEqual(lines[2], "Arena (generic): Content")
     NS.Preview.SetPreviewAs("current")
     NS.Preview.SetTestMode(true)
     assertEqual(NS.Surfaces.WhyLines("p1")[1], "Test mode: placeholder chips that send nothing.")
@@ -439,10 +439,10 @@ test("surfaces: [nesting] a parent draws its own section, then one per child who
     assertEqual(plan.sections[1].title, "Raid night")
     assertEqual(plan.sections[2].groupId, keyed)
     assertEqual(plan.sections[2].slots[1].line, "/p go")
-    assertEqual(plan.sections[3].groupId, "bi.mplus", "the arena child is not active in a key")
+    assertEqual(plan.sections[3].groupId, T.seeded(NS, "bi.mplus"), "the arena child is not active in a key")
     NS.SchemaRuntime.Set("group.enabled", false, keyed)
     plan = planFor(NS)
-    assertEqual(plan.sections[2].groupId, "bi.mplus", "a disabled child leaves the plan")
+    assertEqual(plan.sections[2].groupId, T.seeded(NS, "bi.mplus"), "a disabled child leaves the plan")
     NS.SchemaRuntime.Set("group.enabled", false, parent)
     assertTrue(planFor(NS).order[1] ~= parent, "the parent's own gate is the whole family's")
 end)

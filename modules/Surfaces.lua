@@ -2,9 +2,9 @@ local _, NS = ...
 -- modules/Surfaces.lua — the surfaces' plans and their rebuild (spec §4.3, §7, §10).
 --
 -- THE PLAN (this half): for one pad and one snapshot, the active groups in the pad's own order
--- (Resolver, D6), one section per group (a group with children, a node battleground or a user
--- parent, gives its own callouts' section when it has any, then one section per child whose When
--- matches; the parent's When gates the whole), and one slot per callout: baked to its single macro line, or refused
+-- (Resolver, D6), one section per group (a parent, a seeded battleground's set among them, gives
+-- its own callouts' section when it has any, then one section per child whose When matches; the
+-- parent's When gates the whole), and one slot per callout: baked to its single macro line, or refused
 -- with the reason its chip's tooltip shows (Bake, §8.3; §18 "a baked line fails validation"). A
 -- locked slot keeps its line and carries the lock (§8.4). Library, Resolver and Bake are reached
 -- through `deps`, so a test can hand in any snapshot. Test mode's plan is placeholder slots that
@@ -36,16 +36,16 @@ local ROLE = { TANK = L["Tank"], HEALER = L["Healer"], DAMAGER = L["Damage"] }
 
 S.TEST_SECTIONS, S.TEST_SLOTS = 2, 4
 
--- A group's children: `opts.children` (Library.Children) when given, else the merged group's own
--- list (a built-in set's nodes).
+-- A group's children: `opts.children` (Library.Children) when given, else the group's own
+-- `children` list (a test's hand-made group).
 local function childrenOf(groupId, g, opts)
     if opts and opts.children then return opts.children(groupId) end
     return type(g.children) == "table" and g.children or {}
 end
 
 -- Whether a child shows: always without `opts.active`; else a child the Resolver judged (one of
--- `opts.groups`, a user group) only while it is active, its own When and Enabled. A built-in node
--- has no When of its own.
+-- `opts.groups`, a user group) only while it is active, its own When and Enabled. A child the
+-- Resolver was not handed (a test's hand-made group) always shows.
 local function childShown(child, opts)
     if not (opts and opts.active) then return true end
     if not (opts.groups and opts.groups[child]) then return true end
@@ -267,12 +267,10 @@ local function unbuiltLines(id)
     return { L["This pad has not been built yet."] }
 end
 
--- A group's name as the why lines show it: a built-in says so.
+-- A group's name as the why lines show it.
 local function whyName(gid)
     local g = NS.Library.Group(gid)
-    local name = g and g.name or gid
-    if NS.Library.IsBuiltin(gid) then name = L["%s (built-in)"]:format(name) end
-    return name
+    return g and g.name or gid
 end
 
 -- Every distinct lock on the plan's slots, sorted, as its tooltip line, appended to `out`.

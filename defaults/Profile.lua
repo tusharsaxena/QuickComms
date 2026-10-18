@@ -32,7 +32,7 @@ NS.C = {
         nextId    = 1,
         callouts  = {},   -- empty is deliberate: a fresh profile has no user callouts
         groups    = {},
-        builtins  = {},   -- overlay on the shipped sets: { [groupId] = { enabled, hidden = {} } }
+        seededSets = {},  -- the shipped set and node ids this profile was given as groups: { [id] = true }
         pads      = {},
         dials     = {},
         padOrder  = {},

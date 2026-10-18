@@ -67,6 +67,9 @@ _G.QUICKCOMMS_TEST = Kit.expose{
     -- The kit's secret-value simulator (tests/_kit/secrets.lua), which Kit.expose leaves out.
     secret      = Kit.secret,
     isSecret    = Kit.isSecret,
+    -- The id a profile's seeded group or callout has (Library.ByOrigin), by the shipped id it came
+    -- from: `T.seeded(NS, "bi.mplus.pull")`. Seeded ids are fresh per profile, so a case names them so.
+    seeded      = function(NS, origin) return NS.Library.ByOrigin(origin) end,
 }
 
 -- The diagnostics-dump contract's consumer facts (debug-logging-§14): the kit's cases run through

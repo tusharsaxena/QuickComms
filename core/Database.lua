@@ -18,6 +18,9 @@ NS.MIGRATIONS = {
     -- 1 -> 2 (phase 4): the generic battleground set moves below the per-battleground sets on every
     -- pad and dial, so the dial opens into a node set (D9). Library is the registry writer; it moves.
     { to = 2, perProfile = true, run = function(_, profile) NS.Library.MoveGenericBattlegroundLast(profile) end },
+    -- 2 -> 3 (2026-10-18-builtins-as-groups-design.md): the built-in overlay becomes seeded groups,
+    -- each in its set's place on every pad and dial; Library seeds them and converts the lists.
+    { to = 3, perProfile = true, run = function(_, profile) NS.Library.SeedFromOverlay(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.

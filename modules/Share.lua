@@ -314,11 +314,6 @@ function SH.Portable(kind, path)
     return path ~= kind .. ".name" and path ~= kind .. ".enabled"
 end
 
-local function topBuiltin(gid)
-    local def = NS.BuiltIns.groups[gid]
-    return def ~= nil and def.parent == nil
-end
-
 -- A surface's portable fields, every string in each value sanitized, nested ones included
 -- (cleanValue); a field that does not travel, or whose value cannot be stored, is left out and
 -- counted. The seam checks each value again, against its row, when Library.Import writes it.
@@ -336,7 +331,7 @@ local function surfaceEntry(spec, id, s, res)
     if type(s) ~= "table" then return nil, "damaged" end
     local name, why = cleanName(s.name, res)
     if not name then return nil, why end
-    local groups = keepRefs(s.groups, function(gid) return res.known[gid] == "group" or topBuiltin(gid) end, res)
+    local groups = keepRefs(s.groups, function(gid) return res.known[gid] == "group" end, res)
     return { id = id, name = name, enabled = s.enabled ~= false, groups = groups,
         fields = surfaceFields(spec.kind, s.fields, res) }
 end
@@ -587,7 +582,7 @@ end
 -- The picked ids and what they need: a pad's or a dial's user groups, every picked group's children
 -- (they show with it), then every picked group's callouts (spec §15: a group references its
 -- callouts, a surface its groups). A child picked alone travels without its parent, and so arrives
--- top-level. Built-in sets travel by id only. A callout is never picked on its own: it travels inside the group that owns it
+-- top-level. A seeded group travels as any group does, without its origin. A callout is never picked on its own: it travels inside the group that owns it
 -- (2026-10-17-callouts-owned-by-groups-design.md), so a `callout` pick is ignored.
 local function bringGroups(want, surfaces, ids, groups)
     for sid in pairs(ids) do

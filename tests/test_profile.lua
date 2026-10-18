@@ -16,13 +16,18 @@ test("profile: behavior defaults match spec §5.1", function()
     assertEqual(b.autoPromote, false)
 end)
 
-test("profile: collections exist; default nextId is 1, 3 after boot", function()
+test("profile: collections exist; default nextId is 1, past every seeded id after boot", function()
     local NS0 = T.newAddon()
     assertEqual(NS0.C.PROFILE.nextId, 1)
     local NS = T.bootAddon()
     local p = NS.db.profile
-    assertEqual(p.nextId, 3)
-    for _, key in ipairs({ "callouts", "groups", "builtins", "pads", "dials", "padOrder", "dialOrder" }) do
+    -- p1 and d2, then one id per seeded callout and group
+    local n = 2
+    for _ in pairs(NS.BuiltIns.groups) do n = n + 1 end
+    for _ in pairs(NS.BuiltIns.callouts) do n = n + 1 end
+    assertEqual(p.nextId, n + 1)
+    assertNil(p.builtins, "the built-in overlay is gone")
+    for _, key in ipairs({ "callouts", "groups", "seededSets", "pads", "dials", "padOrder", "dialOrder" }) do
         assertEqual(type(p[key]), "table", key)
     end
 end)
@@ -44,21 +49,21 @@ test("profile: the spam guard clamps to 0.6-2.0 and fallback refuses unknown val
     assertEqual(NS.Setting("behavior.soloFallback"), "none")
 end)
 
-test("profile: schema version target is 2 (phase 4: the battleground order)", function()
+test("profile: schema version target is 3 (the built-in sets as seeded groups)", function()
     local NS = T.bootAddon()
-    assertEqual(NS.SCHEMA_VERSION, 2)
+    assertEqual(NS.SCHEMA_VERSION, 3)
     assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
 end)
 
 -- ── Prepare keeps one owner per callout (2026-10-17-callouts-owned-by-groups-design.md) ────
 
 -- A booted profile where c1 sits in g1 and g2 (a shared callout, as earlier builds stored one) and
--- c9 sits in no group.
+-- c999 sits in no group (seeded ids are low numbers, so these never collide).
 local function broken()
     local NS = T.bootAddon()
     local p = NS.db.profile
     p.callouts.c1 = { name = "Kick", text = "Kick {rt8}", channel = "party", icon = 136012 }
-    p.callouts.c9 = { name = "Loose", text = "x", channel = "say" }
+    p.callouts.c999 = { name = "Loose", text = "x", channel = "say" }
     p.groups.g1 = { name = "One", callouts = { "c1" }, when = {} }
     p.groups.g2 = { name = "Two", callouts = { "c1" }, when = {} }
     return NS, p
@@ -94,17 +99,17 @@ end)
 test("prepare: a callout held by no group is dropped", function()
     local NS = T.bootAddon()
     local p = NS.db.profile
-    p.callouts.c9 = { name = "Loose", text = "x", channel = "say" }
+    p.callouts.c999 = { name = "Loose", text = "x", channel = "say" }
     local result = NS.Library.Prepare()
     -- red under: drop the orphan pass from Lib.Prepare
-    assertNil(p.callouts.c9)
+    assertNil(p.callouts.c999)
     assertEqual(result.repaired, 1, "the repaired tally counts it")
 end)
 
 test("prepare: is idempotent after a split", function()
     local NS, p = broken()
     NS.Library.Prepare()
-    assertNil(p.callouts.c9)
+    assertNil(p.callouts.c999)
     local after = shape(p)
     local again = NS.Library.Prepare()
     assertEqual(again.repaired, 0)

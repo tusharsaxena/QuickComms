@@ -83,7 +83,7 @@ test("popup: Add opens blank with Smart group", function()
     assertTrue(Pop.catcher:IsShown(), "modal: the catcher covers the settings window")
     assertTrue(Pop.frame:IsShown())
     assertFalse(Pop.Open("g999"), "no such user group")
-    assertFalse(Pop.Open(NS.BuiltIns.order[1]), "a built-in set is read-only")
+    assertFalse(Pop.Open(NS.BuiltIns.order[1]), "a shipped id is no group")
 end)
 
 test("popup: edit opens filled in", function()

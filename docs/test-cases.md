@@ -101,7 +101,7 @@ Total.
 - perf: [review] a refresh whose signature moves notes situationRefresh before the rebuild it publishes
 - perf: [phase 5] the Comms Dial page's Preview notes neither bakeSurface nor resolverResolve
 
-### test_database.lua (7)
+### test_database.lua (10)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the target is the last step's `to`, and the steps climb in order
@@ -109,15 +109,18 @@ Total.
 - database: a step that raises leaves the stamp where it was
 - database: a perProfile step runs once for every stored profile
 - database: [phase 4] step 2 moves the generic battleground set below the per-battleground sets
+- database: step 3 turns the built-in overlay into seeded groups, each in its set's place
+- database: step 3 runs once, and the profile loads without duplicates
+- database: step 3 leaves a profile never prepared to Prepare, which seeds it once
 - database: the profile defaults carry the Master controls value, and no debug flag
 
 ### test_profile.lua (8)
 
 - profile: behavior defaults match spec §5.1
-- profile: collections exist; default nextId is 1, 3 after boot
+- profile: collections exist; default nextId is 1, past every seeded id after boot
 - profile: every behavior row resolves through the seam
 - profile: the spam guard clamps to 0.6-2.0 and fallback refuses unknown values
-- profile: schema version target is 2 (phase 4: the battleground order)
+- profile: schema version target is 3 (the built-in sets as seeded groups)
 - prepare: a callout held by two groups is split into a copy
 - prepare: a callout held by no group is dropped
 - prepare: is idempotent after a split
@@ -296,7 +299,7 @@ Total.
 - share: a newer version is refused with a line to update; a damaged version is refused
 - share: [review 2] a command or control characters never survive: / is refused, lines are flattened
 - share: ids, channels, names, icons and Whens are checked against the schema
-- share: a pad keeps the shared groups and the built-in sets, and only the fields that travel
+- share: a pad keeps the shared groups, and only the fields that travel; a shipped id is a dropped reference
 - share: the report counts what arrives, then names each member left out and why
 - share: more members than one string may carry is refused before any is checked
 - share: [review 1] a hand-made string with a NaN reference, a cyclic field or an infinite icon raises nothing
@@ -351,29 +354,27 @@ Total.
 
 ### test_library.lua (73)
 
-- library: Prepare seeds one pad and one dial with every built-in, once
+- library: Prepare seeds every shipped set as a group, on one pad and one dial, once
+- library: a seeded group is an ordinary group: its fields, When, callouts and origin
+- library: a seeded battleground set holds its nodes as groups inside it, in shipped order, with their winds
 - library: callouts validate on create
 - library: whisper channels are refused (owner, issue #7)
 - library: [review 4] deleting a callout clears its group
 - library: [review 4] deleting a group clears every surface
-- library: adding a built-in callout copies it (P2)
-- library: [review 4] Customize swaps the copy in place; deleting the copy puts the set back, on
-- library: hidden built-in callouts drop out of the merged group
-- library: [review 5] a newly shipped built-in is appended once; a removed one stays removed
+- library: adding a seeded callout copies it (P2); the copy keeps no origin
+- library: [review 5] a newly shipped set is seeded once, at the end of every surface; a deleted one stays deleted
+- library: a node shipped after its set was seeded goes inside the set's group
 - library: Prepare repairs dangling ids
-- library: AllGroups is top-level only and merges the overlay
+- library: AllGroups is every user group, a seeded node among them
 - library: every mutation announces LIBRARY_CHANGED
-- library: overlay writers resolve child ids to the top-level overlay
-- library: Customize twice is refused until the copy is deleted
-- library: Customize copies openInto and flattens node callouts
+- library: no shipped id is a member any more
 - library: Prepare survives malformed groups and surfaces
 - library: Prepare repairs the order lists
 - library: MoveInGroup with a nil target returns false
-- library: [final 2] a built-in whose copy fails validation is refused cleanly, with no hole
+- library: [final 2] a callout whose copy fails validation is refused cleanly, with no hole
 - library: [final 2] the name cap counts characters, not bytes
-- library: [final 2] Customize skips a copy that fails and reports it, leaving no hole
 - library: [final minor 2] Prepare lifts a stale nextId above every existing id
-- library: [final minor 3] Prepare repairs corrupt top-level registry keys and builtins entries
+- library: [final minor 3] Prepare repairs corrupt top-level registry keys
 - library: SetSurfacePoint stores a copy of a plain anchor, announces it, and nil clears it
 - library: SetSurfacePoint refuses an unknown surface or a malformed anchor, and stores nothing
 - library: [phase 3] a copy's name stays within the 32-character cap, counted in characters
@@ -382,20 +383,16 @@ Total.
 - library: CreateGroup takes a callout no group holds, and copies one a group holds
 - library: [phase 3] OfferGroup puts a user group first on every pad and dial, once
 - library: [phase 3] MoveGroupOnSurface reorders a surface's groups and announces it
-- library: [phase 3] Member answers the live member of each kind, and a built-in group's copy
+- library: [phase 3] Member answers the live member of each kind
 - library: [phase 3] Touch announces the member it is handed, and the field
 - library: [phase 3] MemberIds lists each kind in its picker's order
-- library: [phase 3] Customize shortens a long set name instead of refusing it
-- library: [phase 3] Customize changes nothing when the copy cannot be made
 - library: [phase 3] ValidWhen accepts every shipped When and refuses bad shapes
 - library: [final] a surface's offsets are bounded at its smallest scale, not at 1
-- library: [phase 3] the point, icon and hidden-set validators
+- library: [phase 3] the point and icon validators
 - library: [phase 3] every member template holds a value at every field
 - library: [phase 3] Batch holds the announces and sends one per kind it touched
-- library: [final 8] a set on no surface is customized onto none, and Customize says how many it reached
-- library: [final 24] Customize puts the copy in the set's place on every pad and dial
-- library: [final 1] Customize, AddToGroup with a built-in, and OfferGroup each send one LIBRARY_CHANGED
-- library: [final 1] one Customize click rebuilds the pads once
+- library: [final 1] Restore, AddToGroup and OfferGroup each send one LIBRARY_CHANGED
+- library: [final 1] one Restore click rebuilds the pads once
 - library: [final 2] ValidWhen refuses a value its row can never match, and names the row and value
 - library: [phase 4] keys: upper-cased, none is false; what the open dial uses is reserved
 - library: [final 3] a key is one base key with known modifiers, none twice; a bare or dangling modifier is no key
@@ -403,7 +400,7 @@ Total.
 - library: [phase 4] the generic battleground set moves below the per-battleground sets, once
 - library: [phase 5] Import makes every member under a fresh id, its references pointing at the copies
 - library: [review 3] importing the same string twice makes two copies; nothing that existed changes
-- library: [review 4] an imported pad and dial arrive unbound: no key, the default place, no built-in re-added
+- library: [review 4] an imported pad and dial arrive unbound: no key, the default place, no set added
 - library: [review] an imported Look keeps a bool a bool and a color its four channels
 - library: [phase 5] Import is one act: one LIBRARY_CHANGED; a refused result imports nothing
 - library: [phase 5] Prepare gives a pad saved before the Look groups every field it lacks
@@ -418,31 +415,35 @@ Total.
 - library: [icons] an import carries a glyph's color into the fresh copies
 - library: [icons] IconTint draws a glyph's color as r, g, b; no color, a bad one or no glyph is white
 - library: [nesting] a group takes a top-level group as its parent and leaves every surface
-- library: [nesting] one level only: self, a child, a parent with children, a stranger and a built-in are refused
+- library: [nesting] one level only: self, a child, a parent with children, a stranger and a shipped id are refused
 - library: [nesting] none clears the parent: false, empty text and 'none' all do
 - library: [nesting] a group's children are in the order they were made; MemberIds lists them under it
 - library: [nesting] deleting a parent makes its children top-level groups in its place on every surface
 - library: [nesting] Duplicate keeps a child inside its parent; a parent's copy holds no children
 - library: [nesting] Prepare drops a bad parent (gone, itself, a chain, a cycle) and takes a child off every surface
+- library: [restore] a deleted set comes back once, as fresh groups at the end of every surface
+- library: [restore] a deleted node comes back inside its set; a deleted callout at the end of its group
+- library: [restore] a set deleted with its nodes kept brings back only what is missing
+- library: [restore] a set nested in another group keeps its place; its nodes stay out
+- library: [restore] a new pad holds the seeded sets still top-level, in shipped order
+- library: [restore] ByOrigin finds a seeded group or callout, and a copy is never one
 
-### test_members.lua (28)
+### test_members.lua (26)
 
 - members: a callout field is written through the seam by instance id, and announced once
 - members: with no id the seam writes the selected member, else the first the page lists, else refuses
 - members: [review 5] a bad name or channel is refused with its reason and stores nothing
 - members: an icon typed as digits is stored as a texture id; empty text clears it
-- members: [review 4] a built-in group's fields read, and every write to them is refused
+- members: a seeded group's fields read and write as any group's; the shipped set never changes
 - members: a group's When is one structured row: a valid When stores, a bad one is refused
 - members: member rows are not AceDB defaults, and each resolves against its template
-- members: [review 4] the CLI prints the built-in refusal
-- members: Library's built-in writers and the pad point go through the seam, one announce each
+- members: Library's own writers (the pad point, an icon) go through the seam, one announce each
 - members: the structured rows are typed and printed on the CLI through the descriptor's parse and format
 - members: [review 1] a callout edited from the CLI in combat waits for combat end, with the stale hint
 - members: [fix 1] pad.point refuses an unknown anchor name or a non-finite offset; nothing is stored
 - members: [final 2, 11] the CLI maps When values onto their tokens, and refuses one a row never matches
 - members: [final 7] what `get group.when` prints types back in
 - members: [final 4] an off-screen pad.point is refused; `/qc reset` brings back a pad's place and clears an icon
-- members: [final 5] builtin.hidden with no set selected says to pick one
 - members: [phase 4] a dial's fields are member rows, and its position goes through SetSurfacePoint
 - members: [review 4] a dial's key is stored upper-case; none clears it; a reserved key or another dial's is refused
 - members: [final 3] a bare, dangling, unknown or repeated modifier is refused; [final 4] modifier order is one key
@@ -451,14 +452,14 @@ Total.
 - members: [phase 5] a When's key level prints as it types back in: one level, open below, open above
 - members: [phase 5] a pad's Look rows are composed member rows: checked, clamped, announced
 - members: [icons] a glyph's color is written through the seam by id, typed text read as rrggbb
-- members: [icons] a malformed color, a color on no glyph and a built-in's color are refused
+- members: [icons] a malformed color, a color on no glyph and a shipped id's color are refused
 - members: [icons] an icon that is no glyph clears the color in the same act; a glyph keeps it
 - members: [icons] Library.SetIcon writes the icon and its color as one act
 - members: [icons] `/qc reset` clears a color; a group page's Defaults keeps it with the icon
 
 ### test_editors.lua (17)
 
-- editors: [review 2] Select mirrors a built-in group into the built-in selection; Heal keeps a member that exists
+- editors: [review 2] Select keeps the selection, and nothing else; Heal keeps a member that exists
 - editors: every membership change asks for one structural repaint, on the next frame
 - editors: [phase 3] a scalar member write repaints nothing; a name does
 - editors: [phase 3] a situation change repaints only when the set of active groups changes
@@ -565,11 +566,11 @@ Total.
 - when: [review 5] the key-level range refuses lowest above highest; clearing both drops the row
 - when: [review 5] a typed key level is refused when the range would be upside down, and nothing is stored
 - when: the specialization row offers the player's class, or the classes the class row picked
-- when: Describe reads a When back as lines, and ActiveLine names the row that does not match
+- when: ActiveLine names the row that does not match
 - when: [phase 3] a group turned off never reads Active now, as the picker's dot does not
 - when: CharacterId takes Name-Realm as typed and gives a bare name the player's realm
 - when: [phase 3] the open rows are session state that a profile switch clears
-- when: Write stores a user group's When through the seam and refuses a built-in with its reason
+- when: Write stores a group's When through the seam, a seeded one's too, and refuses a shipped id
 - when: the battleground names come from the shipped sets, by instanceID
 - when: [final 6] a typed character takes the client's case; the Resolver matches one in any case
 - when: [final 2, 11] ResolveValue maps a typed value onto the token or id its row stores, or refuses it
@@ -577,12 +578,12 @@ Total.
 ### test_page_groups.lua (41)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
-- groups page: the picker lists user groups by name, then the built-ins, active ones dotted
+- groups page: the picker lists every group by name, a seeded set among them, active ones dotted
 - groups page: General draws Preview as first, then the group's rows; Duplicate and Delete act
-- groups page: Callouts drags to reorder, removes, and copies a built-in callout in (P2)
+- groups page: Callouts drags to reorder, removes, and copies a seeded callout in (P2)
 - groups page: Add callout opens the popup for this group
-- groups page: Reuse lists callouts as <group>: <callout> and built-ins as <set>: <callout>
-- groups page: Reuse leaves out the built-in set the group was customized from
+- groups page: Reuse lists every callout as <group>: <callout>, a seeded one too
+- groups page: Reuse on a seeded group leaves out its own callouts; another group offers them
 - groups page: Reuse draws the group part in muted gold and the callout name in white
 - groups page: Reuse sorts the whole list by group, then callout, ignoring case
 - groups page: Reuse numbers same-named copies so each entry is unambiguous
@@ -593,14 +594,14 @@ Total.
 - groups page: the edit glyph opens the popup filled in
 - groups page: [review 3] the remove glyph asks, then deletes the callout
 - groups page: deleting a group deletes its callouts
-- groups page: [review 4] a built-in is read-only; Customize puts the copy in its place and selects it
-- groups page: a built-in's Callouts tab hides and shows its callouts, a node's named with its node
-- groups page: the When tab of a built-in describes it; a user group's edits it; Preview bakes each callout
-- groups page: [phase 3] a built-in's Defaults turns it back on: the Enabled row its General draws
+- groups page: a seeded set's General is any group's: Name, Enabled, Parent group, the icon, Duplicate, Delete
+- groups page: a seeded set's Callouts tab is the callout table: Add callout, Reuse, a row per callout
+- groups page: a seeded set's When tab edits it as any group's; Preview bakes each callout
 - groups page: [review 5] the When tab refuses an upside-down key-level range
 - groups page: [final 16] New group rebuilds the pads once, however many pads there are
 - groups page: [final 3, 25] a user group's Defaults: Enabled on, Open the dial off, the rest kept, one rebuild
-- groups page: [final 8] Customize of a set on no pad says the copy is on none
+- groups page: [restore] Restore built-in groups brings back a deleted set and says so; again, nothing is missing
+- groups page: [restore] with every group deleted, General still offers Restore built-in groups
 - groups page: [final 12] Duplicate says the copy is on no pad yet
 - groups page: [final 20] the Instances row adds a typed id, removes one, and refuses a fraction or a negative
 - groups page: [final 18] Add the instance you are in reads the instance at the click, not at the draw
@@ -654,12 +655,10 @@ Total.
 - dials page: [final 10] the key line of a dial that is off says the key opens nothing, and warns of no override
 - dials page: [final 11] the page's own plan builds are not timed as a surface's bake
 
-### test_page_share.lua (14)
+### test_page_share.lua (12)
 
-- share page: every shipped set has a line; turning M+ off takes it off the pad
-- share page: [review 4] Customize puts the copy in the set's place, selects it and opens the Groups page
-- share page: Choose callouts opens the set on the Groups page's Callouts tab
-- share page: Defaults turns every set back on and shows all of their callouts, as one act
+- share page: two tabs, and a seeded set is ticked and exported as any group, its nodes with it
+- share page: Defaults unticks everything and forgets the checked string; nothing in the profile changes
 - share page: [phase 5] Export ticks a group; its callouts come along, and the string opens in the copy window
 - share page: Export lists groups, pads and dials, and no callouts; a ticked group brings its callouts
 - share page: [phase 5] Export with nothing ticked says so and opens nothing
@@ -673,7 +672,7 @@ Total.
 
 ### test_check.lua (6)
 
-- check: a built-in callout prints its line and channel
+- check: a seeded callout prints its line and channel
 - check: a refused callout prints the reason
 - check: an unknown id says so
 - check: never calls SendChatMessage
@@ -811,7 +810,7 @@ Total.
 - surfaces: a Say callout locked by an encounter lights the plan's lockdown chip
 - surfaces: solo with the self fallback, a smart callout carries the text to print
 - surfaces: the bake context fills {me} from the client
-- surfaces: a disabled built-in leaves the plan
+- surfaces: a disabled seeded set leaves the plan
 - surfaces: the test plan is placeholder chips that carry no line
 - surfaces: the first situation read builds the default pad, armed and shown
 - surfaces: ACTIVE_GROUPS_CHANGED is sent once per real change of a pad's active groups
@@ -825,8 +824,8 @@ Total.
 - surfaces: disabled out of combat, every pad hides and every chip disarms; enabled, they return
 - surfaces: [review 2] disabled mid-combat: nothing blocked, one held registration, finished at combat end
 - surfaces: [fix wave] disabled then enabled inside one combat: the pad is shown and armed after it
-- surfaces: [phase 3] WhyLines names each shown group in order, built-ins marked, then the locks
-- surfaces: [phase 3] WhyLines in a key explains the built-in's matched row; a preview says so
+- surfaces: [phase 3] WhyLines names each shown group in order, then the locks
+- surfaces: [phase 3] WhyLines in a key explains the seeded set's matched row; a preview says so
 - surfaces: [icons] a slot carries its callout's icon color, a dial's group entry its group's
 - surfaces: [nesting] a parent draws its own section, then one per child whose When matches
 - surfaces: [nesting] a dial draws a parent's own callouts and a ring per child whose When matches
@@ -990,7 +989,7 @@ Total.
 | test_bus.lua | 2 |
 | test_surface_parity.lua | 15 |
 | test_setup.lua | 26 |
-| test_database.lua | 7 |
+| test_database.lua | 10 |
 | test_profile.lua | 8 |
 | test_schema.lua | 18 |
 | test_slash.lua | 15 |
@@ -1007,7 +1006,7 @@ Total.
 | test_builtins.lua | 7 |
 | test_gameids.lua | 2 |
 | test_library.lua | 73 |
-| test_members.lua | 28 |
+| test_members.lua | 26 |
 | test_editors.lua | 17 |
 | test_callout_popup.lua | 38 |
 | test_icon_browser.lua | 26 |
@@ -1016,7 +1015,7 @@ Total.
 | test_page_groups.lua | 41 |
 | test_page_pads.lua | 13 |
 | test_page_dials.lua | 17 |
-| test_page_share.lua | 14 |
+| test_page_share.lua | 12 |
 | test_check.lua | 6 |
 | test_send_guard.lua | 10 |
 | test_sendengine.lua | 31 |
@@ -1036,4 +1035,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **822** |
+| **Total** | **821** |
