@@ -99,3 +99,51 @@ LibKa0s change follows `docs/releasing.md`; `libs/` is only ever re-vendored, ne
 
 ## Builder calls
 
+- **[L1] Where the drawer lives.** A new eleventh file of the Options major,
+  `LibKa0s/OptionsDrawer.lua` (`DRAWER_MINOR` 1), paired on the shell's minor like `OptionsNav.lua`,
+  not a Widgets-major file (the Options major does not depend on Widgets) and not an append to
+  `OptionsWidgets.lua` (its census trigger is "the next maker added"). `Options.lua` goes to minor
+  29 for the guarded attach and one `RefreshPanel` read. Options key **29.2.34.2.4.8.1.7.4.2.1**;
+  LibKa0s **v1.73.0** on `feat/drawer-widget`, not tagged, no release run (both wait on the owner).
+- **[L1] Not a registered AceGUI widget type.** AceGUI's widget registry is process-global, so the
+  drawer is three AceGUI `SimpleGroup`s (the drawer, its header, its box) decorated on their frames
+  and handed back clean on release (the header's button hidden and deaf, the box's patched
+  `OnWidthSet` / `OnHeightSet` / `LayoutFinished` and content anchors restored). The box is the
+  AceGUI container the host fills.
+- **[L1] API.** `H.Drawer(ctx, spec)`, `spec = { label, summary, set, tooltip, open, onToggle, body,
+  actions, disabled }`; returns `{ group, header, head, body, ctx, actions, open }`. `summary` and
+  `set` may be functions read at draw. `set` true: gold name, pale-gold summary; else white name,
+  gray summary. The host words "Any" itself.
+- **[L1] Open state is the host's.** A header click calls `onToggle(not open)` and then
+  `RefreshPanel(page, true)`; refused in combat (`drawer <label>`). Q2 keeps the per-group,
+  per-session open set in `NS.State.whenOpen` and passes `open` / `onToggle`; it needs no refresh of
+  its own on a toggle.
+- **[L1] The body ctx.** `spec.body(ctx, box)` gets a view whose `scroll` is the box, so
+  `RenderGrid`, `IdList`, `TextRow`, `InlineButtonPair` draw into the box unchanged, and whose every
+  other field reads and writes through to the page (so `Ed.Live(ctx, fn)` and `ctx.refreshers` land
+  on the page ctx `Ed.built` holds). `RefreshPanel` on a view refreshes its page (Options minor 29).
+  Never `ClearScroll` a view.
+- **[L1] Select all / Clear (Any)** are `spec.actions = { { text, tooltip, onClick, disabled } }`:
+  buttons on the box's last line, right-aligned behind a filler, `0.22` of the line each, `onClick`
+  pcall'd and refused in combat. Q2 passes both for a checkbox condition and Clear alone otherwise.
+- **[L1] Read-only (Q3's inheriting group).** `spec.disabled` draws the body under the page's
+  `__renderDisabled` flag (restored after) and disables every action; the header still opens and
+  closes. The library's own rows honor the flag, but Groups_When.lua's bespoke `checkbox` and key
+  level `make` items do not: Q2/Q3 must call `SetDisabled` on them itself (or omit `actions`, as the
+  spec's read-only view does).
+- **[L1] Look.** Header 26px; chevron `Interface\ChatFrame\ChatFrameExpandArrow`, rotated a quarter
+  turn while open; the name `GameFontNormal` at x=26, the summary `GameFontHighlightSmall`
+  right-aligned, one line, ellipsis; header fill/edge warmer and gold-edged while open; the box joins
+  under it (no top edge) with padding 26 / 10 / 8 / 8, so its rows line up under the name; 4px after
+  each drawer. File-local constants (not `lib.LAYOUT`).
+- **[L1] The library-stack-§7 one-consumer row** is in LibKa0s `CLAUDE.md` -> `## Documented
+  deviations`, trigger "a second addon draws a drawer, or one release passes after v1.73.0 with no
+  second consumer named, or a breaking API change".
+- **[L1] For Q1.** The re-vendor takes v1.73.0 (and v1.72.0's Perf 15 and kit revision 39). Quick
+  Comms' Options degradation stub (`settings/OptionsSetup.lua`, pinned by name in
+  `tests/test_surface_parity.lua`) needs `H.Drawer = function() end` beside `H.NavRail`. The vendor
+  gate resolves the provenance line's tag in `../LibKa0s`, and `v1.73.0` is not tagged.
+- **[L1] Follow-ups, not done.** `docs/api/CONSUMERS.md` keeps its v1.71.0 stamp until Quick Comms
+  calls `O.Drawer`; the standard's `library-stack-§7` counts (fifteen majors across thirty-four
+  files, ten Options files) need an upstream recount for the thirty-fifth file. LibKa0s README's
+  standard pointer moved v2.81.0 -> v2.83.0 (neither v2.82.0 nor v2.83.0 binds the payload).
