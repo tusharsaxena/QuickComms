@@ -452,7 +452,7 @@ test("groups page: a seeded set's When tab edits it as any group's; Preview bake
     local gid = NS.Library.CreateGroup({ name = "Mine", callouts = { cid } })
     pick(NS, gid)
     w = P.tab("groups", "preview")
-    assertTrue(P.hasText(w, "Pull: Sends: /p Pulling"))
+    assertTrue(P.find(w, "Label", "Sends: /p Pulling") ~= nil)
 end)
 
 test("groups page: [review 5] the When tab refuses an upside-down key-level range", function()
@@ -879,4 +879,91 @@ test("groups page: [nesting] a pad's and a dial's Add a group leave out a child"
     assertFalse(has(S.Pads.AddableGroups("p1"), c))
     assertFalse(has(S.Dials.AddableGroups("d2"), c))
     assertTrue(has(S.Pads.AddableGroups("p1"), a))
+end)
+
+-- ── the Preview table (2026-10-18-builtins-as-groups-design.md, goal 3) ──────────────────────
+
+-- The widget among `widgets` whose children hold `child`.
+local function rowOf(widgets, child)
+    for _, x in ipairs(widgets) do
+        for _, c in ipairs(x.children or {}) do if c == child then return x end end
+    end
+    return nil
+end
+
+test("groups page: [preview table] Preview is the active-now line, then a table: each callout's name beside what it sends", function()
+    local NS, _, P = open(MPLUS)
+    local lists = P.reorderSpy()
+    local pull = NS.Library.CreateCallout({ name = "Pull", text = "Pulling", channel = "party" })
+    local lust = NS.Library.CreateCallout({ name = "Lust", text = "Lust now", channel = "party" })
+    local gid = NS.Library.CreateGroup({ name = "Mine", callouts = { pull, lust } })
+    pick(NS, gid)
+    local w = P.tab("groups", "preview")
+    assertTrue(P.hasText(w, "Active now."))
+    -- red under: one "<name>: <preview>" line per callout, as before
+    assertFalse(P.hasText(w, "Pull: Sends"))
+    assertTrue(P.find(w, "Label", "Callout") ~= nil, "the name column's header")
+    assertTrue(P.find(w, "Label", "What it sends here") ~= nil, "the preview column's header")
+    local name, sends = P.find(w, "Label", "Pull"), P.find(w, "Label", "Sends: /p Pulling")
+    assertTrue(name ~= nil and sends ~= nil)
+    local row = rowOf(w, name)
+    assertEqual(row.children[2], sends, "one row: the name, then what it sends")
+    assertTrue(P.find(w, "Label", "Lust") ~= nil)
+    assertTrue(P.find(w, "Label", "Sends: /p Lust now") ~= nil)
+    assertEqual(lists[#lists].rows, 2, "a boxed row per callout")
+    assertEqual(lists[#lists].specs[1].draggable, false, "nothing to drag")
+end)
+
+test("groups page: [preview table] a group holding groups shows a titled table for its own callouts, then one per child", function()
+    local NS, _, P = open(MPLUS)
+    local function callout(name) return NS.Library.CreateCallout({ name = name, text = name, channel = "party" }) end
+    local top = NS.Library.CreateGroup({ name = "Top", callouts = { callout("Own") } })
+    local a = NS.Library.CreateGroup({ name = "Node A", callouts = { callout("A1") } })
+    local b = NS.Library.CreateGroup({ name = "Node B", callouts = { callout("B1"), callout("B2") } })
+    NS.SchemaRuntime.Set("group.parent", top, a)
+    NS.SchemaRuntime.Set("group.parent", top, b)
+    pick(NS, top)
+    local lists = P.reorderSpy()
+    local w = P.tab("groups", "preview")
+    for _, title in ipairs({ "Top", "Node A", "Node B" }) do
+        assertTrue(P.find(w, "Heading", title) ~= nil, "a section for " .. title)
+    end
+    assertEqual(#P.all(w, "Label", "Callout"), 3, "each table has its header")
+    assertTrue(P.find(w, "Label", "Sends: /p B2") ~= nil)
+    -- red under: a list per table (the page keeps one, so the others' boxes would never be reclaimed)
+    assertEqual(#lists, 1, "one box list for the tab")
+    assertEqual(lists[1].rows, 4, "a box per callout, across the tables")
+end)
+
+test("groups page: [preview table] a situation change rewrites a row's text in place and lays the table out again", function()
+    local NS, _, P = open(MPLUS)
+    local pull = NS.Library.CreateCallout({ name = "Pull", text = "Pulling", channel = "smartGroup" })
+    local gid = NS.Library.CreateGroup({ name = "Mine", callouts = { pull } })
+    pick(NS, gid)
+    local w = P.tab("groups", "preview")
+    local sends = P.find(w, "Label", "Sends: /p Pulling")
+    local scroll = NS.addon.Settings.Helpers.EnsureScroll(P.ctx("groups"))
+    local before = scroll.layoutCount or 0
+    local solo = {}
+    for k, v in pairs(MPLUS) do solo[k] = v end
+    solo.inGroup = false
+    NS.Situation.ReadInputs = function() return solo end
+    NS.Situation.RefreshNow("test")
+    NS.addon.Settings.Editors.RefreshLive()
+    -- red under: no Ed.Live for the rows (the text would stay what it was when drawn)
+    assertTrue(sends.text ~= "Sends: /p Pulling", "the row says what it sends now")
+    assertTrue(sends.text:find("Sends nothing here", 1, true) ~= nil)
+    -- red under: set the text without a layout (a taller text would spill out of its box)
+    assertTrue((scroll.layoutCount or 0) > before, "the table laid out again")
+end)
+
+test("groups page: [preview table] a group with no callouts says so, with no table", function()
+    local NS, _, P = open()
+    local lists = P.reorderSpy()
+    local gid = NS.Library.CreateGroup({ name = "Empty" })
+    pick(NS, gid)
+    local w = P.tab("groups", "preview")
+    assertTrue(P.hasText(w, "This group has no callouts yet."))
+    assertNil(P.find(w, "Label", "Callout"), "no header for an empty table")
+    assertEqual(#lists, 0, "no box list")
 end)

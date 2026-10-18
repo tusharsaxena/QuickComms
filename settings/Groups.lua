@@ -16,7 +16,9 @@ local _, NS = ...
 --               drag-to-reorder list with an edit and a remove glyph each. The group owns its
 --               callouts, so remove deletes the callout (asking first).
 --     When      settings/Groups_When.lua
---     Preview   the active-now line, then every callout baked for the current or previewed situation
+--     Preview   the active-now line, then a table (Ed.TableRows): one boxed row per callout, its name
+--               beside what it sends under the current or previewed situation, or why it sends nothing;
+--               a group holding groups has a titled table for its own callouts, then one per child
 --
 -- The band holds the picker and the create action (options-ui-§14); the acts are General's, which
 -- is first. A new group goes to the top of every pad and dial (Library.OfferGroup), so it shows as
@@ -392,6 +394,35 @@ local function renderCallouts(ctx)
     Ed.ReorderRows(ctx, PAGE, entries, function(from, to) G.MoveCallout(gid, from, to) end)
 end
 
+-- The Preview table's column headings.
+local PREVIEW_HEADER = { name = L["Callout"], text = L["What it sends here"] }
+
+--- What the Preview tab tabulates for group `gid` (Surfaces.Sections: the group; or, for a group
+--- holding groups, its own callouts when it has any, then each child): one block per section,
+--- titled when there are several, each row a callout's name and icon and its first preview line
+--- (Callouts.PreviewLines), read when drawn and again on each live refresh.
+function G.PreviewBlocks(gid)
+    local sections = NS.Surfaces.Sections(gid, NS.Library.Group, { children = NS.Library.Children })
+    local blocks = {}
+    for _, sec in ipairs(sections) do
+        local rows = {}
+        for _, cid in ipairs(sec.callouts) do
+            local c = NS.Library.Callout(cid)
+            if c then
+                rows[#rows + 1] = { label = c.name or cid, icon = c.icon, iconColor = c.iconColor,
+                    text = function()
+                        local now = NS.Library.Callout(cid)
+                        return now and Settings.Callouts.PreviewLines(now)[1] or ""
+                    end }
+            end
+        end
+        blocks[#blocks + 1] = { title = #sections > 1 and sec.title or nil, rows = rows }
+    end
+    return blocks
+end
+
+-- The Preview tab: the active-now line, then the table (Ed.TableRows), or a line saying the group
+-- has no callouts.
 local function renderPreview(ctx)
     local h = H()
     local gid = Ed.Selected("group")
@@ -400,31 +431,18 @@ local function renderPreview(ctx)
         h.TextRow(ctx, NONE)
         return
     end
-    -- Every line here is refreshed in place (Ed.Live) on a write or a situation change.
+    -- The active-now line and the table's texts are refreshed in place (Ed.Live) on a write or a
+    -- situation change.
     local W = Settings.GroupsWhen
     local active = h.TextRow(ctx, W.ActiveText(gid))
     Ed.Live(ctx, function() if active then active:SetText(W.ActiveText(gid)) end end)
-    local sections = NS.Surfaces.Sections(gid, NS.Library.Group, { children = NS.Library.Children })
-    local any = false
-    for _, sec in ipairs(sections) do
-        if #sections > 1 then h.Section(ctx, sec.title) end
-        local ids = sec.callouts
-        local function lines()
-            local out = {}
-            for _, cid in ipairs(ids) do
-                local c = NS.Library.Callout(cid)
-                if c then out[#out + 1] = L["%s: %s"]:format(c.name, Settings.Callouts.PreviewLines(c)[1]) end
-            end
-            return out
-        end
-        local now = lines()
-        if #now > 0 then
-            any = true
-            local label = h.TextRow(ctx, table.concat(now, "\n"))
-            Ed.Live(ctx, function() if label then label:SetText(table.concat(lines(), "\n")) end end)
-        end
+    local blocks, any = G.PreviewBlocks(gid), false
+    for _, b in ipairs(blocks) do any = any or #b.rows > 0 end
+    if not any then
+        h.TextRow(ctx, L["This group has no callouts yet."])
+        return
     end
-    if not any then h.TextRow(ctx, L["This group has no callouts yet."]) end
+    Ed.TableRows(ctx, PAGE, blocks, PREVIEW_HEADER)
 end
 
 local function ids(entries)

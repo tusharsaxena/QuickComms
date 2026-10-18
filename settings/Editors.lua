@@ -536,6 +536,130 @@ function Ed.ReorderRows(ctx, pageKey, entries, onMove)
     r:Finish(scroll.content or scroll.frame)
 end
 
+-- ── the table (2026-10-18-builtins-as-groups-design.md, goal 3) ────────────────────────────────
+--
+-- A read-only two-column table: the Groups page's Preview, one row per callout, its name (with its
+-- icon) in one cell and what it sends here in the other. Each row is the reorder list's row box
+-- (LibKa0s-Widgets' ROW_BOX, through a ReorderList whose rows have no handle), so it has the
+-- Callouts table's fill, border and left and right edges.
+--
+-- THE ROW'S LAYOUT is its own (Ed.TABLE_LAYOUT, Ed.LayoutTableRow), not AceGUI's Table: the text
+-- wraps, and a Label's height follows its width only when SetWidth is called (OnWidthSet). The
+-- Table layout anchors a fill cell's edges and measures its height in the same pass, so a wrapped
+-- text would be measured at the width it was made with and spill out of its box. This layout sets
+-- both widths first, then sizes the row to the taller cell (at least ROW_H, the Callouts table's
+-- row) and centers each cell in it; a resize lays the rows out again with the new width.
+Ed.TABLE_LAYOUT = addonName .. "TableRow"
+-- The name cell is wide enough that AceGUI's Label keeps its icon left of its text (it stacks them
+-- under 200px of text room); TABLE_PAD in from each side of the box, TABLE_GAP between the cells,
+-- TABLE_VPAD above and below a text taller than one row.
+Ed.TABLE_NAME_W, Ed.TABLE_PAD, Ed.TABLE_GAP, Ed.TABLE_VPAD = 220, 8, 12, 6
+-- The header's gold (the client's NORMAL_FONT_COLOR, the field labels' and the tabs').
+local HEADER_COLOR = { 1, 0.82, 0 }
+
+local function cellHeight(child)
+    local f = child.frame
+    return f.height or (f.GetHeight and f:GetHeight()) or 0
+end
+
+--- The table row's layout (AceGUI's layout contract: content, children): the name cell
+--- TABLE_NAME_W wide, the text cell the width that leaves, the row the taller cell's height plus
+--- TABLE_VPAD above and below, never under ROW_H, each cell centered in it.
+function Ed.LayoutTableRow(content, children)
+    local name, text = children[1], children[2]
+    if not (name and text) then return end
+    local width = content.width or (content.GetWidth and content:GetWidth()) or 0
+    local textX = Ed.TABLE_PAD + Ed.TABLE_NAME_W + Ed.TABLE_GAP
+    name:SetWidth(Ed.TABLE_NAME_W)
+    text:SetWidth(math.max(width - textX - Ed.TABLE_PAD, 0))
+    local tall = math.max(cellHeight(name), cellHeight(text))
+    local rowH = math.max(Ed.ROW_H, tall + 2 * Ed.TABLE_VPAD)
+    for _, cell in ipairs({ { name, Ed.TABLE_PAD }, { text, textX } }) do
+        local f = cell[1].frame
+        f:ClearAllPoints()
+        f:SetPoint("TOPLEFT", content, "TOPLEFT", cell[2], -(rowH - cellHeight(cell[1])) / 2)
+        f:Show()
+    end
+    if content.obj and content.obj.LayoutFinished then content.obj:LayoutFinished(nil, rowH) end
+end
+
+do
+    local AceGUI = LibStub and LibStub("AceGUI-3.0", true)
+    if AceGUI and AceGUI.RegisterLayout then AceGUI:RegisterLayout(Ed.TABLE_LAYOUT, Ed.LayoutTableRow) end
+end
+
+-- One table row's two labels into `into`, laid out by Ed.TABLE_LAYOUT.
+local function tableRow(h, into, name, text)
+    into:SetLayout(Ed.TABLE_LAYOUT)
+    local a, b = h.AceGUI:Create("Label"), h.AceGUI:Create("Label")
+    a:SetText(name)
+    b:SetText(text)
+    into:AddChild(a)
+    into:AddChild(b)
+    return a, b
+end
+
+--- The table: per block ({ title = string|nil, rows = { { label, icon = texture|nil,
+--- iconColor = "rrggbb"|nil, text = fn() -> string } } }) its title as a section heading when it
+--- has one, then `header` ({ name, text }, the column headings in gold), then one boxed row per
+--- entry. A block with no rows draws nothing. The texts are live (Ed.Live): a situation change or a
+--- write sets each one that changed and lays the page out again, so a row grows or shrinks with its
+--- text. One box list for the whole call, kept as the page's (Ed.reorders), so the redraw that
+--- clears the page gives every box back.
+function Ed.TableRows(ctx, pageKey, blocks, header)
+    local h = H()
+    local scroll = h.EnsureScroll(ctx)
+    if not (h.AceGUI and scroll) then return end
+    local frames, cells = {}, {}
+    for _, block in ipairs(blocks) do
+        if #block.rows > 0 then
+            if block.title then h.Section(ctx, block.title) end
+            local items = { { wide = true, make = function(_, into)
+                local a, b = tableRow(h, into, header.name, header.text)
+                a:SetColor(HEADER_COLOR[1], HEADER_COLOR[2], HEADER_COLOR[3])
+                b:SetColor(HEADER_COLOR[1], HEADER_COLOR[2], HEADER_COLOR[3])
+                return true
+            end } }
+            for _, e in ipairs(block.rows) do
+                items[#items + 1] = { wide = true, make = function(_, into)
+                    local shown = e.text()
+                    local name, text = tableRow(h, into, e.label, shown)
+                    if e.icon then
+                        name:SetImage(e.icon)
+                        name:SetImageSize(ROW_ICON, ROW_ICON)
+                    end
+                    Ed.Tint(name.image, e.icon, e.iconColor)
+                    -- As a reorder row's label: AceGUI's pool keeps the tint (options-ui-§19).
+                    name:SetCallback("OnRelease", function(w)
+                        if w.image then w.image:SetVertexColor(1, 1, 1, 1) end
+                    end)
+                    frames[#frames + 1] = into.frame
+                    cells[#cells + 1] = { label = text, text = e.text, shown = shown }
+                    return true
+                end }
+            end
+            h.RenderGrid(ctx, items, scroll, { gap = false })
+        end
+    end
+    if #frames == 0 then return end
+    Ed.Live(ctx, function()
+        local moved = false
+        for _, c in ipairs(cells) do
+            local now = c.text()
+            if now ~= c.shown then
+                c.shown = now
+                c.label:SetText(now)
+                moved = true
+            end
+        end
+        if moved then scroll:DoLayout() end
+    end)
+    local r = newReorder(pageKey, nil)
+    if not r then return end
+    for _, f in ipairs(frames) do r:AddRow(f, { draggable = false }) end
+    r:Finish(scroll.content or scroll.frame)
+end
+
 -- ── pages ───────────────────────────────────────────────────────────────────────────────────
 
 --- The strip and the active tab, through the library's tabbed renderer with the page's host tabs. A

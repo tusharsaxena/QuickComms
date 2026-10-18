@@ -148,19 +148,21 @@ return function(NS, m)
         m.StaticPopupDialogs[shown[1]].OnAccept(nil, shown[4])
     end
 
-    --- Record every ReorderList built from here on: { opts, rows } per list, latest last.
+    --- Record every ReorderList built from here on: { opts, rows, specs } per list, latest last
+    --- (`specs`: each AddRow's spec, or false for none).
     function P.reorderSpy()
         local W = m.LibStub("LibKa0s-Widgets-1.0")
         local real = W.ReorderList
         local lists = {}
         W.ReorderList = function(opts)
             local r = real(opts)
-            local seen = { opts = opts, rows = 0 }
+            local seen = { opts = opts, rows = 0, specs = {} }
             lists[#lists + 1] = seen
             local add = r.AddRow
-            r.AddRow = function(self, ...)
+            r.AddRow = function(self, frame, spec, ...)
                 seen.rows = seen.rows + 1
-                return add(self, ...)
+                seen.specs[seen.rows] = spec or false
+                return add(self, frame, spec, ...)
             end
             return r
         end

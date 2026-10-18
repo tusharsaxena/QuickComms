@@ -457,7 +457,7 @@ Total.
 - members: [icons] Library.SetIcon writes the icon and its color as one act
 - members: [icons] `/qc reset` clears a color; a group page's Defaults keeps it with the icon
 
-### test_editors.lua (17)
+### test_editors.lua (19)
 
 - editors: [review 2] Select keeps the selection, and nothing else; Heal keeps a member that exists
 - editors: every membership change asks for one structural repaint, on the next frame
@@ -476,6 +476,8 @@ Total.
 - editors: [layout] under AceGUI's column rule only the label's column is weighted
 - editors: Snapshot is the preview's while Preview as is on
 - editors: [icons] a row's glyph is drawn in its color; a row with none is white
+- editors: [preview table] TableRows draws a header, then a boxed row per entry: its name in one cell, its text in the other
+- editors: [preview table] a table row gives its text the width the name leaves, and grows with the text
 
 ### test_callout_popup.lua (38)
 
@@ -575,7 +577,7 @@ Total.
 - when: [final 6] a typed character takes the client's case; the Resolver matches one in any case
 - when: [final 2, 11] ResolveValue maps a typed value onto the token or id its row stores, or refuses it
 
-### test_page_groups.lua (41)
+### test_page_groups.lua (45)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists every group by name, a seeded set among them, active ones dotted
@@ -618,6 +620,10 @@ Total.
 - groups page: [nesting] the picker lists each child indented under its parent
 - groups page: [nesting] deleting a parent asks, saying its groups become top-level groups in its place
 - groups page: [nesting] a pad's and a dial's Add a group leave out a child
+- groups page: [preview table] Preview is the active-now line, then a table: each callout's name beside what it sends
+- groups page: [preview table] a group holding groups shows a titled table for its own callouts, then one per child
+- groups page: [preview table] a situation change rewrites a row's text in place and lays the table out again
+- groups page: [preview table] a group with no callouts says so, with no table
 
 ### test_page_pads.lua (13)
 
@@ -1007,12 +1013,12 @@ Total.
 | test_gameids.lua | 2 |
 | test_library.lua | 73 |
 | test_members.lua | 26 |
-| test_editors.lua | 17 |
+| test_editors.lua | 19 |
 | test_callout_popup.lua | 38 |
 | test_icon_browser.lua | 26 |
 | test_eui_skin.lua | 10 |
 | test_groups_when.lua | 12 |
-| test_page_groups.lua | 41 |
+| test_page_groups.lua | 45 |
 | test_page_pads.lua | 13 |
 | test_page_dials.lua | 17 |
 | test_page_share.lua | 12 |
@@ -1035,4 +1041,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **821** |
+| **Total** | **827** |

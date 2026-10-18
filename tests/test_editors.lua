@@ -301,3 +301,88 @@ test("editors: [icons] a row's glyph is drawn in its color; a row with none is w
     -- red under: tint only a row with a color (AceGUI pools the Label, so a white row must be set white)
     assertEqual(table.concat(b.image.vertexColor, ","), "1,1,1")
 end)
+
+-- ── the table (2026-10-18-builtins-as-groups-design.md, goal 3: the Groups page's Preview) ──────
+
+local function probeTable(blocks, header)
+    local NS, m, Ed = enabled()
+    if type(blocks) == "function" then blocks = blocks(NS) end
+    local P = dofile("tests/page_helpers.lua")(NS, m)
+    P.show("Comms Pad")
+    local lists = P.reorderSpy()
+    local w = P.during(function() Ed.TableRows(P.ctx("pads"), "probe", blocks, header) end)
+    return NS, P, w, lists, Ed
+end
+
+-- The widget among `widgets` whose children hold `child`.
+local function rowOf(widgets, child)
+    for _, x in ipairs(widgets) do
+        for _, c in ipairs(x.children or {}) do if c == child then return x end end
+    end
+    return nil
+end
+
+test("editors: [preview table] TableRows draws a header, then a boxed row per entry: its name in one cell, its text in the other", function()
+    local star
+    local _, P, w, lists, Ed = probeTable(function(NS)
+        star = NS.Icon("star")
+        return { { rows = {
+            { label = "Pull", icon = star, iconColor = "00ff00", text = function() return "Sends: /p Pulling" end },
+            { label = "Lust", text = function() return "Solo" end } } } }
+    end, { name = "Callout", text = "What it sends here" })
+    local name, sends = P.find(w, "Label", "Pull"), P.find(w, "Label", "Sends: /p Pulling")
+    assertTrue(name ~= nil and sends ~= nil, "the name and the text are separate labels")
+    local row = rowOf(w, name)
+    -- red under: one "<name>: <text>" label per row
+    assertEqual(row.children[1], name)
+    assertEqual(row.children[2], sends, "the text is the same row's second cell")
+    assertEqual(row.layout, Ed.TABLE_LAYOUT)
+    assertEqual(name.image and name.image[1], star, "the name keeps the entry's icon")
+    assertEqual(table.concat(name.image.vertexColor, ","), "0,1,0", "in its color")
+    local head = P.find(w, "Label", "Callout")
+    assertTrue(head ~= nil and P.find(w, "Label", "What it sends here") ~= nil, "the header's two cells")
+    assertEqual(rowOf(w, head).layout, Ed.TABLE_LAYOUT, "the header lines up with the rows")
+    assertEqual(head.color.r, 1)
+    assertEqual(head.color.g, 0.82, "the header in gold")
+    -- the box under each row is the Callouts table's (the library's ROW_BOX), with nothing to drag
+    assertEqual(#lists, 1)
+    assertEqual(lists[1].rows, 2, "a box per entry, none for the header")
+    assertEqual(lists[1].specs[1].draggable, false)
+    assertNil(lists[1].opts.onMove)
+    -- red under: leave the list off Ed.reorders (the page's redraw would not reclaim its boxes)
+    assertTrue(Ed.reorders.probe ~= nil)
+end)
+
+test("editors: [preview table] a table row gives its text the width the name leaves, and grows with the text", function()
+    local _, _, Ed = enabled()
+    -- A cell as AceGUI's Label behaves: SetWidth sets its frame's height from the wrapped text.
+    local function cell(heightAt)
+        local c = { frame = { points = {} } }
+        function c:SetWidth(width) self.width = width; self.frame.height = heightAt(width) end
+        function c.frame:ClearAllPoints() self.points = {} end
+        function c.frame:SetPoint(...) self.points[#self.points + 1] = { ... } end
+        c.frame.Show = function() end
+        return c
+    end
+    local finished
+    local content = { width = 700, obj = { LayoutFinished = function(_, _, height) finished = height end } }
+    local name = cell(function() return 14 end)
+    local text = cell(function(width) return width < 300 and 42 or 14 end)
+    Ed.LayoutTableRow(content, { name, text })
+    assertEqual(name.width, Ed.TABLE_NAME_W)
+    -- red under: leave the text the width it was made with (it would wrap at the wrong edge)
+    assertEqual(text.width, 700 - 2 * Ed.TABLE_PAD - Ed.TABLE_NAME_W - Ed.TABLE_GAP)
+    assertEqual(finished, Ed.ROW_H, "one line: the Callouts table's row height")
+    local p = name.frame.points[1]
+    assertEqual(p[1], "TOPLEFT")
+    assertEqual(p[2], content)
+    assertEqual(p[4], Ed.TABLE_PAD)
+    assertEqual(p[5], -(Ed.ROW_H - 14) / 2, "centered in the row")
+    assertEqual(text.frame.points[1][4], Ed.TABLE_PAD + Ed.TABLE_NAME_W + Ed.TABLE_GAP)
+    content.width = 500
+    Ed.LayoutTableRow(content, { name, text })
+    -- red under: a fixed ROW_H (wrapped text would spill out of its box)
+    assertEqual(finished, 42 + 2 * Ed.TABLE_VPAD, "three lines: the row grows to hold them")
+    assertEqual(name.frame.points[1][5], -(42 + 2 * Ed.TABLE_VPAD - 14) / 2)
+    assertEqual(text.frame.points[1][5], -Ed.TABLE_VPAD)
+end)

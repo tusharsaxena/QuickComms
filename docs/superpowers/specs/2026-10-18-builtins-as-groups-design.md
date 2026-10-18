@@ -153,3 +153,22 @@ Recorded as each task makes them (plan ledger task in brackets).
   no caller now.
 - [T2] **The dial's three-rings-deep warning** knows a seeded battleground set by its origin
   (`bi.bg.<key>`) while it holds groups.
+- [T3] **Groups page parity needed no new code in T3**: T2 already removed every built-in branch
+  (General, Callouts, When), so a seeded group draws the same tab set as any group; the existing
+  page tests (a seeded set's General, Callouts table with Add/Reuse/drag/remove, editable When)
+  stand as the parity check.
+- [T3] **The Preview table is Ed.TableRows** (settings/Editors.lua), shared widget composition
+  beside Ed.ReorderRows: a gold header row ("Callout", "What it sends here"), then one row per
+  callout with its icon (in its color) and name in a 220px cell and its first preview line in the
+  cell filling the rest. The rows sit in the library's row box (a ReorderList whose rows have no
+  handle, `draggable = false`), so fill, border and left and right edges are the Callouts table's;
+  the header row has no box. The preview text is the first line only, as before (bytes, lock and
+  token notes stay in the callout popup's preview).
+- [T3] **A row has its own AceGUI layout** (`QuickCommsTableRow`, Ed.LayoutTableRow, registered
+  with AceGUI at load), not AceGUI's Table: a wrapped text needs its width set before its height is
+  read, which the Table layout does not do for a fill cell. The row is never shorter than the
+  Callouts table's (ROW_H, 30px) and grows with a wrapped text (6px above and below); both cells are
+  centered in it. A live refresh that changes a text lays the page out again, so the row resizes.
+- [T3] **A group holding groups** shows a titled table per section (its own callouts when it has
+  any, then each child), each with its header; a group with no callouts keeps the one line ("This
+  group has no callouts yet.") and draws no table.
