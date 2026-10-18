@@ -866,3 +866,94 @@ test("library: CreateCalloutIn makes and places a callout in one act", function(
     assertEqual(p.nextId, nextId, "a refusal consumes no id")
 end)
 
+
+-- ── a glyph's color (icon browser spec, "Data model") ───────────────────────────────────────
+
+test("library: [icons] IsGlyph names a catalog icon by its path; ValidIconColor takes none or rrggbb", function()
+    local NS, Lib = boot()
+    assertEqual(Lib.IsGlyph(NS.Icon("star")), "star")
+    assertNil(Lib.IsGlyph("Interface\\TargetingFrame\\UI-RaidTargetingIcon_8"), "a raid marker is no glyph")
+    assertNil(Lib.IsGlyph(136012))
+    assertNil(Lib.IsGlyph(false))
+    for _, ok in ipairs({ false, "ff8000", "00aa99" }) do assertTrue(Lib.ValidIconColor(ok), tostring(ok)) end
+    assertTrue(Lib.ValidIconColor(nil))
+    for _, bad in ipairs({ "FF8000", "#ff8000", "ff800", "ff80000", "ff80zz", 16744448, true, {} }) do
+        assertFalse(Lib.ValidIconColor(bad), tostring(bad))
+    end
+    assertEqual(Lib.IconColorValue("  #FF8000 "), "ff8000")
+    assertTrue(Lib.IconColorValue("") == false and Lib.IconColorValue(nil) == false)
+end)
+
+test("library: [icons] a new member keeps a glyph's color, drops it on any other icon, refuses a bad one", function()
+    local NS, Lib, p = boot()
+    local star = NS.Icon("star")
+    local cid = Lib.CreateCallout({ name = "A", text = "a", channel = "say", icon = star, iconColor = "ff0000" })
+    -- red under: CreateCallout storing the four fields only
+    assertEqual(p.callouts[cid].iconColor, "ff0000")
+    local plain = Lib.CreateCallout({ name = "B", text = "b", channel = "say", icon = 136012, iconColor = "ff0000" })
+    assertNil(p.callouts[plain].iconColor, "a game icon takes no color")
+    local id, why = Lib.CreateCallout({ name = "C", text = "c", channel = "say", icon = star, iconColor = "red" })
+    assertNil(id)
+    assertEqual(why, "badIconColor")
+    local gid = Lib.CreateGroup({ name = "G", icon = star, iconColor = "00ff00" })
+    assertEqual(p.groups[gid].iconColor, "00ff00")
+    assertNil(Lib.CreateGroup({ name = "H", icon = star, iconColor = 5 }))
+    assertNil(p.groups[Lib.CreateGroup({ name = "I", iconColor = "00ff00" })].iconColor, "no icon, no color")
+end)
+
+test("library: [icons] a copy keeps the color: AddToGroup, DuplicateGroup and a held callout's copy", function()
+    local NS, Lib, p = boot()
+    local star = NS.Icon("star")
+    local g1 = Lib.CreateGroup({ name = "One", icon = star, iconColor = "00ff00" })
+    local cid = Lib.CreateCalloutIn(g1, { name = "A", text = "a", channel = "say", icon = star, iconColor = "ff0000" })
+    local g2 = Lib.CreateGroup({ name = "Two" })
+    -- red under: copyCallout without iconColor
+    assertEqual(p.callouts[Lib.AddToGroup(g2, cid)].iconColor, "ff0000")
+    local dup = Lib.DuplicateGroup(g1)
+    assertEqual(p.groups[dup].iconColor, "00ff00")
+    assertEqual(p.callouts[p.groups[dup].callouts[1]].iconColor, "ff0000")
+end)
+
+test("library: [icons] Prepare drops a malformed stored color and keeps a good one", function()
+    local NS, Lib, p = boot()
+    local star = NS.Icon("star")
+    local gid = Lib.CreateGroup({ name = "G", icon = star, iconColor = "00ff00" })
+    local good = Lib.CreateCalloutIn(gid, { name = "A", text = "a", channel = "say", icon = star, iconColor = "ff0000" })
+    local bad = Lib.CreateCalloutIn(gid, { name = "B", text = "b", channel = "say", icon = star })
+    p.callouts[bad].iconColor = "#ZZZ"
+    p.groups[gid].iconColor = { 1, 0, 0 }
+    -- red under: drop dropBadColors from Lib.Prepare
+    local r = Lib.Prepare()
+    assertEqual(r.repaired, 2)
+    assertNil(p.callouts[bad].iconColor)
+    assertNil(p.groups[gid].iconColor)
+    assertEqual(p.callouts[good].iconColor, "ff0000")
+    assertEqual(Lib.Prepare().repaired, 0, "idempotent")
+end)
+
+test("library: [icons] an import carries a glyph's color into the fresh copies", function()
+    local NS, Lib, p = boot()
+    local star = NS.Icon("star")
+    local res = NS.Share.Validate({ v = 1, addon = "QuickComms", kind = "bundle",
+        callouts = { c1 = { name = "A", text = "a", channel = "say", icon = star, iconColor = "ff0000" } },
+        groups = { g1 = { name = "G", icon = star, iconColor = "00ff00", callouts = { "c1" } } } })
+    local _, map = Lib.Import(res)
+    -- red under: importMembers building the group without iconColor
+    assertEqual(p.groups[map.g1].iconColor, "00ff00")
+    assertEqual(p.callouts[map.c1].iconColor, "ff0000")
+end)
+
+test("library: [icons] IconTint draws a glyph's color as r, g, b; no color, a bad one or no glyph is white", function()
+    local NS, Lib = boot()
+    local star = NS.Icon("star")
+    local r, g, b = Lib.IconTint(star, "ff8000")
+    -- red under: IconTint answering white for every color
+    assertEqual(r .. "," .. g .. "," .. b, "1," .. (128 / 255) .. ",0")
+    assertEqual(table.concat({ Lib.IconTint(star, nil) }, ","), "1,1,1", "untinted")
+    assertEqual(table.concat({ Lib.IconTint(star, false) }, ","), "1,1,1", "false is none")
+    assertEqual(table.concat({ Lib.IconTint(star, "#zz0000") }, ","), "1,1,1", "a malformed color draws white")
+    -- red under: tint any icon that carries a color, glyph or not
+    assertEqual(table.concat({ Lib.IconTint(136012, "ff0000") }, ","), "1,1,1", "a game icon is never tinted")
+    assertEqual(table.concat({ Lib.IconTint("Interface\\TargetingFrame\\UI-RaidTargetingIcon_8", "ff0000") }, ","),
+        "1,1,1", "nor a raid marker")
+end)

@@ -227,3 +227,20 @@ test("dial layout: [review 6] a pinned ring ignores the dial's slices; Flat keep
     assertEqual(rings[open].pages > 1, true, "and pages them behind More")
     for _, item in ipairs(rings[open].items) do assertNil(item.wedge, "nothing in Flat is pinned") end
 end)
+
+test("dial layout: [icons] a ring entry carries its group's icon color, a send entry its callout's", function()
+    local L = DL()
+    local group = { id = "g", title = "G", icon = "glyph", iconColor = "ff0000",
+        slots = { { calloutId = "c", name = "C", icon = "glyph", iconColor = "00ff00" } } }
+    local rings = L.Rings({ group, { id = "x", title = "X", slots = slots("x", 1) } }, { slices = 8, title = "D" })
+    local ring, send
+    for _, r in ipairs(rings) do
+        for _, item in ipairs(r.items) do
+            if item.kind == "ring" and item.title == "G" then ring = item end
+            if item.kind == "send" and item.title == "C" then send = item end
+        end
+    end
+    -- red under: ringEntry / sendEntries without iconColor
+    assertEqual(ring and ring.iconColor, "ff0000")
+    assertEqual(send and send.iconColor, "00ff00")
+end)

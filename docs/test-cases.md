@@ -288,7 +288,7 @@ Total.
 - bake: a typed %t counts as live
 - bake: [phase 5] CleanText is the sanitizer short of the escape; Sanitize is CleanText, then the escape
 
-### test_share.lua (28)
+### test_share.lua (30)
 
 - share: a string is !QC1! then printable text, and decodes back to the same payload
 - share: [review 1] a pasted string may wrap and carry spaces; a cut-short one is damaged and imports nothing
@@ -318,6 +318,8 @@ Total.
 - share import: the report counts a shared callout once per group, as the import makes it
 - share import: a callout in no imported group is not imported
 - share: Collect takes a callout only inside its group; a picked callout alone is nothing
+- share: [icons] a glyph's color travels; an old string arrives untinted; a bad color is dropped and counted
+- share: [icons] an export carries each member's color, and the string round-trips it
 
 ### test_resolver.lua (8)
 
@@ -345,7 +347,7 @@ Total.
 - game ids: every battleground set matches only battleground maps, and no map is two sets'
 - game ids: the shipped dungeons are Mythic+ dungeons and the shipped raids are raids
 
-### test_library.lua (60)
+### test_library.lua (66)
 
 - library: Prepare seeds one pad and one dial with every built-in, once
 - library: callouts validate on create
@@ -407,8 +409,14 @@ Total.
 - library: removing a callout from its group deletes it
 - library: deleting a group deletes its callouts
 - library: CreateCalloutIn makes and places a callout in one act
+- library: [icons] IsGlyph names a catalog icon by its path; ValidIconColor takes none or rrggbb
+- library: [icons] a new member keeps a glyph's color, drops it on any other icon, refuses a bad one
+- library: [icons] a copy keeps the color: AddToGroup, DuplicateGroup and a held callout's copy
+- library: [icons] Prepare drops a malformed stored color and keeps a good one
+- library: [icons] an import carries a glyph's color into the fresh copies
+- library: [icons] IconTint draws a glyph's color as r, g, b; no color, a bad one or no glyph is white
 
-### test_members.lua (23)
+### test_members.lua (28)
 
 - members: a callout field is written through the seam by instance id, and announced once
 - members: with no id the seam writes the selected member, else the first the page lists, else refuses
@@ -433,8 +441,13 @@ Total.
 - members: [phase 4] an off-screen dial.point is refused; `/qc reset` brings the dial back and frees its key
 - members: [phase 5] a When's key level prints as it types back in: one level, open below, open above
 - members: [phase 5] a pad's Look rows are composed member rows: checked, clamped, announced
+- members: [icons] a glyph's color is written through the seam by id, typed text read as rrggbb
+- members: [icons] a malformed color, a color on no glyph and a built-in's color are refused
+- members: [icons] an icon that is no glyph clears the color in the same act; a glyph keeps it
+- members: [icons] Library.SetIcon writes the icon and its color as one act
+- members: [icons] `/qc reset` clears a color; a group page's Defaults keeps it with the icon
 
-### test_editors.lua (14)
+### test_editors.lua (15)
 
 - editors: [review 2] Select mirrors a built-in group into the built-in selection; Heal keeps a member that exists
 - editors: every membership change asks for one structural repaint, on the next frame
@@ -450,8 +463,9 @@ Total.
 - editors: a row's remove is a glyph, not a button
 - editors: a row with edit shows the edit glyph and fires it
 - editors: Snapshot is the preview's while Preview as is on
+- editors: [icons] a row's glyph is drawn in its color; a row with none is white
 
-### test_callout_popup.lua (28)
+### test_callout_popup.lua (33)
 
 - popup: Add opens blank with Smart group
 - popup: edit opens filled in
@@ -470,7 +484,9 @@ Total.
 - popup: the info glyph's tooltip lists the tokens, {group1} to {group8} only for a raid channel
 - popup: the preview is headed Preview, a gap above Cancel then Save
 - callout helpers: TokenHelp folds {group1}-{group8} into one line and names {spell:ID}
-- popup: Choose an icon writes the draft's icon
+- popup: [icons] Choose icon… opens the browser; its Choose writes the draft's icon, not the callout
+- popup: [icons] a glyph chosen with a color: the draft carries both; the swatch writes the draft's color
+- popup: [icons] the swatch writes the draft on a drag tick (OnValueChanged) with no confirm, as OK leaves it
 - popup: the window is Blizzard's settings-window template, and its own close X cancels
 - popup: the template's background sits over the catcher's dim and under the border
 - popup: a settings-window template without its close X falls back to the dialog look
@@ -481,10 +497,42 @@ Total.
 - settings: there is no Callouts page
 - callout helpers: [phase 3] the token picker offers {group1}-{group8} only when the channel can resolve to Raid
 - callout helpers: PreviewLines says what a callout sends here, or why it sends nothing
+- popup: [icons] the draft carries the icon's color; Save writes icon and color in one act
+- popup: [icons] an icon typed in that is no glyph drops the draft's color, and Save clears it
+- popup: [icons] Add saves a glyph with its color; a malformed color stays open and names the field
 
-### test_eui_skin.lua (8)
+### test_icon_browser.lua (25)
+
+- icon browser: the window is the popup's chrome, stacked above the popup and its catcher
+- icon browser: tabs in order; the stored icon is preselected and its tab opened
+- icon browser: a click selects, a double-click chooses; Choose hands the opener the icon
+- icon browser: hovering an icon names it, or gives a game icon's texture id
+- icon browser: Suggested is the markers, the built-in sets' icons and the curated glyphs; Markers the eight
+- icon browser: Glyphs is every catalog icon, labeled from its key
+- icon browser: Game icons is both macro lists, filtered All / Spells / Items
+- icon browser: the game list not loaded yet says so, and loads on a later visit
+- icon browser: the grid is virtualized: a fixed set of cells re-dressed as it scrolls
+- icon browser: a scroll under the pointer re-says the hovered cell's tooltip, or hides it
+- icon browser: a long name in the footer stops at the Choose button, on one line
+- icon browser: the wheel over the scrollbar scrolls the grid too
+- icon browser: a filtered game list holds each icon once (the loose lists overlap the full ones)
+- icon browser: the color picker its swatch opened closes with the browser, and only that one
+- icon browser: a chooser's swatch released with the picker up hides it and lets the swatch go
+- icon browser: the swatch tints every glyph; Choose hands a glyph its color, white as none
+- icon browser: Escape over the popup closes the browser only; the popup's Escape comes back after
+- icon browser: the popup closing closes it as Cancel
+- icon browser: a popup that closes leaves a browser opened by another owner alone
+- icon browser: Choose is refused in combat; nothing is written
+- icon browser: a stand-down closes it
+- icon browser: Compat.MacroIcons reads both lists, plain texture ids only, never raising
+- icon browser: the area follows the tab band when the chrome learns its width (first open)
+- icon browser: Compat.MacroIcons reads the loose lists first, as the macro icon selector does
+- icon browser: Library.IconColorFrom stores a picked color as hex, white as none
+
+### test_eui_skin.lua (9)
 
 - eui skin: the popup is painted as EllesmereUI paints the settings window when every condition holds
+- eui skin: the icon browser's window is painted the same way, once, when it is built
 - eui skin: a callback that comes after the popup was built paints it at once
 - eui skin: not painted when any condition fails
 - eui skin: never raises without EllesmereUI, or with one that has no RegisterSkin
@@ -508,7 +556,7 @@ Total.
 - when: [final 6] a typed character takes the client's case; the Resolver matches one in any case
 - when: [final 2, 11] ResolveValue maps a typed value onto the token or id its row stores, or refuses it
 
-### test_page_groups.lua (24)
+### test_page_groups.lua (29)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists user groups by name, then the built-ins, active ones dotted
@@ -533,7 +581,12 @@ Total.
 - groups page: [final 12] Duplicate says the copy is on no pad yet
 - groups page: [final 20] the Instances row adds a typed id, removes one, and refuses a fraction or a negative
 - groups page: [final 18] Add the instance you are in reads the instance at the click, not at the draw
-- groups page: [phase 5] Choose an icon sets a user group's icon; a built-in set offers no picker
+- groups page: [icons] General shows the icon, Choose icon… and the swatch; the browser's Choose writes the group's icon
+- groups page: [icons] a glyph's swatch writes the group's color; a game icon chosen clears it in the same act
+- groups page: [icons] the browser closes as Cancel when the settings window hides or the group is deleted
+- groups page: [icons] a callout row in the Callouts tab draws its glyph in the callout's color
+- groups page: [icons] a tinted callout row puts its image back to white when released (AceGUI's shared pool)
+- groups page: [icons] the swatch writes on a drag tick (OnValueChanged) with no confirm, as OK leaves it
 
 ### test_page_pads.lua (12)
 
@@ -701,7 +754,7 @@ Total.
 - layout: the fade follows combat and the mouse, under the master alpha
 - layout: the channel tag names the resolved channel
 
-### test_dial_layout.lua (14)
+### test_dial_layout.lua (15)
 
 - dial layout: four wedges sit on N, E, S and W, clockwise from the top
 - dial layout: slices are 4, 6, 8 or 12, and 12 only on a ring with no children
@@ -717,8 +770,9 @@ Total.
 - dial layout: [phase 5] a node set's nodes sit on their compass winds; the middle node takes N
 - dial layout: [review 6] [phase 5] nodes that cannot all be pinned keep their shipped order
 - dial layout: [review 6] a pinned ring ignores the dial's slices; Flat keeps its paging
+- dial layout: [icons] a ring entry carries its group's icon color, a send entry its callout's
 
-### test_surfaces.lua (22)
+### test_surfaces.lua (23)
 
 - surfaces: in a key the default pad's plan is the M+ set, baked to /p
 - surfaces: [review 5] a refused callout is a slot with its reason and no line
@@ -742,8 +796,9 @@ Total.
 - surfaces: [fix wave] disabled then enabled inside one combat: the pad is shown and armed after it
 - surfaces: [phase 3] WhyLines names each shown group in order, built-ins marked, then the locks
 - surfaces: [phase 3] WhyLines in a key explains the built-in's matched row; a preview says so
+- surfaces: [icons] a slot carries its callout's icon color, a dial's group entry its group's
 
-### test_pad_render.lua (17)
+### test_pad_render.lua (18)
 
 - render: Dress builds a chip's regions once, each its own object
 - render: [audit QC-07] the chip's padlock is the catalog's lock mark, tinted gold; the Blizzard art is the nil fallback
@@ -762,6 +817,7 @@ Total.
 - render: [review] a chip's label stops short of the channel tag, on one line
 - render: [phase 5] Use class color takes the player's class color and keeps the swatch's alpha
 - render: [phase 5] a section title keeps its gold until the player colors the font
+- render: [icons] a glyph chip is drawn in its color; the chip repainted with another icon is white again
 
 ### test_pad.lua (26)
 
@@ -792,7 +848,7 @@ Total.
 - pad: [phase 5] the pad wears its Look: the chips' font and the edge and body it was given
 - pad: [review 5] a font or border this machine does not have draws the default, with no error
 
-### test_dial.lua (28)
+### test_dial.lua (29)
 
 - dial: Apply builds QuickCommsDial<n> with a ring per page, each callout wedge armed with its baked line
 - dial: a refused callout is a dimmed, disarmed wedge; a ring wedge is disarmed
@@ -822,6 +878,7 @@ Total.
 - dial: [final 5] test mode opens dial 1 once: a rebuild keeps it open, and after the player closes it, closed
 - dial: [phase 5] Arathi Basin's node wedges sit on their winds: Lumber Mill is SW, Blacksmith N
 - dial: [review 6] on a four- or six-slice dial every node shows, and the number keys pick the shown wedges from N
+- dial: [icons] a wedge draws its glyph in its color; repainted untinted, it is white again
 
 ### test_vendor_sync.lua (3)
 
@@ -912,17 +969,18 @@ Total.
 | test_tokens.lua | 8 |
 | test_channels.lua | 8 |
 | test_bake.lua | 12 |
-| test_share.lua | 28 |
+| test_share.lua | 30 |
 | test_resolver.lua | 8 |
 | test_builtins.lua | 7 |
 | test_gameids.lua | 2 |
-| test_library.lua | 60 |
-| test_members.lua | 23 |
-| test_editors.lua | 14 |
-| test_callout_popup.lua | 28 |
-| test_eui_skin.lua | 8 |
+| test_library.lua | 66 |
+| test_members.lua | 28 |
+| test_editors.lua | 15 |
+| test_callout_popup.lua | 33 |
+| test_icon_browser.lua | 25 |
+| test_eui_skin.lua | 9 |
 | test_groups_when.lua | 12 |
-| test_page_groups.lua | 24 |
+| test_page_groups.lua | 29 |
 | test_page_pads.lua | 12 |
 | test_page_dials.lua | 17 |
 | test_page_share.lua | 14 |
@@ -933,11 +991,11 @@ Total.
 | test_preview.lua | 17 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 12 |
-| test_dial_layout.lua | 14 |
-| test_surfaces.lua | 22 |
-| test_pad_render.lua | 17 |
+| test_dial_layout.lua | 15 |
+| test_surfaces.lua | 23 |
+| test_pad_render.lua | 18 |
 | test_pad.lua | 26 |
-| test_dial.lua | 28 |
+| test_dial.lua | 29 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -945,4 +1003,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **735** |
+| **Total** | **789** |

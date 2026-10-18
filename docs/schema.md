@@ -25,8 +25,8 @@ Exactly two (savedvariables-§4):
 | `behavior.dropNotes`, `whyTooltips`, `lockdownChip` | `true` | Behavior | the `[QC]` drop note, the why tooltips, the lockdown chip |
 | `behavior.sounds`, `autoPromote` | `false` | Behavior | sounds; a narrower When floats up within a surface's order |
 | `nextId` | `1` | `Library.NewId` | the id counter for user callouts and groups |
-| `callouts` | `{}` | `Library` (membership and order); member fields through the seam (member rows) | user callouts keyed by id: name, text, channel, icon; each id sits in exactly one user group's `callouts` list |
-| `groups` | `{}` | `Library` (membership and order); member fields through the seam (member rows) | user groups keyed by id: name, icon, callouts (the group owns them: no other group holds the same id), when, openInto, enabled |
+| `callouts` | `{}` | `Library` (membership and order); member fields through the seam (member rows) | user callouts keyed by id: name, text, channel, icon, and `iconColor` (a LibKa0s glyph's color, `"rrggbb"` lowercase; absent or `false` for none); each id sits in exactly one user group's `callouts` list |
+| `groups` | `{}` | `Library` (membership and order); member fields through the seam (member rows) | user groups keyed by id: name, icon, `iconColor` (as a callout's), callouts (the group owns them: no other group holds the same id), when, openInto, enabled |
 | `builtins` | `{}` | `Library` (membership and order); member fields through the seam (member rows) | the overlay on the shipped sets, keyed on the top-level built-in id: enabled, hidden |
 | `pads` | `{}` | `Library` (membership and order); member fields through the seam (member rows) | surfaces keyed by id: groups (ordered), `seenBuiltins`, and the surface's own settings; a pad's `look` holds visibility, fade, faded alpha and the Look groups' fields (font, size, color and its companion, flags, shadow; border style, thickness, color and its companion; background and its companion) |
 | `dials` | `{}` | `Library` (membership and order); member fields through the seam (`dial.name\|enabled\|mode\|slices\|openAt\|point\|key`) | surfaces keyed by id: groups (ordered), `seenBuiltins`, and the dial's own settings; a new dial stores `interaction = "relaxed"`, and `delay`, `tapAction` and `depth` are kept but nothing reads them |
@@ -36,12 +36,13 @@ Exactly two (savedvariables-§4):
 | `padOrder`, `dialOrder` | `{}` | `Library` only | display order of the surfaces |
 | `seeded` | `false` | `Library.Prepare` | true once the default pad and dial exist |
 
-**Member rows** address a member's fields through the seam (`settings/SchemaMembers.lua`): `callout.name|text|channel|icon`, `group.name|icon|enabled|openInto|when`, `pad.name|enabled|groupsAs`, `pad.layout.orientation|columns|growth|style|scale|spacing|width`, `pad.point`, `pad.look.visibility|fade|fadeAlpha`, the twelve Look rows `pad.look.font|fontSize|fontColor|useClassColorFont|fontFlags|fontShadow|borderStyle|borderSize|borderColor|useClassColorBorder|background|useClassColorBackground` (composed by the options library; the colors are the `color` row type), `dial.name|enabled|mode|slices|openAt|point|key`, `builtin.enabled|hidden`. They are not AceDB defaults; `Library.TEMPLATES` is their shape. A `callout.*` row is addressed by the callout's id alone (no page selects a callout): its `page = "callouts"` is the `/qc list` heading, not a registered panel page.
+**Member rows** address a member's fields through the seam (`settings/SchemaMembers.lua`): `callout.name|text|channel|icon|iconColor`, `group.name|icon|iconColor|enabled|openInto|when`, `pad.name|enabled|groupsAs`, `pad.layout.orientation|columns|growth|style|scale|spacing|width`, `pad.point`, `pad.look.visibility|fade|fadeAlpha`, the twelve Look rows `pad.look.font|fontSize|fontColor|useClassColorFont|fontFlags|fontShadow|borderStyle|borderSize|borderColor|useClassColorBorder|background|useClassColorBackground` (composed by the options library; the colors are the `color` row type), `dial.name|enabled|mode|slices|openAt|point|key`, `builtin.enabled|hidden`. They are not AceDB defaults; `Library.TEMPLATES` is their shape. A `callout.*` row is addressed by the callout's id alone (no page selects a callout): its `page = "callouts"` is the `/qc list` heading, not a registered panel page. An icon is a texture path (a LibKa0s glyph or a raid marker) or a texture id (a number: a game icon from the macro icon lists); `false` is none. `callout.iconColor` and `group.iconColor` default to `false` (none: the glyph is drawn white) and take six hex digits (typed text may carry `#`, spaces or capitals; it is stored lowercase), only on a member whose icon is a LibKa0s glyph; an icon write that leaves a colored member without a glyph clears its color in the same act. Both are reset-exempt with the icon rows (`settings/Schema.lua`): a named `/qc reset` clears the color, a page's Defaults keeps it.
 
 `modules/Library.lua` is the one writer of every structural key above (architecture-§5); built-ins
 are shipped data in `NS.BuiltIns`, never copied into the profile. `Library.Prepare` is the load
 pass, run after `RunMigrations` on `OnInitialize` and on every profile event: it seeds, appends new
-built-ins once per surface, normalizes malformed shapes, repairs `padOrder` / `dialOrder`, and keeps
+built-ins once per surface, normalizes malformed shapes, drops a malformed stored `iconColor` from
+any user callout or group, repairs `padOrder` / `dialOrder`, and keeps
 the ownership rule: a callout a second group holds is replaced there by a fresh copy with equal
 fields, and a callout no group holds is deleted, each counted as a repair. A second run changes
 nothing.
@@ -79,6 +80,8 @@ No schema step in phase 5: `Library.Prepare` fills a stored pad's missing layout
 the defaults (`fillShape`), so a pad saved before the Look groups reads like a new one.
 No schema step for callouts owned by groups (2026-10-17) either: `Library.Prepare` enforces the
 ownership rule on every load, which also covers a profile a hand edit breaks later.
+No schema step for the glyph color (2026-10-18): `iconColor` is a new optional field, absent on
+every member stored before it (none, drawn white), and `Library.Prepare` drops a malformed one.
 The runner runs in `OnInitialize` before anything reads the profile, and again on every profile
 event; it advances the stamp only after a step returns. A stored-value type change adds a step and
 raises the target; the default stays `0`.

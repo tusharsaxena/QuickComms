@@ -146,13 +146,15 @@ local function sendEntries(slots, node)
     for i, slot in ipairs(slots or {}) do
         local title = slot.name
         if node then title = L["%s · %s"]:format(tostring(slot.name), node) end
-        out[i] = { kind = "send", slot = slot, title = title, icon = slot.icon }
+        out[i] = { kind = "send", slot = slot, title = title, icon = slot.icon, iconColor = slot.iconColor }
     end
     return out
 end
 
-local function ringEntry(title, icon, entries, pinned)
-    return { kind = "ring", title = title, icon = icon, sub = { title = title, entries = entries, pinned = pinned } }
+-- `src`: the group (or node) the ring is, for its title, icon and icon color.
+local function ringEntry(src, entries, pinned)
+    return { kind = "ring", title = src.title, icon = src.icon, iconColor = src.iconColor,
+        sub = { title = src.title, entries = entries, pinned = pinned } }
 end
 
 --- A node set's nodes on their compass winds (spec §12.1): each entry's `wind` (N, NE … NW, or
@@ -196,17 +198,17 @@ local function groupEntry(g)
         local nodes = {}
         for _, c in ipairs(g.children) do
             if #(c.slots or {}) > 0 then
-                local node = ringEntry(c.title, c.icon, sendEntries(c.slots))
+                local node = ringEntry(c, sendEntries(c.slots))
                 node.wind = c.compass
                 nodes[#nodes + 1] = node
             end
         end
         if #nodes == 0 then return nil end
         local pinned = DL.PinNodes(nodes)
-        return ringEntry(g.title, g.icon, pinned or nodes, pinned ~= nil)
+        return ringEntry(g, pinned or nodes, pinned ~= nil)
     end
     if #(g.slots or {}) == 0 then return nil end
-    return ringEntry(g.title, g.icon, sendEntries(g.slots))
+    return ringEntry(g, sendEntries(g.slots))
 end
 
 -- Every callout, highest group first, a node set's nodes in order (Flat).

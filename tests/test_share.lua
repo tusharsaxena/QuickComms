@@ -480,3 +480,45 @@ test("share: Collect takes a callout only inside its group; a picked callout alo
     assertEqual(payload.callouts[cid].text, KICK.text)
     assertEqual(SH.REASON_TEXT.nothing, "Tick at least one group, pad or dial to export.")
 end)
+
+-- ── a glyph's color (icon browser spec, "Data model") ───────────────────────────────────────
+
+test("share: [icons] a glyph's color travels; an old string arrives untinted; a bad color is dropped and counted", function()
+    local NS, SH = boot()
+    local star = NS.Icon("star")
+    local res = SH.Validate(bundle({
+        callouts = {
+            c1 = { name = "Red", text = "a", channel = "say", icon = star, iconColor = "#FF0000" },
+            c2 = { name = "Old", text = "b", channel = "say", icon = star },
+            c3 = { name = "Bad", text = "c", channel = "say", icon = star, iconColor = "crimson" },
+            c4 = { name = "Huge", text = "d", channel = "say", icon = star, iconColor = string.rep("f", 300) },
+        },
+        groups = { g1 = { name = "G", icon = star, iconColor = { 1, 0, 0 }, callouts = { "c1", "c2", "c3", "c4" } } },
+    }))
+    assertEqual(refusals(res), "", "a bad color is a bad field, not a bad member")
+    local by = {}
+    for _, e in ipairs(res.callouts) do by[e.id] = e.fields end
+    -- red under: calloutEntry without iconColor
+    assertEqual(by.c1.iconColor, "ff0000")
+    assertNil(by.c2.iconColor)
+    assertNil(by.c3.iconColor)
+    assertNil(by.c4.iconColor)
+    assertNil(res.groups[1].fields.iconColor)
+    -- red under: cleanIconColor dropping a bad color without counting it
+    assertEqual(res.ignored, 3)
+end)
+
+test("share: [icons] an export carries each member's color, and the string round-trips it", function()
+    local NS, SH = boot()
+    local Lib, star = NS.Library, NS.Icon("star")
+    local gid = Lib.CreateGroup({ name = "G", icon = star, iconColor = "00ff00" })
+    local cid = Lib.CreateCalloutIn(gid, { name = "A", text = "a", channel = "say", icon = star, iconColor = "ff0000" })
+    local plain = Lib.CreateCalloutIn(gid, KICK)
+    local payload = SH.Collect({ group = { [gid] = true } })
+    -- red under: exportMember without iconColor
+    assertEqual(payload.groups[gid].iconColor, "00ff00")
+    assertEqual(payload.callouts[cid].iconColor, "ff0000")
+    assertNil(payload.callouts[plain].iconColor)
+    local back = SH.Validate(SH.Decode(SH.Encode(payload)))
+    assertEqual(back.groups[1].fields.iconColor, "00ff00")
+end)

@@ -95,6 +95,31 @@ test("eui skin: the popup is painted as EllesmereUI paints the settings window w
     assertFalse(Pop.IsOpen())
 end)
 
+test("eui skin: the icon browser's window is painted the same way, once, when it is built", function()
+    local NS, _, Pop, gid, eui = openWith()
+    local S, calls = facade()
+    eui.registered.QuickComms(S)
+    Pop.Open(gid)
+    local n = #calls
+    local B = NS.addon.Settings.IconBrowser
+    assertTrue(B.Open({ owner = "test", onChoose = function() end }))
+    local f = B.frame
+    -- red under: paint only Pop.chrome in settings/CalloutPopup_Skin.lua
+    assertTrue(called(calls, "Shell", f), "the browser's shell")
+    assertTrue(called(calls, "FadeNineSlice", f.NineSlice))
+    assertTrue(called(calls, "CloseButton", f.ClosePanelButton))
+    assertEqual(f.Bg:GetAlpha(), 0)
+    assertEqual(#calls - n, 3, "chrome only")
+    assertTrue(NS.addon.Settings.CalloutPopupSkin.Describe():find("applied=true failed=false browser=true", 1, true) ~= nil)
+    B.Cancel()
+    B.Open({ owner = "test", onChoose = function() end })
+    eui.registered.QuickComms(S)
+    assertEqual(#calls - n, 3, "one paint per window")
+    -- the close X still cancels
+    f.ClosePanelButton:__fire("OnClick")
+    assertFalse(B.IsOpen())
+end)
+
 test("eui skin: a callback that comes after the popup was built paints it at once", function()
     local NS, _, Pop, gid, eui = openWith()
     Pop.Open(gid)

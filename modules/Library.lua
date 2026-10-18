@@ -245,6 +245,74 @@ function Lib.ValidIcon(v)
     return false, "badIcon"
 end
 
+-- Each LibKa0s catalog icon's texture path mapped to its catalog name, built on the first ask (the
+-- catalog is fixed for the session; NS.IconNames, library-stack-§8). Empty without the library.
+local glyphNames
+
+--- The LibKa0s catalog name of icon `v` when it is one of the catalog's glyphs (white on transparent,
+--- so it takes a tint), else nil: a game icon, a raid marker or any other texture.
+--- @return string|nil
+function Lib.IsGlyph(v)
+    if type(v) ~= "string" then return nil end
+    if not glyphNames then
+        glyphNames = {}
+        for _, name in ipairs(NS.IconNames()) do
+            local path = NS.Icon(name)
+            if path then glyphNames[path] = name end
+        end
+    end
+    return glyphNames[v]
+end
+
+--- A glyph's color as stored: six lowercase hex digits ("rrggbb"), from text that may carry spaces,
+--- a leading "#" or capitals. Nil, false and empty text are no color (false). Anything else is kept
+--- as given, for ValidIconColor to refuse.
+function Lib.IconColorValue(v)
+    if v == nil or v == false then return false end
+    if type(v) ~= "string" then return v end
+    local t = v:match("^%s*#?(.-)%s*$"):lower()
+    if t == "" then return false end
+    return t
+end
+
+--- Whether `v` is a stored glyph color: none (nil or false) or six lowercase hex digits.
+--- @return boolean ok, string|nil reason
+function Lib.ValidIconColor(v)
+    if v == nil or v == false then return true end
+    if type(v) == "string" and v:match("^%x%x%x%x%x%x$") and v == v:lower() then return true end
+    return false, "badIconColor"
+end
+
+--- The tint icon `icon` is drawn with, as r, g, b (0..1): its glyph color, or white (1, 1, 1) for
+--- none, a malformed color or an icon that is no glyph. Every place a member's icon is drawn sets
+--- this, white included, since a pooled texture keeps the last tint it was given.
+--- @return number r, number g, number b
+function Lib.IconTint(icon, color)
+    if type(color) ~= "string" or not Lib.ValidIconColor(color) or not Lib.IsGlyph(icon) then return 1, 1, 1 end
+    return tonumber(color:sub(1, 2), 16) / 255, tonumber(color:sub(3, 4), 16) / 255, tonumber(color:sub(5, 6), 16) / 255
+end
+
+--- The stored glyph color for a picked r, g, b (0..1, as the color picker answers): six lowercase
+--- hex digits, or false (none) for white, which is how an untinted glyph is drawn. A channel out of
+--- range is clamped.
+--- @return string|false
+function Lib.IconColorFrom(r, g, b)
+    local function byte(v)
+        v = tonumber(v) or 1
+        return math.floor(math.max(0, math.min(1, v)) * 255 + 0.5)
+    end
+    local hex = ("%02x%02x%02x"):format(byte(r), byte(g), byte(b))
+    if hex == "ffffff" then return false end
+    return hex
+end
+
+-- The color a member made with `icon` and `color` keeps: the color only when the icon is a glyph,
+-- else none (a malformed color is refused before this).
+local function glyphColor(icon, color)
+    if color and Lib.IsGlyph(icon) then return color end
+    return nil
+end
+
 -- The nine region anchor names SetPoint accepts.
 local ANCHORS = {
     TOPLEFT = true, TOP = true, TOPRIGHT = true, LEFT = true, CENTER = true, RIGHT = true,
@@ -357,6 +425,7 @@ local function validCallout(f)
     if type(f.text) ~= "string" then return false, "badText" end
     if not NS.Channels.IsKind(f.channel) then return false, "badChannel" end
     if not Lib.ValidIcon(f.icon) then return false, "badIcon" end
+    if not Lib.ValidIconColor(f.iconColor) then return false, "badIconColor" end
     return true
 end
 
@@ -378,13 +447,14 @@ function Lib.CopyName(name, suffix)
     return firstChars(tostring(name or ""), Lib.NAME_MAX - chars(suffix)) .. suffix
 end
 
---- Create a user callout.
+--- Create a user callout. Its `iconColor` is kept only when its icon is a glyph.
 --- @return string|nil id, string|nil reason
 function Lib.CreateCallout(fields)
     local ok, why = validCallout(fields)
     if not ok then return nil, why end
     local id = Lib.NewId("c")
-    P().callouts[id] = { name = fields.name, text = fields.text, channel = fields.channel, icon = fields.icon }
+    P().callouts[id] = { name = fields.name, text = fields.text, channel = fields.channel, icon = fields.icon,
+        iconColor = glyphColor(fields.icon, fields.iconColor) }
     announce("callout", id)
     return id
 end
@@ -401,19 +471,22 @@ end
 
 -- ── groups ──────────────────────────────────────────────────────────────────────────────────
 
--- A new user callout with `src`'s four fields and its name unchanged (the copy lives in another
--- group, or the player renames it), checked as any new callout is.
+-- A new user callout with `src`'s fields (its icon's color too) and its name unchanged (the copy
+-- lives in another group, or the player renames it), checked as any new callout is.
 local function copyCallout(src)
-    return Lib.CreateCallout({ name = src.name, text = src.text, channel = src.channel, icon = src.icon })
+    return Lib.CreateCallout({ name = src.name, text = src.text, channel = src.channel, icon = src.icon,
+        iconColor = src.iconColor })
 end
 
---- Create a user group. `fields.callouts` (optional) are user callout ids, in order; an id that is
---- not a user callout is dropped. One owner: a callout no group holds is taken as it is, and one a
---- group holds (or that the list repeats) is copied, the copies and the group made as one act (Batch).
+--- Create a user group, its `iconColor` kept only when its icon is a glyph. `fields.callouts`
+--- (optional) are user callout ids, in order; an id that is not a user callout is dropped. One owner:
+--- a callout no group holds is taken as it is, and one a group holds (or that the list repeats) is
+--- copied, the copies and the group made as one act (Batch).
 --- @return string|nil id, string|nil reason
 function Lib.CreateGroup(fields)
     if type(fields) ~= "table" or not Lib.ValidName(fields.name) then return nil, "badName" end
     if fields.when ~= nil and not Lib.ValidWhen(fields.when) then return nil, "badWhen" end
+    if not Lib.ValidIconColor(fields.iconColor) then return nil, "badIconColor" end
     local p = P()
     local wanted, take, copies = {}, {}, false
     for _, cid in ipairs(type(fields.callouts) == "table" and fields.callouts or {}) do
@@ -431,8 +504,9 @@ function Lib.CreateGroup(fields)
             if id then callouts[#callouts + 1] = id end
         end
         local id = Lib.NewId("g")
-        p.groups[id] = { name = fields.name, icon = fields.icon, callouts = callouts, when = copyTable(fields.when) or {},
-            openInto = fields.openInto == true, enabled = fields.enabled ~= false }
+        p.groups[id] = { name = fields.name, icon = fields.icon, iconColor = glyphColor(fields.icon, fields.iconColor),
+            callouts = callouts, when = copyTable(fields.when) or {}, openInto = fields.openInto == true,
+            enabled = fields.enabled ~= false }
         announce("group", id)
         return id
     end
@@ -495,8 +569,8 @@ end
 function Lib.DuplicateGroup(id)
     local g = P().groups[id]
     if not g then return nil, "noGroup" end
-    return Lib.CreateGroup({ name = Lib.CopyName(g.name), icon = g.icon, when = g.when, openInto = g.openInto,
-        enabled = g.enabled, callouts = g.callouts })
+    return Lib.CreateGroup({ name = Lib.CopyName(g.name), icon = g.icon, iconColor = g.iconColor, when = g.when,
+        openInto = g.openInto, enabled = g.enabled, callouts = g.callouts })
 end
 
 -- Put callout `id` into group `g` at `index`, clamped (end by default).
@@ -562,6 +636,32 @@ function Lib.MoveInGroup(groupId, from, to)
     table.insert(g.callouts, to, table.remove(g.callouts, from))
     announce("group", groupId)
     return true
+end
+
+-- ── icons ───────────────────────────────────────────────────────────────────────────────────
+
+--- Set a user callout's or a user group's icon and its glyph color as ONE act (Batch): the
+--- `<kind>.icon` member row, then `<kind>.iconColor`, both through the seam. A color stays only on a
+--- glyph: with any other icon the color is cleared. A malformed color is refused before anything is
+--- written. A texture id may be given as a number (the Icon row takes text).
+--- @param kind string "callout" | "group"
+--- @param icon string|number|false
+--- @param color string|false|nil "rrggbb", or none
+--- @return boolean ok, string|nil why (the seam's line, or a reason code)
+function Lib.SetIcon(kind, id, icon, color)
+    if kind ~= "callout" and kind ~= "group" then return false, "badKind" end
+    if id == nil then return false, "noMember" end
+    color = Lib.IconColorValue(color)
+    if not Lib.ValidIconColor(color) then return false, "badIconColor" end
+    if type(icon) == "number" then icon = tostring(icon) end
+    local S = NS.SchemaRuntime
+    return Lib.Batch(function()
+        local ok, err, why = S.Set(kind .. ".icon", icon, id)
+        if not ok then return false, why or err end
+        ok, err, why = S.Set(kind .. ".iconColor", glyphColor(Lib.Member(kind, id).icon, color) or false, id)
+        if not ok then return false, why or err end
+        return true
+    end)
 end
 
 -- ── built-ins ───────────────────────────────────────────────────────────────────────────────
@@ -651,11 +751,11 @@ local SURFACE_DEFAULTS = {
 }
 
 --- The shape of one member of each kind: what every member row's path resolves against (the
---- architecture-§5 boot check) and what a member row resets to. `icon` and `point` are false, not
---- nil, so the boot check can see the key: false is "none" and "the default place".
+--- architecture-§5 boot check) and what a member row resets to. `icon`, `iconColor` and `point` are
+--- false, not nil, so the boot check can see the key: false is "none" and "the default place".
 Lib.TEMPLATES = {
-    callout = { name = "", text = "", channel = "smartGroup", icon = false },
-    group = { name = "", icon = false, enabled = true, openInto = false, when = {} },
+    callout = { name = "", text = "", channel = "smartGroup", icon = false, iconColor = false },
+    group = { name = "", icon = false, iconColor = false, enabled = true, openInto = false, when = {} },
     pad = { name = "", enabled = true, groupsAs = SURFACE_DEFAULTS.pad.groupsAs, point = false,
         layout = copyTable(SURFACE_DEFAULTS.pad.layout), look = copyTable(SURFACE_DEFAULTS.pad.look) },
     builtin = { enabled = true, hidden = {} },
@@ -921,6 +1021,16 @@ local function seed(p, result)
     result.seeded = true
 end
 
+-- A stored glyph color that is not one (Library.ValidIconColor) is dropped from every user callout
+-- and group: a hand-edited or damaged SavedVariables never reaches a renderer.
+local function dropBadColors(p, result)
+    for _, key in ipairs({ "callouts", "groups" }) do
+        for _, m in pairs(p[key]) do
+            if not Lib.ValidIconColor(m.iconColor) then m.iconColor = nil result.repaired = result.repaired + 1 end
+        end
+    end
+end
+
 -- One owner: a callout held a second time (by another group, or again in the same list) is replaced
 -- there by a fresh copy, the groups walked by id so the first keeps the original. A plain copy of the
 -- stored fields, checked by nothing: a repair, never a refusal. Before the dangling-id repair.
@@ -1014,13 +1124,14 @@ local function repairOrder(order, set, result)
     end
 end
 
---- Seed, append newly shipped built-ins once per surface, split shared callouts, drop dangling ids
---- and loose callouts. Idempotent. `repaired` counts every split, drop and fix.
+--- Seed, append newly shipped built-ins once per surface, split shared callouts, drop dangling ids,
+--- loose callouts and malformed glyph colors. Idempotent. `repaired` counts every split, drop and fix.
 --- @return table { seeded, appended, repaired }
 function Lib.Prepare()
     local p = P()
     local result = { seeded = false, appended = 0, repaired = 0 }
     normalize(p, result)
+    dropBadColors(p, result)
     liftNextId(p)
     seed(p, result)
     splitShared(p, result)
@@ -1082,8 +1193,8 @@ local function importMembers(res, map, tally)
             end
         end
         local f = e.fields
-        local id = Lib.CreateGroup({ name = f.name, icon = f.icon, when = f.when, openInto = f.openInto,
-            enabled = f.enabled, callouts = ids })
+        local id = Lib.CreateGroup({ name = f.name, icon = f.icon, iconColor = f.iconColor, when = f.when,
+            openInto = f.openInto, enabled = f.enabled, callouts = ids })
         if id then map[e.id], tally.groups = id, tally.groups + 1 end
     end
     for _, e in ipairs(res.pads) do importSurface("pad", e, map, tally) end

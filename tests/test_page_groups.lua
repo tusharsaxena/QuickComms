@@ -462,18 +462,139 @@ test("groups page: [final 18] Add the instance you are in reads the instance at 
     assertTrue(NS.db.profile.groups[gid].when.instances[2526])
 end)
 
-test("groups page: [phase 5] Choose an icon sets a user group's icon; a built-in set offers no picker", function()
+test("groups page: [icons] General shows the icon, Choose icon… and the swatch; the browser's Choose writes the group's icon", function()
     local NS, _, P = open()
     local gid = NS.Library.CreateGroup({ name = "Mine" })
     local Ed = NS.addon.Settings.Editors
+    local B = NS.addon.Settings.IconBrowser
     Ed.Select("group", gid)
     local w = P.redraw("groups")
+    local choose = P.find(w, "Button", "Choose icon…")
+    -- red under: keep the inline grid (Ed.IconPicker) on the General tab
+    assertTrue(choose ~= nil, "the chooser's button")
+    local preview = P.find(w, "Icon")
+    assertEqual(preview.image[1], Ed.NO_ICON, "no icon yet: the question mark")
+    assertTrue(P.find(w, "ColorPicker", "Icon color").disabled, "no glyph, no color")
+    choose:__fire("OnClick")
+    assertTrue(B.IsOpen())
+    assertEqual(B.State().owner, "group")
     local wanted = "Interface\\Icons\\Achievement_Boss_Ragnaros"
-    for _, icon in ipairs(P.all(w, "Icon")) do
-        if icon.image and icon.image[1] == wanted then icon:__fire("OnClick") end
-    end
+    B.Select(wanted)
+    assertTrue(B.Choose())
     assertEqual(NS.db.profile.groups[gid].icon, wanted)
+    assertEqual(preview.image[1], wanted, "the chooser's icon is put back in place")
     Ed.Select("group", "bi.mplus")
     w = P.redraw("groups")
-    assertEqual(#P.all(w, "Icon"), 0, "built-ins are read-only")
+    assertNil(P.find(w, "Button", "Choose icon…"), "built-ins are read-only")
+end)
+
+test("groups page: [icons] a glyph's swatch writes the group's color; a game icon chosen clears it in the same act", function()
+    local NS, _, P = open()
+    local star = NS.Icon("star")
+    local gid = NS.Library.CreateGroup({ name = "Mine", icon = star, iconColor = "ff0000" })
+    local B = NS.addon.Settings.IconBrowser
+    pick(NS, gid)
+    local w = P.redraw("groups")
+    local preview, swatch = P.find(w, "Icon"), P.find(w, "ColorPicker", "Icon color")
+    assertEqual(table.concat(preview.image.vertexColor, ","), "1,0,0", "the icon drawn in its color")
+    assertFalse(swatch.disabled, "a glyph takes a color")
+    assertEqual(swatch.color.r .. "," .. swatch.color.g .. "," .. swatch.color.b, "1,0,0")
+    swatch:__fire("OnValueConfirmed", 0, 0, 1, 1)
+    assertEqual(NS.db.profile.groups[gid].iconColor, "0000ff")
+    assertEqual(table.concat(preview.image.vertexColor, ","), "0,0,1")
+    swatch:__fire("OnValueConfirmed", 1, 1, 1, 1)
+    assertTrue(not NS.db.profile.groups[gid].iconColor, "white is none")
+    NS.SchemaRuntime.Set("group.iconColor", "00ff00", gid)
+    -- review focus 1: the stored glyph has a color; a game icon chosen clears it in the same act
+    local changes = 0
+    local send = NS.addon.SendMessage
+    NS.addon.SendMessage = function(self, name, ...)
+        if name == NS.MSG.LIBRARY_CHANGED then changes = changes + 1 end
+        return send(self, name, ...)
+    end
+    P.find(w, "Button", "Choose icon…"):__fire("OnClick")
+    assertEqual(B.State().tab, "glyphs", "the stored glyph's tab")
+    assertEqual(B.State().color, "00ff00")
+    B.SetTab("game")
+    B.Select(136243)
+    assertTrue(B.Choose())
+    local g = NS.db.profile.groups[gid]
+    assertEqual(g.icon, 136243)
+    assertTrue(not g.iconColor, "the color is cleared")
+    assertEqual(changes, 1, "icon and color in one act")
+    assertTrue(swatch.disabled, "a game icon takes no color")
+    -- and back to a glyph with a color: both land, as one act
+    P.find(w, "Button", "Choose icon…"):__fire("OnClick")
+    B.SetTab("glyphs")
+    B.Select(star)
+    B.SetColor("ff8000")
+    assertTrue(B.Choose())
+    -- red under: write the icon through the seam alone in G.IconSpec's choose (no Library.SetIcon)
+    assertEqual(g.icon, star)
+    assertEqual(g.iconColor, "ff8000")
+    assertEqual(changes, 2)
+end)
+
+test("groups page: [icons] the browser closes as Cancel when the settings window hides or the group is deleted", function()
+    local NS, m, P = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    local B = NS.addon.Settings.IconBrowser
+    pick(NS, gid)
+    local w = P.redraw("groups")
+    P.find(w, "Button", "Choose icon…"):__fire("OnClick")
+    m.SettingsPanel:__fire("OnHide")
+    -- red under: drop the SettingsPanel OnHide hook in settings/IconBrowser.lua's build
+    assertFalse(B.IsOpen())
+    P.find(w, "Button", "Choose icon…"):__fire("OnClick")
+    B.Select(NS.Icon("star"))
+    NS.Library.DeleteGroup(gid)
+    -- red under: drop the `valid` check in settings/IconBrowser.lua's onLibraryChanged
+    assertFalse(B.IsOpen(), "its group is gone")
+    assertTrue(NS.db.profile.groups[gid] == nil)
+end)
+
+test("groups page: [icons] a callout row in the Callouts tab draws its glyph in the callout's color", function()
+    local NS, _, P = open()
+    local star = NS.Icon("star")
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    NS.Library.CreateCalloutIn(gid, { name = "Star", text = "go", channel = "party", icon = star, iconColor = "00ff00" })
+    pick(NS, gid)
+    local w = P.tab("groups", "callouts")
+    local row
+    for _, label in ipairs(P.all(w, "Label")) do
+        if label.image and label.image[1] == star then row = label end
+    end
+    assertTrue(row ~= nil, "the callout's row shows its icon")
+    -- red under: the Callouts tab's entries without iconColor
+    assertEqual(table.concat(row.image.vertexColor, ","), "0,1,0")
+end)
+
+test("groups page: [icons] a tinted callout row puts its image back to white when released (AceGUI's shared pool)", function()
+    local NS, m, P = open()
+    local star = NS.Icon("star")
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    NS.Library.CreateCalloutIn(gid, { name = "Star", text = "go", channel = "party", icon = star, iconColor = "00ff00" })
+    pick(NS, gid)
+    local w = P.tab("groups", "callouts")
+    local row
+    for _, label in ipairs(P.all(w, "Label")) do
+        if label.image and label.image[1] == star then row = label end
+    end
+    assertEqual(table.concat(row.image.vertexColor, ","), "0,1,0")
+    m.LibStub("AceGUI-3.0"):Release(row)
+    -- red under: drop the row label's OnRelease in Ed.ReorderRows
+    assertEqual(table.concat(row.image.vertexColor, ","), "1,1,1", "the pooled image is white for its next owner")
+end)
+
+test("groups page: [icons] the swatch writes on a drag tick (OnValueChanged) with no confirm, as OK leaves it", function()
+    local NS, _, P = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine", icon = NS.Icon("star"), iconColor = "ff0000" })
+    pick(NS, gid)
+    local w = P.redraw("groups")
+    local swatch = P.find(w, "ColorPicker", "Icon color")
+    swatch:__fire("OnValueChanged", 0, 0, 1, 1)
+    -- red under: listen for OnValueConfirmed alone in Ed.IconChooser
+    assertEqual(NS.db.profile.groups[gid].iconColor, "0000ff")
+    swatch:__fire("OnValueConfirmed", 1, 0, 0, 1)   -- Cancel confirms the old color
+    assertEqual(NS.db.profile.groups[gid].iconColor, "ff0000", "Cancel puts the old color back")
 end)

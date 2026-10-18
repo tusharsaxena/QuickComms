@@ -388,3 +388,24 @@ test("surfaces: [phase 3] WhyLines in a key explains the built-in's matched row;
     assertEqual(NS.Surfaces.WhyLines("p1")[1], "Test mode: placeholder chips that send nothing.")
     assertEqual(NS.Surfaces.WhyLines("p9")[1], "This pad has not been built yet.")
 end)
+
+test("surfaces: [icons] a slot carries its callout's icon color, a dial's group entry its group's", function()
+    local NS = live()
+    local star = NS.Icon("star")
+    local cid, gid = userCallout(NS, { name = "Star", text = "go", channel = "party", icon = star,
+        iconColor = "ff0000" })
+    NS.Library.SetIcon("group", gid, star, "0000ff")
+    -- red under: S.Slot copying name and icon only
+    assertEqual(slotOf(planFor(NS), cid).iconColor, "ff0000")
+    NS.Library.AddGroupToSurface("dial", "d2", gid, 1)
+    local snap = NS.Situation.Current()
+    local plan = NS.Surfaces.BuildDialPlan("d2", NS.db.profile.dials.d2, snap, NS.Surfaces.Deps(snap))
+    local ring
+    for _, r in ipairs(plan.rings) do
+        for _, item in ipairs(r.items) do
+            if item.kind == "ring" and item.title == "Mine" then ring = item end
+        end
+    end
+    -- red under: the dial's group entry built without iconColor
+    assertEqual(ring and ring.iconColor, "0000ff")
+end)

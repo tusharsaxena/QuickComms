@@ -163,6 +163,12 @@ settings\Editors.lua
 # LOAD-BEARING: takes Settings.Editors at load; publishes Settings.Callouts (the token list and the
 # preview lines), which settings\CalloutPopup.lua takes at load and settings\Groups.lua reads at run time.
 settings\Callouts.lua
+# Conventional: publishes Settings.ModalWindow, the window settings\CalloutPopup.lua and settings\IconBrowser.lua build at run time.
+settings\ModalWindow.lua
+# LOAD-BEARING: publishes Settings.IconBrowserSources, which settings\IconBrowser.lua takes at load.
+settings\IconBrowser_Sources.lua
+# Conventional: publishes Settings.IconBrowser; settings\Editors.lua and settings\CalloutPopup.lua open it at run time only.
+settings\IconBrowser.lua
 # LOAD-BEARING: takes Settings.Editors and Settings.Callouts at load and publishes Settings.CalloutPopup,
 # which settings\CalloutPopup_Skin.lua takes at load; settings\Groups.lua opens it at run time only.
 settings\CalloutPopup.lua

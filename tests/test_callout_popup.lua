@@ -451,37 +451,69 @@ test("callout helpers: TokenHelp folds {group1}-{group8} into one line and names
     for _, line in ipairs(raid) do assertTrue(line[2] ~= "", line[1] .. " has its help") end
 end)
 
--- The picker's icon showing `path`, among the widgets `w`.
-local function iconFor(P, w, path)
-    for _, icon in ipairs(P.all(w, "Icon")) do
-        if icon.image and icon.image[1] == path then return icon end
-    end
-    return nil
-end
-
-test("popup: Choose an icon writes the draft's icon", function()
+test("popup: [icons] Choose icon… opens the browser; its Choose writes the draft's icon, not the callout", function()
     local NS, _, P, Pop = open()
     local gid, cid = withKick(NS)
+    local B = NS.addon.Settings.IconBrowser
     local w = P.during(function() Pop.Open(gid, cid) end)
-    assertTrue(P.find(w, "Heading", "Choose an icon") ~= nil)
-    iconFor(P, w, SKULL):__fire("OnClick")
-    -- red under: hand the picker the seam row (it would write the stored callout at once)
+    -- red under: keep the inline grid (Ed.IconPicker) in the popup
+    assertNil(P.find(w, "Heading", "Choose an icon"), "no inline grid")
+    P.find(w, "Button", "Choose icon…"):__fire("OnClick")
+    assertTrue(B.IsOpen())
+    assertEqual(B.State().owner, "popup")
+    assertEqual(B.State().tab, "suggested", "no icon yet: Suggested")
+    B.Select(SKULL)
+    assertTrue(B.Choose())
+    assertFalse(B.IsOpen())
+    assertTrue(Pop.IsOpen(), "the popup stays open")
+    -- red under: hand the browser a seam write (it would write the stored callout at once)
     assertEqual(Pop.Draft().icon, SKULL)
     assertNil(NS.db.profile.callouts[cid].icon, "the stored icon waits for Save")
     assertEqual(P.find(w, "EditBox", "Icon").text, SKULL, "the Icon box shows the pick")
+    assertEqual(P.find(w, "Icon").image[1], SKULL, "the chooser's icon shows the pick")
     assertTrue(Pop.Save())
     assertEqual(NS.db.profile.callouts[cid].icon, SKULL)
-    -- the palette: a LibKa0s mark by its path, the built-in sets' own icons, and no window chrome
-    w = P.during(function() Pop.Open(gid, cid) end)
-    local chat = NS.Icon("chat")
-    assertTrue(chat ~= nil and iconFor(P, w, chat) ~= nil)
-    assertTrue(iconFor(P, w, "Interface\\Icons\\Spell_Nature_Bloodlust") ~= nil)
-    assertNil(iconFor(P, w, "Interface\\Icons\\INV_Misc_QuestionMark"))
-    assertNil(iconFor(P, w, NS.Icon("close")), "the catalog's window chrome is not offered")
-    local byPath = {}
-    for _, e in ipairs(NS.addon.Settings.Editors.IconPalette()) do byPath[e.path] = e.label end
-    assertEqual(byPath[SKULL], "Skull", "a raid marker carries its localized name")
-    assertEqual(byPath[NS.Icon("speech-bubble")], "Speech bubble", "a catalog mark carries a localized label")
+end)
+
+test("popup: [icons] a glyph chosen with a color: the draft carries both; the swatch writes the draft's color", function()
+    local NS, _, P, Pop = open()
+    local gid, cid = withKick(NS)
+    local B = NS.addon.Settings.IconBrowser
+    local w = P.during(function() Pop.Open(gid, cid) end)
+    local swatch = P.find(w, "ColorPicker", "Icon color")
+    assertTrue(swatch.disabled, "no glyph: the swatch is idle")
+    P.find(w, "Button", "Choose icon…"):__fire("OnClick")
+    B.SetTab("glyphs")
+    B.Select(NS.Icon("star"))
+    B.SetColor("ff8000")
+    B.Choose()
+    assertEqual(Pop.Draft().icon, NS.Icon("star"))
+    assertEqual(Pop.Draft().iconColor, "ff8000")
+    assertFalse(swatch.disabled)
+    swatch:__fire("OnValueConfirmed", 0, 1, 0, 1)
+    -- red under: write the swatch's pick through the seam in the popup's chooser spec
+    assertEqual(Pop.Draft().iconColor, "00ff00")
+    assertTrue(not NS.db.profile.callouts[cid].iconColor, "the stored color waits for Save")
+    assertEqual(table.concat(P.find(w, "Icon").image.vertexColor, ","), "0,1,0", "the chooser's icon in the draft's color")
+    assertTrue(Pop.Save())
+    assertEqual(NS.db.profile.callouts[cid].iconColor, "00ff00")
+    -- a game icon chosen over the glyph drops the color from the draft
+    Pop.Open(gid, cid)
+    Pop.SetIcon(136243, "ff0000")
+    assertNil(Pop.Draft().iconColor, "no color on a game icon")
+end)
+
+test("popup: [icons] the swatch writes the draft on a drag tick (OnValueChanged) with no confirm, as OK leaves it", function()
+    local NS, _, P, Pop = open()
+    local gid, cid = withKick(NS)
+    local w = P.during(function() Pop.Open(gid, cid) end)
+    Pop.SetIcon(NS.Icon("star"), "ff8000")
+    local swatch = P.find(w, "ColorPicker", "Icon color")
+    swatch:__fire("OnValueChanged", 0, 1, 0, 1)
+    -- red under: listen for OnValueConfirmed alone in Ed.IconChooser
+    assertEqual(Pop.Draft().iconColor, "00ff00")
+    swatch:__fire("OnValueConfirmed", 1, 128 / 255, 0, 1)   -- Cancel confirms the old color
+    assertEqual(Pop.Draft().iconColor, "ff8000", "Cancel puts the old color back")
 end)
 
 -- Record every CreateFrame template from here on (nil for none); the frame is still made.
@@ -705,4 +737,60 @@ test("callout helpers: PreviewLines says what a callout sends here, or why it se
     NS.Preview.SetPreviewAs("raid:heroic")
     assertFalse(lines("Stack", "raid"):find("Locked: you are not in a raid.", 1, true) ~= nil)
     assertTrue(lines("Stack", "raid"):find("Previewing: Raid", 1, true) ~= nil)
+end)
+
+-- ── a glyph's color (icon browser spec, "Data model") ───────────────────────────────────────
+
+test("popup: [icons] the draft carries the icon's color; Save writes icon and color in one act", function()
+    local NS, _, P, Pop = open()
+    local gid, cid = withKick(NS)
+    local star = NS.Icon("star")
+    NS.Library.SetIcon("callout", cid, star, "ff0000")
+    P.during(function() Pop.Open(gid, cid) end)
+    -- red under: copyFields reading FIELDS (the rows drawn), not DRAFT
+    assertEqual(Pop.Draft().iconColor, "ff0000")
+    Pop.Draft().icon, Pop.Draft().iconColor = NS.Icon("heart"), "00ff00"
+    local writes = seamWrites(NS)
+    local seen = libraryChanges(NS)
+    assertTrue(Pop.Save())
+    assertEqual(#writes, 2)
+    assertEqual(writes[1][1] .. "," .. writes[2][1], "callout.icon,callout.iconColor", "the icon lands first")
+    assertEqual(seen.n, 1, "one act")
+    assertEqual(NS.db.profile.callouts[cid].iconColor, "00ff00")
+end)
+
+test("popup: [icons] an icon typed in that is no glyph drops the draft's color, and Save clears it", function()
+    local NS, _, P, Pop = open()
+    local gid, cid = withKick(NS)
+    NS.Library.SetIcon("callout", cid, NS.Icon("star"), "ff0000")
+    local w = P.during(function() Pop.Open(gid, cid) end)
+    P.find(w, "EditBox", "Icon"):__fire("OnEnterPressed", "136012")
+    -- red under: drop the glyph check from put in settings/CalloutPopup.lua
+    assertNil(Pop.Draft().iconColor)
+    assertTrue(Pop.Save())
+    local c = NS.db.profile.callouts[cid]
+    assertEqual(c.icon, 136012)
+    assertTrue(not c.iconColor)
+end)
+
+test("popup: [icons] Add saves a glyph with its color; a malformed color stays open and names the field", function()
+    local NS, _, P, Pop = open()
+    local gid = withKick(NS)
+    local p = NS.db.profile
+    local w = P.during(function() Pop.Open(gid) end)
+    assertNil(Pop.Draft().iconColor)
+    P.find(w, "EditBox", "Name"):__fire("OnEnterPressed", "Mark")
+    Pop.Draft().icon, Pop.Draft().iconColor = NS.Icon("star"), "zz"
+    local before = count(p.callouts)
+    local ok, why = Pop.Save()
+    assertFalse(ok)
+    assertEqual(why, "iconColor")
+    assertTrue(Pop.IsOpen(), "the popup stays open")
+    assertEqual(count(p.callouts), before, "nothing written")
+    -- red under: drop the iconColor check from check in settings/CalloutPopup.lua
+    assertTrue(labelWith(P, w, "Icon color: An icon color is six hex digits (rrggbb), or empty for none.") ~= nil)
+    Pop.Draft().iconColor = "0000ff"
+    assertTrue(Pop.Save())
+    local list = p.groups[gid].callouts
+    assertEqual(p.callouts[list[#list]].iconColor, "0000ff")
 end)

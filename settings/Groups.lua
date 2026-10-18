@@ -5,7 +5,8 @@ local _, NS = ...
 --     band      [ Group v (picker; a green dot marks a group active now) ][ New group ]
 --     strip     [ General ][ Callouts ][ When ][ Preview ]
 --     General   Preview as (page-wide, first), then Name, Icon, Enabled, Open the dial on this group,
---               Choose an icon (settings/Editors.lua's picker), then Duplicate and Delete. A built-in:
+--               the icon with Choose icon… and its color swatch (settings/Editors.lua's chooser; the
+--               icon browser writes icon and color as one act), then Duplicate and Delete. A built-in:
 --               what it is, its Enabled row, and Customize.
 --     Callouts  a user group's: Add callout (the callout popup, settings/CalloutPopup.lua), Reuse
 --               existing callout with Add (an independent copy, of a user or a built-in callout, spec
@@ -178,6 +179,30 @@ function G.RemoveCallout(gid, cid)
     end)
 end
 
+--- The General tab's icon chooser for user group `gid` (Ed.IconChooser): the browser's Choose writes
+--- icon and color as one act (Library.SetIcon), the swatch the color row; a refusal prints its reason.
+--- The browser closes as Cancel when the group is gone.
+function G.IconSpec(gid)
+    local function stored()
+        local g = NS.db.profile.groups[gid]
+        if not g then return nil, nil end
+        return g.icon or nil, g.iconColor or nil
+    end
+    return {
+        get = stored,
+        choose = function(icon, color)
+            local ok, why = NS.Library.SetIcon("group", gid, icon or false, color)
+            if not ok then NS.Print(tostring(why)) end
+        end,
+        setColor = function(color)
+            local ok, err, why = NS.SchemaRuntime.Set("group.iconColor", color or false, gid)
+            if not ok then NS.Print(tostring(why or err)) end
+        end,
+        owner = "group",
+        valid = function() return NS.db.profile.groups[gid] ~= nil end,
+    }
+end
+
 local NONE = L["No groups yet. Click New group to make one."]
 
 local function renderGeneral(ctx, rows)
@@ -201,12 +226,13 @@ local function renderGeneral(ctx, rows)
         }, nil)
         return
     end
+    -- The icon's color is drawn with the icon (the browser's swatch), not as a text box.
     local mine = {}
     for _, row in ipairs(Ed.Scalar(rows)) do
-        if row.path ~= "state.previewAs" then mine[#mine + 1] = row end
+        if row.path ~= "state.previewAs" and row.path ~= "group.iconColor" then mine[#mine + 1] = row end
     end
     h.RenderRows(ctx, mine, nil, nil, { noHeadings = true })
-    Ed.IconPicker(ctx, "group.icon", gid)
+    Ed.IconChooser(ctx, G.IconSpec(gid))
     h.InlineButtonPair(ctx,
         { text = L["Duplicate"], tooltip = L["Make a copy of this group, with copies of its callouts and the same When. The copy is on no pad until you add it under Comms Pad > Groups."],
           onClick = function() G.Duplicate(gid) end },
@@ -300,7 +326,7 @@ local function renderCallouts(ctx)
     local entries = {}
     for i, cid in ipairs(list) do
         local c = NS.Library.Callout(cid)
-        entries[i] = { id = cid, label = calloutLabel(cid), icon = c and c.icon or nil,
+        entries[i] = { id = cid, label = calloutLabel(cid), icon = c and c.icon or nil, iconColor = c and c.iconColor or nil,
             edit = function() Settings.CalloutPopup.Open(gid, cid) end,
             editTooltip = L["Edit this callout: its name, text, channel and icon."],
             remove = function() G.RemoveCallout(gid, cid) end,

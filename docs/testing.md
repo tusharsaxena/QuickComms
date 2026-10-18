@@ -51,7 +51,7 @@ Named suites the standard requires: `test_surface_parity` (testing-§8), `test_v
 `test_pad_render` and `test_pad`, and phase 3's `test_members`, `test_editors`, `test_callout_popup` (the callout popup, which replaced `test_page_callouts`), `test_eui_skin` (its optional EllesmereUI skin, on a mocked EllesmereUI),
 `test_groups_when`, `test_page_groups`, `test_page_pads` and `test_page_share`, and phase 4's
 `test_dial_layout`, `test_dial_secure`, `test_dial` and `test_page_dials`, and phase 5's `test_share`
-and `test_gameids`. Kit suites, declared by directory:
+and `test_gameids`, and the icon browser's `test_icon_browser`. Kit suites, declared by directory:
 `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`, `test_lizard_sighted`.
 Every new `tests/test_*.lua` is added to the `suites` list in `tests/run.lua`; the kit fails the run
 in both directions.
@@ -60,7 +60,8 @@ in both directions.
 snippets run in the header's own environment with protected calls allowed in combat; `WrapScript`
 (raising if a hook came first), `SetFrameRef`, `Execute`, override bindings, `GetBindingAction`, the
 cursor, and `__pressKey(key)`, which routes a key through a snippet's binding, then an override
-binding.
+binding. For the icon browser it adds the macro icon lists (`GetMacroIcons`, `GetMacroItemIcons`)
+and the AceGUI Icon and Label widgets' image texture with `SetVertexColor`, which records the tint it was given.
 
 `tests/page_helpers.lua` (not a suite) drives an editor page through the kit's AceGUI recorder: show a page, redraw it, click a tab, find a widget by its label, fire its callback, accept the last popup, and spy on the reorder lists.
 

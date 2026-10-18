@@ -58,7 +58,7 @@ function S.Slot(calloutId, callout, snap, opts)
         slot.reason = "noCallout"
         return slot
     end
-    slot.name, slot.icon = callout.name, callout.icon
+    slot.name, slot.icon, slot.iconColor = callout.name, callout.icon, callout.iconColor
     local line, reason, info = NS.Bake.Bake(callout, snap, opts)
     slot.line, slot.reason = line, reason
     slot.concrete, slot.lock = info.concrete, info.lock
@@ -213,14 +213,14 @@ function S.BuildDialPlan(surfaceId, dial, snap, deps)
     local groups = {}
     for _, gid in ipairs(order) do
         local g = deps.group(gid)
-        local entry = { id = gid, title = g.name, icon = g.icon, openInto = g.openInto == true }
+        local entry = { id = gid, title = g.name, icon = g.icon, iconColor = g.iconColor, openInto = g.openInto == true }
         if type(g.children) == "table" and #g.children > 0 then
             entry.children = {}
             for _, child in ipairs(g.children) do
                 local c = deps.group(child)
                 if c then
                     entry.children[#entry.children + 1] = { id = child, title = c.name, icon = c.icon,
-                        compass = c.compass, slots = slotsOf(c.callouts) }
+                        iconColor = c.iconColor, compass = c.compass, slots = slotsOf(c.callouts) }
                 end
             end
         else

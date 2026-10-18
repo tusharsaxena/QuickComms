@@ -246,3 +246,17 @@ test("render: [phase 5] a section title keeps its gold until the player colors t
     t = R.TitleFont(R.LabelFont({ fontColor = { r = 1, g = 1, b = 1, a = 1 }, useClassColorFont = true }))
     assertEqual(t.r .. "," .. t.g .. "," .. t.b, "0.25,0.75,0.5", "and so does the class color")
 end)
+
+test("render: [icons] a glyph chip is drawn in its color; the chip repainted with another icon is white again", function()
+    local NS, m = T.enableAddon()
+    local b = chip(NS, m)
+    local star = NS.Icon("star")
+    NS.PadRender.Paint(b, { calloutId = "c1", name = "Star", line = "/p Go", concrete = "party", chatType = "PARTY",
+        icon = star, iconColor = "ff0000" }, "iconLabel")
+    assertEqual(b.qcIcon.__texture, star)
+    -- red under: Paint setting the texture only
+    assertEqual(table.concat(b.qcIcon.__color, ","), "1,0,0")
+    NS.PadRender.Paint(b, ARMED, "iconLabel")
+    -- red under: tint only when the slot carries a color (a reused chip keeps the old one)
+    assertEqual(table.concat(b.qcIcon.__color, ","), "1,1,1")
+end)

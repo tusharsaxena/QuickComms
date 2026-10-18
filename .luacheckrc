@@ -19,7 +19,8 @@ globals = {
   "QuickCommsDB",       -- AceDB
   "QuickCommsPerfDB",   -- the diagnostics capture ring (performance-§5)
   "StaticPopupDialogs",
-  -- settings/CalloutPopup.lua: Escape closes the callout popup first (a special frame, by name).
+  -- settings/ModalWindow.lua: Escape closes the callout popup and the icon browser (special frames,
+  -- by name); settings/IconBrowser.lua lifts the popup's out while the browser is open.
   "UISpecialFrames",
   -- modules/Dial.lua: the key bindings menu's header for Bindings.xml, which the client reads by this
   -- name (spec §9.4). Its four entry labels hold a space and a colon, so they are rawset beside a
@@ -45,6 +46,8 @@ read_globals = {
   "C_CVar", "GetCVarBool", "UnitGUID", "UnitName",
   -- modules/Pad_Render.lua and core/Compat.lua: the chip tooltip and the chat colors.
   "GameTooltip", "ChatTypeInfo",
+  -- settings/Editors.lua: the color picker a swatch of ours opened goes with the swatch.
+  "ColorPickerFrame",
   -- modules/Pad.lua: the sent-chip sound.
   "PlaySound", "SOUNDKIT",
   -- modules/Dial_Render.lua: the pointer follows the cursor.
@@ -73,8 +76,10 @@ files["core/EUIBridge.lua"] = {
 
 -- Compat.HasTemplate: whether the client has an XML template (the callout popup's window). Scoped
 -- here so no feature file reads it directly (compat).
+-- Compat.MacroIcons: the macro icon selector's lists (the icon browser's Game icons tab).
 files["core/Compat.lua"] = {
-  read_globals = { "C_XMLUtil" },
+  read_globals = { "C_XMLUtil", "GetMacroIcons", "GetMacroItemIcons", "GetLooseMacroIcons",
+    "GetLooseMacroItemIcons" },
 }
 
 -- QC:SlashEnabled and QC:OnSlashCommand are methods on the addon object by calling convention;

@@ -5,14 +5,16 @@ local addonName, NS = ...
 --     window   Blizzard's settings window (title "Ka0s Quick Comms")             (its close X)
 --     header   New callout / Edit callout, the gold rule under it
 --     body     Name, Text, Channel, Icon (the member rows' labels, read and written on the draft),
---              with an info glyph beside the Text label whose tooltip lists the tokens; Choose an
---              icon, Preview, then Cancel and Save, and under them the line that names a field
---              Save refused
+--              with an info glyph beside the Text label whose tooltip lists the tokens; the icon
+--              (Choose icon… opens the icon browser over the popup, and a glyph's color swatch),
+--              Preview, then Cancel and Save, and under them the line that names a field Save
+--              refused
 --
--- THE DRAFT is a plain copy of the callout's four fields (blank for Add: an empty name and text,
--- Smart group, no icon), and every control writes it, never the profile. The preview bakes the
--- draft, and the token tooltip reads its channel when it shows, so both follow each edit before
--- anything is saved. A text box commits to the
+-- THE DRAFT is a plain copy of the callout's four fields and its icon's glyph color (blank for Add:
+-- an empty name and text, Smart group, no icon, no color), and every control writes it, never the
+-- profile. An icon that is no glyph drops the draft's color, as the stored callout would. The
+-- preview bakes the draft, and the token tooltip reads its channel when it shows, so both follow
+-- each edit before anything is saved. A text box commits to the
 -- draft on Enter, and what a box shows that Enter did not commit is taken into the draft before any
 -- other write and by Save, so a typed name is never lost to a pick or to a click on Save. Save checks
 -- the draft with the member rows' own validators, then writes it as ONE act (Library.Batch): an edit writes each
@@ -22,9 +24,9 @@ local addonName, NS = ...
 -- and so do the settings window hiding, a profile change and the callout ceasing to exist, so a
 -- Cancel never leaves a half-saved or empty callout behind.
 --
--- THE LOOK is the settings window's. The window is Blizzard's own SettingsFrameTemplate (its
--- background, its border with the window title, its close X), and inside it the library's panel
--- factory draws a page's header (title and gold rule); the body is drawn with the same Helpers,
+-- THE LOOK is the settings window's. The window is settings/ModalWindow.lua's: Blizzard's own
+-- SettingsFrameTemplate (its background, its border with the window title, its close X), and inside
+-- it the library's panel factory draws a page's header (title and gold rule); the body is drawn with the same Helpers,
 -- picker and button pair as a page, into a plain AceGUI container rather than a scroll frame: the
 -- popup has no scrollbar, and the window's height follows the laid-out body (fit, after every
 -- refresh and every error line). It is not a page (no sidebar entry, no banner, no Defaults). A
@@ -43,13 +45,11 @@ local L = NS.L
 Settings.CalloutPopup = Settings.CalloutPopup or {}
 local Pop = Settings.CalloutPopup
 
+-- The member rows the popup draws, in order, and every field the draft carries (the icon's color
+-- is drawn with the icon, not as a row of its own).
 local FIELDS = { "name", "text", "channel", "icon" }
+local DRAFT = { "name", "text", "channel", "icon", "iconColor" }
 local WIDTH, HEIGHT = 560, 640   -- HEIGHT until the first fit
-local TEMPLATE = "SettingsFrameTemplate"
--- Where the page sits in the window: inside the template's background (its Bg is inset 7,-18 /
--- -3,3), under the title bar; the fallback window is the page alone.
-local INSET_TEMPLATE = { left = 8, top = 24, right = 4, bottom = 5 }
-local INSET_PLAIN = { left = 0, top = 0, right = 0, bottom = 0 }
 -- The page's body starts this far under the panel's top: the library's header (HEADER_HEIGHT, 54)
 -- plus its 8 (Options.lua, CreatePanel). The laid-out body sits CHROME_GAP under that, as a page's
 -- scroll does, CONTENT_X in from both sides (the pages' left inset, CONTENT_LEFT; there is no
@@ -59,11 +59,6 @@ local INSET_PLAIN = { left = 0, top = 0, right = 0, bottom = 0 }
 -- tests/test_callout_popup.lua reads BODY_TOP off the body anchor of the panel CreatePanel builds
 -- and CONTENT_X from lib.LAYOUT, so a re-vendor that moves any of them turns it red.
 local BODY_TOP, CONTENT_X, BODY_BOTTOM = 62, 12, 12
-local DIM = { 0, 0, 0, 0.45 }
--- The catcher's frame level in its strata. Above it, in order: the template's Bg (LEVEL + 1; the
--- template declares it at absolute level 0, which would put it under the catcher's dim), the window
--- with its border (LEVEL + 2), the page (LEVEL + 3) and the close X (LEVEL + 5).
-local LEVEL = 10
 local ERROR_COLOR = "|cffff4040"
 -- The gap between the preview and the button pair, a section's worth (two row gaps).
 local BUTTONS_GAP = 16
@@ -83,8 +78,9 @@ local function H() return Settings.Helpers end
 
 local function copyFields(c)
     local out = {}
-    for _, f in ipairs(FIELDS) do out[f] = c[f] end
+    for _, f in ipairs(DRAFT) do out[f] = c[f] end
     if out.icon == false then out.icon = nil end
+    if out.iconColor == false then out.iconColor = nil end
     return out
 end
 
@@ -101,8 +97,9 @@ end
 
 local function put(field, value, row)
     if row and type(row.normalize) == "function" then value = row.normalize(value) end
-    if field == "icon" and value == false then value = nil end
+    if (field == "icon" or field == "iconColor") and value == false then value = nil end
     draft[field] = value
+    if field == "icon" and not NS.Library.IsGlyph(value) then draft.iconColor = nil end
 end
 
 -- Take into the draft what the player typed in a box and did not commit with Enter: a box whose
@@ -163,6 +160,9 @@ local function check(d)
     if not ok then return "channel", channel.label, why end
     if not NS.Library.ValidIcon(d.icon) then
         return "icon", Ed.Row("callout.icon").label, L["An icon is a texture id or a texture path."]
+    end
+    if not NS.Library.ValidIconColor(d.iconColor) then
+        return "iconColor", Ed.Row("callout.iconColor").label, L["An icon color is six hex digits (rrggbb), or empty for none."]
     end
     return nil
 end
@@ -262,7 +262,12 @@ local function render()
         end
     end
     Pop.tokenGlyph = tokenGlyph(boxes.text)
-    Ed.IconPicker(ctx, function(path) setField("icon", path) end)
+    Ed.IconChooser(ctx, {
+        get = function() return draft and draft.icon, draft and draft.iconColor end,
+        choose = function(icon, color) Pop.SetIcon(icon, color) end,
+        setColor = function(color) setField("iconColor", color) end,
+        owner = "popup", lift = { addonName .. "CalloutPopup" },
+    })
     h.Section(ctx, L["Preview"])
     -- One label, refreshed in place on every draft write and every situation change.
     local live = h.TextRow(ctx, table.concat(C.PreviewLines(draft), "\n"))
@@ -281,10 +286,21 @@ local function render()
     fit()
 end
 
+--- The icon browser's Choose: the draft's icon and its glyph color, as one draft write (a color
+--- stays only on a glyph).
+function Pop.SetIcon(icon, color)
+    if not draft then return end
+    flush()
+    put("icon", icon)
+    if NS.Library.IsGlyph(draft.icon) then draft.iconColor = color or nil end
+    refresh()
+end
+
 -- Hide the popup and drop the draft. The state is cleared first, so the frame's own OnHide (Escape)
--- finds nothing left to cancel.
+-- finds nothing left to cancel. An icon browser opened from the popup closes with it, as Cancel.
 local function close()
     gid, cid, draft, baseline = nil, nil, nil, nil
+    if Settings.IconBrowser then Settings.IconBrowser.Cancel("popup") end
     errorRow = nil
     Pop.tokenGlyph = nil
     boxes, shown = {}, {}
@@ -295,47 +311,6 @@ local function close()
     end
     if Pop.frame then Pop.frame:Hide() end
     if Pop.catcher then Pop.catcher:Hide() end
-end
-
-local function isTable(v) return type(v) == "table" end
-
--- The window: SettingsFrameTemplate when the client has it and it still has the parts used here
--- (NineSlice with its title, Bg, ClosePanelButton), else a plain frame. Answers the window and its
--- chrome: what the skin paints, and whether the template drew it.
-local function makeWindow(parent)
-    local name = addonName .. "CalloutPopup"
-    local f
-    -- A client that says it lacks the template is not asked; one that cannot say is, under pcall.
-    if NS.Compat.HasTemplate(TEMPLATE) ~= false then
-        local ok, made = pcall(CreateFrame, "Frame", name, parent, TEMPLATE)
-        if ok then f = made end
-    end
-    if f and isTable(f.NineSlice) and isTable(f.ClosePanelButton) then
-        if isTable(f.NineSlice.Text) then f.NineSlice.Text:SetText(NS.BRAND) end
-        return f, { template = true, window = f, nineSlice = f.NineSlice,
-            bg = isTable(f.Bg) and f.Bg or nil, close = f.ClosePanelButton }
-    end
-    return f or CreateFrame("Frame", name, parent), { template = false }
-end
-
--- The fallback's chrome, as the popup looked before the template: Blizzard's dialog edge over a
--- dark fill under the page, and the shared close mark.
-local function plainChrome(window, panel, chrome)
-    local bg = CreateFrame("Frame", nil, window, "BackdropTemplate")
-    bg:SetAllPoints(window)
-    bg:SetFrameLevel(LEVEL + 1)
-    if bg.SetBackdrop then
-        bg:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8X8",
-            edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-            edgeSize = 32,
-            insets = { left = 11, right = 11, top = 11, bottom = 11 },
-        })
-        bg:SetBackdropColor(0.05, 0.05, 0.05, 0.96)
-    end
-    local closeButton = NS.MakeCloseButton(panel, function() Pop.Cancel() end)
-    if closeButton then closeButton:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -12, -12) end
-    chrome.window, chrome.bg, chrome.close = window, bg, closeButton
 end
 
 -- The body: a plain AceGUI container in the page's body, where a page has its scroll frame. The
@@ -354,62 +329,24 @@ local function makeBody(h)
     return group
 end
 
--- The popup and its click-catcher, built once, on the first Open. The catcher is a full-screen
--- button in the DIALOG strata (above the settings window) that swallows every click and wheel; the
--- window is its child, so it draws above it and its dropdowns' pull-outs above both.
+-- The popup and its click-catcher (settings/ModalWindow.lua), built once, on the first Open, in
+-- the DIALOG strata (above the settings window); the window is the catcher's child, so it draws
+-- above it and its dropdowns' pull-outs above both.
 local function build()
     local h = H()
-    local catcher = CreateFrame("Button", nil, UIParent)
-    catcher:SetAllPoints(UIParent)
-    catcher:SetFrameStrata("DIALOG")
-    catcher:SetFrameLevel(LEVEL)
-    catcher:EnableMouse(true)
-    catcher:EnableMouseWheel(true)
-    catcher:SetScript("OnMouseWheel", function() end)
-    local dim = catcher:CreateTexture(nil, "BACKGROUND")
-    dim:SetAllPoints(catcher)
-    dim:SetColorTexture(DIM[1], DIM[2], DIM[3], DIM[4])
-    catcher:Hide()
-    Pop.catcher = catcher
-
-    local window, chrome = makeWindow(catcher)
-    inset = chrome.template and INSET_TEMPLATE or INSET_PLAIN
-    -- The strata again: a template may name its own, and the window must stay above the catcher.
-    window:SetFrameStrata("DIALOG")
-    window:SetFrameLevel(LEVEL + 2)
-    window:SetSize(WIDTH, HEIGHT)
-    window:ClearAllPoints()
-    window:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-    window:EnableMouse(true)
-
-    -- The library's panel factory: the settings pages' header, body and refresh registry.
-    ctx = h.CreatePanel(addonName .. "CalloutPopupPage", L["Edit callout"], { isMain = true })
-    local panel = ctx.panel
-    panel:SetParent(window)
-    panel:ClearAllPoints()
-    panel:SetPoint("TOPLEFT", window, "TOPLEFT", inset.left, -inset.top)
-    panel:SetPoint("BOTTOMRIGHT", window, "BOTTOMRIGHT", -inset.right, inset.bottom)
-    panel:SetFrameLevel(LEVEL + 3)
-    if chrome.template then
-        -- The template's Bg, over the catcher's dim and under the border: at its declared level 0
-        -- the dim would draw over it, and the popup would be darker than the settings window.
-        if chrome.bg then chrome.bg:SetFrameLevel(LEVEL + 1) end
-        -- The template's close X (an accepted deviation, docs/ARCHITECTURE.md): a click is a
-        -- Cancel, and it sits above the page, whose top edge it overlaps.
-        chrome.close:SetScript("OnClick", function() Pop.Cancel() end)
-        chrome.close:SetFrameLevel(LEVEL + 5)
-    else
-        plainChrome(window, panel, chrome)
-    end
+    local w = Settings.ModalWindow.Build({ name = addonName .. "CalloutPopup", pageName = addonName .. "CalloutPopupPage",
+        title = L["Edit callout"], width = WIDTH, height = HEIGHT, strata = "DIALOG",
+        onClose = function() Pop.Cancel() end })
+    ctx, inset = w.ctx, w.inset
+    Pop.catcher = w.catcher
     body = makeBody(h)
-    -- Escape hides a special frame; hidden with a draft still open is a Cancel.
-    if UISpecialFrames then UISpecialFrames[#UISpecialFrames + 1] = addonName .. "CalloutPopup" end
-    window:HookScript("OnHide", function() if draft then Pop.Cancel() end end)
+    -- Hidden with a draft still open (Escape) is a Cancel.
+    w.frame:HookScript("OnHide", function() if draft then Pop.Cancel() end end)
     local settingsWindow = _G.SettingsPanel
     if settingsWindow and settingsWindow.HookScript then
         settingsWindow:HookScript("OnHide", function() if draft then Pop.Cancel() end end)
     end
-    Pop.frame, Pop.chrome = window, chrome
+    Pop.frame, Pop.chrome = w.frame, w.chrome
     local skin = Settings.CalloutPopupSkin
     if skin then skin.TryApply() end
 end
@@ -429,7 +366,7 @@ function Pop.Open(groupId, calloutId)
         draft = copyFields(baseline)
     else
         baseline = nil
-        draft = { name = "", text = "", channel = "smartGroup", icon = nil }
+        draft = { name = "", text = "", channel = "smartGroup", icon = nil, iconColor = nil }
     end
     local title = calloutId and L["Edit callout"] or L["New callout"]
     ctx.panel.title:SetText(title)
@@ -442,9 +379,9 @@ function Pop.Open(groupId, calloutId)
 end
 
 -- The value the seam row takes for a draft field: an icon as text (the row's normalize turns a
--- texture id back into a number) or false for none.
+-- texture id back into a number), and an icon or its color false for none.
 local function seamValue(field, value)
-    if field ~= "icon" then return value end
+    if field ~= "icon" and field ~= "iconColor" then return value end
     if value == nil then return false end
     return tostring(value)
 end
@@ -469,7 +406,8 @@ function Pop.Save()
     if cid then
         local S, id, d, base = NS.SchemaRuntime, cid, draft, baseline
         ok, reason = NS.Library.Batch(function()
-            for _, f in ipairs(FIELDS) do
+            -- DRAFT's order: the icon lands before its color, which the color row checks against.
+            for _, f in ipairs(DRAFT) do
                 if d[f] ~= base[f] then
                     local done, err, w = S.Set("callout." .. f, seamValue(f, d[f]), id)
                     if not done then return false, tostring(w or err) end

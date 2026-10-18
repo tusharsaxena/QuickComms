@@ -216,94 +216,121 @@ function Ed.ActionDropdown(label, tooltip, entries, onPick)
     end }
 end
 
--- ── the icon picker (spec §13.1, §19 row 5) ─────────────────────────────────────────────────
+-- ── the icon (icon browser spec, "Goals") ───────────────────────────────────────────────────
 
--- What the picker offers, in order: the eight raid markers; the game icons the built-in sets wear,
--- read from NS.BuiltIns when the picker draws (so a set that gains an icon offers it); then the
--- LibKa0s icon catalog's entries a callout reads well with. The catalog is enumerated (NS.IconNames;
--- library-stack-§8: never a hard-coded path list), and ICON_MARK_KEEP only picks among its names:
--- most of the catalog is window chrome (close, sort, align) that means nothing on a callout, and a
--- name the catalog drops simply stops being offered. Each icon is stored by its texture path, which
--- is what the Icon box takes; any other texture is typed into the box.
-Ed.ICON_MARKERS = { L["Star"], L["Circle"], L["Diamond"], L["Triangle"], L["Moon"], L["Square"], L["Cross"],
-    L["Skull"] }
--- Each kept catalog name and its player-facing label (the catalog's keys are not labels).
-Ed.ICON_MARK_KEEP = { chat = L["Chat"], ["speech-bubble"] = L["Speech bubble"], warning = L["Warning"],
-    info = L["Information"], help = L["Help"], target = L["Target"], shield = L["Shield"],
-    heart = L["Heart"], star = L["Star"], ["map-marker"] = L["Map marker"], location = L["Location"],
-    people = L["People"], person = L["Person"], timer = L["Timer"], ban = L["Ban"],
-    ["thumb-up"] = L["Thumbs up"] }
+-- Where an editor's icon is chosen (the callout popup, a user group's General tab), under its Icon
+-- box: the icon as it is drawn (a glyph in its color; a question mark for none), Choose icon…, which
+-- opens the icon browser (settings/IconBrowser.lua) over whatever opened it, and the glyph's color
+-- swatch, live only while the icon is a glyph (no other icon takes a color). Every control writes
+-- through `spec`, never the profile itself, and the row is put back in place (Ed.Live) after any write.
+Ed.NO_ICON = "Interface\\Icons\\INV_Misc_QuestionMark"
+local CHOOSER_ICON = 32
 
--- The built-in sets' icons, each once, in the sets' order: a set's own, then its callouts'.
-local function builtinIcons(out, seen)
-    local BI = NS.BuiltIns
-    local function add(path, label)
-        if type(path) == "string" and not seen[path] then
-            seen[path] = true
-            out[#out + 1] = { path = path, label = label }
+--- Open the icon browser on what `spec.get()` answers (see Ed.IconChooser).
+--- @return boolean opened
+function Ed.OpenIconBrowser(spec)
+    local icon, color = spec.get()
+    return Settings.IconBrowser.Open({ icon = icon, color = color, onChoose = spec.choose,
+        owner = spec.owner, lift = spec.lift, valid = spec.valid })
+end
+
+-- The swatch's write: the picked color as stored (white is none), only when it changed. AceGUI's
+-- ColorPicker sends OnValueChanged on every drag tick while the picker is open, and OK confirms
+-- nothing new (its color is the last tick's), so the swatch writes on both callbacks, as
+-- AceConfigDialog does; Cancel confirms the old color, which puts it back.
+local function swatchWrite(spec, r, g, b)
+    local _, current = spec.get()
+    local picked = NS.Library.IconColorFrom(r, g, b) or nil
+    if picked ~= (current or nil) then spec.setColor(picked) end
+end
+
+-- THE COLOR PICKER OUTLIVES ITS SWATCH. Blizzard's ColorPickerFrame is not modal, and AceGUI's
+-- ColorPicker binds it to the widget that opened it. Left up when that widget goes (the icon
+-- browser closing, the popup closing, a page redraw giving the row back to AceGUI's shared pool),
+-- it would drive the next owner of the swatch, another addon's included. So a swatch of ours is
+-- tracked (Ed.TrackPicker) and, when it goes, hides the picker if it opened it (Ed.ReleasePicker).
+-- AceGUI pools the frame, so its OnClick is hooked once and answers only while it is ours.
+local swatchOf = setmetatable({}, { __mode = "k" })   -- swatch frame -> our widget, while ours
+local hooked = setmetatable({}, { __mode = "k" })
+local pickerOwner                                     -- the swatch of ours that opened the picker
+
+--- Track `swatch` (an AceGUI ColorPicker): from now on, a click that opens the picker on it is noted.
+function Ed.TrackPicker(swatch)
+    local frame = swatch.frame
+    swatchOf[frame] = swatch
+    if hooked[frame] or not frame.HookScript then return end
+    hooked[frame] = true
+    frame:HookScript("OnClick", function(self)
+        local w, picker = swatchOf[self], ColorPickerFrame
+        if not (w and picker and picker:IsShown()) then return end
+        pickerOwner = w
+        if not hooked[picker] and picker.HookScript then
+            hooked[picker] = true
+            picker:HookScript("OnHide", function() pickerOwner = nil end)
         end
-    end
-    for _, gid in ipairs(BI.order) do
-        local def = BI.groups[gid]
-        add(def.icon, def.name)
-        for _, cid in ipairs(def.callouts or {}) do
-            local c = BI.callouts[cid]
-            if c then add(c.icon, c.name) end
-        end
-    end
+    end)
 end
 
---- The picker's icons, { path, label } in order. The catalog's marks need the library; without it
---- they are left out.
-function Ed.IconPalette()
-    local out, seen = {}, {}
-    for i, name in ipairs(Ed.ICON_MARKERS) do
-        local path = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_" .. i
-        seen[path] = true
-        out[#out + 1] = { path = path, label = name }
-    end
-    builtinIcons(out, seen)
-    for _, name in ipairs(NS.IconNames()) do
-        local label = Ed.ICON_MARK_KEEP[name]
-        local path = label and NS.Icon(name)
-        if path then out[#out + 1] = { path = path, label = label } end
-    end
-    return out
+--- Whether `swatch` is still tracked (its picks are still ours to write).
+function Ed.PickerTracked(swatch)
+    return swatchOf[swatch.frame] == swatch
 end
 
---- Write a picked icon to the member row `rowPath` (callout.icon, group.icon) for `id`, through the
---- seam; a refusal prints its reason. The Icon box above refreshes in place.
---- @return boolean
-function Ed.SetIcon(rowPath, id, path)
-    local ok, err, why = NS.SchemaRuntime.Set(rowPath, path, id)
-    if not ok then NS.Print(tostring(why or err)) end
-    return ok == true
+--- Hide the picker if `swatch` opened it; `untrack` also lets the swatch go (it is being released).
+function Ed.ReleasePicker(swatch, untrack)
+    if untrack then swatchOf[swatch.frame] = nil end
+    if pickerOwner ~= swatch then return end
+    pickerOwner = nil
+    local picker = ColorPickerFrame
+    if picker and picker:IsShown() then picker:Hide() end
 end
 
---- The picker: a "Choose an icon" heading over a grid of the palette's icons; a click on one is the
---- member's icon. `target` is the member row (callout.icon, group.icon) written for `id` through the
---- seam, or a function that takes the picked path instead (the callout popup's draft).
-function Ed.IconPicker(ctx, target, id)
+--- The chooser, as one row. `spec` = { get() -> icon, color; choose(icon, color) (the browser's
+--- Choose); setColor(color|nil) (the swatch); owner, lift, valid (handed to the browser) }.
+function Ed.IconChooser(ctx, spec)
     local h = H()
-    local pick = type(target) == "function" and target or function(path) Ed.SetIcon(target, id, path) end
-    h.Section(ctx, L["Choose an icon"])
     h.RenderGrid(ctx, { { wide = true, make = function(_, parent)
         local AceGUI = h.AceGUI
-        local grid = AceGUI:Create("SimpleGroup")
-        grid:SetLayout("Flow")
-        grid:SetFullWidth(true)
-        for _, e in ipairs(Ed.IconPalette()) do
-            local icon = AceGUI:Create("Icon")
-            icon:SetImage(e.path)
-            icon:SetImageSize(24, 24)
-            icon:SetWidth(36)
-            icon:SetHeight(36)
-            icon:SetCallback("OnClick", function() pick(e.path) end)
-            h.AttachTooltip(icon, e.label, L["Click to use this icon."])
-            grid:AddChild(icon)
+        local preview = AceGUI:Create("Icon")
+        preview:SetImageSize(CHOOSER_ICON, CHOOSER_ICON)
+        preview:SetWidth(48)
+        preview:SetHeight(44)
+        preview:SetCallback("OnClick", function() Ed.OpenIconBrowser(spec) end)
+        h.AttachTooltip(preview, L["Icon"], L["Click to choose another icon."])
+        local choose = AceGUI:Create("Button")
+        choose:SetText(L["Choose icon…"])
+        choose:SetRelativeWidth(0.4)
+        choose:SetCallback("OnClick", function() Ed.OpenIconBrowser(spec) end)
+        h.AttachTooltip(choose, L["Choose icon…"], L["Pick from the raid markers, the game's icons and the LibKa0s glyphs."])
+        local swatch = AceGUI:Create("ColorPicker")
+        swatch:SetLabel(L["Icon color"])
+        swatch:SetHasAlpha(false)
+        swatch:SetRelativeWidth(0.4)
+        local function pick(_, _, r, g, b)
+            if Ed.PickerTracked(swatch) then swatchWrite(spec, r, g, b) end
         end
-        parent:AddChild(grid)
-        return grid
+        swatch:SetCallback("OnValueChanged", pick)
+        swatch:SetCallback("OnValueConfirmed", pick)
+        Ed.TrackPicker(swatch)
+        swatch:SetCallback("OnRelease", function() Ed.ReleasePicker(swatch, true) end)
+        h.AttachTooltip(swatch, L["Icon color"], L["The color a LibKa0s glyph is drawn in. Only a glyph takes a color; white is none."])
+        local function paint()
+            local icon, color = spec.get()
+            preview:SetImage(icon or Ed.NO_ICON)
+            Ed.Tint(preview.image, icon, color)
+            swatch:SetColor(NS.Library.IconTint(icon, color))
+            swatch:SetDisabled(not NS.Library.IsGlyph(icon))
+        end
+        paint()
+        Ed.Live(ctx, paint)
+        local row = AceGUI:Create("SimpleGroup")
+        row:SetLayout("Flow")
+        row:SetFullWidth(true)
+        row:AddChild(preview)
+        row:AddChild(choose)
+        row:AddChild(swatch)
+        parent:AddChild(row)
+        return row
     end } })
 end
 
@@ -355,9 +382,15 @@ local function addGlyph(h, into, kind, onClick, tooltip)
     return g
 end
 
---- One uniform row per entry ({ id, label, icon = texture|nil, edit = fn|nil, editTooltip = string|nil,
+--- Draw `texture` (an AceGUI widget's image) in icon `icon`'s glyph color, or white: AceGUI pools its
+--- widgets and a pooled texture keeps the last tint it was given, so an untinted icon is set white.
+function Ed.Tint(texture, icon, color)
+    if texture then texture:SetVertexColor(NS.Library.IconTint(icon, color)) end
+end
+
+--- One uniform row per entry ({ id, label, icon = texture|nil, iconColor = "rrggbb"|nil, edit = fn|nil, editTooltip = string|nil,
 --- remove = fn|nil, removeTooltip = string|nil }): the library's handle in the gutter at the left, the
---- entry's icon (when set) and its label, then the edit and remove glyphs at the right. With
+--- entry's icon (when set, a glyph in its color) and its label, then the edit and remove glyphs at the right. With
 --- `onMove(from, to)` the rows drag; the list's one write and one repaint are the host's (Library,
 --- then LIBRARY_CHANGED).
 function Ed.ReorderRows(ctx, pageKey, entries, onMove)
@@ -383,6 +416,12 @@ function Ed.ReorderRows(ctx, pageKey, entries, onMove)
                 label:SetImage(e.icon)
                 label:SetImageSize(ROW_ICON, ROW_ICON)
             end
+            Ed.Tint(label.image, e.icon, e.iconColor)
+            -- AceGUI's Label never resets its image's color on acquire, and its pool is shared with
+            -- every addon: put the tint back to white when the row is released (options-ui-§19).
+            label:SetCallback("OnRelease", function(w)
+                if w.image then w.image:SetVertexColor(1, 1, 1, 1) end
+            end)
             label:SetRelativeWidth(0.85 - 0.06 * glyphs)
             into:AddChild(label)
             if e.edit then addGlyph(h, into, "edit", e.edit, e.editTooltip) end

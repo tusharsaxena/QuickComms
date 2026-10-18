@@ -190,10 +190,11 @@ local S = Settings.SchemaLib:New{
     -- the composer is hollow.
     writeThrough = { "enabled" },
     -- The minimap button is a per-installation display preference: neither reset may touch it. A
-    -- member's icon, a pad's or dial's position and a dial's key have a default only so a named
-    -- `/qc reset` restores them; a page's Defaults (a bracketed sweep) keeps them.
-    resetExempt  = { [MINIMAP_PATH] = true, ["callout.icon"] = true, ["group.icon"] = true, ["pad.point"] = true,
-        ["dial.point"] = true, ["dial.key"] = true },
+    -- member's icon and its glyph color, a pad's or dial's position and a dial's key have a default
+    -- only so a named `/qc reset` restores them; a page's Defaults (a bracketed sweep) keeps them.
+    resetExempt  = { [MINIMAP_PATH] = true, ["callout.icon"] = true, ["callout.iconColor"] = true,
+        ["group.icon"] = true, ["group.iconColor"] = true, ["pad.point"] = true, ["dial.point"] = true,
+        ["dial.key"] = true },
 }
 NS.SchemaRuntime = S
 
