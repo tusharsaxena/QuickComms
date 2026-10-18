@@ -47,6 +47,15 @@ function Bridge.IsSuiteReady()
     return suite() ~= nil and loaded(SKIN_CHILD)
 end
 
+--- Why the suite is not ready, in words for the diagnostics report, or nil when it is.
+--- @return string|nil
+function Bridge.SuiteProblem()
+    if type(EllesmereUI) ~= "table" then return "EllesmereUI is not loaded" end
+    if not suite() then return "EllesmereUI has no RegisterSkin (an EllesmereUI without the skinning API)" end
+    if not loaded(SKIN_CHILD) then return "EllesmereUI Blizzard Skins+ (" .. SKIN_CHILD .. ") is not loaded" end
+    return nil
+end
+
 --- EllesmereUI's own answer, through the facade it handed over: are its third-party skinning and
 --- this addon's entry both on? A facade without IsEnabled, or one whose IsEnabled raises, reads as
 --- off.
@@ -76,5 +85,6 @@ function Bridge.Register(onFacade)
     local eui = suite()
     if not eui then return false end
     local ok = pcall(eui.RegisterSkin, Bridge.SKIN_NAME, onFacade)
+    Bridge.registered = ok
     return ok
 end

@@ -151,7 +151,10 @@ body     Name, Text, Channel, Icon (the callout.* member rows' labels and help),
   hidden and its close X; the page's controls stay stock, as the settings window's do. Quick Comms
   has no switch of its own for it: EllesmereUI's per-addon entry is the switch, and a skin comes off
   only with a reload. The fallback window (a client without the template) is not painted: the skin
-  is the settings window's, and that window is not it.
+  is the settings window's, and that window is not it. The skin does not wait for Quick Comms to
+  be enabled: the popup and the browser are the settings panel's, which stays up while the addon is
+  disabled (slash-commands-§7), so they open in EllesmereUI's look either way. `/qc diagnostics`
+  says why the skin is or is not on (its `why=`, `docs/debug.md`).
   The skin follows EllesmereUI's third-party switches and its third-party style (a majority vote
   over all its window styles), not its Settings-window skin or its window-skin kill switch, which
   its public API does not expose. So the popup matches the settings window behind it only when
@@ -163,22 +166,21 @@ body     Name, Text, Channel, Icon (the callout.* member rows' labels and help),
 `settings/IconBrowser.lua`: where an icon is picked, opened by Choose icon… (or a click on the icon)
 in the callout popup and on a user group's General tab. It is not a page. Its window is the popup's
 (`settings/ModalWindow.lua`: Blizzard's `SettingsFrameTemplate`, titled "Ka0s Quick Comms", its close
-X, the gold header), 560 × 540, with its own full-screen catcher in the `FULLSCREEN` strata, above the
+X, the gold header), 560 × 550, with its own full-screen catcher in the `FULLSCREEN` strata, above the
 popup and the popup's catcher (`DIALOG`): it is modal to whatever opened it. Only one browser exists,
 built on its first open. The EllesmereUI skin paints it as it paints the popup.
 
 ```
 window   Blizzard's settings window, titled Ka0s Quick Comms                 (its close X)
 header   Choose an icon, the gold rule under it
-tabs     [ Suggested ][ Markers ][ Game icons ][ Glyphs ]   (the library's tab strip)
-toolbar  Game icons: Show (All / Spells / Items). Suggested and Glyphs: Icon color (the
-         swatch). At the right, how many icons the tab holds.
-grid     12 × 7 icons and a scrollbar; the mouse wheel scrolls it
+tabs     [ Markers ][ Game icons ][ Glyphs ]   (the library's tab strip)
+toolbar  Game icons: Show (All / Spells / Items). Glyphs: Icon color (the swatch). At the
+         right, how many icons the tab holds.
+grid     12 × 7 icons and a scrollbar, 10px under the toolbar; the mouse wheel scrolls it
 footer   the selected icon (a glyph in the color) and its name, then Choose and Cancel
 ```
 
-- **Suggested**: the eight raid markers, the built-in sets' icons and the curated LibKa0s glyphs
-  (what the old inline grid offered). **Markers**: the eight raid target markers. **Game icons**: every
+- **Markers**: the eight raid target markers. **Game icons**: every
   icon the macro icon selector offers (the loose lists and then `GetMacroIcons` for spells, the
   same for items, through `Compat.MacroIcons`), as texture ids, each once, filtered All / Spells / Items; until the client has
   loaded its own icon list the tab says so, and the list is read again on the next visit. **Glyphs**:
@@ -188,7 +190,9 @@ footer   the selected icon (a glyph in the color) and its name, then Choose and 
   scrolls, so the thousands of game icons cost no more frames than a short tab.
 - **Pick**: hovering an icon names it (its label, or "Texture id N" for a game icon); a click selects
   it (gold behind it, named in the footer); a double-click or **Choose** chooses it. The stored icon
-  is preselected, and its tab opened and scrolled to it.
+  is preselected, and its tab opened and scrolled to it. No icon, or one no tab lists (a built-in
+  set's spell icon, a typed texture path), opens Markers, the first tab, with nothing selected: no
+  cell could show such an icon selected, and Choose waits for a click.
 - **Icon color**: the swatch opens Blizzard's color picker (above the browser); every glyph in the
   grid and the footer is drawn in the color. Choose hands a glyph its color (white is none) and any
   other icon none.

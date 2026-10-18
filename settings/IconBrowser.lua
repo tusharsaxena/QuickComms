@@ -5,17 +5,20 @@ local addonName, NS = ...
 --
 --     window   settings/ModalWindow.lua's (the callout popup's chrome), title "Ka0s Quick Comms"
 --     header   Choose an icon, the gold rule under it
---     tabs     [ Suggested ][ Markers ][ Game icons ][ Glyphs ]   (the library's tab strip)
---     toolbar  Game icons: Show All / Spells / Items. Suggested and Glyphs: the glyph color swatch.
---              At the right, how many icons the tab holds.
---     grid     COLS x ROWS icons and a scrollbar; the mouse wheel scrolls too
+--     tabs     [ Markers ][ Game icons ][ Glyphs ]   (the library's tab strip)
+--     toolbar  Game icons: Show All / Spells / Items. Glyphs: the glyph color swatch. At the
+--              right, how many icons the tab holds.
+--     grid     COLS x ROWS icons and a scrollbar, GRID_GAP under the toolbar; the mouse wheel
+--              scrolls too
 --     footer   the selected icon (a glyph in the color) and its name, then Choose and Cancel
 --
 -- A click on an icon selects it, a double-click chooses it, and hovering one names it (its label,
 -- or a game icon's texture id). Choose hands the opener the icon and, for a glyph, the color (none
 -- for white), then closes; the opener writes it (the popup's draft, or the group's icon and color as
 -- one act). Cancel, the close X and Escape change nothing. The stored icon is preselected, and its
--- tab opened and scrolled to it.
+-- tab opened and scrolled to it. An icon no tab lists (a built-in set's spell icon, a typed texture
+-- path), or none, opens on Markers, the first tab, with nothing selected: the footer asks for a
+-- click, and Choose waits for one.
 --
 -- THE GRID IS VIRTUALIZED: COLS x ROWS cell buttons are built once and re-dressed from the tab's
 -- list at the scroll offset, so the Game icons tab's thousands of entries cost a few dozen frames.
@@ -45,18 +48,19 @@ local B = Settings.IconBrowser
 B.COLS, B.ROWS = 12, 7
 local COLS, ROWS = B.COLS, B.ROWS
 local CELL, ICON = 40, 32           -- a cell's pitch, and the icon in it
-local WIDTH, HEIGHT = 560, 540
+local WIDTH, HEIGHT = 560, 550
 local STRATA = "FULLSCREEN"
 -- As settings/CalloutPopup.lua restates them: the pages' left inset and the gap under the body.
 local CONTENT_X, BODY_BOTTOM = 12, 12
--- The toolbar's band over the grid. HEIGHT leaves the footer (34) its band under the grid, below
--- the header, a one-row tab strip and the gaps.
-local TOOLBAR_H = 30
+-- The toolbar's band over the grid, and the gap between them (the swatch's row would touch the
+-- grid's first row). HEIGHT leaves the footer (34) its band under the grid, below the header, a
+-- one-row tab strip and the gaps.
+local TOOLBAR_H, GRID_GAP = 30, 10
+B.GRID_TOP = TOOLBAR_H + GRID_GAP
 local GOLD = { 1, 0.82, 0, 0.7 }
 local GRAY = "|cffaaaaaa"
 
 B.TABS = {
-    { key = "suggested", label = L["Suggested"], tooltip = L["The raid markers, the built-in sets' icons and the glyphs callouts use most."] },
     { key = "markers", label = L["Markers"], tooltip = L["The eight raid target markers."] },
     { key = "game", label = L["Game icons"], tooltip = L["Every icon the macro icon picker offers."] },
     { key = "glyphs", label = L["Glyphs"], tooltip = L["Every LibKa0s glyph. A glyph is drawn in the color you pick."] },
@@ -64,13 +68,16 @@ B.TABS = {
 local FILTERS = { all = L["All"], spells = L["Spells"], items = L["Items"] }
 local FILTER_ORDER = { "all", "spells", "items" }
 -- The tabs that hold glyphs, where the toolbar shows the color swatch.
-local SWATCH_TABS = { suggested = true, glyphs = true }
+local SWATCH_TABS = { glyphs = true }
+local FIRST_TAB = B.TABS[1].key
+local TAB_KEYS = {}
+for _, t in ipairs(B.TABS) do TAB_KEYS[t.key] = true end
 
 -- The open request ({ icon, color, onChoose, owner, lift, valid }), nil while closed, and what the
 -- browser shows: the tab, the game filter, the tab's list, the selection, the glyph color, the
 -- first visible row.
 local request
-local tab, filter, list, loaded, selected, color, offset = "suggested", "all", {}, true, nil, nil, 0
+local tab, filter, list, loaded, selected, color, offset = FIRST_TAB, "all", {}, true, nil, nil, 0
 local ctx, area, grid, slider, status, count, filterDD, swatch, preview, nameText, chooseBtn, cancelBtn
 local drawing = false
 B.cells = {}
@@ -280,7 +287,7 @@ end
 
 local function buildGrid()
     grid = CreateFrame("Frame", nil, area)
-    grid:SetPoint("TOPLEFT", area, "TOPLEFT", 0, -TOOLBAR_H)
+    grid:SetPoint("TOPLEFT", area, "TOPLEFT", 0, -B.GRID_TOP)
     grid:SetSize(COLS * CELL, ROWS * CELL)
     grid:EnableMouseWheel(true)
     grid:SetScript("OnMouseWheel", function(_, delta) setOffset(offset - delta) end)
@@ -404,7 +411,9 @@ function B.Open(req)
     if not (H() and H().AceGUI) then return false end
     if not ctx then build() end
     request = req
-    selected = req.icon or nil
+    local home = req.icon ~= nil and Src.TabFor(req.icon) or nil
+    -- An icon no tab lists is not selected: no cell could show it selected.
+    selected = home and req.icon or nil
     color = nil
     if NS.Library.IsGlyph(selected) and req.color and NS.Library.ValidIconColor(req.color) then color = req.color end
     filter = "all"
@@ -412,7 +421,7 @@ function B.Open(req)
     B.catcher:Show()
     B.frame:Show()
     ctx.panel:Show()
-    showTab(selected ~= nil and Src.TabFor(selected) or "suggested", selected)
+    showTab(home or FIRST_TAB, selected)
     return true
 end
 
@@ -423,9 +432,9 @@ function B.Select(icon)
     draw()
 end
 
---- Show tab `key` ("suggested", "markers", "game", "glyphs"), scrolled to the selection when it holds it.
+--- Show tab `key` ("markers", "game", "glyphs"), scrolled to the selection when it holds it.
 function B.SetTab(key)
-    if not request then return end
+    if not (request and TAB_KEYS[key]) then return end
     showTab(key, selected)
 end
 

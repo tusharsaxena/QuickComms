@@ -461,7 +461,7 @@ test("popup: [icons] Choose icon… opens the browser; its Choose writes the dra
     P.find(w, "Button", "Choose icon…"):__fire("OnClick")
     assertTrue(B.IsOpen())
     assertEqual(B.State().owner, "popup")
-    assertEqual(B.State().tab, "suggested", "no icon yet: Suggested")
+    assertEqual(B.State().tab, "markers", "no icon yet: Markers, the first tab")
     B.Select(SKULL)
     assertTrue(B.Choose())
     assertFalse(B.IsOpen())

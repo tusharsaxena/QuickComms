@@ -783,8 +783,6 @@ L["Pick from the raid markers, the game's icons and the LibKa0s glyphs."] = "Pic
 L["The color a LibKa0s glyph is drawn in. Only a glyph takes a color; white is none."] = "The color a LibKa0s glyph is drawn in. Only a glyph takes a color; white is none."
 -- settings/IconBrowser.lua: the icon browser (icon browser spec)
 L["Choose an icon"] = "Choose an icon"
-L["Suggested"] = "Suggested"
-L["The raid markers, the built-in sets' icons and the glyphs callouts use most."] = "The raid markers, the built-in sets' icons and the glyphs callouts use most."
 L["Markers"] = "Markers"
 L["The eight raid target markers."] = "The eight raid target markers."
 L["Game icons"] = "Game icons"

@@ -501,13 +501,14 @@ Total.
 - popup: [icons] an icon typed in that is no glyph drops the draft's color, and Save clears it
 - popup: [icons] Add saves a glyph with its color; a malformed color stays open and names the field
 
-### test_icon_browser.lua (25)
+### test_icon_browser.lua (26)
 
 - icon browser: the window is the popup's chrome, stacked above the popup and its catcher
 - icon browser: tabs in order; the stored icon is preselected and its tab opened
 - icon browser: a click selects, a double-click chooses; Choose hands the opener the icon
 - icon browser: hovering an icon names it, or gives a game icon's texture id
-- icon browser: Suggested is the markers, the built-in sets' icons and the curated glyphs; Markers the eight
+- icon browser: Markers is the eight raid markers, in order; no Suggested list is left
+- icon browser: the grid sits a section gap under the toolbar's row
 - icon browser: Glyphs is every catalog icon, labeled from its key
 - icon browser: Game icons is both macro lists, filtered All / Spells / Items
 - icon browser: the game list not loaded yet says so, and loads on a later visit
@@ -529,7 +530,7 @@ Total.
 - icon browser: Compat.MacroIcons reads the loose lists first, as the macro icon selector does
 - icon browser: Library.IconColorFrom stores a picked color as hex, white as none
 
-### test_eui_skin.lua (9)
+### test_eui_skin.lua (10)
 
 - eui skin: the popup is painted as EllesmereUI paints the settings window when every condition holds
 - eui skin: the icon browser's window is painted the same way, once, when it is built
@@ -537,9 +538,10 @@ Total.
 - eui skin: not painted when any condition fails
 - eui skin: never raises without EllesmereUI, or with one that has no RegisterSkin
 - eui skin: a facade missing a primitive, or one that raises, leaves the popup stock
-- eui skin: waits out a stand-down and paints on the way back up
+- eui skin: paints while the addon is disabled (the popup and the browser are the settings panel's)
 - eui skin: the fallback window (no settings-window template) keeps its older look
 - eui skin: the diagnostics report names its state
+- eui skin: the diagnostics line says, in words, why the skin is or is not on
 
 ### test_groups_when.lua (12)
 
@@ -977,8 +979,8 @@ Total.
 | test_members.lua | 28 |
 | test_editors.lua | 15 |
 | test_callout_popup.lua | 33 |
-| test_icon_browser.lua | 25 |
-| test_eui_skin.lua | 9 |
+| test_icon_browser.lua | 26 |
+| test_eui_skin.lua | 10 |
 | test_groups_when.lua | 12 |
 | test_page_groups.lua | 29 |
 | test_page_pads.lua | 12 |
@@ -1003,4 +1005,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **789** |
+| **Total** | **791** |
