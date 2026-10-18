@@ -332,7 +332,7 @@ Total.
 - share: [review] a pad's or dial's reference to a group the string nests is dropped and counted
 - share: [inherit] a child's Inherit when conditions travels; an old string's child inherits
 
-### test_resolver.lua (11)
+### test_resolver.lua (12)
 
 - resolver: an empty When always matches
 - resolver: each row matches and fails on its own
@@ -345,6 +345,7 @@ Total.
 - resolver: [inherit] a child that inherits is judged by its parent's When, not its own
 - resolver: [inherit] WhenOf names the When that judges a group, and whose it is
 - resolver: [inherit] SurfaceOrder's narrowness reads the When that judges the group
+- resolver: [all] All battlegrounds and All dungeons and raids match the whole kind, the listed ids aside
 
 ### test_builtins.lua (7)
 
@@ -361,7 +362,7 @@ Total.
 - game ids: every battleground set matches only battleground maps, and no map is two sets'
 - game ids: the shipped dungeons are Mythic+ dungeons and the shipped raids are raids
 
-### test_library.lua (76)
+### test_library.lua (77)
 
 - library: Prepare seeds every shipped set as a group, on one pad and one dial, once
 - library: a seeded group is an ordinary group: its fields, When, callouts and origin
@@ -439,6 +440,7 @@ Total.
 - library: [restore] a new pad holds the seeded sets still top-level, in shipped order
 - library: [restore] SeededBattleground names a seeded battleground set's key; a node, another set and a copy have none
 - library: [inherit] a new or seeded group inherits its parent's When; Duplicate and an untick keep false
+- library: [all] ValidWhen takes all on the instance and battleground rows, and on no other
 
 ### test_members.lua (28)
 
@@ -580,7 +582,7 @@ Total.
 - eui skin: the diagnostics report names its state
 - eui skin: the diagnostics line says, in words, why the skin is or is not on
 
-### test_groups_when.lua (16)
+### test_groups_when.lua (17)
 
 - when: Toggle adds and removes one value, drops an emptied row, and never mutates its input
 - when: [review 5] the key-level range refuses lowest above highest; clearing both drops the row
@@ -598,8 +600,9 @@ Total.
 - when: [drawers] Summary gives the key level and the id rows a short phrase
 - when: [drawers] SelectAll ticks every value the row offers, and never mutates its input
 - when: [inherit] ActiveText judges an inheriting group by its parent's When
+- when: [all] SetAll turns the whole kind on and off and keeps the listed ids; Summary names it
 
-### test_page_groups.lua (57)
+### test_page_groups.lua (59)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists every group by name, a seeded set among them, active ones dotted
@@ -658,6 +661,8 @@ Total.
 - groups page: [inherit] a seeded battleground's nodes carry no green dot in the open world
 - groups page: [inherit] General's Inherit when conditions sits beside Parent group, grayed out with no parent
 - groups page: [inherit] an inheriting group's When tab shows its parent's conditions, read-only
+- groups page: [all] the battleground drawer's All battlegrounds dims and locks the list, which it keeps
+- groups page: [all] a gap separates the Every condition line from the first drawer
 
 ### test_page_pads.lua (13)
 
@@ -1044,17 +1049,17 @@ Total.
 | test_channels.lua | 8 |
 | test_bake.lua | 12 |
 | test_share.lua | 35 |
-| test_resolver.lua | 11 |
+| test_resolver.lua | 12 |
 | test_builtins.lua | 7 |
 | test_gameids.lua | 2 |
-| test_library.lua | 76 |
+| test_library.lua | 77 |
 | test_members.lua | 28 |
 | test_editors.lua | 17 |
 | test_callout_popup.lua | 38 |
 | test_icon_browser.lua | 32 |
 | test_eui_skin.lua | 10 |
-| test_groups_when.lua | 16 |
-| test_page_groups.lua | 57 |
+| test_groups_when.lua | 17 |
+| test_page_groups.lua | 59 |
 | test_page_pads.lua | 13 |
 | test_page_dials.lua | 17 |
 | test_page_share.lua | 12 |
@@ -1077,4 +1082,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **863** |
+| **Total** | **868** |

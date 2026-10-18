@@ -382,8 +382,8 @@ your edits, in its place, with no stock set beside it. `/reload` again → nothi
 is added. Result:
 
 **EDIT-22. The When drawers.** Groups → a group of yours → When → the active-now line, then the gray
-line "Every condition you set must match. A condition left as Any does not limit the group.", then
-eleven header bars, closed, in this order: Content, Instance, Difficulty, Key level, Group, Leader
+line "Every condition you set must match. A condition left as Any does not limit the group.", a
+clear gap under it, then eleven header bars, closed, in this order: Content, Instance, Difficulty, Key level, Group, Leader
 or assist, Class, Specialization, Role, Character, Battleground. Each has a right-pointing chevron,
 its name in white and "Any" in gray at its right edge; there is no enable checkbox anywhere. They
 look like the settings panel (its fonts, gold, dark fills and thin borders), not like another
@@ -397,7 +397,11 @@ every difficulty is ticked and the summary lists them, cut with an ellipsis befo
 `10` → "10 or higher"; Highest `15` → "10 to 15"; Highest `5` is refused with a line and the box goes
 back. Instance: an add box and Add the instance you are in, no Select all; add two dungeons → "2
 instances"; Clear (Any) empties the list. Specialization with a class picked → Select all ticks that
-class's specs only. Open every drawer, scroll to the bottom, open Battleground and tick a box in
+class's specs only. Battleground: "All battlegrounds" sits on top of the drawer, unticked; add one
+battleground, then tick it → the summary reads "All battlegrounds", the add box, the list and both
+buttons are dimmed and do nothing on a click; in any battleground the group is active; untick → the
+battleground you added is still listed and the summary names it. Instance has "All dungeons and
+raids" the same way; Character has no such box. Open every drawer, scroll to the bottom, open Battleground and tick a box in
 it, then Select all and Clear (Any) → the page stays where you scrolled each time, never jumping to
 the top. Click an open header → its drawer closes and its summary stays. Pick another
 group and come back → the drawers you left open are still open, and the other group's are its own;

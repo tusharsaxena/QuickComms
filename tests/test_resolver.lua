@@ -150,3 +150,21 @@ test("resolver: [inherit] SurfaceOrder's narrowness reads the When that judges t
     -- red under: Narrowness of the child's own (empty) When
     assertEqual(table.concat(R.SurfaceOrder({ "wide", "kid" }, active, groups, true), ","), "kid,wide")
 end)
+
+test("resolver: [all] All battlegrounds and All dungeons and raids match the whole kind, the listed ids aside", function()
+    local R = res()
+    local bg = { battleground = { all = true, [2107] = true } }
+    -- red under: a battleground row that only matches its listed ids
+    assertTrue((R.Matches(bg, { content = "battleground", instanceID = 727 })), "any battleground")
+    assertFalse((R.Matches(bg, { content = "arena", instanceID = 1505 })), "not an arena")
+    assertFalse((R.Matches(bg, { content = "openWorld" })), "not the open world")
+    local inst = { instances = { all = true } }
+    assertTrue((R.Matches(inst, MPLUS)), "a key")
+    assertTrue((R.Matches(inst, { content = "dungeon", instanceID = 1 })), "a dungeon")
+    assertTrue((R.Matches(inst, { content = "raid", instanceID = 2 })), "a raid")
+    assertFalse((R.Matches(inst, { content = "delve", instanceID = 3 })), "not a delve")
+    assertFalse((R.Matches(inst, { content = "openWorld" })), "not the open world")
+    -- A whole kind is a condition like any other row, not a specific place.
+    assertEqual(R.Narrowness({ battleground = { all = true, [2107] = true } }), 1)
+    assertEqual(R.Narrowness({ battleground = { [2107] = true } }), 101)
+end)

@@ -30,6 +30,13 @@ R.TOKENS = {
     role = { "TANK", "HEALER", "DAMAGER" },
 }
 
+--- The value an id row (instances, battleground) stores for its whole kind: All dungeons and raids,
+--- All battlegrounds. It matches beside the row's listed ids, which it keeps for an untick.
+R.ALL = "all"
+
+-- The kinds of place All dungeons and raids matches.
+local DUNGEON_OR_RAID = { dungeon = true, mythicPlus = true, raid = true }
+
 -- A character matches its Name-Realm without regard to case: a name typed in lower case still
 -- names the character UnitFullName reports.
 local function characterMatches(v, character)
@@ -50,8 +57,14 @@ end
 
 local CHECK = {
     content      = function(v, s) return v[s.content] == true end,
-    instances    = function(v, s) return s.instanceID ~= nil and v[s.instanceID] == true end,
-    battleground = function(v, s) return s.content == "battleground" and s.instanceID ~= nil and v[s.instanceID] == true end,
+    instances    = function(v, s)
+        if v[R.ALL] == true then return DUNGEON_OR_RAID[s.content] == true end
+        return s.instanceID ~= nil and v[s.instanceID] == true
+    end,
+    battleground = function(v, s)
+        if s.content ~= "battleground" then return false end
+        return v[R.ALL] == true or (s.instanceID ~= nil and v[s.instanceID] == true)
+    end,
     difficulty   = function(v, s) return s.difficulty ~= nil and v[s.difficulty] == true end,
     keyLevel     = function(v, s)
         if s.content ~= "mythicPlus" or type(s.keyLevel) ~= "number" then return false end
@@ -108,13 +121,15 @@ function R.ActiveGroups(groups, s)
     return active
 end
 
---- How narrow a When is: the number of set rows, plus 100 for a specific instance or battleground.
+--- How narrow a When is: the number of set rows, plus 100 for a specific instance or battleground
+--- (not for a whole kind, R.ALL, which is a condition like any other row).
 function R.Narrowness(when)
     if type(when) ~= "table" then return 0 end
     local n = 0
     for _, row in ipairs(R.ROWS) do
         if isSet(row, when[row]) then
-            n = n + ((row == "instances" or row == "battleground") and 101 or 1)
+            local specific = (row == "instances" or row == "battleground") and when[row][R.ALL] ~= true
+            n = n + (specific and 101 or 1)
         end
     end
     return n

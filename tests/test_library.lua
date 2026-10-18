@@ -1200,3 +1200,13 @@ test("library: [inherit] a new or seeded group inherits its parent's When; Dupli
     assertEqual(p.groups[copy].inheritWhen, false, "the copy keeps the untick")
     assertTrue(Lib.TEMPLATES.group.inheritWhen, "the row's default is on")
 end)
+
+test("library: [all] ValidWhen takes all on the instance and battleground rows, and on no other", function()
+    local NS = T.bootAddon()
+    local Lib = NS.Library
+    -- red under: an id row that takes positive whole ids only
+    assertTrue((Lib.ValidWhen({ battleground = { all = true } })))
+    assertTrue((Lib.ValidWhen({ instances = { all = true, [2526] = true } })))
+    assertFalse((Lib.ValidWhen({ spec = { all = true } })))
+    assertFalse((Lib.ValidWhen({ characters = { all = true } })))
+end)
