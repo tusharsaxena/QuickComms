@@ -465,7 +465,7 @@ Total.
 - editors: Snapshot is the preview's while Preview as is on
 - editors: [icons] a row's glyph is drawn in its color; a row with none is white
 
-### test_callout_popup.lua (30)
+### test_callout_popup.lua (33)
 
 - popup: Add opens blank with Smart group
 - popup: edit opens filled in
@@ -476,11 +476,14 @@ Total.
 - popup: Cancel on edit writes nothing
 - popup: Save with an empty name stays open and writes nothing
 - popup: Save takes the text typed into a box without Enter
-- popup: a pick, a token or a seam write keeps the text typed without Enter
+- popup: a pick or a seam write keeps the text typed without Enter
 - popup: the callout deleted under an open popup closes it; a late Save writes nothing
 - popup: closing the settings window cancels
 - popup: Escape and a profile change cancel
-- popup: Insert a token appends to the draft's text
+- popup: there is no token dropdown; an info glyph sits right of the Text label
+- popup: the info glyph's tooltip lists the tokens, {group1} to {group8} only for a raid channel
+- popup: the preview is headed Preview, a gap above Cancel then Save
+- callout helpers: TokenHelp folds {group1}-{group8} into one line and names {spell:ID}
 - popup: [icons] Choose icon… opens the browser; its Choose writes the draft's icon, not the callout
 - popup: [icons] a glyph chosen with a color: the draft carries both; the swatch writes the draft's color
 - popup: [icons] the swatch writes the draft on a drag tick (OnValueChanged) with no confirm, as OK leaves it
@@ -973,7 +976,7 @@ Total.
 | test_library.lua | 66 |
 | test_members.lua | 28 |
 | test_editors.lua | 15 |
-| test_callout_popup.lua | 30 |
+| test_callout_popup.lua | 33 |
 | test_icon_browser.lua | 25 |
 | test_eui_skin.lua | 9 |
 | test_groups_when.lua | 12 |
@@ -1000,4 +1003,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **786** |
+| **Total** | **789** |

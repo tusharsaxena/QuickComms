@@ -260,6 +260,7 @@ local function build()
         local f = frame
         while type(f) == "table" do
             if type(f.__name) == "string" and f.__name:find("^QuickComms") then return true end
+            if f.__qcOurs then return true end
             f = f.__parent
         end
         return false
@@ -293,6 +294,49 @@ local function build()
             self.__w, self.__h = w, h
             return self
         end
+    end
+
+    -- AceGUI's EditBox draws its label as a font string of its own (`w.label`, GameFontNormalSmall,
+    -- anchored across the top of the widget): the kit's fake keeps only the label's text. Here the
+    -- label is a region that shows what SetLabel gave it, answers a face of size 10 (GetFont) and a
+    -- width of 6 per letter (GetStringWidth), and frames made on the box's frame are dressed, so a
+    -- glyph anchored beside the label (settings/CalloutPopup.lua) records its points and size.
+    M.__libs["AceGUI-3.0"]:RegisterWidgetType("EditBox", function()
+        local w = M.__makeAceGUIWidget("EditBox")
+        local label = region("FontString")
+        function label.GetFont() return "Fonts\\FRIZQT__.TTF", 10, "" end
+        function label.GetStringWidth(r) return 6 * #(r.__text or "") end
+        w.label = label
+        w.frame.__qcOurs = true
+        function w:SetLabel(v)
+            self.labelText = v
+            label:SetText(v)
+            return self
+        end
+        return w
+    end)
+
+    -- GameTooltip, recorded (fidelity rule 3): the owner and anchor SetOwner names, and the lines
+    -- since, each { left, right } (SetText and AddLine have no right side). SetOwner starts a new
+    -- tooltip, as the client's does.
+    local tip = M.GameTooltip
+    tip.__lines = {}
+    function tip.SetOwner(t, owner, anchor)
+        t.__owner, t.__anchor, t.__lines = owner, anchor, {}
+        return t
+    end
+    function tip.ClearLines(t) t.__lines = {} return t end
+    function tip.SetText(t, text)
+        t.__lines = { { text } }
+        return t
+    end
+    function tip.AddLine(t, text)
+        t.__lines[#t.__lines + 1] = { text }
+        return t
+    end
+    function tip.AddDoubleLine(t, left, right)
+        t.__lines[#t.__lines + 1] = { left, right }
+        return t
     end
 
     local function actsOn(button, down)
