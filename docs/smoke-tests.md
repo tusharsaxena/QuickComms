@@ -397,7 +397,9 @@ every difficulty is ticked and the summary lists them, cut with an ellipsis befo
 `10` → "10 or higher"; Highest `15` → "10 to 15"; Highest `5` is refused with a line and the box goes
 back. Instance: an add box and Add the instance you are in, no Select all; add two dungeons → "2
 instances"; Clear (Any) empties the list. Specialization with a class picked → Select all ticks that
-class's specs only. Click an open header → its drawer closes and its summary stays. Pick another
+class's specs only. Open every drawer, scroll to the bottom, open Battleground and tick a box in
+it, then Select all and Clear (Any) → the page stays where you scrolled each time, never jumping to
+the top. Click an open header → its drawer closes and its summary stays. Pick another
 group and come back → the drawers you left open are still open, and the other group's are its own;
 `/qc profile Other` and back → all closed; `/reload` → all closed, every condition kept. In combat
 the panel cannot be opened; with it open on the pull, the combat cover lies over the tab and no

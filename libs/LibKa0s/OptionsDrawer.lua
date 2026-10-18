@@ -255,22 +255,6 @@ function lib.__AttachDrawer(O)
     head:Show()
   end
 
-  --- Run `fn`, a structural re-render of `page`, with the page's scroll offset carried across it.
-  --- ClearScroll releases the page's rows, and the render's first AddChild runs the ScrollFrame's
-  --- LayoutFinished -> FixScroll synchronously while the content is one row tall, which sets the
-  --- offset to 0 (OptionsScroll.lua's FixScroll, the "content fits" branch). A toggle is
-  --- navigation, so the player stays where they were; FixScroll clamps an offset past the new end.
-  local function keepScroll(page, fn)
-    local sc = page.scroll
-    local st = sc and (sc.status or sc.localstatus)
-    local off = st and st.offset
-    fn()
-    if st and off then
-      st.offset = off
-      if sc.FixScroll then sc:FixScroll() end
-    end
-  end
-
   local function wireHead(head, ctx, spec, open)
     local page = rawget(ctx, "__drawerPage") or ctx
     head:SetScript("OnClick", function()
@@ -283,7 +267,9 @@ function lib.__AttachDrawer(O)
         print(lib.STRINGS.BUTTON_FAILED:format(tostring(err)))
         return
       end
-      keepScroll(page, function() O.RefreshPanel(page, true) end)
+      -- RefreshPanel carries the scroll offset across the re-render (Options.lua's keepScroll): a
+      -- toggle is navigation, so the player stays where they were.
+      O.RefreshPanel(page, true)
     end)
     head:SetScript("OnEnter", function()
       if not (GameTooltip and spec.tooltip) then return end

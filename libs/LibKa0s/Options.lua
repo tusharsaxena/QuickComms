@@ -1128,6 +1128,25 @@ function lib:New(d)
     end)
   end
 
+  --- Run `fn`, a structural re-render of a page on screen, with the page's scroll offset carried
+  --- across it (minor 29). ClearScroll releases the page's rows, and the render's first AddChild
+  --- runs the ScrollFrame's LayoutFinished -> FixScroll synchronously while the content is one row
+  --- tall, which sets the offset to 0 (OptionsScroll.lua's FixScroll, the "content fits" branch).
+  --- A refresh redraws what the player is already looking at -- a write inside an open drawer, a
+  --- row appearing -- so they stay where they were; FixScroll clamps an offset past the new end.
+  --- Only here: a page drawn on its show and a tab click (OptionsTabs.lua) are a change of
+  --- subject, and start at the top.
+  local function keepScroll(ctx, fn)
+    local sc = ctx.scroll
+    local st = sc and (sc.status or sc.localstatus)
+    local off = st and st.offset
+    fn()
+    if st and off then
+      st.offset = off
+      if sc.FixScroll then sc:FixScroll() end
+    end
+  end
+
   local function refreshCtx(ctx, structural)
     -- No renderer declared: the legacy shape, refreshed ungated exactly as it always was. In
     -- combat too: refreshers only put widgets back to stored values, which is what a refused write
@@ -1137,7 +1156,7 @@ function lib:New(d)
       ctx._dirty = true
       return
     end
-    if structural then renderCtx(ctx) else runRefreshers(ctx) end
+    if structural then keepScroll(ctx, function() renderCtx(ctx) end) else runRefreshers(ctx) end
   end
 
   function O.RefreshAllPanels()

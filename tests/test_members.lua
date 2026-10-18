@@ -536,3 +536,11 @@ test("members: [inherit] group.inheritWhen is a member row: a bool stores and an
     NS.addon:OnSlashCommand("set group.inheritWhen true")
     assertTrue(NS.db.profile.groups[child].inheritWhen, "the CLI reaches it")
 end)
+
+test("members: [inherit] the Enabled tooltip names whose When a sub-group is shown by", function()
+    -- red under: "Show this group wherever its When matches", which reads wrong for a group that
+    -- inherits: it is shown wherever its parent's When matches, whatever its own says.
+    local NS = T.enableAddon()
+    local row = NS.SchemaRuntime.FindRow("group.enabled")
+    assertEqual(row.desc, "Show this group wherever its When matches (its parent's, while Inherit when conditions is ticked). Off keeps the group and its place on every pad.")
+end)

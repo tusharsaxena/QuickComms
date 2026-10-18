@@ -209,7 +209,7 @@ local ROWS = {
       normalize = Lib.IconColorValue, validate = check(iconColorCheck("group")) },
     { path = "group.enabled", instance = "group", type = "bool", default = T.group.enabled,
       page = "groups", group = GENERAL, label = L["Enabled"],
-      desc = L["Show this group wherever its When matches. Off keeps the group and its place on every pad."] },
+      desc = L["Show this group wherever its When matches (its parent's, while Inherit when conditions is ticked). Off keeps the group and its place on every pad."] },
     { path = "group.openInto", instance = "group", type = "bool", default = T.group.openInto,
       page = "groups", group = GENERAL, label = L["Open the dial on this group"],
       desc = L["When this is the first active group on a Comms Dial, the dial opens straight on its ring, and the middle of the dial goes back to the groups."] },

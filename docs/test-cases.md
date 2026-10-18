@@ -440,7 +440,7 @@ Total.
 - library: [restore] SeededBattleground names a seeded battleground set's key; a node, another set and a copy have none
 - library: [inherit] a new or seeded group inherits its parent's When; Duplicate and an untick keep false
 
-### test_members.lua (27)
+### test_members.lua (28)
 
 - members: a callout field is written through the seam by instance id, and announced once
 - members: with no id the seam writes the selected member, else the first the page lists, else refuses
@@ -469,6 +469,7 @@ Total.
 - members: [icons] Library.SetIcon writes the icon and its color as one act
 - members: [icons] `/qc reset` clears a color; a group page's Defaults keeps it with the icon
 - members: [inherit] group.inheritWhen is a member row: a bool stores and announces, anything else is refused
+- members: [inherit] the Enabled tooltip names whose When a sub-group is shown by
 
 ### test_editors.lua (17)
 
@@ -1047,7 +1048,7 @@ Total.
 | test_builtins.lua | 7 |
 | test_gameids.lua | 2 |
 | test_library.lua | 76 |
-| test_members.lua | 27 |
+| test_members.lua | 28 |
 | test_editors.lua | 17 |
 | test_callout_popup.lua | 38 |
 | test_icon_browser.lua | 32 |
@@ -1076,4 +1077,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **862** |
+| **Total** | **863** |
