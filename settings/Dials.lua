@@ -190,8 +190,7 @@ function DD.DepthWarning(id)
     if not dial or dial.mode == "flat" then return nil end
     local names = {}
     for _, gid in ipairs(dial.groups) do
-        local g = NS.Library.Group(gid)
-        local short = g and type(g.origin) == "string" and g.origin:match("^bi%.bg%.([^.]+)$")
+        local short = NS.Library.SeededBattleground(gid)
         local preset = short and #NS.Library.Children(gid) > 0 and NS.Preview.FindPreset("bg:" .. short)
         if preset and preset.snapshot then
             local snap = preset.snapshot

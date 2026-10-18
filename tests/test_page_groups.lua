@@ -204,7 +204,7 @@ test("groups page: Reuse draws the group part in muted gold and the callout name
     assertEqual(G.MUTED_GOLD, "|cffc9a66b")
     assertEqual(byId[kick].label, "|cffc9a66bMine|r: Kick")
     -- a seeded node is a group like any other: its own name is the group part
-    assertEqual(byId[T.seeded(NS, "bi.bg.ab.stables.inc1")].label, "|cffc9a66bStables|r: INC 1")
+    assertEqual(byId[T.seeded(NS, "bi.bg.ab.stables.inc1")].label, "|cffc9a66bArathi Basin: Stables|r: INC 1")
 end)
 
 test("groups page: Reuse sorts the whole list by group, then callout, ignoring case", function()
@@ -242,6 +242,20 @@ test("groups page: Reuse numbers same-named copies so each entry is unambiguous"
     assertEqual(labels[kick], "Mine: Kick")
     assertEqual(labels[copy], "Mine: Kick (2)")
     assertEqual(colored[copy], "|cffc9a66bMine|r: Kick (2)")
+end)
+
+test("groups page: [review] Reuse names a node's callout with its battleground, so two sets' Farm nodes read apart", function()
+    local NS = open()
+    local abFarm, dwgFarm = T.seeded(NS, "bi.bg.ab.farm"), T.seeded(NS, "bi.bg.dwg.farm")
+    local a, d = NS.Library.Group(abFarm).callouts[1], NS.Library.Group(dwgFarm).callouts[1]
+    local mine = NS.Library.CreateGroup({ name = "Mine" })
+    local labels = {}
+    for _, e in ipairs(NS.addon.Settings.Groups.ReusableCallouts(mine)) do labels[e.id] = e.plain end
+    local name = NS.Library.Callout(a).name
+    -- red under: label a child group's callouts with the child's name alone in G.ReusableCallouts
+    assertEqual(labels[a], "Arathi Basin: Farm: " .. name)
+    assertEqual(labels[d], "Deepwind Gorge: Farm: " .. NS.Library.Callout(d).name)
+    assertTrue(labels[a] ~= labels[d])
 end)
 
 test("groups page: the Reuse row stretches the dropdown and puts Add at the right edge, as tall as it", function()
@@ -933,6 +947,22 @@ test("groups page: [preview table] a group holding groups shows a titled table f
     -- red under: a list per table (the page keeps one, so the others' boxes would never be reclaimed)
     assertEqual(#lists, 1, "one box list for the tab")
     assertEqual(lists[1].rows, 4, "a box per callout, across the tables")
+end)
+
+test("groups page: [review] a parent with no callouts of its own and one child titles the child's table", function()
+    local NS, _, P = open(MPLUS)
+    local top = NS.Library.CreateGroup({ name = "Top" })
+    local kid = NS.Library.CreateGroup({ name = "Only child",
+        callouts = { NS.Library.CreateCallout({ name = "K1", text = "K1", channel = "party" }) } })
+    NS.SchemaRuntime.Set("group.parent", top, kid)
+    pick(NS, top)
+    local w = P.tab("groups", "preview")
+    -- red under: title a block only when there are several sections (G.PreviewBlocks)
+    assertTrue(P.find(w, "Heading", "Only child") ~= nil, "the one table is the child's, and says so")
+    assertTrue(P.find(w, "Label", "K1") ~= nil)
+    pick(NS, kid)
+    w = P.tab("groups", "preview")
+    assertNil(P.find(w, "Heading", "Only child"), "a group's own table has no title")
 end)
 
 test("groups page: [preview table] a situation change rewrites a row's text in place and lays the table out again", function()

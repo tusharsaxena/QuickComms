@@ -547,6 +547,23 @@ test("share: [nesting] a picked parent brings its children, and the import nests
     assertTrue(map[parent] ~= parent)
 end)
 
+test("share: [review] a child picked alone travels without its parent: nothing dropped, and it arrives top-level", function()
+    local NS, SH = boot()
+    local Lib = NS.Library
+    local parent = Lib.CreateGroup({ name = "Raid night" })
+    local child = Lib.CreateGroup({ name = "Boss 1" })
+    Lib.CreateCalloutIn(child, KICK)
+    NS.SchemaRuntime.Set("group.parent", parent, child)
+    local payload = SH.Collect({ group = { [child] = true } })
+    assertNil(payload.groups[parent], "the parent stays home")
+    -- red under: exportMember writing `parent` for a parent the payload does not carry
+    assertNil(payload.groups[child].parent)
+    local res = SH.Validate(SH.Decode(SH.Encode(payload)))
+    assertEqual(res.dropped, 0, "the addon's own string reports nothing dropped")
+    local _, map = Lib.Import(res)
+    assertNil(NS.db.profile.groups[map[child]].parent, "the copy is top-level")
+end)
+
 test("share: [nesting] a parent the string does not carry, itself, or one inside another is dropped and counted", function()
     local NS, SH = boot()
     local res = SH.Validate(bundle({ groups = {

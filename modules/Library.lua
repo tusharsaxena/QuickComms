@@ -9,7 +9,7 @@ local _, NS = ...
 -- seed data. Each profile is given them once as ordinary user groups and callouts under fresh ids,
 -- a battleground's nodes as groups inside its set; each seeded member keeps the shipped id it came
 -- from (`origin`), and a node its compass wind (`compass`). Neither is a tag or a lock: only Library
--- reads `origin` (which shipped sets a profile was given, seededSets, and what Restore puts back).
+-- reads `origin` (what Restore puts back, and SeededBattleground for the dial's depth warning).
 -- ONE OWNER (2026-10-17-callouts-owned-by-groups-design.md): each user callout id sits in exactly
 -- one user group's list. Adding a callout to a group adds a copy, removing one deletes it, and a
 -- deleted group takes its callouts with it.
@@ -128,12 +128,12 @@ local function byOrigin(set, origin)
     return found
 end
 
---- The user group, else the user callout, seeded from shipped id `origin` ("bi.mplus",
---- "bi.mplus.lust"), or nil when the profile has none (never seeded, or deleted since).
+--- The battleground key ("ab") of user group `id` when it was seeded from a shipped battleground
+--- set ("bi.bg.ab"), a node not included; nil for any other group (the dial's depth warning).
 --- @return string|nil
-function Lib.ByOrigin(origin)
-    local p = P()
-    return byOrigin(p.groups, origin) or byOrigin(p.callouts, origin)
+function Lib.SeededBattleground(id)
+    local g = P().groups[id]
+    return g and type(g.origin) == "string" and g.origin:match("^bi%.bg%.([^.]+)$") or nil
 end
 
 -- Whether any user group's list holds `calloutId`.

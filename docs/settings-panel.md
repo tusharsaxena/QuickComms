@@ -127,7 +127,9 @@ user group, so there is no Callouts page and no shared callout.
   ScrollFrame's clip rect exactly, and options-ui-§8 insets a cell-filling button so its right
   border is not shaved.
 - **Reuse callout** is a dropdown of every callout the player could copy, each as
-  `<group>: <callout>` (a seeded set's callouts among them; there is no built-in section), less
+  `<group>: <callout>` (a group inside another as `<parent>: <group>: <callout>`, so two
+  battlegrounds' same-named nodes read apart; a seeded set's callouts among them; there is no
+  built-in section), less
   this group's own callouts, as one list sorted by group, then callout, ignoring case (on the
   plain text). A stock callout the player deleted comes back through Restore built-in groups, not
   here. The group part is drawn in a muted gold (`c9a66b`, LibKa0s' debug-tag tone), the

@@ -291,7 +291,7 @@ Total.
 - bake: a typed %t counts as live
 - bake: [phase 5] CleanText is the sanitizer short of the escape; Sanitize is CleanText, then the escape
 
-### test_share.lua (32)
+### test_share.lua (33)
 
 - share: a string is !QC1! then printable text, and decodes back to the same payload
 - share: [review 1] a pasted string may wrap and carry spaces; a cut-short one is damaged and imports nothing
@@ -324,6 +324,7 @@ Total.
 - share: [icons] a glyph's color travels; an old string arrives untinted; a bad color is dropped and counted
 - share: [icons] an export carries each member's color, and the string round-trips it
 - share: [nesting] a picked parent brings its children, and the import nests them under the new copy
+- share: [review] a child picked alone travels without its parent: nothing dropped, and it arrives top-level
 - share: [nesting] a parent the string does not carry, itself, or one inside another is dropped and counted
 
 ### test_resolver.lua (8)
@@ -426,7 +427,7 @@ Total.
 - library: [restore] a set deleted with its nodes kept brings back only what is missing
 - library: [restore] a set nested in another group keeps its place; its nodes stay out
 - library: [restore] a new pad holds the seeded sets still top-level, in shipped order
-- library: [restore] ByOrigin finds a seeded group or callout, and a copy is never one
+- library: [restore] SeededBattleground names a seeded battleground set's key; a node, another set and a copy have none
 
 ### test_members.lua (26)
 
@@ -577,7 +578,7 @@ Total.
 - when: [final 6] a typed character takes the client's case; the Resolver matches one in any case
 - when: [final 2, 11] ResolveValue maps a typed value onto the token or id its row stores, or refuses it
 
-### test_page_groups.lua (45)
+### test_page_groups.lua (47)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists every group by name, a seeded set among them, active ones dotted
@@ -589,6 +590,7 @@ Total.
 - groups page: Reuse draws the group part in muted gold and the callout name in white
 - groups page: Reuse sorts the whole list by group, then callout, ignoring case
 - groups page: Reuse numbers same-named copies so each entry is unambiguous
+- groups page: [review] Reuse names a node's callout with its battleground, so two sets' Farm nodes read apart
 - groups page: the Reuse row stretches the dropdown and puts Add at the right edge, as tall as it
 - groups page: Add callout spans the row to EDGE_INSET short of the right edge, as Reuse's Add
 - groups page: Reuse + Add puts an independent copy at the end
@@ -622,6 +624,7 @@ Total.
 - groups page: [nesting] a pad's and a dial's Add a group leave out a child
 - groups page: [preview table] Preview is the active-now line, then a table: each callout's name beside what it sends
 - groups page: [preview table] a group holding groups shows a titled table for its own callouts, then one per child
+- groups page: [review] a parent with no callouts of its own and one child titles the child's table
 - groups page: [preview table] a situation change rewrites a row's text in place and lays the table out again
 - groups page: [preview table] a group with no callouts says so, with no table
 
@@ -1007,7 +1010,7 @@ Total.
 | test_tokens.lua | 8 |
 | test_channels.lua | 8 |
 | test_bake.lua | 12 |
-| test_share.lua | 32 |
+| test_share.lua | 33 |
 | test_resolver.lua | 8 |
 | test_builtins.lua | 7 |
 | test_gameids.lua | 2 |
@@ -1018,7 +1021,7 @@ Total.
 | test_icon_browser.lua | 26 |
 | test_eui_skin.lua | 10 |
 | test_groups_when.lua | 12 |
-| test_page_groups.lua | 45 |
+| test_page_groups.lua | 47 |
 | test_page_pads.lua | 13 |
 | test_page_dials.lua | 17 |
 | test_page_share.lua | 12 |
@@ -1041,4 +1044,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **827** |
+| **Total** | **830** |

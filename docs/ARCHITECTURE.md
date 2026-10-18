@@ -142,7 +142,8 @@ parent is kept only when the string carries it and it is top-level there), and t
 fields through the seam (`modules/Share.lua` only decodes and checks). The shipped sets
 (`NS.BuiltIns`) are seed data: each profile is given them once as ordinary user groups and callouts
 under fresh ids, a battleground's nodes as groups inside its set, each seeded member keeping its
-shipped id as `origin` (neither a tag nor a lock; only Library reads it) and a node its compass
+shipped id as `origin` (neither a tag nor a lock; only Library reads it: Restore, and
+`Library.SeededBattleground` for the dial's depth warning) and a node its compass
 wind; `profile.seededSets` records the shipped sets and nodes the profile was given. Restore
 built-in groups (`Library.RestoreBuiltins`, one act) puts back, as fresh members, every seeded set,
 node and callout whose origin the profile no longer has, and changes nothing the player has. The

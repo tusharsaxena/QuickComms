@@ -260,8 +260,9 @@ stands. Edit again, change it → click the close X → the old text stands. Edi
 settings window (or `/qc profile Other`) → the popup is gone with it, nothing saved. Result:
 
 **EDIT-11. Reuse makes a copy.** On group A's Callouts tab, open Reuse callout → your
-callouts read `<group>: <callout>` (none of group A's own: they are left out) and the built-in ones
-`<set>: <callout>`, all in one alphabetical list (by group, then callout); the group part is a
+callouts read `<group>: <callout>` (none of group A's own: they are left out), a seeded set's
+`<set>: <callout>` and a battleground node's `<set>: <node>: <callout>` (Arathi Basin's and
+Deepwind Gorge's Farm read apart), all in one alphabetical list (by group, then callout); the group part is a
 muted gold, the callout's name white. The dropdown runs across the row with Add at its right
 edge, Add as tall as the dropdown, and Add callout above spans the same width: the right edges of
 Add callout and Add line up, a hair (2 px) short of the list's boxes, and **both buttons' right

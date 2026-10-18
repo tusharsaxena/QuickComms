@@ -41,8 +41,9 @@ a deleted one is never seeded again by `Prepare`. A stored profile from before t
 converted once by migration step 3 (`Library.SeedFromOverlay`, `docs/schema.md`).
 
 Restore built-in groups (the Groups page's General tab) calls `Library.RestoreBuiltins`, one act in
-`Library.Batch`: for each shipped set, node and callout, `Library.ByOrigin` asks whether the profile
-still has a member with that origin; what is missing is seeded again, fresh, and a set that came back
+`Library.Batch`: each shipped set and node is matched by origin against the profile's groups, and
+each shipped callout by origin among the callouts of its seeded group; what is missing is seeded
+again, fresh, and a set that came back
 goes at the end of every pad and dial. One `LIBRARY_CHANGED` rebuilds the surfaces and repaints the
 pages, and the page prints one line with the counts.
 

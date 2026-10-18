@@ -115,7 +115,8 @@ Recorded as each task makes them (plan ledger task in brackets).
 - [T2] **Origin key: `origin`, the shipped id** (`"bi.mplus"`, `"bi.mplus.lust"`), on every seeded
   group and callout; a seeded node also keeps its `compass` wind, so the dial still pins node
   wedges to their winds. Neither is a member row, a tag or a lock: Library writes them when it
-  seeds and only Library reads `origin` (Library.ByOrigin). A Duplicate, a Reuse copy and an
+  seeds and only Library reads `origin` (RestoreBuiltins, and Library.SeededBattleground for the
+  dial's depth warning; review round 1 replaced the test-only Library.ByOrigin with it). A Duplicate, a Reuse copy and an
   import keep neither, and Share does not carry them (an exported set's nodes arrive unpinned).
 - [T2] **`profile.seededSets`** (`{ [shipped id] = true }`, sets and nodes) replaces the overlay
   (`profile.builtins`) and every surface's `seenBuiltins`. Prepare seeds a shipped set the profile
@@ -152,7 +153,7 @@ Recorded as each task makes them (plan ledger task in brackets).
   built-in When tab used it). Settings.Editors.Open stays (a tested, combat-gated page jump), with
   no caller now.
 - [T2] **The dial's three-rings-deep warning** knows a seeded battleground set by its origin
-  (`bi.bg.<key>`) while it holds groups.
+  (`bi.bg.<key>`, read through Library.SeededBattleground) while it holds groups.
 - [T3] **Groups page parity needed no new code in T3**: T2 already removed every built-in branch
   (General, Callouts, When), so a seeded group draws the same tab set as any group; the existing
   page tests (a seeded set's General, Callouts table with Add/Reuse/drag/remove, editable When)

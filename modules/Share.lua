@@ -630,14 +630,16 @@ function SH.FieldsOf(kind, id)
     return out
 end
 
-local function exportMember(kind, id, m)
+-- A member's payload entry. A child's `parent` travels only when the parent is picked too (`want`),
+-- so a child picked alone arrives top-level with nothing dropped.
+local function exportMember(kind, id, m, want)
     if kind == "callout" then
         return { name = m.name, text = m.text, channel = m.channel, icon = m.icon or nil, iconColor = m.iconColor or nil }
     end
     if kind == "group" then
         return { name = m.name, icon = m.icon or nil, iconColor = m.iconColor or nil, callouts = copy(m.callouts),
             when = copy(m.when), openInto = m.openInto == true, enabled = m.enabled ~= false,
-            parent = NS.Library.IsChild(id) and m.parent or nil }
+            parent = NS.Library.IsChild(id) and want.group[m.parent] and m.parent or nil }
     end
     return { name = m.name, enabled = m.enabled ~= false, groups = copy(m.groups), fields = SH.FieldsOf(kind, id) }
 end
@@ -653,7 +655,7 @@ function SH.Collect(pick)
         local set, out = p[spec.key], {}
         for id in pairs(want[spec.kind]) do
             if set[id] then
-                out[id] = exportMember(spec.kind, id, set[id])
+                out[id] = exportMember(spec.kind, id, set[id], want)
                 n = n + 1
             end
         end

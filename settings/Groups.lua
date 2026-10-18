@@ -184,7 +184,8 @@ end
 local MUTED_GOLD = "|cffc9a66b"
 G.MUTED_GOLD = MUTED_GOLD
 
---- What Reuse callout offers group `gid`: every callout ("<its group>: <name>") but `gid`'s own (a
+--- What Reuse callout offers group `gid`: every callout ("<its group>: <name>", a child group as
+--- "<its parent>: <it>", so two battlegrounds' same-named nodes read apart) but `gid`'s own (a
 --- seeded set's among them, 2026-10-18-builtins-as-groups-design.md), as one list sorted by group,
 --- then name, case-insensitively, on the plain text. Entries that would read alike are numbered
 --- ("<name> (2)") so each is unambiguous. Each entry is { id, label (the group part in MUTED_GOLD),
@@ -194,7 +195,11 @@ function G.ReusableCallouts(gid)
     local owner, own = {}, {}
     for id, g in pairs(p.groups) do
         for _, cid in ipairs(g.callouts or {}) do
-            owner[cid] = owner[cid] or g.name or id
+            if not owner[cid] then
+                local name = g.name or id
+                local parent = NS.Library.IsChild(id) and p.groups[g.parent]
+                owner[cid] = parent and L["%s: %s"]:format(parent.name or g.parent, name) or name
+            end
             if id == gid then own[cid] = true end
         end
     end
@@ -399,7 +404,7 @@ local PREVIEW_HEADER = { name = L["Callout"], text = L["What it sends here"] }
 
 --- What the Preview tab tabulates for group `gid` (Surfaces.Sections: the group; or, for a group
 --- holding groups, its own callouts when it has any, then each child): one block per section,
---- titled when there are several, each row a callout's name and icon and its first preview line
+--- titled when there are several or the one is a child's, each row a callout's name and icon and its first preview line
 --- (Callouts.PreviewLines), read when drawn and again on each live refresh.
 function G.PreviewBlocks(gid)
     local sections = NS.Surfaces.Sections(gid, NS.Library.Group, { children = NS.Library.Children })
@@ -416,7 +421,10 @@ function G.PreviewBlocks(gid)
                     end }
             end
         end
-        blocks[#blocks + 1] = { title = #sections > 1 and sec.title or nil, rows = rows }
+        -- Titled when there are several, or when the one section is a child's (a parent with no
+        -- callouts of its own and one child), so the table never reads as the parent's own.
+        local titled = #sections > 1 or sec.groupId ~= gid
+        blocks[#blocks + 1] = { title = titled and sec.title or nil, rows = rows }
     end
     return blocks
 end
