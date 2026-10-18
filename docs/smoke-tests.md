@@ -22,7 +22,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
 | SEND-1..5 | Send | Secure sends in keys and on bosses, the spam guard |
 | PAD-1..8 | Pad | The Comms Pad |
-| EDIT-1..18 | Editors | The Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser and glyph colors, Reuse and the glyph lists), Comms Pad and Share pages, Preview as…, Why is this showing? |
+| EDIT-1..21 | Editors | The Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser and glyph colors, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups, the Preview table), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
 | DIAL-1..12 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial |
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
 | LOOK-1..2 | Look | The Comms Pad's font, border and background |
@@ -182,11 +182,15 @@ When tab tick Content, then M+. Enter a key → the pad shows the new group firs
 an `Inc` chip; click it → the party sees "INC" with a skull. Leave the key → the group is gone from
 the pad. Result:
 
-**EDIT-2. Customize a built-in (the phase 3 exit).** Groups → pick "M+ (generic) (built-in)" → it
-says it is read-only and offers Customize; click it → a line says the copy took its place, the page
-now edits "M+ (generic) (custom)", and the pad (in a key) shows the copy where the set was. Rename a
-callout in the copy → the chip's label changes. Share → Built-in shows the set's button as "Edit the
-copy". Result:
+**EDIT-2. A built-in set is an ordinary group (the phase 3 exit, rewritten 2026-10-18).** Groups →
+pick "M+ (generic)" → the picker shows no "(built-in)" tag, and the page draws the same tabs as a
+group of yours, nothing read-only. General: Name, Enabled, Open the dial on this group, Parent group,
+the icon with Choose icon…, Duplicate and Delete, then Restore built-in groups; no Customize and no
+read-only line. Callouts: the callout table, exactly as a group of yours draws it (Add callout, Reuse
+callout with Add, a boxed row per callout with its handle, icon, name and channel, edit and remove
+glyphs); no Show checkboxes. When: the editable condition rows, each with its checkbox, Content →
+M+ ticked; not read-only text. Rename a callout in the popup and Save → in a key, the chip's label
+changes. Untick Enabled → in a key the set is gone from the pad; tick it again. Result:
 
 **EDIT-3. Preview as….** Out of combat, in the open world: Groups → General → Preview as → Arena →
 the pad shows the arena set with PREVIEW on its header and `Preview: Arena`; clicking a chip sends
@@ -194,19 +198,26 @@ nothing; its tooltip says so. Close the settings → the preview ends. `/qc prev
 the raid set; pull something → the preview ends with one line and the live chips return. Result:
 
 **EDIT-4. Why is this showing?.** In a key, hover the pad's header → the tooltip lists "M+
-(generic) (built-in): Content" (and any user group, with its rows); with a `/raid` callout on the pad
+(generic): Content" (and any other group, with its rows); with a `/raid` callout on the pad
 outside a raid, the last line names the lock. Behavior → Explain why groups show off → no tooltip.
 `/qc why` prints the same lines per pad. Result:
 
 **EDIT-5. The Comms Pad page.** Comms Pad → Layout: Orientation Vertical, Chip style Label only,
 Scale 1.5 → the pad redraws each time. Type X `200`, Y `-100` → it moves; Reset this pad's position
 → it returns. Look → Visibility Only out of combat → it hides on the pull with no error. Groups:
-drag a group to the top → it comes first on the pad. New pad → a second pad appears with every
-built-in set; Delete pad (Yes) → it is gone. Result:
+drag a group to the top → it comes first on the pad. New pad → a second pad appears holding every
+built-in group you still have (top-level, in shipped order); Delete pad (Yes) → it is gone. Result:
 
-**EDIT-6. The Built-in tab.** Share → Built-in: untick "Raid (generic)" → in a raid it is gone from
-the pad. Choose callouts on "M+ (generic)" → the Groups page opens on its Callouts tab; untick
-"Lust" → the chip is gone in a key. Defaults (top right) → every set and callout is back. Result:
+**EDIT-6. Restore built-in groups (rewritten 2026-10-18; the Share page's Built-in tab is gone).**
+Share has two tabs, Export and Import. Groups → "Raid (generic)" → Delete (Yes) → it is gone from the
+picker and, in a raid, from the pad. On "M+ (generic)"'s Callouts tab remove "Lust" (Yes). General →
+Restore built-in groups (no question asked) → one chat line counts the groups and callouts that came
+back; "Raid (generic)" is in the picker again and last on every pad's and dial's Groups list, and
+"Lust" is the last row of M+ (generic)'s Callouts. Click Restore again → "nothing to restore", and
+nothing is added. Delete "Lumber Mill" (inside "Arathi Basin") → Restore → it is back, indented under
+Arathi Basin in the picker, and in Arathi Basin (or Preview as → Arathi Basin) its wedge is on its
+wind, SW, again. Rename "M+ (generic)" → Restore leaves it as it is and adds no second M+ set. With
+every group deleted, the "No groups yet" General still offers Restore built-in groups. Result:
 
 **EDIT-7. An edit during combat.** With a user callout on the pad (its id is `c<n>`: `/qc get
 callout.name c1` names the first), in combat type `/qc set callout.text c1 Incoming now` → no error,
@@ -258,7 +269,8 @@ borders are whole** (not shaved by the page's edge). In the list, every row's ha
 glyphs sit centered in its box, and the edit and remove glyphs are small and close to the box's
 right edge (the same on Comms Pad → Groups and Comms Dial → Groups). Pick one of group B's callouts → nothing is added yet; click Add → it is A's
 last row. Edit the copy's text and Save → B's original is unchanged (check its row or its chip).
-Reuse a built-in callout → a copy you can edit. Result:
+The list has no built-in section: "M+ (generic): Lust" is listed like any other group's callout;
+reuse it → a copy you can edit, and the M+ group's Lust is unchanged. Result:
 
 **EDIT-12. The remove glyphs.** On a group's Callouts tab, a row's remove glyph (the red no-entry
 sign; its tooltip reads Remove, "Delete this callout. Asks first.") → the confirmation names the callout;
@@ -289,8 +301,8 @@ Click Choose icon… → the icon browser opens **over** the popup, which is dim
 the popup does nothing), and looks like it: the settings window's background and border, "Ka0s
 Quick Comms" in the top bar, Blizzard's close X, the gold "Choose an icon" header. The tabs read
 Markers, Game icons, Glyphs (no Suggested); the callout's icon is selected (gold behind it) on its
-own tab, scrolled into view, and named in the footer; a callout with no icon, or a built-in's spell
-icon, opens on Markers with nothing selected. On Glyphs, the Icon color row sits clear of the first
+own tab, scrolled into view, and named in the footer; a callout with no icon, or a seeded set's
+spell icon, opens on Markers with nothing selected. On Glyphs, the Icon color row sits clear of the first
 row of icons (a gap between them), and it is gone on Markers. Markers shows the eight markers; Glyphs every
 LibKa0s glyph, white, each named on hover (`Arrow circle down`-style names); the count at the right
 follows the tab. Click an icon → it is selected and named in the footer, nothing else changes; Cancel
@@ -333,6 +345,39 @@ and hover again → one {group1} … {group8} line appears (no Save needed). Mov
 hides. Cancel, then open another settings page with text boxes (a group's General tab) and open
 the popup again a few times → no stray "i" appears beside any other box, and the popup shows
 exactly one. Result:
+
+**EDIT-19. A group inside another.** Make two groups of yours, `My keys` (on the pad, with a
+callout and a When that matches where you are) and `Kicks`. On Kicks' General tab, Parent group →
+the dropdown lists None and the top-level groups, not Kicks itself; pick My keys → Kicks leaves every
+pad's and dial's Groups list, Add a group there does not offer it, and the Groups picker lists it
+indented right under My keys. Give Kicks a callout and a When that matches → the pad shows My keys'
+own section, then a section titled Kicks; the dial (test mode or its key) shows My keys' callouts,
+then a Kicks wedge that opens its ring. Change Kicks' When so it does not match → its section and
+ring go, My keys stays. On My keys' General tab, Parent group is grayed out; its tooltip names
+Kicks. Duplicate Kicks → the chat line says the copy is inside My keys. Delete My keys → the question
+says the groups inside it become top-level groups in its place; Yes → Kicks and its copy are
+top-level, on every pad and dial where My keys was. `/qc set group.parent none` on a selected child
+makes it top-level; `/qc set group.parent <its own id>` is refused, with a line saying why.
+Result:
+
+**EDIT-20. The Preview table.** Groups → "M+ (generic)" → Preview → the active-now line, then a gold
+header row, "Callout" and "What it sends here", then one box per callout like the Callouts tab's rows
+(switch between the two tabs: the same fill and border, and the same left and right edges): the
+callout's icon (in its color) and name on the left, what it sends here on the right, or, outside a
+key, why it sends nothing. Give a callout a long text → its row grows, the text wraps inside the
+right cell, and the name and the text stay centered in the row. Preview as → an M+ dungeon → each
+row's text changes in place to the baked line. "Arathi Basin" → a titled table per node (Stables,
+Lumber Mill, …), each with its header. A new group with no callouts → "This group has no callouts
+yet." and no table. Result:
+
+**EDIT-21. An older profile converts once.** On a profile saved before the built-in sets became
+groups (the owner's, with a hidden built-in callout, one set unticked on the old Built-in tab, and
+one customized copy), `/reload` → no Lua error; the Groups picker lists every built-in set by name,
+with no "(built-in)" tag and no duplicates; Comms Pad → Groups and Comms Dial → Groups list them in
+the same places as before; the unticked set is a group with Enabled unticked; the hidden callout is
+missing from its group (Restore built-in groups brings it back); the customized copy is there with
+your edits, in its place, with no stock set beside it. `/reload` again → nothing changes and nothing
+is added. Result:
 
 ## Dial
 
@@ -483,7 +528,8 @@ wedge on the Comms Dial shows it, and the General tab's icon follows. With that 
 `/qc set group.icon 136012` still sets it. Click the red clear glyph beside Choose icon… → the
 General tab's icon is the question mark, the wedge shows no icon, and the clear glyph goes idle; in
 the popup, a callout with an icon → clear glyph → the icon is the question mark, Save → the row and
-the chip show no icon. A built-in set's General tab has no Choose icon…. Result:
+the chip show no icon. A built-in set's General tab ("M+ (generic)") has the same Icon row and
+Choose icon…: a glyph chosen there shows on its wedge. Result:
 
 ## Battlegrounds
 
@@ -545,6 +591,6 @@ from the client, so this check needs a non-English client pass. Result:
 |---|---|---|
 | INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..2, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet; LOC-1 re-enumerated in phase 5 and owed a non-English client pass |
 | SEND-1..5, PAD-1..8 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet; PAD-8 added in phase 5 (audit QC-07) |
-| EDIT-1..18 | Phase 3: the editors | No client pass recorded yet; EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17); EDIT-9, 13 and ICON-1 rewritten and EDIT-14..17 added with the icon browser and glyph colors (2026-10-18); EDIT-9 rewritten and EDIT-18 added when the token dropdown became the Text label's info glyph (2026-10-18); EDIT-13, 14 and ICON-1 rewritten when the Suggested tab went and the skin stopped waiting for the addon to be enabled (2026-10-18); EDIT-9, 18 and ICON-1 rewritten when the Icon boxes went and the popup took its two-column layout (2026-10-18); EDIT-9, 11 and ICON-1 rewritten with the clear glyph, the Preview gap and the buttons' 2 px inset (2026-10-18) |
+| EDIT-1..21 | Phase 3: the editors | No client pass recorded yet; EDIT-2, 4, 5, 6, 11, 14 and ICON-1 rewritten and EDIT-19..21 added when the built-in sets became seeded groups, groups nested and the Preview tab became a table (2026-10-18); EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17); EDIT-9, 13 and ICON-1 rewritten and EDIT-14..17 added with the icon browser and glyph colors (2026-10-18); EDIT-9 rewritten and EDIT-18 added when the token dropdown became the Text label's info glyph (2026-10-18); EDIT-13, 14 and ICON-1 rewritten when the Suggested tab went and the skin stopped waiting for the addon to be enabled (2026-10-18); EDIT-9, 18 and ICON-1 rewritten when the Icon boxes went and the popup took its two-column layout (2026-10-18); EDIT-9, 11 and ICON-1 rewritten with the clear glyph, the Preview gap and the buttons' 2 px inset (2026-10-18) |
 | DIAL-1..12 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
 | SHARE-1..6, LOOK-1..2, ICON-1, BG-1..2, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; LOOK-2's in-combat step goes through `/qc set` |

@@ -208,6 +208,8 @@ DropWatcher's restriction readers are the template.
 
 ### 5.1 SavedVariables
 
+*Superseded in part 2026-10-18 by 2026-10-18-builtins-as-groups-design.md: `builtins` (the overlay) and every surface's `seenBuiltins` are gone; the shipped sets are seeded into `callouts` and `groups` as ordinary members (each keeping its shipped id as `origin`), `seededSets` records which were given, and a group may carry `parent` (one level). Migration step 3 converts a stored profile.*
+
 `QuickCommsDB` is AceDB, with profiles. `defaults/Profile.lua` holds every default literal.
 
 ```lua
@@ -705,8 +707,11 @@ NS.BuiltIns.callouts["bi.mplus.lust"] = { name = L["Lust"], text = L["Lust on th
 **Battleground node structure** (brainstorm §8): each battleground group has one child group per node, and each node's sub-ring is INC 1 / INC 2 / INC 3 / INC Many / Clear / Help.
 - The callout text is built from a template, `"INC 3 {node}"`, with the node name baked in.
 - These are the only built-in groups with children. The `children` field on a group is used **only by built-ins** in v0.1.0. User nesting is a future issue.
+  *Superseded 2026-10-18 by 2026-10-18-builtins-as-groups-design.md: any group may sit inside a top-level group (its `parent`, one level), and a seeded battleground set holds its nodes that way.*
 
 ### 12.2 Behavior
+
+*Superseded 2026-10-18 by 2026-10-18-builtins-as-groups-design.md: the shipped sets are seed data. Each profile is given them once as ordinary, editable user groups and callouts, placed where the built-in sets were; the overlay (enabled, hidden), the show/hide checkboxes and Customize are gone, and Restore built-in groups (the Groups page) brings back what the player deleted.*
 
 **On by default (D7):** the prepare pass puts every built-in group in the default pad's and dial's lists.
 
@@ -731,6 +736,8 @@ It is one act: the pads rebuild once. A set on no surface is customized onto non
 ### 13.1 Pages
 
 *Superseded 2026-10-17 by 2026-10-17-callouts-owned-by-groups-design.md: there is no Callouts page; a user group's Callouts tab makes, edits (in a Save/Cancel popup), reuses (as a copy) and removes its callouts.*
+
+*Superseded in part 2026-10-18 by 2026-10-18-builtins-as-groups-design.md: every group, a seeded built-in set among them, has the same tabs (no read-only built-in branch, no Customize); General has Parent group and Restore built-in groups; Preview is a table of each callout's name beside what it sends; Share has no Built-in tab.*
 
 **Blizzard Settings ▸ AddOns ▸ Ka0s Quick Comms**, built with LibKa0s-Options. The body is built lazily, and a library breadcrumb sits on every page.
 
@@ -800,6 +807,8 @@ While the addon is disabled, feature verbs answer with the standard one-line ref
 ## 15. Share (export and import)
 
 *Superseded 2026-10-17 by 2026-10-17-callouts-owned-by-groups-design.md: Export has no callout checkboxes, a callout travels inside its group, and an import gives each group its own copy and leaves out a callout no group holds; the payload format is unchanged.*
+
+*Amended 2026-10-18 by 2026-10-18-builtins-as-groups-design.md: a seeded set exports as any group; a picked parent brings its children and an import nests them under the new copy; a `bi.` reference in an older string is a dropped reference.*
 
 **Format:** `!QC1!` + `LibDeflate:EncodeForPrint(LibDeflate:CompressDeflate(LibSerialize:Serialize(payload)))`.
 

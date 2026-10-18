@@ -24,25 +24,31 @@ Exactly two (savedvariables-§4):
 | `behavior.spamGuard` | `1.0` | Behavior | seconds between sends, 0.6-2.0 (phase 2's send engine; no hard guard in combat, spec §9.2) |
 | `behavior.dropNotes`, `whyTooltips`, `lockdownChip` | `true` | Behavior | the `[QC]` drop note, the why tooltips, the lockdown chip |
 | `behavior.sounds`, `autoPromote` | `false` | Behavior | sounds; a narrower When floats up within a surface's order |
-| `nextId` | `1` | `Library.NewId` | the id counter for user callouts and groups |
-| `callouts` | `{}` | `Library` (membership and order); member fields through the seam (member rows) | user callouts keyed by id: name, text, channel, icon, and `iconColor` (a LibKa0s glyph's color, `"rrggbb"` lowercase; absent or `false` for none); each id sits in exactly one user group's `callouts` list |
-| `groups` | `{}` | `Library` (membership and order); member fields through the seam (member rows) | user groups keyed by id: name, icon, `iconColor` (as a callout's), callouts (the group owns them: no other group holds the same id), when, openInto, enabled |
-| `builtins` | `{}` | `Library` (membership and order); member fields through the seam (member rows) | the overlay on the shipped sets, keyed on the top-level built-in id: enabled, hidden |
-| `pads` | `{}` | `Library` (membership and order); member fields through the seam (member rows) | surfaces keyed by id: groups (ordered), `seenBuiltins`, and the surface's own settings; a pad's `look` holds visibility, fade, faded alpha and the Look groups' fields (font, size, color and its companion, flags, shadow; border style, thickness, color and its companion; background and its companion) |
-| `dials` | `{}` | `Library` (membership and order); member fields through the seam (`dial.name\|enabled\|mode\|slices\|openAt\|point\|key`) | surfaces keyed by id: groups (ordered), `seenBuiltins`, and the dial's own settings; a new dial stores `interaction = "relaxed"`, and `delay`, `tapAction` and `depth` are kept but nothing reads them |
+| `nextId` | `1` | `Library.NewId` | the id counter for every user id (`c<n>`, `g<n>`, `p<n>`, `d<n>`); past the seeded sets' ids after the first load |
+| `callouts` | `{}` | `Library` (membership and order); member fields through the seam (member rows) | user callouts keyed by id: name, text, channel, icon, and `iconColor` (a LibKa0s glyph's color, `"rrggbb"` lowercase; absent or `false` for none); each id sits in exactly one user group's `callouts` list. A seeded callout also keeps `origin`, the shipped callout id it was copied from (`"bi.mplus.lust"`), which only Library reads |
+| `groups` | `{}` | `Library` (membership and order); member fields through the seam (member rows) | user groups keyed by id: name, icon, `iconColor` (as a callout's), callouts (the group owns them: no other group holds the same id), when, openInto, enabled, and `parent` (the top-level group it sits inside; absent or `false` for none, one level only). A seeded group also keeps `origin` (the shipped set or node id, `"bi.mplus"`, `"bi.bg.ab.mine"`), and a seeded battleground node its `compass` wind; neither is a member row, and a copy keeps neither |
+| `seededSets` | `{}` | `Library` only (seeding, Restore, migration step 3) | the shipped set and node ids this profile was given as groups, `{ [id] = true }`: Prepare seeds a set not listed here (one a later version ships), and never seeds again a set the player deleted |
+| `pads` | `{}` | `Library` (membership and order); member fields through the seam (member rows) | surfaces keyed by id: groups (ordered, top-level groups only: a child shows with its parent), and the surface's own settings; a pad's `look` holds visibility, fade, faded alpha and the Look groups' fields (font, size, color and its companion, flags, shadow; border style, thickness, color and its companion; background and its companion) |
+| `dials` | `{}` | `Library` (membership and order); member fields through the seam (`dial.name\|enabled\|mode\|slices\|openAt\|point\|key`) | surfaces keyed by id: groups (ordered, top-level groups only), and the dial's own settings; a new dial stores `interaction = "relaxed"`, and `delay`, `tapAction` and `depth` are kept but nothing reads them |
 | `pads[id].point` | absent (the pad sits 150 px below the center) | the `pad.point` member row: the drag strip, the X/Y boxes, Reset position | the saved anchor, the positional array `{ point, relativePoint, x, y }` |
 | `dials[id].point` | absent (the dial opens at the center) | the `dial.point` member row: the X/Y boxes, Reset position | the saved anchor, the positional array `{ point, relativePoint, x, y }` |
 | `dials[id].key` | absent (`false`: no key) | the `dial.key` member row: the Comms Dial page's key capture, `/qc set dial.key` | the dial's key, upper-case (`SHIFT-G`); bound as an override binding, never in WoW's own bindings |
 | `padOrder`, `dialOrder` | `{}` | `Library` only | display order of the surfaces |
-| `seeded` | `false` | `Library.Prepare` | true once the default pad and dial exist |
+| `seeded` | `false` | `Library.Prepare` | true once the default pad and dial exist (and the shipped sets are seeded into them) |
 
-**Member rows** address a member's fields through the seam (`settings/SchemaMembers.lua`): `callout.name|text|channel|icon|iconColor`, `group.name|icon|iconColor|enabled|openInto|when`, `pad.name|enabled|groupsAs`, `pad.layout.orientation|columns|growth|style|scale|spacing|width`, `pad.point`, `pad.look.visibility|fade|fadeAlpha`, the twelve Look rows `pad.look.font|fontSize|fontColor|useClassColorFont|fontFlags|fontShadow|borderStyle|borderSize|borderColor|useClassColorBorder|background|useClassColorBackground` (composed by the options library; the colors are the `color` row type), `dial.name|enabled|mode|slices|openAt|point|key`, `builtin.enabled|hidden`. They are not AceDB defaults; `Library.TEMPLATES` is their shape. A `callout.*` row is addressed by the callout's id alone (no page selects a callout): its `page = "callouts"` is the `/qc list` heading, not a registered panel page. An icon is a texture path (a LibKa0s glyph or a raid marker) or a texture id (a number: a game icon from the macro icon lists); `false` is none. `callout.iconColor` and `group.iconColor` default to `false` (none: the glyph is drawn white) and take six hex digits (typed text may carry `#`, spaces or capitals; it is stored lowercase), only on a member whose icon is a LibKa0s glyph; an icon write that leaves a colored member without a glyph clears its color in the same act. Both are reset-exempt with the icon rows (`settings/Schema.lua`): a named `/qc reset` clears the color, a page's Defaults keeps it.
+**Member rows** address a member's fields through the seam (`settings/SchemaMembers.lua`): `callout.name|text|channel|icon|iconColor`, `group.name|icon|iconColor|enabled|openInto|parent|when`, `pad.name|enabled|groupsAs`, `pad.layout.orientation|columns|growth|style|scale|spacing|width`, `pad.point`, `pad.look.visibility|fade|fadeAlpha`, the twelve Look rows `pad.look.font|fontSize|fontColor|useClassColorFont|fontFlags|fontShadow|borderStyle|borderSize|borderColor|useClassColorBorder|background|useClassColorBackground` (composed by the options library; the colors are the `color` row type), `dial.name|enabled|mode|slices|openAt|point|key`. They are not AceDB defaults; `Library.TEMPLATES` is their shape. A `callout.*` row is addressed by the callout's id alone (no page selects a callout): its `page = "callouts"` is the `/qc list` heading, not a registered panel page. An icon is a texture path (a LibKa0s glyph or a raid marker) or a texture id (a number: a game icon from the macro icon lists); `false` is none. `callout.iconColor` and `group.iconColor` default to `false` (none: the glyph is drawn white) and take six hex digits (typed text may carry `#`, spaces or capitals; it is stored lowercase), only on a member whose icon is a LibKa0s glyph; an icon write that leaves a colored member without a glyph clears its color in the same act. Both are reset-exempt with the icon rows (`settings/Schema.lua`): a named `/qc reset` clears the color, a page's Defaults keeps it. `group.parent` takes a group id, or `false` (`none` or empty text on the CLI) for none; `Library.ValidParent` refuses itself, a group that is not a top-level user group, and any parent for a group that holds groups. Its write takes the group off every pad and dial in the same act (`Library.SettleParent`). It is reset-exempt too.
 
-`modules/Library.lua` is the one writer of every structural key above (architecture-§5); built-ins
-are shipped data in `NS.BuiltIns`, never copied into the profile. `Library.Prepare` is the load
-pass, run after `RunMigrations` on `OnInitialize` and on every profile event: it seeds, appends new
-built-ins once per surface, normalizes malformed shapes, drops a malformed stored `iconColor` from
-any user callout or group, repairs `padOrder` / `dialOrder`, and keeps
+`modules/Library.lua` is the one writer of every structural key above (architecture-§5). The
+shipped sets in `NS.BuiltIns` are seed data: a profile is given them once as ordinary groups and
+callouts (fresh ids from `nextId`; each group's callouts take their ids before it, a set's nodes
+after it, so the nodes keep their shipped order), placed on the default pad and dial, a battleground's
+nodes inside its set. `Library.Prepare` is the load
+pass, run after `RunMigrations` on `OnInitialize` and on every profile event: it makes the default
+pad and dial and seeds the sets once, seeds a set a later version ships (one `seededSets` does not
+list) at the end of every pad and dial, normalizes malformed shapes, drops a malformed stored
+`iconColor` from any user callout or group, drops a parent that is gone, the group itself or a group
+inside another (judged on the parents as stored) and takes any child off every surface, repairs
+`padOrder` / `dialOrder`, and keeps
 the ownership rule: a callout a second group holds is replaced there by a fresh copy with equal
 fields, and a callout no group holds is deleted, each counted as a repair. A second run changes
 nothing.
@@ -75,7 +81,18 @@ Phase 5 adds `share` (the Share page's ticks, `pick`, per group, pad and dial, a
 `Library.Prepare` makes a profile that predates them whole.
 Step 2 (phase 4, `perProfile`): the generic battleground set below the per-battleground sets on every
 pad and dial (`Library.MoveGenericBattlegroundLast`), so a battleground's node set can be the first
-active group and the dial opens into it. `NS.SCHEMA_VERSION` is 2.
+active group and the dial opens into it.
+Step 3 (2026-10-18, `perProfile`, `Library.SeedFromOverlay`): the built-in overlay becomes seeded
+groups. On a stored profile that has its surfaces (`seeded`) and no `seededSets` yet, every set is
+seeded as an ordinary group and takes the set's place on every pad and dial that listed it; a set
+that was off is a group that is off; its hidden callouts are left out (Restore built-in groups brings
+them back); a customized set is not seeded (its copy, a user group already, keeps its place) and
+counts as given; a node or stale `bi.` reference on a surface is dropped; `profile.builtins` and every
+surface's `seenBuiltins` go. A profile never prepared is left to `Library.Prepare`, which seeds it as a
+new one, and one that already has `seededSets` is left alone, so the step runs once.
+`NS.SCHEMA_VERSION` is 3.
+No schema step for nested groups (2026-10-18): a group without `parent` is top-level, and
+`Library.Prepare` drops a bad one.
 No schema step in phase 5: `Library.Prepare` fills a stored pad's missing layout and look fields from
 the defaults (`fillShape`), so a pad saved before the Look groups reads like a new one.
 No schema step for callouts owned by groups (2026-10-17) either: `Library.Prepare` enforces the

@@ -22,8 +22,41 @@ suspend takes the same latch's `perf` hold.
 ## Today: a profile event
 
 AceDB's switch, copy or reset → `reloadProfile` (`core/QuickComms.lua`): the migrations,
-`Library.Prepare()` (seed, append newly shipped built-ins, repair the registry, lift `nextId`), a panel
-refresh, the latch re-read from the incoming profile's `enabled`, then `NS.MSG.PROFILE_CHANGED`.
+`Library.Prepare()` (the default pad and dial and the seeded sets once, a newly shipped set seeded,
+the registry repaired, a bad parent dropped, `nextId` lifted), a panel refresh, the latch re-read
+from the incoming profile's `enabled`, then `NS.MSG.PROFILE_CHANGED`.
+
+## Today: the built-in sets are seeded
+
+The shipped sets (`NS.BuiltIns`, `defaults/BuiltIns*.lua`) are seed data. A profile `Library.Prepare`
+has never prepared (a new or a reset one) gets the default pad and dial, then every shipped set, in
+shipped order, as ordinary user groups and callouts under fresh ids from `nextId`: each group's
+callouts take their ids before it, and a battleground's nodes come after their set as groups inside
+it (`parent`), so `Library.Children` keeps the shipped node order. Each seeded member keeps its
+shipped id as `origin`, a node its `compass` wind, and `profile.seededSets` records every set and
+node given. The top-level sets go on the default pad and dial. From then on they are ordinary groups:
+every edit, delete and duplicate is the player's, and nothing at draw time reads `NS.BuiltIns` for
+them. A set a later version ships is seeded by the next `Prepare` at the end of every pad and dial;
+a deleted one is never seeded again by `Prepare`. A stored profile from before the seeding is
+converted once by migration step 3 (`Library.SeedFromOverlay`, `docs/schema.md`).
+
+Restore built-in groups (the Groups page's General tab) calls `Library.RestoreBuiltins`, one act in
+`Library.Batch`: for each shipped set, node and callout, `Library.ByOrigin` asks whether the profile
+still has a member with that origin; what is missing is seeded again, fresh, and a set that came back
+goes at the end of every pad and dial. One `LIBRARY_CHANGED` rebuilds the surfaces and repaints the
+pages, and the page prints one line with the counts.
+
+## Today: a group inside another
+
+A group's `parent` (the `group.parent` row) puts it inside a top-level group, one level deep
+(`Library.ValidParent`). The write's `onChange` runs `Library.SettleParent` and `Library.Touch` in
+one `Library.Batch`, taking the group off every pad and dial. A rebuild draws a parent where the
+surface lists it: `Surfaces.BuildPlan` gives a pad a section for the parent's own callouts (when it
+has any), then one section per child that the Resolver finds active, in `Library.Children`'s order;
+`Surfaces.BuildDialPlan` gives a dial the parent's own callouts first, then a node ring per active
+child (pinned to the compass winds when every child has one and the parent has no callouts of its
+own). The parent's When and Enabled gate the whole family. Deleting a parent (`Library.DeleteGroup`)
+makes its children top-level groups, in its place on every pad and dial, in one act.
 
 ## Today: a restriction or combat edge
 
@@ -58,7 +91,7 @@ The checkbox, `/qc test` and the launcher entry call `Preview.SetTestMode`. It i
 
 ## Today: an editor writes a member
 
-A widget on an editor page (or `/qc set group.name …`) writes a member row through the seam: `resolveRoot` finds the member (`Library.Member`) by the instance argument or the page's selection (a callout only by its id: `/qc set callout.text <id> …`), the row validates and stores the field, and its `onChange` calls `Library.Touch`, which sends `LIBRARY_CHANGED`. `Surfaces.Request` rebuilds the pads (in combat: queued, with the stale hint). A name, Enabled or When write (`Editors.STRUCTURAL`), or a membership change, repaints every editor page once on the next frame; any other field write refreshes the widgets and the live lines in place. Creating, deleting, duplicating, reordering and Customize are Library's own operations and end the same way. An act of several writes (Customize, New group, a page's Defaults) runs inside `Library.Batch`, which sends one `LIBRARY_CHANGED` for the whole act, so the pads rebuild once.
+A widget on an editor page (or `/qc set group.name …`) writes a member row through the seam: `resolveRoot` finds the member (`Library.Member`) by the instance argument or the page's selection (a callout only by its id: `/qc set callout.text <id> …`), the row validates and stores the field, and its `onChange` calls `Library.Touch`, which sends `LIBRARY_CHANGED`. `Surfaces.Request` rebuilds the pads (in combat: queued, with the stale hint). A name, Enabled or When write (`Editors.STRUCTURAL`), or a membership change, repaints every editor page once on the next frame; any other field write refreshes the widgets and the live lines in place. Creating, deleting, duplicating, reordering and restoring are Library's own operations and end the same way. An act of several writes (New group, Restore built-in groups, a Parent group write with the surfaces it leaves, a page's Defaults) runs inside `Library.Batch`, which sends one `LIBRARY_CHANGED` for the whole act, so the pads rebuild once.
 
 ## Today: the callout popup saves
 
@@ -80,7 +113,7 @@ A rebuild (`Surfaces.ApplyAll`, out of combat) builds each enabled dial's plan (
 
 ## Today: sharing
 
-Export: the ticks (`NS.State.share.pick`) go to `Share.Collect`, which adds what they need (a pad's or a dial's user groups, a group's callouts) and reads each pad's and dial's portable fields through the seam (`Share.FieldsOf`); `Share.Encode` makes the `!QC1!` string, and the copy window shows it selected. A callout travels only inside its group: Export has no callout ticks. Import: the pasted string goes to `Share.Check` (decode, version, schema checks, a callout no imported group holds left out and counted in the report, `Bake.CleanText` over every text field and nested key, names and field strings stored with their `|` escapes literal), the page shows `Share.ReportLines` (an edit to the box forgets the check, so Import needs a fresh Accept), and Import hands the result to `Share.Apply`, which calls `Library.Import`: fresh ids, one copy of a callout per group that holds it (a glyph's color travels with its callout or group; an old string without one arrives untinted, and a malformed color is dropped and counted with the ignored fields, with no payload version change), references remapped, a surface's fields through the seam, no key or position, all in one `Library.Batch`, so one `LIBRARY_CHANGED` rebuilds the surfaces (at combat end, if need be) and repaints the pages.
+Export: the ticks (`NS.State.share.pick`) go to `Share.Collect`, which adds what they need (a pad's or a dial's groups, a parent's children, a group's callouts) and reads each pad's and dial's portable fields through the seam (`Share.FieldsOf`); `Share.Encode` makes the `!QC1!` string, and the copy window shows it selected. A callout travels only inside its group: Export has no callout ticks. Import: the pasted string goes to `Share.Check` (decode, version, schema checks, a callout no imported group holds left out and counted in the report, `Bake.CleanText` over every text field and nested key, names and field strings stored with their `|` escapes literal), the page shows `Share.ReportLines` (an edit to the box forgets the check, so Import needs a fresh Accept), and Import hands the result to `Share.Apply`, which calls `Library.Import`: fresh ids, one copy of a callout per group that holds it, a parent kept only when the string carries it and it has no parent of its own there (a glyph's color travels with its callout or group; an old string without one arrives untinted, and a malformed color is dropped and counted with the ignored fields, with no payload version change), references remapped, a surface's fields through the seam, no key or position, all in one `Library.Batch`, so one `LIBRARY_CHANGED` rebuilds the surfaces (at combat end, if need be) and repaints the pages.
 
 ## The design's callout pipeline (spec §4.1)
 

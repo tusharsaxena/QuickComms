@@ -172,3 +172,27 @@ Recorded as each task makes them (plan ledger task in brackets).
 - [T3] **A group holding groups** shows a titled table per section (its own callouts when it has
   any, then each child), each with its header; a group with no callouts keeps the one line ("This
   group has no callouts yet.") and draws no table.
+- [T4] **Docs only, no behavior change.** ARCHITECTURE (overview, module map, schema, the
+  registry paragraph, the bus row, known limitations), schema.md (the `seededSets`, `origin`,
+  `compass` and `parent` keys, migration step 3), module-map.md, settings-panel.md, data-flow.md (new
+  "the built-in sets are seeded" and "a group inside another" sections), scope.md, slash-dispatch.md
+  (`group.parent`'s text form; the `builtin.*` rows gone) and the README describe what T1-T3 built.
+  No deviation from the Ka0s standard was found: Restore built-in groups on General (not Defaults)
+  follows options-ui-§13.
+- [T4] **Smoke checks are rewritten in place, not retired**: EDIT-2 (now "a built-in set is an
+  ordinary group", the owner's screenshots 24 vs 25 and 26 vs 29) and EDIT-6 (now Restore built-in
+  groups) keep their numbers; EDIT-4, 5, 11, 14 and ICON-1 lose the "(built-in)" tag and the built-in
+  Reuse section; EDIT-19 (nested groups), EDIT-20 (the Preview table) and EDIT-21 (an older profile
+  converts once) are added.
+- [T4] **Known limitations added**: one level of nesting and no reorder control for children; a
+  battleground ring is pinned only while every group inside it is a seeded node and the set holds no
+  callouts of its own (the wind is not a member field, so an imported set's nodes arrive unpinned);
+  Restore puts back only what is missing and never resets an edited group, and a copy (Duplicate,
+  Reuse, import, a customized set converted by step 3) keeps no origin, so Restore adds the stock set
+  beside such a copy.
+- [T4] **Older specs carry italic "Superseded" notes in place** (the 2026-10-17 pattern): the v1
+  spec's §5.1, §12.1 (user nesting), §12.2, §13.1 and §15, and the 2026-10-17 spec's built-in
+  non-goal. Their text is otherwise unchanged.
+- [T4] `defaults/Profile.lua`'s comment on `callouts` (a fresh profile has none) was stale and is
+  corrected, comment only. The README's unreleased 0.1.0 Version History row names the editable
+  built-in groups and nested groups; no version bump.
