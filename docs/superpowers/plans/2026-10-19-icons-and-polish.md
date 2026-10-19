@@ -63,7 +63,7 @@
 | Q1 Pad: title, chip width, growth | QC | done | ea04cd1 |
 | Q2 /qc toggle | QC | done | e71b428 |
 | Q3 Look headings + Callouts rows | QC | done | 6a34bf7 |
-| Q4 Preview as → Master controls | QC | todo | |
+| Q4 Preview as → Master controls | QC | done | b61ef26 |
 | Q5 Instances + Arena drawers | QC | todo | |
 | Q6 Vendor LibKa0s v1.74.0 + icon browser | QC | todo | |
 | Q7 Dungeon (generic) + built-in icons | QC | todo | |
