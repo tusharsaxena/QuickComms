@@ -228,7 +228,8 @@ an `Inc` chip; click it → the party sees "INC" with a skull. Leave the key →
 the pad. Result:
 
 **EDIT-2. A built-in set is an ordinary group (the phase 3 exit, rewritten 2026-10-18).** Groups →
-pick "Dungeon (generic)" → the picker shows no "(built-in)" tag, and the page draws the same tabs as a
+pick "Dungeon (generic)" → the picker shows no "(built-in)" tag (in a key it reads `Dungeon (generic)` with the
+green dot after the name, not before it; Comms Pad → Groups and Comms Dial → Groups put it after the name too), and the page draws the same tabs as a
 group of yours, nothing read-only. General: Name, Enabled, Open the dial on this group, Parent group,
 the icon with Choose icon…, Duplicate and Delete, then Restore built-in groups; no Customize and no
 read-only line. Callouts: the callout table, exactly as a group of yours draws it (Add callout, Reuse

@@ -35,7 +35,9 @@ local Ed = Settings.Editors
 
 Ed.ROW_H = 30       -- one reorderable row; the drop arithmetic's stride
 Ed.HANDLE_W = 30    -- the library's handle gutter (LibKa0s-Widgets ROW_BOX.HANDLE_W)
-Ed.ACTIVE_DOT = "|TInterface\\COMMON\\Indicator-Green:12|t "
+-- After a name, never before it: the name leads, so a list reads by name and a nested child's indent
+-- stays in front of it.
+Ed.ACTIVE_DOT = " |TInterface\\COMMON\\Indicator-Green:12|t"
 Ed.pages, Ed.built, Ed.reorders, Ed.redraw, Ed.categories = {}, {}, {}, {}, {}
 
 local function H() return Settings.Helpers end

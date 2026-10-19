@@ -54,7 +54,7 @@ is an ordinary group (2026-10-18-builtins-as-groups-design.md), with no tag, no 
 read-only branch.
 
 ```
-band      [ Group v (picker; a green dot marks a group active now; a group inside another is
+band      [ Group v (picker; a green dot after its name marks a group active now; a group inside another is
           listed, indented, right after it) ][ New group ]
           [x] Preview while editing (under the picker)
 strip     [ General ][ Callouts ][ When ][ Preview ]

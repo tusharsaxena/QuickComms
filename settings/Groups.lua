@@ -49,14 +49,14 @@ G.CHILD_INDENT = "    "
 
 --- Picker entries in the page's order (Library.MemberIds: the groups by name, each with its
 --- children under it, indented by CHILD_INDENT); a group active under the current or previewed
---- situation carries a green dot.
+--- situation carries a green dot after its name.
 function G.Entries()
     local active = NS.Resolver.ActiveGroups(NS.Library.AllGroups(), Ed.Snapshot())
     local out = {}
     for _, id in ipairs(NS.Library.MemberIds("group")) do
         local text = NS.db.profile.groups[id].name or id
         local indent = NS.Library.IsChild(id) and G.CHILD_INDENT or ""
-        out[#out + 1] = { id = id, label = indent .. (active[id] and Ed.ACTIVE_DOT or "") .. text }
+        out[#out + 1] = { id = id, label = indent .. text .. (active[id] and Ed.ACTIVE_DOT or "") }
     end
     return out
 end
