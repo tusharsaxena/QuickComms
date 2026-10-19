@@ -164,12 +164,14 @@ cleared, keeps the player's choice. Result:
 
 **PAD-3. Lock, drag, position.** `/qc unlock` → a drag strip appears above the pad; drag it
 elsewhere; `/reload` → it is where you left it. In combat the strip will not drag, and a drag still
-held when combat starts ends there, with no error. `/qc lock` → the strip is gone. General → Master
+held when combat starts ends there, with no error. `/qc lock` → the strip is gone (it comes back, undraggable, only to carry PREVIEW or TEST MODE). General → Master
 controls → Reset position → the pad returns to its default place, just below the center. The
 launcher's Locked entry toggles the same lock. Result:
 
-**PAD-4. Test mode.** `/qc test` → placeholder chips and a TEST MODE label; clicking one sends
-nothing. Pull something → test mode ends with one line and the real chips return. `/qc test` in
+**PAD-4. Test mode.** `/qc test` → placeholder chips, and the strip above the pad reads
+`Comms Pad  TEST MODE` (TEST MODE in green; the strip shows even while locked, and will not drag
+then; the header has no TEST MODE of its own); clicking one sends nothing. Rename the pad to a long
+name → the strip grows to fit the name and the marker. Pull something → test mode ends with one line and the real chips return. `/qc test` in
 combat → refused with one line. The Master controls checkbox and the launcher entry follow every
 change. Result:
 
@@ -222,7 +224,8 @@ reading M+ in gold; not read-only text. Rename a callout in the popup and Save �
 changes. Untick Enabled → in a key the set is gone from the pad; tick it again. Result:
 
 **EDIT-3. Preview as….** Out of combat, in the open world: General → Master controls → Preview as → Arena →
-the pad shows the arena set with PREVIEW on its header and `Preview: Arena`; clicking a chip sends
+the pad shows the arena set with `Preview: Arena` on its header and PREVIEW on its drag strip (in
+green, after the pad's name); clicking a chip sends
 nothing; its tooltip says so. The Comms Pad, Comms Dial and Groups pages' General tabs have no
 Preview as row. Close the settings → the preview ends. `/qc preview raid:heroic` →
 the raid set; pull something → the preview ends with one line and the live chips return. Result:
@@ -498,7 +501,7 @@ Typing in the search box keeps up without a hitch. Result:
 
 **EDIT-27. Preview while editing.** Out of combat, in the open world: Settings → Groups → the band
 shows Preview while editing, ticked, under the Group picker. Pick "Arena" → every pad shows only the
-arena set, with PREVIEW and `Preview: Arena` on its header, and dial 1 opens on it; clicking a chip
+arena set, with `Preview: Arena` on its header and PREVIEW on its drag strip, and dial 1 opens on it; clicking a chip
 sends nothing. Pick a battleground set → its own callouts and every node show, outside the
 battleground. Set General → Master controls → Preview as → Raid · Heroic, then back on Groups → the
 edited group still shows alone; go to another settings page → the pads show the Raid · Heroic

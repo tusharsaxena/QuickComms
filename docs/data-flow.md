@@ -108,7 +108,7 @@ Every place a member's icon is drawn (a pad's chips, a dial's wedges and ring we
 
 ## Today: Preview as…
 
-`Preview.SetPreviewAs(key)` (the row in General › Master controls, `/qc preview`) turns test mode's second flavor on: `TEST_MODE_CHANGED`, then `Surfaces.ApplyAll` builds each pad from the previewed snapshot and marks the plan, so every chip is disarmed and the header reads `Preview: …`. Combat, the stand-down and the settings window closing end it.
+`Preview.SetPreviewAs(key)` (the row in General › Master controls, `/qc preview`) turns test mode's second flavor on: `TEST_MODE_CHANGED`, then `Surfaces.ApplyAll` builds each pad from the previewed snapshot and marks the plan, so every chip is disarmed, the header reads `Preview: …` and the drag strip reads `<pad name>  PREVIEW` (test mode's reads `TEST MODE`; the strip shows while it carries the marker, locked or not). Combat, the stand-down and the settings window closing end it.
 
 ## Today: the Comms Dial
 

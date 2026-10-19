@@ -105,8 +105,13 @@ test("preview: [phase 3] Preview as Arena builds the pad from the arena snapshot
     assertTrue(chip:GetAttribute("macrotext") == nil)
     local header = NS.Pad.Instance("p1").header
     assertEqual(header.qcSituation:GetText(), "Preview: Arena")
-    assertTrue(header.qcTest:IsShown())
-    assertEqual(header.qcTest:GetText(), "PREVIEW")
+    -- red under: PREVIEW left in the header instead of the drag strip
+    local handle = NS.Pad.Instance("p1").handle
+    assertEqual(handle.label:GetText(), "Comms Pad  |cff19ff19PREVIEW|r")
+    assertTrue(handle:IsShown(), "locked, the strip still shows to carry PREVIEW")
+    NS.Preview.SetPreviewAs(nil)
+    assertEqual(handle.label:GetText(), "Comms Pad")
+    assertFalse(handle:IsShown(), "locked and live again: no strip")
 end)
 
 test("preview: [review 3] a previewed chip sends nothing and reports nothing", function()

@@ -295,17 +295,14 @@ function R.SetCooling(btn, on)
     btn.qcCool:SetShown(on and true or false)
 end
 
---- Build the header row: the situation chip, the lockdown chip, the test label, the stale hint and
---- the collapse toggle.
+--- Build the header row: the situation chip, the lockdown chip, the stale hint and the collapse
+--- toggle. PREVIEW and TEST MODE are not here: they ride the drag strip's label (R.StripLabel).
 function R.DressHeader(header, onCollapse)
     header.qcSituation = header:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     header.qcSituation:SetPoint("LEFT", header, "LEFT", 6, 0)
     header.qcLockdown = header:CreateFontString(nil, "OVERLAY", "GameFontRedSmall")
     header.qcLockdown:SetPoint("LEFT", header.qcSituation, "RIGHT", 6, 0)
     header.qcLockdown:SetText(L["LOCKDOWN"])
-    header.qcTest = header:CreateFontString(nil, "OVERLAY", "GameFontGreenSmall")
-    header.qcTest:SetPoint("LEFT", header.qcLockdown, "RIGHT", 6, 0)
-    header.qcTest:SetText(L["TEST MODE"])
     local collapse = CreateFrame("Button", nil, header)
     collapse:SetSize(16, 16)
     collapse:SetPoint("RIGHT", header, "RIGHT", -2, 0)
@@ -317,15 +314,26 @@ function R.DressHeader(header, onCollapse)
     header.qcStale:SetPoint("RIGHT", collapse, "LEFT", -4, 0)
     header.qcStale:SetText(L["updates after combat"])
     header.qcLockdown:Hide()
-    header.qcTest:Hide()
     header.qcStale:Hide()
+end
+
+-- GameFontGreenSmall's green (0.1, 1, 0.1), the color the header's marker wore before it moved.
+local MARK_GREEN = "|cff19ff19"
+
+--- The drag strip's label: the pad's name, then the marker (PREVIEW or TEST MODE) in green when a
+--- preview or test mode is drawn. The client measures a string without its escapes, so the strip's
+--- Measure grows by the marker's own width.
+--- @param name string
+--- @param mark string|nil already localized
+--- @return string
+function R.StripLabel(name, mark)
+    if not mark then return name end
+    return name .. "  " .. MARK_GREEN .. mark .. "|r"
 end
 
 function R.PaintHeader(header, state)
     header.qcSituation:SetText(state.situation or "")
     header.qcLockdown:SetShown(state.lockdown == true)
-    header.qcTest:SetShown(state.test == true)
-    header.qcTest:SetText(state.testText or L["TEST MODE"])
     header.qcStale:SetShown(state.stale == true)
     header.qcCollapse.qcText:SetText(state.collapsed and "+" or "-")
 end

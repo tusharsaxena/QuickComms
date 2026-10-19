@@ -935,7 +935,7 @@ Total.
 - surfaces: [nesting] a parent that draws nothing leaves its surface with nothing active
 - surfaces: [inherit] a child that inherits shows wherever its parent's When matches, whatever its own says
 
-### test_pad_render.lua (19)
+### test_pad_render.lua (20)
 
 - render: Dress builds a chip's regions once, each its own object
 - render: [audit QC-07] the chip's padlock is the catalog's lock mark, tinted gold; the Blizzard art is the nil fallback
@@ -946,8 +946,9 @@ Total.
 - render: a test-mode chip and a solo self-print chip are not dimmed, and say what they do
 - render: flashes take the result's color; the cooldown dims and clears
 - render: the situation chip names the content, the dungeon and the key
-- render: the header shows the lockdown chip, the stale hint and the test label on demand
+- render: the header shows the lockdown chip and the stale hint on demand; no test label
 - render: the drag-strip seam builds a hidden strip, and answers nil without the library
+- render: [R3] the strip label is the pad's name, then PREVIEW or TEST MODE in green
 - pad render: [phase 3] a previewed slot's tooltip shows its line and says it sends nothing
 - render: [phase 5] a pad's Look is a font and a skin; the defaults are the skin a pad always wore
 - render: [review] the skin's 1px inner line is kept only on the default flat 1px edge
@@ -957,7 +958,7 @@ Total.
 - render: [icons] a glyph chip is drawn in its color; the chip repainted with another icon is white again
 - render: [B3] a chip's label is one line, and hidden when the chip leaves it no room
 
-### test_pad.lua (29)
+### test_pad.lua (30)
 
 - pad: the default pad shows the M+ callouts, each chip armed with its baked line
 - pad: [review 5] a refused chip is dimmed and disarmed: a click sends and reports nothing
@@ -988,6 +989,7 @@ Total.
 - pad: [B1] a group named as the header's situation draws no title row of its own
 - pad: [B2] down growth pins the pad's top edge; the header is on top and the strip above
 - pad: [B2] up growth pins the bottom edge, puts the header at the bottom and the strip below
+- pad: [R3] the strip reads the pad's name and PREVIEW / TEST MODE, grows to fit, and shows while locked
 
 ### test_dial.lua (29)
 
@@ -1160,8 +1162,8 @@ Total.
 | test_pad_layout.lua | 15 |
 | test_dial_layout.lua | 16 |
 | test_surfaces.lua | 27 |
-| test_pad_render.lua | 19 |
-| test_pad.lua | 29 |
+| test_pad_render.lua | 20 |
+| test_pad.lua | 30 |
 | test_dial.lua | 29 |
 | test_icon_style.lua | 8 |
 | test_glow.lua | 11 |
@@ -1172,4 +1174,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **946** |
+| **Total** | **948** |

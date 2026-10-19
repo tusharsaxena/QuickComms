@@ -568,3 +568,44 @@ test("pad: [B2] up growth pins the bottom edge, puts the header at the bottom an
     assertEqual(pointsOf(inst.header), "TOPLEFT,QuickCommsPadp1,TOPLEFT,0,0 | TOPRIGHT,QuickCommsPadp1,TOPRIGHT,0,0",
         "a growth change re-anchors the header")
 end)
+
+-- The client measures a string without its color escapes; the stand-in does the same, 6 per letter.
+local function measureLikeTheClient(m)
+    local fs = { text = "" }
+    function fs.SetText(self, v) self.text = v or "" end
+    function fs.GetStringWidth(self)
+        return 6 * #(self.text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""))
+    end
+    m.LibStub("LibKa0s-Widgets-1.0").__DragHandleMeasurer = function() return fs end
+end
+
+test("pad: [R3] the strip reads the pad's name and PREVIEW / TEST MODE, grows to fit, and shows while locked", function()
+    local NS, m = live()
+    measureLikeTheClient(m)
+    NS.db.profile.pads.p1.name = "A rather long raid pad name"
+    local inst = NS.Pad.Instance("p1")
+    local widths = {}
+    inst.handle.SetWidth = function(_, w) widths[#widths + 1] = w end
+    NS.Pad.Apply("p1", planFor(NS))
+    -- red under: the strip keeping the label it was built with (a rename never reached it)
+    assertEqual(inst.handle.label:GetText(), "A rather long raid pad name")
+    assertTrue(NS.Setting("locked"))
+    assertFalse(inst.handle:IsShown(), "locked and live: no strip")
+    NS.Preview.SetTestMode(true)
+    assertEqual(inst.handle.label:GetText(), "A rather long raid pad name  |cff19ff19TEST MODE|r")
+    -- red under: ApplyLock hiding the strip on a locked pad in test mode (the marker would vanish)
+    assertTrue(inst.handle:IsShown(), "locked, test mode still shows the strip that carries the marker")
+    local reserve = inst.handle:Reserve() * 2
+    assertEqual(widths[#widths], 6 * #"A rather long raid pad name  TEST MODE" + reserve, "the strip grows to fit")
+    -- red under: canDrag ignoring the lock now that the strip shows while locked
+    inst.handle:__fire("OnDragStart")
+    assertFalse(inst.dragging == true, "a locked strip does not drag")
+    NS.Preview.SetTestMode(false)
+    assertEqual(inst.handle.label:GetText(), "A rather long raid pad name")
+    assertFalse(inst.handle:IsShown())
+    NS.SchemaRuntime.Set("locked", false)
+    NS.Pad.ApplyLock()
+    assertTrue(inst.handle:IsShown())
+    assertEqual(widths[#widths], 6 * #"A rather long raid pad name" + reserve, "unlocked, it fits the name alone")
+    assertNil(inst.header.qcTest, "the header carries no marker of its own")
+end)
