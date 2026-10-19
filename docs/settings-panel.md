@@ -392,7 +392,7 @@ footer   the selected icon (a glyph in the color) and its name, then Choose and 
 
 ```
 band     [ Pad v (picker) ][ New pad ]
-strip    [ General ][ Groups ][ Layout ][ Look ]
+strip    [ General ][ Groups ][ Layout ][ Look ][ Icons ]
 General  Name, Enabled, then Unlock (or Lock) pads and Delete pad
 Groups   Show groups as, then the pad's groups as a drag-to-reorder list with a remove glyph
          (its priority order; it takes the group off the pad and asks nothing), then Add a group
@@ -403,7 +403,17 @@ Look     visibility, fade and faded alpha; then Font (face, size, color with Use
          flags, shadow), Border (style, thickness, color with Use class color) and Background
          (its color with Use class color), each composed by the options library (options-ui-§16,
          §17) under its own heading
+Icons    the chips' icons (B9): Size and crop (Icon size, Zoom), Color (Desaturate, Icon opacity,
+         Tint with Use class color), Border (the composed block: Show border, style, thickness,
+         color with Use class color) and Glow (Glow, Glow when, Glow style, Glow color with Use
+         class color), then one heading per style's knobs and Offset
 ```
+
+The Icons tab's rows are `pad.icon.*` (settings/SchemaIcons.lua). Every color pair sits on one line and is
+never grayed out; Border style and thickness are grayed out while Show border is off; Glow when, Glow style
+and every knob while the glow is off, and a knob also while the glow is in a style it does not apply to.
+Glow when is Always, On hover or After sending (1.5 s from the send result). The page's Defaults puts the
+Icons rows back too.
 
 X and Y write the whole `pad.point` row, the same one the drag strip writes; a drag on screen
 updates the boxes. A new pad holds the seeded sets the profile still has as top-level groups, in
@@ -415,12 +425,14 @@ shipped order.
 
 ```
 band     [ Dial v (picker) ][ New dial ]
-strip    [ General ][ Groups ][ Wheel ][ Binding ][ Preview ]
+strip    [ General ][ Groups ][ Wheel ][ Icons ][ Binding ][ Preview ]
 General  Name, Enabled, then Delete dial
 Groups   Show groups as (Categories or Flat), the depth-3 warning (spec §11.3), then the dial's
          groups as a drag-to-reorder list with a remove glyph (its priority order, spec §7; it
          takes the group off the dial and asks nothing), then Add a group (top-level groups only)
 Wheel    wedges per ring, open at, then Position: X and Y and Reset this dial's position
+Icons    the wedges' icons, as the Comms Pad page's Icons tab (a wedge's border is a round ring;
+         its icon size keeps the wedge's own size)
 Binding  how Relaxed mode works, the key capture, and the key's line (what it opens, or the WoW
          binding it shares, spec §9.4 / §18)
 Preview  each ring as the current or previewed situation builds it, wedge by wedge

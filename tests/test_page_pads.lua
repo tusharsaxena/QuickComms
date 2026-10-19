@@ -215,3 +215,49 @@ test("pads page: [phase 5] Look carries the composed Font, Border and Background
     P.find(w, "CheckBox", "Font shadow"):__fire("OnValueChanged", false)
     assertFalse(NS.db.profile.pads.p1.look.fontShadow)
 end)
+
+-- ── the Icons tab (B9) ──────────────────────────────────────────────────────────────────────
+
+local ICON_HEADINGS = { "Size and crop", "Color", "Border", "Glow", "Pixel border", "Auto cast sparkles",
+    "Button (rotating rays)", "Proc (flipbook)", "Offset" }
+
+test("pads page: [B9] Icons carries its headings once each, a companion beside each swatch, and writes the pad", function()
+    local NS, _, P = open()
+    local w = P.tab("pads", "Icons")
+    for _, heading in ipairs(ICON_HEADINGS) do
+        -- red under: the host's own h.Section above each subgroup (the library draws it from the rows)
+        assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
+    end
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 3, "tint, border and glow (options-ui-§17)")
+    assertTrue(P.find(w, "ColorPicker", "Tint") ~= nil)
+    assertTrue(P.find(w, "ColorPicker", "Glow color") ~= nil)
+    assertTrue(P.find(w, "CheckBox", "Show border") ~= nil, "the composed Border block")
+    P.find(w, "Slider", "Icon size"):__fire("OnMouseUp", 30)
+    P.find(w, "CheckBox", "Glow"):__fire("OnValueChanged", true)
+    assertEqual(NS.db.profile.pads.p1.icon.size, 30)
+    assertTrue(NS.db.profile.pads.p1.icon.glowEnabled)
+end)
+
+test("pads page: [B9] the glow's knobs are grayed out while it is off or in another style; its color never is", function()
+    local NS, _, P = open()
+    local w = P.tab("pads", "Icons")
+    assertTrue(P.find(w, "Slider", "Lines").disabled, "the glow is off by default")
+    assertFalse(P.find(w, "ColorPicker", "Glow color").disabled)
+    assertTrue(P.find(w, "Slider", "Border thickness (px)").disabled, "the border is off by default")
+    NS.SchemaRuntime.Set("pad.icon.glowEnabled", true, "p1")
+    NS.SchemaRuntime.Set("pad.icon.borderShow", true, "p1")
+    w = P.tab("pads", "Icons")
+    assertFalse(P.find(w, "Slider", "Lines").disabled, "pixel, the default style")
+    assertTrue(P.find(w, "Slider", "Ray speed").disabled, "a button knob under the pixel style")
+    assertFalse(P.find(w, "Slider", "Border thickness (px)").disabled)
+end)
+
+test("pads page: [B9] Defaults puts the Icons rows back too, and its tooltip names them", function()
+    local NS, _, P = open()
+    NS.SchemaRuntime.Set("pad.icon.zoom", 0.2, "p1")
+    NS.SchemaRuntime.Set("pad.icon.glowEnabled", true, "p1")
+    P.ctx("pads").panel.defaultsOnClick()
+    assertEqual(NS.db.profile.pads.p1.icon.zoom, 0)
+    assertFalse(NS.db.profile.pads.p1.icon.glowEnabled)
+    assertTrue(P.ctx("pads").panel.defaultsTooltip:find("icons", 1, true) ~= nil)
+end)

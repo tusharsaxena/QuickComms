@@ -5,7 +5,7 @@
 ## Version: 0.1.0
 ## IconTexture: Interface\AddOns\QuickComms\media\logos\quickcomms.logo.128.tga
 ## SavedVariables: QuickCommsDB, QuickCommsPerfDB
-## OptionalDeps: Ace3, LibStub, CallbackHandler-1.0, LibSharedMedia-3.0, LibDataBroker-1.1, LibDBIcon-1.0, LibDeflate, LibSerialize, EllesmereUI
+## OptionalDeps: Ace3, LibStub, CallbackHandler-1.0, LibSharedMedia-3.0, LibDataBroker-1.1, LibDBIcon-1.0, LibDeflate, LibSerialize, LibCustomGlow-1.0, EllesmereUI
 ## DefaultState: enabled
 ## Category-enUS: Chat
 ## X-License: MIT
@@ -29,6 +29,8 @@ libs\LibSharedMedia-3.0\lib.xml
 # Conventional: LibKa0s-Launcher-1.0 resolves both at Register time; LibDBIcon needs the two above it.
 libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
 libs\LibDBIcon-1.0\lib.xml
+# Conventional: the icon glows (modules\Glow.lua resolves it at call time). It resolves only LibStub at file load.
+libs\LibCustomGlow-1.0\LibCustomGlow-1.0.xml
 # ONE line: the .xml is itself the file list (library-stack-§7). After Ace3.
 libs\LibKa0s\LibKa0s.xml
 # LOAD-BEARING: modules\Share.lua takes LibDeflate at load (the share string's compression, spec §15).
@@ -94,6 +96,8 @@ defaults\BuiltIns_Raid.lua
 defaults\BuiltIns_Arena.lua
 # Conventional: data
 defaults\BuiltIns_Battlegrounds.lua
+# LOAD-BEARING: publishes NS.IconDefaults, which modules\Library.lua reads at load (SURFACE_DEFAULTS).
+defaults\Icons.lua
 # Conventional: data (the editors' and Preview as's shipped ids), read at call time
 defaults\GameIds.lua
 # Conventional: data (the When editor's instance and arena lists), read at call time
@@ -126,6 +130,10 @@ modules\SendEngine.lua
 modules\Preview.lua
 # LOAD-BEARING: publishes NS.PadLayout, which modules\Pad_Render.lua and modules\Pad.lua take at load.
 modules\Pad_Layout.lua
+# LOAD-BEARING: publishes NS.IconStyle, which modules\Pad_Render.lua and modules\Dial_Render.lua take at load.
+modules\IconStyle.lua
+# LOAD-BEARING: publishes NS.Glow, which modules\Pad_Render.lua and modules\Dial_Render.lua take at load; appends to NS.STAND_DOWN.
+modules\Glow.lua
 # Conventional: the surfaces' plans and rebuild; calls modules\Pad.lua at run time only
 modules\Surfaces.lua
 # LOAD-BEARING: publishes NS.PadRender, which modules\Pad.lua takes as a load-time upvalue.
@@ -157,7 +165,10 @@ settings\OptionsSetup.lua
 # only when a row's onChange runs); loads before settings\Panel.lua,
 # which splices the Master controls in ahead of these rows.
 settings\SchemaRows.lua
-# LOAD-BEARING: reads NS.Library.TEMPLATES, NS.Channels.KINDS and NS.SchemaRuntime.AddRows at file scope.
+# LOAD-BEARING: publishes Settings.IconRows, which settings\SchemaMembers.lua calls at file scope; reads
+# NS.IconDefaults at file scope.
+settings\SchemaIcons.lua
+# LOAD-BEARING: reads NS.Library.TEMPLATES, NS.Channels.KINDS, Settings.IconRows and NS.SchemaRuntime.AddRows at file scope.
 settings\SchemaMembers.lua
 # LOAD-BEARING: reads NS.C, Settings.Helpers and NS.SchemaRuntime.AddRows at file scope.
 settings\Panel.lua

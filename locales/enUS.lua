@@ -642,7 +642,8 @@ L["Pad"] = "Pad"
 L["Which Comms Pad this page edits."] = "Which Comms Pad this page edits."
 L["New pad"] = "New pad"
 L["Make a new Comms Pad holding the built-in groups, and edit it here."] = "Make a new Comms Pad holding the built-in groups, and edit it here."
-L["Put the selected pad's groups-as, layout and look back to their defaults, and turn it on. Its name, groups and position are kept."] = "Put the selected pad's groups-as, layout and look back to their defaults, and turn it on. Its name, groups and position are kept."
+L["Put the selected pad's groups-as, layout, look and icons back to their defaults, and turn it on. Its name, groups and position are kept."] =
+    "Put the selected pad's groups-as, layout, look and icons back to their defaults, and turn it on. Its name, groups and position are kept."
 
 -- Share page (settings/Share.lua)
 L["Share"] = "Share"
@@ -730,7 +731,8 @@ L["Which Comms Dial this page edits."] = "Which Comms Dial this page edits."
 L["New dial"] = "New dial"
 L["Make a new Comms Dial holding the built-in groups, and edit it here."] = "Make a new Comms Dial holding the built-in groups, and edit it here."
 L["What each ring holds here, or in the preview."] = "What each ring holds here, or in the preview."
-L["Put the selected dial's groups-as, wedges per ring and where it opens back to their defaults, and turn it on. Its name, groups, key and position are kept."] = "Put the selected dial's groups-as, wedges per ring and where it opens back to their defaults, and turn it on. Its name, groups, key and position are kept."
+L["Put the selected dial's groups-as, wedges per ring, where it opens and its icons back to their defaults, and turn it on. Its name, groups, key and position are kept."] =
+    "Put the selected dial's groups-as, wedges per ring, where it opens and its icons back to their defaults, and turn it on. Its name, groups, key and position are kept."
 L["Three rings deep: %s. A group listed above it is active in that battleground too, so the dial opens on the groups instead of the nodes. Move the battleground to the top of the list to open straight on its nodes."] = "Three rings deep: %s. A group listed above it is active in that battleground too, so the dial opens on the groups instead of the nodes. Move the battleground to the top of the list to open straight on its nodes."
 
 -- modules/Share.lua: the share string's report and refusals (phase 5)
@@ -873,3 +875,76 @@ L["Person"] = "Person"
 L["Timer"] = "Timer"
 L["Ban"] = "Ban"
 L["Thumbs up"] = "Thumbs up"
+
+-- The Icons tab (B9: settings/SchemaIcons.lua, settings/Pads.lua, settings/Dials.lua)
+L["Icons"] = "Icons"
+L["Size and crop"] = "Size and crop"
+L["Color"] = "Color"
+L["Glow"] = "Glow"
+L["On hover"] = "On hover"
+L["After sending"] = "After sending"
+L["Pixel border"] = "Pixel border"
+L["Auto cast sparkles"] = "Auto cast sparkles"
+L["Button (rotating rays)"] = "Button (rotating rays)"
+L["Proc (flipbook)"] = "Proc (flipbook)"
+L["Lines"] = "Lines"
+L["How many lines run around the icon. Pixel border only."] =
+    "How many lines run around the icon. Pixel border only."
+L["Line speed"] = "Line speed"
+L["How fast the lines run around the icon. Higher is faster. Pixel border only."] =
+    "How fast the lines run around the icon. Higher is faster. Pixel border only."
+L["Line length (0 = automatic)"] = "Line length (0 = automatic)"
+L["How long each line is, in pixels. 0 sizes the lines from the icon. Pixel border only."] =
+    "How long each line is, in pixels. 0 sizes the lines from the icon. Pixel border only."
+L["Line thickness"] = "Line thickness"
+L["How thick each line is, in pixels. Pixel border only."] =
+    "How thick each line is, in pixels. Pixel border only."
+L["Dark border"] = "Dark border"
+L["Draw a dark border inside the lines. Pixel border only."] =
+    "Draw a dark border inside the lines. Pixel border only."
+L["Sparkles"] = "Sparkles"
+L["How many sparkles circle the icon in each ring. Auto cast sparkles only."] =
+    "How many sparkles circle the icon in each ring. Auto cast sparkles only."
+L["Sparkle speed"] = "Sparkle speed"
+L["How fast the sparkles circle the icon. Higher is faster. Auto cast sparkles only."] =
+    "How fast the sparkles circle the icon. Higher is faster. Auto cast sparkles only."
+L["Sparkle size"] = "Sparkle size"
+L["How big the sparkles are. Auto cast sparkles only."] = "How big the sparkles are. Auto cast sparkles only."
+L["Ray speed"] = "Ray speed"
+L["How fast the rays turn. Higher is faster. Button (rotating rays) only."] =
+    "How fast the rays turn. Higher is faster. Button (rotating rays) only."
+L["Loop duration (seconds)"] = "Loop duration (seconds)"
+L["How many seconds one loop of the flipbook takes. Proc (flipbook) only."] =
+    "How many seconds one loop of the flipbook takes. Proc (flipbook) only."
+L["Start animation"] = "Start animation"
+L["Play the burst that opens the proc glow when it starts. Proc (flipbook) only."] =
+    "Play the burst that opens the proc glow when it starts. Proc (flipbook) only."
+L["Offset"] = "Offset"
+L["Glow X offset"] = "Glow X offset"
+L["How far the glow reaches past the icon's sides, in pixels. Pixel border, Proc and Auto cast styles."] =
+    "How far the glow reaches past the icon's sides, in pixels. Pixel border, Proc and Auto cast styles."
+L["Glow Y offset"] = "Glow Y offset"
+L["How far the glow reaches past the icon's top and bottom, in pixels. Pixel border, Proc and Auto cast styles."] =
+    "How far the glow reaches past the icon's top and bottom, in pixels. Pixel border, Proc and Auto cast styles."
+L["How big each chip's icon is, in pixels. A bigger icon makes the chips taller."] =
+    "How big each chip's icon is, in pixels. A bigger icon makes the chips taller."
+L["How big each wedge's icon is, in pixels. The wedges keep their size."] =
+    "How big each wedge's icon is, in pixels. The wedges keep their size."
+L["Icon size"] = "Icon size"
+L["Zoom"] = "Zoom"
+L["Crop the icon's edges: 0 shows the whole icon, 0.25 crops a quarter off each side. A little zoom trims the dark edge baked into most game icons."] =
+    "Crop the icon's edges: 0 shows the whole icon, 0.25 crops a quarter off each side. A little zoom trims the dark edge baked into most game icons."
+L["Desaturate"] = "Desaturate"
+L["Draw the icons in gray."] = "Draw the icons in gray."
+L["Icon opacity"] = "Icon opacity"
+L["How opaque the icons are."] = "How opaque the icons are."
+L["Tint"] = "Tint"
+L["Draw a border around each icon."] = "Draw a border around each icon."
+L["Draw a glow around each icon."] = "Draw a glow around each icon."
+L["Glow when"] = "Glow when"
+L["Always, while the mouse is over the icon, or for a moment after its callout is sent."] =
+    "Always, while the mouse is over the icon, or for a moment after its callout is sent."
+L["Glow style"] = "Glow style"
+L["How the glow looks."] = "How the glow looks."
+L["Glow color"] = "Glow color"
+L["Automatic"] = "Automatic"

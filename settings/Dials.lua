@@ -2,12 +2,14 @@ local _, NS = ...
 -- settings/Dials.lua — the Comms Dial page (design spec §11, §13.1): one dial at a time.
 --
 --     band     [ Dial v (picker) ][ New dial ]
---     strip    [ General ][ Groups ][ Wheel ][ Binding ][ Preview ]
+--     strip    [ General ][ Groups ][ Wheel ][ Icons ][ Binding ][ Preview ]
 --     General  Name, Enabled, then Delete dial
 --     Groups   Show groups as (Categories or Flat), the depth-3 warning (spec §11.3), then the dial's
 --              groups as a drag-to-reorder list with Remove (its priority order, spec §7), then Add a
 --              group
 --     Wheel    wedges per ring, open at, then Position: X and Y and Reset this dial's position
+--     Icons    the wedges' icons (B9, settings/SchemaIcons.lua), as the Comms Pad page's Icons tab;
+--              a wedge's border is a round ring and its icon size keeps the wedge's own size
 --     Binding  how Relaxed mode works, the key capture, and the key's line (what it opens, or the WoW
 --              binding it shares, spec §9.4 / §18)
 --     Preview  each ring as the current or previewed situation builds it, wedge by wedge
@@ -34,6 +36,7 @@ local GENERAL = L["General"]
 local GROUPS = L["Groups"]
 local WHEEL = L["Wheel"]
 local BINDING = L["Binding"]
+local ICONS = L["Icons"]
 
 local DIRECTION = { N = L["N"], NE = L["NE"], E = L["E"], SE = L["SE"], S = L["S"], SW = L["SW"], W = L["W"],
     NW = L["NW"] }
@@ -310,6 +313,16 @@ local function offsetBox(ctx, id, label, axis)
     end }
 end
 
+-- The Icons tab: its rows in schema order, the headings the library's (as the Comms Pad page's).
+local function renderIcons(ctx, rows)
+    local h = H()
+    if not selected() then
+        h.TextRow(ctx, NONE)
+        return
+    end
+    h.RenderRows(ctx, Ed.Scalar(rows), nil, nil, { noHeadings = true })
+end
+
 local function renderWheel(ctx, rows)
     local h = H()
     local id = selected()
@@ -400,6 +413,7 @@ local function render(ctx)
         { key = GENERAL, render = renderGeneral },
         { key = GROUPS, render = renderGroups },
         { key = WHEEL, render = renderWheel },
+        { key = ICONS, render = renderIcons },
         { key = BINDING, render = renderBinding },
         { key = "preview", label = L["Preview"], tooltip = L["What each ring holds here, or in the preview."],
           render = renderPreview },
@@ -407,7 +421,7 @@ local function render(ctx)
 end
 
 Ed.RegisterPage(PAGE, L["Comms Dial"], "DialsPanel", render, {
-    tooltip = L["Put the selected dial's groups-as, wedges per ring and where it opens back to their defaults, and turn it on. Its name, groups, key and position are kept."],
+    tooltip = L["Put the selected dial's groups-as, wedges per ring, where it opens and its icons back to their defaults, and turn it on. Its name, groups, key and position are kept."],
     -- One act (Library.Batch): the dials rebuild, and their keys re-bind, once, not once per row.
     onClick = function(ctx) NS.Library.Batch(function() H().RestoreDefaults(PAGE, ctx) end) end,
 })

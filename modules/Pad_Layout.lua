@@ -17,8 +17,9 @@ PL.HEADER_H  = 18    -- the header row: situation chip, lockdown chip, stale hin
 PL.PAD       = 4     -- inner padding
 PL.SECTION_H = 14    -- a section's small-caps label row
 PL.CHIP_H    = 24    -- icon + label chip height
-PL.ICON      = 20    -- the icon tile inside an icon + label chip
-PL.ICON_ONLY = 28    -- an icon-only chip is square
+PL.ICON      = 20    -- the icon tile inside an icon + label chip (the Icons tab's default size)
+PL.ICON_ONLY = 28    -- an icon-only chip is square: its icon and 8 pixels
+PL.ICON_ROOM = 4     -- a labeled chip's height past its icon's size
 PL.LABEL_H   = 22    -- label-only chip height
 PL.MIN_PAD_W = 120   -- the narrowest pad: the header's situation text and collapse button need it
 PL.MIN_CHIP_W = 1    -- the narrowest labeled chip (its label hides when it has no room)
@@ -78,13 +79,18 @@ local function sizeOf(fontSize)
 end
 
 --- One chip's width and height for the pad's style. A labeled chip grows with the Look's font size
---- (never below its shipped height); an icon-only chip draws no text.
-function PL.CellSize(layout, fontSize)
+--- and the Icons tab's icon size (never below its shipped height); an icon-only chip draws no text
+--- and stays square around its icon.
+function PL.CellSize(layout, fontSize, iconSize)
     layout = type(layout) == "table" and layout or {}
-    if layout.style == "icon" then return PL.ICON_ONLY, PL.ICON_ONLY end
+    local icon = tonumber(iconSize) or PL.ICON
+    if layout.style == "icon" then
+        local s = icon + (PL.ICON_ONLY - PL.ICON)
+        return s, s
+    end
     local w = math.max(PL.MIN_CHIP_W, tonumber(layout.width) or PL.DEFAULT_W)
     if layout.style == "label" then return w, math.max(PL.LABEL_H, sizeOf(fontSize) + PL.LABEL_ROOM) end
-    return w, math.max(PL.CHIP_H, sizeOf(fontSize) + PL.CHIP_ROOM)
+    return w, math.max(PL.CHIP_H, sizeOf(fontSize) + PL.CHIP_ROOM, icon + PL.ICON_ROOM)
 end
 
 --- A section title row's height for the Look's font size (never below SECTION_H).
@@ -218,12 +224,13 @@ end
 --- @param sections table from VisibleSections
 --- @param layout table the pad's layout table
 --- @param opts table|nil { collapsed = boolean, fontSize = number (the Look's; rows grow to hold it),
+---   iconSize = number (the Icons tab's; a chip grows to hold it),
 ---   situation = string (the header's text: a section title equal to it is not drawn) }
 --- @return table { width, height, items, headerY (the header row's top), up (the growth is upward) }
 function PL.Compute(sections, layout, opts)
     layout = type(layout) == "table" and layout or {}
     opts = type(opts) == "table" and opts or {}
-    local cw, ch = PL.CellSize(layout, opts.fontSize)
+    local cw, ch = PL.CellSize(layout, opts.fontSize, opts.iconSize)
     local gap = math.max(0, tonumber(layout.spacing) or 4)
     local up = PL.GrowsUp(layout.growth)
     local blocks, contentW = {}, 0

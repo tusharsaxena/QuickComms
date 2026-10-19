@@ -2,7 +2,7 @@ local _, NS = ...
 -- settings/Pads.lua — the Comms Pad page (design spec §10.2-§10.4, §13.1): one pad at a time.
 --
 --     band     [ Pad v (picker) ][ New pad ]
---     strip    [ General ][ Groups ][ Layout ][ Look ]
+--     strip    [ General ][ Groups ][ Layout ][ Look ][ Icons ]
 --     General  Name, Enabled, then Unlock (or Lock) pads and Delete pad
 --     Groups   Show groups as, then the pad's groups as a drag-to-reorder list with Remove (its
 --              priority order, spec §7), then Add a group
@@ -12,6 +12,9 @@ local _, NS = ...
 --              flags, shadow), Border (style, thickness, color with Use class color) and Background
 --              (its color with Use class color), each composed by the options library (options-ui-§16,
 --              §17) under its own heading, which the library draws from the rows' subgroup (once)
+--     Icons    the chips' icons (B9, settings/SchemaIcons.lua): Size and crop, Color (with Tint), the
+--              composed Border block and Glow (with its trigger, style, color and each style's knobs),
+--              each under its own heading drawn by the library
 --
 -- The band holds the picker and the create action (options-ui-§14). Every field is a member row
 -- (settings/SchemaMembers.lua) written to the selected pad; the pad redraws through LIBRARY_CHANGED
@@ -31,6 +34,7 @@ local GENERAL = L["General"]
 local GROUPS = L["Groups"]
 local LAYOUT = L["Layout"]
 local LOOK = L["Look"]
+local ICONS = L["Icons"]
 
 Settings.Pads = Settings.Pads or {}
 local PD = Settings.Pads
@@ -220,6 +224,9 @@ local function renderLook(ctx, rows)
     h.RenderRows(ctx, Ed.Scalar(rows), nil, nil, { noHeadings = true })
 end
 
+-- The Icons tab is drawn as Look is: its rows in schema order, the headings the library's.
+local renderIcons = renderLook
+
 local function ids(entries)
     local out = {}
     for i, e in ipairs(entries) do out[i] = e.id end
@@ -246,11 +253,12 @@ local function render(ctx)
         { key = GROUPS, render = renderGroups },
         { key = LAYOUT, render = renderLayout },
         { key = LOOK, render = renderLook },
+        { key = ICONS, render = renderIcons },
     })
 end
 
 Ed.RegisterPage(PAGE, L["Comms Pad"], "PadsPanel", render, {
-    tooltip = L["Put the selected pad's groups-as, layout and look back to their defaults, and turn it on. Its name, groups and position are kept."],
+    tooltip = L["Put the selected pad's groups-as, layout, look and icons back to their defaults, and turn it on. Its name, groups and position are kept."],
     -- One act (Library.Batch): the pads rebuild once, not once per row.
     onClick = function(ctx) NS.Library.Batch(function() H().RestoreDefaults(PAGE, ctx) end) end,
 })

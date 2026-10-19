@@ -26,6 +26,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | DIAL-1..12 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial |
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
 | LOOK-1..2 | Look | The Comms Pad's font, border and background |
+| ICONS-1..3 | Icons tab | The chips' and wedges' icon look, border and glow triggers |
 | ICON-1 | Icons | Choosing an icon, for a callout and for a group |
 | BG-1..2 | Battlegrounds | Node winds on the dial; the battleground instance ids |
 | IDS-1 | Instance ids | The Midnight dungeons and raids |
@@ -597,6 +598,24 @@ opacity → the body changes; Use class color → your class color at 50%. The s
 and locked in combat, so the in-combat write goes through the command line: in combat,
 `/qc set pad.look.borderSize 3` → no error, the header shows "updates after combat", and the thicker
 edge lands at combat end. Defaults → the Ka0s look again. Result:
+
+## Icons tab
+
+**ICONS-1. Look.** Comms Pad → Icons: Icon size 32 → the chips grow taller around the bigger icons;
+Zoom 0.1 → each icon's edge is cropped; Desaturate → gray; Icon opacity 50% → faint; Tint red → a
+white glyph turns red and a colored glyph darker. Show border, thickness 2, color white → a square
+edge over each icon. Comms Dial → Icons: Show border → a round ring behind each wedge's icon; Icon size
+20 → smaller icons, the wedges keep their size. Defaults on each page → the icons as before. Result:
+
+**ICONS-2. Glow styles.** Comms Pad → Icons → Glow on: Pixel border → lines run around every icon;
+Auto cast sparkles, Button (rotating rays) and Proc (flipbook) each look different, and each style's
+knobs gray out under the others. With a full pad glowing in Pixel border, the frame rate stays where
+it was. Result:
+
+**ICONS-3. Glow triggers.** Glow when On hover → only the icon under the mouse glows; in combat too,
+with no error. After sending → a chip glows for about a second and a half after its line is sent,
+then stops. In combat, `/qc set pad.icon.size 30` → no error, "updates after combat", the bigger
+icons land at combat end. Result:
 
 ## Icons
 

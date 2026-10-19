@@ -883,12 +883,13 @@ local SURFACE_DEFAULTS = {
             useClassColorFont = false, fontFlags = "", fontShadow = true,
             borderStyle = "None", borderSize = 1, borderColor = { r = 0, g = 0, b = 0, a = 1 },
             useClassColorBorder = false,
-            background = { r = 0.06, g = 0.06, b = 0.08, a = 0.92 }, useClassColorBackground = false } },
+            background = { r = 0.06, g = 0.06, b = 0.08, a = 0.92 }, useClassColorBackground = false },
+        icon = NS.IconDefaults.For("pad") },   -- the Icons tab (defaults/Icons.lua)
     -- Relaxed is the only interaction in v0.1.0 (the C7 fallback, round-4 record). `delay` and
     -- `tapAction` are kept for the hold, flick and release upgrade, and `depth` until owner ruling R5
     -- gives it a meaning; nothing reads them yet.
     dial = { mode = "categories", slices = 4, depth = 2, openAt = "center", delay = 0.3,
-        interaction = "relaxed", key = nil, tapAction = "first" },
+        interaction = "relaxed", key = nil, tapAction = "first", icon = NS.IconDefaults.For("dial") },
 }
 
 --- The shape of one member of each kind: what every member row's path resolves against (the
@@ -899,11 +900,12 @@ Lib.TEMPLATES = {
     group = { name = "", icon = false, iconColor = false, enabled = true, openInto = false, when = {}, parent = false,
         inheritWhen = true },
     pad = { name = "", enabled = true, groupsAs = SURFACE_DEFAULTS.pad.groupsAs, point = false,
-        layout = copyTable(SURFACE_DEFAULTS.pad.layout), look = copyTable(SURFACE_DEFAULTS.pad.look) },
+        layout = copyTable(SURFACE_DEFAULTS.pad.layout), look = copyTable(SURFACE_DEFAULTS.pad.look),
+        icon = copyTable(SURFACE_DEFAULTS.pad.icon) },
     -- `key` and `point` are false, not nil, for the same reason as above: false is "no key" and "the
     -- default place".
     dial = { name = "", enabled = true, mode = SURFACE_DEFAULTS.dial.mode, slices = SURFACE_DEFAULTS.dial.slices,
-        openAt = SURFACE_DEFAULTS.dial.openAt, key = false, point = false },
+        openAt = SURFACE_DEFAULTS.dial.openAt, key = false, point = false, icon = copyTable(SURFACE_DEFAULTS.dial.icon) },
 }
 
 --- A dial's place when its `point` is unset: the middle of the screen (read at run time by

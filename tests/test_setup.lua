@@ -152,7 +152,7 @@ end)
 
 test("perf: [audit QC-12] every bucket key is lowerCamelCase, named for the path it times (naming-cheatsheet)", function()
     local NS = T.enableAddon()
-    assertTrue(#NS.Perf.BUCKET_ORDER == 7)
+    assertTrue(#NS.Perf.BUCKET_ORDER == 8)   -- design spec §16's seven and the Icons tab's glowStart
     for _, key in ipairs(NS.Perf.BUCKET_ORDER) do
         -- red under: a dotted key such as "bakeSurface" in core/PerfSetup.lua
         assertTrue(key:match("^%l[%w]*$") ~= nil, key .. " is not lowerCamelCase")

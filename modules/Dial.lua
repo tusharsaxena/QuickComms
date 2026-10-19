@@ -18,7 +18,10 @@ local _, NS = ...
 -- §11.4), taking no key. The guard's dim and the result flash (spec §9.2, §9.3) are insecure and
 -- reach every wedge as they reach every chip: Pad.Cooldown calls Dial.Cooldown, and SEND_RESULT
 -- flashes a callout's wedges. The dial closes on a send, so both show on the next open; a drop stays
--- red for DROP_SECONDS so the player can reopen it and see which line was lost.
+-- red for DROP_SECONDS so the player can reopen it and see which line was lost. The Icons tab (B9)
+-- is read once per rebuild (IconStyle.Config) and painted on every wedge; a wedge the rebuild leaves
+-- unused, and every wedge of a released dial, loses its glow (Glow.ReleaseFree), and a send result
+-- starts an After sending glow (Glow.Sent).
 
 NS.Dial = NS.Dial or {}
 local Dial = NS.Dial
@@ -96,6 +99,14 @@ local function releaseRings(inst)
     inst.byCallout = {}
 end
 
+-- Every wedge no ring drew this time loses its glow: the free wedges of the rings in use and of the
+-- rings left in the pool.
+local function releaseFreeGlows(inst)
+    for _, list in ipairs({ inst.rings.active, inst.rings.free }) do
+        for _, ring in ipairs(list) do NS.Glow.ReleaseFree(ring.qcWedges) end
+    end
+end
+
 local function build(index)
     local header = DS.NewHeader(index)
     header:SetSize(DL.HUB, DL.HUB)   -- protected geometry: here, under Apply, out of combat
@@ -118,7 +129,7 @@ end
 
 -- One ring's wedges: placed on their compass points (a pinned node on its own wind, Dial_Layout's
 -- `wedge`), painted, armed, indexed by callout.
-local function placeWedges(inst, ring, spec)
+local function placeWedges(inst, ring, spec, icfg)
     local wedges = {}
     for i, item in ipairs(spec.items) do
         local w = NS.Pool.Acquire(ring.qcWedges, function() return newWedge(inst, ring) end)
@@ -126,7 +137,7 @@ local function placeWedges(inst, ring, spec)
         w:ClearAllPoints()
         w:SetPoint("CENTER", ring, "CENTER", geo.x, geo.y)
         w:SetSize(DL.WEDGE, DL.WEDGE)
-        R.PaintWedge(w, item, geo)
+        R.PaintWedge(w, item, geo, icfg)
         arm(w, item)
         if item.slot then
             local list = inst.byCallout[item.slot.calloutId] or {}
@@ -151,14 +162,16 @@ function Dial.Apply(index, id, plan)
     byId[id] = inst
     DS.Close(inst.header)
     releaseRings(inst)
+    local icfg = NS.IconStyle.Config(dial.icon, "dial")
     local loaded = {}
     for r, spec in ipairs(plan.rings) do
         local ring = NS.Pool.Acquire(inst.rings, function() return newRing(inst) end)
         ring:Hide()
         R.PaintRing(ring, spec)
         loaded[r] = { frame = ring, parent = spec.parent, prev = spec.prev, next = spec.next,
-            wedges = placeWedges(inst, ring, spec) }
+            wedges = placeWedges(inst, ring, spec, icfg) }
     end
+    releaseFreeGlows(inst)
     DS.Load(inst.header, loaded, { openRing = plan.openRing, openAt = plan.test and "center" or dial.openAt })
     applyPoint(inst)
     inst.header:SetScale(math.max(NS.Library.MIN_SURFACE_SCALE, tonumber(NS.Setting("scale")) or 1))
@@ -175,6 +188,7 @@ function Dial.Release(index)
     if not inst or inCombat() then return false end
     DS.Close(inst.header)
     releaseRings(inst)
+    releaseFreeGlows(inst)
     DS.Load(inst.header, {}, {})
     if inst.id and byId[inst.id] == inst then byId[inst.id] = nil end
     inst.id, inst.plan, inst.live = nil, nil, false
@@ -340,7 +354,10 @@ local function onSendResult(_, calloutId, surfaceId, what)
     local inst = byId[surfaceId]
     local list = inst and inst.byCallout[calloutId]
     if not list then return end
-    for _, w in ipairs(list) do R.Flash(w, what) end
+    for _, w in ipairs(list) do
+        R.Flash(w, what)
+        NS.Glow.Sent(w)
+    end
     local timers = State.dialFlashTimers or {}
     State.dialFlashTimers = timers
     local handle

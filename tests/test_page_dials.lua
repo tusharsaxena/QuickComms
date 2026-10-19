@@ -298,3 +298,29 @@ test("dials page: [final 11] the page's own plan builds are not timed as a surfa
     -- red under: build the page's plans through S.BuildDialPlan's bracket
     assertEqual(notes, 0)
 end)
+
+-- ── the Icons tab (B9) ──────────────────────────────────────────────────────────────────────
+
+test("dials page: [B9] Icons follows Wheel, carries its headings once each, and writes the dial", function()
+    local NS, _, P = open()
+    local w = P.tab("dials", "Icons")
+    for _, heading in ipairs({ "Size and crop", "Color", "Border", "Glow", "Pixel border", "Auto cast sparkles",
+        "Button (rotating rays)", "Proc (flipbook)", "Offset" }) do
+        assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
+    end
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 3)
+    local order, seen = {}, {}
+    for _, row in ipairs(NS.addon.Settings.RowsForPage("dials")) do
+        if row.group and not seen[row.group] then seen[row.group] = true order[#order + 1] = row.group end
+    end
+    -- red under: the dial's Icons rows appended after the Binding row (the tab would follow Binding)
+    assertEqual(table.concat(order, ","), "General,Groups,Wheel,Icons,Binding", "the strip's tabs, in order")
+    P.find(w, "Slider", "Icon size"):__fire("OnMouseUp", 24)
+    P.find(w, "CheckBox", "Show border"):__fire("OnValueChanged", true)
+    assertEqual(NS.db.profile.dials.d2.icon.size, 24)
+    assertTrue(NS.db.profile.dials.d2.icon.borderShow)
+    NS.SchemaRuntime.Set("dial.icon.zoom", 0.1, "d2")
+    P.ctx("dials").panel.defaultsOnClick()
+    assertEqual(NS.db.profile.dials.d2.icon.zoom, 0)
+    assertTrue(P.ctx("dials").panel.defaultsTooltip:find("icons", 1, true) ~= nil)
+end)

@@ -31,6 +31,9 @@ local _, NS = ...
 -- The root is pinned by its growth edge (PadLayout.EdgePoint, B2): its top for down growth, its
 -- bottom for up growth, where the header row and the drag strip then sit too; a drop is saved as that
 -- edge's point, so a resize or a reload grows the pad away from the strip and never drifts it.
+-- The Icons tab (B9) is read once per rebuild (IconStyle.Config) and painted on every chip; its icon
+-- size feeds the chips' geometry. A chip the rebuild leaves unused, and every chip of a released pad,
+-- loses its glow (Glow.ReleaseFree); a send result starts an After sending glow (Glow.Sent).
 
 NS.Pad = NS.Pad or {}
 local Pad = NS.Pad
@@ -152,15 +155,15 @@ end
 Pad.ArmSlot = arm
 
 -- Every chip and section title of the layout, in the pad's font (its Look's font block); a title in
--- its own variant of it (R.TitleFont).
-local function place(inst, box, style, font, titleFont)
+-- its own variant of it (R.TitleFont); each chip's icon in the pad's Icons tab (`icfg`).
+local function place(inst, box, style, font, titleFont, icfg)
     for _, item in ipairs(box.items) do
         if item.kind == "chip" then
             local btn = NS.Pool.Acquire(inst.chips, function() return newChip(inst) end)
             btn:ClearAllPoints()
             btn:SetPoint("TOPLEFT", inst.root, "TOPLEFT", item.x, -item.y)
             btn:SetSize(item.w, item.h)
-            R.Paint(btn, item.slot, style, item.w)
+            R.Paint(btn, item.slot, style, item.w, icfg)
             R.ApplyFont(btn.qcLabel, font)
             arm(btn, item.slot)
             local list = inst.byCallout[item.slot.calloutId] or {}
@@ -279,17 +282,19 @@ function Pad.Apply(id, plan)
     inst.byCallout = {}
     local layout = type(pad.layout) == "table" and pad.layout or {}
     local look = type(pad.look) == "table" and pad.look or {}
+    local icfg = NS.IconStyle.Config(pad.icon, "pad")
     local sections = PL.VisibleSections(plan.sections, pad.groupsAs, session("padTab")[id])
     local hstate = headerState(inst, plan)
     local box = PL.Compute(sections, layout, { collapsed = hstate.collapsed,
-        fontSize = look.fontSize, situation = hstate.situation })
+        fontSize = look.fontSize, situation = hstate.situation, iconSize = icfg.size })
     inst.root:SetScale(math.max(NS.Library.MIN_SURFACE_SCALE, (tonumber(NS.Setting("scale")) or 1) * (tonumber(layout.scale) or 1)))
     inst.root:SetSize(box.width, box.height)
     inst.height = box.height
     anchorEdge(inst, box.up)
     NS.ApplySkin(inst.root, R.SkinFor(look))
     local font = R.LabelFont(look)
-    place(inst, box, layout.style, font, R.TitleFont(font))
+    place(inst, box, layout.style, font, R.TitleFont(font), icfg)
+    NS.Glow.ReleaseFree(inst.chips)
     R.PaintHeader(inst.header, hstate)
     Pad.ApplyLock()
     NS.SendEngine.SetVisibility(inst.root,
@@ -310,6 +315,7 @@ function Pad.Release(id)
         inst.root:StopMovingOrSizing()
     end
     NS.Pool.ReleaseAll(inst.chips, releaseChip)
+    NS.Glow.ReleaseFree(inst.chips)
     NS.Pool.ReleaseAll(inst.titles)
     inst.byCallout, inst.plan, inst.live = {}, nil, false
     if inst.handle then inst.handle:Hide() end
@@ -444,7 +450,10 @@ local function onSendResult(_, calloutId, surfaceId, what)
     local inst = pads[surfaceId]
     local list = inst and inst.byCallout[calloutId]
     if not list then return end
-    for _, btn in ipairs(list) do R.Flash(btn, what) end
+    for _, btn in ipairs(list) do
+        R.Flash(btn, what)
+        NS.Glow.Sent(btn)
+    end
     local timers = session("padFlashTimers")
     local handle
     handle = NS.addon:ScheduleTimer(function()

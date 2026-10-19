@@ -303,7 +303,7 @@ Total.
 - bake: a typed %t counts as live
 - bake: [phase 5] CleanText is the sanitizer short of the escape; Sanitize is CleanText, then the escape
 
-### test_share.lua (36)
+### test_share.lua (37)
 
 - share: a string is !QC1! then printable text, and decodes back to the same payload
 - share: [review 1] a pasted string may wrap and carry spaces; a cut-short one is damaged and imports nothing
@@ -341,6 +341,7 @@ Total.
 - share: [review] a pad's or dial's reference to a group the string nests is dropped and counted
 - share: [inherit] a child's Inherit when conditions travels; an old string's child inherits
 - share: [B2] a pad shared before the growth split carries Upward, which lands as Right and up
+- share: [B9] a pad's and a dial's Icons rows travel; an old string brings none
 
 ### test_resolver.lua (13)
 
@@ -692,7 +693,7 @@ Total.
 - groups page: [all] a gap separates the Every condition line from the first drawer
 - groups page: [arena] the arena drawer's All arenas dims and locks the list, which it keeps
 
-### test_page_pads.lua (13)
+### test_page_pads.lua (16)
 
 - pads page: New pad makes a second pad holding every built-in, selects it, and the pad is built
 - pads page: the Layout rows write the selected pad
@@ -707,8 +708,11 @@ Total.
 - pads page: [final 4] Defaults keeps the pad's position
 - pads page: [final 26] New pad takes the lowest free number, so a delete never leads to two names alike
 - pads page: [phase 5] Look carries the composed Font, Border and Background groups under their headings
+- pads page: [B9] Icons carries its headings once each, a companion beside each swatch, and writes the pad
+- pads page: [B9] the glow's knobs are grayed out while it is off or in another style; its color never is
+- pads page: [B9] Defaults puts the Icons rows back too, and its tooltip names them
 
-### test_page_dials.lua (17)
+### test_page_dials.lua (18)
 
 - dials page: New dial makes a second dial holding every built-in, selects it, and builds QuickCommsDial2
 - dials page: New dial takes the lowest free number, so a delete never leads to two names alike
@@ -727,6 +731,7 @@ Total.
 - dials page: [final 8] the Binding tab names this dial's Open Comms Dial entry and sees a key bound there
 - dials page: [final 10] the key line of a dial that is off says the key opens nothing, and warns of no override
 - dials page: [final 11] the page's own plan builds are not timed as a surface's bake
+- dials page: [B9] Icons follows Wheel, carries its headings once each, and writes the dial
 
 ### test_page_share.lua (12)
 
@@ -994,6 +999,27 @@ Total.
 - dial: [review 6] on a four- or six-slice dial every node shows, and the number keys pick the shown wedges from N
 - dial: [icons] a wedge draws its glyph in its color; repainted untinted, it is white again
 
+### test_icon_style.lua (7)
+
+- icon style: the defaults keep today's look on a chip and on a wedge
+- icon style: zoom crops through SetTexCoord, desaturate and alpha reach the texture
+- icon style: the tint multiplies a glyph's own color; white keeps it
+- icon style: a pad's icon size feeds the chip's geometry
+- icon style: a chip's border is off by default; on, it is a backdrop over the icon in its color
+- icon style: a wedge's border is a round ring behind its icon, icon plus twice the thickness
+- icon style: a pad saved before the Icons tab reads like a new one (fillShape backfills `icon`)
+
+### test_glow.lua (8)
+
+- glow: off by default, so a chip starts nothing
+- glow: each style starts with the knob table's arguments, on the icon, under the addon's key
+- glow: a repaint that changes nothing calls the library not at all; a setting restarts it
+- glow: On hover starts on enter and stops on leave
+- glow: After sending glows from the send result for SEND_SECONDS, then stops
+- glow: a chip a rebuild leaves unused stops its glow, and so does every chip of a released pad
+- glow: in combat a hover glow starts and stops with no protected call; an Icons write waits for combat end
+- glow: a wedge glows on its icon too, and on hover
+
 ### test_vendor_sync.lua (3)
 
 - libs/LibKa0s is the LibKa0s release CLAUDE.md says this addon bundles
@@ -1083,7 +1109,7 @@ Total.
 | test_tokens.lua | 8 |
 | test_channels.lua | 8 |
 | test_bake.lua | 12 |
-| test_share.lua | 36 |
+| test_share.lua | 37 |
 | test_resolver.lua | 13 |
 | test_builtins.lua | 9 |
 | test_gameids.lua | 4 |
@@ -1095,8 +1121,8 @@ Total.
 | test_eui_skin.lua | 10 |
 | test_groups_when.lua | 20 |
 | test_page_groups.lua | 63 |
-| test_page_pads.lua | 13 |
-| test_page_dials.lua | 17 |
+| test_page_pads.lua | 16 |
+| test_page_dials.lua | 18 |
 | test_page_share.lua | 12 |
 | test_check.lua | 6 |
 | test_send_guard.lua | 10 |
@@ -1110,6 +1136,8 @@ Total.
 | test_pad_render.lua | 19 |
 | test_pad.lua | 29 |
 | test_dial.lua | 29 |
+| test_icon_style.lua | 7 |
+| test_glow.lua | 8 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -1117,4 +1145,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **903** |
+| **Total** | **923** |

@@ -407,6 +407,20 @@ end
 
 for _, row in ipairs(lookRows()) do ROWS[#ROWS + 1] = row end
 
+-- The Icons tab's rows (B9, settings/SchemaIcons.lua), with these checks: a pad's after its Look rows,
+-- a dial's after its Wheel rows (before the Binding tab's row), so each editor's Icons tab sits there.
+do
+    local C = { check = check, choices = choices, oneOf = oneOf, clamp = clamp, NUMBER = NUMBER, BOOL = BOOL,
+        color = check(isColor), name = check(isName), fourChannels = fourChannels }
+    local IconRows = NS.addon.Settings.IconRows
+    for _, row in ipairs(IconRows("pad", C)) do ROWS[#ROWS + 1] = row end
+    local at = #ROWS + 1
+    for i, row in ipairs(ROWS) do
+        if row.path == "dial.key" then at = i break end
+    end
+    for i, row in ipairs(IconRows("dial", C)) do table.insert(ROWS, at + i - 1, row) end
+end
+
 -- Every member row's reaction: Library.Touch announces the write (LIBRARY_CHANGED, the pads' rebuild),
 -- naming the row's path as the field. A color stays only on a glyph: an icon write that leaves a
 -- colored member without one clears its color through the seam in the same act (Library.Batch, one
