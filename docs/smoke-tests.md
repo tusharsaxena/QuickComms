@@ -514,7 +514,9 @@ The README's Credits section names the three sets, their licenses and the Game-i
 Typing in the search box keeps up without a hitch. Result:
 
 **EDIT-27. Preview while editing.** Out of combat, in the open world: Settings → Groups → the band
-shows Preview while editing, ticked, under the Group picker. Pick "Arena" → every pad shows only the
+draws the Group picker's box under its label, New group to its right and level with the box, and
+Preview while editing, ticked, under the Group picker; pick another group and the three are still
+drawn. Pick "Arena" → every pad shows only the
 arena set, with `Preview: Arena` on its header and PREVIEW on its drag strip, and dial 1 opens on it; clicking a chip
 sends nothing to chat and prints one local line, `[QC] /<slash> <text>` (the channel's slash and the
 callout's text with its tokens filled in, `{me}` as your name). Pick a battleground set → its own callouts and every node show, outside the

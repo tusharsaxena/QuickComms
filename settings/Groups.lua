@@ -569,85 +569,145 @@ end
 -- THE BAND (options-ui-§14) through O.PageHeader, which a page with a picker and another page-wide
 -- control draws instead of O.PageBanner: the picker in the left half with New group level with its
 -- control in the right half, as PageBanner places them, and Preview while editing under the
--- picker. The widgets are the page's to release: the last render's go back to AceGUI once this
--- render's are drawn, so none is released under the callback that asked for the redraw.
-G.BAND_H, G.BAND_GAP, G.BAND_ACTION_Y, G.BAND_ACTION_H = 72, 4, 14, 24
-G.BAND_TOGGLE_Y, G.BAND_TOGGLE_H = 46, 24
-
-local function place(widget, frame, left, leftRel, leftX, right, rightRel, rightX, y, height)
-    local f = widget.frame
-    if not f then return end
-    f:SetParent(frame)
-    f:ClearAllPoints()
-    f:SetPoint(left, frame, leftRel, leftX, -y)
-    f:SetPoint(right, frame, rightRel, rightX, -y)
-    if height then f:SetHeight(height) end
-    f:Show()
-end
+-- picker.
+--
+-- ONE AceGUI SimpleGroup holds the three, as PanelMaster's band does (settings/PanelEditor.lua
+-- drawPageHeader). They were once placed by hand, each widget frame SetParent'ed into the header
+-- frame and anchored there, and in the client the band then showed only the picker's "Group"
+-- label: the control, New group and the checkbox were not drawn, though the picker's list still
+-- opened where it should have been. A widget placed by hand is no container's child, so nothing
+-- AceGUI does for a child happened to it: no AddChild (WidgetBase.SetParent's SetParent(nil)
+-- before the new parent, then frame:Show()), and no layout (SetWidth, so OnWidthSet), on a widget
+-- AceGUI's pool hands back hidden and parked on UIParent by its last Release. A container's
+-- AddChild and Flow layout do all of that, so the band uses one.
+--
+-- The block is parented to the handed frame by hand, so it is shown here: AceGUI's pool hands a
+-- SimpleGroup back hidden, and only a parent container's layout would show it (PanelMaster's
+-- comment: its band kept its height and divider and lost what was inside it).
+G.BAND_H = 72
 
 local function refused(kind, subject)
     local check = H().__combatRefused
     return check ~= nil and check(kind, subject) == true
 end
 
-local function bandPicker(AceGUI, frame, list, order, selected)
+-- A host callback, pcall'd as O.PageBanner's are: a raise inside AceGUI's own dispatch would take
+-- the click handling of every widget on the frame with it. The error is printed, not swallowed.
+local function guarded(fn, ...)
+    local ok, err = pcall(fn, ...)
+    if not ok then NS.Print(tostring(err)) end
+end
+
+local function bandPicker(AceGUI, list, order, selected)
     local dd = AceGUI:Create("Dropdown")
     local label = L["Group"]
     dd:SetLabel(label)
     dd:SetList(list, order)
     dd:SetValue(selected)
+    dd:SetRelativeWidth(0.5)
     dd:SetCallback("OnValueChanged", function(_, _, v)
         -- A change of subject is a structural redraw: refused in combat, as PageBanner's is.
         if refused("banner select", v) then
             dd:SetValue(selected)
             return
         end
-        Ed.Select("group", v)
-        Ed.RequestRefresh()
+        guarded(function()
+            Ed.Select("group", v)
+            Ed.RequestRefresh()
+        end)
     end)
-    place(dd, frame, "TOPLEFT", "TOPLEFT", 0, "TOPRIGHT", "TOP", -G.BAND_GAP, 0)
     H().AttachTooltip(dd, label, L["Which group this page edits. A green dot marks a group active now (or in the preview)."])
     return dd
 end
 
-local function bandAction(AceGUI, frame)
+local function bandAction(AceGUI)
     local btn = AceGUI:Create("Button")
     local text = L["New group"]
     btn:SetText(text)
+    btn:SetRelativeWidth(0.5)
     btn:SetCallback("OnClick", function()
         if refused("banner action", text) then return end
-        G.Create()
+        guarded(G.Create)
     end)
-    place(btn, frame, "TOPLEFT", "TOP", G.BAND_GAP, "TOPRIGHT", "TOPRIGHT", 0, G.BAND_ACTION_Y, G.BAND_ACTION_H)
     H().AttachTooltip(btn, text, L["Make a new group, put it at the top of every pad, and edit it here."])
     return btn
 end
 
-local function bandToggle(AceGUI, frame)
-    local row = Ed.Row("behavior.previewOnEdit")
+local function bandToggle(AceGUI, row)
     local cb = AceGUI:Create("CheckBox")
     cb:SetLabel(row.label)
     cb:SetValue(NS.Setting("behavior.previewOnEdit") ~= false)
+    -- The left half, so the Flow layout puts it on its own row, under the picker.
+    cb:SetRelativeWidth(0.5)
     cb:SetCallback("OnValueChanged", function(_, _, v)
-        local ok, err, why = NS.SchemaRuntime.Set("behavior.previewOnEdit", v and true or false)
-        if not ok then NS.Print(tostring(why or err)) end
+        guarded(function()
+            local ok, err, why = NS.SchemaRuntime.Set("behavior.previewOnEdit", v and true or false)
+            if not ok then NS.Print(tostring(why or err)) end
+        end)
     end)
-    place(cb, frame, "TOPLEFT", "TOPLEFT", 0, "TOPRIGHT", "TOP", -G.BAND_GAP, G.BAND_TOGGLE_Y, G.BAND_TOGGLE_H)
     H().AttachTooltip(cb, row.label, row.desc)
     return cb
 end
 
+-- The Flow layout reads the block's content width, which a SimpleGroup's OnAcquire sets to 300
+-- and only SetWidth changes; the two anchors size the frame and leave it alone. So the band's
+-- width is passed on here, at the build when the header already has one, and from the header's
+-- OnSizeChanged after (PanelMaster's reason: the first page opened is drawn before the canvas has
+-- laid itself out). Hooked on the header frame, not ctx.chrome, whose OnSizeChanged is the
+-- strip's; guarded on a change in width, since a height change fires it too.
+local function fitBand(ctx, block, frame)
+    local function fit(width)
+        if type(width) ~= "number" or width <= 0 or block.qcLaidOutAt == width then return end
+        block.qcLaidOutAt = width
+        block:SetWidth(width)
+        block:DoLayout()
+    end
+    fit(frame.GetWidth and frame:GetWidth())
+    if frame.SetScript then
+        frame:SetScript("OnSizeChanged", function(_, width)
+            -- A released block is no longer the band's: the next render's hook replaces this one.
+            if ctx.qcBand and ctx.qcBand.block == block then fit(width) end
+        end)
+    end
+end
+
+local function buildBand(ctx, frame, list, order, selected)
+    local AceGUI = H().AceGUI
+    local block = AceGUI and AceGUI:Create("SimpleGroup")
+    if not (block and block.frame) then return end
+    block:SetLayout("Flow")
+    block.frame:SetParent(frame)
+    block.frame:ClearAllPoints()
+    block.frame:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
+    block.frame:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
+    block.frame:Show()
+    local band = { block = block, picker = bandPicker(AceGUI, list, order, selected), action = bandAction(AceGUI) }
+    block:AddChild(band.picker)
+    block:AddChild(band.action)
+    local row = Ed.Row("behavior.previewOnEdit")
+    if row then
+        band.toggle = bandToggle(AceGUI, row)
+        block:AddChild(band.toggle)
+    end
+    ctx.qcBand = band
+    fitBand(ctx, block, frame)
+end
+
+-- THE RELEASE ORDER. The last render's block goes back to AceGUI only once this render's is built,
+-- and with it its three widgets (a container's Release releases its children). Released first, it
+-- would be in AceGUI's pool in time for this render's Create calls to hand its widgets straight
+-- back out, re-initialized, while one of them may still be on the stack. And no widget is released
+-- under its own running callback: the band's callbacks never redraw the page themselves. A pick
+-- and New group ask Ed.RequestRefresh, which redraws on the next frame; the checkbox's write
+-- repaints the pads, not this page. So the callback has returned before its widget is released.
 local function drawBand(ctx, list, order, selected)
     local old = ctx.qcBand
     ctx.qcBand = nil
     H().PageHeader(ctx, { height = G.BAND_H, build = function(_, frame)
-        local AceGUI = H().AceGUI
-        ctx.qcBand = { picker = bandPicker(AceGUI, frame, list, order, selected), action = bandAction(AceGUI, frame),
-            toggle = Ed.Row("behavior.previewOnEdit") and bandToggle(AceGUI, frame) or nil }
+        buildBand(ctx, frame, list, order, selected)
     end })
     local AceGUI = H().AceGUI
-    if not AceGUI then return end
-    for _, w in pairs(old or {}) do AceGUI:Release(w) end
+    if old and old.block and AceGUI then AceGUI:Release(old.block) end
 end
 
 local function render(ctx)

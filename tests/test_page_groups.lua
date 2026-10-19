@@ -83,6 +83,80 @@ test("groups page: the picker lists every group by name, a seeded set among them
     for _, e in ipairs(entries) do assertTrue(e.id:match("^bi%.") == nil, "no shipped id: " .. e.id) end
 end)
 
+-- Every band widget AceGUI makes from here on records the frame it was parented to; the stub frame
+-- answers SetParent with itself and keeps nothing.
+local function recordParents(m)
+    local ace = m.LibStub("AceGUI-3.0")
+    local create = ace.Create
+    ace.Create = function(fake, wtype, ...)
+        local w = create(fake, wtype, ...)
+        if w.frame then rawset(w.frame, "SetParent", function(self, p) self.qcParent = p; return self end) end
+        return w
+    end
+    return function() ace.Create = create end
+end
+
+-- The band as AceGUI would draw it: one SimpleGroup under the header frame, shown, laid out by
+-- Flow, holding the picker and New group (each half the band) and the checkbox under the picker.
+local function assertBand(band, label)
+    assertTrue(band ~= nil and band.block ~= nil, label .. ": a block")
+    local block = band.block
+    assertEqual(block.type, "SimpleGroup", label)
+    assertEqual(block.layout, "Flow", label)
+    assertTrue(block.frame.qcParent ~= nil, label .. ": parented to the header frame")
+    assertTrue(block.frame:IsShown(), label .. ": the block shown, as AceGUI's pool will not")
+    assertFalse(block.__released == true, label)
+    local kids = {}
+    for i, w in ipairs(block.children) do kids[i] = w end
+    assertTrue(kids[1] == band.picker and kids[2] == band.action and kids[3] == band.toggle,
+        label .. ": picker, New group, then the checkbox, each the block's child")
+    for _, w in ipairs(kids) do
+        assertFalse(w.__released == true, label .. ": " .. w.type .. " live")
+        assertEqual(w.relativeWidth, 0.5, label .. ": " .. w.type .. " sized by the layout")
+    end
+end
+
+test("groups page: [band] the picker, New group and Preview while editing are one SimpleGroup's, after a group switch too", function()
+    local NS, m = T.enableAddon()
+    NS.Situation.ReadInputs = function() return {} end
+    NS.Situation.RefreshNow("test")
+    local P = dofile("tests/page_helpers.lua")(NS, m)
+    local restore = recordParents(m)
+    local first = NS.Library.CreateGroup({ name = "First" })
+    local second = NS.Library.CreateGroup({ name = "Second" })
+    pick(NS, first)
+    P.show("Groups")
+    local ctx = P.ctx("groups")
+    local band = ctx.qcBand
+    -- red under: place the widgets in the header frame by hand again (no block, no AddChild)
+    assertBand(band, "first render")
+    local header = band.block.frame.qcParent
+    -- The header's width reaches the layout: the block is a SimpleGroup laid out at 300 otherwise.
+    header:__setGeom(640, 72)
+    local laid = band.block.layoutCount or 0
+    header:__fire("OnSizeChanged", 640, 72)
+    assertEqual(band.block.width, 640, "the band's width, through SetWidth")
+    assertTrue((band.block.layoutCount or 0) > laid, "and laid out again")
+    header:__fire("OnSizeChanged", 640, 80)
+    assertEqual(band.block.layoutCount, laid + 1, "a height change alone lays out nothing")
+    -- A group switch through the picker redraws the page on the next frame.
+    band.picker:__fire("OnValueChanged", second)
+    P.flush()
+    local again = ctx.qcBand
+    assertTrue(again ~= band, "a new band")
+    assertBand(again, "after a group switch")
+    assertEqual(again.picker.value, second)
+    assertTrue(again.block.frame.qcParent == header, "the same header frame")
+    assertEqual(again.block.width, 640, "a header that has a width passes it on at the build")
+    assertTrue(band.block.__released == true, "the last render's block went back to AceGUI")
+    -- a released block's hook is not the band's any more
+    local w = band.block.width
+    header:__fire("OnSizeChanged", 700, 72)
+    assertEqual(band.block.width, w)
+    assertEqual(again.block.width, 700)
+    restore()
+end)
+
 test("groups page: General draws the group's rows, no Preview as; Duplicate and Delete act", function()
     local NS, _, P = open()
     local gid = NS.Library.CreateGroup({ name = "Mine" })

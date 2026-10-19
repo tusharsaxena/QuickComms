@@ -632,10 +632,11 @@ Total.
 - when: [arena] the arena row: names, Summary, All arenas, the CLI value, and its tooltip
 - when: [arena] Add the arena you are in reads the live snapshot, and refuses outside an arena
 
-### test_page_groups.lua (66)
+### test_page_groups.lua (67)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists every group by name, a seeded set among them, active ones dotted
+- groups page: [band] the picker, New group and Preview while editing are one SimpleGroup's, after a group switch too
 - groups page: General draws the group's rows, no Preview as; Duplicate and Delete act
 - groups page: Callouts drags to reorder, removes, and copies a seeded callout in (P2)
 - groups page: Add callout opens the popup for this group
@@ -1162,7 +1163,7 @@ Total.
 | test_icon_browser.lua | 36 |
 | test_eui_skin.lua | 10 |
 | test_groups_when.lua | 20 |
-| test_page_groups.lua | 66 |
+| test_page_groups.lua | 67 |
 | test_page_pads.lua | 16 |
 | test_page_dials.lua | 18 |
 | test_page_share.lua | 12 |
@@ -1188,4 +1189,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **962** |
+| **Total** | **963** |
