@@ -62,7 +62,7 @@
 | S1 options-ui-§15 extras | WowAddonStandards | todo | |
 | Q1 Pad: title, chip width, growth | QC | done | ea04cd1 |
 | Q2 /qc toggle | QC | done | e71b428 |
-| Q3 Look headings + Callouts rows | QC | todo | |
+| Q3 Look headings + Callouts rows | QC | done | 6a34bf7 |
 | Q4 Preview as → Master controls | QC | todo | |
 | Q5 Instances + Arena drawers | QC | todo | |
 | Q6 Vendor LibKa0s v1.74.0 + icon browser | QC | todo | |
