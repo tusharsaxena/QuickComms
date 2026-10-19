@@ -8,8 +8,8 @@ eagerly at `OnEnable`; each page's body builds on its first show (options-ui-§1
 | Ka0s Quick Comms (landing) | The logo, the TOC notes line and the slash command list, drawn by the library's `BuildLandingPage` |
 | General | `Master controls`, `Behavior` |
 | Groups | One group (a seeded built-in set is one too): `General`, `Callouts`, `When`, `Preview` |
-| Comms Pad | One pad: `General`, `Groups`, `Layout`, `Look` |
-| Comms Dial | One dial: `General`, `Groups`, `Wheel`, `Binding`, `Preview` |
+| Comms Pad | One pad: `General`, `Groups`, `Layout`, `Look`, `Icons` |
+| Comms Dial | One dial: `General`, `Groups`, `Wheel`, `Icons`, `Binding`, `Preview` |
 | Share | `Export`, `Import` |
 | Profiles | AceDBOptions: switch, copy, reset and delete profiles |
 
@@ -32,7 +32,8 @@ Reset all settings buttons.
 
 Lock frame, `/qc lock|unlock` and the launcher's Locked entry write the same path; Test mode,
 `/qc test` and the launcher's Test mode entry call the same switch (`Preview.SetTestMode`), which is
-refused in combat.
+refused in combat. The launcher's Show window entry calls `/qc toggle`'s handler
+(`SlashVerbs.TogglePads`), which hides or shows every Comms Pad for the session.
 
 Preview as is passed through the composer's `extra` slot, so it lands after the canonical rows and
 before the button pair, never among them: options-ui-§15 as amended in v2.84.0 sanctions that slot

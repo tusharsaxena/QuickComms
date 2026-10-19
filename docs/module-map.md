@@ -1,7 +1,7 @@
 # Module map — Ka0s Quick Comms
 
 Every non-vendored file, its responsibility, and the TOC load order. `libs/` (Ace3, LibSharedMedia,
-LibDataBroker, LibDBIcon, LibDeflate, LibSerialize, LibCustomGlow-1.0, LibKa0s v1.73.0 whole) and `tests/_kit/` are vendored and never edited.
+LibDataBroker, LibDBIcon, LibDeflate, LibSerialize, LibCustomGlow-1.0, LibKa0s v1.74.0 whole) and `tests/_kit/` are vendored and never edited.
 
 ## Load order (the TOC)
 
@@ -30,8 +30,8 @@ The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after Li
 | 16 | `defaults/Profile.lua` | data | every default value (`NS.C`) |
 | 16a | `defaults/BuiltIns.lua` | data | `NS.BuiltIns`: the registry of shipped sets and the declaring helpers; seed data, copied into each profile once as ordinary groups by `Library` |
 | 16b | `defaults/BuiltIns_MythicPlus.lua`, `_Raid.lua`, `_Arena.lua`, `_Battlegrounds.lua` | data | the four shipped sets (spec §12), a battleground's nodes as groups inside its set |
+| 16b1 | `defaults/Icons.lua` | data | `NS.IconDefaults`: the Icons tab's defaults (`For(kind)`), size ranges, glow styles, triggers and DropWatcher's knob table; `modules/Library.lua` reads it at load |
 | 16b2 | `defaults/GameIds.lua` | data | the shipped ids: the season's dungeons and raids, classes, specializations (matched against the client's data by `tools/derive-gameids.py` and `tests/test_gameids.lua`; confirmed in game by IDS-1) |
-| 16b2a | `defaults/Icons.lua` | data | `NS.IconDefaults`: the Icons tab's defaults (`For(kind)`), size ranges, glow styles, triggers and DropWatcher's knob table; `modules/Library.lua` reads it at load |
 | 16b3 | `defaults/GameIds_Instances.lua` | data | the When editor's place lists: `INSTANCES` (every Encounter Journal dungeon and raid) and `ARENAS` (every arena, one per arena), derived and checked by `tools/derive-gameids.py` |
 | 16c | `modules/Restrictions.lua` | edge | what the client's addon restrictions allow; `RESTRICTION_CHANGED` |
 | 16d | `modules/Situation.lua` | classifier + edge | the situation snapshot; `SITUATION_CHANGED` |
@@ -73,7 +73,7 @@ The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after Li
 | 21c | `settings/Groups_When.lua` | settings | the Groups page's When editor: a drawer per condition (`H.Drawer`), Select all and Clear (Any), an inheriting group's read-only view |
 | 21d | `settings/Groups.lua` | settings | the Groups page, the same for every group, a seeded built-in set among them (General: Parent group, Inherit when conditions, Restore built-in groups; Callouts: Add callout, Reuse callout, the glyph list; Preview as a table) |
 | 21e | `settings/Pads.lua` | settings | the Comms Pad page |
-| 21e2 | `settings/Dials.lua` | settings | the Comms Dial page (General, Groups, Wheel, Binding, Preview) |
+| 21e2 | `settings/Dials.lua` | settings | the Comms Dial page (General, Groups, Wheel, Icons, Binding, Preview) |
 | 21f | `settings/Share.lua` | settings | the Share page (Export, Import) |
 | 21g | `settings/SlashVerbs.lua` | verbs | `NS.SlashVerbs`: the verb bodies (`check`, `SetLocked` for `lock` / `unlock`, `preview`, `why`) |
 | 22 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |
@@ -118,7 +118,7 @@ files they add are listed in design spec §4.2.
 | `tests/test_eui_skin.lua` | the popup's EllesmereUI skin on a mocked EllesmereUI: painted as the settings window is when every condition holds, at the build or at a late callback, once (the icon browser's window too); not when any condition fails; never raising without EllesmereUI; a changed facade left stock; painted while the addon is disabled; the fallback window left unpainted; the diagnostics report's line and its `why=` reason |
 | `tests/test_groups_when.lua` | the When editor's pure half (toggle, clear, select all, key-level range, the values offered, the summary, the active-now line, an inheriting group's) and its write through the seam |
 | `tests/test_page_groups.lua` | the Groups page: picker (children indented) and New group, a group's tabs, a seeded set's the same as any (General's Parent group, icon chooser and the browser's writes, Restore built-in groups; Inherit when conditions beside Parent group; the Callouts tab's Add callout, Reuse and glyph list; the When drawers, Select all and Clear (Any), and an inheriting group's read-only When; no green dot on a seeded battleground's nodes in the open world; the Preview table), deleting a parent |
-| `tests/test_page_pads.lua` | the Comms Pad page: picker and New pad, General's acts, the Groups priority list, Layout with X/Y, Look |
+| `tests/test_page_pads.lua` | the Comms Pad page: picker and New pad, General's acts, the Groups priority list, Layout with X/Y, Look, the Icons tab |
 | `tests/test_dial_layout.lua` | `Dial_Layout`: rings, pages, open-into, geometry |
 | `tests/test_dial_secure.lua` | `Dial_Secure`: the snippets on a hand-built dial, in and out of combat |
 | `tests/test_dial.lua` | `Dial`: the frames, the rebuild and keys, the three exit paths, `Bindings.xml` |

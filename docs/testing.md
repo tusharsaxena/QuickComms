@@ -43,15 +43,15 @@ every degradation stub is tested: by a real load, never by a hand-written stub (
 
 Named suites the standard requires: `test_surface_parity` (testing-§8), `test_vendor_sync`
 (testing-§11, delegating to the kit), `test_disabled` (slash-commands-§7). The addon's own:
-`test_harness` (the load and the repository's shape), `test_setup` (each adopted module's wiring),
-`test_database`, `test_schema`, `test_slash`, `test_diagnostics`, and phase 1's `test_compat`,
+`test_harness` (the load and the repository's shape), `test_bus`, `test_setup` (each adopted module's wiring),
+`test_database`, `test_profile`, `test_schema`, `test_slash`, `test_diagnostics`, and phase 1's `test_compat`,
 `test_restrictions`, `test_situation`, `test_tokens`, `test_channels`, `test_bake`, `test_resolver`,
 `test_builtins`, `test_library` and `test_check`, and phase 2's `test_mock_secure`, `test_send_guard`,
 `test_sendengine`, `test_preview`, `test_master`, `test_pad_layout`, `test_surfaces`,
 `test_pad_render` and `test_pad`, and phase 3's `test_members`, `test_editors`, `test_callout_popup` (the callout popup, which replaced `test_page_callouts`), `test_eui_skin` (its optional EllesmereUI skin, on a mocked EllesmereUI),
 `test_groups_when`, `test_page_groups`, `test_page_pads` and `test_page_share`, and phase 4's
 `test_dial_layout`, `test_dial_secure`, `test_dial` and `test_page_dials`, and phase 5's `test_share`
-and `test_gameids`, and the icon browser's `test_icon_browser`. Kit suites, declared by directory:
+and `test_gameids`, the icon browser's `test_icon_browser`, and the Icons tab's `test_icon_style` and `test_glow`. Kit suites, declared by directory:
 `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`, `test_lizard_sighted`.
 Every new `tests/test_*.lua` is added to the `suites` list in `tests/run.lua`; the kit fails the run
 in both directions.

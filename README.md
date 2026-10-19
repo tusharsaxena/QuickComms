@@ -110,8 +110,7 @@ than in comments, so nothing gets lost.
 
 ## Credits
 
-The glyphs in the icon browser ship inside the bundled [LibKa0s](https://github.com/tusharsaxena/LibKa0s)
-library, each set with its license beside its art under `libs/LibKa0s/media/icons/`:
+The glyphs in the icon browser come from three icon sets, each shipped with its license beside its art:
 
 - **Open Iconic**, by Waybury, MIT license (<https://github.com/iconic/open-iconic>).
 - **Phosphor** (the Fill weight), by Phosphor Icons, MIT license (<https://phosphoricons.com>).

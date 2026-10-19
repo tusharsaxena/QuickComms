@@ -44,7 +44,7 @@ Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBO
 LibSharedMedia, LibDataBroker, LibDBIcon, LibDeflate and LibSerialize (the share string, spec §15),
 and LibCustomGlow-1.0 (the Icons tab's glows, resolved at call time and optional; versions and
 licenses in `DEPENDENCIES.md`) are vendored under `libs/`, and so is the whole
-LibKa0s v1.73.0 payload, of which thirteen majors are wired, one setup file each (`DEPENDENCIES.md`
+LibKa0s v1.74.0 payload, of which thirteen majors are wired, one setup file each (`DEPENDENCIES.md`
 lists the toolchain):
 
 | Major | Setup file | Gives |
@@ -257,6 +257,7 @@ Every secure rule lives in one file. `modules/SendEngine.lua` is the only code t
 - Groups nest one level only: a group inside another cannot hold groups, and a group that holds groups cannot go inside another. A group's children are drawn, listed and offered in the order they were made in; there is no control to reorder them yet.
 - A battleground set's ring is pinned to the compass winds only while every group inside it is a seeded node (the wind is not a member field) and the set holds no callouts of its own: a group the player puts inside it, or a callout added to the set itself, unpins the ring, and a set that arrives in a share string brings its nodes unpinned.
 - Restore built-in groups puts back only what is missing (a seeded set, node or callout no member keeps the origin of); it never resets a seeded group the player changed. To get a stock set back, delete its group and restore. A copy (Duplicate, Reuse, an import) keeps no origin, so it never stands in for the stock set.
+- A pad's saved point is read as its growth edge's (its top for down growth, its bottom for up growth, B2). Before 2026-10-19 a saved point named whatever point the client returned, and a never-dragged pad's default `CENTER 0 -150` was its center's; such a pad moves once on its first load, by half its height or its whole height; a drag saves the edge point and it stays put from then on. No migration converts the old point, which would need the pad's drawn height (the addon is unreleased, so only pre-release profiles carry one).
 - The logo is a placeholder generated for the scaffold; the owner may replace the art (regenerate
   the TGAs with the recipe in `DEPENDENCIES.md`).
 

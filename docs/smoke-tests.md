@@ -192,7 +192,9 @@ sections stack upward above it; `/qc unlock` → the drag strip sits below the p
 somewhere, then add a group to the pad → the pad grows upward and the strip stays where you left it;
 `/reload` → the strip is still there. Left and up → the chips fill right to left, still upward. Right
 and down → the header is on top again, the strip above, and adding a group grows the pad downward
-from a top edge that stays put. A profile saved with Upward growth loads as Right and up. Result:
+from a top edge that stays put. A profile saved with Upward growth loads as Right and up. A pad placed
+before 2026-10-19 moves once on its first load, by up to its height (see Known Limitations in
+`docs/ARCHITECTURE.md`); drag it back and it stays. Result:
 
 **PAD-10. Chip width and the section title.** Comms Pad → Layout → Chip width reads 100 on a new
 pad; drag it to 300 → wide chips, each label on one line; down to 30 → the labels cut short, still
