@@ -1,7 +1,8 @@
 local _, NS = ...
 -- modules/Preview.lua — test mode (spec §10.4, preview-mode, options-ui-§15) and the one sender of
 -- TEST_MODE_CHANGED (spec §17). It holds both flavors of test mode: placeholders, and "Preview as…"
--- (spec §13.3), which builds the pads from a synthetic snapshot. They are one switch at a time.
+-- (spec §13.3), which builds the pads from a synthetic snapshot. They are one switch at a time. A
+-- third, the edit preview (one group, while the Groups page edits it), sits over either.
 -- Session-only (NS.State.testMode, never saved): refused while stood down or in combat
 -- with one line, ended when combat starts (while secure writes are still allowed, so the pads swap
 -- back to live chips at once), and ended by the stand-down. The checkbox, the `test` verb and the
@@ -25,9 +26,10 @@ local function refreshPanel()
     if H and H.RefreshAll then H.RefreshAll() end
 end
 
--- Both flavors announce through TEST_MODE_CHANGED: `on` is true while either is on.
+-- Every flavor announces through TEST_MODE_CHANGED: `on` is true while any is on.
 local function announce()
-    NS.addon:SendMessage(NS.MSG.TEST_MODE_CHANGED, State.testMode == true or State.previewAs ~= nil)
+    NS.addon:SendMessage(NS.MSG.TEST_MODE_CHANGED,
+        State.testMode == true or State.previewAs ~= nil or State.editPreview ~= nil)
     refreshPanel()
 end
 
@@ -144,6 +146,10 @@ function P.FindPreset(key)
 end
 
 function P.Label(key)
+    if key == P.EDIT then
+        local g = State.editPreview and NS.Library.Group(State.editPreview)
+        return g and g.name or tostring(State.editPreview)
+    end
     local e = P.FindPreset(key)
     return e and e.label or tostring(key)
 end
@@ -192,6 +198,33 @@ function P.SetPreviewAs(key)
     return true
 end
 
+-- ── Editing a group (2026-10-19 groups polish, C4) ──────────────────────────────────────────
+--
+-- While the Groups page edits a group with Preview while editing on (settings/Groups.lua
+-- SyncEditPreview), every pad and dial shows only that group and the groups inside it, whatever its
+-- When says, drawn and disarmed as a Preview as plan is (modules/Surfaces.lua, plan.editGroup).
+-- It wins over Preview as and test mode while it is on, and leaves both as they were: they come
+-- back when it ends. Session-only (NS.State.editPreview). A start in combat or stood down is
+-- refused without a line, because the page asks again on every draw; combat, the stand-down,
+-- the page hiding and the settings window closing end it.
+
+P.EDIT = "edit"
+
+function P.EditGroup()
+    return State.editPreview
+end
+
+--- Preview only group `gid` on every pad and dial, or end that (nil).
+--- @return boolean changed
+function P.SetEditPreview(gid)
+    if gid == State.editPreview then return false end
+    if gid ~= nil and (NS.IsStoodDown() or fighting()) then return false end
+    State.editPreview = gid
+    NS.Debug("Pad", "edit preview %s", tostring(gid or "off"))
+    announce()
+    return true
+end
+
 local watched = setmetatable({}, { __mode = "k" })
 
 --- End the preview when the settings window closes (spec §13.3). settings/Panel.lua hands it the
@@ -201,6 +234,7 @@ function P.WatchPanel(frame)
     watched[frame] = true
     frame:HookScript("OnHide", function()
         if State.previewAs then P.SetPreviewAs(nil) end
+        if State.editPreview then P.SetEditPreview(nil) end
     end)
     return true
 end
@@ -211,10 +245,11 @@ local function onRestrictionChanged()
         P.SetTestMode(false)
         NS.Print(L["Test mode ended: you entered combat."])
     end
-    if State.previewAs then
-        P.SetPreviewAs(nil)
-        NS.Print(L["Preview ended: you entered combat."])
-    end
+    -- One line for both previews: the edit preview and Preview as end together.
+    local previewing = State.previewAs ~= nil or State.editPreview ~= nil
+    if State.editPreview then P.SetEditPreview(nil) end
+    if State.previewAs then P.SetPreviewAs(nil) end
+    if previewing then NS.Print(L["Preview ended: you entered combat."]) end
 end
 
 -- Its own target (core/Bus.lua); the degraded bus is handled here, as in modules/Situation.lua.
@@ -226,7 +261,7 @@ end
 listen()
 
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
-    State.testMode, State.previewAs = nil, nil
+    State.testMode, State.previewAs, State.editPreview = nil, nil, nil
     if receiver and not NS.Bus.tracked then receiver:UnregisterMessage(NS.MSG.RESTRICTION_CHANGED) end
 end
 NS.STAND_UP[#NS.STAND_UP + 1] = function()

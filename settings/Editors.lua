@@ -676,7 +676,9 @@ end
 --- Register one editor page (options-ui-§3, §5): its canvas, a body built on first show, its place in
 --- the sidebar and its Defaults button (`defaults = { tooltip, onClick(ctx) }`; options-ui-§13: its
 --- blast radius is the selected member). `render(ctx)` draws the band, the strip and the active tab.
-function Ed.RegisterPage(pageKey, title, frameSuffix, render, defaults)
+--- `hooks` (optional) = { onShow, onHide }: run after the panel's own OnShow and OnHide (insecure
+--- hooks on the page's own canvas), each time the page is shown or hidden.
+function Ed.RegisterPage(pageKey, title, frameSuffix, render, defaults, hooks)
     local function redraw(ctx)
         Ed.CancelReorder(pageKey)
         H().ClearScroll(ctx)
@@ -692,6 +694,11 @@ function Ed.RegisterPage(pageKey, title, frameSuffix, render, defaults)
         ctx.panel.defaultsOnClick = function() defaults.onClick(ctx) end
         h.SetRenderer(ctx, redraw)
         Ed.pages[pageKey] = ctx
+        local panel = ctx.panel
+        if hooks and panel and panel.HookScript then
+            if hooks.onShow then panel:HookScript("OnShow", hooks.onShow) end
+            if hooks.onHide then panel:HookScript("OnHide", hooks.onHide) end
+        end
         return _G.Settings.RegisterCanvasLayoutSubcategory(parentCategory, ctx.panel, title)
     end)
 end

@@ -4,6 +4,8 @@ local _, NS = ...
 --
 --     band      [ Group v (picker; a green dot marks a group active now; a group inside another is
 --               listed indented under it) ][ New group ]
+--               [x] Preview while editing (behavior.previewOnEdit: every pad and dial shows only
+--               the group picked, while this page is shown; G.SyncEditPreview)
 --     strip     [ General ][ Callouts ][ When ][ Preview ]
 --     General   Name, Enabled, Open the dial on this group, then
 --               Parent group (none, or a top-level group; idle while the group holds groups) beside
@@ -22,8 +24,9 @@ local _, NS = ...
 --               beside what it sends under the current or previewed situation, or why it sends nothing;
 --               a group holding groups has a titled table for its own callouts, then one per child
 --
--- The band holds the picker and the create action (options-ui-§14); the acts are General's, which
--- is first. A new group goes to the top of every pad and dial (Library.OfferGroup), so it shows as
+-- The band holds the picker, the create action and the page-wide Preview while editing box
+-- (options-ui-§14, through O.PageHeader: a picker with another page-wide control); the acts are
+-- General's, which is first. A new group goes to the top of every pad and dial (Library.OfferGroup), so it shows as
 -- soon as its When matches.
 
 local QC = NS.addon
@@ -333,7 +336,7 @@ local NONE = L["No groups yet. Click New group to make one."]
 -- parentItem), Inherit when conditions (its own checkbox, inheritItem) and the icon's two rows (the
 -- chooser draws them).
 local UNDRAWN = { ["group.parent"] = true, ["group.inheritWhen"] = true,
-    ["group.icon"] = true, ["group.iconColor"] = true }
+    ["group.icon"] = true, ["group.iconColor"] = true, ["behavior.previewOnEdit"] = true }
 
 local function renderGeneral(ctx, rows)
     local h = H()
@@ -521,22 +524,115 @@ local function ids(entries)
     return out
 end
 
+-- Whether the page is on screen (the settings window open on it).
+local function onScreen()
+    local ctx = Ed.pages[PAGE]
+    local panel = ctx and ctx.panel
+    if not (panel and panel.IsVisible) then return false end
+    return panel:IsVisible() == true
+end
+
+--- Preview while editing (2026-10-19 groups polish, C4): while the page is on screen and the
+--- setting is on, every pad and dial shows only the selected group (Preview.SetEditPreview); else
+--- that ends. Run on every draw, on the page's show and hide, and on the setting's write; the
+--- preview refuses a start in combat on its own.
+function G.SyncEditPreview()
+    local gid = Ed.Selected("group")
+    local want = onScreen() and NS.Setting("behavior.previewOnEdit") ~= false and gid ~= nil
+        and NS.Library.Group(gid) ~= nil and gid or nil
+    return NS.Preview.SetEditPreview(want)
+end
+
+-- THE BAND (options-ui-§14) through O.PageHeader, which a page with a picker and another page-wide
+-- control draws instead of O.PageBanner: the picker in the left half with New group level with its
+-- control in the right half, as PageBanner places them, and Preview while editing under the
+-- picker. The widgets are the page's to release: the last render's go back to AceGUI once this
+-- render's are drawn, so none is released under the callback that asked for the redraw.
+G.BAND_H, G.BAND_GAP, G.BAND_ACTION_Y, G.BAND_ACTION_H = 72, 4, 14, 24
+G.BAND_TOGGLE_Y, G.BAND_TOGGLE_H = 46, 24
+
+local function place(widget, frame, left, leftRel, leftX, right, rightRel, rightX, y, height)
+    local f = widget.frame
+    if not f then return end
+    f:SetParent(frame)
+    f:ClearAllPoints()
+    f:SetPoint(left, frame, leftRel, leftX, -y)
+    f:SetPoint(right, frame, rightRel, rightX, -y)
+    if height then f:SetHeight(height) end
+    f:Show()
+end
+
+local function refused(kind, subject)
+    local check = H().__combatRefused
+    return check ~= nil and check(kind, subject) == true
+end
+
+local function bandPicker(AceGUI, frame, list, order, selected)
+    local dd = AceGUI:Create("Dropdown")
+    local label = L["Group"]
+    dd:SetLabel(label)
+    dd:SetList(list, order)
+    dd:SetValue(selected)
+    dd:SetCallback("OnValueChanged", function(_, _, v)
+        -- A change of subject is a structural redraw: refused in combat, as PageBanner's is.
+        if refused("banner select", v) then
+            dd:SetValue(selected)
+            return
+        end
+        Ed.Select("group", v)
+        Ed.RequestRefresh()
+    end)
+    place(dd, frame, "TOPLEFT", "TOPLEFT", 0, "TOPRIGHT", "TOP", -G.BAND_GAP, 0)
+    H().AttachTooltip(dd, label, L["Which group this page edits. A green dot marks a group active now (or in the preview)."])
+    return dd
+end
+
+local function bandAction(AceGUI, frame)
+    local btn = AceGUI:Create("Button")
+    local text = L["New group"]
+    btn:SetText(text)
+    btn:SetCallback("OnClick", function()
+        if refused("banner action", text) then return end
+        G.Create()
+    end)
+    place(btn, frame, "TOPLEFT", "TOP", G.BAND_GAP, "TOPRIGHT", "TOPRIGHT", 0, G.BAND_ACTION_Y, G.BAND_ACTION_H)
+    H().AttachTooltip(btn, text, L["Make a new group, put it at the top of every pad, and edit it here."])
+    return btn
+end
+
+local function bandToggle(AceGUI, frame)
+    local row = Ed.Row("behavior.previewOnEdit")
+    local cb = AceGUI:Create("CheckBox")
+    cb:SetLabel(row.label)
+    cb:SetValue(NS.Setting("behavior.previewOnEdit") ~= false)
+    cb:SetCallback("OnValueChanged", function(_, _, v)
+        local ok, err, why = NS.SchemaRuntime.Set("behavior.previewOnEdit", v and true or false)
+        if not ok then NS.Print(tostring(why or err)) end
+    end)
+    place(cb, frame, "TOPLEFT", "TOPLEFT", 0, "TOPRIGHT", "TOP", -G.BAND_GAP, G.BAND_TOGGLE_Y, G.BAND_TOGGLE_H)
+    H().AttachTooltip(cb, row.label, row.desc)
+    return cb
+end
+
+local function drawBand(ctx, list, order, selected)
+    local old = ctx.qcBand
+    ctx.qcBand = nil
+    H().PageHeader(ctx, { height = G.BAND_H, build = function(_, frame)
+        local AceGUI = H().AceGUI
+        ctx.qcBand = { picker = bandPicker(AceGUI, frame, list, order, selected), action = bandAction(AceGUI, frame),
+            toggle = Ed.Row("behavior.previewOnEdit") and bandToggle(AceGUI, frame) or nil }
+    end })
+    local AceGUI = H().AceGUI
+    if not AceGUI then return end
+    for _, w in pairs(old or {}) do AceGUI:Release(w) end
+end
+
 local function render(ctx)
-    local h = H()
     local entries = G.Entries()
     local selected = Ed.Heal("group", ids(entries))
     Ed.Select("group", selected)   -- keeps the selection in step after a heal
     local list, order = Ed.PickerList(entries)
-    h.PageBanner(ctx, {
-        label = L["Group"], list = list, order = order, value = selected,
-        tooltip = L["Which group this page edits. A green dot marks a group active now (or in the preview)."],
-        onSelect = function(v)
-            Ed.Select("group", v)
-            Ed.RequestRefresh()
-        end,
-        action = { text = L["New group"], tooltip = L["Make a new group, put it at the top of every pad, and edit it here."],
-            onClick = G.Create },
-    })
+    drawBand(ctx, list, order, selected)
     Ed.Tabs(ctx, PAGE, {
         { key = GENERAL, render = renderGeneral },
         { key = "callouts", label = L["Callouts"], tooltip = L["The callouts this group shows, in order."],
@@ -545,6 +641,7 @@ local function render(ctx)
         { key = "preview", label = L["Preview"], tooltip = L["What each callout sends here, or in the preview."],
           render = renderPreview },
     })
+    G.SyncEditPreview()
 end
 
 --- The page's Defaults (options-ui-§13: page-wide, what the page draws): every row of the page, for
@@ -555,6 +652,9 @@ function G.RestoreDefaults(ctx)
 end
 
 Ed.RegisterPage(PAGE, L["Groups"], "GroupsPanel", render, {
-    tooltip = L["Turn the selected group back on, stop it opening the dial, and turn Inherit when conditions back on. Its name, callouts and own When are kept."],
+    tooltip = L["Turn the selected group back on, stop it opening the dial, turn Inherit when conditions back on, and turn Preview while editing back on. Its name, callouts and own When are kept."],
     onClick = function(ctx) G.RestoreDefaults(ctx) end,
+}, {
+    onShow = function() G.SyncEditPreview() end,
+    onHide = function() NS.Preview.SetEditPreview(nil) end,
 })

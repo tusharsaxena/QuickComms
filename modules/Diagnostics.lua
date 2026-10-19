@@ -108,6 +108,7 @@ local function surfaces(out)
     out:joined("Pad", "pads built", NS.Pad.Ids())
     out:add("Pad", "testMode=%s", NS.Preview.IsTestMode())
     out:add("Pad", "previewAs=%s", NS.Preview.PreviewAs() or "off")
+    out:add("Pad", "editPreview=%s", NS.Preview.EditGroup() or "off")
     local ids = {}
     for id in pairs(plans) do ids[#ids + 1] = id end
     table.sort(ids)

@@ -9,7 +9,9 @@ local _, NS = ...
 -- locked slot keeps its line and carries the lock (§8.4). Library, Resolver and Bake are reached
 -- through `deps`, so a test can hand in any snapshot. Test mode's plan is placeholder slots that
 -- carry no line, drawn through the same render path (preview-mode). A "Preview as…" plan is a real
--- plan for the previewed snapshot, marked so every chip is disarmed (spec §13.3).
+-- plan for the previewed snapshot, marked so every chip is disarmed (spec §13.3). An edit preview's
+-- plan (`deps.only`, the group the Groups page edits) skips the Resolver: that group alone, with
+-- every group inside it, whatever their When, marked and disarmed the same way.
 --
 -- A Comms Dial's plan (spec §11) is the same resolve and bake in rings: its active groups in its
 -- order, a group's children as nodes (each gated by its own When, as on a pad), each slot baked,
@@ -121,6 +123,8 @@ end
 -- (deps.unmeasured, settings/Dials.lua) notes neither, because a child noted under a parent that was
 -- never noted would skew performance-§3's within-parent figures.
 local function resolve(list, snap, deps)
+    -- An edit preview: the one group, judged by nobody (no active set, so every child shows).
+    if deps.only then return nil, { deps.only } end
     local t0 = Perf.on and not deps.unmeasured and debugprofilestop()
     local active = NS.Resolver.ActiveGroups(deps.groups, snap)
     local order = NS.Resolver.SurfaceOrder(list, active, deps.groups, deps.autoPromote)
@@ -302,6 +306,12 @@ function S.WhyLines(id)
         if plan.kind == "dial" then return { L["Test mode: placeholder wedges that send nothing."] } end
         return { L["Test mode: placeholder chips that send nothing."] }
     end
+    if plan.editGroup then
+        local out = { L["Editing: %s"]:format(whyName(plan.editGroup)),
+            L["Shown alone while you edit it in the settings. Nothing on it sends."] }
+        lockLines(plan, out)
+        return out
+    end
     local out = {}
     if plan.preview then out[1] = L["Preview as: %s"]:format(NS.Preview.Label(plan.preview)) end
     if #plan.order == 0 then out[#out + 1] = L["No group matches this situation."] end
@@ -351,12 +361,21 @@ function S.ApplyAll(reason)
     local preview = NS.Preview.PreviewSnapshot()
     local snap = preview or NS.Situation.Current()
     local deps = S.Deps(snap)
-    local test = preview == nil and NS.Preview.IsTestMode()
+    -- The edit preview sits over Preview as (whose snapshot it still bakes against) and test mode.
+    local edit = NS.Preview.EditGroup()
+    if edit and not NS.Library.Group(edit) then edit = nil end
+    deps.only = edit
+    local test = not edit and preview == nil and NS.Preview.IsTestMode()
     local p = NS.db.profile
     local plans, dialPlans, n = {}, {}, 0
     State.surfaceOrder = State.surfaceOrder or {}
     local function done(id, plan)
-        if preview then S.MarkPreview(plan, NS.Preview.PreviewAs()) end
+        if edit then
+            S.MarkPreview(plan, NS.Preview.EDIT)
+            plan.editGroup = edit
+        elseif preview then
+            S.MarkPreview(plan, NS.Preview.PreviewAs())
+        end
         n = n + 1
         local sig = table.concat(plan.order, ",")
         if sig ~= State.surfaceOrder[id] then

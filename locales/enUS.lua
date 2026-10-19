@@ -469,6 +469,12 @@ L["No situation named %s. Type /qc preview for the list."] = "No situation named
 L["Previewing: %s"] = "Previewing: %s"
 L["Preview off."] = "Preview off."
 
+-- Preview while editing (modules/Preview.lua, modules/Surfaces.lua, settings/Groups.lua)
+L["Editing: %s"] = "Editing: %s"
+L["Shown alone while you edit it in the settings. Nothing on it sends."] = "Shown alone while you edit it in the settings. Nothing on it sends."
+L["Preview while editing"] = "Preview while editing"
+L["While this page is open, every pad and dial shows only the group you are editing, with the groups inside it, whatever its When says. Nothing on them sends. It ends when you leave this page or combat starts."] = "While this page is open, every pad and dial shows only the group you are editing, with the groups inside it, whatever its When says. Nothing on them sends. It ends when you leave this page or combat starts."
+
 -- Why is this showing? (modules/Surfaces.lua, modules/Pad.lua, settings/SlashVerbs.lua)
 L["This pad has not been built yet."] = "This pad has not been built yet."
 L["Test mode: placeholder chips that send nothing."] = "Test mode: placeholder chips that send nothing."
@@ -615,7 +621,7 @@ L["Bring back every built-in group, and every built-in callout, you deleted, as 
 L["Every built-in group and callout is here already: nothing to restore."] = "Every built-in group and callout is here already: nothing to restore."
 L["Restore built-in groups: %d groups and %d callouts came back. A set that came back is at the end of every pad and dial."] = "Restore built-in groups: %d groups and %d callouts came back. A set that came back is at the end of every pad and dial."
 L["Pick a callout to copy into this group, from any of your other groups. Add puts the copy at the end."] = "Pick a callout to copy into this group, from any of your other groups. Add puts the copy at the end."
-L["Turn the selected group back on, stop it opening the dial, and turn Inherit when conditions back on. Its name, callouts and own When are kept."] = "Turn the selected group back on, stop it opening the dial, and turn Inherit when conditions back on. Its name, callouts and own When are kept."
+L["Turn the selected group back on, stop it opening the dial, turn Inherit when conditions back on, and turn Preview while editing back on. Its name, callouts and own When are kept."] = "Turn the selected group back on, stop it opening the dial, turn Inherit when conditions back on, and turn Preview while editing back on. Its name, callouts and own When are kept."
 L["Make a copy of this group, with copies of its callouts and the same When. The copy is on no pad until you add it under Comms Pad > Groups."] = "Make a copy of this group, with copies of its callouts and the same When. The copy is on no pad until you add it under Comms Pad > Groups."
 L["Make a copy of this group, with copies of its callouts and the same When. The copy sits in the same parent group, beside this one."] = "Make a copy of this group, with copies of its callouts and the same When. The copy sits in the same parent group, beside this one."
 

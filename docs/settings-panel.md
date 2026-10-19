@@ -56,6 +56,7 @@ read-only branch.
 ```
 band      [ Group v (picker; a green dot marks a group active now; a group inside another is
           listed, indented, right after it) ][ New group ]
+          [x] Preview while editing (under the picker)
 strip     [ General ][ Callouts ][ When ][ Preview ]
 General   Name, Enabled, Open the dial on this group, then
           Parent group (None, or a top-level group) beside Inherit when conditions (grayed out
@@ -103,6 +104,17 @@ player has, so it does not ask first, and a second click adds nothing; one chat 
 groups and callouts came back, or that nothing was missing. There is no per-set reset to stock:
 delete the group, then restore. It is not under the header's Defaults, which resets the selected
 group (options-ui-§13).
+
+**Preview while editing** (the band, under the picker, the `behavior.previewOnEdit` row; on by
+default, saved): drawn through `O.PageHeader`, the band a picker with another page-wide control
+takes (options-ui-§14), with New group level with the picker's control as PageBanner places it.
+While the Groups page is on screen with it ticked, every enabled pad and dial shows only the selected
+group, with the groups inside it, whatever their When and Enabled (`Preview.SetEditPreview`,
+`Surfaces` `deps.only`): drawn and disarmed as a Preview as plan, `Preview: <group>` on the header,
+dial 1 open. It follows the picker, and ends when the page hides, the settings window closes,
+combat starts (one "Preview ended" line) or the addon stands down; it never starts in combat.
+Preview as and test mode wait behind it and come back when it ends. The page's Defaults ticks it
+again.
 
 **Preview** (`Ed.TableRows`, shared with no other page yet): the active-now line, then a table. A
 gold header row, "Callout" and "What it sends here", sits outside the boxes; each callout's row is a

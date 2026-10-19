@@ -17,6 +17,11 @@ State.editing = {}
 -- Session-only; test mode's second flavor, so it is never on with State.testMode.
 State.previewAs = nil
 
+-- The edit preview (modules/Preview.lua, settings/Groups.lua): the group id every pad and dial
+-- shows alone while the Groups page edits it, or nil. Session-only; it sits over Preview as and
+-- test mode, which come back when it ends.
+State.editPreview = nil
+
 -- `/qc toggle` and the launcher's Show window entry (settings/SlashVerbs.lua V.TogglePads): every
 -- Comms Pad hidden for the session. Applied through the pads' visibility driver; test mode still
 -- shows them (an explicit preview). Dials are not pads and are not affected.

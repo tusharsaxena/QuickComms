@@ -53,6 +53,10 @@ test("groups page: [exit] a new group with a callout and a When shows first on t
     w = P.tab("groups", "When")
     P.find(w, "CheckBox", "M+"):__fire("OnValueChanged", true)
     assertTrue(NS.db.profile.groups[gid].when.content.mythicPlus)
+    -- Leaving the page ends Preview while editing, so the pad is the live one again.
+    local panel = P.ctx("groups").panel
+    panel:Hide()
+    panel:__fire("OnHide")
     local plan = NS.Surfaces.Plans().p1
     assertEqual(plan.order[1], gid)
     assertEqual(NS.Pad.ChipsFor("p1", cid)[1]:GetAttribute("macrotext"), "/p Incoming")
@@ -88,7 +92,7 @@ test("groups page: General draws the group's rows, no Preview as; Duplicate and 
     assertTrue(P.find(w, "Dropdown", "Preview as") == nil, "Preview as is in General › Master controls")
     local tip = P.ctx("groups").panel.defaultsTooltip
     -- red under: keep "turn Preview as off" in the Defaults tooltip (the row left the page)
-    assertTrue(tip:find("Preview", 1, true) == nil, "Defaults no longer reaches Preview as")
+    assertTrue(tip:find("Preview as", 1, true) == nil, "Defaults no longer reaches Preview as")
     P.find(w, "EditBox", "Name"):__fire("OnEnterPressed", "Kicks")
     assertEqual(NS.db.profile.groups[gid].name, "Kicks")
     P.find(w, "CheckBox", "Enabled"):__fire("OnValueChanged", false)

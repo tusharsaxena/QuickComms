@@ -844,6 +844,22 @@ Total.
 - preview: [final 13] `/qc preview` reads the situation's name without regard to case
 - preview: [final 10] a dungeon preview fills {dungeon}, and the header names the preview as its menu does
 
+### test_edit_preview.lua (13)
+
+- edit preview: every pad shows only the edited group, whatever its When says, and sends nothing
+- edit preview: a battleground set shows its own callouts and every node, outside the battleground
+- edit preview: every dial shows only the edited group
+- edit preview: it ends back to the live pads, and Preview as and test mode come back after it
+- edit preview: combat ends it with one line and the live chips come back armed; a start in combat is refused
+- edit preview: with Preview as on too, combat says so once
+- edit preview: closing the settings window and the stand-down end it
+- edit preview: a group deleted while previewed leaves the live pads
+- edit preview: the why lines say the group is being edited
+- edit preview: Preview while editing is a saved Behavior setting, on by default, drawn only in the Groups band
+- edit preview: showing the Groups page previews the selected group; a pick follows; hiding the page ends it
+- edit preview: the band's Preview while editing box sits under the picker and turns it off and on
+- edit preview: the Groups page drawn in combat does not start it
+
 ### test_master.lua (5)
 
 - master: the frame defaults are spec §5.1's: always shown, scale and alpha 1, locked
@@ -1139,6 +1155,7 @@ Total.
 | test_sendengine.lua | 31 |
 | test_dial_secure.lua | 12 |
 | test_preview.lua | 17 |
+| test_edit_preview.lua | 13 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 15 |
 | test_dial_layout.lua | 16 |
@@ -1155,4 +1172,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **933** |
+| **Total** | **946** |
