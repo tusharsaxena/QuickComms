@@ -43,6 +43,6 @@
 |---|---|---|
 | R1 Built-ins: World (solo), BG parent callouts, group icons, icon colors, migration | done | d79bb09 |
 | R2 Preview while editing a group | done | 47f29c7 |
-| R3 PREVIEW / TEST MODE in the anchor strip | todo | |
+| R3 PREVIEW / TEST MODE in the anchor strip | done | b444290 |
 | R4 Right-click a group title to edit it | todo | |
 | R5 Docs sync + whole-branch review | todo | |
