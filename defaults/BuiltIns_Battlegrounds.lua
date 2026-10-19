@@ -316,7 +316,7 @@ nodeBattleground("ashran", L["Ashran"], { "gi:sword-clash", C.red }, { 1191 }, {
         { "ore",     L["Molten Quarry"],    L["Empowered Ore at Molten Quarry, go"], "gi:mining", C.gold },
     } },
     { "bosses", L["Bosses"], "free", "gi:ogre", C.purple, {
-        { "korlok",   L["Kor'lok"],  L["To Kor'lok, kill their bodyguard"], "gi:ogre", C.purple },
+        { "korlok",   L["Kor'lok"],  L["To Kor'lok, kill their champion"], "gi:ogre", C.purple },
         { "guardian", L["Guardian"], L["Their guardian is coming, focus it"], "gi:crowned-skull", C.red },
         { "captain",  L["Captain"],  L["Kill their captain %t"], "gi:bloody-sword", C.red },
         { "artifact", L["Artifact"], L["The Ancient Artifact is up, get it"], "gi:relic-blade", C.gold },

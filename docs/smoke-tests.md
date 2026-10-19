@@ -760,7 +760,10 @@ where it was (NE), and Our base and Enemy base take two of the winds left over. 
 **BG-5. A flag map.** In Warsong Gulch or Twin Peaks: the pad shows the set's map-wide EFC callouts,
 then Our flag, Enemy flag, Our FC and Midfield (Bridge in Twin Peaks), each its own section; the
 dial opens on the set's ring, its own wedge on N and the four groups on the winds after it. Send
-"INC flag room" → `INC our flag room`; "We have it" → `We have their flag`. Result:
+"INC flag room" → `INC our flag room`; "We have it" → `We have their flag`. The four groups take the
+winds after the set's own wedge in the order they ship, not where they are on the map: which wind
+Our flag or Enemy flag lands on is that order, not geography. The same holds for Ashran, Deephaul Ravine, Seething
+Shore and Isle of Conquest's two bases. Result:
 
 **BG-6. A profile from before the objective groups.** On a profile saved before this build (or a
 copy of one): log in → `/qc diagnostics` shows schema 7; Alterac Valley's set holds its 19 objectives

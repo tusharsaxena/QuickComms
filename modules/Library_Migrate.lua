@@ -166,15 +166,17 @@ local NOW_NODE_SETS = { "bi.bg.wsg", "bi.bg.tp", "bi.bg.ss", "bi.bg.dhr", "bi.bg
 
 --- Step 7 (bg subgroups): every newly shipped node goes inside its set's copy while that is a
 --- top-level group (Library.SeedNewNodes, by origin through seededSets: a node or set the player
---- deleted stays deleted, and nothing already held is touched); and each copy of a set that shipped
---- flat turns Open into on while it still holds the shipped off, as every node set opens into its ring
---- (D9). Prepare seeds the same nodes into a profile never prepared.
+--- deleted stays deleted, and nothing already held is touched); and each top-level copy of a set that
+--- shipped flat turns Open into on while it still holds the shipped off, as every node set opens into
+--- its ring (D9). A copy nested in another group takes no nodes, so its Open into is left alone.
+--- Prepare seeds the same nodes into a profile never prepared.
 function Lib.MigrateBattlegroundNodes(profile)
     if type(profile) ~= "table" or type(profile.groups) ~= "table" then return end
     local wanted = {}
     for _, origin in ipairs(NOW_NODE_SETS) do wanted[origin] = true end
     for _, g in pairs(profile.groups) do
-        if type(g) == "table" and wanted[g.origin] and not g.openInto then g.openInto = true end
+        local nested = type(g) == "table" and type(g.parent) == "string" and profile.groups[g.parent] ~= nil
+        if type(g) == "table" and wanted[g.origin] and not nested and not g.openInto then g.openInto = true end
     end
     Lib.SeedNewNodes(profile)
 end

@@ -456,6 +456,7 @@ test("database: [bg subgroups] step 7 seeds the new objective nodes by origin an
     assertEqual(originCount(p, "bi.bg.tp"), 0, "a set the player deleted stays deleted")
     assertEqual(originCount(p, "bi.bg.tp.ourflag"), 0, "and gains no nodes")
     assertEqual(#kidsOf(p, "g21"), 0, "a set nested in another group takes no nodes (one level)")
+    assertTrue(p.groups.g21.openInto == false, "and keeps its Open into as it was")
     assertTrue(p.seededSets["bi.bg.wg.fortress"], "they are given all the same, so Prepare adds none later")
     -- the player deletes an AV objective; a second run changes nothing
     local held, callouts = 0, 0

@@ -121,9 +121,10 @@ was deleted or sits inside another group is only listed, so neither ever comes b
 takes fresh ids above every stored one, after the nodes already there, and nothing the profile holds
 is changed. This is how Alterac Valley's 19 objectives, Isle of Conquest's Our base and Enemy base,
 and the objective groups of Warsong Gulch, Twin Peaks, Wintergrasp, Ashran, Deephaul Ravine and
-Seething Shore reach stored profiles, the inactive ones included. Each copy of a set that shipped flat
-(those seven) also turns `openInto` on while it still holds the shipped off (false or absent), as
-every node set opens into its ring; an Open into the player turns off after the step is theirs. A
+Seething Shore reach stored profiles, the inactive ones included. Each top-level copy of a set that
+shipped flat (those seven) also turns `openInto` on while it still holds the shipped off (false or
+absent), as every node set opens into its ring; a copy nested in another group takes no nodes and
+keeps its `openInto`, and an Open into the player turns off after the step is theirs. A
 second run changes nothing. `Library.Prepare` seeds the same nodes on a profile never prepared.
 `NS.SCHEMA_VERSION` is 7.
 No schema step for nested groups (2026-10-18): a group without `parent` is top-level, and

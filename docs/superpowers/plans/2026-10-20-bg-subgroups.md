@@ -36,3 +36,4 @@
 | T3 | Migration step 7 (new nodes by origin, Open into) and its tests | done | a9ed826 |
 | T4 | Dial fallback test for AV (in T1); pad packing of child sections | done | 5a5c808 |
 | T5 | derive-winds covers Wintergrasp (and parses the current data again); docs, test-cases, badge | done | 20c0180 |
+| T6 | Review fixes: Kor'lok callout says champion; step 7 leaves a nested copy's Open into alone (asserted); BG-5 notes free-wind order is not geography | done | (this commit) |
