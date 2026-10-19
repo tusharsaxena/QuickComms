@@ -112,7 +112,8 @@ While the Groups page is on screen with it ticked, every enabled pad and dial sh
 group, with the groups inside it, whatever their When and Enabled (`Preview.SetEditPreview`,
 `Surfaces` `deps.only`): drawn and disarmed as a Preview as plan, `Preview: <group>` on the header,
 dial 1 open. It follows the picker, and ends when the page hides, the settings window closes,
-combat starts (one "Preview ended" line) or the addon stands down; it never starts in combat.
+combat starts (one "Preview ended" line) or the addon stands down; it never starts in combat,
+and it comes back once combat ends while the Groups page is still on screen.
 Preview as and test mode wait behind it and come back when it ends. The page's Defaults ticks it
 again.
 

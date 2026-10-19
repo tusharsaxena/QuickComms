@@ -521,7 +521,8 @@ battleground. Set General → Master controls → Preview as → Raid · Heroic,
 edited group still shows alone; go to another settings page → the pads show the Raid · Heroic
 preview again; close the settings with the X → the live pads. On Groups, untick Preview while
 editing → the live pads at once; tick it → the group again. Enter combat with the page open → the
-pads go live with one "Preview ended" line. Result:
+pads go live with one "Preview ended" line; leave combat with the page still open → the edited
+group's preview comes back. Result:
 
 **EDIT-28. Right-click a group title.** Out of combat, in a battleground (or with Preview as →
 Arathi Basin): hover a section title on the pad → the tooltip names the group and says Right-click
