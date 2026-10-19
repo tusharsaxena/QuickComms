@@ -65,7 +65,7 @@
 | Q3 Look headings + Callouts rows | QC | done | 6a34bf7 |
 | Q4 Preview as → Master controls | QC | done | b61ef26 |
 | Q5 Instances + Arena drawers | QC | done | 12e71ef |
-| Q6 Vendor LibKa0s v1.74.0 + icon browser | QC | todo | |
+| Q6 Vendor LibKa0s v1.74.0 + icon browser | QC | done | f89ed21 |
 | Q7 Dungeon (generic) + built-in icons | QC | todo | |
 | Q8 Icon styling + glows | QC | todo | |
 | Q9 Docs sync + final review | QC (+all) | todo | |
