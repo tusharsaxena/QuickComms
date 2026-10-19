@@ -102,7 +102,7 @@ Total.
 - perf: [review] a refresh whose signature moves notes situationRefresh before the rebuild it publishes
 - perf: [phase 5] the Comms Dial page's Preview notes neither bakeSurface nor resolverResolve
 
-### test_database.lua (15)
+### test_database.lua (17)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the target is the last step's `to`, and the steps climb in order
@@ -119,6 +119,8 @@ Total.
 - database: [B2] step 4 rewrites a pad's retired Upward growth as Right and up, once
 - database: [B7] step 5 renames the dungeon set, widens its When and gives seeded callouts their glyphs, once
 - database: [polish] step 6 colors untouched seeded icons and adds the node sets' own callouts, once
+- database: [bg subgroups] step 7 seeds the new objective nodes by origin and opens the flat sets into their ring, once
+- database: [bg subgroups] a fresh profile seeds every objective node once, and step 7 leaves it as it is
 
 ### test_profile.lua (9)
 
@@ -126,7 +128,7 @@ Total.
 - profile: collections exist; default nextId is 1, past every seeded id after boot
 - profile: every behavior row resolves through the seam
 - profile: the spam guard clamps to 0.6-2.0 and fallback refuses unknown values
-- profile: schema version target is 6 (the groups polish)
+- profile: schema version target is 7 (the battleground sub-groups)
 - prepare: a callout held by two groups is split into a copy
 - prepare: a split copy of a seeded callout keeps no origin
 - prepare: a callout held by no group is dropped
@@ -1145,7 +1147,7 @@ Total.
 | test_bus.lua | 2 |
 | test_surface_parity.lua | 15 |
 | test_setup.lua | 27 |
-| test_database.lua | 15 |
+| test_database.lua | 17 |
 | test_profile.lua | 9 |
 | test_schema.lua | 19 |
 | test_slash.lua | 19 |
@@ -1194,4 +1196,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **968** |
+| **Total** | **970** |

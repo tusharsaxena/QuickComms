@@ -375,3 +375,126 @@ test("database: [polish] step 6 colors untouched seeded icons and adds the node 
         callouts = "damaged" })
     NS.Library.MigrateBuiltinsPolish({ groups = "damaged", callouts = { c1 = "damaged" } })
 end)
+
+-- ── step 7 (bg subgroups, 2026-10-20) ─────────────────────────────────────────────────────────
+
+-- A profile as builds before step 7 stored it: Alterac Valley, Warsong Gulch and Twin Peaks flat with
+-- Open into off, Isle of Conquest with its five nodes and no bases, Twin Peaks deleted by the player,
+-- one of AV's map-wide callouts edited, and Wintergrasp nested inside a group of the player's own.
+local function preSubgroupsProfile(BI)
+    local seeded = {}
+    for _, top in ipairs(BI.order) do seeded[top] = true end
+    local p = { nextId = 30, seeded = true, seededSets = seeded, pads = { p1 = { groups = { "g1", "g2", "g3" } } },
+        dials = {}, groups = {}, callouts = {} }
+    local function callout(id, origin, text)
+        local c = BI.callouts[origin]
+        p.callouts[id] = { name = c.name, text = text or c.text, channel = c.channel, origin = origin }
+        return id
+    end
+    p.groups.g1 = { name = "Alterac Valley", origin = "bi.bg.av", openInto = false, enabled = true, when = {},
+        callouts = { callout("c1", "bi.bg.av.general", "Guard Vann!"), callout("c2", "bi.bg.av.push") } }
+    p.groups.g2 = { name = "Isle of Conquest", origin = "bi.bg.ioc", openInto = true, enabled = true, when = {},
+        callouts = {} }
+    p.groups.g3 = { name = "Warsong Gulch", origin = "bi.bg.wsg", openInto = false, enabled = true, when = {},
+        callouts = { callout("c3", "bi.bg.wsg.efcmid") } }
+    for i, child in ipairs(BI.groups["bi.bg.ioc"].children) do
+        if BI.groups[child].compass ~= "free" then
+            seeded[child] = true
+            p.groups["g" .. (10 + i)] = { name = BI.groups[child].name, origin = child, parent = "g2", callouts = {},
+                when = {}, enabled = true }
+        end
+    end
+    p.groups.g20 = { name = "My PvP", callouts = {}, when = {}, enabled = true }
+    p.groups.g21 = { name = "Wintergrasp", origin = "bi.bg.wg", parent = "g20", openInto = false, callouts = {},
+        when = {}, enabled = true }
+    return p
+end
+
+local function kidsOf(p, gid)
+    local out = {}
+    for id, g in pairs(p.groups) do if g.parent == gid then out[#out + 1] = id end end
+    table.sort(out, function(a, b) return tonumber(a:sub(2)) < tonumber(b:sub(2)) end)
+    return out
+end
+
+local function originCount(p, origin)
+    local n = 0
+    for _, g in pairs(p.groups) do if g.origin == origin then n = n + 1 end end
+    return n
+end
+
+test("database: [bg subgroups] step 7 seeds the new objective nodes by origin and opens the flat sets into their ring, once", function()
+    local NS = T.bootAddon()
+    local db, BI = NS.addon.db, NS.BuiltIns
+    db.sv.profiles.Old = preSubgroupsProfile(BI)
+    db.global.schemaVersion = 6
+    NS.addon:RunMigrations()
+    local p = db.sv.profiles.Old
+    -- red under: no step 7 in core/Database.lua
+    assertTrue(db.global.schemaVersion >= 7, "stamped")
+    local av = kidsOf(p, "g1")
+    assertEqual(#av, 19, "every AV objective, inside AV's copy")
+    for i, kid in ipairs(av) do
+        local g, def = p.groups[kid], BI.groups[BI.groups["bi.bg.av"].children[i]]
+        assertEqual(g.origin, BI.groups["bi.bg.av"].children[i], "in shipped order")
+        assertEqual(g.name, def.name)
+        assertEqual(#g.callouts, 2)
+        assertEqual(p.callouts[g.callouts[1]].origin, def.callouts[1])
+        assertEqual(p.callouts[g.callouts[1]].iconColor, BI.callouts[def.callouts[1]].iconColor)
+        assertTrue(tonumber(kid:sub(2)) >= 30, "a fresh id above the stored counter: " .. kid)
+    end
+    assertEqual(p.callouts[p.groups[av[13]].callouts[1]].text, "Attack Iceblood Tower")
+    assertTrue(p.groups.g1.openInto, "a flat set now opens into its ring")
+    assertTrue(p.groups.g3.openInto, "Warsong Gulch too")
+    assertEqual(#kidsOf(p, "g3"), 4, "Warsong Gulch's four")
+    local ioc = kidsOf(p, "g2")
+    assertEqual(#ioc, 7, "Isle of Conquest's five nodes and its two bases")
+    assertEqual(p.groups[ioc[6]].origin .. "," .. p.groups[ioc[7]].origin, "bi.bg.ioc.base,bi.bg.ioc.enemybase",
+        "after the nodes already there")
+    assertEqual(p.callouts.c1.text, "Guard Vann!", "an edited callout is the player's")
+    assertEqual(#p.groups.g1.callouts, 2, "the set's own list is left as it is")
+    assertEqual(originCount(p, "bi.bg.tp"), 0, "a set the player deleted stays deleted")
+    assertEqual(originCount(p, "bi.bg.tp.ourflag"), 0, "and gains no nodes")
+    assertEqual(#kidsOf(p, "g21"), 0, "a set nested in another group takes no nodes (one level)")
+    assertTrue(p.seededSets["bi.bg.wg.fortress"], "they are given all the same, so Prepare adds none later")
+    -- the player deletes an AV objective; a second run changes nothing
+    local held, callouts = 0, 0
+    p.groups[av[1]] = nil
+    for _ in pairs(p.groups) do held = held + 1 end
+    for _ in pairs(p.callouts) do callouts = callouts + 1 end
+    db.global.schemaVersion = 6
+    NS.addon:RunMigrations()
+    local after, afterCallouts = 0, 0
+    for _ in pairs(p.groups) do after = after + 1 end
+    for _ in pairs(p.callouts) do afterCallouts = afterCallouts + 1 end
+    assertEqual(after, held, "a deleted objective stays deleted, and nothing is added twice")
+    assertEqual(afterCallouts, callouts)
+    assertEqual(originCount(p, "bi.bg.av.vanndar"), 0)
+    -- the stamp at 7 runs no step: an Open into the player turns off later is theirs
+    p.groups.g3.openInto = false
+    NS.addon:RunMigrations()
+    assertTrue(p.groups.g3.openInto == false, "Open into turned off after step 7 stays off")
+    NS.Library.MigrateBattlegroundNodes({})
+    NS.Library.MigrateBattlegroundNodes({ groups = "damaged" })
+    NS.Library.MigrateBattlegroundNodes({ groups = { g1 = { origin = "bi.bg.av" } }, seededSets = { ["bi.bg.av"] = true } })
+end)
+
+test("database: [bg subgroups] a fresh profile seeds every objective node once, and step 7 leaves it as it is", function()
+    local NS = T.enableAddon()
+    local p, BI, Lib = NS.db.profile, NS.BuiltIns, NS.Library
+    local av = T.seeded(NS, "bi.bg.av")
+    -- red under: Alterac Valley shipped flat
+    assertEqual(#Lib.Children(av), 19)
+    assertTrue(p.groups[av].openInto)
+    assertEqual(#Lib.Children(T.seeded(NS, "bi.bg.ioc")), 7)
+    local groups = 0
+    for _ in pairs(p.groups) do groups = groups + 1 end
+    local shipped = 0
+    for _ in pairs(BI.groups) do shipped = shipped + 1 end
+    assertEqual(groups, shipped, "one group per shipped set and node")
+    NS.Library.MigrateBattlegroundNodes(p)
+    Lib.Prepare()
+    local again = 0
+    for _ in pairs(p.groups) do again = again + 1 end
+    assertEqual(again, groups, "nothing seeded twice")
+end)
