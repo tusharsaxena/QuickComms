@@ -871,6 +871,12 @@ test("library: [icons] IsGlyph names a catalog icon by its path; ValidIconColor 
     assertNil(Lib.IsGlyph("Interface\\TargetingFrame\\UI-RaidTargetingIcon_8"), "a raid marker is no glyph")
     assertNil(Lib.IsGlyph(136012))
     assertNil(Lib.IsGlyph(false))
+    -- review focus 4: a path a share string or a saved icon carried before the three icon sets
+    -- (LibKa0s v1.74.0) still reads as the same glyph, and a prefixed set's mark resolves to its name
+    assertEqual(Lib.IsGlyph("Interface\\AddOns\\QuickComms\\libs\\LibKa0s\\media\\icons\\star"), "star")
+    assertEqual(Lib.IsGlyph("Interface\\AddOns\\QuickComms\\libs\\LibKa0s\\media\\icons\\phosphor\\arrow-up"),
+        "ph:arrow-up")
+    assertEqual(Lib.IsGlyph(NS.Icon("gi:sword-wound")), "gi:sword-wound")
     for _, ok in ipairs({ false, "ff8000", "00aa99" }) do assertTrue(Lib.ValidIconColor(ok), tostring(ok)) end
     assertTrue(Lib.ValidIconColor(nil))
     for _, bad in ipairs({ "FF8000", "#ff8000", "ff800", "ff80000", "ff80zz", 16744448, true, {} }) do

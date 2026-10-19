@@ -333,8 +333,9 @@ built on its first open. The EllesmereUI skin paints it as it paints the popup.
 window   Blizzard's settings window, titled Ka0s Quick Comms                 (its close X)
 header   Choose an icon, the gold rule under it
 tabs     [ Markers ][ Game icons ][ Glyphs ]   (the library's tab strip)
-toolbar  Game icons: Show (All / Spells / Items). Glyphs: Icon color (the swatch). Then the
-         search box (a magnifier inside its left edge, a clear mark at its right while it holds
+toolbar  Game icons: Show (All / Spells / Items). Glyphs: Show (All / Open Iconic / Phosphor /
+         Game-icons), then Icon color (the swatch). Then the search box (narrower on
+         Glyphs; a magnifier inside its left edge, a clear mark at its right while it holds
          text). At the right, how many icons the tab holds, or "N of M icons" while a search
          narrows it.
 grid     12 × 7 icons and a scrollbar, 10px under the toolbar; the mouse wheel scrolls it
@@ -346,8 +347,13 @@ footer   the selected icon (a glyph in the color) and its name, then Choose and 
   icon the macro icon selector offers (the loose lists and then `GetMacroIcons` for spells, the
   same for items, through `Compat.MacroIcons`), as texture ids, each once, filtered All / Spells / Items; until the client has
   loaded its own icon list the tab says so, and the list is read again on the next visit. **Glyphs**:
-  every icon of the LibKa0s catalog (`NS.IconNames`), named from its catalog key ("arrow-circle-down"
-  reads "Arrow circle down"; the curated glyphs keep their localized labels).
+  every icon of the LibKa0s catalog (`NS.IconNames`, about 5,800 marks in three sets: Open Iconic,
+  Phosphor `ph:`, Game-icons `gi:`), named from its catalog key without the set's prefix
+  ("arrow-circle-down" reads "Arrow circle down", "ph:arrow-up" "Arrow up"; the curated glyphs keep
+  their localized labels), filtered All or one set (the sets read from `NS.IconSets`; each open
+  starts on All, a tab switch keeps the choice). A glyph's tooltip adds its set's name, and a
+  Game-icons mark its author ("Game-icons, by Lorc", as CC BY 3.0 asks; README `## Credits`). Each
+  set's list is built once for the session, so a keystroke re-filters it without rebuilding it.
 - **The grid is virtualized**: 84 cells are built once and re-dressed from the tab's list as it
   scrolls, so the thousands of game icons cost no more frames than a short tab.
 - **Search**: the box filters the shown tab as you type, not case-sensitive, as plain text (`%` or

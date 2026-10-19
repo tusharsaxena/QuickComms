@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-896%2F896_passing-green)
+![Tests](https://img.shields.io/badge/Tests-900%2F900_passing-green)
 
 Quick Comms puts your usual group callouts one click or one keypress away. "Kick on me", "Lust
 now", "INC 3 Lumber Mill": set them up once and they sit on a Comms Pad or open from a
@@ -107,3 +107,18 @@ than in comments, so nothing gets lost.
 | Version | Date | Highlights |
 |---|---|---|
 | 0.1.0 | Unreleased | - The Comms Pad and the Comms Dial, with built-in callouts for Mythic+, raids, arenas and every battleground, sent through secure buttons<br>- Your own callouts and groups (the built-in sets among them, as groups you can edit, and groups inside groups), with conditions for when each group shows, Preview as… and Why is this showing?<br>- The spam guard, drop notes, test mode and the lock<br>- The pad's font, border and background, with class colors<br>- Sharing groups (with their callouts), pads and dials as a string<br>- The settings panel, the minimap button, the `/qc` command and the debug tools |
+
+## Credits
+
+The glyphs in the icon browser ship inside the bundled [LibKa0s](https://github.com/tusharsaxena/LibKa0s)
+library, each set with its license beside its art under `libs/LibKa0s/media/icons/`:
+
+- **Open Iconic**, by Waybury, MIT license (<https://github.com/iconic/open-iconic>).
+- **Phosphor** (the Fill weight), by Phosphor Icons, MIT license (<https://phosphoricons.com>).
+- **Game-icons.net**, CC BY 3.0 (<https://game-icons.net>), by Andy Meneely, Aussiesim, Carl Olsen,
+  Caro Asercion, Cathelineau, Catsu, DarkZaitzev, Delapouite, Faithtoken, Felbrigg, GeneralAce135,
+  Guard13007, HeavenlyDog, Irongamer, John Colburn, John Redman, Kier Heyl, Lorc, Lord Berandas,
+  Lucas, Pepijn Poolman, Pierre Leducq, PriorBlue, Quoting, Rihlsul, Sbed, SeregaCthtuf, Skoll,
+  Sparker, SpencerDub, Starseeker, Viscious Speed, Willdabeast, Zajkonur and Zeromancer. The marks
+  were rasterized to 64×64, their background square removed and recolored white so the game can tint
+  them; `AUTHORS.txt` names each mark's author, and the icon browser's tooltip does too.

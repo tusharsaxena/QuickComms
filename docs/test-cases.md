@@ -548,7 +548,7 @@ Total.
 - popup: every field's label and control share a left edge; Preview's rule and the buttons the columns' edges
 - popup: [icons] an icon that is no texture stays open and names the icon chooser
 
-### test_icon_browser.lua (32)
+### test_icon_browser.lua (36)
 
 - icon browser: the window is the popup's chrome, stacked above the popup and its catcher
 - icon browser: tabs in order; the stored icon is preselected and its tab opened
@@ -582,6 +582,10 @@ Total.
 - icon browser: Src.Search narrows its last results, and stays correct when the query widens or the list grows
 - icon browser: the search is kept across tabs and the session's opens, and re-filters each tab
 - icon browser: Game icons carries the Wowhead hint; its button shows the address in a copy window
+- icon browser: [sets] Src.Glyphs is built once per set: the same table across searches
+- icon browser: [sets] a set's prefix is not in its label; Phosphor reads 'Arrow up'
+- icon browser: [sets] the Glyphs filter lists the library's sets and narrows to one
+- icon browser: [sets] a glyph's tooltip names its set, and a Game-icons mark its author
 
 ### test_eui_skin.lua (10)
 
@@ -1084,7 +1088,7 @@ Total.
 | test_members.lua | 29 |
 | test_editors.lua | 17 |
 | test_callout_popup.lua | 38 |
-| test_icon_browser.lua | 32 |
+| test_icon_browser.lua | 36 |
 | test_eui_skin.lua | 10 |
 | test_groups_when.lua | 20 |
 | test_page_groups.lua | 63 |
@@ -1110,4 +1114,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **896** |
+| **Total** | **900** |
