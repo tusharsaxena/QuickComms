@@ -45,4 +45,4 @@
 | R2 Preview while editing a group | done | 47f29c7 |
 | R3 PREVIEW / TEST MODE in the anchor strip | done | b444290 |
 | R4 Right-click a group title to edit it | done | c0fb92f |
-| R5 Docs sync + whole-branch review | todo | |
+| R5 Docs sync + whole-branch review | done | ed849f7 |
