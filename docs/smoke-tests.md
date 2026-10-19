@@ -22,7 +22,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
 | SEND-1..5 | Send | Secure sends in keys and on bosses, the spam guard |
 | PAD-1..11 | Pad | The Comms Pad, its growth and chip width, the World (solo) set and the built-ins' colors |
-| EDIT-1..28 | Editors | The Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
+| EDIT-1..29 | Editors | The Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
 | DIAL-1..12 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial |
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
 | LOOK-1..2 | Look | The Comms Pad's font, border and background |
@@ -240,7 +240,7 @@ changes. Untick Enabled → in a key the set is gone from the pad; tick it again
 **EDIT-3. Preview as….** Out of combat, in the open world: General → Master controls → Preview as → Arena →
 the pad shows the arena set with `Preview: Arena` on its header and PREVIEW on its drag strip (in
 green, after the pad's name); clicking a chip sends
-nothing; its tooltip says so. The Comms Pad, Comms Dial and Groups pages' General tabs have no
+nothing to chat and prints its line locally (EDIT-29); its tooltip says so. The Comms Pad, Comms Dial and Groups pages' General tabs have no
 Preview as row. Close the settings → the preview ends. `/qc preview raid:heroic` →
 the raid set; pull something → the preview ends with one line and the live chips return. Result:
 
@@ -516,7 +516,8 @@ Typing in the search box keeps up without a hitch. Result:
 **EDIT-27. Preview while editing.** Out of combat, in the open world: Settings → Groups → the band
 shows Preview while editing, ticked, under the Group picker. Pick "Arena" → every pad shows only the
 arena set, with `Preview: Arena` on its header and PREVIEW on its drag strip, and dial 1 opens on it; clicking a chip
-sends nothing. Pick a battleground set → its own callouts and every node show, outside the
+sends nothing to chat and prints one local line, `[QC] /<slash> <text>` (the channel's slash and the
+callout's text with its tokens filled in, `{me}` as your name). Pick a battleground set → its own callouts and every node show, outside the
 battleground. Set General → Master controls → Preview as → Raid · Heroic, then back on Groups → the
 edited group still shows alone; go to another settings page → the pads show the Raid · Heroic
 preview again; close the settings with the X → the live pads. On Groups, untick Preview while
@@ -531,6 +532,15 @@ group in the picker. Pick the Callouts tab, close the settings, right-click a no
 opens on that node, still on Callouts. Set the pad's Groups as to Tabs → right-click the tab's title →
 the group that tab shows. Enter combat and right-click a title → the "cannot open settings during
 combat" line and nothing opens; no error. Result:
+
+**EDIT-29. A preview click echoes its line.** Out of combat, solo in the open world: make a group
+with a callout `Go {me}` on Yell and put it on the pad and the dial. Master controls → Preview as →
+World · Solo → click the chip → one local chat line, `[QC] /y Go <your name>`, and nothing said
+aloud (no yell bubble, nobody else sees it). Change the callout to Smart group and preview Raid ·
+Heroic → the click prints `[QC] /raid Go <your name>`. Open the dial on the preview and click the
+wedge → the same line, and the dial closes. On Groups with Preview while editing ticked, click a chip
+of the edited group → its line prints the same way. End the preview and click the live chip → the
+yell goes out, with no `[QC]` line. Result:
 
 ## Dial
 
@@ -770,7 +780,7 @@ from the client, so this check needs a non-English client pass. Result:
 |---|---|---|
 | INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..3, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet; LOC-1 re-enumerated in phase 5 and owed a non-English client pass; STATE-3 added and PANEL-2 rewritten with `/qc toggle` and Preview as in Master controls (2026-10-19) |
 | SEND-1..5, PAD-1..11 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet; PAD-1 rewritten and PAD-11 added with World (solo) and the built-ins' colors, PAD-3 and PAD-4 rewritten with the strip's marker (2026-10-19, groups polish); PAD-8 added in phase 5 (audit QC-07); PAD-1 rewritten and PAD-9..10 added with the up growth, chip width and the built-in glyphs (2026-10-19) |
-| EDIT-1..28 | Phase 3: the editors | No client pass recorded yet; EDIT-28 added with right-click a group title (2026-10-19); EDIT-27 added with Preview while editing (2026-10-19); EDIT-3, 4, 20 and 22 rewritten and EDIT-25..26 added with Preview as in Master controls, the Dungeon set, the Arena drawer, instance search, the Callouts rows and the glyph sets (2026-10-19); EDIT-1, 2 and 19 rewritten and EDIT-22..24 added with the When drawers, Inherit when conditions and the icon browser's search (2026-10-18); EDIT-2, 4, 5, 6, 11, 14 and ICON-1 rewritten and EDIT-19..21 added when the built-in sets became seeded groups, groups nested and the Preview tab became a table (2026-10-18); EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17); EDIT-9, 13 and ICON-1 rewritten and EDIT-14..17 added with the icon browser and glyph colors (2026-10-18); EDIT-9 rewritten and EDIT-18 added when the token dropdown became the Text label's info glyph (2026-10-18); EDIT-13, 14 and ICON-1 rewritten when the Suggested tab went and the skin stopped waiting for the addon to be enabled (2026-10-18); EDIT-9, 18 and ICON-1 rewritten when the Icon boxes went and the popup took its two-column layout (2026-10-18); EDIT-9, 11 and ICON-1 rewritten with the clear glyph, the Preview gap and the buttons' 2 px inset (2026-10-18) |
+| EDIT-1..29 | Phase 3: the editors | No client pass recorded yet; EDIT-29 added with the preview click's echo (2026-10-20); EDIT-28 added with right-click a group title (2026-10-19); EDIT-27 added with Preview while editing (2026-10-19); EDIT-3, 4, 20 and 22 rewritten and EDIT-25..26 added with Preview as in Master controls, the Dungeon set, the Arena drawer, instance search, the Callouts rows and the glyph sets (2026-10-19); EDIT-1, 2 and 19 rewritten and EDIT-22..24 added with the When drawers, Inherit when conditions and the icon browser's search (2026-10-18); EDIT-2, 4, 5, 6, 11, 14 and ICON-1 rewritten and EDIT-19..21 added when the built-in sets became seeded groups, groups nested and the Preview tab became a table (2026-10-18); EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17); EDIT-9, 13 and ICON-1 rewritten and EDIT-14..17 added with the icon browser and glyph colors (2026-10-18); EDIT-9 rewritten and EDIT-18 added when the token dropdown became the Text label's info glyph (2026-10-18); EDIT-13, 14 and ICON-1 rewritten when the Suggested tab went and the skin stopped waiting for the addon to be enabled (2026-10-18); EDIT-9, 18 and ICON-1 rewritten when the Icon boxes went and the popup took its two-column layout (2026-10-18); EDIT-9, 11 and ICON-1 rewritten with the clear glyph, the Preview gap and the buttons' 2 px inset (2026-10-18) |
 | DIAL-1..12 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-4 rewritten with the node set's map-wide wedge (2026-10-19, groups polish); DIAL-9 rewritten when Preview as moved to Master controls (2026-10-19); DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
 | SHARE-1..6, LOOK-1..2, ICON-1, BG-1..2, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; BG-1 rewritten with the map-wide wedge (2026-10-19, groups polish); LOOK-2's in-combat step goes through `/qc set`; IDS-1 extended to the journal instances and arenas (2026-10-19) |
 | ICONS-1..3 | Icons and polish (2026-10-19): the Icons tab | No client pass recorded yet |

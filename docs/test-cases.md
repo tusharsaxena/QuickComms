@@ -827,7 +827,7 @@ Total.
 - dial secure: [final 2] opening one dial closes another that is open; closing it leaves no key bound
 - dial secure: [firewall] no snippet writes an attribute; the ring on screen lives in the header's environment
 
-### test_preview.lua (17)
+### test_preview.lua (22)
 
 - preview: test mode turns on and off, announcing each edge once
 - preview: a start in combat is refused with one line
@@ -846,6 +846,11 @@ Total.
 - preview: [phase 3] the Preview as row and `/qc preview` drive the same switch
 - preview: [final 13] `/qc preview` reads the situation's name without regard to case
 - preview: [final 10] a dungeon preview fills {dungeon}, and the header names the preview as its menu does
+- preview: [echo] a previewed chip prints [QC] /<slash> <resolved text>, and still sends nothing
+- preview: [echo] the slash follows the channel the previewed situation resolves
+- preview: [echo] a live chip prints nothing extra
+- preview: [echo] the edit preview echoes too, and a press in combat prints without writing
+- preview: [echo] a previewed dial wedge prints the line too
 
 ### test_edit_preview.lua (14)
 
@@ -1164,7 +1169,7 @@ Total.
 | test_send_guard.lua | 10 |
 | test_sendengine.lua | 31 |
 | test_dial_secure.lua | 12 |
-| test_preview.lua | 17 |
+| test_preview.lua | 22 |
 | test_edit_preview.lua | 14 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 15 |
@@ -1182,4 +1187,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **956** |
+| **Total** | **961** |

@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-956%2F956_passing-green)
+![Tests](https://img.shields.io/badge/Tests-961%2F961_passing-green)
 
 Quick Comms puts your usual group callouts one click or one keypress away. "Kick on me", "Lust
 now", "INC 3 Lumber Mill": set them up once and they sit on a Comms Pad or open from a
@@ -42,7 +42,7 @@ match: its parent's, while Inherit when conditions is ticked (the default), else
 and the background, each with a Use class color box. "Preview as…" (or `/qc preview`) shows the pads
 and the dial as they would look somewhere else, and hovering a pad's header or the dial's middle (or
 `/qc why`) tells you why each group is there. While the Groups page is open, every pad and dial shows
-only the group you are editing, sending nothing (untick Preview while editing, under the Group
+only the group you are editing, sending nothing: a click prints `[QC] /p <text>`, the line it would have sent (untick Preview while editing, under the Group
 picker, to keep them live). Right-click a group's title on a pad to open it on the Groups page; the
 page stays on the tab you last used.
 
