@@ -38,7 +38,29 @@ test("schema: the Master controls rows are the framed canonical set, in the cano
     -- The Master controls block leads; the Behavior rows (settings/SchemaRows.lua) follow it.
     assertEqual(table.concat(paths, ",", 1, 8),
         "enabled,visibility,scale,alpha,locked,state.debugConsole,global.minimap.shown,state.testMode")
-    assertEqual(paths[9], "behavior.soloFallback")
+    -- Preview as is the composer's one extra (options-ui-§15 as amended in v2.84.0): after the
+    -- canonical set, before the Behavior rows.
+    -- red under: leave state.previewAs in settings/SchemaRows.lua on the Groups page
+    assertEqual(paths[9], "state.previewAs")
+    assertEqual(paths[10], "behavior.soloFallback")
+end)
+
+test("schema: Preview as sits in Master controls on the General page, after Test mode, on a line of its own", function()
+    local NS = T.newAddon()
+    local Settings = NS.addon.Settings
+    local master = {}
+    for _, row in ipairs(Settings.RowsForPage("general")) do
+        if row.group == Settings.Helpers.MASTER_GROUP then master[#master + 1] = row end
+    end
+    assertEqual(master[#master - 1].path, "state.testMode")
+    local row = master[#master]
+    assertEqual(row.path, "state.previewAs")
+    assertTrue(row.sessionOnly == true, "never saved")
+    assertTrue(row.startsLine == true, "the Minimap button / Test mode line is full")
+    assertEqual(row.default, "current")
+    for _, r in ipairs(Settings.RowsForPage("groups")) do
+        assertTrue(r.path ~= "state.previewAs", "no longer a Groups page row")
+    end
 end)
 
 test("schema: NS.Setting reads through the seam, and answers the default before the db exists", function()

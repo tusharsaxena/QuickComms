@@ -79,12 +79,16 @@ test("groups page: the picker lists every group by name, a seeded set among them
     for _, e in ipairs(entries) do assertTrue(e.id:match("^bi%.") == nil, "no shipped id: " .. e.id) end
 end)
 
-test("groups page: General draws Preview as first, then the group's rows; Duplicate and Delete act", function()
+test("groups page: General draws the group's rows, no Preview as; Duplicate and Delete act", function()
     local NS, _, P = open()
     local gid = NS.Library.CreateGroup({ name = "Mine" })
     pick(NS, gid)
     local w = P.redraw("groups")
-    assertTrue(P.find(w, "Dropdown", "Preview as") ~= nil)
+    -- red under: draw state.previewAs on the group's General tab again
+    assertTrue(P.find(w, "Dropdown", "Preview as") == nil, "Preview as is in General › Master controls")
+    local tip = P.ctx("groups").panel.defaultsTooltip
+    -- red under: keep "turn Preview as off" in the Defaults tooltip (the row left the page)
+    assertTrue(tip:find("Preview", 1, true) == nil, "Defaults no longer reaches Preview as")
     P.find(w, "EditBox", "Name"):__fire("OnEnterPressed", "Kicks")
     assertEqual(NS.db.profile.groups[gid].name, "Kicks")
     P.find(w, "CheckBox", "Enabled"):__fire("OnValueChanged", false)

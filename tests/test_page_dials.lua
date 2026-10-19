@@ -49,10 +49,11 @@ test("dials page: New dial takes the lowest free number, so a delete never leads
     assertEqual(NS.db.profile.dials[again].name, "Comms Dial 2")
 end)
 
-test("dials page: General has Preview as first; Enabled off takes the dial down", function()
+test("dials page: General has no Preview as (it is in Master controls); Enabled off takes the dial down", function()
     local NS, _, P = open()
     local w = P.redraw("dials")
-    assertTrue(P.find(w, "Dropdown", "Preview as") ~= nil, "Preview as is page-wide, first")
+    -- red under: draw state.previewAs on the dial's General tab again
+    assertTrue(P.find(w, "Dropdown", "Preview as") == nil, "Preview as is in General › Master controls")
     P.find(w, "CheckBox", "Enabled"):__fire("OnValueChanged", false)
     assertFalse(NS.db.profile.dials.d2.enabled)
     assertNil(NS.Dial.Instance("d2"), "a disabled dial is not built")

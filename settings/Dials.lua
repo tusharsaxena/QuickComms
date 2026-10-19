@@ -3,7 +3,7 @@ local _, NS = ...
 --
 --     band     [ Dial v (picker) ][ New dial ]
 --     strip    [ General ][ Groups ][ Wheel ][ Binding ][ Preview ]
---     General  Preview as (page-wide, first), Name, Enabled, then Delete dial
+--     General  Name, Enabled, then Delete dial
 --     Groups   Show groups as (Categories or Flat), the depth-3 warning (spec §11.3), then the dial's
 --              groups as a drag-to-reorder list with Remove (its priority order, spec §7), then Add a
 --              group
@@ -249,7 +249,6 @@ end
 
 local function renderGeneral(ctx, rows)
     local h = H()
-    h.RenderRows(ctx, { Ed.Row("state.previewAs") }, nil, nil, { noHeadings = true })
     local id = selected()
     if not id then
         h.TextRow(ctx, NONE)

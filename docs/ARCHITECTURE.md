@@ -122,8 +122,8 @@ One write seam, `NS.SchemaRuntime.Set` (LibKa0s-Schema), reached by the panel, t
 and the host verbs alike; the rows are `settings/Schema.lua`'s `Settings.Schema` array: the composed
 Master controls rows, then the Behavior rows (`behavior.*`, spliced in by `settings/SchemaRows.lua`).
 The Master controls rows are `enabled`, `visibility`, `scale`, `alpha` and `locked` (defaults
-`true`, `always`, 1, 1, `true`), the session rows `state.debugConsole`, `state.testMode` and `state.previewAs`, and the
-minimap row. Every module reads a setting through `NS.Setting(path)`, which answers the row's default before the
+`true`, `always`, 1, 1, `true`), the session rows `state.debugConsole` and `state.testMode`, the
+minimap row, and the block's one `extra` row, the session row `state.previewAs` (Preview as…, options-ui-§15 as amended in v2.84.0). Every module reads a setting through `NS.Setting(path)`, which answers the row's default before the
 database exists. The reactions every surface shares are
 `Settings.REACTIONS`. The path `enabled` is declared `writeThrough` so `/qc enable|disable` still
 lands on a load where the composers are hollow (options-ui-§1 route (a)). Shape, defaults and

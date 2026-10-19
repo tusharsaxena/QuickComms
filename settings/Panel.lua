@@ -52,6 +52,18 @@ local MASTER_ROWS, MASTER_TAIL = Helpers.MasterControls{
         enabled = C.PROFILE.enabled, visibility = C.PROFILE.visibility, scale = C.PROFILE.scale,
         alpha = C.PROFILE.alpha, locked = C.PROFILE.locked, debugConsole = false, testMode = false,
     },
+    -- Preview as… (spec §13.3) is the block's one extra: a page-wide session row (never saved, read
+    -- and written through modules/Preview.lua via settings/Schema.lua SESSION), placed after the
+    -- canonical set and before the button pair. options-ui-§15 as amended in v2.84.0 sanctions host
+    -- rows through the composer's `extra` slot, after the mandated rows and never interleaved with
+    -- them. The Minimap button / Test mode line is full, so it opens its own line.
+    extra            = {
+        { path = "state.previewAs", type = "string", sessionOnly = true, default = "current",
+          startsLine = true, label = L["Preview as"],
+          desc = L["Draw every pad, and open dial 1, as it would look in another situation. Nothing on them sends. It ends when the settings close or combat starts."],
+          values = function() return NS.Preview.Choices() end,
+          validate = function(v) return NS.Preview.FindPreset(v) ~= nil end },
+    },
     -- Reset position resets every pad and dial anchor (spec §10.4).
     onResetPosition  = function() if NS.Surfaces and NS.Surfaces.ResetPositions then NS.Surfaces.ResetPositions() end end,
     onResetAll       = showResetPopup,

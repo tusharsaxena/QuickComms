@@ -456,7 +456,7 @@ L["Preview: %s"] = "Preview: %s"
 L["PREVIEW"] = "PREVIEW"
 L["Preview: this sends nothing."] = "Preview: this sends nothing."
 
--- Preview as… (modules/Preview.lua, settings/SchemaRows.lua, settings/SlashVerbs.lua)
+-- Preview as… (modules/Preview.lua, settings/Panel.lua, settings/SlashVerbs.lua)
 L["Instance %d"] = "Instance %d"
 L["Preview as"] = "Preview as"
 L["Draw every pad, and open dial 1, as it would look in another situation. Nothing on them sends. It ends when the settings close or combat starts."] = "Draw every pad, and open dial 1, as it would look in another situation. Nothing on them sends. It ends when the settings close or combat starts."
@@ -605,7 +605,7 @@ L["Bring back every built-in group, and every built-in callout, you deleted, as 
 L["Every built-in group and callout is here already: nothing to restore."] = "Every built-in group and callout is here already: nothing to restore."
 L["Restore built-in groups: %d groups and %d callouts came back. A set that came back is at the end of every pad and dial."] = "Restore built-in groups: %d groups and %d callouts came back. A set that came back is at the end of every pad and dial."
 L["Pick a callout to copy into this group, from any of your other groups. Add puts the copy at the end."] = "Pick a callout to copy into this group, from any of your other groups. Add puts the copy at the end."
-L["Turn the selected group back on, stop it opening the dial, turn Preview as off, and turn Inherit when conditions back on. Its name, callouts and own When are kept."] = "Turn the selected group back on, stop it opening the dial, turn Preview as off, and turn Inherit when conditions back on. Its name, callouts and own When are kept."
+L["Turn the selected group back on, stop it opening the dial, and turn Inherit when conditions back on. Its name, callouts and own When are kept."] = "Turn the selected group back on, stop it opening the dial, and turn Inherit when conditions back on. Its name, callouts and own When are kept."
 L["Make a copy of this group, with copies of its callouts and the same When. The copy is on no pad until you add it under Comms Pad > Groups."] = "Make a copy of this group, with copies of its callouts and the same When. The copy is on no pad until you add it under Comms Pad > Groups."
 L["Make a copy of this group, with copies of its callouts and the same When. The copy sits in the same parent group, beside this one."] = "Make a copy of this group, with copies of its callouts and the same When. The copy sits in the same parent group, beside this one."
 

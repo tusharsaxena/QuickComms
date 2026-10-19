@@ -130,12 +130,13 @@ Total.
 - prepare: a callout held by no group is dropped
 - prepare: is idempotent after a split
 
-### test_schema.lua (18)
+### test_schema.lua (19)
 
 - schema: every row validates against the defaults
 - schema: a stored row whose path has no default is counted, not passed vacuously
 - schema: the Minimap button row's backing key resolves against the global defaults
 - schema: the Master controls rows are the framed canonical set, in the canonical order
+- schema: Preview as sits in Master controls on the General page, after Test mode, on a line of its own
 - schema: NS.Setting reads through the seam, and answers the default before the db exists
 - schema: a page's rows are the rows whose page is its key
 - schema: an unknown path is refused and stores nothing
@@ -613,7 +614,7 @@ Total.
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists every group by name, a seeded set among them, active ones dotted
-- groups page: General draws Preview as first, then the group's rows; Duplicate and Delete act
+- groups page: General draws the group's rows, no Preview as; Duplicate and Delete act
 - groups page: Callouts drags to reorder, removes, and copies a seeded callout in (P2)
 - groups page: Add callout opens the popup for this group
 - groups page: Reuse lists every callout as <group>: <callout>, a seeded one too
@@ -694,7 +695,7 @@ Total.
 
 - dials page: New dial makes a second dial holding every built-in, selects it, and builds QuickCommsDial2
 - dials page: New dial takes the lowest free number, so a delete never leads to two names alike
-- dials page: General has Preview as first; Enabled off takes the dial down
+- dials page: General has no Preview as (it is in Master controls); Enabled off takes the dial down
 - dials page: Wheel writes wedges per ring and where it opens; X and Y move the dial; Reset puts it back
 - dials page: a refused X or Y says why and puts the box back to the stored offset
 - dials page: Defaults puts the dial's rows back as one act, and keeps its key and position
@@ -1055,7 +1056,7 @@ Total.
 | test_setup.lua | 27 |
 | test_database.lua | 13 |
 | test_profile.lua | 9 |
-| test_schema.lua | 18 |
+| test_schema.lua | 19 |
 | test_slash.lua | 19 |
 | test_disabled.lua | 21 |
 | test_diagnostics.lua | 10 |
@@ -1099,4 +1100,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **885** |
+| **Total** | **886** |

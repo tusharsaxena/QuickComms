@@ -3,7 +3,7 @@ local _, NS = ...
 --
 --     band     [ Pad v (picker) ][ New pad ]
 --     strip    [ General ][ Groups ][ Layout ][ Look ]
---     General  Preview as (page-wide, first), Name, Enabled, then Unlock (or Lock) pads and Delete pad
+--     General  Name, Enabled, then Unlock (or Lock) pads and Delete pad
 --     Groups   Show groups as, then the pad's groups as a drag-to-reorder list with Remove (its
 --              priority order, spec §7), then Add a group
 --     Layout   orientation, grid columns, growth, chip style, scale, spacing, chip width, then
@@ -128,7 +128,6 @@ end
 
 local function renderGeneral(ctx, rows)
     local h = H()
-    h.RenderRows(ctx, { Ed.Row("state.previewAs") }, nil, nil, { noHeadings = true })
     local id = selected()
     if not id then
         h.TextRow(ctx, NONE)

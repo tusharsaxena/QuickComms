@@ -5,7 +5,7 @@ local _, NS = ...
 --     band      [ Group v (picker; a green dot marks a group active now; a group inside another is
 --               listed indented under it) ][ New group ]
 --     strip     [ General ][ Callouts ][ When ][ Preview ]
---     General   Preview as (page-wide, first), then Name, Enabled, Open the dial on this group, then
+--     General   Name, Enabled, Open the dial on this group, then
 --               Parent group (none, or a top-level group; idle while the group holds groups) beside
 --               Inherit when conditions (grayed out with no parent), then
 --               the icon under an Icon label with Choose icon…, the clear glyph and its color swatch
@@ -329,16 +329,15 @@ function G.IconSpec(gid)
 end
 
 local NONE = L["No groups yet. Click New group to make one."]
--- The General tab's rows it leaves out of its RenderRows: Preview as (drawn first, alone), Parent
--- group (its own dropdown, parentItem), Inherit when conditions (its own checkbox, inheritItem) and
--- the icon's two rows (the chooser draws them).
-local UNDRAWN = { ["state.previewAs"] = true, ["group.parent"] = true, ["group.inheritWhen"] = true,
+-- The General tab's rows it leaves out of its RenderRows: Parent group (its own dropdown,
+-- parentItem), Inherit when conditions (its own checkbox, inheritItem) and the icon's two rows (the
+-- chooser draws them).
+local UNDRAWN = { ["group.parent"] = true, ["group.inheritWhen"] = true,
     ["group.icon"] = true, ["group.iconColor"] = true }
 
 local function renderGeneral(ctx, rows)
     local h = H()
     local gid = Ed.Selected("group")
-    h.RenderRows(ctx, { Ed.Row("state.previewAs") }, nil, nil, { noHeadings = true })
     if not (gid and NS.Library.Group(gid)) then
         h.TextRow(ctx, NONE)
         restoreRow(ctx)
@@ -556,6 +555,6 @@ function G.RestoreDefaults(ctx)
 end
 
 Ed.RegisterPage(PAGE, L["Groups"], "GroupsPanel", render, {
-    tooltip = L["Turn the selected group back on, stop it opening the dial, turn Preview as off, and turn Inherit when conditions back on. Its name, callouts and own When are kept."],
+    tooltip = L["Turn the selected group back on, stop it opening the dial, and turn Inherit when conditions back on. Its name, callouts and own When are kept."],
     onClick = function(ctx) G.RestoreDefaults(ctx) end,
 })

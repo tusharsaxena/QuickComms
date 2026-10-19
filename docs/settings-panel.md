@@ -18,7 +18,8 @@ eagerly at `OnEnable`; each page's body builds on its first show (options-ui-§1
 Composed by `Helpers.MasterControls` from one declaration (`settings/Panel.lua`), canonical rows in
 canonical order (options-ui-§15). The Comms Pad is positionable, so the block is the full framed
 set, in order: Enable, General visibility, Master scale, Master alpha, Lock frame, Debug console,
-Minimap button, Test mode, then the Reset position and Reset all settings buttons.
+Minimap button, Test mode, then the block's one extra row, Preview as, then the Reset position and
+Reset all settings buttons.
 
 | Left | Right |
 |---|---|
@@ -26,11 +27,19 @@ Minimap button, Test mode, then the Reset position and Reset all settings button
 | Master scale (`scale`, 0.5-2) | Master alpha (`alpha`) |
 | Lock frame (`locked`) | Debug console (`state.debugConsole`, session) |
 | Minimap button (`global.minimap.shown`) | Test mode (`state.testMode`, session) |
+| Preview as (`state.previewAs`, session; its own line) | |
 | Reset position (button: every pad and dial back to its default place, one chat line) | Reset all settings (button, asks first) |
 
 Lock frame, `/qc lock|unlock` and the launcher's Locked entry write the same path; Test mode,
 `/qc test` and the launcher's Test mode entry call the same switch (`Preview.SetTestMode`), which is
 refused in combat.
+
+Preview as is passed through the composer's `extra` slot, so it lands after the canonical rows and
+before the button pair, never among them: options-ui-§15 as amended in v2.84.0 sanctions that slot
+for page-wide host rows. It draws every pad, and opens dial 1, as another situation would (nothing
+sends); `/qc preview` writes the same session row, and the page follows it (`Preview.announce`
+repaints). It is page-wide, so no editor page draws it, and no page's Defaults reaches it; Reset all
+settings ends it with the other session rows.
 
 Every row writes through the one seam (`NS.SchemaRuntime.Set`), and its reaction is the same one
 the CLI, the launcher and the host verbs trigger (`Settings.REACTIONS` in `settings/Schema.lua`).
@@ -47,7 +56,7 @@ read-only branch.
 band      [ Group v (picker; a green dot marks a group active now; a group inside another is
           listed, indented, right after it) ][ New group ]
 strip     [ General ][ Callouts ][ When ][ Preview ]
-General   Preview as (page-wide, first), then Name, Enabled, Open the dial on this group, then
+General   Name, Enabled, Open the dial on this group, then
           Parent group (None, or a top-level group) beside Inherit when conditions (grayed out
           with no parent), then the icon under an Icon label with Choose icon…, the clear glyph
           and its color swatch (settings/Editors.lua's chooser, no Icon text box), then
@@ -372,7 +381,7 @@ footer   the selected icon (a glyph in the color) and its name, then Choose and 
 ```
 band     [ Pad v (picker) ][ New pad ]
 strip    [ General ][ Groups ][ Layout ][ Look ]
-General  Preview as (page-wide, first), Name, Enabled, then Unlock (or Lock) pads and Delete pad
+General  Name, Enabled, then Unlock (or Lock) pads and Delete pad
 Groups   Show groups as, then the pad's groups as a drag-to-reorder list with a remove glyph
          (its priority order; it takes the group off the pad and asks nothing), then Add a group
          (the top-level groups the pad does not hold: a group inside another shows with it)
@@ -395,7 +404,7 @@ shipped order.
 ```
 band     [ Dial v (picker) ][ New dial ]
 strip    [ General ][ Groups ][ Wheel ][ Binding ][ Preview ]
-General  Preview as (page-wide, first), Name, Enabled, then Delete dial
+General  Name, Enabled, then Delete dial
 Groups   Show groups as (Categories or Flat), the depth-3 warning (spec §11.3), then the dial's
          groups as a drag-to-reorder list with a remove glyph (its priority order, spec §7; it
          takes the group off the dial and asks nothing), then Add a group (top-level groups only)
@@ -405,8 +414,7 @@ Binding  how Relaxed mode works, the key capture, and the key's line (what it op
 Preview  each ring as the current or previewed situation builds it, wedge by wedge
 ```
 
-- **General:** Preview as… draws dial 1 in another situation (its wedges disarmed); Name and Enabled
-  are the `dial.name` and `dial.enabled` rows; Delete dial asks first, keeps the dial's groups and
+- **General:** Name and Enabled are the `dial.name` and `dial.enabled` rows; Delete dial asks first, keeps the dial's groups and
   callouts, and releases its key.
 - **Groups:** Show groups as is `dial.mode` (Categories or Flat). The warning names each battleground
   node set that would open three rings deep because a group above it is active there too
