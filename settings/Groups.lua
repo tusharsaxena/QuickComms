@@ -545,12 +545,17 @@ end
 
 -- Combat ends the edit preview (modules/Preview.lua); its end brings it back while the page is
 -- still on screen. RESTRICTION_CHANGED is sent once Restrictions has cleared its combat edge, so the
--- start is not refused, whichever frame sees PLAYER_REGEN_ENABLED first. At combat start the
--- preview refuses the start on its own. Its own target (core/Bus.lua).
+-- start is not refused, whichever frame sees PLAYER_REGEN_ENABLED first. In combat it does nothing:
+-- the combat edge is Preview's to end (with its one line), whichever target hears it first. Its own
+-- target (core/Bus.lua).
+local function onRestrictionChanged()
+    if not NS.Restrictions.InCombat() then G.SyncEditPreview() end
+end
+
 local receiver
 local function listen()
     receiver = receiver or NS.Bus:NewTarget()
-    if receiver then receiver:RegisterMessage(NS.MSG.RESTRICTION_CHANGED, function() G.SyncEditPreview() end) end
+    if receiver then receiver:RegisterMessage(NS.MSG.RESTRICTION_CHANGED, onRestrictionChanged) end
 end
 listen()
 
