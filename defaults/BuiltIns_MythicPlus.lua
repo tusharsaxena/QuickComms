@@ -8,16 +8,16 @@ local C = BI.COLOR
 local ID = "bi.mplus"
 
 BI.Group(ID, {
-    name = L["Dungeon (generic)"], icon = "Interface\\Icons\\INV_Relics_Hourglass",
+    name = L["Dungeon (generic)"], glyph = "gi:dungeon-gate", color = C.purple,
     when = { content = { dungeon = true, mythicPlus = true } },
     callouts = BI.Callouts(ID, "smartGroup", {
-        { "pull",   L["Pulling"],        L["Pulling next pack"], "gi:crossed-swords" },
+        { "pull",   L["Pulling"],        L["Pulling next pack"], "gi:crossed-swords", C.orange },
         { "lust",   L["Lust"],           L["Lust on this pack {rt8}"], "gi:enrage", C.red },
         { "mana",   L["Need mana"],      L["Wait, need mana"], "gi:water-drop", C.blue },
-        { "kicks",  L["Kick order"],     L["Kick order: {rt1} {rt2} {rt3}"], "gi:boot-kick" },
-        { "skip",   L["Skipping"],       L["Skipping with invis/shroud"], "gi:invisible" },
+        { "kicks",  L["Kick order"],     L["Kick order: {rt1} {rt2} {rt3}"], "gi:boot-kick", C.purple },
+        { "skip",   L["Skipping"],       L["Skipping with invis/shroud"], "gi:invisible", C.cyan },
         { "res",    L["Res me"],         L["Res me pls"], "gi:ankh", C.green },
-        { "chain",  L["Chain pull"],     L["Key time is tight, chain pull"], "gi:crossed-chains" },
+        { "chain",  L["Chain pull"],     L["Key time is tight, chain pull"], "gi:crossed-chains", C.red },
         { "gg",     L["GG"],             L["gg, thanks all"], "gi:trophy-cup", C.gold },
     }),
 })

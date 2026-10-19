@@ -27,6 +27,7 @@ NS.C = {
             lockdownChip = true,     -- shown only when lockdown affects a visible callout (spec §8.4)
             sounds       = false,
             autoPromote  = false,    -- narrower When floats up within a surface's order (spec §7)
+            previewOnEdit = true,    -- the Groups page previews the group it edits on every surface
         },
         -- The registry (spec §5.1). Library (modules/Library.lua) is the ONLY writer of these keys.
         nextId    = 1,

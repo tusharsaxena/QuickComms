@@ -159,9 +159,19 @@ return function(NS, m)
         return nil
     end
 
-    --- The page banner's picker (O.PageBanner's Dropdown) and its create action (its Button).
-    function P.banner(ctx) return inBand(ctx, "Dropdown") end
-    function P.bannerAction(ctx) return inBand(ctx, "Button") end
+    --- The page banner's picker (O.PageBanner's Dropdown) and its create action (its Button); on a
+    --- page that draws its band through O.PageHeader (the Groups page), the ones it keeps on
+    --- `ctx.qcBand`.
+    function P.banner(ctx)
+        local band = ctx and ctx.qcBand
+        if band and band.picker and not band.picker.__released then return band.picker end
+        return inBand(ctx, "Dropdown")
+    end
+    function P.bannerAction(ctx)
+        local band = ctx and ctx.qcBand
+        if band and band.action and not band.action.__released then return band.action end
+        return inBand(ctx, "Button")
+    end
 
     --- Accept the last popup shown, as the player's Yes does.
     function P.accept()

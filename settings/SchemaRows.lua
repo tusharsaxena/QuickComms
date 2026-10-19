@@ -61,6 +61,12 @@ NS.SchemaRuntime.AddRows({
       group = BEHAVIOR, label = L["Promote specific groups"],
       desc = L["Groups for a specific dungeon or battleground move above general ones on each pad and dial."],
       onChange = rebuild },
+    -- Drawn by the Groups page's band, under its picker (settings/Groups.lua), never by a tab: on
+    -- that page so its Defaults reaches it (options-ui-§13, what the page draws).
+    { path = "behavior.previewOnEdit", type = "bool", default = B.previewOnEdit, page = "groups",
+      group = L["General"], skipRender = true, label = L["Preview while editing"],
+      desc = L["While this page is open, every pad and dial shows only the group you are editing, with the groups inside it, whatever its When says. Nothing on them sends. It ends when you leave this page or combat starts."],
+      onChange = function() NS.addon.Settings.Groups.SyncEditPreview() end },
 })
 
 -- Preview as… (spec §13.3) is not here: it is General › Master controls' extra (settings/Panel.lua).

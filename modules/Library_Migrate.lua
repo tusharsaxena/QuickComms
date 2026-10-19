@@ -74,3 +74,88 @@ function Lib.MigrateBuiltins(profile)
     if type(profile.groups) == "table" then migrateDungeonSet(profile.groups) end
     if type(profile.callouts) == "table" then migrateCalloutIcons(profile.callouts) end
 end
+
+-- The game icons the generic sets shipped with before step 6, by origin; every other seeded group
+-- shipped with none (nil). A copy still holding its one takes its glyph and color.
+local OLD_GROUP_ICONS = {
+    ["bi.mplus"] = "Interface\\Icons\\INV_Relics_Hourglass",
+    ["bi.raid"]  = "Interface\\Icons\\Achievement_Boss_Ragnaros",
+    ["bi.arena"] = "Interface\\Icons\\Achievement_Arena_2v2_7",
+    ["bi.bg"]    = "Interface\\Icons\\Achievement_BG_winWSG",
+}
+
+-- The node sets that shipped with no callouts of their own before step 6.
+local NEW_OWN_CALLOUTS = { "bi.bg.ab", "bi.bg.eots", "bi.bg.bfg", "bi.bg.dwg", "bi.bg.ioc" }
+
+-- A fresh callout id on a raw profile: above nextId and every numeric suffix already taken, as
+-- Library's liftNextId keeps it, so a stale counter never reuses an id.
+local function takeCalloutId(profile)
+    local high = type(profile.nextId) == "number" and profile.nextId - 1 or 0
+    for _, key in ipairs({ "callouts", "groups", "pads", "dials" }) do
+        for id in pairs(type(profile[key]) == "table" and profile[key] or {}) do
+            local n = type(id) == "string" and tonumber(id:match("^[cgpd](%d+)$"))
+            if n and n > high then high = n end
+        end
+    end
+    profile.nextId = high + 2
+    return "c" .. (high + 1)
+end
+
+local function colorGroups(groups)
+    local shipped = NS.BuiltIns.groups
+    for _, g in pairs(groups) do
+        local def = type(g) == "table" and type(g.origin) == "string" and shipped[g.origin]
+        if def and def.icon and g.iconColor == nil and (g.icon == nil or g.icon == OLD_GROUP_ICONS[g.origin]) then
+            g.icon, g.iconColor = def.icon, def.iconColor
+        end
+    end
+end
+
+-- A seeded callout still showing its shipped glyph with no color (as every uncolored one shipped)
+-- takes the glyph's color. A picked color, a picked or cleared icon, is the player's.
+local function colorCallouts(callouts)
+    local shipped = NS.BuiltIns.callouts
+    for _, c in pairs(callouts) do
+        local def = type(c) == "table" and type(c.origin) == "string" and shipped[c.origin]
+        if def and def.icon and c.iconColor == nil and c.icon == def.icon then c.iconColor = def.iconColor end
+    end
+end
+
+-- Each copy of a node set (by origin) gets, at the end of its list, every shipped callout of its own
+-- that none of its callouts keeps the origin of. A set the player deleted has no copy, so it stays
+-- deleted; one held already is never added twice.
+local function addOwnCallouts(profile)
+    local wanted = {}
+    for _, origin in ipairs(NEW_OWN_CALLOUTS) do wanted[origin] = NS.BuiltIns.groups[origin] end
+    for _, g in pairs(profile.groups) do
+        local def = type(g) == "table" and type(g.callouts) == "table" and wanted[g.origin]
+        if def then
+            local have = {}
+            for _, cid in ipairs(g.callouts) do
+                local c = profile.callouts[cid]
+                if type(c) == "table" and c.origin then have[c.origin] = true end
+            end
+            for _, origin in ipairs(def.callouts) do
+                if not have[origin] then
+                    local c, id = NS.BuiltIns.callouts[origin], takeCalloutId(profile)
+                    profile.callouts[id] = { name = c.name, text = c.text, channel = c.channel, icon = c.icon,
+                        iconColor = c.iconColor, origin = origin }
+                    g.callouts[#g.callouts + 1] = id
+                end
+            end
+        end
+    end
+end
+
+--- Step 6 (groups polish): every seeded group whose icon is unset or the game icon it shipped with
+--- takes its catalog glyph and color; every seeded callout still on its shipped glyph with no color
+--- takes the glyph's color; and each node set's copy gains the map-wide callouts it lacks. The World
+--- (solo) set is new, so Prepare seeds it (seededSets) like any newly shipped set.
+function Lib.MigrateBuiltinsPolish(profile)
+    if type(profile) ~= "table" then return end
+    if type(profile.groups) == "table" then colorGroups(profile.groups) end
+    if type(profile.callouts) == "table" then
+        colorCallouts(profile.callouts)
+        if type(profile.groups) == "table" then addOwnCallouts(profile) end
+    end
+end

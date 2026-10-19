@@ -102,7 +102,7 @@ Total.
 - perf: [review] a refresh whose signature moves notes situationRefresh before the rebuild it publishes
 - perf: [phase 5] the Comms Dial page's Preview notes neither bakeSurface nor resolverResolve
 
-### test_database.lua (14)
+### test_database.lua (15)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the target is the last step's `to`, and the steps climb in order
@@ -118,6 +118,7 @@ Total.
 - database: the profile defaults carry the Master controls value, and no debug flag
 - database: [B2] step 4 rewrites a pad's retired Upward growth as Right and up, once
 - database: [B7] step 5 renames the dungeon set, widens its When and gives seeded callouts their glyphs, once
+- database: [polish] step 6 colors untouched seeded icons and adds the node sets' own callouts, once
 
 ### test_profile.lua (9)
 
@@ -125,7 +126,7 @@ Total.
 - profile: collections exist; default nextId is 1, past every seeded id after boot
 - profile: every behavior row resolves through the seam
 - profile: the spam guard clamps to 0.6-2.0 and fallback refuses unknown values
-- profile: schema version target is 5 (the built-in glyphs)
+- profile: schema version target is 6 (the groups polish)
 - prepare: a callout held by two groups is split into a copy
 - prepare: a split copy of a seeded callout keeps no origin
 - prepare: a callout held by no group is dropped
@@ -359,7 +360,7 @@ Total.
 - resolver: [all] All battlegrounds and All dungeons and raids match the whole kind, the listed ids aside
 - resolver: [arena] the arena row matches only in an arena: its listed ids, or all of them
 
-### test_builtins.lua (9)
+### test_builtins.lua (13)
 
 - builtins: the expected top-level sets exist in order
 - builtins: ids are unique, referenced and well formed
@@ -370,6 +371,10 @@ Total.
 - builtins: [phase 5] every node set pins each node to a wind, at most eight, Deepwind Gorge's five included
 - builtins: [B7] every callout ships a catalog glyph, with a color only where it is a glyph
 - builtins: [B7] the generic dungeon set is Dungeon (generic), active in a dungeon and in M+
+- builtins: [polish] World (solo) is a solo open-world set of say callouts
+- builtins: [polish] every battleground node set has map-wide callouts of its own
+- builtins: [polish] every callout icon has a color, and no group is white only
+- builtins: [polish] every group has a colored catalog glyph for its icon
 
 ### test_gameids.lua (4)
 
@@ -627,7 +632,7 @@ Total.
 - when: [arena] the arena row: names, Summary, All arenas, the CLI value, and its tooltip
 - when: [arena] Add the arena you are in reads the live snapshot, and refuses outside an arena
 
-### test_page_groups.lua (63)
+### test_page_groups.lua (66)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists every group by name, a seeded set among them, active ones dotted
@@ -692,6 +697,9 @@ Total.
 - groups page: [all] the battleground drawer's All battlegrounds dims and locks the list, which it keeps
 - groups page: [all] a gap separates the Every condition line from the first drawer
 - groups page: [arena] the arena drawer's All arenas dims and locks the list, which it keeps
+- groups page: [R4] EditGroup opens the Groups page on that group and keeps the tab it was on
+- groups page: [R4] EditGroup in combat prints the settings refusal and changes nothing
+- groups page: [R4] EditGroup of a group that is gone opens nothing
 
 ### test_page_pads.lua (16)
 
@@ -839,6 +847,23 @@ Total.
 - preview: [final 13] `/qc preview` reads the situation's name without regard to case
 - preview: [final 10] a dungeon preview fills {dungeon}, and the header names the preview as its menu does
 
+### test_edit_preview.lua (14)
+
+- edit preview: every pad shows only the edited group, whatever its When says, and sends nothing
+- edit preview: a battleground set shows its own callouts and every node, outside the battleground
+- edit preview: every dial shows only the edited group
+- edit preview: it ends back to the live pads, and Preview as and test mode come back after it
+- edit preview: combat ends it with one line and the live chips come back armed; a start in combat is refused
+- edit preview: with Preview as on too, combat says so once
+- edit preview: closing the settings window and the stand-down end it
+- edit preview: a group deleted while previewed leaves the live pads
+- edit preview: the why lines say the group is being edited
+- edit preview: Preview while editing is a saved Behavior setting, on by default, drawn only in the Groups band
+- edit preview: showing the Groups page previews the selected group; a pick follows; hiding the page ends it
+- edit preview: the band's Preview while editing box sits under the picker and turns it off and on
+- edit preview: the Groups page drawn in combat does not start it
+- edit preview: it comes back when combat ends with the Groups page still on screen
+
 ### test_master.lua (5)
 
 - master: the frame defaults are spec §5.1's: always shown, scale and alpha 1, locked
@@ -865,7 +890,7 @@ Total.
 - layout: the fade follows combat and the mouse, under the master alpha
 - layout: the channel tag names the resolved channel
 
-### test_dial_layout.lua (15)
+### test_dial_layout.lua (16)
 
 - dial layout: four wedges sit on N, E, S and W, clockwise from the top
 - dial layout: slices are 4, 6, 8 or 12, and 12 only on a ring with no children
@@ -879,6 +904,7 @@ Total.
 - dial layout: [final 6] a label is anchored by its side, clear of its wedge; the ring title clears the N label
 - dial layout: [final 20] past eight wedges each gets its own direction, as a clock position
 - dial layout: [phase 5] a node set's nodes sit on their compass winds; the middle node takes N
+- dial layout: [polish] a node set's own callouts take one wedge on the first free wind; the nodes stay pinned
 - dial layout: [review 6] [phase 5] nodes that cannot all be pinned keep their shipped order
 - dial layout: [review 6] a pinned ring ignores the dial's slices; Flat keeps its paging
 - dial layout: [icons] a ring entry carries its group's icon color, a send entry its callout's
@@ -913,7 +939,7 @@ Total.
 - surfaces: [nesting] a parent that draws nothing leaves its surface with nothing active
 - surfaces: [inherit] a child that inherits shows wherever its parent's When matches, whatever its own says
 
-### test_pad_render.lua (19)
+### test_pad_render.lua (20)
 
 - render: Dress builds a chip's regions once, each its own object
 - render: [audit QC-07] the chip's padlock is the catalog's lock mark, tinted gold; the Blizzard art is the nil fallback
@@ -924,8 +950,9 @@ Total.
 - render: a test-mode chip and a solo self-print chip are not dimmed, and say what they do
 - render: flashes take the result's color; the cooldown dims and clears
 - render: the situation chip names the content, the dungeon and the key
-- render: the header shows the lockdown chip, the stale hint and the test label on demand
+- render: the header shows the lockdown chip and the stale hint on demand; no test label
 - render: the drag-strip seam builds a hidden strip, and answers nil without the library
+- render: [R3] the strip label is the pad's name, then PREVIEW or TEST MODE in green
 - pad render: [phase 3] a previewed slot's tooltip shows its line and says it sends nothing
 - render: [phase 5] a pad's Look is a font and a skin; the defaults are the skin a pad always wore
 - render: [review] the skin's 1px inner line is kept only on the default flat 1px edge
@@ -935,7 +962,7 @@ Total.
 - render: [icons] a glyph chip is drawn in its color; the chip repainted with another icon is white again
 - render: [B3] a chip's label is one line, and hidden when the chip leaves it no room
 
-### test_pad.lua (29)
+### test_pad.lua (34)
 
 - pad: the default pad shows the M+ callouts, each chip armed with its baked line
 - pad: [review 5] a refused chip is dimmed and disarmed: a click sends and reports nothing
@@ -966,6 +993,11 @@ Total.
 - pad: [B1] a group named as the header's situation draws no title row of its own
 - pad: [B2] down growth pins the pad's top edge; the header is on top and the strip above
 - pad: [B2] up growth pins the bottom edge, puts the header at the bottom and the strip below
+- pad: [R3] the strip reads the pad's name and PREVIEW / TEST MODE, grows to fit, and shows while locked
+- pad: [R4] each drawn title takes a right-click to edit its group; a left-click does nothing
+- pad: [R4] the title's tooltip says Right-click to edit this group
+- pad: [R4] in tabs mode the tab's title edits the group the tab shows; the wheel moves it
+- pad: [R4] merged pads, collapsed pads and test mode's placeholder groups have no title to click
 
 ### test_dial.lua (29)
 
@@ -1101,7 +1133,7 @@ Total.
 | test_bus.lua | 2 |
 | test_surface_parity.lua | 15 |
 | test_setup.lua | 27 |
-| test_database.lua | 14 |
+| test_database.lua | 15 |
 | test_profile.lua | 9 |
 | test_schema.lua | 19 |
 | test_slash.lua | 19 |
@@ -1115,7 +1147,7 @@ Total.
 | test_bake.lua | 12 |
 | test_share.lua | 37 |
 | test_resolver.lua | 13 |
-| test_builtins.lua | 9 |
+| test_builtins.lua | 13 |
 | test_gameids.lua | 4 |
 | test_library.lua | 78 |
 | test_members.lua | 29 |
@@ -1124,7 +1156,7 @@ Total.
 | test_icon_browser.lua | 36 |
 | test_eui_skin.lua | 10 |
 | test_groups_when.lua | 20 |
-| test_page_groups.lua | 63 |
+| test_page_groups.lua | 66 |
 | test_page_pads.lua | 16 |
 | test_page_dials.lua | 18 |
 | test_page_share.lua | 12 |
@@ -1133,12 +1165,13 @@ Total.
 | test_sendengine.lua | 31 |
 | test_dial_secure.lua | 12 |
 | test_preview.lua | 17 |
+| test_edit_preview.lua | 14 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 15 |
-| test_dial_layout.lua | 15 |
+| test_dial_layout.lua | 16 |
 | test_surfaces.lua | 27 |
-| test_pad_render.lua | 19 |
-| test_pad.lua | 29 |
+| test_pad_render.lua | 20 |
+| test_pad.lua | 34 |
 | test_dial.lua | 29 |
 | test_icon_style.lua | 8 |
 | test_glow.lua | 11 |
@@ -1149,4 +1182,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **927** |
+| **Total** | **956** |

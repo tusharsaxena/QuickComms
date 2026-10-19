@@ -126,21 +126,21 @@ test("render: the situation chip names the content, the dungeon and the key", fu
     assertEqual(R.SectionTitle({ text = "Raid", tabIndex = 2, tabCount = 3 }), "Raid (2 of 3)")
 end)
 
-test("render: the header shows the lockdown chip, the stale hint and the test label on demand", function()
+test("render: the header shows the lockdown chip and the stale hint on demand; no test label", function()
     local NS, m = T.enableAddon()
     local root = m.CreateFrame("Frame", "QuickCommsPadTest", m.UIParent)
     local header = m.CreateFrame("Frame", nil, root)
     local collapsed = 0
     NS.PadRender.DressHeader(header, function() collapsed = collapsed + 1 end)
-    NS.PadRender.PaintHeader(header, { situation = "M+", lockdown = true, stale = false, test = false })
+    NS.PadRender.PaintHeader(header, { situation = "M+", lockdown = true, stale = false })
     assertEqual(header.qcSituation:GetText(), "M+")
     assertTrue(header.qcLockdown:IsShown())
     assertFalse(header.qcStale:IsShown())
-    assertFalse(header.qcTest:IsShown())
-    NS.PadRender.PaintHeader(header, { situation = "M+", stale = true, test = true, collapsed = true })
+    -- red under: the header keeping its own TEST MODE / PREVIEW label (it moved to the drag strip)
+    assertNil(header.qcTest)
+    NS.PadRender.PaintHeader(header, { situation = "M+", stale = true, collapsed = true })
     assertFalse(header.qcLockdown:IsShown())
     assertTrue(header.qcStale:IsShown())
-    assertTrue(header.qcTest:IsShown())
     assertEqual(header.qcCollapse.qcText:GetText(), "+")
     header.qcCollapse:__fire("OnClick")
     assertEqual(collapsed, 1)
@@ -154,6 +154,14 @@ test("render: the drag-strip seam builds a hidden strip, and answers nil without
     assertFalse(handle:IsShown(), "born hidden; the pad shows it when unlocked")
     local D = T.newAddon{ skip = T.loadAddon.libFiles }
     assertNil(D.MakeDragHandle(root, { label = "x", moveFrame = root }))
+end)
+
+test("render: [R3] the strip label is the pad's name, then PREVIEW or TEST MODE in green", function()
+    local NS = T.newAddon()
+    local R = NS.PadRender
+    assertEqual(R.StripLabel("Comms Pad"), "Comms Pad")
+    assertEqual(R.StripLabel("Raid pad", "PREVIEW"), "Raid pad  |cff19ff19PREVIEW|r")
+    assertEqual(R.StripLabel("Raid pad", "TEST MODE"), "Raid pad  |cff19ff19TEST MODE|r")
 end)
 
 test("pad render: [phase 3] a previewed slot's tooltip shows its line and says it sends nothing", function()

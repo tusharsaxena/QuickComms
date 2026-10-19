@@ -53,6 +53,10 @@ test("groups page: [exit] a new group with a callout and a When shows first on t
     w = P.tab("groups", "When")
     P.find(w, "CheckBox", "M+"):__fire("OnValueChanged", true)
     assertTrue(NS.db.profile.groups[gid].when.content.mythicPlus)
+    -- Leaving the page ends Preview while editing, so the pad is the live one again.
+    local panel = P.ctx("groups").panel
+    panel:Hide()
+    panel:__fire("OnHide")
     local plan = NS.Surfaces.Plans().p1
     assertEqual(plan.order[1], gid)
     assertEqual(NS.Pad.ChipsFor("p1", cid)[1]:GetAttribute("macrotext"), "/p Incoming")
@@ -88,7 +92,7 @@ test("groups page: General draws the group's rows, no Preview as; Duplicate and 
     assertTrue(P.find(w, "Dropdown", "Preview as") == nil, "Preview as is in General › Master controls")
     local tip = P.ctx("groups").panel.defaultsTooltip
     -- red under: keep "turn Preview as off" in the Defaults tooltip (the row left the page)
-    assertTrue(tip:find("Preview", 1, true) == nil, "Defaults no longer reaches Preview as")
+    assertTrue(tip:find("Preview as", 1, true) == nil, "Defaults no longer reaches Preview as")
     P.find(w, "EditBox", "Name"):__fire("OnEnterPressed", "Kicks")
     assertEqual(NS.db.profile.groups[gid].name, "Kicks")
     P.find(w, "CheckBox", "Enabled"):__fire("OnValueChanged", false)
@@ -1339,4 +1343,56 @@ test("groups page: [arena] the arena drawer's All arenas dims and locks the list
     w = P.tab("groups", "When")
     assertEqual(P.drawer(w, "Arena").__ka0sDrawerSummary, "All arenas")
     assertTrue(P.find(w, "EditBox", "Add an arena").disabled, "the list is locked")
+end)
+
+
+-- ── groups polish (2026-10-19) R4: a pad title's right-click lands here ─────────────────────
+
+local function categoryOpens(NS, m)
+    local opened = {}
+    NS.addon.Settings.Editors.categories.groups = { GetID = function() return 42 end }
+    m.Settings.OpenToCategory = function(id) opened[#opened + 1] = id end
+    return opened
+end
+
+test("groups page: [R4] EditGroup opens the Groups page on that group and keeps the tab it was on", function()
+    local NS, m, P = open()
+    local opened = categoryOpens(NS, m)
+    local a = NS.Library.CreateGroup({ name = "Alpha" })
+    local b = NS.Library.CreateGroup({ name = "Beta" })
+    pick(NS, a)
+    P.tab("groups", "callouts")
+    -- red under: no EditGroup
+    assertTrue(NS.addon:EditGroup(b))
+    P.flush()
+    assertEqual(NS.State.editing.group, b, "the page's own selection")
+    assertEqual(P.ctx("groups").activeTab, "callouts", "the tab is remembered across groups")
+    assertEqual(P.banner(P.ctx("groups")).value, b, "the dropdown reads the group")
+    assertEqual(opened[#opened], 42, "the Groups category, not the main page")
+end)
+
+test("groups page: [R4] EditGroup in combat prints the settings refusal and changes nothing", function()
+    local NS, m, P = open()
+    local opened = categoryOpens(NS, m)
+    local a = NS.Library.CreateGroup({ name = "Alpha" })
+    local b = NS.Library.CreateGroup({ name = "Beta" })
+    pick(NS, a)
+    P.flush()
+    m.__fire("PLAYER_REGEN_DISABLED")
+    m.__setCombat(true)
+    m.prints = {}
+    assertFalse(NS.addon:EditGroup(b))
+    assertEqual(NS.State.editing.group, a)
+    assertEqual(#opened, 0)
+    assertTrue(table.concat(m.prints, "\n"):find("cannot open settings during combat", 1, true) ~= nil)
+    m.__setCombat(false)
+    m.__fire("PLAYER_REGEN_ENABLED")
+end)
+
+test("groups page: [R4] EditGroup of a group that is gone opens nothing", function()
+    local NS, m = open()
+    local opened = categoryOpens(NS, m)
+    assertFalse(NS.addon:EditGroup("nope"))
+    assertFalse(NS.addon:EditGroup("test.1"))
+    assertEqual(#opened, 0)
 end)

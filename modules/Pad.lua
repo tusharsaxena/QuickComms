@@ -6,9 +6,10 @@ local _, NS = ...
 -- chips' and titles' font); it becomes protected in combat because its chips are secure. Every chip
 -- IS a send button (spec §9.1),
 -- built by SendEngine, dressed by Pad_Render, pooled per pad with NS.Pool and never destroyed. The
--- header row (situation chip, lockdown chip, test label, stale hint, collapse) is a plain child;
--- the LibKa0s drag strip sits above the root and shows only while unlocked (KickCD
--- modules/IconGrid_Handle.lua `buildHandle` / `IconGrid:ApplyLock`), and its canDrag refuses while
+-- header row (situation chip, lockdown chip, stale hint, collapse) is a plain child;
+-- the LibKa0s drag strip sits above the root, reads `<pad name>  PREVIEW` / `TEST MODE`, and shows
+-- while unlocked or while it carries that marker (KickCD modules/IconGrid_Handle.lua `buildHandle`
+-- / `IconGrid:ApplyLock`), and its canDrag refuses while
 -- locked or in combat. canDrag guards only the start: when combat begins mid-drag, the
 -- RESTRICTION_CHANGED edge ends the drag itself (endDrags), so the strip's OnDragStop never stops
 -- the protected root in combat.
@@ -56,6 +57,12 @@ local function profilePad(id)
 end
 
 local function inCombat() return NS.Compat.InCombat() end
+
+-- What the drag strip calls a pad: its name, or the generic one.
+local function padName(id)
+    local pad = profilePad(id)
+    return pad and pad.name or L["Comms Pad"]
+end
 local function isLocked() return NS.Setting("locked") ~= false end
 
 local function session(key)
@@ -127,6 +134,34 @@ local function newTitle(inst)
     return inst.root:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 end
 
+-- A section title's hit frame (groups polish R4): a plain, non-secure Button over the title row,
+-- made and placed out of combat with the layout. A right-click opens the Groups page on its group
+-- (QC:EditGroup, which prints the settings refusal in combat); a left-click does nothing, as the
+-- title did. It keeps the pad's hover (the fade) and hands the wheel on, as a chip does.
+local function newTitleHit(inst)
+    local hit = CreateFrame("Button", nil, inst.root)
+    hit:RegisterForClicks("RightButtonUp")
+    hit:EnableMouseWheel(true)
+    hit:SetScript("OnClick", function(self, button)
+        if button == "RightButton" and self.qcGroupId then NS.addon:EditGroup(self.qcGroupId) end
+    end)
+    hit:SetScript("OnEnter", function(self)
+        Pad.SetHover(inst.id, true)
+        local g = self.qcGroupId and NS.Library.Group(self.qcGroupId)
+        R.ShowLines(self, g and g.name or "", { L["Right-click to edit this group."] })
+    end)
+    hit:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+        Pad.SetHover(inst.id, false)
+    end)
+    hit:SetScript("OnMouseWheel", function(_, delta) Pad.Wheel(inst.id, delta) end)
+    return hit
+end
+
+local function releaseTitleHit(hit)
+    hit.qcGroupId = nil
+end
+
 local function releaseChip(btn)
     NS.SendEngine.Disarm(btn)
     btn.qcSlot = nil
@@ -175,6 +210,14 @@ local function place(inst, box, style, font, titleFont, icfg)
             fs:SetPoint("TOPLEFT", inst.root, "TOPLEFT", item.x, -item.y)
             fs:SetText(R.SectionTitle(item))
             R.ApplyFont(fs, titleFont)
+            -- Only a group the profile has: test mode's placeholders ("test.N") name none.
+            if item.groupId and NS.Library.Group(item.groupId) then
+                local hit = NS.Pool.Acquire(inst.titleHits, function() return newTitleHit(inst) end)
+                hit.qcGroupId = item.groupId
+                hit:ClearAllPoints()
+                hit:SetPoint("TOPLEFT", inst.root, "TOPLEFT", item.x, -item.y)
+                hit:SetSize(math.max(1, box.width - 2 * item.x), item.h)
+            end
         end
     end
 end
@@ -190,8 +233,8 @@ local function build(id)
     root:EnableMouseWheel(true)
     root:SetScript("OnMouseWheel", function(_, delta) Pad.Wheel(id, delta) end)
     NS.ApplySkin(root)
-    local inst = { id = id, root = root, chips = NS.Pool.New(), titles = NS.Pool.New(), byCallout = {},
-        hover = 0, live = false }
+    local inst = { id = id, root = root, chips = NS.Pool.New(), titles = NS.Pool.New(), titleHits = NS.Pool.New(),
+        byCallout = {}, hover = 0, live = false }
     local header = CreateFrame("Frame", nil, root)
     header:SetHeight(PL.HEADER_H)
     header:EnableMouse(true)
@@ -207,9 +250,9 @@ local function build(id)
     end)
     R.DressHeader(header, function() Pad.ToggleCollapsed(id) end)
     inst.header = header
-    local label = pad.name or L["Comms Pad"]
+    -- The label is set again on every Apply (stripLabel), so a rename and a preview reach it.
     inst.handle = NS.MakeDragHandle(root, {
-        label = label,
+        label = pad.name or L["Comms Pad"],
         moveFrame = root,
         canDrag = function() return not isLocked() and not inCombat() end,
         -- A new drag supersedes any stop still held for an earlier one (endDrags).
@@ -222,7 +265,9 @@ local function build(id)
             savePoint(inst)
         end,
         onRightClick = function() NS.addon:OpenSettings() end,
-        tooltip = { title = label, body = { L["Drag to move. Right-click for settings."] } },
+        tooltip = { title = function() return padName(id) end, body = { function()
+            return isLocked() and L["Right-click for settings."] or L["Drag to move. Right-click for settings."]
+        end } },
     })
     pads[id] = inst
     applyPoint(inst)
@@ -259,7 +304,8 @@ local function headerState(inst, plan)
         -- battleground), not as a live snapshot would read.
         situation = plan.preview and L["Preview: %s"]:format(NS.Preview.Label(plan.preview))
             or plan.test and L["Test mode"] or R.SituationText(snap, NS.Compat.DungeonName(snap.challengeMapID)),
-        testText = plan.preview and L["PREVIEW"] or nil,
+        -- The strip's marker (R.StripLabel): a preview's, else test mode's (a preview is a test plan).
+        mark = plan.preview and L["PREVIEW"] or plan.test and L["TEST MODE"] or nil,
         lockdown = plan.lockdownChip == true and NS.Setting("behavior.lockdownChip") ~= false,
         stale = State.surfaceStale ~= nil and State.surfaceStale[inst.id] == true,
         test = plan.test == true,
@@ -279,6 +325,7 @@ function Pad.Apply(id, plan)
     inst.plan, inst.live = plan, true
     NS.Pool.ReleaseAll(inst.chips, releaseChip)
     NS.Pool.ReleaseAll(inst.titles)
+    NS.Pool.ReleaseAll(inst.titleHits, releaseTitleHit)
     inst.byCallout = {}
     local layout = type(pad.layout) == "table" and pad.layout or {}
     local look = type(pad.look) == "table" and pad.look or {}
@@ -296,6 +343,8 @@ function Pad.Apply(id, plan)
     place(inst, box, layout.style, font, R.TitleFont(font), icfg)
     NS.Glow.ReleaseFree(inst.chips)
     R.PaintHeader(inst.header, hstate)
+    inst.mark = hstate.mark
+    if inst.handle then inst.handle:SetLabel(R.StripLabel(padName(id), hstate.mark)) end
     Pad.ApplyLock()
     NS.SendEngine.SetVisibility(inst.root,
         PL.VisibilityDriver(NS.Setting("visibility"), look.visibility, plan.hasActive, plan.test == true,
@@ -317,7 +366,8 @@ function Pad.Release(id)
     NS.Pool.ReleaseAll(inst.chips, releaseChip)
     NS.Glow.ReleaseFree(inst.chips)
     NS.Pool.ReleaseAll(inst.titles)
-    inst.byCallout, inst.plan, inst.live = {}, nil, false
+    NS.Pool.ReleaseAll(inst.titleHits, releaseTitleHit)
+    inst.byCallout, inst.plan, inst.live, inst.mark = {}, nil, false, nil
     if inst.handle then inst.handle:Hide() end
     NS.SendEngine.ClearVisibility(inst.root)
     return true
@@ -349,12 +399,14 @@ function Pad.RefreshLocks(id, showLockdownChip)
     inst.header.qcLockdown:SetShown(showLockdownChip and true or false)
 end
 
---- The drag strip: shown on a live pad while unlocked. The strip is not protected.
+--- The drag strip: shown on a live pad while unlocked, and on a locked one while it draws a preview
+--- or test mode, because the strip carries the PREVIEW / TEST MODE marker (canDrag still refuses a
+--- locked drag). The strip is not protected.
 function Pad.ApplyLock()
     local locked = isLocked()
     for _, inst in pairs(pads) do
         if inst.handle then
-            if locked or not inst.live then
+            if not inst.live or (locked and not inst.mark) then
                 inst.handle:Hide()
             else
                 inst.handle:ApplyWidth(0)

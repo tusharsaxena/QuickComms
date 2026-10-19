@@ -194,9 +194,12 @@ test("pad: tabs show one section; the wheel steps them out of combat and is refu
     local NS, m = live(AB)
     NS.db.profile.pads.p1.groupsAs = "tabs"
     NS.Pad.Apply("p1", planFor(NS))
-    -- Arathi Basin's own set comes first (phase 4), so its first node is the first tab.
+    -- Arathi Basin's own set comes first (phase 4), so its own map-wide callouts are the first tab
+    -- (groups polish), then its first node.
+    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.hold")), 1)
+    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.stables.inc1")), 0)
+    assertTrue(NS.Pad.Wheel("p1", -1))
     assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.stables.inc1")), 1)
-    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.lumbermill.inc1")), 0)
     assertTrue(NS.Pad.Wheel("p1", -1))
     assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.lumbermill.inc1")), 1)
     combat(m, true)
@@ -364,12 +367,12 @@ test("pad: [fix wave] tabs switch on a wheel over a chip or the pad, not only th
     local NS = live(AB)
     NS.db.profile.pads.p1.groupsAs = "tabs"
     NS.Pad.Apply("p1", planFor(NS))
-    local chip = NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.stables.inc1"))[1]
+    local chip = NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.hold"))[1]
     -- red under: enable the wheel on the header alone
     chip:__fire("OnMouseWheel", -1)
-    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.lumbermill.inc1")), 1)
+    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.stables.inc1")), 1)
     NS.Pad.Instance("p1").root:__fire("OnMouseWheel", 1)
-    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.stables.inc1")), 1, "back to Stables")
+    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.hold")), 1, "back to the set's own tab")
 end)
 
 test("pad: [fix wave] in combat Reset position, Apply and Release do no protected work; combat end anchors", function()
@@ -564,4 +567,123 @@ test("pad: [B2] up growth pins the bottom edge, puts the header at the bottom an
     NS.Pad.ToggleCollapsed("p1")
     assertEqual(pointsOf(inst.header), "TOPLEFT,QuickCommsPadp1,TOPLEFT,0,0 | TOPRIGHT,QuickCommsPadp1,TOPRIGHT,0,0",
         "a growth change re-anchors the header")
+end)
+
+-- The client measures a string without its color escapes; the stand-in does the same, 6 per letter.
+local function measureLikeTheClient(m)
+    local fs = { text = "" }
+    function fs.SetText(self, v) self.text = v or "" end
+    function fs.GetStringWidth(self)
+        return 6 * #(self.text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""))
+    end
+    m.LibStub("LibKa0s-Widgets-1.0").__DragHandleMeasurer = function() return fs end
+end
+
+test("pad: [R3] the strip reads the pad's name and PREVIEW / TEST MODE, grows to fit, and shows while locked", function()
+    local NS, m = live()
+    measureLikeTheClient(m)
+    NS.db.profile.pads.p1.name = "A rather long raid pad name"
+    local inst = NS.Pad.Instance("p1")
+    local widths = {}
+    inst.handle.SetWidth = function(_, w) widths[#widths + 1] = w end
+    NS.Pad.Apply("p1", planFor(NS))
+    -- red under: the strip keeping the label it was built with (a rename never reached it)
+    assertEqual(inst.handle.label:GetText(), "A rather long raid pad name")
+    assertTrue(NS.Setting("locked"))
+    assertFalse(inst.handle:IsShown(), "locked and live: no strip")
+    NS.Preview.SetTestMode(true)
+    assertEqual(inst.handle.label:GetText(), "A rather long raid pad name  |cff19ff19TEST MODE|r")
+    -- red under: ApplyLock hiding the strip on a locked pad in test mode (the marker would vanish)
+    assertTrue(inst.handle:IsShown(), "locked, test mode still shows the strip that carries the marker")
+    local reserve = inst.handle:Reserve() * 2
+    assertEqual(widths[#widths], 6 * #"A rather long raid pad name  TEST MODE" + reserve, "the strip grows to fit")
+    -- red under: canDrag ignoring the lock now that the strip shows while locked
+    inst.handle:__fire("OnDragStart")
+    assertFalse(inst.dragging == true, "a locked strip does not drag")
+    NS.Preview.SetTestMode(false)
+    assertEqual(inst.handle.label:GetText(), "A rather long raid pad name")
+    assertFalse(inst.handle:IsShown())
+    NS.SchemaRuntime.Set("locked", false)
+    NS.Pad.ApplyLock()
+    assertTrue(inst.handle:IsShown())
+    assertEqual(widths[#widths], 6 * #"A rather long raid pad name" + reserve, "unlocked, it fits the name alone")
+    assertNil(inst.header.qcTest, "the header carries no marker of its own")
+end)
+
+-- ── groups polish (2026-10-19) R4: right-click a section title to edit its group ─────────────
+
+local function hits(NS)
+    return NS.Pad.Instance("p1").titleHits.active
+end
+
+local function spyEdit(NS)
+    local opened = {}
+    NS.addon.EditGroup = function(_, gid) opened[#opened + 1] = gid return true end
+    return opened
+end
+
+test("pad: [R4] each drawn title takes a right-click to edit its group; a left-click does nothing", function()
+    local NS = live(AB)
+    local opened = spyEdit(NS)
+    local plan = planFor(NS)
+    NS.Pad.Apply("p1", plan)
+    local inst = NS.Pad.Instance("p1")
+    -- red under: titles drawn as font strings alone, with nothing to click
+    assertTrue(#hits(NS) > 0, "a hit frame per title")
+    assertEqual(#hits(NS), #inst.titles.active, "one per drawn title")
+    local ids = {}
+    for _, sec in ipairs(plan.sections) do ids[sec.groupId] = true end
+    for _, hit in ipairs(hits(NS)) do
+        assertTrue(ids[hit.qcGroupId], "names a section's group")
+        assertTrue(hit:IsShown())
+    end
+    local hit = hits(NS)[1]
+    hit:__fire("OnClick", "LeftButton")
+    assertEqual(#opened, 0, "left-click is unchanged: nothing")
+    hit:__fire("OnClick", "RightButton")
+    assertEqual(opened[1], hit.qcGroupId)
+end)
+
+test("pad: [R4] the title's tooltip says Right-click to edit this group", function()
+    local NS = live(AB)
+    NS.Pad.Apply("p1", planFor(NS))
+    local shown = {}
+    NS.PadRender.ShowLines = function(_, title, lines) shown[#shown + 1] = { title = title, lines = lines } end
+    local hit = hits(NS)[1]
+    hit:__fire("OnEnter")
+    assertEqual(shown[1].title, NS.Library.Group(hit.qcGroupId).name)
+    assertEqual(shown[1].lines[1], "Right-click to edit this group.")
+end)
+
+test("pad: [R4] in tabs mode the tab's title edits the group the tab shows; the wheel moves it", function()
+    local NS = live(AB)
+    local opened = spyEdit(NS)
+    NS.db.profile.pads.p1.groupsAs = "tabs"
+    local plan = planFor(NS)
+    NS.Pad.Apply("p1", plan)
+    assertEqual(#hits(NS), 1)
+    assertEqual(hits(NS)[1].qcGroupId, plan.sections[1].groupId)
+    assertTrue(NS.Pad.Wheel("p1", -1))
+    assertEqual(#hits(NS), 1, "the last tab's hit frame went back to the pool")
+    hits(NS)[1]:__fire("OnClick", "RightButton")
+    assertEqual(opened[1], plan.sections[2].groupId, "a nested node's own group")
+end)
+
+test("pad: [R4] merged pads, collapsed pads and test mode's placeholder groups have no title to click", function()
+    local NS = live(AB)
+    NS.db.profile.pads.p1.groupsAs = "merged"
+    NS.Pad.Apply("p1", planFor(NS))
+    assertEqual(#hits(NS), 0, "merged draws no titles")
+    NS.db.profile.pads.p1.groupsAs = "sections"
+    NS.Pad.Apply("p1", planFor(NS))
+    assertTrue(#hits(NS) > 0)
+    NS.Pad.ToggleCollapsed("p1")
+    assertEqual(#hits(NS), 0, "collapsed")
+    NS.Pad.ToggleCollapsed("p1")
+    NS.Preview.SetTestMode(true)
+    -- red under: a hit frame on a "test.N" placeholder that names no group
+    assertEqual(#hits(NS), 0, "test mode's groups are placeholders")
+    NS.Preview.SetTestMode(false)
+    NS.Pad.Release("p1")
+    assertEqual(#hits(NS), 0, "a released pad keeps none")
 end)

@@ -55,8 +55,8 @@ one `Library.Batch`, taking the group off every pad and dial. A rebuild draws a 
 surface lists it: `Surfaces.BuildPlan` gives a pad a section for the parent's own callouts (when it
 has any), then one section per child that the Resolver finds active, in `Library.Children`'s order;
 `Surfaces.BuildDialPlan` gives a dial the parent's own callouts first, then a node ring per active
-child (pinned to the compass winds when every child has one and the parent has no callouts of its
-own). The parent's When and Enabled gate the whole family, and a child that inherits its When
+child (pinned to the compass winds when every child has one, the parent's own callouts then taking
+one more wedge on the first free wind). The parent's When and Enabled gate the whole family, and a child that inherits its When
 conditions (`group.inheritWhen`, on unless stored `false`) is judged by the parent's When instead of
 its own (`Resolver.WhenOf`). Deleting a parent (`Library.DeleteGroup`)
 makes its children top-level groups, in its place on every pad and dial, in one act.
@@ -108,7 +108,17 @@ Every place a member's icon is drawn (a pad's chips, a dial's wedges and ring we
 
 ## Today: Preview as…
 
-`Preview.SetPreviewAs(key)` (the row in General › Master controls, `/qc preview`) turns test mode's second flavor on: `TEST_MODE_CHANGED`, then `Surfaces.ApplyAll` builds each pad from the previewed snapshot and marks the plan, so every chip is disarmed and the header reads `Preview: …`. Combat, the stand-down and the settings window closing end it.
+`Preview.SetPreviewAs(key)` (the row in General › Master controls, `/qc preview`) turns test mode's second flavor on: `TEST_MODE_CHANGED`, then `Surfaces.ApplyAll` builds each pad from the previewed snapshot and marks the plan, so every chip is disarmed, the header reads `Preview: …` and the drag strip reads `<pad name>  PREVIEW` (test mode's reads `TEST MODE`; the strip shows while it carries the marker, locked or not). Combat, the stand-down and the settings window closing end it.
+
+The edit preview sits over both flavors. While the Groups page is on screen with Preview while
+editing ticked (`behavior.previewOnEdit`), `Groups.SyncEditPreview` (run on every draw, on the page's
+show and hide, on the setting's write and on `RESTRICTION_CHANGED`) hands the selected group to
+`Preview.SetEditPreview(gid)`: `TEST_MODE_CHANGED`, then `Surfaces.ApplyAll` sets `deps.only`, so each
+pad and dial skips the Resolver and draws that group with every group inside it, marked
+(`plan.editGroup`) and disarmed as a Preview as plan, still baked against the Preview as snapshot when
+one is set. The page hiding, the settings window closing, combat and the stand-down end it; Preview
+as and test mode, left as they were, come back. Once combat ends it comes back while the page is
+still on screen.
 
 ## Today: the Comms Dial
 

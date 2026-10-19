@@ -24,6 +24,7 @@ Exactly two (savedvariables-§4):
 | `behavior.spamGuard` | `1.0` | Behavior | seconds between sends, 0.6-2.0 (phase 2's send engine; no hard guard in combat, spec §9.2) |
 | `behavior.dropNotes`, `whyTooltips`, `lockdownChip` | `true` | Behavior | the `[QC]` drop note, the why tooltips, the lockdown chip |
 | `behavior.sounds`, `autoPromote` | `false` | Behavior | sounds; a narrower When floats up within a surface's order |
+| `behavior.previewOnEdit` | `true` | the Groups page band's Preview while editing box (`skipRender`, page `groups`), `/qc set` | while the Groups page is on screen, every pad and dial shows only the group it edits (session state `State.editPreview`) |
 | `nextId` | `1` | `Library.NewId` | the id counter for every user id (`c<n>`, `g<n>`, `p<n>`, `d<n>`); past the seeded sets' ids after the first load |
 | `callouts` | `{}` | `Library` (membership and order); member fields through the seam (member rows) | user callouts keyed by id: name, text, channel, icon, and `iconColor` (a LibKa0s glyph's color, `"rrggbb"` lowercase; absent or `false` for none); each id sits in exactly one user group's `callouts` list. A seeded callout also keeps `origin`, the shipped callout id it was copied from (`"bi.mplus.lust"`), which only Library reads |
 | `groups` | `{}` | `Library` (membership and order); member fields through the seam (member rows) | user groups keyed by id: name, icon, `iconColor` (as a callout's), callouts (the group owns them: no other group holds the same id), when, openInto, enabled, `parent` (the top-level group it sits inside; absent or `false` for none, one level only), and `inheritWhen` (`true`: while it has a parent, the group is judged by the parent's When instead of its own; `false`: its own; absent reads as `true`). A seeded group also keeps `origin` (the shipped set or node id, `"bi.mplus"`, `"bi.bg.ab.mine"`), and a seeded battleground node its `compass` wind; neither is a member row, and a copy keeps neither |
@@ -103,7 +104,16 @@ group whose origin is `bi.mplus` and whose name is still "M+ (generic)" becomes 
 edited When is left alone); every seeded callout whose icon is unset (nil) or the game icon it
 shipped with takes its catalog glyph and color, while a cleared icon (`false`) or any other icon
 stays. A second run changes nothing.
-`NS.SCHEMA_VERSION` is 5.
+Step 6 (2026-10-19 groups polish, `perProfile`, `Library.MigrateBuiltinsPolish` in
+`modules/Library_Migrate.lua`): every seeded group whose icon is unset (nil) or the game icon its set
+shipped with, and that has no color, takes its catalog glyph and color; every seeded callout still on
+its shipped glyph with no color takes the glyph's color (a picked color, or a picked or cleared icon,
+stays); and each copy of the five node sets (Arathi Basin, Eye of the Storm, Battle for Gilneas,
+Deepwind Gorge, Isle of Conquest) gains, at its end and under fresh ids, each of its map-wide callouts
+none of its callouts keeps the origin of. A deleted set has no copy and is not brought back. The new
+World (solo) set needs no step: `Library.Prepare` seeds it as any newly shipped set (`seededSets`).
+Seeding now copies a shipped group's `iconColor` too. A second run changes nothing.
+`NS.SCHEMA_VERSION` is 6.
 No schema step for nested groups (2026-10-18): a group without `parent` is top-level, and
 `Library.Prepare` drops a bad one.
 No schema step in phase 5: `Library.Prepare` fills a stored pad's missing layout and look fields from
