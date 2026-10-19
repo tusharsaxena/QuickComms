@@ -110,6 +110,16 @@ Every place a member's icon is drawn (a pad's chips, a dial's wedges and ring we
 
 `Preview.SetPreviewAs(key)` (the row in General › Master controls, `/qc preview`) turns test mode's second flavor on: `TEST_MODE_CHANGED`, then `Surfaces.ApplyAll` builds each pad from the previewed snapshot and marks the plan, so every chip is disarmed, the header reads `Preview: …` and the drag strip reads `<pad name>  PREVIEW` (test mode's reads `TEST MODE`; the strip shows while it carries the marker, locked or not). Combat, the stand-down and the settings window closing end it.
 
+The edit preview sits over both flavors. While the Groups page is on screen with Preview while
+editing ticked (`behavior.previewOnEdit`), `Groups.SyncEditPreview` (run on every draw, on the page's
+show and hide, on the setting's write and on `RESTRICTION_CHANGED`) hands the selected group to
+`Preview.SetEditPreview(gid)`: `TEST_MODE_CHANGED`, then `Surfaces.ApplyAll` sets `deps.only`, so each
+pad and dial skips the Resolver and draws that group with every group inside it, marked
+(`plan.editGroup`) and disarmed as a Preview as plan, still baked against the Preview as snapshot when
+one is set. The page hiding, the settings window closing, combat and the stand-down end it; Preview
+as and test mode, left as they were, come back. Once combat ends it comes back while the page is
+still on screen.
+
 ## Today: the Comms Dial
 
 A rebuild (`Surfaces.ApplyAll`, out of combat) builds each enabled dial's plan (`Surfaces.BuildDialPlan`: the active groups in the dial's order, each slot baked, then `Dial_Layout.Rings`), and `Dial.Sync` re-acquires the dial's ring containers and wedges, arms each callout wedge with its baked line, hands the rings to the header (`DialSecure.Load`, through SendEngine) and re-binds every dial's key (`SendEngine.BindKeys`). Pressing the key clicks the header with `Toggle`: its snippet shows the ring the plan opens on and binds Escape, the wheel and 1–8. A group wedge's wrapped click shows that group's ring; a callout wedge's click sends its `macrotext` (the hook tracks it like a chip's) and its post snippet closes the dial. In combat only the snippets run; a change waits for combat end behind the hub's stale hint.

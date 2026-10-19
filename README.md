@@ -12,15 +12,17 @@ boss, an arena or a battleground, and shows the callouts that fit. Every message
 secure button, the only kind of send Midnight still allows mid-pull, so it keeps working in keys and
 on bosses.
 
-It ships with callout sets for Mythic+, raids, arenas and every battleground, all switched on.
+It ships with callout sets for Mythic+, raids, arenas, every battleground and the open world when
+you play solo, all switched on, each callout and group with an icon in its own color.
 You can write your own callouts, sort them into groups, say when each group shows, style the pad,
 and share any of it with a friend as a string you copy and paste.
 
 ## Usage
 
-Enter a key, a raid, an arena or a battleground and the Comms Pad shows the callouts that fit; click
-one to send it. `/qc unlock` lets you drag the pad, `/qc lock` fixes it, `/qc test` shows
-placeholder chips so you can place it anywhere, and `/qc toggle` hides every pad until you toggle it
+Enter a key, a raid, an arena or a battleground (or head out into the open world on your own) and the
+Comms Pad shows the callouts that fit; click one to send it. `/qc unlock` lets you drag the pad, `/qc lock` fixes it, `/qc test` shows
+placeholder chips so you can place it anywhere (the strip above the pad then reads TEST MODE after
+its name, as it reads PREVIEW during a preview), and `/qc toggle` hides every pad until you toggle it
 back or reload. The minimap button's right-click menu has Enabled, Locked, Test mode and Show window.
 
 The Comms Dial opens on a key. Pick one on Settings → Comms Dial → Binding (or in WoW's key bindings
@@ -39,7 +41,10 @@ shows wherever that group does, in a section (or a dial ring) of its own, while 
 match: its parent's, while Inherit when conditions is ticked (the default), else its own. The Preview tab lists each callout beside what it would send where you are. The group's When tab says where it shows, one condition per drawer (click a condition to open it); Comms Pad arranges a pad, and its Look tab sets the font, the border
 and the background, each with a Use class color box. "Preview as…" (or `/qc preview`) shows the pads
 and the dial as they would look somewhere else, and hovering a pad's header or the dial's middle (or
-`/qc why`) tells you why each group is there.
+`/qc why`) tells you why each group is there. While the Groups page is open, every pad and dial shows
+only the group you are editing, sending nothing (untick Preview while editing, under the Group
+picker, to keep them live). Right-click a group's title on a pad to open it on the Groups page; the
+page stays on the tab you last used.
 
 To share, open Settings → Share → Export, tick what you want to send and click Export, then copy the
 string with Ctrl+C. To take one in, paste it on the Import tab and click Accept: Quick Comms lists
@@ -106,7 +111,7 @@ than in comments, so nothing gets lost.
 
 | Version | Date | Highlights |
 |---|---|---|
-| 0.1.0 | Unreleased | - The Comms Pad and the Comms Dial, with built-in callouts for Mythic+, raids, arenas and every battleground, sent through secure buttons<br>- Your own callouts and groups (the built-in sets among them, as groups you can edit, and groups inside groups), with conditions for when each group shows, Preview as… and Why is this showing?<br>- The spam guard, drop notes, test mode and the lock<br>- The pad's font, border and background, with class colors<br>- Sharing groups (with their callouts), pads and dials as a string<br>- The settings panel, the minimap button, the `/qc` command and the debug tools |
+| 0.1.0 | Unreleased | - The Comms Pad and the Comms Dial, with built-in callouts for Mythic+, raids, arenas, every battleground and the solo open world, sent through secure buttons<br>- Your own callouts and groups (the built-in sets among them, as groups you can edit, and groups inside groups), with conditions for when each group shows, Preview as…, a preview of the group you are editing and Why is this showing?<br>- The spam guard, drop notes, test mode and the lock<br>- The pad's font, border and background, with class colors<br>- Sharing groups (with their callouts), pads and dials as a string<br>- The settings panel, the minimap button, the `/qc` command and the debug tools |
 
 ## Credits
 

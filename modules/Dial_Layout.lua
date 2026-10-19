@@ -6,8 +6,9 @@ local _, NS = ...
 -- most `size` items: a callout (kind "send", its baked slot) or a ring to open (kind "ring", the index
 -- of its target). Categories (D2): the first ring holds the groups; a group's ring holds its callouts;
 -- a group with children (a battleground node set, a user parent) holds its own callouts first, then
--- its nodes (a pinned node set: its own callouts as one more wedge), and each node's ring its callouts. Flat: the first ring holds every callout, highest
--- group first, a parent's own before its nodes'. A ring with more items than wedges is paged: each
+-- its nodes (a pinned node set: its own callouts as one more wedge), and each node's ring its
+-- callouts. Flat: the first ring holds every callout, highest group first, a parent's own before its
+-- nodes'. A ring with more items than wedges is paged: each
 -- page but the last holds size - 1 items and a More wedge to the next page, and a later page's parent
 -- and previous are the page before it (the hub and the wheel go back). Open-into (D9): when the first
 -- group has the flag, or is the only group (owner ruling R2), the dial opens on its ring and the hub
