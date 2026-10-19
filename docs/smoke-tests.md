@@ -389,8 +389,8 @@ is added. Result:
 
 **EDIT-22. The When drawers.** Groups → a group of yours → When → the active-now line, then the gray
 line "Every condition you set must match. A condition left as Any does not limit the group.", a
-clear gap under it, then eleven header bars, closed, in this order: Content, Instance, Difficulty, Key level, Group, Leader
-or assist, Class, Specialization, Role, Character, Battleground. Each has a right-pointing chevron,
+clear gap under it, then twelve header bars, closed, in this order: Content, Instance, Difficulty, Key level, Group, Leader
+or assist, Class, Specialization, Role, Character, Battleground, Arena. Each has a right-pointing chevron,
 its name in white and "Any" in gray at its right edge; there is no enable checkbox anywhere. They
 look like the settings panel (its fonts, gold, dark fills and thin borders), not like another
 addon's cards. Hover a header → its tooltip. Click Content → the chevron points down, the header's
@@ -407,7 +407,11 @@ class's specs only. Battleground: "All battlegrounds" sits on top of the drawer,
 battleground, then tick it → the summary reads "All battlegrounds", the add box, the list and both
 buttons are dimmed and do nothing on a click; in any battleground the group is active; untick → the
 battleground you added is still listed and the summary names it. Instance has "All dungeons and
-raids" the same way; Character has no such box. Open every drawer, scroll to the bottom, open Battleground and tick a box in
+raids" and Arena "All arenas" the same way; Character has no such box. Instance: type `Murder Row`
+(or `mu` and pick it from the suggestions) → it is added and named, though it is no season dungeon;
+type `Magisters' Terrace` → the season's 2811 is added. Arena: type `Nagrand` → the suggestions list
+Nagrand Arena once; add it → the summary names it; in an arena, Add the arena you are in adds its
+id, and outside one a line says "You are not in an arena." Open every drawer, scroll to the bottom, open Battleground and tick a box in
 it, then Select all and Clear (Any) → the page stays where you scrolled each time, never jumping to
 the top. Click an open header → its drawer closes and its summary stays. Pick another
 group and come back → the drawers you left open are still open, and the other group's are its own;
@@ -626,7 +630,10 @@ you are in adds that id. Groups → Preview as lists "M+ · Windrunner Spire" an
 Demon Hunter, `/qc diagnostics` → the Situation line reads `spec=1480`, and a When's Specialization
 drawer offers Devourer. If you can enter Sporefall (map 1592), note whether it is a raid and its instanceID
 (ruling R4 left it out of the shipped raids). Only after this check passes
-does `defaults/GameIds.lua`'s note change from "matched" to "confirmed". Result:
+does `defaults/GameIds.lua`'s note change from "matched" to "confirmed". In any dungeon or raid
+outside the season, and in each arena you play: `/qc diagnostics` → the instanceID is one
+`defaults/GameIds_Instances.lua` lists (INSTANCES, ARENAS), and the When editor names it the way the
+client does; only then does that file's note say "confirmed". Result:
 
 ## Non-English client
 

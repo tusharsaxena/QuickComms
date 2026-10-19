@@ -120,7 +120,7 @@ the callout popup's preview.
 set must match. A condition left as Any does not limit the group.", a row's gap, then one drawer per condition
 (the library's `O.Drawer`, LibKa0s `OptionsDrawer.lua` since v1.73.0), in this order: Content,
 Instance, Difficulty, Key level, Group, Leader or assist, Class, Specialization, Role, Character,
-Battleground.
+Battleground, Arena.
 
 ```
 header   > Content                                                      Any
@@ -135,20 +135,26 @@ header   > Key level                                               10 to 15
 - **The header**: a chevron (right while closed, down while open), the condition's name (gold while
   it is set, white otherwise) and, at the right, a summary on one line: "Any" in gray while unset,
   else the chosen values in list order, comma-separated and cut with an ellipsis; an id list names
-  its one entry or counts several ("2 instances", "2 battlegrounds", "2 characters"), or reads "All
-  dungeons and raids" / "All battlegrounds" while its whole-kind checkbox is ticked; the key level
+  its one entry or counts several ("2 instances", "2 battlegrounds", "2 arenas", "2 characters"), or
+  reads "All dungeons and raids" / "All battlegrounds" / "All arenas" while its whole-kind checkbox
+  is ticked; the key level
   reads "10 or higher", "15 or lower", "10 to 15", or "12" when both ends are equal. Hovering it
   shows the condition's tooltip. A click opens or closes its drawer (refused in combat).
 - **The drawer**: a box joined under the header (the header's bottom corners square off and its
   edge goes gold while it is open), its rows lined up under the condition's name. Content,
   difficulty, group, leadership, class, specialization (the classes picked, else the player's) and
   role are checkboxes in three columns; the key level is a Lowest and a Highest box; instances,
-  battlegrounds and characters (`Name-Realm`) are the library's IdList, each with an
+  battlegrounds, arenas and characters (`Name-Realm`) are the library's IdList, each with an
   add-the-one-you-are-in button, which reads where the player is at the click and says so when that
   is nowhere; a typed id is a positive whole number, and a typed character takes the client's case
-  (`bob` reads `Bob-<your realm>`).
+  (`bob` reads `Bob-<your realm>`). The Instance list suggests and names every Encounter Journal
+  dungeon and raid (`NS.GameIds.INSTANCES`, so Murder Row as well as the season's), the Arena list
+  every arena (`NS.GameIds.ARENAS`), the Battleground list the shipped sets' maps; a name two maps
+  share is refused (pick it from the suggestions, or type the id), except that the season's dungeon
+  or raid wins on the Instance list.
 - **The whole-kind checkbox**, on top of the Instance drawer ("All dungeons and raids": any dungeon,
-  Mythic+ key or raid) and the Battleground drawer ("All battlegrounds": any battleground). While it
+  Mythic+ key or raid), the Battleground drawer ("All battlegrounds": any battleground) and the Arena
+  drawer ("All arenas": any arena). While it
   is ticked the list and its buttons under it are drawn dimmed and inert, and keep their entries,
   unused, for an untick; it stores `all` in the row beside the ids (`Resolver.ALL`), which
   `/qc set group.when battleground all` types too. The Character drawer has none: every character

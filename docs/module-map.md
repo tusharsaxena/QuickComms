@@ -30,13 +30,14 @@ The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after Li
 | 16 | `defaults/Profile.lua` | data | every default value (`NS.C`) |
 | 16a | `defaults/BuiltIns.lua` | data | `NS.BuiltIns`: the registry of shipped sets and the declaring helpers; seed data, copied into each profile once as ordinary groups by `Library` |
 | 16b | `defaults/BuiltIns_MythicPlus.lua`, `_Raid.lua`, `_Arena.lua`, `_Battlegrounds.lua` | data | the four shipped sets (spec §12), a battleground's nodes as groups inside its set |
-| 16b2 | `defaults/GameIds.lua` | data | the shipped ids: dungeons, raids, classes, specializations (matched against the client's data by `tools/derive-gameids.py` and `tests/test_gameids.lua`; confirmed in game by IDS-1) |
+| 16b2 | `defaults/GameIds.lua` | data | the shipped ids: the season's dungeons and raids, classes, specializations (matched against the client's data by `tools/derive-gameids.py` and `tests/test_gameids.lua`; confirmed in game by IDS-1) |
+| 16b3 | `defaults/GameIds_Instances.lua` | data | the When editor's place lists: `INSTANCES` (every Encounter Journal dungeon and raid) and `ARENAS` (every arena, one per arena), derived and checked by `tools/derive-gameids.py` |
 | 16c | `modules/Restrictions.lua` | edge | what the client's addon restrictions allow; `RESTRICTION_CHANGED` |
 | 16d | `modules/Situation.lua` | classifier + edge | the situation snapshot; `SITUATION_CHANGED` |
 | 16e | `modules/Tokens.lua` | pure | token expansion |
 | 16f | `modules/Channels.lua` | pure | channel kinds, resolution, lock state |
 | 16g | `modules/Bake.lua` | pure | callout + snapshot to one macro line |
-| 16h | `modules/Resolver.lua` | pure | When rules to active groups; `WhenOf` (a child that inherits is judged by its parent's When) |
+| 16h | `modules/Resolver.lua` | pure | When rules to active groups; `WhenOf` (a child that inherits is judged by its parent's When); `ID_ROWS` (the place rows: instances, battleground, arena) |
 | 16i | `modules/Library.lua` | registry writer | the one writer of the structural registry; `Prepare`; `SetSurfacePoint`; `SetIcon` (a member's icon and its glyph color, one act); the glyph helpers (`IsGlyph`, `ValidIconColor`, `IconTint`, `IconColorFrom`); seeding the shipped sets as ordinary groups, `RestoreBuiltins` and `SeededBattleground`; nesting (`ValidParent`, `SettleParent`, `Children`, `IsChild`); `MoveGenericBattlegroundLast` (migration step 2) and `SeedFromOverlay` (migration step 3) |
 | 16i1 | `modules/Library_Migrate.lua` | registry writer | the registry writer's schemaVersion steps, beside Library (at its line budget): `MigrateGrowth` (migration step 4) |
 | 16i2 | `modules/Share.lua` | pure + edge | the share string: codec, checks, report; Collect, Export, Apply |
@@ -118,6 +119,6 @@ files they add are listed in design spec §4.2.
 | `tests/test_page_dials.lua` | the Comms Dial page |
 | `tests/test_page_share.lua` | the Share page: the Export tab (ticks, what they bring, the string in the copy window) and the Import tab (Accept, the report, Import, the combat refusals), and Defaults |
 | `tests/test_share.lua` | `Share`: the codec, the checks, the sanitizer, the report (pure); a parent and its children travel together, and an import nests them under the new copy |
-| `tests/test_gameids.lua` | the shipped instance ids against an extraction of the client's Map tables |
+| `tests/test_gameids.lua` | the shipped instance and arena ids (`GameIds.lua`, `GameIds_Instances.lua`) against an extraction of the client's Map tables |
 | `tests/page_helpers.lua` | a helper, not a suite: drives an editor page through the kit's AceGUI recorder |
 | `tests/perf.lua` | the six offline scenarios, outside the gate |

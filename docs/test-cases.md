@@ -246,7 +246,7 @@ Total.
 - restrictions: stood down, nothing is heard; the stand-up announces what is in effect
 - restrictions: [final 1] a lockdown lifting under a higher one is announced
 
-### test_situation.lua (15)
+### test_situation.lua (16)
 
 - situation: classifier truth table (content, group)
 - situation: non-table input classifies as open world solo
@@ -263,6 +263,7 @@ Total.
 - situation: [final 1] stood down, the receiver is down; stood up, it hears again
 - situation: [final 1] on the degraded bus the module takes its own receiver down and up
 - situation: [final 1b] both combat edges reach Current() even under the Combat restriction type
+- situation: [arena] an arena snapshot carries its instanceID, which the arena row matches
 
 ### test_tokens.lua (8)
 
@@ -340,7 +341,7 @@ Total.
 - share: [inherit] a child's Inherit when conditions travels; an old string's child inherits
 - share: [B2] a pad shared before the growth split carries Upward, which lands as Right and up
 
-### test_resolver.lua (12)
+### test_resolver.lua (13)
 
 - resolver: an empty When always matches
 - resolver: each row matches and fails on its own
@@ -354,6 +355,7 @@ Total.
 - resolver: [inherit] WhenOf names the When that judges a group, and whose it is
 - resolver: [inherit] SurfaceOrder's narrowness reads the When that judges the group
 - resolver: [all] All battlegrounds and All dungeons and raids match the whole kind, the listed ids aside
+- resolver: [arena] the arena row matches only in an arena: its listed ids, or all of them
 
 ### test_builtins.lua (7)
 
@@ -365,12 +367,14 @@ Total.
 - builtins: battlegrounds use smart group; arena uses party; raid lead uses smart lead
 - builtins: [phase 5] every node set pins each node to a wind, at most eight, Deepwind Gorge's five included
 
-### test_gameids.lua (2)
+### test_gameids.lua (4)
 
 - game ids: every battleground set matches only battleground maps, and no map is two sets'
 - game ids: the shipped dungeons are Mythic+ dungeons and the shipped raids are raids
+- game ids: [instances] INSTANCES are dungeons and raids, cover the season's, and reach past it
+- game ids: [arena] ARENAS are arena maps, one per arena
 
-### test_library.lua (77)
+### test_library.lua (78)
 
 - library: Prepare seeds every shipped set as a group, on one pad and one dial, once
 - library: a seeded group is an ordinary group: its fields, When, callouts and origin
@@ -449,8 +453,9 @@ Total.
 - library: [restore] SeededBattleground names a seeded battleground set's key; a node, another set and a copy have none
 - library: [inherit] a new or seeded group inherits its parent's When; Duplicate and an untick keep false
 - library: [all] ValidWhen takes all on the instance and battleground rows, and on no other
+- library: [arena] ValidWhen takes arena ids and all on the arena row
 
-### test_members.lua (28)
+### test_members.lua (29)
 
 - members: a callout field is written through the seam by instance id, and announced once
 - members: with no id the seam writes the selected member, else the first the page lists, else refuses
@@ -480,6 +485,7 @@ Total.
 - members: [icons] `/qc reset` clears a color; a group page's Defaults keeps it with the icon
 - members: [inherit] group.inheritWhen is a member row: a bool stores and announces, anything else is refused
 - members: [inherit] the Enabled tooltip names whose When a sub-group is shown by
+- members: [arena] the CLI sets the arena row by id, name or all, and prints it back
 
 ### test_editors.lua (17)
 
@@ -590,7 +596,7 @@ Total.
 - eui skin: the diagnostics report names its state
 - eui skin: the diagnostics line says, in words, why the skin is or is not on
 
-### test_groups_when.lua (17)
+### test_groups_when.lua (20)
 
 - when: Toggle adds and removes one value, drops an emptied row, and never mutates its input
 - when: [review 5] the key-level range refuses lowest above highest; clearing both drops the row
@@ -609,8 +615,11 @@ Total.
 - when: [drawers] SelectAll ticks every value the row offers, and never mutates its input
 - when: [inherit] ActiveText judges an inheriting group by its parent's When
 - when: [all] SetAll turns the whole kind on and off and keeps the listed ids; Summary names it
+- when: [instances] a typed name finds any journal dungeon or raid, not the season's only
+- when: [arena] the arena row: names, Summary, All arenas, the CLI value, and its tooltip
+- when: [arena] Add the arena you are in reads the live snapshot, and refuses outside an arena
 
-### test_page_groups.lua (62)
+### test_page_groups.lua (63)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists every group by name, a seeded set among them, active ones dotted
@@ -674,6 +683,7 @@ Total.
 - groups page: [inherit] an inheriting group's When tab shows its parent's conditions, read-only
 - groups page: [all] the battleground drawer's All battlegrounds dims and locks the list, which it keeps
 - groups page: [all] a gap separates the Every condition line from the first drawer
+- groups page: [arena] the arena drawer's All arenas dims and locks the list, which it keeps
 
 ### test_page_pads.lua (13)
 
@@ -1062,22 +1072,22 @@ Total.
 | test_diagnostics.lua | 10 |
 | test_compat.lua | 13 |
 | test_restrictions.lua | 16 |
-| test_situation.lua | 15 |
+| test_situation.lua | 16 |
 | test_tokens.lua | 8 |
 | test_channels.lua | 8 |
 | test_bake.lua | 12 |
 | test_share.lua | 36 |
-| test_resolver.lua | 12 |
+| test_resolver.lua | 13 |
 | test_builtins.lua | 7 |
-| test_gameids.lua | 2 |
-| test_library.lua | 77 |
-| test_members.lua | 28 |
+| test_gameids.lua | 4 |
+| test_library.lua | 78 |
+| test_members.lua | 29 |
 | test_editors.lua | 17 |
 | test_callout_popup.lua | 38 |
 | test_icon_browser.lua | 32 |
 | test_eui_skin.lua | 10 |
-| test_groups_when.lua | 17 |
-| test_page_groups.lua | 62 |
+| test_groups_when.lua | 20 |
+| test_page_groups.lua | 63 |
 | test_page_pads.lua | 13 |
 | test_page_dials.lua | 17 |
 | test_page_share.lua | 12 |
@@ -1100,4 +1110,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **886** |
+| **Total** | **896** |

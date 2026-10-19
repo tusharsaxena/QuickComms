@@ -104,7 +104,7 @@ end
 
 -- What a When row takes, for the refusal of a value it can never match (localization-§4).
 local function whenTakes(row)
-    if row == "instances" or row == "battleground" then return L["an instance id (a whole number)"] end
+    if NS.Resolver.ID_ROWS[row] then return L["an instance id (a whole number)"] end
     if row == "spec" then return L["a specialization id (a whole number)"] end
     if row == "characters" then return L["Name-Realm"] end
     local list = row == "class" and NS.GameIds.CLASSES or NS.Resolver.TOKENS[row] or {}

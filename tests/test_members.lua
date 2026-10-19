@@ -544,3 +544,19 @@ test("members: [inherit] the Enabled tooltip names whose When a sub-group is sho
     local row = NS.SchemaRuntime.FindRow("group.enabled")
     assertEqual(row.desc, "Show this group wherever its When matches (its parent's, while Inherit when conditions is ticked). Off keeps the group and its place on every pad.")
 end)
+
+test("members: [arena] the CLI sets the arena row by id, name or all, and prints it back", function()
+    local NS, m = T.enableAddon()
+    m.GetRealZoneText = function(id) return ({ [1505] = "Nagrand Arena", [572] = "Ruins of Lordaeron" })[id] or "" end
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    NS.State.editing.group = gid
+    -- red under: an arena condition the CLI does not know ("Name a condition")
+    NS.addon:OnSlashCommand("set group.when arena Nagrand Arena, 572")
+    local when = NS.db.profile.groups[gid].when
+    assertTrue(when.arena and when.arena[1505] and when.arena[572], "a name with a space, split on commas")
+    m.prints = {}
+    NS.addon:OnSlashCommand("get group.when")
+    assertTrue(table.concat(m.prints, "\n"):find("arena 1505,572", 1, true) ~= nil, table.concat(m.prints, "\n"))
+    NS.addon:OnSlashCommand("set group.when arena all")
+    assertTrue(NS.db.profile.groups[gid].when.arena.all)
+end)

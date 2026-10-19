@@ -1210,3 +1210,15 @@ test("library: [all] ValidWhen takes all on the instance and battleground rows, 
     assertFalse((Lib.ValidWhen({ spec = { all = true } })))
     assertFalse((Lib.ValidWhen({ characters = { all = true } })))
 end)
+
+test("library: [arena] ValidWhen takes arena ids and all on the arena row", function()
+    local NS = T.bootAddon()
+    local Lib = NS.Library
+    -- red under: an arena row the Resolver does not know (badWhen)
+    assertTrue((Lib.ValidWhen({ arena = { all = true } })))
+    assertTrue((Lib.ValidWhen({ arena = { [1505] = true, [572] = true } })))
+    assertFalse((Lib.ValidWhen({ arena = { ["Nagrand Arena"] = true } })), "a name, not an id")
+    assertFalse((Lib.ValidWhen({ arena = { [-1] = true } })))
+    local _, _, why = NS.SchemaRuntime.Set("group.when", { arena = { nope = true } }, NS.Library.CreateGroup({ name = "Mine" }))
+    assertTrue(tostring(why):find("an instance id", 1, true) ~= nil, tostring(why))
+end)

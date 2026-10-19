@@ -642,7 +642,7 @@ test("groups page: [drawers] the When tab draws one drawer per condition, closed
     -- red under: keep the enable checkbox per condition
     assertNil(P.find(w, "CheckBox", "Content"), "no enable checkbox")
     assertEqual(table.concat(P.drawers(w), ","),
-        "Content,Instance,Difficulty,Key level,Group,Leader or assist,Class,Specialization,Role,Character,Battleground")
+        "Content,Instance,Difficulty,Key level,Group,Leader or assist,Class,Specialization,Role,Character,Battleground,Arena")
     local content = P.drawer(w, "Content")
     assertTrue(content.__ka0sDrawerSet, "a set condition reads gold")
     assertEqual(content.__ka0sDrawerSummary, "Dungeon, Raid")
@@ -1320,4 +1320,23 @@ test("groups page: [all] a gap separates the Every condition line from the first
     -- red under: the first drawer straight under the line
     assertTrue(after ~= nil and after.type == "SimpleGroup" and after.height == NS.addon.Settings.Helpers.ROW_VSPACER,
         "a row spacer comes first")
+end)
+
+test("groups page: [arena] the arena drawer's All arenas dims and locks the list, which it keeps", function()
+    local NS, _, P = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine", when = { arena = { [1505] = true } } })
+    pick(NS, gid)
+    NS.State.whenOpen[gid] = { arena = true }
+    local w = P.tab("groups", "When")
+    -- red under: no arena drawer
+    local all = P.find(w, "CheckBox", "All arenas")
+    assertTrue(all ~= nil, "the checkbox, on top of the drawer")
+    assertFalse(P.find(w, "EditBox", "Add an arena").disabled and true or false)
+    assertTrue(P.find(w, "Button", "Add the arena you are in") ~= nil)
+    all:__fire("OnValueChanged", true)
+    assertTrue(NS.db.profile.groups[gid].when.arena.all)
+    assertTrue(NS.db.profile.groups[gid].when.arena[1505], "the pick is kept")
+    w = P.tab("groups", "When")
+    assertEqual(P.drawer(w, "Arena").__ka0sDrawerSummary, "All arenas")
+    assertTrue(P.find(w, "EditBox", "Add an arena").disabled, "the list is locked")
 end)

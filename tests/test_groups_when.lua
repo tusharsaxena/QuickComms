@@ -225,3 +225,52 @@ test("when: [all] SetAll turns the whole kind on and off and keeps the listed id
     assertEqual(W.ResolveValue("battleground", " All "), "all", "the CLI takes it too")
     assertEqual(W.ResolveValue("instances", "all"), "all")
 end)
+
+-- A client that names a few maps: GetRealZoneText takes a map id.
+local ZONES = { [2813] = "Murder Row", [585] = "Magisters' Terrace", [2811] = "Magisters' Terrace",
+    [230] = "Blackrock Depths", [2792] = "Blackrock Depths", [1505] = "Nagrand Arena", [572] = "Ruins of Lordaeron" }
+
+test("when: [instances] a typed name finds any journal dungeon or raid, not the season's only", function()
+    local NS, env = T.bootAddon()
+    local W = NS.addon.Settings.GroupsWhen
+    env.GetRealZoneText = function(id) return ZONES[id] or "" end
+    -- red under: CANDIDATES.instances reading DUNGEONS and RAIDS only (Murder Row was "notFound")
+    assertEqual(W.ResolveValue("instances", "Murder Row"), 2813)
+    assertEqual(W.ResolveValue("instances", "murder row"), 2813, "without regard to case")
+    -- two maps share a name: the season's one wins, as it did before the list grew
+    assertEqual(W.ResolveValue("instances", "Magisters' Terrace"), 2811)
+    -- two maps share a name and neither is the season's: refused, the id still works
+    assertNil((W.ResolveValue("instances", "Blackrock Depths")))
+    assertEqual(W.ResolveValue("instances", "2792"), 2792)
+    assertNil((W.ResolveValue("instances", "Nagrand Arena")), "an arena is not an instance")
+end)
+
+test("when: [arena] the arena row: names, Summary, All arenas, the CLI value, and its tooltip", function()
+    local NS, env = T.bootAddon()
+    local W = NS.addon.Settings.GroupsWhen
+    env.GetRealZoneText = function(id) return ZONES[id] or "" end
+    -- red under: no arena row in the When editor
+    assertEqual(W.ROWS[#W.ROWS], "arena", "the last drawer, after Battleground")
+    assertTrue(W.TIP.arena ~= nil)
+    assertEqual(W.ResolveValue("arena", "Nagrand Arena"), 1505)
+    assertEqual(W.ResolveValue("arena", "572"), 572)
+    assertNil((W.ResolveValue("arena", "Murder Row")), "a dungeon is not an arena")
+    assertEqual(W.ResolveValue("arena", "All"), "all")
+    assertTrue(W.HasAll("arena"))
+    assertEqual(W.Summary("arena", {}), "Any")
+    assertEqual(W.Summary("arena", { arena = { [1505] = true } }), "Nagrand Arena")
+    assertEqual(W.Summary("arena", { arena = { [1505] = true, [572] = true } }), "2 arenas")
+    assertEqual(W.Summary("arena", W.SetAll({ arena = { [1505] = true } }, "arena", true)), "All arenas")
+end)
+
+test("when: [arena] Add the arena you are in reads the live snapshot, and refuses outside an arena", function()
+    local NS, env = T.bootAddon()
+    local W = NS.addon.Settings.GroupsWhen
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    env.prints = {}
+    NS.Situation.Current = function() return { content = "battleground", instanceID = 2107 } end
+    assertFalse(W.AddHere(gid, "arena"), "a battleground is not an arena")
+    NS.Situation.Current = function() return { content = "arena", instanceID = 1505 } end
+    assertTrue(W.AddHere(gid, "arena"))
+    assertTrue(NS.db.profile.groups[gid].when.arena[1505])
+end)

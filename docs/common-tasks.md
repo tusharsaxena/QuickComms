@@ -78,7 +78,7 @@ Then update the README's `[tests]` badge to the new Total, in the same commit.
 
 ## Re-derive the client-data extractions
 
-`tests/test_gameids.lua`'s `CLIENT_MAPS`, `defaults/GameIds.lua`'s dungeon and raid lists, and the node winds in `defaults/BuiltIns_Battlegrounds.lua` come from the client's own tables, as wago.tools exports them. Two generators re-derive them and check the repository against them (layout-§1: they live under `tools/`, are never loaded, and are `.pkgmeta`-ignored); both need Python 3 and nothing else, download into a new scratch directory, and exit non-zero on any mismatch:
+`tests/test_gameids.lua`'s `CLIENT_MAPS`, `defaults/GameIds.lua`'s dungeon and raid lists, `defaults/GameIds_Instances.lua`'s `INSTANCES` (every journal dungeon and raid) and `ARENAS`, and the node winds in `defaults/BuiltIns_Battlegrounds.lua` come from the client's own tables, as wago.tools exports them. Two generators re-derive them and check the repository against them (layout-§1: they live under `tools/`, are never loaded, and are `.pkgmeta`-ignored); both need Python 3 and nothing else, download into a new scratch directory, and exit non-zero on any mismatch:
 
 ```sh
 D="$(mktemp -d)/tables"
@@ -87,7 +87,7 @@ P="$(mktemp -d)/poi"
 python3 -I tools/derive-winds.py --fetch "$P" && python3 -I tools/derive-winds.py "$P"
 ```
 
-For a new season or patch: change `SEASON`, `LAUNCH` (and `CURRENT_TIER` if the journal renumbers it) at the top of `tools/derive-gameids.py`, run it, and read every `MISMATCH:` and `NOT SHIPPED:` line; change the shipped lists and the test's rows to match only after reading them, then run it again until it prints `OK`. A new shipped id gets its `CLIENT_MAPS` row from the block the script prints. For a battleground a patch redraws, change its entry in `NODES` at the top of `tools/derive-winds.py` (the AreaPOI id and the name that row must carry) and copy the winds it prints into `defaults/BuiltIns_Battlegrounds.lua`. Update the build named in the headers (`defaults/GameIds.lua`, `defaults/BuiltIns_Battlegrounds.lua`, `tests/test_gameids.lua`) with the build `--fetch` printed. A match is not an in-game confirmation: the headers say "matched" until smoke checks BG-1, BG-2 and IDS-1 pass.
+For a new season or patch: change `SEASON`, `LAUNCH` (and `CURRENT_TIER` if the journal renumbers it) at the top of `tools/derive-gameids.py`, run it, and read every `MISMATCH:`, `NOT SHIPPED:` and `DROPPED:` line (`DROPPED_ARENAS` at the top of the script lists the legacy arena maps left out; a new arena map that shares a shipped one's name fails until it is listed there or replaces it); change the shipped lists and the test's rows to match only after reading them, then run it again until it prints `OK`. A new shipped id gets its `CLIENT_MAPS` row from the block the script prints (an `INSTANCES` or `ARENAS` id without one is a `MISMATCH:` line carrying the row to paste). For a battleground a patch redraws, change its entry in `NODES` at the top of `tools/derive-winds.py` (the AreaPOI id and the name that row must carry) and copy the winds it prints into `defaults/BuiltIns_Battlegrounds.lua`. Update the build named in the headers (`defaults/GameIds.lua`, `defaults/GameIds_Instances.lua`, `defaults/BuiltIns_Battlegrounds.lua`, `tests/test_gameids.lua`) with the build `--fetch` printed. A match is not an in-game confirmation: the headers say "matched" until smoke checks BG-1, BG-2 and IDS-1 pass.
 
 The generators leave a `__pycache__/` beside them; `.gitignore` keeps it out of the repository.
 

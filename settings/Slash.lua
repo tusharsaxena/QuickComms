@@ -138,10 +138,10 @@ local function parseKeyLevel(text)
     return { min = tonumber(lo), max = tonumber(hi) }
 end
 
--- The values typed for one condition. An instance or battleground name may hold spaces, so those
--- two split on commas only.
+-- The values typed for one condition. A place's name (an instance, battleground or arena) may hold
+-- spaces, so the place rows split on commas only.
 local function valuesOf(row, rest)
-    if row == "instances" or row == "battleground" then
+    if NS.Resolver.ID_ROWS[row] then
         local out = {}
         for v in rest:gmatch("[^,]+") do
             v = trim(v)

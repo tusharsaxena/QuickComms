@@ -96,6 +96,8 @@ defaults\BuiltIns_Arena.lua
 defaults\BuiltIns_Battlegrounds.lua
 # Conventional: data (the editors' and Preview as's shipped ids), read at call time
 defaults\GameIds.lua
+# Conventional: data (the When editor's instance and arena lists), read at call time
+defaults\GameIds_Instances.lua
 
 # Modules
 # Conventional: read by Situation at call time; appends to NS.FEATURE_EVENTS / STAND_DOWN / STAND_UP

@@ -376,17 +376,17 @@ local function validRange(v)
     return true
 end
 
-local ID_ROWS = { instances = true, battleground = true, spec = true }
 Lib.CHARACTER_MAX = 96   -- bytes of a Name-Realm: a 12-character name and a long realm, both multi-byte
 
 --- Whether `key` is a value the When row `row` can ever match (localization-§4: ids and tokens,
 --- never a name): a token the row lists (NS.Resolver.TOKENS; the class row, NS.GameIds.CLASSES), a
---- positive whole id (instances, battlegrounds, specializations), the whole kind on the instance and
---- battleground rows (NS.Resolver.ALL), or a Name-Realm (characters: no control or "|" character, at
---- most CHARACTER_MAX bytes).
+--- positive whole id (instances, battlegrounds, arenas, specializations), the whole kind on a place
+--- row (NS.Resolver.ID_ROWS, NS.Resolver.ALL), or a Name-Realm (characters: no control or "|"
+--- character, at most CHARACTER_MAX bytes).
 function Lib.ValidWhenValue(row, key)
-    if key == NS.Resolver.ALL and (row == "instances" or row == "battleground") then return true end
-    if ID_ROWS[row] then return type(key) == "number" and key > 0 and key == math.floor(key) end
+    local place = NS.Resolver.ID_ROWS[row]
+    if key == NS.Resolver.ALL and place then return true end
+    if place or row == "spec" then return type(key) == "number" and key > 0 and key == math.floor(key) end
     if row == "characters" then
         return type(key) == "string" and #key <= Lib.CHARACTER_MAX and not key:find("[%c|]")
             and key:match("^[^%s%-]+%-%S+$") ~= nil

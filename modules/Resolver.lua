@@ -8,11 +8,15 @@ NS.Resolver = NS.Resolver or {}
 local R = NS.Resolver
 local L = NS.L
 
-R.ROWS = { "content", "instances", "battleground", "difficulty", "keyLevel", "group", "leadership",
+R.ROWS = { "content", "instances", "battleground", "arena", "difficulty", "keyLevel", "group", "leadership",
     "class", "spec", "role", "characters" }
 
+--- The place rows: each stores map ids (GetInstanceInfo's 8th return) and takes the whole kind
+--- (R.ALL). Library.ValidWhenValue, the CLI and Narrowness read this one set.
+R.ID_ROWS = { instances = true, battleground = true, arena = true }
+
 local LABEL = {
-    content = L["Content"], instances = L["Instance"], battleground = L["Battleground"],
+    content = L["Content"], instances = L["Instance"], battleground = L["Battleground"], arena = L["Arena"],
     difficulty = L["Difficulty"], keyLevel = L["Key level"], group = L["Group"],
     leadership = L["Leader or assist"], class = L["Class"], spec = L["Specialization"], role = L["Role"],
     characters = L["Character"],
@@ -30,8 +34,8 @@ R.TOKENS = {
     role = { "TANK", "HEALER", "DAMAGER" },
 }
 
---- The value an id row (instances, battleground) stores for its whole kind: All dungeons and raids,
---- All battlegrounds. It matches beside the row's listed ids, which it keeps for an untick.
+--- The value a place row (R.ID_ROWS) stores for its whole kind: All dungeons and raids, All
+--- battlegrounds, All arenas. It matches beside the row's listed ids, which it keeps for an untick.
 R.ALL = "all"
 
 -- The kinds of place All dungeons and raids matches.
@@ -63,6 +67,10 @@ local CHECK = {
     end,
     battleground = function(v, s)
         if s.content ~= "battleground" then return false end
+        return v[R.ALL] == true or (s.instanceID ~= nil and v[s.instanceID] == true)
+    end,
+    arena        = function(v, s)
+        if s.content ~= "arena" then return false end
         return v[R.ALL] == true or (s.instanceID ~= nil and v[s.instanceID] == true)
     end,
     difficulty   = function(v, s) return s.difficulty ~= nil and v[s.difficulty] == true end,
@@ -121,14 +129,14 @@ function R.ActiveGroups(groups, s)
     return active
 end
 
---- How narrow a When is: the number of set rows, plus 100 for a specific instance or battleground
+--- How narrow a When is: the number of set rows, plus 100 for a specific instance, battleground or arena
 --- (not for a whole kind, R.ALL, which is a condition like any other row).
 function R.Narrowness(when)
     if type(when) ~= "table" then return 0 end
     local n = 0
     for _, row in ipairs(R.ROWS) do
         if isSet(row, when[row]) then
-            local specific = (row == "instances" or row == "battleground") and when[row][R.ALL] ~= true
+            local specific = R.ID_ROWS[row] and when[row][R.ALL] ~= true
             n = n + (specific and 101 or 1)
         end
     end

@@ -225,3 +225,11 @@ test("situation: [final 1b] both combat edges reach Current() even under the Com
     m.__fire("PLAYER_REGEN_ENABLED")
     assertFalse(NS.Situation.Current().inCombat, "REGEN_ENABLED under the Combat type")
 end)
+
+test("situation: [arena] an arena snapshot carries its instanceID, which the arena row matches", function()
+    local NS = T.newAddon()
+    local s = NS.Situation.Classify(inputs({ inInstance = true, instanceType = "arena", instanceID = 1505, inGroup = true }))
+    assertEqual(s.content, "arena")
+    assertEqual(s.instanceID, 1505)
+    assertTrue((NS.Resolver.Matches({ arena = { [1505] = true } }, s)))
+end)

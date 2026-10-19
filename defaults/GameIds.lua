@@ -1,6 +1,6 @@
 local _, NS = ...
 -- defaults/GameIds.lua — the shipped game-id tables "Preview as…" and the When editor list (spec
--- §13.2, §13.3). DATA ONLY. Every entry is an id or a token, never a name (localization-§4): a name
+-- §13.2, §13.3; the When editor's full instance and arena lists are defaults/GameIds_Instances.lua). DATA ONLY. Every entry is an id or a token, never a name (localization-§4): a name
 -- is read from the client at display time (core/Compat.lua) and never matched.
 --   DUNGEONS  the current Mythic+ season's instanceIDs (GetInstanceInfo's 8th return, which is the
 --             client's Map id): the season's four returning dungeons and Midnight's four new ones.
@@ -16,8 +16,8 @@ local _, NS = ...
 -- tests/test_gameids.lua's extraction. In-game confirmation is smoke check IDS-1 (and BG-2 for the
 -- battlegrounds); this note says CONFIRMED only after the phase 5 smoke test records them as passed.
 -- Not listed: the raids the client gates behind a later season (The Tidebound Grotto, The Venomous
--- Abyss, The Unbinding of Kith'ix) and Sporefall (1592; owner ruling R4): the When editor adds the
--- instance you are in, or a typed id.
+-- Abyss, The Unbinding of Kith'ix) and Sporefall (1592; owner ruling R4): the When editor still
+-- offers each through INSTANCES, which lists every journal dungeon and raid.
 
 NS.GameIds = NS.GameIds or {}
 local G = NS.GameIds
