@@ -92,7 +92,11 @@ counts as given; a node or stale `bi.` reference on a surface is dropped; a seed
 `seenBuiltins` lacks (shipped after the surface last loaded) goes at that surface's end, as `Prepare`
 put such a set before; `profile.builtins` and every surface's `seenBuiltins` go. A profile never prepared is left to `Library.Prepare`, which seeds it as a
 new one, and one that already has `seededSets` is left alone, so the step runs once.
-`NS.SCHEMA_VERSION` is 3.
+Step 4 (2026-10-19, `perProfile`, `Library.MigrateGrowth` in `modules/Library_Migrate.lua`): the
+retired `up` (Upward) growth on any pad becomes `rightUp` (Right and up); every other value, and a
+pad with no layout, is left as it is. A share string made before carries `up` too; Share's import
+reads it as `rightUp`.
+`NS.SCHEMA_VERSION` is 4.
 No schema step for nested groups (2026-10-18): a group without `parent` is top-level, and
 `Library.Prepare` drops a bad one.
 No schema step in phase 5: `Library.Prepare` fills a stored pad's missing layout and look fields from

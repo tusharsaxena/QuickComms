@@ -112,6 +112,8 @@ modules\Bake.lua
 modules\Resolver.lua
 # Conventional: the registry writer (architecture-§5); Prepare is called from the entry after migrations
 modules\Library.lua
+# Conventional: the registry writer's schemaVersion steps, called by core\Database.lua's runner at run time
+modules\Library_Migrate.lua
 # Conventional: the share string's codec and checks (pure), and from Task 5 its edge; reads Bake, Library and the seam at run time
 modules\Share.lua
 # LOAD-BEARING: publishes NS.SendGuard, which modules\SendEngine.lua takes as a load-time upvalue.

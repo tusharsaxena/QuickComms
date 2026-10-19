@@ -625,3 +625,13 @@ test("share: [inherit] a child's Inherit when conditions travels; an old string'
     assertTrue(p.groups[map[mine]].when.role.TANK, "with its own When")
     assertTrue(p.groups[map[kept]].inheritWhen, "absent reads as on")
 end)
+
+test("share: [B2] a pad shared before the growth split carries Upward, which lands as Right and up", function()
+    local _, SH = boot()
+    local res = SH.Validate(bundle({
+        pads = { p1 = { name = "Old", fields = { ["pad.layout.growth"] = "up" } },
+            p2 = { name = "New", fields = { ["pad.layout.growth"] = "leftUp" } } } }))
+    -- red under: no alias for the retired `up` (the seam's oneOf would drop it)
+    assertEqual(res.pads[1].fields["pad.layout.growth"], "rightUp")
+    assertEqual(res.pads[2].fields["pad.layout.growth"], "leftUp")
+end)

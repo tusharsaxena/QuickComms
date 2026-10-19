@@ -67,7 +67,7 @@ test("pads page: X and Y move the pad through its pad.point row; Reset puts it b
     assertEqual(table.concat(NS.db.profile.pads.p1.point, ","), "CENTER,CENTER,40,-150")
     w = P.tab("pads", "Layout")
     P.find(w, "EditBox", "Y offset"):__fire("OnEnterPressed", "-60")
-    assertEqual(pointOf(inst), "CENTER,CENTER,40,-60", "the rebuild re-anchors the pad")
+    assertEqual(pointOf(inst), "TOP,CENTER,40,-60", "the rebuild re-anchors the pad by its growth edge")
     m.prints = {}
     w = P.tab("pads", "Layout")
     local xbox = P.find(w, "EditBox", "X offset")
@@ -86,7 +86,7 @@ test("pads page: X and Y move the pad through its pad.point row; Reset puts it b
     w = P.tab("pads", "Layout")
     P.find(w, "Button", "Reset this pad's position"):__fire("OnClick")
     assertNil(NS.db.profile.pads.p1.point)
-    assertEqual(pointOf(inst), "CENTER,CENTER,0,-150")
+    assertEqual(pointOf(inst), "TOP,CENTER,0,-150")
 end)
 
 test("pads page: Look's visibility reaches the pad's state driver", function()

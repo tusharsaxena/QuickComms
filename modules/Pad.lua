@@ -28,6 +28,9 @@ local _, NS = ...
 -- point lives in the profile), so a profile switch, copy or reset moves an existing pad; a frame
 -- being dragged, or whose drag stop is held for combat end, keeps the cursor's place.
 -- A held stop the stand-down dropped is filed again by the stand-up, and a new drag clears it.
+-- The root is pinned by its growth edge (PadLayout.EdgePoint, B2): its top for down growth, its
+-- bottom for up growth, where the header row and the drag strip then sit too; a drop is saved as that
+-- edge's point, so a resize or a reload grows the pad away from the strip and never drifts it.
 
 NS.Pad = NS.Pad or {}
 local Pad = NS.Pad
@@ -57,17 +60,28 @@ local function session(key)
     return State[key]
 end
 
+local function growsUp(id)
+    local pad = profilePad(id)
+    return PL.GrowsUp(pad and type(pad.layout) == "table" and pad.layout.growth)
+end
+
+-- The stored point, read as the growth edge's (a drop was saved as one; a default or typed point
+-- keeps its offsets on that edge).
 local function applyPoint(inst)
     local pad = profilePad(inst.id)
     local pt = (pad and type(pad.point) == "table") and pad.point or DEFAULT_POINT
+    local point, y = PL.EdgePoint(pt[1], pt[4], nil, growsUp(inst.id))
     inst.root:ClearAllPoints()
-    inst.root:SetPoint(pt[1] or "CENTER", UIParent, pt[2] or "CENTER", tonumber(pt[3]) or 0, tonumber(pt[4]) or 0)
+    inst.root:SetPoint(point, UIParent, pt[2] or "CENTER", tonumber(pt[3]) or 0, y)
 end
 
 -- The point is the `pad.point` member row: Library.SetSurfacePoint writes it through the seam; the pad only asks.
+-- Whatever point the client left after the drag is turned into the growth edge's, at the height the
+-- pad is drawn at.
 local function savePoint(inst)
     local point, _, relativePoint, x, y = inst.root:GetPoint(1)
     if not point then return end
+    point, y = PL.EdgePoint(point, y, inst.height or 0, growsUp(inst.id))
     if NS.Library.SetSurfacePoint("pad", inst.id, { point, relativePoint, x, y }) then
         NS.Debug(TAG, "%s moved to %s %s,%s", inst.id, point, x, y)
     else
@@ -146,7 +160,7 @@ local function place(inst, box, style, font, titleFont)
             btn:ClearAllPoints()
             btn:SetPoint("TOPLEFT", inst.root, "TOPLEFT", item.x, -item.y)
             btn:SetSize(item.w, item.h)
-            R.Paint(btn, item.slot, style)
+            R.Paint(btn, item.slot, style, item.w)
             R.ApplyFont(btn.qcLabel, font)
             arm(btn, item.slot)
             local list = inst.byCallout[item.slot.calloutId] or {}
@@ -176,8 +190,6 @@ local function build(id)
     local inst = { id = id, root = root, chips = NS.Pool.New(), titles = NS.Pool.New(), byCallout = {},
         hover = 0, live = false }
     local header = CreateFrame("Frame", nil, root)
-    header:SetPoint("TOPLEFT", root, "TOPLEFT", 0, 0)
-    header:SetPoint("TOPRIGHT", root, "TOPRIGHT", 0, 0)
     header:SetHeight(PL.HEADER_H)
     header:EnableMouse(true)
     header:EnableMouseWheel(true)
@@ -209,11 +221,32 @@ local function build(id)
         onRightClick = function() NS.addon:OpenSettings() end,
         tooltip = { title = label, body = { L["Drag to move. Right-click for settings."] } },
     })
-    if inst.handle then inst.handle:SetPoint("BOTTOM", root, "TOP", 0, NS.DRAG_GAP) end
     pads[id] = inst
     applyPoint(inst)
     NS.Debug(TAG, "built %s", id)
     return inst
+end
+
+-- The header row and the drag strip on the growth edge: on top (the strip above) for down growth, at
+-- the bottom (the strip below) for up growth. Out of combat, from Apply.
+local function anchorEdge(inst, up)
+    local root, header = inst.root, inst.header
+    header:ClearAllPoints()
+    if up then
+        header:SetPoint("BOTTOMLEFT", root, "BOTTOMLEFT", 0, 0)
+        header:SetPoint("BOTTOMRIGHT", root, "BOTTOMRIGHT", 0, 0)
+    else
+        header:SetPoint("TOPLEFT", root, "TOPLEFT", 0, 0)
+        header:SetPoint("TOPRIGHT", root, "TOPRIGHT", 0, 0)
+    end
+    if inst.handle then
+        inst.handle:ClearAllPoints()
+        if up then
+            inst.handle:SetPoint("TOP", root, "BOTTOM", 0, -NS.DRAG_GAP)
+        else
+            inst.handle:SetPoint("BOTTOM", root, "TOP", 0, NS.DRAG_GAP)
+        end
+    end
 end
 
 local function headerState(inst, plan)
@@ -247,14 +280,17 @@ function Pad.Apply(id, plan)
     local layout = type(pad.layout) == "table" and pad.layout or {}
     local look = type(pad.look) == "table" and pad.look or {}
     local sections = PL.VisibleSections(plan.sections, pad.groupsAs, session("padTab")[id])
-    local box = PL.Compute(sections, layout, { collapsed = session("padCollapsed")[id] == true,
-        fontSize = look.fontSize })
+    local hstate = headerState(inst, plan)
+    local box = PL.Compute(sections, layout, { collapsed = hstate.collapsed,
+        fontSize = look.fontSize, situation = hstate.situation })
     inst.root:SetScale(math.max(NS.Library.MIN_SURFACE_SCALE, (tonumber(NS.Setting("scale")) or 1) * (tonumber(layout.scale) or 1)))
     inst.root:SetSize(box.width, box.height)
+    inst.height = box.height
+    anchorEdge(inst, box.up)
     NS.ApplySkin(inst.root, R.SkinFor(look))
     local font = R.LabelFont(look)
     place(inst, box, layout.style, font, R.TitleFont(font))
-    R.PaintHeader(inst.header, headerState(inst, plan))
+    R.PaintHeader(inst.header, hstate)
     Pad.ApplyLock()
     NS.SendEngine.SetVisibility(inst.root,
         PL.VisibilityDriver(NS.Setting("visibility"), look.visibility, plan.hasActive, plan.test == true))

@@ -787,7 +787,7 @@ test("library: [phase 5] Prepare gives a pad saved before the Look groups every 
     assertEqual(pad.look.visibility, "never", "a stored value is kept")
     assertEqual(pad.look.font, "Friz Quadrata TT")
     assertEqual(pad.look.background.a, 0.92)
-    assertEqual(pad.layout.width, 140)
+    assertEqual(pad.layout.width, 100)
     assertTrue(pad.look.background ~= NS.Library.TEMPLATES.pad.look.background, "a copy, never the template")
 end)
 

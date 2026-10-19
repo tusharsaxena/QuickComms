@@ -154,8 +154,21 @@ function R.Dress(btn, onEnter, onLeave)
     return btn
 end
 
---- Show one slot on a chip. `style` is the pad's layout style.
-function R.Paint(btn, slot, style)
+-- A labeled chip's fixed insets around its label (Dress's anchors): the icon at LEFT+2 and its 4px
+-- gap, or the label-only 4px; the 2px before the tag and the tag's own 4px from the right edge.
+local LABEL_INSET = { label = 4 }
+local TAG_INSET = 2 + 4
+
+--- The room a chip `w` wide leaves its label, beside the icon (unless `style` is label only) and the
+--- channel tag `tagW` wide. Zero or less: no room.
+function R.LabelRoom(w, style, tagW)
+    local left = LABEL_INSET[style] or (2 + PL.ICON + 4)
+    return (tonumber(w) or 0) - left - TAG_INSET - (tonumber(tagW) or 0)
+end
+
+--- Show one slot on a chip. `style` is the pad's layout style, `w` the chip's width (B3: the label
+--- is one line that truncates, hidden when the chip leaves it no room; no width, no check).
+function R.Paint(btn, slot, style, w)
     btn.qcSlot = slot
     local live = slot.line ~= nil or slot.selfText ~= nil or slot.reason == "testMode"
     btn.qcIcon:SetTexture(slot.icon or DEFAULT_ICON)
@@ -170,8 +183,10 @@ function R.Paint(btn, slot, style)
     -- One line that stops short of the channel tag, whatever the Look's font size.
     btn.qcLabel:SetPoint("RIGHT", btn.qcTag, "LEFT", -2, 0)
     btn.qcLabel:SetWordWrap(false)
+    btn.qcLabel:SetMaxLines(1)
     btn.qcLabel:SetText(style == "icon" and "" or (slot.name or "?"))
     btn.qcTag:SetText(PL.Tag(slot.concrete) or "")
+    btn.qcLabel:SetShown(w == nil or R.LabelRoom(w, style, btn.qcTag:GetStringWidth()) > 0)
     btn.qcTag:SetTextColor(tagColor(slot.chatType or NS.Channels.ChatType(slot.concrete)))
     btn.qcLock:SetShown(slot.lock ~= nil)
     btn.qcDim:SetShown(not live)

@@ -108,7 +108,7 @@ test("database: step 3 turns the built-in overlay into seeded groups, each in it
     db.sv.profiles.Old = overlayProfile(NS)
     db.global.schemaVersion = 2
     NS.addon:RunMigrations()
-    assertEqual(db.global.schemaVersion, 3)
+    assertEqual(db.global.schemaVersion, NS.SCHEMA_VERSION)
     local p = db.sv.profiles.Old
     -- red under: run = function() end for step 3 in core/Database.lua
     assertNil(p.builtins, "the overlay is gone")
@@ -204,4 +204,29 @@ test("database: the profile defaults carry the Master controls value, and no deb
     -- The debug flag is session-only (debug-logging-§5).
     assertTrue(p.debug == nil and p.state == nil)
     assertEqual(NS.addon.db.global.minimap.hide, false)
+end)
+
+test("database: [B2] step 4 rewrites a pad's retired Upward growth as Right and up, once", function()
+    local NS = T.bootAddon()
+    local db = NS.addon.db
+    db.sv.profiles.Old = { pads = { p1 = { layout = { growth = "up", columns = 3 } },
+        p2 = { layout = { growth = "left" } }, p3 = {}, p4 = { layout = "damaged" } } }
+    db.global.schemaVersion = 3
+    NS.addon:RunMigrations()
+    local p = db.sv.profiles.Old
+    -- red under: no step 4 in core/Database.lua
+    assertEqual(p.pads.p1.layout.growth, "rightUp")
+    assertEqual(p.pads.p1.layout.columns, 3, "nothing else moves")
+    assertEqual(p.pads.p2.layout.growth, "left")
+    assertNil(p.pads.p3.layout, "a pad with no layout stays without one")
+    assertEqual(p.pads.p4.layout, "damaged")
+    assertTrue(db.global.schemaVersion >= 4)
+    p.pads.p2.layout.growth = "leftUp"
+    db.global.schemaVersion = 3
+    NS.addon:RunMigrations()
+    assertEqual(p.pads.p1.layout.growth, "rightUp", "a second run changes nothing")
+    assertEqual(p.pads.p2.layout.growth, "leftUp")
+    local fresh = {}
+    NS.Library.MigrateGrowth(fresh)
+    assertNil(next(fresh), "a fresh profile is left as it is")
 end)

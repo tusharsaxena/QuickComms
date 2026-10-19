@@ -101,7 +101,7 @@ Total.
 - perf: [review] a refresh whose signature moves notes situationRefresh before the rebuild it publishes
 - perf: [phase 5] the Comms Dial page's Preview notes neither bakeSurface nor resolverResolve
 
-### test_database.lua (12)
+### test_database.lua (13)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the target is the last step's `to`, and the steps climb in order
@@ -115,6 +115,7 @@ Total.
 - database: step 3 runs once, and the profile loads without duplicates
 - database: step 3 leaves a profile never prepared to Prepare, which seeds it once
 - database: the profile defaults carry the Master controls value, and no debug flag
+- database: [B2] step 4 rewrites a pad's retired Upward growth as Right and up, once
 
 ### test_profile.lua (9)
 
@@ -122,7 +123,7 @@ Total.
 - profile: collections exist; default nextId is 1, past every seeded id after boot
 - profile: every behavior row resolves through the seam
 - profile: the spam guard clamps to 0.6-2.0 and fallback refuses unknown values
-- profile: schema version target is 3 (the built-in sets as seeded groups)
+- profile: schema version target is 4 (the growth split)
 - prepare: a callout held by two groups is split into a copy
 - prepare: a split copy of a seeded callout keeps no origin
 - prepare: a callout held by no group is dropped
@@ -294,7 +295,7 @@ Total.
 - bake: a typed %t counts as live
 - bake: [phase 5] CleanText is the sanitizer short of the escape; Sanitize is CleanText, then the escape
 
-### test_share.lua (35)
+### test_share.lua (36)
 
 - share: a string is !QC1! then printable text, and decodes back to the same payload
 - share: [review 1] a pasted string may wrap and carry spaces; a cut-short one is damaged and imports nothing
@@ -331,6 +332,7 @@ Total.
 - share: [nesting] a parent the string does not carry, itself, or one inside another is dropped and counted
 - share: [review] a pad's or dial's reference to a group the string nests is dropped and counted
 - share: [inherit] a child's Inherit when conditions travels; an old string's child inherits
+- share: [B2] a pad shared before the growth split carries Upward, which lands as Right and up
 
 ### test_resolver.lua (12)
 
@@ -814,15 +816,18 @@ Total.
 - master: /qc test toggles test mode, and in combat says why it will not
 - master: the Test mode row reads and writes the one switch, and Reset all ends it
 
-### test_pad_layout.lua (12)
+### test_pad_layout.lua (15)
 
 - layout: horizontal puts a section's chips on one row under the header
 - layout: a titled section draws its label row first
 - layout: grid wraps at its column count; vertical is one column
 - layout: the style sets the cell
+- layout: [B3] narrow chips never make the pad narrower than its header needs
+- layout: [B1] a section title equal to the header's situation is not drawn; a tab's title is
 - layout: [review] a larger Look font grows the chip and title rows; the default size changes nothing
 - layout: leftward growth mirrors the row; collapsed is the header alone
-- layout: upward growth stacks the sections bottom-up, each title above its chips
+- layout: [B2] upward growth puts the header at the bottom and stacks the sections up from it
+- layout: [B2] the pad's anchor is its growth edge; a drop is converted to that edge exactly
 - layout: groups-as picks the sections: sections, merged, one tab at a time
 - layout: the wheel steps tabs and wraps both ways
 - layout: the visibility expression combines the master and the pad
@@ -877,7 +882,7 @@ Total.
 - surfaces: [nesting] a parent that draws nothing leaves its surface with nothing active
 - surfaces: [inherit] a child that inherits shows wherever its parent's When matches, whatever its own says
 
-### test_pad_render.lua (18)
+### test_pad_render.lua (19)
 
 - render: Dress builds a chip's regions once, each its own object
 - render: [audit QC-07] the chip's padlock is the catalog's lock mark, tinted gold; the Blizzard art is the nil fallback
@@ -897,8 +902,9 @@ Total.
 - render: [phase 5] Use class color takes the player's class color and keeps the swatch's alpha
 - render: [phase 5] a section title keeps its gold until the player colors the font
 - render: [icons] a glyph chip is drawn in its color; the chip repainted with another icon is white again
+- render: [B3] a chip's label is one line, and hidden when the chip leaves it no room
 
-### test_pad.lua (26)
+### test_pad.lua (29)
 
 - pad: the default pad shows the M+ callouts, each chip armed with its baked line
 - pad: [review 5] a refused chip is dimmed and disarmed: a click sends and reports nothing
@@ -926,6 +932,9 @@ Total.
 - pad: [phase 3] the header's tooltip says why each group shows, unless the player turned it off
 - pad: [phase 5] the pad wears its Look: the chips' font and the edge and body it was given
 - pad: [review 5] a font or border this machine does not have draws the default, with no error
+- pad: [B1] a group named as the header's situation draws no title row of its own
+- pad: [B2] down growth pins the pad's top edge; the header is on top and the strip above
+- pad: [B2] up growth pins the bottom edge, puts the header at the bottom and the strip below
 
 ### test_dial.lua (29)
 
@@ -1036,7 +1045,7 @@ Total.
 | test_bus.lua | 2 |
 | test_surface_parity.lua | 15 |
 | test_setup.lua | 26 |
-| test_database.lua | 12 |
+| test_database.lua | 13 |
 | test_profile.lua | 9 |
 | test_schema.lua | 18 |
 | test_slash.lua | 15 |
@@ -1048,7 +1057,7 @@ Total.
 | test_tokens.lua | 8 |
 | test_channels.lua | 8 |
 | test_bake.lua | 12 |
-| test_share.lua | 35 |
+| test_share.lua | 36 |
 | test_resolver.lua | 12 |
 | test_builtins.lua | 7 |
 | test_gameids.lua | 2 |
@@ -1069,11 +1078,11 @@ Total.
 | test_dial_secure.lua | 12 |
 | test_preview.lua | 17 |
 | test_master.lua | 5 |
-| test_pad_layout.lua | 12 |
+| test_pad_layout.lua | 15 |
 | test_dial_layout.lua | 15 |
 | test_surfaces.lua | 27 |
-| test_pad_render.lua | 18 |
-| test_pad.lua | 26 |
+| test_pad_render.lua | 19 |
+| test_pad.lua | 29 |
 | test_dial.lua | 29 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
@@ -1082,4 +1091,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **868** |
+| **Total** | **877** |

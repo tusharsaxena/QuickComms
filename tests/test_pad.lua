@@ -135,7 +135,7 @@ test("pad: the drag saves the point; locked or in combat it does not move; Reset
     local NS, m = applied()
     local inst = NS.Pad.Instance("p1")
     local p, _, _, _, y = inst.root:GetPoint(1)
-    assertEqual(p, "CENTER")
+    assertEqual(p, "TOP")
     assertEqual(y, -150)
     local function drag(x, yy)
         inst.handle:__fire("OnDragStart")
@@ -151,7 +151,7 @@ test("pad: the drag saves the point; locked or in combat it does not move; Reset
     NS.Pad.ResetPositions()
     assertNil(NS.db.profile.pads.p1.point)
     p = inst.root:GetPoint(1)
-    assertEqual(p, "CENTER")
+    assertEqual(p, "TOP")
 end)
 
 -- Combat can begin while the player is already dragging: canDrag only guards the start. The pad
@@ -280,12 +280,12 @@ test("pad: [fix wave] a profile switch, a switch back and a profile reset each m
     assertEqual(pointOf(inst), "TOPLEFT,TOPLEFT,40,-60")
     NS.addon.db:SetProfile("Other")
     -- red under: drop the applyPoint in Pad.Apply (the frame keeps Default's place)
-    assertEqual(pointOf(inst), "CENTER,CENTER,0,-150", "Other has no point: the default")
+    assertEqual(pointOf(inst), "TOP,CENTER,0,-150", "Other has no point: the default")
     NS.addon.db:SetProfile("Default")
     assertEqual(pointOf(inst), "TOPLEFT,TOPLEFT,40,-60", "back to Default's own point")
     NS.addon.db:ResetProfile()
     assertNil(NS.db.profile.pads.p1.point)
-    assertEqual(pointOf(inst), "CENTER,CENTER,0,-150", "reset: the default")
+    assertEqual(pointOf(inst), "TOP,CENTER,0,-150", "reset: the default")
 end)
 
 test("pad: [fix wave] a rebuild during a drag leaves the dragged frame where the cursor has it", function()
@@ -320,7 +320,7 @@ test("pad: [fix wave] a held drag survives a profile switch in combat: stopped a
     assertEqual(stops[1], 1, "the root is stopped once combat ends")
     assertEqual(#m.blocked, 0)
     assertNil(NS.db.profile.pads.p1.point, "the old profile's drag is not saved into Other")
-    assertEqual(pointOf(inst), "CENTER,CENTER,0,-150", "Other's place")
+    assertEqual(pointOf(inst), "TOP,CENTER,0,-150", "Other's place")
 end)
 
 test("pad: [fix wave] a held drag on a stand-down in combat is stopped by the held teardown", function()
@@ -387,7 +387,7 @@ test("pad: [fix wave] in combat Reset position, Apply and Release do no protecte
     assertFalse(NS.Pad.Release("p1"))
     assertEqual(#m.blocked, 0)
     combat(m, false)
-    assertEqual(pointOf(inst), "CENTER,CENTER,0,-150")
+    assertEqual(pointOf(inst), "TOP,CENTER,0,-150")
     assertEqual(#m.blocked, 0)
 end)
 
@@ -428,7 +428,7 @@ test("pad: [phase 3] a held drag whose stand-down is canceled in the same combat
     assertEqual(stops[1], 1)
     assertNil(inst.dragHeld)
     assertEqual(#m.blocked, 0)
-    assertEqual(pointOf(inst), "CENTER,CENTER,0,-150", "the drop was never saved: back to the saved point")
+    assertEqual(pointOf(inst), "TOP,CENTER,0,-150", "the drop was never saved: back to the saved point")
 end)
 
 test("pad: [phase 3] a new drag clears a stale held stop, so the next rebuild re-anchors", function()
@@ -505,4 +505,63 @@ test("pad: [review 5] a font or border this machine does not have draws the defa
     local label = NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.mplus.pull"))[1].qcLabel
     assertEqual(label.__font[1], "Fonts\\FRIZQT__.TTF")
     assertEqual(skins[NS.Pad.Instance("p1").root].edgeFile, "Interface\\Buttons\\WHITE8x8")
+end)
+
+-- ── icons and polish (2026-10-19): the title, the growth edge ───────────────────────────────
+
+local function pointsOf(frame)
+    local out = {}
+    for i = 1, #(frame.__points or {}) do
+        local p, rel, relPoint, x, y = frame:GetPoint(i)
+        out[#out + 1] = table.concat({ tostring(p), rel == nil and "nil" or (rel.__name or "frame"),
+            tostring(relPoint), tostring(x), tostring(y) }, ",")
+    end
+    return table.concat(out, " | ")
+end
+
+test("pad: [B1] a group named as the header's situation draws no title row of its own", function()
+    local NS = live()
+    local cid = assert(NS.Library.CreateCallout({ name = "Go", text = "Go", channel = "party" }))
+    local gid = NS.Library.CreateGroup({ name = "m+ +12" })
+    NS.Library.AddToGroup(gid, cid)
+    NS.Library.AddGroupToSurface("pad", "p1", gid, 1)
+    NS.Pad.Apply("p1", planFor(NS))
+    local inst = NS.Pad.Instance("p1")
+    assertEqual(inst.header.qcSituation:GetText(), "M+ +12")
+    -- red under: Pad.Apply not passing the situation to PL.Compute
+    for _, fs in ipairs(inst.titles.active) do
+        assertTrue(fs:GetText() ~= "m+ +12", "the situation is not drawn twice")
+    end
+end)
+
+test("pad: [B2] down growth pins the pad's top edge; the header is on top and the strip above", function()
+    local NS = applied()
+    local inst = NS.Pad.Instance("p1")
+    -- red under: applyPoint anchoring the stored CENTER point (a resize drifts both ways)
+    assertEqual(pointOf(inst), "TOP,CENTER,0,-150")
+    assertEqual(pointsOf(inst.header), "TOPLEFT,QuickCommsPadp1,TOPLEFT,0,0 | TOPRIGHT,QuickCommsPadp1,TOPRIGHT,0,0")
+    assertEqual(pointsOf(inst.handle), "BOTTOM,QuickCommsPadp1,TOP,0," .. NS.DRAG_GAP)
+end)
+
+test("pad: [B2] up growth pins the bottom edge, puts the header at the bottom and the strip below", function()
+    local NS, m = live()
+    NS.db.profile.pads.p1.layout.growth = "rightUp"
+    NS.Pad.Apply("p1", planFor(NS))
+    local inst = NS.Pad.Instance("p1")
+    assertEqual(pointOf(inst), "BOTTOM,CENTER,0,-150")
+    assertEqual(pointsOf(inst.header),
+        "BOTTOMLEFT,QuickCommsPadp1,BOTTOMLEFT,0,0 | BOTTOMRIGHT,QuickCommsPadp1,BOTTOMRIGHT,0,0")
+    assertEqual(pointsOf(inst.handle), "TOP,QuickCommsPadp1,BOTTOM,0," .. -NS.DRAG_GAP)
+    -- A drop is saved as the bottom edge, so the reload and every resize keep the strip where it was.
+    local h = inst.root.__h
+    startDrag(NS, m)
+    inst.handle:__fire("OnDragStop")
+    assertEqual(table.concat(NS.db.profile.pads.p1.point, ","), "BOTTOMLEFT,TOPLEFT,25," .. (-35 - h))
+    NS.Pad.ToggleCollapsed("p1")
+    assertEqual(pointOf(inst), "BOTTOMLEFT,TOPLEFT,25," .. (-35 - h), "a resize keeps the bottom edge")
+    assertTrue(inst.root.__h < h, "collapsed is shorter")
+    NS.db.profile.pads.p1.layout.growth = "right"
+    NS.Pad.ToggleCollapsed("p1")
+    assertEqual(pointsOf(inst.header), "TOPLEFT,QuickCommsPadp1,TOPLEFT,0,0 | TOPRIGHT,QuickCommsPadp1,TOPRIGHT,0,0",
+        "a growth change re-anchors the header")
 end)

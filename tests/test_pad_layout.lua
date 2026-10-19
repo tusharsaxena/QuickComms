@@ -64,8 +64,33 @@ test("layout: the style sets the cell", function()
     w, h = pl.CellSize({ style = "label", width = 160 })
     assertEqual(w, 160)
     assertEqual(h, 22)
+    -- red under: PL.CellSize clamping a chip to the pad's minimum (120)
     w = pl.CellSize({ style = "iconLabel", width = 60 })
-    assertEqual(w, 120, "never narrower than MIN_W")
+    assertEqual(w, 60, "a chip may be narrower than the pad's minimum")
+    assertEqual((pl.CellSize({ style = "iconLabel", width = 1 })), 1, "down to one pixel")
+    assertEqual((pl.CellSize({ style = "iconLabel", width = 0 })), 1, "never below one")
+    assertEqual((pl.CellSize({ style = "iconLabel" })), 100, "the default chip width is 100")
+end)
+
+test("layout: [B3] narrow chips never make the pad narrower than its header needs", function()
+    local pl = PL()
+    local narrow = { orientation = "horizontal", growth = "right", style = "iconLabel", spacing = 4, width = 10 }
+    local box = pl.Compute({ { slots = slots(2) } }, narrow)
+    assertEqual(box.width, 120, "the pad's own minimum")
+    assertEqual(chips(box)[2].x, 18, "the chips keep their own width")
+end)
+
+test("layout: [B1] a section title equal to the header's situation is not drawn; a tab's title is", function()
+    local pl = PL()
+    local box = pl.Compute({ { title = "World", slots = slots(1) } }, H, { situation = " world " })
+    -- red under: PL.Compute ignoring opts.situation
+    assertEqual(box.items[1].kind, "chip", "no title row")
+    assertEqual(box.items[1].y, 22, "the chip moves up into its place")
+    local other = pl.Compute({ { title = "World", slots = slots(1) } }, H, { situation = "M+ +12" })
+    assertEqual(other.items[1].kind, "title", "a different situation keeps the title")
+    local tab = pl.Compute({ { title = "World", slots = slots(1), tabIndex = 1, tabCount = 2 } }, H,
+        { situation = "World" })
+    assertEqual(tab.items[1].kind, "title", "a tab's title names its place, so it stays")
 end)
 
 test("layout: [review] a larger Look font grows the chip and title rows; the default size changes nothing", function()
@@ -103,9 +128,9 @@ test("layout: leftward growth mirrors the row; collapsed is the header alone", f
     assertEqual(box.width, 120)
 end)
 
-test("layout: upward growth stacks the sections bottom-up, each title above its chips", function()
+test("layout: [B2] upward growth puts the header at the bottom and stacks the sections up from it", function()
     local pl = PL()
-    local up = { orientation = "grid", columns = 2, growth = "up", style = "iconLabel", spacing = 4, width = 140 }
+    local up = { orientation = "grid", columns = 2, growth = "rightUp", style = "iconLabel", spacing = 4, width = 140 }
     local box = pl.Compute({ { title = "A", slots = slots(3) }, { title = "B", slots = slots(1) } }, up)
     local byText, chipsOf, cur = {}, {}, nil
     for _, it in ipairs(box.items) do
@@ -122,12 +147,40 @@ test("layout: upward growth stacks the sections bottom-up, each title above its 
             assertTrue(byText[name].y < c.y, name .. "'s title sits above its chips")
         end
     end
-    assertEqual(byText["B"].y, 22, "the last section is on top, under the header")
+    assertEqual(box.height, 22 + 14 + 24 + 4 + 14 + 24 + 4 + 24 + 4 + 4)
+    -- red under: the header pinned on top for every growth (the old "up" only reversed the sections)
+    assertTrue(box.up == true, "the box says the pad grows up")
+    assertEqual(box.headerY, box.height - 18, "the header row is the pad's bottom row")
+    assertEqual(byText["B"].y, 8, "the last section is on top")
     assertTrue(byText["A"].y > chipsOf["B"][1].y, "section A sits below section B")
     local a = chipsOf["A"]
-    assertTrue(a[3].y < a[1].y, "the first chip row sits nearest the anchor")
-    assertEqual(box.height, 22 + 14 + 24 + 4 + 14 + 24 + 4 + 24 + 4 + 4)
-    assertEqual(a[1].y + a[1].h + 4 + 4, box.height, "the first row sits on the bottom edge")
+    assertTrue(a[3].y < a[1].y, "the first chip row sits nearest the header")
+    assertEqual(a[1].y + a[1].h + 4, box.headerY, "the first row sits just above the header")
+    local left = pl.Compute({ { slots = slots(2) } }, { orientation = "horizontal", growth = "leftUp",
+        style = "iconLabel", spacing = 4, width = 140 })
+    local c = chips(left)
+    assertEqual(c[1].x, 148, "Left and up mirrors the row too")
+    assertEqual(left.headerY, left.height - 18)
+    local down = pl.Compute({ { slots = slots(1) } }, H)
+    assertEqual(down.headerY, 0, "down growth keeps the header on top")
+    assertTrue(not down.up)
+    assertTrue(pl.GrowsUp("rightUp") and pl.GrowsUp("leftUp") and not pl.GrowsUp("right") and not pl.GrowsUp("left"))
+end)
+
+test("layout: [B2] the pad's anchor is its growth edge; a drop is converted to that edge exactly", function()
+    local pl = PL()
+    local p, y = pl.EdgePoint("CENTER", -150, nil, false)
+    assertEqual(p .. "," .. y, "TOP,-150", "a stored point is read as the growth edge")
+    p, y = pl.EdgePoint("TOPLEFT", -35, nil, true)
+    assertEqual(p .. "," .. y, "BOTTOMLEFT,-35")
+    p, y = pl.EdgePoint("TOPLEFT", -35, 100, true)
+    assertEqual(p .. "," .. y, "BOTTOMLEFT,-135", "the frame's bottom edge, 100 below its top")
+    p, y = pl.EdgePoint("CENTER", 0, 100, false)
+    assertEqual(p .. "," .. y, "TOP,50")
+    p, y = pl.EdgePoint("BOTTOMRIGHT", 10, 60, false)
+    assertEqual(p .. "," .. y, "TOPRIGHT,70")
+    p, y = pl.EdgePoint("RIGHT", 0, 60, true)
+    assertEqual(p .. "," .. y, "BOTTOMRIGHT,-30")
 end)
 
 test("layout: groups-as picks the sections: sections, merged, one tab at a time", function()

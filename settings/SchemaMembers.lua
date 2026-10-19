@@ -139,7 +139,9 @@ end
 
 local GROUPS_AS = choices({ { "sections", L["Sections"] }, { "merged", L["One list"] }, { "tabs", L["Tabs (the mouse wheel switches)"] } })
 local ORIENTATION = choices({ { "horizontal", L["Horizontal"] }, { "vertical", L["Vertical"] }, { "grid", L["Grid"] } })
-local GROWTH = choices({ { "right", L["Right and down"] }, { "left", L["Left and down"] }, { "up", L["Upward"] } })
+-- `up` (Upward) is retired: migration step 4 and Share's import alias read it as rightUp (B2).
+local GROWTH = choices({ { "right", L["Right and down"] }, { "left", L["Left and down"] },
+    { "rightUp", L["Right and up"] }, { "leftUp", L["Left and up"] } })
 local STYLE = choices({ { "iconLabel", L["Icon and label"] }, { "icon", L["Icon only"] }, { "label", L["Label only"] } })
 local VISIBILITY = choices({ { "always", L["Always"] }, { "inCombat", L["Only in combat"] },
     { "outOfCombat", L["Only out of combat"] }, { "whenActive", L["When a group is active"] }, { "never", L["Never"] } })
@@ -267,8 +269,8 @@ local ROWS = {
       min = 0, max = 20, step = 1, page = "pads", group = L["Layout"], label = L["Spacing"],
       desc = L["Pixels between chips."], validate = NUMBER, normalize = clamp(0, 20, true) },
     { path = "pad.layout.width", instance = "pad", type = "number", default = T.pad.layout.width,
-      min = 120, max = 300, step = 10, page = "pads", group = L["Layout"], label = L["Chip width"],
-      desc = L["How wide a labeled chip is."], validate = NUMBER, normalize = clamp(120, 300, true) },
+      min = 1, max = 300, step = 1, page = "pads", group = L["Layout"], label = L["Chip width"],
+      desc = L["How wide a labeled chip is."], validate = NUMBER, normalize = clamp(1, 300, true) },
     -- Position's default is false, the default place, so `/qc reset pad.point` brings a pad back; the
     -- page's Defaults keeps the position (settings/Schema.lua resetExempt), as its tooltip says.
     { path = "pad.point", instance = "pad", type = "point", default = false,

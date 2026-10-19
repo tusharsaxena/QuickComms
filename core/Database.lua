@@ -21,6 +21,8 @@ NS.MIGRATIONS = {
     -- 2 -> 3 (2026-10-18-builtins-as-groups-design.md): the built-in overlay becomes seeded groups,
     -- each in its set's place on every pad and dial; Library seeds them and converts the lists.
     { to = 3, perProfile = true, run = function(_, profile) NS.Library.SeedFromOverlay(profile) end },
+    -- 3 -> 4 (2026-10-19 icons and polish, B2): a pad's retired Upward growth becomes Right and up.
+    { to = 4, perProfile = true, run = function(_, profile) NS.Library.MigrateGrowth(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.
