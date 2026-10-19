@@ -61,7 +61,7 @@
 | L2 Release v1.74.0 (local tag) | LibKa0s | todo | |
 | S1 options-ui-§15 extras | WowAddonStandards | todo | |
 | Q1 Pad: title, chip width, growth | QC | done | ea04cd1 |
-| Q2 /qc toggle | QC | todo | |
+| Q2 /qc toggle | QC | done | e71b428 |
 | Q3 Look headings + Callouts rows | QC | todo | |
 | Q4 Preview as → Master controls | QC | todo | |
 | Q5 Instances + Arena drawers | QC | todo | |
