@@ -67,7 +67,7 @@
 | Q5 Instances + Arena drawers | QC | done | 12e71ef |
 | Q6 Vendor LibKa0s v1.74.0 + icon browser | QC | done | f89ed21 |
 | Q7 Dungeon (generic) + built-in icons | QC | done | a344069 |
-| Q8 Icon styling + glows | QC | done | d8c9fee |
+| Q8 Icon styling + glows | QC | done | a86f62f |
 | Q9 Docs sync + final review | QC (+all) | todo | |
 
 ---
