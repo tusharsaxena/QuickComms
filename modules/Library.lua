@@ -458,6 +458,7 @@ local function firstChars(s, n)
     end
     return table.concat(out)
 end
+Lib.FirstChars = firstChars
 
 --- A copy's name: "<name> (copy)", or `<name>` plus `suffix`, the original shortened so the whole
 --- stays within NAME_MAX (counted in characters).

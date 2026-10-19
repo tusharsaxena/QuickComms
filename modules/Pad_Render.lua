@@ -80,7 +80,9 @@ function R.SectionTitle(item)
     return item.text
 end
 
-local function tagColor(chatType)
+--- A chat type's color (the game's ChatTypeInfo, else Constants.CHAT_COLORS, else SAY's): a chip's
+--- tag, and a callout row's channel on the Groups page.
+function R.TagColor(chatType)
     local r, g, b = NS.Compat.ChatColor(chatType)
     if r then return r, g, b end
     local c = NS.Constants.CHAT_COLORS[chatType] or NS.Constants.CHAT_COLORS.SAY
@@ -187,7 +189,7 @@ function R.Paint(btn, slot, style, w)
     btn.qcLabel:SetText(style == "icon" and "" or (slot.name or "?"))
     btn.qcTag:SetText(PL.Tag(slot.concrete) or "")
     btn.qcLabel:SetShown(w == nil or R.LabelRoom(w, style, btn.qcTag:GetStringWidth()) > 0)
-    btn.qcTag:SetTextColor(tagColor(slot.chatType or NS.Channels.ChatType(slot.concrete)))
+    btn.qcTag:SetTextColor(R.TagColor(slot.chatType or NS.Channels.ChatType(slot.concrete)))
     btn.qcLock:SetShown(slot.lock ~= nil)
     btn.qcDim:SetShown(not live)
     btn.qcCool:Hide()

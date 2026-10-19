@@ -204,7 +204,8 @@ test("pads page: [phase 5] Look carries the composed Font, Border and Background
     local NS, _, P = open()
     local w = P.tab("pads", "Look")
     for _, heading in ipairs({ "Font", "Border", "Background" }) do
-        assertTrue(P.find(w, "Heading", heading) ~= nil, heading)
+        -- red under: the host's own h.Section above each subgroup (the library draws it from the rows)
+        assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
     end
     assertEqual(#P.all(w, "CheckBox", "Use class color"), 3, "a companion beside each swatch (options-ui-§17)")
     assertTrue(P.find(w, "ColorPicker", "Font color") ~= nil)

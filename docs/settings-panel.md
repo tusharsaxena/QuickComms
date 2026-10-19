@@ -54,7 +54,10 @@ General   Preview as (page-wide, first), then Name, Enabled, Open the dial on th
           Duplicate and Delete, then Restore built-in groups (page-wide)
 Callouts  Add callout (the callout popup, blank; across the row), Reuse callout
           with Add at the right edge (both 2px short of it), then its callouts as a drag-to-reorder list, each row the handle,
-          the icon, the name and channel, then an edit glyph and a remove glyph at the right edge
+          the icon (the question mark when none), the name in gold, the channel's short label in
+          its chat color (a smart kind resolved against the snapshot; PARTY's when solo) and the
+          text in muted white cut at 40 characters with "…", then an edit glyph and a remove glyph
+          at the right edge
 When      settings/Groups_When.lua
 Preview   the active-now line, then a table: a gold header row (Callout, What it sends here), then
           one boxed row per callout, its icon and name beside its first preview line

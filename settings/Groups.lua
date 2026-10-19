@@ -14,7 +14,8 @@ local _, NS = ...
 --               every shipped set, node and callout the profile no longer has comes back).
 --     Callouts  Add callout (the callout popup, settings/CalloutPopup.lua), Reuse callout with Add (an
 --               independent copy of another group's callout, spec P2), then its callouts as a
---               drag-to-reorder list with an edit and a remove glyph each. The group owns its
+--               drag-to-reorder list ([icon] gold name, channel in its chat color, muted text cut
+--               at 40 characters) with an edit and a remove glyph each. The group owns its
 --               callouts, so remove deletes the callout (asking first).
 --     When      settings/Groups_When.lua
 --     Preview   the active-now line, then a table (Ed.TableRows): one boxed row per callout, its name
@@ -205,10 +206,36 @@ local function restoreRow(ctx)
         onClick = function() G.RestoreBuiltins() end }, nil)
 end
 
-local function calloutLabel(cid)
-    local c = NS.Library.Callout(cid)
+-- A callout row (B5): [icon] the name in gold, the channel's short label in its chat color, then the
+-- text in muted white, cut at PREVIEW_CHARS characters. User text is drawn literal (Share.Literal),
+-- so a typed "|" never opens an escape; the cut keeps every row one line (options-ui-§18's stride).
+local PREVIEW_CHARS = 40
+local SHORT_CHANNEL = {
+    smartGroup = L["Smart group"], smartLead = L["Smart lead"], party = L["Party"], raid = L["Raid"],
+    instance = L["Instance"], raidWarning = L["Raid warning"], say = L["Say"], yell = L["Yell"],
+}
+
+local function hex(r, g, b)
+    local function byte(v) return math.floor(v * 255 + 0.5) end
+    return ("%02x%02x%02x"):format(byte(r), byte(g), byte(b))
+end
+
+-- A smart kind resolves against the editor's snapshot; resolving to nothing (solo) takes PARTY's.
+local function channelColor(kind)
+    local concrete = NS.Channels.Resolve(kind, Ed.Snapshot(), NS.Setting("behavior.soloFallback"))
+    return hex(NS.PadRender.TagColor(NS.Channels.ChatType(concrete) or "PARTY"))
+end
+
+local function preview(text)
+    local head = NS.Library.FirstChars(text, PREVIEW_CHARS)
+    if #head < #text then head = head .. "…" end
+    return NS.Share.Literal(head)
+end
+
+local function calloutLabel(c, cid)
     if not c then return cid end
-    return ("%s  |cff808080%s|r"):format(c.name or cid, c.channel or "")
+    return ("|cffffd100%s|r  |cff%s%s|r  |cffb3b3b3%s|r"):format(NS.Share.Literal(c.name or cid),
+        channelColor(c.channel), SHORT_CHANNEL[c.channel] or tostring(c.channel), preview(c.text or ""))
 end
 
 -- The group part of a Reuse entry ("<group>:", a set's "<set>: <child>:") is drawn in the muted
@@ -425,7 +452,8 @@ local function renderCallouts(ctx)
     local entries = {}
     for i, cid in ipairs(list) do
         local c = NS.Library.Callout(cid)
-        entries[i] = { id = cid, label = calloutLabel(cid), icon = c and c.icon or nil, iconColor = c and c.iconColor or nil,
+        entries[i] = { id = cid, label = calloutLabel(c, cid), ghost = c and c.name or cid,
+            icon = c and c.icon or Ed.NO_ICON, iconColor = c and c.iconColor or nil,
             edit = function() Settings.CalloutPopup.Open(gid, cid) end,
             editTooltip = L["Edit this callout: its name, text, channel and icon."],
             remove = function() G.RemoveCallout(gid, cid) end,

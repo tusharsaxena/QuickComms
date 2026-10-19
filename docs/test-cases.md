@@ -609,7 +609,7 @@ Total.
 - when: [inherit] ActiveText judges an inheriting group by its parent's When
 - when: [all] SetAll turns the whole kind on and off and keeps the listed ids; Summary names it
 
-### test_page_groups.lua (59)
+### test_page_groups.lua (62)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists every group by name, a seeded set among them, active ones dotted
@@ -654,6 +654,9 @@ Total.
 - groups page: [icons] the browser closes as Cancel when the settings window hides or the group is deleted
 - groups page: [icons] a callout row in the Callouts tab draws its glyph in the callout's color
 - groups page: [icons] a tinted callout row puts its image back to white when released (AceGUI's shared pool)
+- groups page: [rows] a callout row reads gold name, the channel in its chat color, then the text
+- groups page: [rows] a callout row cuts its text at 40 characters, escapes |, and shows the fallback icon
+- groups page: [rows] a callout row's text cut counts UTF-8 characters, not bytes
 - groups page: [icons] the swatch writes on a drag tick (OnValueChanged) with no confirm, as OK leaves it
 - groups page: [nesting] General's Parent group offers the top-level groups but itself; a pick nests the group
 - groups page: [nesting] a group that holds groups cannot take a parent: the dropdown is idle and says why
@@ -1073,7 +1076,7 @@ Total.
 | test_icon_browser.lua | 32 |
 | test_eui_skin.lua | 10 |
 | test_groups_when.lua | 17 |
-| test_page_groups.lua | 59 |
+| test_page_groups.lua | 62 |
 | test_page_pads.lua | 13 |
 | test_page_dials.lua | 17 |
 | test_page_share.lua | 12 |
@@ -1096,4 +1099,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **882** |
+| **Total** | **885** |

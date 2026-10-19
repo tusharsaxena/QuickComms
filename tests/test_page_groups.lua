@@ -930,6 +930,67 @@ test("groups page: [icons] a tinted callout row puts its image back to white whe
     assertEqual(table.concat(row.image.vertexColor, ","), "1,1,1", "the pooled image is white for its next owner")
 end)
 
+-- The row's label (B5): the name in gold, the channel's short label in its chat color, then the
+-- text in muted white, cut at 40 characters.
+local function calloutRow(P, w, icon)
+    for _, label in ipairs(P.all(w, "Label")) do
+        if label.image and label.image[1] == icon then return label end
+    end
+    return nil
+end
+
+test("groups page: [rows] a callout row reads gold name, the channel in its chat color, then the text", function()
+    local NS, _, P = open()
+    local lists = P.reorderSpy()
+    local star = NS.Icon("star")
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    NS.Library.CreateCalloutIn(gid, { name = "Star", text = "go", channel = "party", icon = star })
+    NS.Library.CreateCalloutIn(gid, { name = "Warn", text = "move", channel = "raidWarning", icon = star })
+    pick(NS, gid)
+    local w = P.tab("groups", "callouts")
+    local rows = {}
+    for _, label in ipairs(P.all(w, "Label")) do
+        if label.image and label.image[1] == star then rows[#rows + 1] = label end
+    end
+    -- red under: calloutLabel's old "%s  |cff808080%s|r" (the raw kind id in gray)
+    assertEqual(rows[1].text, "|cffffd100Star|r  |cffababffParty|r  |cffb3b3b3go|r")
+    assertEqual(rows[2].text, "|cffffd100Warn|r  |cffff4700Raid warning|r  |cffb3b3b3move|r")
+    -- red under: Ed.ReorderRows' ghostText without entry.ghost
+    assertEqual(lists[#lists].specs[1].ghostText, "Star", "the drag copy carries the plain name")
+end)
+
+test("groups page: [rows] a callout row cuts its text at 40 characters, escapes |, and shows the fallback icon", function()
+    local NS, _, P = open()
+    local Ed = NS.addon.Settings.Editors
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    NS.Library.CreateCalloutIn(gid, { name = "Long", text = "a|b" .. ("x"):rep(50), channel = "smartGroup" })
+    pick(NS, gid)
+    local w = P.tab("groups", "callouts")
+    -- red under: the row's icon only when the callout has one
+    local row = calloutRow(P, w, Ed.NO_ICON)
+    assertTrue(row ~= nil, "a callout with no icon shows the question mark")
+    -- solo: a smart kind resolves to nothing and takes PARTY's color
+    assertEqual(row.text, "|cffffd100Long|r  |cffababffSmart group|r  |cffb3b3b3a||b" .. ("x"):rep(37) .. "…|r")
+end)
+
+test("groups page: [rows] a callout row's text cut counts UTF-8 characters, not bytes", function()
+    local NS, _, P = open()
+    local Ed = NS.addon.Settings.Editors
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    NS.Library.CreateCalloutIn(gid, { name = "Uni", text = ("é"):rep(45), channel = "say" })
+    pick(NS, gid)
+    local row = calloutRow(P, P.tab("groups", "callouts"), Ed.NO_ICON)
+    assertEqual(row.text, "|cffffd100Uni|r  |cffffffffSay|r  |cffb3b3b3" .. ("é"):rep(40) .. "…|r")
+    -- a text at the limit is not cut
+    local exact = NS.Library.CreateCalloutIn(gid, { name = "Exact", text = ("y"):rep(40), channel = "say" })
+    assertTrue(exact ~= nil)
+    local found
+    for _, label in ipairs(P.all(P.tab("groups", "callouts"), "Label")) do
+        if label.text == "|cffffd100Exact|r  |cffffffffSay|r  |cffb3b3b3" .. ("y"):rep(40) .. "|r" then found = true end
+    end
+    assertTrue(found, "40 characters exactly: no ellipsis")
+end)
+
 test("groups page: [icons] the swatch writes on a drag tick (OnValueChanged) with no confirm, as OK leaves it", function()
     local NS, _, P = open()
     local gid = NS.Library.CreateGroup({ name = "Mine", icon = NS.Icon("star"), iconColor = "ff0000" })

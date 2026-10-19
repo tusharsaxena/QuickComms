@@ -483,7 +483,7 @@ function Ed.Tint(texture, icon, color)
 end
 
 --- One uniform row per entry ({ id, label, icon = texture|nil, iconColor = "rrggbb"|nil, edit = fn|nil, editTooltip = string|nil,
---- remove = fn|nil, removeTooltip = string|nil }): the library's handle in the gutter at the left, the
+--- remove = fn|nil, removeTooltip = string|nil, ghost = string|nil (the drag copy's text; default label) }): the library's handle in the gutter at the left, the
 --- entry's icon (when set, a glyph in its color) and its label, then the edit and remove glyphs at the
 --- right edge, every widget centered in the row (a Table layout: Ed.RowColumns, Ed.RowAlignV). With
 --- `onMove(from, to)` the rows drag; the list's one write and one repaint are the host's (Library,
@@ -533,7 +533,7 @@ function Ed.ReorderRows(ctx, pageKey, entries, onMove)
     if not onMove then return end
     local r = newReorder(pageKey, onMove)
     if not r then return end
-    for _, b in ipairs(built) do r:AddRow(b.group.frame, { ghostText = b.entry.label }) end
+    for _, b in ipairs(built) do r:AddRow(b.group.frame, { ghostText = b.entry.ghost or b.entry.label }) end
     r:Finish(scroll.content or scroll.frame)
 end
 
