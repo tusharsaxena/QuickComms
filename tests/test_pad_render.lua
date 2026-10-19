@@ -66,13 +66,26 @@ test("render: [review 5] a refused chip is dimmed and its tooltip says why", fun
     assertEqual(lines[2], "Callout text cannot start with /.")
 end)
 
+-- The x offset of the label's RIGHT anchor on the chip (the label anchored as the client keeps a
+-- region's anchors: wow_mock's regions record none).
+local function labelEnd(b)
+    for i = 1, b.qcLabel:GetNumPoints() do
+        local p, rel, relPoint, x = b.qcLabel:GetPoint(i)
+        if p == "RIGHT" and rel == b and relPoint == "RIGHT" then return x end
+    end
+end
+
 test("render: a locked chip shows the padlock and names the lock; RefreshLock follows the slot", function()
     local NS, m = T.enableAddon()
     local b = chip(NS, m)
     local slot = { calloutId = "c3", name = "Shout", line = "/s Go", concrete = "say", chatType = "SAY", lock = "lockdown" }
+    m.__anchored(b.qcLabel, {})
+    function b.qcLabel.ClearAllPoints(self) self.__anchors = {}; return self end
     NS.PadRender.Paint(b, slot, "iconLabel")
     assertTrue(b.qcLock:IsShown())
     assertFalse(b.qcDim:IsShown(), "locked is not refused: it stays armed")
+    -- red under: end a locked chip's label at the chip's edge, under the padlock
+    assertEqual(labelEnd(b), -14, "the label ends at the padlock")
     local lines = NS.PadRender.TooltipLines(slot)
     assertEqual(lines[2], "/s Go")
     assertTrue(lines[3]:find("Say", 1, true) ~= nil, "the channel")
@@ -80,6 +93,12 @@ test("render: a locked chip shows the padlock and names the lock; RefreshLock fo
     slot.lock = nil
     NS.PadRender.RefreshLock(b)
     assertFalse(b.qcLock:IsShown())
+    assertEqual(labelEnd(b), -4, "unlocked, the label runs to the chip's edge again")
+    local p1, rel = b.qcLabel:GetPoint(1)
+    assertTrue(p1 == "LEFT" and rel == b.qcIcon, "and still starts at the icon")
+    slot.lock = "lockdown"
+    NS.PadRender.RefreshLock(b)
+    assertEqual(labelEnd(b), -14, "a lock that comes in combat moves the end too")
 end)
 
 test("render: the style decides icon and label", function()

@@ -107,7 +107,7 @@ files they add are listed in design spec §4.2.
 | `tests/test_master.lua` | the lock and test mode through one handler from the row, the verb and the launcher entry |
 | `tests/test_pad_layout.lua` | `Pad_Layout`: geometry, the sections per groups-as mode, the visibility expression, the fade |
 | `tests/test_surfaces.lua` | `Surfaces`: a pad's plan (a parent's own callouts and a section per child that is active), and the rebuild queued in combat with the stale hint |
-| `tests/test_pad_render.lua` | `Pad_Render`: what a chip and the header show (no channel letter: the label runs to the chip's edge, the tooltip names the channel), and the drag-strip seam |
+| `tests/test_pad_render.lua` | `Pad_Render`: what a chip and the header show (no channel letter: the label runs to the chip's edge, or the padlock's while locked; the tooltip names the channel), and the drag-strip seam |
 | `tests/test_icon_style.lua` | `IconStyle`: the defaults keep today's look; zoom, desaturate, alpha, the tint times a glyph's color; a pad's icon size feeds the chip's geometry; the chip's border and the wedge's round ring, never wider than the wedge; `fillShape` backfills `icon` |
 | `tests/test_glow.lua` | `Glow`: off by default; each style's call and knobs (a fake LibCustomGlow-1.0); an unchanged rebuild calls nothing; On hover and After sending; unused and released chips stop; no protected call in combat and the Icons write held to combat end; a wedge's glow; a dial's send glow from the next open within `DROP_SECONDS`; the stand-down puts out a send glow whose release is held |
 | `tests/test_pad.lua` | `Pad`: armed or disarmed chips, the visibility driver, the drag strip shown while unlocked (it will not drag while locked or in combat) |

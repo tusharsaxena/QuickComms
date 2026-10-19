@@ -184,6 +184,22 @@ end
 -- gap, or the label-only 4px; RIGHT_INSET from the chip's right edge.
 local LABEL_INSET = { label = 4 }
 local RIGHT_INSET = 4
+-- On a locked chip the label ends at the padlock (12 wide at TOPRIGHT -1) and a 1px gap, not under it.
+local LOCK_INSET = 14
+
+-- The label's two anchors: from the icon (or the chip's left edge, label only) to the chip's right
+-- edge, or to the padlock's left edge while it shows. Paint and RefreshLock both call it, so a lock
+-- that comes or goes in combat moves the label's end too.
+local function anchorLabel(btn, locked)
+    local label = btn.qcLabel
+    label:ClearAllPoints()
+    if btn.qcLabelOnly then
+        label:SetPoint("LEFT", btn, "LEFT", 4, 0)
+    else
+        label:SetPoint("LEFT", btn.qcIcon, "RIGHT", 4, 0)
+    end
+    label:SetPoint("RIGHT", btn, "RIGHT", -(locked and LOCK_INSET or RIGHT_INSET), 0)
+end
 
 --- The room a chip `w` wide leaves its label, beside the icon `iconSize` wide (unless `style` is label
 --- only). Zero or less: no room.
@@ -209,15 +225,10 @@ function R.Paint(btn, slot, style, w, icfg)
     btn.qcIcon:SetShown(style ~= "label")
     IS.PaintBorder(btn, icfg, style ~= "label")
     Glow.Bind(btn, style ~= "label" and icfg.glow or false, slot.calloutId)
-    btn.qcLabel:ClearAllPoints()
-    if style == "label" then
-        btn.qcLabel:SetPoint("LEFT", btn, "LEFT", 4, 0)
-    else
-        btn.qcLabel:SetPoint("LEFT", btn.qcIcon, "RIGHT", 4, 0)
-    end
-    -- One line to the chip's right edge, whatever the Look's font size. No channel letter beside it:
-    -- the channel is in the tooltip (TooltipLines).
-    btn.qcLabel:SetPoint("RIGHT", btn, "RIGHT", -RIGHT_INSET, 0)
+    btn.qcLabelOnly = style == "label"
+    -- One line to the chip's right edge (the padlock's, while locked), whatever the Look's font size.
+    -- No channel letter beside it: the channel is in the tooltip (TooltipLines).
+    anchorLabel(btn, slot.lock ~= nil)
     btn.qcLabel:SetWordWrap(false)
     btn.qcLabel:SetMaxLines(1)
     btn.qcLabel:SetText(style == "icon" and "" or (slot.name or "?"))
@@ -229,7 +240,9 @@ function R.Paint(btn, slot, style, w, icfg)
 end
 
 function R.RefreshLock(btn)
-    btn.qcLock:SetShown(btn.qcSlot ~= nil and btn.qcSlot.lock ~= nil)
+    local locked = btn.qcSlot ~= nil and btn.qcSlot.lock ~= nil
+    btn.qcLock:SetShown(locked)
+    anchorLabel(btn, locked)
 end
 
 -- ── the pad's Look (spec §10.3; options-ui-§16, §17) ────────────────────────────────────────

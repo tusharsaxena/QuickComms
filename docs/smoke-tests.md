@@ -138,7 +138,7 @@ prints; if it arrives, no line prints. Never two lines for one press. Result:
 **SEND-4. A raid boss (C1).** In a raid (LFR is enough), the pad shows the raid set; on a boss,
 click a `/raid` chip → the raid sees it, the chip flashes gold. A lead callout's tooltip reads
 `Channel: Raid warning` only when you are leader or assist; otherwise its chip carries a padlock and
-its tooltip says why. A `/raid`
+its tooltip says why, and its label stops short of the padlock, not under it. A `/raid`
 line that never arrives during the encounter is C1 failing: record it. Result:
 
 **SEND-5. Rebuilt between pulls in a key (C4).** In a key, between pulls, `/qc set
