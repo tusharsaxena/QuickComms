@@ -999,7 +999,7 @@ Total.
 - dial: [review 6] on a four- or six-slice dial every node shows, and the number keys pick the shown wedges from N
 - dial: [icons] a wedge draws its glyph in its color; repainted untinted, it is white again
 
-### test_icon_style.lua (7)
+### test_icon_style.lua (8)
 
 - icon style: the defaults keep today's look on a chip and on a wedge
 - icon style: zoom crops through SetTexCoord, desaturate and alpha reach the texture
@@ -1007,9 +1007,10 @@ Total.
 - icon style: a pad's icon size feeds the chip's geometry
 - icon style: a chip's border is off by default; on, it is a backdrop over the icon in its color
 - icon style: a wedge's border is a round ring behind its icon, icon plus twice the thickness
+- icon style: a wedge's ring never grows past the wedge, so it cannot reach the next wedge or its label
 - icon style: a pad saved before the Icons tab reads like a new one (fillShape backfills `icon`)
 
-### test_glow.lua (8)
+### test_glow.lua (11)
 
 - glow: off by default, so a chip starts nothing
 - glow: each style starts with the knob table's arguments, on the icon, under the addon's key
@@ -1019,6 +1020,9 @@ Total.
 - glow: a chip a rebuild leaves unused stops its glow, and so does every chip of a released pad
 - glow: in combat a hover glow starts and stops with no protected call; an Icons write waits for combat end
 - glow: a wedge glows on its icon too, and on hover
+- glow: on a dial, After sending glows again from the next open within DROP_SECONDS
+- glow: on a dial, an open later than DROP_SECONDS after the send shows no send glow
+- glow: the stand-down puts out a running send glow even when the frames' release is held
 
 ### test_vendor_sync.lua (3)
 
@@ -1136,8 +1140,8 @@ Total.
 | test_pad_render.lua | 19 |
 | test_pad.lua | 29 |
 | test_dial.lua | 29 |
-| test_icon_style.lua | 7 |
-| test_glow.lua | 8 |
+| test_icon_style.lua | 8 |
+| test_glow.lua | 11 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -1145,4 +1149,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **923** |
+| **Total** | **927** |

@@ -944,6 +944,8 @@ L["Draw a glow around each icon."] = "Draw a glow around each icon."
 L["Glow when"] = "Glow when"
 L["Always, while the mouse is over the icon, or for a moment after its callout is sent."] =
     "Always, while the mouse is over the icon, or for a moment after its callout is sent."
+L["Always, while the mouse is over the icon, or for a moment after its callout is sent. The dial closes on a send, so that moment runs from the next time you open it, within a few seconds."] =
+    "Always, while the mouse is over the icon, or for a moment after its callout is sent. The dial closes on a send, so that moment runs from the next time you open it, within a few seconds."
 L["Glow style"] = "Glow style"
 L["How the glow looks."] = "How the glow looks."
 L["Glow color"] = "Glow color"

@@ -142,7 +142,8 @@ function IS.PaintBorder(btn, cfg, shown)
 end
 
 --- A wedge's round border: a disc of the circle mask behind the icon, the icon's size plus twice the
---- thickness, in the border's color; hidden when the border is off.
+--- thickness but never wider than the wedge (DialLayout.WEDGE), so a thick ring on a big icon cannot
+--- reach the next wedge or its label; in the border's color; hidden when the border is off.
 function IS.PaintRing(btn, cfg)
     local border = cfg.border
     if not border then
@@ -157,7 +158,7 @@ function IS.PaintRing(btn, cfg)
         ring:SetPoint("CENTER", btn, "CENTER", 0, 0)
         btn.qcRing = ring
     end
-    local c, d = border.color, cfg.size + 2 * border.size
+    local c, d = border.color, math.min(cfg.size + 2 * border.size, NS.DialLayout.WEDGE)
     ring:SetSize(d, d)
     ring:SetVertexColor(c[1], c[2], c[3], c[4])
     ring:Show()

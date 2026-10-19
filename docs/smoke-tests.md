@@ -614,7 +614,8 @@ it was. Result:
 
 **ICONS-3. Glow triggers.** Glow when On hover → only the icon under the mouse glows; in combat too,
 with no error. After sending → a chip glows for about a second and a half after its line is sent,
-then stops. In combat, `/qc set pad.icon.size 30` → no error, "updates after combat", the bigger
+then stops; on a dial, send from a wedge and reopen the dial within a few seconds → that wedge glows
+for about a second and a half from the open, then stops, and a later reopen shows no glow. In combat, `/qc set pad.icon.size 30` → no error, "updates after combat", the bigger
 icons land at combat end. Result:
 
 ## Icons

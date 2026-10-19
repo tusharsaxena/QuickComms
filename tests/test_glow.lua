@@ -225,3 +225,76 @@ test("glow: a wedge glows on its icon too, and on hover", function()
     w:__fire("OnLeave")
     assertEqual(names(lib), "PixelGlow_Start,PixelGlow_Stop")
 end)
+
+-- A dial closes on every send, so its send result lands while the wedges are hidden: the window runs
+-- again from the next open, if that comes within Dial.DROP_SECONDS of the send.
+local function dialFor(NS, when)
+    local did = NS.db.profile.dialOrder[1]
+    set(NS, "dial.icon.glowEnabled", true, did)
+    set(NS, "dial.icon.glowWhen", when, did)
+    local snap = NS.Situation.Current()
+    local plan = NS.Surfaces.BuildDialPlan(did, NS.db.profile.dials[did], snap, NS.Surfaces.Deps(snap))
+    assertTrue(NS.Dial.Apply(1, did, plan))
+    local cid = T.seeded(NS, "bi.mplus.pull")
+    local w = NS.Dial.WedgesFor(did, cid)[1]
+    assertTrue(w ~= nil, "the pull callout has a wedge")
+    return did, cid, w, NS.Dial.Instance(did).header
+end
+
+local function hasTimer(m, delay, from)
+    for i = from or 1, #m.__timers do if m.__timers[i].delay == delay then return true end end
+    return false
+end
+
+test("glow: on a dial, After sending glows again from the next open within DROP_SECONDS", function()
+    local NS, m, lib = live()
+    local did, cid, w, header = dialFor(NS, "send")
+    assertTrue(not header:IsShown(), "closed, as after a send")
+    lib.calls = {}
+    NS.addon:SendMessage(NS.MSG.SEND_RESULT, cid, did, "sent")
+    m.__fireTimers()
+    -- red under: drop the hold (the window spent while the dial was closed, nothing on the next open)
+    lib.calls = {}
+    m.__now = m.__now + NS.Dial.DROP_SECONDS - 1
+    local from = #m.__timers + 1
+    NS.DialSecure.Open(header)
+    assertTrue(header:IsShown())
+    assertEqual(names(lib), "PixelGlow_Start", "the reopened dial shows the send glow")
+    assertTrue(lib.calls[1][2] == w.qcIconFrame)
+    assertTrue(hasTimer(m, NS.Glow.SEND_SECONDS, from), "for SEND_SECONDS from the open")
+    m.__fireTimers()
+    assertEqual(names(lib), "PixelGlow_Start,PixelGlow_Stop")
+    NS.DialSecure.Close(header)
+    NS.DialSecure.Open(header)
+    assertEqual(names(lib), "PixelGlow_Start,PixelGlow_Stop", "once only")
+end)
+
+test("glow: on a dial, an open later than DROP_SECONDS after the send shows no send glow", function()
+    local NS, m, lib = live()
+    local did, cid, _, header = dialFor(NS, "send")
+    NS.addon:SendMessage(NS.MSG.SEND_RESULT, cid, did, "sent")
+    m.__fireTimers()
+    lib.calls = {}
+    m.__now = m.__now + NS.Dial.DROP_SECONDS + 1
+    NS.DialSecure.Open(header)
+    assertEqual(#lib.calls, 0)
+end)
+
+test("glow: the stand-down puts out a running send glow even when the frames' release is held", function()
+    local NS, m, lib = live()
+    set(NS, "pad.icon.glowEnabled", true)
+    set(NS, "pad.icon.glowWhen", "send")
+    local chip = rebuild(NS)
+    m.__fireTimers()
+    lib.calls = {}
+    NS.addon:SendMessage(NS.MSG.SEND_RESULT, T.seeded(NS, "bi.mplus.pull"), "p1", "sent")
+    assertEqual(names(lib), "PixelGlow_Start")
+    lib.calls = {}
+    combat(m, true)
+    NS.StandDown()   -- the frames' release (Surfaces' teardown) waits for combat end
+    assertTrue(NS.State.pendingTeardown ~= nil, "the teardown is held")
+    -- red under: cancel the timers without clearing the buttons' send state
+    assertNil(chip.qcSending)
+    assertNil(chip.qcGlowTimer)
+    assertEqual(names(lib), "PixelGlow_Stop")
+end)

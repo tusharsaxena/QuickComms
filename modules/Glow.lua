@@ -7,7 +7,9 @@ local _, NS = ...
 -- icon is drawn), On hover (OnEnter to OnLeave, hooked insecurely beside the tooltip) or After
 -- sending (SEND_SECONDS from the callout's send result, the same SEND_RESULT edge that flashes the
 -- chip; a second result restarts the window). Bind hands a button its surface's glow settings at
--- every paint; Update decides from them and the button's hover and send state.
+-- every paint; Update decides from them and the button's hover and send state. A dial closes on every
+-- send, so its result lands while the wedges are hidden: Sent is given a hold there (Dial.DROP_SECONDS,
+-- as long as a drop stays red), and the dial's next open within it runs the window again (Shown).
 --
 -- ON THE ICON. The effect is started on the icon's plain child frame (modules/IconStyle.lua
 -- IconFrame), FRAME_LEVEL over it, so it circles the icon and sits over the icon's border. The
@@ -19,7 +21,9 @@ local _, NS = ...
 -- FREE WHEN NOTHING CHANGED. A rebuild paints every chip again; Apply keeps the running effect when
 -- the settings' signature (IconStyle.Config's `sig`) is the same, and stops and restarts it
 -- otherwise. A chip the rebuild leaves in its pool's free list, and every chip of a released pad or
--- dial, is released here (Release): effect stopped, its send timer canceled, its state cleared.
+-- dial, is released here (Release): effect stopped, its send timer canceled, its state cleared. The
+-- stand-down puts out every running send glow itself (each timer knows its button), since the frames'
+-- release can be held to combat end and canceled by a stand-up in the same combat.
 --
 -- HEADLESS. Without the library (the suites load no libs/ beyond LibKa0s, or a LibStub miss) the
 -- decision is still recorded on the button (`qcGlowStyle`) and nothing is drawn.
@@ -123,7 +127,7 @@ local function cancelSend(btn)
         if State.glowTimers then State.glowTimers[btn.qcGlowTimer] = nil end
         btn.qcGlowTimer = nil
     end
-    btn.qcSending = nil
+    btn.qcSending, btn.qcSendHeldUntil = nil, nil
 end
 
 --- A button's paint: its surface's glow settings (IconStyle.Config's `glow`, false while off) for
@@ -142,11 +146,14 @@ function Glow.SetHover(btn, on)
     if btn.qcGlowCfg then Glow.Update(btn) end
 end
 
---- The button's callout had a send result (After sending): glow for SEND_SECONDS from now.
-function Glow.Sent(btn)
+--- The button's callout had a send result (After sending): glow for SEND_SECONDS from now. With
+--- `holdSeconds` (a dial's wedge, hidden by the send), the button's next Shown within that many
+--- seconds runs the window again.
+function Glow.Sent(btn, holdSeconds)
     if not (btn and btn.qcGlowCfg and btn.qcGlowCfg.when == "send") then return end
     cancelSend(btn)
     btn.qcSending = true
+    if holdSeconds then btn.qcSendHeldUntil = GetTime() + holdSeconds end
     local timers = State.glowTimers or {}
     State.glowTimers = timers
     local handle
@@ -158,8 +165,16 @@ function Glow.Sent(btn)
         end
     end, Glow.SEND_SECONDS)
     btn.qcGlowTimer = handle
-    timers[handle] = true
+    timers[handle] = btn
     Glow.Update(btn)
+end
+
+--- The button came on screen (a dial opening): a send held for it runs its window now, once.
+function Glow.Shown(btn)
+    local untilAt = btn and btn.qcSendHeldUntil
+    if not untilAt then return end
+    btn.qcSendHeldUntil = nil
+    if GetTime() <= untilAt then Glow.Sent(btn) end
 end
 
 --- A button no longer drawn: its effect stopped, its send timer canceled, its state cleared.
@@ -175,8 +190,16 @@ function Glow.ReleaseFree(pool)
     for _, btn in ipairs(pool and pool.free or {}) do Glow.Release(btn) end
 end
 
--- The stand-down: no send timer outlives it (the frames' own release stops the effects).
+-- The stand-down: no send timer outlives it, and no send glow stays lit on a button whose release
+-- is held (the frames' own release stops every other effect).
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
-    for handle in pairs(State.glowTimers or {}) do NS.addon:CancelTimer(handle) end
+    for handle, btn in pairs(State.glowTimers or {}) do
+        NS.addon:CancelTimer(handle)
+        if type(btn) == "table" and btn.qcGlowTimer == handle then
+            btn.qcGlowTimer = nil
+            cancelSend(btn)
+            Glow.Update(btn)
+        end
+    end
     State.glowTimers = nil
 end

@@ -412,7 +412,8 @@ Icons    the chips' icons (B9): Size and crop (Icon size, Zoom), Color (Desatura
 The Icons tab's rows are `pad.icon.*` (settings/SchemaIcons.lua). Every color pair sits on one line and is
 never grayed out; Border style and thickness are grayed out while Show border is off; Glow when, Glow style
 and every knob while the glow is off, and a knob also while the glow is in a style it does not apply to.
-Glow when is Always, On hover or After sending (1.5 s from the send result). The page's Defaults puts the
+Glow when is Always, On hover or After sending (1.5 s from the send result; a dial closes on the send,
+so its wedge glows for 1.5 s from the next open, if that comes within 5 s). The page's Defaults puts the
 Icons rows back too.
 
 X and Y write the whole `pad.point` row, the same one the drag strip writes; a drag on screen
@@ -431,8 +432,8 @@ Groups   Show groups as (Categories or Flat), the depth-3 warning (spec §11.3),
          groups as a drag-to-reorder list with a remove glyph (its priority order, spec §7; it
          takes the group off the dial and asks nothing), then Add a group (top-level groups only)
 Wheel    wedges per ring, open at, then Position: X and Y and Reset this dial's position
-Icons    the wedges' icons, as the Comms Pad page's Icons tab (a wedge's border is a round ring;
-         its icon size keeps the wedge's own size)
+Icons    the wedges' icons, as the Comms Pad page's Icons tab (a wedge's border is a round ring,
+         never wider than the wedge; its icon size keeps the wedge's own size)
 Binding  how Relaxed mode works, the key capture, and the key's line (what it opens, or the WoW
          binding it shares, spec §9.4 / §18)
 Preview  each ring as the current or previewed situation builds it, wedge by wedge

@@ -130,6 +130,22 @@ test("icon style: a wedge's border is a round ring behind its icon, icon plus tw
     assertFalse(w.qcRing:IsShown())
 end)
 
+test("icon style: a wedge's ring never grows past the wedge, so it cannot reach the next wedge or its label", function()
+    local NS = live()
+    local did = NS.db.profile.dialOrder[1]
+    set(NS, "dial.icon.borderShow", true, did)
+    set(NS, "dial.icon.borderSize", 16, did)
+    set(NS, "dial.icon.size", 40, did)
+    local snap = NS.Situation.Current()
+    local plan = NS.Surfaces.BuildDialPlan(did, NS.db.profile.dials[did], snap, NS.Surfaces.Deps(snap))
+    assertTrue(NS.Dial.Apply(1, did, plan))
+    local w = NS.Dial.RingWedges(did, 1)[1]
+    local d = NS.DialLayout.WEDGE
+    -- red under: size the ring icon + 2 x thickness unclamped (72 around a 44 px wedge)
+    assertEqual(csv(w.qcRing.__size), d .. "," .. d)
+    assertEqual(csv(w.qcIcon.__size), "40,40")
+end)
+
 test("icon style: a pad saved before the Icons tab reads like a new one (fillShape backfills `icon`)", function()
     local NS = live()
     NS.db.profile.pads.p1.icon = nil

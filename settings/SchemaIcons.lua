@@ -64,8 +64,10 @@ local KNOB_TEXT = {
 
 -- What each kind's rows say about where the icon is.
 local WHERE = {
-    pad = { page = "pads", size = L["How big each chip's icon is, in pixels. A bigger icon makes the chips taller."] },
-    dial = { page = "dials", size = L["How big each wedge's icon is, in pixels. The wedges keep their size."] },
+    pad = { page = "pads", size = L["How big each chip's icon is, in pixels. A bigger icon makes the chips taller."],
+        when = L["Always, while the mouse is over the icon, or for a moment after its callout is sent."] },
+    dial = { page = "dials", size = L["How big each wedge's icon is, in pixels. The wedges keep their size."],
+        when = L["Always, while the mouse is over the icon, or for a moment after its callout is sent. The dial closes on a send, so that moment runs from the next time you open it, within a few seconds."] },
 }
 
 local function get(path) return NS.SchemaRuntime.Get(path) end
@@ -132,8 +134,7 @@ function NS.addon.Settings.IconRows(kind, C)
     at(GLOW, { path = P .. "glowEnabled", type = "bool", default = T.glowEnabled, label = L["Glow"],
         desc = L["Draw a glow around each icon."], validate = C.BOOL, startsLine = true })
     at(GLOW, { path = P .. "glowWhen", type = "string", default = T.glowWhen, values = WHEN_VALUES, label = L["Glow when"],
-        desc = L["Always, while the mouse is over the icon, or for a moment after its callout is sent."],
-        validate = C.oneOf(WHEN_VALUES), disabledIf = glowOff })
+        desc = where.when, validate = C.oneOf(WHEN_VALUES), disabledIf = glowOff })
     at(GLOW, { path = P .. "glowType", type = "string", default = T.glowType, values = STYLE_VALUES, label = L["Glow style"],
         desc = L["How the glow looks."], validate = C.oneOf(STYLE_VALUES), disabledIf = glowOff })
     stamp(O.ColorPair(spec(GLOW, { key = "glowColor", companionKey = "useClassColorGlow", label = L["Glow color"] })), GLOW)

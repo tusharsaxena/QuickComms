@@ -21,7 +21,8 @@ local _, NS = ...
 -- red for DROP_SECONDS so the player can reopen it and see which line was lost. The Icons tab (B9)
 -- is read once per rebuild (IconStyle.Config) and painted on every wedge; a wedge the rebuild leaves
 -- unused, and every wedge of a released dial, loses its glow (Glow.ReleaseFree), and a send result
--- starts an After sending glow (Glow.Sent).
+-- starts an After sending glow (Glow.Sent) held for DROP_SECONDS: the send closed the dial, so the
+-- next open within that time runs the glow again (Glow.Shown, from the header's OnShow).
 
 NS.Dial = NS.Dial or {}
 local Dial = NS.Dial
@@ -113,6 +114,12 @@ local function build(index)
     local inst = { index = index, header = header, rings = NS.Pool.New(), byCallout = {}, live = false }
     R.DressHub(header, function(self)
         if inst.id then Dial.ShowWhy(inst.id, self) end
+    end)
+    -- Insecure, beside the hub's own OnShow hook: a send glow held for a wedge runs on the next open.
+    header:HookScript("OnShow", function()
+        for _, list in pairs(inst.byCallout) do
+            for _, w in ipairs(list) do NS.Glow.Shown(w) end
+        end
     end)
     byIndex[index] = inst
     NS.Debug(TAG, "built %s", header:GetName())
@@ -356,7 +363,7 @@ local function onSendResult(_, calloutId, surfaceId, what)
     if not list then return end
     for _, w in ipairs(list) do
         R.Flash(w, what)
-        NS.Glow.Sent(w)
+        NS.Glow.Sent(w, Dial.DROP_SECONDS)
     end
     local timers = State.dialFlashTimers or {}
     State.dialFlashTimers = timers

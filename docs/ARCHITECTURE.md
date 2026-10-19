@@ -41,9 +41,9 @@ situation and "Why is this showing?" explains them. A dial opens on its
 key (or on WoW's key bindings menu, through `Bindings.xml`) in Relaxed mode: click a wedge to send.
 
 Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBOptions),
-LibSharedMedia, LibDataBroker, LibDBIcon, LibDeflate and LibSerialize (the share string, spec §15;
-LibCustomGlow-1.0, the Icons tab's glows, resolved at call time and optional;
-versions and licenses in `DEPENDENCIES.md`) are vendored under `libs/`, and so is the whole
+LibSharedMedia, LibDataBroker, LibDBIcon, LibDeflate and LibSerialize (the share string, spec §15),
+and LibCustomGlow-1.0 (the Icons tab's glows, resolved at call time and optional; versions and
+licenses in `DEPENDENCIES.md`) are vendored under `libs/`, and so is the whole
 LibKa0s v1.73.0 payload, of which thirteen majors are wired, one setup file each (`DEPENDENCIES.md`
 lists the toolchain):
 
@@ -98,7 +98,7 @@ line: the client reads it there, and the standard allows it (layout-§1, toc-fil
 | `modules/Pad_Layout.lua` | pure | pad geometry (up growth puts the header at the bottom; the pad is pinned by its growth edge), the sections each groups-as mode draws, the visibility expression, the fade |
 | `modules/Surfaces.lua` | edge | each pad's plan (active groups, sections, baked or refused slots), each dial's plan and rebuild beside the pads, and the one rebuild request, queued in combat with the stale hint; sends `ACTIVE_GROUPS_CHANGED` and `SURFACE_REBUILT` |
 | `modules/IconStyle.lua` | render | the Icons tab's look on a chip's or a wedge's icon (B9): `Config` reads a surface's `icon` table once per rebuild; size, crop (`SetTexCoord`), desaturation, alpha, the tint multiplied with a glyph's own color, and the border (a backdrop on a plain child frame over a chip's icon; a round ring behind a wedge's) |
-| `modules/Glow.lua` | render | the Icons tab's glow: LibCustomGlow-1.0's four styles with DropWatcher's knob table, started on the icon's plain child frame; the trigger Always, On hover or After sending (`SEND_SECONDS`, 1.5 s from the send result); an unchanged rebuild restarts nothing, and a chip or wedge no longer drawn stops its glow |
+| `modules/Glow.lua` | render | the Icons tab's glow: LibCustomGlow-1.0's four styles with DropWatcher's knob table, started on the icon's plain child frame; the trigger Always, On hover or After sending (`SEND_SECONDS`, 1.5 s from the send result; on a dial, which the send closes, again from the next open within `Dial.DROP_SECONDS`); a stand-down puts out a running send glow itself; an unchanged rebuild restarts nothing, and a chip or wedge no longer drawn stops its glow |
 | `modules/Pad_Render.lua` | render | insecure chip and header visuals: icon (styled by `IconStyle` and `Glow`), label, channel tag, padlock, guard veil, hover, flashes, the header's chips and hints |
 | `modules/Pad.lua` | frames | the pad's frames: pooled secure chips, the header, the drag strip and lock, the saved position through `Library`, tabs, collapse, the send feedback |
 | `DialLayout` | pure | `modules/Dial_Layout.lua`: the dial's rings, pages, open-into and geometry |
