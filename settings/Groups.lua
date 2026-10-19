@@ -573,13 +573,16 @@ end
 --
 -- ONE AceGUI SimpleGroup holds the three, as PanelMaster's band does (settings/PanelEditor.lua
 -- drawPageHeader). They were once placed by hand, each widget frame SetParent'ed into the header
--- frame and anchored there, and in the client the band then showed only the picker's "Group"
--- label: the control, New group and the checkbox were not drawn, though the picker's list still
--- opened where it should have been. A widget placed by hand is no container's child, so nothing
--- AceGUI does for a child happened to it: no AddChild (WidgetBase.SetParent's SetParent(nil)
--- before the new parent, then frame:Show()), and no layout (SetWidth, so OnWidthSet), on a widget
--- AceGUI's pool hands back hidden and parked on UIParent by its last Release. A container's
--- AddChild and Flow layout do all of that, so the band uses one.
+-- frame, anchored there and shown (the old place() helper ended with frame:Show()), and in the
+-- client the band then showed only the picker's "Group" label: the control, New group and the
+-- checkbox were not drawn, though the picker's list still opened where it should have been. WHY
+-- is unconfirmed. Not a missing Show, and not only a missing SetWidth: AceGUI's Button has no
+-- OnWidthSet, and both it and the checkbox were anchored on both sides with a height, their text a
+-- font string on their own frame. Frame level, strata, the pool and the release order are all
+-- still open. So the band takes the shape that is known to draw, PanelMaster's: a SimpleGroup
+-- parented by hand, anchored to both corners and shown, its children added through AddChild and
+-- placed by its Flow layout (which shows and sizes each child). The in-game band check (smoke
+-- tests) is the verification, not this comment.
 --
 -- The block is parented to the handed frame by hand, so it is shown here: AceGUI's pool hands a
 -- SimpleGroup back hidden, and only a parent container's layout would show it (PanelMaster's
