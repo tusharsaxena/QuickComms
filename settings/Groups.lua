@@ -543,6 +543,24 @@ function G.SyncEditPreview()
     return NS.Preview.SetEditPreview(want)
 end
 
+-- Combat ends the edit preview (modules/Preview.lua); its end brings it back while the page is
+-- still on screen. RESTRICTION_CHANGED is sent once Restrictions has cleared its combat edge, so the
+-- start is not refused, whichever frame sees PLAYER_REGEN_ENABLED first. At combat start the
+-- preview refuses the start on its own. Its own target (core/Bus.lua).
+local receiver
+local function listen()
+    receiver = receiver or NS.Bus:NewTarget()
+    if receiver then receiver:RegisterMessage(NS.MSG.RESTRICTION_CHANGED, function() G.SyncEditPreview() end) end
+end
+listen()
+
+NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
+    if receiver and not NS.Bus.tracked then receiver:UnregisterMessage(NS.MSG.RESTRICTION_CHANGED) end
+end
+NS.STAND_UP[#NS.STAND_UP + 1] = function()
+    if not NS.Bus.tracked then listen() end
+end
+
 -- THE BAND (options-ui-§14) through O.PageHeader, which a page with a picker and another page-wide
 -- control draws instead of O.PageBanner: the picker in the left half with New group level with its
 -- control in the right half, as PageBanner places them, and Preview while editing under the

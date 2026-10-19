@@ -243,3 +243,17 @@ test("edit preview: the Groups page drawn in combat does not start it", function
     assertTrue(NS.Preview.EditGroup() == nil)
     combat(m, false)
 end)
+
+test("edit preview: it comes back when combat ends with the Groups page still on screen", function()
+    local NS, m, _, gid = page()
+    assertEqual(NS.Preview.EditGroup(), gid)
+    combat(m, true)
+    assertTrue(NS.Preview.EditGroup() == nil, "combat ends it")
+    -- No page redraw here: only the end of combat itself (RESTRICTION_CHANGED, sent once
+    -- Restrictions has cleared its edge) may bring it back.
+    NS.addon.Settings.Editors.RequestRefresh = function() end
+    combat(m, false)
+    -- red under: drop the Groups page's RESTRICTION_CHANGED listener
+    assertEqual(NS.Preview.EditGroup(), gid)
+    assertEqual(NS.Surfaces.Plans().p1.editGroup, gid)
+end)

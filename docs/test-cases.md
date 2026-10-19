@@ -847,7 +847,7 @@ Total.
 - preview: [final 13] `/qc preview` reads the situation's name without regard to case
 - preview: [final 10] a dungeon preview fills {dungeon}, and the header names the preview as its menu does
 
-### test_edit_preview.lua (13)
+### test_edit_preview.lua (14)
 
 - edit preview: every pad shows only the edited group, whatever its When says, and sends nothing
 - edit preview: a battleground set shows its own callouts and every node, outside the battleground
@@ -862,6 +862,7 @@ Total.
 - edit preview: showing the Groups page previews the selected group; a pick follows; hiding the page ends it
 - edit preview: the band's Preview while editing box sits under the picker and turns it off and on
 - edit preview: the Groups page drawn in combat does not start it
+- edit preview: it comes back when combat ends with the Groups page still on screen
 
 ### test_master.lua (5)
 
@@ -1164,7 +1165,7 @@ Total.
 | test_sendengine.lua | 31 |
 | test_dial_secure.lua | 12 |
 | test_preview.lua | 17 |
-| test_edit_preview.lua | 13 |
+| test_edit_preview.lua | 14 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 15 |
 | test_dial_layout.lua | 16 |
@@ -1181,4 +1182,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **955** |
+| **Total** | **956** |
