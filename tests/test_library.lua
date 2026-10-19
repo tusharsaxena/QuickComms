@@ -68,6 +68,12 @@ test("library: a seeded group is an ordinary group: its fields, When, callouts a
     assertEqual(p.callouts[lust].text, "Lust on this pack {rt8}")
     assertEqual(p.callouts[lust].channel, "smartGroup")
     assertEqual(p.callouts[lust].origin, "bi.mplus.lust")
+    -- red under: seedCallout drops iconColor (B7)
+    local shipped = NS.BuiltIns.callouts["bi.mplus.lust"]
+    assertEqual(p.callouts[lust].icon, shipped.icon)
+    assertTrue(shipped.iconColor ~= nil, "the shipped lust is tinted")
+    assertEqual(p.callouts[lust].iconColor, shipped.iconColor)
+    assertTrue(p.callouts[lust].glyph == nil, "the catalog name is seed data only")
     -- every write a user group takes, through the seam
     assertTrue((NS.SchemaRuntime.Set("group.name", "Keys", gid)))
     assertTrue((NS.SchemaRuntime.Set("group.when", { content = { raid = true } }, gid)))

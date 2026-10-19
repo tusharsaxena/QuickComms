@@ -148,9 +148,14 @@ The C1–C9 checks of the phase 0 harness (design spec §19) are recorded in
 
 ## Pad
 
-**PAD-1. First run.** On a fresh profile, enter a key → the default pad shows "M+ (generic)" with
+**PAD-1. First run.** On a fresh profile, enter a key → the default pad shows "Dungeon (generic)" with
 eight chips, each tagged `P`; the header reads `M+ · <dungeon> +<level>`. Hovering a chip shows its
-name and the exact line it sends. Result:
+name and the exact line it sends. Every chip shows its glyph: Lust a red enraged face, Need mana a
+blue drop, Res me a green ankh, GG a gold trophy, the rest white. Leave the key and zone into a
+normal or heroic dungeon → the same set shows. On a profile saved before this build (it still shows
+"M+ (generic)" with the bloodlust spell icon on Lust), `/reload` with this build → the set reads
+"Dungeon (generic)" and Lust shows the red glyph; a set renamed before, or a callout whose icon was
+cleared, keeps the player's choice. Result:
 
 **PAD-2. The stale hint.** In combat, `/qc set behavior.autoPromote false` → the header shows
 "updates after combat"; when combat ends it clears and the pad has rebuilt. Result:
@@ -189,7 +194,7 @@ an `Inc` chip; click it → the party sees "INC" with a skull. Leave the key →
 the pad. Result:
 
 **EDIT-2. A built-in set is an ordinary group (the phase 3 exit, rewritten 2026-10-18).** Groups →
-pick "M+ (generic)" → the picker shows no "(built-in)" tag, and the page draws the same tabs as a
+pick "Dungeon (generic)" → the picker shows no "(built-in)" tag, and the page draws the same tabs as a
 group of yours, nothing read-only. General: Name, Enabled, Open the dial on this group, Parent group,
 the icon with Choose icon…, Duplicate and Delete, then Restore built-in groups; no Customize and no
 read-only line. Callouts: the callout table, exactly as a group of yours draws it (Add callout, Reuse
@@ -216,13 +221,13 @@ built-in group you still have (top-level, in shipped order); Delete pad (Yes) �
 
 **EDIT-6. Restore built-in groups (rewritten 2026-10-18; the Share page's Built-in tab is gone).**
 Share has two tabs, Export and Import. Groups → "Raid (generic)" → Delete (Yes) → it is gone from the
-picker and, in a raid, from the pad. On "M+ (generic)"'s Callouts tab remove "Lust" (Yes). General →
+picker and, in a raid, from the pad. On "Dungeon (generic)"'s Callouts tab remove "Lust" (Yes). General →
 Restore built-in groups (no question asked) → one chat line counts the groups and callouts that came
 back; "Raid (generic)" is in the picker again and last on every pad's and dial's Groups list, and
-"Lust" is the last row of M+ (generic)'s Callouts. Click Restore again → "nothing to restore", and
+"Lust" is the last row of Dungeon (generic)'s Callouts. Click Restore again → "nothing to restore", and
 nothing is added. Delete "Lumber Mill" (inside "Arathi Basin") → Restore → it is back, indented under
 Arathi Basin in the picker, and in Arathi Basin (or Preview as → Arathi Basin) its wedge is on its
-wind, SW, again. Rename "M+ (generic)" → Restore leaves it as it is and adds no second M+ set. With
+wind, SW, again. Rename "Dungeon (generic)" → Restore leaves it as it is and adds no second dungeon set. With
 every group deleted, the "No groups yet" General still offers Restore built-in groups. Result:
 
 **EDIT-7. An edit during combat.** With a user callout on the pad (its id is `c<n>`: `/qc get
@@ -276,7 +281,7 @@ borders are whole** (not shaved by the page's edge). In the list, every row's ha
 glyphs sit centered in its box, and the edit and remove glyphs are small and close to the box's
 right edge (the same on Comms Pad → Groups and Comms Dial → Groups). Pick one of group B's callouts → nothing is added yet; click Add → it is A's
 last row. Edit the copy's text and Save → B's original is unchanged (check its row or its chip).
-The list has no built-in section: "M+ (generic): Lust" is listed like any other group's callout;
+The list has no built-in section: "Dungeon (generic): Lust" is listed like any other group's callout;
 reuse it → a copy you can edit, and the M+ group's Lust is unchanged. Result:
 
 **EDIT-12. The remove glyphs.** On a group's Callouts tab, a row's remove glyph (the red no-entry
@@ -368,7 +373,7 @@ top-level, on every pad and dial where My keys was. `/qc set group.parent none` 
 makes it top-level; `/qc set group.parent <its own id>` is refused, with a line saying why.
 Result:
 
-**EDIT-20. The Preview table.** Groups → "M+ (generic)" → Preview → the active-now line, then a gold
+**EDIT-20. The Preview table.** Groups → "Dungeon (generic)" → Preview → the active-now line, then a gold
 header row, "Callout" and "What it sends here", then one box per callout like the Callouts tab's rows
 (switch between the two tabs: the same fill and border, and the same left and right edges): the
 callout's icon (in its color) and name on the left, what it sends here on the right, or, outside a
@@ -603,7 +608,7 @@ wedge on the Comms Dial shows it, and the General tab's icon follows. With that 
 `/qc set group.icon 136012` still sets it. Click the red clear glyph beside Choose icon… → the
 General tab's icon is the question mark, the wedge shows no icon, and the clear glyph goes idle; in
 the popup, a callout with an icon → clear glyph → the icon is the question mark, Save → the row and
-the chip show no icon. A built-in set's General tab ("M+ (generic)") has the same Icon row and
+the chip show no icon. A built-in set's General tab ("Dungeon (generic)") has the same Icon row and
 Choose icon…: a glyph chosen there shows on its wedge. Result:
 
 ## Battlegrounds

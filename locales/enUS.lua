@@ -106,7 +106,7 @@ L["Character"] = "Character"
 L["always on"] = "always on"
 
 -- Built-in callout sets (defaults/BuiltIns_*.lua)
-L["M+ (generic)"] = "M+ (generic)"
+L["Dungeon (generic)"] = "Dungeon (generic)"
 L["Pulling"] = "Pulling"
 L["Pulling next pack"] = "Pulling next pack"
 L["Lust"] = "Lust"

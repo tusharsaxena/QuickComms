@@ -21,7 +21,7 @@ end
 local function planOf(NS, opts)
     opts = opts or {}
     local snap = NS.Situation.Current()
-    local group = { id = T.seeded(NS, "bi.mplus"), title = "M+ (generic)", slots = {} }
+    local group = { id = T.seeded(NS, "bi.mplus"), title = "Dungeon (generic)", slots = {} }
     for i, cid in ipairs(NS.Library.Group(T.seeded(NS, "bi.mplus")).callouts) do
         if i > (opts.n or 8) then break end
         local slot = NS.Surfaces.Slot(cid, NS.Library.Callout(cid), snap, { soloFallback = "none", ctx = {} })

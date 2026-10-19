@@ -96,7 +96,13 @@ Step 4 (2026-10-19, `perProfile`, `Library.MigrateGrowth` in `modules/Library_Mi
 retired `up` (Upward) growth on any pad becomes `rightUp` (Right and up); every other value, and a
 pad with no layout, is left as it is. A share string made before carries `up` too; Share's import
 reads it as `rightUp`.
-`NS.SCHEMA_VERSION` is 4.
+Step 5 (2026-10-19, `perProfile`, `Library.MigrateBuiltins` in `modules/Library_Migrate.lua`): every
+group whose origin is `bi.mplus` and whose name is still "M+ (generic)" becomes "Dungeon (generic)"
+(a renamed one keeps its name), and one whose When is still content M+ alone also takes Dungeon (an
+edited When is left alone); every seeded callout whose icon is unset (nil) or the game icon it
+shipped with takes its catalog glyph and color, while a cleared icon (`false`) or any other icon
+stays. A second run changes nothing.
+`NS.SCHEMA_VERSION` is 5.
 No schema step for nested groups (2026-10-18): a group without `parent` is top-level, and
 `Library.Prepare` drops a bad one.
 No schema step in phase 5: `Library.Prepare` fills a stored pad's missing layout and look fields from

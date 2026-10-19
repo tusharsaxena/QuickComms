@@ -49,9 +49,9 @@ test("profile: the spam guard clamps to 0.6-2.0 and fallback refuses unknown val
     assertEqual(NS.Setting("behavior.soloFallback"), "none")
 end)
 
-test("profile: schema version target is 4 (the growth split)", function()
+test("profile: schema version target is 5 (the built-in glyphs)", function()
     local NS = T.bootAddon()
-    assertEqual(NS.SCHEMA_VERSION, 4)
+    assertEqual(NS.SCHEMA_VERSION, 5)
     assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
 end)
 

@@ -727,7 +727,8 @@ end
 local function seedCallout(p, cid)
     local c = NS.BuiltIns.callouts[cid]
     local id = takeId(p, "c")
-    p.callouts[id] = { name = c.name, text = c.text, channel = c.channel, icon = c.icon, origin = cid }
+    p.callouts[id] = { name = c.name, text = c.text, channel = c.channel, icon = c.icon, iconColor = c.iconColor,
+        origin = cid }
     return id
 end
 

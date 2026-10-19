@@ -25,7 +25,7 @@ The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after Li
 | 11 | `core/PerfSetup.lua` | setup | LibKa0s-Perf: `NS.Perf`, the declared buckets |
 | 12 | `core/DebugLogSetup.lua` | setup | LibKa0s-DebugLog: the console, `NS.Debug` and its gates, the diagnostics descriptor |
 | 13 | `core/QuickComms.lua` | lifecycle | AceAddon registration (`NS.addon`), `NS.FEATURE_EVENTS`, `NS.STAND_DOWN` / `NS.STAND_UP`, `NS.StandDown` / `NS.StandUp`, the profile callbacks |
-| 14 | `core/Database.lua` | data | `NS.MIGRATIONS` (step 3 turns the built-in overlay into seeded groups; step 4 retires the Upward growth), `NS.SCHEMA_VERSION` and the schemaVersion migration runner |
+| 14 | `core/Database.lua` | data | `NS.MIGRATIONS` (step 3 turns the built-in overlay into seeded groups; step 4 retires the Upward growth; step 5 renames the dungeon set and gives seeded callouts their glyphs), `NS.SCHEMA_VERSION` and the schemaVersion migration runner |
 | 15 | `core/LauncherSetup.lua` | setup | LibKa0s-Launcher: the one LDB object, registered twice |
 | 16 | `defaults/Profile.lua` | data | every default value (`NS.C`) |
 | 16a | `defaults/BuiltIns.lua` | data | `NS.BuiltIns`: the registry of shipped sets and the declaring helpers; seed data, copied into each profile once as ordinary groups by `Library` |
@@ -39,7 +39,7 @@ The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after Li
 | 16g | `modules/Bake.lua` | pure | callout + snapshot to one macro line |
 | 16h | `modules/Resolver.lua` | pure | When rules to active groups; `WhenOf` (a child that inherits is judged by its parent's When); `ID_ROWS` (the place rows: instances, battleground, arena) |
 | 16i | `modules/Library.lua` | registry writer | the one writer of the structural registry; `Prepare`; `SetSurfacePoint`; `SetIcon` (a member's icon and its glyph color, one act); the glyph helpers (`IsGlyph`, `ValidIconColor`, `IconTint`, `IconColorFrom`); seeding the shipped sets as ordinary groups, `RestoreBuiltins` and `SeededBattleground`; nesting (`ValidParent`, `SettleParent`, `Children`, `IsChild`); `MoveGenericBattlegroundLast` (migration step 2) and `SeedFromOverlay` (migration step 3) |
-| 16i1 | `modules/Library_Migrate.lua` | registry writer | the registry writer's schemaVersion steps, beside Library (at its line budget): `MigrateGrowth` (migration step 4) |
+| 16i1 | `modules/Library_Migrate.lua` | registry writer | the registry writer's schemaVersion steps, beside Library (at its line budget): `MigrateGrowth` (migration step 4), `MigrateBuiltins` (step 5) |
 | 16i2 | `modules/Share.lua` | pure + edge | the share string: codec, checks, report; Collect, Export, Apply |
 | 16j | `modules/SendEngine_Guard.lua` | pure | `NS.SendGuard`: the soft guard's timing, the acting click edge, the echo tracker, the keyed queue |
 | 16k | `modules/SendEngine.lua` | secure writer | the only secure writer: send buttons, arm and disarm, the combat-end queue, the click hook, the echo events, the held stand-down; the dial headers and rings, the wedge wrap, frame refs, snippet runs and the override bindings (`BindKeys`) |

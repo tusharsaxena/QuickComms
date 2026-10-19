@@ -102,7 +102,7 @@ Total.
 - perf: [review] a refresh whose signature moves notes situationRefresh before the rebuild it publishes
 - perf: [phase 5] the Comms Dial page's Preview notes neither bakeSurface nor resolverResolve
 
-### test_database.lua (13)
+### test_database.lua (14)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the target is the last step's `to`, and the steps climb in order
@@ -117,6 +117,7 @@ Total.
 - database: step 3 leaves a profile never prepared to Prepare, which seeds it once
 - database: the profile defaults carry the Master controls value, and no debug flag
 - database: [B2] step 4 rewrites a pad's retired Upward growth as Right and up, once
+- database: [B7] step 5 renames the dungeon set, widens its When and gives seeded callouts their glyphs, once
 
 ### test_profile.lua (9)
 
@@ -124,7 +125,7 @@ Total.
 - profile: collections exist; default nextId is 1, past every seeded id after boot
 - profile: every behavior row resolves through the seam
 - profile: the spam guard clamps to 0.6-2.0 and fallback refuses unknown values
-- profile: schema version target is 4 (the growth split)
+- profile: schema version target is 5 (the built-in glyphs)
 - prepare: a callout held by two groups is split into a copy
 - prepare: a split copy of a seeded callout keeps no origin
 - prepare: a callout held by no group is dropped
@@ -357,7 +358,7 @@ Total.
 - resolver: [all] All battlegrounds and All dungeons and raids match the whole kind, the listed ids aside
 - resolver: [arena] the arena row matches only in an arena: its listed ids, or all of them
 
-### test_builtins.lua (7)
+### test_builtins.lua (9)
 
 - builtins: the expected top-level sets exist in order
 - builtins: ids are unique, referenced and well formed
@@ -366,6 +367,8 @@ Total.
 - builtins: bake audit, every callout bakes under its set's snapshot
 - builtins: battlegrounds use smart group; arena uses party; raid lead uses smart lead
 - builtins: [phase 5] every node set pins each node to a wind, at most eight, Deepwind Gorge's five included
+- builtins: [B7] every callout ships a catalog glyph, with a color only where it is a glyph
+- builtins: [B7] the generic dungeon set is Dungeon (generic), active in a dungeon and in M+
 
 ### test_gameids.lua (4)
 
@@ -1068,7 +1071,7 @@ Total.
 | test_bus.lua | 2 |
 | test_surface_parity.lua | 15 |
 | test_setup.lua | 27 |
-| test_database.lua | 13 |
+| test_database.lua | 14 |
 | test_profile.lua | 9 |
 | test_schema.lua | 19 |
 | test_slash.lua | 19 |
@@ -1082,7 +1085,7 @@ Total.
 | test_bake.lua | 12 |
 | test_share.lua | 36 |
 | test_resolver.lua | 13 |
-| test_builtins.lua | 7 |
+| test_builtins.lua | 9 |
 | test_gameids.lua | 4 |
 | test_library.lua | 78 |
 | test_members.lua | 29 |
@@ -1114,4 +1117,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **900** |
+| **Total** | **903** |

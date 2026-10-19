@@ -47,7 +47,7 @@ test("surfaces: in a key the default pad's plan is the M+ set, baked to /p", fun
     local plan = planFor(NS)
     assertEqual(table.concat(plan.order, ","), T.seeded(NS, "bi.mplus"))
     assertTrue(plan.hasActive)
-    assertEqual(plan.sections[1].title, "M+ (generic)")
+    assertEqual(plan.sections[1].title, "Dungeon (generic)")
     assertEqual(#plan.sections[1].slots, 8)
     local pull = plan.sections[1].slots[1]
     assertEqual(pull.calloutId, T.seeded(NS, "bi.mplus.pull"))
@@ -378,7 +378,7 @@ end)
 
 test("surfaces: [phase 3] WhyLines in a key explains the seeded set's matched row; a preview says so", function()
     local NS = live()
-    assertEqual(NS.Surfaces.WhyLines("p1")[1], "M+ (generic): Content")
+    assertEqual(NS.Surfaces.WhyLines("p1")[1], "Dungeon (generic): Content")
     NS.Preview.SetPreviewAs("arena")
     local lines = NS.Surfaces.WhyLines("p1")
     assertEqual(lines[1], "Preview as: Arena")

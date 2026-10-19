@@ -454,7 +454,7 @@ test("pad: [phase 3] the header's tooltip says why each group shows, unless the 
     -- red under: drop the Pad.ShowWhy call from the header's OnEnter
     assertEqual(#shown, 1)
     assertEqual(shown[1].title, "Why is this showing?")
-    assertEqual(shown[1].lines[1], "M+ (generic): Content")
+    assertEqual(shown[1].lines[1], "Dungeon (generic): Content")
     header:__fire("OnLeave")
     NS.SchemaRuntime.Set("behavior.whyTooltips", false)
     header:__fire("OnEnter")

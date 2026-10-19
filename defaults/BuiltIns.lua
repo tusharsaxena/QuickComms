@@ -7,11 +7,23 @@ local _, NS = ...
 NS.BuiltIns = NS.BuiltIns or { groups = {}, callouts = {}, order = {}, SNAPSHOTS = {} }
 local BI = NS.BuiltIns
 
+-- The tints a shipped glyph takes where its color carries meaning (B7): red for a kill or a wipe,
+-- green for life and all-clear, blue for water and mana, gold for a reward, orange for an alarm,
+-- purple for crowd control. Any other glyph draws white.
+BI.COLOR = { red = "ff4040", green = "40d040", blue = "4da6ff", gold = "ffd100", orange = "ff9933",
+    purple = "b07cff" }
+
 --- Declare a callout. `short` is appended to the group id: "bi.mplus" + "lust" -> "bi.mplus.lust".
+--- `glyph` names its icon in the LibKa0s catalog (B7; library-stack-§8: a shipped mark, never one
+--- drawn here) and `color` tints it ("rrggbb", where the color carries meaning). The catalog name is
+--- kept as `glyph` for the integrity tests; seeding copies `icon` (its texture path) and `iconColor`.
+--- Without the library the icon is nil, and so is the color, which only a glyph takes.
 --- @return string id
-function BI.Callout(groupId, short, name, text, channel, icon)
+function BI.Callout(groupId, short, name, text, channel, glyph, color)
     local id = groupId .. "." .. short
-    BI.callouts[id] = { name = name, text = text, channel = channel, icon = icon }
+    local icon = glyph and NS.Icon(glyph) or nil
+    BI.callouts[id] = { name = name, text = text, channel = channel, icon = icon, glyph = glyph,
+        iconColor = icon and color or nil }
     return id
 end
 
@@ -23,9 +35,9 @@ function BI.Group(id, def)
     return def
 end
 
---- Callouts from a list of { short, name, text[, icon] } rows, all on `channel`.
+--- Callouts from a list of { short, name, text, glyph[, color] } rows, all on `channel`.
 function BI.Callouts(groupId, channel, rows)
     local ids = {}
-    for n, r in ipairs(rows) do ids[n] = BI.Callout(groupId, r[1], r[2], r[3], channel, r[4]) end
+    for n, r in ipairs(rows) do ids[n] = BI.Callout(groupId, r[1], r[2], r[3], channel, r[4], r[5]) end
     return ids
 end
