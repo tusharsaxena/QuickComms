@@ -57,9 +57,9 @@
 
 | Task | Repo | Status | Commit |
 |---|---|---|---|
-| L1 Glyph generator + catalog | LibKa0s | todo | |
-| L2 Release v1.74.0 (local tag) | LibKa0s | todo | |
-| S1 options-ui-§15 extras | WowAddonStandards | todo | |
+| L1 Glyph generator + catalog | LibKa0s | done | 9eb711d |
+| L2 Release v1.74.0 (local tag) | LibKa0s | done | 5bcb39a (tag v1.74.0, local) |
+| S1 options-ui-§15 extras | WowAddonStandards | done | 16b0300 |
 | Q1 Pad: title, chip width, growth | QC | done | ea04cd1 |
 | Q2 /qc toggle | QC | done | e71b428 |
 | Q3 Look headings + Callouts rows | QC | done | 6a34bf7 |
@@ -68,7 +68,7 @@
 | Q6 Vendor LibKa0s v1.74.0 + icon browser | QC | done | f89ed21 |
 | Q7 Dungeon (generic) + built-in icons | QC | done | a344069 |
 | Q8 Icon styling + glows | QC | done | a86f62f |
-| Q9 Docs sync + final review | QC (+all) | todo | |
+| Q9 Docs sync + final review | QC (+all) | done | 2048f57 |
 
 ---
 
