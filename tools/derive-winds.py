@@ -10,7 +10,9 @@
 # north up, the nearest of eight; a node within a third of the farthest node's distance from that
 # center is "middle". Each node is named by its AreaPOI id with the name that row must carry, so a
 # wrong id fails rather than placing the wrong point. Every node defaults/ ships must be below, and
-# every node below must be shipped with the wind derived here.
+# every node below must be shipped with the wind derived here. A child with no fixed place (wind
+# "free", DialLayout.FREE) or none at all (Alterac Valley's nineteen, more than the eight winds) is
+# not a node here, and a set with no node of its own is not checked.
 import math
 import os
 import re
@@ -31,6 +33,13 @@ NODES = {
                    ("shrine", 6545, "Shrine"), ("ruins", 6547, "Ruins")]),
     "ioc": (628, [("docks", 2356, "Docks"), ("hangar", 2350, "Hangar"), ("workshop", 2345, "Workshop"),
                   ("quarry", 2361, "Quarry"), ("refinery", 2366, "Refinery")]),
+    # Wintergrasp's southern towers are one objective; Winter's Edge, the middle tower, places it.
+    "wg": (2118, [("fortress", 6027, "Wintergrasp Fortress"),
+                  ("brokentemple", 6061, "Broken Temple Vehicle Workshop"),
+                  ("sunkenring", 6060, "Sunken Ring Vehicle Workshop"),
+                  ("westspark", 6063, "Westspark Vehicle Workshop"),
+                  ("eastspark", 6068, "Eastspark Vehicle Workshop"),
+                  ("towers", 6065, "Winter's Edge Tower")]),
 }
 WINDS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
 SHIPPED = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -61,8 +70,17 @@ def winds_of(poi, mapid, nodes):
 def shipped():
     text = open(SHIPPED, encoding="utf-8").read()
     out = {}
-    for key, body in re.findall(r'nodeBattleground\("(\w+)".*?\{(.*?)\n\}\)', text, re.S):
-        out[key] = dict(re.findall(r'\{ "(\w+)", L\["[^"]+"\], "(\w+)" \}', body))
+    # each set's text runs from its nodeBattleground( call to the next set's declaration
+    starts = [(m.start(), m.group(1)) for m in re.finditer(r'^nodeBattleground\("(\w+)"', text, re.M)]
+    if not starts:
+        ct.fail("no nodeBattleground(...) in " + SHIPPED)
+    for at, key in starts:
+        end = re.compile(r'^(nodeBattleground|flatBattleground|BI\.Group)\(', re.M).search(text, at + 1)
+        body = text[at:end.start() if end else len(text)]
+        # a node row: { "key", L["Name"], "WIND", glyph, color[, rows] }
+        nodes = {k: w for k, w in re.findall(r'\{ "(\w+)", L\["[^"]+"\], "(\w+)"[ ,}]', body) if w != "free"}
+        if nodes:
+            out[key] = nodes
     if not out:
         ct.fail("no nodeBattleground(...) in " + SHIPPED)
     return out

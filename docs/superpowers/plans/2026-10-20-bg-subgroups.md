@@ -35,4 +35,4 @@
 | T2 | Built-in data: AV, IoC bases, WSG, TP, WG, Ashran, DHR, SS children; locale strings; integrity tests | done | 0a73916 |
 | T3 | Migration step 7 (new nodes by origin, Open into) and its tests | done | a9ed826 |
 | T4 | Dial fallback test for AV (in T1); pad packing of child sections | done | (this commit) |
-| T5 | derive-winds covers Wintergrasp; docs, test-cases, badge | pending | |
+| T5 | derive-winds covers Wintergrasp (and parses the current data again); docs, test-cases, badge | done | (this commit) |

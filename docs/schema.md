@@ -27,7 +27,7 @@ Exactly two (savedvariables-§4):
 | `behavior.previewOnEdit` | `true` | the Groups page band's Preview while editing box (`skipRender`, page `groups`), `/qc set` | while the Groups page is on screen, every pad and dial shows only the group it edits (session state `State.editPreview`) |
 | `nextId` | `1` | `Library.NewId` | the id counter for every user id (`c<n>`, `g<n>`, `p<n>`, `d<n>`); past the seeded sets' ids after the first load |
 | `callouts` | `{}` | `Library` (membership and order); member fields through the seam (member rows) | user callouts keyed by id: name, text, channel, icon, and `iconColor` (a LibKa0s glyph's color, `"rrggbb"` lowercase; absent or `false` for none); each id sits in exactly one user group's `callouts` list. A seeded callout also keeps `origin`, the shipped callout id it was copied from (`"bi.mplus.lust"`), which only Library reads |
-| `groups` | `{}` | `Library` (membership and order); member fields through the seam (member rows) | user groups keyed by id: name, icon, `iconColor` (as a callout's), callouts (the group owns them: no other group holds the same id), when, openInto, enabled, `parent` (the top-level group it sits inside; absent or `false` for none, one level only), and `inheritWhen` (`true`: while it has a parent, the group is judged by the parent's When instead of its own; `false`: its own; absent reads as `true`). A seeded group also keeps `origin` (the shipped set or node id, `"bi.mplus"`, `"bi.bg.ab.mine"`), and a seeded battleground node its `compass` wind; neither is a member row, and a copy keeps neither |
+| `groups` | `{}` | `Library` (membership and order); member fields through the seam (member rows) | user groups keyed by id: name, icon, `iconColor` (as a callout's), callouts (the group owns them: no other group holds the same id), when, openInto, enabled, `parent` (the top-level group it sits inside; absent or `false` for none, one level only), and `inheritWhen` (`true`: while it has a parent, the group is judged by the parent's When instead of its own; `false`: its own; absent reads as `true`). A seeded group also keeps `origin` (the shipped set or node id, `"bi.mplus"`, `"bi.bg.ab.mine"`), and a seeded battleground node its `compass` wind (`N` … `NW`, `middle`, `free` for a child with no fixed place on the map, which takes a wind left over after the middle ones, or absent where a set has more children than winds: Alterac Valley's); neither is a member row, and a copy keeps neither |
 | `seededSets` | `{}` | `Library` only (seeding, Restore, migration step 3) | the shipped set and node ids this profile was given as groups, `{ [id] = true }`: Prepare seeds a set not listed here (one a later version ships), and never seeds again a set the player deleted |
 | `pads` | `{}` | `Library` (membership and order); member fields through the seam (member rows) | surfaces keyed by id: groups (ordered, top-level groups only: a child shows with its parent), and the surface's own settings; a pad's `look` holds visibility, fade, faded alpha and the Look groups' fields (font, size, color and its companion, flags, shadow; border style, thickness, color and its companion; background and its companion), and its `icon` holds the Icons tab's fields (below) |
 | `dials` | `{}` | `Library` (membership and order); member fields through the seam (`dial.name\|enabled\|mode\|slices\|openAt\|point\|key`) | surfaces keyed by id: groups (ordered, top-level groups only), and the dial's own settings (its `icon`: the Icons tab's fields, below); a new dial stores `interaction = "relaxed"`, and `delay`, `tapAction` and `depth` are kept but nothing reads them |
@@ -113,7 +113,19 @@ Deepwind Gorge, Isle of Conquest) gains, at its end and under fresh ids, each of
 none of its callouts keeps the origin of. A deleted set has no copy and is not brought back. The new
 World (solo) set needs no step: `Library.Prepare` seeds it as any newly shipped set (`seededSets`).
 Seeding now copies a shipped group's `iconColor` too. A second run changes nothing.
-`NS.SCHEMA_VERSION` is 6.
+Step 7 (2026-10-20 battleground sub-groups, `perProfile`, `Library.MigrateBattlegroundNodes` in
+`modules/Library_Migrate.lua`): every node a later version ships goes inside its set's copy while that
+copy is a top-level group (`Library.SeedNewNodes`, the node half of Prepare's seeding, shared): a node
+`seededSets` already lists (kept, moved or deleted by the player) is passed over, and one whose set
+was deleted or sits inside another group is only listed, so neither ever comes back; each new node
+takes fresh ids above every stored one, after the nodes already there, and nothing the profile holds
+is changed. This is how Alterac Valley's 19 objectives, Isle of Conquest's Our base and Enemy base,
+and the objective groups of Warsong Gulch, Twin Peaks, Wintergrasp, Ashran, Deephaul Ravine and
+Seething Shore reach stored profiles, the inactive ones included. Each copy of a set that shipped flat
+(those seven) also turns `openInto` on while it still holds the shipped off (false or absent), as
+every node set opens into its ring; an Open into the player turns off after the step is theirs. A
+second run changes nothing. `Library.Prepare` seeds the same nodes on a profile never prepared.
+`NS.SCHEMA_VERSION` is 7.
 No schema step for nested groups (2026-10-18): a group without `parent` is top-level, and
 `Library.Prepare` drops a bad one.
 No schema step in phase 5: `Library.Prepare` fills a stored pad's missing layout and look fields from

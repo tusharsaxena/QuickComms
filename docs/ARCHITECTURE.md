@@ -241,6 +241,9 @@ Every secure rule lives in one file. `modules/SendEngine.lua` is the only code t
 - Disabled in combat, a dial keeps working (and its key keeps opening it) until combat ends and the held stand-down finishes.
 - Test mode or Preview as… ended by a combat whose lockdown began first leaves dial 1 open, its placeholder wedges sending nothing and holding no key, until combat ends (the hub or its key closes it sooner).
 - Battleground node sets are pinned to compass winds derived from the client's map data, not yet checked in game (smoke check BG-1); Flat mode is not pinned.
+- Alterac Valley's 19 objective groups cannot sit on the eight compass winds, so its dial ring is unpinned and paged: its own four callouts first, then the objectives north to south a few wedges a page behind More (eight pages on a four-slice dial). Its pad sets the objectives two to a row, still about 560 px tall beside the generic set on a default pad; groups as tabs, or switching the generic set off, shortens it (smoke check BG-3).
+- A battleground's objective groups have no faction condition (owner ruling, 2026-10-20): "Our base" and "Enemy base", "Our flag" and "Enemy flag" read the same for either side, so nothing names Alliance or Horde, and a group is not hidden for the side it does not fit. Seething Shore's groups are the node in front of you and the next spawn, not its dozen sites, because its azerite erupts at random among them.
+- A grid pad packs a parent's child sections side by side only while consecutive ones fit its columns; a lone or wide child keeps a row of its own, and horizontal and vertical pads never pack.
 - The Profiles page builds only where AceDBOptions and AceConfigDialog resolve, which the headless
   mock does not model; PROFILE-1 is its in-game check.
 - A share string carries at most 500 members and 50,000 characters; a larger collection is shared in parts.
