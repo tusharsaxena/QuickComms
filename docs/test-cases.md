@@ -879,7 +879,7 @@ Total.
 - master: /qc test toggles test mode, and in combat says why it will not
 - master: the Test mode row reads and writes the one switch, and Reset all ends it
 
-### test_pad_layout.lua (15)
+### test_pad_layout.lua (14)
 
 - layout: horizontal puts a section's chips on one row under the header
 - layout: a titled section draws its label row first
@@ -895,7 +895,6 @@ Total.
 - layout: the wheel steps tabs and wraps both ways
 - layout: the visibility expression combines the master and the pad
 - layout: the fade follows combat and the mouse, under the master alpha
-- layout: the channel tag names the resolved channel
 
 ### test_dial_layout.lua (16)
 
@@ -950,7 +949,7 @@ Total.
 
 - render: Dress builds a chip's regions once, each its own object
 - render: [audit QC-07] the chip's padlock is the catalog's lock mark, tinted gold; the Blizzard art is the nil fallback
-- render: an armed chip shows its name, its channel tag in the chat color, no lock, no dim
+- render: an armed chip shows its name, no channel letter, no lock, no dim; its tooltip names the channel
 - render: [review 5] a refused chip is dimmed and its tooltip says why
 - render: a locked chip shows the padlock and names the lock; RefreshLock follows the slot
 - render: the style decides icon and label
@@ -963,7 +962,7 @@ Total.
 - pad render: [phase 3] a previewed slot's tooltip shows its line and says it sends nothing
 - render: [phase 5] a pad's Look is a font and a skin; the defaults are the skin a pad always wore
 - render: [review] the skin's 1px inner line is kept only on the default flat 1px edge
-- render: [review] a chip's label stops short of the channel tag, on one line
+- render: [review] a chip's label runs to the chip's right edge, on one line
 - render: [phase 5] Use class color takes the player's class color and keeps the swatch's alpha
 - render: [phase 5] a section title keeps its gold until the player colors the font
 - render: [icons] a glyph chip is drawn in its color; the chip repainted with another icon is white again
@@ -1174,7 +1173,7 @@ Total.
 | test_preview.lua | 23 |
 | test_edit_preview.lua | 14 |
 | test_master.lua | 5 |
-| test_pad_layout.lua | 15 |
+| test_pad_layout.lua | 14 |
 | test_dial_layout.lua | 16 |
 | test_surfaces.lua | 27 |
 | test_pad_render.lua | 20 |
@@ -1189,4 +1188,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **963** |
+| **Total** | **962** |

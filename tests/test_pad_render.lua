@@ -38,13 +38,17 @@ test("render: [audit QC-07] the chip's padlock is the catalog's lock mark, tinte
     assertEqual(b2.qcLock.__texture, "Interface\\PetBattles\\PetBattle-LockIcon")
 end)
 
-test("render: an armed chip shows its name, its channel tag in the chat color, no lock, no dim", function()
+test("render: an armed chip shows its name, no channel letter, no lock, no dim; its tooltip names the channel", function()
     local NS, m = T.enableAddon()
     local b = chip(NS, m)
     NS.PadRender.Paint(b, ARMED, "iconLabel")
     assertEqual(b.qcLabel:GetText(), "Pull")
-    assertEqual(b.qcTag:GetText(), "P")
-    assertEqual(b.qcTag.__color[1], 0.67)
+    -- red under: Dress making the qcTag font string again
+    assertTrue(b.qcTag == nil, "no channel letter at the chip's right edge")
+    local lines = NS.PadRender.TooltipLines(ARMED)
+    assertEqual(lines[2], "/p Pull")
+    -- the channel by name, in its chat color (PARTY's 0.67, 0.67, 1)
+    assertEqual(lines[3], "Channel: |cffababffParty|r")
     assertFalse(b.qcLock:IsShown())
     assertFalse(b.qcDim:IsShown())
     assertTrue(b.qcIcon:IsShown())
@@ -71,7 +75,8 @@ test("render: a locked chip shows the padlock and names the lock; RefreshLock fo
     assertFalse(b.qcDim:IsShown(), "locked is not refused: it stays armed")
     local lines = NS.PadRender.TooltipLines(slot)
     assertEqual(lines[2], "/s Go")
-    assertEqual(lines[3], "Locked: Say and Yell are blocked during this encounter.")
+    assertTrue(lines[3]:find("Say", 1, true) ~= nil, "the channel")
+    assertEqual(lines[4], "Locked: Say and Yell are blocked during this encounter.")
     slot.lock = nil
     NS.PadRender.RefreshLock(b)
     assertFalse(b.qcLock:IsShown())
@@ -219,7 +224,7 @@ test("render: [review] the skin's 1px inner line is kept only on the default fla
     assertEqual(R.SkinFor({ borderSize = 3 }).insets.left, 3, "a flat edge insets by its thickness")
 end)
 
-test("render: [review] a chip's label stops short of the channel tag, on one line", function()
+test("render: [review] a chip's label runs to the chip's right edge, on one line", function()
     local NS, m = T.enableAddon()
     local b = chip(NS, m)
     local points, wrap = {}, nil
@@ -230,9 +235,10 @@ test("render: [review] a chip's label stops short of the channel tag, on one lin
     assertEqual(wrap, false, "one line")
     local right
     for _, pt in ipairs(points) do if pt[1] == "RIGHT" then right = pt end end
-    -- red under: R.Paint anchoring the label LEFT only (a large font runs under the tag and off the chip)
+    -- red under: R.Paint anchoring the label LEFT only (a large font runs off the chip)
     assertTrue(right ~= nil, "a right edge")
-    assertTrue(right[2] == b.qcTag, "bounded by the tag")
+    -- red under: the label still bounded by a channel letter (the tag took the width it now uses)
+    assertTrue(right[2] == b and right[3] == "RIGHT" and right[4] == -4, "the chip's right edge, less its padding")
 end)
 
 test("render: [phase 5] Use class color takes the player's class color and keeps the swatch's alpha", function()
@@ -290,6 +296,7 @@ test("render: [B3] a chip's label is one line, and hidden when the chip leaves i
     assertFalse(b.qcLabel:IsShown())
     NS.PadRender.Paint(b, ARMED, "iconLabel")
     assertTrue(b.qcLabel:IsShown(), "no width given: shown")
-    assertTrue(NS.PadRender.LabelRoom(140, "iconLabel", 0) > 0)
-    assertTrue(NS.PadRender.LabelRoom(30, "iconLabel", 10) <= 0, "the tag takes its room too")
+    assertTrue(NS.PadRender.LabelRoom(140, "iconLabel") > 0)
+    assertEqual(NS.PadRender.LabelRoom(34, "iconLabel"), 4, "26 for the icon and its gaps, 4 for the right padding, no channel letter")
+    assertTrue(NS.PadRender.LabelRoom(30, "iconLabel") <= 0)
 end)

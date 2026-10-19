@@ -136,8 +136,9 @@ drops it, the chip flashes red and exactly one `[QC] … may have been dropped b
 prints; if it arrives, no line prints. Never two lines for one press. Result:
 
 **SEND-4. A raid boss (C1).** In a raid (LFR is enough), the pad shows the raid set; on a boss,
-click a `/raid` chip → the raid sees it, the chip flashes gold. A lead callout shows `RW` only when
-you are leader or assist; otherwise its chip carries a padlock and its tooltip says why. A `/raid`
+click a `/raid` chip → the raid sees it, the chip flashes gold. A lead callout's tooltip reads
+`Channel: Raid warning` only when you are leader or assist; otherwise its chip carries a padlock and
+its tooltip says why. A `/raid`
 line that never arrives during the encounter is C1 failing: record it. Result:
 
 **SEND-5. Rebuilt between pulls in a key (C4).** In a key, between pulls, `/qc set
@@ -151,8 +152,9 @@ The C1–C9 checks of the phase 0 harness (design spec §19) are recorded in
 ## Pad
 
 **PAD-1. First run.** On a fresh profile, enter a key → the default pad shows "Dungeon (generic)" with
-eight chips, each tagged `P`; the header reads `M+ · <dungeon> +<level>`. Hovering a chip shows its
-name and the exact line it sends. Every chip shows its glyph in a color: Lust a red enraged face,
+eight chips, with no channel letter at the right edge of any of them (the label runs to the edge);
+the header reads `M+ · <dungeon> +<level>`. Hovering a chip shows its name, the exact line it sends
+and `Channel: Party` in the party's chat color; a wedge on the Comms Dial shows the same lines. Every chip shows its glyph in a color: Lust a red enraged face,
 Need mana a blue drop, Res me a green ankh, GG a gold trophy, Pulling orange crossed swords, Kick
 order a purple boot, Skipping a cyan figure, Chain pull red chains. Leave the key and zone into a
 normal or heroic dungeon → the same set shows. On a profile saved before this build (it still shows
@@ -200,13 +202,14 @@ before 2026-10-19 moves once on its first load, by up to its height (see Known L
 `docs/ARCHITECTURE.md`); drag it back and it stays. Result:
 
 **PAD-10. Chip width and the section title.** Comms Pad → Layout → Chip width reads 100 on a new
-pad; drag it to 300 → wide chips, each label on one line; down to 30 → the labels cut short, still
+pad; drag it to 300 → wide chips, each label on one line, running to the chip's right edge with no
+channel letter after it; down to 30 → the labels cut short, still
 one line; down to 1 → icon-only slivers, no label and no Lua error. Make a group named `World`, put
 it on the pad and stand in the open world → the header reads `World` and the section under it has
 no second `World` line; rename the group `My world` → its title line is back. Result:
 
 **PAD-11. World (solo) and the built-ins' colors (groups polish).** Out of any group, in the open
-world: the pad shows a World (solo) section of nine chips tagged `S` (Rare spotted a gold spyglass,
+world: the pad shows a World (solo) section of nine chips, each tooltip reading `Channel: Say` (Rare spotted a gold spyglass,
 Elite help a red ogre, Group quest a gold scroll, World boss a red crowned skull, Event here an orange
 bell, Invite me a blue envelope, Thanks green hands, AFK a white cup, Back a cyan arrow).
 Target a mob and click Rare spotted → /say reads "Rare spotted here: <target>"; click Invite me →

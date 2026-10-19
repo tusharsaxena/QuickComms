@@ -29,13 +29,6 @@ PL.CHIP_ROOM = 10    -- a labeled chip's height past its font size: CHIP_H at FO
 PL.LABEL_ROOM = 8    -- a label-only chip's
 PL.TITLE_ROOM = 4    -- a section title row's
 
-local TAG = { party = "P", raid = "R", instance = "I", raidWarning = "RW", say = "S", yell = "Y" }
-
---- The chip's channel tag: the channel a callout resolved to (a smart kind shows its result).
-function PL.Tag(concrete)
-    return TAG[concrete]
-end
-
 function PL.ClampTab(tab, n)
     n = tonumber(n) or 0
     if n < 1 then return 1 end

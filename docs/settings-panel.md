@@ -423,7 +423,9 @@ General  Name, Enabled, then Unlock (or Lock) pads and Delete pad
 Groups   Show groups as, then the pad's groups as a drag-to-reorder list with a remove glyph
          (its priority order; it takes the group off the pad and asks nothing), then Add a group
          (the top-level groups the pad does not hold: a group inside another shows with it)
-Layout   orientation, grid columns, growth, chip style, scale, spacing, chip width, then
+Layout   orientation, grid columns, growth, chip style, scale, spacing, chip width (a chip's
+         label runs to its right edge: no channel letter there, the chip's tooltip names the
+         channel; nothing in the panel turned the letter on or off), then
          Position: X and Y and Reset this pad's position
 Look     visibility, fade and faded alpha; then Font (face, size, color with Use class color,
          flags, shadow), Border (style, thickness, color with Use class color) and Background

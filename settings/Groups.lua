@@ -226,7 +226,7 @@ end
 -- A smart kind resolves against the editor's snapshot; resolving to nothing (solo) takes PARTY's.
 local function channelColor(kind)
     local concrete = NS.Channels.Resolve(kind, Ed.Snapshot(), NS.Setting("behavior.soloFallback"))
-    return hex(NS.PadRender.TagColor(NS.Channels.ChatType(concrete) or "PARTY"))
+    return hex(NS.PadRender.ChannelColor(NS.Channels.ChatType(concrete) or "PARTY"))
 end
 
 local function preview(text)

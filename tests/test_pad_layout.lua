@@ -237,10 +237,3 @@ test("layout: the fade follows combat and the mouse, under the master alpha", fu
     assertEqual(A(nil, nil, false, false), 1)
 end)
 
-test("layout: the channel tag names the resolved channel", function()
-    local pl = PL()
-    assertEqual(pl.Tag("party"), "P")
-    assertEqual(pl.Tag("instance"), "I")
-    assertEqual(pl.Tag("raidWarning"), "RW")
-    assertTrue(pl.Tag(nil) == nil)
-end)
