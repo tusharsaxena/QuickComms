@@ -68,7 +68,8 @@ function PL.VisibleSections(sections, groupsAs, tab)
         local n = #sections
         if n == 0 then return {} end
         local i = PL.ClampTab(tab, n)
-        return { { title = sections[i].title, slots = sections[i].slots or {}, tabIndex = i, tabCount = n } }
+        return { { groupId = sections[i].groupId, title = sections[i].title, slots = sections[i].slots or {},
+            tabIndex = i, tabCount = n } }
     end
     return sections
 end
@@ -155,8 +156,8 @@ end
 local function sectionBlock(s, layout, cw, ch, gap, up, th, situation)
     local items, by = {}, 0
     if s.title and (s.tabCount or not PL.SameText(s.title, situation)) then
-        items[#items + 1] = { kind = "title", text = s.title, tabIndex = s.tabIndex, tabCount = s.tabCount,
-            x = PL.PAD, y = 0, w = 0, h = th }
+        items[#items + 1] = { kind = "title", text = s.title, groupId = s.groupId, tabIndex = s.tabIndex,
+            tabCount = s.tabCount, x = PL.PAD, y = 0, w = 0, h = th }
         by = th
     end
     local list = s.slots or {}

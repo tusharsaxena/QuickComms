@@ -36,7 +36,7 @@ local Ed = Settings.Editors
 Ed.ROW_H = 30       -- one reorderable row; the drop arithmetic's stride
 Ed.HANDLE_W = 30    -- the library's handle gutter (LibKa0s-Widgets ROW_BOX.HANDLE_W)
 Ed.ACTIVE_DOT = "|TInterface\\COMMON\\Indicator-Green:12|t "
-Ed.pages, Ed.built, Ed.reorders, Ed.redraw = {}, {}, {}, {}
+Ed.pages, Ed.built, Ed.reorders, Ed.redraw, Ed.categories = {}, {}, {}, {}, {}
 
 local function H() return Settings.Helpers end
 
@@ -699,8 +699,32 @@ function Ed.RegisterPage(pageKey, title, frameSuffix, render, defaults, hooks)
             if hooks.onShow then panel:HookScript("OnShow", hooks.onShow) end
             if hooks.onHide then panel:HookScript("OnHide", hooks.onHide) end
         end
-        return _G.Settings.RegisterCanvasLayoutSubcategory(parentCategory, ctx.panel, title)
+        local category = _G.Settings.RegisterCanvasLayoutSubcategory(parentCategory, ctx.panel, title)
+        Ed.categories[pageKey] = category
+        return category
     end)
+end
+
+--- Open the settings window on one editor page (groups polish R4: a pad title's right-click). The
+--- library's OpenOptionsPanel opens the main category only, so this is the host's own OpenToCategory
+--- wrapper (LibKa0s O.SelectTab's note), with the same combat gate: in combat it goes through
+--- QC:OpenSettings, whose OpenOptionsPanel prints the settings refusal and opens nothing. A page
+--- whose category has no id (none registered yet) opens the main category instead.
+--- @return boolean opened
+function Ed.OpenPage(pageKey)
+    if NS.Compat.InCombat() then
+        QC:OpenSettings()
+        return false
+    end
+    if Settings.Register then Settings.Register() end
+    local category = Ed.categories[pageKey]
+    local id = category and category.GetID and category:GetID()
+    if not (id and _G.Settings and _G.Settings.OpenToCategory) then
+        QC:OpenSettings()
+        return true
+    end
+    _G.Settings.OpenToCategory(id)
+    return true
 end
 
 -- ── acts ────────────────────────────────────────────────────────────────────────────────────

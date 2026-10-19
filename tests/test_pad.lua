@@ -609,3 +609,81 @@ test("pad: [R3] the strip reads the pad's name and PREVIEW / TEST MODE, grows to
     assertEqual(widths[#widths], 6 * #"A rather long raid pad name" + reserve, "unlocked, it fits the name alone")
     assertNil(inst.header.qcTest, "the header carries no marker of its own")
 end)
+
+-- ── groups polish (2026-10-19) R4: right-click a section title to edit its group ─────────────
+
+local function hits(NS)
+    return NS.Pad.Instance("p1").titleHits.active
+end
+
+local function spyEdit(NS)
+    local opened = {}
+    NS.addon.EditGroup = function(_, gid) opened[#opened + 1] = gid return true end
+    return opened
+end
+
+test("pad: [R4] each drawn title takes a right-click to edit its group; a left-click does nothing", function()
+    local NS = live(AB)
+    local opened = spyEdit(NS)
+    local plan = planFor(NS)
+    NS.Pad.Apply("p1", plan)
+    local inst = NS.Pad.Instance("p1")
+    -- red under: titles drawn as font strings alone, with nothing to click
+    assertTrue(#hits(NS) > 0, "a hit frame per title")
+    assertEqual(#hits(NS), #inst.titles.active, "one per drawn title")
+    local ids = {}
+    for _, sec in ipairs(plan.sections) do ids[sec.groupId] = true end
+    for _, hit in ipairs(hits(NS)) do
+        assertTrue(ids[hit.qcGroupId], "names a section's group")
+        assertTrue(hit:IsShown())
+    end
+    local hit = hits(NS)[1]
+    hit:__fire("OnClick", "LeftButton")
+    assertEqual(#opened, 0, "left-click is unchanged: nothing")
+    hit:__fire("OnClick", "RightButton")
+    assertEqual(opened[1], hit.qcGroupId)
+end)
+
+test("pad: [R4] the title's tooltip says Right-click to edit this group", function()
+    local NS = live(AB)
+    NS.Pad.Apply("p1", planFor(NS))
+    local shown = {}
+    NS.PadRender.ShowLines = function(_, title, lines) shown[#shown + 1] = { title = title, lines = lines } end
+    local hit = hits(NS)[1]
+    hit:__fire("OnEnter")
+    assertEqual(shown[1].title, NS.Library.Group(hit.qcGroupId).name)
+    assertEqual(shown[1].lines[1], "Right-click to edit this group.")
+end)
+
+test("pad: [R4] in tabs mode the tab's title edits the group the tab shows; the wheel moves it", function()
+    local NS = live(AB)
+    local opened = spyEdit(NS)
+    NS.db.profile.pads.p1.groupsAs = "tabs"
+    local plan = planFor(NS)
+    NS.Pad.Apply("p1", plan)
+    assertEqual(#hits(NS), 1)
+    assertEqual(hits(NS)[1].qcGroupId, plan.sections[1].groupId)
+    assertTrue(NS.Pad.Wheel("p1", -1))
+    assertEqual(#hits(NS), 1, "the last tab's hit frame went back to the pool")
+    hits(NS)[1]:__fire("OnClick", "RightButton")
+    assertEqual(opened[1], plan.sections[2].groupId, "a nested node's own group")
+end)
+
+test("pad: [R4] merged pads, collapsed pads and test mode's placeholder groups have no title to click", function()
+    local NS = live(AB)
+    NS.db.profile.pads.p1.groupsAs = "merged"
+    NS.Pad.Apply("p1", planFor(NS))
+    assertEqual(#hits(NS), 0, "merged draws no titles")
+    NS.db.profile.pads.p1.groupsAs = "sections"
+    NS.Pad.Apply("p1", planFor(NS))
+    assertTrue(#hits(NS) > 0)
+    NS.Pad.ToggleCollapsed("p1")
+    assertEqual(#hits(NS), 0, "collapsed")
+    NS.Pad.ToggleCollapsed("p1")
+    NS.Preview.SetTestMode(true)
+    -- red under: a hit frame on a "test.N" placeholder that names no group
+    assertEqual(#hits(NS), 0, "test mode's groups are placeholders")
+    NS.Preview.SetTestMode(false)
+    NS.Pad.Release("p1")
+    assertEqual(#hits(NS), 0, "a released pad keeps none")
+end)

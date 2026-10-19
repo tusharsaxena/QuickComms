@@ -632,7 +632,7 @@ Total.
 - when: [arena] the arena row: names, Summary, All arenas, the CLI value, and its tooltip
 - when: [arena] Add the arena you are in reads the live snapshot, and refuses outside an arena
 
-### test_page_groups.lua (63)
+### test_page_groups.lua (66)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists every group by name, a seeded set among them, active ones dotted
@@ -697,6 +697,9 @@ Total.
 - groups page: [all] the battleground drawer's All battlegrounds dims and locks the list, which it keeps
 - groups page: [all] a gap separates the Every condition line from the first drawer
 - groups page: [arena] the arena drawer's All arenas dims and locks the list, which it keeps
+- groups page: [R4] EditGroup opens the Groups page on that group and keeps the tab it was on
+- groups page: [R4] EditGroup in combat prints the settings refusal and changes nothing
+- groups page: [R4] EditGroup of a group that is gone opens nothing
 
 ### test_page_pads.lua (16)
 
@@ -958,7 +961,7 @@ Total.
 - render: [icons] a glyph chip is drawn in its color; the chip repainted with another icon is white again
 - render: [B3] a chip's label is one line, and hidden when the chip leaves it no room
 
-### test_pad.lua (30)
+### test_pad.lua (34)
 
 - pad: the default pad shows the M+ callouts, each chip armed with its baked line
 - pad: [review 5] a refused chip is dimmed and disarmed: a click sends and reports nothing
@@ -990,6 +993,10 @@ Total.
 - pad: [B2] down growth pins the pad's top edge; the header is on top and the strip above
 - pad: [B2] up growth pins the bottom edge, puts the header at the bottom and the strip below
 - pad: [R3] the strip reads the pad's name and PREVIEW / TEST MODE, grows to fit, and shows while locked
+- pad: [R4] each drawn title takes a right-click to edit its group; a left-click does nothing
+- pad: [R4] the title's tooltip says Right-click to edit this group
+- pad: [R4] in tabs mode the tab's title edits the group the tab shows; the wheel moves it
+- pad: [R4] merged pads, collapsed pads and test mode's placeholder groups have no title to click
 
 ### test_dial.lua (29)
 
@@ -1148,7 +1155,7 @@ Total.
 | test_icon_browser.lua | 36 |
 | test_eui_skin.lua | 10 |
 | test_groups_when.lua | 20 |
-| test_page_groups.lua | 63 |
+| test_page_groups.lua | 66 |
 | test_page_pads.lua | 16 |
 | test_page_dials.lua | 18 |
 | test_page_share.lua | 12 |
@@ -1163,7 +1170,7 @@ Total.
 | test_dial_layout.lua | 16 |
 | test_surfaces.lua | 27 |
 | test_pad_render.lua | 20 |
-| test_pad.lua | 30 |
+| test_pad.lua | 34 |
 | test_dial.lua | 29 |
 | test_icon_style.lua | 8 |
 | test_glow.lua | 11 |
@@ -1174,4 +1181,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **948** |
+| **Total** | **955** |

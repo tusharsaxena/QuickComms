@@ -116,6 +116,14 @@ combat starts (one "Preview ended" line) or the addon stands down; it never star
 Preview as and test mode wait behind it and come back when it ends. The page's Defaults ticks it
 again.
 
+**Opened from a pad** (groups polish R4): right-clicking a pad's section title (in tabs mode, the
+tab's title) runs `QC:EditGroup(gid)` (`G.Edit`): the page's own selection moves to that group, as
+the picker does, so the tab the page was on stays (the library keeps a page's active tab for the
+session), and the settings window opens on the Groups page itself (`Ed.OpenPage`, the host's
+`Settings.OpenToCategory` wrapper on the page's category). In combat the window cannot open: the
+library's settings refusal is printed and the selection is kept. A group the profile no longer has
+(or test mode's placeholder groups, which draw no hit frame) opens nothing.
+
 **Preview** (`Ed.TableRows`, shared with no other page yet): the active-now line, then a table. A
 gold header row, "Callout" and "What it sends here", sits outside the boxes; each callout's row is a
 box like the Callouts tab's (the same fill, border and left and right edges; a reorder list's row

@@ -134,6 +134,34 @@ local function newTitle(inst)
     return inst.root:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 end
 
+-- A section title's hit frame (groups polish R4): a plain, non-secure Button over the title row,
+-- made and placed out of combat with the layout. A right-click opens the Groups page on its group
+-- (QC:EditGroup, which prints the settings refusal in combat); a left-click does nothing, as the
+-- title did. It keeps the pad's hover (the fade) and hands the wheel on, as a chip does.
+local function newTitleHit(inst)
+    local hit = CreateFrame("Button", nil, inst.root)
+    hit:RegisterForClicks("RightButtonUp")
+    hit:EnableMouseWheel(true)
+    hit:SetScript("OnClick", function(self, button)
+        if button == "RightButton" and self.qcGroupId then NS.addon:EditGroup(self.qcGroupId) end
+    end)
+    hit:SetScript("OnEnter", function(self)
+        Pad.SetHover(inst.id, true)
+        local g = self.qcGroupId and NS.Library.Group(self.qcGroupId)
+        R.ShowLines(self, g and g.name or "", { L["Right-click to edit this group."] })
+    end)
+    hit:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+        Pad.SetHover(inst.id, false)
+    end)
+    hit:SetScript("OnMouseWheel", function(_, delta) Pad.Wheel(inst.id, delta) end)
+    return hit
+end
+
+local function releaseTitleHit(hit)
+    hit.qcGroupId = nil
+end
+
 local function releaseChip(btn)
     NS.SendEngine.Disarm(btn)
     btn.qcSlot = nil
@@ -182,6 +210,14 @@ local function place(inst, box, style, font, titleFont, icfg)
             fs:SetPoint("TOPLEFT", inst.root, "TOPLEFT", item.x, -item.y)
             fs:SetText(R.SectionTitle(item))
             R.ApplyFont(fs, titleFont)
+            -- Only a group the profile has: test mode's placeholders ("test.N") name none.
+            if item.groupId and NS.Library.Group(item.groupId) then
+                local hit = NS.Pool.Acquire(inst.titleHits, function() return newTitleHit(inst) end)
+                hit.qcGroupId = item.groupId
+                hit:ClearAllPoints()
+                hit:SetPoint("TOPLEFT", inst.root, "TOPLEFT", item.x, -item.y)
+                hit:SetSize(math.max(1, box.width - 2 * item.x), item.h)
+            end
         end
     end
 end
@@ -197,8 +233,8 @@ local function build(id)
     root:EnableMouseWheel(true)
     root:SetScript("OnMouseWheel", function(_, delta) Pad.Wheel(id, delta) end)
     NS.ApplySkin(root)
-    local inst = { id = id, root = root, chips = NS.Pool.New(), titles = NS.Pool.New(), byCallout = {},
-        hover = 0, live = false }
+    local inst = { id = id, root = root, chips = NS.Pool.New(), titles = NS.Pool.New(), titleHits = NS.Pool.New(),
+        byCallout = {}, hover = 0, live = false }
     local header = CreateFrame("Frame", nil, root)
     header:SetHeight(PL.HEADER_H)
     header:EnableMouse(true)
@@ -289,6 +325,7 @@ function Pad.Apply(id, plan)
     inst.plan, inst.live = plan, true
     NS.Pool.ReleaseAll(inst.chips, releaseChip)
     NS.Pool.ReleaseAll(inst.titles)
+    NS.Pool.ReleaseAll(inst.titleHits, releaseTitleHit)
     inst.byCallout = {}
     local layout = type(pad.layout) == "table" and pad.layout or {}
     local look = type(pad.look) == "table" and pad.look or {}
@@ -329,6 +366,7 @@ function Pad.Release(id)
     NS.Pool.ReleaseAll(inst.chips, releaseChip)
     NS.Glow.ReleaseFree(inst.chips)
     NS.Pool.ReleaseAll(inst.titles)
+    NS.Pool.ReleaseAll(inst.titleHits, releaseTitleHit)
     inst.byCallout, inst.plan, inst.live, inst.mark = {}, nil, false, nil
     if inst.handle then inst.handle:Hide() end
     NS.SendEngine.ClearVisibility(inst.root)

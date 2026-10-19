@@ -644,6 +644,23 @@ local function render(ctx)
     G.SyncEditPreview()
 end
 
+--- Edit group `gid` here (groups polish R4: a pad's section title, right-clicked): the page's own
+--- selection moves to it (Ed.Select, as the picker does), so the tab the page was on stays (the
+--- library keeps a page's active tab for the session), and the settings window opens on this page.
+--- In combat the window cannot open: the settings refusal is printed and the selection is kept.
+--- @return boolean opened
+function G.Edit(gid)
+    if not (type(gid) == "string" and NS.Library.Group(gid)) then return false end
+    if NS.Compat.InCombat() then return Ed.OpenPage(PAGE) end
+    if Ed.Selected("group") ~= gid then
+        Ed.Select("group", gid)
+        Ed.RequestRefresh()
+    end
+    return Ed.OpenPage(PAGE)
+end
+
+function QC.EditGroup(_, gid) return G.Edit(gid) end
+
 --- The page's Defaults (options-ui-§13: page-wide, what the page draws): every row of the page, for
 --- the selected group.
 function G.RestoreDefaults(ctx)
