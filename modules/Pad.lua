@@ -213,6 +213,11 @@ local function place(inst, box, style, font, titleFont, icfg)
             local fs = NS.Pool.Acquire(inst.titles, function() return newTitle(inst) end)
             fs:ClearAllPoints()
             fs:SetPoint("TOPLEFT", inst.root, "TOPLEFT", item.x, -item.y)
+            -- A title in a packed row (Pad_Layout) stops at its block's width, cut short on one line;
+            -- any other sizes to its text (0), as a pooled one may have carried a width.
+            fs:SetWordWrap(false)
+            fs:SetJustifyH("LEFT")
+            fs:SetWidth(item.w > 0 and item.w or 0)
             fs:SetText(R.SectionTitle(item))
             R.ApplyFont(fs, titleFont)
             -- Only a group the profile has: test mode's placeholders ("test.N") name none.
@@ -221,7 +226,7 @@ local function place(inst, box, style, font, titleFont, icfg)
                 hit.qcGroupId = item.groupId
                 hit:ClearAllPoints()
                 hit:SetPoint("TOPLEFT", inst.root, "TOPLEFT", item.x, -item.y)
-                hit:SetSize(math.max(1, box.width - 2 * item.x), item.h)
+                hit:SetSize(math.max(1, item.w > 0 and item.w or (box.width - 2 * item.x)), item.h)
             end
         end
     end

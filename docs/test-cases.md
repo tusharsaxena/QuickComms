@@ -885,7 +885,7 @@ Total.
 - master: /qc test toggles test mode, and in combat says why it will not
 - master: the Test mode row reads and writes the one switch, and Reset all ends it
 
-### test_pad_layout.lua (14)
+### test_pad_layout.lua (17)
 
 - layout: horizontal puts a section's chips on one row under the header
 - layout: a titled section draws its label row first
@@ -901,6 +901,9 @@ Total.
 - layout: the wheel steps tabs and wraps both ways
 - layout: the visibility expression combines the master and the pad
 - layout: the fade follows combat and the mouse, under the master alpha
+- layout: [bg subgroups] a grid pad sets a parent's small child sections side by side
+- layout: [bg subgroups] only one parent's children pack, only in a grid, only while they fit
+- layout: [bg subgroups] packed rows mirror for left growth and stay bottom-aligned growing up
 
 ### test_dial_layout.lua (18)
 
@@ -976,7 +979,7 @@ Total.
 - render: [icons] a glyph chip is drawn in its color; the chip repainted with another icon is white again
 - render: [B3] a chip's label is one line, and hidden when the chip leaves it no room
 
-### test_pad.lua (34)
+### test_pad.lua (35)
 
 - pad: the default pad shows the M+ callouts, each chip armed with its baked line
 - pad: [review 5] a refused chip is dimmed and disarmed: a click sends and reports nothing
@@ -1012,6 +1015,7 @@ Total.
 - pad: [R4] the title's tooltip says Right-click to edit this group
 - pad: [R4] in tabs mode the tab's title edits the group the tab shows; the wheel moves it
 - pad: [R4] merged pads, collapsed pads and test mode's placeholder groups have no title to click
+- pad: [bg subgroups] Alterac Valley draws its nineteen objectives two to a row, each title its block wide
 
 ### test_dial.lua (29)
 
@@ -1181,11 +1185,11 @@ Total.
 | test_preview.lua | 23 |
 | test_edit_preview.lua | 14 |
 | test_master.lua | 5 |
-| test_pad_layout.lua | 14 |
+| test_pad_layout.lua | 17 |
 | test_dial_layout.lua | 18 |
 | test_surfaces.lua | 27 |
 | test_pad_render.lua | 20 |
-| test_pad.lua | 34 |
+| test_pad.lua | 35 |
 | test_dial.lua | 29 |
 | test_icon_style.lua | 8 |
 | test_glow.lua | 11 |
@@ -1196,4 +1200,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **970** |
+| **Total** | **974** |

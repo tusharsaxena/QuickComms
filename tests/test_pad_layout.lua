@@ -237,3 +237,81 @@ test("layout: the fade follows combat and the mouse, under the master alpha", fu
     assertEqual(A(nil, nil, false, false), 1)
 end)
 
+
+-- ── child sections side by side (bg subgroups, 2026-10-20) ──────────────────────────────────
+
+local GRID = { orientation = "grid", columns = 4, growth = "right", style = "iconLabel", spacing = 4, width = 100 }
+
+-- Alterac Valley as a pad draws it: its own four callouts, then nineteen two-chip objectives.
+local function avSections()
+    local out = { { groupId = "av", title = "Alterac Valley", slots = slots(4) } }
+    for i = 1, 19 do
+        out[#out + 1] = { groupId = "n" .. i, title = "Objective " .. i, slots = slots(2), parentId = "av" }
+    end
+    return out
+end
+
+local function titlesOf(box)
+    local out = {}
+    for _, it in ipairs(box.items) do if it.kind == "title" then out[it.text] = it end end
+    return out
+end
+
+test("layout: [bg subgroups] a grid pad sets a parent's small child sections side by side", function()
+    local pl = PL()
+    local box = pl.Compute(avSections(), GRID)
+    local t = titlesOf(box)
+    -- red under: stack every section on its own row in modules/Pad_Layout.lua stackBlocks
+    assertEqual(t["Objective 1"].y, t["Objective 2"].y, "two objectives share a row")
+    assertEqual(t["Objective 1"].x, 4)
+    assertEqual(t["Objective 2"].x, 4 + 2 * 104, "the second starts on the grid's third column")
+    assertEqual(t["Objective 2"].w, 204, "its title stops at its block")
+    assertTrue(t["Objective 3"].y > t["Objective 1"].y, "the third starts the next row")
+    assertEqual(t["Objective 3"].x, 4)
+    assertEqual(t["Alterac Valley"].w, 0, "a section on a row of its own keeps its title unsized")
+    local row = 14 + 24 + 4
+    -- the header and padding, the set's own row, ten rows of objectives (nine pairs and one), padding
+    assertEqual(box.height, 22 + row + 10 * row + 4)
+    assertEqual(box.width, 4 * 100 + 3 * 4 + 8)
+    local inRow = {}
+    for _, it in ipairs(box.items) do
+        if it.kind == "chip" and it.y == t["Objective 2"].y + 14 then inRow[#inRow + 1] = it.x end
+    end
+    assertEqual(table.concat(inRow, ","), "4,108,212,316", "the chips stay on the grid's columns")
+end)
+
+test("layout: [bg subgroups] only one parent's children pack, only in a grid, only while they fit", function()
+    local pl = PL()
+    local mixed = {
+        { groupId = "a", title = "A", slots = slots(2) },
+        { groupId = "b", title = "B", slots = slots(2) },
+        { groupId = "x1", title = "X1", slots = slots(2), parentId = "x" },
+        { groupId = "y1", title = "Y1", slots = slots(2), parentId = "y" },
+        { groupId = "y2", title = "Y2", slots = slots(3), parentId = "y" },
+    }
+    local t = titlesOf(pl.Compute(mixed, GRID))
+    assertTrue(t.B.y > t.A.y, "two top-level groups never share a row")
+    assertTrue(t.Y1.y > t.X1.y, "two parents' children never share a row")
+    assertTrue(t.Y2.y > t.Y1.y, "two and three columns do not fit four")
+    local h = titlesOf(pl.Compute(avSections(), H))
+    assertTrue(h["Objective 2"].y > h["Objective 1"].y, "a horizontal pad keeps one section per row")
+end)
+
+test("layout: [bg subgroups] packed rows mirror for left growth and stay bottom-aligned growing up", function()
+    local pl = PL()
+    local left = {}
+    for k, v in pairs(GRID) do left[k] = v end
+    left.growth = "left"
+    local box = pl.Compute(avSections(), left)
+    local t = titlesOf(box)
+    assertEqual(t["Objective 1"].x, 420 - 4 - 204, "the first block mirrors to the right")
+    assertEqual(t["Objective 2"].x, 4)
+    local up = {}
+    for k, v in pairs(GRID) do up[k] = v end
+    up.growth = "rightUp"
+    local ub = pl.Compute(avSections(), up)
+    local u = titlesOf(ub)
+    assertEqual(u["Objective 1"].y, u["Objective 2"].y, "still one row")
+    assertTrue(u["Objective 3"].y < u["Objective 1"].y, "the next row sits above it")
+    assertEqual(ub.height, box.height)
+end)

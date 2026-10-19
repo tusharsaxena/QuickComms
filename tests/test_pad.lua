@@ -688,3 +688,39 @@ test("pad: [R4] merged pads, collapsed pads and test mode's placeholder groups h
     NS.Pad.Release("p1")
     assertEqual(#hits(NS), 0, "a released pad keeps none")
 end)
+
+-- ── bg subgroups (2026-10-20): Alterac Valley's objectives side by side ──────────────────────
+
+local AV = { inInstance = true, instanceType = "pvp", instanceID = 30, inGroup = true, inRaid = true,
+    inInstanceGroup = true }
+
+test("pad: [bg subgroups] Alterac Valley draws its nineteen objectives two to a row, each title its block wide", function()
+    local NS = live(AV)
+    local plan = planFor(NS)
+    local av = T.seeded(NS, "bi.bg.av")
+    local kids = 0
+    for _, sec in ipairs(plan.sections) do if sec.parentId == av then kids = kids + 1 end end
+    -- red under: no parentId on a child's section in modules/Surfaces.lua
+    assertEqual(kids, 19, "each objective's section names its set")
+    assertTrue(NS.Pad.Apply("p1", plan))
+    local inst = NS.Pad.Instance("p1")
+    -- record the size and width each pooled title and hit frame is given (the mock answers none),
+    -- then draw the same plan again on the same pooled frames
+    for _, hit in ipairs(hits(NS)) do rawset(hit, "SetSize", function(self, w, h) self.__sz = { w, h } end) end
+    for _, fs in ipairs(inst.titles.active) do rawset(fs, "SetWidth", function(self, w) self.__w = w end) end
+    assertTrue(NS.Pad.Apply("p1", plan))
+    local byGroup = {}
+    for _, hit in ipairs(hits(NS)) do byGroup[hit.qcGroupId] = hit end
+    local first, second = byGroup[T.seeded(NS, "bi.bg.av.vanndar")], byGroup[T.seeded(NS, "bi.bg.av.dbnorth")]
+    assertTrue(first ~= nil and second ~= nil, "each objective's title takes a right-click")
+    -- the default pad: a four-column grid of 100-pixel chips, 4 apart
+    assertEqual(second.__sz[1], 204, "the second's hit frame is its block wide")
+    assertEqual(first.__sz[1], 204)
+    assertTrue(byGroup[av].__sz[1] > 204, "the set's own title row spans the pad")
+    local sized, auto = 0, 0
+    for _, fs in ipairs(inst.titles.active) do
+        if fs.__w == 204 then sized = sized + 1 elseif fs.__w == 0 then auto = auto + 1 end
+    end
+    assertEqual(sized, 18, "each paired objective's title stops at its block; the nineteenth has a row to itself")
+    assertEqual(sized + auto, #inst.titles.active, "every other title sizes to its text")
+end)
