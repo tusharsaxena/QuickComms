@@ -293,7 +293,8 @@ function Pad.Apply(id, plan)
     R.PaintHeader(inst.header, hstate)
     Pad.ApplyLock()
     NS.SendEngine.SetVisibility(inst.root,
-        PL.VisibilityDriver(NS.Setting("visibility"), look.visibility, plan.hasActive, plan.test == true))
+        PL.VisibilityDriver(NS.Setting("visibility"), look.visibility, plan.hasActive, plan.test == true,
+            NS.State.padsHidden == true))
     Pad.ApplyAlpha(id)
     if t0 then Perf.Note("padLayout", debugprofilestop() - t0) end
     return true

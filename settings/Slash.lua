@@ -35,6 +35,8 @@ local COMMANDS = {
         function() NS.SlashVerbs.SetLocked(true) end},
     {"unlock",   L["Unlock the Comms Pads so they can be dragged"],
         function() NS.SlashVerbs.SetLocked(false) end},
+    {"toggle",   L["Show or hide every Comms Pad for this session"],
+        function() NS.SlashVerbs.TogglePads() end},
     {"version",  L["Print the addon version"],
         function() Sl:CliVersion() end},
     {"list",     L["List every setting and its current value"],

@@ -16,7 +16,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | SLASH-1..2 | Slash | `/qc` and `/quickcomms`, help, a slash collision |
 | PANEL-1..3 | Settings panel | Landing page, General → Master controls, the Defaults button |
 | PROFILE-1..2 | Profiles | The Profiles page and the `profile` verb |
-| STATE-1..2 | State | Enable/disable, the launcher menu |
+| STATE-1..3 | State | Enable/disable, the launcher menu, `/qc toggle` |
 | COMBAT-1 | Combat | The settings panel in combat |
 | DIAG-1..2 | Diagnostics | The debug console, the report, perf |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
@@ -85,9 +85,15 @@ and works while the addon is disabled. Result:
 and `/qc diagnostics` still answer; the minimap menu's Enabled entry is unticked and still clickable;
 `/qc enable` → enabled again, and `enabled = true` is echoed. Result:
 
-**STATE-2. Launcher menu.** Right-click the minimap button → three entries, Enabled, Locked and Test
-mode, each ticking the state it shows and toggling it; left-click → the settings panel opens.
-Result:
+**STATE-2. Launcher menu.** Right-click the minimap button → four entries, Enabled, Locked, Test
+mode and Show window, each ticking the state it shows and toggling it; left-click → the settings
+panel opens. Result:
+
+**STATE-3. Hide the pads for the session.** `/qc toggle` → every Comms Pad hides and the chat says so;
+the minimap menu's Show window is unticked; the dials still open. `/qc test` → the pads show as
+placeholders, and turning it off hides them again. `/qc toggle` → the pads are back. Hide them, pull
+a training dummy and type `/qc toggle` → nothing changes until combat ends, then the pads show, with
+no Lua error. Hide them and `/reload` → the pads show. Result:
 
 ## Combat
 

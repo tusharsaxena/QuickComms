@@ -213,14 +213,29 @@ local function openMenu(m)
     return root
 end
 
-test("launcher: the right-click menu is Enabled, Locked and Test mode", function()
+test("launcher: the right-click menu is Enabled, Locked, Test mode and Show window", function()
     local _, _, m = T.enableAddon()
     local root = openMenu(m)
     assertEqual(root.title, "Ka0s Quick Comms")
     local labels = {}
     for i, box in ipairs(root.boxes) do labels[i] = box.label end
-    -- red under: drop isTestMode/toggleTestMode from core/LauncherSetup.lua
-    assertEqual(table.concat(labels, ","), "Enabled,Locked,Test mode")
+    -- red under: drop isWindowShown/toggleWindow from core/LauncherSetup.lua
+    assertEqual(table.concat(labels, ","), "Enabled,Locked,Test mode,Show window")
+end)
+
+test("launcher: Show window calls the handler `/qc toggle` calls and reflects the session flag", function()
+    local NS, _, m = T.enableAddon()
+    local calls, real = 0, NS.SlashVerbs.TogglePads
+    NS.SlashVerbs.TogglePads = function(...) calls = calls + 1; return real(...) end
+    local function box() return openMenu(m).boxes[4] end   -- the state is read when the menu opens
+    assertTrue(box().checked(), "shown on a fresh addon")
+    box().click()
+    assertEqual(calls, 1, "the one handler")
+    assertTrue(NS.State.padsHidden == true)
+    assertFalse(box().checked())
+    box().click()
+    assertTrue(box().checked())
+    NS.SlashVerbs.TogglePads = real
 end)
 
 test("launcher: Enabled calls the same handler `/qc disable` calls", function()

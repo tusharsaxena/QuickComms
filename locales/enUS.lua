@@ -49,6 +49,9 @@ L["Set a setting — `/qc set <path> <value>` (try /qc list)"] =
 L["Turn test mode on or off (placeholder chips and wedges; it opens dial 1; combat ends it)"] =
     "Turn test mode on or off (placeholder chips and wedges; it opens dial 1; combat ends it)"
 L["Unlock the Comms Pads so they can be dragged"] = "Unlock the Comms Pads so they can be dragged"
+L["Show or hide every Comms Pad for this session"] = "Show or hide every Comms Pad for this session"
+L["Comms Pads hidden for this session."] = "Comms Pads hidden for this session."
+L["Comms Pads shown."] = "Comms Pads shown."
 L["Write the diagnostics report to the debug console"] =
     "Write the diagnostics report to the debug console"
 

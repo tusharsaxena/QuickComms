@@ -17,6 +17,11 @@ State.editing = {}
 -- Session-only; test mode's second flavor, so it is never on with State.testMode.
 State.previewAs = nil
 
+-- `/qc toggle` and the launcher's Show window entry (settings/SlashVerbs.lua V.TogglePads): every
+-- Comms Pad hidden for the session. Applied through the pads' visibility driver; test mode still
+-- shows them (an explicit preview). Dials are not pads and are not affected.
+State.padsHidden = false
+
 -- The When editor's rows switched on with nothing chosen yet (settings/Groups_When.lua):
 -- { [groupId] = { [row] = true } }. Session-only; a profile switch clears it (settings/Editors.lua).
 State.whenOpen = {}

@@ -72,7 +72,7 @@ Total.
 - parity: the Env seam publishes the same NS members on both paths
 - parity: the Media seam publishes the same NS members on both paths
 
-### test_setup.lua (26)
+### test_setup.lua (27)
 
 - core: NS.Print is NS.Util.print after AceConsole's embed (architecture-§2)
 - core: the printer tags every line with the cyan [QC] prefix
@@ -90,7 +90,8 @@ Total.
 - perf: the `perf` hold stands the addon down, and the verbs keep answering
 - perf: the descriptor's SavedVariables global is declared in the TOC
 - launcher: one object, labeled with the brand, the logo as its icon, registered on enable
-- launcher: the right-click menu is Enabled, Locked and Test mode
+- launcher: the right-click menu is Enabled, Locked, Test mode and Show window
+- launcher: Show window calls the handler `/qc toggle` calls and reflects the session flag
 - launcher: Enabled calls the same handler `/qc disable` calls
 - launcher: degraded, Register says once that there is no minimap button
 - options: the category registers eagerly, with the General page under it
@@ -150,7 +151,7 @@ Total.
 - schema: a callout write that names no id is refused, even with callouts present
 - schema: [phase 3] a fresh profile has no row off its default; the member rows are not counted
 
-### test_slash.lua (15)
+### test_slash.lua (19)
 
 - slash: NS.COMMANDS is positional triples, every reserved verb present
 - slash: `diagnostics` has no alias of any kind (debug-logging-§14)
@@ -167,6 +168,10 @@ Total.
 - slash: [final 16] `why` with nothing built speaks of pads and dials
 - slash: a callout's rows take its id after the path; with none the write is refused and names the form
 - slash: [final 9] test and preview's help, and the Preview as row, speak of the dials too
+- slash: [toggle] the flag is off on a fresh addon and the pads show
+- slash: [toggle] `toggle` hides every pad, a second `toggle` shows them again
+- slash: [toggle] test mode shows the pads even while they are hidden
+- slash: [toggle] in combat the flag flips and the driver waits for combat to end
 
 ### test_disabled.lua (21)
 
@@ -1044,11 +1049,11 @@ Total.
 | test_mock_secure.lua | 24 |
 | test_bus.lua | 2 |
 | test_surface_parity.lua | 15 |
-| test_setup.lua | 26 |
+| test_setup.lua | 27 |
 | test_database.lua | 13 |
 | test_profile.lua | 9 |
 | test_schema.lua | 18 |
-| test_slash.lua | 15 |
+| test_slash.lua | 19 |
 | test_disabled.lua | 21 |
 | test_diagnostics.lua | 10 |
 | test_compat.lua | 13 |
@@ -1091,4 +1096,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **877** |
+| **Total** | **882** |

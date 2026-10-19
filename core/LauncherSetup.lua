@@ -6,7 +6,7 @@ local addonName, NS = ...
 -- tooltip. This file supplies the seams: the logo, the brand label, where LibDBIcon's `hide` lives
 -- (db.global.minimap, shared with the Minimap button row), and one accessor-and-toggle pair per
 -- menu entry. Enabled calls the handler `/qc enable|disable` calls (settings/Slash.lua); Locked
--- calls `/qc lock|unlock`'s, and Test mode `/qc test`'s (design spec §16).
+-- calls `/qc lock|unlock`'s, Test mode `/qc test`'s, and Show window `/qc toggle`'s (design spec §16).
 
 local lib = LibStub and LibStub("LibKa0s-Launcher-1.0", true)
 
@@ -64,6 +64,9 @@ NS.Launcher = lib:New({
     toggleLock     = function() NS.SlashVerbs.ToggleLock() end,
     isTestMode     = function() return NS.Preview ~= nil and NS.Preview.IsTestMode() end,
     toggleTestMode = function() NS.Preview.ToggleTestMode() end,
+    -- The pads are the primary display: Show window is `/qc toggle`'s session hide (plan B4).
+    isWindowShown  = function() return NS.SlashVerbs ~= nil and NS.SlashVerbs.PadsShown() end,
+    toggleWindow   = function() NS.SlashVerbs.TogglePads() end,
 
     print         = function(line) NS.Print(line) end,
     debug         = function(tag, message) NS.Debug(tag, message) end,

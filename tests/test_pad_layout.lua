@@ -221,6 +221,8 @@ test("layout: the visibility expression combines the master and the pad", functi
     assertEqual(V("always", "whenActive", true, false), "show")
     assertEqual(V("never", "never", false, true), "show", "test mode shows the display")
     assertEqual(V(nil, nil, true, false), "show")
+    assertEqual(V("always", "always", true, false, true), "hide", "/qc toggle hides the pad")
+    assertEqual(V("always", "always", true, true, true), "show", "test mode wins over /qc toggle")
 end)
 
 test("layout: the fade follows combat and the mouse, under the master alpha", function()

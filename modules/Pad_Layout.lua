@@ -241,9 +241,10 @@ end
 
 --- The pad's visibility as one state-driver expression (spec §10.3). The master visibility applies
 --- on top of the pad's own; "whenActive" is decided at the last out-of-combat rebuild; test mode
---- shows the display (options-ui-§15).
-function PL.VisibilityDriver(master, padVis, hasActive, testMode)
+--- shows the display (options-ui-§15), even over `/qc toggle`'s session hide (`hidden`).
+function PL.VisibilityDriver(master, padVis, hasActive, testMode, hidden)
     if testMode then return "show" end
+    if hidden then return "hide" end
     if master == "never" or padVis == "never" then return "hide" end
     if padVis == "whenActive" then
         if not hasActive then return "hide" end

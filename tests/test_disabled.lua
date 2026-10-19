@@ -305,7 +305,8 @@ test("disabled [§7 step 6]: every event and message in R_on, fired anyway, runs
 end)
 
 -- The verbs that act on a running addon (slash-commands-§2's feature-verb SHOULD, taken).
-local FEATURE_VERBS = { lock = true, unlock = true, check = true, test = true, preview = true, why = true }
+local FEATURE_VERBS = { lock = true, unlock = true, check = true, test = true, preview = true, why = true,
+    toggle = true }
 
 test("disabled [§7 step 7]: every NS.COMMANDS entry and the bare /qc: reserved verbs answer, feature verbs refuse once and write nothing", function()
     local NS, m = baseline()
@@ -367,7 +368,9 @@ test("disabled [§7 step 8]: the launcher's left-click opens the panel and its m
     }
     m.MenuUtil = { CreateContextMenu = function(owner, gen) gen(owner, root) end }
     m.ldbObjects.QuickComms.OnClick(m.UIParent, "RightButton")
-    assertEqual(#boxes, 3)
+    assertEqual(#boxes, 4)
+    assertTrue(boxes[4].label:find("^Show window") ~= nil, boxes[4].label)
+    assertEqual(boxes[4].enabled, false, "Show window is grayed")
     assertEqual(boxes[1].label, "Enabled")
     assertTrue(boxes[1].enabled == nil, "Enabled stays clickable")
     assertTrue(boxes[2].label:find("^Locked") ~= nil, boxes[2].label)

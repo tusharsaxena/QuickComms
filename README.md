@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-877%2F877_passing-green)
+![Tests](https://img.shields.io/badge/Tests-882%2F882_passing-green)
 
 Quick Comms puts your usual group callouts one click or one keypress away. "Kick on me", "Lust
 now", "INC 3 Lumber Mill": set them up once and they sit on a Comms Pad or open from a
@@ -19,9 +19,9 @@ and share any of it with a friend as a string you copy and paste.
 ## Usage
 
 Enter a key, a raid, an arena or a battleground and the Comms Pad shows the callouts that fit; click
-one to send it. `/qc unlock` lets you drag the pad, `/qc lock` fixes it, and `/qc test` shows
-placeholder chips so you can place it anywhere. The minimap button's right-click menu has Enabled,
-Locked and Test mode.
+one to send it. `/qc unlock` lets you drag the pad, `/qc lock` fixes it, `/qc test` shows
+placeholder chips so you can place it anywhere, and `/qc toggle` hides every pad until you toggle it
+back or reload. The minimap button's right-click menu has Enabled, Locked, Test mode and Show window.
 
 The Comms Dial opens on a key. Pick one on Settings → Comms Dial → Binding (or in WoW's key bindings
 menu), press it, click a group, then click a callout to send it. In a battleground the dial opens

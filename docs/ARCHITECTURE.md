@@ -193,7 +193,7 @@ tracked registration down and replay it.
 `/qc`, alias `/quickcomms`. The reserved verbs (`help config enable disable lock unlock version list
 get set reset resetall profile debug diagnostics perf`; `lock` and `unlock` are slash-commands-§8's,
 the Lock frame row's path through the seam) and the feature verbs `check <id>`, which prints the
-line a callout would send under the current situation and never sends, `test` (test mode), `preview` ("Preview as…") and `why` ("Why is this showing?", for every built pad and dial). The full table, the live-while-disabled set
+line a callout would send under the current situation and never sends, `test` (test mode), `toggle` (hide or show every Comms Pad for the session, also the launcher's Show window entry), `preview` ("Preview as…") and `why` ("Why is this showing?", for every built pad and dial). The full table, the live-while-disabled set
 and the handlers are in [`slash-dispatch.md`](slash-dispatch.md). `enable` and `disable` call the
 same handler as the Master controls row and the launcher entry.
 
