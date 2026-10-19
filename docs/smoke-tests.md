@@ -16,16 +16,17 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | SLASH-1..2 | Slash | `/qc` and `/quickcomms`, help, a slash collision |
 | PANEL-1..3 | Settings panel | Landing page, General → Master controls, the Defaults button |
 | PROFILE-1..2 | Profiles | The Profiles page and the `profile` verb |
-| STATE-1..2 | State | Enable/disable, the launcher menu |
+| STATE-1..3 | State | Enable/disable, the launcher menu, `/qc toggle` |
 | COMBAT-1 | Combat | The settings panel in combat |
 | DIAG-1..2 | Diagnostics | The debug console, the report, perf |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
 | SEND-1..5 | Send | Secure sends in keys and on bosses, the spam guard |
-| PAD-1..8 | Pad | The Comms Pad |
-| EDIT-1..24 | Editors | The Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search and glyph colors, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
+| PAD-1..10 | Pad | The Comms Pad, its growth and chip width |
+| EDIT-1..26 | Editors | The Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
 | DIAL-1..12 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial |
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
 | LOOK-1..2 | Look | The Comms Pad's font, border and background |
+| ICONS-1..3 | Icons tab | The chips' and wedges' icon look, border and glow triggers |
 | ICON-1 | Icons | Choosing an icon, for a callout and for a group |
 | BG-1..2 | Battlegrounds | Node winds on the dial; the battleground instance ids |
 | IDS-1 | Instance ids | The Midnight dungeons and raids |
@@ -65,7 +66,8 @@ switching pages back and forth), the notes line, and the slash command list. Res
 
 **PANEL-2. Master controls.** General → the `Master controls` tab: Enable Ka0s Quick Comms beside
 General visibility, Master scale beside Master alpha, Lock frame beside Debug console, Minimap button
-beside Test mode, then Reset position beside Reset all settings. Ticking Debug console opens the
+beside Test mode, then Preview as alone on its own line, then Reset position beside Reset all
+settings. Ticking Debug console opens the
 console; unticking Minimap button hides the button at once. Result:
 
 **PANEL-3. Defaults and Reset all.** Hide the minimap button, untick Enable, press the header's
@@ -85,9 +87,15 @@ and works while the addon is disabled. Result:
 and `/qc diagnostics` still answer; the minimap menu's Enabled entry is unticked and still clickable;
 `/qc enable` → enabled again, and `enabled = true` is echoed. Result:
 
-**STATE-2. Launcher menu.** Right-click the minimap button → three entries, Enabled, Locked and Test
-mode, each ticking the state it shows and toggling it; left-click → the settings panel opens.
-Result:
+**STATE-2. Launcher menu.** Right-click the minimap button → four entries, Enabled, Locked, Test
+mode and Show window, each ticking the state it shows and toggling it; left-click → the settings
+panel opens. Result:
+
+**STATE-3. Hide the pads for the session.** `/qc toggle` → every Comms Pad hides and the chat says so;
+the minimap menu's Show window is unticked; the dials still open. `/qc test` → the pads show as
+placeholders, and turning it off hides them again. `/qc toggle` → the pads are back. Hide them, pull
+a training dummy and type `/qc toggle` → nothing changes until combat ends, then the pads show, with
+no Lua error. Hide them and `/reload` → the pads show. Result:
 
 ## Combat
 
@@ -142,9 +150,14 @@ The C1–C9 checks of the phase 0 harness (design spec §19) are recorded in
 
 ## Pad
 
-**PAD-1. First run.** On a fresh profile, enter a key → the default pad shows "M+ (generic)" with
+**PAD-1. First run.** On a fresh profile, enter a key → the default pad shows "Dungeon (generic)" with
 eight chips, each tagged `P`; the header reads `M+ · <dungeon> +<level>`. Hovering a chip shows its
-name and the exact line it sends. Result:
+name and the exact line it sends. Every chip shows its glyph: Lust a red enraged face, Need mana a
+blue drop, Res me a green ankh, GG a gold trophy, the rest white. Leave the key and zone into a
+normal or heroic dungeon → the same set shows. On a profile saved before this build (it still shows
+"M+ (generic)" with the bloodlust spell icon on Lust), `/reload` with this build → the set reads
+"Dungeon (generic)" and Lust shows the red glyph; a set renamed before, or a callout whose icon was
+cleared, keeps the player's choice. Result:
 
 **PAD-2. The stale hint.** In combat, `/qc set behavior.autoPromote false` → the header shows
 "updates after combat"; when combat ends it clears and the pad has rebuilt. Result:
@@ -173,6 +186,22 @@ shows, no error; after combat the pad is the other profile's. Result:
 its chip shows a small gold padlock in its top-right corner (the LibKa0s catalog's `lock` mark, not the pet-battle lock). With LibKa0s removed (DEGRADED-1)
 the pet-battle padlock draws instead, with no error. Result:
 
+**PAD-9. Up growth.** Comms Pad → Layout → Growth offers Right and down, Left and down, Right and up
+and Left and up (no Upward). Right and up → the header row sits at the bottom of the pad and the
+sections stack upward above it; `/qc unlock` → the drag strip sits below the pad. Drag the strip
+somewhere, then add a group to the pad → the pad grows upward and the strip stays where you left it;
+`/reload` → the strip is still there. Left and up → the chips fill right to left, still upward. Right
+and down → the header is on top again, the strip above, and adding a group grows the pad downward
+from a top edge that stays put. A profile saved with Upward growth loads as Right and up. A pad placed
+before 2026-10-19 moves once on its first load, by up to its height (see Known Limitations in
+`docs/ARCHITECTURE.md`); drag it back and it stays. Result:
+
+**PAD-10. Chip width and the section title.** Comms Pad → Layout → Chip width reads 100 on a new
+pad; drag it to 300 → wide chips, each label on one line; down to 30 → the labels cut short, still
+one line; down to 1 → icon-only slivers, no label and no Lua error. Make a group named `World`, put
+it on the pad and stand in the open world → the header reads `World` and the section under it has
+no second `World` line; rename the group `My world` → its title line is back. Result:
+
 ## Editors
 
 **EDIT-1. A callout and a group on the pad (the phase 3 exit).** Settings → Groups → New group; on
@@ -183,7 +212,7 @@ an `Inc` chip; click it → the party sees "INC" with a skull. Leave the key →
 the pad. Result:
 
 **EDIT-2. A built-in set is an ordinary group (the phase 3 exit, rewritten 2026-10-18).** Groups →
-pick "M+ (generic)" → the picker shows no "(built-in)" tag, and the page draws the same tabs as a
+pick "Dungeon (generic)" → the picker shows no "(built-in)" tag, and the page draws the same tabs as a
 group of yours, nothing read-only. General: Name, Enabled, Open the dial on this group, Parent group,
 the icon with Choose icon…, Duplicate and Delete, then Restore built-in groups; no Customize and no
 read-only line. Callouts: the callout table, exactly as a group of yours draws it (Add callout, Reuse
@@ -192,12 +221,13 @@ glyphs); no Show checkboxes. When: the editable condition drawers (EDIT-22), Con
 reading M+ in gold; not read-only text. Rename a callout in the popup and Save → in a key, the chip's label
 changes. Untick Enabled → in a key the set is gone from the pad; tick it again. Result:
 
-**EDIT-3. Preview as….** Out of combat, in the open world: Groups → General → Preview as → Arena →
+**EDIT-3. Preview as….** Out of combat, in the open world: General → Master controls → Preview as → Arena →
 the pad shows the arena set with PREVIEW on its header and `Preview: Arena`; clicking a chip sends
-nothing; its tooltip says so. Close the settings → the preview ends. `/qc preview raid:heroic` →
+nothing; its tooltip says so. The Comms Pad, Comms Dial and Groups pages' General tabs have no
+Preview as row. Close the settings → the preview ends. `/qc preview raid:heroic` →
 the raid set; pull something → the preview ends with one line and the live chips return. Result:
 
-**EDIT-4. Why is this showing?.** In a key, hover the pad's header → the tooltip lists "M+
+**EDIT-4. Why is this showing?.** In a key, hover the pad's header → the tooltip lists "Dungeon
 (generic): Content" (and any other group, with its rows); with a `/raid` callout on the pad
 outside a raid, the last line names the lock. Behavior → Explain why groups show off → no tooltip.
 `/qc why` prints the same lines per pad. Result:
@@ -210,13 +240,13 @@ built-in group you still have (top-level, in shipped order); Delete pad (Yes) �
 
 **EDIT-6. Restore built-in groups (rewritten 2026-10-18; the Share page's Built-in tab is gone).**
 Share has two tabs, Export and Import. Groups → "Raid (generic)" → Delete (Yes) → it is gone from the
-picker and, in a raid, from the pad. On "M+ (generic)"'s Callouts tab remove "Lust" (Yes). General →
+picker and, in a raid, from the pad. On "Dungeon (generic)"'s Callouts tab remove "Lust" (Yes). General →
 Restore built-in groups (no question asked) → one chat line counts the groups and callouts that came
 back; "Raid (generic)" is in the picker again and last on every pad's and dial's Groups list, and
-"Lust" is the last row of M+ (generic)'s Callouts. Click Restore again → "nothing to restore", and
+"Lust" is the last row of Dungeon (generic)'s Callouts. Click Restore again → "nothing to restore", and
 nothing is added. Delete "Lumber Mill" (inside "Arathi Basin") → Restore → it is back, indented under
 Arathi Basin in the picker, and in Arathi Basin (or Preview as → Arathi Basin) its wedge is on its
-wind, SW, again. Rename "M+ (generic)" → Restore leaves it as it is and adds no second M+ set. With
+wind, SW, again. Rename "Dungeon (generic)" → Restore leaves it as it is and adds no second dungeon set. With
 every group deleted, the "No groups yet" General still offers Restore built-in groups. Result:
 
 **EDIT-7. An edit during combat.** With a user callout on the pad (its id is `c<n>`: `/qc get
@@ -270,7 +300,7 @@ borders are whole** (not shaved by the page's edge). In the list, every row's ha
 glyphs sit centered in its box, and the edit and remove glyphs are small and close to the box's
 right edge (the same on Comms Pad → Groups and Comms Dial → Groups). Pick one of group B's callouts → nothing is added yet; click Add → it is A's
 last row. Edit the copy's text and Save → B's original is unchanged (check its row or its chip).
-The list has no built-in section: "M+ (generic): Lust" is listed like any other group's callout;
+The list has no built-in section: "Dungeon (generic): Lust" is listed like any other group's callout;
 reuse it → a copy you can edit, and the M+ group's Lust is unchanged. Result:
 
 **EDIT-12. The remove glyphs.** On a group's Callouts tab, a row's remove glyph (the red no-entry
@@ -362,7 +392,7 @@ top-level, on every pad and dial where My keys was. `/qc set group.parent none` 
 makes it top-level; `/qc set group.parent <its own id>` is refused, with a line saying why.
 Result:
 
-**EDIT-20. The Preview table.** Groups → "M+ (generic)" → Preview → the active-now line, then a gold
+**EDIT-20. The Preview table.** Groups → "Dungeon (generic)" → Preview → the active-now line, then a gold
 header row, "Callout" and "What it sends here", then one box per callout like the Callouts tab's rows
 (switch between the two tabs: the same fill and border, and the same left and right edges): the
 callout's icon (in its color) and name on the left, what it sends here on the right, or, outside a
@@ -383,8 +413,8 @@ is added. Result:
 
 **EDIT-22. The When drawers.** Groups → a group of yours → When → the active-now line, then the gray
 line "Every condition you set must match. A condition left as Any does not limit the group.", a
-clear gap under it, then eleven header bars, closed, in this order: Content, Instance, Difficulty, Key level, Group, Leader
-or assist, Class, Specialization, Role, Character, Battleground. Each has a right-pointing chevron,
+clear gap under it, then twelve header bars, closed, in this order: Content, Instance, Difficulty, Key level, Group, Leader
+or assist, Class, Specialization, Role, Character, Battleground, Arena. Each has a right-pointing chevron,
 its name in white and "Any" in gray at its right edge; there is no enable checkbox anywhere. They
 look like the settings panel (its fonts, gold, dark fills and thin borders), not like another
 addon's cards. Hover a header → its tooltip. Click Content → the chevron points down, the header's
@@ -401,7 +431,11 @@ class's specs only. Battleground: "All battlegrounds" sits on top of the drawer,
 battleground, then tick it → the summary reads "All battlegrounds", the add box, the list and both
 buttons are dimmed and do nothing on a click; in any battleground the group is active; untick → the
 battleground you added is still listed and the summary names it. Instance has "All dungeons and
-raids" the same way; Character has no such box. Open every drawer, scroll to the bottom, open Battleground and tick a box in
+raids" and Arena "All arenas" the same way; Character has no such box. Instance: type `Murder Row`
+(or `mu` and pick it from the suggestions) → it is added and named, though it is no season dungeon;
+type `Magisters' Terrace` → the season's 2811 is added. Arena: type `Nagrand` → the suggestions list
+Nagrand Arena once; add it → the summary names it; in an arena, Add the arena you are in adds its
+id, and outside one a line says "You are not in an arena." Open every drawer, scroll to the bottom, open Battleground and tick a box in
 it, then Select all and Clear (Any) → the page stays where you scrolled each time, never jumping to
 the top. Click an open header → its drawer closes and its summary stays. Pick another
 group and come back → the drawers you left open are still open, and the other group's are its own;
@@ -443,6 +477,24 @@ The hint box is gone on Markers and Glyphs. Switch tabs with text in the box →
 filtered by it; Cancel and open the browser again → the text is still there; `/reload` → the box is
 empty. Escape with the Wowhead window's box focused closes that window alone; close the browser →
 the Wowhead window closes with it. Result:
+
+**EDIT-25. The Callouts rows and the Look tab.** Groups → "Dungeon (generic)" → Callouts → each
+row reads its icon, the name in gold, the channel's short label in its chat color (Party blue,
+Say white) and the start of its text in a muted white, cut at 40
+characters with "…". A callout with no icon shows the question mark; a callout whose text holds a
+`|` shows the bar, not a color change; a Smart channel takes the color of the channel it resolves to
+now (solo: Party). Comms Pad → Look → Visibility, then the Font, Border and Background headings, each
+heading once. Result:
+
+**EDIT-26. The glyph sets and their credits.** Open the icon browser (EDIT-14) → Glyphs: the count
+reads over five thousand. A set dropdown left of Icon color reads All; pick Open Iconic → only the
+original marks (the count about two hundred), Phosphor → the Phosphor marks, Game-icons → the
+thousands of game marks; All → every set again. The search (EDIT-24) filters within the set picked.
+Labels drop the set prefix (`Arrow up`, not `ph:arrow-up`); hover a Phosphor mark → the tooltip
+names Phosphor; hover a Game-icons mark → "Game-icons, by <author>" (a Lorc or Delapouite mark, for
+instance). Choose a Game-icons glyph, Save → the chip shows it in white, or in the Icon color picked.
+The README's Credits section names the three sets, their licenses and the Game-icons authors.
+Typing in the search box keeps up without a hitch. Result:
 
 ## Dial
 
@@ -499,7 +551,7 @@ the key is the game's again. Result:
 
 **DIAL-9. Test mode and Preview as.** Out of combat: `/qc test` → dial 1 opens at its place with
 placeholder wedges and TEST MODE above the hub; clicking sends nothing; 1 still fires the action bar.
-Comms Dial → General → Preview as → Arathi Basin → the dial opens on the nodes with PREVIEW; nothing
+General → Master controls → Preview as → Arathi Basin → the dial opens on the nodes with PREVIEW; nothing
 sends; Escape closes the settings window (not the dial), which ends the preview and closes the dial.
 Turn test mode on, then pull a target dummy → test mode ends; the dial closes at once or, if combat
 won the race, at combat end, and in between 1–8 and Escape still do what they always do. Result:
@@ -583,6 +635,25 @@ and locked in combat, so the in-combat write goes through the command line: in c
 `/qc set pad.look.borderSize 3` → no error, the header shows "updates after combat", and the thicker
 edge lands at combat end. Defaults → the Ka0s look again. Result:
 
+## Icons tab
+
+**ICONS-1. Look.** Comms Pad → Icons: Icon size 32 → the chips grow taller around the bigger icons;
+Zoom 0.1 → each icon's edge is cropped; Desaturate → gray; Icon opacity 50% → faint; Tint red → a
+white glyph turns red and a colored glyph darker. Show border, thickness 2, color white → a square
+edge over each icon. Comms Dial → Icons: Show border → a round ring behind each wedge's icon; Icon size
+20 → smaller icons, the wedges keep their size. Defaults on each page → the icons as before. Result:
+
+**ICONS-2. Glow styles.** Comms Pad → Icons → Glow on: Pixel border → lines run around every icon;
+Auto cast sparkles, Button (rotating rays) and Proc (flipbook) each look different, and each style's
+knobs gray out under the others. With a full pad glowing in Pixel border, the frame rate stays where
+it was. Result:
+
+**ICONS-3. Glow triggers.** Glow when On hover → only the icon under the mouse glows; in combat too,
+with no error. After sending → a chip glows for about a second and a half after its line is sent,
+then stops; on a dial, send from a wedge and reopen the dial within a few seconds → that wedge glows
+for about a second and a half from the open, then stops, and a later reopen shows no glow. In combat, `/qc set pad.icon.size 30` → no error, "updates after combat", the bigger
+icons land at combat end. Result:
+
 ## Icons
 
 **ICON-1. Choosing an icon.** Groups → a group of yours → Callouts → a row's edit glyph → Choose
@@ -593,7 +664,7 @@ wedge on the Comms Dial shows it, and the General tab's icon follows. With that 
 `/qc set group.icon 136012` still sets it. Click the red clear glyph beside Choose icon… → the
 General tab's icon is the question mark, the wedge shows no icon, and the clear glyph goes idle; in
 the popup, a callout with an icon → clear glyph → the icon is the question mark, Save → the row and
-the chip show no icon. A built-in set's General tab ("M+ (generic)") has the same Icon row and
+the chip show no icon. A built-in set's General tab ("Dungeon (generic)") has the same Icon row and
 Choose icon…: a glyph chosen there shows on its wedge. Result:
 
 ## Battlegrounds
@@ -620,7 +691,10 @@ you are in adds that id. Groups → Preview as lists "M+ · Windrunner Spire" an
 Demon Hunter, `/qc diagnostics` → the Situation line reads `spec=1480`, and a When's Specialization
 drawer offers Devourer. If you can enter Sporefall (map 1592), note whether it is a raid and its instanceID
 (ruling R4 left it out of the shipped raids). Only after this check passes
-does `defaults/GameIds.lua`'s note change from "matched" to "confirmed". Result:
+does `defaults/GameIds.lua`'s note change from "matched" to "confirmed". In any dungeon or raid
+outside the season, and in each arena you play: `/qc diagnostics` → the instanceID is one
+`defaults/GameIds_Instances.lua` lists (INSTANCES, ARENAS), and the When editor names it the way the
+client does; only then does that file's note say "confirmed". Result:
 
 ## Non-English client
 
@@ -654,8 +728,9 @@ from the client, so this check needs a non-English client pass. Result:
 
 | ID | Origin | Why it is owed |
 |---|---|---|
-| INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..2, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet; LOC-1 re-enumerated in phase 5 and owed a non-English client pass |
-| SEND-1..5, PAD-1..8 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet; PAD-8 added in phase 5 (audit QC-07) |
-| EDIT-1..24 | Phase 3: the editors | No client pass recorded yet; EDIT-1, 2 and 19 rewritten and EDIT-22..24 added with the When drawers, Inherit when conditions and the icon browser's search (2026-10-18); EDIT-2, 4, 5, 6, 11, 14 and ICON-1 rewritten and EDIT-19..21 added when the built-in sets became seeded groups, groups nested and the Preview tab became a table (2026-10-18); EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17); EDIT-9, 13 and ICON-1 rewritten and EDIT-14..17 added with the icon browser and glyph colors (2026-10-18); EDIT-9 rewritten and EDIT-18 added when the token dropdown became the Text label's info glyph (2026-10-18); EDIT-13, 14 and ICON-1 rewritten when the Suggested tab went and the skin stopped waiting for the addon to be enabled (2026-10-18); EDIT-9, 18 and ICON-1 rewritten when the Icon boxes went and the popup took its two-column layout (2026-10-18); EDIT-9, 11 and ICON-1 rewritten with the clear glyph, the Preview gap and the buttons' 2 px inset (2026-10-18) |
-| DIAL-1..12 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
-| SHARE-1..6, LOOK-1..2, ICON-1, BG-1..2, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; LOOK-2's in-combat step goes through `/qc set` |
+| INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..3, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet; LOC-1 re-enumerated in phase 5 and owed a non-English client pass; STATE-3 added and PANEL-2 rewritten with `/qc toggle` and Preview as in Master controls (2026-10-19) |
+| SEND-1..5, PAD-1..10 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet; PAD-8 added in phase 5 (audit QC-07); PAD-1 rewritten and PAD-9..10 added with the up growth, chip width and the built-in glyphs (2026-10-19) |
+| EDIT-1..26 | Phase 3: the editors | No client pass recorded yet; EDIT-3, 4, 20 and 22 rewritten and EDIT-25..26 added with Preview as in Master controls, the Dungeon set, the Arena drawer, instance search, the Callouts rows and the glyph sets (2026-10-19); EDIT-1, 2 and 19 rewritten and EDIT-22..24 added with the When drawers, Inherit when conditions and the icon browser's search (2026-10-18); EDIT-2, 4, 5, 6, 11, 14 and ICON-1 rewritten and EDIT-19..21 added when the built-in sets became seeded groups, groups nested and the Preview tab became a table (2026-10-18); EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17); EDIT-9, 13 and ICON-1 rewritten and EDIT-14..17 added with the icon browser and glyph colors (2026-10-18); EDIT-9 rewritten and EDIT-18 added when the token dropdown became the Text label's info glyph (2026-10-18); EDIT-13, 14 and ICON-1 rewritten when the Suggested tab went and the skin stopped waiting for the addon to be enabled (2026-10-18); EDIT-9, 18 and ICON-1 rewritten when the Icon boxes went and the popup took its two-column layout (2026-10-18); EDIT-9, 11 and ICON-1 rewritten with the clear glyph, the Preview gap and the buttons' 2 px inset (2026-10-18) |
+| DIAL-1..12 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-9 rewritten when Preview as moved to Master controls (2026-10-19); DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
+| SHARE-1..6, LOOK-1..2, ICON-1, BG-1..2, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; LOOK-2's in-combat step goes through `/qc set`; IDS-1 extended to the journal instances and arenas (2026-10-19) |
+| ICONS-1..3 | Icons and polish (2026-10-19): the Icons tab | No client pass recorded yet |

@@ -6,8 +6,9 @@ local addonName, NS = ...
 --     window   settings/ModalWindow.lua's (the callout popup's chrome), title "Ka0s Quick Comms"
 --     header   Choose an icon, the gold rule under it
 --     tabs     [ Markers ][ Game icons ][ Glyphs ]   (the library's tab strip)
---     toolbar  Game icons: Show All / Spells / Items. Glyphs: the glyph color swatch. Then the
---              search box (a magnifier, a clear mark), and at the right how many icons the tab
+--     toolbar  Game icons: Show All / Spells / Items. Glyphs: Show All or one icon set (Open
+--              Iconic / Phosphor / Game-icons, from the library), then the glyph color swatch. Then
+--              the search box (a magnifier, a clear mark), and at the right how many icons the tab
 --              holds, or "N of M icons" while a search narrows it.
 --     grid     COLS x ROWS icons and a scrollbar, GRID_GAP under the toolbar; the mouse wheel
 --              scrolls too
@@ -16,7 +17,8 @@ local addonName, NS = ...
 --     footer   the selected icon (a glyph in the color) and its name, then Choose and Cancel
 --
 -- A click on an icon selects it, a double-click chooses it, and hovering one names it (its label,
--- or a game icon's texture id). Choose hands the opener the icon and, for a glyph, the color (none
+-- or a game icon's texture id; a glyph's tooltip also names its set, and a Game-icons mark its
+-- author, as CC BY 3.0 asks). Choose hands the opener the icon and, for a glyph, the color (none
 -- for white), then closes; the opener writes it (the popup's draft, or the group's icon and color as
 -- one act). Cancel, the close X and Escape change nothing. The stored icon is preselected, and its
 -- tab opened and scrolled to it. An icon no tab lists (a built-in set's spell icon, a typed texture
@@ -65,9 +67,12 @@ local CONTENT_X, BODY_BOTTOM = 12, 12
 local TOOLBAR_H, GRID_GAP = 30, 10
 local HINT_GAP, HINT_H = 8, 36
 B.GRID_TOP = TOOLBAR_H + GRID_GAP
--- The filter and the swatch are TOOL_W wide; the search box sits SEARCH_GAP after them (at the
--- left edge on Markers, which has neither), SEARCH_W wide.
+-- The game filter is TOOL_W wide; the search box sits SEARCH_GAP after it (at the left edge on
+-- Markers, which has no control), SEARCH_W wide. Glyphs carries two controls, the set filter (SET_W)
+-- and the swatch (SWATCH_W), so its search box is narrower (SEARCH_W_GLYPHS) and the count keeps
+-- its room at the right.
 local TOOL_W, SEARCH_GAP, SEARCH_W, SEARCH_GLYPH = 180, 10, 190, 14
+local SET_W, SWATCH_W, SEARCH_W_GLYPHS = 130, 110, 160
 local GOLD = { 1, 0.82, 0, 0.7 }
 local GRAY = "|cffaaaaaa"
 -- The magnifier's muted gold and the clear mark's gray (the approved mockup's), and the hint's box:
@@ -90,13 +95,14 @@ local TAB_KEYS = {}
 for _, t in ipairs(B.TABS) do TAB_KEYS[t.key] = true end
 
 -- The open request ({ icon, color, onChoose, owner, lift, valid }), nil while closed, and what the
--- browser shows: the tab, the game filter, the tab's list (searched) and how many the tab holds, the
--- selection, the glyph color, the first visible row. `search` is the session's typed text, kept
--- while closed.
+-- browser shows: the tab, the game filter, the glyph set, the tab's list (searched) and how many the
+-- tab holds, the selection, the glyph color, the first visible row. `search` is the session's typed
+-- text, kept while closed.
 local request
 local tab, filter, list, total, loaded, selected, color, offset = FIRST_TAB, "all", {}, 0, true, nil, nil, 0
+local glyphSet = "all"
 local search = ""
-local ctx, area, grid, slider, status, count, filterDD, swatch, preview, nameText, chooseBtn, cancelBtn
+local ctx, area, grid, slider, status, count, filterDD, setsDD, swatch, preview, nameText, chooseBtn, cancelBtn
 local searchBox, clearMark, hint, hintText, linkBtn, linkWin
 local drawing = false
 B.cells = {}
@@ -199,6 +205,8 @@ local function tooltip(cell)
     if cell.qcIcon == nil or not GameTooltip then return end
     GameTooltip:SetOwner(cell, "ANCHOR_RIGHT")
     GameTooltip:SetText(Src.Label(cell.qcIcon))
+    local credit = Src.Credit(cell.qcIcon)
+    if credit then GameTooltip:AddLine(credit, 0.7, 0.7, 0.7, true) end
     GameTooltip:AddLine(L["Click to select it, double-click to choose it."], 1, 1, 1, true)
     GameTooltip:Show()
 end
@@ -245,9 +253,15 @@ local function applyInsets()
     if input and input.SetTextInsets then input:SetTextInsets(SEARCH_GLYPH + 4, SEARCH_GLYPH + 6, 3, 3) end
 end
 
--- The search box after the tab's own control (none on Markers), its text and its clear mark.
+-- The search box after the tab's own controls (none on Markers), its text and its clear mark.
 local function drawSearch()
-    local x = (tab == "game" or SWATCH_TABS[tab]) and (TOOL_W + SEARCH_GAP) or 0
+    local x, w = 0, SEARCH_W
+    if tab == "game" then
+        x = TOOL_W + SEARCH_GAP
+    elseif SWATCH_TABS[tab] then
+        x, w = SET_W + SWATCH_W + 2 * SEARCH_GAP, SEARCH_W_GLYPHS
+    end
+    searchBox:SetWidth(w)
     searchBox.frame:ClearAllPoints()
     searchBox.frame:SetPoint("TOPLEFT", area, "TOPLEFT", x, 0)
     if searchBox:GetText() ~= search then
@@ -261,6 +275,8 @@ end
 local function drawToolbar()
     filterDD.frame:SetShown(tab == "game")
     filterDD:SetValue(filter)
+    setsDD.frame:SetShown(tab == "glyphs")
+    setsDD:SetValue(glyphSet)
     swatch.frame:SetShown(SWATCH_TABS[tab] == true)
     local hex = color or "ffffff"
     swatch:SetColor(tonumber(hex:sub(1, 2), 16) / 255, tonumber(hex:sub(3, 4), 16) / 255, tonumber(hex:sub(5, 6), 16) / 255)
@@ -296,7 +312,7 @@ end
 -- The tab's list, searched, from the top, or scrolled to `icon` when the list holds it.
 local function fill(icon)
     local all
-    all, loaded = Src.List(tab, filter)
+    all, loaded = Src.List(tab, tab == "glyphs" and glyphSet or filter)
     total = #all
     list = Src.Search(all, tab, search)
     offset = 0
@@ -388,16 +404,28 @@ local function buildToolbar(AceGUI)
     filterDD:SetCallback("OnValueChanged", function(_, _, key) B.SetFilter(key) end)
     H().AttachTooltip(filterDD, L["Show"], L["All the game's icons, or only the spell or the item icons."])
     place(filterDD, "TOPLEFT", 0, 0)
+    setsDD = AceGUI:Create("Dropdown")
+    setsDD:SetLabel("")
+    local sets, order = { all = L["All"] }, { "all" }
+    for _, set in ipairs(Src.GlyphSets()) do
+        sets[set.id] = set.label
+        order[#order + 1] = set.id
+    end
+    setsDD:SetList(sets, order)
+    setsDD:SetWidth(SET_W)
+    setsDD:SetCallback("OnValueChanged", function(_, _, key) B.SetGlyphSet(key) end)
+    H().AttachTooltip(setsDD, L["Show"], L["Every glyph, or only one icon set's."])
+    place(setsDD, "TOPLEFT", 0, 0)
     swatch = AceGUI:Create("ColorPicker")
     swatch:SetLabel(L["Icon color"])
     swatch:SetHasAlpha(false)
-    swatch:SetWidth(TOOL_W)
+    swatch:SetWidth(SWATCH_W)
     local function pick(_, _, r, g, b) B.SetColor(NS.Library.IconColorFrom(r, g, b) or nil) end
     swatch:SetCallback("OnValueChanged", pick)
     swatch:SetCallback("OnValueConfirmed", pick)
     Settings.Editors.TrackPicker(swatch)
     H().AttachTooltip(swatch, L["Icon color"], L["The color a glyph is drawn in. White is none."])
-    place(swatch, "TOPLEFT", 0, 0)
+    place(swatch, "TOPLEFT", SET_W + SEARCH_GAP, 0)
     count = area:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     count:SetPoint("TOPRIGHT", area, "TOPRIGHT", 0, -6)
 end
@@ -575,7 +603,7 @@ function B.Open(req)
     selected = home and req.icon or nil
     color = nil
     if NS.Library.IsGlyph(selected) and req.color and NS.Library.ValidIconColor(req.color) then color = req.color end
-    filter = "all"
+    filter, glyphSet = "all", "all"
     lift(req.lift)
     B.catcher:Show()
     B.frame:Show()
@@ -602,6 +630,19 @@ function B.SetFilter(key)
     if not (request and FILTERS[key]) then return end
     filter = key
     if tab == "game" then showTab("game", selected) end
+end
+
+--- The Glyphs tab's set filter: "all" or a set's id (Src.GlyphSets). Kept across tab switches while
+--- open; each open starts on "all", so a stored glyph of any set can be shown selected.
+function B.SetGlyphSet(key)
+    if not request then return end
+    local known = key == "all"
+    for _, set in ipairs(Src.GlyphSets()) do
+        if set.id == key then known = true end
+    end
+    if not known then return end
+    glyphSet = key
+    if tab == "glyphs" then showTab("glyphs", selected) end
 end
 
 --- Search the shown tab for `text` (nil or blank shows it whole), as the search box does as it is
@@ -661,13 +702,13 @@ end
 --- What the browser shows (for tests), or nil while closed.
 function B.State()
     if not request then return nil end
-    return { tab = tab, filter = filter, selected = selected, color = color, offset = offset, count = #list,
+    return { tab = tab, filter = filter, glyphSet = glyphSet, selected = selected, color = color, offset = offset, count = #list,
         total = total, search = search, loaded = loaded, owner = request.owner }
 end
 
 --- The toolbar's and the footer's widgets (for tests).
 function B.Widgets()
-    return { filter = filterDD, swatch = swatch, choose = chooseBtn, cancel = cancelBtn, slider = slider,
+    return { filter = filterDD, sets = setsDD, swatch = swatch, choose = chooseBtn, cancel = cancelBtn, slider = slider,
         grid = grid, status = status, count = count, preview = preview, name = nameText, area = area,
         search = searchBox, clear = clearMark, hint = hint, hintText = hintText, link = linkBtn }
 end

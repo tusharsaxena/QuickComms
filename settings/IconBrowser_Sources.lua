@@ -7,7 +7,9 @@ local _, NS = ...
 --     game       every icon the macro icon selector offers (Compat.MacroIcons: spells, then items),
 --                as texture ids, filtered All / Spells / Items
 --     glyphs     every icon of the LibKa0s catalog (NS.IconNames; library-stack-§8: enumerated,
---                never a hard-coded path list), white on transparent, so each takes a color
+--                never a hard-coded path list), white on transparent, so each takes a color;
+--                filtered All or one of the catalog's sets (NS.IconSets: Open Iconic, Phosphor,
+--                Game-icons), each list built once for the session
 --
 -- Each tab is a list of icon VALUES as the Icon row stores them (a texture path, or a texture id
 -- for a game icon), never a table per icon: the game list holds thousands. Label(icon) names one.
@@ -15,6 +17,9 @@ local _, NS = ...
 -- THE GAME LIST is read on first use and kept only once the client answers with icons: until its
 -- own icon list has loaded the client answers with none, so an empty answer is asked again next
 -- time (GameIcons' second value says whether it is loaded).
+--
+-- A SET'S PREFIX ("ph:", "gi:") is part of a glyph's catalog key, never of its label: "ph:arrow-up"
+-- reads "Arrow up", and the tooltip names the set (and a Game-icons mark's author) instead.
 --
 -- SEARCH (Search) is a case-insensitive plain substring over what an icon is called on its tab: a
 -- marker's name, a glyph's catalog key and its shown label, a game icon's texture id (its digits;
@@ -43,12 +48,36 @@ function Src.MarkerPath(i)
     return "Interface\\TargetingFrame\\UI-RaidTargetingIcon_" .. i
 end
 
---- A catalog name's label: the curated one, else the name itself, its dashes as spaces and its
---- first letter capitalized ("arrow-circle-down" -> "Arrow circle down"; not localized).
+--- A catalog name's label: the curated one, else the name itself without its set's prefix, its
+--- dashes as spaces and its first letter capitalized ("arrow-circle-down" -> "Arrow circle down",
+--- "ph:arrow-up" -> "Arrow up"; not localized).
 function Src.GlyphLabel(name)
     if Src.GLYPH_LABELS[name] then return Src.GLYPH_LABELS[name] end
-    local words = name:gsub("-", " ")
+    local words = (name:match("^%l+:(.+)$") or name):gsub("-", " ")
     return (words:gsub("^%l", string.upper))
+end
+
+-- The set names the browser shows, by set id; a set this table does not know shows the library's.
+local SET_LABELS = { ["open-iconic"] = L["Open Iconic"], phosphor = L["Phosphor"], ["game-icons"] = L["Game-icons"] }
+
+--- The catalog's sets, in the library's order: { id, label (localized), prefix }. Empty without
+--- the library, or with one that predates the sets.
+--- @return table[]
+function Src.GlyphSets()
+    local out = {}
+    for _, set in ipairs(NS.IconSets()) do
+        out[#out + 1] = { id = set.id, label = SET_LABELS[set.id] or set.label, prefix = set.prefix or "" }
+    end
+    return out
+end
+
+-- A catalog name's set id, by its prefix (none: the set whose prefix is empty), or nil.
+local function setOfName(name)
+    local prefix = name:match("^(%l+:)") or ""
+    for _, set in ipairs(NS.IconSets()) do
+        if (set.prefix or "") == prefix then return set.id end
+    end
+    return nil
 end
 
 function Src.Markers()
@@ -57,13 +86,24 @@ function Src.Markers()
     return out
 end
 
---- Every catalog glyph's path, in the catalog's order; empty without the library.
-function Src.Glyphs()
+-- Each set's glyph list, and "all"'s, built on the first ask and kept: the catalog is fixed for the
+-- session, and Search memoizes by list identity, so a list rebuilt per keystroke would miss both of
+-- its memos and recompute ~5,800 labels on every one.
+local glyphLists = {}
+
+--- The catalog's glyphs' paths, in the catalog's order: every one (`set` nil or "all"), or one set's
+--- by its id. Empty without the library. The same table on every call for the same set.
+--- @return table
+function Src.Glyphs(set)
+    set = set or "all"
+    if glyphLists[set] then return glyphLists[set] end
     local out = {}
     for _, name in ipairs(NS.IconNames()) do
         local path = NS.Icon(name)
-        if path then out[#out + 1] = path end
+        if path and (set == "all" or setOfName(name) == set) then out[#out + 1] = path end
     end
+    -- Not kept while the library is absent: an empty answer is no catalog.
+    if #NS.IconNames() > 0 then glyphLists[set] = out end
     return out
 end
 
@@ -88,6 +128,29 @@ end
 function Src.Label(icon)
     if type(icon) == "number" then return L["Texture id %d"]:format(icon) end
     return labelMap()[icon] or tostring(icon or "")
+end
+
+--- The set id of glyph `icon` (a path), or nil for anything that is no catalog glyph.
+--- @return string|nil
+function Src.SetOf(icon)
+    labelMap()
+    local name = type(icon) == "string" and keys[icon]
+    return name and setOfName(name) or nil
+end
+
+--- The set's shown name for glyph `icon`, with its author where the set's license asks for one
+--- ("Game-icons, by Lorc"), or nil for anything that is no catalog glyph.
+--- @return string|nil
+function Src.Credit(icon)
+    local id = Src.SetOf(icon)
+    if not id then return nil end
+    local label = id
+    for _, set in ipairs(Src.GlyphSets()) do
+        if set.id == id then label = set.label end
+    end
+    local who = NS.IconAuthor(keys[icon])
+    if who then return L["%s, by %s"]:format(label, who) end
+    return label
 end
 
 -- The client's icon lists, kept once they answered with icons.
@@ -135,11 +198,11 @@ function Src.TabFor(icon)
     return nil
 end
 
---- The list a tab shows (`filter` for the game tab), and whether it is loaded. Markers for any
---- other key.
+--- The list a tab shows (`filter`: the game tab's, or the glyph set's id), and whether it is
+--- loaded. Markers for any other key.
 --- @return table icons, boolean loaded
 function Src.List(tab, filter)
-    if tab == "glyphs" then return Src.Glyphs(), true end
+    if tab == "glyphs" then return Src.Glyphs(filter), true end
     if tab == "game" then return Src.GameIcons(filter) end
     return Src.Markers(), true
 end

@@ -1,21 +1,24 @@
 local _, NS = ...
--- defaults/BuiltIns_MythicPlus.lua — the generic M+ set (spec §12, brainstorm §8).
+-- defaults/BuiltIns_MythicPlus.lua — the generic dungeon set (spec §12, brainstorm §8): any dungeon,
+-- a keystone run included. Its id stays `bi.mplus`, as shipped ids do; migration step 5 renames and
+-- widens the copies stored profiles hold (modules/Library_Migrate.lua MigrateBuiltins).
 
 local BI, L = NS.BuiltIns, NS.L
+local C = BI.COLOR
 local ID = "bi.mplus"
 
 BI.Group(ID, {
-    name = L["M+ (generic)"], icon = "Interface\\Icons\\INV_Relics_Hourglass",
-    when = { content = { mythicPlus = true } },
+    name = L["Dungeon (generic)"], icon = "Interface\\Icons\\INV_Relics_Hourglass",
+    when = { content = { dungeon = true, mythicPlus = true } },
     callouts = BI.Callouts(ID, "smartGroup", {
-        { "pull",   L["Pulling"],        L["Pulling next pack"] },
-        { "lust",   L["Lust"],           L["Lust on this pack {rt8}"], "Interface\\Icons\\Spell_Nature_Bloodlust" },
-        { "mana",   L["Need mana"],      L["Wait, need mana"] },
-        { "kicks",  L["Kick order"],     L["Kick order: {rt1} {rt2} {rt3}"] },
-        { "skip",   L["Skipping"],       L["Skipping with invis/shroud"] },
-        { "res",    L["Res me"],         L["Res me pls"], "Interface\\Icons\\Spell_Nature_Reincarnation" },
-        { "chain",  L["Chain pull"],     L["Key time is tight, chain pull"] },
-        { "gg",     L["GG"],             L["gg, thanks all"] },
+        { "pull",   L["Pulling"],        L["Pulling next pack"], "gi:crossed-swords" },
+        { "lust",   L["Lust"],           L["Lust on this pack {rt8}"], "gi:enrage", C.red },
+        { "mana",   L["Need mana"],      L["Wait, need mana"], "gi:water-drop", C.blue },
+        { "kicks",  L["Kick order"],     L["Kick order: {rt1} {rt2} {rt3}"], "gi:boot-kick" },
+        { "skip",   L["Skipping"],       L["Skipping with invis/shroud"], "gi:invisible" },
+        { "res",    L["Res me"],         L["Res me pls"], "gi:ankh", C.green },
+        { "chain",  L["Chain pull"],     L["Key time is tight, chain pull"], "gi:crossed-chains" },
+        { "gg",     L["GG"],             L["gg, thanks all"], "gi:trophy-cup", C.gold },
     }),
 })
 

@@ -89,7 +89,7 @@ test("members: a seeded group's fields read and write as any group's; the shippe
     assertTrue((S.Set("group.enabled", false, gid)))
     assertTrue((S.Set("group.when", { content = { raid = true } }, gid)))
     assertEqual(NS.db.profile.groups[gid].name, "Mine")
-    assertEqual(NS.BuiltIns.groups["bi.mplus"].name, "M+ (generic)", "the seed data is untouched")
+    assertEqual(NS.BuiltIns.groups["bi.mplus"].name, "Dungeon (generic)", "the seed data is untouched")
     assertTrue(NS.BuiltIns.groups["bi.mplus"].when.content.mythicPlus)
     assertFalse((S.Set("group.name", "Mine", "bi.mplus")), "a shipped id is no group")
 end)
@@ -543,4 +543,20 @@ test("members: [inherit] the Enabled tooltip names whose When a sub-group is sho
     local NS = T.enableAddon()
     local row = NS.SchemaRuntime.FindRow("group.enabled")
     assertEqual(row.desc, "Show this group wherever its When matches (its parent's, while Inherit when conditions is ticked). Off keeps the group and its place on every pad.")
+end)
+
+test("members: [arena] the CLI sets the arena row by id, name or all, and prints it back", function()
+    local NS, m = T.enableAddon()
+    m.GetRealZoneText = function(id) return ({ [1505] = "Nagrand Arena", [572] = "Ruins of Lordaeron" })[id] or "" end
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    NS.State.editing.group = gid
+    -- red under: an arena condition the CLI does not know ("Name a condition")
+    NS.addon:OnSlashCommand("set group.when arena Nagrand Arena, 572")
+    local when = NS.db.profile.groups[gid].when
+    assertTrue(when.arena and when.arena[1505] and when.arena[572], "a name with a space, split on commas")
+    m.prints = {}
+    NS.addon:OnSlashCommand("get group.when")
+    assertTrue(table.concat(m.prints, "\n"):find("arena 1505,572", 1, true) ~= nil, table.concat(m.prints, "\n"))
+    NS.addon:OnSlashCommand("set group.when arena all")
+    assertTrue(NS.db.profile.groups[gid].when.arena.all)
 end)

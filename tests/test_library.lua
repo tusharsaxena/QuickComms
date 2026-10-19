@@ -68,6 +68,12 @@ test("library: a seeded group is an ordinary group: its fields, When, callouts a
     assertEqual(p.callouts[lust].text, "Lust on this pack {rt8}")
     assertEqual(p.callouts[lust].channel, "smartGroup")
     assertEqual(p.callouts[lust].origin, "bi.mplus.lust")
+    -- red under: seedCallout drops iconColor (B7)
+    local shipped = NS.BuiltIns.callouts["bi.mplus.lust"]
+    assertEqual(p.callouts[lust].icon, shipped.icon)
+    assertTrue(shipped.iconColor ~= nil, "the shipped lust is tinted")
+    assertEqual(p.callouts[lust].iconColor, shipped.iconColor)
+    assertTrue(p.callouts[lust].glyph == nil, "the catalog name is seed data only")
     -- every write a user group takes, through the seam
     assertTrue((NS.SchemaRuntime.Set("group.name", "Keys", gid)))
     assertTrue((NS.SchemaRuntime.Set("group.when", { content = { raid = true } }, gid)))
@@ -787,7 +793,7 @@ test("library: [phase 5] Prepare gives a pad saved before the Look groups every 
     assertEqual(pad.look.visibility, "never", "a stored value is kept")
     assertEqual(pad.look.font, "Friz Quadrata TT")
     assertEqual(pad.look.background.a, 0.92)
-    assertEqual(pad.layout.width, 140)
+    assertEqual(pad.layout.width, 100)
     assertTrue(pad.look.background ~= NS.Library.TEMPLATES.pad.look.background, "a copy, never the template")
 end)
 
@@ -871,6 +877,12 @@ test("library: [icons] IsGlyph names a catalog icon by its path; ValidIconColor 
     assertNil(Lib.IsGlyph("Interface\\TargetingFrame\\UI-RaidTargetingIcon_8"), "a raid marker is no glyph")
     assertNil(Lib.IsGlyph(136012))
     assertNil(Lib.IsGlyph(false))
+    -- review focus 4: a path a share string or a saved icon carried before the three icon sets
+    -- (LibKa0s v1.74.0) still reads as the same glyph, and a prefixed set's mark resolves to its name
+    assertEqual(Lib.IsGlyph("Interface\\AddOns\\QuickComms\\libs\\LibKa0s\\media\\icons\\star"), "star")
+    assertEqual(Lib.IsGlyph("Interface\\AddOns\\QuickComms\\libs\\LibKa0s\\media\\icons\\phosphor\\arrow-up"),
+        "ph:arrow-up")
+    assertEqual(Lib.IsGlyph(NS.Icon("gi:sword-wound")), "gi:sword-wound")
     for _, ok in ipairs({ false, "ff8000", "00aa99" }) do assertTrue(Lib.ValidIconColor(ok), tostring(ok)) end
     assertTrue(Lib.ValidIconColor(nil))
     for _, bad in ipairs({ "FF8000", "#ff8000", "ff800", "ff80000", "ff80zz", 16744448, true, {} }) do
@@ -1209,4 +1221,16 @@ test("library: [all] ValidWhen takes all on the instance and battleground rows, 
     assertTrue((Lib.ValidWhen({ instances = { all = true, [2526] = true } })))
     assertFalse((Lib.ValidWhen({ spec = { all = true } })))
     assertFalse((Lib.ValidWhen({ characters = { all = true } })))
+end)
+
+test("library: [arena] ValidWhen takes arena ids and all on the arena row", function()
+    local NS = T.bootAddon()
+    local Lib = NS.Library
+    -- red under: an arena row the Resolver does not know (badWhen)
+    assertTrue((Lib.ValidWhen({ arena = { all = true } })))
+    assertTrue((Lib.ValidWhen({ arena = { [1505] = true, [572] = true } })))
+    assertFalse((Lib.ValidWhen({ arena = { ["Nagrand Arena"] = true } })), "a name, not an id")
+    assertFalse((Lib.ValidWhen({ arena = { [-1] = true } })))
+    local _, _, why = NS.SchemaRuntime.Set("group.when", { arena = { nope = true } }, NS.Library.CreateGroup({ name = "Mine" }))
+    assertTrue(tostring(why):find("an instance id", 1, true) ~= nil, tostring(why))
 end)

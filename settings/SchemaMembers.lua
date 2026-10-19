@@ -104,7 +104,7 @@ end
 
 -- What a When row takes, for the refusal of a value it can never match (localization-§4).
 local function whenTakes(row)
-    if row == "instances" or row == "battleground" then return L["an instance id (a whole number)"] end
+    if NS.Resolver.ID_ROWS[row] then return L["an instance id (a whole number)"] end
     if row == "spec" then return L["a specialization id (a whole number)"] end
     if row == "characters" then return L["Name-Realm"] end
     local list = row == "class" and NS.GameIds.CLASSES or NS.Resolver.TOKENS[row] or {}
@@ -139,7 +139,9 @@ end
 
 local GROUPS_AS = choices({ { "sections", L["Sections"] }, { "merged", L["One list"] }, { "tabs", L["Tabs (the mouse wheel switches)"] } })
 local ORIENTATION = choices({ { "horizontal", L["Horizontal"] }, { "vertical", L["Vertical"] }, { "grid", L["Grid"] } })
-local GROWTH = choices({ { "right", L["Right and down"] }, { "left", L["Left and down"] }, { "up", L["Upward"] } })
+-- `up` (Upward) is retired: migration step 4 and Share's import alias read it as rightUp (B2).
+local GROWTH = choices({ { "right", L["Right and down"] }, { "left", L["Left and down"] },
+    { "rightUp", L["Right and up"] }, { "leftUp", L["Left and up"] } })
 local STYLE = choices({ { "iconLabel", L["Icon and label"] }, { "icon", L["Icon only"] }, { "label", L["Label only"] } })
 local VISIBILITY = choices({ { "always", L["Always"] }, { "inCombat", L["Only in combat"] },
     { "outOfCombat", L["Only out of combat"] }, { "whenActive", L["When a group is active"] }, { "never", L["Never"] } })
@@ -267,8 +269,8 @@ local ROWS = {
       min = 0, max = 20, step = 1, page = "pads", group = L["Layout"], label = L["Spacing"],
       desc = L["Pixels between chips."], validate = NUMBER, normalize = clamp(0, 20, true) },
     { path = "pad.layout.width", instance = "pad", type = "number", default = T.pad.layout.width,
-      min = 120, max = 300, step = 10, page = "pads", group = L["Layout"], label = L["Chip width"],
-      desc = L["How wide a labeled chip is."], validate = NUMBER, normalize = clamp(120, 300, true) },
+      min = 1, max = 300, step = 1, page = "pads", group = L["Layout"], label = L["Chip width"],
+      desc = L["How wide a labeled chip is."], validate = NUMBER, normalize = clamp(1, 300, true) },
     -- Position's default is false, the default place, so `/qc reset pad.point` brings a pad back; the
     -- page's Defaults keeps the position (settings/Schema.lua resetExempt), as its tooltip says.
     { path = "pad.point", instance = "pad", type = "point", default = false,
@@ -404,6 +406,20 @@ local function lookRows()
 end
 
 for _, row in ipairs(lookRows()) do ROWS[#ROWS + 1] = row end
+
+-- The Icons tab's rows (B9, settings/SchemaIcons.lua), with these checks: a pad's after its Look rows,
+-- a dial's after its Wheel rows (before the Binding tab's row), so each editor's Icons tab sits there.
+do
+    local C = { check = check, choices = choices, oneOf = oneOf, clamp = clamp, NUMBER = NUMBER, BOOL = BOOL,
+        color = check(isColor), name = check(isName), fourChannels = fourChannels }
+    local IconRows = NS.addon.Settings.IconRows
+    for _, row in ipairs(IconRows("pad", C)) do ROWS[#ROWS + 1] = row end
+    local at = #ROWS + 1
+    for i, row in ipairs(ROWS) do
+        if row.path == "dial.key" then at = i break end
+    end
+    for i, row in ipairs(IconRows("dial", C)) do table.insert(ROWS, at + i - 1, row) end
+end
 
 -- Every member row's reaction: Library.Touch announces the write (LIBRARY_CHANGED, the pads' rebuild),
 -- naming the row's path as the field. A color stays only on a glyph: an icon write that leaves a

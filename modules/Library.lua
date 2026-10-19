@@ -376,17 +376,17 @@ local function validRange(v)
     return true
 end
 
-local ID_ROWS = { instances = true, battleground = true, spec = true }
 Lib.CHARACTER_MAX = 96   -- bytes of a Name-Realm: a 12-character name and a long realm, both multi-byte
 
 --- Whether `key` is a value the When row `row` can ever match (localization-§4: ids and tokens,
 --- never a name): a token the row lists (NS.Resolver.TOKENS; the class row, NS.GameIds.CLASSES), a
---- positive whole id (instances, battlegrounds, specializations), the whole kind on the instance and
---- battleground rows (NS.Resolver.ALL), or a Name-Realm (characters: no control or "|" character, at
---- most CHARACTER_MAX bytes).
+--- positive whole id (instances, battlegrounds, arenas, specializations), the whole kind on a place
+--- row (NS.Resolver.ID_ROWS, NS.Resolver.ALL), or a Name-Realm (characters: no control or "|"
+--- character, at most CHARACTER_MAX bytes).
 function Lib.ValidWhenValue(row, key)
-    if key == NS.Resolver.ALL and (row == "instances" or row == "battleground") then return true end
-    if ID_ROWS[row] then return type(key) == "number" and key > 0 and key == math.floor(key) end
+    local place = NS.Resolver.ID_ROWS[row]
+    if key == NS.Resolver.ALL and place then return true end
+    if place or row == "spec" then return type(key) == "number" and key > 0 and key == math.floor(key) end
     if row == "characters" then
         return type(key) == "string" and #key <= Lib.CHARACTER_MAX and not key:find("[%c|]")
             and key:match("^[^%s%-]+%-%S+$") ~= nil
@@ -458,6 +458,7 @@ local function firstChars(s, n)
     end
     return table.concat(out)
 end
+Lib.FirstChars = firstChars
 
 --- A copy's name: "<name> (copy)", or `<name>` plus `suffix`, the original shortened so the whole
 --- stays within NAME_MAX (counted in characters).
@@ -726,7 +727,8 @@ end
 local function seedCallout(p, cid)
     local c = NS.BuiltIns.callouts[cid]
     local id = takeId(p, "c")
-    p.callouts[id] = { name = c.name, text = c.text, channel = c.channel, icon = c.icon, origin = cid }
+    p.callouts[id] = { name = c.name, text = c.text, channel = c.channel, icon = c.icon, iconColor = c.iconColor,
+        origin = cid }
     return id
 end
 
@@ -875,18 +877,19 @@ local SURFACE_DEFAULTS = {
     -- small white face with its shadow, a flat 1px black edge ("None" is no border art) and the
     -- 0.06, 0.06, 0.08, 0.92 body (spec §10.1).
     pad = { groupsAs = "sections", layout = { orientation = "grid", columns = 4, growth = "right",
-        style = "iconLabel", scale = 1.0, spacing = 4, width = 140 },
+        style = "iconLabel", scale = 1.0, spacing = 4, width = 100 },
         look = { visibility = "always", fade = "none", fadeAlpha = 0.4,
             font = "Friz Quadrata TT", fontSize = 10, fontColor = { r = 1, g = 1, b = 1, a = 1 },
             useClassColorFont = false, fontFlags = "", fontShadow = true,
             borderStyle = "None", borderSize = 1, borderColor = { r = 0, g = 0, b = 0, a = 1 },
             useClassColorBorder = false,
-            background = { r = 0.06, g = 0.06, b = 0.08, a = 0.92 }, useClassColorBackground = false } },
+            background = { r = 0.06, g = 0.06, b = 0.08, a = 0.92 }, useClassColorBackground = false },
+        icon = NS.IconDefaults.For("pad") },   -- the Icons tab (defaults/Icons.lua)
     -- Relaxed is the only interaction in v0.1.0 (the C7 fallback, round-4 record). `delay` and
     -- `tapAction` are kept for the hold, flick and release upgrade, and `depth` until owner ruling R5
     -- gives it a meaning; nothing reads them yet.
     dial = { mode = "categories", slices = 4, depth = 2, openAt = "center", delay = 0.3,
-        interaction = "relaxed", key = nil, tapAction = "first" },
+        interaction = "relaxed", key = nil, tapAction = "first", icon = NS.IconDefaults.For("dial") },
 }
 
 --- The shape of one member of each kind: what every member row's path resolves against (the
@@ -897,11 +900,12 @@ Lib.TEMPLATES = {
     group = { name = "", icon = false, iconColor = false, enabled = true, openInto = false, when = {}, parent = false,
         inheritWhen = true },
     pad = { name = "", enabled = true, groupsAs = SURFACE_DEFAULTS.pad.groupsAs, point = false,
-        layout = copyTable(SURFACE_DEFAULTS.pad.layout), look = copyTable(SURFACE_DEFAULTS.pad.look) },
+        layout = copyTable(SURFACE_DEFAULTS.pad.layout), look = copyTable(SURFACE_DEFAULTS.pad.look),
+        icon = copyTable(SURFACE_DEFAULTS.pad.icon) },
     -- `key` and `point` are false, not nil, for the same reason as above: false is "no key" and "the
     -- default place".
     dial = { name = "", enabled = true, mode = SURFACE_DEFAULTS.dial.mode, slices = SURFACE_DEFAULTS.dial.slices,
-        openAt = SURFACE_DEFAULTS.dial.openAt, key = false, point = false },
+        openAt = SURFACE_DEFAULTS.dial.openAt, key = false, point = false, icon = copyTable(SURFACE_DEFAULTS.dial.icon) },
 }
 
 --- A dial's place when its `point` is unset: the middle of the screen (read at run time by

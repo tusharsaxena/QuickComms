@@ -26,6 +26,11 @@ marked as such rather than listed as a requirement.
   `libs/LibSerialize/LICENSE`) from <https://github.com/rossnichols/LibSerialize>. Each folder is the
   tag's `.lua`, `lib.xml` and license, copied whole and never edited; a new version is a re-copy from
   its tag, in one commit with this line.
+- **LibCustomGlow-1.0 is vendored too**: `libs/LibCustomGlow-1.0/` (MIT, minor 24, copied whole from
+  the DropWatcher sibling's vendored copy, which came from KickCD's) draws the Icons tab's glows on the
+  Comms Pad's chips and the Comms Dial's wedges. `modules/Glow.lua` resolves it at call time; without
+  it no glow is drawn and nothing else changes. Its TOC line sits before `LibKa0s.xml`, and it is
+  named in `## OptionalDeps:`.
 
 ## Development — the contributor toolchain
 

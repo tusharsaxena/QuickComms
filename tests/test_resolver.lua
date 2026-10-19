@@ -168,3 +168,22 @@ test("resolver: [all] All battlegrounds and All dungeons and raids match the who
     assertEqual(R.Narrowness({ battleground = { all = true, [2107] = true } }), 1)
     assertEqual(R.Narrowness({ battleground = { [2107] = true } }), 101)
 end)
+
+test("resolver: [arena] the arena row matches only in an arena: its listed ids, or all of them", function()
+    local R = res()
+    -- red under: no arena row (an unknown row is never read, so it matched everywhere)
+    assertTrue(R.LABEL.arena ~= nil)
+    local one = { arena = { [1505] = true } }
+    assertTrue((R.Matches(one, { content = "arena", instanceID = 1505 })))
+    assertFalse((R.Matches(one, { content = "arena", instanceID = 572 })), "another arena")
+    assertFalse((R.Matches(one, { content = "battleground", instanceID = 1505 })), "not outside an arena")
+    local all = { arena = { all = true, [1505] = true } }
+    assertTrue((R.Matches(all, { content = "arena", instanceID = 572 })), "any arena")
+    assertFalse((R.Matches(all, { content = "battleground", instanceID = 727 })), "not a battleground")
+    assertFalse((R.Matches(all, { content = "openWorld" })))
+    assertFalse((R.Matches({ arena = { [1505] = true } }, MPLUS)))
+    assertEqual(R.Narrowness(all), 1, "a whole kind is one condition")
+    assertEqual(R.Narrowness(one), 101, "a specific arena moves up")
+    assertTrue(R.ID_ROWS.arena and R.ID_ROWS.instances and R.ID_ROWS.battleground)
+    assertNil(R.ID_ROWS.spec, "a specialization id is no place")
+end)

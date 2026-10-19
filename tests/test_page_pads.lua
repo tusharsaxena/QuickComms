@@ -67,7 +67,7 @@ test("pads page: X and Y move the pad through its pad.point row; Reset puts it b
     assertEqual(table.concat(NS.db.profile.pads.p1.point, ","), "CENTER,CENTER,40,-150")
     w = P.tab("pads", "Layout")
     P.find(w, "EditBox", "Y offset"):__fire("OnEnterPressed", "-60")
-    assertEqual(pointOf(inst), "CENTER,CENTER,40,-60", "the rebuild re-anchors the pad")
+    assertEqual(pointOf(inst), "TOP,CENTER,40,-60", "the rebuild re-anchors the pad by its growth edge")
     m.prints = {}
     w = P.tab("pads", "Layout")
     local xbox = P.find(w, "EditBox", "X offset")
@@ -86,7 +86,7 @@ test("pads page: X and Y move the pad through its pad.point row; Reset puts it b
     w = P.tab("pads", "Layout")
     P.find(w, "Button", "Reset this pad's position"):__fire("OnClick")
     assertNil(NS.db.profile.pads.p1.point)
-    assertEqual(pointOf(inst), "CENTER,CENTER,0,-150")
+    assertEqual(pointOf(inst), "TOP,CENTER,0,-150")
 end)
 
 test("pads page: Look's visibility reaches the pad's state driver", function()
@@ -150,7 +150,8 @@ end)
 test("pads page: General's Unlock pads toggles the one lock", function()
     local NS, _, P = open()
     local w = P.redraw("pads")
-    assertTrue(P.find(w, "Dropdown", "Preview as") ~= nil, "Preview as is page-wide, first")
+    -- red under: draw state.previewAs on the pad's General tab again (it lives in General › Master controls)
+    assertTrue(P.find(w, "Dropdown", "Preview as") == nil, "Preview as is in General › Master controls")
     P.find(w, "Button", "Unlock pads"):__fire("OnClick")
     assertFalse(NS.Setting("locked"))
     P.flush()
@@ -204,7 +205,8 @@ test("pads page: [phase 5] Look carries the composed Font, Border and Background
     local NS, _, P = open()
     local w = P.tab("pads", "Look")
     for _, heading in ipairs({ "Font", "Border", "Background" }) do
-        assertTrue(P.find(w, "Heading", heading) ~= nil, heading)
+        -- red under: the host's own h.Section above each subgroup (the library draws it from the rows)
+        assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
     end
     assertEqual(#P.all(w, "CheckBox", "Use class color"), 3, "a companion beside each swatch (options-ui-§17)")
     assertTrue(P.find(w, "ColorPicker", "Font color") ~= nil)
@@ -212,4 +214,50 @@ test("pads page: [phase 5] Look carries the composed Font, Border and Background
     assertTrue(P.find(w, "ColorPicker", "Background") ~= nil)
     P.find(w, "CheckBox", "Font shadow"):__fire("OnValueChanged", false)
     assertFalse(NS.db.profile.pads.p1.look.fontShadow)
+end)
+
+-- ── the Icons tab (B9) ──────────────────────────────────────────────────────────────────────
+
+local ICON_HEADINGS = { "Size and crop", "Color", "Border", "Glow", "Pixel border", "Auto cast sparkles",
+    "Button (rotating rays)", "Proc (flipbook)", "Offset" }
+
+test("pads page: [B9] Icons carries its headings once each, a companion beside each swatch, and writes the pad", function()
+    local NS, _, P = open()
+    local w = P.tab("pads", "Icons")
+    for _, heading in ipairs(ICON_HEADINGS) do
+        -- red under: the host's own h.Section above each subgroup (the library draws it from the rows)
+        assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
+    end
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 3, "tint, border and glow (options-ui-§17)")
+    assertTrue(P.find(w, "ColorPicker", "Tint") ~= nil)
+    assertTrue(P.find(w, "ColorPicker", "Glow color") ~= nil)
+    assertTrue(P.find(w, "CheckBox", "Show border") ~= nil, "the composed Border block")
+    P.find(w, "Slider", "Icon size"):__fire("OnMouseUp", 30)
+    P.find(w, "CheckBox", "Glow"):__fire("OnValueChanged", true)
+    assertEqual(NS.db.profile.pads.p1.icon.size, 30)
+    assertTrue(NS.db.profile.pads.p1.icon.glowEnabled)
+end)
+
+test("pads page: [B9] the glow's knobs are grayed out while it is off or in another style; its color never is", function()
+    local NS, _, P = open()
+    local w = P.tab("pads", "Icons")
+    assertTrue(P.find(w, "Slider", "Lines").disabled, "the glow is off by default")
+    assertFalse(P.find(w, "ColorPicker", "Glow color").disabled)
+    assertTrue(P.find(w, "Slider", "Border thickness (px)").disabled, "the border is off by default")
+    NS.SchemaRuntime.Set("pad.icon.glowEnabled", true, "p1")
+    NS.SchemaRuntime.Set("pad.icon.borderShow", true, "p1")
+    w = P.tab("pads", "Icons")
+    assertFalse(P.find(w, "Slider", "Lines").disabled, "pixel, the default style")
+    assertTrue(P.find(w, "Slider", "Ray speed").disabled, "a button knob under the pixel style")
+    assertFalse(P.find(w, "Slider", "Border thickness (px)").disabled)
+end)
+
+test("pads page: [B9] Defaults puts the Icons rows back too, and its tooltip names them", function()
+    local NS, _, P = open()
+    NS.SchemaRuntime.Set("pad.icon.zoom", 0.2, "p1")
+    NS.SchemaRuntime.Set("pad.icon.glowEnabled", true, "p1")
+    P.ctx("pads").panel.defaultsOnClick()
+    assertEqual(NS.db.profile.pads.p1.icon.zoom, 0)
+    assertFalse(NS.db.profile.pads.p1.icon.glowEnabled)
+    assertTrue(P.ctx("pads").panel.defaultsTooltip:find("icons", 1, true) ~= nil)
 end)

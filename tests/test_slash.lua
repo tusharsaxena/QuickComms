@@ -124,7 +124,7 @@ test("slash: [phase 3] `why` prints each built pad and why its groups show", fun
     NS.addon:OnSlashCommand("why")
     local text = table.concat(m.prints, "\n")
     assertTrue(text:find("Comms Pad (p1):", 1, true) ~= nil, text)
-    assertTrue(text:find("  M+ (generic): Content", 1, true) ~= nil, text)
+    assertTrue(text:find("  Dungeon (generic): Content", 1, true) ~= nil, text)
 end)
 test("slash: [phase 4] `why` covers the dials too", function()
     local NS, _, m = T.enableAddon()
@@ -197,4 +197,62 @@ test("slash: [final 9] test and preview's help, and the Preview as row, speak of
     do
         assertEqual(row.desc, "Draw every pad, and open dial 1, as it would look in another situation. Nothing on them sends. It ends when the settings close or combat starts.")
     end
+end)
+
+-- ── `/qc toggle`: every Comms Pad hidden or shown for the session (plan B4) ──────────────────
+
+local function toggleLive()
+    local NS, _, m = T.enableAddon()
+    NS.Situation.ReadInputs = function()
+        return { inInstance = true, instanceType = "party", difficultyID = 8, keystoneActive = true, keyLevel = 12,
+            inGroup = true }
+    end
+    NS.Situation.RefreshNow("test")
+    return NS, m
+end
+
+test("slash: [toggle] the flag is off on a fresh addon and the pads show", function()
+    local NS, m = toggleLive()
+    assertFalse(NS.State.padsHidden == true, "session flag starts off")
+    assertEqual(m.stateDrivers[NS.Pad.Instance("p1").root].visibility, "show")
+end)
+
+test("slash: [toggle] `toggle` hides every pad, a second `toggle` shows them again", function()
+    local NS, m = toggleLive()
+    m.prints = {}
+    -- red under: drop the toggle row from NS.COMMANDS in settings/Slash.lua
+    NS.addon:OnSlashCommand("toggle")
+    assertTrue(NS.State.padsHidden == true)
+    assertEqual(m.stateDrivers[NS.Pad.Instance("p1").root].visibility, "hide")
+    assertEqual(#m.prints, 1, "one confirmation line")
+    assertTrue(m.prints[1]:find("hidden", 1, true) ~= nil, m.prints[1])
+    NS.addon:OnSlashCommand("toggle")
+    assertFalse(NS.State.padsHidden == true)
+    assertEqual(m.stateDrivers[NS.Pad.Instance("p1").root].visibility, "show")
+end)
+
+test("slash: [toggle] test mode shows the pads even while they are hidden", function()
+    local NS, m = toggleLive()
+    NS.addon:OnSlashCommand("toggle")
+    NS.Preview.SetTestMode(true)
+    assertEqual(m.stateDrivers[NS.Pad.Instance("p1").root].visibility, "show")
+    NS.Preview.SetTestMode(false)
+    assertEqual(m.stateDrivers[NS.Pad.Instance("p1").root].visibility, "hide")
+end)
+
+test("slash: [toggle] in combat the flag flips and the driver waits for combat to end", function()
+    local NS, m = toggleLive()
+    local root = NS.Pad.Instance("p1").root
+    m.__setCombat(false)
+    m.__fire("PLAYER_REGEN_DISABLED")
+    m.__setCombat(true)
+    NS.addon:OnSlashCommand("toggle")
+    assertTrue(NS.State.padsHidden == true)
+    assertEqual(#m.blocked, 0, "no protected call in combat")
+    assertEqual(m.stateDrivers[root].visibility, "show", "held for combat")
+    m.__setCombat(false)
+    m.__fire("PLAYER_REGEN_ENABLED")
+    -- red under: apply the driver directly instead of through Surfaces.Request (RunOrQueue)
+    assertEqual(m.stateDrivers[root].visibility, "hide")
+    assertEqual(#m.blocked, 0)
 end)

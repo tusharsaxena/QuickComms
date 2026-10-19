@@ -8,11 +8,15 @@ local _, NS = ...
 -- locked, a dim veil when its bake was refused, a dim veil during the spam guard's window, a gold hover and a flash per send
 -- result. The tooltip names the line it sends, or why it sends nothing, and any lock. The pad's Look
 -- (phase 5) is read here as two plain values, a font (LabelFont) and a skin (SkinFor), which
--- modules/Pad.lua applies out of combat.
+-- modules/Pad.lua applies out of combat. The Icons tab (B9) styles the icon through
+-- modules/IconStyle.lua (size, crop, desaturation, alpha, tint, border) and modules/Glow.lua (the
+-- glow, whose On hover trigger the chip's OnEnter and OnLeave hooks drive).
 
 NS.PadRender = NS.PadRender or {}
 local R = NS.PadRender
 local PL = NS.PadLayout
+local IS = NS.IconStyle
+local Glow = NS.Glow
 local L = NS.L
 
 local DEFAULT_ICON = "Interface\\Icons\\INV_Misc_QuestionMark"
@@ -80,7 +84,9 @@ function R.SectionTitle(item)
     return item.text
 end
 
-local function tagColor(chatType)
+--- A chat type's color (the game's ChatTypeInfo, else Constants.CHAT_COLORS, else SAY's): a chip's
+--- tag, and a callout row's channel on the Groups page.
+function R.TagColor(chatType)
     local r, g, b = NS.Compat.ChatColor(chatType)
     if r then return r, g, b end
     local c = NS.Constants.CHAT_COLORS[chatType] or NS.Constants.CHAT_COLORS.SAY
@@ -145,22 +151,46 @@ function R.Dress(btn, onEnter, onLeave)
     hover:SetColorTexture(gold.r, gold.g, gold.b, 0.25)
     btn:HookScript("OnEnter", function(self)
         R.ShowTooltip(self)
+        Glow.SetHover(self, true)
         if onEnter then onEnter(self) end
     end)
     btn:HookScript("OnLeave", function(self)
         GameTooltip:Hide()
+        Glow.SetHover(self, false)
         if onLeave then onLeave(self) end
     end)
     return btn
 end
 
---- Show one slot on a chip. `style` is the pad's layout style.
-function R.Paint(btn, slot, style)
+-- A labeled chip's fixed insets around its label (Dress's anchors): the icon at LEFT+2 and its 4px
+-- gap, or the label-only 4px; the 2px before the tag and the tag's own 4px from the right edge.
+local LABEL_INSET = { label = 4 }
+local TAG_INSET = 2 + 4
+
+--- The room a chip `w` wide leaves its label, beside the icon `iconSize` wide (unless `style` is label
+--- only) and the channel tag `tagW` wide. Zero or less: no room.
+function R.LabelRoom(w, style, tagW, iconSize)
+    local left = LABEL_INSET[style] or (2 + (tonumber(iconSize) or PL.ICON) + 4)
+    return (tonumber(w) or 0) - left - TAG_INSET - (tonumber(tagW) or 0)
+end
+
+-- The Icons tab's defaults, for a paint that names no config (IconStyle.Config of none).
+local DEFAULT_LOOK
+
+--- Show one slot on a chip. `style` is the pad's layout style, `w` the chip's width (B3: the label
+--- is one line that truncates, hidden when the chip leaves it no room; no width, no check), `icfg`
+--- the pad's Icons tab (IconStyle.Config; none is the defaults).
+function R.Paint(btn, slot, style, w, icfg)
     btn.qcSlot = slot
+    DEFAULT_LOOK = DEFAULT_LOOK or IS.Config(nil, "pad")
+    icfg = icfg or DEFAULT_LOOK
     local live = slot.line ~= nil or slot.selfText ~= nil or slot.reason == "testMode"
     btn.qcIcon:SetTexture(slot.icon or DEFAULT_ICON)
-    btn.qcIcon:SetVertexColor(NS.Library.IconTint(slot.icon, slot.iconColor))
+    btn.qcIcon:SetSize(icfg.size, icfg.size)
+    IS.ApplyIcon(btn.qcIcon, icfg, NS.Library.IconTint(slot.icon, slot.iconColor))
     btn.qcIcon:SetShown(style ~= "label")
+    IS.PaintBorder(btn, icfg, style ~= "label")
+    Glow.Bind(btn, style ~= "label" and icfg.glow or false, slot.calloutId)
     btn.qcLabel:ClearAllPoints()
     if style == "label" then
         btn.qcLabel:SetPoint("LEFT", btn, "LEFT", 4, 0)
@@ -170,9 +200,11 @@ function R.Paint(btn, slot, style)
     -- One line that stops short of the channel tag, whatever the Look's font size.
     btn.qcLabel:SetPoint("RIGHT", btn.qcTag, "LEFT", -2, 0)
     btn.qcLabel:SetWordWrap(false)
+    btn.qcLabel:SetMaxLines(1)
     btn.qcLabel:SetText(style == "icon" and "" or (slot.name or "?"))
     btn.qcTag:SetText(PL.Tag(slot.concrete) or "")
-    btn.qcTag:SetTextColor(tagColor(slot.chatType or NS.Channels.ChatType(slot.concrete)))
+    btn.qcLabel:SetShown(w == nil or R.LabelRoom(w, style, btn.qcTag:GetStringWidth(), icfg.size) > 0)
+    btn.qcTag:SetTextColor(R.TagColor(slot.chatType or NS.Channels.ChatType(slot.concrete)))
     btn.qcLock:SetShown(slot.lock ~= nil)
     btn.qcDim:SetShown(not live)
     btn.qcCool:Hide()

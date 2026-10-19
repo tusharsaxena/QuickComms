@@ -8,6 +8,7 @@
 	<Script file="Pool.lua"/>
 	<Script file="Item.lua"/>
 	<Script file="Media.lua"/>
+	<Script file="MediaIcons.lua"/>
 	<Script file="Widgets.lua"/>
 	<Script file="WidgetsReorder.lua"/>
 	<Script file="WidgetsDragHandle.lua"/>

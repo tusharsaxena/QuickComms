@@ -791,3 +791,116 @@ test("icon browser: Game icons carries the Wowhead hint; its button shows the ad
     B.Cancel()
     assertFalse(f:IsShown(), "it goes with the browser")
 end)
+
+-- ── the three icon sets (LibKa0s v1.74.0: Open Iconic, Phosphor, Game-icons) ─────────────────
+
+test("icon browser: [sets] Src.Glyphs is built once per set: the same table across searches", function()
+    local _, _, _, B, Src = boot()
+    -- review focus 5: a keystroke must not rebuild the ~5,800-glyph list, or Search's memos miss
+    -- red under: build a new table in Src.Glyphs on every call
+    assertTrue(Src.Glyphs() == Src.Glyphs(), "one table for the session")
+    assertTrue(Src.Glyphs("phosphor") == Src.Glyphs("phosphor"), "one table per set")
+    local seen = {}
+    local list = Src.List
+    Src.List = function(...)
+        local out, loaded = list(...)
+        seen[#seen + 1] = out
+        return out, loaded
+    end
+    openOn(B, nil)
+    B.SetTab("glyphs")
+    B.SetSearch("a")
+    B.SetSearch("ar")
+    B.SetSearch("arr")
+    Src.List = list
+    -- the first read is the Markers tab the browser opened on; the glyph tab's reads follow
+    table.remove(seen, 1)
+    assertTrue(#seen >= 4)
+    for i = 1, #seen do assertTrue(seen[i] == Src.Glyphs(), "read " .. i .. " is the session's list") end
+end)
+
+test("icon browser: [sets] a set's prefix is not in its label; Phosphor reads 'Arrow up'", function()
+    local NS, _, _, _, Src = boot()
+    -- red under: label from the whole key ("Ph:arrow-up")
+    assertEqual(Src.GlyphLabel("ph:arrow-up"), "Arrow up")
+    assertEqual(Src.Label(NS.Icon("ph:arrow-up")), "Arrow up")
+    assertEqual(Src.Label(NS.Icon("gi:sword-wound")), "Sword wound")
+    assertEqual(Src.Label(NS.Icon("arrow-circle-down")), "Arrow circle down", "Open Iconic has no prefix")
+    -- the key still finds it, the prefix included
+    assertTrue(listed(Src.Search(Src.Glyphs(), "glyphs", "ph:arrow-up"), NS.Icon("ph:arrow-up")))
+    assertEqual(Src.SetOf(NS.Icon("ph:arrow-up")), "phosphor")
+    assertEqual(Src.SetOf(NS.Icon("gi:sword-wound")), "game-icons")
+    assertEqual(Src.SetOf(NS.Icon("star")), "open-iconic")
+    assertNil(Src.SetOf(SKULL), "a raid marker is in no set")
+end)
+
+test("icon browser: [sets] the Glyphs filter lists the library's sets and narrows to one", function()
+    local NS, _, _, B, Src = boot()
+    local sets = Src.GlyphSets()
+    -- red under: no Src.GlyphSets (the sets read from ICON_SETS)
+    assertEqual(#sets, 3)
+    assertEqual(sets[1].id .. "," .. sets[2].id .. "," .. sets[3].id, "open-iconic,phosphor,game-icons")
+    assertEqual(sets[3].label, "Game-icons")
+    local all, ph = #Src.Glyphs(), #Src.Glyphs("phosphor")
+    assertTrue(ph > 1000 and ph < all, "Phosphor alone")
+    assertEqual(#Src.Glyphs("open-iconic") + ph + #Src.Glyphs("game-icons"), all, "every glyph in one set")
+    for _, path in ipairs(Src.Glyphs("phosphor")) do
+        assertEqual(Src.SetOf(path), "phosphor")
+    end
+    openOn(B, nil)
+    B.SetTab("glyphs")
+    local w = B.Widgets()
+    assertTrue(w.sets ~= nil and w.sets.frame:IsShown(), "the set filter shows on Glyphs")
+    assertFalse(w.filter.frame:IsShown(), "the game filter does not")
+    assertTrue(w.swatch.frame:IsShown(), "the swatch still does")
+    assertEqual(B.State().glyphSet, "all")
+    assertEqual(B.State().count, all)
+    w.sets:__fire("OnValueChanged", "phosphor")
+    assertEqual(B.State().glyphSet, "phosphor")
+    assertEqual(B.State().count, ph)
+    assertEqual(w.count:GetText(), ph .. " icons")
+    assertTrue(cellFor(B, Src.Glyphs("phosphor")[1]) ~= nil)
+    -- a search narrows inside the set
+    B.SetSearch("arrow-up")
+    assertTrue(B.State().count > 0 and B.State().count < ph)
+    assertEqual(w.count:GetText(), B.State().count .. " of " .. ph .. " icons")
+    B.SetSearch("")
+    -- the game tab keeps its own filter; the set filter hides there
+    B.SetTab("game")
+    assertFalse(w.sets.frame:IsShown())
+    assertEqual(B.State().filter, "all")
+    B.SetTab("glyphs")
+    assertEqual(B.State().glyphSet, "phosphor", "kept across a tab switch")
+    B.SetGlyphSet("nope")
+    assertEqual(B.State().glyphSet, "phosphor", "an unknown set is refused")
+    -- a stored glyph from another set opens on All, so it can be shown selected
+    B.Cancel()
+    openOn(B, NS.Icon("gi:sword-wound"))
+    assertEqual(B.State().tab, "glyphs")
+    assertEqual(B.State().glyphSet, "all")
+    assertTrue(cellFor(B, NS.Icon("gi:sword-wound")) ~= nil, "scrolled to it")
+end)
+
+test("icon browser: [sets] a glyph's tooltip names its set, and a Game-icons mark its author", function()
+    local NS, m, _, B = boot()
+    local lines = {}
+    rawset(m.GameTooltip, "SetText", function(_, text) lines = { text } end)
+    rawset(m.GameTooltip, "AddLine", function(_, text) lines[#lines + 1] = text end)
+    local Media = m.LibStub("LibKa0s-Media-1.0")
+    local who = Media.IconAuthor("gi:sword-wound")
+    assertTrue(type(who) == "string" and who ~= "", "the library names the author")
+    openOn(B, NS.Icon("gi:sword-wound"))
+    cellFor(B, NS.Icon("gi:sword-wound")):__fire("OnEnter")
+    assertEqual(lines[1], "Sword wound")
+    -- red under: no author line on a Game-icons tooltip (CC BY 3.0 asks for the credit)
+    assertTrue(listed(lines, "Game-icons, by " .. who), "names the set and the author")
+    B.SetGlyphSet("phosphor")
+    B.SetSearch("ph:arrow-up")
+    cellFor(B, NS.Icon("ph:arrow-up")):__fire("OnEnter")
+    assertEqual(lines[1], "Arrow up")
+    assertTrue(listed(lines, "Phosphor"), "names the set")
+    B.SetSearch("")
+    B.SetTab("markers")
+    cellFor(B, SKULL):__fire("OnEnter")
+    assertEqual(#lines, 2, "a marker: its name and the click line, no set")
+end)

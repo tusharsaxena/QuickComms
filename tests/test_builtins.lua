@@ -93,3 +93,26 @@ test("builtins: [phase 5] every node set pins each node to a wind, at most eight
     assertEqual(#BI.groups["bi.bg.dwg"].children, 5)
     assertEqual(BI.callouts["bi.bg.dwg.shrine.inc2"].text, "INC 2 Shrine")
 end)
+
+test("builtins: [B7] every callout ships a catalog glyph, with a color only where it is a glyph", function()
+    local NS, BI = bi()
+    local Lib = NS.Library
+    for cid, c in pairs(BI.callouts) do
+        -- red under: a callout row without its glyph name in defaults/BuiltIns_*.lua
+        assertTrue(type(c.glyph) == "string", cid .. " names a glyph")
+        assertTrue(NS.Icon(c.glyph) ~= nil, cid .. ": the vendored catalog carries " .. tostring(c.glyph))
+        assertEqual(c.icon, NS.Icon(c.glyph), cid .. " stores the glyph's path")
+        assertEqual(Lib.IsGlyph(c.icon), c.glyph, cid .. " reads back as its glyph")
+        assertTrue(Lib.ValidIconColor(c.iconColor), cid .. " color")
+    end
+    assertEqual(BI.callouts["bi.arena.kill"].iconColor, "ff4040", "a kill is red")
+    assertEqual(BI.callouts["bi.bg.ab.stables.clear"].iconColor, "40d040", "a node clear is green")
+    assertEqual(BI.callouts["bi.mplus.lust"].glyph, "gi:enrage")
+end)
+
+test("builtins: [B7] the generic dungeon set is Dungeon (generic), active in a dungeon and in M+", function()
+    local _, BI = bi()
+    local g = BI.groups["bi.mplus"]
+    assertEqual(g.name, "Dungeon (generic)")
+    assertTrue(g.when.content.dungeon and g.when.content.mythicPlus)
+end)

@@ -327,6 +327,10 @@ end
 -- Enabled (carried beside the fields), its position and its key (spec §15: it arrives unbound).
 local NOT_PORTABLE = { point = true, key = true }
 
+-- A field value an older string may carry that the row no longer offers, and what it means now:
+-- the retired Upward growth (B2; core/Database.lua step 4 does the same for a stored profile).
+local VALUE_ALIAS = { ["pad.layout.growth"] = { up = "rightUp" } }
+
 --- Whether the member row at `path` travels in a share string with a `kind` ("pad" | "dial").
 function SH.Portable(kind, path)
     local row = NS.SchemaRuntime and type(path) == "string" and NS.SchemaRuntime.FindRow(path)
@@ -342,6 +346,8 @@ local function surfaceFields(kind, fields, res)
     for path, value in pairs(type(fields) == "table" and fields or {}) do
         local v = nil
         if SH.Portable(kind, path) then v = cleanValue(value, 1, {}, res) end
+        local alias = VALUE_ALIAS[path]
+        if alias and v ~= nil and alias[v] then v = alias[v] end
         if v ~= nil then out[path] = v else res.ignored = res.ignored + 1 end
     end
     return out

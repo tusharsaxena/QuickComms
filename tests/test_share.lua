@@ -625,3 +625,29 @@ test("share: [inherit] a child's Inherit when conditions travels; an old string'
     assertTrue(p.groups[map[mine]].when.role.TANK, "with its own When")
     assertTrue(p.groups[map[kept]].inheritWhen, "absent reads as on")
 end)
+
+test("share: [B2] a pad shared before the growth split carries Upward, which lands as Right and up", function()
+    local _, SH = boot()
+    local res = SH.Validate(bundle({
+        pads = { p1 = { name = "Old", fields = { ["pad.layout.growth"] = "up" } },
+            p2 = { name = "New", fields = { ["pad.layout.growth"] = "leftUp" } } } }))
+    -- red under: no alias for the retired `up` (the seam's oneOf would drop it)
+    assertEqual(res.pads[1].fields["pad.layout.growth"], "rightUp")
+    assertEqual(res.pads[2].fields["pad.layout.growth"], "leftUp")
+end)
+
+test("share: [B9] a pad's and a dial's Icons rows travel; an old string brings none", function()
+    local _, SH = boot()
+    assertTrue(SH.Portable("pad", "pad.icon.size"))
+    assertTrue(SH.Portable("dial", "dial.icon.glowType"))
+    local res = SH.Validate(bundle({
+        pads = { p1 = { name = "Glowing", fields = { ["pad.icon.size"] = 30, ["pad.icon.glowEnabled"] = true } },
+            p2 = { name = "Old", fields = { ["pad.layout.width"] = 120 } } },
+        dials = { d1 = { name = "Ringed", fields = { ["dial.icon.borderShow"] = true } } } }))
+    local f = res.pads[1].fields
+    -- red under: an Icons field with no member row behind it (Portable refuses it)
+    assertEqual(f["pad.icon.size"], 30)
+    assertTrue(f["pad.icon.glowEnabled"])
+    assertNil(res.pads[2].fields["pad.icon.size"], "a string made before the Icons tab carries none")
+    assertTrue(res.dials[1].fields["dial.icon.borderShow"])
+end)

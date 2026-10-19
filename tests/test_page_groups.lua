@@ -74,17 +74,21 @@ test("groups page: the picker lists every group by name, a seeded set among them
     assertTrue(at[alpha] < at[mplus] and at[mplus] < at[zed], "one list, by name")
     local label = entries[at[mplus]].label
     assertTrue(label:find("Indicator-Green", 1, true) ~= nil, "active in a key")
-    assertTrue(label:find("M+ (generic)", 1, true) ~= nil)
+    assertTrue(label:find("Dungeon (generic)", 1, true) ~= nil)
     assertTrue(label:find("(built-in)", 1, true) == nil, "no built-in tag")
     for _, e in ipairs(entries) do assertTrue(e.id:match("^bi%.") == nil, "no shipped id: " .. e.id) end
 end)
 
-test("groups page: General draws Preview as first, then the group's rows; Duplicate and Delete act", function()
+test("groups page: General draws the group's rows, no Preview as; Duplicate and Delete act", function()
     local NS, _, P = open()
     local gid = NS.Library.CreateGroup({ name = "Mine" })
     pick(NS, gid)
     local w = P.redraw("groups")
-    assertTrue(P.find(w, "Dropdown", "Preview as") ~= nil)
+    -- red under: draw state.previewAs on the group's General tab again
+    assertTrue(P.find(w, "Dropdown", "Preview as") == nil, "Preview as is in General › Master controls")
+    local tip = P.ctx("groups").panel.defaultsTooltip
+    -- red under: keep "turn Preview as off" in the Defaults tooltip (the row left the page)
+    assertTrue(tip:find("Preview", 1, true) == nil, "Defaults no longer reaches Preview as")
     P.find(w, "EditBox", "Name"):__fire("OnEnterPressed", "Kicks")
     assertEqual(NS.db.profile.groups[gid].name, "Kicks")
     P.find(w, "CheckBox", "Enabled"):__fire("OnValueChanged", false)
@@ -638,7 +642,7 @@ test("groups page: [drawers] the When tab draws one drawer per condition, closed
     -- red under: keep the enable checkbox per condition
     assertNil(P.find(w, "CheckBox", "Content"), "no enable checkbox")
     assertEqual(table.concat(P.drawers(w), ","),
-        "Content,Instance,Difficulty,Key level,Group,Leader or assist,Class,Specialization,Role,Character,Battleground")
+        "Content,Instance,Difficulty,Key level,Group,Leader or assist,Class,Specialization,Role,Character,Battleground,Arena")
     local content = P.drawer(w, "Content")
     assertTrue(content.__ka0sDrawerSet, "a set condition reads gold")
     assertEqual(content.__ka0sDrawerSummary, "Dungeon, Raid")
@@ -928,6 +932,67 @@ test("groups page: [icons] a tinted callout row puts its image back to white whe
     m.LibStub("AceGUI-3.0"):Release(row)
     -- red under: drop the row label's OnRelease in Ed.ReorderRows
     assertEqual(table.concat(row.image.vertexColor, ","), "1,1,1", "the pooled image is white for its next owner")
+end)
+
+-- The row's label (B5): the name in gold, the channel's short label in its chat color, then the
+-- text in muted white, cut at 40 characters.
+local function calloutRow(P, w, icon)
+    for _, label in ipairs(P.all(w, "Label")) do
+        if label.image and label.image[1] == icon then return label end
+    end
+    return nil
+end
+
+test("groups page: [rows] a callout row reads gold name, the channel in its chat color, then the text", function()
+    local NS, _, P = open()
+    local lists = P.reorderSpy()
+    local star = NS.Icon("star")
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    NS.Library.CreateCalloutIn(gid, { name = "Star", text = "go", channel = "party", icon = star })
+    NS.Library.CreateCalloutIn(gid, { name = "Warn", text = "move", channel = "raidWarning", icon = star })
+    pick(NS, gid)
+    local w = P.tab("groups", "callouts")
+    local rows = {}
+    for _, label in ipairs(P.all(w, "Label")) do
+        if label.image and label.image[1] == star then rows[#rows + 1] = label end
+    end
+    -- red under: calloutLabel's old "%s  |cff808080%s|r" (the raw kind id in gray)
+    assertEqual(rows[1].text, "|cffffd100Star|r  |cffababffParty|r  |cffb3b3b3go|r")
+    assertEqual(rows[2].text, "|cffffd100Warn|r  |cffff4700Raid warning|r  |cffb3b3b3move|r")
+    -- red under: Ed.ReorderRows' ghostText without entry.ghost
+    assertEqual(lists[#lists].specs[1].ghostText, "Star", "the drag copy carries the plain name")
+end)
+
+test("groups page: [rows] a callout row cuts its text at 40 characters, escapes |, and shows the fallback icon", function()
+    local NS, _, P = open()
+    local Ed = NS.addon.Settings.Editors
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    NS.Library.CreateCalloutIn(gid, { name = "Long", text = "a|b" .. ("x"):rep(50), channel = "smartGroup" })
+    pick(NS, gid)
+    local w = P.tab("groups", "callouts")
+    -- red under: the row's icon only when the callout has one
+    local row = calloutRow(P, w, Ed.NO_ICON)
+    assertTrue(row ~= nil, "a callout with no icon shows the question mark")
+    -- solo: a smart kind resolves to nothing and takes PARTY's color
+    assertEqual(row.text, "|cffffd100Long|r  |cffababffSmart group|r  |cffb3b3b3a||b" .. ("x"):rep(37) .. "…|r")
+end)
+
+test("groups page: [rows] a callout row's text cut counts UTF-8 characters, not bytes", function()
+    local NS, _, P = open()
+    local Ed = NS.addon.Settings.Editors
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    NS.Library.CreateCalloutIn(gid, { name = "Uni", text = ("é"):rep(45), channel = "say" })
+    pick(NS, gid)
+    local row = calloutRow(P, P.tab("groups", "callouts"), Ed.NO_ICON)
+    assertEqual(row.text, "|cffffd100Uni|r  |cffffffffSay|r  |cffb3b3b3" .. ("é"):rep(40) .. "…|r")
+    -- a text at the limit is not cut
+    local exact = NS.Library.CreateCalloutIn(gid, { name = "Exact", text = ("y"):rep(40), channel = "say" })
+    assertTrue(exact ~= nil)
+    local found
+    for _, label in ipairs(P.all(P.tab("groups", "callouts"), "Label")) do
+        if label.text == "|cffffd100Exact|r  |cffffffffSay|r  |cffb3b3b3" .. ("y"):rep(40) .. "|r" then found = true end
+    end
+    assertTrue(found, "40 characters exactly: no ellipsis")
 end)
 
 test("groups page: [icons] the swatch writes on a drag tick (OnValueChanged) with no confirm, as OK leaves it", function()
@@ -1255,4 +1320,23 @@ test("groups page: [all] a gap separates the Every condition line from the first
     -- red under: the first drawer straight under the line
     assertTrue(after ~= nil and after.type == "SimpleGroup" and after.height == NS.addon.Settings.Helpers.ROW_VSPACER,
         "a row spacer comes first")
+end)
+
+test("groups page: [arena] the arena drawer's All arenas dims and locks the list, which it keeps", function()
+    local NS, _, P = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine", when = { arena = { [1505] = true } } })
+    pick(NS, gid)
+    NS.State.whenOpen[gid] = { arena = true }
+    local w = P.tab("groups", "When")
+    -- red under: no arena drawer
+    local all = P.find(w, "CheckBox", "All arenas")
+    assertTrue(all ~= nil, "the checkbox, on top of the drawer")
+    assertFalse(P.find(w, "EditBox", "Add an arena").disabled and true or false)
+    assertTrue(P.find(w, "Button", "Add the arena you are in") ~= nil)
+    all:__fire("OnValueChanged", true)
+    assertTrue(NS.db.profile.groups[gid].when.arena.all)
+    assertTrue(NS.db.profile.groups[gid].when.arena[1505], "the pick is kept")
+    w = P.tab("groups", "When")
+    assertEqual(P.drawer(w, "Arena").__ka0sDrawerSummary, "All arenas")
+    assertTrue(P.find(w, "EditBox", "Add an arena").disabled, "the list is locked")
 end)

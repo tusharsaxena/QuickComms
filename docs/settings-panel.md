@@ -8,8 +8,8 @@ eagerly at `OnEnable`; each page's body builds on its first show (options-ui-§1
 | Ka0s Quick Comms (landing) | The logo, the TOC notes line and the slash command list, drawn by the library's `BuildLandingPage` |
 | General | `Master controls`, `Behavior` |
 | Groups | One group (a seeded built-in set is one too): `General`, `Callouts`, `When`, `Preview` |
-| Comms Pad | One pad: `General`, `Groups`, `Layout`, `Look` |
-| Comms Dial | One dial: `General`, `Groups`, `Wheel`, `Binding`, `Preview` |
+| Comms Pad | One pad: `General`, `Groups`, `Layout`, `Look`, `Icons` |
+| Comms Dial | One dial: `General`, `Groups`, `Wheel`, `Icons`, `Binding`, `Preview` |
 | Share | `Export`, `Import` |
 | Profiles | AceDBOptions: switch, copy, reset and delete profiles |
 
@@ -18,7 +18,8 @@ eagerly at `OnEnable`; each page's body builds on its first show (options-ui-§1
 Composed by `Helpers.MasterControls` from one declaration (`settings/Panel.lua`), canonical rows in
 canonical order (options-ui-§15). The Comms Pad is positionable, so the block is the full framed
 set, in order: Enable, General visibility, Master scale, Master alpha, Lock frame, Debug console,
-Minimap button, Test mode, then the Reset position and Reset all settings buttons.
+Minimap button, Test mode, then the block's one extra row, Preview as, then the Reset position and
+Reset all settings buttons.
 
 | Left | Right |
 |---|---|
@@ -26,11 +27,20 @@ Minimap button, Test mode, then the Reset position and Reset all settings button
 | Master scale (`scale`, 0.5-2) | Master alpha (`alpha`) |
 | Lock frame (`locked`) | Debug console (`state.debugConsole`, session) |
 | Minimap button (`global.minimap.shown`) | Test mode (`state.testMode`, session) |
+| Preview as (`state.previewAs`, session; its own line) | |
 | Reset position (button: every pad and dial back to its default place, one chat line) | Reset all settings (button, asks first) |
 
 Lock frame, `/qc lock|unlock` and the launcher's Locked entry write the same path; Test mode,
 `/qc test` and the launcher's Test mode entry call the same switch (`Preview.SetTestMode`), which is
-refused in combat.
+refused in combat. The launcher's Show window entry calls `/qc toggle`'s handler
+(`SlashVerbs.TogglePads`), which hides or shows every Comms Pad for the session.
+
+Preview as is passed through the composer's `extra` slot, so it lands after the canonical rows and
+before the button pair, never among them: options-ui-§15 as amended in v2.84.0 sanctions that slot
+for page-wide host rows. It draws every pad, and opens dial 1, as another situation would (nothing
+sends); `/qc preview` writes the same session row, and the page follows it (`Preview.announce`
+repaints). It is page-wide, so no editor page draws it, and no page's Defaults reaches it; Reset all
+settings ends it with the other session rows.
 
 Every row writes through the one seam (`NS.SchemaRuntime.Set`), and its reaction is the same one
 the CLI, the launcher and the host verbs trigger (`Settings.REACTIONS` in `settings/Schema.lua`).
@@ -47,14 +57,17 @@ read-only branch.
 band      [ Group v (picker; a green dot marks a group active now; a group inside another is
           listed, indented, right after it) ][ New group ]
 strip     [ General ][ Callouts ][ When ][ Preview ]
-General   Preview as (page-wide, first), then Name, Enabled, Open the dial on this group, then
+General   Name, Enabled, Open the dial on this group, then
           Parent group (None, or a top-level group) beside Inherit when conditions (grayed out
           with no parent), then the icon under an Icon label with Choose icon…, the clear glyph
           and its color swatch (settings/Editors.lua's chooser, no Icon text box), then
           Duplicate and Delete, then Restore built-in groups (page-wide)
 Callouts  Add callout (the callout popup, blank; across the row), Reuse callout
           with Add at the right edge (both 2px short of it), then its callouts as a drag-to-reorder list, each row the handle,
-          the icon, the name and channel, then an edit glyph and a remove glyph at the right edge
+          the icon (the question mark when none), the name in gold, the channel's short label in
+          its chat color (a smart kind resolved against the snapshot; PARTY's when solo) and the
+          text in muted white cut at 40 characters with "…", then an edit glyph and a remove glyph
+          at the right edge
 When      settings/Groups_When.lua
 Preview   the active-now line, then a table: a gold header row (Callout, What it sends here), then
           one boxed row per callout, its icon and name beside its first preview line
@@ -108,7 +121,7 @@ the callout popup's preview.
 set must match. A condition left as Any does not limit the group.", a row's gap, then one drawer per condition
 (the library's `O.Drawer`, LibKa0s `OptionsDrawer.lua` since v1.73.0), in this order: Content,
 Instance, Difficulty, Key level, Group, Leader or assist, Class, Specialization, Role, Character,
-Battleground.
+Battleground, Arena.
 
 ```
 header   > Content                                                      Any
@@ -123,20 +136,26 @@ header   > Key level                                               10 to 15
 - **The header**: a chevron (right while closed, down while open), the condition's name (gold while
   it is set, white otherwise) and, at the right, a summary on one line: "Any" in gray while unset,
   else the chosen values in list order, comma-separated and cut with an ellipsis; an id list names
-  its one entry or counts several ("2 instances", "2 battlegrounds", "2 characters"), or reads "All
-  dungeons and raids" / "All battlegrounds" while its whole-kind checkbox is ticked; the key level
+  its one entry or counts several ("2 instances", "2 battlegrounds", "2 arenas", "2 characters"), or
+  reads "All dungeons and raids" / "All battlegrounds" / "All arenas" while its whole-kind checkbox
+  is ticked; the key level
   reads "10 or higher", "15 or lower", "10 to 15", or "12" when both ends are equal. Hovering it
   shows the condition's tooltip. A click opens or closes its drawer (refused in combat).
 - **The drawer**: a box joined under the header (the header's bottom corners square off and its
   edge goes gold while it is open), its rows lined up under the condition's name. Content,
   difficulty, group, leadership, class, specialization (the classes picked, else the player's) and
   role are checkboxes in three columns; the key level is a Lowest and a Highest box; instances,
-  battlegrounds and characters (`Name-Realm`) are the library's IdList, each with an
+  battlegrounds, arenas and characters (`Name-Realm`) are the library's IdList, each with an
   add-the-one-you-are-in button, which reads where the player is at the click and says so when that
   is nowhere; a typed id is a positive whole number, and a typed character takes the client's case
-  (`bob` reads `Bob-<your realm>`).
+  (`bob` reads `Bob-<your realm>`). The Instance list suggests and names every Encounter Journal
+  dungeon and raid (`NS.GameIds.INSTANCES`, so Murder Row as well as the season's), the Arena list
+  every arena (`NS.GameIds.ARENAS`), the Battleground list the shipped sets' maps; a name two maps
+  share is refused (pick it from the suggestions, or type the id), except that the season's dungeon
+  or raid wins on the Instance list.
 - **The whole-kind checkbox**, on top of the Instance drawer ("All dungeons and raids": any dungeon,
-  Mythic+ key or raid) and the Battleground drawer ("All battlegrounds": any battleground). While it
+  Mythic+ key or raid), the Battleground drawer ("All battlegrounds": any battleground) and the Arena
+  drawer ("All arenas": any arena). While it
   is ticked the list and its buttons under it are drawn dimmed and inert, and keep their entries,
   unused, for an untick; it stores `all` in the row beside the ids (`Resolver.ALL`), which
   `/qc set group.when battleground all` types too. The Character drawer has none: every character
@@ -315,8 +334,9 @@ built on its first open. The EllesmereUI skin paints it as it paints the popup.
 window   Blizzard's settings window, titled Ka0s Quick Comms                 (its close X)
 header   Choose an icon, the gold rule under it
 tabs     [ Markers ][ Game icons ][ Glyphs ]   (the library's tab strip)
-toolbar  Game icons: Show (All / Spells / Items). Glyphs: Icon color (the swatch). Then the
-         search box (a magnifier inside its left edge, a clear mark at its right while it holds
+toolbar  Game icons: Show (All / Spells / Items). Glyphs: Show (All / Open Iconic / Phosphor /
+         Game-icons), then Icon color (the swatch). Then the search box (narrower on
+         Glyphs; a magnifier inside its left edge, a clear mark at its right while it holds
          text). At the right, how many icons the tab holds, or "N of M icons" while a search
          narrows it.
 grid     12 × 7 icons and a scrollbar, 10px under the toolbar; the mouse wheel scrolls it
@@ -328,8 +348,13 @@ footer   the selected icon (a glyph in the color) and its name, then Choose and 
   icon the macro icon selector offers (the loose lists and then `GetMacroIcons` for spells, the
   same for items, through `Compat.MacroIcons`), as texture ids, each once, filtered All / Spells / Items; until the client has
   loaded its own icon list the tab says so, and the list is read again on the next visit. **Glyphs**:
-  every icon of the LibKa0s catalog (`NS.IconNames`), named from its catalog key ("arrow-circle-down"
-  reads "Arrow circle down"; the curated glyphs keep their localized labels).
+  every icon of the LibKa0s catalog (`NS.IconNames`, about 5,800 marks in three sets: Open Iconic,
+  Phosphor `ph:`, Game-icons `gi:`), named from its catalog key without the set's prefix
+  ("arrow-circle-down" reads "Arrow circle down", "ph:arrow-up" "Arrow up"; the curated glyphs keep
+  their localized labels), filtered All or one set (the sets read from `NS.IconSets`; each open
+  starts on All, a tab switch keeps the choice). A glyph's tooltip adds its set's name, and a
+  Game-icons mark its author ("Game-icons, by Lorc", as CC BY 3.0 asks; README `## Credits`). Each
+  set's list is built once for the session, so a keystroke re-filters it without rebuilding it.
 - **The grid is virtualized**: 84 cells are built once and re-dressed from the tab's list as it
   scrolls, so the thousands of game icons cost no more frames than a short tab.
 - **Search**: the box filters the shown tab as you type, not case-sensitive, as plain text (`%` or
@@ -368,8 +393,8 @@ footer   the selected icon (a glyph in the color) and its name, then Choose and 
 
 ```
 band     [ Pad v (picker) ][ New pad ]
-strip    [ General ][ Groups ][ Layout ][ Look ]
-General  Preview as (page-wide, first), Name, Enabled, then Unlock (or Lock) pads and Delete pad
+strip    [ General ][ Groups ][ Layout ][ Look ][ Icons ]
+General  Name, Enabled, then Unlock (or Lock) pads and Delete pad
 Groups   Show groups as, then the pad's groups as a drag-to-reorder list with a remove glyph
          (its priority order; it takes the group off the pad and asks nothing), then Add a group
          (the top-level groups the pad does not hold: a group inside another shows with it)
@@ -379,7 +404,18 @@ Look     visibility, fade and faded alpha; then Font (face, size, color with Use
          flags, shadow), Border (style, thickness, color with Use class color) and Background
          (its color with Use class color), each composed by the options library (options-ui-§16,
          §17) under its own heading
+Icons    the chips' icons (B9): Size and crop (Icon size, Zoom), Color (Desaturate, Icon opacity,
+         Tint with Use class color), Border (the composed block: Show border, style, thickness,
+         color with Use class color) and Glow (Glow, Glow when, Glow style, Glow color with Use
+         class color), then one heading per style's knobs and Offset
 ```
+
+The Icons tab's rows are `pad.icon.*` (settings/SchemaIcons.lua). Every color pair sits on one line and is
+never grayed out; Border style and thickness are grayed out while Show border is off; Glow when, Glow style
+and every knob while the glow is off, and a knob also while the glow is in a style it does not apply to.
+Glow when is Always, On hover or After sending (1.5 s from the send result; a dial closes on the send,
+so its wedge glows for 1.5 s from the next open, if that comes within 5 s). The page's Defaults puts the
+Icons rows back too.
 
 X and Y write the whole `pad.point` row, the same one the drag strip writes; a drag on screen
 updates the boxes. A new pad holds the seeded sets the profile still has as top-level groups, in
@@ -391,19 +427,20 @@ shipped order.
 
 ```
 band     [ Dial v (picker) ][ New dial ]
-strip    [ General ][ Groups ][ Wheel ][ Binding ][ Preview ]
-General  Preview as (page-wide, first), Name, Enabled, then Delete dial
+strip    [ General ][ Groups ][ Wheel ][ Icons ][ Binding ][ Preview ]
+General  Name, Enabled, then Delete dial
 Groups   Show groups as (Categories or Flat), the depth-3 warning (spec §11.3), then the dial's
          groups as a drag-to-reorder list with a remove glyph (its priority order, spec §7; it
          takes the group off the dial and asks nothing), then Add a group (top-level groups only)
 Wheel    wedges per ring, open at, then Position: X and Y and Reset this dial's position
+Icons    the wedges' icons, as the Comms Pad page's Icons tab (a wedge's border is a round ring,
+         never wider than the wedge; its icon size keeps the wedge's own size)
 Binding  how Relaxed mode works, the key capture, and the key's line (what it opens, or the WoW
          binding it shares, spec §9.4 / §18)
 Preview  each ring as the current or previewed situation builds it, wedge by wedge
 ```
 
-- **General:** Preview as… draws dial 1 in another situation (its wedges disarmed); Name and Enabled
-  are the `dial.name` and `dial.enabled` rows; Delete dial asks first, keeps the dial's groups and
+- **General:** Name and Enabled are the `dial.name` and `dial.enabled` rows; Delete dial asks first, keeps the dial's groups and
   callouts, and releases its key.
 - **Groups:** Show groups as is `dial.mode` (Categories or Flat). The warning names each battleground
   node set that would open three rings deep because a group above it is active there too

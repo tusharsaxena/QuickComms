@@ -5,13 +5,13 @@ local _, NS = ...
 -- with the condition's name (gold while it is set) and a summary of its values ("Any" while unset),
 -- which opens a box holding its choices: checkboxes in three columns for a short list, a lowest and
 -- highest box for the key level, and an id list (the library's IdList: an add box with suggestions,
--- one line per entry with Remove) for instances, battlegrounds and characters; under them Select all
--- (a checkbox list) and Clear (Any). Values are ids and tokens, never localized names
--- (localization-§4): instances and battlegrounds by instanceID, classes by classFile,
+-- one line per entry with Remove) for instances, battlegrounds, arenas and characters; under them
+-- Select all (a checkbox list) and Clear (Any). Values are ids and tokens, never localized names
+-- (localization-§4): instances, battlegrounds and arenas by instanceID, classes by classFile,
 -- specializations by specID, characters by Name-Realm; a name is shown, never matched. The list
--- data is shipped (defaults/GameIds.lua and the battleground sets); "Add the instance you are in"
--- covers an id the table does not list yet. A live line says whether the group is active now, or in
--- the previewed situation, and which row stops it. A group inside another that inherits its When
+-- data is shipped (defaults/GameIds_Instances.lua, defaults/GameIds.lua and the battleground sets);
+-- "Add the instance you are in" covers an id the tables do not list yet. A live line says whether
+-- the group is active now, or in the previewed situation, and which row stops it. A group inside another that inherits its When
 -- conditions (group.inheritWhen) shows its parent's When here, read-only, under a line that says so.
 --
 -- Every change writes the group's WHOLE When through the seam (`group.when`, a structured member
@@ -32,7 +32,7 @@ Settings.GroupsWhen = Settings.GroupsWhen or {}
 local W = Settings.GroupsWhen
 
 W.ROWS = { "content", "instances", "difficulty", "keyLevel", "group", "leadership", "class", "spec", "role",
-    "characters", "battleground" }
+    "characters", "battleground", "arena" }
 
 -- The labels of the token rows' values. The tokens themselves, and their order, are
 -- NS.Resolver.TOKENS (read at call time), which Library.ValidWhen checks against too.
@@ -57,6 +57,7 @@ W.TIP = {
     role = L["Your group role."],
     characters = L["Specific characters, as Name-Realm."],
     battleground = L["Specific battlegrounds."],
+    arena = L["Specific arenas."],
 }
 
 local function copy(t)
@@ -348,18 +349,24 @@ local function renderKeyLevel(ctx, gid)
     H().RenderGrid(ctx, { box(L["Lowest key level"], "min"), box(L["Highest key level"], "max") })
 end
 
--- Typed text -> one of `candidates` by exact name (case-insensitive), through `nameFn`.
-local function byName(text, candidates, nameFn)
+-- Typed text -> one of `candidates` by exact name (case-insensitive), through `nameFn`. A name two
+-- ids carry is "ambiguous", unless exactly one of them is in `prefer` (a set): that one wins.
+local function byName(text, candidates, nameFn, prefer)
     local want = (text or ""):lower()
-    local found
+    local found, preferred, many
     for _, id in ipairs(type(candidates) == "function" and candidates() or {}) do
-        if nameFn(id):lower() == want then
-            if found and found ~= id then return nil, "ambiguous" end
-            found = id
+        if nameFn(id):lower() == want and id ~= found then
+            many = found ~= nil
+            found = found or id
+            if prefer and prefer[id] then
+                if preferred then return nil, "ambiguous" end
+                preferred = id
+            end
         end
     end
+    if many then found = preferred end
     if found then return found, nameFn(found) end
-    return nil, "notFound"
+    return nil, many and "ambiguous" or "notFound"
 end
 
 -- A typed id: a positive whole number, never a fraction or a negative (which can never match).
@@ -369,21 +376,38 @@ local function wholeId(text)
     return nil
 end
 
-local function idKind(nameFn, noun, plural)
+local function idKind(nameFn, noun, plural, prefer)
     return {
         noun = noun, plural = plural,
         info = function(id) return nameFn(id), nil end,
         resolve = function(text, candidates)
             local n = wholeId(text)
             if n then return n, nameFn(n) end
-            return byName(text, candidates, nameFn)
+            return byName(text, candidates, nameFn, prefer and prefer())
         end,
     }
 end
 
+-- The season's dungeons and raids (Preview as…'s): the instance a name two maps share means.
+local function seasonInstances()
+    local out = {}
+    for _, id in ipairs(NS.GameIds.DUNGEONS) do out[id] = true end
+    for _, id in ipairs(NS.GameIds.RAIDS) do out[id] = true end
+    return out
+end
+
+local function shipped(list)
+    return function()
+        local out = {}
+        for i, id in ipairs(NS.GameIds[list] or {}) do out[i] = id end
+        return out
+    end
+end
+
 local KIND = {
-    instances = function() return idKind(W.InstanceName, L["instance"], L["instances"]) end,
+    instances = function() return idKind(W.InstanceName, L["instance"], L["instances"], seasonInstances) end,
     battleground = function() return idKind(W.BattlegroundName, L["battleground"], L["battlegrounds"]) end,
+    arena = function() return idKind(W.InstanceName, L["arena"], L["arenas"]) end,
     characters = function()
         return { noun = L["character"], plural = L["characters"],
             info = function(id) return tostring(id), nil end,
@@ -396,13 +420,9 @@ local KIND = {
 }
 
 local CANDIDATES = {
-    instances = function()
-        local out = {}
-        for _, id in ipairs(NS.GameIds.DUNGEONS) do out[#out + 1] = id end
-        for _, id in ipairs(NS.GameIds.RAIDS) do out[#out + 1] = id end
-        return out
-    end,
+    instances = shipped("INSTANCES"),
     battleground = battlegroundIds,
+    arena = shipped("ARENAS"),
     characters = function() return {} end,
 }
 
@@ -411,6 +431,8 @@ local ADD = {
         L["Add the instance you are in"] },
     battleground = { L["Add a battleground"], L["Type a battleground's id or name, then press Enter or Add."],
         L["Add the battleground you are in"] },
+    arena = { L["Add an arena"], L["Type an arena's id or name, then press Enter or Add."],
+        L["Add the arena you are in"] },
     characters = { L["Add a character"], L["Type Name-Realm, or a name on your realm, then press Enter or Add."],
         L["Add this character"] },
 }
@@ -422,6 +444,8 @@ local ALL = {
         L["Match in any dungeon, Mythic+ key or raid. The instances listed below are kept, unused, until you untick this."] },
     battleground = { L["All battlegrounds"],
         L["Match in any battleground. The battlegrounds listed below are kept, unused, until you untick this."] },
+    arena = { L["All arenas"],
+        L["Match in any arena. The arenas listed below are kept, unused, until you untick this."] },
 }
 
 --- Whether id row `row` offers the whole-kind checkbox.
@@ -437,7 +461,8 @@ end
 
 -- An id row's summary for several entries.
 local COUNT = {
-    instances = L["%d instances"], battleground = L["%d battlegrounds"], characters = L["%d characters"],
+    instances = L["%d instances"], battleground = L["%d battlegrounds"], arena = L["%d arenas"],
+    characters = L["%d characters"],
 }
 
 --- A drawer's summary (spec §1): "Any" while the row is unset; else the chosen values in the row's
@@ -485,6 +510,7 @@ local function here(row)
     local live = NS.Situation.Current()
     if row == "instances" then return live.content ~= "openWorld" and live.instanceID or nil end
     if row == "battleground" then return live.content == "battleground" and live.instanceID or nil end
+    if row == "arena" then return live.content == "arena" and live.instanceID or nil end
     if row == "characters" then return live.character end
     return nil
 end
@@ -492,6 +518,7 @@ end
 local NOT_HERE = {
     instances = L["You are not in an instance."],
     battleground = L["You are not in a battleground."],
+    arena = L["You are not in an arena."],
     characters = L["Your character is not known yet."],
 }
 
@@ -509,7 +536,7 @@ end
 
 --- One value typed for When row `row` on the command line, as the value the row stores
 --- (localization-§4: ids and tokens, never a name): a token matched without regard to case; an
---- instance or battleground by its id or its listed name; a specialization by its id; a character
+--- instance, battleground or arena by its id or its listed name; a specialization by its id; a character
 --- as Name-Realm. Nil and the reason for a value the row can never match.
 --- @return any|nil value, string|nil reason
 function W.ResolveValue(row, text)

@@ -249,6 +249,11 @@ local function build()
         function r:SetFont(path, size, flags) self.__font = { path, size, flags } return true end
         function r:SetShadowOffset(x, y) self.__shadow = { x, y } return self end
         function r:SetAlpha(a) self.__alpha = a return self end
+        -- The Icons tab's texture calls (modules/IconStyle.lua), recorded so a crop, a desaturation
+        -- and an icon size can be asserted on.
+        function r:SetTexCoord(...) self.__texCoord = { ... } return self end
+        function r:SetDesaturated(v) self.__desaturated = v return self end
+        function r:SetSize(w, h) self.__size = { w, h } return self end
         function r:GetAlpha() return self.__alpha or 1 end
         return setmetatable(r, { __index = function(_, key)
             if type(key) ~= "string" then return nil end

@@ -108,7 +108,7 @@ test("database: step 3 turns the built-in overlay into seeded groups, each in it
     db.sv.profiles.Old = overlayProfile(NS)
     db.global.schemaVersion = 2
     NS.addon:RunMigrations()
-    assertEqual(db.global.schemaVersion, 3)
+    assertEqual(db.global.schemaVersion, NS.SCHEMA_VERSION)
     local p = db.sv.profiles.Old
     -- red under: run = function() end for step 3 in core/Database.lua
     assertNil(p.builtins, "the overlay is gone")
@@ -204,4 +204,95 @@ test("database: the profile defaults carry the Master controls value, and no deb
     -- The debug flag is session-only (debug-logging-§5).
     assertTrue(p.debug == nil and p.state == nil)
     assertEqual(NS.addon.db.global.minimap.hide, false)
+end)
+
+test("database: [B2] step 4 rewrites a pad's retired Upward growth as Right and up, once", function()
+    local NS = T.bootAddon()
+    local db = NS.addon.db
+    db.sv.profiles.Old = { pads = { p1 = { layout = { growth = "up", columns = 3 } },
+        p2 = { layout = { growth = "left" } }, p3 = {}, p4 = { layout = "damaged" } } }
+    db.global.schemaVersion = 3
+    NS.addon:RunMigrations()
+    local p = db.sv.profiles.Old
+    -- red under: no step 4 in core/Database.lua
+    assertEqual(p.pads.p1.layout.growth, "rightUp")
+    assertEqual(p.pads.p1.layout.columns, 3, "nothing else moves")
+    assertEqual(p.pads.p2.layout.growth, "left")
+    assertNil(p.pads.p3.layout, "a pad with no layout stays without one")
+    assertEqual(p.pads.p4.layout, "damaged")
+    assertTrue(db.global.schemaVersion >= 4)
+    p.pads.p2.layout.growth = "leftUp"
+    db.global.schemaVersion = 3
+    NS.addon:RunMigrations()
+    assertEqual(p.pads.p1.layout.growth, "rightUp", "a second run changes nothing")
+    assertEqual(p.pads.p2.layout.growth, "leftUp")
+    local fresh = {}
+    NS.Library.MigrateGrowth(fresh)
+    assertNil(next(fresh), "a fresh profile is left as it is")
+end)
+
+-- A profile as builds before step 5 stored it: the generic dungeon set under its old name and M+
+-- only When, and the seeded callouts with the icons they shipped with then (none, or a game icon).
+local OLD_LUST = "Interface\\Icons\\Spell_Nature_Bloodlust"
+local function preIconProfile()
+    return {
+        groups = {
+            g1 = { name = "M+ (generic)", when = { content = { mythicPlus = true } }, origin = "bi.mplus" },
+            g2 = { name = "My keys", when = { content = { mythicPlus = true } }, origin = "bi.mplus" },
+            g3 = { name = "M+ (generic)", when = { content = { mythicPlus = true }, keyLevel = { min = 10 } },
+                origin = "bi.mplus" },
+            g4 = { name = "M+ (generic)", when = { content = { mythicPlus = true } } },
+        },
+        callouts = {
+            c1 = { name = "Lust", text = "x", origin = "bi.mplus.lust", icon = OLD_LUST },
+            c2 = { name = "Pulling", text = "x", origin = "bi.mplus.pull" },
+            c3 = { name = "Kill", text = "x", origin = "bi.arena.kill", icon = false },
+            c4 = { name = "Kick", text = "x", origin = "bi.mplus.kicks", icon = 136012 },
+            c5 = { name = "Mine", text = "x", icon = OLD_LUST },
+            c6 = { name = "Gone", text = "x", origin = "bi.nothing" },
+            c7 = { name = "Res", text = "x", origin = "bi.mplus.res", icon = "Interface\\Icons\\Spell_Nature_Reincarnation" },
+        },
+    }
+end
+
+test("database: [B7] step 5 renames the dungeon set, widens its When and gives seeded callouts their glyphs, once", function()
+    local NS = T.bootAddon()
+    local db = NS.addon.db
+    local BI = NS.BuiltIns
+    db.sv.profiles.Old = preIconProfile()
+    db.global.schemaVersion = 4
+    NS.addon:RunMigrations()
+    local p = db.sv.profiles.Old
+    -- red under: no step 5 in core/Database.lua
+    assertEqual(p.groups.g1.name, "Dungeon (generic)", "an un-renamed set takes the new name")
+    assertTrue(p.groups.g1.when.content.dungeon and p.groups.g1.when.content.mythicPlus, "and the wider When")
+    assertEqual(p.groups.g2.name, "My keys", "a renamed set keeps its name")
+    assertTrue(p.groups.g2.when.content.dungeon, "its unedited When still widens")
+    assertEqual(p.groups.g3.name, "Dungeon (generic)")
+    assertNil(p.groups.g3.when.content.dungeon, "an edited When is the player's")
+    assertEqual(p.groups.g4.name, "M+ (generic)", "a group of the player's own is not the shipped set")
+    assertNil(p.groups.g4.when.content.dungeon)
+    local lust, pull, res = BI.callouts["bi.mplus.lust"], BI.callouts["bi.mplus.pull"], BI.callouts["bi.mplus.res"]
+    assertEqual(p.callouts.c1.icon, lust.icon, "the old shipped icon becomes the glyph")
+    assertEqual(p.callouts.c1.iconColor, lust.iconColor)
+    assertEqual(p.callouts.c2.icon, pull.icon, "no icon becomes the glyph")
+    assertEqual(p.callouts.c7.icon, res.icon)
+    assertTrue(p.callouts.c3.icon == false, "a cleared icon stays cleared")
+    assertNil(p.callouts.c3.iconColor)
+    assertEqual(p.callouts.c4.icon, 136012, "a picked icon is the player's")
+    assertEqual(p.callouts.c5.icon, OLD_LUST, "a callout of the player's own is untouched")
+    assertNil(p.callouts.c6.icon, "an origin no longer shipped is left alone")
+    assertTrue(db.global.schemaVersion >= 5)
+    -- a second run changes nothing, edits since included
+    p.groups.g1.name = "Keys"
+    p.callouts.c2.iconColor = "123456"
+    db.global.schemaVersion = 4
+    NS.addon:RunMigrations()
+    assertEqual(p.groups.g1.name, "Keys")
+    assertEqual(p.callouts.c2.iconColor, "123456")
+    assertEqual(p.callouts.c1.icon, lust.icon)
+    local fresh = {}
+    NS.Library.MigrateBuiltins(fresh)
+    assertNil(next(fresh), "a fresh profile is left as it is")
+    NS.Library.MigrateBuiltins({ groups = "damaged", callouts = { c1 = "damaged" } })
 end)

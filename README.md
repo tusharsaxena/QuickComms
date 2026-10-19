@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-868%2F868_passing-green)
+![Tests](https://img.shields.io/badge/Tests-927%2F927_passing-green)
 
 Quick Comms puts your usual group callouts one click or one keypress away. "Kick on me", "Lust
 now", "INC 3 Lumber Mill": set them up once and they sit on a Comms Pad or open from a
@@ -19,9 +19,9 @@ and share any of it with a friend as a string you copy and paste.
 ## Usage
 
 Enter a key, a raid, an arena or a battleground and the Comms Pad shows the callouts that fit; click
-one to send it. `/qc unlock` lets you drag the pad, `/qc lock` fixes it, and `/qc test` shows
-placeholder chips so you can place it anywhere. The minimap button's right-click menu has Enabled,
-Locked and Test mode.
+one to send it. `/qc unlock` lets you drag the pad, `/qc lock` fixes it, `/qc test` shows
+placeholder chips so you can place it anywhere, and `/qc toggle` hides every pad until you toggle it
+back or reload. The minimap button's right-click menu has Enabled, Locked, Test mode and Show window.
 
 The Comms Dial opens on a key. Pick one on Settings → Comms Dial → Binding (or in WoW's key bindings
 menu), press it, click a group, then click a callout to send it. In a battleground the dial opens
@@ -107,3 +107,17 @@ than in comments, so nothing gets lost.
 | Version | Date | Highlights |
 |---|---|---|
 | 0.1.0 | Unreleased | - The Comms Pad and the Comms Dial, with built-in callouts for Mythic+, raids, arenas and every battleground, sent through secure buttons<br>- Your own callouts and groups (the built-in sets among them, as groups you can edit, and groups inside groups), with conditions for when each group shows, Preview as… and Why is this showing?<br>- The spam guard, drop notes, test mode and the lock<br>- The pad's font, border and background, with class colors<br>- Sharing groups (with their callouts), pads and dials as a string<br>- The settings panel, the minimap button, the `/qc` command and the debug tools |
+
+## Credits
+
+The glyphs in the icon browser come from three icon sets, each shipped with its license beside its art:
+
+- **Open Iconic**, by Waybury, MIT license (<https://github.com/iconic/open-iconic>).
+- **Phosphor** (the Fill weight), by Phosphor Icons, MIT license (<https://phosphoricons.com>).
+- **Game-icons.net**, CC BY 3.0 (<https://game-icons.net>), by Andy Meneely, Aussiesim, Carl Olsen,
+  Caro Asercion, Cathelineau, Catsu, DarkZaitzev, Delapouite, Faithtoken, Felbrigg, GeneralAce135,
+  Guard13007, HeavenlyDog, Irongamer, John Colburn, John Redman, Kier Heyl, Lorc, Lord Berandas,
+  Lucas, Pepijn Poolman, Pierre Leducq, PriorBlue, Quoting, Rihlsul, Sbed, SeregaCthtuf, Skoll,
+  Sparker, SpencerDub, Starseeker, Viscious Speed, Willdabeast, Zajkonur and Zeromancer. The marks
+  were rasterized to 64×64, their background square removed and recolored white so the game can tint
+  them; `AUTHORS.txt` names each mark's author, and the icon browser's tooltip does too.

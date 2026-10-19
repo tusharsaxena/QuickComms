@@ -35,6 +35,8 @@ local COMMANDS = {
         function() NS.SlashVerbs.SetLocked(true) end},
     {"unlock",   L["Unlock the Comms Pads so they can be dragged"],
         function() NS.SlashVerbs.SetLocked(false) end},
+    {"toggle",   L["Show or hide every Comms Pad for this session"],
+        function() NS.SlashVerbs.TogglePads() end},
     {"version",  L["Print the addon version"],
         function() Sl:CliVersion() end},
     {"list",     L["List every setting and its current value"],
@@ -136,10 +138,10 @@ local function parseKeyLevel(text)
     return { min = tonumber(lo), max = tonumber(hi) }
 end
 
--- The values typed for one condition. An instance or battleground name may hold spaces, so those
--- two split on commas only.
+-- The values typed for one condition. A place's name (an instance, battleground or arena) may hold
+-- spaces, so the place rows split on commas only.
 local function valuesOf(row, rest)
-    if row == "instances" or row == "battleground" then
+    if NS.Resolver.ID_ROWS[row] then
         local out = {}
         for v in rest:gmatch("[^,]+") do
             v = trim(v)

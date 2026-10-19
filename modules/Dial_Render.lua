@@ -9,11 +9,16 @@ local _, NS = ...
 -- guard's cooling veil, a result flash and a gold glow under the mouse (the selected wedge). The hub carries the stale hint, the lockdown chip and the test
 -- or preview label. The pointer is a plain (unprotected) child of the header that turns toward the
 -- cursor: its OnUpdate is set when the header shows and cleared when it hides, so a closed or
--- stood-down dial runs nothing per frame (perf bucket dialRender).
+-- stood-down dial runs nothing per frame (perf bucket dialRender). The Icons tab (B9) styles each
+-- wedge's icon through modules/IconStyle.lua (its size inside the fixed wedge, crop, desaturation,
+-- alpha, tint, and a round ring for a border) and modules/Glow.lua (the glow, whose On hover trigger
+-- the wedge's OnEnter and OnLeave hooks drive).
 
 NS.DialRender = NS.DialRender or {}
 local R = NS.DialRender
 local DL = NS.DialLayout
+local IS = NS.IconStyle
+local Glow = NS.Glow
 local L = NS.L
 local Perf = NS.Perf
 
@@ -192,19 +197,35 @@ function R.DressWedge(btn)
     btn.qcFlash:Hide()
     local gold = NS.Constants.GOLD
     btn.qcGlow = circle(btn, "HIGHLIGHT", DL.WEDGE + 8, gold.r, gold.g, gold.b, 0.45)
-    btn:HookScript("OnEnter", R.ShowTooltip)
-    btn:HookScript("OnLeave", function() GameTooltip:Hide() end)
+    btn:HookScript("OnEnter", function(self)
+        R.ShowTooltip(self)
+        Glow.SetHover(self, true)
+    end)
+    btn:HookScript("OnLeave", function(self)
+        GameTooltip:Hide()
+        Glow.SetHover(self, false)
+    end)
     return btn
 end
 
+-- The Icons tab's defaults, for a paint that names no config (IconStyle.Config of none).
+local DEFAULT_LOOK
+
 --- Show one ring item on a wedge: its icon, its label outward (its `geo.anchor` point at `geo.lx,
 --- geo.ly`, so it reads away from the wedge), a padlock when its
---- callout is locked, and the dim veil when it sends nothing here.
-function R.PaintWedge(btn, item, geo)
+--- callout is locked, and the dim veil when it sends nothing here. `icfg` is the dial's Icons tab
+--- (IconStyle.Config; none is the defaults).
+function R.PaintWedge(btn, item, geo, icfg)
     btn.qcItem = item
     local slot = item.slot
+    DEFAULT_LOOK = DEFAULT_LOOK or IS.Config(nil, "dial")
+    icfg = icfg or DEFAULT_LOOK
     btn.qcIcon:SetTexture(item.icon or (item.more and MORE_ICON) or DEFAULT_ICON)
-    btn.qcIcon:SetVertexColor(NS.Library.IconTint(item.icon, item.iconColor))
+    btn.qcIcon:SetSize(icfg.size, icfg.size)
+    IS.ApplyIcon(btn.qcIcon, icfg, NS.Library.IconTint(item.icon, item.iconColor))
+    IS.PaintRing(btn, icfg)
+    IS.IconFrame(btn)
+    Glow.Bind(btn, icfg.glow, slot and slot.calloutId or item.title)
     btn.qcLabel:ClearAllPoints()
     btn.qcLabel:SetPoint(geo.anchor or "CENTER", btn, "CENTER", geo.lx, geo.ly)
     btn.qcLabel:SetText(item.title or "?")

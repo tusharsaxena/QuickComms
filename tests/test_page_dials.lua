@@ -49,10 +49,11 @@ test("dials page: New dial takes the lowest free number, so a delete never leads
     assertEqual(NS.db.profile.dials[again].name, "Comms Dial 2")
 end)
 
-test("dials page: General has Preview as first; Enabled off takes the dial down", function()
+test("dials page: General has no Preview as (it is in Master controls); Enabled off takes the dial down", function()
     local NS, _, P = open()
     local w = P.redraw("dials")
-    assertTrue(P.find(w, "Dropdown", "Preview as") ~= nil, "Preview as is page-wide, first")
+    -- red under: draw state.previewAs on the dial's General tab again
+    assertTrue(P.find(w, "Dropdown", "Preview as") == nil, "Preview as is in General › Master controls")
     P.find(w, "CheckBox", "Enabled"):__fire("OnValueChanged", false)
     assertFalse(NS.db.profile.dials.d2.enabled)
     assertNil(NS.Dial.Instance("d2"), "a disabled dial is not built")
@@ -296,4 +297,30 @@ test("dials page: [final 11] the page's own plan builds are not timed as a surfa
     assertTrue(ok, tostring(err))
     -- red under: build the page's plans through S.BuildDialPlan's bracket
     assertEqual(notes, 0)
+end)
+
+-- ── the Icons tab (B9) ──────────────────────────────────────────────────────────────────────
+
+test("dials page: [B9] Icons follows Wheel, carries its headings once each, and writes the dial", function()
+    local NS, _, P = open()
+    local w = P.tab("dials", "Icons")
+    for _, heading in ipairs({ "Size and crop", "Color", "Border", "Glow", "Pixel border", "Auto cast sparkles",
+        "Button (rotating rays)", "Proc (flipbook)", "Offset" }) do
+        assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
+    end
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 3)
+    local order, seen = {}, {}
+    for _, row in ipairs(NS.addon.Settings.RowsForPage("dials")) do
+        if row.group and not seen[row.group] then seen[row.group] = true order[#order + 1] = row.group end
+    end
+    -- red under: the dial's Icons rows appended after the Binding row (the tab would follow Binding)
+    assertEqual(table.concat(order, ","), "General,Groups,Wheel,Icons,Binding", "the strip's tabs, in order")
+    P.find(w, "Slider", "Icon size"):__fire("OnMouseUp", 24)
+    P.find(w, "CheckBox", "Show border"):__fire("OnValueChanged", true)
+    assertEqual(NS.db.profile.dials.d2.icon.size, 24)
+    assertTrue(NS.db.profile.dials.d2.icon.borderShow)
+    NS.SchemaRuntime.Set("dial.icon.zoom", 0.1, "d2")
+    P.ctx("dials").panel.defaultsOnClick()
+    assertEqual(NS.db.profile.dials.d2.icon.zoom, 0)
+    assertTrue(P.ctx("dials").panel.defaultsTooltip:find("icons", 1, true) ~= nil)
 end)

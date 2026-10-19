@@ -3,7 +3,10 @@ local _, NS = ...
 -- plain tables in, plain tables out; no frame and no client read. Coordinates are offsets from the
 -- pad root's TOPLEFT with y growing down; modules/Pad.lua flips y for SetPoint. The cell placement
 -- copies KickCD modules/IconGrid_Layout.lua `Layout.layoutBlock` (row-major cells, an axis mirrored
--- for leftward or upward growth); the visibility expression copies ConsumableMaster
+-- for leftward or upward growth). Growth is two orthogonal choices, as KickCD's IconGrid keeps
+-- anchor and grow apart: left mirrors the chips, up puts the header row at the pad's bottom and
+-- stacks the sections up from it, and the pad is pinned by its growth edge (EdgePoint) so a resize
+-- grows away from the drag strip. The visibility expression copies ConsumableMaster
 -- core/MacroBarModel.lua `BM.ResolveVisibility` (a constant or one [combat] state-driver
 -- expression, never an insecure Show/Hide in combat).
 
@@ -14,11 +17,13 @@ PL.HEADER_H  = 18    -- the header row: situation chip, lockdown chip, stale hin
 PL.PAD       = 4     -- inner padding
 PL.SECTION_H = 14    -- a section's small-caps label row
 PL.CHIP_H    = 24    -- icon + label chip height
-PL.ICON      = 20    -- the icon tile inside an icon + label chip
-PL.ICON_ONLY = 28    -- an icon-only chip is square
+PL.ICON      = 20    -- the icon tile inside an icon + label chip (the Icons tab's default size)
+PL.ICON_ONLY = 28    -- an icon-only chip is square: its icon and 8 pixels
+PL.ICON_ROOM = 4     -- a labeled chip's height past its icon's size
 PL.LABEL_H   = 22    -- label-only chip height
-PL.MIN_W     = 120   -- the narrowest pad and the narrowest labeled chip
-PL.DEFAULT_W = 140
+PL.MIN_PAD_W = 120   -- the narrowest pad: the header's situation text and collapse button need it
+PL.MIN_CHIP_W = 1    -- the narrowest labeled chip (its label hides when it has no room)
+PL.DEFAULT_W = 100
 PL.FONT_SIZE = 10    -- the Look's default font size, which the heights above were drawn for
 PL.CHIP_ROOM = 10    -- a labeled chip's height past its font size: CHIP_H at FONT_SIZE and up
 PL.LABEL_ROOM = 8    -- a label-only chip's
@@ -74,13 +79,18 @@ local function sizeOf(fontSize)
 end
 
 --- One chip's width and height for the pad's style. A labeled chip grows with the Look's font size
---- (never below its shipped height); an icon-only chip draws no text.
-function PL.CellSize(layout, fontSize)
+--- and the Icons tab's icon size (never below its shipped height); an icon-only chip draws no text
+--- and stays square around its icon.
+function PL.CellSize(layout, fontSize, iconSize)
     layout = type(layout) == "table" and layout or {}
-    if layout.style == "icon" then return PL.ICON_ONLY, PL.ICON_ONLY end
-    local w = math.max(PL.MIN_W, tonumber(layout.width) or PL.DEFAULT_W)
+    local icon = tonumber(iconSize) or PL.ICON
+    if layout.style == "icon" then
+        local s = icon + (PL.ICON_ONLY - PL.ICON)
+        return s, s
+    end
+    local w = math.max(PL.MIN_CHIP_W, tonumber(layout.width) or PL.DEFAULT_W)
     if layout.style == "label" then return w, math.max(PL.LABEL_H, sizeOf(fontSize) + PL.LABEL_ROOM) end
-    return w, math.max(PL.CHIP_H, sizeOf(fontSize) + PL.CHIP_ROOM)
+    return w, math.max(PL.CHIP_H, sizeOf(fontSize) + PL.CHIP_ROOM, icon + PL.ICON_ROOM)
 end
 
 --- A section title row's height for the Look's font size (never below SECTION_H).
@@ -96,12 +106,55 @@ function PL.Columns(layout, count)
     return math.max(1, count)
 end
 
+-- Growth values: the horizontal half mirrors, the vertical half moves the header (B2).
+local UP = { rightUp = true, leftUp = true, up = true }   -- `up`: the retired value, read as rightUp
+local MIRROR = { left = true, leftUp = true }
+
+--- Whether a pad with this growth grows upward (its header row at the bottom).
+function PL.GrowsUp(growth)
+    return UP[growth] == true
+end
+
+local function trimLower(s)
+    return (tostring(s):gsub("^%s+", ""):gsub("%s+$", "")):lower()
+end
+
+--- Whether a section title says what the header's situation already says (B1): the same text,
+--- ignoring case and surrounding spaces.
+function PL.SameText(a, b)
+    if type(a) ~= "string" or type(b) ~= "string" then return false end
+    return trimLower(a) == trimLower(b)
+end
+
+-- A frame point's vertical half's offset from the frame's center, and its horizontal half.
+local function splitPoint(point)
+    point = type(point) == "string" and point or "CENTER"
+    local v = point:match("^TOP") and "TOP" or point:match("^BOTTOM") and "BOTTOM" or ""
+    local hz = point:match("LEFT$") or point:match("RIGHT$") or ""
+    return v, hz
+end
+local V_OFFSET = { TOP = 0.5, [""] = 0, BOTTOM = -0.5 }
+
+--- The anchor a pad takes for its growth: the given frame point's horizontal half on the growth edge
+--- (TOP for down, BOTTOM for up). With the frame's height `h` the y offset moves to that edge, so a
+--- point read off a drawn frame names the same place (a drop); without it the stored offset is kept
+--- (a stored point is read as the growth edge's).
+--- @return string point, number y
+function PL.EdgePoint(point, y, h, up)
+    local v, hz = splitPoint(point)
+    local edge = up and "BOTTOM" or "TOP"
+    y = tonumber(y) or 0
+    if tonumber(h) then y = y + (V_OFFSET[edge] - V_OFFSET[v]) * h end
+    return (hz == "" and edge or edge .. hz), y
+end
+
 -- One section as a block: its title row and chip rows, offsets from the block's top. Upward growth
--- flips the chip rows inside the block (the first row sits nearest the anchor) but keeps the title
--- directly above its chips.
-local function sectionBlock(s, layout, cw, ch, gap, up, th)
+-- flips the chip rows inside the block (the first row sits nearest the header) but keeps the title
+-- directly above its chips. A title the header's situation already says is not drawn (B1), unless it
+-- is a tab's, whose drawn title names its place.
+local function sectionBlock(s, layout, cw, ch, gap, up, th, situation)
     local items, by = {}, 0
-    if s.title then
+    if s.title and (s.tabCount or not PL.SameText(s.title, situation)) then
         items[#items + 1] = { kind = "title", text = s.title, tabIndex = s.tabIndex, tabCount = s.tabCount,
             x = PL.PAD, y = 0, w = 0, h = th }
         by = th
@@ -125,10 +178,10 @@ local function sectionBlock(s, layout, cw, ch, gap, up, th)
 end
 
 -- The non-empty section blocks, and the widest block's content width.
-local function collectBlocks(sections, layout, cw, ch, gap, up, th)
+local function collectBlocks(sections, layout, cw, ch, gap, up, th, situation)
     local blocks, contentW = {}, 0
     for _, s in ipairs(type(sections) == "table" and sections or {}) do
-        local b = sectionBlock(s, layout, cw, ch, gap, up, th)
+        local b = sectionBlock(s, layout, cw, ch, gap, up, th, situation)
         if #b.items > 0 then
             blocks[#blocks + 1] = b
             if b.cols > 0 then contentW = math.max(contentW, b.cols * cw + (b.cols - 1) * gap) end
@@ -137,15 +190,20 @@ local function collectBlocks(sections, layout, cw, ch, gap, up, th)
     return blocks, contentW
 end
 
--- Stack the blocks under the header, "up" in reverse order; answers the y below the last one.
-local function stackBlocks(blocks, up)
-    local y, nb = PL.HEADER_H + PL.PAD, #blocks
-    for k = 1, nb do
-        local b = blocks[up and (nb + 1 - k) or k]
+-- Stack the blocks under the header in order; answers the y below the last one.
+local function stackBlocks(blocks)
+    local y = PL.HEADER_H + PL.PAD
+    for _, b in ipairs(blocks) do
         b.top = y
         y = y + b.h + b.trail
     end
     return y
+end
+
+-- Upward growth mirrors the stack across the pad's height, block by block: the header row becomes
+-- the bottom row and the first section sits just above it, each block's own inside kept.
+local function flipBlocks(blocks, height)
+    for _, b in ipairs(blocks) do b.top = height - b.top - b.h end
 end
 
 -- Every block's items in pad coordinates; "left" mirrors each chip across the pad's width.
@@ -161,34 +219,39 @@ local function flattenBlocks(blocks, mirror, width)
     return items
 end
 
---- Place every title row and chip. The header stays on top; "up" stacks the section blocks in
---- reverse order (the first section nearest the anchor), "left" mirrors each chip row.
+--- Place every title row and chip. Down growth keeps the header on top; up growth puts it at the
+--- bottom with the first section just above it; left mirrors each chip row.
 --- @param sections table from VisibleSections
 --- @param layout table the pad's layout table
---- @param opts table|nil { collapsed = boolean, fontSize = number (the Look's; rows grow to hold it) }
---- @return table { width, height, items }
+--- @param opts table|nil { collapsed = boolean, fontSize = number (the Look's; rows grow to hold it),
+---   iconSize = number (the Icons tab's; a chip grows to hold it),
+---   situation = string (the header's text: a section title equal to it is not drawn) }
+--- @return table { width, height, items, headerY (the header row's top), up (the growth is upward) }
 function PL.Compute(sections, layout, opts)
     layout = type(layout) == "table" and layout or {}
     opts = type(opts) == "table" and opts or {}
-    local cw, ch = PL.CellSize(layout, opts.fontSize)
+    local cw, ch = PL.CellSize(layout, opts.fontSize, opts.iconSize)
     local gap = math.max(0, tonumber(layout.spacing) or 4)
-    local up = layout.growth == "up"
+    local up = PL.GrowsUp(layout.growth)
     local blocks, contentW = {}, 0
     if not opts.collapsed then
-        blocks, contentW = collectBlocks(sections, layout, cw, ch, gap, up, PL.TitleHeight(opts.fontSize))
+        blocks, contentW = collectBlocks(sections, layout, cw, ch, gap, up, PL.TitleHeight(opts.fontSize),
+            opts.situation)
     end
-    local width = math.max(PL.MIN_W, contentW + 2 * PL.PAD)
-    local y = stackBlocks(blocks, up)
-    local items = flattenBlocks(blocks, layout.growth == "left", width)
+    local width = math.max(PL.MIN_PAD_W, contentW + 2 * PL.PAD)
+    local y = stackBlocks(blocks)
     local height = #blocks > 0 and (y + PL.PAD) or PL.HEADER_H
-    return { width = width, height = height, items = items }
+    if up then flipBlocks(blocks, height) end
+    local items = flattenBlocks(blocks, MIRROR[layout.growth] == true, width)
+    return { width = width, height = height, items = items, up = up, headerY = up and (height - PL.HEADER_H) or 0 }
 end
 
 --- The pad's visibility as one state-driver expression (spec §10.3). The master visibility applies
 --- on top of the pad's own; "whenActive" is decided at the last out-of-combat rebuild; test mode
---- shows the display (options-ui-§15).
-function PL.VisibilityDriver(master, padVis, hasActive, testMode)
+--- shows the display (options-ui-§15), even over `/qc toggle`'s session hide (`hidden`).
+function PL.VisibilityDriver(master, padVis, hasActive, testMode, hidden)
     if testMode then return "show" end
+    if hidden then return "hide" end
     if master == "never" or padVis == "never" then return "hide" end
     if padVis == "whenActive" then
         if not hasActive then return "hide" end

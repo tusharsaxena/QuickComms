@@ -72,7 +72,7 @@ Total.
 - parity: the Env seam publishes the same NS members on both paths
 - parity: the Media seam publishes the same NS members on both paths
 
-### test_setup.lua (26)
+### test_setup.lua (27)
 
 - core: NS.Print is NS.Util.print after AceConsole's embed (architecture-§2)
 - core: the printer tags every line with the cyan [QC] prefix
@@ -90,7 +90,8 @@ Total.
 - perf: the `perf` hold stands the addon down, and the verbs keep answering
 - perf: the descriptor's SavedVariables global is declared in the TOC
 - launcher: one object, labeled with the brand, the logo as its icon, registered on enable
-- launcher: the right-click menu is Enabled, Locked and Test mode
+- launcher: the right-click menu is Enabled, Locked, Test mode and Show window
+- launcher: Show window calls the handler `/qc toggle` calls and reflects the session flag
 - launcher: Enabled calls the same handler `/qc disable` calls
 - launcher: degraded, Register says once that there is no minimap button
 - options: the category registers eagerly, with the General page under it
@@ -101,7 +102,7 @@ Total.
 - perf: [review] a refresh whose signature moves notes situationRefresh before the rebuild it publishes
 - perf: [phase 5] the Comms Dial page's Preview notes neither bakeSurface nor resolverResolve
 
-### test_database.lua (12)
+### test_database.lua (14)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the target is the last step's `to`, and the steps climb in order
@@ -115,6 +116,8 @@ Total.
 - database: step 3 runs once, and the profile loads without duplicates
 - database: step 3 leaves a profile never prepared to Prepare, which seeds it once
 - database: the profile defaults carry the Master controls value, and no debug flag
+- database: [B2] step 4 rewrites a pad's retired Upward growth as Right and up, once
+- database: [B7] step 5 renames the dungeon set, widens its When and gives seeded callouts their glyphs, once
 
 ### test_profile.lua (9)
 
@@ -122,18 +125,19 @@ Total.
 - profile: collections exist; default nextId is 1, past every seeded id after boot
 - profile: every behavior row resolves through the seam
 - profile: the spam guard clamps to 0.6-2.0 and fallback refuses unknown values
-- profile: schema version target is 3 (the built-in sets as seeded groups)
+- profile: schema version target is 5 (the built-in glyphs)
 - prepare: a callout held by two groups is split into a copy
 - prepare: a split copy of a seeded callout keeps no origin
 - prepare: a callout held by no group is dropped
 - prepare: is idempotent after a split
 
-### test_schema.lua (18)
+### test_schema.lua (19)
 
 - schema: every row validates against the defaults
 - schema: a stored row whose path has no default is counted, not passed vacuously
 - schema: the Minimap button row's backing key resolves against the global defaults
 - schema: the Master controls rows are the framed canonical set, in the canonical order
+- schema: Preview as sits in Master controls on the General page, after Test mode, on a line of its own
 - schema: NS.Setting reads through the seam, and answers the default before the db exists
 - schema: a page's rows are the rows whose page is its key
 - schema: an unknown path is refused and stores nothing
@@ -149,7 +153,7 @@ Total.
 - schema: a callout write that names no id is refused, even with callouts present
 - schema: [phase 3] a fresh profile has no row off its default; the member rows are not counted
 
-### test_slash.lua (15)
+### test_slash.lua (19)
 
 - slash: NS.COMMANDS is positional triples, every reserved verb present
 - slash: `diagnostics` has no alias of any kind (debug-logging-§14)
@@ -166,6 +170,10 @@ Total.
 - slash: [final 16] `why` with nothing built speaks of pads and dials
 - slash: a callout's rows take its id after the path; with none the write is refused and names the form
 - slash: [final 9] test and preview's help, and the Preview as row, speak of the dials too
+- slash: [toggle] the flag is off on a fresh addon and the pads show
+- slash: [toggle] `toggle` hides every pad, a second `toggle` shows them again
+- slash: [toggle] test mode shows the pads even while they are hidden
+- slash: [toggle] in combat the flag flips and the driver waits for combat to end
 
 ### test_disabled.lua (21)
 
@@ -239,7 +247,7 @@ Total.
 - restrictions: stood down, nothing is heard; the stand-up announces what is in effect
 - restrictions: [final 1] a lockdown lifting under a higher one is announced
 
-### test_situation.lua (15)
+### test_situation.lua (16)
 
 - situation: classifier truth table (content, group)
 - situation: non-table input classifies as open world solo
@@ -256,6 +264,7 @@ Total.
 - situation: [final 1] stood down, the receiver is down; stood up, it hears again
 - situation: [final 1] on the degraded bus the module takes its own receiver down and up
 - situation: [final 1b] both combat edges reach Current() even under the Combat restriction type
+- situation: [arena] an arena snapshot carries its instanceID, which the arena row matches
 
 ### test_tokens.lua (8)
 
@@ -294,7 +303,7 @@ Total.
 - bake: a typed %t counts as live
 - bake: [phase 5] CleanText is the sanitizer short of the escape; Sanitize is CleanText, then the escape
 
-### test_share.lua (35)
+### test_share.lua (37)
 
 - share: a string is !QC1! then printable text, and decodes back to the same payload
 - share: [review 1] a pasted string may wrap and carry spaces; a cut-short one is damaged and imports nothing
@@ -331,8 +340,10 @@ Total.
 - share: [nesting] a parent the string does not carry, itself, or one inside another is dropped and counted
 - share: [review] a pad's or dial's reference to a group the string nests is dropped and counted
 - share: [inherit] a child's Inherit when conditions travels; an old string's child inherits
+- share: [B2] a pad shared before the growth split carries Upward, which lands as Right and up
+- share: [B9] a pad's and a dial's Icons rows travel; an old string brings none
 
-### test_resolver.lua (12)
+### test_resolver.lua (13)
 
 - resolver: an empty When always matches
 - resolver: each row matches and fails on its own
@@ -346,8 +357,9 @@ Total.
 - resolver: [inherit] WhenOf names the When that judges a group, and whose it is
 - resolver: [inherit] SurfaceOrder's narrowness reads the When that judges the group
 - resolver: [all] All battlegrounds and All dungeons and raids match the whole kind, the listed ids aside
+- resolver: [arena] the arena row matches only in an arena: its listed ids, or all of them
 
-### test_builtins.lua (7)
+### test_builtins.lua (9)
 
 - builtins: the expected top-level sets exist in order
 - builtins: ids are unique, referenced and well formed
@@ -356,13 +368,17 @@ Total.
 - builtins: bake audit, every callout bakes under its set's snapshot
 - builtins: battlegrounds use smart group; arena uses party; raid lead uses smart lead
 - builtins: [phase 5] every node set pins each node to a wind, at most eight, Deepwind Gorge's five included
+- builtins: [B7] every callout ships a catalog glyph, with a color only where it is a glyph
+- builtins: [B7] the generic dungeon set is Dungeon (generic), active in a dungeon and in M+
 
-### test_gameids.lua (2)
+### test_gameids.lua (4)
 
 - game ids: every battleground set matches only battleground maps, and no map is two sets'
 - game ids: the shipped dungeons are Mythic+ dungeons and the shipped raids are raids
+- game ids: [instances] INSTANCES are dungeons and raids, cover the season's, and reach past it
+- game ids: [arena] ARENAS are arena maps, one per arena
 
-### test_library.lua (77)
+### test_library.lua (78)
 
 - library: Prepare seeds every shipped set as a group, on one pad and one dial, once
 - library: a seeded group is an ordinary group: its fields, When, callouts and origin
@@ -441,8 +457,9 @@ Total.
 - library: [restore] SeededBattleground names a seeded battleground set's key; a node, another set and a copy have none
 - library: [inherit] a new or seeded group inherits its parent's When; Duplicate and an untick keep false
 - library: [all] ValidWhen takes all on the instance and battleground rows, and on no other
+- library: [arena] ValidWhen takes arena ids and all on the arena row
 
-### test_members.lua (28)
+### test_members.lua (29)
 
 - members: a callout field is written through the seam by instance id, and announced once
 - members: with no id the seam writes the selected member, else the first the page lists, else refuses
@@ -472,6 +489,7 @@ Total.
 - members: [icons] `/qc reset` clears a color; a group page's Defaults keeps it with the icon
 - members: [inherit] group.inheritWhen is a member row: a bool stores and announces, anything else is refused
 - members: [inherit] the Enabled tooltip names whose When a sub-group is shown by
+- members: [arena] the CLI sets the arena row by id, name or all, and prints it back
 
 ### test_editors.lua (17)
 
@@ -534,7 +552,7 @@ Total.
 - popup: every field's label and control share a left edge; Preview's rule and the buttons the columns' edges
 - popup: [icons] an icon that is no texture stays open and names the icon chooser
 
-### test_icon_browser.lua (32)
+### test_icon_browser.lua (36)
 
 - icon browser: the window is the popup's chrome, stacked above the popup and its catcher
 - icon browser: tabs in order; the stored icon is preselected and its tab opened
@@ -568,6 +586,10 @@ Total.
 - icon browser: Src.Search narrows its last results, and stays correct when the query widens or the list grows
 - icon browser: the search is kept across tabs and the session's opens, and re-filters each tab
 - icon browser: Game icons carries the Wowhead hint; its button shows the address in a copy window
+- icon browser: [sets] Src.Glyphs is built once per set: the same table across searches
+- icon browser: [sets] a set's prefix is not in its label; Phosphor reads 'Arrow up'
+- icon browser: [sets] the Glyphs filter lists the library's sets and narrows to one
+- icon browser: [sets] a glyph's tooltip names its set, and a Game-icons mark its author
 
 ### test_eui_skin.lua (10)
 
@@ -582,7 +604,7 @@ Total.
 - eui skin: the diagnostics report names its state
 - eui skin: the diagnostics line says, in words, why the skin is or is not on
 
-### test_groups_when.lua (17)
+### test_groups_when.lua (20)
 
 - when: Toggle adds and removes one value, drops an emptied row, and never mutates its input
 - when: [review 5] the key-level range refuses lowest above highest; clearing both drops the row
@@ -601,12 +623,15 @@ Total.
 - when: [drawers] SelectAll ticks every value the row offers, and never mutates its input
 - when: [inherit] ActiveText judges an inheriting group by its parent's When
 - when: [all] SetAll turns the whole kind on and off and keeps the listed ids; Summary names it
+- when: [instances] a typed name finds any journal dungeon or raid, not the season's only
+- when: [arena] the arena row: names, Summary, All arenas, the CLI value, and its tooltip
+- when: [arena] Add the arena you are in reads the live snapshot, and refuses outside an arena
 
-### test_page_groups.lua (59)
+### test_page_groups.lua (63)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists every group by name, a seeded set among them, active ones dotted
-- groups page: General draws Preview as first, then the group's rows; Duplicate and Delete act
+- groups page: General draws the group's rows, no Preview as; Duplicate and Delete act
 - groups page: Callouts drags to reorder, removes, and copies a seeded callout in (P2)
 - groups page: Add callout opens the popup for this group
 - groups page: Reuse lists every callout as <group>: <callout>, a seeded one too
@@ -647,6 +672,9 @@ Total.
 - groups page: [icons] the browser closes as Cancel when the settings window hides or the group is deleted
 - groups page: [icons] a callout row in the Callouts tab draws its glyph in the callout's color
 - groups page: [icons] a tinted callout row puts its image back to white when released (AceGUI's shared pool)
+- groups page: [rows] a callout row reads gold name, the channel in its chat color, then the text
+- groups page: [rows] a callout row cuts its text at 40 characters, escapes |, and shows the fallback icon
+- groups page: [rows] a callout row's text cut counts UTF-8 characters, not bytes
 - groups page: [icons] the swatch writes on a drag tick (OnValueChanged) with no confirm, as OK leaves it
 - groups page: [nesting] General's Parent group offers the top-level groups but itself; a pick nests the group
 - groups page: [nesting] a group that holds groups cannot take a parent: the dropdown is idle and says why
@@ -663,8 +691,9 @@ Total.
 - groups page: [inherit] an inheriting group's When tab shows its parent's conditions, read-only
 - groups page: [all] the battleground drawer's All battlegrounds dims and locks the list, which it keeps
 - groups page: [all] a gap separates the Every condition line from the first drawer
+- groups page: [arena] the arena drawer's All arenas dims and locks the list, which it keeps
 
-### test_page_pads.lua (13)
+### test_page_pads.lua (16)
 
 - pads page: New pad makes a second pad holding every built-in, selects it, and the pad is built
 - pads page: the Layout rows write the selected pad
@@ -679,12 +708,15 @@ Total.
 - pads page: [final 4] Defaults keeps the pad's position
 - pads page: [final 26] New pad takes the lowest free number, so a delete never leads to two names alike
 - pads page: [phase 5] Look carries the composed Font, Border and Background groups under their headings
+- pads page: [B9] Icons carries its headings once each, a companion beside each swatch, and writes the pad
+- pads page: [B9] the glow's knobs are grayed out while it is off or in another style; its color never is
+- pads page: [B9] Defaults puts the Icons rows back too, and its tooltip names them
 
-### test_page_dials.lua (17)
+### test_page_dials.lua (18)
 
 - dials page: New dial makes a second dial holding every built-in, selects it, and builds QuickCommsDial2
 - dials page: New dial takes the lowest free number, so a delete never leads to two names alike
-- dials page: General has Preview as first; Enabled off takes the dial down
+- dials page: General has no Preview as (it is in Master controls); Enabled off takes the dial down
 - dials page: Wheel writes wedges per ring and where it opens; X and Y move the dial; Reset puts it back
 - dials page: a refused X or Y says why and puts the box back to the stored offset
 - dials page: Defaults puts the dial's rows back as one act, and keeps its key and position
@@ -699,6 +731,7 @@ Total.
 - dials page: [final 8] the Binding tab names this dial's Open Comms Dial entry and sees a key bound there
 - dials page: [final 10] the key line of a dial that is off says the key opens nothing, and warns of no override
 - dials page: [final 11] the page's own plan builds are not timed as a surface's bake
+- dials page: [B9] Icons follows Wheel, carries its headings once each, and writes the dial
 
 ### test_page_share.lua (12)
 
@@ -814,15 +847,18 @@ Total.
 - master: /qc test toggles test mode, and in combat says why it will not
 - master: the Test mode row reads and writes the one switch, and Reset all ends it
 
-### test_pad_layout.lua (12)
+### test_pad_layout.lua (15)
 
 - layout: horizontal puts a section's chips on one row under the header
 - layout: a titled section draws its label row first
 - layout: grid wraps at its column count; vertical is one column
 - layout: the style sets the cell
+- layout: [B3] narrow chips never make the pad narrower than its header needs
+- layout: [B1] a section title equal to the header's situation is not drawn; a tab's title is
 - layout: [review] a larger Look font grows the chip and title rows; the default size changes nothing
 - layout: leftward growth mirrors the row; collapsed is the header alone
-- layout: upward growth stacks the sections bottom-up, each title above its chips
+- layout: [B2] upward growth puts the header at the bottom and stacks the sections up from it
+- layout: [B2] the pad's anchor is its growth edge; a drop is converted to that edge exactly
 - layout: groups-as picks the sections: sections, merged, one tab at a time
 - layout: the wheel steps tabs and wraps both ways
 - layout: the visibility expression combines the master and the pad
@@ -877,7 +913,7 @@ Total.
 - surfaces: [nesting] a parent that draws nothing leaves its surface with nothing active
 - surfaces: [inherit] a child that inherits shows wherever its parent's When matches, whatever its own says
 
-### test_pad_render.lua (18)
+### test_pad_render.lua (19)
 
 - render: Dress builds a chip's regions once, each its own object
 - render: [audit QC-07] the chip's padlock is the catalog's lock mark, tinted gold; the Blizzard art is the nil fallback
@@ -897,8 +933,9 @@ Total.
 - render: [phase 5] Use class color takes the player's class color and keeps the swatch's alpha
 - render: [phase 5] a section title keeps its gold until the player colors the font
 - render: [icons] a glyph chip is drawn in its color; the chip repainted with another icon is white again
+- render: [B3] a chip's label is one line, and hidden when the chip leaves it no room
 
-### test_pad.lua (26)
+### test_pad.lua (29)
 
 - pad: the default pad shows the M+ callouts, each chip armed with its baked line
 - pad: [review 5] a refused chip is dimmed and disarmed: a click sends and reports nothing
@@ -926,6 +963,9 @@ Total.
 - pad: [phase 3] the header's tooltip says why each group shows, unless the player turned it off
 - pad: [phase 5] the pad wears its Look: the chips' font and the edge and body it was given
 - pad: [review 5] a font or border this machine does not have draws the default, with no error
+- pad: [B1] a group named as the header's situation draws no title row of its own
+- pad: [B2] down growth pins the pad's top edge; the header is on top and the strip above
+- pad: [B2] up growth pins the bottom edge, puts the header at the bottom and the strip below
 
 ### test_dial.lua (29)
 
@@ -958,6 +998,31 @@ Total.
 - dial: [phase 5] Arathi Basin's node wedges sit on their winds: Lumber Mill is SW, Blacksmith N
 - dial: [review 6] on a four- or six-slice dial every node shows, and the number keys pick the shown wedges from N
 - dial: [icons] a wedge draws its glyph in its color; repainted untinted, it is white again
+
+### test_icon_style.lua (8)
+
+- icon style: the defaults keep today's look on a chip and on a wedge
+- icon style: zoom crops through SetTexCoord, desaturate and alpha reach the texture
+- icon style: the tint multiplies a glyph's own color; white keeps it
+- icon style: a pad's icon size feeds the chip's geometry
+- icon style: a chip's border is off by default; on, it is a backdrop over the icon in its color
+- icon style: a wedge's border is a round ring behind its icon, icon plus twice the thickness
+- icon style: a wedge's ring never grows past the wedge, so it cannot reach the next wedge or its label
+- icon style: a pad saved before the Icons tab reads like a new one (fillShape backfills `icon`)
+
+### test_glow.lua (11)
+
+- glow: off by default, so a chip starts nothing
+- glow: each style starts with the knob table's arguments, on the icon, under the addon's key
+- glow: a repaint that changes nothing calls the library not at all; a setting restarts it
+- glow: On hover starts on enter and stops on leave
+- glow: After sending glows from the send result for SEND_SECONDS, then stops
+- glow: a chip a rebuild leaves unused stops its glow, and so does every chip of a released pad
+- glow: in combat a hover glow starts and stops with no protected call; an Icons write waits for combat end
+- glow: a wedge glows on its icon too, and on hover
+- glow: on a dial, After sending glows again from the next open within DROP_SECONDS
+- glow: on a dial, an open later than DROP_SECONDS after the send shows no send glow
+- glow: the stand-down puts out a running send glow even when the frames' release is held
 
 ### test_vendor_sync.lua (3)
 
@@ -1035,33 +1100,33 @@ Total.
 | test_mock_secure.lua | 24 |
 | test_bus.lua | 2 |
 | test_surface_parity.lua | 15 |
-| test_setup.lua | 26 |
-| test_database.lua | 12 |
+| test_setup.lua | 27 |
+| test_database.lua | 14 |
 | test_profile.lua | 9 |
-| test_schema.lua | 18 |
-| test_slash.lua | 15 |
+| test_schema.lua | 19 |
+| test_slash.lua | 19 |
 | test_disabled.lua | 21 |
 | test_diagnostics.lua | 10 |
 | test_compat.lua | 13 |
 | test_restrictions.lua | 16 |
-| test_situation.lua | 15 |
+| test_situation.lua | 16 |
 | test_tokens.lua | 8 |
 | test_channels.lua | 8 |
 | test_bake.lua | 12 |
-| test_share.lua | 35 |
-| test_resolver.lua | 12 |
-| test_builtins.lua | 7 |
-| test_gameids.lua | 2 |
-| test_library.lua | 77 |
-| test_members.lua | 28 |
+| test_share.lua | 37 |
+| test_resolver.lua | 13 |
+| test_builtins.lua | 9 |
+| test_gameids.lua | 4 |
+| test_library.lua | 78 |
+| test_members.lua | 29 |
 | test_editors.lua | 17 |
 | test_callout_popup.lua | 38 |
-| test_icon_browser.lua | 32 |
+| test_icon_browser.lua | 36 |
 | test_eui_skin.lua | 10 |
-| test_groups_when.lua | 17 |
-| test_page_groups.lua | 59 |
-| test_page_pads.lua | 13 |
-| test_page_dials.lua | 17 |
+| test_groups_when.lua | 20 |
+| test_page_groups.lua | 63 |
+| test_page_pads.lua | 16 |
+| test_page_dials.lua | 18 |
 | test_page_share.lua | 12 |
 | test_check.lua | 6 |
 | test_send_guard.lua | 10 |
@@ -1069,12 +1134,14 @@ Total.
 | test_dial_secure.lua | 12 |
 | test_preview.lua | 17 |
 | test_master.lua | 5 |
-| test_pad_layout.lua | 12 |
+| test_pad_layout.lua | 15 |
 | test_dial_layout.lua | 15 |
 | test_surfaces.lua | 27 |
-| test_pad_render.lua | 18 |
-| test_pad.lua | 26 |
+| test_pad_render.lua | 19 |
+| test_pad.lua | 29 |
 | test_dial.lua | 29 |
+| test_icon_style.lua | 8 |
+| test_glow.lua | 11 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -1082,4 +1149,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **868** |
+| **Total** | **927** |

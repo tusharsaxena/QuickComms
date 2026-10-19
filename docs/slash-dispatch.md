@@ -11,6 +11,7 @@ settings panel.
 | `config` | reserved | yes | `QC:OpenSettings` |
 | `enable` / `disable` | reserved | yes | `runEnabled`, writing `enabled` through the seam |
 | `lock` / `unlock` | reserved (slash-commands-§8) | no (refused while disabled) | `NS.SlashVerbs.SetLocked`, writing `locked` through the seam; the Lock frame row and the launcher's Locked entry write the same path |
+| `toggle` | feature | no (refused while disabled) | `NS.SlashVerbs.TogglePads`: flips the session flag `State.padsHidden` (never saved; a reload clears it) and rebuilds through `Surfaces.Request`, so in combat it waits for combat to end. The pads' visibility driver then says `hide`; test mode still shows them; dials are not affected. The launcher's Show window entry calls the same handler (launcher-§2) |
 | `version` | reserved | yes | the library |
 | `list` / `get` / `set` / `reset` / `resetall` | reserved | yes | the library over the schema seam; `reset` takes a path, `resetall` asks first |
 | `profile` | reserved | yes (added to the live list) | the library's profile verb |

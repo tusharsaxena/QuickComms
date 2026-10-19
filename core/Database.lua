@@ -21,6 +21,11 @@ NS.MIGRATIONS = {
     -- 2 -> 3 (2026-10-18-builtins-as-groups-design.md): the built-in overlay becomes seeded groups,
     -- each in its set's place on every pad and dial; Library seeds them and converts the lists.
     { to = 3, perProfile = true, run = function(_, profile) NS.Library.SeedFromOverlay(profile) end },
+    -- 3 -> 4 (2026-10-19 icons and polish, B2): a pad's retired Upward growth becomes Right and up.
+    { to = 4, perProfile = true, run = function(_, profile) NS.Library.MigrateGrowth(profile) end },
+    -- 4 -> 5 (B7): "M+ (generic)" becomes "Dungeon (generic)" with a Dungeon + M+ When, and seeded
+    -- callouts take their catalog glyphs, wherever the player has not changed them.
+    { to = 5, perProfile = true, run = function(_, profile) NS.Library.MigrateBuiltins(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.

@@ -1,6 +1,6 @@
 local _, NS = ...
 -- settings/SlashVerbs.lua — the bodies of the feature verbs settings/Slash.lua's NS.COMMANDS rows
--- call (spec §14). Today: `check`, `lock`, `unlock`, `preview` and `why`. The rows are positional triples; the work lives here so it can
+-- call (spec §14). Today: `check`, `lock`, `unlock`, `toggle`, `preview` and `why`. The rows are positional triples; the work lives here so it can
 -- be tested without the dispatcher.
 
 NS.SlashVerbs = NS.SlashVerbs or {}
@@ -60,6 +60,21 @@ end
 
 function V.ToggleLock()
     V.SetLocked(NS.Setting("locked") == false)
+end
+
+--- `/qc toggle` and the launcher's Show window entry: hide or show every Comms Pad for the session
+--- (State.padsHidden). The pads' secure visibility driver carries the flag, so the change goes
+--- through Surfaces.Request: now, or at the end of combat with the stale hint meanwhile.
+function V.TogglePads()
+    if NS.IsStoodDown() then return NS.Print(NS.SlashCommands:DisabledLine()) end
+    NS.State.padsHidden = V.PadsShown()
+    NS.Surfaces.Request("padsHidden")
+    NS.Print(NS.State.padsHidden and L["Comms Pads hidden for this session."] or L["Comms Pads shown."])
+end
+
+--- Whether the pads are shown, as far as `/qc toggle` is concerned.
+function V.PadsShown()
+    return NS.State.padsHidden ~= true
 end
 
 --- The lines `/qc preview [name|off]` prints (spec §14): the menu with the one on now, or the result
