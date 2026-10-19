@@ -169,7 +169,11 @@ test("pad render: [phase 3] a previewed slot's tooltip shows its line and says i
     local lines = NS.PadRender.TooltipLines({ name = "Lust", line = "/p Lust", preview = true })
     assertEqual(lines[2], "/p Lust")
     -- [final 9] a previewed wedge shares these lines, so the line names no surface
-    assertEqual(lines[#lines], "Preview: this sends nothing.")
+    assertEqual(lines[#lines - 1], "Preview: this sends nothing.")
+    -- [echo review 2] a click prints the line, and the tooltip says so
+    assertEqual(lines[#lines], "Click to print its line.")
+    local solo = NS.PadRender.TooltipLines({ name = "Me", selfText = "x", preview = true })
+    assertEqual(solo[#solo], "Preview: this sends nothing.", "no line, nothing to print")
 end)
 
 test("render: [phase 5] a pad's Look is a font and a skin; the defaults are the skin a pad always wore", function()

@@ -108,7 +108,7 @@ Every place a member's icon is drawn (a pad's chips, a dial's wedges and ring we
 
 ## Today: Preview as…
 
-`Preview.SetPreviewAs(key)` (the row in General › Master controls, `/qc preview`) turns test mode's second flavor on: `TEST_MODE_CHANGED`, then `Surfaces.ApplyAll` builds each pad from the previewed snapshot and marks the plan, so every chip is disarmed (a click prints the line it would have sent, `[QC] /p Pulling next pack`, through `NS.Print`, and sends nothing), the header reads `Preview: …` and the drag strip reads `<pad name>  PREVIEW` (test mode's reads `TEST MODE`; the strip shows while it carries the marker, locked or not). Combat, the stand-down and the settings window closing end it.
+`Preview.SetPreviewAs(key)` (the row in General › Master controls, `/qc preview`) turns test mode's second flavor on: `TEST_MODE_CHANGED`, then `Surfaces.ApplyAll` builds each pad from the previewed snapshot and marks the plan, so every chip is disarmed (a click prints the line it would have sent, `[QC] /p Pulling next pack`, through `NS.Print`, and sends nothing; the echo names no padlock, since locks read your real group rather than the previewed situation, so it is what the press would send), the header reads `Preview: …` and the drag strip reads `<pad name>  PREVIEW` (test mode's reads `TEST MODE`; the strip shows while it carries the marker, locked or not). Combat, the stand-down and the settings window closing end it.
 
 The edit preview sits over both flavors. While the Groups page is on screen with Preview while
 editing ticked (`behavior.previewOnEdit`), `Groups.SyncEditPreview` (run on every draw, on the page's

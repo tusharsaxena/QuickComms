@@ -459,6 +459,7 @@ L["Preview ended: you entered combat."] = "Preview ended: you entered combat."
 L["Preview: %s"] = "Preview: %s"
 L["PREVIEW"] = "PREVIEW"
 L["Preview: this sends nothing."] = "Preview: this sends nothing."
+L["Click to print its line."] = "Click to print its line."
 
 -- Preview as… (modules/Preview.lua, settings/Panel.lua, settings/SlashVerbs.lua)
 L["Instance %d"] = "Instance %d"

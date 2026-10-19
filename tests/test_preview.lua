@@ -313,6 +313,18 @@ test("preview: [echo] the slash follows the channel the previewed situation reso
     assertEqual(m.prints[1], NS.PREFIX .. " /raid Incoming")
 end)
 
+test("preview: [echo review 3] a padlocked previewed chip echoes its line, naming no lock", function()
+    local NS, m = live()
+    local cid = echoGroup(NS, "Pull", "raid")
+    assertTrue(NS.Preview.SetPreviewAs("world"))
+    local chip = NS.Pad.ChipsFor("p1", cid)[1]
+    assertTrue(chip ~= nil)
+    m.prints = {}
+    m.__click(chip)
+    -- locks read the real group, not the previewed situation: the echo is what it would send
+    assertEqual(m.prints[1], NS.PREFIX .. " /raid Pull")
+end)
+
 test("preview: [echo] a live chip prints nothing extra", function()
     local NS, m = live()
     local cid = echoGroup(NS, "Hello", "say")

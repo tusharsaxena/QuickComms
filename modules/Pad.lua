@@ -174,8 +174,9 @@ end
 -- A previewed chip (spec §13.3) keeps its line for the tooltip and is disarmed, and carries neither
 -- the solo self-line nor the lock text: a previewed chip sends and reports nothing. It carries its
 -- baked line as `echo` instead, which the click hook prints locally ("[QC] /p Pulling next pack"),
--- so a preview shows what a live press would have sent. Baked here, out of combat, so a press in
--- combat only prints a string and writes no attribute.
+-- so a preview shows what a live press would have sent. The echo names no lock: locks read your real
+-- group, not the previewed situation, so a previewed raid or M+ chip would nearly always carry one.
+-- Baked here, out of combat, so a press in combat only prints a string and writes no attribute.
 local function arm(btn, slot)
     local preview = slot.preview == true
     local meta = { calloutId = slot.calloutId, surfaceId = slot.surfaceId, name = slot.name,

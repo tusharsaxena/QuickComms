@@ -74,7 +74,10 @@ function R.TooltipLines(slot)
         lines[2] = R.REASON_TEXT[slot.reason] or L["Not available here."]
     end
     if slot.lock then lines[#lines + 1] = R.LOCK_TEXT[slot.lock] or tostring(slot.lock) end
-    if slot.preview then lines[#lines + 1] = L["Preview: this sends nothing."] end
+    if slot.preview then
+        lines[#lines + 1] = L["Preview: this sends nothing."]
+        if slot.line then lines[#lines + 1] = L["Click to print its line."] end
+    end
     return lines
 end
 
