@@ -1,7 +1,7 @@
 -- tests/test_builtins.lua — defaults/BuiltIns*.lua (spec §12): integrity and the bake audit.
 
 local T = _G.QUICKCOMMS_TEST
-local test, assertEqual, assertTrue = T.test, T.assertEqual, T.assertTrue
+local test, assertEqual, assertTrue, assertNil = T.test, T.assertEqual, T.assertTrue, T.assertNil
 
 local function bi() local NS = T.newAddon() return NS, NS.BuiltIns end
 
@@ -86,11 +86,14 @@ test("builtins: [phase 5] every node set pins each node to a wind, at most eight
             sets = sets + 1
             local nodes = {}
             for i, child in ipairs(def.children) do nodes[i] = { wind = BI.groups[child].compass } end
+            -- its own callouts take one wedge too (modules/Dial_Layout.lua groupEntry)
+            if #def.callouts > 0 then nodes[#nodes + 1] = { wind = NS.DialLayout.MIDDLE } end
             -- red under: drop one node's wind from defaults/BuiltIns_Battlegrounds.lua
-            assertTrue(NS.DialLayout.PinNodes(nodes) ~= nil, gid .. " pins every node")
+            if gid ~= "bi.bg.av" then assertTrue(NS.DialLayout.PinNodes(nodes) ~= nil, gid .. " pins every node") end
         end
     end
-    assertEqual(sets, 5)
+    -- the five node sets, and the seven with objectives (bg subgroups)
+    assertEqual(sets, 12)
     assertEqual(BI.groups["bi.bg.ab.lumbermill"].compass, "SW")
     assertEqual(#BI.groups["bi.bg.dwg"].children, 5)
     assertEqual(BI.callouts["bi.bg.dwg.shrine.inc2"].text, "INC 2 Shrine")
@@ -185,4 +188,92 @@ test("builtins: [polish] every group has a colored catalog glyph for its icon", 
     end
     assertEqual(BI.groups["bi.bg.bfg.lighthouse"].glyph, "gi:lighthouse", "a node's icon is its name")
     assertEqual(BI.groups["bi.world"].glyph, "gi:world")
+end)
+
+-- ── battleground sub-groups (2026-10-20) ─────────────────────────────────────────────────────
+
+local function childNames(BI, gid)
+    local out = {}
+    for i, child in ipairs(BI.groups[gid].children or {}) do out[i] = BI.groups[child].name end
+    return table.concat(out, ",")
+end
+
+test("builtins: [bg subgroups] Alterac Valley has every general, captain, bunker, tower and graveyard, north to south", function()
+    local NS, BI = bi()
+    local av = BI.groups["bi.bg.av"]
+    -- red under: Alterac Valley declared flat in defaults/BuiltIns_Battlegrounds.lua
+    assertEqual(#(av.children or {}), 19)
+    assertTrue(av.openInto, "opens into its ring, as a node set does")
+    assertEqual(childNames(BI, "bi.bg.av"), "Vanndar,DB North Bunker,Stormpike GY,Aid Station,DB South Bunker,"
+        .. "Icewing Bunker,Stonehearth GY,Balinda,Stonehearth Bunker,Snowfall GY,Iceblood GY,Galvangar,"
+        .. "Iceblood Tower,Tower Point,Frostwolf GY,West FW Tower,East FW Tower,Relief Hut,Drek'Thar")
+    for _, child in ipairs(av.children) do
+        local g = BI.groups[child]
+        assertEqual(#g.callouts, 2, child .. " has exactly two")
+        local attack, defend = BI.callouts[g.callouts[1]], BI.callouts[g.callouts[2]]
+        assertEqual(attack.name .. "/" .. defend.name, "Attack/Defend", child)
+        assertTrue(attack.text:match("^Attack %S") ~= nil and defend.text:match("^Defend %S") ~= nil, child)
+        assertEqual(attack.text:sub(8), defend.text:sub(8), child .. " names one objective")
+        assertNil(g.compass, child .. ": nineteen cannot sit on the eight winds")
+    end
+    assertEqual(BI.callouts["bi.bg.av.ibtower.attack"].text, "Attack Iceblood Tower")
+    assertEqual(BI.callouts["bi.bg.av.wfw.defend"].text, "Defend West Frostwolf Tower", "the message names it in full")
+    assertEqual(BI.callouts["bi.bg.av.drekthar.attack"].text, "Attack Drek'Thar")
+    assertEqual(BI.callouts["bi.bg.av.balinda.defend"].text, "Defend Balinda Stonehearth")
+    assertEqual(BI.callouts["bi.bg.av.general"].text, "Defend our general", "the map-wide callouts stay")
+    local nodes = {}
+    for i, child in ipairs(av.children) do nodes[i] = { wind = BI.groups[child].compass } end
+    assertNil(NS.DialLayout.PinNodes(nodes), "the dial draws it unpinned")
+end)
+
+test("builtins: [bg subgroups] Isle of Conquest gains Our base and Enemy base beside its five nodes", function()
+    local _, BI = bi()
+    -- red under: no base children on Isle of Conquest in defaults/BuiltIns_Battlegrounds.lua
+    assertEqual(childNames(BI, "bi.bg.ioc"), "Docks,Hangar,Workshop,Quarry,Refinery,Our base,Enemy base")
+    local function texts(gid)
+        local out = {}
+        for i, cid in ipairs(BI.groups[gid].callouts) do out[i] = BI.callouts[cid].text end
+        return table.concat(out, "|")
+    end
+    assertEqual(texts("bi.bg.ioc.base"), "Defend our base|Walls down at our base")
+    assertEqual(texts("bi.bg.ioc.enemybase"), "Attack the enemy base|Walls down at the enemy base")
+    assertEqual(BI.groups["bi.bg.ioc.base"].compass, "free", "no fixed place a neutral callout can name")
+    assertEqual(BI.groups["bi.bg.ioc.docks"].compass, "W", "the nodes keep their winds")
+end)
+
+test("builtins: [bg subgroups] the flag maps, Wintergrasp, Ashran, Deephaul Ravine and Seething Shore have objective children", function()
+    local _, BI = bi()
+    local want = {
+        ["bi.bg.wsg"] = "Our flag,Enemy flag,Our FC,Midfield",
+        ["bi.bg.tp"] = "Our flag,Enemy flag,Our FC,Bridge",
+        ["bi.bg.wg"] = "Fortress,Broken Temple,Sunken Ring,Westspark,Eastspark,Towers",
+        ["bi.bg.ashran"] = "Road of Glory,Our base,Enemy base,Events,Bosses",
+        ["bi.bg.dhr"] = "Crystal,Carts",
+        ["bi.bg.ss"] = "Azerite node,New nodes",
+    }
+    for gid, names in pairs(want) do
+        -- red under: a set left flat in defaults/BuiltIns_Battlegrounds.lua
+        assertEqual(childNames(BI, gid), names, gid)
+        assertTrue(BI.groups[gid].openInto, gid .. " opens into its ring")
+        assertTrue(#BI.groups[gid].callouts >= 3, gid .. " keeps its map-wide callouts")
+        for _, child in ipairs(BI.groups[gid].children) do
+            local n = #BI.groups[child].callouts
+            assertTrue(n >= 2 and n <= 6, child .. " has two to six callouts")
+        end
+    end
+    assertEqual(BI.callouts["bi.bg.wsg.ourflag.inc"].text, "INC our flag room")
+    assertEqual(BI.callouts["bi.bg.tp.mid.inc"].text, "INC bridge")
+    assertEqual(BI.callouts["bi.bg.wg.westspark.attack"].text, "Attack Westspark")
+    assertEqual(BI.groups["bi.bg.wg.fortress"].compass, "N", "Wintergrasp's objectives keep their winds")
+    assertEqual(BI.groups["bi.bg.wg.towers"].compass, "S")
+end)
+
+test("builtins: [bg subgroups] no callout names a faction", function()
+    local _, BI = bi()
+    for cid, c in pairs(BI.callouts) do
+        if cid:match("^bi%.bg") then
+            -- red under: a callout reading "Alliance" or "Horde" in defaults/BuiltIns_Battlegrounds.lua
+            assertTrue(not (c.text:find("Alliance") or c.text:find("Horde")), cid .. " is faction neutral")
+        end
+    end
 end)

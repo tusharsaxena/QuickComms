@@ -360,7 +360,7 @@ Total.
 - resolver: [all] All battlegrounds and All dungeons and raids match the whole kind, the listed ids aside
 - resolver: [arena] the arena row matches only in an arena: its listed ids, or all of them
 
-### test_builtins.lua (13)
+### test_builtins.lua (17)
 
 - builtins: the expected top-level sets exist in order
 - builtins: ids are unique, referenced and well formed
@@ -375,6 +375,10 @@ Total.
 - builtins: [polish] every battleground node set has map-wide callouts of its own
 - builtins: [polish] every callout icon has a color, and no group is white only
 - builtins: [polish] every group has a colored catalog glyph for its icon
+- builtins: [bg subgroups] Alterac Valley has every general, captain, bunker, tower and graveyard, north to south
+- builtins: [bg subgroups] Isle of Conquest gains Our base and Enemy base beside its five nodes
+- builtins: [bg subgroups] the flag maps, Wintergrasp, Ashran, Deephaul Ravine and Seething Shore have objective children
+- builtins: [bg subgroups] no callout names a faction
 
 ### test_gameids.lua (4)
 
@@ -896,7 +900,7 @@ Total.
 - layout: the visibility expression combines the master and the pad
 - layout: the fade follows combat and the mouse, under the master alpha
 
-### test_dial_layout.lua (16)
+### test_dial_layout.lua (18)
 
 - dial layout: four wedges sit on N, E, S and W, clockwise from the top
 - dial layout: slices are 4, 6, 8 or 12, and 12 only on a ring with no children
@@ -912,6 +916,8 @@ Total.
 - dial layout: [phase 5] a node set's nodes sit on their compass winds; the middle node takes N
 - dial layout: [polish] a node set's own callouts take one wedge on the first free wind; the nodes stay pinned
 - dial layout: [review 6] [phase 5] nodes that cannot all be pinned keep their shipped order
+- dial layout: [bg subgroups] a free node takes a wind left after the middle ones; the set's own wedge keeps its place
+- dial layout: [bg subgroups] a set with more children than winds falls back to its unpinned, paged ring
 - dial layout: [review 6] a pinned ring ignores the dial's slices; Flat keeps its paging
 - dial layout: [icons] a ring entry carries its group's icon color, a send entry its callout's
 
@@ -1153,7 +1159,7 @@ Total.
 | test_bake.lua | 12 |
 | test_share.lua | 37 |
 | test_resolver.lua | 13 |
-| test_builtins.lua | 13 |
+| test_builtins.lua | 17 |
 | test_gameids.lua | 4 |
 | test_library.lua | 78 |
 | test_members.lua | 29 |
@@ -1174,7 +1180,7 @@ Total.
 | test_edit_preview.lua | 14 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 14 |
-| test_dial_layout.lua | 16 |
+| test_dial_layout.lua | 18 |
 | test_surfaces.lua | 27 |
 | test_pad_render.lua | 20 |
 | test_pad.lua | 34 |
@@ -1188,4 +1194,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **962** |
+| **Total** | **968** |
