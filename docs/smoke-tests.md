@@ -21,8 +21,8 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | DIAG-1..2 | Diagnostics | The debug console, the report, perf |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
 | SEND-1..5 | Send | Secure sends in keys and on bosses, the spam guard |
-| PAD-1..8 | Pad | The Comms Pad |
-| EDIT-1..24 | Editors | The Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search and glyph colors, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
+| PAD-1..10 | Pad | The Comms Pad, its growth and chip width |
+| EDIT-1..26 | Editors | The Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
 | DIAL-1..12 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial |
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
 | LOOK-1..2 | Look | The Comms Pad's font, border and background |
@@ -66,7 +66,8 @@ switching pages back and forth), the notes line, and the slash command list. Res
 
 **PANEL-2. Master controls.** General → the `Master controls` tab: Enable Ka0s Quick Comms beside
 General visibility, Master scale beside Master alpha, Lock frame beside Debug console, Minimap button
-beside Test mode, then Reset position beside Reset all settings. Ticking Debug console opens the
+beside Test mode, then Preview as alone on its own line, then Reset position beside Reset all
+settings. Ticking Debug console opens the
 console; unticking Minimap button hides the button at once. Result:
 
 **PANEL-3. Defaults and Reset all.** Hide the minimap button, untick Enable, press the header's
@@ -185,6 +186,20 @@ shows, no error; after combat the pad is the other profile's. Result:
 its chip shows a small gold padlock in its top-right corner (the LibKa0s catalog's `lock` mark, not the pet-battle lock). With LibKa0s removed (DEGRADED-1)
 the pet-battle padlock draws instead, with no error. Result:
 
+**PAD-9. Up growth.** Comms Pad → Layout → Growth offers Right and down, Left and down, Right and up
+and Left and up (no Upward). Right and up → the header row sits at the bottom of the pad and the
+sections stack upward above it; `/qc unlock` → the drag strip sits below the pad. Drag the strip
+somewhere, then add a group to the pad → the pad grows upward and the strip stays where you left it;
+`/reload` → the strip is still there. Left and up → the chips fill right to left, still upward. Right
+and down → the header is on top again, the strip above, and adding a group grows the pad downward
+from a top edge that stays put. A profile saved with Upward growth loads as Right and up. Result:
+
+**PAD-10. Chip width and the section title.** Comms Pad → Layout → Chip width reads 100 on a new
+pad; drag it to 300 → wide chips, each label on one line; down to 30 → the labels cut short, still
+one line; down to 1 → icon-only slivers, no label and no Lua error. Make a group named `World`, put
+it on the pad and stand in the open world → the header reads `World` and the section under it has
+no second `World` line; rename the group `My world` → its title line is back. Result:
+
 ## Editors
 
 **EDIT-1. A callout and a group on the pad (the phase 3 exit).** Settings → Groups → New group; on
@@ -204,12 +219,13 @@ glyphs); no Show checkboxes. When: the editable condition drawers (EDIT-22), Con
 reading M+ in gold; not read-only text. Rename a callout in the popup and Save → in a key, the chip's label
 changes. Untick Enabled → in a key the set is gone from the pad; tick it again. Result:
 
-**EDIT-3. Preview as….** Out of combat, in the open world: Groups → General → Preview as → Arena →
+**EDIT-3. Preview as….** Out of combat, in the open world: General → Master controls → Preview as → Arena →
 the pad shows the arena set with PREVIEW on its header and `Preview: Arena`; clicking a chip sends
-nothing; its tooltip says so. Close the settings → the preview ends. `/qc preview raid:heroic` →
+nothing; its tooltip says so. The Comms Pad, Comms Dial and Groups pages' General tabs have no
+Preview as row. Close the settings → the preview ends. `/qc preview raid:heroic` →
 the raid set; pull something → the preview ends with one line and the live chips return. Result:
 
-**EDIT-4. Why is this showing?.** In a key, hover the pad's header → the tooltip lists "M+
+**EDIT-4. Why is this showing?.** In a key, hover the pad's header → the tooltip lists "Dungeon
 (generic): Content" (and any other group, with its rows); with a `/raid` callout on the pad
 outside a raid, the last line names the lock. Behavior → Explain why groups show off → no tooltip.
 `/qc why` prints the same lines per pad. Result:
@@ -460,6 +476,24 @@ filtered by it; Cancel and open the browser again → the text is still there; `
 empty. Escape with the Wowhead window's box focused closes that window alone; close the browser →
 the Wowhead window closes with it. Result:
 
+**EDIT-25. The Callouts rows and the Look tab.** Groups → "Dungeon (generic)" → Callouts → each
+row reads its icon, the name in gold, the channel's short label in its chat color (Party blue,
+Say white) and the start of its text in a muted white, cut at 40
+characters with "…". A callout with no icon shows the question mark; a callout whose text holds a
+`|` shows the bar, not a color change; a Smart channel takes the color of the channel it resolves to
+now (solo: Party). Comms Pad → Look → Visibility, then the Font, Border and Background headings, each
+heading once. Result:
+
+**EDIT-26. The glyph sets and their credits.** Open the icon browser (EDIT-14) → Glyphs: the count
+reads over five thousand. A set dropdown left of Icon color reads All; pick Open Iconic → only the
+original marks (the count about two hundred), Phosphor → the Phosphor marks, Game-icons → the
+thousands of game marks; All → every set again. The search (EDIT-24) filters within the set picked.
+Labels drop the set prefix (`Arrow up`, not `ph:arrow-up`); hover a Phosphor mark → the tooltip
+names Phosphor; hover a Game-icons mark → "Game-icons, by <author>" (a Lorc or Delapouite mark, for
+instance). Choose a Game-icons glyph, Save → the chip shows it in white, or in the Icon color picked.
+The README's Credits section names the three sets, their licenses and the Game-icons authors.
+Typing in the search box keeps up without a hitch. Result:
+
 ## Dial
 
 **DIAL-1. Open and close (Relaxed).** Settings → Comms Dial → Binding: click Key, press G → the line
@@ -515,7 +549,7 @@ the key is the game's again. Result:
 
 **DIAL-9. Test mode and Preview as.** Out of combat: `/qc test` → dial 1 opens at its place with
 placeholder wedges and TEST MODE above the hub; clicking sends nothing; 1 still fires the action bar.
-Comms Dial → General → Preview as → Arathi Basin → the dial opens on the nodes with PREVIEW; nothing
+General → Master controls → Preview as → Arathi Basin → the dial opens on the nodes with PREVIEW; nothing
 sends; Escape closes the settings window (not the dial), which ends the preview and closes the dial.
 Turn test mode on, then pull a target dummy → test mode ends; the dial closes at once or, if combat
 won the race, at combat end, and in between 1–8 and Escape still do what they always do. Result:
@@ -692,8 +726,9 @@ from the client, so this check needs a non-English client pass. Result:
 
 | ID | Origin | Why it is owed |
 |---|---|---|
-| INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..2, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet; LOC-1 re-enumerated in phase 5 and owed a non-English client pass |
-| SEND-1..5, PAD-1..8 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet; PAD-8 added in phase 5 (audit QC-07) |
-| EDIT-1..24 | Phase 3: the editors | No client pass recorded yet; EDIT-1, 2 and 19 rewritten and EDIT-22..24 added with the When drawers, Inherit when conditions and the icon browser's search (2026-10-18); EDIT-2, 4, 5, 6, 11, 14 and ICON-1 rewritten and EDIT-19..21 added when the built-in sets became seeded groups, groups nested and the Preview tab became a table (2026-10-18); EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17); EDIT-9, 13 and ICON-1 rewritten and EDIT-14..17 added with the icon browser and glyph colors (2026-10-18); EDIT-9 rewritten and EDIT-18 added when the token dropdown became the Text label's info glyph (2026-10-18); EDIT-13, 14 and ICON-1 rewritten when the Suggested tab went and the skin stopped waiting for the addon to be enabled (2026-10-18); EDIT-9, 18 and ICON-1 rewritten when the Icon boxes went and the popup took its two-column layout (2026-10-18); EDIT-9, 11 and ICON-1 rewritten with the clear glyph, the Preview gap and the buttons' 2 px inset (2026-10-18) |
-| DIAL-1..12 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
-| SHARE-1..6, LOOK-1..2, ICON-1, BG-1..2, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; LOOK-2's in-combat step goes through `/qc set` |
+| INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..3, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet; LOC-1 re-enumerated in phase 5 and owed a non-English client pass; STATE-3 added and PANEL-2 rewritten with `/qc toggle` and Preview as in Master controls (2026-10-19) |
+| SEND-1..5, PAD-1..10 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet; PAD-8 added in phase 5 (audit QC-07); PAD-1 rewritten and PAD-9..10 added with the up growth, chip width and the built-in glyphs (2026-10-19) |
+| EDIT-1..26 | Phase 3: the editors | No client pass recorded yet; EDIT-3, 4, 20 and 22 rewritten and EDIT-25..26 added with Preview as in Master controls, the Dungeon set, the Arena drawer, instance search, the Callouts rows and the glyph sets (2026-10-19); EDIT-1, 2 and 19 rewritten and EDIT-22..24 added with the When drawers, Inherit when conditions and the icon browser's search (2026-10-18); EDIT-2, 4, 5, 6, 11, 14 and ICON-1 rewritten and EDIT-19..21 added when the built-in sets became seeded groups, groups nested and the Preview tab became a table (2026-10-18); EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17); EDIT-9, 13 and ICON-1 rewritten and EDIT-14..17 added with the icon browser and glyph colors (2026-10-18); EDIT-9 rewritten and EDIT-18 added when the token dropdown became the Text label's info glyph (2026-10-18); EDIT-13, 14 and ICON-1 rewritten when the Suggested tab went and the skin stopped waiting for the addon to be enabled (2026-10-18); EDIT-9, 18 and ICON-1 rewritten when the Icon boxes went and the popup took its two-column layout (2026-10-18); EDIT-9, 11 and ICON-1 rewritten with the clear glyph, the Preview gap and the buttons' 2 px inset (2026-10-18) |
+| DIAL-1..12 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-9 rewritten when Preview as moved to Master controls (2026-10-19); DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
+| SHARE-1..6, LOOK-1..2, ICON-1, BG-1..2, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; LOOK-2's in-combat step goes through `/qc set`; IDS-1 extended to the journal instances and arenas (2026-10-19) |
+| ICONS-1..3 | Icons and polish (2026-10-19): the Icons tab | No client pass recorded yet |
