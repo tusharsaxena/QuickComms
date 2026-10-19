@@ -199,6 +199,25 @@ test("dial layout: [phase 5] a node set's nodes sit on their compass winds; the 
     assertEqual(mill.items[3].slot.line, "/i INC 3 Lumber Mill", "still two clicks to INC 3 Lumber Mill")
 end)
 
+test("dial layout: [polish] a node set's own callouts take one wedge on the first free wind; the nodes stay pinned", function()
+    local L = DL()
+    local g = abPinned()
+    g.slots = {}
+    for k, word in ipairs({ "Hold", "Zerg", "Ninja", "Rotate", "Ahead" }) do
+        g.slots[k] = { calloutId = "own" .. k, name = word, line = "/i " .. word }
+    end
+    local rings, open = L.Rings({ g }, { mode = "categories", slices = 4 })
+    local ring = rings[open]
+    -- red under: put a parent's own callouts first on an unpinned ring in modules/Dial_Layout.lua
+    assertEqual(ring.size, 8, "still the eight winds")
+    local at = {}
+    for _, item in ipairs(ring.items) do at[#at + 1] = item.title .. "@" .. L.Direction(item.wedge, ring.size) end
+    assertEqual(table.concat(at, ","), "Blacksmith@N,Gold Mine@NE,Arathi Basin@E,Farm@SE,Lumber Mill@SW,Stables@NW")
+    local own = rings[ring.items[3].target]
+    assertEqual(own.title, "Arathi Basin")
+    assertEqual(own.items[1].slot.line, "/i Hold", "the set's own callouts, on the dial's slices")
+end)
+
 test("dial layout: [review 6] [phase 5] nodes that cannot all be pinned keep their shipped order", function()
     local L = DL()
     assertNil(L.PinNodes({ { wind = "N" }, { wind = "N" } }), "two on one wind")

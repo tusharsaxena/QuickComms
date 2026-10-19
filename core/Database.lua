@@ -26,6 +26,9 @@ NS.MIGRATIONS = {
     -- 4 -> 5 (B7): "M+ (generic)" becomes "Dungeon (generic)" with a Dungeon + M+ When, and seeded
     -- callouts take their catalog glyphs, wherever the player has not changed them.
     { to = 5, perProfile = true, run = function(_, profile) NS.Library.MigrateBuiltins(profile) end },
+    -- 5 -> 6 (groups polish): seeded groups and callouts take their colored glyphs, and the battleground
+    -- node sets their map-wide callouts, wherever the player has not changed them.
+    { to = 6, perProfile = true, run = function(_, profile) NS.Library.MigrateBuiltinsPolish(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.

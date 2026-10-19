@@ -59,6 +59,9 @@ test("library: a seeded group is an ordinary group: its fields, When, callouts a
     local g, def = p.groups[gid], NS.BuiltIns.groups["bi.mplus"]
     assertEqual(g.name, def.name)
     assertEqual(g.icon, def.icon)
+    -- red under: seedGroup drops iconColor (polish)
+    assertTrue(def.iconColor ~= nil, "the shipped set is tinted")
+    assertEqual(g.iconColor, def.iconColor)
     assertTrue(g.when.content.mythicPlus)
     assertTrue(g.when ~= def.when, "a copy of the shipped When")
     assertTrue(g.enabled)
@@ -88,7 +91,7 @@ test("library: a seeded battleground set holds its nodes as groups inside it, in
     local NS, Lib, p = boot()
     local ab = T.seeded(NS, "bi.bg.ab")
     assertTrue(p.groups[ab].openInto)
-    assertEqual(#p.groups[ab].callouts, 0)
+    assertEqual(#p.groups[ab].callouts, #NS.BuiltIns.groups["bi.bg.ab"].callouts, "its map-wide callouts")
     local kids = Lib.Children(ab)
     local def = NS.BuiltIns.groups["bi.bg.ab"]
     assertEqual(#kids, #def.children)

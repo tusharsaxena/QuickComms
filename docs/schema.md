@@ -103,7 +103,16 @@ group whose origin is `bi.mplus` and whose name is still "M+ (generic)" becomes 
 edited When is left alone); every seeded callout whose icon is unset (nil) or the game icon it
 shipped with takes its catalog glyph and color, while a cleared icon (`false`) or any other icon
 stays. A second run changes nothing.
-`NS.SCHEMA_VERSION` is 5.
+Step 6 (2026-10-19 groups polish, `perProfile`, `Library.MigrateBuiltinsPolish` in
+`modules/Library_Migrate.lua`): every seeded group whose icon is unset (nil) or the game icon its set
+shipped with, and that has no color, takes its catalog glyph and color; every seeded callout still on
+its shipped glyph with no color takes the glyph's color (a picked color, or a picked or cleared icon,
+stays); and each copy of the five node sets (Arathi Basin, Eye of the Storm, Battle for Gilneas,
+Deepwind Gorge, Isle of Conquest) gains, at its end and under fresh ids, each of its map-wide callouts
+none of its callouts keeps the origin of. A deleted set has no copy and is not brought back. The new
+World (solo) set needs no step: `Library.Prepare` seeds it as any newly shipped set (`seededSets`).
+Seeding now copies a shipped group's `iconColor` too. A second run changes nothing.
+`NS.SCHEMA_VERSION` is 6.
 No schema step for nested groups (2026-10-18): a group without `parent` is top-level, and
 `Library.Prepare` drops a bad one.
 No schema step in phase 5: `Library.Prepare` fills a stored pad's missing layout and look fields from

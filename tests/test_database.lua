@@ -296,3 +296,82 @@ test("database: [B7] step 5 renames the dungeon set, widens its When and gives s
     assertNil(next(fresh), "a fresh profile is left as it is")
     NS.Library.MigrateBuiltins({ groups = "damaged", callouts = { c1 = "damaged" } })
 end)
+
+-- A profile as builds before step 6 stored it: the seeded sets' game icons and uncolored glyphs, and
+-- Arathi Basin's set with no callouts of its own.
+local function prePolishProfile(BI)
+    local pull = BI.callouts["bi.mplus.pull"]
+    return {
+        nextId = 9,
+        groups = {
+            g1 = { name = "Dungeon (generic)", icon = "Interface\\Icons\\INV_Relics_Hourglass", origin = "bi.mplus",
+                callouts = { "c1", "c2", "c3", "c4" } },
+            g2 = { name = "Raid", icon = 136012, origin = "bi.raid", callouts = {} },
+            g3 = { name = "Arathi Basin", origin = "bi.bg.ab", callouts = {} },
+            g4 = { name = "Eye", origin = "bi.bg.eots", icon = false, callouts = { "c5" } },
+            g5 = { name = "Stables", origin = "bi.bg.ab.stables", parent = "g3", callouts = {} },
+            g8 = { name = "Mine", callouts = {} },
+        },
+        callouts = {
+            c1 = { name = "Pulling", text = "x", origin = "bi.mplus.pull", icon = pull.icon },
+            c2 = { name = "Kick", text = "x", origin = "bi.mplus.kicks", icon = BI.callouts["bi.mplus.kicks"].icon,
+                iconColor = "123456" },
+            c3 = { name = "Skip", text = "x", origin = "bi.mplus.skip", icon = false },
+            c4 = { name = "Lust", text = "x", origin = "bi.mplus.lust", icon = 136012 },
+            c5 = { name = "Flag", text = "x", origin = "bi.bg.eots.flagcap" },
+        },
+    }
+end
+
+test("database: [polish] step 6 colors untouched seeded icons and adds the node sets' own callouts, once", function()
+    local NS = T.bootAddon()
+    local db = NS.addon.db
+    local BI = NS.BuiltIns
+    db.sv.profiles.Old = prePolishProfile(BI)
+    db.global.schemaVersion = 5
+    NS.addon:RunMigrations()
+    local p = db.sv.profiles.Old
+    -- red under: no step 6 in core/Database.lua
+    assertTrue(db.global.schemaVersion >= 6)
+    local mplus, ab = BI.groups["bi.mplus"], BI.groups["bi.bg.ab"]
+    assertEqual(p.groups.g1.icon, mplus.icon, "the old shipped game icon becomes the glyph")
+    assertEqual(p.groups.g1.iconColor, mplus.iconColor)
+    assertEqual(p.groups.g2.icon, 136012, "a picked icon is the player's")
+    assertNil(p.groups.g2.iconColor)
+    assertEqual(p.groups.g3.icon, ab.icon, "no icon becomes the glyph")
+    assertTrue(p.groups.g4.icon == false, "a cleared icon stays cleared")
+    assertEqual(p.groups.g5.icon, BI.groups["bi.bg.ab.stables"].icon, "a node takes its glyph")
+    assertNil(p.groups.g8.icon, "a group of the player's own is untouched")
+    assertEqual(p.callouts.c1.iconColor, BI.callouts["bi.mplus.pull"].iconColor, "an uncolored glyph takes its color")
+    assertEqual(p.callouts.c2.iconColor, "123456", "a picked color is the player's")
+    assertTrue(p.callouts.c3.icon == false and p.callouts.c3.iconColor == nil, "a cleared icon takes no color")
+    assertNil(p.callouts.c4.iconColor, "a picked icon takes no color")
+    -- Arathi Basin's own callouts arrive at the end of its group, each once, under fresh ids.
+    assertEqual(#p.groups.g3.callouts, #ab.callouts)
+    for i, cid in ipairs(p.groups.g3.callouts) do
+        assertEqual(p.callouts[cid].origin, ab.callouts[i], "in shipped order")
+        assertEqual(p.callouts[cid].text, BI.callouts[ab.callouts[i]].text)
+        assertEqual(p.callouts[cid].iconColor, BI.callouts[ab.callouts[i]].iconColor)
+        assertTrue(cid:match("^c%d+$") and tonumber(cid:sub(2)) >= 9, "a fresh id: " .. cid)
+    end
+    local eots = BI.groups["bi.bg.eots"].callouts
+    assertEqual(#p.groups.g4.callouts, #eots, "one already held is not added twice")
+    assertEqual(p.groups.g4.callouts[1], "c5")
+    assertEqual(#p.groups.g5.callouts, 0, "a node gains nothing")
+    for _, g in pairs(p.groups) do assertTrue(g.origin ~= "bi.bg.dwg", "a deleted set is not brought back") end
+    assertNil(p.groups.g6)
+    assertTrue(p.nextId > 9)
+    -- a second run changes nothing, edits since included
+    local held = #p.groups.g3.callouts
+    p.groups.g3.iconColor = "654321"
+    db.global.schemaVersion = 5
+    NS.addon:RunMigrations()
+    assertEqual(#p.groups.g3.callouts, held, "nothing is added twice")
+    assertEqual(p.groups.g3.iconColor, "654321")
+    local fresh = {}
+    NS.Library.MigrateBuiltinsPolish(fresh)
+    assertNil(next(fresh), "a fresh profile is left as it is")
+    NS.Library.MigrateBuiltinsPolish({ groups = { g1 = { origin = "bi.bg.ab", callouts = "damaged" } },
+        callouts = "damaged" })
+    NS.Library.MigrateBuiltinsPolish({ groups = "damaged", callouts = { c1 = "damaged" } })
+end)

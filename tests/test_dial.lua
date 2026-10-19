@@ -320,9 +320,12 @@ end)
 
 test("dial: [review 1] the key opens nothing where no group is active, and is the game's again while disabled", function()
     local NS, m = live({})
+    -- the World (solo) set is the one active solo in the open world (groups polish): without it, none is
+    assertTrue(NS.Library.DeleteGroup(T.seeded(NS, "bi.world")))
+    NS.Situation.RefreshNow("test")
     bindG(NS)
     m.__pressKey("G")
-    assertFalse(NS.Dial.IsOpen("d2"), "solo in the open world: no ring to show")
+    assertFalse(NS.Dial.IsOpen("d2"), "solo in the open world with no World set: no ring to show")
     NS.SchemaRuntime.Set("enabled", false)
     -- red under: drop NS.Dial.HideAll() from the stand-down's Teardown in modules/Surfaces.lua
     assertFalse(m.__pressKey("G"))
@@ -502,10 +505,11 @@ test("dial: [review 6] on a four- or six-slice dial every node shows, and the nu
         m.__pressKey("G")
         local r = NS.Dial.ShownRing("d2")
         assertEqual(ringTitle(NS), "Arathi Basin")
-        assertEqual(#NS.Dial.RingWedges("d2", r), 5, slices .. " slices: five nodes, no More")
-        -- clockwise from N: Blacksmith (N), Gold Mine (NE), Farm (SE), Lumber Mill (SW), Stables (NW)
-        m.__pressKey("4")
-        assertEqual(ringTitle(NS), "Lumber Mill", slices .. " slices: key 4 is the fourth wedge shown")
+        assertEqual(#NS.Dial.RingWedges("d2", r), 6, slices .. " slices: five nodes and the set's own, no More")
+        -- clockwise from N: Blacksmith (N), Gold Mine (NE), Arathi Basin's own (E), Farm (SE),
+        -- Lumber Mill (SW), Stables (NW)
+        m.__pressKey("5")
+        assertEqual(ringTitle(NS), "Lumber Mill", slices .. " slices: key 5 is the fifth wedge shown")
         m.__pressKey("3")
         assertEqual(m.sentMacros[#m.sentMacros].text, "/i INC 3 Lumber Mill")
     end

@@ -55,8 +55,8 @@ one `Library.Batch`, taking the group off every pad and dial. A rebuild draws a 
 surface lists it: `Surfaces.BuildPlan` gives a pad a section for the parent's own callouts (when it
 has any), then one section per child that the Resolver finds active, in `Library.Children`'s order;
 `Surfaces.BuildDialPlan` gives a dial the parent's own callouts first, then a node ring per active
-child (pinned to the compass winds when every child has one and the parent has no callouts of its
-own). The parent's When and Enabled gate the whole family, and a child that inherits its When
+child (pinned to the compass winds when every child has one, the parent's own callouts then taking
+one more wedge on the first free wind). The parent's When and Enabled gate the whole family, and a child that inherits its When
 conditions (`group.inheritWhen`, on unless stored `false`) is judged by the parent's When instead of
 its own (`Resolver.WhenOf`). Deleting a parent (`Library.DeleteGroup`)
 makes its children top-level groups, in its place on every pad and dial, in one act.

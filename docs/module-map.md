@@ -29,7 +29,7 @@ The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after Li
 | 15 | `core/LauncherSetup.lua` | setup | LibKa0s-Launcher: the one LDB object, registered twice |
 | 16 | `defaults/Profile.lua` | data | every default value (`NS.C`) |
 | 16a | `defaults/BuiltIns.lua` | data | `NS.BuiltIns`: the registry of shipped sets and the declaring helpers; seed data, copied into each profile once as ordinary groups by `Library` |
-| 16b | `defaults/BuiltIns_MythicPlus.lua`, `_Raid.lua`, `_Arena.lua`, `_Battlegrounds.lua` | data | the four shipped sets (spec §12), a battleground's nodes as groups inside its set |
+| 16b | `defaults/BuiltIns_MythicPlus.lua`, `_Raid.lua`, `_Arena.lua`, `_World.lua`, `_Battlegrounds.lua` | data | the shipped sets (spec §12; World (solo), groups polish), a battleground's nodes as groups inside its set; every set, node and callout carries a colored catalog glyph |
 | 16b1 | `defaults/Icons.lua` | data | `NS.IconDefaults`: the Icons tab's defaults (`For(kind)`), size ranges, glow styles, triggers and DropWatcher's knob table; `modules/Library.lua` reads it at load |
 | 16b2 | `defaults/GameIds.lua` | data | the shipped ids: the season's dungeons and raids, classes, specializations (matched against the client's data by `tools/derive-gameids.py` and `tests/test_gameids.lua`; confirmed in game by IDS-1) |
 | 16b3 | `defaults/GameIds_Instances.lua` | data | the When editor's place lists: `INSTANCES` (every Encounter Journal dungeon and raid) and `ARENAS` (every arena, one per arena), derived and checked by `tools/derive-gameids.py` |

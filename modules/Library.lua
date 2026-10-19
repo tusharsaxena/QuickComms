@@ -742,7 +742,8 @@ local function seedGroup(p, gid, parent, hidden)
         if not (hidden and hidden[cid]) then callouts[#callouts + 1] = seedCallout(p, cid) end
     end
     local id = takeId(p, "g")
-    p.groups[id] = { name = def.name, icon = def.icon, callouts = callouts, when = copyTable(def.when) or {},
+    p.groups[id] = { name = def.name, icon = def.icon, iconColor = def.iconColor, callouts = callouts,
+        when = copyTable(def.when) or {},
         openInto = def.openInto == true, enabled = true, parent = parent, inheritWhen = true, compass = def.compass,
         origin = gid }
     p.seededSets[gid] = true

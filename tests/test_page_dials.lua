@@ -194,7 +194,9 @@ test("dials page: Preview lists the rings wedge by wedge, marking the one the di
     local w = P.tab("dials", "preview")
     -- phase 5: the nodes are pinned to their winds, on one eight-wedge ring (spec §12.1)
     assertTrue(P.hasText(w, "Arathi Basin (opens here)"))
-    assertTrue(P.hasText(w, "  4 SW: Lumber Mill, opens a ring"))
+    -- the set's own map-wide callouts take the first free wind (groups polish)
+    assertTrue(P.hasText(w, "  3 E: Arathi Basin, opens a ring"))
+    assertTrue(P.hasText(w, "  5 SW: Lumber Mill, opens a ring"))
 end)
 
 test("dials page: [final 20] at 12 wedges per ring the Preview names each wedge by its clock position", function()

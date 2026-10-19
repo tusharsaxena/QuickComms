@@ -10,10 +10,11 @@ test("builtins: the expected top-level sets exist in order", function()
     assertEqual(BI.order[1], "bi.mplus")
     assertEqual(BI.order[2], "bi.raid")
     assertEqual(BI.order[3], "bi.arena")
+    assertEqual(BI.order[4], "bi.world")
     -- A battleground's own set comes before the generic one, so the dial opens into it (D9, phase 4).
-    assertEqual(BI.order[4], "bi.bg.ab")
+    assertEqual(BI.order[5], "bi.bg.ab")
     assertEqual(BI.order[#BI.order], "bi.bg")
-    assertTrue(#BI.order >= 18, "generic sets plus one per battleground")
+    assertTrue(#BI.order >= 19, "generic sets plus one per battleground")
 end)
 
 test("builtins: ids are unique, referenced and well formed", function()
@@ -45,6 +46,7 @@ test("builtins: node sets open into their ring and nest one level", function()
     local ab = BI.groups["bi.bg.ab"]
     assertTrue(ab.openInto)
     assertEqual(#ab.children, 5)
+    assertTrue(#ab.callouts >= 4, "and map-wide callouts of its own")
     local stables = BI.groups[ab.children[1]]
     assertEqual(#stables.callouts, 6)
     assertEqual(BI.callouts[stables.callouts[3]].text, "INC 3 Stables")
@@ -115,4 +117,72 @@ test("builtins: [B7] the generic dungeon set is Dungeon (generic), active in a d
     local g = BI.groups["bi.mplus"]
     assertEqual(g.name, "Dungeon (generic)")
     assertTrue(g.when.content.dungeon and g.when.content.mythicPlus)
+end)
+
+-- The white the glyphs draw when no color is set; a set must not be all of it.
+local WHITE = "ffffff"
+
+test("builtins: [polish] World (solo) is a solo open-world set of say callouts", function()
+    local NS, BI = bi()
+    local g = BI.groups["bi.world"]
+    -- red under: no defaults/BuiltIns_World.lua
+    assertTrue(g ~= nil, "the set exists")
+    assertEqual(g.name, "World (solo)")
+    assertTrue(g.when.content.openWorld and g.when.group.solo, "World, Solo")
+    assertTrue(#g.callouts >= 8, "about eight callouts")
+    for _, cid in ipairs(g.callouts) do
+        local ch = BI.callouts[cid].channel
+        assertTrue(ch == "say" or ch == "yell", cid .. " speaks out loud, as a solo player can")
+    end
+    assertEqual(BI.SNAPSHOTS["bi.world"].content, "openWorld", "the bake audit checks it solo")
+    assertEqual(BI.SNAPSHOTS["bi.world"].group, "solo")
+    local line = NS.Bake.Bake(BI.callouts["bi.world.thanks"], BI.SNAPSHOTS["bi.world"], { ctx = {} })
+    assertEqual(line, "/s Thanks for the help!")
+end)
+
+test("builtins: [polish] every battleground node set has map-wide callouts of its own", function()
+    local _, BI = bi()
+    for _, key in ipairs({ "ab", "eots", "bfg", "dwg", "ioc" }) do
+        local g = BI.groups["bi.bg." .. key]
+        -- red under: a node set with no `callouts` rows in defaults/BuiltIns_Battlegrounds.lua
+        assertTrue(#g.callouts >= 4 and #g.callouts <= 6, key .. " has four to six")
+        for _, cid in ipairs(g.callouts) do assertEqual(BI.callouts[cid].channel, "smartGroup", cid) end
+    end
+    assertEqual(BI.callouts["bi.bg.ioc.siege"].text, "Escort our siege engine")
+end)
+
+test("builtins: [polish] every callout icon has a color, and no group is white only", function()
+    local _, BI = bi()
+    for cid, c in pairs(BI.callouts) do
+        -- red under: a callout row without its color in defaults/BuiltIns_*.lua
+        assertTrue(type(c.iconColor) == "string", cid .. " has a color")
+    end
+    for gid, g in pairs(BI.groups) do
+        local colors, n = {}, 0
+        for _, cid in ipairs(g.callouts) do
+            local color = BI.callouts[cid].iconColor
+            if not colors[color] then colors[color], n = true, n + 1 end
+        end
+        if #g.callouts > 1 then
+            assertTrue(n >= 2, gid .. " uses more than one color")
+            assertTrue(not (n == 1 and colors[WHITE]), gid .. " is not white only")
+        end
+    end
+    assertEqual(BI.callouts["bi.mplus.pull"].iconColor, BI.COLOR.orange, "a pull is an alarm")
+    assertEqual(BI.callouts["bi.raid.stack"].iconColor, WHITE, "white is one of the colors")
+end)
+
+test("builtins: [polish] every group has a colored catalog glyph for its icon", function()
+    local NS, BI = bi()
+    local Lib = NS.Library
+    for gid, g in pairs(BI.groups) do
+        -- red under: a group declared without `glyph` in defaults/BuiltIns_*.lua
+        assertTrue(type(g.glyph) == "string", gid .. " names a glyph")
+        assertTrue(NS.Icon(g.glyph) ~= nil, gid .. ": the vendored catalog carries " .. tostring(g.glyph))
+        assertEqual(g.icon, NS.Icon(g.glyph), gid .. " stores the glyph's path")
+        assertEqual(Lib.IsGlyph(g.icon), g.glyph, gid .. " reads back as its glyph")
+        assertTrue(type(g.iconColor) == "string" and Lib.ValidIconColor(g.iconColor), gid .. " color")
+    end
+    assertEqual(BI.groups["bi.bg.bfg.lighthouse"].glyph, "gi:lighthouse", "a node's icon is its name")
+    assertEqual(BI.groups["bi.world"].glyph, "gi:world")
 end)

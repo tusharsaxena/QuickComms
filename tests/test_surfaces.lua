@@ -71,10 +71,12 @@ test("surfaces: a node battleground gives one section per node, baked to /i", fu
     local NS = live(AB)
     local plan = planFor(NS)
     assertEqual(table.concat(plan.order, ","), T.seeded(NS, "bi.bg.ab") .. "," .. T.seeded(NS, "bi.bg"))
-    assertEqual(#plan.sections, 6)
-    assertEqual(plan.sections[2].title, "Lumber Mill")
-    assertEqual(plan.sections[2].slots[3].line, "/i INC 3 Lumber Mill")
-    assertEqual(plan.sections[6].title, "Battleground (generic)")
+    -- the set's own map-wide callouts first (groups polish), then a section per node
+    assertEqual(#plan.sections, 7)
+    assertEqual(plan.sections[1].title, "Arathi Basin")
+    assertEqual(plan.sections[3].title, "Lumber Mill")
+    assertEqual(plan.sections[3].slots[3].line, "/i INC 3 Lumber Mill")
+    assertEqual(plan.sections[7].title, "Battleground (generic)")
 end)
 
 test("surfaces: a Say callout locked by an encounter lights the plan's lockdown chip", function()
