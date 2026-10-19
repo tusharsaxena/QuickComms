@@ -85,13 +85,34 @@ test("groups page: the picker lists every group by name, a seeded set among them
 end)
 
 -- Every band widget AceGUI makes from here on records the frame it was parented to; the stub frame
--- answers SetParent with itself and keeps nothing.
+-- answers SetParent with itself and keeps nothing. And it is handed out hidden, as AceGUI's pool
+-- hands back a released widget, while a SimpleGroup does what AceGUI's container does for a child
+-- (the kit's fake does neither): AddChild shows it, and a Flow layout gives each child its relative
+-- share of the group's width (SetWidth). Only a widget that goes through the block is shown and sized.
 local function recordParents(m)
     local ace = m.LibStub("AceGUI-3.0")
     local create = ace.Create
     ace.Create = function(fake, wtype, ...)
         local w = create(fake, wtype, ...)
-        if w.frame then rawset(w.frame, "SetParent", function(self, p) self.qcParent = p; return self end) end
+        if w.frame then
+            rawset(w.frame, "SetParent", function(self, p) self.qcParent = p; return self end)
+            w.frame:Hide()
+        end
+        if wtype == "SimpleGroup" then
+            local add, layout = w.AddChild, w.DoLayout
+            function w.AddChild(self, child)
+                if child.frame then child.frame:Show() end
+                return add(self, child)
+            end
+            function w.DoLayout(self)
+                if self.layout == "Flow" and type(self.width) == "number" then
+                    for _, child in ipairs(self.children) do
+                        if child.relativeWidth then child:SetWidth(child.relativeWidth * self.width) end
+                    end
+                end
+                return layout(self)
+            end
+        end
         return w
     end
     return function() ace.Create = create end
@@ -113,7 +134,11 @@ local function assertBand(band, label)
         label .. ": picker, New group, then the checkbox, each the block's child")
     for _, w in ipairs(kids) do
         assertFalse(w.__released == true, label .. ": " .. w.type .. " live")
-        assertEqual(w.relativeWidth, 0.5, label .. ": " .. w.type .. " sized by the layout")
+        assertEqual(w.relativeWidth, 0.5, label .. ": " .. w.type .. " half the band")
+        assertTrue(w.frame:IsShown(), label .. ": " .. w.type .. " shown, by the block's AddChild")
+        if type(block.width) == "number" then
+            assertEqual(w.width, block.width / 2, label .. ": " .. w.type .. " sized by the block's layout")
+        end
     end
 end
 
@@ -138,6 +163,7 @@ test("groups page: [band] the picker, New group and Preview while editing are on
     header:__fire("OnSizeChanged", 640, 72)
     assertEqual(band.block.width, 640, "the band's width, through SetWidth")
     assertTrue((band.block.layoutCount or 0) > laid, "and laid out again")
+    assertBand(band, "after the header's width arrived")
     header:__fire("OnSizeChanged", 640, 80)
     assertEqual(band.block.layoutCount, laid + 1, "a height change alone lays out nothing")
     -- A group switch through the picker redraws the page on the next frame.
