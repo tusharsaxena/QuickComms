@@ -304,10 +304,11 @@ end)
 test("dials page: [B9] Icons follows Wheel, carries its headings once each, and writes the dial", function()
     local NS, _, P = open()
     local w = P.tab("dials", "Icons")
-    for _, heading in ipairs({ "Size and crop", "Color", "Border", "Glow", "Pixel border", "Auto cast sparkles",
-        "Button (rotating rays)", "Proc (flipbook)", "Offset" }) do
+    for _, heading in ipairs({ "Size and crop", "Color", "Border", "Glow", "Offset" }) do
         assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
     end
+    -- red under: Dials' renderIcons without Settings.ShownIconRows
+    assertEqual(#P.all(w, "Heading", "Pixel border"), 0, "the glow is off by default: no style's knobs")
     assertEqual(#P.all(w, "CheckBox", "Use class color"), 3)
     local order, seen = {}, {}
     for _, row in ipairs(NS.addon.Settings.RowsForPage("dials")) do
@@ -324,4 +325,18 @@ test("dials page: [B9] Icons follows Wheel, carries its headings once each, and 
     P.ctx("dials").panel.defaultsOnClick()
     assertEqual(NS.db.profile.dials.d2.icon.zoom, 0)
     assertTrue(P.ctx("dials").panel.defaultsTooltip:find("icons", 1, true) ~= nil)
+end)
+
+test("dials page: [glow knobs] only the selected style's knobs show, and a Glow or Glow style write repaints", function()
+    local _, _, P = open()
+    local w = P.tab("dials", "Icons")
+    P.find(w, "CheckBox", "Glow"):__fire("OnValueChanged", true)
+    w = P.during(P.flush)
+    assertEqual(#P.all(w, "Heading", "Pixel border"), 1, "the repaint draws the default style's knobs")
+    assertEqual(#P.all(w, "Heading", "Auto cast sparkles"), 0)
+    P.find(w, "Dropdown", "Glow style"):__fire("OnValueChanged", "autocast")
+    w = P.during(P.flush)
+    assertEqual(#P.all(w, "Heading", "Auto cast sparkles"), 1)
+    assertEqual(#P.all(w, "Heading", "Pixel border"), 0)
+    assertEqual(#P.all(w, "Heading", "Offset"), 1, "Offset always shows")
 end)

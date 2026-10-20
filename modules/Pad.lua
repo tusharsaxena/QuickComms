@@ -2,9 +2,9 @@ local _, NS = ...
 -- modules/Pad.lua — the Comms Pad's frames (spec §10.1, §10.3, §10.4).
 --
 -- The root is a plain BackdropTemplate frame wearing the Ka0s skin (NS.ApplySkin), dressed at every
--- rebuild by the pad's Window tab (Pad_Render.SkinFor: border and background; Pad_Render.TitleFont:
--- the section titles' font; Pad_Render.HeaderLook: the header row's height, font, background and
--- edge) and its Chip tab (Pad_Render.ChipLook: each chip's body, edge, label font and glow);
+-- rebuild by the pad's Main window tab (Pad_Render.SkinFor: border and background), its Pad header
+-- tab (Pad_Render.HeaderLook: the header row's height, font, background and edge), its Section header
+-- tab (Pad_Render.SectionLook: each title row's height and font, and the band behind it) and its Chip tab (Pad_Render.ChipLook: each chip's body, edge, label font and glow);
 -- it becomes protected in combat because its chips are secure. Every chip
 -- IS a send button (spec §9.1),
 -- built by SendEngine, dressed by Pad_Render, pooled per pad with NS.Pool and never destroyed. The
@@ -132,8 +132,19 @@ local function newChip(inst)
     return btn
 end
 
+-- A section title: its text on a band of its own (a plain BackdropTemplate child of the root, mouse
+-- off), which the Section header tab's background and border dress (R.ApplySectionBand). The text is
+-- the band's, so the band never draws over it. The pool holds the text; the band goes with it.
 local function newTitle(inst)
-    return inst.root:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local band = CreateFrame("Frame", nil, inst.root, "BackdropTemplate")
+    band:EnableMouse(false)
+    local fs = band:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    fs.qcBand = band
+    return fs
+end
+
+local function releaseTitle(fs)
+    fs.qcBand:Hide()
 end
 
 -- A section title's hit frame (groups polish R4): a plain, non-secure Button over the title row,
@@ -196,9 +207,16 @@ end
 -- The dial's callout wedges are armed exactly as a chip is (modules/Dial.lua).
 Pad.ArmSlot = arm
 
+-- A title row's width: its block's in a packed row (Pad_Layout), else the pad's inside its padding.
+-- The band and the hit frame both span it.
+local function titleWidth(item, box)
+    return math.max(1, item.w > 0 and item.w or (box.width - 2 * item.x))
+end
+
 -- Every chip and section title of the layout: each chip in the pad's Chip tab (`clook`, R.ChipLook)
--- and its icon in the Icons tab (`icfg`); each title in the Window tab's Section titles font.
-local function place(inst, box, style, clook, titleFont, icfg)
+-- and its icon in the Icons tab (`icfg`); each title in the Section header tab's look (`slook`,
+-- R.SectionLook): its band across the row, its text on the band's left edge, clear of its border.
+local function place(inst, box, style, clook, slook, icfg)
     for _, item in ipairs(box.items) do
         if item.kind == "chip" then
             local btn = NS.Pool.Acquire(inst.chips, function() return newChip(inst) end)
@@ -213,22 +231,28 @@ local function place(inst, box, style, clook, titleFont, icfg)
             inst.byCallout[item.slot.calloutId] = list
         else
             local fs = NS.Pool.Acquire(inst.titles, function() return newTitle(inst) end)
+            local band, inset = fs.qcBand, slook.inset
+            band:ClearAllPoints()
+            band:SetPoint("TOPLEFT", inst.root, "TOPLEFT", item.x, -item.y)
+            band:SetSize(titleWidth(item, box), item.h)
+            R.ApplySectionBand(band, slook)
+            band:Show()
             fs:ClearAllPoints()
-            fs:SetPoint("TOPLEFT", inst.root, "TOPLEFT", item.x, -item.y)
+            fs:SetPoint("LEFT", band, "LEFT", inset, 0)
             -- A title in a packed row (Pad_Layout) stops at its block's width, cut short on one line;
             -- any other sizes to its text (0), as a pooled one may have carried a width.
             fs:SetWordWrap(false)
             fs:SetJustifyH("LEFT")
-            fs:SetWidth(item.w > 0 and item.w or 0)
+            fs:SetWidth(item.w > 0 and math.max(1, item.w - 2 * inset) or 0)
             fs:SetText(R.SectionTitle(item))
-            R.ApplyFont(fs, titleFont)
+            R.ApplyFont(fs, slook.font)
             -- Only a group the profile has: test mode's placeholders ("test.N") name none.
             if item.groupId and NS.Library.Group(item.groupId) then
                 local hit = NS.Pool.Acquire(inst.titleHits, function() return newTitleHit(inst) end)
                 hit.qcGroupId = item.groupId
                 hit:ClearAllPoints()
                 hit:SetPoint("TOPLEFT", inst.root, "TOPLEFT", item.x, -item.y)
-                hit:SetSize(math.max(1, item.w > 0 and item.w or (box.width - 2 * item.x)), item.h)
+                hit:SetSize(titleWidth(item, box), item.h)
             end
         end
     end
@@ -247,7 +271,7 @@ local function build(id)
     NS.ApplySkin(root)
     local inst = { id = id, root = root, chips = NS.Pool.New(), titles = NS.Pool.New(), titleHits = NS.Pool.New(),
         byCallout = {}, hover = 0, live = false }
-    -- A plain BackdropTemplate child: the Window tab's Header block dresses it at every Apply.
+    -- A plain BackdropTemplate child: the Pad header tab dresses it at every Apply.
     local header = CreateFrame("Frame", nil, root, "BackdropTemplate")
     header:SetHeight(PL.HEADER_H)
     header:EnableMouse(true)
@@ -337,7 +361,7 @@ function Pad.Apply(id, plan)
     if not (inst.dragging or inst.dragHeld) then applyPoint(inst) end
     inst.plan, inst.live = plan, true
     NS.Pool.ReleaseAll(inst.chips, releaseChip)
-    NS.Pool.ReleaseAll(inst.titles)
+    NS.Pool.ReleaseAll(inst.titles, releaseTitle)
     NS.Pool.ReleaseAll(inst.titleHits, releaseTitleHit)
     inst.byCallout = {}
     local layout = type(pad.layout) == "table" and pad.layout or {}
@@ -348,20 +372,25 @@ function Pad.Apply(id, plan)
     -- The looks the last rebuild built are reused while their settings hold (Pad_Render's signatures).
     inst.hlook = R.HeaderLook(pad.header, inst.hlook)
     local hlook = inst.hlook
+    inst.slook = R.SectionLook(pad.section, inst.slook)
+    local slook = inst.slook
     local chip = type(pad.chip) == "table" and pad.chip or {}
+    -- The header wears its font and text before the layout, so the pad is as wide as the row needs
+    -- (R.HeaderMinWidth), no wider.
+    R.ApplyHeaderLook(inst.header, hlook)
+    R.PaintHeader(inst.header, hstate)
     local box = PL.Compute(sections, layout, { collapsed = hstate.collapsed, headerH = hlook.height, chip = chip,
-        fontSize = chip.fontSize, titleSize = look.fontSize, situation = hstate.situation, iconSize = icfg.size })
+        fontSize = chip.fontSize, titleSize = slook.font.size, titleH = slook.height, situation = hstate.situation, iconSize = icfg.size,
+        minWidth = R.HeaderMinWidth(inst.header) })
     inst.root:SetScale(math.max(NS.Library.MIN_SURFACE_SCALE, (tonumber(NS.Setting("scale")) or 1) * (tonumber(layout.scale) or 1)))
     inst.root:SetSize(box.width, box.height)
     inst.width, inst.height = box.width, box.height
     anchorEdge(inst, box.up)
     inst.header:SetHeight(box.headerH)
-    R.ApplyHeaderLook(inst.header, hlook)
     NS.ApplySkin(inst.root, R.SkinFor(look))
     inst.clook = R.ChipLook(chip, inst.clook)
-    place(inst, box, layout.style, inst.clook, R.TitleFont(look), icfg)
+    place(inst, box, layout.style, inst.clook, slook, icfg)
     NS.Glow.ReleaseFree(inst.chips)
-    R.PaintHeader(inst.header, hstate)
     inst.mark = hstate.mark
     if inst.handle then inst.handle:SetLabel(R.StripLabel(padName(id), hstate.mark)) end
     Pad.ApplyLock()
@@ -384,7 +413,7 @@ function Pad.Release(id)
     end
     NS.Pool.ReleaseAll(inst.chips, releaseChip)
     NS.Glow.ReleaseFree(inst.chips)
-    NS.Pool.ReleaseAll(inst.titles)
+    NS.Pool.ReleaseAll(inst.titles, releaseTitle)
     NS.Pool.ReleaseAll(inst.titleHits, releaseTitleHit)
     inst.byCallout, inst.plan, inst.live, inst.mark = {}, nil, false, nil
     if inst.handle then inst.handle:Hide() end

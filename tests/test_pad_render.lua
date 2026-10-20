@@ -276,12 +276,12 @@ test("render: [phase 5] Use class color takes the player's class color and keeps
         "a positional swatch, alpha 1 by default")
 end)
 
-test("render: [window] the section titles wear the Window tab's Section titles font, gold by default", function()
+test("render: [window] the section titles wear the Section header tab's font, gold by default", function()
     local NS, m = T.enableAddon()
     m.RAID_CLASS_COLORS = { MAGE = { r = 0.25, g = 0.75, b = 0.5 } }
     local R = NS.PadRender
-    -- red under: a white default in Library's pad.look.fontColor (the titles were always gold)
-    local t = R.TitleFont(NS.Library.TEMPLATES.pad.look)
+    -- red under: a white default in defaults/PadStyle.lua D.Section's fontColor (the titles were always gold)
+    local t = R.TitleFont(NS.Library.TEMPLATES.pad.section)
     assertEqual(t.r .. "," .. t.g .. "," .. t.b .. "|" .. t.size, "1,0.82,0|12", "the owner's default: gold, 12 points")
     t = R.TitleFont({ fontSize = 12, fontColor = { r = 1, g = 0, b = 0, a = 1 } })
     assertEqual(t.r .. "," .. t.g .. "," .. t.b .. "|" .. t.size, "1,0,0|12", "a chosen color reaches the titles")
@@ -289,6 +289,24 @@ test("render: [window] the section titles wear the Window tab's Section titles f
     assertEqual(t.r .. "," .. t.g .. "," .. t.b, "0.25,0.75,0.5", "and so does the class color")
     t = R.TitleFont({ fontColor = { r = 1, g = 1, b = 1, a = 1 } })
     assertEqual(t.r .. "," .. t.g .. "," .. t.b, "1,1,1", "white is a color like any other now")
+end)
+
+test("render: [section header] SectionLook: no band by default, then the band's skin and the text's inset", function()
+    local NS = T.enableAddon()
+    local R = NS.PadRender
+    local sl = R.SectionLook(NS.Library.TEMPLATES.pad.section)
+    -- red under: a section look that draws an edge or a body by default (the titles never had one)
+    assertNil(sl.skin.edgeFile, "no edge")
+    assertEqual(sl.skin.bg[4], 0, "a clear body")
+    assertEqual(sl.inset .. "|" .. sl.height .. "|" .. sl.font.size, "0|0|12", "the text on the band's edge, automatic height")
+    local framed = R.SectionLook({ borderSize = 2, borderColor = { r = 1, g = 0, b = 0, a = 1 }, height = 22,
+        background = { r = 0, g = 0, b = 1, a = 0.5 } })
+    assertTrue(framed.skin.edgeFile ~= nil, "a flat edge")
+    assertEqual(framed.inset, 2, "the text keeps clear of the edge")
+    assertEqual(framed.height, 22)
+    assertEqual(table.concat(framed.skin.bg, ","), "0,0,1,0.5")
+    assertTrue(R.SectionLook({ borderSize = 2, borderColor = { r = 1, g = 0, b = 0, a = 1 }, height = 22,
+        background = { r = 0, g = 0, b = 1, a = 0.5 } }, framed) == framed, "an unchanged look is reused")
 end)
 
 test("render: [icons] a glyph chip is drawn in its color; the chip repainted with another icon is white again", function()

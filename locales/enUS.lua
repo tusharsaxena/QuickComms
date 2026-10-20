@@ -605,10 +605,13 @@ L["Spacing"] = "Spacing"
 L["Pixels between chips."] = "Pixels between chips."
 L["Position"] = "Position"
 L["Where the pad sits. Drag it while unlocked, or type an offset."] = "Where the pad sits. Drag it while unlocked, or type an offset."
-L["Window"] = "Window"
-L["Header"] = "Header"
+L["Pad header"] = "Pad header"
+L["Section header"] = "Section header"
+L["Main window"] = "Main window"
 L["Header height"] = "Header height"
-L["Section titles"] = "Section titles"
+L["Section header height (0 = automatic)"] = "Section header height (0 = automatic)"
+L["How tall each section title's row is, in pixels. 0 grows it to hold its font."] =
+    "How tall each section title's row is, in pixels. 0 grows it to hold its font."
 L["Chip"] = "Chip"
 L["Size"] = "Size"
 L["Chip width"] = "Chip width"
@@ -845,8 +848,8 @@ L["Pad"] = "Pad"
 L["Which Comms Pad this page edits."] = "Which Comms Pad this page edits."
 L["New pad"] = "New pad"
 L["Make a new Comms Pad holding the built-in groups, and edit it here."] = "Make a new Comms Pad holding the built-in groups, and edit it here."
-L["Put the selected pad's groups-as, layout, window, chips and icons back to their defaults, and turn it on. Its name, groups and position are kept."] =
-    "Put the selected pad's groups-as, layout, window, chips and icons back to their defaults, and turn it on. Its name, groups and position are kept."
+L["Put the selected pad's groups-as, layout, headers, window, chips and icons back to their defaults, and turn it on. Its name, groups and position are kept."] =
+    "Put the selected pad's groups-as, layout, headers, window, chips and icons back to their defaults, and turn it on. Its name, groups and position are kept."
 
 -- Share page (settings/Share.lua)
 L["Share"] = "Share"

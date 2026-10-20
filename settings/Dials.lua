@@ -294,14 +294,15 @@ local function offsetBox(ctx, id, label, axis)
     end }
 end
 
--- The Icons tab: its rows in schema order, the headings the library's (as the Comms Pad page's).
+-- The Icons tab: its rows in schema order, the headings the library's (as the Comms Pad page's), and
+-- only the selected glow style's knobs (Settings.ShownIconRows).
 local function renderIcons(ctx, rows)
     local h = H()
     if not selected() then
         h.TextRow(ctx, NONE)
         return
     end
-    h.RenderRows(ctx, Ed.Scalar(rows), nil, nil, { noHeadings = true })
+    h.RenderRows(ctx, Ed.Scalar(Settings.ShownIconRows(rows)), nil, nil, { noHeadings = true })
 end
 
 local function renderWheel(ctx, rows)

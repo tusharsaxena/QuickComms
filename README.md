@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1004%2F1004_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1017%2F1017_passing-green)
 
 Quick Comms puts your usual group callouts one click or one keypress away. "Kick on me", "Lust
 now", "INC Lumber Mill": set them up once and they sit on a Comms Pad or open from a
@@ -47,8 +47,9 @@ Reuse
 callout copies a callout from any of your other groups into this one, and each row has an
 edit and a remove button. A group's Parent group setting puts it inside another group: it then
 shows wherever that group does, in a section (or a dial ring) of its own, while its conditions
-match: its parent's, while Inherit when conditions is ticked (the default), else its own. The Preview tab lists each callout beside what it would send where you are. The group's When tab says where it shows, one condition per drawer (click a condition to open it); Comms Pad arranges a pad: its Window tab styles the pad's header row
-(the one that names where you are), its section titles, border and background, and its Chip tab the
+match: its parent's, while Inherit when conditions is ticked (the default), else its own. The Preview tab lists each callout beside what it would send where you are. The group's When tab says where it shows, one condition per drawer (click a condition to open it); Comms Pad arranges a pad: its Pad header tab styles the header row
+(the one that names where you are), its Section header tab the section titles (their height, font and a
+band behind each), its Main window tab the pad's visibility, border and background, and its Chip tab the
 chips themselves (size, color, border, font and an optional glow), each color with a Use class color
 box. "Preview as…" (or `/qc preview`) shows the pads
 and the dial as they would look somewhere else, and hovering a pad's header or the dial's middle (or

@@ -479,7 +479,7 @@ local function withMedia(mm)
     lsm.MediaType = {}
 end
 
-test("pad: [phase 5] the pad wears its Window tab: the titles' font and the edge and body it was given", function()
+test("pad: [phase 5] the pad wears its Section header and Main window tabs: the titles' font, the edge and body", function()
     local NS = T.enableAddon{ mock = withMedia }
     NS.Situation.ReadInputs = function() return AB end
     NS.Situation.RefreshNow("test")
@@ -487,14 +487,14 @@ test("pad: [phase 5] the pad wears its Window tab: the titles' font and the edge
     local apply = NS.ApplySkin
     NS.ApplySkin = function(frame, skin) skins[frame] = skin return apply(frame, skin) end
     local S = NS.SchemaRuntime
-    assertTrue(S.Set("pad.look.font", "Arial", "p1"))
-    assertTrue(S.Set("pad.look.fontSize", 13, "p1"))
+    assertTrue(S.Set("pad.section.font", "Arial", "p1"))
+    assertTrue(S.Set("pad.section.fontSize", 13, "p1"))
     assertTrue(S.Set("pad.look.borderStyle", "Tooltip", "p1"))
     assertTrue(S.Set("pad.look.background", { r = 0.2, g = 0.1, b = 0, a = 1 }, "p1"))
     local title = NS.Pad.Instance("p1").titles.active[1]
     assertEqual(title.__font[1] .. "," .. title.__font[2], "Fonts\\ARIALN.TTF,13")
     local label = NS.Pad.Instance("p1").chips.active[1].qcLabel
-    -- red under: Pad.Apply drawing the chips' labels in the Window tab's font
+    -- red under: Pad.Apply drawing the chips' labels in the Section header tab's font
     assertTrue(label.__font[2] == 10, "a chip's label keeps the Chip tab's font")
     local skin = skins[NS.Pad.Instance("p1").root]
     assertEqual(skin.edgeFile, "Interface\\Tooltips\\UI-Tooltip-Border")
@@ -542,13 +542,50 @@ test("pad: [window] the header's text starts at the section titles' left edge, i
         -- red under: the situation anchored at LEFT 6 (a few pixels right of the titles)
         assertEqual(point .. "," .. relPoint .. "," .. x, "LEFT,LEFT," .. PL.PAD, growth)
         assertTrue(rel == inst.header, "on the header, which spans the pad")
+        -- A title's text sits on its band's left edge (no border by default), the band at PL.PAD.
         local titles = 0
         for _, fs in ipairs(inst.titles.active) do
-            local p, r, rp, tx = fs:GetPoint(1)
-            if p == "TOPLEFT" and r == inst.root and rp == "TOPLEFT" and tx == PL.PAD then titles = titles + 1 end
+            local p, r, rp, tx = fs.qcBand:GetPoint(1)
+            local fp, fr, _, fx = fs:GetPoint(1)
+            if p == "TOPLEFT" and r == inst.root and rp == "TOPLEFT" and tx == PL.PAD and fp == "LEFT"
+                and fr == fs.qcBand and fx == 0 then
+                titles = titles + 1
+            end
         end
         assertTrue(titles > 0, growth .. ": a section title on the same left edge")
     end
+end)
+
+test("pad: [icon only] the pad is as wide as its chips when the header is narrower, else as the header needs", function()
+    local NS = live()
+    local PL = NS.PadLayout
+    local inst = NS.Pad.Instance("p1")
+    local sit = inst.header.qcSituation
+    sit.GetStringWidth = function(self) return 6 * #(self:GetText() or "") end
+    assertTrue(NS.SchemaRuntime.Set("pad.layout.style", "icon", "p1"))
+    local cw = PL.ICON_ONLY
+    local contentW = 4 * cw + 3 * 4
+    -- red under: PL.Compute's fixed 120-pixel floor (116 of chips left 4 spare pixels at the right edge)
+    assertEqual(inst.root.__w, contentW + 2 * PL.PAD, "four 24-pixel columns and the pad's padding")
+    sit.GetStringWidth = function() return 200 end
+    NS.Pad.Apply("p1", planFor(NS))
+    assertEqual(inst.root.__w, NS.PadRender.HeaderMinWidth(inst.header), "a wide header widens the pad")
+    assertEqual(inst.root.__w, PL.PAD + 200 + 4 + 16 + 2, "its text, a gap and the collapse button at its inset")
+end)
+
+test("pad: [icon only] a PvP match's lockdown chip, shown out of combat, widens the header row by itself", function()
+    local NS = live()
+    local PL = NS.PadLayout
+    local inst = NS.Pad.Instance("p1")
+    inst.header.qcSituation.GetStringWidth = function() return 70 end
+    inst.header.qcLockdown.GetStringWidth = function() return 60 end
+    assertTrue(NS.SchemaRuntime.Set("pad.layout.style", "icon", "p1"))
+    local plan = planFor(NS)
+    plan.lockdownChip = true -- a say or yell slot locked by lockdown.pvpMatch (Channels' LOCKS.say)
+    assertTrue(NS.Pad.Apply("p1", plan))
+    assertTrue(inst.header.qcLockdown:IsShown(), "the chip is shown")
+    -- red under: the chip left out (it would run under the collapse button and past the edge)
+    assertEqual(inst.root.__w, PL.PAD + 70 + 6 + 60 + 4 + 16 + 2, "the text, the chip at its gap, then the button")
 end)
 
 test("pad: [chip] a chip wears the Chip tab: the owner's default body, edge, label and size, then what it is given", function()
@@ -768,6 +805,35 @@ end)
 local function hits(NS)
     return NS.Pad.Instance("p1").titleHits.active
 end
+
+test("pad: [section header] each title sits on a band its row wide, dressed by the Section header tab", function()
+    local NS = live(AB)
+    local S = NS.SchemaRuntime
+    local skins = {}
+    local apply = NS.ApplySkin
+    NS.ApplySkin = function(frame, skin) skins[frame] = skin return apply(frame, skin) end
+    assertTrue(S.Set("pad.section.borderSize", 2, "p1"))
+    assertTrue(S.Set("pad.section.background", { r = 0, g = 0, b = 1, a = 0.5 }, "p1"))
+    assertTrue(S.Set("pad.section.height", 26, "p1"))
+    local inst = NS.Pad.Instance("p1")
+    assertTrue(#inst.titles.active > 0)
+    for _, fs in ipairs(inst.titles.active) do
+        local band = fs.qcBand
+        -- red under: Pad.lua drawing the title on the root with no band
+        assertTrue(band ~= nil and band:IsShown(), "the band shows with its title")
+        assertEqual(band.__h, 26, "Section header height sets the row")
+        assertEqual(table.concat(skins[band].bg, ","), "0,0,1,0.5", "the band wears the tab's background")
+        local _, _, _, x = fs:GetPoint(1)
+        assertEqual(x, 2, "the text keeps clear of the 2-pixel edge")
+    end
+    local fs = inst.titles.active[1]
+    local _, _, _, bx = fs.qcBand:GetPoint(1)
+    assertEqual(fs.qcBand.__w, inst.root.__w - 2 * bx, "the band spans the row")
+    local hit = hits(NS)[1]
+    assertEqual(hit.__w .. "x" .. hit.__h, fs.qcBand.__w .. "x" .. fs.qcBand.__h, "as the title's hit frame does")
+    NS.Pad.Release("p1")
+    assertFalse(fs.qcBand:IsShown(), "a released title's band goes with it")
+end)
 
 local function spyEdit(NS)
     local opened = {}

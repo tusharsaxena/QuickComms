@@ -1,5 +1,5 @@
 -- tests/test_page_pads.lua — settings/Pads.lua (spec §10.2-§10.4, §13.1): the pad picker and New pad,
--- General's acts, the Groups priority list, Layout with the X/Y position, and Look. Driven headlessly
+-- General's acts, the Groups priority list, Layout with the X/Y position, and the styled tabs. Driven headlessly
 -- through tests/page_helpers.lua.
 
 local T = _G.QUICKCOMMS_TEST
@@ -89,9 +89,9 @@ test("pads page: X and Y move the pad through its pad.point row; Reset puts it b
     assertEqual(pointOf(inst), "TOP,CENTER,0,-150")
 end)
 
-test("pads page: Look's visibility reaches the pad's state driver", function()
+test("pads page: Main window's visibility reaches the pad's state driver", function()
     local NS, m, P = open()
-    local w = P.tab("pads", "Window")
+    local w = P.tab("pads", "Main window")
     P.find(w, "Dropdown", "Visibility"):__fire("OnValueChanged", "never")
     assertEqual(NS.db.profile.pads.p1.look.visibility, "never")
     assertEqual(m.stateDrivers[NS.Pad.Instance("p1").root].visibility, "hide")
@@ -201,28 +201,63 @@ test("pads page: [final 26] New pad takes the lowest free number, so a delete ne
     assertEqual(NS.db.profile.pads[Pads.Create()].name, "Comms Pad 4")
 end)
 
-test("pads page: [phase 5] Window carries the composed Header, Font, Border and Background groups under their headings", function()
+test("pads page: [window tabs] the strip reads Layout, Pad header, Section header, Main window, Chip, Icons", function()
+    local NS = open()
+    local order, seen = {}, {}
+    for _, row in ipairs(NS.addon.Settings.RowsForPage("pads")) do
+        if row.group and not seen[row.group] then
+            seen[row.group] = true
+            order[#order + 1] = row.group
+        end
+    end
+    -- red under: the Visibility rows left ahead of the header tabs (the library orders tabs by each
+    -- group's first row), or the one Window tab (2026-10-20, owner request)
+    assertEqual(table.concat(order, ","), "General,Groups,Layout,Pad header,Section header,Main window,Chip,Icons")
+end)
+
+test("pads page: [window tabs] Pad header carries Size, Font, Background and Border under their headings", function()
     local NS, _, P = open()
-    local w = P.tab("pads", "Window")
-    for _, heading in ipairs({ "Header", "Section titles", "Border", "Background" }) do
+    local w = P.tab("pads", "Pad header")
+    for _, heading in ipairs({ "Size", "Font", "Background", "Border" }) do
         -- red under: the host's own h.Section above each subgroup (the library draws it from the rows)
         assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
     end
-    -- the header's font, background and border, then the pad's font, border and background
-    assertEqual(#P.all(w, "CheckBox", "Use class color"), 6, "a companion beside each swatch (options-ui-§17)")
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 3, "a companion beside each swatch (options-ui-§17)")
     assertTrue(P.find(w, "ColorPicker", "Font color") ~= nil)
     assertTrue(P.find(w, "ColorPicker", "Border color") ~= nil)
     assertTrue(P.find(w, "ColorPicker", "Background") ~= nil)
-    -- The Header block comes first, so its Font shadow is the first one drawn.
-    local shadows = P.all(w, "CheckBox", "Font shadow")
-    assertEqual(#shadows, 2)
-    shadows[1]:__fire("OnValueChanged", false)
+    P.find(w, "CheckBox", "Font shadow"):__fire("OnValueChanged", false)
     assertFalse(NS.db.profile.pads.p1.header.fontShadow)
-    shadows[2]:__fire("OnValueChanged", false)
-    assertFalse(NS.db.profile.pads.p1.look.fontShadow)
     P.find(w, "Slider", "Header height"):__fire("OnMouseUp", 30)
     assertEqual(NS.db.profile.pads.p1.header.height, 30)
     assertEqual(NS.Pad.Instance("p1").header.__h, 30, "the pad's header row follows")
+end)
+
+test("pads page: [window tabs] Section header carries Size, Font, Background and Border, and writes the section table", function()
+    local NS, _, P = open()
+    local w = P.tab("pads", "Section header")
+    for _, heading in ipairs({ "Size", "Font", "Background", "Border" }) do
+        assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
+    end
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 3, "font, background and border")
+    P.find(w, "CheckBox", "Font shadow"):__fire("OnValueChanged", false)
+    assertFalse(NS.db.profile.pads.p1.section.fontShadow)
+    -- red under: no pad.section.height row
+    P.find(w, "Slider", "Section header height (0 = automatic)"):__fire("OnMouseUp", 22)
+    assertEqual(NS.db.profile.pads.p1.section.height, 22)
+end)
+
+test("pads page: [window tabs] Main window carries Visibility, Background and Border, and no font", function()
+    local NS, _, P = open()
+    local w = P.tab("pads", "Main window")
+    for _, heading in ipairs({ "Visibility", "Background", "Border" }) do
+        assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
+    end
+    assertNil(P.find(w, "ColorPicker", "Font color"), "no font on the Main window (owner's call)")
+    assertNil(P.find(w, "CheckBox", "Font shadow"))
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 2, "background and border")
+    P.find(w, "Slider", "Faded alpha"):__fire("OnMouseUp", 0.5)
+    assertEqual(NS.db.profile.pads.p1.look.fadeAlpha, 0.5)
 end)
 
 -- ── the Chip tab (2026-10-20) ───────────────────────────────────────────────────────────────
@@ -248,8 +283,27 @@ end)
 
 -- ── the Icons tab (B9) ──────────────────────────────────────────────────────────────────────
 
-local ICON_HEADINGS = { "Size and crop", "Color", "Border", "Glow", "Pixel border", "Auto cast sparkles",
-    "Button (rotating rays)", "Proc (flipbook)", "Offset" }
+local ICON_HEADINGS = { "Size and crop", "Color", "Border", "Glow", "Offset" }
+local STYLE_HEADINGS = { pixel = "Pixel border", autocast = "Auto cast sparkles", button = "Button (rotating rays)",
+    proc = "Proc (flipbook)" }
+
+-- The style headings `w` draws, as a sorted comma list.
+local function styleHeadings(P, w)
+    local out = {}
+    for _, heading in pairs(STYLE_HEADINGS) do
+        if #P.all(w, "Heading", heading) > 0 then out[#out + 1] = heading end
+    end
+    table.sort(out)
+    return table.concat(out, ",")
+end
+
+-- The index of the first widget of `wtype` labeled `label` in draw order, or nil.
+local function indexOf(w, wtype, label)
+    for i, x in ipairs(w) do
+        if x.type == wtype and (x.labelText == label or x.text == label) then return i end
+    end
+    return nil
+end
 
 test("pads page: [B9] Icons carries its headings once each, a companion beside each swatch, and writes the pad", function()
     local NS, _, P = open()
@@ -258,6 +312,8 @@ test("pads page: [B9] Icons carries its headings once each, a companion beside e
         -- red under: the host's own h.Section above each subgroup (the library draws it from the rows)
         assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
     end
+    -- red under: the Icons tab drawn through renderStyled (every knob row)
+    assertEqual(styleHeadings(P, w), "", "the glow is off by default: no style's knobs")
     assertEqual(#P.all(w, "CheckBox", "Use class color"), 3, "tint, border and glow (options-ui-§17)")
     assertTrue(P.find(w, "ColorPicker", "Tint") ~= nil)
     assertTrue(P.find(w, "ColorPicker", "Glow color") ~= nil)
@@ -268,18 +324,93 @@ test("pads page: [B9] Icons carries its headings once each, a companion beside e
     assertTrue(NS.db.profile.pads.p1.icon.glowEnabled)
 end)
 
-test("pads page: [B9] the glow's knobs are grayed out while it is off or in another style; its color never is", function()
+test("pads page: [B9] the offsets are grayed out while the glow is off or in Button; its color never is", function()
     local NS, _, P = open()
     local w = P.tab("pads", "Icons")
-    assertTrue(P.find(w, "Slider", "Lines").disabled, "the glow is off by default")
+    assertTrue(P.find(w, "Slider", "Glow X offset").disabled, "the glow is off by default, and Offset still shows")
+    assertTrue(P.find(w, "Slider", "Glow Y offset").disabled)
     assertFalse(P.find(w, "ColorPicker", "Glow color").disabled)
     assertTrue(P.find(w, "Slider", "Border thickness (px)").disabled, "the border is off by default")
     NS.SchemaRuntime.Set("pad.icon.glowEnabled", true, "p1")
     NS.SchemaRuntime.Set("pad.icon.borderShow", true, "p1")
     w = P.tab("pads", "Icons")
     assertFalse(P.find(w, "Slider", "Lines").disabled, "pixel, the default style")
-    assertTrue(P.find(w, "Slider", "Ray speed").disabled, "a button knob under the pixel style")
+    assertFalse(P.find(w, "Slider", "Glow X offset").disabled)
     assertFalse(P.find(w, "Slider", "Border thickness (px)").disabled)
+    NS.SchemaRuntime.Set("pad.icon.glowType", "button", "p1")
+    w = P.tab("pads", "Icons")
+    assertFalse(P.find(w, "Slider", "Ray speed").disabled)
+    assertTrue(P.find(w, "Slider", "Glow X offset").disabled, "Button ignores the offsets")
+    assertTrue(P.find(w, "Slider", "Glow Y offset").disabled)
+end)
+
+test("pads page: [glow knobs] only the selected style's knobs show, and none while the glow is off", function()
+    local NS, _, P = open()
+    NS.SchemaRuntime.Set("pad.icon.glowEnabled", true, "p1")
+    for style, heading in pairs(STYLE_HEADINGS) do
+        NS.SchemaRuntime.Set("pad.icon.glowType", style, "p1")
+        local w = P.tab("pads", "Icons")
+        -- red under: Settings.ShownIconRows answering every row
+        assertEqual(styleHeadings(P, w), heading, style)
+    end
+    NS.SchemaRuntime.Set("pad.icon.glowType", "pixel", "p1")
+    local w = P.tab("pads", "Icons")
+    assertTrue(P.find(w, "Slider", "Lines") ~= nil)
+    assertNil(P.find(w, "Slider", "Ray speed"), "a button knob under the pixel style is not drawn")
+    assertNil(P.find(w, "CheckBox", "Start animation"))
+    NS.SchemaRuntime.Set("pad.icon.glowEnabled", false, "p1")
+    w = P.tab("pads", "Icons")
+    assertEqual(styleHeadings(P, w), "", "the glow off: no style's knobs")
+    assertNil(P.find(w, "Slider", "Lines"))
+    assertTrue(P.find(w, "Slider", "Glow X offset") ~= nil, "Offset always shows")
+    -- The rows stay in the schema: /qc set and Defaults still reach a hidden knob.
+    assertTrue(NS.SchemaRuntime.Set("pad.icon.procDuration", 2, "p1"))
+    assertEqual(NS.db.profile.pads.p1.icon.procDuration, 2)
+end)
+
+test("pads page: [glow knobs] Offset comes right after Glow color, in the schema and on the tab", function()
+    local NS, _, P = open()
+    local paths = {}
+    for _, row in ipairs(NS.addon.Settings.RowsForPage("pads")) do
+        if row.group == "Icons" then paths[#paths + 1] = row.path end
+    end
+    local at
+    for i, p in ipairs(paths) do
+        if p == "pad.icon.useClassColorGlow" then at = i end
+    end
+    assertTrue(at ~= nil)
+    -- red under: the knob loop in the knob table's order (the offsets last)
+    assertEqual(paths[at + 1], "pad.icon.xOffset")
+    assertEqual(paths[at + 2], "pad.icon.yOffset")
+    assertEqual(paths[at + 3], "pad.icon.pixelLines", "then the styles' knobs")
+    NS.SchemaRuntime.Set("pad.icon.glowEnabled", true, "p1")
+    local w = P.tab("pads", "Icons")
+    local color, offset, pixel = indexOf(w, "ColorPicker", "Glow color"), indexOf(w, "Heading", "Offset"),
+        indexOf(w, "Heading", "Pixel border")
+    assertTrue(color < offset and offset < pixel, "Glow color, then Offset, then the style's knobs")
+end)
+
+test("pads page: [glow knobs] a Glow or Glow style write repaints the tab, so the right knobs appear", function()
+    local NS, _, P = open()
+    local Ed = NS.addon.Settings.Editors
+    for _, path in ipairs({ "pad.icon.glowEnabled", "pad.icon.glowType", "dial.icon.glowEnabled",
+        "dial.icon.glowType" }) do
+        assertTrue(Ed.STRUCTURAL[path], path .. " is structural")
+    end
+    local w = P.tab("pads", "Icons")
+    P.find(w, "CheckBox", "Glow"):__fire("OnValueChanged", true)
+    assertTrue(Ed.Pending(), "a structural repaint is asked for")
+    -- red under: drop pad.icon.glowEnabled from Ed.STRUCTURAL (the write refreshes in place only)
+    w = P.during(P.flush)
+    assertEqual(styleHeadings(P, w), "Pixel border", "the repaint draws the default style's knobs")
+    P.find(w, "Dropdown", "Glow style"):__fire("OnValueChanged", "proc")
+    -- red under: drop pad.icon.glowType from Ed.STRUCTURAL
+    w = P.during(P.flush)
+    assertEqual(styleHeadings(P, w), "Proc (flipbook)")
+    P.find(w, "CheckBox", "Glow"):__fire("OnValueChanged", false)
+    w = P.during(P.flush)
+    assertEqual(styleHeadings(P, w), "")
+    assertTrue(P.find(w, "Slider", "Glow X offset") ~= nil)
 end)
 
 test("pads page: [B9] Defaults puts the Icons rows back too, and its tooltip names them", function()

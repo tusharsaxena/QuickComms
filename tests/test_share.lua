@@ -372,7 +372,7 @@ test("share: [review] a name's live | escape is stored and reported as text (||)
             c2 = { name = "|cffff0000Bad|r", text = "/run x", channel = "party" },
             c3 = { name = "Typed||pipe", text = "hi", channel = "party" } },
         groups = { g1 = { name = "|cffff0000Kick|r", callouts = { "c1", "c3" } } },
-        pads = { p1 = { name = "|Hitem:1|h[x]|h", fields = { ["pad.look.font"] = "|TFont:99|t" } } },
+        pads = { p1 = { name = "|Hitem:1|h[x]|h", fields = { ["pad.section.font"] = "|TFont:99|t" } } },
     }))
     assertTrue(res.ok)
     -- red under: cleanName in modules/Share.lua storing Bake.CleanText's answer as it is
@@ -381,7 +381,7 @@ test("share: [review] a name's live | escape is stored and reported as text (||)
     assertEqual(res.callouts[2].fields.name, "Typed||pipe", "an escaped pipe is kept as it is, never doubled again")
     assertEqual(res.groups[1].fields.name, "||cffff0000Kick||r")
     assertEqual(res.pads[1].name, "||Hitem:1||h[x]||h")
-    assertEqual(res.pads[1].fields["pad.look.font"], "||TFont:99||t", "a field's string is display text too")
+    assertEqual(res.pads[1].fields["pad.section.font"], "||TFont:99||t", "a field's string is display text too")
     -- the refused callout's name in the report
     assertEqual(SH.ReportLines(res)[2], "Left out the callout '||cffff0000Bad||r': its text starts with /.")
 end)
@@ -409,7 +409,7 @@ test("share: [review] a nested key in a When or a field passes the sanitizer and
             g2 = { name = "Long key", when = { characters = { [string.rep("a", 50) .. "-" .. string.rep("b", 50)] = true } } },
             g3 = { name = "Fine", when = { characters = { ["Kaos-Silvermoon"] = true } } } },
         pads = { p1 = { name = "Keys", fields = {
-            ["pad.look.fontColor"] = { r = 1, g = 1, b = 1, ["x\1y"] = 1 },
+            ["pad.section.fontColor"] = { r = 1, g = 1, b = 1, ["x\1y"] = 1 },
             ["pad.look.borderColor"] = { r = 1, g = 1, b = 1, [string.rep("z", 300)] = 1 },
             ["pad.look.background"] = { r = 1, g = 1, b = 1, [math.huge] = 1 } } } },
     })))
@@ -418,7 +418,7 @@ test("share: [review] a nested key in a When or a field passes the sanitizer and
     assertEqual(refusals(res), "group:g1:badWhen,group:g2:badWhen")
     assertTrue(res.groups[1].fields.when.characters["Kaos-Silvermoon"])
     local f = res.pads[1].fields
-    assertNil(f["pad.look.fontColor"], "a control character in a key")
+    assertNil(f["pad.section.fontColor"], "a control character in a key")
     assertNil(f["pad.look.borderColor"], "a key past TEXT_MAX")
     assertNil(f["pad.look.background"], "a key that is not finite")
     assertEqual(res.ignored, 3)

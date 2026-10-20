@@ -9,12 +9,21 @@ local _, NS = ...
 --     Color           Desaturate, Icon opacity, then Tint and its Use class color companion
 --     Border          the composed block (O.BorderGroup with its Show border toggle, options-ui-§16)
 --     Glow            Glow, Glow when, Glow style, then Glow color and its Use class color companion
---     one heading per style's knobs (DropWatcher's knob table), then Offset
+--     Offset          Glow X offset, Glow Y offset (always drawn, right after Glow; owner request
+--                     2026-10-20, it closed the tab until then)
+--     the selected style's knobs, under that style's heading (DropWatcher's knob table): Pixel border,
+--                     Auto cast sparkles, Button (rotating rays) or Proc (flipbook)
 --
 -- Every color pair is O.ColorPair (options-ui-§17; THE PLAYER'S CLASS: a chip is about no unit) and
 -- is never dimmed (anti-pattern #74: the swatch's alpha is read under either mode). Border style and
--- thickness are dimmed while Show border is off; Glow when, Glow style and every knob while the glow
--- is off, and a knob also while the glow is in a style it does not apply to.
+-- thickness are dimmed while Show border is off; Glow when, Glow style and the offsets while the glow
+-- is off, and an offset also while the glow is in a style it does not apply to (Button).
+--
+-- A style's knobs show only while the glow is on and in that style (owner request, 2026-10-20): the
+-- rows stay in the schema (Defaults, a share import, /qc set and list still reach every knob), and
+-- the tab's render filters them through Settings.ShownIconRows. Glow and Glow style are structural
+-- (settings/Editors.lua Ed.STRUCTURAL), so a write to either repaints the tab, its scroll kept, and
+-- the right heading appears. The options library has no hidden-row field to say this in the row.
 --
 -- settings/SchemaMembers.lua calls Settings.IconRows with its checks and splices the rows into its
 -- own list (a pad's after its Look rows; a dial's after its Wheel rows, so the Icons tab follows
@@ -73,6 +82,10 @@ local WHERE = {
 }
 
 local function get(path) return NS.SchemaRuntime.Get(path) end
+
+-- A style's knob row's path -> the styles it applies to (the offsets are no style's: always drawn).
+local KNOB_STYLES = {}
+local OFFSETS = { xOffset = true, yOffset = true }
 
 --- One kind's Icons rows, in tab order.
 --- @param kind string "pad" | "dial"
@@ -141,7 +154,7 @@ function NS.addon.Settings.IconRows(kind, C)
         desc = L["How the glow looks."], validate = C.oneOf(STYLE_VALUES), disabledIf = glowOff })
     stamp(O.ColorPair(spec(GLOW, { key = "glowColor", companionKey = "useClassColorGlow", label = L["Glow color"] })), GLOW)
 
-    for _, knob in ipairs(D.GLOW_KNOBS) do
+    local function knobRow(knob)
         local text = KNOB_TEXT[knob.key]
         local styles = knob.styles
         local row = { path = P .. knob.key, default = knob.default, label = text[2], desc = text[3],
@@ -153,7 +166,33 @@ function NS.addon.Settings.IconRows(kind, C)
             row.validate, row.normalize = C.NUMBER, C.clamp(knob.min, knob.max, knob.step >= 1)
             if knob.key == "pixelLength" then row.zeroText = L["Automatic"] end
         end
+        if not OFFSETS[knob.key] then KNOB_STYLES[row.path] = styles end
         at(text[1], row)
     end
+    -- The offsets first, right after Glow; then each style's knobs in the knob table's order.
+    for _, knob in ipairs(D.GLOW_KNOBS) do
+        if OFFSETS[knob.key] then knobRow(knob) end
+    end
+    for _, knob in ipairs(D.GLOW_KNOBS) do
+        if not OFFSETS[knob.key] then knobRow(knob) end
+    end
     return rows
+end
+
+--- The Icons tab's rows to draw: every row but a style's knobs while the glow is off or in another
+--- style. Its kind's Glow and Glow style are read for the member the page has selected.
+--- @param rows table the tab's rows
+--- @return table rows
+function NS.addon.Settings.ShownIconRows(rows)
+    local out = {}
+    for _, row in ipairs(rows or {}) do
+        local styles = KNOB_STYLES[row.path]
+        local show = styles == nil
+        if not show then
+            local P = row.instance .. ".icon."
+            show = get(P .. "glowEnabled") == true and styles[get(P .. "glowType")] == true
+        end
+        if show then out[#out + 1] = row end
+    end
+    return out
 end
