@@ -23,7 +23,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | SEND-1..5 | Send | Secure sends in keys and on bosses, the spam guard |
 | PAD-1..14 | Pad | The Comms Pad, its growth and button width, the World (solo) and In Group sets and the built-ins' colors, the header click and icon only's width |
 | EDIT-1..29 | Editors | The Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
-| DIAL-1..21 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, the lone-group open and the group ring, page arrows and the page row, Auto wedges, the ring radius, the Labels tab, the slices and their hover, the Slices tab, the pointer, the tooltip outside the dial |
+| DIAL-1..24 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, the lone-group open and the group ring, page arrows and the page row, Auto wedges, the ring radius, the Labels tab, the slices and the slice lit by direction, the Slices tab, the pointer, the tooltip outside the dial, the hub over the slices, the pointer, label and icon offsets, the Paging tab |
 | KEY-1..3 | Key bindings | A dial's key as WoW's own binding in Options → Keybindings, Character Specific Keybindings, Toggle Comms Pads |
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
 | LOOK-1..6 | Pad header, Section header, Window | The Comms Pad's three window tabs: the section titles' font, the pad's border and background, the header's look, size and alignment, the tab strip and headings, the section header's band and height |
@@ -706,13 +706,13 @@ Defaults → white 12-point labels again. Result:
 update, the dial keeps its Wedges per ring (4 stays 4; only a new dial starts on Auto); `/reload` →
 no Lua error, and Groups pages carry no Open the dial or Skip on the dial boxes. Result:
 
-**DIAL-18. A hovered slice lights whole (dial slices, 2026-10-21).** Open the dial on a four-wedge
-ring. Move the mouse onto a wedge's icon → its whole slice, from the hub to the rim, takes a faint
-gold fill; off it → the fill goes. Move the mouse across the slice away from the icon (toward the rim
-and toward its edges) → the slice stays lit and a click there sends that wedge, as a click on the
-icon does. Only the corners nearest the hub and the far corners of the slice do nothing. Try a
-12-wedge ring of callouts (Wedges per ring 12) → each slice still lights from most of its area; the
-squares never overlap, so one slice lights at a time. In combat → the same, no error. Result:
+**DIAL-18. The slice under the cursor lights whole (dial slices, 2026-10-21; by direction since the
+hub fix).** Open the dial on a four-wedge ring. Move the mouse just outside the hub toward E, between
+the hub and the E icon, not on it → the whole E slice, hub to rim, takes a faint gold fill. Sweep
+round the hub → the lit slice follows the mouse's direction; over the hub (the ✕) or past the rim →
+nothing lights; on a three-callout Auto ring the empty S quarter never lights. Close the dial → the
+fill goes. A click lands on the wedge's square (most of the slice, not the corners nearest the hub).
+In combat → the same, no error. Result:
 
 **DIAL-19. The Slices tab (dial slices, 2026-10-21).** Comms Dial → Slices: four headings
 (Background, Border, Highlight, Pointer), each color with Use class color. Background a blue → every
@@ -732,6 +732,26 @@ hover the hub → Why is this showing? shows there too. Labels → Tooltip side 
 arrows (or under the bottom label on a one-page ring); Left → left of the disc, clear of the longest
 label on that side; Right → mirrored. Tooltip offset 40 → each 40 pixels further out. Ring radius
 160 → the tooltip still clears the bigger dial. Result:
+
+**DIAL-22. The hub draws over the slices (2026-10-21).** Open the dial with the default Slices look,
+then Background alpha 100% → the hub's circle and red ✕ stay bright on top; the pointer is drawn over
+the slices; the stale hint, LOCKDOWN and PREVIEW labels near the hub stay readable. Click the hub →
+it still goes up a ring or closes. Result:
+
+**DIAL-23. Pointer, label and icon offsets (2026-10-21).** Slices → Pointer offset 70 → the pointer
+circles 70 pixels from the middle; 0 → back just outside the hub. Labels → Label offset 250 → every
+label sits further out, the ring title above them and the page row below them; 0 → just past the
+disc; untick Show labels → the offset grays out. Wheel → Icon offset 60 → the icons sit closer to the
+hub, the disc keeps its size and each wedge still lights and clicks; 0 → back on the ring radius.
+Result:
+
+**DIAL-24. The Paging tab (2026-10-21).** On a paged ring (World solo), Comms Dial → Paging: three
+headings (Position, Arrows, Page indicator). Offset 30 → the row drops further under the labels.
+Arrow size 40 → bigger round plates and chevrons; Arrow spacing 30 → they stand further from the
+dots; Arrow color white, Arrow background red → as set (the dimmed end arrow stays gray). Dot size
+10, Current page width 10 → the pill becomes a plain dot; Dot spacing 15; Current page color green,
+Other pages color white → as set; Use class color → your class color. Defaults → the gold 24-pixel
+arrows and the 18-by-6 gold pill. Result:
 
 ## Share
 
@@ -1030,7 +1050,7 @@ from the client, so this check needs a non-English client pass. Result:
 | INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..4, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet; STATE-3 rewritten and STATE-4 added with the pads' hidden state kept per character (2026-10-21); LOC-1 re-enumerated in phase 5 and owed a non-English client pass; STATE-3 added and PANEL-2 rewritten with `/qc toggle` and Preview as in Master controls (2026-10-19) |
 | SEND-1..5, PAD-1..14 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet; PAD-14 added with icon only's width (2026-10-20); PAD-13 added with a click anywhere on the header (2026-10-20); PAD-12 added with In Group, PAD-3 and PAD-4 rewritten with the strip as wide as the pad (2026-10-20, bg buttons); PAD-1 rewritten and PAD-11 added with World (solo) and the built-ins' colors, PAD-3 and PAD-4 rewritten with the strip's marker (2026-10-19, groups polish); PAD-8 added in phase 5 (audit QC-07); PAD-1 rewritten and PAD-9..10 added with the up growth, button width and the built-in glyphs (2026-10-19) |
 | EDIT-1..29 | Phase 3: the editors | No client pass recorded yet; EDIT-29 added with the preview click's echo (2026-10-20); EDIT-28 added with right-click a group title (2026-10-19); EDIT-27 added with Preview while editing (2026-10-19); EDIT-3, 4, 20 and 22 rewritten and EDIT-25..26 added with Preview as in Master controls, the Dungeon set, the Arena drawer, instance search, the Callouts rows and the glyph sets (2026-10-19); EDIT-1, 2 and 19 rewritten and EDIT-22..24 added with the When drawers, Inherit when conditions and the icon browser's search (2026-10-18); EDIT-2, 4, 5, 6, 11, 14 and ICON-1 rewritten and EDIT-19..21 added when the built-in sets became seeded groups, groups nested and the Preview tab became a table (2026-10-18); EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17); EDIT-9, 13 and ICON-1 rewritten and EDIT-14..17 added with the icon browser and glyph colors (2026-10-18); EDIT-9 rewritten and EDIT-18 added when the token dropdown became the Text label's info glyph (2026-10-18); EDIT-13, 14 and ICON-1 rewritten when the Suggested tab went and the skin stopped waiting for the addon to be enabled (2026-10-18); EDIT-9, 18 and ICON-1 rewritten when the Icon boxes went and the popup took its two-column layout (2026-10-18); EDIT-9, 11 and ICON-1 rewritten with the clear glyph, the Preview gap and the buttons' 2 px inset (2026-10-18) |
-| DIAL-1..21 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-1 and 5 rewritten and DIAL-18..21 added with the dial slices (2026-10-21: whole-slice hover and the grown hit squares, the Slices tab, the pointer, the tooltip outside the dial, the pill-and-dot page row); DIAL-1, 2, 4, 5, 6, 9, 11 and 13 rewritten and DIAL-14..17 added with the dial rework (2026-10-21: the lone-group open and the ring of groups, page arrows and dots, Auto wedges, the ring radius, the Labels tab, no Binding tab); DIAL-2 rewritten and DIAL-13 added with Skip on the dial in content (2026-10-20); DIAL-2 and DIAL-4 rewritten with In Group and the four node buttons (2026-10-20, bg buttons); DIAL-4 rewritten with the node set's map-wide wedge (2026-10-19, groups polish); DIAL-9 rewritten when Preview as moved to Master controls (2026-10-19); DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
+| DIAL-1..24 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-18 rewritten and DIAL-22..24 added (2026-10-21: the slice lit by direction outside the hub, the hub over the slices, the pointer, label and icon offsets, the Paging tab); DIAL-1 and 5 rewritten and DIAL-18..21 added with the dial slices (2026-10-21: whole-slice hover and the grown hit squares, the Slices tab, the pointer, the tooltip outside the dial, the pill-and-dot page row); DIAL-1, 2, 4, 5, 6, 9, 11 and 13 rewritten and DIAL-14..17 added with the dial rework (2026-10-21: the lone-group open and the ring of groups, page arrows and dots, Auto wedges, the ring radius, the Labels tab, no Binding tab); DIAL-2 rewritten and DIAL-13 added with Skip on the dial in content (2026-10-20); DIAL-2 and DIAL-4 rewritten with In Group and the four node buttons (2026-10-20, bg buttons); DIAL-4 rewritten with the node set's map-wide wedge (2026-10-19, groups polish); DIAL-9 rewritten when Preview as moved to Master controls (2026-10-19); DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
 | SHARE-1..6, LOOK-1..2, ICON-1, BG-1..8, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; SHARE-5, BG-1, BG-3 and BG-5 rewritten with the dial rework (2026-10-21); BG-1 and BG-4 rewritten and BG-7..8 added with the four node buttons and Silvershard Mines' and Temple of Kotmogu's groups (2026-10-20, bg buttons); BG-1 rewritten with Wintergrasp's winds and BG-3..6 added with the battleground objective groups (2026-10-20); BG-1 rewritten with the map-wide wedge (2026-10-19, groups polish); LOOK-2's in-combat step goes through `/qc set`; IDS-1 extended to the journal instances and arenas (2026-10-19) |
 | ICONS-1..3 | Icons and polish (2026-10-19): the Icons tab | No client pass recorded yet; ICONS-1 rewritten with the owner's pad defaults (2026-10-20) |
 | LOOK-3..6, BUTTON-1..2, KEY-1..3 | Window, Button and keys (2026-10-20): the header's look and alignment, the three window tabs and the section band, the Buttons tab, keys as WoW bindings and Toggle Comms Pads | No client pass recorded yet; KEY-1..3 rewritten with the key set only in Options → Keybindings and the pads' hidden state kept per character (2026-10-21); LOOK-2, LOOK-5, EDIT-5, EDIT-25 and BUTTON-1..2 reworded with Visibility on General, Main window renamed Window and the Chip tab renamed Buttons (chips became buttons in the UI wording, then internally as `pad.button.*`; 2026-10-20); LOOK-5..6 added and LOOK-1..3 rewritten with the Window tab split into Pad header, Section header and Main window (2026-10-20); LOOK-1, LOOK-3 and BUTTON-1 rewritten with the owner's pad defaults (2026-10-20); LOOK-1 rewritten with the Section titles font, PAD-10 with Button width on the Buttons tab, DIAL-6 and DIAL-8 with the dial key as WoW's own binding |

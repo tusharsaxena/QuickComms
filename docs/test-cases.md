@@ -734,7 +734,7 @@ Total.
 - pads page: [glow knobs] a Glow or Glow style write repaints the tab, so the right knobs appear
 - pads page: [B9] Defaults puts the Icons rows back too, and its tooltip names them
 
-### test_page_dials.lua (18)
+### test_page_dials.lua (20)
 
 - dials page: New dial makes a second dial holding every built-in, selects it, and builds QuickCommsDial2
 - dials page: New dial takes the lowest free number, so a delete never leads to two names alike
@@ -754,6 +754,8 @@ Total.
 - dials page: [labels] Labels shows or hides the wedges' names and styles them; off grays the font
 - dials page: [slices] Slices writes the fill, border, highlight and pointer, each color with its class color
 - dials page: [slices] every slice texture the dial names ships under media/textures
+- dials page: [paging] Paging sizes, spaces and colors the arrows and page indicators; the dial follows
+- dials page: [wheel] Icon offset moves the icons in or out; 0 is the ring radius
 
 ### test_page_share.lua (12)
 
@@ -1038,7 +1040,7 @@ Total.
 - pad: [R4] merged pads, collapsed pads and test mode's placeholder groups have no title to click
 - pad: [bg subgroups] Alterac Valley draws its nineteen objectives two to a row, each title its block wide
 
-### test_dial.lua (35)
+### test_dial.lua (37)
 
 - dial: Apply builds QuickCommsDial<n> with a ring per page, each callout wedge armed with its baked line
 - dial: a refused callout is a dimmed, disarmed wedge; a ring wedge is disarmed
@@ -1072,9 +1074,11 @@ Total.
 - dial: [icons] a wedge draws its glyph in its color; repainted untinted, it is white again
 - dial: [rework] a paged ring turns with its arrows and the Left and Right keys; its dots mark the page
 - dial: [rework] wedges have no backdrop; the slices, the wedges and their hit squares follow the ring radius
-- dial: [slices] each place is a tinted slice; a hovered wedge lights its own slice; the border is lines
+- dial: [slices] each place is a tinted slice; the slice the cursor points into lights, anywhere but the hub
+- dial: [front] the hub, its close mark and the pointer draw over the slices
 - dial: [tooltip] a wedge's tooltip sits outside the dial: above by default, on the Labels tab's side
-- dial: [pointer] the pointer is a catalog glyph, sized and colored by the Slices tab, and can be off
+- dial: [pointer] the pointer is a catalog glyph, sized, colored and placed by the Slices tab, and can be off
+- dial: [labels] the Label offset moves every label out from the center; the title and the page row follow
 
 ### test_icon_style.lua (8)
 
@@ -1203,7 +1207,7 @@ Total.
 | test_groups_when.lua | 20 |
 | test_page_groups.lua | 67 |
 | test_page_pads.lua | 24 |
-| test_page_dials.lua | 18 |
+| test_page_dials.lua | 20 |
 | test_page_share.lua | 12 |
 | test_check.lua | 6 |
 | test_send_guard.lua | 10 |
@@ -1217,7 +1221,7 @@ Total.
 | test_surfaces.lua | 27 |
 | test_pad_render.lua | 21 |
 | test_pad.lua | 43 |
-| test_dial.lua | 35 |
+| test_dial.lua | 37 |
 | test_icon_style.lua | 8 |
 | test_glow.lua | 11 |
 | test_vendor_sync.lua | 3 |
@@ -1227,4 +1231,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1001** |
+| **Total** | **1005** |
