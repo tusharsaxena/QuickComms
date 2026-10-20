@@ -206,7 +206,7 @@ local function place(inst, box, style, clook, titleFont, icfg)
             btn:SetPoint("TOPLEFT", inst.root, "TOPLEFT", item.x, -item.y)
             btn:SetSize(item.w, item.h)
             R.Paint(btn, item.slot, style, item.w, icfg)
-            R.ApplyChipLook(btn, clook)
+            R.ApplyChipLook(btn, clook, item.w, item.h)
             arm(btn, item.slot)
             local list = inst.byCallout[item.slot.calloutId] or {}
             list[#list + 1] = btn

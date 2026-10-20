@@ -597,6 +597,12 @@ test("pad: [chip] the chip glow is off by default, then wraps the whole chip in 
     btn = pull(NS)
     assertEqual(btn.qcChipGlowStyle, "autocast")
     assertTrue(btn.qcChipGlowSig ~= sig, "a new style is a new signature")
+    sig = btn.qcChipGlowSig
+    assertTrue(S.Set("pad.layout.style", "icon", "p1"))
+    btn = pull(NS)
+    -- red under: the signature built from Chip width x Chip height, not the chip's drawn size
+    assertTrue(btn.__w .. "x" .. btn.__h ~= "100x24", "icon only draws the chip another size")
+    assertTrue(btn.qcChipGlowSig ~= sig, "a resized chip restarts its glow")
     NS.Glow.Release(btn)
     assertNil(btn.qcChipGlowStyle, "released with the chip")
     assertTrue(S.Set("pad.chip.glowEnabled", false, "p1"))

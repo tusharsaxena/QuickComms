@@ -400,17 +400,34 @@ function R.ChipLook(chip, prev)
         tostring(chip.width) .. "x" .. tostring(chip.height)) }
 end
 
+-- The chip glow for a chip drawn `w` x `h`: the look's glow, its signature carrying that size, so a
+-- chip the Layout's Chip style or the Icons tab's icon size resized restarts a pixel or autocast glow
+-- whose lines were laid out for its old size. One per size, kept on the look.
+local function sizedGlow(cl, w, h)
+    local g = cl.glow
+    if not (g and w and h) then return g end
+    local key = tostring(w) .. "x" .. tostring(h)
+    cl.glowBySize = cl.glowBySize or {}
+    local sized = cl.glowBySize[key]
+    if not sized then
+        sized = setmetatable({ sig = tostring(g.sig) .. "|" .. key }, { __index = g })
+        cl.glowBySize[key] = sized
+    end
+    return sized
+end
+
 --- Dress a chip in its look (R.ChipLook): its body, its edge, its label's font and its glow. A look the
 --- chip already wears (its signature) is not painted again; the glow is handed over every time, since a
---- chip's release puts its glow out (Glow.Release), and Glow.Chip keeps an unchanged one.
-function R.ApplyChipLook(btn, cl)
+--- chip's release puts its glow out (Glow.Release), and Glow.Chip keeps an unchanged one. `w` and `h`
+--- are the chip's drawn size, part of its glow's signature.
+function R.ApplyChipLook(btn, cl, w, h)
     if btn.qcLookSig ~= cl.sig then
         btn.qcLookSig = cl.sig
         btn.qcBg:SetColorTexture(cl.bg[1], cl.bg[2], cl.bg[3], cl.bg[4])
         NS.ApplySkin(btn.qcEdge, cl.edge)
         R.ApplyFont(btn.qcLabel, cl.font)
     end
-    Glow.Chip(btn, cl.glow)
+    Glow.Chip(btn, sizedGlow(cl, w, h))
 end
 
 function R.Flash(btn, what)
