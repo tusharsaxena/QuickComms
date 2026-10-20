@@ -96,6 +96,14 @@ test("dial yield: an open-world content row names no content", function()
     assertEqual(dialOrder(NS), gid .. "," .. T.seeded(NS, "bi.group"))
 end)
 
+test("dial yield: in the open world a group naming open world and a dungeon keeps In Group on the dial", function()
+    local NS = live(PARTY)
+    local gid = NS.Library.CreateGroup({ name = "Out and in", when = { content = { openWorld = true, dungeon = true } } })
+    NS.Library.AddGroupToSurface("dial", "d2", gid, 1)
+    -- red under: dialOrder scanning the Whens without asking whether the place is content
+    assertEqual(dialOrder(NS), gid .. "," .. T.seeded(NS, "bi.group"))
+end)
+
 test("dial yield: an edit preview of In Group still shows it on the dial", function()
     local NS = live()
     local snap = NS.Situation.Current()

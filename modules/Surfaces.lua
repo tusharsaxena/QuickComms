@@ -240,9 +240,13 @@ end
 -- A dial's order without its Skip on the dial in content groups (group.dialYield) while another
 -- group in it, one that does not skip, names content (namesContent): in a key the dial opens on the
 -- key's set, not on a ring of groups, and In Group stays on the pad. Only such a group triggers it,
--- so the skip never empties the dial. An edit preview (deps.only) shows its one group regardless.
-local function dialOrder(order, deps)
+-- so the skip never empties the dial. An edit preview (deps.only) shows its one group regardless,
+-- and the open world (snap.content openWorld, or none) keeps every group: a group whose When names
+-- open world and a dungeon is active there, but the place is not content.
+local function dialOrder(order, snap, deps)
     if deps.only then return order end
+    local place = type(snap) == "table" and snap.content or nil
+    if place == nil or place == "openWorld" then return order end
     local function yields(gid)
         local g = deps.group(gid)
         return type(g) == "table" and g.dialYield == true
@@ -270,7 +274,7 @@ function S.BuildDialPlan(surfaceId, dial, snap, deps)
     local t0 = Perf.on and not deps.unmeasured and debugprofilestop()
     dial = type(dial) == "table" and dial or {}
     local active, order = resolve(dial.groups, snap, deps)
-    order = dialOrder(order, deps)
+    order = dialOrder(order, snap, deps)
     local opts = { soloFallback = deps.soloFallback, ctx = deps.ctx }
     local plan = { kind = "dial", surfaceId = surfaceId, snapshot = snap, order = order, active = active,
         lockdownChip = false, hasActive = false }

@@ -964,7 +964,7 @@ Total.
 - surfaces: [nesting] a parent that draws nothing leaves its surface with nothing active
 - surfaces: [inherit] a child that inherits shows wherever its parent's When matches, whatever its own says
 
-### test_dial_yield.lua (11)
+### test_dial_yield.lua (12)
 
 - dial yield: In Group is seeded skipping the dial in content; the other seeded sets are not
 - dial yield: in a key the dial leaves In Group out; the pad keeps it
@@ -973,6 +973,7 @@ Total.
 - dial yield: the skip never empties the dial, and a skipping content group triggers nothing
 - dial yield: a place row names content as a content row does
 - dial yield: an open-world content row names no content
+- dial yield: in the open world a group naming open world and a dungeon keeps In Group on the dial
 - dial yield: an edit preview of In Group still shows it on the dial
 - dial yield: the row is written through the seam and refuses a non-bool
 - dial yield: General's Skip on the dial in content sits by Open into, grayed out for a child
@@ -1220,7 +1221,7 @@ Total.
 | test_pad_layout.lua | 19 |
 | test_dial_layout.lua | 18 |
 | test_surfaces.lua | 27 |
-| test_dial_yield.lua | 11 |
+| test_dial_yield.lua | 12 |
 | test_pad_render.lua | 20 |
 | test_pad.lua | 40 |
 | test_dial.lua | 34 |
@@ -1233,4 +1234,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1003** |
+| **Total** | **1004** |
