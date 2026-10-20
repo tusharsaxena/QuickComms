@@ -5,7 +5,7 @@ local _, NS = ...
 -- third, the edit preview (one group, while the Groups page edits it), sits over either.
 -- Session-only (NS.State.testMode, never saved): refused while stood down or in combat
 -- with one line, ended when combat starts (while secure writes are still allowed, so the pads swap
--- back to live chips at once), and ended by the stand-down. The checkbox, the `test` verb and the
+-- back to live buttons at once), and ended by the stand-down. The checkbox, the `test` verb and the
 -- launcher entry all call SetTestMode. Copied from DropWatcher core/DropWatcher.lua `NS.SetTestMode`,
 -- `testModeRefusal` and `DW.OnCombatStart`; the combat edge arrives as RESTRICTION_CHANGED here,
 -- because modules/Restrictions.lua owns PLAYER_REGEN_DISABLED.
@@ -67,7 +67,7 @@ end
 --
 -- Test mode's second flavor: the pads are built from a synthetic snapshot instead of placeholders,
 -- so they show the groups that situation resolves to (modules/Surfaces.lua marks the plan, and every
--- previewed chip is disarmed). Only where you are changes: the class, specialization, role and
+-- previewed button is disarmed). Only where you are changes: the class, specialization, role and
 -- character are the live ones. Session-only (NS.State.previewAs).
 
 P.CURRENT = "current"

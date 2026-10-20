@@ -332,9 +332,9 @@ local ROWS = {
 -- Background; Border; no font, the owner's call). It was Main window, with Visibility, Fade and Faded
 -- alpha, until those moved to General (owner request, 2026-10-20).
 --
--- The Chip tab (`pad.chip.*`, 2026-10-20; its label reads Buttons) styles the chips themselves: Size (Chip width, moved from
--- Layout, and Chip height, 0 automatic), Color (the chip's background), Border, Font (the chips'
--- labels only) and Glow (off by default: a LibCustomGlow effect around the whole chip, in one of the
+-- The Buttons tab (`pad.button.*`, 2026-10-20; `pad.chip.*` until the rename) styles the buttons themselves: Size (Button width, moved from
+-- Layout, and Button height, 0 automatic), Color (the button's background), Border, Font (the buttons'
+-- labels only) and Glow (off by default: a LibCustomGlow effect around the whole button, in one of the
 -- Icons tab's four styles, at that tab's knob defaults).
 
 local function unit01(c) return type(c) == "number" and c >= 0 and c <= 1 end
@@ -385,7 +385,7 @@ local function composedChecks(O)
 end
 
 -- One composed block's rows stamped as pad member rows: `prefix` names the pad's table
--- ("pad.look.", "pad.header.", "pad.section.", "pad.chip."), `defaults` that table's shipped values.
+-- ("pad.look.", "pad.header.", "pad.section.", "pad.button."), `defaults` that table's shipped values.
 local function stampBlock(out, list, prefix, checks)
     for _, row in ipairs(list) do
         local c = checks[row.path:sub(#prefix + 1)] or {}
@@ -401,7 +401,7 @@ local function blockSpec(prefix, group, subgroup, defaults, extra)
 end
 
 -- The three tabs, in strip order: the options library orders a page's tabs by each group's first
--- row, so these rows come after Layout's and before the Chip tab's (shown as Buttons).
+-- row, so these rows come after Layout's and before the Buttons tab's.
 local PAD_HEADER, SECTION_HEADER, WINDOW = L["Pad header"], L["Section header"], L["Window"]
 local LOOK, HEAD, SECT = "pad.look.", "pad.header.", "pad.section."
 local HEADER_H, SECTION_H = NS.PadDefaults.HEADER_H, NS.PadDefaults.SECTION_H
@@ -438,48 +438,48 @@ end
 
 for _, row in ipairs(windowRows()) do ROWS[#ROWS + 1] = row end
 
-local CHIP, CHIPP = L["Buttons"], "pad.chip."
-local CHIP_H = NS.PadDefaults.CHIP_H
+local BUTTON, BUTTONP = L["Buttons"], "pad.button."
+local BUTTON_H = NS.PadDefaults.BUTTON_H
 
-local function chipRows()
+local function buttonRows()
     local O = NS.addon.Settings.Helpers
     local checks = composedChecks(O)
     checks.glowColor = checks.background
     checks.useClassColorGlow = { validate = BOOL }
-    local cdef = T.pad.chip
+    local cdef = T.pad.button
     local SIZE, COLOR, GLOW = L["Size"], L["Color"], L["Glow"]
-    local function glowOff() return NS.SchemaRuntime.Get(CHIPP .. "glowEnabled") ~= true end
+    local function glowOff() return NS.SchemaRuntime.Get(BUTTONP .. "glowEnabled") ~= true end
     local styles = choices(NS.addon.Settings.GLOW_STYLES)
     local function row(subgroup, r)
-        r.instance, r.page, r.group, r.subgroup = "pad", "pads", CHIP, subgroup
+        r.instance, r.page, r.group, r.subgroup = "pad", "pads", BUTTON, subgroup
         return r
     end
     local out = {
-        row(SIZE, { path = CHIPP .. "width", type = "number", default = cdef.width, min = 1, max = 300, step = 1,
+        row(SIZE, { path = BUTTONP .. "width", type = "number", default = cdef.width, min = 1, max = 300, step = 1,
             label = L["Button width"], startsLine = true, desc = L["How wide a labeled button is. An icon-only button stays square around its icon."],
             validate = NUMBER, normalize = clamp(1, 300, true) }),
-        row(SIZE, { path = CHIPP .. "height", type = "number", default = cdef.height, min = CHIP_H.min,
-            max = CHIP_H.max, step = 1, label = L["Button height (0 = automatic)"], zeroText = L["Automatic"],
+        row(SIZE, { path = BUTTONP .. "height", type = "number", default = cdef.height, min = BUTTON_H.min,
+            max = BUTTON_H.max, step = 1, label = L["Button height (0 = automatic)"], zeroText = L["Automatic"],
             desc = L["How tall a labeled button is, in pixels. 0 grows it to hold its font and its icon. An icon-only button stays square around its icon."],
-            validate = NUMBER, normalize = clamp(CHIP_H.min, CHIP_H.max, true) }),
+            validate = NUMBER, normalize = clamp(BUTTON_H.min, BUTTON_H.max, true) }),
     }
-    stampBlock(out, O.ColorPair(blockSpec(CHIPP, CHIP, COLOR, cdef, { key = "background", label = L["Background"] })),
-        CHIPP, checks)
-    stampBlock(out, O.BorderGroup(blockSpec(CHIPP, CHIP, L["Border"], cdef)), CHIPP, checks)
-    stampBlock(out, O.FontGroup(blockSpec(CHIPP, CHIP, L["Font"], cdef)), CHIPP, checks)
-    out[#out + 1] = row(GLOW, { path = CHIPP .. "glowEnabled", type = "bool", default = cdef.glowEnabled,
+    stampBlock(out, O.ColorPair(blockSpec(BUTTONP, BUTTON, COLOR, cdef, { key = "background", label = L["Background"] })),
+        BUTTONP, checks)
+    stampBlock(out, O.BorderGroup(blockSpec(BUTTONP, BUTTON, L["Border"], cdef)), BUTTONP, checks)
+    stampBlock(out, O.FontGroup(blockSpec(BUTTONP, BUTTON, L["Font"], cdef)), BUTTONP, checks)
+    out[#out + 1] = row(GLOW, { path = BUTTONP .. "glowEnabled", type = "bool", default = cdef.glowEnabled,
         label = L["Glow"], desc = L["Draw a glow around each button."], validate = BOOL, startsLine = true })
-    out[#out + 1] = row(GLOW, { path = CHIPP .. "glowType", type = "string", default = cdef.glowType, values = styles,
+    out[#out + 1] = row(GLOW, { path = BUTTONP .. "glowType", type = "string", default = cdef.glowType, values = styles,
         label = L["Glow style"], desc = L["How the glow looks."], validate = oneOf(styles), disabledIf = glowOff })
-    stampBlock(out, O.ColorPair(blockSpec(CHIPP, CHIP, GLOW, cdef, { key = "glowColor",
-        companionKey = "useClassColorGlow", label = L["Glow color"] })), CHIPP, checks)
+    stampBlock(out, O.ColorPair(blockSpec(BUTTONP, BUTTON, GLOW, cdef, { key = "glowColor",
+        companionKey = "useClassColorGlow", label = L["Glow color"] })), BUTTONP, checks)
     return out
 end
 
-for _, row in ipairs(chipRows()) do ROWS[#ROWS + 1] = row end
+for _, row in ipairs(buttonRows()) do ROWS[#ROWS + 1] = row end
 
 -- The Icons tab's rows (B9, settings/SchemaIcons.lua), with these checks: a pad's after its window and
--- Chip rows, a dial's after its Wheel rows, so each editor's Icons tab sits there.
+-- Button rows, a dial's after its Wheel rows, so each editor's Icons tab sits there.
 do
     local C = { check = check, choices = choices, oneOf = oneOf, clamp = clamp, NUMBER = NUMBER, BOOL = BOOL,
         color = check(isColor), name = check(isName), fourChannels = fourChannels }

@@ -224,7 +224,7 @@ end
 
 -- `point` and `when` are the structured member rows (settings/SchemaMembers.lua): each drawn by its
 -- own control on its editor page and typed and printed on the CLI by settings/Slash.lua's parse and
--- format hooks. `color` is a pad's Window and Chip swatches (phase 5), which the options library draws
+-- format hooks. `color` is a pad's Window and Button swatches (phase 5), which the options library draws
 -- and its CLI parses and prints itself. (A dial's key was a third, `key`, until 2026-10-20: it is
 -- WoW's own binding now, set on the Binding tab, never a row.)
 local VALID_TYPES = { bool = true, number = true, string = true, point = true, when = true, color = true }

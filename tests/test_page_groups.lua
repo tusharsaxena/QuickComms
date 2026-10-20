@@ -59,11 +59,11 @@ test("groups page: [exit] a new group with a callout and a When shows first on t
     panel:__fire("OnHide")
     local plan = NS.Surfaces.Plans().p1
     assertEqual(plan.order[1], gid)
-    assertEqual(NS.Pad.ChipsFor("p1", cid)[1]:GetAttribute("macrotext"), "/p Incoming")
+    assertEqual(NS.Pad.ButtonsFor("p1", cid)[1]:GetAttribute("macrotext"), "/p Incoming")
     -- and not in the open world
     NS.Situation.ReadInputs = function() return {} end
     NS.Situation.RefreshNow("test")
-    assertTrue(NS.Pad.ChipsFor("p1", cid)[1] == nil)
+    assertTrue(NS.Pad.ButtonsFor("p1", cid)[1] == nil)
 end)
 
 test("groups page: the picker lists every group by name, a seeded set among them, active ones dotted", function()

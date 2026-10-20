@@ -25,7 +25,7 @@ local BUCKETS = {
     { key = "bakeSurface" }, -- modules/Surfaces.lua: one pad's or dial's plan (resolve, order, bake every slot)
     { key = "resolverResolve", within = "bakeSurface" }, -- modules/Surfaces.lua: a plan's active groups and their order
     { key = "sendClick" },   -- modules/SendEngine.lua: the OnClick hook
-    { key = "padLayout" },   -- modules/Pad.lua: one pad's rebuild (geometry, chips, arm)
+    { key = "padLayout" },   -- modules/Pad.lua: one pad's rebuild (geometry, buttons, arm)
     { key = "echoMatch" },   -- modules/SendEngine.lua: a CHAT_MSG_* echo while a press waits
     { key = "dialRender" },  -- modules/Dial_Render.lua: the pointer's OnUpdate while a dial is open
     { key = "glowStart" },   -- modules/Glow.lua: one icon glow's start (the Icons tab, B9)

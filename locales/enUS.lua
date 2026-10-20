@@ -468,7 +468,7 @@ L["Damage"] = "Damage"
 L["Callout %d"] = "Callout %d"
 L["Test group %d"] = "Test group %d"
 
--- Comms Pad chips and header (modules/Pad_Render.lua)
+-- Comms Pad buttons and header (modules/Pad_Render.lua)
 L["Callout text cannot start with /."] = "Callout text cannot start with /."
 L["Too long: a chat line holds 255 bytes."] = "Too long: a chat line holds 255 bytes."
 L["This callout has no text."] = "This callout has no text."

@@ -1,7 +1,7 @@
 local _, NS = ...
 -- core/PoolSetup.lua — NS.Pool from LibKa0s-Pool-1.0: the free/active frame pool.
 --
--- The Comms Pad's chips and the Comms Dial's wedges re-render whenever the active groups change
+-- The Comms Pad's buttons and the Comms Dial's wedges re-render whenever the active groups change
 -- (design spec §10, §11), so they come from a pool, never from a CreateFrame per render. Nothing
 -- draws yet; the surface tasks are the first consumers. Only the array shape is wired; the keyed
 -- family is not (tests/test_surface_parity.lua names it).

@@ -21,10 +21,10 @@ local _, NS = ...
 --                     Pad header, Section header and this were one Window tab until 2026-10-20, then
 --                     this was Main window, with Visibility, until that moved to General (owner
 --                     requests)
---     Buttons  the chips themselves (`pad.chip.*`; the Chip tab until 2026-10-20): Size (Button width,
---              from Layout until 2026-10-20, and Button height, 0 automatic), Color (the chip's
---              background), Border, Font (the chips' labels) and Glow (off by default: its style and color), each under its own heading
---     Icons    the chips' icons (B9, settings/SchemaIcons.lua): Size and crop, Color (with Tint), the
+--     Buttons  the buttons themselves (`pad.button.*`; the Chip tab, `pad.chip.*`, until 2026-10-20): Size (Button width,
+--              from Layout until 2026-10-20, and Button height, 0 automatic), Color (the button's
+--              background), Border, Font (the buttons' labels) and Glow (off by default: its style and color), each under its own heading
+--     Icons    the buttons' icons (B9, settings/SchemaIcons.lua): Size and crop, Color (with Tint), the
 --              composed Border block, Glow (its trigger, style and color), Offset, then only the
 --              selected style's knobs (none while the glow is off), each under its own heading drawn
 --              by the library
@@ -49,7 +49,7 @@ local LAYOUT = L["Layout"]
 local PAD_HEADER = L["Pad header"]
 local SECTION_HEADER = L["Section header"]
 local WINDOW = L["Window"]
-local CHIP = L["Buttons"]
+local BUTTON = L["Buttons"]
 local ICONS = L["Icons"]
 
 Settings.Pads = Settings.Pads or {}
@@ -273,7 +273,7 @@ local function render(ctx)
         { key = PAD_HEADER, render = renderStyled },
         { key = SECTION_HEADER, render = renderStyled },
         { key = WINDOW, render = renderStyled },
-        { key = CHIP, render = renderStyled },
+        { key = BUTTON, render = renderStyled },
         { key = ICONS, render = renderIcons },
     })
 end

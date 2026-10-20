@@ -60,7 +60,7 @@ test("diagnostics: [final 1] the restriction section names the active reasons an
     assertTrue(text:find("active=chatLockdown,encounter reason=encounter canSendChat=false", 1, true) ~= nil, text)
 end)
 
-test("diagnostics: the surfaces and send sections name the pads, the armed chips and the guard", function()
+test("diagnostics: the surfaces and send sections name the pads, the armed buttons and the guard", function()
     local NS = T.enableAddon()
     NS.Situation.ReadInputs = function()
         return { inInstance = true, instanceType = "party", difficultyID = 8, keystoneActive = true,
@@ -71,7 +71,7 @@ test("diagnostics: the surfaces and send sections name the pads, the armed chips
     NS.Situation.RefreshNow("test")
     local text = report(NS)
     assertTrue(text:find("p1 active=" .. T.seeded(NS, "bi.mplus") .. " stale=false", 1, true) ~= nil, text)
-    -- the pad's 8 chips, and the default dial's 11 wedges: 1 group wedge, then 8 callouts on three
+    -- the pad's 8 buttons, and the default dial's 11 wedges: 1 group wedge, then 8 callouts on three
     -- pages of 4 (two More wedges), so 16 armed
     assertTrue(text:find("buttons=19 armed=16", 1, true) ~= nil, text)
     assertTrue(text:find("p1:" .. T.seeded(NS, "bi.mplus.pull") .. " /p Pulling next pack", 1, true) ~= nil, text)

@@ -110,7 +110,7 @@ test("dial: the hub shows the lockdown chip, the stale hint and TEST MODE; the p
     assertNil(pointer:GetScript("OnUpdate"))
 end)
 
-test("dial: a press dims every wedge and chip for the guard window; a drop stays red long enough to reopen and see", function()
+test("dial: a press dims every wedge and button for the guard window; a drop stays red long enough to reopen and see", function()
     local NS, m = live()
     NS.Dial.Apply(1, "d2", planOf(NS))
     local h = NS.Dial.Instance("d2").header
@@ -126,7 +126,7 @@ test("dial: a press dims every wedge and chip for the guard window; a drop stays
     m.__click(w)
     -- red under: drop the NS.Dial.Cooldown call from Pad.Cooldown
     assertTrue(other.qcCool:IsShown(), "the guard is global: every wedge dims")
-    assertTrue(NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.mplus.lust"))[1].qcCool:IsShown(), "and every chip")
+    assertTrue(NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.mplus.lust"))[1].qcCool:IsShown(), "and every button")
     m.__fireTimers()
     assertFalse(other.qcCool:IsShown())
 end)

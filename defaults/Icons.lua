@@ -1,5 +1,5 @@
 local _, NS = ...
--- defaults/Icons.lua — the Icons tab's defaults (B9): how a Comms Pad chip's and a Comms Dial
+-- defaults/Icons.lua — the Icons tab's defaults (B9): how a Comms Pad button's and a Comms Dial
 -- wedge's icon is drawn. Every field is a flat leaf of the surface's top-level `icon` table
 -- (`pad.icon.*`, `dial.icon.*`), so Library's fillShape backfills a surface saved before the field
 -- existed (it fills one level deep). modules/Library.lua copies these into SURFACE_DEFAULTS and
@@ -14,7 +14,7 @@ local _, NS = ...
 NS.IconDefaults = NS.IconDefaults or {}
 local D = NS.IconDefaults
 
--- The size ranges: a chip's icon feeds the chip's geometry; a wedge's is drawn inside the fixed
+-- The size ranges: a button's icon feeds the button's geometry; a wedge's is drawn inside the fixed
 -- 44-pixel wedge (modules/Dial_Layout.lua DL.WEDGE), so its geometry never changes.
 D.SIZE = { pad = { min = 12, max = 40, default = 16 }, dial = { min = 16, max = 40, default = 32 } }
 

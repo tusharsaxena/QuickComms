@@ -210,7 +210,7 @@ Total.
 - diagnostics: `enabled` is always listed, and a hidden minimap button is listed
 - diagnostics: the situation and library sections report the snapshot and the registry
 - diagnostics: [final 1] the restriction section names the active reasons and canSendChat
-- diagnostics: the surfaces and send sections name the pads, the armed chips and the guard
+- diagnostics: the surfaces and send sections name the pads, the armed buttons and the guard
 - diagnostics: [phase 3] the surfaces section names the preview
 - diagnostics: [final 21] the settings section lists no member row
 - diagnostics: [phase 4] the dials and bindings sections name each dial, its key and each entry's WoW binding
@@ -733,7 +733,7 @@ Total.
 - pads page: [window tabs] Section header carries Size, Font, Background and Border, and writes the section table
 - pads page: [window tabs] Window carries Background and Border, and no font and no Visibility
 - pads page: General carries Visibility, Fade and Faded alpha under a Visibility heading, before its buttons
-- pads page: [chip] Buttons carries Size, Color, Border, Font and Glow, and Button width left Layout for it
+- pads page: [button] Buttons carries Size, Color, Border, Font and Glow, and Button width left Layout for it
 - pads page: [B9] Icons carries its headings once each, a companion beside each swatch, and writes the pad
 - pads page: [B9] the offsets are grayed out while the glow is off or in Button; its color never is
 - pads page: [glow knobs] only the selected style's knobs show, and none while the glow is off
@@ -855,10 +855,10 @@ Total.
 - preview: the start of combat ends test mode, with one line
 - preview: test mode still ends when lockdown has already begun at the combat edge
 - preview: the stand-down ends test mode silently, and stood down a start is refused
-- preview: [phase 3] Preview as Arena builds the pad from the arena snapshot, every chip disarmed
-- preview: [review 3] a previewed chip sends nothing and reports nothing
-- preview: [review 3] a previewed solo chip prints nothing, even with the self fallback
-- preview: [review 3] combat ends it with one line, and the live chips come back armed
+- preview: [phase 3] Preview as Arena builds the pad from the arena snapshot, every button disarmed
+- preview: [review 3] a previewed button sends nothing and reports nothing
+- preview: [review 3] a previewed solo button prints nothing, even with the self fallback
+- preview: [review 3] combat ends it with one line, and the live buttons come back armed
 - preview: [phase 3] refused in combat and while disabled, with one line each
 - preview: [review 3] the stand-down ends it silently, and so does closing the settings window
 - preview: [phase 3] test mode and Preview as are one switch at a time
@@ -867,10 +867,10 @@ Total.
 - preview: [phase 3] the Preview as row and `/qc preview` drive the same switch
 - preview: [final 13] `/qc preview` reads the situation's name without regard to case
 - preview: [final 10] a dungeon preview fills {dungeon}, and the header names the preview as its menu does
-- preview: [echo] a previewed chip prints [QC] /<slash> <resolved text>, and still sends nothing
+- preview: [echo] a previewed button prints [QC] /<slash> <resolved text>, and still sends nothing
 - preview: [echo] the slash follows the channel the previewed situation resolves
-- preview: [echo review 3] a padlocked previewed chip echoes its line, naming no lock
-- preview: [echo] a live chip prints nothing extra
+- preview: [echo review 3] a padlocked previewed button echoes its line, naming no lock
+- preview: [echo] a live button prints nothing extra
 - preview: [echo] the edit preview echoes too, and a press in combat prints without writing
 - preview: [echo] a previewed dial wedge prints the line too
 
@@ -880,7 +880,7 @@ Total.
 - edit preview: a battleground set shows its own callouts and every node, outside the battleground
 - edit preview: every dial shows only the edited group
 - edit preview: it ends back to the live pads, and Preview as and test mode come back after it
-- edit preview: combat ends it with one line and the live chips come back armed; a start in combat is refused
+- edit preview: combat ends it with one line and the live buttons come back armed; a start in combat is refused
 - edit preview: with Preview as on too, combat says so once
 - edit preview: closing the settings window and the stand-down end it
 - edit preview: a group deleted while previewed leaves the live pads
@@ -901,15 +901,15 @@ Total.
 
 ### test_pad_layout.lua (21)
 
-- layout: horizontal puts a section's chips on one row under the header
+- layout: horizontal puts a section's buttons on one row under the header
 - layout: a titled section draws its label row first
 - layout: [section header] opts.titleH above 0 fixes the title rows' height; 0 keeps it automatic
 - layout: grid wraps at its column count; vertical is one column
 - layout: the style sets the cell
-- layout: [B3] narrow chips never make the pad narrower than its header needs
+- layout: [B3] narrow buttons never make the pad narrower than its header needs
 - layout: [icon only] opts.minWidth is the pad's floor; without it the floor is MIN_PAD_W
 - layout: [B1] a section title equal to the header's situation is not drawn; a tab's title is
-- layout: [review] a larger Look font grows the chip and title rows; the default size changes nothing
+- layout: [review] a larger Look font grows the button and title rows; the default size changes nothing
 - layout: leftward growth mirrors the row; collapsed is the header alone
 - layout: [B2] upward growth puts the header at the bottom and stacks the sections up from it
 - layout: [B2] the pad's anchor is its growth edge; a drop is converted to that edge exactly
@@ -921,7 +921,7 @@ Total.
 - layout: [bg subgroups] only one parent's children pack, only in a grid, only while they fit
 - layout: [bg subgroups] packed rows mirror for left growth and stay bottom-aligned growing up
 - layout: [window] the header row's height moves every row and is the collapsed pad's height
-- layout: [chip] a Chip height above 0 is the labeled chip's height; 0 is automatic; icon-only stays square
+- layout: [button] a Button height above 0 is the labeled button's height; 0 is automatic; icon-only stays square
 
 ### test_dial_layout.lua (18)
 
@@ -953,17 +953,17 @@ Total.
 - surfaces: solo with the self fallback, a smart callout carries the text to print
 - surfaces: the bake context fills {me} from the client
 - surfaces: a disabled seeded set leaves the plan
-- surfaces: the test plan is placeholder chips that carry no line
+- surfaces: the test plan is placeholder buttons that carry no line
 - surfaces: the first situation read builds the default pad, armed and shown
 - surfaces: ACTIVE_GROUPS_CHANGED is sent once per real change of a pad's active groups
 - surfaces: [review 1] a situation change in combat queues: nothing blocked, stale shows, combat end rebuilds
 - surfaces: [review 1] a profile switch in combat queues the new profile's pads
 - surfaces: [fix wave] enabled in combat (a /reload mid-pull): combat end builds the pad, the queue empties
 - surfaces: a setting written in combat waits for combat end, with the stale hint
-- surfaces: an encounter lockdown in combat padlocks a Say chip and lights the chip, nothing blocked
-- surfaces: test mode draws placeholders that send nothing; combat start brings the live chips back
+- surfaces: an encounter lockdown in combat padlocks a Say button and lights the lockdown chip, nothing blocked
+- surfaces: test mode draws placeholders that send nothing; combat start brings the live buttons back
 - surfaces: if lockdown has already begun at the combat edge, test mode's end is queued, not blocked
-- surfaces: disabled out of combat, every pad hides and every chip disarms; enabled, they return
+- surfaces: disabled out of combat, every pad hides and every button disarms; enabled, they return
 - surfaces: [review 2] disabled mid-combat: nothing blocked, one held registration, finished at combat end
 - surfaces: [fix wave] disabled then enabled inside one combat: the pad is shown and armed after it
 - surfaces: [phase 3] WhyLines names each shown group in order, then the locks
@@ -991,13 +991,13 @@ Total.
 
 ### test_pad_render.lua (21)
 
-- render: Dress builds a chip's regions once, each its own object
-- render: [audit QC-07] the chip's padlock is the catalog's lock mark, tinted gold; the Blizzard art is the nil fallback
-- render: an armed chip shows its name, no channel letter, no lock, no dim; its tooltip names the channel
-- render: [review 5] a refused chip is dimmed and its tooltip says why
-- render: a locked chip shows the padlock and names the lock; RefreshLock follows the slot
+- render: Dress builds a button's regions once, each its own object
+- render: [audit QC-07] the button's padlock is the catalog's lock mark, tinted gold; the Blizzard art is the nil fallback
+- render: an armed button shows its name, no channel letter, no lock, no dim; its tooltip names the channel
+- render: [review 5] a refused button is dimmed and its tooltip says why
+- render: a locked button shows the padlock and names the lock; RefreshLock follows the slot
 - render: the style decides icon and label
-- render: a test-mode chip and a solo self-print chip are not dimmed, and say what they do
+- render: a test-mode button and a solo self-print button are not dimmed, and say what they do
 - render: flashes take the result's color; the cooldown dims and clears
 - render: the situation chip names the content, the dungeon and the key
 - render: the header shows the lockdown chip and the stale hint on demand; no test label
@@ -1006,34 +1006,34 @@ Total.
 - pad render: [phase 3] a previewed slot's tooltip shows its line and says it sends nothing
 - render: [phase 5] a pad's Look is a font and a skin; the defaults are the skin a pad always wore
 - render: [review] the skin's 1px inner line is kept only on the default flat 1px edge
-- render: [review] a chip's label runs to the chip's right edge, on one line
+- render: [review] a button's label runs to the button's right edge, on one line
 - render: [phase 5] Use class color takes the player's class color and keeps the swatch's alpha
 - render: [window] the section titles wear the Section header tab's font, gold by default
 - render: [section header] SectionLook: no band by default, then the band's skin and the text's inset
-- render: [icons] a glyph chip is drawn in its color; the chip repainted with another icon is white again
-- render: [B3] a chip's label is one line, and hidden when the chip leaves it no room
+- render: [icons] a glyph button is drawn in its color; the button repainted with another icon is white again
+- render: [B3] a button's label is one line, and hidden when the button leaves it no room
 
 ### test_pad.lua (43)
 
-- pad: the default pad shows the M+ callouts, each chip armed with its baked line
-- pad: [review 5] a refused chip is dimmed and disarmed: a click sends and reports nothing
+- pad: the default pad shows the M+ callouts, each button armed with its baked line
+- pad: [review 5] a refused button is dimmed and disarmed: a click sends and reports nothing
 - pad: [review 4] a hidden or locked pad still rebuilds; the driver hides; the strip stays hidden
-- pad: a rebuild with fewer chips parks the rest, disarmed, for the next
+- pad: a rebuild with fewer buttons parks the rest, disarmed, for the next
 - pad: [registry] no file but Library writes a surface's point
 - pad: the drag saves the point; locked or in combat it does not move; Reset position clears it
 - pad: [fix 1] combat starting mid-drag ends the drag on the edge; the stop is never blocked
 - pad: [fix 1] a drag caught after lockdown began is stopped and saved when combat ends
 - pad: tabs show one section; the wheel steps them out of combat and is refused in it
-- pad: collapse hides the chips out of combat and is refused, with one line, in it
-- pad: a send result flashes its chips; a press dims every chip for the guard window
+- pad: collapse hides the buttons out of combat and is refused, with one line, in it
+- pad: a send result flashes its buttons; a press dims every button for the guard window
 - pad: the fade follows the mouse and combat through SetAlpha alone
-- pad: Sync releases a pad no plan names: hidden, its chips disarmed
+- pad: Sync releases a pad no plan names: hidden, its buttons disarmed
 - pad: [fix wave] a profile switch, a switch back and a profile reset each move the pad to that profile's point
 - pad: [fix wave] a rebuild during a drag leaves the dragged frame where the cursor has it
 - pad: [fix wave] a held drag survives a profile switch in combat: stopped at combat end, nothing blocked
 - pad: [fix wave] a held drag on a stand-down in combat is stopped by the held teardown
-- pad: [fix wave] a locked chip's press is not tracked: no guard, no drop, one lock note
-- pad: [fix wave] tabs switch on a wheel over a chip or the pad, not only the header
+- pad: [fix wave] a locked button's press is not tracked: no guard, no drop, one lock note
+- pad: [fix wave] tabs switch on a wheel over a button or the pad, not only the header
 - pad: [fix wave] in combat Reset position, Apply and Release do no protected work; combat end anchors
 - pad: [review 5] too long, and solo with no fallback: dimmed, disarmed, the reason shown, a click does nothing
 - pad: [phase 3] a held drag whose stand-down is canceled in the same combat is stopped at combat end
@@ -1042,10 +1042,10 @@ Total.
 - pad: [phase 5] the pad wears its Section header and Main window tabs: the titles' font, the edge and body
 - pad: [window] the header wears its own block: gold outlined 16-point text over nothing by default, then what it is given
 - pad: [window] the header's text starts at the section titles' left edge, in every growth
-- pad: [icon only] the pad is as wide as its chips when the header is narrower, else as the header needs
+- pad: [icon only] the pad is as wide as its buttons when the header is narrower, else as the header needs
 - pad: [icon only] a PvP match's lockdown chip, shown out of combat, widens the header row by itself
-- pad: [chip] a chip wears the Chip tab: the owner's default body, edge, label and size, then what it is given
-- pad: [chip] the chip glow is off by default, then wraps the whole chip in its style, and goes with the chip
+- pad: [button] a button wears the Buttons tab: the owner's default body, edge, label and size, then what it is given
+- pad: [button] the button glow is off by default, then wraps the whole button in its style, and goes with the button
 - pad: [review 5] a font or border this machine does not have draws the default, with no error
 - pad: [B1] a group named as the header's situation draws no title row of its own
 - pad: [B2] down growth pins the pad's top edge; the header is on top and the strip above
@@ -1065,7 +1065,7 @@ Total.
 - dial: a refused callout is a dimmed, disarmed wedge; a ring wedge is disarmed
 - dial: [audit QC-07] the hub's close and a wedge's padlock are catalog marks, with the Blizzard art as the nil fallback
 - dial: the hub shows the lockdown chip, the stale hint and TEST MODE; the pointer runs only while open
-- dial: a press dims every wedge and chip for the guard window; a drop stays red long enough to reopen and see
+- dial: a press dims every wedge and button for the guard window; a drop stays red long enough to reopen and see
 - dial: Release closes, disarms and forgets a dial; HideAll also releases the keys
 - dial: Sync applies each planned dial at its place in the order, and opens dial 1 in test mode
 - dial: the first situation read builds the default dial, closed; setting its key is WoW's own binding
@@ -1098,23 +1098,23 @@ Total.
 
 ### test_icon_style.lua (8)
 
-- icon style: the defaults draw the owner's look on a chip and on a wedge
+- icon style: the defaults draw the owner's look on a button and on a wedge
 - icon style: zoom crops through SetTexCoord, desaturate and alpha reach the texture
 - icon style: the tint multiplies a glyph's own color; white keeps it
-- icon style: a pad's icon size feeds the chip's geometry
-- icon style: a chip's border is off by default; on, it is a backdrop over the icon in its color
+- icon style: a pad's icon size feeds the button's geometry
+- icon style: a button's border is off by default; on, it is a backdrop over the icon in its color
 - icon style: a wedge's border is a round ring behind its icon, icon plus twice the thickness
 - icon style: a wedge's ring never grows past the wedge, so it cannot reach the next wedge or its label
 - icon style: a pad saved before the Icons tab reads like a new one (fillShape backfills `icon`)
 
 ### test_glow.lua (11)
 
-- glow: off by default, so a chip starts nothing
+- glow: off by default, so a button starts nothing
 - glow: each style starts with the knob table's arguments, on the icon, under the addon's key
 - glow: a repaint that changes nothing calls the library not at all; a setting restarts it
 - glow: On hover starts on enter and stops on leave
 - glow: After sending glows from the send result for SEND_SECONDS, then stops
-- glow: a chip a rebuild leaves unused stops its glow, and so does every chip of a released pad
+- glow: a button a rebuild leaves unused stops its glow, and so does every button of a released pad
 - glow: in combat a hover glow starts and stops with no protected call; an Icons write waits for combat end
 - glow: a wedge glows on its icon too, and on hover
 - glow: on a dial, After sending glows again from the next open within DROP_SECONDS
