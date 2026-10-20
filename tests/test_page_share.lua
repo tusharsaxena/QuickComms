@@ -150,17 +150,17 @@ test("share page: [review] editing the box after Accept forgets the check: Impor
     assertEqual(after, before, "the old string's members never arrive")
 end)
 
-test("share page: [phase 5] an imported dial says it has no key yet", function()
+test("share page: [phase 5] an imported dial says where its key comes from", function()
     local NS, m, P = open()
-    NS.SchemaRuntime.Set("dial.key", "G", "d2")
+    assertTrue(NS.Dial.BindKey("d2", "G"))
     local text = NS.Share.Encode(NS.Share.Collect({ dial = { d2 = true } }))
     P.tab("share", "Import")
     NS.addon.Settings.Share.Check(text)
     m.prints = {}
     local tally = NS.addon.Settings.Share.Import()
     assertEqual(tally.dials, 1)
-    assertTrue(table.concat(m.prints, "\n"):find("An imported dial has no key yet", 1, true) ~= nil)
-    assertEqual(NS.db.profile.dials.d2.key, "G", "the original keeps its key")
+    assertTrue(table.concat(m.prints, "\n"):find("An imported dial's key is the one WoW binds to its place", 1, true) ~= nil)
+    assertEqual(NS.Dial.KeyOf("d2"), "G", "the original keeps its key")
 end)
 
 test("share page: [phase 5] an imported group no shared pad or dial lists says where to add it", function()

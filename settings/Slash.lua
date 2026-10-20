@@ -84,11 +84,10 @@ end
 
 -- ── the structured member rows on the command line (slash-commands-§6) ──────────────────────
 --
--- Three row types are structured (settings/SchemaMembers.lua): point, when and key. The library
--- parses and prints bool, number, string and color; the descriptor's `parse` and `format` hooks
--- teach it these three and hand every other row back to it:
+-- Two row types are structured (settings/SchemaMembers.lua): point and when. The library parses
+-- and prints bool, number, string and color; the descriptor's `parse` and `format` hooks teach it
+-- these two and hand every other row back to it (a dial's key is WoW's own binding, no row):
 --   pad.point, dial.point  `x y` (keeps the anchor points) or `POINT RELATIVEPOINT x y`
---   dial.key        one key, `shift-g` or `SHIFT-G`; `none` clears it
 --   group.when      `<condition> <value>[,<value>...]` replaces that one condition; the condition
 --                   alone clears it; keyLevel takes `min-max`, either end empty, or one level.
 --                   Several conditions go in one line separated by `;`, which is also how `get`
@@ -192,12 +191,7 @@ local function parseWhen(text)
     return when
 end
 
--- A key as typed; the row's validate and normalize do the rest (Library.KeyValue).
-local function parseKey(text)
-    return (text or ""):match("^%s*(.-)%s*$")
-end
-
-local PARSE = { point = parsePoint, when = parseWhen, key = parseKey }
+local PARSE = { point = parsePoint, when = parseWhen }
 
 local function sortedKeys(set)
     local keys = {}
@@ -241,10 +235,6 @@ local FORMAT = {
         return ("%s %s %s %s"):format(tostring(v[1]), tostring(v[2]), tostring(v[3]), tostring(v[4]))
     end,
     when = formatWhen,
-    key = function(v)
-        if type(v) ~= "string" then return L["none"] end
-        return v
-    end,
 }
 
 -- The callout the running get, set or reset names (byId), or nil: the descriptor's get, set and

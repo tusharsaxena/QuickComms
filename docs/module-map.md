@@ -31,6 +31,7 @@ The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after Li
 | 16a | `defaults/BuiltIns.lua` | data | `NS.BuiltIns`: the registry of shipped sets and the declaring helpers; seed data, copied into each profile once as ordinary groups by `Library` |
 | 16b | `defaults/BuiltIns_MythicPlus.lua`, `_Raid.lua`, `_Arena.lua`, `_World.lua`, `_Battlegrounds.lua`, `_Group.lua` | data | the shipped sets (spec §12; World (solo), groups polish; In Group, bg buttons, declared last so a content set stays first), a battleground's nodes as groups inside its set, each base-capture node with Attack, Defend, INC and Clear (bg buttons), and its objectives too (bg subgroups: Alterac Valley's 19, Isle of Conquest's bases, the flag maps', Wintergrasp's, Ashran's, Deephaul Ravine's and Seething Shore's; bg buttons: Silvershard Mines' tracks and switches, Temple of Kotmogu's orbs and center, each with its own callouts); every set, node and callout carries a colored catalog glyph |
 | 16b1 | `defaults/Icons.lua` | data | `NS.IconDefaults`: the Icons tab's defaults (`For(kind)`), size ranges, glow styles, triggers and DropWatcher's knob table; `modules/Library.lua` reads it at load |
+| 16b1a | `defaults/PadStyle.lua` | data | `NS.PadDefaults`: the Window tab's Header block (`Header()`, the header height range `HEADER_H`, default 22) and the Chip tab's defaults (`Chip()`, the chip height range `CHIP_H`, 0 automatic); `modules/Library.lua` and `modules/Pad_Layout.lua` read it at load |
 | 16b2 | `defaults/GameIds.lua` | data | the shipped ids: the season's dungeons and raids, classes, specializations (matched against the client's data by `tools/derive-gameids.py` and `tests/test_gameids.lua`; confirmed in game by IDS-1) |
 | 16b3 | `defaults/GameIds_Instances.lua` | data | the When editor's place lists: `INSTANCES` (every Encounter Journal dungeon and raid) and `ARENAS` (every arena, one per arena), derived and checked by `tools/derive-gameids.py` |
 | 16c | `modules/Restrictions.lua` | edge | what the client's addon restrictions allow; `RESTRICTION_CHANGED` |
@@ -43,18 +44,18 @@ The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after Li
 | 16i1 | `modules/Library_Migrate.lua` | registry writer | the registry writer's schemaVersion steps, beside Library (at its line budget): `MigrateGrowth` (migration step 4), `MigrateBuiltins` (step 5), `MigrateBuiltinsPolish` (step 6), `MigrateBattlegroundNodes` (step 7) |
 | 16i2 | `modules/Share.lua` | pure + edge | the share string: codec, checks, report; Collect, Export, Apply |
 | 16j | `modules/SendEngine_Guard.lua` | pure | `NS.SendGuard`: the soft guard's timing, the acting click edge, the echo tracker, the keyed queue |
-| 16k | `modules/SendEngine.lua` | secure writer | the only secure writer: send buttons, arm and disarm, the combat-end queue, the click hook, the echo events, the held stand-down; the dial headers and rings, the wedge wrap, frame refs, snippet runs and the override bindings (`BindKeys`) |
+| 16k | `modules/SendEngine.lua` | secure writer | the only secure writer: send buttons, arm and disarm, the combat-end queue, the click hook, the echo events, the held stand-down; the dial headers and rings, the wedge wrap, frame refs and snippet runs (a dial's key is WoW's own binding, set in `modules/Dial.lua`) |
 | 16l | `modules/Preview.lua` | session state | test mode and "Preview as…": refused in combat, ended at the combat edge; `TEST_MODE_CHANGED` |
-| 16m | `modules/Pad_Layout.lua` | pure | `NS.PadLayout`: pad geometry (up growth puts the header at the bottom; the pad is pinned by its growth edge; a grid pad sets a parent's small child sections side by side), visibility, fade |
-| 16m1 | `modules/IconStyle.lua` | render | `NS.IconStyle`: the Icons tab's look on an icon (`Config`, `ApplyIcon`, `PaintBorder`, `PaintRing`, `IconFrame`) |
-| 16m2 | `modules/Glow.lua` | render | `NS.Glow`: the Icons tab's glow (LibCustomGlow-1.0 at call time): `Bind`, `SetHover`, `Sent`, `Release`, `ReleaseFree`; the `glowStart` perf bucket |
-| 16n | `modules/Surfaces.lua` | edge | the pads' and dials' plans (a group holding groups draws its own callouts, then a section, or a node ring, per child whose When matches) and the one rebuild request, queued in combat with the stale hint |
-| 16o | `modules/Pad_Render.lua` | render | `NS.PadRender`: insecure chip and header visuals |
+| 16m | `modules/Pad_Layout.lua` | pure | `NS.PadLayout`: pad geometry (the header row's height, `HeaderHeight`; the Chip tab's size, `CellSize`; up growth puts the header at the bottom; the pad is pinned by its growth edge; a grid pad sets a parent's small child sections side by side), visibility, fade |
+| 16m1 | `modules/IconStyle.lua` | render | `NS.IconStyle`: the Icons tab's look on an icon (`Config`, `ApplyIcon`, `PaintBorder`, `PaintRing`, `IconFrame`); `GlowConfig`, which the Chip tab's glow reads too |
+| 16m2 | `modules/Glow.lua` | render | `NS.Glow`: the Icons tab's glow (LibCustomGlow-1.0 at call time): `Bind`, `SetHover`, `Sent`, `Release`, `ReleaseFree`; the Chip tab's glow around the whole chip (`Chip`, its own key); the `glowStart` perf bucket |
+| 16n | `modules/Surfaces.lua` | edge | the pads' and dials' plans (a group holding groups draws its own callouts, then a section, or a node ring, per child whose When matches; a dial leaves out a Skip on the dial in content group while another active group on it names content) and the one rebuild request, queued in combat with the stale hint |
+| 16o | `modules/Pad_Render.lua` | render | `NS.PadRender`: insecure chip and header visuals; the Window tab's skin and Section titles font, the header's look (`HeaderLook`, `ApplyHeaderLook`) and the Chip tab's (`ChipLook`, `ApplyChipLook`) |
 | 16p | `modules/Pad.lua` | frames | the pad's frames: pooled secure chips, header, drag strip (as wide as the pad) and lock, position via `Library`, tabs, collapse, feedback |
 | 16q | `modules/Dial_Layout.lua` | pure | `NS.DialLayout`: a dial's rings, pages, open-into, depth (`DeepGroups`) and wedge geometry; a node set pinned to its compass winds (`PinNodes`: `middle` and `free` nodes take the winds left over), else its paged ring |
 | 16r | `modules/Dial_Secure.lua` | secure snippets | `NS.DialSecure`: the header's restricted snippets (text) and the ring wiring (`Load`); every write goes through SendEngine |
 | 16s | `modules/Dial_Render.lua` | render | `NS.DialRender`: the dial's insecure paint (disc, hub, spokes, wedges) and the pointer's `OnUpdate` |
-| 16t | `modules/Dial.lua` | frames | `NS.Dial`: the dial's header, ring and wedge pools, arming, `Sync` and the keys, the feedback; the key bindings menu's labels |
+| 16t | `modules/Dial.lua` | frames | `NS.Dial`: the dial's header, ring and wedge pools, arming, `Sync`, the feedback; the key (`BindKey`, `KeyOf`, `Command`, `PlaceOf`: WoW's own binding of the place's Open Comms Dial entry); the key bindings menu's labels |
 | 17 | `modules/Diagnostics.lua` | sections | the addon's sections of `/qc diagnostics` (identity, settings, registration, integrations, situation, restrictions, library, surfaces, dials, bindings, send) |
 | 18 | `settings/SchemaSetup.lua` | setup | LibKa0s-Schema, or the host's documented stub of it |
 | 19 | `settings/Schema.lua` | settings | the rows, the write seam (`NS.SchemaRuntime`), `NS.Setting`, the shared reactions, the defaults tree, the global reset |
@@ -75,14 +76,15 @@ The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after Li
 | 21e | `settings/Pads.lua` | settings | the Comms Pad page |
 | 21e2 | `settings/Dials.lua` | settings | the Comms Dial page (General, Groups, Wheel, Icons, Binding, Preview) |
 | 21f | `settings/Share.lua` | settings | the Share page (Export, Import) |
-| 21g | `settings/SlashVerbs.lua` | verbs | `NS.SlashVerbs`: the verb bodies (`check`, `SetLocked` for `lock` / `unlock`, `preview`, `why`) |
+| 21g | `settings/SlashVerbs.lua` | verbs | `NS.SlashVerbs`: the verb bodies (`check`, `SetLocked` for `lock` / `unlock`, `TogglePads` for `toggle`, `preview`, `why`); the Toggle Comms Pads binding's hidden `QuickCommsTogglePads` button and label |
 | 22 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |
 | 23 | `settings/Profiles.lua` | settings | the Profiles page (AceDBOptions) |
 
 `Bindings.xml` (root, not a TOC line): Open Comms Dial 1–4 in WoW's key bindings menu, each a
-`CLICK QuickCommsDial<n>:Toggle` binding. The client reads it from the addon's root by name, and the
-standard allows it there (layout-§1, toc-file-§4 (standard v2.80.0)); its labels are set in
-`modules/Dial.lua`.
+`CLICK QuickCommsDial<n>:Toggle` binding (a dial's key is this binding since 2026-10-20), and Toggle
+Comms Pads, `CLICK QuickCommsTogglePads:LeftButton`. The client reads it from the addon's root by
+name, and the standard allows it there (layout-§1, toc-file-§4 (standard v2.80.0)); the dials' labels
+are set in `modules/Dial.lua`, Toggle Comms Pads' in `settings/SlashVerbs.lua`.
 
 `tools/` holds the dev-only generators (`derive-gameids.py`, `derive-winds.py` and their shared
 `client_tables.py`): Python, never loaded by the client or the TOC, `.pkgmeta`-ignored (layout-§1).
@@ -107,6 +109,7 @@ files they add are listed in design spec §4.2.
 | `tests/test_master.lua` | the lock and test mode through one handler from the row, the verb and the launcher entry |
 | `tests/test_pad_layout.lua` | `Pad_Layout`: geometry, the sections per groups-as mode, the visibility expression, the fade |
 | `tests/test_surfaces.lua` | `Surfaces`: a pad's plan (a parent's own callouts and a section per child that is active), and the rebuild queued in combat with the stale hint |
+| `tests/test_dial_yield.lua` | Skip on the dial in content (`group.dialYield`): the dial's order in a key, a battleground and the open world, the pad unchanged, the edit preview, the row and its graying for a child, the share string |
 | `tests/test_pad_render.lua` | `Pad_Render`: what a chip and the header show (no channel letter: the label runs to the chip's edge, or the padlock's while locked; the tooltip names the channel), and the drag-strip seam |
 | `tests/test_icon_style.lua` | `IconStyle`: the defaults keep today's look; zoom, desaturate, alpha, the tint times a glyph's color; a pad's icon size feeds the chip's geometry; the chip's border and the wedge's round ring, never wider than the wedge; `fillShape` backfills `icon` |
 | `tests/test_glow.lua` | `Glow`: off by default; each style's call and knobs (a fake LibCustomGlow-1.0); an unchanged rebuild calls nothing; On hover and After sending; unused and released chips stop; no protected call in combat and the Icons write held to combat end; a wedge's glow; a dial's send glow from the next open within `DROP_SECONDS`; the stand-down puts out a send glow whose release is held |
@@ -118,10 +121,10 @@ files they add are listed in design spec §4.2.
 | `tests/test_eui_skin.lua` | the popup's EllesmereUI skin on a mocked EllesmereUI: painted as the settings window is when every condition holds, at the build or at a late callback, once (the icon browser's window too); not when any condition fails; never raising without EllesmereUI; a changed facade left stock; painted while the addon is disabled; the fallback window left unpainted; the diagnostics report's line and its `why=` reason |
 | `tests/test_groups_when.lua` | the When editor's pure half (toggle, clear, select all, key-level range, the values offered, the summary, the active-now line, an inheriting group's) and its write through the seam |
 | `tests/test_page_groups.lua` | the Groups page: the band (the picker, New group and Preview while editing one SimpleGroup's children, shown and sized, after a group switch too), picker (children indented, the green dot after the name) and New group, a group's tabs, a seeded set's the same as any (General's Parent group, icon chooser and the browser's writes, Restore built-in groups; Inherit when conditions beside Parent group; the Callouts tab's Add callout, Reuse and glyph list; the When drawers, Select all and Clear (Any), and an inheriting group's read-only When; no green dot on a seeded battleground's nodes in the open world; the Preview table), deleting a parent |
-| `tests/test_page_pads.lua` | the Comms Pad page: picker and New pad, General's acts, the Groups priority list, Layout with X/Y, Look, the Icons tab |
+| `tests/test_page_pads.lua` | the Comms Pad page: picker and New pad, General's acts, the Groups priority list, Layout with X/Y, the Window tab (its Header block), the Chip tab, the Icons tab |
 | `tests/test_dial_layout.lua` | `Dial_Layout`: rings, pages, open-into, geometry |
 | `tests/test_dial_secure.lua` | `Dial_Secure`: the snippets on a hand-built dial, in and out of combat |
-| `tests/test_dial.lua` | `Dial`: the frames, the rebuild and keys, the three exit paths, `Bindings.xml` |
+| `tests/test_dial.lua` | `Dial`: the frames, the rebuild, the keys as WoW's own bindings (`BindKey`), the three exit paths, `Bindings.xml` and the Toggle Comms Pads binding |
 | `tests/test_page_dials.lua` | the Comms Dial page |
 | `tests/test_page_share.lua` | the Share page: the Export tab (ticks, what they bring, the string in the copy window) and the Import tab (Accept, the report, Import, the combat refusals), and Defaults |
 | `tests/test_share.lua` | `Share`: the codec, the checks, the sanitizer, the report (pure); a parent and its children travel together, and an import nests them under the new copy |

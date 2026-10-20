@@ -142,23 +142,17 @@ test("dial: Release closes, disarms and forgets a dial; HideAll also releases th
     for _, b in ipairs(NS.SendEngine.ArmedButtons()) do assertTrue(b.qcMeta.surfaceId ~= "d2") end
     m.__click(h, "Toggle")
     assertFalse(h:IsShown(), "nothing left to open")
-    NS.SendEngine.BindKeys({ { key = "G", name = "QuickCommsDial1", button = "Toggle" } })
-    NS.Dial.HideAll()
-    assertNil(m.overrideBindings.G)
 end)
 
-test("dial: Sync applies each planned dial at its place in the order, binds its key, and opens dial 1 in test mode", function()
-    local NS, m = live()
-    NS.db.profile.dials.d2.key = "G"
+test("dial: Sync applies each planned dial at its place in the order, and opens dial 1 in test mode", function()
+    local NS = live()
     NS.Dial.Sync({ d2 = planOf(NS) }, { "d2" })
-    assertEqual(m.overrideBindings.G.name, "QuickCommsDial1")
-    assertEqual(m.overrideBindings.G.button, "Toggle")
+    assertEqual(NS.Dial.Instance("d2").header:GetName(), "QuickCommsDial1")
     assertFalse(NS.Dial.IsOpen("d2"))
     NS.Dial.Sync({ d2 = planOf(NS, { test = true }) }, { "d2" })
     assertTrue(NS.Dial.IsOpen("d2"), "test mode shows dial 1 open")
     NS.Dial.Sync({}, { "d2" })
     assertNil(NS.Dial.Instance("d2"))
-    assertNil(m.overrideBindings.G)
 end)
 
 -- ── the rebuild edge, the keys and the exit paths (Task 7) ──────────────────────────────────
@@ -178,7 +172,7 @@ local function combat(m, on)
     end
 end
 
-local function bindG(NS) assertTrue(NS.SchemaRuntime.Set("dial.key", "G", "d2")) end
+local function bindG(NS) assertTrue(NS.Dial.BindKey("d2", "G")) end
 
 local function wedgeTitled(NS, r, title)
     for _, w in ipairs(NS.Dial.RingWedges("d2", r)) do
@@ -192,16 +186,96 @@ local function ringTitle(NS)
     return r and NS.Surfaces.DialPlans().d2.rings[r].title
 end
 
-test("dial: the first situation read builds the default dial, closed; setting its key binds it", function()
+test("dial: the first situation read builds the default dial, closed; setting its key is WoW's own binding", function()
     local NS, m = live()
     local inst = NS.Dial.Instance("d2")
     assertTrue(inst ~= nil)
     assertEqual(inst.header:GetName(), "QuickCommsDial1")
     assertFalse(inst.header:IsShown())
-    assertNil(next(m.overrideBindings))
     bindG(NS)
-    assertEqual(m.overrideBindings.G.name, "QuickCommsDial1")
-    assertEqual(m.overrideBindings.G.button, "Toggle")
+    -- red under: an override binding (SetOverrideBindingClick), which Options -> Keybindings never shows
+    assertNil(next(m.overrideBindings), "no override binding")
+    assertEqual(m.bindingActions.G, "CLICK QuickCommsDial1:Toggle", "the Open Comms Dial 1 entry")
+    assertEqual(m.bindingKeys["CLICK QuickCommsDial1:Toggle"], "G")
+    assertEqual(table.concat(m.bindingSaves, ","), "1", "saved in the set in force")
+    assertNil(NS.db.profile.dials.d2.key, "never a profile field")
+    assertEqual(NS.Dial.KeyOf("d2"), "G")
+end)
+
+test("dial: [keys] a new key unbinds the old one; Escape (no key) clears it; a reserved key is refused", function()
+    local NS, m = live()
+    bindG(NS)
+    assertTrue(NS.Dial.BindKey("d2", "shift-h"))
+    assertNil(m.bindingActions.G, "the old key is the game's again")
+    assertEqual(m.bindingActions["SHIFT-H"], "CLICK QuickCommsDial1:Toggle", "normalized as the client spells it")
+    m.prints = {}
+    assertFalse(NS.Dial.BindKey("d2", "Escape"))
+    assertTrue(m.prints[1]:find("the open dial uses them", 1, true) ~= nil, m.prints[1])
+    assertFalse(NS.Dial.BindKey("d2", "3"), "1 to 8 pick the open dial's wedges")
+    assertEqual(NS.Dial.KeyOf("d2"), "SHIFT-H", "a refusal changes nothing")
+    assertTrue(NS.Dial.BindKey("d2", ""))
+    assertNil(m.bindingActions["SHIFT-H"])
+    assertNil(NS.Dial.KeyOf("d2"))
+    assertEqual(#m.blocked, 0)
+end)
+
+test("dial: [keys] a new key unbinds both keys the menu holds for the dial; Escape clears both", function()
+    local NS, m = live()
+    local command = "CLICK QuickCommsDial1:Toggle"
+    m.SetBinding("J", command)   -- the menu's two keys for Open Comms Dial 1
+    m.SetBinding("K", command)
+    -- red under: only Compat.BindingKey's first key unbound, K still opening the dial
+    assertTrue(NS.Dial.BindKey("d2", "G"))
+    assertNil(m.bindingActions.J)
+    assertNil(m.bindingActions.K, "the second key is unbound too")
+    assertEqual(table.concat(NS.Compat.BindingKeys(command), ","), "G")
+    assertEqual(NS.Dial.KeyOf("d2"), "G")
+    m.SetBinding("K", command)
+    assertTrue(NS.Dial.BindKey("d2", "K"), "the new key is one of the two: the other goes")
+    assertEqual(table.concat(NS.Compat.BindingKeys(command), ","), "K")
+    m.SetBinding("J", command)
+    assertTrue(NS.Dial.BindKey("d2", ""))
+    assertEqual(#NS.Compat.BindingKeys(command), 0, "Escape leaves no key bound")
+    assertEqual(#m.blocked, 0)
+end)
+
+test("dial: [keys] a key bound elsewhere in WoW is taken, with one line naming what it was", function()
+    local NS, m = live()
+    m.bindingActions.F = "TOGGLEAUTORUN"
+    m.BINDING_NAME_TOGGLEAUTORUN = "Toggle Autorun"
+    m.prints = {}
+    assertTrue(NS.Dial.BindKey("d2", "F"))
+    assertEqual(m.bindingActions.F, "CLICK QuickCommsDial1:Toggle")
+    assertTrue(m.prints[1]:find("F was Toggle Autorun in WoW's key bindings; now it opens this dial.", 1, true) ~= nil,
+        m.prints[1])
+end)
+
+test("dial: [keys] in combat a key cannot be set, with one line, and nothing is blocked", function()
+    local NS, m = live()
+    combat(m, true)
+    m.prints = {}
+    -- red under: Dial.BindKey calling SetBinding in combat (ADDON_ACTION_BLOCKED)
+    assertFalse(NS.Dial.BindKey("d2", "G"))
+    assertEqual(#m.prints, 1)
+    assertTrue(m.prints[1]:find("after combat", 1, true) ~= nil, m.prints[1])
+    assertEqual(#m.blocked, 0)
+    assertNil(m.bindingActions.G)
+end)
+
+test("dial: [keys] a key set in Options -> Keybindings is the dial's key; a dial past the fourth has none", function()
+    local NS, m = live()
+    m.SetBinding("J", "CLICK QuickCommsDial1:Toggle")   -- what the game's own menu does
+    assertEqual(NS.Dial.KeyOf("d2"), "J")
+    m.__pressKey("J")
+    assertTrue(NS.Dial.IsOpen("d2"))
+    local ids = {}
+    for i = 1, 4 do ids[i] = NS.Library.CreateSurface("dial", "Dial " .. i) end
+    assertEqual(NS.Dial.PlaceOf(ids[4]), 5)
+    assertNil(NS.Dial.Command(5))
+    m.prints = {}
+    assertFalse(NS.Dial.BindKey(ids[4], "K"))
+    assertTrue(m.prints[1]:find("first 4 dials", 1, true) ~= nil, m.prints[1])
+    assertNil(m.bindingActions.K)
 end)
 
 test("dial: [exit] in Arathi Basin the dial opens on the nodes; Lumber Mill, then INC, sends in two clicks", function()
@@ -222,8 +296,9 @@ test("dial: [exit] on a raid boss the dial opens and a click on a wedge sends, w
     bindG(NS)
     combat(m, true)
     m.__pressKey("G")
-    -- the raid set and In Group (bg buttons): the group ring, the raid set first
-    m.__click(NS.Dial.RingWedges("d2", NS.Dial.ShownRing("d2"))[1])
+    -- In Group skips the dial in a raid (group.dialYield): the dial opens on the raid set's ring
+    -- red under: S.BuildDialPlan keeping In Group, which opens the dial on a ring of groups
+    assertEqual(ringTitle(NS), "Raid (generic)")
     local w = NS.Dial.RingWedges("d2", NS.Dial.ShownRing("d2"))[1]
     m.__click(w)
     assertEqual(m.sentMacros[#m.sentMacros].text, "/raid Bloodlust now")
@@ -301,20 +376,17 @@ test("dial: Preview as opens dial 1 on the previewed situation, and its wedges s
     assertEqual(NS.Dial.Instance("d2").header.qcTest:GetText(), "PREVIEW")
 end)
 
-test("dial: [review 3] a key or wedge change in combat waits for combat end, behind the hub's stale hint", function()
+test("dial: [review 3] a wedge change in combat waits for combat end, behind the hub's stale hint; the key works", function()
     local NS, m = live()
     bindG(NS)
     combat(m, true)
-    assertTrue(NS.SchemaRuntime.Set("dial.key", "H", "d2"))
     assertTrue(NS.SchemaRuntime.Set("dial.slices", 8, "d2"))
     assertEqual(#m.blocked, 0)
     assertTrue(NS.Dial.Instance("d2").header.qcStale:IsShown())
-    assertEqual(m.overrideBindings.G.name, "QuickCommsDial1", "the old key still opens the dial")
     m.__pressKey("G")
-    assertTrue(NS.Dial.IsOpen("d2"), "and it works in combat")
+    assertTrue(NS.Dial.IsOpen("d2"), "the key opens the dial in combat")
     combat(m, false)
-    assertNil(m.overrideBindings.G)
-    assertEqual(m.overrideBindings.H.name, "QuickCommsDial1")
+    assertEqual(m.bindingActions.G, "CLICK QuickCommsDial1:Toggle", "WoW's binding, untouched by the rebuild")
     assertFalse(NS.Dial.Instance("d2").header.qcStale:IsShown())
     assertEqual(NS.Surfaces.DialPlans().d2.rings[2].size, 8)
     assertEqual(#m.blocked, 0)
@@ -330,11 +402,11 @@ test("dial: [review 1] the key opens nothing where no group is active, and is th
     assertFalse(NS.Dial.IsOpen("d2"), "solo in the open world with no World set: no ring to show")
     NS.SchemaRuntime.Set("enabled", false)
     -- red under: drop NS.Dial.HideAll() from the stand-down's Teardown in modules/Surfaces.lua
-    assertFalse(m.__pressKey("G"))
+    m.__pressKey("G")
+    assertFalse(NS.Dial.IsOpen("d2"), "the key is still WoW's binding, and opens nothing while disabled")
     assertEqual(#m.blocked, 0)
     NS.SchemaRuntime.Set("enabled", true)
-    -- red under: bind the keys only on a key edit (spec §9.4: re-applied on stand-up)
-    assertEqual(m.overrideBindings.G.name, "QuickCommsDial1", "re-applied on stand-up")
+    assertEqual(m.bindingActions.G, "CLICK QuickCommsDial1:Toggle", "kept through the stand-down")
 end)
 
 test("dial: [review 3] disabled in combat with the dial open: nothing blocked; combat end hides it and frees the key", function()
@@ -347,37 +419,19 @@ test("dial: [review 3] disabled in combat with the dial open: nothing blocked; c
     assertTrue(NS.Dial.IsOpen("d2"), "held: no protected call in combat")
     combat(m, false)
     assertNil(NS.Dial.Instance("d2"))
-    assertNil(m.overrideBindings.G)
-    assertEqual(#m.blocked, 0)
+    m.__pressKey("G")
+    assertEqual(#m.blocked, 0, "the key now clicks an emptied header: nothing opens, nothing is blocked")
 end)
 
-test("dial: [review 3] a profile switch in combat waits: the old key still opens the dial, then combat end binds the new", function()
-    local NS, m = live()
-    bindG(NS)
-    combat(m, true)
-    NS.addon.db:SetProfile("Other")
-    assertTrue(NS.SchemaRuntime.Set("dial.key", "H", NS.db.profile.dialOrder[1]))
-    assertEqual(#m.blocked, 0)
-    local h = m.__named.QuickCommsDial1
-    assertTrue(h.qcStale:IsShown(), "updates after combat")
-    assertEqual(m.overrideBindings.G.name, "QuickCommsDial1", "the old profile's key until combat ends")
-    combat(m, false)
-    assertNil(m.overrideBindings.G)
-    assertEqual(m.overrideBindings.H.name, "QuickCommsDial1")
-    assertFalse(h.qcStale:IsShown())
-    assertEqual(#m.blocked, 0)
-end)
-
-test("dial: a profile switch binds the new profile's key and releases the old one", function()
+test("dial: [keys] a profile switch keeps the key: it is WoW's binding, never the profile's", function()
     local NS, m = live()
     bindG(NS)
     NS.addon.db:SetProfile("Other")
-    assertNil(m.overrideBindings.G, "Other's dial has no key")
-    assertTrue(NS.SchemaRuntime.Set("dial.key", "H", NS.db.profile.dialOrder[1]))
-    assertEqual(m.overrideBindings.H.name, "QuickCommsDial1")
-    NS.addon.db:SetProfile("Default")
-    assertEqual(m.overrideBindings.G.name, "QuickCommsDial1")
-    assertNil(m.overrideBindings.H)
+    -- red under: a key stored in the profile (the Other profile's dial would have none)
+    assertEqual(NS.Dial.KeyOf(NS.db.profile.dialOrder[1]), "G", "the first dial in any profile takes place 1's key")
+    m.__pressKey("G")
+    assertTrue(NS.Dial.IsOpen(NS.db.profile.dialOrder[1]))
+    assertEqual(#m.blocked, 0)
 end)
 
 test("dial: Reset position puts every pad and dial back, through their point rows, on one line", function()
@@ -427,12 +481,16 @@ test("dial: Bindings.xml offers Open Comms Dial 1 to 4, each clicking that dial'
     local xml = readFile("Bindings.xml")
     local names = {}
     for name in xml:gmatch('<Binding name="([^"]+)"') do names[#names + 1] = name end
-    assertEqual(#names, NS.Dial.BINDINGS)
-    for i, name in ipairs(names) do
+    assertEqual(#names, NS.Dial.BINDINGS + 1, "the four dials and Toggle Comms Pads")
+    for i = 1, NS.Dial.BINDINGS do
+        local name = names[i]
         assertEqual(name, ("CLICK QuickCommsDial%d:Toggle"):format(i))
         -- red under: drop the rawset loop from modules/Dial.lua (the menu would show the raw name)
         assertEqual(m["BINDING_NAME_" .. name], ("Open Comms Dial %d"):format(i))
     end
+    assertEqual(names[#names], "CLICK QuickCommsTogglePads:LeftButton")
+    -- red under: drop the label's rawset from settings/SlashVerbs.lua
+    assertEqual(m["BINDING_NAME_" .. names[#names]], "Toggle Comms Pads")
     assertTrue(xml:find('header="QUICKCOMMS"', 1, true) ~= nil)
     -- red under: drop the BINDING_HEADER_QUICKCOMMS line from modules/Dial.lua
     assertEqual(rawget(_G, "BINDING_HEADER_QUICKCOMMS"), "Ka0s Quick Comms")
@@ -440,6 +498,27 @@ test("dial: Bindings.xml offers Open Comms Dial 1 to 4, each clicking that dial'
         -- a root file, not a TOC line, as the standard allows (layout-§1, toc-file-§4 (standard v2.80.0))
         assertTrue(rel ~= "Bindings.xml", "the client loads it by name, never through the TOC")
     end
+end)
+
+test("dial: [keys] Toggle Comms Pads runs exactly /qc toggle's handler, from a key bound in WoW's menu", function()
+    local NS, m = live()
+    local calls = 0
+    local toggle = NS.SlashVerbs.TogglePads
+    NS.SlashVerbs.TogglePads = function(...)
+        calls = calls + 1
+        return toggle(...)
+    end
+    m.SetBinding("P", "CLICK QuickCommsTogglePads:LeftButton")   -- bound in Options -> Keybindings
+    m.prints = {}
+    assertTrue(m.__pressKey("P"))
+    -- red under: the button's OnClick doing its own toggle (two handlers for one verb)
+    assertEqual(calls, 1, "one press, one toggle")
+    assertTrue(NS.State.padsHidden, "the pads are hidden for the session")
+    assertTrue(m.prints[1]:find("Comms Pads hidden for this session.", 1, true) ~= nil, m.prints[1])
+    m.__pressKey("P")
+    assertFalse(NS.State.padsHidden == true, "and shown again")
+    assertEqual(calls, 2)
+    assertFalse(m.__named.QuickCommsTogglePads:IsShown(), "the button itself is never seen")
 end)
 
 test("dial: the key bindings menu's click opens the dial, even while it is hidden", function()
@@ -456,7 +535,7 @@ test("dial: [final 2] two dials: opening the second closes the first, and the nu
     local NS, m = live()
     bindG(NS)
     local other = NS.Library.CreateSurface("dial", "Lead")
-    assertTrue(NS.SchemaRuntime.Set("dial.key", "H", other))
+    assertTrue(NS.Dial.BindKey(other, "H"))
     assertTrue(NS.Dial.Instance(other) ~= nil, "the second dial is built")
     m.__pressKey("G")
     assertTrue(NS.Dial.IsOpen("d2"))

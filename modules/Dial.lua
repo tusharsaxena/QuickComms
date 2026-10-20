@@ -12,10 +12,17 @@ local _, NS = ...
 -- paint changes here: the stale hint, the padlocks, the lockdown chip, the hub's tooltip. A callout
 -- wedge is armed exactly as a pad chip is (Pad.ArmSlot): a refused, placeholder or previewed slot is
 -- disarmed. The dial's place is `dials[id].point` (the `dial.point` member row; Reset position writes
--- it through Library.SetSurfacePoint); "Open at the cursor" re-anchors in the snippet instead. Sync
--- binds every built dial's key to its header (SendEngine.BindKeys) after the rebuild, so a profile
--- switch, a stand-up or a key edit re-binds; and in test mode or a preview it opens dial 1 (spec
--- §11.4), taking no key. The guard's dim and the result flash (spec §9.2, §9.3) are insecure and
+-- it through Library.SetSurfacePoint); "Open at the cursor" re-anchors in the snippet instead. In test
+-- mode or a preview Sync opens dial 1 (spec §11.4), taking no key.
+--
+-- THE KEY (2026-10-20) is WoW's own binding of the place's Bindings.xml entry ("CLICK
+-- QuickCommsDial<place>:Toggle", Open Comms Dial <place> under Ka0s Quick Comms in Options ->
+-- Keybindings), never a profile field: account-wide unless the player ticks Character Specific
+-- Keybindings, the same binding whichever page sets it. BindKey sets it (the Comms Dial page's Key
+-- box), out of combat only, through core/Compat.lua: the old key unbound, the new one bound, the set
+-- saved. It follows the place, so a dial that moves up the list takes the key of its new place, and
+-- a place with no dial, a disabled dial or a stood-down addon leaves the key bound and opening
+-- nothing. Only the first BINDINGS places have an entry, so a dial past them has no key. The guard's dim and the result flash (spec §9.2, §9.3) are insecure and
 -- reach every wedge as they reach every chip: Pad.Cooldown calls Dial.Cooldown, and SEND_RESULT
 -- flashes a callout's wedges. The dial closes on a send, so both show on the next open; a drop stays
 -- red for DROP_SECONDS so the player can reopen it and see which line was lost. The Icons tab (B9)
@@ -46,6 +53,80 @@ Dial.BINDINGS = 4
 BINDING_HEADER_QUICKCOMMS = NS.BRAND
 for i = 1, Dial.BINDINGS do
     rawset(_G, ("BINDING_NAME_CLICK %s:%s"):format(DS.HEADER:format(i), DS.TOGGLE), L["Open Comms Dial %d"]:format(i))
+end
+
+--- The key bindings menu's command for the dial at `place` in the dial order (Bindings.xml), or nil
+--- past the BINDINGS entries the menu lists.
+function Dial.Command(place)
+    place = tonumber(place)
+    if not place or place < 1 or place > Dial.BINDINGS then return nil end
+    return ("CLICK %s:%s"):format(DS.HEADER:format(place), DS.TOGGLE)
+end
+
+--- A dial's place in the dial order, or nil.
+function Dial.PlaceOf(id)
+    local p = NS.db and NS.db.profile
+    for i, did in ipairs(p and p.dialOrder or {}) do
+        if did == id then return i end
+    end
+    return nil
+end
+
+--- The key WoW binds to the dial `id`'s entry (its first), or nil: none, no entry past the
+--- BINDINGS places, or no such dial.
+function Dial.KeyOf(id)
+    local command = Dial.Command(Dial.PlaceOf(id))
+    return command and NS.Compat.BindingKey(command) or nil
+end
+
+-- Why a key cannot open a dial (Library.ValidKey's reason codes).
+local KEY_WHY = {
+    badKey = L["A key is one key, with ALT-, CTRL- or SHIFT- in front if you like."],
+    reservedKey = L["Escape, the left and right mouse buttons, the mouse wheel and 1 to 8 without a modifier cannot open a dial: the open dial uses them."],
+}
+
+-- Bind `key` (normalized; nil clears) to `command` in place of every key in `olds` (the menu holds
+-- two per action; each one that is not `key` is unbound), and save the set.
+local function rebind(command, olds, key)
+    for _, old in ipairs(olds) do
+        if old ~= key then NS.Compat.SetBinding(old, nil) end
+    end
+    local before = key and NS.Compat.BindingAction(key)
+    if key and before ~= command then NS.Compat.SetBinding(key, command) end
+    NS.Compat.SaveBindings()
+    NS.Debug("Bind", "%s: %s -> %s", command, #olds > 0 and table.concat(olds, ",") or "none", tostring(key or "none"))
+    if before and before ~= command then
+        NS.Print(L["%s was %s in WoW's key bindings; now it opens this dial."]:format(key,
+            NS.Compat.BindingLabel(before) or before))
+    end
+end
+
+--- Set the dial `id`'s key: WoW's own binding of its place's entry (Bindings.xml), its old key
+--- unbound and the set saved, so Options -> Keybindings shows it and it lasts. `key` as captured or
+--- typed ("" or "none" clears it). Refused, with one printed line, in combat (the game refuses a
+--- binding change), past the BINDINGS places, and for a key the open dial needs.
+--- @return boolean set
+function Dial.BindKey(id, key)
+    local place = Dial.PlaceOf(id)
+    local command = Dial.Command(place)
+    if not command then
+        NS.Print(L["Only the first %d dials in the list have a key in WoW's key bindings."]:format(Dial.BINDINGS))
+        return false
+    end
+    if NS.Compat.InCombat() then
+        NS.Print(L["Key bindings can be changed after combat."])
+        return false
+    end
+    local ok, code = NS.Library.ValidKey(key)
+    if not ok then
+        NS.Print(KEY_WHY[code] or tostring(code))
+        return false
+    end
+    key = NS.Library.KeyValue(key) or nil
+    local olds = NS.Compat.BindingKeys(command)
+    if (key and #olds == 1 and olds[1] == key) or (not key and #olds == 0) then return true end
+    rebind(command, olds, key)
+    return true
 end
 
 local byIndex, byId = {}, {}   -- [place] = instance; [dialId] = instance
@@ -209,22 +290,18 @@ local function link()
     if #headers ~= linked and DS.Link(headers) then linked = #headers end
 end
 
--- Apply each planned dial at its place in `order` (the dial order). Answers the places built, the
--- keys to bind ({ key, name, button } per built dial with a key) and the first place built.
+-- Apply each planned dial at its place in `order` (the dial order). Answers the places built and the
+-- first place built.
 local function applyAll(plans, order)
-    local used, keys, first = {}, {}, nil
+    local used, first = {}, nil
     for index, id in ipairs(order or {}) do
         local plan = plans[id]
         if plan and Dial.Apply(index, id, plan) then
             used[index] = true
             first = first or index
-            local key = profileDial(id).key
-            if type(key) == "string" and key ~= "" then
-                keys[#keys + 1] = { key = key, name = DS.HEADER:format(index), button = DS.TOGGLE }
-            end
         end
     end
-    return used, keys, first
+    return used, first
 end
 
 -- In test mode or a preview, open the first dial built (spec §11.4) when the mode turns on or
@@ -237,28 +314,25 @@ local function openDisplay(plans, order, first, wasOpen)
 end
 
 --- Make the dials match a set of plans: apply each planned dial at its place in `order` (the dial
---- order), release every other place, bind each built dial's key to its header, and in test mode or a
---- preview open the first one (spec §11.4): when the mode turns on or changes, or when the dial was open
+--- order), release every other place, and in test mode or a preview open the first one (spec §11.4): when the mode turns on or changes, or when the dial was open
 --- before this rebuild closed it. A dial the player closed stays closed through later rebuilds, so it
 --- does not come back over the settings window after every edit. Out of combat only.
 function Dial.Sync(plans, order)
     local wasOpen = {}
     for index, inst in pairs(byIndex) do wasOpen[index] = inst.header:IsShown() end
-    local used, keys, first = applyAll(plans, order)
+    local used, first = applyAll(plans, order)
     for index in pairs(byIndex) do
         if not used[index] then Dial.Release(index) end
     end
     link()
-    NS.SendEngine.BindKeys(keys)
     openDisplay(plans, order, first, wasOpen)
 end
 
---- The secure half of the stand-down: every dial released, every key unbound. Out of combat (the
---- stand-down holds it to combat end).
+--- The secure half of the stand-down: every dial released, so its key (WoW's binding, kept) opens
+--- nothing. Out of combat (the stand-down holds it to combat end).
 function Dial.HideAll()
     for index in pairs(byIndex) do Dial.Release(index) end
     displayMode = nil
-    NS.SendEngine.ClearKeys()
 end
 
 -- ── insecure updates, allowed in combat ─────────────────────────────────────────────────────

@@ -23,9 +23,11 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | SEND-1..5 | Send | Secure sends in keys and on bosses, the spam guard |
 | PAD-1..12 | Pad | The Comms Pad, its growth and chip width, the World (solo) and In Group sets and the built-ins' colors |
 | EDIT-1..29 | Editors | The Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
-| DIAL-1..12 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial |
+| DIAL-1..13 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, In Group off the dial in content |
+| KEY-1..3 | Key bindings | A dial's key as WoW's own binding in Options → Keybindings, Character Specific Keybindings, Toggle Comms Pads |
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
-| LOOK-1..2 | Look | The Comms Pad's font, border and background |
+| LOOK-1..4 | Window | The Comms Pad's Window tab: the section titles' font, border and background, the header's look, size and alignment |
+| CHIP-1..2 | Chip tab | The chips' size, color, border and font; the chip glow |
 | ICONS-1..3 | Icons tab | The chips' and wedges' icon look, border and glow triggers |
 | ICON-1 | Icons | Choosing an icon, for a callout and for a group |
 | BG-1..8 | Battlegrounds | Node winds on the dial; the battleground instance ids; the objective groups (Alterac Valley, Isle of Conquest's bases, a flag map) and their migration; the four node buttons; Silvershard Mines' and Temple of Kotmogu's groups |
@@ -202,8 +204,8 @@ from a top edge that stays put. A profile saved with Upward growth loads as Righ
 before 2026-10-19 moves once on its first load, by up to its height (see Known Limitations in
 `docs/ARCHITECTURE.md`); drag it back and it stays. Result:
 
-**PAD-10. Chip width and the section title.** Comms Pad → Layout → Chip width reads 100 on a new
-pad; drag it to 300 → wide chips, each label on one line, running to the chip's right edge with no
+**PAD-10. Chip width and the section title.** Comms Pad → Chip → Chip width reads 100 on a new
+pad, and Layout no longer has it; drag it to 300 → wide chips, each label on one line, running to the chip's right edge with no
 channel letter after it; down to 30 → the labels cut short, still
 one line; down to 1 → icon-only slivers, no label and no Lua error. Make a group named `World`, put
 it on the pad and stand in the open world → the header reads `World` and the section under it has
@@ -229,7 +231,7 @@ handshake, brb a white cup, Ready a green check, Drink a blue flask, Summon a pu
 own icon three cyan figures. Click GLHF → party chat reads "GLHF"; Drink → "Drinking"; Summon →
 "Summon please!". Convert to a raid → the same chips send to raid chat; in a battleground or a
 dungeon finder group → instance chat, and the battleground's own set is still first on the pad and
-the dial still opens on its nodes. Leave the group → the In Group section is gone. Result:
+the dial still opens on its nodes (In Group is not on the dial there, DIAL-13). Leave the group → the In Group section is gone. Result:
 
 ## Editors
 
@@ -265,7 +267,7 @@ outside a raid, the last line names the lock. Behavior → Explain why groups sh
 
 **EDIT-5. The Comms Pad page.** Comms Pad → Layout: Orientation Vertical, Chip style Label only,
 Scale 1.5 → the pad redraws each time. Type X `200`, Y `-100` → it moves; Reset this pad's position
-→ it returns. Look → Visibility Only out of combat → it hides on the pull with no error. Groups:
+→ it returns. Window → Visibility Only out of combat → it hides on the pull with no error. Groups:
 drag a group to the top → it comes first on the pad. New pad → a second pad appears holding every
 built-in group you still have (top-level, in shipped order); Delete pad (Yes) → it is gone. Result:
 
@@ -509,13 +511,14 @@ filtered by it; Cancel and open the browser again → the text is still there; `
 empty. Escape with the Wowhead window's box focused closes that window alone; close the browser →
 the Wowhead window closes with it. Result:
 
-**EDIT-25. The Callouts rows and the Look tab.** Groups → "Dungeon (generic)" → Callouts → each
+**EDIT-25. The Callouts rows and the Window and Chip tabs.** Groups → "Dungeon (generic)" → Callouts → each
 row reads its icon, the name in gold, the channel's short label in its chat color (Party blue,
 Say white) and the start of its text in a muted white, cut at 40
 characters with "…". A callout with no icon shows the question mark; a callout whose text holds a
 `|` shows the bar, not a color change; a Smart channel takes the color of the channel it resolves to
-now (solo: Party). Comms Pad → Look → Visibility, then the Font, Border and Background headings, each
-heading once. Result:
+now (solo: Party). Comms Pad → Window → Visibility, then the Header, Section titles, Border and
+Background headings, each heading once; Comms Pad → Chip → the Size, Color, Border, Font and Glow
+headings, each once. Result:
 
 **EDIT-26. The glyph sets and their credits.** Open the icon browser (EDIT-14) → Glyphs: the count
 reads over five thousand. A set dropdown left of Icon color reads All; pick Open Iconic → only the
@@ -567,8 +570,8 @@ outside the disc, the ✕ hub, and a gold pointer that follows the cursor. Press
 Escape → it closes and the game menu does not open. Open it; right-click a wedge → it closes and nothing
 is sent. Result:
 
-**DIAL-2. A wedge sends in a boss (the phase 4 exit).** On a raid or M+ boss, press G, click the raid
-or dungeon group (In Group is beside it, so the dial opens on the group ring), then click a callout
+**DIAL-2. A wedge sends in a boss (the phase 4 exit).** On a raid or M+ boss, press G → the dial opens
+straight on the raid or dungeon set's ring (In Group skips the dial in content); click a callout
 wedge → the group sees the line, the dial closes, and there is no "action blocked" error or red
 text. With the dial closed, 1 still fires your action bar's first button. Press G again at once → every
 wedge is dimmed for about a second (the spam guard). Result:
@@ -585,7 +588,7 @@ with an Arathi Basin wedge (the gold wheat sheaf) on E, the first wind left free
 map-wide callouts (groups polish);
 click Lumber Mill, then INC → instance chat shows "INC Lumber Mill": two clicks. Open again and
 press 4 → Lumber Mill's ring opens (the number keys count the shown wedges clockwise from N). (If it opens on the group ring instead, check the Groups tab: Arathi Basin must sit above
-Battleground (generic), In Group and every group active there, and the tab's "Three rings deep" warning names the
+Battleground (generic) and every group active there, and the tab's "Three rings deep" warning names the
 cause; a `/reload` after updating runs the migration that moves the generic set. If the dial does not
 show Arathi Basin at all, the instance id may be wrong: run `/qc diagnostics`, copy the `situation`
 section's instanceID into the "Battleground instance IDs seen" table of
@@ -596,12 +599,12 @@ the ids.) Result:
 third wedge's callout is sent; open, scroll down → the next page, up → back; the More wedge does the
 same. After the dial closes, 1–8, Escape and the mouse wheel do what they did before. Result:
 
-**DIAL-6. Key bindings and conflicts.** Escape → Options → Keybindings → AddOns → "Ka0s Quick Comms"
-lists Open Comms Dial 1 to 4; bind Open Comms Dial 1 to F → F opens dial 1 like its own key. On the
-Binding tab set the key to TAB → the line warns that TAB is also a WoW binding, and TAB opens the dial;
-`/qc disable` → TAB targets again; `/qc enable` → TAB opens the dial again. New dial → give it TAB →
-refused with "TAB already opens Comms Dial."; give it 3, or the mouse wheel → refused, saying the open
-dial uses them; ALT-3 is taken. Result:
+**DIAL-6. Keys taken from WoW, and refused keys.** On the Binding tab set the key to TAB → one chat
+line says TAB was Target Nearest Enemy in WoW's key bindings and now opens this dial; TAB opens the
+dial, and Options → Keybindings shows TAB on Open Comms Dial 1 and nothing on Target Nearest Enemy
+(set it back there afterwards). `/qc disable` → TAB opens nothing (it stays bound: a WoW binding is not
+handed back); `/qc enable` → TAB opens the dial again. Give it 3, or the mouse wheel → refused, saying
+the open dial uses them, and the box goes back; ALT-3 is taken. Result:
 
 **DIAL-7. Open at the cursor, the dial's place, Reset position.** Wheel → Open at → At the cursor →
 press G away from the middle → the dial opens centered on the cursor, in combat too (unverified: a
@@ -609,10 +612,10 @@ restricted `SetPoint` to `$cursor`). Back to At its place; set Y to 150 → it o
 dial's position → the middle again. General → Master controls → Reset position → pads and dials back,
 one chat line. Result:
 
-**DIAL-8. Edits and disable in combat.** In combat: `/qc set dial.key H` → no error, and the hub shows
-"updates after combat" when G opens it; after combat H opens it and G no longer does. In combat with
-the dial open: `/qc disable` → no error, the dial keeps working until combat ends, then it is gone and
-the key is the game's again. Result:
+**DIAL-8. Edits and disable in combat.** In combat: `/qc set dial.slices 8` → no error, and the hub
+shows "updates after combat" when G opens it; after combat it has eight wedges. In combat with the
+dial open: `/qc disable` → no error, the dial keeps working until combat ends, then it is gone and G
+opens nothing (still bound in WoW's key bindings). Result:
 
 **DIAL-9. Test mode and Preview as.** Out of combat: `/qc test` → dial 1 opens at its place with
 placeholder wedges and TEST MODE above the hub; clicking sends nothing; 1 still fires the action bar.
@@ -640,6 +643,14 @@ dial with the hub, then change Wedges per ring → it stays closed. Result:
 LibKa0s catalog's `close` mark, not the round stop button), and during an encounter a Say callout's wedge shows
 the same small gold padlock as a pad chip (PAD-8). With LibKa0s removed (DEGRADED-1) the stop button and the
 pet-battle padlock draw instead, with no error. Result:
+
+**DIAL-13. In Group skips the dial in content.** In the open world with a party, press G → the dial
+shows In Group (alone, it opens on its ring). Enter a dungeon with the party (or start a key) and
+press G → the dial opens straight on the Dungeon (generic) ring, with no ring of groups and no In
+Group wedge; the pad still shows the In Group section after the dungeon set. Settings → Groups → In
+Group → General: Skip on the dial in content is ticked; untick it → the dial opens on the group ring
+again, In Group beside the dungeon set; tick it back. Pick a group inside another (an Arathi Basin
+node) → the box is grayed out. Result:
 
 ## Share
 
@@ -688,10 +699,13 @@ it as before. Result:
 
 ## Look
 
-**LOOK-1. Font.** Comms Pad → Look → Font: pick another face, Font size 14, Font flags Outline,
-untick Font shadow → the chip labels and the section titles redraw that way, the titles still gold;
-tick Use class color → both take your class color, and Font color's opacity still applies; untick it
-and set Font color to red → both turn red. Result:
+The Comms Pad's Window tab (the Look tab until 2026-10-20; the checks keep their LOOK ids).
+
+**LOOK-1. Section titles.** Comms Pad → Window → Section titles: pick another face, Font size 14,
+Font flags Outline, untick Font shadow → the section titles (In Party, Mythic+…) redraw that way, still
+gold; the chip labels do not change (they are the Chip tab's). Tick Use class color → the titles take
+your class color, and Font color's opacity still applies; untick it and set Font color to red → the
+titles turn red. Result:
 
 **LOOK-2. Border and background.** Border style: a LibSharedMedia border (Blizzard Tooltip, for one),
 thickness 3, color red → the pad's edge changes; thickness 0 → no edge. Background: dark blue at 50%
@@ -699,6 +713,66 @@ opacity → the body changes; Use class color → your class color at 50%. The s
 and locked in combat, so the in-combat write goes through the command line: in combat,
 `/qc set pad.look.borderSize 3` → no error, the header shows "updates after combat", and the thicker
 edge lands at combat end. Defaults → the Ka0s look again. Result:
+
+**LOOK-3. The header's look (2026-10-20).** On a new pad the header row (the top row, `World` in the
+open world) is a little taller than before (22 pixels; it was 18) and otherwise looks as it did: small
+gold text, no background, no edge. Comms Pad → Window → Header: Header height 30 → the row grows and
+every section moves down with it; Font size 14, another face, Font flags Outline → the situation text
+redraws that way, and during an encounter with a Say callout on the pad the LOCKDOWN chip takes the
+same face and size and stays red; the collapse button grows with it. Background dark red at 60% → a
+band behind the header only; Border thickness 2, color white → an edge around the header only, with no
+gray inner line; a LibSharedMedia border style draws that art. Use class color on each → your class
+color. Defaults → the header as it was, 22 tall. Result:
+
+**LOOK-4. The header's text sits on the titles' edge (2026-10-20).** Stand where the pad shows a section
+title under the header (a party in the open world: `World` over `In Party`). The `W` of World and the
+`I` of In Party start at the same distance from the pad's left edge (before, World sat a few pixels to
+the right). Layout → Growth → Left and down, Right and up, Left and up in turn → still aligned in each;
+Spacing 20 → still aligned. Result:
+
+## Chip tab
+
+**CHIP-1. Size, color, border and font (2026-10-20).** On a new pad the chips look as before (the dark
+body, no edge, small white labels). Comms Pad → Chip: Chip width 160 → wider chips; Chip height 40 →
+taller chips, label and icon centered; Chip height 0 → back to the automatic height; Chip style Icon
+only (Layout) → square chips around the icons whatever the size says. Color → Background red at 50% →
+every chip's body; Use class color → your class color. Border thickness 2, color white → an edge around
+every chip, over the body, never hiding the icon or label; a LibSharedMedia border draws that art; 0 →
+no edge. Font: another face, size 14, Outline, Font color yellow → the chip labels only (the section
+titles keep the Window tab's font); a bigger font grows the automatic height. Defaults → the chips as
+before. In combat, `/qc set pad.chip.width 150` → no error, "updates after combat", wider chips at
+combat end. Result:
+
+**CHIP-2. The chip glow (2026-10-20).** Chip → Glow is off by default and Glow style is grayed out.
+Tick Glow → every chip glows around its whole edge in Pixel border, gold; Glow style Auto cast
+sparkles, Button (rotating rays), Proc (flipbook) → each looks different; Glow color green → green;
+Use class color → your class color. With the Icons tab's glow on too, both glows show (one around the
+icon, one around the chip) and turning either off leaves the other. A full pad glowing keeps the frame
+rate where it was; untick Glow → every chip glow stops. Result:
+
+## Key bindings
+
+**KEY-1. A dial's key is WoW's own binding (2026-10-20).** Settings → Comms Dial → Binding: click Key,
+press G. Escape → Options → Keybindings → AddOns → Ka0s Quick Comms → Open Comms Dial 1 shows G. There,
+bind Open Comms Dial 1 to F instead, close Options, reopen Settings → Comms Dial → Binding → the box
+shows F and the line reads "F opens and closes this dial."; F opens the dial and G no longer does (G is
+back to whatever it was before). Escape in the Key box → no key; Options shows none for Open Comms
+Dial 1. Make five dials → the fifth's Key box is grayed out and its line says to move it into the first
+four. In combat, with the settings open, press a key in the box → one chat line says key bindings can
+be changed after combat, and nothing changes. `/reload` → the key is still bound. Result:
+
+**KEY-2. Account-wide, unless Character Specific Keybindings (2026-10-20).** Bind G to the dial on one
+character, log a second character → G opens its dial too (the Binding tab shows G). Options →
+Keybindings → tick Character Specific Keybindings on the second character, set the dial's key to H on
+the Binding tab → H opens it here; log back to the first → still G there. Switch profile (Profiles
+page) → the key does not change. Result:
+
+**KEY-3. Toggle Comms Pads (2026-10-20).** Options → Keybindings → Ka0s Quick Comms lists Toggle Comms
+Pads after Open Comms Dial 1 to 4. Bind it to P. Press P once → every pad hides and the chat says
+"Comms Pads hidden for this session." (exactly once: one press, one toggle); the minimap menu's Show
+window is unticked. Press P → the pads are back. In combat, press P → nothing changes until combat
+ends, then the pads toggle, with no Lua error. `/qc disable`, press P → the disabled line, as
+`/qc toggle` prints. Result:
 
 ## Icons tab
 
@@ -831,7 +905,7 @@ code (phase 5):
   editor falls back to the id).
 - **Sent in chat**: the callout tokens' values (`{me}`, `{spec}`, …) come from the client in its own
   language and are escaped like any value (`test_tokens`).
-- **The Look's font**: the default face is LibSharedMedia's "Friz Quadrata TT", which LibSharedMedia
+- **The pads' fonts** (the Window tab's header and section titles, the Chip tab's labels): the default face is LibSharedMedia's "Friz Quadrata TT", which LibSharedMedia
   does not register on koKR, zhCN or zhTW; a face the machine does not have draws `STANDARD_TEXT_FONT`
   (`Pad_Render.LabelFont`, `test_pad_render`).
 - **Printed**: every chat and report line is English through `NS.L`, the share and import lines
@@ -852,6 +926,7 @@ from the client, so this check needs a non-English client pass. Result:
 | INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..3, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet; LOC-1 re-enumerated in phase 5 and owed a non-English client pass; STATE-3 added and PANEL-2 rewritten with `/qc toggle` and Preview as in Master controls (2026-10-19) |
 | SEND-1..5, PAD-1..12 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet; PAD-12 added with In Group, PAD-3 and PAD-4 rewritten with the strip as wide as the pad (2026-10-20, bg buttons); PAD-1 rewritten and PAD-11 added with World (solo) and the built-ins' colors, PAD-3 and PAD-4 rewritten with the strip's marker (2026-10-19, groups polish); PAD-8 added in phase 5 (audit QC-07); PAD-1 rewritten and PAD-9..10 added with the up growth, chip width and the built-in glyphs (2026-10-19) |
 | EDIT-1..29 | Phase 3: the editors | No client pass recorded yet; EDIT-29 added with the preview click's echo (2026-10-20); EDIT-28 added with right-click a group title (2026-10-19); EDIT-27 added with Preview while editing (2026-10-19); EDIT-3, 4, 20 and 22 rewritten and EDIT-25..26 added with Preview as in Master controls, the Dungeon set, the Arena drawer, instance search, the Callouts rows and the glyph sets (2026-10-19); EDIT-1, 2 and 19 rewritten and EDIT-22..24 added with the When drawers, Inherit when conditions and the icon browser's search (2026-10-18); EDIT-2, 4, 5, 6, 11, 14 and ICON-1 rewritten and EDIT-19..21 added when the built-in sets became seeded groups, groups nested and the Preview tab became a table (2026-10-18); EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17); EDIT-9, 13 and ICON-1 rewritten and EDIT-14..17 added with the icon browser and glyph colors (2026-10-18); EDIT-9 rewritten and EDIT-18 added when the token dropdown became the Text label's info glyph (2026-10-18); EDIT-13, 14 and ICON-1 rewritten when the Suggested tab went and the skin stopped waiting for the addon to be enabled (2026-10-18); EDIT-9, 18 and ICON-1 rewritten when the Icon boxes went and the popup took its two-column layout (2026-10-18); EDIT-9, 11 and ICON-1 rewritten with the clear glyph, the Preview gap and the buttons' 2 px inset (2026-10-18) |
-| DIAL-1..12 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-2 and DIAL-4 rewritten with In Group and the four node buttons (2026-10-20, bg buttons); DIAL-4 rewritten with the node set's map-wide wedge (2026-10-19, groups polish); DIAL-9 rewritten when Preview as moved to Master controls (2026-10-19); DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
+| DIAL-1..13 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-2 rewritten and DIAL-13 added with Skip on the dial in content (2026-10-20); DIAL-2 and DIAL-4 rewritten with In Group and the four node buttons (2026-10-20, bg buttons); DIAL-4 rewritten with the node set's map-wide wedge (2026-10-19, groups polish); DIAL-9 rewritten when Preview as moved to Master controls (2026-10-19); DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
 | SHARE-1..6, LOOK-1..2, ICON-1, BG-1..8, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; BG-1 and BG-4 rewritten and BG-7..8 added with the four node buttons and Silvershard Mines' and Temple of Kotmogu's groups (2026-10-20, bg buttons); BG-1 rewritten with Wintergrasp's winds and BG-3..6 added with the battleground objective groups (2026-10-20); BG-1 rewritten with the map-wide wedge (2026-10-19, groups polish); LOOK-2's in-combat step goes through `/qc set`; IDS-1 extended to the journal instances and arenas (2026-10-19) |
 | ICONS-1..3 | Icons and polish (2026-10-19): the Icons tab | No client pass recorded yet |
+| LOOK-3..4, CHIP-1..2, KEY-1..3 | Window, Chip and keys (2026-10-20): the header's look and alignment, the Chip tab, keys as WoW bindings and Toggle Comms Pads | No client pass recorded yet; LOOK-1 rewritten with the Section titles font, PAD-10 with Chip width on the Chip tab, DIAL-6 and DIAL-8 with the dial key as WoW's own binding |

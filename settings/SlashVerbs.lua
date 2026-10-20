@@ -62,7 +62,8 @@ function V.ToggleLock()
     V.SetLocked(NS.Setting("locked") == false)
 end
 
---- `/qc toggle` and the launcher's Show window entry: hide or show every Comms Pad for the session
+--- `/qc toggle`, the launcher's Show window entry and the Toggle Comms Pads key binding: hide or show
+--- every Comms Pad for the session
 --- (State.padsHidden). The pads' secure visibility driver carries the flag, so the change goes
 --- through Surfaces.Request: now, or at the end of combat with the stale hint meanwhile.
 function V.TogglePads()
@@ -70,6 +71,22 @@ function V.TogglePads()
     NS.State.padsHidden = V.PadsShown()
     NS.Surfaces.Request("padsHidden")
     NS.Print(NS.State.padsHidden and L["Comms Pads hidden for this session."] or L["Comms Pads shown."])
+end
+
+-- The key bindings menu's Toggle Comms Pads (Bindings.xml, 2026-10-20): a CLICK on this plain,
+-- hidden, named button, whose click runs V.TogglePads, the one handler `/qc toggle` and the launcher's
+-- Show window call. A Bindings.xml body runs in the global environment, so the binding reaches the
+-- handler through a frame the client finds by name rather than through a global function. Registered
+-- for the down edge, as the dial headers are, so one press toggles once. Its label is a global the
+-- menu reads by the binding's name, which holds a space and a colon: rawset, as modules/Dial.lua's.
+V.TOGGLE_BUTTON = "QuickCommsTogglePads"
+V.TOGGLE_COMMAND = ("CLICK %s:LeftButton"):format(V.TOGGLE_BUTTON)
+do
+    local button = CreateFrame("Button", V.TOGGLE_BUTTON, UIParent)
+    button:RegisterForClicks("AnyDown")
+    button:SetScript("OnClick", function() V.TogglePads() end)
+    button:Hide()
+    rawset(_G, "BINDING_NAME_" .. V.TOGGLE_COMMAND, L["Toggle Comms Pads"])
 end
 
 --- Whether the pads are shown, as far as `/qc toggle` is concerned.

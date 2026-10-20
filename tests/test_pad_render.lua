@@ -204,10 +204,10 @@ test("render: [phase 5] a pad's Look is a font and a skin; the defaults are the 
     local NS, m = T.enableAddon()
     m.STANDARD_TEXT_FONT = "Fonts\\FRIZQT__.TTF"
     local R, look = NS.PadRender, NS.Library.TEMPLATES.pad.look
-    local font = R.LabelFont(look)
+    local font = R.LabelFont(NS.Library.TEMPLATES.pad.chip)
     assertEqual(font.path, "Fonts\\FRIZQT__.TTF", "no LibSharedMedia here: the standard face")
     assertEqual(font.size .. "|" .. font.flags .. "|" .. tostring(font.shadow), "10||true")
-    assertEqual(font.r + font.g + font.b + font.a, 4, "white")
+    assertEqual(font.r + font.g + font.b + font.a, 4, "a chip's label: white")
     local skin = R.SkinFor(look)
     assertEqual(skin.edgeFile, "Interface\\Buttons\\WHITE8x8", "None is the flat Ka0s edge")
     assertEqual(skin.edgeSize, 1)
@@ -271,17 +271,19 @@ test("render: [phase 5] Use class color takes the player's class color and keeps
         "a positional swatch, alpha 1 by default")
 end)
 
-test("render: [phase 5] a section title keeps its gold until the player colors the font", function()
+test("render: [window] the section titles wear the Window tab's Section titles font, gold by default", function()
     local NS, m = T.enableAddon()
     m.RAID_CLASS_COLORS = { MAGE = { r = 0.25, g = 0.75, b = 0.5 } }
     local R = NS.PadRender
-    -- red under: apply the label font to the titles in modules/Pad.lua's place() (they turn white)
-    local t = R.TitleFont(R.LabelFont(NS.Library.TEMPLATES.pad.look))
-    assertEqual(t.r .. "," .. t.g .. "," .. t.b .. "|" .. t.size, "1,0.82,0|10", "the default Look: gold, as before")
-    t = R.TitleFont(R.LabelFont({ fontSize = 12, fontColor = { r = 1, g = 0, b = 0, a = 1 } }))
+    -- red under: a white default in Library's pad.look.fontColor (the titles were always gold)
+    local t = R.TitleFont(NS.Library.TEMPLATES.pad.look)
+    assertEqual(t.r .. "," .. t.g .. "," .. t.b .. "|" .. t.size, "1,0.82,0|10", "the default: gold, as before")
+    t = R.TitleFont({ fontSize = 12, fontColor = { r = 1, g = 0, b = 0, a = 1 } })
     assertEqual(t.r .. "," .. t.g .. "," .. t.b .. "|" .. t.size, "1,0,0|12", "a chosen color reaches the titles")
-    t = R.TitleFont(R.LabelFont({ fontColor = { r = 1, g = 1, b = 1, a = 1 }, useClassColorFont = true }))
+    t = R.TitleFont({ fontColor = { r = 1, g = 1, b = 1, a = 1 }, useClassColorFont = true })
     assertEqual(t.r .. "," .. t.g .. "," .. t.b, "0.25,0.75,0.5", "and so does the class color")
+    t = R.TitleFont({ fontColor = { r = 1, g = 1, b = 1, a = 1 } })
+    assertEqual(t.r .. "," .. t.g .. "," .. t.b, "1,1,1", "white is a color like any other now")
 end)
 
 test("render: [icons] a glyph chip is drawn in its color; the chip repainted with another icon is white again", function()

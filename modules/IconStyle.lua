@@ -57,7 +57,8 @@ local function borderTexture(name)
 end
 
 -- The glow's settings as modules/Glow.lua takes them, or false while it is off; `sig` names every
--- value it draws with, so an unchanged rebuild keeps the effect.
+-- value it draws with, so an unchanged rebuild keeps the effect. A table without the knobs (the Chip
+-- tab's) takes their defaults; one without `glowWhen` glows always.
 local function glowConfig(icon, size)
     if icon.glowEnabled ~= true then return false end
     local g = { type = icon.glowType, when = icon.glowWhen, size = size }
@@ -72,6 +73,10 @@ local function glowConfig(icon, size)
     g.sig = table.concat(parts, "|")
     return g
 end
+
+--- A glow-bearing table (a surface's `icon`, a pad's `chip`) read into modules/Glow.lua's settings, or
+--- false while its glow is off. `size` joins the signature.
+IS.GlowConfig = glowConfig
 
 --- A surface's `icon` table read into what a paint takes. A nil table is the kind's defaults.
 --- @param icon table|nil the surface's `icon` (pad.icon / dial.icon)

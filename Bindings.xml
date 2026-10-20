@@ -1,9 +1,14 @@
 <Bindings>
 	<!-- Ka0s Quick Comms: Open Comms Dial 1-4 (design spec §9.4, P7). Each clicks the dial header at that
 	     place in the dial order (modules/Dial_Secure.lua names them QuickCommsDial<n>) with the Toggle
-	     button, as the dial's own key does. The labels are set in modules/Dial.lua. -->
+	     button. Since 2026-10-20 a dial's key IS one of these bindings: the Comms Dial page's Key box
+	     sets it (modules/Dial.lua Dial.BindKey). The labels are set in modules/Dial.lua. -->
 	<Binding name="CLICK QuickCommsDial1:Toggle" header="QUICKCOMMS" category="ADDONS"/>
 	<Binding name="CLICK QuickCommsDial2:Toggle" category="ADDONS"/>
 	<Binding name="CLICK QuickCommsDial3:Toggle" category="ADDONS"/>
 	<Binding name="CLICK QuickCommsDial4:Toggle" category="ADDONS"/>
+	<!-- Toggle Comms Pads: clicks the plain QuickCommsTogglePads button (settings/SlashVerbs.lua), whose
+	     click runs /qc toggle's handler (V.TogglePads). A CLICK on a named frame, so no global function
+	     is needed here. Its label is set in settings/SlashVerbs.lua. -->
+	<Binding name="CLICK QuickCommsTogglePads:LeftButton" category="ADDONS"/>
 </Bindings>

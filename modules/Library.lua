@@ -535,6 +535,7 @@ function Lib.CreateGroup(fields)
         local id = Lib.NewId("g")
         p.groups[id] = { name = fields.name, icon = fields.icon, iconColor = glyphColor(fields.icon, fields.iconColor),
             callouts = callouts, when = copyTable(fields.when) or {}, openInto = fields.openInto == true,
+            dialYield = fields.dialYield == true,
             enabled = fields.enabled ~= false, parent = fields.parent or nil, inheritWhen = fields.inheritWhen ~= false }
         announce("group", id)
         return id
@@ -594,8 +595,8 @@ function Lib.DuplicateGroup(id)
     local g = P().groups[id]
     if not g then return nil, "noGroup" end
     return Lib.CreateGroup({ name = Lib.CopyName(g.name), icon = g.icon, iconColor = g.iconColor, when = g.when,
-        openInto = g.openInto, enabled = g.enabled, callouts = g.callouts, parent = isChild(id) and g.parent or nil,
-        inheritWhen = g.inheritWhen })
+        openInto = g.openInto, dialYield = g.dialYield, enabled = g.enabled, callouts = g.callouts,
+        parent = isChild(id) and g.parent or nil, inheritWhen = g.inheritWhen })
 end
 
 --- The group.parent row's reaction (settings/SchemaMembers.lua): a group that now sits inside another
@@ -744,8 +745,8 @@ local function seedGroup(p, gid, parent, hidden)
     local id = takeId(p, "g")
     p.groups[id] = { name = def.name, icon = def.icon, iconColor = def.iconColor, callouts = callouts,
         when = copyTable(def.when) or {},
-        openInto = def.openInto == true, enabled = true, parent = parent, inheritWhen = true, compass = def.compass,
-        origin = gid }
+        openInto = def.openInto == true, dialYield = def.dialYield == true, enabled = true, parent = parent,
+        inheritWhen = true, compass = def.compass, origin = gid }
     p.seededSets[gid] = true
     return id
 end
@@ -901,24 +902,26 @@ end
 -- ── surfaces ────────────────────────────────────────────────────────────────────────────────
 
 local SURFACE_DEFAULTS = {
-    -- look: the Look tab's rows (settings/SchemaMembers.lua). The font, border and background rows
-    -- (phase 5, options-ui-§16/§17) default to the Ka0s skin a pad has always worn: the chip label's
-    -- small white face with its shadow, a flat 1px black edge ("None" is no border art) and the
-    -- 0.06, 0.06, 0.08, 0.92 body (spec §10.1).
+    -- look: the Window tab's rows (settings/SchemaMembers.lua; `look` is the tab's old name, kept as
+    -- the stored key). The font (the section titles' since 2026-10-20: their small gold face with its
+    -- shadow), border and background rows default to the Ka0s skin a pad has always worn: a flat 1px
+    -- black edge ("None" is no border art) and the 0.06, 0.06, 0.08, 0.92 body (spec §10.1).
     pad = { groupsAs = "sections", layout = { orientation = "grid", columns = 4, growth = "right",
-        style = "iconLabel", scale = 1.0, spacing = 4, width = 100 },
+        style = "iconLabel", scale = 1.0, spacing = 4 },
         look = { visibility = "always", fade = "none", fadeAlpha = 0.4,
-            font = "Friz Quadrata TT", fontSize = 10, fontColor = { r = 1, g = 1, b = 1, a = 1 },
+            font = "Friz Quadrata TT", fontSize = 10, fontColor = { r = 1, g = 0.82, b = 0, a = 1 },
             useClassColorFont = false, fontFlags = "", fontShadow = true,
             borderStyle = "None", borderSize = 1, borderColor = { r = 0, g = 0, b = 0, a = 1 },
             useClassColorBorder = false,
             background = { r = 0.06, g = 0.06, b = 0.08, a = 0.92 }, useClassColorBackground = false },
-        icon = NS.IconDefaults.For("pad") },   -- the Icons tab (defaults/Icons.lua)
+        icon = NS.IconDefaults.For("pad"),   -- the Icons tab (defaults/Icons.lua)
+        header = NS.PadDefaults.Header(),    -- the Window tab's Header block (defaults/PadStyle.lua)
+        chip = NS.PadDefaults.Chip() },      -- the Chip tab (defaults/PadStyle.lua)
     -- Relaxed is the only interaction in v0.1.0 (the C7 fallback, round-4 record). `delay` and
     -- `tapAction` are kept for the hold, flick and release upgrade, and `depth` until owner ruling R5
     -- gives it a meaning; nothing reads them yet.
     dial = { mode = "categories", slices = 4, depth = 2, openAt = "center", delay = 0.3,
-        interaction = "relaxed", key = nil, tapAction = "first", icon = NS.IconDefaults.For("dial") },
+        interaction = "relaxed", tapAction = "first", icon = NS.IconDefaults.For("dial") },
 }
 
 --- The shape of one member of each kind: what every member row's path resolves against (the
@@ -926,15 +929,16 @@ local SURFACE_DEFAULTS = {
 --- false, not nil, so the boot check can see the key: false is "none" and "the default place".
 Lib.TEMPLATES = {
     callout = { name = "", text = "", channel = "smartGroup", icon = false, iconColor = false },
-    group = { name = "", icon = false, iconColor = false, enabled = true, openInto = false, when = {}, parent = false,
-        inheritWhen = true },
+    group = { name = "", icon = false, iconColor = false, enabled = true, openInto = false, dialYield = false, when = {},
+        parent = false, inheritWhen = true },
     pad = { name = "", enabled = true, groupsAs = SURFACE_DEFAULTS.pad.groupsAs, point = false,
         layout = copyTable(SURFACE_DEFAULTS.pad.layout), look = copyTable(SURFACE_DEFAULTS.pad.look),
-        icon = copyTable(SURFACE_DEFAULTS.pad.icon) },
-    -- `key` and `point` are false, not nil, for the same reason as above: false is "no key" and "the
-    -- default place".
+        icon = copyTable(SURFACE_DEFAULTS.pad.icon), header = copyTable(SURFACE_DEFAULTS.pad.header),
+        chip = copyTable(SURFACE_DEFAULTS.pad.chip) },
+    -- `point` is false, not nil, for the same reason as above: false is "the default place". A dial
+    -- has no `key`: its key is WoW's own binding (modules/Dial.lua Dial.BindKey).
     dial = { name = "", enabled = true, mode = SURFACE_DEFAULTS.dial.mode, slices = SURFACE_DEFAULTS.dial.slices,
-        openAt = SURFACE_DEFAULTS.dial.openAt, key = false, point = false, icon = copyTable(SURFACE_DEFAULTS.dial.icon) },
+        openAt = SURFACE_DEFAULTS.dial.openAt, point = false, icon = copyTable(SURFACE_DEFAULTS.dial.icon) },
 }
 
 --- A dial's place when its `point` is unset: the middle of the screen (read at run time by
@@ -1039,6 +1043,9 @@ end
 
 -- ── dial keys (spec §9.4, §18) ──────────────────────────────────────────────────────────────
 
+-- A dial's key is WoW's own binding of its Open Comms Dial entry since 2026-10-20 (modules/Dial.lua
+-- Dial.BindKey), never a profile field: these two read and check a key as typed or captured.
+
 -- Keys a dial may not take, because the open dial uses them. Whatever the modifiers: Escape (the game
 -- menu, and the open dial's close), the left and right mouse buttons, and the mouse wheel (the open
 -- dial turns its pages with it). Without a modifier: 1-8, which pick the open dial's wedges (ALT-1 is
@@ -1108,18 +1115,6 @@ function Lib.ValidKey(v)
     if not mods then return false, "badKey" end
     if RESERVED_KEYS[base] or RESERVED_BARE[v] then return false, "reservedKey" end
     return true
-end
-
---- The other dial that already has `key` (spec §18: one key opens one dial), or nil.
-function Lib.KeyOwner(key, exceptId)
-    key = Lib.KeyValue(key)
-    if type(key) ~= "string" then return nil end
-    local ids = {}
-    for id, d in pairs(P().dials) do
-        if id ~= exceptId and type(d) == "table" and d.key == key then ids[#ids + 1] = id end
-    end
-    table.sort(ids)
-    return ids[1]
 end
 
 -- ── migrations (core/Database.lua calls these; Library writes the lists) ────────────────────
@@ -1453,7 +1448,8 @@ local function importMembers(res, map, tally)
         end
         local f = e.fields
         local id = Lib.CreateGroup({ name = f.name, icon = f.icon, iconColor = f.iconColor, when = f.when,
-            openInto = f.openInto, enabled = f.enabled, inheritWhen = f.inheritWhen, callouts = ids })
+            openInto = f.openInto, dialYield = f.dialYield, enabled = f.enabled, inheritWhen = f.inheritWhen,
+            callouts = ids })
         if id then map[e.id], tally.groups = id, tally.groups + 1 end
     end
     nestImported(res, map, tally)

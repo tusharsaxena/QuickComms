@@ -1,7 +1,7 @@
 local _, NS = ...
 -- modules/SendEngine.lua — THE ONLY SECURE WRITER (spec §9, events-frames-taint-§2/§4). It alone
 -- creates frames from a Secure* template, calls SetAttribute, registers or unregisters state
--- drivers, sets and clears override bindings, and (phase 4, the Comms Dial) sets a header's frame
+-- drivers, and (phase 4, the Comms Dial) sets a header's frame
 -- refs, wraps a button's click in a header's snippets and runs a header's snippet;
 -- tests/test_sendengine.lua greps every other shipped file for those calls. Every write is
 -- made out of combat. A caller asks through RunOrQueue, which runs the work now or, in combat
@@ -23,8 +23,9 @@ local _, NS = ...
 -- here for the header (a SecureHandlerClickTemplate button named QuickCommsDial<n>), its ring
 -- containers (SecureFrameTemplate), its wedges (send buttons wrapped by the header's snippets BEFORE
 -- the click hook below, because the client's wrap replaces the script and would drop the hook), and
--- every attribute, frame ref and snippet run. The dials' keys are override bindings on one owner
--- frame, replaced as a set at each rebuild and cleared by the stand-down (spec §9.4).
+-- every attribute, frame ref and snippet run. A dial's key is WoW's own binding of its header's
+-- Bindings.xml entry since 2026-10-20 (modules/Dial.lua BindKey, through core/Compat.lua), so no
+-- override binding is written here any more.
 --
 -- Stand-down (spec §9.5, slash-commands-§7): Teardown(fn) runs the secure half now or, in combat,
 -- holds it in the one registration a disabled addon may keep: a private AceEvent target listening
@@ -266,46 +267,6 @@ end
 function SE.Snapshot()
     local q = State.sendQueue
     return q and G.Keys(q) or {}
-end
-
--- ── the override bindings (spec §9.4): the dials' keys ──────────────────────────────────────
-
-local bindOwner          -- a plain frame; every override binding this addon holds is its
-local bound = {}
-
---- Bind each { key, name, button } as an override click, replacing every binding this addon held.
---- Out of combat only: the client refuses override bindings in combat. Logged only on a change.
---- @return boolean applied
-function SE.BindKeys(list)
-    if inCombat() then
-        NS.Debug("Bind", "bindings refused: in combat")
-        return false
-    end
-    bindOwner = bindOwner or CreateFrame("Frame")
-    ClearOverrideBindings(bindOwner)
-    bound = {}
-    local parts = {}
-    for _, b in ipairs(list or {}) do
-        SetOverrideBindingClick(bindOwner, true, b.key, b.name, b.button)
-        bound[#bound + 1] = { key = b.key, name = b.name, button = b.button }
-        parts[#parts + 1] = b.key .. "=" .. b.name
-    end
-    local sig = table.concat(parts, ",")
-    -- Log on change (debug-logging-§9); the library re-arms the key on a console Clear.
-    NS.DebugChanged("bindings", "Bind", "bound %s", sig ~= "" and sig or "nothing")
-    return true
-end
-
---- Release every key this addon bound. Out of combat only.
-function SE.ClearKeys()
-    return SE.BindKeys({})
-end
-
---- The bindings in force, for diagnostics and the Binding tab: { key, name, button } each, a copy.
-function SE.Bindings()
-    local out = {}
-    for i, b in ipairs(bound) do out[i] = { key = b.key, name = b.name, button = b.button } end
-    return out
 end
 
 -- ── the held stand-down (spec §9.5) ─────────────────────────────────────────────────────────

@@ -102,6 +102,8 @@ defaults\BuiltIns_Battlegrounds.lua
 defaults\BuiltIns_Group.lua
 # LOAD-BEARING: publishes NS.IconDefaults, which modules\Library.lua reads at load (SURFACE_DEFAULTS).
 defaults\Icons.lua
+# LOAD-BEARING: publishes NS.PadDefaults, which modules\Library.lua reads at load (SURFACE_DEFAULTS).
+defaults\PadStyle.lua
 # Conventional: data (the editors' and Preview as's shipped ids), read at call time
 defaults\GameIds.lua
 # Conventional: data (the When editor's instance and arena lists), read at call time
@@ -205,7 +207,8 @@ settings\Pads.lua
 settings\Dials.lua
 # LOAD-BEARING: takes Settings.Editors at load and registers the Share page (after Comms Dial, before Profiles).
 settings\Share.lua
-# Conventional: the verb bodies settings\Slash.lua's NS.COMMANDS rows call at run time; read modules only inside functions.
+# Conventional: the verb bodies settings\Slash.lua's NS.COMMANDS rows call at run time; read modules only inside functions;
+# makes Bindings.xml's Toggle Comms Pads button (QuickCommsTogglePads) at load.
 settings\SlashVerbs.lua
 # LOAD-BEARING: captures NS.SchemaRuntime.Get/Set/FindRow/ApplyDefault at load.
 settings\Slash.lua

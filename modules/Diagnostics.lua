@@ -5,7 +5,7 @@ local _, NS = ...
 -- and the Add loop are LibKa0s-DebugLog-1.0's. Every section READS state and never acts: no hold,
 -- no event, no timer, safe in combat and while stood down. `out:add` formats %s-only and runs every
 -- argument through safeToString, so raw values are passed, never pre-built strings. The sections
--- cover design spec §16's list, the Comms Dial's and its override bindings included.
+-- cover design spec §16's list, the Comms Dial's and its WoW key bindings included.
 
 NS.Diagnostics = NS.Diagnostics or {}
 
@@ -129,16 +129,20 @@ local function dials(out)
     for _, id in ipairs(NS.Dial.Ids()) do
         local inst, plan, d = NS.Dial.Instance(id), plans[id], p.dials[id]
         out:add("Dial", "%s %s key=%s rings=%s openRing=%s open=%s active=%s stale=%s lockdownChip=%s", id,
-            inst.header:GetName(), d and d.key, plan and #plan.rings, plan and plan.openRing, NS.Dial.IsOpen(id),
+            inst.header:GetName(), d and NS.Dial.KeyOf(id), plan and #plan.rings, plan and plan.openRing, NS.Dial.IsOpen(id),
             plan and table.concat(plan.order, ","), stale[id] == true, plan and plan.lockdownChip)
     end
 end
 
--- The override bindings (spec §9.4, §16): every key the addon holds, and the frame and button it clicks.
+-- The key bindings (spec §9.4, §16): each Open Comms Dial entry's key in WoW's own bindings, the
+-- command it runs, and the Toggle Comms Pads entry's.
 local function bindings(out)
-    local list = NS.SendEngine.Bindings()
-    out:add("Bind", "override bindings=%s", #list)
-    for _, b in ipairs(list) do out:add("Bind", "%s -> %s:%s", b.key, b.name, b.button) end
+    local commands = {}
+    for place = 1, NS.Dial.BINDINGS do commands[place] = NS.Dial.Command(place) end
+    commands[#commands + 1] = NS.SlashVerbs.TOGGLE_COMMAND
+    for _, command in ipairs(commands) do
+        out:add("Bind", "%s -> %s", tostring(NS.Compat.BindingKey(command) or "none"), command)
+    end
 end
 
 -- The send engine (spec §16): the armed buttons, each with its pad, callout and escaped line; the

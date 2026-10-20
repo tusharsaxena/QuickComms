@@ -8,7 +8,7 @@ eagerly at `OnEnable`; each page's body builds on its first show (options-ui-§1
 | Ka0s Quick Comms (landing) | The logo, the TOC notes line and the slash command list, drawn by the library's `BuildLandingPage` |
 | General | `Master controls`, `Behavior` |
 | Groups | One group (a seeded built-in set is one too): `General`, `Callouts`, `When`, `Preview` |
-| Comms Pad | One pad: `General`, `Groups`, `Layout`, `Look`, `Icons` |
+| Comms Pad | One pad: `General`, `Groups`, `Layout`, `Window`, `Chip`, `Icons` |
 | Comms Dial | One dial: `General`, `Groups`, `Wheel`, `Icons`, `Binding`, `Preview` |
 | Share | `Export`, `Import` |
 | Profiles | AceDBOptions: switch, copy, reset and delete profiles |
@@ -32,8 +32,9 @@ Reset all settings buttons.
 
 Lock frame, `/qc lock|unlock` and the launcher's Locked entry write the same path; Test mode,
 `/qc test` and the launcher's Test mode entry call the same switch (`Preview.SetTestMode`), which is
-refused in combat. The launcher's Show window entry calls `/qc toggle`'s handler
-(`SlashVerbs.TogglePads`), which hides or shows every Comms Pad for the session.
+refused in combat. The launcher's Show window entry and the Toggle Comms Pads key binding (Options →
+Keybindings → Ka0s Quick Comms) call `/qc toggle`'s handler (`SlashVerbs.TogglePads`), which hides
+or shows every Comms Pad for the session.
 
 Preview as is passed through the composer's `extra` slot, so it lands after the canonical rows and
 before the button pair, never among them: options-ui-§15 as amended in v2.84.0 sanctions that slot
@@ -58,7 +59,8 @@ band      [ Group v (picker; a green dot after its name marks a group active now
           listed, indented, right after it) ][ New group ]
           [x] Preview while editing (under the picker)
 strip     [ General ][ Callouts ][ When ][ Preview ]
-General   Name, Enabled, Open the dial on this group, then
+General   Name, Enabled, Open the dial on this group, Skip on the dial in content (grayed out for a
+          group inside another), then
           Parent group (None, or a top-level group) beside Inherit when conditions (grayed out
           with no parent), then the icon under an Icon label with Choose icon…, the clear glyph
           and its color swatch (settings/Editors.lua's chooser, no Icon text box), then
@@ -418,31 +420,55 @@ footer   the selected icon (a glyph in the color) and its name, then Choose and 
 
 ```
 band     [ Pad v (picker) ][ New pad ]
-strip    [ General ][ Groups ][ Layout ][ Look ][ Icons ]
+strip    [ General ][ Groups ][ Layout ][ Window ][ Chip ][ Icons ]
 General  Name, Enabled, then Unlock (or Lock) pads and Delete pad
 Groups   Show groups as, then the pad's groups as a drag-to-reorder list with a remove glyph
          (its priority order; it takes the group off the pad and asks nothing), then Add a group
          (the top-level groups the pad does not hold: a group inside another shows with it)
-Layout   orientation, grid columns, growth, chip style, scale, spacing, chip width (a chip's
-         label runs to its right edge, or to the padlock on a locked chip: no channel letter
-         there, the chip's tooltip names the channel; nothing in the panel turned the letter on or off), then
-         Position: X and Y and Reset this pad's position
-Look     visibility, fade and faded alpha; then Font (face, size, color with Use class color,
-         flags, shadow), Border (style, thickness, color with Use class color) and Background
-         (its color with Use class color), each composed by the options library (options-ui-§16,
-         §17) under its own heading
+Layout   orientation, grid columns, growth, chip style, scale, spacing (a chip's label runs to
+         its right edge, or to the padlock on a locked chip: no channel letter there, the chip's
+         tooltip names the channel), then Position: X and Y and Reset this pad's position
+Window   visibility, fade and faded alpha; then Header (Header height, then a font block, a
+         Background with Use class color and a border block, all for the pad's top row, the one
+         that names the situation: World, M+, Raid), Section titles (face, size, color with Use
+         class color, flags, shadow: the gold group titles), Border (style, thickness, color with
+         Use class color) and Background (its color with Use class color), each composed by the
+         options library (options-ui-§16, §17) under its own heading
+Chip     the chips themselves: Size (Chip width, Chip height with 0 automatic), Color (the chip's
+         Background with Use class color), Border (the composed block), Font (the chips' labels:
+         face, size, color with Use class color, flags, shadow) and Glow (Glow, Glow style, Glow
+         color with Use class color)
 Icons    the chips' icons (B9): Size and crop (Icon size, Zoom), Color (Desaturate, Icon opacity,
          Tint with Use class color), Border (the composed block: Show border, style, thickness,
          color with Use class color) and Glow (Glow, Glow when, Glow style, Glow color with Use
          class color), then one heading per style's knobs and Offset
 ```
 
+The Window tab was the Look tab until 2026-10-20, and its own rows keep their `pad.look.*` paths; its
+Header block is `pad.header.*`. Every Header default draws the header as it was (GameFontNormalSmall's
+face, 10 points, gold, its shadow, over no background and no edge) except its height, 22 where it was
+18 (owner: "make the header slightly larger"). The header's text starts at the section titles' left
+edge (`PadLayout.PAD`) in every growth direction; the lockdown chip and the stale hint take the
+header's face, size, flags and shadow and keep their own red and gray, and the collapse button is two
+points larger in the header's color. Section titles are the Window tab's Font block, gold by default,
+now that the chips and the header have their own.
+
+The Chip tab's rows are `pad.chip.*` (settings/SchemaMembers.lua). Chip width moved there from Layout
+(`pad.layout.width` is gone). Chip height 0 is automatic, the height a chip always had (grown to hold
+its font and its icon); above 0 a labeled chip is that tall, never shorter than its icon and 4 pixels
+beside an icon. An icon-only chip stays square around its icon whatever the size says. The chip's edge
+is drawn on a plain child laid over it, so it never hides the icon or label; its glow (off by default)
+is LibCustomGlow's effect around the whole chip in one of the Icons tab's four styles, at that tab's
+knob defaults, on its own key beside the icon's glow, always on while enabled. Every Chip default draws
+the chip as it was: the 0.10, 0.10, 0.12, 0.90 body, no edge, the small white label. Glow style is
+grayed out while the glow is off; the color pairs never are.
+
 The Icons tab's rows are `pad.icon.*` (settings/SchemaIcons.lua). Every color pair sits on one line and is
 never grayed out; Border style and thickness are grayed out while Show border is off; Glow when, Glow style
 and every knob while the glow is off, and a knob also while the glow is in a style it does not apply to.
 Glow when is Always, On hover or After sending (1.5 s from the send result; a dial closes on the send,
 so its wedge glows for 1.5 s from the next open, if that comes within 5 s). The page's Defaults puts the
-Icons rows back too.
+Window, Chip and Icons rows back too.
 
 X and Y write the whole `pad.point` row, the same one the drag strip writes; a drag on screen
 updates the boxes. A new pad holds the seeded sets the profile still has as top-level groups, in
@@ -462,13 +488,13 @@ Groups   Show groups as (Categories or Flat), the depth-3 warning (spec §11.3),
 Wheel    wedges per ring, open at, then Position: X and Y and Reset this dial's position
 Icons    the wedges' icons, as the Comms Pad page's Icons tab (a wedge's border is a round ring,
          never wider than the wedge; its icon size keeps the wedge's own size)
-Binding  how Relaxed mode works, the key capture, and the key's line (what it opens, or the WoW
-         binding it shares, spec §9.4 / §18)
+Binding  how Relaxed mode works, the key capture (WoW's own binding of the dial's Open Comms
+         Dial entry), the key's line, and the dial's place in WoW's key bindings (spec §9.4)
 Preview  each ring as the current or previewed situation builds it, wedge by wedge
 ```
 
-- **General:** Name and Enabled are the `dial.name` and `dial.enabled` rows; Delete dial asks first, keeps the dial's groups and
-  callouts, and releases its key.
+- **General:** Name and Enabled are the `dial.name` and `dial.enabled` rows; Delete dial asks first and keeps the dial's groups and
+  callouts (the key belongs to the place, so the dial that moves up takes it).
 - **Groups:** Show groups as is `dial.mode` (Categories or Flat). The warning names each battleground
   node set that would open three rings deep because a group above it is active there too
   (`Dial_Layout.DeepGroups`, built under that battleground's preview); it knows a seeded
@@ -478,23 +504,29 @@ Preview  each ring as the current or previewed situation builds it, wedge by wed
   12-wedge dial), Open at is `dial.openAt` (its place or the cursor). X and Y write the whole
   `dial.point` row; a refused offset says why and puts the box back. There is no depth control
   (owner ruling R5): depth is spec §11.3's limit, warned about on the Groups tab.
-- **Binding:** a line on how Relaxed mode works; the Key capture box (AceGUI's `Keybinding`, the
-  `dial.key` row; Escape in it clears the key); the key's line, which says what the key opens or
-  names the WoW binding it shares by its menu label (`Compat.BindingAction`, then
-  `Compat.BindingLabel`; the dial's key still wins while the addon is enabled); for a dial that is
-  off, or with Quick Comms stood down, it says the key opens nothing; with no key of its own it names
-  a key bound to the dial's Open Comms Dial entry (`Compat.BindingKey`). A place line names which
-  Open Comms Dial entry this dial is (its place in the dial list, so it moves when a dial above it is
-  deleted), or says a dial past the fourth has none.
-  A key another dial has, or one the open dial uses (Escape, the mouse buttons and wheel, 1–8
-  without a modifier), is refused, and the box goes back to the stored key.
+- **Binding:** a line on how Relaxed mode works; the Key capture box (AceGUI's `Keybinding`; Escape
+  in it clears the key). Since 2026-10-20 the key is no profile field: it is WoW's own binding of the
+  dial's Bindings.xml entry, Open Comms Dial <n>, n the dial's place in the dial list. The box shows
+  that entry's key (`Compat.BindingKey`, GetBindingKey) and sets it through `Dial.BindKey`
+  (`Compat.SetBinding`, the old key unbound, then `Compat.SaveBindings` in the set in force), so
+  Options → Keybindings → Ka0s Quick Comms shows the same key and a key set there shows here (the
+  page re-reads it each time it is shown). It is account-wide unless the player ticks Character
+  Specific Keybindings there. A key taken from another WoW binding prints one line naming it by its
+  menu label (`Compat.BindingLabel`). Out of combat only: in combat the box refuses with one line and
+  goes back. A key the open dial uses (Escape, the mouse buttons and wheel, 1–8 without a modifier)
+  is refused the same way. The key's line says what the key does: opens and closes this dial, or
+  nothing while the dial is off or Quick Comms is stood down, or that there is no key yet. A place
+  line names the Open Comms Dial entry (it moves when a dial above it is deleted) and that the key is
+  for every character unless Character Specific Keybindings is ticked. A dial past the fourth place
+  has no entry: its box is disabled and the line says to move it into the first four.
 - **Preview:** each ring, wedge by wedge, with its compass word (a clock position past eight
   wedges), marking the ring the dial opens on
   and the wedges that open a ring. It is a listing (owner ruling R3); the drawn dial is the
   in-game preview (test mode, Preview as…).
 
 The page's Defaults puts groups-as, wedges per ring and open at back to their defaults and turns the
-dial on, in one act (`Library.Batch`); the name, groups, key and position are kept.
+dial on, in one act (`Library.Batch`); the name, groups and position are kept, and the key, WoW's
+own binding, is never touched.
 
 ## Share
 

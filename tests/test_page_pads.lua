@@ -91,7 +91,7 @@ end)
 
 test("pads page: Look's visibility reaches the pad's state driver", function()
     local NS, m, P = open()
-    local w = P.tab("pads", "Look")
+    local w = P.tab("pads", "Window")
     P.find(w, "Dropdown", "Visibility"):__fire("OnValueChanged", "never")
     assertEqual(NS.db.profile.pads.p1.look.visibility, "never")
     assertEqual(m.stateDrivers[NS.Pad.Instance("p1").root].visibility, "hide")
@@ -201,19 +201,49 @@ test("pads page: [final 26] New pad takes the lowest free number, so a delete ne
     assertEqual(NS.db.profile.pads[Pads.Create()].name, "Comms Pad 4")
 end)
 
-test("pads page: [phase 5] Look carries the composed Font, Border and Background groups under their headings", function()
+test("pads page: [phase 5] Window carries the composed Header, Font, Border and Background groups under their headings", function()
     local NS, _, P = open()
-    local w = P.tab("pads", "Look")
-    for _, heading in ipairs({ "Font", "Border", "Background" }) do
+    local w = P.tab("pads", "Window")
+    for _, heading in ipairs({ "Header", "Section titles", "Border", "Background" }) do
         -- red under: the host's own h.Section above each subgroup (the library draws it from the rows)
         assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
     end
-    assertEqual(#P.all(w, "CheckBox", "Use class color"), 3, "a companion beside each swatch (options-ui-§17)")
+    -- the header's font, background and border, then the pad's font, border and background
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 6, "a companion beside each swatch (options-ui-§17)")
     assertTrue(P.find(w, "ColorPicker", "Font color") ~= nil)
     assertTrue(P.find(w, "ColorPicker", "Border color") ~= nil)
     assertTrue(P.find(w, "ColorPicker", "Background") ~= nil)
-    P.find(w, "CheckBox", "Font shadow"):__fire("OnValueChanged", false)
+    -- The Header block comes first, so its Font shadow is the first one drawn.
+    local shadows = P.all(w, "CheckBox", "Font shadow")
+    assertEqual(#shadows, 2)
+    shadows[1]:__fire("OnValueChanged", false)
+    assertFalse(NS.db.profile.pads.p1.header.fontShadow)
+    shadows[2]:__fire("OnValueChanged", false)
     assertFalse(NS.db.profile.pads.p1.look.fontShadow)
+    P.find(w, "Slider", "Header height"):__fire("OnMouseUp", 30)
+    assertEqual(NS.db.profile.pads.p1.header.height, 30)
+    assertEqual(NS.Pad.Instance("p1").header.__h, 30, "the pad's header row follows")
+end)
+
+-- ── the Chip tab (2026-10-20) ───────────────────────────────────────────────────────────────
+
+test("pads page: [chip] Chip carries Size, Color, Border, Font and Glow, and Chip width left Layout for it", function()
+    local NS, _, P = open()
+    local w = P.tab("pads", "Chip")
+    for _, heading in ipairs({ "Size", "Color", "Border", "Font", "Glow" }) do
+        assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
+    end
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 4, "background, border, font and glow (options-ui-§17)")
+    assertTrue(P.find(w, "Slider", "Glow style") == nil, "a dropdown, not a slider")
+    -- red under: the Glow style row without its disabledIf
+    assertTrue(P.find(w, "Dropdown", "Glow style").disabled, "the glow is off by default")
+    P.find(w, "Slider", "Chip width"):__fire("OnMouseUp", 140)
+    P.find(w, "CheckBox", "Glow"):__fire("OnValueChanged", true)
+    assertEqual(NS.db.profile.pads.p1.chip.width, 140)
+    assertTrue(NS.db.profile.pads.p1.chip.glowEnabled)
+    assertFalse(P.find(P.tab("pads", "Chip"), "Dropdown", "Glow style").disabled)
+    assertNil(P.find(P.tab("pads", "Layout"), "Slider", "Chip width"), "moved to the Chip tab")
+    assertNil(NS.db.profile.pads.p1.layout.width, "and out of the layout table")
 end)
 
 -- ── the Icons tab (B9) ──────────────────────────────────────────────────────────────────────

@@ -30,7 +30,12 @@
 --                  owner's; __bindingStacks keeps every owner's, so a ClearBindings hands the key back)
 --   overrideBindings    [key] = { owner, name, button }: SetOverrideBindingClick (refused in combat)
 --   bindingActions      [key] = the action the player's own WoW binding names (GetBindingAction)
---   bindingKeys         [command] = the key the player bound to a command in WoW's menu (GetBindingKey)
+--   bindingKeys         [command] = the first key the player bound to a command in WoW's menu; GetBindingKey
+--                  answers it, then every other key bindingActions names for the command (a second key)
+--   SetBinding(key, command)  WoW's own binding (refused in combat): key -> command in bindingActions,
+--                  and the command's first key in bindingKeys; a nil command unbinds the key
+--   bindingSaves        every SaveBindings(set) call's set, in order (refused in combat)
+--   bindingSet          GetCurrentBindingSet()'s answer (1, the account's; 2, the character's)
 --   cursor              { x, y }: GetCursorPosition's answer
 --   __named[name]       every named frame (a binding clicks a frame by its name)
 --   missingTemplates    [template] = true makes CreateFrame raise on it, as a client without it does;
@@ -255,6 +260,19 @@ local function build()
         function r:SetDesaturated(v) self.__desaturated = v return self end
         function r:SetSize(w, h) self.__size = { w, h } return self end
         function r:GetAlpha() return self.__alpha or 1 end
+        -- Anchors, recorded (the pad header's situation text is asserted on its left edge); no anchor
+        -- answers nil, as the client does.
+        r.__points = {}
+        function r:SetPoint(point, rel, relPoint, x, y)
+            self.__points[#self.__points + 1] = { point, rel, relPoint, x, y }
+            return self
+        end
+        function r:ClearAllPoints() self.__points = {} return self end
+        function r:GetPoint(i)
+            local p = self.__points[i or 1]
+            if not p then return nil end
+            return p[1], p[2], p[3], p[4], p[5]
+        end
         return setmetatable(r, { __index = function(_, key)
             if type(key) ~= "string" then return nil end
             if key:match("^Get") then return function() return 0 end end
@@ -299,6 +317,10 @@ local function build()
         frame.GetEffectiveScale = function() return 1 end
         frame.SetSize = function(self, w, h)
             self.__w, self.__h = w, h
+            return self
+        end
+        frame.SetHeight = function(self, h)
+            self.__h = h
             return self
         end
     end
@@ -444,6 +466,8 @@ local function build()
     M.overrideBindings   = {}
     M.bindingActions     = {}
     M.bindingKeys        = {}
+    M.bindingSaves       = {}
+    M.bindingSet         = 1
     M.cursor             = { x = 0, y = 0 }
     M.__named            = {}
 
@@ -618,6 +642,15 @@ local function build()
         if template == "SettingsFrameTemplate" then dressSettingsFrame(f) end
         if ours(f) then dress(f) end
         if type(name) == "string" then M.__named[name] = f end
+        -- A plain Button records its registered clicks too (the client's default is LeftButtonUp), so
+        -- `__click` and a CLICK binding (`__pressKey`) reach one only on an edge it registered.
+        if frameType == "Button" and not (type(template) == "string" and template:find("Secure", 1, true)) then
+            f.__clicks = { "LeftButtonUp" }
+            f.RegisterForClicks = function(self, ...)
+                self.__clicks = { ... }
+                return self
+            end
+        end
         if type(template) == "string" and template:find("Secure", 1, true) then
             if M.inCombat then refuse(f, "CreateFrame") end
             f.__attrs, f.__clicks = {}, {}
@@ -683,14 +716,50 @@ local function build()
     end
 
     M.GetBindingAction = function(key) return M.bindingActions[key] or "" end
-    M.GetBindingKey = function(command) return M.bindingKeys[command] end
+    -- Every key bound to `command`: bindingKeys' first, then any other key bindingActions names it
+    -- for (sorted), as the menu holds two per action.
+    M.GetBindingKey = function(command)
+        local first = M.bindingKeys[command]
+        local rest = {}
+        for key, action in pairs(M.bindingActions) do
+            if action == command and key ~= first then rest[#rest + 1] = key end
+        end
+        table.sort(rest)
+        if first == nil then return unpack(rest) end
+        return first, unpack(rest)
+    end
+
+    M.SetBinding = function(key, command)
+        if M.inCombat then
+            refuse(nil, "SetBinding")
+            return false
+        end
+        local prev = M.bindingActions[key]
+        if prev and M.bindingKeys[prev] == key then M.bindingKeys[prev] = nil end
+        M.bindingActions[key] = command
+        if command and not M.bindingKeys[command] then M.bindingKeys[command] = key end
+        return true
+    end
+    M.SaveBindings = function(set)
+        if M.inCombat then
+            refuse(nil, "SaveBindings")
+            return
+        end
+        M.bindingSaves[#M.bindingSaves + 1] = set
+    end
+    M.GetCurrentBindingSet = function() return M.bindingSet end
     M.GetCursorPosition = function() return M.cursor.x, M.cursor.y end
 
-    --- A key press as the client routes it: a snippet's binding first, then an override binding;
-    --- the target is clicked with the binding's button, down then up as `__click` presses it.
+    --- A key press as the client routes it: a snippet's binding first, then an override binding, then
+    --- the player's own WoW binding when it is a CLICK one ("CLICK <frame>:<button>"); the target is
+    --- clicked with the binding's button, down then up as `__click` presses it.
     --- @return boolean routed
     M.__pressKey = function(key)
         local b = M.restrictedBindings[key] or M.overrideBindings[key]
+        if not b then
+            local name, button = tostring(M.bindingActions[key] or ""):match("^CLICK ([^:]+):(.+)$")
+            if name then b = { name = name, button = button } end
+        end
         if not b then return false end
         local target = b.target or b.name
         if type(target) == "string" then target = M.__named[target] end

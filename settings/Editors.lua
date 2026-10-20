@@ -187,7 +187,7 @@ function Ed.Row(path)
 end
 
 -- The structured member rows (settings/SchemaMembers.lua): a table each, drawn by the page's own controls.
-local STRUCTURED = { point = true, when = true, key = true }
+local STRUCTURED = { point = true, when = true }
 
 --- The rows the flow engine draws: a structured row has its own control on its page.
 function Ed.Scalar(rows)

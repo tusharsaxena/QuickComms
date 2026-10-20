@@ -283,7 +283,7 @@ local function groupEntry(_, id, g, res)
     -- `parent` as the string has it; checkParents keeps it or drops it once every group is read.
     return { id = id, callouts = refs, parent = g.parent, fields = { name = name, icon = icon,
         iconColor = cleanIconColor(g.iconColor, res), when = when, openInto = g.openInto == true,
-        enabled = g.enabled ~= false, inheritWhen = g.inheritWhen ~= false } }
+        dialYield = g.dialYield == true, enabled = g.enabled ~= false, inheritWhen = g.inheritWhen ~= false } }
 end
 
 -- Each checked group's parent kept only when it names another checked group whose own parent, as the
@@ -324,8 +324,9 @@ local function dropNested(res)
 end
 
 -- The member rows whose value travels with a pad or a dial: every one of its kind but its name and
--- Enabled (carried beside the fields), its position and its key (spec §15: it arrives unbound).
-local NOT_PORTABLE = { point = true, key = true }
+-- Enabled (carried beside the fields) and its position. A dial's key is no field at all: it is WoW's
+-- own binding (modules/Dial.lua BindKey), so it never travels (spec §15: it arrives unbound).
+local NOT_PORTABLE = { point = true }
 
 -- A field value an older string may carry that the row no longer offers, and what it means now:
 -- the retired Upward growth (B2; core/Database.lua step 4 does the same for a stored profile).
@@ -665,7 +666,8 @@ local function exportMember(kind, id, m, want)
     end
     if kind == "group" then
         return { name = m.name, icon = m.icon or nil, iconColor = m.iconColor or nil, callouts = copy(m.callouts),
-            when = copy(m.when), openInto = m.openInto == true, enabled = m.enabled ~= false,
+            when = copy(m.when), openInto = m.openInto == true, dialYield = m.dialYield == true,
+            enabled = m.enabled ~= false,
             inheritWhen = m.inheritWhen ~= false,
             parent = NS.Library.IsChild(id) and want.group[m.parent] and m.parent or nil }
     end

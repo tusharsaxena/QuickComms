@@ -25,8 +25,14 @@ local _, NS = ...
 -- stand-down puts out every running send glow itself (each timer knows its button), since the frames'
 -- release can be held to combat end and canceled by a stand-up in the same combat.
 --
+-- THE CHIP GLOW (the Chip tab, 2026-10-20) is a second effect on a Comms Pad chip, around the whole
+-- chip: started on the chip's edge frame (modules/Pad_Render.lua `qcEdge`, a plain child laid over
+-- the chip) under its own key, so it never meets the icon's. It has no trigger: on while the chip is
+-- drawn with it enabled (Glow.Chip, at every paint), in its style and color at the Icons tab's knob
+-- defaults; the same signature rule keeps it across an unchanged rebuild, and Release stops it too.
+--
 -- HEADLESS. Without the library (the suites load no libs/ beyond LibKa0s, or a LibStub miss) the
--- decision is still recorded on the button (`qcGlowStyle`) and nothing is drawn.
+-- decision is still recorded on the button (`qcGlowStyle`, `qcChipGlowStyle`) and nothing is drawn.
 
 NS.Glow = NS.Glow or {}
 local Glow = NS.Glow
@@ -36,6 +42,7 @@ local Perf = NS.Perf
 -- The key every effect is started and stopped under, so another addon's glow on the same frame is
 -- never touched (the button style has no key: one per frame).
 Glow.KEY = "QuickCommsIcon"
+Glow.CHIP_KEY = "QuickCommsChip"
 Glow.FRAME_LEVEL = 2
 Glow.SEND_SECONDS = 1.5
 
@@ -43,34 +50,35 @@ local function lib() return LibStub and LibStub("LibCustomGlow-1.0", true) or ni
 
 local function num(v, fallback) return type(v) == "number" and v or fallback end
 
+-- Each style's start and stop on frame `f` under `key` (the button style takes none: one per frame).
 local START = {
     button = function(L, f, c)
         L.ButtonGlow_Start(f, c.color, num(c.buttonFrequency), Glow.FRAME_LEVEL)
     end,
-    proc = function(L, f, c)
+    proc = function(L, f, c, key)
         L.ProcGlow_Start(f, { color = c.color, startAnim = c.procStartAnim ~= false,
             duration = num(c.procDuration, 1), xOffset = num(c.xOffset, 0), yOffset = num(c.yOffset, 0),
-            key = Glow.KEY, frameLevel = Glow.FRAME_LEVEL })
+            key = key, frameLevel = Glow.FRAME_LEVEL })
     end,
-    pixel = function(L, f, c)
+    pixel = function(L, f, c, key)
         -- A length of 0 is automatic (the library sizes the lines from the icon); `border` must be a
         -- boolean, since the library draws its dark border for nil.
         local length = num(c.pixelLength, 0)
         L.PixelGlow_Start(f, c.color, num(c.pixelLines), num(c.pixelFrequency), length > 0 and length or nil,
-            num(c.pixelThickness), num(c.xOffset, 0), num(c.yOffset, 0), c.pixelBorder == true, Glow.KEY,
+            num(c.pixelThickness), num(c.xOffset, 0), num(c.yOffset, 0), c.pixelBorder == true, key,
             Glow.FRAME_LEVEL)
     end,
-    autocast = function(L, f, c)
+    autocast = function(L, f, c, key)
         L.AutoCastGlow_Start(f, c.color, num(c.autocastParticles), num(c.autocastFrequency),
-            num(c.autocastScale), num(c.xOffset, 0), num(c.yOffset, 0), Glow.KEY, Glow.FRAME_LEVEL)
+            num(c.autocastScale), num(c.xOffset, 0), num(c.yOffset, 0), key, Glow.FRAME_LEVEL)
     end,
 }
 
 local STOP = {
     button   = function(L, f) L.ButtonGlow_Stop(f) end,
-    proc     = function(L, f) L.ProcGlow_Stop(f, Glow.KEY) end,
-    pixel    = function(L, f) L.PixelGlow_Stop(f, Glow.KEY) end,
-    autocast = function(L, f) L.AutoCastGlow_Stop(f, Glow.KEY) end,
+    proc     = function(L, f, key) L.ProcGlow_Stop(f, key) end,
+    pixel    = function(L, f, key) L.PixelGlow_Stop(f, key) end,
+    autocast = function(L, f, key) L.AutoCastGlow_Stop(f, key) end,
 }
 
 -- The proc style's frame replays its opening burst from its own OnShow, and a rebuild re-shows the
@@ -86,7 +94,7 @@ end
 function Glow.Stop(btn)
     if not (btn and btn.qcGlowStyle) then return end
     local L, stop = lib(), STOP[btn.qcGlowStyle]
-    if L and stop and btn.qcIconFrame then stop(L, btn.qcIconFrame) end
+    if L and stop and btn.qcIconFrame then stop(L, btn.qcIconFrame, Glow.KEY) end
     btn.qcGlowStyle, btn.qcGlowSig = nil, nil
 end
 
@@ -99,7 +107,7 @@ local function start(btn, g)
     Glow.Stop(btn)
     local t0 = Perf.on and debugprofilestop()
     local L, fn = lib(), START[g.type]
-    if L and fn and btn.qcIconFrame then fn(L, btn.qcIconFrame, g) end
+    if L and fn and btn.qcIconFrame then fn(L, btn.qcIconFrame, g, Glow.KEY) end
     btn.qcGlowStyle, btn.qcGlowSig = g.type, g.sig
     spendBurst(btn)
     if t0 then Perf.Note("glowStart", debugprofilestop() - t0) end
@@ -177,11 +185,33 @@ function Glow.Shown(btn)
     if GetTime() <= untilAt then Glow.Sent(btn) end
 end
 
---- A button no longer drawn: its effect stopped, its send timer canceled, its state cleared.
+-- ── the chip glow (the Chip tab) ────────────────────────────────────────────────────────────
+
+local function stopChip(btn)
+    if not btn.qcChipGlowStyle then return end
+    local L, stop = lib(), STOP[btn.qcChipGlowStyle]
+    if L and stop and btn.qcEdge then stop(L, btn.qcEdge, Glow.CHIP_KEY) end
+    btn.qcChipGlowStyle, btn.qcChipGlowSig = nil, nil
+end
+
+--- A chip's paint: its pad's chip glow (IconStyle.GlowConfig of the Chip tab, false while off), on
+--- the chip's edge frame. An unchanged signature keeps the running effect.
+function Glow.Chip(btn, g)
+    if not btn then return end
+    if not g then return stopChip(btn) end
+    if btn.qcChipGlowStyle and btn.qcChipGlowSig == g.sig then return end
+    stopChip(btn)
+    local L, fn = lib(), START[g.type]
+    if L and fn and btn.qcEdge then fn(L, btn.qcEdge, g, Glow.CHIP_KEY) end
+    btn.qcChipGlowStyle, btn.qcChipGlowSig = g.type, g.sig
+end
+
+--- A button no longer drawn: its effects stopped, its send timer canceled, its state cleared.
 function Glow.Release(btn)
     if not btn then return end
     cancelSend(btn)
     Glow.Stop(btn)
+    stopChip(btn)
     btn.qcGlowCfg, btn.qcGlowKey, btn.qcHovered = nil, nil, nil
 end
 

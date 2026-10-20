@@ -9,8 +9,8 @@ local _, NS = ...
 -- row's onChange hands the write to Library.Touch, which sends LIBRARY_CHANGED, so the pads rebuild
 -- (in combat, at combat end, with the stale hint), naming the field so the editor pages repaint
 -- only when what they draw changes shape. Paths resolve against Library.TEMPLATES at the boot
--- check; member rows are no AceDB default. Three row types are structured (a pad's or a dial's
--- point, a group's When, a dial's key): their pages draw their own
+-- check; member rows are no AceDB default. Two row types are structured (a pad's or a dial's
+-- point, a group's When): their pages draw their own
 -- controls, and settings/Slash.lua's parse and format hooks type and print them on the command
 -- line. Added on every load, the degraded one included: Library's writers need them
 -- (tests/test_setup.lua pins that a degraded load's schema holds these rows and nothing else).
@@ -38,9 +38,7 @@ local WHY = {
     parentIsChild = L["That group is inside another group: groups go one level deep."],
     hasChildren = L["This group holds groups of its own, so it cannot go inside another: groups go one level deep."],
     badChoice = L["That is not one of the choices."],
-    badKey    = L["A key is one key, with ALT-, CTRL- or SHIFT- in front if you like."],
     badColor  = L["A color is red, green and blue, and optionally alpha, each from 0 to 1."],
-    reservedKey = L["Escape, the left and right mouse buttons, the mouse wheel and 1 to 8 without a modifier cannot open a dial: the open dial uses them."],
 }
 
 local function check(fn)
@@ -151,19 +149,6 @@ local OPEN_AT = choices({ { "center", L["At its place"] }, { "cursor", L["At the
 local SLICES = {}
 for i, n in ipairs({ 4, 6, 8, 12 }) do SLICES[i] = { value = n, text = tostring(n) } end
 
--- A dial's key: none, or a key that is not reserved and that no other dial has (spec §18: the editor
--- refuses, naming the other dial). The seam then stores it as Library.KeyValue normalizes it.
-local function keyCheck(v, id)
-    local ok, code = Lib.ValidKey(v)
-    if not ok then return false, WHY[code] end
-    local other = Lib.KeyOwner(v, id)
-    if other then
-        local d = NS.db.profile.dials[other]
-        return false, L["%s already opens %s."]:format(Lib.KeyValue(v), tostring(d and d.name or other))
-    end
-    return true
-end
-
 local ROWS = {
     -- A callout's rows (spec §13.1, as amended 2026-10-17): addressed by id alone, drawn by the callout
     -- popup against its draft; `page` is only their /qc list heading. Name and text have no default: a
@@ -215,6 +200,17 @@ local ROWS = {
     { path = "group.openInto", instance = "group", type = "bool", default = T.group.openInto,
       page = "groups", group = GENERAL, label = L["Open the dial on this group"],
       desc = L["When this is the first active group on a Comms Dial, the dial opens straight on its ring, and the middle of the dial goes back to the groups."] },
+    -- Skip on the dial in content (modules/Surfaces.lua S.BuildDialPlan): a top-level group a dial
+    -- leaves out while a content group is active on it (In Group ships with it on). A group inside
+    -- another rides its parent's ring, so the row is grayed out for one; its stored value is kept.
+    { path = "group.dialYield", instance = "group", type = "bool", default = T.group.dialYield,
+      page = "groups", group = GENERAL, label = L["Skip on the dial in content"],
+      validate = check(function(v) return type(v) == "boolean", "badChoice" end),
+      disabledIf = function()
+          local gid = NS.State.editing and NS.State.editing.group
+          return gid ~= nil and Lib.IsChild(gid)
+      end,
+      desc = L["While a dungeon, raid, arena, battleground or other content group is active, the Comms Dial leaves this group out. The Comms Pad still shows it."] },
     -- Nesting (2026-10-18-builtins-as-groups-design.md, goal 2): the top-level group this one sits
     -- inside, or none (false). The General tab draws it as its own dropdown of the groups it may take
     -- (settings/Groups.lua); /qc takes a group id or none. Taking a parent takes the group off every
@@ -268,9 +264,6 @@ local ROWS = {
     { path = "pad.layout.spacing", instance = "pad", type = "number", default = T.pad.layout.spacing,
       min = 0, max = 20, step = 1, page = "pads", group = L["Layout"], label = L["Spacing"],
       desc = L["Pixels between chips."], validate = NUMBER, normalize = clamp(0, 20, true) },
-    { path = "pad.layout.width", instance = "pad", type = "number", default = T.pad.layout.width,
-      min = 1, max = 300, step = 1, page = "pads", group = L["Layout"], label = L["Chip width"],
-      desc = L["How wide a labeled chip is."], validate = NUMBER, normalize = clamp(1, 300, true) },
     -- Position's default is false, the default place, so `/qc reset pad.point` brings a pad back; the
     -- page's Defaults keeps the position (settings/Schema.lua resetExempt), as its tooltip says.
     { path = "pad.point", instance = "pad", type = "point", default = false,
@@ -278,15 +271,15 @@ local ROWS = {
       desc = L["Where the pad sits. Drag it while unlocked, or type an offset."],
       validate = check(Lib.ValidPoint) },
     { path = "pad.look.visibility", instance = "pad", type = "string", default = T.pad.look.visibility,
-      values = VISIBILITY, page = "pads", group = L["Look"], label = L["Visibility"],
+      values = VISIBILITY, page = "pads", group = L["Window"], label = L["Visibility"],
       desc = L["When this pad shows. General visibility applies on top. When a group is active is decided at the last change out of combat."],
       validate = oneOf(VISIBILITY) },
     { path = "pad.look.fade", instance = "pad", type = "string", default = T.pad.look.fade,
-      values = FADE, page = "pads", group = L["Look"], label = L["Fade"],
+      values = FADE, page = "pads", group = L["Window"], label = L["Fade"],
       desc = L["Fade the pad out of combat, or until the mouse is over it."],
       validate = oneOf(FADE) },
     { path = "pad.look.fadeAlpha", instance = "pad", type = "number", default = T.pad.look.fadeAlpha,
-      min = 0, max = 1, step = 0.05, page = "pads", group = L["Look"], label = L["Faded alpha"],
+      min = 0, max = 1, step = 0.05, page = "pads", group = L["Window"], label = L["Faded alpha"],
       desc = L["How visible a faded pad is."], validate = NUMBER, normalize = clamp(0, 1) },
 
     -- Comms Dial page (spec §11, §13.1). Relaxed is the only interaction in v0.1.0, so there is no
@@ -298,7 +291,7 @@ local ROWS = {
       validate = check(Lib.ValidName) },
     { path = "dial.enabled", instance = "dial", type = "bool", default = T.dial.enabled,
       page = "dials", group = GENERAL, label = L["Enabled"],
-      desc = L["Build this dial and bind its key. A disabled dial keeps its groups, key and settings."] },
+      desc = L["Build this dial. A disabled dial keeps its groups and settings, and its key opens nothing."] },
     { path = "dial.mode", instance = "dial", type = "string", default = T.dial.mode, values = MODE,
       page = "dials", group = L["Groups"], label = L["Show groups as"],
       desc = L["Categories: the first ring holds your groups and a click opens one. Flat: the first ring holds callouts, highest group first, with More for the rest."],
@@ -311,27 +304,34 @@ local ROWS = {
       page = "dials", group = L["Wheel"], label = L["Open at"],
       desc = L["Where the dial opens: at its place (set below), or wherever the cursor is."],
       validate = oneOf(OPEN_AT) },
-    -- Position's and Key's default is false (the default place, no key), so `/qc reset dial.point` and
-    -- `/qc reset dial.key` reach them; the page's Defaults keeps both (settings/Schema.lua
-    -- resetExempt), as its tooltip says. As the pad.point row.
+    -- Position's default is false (the default place), so `/qc reset dial.point` reaches it; the page's
+    -- Defaults keeps it (settings/Schema.lua resetExempt), as its tooltip says. As the pad.point row.
+    -- A dial has no key row: its key is WoW's own binding (the Binding tab, modules/Dial.lua BindKey).
     { path = "dial.point", instance = "dial", type = "point", default = false,
       page = "dials", group = L["Wheel"], label = L["Position"],
       desc = L["Where the dial opens at its place. Type an offset from the middle of the screen."],
       validate = check(Lib.ValidPoint) },
-    { path = "dial.key", instance = "dial", type = "key", default = false,
-      page = "dials", group = L["Binding"], label = L["Key"],
-      desc = L["The key that opens and closes this dial. One key opens one dial. Escape, the left and right mouse buttons, the mouse wheel and 1 to 8 without a modifier cannot be used: the open dial uses them."],
-      validate = keyCheck, normalize = Lib.KeyValue },
 }
 
--- ── a pad's Look groups (spec §10.3, §19 row 5; options-ui-§16, §17) ───────────────────────────
+-- ── a pad's Window groups (spec §10.3, §19 row 5; options-ui-§16, §17) ─────────────────────────
 
--- The font block, the border block and the background swatch with its class-color companion, each
--- COMPOSED by the options library (a hand-written copy is anti-pattern #73) and then stamped as pad
--- member rows: the instance, a check per leaf, and the defaults Library ships (Library.TEMPLATES).
+-- The font blocks, the border blocks and the background swatches with their class-color companions,
+-- each COMPOSED by the options library (a hand-written copy is anti-pattern #73) and then stamped as
+-- pad member rows: the instance, a check per leaf, and the defaults Library ships (Library.TEMPLATES).
 -- The class color is the player's (`classColorSource = "player"`, the composer's default): a pad's
 -- text is about no unit. A background is not a bar, so it takes a swatch and its companion only. On
 -- a degraded load the composers are hollow and these rows are absent.
+--
+-- The Window tab (the Look tab until 2026-10-20; its rows keep the `pad.look.` paths) holds, after
+-- Visibility, Fade and Faded alpha: the Header block (`pad.header.*`: its height, then a font, a
+-- background and a border of its own, all under one heading), the Section titles font
+-- (`pad.look.font*`: the section titles only, now that the chips and the header have their own), then
+-- the pad's Border and Background.
+--
+-- The Chip tab (`pad.chip.*`, 2026-10-20) styles the chips themselves: Size (Chip width, moved from
+-- Layout, and Chip height, 0 automatic), Color (the chip's background), Border, Font (the chips'
+-- labels only) and Glow (off by default: a LibCustomGlow effect around the whole chip, in one of the
+-- Icons tab's four styles, at that tab's knob defaults).
 
 local function unit01(c) return type(c) == "number" and c >= 0 and c <= 1 end
 
@@ -360,65 +360,120 @@ local function fourChannels(v)
     return { r = r, g = g, b = b, a = a }
 end
 
-local LOOK = "pad.look."
-local LOOK_DEFAULTS = T.pad.look
-
-local function lookChecks(O)
+-- The checks every composed leaf takes, by its leaf name, whichever block it is in.
+local function composedChecks(O)
     local flags = O.FONT_FLAGS or {}
+    local color = { validate = check(isColor), normalize = fourChannels }
     return {
         font = { validate = check(isName) },
         fontSize = { validate = NUMBER, normalize = clamp(6, 32, true) },
-        fontColor = { validate = check(isColor), normalize = fourChannels },
+        fontColor = color,
         useClassColorFont = { validate = BOOL },
         fontFlags = { validate = check(function(v) return type(v) == "string" and flags[v] ~= nil, "badChoice" end) },
         fontShadow = { validate = BOOL },
         borderStyle = { validate = check(isName) },
         borderSize = { validate = NUMBER, normalize = clamp(0, 16, true) },
-        borderColor = { validate = check(isColor), normalize = fourChannels },
+        borderColor = color,
         useClassColorBorder = { validate = BOOL },
-        background = { validate = check(isColor), normalize = fourChannels },
+        background = color,
         useClassColorBackground = { validate = BOOL },
     }
 end
 
-local function lookSpec(subgroup, extra)
-    local spec = { prefix = LOOK, page = "pads", group = L["Look"], subgroup = subgroup, defaults = LOOK_DEFAULTS }
+-- One composed block's rows stamped as pad member rows: `prefix` names the pad's table
+-- ("pad.look.", "pad.header."), `defaults` that table's shipped values.
+local function stampBlock(out, list, prefix, checks)
+    for _, row in ipairs(list) do
+        local c = checks[row.path:sub(#prefix + 1)] or {}
+        row.instance, row.validate, row.normalize = "pad", c.validate, c.normalize
+        out[#out + 1] = row
+    end
+end
+
+local function blockSpec(prefix, group, subgroup, defaults, extra)
+    local spec = { prefix = prefix, page = "pads", group = group, subgroup = subgroup, defaults = defaults }
     for k, v in pairs(extra or {}) do spec[k] = v end
     return spec
 end
 
-local function lookRows()
+local WINDOW = L["Window"]
+local HEADER = L["Header"]
+local LOOK, HEAD = "pad.look.", "pad.header."
+local HEADER_H = NS.PadDefaults.HEADER_H
+
+local function windowRows()
     local O = NS.addon.Settings.Helpers
-    local checks = lookChecks(O)
+    local checks = composedChecks(O)
     local out = {}
-    for _, list in ipairs({
-        O.FontGroup(lookSpec(L["Font"])),
-        O.BorderGroup(lookSpec(L["Border"])),
-        O.ColorPair(lookSpec(L["Background"], { key = "background", label = L["Background"] })),
-    }) do
-        for _, row in ipairs(list) do
-            local c = checks[row.path:sub(#LOOK + 1)] or {}
-            row.instance, row.validate, row.normalize = "pad", c.validate, c.normalize
-            out[#out + 1] = row
-        end
-    end
+    -- The Header block: its height first, then its font, background and border, under one heading.
+    out[1] = { path = HEAD .. "height", instance = "pad", type = "number", default = T.pad.header.height,
+        min = HEADER_H.min, max = HEADER_H.max, step = 1, page = "pads", group = WINDOW, subgroup = HEADER,
+        label = L["Header height"], startsLine = true,
+        desc = L["How tall the pad's header row is, in pixels: the row with the situation (World, M+, Raid) and the collapse button."],
+        validate = NUMBER, normalize = clamp(HEADER_H.min, HEADER_H.max, true) }
+    local hdef = T.pad.header
+    stampBlock(out, O.FontGroup(blockSpec(HEAD, WINDOW, HEADER, hdef)), HEAD, checks)
+    stampBlock(out, O.ColorPair(blockSpec(HEAD, WINDOW, HEADER, hdef, { key = "background", label = L["Background"] })),
+        HEAD, checks)
+    stampBlock(out, O.BorderGroup(blockSpec(HEAD, WINDOW, HEADER, hdef)), HEAD, checks)
+    local ldef = T.pad.look
+    stampBlock(out, O.FontGroup(blockSpec(LOOK, WINDOW, L["Section titles"], ldef)), LOOK, checks)
+    stampBlock(out, O.BorderGroup(blockSpec(LOOK, WINDOW, L["Border"], ldef)), LOOK, checks)
+    stampBlock(out, O.ColorPair(blockSpec(LOOK, WINDOW, L["Background"], ldef, { key = "background", label = L["Background"] })),
+        LOOK, checks)
     return out
 end
 
-for _, row in ipairs(lookRows()) do ROWS[#ROWS + 1] = row end
+for _, row in ipairs(windowRows()) do ROWS[#ROWS + 1] = row end
 
--- The Icons tab's rows (B9, settings/SchemaIcons.lua), with these checks: a pad's after its Look rows,
--- a dial's after its Wheel rows (before the Binding tab's row), so each editor's Icons tab sits there.
+local CHIP, CHIPP = L["Chip"], "pad.chip."
+local CHIP_H = NS.PadDefaults.CHIP_H
+
+local function chipRows()
+    local O = NS.addon.Settings.Helpers
+    local checks = composedChecks(O)
+    checks.glowColor = checks.background
+    checks.useClassColorGlow = { validate = BOOL }
+    local cdef = T.pad.chip
+    local SIZE, COLOR, GLOW = L["Size"], L["Color"], L["Glow"]
+    local function glowOff() return NS.SchemaRuntime.Get(CHIPP .. "glowEnabled") ~= true end
+    local styles = choices(NS.addon.Settings.GLOW_STYLES)
+    local function row(subgroup, r)
+        r.instance, r.page, r.group, r.subgroup = "pad", "pads", CHIP, subgroup
+        return r
+    end
+    local out = {
+        row(SIZE, { path = CHIPP .. "width", type = "number", default = cdef.width, min = 1, max = 300, step = 1,
+            label = L["Chip width"], startsLine = true, desc = L["How wide a labeled chip is. An icon-only chip stays square around its icon."],
+            validate = NUMBER, normalize = clamp(1, 300, true) }),
+        row(SIZE, { path = CHIPP .. "height", type = "number", default = cdef.height, min = CHIP_H.min,
+            max = CHIP_H.max, step = 1, label = L["Chip height (0 = automatic)"], zeroText = L["Automatic"],
+            desc = L["How tall a labeled chip is, in pixels. 0 grows it to hold its font and its icon. An icon-only chip stays square around its icon."],
+            validate = NUMBER, normalize = clamp(CHIP_H.min, CHIP_H.max, true) }),
+    }
+    stampBlock(out, O.ColorPair(blockSpec(CHIPP, CHIP, COLOR, cdef, { key = "background", label = L["Background"] })),
+        CHIPP, checks)
+    stampBlock(out, O.BorderGroup(blockSpec(CHIPP, CHIP, L["Border"], cdef)), CHIPP, checks)
+    stampBlock(out, O.FontGroup(blockSpec(CHIPP, CHIP, L["Font"], cdef)), CHIPP, checks)
+    out[#out + 1] = row(GLOW, { path = CHIPP .. "glowEnabled", type = "bool", default = cdef.glowEnabled,
+        label = L["Glow"], desc = L["Draw a glow around each chip."], validate = BOOL, startsLine = true })
+    out[#out + 1] = row(GLOW, { path = CHIPP .. "glowType", type = "string", default = cdef.glowType, values = styles,
+        label = L["Glow style"], desc = L["How the glow looks."], validate = oneOf(styles), disabledIf = glowOff })
+    stampBlock(out, O.ColorPair(blockSpec(CHIPP, CHIP, GLOW, cdef, { key = "glowColor",
+        companionKey = "useClassColorGlow", label = L["Glow color"] })), CHIPP, checks)
+    return out
+end
+
+for _, row in ipairs(chipRows()) do ROWS[#ROWS + 1] = row end
+
+-- The Icons tab's rows (B9, settings/SchemaIcons.lua), with these checks: a pad's after its Window and
+-- Chip rows, a dial's after its Wheel rows, so each editor's Icons tab sits there.
 do
     local C = { check = check, choices = choices, oneOf = oneOf, clamp = clamp, NUMBER = NUMBER, BOOL = BOOL,
         color = check(isColor), name = check(isName), fourChannels = fourChannels }
     local IconRows = NS.addon.Settings.IconRows
     for _, row in ipairs(IconRows("pad", C)) do ROWS[#ROWS + 1] = row end
-    local at = #ROWS + 1
-    for i, row in ipairs(ROWS) do
-        if row.path == "dial.key" then at = i break end
-    end
-    for i, row in ipairs(IconRows("dial", C)) do table.insert(ROWS, at + i - 1, row) end
+    for _, row in ipairs(IconRows("dial", C)) do ROWS[#ROWS + 1] = row end
 end
 
 -- Every member row's reaction: Library.Touch announces the write (LIBRARY_CHANGED, the pads' rebuild),

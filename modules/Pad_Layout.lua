@@ -13,7 +13,10 @@ local _, NS = ...
 NS.PadLayout = NS.PadLayout or {}
 local PL = NS.PadLayout
 
-PL.HEADER_H  = 18    -- the header row: situation chip, lockdown chip, stale hint, collapse
+-- The header row (situation chip, lockdown chip, stale hint, collapse): its default height and range,
+-- the Window tab's Header height (defaults/PadStyle.lua; 18 before 2026-10-20).
+PL.HEADER_H  = NS.PadDefaults.HEADER_H.default
+PL.HEADER_MIN, PL.HEADER_MAX = NS.PadDefaults.HEADER_H.min, NS.PadDefaults.HEADER_H.max
 PL.PAD       = 4     -- inner padding
 PL.SECTION_H = 14    -- a section's small-caps label row
 PL.CHIP_H    = 24    -- icon + label chip height
@@ -24,7 +27,7 @@ PL.LABEL_H   = 22    -- label-only chip height
 PL.MIN_PAD_W = 120   -- the narrowest pad: the header's situation text and collapse button need it
 PL.MIN_CHIP_W = 1    -- the narrowest labeled chip (its label hides when it has no room)
 PL.DEFAULT_W = 100
-PL.FONT_SIZE = 10    -- the Look's default font size, which the heights above were drawn for
+PL.FONT_SIZE = 10    -- the Chip tab's default font size, which the heights above were drawn for
 PL.CHIP_ROOM = 10    -- a labeled chip's height past its font size: CHIP_H at FONT_SIZE and up
 PL.LABEL_ROOM = 8    -- a label-only chip's
 PL.TITLE_ROOM = 4    -- a section title row's
@@ -67,29 +70,43 @@ function PL.VisibleSections(sections, groupsAs, tab)
     return sections
 end
 
--- The Look's font size, or the default.
+-- The Chip tab's font size, or the default.
 local function sizeOf(fontSize)
     return tonumber(fontSize) or PL.FONT_SIZE
 end
 
---- One chip's width and height for the pad's style. A labeled chip grows with the Look's font size
---- and the Icons tab's icon size (never below its shipped height); an icon-only chip draws no text
---- and stays square around its icon.
-function PL.CellSize(layout, fontSize, iconSize)
-    layout = type(layout) == "table" and layout or {}
+--- One chip's width and height for the pad's style. `cell` is { style, width, height }: the layout's
+--- style and the Chip tab's size. A labeled chip is `width` wide; its height is `height` when that is
+--- above 0 (never below the icon and its 4 pixels, beside an icon), else automatic: grown with the
+--- chips' font size and the Icons tab's icon size, never below its shipped height. An icon-only chip
+--- draws no text and stays square around its icon, whatever the size says.
+function PL.CellSize(cell, fontSize, iconSize)
+    cell = type(cell) == "table" and cell or {}
     local icon = tonumber(iconSize) or PL.ICON
-    if layout.style == "icon" then
+    if cell.style == "icon" then
         local s = icon + (PL.ICON_ONLY - PL.ICON)
         return s, s
     end
-    local w = math.max(PL.MIN_CHIP_W, tonumber(layout.width) or PL.DEFAULT_W)
-    if layout.style == "label" then return w, math.max(PL.LABEL_H, sizeOf(fontSize) + PL.LABEL_ROOM) end
+    local w = math.max(PL.MIN_CHIP_W, tonumber(cell.width) or PL.DEFAULT_W)
+    local fixed = math.floor(tonumber(cell.height) or 0)
+    if cell.style == "label" then
+        if fixed > 0 then return w, fixed end
+        return w, math.max(PL.LABEL_H, sizeOf(fontSize) + PL.LABEL_ROOM)
+    end
+    if fixed > 0 then return w, math.max(fixed, icon + PL.ICON_ROOM) end
     return w, math.max(PL.CHIP_H, sizeOf(fontSize) + PL.CHIP_ROOM, icon + PL.ICON_ROOM)
 end
 
---- A section title row's height for the Look's font size (never below SECTION_H).
+--- A section title row's height for the section titles' font size (never below SECTION_H).
 function PL.TitleHeight(fontSize)
     return math.max(PL.SECTION_H, sizeOf(fontSize) + PL.TITLE_ROOM)
+end
+
+--- The header row's height: the Window tab's Header height, clamped, or the default.
+function PL.HeaderHeight(h)
+    h = tonumber(h)
+    if not h then return PL.HEADER_H end
+    return math.floor(math.max(PL.HEADER_MIN, math.min(PL.HEADER_MAX, h)) + 0.5)
 end
 
 --- Columns for a section of `count` chips: one row (horizontal), one column (vertical) or N (grid).
@@ -195,9 +212,10 @@ local function joins(row, b, maxCols)
 end
 
 -- Stack the blocks under the header in order, packing child rows (joins); each block's `left` is its
--- first column. Answers the y below the last row and the widest row's columns.
-local function stackBlocks(blocks, maxCols)
-    local y, row, widest = PL.HEADER_H + PL.PAD, nil, 0
+-- first column, below a header row `hh` tall. Answers the y below the last row and the widest row's
+-- columns.
+local function stackBlocks(blocks, maxCols, hh)
+    local y, row, widest = hh + PL.PAD, nil, 0
     for _, b in ipairs(blocks) do
         if joins(row, b, maxCols) then
             b.top, b.left = row.top, row.cols
@@ -247,29 +265,38 @@ end
 --- bottom with the first section just above it; left mirrors each chip row.
 --- @param sections table from VisibleSections
 --- @param layout table the pad's layout table
---- @param opts table|nil { collapsed = boolean, fontSize = number (the Look's; rows grow to hold it),
----   iconSize = number (the Icons tab's; a chip grows to hold it),
+--- @param opts table|nil { collapsed = boolean, chip = table (the Chip tab's { width, height }; default:
+---   the layout table's own), fontSize = number (the chips' label size; a chip grows to hold it), titleSize = number (the section titles' size; a title row grows to hold it; default
+---   fontSize), iconSize = number (the Icons tab's; a chip grows to hold it), headerH = number (the
+---   header row's height, PL.HeaderHeight),
 ---   situation = string (the header's text: a section title equal to it is not drawn) }
---- @return table { width, height, items, headerY (the header row's top), up (the growth is upward) }
+--- @return table { width, height, items, headerY (the header row's top), headerH (its height), up (the
+---   growth is upward) }
 function PL.Compute(sections, layout, opts)
     layout = type(layout) == "table" and layout or {}
     opts = type(opts) == "table" and opts or {}
-    local cw, ch = PL.CellSize(layout, opts.fontSize, opts.iconSize)
+    -- The Chip tab's size (opts.chip); a pure caller may hand a layout table that carries its own.
+    local chip = type(opts.chip) == "table" and opts.chip or layout
+    local cw, ch = PL.CellSize({ style = layout.style, width = chip.width, height = chip.height }, opts.fontSize,
+        opts.iconSize)
+    local hh = PL.HeaderHeight(opts.headerH)
     local gap = math.max(0, tonumber(layout.spacing) or 4)
     local up = PL.GrowsUp(layout.growth)
     local blocks, contentW = {}, 0
     if not opts.collapsed then
-        blocks, contentW = collectBlocks(sections, layout, cw, ch, gap, up, PL.TitleHeight(opts.fontSize),
+        blocks, contentW = collectBlocks(sections, layout, cw, ch, gap, up,
+            PL.TitleHeight(opts.titleSize or opts.fontSize),
             opts.situation)
     end
     local maxCols = layout.orientation == "grid" and PL.Columns(layout, 1) or nil
-    local y, widest = stackBlocks(blocks, maxCols)
+    local y, widest = stackBlocks(blocks, maxCols, hh)
     if widest > 0 then contentW = math.max(contentW, widest * cw + (widest - 1) * gap) end
     local width = math.max(PL.MIN_PAD_W, contentW + 2 * PL.PAD)
-    local height = #blocks > 0 and (y + PL.PAD) or PL.HEADER_H
+    local height = #blocks > 0 and (y + PL.PAD) or hh
     if up then flipBlocks(blocks, height) end
     local items = flattenBlocks(blocks, MIRROR[layout.growth] == true, width, cw + gap, cw, gap)
-    return { width = width, height = height, items = items, up = up, headerY = up and (height - PL.HEADER_H) or 0 }
+    return { width = width, height = height, items = items, up = up, headerY = up and (height - hh) or 0,
+        headerH = hh }
 end
 
 --- The pad's visibility as one state-driver expression (spec §10.3). The master visibility applies
