@@ -223,7 +223,7 @@ test("launcher: the right-click menu is Enabled, Locked, Test mode and Show wind
     assertEqual(table.concat(labels, ","), "Enabled,Locked,Test mode,Show window")
 end)
 
-test("launcher: Show window calls the handler `/qc toggle` calls and reflects the session flag", function()
+test("launcher: Show window calls the handler `/qc toggle` calls and reflects the saved flag", function()
     local NS, _, m = T.enableAddon()
     local calls, real = 0, NS.SlashVerbs.TogglePads
     NS.SlashVerbs.TogglePads = function(...) calls = calls + 1; return real(...) end
@@ -231,7 +231,7 @@ test("launcher: Show window calls the handler `/qc toggle` calls and reflects th
     assertTrue(box().checked(), "shown on a fresh addon")
     box().click()
     assertEqual(calls, 1, "the one handler")
-    assertTrue(NS.State.padsHidden == true)
+    assertTrue(NS.db.char.padsHidden == true)
     assertFalse(box().checked())
     box().click()
     assertTrue(box().checked())

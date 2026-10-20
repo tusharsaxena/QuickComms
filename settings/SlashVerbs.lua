@@ -63,14 +63,16 @@ function V.ToggleLock()
 end
 
 --- `/qc toggle`, the launcher's Show window entry and the Toggle Comms Pads key binding: hide or show
---- every Comms Pad for the session
---- (State.padsHidden). The pads' secure visibility driver carries the flag, so the change goes
---- through Surfaces.Request: now, or at the end of combat with the stale hint meanwhile.
+--- every Comms Pad, remembered per character (`db.char.padsHidden`, so a /reload or the next login
+--- restores it). The pads' secure visibility driver carries the flag, so the change goes through
+--- Surfaces.Request: now, or at the end of combat with the stale hint meanwhile. Test mode still shows
+--- them (an explicit preview); dials are not pads and are not affected.
 function V.TogglePads()
     if NS.IsStoodDown() then return NS.Print(NS.SlashCommands:DisabledLine()) end
-    NS.State.padsHidden = V.PadsShown()
+    local hidden = V.PadsShown()
+    NS.db.char.padsHidden = hidden
     NS.Surfaces.Request("padsHidden")
-    NS.Print(NS.State.padsHidden and L["Comms Pads hidden for this session."] or L["Comms Pads shown."])
+    NS.Print(hidden and L["Comms Pads hidden on this character until you show them again."] or L["Comms Pads shown."])
 end
 
 -- The key bindings menu's Toggle Comms Pads (Bindings.xml, 2026-10-20): a CLICK on this plain,
@@ -89,9 +91,10 @@ do
     rawset(_G, "BINDING_NAME_" .. V.TOGGLE_COMMAND, L["Toggle Comms Pads"])
 end
 
---- Whether the pads are shown, as far as `/qc toggle` is concerned.
+--- Whether the pads are shown, as far as `/qc toggle` is concerned: this character's last choice.
 function V.PadsShown()
-    return NS.State.padsHidden ~= true
+    local char = NS.db and NS.db.char
+    return not (char and char.padsHidden == true)
 end
 
 --- The lines `/qc preview [name|off]` prints (spec §14): the menu with the one on now, or the result

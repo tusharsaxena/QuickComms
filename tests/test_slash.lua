@@ -199,7 +199,7 @@ test("slash: [final 9] test and preview's help, and the Preview as row, speak of
     end
 end)
 
--- ── `/qc toggle`: every Comms Pad hidden or shown for the session (plan B4) ──────────────────
+-- ── `/qc toggle`: every Comms Pad hidden or shown, remembered per character (plan B4, 2026-10-21) ──
 
 local function toggleLive()
     local NS, _, m = T.enableAddon()
@@ -213,7 +213,7 @@ end
 
 test("slash: [toggle] the flag is off on a fresh addon and the pads show", function()
     local NS, m = toggleLive()
-    assertFalse(NS.State.padsHidden == true, "session flag starts off")
+    assertFalse(NS.db.char.padsHidden == true, "the flag starts off")
     assertEqual(m.stateDrivers[NS.Pad.Instance("p1").root].visibility, "show")
 end)
 
@@ -222,12 +222,12 @@ test("slash: [toggle] `toggle` hides every pad, a second `toggle` shows them aga
     m.prints = {}
     -- red under: drop the toggle row from NS.COMMANDS in settings/Slash.lua
     NS.addon:OnSlashCommand("toggle")
-    assertTrue(NS.State.padsHidden == true)
+    assertTrue(NS.db.char.padsHidden == true)
     assertEqual(m.stateDrivers[NS.Pad.Instance("p1").root].visibility, "hide")
     assertEqual(#m.prints, 1, "one confirmation line")
     assertTrue(m.prints[1]:find("hidden", 1, true) ~= nil, m.prints[1])
     NS.addon:OnSlashCommand("toggle")
-    assertFalse(NS.State.padsHidden == true)
+    assertFalse(NS.db.char.padsHidden == true)
     assertEqual(m.stateDrivers[NS.Pad.Instance("p1").root].visibility, "show")
 end)
 
@@ -247,7 +247,7 @@ test("slash: [toggle] in combat the flag flips and the driver waits for combat t
     m.__fire("PLAYER_REGEN_DISABLED")
     m.__setCombat(true)
     NS.addon:OnSlashCommand("toggle")
-    assertTrue(NS.State.padsHidden == true)
+    assertTrue(NS.db.char.padsHidden == true)
     assertEqual(#m.blocked, 0, "no protected call in combat")
     assertEqual(m.stateDrivers[root].visibility, "show", "held for combat")
     m.__setCombat(false)
@@ -255,4 +255,29 @@ test("slash: [toggle] in combat the flag flips and the driver waits for combat t
     -- red under: apply the driver directly instead of through Surfaces.Request (RunOrQueue)
     assertEqual(m.stateDrivers[root].visibility, "hide")
     assertEqual(#m.blocked, 0)
+end)
+
+test("slash: [toggle] the hidden state is this character's: a /reload or the next login restores it", function()
+    local NS, m = toggleLive()
+    NS.addon:OnSlashCommand("toggle")
+    assertTrue(NS.db.char.padsHidden == true)
+    -- red under: keep the flag in core/State.lua (session-only, a /reload shows the pads again)
+    local saved = _G.QuickCommsDB
+    assertTrue(saved.char["Tester - Realm"].padsHidden == true, "saved in the character's section")
+    local NS2, _, m2 = T.enableAddon({ sv = saved })   -- what the client hands back after a /reload
+    NS2.Situation.ReadInputs = function()
+        return { inInstance = true, instanceType = "party", difficultyID = 8, keystoneActive = true, keyLevel = 12,
+            inGroup = true }
+    end
+    NS2.Situation.RefreshNow("test")
+    assertFalse(NS2.SlashVerbs.PadsShown(), "restored hidden")
+    assertEqual(m2.stateDrivers[NS2.Pad.Instance("p1").root].visibility, "hide")
+    NS2.addon:OnSlashCommand("toggle")
+    assertEqual(m2.stateDrivers[NS2.Pad.Instance("p1").root].visibility, "show")
+    assertTrue(_G.QuickCommsDB.char["Tester - Realm"].padsHidden == false, "and shown again, saved")
+    NS2.addon.db:SetProfile("Other")
+    NS2.addon:OnSlashCommand("toggle")
+    NS2.addon.db:SetProfile("Other")
+    assertFalse(NS2.SlashVerbs.PadsShown(), "a profile switch keeps the character's choice")
+    assertTrue(m.stateDrivers ~= m2.stateDrivers, "two loads, two mocks")
 end)

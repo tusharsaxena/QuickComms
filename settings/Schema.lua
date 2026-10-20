@@ -282,6 +282,7 @@ function Settings.BuildDefaults()
     local out = {
         profile = deepcopy(C.PROFILE),
         global  = deepcopy(C.GLOBAL_DEFAULTS),
+        char    = deepcopy(C.CHAR_DEFAULTS),
     }
     for _, def in ipairs(Schema) do
         if def.path and not def.sessionOnly and not GLOBAL[def.path] and not def.instance then
