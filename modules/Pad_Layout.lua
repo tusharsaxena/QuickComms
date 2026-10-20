@@ -27,7 +27,7 @@ PL.LABEL_H   = 22    -- label-only chip height
 PL.MIN_PAD_W = 120   -- the narrowest pad: the header's situation text and collapse button need it
 PL.MIN_CHIP_W = 1    -- the narrowest labeled chip (its label hides when it has no room)
 PL.DEFAULT_W = 100
-PL.FONT_SIZE = 10    -- the Look's default font size, which the heights above were drawn for
+PL.FONT_SIZE = 10    -- the Chip tab's default font size, which the heights above were drawn for
 PL.CHIP_ROOM = 10    -- a labeled chip's height past its font size: CHIP_H at FONT_SIZE and up
 PL.LABEL_ROOM = 8    -- a label-only chip's
 PL.TITLE_ROOM = 4    -- a section title row's
@@ -70,7 +70,7 @@ function PL.VisibleSections(sections, groupsAs, tab)
     return sections
 end
 
--- The Look's font size, or the default.
+-- The Chip tab's font size, or the default.
 local function sizeOf(fontSize)
     return tonumber(fontSize) or PL.FONT_SIZE
 end

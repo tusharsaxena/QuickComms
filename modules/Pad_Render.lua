@@ -234,7 +234,7 @@ function R.Paint(btn, slot, style, w, icfg)
     IS.PaintBorder(btn, icfg, style ~= "label")
     Glow.Bind(btn, style ~= "label" and icfg.glow or false, slot.calloutId)
     btn.qcLabelOnly = style == "label"
-    -- One line to the chip's right edge (the padlock's, while locked), whatever the Look's font size.
+    -- One line to the chip's right edge (the padlock's, while locked), whatever the Chip tab's font size.
     -- No channel letter beside it: the channel is in the tooltip (TooltipLines).
     anchorLabel(btn, slot.lock ~= nil)
     btn.qcLabel:SetWordWrap(false)

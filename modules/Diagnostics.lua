@@ -5,7 +5,7 @@ local _, NS = ...
 -- and the Add loop are LibKa0s-DebugLog-1.0's. Every section READS state and never acts: no hold,
 -- no event, no timer, safe in combat and while stood down. `out:add` formats %s-only and runs every
 -- argument through safeToString, so raw values are passed, never pre-built strings. The sections
--- cover design spec §16's list, the Comms Dial's and its override bindings included.
+-- cover design spec §16's list, the Comms Dial's and its WoW key bindings included.
 
 NS.Diagnostics = NS.Diagnostics or {}
 

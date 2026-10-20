@@ -215,7 +215,7 @@ Total.
 - diagnostics: [final 21] the settings section lists no member row
 - diagnostics: [phase 4] the dials and bindings sections name each dial, its key and each entry's WoW binding
 
-### test_compat.lua (14)
+### test_compat.lua (15)
 
 - compat: plain readers pass plain values and drop secrets
 - compat: InstanceInfo with a secret instanceID reads nil, never raises
@@ -230,6 +230,7 @@ Total.
 - compat: [phase 3] SpecInfoByID and ClassName read display names; secret or missing ones are nil
 - compat: [phase 4] BindingAction reads the player's WoW binding; none, a secret or a missing API is nil
 - compat: [final 7] BindingLabel reads the menu's name for an action; [final 8] BindingKey a command's key; secrets are nil
+- compat: [keys] BindingKeys lists every key a command has (the menu takes two); secrets and a missing API give none
 - compat: [keys] SetBinding and SaveBindings write WoW's own bindings, never in combat or without the API
 
 ### test_restrictions.lua (16)
@@ -1029,7 +1030,7 @@ Total.
 - pad: [R4] merged pads, collapsed pads and test mode's placeholder groups have no title to click
 - pad: [bg subgroups] Alterac Valley draws its nineteen objectives two to a row, each title its block wide
 
-### test_dial.lua (33)
+### test_dial.lua (34)
 
 - dial: Apply builds QuickCommsDial<n> with a ring per page, each callout wedge armed with its baked line
 - dial: a refused callout is a dimmed, disarmed wedge; a ring wedge is disarmed
@@ -1040,6 +1041,7 @@ Total.
 - dial: Sync applies each planned dial at its place in the order, and opens dial 1 in test mode
 - dial: the first situation read builds the default dial, closed; setting its key is WoW's own binding
 - dial: [keys] a new key unbinds the old one; Escape (no key) clears it; a reserved key is refused
+- dial: [keys] a new key unbinds both keys the menu holds for the dial; Escape clears both
 - dial: [keys] a key bound elsewhere in WoW is taken, with one line naming what it was
 - dial: [keys] in combat a key cannot be set, with one line, and nothing is blocked
 - dial: [keys] a key set in Options -> Keybindings is the dial's key; a dial past the fourth has none
@@ -1173,7 +1175,7 @@ Total.
 | test_slash.lua | 19 |
 | test_disabled.lua | 21 |
 | test_diagnostics.lua | 10 |
-| test_compat.lua | 14 |
+| test_compat.lua | 15 |
 | test_restrictions.lua | 16 |
 | test_situation.lua | 16 |
 | test_tokens.lua | 8 |
@@ -1206,7 +1208,7 @@ Total.
 | test_surfaces.lua | 27 |
 | test_pad_render.lua | 20 |
 | test_pad.lua | 40 |
-| test_dial.lua | 33 |
+| test_dial.lua | 34 |
 | test_icon_style.lua | 8 |
 | test_glow.lua | 11 |
 | test_vendor_sync.lua | 3 |
@@ -1216,4 +1218,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **990** |
+| **Total** | **992** |
