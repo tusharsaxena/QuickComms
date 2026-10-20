@@ -13,8 +13,12 @@ test("builtins: the expected top-level sets exist in order", function()
     assertEqual(BI.order[4], "bi.world")
     -- A battleground's own set comes before the generic one, so the dial opens into it (D9, phase 4).
     assertEqual(BI.order[5], "bi.bg.ab")
-    assertEqual(BI.order[#BI.order], "bi.bg")
-    assertTrue(#BI.order >= 19, "generic sets plus one per battleground")
+    -- the generic battleground set after every battleground's own, and In Group after it (bg
+    -- buttons): in a battleground the map's own set is the first active group (D9)
+    assertEqual(BI.order[#BI.order - 1], "bi.bg")
+    assertEqual(BI.order[#BI.order], "bi.group")
+    for i = 5, #BI.order - 2 do assertTrue(BI.order[i]:match("^bi%.bg%.") ~= nil, BI.order[i]) end
+    assertTrue(#BI.order >= 20, "generic sets plus one per battleground")
 end)
 
 test("builtins: ids are unique, referenced and well formed", function()
@@ -350,4 +354,29 @@ test("builtins: [bg buttons] Temple of Kotmogu has its four orbs and the center"
         { ctx = { target = "Traxex" } })
     assertTrue(line:find("Kill their green orb carrier", 1, true) ~= nil, line)
     assertEqual(BI.callouts["bi.bg.tok.mid"].text, "Orbs to the middle", "the map-wide callouts stay")
+end)
+
+test("builtins: [bg buttons] In Group is a party, raid and instance group set of short smart-group lines", function()
+    local NS, BI = bi()
+    local g = BI.groups["bi.group"]
+    -- red under: no defaults/BuiltIns_Group.lua (or no TOC line for it)
+    assertTrue(g ~= nil, "the set exists")
+    assertEqual(g.name, "In Group")
+    assertTrue(g.when.group.party and g.when.group.raid and g.when.group.instance, "Party, Raid, Instance group")
+    assertNil(g.when.group.solo)
+    assertNil(g.when.content, "no content condition")
+    assertEqual(rows(BI, "bi.group"), "Hello=Hello|tyff=tyff|Buffs please=Buffs please!|"
+        .. "Healthstone=Healthstone please!|GLHF=GLHF|ggty=ggty|ggnt=ggnt|ty=ty|brb=brb|Ready=Ready|"
+        .. "Drink=Drinking|Summon=Summon please!")
+    for _, cid in ipairs(g.callouts) do assertEqual(BI.callouts[cid].channel, "smartGroup", cid) end
+    assertEqual(g.glyph, "ph:users-three")
+    local snap = BI.SNAPSHOTS["bi.group"]
+    assertEqual(snap.group, "party", "the bake audit checks it in a party")
+    assertEqual(NS.Bake.Bake(BI.callouts["bi.group.glhf"], snap, { ctx = {} }), "/p GLHF")
+    -- active in a party, a raid and a battleground's instance group; not solo
+    local R = NS.Resolver
+    assertTrue(R.Matches(g.when, { group = "party" }))
+    assertTrue(R.Matches(g.when, { group = "raid" }))
+    assertTrue(R.Matches(g.when, { group = "raid", instanceGroup = true, content = "battleground" }))
+    assertTrue(not R.Matches(g.when, { group = "solo" }), "not solo")
 end)

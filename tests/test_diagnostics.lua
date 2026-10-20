@@ -66,6 +66,8 @@ test("diagnostics: the surfaces and send sections name the pads, the armed chips
         return { inInstance = true, instanceType = "party", difficultyID = 8, keystoneActive = true,
             keyLevel = 12, inGroup = true }
     end
+    -- M+ alone: In Group (active in any party, bg buttons) off, so the counts below stay M+'s
+    NS.SchemaRuntime.Set("group.enabled", false, T.seeded(NS, "bi.group"))
     NS.Situation.RefreshNow("test")
     local text = report(NS)
     assertTrue(text:find("p1 active=" .. T.seeded(NS, "bi.mplus") .. " stale=false", 1, true) ~= nil, text)
@@ -102,6 +104,8 @@ test("diagnostics: [phase 4] the dials and bindings sections name each dial, its
         return { inInstance = true, instanceType = "party", difficultyID = 8, keystoneActive = true,
             keyLevel = 12, inGroup = true }
     end
+    -- M+ alone: In Group (active in any party, bg buttons) off, so the counts below stay M+'s
+    NS.SchemaRuntime.Set("group.enabled", false, T.seeded(NS, "bi.group"))
     NS.Situation.RefreshNow("test")
     NS.SchemaRuntime.Set("dial.key", "G", "d2")
     local text = report(NS)

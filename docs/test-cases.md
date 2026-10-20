@@ -362,7 +362,7 @@ Total.
 - resolver: [all] All battlegrounds and All dungeons and raids match the whole kind, the listed ids aside
 - resolver: [arena] the arena row matches only in an arena: its listed ids, or all of them
 
-### test_builtins.lua (20)
+### test_builtins.lua (21)
 
 - builtins: the expected top-level sets exist in order
 - builtins: ids are unique, referenced and well formed
@@ -384,6 +384,7 @@ Total.
 - builtins: [bg buttons] every base-capture node has Attack, Defend, INC and Clear, as Wintergrasp's workshops do
 - builtins: [bg buttons] Silvershard Mines has its three tracks and the switches, each with four
 - builtins: [bg buttons] Temple of Kotmogu has its four orbs and the center
+- builtins: [bg buttons] In Group is a party, raid and instance group set of short smart-group lines
 
 ### test_gameids.lua (4)
 
@@ -1168,7 +1169,7 @@ Total.
 | test_bake.lua | 12 |
 | test_share.lua | 37 |
 | test_resolver.lua | 13 |
-| test_builtins.lua | 20 |
+| test_builtins.lua | 21 |
 | test_gameids.lua | 4 |
 | test_library.lua | 78 |
 | test_members.lua | 29 |
@@ -1203,4 +1204,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **977** |
+| **Total** | **978** |

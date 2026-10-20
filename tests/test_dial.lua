@@ -222,6 +222,8 @@ test("dial: [exit] on a raid boss the dial opens and a click on a wedge sends, w
     bindG(NS)
     combat(m, true)
     m.__pressKey("G")
+    -- the raid set and In Group (bg buttons): the group ring, the raid set first
+    m.__click(NS.Dial.RingWedges("d2", NS.Dial.ShownRing("d2"))[1])
     local w = NS.Dial.RingWedges("d2", NS.Dial.ShownRing("d2"))[1]
     m.__click(w)
     assertEqual(m.sentMacros[#m.sentMacros].text, "/raid Bloodlust now")
