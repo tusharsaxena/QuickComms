@@ -3,7 +3,7 @@ local _, NS = ...
 -- textures and font strings on the dial's frames, their text, color and visibility, which the client
 -- allows in combat; it never touches an attribute or a protected frame's geometry or visibility (the
 -- header's snippets show and hide the rings; modules/Dial.lua sizes and places the frames, out of
--- combat). As modules/Pad_Render.lua dresses a pad's secure chips, this dresses the dial's secure
+-- combat). As modules/Pad_Render.lua dresses a pad's secure buttons, this dresses the dial's secure
 -- frames: the dark disc and the hub's close mark on the header, spokes and a title on each ring, and
 -- on each wedge an icon (a glyph in its color), its label outside the disc, a padlock, a dim veil when it sends nothing, the
 -- guard's cooling veil, a result flash and a gold glow under the mouse (the selected wedge). The hub carries the stale hint, the lockdown chip and the test
@@ -158,7 +158,7 @@ function R.PaintRing(ring, spec)
     ring.qcTitle:SetText(R.RingTitle(spec))
 end
 
---- A wedge's tooltip lines: a callout's as its pad chip's (name, its line or why it sends nothing,
+--- A wedge's tooltip lines: a callout's as its pad button's (name, its line or why it sends nothing,
 --- any lock), a ring's name and what a click does.
 function R.WedgeLines(item)
     if item.slot then return NS.PadRender.TooltipLines(item.slot) end

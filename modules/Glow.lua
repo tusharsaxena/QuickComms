@@ -1,12 +1,12 @@
 local _, NS = ...
--- modules/Glow.lua — the Icons tab's glow (B9) on a Comms Pad chip's and a Comms Dial wedge's icon:
+-- modules/Glow.lua — the Icons tab's glow (B9) on a Comms Pad button's and a Comms Dial wedge's icon:
 -- LibCustomGlow-1.0's effect, modeled on DropWatcher modules/Glow.lua (its START/STOP tables, its
 -- knob table, the unchanged-repaint no-op and the proc burst spent once).
 --
 -- THE TRIGGER (owner decision 2026-10-19), per pad and per dial, off by default: Always (while the
 -- icon is drawn), On hover (OnEnter to OnLeave, hooked insecurely beside the tooltip) or After
 -- sending (SEND_SECONDS from the callout's send result, the same SEND_RESULT edge that flashes the
--- chip; a second result restarts the window). Bind hands a button its surface's glow settings at
+-- button; a second result restarts the window). Bind hands a button its surface's glow settings at
 -- every paint; Update decides from them and the button's hover and send state. A dial closes on every
 -- send, so its result lands while the wedges are hidden: Sent is given a hold there (Dial.DROP_SECONDS,
 -- as long as a drop stays red), and the dial's next open within it runs the window again (Shown).
@@ -18,21 +18,21 @@ local _, NS = ...
 -- starts and stops in combat as well. Settings changes reach the screen through the rebuild, which
 -- waits for combat end.
 --
--- FREE WHEN NOTHING CHANGED. A rebuild paints every chip again; Apply keeps the running effect when
+-- FREE WHEN NOTHING CHANGED. A rebuild paints every button again; Apply keeps the running effect when
 -- the settings' signature (IconStyle.Config's `sig`) is the same, and stops and restarts it
--- otherwise. A chip the rebuild leaves in its pool's free list, and every chip of a released pad or
+-- otherwise. A button the rebuild leaves in its pool's free list, and every button of a released pad or
 -- dial, is released here (Release): effect stopped, its send timer canceled, its state cleared. The
 -- stand-down puts out every running send glow itself (each timer knows its button), since the frames'
 -- release can be held to combat end and canceled by a stand-up in the same combat.
 --
--- THE CHIP GLOW (the Chip tab, 2026-10-20) is a second effect on a Comms Pad chip, around the whole
--- chip: started on the chip's edge frame (modules/Pad_Render.lua `qcEdge`, a plain child laid over
--- the chip) under its own key, so it never meets the icon's. It has no trigger: on while the chip is
--- drawn with it enabled (Glow.Chip, at every paint), in its style and color at the Icons tab's knob
+-- THE BUTTON GLOW (the Buttons tab, 2026-10-20) is a second effect on a Comms Pad button, around the whole
+-- button: started on the button's edge frame (modules/Pad_Render.lua `qcEdge`, a plain child laid over
+-- the button) under its own key, so it never meets the icon's. It has no trigger: on while the button is
+-- drawn with it enabled (Glow.Button, at every paint), in its style and color at the Icons tab's knob
 -- defaults; the same signature rule keeps it across an unchanged rebuild, and Release stops it too.
 --
 -- HEADLESS. Without the library (the suites load no libs/ beyond LibKa0s, or a LibStub miss) the
--- decision is still recorded on the button (`qcGlowStyle`, `qcChipGlowStyle`) and nothing is drawn.
+-- decision is still recorded on the button (`qcGlowStyle`, `qcButtonGlowStyle`) and nothing is drawn.
 
 NS.Glow = NS.Glow or {}
 local Glow = NS.Glow
@@ -42,7 +42,7 @@ local Perf = NS.Perf
 -- The key every effect is started and stopped under, so another addon's glow on the same frame is
 -- never touched (the button style has no key: one per frame).
 Glow.KEY = "QuickCommsIcon"
-Glow.CHIP_KEY = "QuickCommsChip"
+Glow.BUTTON_KEY = "QuickCommsButton"
 Glow.FRAME_LEVEL = 2
 Glow.SEND_SECONDS = 1.5
 
@@ -185,25 +185,25 @@ function Glow.Shown(btn)
     if GetTime() <= untilAt then Glow.Sent(btn) end
 end
 
--- ── the chip glow (the Chip tab) ────────────────────────────────────────────────────────────
+-- ── the button glow (the Buttons tab) ────────────────────────────────────────────────────────────
 
-local function stopChip(btn)
-    if not btn.qcChipGlowStyle then return end
-    local L, stop = lib(), STOP[btn.qcChipGlowStyle]
-    if L and stop and btn.qcEdge then stop(L, btn.qcEdge, Glow.CHIP_KEY) end
-    btn.qcChipGlowStyle, btn.qcChipGlowSig = nil, nil
+local function stopButton(btn)
+    if not btn.qcButtonGlowStyle then return end
+    local L, stop = lib(), STOP[btn.qcButtonGlowStyle]
+    if L and stop and btn.qcEdge then stop(L, btn.qcEdge, Glow.BUTTON_KEY) end
+    btn.qcButtonGlowStyle, btn.qcButtonGlowSig = nil, nil
 end
 
---- A chip's paint: its pad's chip glow (IconStyle.GlowConfig of the Chip tab, false while off), on
---- the chip's edge frame. An unchanged signature keeps the running effect.
-function Glow.Chip(btn, g)
+--- A button's paint: its pad's button glow (IconStyle.GlowConfig of the Buttons tab, false while off), on
+--- the button's edge frame. An unchanged signature keeps the running effect.
+function Glow.Button(btn, g)
     if not btn then return end
-    if not g then return stopChip(btn) end
-    if btn.qcChipGlowStyle and btn.qcChipGlowSig == g.sig then return end
-    stopChip(btn)
+    if not g then return stopButton(btn) end
+    if btn.qcButtonGlowStyle and btn.qcButtonGlowSig == g.sig then return end
+    stopButton(btn)
     local L, fn = lib(), START[g.type]
-    if L and fn and btn.qcEdge then fn(L, btn.qcEdge, g, Glow.CHIP_KEY) end
-    btn.qcChipGlowStyle, btn.qcChipGlowSig = g.type, g.sig
+    if L and fn and btn.qcEdge then fn(L, btn.qcEdge, g, Glow.BUTTON_KEY) end
+    btn.qcButtonGlowStyle, btn.qcButtonGlowSig = g.type, g.sig
 end
 
 --- A button no longer drawn: its effects stopped, its send timer canceled, its state cleared.
@@ -211,7 +211,7 @@ function Glow.Release(btn)
     if not btn then return end
     cancelSend(btn)
     Glow.Stop(btn)
-    stopChip(btn)
+    stopButton(btn)
     btn.qcGlowCfg, btn.qcGlowKey, btn.qcHovered = nil, nil, nil
 end
 

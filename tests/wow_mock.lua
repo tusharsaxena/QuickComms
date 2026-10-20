@@ -187,7 +187,7 @@ local function build()
     -- `useOnKeyDown` attribute when set, else the ActionButtonUseKeyDown cvar; hooks still hear
     -- both edges. Frames under a root whose name starts "QuickComms" get regions of their own (the
     -- base aliases CreateTexture to the frame itself, its documented divergence) and record
-    -- SetPoint, SetAlpha and SetSize, so a pad's chips, padlocks and flashes can be asserted on.
+    -- SetPoint, SetAlpha and SetSize, so a pad's buttons, padlocks and flashes can be asserted on.
     M.blocked      = {}
     M.sentMacros   = {}
     M.stateDrivers = {}

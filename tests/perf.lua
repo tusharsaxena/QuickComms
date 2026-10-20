@@ -16,7 +16,7 @@
 --                         instance loaded WITHOUT the LibKa0s-Perf files (core/PerfSetup.lua's
 --                         stub): the zero-overhead pin is that capture off allocates no more than no
 --                         instrumentation at all.
---   padRebuild12          one 12-chip pad rebuilt from its plan, capture on: bakeSurface,
+--   padRebuild12          one 12-button pad rebuilt from its plan, capture on: bakeSurface,
 --                         resolverResolve and padLayout, three notes.
 --   dialOpenClose         the default dial opened, one pointer frame drawn, closed: one note.
 --   situationRefresh      one situation read whose signature did not move: one note.
@@ -28,7 +28,7 @@
 -- ceiling only by re-measuring and saying why; a rise is the finding.
 --
 -- Raised 2026-10-14: padRebuild12 68960.4 -> 69960.4 bytes/iter (69632 -> 70656) at e0bb552, where the
--- chip and title rows started growing with the Look's font size (the final review's fix): the
+-- button and title rows started growing with the Look's font size (the final review's fix): the
 -- geometry now reads the size per rebuild. Re-measured; the cost is that fix's, by design.
 
 local BYTE_CEILING = {
@@ -150,7 +150,7 @@ live(bare)
 measure("dialPointerNoHarness", N, pointerFrame(bare, bareMock))
 NS.DialSecure.Close(NS.Dial.Instance("d2").header)
 
--- A 12-chip pad: twelve callouts in one group of the player's own, the pad's only group.
+-- A 12-button pad: twelve callouts in one group of the player's own, the pad's only group.
 local Lib = NS.Library
 local twelve = {}
 for i = 1, 12 do

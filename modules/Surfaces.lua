@@ -5,11 +5,11 @@ local _, NS = ...
 -- (Resolver, D6), one section per group (a parent, a seeded battleground's set among them, gives
 -- its own callouts' section when it has any, then one section per child whose When matches; the
 -- parent's When gates the whole), and one slot per callout: baked to its single macro line, or refused
--- with the reason its chip's tooltip shows (Bake, §8.3; §18 "a baked line fails validation"). A
+-- with the reason its button's tooltip shows (Bake, §8.3; §18 "a baked line fails validation"). A
 -- locked slot keeps its line and carries the lock (§8.4). Library, Resolver and Bake are reached
 -- through `deps`, so a test can hand in any snapshot. Test mode's plan is placeholder slots that
 -- carry no line, drawn through the same render path (preview-mode). A "Preview as…" plan is a real
--- plan for the previewed snapshot, marked so every chip is disarmed (spec §13.3). An edit preview's
+-- plan for the previewed snapshot, marked so every button is disarmed (spec §13.3). An edit preview's
 -- plan (`deps.only`, the group the Groups page edits) skips the Resolver: that group alone, with
 -- every group inside it, whatever their When, marked and disarmed the same way.
 --
@@ -76,7 +76,7 @@ function S.Sections(groupId, groupOf, opts)
     return out
 end
 
---- One chip's slot: the baked line, or the reason there is none.
+--- One button's slot: the baked line, or the reason there is none.
 function S.Slot(calloutId, callout, snap, opts)
     local slot = { calloutId = calloutId }
     if type(callout) ~= "table" then
@@ -177,7 +177,7 @@ local function testSlots(surfaceId, s)
     return slots
 end
 
---- Test mode's plan: placeholder chips that send nothing (spec §10.4).
+--- Test mode's plan: placeholder buttons that send nothing (spec §10.4).
 function S.TestPlan(surfaceId)
     local sections = {}
     for s = 1, S.TEST_SECTIONS do
@@ -202,7 +202,7 @@ end
 
 --- A "Preview as…" plan (spec §13.3): drawn like test mode (always shown, the header says so) but from
 --- the groups the previewed snapshot resolves to. Every slot keeps its line for the tooltip and is
---- disarmed by the pad, so a previewed chip sends nothing.
+--- disarmed by the pad, so a previewed button sends nothing.
 function S.MarkPreview(plan, key)
     plan.test, plan.preview = true, key
     S.EachSlot(plan, function(slot) slot.preview = true end)

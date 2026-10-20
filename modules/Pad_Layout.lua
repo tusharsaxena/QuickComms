@@ -4,7 +4,7 @@ local _, NS = ...
 -- pad root's TOPLEFT with y growing down; modules/Pad.lua flips y for SetPoint. The cell placement
 -- copies KickCD modules/IconGrid_Layout.lua `Layout.layoutBlock` (row-major cells, an axis mirrored
 -- for leftward or upward growth). Growth is two orthogonal choices, as KickCD's IconGrid keeps
--- anchor and grow apart: left mirrors the chips, up puts the header row at the pad's bottom and
+-- anchor and grow apart: left mirrors the buttons, up puts the header row at the pad's bottom and
 -- stacks the sections up from it, and the pad is pinned by its growth edge (EdgePoint) so a resize
 -- grows away from the drag strip. The visibility expression copies ConsumableMaster
 -- core/MacroBarModel.lua `BM.ResolveVisibility` (a constant or one [combat] state-driver
@@ -19,17 +19,17 @@ PL.HEADER_H  = NS.PadDefaults.HEADER_H.default
 PL.HEADER_MIN, PL.HEADER_MAX = NS.PadDefaults.HEADER_H.min, NS.PadDefaults.HEADER_H.max
 PL.PAD       = 4     -- inner padding
 PL.SECTION_H = 14    -- a section's small-caps label row
-PL.CHIP_H    = 24    -- icon + label chip height
-PL.ICON      = NS.IconDefaults.SIZE.pad.default -- the icon tile inside an icon + label chip (16)
-PL.ICON_ONLY = PL.ICON + 8 -- an icon-only chip is square: its icon and 8 pixels
-PL.ICON_ROOM = 4     -- a labeled chip's height past its icon's size
-PL.LABEL_H   = 22    -- label-only chip height
+PL.BUTTON_H    = 24    -- icon + label button height
+PL.ICON      = NS.IconDefaults.SIZE.pad.default -- the icon tile inside an icon + label button (16)
+PL.ICON_ONLY = PL.ICON + 8 -- an icon-only button is square: its icon and 8 pixels
+PL.ICON_ROOM = 4     -- a labeled button's height past its icon's size
+PL.LABEL_H   = 22    -- label-only button height
 PL.MIN_PAD_W = 120   -- the narrowest pad when the caller measures no header (opts.minWidth)
-PL.MIN_CHIP_W = 1    -- the narrowest labeled chip (its label hides when it has no room)
+PL.MIN_BUTTON_W = 1    -- the narrowest labeled button (its label hides when it has no room)
 PL.DEFAULT_W = 100
-PL.FONT_SIZE = 10    -- the Chip tab's default font size, which the heights above were drawn for
-PL.CHIP_ROOM = 10    -- a labeled chip's height past its font size: CHIP_H at FONT_SIZE and up
-PL.LABEL_ROOM = 8    -- a label-only chip's
+PL.FONT_SIZE = 10    -- the Buttons tab's default font size, which the heights above were drawn for
+PL.BUTTON_ROOM = 10    -- a labeled button's height past its font size: BUTTON_H at FONT_SIZE and up
+PL.LABEL_ROOM = 8    -- a label-only button's
 PL.TITLE_ROOM = 4    -- a section title row's
 
 function PL.ClampTab(tab, n)
@@ -70,15 +70,15 @@ function PL.VisibleSections(sections, groupsAs, tab)
     return sections
 end
 
--- The Chip tab's font size, or the default.
+-- The Buttons tab's font size, or the default.
 local function sizeOf(fontSize)
     return tonumber(fontSize) or PL.FONT_SIZE
 end
 
---- One chip's width and height for the pad's style. `cell` is { style, width, height }: the layout's
---- style and the Chip tab's size. A labeled chip is `width` wide; its height is `height` when that is
+--- One button's width and height for the pad's style. `cell` is { style, width, height }: the layout's
+--- style and the Buttons tab's size. A labeled button is `width` wide; its height is `height` when that is
 --- above 0 (never below the icon and its 4 pixels, beside an icon), else automatic: grown with the
---- chips' font size and the Icons tab's icon size, never below its shipped height. An icon-only chip
+--- buttons' font size and the Icons tab's icon size, never below its shipped height. An icon-only button
 --- draws no text and stays square around its icon, whatever the size says.
 function PL.CellSize(cell, fontSize, iconSize)
     cell = type(cell) == "table" and cell or {}
@@ -87,14 +87,14 @@ function PL.CellSize(cell, fontSize, iconSize)
         local s = icon + (PL.ICON_ONLY - PL.ICON)
         return s, s
     end
-    local w = math.max(PL.MIN_CHIP_W, tonumber(cell.width) or PL.DEFAULT_W)
+    local w = math.max(PL.MIN_BUTTON_W, tonumber(cell.width) or PL.DEFAULT_W)
     local fixed = math.floor(tonumber(cell.height) or 0)
     if cell.style == "label" then
         if fixed > 0 then return w, fixed end
         return w, math.max(PL.LABEL_H, sizeOf(fontSize) + PL.LABEL_ROOM)
     end
     if fixed > 0 then return w, math.max(fixed, icon + PL.ICON_ROOM) end
-    return w, math.max(PL.CHIP_H, sizeOf(fontSize) + PL.CHIP_ROOM, icon + PL.ICON_ROOM)
+    return w, math.max(PL.BUTTON_H, sizeOf(fontSize) + PL.BUTTON_ROOM, icon + PL.ICON_ROOM)
 end
 
 --- A section title row's height: the Section header tab's height when it is above 0, else automatic,
@@ -112,7 +112,7 @@ function PL.HeaderHeight(h)
     return math.floor(math.max(PL.HEADER_MIN, math.min(PL.HEADER_MAX, h)) + 0.5)
 end
 
---- Columns for a section of `count` chips: one row (horizontal), one column (vertical) or N (grid).
+--- Columns for a section of `count` buttons: one row (horizontal), one column (vertical) or N (grid).
 function PL.Columns(layout, count)
     layout = type(layout) == "table" and layout or {}
     if layout.orientation == "vertical" then return 1 end
@@ -162,9 +162,9 @@ function PL.EdgePoint(point, y, h, up)
     return (hz == "" and edge or edge .. hz), y
 end
 
--- One section as a block: its title row and chip rows, offsets from the block's top. Upward growth
--- flips the chip rows inside the block (the first row sits nearest the header) but keeps the title
--- directly above its chips. A title the header's situation already says is not drawn (B1), unless it
+-- One section as a block: its title row and button rows, offsets from the block's top. Upward growth
+-- flips the button rows inside the block (the first row sits nearest the header) but keeps the title
+-- directly above its buttons. A title the header's situation already says is not drawn (B1), unless it
 -- is a tab's, whose drawn title names its place.
 local function sectionBlock(s, layout, cw, ch, gap, up, th, situation)
     local items, by = {}, 0
@@ -182,7 +182,7 @@ local function sectionBlock(s, layout, cw, ch, gap, up, th, situation)
             local r = math.floor((i - 1) / cols)
             local c = (i - 1) - r * cols
             local vr = up and (rows - 1 - r) or r
-            items[#items + 1] = { kind = "chip", slot = slot, row = r, col = c,
+            items[#items + 1] = { kind = "button", slot = slot, row = r, col = c,
                 x = PL.PAD + c * (cw + gap), y = by + vr * (ch + gap), w = cw, h = ch }
         end
         by = by + rows * ch + (rows - 1) * gap
@@ -207,8 +207,8 @@ end
 
 -- Whether block `b` joins the row `row` (bg subgroups): in a grid pad, consecutive child sections of
 -- one parent sit side by side while their columns fit the grid's, so a set of many small children
--- (Alterac Valley's nineteen two-chip objectives) takes half the height. Each block keeps its own
--- columns, so the chips stay on the grid's columns. Any other section starts its own row.
+-- (Alterac Valley's nineteen two-button objectives) takes half the height. Each block keeps its own
+-- columns, so the buttons stay on the grid's columns. Any other section starts its own row.
 local function joins(row, b, maxCols)
     return maxCols ~= nil and row ~= nil and b.parentId ~= nil and row.parentId == b.parentId
         and b.cols > 0 and row.cols + b.cols <= maxCols
@@ -243,7 +243,7 @@ local function flipBlocks(blocks, height)
     for _, b in ipairs(blocks) do b.top = height - b.top - b.h end
 end
 
--- Every block's items in pad coordinates; "left" mirrors each chip across the pad's width. A block in
+-- Every block's items in pad coordinates; "left" mirrors each button across the pad's width. A block in
 -- a packed row moves right by its first column, and its title takes the block's width (`w`), so a
 -- long title stops at its neighbor; left growth mirrors such a title with its block.
 local function flattenBlocks(blocks, mirror, width, step, cw, gap)
@@ -257,21 +257,21 @@ local function flattenBlocks(blocks, mirror, width, step, cw, gap)
                 it.w = bw
                 if mirror then it.x = width - it.x - it.w end
             end
-            if mirror and it.kind == "chip" then it.x = width - it.x - it.w end
+            if mirror and it.kind == "button" then it.x = width - it.x - it.w end
             items[#items + 1] = it
         end
     end
     return items
 end
 
---- Place every title row and chip. Down growth keeps the header on top; up growth puts it at the
---- bottom with the first section just above it; left mirrors each chip row.
+--- Place every title row and button. Down growth keeps the header on top; up growth puts it at the
+--- bottom with the first section just above it; left mirrors each button row.
 --- @param sections table from VisibleSections
 --- @param layout table the pad's layout table
---- @param opts table|nil { collapsed = boolean, chip = table (the Chip tab's { width, height }; default:
----   the layout table's own), fontSize = number (the chips' label size; a chip grows to hold it), titleSize = number (the section titles' size; a title row grows to hold it; default
+--- @param opts table|nil { collapsed = boolean, button = table (the Buttons tab's { width, height }; default:
+---   the layout table's own), fontSize = number (the buttons' label size; a button grows to hold it), titleSize = number (the section titles' size; a title row grows to hold it; default
 ---   fontSize), titleH = number (the Section header tab's height: above 0 fixes the title rows'
----   height, 0 or none keeps it automatic), iconSize = number (the Icons tab's; a chip grows to hold it), headerH = number (the
+---   height, 0 or none keeps it automatic), iconSize = number (the Icons tab's; a button grows to hold it), headerH = number (the
 ---   header row's height, PL.HeaderHeight),
 ---   situation = string (the header's text: a section title equal to it is not drawn),
 ---   minWidth = number (the narrowest the pad may be: what its header row needs, measured by
@@ -281,9 +281,9 @@ end
 function PL.Compute(sections, layout, opts)
     layout = type(layout) == "table" and layout or {}
     opts = type(opts) == "table" and opts or {}
-    -- The Chip tab's size (opts.chip); a pure caller may hand a layout table that carries its own.
-    local chip = type(opts.chip) == "table" and opts.chip or layout
-    local cw, ch = PL.CellSize({ style = layout.style, width = chip.width, height = chip.height }, opts.fontSize,
+    -- The Buttons tab's size (opts.button); a pure caller may hand a layout table that carries its own.
+    local button = type(opts.button) == "table" and opts.button or layout
+    local cw, ch = PL.CellSize({ style = layout.style, width = button.width, height = button.height }, opts.fontSize,
         opts.iconSize)
     local hh = PL.HeaderHeight(opts.headerH)
     local gap = math.max(0, tonumber(layout.spacing) or 4)
@@ -298,7 +298,7 @@ function PL.Compute(sections, layout, opts)
     local y, widest = stackBlocks(blocks, maxCols, hh)
     if widest > 0 then contentW = math.max(contentW, widest * cw + (widest - 1) * gap) end
     -- Never narrower than the header row needs: a fixed floor would leave an icon-only pad's spare
-    -- width at its right edge, past the last chip.
+    -- width at its right edge, past the last button.
     local width = math.max(tonumber(opts.minWidth) or PL.MIN_PAD_W, contentW + 2 * PL.PAD)
     local height = #blocks > 0 and (y + PL.PAD) or hh
     if up then flipBlocks(blocks, height) end

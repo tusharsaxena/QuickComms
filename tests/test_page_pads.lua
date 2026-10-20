@@ -275,9 +275,9 @@ test("pads page: General carries Visibility, Fade and Faded alpha under a Visibi
     assertTrue(P.find(w, "Button", "Delete pad") ~= nil, "Unlock and Delete stay on General")
 end)
 
--- ── the Chip tab (2026-10-20) ───────────────────────────────────────────────────────────────
+-- ── the Buttons tab (2026-10-20) ───────────────────────────────────────────────────────────────
 
-test("pads page: [chip] Buttons carries Size, Color, Border, Font and Glow, and Button width left Layout for it", function()
+test("pads page: [button] Buttons carries Size, Color, Border, Font and Glow, and Button width left Layout for it", function()
     local NS, _, P = open()
     local w = P.tab("pads", "Buttons")
     for _, heading in ipairs({ "Size", "Color", "Border", "Font", "Glow" }) do
@@ -289,8 +289,8 @@ test("pads page: [chip] Buttons carries Size, Color, Border, Font and Glow, and 
     assertTrue(P.find(w, "Dropdown", "Glow style").disabled, "the glow is off by default")
     P.find(w, "Slider", "Button width"):__fire("OnMouseUp", 140)
     P.find(w, "CheckBox", "Glow"):__fire("OnValueChanged", true)
-    assertEqual(NS.db.profile.pads.p1.chip.width, 140)
-    assertTrue(NS.db.profile.pads.p1.chip.glowEnabled)
+    assertEqual(NS.db.profile.pads.p1.button.width, 140)
+    assertTrue(NS.db.profile.pads.p1.button.glowEnabled)
     assertFalse(P.find(P.tab("pads", "Buttons"), "Dropdown", "Glow style").disabled)
     assertNil(P.find(P.tab("pads", "Layout"), "Slider", "Button width"), "moved to the Buttons tab")
     assertNil(NS.db.profile.pads.p1.layout.width, "and out of the layout table")

@@ -72,7 +72,7 @@ local function situation(out)
     out:add("Situation", "lockdown=%s", table.concat(lock, ","))
 end
 
--- The restriction state (spec §16): every reason in effect, the one the chip names, and whether
+-- The restriction state (spec §16): every reason in effect, the one the button names, and whether
 -- a chat message may be sent. Read live, like every Restrictions answer.
 local function restrictions(out)
     local R = NS.Restrictions

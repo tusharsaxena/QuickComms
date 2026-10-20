@@ -1,5 +1,5 @@
--- tests/test_pad.lua — modules/Pad.lua (spec §10): the pad's frames and chips. Each chip is a pooled
--- secure send button armed with its baked line; a refused chip is disarmed; visibility goes through
+-- tests/test_pad.lua — modules/Pad.lua (spec §10): the pad's frames and buttons. Each button is a pooled
+-- secure send button armed with its baked line; a refused button is disarmed; visibility goes through
 -- the state driver; the drag strip shows while unlocked, and will not drag while locked or in combat.
 
 local T = _G.QUICKCOMMS_TEST
@@ -40,46 +40,46 @@ local function applied(inputs)
     return NS, m
 end
 
-local function pull(NS) return NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.mplus.pull"))[1] end
+local function pull(NS) return NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.mplus.pull"))[1] end
 
-test("pad: the default pad shows the M+ callouts, each chip armed with its baked line", function()
+test("pad: the default pad shows the M+ callouts, each button armed with its baked line", function()
     local NS, m = applied()
     local inst = NS.Pad.Instance("p1")
     assertEqual(inst.root.__name, "QuickCommsPadp1")
     assertTrue(inst.root:IsShown())
-    local _, active = NS.Pool.Counts(inst.chips)
+    local _, active = NS.Pool.Counts(inst.buttons)
     assertEqual(active, 20, "M+'s eight and In Group's twelve")
-    local chip = pull(NS)
-    assertEqual(chip:GetAttribute("type"), "macro")
-    assertEqual(chip:GetAttribute("macrotext"), "/p Pulling next pack")
-    assertEqual(chip.qcLabel:GetText(), "Pulling")
-    assertTrue(chip.qcTag == nil, "no channel letter on the chip")
-    assertEqual(NS.PadRender.TooltipLines(chip.qcSlot)[3], "Channel: |cffababffParty|r", "the tooltip names it")
-    m.__click(chip)
+    local button = pull(NS)
+    assertEqual(button:GetAttribute("type"), "macro")
+    assertEqual(button:GetAttribute("macrotext"), "/p Pulling next pack")
+    assertEqual(button.qcLabel:GetText(), "Pulling")
+    assertTrue(button.qcTag == nil, "no channel letter on the button")
+    assertEqual(NS.PadRender.TooltipLines(button.qcSlot)[3], "Channel: |cffababffParty|r", "the tooltip names it")
+    m.__click(button)
     assertEqual(m.sentMacros[#m.sentMacros].text, "/p Pulling next pack")
     assertEqual(inst.header.qcSituation:GetText(), "M+ +12")
 end)
 
-test("pad: [review 5] a refused chip is dimmed and disarmed: a click sends and reports nothing", function()
+test("pad: [review 5] a refused button is dimmed and disarmed: a click sends and reports nothing", function()
     local NS, m = live()
     local cid = NS.Library.CreateCallout({ name = "Bad", text = "/run x", channel = "party" })
     local gid = NS.Library.CreateGroup({ name = "Mine" })
     cid = NS.Library.AddToGroup(gid, cid)
     NS.Library.AddGroupToSurface("pad", "p1", gid, 1)
     NS.Pad.Apply("p1", planFor(NS))
-    local chip = NS.Pad.ChipsFor("p1", cid)[1]
-    assertNil(chip:GetAttribute("type"))
-    assertNil(chip:GetAttribute("macrotext"))
-    assertTrue(chip.qcDim:IsShown())
-    assertEqual(NS.PadRender.TooltipLines(chip.qcSlot)[2], "Callout text cannot start with /.")
+    local button = NS.Pad.ButtonsFor("p1", cid)[1]
+    assertNil(button:GetAttribute("type"))
+    assertNil(button:GetAttribute("macrotext"))
+    assertTrue(button.qcDim:IsShown())
+    assertEqual(NS.PadRender.TooltipLines(button.qcSlot)[2], "Callout text cannot start with /.")
     local heard = 0
     local t = NS.Bus:NewTarget()
     t:RegisterMessage(NS.MSG.SEND_RESULT, function() heard = heard + 1 end)
     local before = #m.sentMacros
-    m.__click(chip)
+    m.__click(button)
     assertEqual(#m.sentMacros, before)
     assertEqual(heard, 0)
-    assertEqual(pull(NS):GetAttribute("type"), "macro", "the other chips still send")
+    assertEqual(pull(NS):GetAttribute("type"), "macro", "the other buttons still send")
 end)
 
 test("pad: [review 4] a hidden or locked pad still rebuilds; the driver hides; the strip stays hidden", function()
@@ -105,18 +105,18 @@ test("pad: [review 4] a hidden or locked pad still rebuilds; the driver hides; t
     assertEqual(#m.blocked, 0)
 end)
 
-test("pad: a rebuild with fewer chips parks the rest, disarmed, for the next", function()
+test("pad: a rebuild with fewer buttons parks the rest, disarmed, for the next", function()
     local NS = applied()
     local inst = NS.Pad.Instance("p1")
     -- M+ alone: In Group (active in any party, bg buttons) off before the count
     NS.SchemaRuntime.Set("group.enabled", false, T.seeded(NS, "bi.group"))
     NS.Pad.Apply("p1", planFor(NS))
-    local before = NS.SendEngine.ButtonCount()   -- the pad's eight chips and the default dial's wedges
+    local before = NS.SendEngine.ButtonCount()   -- the pad's eight buttons and the default dial's wedges
     NS.SchemaRuntime.Set("group.enabled", false, T.seeded(NS, "bi.mplus"))
     NS.Pad.Apply("p1", planFor(NS))
-    local free, active = NS.Pool.Counts(inst.chips)
+    local free, active = NS.Pool.Counts(inst.buttons)
     assertEqual(active, 0)
-    assertEqual(free, 20, "the twenty chips M+ and In Group drew, parked")
+    assertEqual(free, 20, "the twenty buttons M+ and In Group drew, parked")
     assertEqual(#NS.SendEngine.ArmedButtons(), 0)
     NS.SchemaRuntime.Set("group.enabled", true, T.seeded(NS, "bi.mplus"))
     NS.Pad.Apply("p1", planFor(NS))
@@ -200,22 +200,22 @@ test("pad: tabs show one section; the wheel steps them out of combat and is refu
     NS.Pad.Apply("p1", planFor(NS))
     -- Arathi Basin's own set comes first (phase 4), so its own map-wide callouts are the first tab
     -- (groups polish), then its first node.
-    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.hold")), 1)
-    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.stables.attack")), 0)
+    assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.hold")), 1)
+    assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.stables.attack")), 0)
     assertTrue(NS.Pad.Wheel("p1", -1))
-    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.stables.attack")), 1)
+    assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.stables.attack")), 1)
     assertTrue(NS.Pad.Wheel("p1", -1))
-    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.lumbermill.attack")), 1)
+    assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.lumbermill.attack")), 1)
     combat(m, true)
     assertFalse(NS.Pad.Wheel("p1", -1))
-    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.lumbermill.attack")), 1, "unchanged in combat")
+    assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.lumbermill.attack")), 1, "unchanged in combat")
     assertEqual(#m.blocked, 0)
 end)
 
-test("pad: collapse hides the chips out of combat and is refused, with one line, in it", function()
+test("pad: collapse hides the buttons out of combat and is refused, with one line, in it", function()
     local NS, m = applied()
     assertTrue(NS.Pad.ToggleCollapsed("p1"))
-    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.mplus.pull")), 0)
+    assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.mplus.pull")), 0)
     assertEqual(NS.Pad.Instance("p1").header.qcCollapse.qcText:GetText(), "+")
     assertTrue(NS.Pad.ToggleCollapsed("p1"))
     combat(m, true)
@@ -225,16 +225,16 @@ test("pad: collapse hides the chips out of combat and is refused, with one line,
     assertEqual(#m.blocked, 0)
 end)
 
-test("pad: a send result flashes its chips; a press dims every chip for the guard window", function()
+test("pad: a send result flashes its buttons; a press dims every button for the guard window", function()
     local NS, m = applied()
-    local chip = pull(NS)
+    local button = pull(NS)
     NS.addon:SendMessage(NS.MSG.SEND_RESULT, T.seeded(NS, "bi.mplus.pull"), "p1", "dropped")
-    assertTrue(chip.qcFlash:IsShown())
+    assertTrue(button.qcFlash:IsShown())
     m.__fireTimers()
-    assertFalse(chip.qcFlash:IsShown())
-    m.__click(chip)
-    local other = NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.mplus.lust"))[1]
-    assertTrue(other.qcCool:IsShown(), "the guard is global: every chip dims")
+    assertFalse(button.qcFlash:IsShown())
+    m.__click(button)
+    local other = NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.mplus.lust"))[1]
+    assertTrue(other.qcCool:IsShown(), "the guard is global: every button dims")
     m.__fireTimers()
     assertFalse(other.qcCool:IsShown())
 end)
@@ -255,7 +255,7 @@ test("pad: the fade follows the mouse and combat through SetAlpha alone", functi
     assertEqual(#m.blocked, 0)
 end)
 
-test("pad: Sync releases a pad no plan names: hidden, its chips disarmed", function()
+test("pad: Sync releases a pad no plan names: hidden, its buttons disarmed", function()
     local NS = applied()
     NS.Pad.Sync({})
     local inst = NS.Pad.Instance("p1")
@@ -343,23 +343,23 @@ test("pad: [fix wave] a held drag on a stand-down in combat is stopped by the he
     assertEqual(#m.blocked, 0)
 end)
 
-test("pad: [fix wave] a locked chip's press is not tracked: no guard, no drop, one lock note", function()
+test("pad: [fix wave] a locked button's press is not tracked: no guard, no drop, one lock note", function()
     local NS, m = live({})
     local cid = userGroup(NS, { name = "Inc", text = "Incoming", channel = "party" })
     NS.Pad.Apply("p1", planFor(NS))
-    local chip = NS.Pad.ChipsFor("p1", cid)[1]
-    assertEqual(chip:GetAttribute("macrotext"), "/p Incoming", "locked, still armed")
-    assertTrue(chip.qcLock:IsShown())
+    local button = NS.Pad.ButtonsFor("p1", cid)[1]
+    assertEqual(button:GetAttribute("macrotext"), "/p Incoming", "locked, still armed")
+    assertTrue(button.qcLock:IsShown())
     local heard = {}
     local t = NS.Bus:NewTarget()
     t:RegisterMessage(NS.MSG.SEND_RESULT, function(_, _, _, what) heard[#heard + 1] = what end)
     m.prints = {}
     m.__now = 100
-    m.__click(chip)
+    m.__click(button)
     -- red under: track a locked press like any other (a 'dropped' blaming the spam guard)
     assertEqual(NS.SendEngine.EchoState().pending, 0)
     assertNil(NS.SendEngine.GuardState().last, "no guard stamp")
-    assertFalse(chip.qcCool:IsShown(), "no dim")
+    assertFalse(button.qcCool:IsShown(), "no dim")
     m.__now = 103
     m.__fireTimers()
     assertEqual(#heard, 0)
@@ -367,16 +367,16 @@ test("pad: [fix wave] a locked chip's press is not tracked: no guard, no drop, o
     assertTrue(m.prints[1]:find("Locked: you are not in a group.", 1, true) ~= nil, m.prints[1])
 end)
 
-test("pad: [fix wave] tabs switch on a wheel over a chip or the pad, not only the header", function()
+test("pad: [fix wave] tabs switch on a wheel over a button or the pad, not only the header", function()
     local NS = live(AB)
     NS.db.profile.pads.p1.groupsAs = "tabs"
     NS.Pad.Apply("p1", planFor(NS))
-    local chip = NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.hold"))[1]
+    local button = NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.hold"))[1]
     -- red under: enable the wheel on the header alone
-    chip:__fire("OnMouseWheel", -1)
-    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.stables.attack")), 1)
+    button:__fire("OnMouseWheel", -1)
+    assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.stables.attack")), 1)
     NS.Pad.Instance("p1").root:__fire("OnMouseWheel", 1)
-    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.hold")), 1, "back to the set's own tab")
+    assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.hold")), 1, "back to the set's own tab")
 end)
 
 test("pad: [fix wave] in combat Reset position, Apply and Release do no protected work; combat end anchors", function()
@@ -408,13 +408,13 @@ test("pad: [review 5] too long, and solo with no fallback: dimmed, disarmed, the
     local t = NS.Bus:NewTarget()
     t:RegisterMessage(NS.MSG.SEND_RESULT, function() heard = heard + 1 end)
     for cid, reason in pairs({ [long] = "Too long: a chat line holds 255 bytes.", [solo] = "You are not in a group." }) do
-        local chip = NS.Pad.ChipsFor("p1", cid)[1]
-        assertNil(chip:GetAttribute("type"), cid)
-        assertTrue(chip.qcDim:IsShown(), cid)
-        assertEqual(NS.PadRender.TooltipLines(chip.qcSlot)[2], reason)
+        local button = NS.Pad.ButtonsFor("p1", cid)[1]
+        assertNil(button:GetAttribute("type"), cid)
+        assertTrue(button.qcDim:IsShown(), cid)
+        assertEqual(NS.PadRender.TooltipLines(button.qcSlot)[2], reason)
         local before = #m.sentMacros
         m.prints = {}
-        m.__click(chip)
+        m.__click(button)
         assertEqual(#m.sentMacros, before)
         assertEqual(#m.prints, 0)
     end
@@ -493,9 +493,9 @@ test("pad: [phase 5] the pad wears its Section header and Main window tabs: the 
     assertTrue(S.Set("pad.look.background", { r = 0.2, g = 0.1, b = 0, a = 1 }, "p1"))
     local title = NS.Pad.Instance("p1").titles.active[1]
     assertEqual(title.__font[1] .. "," .. title.__font[2], "Fonts\\ARIALN.TTF,13")
-    local label = NS.Pad.Instance("p1").chips.active[1].qcLabel
-    -- red under: Pad.Apply drawing the chips' labels in the Section header tab's font
-    assertTrue(label.__font[2] == 10, "a chip's label keeps the Chip tab's font")
+    local label = NS.Pad.Instance("p1").buttons.active[1].qcLabel
+    -- red under: Pad.Apply drawing the buttons' labels in the Section header tab's font
+    assertTrue(label.__font[2] == 10, "a button's label keeps the Buttons tab's font")
     local skin = skins[NS.Pad.Instance("p1").root]
     assertEqual(skin.edgeFile, "Interface\\Tooltips\\UI-Tooltip-Border")
     assertEqual(table.concat(skin.bg, ","), "0.2,0.1,0,1")
@@ -556,7 +556,7 @@ test("pad: [window] the header's text starts at the section titles' left edge, i
     end
 end)
 
-test("pad: [icon only] the pad is as wide as its chips when the header is narrower, else as the header needs", function()
+test("pad: [icon only] the pad is as wide as its buttons when the header is narrower, else as the header needs", function()
     local NS = live()
     local PL = NS.PadLayout
     local inst = NS.Pad.Instance("p1")
@@ -565,7 +565,7 @@ test("pad: [icon only] the pad is as wide as its chips when the header is narrow
     assertTrue(NS.SchemaRuntime.Set("pad.layout.style", "icon", "p1"))
     local cw = PL.ICON_ONLY
     local contentW = 4 * cw + 3 * 4
-    -- red under: PL.Compute's fixed 120-pixel floor (116 of chips left 4 spare pixels at the right edge)
+    -- red under: PL.Compute's fixed 120-pixel floor (116 of buttons left 4 spare pixels at the right edge)
     assertEqual(inst.root.__w, contentW + 2 * PL.PAD, "four 24-pixel columns and the pad's padding")
     sit.GetStringWidth = function() return 200 end
     NS.Pad.Apply("p1", planFor(NS))
@@ -583,12 +583,12 @@ test("pad: [icon only] a PvP match's lockdown chip, shown out of combat, widens 
     local plan = planFor(NS)
     plan.lockdownChip = true -- a say or yell slot locked by lockdown.pvpMatch (Channels' LOCKS.say)
     assertTrue(NS.Pad.Apply("p1", plan))
-    assertTrue(inst.header.qcLockdown:IsShown(), "the chip is shown")
-    -- red under: the chip left out (it would run under the collapse button and past the edge)
-    assertEqual(inst.root.__w, PL.PAD + 70 + 6 + 60 + 4 + 16 + 2, "the text, the chip at its gap, then the button")
+    assertTrue(inst.header.qcLockdown:IsShown(), "the lockdown chip is shown")
+    -- red under: the lockdown chip left out (it would run under the collapse button and past the edge)
+    assertEqual(inst.root.__w, PL.PAD + 70 + 6 + 60 + 4 + 16 + 2, "the text, the lockdown chip at its gap, then the button")
 end)
 
-test("pad: [chip] a chip wears the Chip tab: the owner's default body, edge, label and size, then what it is given", function()
+test("pad: [button] a button wears the Buttons tab: the owner's default body, edge, label and size, then what it is given", function()
     local NS = T.enableAddon{ mock = withMedia }
     local skins = {}
     local apply = NS.ApplySkin
@@ -606,51 +606,51 @@ test("pad: [chip] a chip wears the Chip tab: the owner's default body, edge, lab
     assertEqual(table.concat(skins[btn.qcEdge].border, ","), table.concat({ 0xEA / 255, 0xEA / 255, 0xEA / 255, 0.10 }, ","),
         "#EAEAEA at 10%")
     assertEqual(table.concat(btn.qcLabel.__color, ","), "1,1,1,1", "the small white label")
-    assertEqual(btn.__w .. "x" .. btn.__h, "100x24", "the chip's shipped size")
-    assertTrue(S.Set("pad.chip.background", { r = 0.3, g = 0, b = 0, a = 0.5 }, "p1"))
-    assertTrue(S.Set("pad.chip.borderSize", 2, "p1"))
-    assertTrue(S.Set("pad.chip.font", "Arial", "p1"))
-    assertTrue(S.Set("pad.chip.width", 150, "p1"))
-    assertTrue(S.Set("pad.chip.height", 40, "p1"))
+    assertEqual(btn.__w .. "x" .. btn.__h, "100x24", "the button's shipped size")
+    assertTrue(S.Set("pad.button.background", { r = 0.3, g = 0, b = 0, a = 0.5 }, "p1"))
+    assertTrue(S.Set("pad.button.borderSize", 2, "p1"))
+    assertTrue(S.Set("pad.button.font", "Arial", "p1"))
+    assertTrue(S.Set("pad.button.width", 150, "p1"))
+    assertTrue(S.Set("pad.button.height", 40, "p1"))
     btn = pull(NS)
     assertEqual(table.concat(btn.qcBg.__color, ","), "0.3,0,0,0.5")
-    -- red under: R.ApplyChipLook skipping the edge (the Border block wired to nothing)
+    -- red under: R.ApplyButtonLook skipping the edge (the Border block wired to nothing)
     assertEqual(skins[btn.qcEdge].edgeFile, "Interface\\Buttons\\WHITE8x8")
     assertEqual(skins[btn.qcEdge].edgeSize, 2)
-    assertEqual(skins[btn.qcEdge].bg[4], 0, "the edge draws over the chip, never a second body")
+    assertEqual(skins[btn.qcEdge].bg[4], 0, "the edge draws over the button, never a second body")
     assertEqual(btn.qcLabel.__font[1], "Fonts\\ARIALN.TTF")
-    assertEqual(btn.__w .. "x" .. btn.__h, "150x40", "Chip width and Chip height")
+    assertEqual(btn.__w .. "x" .. btn.__h, "150x40", "Button width and Button height")
     skins[btn.qcEdge] = nil
     assertTrue(S.Set("pad.layout.spacing", 6, "p1"))
-    -- red under: R.ApplyChipLook skinning every chip on every rebuild (the look did not change)
-    assertNil(skins[pull(NS).qcEdge], "a rebuild that changed no chip setting repaints no chip")
+    -- red under: R.ApplyButtonLook skinning every button on every rebuild (the look did not change)
+    assertNil(skins[pull(NS).qcEdge], "a rebuild that changed no button setting repaints no button")
 end)
 
-test("pad: [chip] the chip glow is off by default, then wraps the whole chip in its style, and goes with the chip", function()
+test("pad: [button] the button glow is off by default, then wraps the whole button in its style, and goes with the button", function()
     local NS = live()
     local S = NS.SchemaRuntime
     local btn = pull(NS)
-    assertNil(btn.qcChipGlowStyle, "off by default")
-    assertTrue(S.Set("pad.chip.glowEnabled", true, "p1"))
+    assertNil(btn.qcButtonGlowStyle, "off by default")
+    assertTrue(S.Set("pad.button.glowEnabled", true, "p1"))
     btn = pull(NS)
-    -- red under: R.ApplyChipLook never calling Glow.Chip
-    assertEqual(btn.qcChipGlowStyle, "pixel")
+    -- red under: R.ApplyButtonLook never calling Glow.Button
+    assertEqual(btn.qcButtonGlowStyle, "pixel")
     assertNil(btn.qcGlowStyle, "the icon's own glow is untouched")
-    local sig = btn.qcChipGlowSig
-    assertTrue(S.Set("pad.chip.glowType", "autocast", "p1"))
+    local sig = btn.qcButtonGlowSig
+    assertTrue(S.Set("pad.button.glowType", "autocast", "p1"))
     btn = pull(NS)
-    assertEqual(btn.qcChipGlowStyle, "autocast")
-    assertTrue(btn.qcChipGlowSig ~= sig, "a new style is a new signature")
-    sig = btn.qcChipGlowSig
+    assertEqual(btn.qcButtonGlowStyle, "autocast")
+    assertTrue(btn.qcButtonGlowSig ~= sig, "a new style is a new signature")
+    sig = btn.qcButtonGlowSig
     assertTrue(S.Set("pad.layout.style", "icon", "p1"))
     btn = pull(NS)
-    -- red under: the signature built from Chip width x Chip height, not the chip's drawn size
-    assertTrue(btn.__w .. "x" .. btn.__h ~= "100x24", "icon only draws the chip another size")
-    assertTrue(btn.qcChipGlowSig ~= sig, "a resized chip restarts its glow")
+    -- red under: the signature built from Button width x Button height, not the button's drawn size
+    assertTrue(btn.__w .. "x" .. btn.__h ~= "100x24", "icon only draws the button another size")
+    assertTrue(btn.qcButtonGlowSig ~= sig, "a resized button restarts its glow")
     NS.Glow.Release(btn)
-    assertNil(btn.qcChipGlowStyle, "released with the chip")
-    assertTrue(S.Set("pad.chip.glowEnabled", false, "p1"))
-    assertNil(pull(NS).qcChipGlowStyle)
+    assertNil(btn.qcButtonGlowStyle, "released with the button")
+    assertTrue(S.Set("pad.button.glowEnabled", false, "p1"))
+    assertNil(pull(NS).qcButtonGlowStyle)
 end)
 
 test("pad: [review 5] a font or border this machine does not have draws the default, with no error", function()
@@ -662,9 +662,9 @@ test("pad: [review 5] a font or border this machine does not have draws the defa
     local apply = NS.ApplySkin
     NS.ApplySkin = function(frame, skin) skins[frame] = skin return apply(frame, skin) end
     -- a shared pad, or a media addon since removed: the names are stored, the media is not here
-    assertTrue(NS.SchemaRuntime.Set("pad.chip.font", "Gone Font", "p1"))
+    assertTrue(NS.SchemaRuntime.Set("pad.button.font", "Gone Font", "p1"))
     assertTrue(NS.SchemaRuntime.Set("pad.look.borderStyle", "Gone Border", "p1"))
-    local label = NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.mplus.pull"))[1].qcLabel
+    local label = NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.mplus.pull"))[1].qcLabel
     assertEqual(label.__font[1], "Fonts\\FRIZQT__.TTF")
     assertEqual(skins[NS.Pad.Instance("p1").root].edgeFile, "Interface\\Buttons\\WHITE8x8")
 end)
@@ -931,7 +931,7 @@ test("pad: [bg subgroups] Alterac Valley draws its nineteen objectives two to a 
     for _, hit in ipairs(hits(NS)) do byGroup[hit.qcGroupId] = hit end
     local first, second = byGroup[T.seeded(NS, "bi.bg.av.vanndar")], byGroup[T.seeded(NS, "bi.bg.av.dbnorth")]
     assertTrue(first ~= nil and second ~= nil, "each objective's title takes a right-click")
-    -- the default pad: a four-column grid of 100-pixel chips, 4 apart
+    -- the default pad: a four-column grid of 100-pixel buttons, 4 apart
     assertEqual(second.__sz[1], 204, "the second's hit frame is its block wide")
     assertEqual(first.__sz[1], 204)
     assertTrue(byGroup[av].__sz[1] > 204, "the set's own title row spans the pad")

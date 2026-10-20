@@ -359,14 +359,14 @@ local function press(b)
         NS.Print(meta.selfText)
         return
     end
-    -- A previewed chip or wedge (disarmed, spec §13.3): the line it would have sent, printed locally
+    -- A previewed button or wedge (disarmed, spec §13.3): the line it would have sent, printed locally
     -- and nothing more. No attribute is read or written, so a press in combat stays safe.
     if meta.echo then
         NS.Print(meta.echo)
         return
     end
     if not (b.qcArmed and meta.chatType) then return end
-    -- A padlocked chip stays armed (spec §8.4), but the game is expected to refuse it: no echo is
+    -- A padlocked button stays armed (spec §8.4), but the game is expected to refuse it: no echo is
     -- awaited and no guard stamped, so a refusal is never blamed on the spam guard.
     local lockText = meta.lockText and meta.lockText()
     if lockText then

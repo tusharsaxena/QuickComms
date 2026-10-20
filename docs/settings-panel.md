@@ -451,8 +451,8 @@ Icons    the buttons' icons (B9): Size and crop (Icon size, Zoom), Color (Desatu
 Pad header, Section header and Window were one Window tab until 2026-10-20 (the Look tab before
 that); the owner split it into three, each under its own headings. The third was Main window, with
 Visibility, Fade and Faded alpha, until the owner moved those to General and renamed it Window
-(2026-10-20); the Buttons tab was the Chip tab until then (UI wording only: its rows are still
-`pad.chip.*`). The options library orders a page's
+(2026-10-20); the Buttons tab was the Chip tab until then, and its rows were `pad.chip.*` until the internal
+rename to `pad.button.*` (2026-10-20; no migration: profiles are reset). The options library orders a page's
 tabs by each group's first row (options-ui-§13), so the three tabs' rows sit after Layout's and before
 the Buttons tab's in `settings/SchemaMembers.lua`; General's Visibility rows sit after Name and
 Enabled, so General stays first. Window's and the Visibility rows keep their `pad.look.*` paths; Pad
@@ -470,7 +470,7 @@ tab's Background and Border draw a band behind each title across its row (a pack
 block's width, as its right-click frame), with the text kept clear of the edge; by default there is
 none, and the text sits on the titles' left edge as before.
 
-The Buttons tab's rows are `pad.chip.*` (settings/SchemaMembers.lua). Button width moved there from Layout
+The Buttons tab's rows are `pad.button.*` (settings/SchemaMembers.lua). Button width moved there from Layout
 (`pad.layout.width` is gone). Button height 0 is automatic, the height a button always had (grown to hold
 its font and its icon); above 0 a labeled button is that tall, never shorter than its icon and 4 pixels
 beside an icon. An icon-only button stays square around its icon whatever the size says. The button's edge

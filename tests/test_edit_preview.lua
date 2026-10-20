@@ -53,7 +53,7 @@ end
 test("edit preview: every pad shows only the edited group, whatever its When says, and sends nothing", function()
     local NS, m = live()
     local gid, cid = raidGroup(NS)
-    assertTrue(NS.Pad.ChipsFor("p1", cid)[1] == nil, "the raid group is not active in the open world")
+    assertTrue(NS.Pad.ButtonsFor("p1", cid)[1] == nil, "the raid group is not active in the open world")
     -- red under: drop the edit branch from Surfaces.ApplyAll
     assertTrue(NS.Preview.SetEditPreview(gid))
     assertEqual(NS.Preview.EditGroup(), gid)
@@ -61,11 +61,11 @@ test("edit preview: every pad shows only the edited group, whatever its When say
     assertEqual(table.concat(sectionIds(plan), ","), gid, "that group and nothing else")
     assertEqual(plan.editGroup, gid)
     assertTrue(plan.test and plan.preview ~= nil, "drawn as a preview")
-    local chip = NS.Pad.ChipsFor("p1", cid)[1]
-    assertTrue(chip ~= nil)
-    assertTrue(chip:GetAttribute("macrotext") == nil, "disarmed")
+    local button = NS.Pad.ButtonsFor("p1", cid)[1]
+    assertTrue(button ~= nil)
+    assertTrue(button:GetAttribute("macrotext") == nil, "disarmed")
     local before = #m.sentMacros
-    m.__click(chip)
+    m.__click(button)
     assertEqual(#m.sentMacros, before)
     assertEqual(NS.Pad.Instance("p1").header.qcSituation:GetText(), "Preview: Raid only")
     assertFalse(NS.Preview.SetEditPreview(gid), "already on: no edge")
@@ -109,10 +109,10 @@ test("edit preview: it ends back to the live pads, and Preview as and test mode 
     P.SetEditPreview(nil)
     assertTrue(NS.Surfaces.Plans().p1.sections[1].groupId:match("^test%.") ~= nil, "test mode resumes")
     P.SetTestMode(false)
-    assertTrue(NS.Pad.ChipsFor("p1", cid)[1] == nil, "live again: the raid group is not active here")
+    assertTrue(NS.Pad.ButtonsFor("p1", cid)[1] == nil, "live again: the raid group is not active here")
 end)
 
-test("edit preview: combat ends it with one line and the live chips come back armed; a start in combat is refused", function()
+test("edit preview: combat ends it with one line and the live buttons come back armed; a start in combat is refused", function()
     local NS, m = live()
     local gid = raidGroup(NS)
     NS.Preview.SetEditPreview(gid)
@@ -149,7 +149,7 @@ test("edit preview: closing the settings window and the stand-down end it", func
     -- red under: leave the edit preview out of Preview.WatchPanel's OnHide
     m.SettingsPanel:__fire("OnHide")
     assertTrue(NS.Preview.EditGroup() == nil)
-    assertTrue(NS.Pad.ChipsFor("p1", cid)[1] == nil)
+    assertTrue(NS.Pad.ButtonsFor("p1", cid)[1] == nil)
     NS.Preview.SetEditPreview(gid)
     NS.SchemaRuntime.Set("enabled", false)
     assertTrue(NS.Preview.EditGroup() == nil)

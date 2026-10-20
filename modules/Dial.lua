@@ -10,7 +10,7 @@ local _, NS = ...
 -- SendEngine.RunOrQueue (and the stand-down's held Teardown), and Apply also declines on its own in
 -- combat. In combat only the header's snippets act (open, switch rings, send, close) and only insecure
 -- paint changes here: the stale hint, the padlocks, the lockdown chip, the hub's tooltip. A callout
--- wedge is armed exactly as a pad chip is (Pad.ArmSlot): a refused, placeholder or previewed slot is
+-- wedge is armed exactly as a pad button is (Pad.ArmSlot): a refused, placeholder or previewed slot is
 -- disarmed. The dial's place is `dials[id].point` (the `dial.point` member row; Reset position writes
 -- it through Library.SetSurfacePoint); "Open at the cursor" re-anchors in the snippet instead. In test
 -- mode or a preview Sync opens dial 1 (spec §11.4), taking no key.
@@ -23,7 +23,7 @@ local _, NS = ...
 -- saved. It follows the place, so a dial that moves up the list takes the key of its new place, and
 -- a place with no dial, a disabled dial or a stood-down addon leaves the key bound and opening
 -- nothing. Only the first BINDINGS places have an entry, so a dial past them has no key. The guard's dim and the result flash (spec §9.2, §9.3) are insecure and
--- reach every wedge as they reach every chip: Pad.Cooldown calls Dial.Cooldown, and SEND_RESULT
+-- reach every wedge as they reach every button: Pad.Cooldown calls Dial.Cooldown, and SEND_RESULT
 -- flashes a callout's wedges. The dial closes on a send, so both show on the next open; a drop stays
 -- red for DROP_SECONDS so the player can reopen it and see which line was lost. The Icons tab (B9)
 -- is read once per rebuild (IconStyle.Config) and painted on every wedge; a wedge the rebuild leaves
@@ -148,7 +148,7 @@ local function applyPoint(inst)
     inst.header:SetPoint(pt[1] or "CENTER", UIParent, pt[2] or "CENTER", tonumber(pt[3]) or 0, tonumber(pt[4]) or 0)
 end
 
--- A callout wedge is armed as a chip is; a ring wedge sends nothing (its click switches the ring).
+-- A callout wedge is armed as a button is; a ring wedge sends nothing (its click switches the ring).
 local function arm(btn, item)
     if item.slot then return NS.Pad.ArmSlot(btn, item.slot) end
     NS.SendEngine.Disarm(btn)
@@ -163,7 +163,7 @@ local function newRing(inst)
     return ring
 end
 
--- A wedge's press dims every chip and wedge for the guard window (Pad.Cooldown calls Dial.Cooldown).
+-- A wedge's press dims every button and wedge for the guard window (Pad.Cooldown calls Dial.Cooldown).
 local function newWedge(inst, ring)
     return R.DressWedge(DS.NewWedge(inst.header, ring, function(_, _, window) NS.Pad.Cooldown(window) end))
 end
@@ -346,7 +346,7 @@ local function forEachWedge(fn)
 end
 
 --- The guard's dim on every wedge of every dial, for the window (spec §9.2, D12: the guard is
---- global). Pad.Cooldown calls it, so a chip's press and a wedge's dim the same set.
+--- global). Pad.Cooldown calls it, so a button's press and a wedge's dim the same set.
 function Dial.Cooldown(window)
     forEachWedge(function(w) R.SetCooling(w, true) end)
     if State.dialCoolTimer then NS.addon:CancelTimer(State.dialCoolTimer) end

@@ -251,7 +251,7 @@ test("disabled [§7 step 1]: enabled, the registration set holds events and mess
     local _, _, snap = baseline()
     assertTrue(#snap.R > 0, "R_on is not empty")
     assertTrue(snap.messages > 0, "the bus receivers are in R_on")
-    assertTrue(#snap.F > 0, "F_on is not empty: the pad and its chips are shown")
+    assertTrue(#snap.F > 0, "F_on is not empty: the pad and its buttons are shown")
     assertTrue(countDrawn(snap.F) > 0)
 end)
 

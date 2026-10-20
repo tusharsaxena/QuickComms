@@ -1,9 +1,9 @@
 local _, NS = ...
--- modules/IconStyle.lua — the Icons tab's look (B9) on a Comms Pad chip's and a Comms Dial wedge's
+-- modules/IconStyle.lua — the Icons tab's look (B9) on a Comms Pad button's and a Comms Dial wedge's
 -- icon, modeled on DropWatcher modules/IconStyle.lua: its size, crop, desaturation, alpha, tint and
 -- border. INSECURE visuals only: texture calls on the icon and a plain child frame, which the client
 -- allows in combat too; it never touches a secure attribute or a protected frame's geometry. A
--- chip's icon size changes the chip's geometry (modules/Pad_Layout.lua CellSize), so every change
+-- button's icon size changes the button's geometry (modules/Pad_Layout.lua CellSize), so every change
 -- here reaches the screen through a rebuild (LIBRARY_CHANGED -> Surfaces.Request, held behind combat
 -- with the stale hint), never in combat.
 --
@@ -17,9 +17,9 @@ local _, NS = ...
 -- times the tint, so the default white keeps every icon as it was. Its alpha joins the icon's alpha.
 --
 -- THE ICON FRAME is a plain BackdropTemplate child of the button laid over the icon (SetAllPoints),
--- made on first use: a chip's square border is its backdrop (drawn over the icon's outer edge, as
+-- made on first use: a button's square border is its backdrop (drawn over the icon's outer edge, as
 -- DropWatcher's is), and the glow (modules/Glow.lua) is started on it, so the effect circles the
--- icon, not the whole chip. A wedge is round, so its border is a ring instead: a disc of the circle
+-- icon, not the whole button. A wedge is round, so its border is a ring instead: a disc of the circle
 -- mask behind the icon, the icon's size plus twice the thickness, in the border's color.
 --
 -- SOLID, the default border style, is the client's WHITE8X8 stretched to the thickness: registered
@@ -57,7 +57,7 @@ local function borderTexture(name)
 end
 
 -- The glow's settings as modules/Glow.lua takes them, or false while it is off; `sig` names every
--- value it draws with, so an unchanged rebuild keeps the effect. A table without the knobs (the Chip
+-- value it draws with, so an unchanged rebuild keeps the effect. A table without the knobs (the Button
 -- tab's) takes their defaults; one without `glowWhen` glows always.
 local function glowConfig(icon, size)
     if icon.glowEnabled ~= true then return false end
@@ -74,7 +74,7 @@ local function glowConfig(icon, size)
     return g
 end
 
---- A glow-bearing table (a surface's `icon`, a pad's `chip`) read into modules/Glow.lua's settings, or
+--- A glow-bearing table (a surface's `icon`, a pad's `button`) read into modules/Glow.lua's settings, or
 --- false while its glow is off. `size` joins the signature.
 IS.GlowConfig = glowConfig
 
@@ -126,7 +126,7 @@ function IS.IconFrame(btn)
     return f
 end
 
---- A chip's square border: the icon frame's backdrop, or none. `shown` false (a label-only chip)
+--- A button's square border: the icon frame's backdrop, or none. `shown` false (a label-only button)
 --- draws none.
 function IS.PaintBorder(btn, cfg, shown)
     local f = IS.IconFrame(btn)

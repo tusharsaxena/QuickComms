@@ -33,8 +33,8 @@ local function live(inputs)
     return NS, m
 end
 
-local function arenaChip(NS)
-    return NS.Pad.ChipsFor("p1", NS.Library.Group(T.seeded(NS, "bi.arena")).callouts[1])[1]
+local function arenaButton(NS)
+    return NS.Pad.ButtonsFor("p1", NS.Library.Group(T.seeded(NS, "bi.arena")).callouts[1])[1]
 end
 
 test("preview: test mode turns on and off, announcing each edge once", function()
@@ -91,7 +91,7 @@ test("preview: the stand-down ends test mode silently, and stood down a start is
     assertTrue(m.prints[1]:find("is disabled", 1, true) ~= nil, m.prints[1])
 end)
 
-test("preview: [phase 3] Preview as Arena builds the pad from the arena snapshot, every chip disarmed", function()
+test("preview: [phase 3] Preview as Arena builds the pad from the arena snapshot, every button disarmed", function()
     local NS = live()
     local out = heard(NS)
     assertTrue(NS.Preview.SetPreviewAs("arena"))
@@ -99,10 +99,10 @@ test("preview: [phase 3] Preview as Arena builds the pad from the arena snapshot
     local plan = NS.Surfaces.Plans().p1
     assertEqual(plan.preview, "arena")
     assertEqual(plan.order[1], T.seeded(NS, "bi.arena"))
-    local chip = arenaChip(NS)
-    assertTrue(chip ~= nil, "the arena set is drawn in the open world")
-    -- red under: drop `and not slot.preview` from Pad's arm (the previewed chip is armed)
-    assertTrue(chip:GetAttribute("macrotext") == nil)
+    local button = arenaButton(NS)
+    assertTrue(button ~= nil, "the arena set is drawn in the open world")
+    -- red under: drop `and not slot.preview` from Pad's arm (the previewed button is armed)
+    assertTrue(button:GetAttribute("macrotext") == nil)
     local header = NS.Pad.Instance("p1").header
     assertEqual(header.qcSituation:GetText(), "Preview: Arena")
     -- red under: PREVIEW left in the header instead of the drag strip
@@ -114,19 +114,19 @@ test("preview: [phase 3] Preview as Arena builds the pad from the arena snapshot
     assertFalse(handle:IsShown(), "locked and live again: no strip")
 end)
 
-test("preview: [review 3] a previewed chip sends nothing and reports nothing", function()
+test("preview: [review 3] a previewed button sends nothing and reports nothing", function()
     local NS, m = live()
     NS.Preview.SetPreviewAs("arena")
     local results = 0
     local t = NS.Bus:NewTarget()
     t:RegisterMessage(NS.MSG.SEND_RESULT, function() results = results + 1 end)
     local before = #m.sentMacros
-    m.__click(arenaChip(NS))
+    m.__click(arenaButton(NS))
     assertEqual(#m.sentMacros, before)
     assertEqual(results, 0)
 end)
 
-test("preview: [review 3] a previewed solo chip prints nothing, even with the self fallback", function()
+test("preview: [review 3] a previewed solo button prints nothing, even with the self fallback", function()
     local NS, m = live()
     NS.SchemaRuntime.Set("behavior.soloFallback", "self")
     local Lib = NS.Library
@@ -134,15 +134,15 @@ test("preview: [review 3] a previewed solo chip prints nothing, even with the se
     local gid = Lib.CreateGroup({ name = "Mine", callouts = { cid } })
     Lib.AddGroupToSurface("pad", "p1", gid, 1)
     assertTrue(NS.Preview.SetPreviewAs("world"))
-    local chip = NS.Pad.ChipsFor("p1", cid)[1]
-    assertTrue(chip ~= nil, "the user group (an empty When) shows in the previewed open world")
+    local button = NS.Pad.ButtonsFor("p1", cid)[1]
+    assertTrue(button ~= nil, "the user group (an empty When) shows in the previewed open world")
     m.prints = {}
-    m.__click(chip)
-    -- red under: keep `slot.selfText` in a previewed chip's meta (modules/Pad.lua arm)
+    m.__click(button)
+    -- red under: keep `slot.selfText` in a previewed button's meta (modules/Pad.lua arm)
     assertEqual(#m.prints, 0)
 end)
 
-test("preview: [review 3] combat ends it with one line, and the live chips come back armed", function()
+test("preview: [review 3] combat ends it with one line, and the live buttons come back armed", function()
     local NS, m = live(MPLUS)
     NS.Preview.SetPreviewAs("arena")
     m.prints = {}
@@ -151,7 +151,7 @@ test("preview: [review 3] combat ends it with one line, and the live chips come 
     assertTrue(NS.Preview.PreviewAs() == nil)
     assertEqual(#m.prints, 1)
     assertTrue(m.prints[1]:find("Preview ended: you entered combat.", 1, true) ~= nil, m.prints[1])
-    assertEqual(NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.mplus.pull"))[1]:GetAttribute("macrotext"), "/p Pulling next pack")
+    assertEqual(NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.mplus.pull"))[1]:GetAttribute("macrotext"), "/p Pulling next pack")
     assertEqual(#m.blocked, 0)
 end)
 
@@ -180,7 +180,7 @@ test("preview: [review 3] the stand-down ends it silently, and so does closing t
     -- red under: drop the WatchPanel call from Settings.Register in settings/Panel.lua
     m.SettingsPanel:__fire("OnHide")
     assertTrue(NS.Preview.PreviewAs() == nil)
-    assertTrue(arenaChip(NS) == nil, "back to the open world, where the arena set is not active")
+    assertTrue(arenaButton(NS) == nil, "back to the open world, where the arena set is not active")
 end)
 
 test("preview: [phase 3] test mode and Preview as are one switch at a time", function()
@@ -284,24 +284,24 @@ local function echoGroup(NS, text, channel)
     return cid, gid
 end
 
-test("preview: [echo] a previewed chip prints [QC] /<slash> <resolved text>, and still sends nothing", function()
+test("preview: [echo] a previewed button prints [QC] /<slash> <resolved text>, and still sends nothing", function()
     local NS, m = live()
     local cid = echoGroup(NS, "Go {me}", "yell")
     assertTrue(NS.Preview.SetPreviewAs("world"))
-    local chip = NS.Pad.ChipsFor("p1", cid)[1]
-    assertTrue(chip ~= nil)
+    local button = NS.Pad.ButtonsFor("p1", cid)[1]
+    assertTrue(button ~= nil)
     local results = 0
     local t = NS.Bus:NewTarget()
     t:RegisterMessage(NS.MSG.SEND_RESULT, function() results = results + 1 end)
     local before = #m.sentMacros
     m.prints = {}
-    m.__click(chip)
+    m.__click(button)
     -- red under: drop `echo = preview and slot.line` from Pad's arm (modules/Pad.lua)
     assertEqual(#m.prints, 1)
     assertEqual(m.prints[1], NS.PREFIX .. " /y Go " .. NS.Compat.PlayerName())
     assertEqual(#m.sentMacros, before, "nothing reaches chat")
     assertEqual(results, 0, "nothing reported")
-    assertTrue(chip:GetAttribute("macrotext") == nil, "still disarmed")
+    assertTrue(button:GetAttribute("macrotext") == nil, "still disarmed")
 end)
 
 test("preview: [echo] the slash follows the channel the previewed situation resolves", function()
@@ -309,29 +309,29 @@ test("preview: [echo] the slash follows the channel the previewed situation reso
     local cid = echoGroup(NS, "Incoming", "smartGroup")
     assertTrue(NS.Preview.SetPreviewAs("raid:heroic"))
     m.prints = {}
-    m.__click(NS.Pad.ChipsFor("p1", cid)[1])
+    m.__click(NS.Pad.ButtonsFor("p1", cid)[1])
     assertEqual(m.prints[1], NS.PREFIX .. " /raid Incoming")
 end)
 
-test("preview: [echo review 3] a padlocked previewed chip echoes its line, naming no lock", function()
+test("preview: [echo review 3] a padlocked previewed button echoes its line, naming no lock", function()
     local NS, m = live()
     local cid = echoGroup(NS, "Pull", "raid")
     assertTrue(NS.Preview.SetPreviewAs("world"))
-    local chip = NS.Pad.ChipsFor("p1", cid)[1]
-    assertTrue(chip ~= nil)
+    local button = NS.Pad.ButtonsFor("p1", cid)[1]
+    assertTrue(button ~= nil)
     m.prints = {}
-    m.__click(chip)
+    m.__click(button)
     -- locks read the real group, not the previewed situation: the echo is what it would send
     assertEqual(m.prints[1], NS.PREFIX .. " /raid Pull")
 end)
 
-test("preview: [echo] a live chip prints nothing extra", function()
+test("preview: [echo] a live button prints nothing extra", function()
     local NS, m = live()
     local cid = echoGroup(NS, "Hello", "say")
-    local chip = NS.Pad.ChipsFor("p1", cid)[1]
-    assertEqual(chip:GetAttribute("macrotext"), "/s Hello")
+    local button = NS.Pad.ButtonsFor("p1", cid)[1]
+    assertEqual(button:GetAttribute("macrotext"), "/s Hello")
     m.prints = {}
-    m.__click(chip)
+    m.__click(button)
     assertEqual(#m.prints, 0)
     assertEqual(m.sentMacros[#m.sentMacros].text, "/s Hello")
 end)
@@ -340,18 +340,18 @@ test("preview: [echo] the edit preview echoes too, and a press in combat prints 
     local NS, m = live()
     local cid, gid = echoGroup(NS, "Stack", "party")
     assertTrue(NS.Preview.SetEditPreview(gid))
-    local chip = NS.Pad.ChipsFor("p1", cid)[1]
+    local button = NS.Pad.ButtonsFor("p1", cid)[1]
     m.prints = {}
-    m.__click(chip)
+    m.__click(button)
     assertEqual(m.prints[1], NS.PREFIX .. " /p Stack")
     -- In combat (the meta is already baked): a press prints and changes no secure attribute.
     m.__setCombat(true)
-    local type0, text0 = chip:GetAttribute("type"), chip:GetAttribute("macrotext")
-    NS.SendEngine.OnClick(chip, "LeftButton", false)
-    NS.SendEngine.OnClick(chip, "LeftButton", true)
+    local type0, text0 = button:GetAttribute("type"), button:GetAttribute("macrotext")
+    NS.SendEngine.OnClick(button, "LeftButton", false)
+    NS.SendEngine.OnClick(button, "LeftButton", true)
     assertEqual(#m.prints, 2)
-    assertEqual(chip:GetAttribute("type"), type0)
-    assertEqual(chip:GetAttribute("macrotext"), text0)
+    assertEqual(button:GetAttribute("type"), type0)
+    assertEqual(button:GetAttribute("macrotext"), text0)
     assertEqual(#m.blocked, 0)
     m.__setCombat(false)
 end)

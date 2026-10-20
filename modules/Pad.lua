@@ -4,8 +4,8 @@ local _, NS = ...
 -- The root is a plain BackdropTemplate frame wearing the Ka0s skin (NS.ApplySkin), dressed at every
 -- rebuild by the pad's Main window tab (Pad_Render.SkinFor: border and background), its Pad header
 -- tab (Pad_Render.HeaderLook: the header row's height, font, background and edge), its Section header
--- tab (Pad_Render.SectionLook: each title row's height and font, and the band behind it) and its Chip tab (Pad_Render.ChipLook: each chip's body, edge, label font and glow);
--- it becomes protected in combat because its chips are secure. Every chip
+-- tab (Pad_Render.SectionLook: each title row's height and font, and the band behind it) and its Buttons tab (Pad_Render.ButtonLook: each button's body, edge, label font and glow);
+-- it becomes protected in combat because its buttons are secure. Every button
 -- IS a send button (spec §9.1),
 -- built by SendEngine, dressed by Pad_Render, pooled per pad with NS.Pool and never destroyed. The
 -- header row (situation chip, lockdown chip, stale hint, collapse) is a plain child;
@@ -21,7 +21,7 @@ local _, NS = ...
 -- SendEngine state driver (spec §10.3), never an insecure Show/Hide on the root. What may change in
 -- combat is insecure: alpha (the fade), the padlocks, the lockdown chip, the stale hint, the
 -- cooldown veil and the flashes. Tab switching and collapse are refused in combat with one line
--- (spec §10.2, the C8 fallback); the wheel is heard over the header, the root and every chip. The
+-- (spec §10.2, the C8 fallback); the wheel is heard over the header, the root and every button. The
 -- position is `pads[id].point = { point, relativePoint, x, y }`
 -- (a member row since phase 3, spec §5.1), shaped as DropWatcher modules/Window.lua `savePoint` /
 -- `applyPoint`. It is the `pad.point` member row (settings/SchemaMembers.lua): the drag and Reset
@@ -34,8 +34,8 @@ local _, NS = ...
 -- The root is pinned by its growth edge (PadLayout.EdgePoint, B2): its top for down growth, its
 -- bottom for up growth, where the header row and the drag strip then sit too; a drop is saved as that
 -- edge's point, so a resize or a reload grows the pad away from the strip and never drifts it.
--- The Icons tab (B9) is read once per rebuild (IconStyle.Config) and painted on every chip; its icon
--- size feeds the chips' geometry. A chip the rebuild leaves unused, and every chip of a released pad,
+-- The Icons tab (B9) is read once per rebuild (IconStyle.Config) and painted on every button; its icon
+-- size feeds the buttons' geometry. A button the rebuild leaves unused, and every button of a released pad,
 -- loses its glow (Glow.ReleaseFree); a send result starts an After sending glow (Glow.Sent).
 
 NS.Pad = NS.Pad or {}
@@ -103,27 +103,27 @@ local function savePoint(inst)
     end
 end
 
--- ── chips ───────────────────────────────────────────────────────────────────────────────────
+-- ── buttons ───────────────────────────────────────────────────────────────────────────────────
 
-local function forEachChip(fn)
+local function forEachButton(fn)
     for _, inst in pairs(pads) do
-        for _, btn in ipairs(inst.chips.active) do fn(btn) end
+        for _, btn in ipairs(inst.buttons.active) do fn(btn) end
     end
 end
 
---- The spam guard is global (D12): one press dims every chip on every pad, and every wedge on every
+--- The spam guard is global (D12): one press dims every button on every pad, and every wedge on every
 --- dial (modules/Dial.lua, which a wedge's press reaches through here too), for the window.
 function Pad.Cooldown(window)
     if NS.Dial and NS.Dial.Cooldown then NS.Dial.Cooldown(window) end
-    forEachChip(function(btn) R.SetCooling(btn, true) end)
+    forEachButton(function(btn) R.SetCooling(btn, true) end)
     if State.padCoolTimer then NS.addon:CancelTimer(State.padCoolTimer) end
     State.padCoolTimer = NS.addon:ScheduleTimer(function()
         State.padCoolTimer = nil
-        forEachChip(function(btn) R.SetCooling(btn, false) end)
+        forEachButton(function(btn) R.SetCooling(btn, false) end)
     end, tonumber(window) or 1)
 end
 
-local function newChip(inst)
+local function newButton(inst)
     local btn = NS.SendEngine.NewButton(inst.root, function(_, _, window) Pad.Cooldown(window) end)
     R.Dress(btn, function() Pad.SetHover(inst.id, true) end, function() Pad.SetHover(inst.id, false) end)
     -- An insecure hook, as Dress hooks OnEnter: it never touches the secure click path.
@@ -150,7 +150,7 @@ end
 -- A section title's hit frame (groups polish R4): a plain, non-secure Button over the title row,
 -- made and placed out of combat with the layout. A right-click opens the Groups page on its group
 -- (QC:EditGroup, which prints the settings refusal in combat); a left-click does nothing, as the
--- title did. It keeps the pad's hover (the fade) and hands the wheel on, as a chip does.
+-- title did. It keeps the pad's hover (the fade) and hands the wheel on, as a button does.
 local function newTitleHit(inst)
     local hit = CreateFrame("Button", nil, inst.root)
     hit:RegisterForClicks("RightButtonUp")
@@ -175,20 +175,20 @@ local function releaseTitleHit(hit)
     hit.qcGroupId = nil
 end
 
-local function releaseChip(btn)
+local function releaseButton(btn)
     NS.SendEngine.Disarm(btn)
     btn.qcSlot = nil
 end
 
 -- Armed when the slot baked; otherwise disarmed, keeping only what a click may still do (a solo
--- self-print). A refused or placeholder chip carries no chat type, so its click reports nothing.
+-- self-print). A refused or placeholder button carries no chat type, so its click reports nothing.
 -- lockText reads the slot's live lock (RefreshLocks keeps it current in combat), so a press on a
--- padlocked chip is explained by its lock, never tracked as a send.
--- A previewed chip (spec §13.3) keeps its line for the tooltip and is disarmed, and carries neither
--- the solo self-line nor the lock text: a previewed chip sends and reports nothing. It carries its
+-- padlocked button is explained by its lock, never tracked as a send.
+-- A previewed button (spec §13.3) keeps its line for the tooltip and is disarmed, and carries neither
+-- the solo self-line nor the lock text: a previewed button sends and reports nothing. It carries its
 -- baked line as `echo` instead, which the click hook prints locally ("[QC] /p Pulling next pack"),
 -- so a preview shows what a live press would have sent. The echo names no lock: locks read your real
--- group, not the previewed situation, so a previewed raid or M+ chip would nearly always carry one.
+-- group, not the previewed situation, so a previewed raid or M+ button would nearly always carry one.
 -- Baked here, out of combat, so a press in combat only prints a string and writes no attribute.
 local function arm(btn, slot)
     local preview = slot.preview == true
@@ -204,7 +204,7 @@ local function arm(btn, slot)
     end
 end
 
--- The dial's callout wedges are armed exactly as a chip is (modules/Dial.lua).
+-- The dial's callout wedges are armed exactly as a button is (modules/Dial.lua).
 Pad.ArmSlot = arm
 
 -- A title row's width: its block's in a packed row (Pad_Layout), else the pad's inside its padding.
@@ -213,18 +213,18 @@ local function titleWidth(item, box)
     return math.max(1, item.w > 0 and item.w or (box.width - 2 * item.x))
 end
 
--- Every chip and section title of the layout: each chip in the pad's Chip tab (`clook`, R.ChipLook)
+-- Every button and section title of the layout: each button in the pad's Buttons tab (`clook`, R.ButtonLook)
 -- and its icon in the Icons tab (`icfg`); each title in the Section header tab's look (`slook`,
 -- R.SectionLook): its band across the row, its text on the band's left edge, clear of its border.
 local function place(inst, box, style, clook, slook, icfg)
     for _, item in ipairs(box.items) do
-        if item.kind == "chip" then
-            local btn = NS.Pool.Acquire(inst.chips, function() return newChip(inst) end)
+        if item.kind == "button" then
+            local btn = NS.Pool.Acquire(inst.buttons, function() return newButton(inst) end)
             btn:ClearAllPoints()
             btn:SetPoint("TOPLEFT", inst.root, "TOPLEFT", item.x, -item.y)
             btn:SetSize(item.w, item.h)
             R.Paint(btn, item.slot, style, item.w, icfg)
-            R.ApplyChipLook(btn, clook, item.w, item.h)
+            R.ApplyButtonLook(btn, clook, item.w, item.h)
             arm(btn, item.slot)
             local list = inst.byCallout[item.slot.calloutId] or {}
             list[#list + 1] = btn
@@ -269,7 +269,7 @@ local function build(id)
     root:EnableMouseWheel(true)
     root:SetScript("OnMouseWheel", function(_, delta) Pad.Wheel(id, delta) end)
     NS.ApplySkin(root)
-    local inst = { id = id, root = root, chips = NS.Pool.New(), titles = NS.Pool.New(), titleHits = NS.Pool.New(),
+    local inst = { id = id, root = root, buttons = NS.Pool.New(), titles = NS.Pool.New(), titleHits = NS.Pool.New(),
         byCallout = {}, hover = 0, live = false }
     -- A plain BackdropTemplate child: the Pad header tab dresses it at every Apply.
     local header = CreateFrame("Frame", nil, root, "BackdropTemplate")
@@ -360,7 +360,7 @@ function Pad.Apply(id, plan)
     local inst = pads[id] or build(id)
     if not (inst.dragging or inst.dragHeld) then applyPoint(inst) end
     inst.plan, inst.live = plan, true
-    NS.Pool.ReleaseAll(inst.chips, releaseChip)
+    NS.Pool.ReleaseAll(inst.buttons, releaseButton)
     NS.Pool.ReleaseAll(inst.titles, releaseTitle)
     NS.Pool.ReleaseAll(inst.titleHits, releaseTitleHit)
     inst.byCallout = {}
@@ -374,13 +374,13 @@ function Pad.Apply(id, plan)
     local hlook = inst.hlook
     inst.slook = R.SectionLook(pad.section, inst.slook)
     local slook = inst.slook
-    local chip = type(pad.chip) == "table" and pad.chip or {}
+    local button = type(pad.button) == "table" and pad.button or {}
     -- The header wears its font and text before the layout, so the pad is as wide as the row needs
     -- (R.HeaderMinWidth), no wider.
     R.ApplyHeaderLook(inst.header, hlook)
     R.PaintHeader(inst.header, hstate)
-    local box = PL.Compute(sections, layout, { collapsed = hstate.collapsed, headerH = hlook.height, chip = chip,
-        fontSize = chip.fontSize, titleSize = slook.font.size, titleH = slook.height, situation = hstate.situation, iconSize = icfg.size,
+    local box = PL.Compute(sections, layout, { collapsed = hstate.collapsed, headerH = hlook.height, button = button,
+        fontSize = button.fontSize, titleSize = slook.font.size, titleH = slook.height, situation = hstate.situation, iconSize = icfg.size,
         minWidth = R.HeaderMinWidth(inst.header) })
     inst.root:SetScale(math.max(NS.Library.MIN_SURFACE_SCALE, (tonumber(NS.Setting("scale")) or 1) * (tonumber(layout.scale) or 1)))
     inst.root:SetSize(box.width, box.height)
@@ -388,9 +388,9 @@ function Pad.Apply(id, plan)
     anchorEdge(inst, box.up)
     inst.header:SetHeight(box.headerH)
     NS.ApplySkin(inst.root, R.SkinFor(look))
-    inst.clook = R.ChipLook(chip, inst.clook)
+    inst.clook = R.ButtonLook(button, inst.clook)
     place(inst, box, layout.style, inst.clook, slook, icfg)
-    NS.Glow.ReleaseFree(inst.chips)
+    NS.Glow.ReleaseFree(inst.buttons)
     inst.mark = hstate.mark
     if inst.handle then inst.handle:SetLabel(R.StripLabel(padName(id), hstate.mark)) end
     Pad.ApplyLock()
@@ -402,7 +402,7 @@ function Pad.Apply(id, plan)
     return true
 end
 
---- Take a pad off screen: its chips disarmed and parked, its driver cleared. Out of combat only.
+--- Take a pad off screen: its buttons disarmed and parked, its driver cleared. Out of combat only.
 function Pad.Release(id)
     local inst = pads[id]
     if not inst or inCombat() then return false end
@@ -411,8 +411,8 @@ function Pad.Release(id)
         inst.dragHeld = nil
         inst.root:StopMovingOrSizing()
     end
-    NS.Pool.ReleaseAll(inst.chips, releaseChip)
-    NS.Glow.ReleaseFree(inst.chips)
+    NS.Pool.ReleaseAll(inst.buttons, releaseButton)
+    NS.Glow.ReleaseFree(inst.buttons)
     NS.Pool.ReleaseAll(inst.titles, releaseTitle)
     NS.Pool.ReleaseAll(inst.titleHits, releaseTitleHit)
     inst.byCallout, inst.plan, inst.live, inst.mark = {}, nil, false, nil
@@ -443,7 +443,7 @@ end
 function Pad.RefreshLocks(id, showLockdownChip)
     local inst = pads[id]
     if not inst then return end
-    for _, btn in ipairs(inst.chips.active) do R.RefreshLock(btn) end
+    for _, btn in ipairs(inst.buttons.active) do R.RefreshLock(btn) end
     inst.header.qcLockdown:SetShown(showLockdownChip and true or false)
 end
 
@@ -535,7 +535,7 @@ function Pad.Instance(id)
     return pads[id]
 end
 
-function Pad.ChipsFor(id, calloutId)
+function Pad.ButtonsFor(id, calloutId)
     local inst = pads[id]
     return inst and inst.byCallout[calloutId] or {}
 end

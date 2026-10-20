@@ -116,7 +116,7 @@ test("dial secure: [exit] in combat the dial opens, switches rings and sends, wi
     assertEqual(m.sentMacros[#m.sentMacros].text, "/p two")
     assertFalse(h:IsShown())
     assertEqual(#m.blocked, 0)
-    assertEqual(NS.SendEngine.EchoState().pending, 1, "tracked like a chip's send")
+    assertEqual(NS.SendEngine.EchoState().pending, 1, "tracked like a button's send")
 end)
 
 test("dial secure: open at the cursor anchors the hub to it; a dial with no ring opens nothing", function()

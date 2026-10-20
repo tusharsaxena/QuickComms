@@ -791,14 +791,14 @@ test("library: [phase 5] Prepare gives a pad saved before the Look groups every 
     local NS, Lib, p = boot()
     local pad = p.pads[p.padOrder[1]]
     pad.look = { visibility = "never" }
-    pad.chip, pad.section, pad.header = nil, nil, { height = 30 }
+    pad.button, pad.section, pad.header = nil, nil, { height = 30 }
     Lib.Prepare()
     assertEqual(pad.look.visibility, "never", "a stored value is kept")
     assertNil(pad.look.font, "the section titles' font left the Main window (2026-10-20)")
     assertEqual(pad.section.font, "Friz Quadrata TT", "the Section header tab, filled whole")
     assertEqual(pad.section.height, 0, "automatic")
     assertEqual(pad.look.background.a, 0.92)
-    assertEqual(pad.chip.width, 100, "the Chip tab, filled whole")
+    assertEqual(pad.button.width, 100, "the Buttons tab, filled whole")
     assertEqual(pad.header.height, 30, "a stored header height is kept")
     assertEqual(pad.header.fontSize, 16, "and the header's other fields filled with the owner's defaults")
     assertTrue(pad.look.background ~= NS.Library.TEMPLATES.pad.look.background, "a copy, never the template")

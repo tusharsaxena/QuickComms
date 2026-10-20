@@ -1,7 +1,7 @@
 -- tests/test_glow.lua — the Icons tab's glow (B9, modules/Glow.lua): LibCustomGlow-1.0's effect on a
--- chip's or a wedge's icon. Off by default; each style starts with DropWatcher's knob table under the
+-- button's or a wedge's icon. Off by default; each style starts with DropWatcher's knob table under the
 -- addon's key; a repaint that changes nothing calls the library not at all; the trigger is Always,
--- On hover (OnEnter/OnLeave) or After sending (a send result, then SEND_SECONDS); a chip a rebuild
+-- On hover (OnEnter/OnLeave) or After sending (a send result, then SEND_SECONDS); a button a rebuild
 -- leaves unused, or a released pad, stops its glow; and in combat a glow starts and stops with no
 -- protected call (the effect's frames are plain children), while an Icons write waits for combat end.
 
@@ -49,7 +49,7 @@ end
 
 local function rebuild(NS)
     assertTrue(NS.Pad.Apply("p1", planFor(NS)))
-    return NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.mplus.pull"))[1]
+    return NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.mplus.pull"))[1]
 end
 
 local function set(NS, path, v, id)
@@ -68,11 +68,11 @@ local function combat(m, on)
     end
 end
 
-test("glow: off by default, so a chip starts nothing", function()
+test("glow: off by default, so a button starts nothing", function()
     local NS, _, lib = live()
-    local chip = rebuild(NS)
+    local button = rebuild(NS)
     assertEqual(#lib.calls, 0)
-    assertNil(chip.qcGlowStyle)
+    assertNil(button.qcGlowStyle)
 end)
 
 test("glow: each style starts with the knob table's arguments, on the icon, under the addon's key", function()
@@ -80,10 +80,10 @@ test("glow: each style starts with the knob table's arguments, on the icon, unde
     local G = NS.Glow
     set(NS, "pad.icon.glowEnabled", true)
     -- pixel, the default style: length 0 is automatic (nil), the border a boolean
-    local chip = rebuild(NS)
+    local button = rebuild(NS)
     local c = lib.calls[1]
     assertEqual(c[1], "PixelGlow_Start")
-    assertTrue(c[2] == chip.qcIconFrame, "the effect is on the icon, not the whole chip")
+    assertTrue(c[2] == button.qcIconFrame, "the effect is on the icon, not the whole button")
     assertEqual(c[3][1], 1); assertEqual(c[3][2], 0.82); assertEqual(c[3][4], 1)
     assertEqual(c[4], 8); assertEqual(c[5], 0.1); assertNil(c[6]); assertEqual(c[7], 1)
     assertEqual(c[10], true); assertEqual(c[11], G.KEY); assertEqual(c[12], G.FRAME_LEVEL)
@@ -113,10 +113,10 @@ test("glow: each style starts with the knob table's arguments, on the icon, unde
     assertEqual(ac[9], G.KEY); assertEqual(ac[10], G.FRAME_LEVEL)
     lib.calls = {}
     set(NS, "pad.icon.glowEnabled", false)
-    chip = rebuild(NS)
+    button = rebuild(NS)
     assertTrue(count(lib, "AutoCastGlow_Stop") >= 1, "turned off: stopped")
     assertEqual(count(lib, "AutoCastGlow_Start"), 0)
-    assertNil(chip.qcGlowStyle)
+    assertNil(button.qcGlowStyle)
 end)
 
 test("glow: a repaint that changes nothing calls the library not at all; a setting restarts it", function()
@@ -131,7 +131,7 @@ test("glow: a repaint that changes nothing calls the library not at all; a setti
     assertEqual(#lib.calls, 0)
     set(NS, "pad.icon.pixelLines", 4)
     rebuild(NS)
-    assertEqual(count(lib, "PixelGlow_Start"), started, "every glowing chip restarts once")
+    assertEqual(count(lib, "PixelGlow_Start"), started, "every glowing button restarts once")
 end)
 
 test("glow: On hover starts on enter and stops on leave", function()
@@ -139,12 +139,12 @@ test("glow: On hover starts on enter and stops on leave", function()
     set(NS, "pad.icon.glowEnabled", true)
     set(NS, "pad.icon.glowWhen", "hover")
     lib.calls = {}
-    local chip = rebuild(NS)
+    local button = rebuild(NS)
     assertEqual(#lib.calls, 0, "nothing until the mouse is over it")
-    chip:__fire("OnEnter")
+    button:__fire("OnEnter")
     assertEqual(names(lib), "PixelGlow_Start")
-    assertTrue(lib.calls[1][2] == chip.qcIconFrame)
-    chip:__fire("OnLeave")
+    assertTrue(lib.calls[1][2] == button.qcIconFrame)
+    button:__fire("OnLeave")
     assertEqual(names(lib), "PixelGlow_Start,PixelGlow_Stop")
 end)
 
@@ -153,11 +153,11 @@ test("glow: After sending glows from the send result for SEND_SECONDS, then stop
     set(NS, "pad.icon.glowEnabled", true)
     set(NS, "pad.icon.glowWhen", "send")
     lib.calls = {}
-    local chip = rebuild(NS)
+    local button = rebuild(NS)
     assertEqual(#lib.calls, 0)
     NS.addon:SendMessage(NS.MSG.SEND_RESULT, T.seeded(NS, "bi.mplus.pull"), "p1", "sent")
     assertEqual(names(lib), "PixelGlow_Start")
-    assertTrue(lib.calls[1][2] == chip.qcIconFrame)
+    assertTrue(lib.calls[1][2] == button.qcIconFrame)
     local found
     for _, t in ipairs(m.__timers) do if t.delay == NS.Glow.SEND_SECONDS then found = true end end
     assertTrue(found, "a timer for SEND_SECONDS")
@@ -166,46 +166,46 @@ test("glow: After sending glows from the send result for SEND_SECONDS, then stop
     assertEqual(names(lib), "PixelGlow_Start,PixelGlow_Stop")
 end)
 
-test("glow: a chip a rebuild leaves unused stops its glow, and so does every chip of a released pad", function()
+test("glow: a button a rebuild leaves unused stops its glow, and so does every button of a released pad", function()
     local NS, _, lib = live()
     set(NS, "pad.icon.glowEnabled", true)
     rebuild(NS)
     local inst = NS.Pad.Instance("p1")
-    local n = #inst.chips.active
-    assertTrue(n > 1, "chips: " .. n)
+    local n = #inst.buttons.active
+    assertTrue(n > 1, "buttons: " .. n)
     lib.calls = {}
     assertTrue(NS.Library.RemoveGroupFromSurface("pad", "p1", T.seeded(NS, "bi.mplus")), "removed")
     rebuild(NS)
-    -- red under: the rebuild leaving the pool's free chips glowing
-    assertTrue(count(lib, "PixelGlow_Stop") > 0, "the chips no longer drawn stop")
-    for _, b in ipairs(inst.chips.free) do assertNil(b.qcGlowStyle) end
+    -- red under: the rebuild leaving the pool's free buttons glowing
+    assertTrue(count(lib, "PixelGlow_Stop") > 0, "the buttons no longer drawn stop")
+    for _, b in ipairs(inst.buttons.free) do assertNil(b.qcGlowStyle) end
     NS.Library.AddGroupToSurface("pad", "p1", T.seeded(NS, "bi.mplus"))
     rebuild(NS)
     lib.calls = {}
-    local glowing = #inst.chips.active
+    local glowing = #inst.buttons.active
     assertTrue(glowing > 0, "glowing: " .. glowing)
     NS.Pad.Release("p1")
-    assertEqual(count(lib, "PixelGlow_Stop"), glowing, "every chip that glowed stops")
-    for _, b in ipairs(inst.chips.free) do assertNil(b.qcGlowStyle) end
+    assertEqual(count(lib, "PixelGlow_Stop"), glowing, "every button that glowed stops")
+    for _, b in ipairs(inst.buttons.free) do assertNil(b.qcGlowStyle) end
 end)
 
 test("glow: in combat a hover glow starts and stops with no protected call; an Icons write waits for combat end", function()
     local NS, m, lib = live()
     set(NS, "pad.icon.glowEnabled", true)
     set(NS, "pad.icon.glowWhen", "hover")
-    local chip = rebuild(NS)
+    local button = rebuild(NS)
     lib.calls = {}
     combat(m, true)
-    chip:__fire("OnEnter")
-    chip:__fire("OnLeave")
+    button:__fire("OnEnter")
+    button:__fire("OnLeave")
     assertEqual(names(lib), "PixelGlow_Start,PixelGlow_Stop")
     set(NS, "pad.icon.zoom", 0.2)
     m.__fireTimers()
-    assertEqual(table.concat(chip.qcIcon.__texCoord, ","), "0,1,0,1", "not repainted in combat")
+    assertEqual(table.concat(button.qcIcon.__texCoord, ","), "0,1,0,1", "not repainted in combat")
     assertEqual(#m.blocked, 0, "no protected call")
     combat(m, false)
     m.__fireTimers()
-    assertEqual(table.concat(chip.qcIcon.__texCoord, ","), "0.2,0.8,0.2,0.8", "repainted at combat end")
+    assertEqual(table.concat(button.qcIcon.__texCoord, ","), "0.2,0.8,0.2,0.8", "repainted at combat end")
 end)
 
 test("glow: a wedge glows on its icon too, and on hover", function()
@@ -284,7 +284,7 @@ test("glow: the stand-down puts out a running send glow even when the frames' re
     local NS, m, lib = live()
     set(NS, "pad.icon.glowEnabled", true)
     set(NS, "pad.icon.glowWhen", "send")
-    local chip = rebuild(NS)
+    local button = rebuild(NS)
     m.__fireTimers()
     lib.calls = {}
     NS.addon:SendMessage(NS.MSG.SEND_RESULT, T.seeded(NS, "bi.mplus.pull"), "p1", "sent")
@@ -294,7 +294,7 @@ test("glow: the stand-down puts out a running send glow even when the frames' re
     NS.StandDown()   -- the frames' release (Surfaces' teardown) waits for combat end
     assertTrue(NS.State.pendingTeardown ~= nil, "the teardown is held")
     -- red under: cancel the timers without clearing the buttons' send state
-    assertNil(chip.qcSending)
-    assertNil(chip.qcGlowTimer)
+    assertNil(button.qcSending)
+    assertNil(button.qcGlowTimer)
     assertEqual(names(lib), "PixelGlow_Stop")
 end)

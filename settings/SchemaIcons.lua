@@ -1,5 +1,5 @@
 local _, NS = ...
--- settings/SchemaIcons.lua — the Icons tab's member rows (B9): how a Comms Pad's chips and a Comms
+-- settings/SchemaIcons.lua — the Icons tab's member rows (B9): how a Comms Pad's buttons and a Comms
 -- Dial's wedges draw their icons, one set of rows per kind under `pad.icon.*` and `dial.icon.*`
 -- (flat leaves, so Library's fillShape backfills them; defaults/Icons.lua holds the values). Drawn
 -- by the Icons tab of each editor (settings/Pads.lua, settings/Dials.lua), each block under its own
@@ -14,7 +14,7 @@ local _, NS = ...
 --     the selected style's knobs, under that style's heading (DropWatcher's knob table): Pixel border,
 --                     Auto cast sparkles, Button (rotating rays) or Proc (flipbook)
 --
--- Every color pair is O.ColorPair (options-ui-§17; THE PLAYER'S CLASS: a chip is about no unit) and
+-- Every color pair is O.ColorPair (options-ui-§17; THE PLAYER'S CLASS: a button is about no unit) and
 -- is never dimmed (anti-pattern #74: the swatch's alpha is read under either mode). Border style and
 -- thickness are dimmed while Show border is off; Glow when, Glow style and the offsets while the glow
 -- is off, and an offset also while the glow is in a style it does not apply to (Button).
@@ -44,7 +44,7 @@ local GLOW = L["Glow"]
 local WHEN = { { "always", L["Always"] }, { "hover", L["On hover"] }, { "send", L["After sending"] } }
 local STYLES = { { "pixel", L["Pixel border"] }, { "autocast", L["Auto cast sparkles"] },
     { "button", L["Button (rotating rays)"] }, { "proc", L["Proc (flipbook)"] } }
--- The Chip tab's Glow style takes the same four (settings/SchemaMembers.lua).
+-- The Buttons tab's Glow style takes the same four (settings/SchemaMembers.lua).
 NS.addon.Settings.GLOW_STYLES = STYLES
 
 -- Each knob's heading, label and tooltip, keyed by its defaults/Icons.lua entry.

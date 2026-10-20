@@ -119,7 +119,7 @@ test("surfaces: a disabled seeded set leaves the plan", function()
     assertEqual(#plan.sections, 0)
 end)
 
-test("surfaces: the test plan is placeholder chips that carry no line", function()
+test("surfaces: the test plan is placeholder buttons that carry no line", function()
     local NS = live()
     local plan = NS.Surfaces.TestPlan("p1")
     assertTrue(plan.test)
@@ -147,7 +147,7 @@ local function combat(m, on)
     end
 end
 
-local function pull(NS) return NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.mplus.pull"))[1] end
+local function pull(NS) return NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.mplus.pull"))[1] end
 local function staleShown(NS) return NS.Pad.Instance("p1").header.qcStale:IsShown() end
 
 local function nonMessages(m)
@@ -195,7 +195,7 @@ end)
 
 test("surfaces: [review 1] a situation change in combat queues: nothing blocked, stale shows, combat end rebuilds", function()
     local NS, m = live()
-    local chip = pull(NS)
+    local button = pull(NS)
     local rebuilt = {}
     local t = NS.Bus:NewTarget()
     t:RegisterMessage(NS.MSG.SURFACE_REBUILT, function(_, id, stale) rebuilt[#rebuilt + 1] = id .. ":" .. tostring(stale) end)
@@ -203,7 +203,7 @@ test("surfaces: [review 1] a situation change in combat queues: nothing blocked,
     NS.Situation.ReadInputs = function() return withInputs(MPLUS, { inInstanceGroup = true }) end
     NS.Situation.RefreshNow("test")
     assertEqual(#m.blocked, 0)
-    assertEqual(chip:GetAttribute("macrotext"), "/p Pulling next pack", "frozen in combat")
+    assertEqual(button:GetAttribute("macrotext"), "/p Pulling next pack", "frozen in combat")
     assertTrue(staleShown(NS))
     assertEqual(table.concat(rebuilt, ","), "p1:true,d2:true")
     combat(m, false)
@@ -222,18 +222,18 @@ test("surfaces: [review 1] a profile switch in combat queues the new profile's p
     NS.Library.SetSurfacePoint("pad", "p1", { "TOPLEFT", "TOPLEFT", 40, -60 })
     NS.addon.db:SetProfile("Default")
     local root = NS.Pad.Instance("p1").root
-    assertEqual(#NS.Pad.ChipsFor("p1", cid), 0, "Default does not carry Other's group")
+    assertEqual(#NS.Pad.ButtonsFor("p1", cid), 0, "Default does not carry Other's group")
     assertEqual((root:GetPoint(1)), "TOP", "the default point, on the growth edge")
     combat(m, true)
     NS.addon.db:SetProfile("Other")
     assertEqual(#m.blocked, 0)
     assertTrue(staleShown(NS))
-    assertEqual(pull(NS):GetAttribute("macrotext"), "/p Pulling next pack", "the chips keep their old lines")
-    assertEqual(#NS.Pad.ChipsFor("p1", cid), 0, "nothing of the new profile until combat ends")
+    assertEqual(pull(NS):GetAttribute("macrotext"), "/p Pulling next pack", "the buttons keep their old lines")
+    assertEqual(#NS.Pad.ButtonsFor("p1", cid), 0, "nothing of the new profile until combat ends")
     assertEqual((root:GetPoint(1)), "TOP")
     combat(m, false)
     assertEqual(#m.blocked, 0)
-    assertEqual(NS.Pad.ChipsFor("p1", cid)[1]:GetAttribute("macrotext"), "/p Other line")
+    assertEqual(NS.Pad.ButtonsFor("p1", cid)[1]:GetAttribute("macrotext"), "/p Other line")
     -- red under: drop the applyPoint in Pad.Apply (the pad keeps Default's place)
     local p, _, rel, x, y = root:GetPoint(1)
     assertEqual(table.concat({ p, rel, x, y }, ","), "TOPLEFT,TOPLEFT,40,-60")
@@ -268,28 +268,28 @@ test("surfaces: a setting written in combat waits for combat end, with the stale
     assertEqual(#m.blocked, 0)
 end)
 
-test("surfaces: an encounter lockdown in combat padlocks a Say chip and lights the chip, nothing blocked", function()
+test("surfaces: an encounter lockdown in combat padlocks a Say button and lights the lockdown chip, nothing blocked", function()
     local NS, m = live()
     local cid = userCallout(NS, { name = "Shout", text = "Go go", channel = "say" })
-    local chip = NS.Pad.ChipsFor("p1", cid)[1]
-    assertFalse(chip.qcLock:IsShown())
+    local button = NS.Pad.ButtonsFor("p1", cid)[1]
+    assertFalse(button.qcLock:IsShown())
     combat(m, true)
     local enc = m.Enum.AddOnRestrictionType.Encounter
     m.restrictionStates[enc] = m.Enum.AddOnRestrictionState.Active
     m.__fire("ADDON_RESTRICTION_STATE_CHANGED", enc, m.Enum.AddOnRestrictionState.Active)
-    assertTrue(chip.qcLock:IsShown())
+    assertTrue(button.qcLock:IsShown())
     assertTrue(NS.Pad.Instance("p1").header.qcLockdown:IsShown())
-    assertEqual(chip:GetAttribute("macrotext"), "/s Go go", "a lock never disarms")
+    assertEqual(button:GetAttribute("macrotext"), "/s Go go", "a lock never disarms")
     assertEqual(#m.blocked, 0)
 end)
 
-test("surfaces: test mode draws placeholders that send nothing; combat start brings the live chips back", function()
+test("surfaces: test mode draws placeholders that send nothing; combat start brings the live buttons back", function()
     local NS, m = live()
     NS.Preview.SetTestMode(true)
     local inst = NS.Pad.Instance("p1")
     assertEqual(inst.handle.label:GetText(), "Comms Pad  |cff19ff19TEST MODE|r")
     assertEqual(#NS.SendEngine.ArmedButtons(), 0, "placeholders are disarmed")
-    m.__click(NS.Pad.ChipsFor("p1", "test.1.1")[1])
+    m.__click(NS.Pad.ButtonsFor("p1", "test.1.1")[1])
     assertEqual(#m.sentMacros, 0)
     combat(m, true)
     assertFalse(NS.Preview.IsTestMode())
@@ -313,7 +313,7 @@ test("surfaces: if lockdown has already begun at the combat edge, test mode's en
     assertEqual(NS.Pad.Instance("p1").handle.label:GetText(), "Comms Pad")
 end)
 
-test("surfaces: disabled out of combat, every pad hides and every chip disarms; enabled, they return", function()
+test("surfaces: disabled out of combat, every pad hides and every button disarms; enabled, they return", function()
     local NS = live()
     local inst = NS.Pad.Instance("p1")
     NS.SchemaRuntime.Set("enabled", false)
