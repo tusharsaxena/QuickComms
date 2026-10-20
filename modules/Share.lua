@@ -324,8 +324,9 @@ local function dropNested(res)
 end
 
 -- The member rows whose value travels with a pad or a dial: every one of its kind but its name and
--- Enabled (carried beside the fields), its position and its key (spec §15: it arrives unbound).
-local NOT_PORTABLE = { point = true, key = true }
+-- Enabled (carried beside the fields) and its position. A dial's key is no field at all: it is WoW's
+-- own binding (modules/Dial.lua BindKey), so it never travels (spec §15: it arrives unbound).
+local NOT_PORTABLE = { point = true }
 
 -- A field value an older string may carry that the row no longer offers, and what it means now:
 -- the retired Upward growth (B2; core/Database.lua step 4 does the same for a stored profile).

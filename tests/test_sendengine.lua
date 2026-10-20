@@ -445,43 +445,11 @@ test("sendengine: [phase 4] attributes, frame refs and snippets are written out 
     assertEqual(#m.blocked, 0)
 end)
 
-test("sendengine: [audit QC-11] the bound-keys line logs on change through DebugChanged, re-armed by a console Clear", function()
-    local NS = T.enableAddon()
-    local SE = NS.SendEngine
-    NS.DebugLog:SetEnabled(true)
-    local function bindLines()
-        local n = 0
-        for _, line in ipairs(NS.DebugLog.buffer) do
-            if tostring(line):find("bound G=QuickCommsDial1", 1, true) then n = n + 1 end
-        end
-        return n
-    end
-    local set = { { key = "G", name = "QuickCommsDial1", button = "Toggle" } }
-    NS.DebugLog:Clear()
-    SE.BindKeys(set)
-    SE.BindKeys(set)
-    assertEqual(bindLines(), 1, "an unchanged set logs once")
-    NS.DebugLog:Clear()
-    SE.BindKeys(set)
-    -- red under: put back the hand-rolled boundSig memo in SE.BindKeys (no Clear re-arms it)
-    assertEqual(bindLines(), 1, "a Clear re-arms the line")
-end)
-
-test("sendengine: [phase 4] BindKeys replaces the whole set, out of combat only; ClearKeys empties it", function()
+test("sendengine: [keys] no override binding is written: a dial's key is WoW's own binding (modules/Dial.lua)", function()
     local NS, m = T.enableAddon()
-    local SE = NS.SendEngine
-    assertTrue(SE.BindKeys({ { key = "G", name = "QuickCommsDial1", button = "Toggle" } }))
-    assertEqual(m.overrideBindings.G.name, "QuickCommsDial1")
-    assertEqual(m.overrideBindings.G.button, "Toggle")
-    assertTrue(SE.BindKeys({ { key = "H", name = "QuickCommsDial2", button = "Toggle" } }))
-    assertNil(m.overrideBindings.G, "the earlier set is gone")
-    assertEqual(SE.Bindings()[1].key, "H")
-    combat(m, true)
-    assertFalse(SE.BindKeys({}))
-    assertEqual(m.overrideBindings.H.name, "QuickCommsDial2", "kept until combat ends")
-    assertEqual(#m.blocked, 0)
-    combat(m, false)
-    assertTrue(SE.ClearKeys())
-    assertNil(m.overrideBindings.H)
-    assertEqual(#SE.Bindings(), 0)
+    -- red under: a SendEngine.BindKeys left behind (two key systems, one of them invisible in Options)
+    assertNil(NS.SendEngine.BindKeys)
+    assertNil(NS.SendEngine.ClearKeys)
+    assertTrue(NS.Dial.BindKey("d2", "G"))
+    assertNil(next(m.overrideBindings))
 end)

@@ -187,12 +187,12 @@ local S = Settings.SchemaLib:New{
     -- the composer is hollow.
     writeThrough = { "enabled" },
     -- The minimap button is a per-installation display preference: neither reset may touch it. A
-    -- member's icon and its glyph color, a group's parent, a pad's or dial's position and a dial's
-    -- key have a default only so a named `/qc reset` restores them; a page's Defaults (a bracketed
-    -- sweep) keeps them.
+    -- member's icon and its glyph color, a group's parent and a pad's or dial's position have a
+    -- default only so a named `/qc reset` restores them; a page's Defaults (a bracketed sweep) keeps
+    -- them.
     resetExempt  = { [MINIMAP_PATH] = true, ["callout.icon"] = true, ["callout.iconColor"] = true,
         ["group.icon"] = true, ["group.iconColor"] = true, ["group.parent"] = true, ["pad.point"] = true,
-        ["dial.point"] = true, ["dial.key"] = true },
+        ["dial.point"] = true },
 }
 NS.SchemaRuntime = S
 
@@ -222,12 +222,12 @@ function Settings.RowsForPage(pageKey)
     return out
 end
 
--- `point`, `when` and `key` are the structured member rows (settings/SchemaMembers.lua): each
--- drawn by its own control on its editor page (a dial's key by a capture box) and typed and printed on
--- the CLI by settings/Slash.lua's parse and format hooks. `color` is a pad's Look swatches (phase 5),
--- which the options library draws and its CLI parses and prints itself.
-local VALID_TYPES = { bool = true, number = true, string = true, point = true, when = true, key = true,
-    color = true }
+-- `point` and `when` are the structured member rows (settings/SchemaMembers.lua): each drawn by its
+-- own control on its editor page and typed and printed on the CLI by settings/Slash.lua's parse and
+-- format hooks. `color` is a pad's Window and Chip swatches (phase 5), which the options library draws
+-- and its CLI parses and prints itself. (A dial's key was a third, `key`, until 2026-10-20: it is
+-- WoW's own binding now, set on the Binding tab, never a row.)
+local VALID_TYPES = { bool = true, number = true, string = true, point = true, when = true, color = true }
 
 -- A row carrying BOTH its own get and set owns its storage, so there is no defaults entry at its
 -- path: answering nil makes the library skip the resolution check for it (the session rows, and

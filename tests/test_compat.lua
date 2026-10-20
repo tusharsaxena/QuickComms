@@ -176,3 +176,23 @@ test("compat: [final 7] BindingLabel reads the menu's name for an action; [final
     m.GetBindingKey = nil
     T.assertNil(NS.Compat.BindingKey("CLICK QuickCommsDial1:Toggle"))
 end)
+
+test("compat: [keys] SetBinding and SaveBindings write WoW's own bindings, never in combat or without the API", function()
+    local NS, m = T.newAddon()
+    assertTrue(NS.Compat.SetBinding("G", "CLICK QuickCommsDial1:Toggle"))
+    assertEqual(m.bindingActions.G, "CLICK QuickCommsDial1:Toggle")
+    m.bindingSet = 2   -- Character Specific Keybindings ticked
+    assertTrue(NS.Compat.SaveBindings())
+    assertEqual(m.bindingSaves[1], 2, "saved in the set in force")
+    m.inCombat = true
+    -- red under: Compat.SetBinding without its combat gate (ADDON_ACTION_BLOCKED)
+    T.assertFalse(NS.Compat.SetBinding("H", "CLICK QuickCommsDial1:Toggle"))
+    T.assertFalse(NS.Compat.SaveBindings())
+    assertEqual(#m.blocked, 0)
+    m.inCombat = false
+    assertTrue(NS.Compat.SetBinding("G", nil))
+    T.assertNil(m.bindingActions.G, "a nil command unbinds the key")
+    m.SetBinding, m.SaveBindings = nil, nil
+    T.assertFalse(NS.Compat.SetBinding("G", "CLICK QuickCommsDial1:Toggle"))
+    T.assertFalse(NS.Compat.SaveBindings())
+end)

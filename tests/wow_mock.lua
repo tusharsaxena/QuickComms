@@ -31,6 +31,10 @@
 --   overrideBindings    [key] = { owner, name, button }: SetOverrideBindingClick (refused in combat)
 --   bindingActions      [key] = the action the player's own WoW binding names (GetBindingAction)
 --   bindingKeys         [command] = the key the player bound to a command in WoW's menu (GetBindingKey)
+--   SetBinding(key, command)  WoW's own binding (refused in combat): key -> command in bindingActions,
+--                  and the command's first key in bindingKeys; a nil command unbinds the key
+--   bindingSaves        every SaveBindings(set) call's set, in order (refused in combat)
+--   bindingSet          GetCurrentBindingSet()'s answer (1, the account's; 2, the character's)
 --   cursor              { x, y }: GetCursorPosition's answer
 --   __named[name]       every named frame (a binding clicks a frame by its name)
 --   missingTemplates    [template] = true makes CreateFrame raise on it, as a client without it does;
@@ -461,6 +465,8 @@ local function build()
     M.overrideBindings   = {}
     M.bindingActions     = {}
     M.bindingKeys        = {}
+    M.bindingSaves       = {}
+    M.bindingSet         = 1
     M.cursor             = { x = 0, y = 0 }
     M.__named            = {}
 
@@ -701,13 +707,38 @@ local function build()
 
     M.GetBindingAction = function(key) return M.bindingActions[key] or "" end
     M.GetBindingKey = function(command) return M.bindingKeys[command] end
+
+    M.SetBinding = function(key, command)
+        if M.inCombat then
+            refuse(nil, "SetBinding")
+            return false
+        end
+        local prev = M.bindingActions[key]
+        if prev and M.bindingKeys[prev] == key then M.bindingKeys[prev] = nil end
+        M.bindingActions[key] = command
+        if command and not M.bindingKeys[command] then M.bindingKeys[command] = key end
+        return true
+    end
+    M.SaveBindings = function(set)
+        if M.inCombat then
+            refuse(nil, "SaveBindings")
+            return
+        end
+        M.bindingSaves[#M.bindingSaves + 1] = set
+    end
+    M.GetCurrentBindingSet = function() return M.bindingSet end
     M.GetCursorPosition = function() return M.cursor.x, M.cursor.y end
 
-    --- A key press as the client routes it: a snippet's binding first, then an override binding;
-    --- the target is clicked with the binding's button, down then up as `__click` presses it.
+    --- A key press as the client routes it: a snippet's binding first, then an override binding, then
+    --- the player's own WoW binding when it is a CLICK one ("CLICK <frame>:<button>"); the target is
+    --- clicked with the binding's button, down then up as `__click` presses it.
     --- @return boolean routed
     M.__pressKey = function(key)
         local b = M.restrictedBindings[key] or M.overrideBindings[key]
+        if not b then
+            local name, button = tostring(M.bindingActions[key] or ""):match("^CLICK ([^:]+):(.+)$")
+            if name then b = { name = name, button = button } end
+        end
         if not b then return false end
         local target = b.target or b.name
         if type(target) == "string" then target = M.__named[target] end

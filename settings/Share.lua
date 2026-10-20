@@ -140,8 +140,8 @@ local function looseGroups(res)
     return n
 end
 
---- Import the checked string and say what arrived (one chat line; one more when a dial did, since it
---- has no key yet; and one more when a group arrived that no shared pad or dial lists, since it shows
+--- Import the checked string and say what arrived (one chat line; one more when a dial did, since its
+--- key is whatever WoW binds to its place in the dial list; and one more when a group arrived that no shared pad or dial lists, since it shows
 --- nowhere until it is added). A refusal prints its reason and keeps the string.
 --- @return table|nil Library.Import's tally
 function SH.Import()
@@ -154,7 +154,9 @@ function SH.Import()
     NS.State.share.import = nil
     local counts = NS.Share.CountText(tally)
     NS.Print(counts ~= "" and L["Imported %s."]:format(counts) or L["Nothing was imported."])
-    if tally.dials > 0 then NS.Print(L["An imported dial has no key yet: give it one on the Comms Dial page."]) end
+    if tally.dials > 0 then
+        NS.Print(L["An imported dial's key is the one WoW binds to its place in the dial list: see its Binding tab on the Comms Dial page."])
+    end
     if looseGroups(res) > 0 then
         NS.Print(L["An imported group is on no pad or dial yet: add it on the Groups tab of the Comms Pad or Comms Dial page."])
     end

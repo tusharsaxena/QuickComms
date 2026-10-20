@@ -920,7 +920,7 @@ local SURFACE_DEFAULTS = {
     -- `tapAction` are kept for the hold, flick and release upgrade, and `depth` until owner ruling R5
     -- gives it a meaning; nothing reads them yet.
     dial = { mode = "categories", slices = 4, depth = 2, openAt = "center", delay = 0.3,
-        interaction = "relaxed", key = nil, tapAction = "first", icon = NS.IconDefaults.For("dial") },
+        interaction = "relaxed", tapAction = "first", icon = NS.IconDefaults.For("dial") },
 }
 
 --- The shape of one member of each kind: what every member row's path resolves against (the
@@ -934,10 +934,10 @@ Lib.TEMPLATES = {
         layout = copyTable(SURFACE_DEFAULTS.pad.layout), look = copyTable(SURFACE_DEFAULTS.pad.look),
         icon = copyTable(SURFACE_DEFAULTS.pad.icon), header = copyTable(SURFACE_DEFAULTS.pad.header),
         chip = copyTable(SURFACE_DEFAULTS.pad.chip) },
-    -- `key` and `point` are false, not nil, for the same reason as above: false is "no key" and "the
-    -- default place".
+    -- `point` is false, not nil, for the same reason as above: false is "the default place". A dial
+    -- has no `key`: its key is WoW's own binding (modules/Dial.lua Dial.BindKey).
     dial = { name = "", enabled = true, mode = SURFACE_DEFAULTS.dial.mode, slices = SURFACE_DEFAULTS.dial.slices,
-        openAt = SURFACE_DEFAULTS.dial.openAt, key = false, point = false, icon = copyTable(SURFACE_DEFAULTS.dial.icon) },
+        openAt = SURFACE_DEFAULTS.dial.openAt, point = false, icon = copyTable(SURFACE_DEFAULTS.dial.icon) },
 }
 
 --- A dial's place when its `point` is unset: the middle of the screen (read at run time by
@@ -1042,6 +1042,9 @@ end
 
 -- ── dial keys (spec §9.4, §18) ──────────────────────────────────────────────────────────────
 
+-- A dial's key is WoW's own binding of its Open Comms Dial entry since 2026-10-20 (modules/Dial.lua
+-- Dial.BindKey), never a profile field: these two read and check a key as typed or captured.
+
 -- Keys a dial may not take, because the open dial uses them. Whatever the modifiers: Escape (the game
 -- menu, and the open dial's close), the left and right mouse buttons, and the mouse wheel (the open
 -- dial turns its pages with it). Without a modifier: 1-8, which pick the open dial's wedges (ALT-1 is
@@ -1111,18 +1114,6 @@ function Lib.ValidKey(v)
     if not mods then return false, "badKey" end
     if RESERVED_KEYS[base] or RESERVED_BARE[v] then return false, "reservedKey" end
     return true
-end
-
---- The other dial that already has `key` (spec §18: one key opens one dial), or nil.
-function Lib.KeyOwner(key, exceptId)
-    key = Lib.KeyValue(key)
-    if type(key) ~= "string" then return nil end
-    local ids = {}
-    for id, d in pairs(P().dials) do
-        if id ~= exceptId and type(d) == "table" and d.key == key then ids[#ids + 1] = id end
-    end
-    table.sort(ids)
-    return ids[1]
 end
 
 -- ── migrations (core/Database.lua calls these; Library writes the lists) ────────────────────

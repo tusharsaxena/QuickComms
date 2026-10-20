@@ -257,7 +257,7 @@ function Compat.ClassName(classFile)
     return PlainString(names[classFile])
 end
 
--- ── The dial's key (spec §9.4) ───────────────────────────────────────────────────────────────
+-- ── The dial's key (spec §9.4): WoW's own binding since 2026-10-20 ───────────────────────────────────────────────────────────────
 
 --- The action the player's own WoW binding gives `key` (a binding name such as MOVEFORWARD, or a
 --- CLICK binding), or nil when it has none, it is secret, or the API is absent. Shown, never matched.
@@ -285,6 +285,25 @@ function Compat.BindingKey(command)
     local key = PlainString((GetBindingKey(command)))
     if key == nil or key == "" then return nil end
     return key
+end
+
+--- Bind `key` to `command` in WoW's own key bindings (SetBinding), or unbind `key` when `command` is
+--- nil. The game refuses a binding change in combat, so this answers false there, and when the API
+--- is absent; the caller saves the set (SaveBindings) once it is done.
+--- @return boolean set
+function Compat.SetBinding(key, command)
+    if not (SetBinding and Compat.IsSafeKey(key)) or Compat.InCombat() then return false end
+    return SetBinding(key, command) ~= false
+end
+
+--- Save WoW's key bindings in the set in force (GetCurrentBindingSet: the account's, or this
+--- character's while Character Specific Keybindings is ticked), so a binding survives a reload. False
+--- in combat, or when the API is absent.
+--- @return boolean saved
+function Compat.SaveBindings()
+    if not (SaveBindings and GetCurrentBindingSet) or Compat.InCombat() then return false end
+    SaveBindings(GetCurrentBindingSet())
+    return true
 end
 
 -- ── The pad (spec §10.1) ─────────────────────────────────────────────────────────────────────

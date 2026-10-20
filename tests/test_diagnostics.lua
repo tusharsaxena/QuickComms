@@ -98,7 +98,7 @@ test("diagnostics: [final 21] the settings section lists no member row", functio
         assertTrue(text:find(" " .. prefix, 1, true) == nil, prefix .. "\n" .. text)
     end
 end)
-test("diagnostics: [phase 4] the dials and bindings sections name each dial, its key and the override bindings", function()
+test("diagnostics: [phase 4] the dials and bindings sections name each dial, its key and each entry's WoW binding", function()
     local NS = T.enableAddon()
     NS.Situation.ReadInputs = function()
         return { inInstance = true, instanceType = "party", difficultyID = 8, keystoneActive = true,
@@ -107,11 +107,11 @@ test("diagnostics: [phase 4] the dials and bindings sections name each dial, its
     -- M+ alone: In Group (active in any party, bg buttons) off, so the counts below stay M+'s
     NS.SchemaRuntime.Set("group.enabled", false, T.seeded(NS, "bi.group"))
     NS.Situation.RefreshNow("test")
-    NS.SchemaRuntime.Set("dial.key", "G", "d2")
+    assertTrue(NS.Dial.BindKey("d2", "G"))
     local text = report(NS)
     assertTrue(text:find("d2 QuickCommsDial1 key=G rings=4 openRing=2 open=false active=" .. T.seeded(NS, "bi.mplus") .. " stale=false", 1, true)
         ~= nil, text)
-    assertTrue(text:find("override bindings=1", 1, true) ~= nil, text)
-    assertTrue(text:find("G -> QuickCommsDial1:Toggle", 1, true) ~= nil, text)
+    assertTrue(text:find("G -> CLICK QuickCommsDial1:Toggle", 1, true) ~= nil, text)
+    assertTrue(text:find("none -> CLICK QuickCommsDial2:Toggle", 1, true) ~= nil, text)
     assertTrue(text:find("d2:" .. T.seeded(NS, "bi.mplus.pull") .. " /p Pulling next pack", 1, true) ~= nil, "the armed wedges")
 end)

@@ -636,7 +636,6 @@ L["Name a condition: %s."] = "Name a condition: %s."
 L["A key level is `min-max`; either end may be empty."] = "A key level is `min-max`; either end may be empty."
 L["always"] = "always"
 L["the default place"] = "the default place"
-L["none"] = "none"
 L["(nothing to edit)"] = "(nothing to edit)"
 
 -- Preview as… (modules/Preview.lua, modules/Pad.lua, modules/Pad_Render.lua)
@@ -862,9 +861,7 @@ L["Categories"] = "Categories"
 L["Flat"] = "Flat"
 L["At its place"] = "At its place"
 L["At the cursor"] = "At the cursor"
-L["%s already opens %s."] = "%s already opens %s."
 L["What the lists and the dial's first ring call this dial. Press Enter to apply."] = "What the lists and the dial's first ring call this dial. Press Enter to apply."
-L["Build this dial and bind its key. A disabled dial keeps its groups, key and settings."] = "Build this dial and bind its key. A disabled dial keeps its groups, key and settings."
 L["Categories: the first ring holds your groups and a click opens one. Flat: the first ring holds callouts, highest group first, with More for the rest."] = "Categories: the first ring holds your groups and a click opens one. Flat: the first ring holds callouts, highest group first, with More for the rest."
 L["Wheel"] = "Wheel"
 L["Wedges per ring"] = "Wedges per ring"
@@ -874,7 +871,6 @@ L["Where the dial opens: at its place (set below), or wherever the cursor is."] 
 L["Where the dial opens at its place. Type an offset from the middle of the screen."] = "Where the dial opens at its place. Type an offset from the middle of the screen."
 L["Binding"] = "Binding"
 L["Key"] = "Key"
-L["The key that opens and closes this dial. One key opens one dial. Escape, the left and right mouse buttons, the mouse wheel and 1 to 8 without a modifier cannot be used: the open dial uses them."] = "The key that opens and closes this dial. One key opens one dial. Escape, the left and right mouse buttons, the mouse wheel and 1 to 8 without a modifier cannot be used: the open dial uses them."
 L["No dial to edit: make one on the Comms Dial page."] = "No dial to edit: make one on the Comms Dial page."
 
 -- The Comms Dial's paint (modules/Dial_Render.lua)
@@ -888,6 +884,26 @@ L["Pad and dial positions reset."] = "Pad and dial positions reset."
 
 -- The key bindings menu (modules/Dial.lua, Bindings.xml)
 L["Open Comms Dial %d"] = "Open Comms Dial %d"
+L["An imported dial's key is the one WoW binds to its place in the dial list: see its Binding tab on the Comms Dial page."] =
+    "An imported dial's key is the one WoW binds to its place in the dial list: see its Binding tab on the Comms Dial page."
+L["%s was %s in WoW's key bindings; now it opens this dial."] =
+    "%s was %s in WoW's key bindings; now it opens this dial."
+L["Build this dial. A disabled dial keeps its groups and settings, and its key opens nothing."] =
+    "Build this dial. A disabled dial keeps its groups and settings, and its key opens nothing."
+L["Click, then press the key you want, with Alt, Ctrl or Shift if you like. Escape clears it. This is WoW's own key binding (Options, Keybindings, Ka0s Quick Comms): changing it in either place changes both."] =
+    "Click, then press the key you want, with Alt, Ctrl or Shift if you like. Escape clears it. This is WoW's own key binding (Options, Keybindings, Ka0s Quick Comms): changing it in either place changes both."
+L["Delete this dial. Its groups and callouts are kept. Asks first."] =
+    "Delete this dial. Its groups and callouts are kept. Asks first."
+L["Key bindings can be changed after combat."] = "Key bindings can be changed after combat."
+L["No key yet. Click the box and press one, or bind Open Comms Dial %d in WoW's key bindings: it is the same key."] =
+    "No key yet. Click the box and press one, or bind Open Comms Dial %d in WoW's key bindings: it is the same key."
+L["No key: WoW's key bindings list Open Comms Dial 1 to %d only. Move this dial into the first %d to give it one."] =
+    "No key: WoW's key bindings list Open Comms Dial 1 to %d only. Move this dial into the first %d to give it one."
+L["Only the first %d dials in the list have a key in WoW's key bindings."] =
+    "Only the first %d dials in the list have a key in WoW's key bindings."
+L["The key is for every character, unless you tick Character Specific Keybindings there."] =
+    "The key is for every character, unless you tick Character Specific Keybindings there."
+L["This dial is number %d in the dial list."] = "This dial is number %d in the dial list."
 
 
 -- Comms Dial page (settings/Dials.lua)
@@ -900,8 +916,6 @@ L["SW"] = "SW"
 L["W"] = "W"
 L["NW"] = "NW"
 L["Comms Dial %d"] = "Comms Dial %d"
-L["No key yet. Click the box and press one, or bind Open Comms Dial in WoW's key bindings."] = "No key yet. Click the box and press one, or bind Open Comms Dial in WoW's key bindings."
-L["%s is also %s in WoW's key bindings. While Quick Comms is enabled, it opens this dial instead."] = "%s is also %s in WoW's key bindings. While Quick Comms is enabled, it opens this dial instead."
 L["%s opens and closes this dial."] = "%s opens and closes this dial."
 L["Nothing to show: no group on this dial is active here."] = "Nothing to show: no group on this dial is active here."
 L["%s (opens here)"] = "%s (opens here)"
@@ -910,7 +924,6 @@ L["  %d %s: %s"] = "  %d %s: %s"
 L["%s o'clock"] = "%s o'clock"
 L["No dials yet. Click New dial to make one."] = "No dials yet. Click New dial to make one."
 L["Delete dial"] = "Delete dial"
-L["Delete this dial. Its groups and callouts are kept, and its key is released. Asks first."] = "Delete this dial. Its groups and callouts are kept, and its key is released. Asks first."
 L["This dial lists no group. Add one below."] = "This dial lists no group. Add one below."
 L["Higher groups come first on the dial. Drag to reorder."] = "Higher groups come first on the dial. Drag to reorder."
 L["Take this group off the dial. The group itself is kept."] = "Take this group off the dial. The group itself is kept."
@@ -918,16 +931,11 @@ L["Add a group to the end of this dial's list."] = "Add a group to the end of th
 L["Pixels from the middle of the screen. Press Enter to apply."] = "Pixels from the middle of the screen. Press Enter to apply."
 L["Reset this dial's position"] = "Reset this dial's position"
 L["Put this dial back in the middle of the screen."] = "Put this dial back in the middle of the screen."
-L["Click, then press the key you want, with Alt, Ctrl or Shift if you like. Escape clears it."] = "Click, then press the key you want, with Alt, Ctrl or Shift if you like. Escape clears it."
 L["Relaxed: press the key to open the dial and click a wedge to send. The key again, Escape or a right click closes it; a click in the middle goes back a ring. The number keys 1 to 8 pick a wedge, and the mouse wheel turns pages."] = "Relaxed: press the key to open the dial and click a wedge to send. The key again, Escape or a right click closes it; a click in the middle goes back a ring. The number keys 1 to 8 pick a wedge, and the mouse wheel turns pages."
-L["No key here, but %s opens this dial from WoW's key bindings (Open Comms Dial %d)."] = "No key here, but %s opens this dial from WoW's key bindings (Open Comms Dial %d)."
 L["%s is bound to Open Comms Dial %d in WoW's key bindings, but this dial is off: it opens nothing until the dial is enabled."] = "%s is bound to Open Comms Dial %d in WoW's key bindings, but this dial is off: it opens nothing until the dial is enabled."
 L["%s is bound to Open Comms Dial %d in WoW's key bindings, but Quick Comms is off: it opens nothing until Quick Comms is enabled."] = "%s is bound to Open Comms Dial %d in WoW's key bindings, but Quick Comms is off: it opens nothing until Quick Comms is enabled."
-L["%s is kept for this dial, which is off: it opens nothing until the dial is enabled."] = "%s is kept for this dial, which is off: it opens nothing until the dial is enabled."
-L["%s is kept for this dial, but Quick Comms is off: it opens nothing until Quick Comms is enabled."] = "%s is kept for this dial, but Quick Comms is off: it opens nothing until Quick Comms is enabled."
 L["In WoW's key bindings, under Ka0s Quick Comms, this dial is Open Comms Dial %d."] = "In WoW's key bindings, under Ka0s Quick Comms, this dial is Open Comms Dial %d."
 L["The number is its place in the dial list: it changes when a dial above it is deleted."] = "The number is its place in the dial list: it changes when a dial above it is deleted."
-L["This dial is number %d in the dial list, and WoW's key bindings list Open Comms Dial 1 to 4 only: give it a key above."] = "This dial is number %d in the dial list, and WoW's key bindings list Open Comms Dial 1 to 4 only: give it a key above."
 L["Dial"] = "Dial"
 L["Which Comms Dial this page edits."] = "Which Comms Dial this page edits."
 L["New dial"] = "New dial"
@@ -988,7 +996,6 @@ L["Untick everything."] = "Untick everything."
 L["Paste a string in the box, then click Accept to check it. Nothing changes until you click Import."] = "Paste a string in the box, then click Accept to check it. Nothing changes until you click Import."
 L["Imported %s."] = "Imported %s."
 L["Nothing was imported."] = "Nothing was imported."
-L["An imported dial has no key yet: give it one on the Comms Dial page."] = "An imported dial has no key yet: give it one on the Comms Dial page."
 L["An imported group is on no pad or dial yet: add it on the Groups tab of the Comms Pad or Comms Dial page."] = "An imported group is on no pad or dial yet: add it on the Groups tab of the Comms Pad or Comms Dial page."
 L["Share string"] = "Share string"
 L["Import"] = "Import"

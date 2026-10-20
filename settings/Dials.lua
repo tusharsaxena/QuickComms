@@ -10,21 +10,25 @@ local _, NS = ...
 --     Wheel    wedges per ring, open at, then Position: X and Y and Reset this dial's position
 --     Icons    the wedges' icons (B9, settings/SchemaIcons.lua), as the Comms Pad page's Icons tab;
 --              a wedge's border is a round ring and its icon size keeps the wedge's own size
---     Binding  how Relaxed mode works, the key capture, and the key's line (what it opens, or the WoW
---              binding it shares, spec §9.4 / §18)
+--     Binding  how Relaxed mode works, the key capture (WoW's own binding of the dial's Open Comms
+--              Dial entry), the key's line and the dial's place in WoW's key bindings (spec §9.4)
 --     Preview  each ring as the current or previewed situation builds it, wedge by wedge
 --
 -- The band holds the picker and the create action (options-ui-§14). Every field is a member row
--- (settings/SchemaMembers.lua) written to the selected dial; the dial rebuilds, and its key is bound
--- again, through LIBRARY_CHANGED -> Surfaces.Request, which waits for combat end when it must. The key
--- is the `dial.key` row, written by AceGUI's Keybinding widget (Escape in it answers "", no key); the
--- row refuses a key another dial has, naming that dial. Relaxed is the only interaction in v0.1.0 (the
+-- (settings/SchemaMembers.lua) written to the selected dial; the dial rebuilds through LIBRARY_CHANGED
+-- -> Surfaces.Request, which waits for combat end when it must. The key is no row (2026-10-20): it is
+-- WoW's own binding of the dial's Open Comms Dial entry (modules/Dial.lua BindKey), captured by
+-- AceGUI's Keybinding widget (Escape in it answers "", no key) and shown as GetBindingKey reads it, so
+-- the box and Options -> Keybindings always agree; it is account-wide unless the player ticks
+-- Character Specific Keybindings there. The page re-reads it each time it is shown (its OnShow hook),
+-- so a key set in Options -> Keybindings shows on the way back. A dial past the menu's four entries
+-- has no key, and its box is disabled. Relaxed is the only interaction in v0.1.0 (the
 -- C7 fallback), so there is no delay or tap-action control, and depth is spec §11.3's limit, not a
 -- control (owner ruling R5): the Groups tab warns when a battleground node set would open three rings
 -- deep (DD.DepthWarning). The Preview tab is a listing, not a drawn wheel (owner ruling R3): the wheel
 -- itself shows in game (test mode and Preview as… open dial 1). As settings/Pads.lua: New dial takes
 -- the lowest free number, a refused X or Y says why and puts the box back, and Defaults is one act
--- (Library.Batch) that keeps the dial's key and position.
+-- (Library.Batch) that keeps the dial's position (and never touches its key, which is WoW's).
 
 local QC = NS.addon
 local Settings = QC.Settings
@@ -106,25 +110,13 @@ function DD.ResetPoint(id)
     return (NS.SchemaRuntime.Set("dial.point", nil, id)) == true
 end
 
---- Write the dial's key through the seam ("" is no key); a refusal prints its reason.
+--- Set the dial's key: WoW's own binding of its Open Comms Dial entry ("" is no key), through
+--- Dial.BindKey; a refusal prints its reason. The page's lines follow.
 --- @return boolean
 function DD.SetKey(id, key)
-    local ok, _, why = NS.SchemaRuntime.Set("dial.key", key or "", id)
-    if not ok and why then NS.Print(tostring(why)) end
-    return ok == true
-end
-
-local function placeOf(id)
-    for i, did in ipairs(NS.db.profile.dialOrder) do
-        if did == id then return i end
-    end
-    return nil
-end
-
--- The key bindings menu's command for the dial at `place` (Bindings.xml), or nil past the fourth.
-local function menuCommand(place)
-    if not place or place > NS.Dial.BINDINGS then return nil end
-    return ("CLICK %s:%s"):format(NS.DialSecure.HEADER:format(place), NS.DialSecure.TOGGLE)
+    local ok = NS.Dial.BindKey(id, key or "")
+    if ok then Ed.RefreshLive() end
+    return ok
 end
 
 -- Plans the page builds to look at (the depth warning, the Preview listing) are not a surface's bake:
@@ -135,51 +127,40 @@ local function lookDeps(snap)
     return deps
 end
 
---- The Binding tab's line: the dial's key and what it does, or the WoW binding it shares (spec §9.4).
---- A dial that is off, or Quick Comms stood down, binds nothing, and the line says so. With no key of
---- its own, a key bound to its Open Comms Dial entry in WoW's menu is named.
+--- The Binding tab's line: the dial's key (WoW's binding of its Open Comms Dial entry) and what it does
+--- (spec §9.4). A dial that is off, or Quick Comms stood down, opens nothing, and the line says so.
 function DD.KeyLine(id)
     local dial = NS.db.profile.dials[id]
-    local key = dial and dial.key
-    local place = placeOf(id)
-    local own = menuCommand(place)
-    if type(key) ~= "string" or key == "" then
-        local menuKey = own and NS.Compat.BindingKey(own)
-        if menuKey then
-            if dial and dial.enabled == false then
-                return L["%s is bound to Open Comms Dial %d in WoW's key bindings, but this dial is off: it opens nothing until the dial is enabled."]:format(menuKey, place)
-            end
-            if NS.IsStoodDown() then
-                return L["%s is bound to Open Comms Dial %d in WoW's key bindings, but Quick Comms is off: it opens nothing until Quick Comms is enabled."]:format(menuKey, place)
-            end
-            return L["No key here, but %s opens this dial from WoW's key bindings (Open Comms Dial %d)."]:format(menuKey, place)
-        end
-        return L["No key yet. Click the box and press one, or bind Open Comms Dial in WoW's key bindings."]
+    local place = NS.Dial.PlaceOf(id)
+    if not NS.Dial.Command(place) then
+        return L["No key: WoW's key bindings list Open Comms Dial 1 to %d only. Move this dial into the first %d to give it one."]
+            :format(NS.Dial.BINDINGS, NS.Dial.BINDINGS)
     end
-    if dial.enabled == false then
-        return L["%s is kept for this dial, which is off: it opens nothing until the dial is enabled."]:format(key)
+    local key = NS.Dial.KeyOf(id)
+    if not key then
+        return L["No key yet. Click the box and press one, or bind Open Comms Dial %d in WoW's key bindings: it is the same key."]:format(place)
+    end
+    if dial and dial.enabled == false then
+        return L["%s is bound to Open Comms Dial %d in WoW's key bindings, but this dial is off: it opens nothing until the dial is enabled."]:format(key, place)
     end
     if NS.IsStoodDown() then
-        return L["%s is kept for this dial, but Quick Comms is off: it opens nothing until Quick Comms is enabled."]:format(key)
-    end
-    local action = NS.Compat.BindingAction(key)
-    if action and action ~= own then
-        return L["%s is also %s in WoW's key bindings. While Quick Comms is enabled, it opens this dial instead."]
-            :format(key, NS.Compat.BindingLabel(action) or action)
+        return L["%s is bound to Open Comms Dial %d in WoW's key bindings, but Quick Comms is off: it opens nothing until Quick Comms is enabled."]:format(key, place)
     end
     return L["%s opens and closes this dial."]:format(key)
 end
 
---- Which Open Comms Dial entry in WoW's key bindings opens this dial: its place in the dial list, so
---- the number changes when a dial above it is deleted.
+--- Which Open Comms Dial entry in WoW's key bindings this dial is: its place in the dial list, so the
+--- number changes when a dial above it is deleted; and that the key is account-wide unless the player
+--- ticks Character Specific Keybindings.
 function DD.PlaceLine(id)
-    local place = placeOf(id)
+    local place = NS.Dial.PlaceOf(id)
     if not place then return "" end
-    if menuCommand(place) then
+    if NS.Dial.Command(place) then
         return L["In WoW's key bindings, under Ka0s Quick Comms, this dial is Open Comms Dial %d."]:format(place)
             .. " " .. L["The number is its place in the dial list: it changes when a dial above it is deleted."]
+            .. " " .. L["The key is for every character, unless you tick Character Specific Keybindings there."]
     end
-    return L["This dial is number %d in the dial list, and WoW's key bindings list Open Comms Dial 1 to 4 only: give it a key above."]:format(place)
+    return L["This dial is number %d in the dial list."]:format(place)
 end
 
 --- The Groups tab's warning (spec §11.3: depth 3 is allowed, with the editor warning): the seeded
@@ -259,7 +240,7 @@ local function renderGeneral(ctx, rows)
     end
     h.RenderRows(ctx, Ed.Scalar(rows), nil, nil, { noHeadings = true })
     h.InlineButtonPair(ctx, { text = L["Delete dial"],
-        tooltip = L["Delete this dial. Its groups and callouts are kept, and its key is released. Asks first."],
+        tooltip = L["Delete this dial. Its groups and callouts are kept. Asks first."],
         onClick = function() DD.Delete(id) end }, nil)
 end
 
@@ -337,26 +318,28 @@ local function renderWheel(ctx, rows)
         tooltip = L["Put this dial back in the middle of the screen."], onClick = function() DD.ResetPoint(id) end }, nil)
 end
 
--- The key capture: AceGUI's Keybinding widget. The widget shows a pressed key before it fires
--- OnKeyChanged, and a refused write changes nothing (no refresh runs), so the callback itself puts
--- the box back to the stored key; the refresher follows writes made elsewhere. (The kit's AceGUI
--- fake has no SetKey; the guard keeps the page drawable there.)
+-- The key capture: AceGUI's Keybinding widget, showing WoW's own binding of the dial's entry
+-- (Dial.KeyOf). The widget shows a pressed key before it fires OnKeyChanged, and a refused bind
+-- changes nothing, so the callback itself puts the box back to the bound key; the live line follows
+-- binds made elsewhere (Options -> Keybindings, read again when the page is shown). A dial past the
+-- menu's entries has no key: the box is disabled. (The kit's AceGUI fake has no SetKey; the guard
+-- keeps the page drawable there.)
 local function keyBox(ctx, id)
     local function show(kb)
-        local k = NS.db.profile.dials[id] and NS.db.profile.dials[id].key
-        if kb.SetKey then kb:SetKey(type(k) == "string" and k or "") end
+        if kb.SetKey then kb:SetKey(NS.Dial.KeyOf(id) or "") end
     end
     return { make = function(_, parent, rel)
         local kb = H().AceGUI:Create("Keybinding")
         kb:SetLabel(L["Key"])
         show(kb)
-        if ctx.refreshers then ctx.refreshers[#ctx.refreshers + 1] = function() show(kb) end end
+        Ed.Live(ctx, function() show(kb) end)
+        kb:SetDisabled(NS.Dial.Command(NS.Dial.PlaceOf(id)) == nil)
         kb:SetRelativeWidth(rel or 0.5)
         kb:SetCallback("OnKeyChanged", function(_, _, value)
             -- A refusal (its line already printed) puts the box back to the stored key.
             if not DD.SetKey(id, value) then show(kb) end
         end)
-        H().AttachTooltip(kb, L["Key"], L["Click, then press the key you want, with Alt, Ctrl or Shift if you like. Escape clears it."])
+        H().AttachTooltip(kb, L["Key"], L["Click, then press the key you want, with Alt, Ctrl or Shift if you like. Escape clears it. This is WoW's own key binding (Options, Keybindings, Ka0s Quick Comms): changing it in either place changes both."])
         parent:AddChild(kb)
         return kb
     end }
@@ -422,6 +405,9 @@ end
 
 Ed.RegisterPage(PAGE, L["Comms Dial"], "DialsPanel", render, {
     tooltip = L["Put the selected dial's groups-as, wedges per ring, where it opens and its icons back to their defaults, and turn it on. Its name, groups, key and position are kept."],
-    -- One act (Library.Batch): the dials rebuild, and their keys re-bind, once, not once per row.
+    -- One act (Library.Batch): the dials rebuild once, not once per row.
     onClick = function(ctx) NS.Library.Batch(function() H().RestoreDefaults(PAGE, ctx) end) end,
+}, {
+    -- WoW's key bindings may have changed while another page was shown (Options -> Keybindings).
+    onShow = function() Ed.RefreshLive() end,
 })

@@ -90,11 +90,11 @@ test("dials page: a refused X or Y says why and puts the box back to the stored 
 end)
 
 test("dials page: Defaults puts the dial's rows back as one act, and keeps its key and position", function()
-    local NS, _, P = open()
+    local NS, m, P = open()
     local S = NS.SchemaRuntime
     S.Set("dial.slices", 8, "d2")
     S.Set("dial.mode", "flat", "d2")
-    S.Set("dial.key", "G", "d2")
+    assertTrue(NS.Dial.BindKey("d2", "G"))
     S.Set("dial.point", { "CENTER", "CENTER", 0, 120 }, "d2")
     local applied = 0
     local apply = NS.Surfaces.ApplyAll
@@ -105,38 +105,44 @@ test("dials page: Defaults puts the dial's rows back as one act, and keeps its k
     assertEqual(NS.db.profile.dials.d2.mode, "categories")
     -- red under: drop Library.Batch from the page's Defaults (one rebuild, and one re-bind, per row)
     assertEqual(applied, 1)
-    -- red under: drop dial.key or dial.point from settings/Schema.lua's resetExempt
-    assertEqual(NS.db.profile.dials.d2.key, "G")
+    -- red under: drop dial.point from settings/Schema.lua's resetExempt
+    assertEqual(m.bindingActions.G, "CLICK QuickCommsDial1:Toggle", "WoW's binding: no row, nothing to reset")
     assertEqual(table.concat(NS.db.profile.dials.d2.point, ","), "CENTER,CENTER,0,120")
 end)
 
-test("dials page: [review 4] the Binding tab binds the key; another dial's is refused naming it; a WoW key warns and binds", function()
+test("dials page: [keys] the Key box sets WoW's own binding and shows what WoW binds; a refusal puts it back", function()
     local NS, m, P = open()
     key(P):__fire("OnKeyChanged", "SHIFT-G")
-    assertEqual(NS.db.profile.dials.d2.key, "SHIFT-G")
-    assertEqual(m.overrideBindings["SHIFT-G"].name, "QuickCommsDial1")
+    -- red under: DD.SetKey writing a profile field (Options -> Keybindings would never show it)
+    assertEqual(m.bindingActions["SHIFT-G"], "CLICK QuickCommsDial1:Toggle")
+    assertNil(NS.db.profile.dials.d2.key, "never a profile field")
     assertTrue(P.hasText(P.tab("dials", "Binding"), "SHIFT-G opens and closes this dial."))
+    assertEqual(key(P).shownKey, "SHIFT-G", "the box shows WoW's binding")
     local id = NS.addon.Settings.Dials.Create()
     P.flush()
-    m.prints = {}
     local kb = key(P)
-    P.pressKey(kb, "SHIFT-G")
-    assertNil(NS.db.profile.dials[id].key)
-    local text = table.concat(m.prints, "\n")
-    assertTrue(text:find("SHIFT-G already opens Comms Dial.", 1, true) ~= nil, text)
-    assertEqual(kb.shownKey, "", "a refused key: the box goes back to the stored (no) key")
-    kb = key(P)
+    assertEqual(kb.shownKey, "", "the second dial has no key yet")
     P.pressKey(kb, "1")
-    assertNil(NS.db.profile.dials[id].key)
-    assertEqual(kb.shownKey, "", "an unmodified 1 is refused, and the box goes back too")
+    assertEqual(kb.shownKey, "", "an unmodified 1 is refused, and the box goes back")
+    assertNil(m.bindingActions["1"])
     m.bindingActions.TAB = "TARGETNEARESTENEMY"
     key(P):__fire("OnKeyChanged", "TAB")
-    assertEqual(NS.db.profile.dials[id].key, "TAB")
-    assertEqual(m.overrideBindings.TAB.name, "QuickCommsDial2", "it still binds")
-    assertTrue(P.hasText(P.tab("dials", "Binding"), "TAB is also TARGETNEARESTENEMY in WoW's key bindings."))
+    assertEqual(m.bindingActions.TAB, "CLICK QuickCommsDial2:Toggle", "taken from Target Nearest Enemy")
+    assertEqual(NS.Dial.KeyOf(id), "TAB")
     key(P):__fire("OnKeyChanged", "")
-    assertEqual(NS.db.profile.dials[id].key, false, "Escape in the box clears the key")
-    assertNil(m.overrideBindings.TAB)
+    assertNil(m.bindingActions.TAB, "Escape in the box clears the key")
+    assertNil(NS.Dial.KeyOf(id))
+end)
+
+test("dials page: [keys] a key set in Options -> Keybindings shows in the box when the page is shown again", function()
+    local NS, m, P = open()
+    local kb = key(P)
+    assertEqual(kb.shownKey, "")
+    m.SetBinding("F", "CLICK QuickCommsDial1:Toggle")   -- the game's own Keybindings page
+    -- red under: no OnShow hook on the Comms Dial page (the box keeps the old key)
+    P.ctx("dials").panel:__fire("OnShow")
+    assertEqual(kb.shownKey, "F")
+    assertEqual(NS.addon.Settings.Dials.KeyLine("d2"), "F opens and closes this dial.")
 end)
 
 test("dials page: Groups switches Categories and Flat, and reorders the dial's groups", function()
@@ -228,31 +234,33 @@ end)
 
 -- ── final review fixes ──────────────────────────────────────────────────────────────────────
 
-test("dials page: [final 7] a WoW conflict names the action as WoW's key bindings menu shows it", function()
+test("dials page: [final 7] a key taken from another WoW binding names it as WoW's key bindings menu shows it", function()
     local NS, m, P = open()
     m.BINDING_NAME_TARGETNEARESTENEMY = "Target Nearest Enemy"
     m.bindingActions.TAB = "TARGETNEARESTENEMY"
+    m.prints = {}
     key(P):__fire("OnKeyChanged", "TAB")
-    -- red under: print the raw token in DD.KeyLine
-    assertTrue(P.hasText(P.tab("dials", "Binding"), "TAB is also Target Nearest Enemy in WoW's key bindings."))
-    m.bindingActions.F = "CLICK QuickCommsDial2:Toggle"
-    key(P):__fire("OnKeyChanged", "F")
-    assertEqual(NS.addon.Settings.Dials.KeyLine("d2"),
-        "F is also Open Comms Dial 2 in WoW's key bindings. While Quick Comms is enabled, it opens this dial instead.")
+    -- red under: print the raw token in Dial.BindKey
+    assertTrue(table.concat(m.prints, "\n"):find("TAB was Target Nearest Enemy in WoW's key bindings; now it opens this dial.", 1, true)
+        ~= nil, table.concat(m.prints, "\n"))
     m.bindingActions.J = "SOMETHING_UNNAMED"
+    m.prints = {}
     key(P):__fire("OnKeyChanged", "J")
-    assertTrue(NS.addon.Settings.Dials.KeyLine("d2"):find("J is also SOMETHING_UNNAMED", 1, true) ~= nil, "no label: the token")
+    assertTrue(table.concat(m.prints, "\n"):find("J was SOMETHING_UNNAMED", 1, true) ~= nil, "no label: the token")
+    assertNil(m.bindingActions.TAB, "the dial's old key went back to nothing")
+    assertEqual(NS.Dial.KeyOf("d2"), "J")
 end)
 
-test("dials page: [final 8] the Binding tab names this dial's Open Comms Dial entry and sees a key bound there", function()
+test("dials page: [final 8] the Binding tab names this dial's Open Comms Dial entry, and what its key does", function()
     local NS, m, P = open()
     local Dials = NS.addon.Settings.Dials
     -- red under: show the fixed "also lists Open Comms Dial 1 to 4" line
     assertTrue(P.hasText(P.tab("dials", "Binding"), "In WoW's key bindings, under Ka0s Quick Comms, this dial is Open Comms Dial 1."))
+    assertTrue(P.hasText(P.tab("dials", "Binding"), "The key is for every character, unless you tick Character Specific Keybindings there."))
+    assertEqual(Dials.KeyLine("d2"), "No key yet. Click the box and press one, or bind Open Comms Dial 1 in WoW's key bindings: it is the same key.")
     m.bindingKeys["CLICK QuickCommsDial1:Toggle"] = "F"
-    -- red under: answer "No key yet" without reading GetBindingKey
-    assertEqual(Dials.KeyLine("d2"), "No key here, but F opens this dial from WoW's key bindings (Open Comms Dial 1).")
-    -- red under: the no-own-key branch skips the dial.enabled and stood-down checks
+    assertEqual(Dials.KeyLine("d2"), "F opens and closes this dial.")
+    -- red under: DD.KeyLine skipping the dial.enabled and stood-down checks
     assertTrue(NS.SchemaRuntime.Set("dial.enabled", false, "d2"))
     assertEqual(Dials.KeyLine("d2"), "F is bound to Open Comms Dial 1 in WoW's key bindings, but this dial is off: it opens nothing until the dial is enabled.")
     assertTrue(NS.SchemaRuntime.Set("dial.enabled", true, "d2"))
@@ -263,22 +271,10 @@ test("dials page: [final 8] the Binding tab names this dial's Open Comms Dial en
     local ids = {}
     for i = 1, 4 do ids[i] = Dials.Create() end
     P.flush()
-    assertEqual(Dials.PlaceLine(ids[4]), "This dial is number 5 in the dial list, and WoW's key bindings list Open Comms Dial 1 to 4 only: give it a key above.")
-    assertEqual(Dials.KeyLine(ids[4]), "No key yet. Click the box and press one, or bind Open Comms Dial in WoW's key bindings.")
-end)
-
-test("dials page: [final 10] the key line of a dial that is off says the key opens nothing, and warns of no override", function()
-    local NS, m, P = open()
-    local Dials = NS.addon.Settings.Dials
-    m.bindingActions.G = "MOVEFORWARD"
-    key(P):__fire("OnKeyChanged", "G")
-    assertTrue(NS.SchemaRuntime.Set("dial.enabled", false, "d2"))
-    -- red under: ignore dial.enabled in DD.KeyLine
-    assertEqual(Dials.KeyLine("d2"), "G is kept for this dial, which is off: it opens nothing until the dial is enabled.")
-    assertNil(m.overrideBindings.G, "and indeed nothing is bound")
-    assertTrue(NS.SchemaRuntime.Set("dial.enabled", true, "d2"))
-    NS.IsStoodDown = function() return true end
-    assertEqual(Dials.KeyLine("d2"), "G is kept for this dial, but Quick Comms is off: it opens nothing until Quick Comms is enabled.")
+    assertEqual(Dials.PlaceLine(ids[4]), "This dial is number 5 in the dial list.")
+    assertEqual(Dials.KeyLine(ids[4]), "No key: WoW's key bindings list Open Comms Dial 1 to 4 only. Move this dial into the first 4 to give it one.")
+    -- red under: an enabled Key box on a dial past the menu's entries
+    assertTrue(key(P).disabled, "the fifth dial's Key box is disabled")
 end)
 
 test("dials page: [final 11] the page's own plan builds are not timed as a surface's bake", function()
@@ -317,8 +313,9 @@ test("dials page: [B9] Icons follows Wheel, carries its headings once each, and 
     for _, row in ipairs(NS.addon.Settings.RowsForPage("dials")) do
         if row.group and not seen[row.group] then seen[row.group] = true order[#order + 1] = row.group end
     end
-    -- red under: the dial's Icons rows appended after the Binding row (the tab would follow Binding)
-    assertEqual(table.concat(order, ","), "General,Groups,Wheel,Icons,Binding", "the strip's tabs, in order")
+    -- The Binding tab has no row (a dial's key is WoW's own binding): the page draws it after Icons.
+    assertEqual(table.concat(order, ","), "General,Groups,Wheel,Icons", "the rows' tabs, in order")
+    assertTrue(P.tab("dials", "Binding") ~= nil, "and the Binding tab is still on the strip")
     P.find(w, "Slider", "Icon size"):__fire("OnMouseUp", 24)
     P.find(w, "CheckBox", "Show border"):__fire("OnValueChanged", true)
     assertEqual(NS.db.profile.dials.d2.icon.size, 24)
