@@ -46,8 +46,8 @@ L["Reset one setting to its default — `/qc reset <path>`"] =
     "Reset one setting to its default — `/qc reset <path>`"
 L["Set a setting — `/qc set <path> <value>` (try /qc list)"] =
     "Set a setting — `/qc set <path> <value>` (try /qc list)"
-L["Turn test mode on or off (placeholder chips and wedges; it opens dial 1; combat ends it)"] =
-    "Turn test mode on or off (placeholder chips and wedges; it opens dial 1; combat ends it)"
+L["Turn test mode on or off (placeholder buttons and wedges; it opens dial 1; combat ends it)"] =
+    "Turn test mode on or off (placeholder buttons and wedges; it opens dial 1; combat ends it)"
 L["Unlock the Comms Pads so they can be dragged"] = "Unlock the Comms Pads so they can be dragged"
 L["Show or hide every Comms Pad for this session"] = "Show or hide every Comms Pad for this session"
 L["Comms Pads hidden for this session."] = "Comms Pads hidden for this session."
@@ -86,7 +86,7 @@ L["Note dropped callouts in chat"] = "Note dropped callouts in chat"
 L["Print a one-line note when a callout seems to have been dropped by the game."] = "Print a one-line note when a callout seems to have been dropped by the game."
 L["Explain why groups show"] = "Explain why groups show"
 L["Show which conditions matched in the pad and dial tooltips."] = "Show which conditions matched in the pad and dial tooltips."
-L["Show the lockdown chip"] = "Show the lockdown chip"
+L["Show the lockdown tag"] = "Show the lockdown tag"
 L["Show LOCKDOWN on a pad or dial when lockdown is blocking one of its callouts."] = "Show LOCKDOWN on a pad or dial when lockdown is blocking one of its callouts."
 L["Play a sound on send"] = "Play a sound on send"
 L["A short sound when a callout is sent."] = "A short sound when a callout is sent."
@@ -557,7 +557,7 @@ L["Never"] = "Never"
 L["Out of combat"] = "Out of combat"
 L["Until the mouse is over it"] = "Until the mouse is over it"
 L["Name"] = "Name"
-L["What the chip and the lists call this callout. Press Enter to apply."] = "What the chip and the lists call this callout. Press Enter to apply."
+L["What the button and the lists call this callout. Press Enter to apply."] = "What the button and the lists call this callout. Press Enter to apply."
 L["Text"] = "Text"
 L["What is sent. Tokens in braces are filled in: {target}, {focus}, {skull}, {me}, {spec}, {key}, {dungeon}, {spell:ID}; in a raid, {group1} to {group8}. Press Enter to apply."] = "What is sent. Tokens in braces are filled in: {target}, {focus}, {skull}, {me}, {spec}, {key}, {dungeon}, {spell:ID}; in a raid, {group1} to {group8}. Press Enter to apply."
 L["Channel"] = "Channel"
@@ -594,33 +594,33 @@ L["Layout"] = "Layout"
 L["Orientation"] = "Orientation"
 L["One row, one column, or a grid."] = "One row, one column, or a grid."
 L["Grid columns"] = "Grid columns"
-L["Chips per row when the orientation is Grid."] = "Chips per row when the orientation is Grid."
+L["Buttons per row when the orientation is Grid."] = "Buttons per row when the orientation is Grid."
 L["Growth"] = "Growth"
-L["Which way the chips fill from the pad's anchor."] = "Which way the chips fill from the pad's anchor."
-L["Chip style"] = "Chip style"
+L["Which way the buttons fill from the pad's anchor."] = "Which way the buttons fill from the pad's anchor."
+L["Button style"] = "Button style"
 L["Icon only puts the callout's name in its tooltip."] = "Icon only puts the callout's name in its tooltip."
 L["Scale"] = "Scale"
 L["This pad's size, on top of the master scale."] = "This pad's size, on top of the master scale."
 L["Spacing"] = "Spacing"
-L["Pixels between chips."] = "Pixels between chips."
+L["Pixels between buttons."] = "Pixels between buttons."
 L["Position"] = "Position"
 L["Where the pad sits. Drag it while unlocked, or type an offset."] = "Where the pad sits. Drag it while unlocked, or type an offset."
 L["Pad header"] = "Pad header"
 L["Section header"] = "Section header"
-L["Main window"] = "Main window"
+L["Window"] = "Window"
 L["Header height"] = "Header height"
 L["Section header height (0 = automatic)"] = "Section header height (0 = automatic)"
 L["How tall each section title's row is, in pixels. 0 grows it to hold its font."] =
     "How tall each section title's row is, in pixels. 0 grows it to hold its font."
-L["Chip"] = "Chip"
+L["Buttons"] = "Buttons"
 L["Size"] = "Size"
-L["Chip width"] = "Chip width"
-L["How wide a labeled chip is. An icon-only chip stays square around its icon."] =
-    "How wide a labeled chip is. An icon-only chip stays square around its icon."
-L["Chip height (0 = automatic)"] = "Chip height (0 = automatic)"
-L["How tall a labeled chip is, in pixels. 0 grows it to hold its font and its icon. An icon-only chip stays square around its icon."] =
-    "How tall a labeled chip is, in pixels. 0 grows it to hold its font and its icon. An icon-only chip stays square around its icon."
-L["Draw a glow around each chip."] = "Draw a glow around each chip."
+L["Button width"] = "Button width"
+L["How wide a labeled button is. An icon-only button stays square around its icon."] =
+    "How wide a labeled button is. An icon-only button stays square around its icon."
+L["Button height (0 = automatic)"] = "Button height (0 = automatic)"
+L["How tall a labeled button is, in pixels. 0 grows it to hold its font and its icon. An icon-only button stays square around its icon."] =
+    "How tall a labeled button is, in pixels. 0 grows it to hold its font and its icon. An icon-only button stays square around its icon."
+L["Draw a glow around each button."] = "Draw a glow around each button."
 L["How tall the pad's header row is, in pixels: the row with the situation (World, M+, Raid) and the collapse button."] =
     "How tall the pad's header row is, in pixels: the row with the situation (World, M+, Raid) and the collapse button."
 L["Visibility"] = "Visibility"
@@ -677,7 +677,7 @@ L["While this page is open, every pad and dial shows only the group you are edit
 
 -- Why is this showing? (modules/Surfaces.lua, modules/Pad.lua, settings/SlashVerbs.lua)
 L["This pad has not been built yet."] = "This pad has not been built yet."
-L["Test mode: placeholder chips that send nothing."] = "Test mode: placeholder chips that send nothing."
+L["Test mode: placeholder buttons that send nothing."] = "Test mode: placeholder buttons that send nothing."
 L["Preview as: %s"] = "Preview as: %s"
 L["No group matches this situation."] = "No group matches this situation."
 L["Why is this showing?"] = "Why is this showing?"
@@ -848,8 +848,8 @@ L["Pad"] = "Pad"
 L["Which Comms Pad this page edits."] = "Which Comms Pad this page edits."
 L["New pad"] = "New pad"
 L["Make a new Comms Pad holding the built-in groups, and edit it here."] = "Make a new Comms Pad holding the built-in groups, and edit it here."
-L["Put the selected pad's groups-as, layout, headers, window, chips and icons back to their defaults, and turn it on. Its name, groups and position are kept."] =
-    "Put the selected pad's groups-as, layout, headers, window, chips and icons back to their defaults, and turn it on. Its name, groups and position are kept."
+L["Put the selected pad's groups-as, layout, headers, window, buttons and icons back to their defaults, and turn it on. Its name, groups and position are kept."] =
+    "Put the selected pad's groups-as, layout, headers, window, buttons and icons back to their defaults, and turn it on. Its name, groups and position are kept."
 
 -- Share page (settings/Share.lua)
 L["Share"] = "Share"
@@ -1185,8 +1185,8 @@ L["How far the glow reaches past the icon's sides, in pixels. Pixel border, Proc
 L["Glow Y offset"] = "Glow Y offset"
 L["How far the glow reaches past the icon's top and bottom, in pixels. Pixel border, Proc and Auto cast styles."] =
     "How far the glow reaches past the icon's top and bottom, in pixels. Pixel border, Proc and Auto cast styles."
-L["How big each chip's icon is, in pixels. A bigger icon makes the chips taller."] =
-    "How big each chip's icon is, in pixels. A bigger icon makes the chips taller."
+L["How big each button's icon is, in pixels. A bigger icon makes the buttons taller."] =
+    "How big each button's icon is, in pixels. A bigger icon makes the buttons taller."
 L["How big each wedge's icon is, in pixels. The wedges keep their size."] =
     "How big each wedge's icon is, in pixels. The wedges keep their size."
 L["Icon size"] = "Icon size"

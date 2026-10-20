@@ -8,7 +8,7 @@ eagerly at `OnEnable`; each page's body builds on its first show (options-ui-§1
 | Ka0s Quick Comms (landing) | The logo, the TOC notes line and the slash command list, drawn by the library's `BuildLandingPage` |
 | General | `Master controls`, `Behavior` |
 | Groups | One group (a seeded built-in set is one too): `General`, `Callouts`, `When`, `Preview` |
-| Comms Pad | One pad: `General`, `Groups`, `Layout`, `Pad header`, `Section header`, `Main window`, `Chip`, `Icons` |
+| Comms Pad | One pad: `General`, `Groups`, `Layout`, `Pad header`, `Section header`, `Window`, `Buttons`, `Icons` |
 | Comms Dial | One dial: `General`, `Groups`, `Wheel`, `Icons`, `Binding`, `Preview` |
 | Share | `Export`, `Import` |
 | Profiles | AceDBOptions: switch, copy, reset and delete profiles |
@@ -116,7 +116,7 @@ the header frame by hand drew only the picker's label in the client.
 While the Groups page is on screen with it ticked, every enabled pad and dial shows only the selected
 group, with the groups inside it, whatever their When and Enabled (`Preview.SetEditPreview`,
 `Surfaces` `deps.only`): drawn and disarmed as a Preview as plan, `Preview: <group>` on the header,
-dial 1 open. Clicking a chip or a wedge sends nothing and prints the line it would have sent
+dial 1 open. Clicking a button or a wedge sends nothing and prints the line it would have sent
 (`[QC] /p Pulling next pack`). It follows the picker, and ends when the page hides, the settings window closes,
 combat starts (one "Preview ended" line) or the addon stands down; it never starts in combat,
 and it comes back once combat ends while the Groups page is still on screen.
@@ -420,13 +420,14 @@ footer   the selected icon (a glyph in the color) and its name, then Choose and 
 
 ```
 band     [ Pad v (picker) ][ New pad ]
-strip    [ General ][ Groups ][ Layout ][ Pad header ][ Section header ][ Main window ][ Chip ][ Icons ]
-General  Name, Enabled, then Unlock (or Lock) pads and Delete pad
+strip    [ General ][ Groups ][ Layout ][ Pad header ][ Section header ][ Window ][ Buttons ][ Icons ]
+General  Name, Enabled, Visibility (visibility, fade and faded alpha, under its heading), then
+         Unlock (or Lock) pads and Delete pad
 Groups   Show groups as, then the pad's groups as a drag-to-reorder list with a remove glyph
          (its priority order; it takes the group off the pad and asks nothing), then Add a group
          (the top-level groups the pad does not hold: a group inside another shows with it)
-Layout   orientation, grid columns, growth, chip style, scale, spacing (a chip's label runs to
-         its right edge, or to the padlock on a locked chip: no channel letter there, the chip's
+Layout   orientation, grid columns, growth, button style, scale, spacing (a button's label runs
+         to its right edge, or to the padlock on a locked button: no channel letter there, the button's
          tooltip names the channel), then Position: X and Y and Reset this pad's position
 Pad header      the pad's top row, the one that names the situation (World, M+, Raid): Size
                 (Header height), Font (face, size, color with Use class color, flags, shadow),
@@ -435,28 +436,31 @@ Pad header      the pad's top row, the one that names the situation (World, M+, 
                 each under its own heading
 Section header  each section title's row (the gold group titles): Size (Section header height, 0
                 automatic), Font, and the Background and Border of the band behind each title
-Main window     the pad itself: Visibility (visibility, fade and faded alpha), Background and
-                Border; no font
-Chip     the chips themselves: Size (Chip width, Chip height with 0 automatic), Color (the chip's
-         Background with Use class color), Border (the composed block), Font (the chips' labels:
+Window          the pad itself: Background and Border; no font
+Buttons  the buttons themselves: Size (Button width, Button height with 0 automatic), Color (the
+         button's Background with Use class color), Border (the composed block), Font (the labels:
          face, size, color with Use class color, flags, shadow) and Glow (Glow, Glow style, Glow
          color with Use class color)
-Icons    the chips' icons (B9): Size and crop (Icon size, Zoom), Color (Desaturate, Icon opacity,
+Icons    the buttons' icons (B9): Size and crop (Icon size, Zoom), Color (Desaturate, Icon opacity,
          Tint with Use class color), Border (the composed block: Show border, style, thickness,
          color with Use class color), Glow (Glow, Glow when, Glow style, Glow color with Use
          class color), Offset (Glow X offset, Glow Y offset, always drawn), then the selected
          Glow style's knobs under its heading (none while the glow is off)
 ```
 
-Pad header, Section header and Main window were one Window tab until 2026-10-20 (the Look tab before
-that); the owner split it into three, each under its own headings. The options library orders a page's
+Pad header, Section header and Window were one Window tab until 2026-10-20 (the Look tab before
+that); the owner split it into three, each under its own headings. The third was Main window, with
+Visibility, Fade and Faded alpha, until the owner moved those to General and renamed it Window
+(2026-10-20); the Buttons tab was the Chip tab until then (UI wording only: its rows are still
+`pad.chip.*`). The options library orders a page's
 tabs by each group's first row (options-ui-§13), so the three tabs' rows sit after Layout's and before
-the Chip tab's in `settings/SchemaMembers.lua`. Main window's rows keep their `pad.look.*` paths; Pad
+the Buttons tab's in `settings/SchemaMembers.lua`; General's Visibility rows sit after Name and
+Enabled, so General stays first. Window's and the Visibility rows keep their `pad.look.*` paths; Pad
 header's are `pad.header.*`, Section header's `pad.section.*`. The Pad header defaults are the owner's
 (2026-10-20): 24 pixels tall (it
 was 18), Friz Quadrata at 16 points, gold, outlined, with its shadow, over no background and no edge
 (its edge color white, for when a thickness is set). The header's text starts at the section titles' left
-edge (`PadLayout.PAD`) in every growth direction; the lockdown chip and the stale hint take the
+edge (`PadLayout.PAD`) in every growth direction; the LOCKDOWN tag and the stale hint take the
 header's face, size, flags and shadow and keep their own red and gray, and the collapse button is two
 points larger in the header's color. The section titles take the Section header tab's Font block (it
 was the Window tab's Section titles block, `pad.look.font*`); by default (the owner's, 2026-10-20) 12
@@ -466,16 +470,16 @@ tab's Background and Border draw a band behind each title across its row (a pack
 block's width, as its right-click frame), with the text kept clear of the edge; by default there is
 none, and the text sits on the titles' left edge as before.
 
-The Chip tab's rows are `pad.chip.*` (settings/SchemaMembers.lua). Chip width moved there from Layout
-(`pad.layout.width` is gone). Chip height 0 is automatic, the height a chip always had (grown to hold
-its font and its icon); above 0 a labeled chip is that tall, never shorter than its icon and 4 pixels
-beside an icon. An icon-only chip stays square around its icon whatever the size says. The chip's edge
+The Buttons tab's rows are `pad.chip.*` (settings/SchemaMembers.lua). Button width moved there from Layout
+(`pad.layout.width` is gone). Button height 0 is automatic, the height a button always had (grown to hold
+its font and its icon); above 0 a labeled button is that tall, never shorter than its icon and 4 pixels
+beside an icon. An icon-only button stays square around its icon whatever the size says. The button's edge
 is drawn on a plain child laid over it, so it never hides the icon or label; its glow (off by default)
-is LibCustomGlow's effect around the whole chip in one of the Icons tab's four styles, at that tab's
-knob defaults, on its own key beside the icon's glow, always on while enabled. The Chip defaults are
+is LibCustomGlow's effect around the whole button in one of the Icons tab's four styles, at that tab's
+knob defaults, on its own key beside the icon's glow, always on while enabled. The Buttons defaults are
 the owner's (2026-10-20): a #3F3F3F body at 25% opacity, a flat 1-pixel #EAEAEA edge at 10% (Border
 style None is no border art, so the thickness draws a plain line), the small white label, the
-automatic height. The Icons tab's Icon size defaults to 16 on a pad (an icon-only chip is 24 square).
+automatic height. The Icons tab's Icon size defaults to 16 on a pad (an icon-only button is 24 square).
 Glow style is
 grayed out while the glow is off; the color pairs never are.
 
@@ -491,7 +495,7 @@ tab on the next frame, its scroll kept, so the right heading appears at once. Th
 Icons tab does the same.
 Glow when is Always, On hover or After sending (1.5 s from the send result; a dial closes on the send,
 so its wedge glows for 1.5 s from the next open, if that comes within 5 s). The page's Defaults puts the
-Pad header, Section header, Main window, Chip and Icons rows back too.
+Pad header, Section header, Window, Buttons and Icons rows back too.
 
 X and Y write the whole `pad.point` row, the same one the drag strip writes; a drag on screen
 updates the boxes. A new pad holds the seeded sets the profile still has as top-level groups, in

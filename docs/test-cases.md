@@ -714,13 +714,13 @@ Total.
 - groups page: [R4] EditGroup in combat prints the settings refusal and changes nothing
 - groups page: [R4] EditGroup of a group that is gone opens nothing
 
-### test_page_pads.lua (23)
+### test_page_pads.lua (24)
 
 - pads page: New pad makes a second pad holding every built-in, selects it, and the pad is built
 - pads page: the Layout rows write the selected pad
 - pads page: Grid columns is grayed out unless the orientation is Grid
 - pads page: X and Y move the pad through its pad.point row; Reset puts it back
-- pads page: Main window's visibility reaches the pad's state driver
+- pads page: General's visibility reaches the pad's state driver
 - pads page: Groups lists the pad's groups; remove one, add it back at the end, drag to reorder
 - pads page: the remove glyph takes a group off the pad without asking and keeps the group
 - pads page: Delete pad asks, then the pad is gone, its frame released, and the page heals
@@ -728,11 +728,12 @@ Total.
 - pads page: [final 3, 15] Defaults puts the pad's rows back as one act: one rebuild
 - pads page: [final 4] Defaults keeps the pad's position
 - pads page: [final 26] New pad takes the lowest free number, so a delete never leads to two names alike
-- pads page: [window tabs] the strip reads Layout, Pad header, Section header, Main window, Chip, Icons
+- pads page: [window tabs] the strip reads General first, then Layout, Pad header, Section header, Window, Buttons, Icons
 - pads page: [window tabs] Pad header carries Size, Font, Background and Border under their headings
 - pads page: [window tabs] Section header carries Size, Font, Background and Border, and writes the section table
-- pads page: [window tabs] Main window carries Visibility, Background and Border, and no font
-- pads page: [chip] Chip carries Size, Color, Border, Font and Glow, and Chip width left Layout for it
+- pads page: [window tabs] Window carries Background and Border, and no font and no Visibility
+- pads page: General carries Visibility, Fade and Faded alpha under a Visibility heading, before its buttons
+- pads page: [chip] Buttons carries Size, Color, Border, Font and Glow, and Button width left Layout for it
 - pads page: [B9] Icons carries its headings once each, a companion beside each swatch, and writes the pad
 - pads page: [B9] the offsets are grayed out while the glow is off or in Button; its color never is
 - pads page: [glow knobs] only the selected style's knobs show, and none while the glow is off
@@ -1221,7 +1222,7 @@ Total.
 | test_eui_skin.lua | 10 |
 | test_groups_when.lua | 20 |
 | test_page_groups.lua | 67 |
-| test_page_pads.lua | 23 |
+| test_page_pads.lua | 24 |
 | test_page_dials.lua | 19 |
 | test_page_share.lua | 12 |
 | test_check.lua | 6 |
@@ -1247,4 +1248,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1017** |
+| **Total** | **1018** |

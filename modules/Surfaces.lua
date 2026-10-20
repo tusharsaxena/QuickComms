@@ -351,7 +351,7 @@ function S.WhyLines(id)
     if not plan then return unbuiltLines(id) end
     if plan.test and not plan.preview then
         if plan.kind == "dial" then return { L["Test mode: placeholder wedges that send nothing."] } end
-        return { L["Test mode: placeholder chips that send nothing."] }
+        return { L["Test mode: placeholder buttons that send nothing."] }
     end
     if plan.editGroup then
         local out = { L["Editing: %s"]:format(whyName(plan.editGroup)),

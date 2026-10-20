@@ -191,7 +191,7 @@ test("slash: [final 9] test and preview's help, and the Preview as row, speak of
     NS.addon:OnSlashCommand("help")
     local text = table.concat(m.prints, "\n")
     -- red under: keep the pads-and-chips-only lines in settings/Slash.lua
-    assertTrue(text:find("Turn test mode on or off (placeholder chips and wedges; it opens dial 1; combat ends it)", 1, true) ~= nil, text)
+    assertTrue(text:find("Turn test mode on or off (placeholder buttons and wedges; it opens dial 1; combat ends it)", 1, true) ~= nil, text)
     assertTrue(text:find("Preview the pads and dials as another situation", 1, true) ~= nil, text)
     local row = NS.SchemaRuntime.FindRow("state.previewAs")
     do

@@ -21,14 +21,14 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | DIAG-1..2 | Diagnostics | The debug console, the report, perf |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
 | SEND-1..5 | Send | Secure sends in keys and on bosses, the spam guard |
-| PAD-1..14 | Pad | The Comms Pad, its growth and chip width, the World (solo) and In Group sets and the built-ins' colors, the header click and icon only's width |
+| PAD-1..14 | Pad | The Comms Pad, its growth and button width, the World (solo) and In Group sets and the built-ins' colors, the header click and icon only's width |
 | EDIT-1..29 | Editors | The Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
 | DIAL-1..13 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, In Group off the dial in content |
 | KEY-1..3 | Key bindings | A dial's key as WoW's own binding in Options → Keybindings, Character Specific Keybindings, Toggle Comms Pads |
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
-| LOOK-1..6 | Pad header, Section header, Main window | The Comms Pad's three window tabs: the section titles' font, the pad's border and background, the header's look, size and alignment, the tab strip and headings, the section header's band and height |
-| CHIP-1..2 | Chip tab | The chips' size, color, border and font; the chip glow |
-| ICONS-1..3 | Icons tab | The chips' and wedges' icon look, border and glow triggers |
+| LOOK-1..6 | Pad header, Section header, Window | The Comms Pad's three window tabs: the section titles' font, the pad's border and background, the header's look, size and alignment, the tab strip and headings, the section header's band and height |
+| CHIP-1..2 | Buttons tab | The buttons' size, color, border and font; the button glow |
+| ICONS-1..3 | Icons tab | The buttons' and wedges' icon look, border and glow triggers |
 | ICON-1 | Icons | Choosing an icon, for a callout and for a group |
 | BG-1..8 | Battlegrounds | Node winds on the dial; the battleground instance ids; the objective groups (Alterac Valley, Isle of Conquest's bases, a flag map) and their migration; the four node buttons; Silvershard Mines' and Temple of Kotmogu's groups |
 | IDS-1 | Instance ids | The Midnight dungeons and raids |
@@ -129,17 +129,17 @@ Result:
 `Pulling` on the default pad → the party sees "Pulling next pack" both times; with `/qc debug on`,
 the console shows an `Echo` line ending `sent`. Result:
 
-**SEND-2. A boss in a key.** On a key's boss, click `Lust` once → the party sees the line; the chip
+**SEND-2. A boss in a key.** On a key's boss, click `Lust` once → the party sees the line; the button
 flashes gold. Result:
 
-**SEND-3. The spam guard on a boss.** On a boss, click two chips about half a second apart → every
-chip dims for about a second after the first press; the second chip flashes amber. If the game
-drops it, the chip flashes red and exactly one `[QC] … may have been dropped by the game` line
+**SEND-3. The spam guard on a boss.** On a boss, click two buttons about half a second apart → every
+button dims for about a second after the first press; the second button flashes amber. If the game
+drops it, the button flashes red and exactly one `[QC] … may have been dropped by the game` line
 prints; if it arrives, no line prints. Never two lines for one press. Result:
 
 **SEND-4. A raid boss (C1).** In a raid (LFR is enough), the pad shows the raid set; on a boss,
-click a `/raid` chip → the raid sees it, the chip flashes gold. A lead callout's tooltip reads
-`Channel: Raid warning` only when you are leader or assist; otherwise its chip carries a padlock and
+click a `/raid` button → the raid sees it, the button flashes gold. A lead callout's tooltip reads
+`Channel: Raid warning` only when you are leader or assist; otherwise its button carries a padlock and
 its tooltip says why, and its label stops short of the padlock, not under it. A `/raid`
 line that never arrives during the encounter is C1 failing: record it. Result:
 
@@ -154,9 +154,9 @@ The C1–C9 checks of the phase 0 harness (design spec §19) are recorded in
 ## Pad
 
 **PAD-1. First run.** On a fresh profile, enter a key → the default pad shows "Dungeon (generic)" with
-eight chips, with no channel letter at the right edge of any of them (the label runs to the edge);
-the header reads `M+ · <dungeon> +<level>`. Hovering a chip shows its name, the exact line it sends
-and `Channel: Party` in the party's chat color; a wedge on the Comms Dial shows the same lines. Every chip shows its glyph in a color: Lust a red enraged face,
+eight buttons, with no channel letter at the right edge of any of them (the label runs to the edge);
+the header reads `M+ · <dungeon> +<level>`. Hovering a button shows its name, the exact line it sends
+and `Channel: Party` in the party's chat color; a wedge on the Comms Dial shows the same lines. Every button shows its glyph in a color: Lust a red enraged face,
 Need mana a blue drop, Res me a green ankh, GG a gold trophy, Pulling orange crossed swords, Kick
 order a purple boot, Skipping a cyan figure, Chain pull red chains. Leave the key and zone into a
 normal or heroic dungeon → the same set shows. On a profile saved before this build (it still shows
@@ -174,10 +174,10 @@ held when combat starts ends there, with no error. `/qc lock` → the strip is g
 controls → Reset position → the pad returns to its default place, just below the center. The
 launcher's Locked entry toggles the same lock. Result:
 
-**PAD-4. Test mode.** `/qc test` → placeholder chips, and the strip above the pad reads
+**PAD-4. Test mode.** `/qc test` → placeholder buttons, and the strip above the pad reads
 `Comms Pad  TEST MODE` (TEST MODE in green; the strip shows even while locked, and will not drag
 then; the header has no TEST MODE of its own); clicking one sends nothing. Rename the pad to a long
-name → the strip stays as wide as the pad while the name and the marker fit, and widens past the pad only for a name too long for it. Pull something → test mode ends with one line and the real chips return. `/qc test` in
+name → the strip stays as wide as the pad while the name and the marker fit, and widens past the pad only for a name too long for it. Pull something → test mode ends with one line and the real buttons return. `/qc test` in
 combat → refused with one line. The Master controls checkbox and the launcher entry follow every
 change. Result:
 
@@ -185,34 +185,34 @@ change. Result:
 with no error and returns after; Master alpha 50% → the pad is half transparent. Result:
 
 **PAD-6. Disabled mid-combat.** `/qc disable` during combat → no "action blocked" error; the pad
-stays until combat ends, then hides. `/qc enable` → it returns with live chips. Result:
+stays until combat ends, then hides. `/qc enable` → it returns with live buttons. Result:
 
 **PAD-7. A profile switch in combat.** `/qc profile <another>` during combat → the stale hint
 shows, no error; after combat the pad is the other profile's. Result:
 
 **PAD-8. The padlock mark.** Put a Say callout on the pad and pull an encounter (the chat lockdown) →
-its chip shows a small gold padlock in its top-right corner (the LibKa0s catalog's `lock` mark, not the pet-battle lock). With LibKa0s removed (DEGRADED-1)
+its button shows a small gold padlock in its top-right corner (the LibKa0s catalog's `lock` mark, not the pet-battle lock). With LibKa0s removed (DEGRADED-1)
 the pet-battle padlock draws instead, with no error. Result:
 
 **PAD-9. Up growth.** Comms Pad → Layout → Growth offers Right and down, Left and down, Right and up
 and Left and up (no Upward). Right and up → the header row sits at the bottom of the pad and the
 sections stack upward above it; `/qc unlock` → the drag strip sits below the pad. Drag the strip
 somewhere, then add a group to the pad → the pad grows upward and the strip stays where you left it;
-`/reload` → the strip is still there. Left and up → the chips fill right to left, still upward. Right
+`/reload` → the strip is still there. Left and up → the buttons fill right to left, still upward. Right
 and down → the header is on top again, the strip above, and adding a group grows the pad downward
 from a top edge that stays put. A profile saved with Upward growth loads as Right and up. A pad placed
 before 2026-10-19 moves once on its first load, by up to its height (see Known Limitations in
 `docs/ARCHITECTURE.md`); drag it back and it stays. Result:
 
-**PAD-10. Chip width and the section title.** Comms Pad → Chip → Chip width reads 100 on a new
-pad, and Layout no longer has it; drag it to 300 → wide chips, each label on one line, running to the chip's right edge with no
+**PAD-10. Button width and the section title.** Comms Pad → Buttons → Button width reads 100 on a new
+pad, and Layout no longer has it; drag it to 300 → wide buttons, each label on one line, running to the button's right edge with no
 channel letter after it; down to 30 → the labels cut short, still
 one line; down to 1 → icon-only slivers, no label and no Lua error. Make a group named `World`, put
 it on the pad and stand in the open world → the header reads `World` and the section under it has
 no second `World` line; rename the group `My world` → its title line is back. Result:
 
 **PAD-11. World (solo) and the built-ins' colors (groups polish).** Out of any group, in the open
-world: the pad shows a World (solo) section of nine chips, each tooltip reading `Channel: Say` (Rare spotted a gold spyglass,
+world: the pad shows a World (solo) section of nine buttons, each tooltip reading `Channel: Say` (Rare spotted a gold spyglass,
 Elite help a red ogre, Group quest a gold scroll, World boss a red crowned skull, Event here an orange
 bell, Invite me a blue envelope, Thanks green hands, AFK a white cup, Back a cyan arrow).
 Target a mob and click Rare spotted → /say reads "Rare spotted here: <target>"; click Invite me →
@@ -224,25 +224,25 @@ colors, except one whose icon or color you changed; each node battleground set g
 callouts once, at the end of its list; a battleground set you had deleted does not come back.
 `/reload` again → nothing changes and nothing is added. Result:
 
-**PAD-12. In Group (bg buttons).** Join a party → the pad shows an In Group section of twelve chips
+**PAD-12. In Group (bg buttons).** Join a party → the pad shows an In Group section of twelve buttons
 after the content sets (Hello a gold waving hand, tyff a green meal, Buffs please a purple arm,
 Healthstone a green potion, GLHF a green clover, ggty gold hands, ggnt a cyan thumb, ty a green
 handshake, brb a white cup, Ready a green check, Drink a blue flask, Summon a purple portal), the set's
 own icon three cyan figures. Click GLHF → party chat reads "GLHF"; Drink → "Drinking"; Summon →
-"Summon please!". Convert to a raid → the same chips send to raid chat; in a battleground or a
+"Summon please!". Convert to a raid → the same buttons send to raid chat; in a battleground or a
 dungeon finder group → instance chat, and the battleground's own set is still first on the pad and
 the dial still opens on its nodes (In Group is not on the dial there, DIAL-13). Leave the group → the In Group section is gone. Result:
 
 **PAD-13. Click the header to collapse.** Left-click anywhere on the pad's header row (on "World",
 not only the − button) → the pad folds to its header and the button reads +; click the row again → the
-chips come back. A right-click on the row does nothing. In combat a click prints the one-line refusal
+buttons come back. A right-click on the row does nothing. In combat a click prints the one-line refusal
 and the pad stays as it was. The mouse wheel over the row still switches tabs, and hovering it still shows
 "Why is this showing?".
 
-**PAD-14. Icon only has no spare width (2026-10-20).** Comms Pad → Layout → Chip style Icon only, a
-grid of 4 columns, in the open world (`World` in the header) → the gap between the last chip and the
-pad's right edge is the same as between the first chip and its left edge (before, the right one was
-wider). Chip style Icon and label → the same even gap. Enter a key, whose header text is longer than
+**PAD-14. Icon only has no spare width (2026-10-20).** Comms Pad → Layout → Button style Icon only, a
+grid of 4 columns, in the open world (`World` in the header) → the gap between the last button and the
+pad's right edge is the same as between the first button and its left edge (before, the right one was
+wider). Button style Icon and label → the same even gap. Enter a key, whose header text is longer than
 four icons → the pad widens just enough for the text and the collapse button. With a Say callout in
 the pad's groups, Preview as… an arena → LOCKDOWN shows after the header text and the pad widens for
 it too: it clears the collapse button and stays inside the right edge. Result:
@@ -253,7 +253,7 @@ it too: it clears the collapse button and stays inside the right edge. Result:
 its Callouts tab click Add callout → the callout popup opens blank (Smart group, no icon); name it
 `Inc`, text `INC {skull}`, Save → the popup closes and `Inc` is the list's last row. On the group's
 When tab click the Content header and tick M+ in its drawer. Enter a key → the pad shows the new group first with
-an `Inc` chip; click it → the party sees "INC" with a skull. Leave the key → the group is gone from
+an `Inc` button; click it → the party sees "INC" with a skull. Leave the key → the group is gone from
 the pad. Result:
 
 **EDIT-2. A built-in set is an ordinary group (the phase 3 exit, rewritten 2026-10-18).** Groups →
@@ -264,24 +264,24 @@ the icon with Choose icon…, Duplicate and Delete, then Restore built-in groups
 read-only line. Callouts: the callout table, exactly as a group of yours draws it (Add callout, Reuse
 callout with Add, a boxed row per callout with its handle, icon, name and channel, edit and remove
 glyphs); no Show checkboxes. When: the editable condition drawers (EDIT-22), Content's summary
-reading M+ in gold; not read-only text. Rename a callout in the popup and Save → in a key, the chip's label
+reading M+ in gold; not read-only text. Rename a callout in the popup and Save → in a key, the button's label
 changes. Untick Enabled → in a key the set is gone from the pad; tick it again. Result:
 
 **EDIT-3. Preview as….** Out of combat, in the open world: General → Master controls → Preview as → Arena →
 the pad shows the arena set with `Preview: Arena` on its header and PREVIEW on its drag strip (in
-green, after the pad's name); clicking a chip sends
+green, after the pad's name); clicking a button sends
 nothing to chat and prints its line locally (EDIT-29); its tooltip says so. The Comms Pad, Comms Dial and Groups pages' General tabs have no
 Preview as row. Close the settings → the preview ends. `/qc preview raid:heroic` →
-the raid set; pull something → the preview ends with one line and the live chips return. Result:
+the raid set; pull something → the preview ends with one line and the live buttons return. Result:
 
 **EDIT-4. Why is this showing?.** In a key, hover the pad's header → the tooltip lists "Dungeon
 (generic): Content" (and any other group, with its rows); with a `/raid` callout on the pad
 outside a raid, the last line names the lock. Behavior → Explain why groups show off → no tooltip.
 `/qc why` prints the same lines per pad. Result:
 
-**EDIT-5. The Comms Pad page.** Comms Pad → Layout: Orientation Vertical, Chip style Label only,
+**EDIT-5. The Comms Pad page.** Comms Pad → Layout: Orientation Vertical, Button style Label only,
 Scale 1.5 → the pad redraws each time. Type X `200`, Y `-100` → it moves; Reset this pad's position
-→ it returns. Main window → Visibility Only out of combat → it hides on the pull with no error. Groups:
+→ it returns. General → Visibility Only out of combat → it hides on the pull with no error. Groups:
 drag a group to the top → it comes first on the pad. New pad → a second pad appears holding every
 built-in group you still have (top-level, in shipped order); Delete pad (Yes) → it is gone. Result:
 
@@ -298,7 +298,7 @@ every group deleted, the "No groups yet" General still offers Restore built-in g
 
 **EDIT-7. An edit during combat.** With a user callout on the pad (its id is `c<n>`: `/qc get
 callout.name c1` names the first), in combat type `/qc set callout.text c1 Incoming now` → no error,
-the header shows "updates after combat"; after combat the chip sends the new text. `/qc set
+the header shows "updates after combat"; after combat the button sends the new text. `/qc set
 callout.text Incoming now` (no id) is refused with a line naming the id form and writes nothing.
 Opening the settings in combat is refused, as before. Result:
 
@@ -325,11 +325,11 @@ and Cancel; in the right column the Channel label, its dropdown, the Icon color 
 start on one line, a clear gap right of the Name box; the right edges of the Channel dropdown, the
 Text box, the Preview rule and Save line up, as do the Name box's, the clear glyph's cell's and Cancel's. There is **no scrollbar**: the window is
 exactly as tall as its content, with no empty band under the error line and nothing cut off at the
-bottom. Clicking the page behind it does nothing. Type more text and press Enter → Preview follows the edit, while the chip on
+bottom. Clicking the page behind it does nothing. Type more text and press Enter → Preview follows the edit, while the button on
 the pad still sends the old line; type text long enough that Preview wraps onto another
 line → the window grows with it. Clear the Name and click Save → the popup stays open and a red line names Name;
 nothing changed on the pad, and the window grew to show the red line. Type a name back, click Choose icon… and double-click an icon in the browser, Save → the popup
-closes, the row and the chip show the new name, text and icon. Result:
+closes, the row and the button show the new name, text and icon. Result:
 
 **EDIT-10. Cancel leaves nothing behind.** Add callout → type a name and text → Cancel → no new row,
 and `/reload` shows none either. Edit a callout, change its text → press Escape → the old text
@@ -346,7 +346,7 @@ Add callout and Add line up, a hair (2 px) short of the list's boxes, and **both
 borders are whole** (not shaved by the page's edge). In the list, every row's handle, icon, name and
 glyphs sit centered in its box, and the edit and remove glyphs are small and close to the box's
 right edge (the same on Comms Pad → Groups and Comms Dial → Groups). Pick one of group B's callouts → nothing is added yet; click Add → it is A's
-last row. Edit the copy's text and Save → B's original is unchanged (check its row or its chip).
+last row. Edit the copy's text and Save → B's original is unchanged (check its row or its button).
 The list has no built-in section: "Dungeon (generic): Lust" is listed like any other group's callout;
 reuse it → a copy you can edit, and the M+ group's Lust is unchanged. Result:
 
@@ -385,19 +385,19 @@ row of icons (a gap between them), and it is gone on Markers. Markers shows the 
 LibKa0s glyph, white, each named on hover (`Arrow circle down`-style names); the count at the right
 follows the tab. Click an icon → it is selected and named in the footer, nothing else changes; Cancel
 → the popup's icon is unchanged. Choose icon… again, double-click the skull → the browser closes and
-the popup shows the skull (the chip on the pad does not change until Save). Result:
+the popup shows the skull (the button on the pad does not change until Save). Result:
 
 **EDIT-15. The Game icons tab.** In the browser, Game icons → thousands of icons (the count reads in
 the thousands), the same ones the macro icon selector offers. Scroll with the wheel and drag the
 scrollbar from top to bottom → it keeps up without a hitch, and each icon draws (no blank or green
 square). Hover one → "Texture id N". Show → Spells, then Items → each list is smaller, and All is
-both. Choose a game icon, Save → the chip and the row show it. If the tab says the game's icon list
+both. Choose a game icon, Save → the button and the row show it. If the tab says the game's icon list
 has not loaded yet on the first open after a login, open it again a moment later → the icons are
 there. Result:
 
 **EDIT-16. A glyph's color, everywhere.** Choose a glyph for one of your callouts (Glyphs tab), then
 Icon color → Blizzard's color picker opens **above** the browser; pick orange → every glyph in the
-grid and the footer turns orange. Choose, Save → the chip on the pad, the wedge on the Comms Dial
+grid and the footer turns orange. Choose, Save → the button on the pad, the wedge on the Comms Dial
 (test mode) and the callout's row on the Callouts tab show the glyph in orange; the popup's icon too
 when it is opened again. On a group of yours, General → Choose icon… → a glyph, Choose → then Icon
 color → green → the group's wedge on the dial is green at once. Now choose a raid marker for that
@@ -525,13 +525,13 @@ filtered by it; Cancel and open the browser again → the text is still there; `
 empty. Escape with the Wowhead window's box focused closes that window alone; close the browser →
 the Wowhead window closes with it. Result:
 
-**EDIT-25. The Callouts rows and the window and Chip tabs.** Groups → "Dungeon (generic)" → Callouts → each
+**EDIT-25. The Callouts rows and the window and Buttons tabs.** Groups → "Dungeon (generic)" → Callouts → each
 row reads its icon, the name in gold, the channel's short label in its chat color (Party blue,
 Say white) and the start of its text in a muted white, cut at 40
 characters with "…". A callout with no icon shows the question mark; a callout whose text holds a
 `|` shows the bar, not a color change; a Smart channel takes the color of the channel it resolves to
 now (solo: Party). Comms Pad → Pad header and Section header → the Size, Font, Background and Border
-headings, Main window → the Visibility, Background and Border headings, each heading once; Comms Pad → Chip → the Size, Color, Border, Font and Glow
+headings, Window → the Background and Border headings, General → the Visibility heading, each heading once; Comms Pad → Buttons → the Size, Color, Border, Font and Glow
 headings, each once. Result:
 
 **EDIT-26. The glyph sets and their credits.** Open the icon browser (EDIT-14) → Glyphs: the count
@@ -540,7 +540,7 @@ original marks (the count about two hundred), Phosphor → the Phosphor marks, G
 thousands of game marks; All → every set again. The search (EDIT-24) filters within the set picked.
 Labels drop the set prefix (`Arrow up`, not `ph:arrow-up`); hover a Phosphor mark → the tooltip
 names Phosphor; hover a Game-icons mark → "Game-icons, by <author>" (a Lorc or Delapouite mark, for
-instance). Choose a Game-icons glyph, Save → the chip shows it in white, or in the Icon color picked.
+instance). Choose a Game-icons glyph, Save → the button shows it in white, or in the Icon color picked.
 The README's Credits section names the three sets, their licenses and the Game-icons authors.
 Typing in the search box keeps up without a hitch. Result:
 
@@ -548,7 +548,7 @@ Typing in the search box keeps up without a hitch. Result:
 draws the Group picker's box under its label, New group to its right and level with the box, and
 Preview while editing, ticked, under the Group picker; pick another group and the three are still
 drawn. Pick "Arena" → every pad shows only the
-arena set, with `Preview: Arena` on its header and PREVIEW on its drag strip, and dial 1 opens on it; clicking a chip
+arena set, with `Preview: Arena` on its header and PREVIEW on its drag strip, and dial 1 opens on it; clicking a button
 sends nothing to chat and prints one local line, `[QC] /<slash> <text>` (the channel's slash and the
 callout's text with its tokens filled in, `{me}` as your name). Pick a battleground set → its own callouts and every node show, outside the
 battleground. Set General → Master controls → Preview as → Raid · Heroic, then back on Groups → the
@@ -568,11 +568,11 @@ combat" line and nothing opens; no error. Result:
 
 **EDIT-29. A preview click echoes its line.** Out of combat, solo in the open world: make a group
 with a callout `Go {me}` on Yell and put it on the pad and the dial. Master controls → Preview as →
-World · Solo → click the chip → one local chat line, `[QC] /y Go <your name>`, and nothing said
+World · Solo → click the button → one local chat line, `[QC] /y Go <your name>`, and nothing said
 aloud (no yell bubble, nobody else sees it). Change the callout to Smart group and preview Raid ·
 Heroic → the click prints `[QC] /raid Go <your name>`. Open the dial on the preview and click the
-wedge → the same line, and the dial closes. On Groups with Preview while editing ticked, click a chip
-of the edited group → its line prints the same way. End the preview and click the live chip → the
+wedge → the same line, and the dial closes. On Groups with Preview while editing ticked, click a button
+of the edited group → its line prints the same way. End the preview and click the live button → the
 yell goes out, with no `[QC]` line. Result:
 
 ## Dial
@@ -655,7 +655,7 @@ dial with the hub, then change Wedges per ring → it stays closed. Result:
 
 **DIAL-12. The hub's close and the wedge padlock.** Open the dial → the hub carries a red ✕ (the
 LibKa0s catalog's `close` mark, not the round stop button), and during an encounter a Say callout's wedge shows
-the same small gold padlock as a pad chip (PAD-8). With LibKa0s removed (DEGRADED-1) the stop button and the
+the same small gold padlock as a pad button (PAD-8). With LibKa0s removed (DEGRADED-1) the stop button and the
 pet-battle padlock draw instead, with no error. Result:
 
 **DIAL-13. In Group skips the dial in content.** In the open world with a party, press G → the dial
@@ -713,17 +713,18 @@ it as before. Result:
 
 ## Look
 
-The Comms Pad's Pad header, Section header and Main window tabs (one Window tab until 2026-10-20, the
-Look tab before that; the checks keep their LOOK ids).
+The Comms Pad's Pad header, Section header and Window tabs (one Window tab until 2026-10-20, the
+Look tab before that, then Main window until it became Window, its visibility rows on General; the
+checks keep their LOOK ids).
 
 **LOOK-1. Section titles.** On a new pad the section titles are gold, 12 points and outlined. Comms
 Pad → Section header → Font: pick another face, Font size 14, Font flags None, untick Font shadow →
 the section titles (In Party, Mythic+…) redraw that way, still
-gold; the chip labels do not change (they are the Chip tab's). Tick Use class color → the titles take
+gold; the button labels do not change (they are the Buttons tab's). Tick Use class color → the titles take
 your class color, and Font color's opacity still applies; untick it and set Font color to red → the
 titles turn red. Result:
 
-**LOOK-2. Border and background.** Comms Pad → Main window → Border style: a LibSharedMedia border (Blizzard Tooltip, for one),
+**LOOK-2. Border and background.** Comms Pad → Window → Border style: a LibSharedMedia border (Blizzard Tooltip, for one),
 thickness 3, color red → the pad's edge changes; thickness 0 → no edge. Background: dark blue at 50%
 opacity → the body changes; Use class color → your class color at 50%. The settings panel is closed
 and locked in combat, so the in-combat write goes through the command line: in combat,
@@ -734,7 +735,7 @@ edge lands at combat end. Defaults → the Ka0s look again. Result:
 open world) is 24 pixels tall (it was 18) with gold 16-point outlined text, no background and no edge
 (the owner's defaults). Comms Pad → Pad header: Size → Header height 30 → the row grows and every
 section moves down with it; Font size 20, another face, Font flags Thick outline → the situation text
-redraws that way, and during an encounter with a Say callout on the pad the LOCKDOWN chip takes the
+redraws that way, and during an encounter with a Say callout on the pad the LOCKDOWN tag takes the
 same face and size and stays red; the collapse button grows with it. Background dark red at 60% → a
 band behind the header only; Border thickness 2, color white → an edge around the header only, with no
 gray inner line; a LibSharedMedia border style draws that art. Use class color on each → your class
@@ -747,9 +748,10 @@ the right). Layout → Growth → Left and down, Right and up, Left and up in tu
 Spacing 20 → still aligned. Result:
 
 **LOOK-5. Three window tabs (2026-10-20).** Comms Pad → the strip reads General, Groups, Layout, Pad
-header, Section header, Main window, Chip, Icons (no Window tab). Pad header shows the headings Size,
-Font, Background and Border, each once; Section header the same four; Main window Visibility,
-Background and Border, with no font controls. Change a value on each tab → only that part of the pad
+header, Section header, Window, Buttons, Icons (no Main window or Chip tab). Pad header shows the headings Size,
+Font, Background and Border, each once; Section header the same four; Window Background and
+Border, with no font controls and no Visibility (General has it, under its own heading, above Unlock
+pads and Delete pad). Change a value on each tab → only that part of the pad
 changes (the header row, the section titles, the pad's body). Defaults on the page → all three tabs go
 back to the owner's look. Result:
 
@@ -759,29 +761,29 @@ Background dark blue at 60% → a band behind each title, spanning the pad's ins
 paired objectives: each band its own block's width, stopping at its neighbor); Border thickness 2,
 color white → an edge around each band, the title text kept clear of it; Use class color on each →
 your class color. Size → Section header height 30 → every title row grows to 30 pixels with its text
-centered and the chips move down with it; 0 → the automatic height again (it reads Automatic). A
+centered and the buttons move down with it; 0 → the automatic height again (it reads Automatic). A
 right-click on a title still opens its group. Result:
 
-## Chip tab
+## Buttons tab
 
-**CHIP-1. Size, color, border and font (2026-10-20).** On a new pad the chips wear the owner's
+**CHIP-1. Size, color, border and font (2026-10-20).** On a new pad the buttons wear the owner's
 defaults: a faint gray body (#3F3F3F at 25%), a faint 1-pixel light edge (#EAEAEA at 10%), small white
-labels, 16-pixel icons. Comms Pad → Chip: Chip width 160 → wider chips; Chip height 40 →
-taller chips, label and icon centered; Chip height 0 → back to the automatic height; Chip style Icon
-only (Layout) → square chips around the icons whatever the size says. Color → Background red at 50% →
-every chip's body; Use class color → your class color. Border thickness 2, color white → an edge around
-every chip, over the body, never hiding the icon or label; a LibSharedMedia border draws that art; 0 →
-no edge. Font: another face, size 14, Outline, Font color yellow → the chip labels only (the section
+labels, 16-pixel icons. Comms Pad → Buttons: Button width 160 → wider buttons; Button height 40 →
+taller buttons, label and icon centered; Button height 0 → back to the automatic height; Button style Icon
+only (Layout) → square buttons around the icons whatever the size says. Color → Background red at 50% →
+every button's body; Use class color → your class color. Border thickness 2, color white → an edge around
+every button, over the body, never hiding the icon or label; a LibSharedMedia border draws that art; 0 →
+no edge. Font: another face, size 14, Outline, Font color yellow → the button labels only (the section
 titles keep the Section header tab's font); a bigger font grows the automatic height. Defaults → the owner's
-chips again. In combat, `/qc set pad.chip.width 150` → no error, "updates after combat", wider chips at
+buttons again. In combat, `/qc set pad.chip.width 150` → no error, "updates after combat", wider buttons at
 combat end. Result:
 
-**CHIP-2. The chip glow (2026-10-20).** Chip → Glow is off by default and Glow style is grayed out.
-Tick Glow → every chip glows around its whole edge in Pixel border, gold; Glow style Auto cast
+**CHIP-2. The button glow (2026-10-20).** Buttons → Glow is off by default and Glow style is grayed out.
+Tick Glow → every button glows around its whole edge in Pixel border, gold; Glow style Auto cast
 sparkles, Button (rotating rays), Proc (flipbook) → each looks different; Glow color green → green;
 Use class color → your class color. With the Icons tab's glow on too, both glows show (one around the
-icon, one around the chip) and turning either off leaves the other. A full pad glowing keeps the frame
-rate where it was; untick Glow → every chip glow stops. Result:
+icon, one around the button) and turning either off leaves the other. A full pad glowing keeps the frame
+rate where it was; untick Glow → every button glow stops. Result:
 
 ## Key bindings
 
@@ -809,8 +811,8 @@ ends, then the pads toggle, with no Lua error. `/qc disable`, press P → the di
 
 ## Icons tab
 
-**ICONS-1. Look.** Comms Pad → Icons: Icon size reads 16 on a new pad (an icon-only chip is 24
-pixels square); Icon size 32 → the chips grow taller around the bigger icons;
+**ICONS-1. Look.** Comms Pad → Icons: Icon size reads 16 on a new pad (an icon-only button is 24
+pixels square); Icon size 32 → the buttons grow taller around the bigger icons;
 Zoom 0.1 → each icon's edge is cropped; Desaturate → gray; Icon opacity 50% → faint; Tint red → a
 white glyph turns red and a colored glyph darker. Show border, thickness 2, color white → a square
 edge over each icon. Comms Dial → Icons: Show border → a round ring behind each wedge's icon; Icon size
@@ -825,7 +827,7 @@ Untick Glow → the style's heading goes, Offset stays. Comms Dial → Icons →
 glowing in Pixel border, the frame rate stays where it was. Result:
 
 **ICONS-3. Glow triggers.** Glow when On hover → only the icon under the mouse glows; in combat too,
-with no error. After sending → a chip glows for about a second and a half after its line is sent,
+with no error. After sending → a button glows for about a second and a half after its line is sent,
 then stops; on a dial, send from a wedge and reopen the dial within a few seconds → that wedge glows
 for about a second and a half from the open, then stops, and a later reopen shows no glow. In combat, `/qc set pad.icon.size 30` → no error, "updates after combat", the bigger
 icons land at combat end. Result:
@@ -834,13 +836,13 @@ icons land at combat end. Result:
 
 **ICON-1. Choosing an icon.** Groups → a group of yours → Callouts → a row's edit glyph → Choose
 icon… → double-click the skull → the icon beside Choose icon… is the skull (the popup has no Icon
-box); Save → the row and the chip show the skull. Groups → a group of yours → General → no Icon text
+box); Save → the row and the button show the skull. Groups → a group of yours → General → no Icon text
 box, an "Icon" label over the icon and Choose icon… → Glyphs → double-click a glyph → the group's
 wedge on the Comms Dial shows it, and the General tab's icon follows. With that group selected,
 `/qc set group.icon 136012` still sets it. Click the red clear glyph beside Choose icon… → the
 General tab's icon is the question mark, the wedge shows no icon, and the clear glyph goes idle; in
 the popup, a callout with an icon → clear glyph → the icon is the question mark, Save → the row and
-the chip show no icon. A built-in set's General tab ("Dungeon (generic)") has the same Icon row and
+the button show no icon. A built-in set's General tab ("Dungeon (generic)") has the same Icon row and
 Choose icon…: a glyph chosen there shows on its wedge. Result:
 
 ## Battlegrounds
@@ -866,7 +868,7 @@ section (its four map-wide callouts) is followed by 19 objective sections, two t
 south: Vanndar, DB North Bunker, Stormpike GY, Aid Station, DB South Bunker, Icewing Bunker,
 Stonehearth GY, Balinda, Stonehearth Bunker, Snowfall GY, Iceblood GY, Galvangar, Iceblood Tower,
 Tower Point, Frostwolf GY, West FW Tower, East FW Tower, Relief Hut, Drek'Thar (the last on a row
-of its own). Each holds Attack and Defend; a long title stops short at its neighbor, and its chips
+of its own). Each holds Attack and Defend; a long title stops short at its neighbor, and its buttons
 stay on the grid's columns. The pad fits on screen; note its height. Click Iceblood Tower's Attack →
 `/i Attack Iceblood Tower`. Right-click a title in the second
 column → the Groups page opens on that objective. Open the dial → it opens on Alterac Valley's own
@@ -942,7 +944,7 @@ code (phase 5):
   editor falls back to the id).
 - **Sent in chat**: the callout tokens' values (`{me}`, `{spec}`, …) come from the client in its own
   language and are escaped like any value (`test_tokens`).
-- **The pads' fonts** (the Pad header and Section header tabs', the Chip tab's labels): the default face is LibSharedMedia's "Friz Quadrata TT", which LibSharedMedia
+- **The pads' fonts** (the Pad header and Section header tabs', the Buttons tab's labels): the default face is LibSharedMedia's "Friz Quadrata TT", which LibSharedMedia
   does not register on koKR, zhCN or zhTW; a face the machine does not have draws `STANDARD_TEXT_FONT`
   (`Pad_Render.LabelFont`, `test_pad_render`).
 - **Printed**: every chat and report line is English through `NS.L`, the share and import lines
@@ -966,4 +968,4 @@ from the client, so this check needs a non-English client pass. Result:
 | DIAL-1..13 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-2 rewritten and DIAL-13 added with Skip on the dial in content (2026-10-20); DIAL-2 and DIAL-4 rewritten with In Group and the four node buttons (2026-10-20, bg buttons); DIAL-4 rewritten with the node set's map-wide wedge (2026-10-19, groups polish); DIAL-9 rewritten when Preview as moved to Master controls (2026-10-19); DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
 | SHARE-1..6, LOOK-1..2, ICON-1, BG-1..8, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; BG-1 and BG-4 rewritten and BG-7..8 added with the four node buttons and Silvershard Mines' and Temple of Kotmogu's groups (2026-10-20, bg buttons); BG-1 rewritten with Wintergrasp's winds and BG-3..6 added with the battleground objective groups (2026-10-20); BG-1 rewritten with the map-wide wedge (2026-10-19, groups polish); LOOK-2's in-combat step goes through `/qc set`; IDS-1 extended to the journal instances and arenas (2026-10-19) |
 | ICONS-1..3 | Icons and polish (2026-10-19): the Icons tab | No client pass recorded yet; ICONS-1 rewritten with the owner's pad defaults (2026-10-20) |
-| LOOK-3..6, CHIP-1..2, KEY-1..3 | Window, Chip and keys (2026-10-20): the header's look and alignment, the three window tabs and the section band, the Chip tab, keys as WoW bindings and Toggle Comms Pads | No client pass recorded yet; LOOK-5..6 added and LOOK-1..3 rewritten with the Window tab split into Pad header, Section header and Main window (2026-10-20); LOOK-1, LOOK-3 and CHIP-1 rewritten with the owner's pad defaults (2026-10-20); LOOK-1 rewritten with the Section titles font, PAD-10 with Chip width on the Chip tab, DIAL-6 and DIAL-8 with the dial key as WoW's own binding |
+| LOOK-3..6, CHIP-1..2, KEY-1..3 | Window, Chip and keys (2026-10-20): the header's look and alignment, the three window tabs and the section band, the Chip tab, keys as WoW bindings and Toggle Comms Pads | No client pass recorded yet; LOOK-2, LOOK-5, EDIT-5, EDIT-25 and CHIP-1..2 reworded with Visibility on General, Main window renamed Window and the Chip tab renamed Buttons (chips are buttons in the UI wording; 2026-10-20); LOOK-5..6 added and LOOK-1..3 rewritten with the Window tab split into Pad header, Section header and Main window (2026-10-20); LOOK-1, LOOK-3 and CHIP-1 rewritten with the owner's pad defaults (2026-10-20); LOOK-1 rewritten with the Section titles font, PAD-10 with Chip width on the Chip tab, DIAL-6 and DIAL-8 with the dial key as WoW's own binding |

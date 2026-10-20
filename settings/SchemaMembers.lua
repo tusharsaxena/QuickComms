@@ -155,7 +155,7 @@ local ROWS = {
     -- reset never blanks them.
     { path = "callout.name", instance = "callout", type = "string", dialogControl = "EditBox",
       maxLetters = Lib.NAME_MAX, page = "callouts", group = GENERAL, label = L["Name"],
-      desc = L["What the chip and the lists call this callout. Press Enter to apply."],
+      desc = L["What the button and the lists call this callout. Press Enter to apply."],
       validate = check(Lib.ValidName) },
     { path = "callout.text", instance = "callout", type = "string", dialogControl = "EditBox",
       maxLetters = 255, page = "callouts", group = GENERAL, label = L["Text"],
@@ -239,6 +239,20 @@ local ROWS = {
     { path = "pad.enabled", instance = "pad", type = "bool", default = T.pad.enabled,
       page = "pads", group = GENERAL, label = L["Enabled"],
       desc = L["Draw this pad. A disabled pad keeps its groups and its settings."] },
+    -- Visibility, Fade and Faded alpha (`pad.look.*`, the paths kept) under General's Visibility heading
+    -- (owner request, 2026-10-20; on the Window tab before): General's first row stays Name, so the
+    -- options library still draws General first.
+    { path = "pad.look.visibility", instance = "pad", type = "string", default = T.pad.look.visibility,
+      values = VISIBILITY, page = "pads", group = GENERAL, subgroup = L["Visibility"], label = L["Visibility"],
+      desc = L["When this pad shows. General visibility applies on top. When a group is active is decided at the last change out of combat."],
+      validate = oneOf(VISIBILITY) },
+    { path = "pad.look.fade", instance = "pad", type = "string", default = T.pad.look.fade,
+      values = FADE, page = "pads", group = GENERAL, subgroup = L["Visibility"], label = L["Fade"],
+      desc = L["Fade the pad out of combat, or until the mouse is over it."],
+      validate = oneOf(FADE) },
+    { path = "pad.look.fadeAlpha", instance = "pad", type = "number", default = T.pad.look.fadeAlpha,
+      min = 0, max = 1, step = 0.05, page = "pads", group = GENERAL, subgroup = L["Visibility"], label = L["Faded alpha"],
+      desc = L["How visible a faded pad is."], validate = NUMBER, normalize = clamp(0, 1) },
     { path = "pad.groupsAs", instance = "pad", type = "string", default = T.pad.groupsAs, values = GROUPS_AS,
       page = "pads", group = L["Groups"], label = L["Show groups as"],
       desc = L["Sections under small headings, one merged list, or one group at a time (the mouse wheel over the pad switches; not in combat)."],
@@ -248,14 +262,14 @@ local ROWS = {
       desc = L["One row, one column, or a grid."], validate = oneOf(ORIENTATION) },
     { path = "pad.layout.columns", instance = "pad", type = "number", default = T.pad.layout.columns,
       min = 1, max = 12, step = 1, page = "pads", group = L["Layout"], label = L["Grid columns"],
-      desc = L["Chips per row when the orientation is Grid."],
+      desc = L["Buttons per row when the orientation is Grid."],
       disabledIf = function() return NS.SchemaRuntime.Get("pad.layout.orientation") ~= "grid" end,
       validate = NUMBER, normalize = clamp(1, 12, true) },
     { path = "pad.layout.growth", instance = "pad", type = "string", default = T.pad.layout.growth,
       values = GROWTH, page = "pads", group = L["Layout"], label = L["Growth"],
-      desc = L["Which way the chips fill from the pad's anchor."], validate = oneOf(GROWTH) },
+      desc = L["Which way the buttons fill from the pad's anchor."], validate = oneOf(GROWTH) },
     { path = "pad.layout.style", instance = "pad", type = "string", default = T.pad.layout.style,
-      values = STYLE, page = "pads", group = L["Layout"], label = L["Chip style"],
+      values = STYLE, page = "pads", group = L["Layout"], label = L["Button style"],
       desc = L["Icon only puts the callout's name in its tooltip."], validate = oneOf(STYLE) },
     { path = "pad.layout.scale", instance = "pad", type = "number", default = T.pad.layout.scale,
       min = 0.5, max = 2, step = 0.05, page = "pads", group = L["Layout"], label = L["Scale"],
@@ -263,7 +277,7 @@ local ROWS = {
       validate = NUMBER, normalize = clamp(0.5, 2) },
     { path = "pad.layout.spacing", instance = "pad", type = "number", default = T.pad.layout.spacing,
       min = 0, max = 20, step = 1, page = "pads", group = L["Layout"], label = L["Spacing"],
-      desc = L["Pixels between chips."], validate = NUMBER, normalize = clamp(0, 20, true) },
+      desc = L["Pixels between buttons."], validate = NUMBER, normalize = clamp(0, 20, true) },
     -- Position's default is false, the default place, so `/qc reset pad.point` brings a pad back; the
     -- page's Defaults keeps the position (settings/Schema.lua resetExempt), as its tooltip says.
     { path = "pad.point", instance = "pad", type = "point", default = false,
@@ -314,10 +328,11 @@ local ROWS = {
 -- The Window tab (the Look tab before) became three tabs on 2026-10-20 (owner request), each under
 -- its own headings: Pad header (`pad.header.*`: Size, its Header height; Font; Background; Border),
 -- Section header (`pad.section.*`: Size, its height, 0 automatic; Font, the section titles'; and the
--- Background and Border of the band behind each title) and Main window (`pad.look.*`, the stored key
--- kept: Visibility, with Fade and Faded alpha; Background; Border; no font, the owner's call).
+-- Background and Border of the band behind each title) and Window (`pad.look.*`, the stored key kept:
+-- Background; Border; no font, the owner's call). It was Main window, with Visibility, Fade and Faded
+-- alpha, until those moved to General (owner request, 2026-10-20).
 --
--- The Chip tab (`pad.chip.*`, 2026-10-20) styles the chips themselves: Size (Chip width, moved from
+-- The Chip tab (`pad.chip.*`, 2026-10-20; its label reads Buttons) styles the chips themselves: Size (Chip width, moved from
 -- Layout, and Chip height, 0 automatic), Color (the chip's background), Border, Font (the chips'
 -- labels only) and Glow (off by default: a LibCustomGlow effect around the whole chip, in one of the
 -- Icons tab's four styles, at that tab's knob defaults).
@@ -386,10 +401,8 @@ local function blockSpec(prefix, group, subgroup, defaults, extra)
 end
 
 -- The three tabs, in strip order: the options library orders a page's tabs by each group's first
--- row, so these rows come after Layout's and before the Chip tab's. SHOWN is Main window's
--- Visibility heading (VISIBILITY is that row's choices).
-local PAD_HEADER, SECTION_HEADER, MAIN_WINDOW = L["Pad header"], L["Section header"], L["Main window"]
-local SHOWN = L["Visibility"]
+-- row, so these rows come after Layout's and before the Chip tab's (shown as Buttons).
+local PAD_HEADER, SECTION_HEADER, WINDOW = L["Pad header"], L["Section header"], L["Window"]
 local LOOK, HEAD, SECT = "pad.look.", "pad.header.", "pad.section."
 local HEADER_H, SECTION_H = NS.PadDefaults.HEADER_H, NS.PadDefaults.SECTION_H
 
@@ -418,25 +431,14 @@ local function windowRows()
         desc = L["How tall each section title's row is, in pixels. 0 grows it to hold its font."],
         validate = NUMBER, normalize = clamp(SECTION_H.min, SECTION_H.max, true) }
     styleBlocks(out, O, checks, SECT, SECTION_HEADER, T.pad.section, true)
-    -- Main window: Visibility (with Fade and Faded alpha), then its Background and Border; no font.
-    out[#out + 1] = { path = "pad.look.visibility", instance = "pad", type = "string", default = T.pad.look.visibility,
-        values = VISIBILITY, page = "pads", group = MAIN_WINDOW, subgroup = SHOWN, label = L["Visibility"],
-        desc = L["When this pad shows. General visibility applies on top. When a group is active is decided at the last change out of combat."],
-        validate = oneOf(VISIBILITY) }
-    out[#out + 1] = { path = "pad.look.fade", instance = "pad", type = "string", default = T.pad.look.fade,
-        values = FADE, page = "pads", group = MAIN_WINDOW, subgroup = SHOWN, label = L["Fade"],
-        desc = L["Fade the pad out of combat, or until the mouse is over it."],
-        validate = oneOf(FADE) }
-    out[#out + 1] = { path = "pad.look.fadeAlpha", instance = "pad", type = "number", default = T.pad.look.fadeAlpha,
-        min = 0, max = 1, step = 0.05, page = "pads", group = MAIN_WINDOW, subgroup = SHOWN, label = L["Faded alpha"],
-        desc = L["How visible a faded pad is."], validate = NUMBER, normalize = clamp(0, 1) }
-    styleBlocks(out, O, checks, LOOK, MAIN_WINDOW, T.pad.look, false)
+    -- Window: its Background and Border; no font (Visibility, Fade and Faded alpha are on General).
+    styleBlocks(out, O, checks, LOOK, WINDOW, T.pad.look, false)
     return out
 end
 
 for _, row in ipairs(windowRows()) do ROWS[#ROWS + 1] = row end
 
-local CHIP, CHIPP = L["Chip"], "pad.chip."
+local CHIP, CHIPP = L["Buttons"], "pad.chip."
 local CHIP_H = NS.PadDefaults.CHIP_H
 
 local function chipRows()
@@ -454,11 +456,11 @@ local function chipRows()
     end
     local out = {
         row(SIZE, { path = CHIPP .. "width", type = "number", default = cdef.width, min = 1, max = 300, step = 1,
-            label = L["Chip width"], startsLine = true, desc = L["How wide a labeled chip is. An icon-only chip stays square around its icon."],
+            label = L["Button width"], startsLine = true, desc = L["How wide a labeled button is. An icon-only button stays square around its icon."],
             validate = NUMBER, normalize = clamp(1, 300, true) }),
         row(SIZE, { path = CHIPP .. "height", type = "number", default = cdef.height, min = CHIP_H.min,
-            max = CHIP_H.max, step = 1, label = L["Chip height (0 = automatic)"], zeroText = L["Automatic"],
-            desc = L["How tall a labeled chip is, in pixels. 0 grows it to hold its font and its icon. An icon-only chip stays square around its icon."],
+            max = CHIP_H.max, step = 1, label = L["Button height (0 = automatic)"], zeroText = L["Automatic"],
+            desc = L["How tall a labeled button is, in pixels. 0 grows it to hold its font and its icon. An icon-only button stays square around its icon."],
             validate = NUMBER, normalize = clamp(CHIP_H.min, CHIP_H.max, true) }),
     }
     stampBlock(out, O.ColorPair(blockSpec(CHIPP, CHIP, COLOR, cdef, { key = "background", label = L["Background"] })),
@@ -466,7 +468,7 @@ local function chipRows()
     stampBlock(out, O.BorderGroup(blockSpec(CHIPP, CHIP, L["Border"], cdef)), CHIPP, checks)
     stampBlock(out, O.FontGroup(blockSpec(CHIPP, CHIP, L["Font"], cdef)), CHIPP, checks)
     out[#out + 1] = row(GLOW, { path = CHIPP .. "glowEnabled", type = "bool", default = cdef.glowEnabled,
-        label = L["Glow"], desc = L["Draw a glow around each chip."], validate = BOOL, startsLine = true })
+        label = L["Glow"], desc = L["Draw a glow around each button."], validate = BOOL, startsLine = true })
     out[#out + 1] = row(GLOW, { path = CHIPP .. "glowType", type = "string", default = cdef.glowType, values = styles,
         label = L["Glow style"], desc = L["How the glow looks."], validate = oneOf(styles), disabledIf = glowOff })
     stampBlock(out, O.ColorPair(blockSpec(CHIPP, CHIP, GLOW, cdef, { key = "glowColor",
