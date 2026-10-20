@@ -23,7 +23,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | SEND-1..5 | Send | Secure sends in keys and on bosses, the spam guard |
 | PAD-1..12 | Pad | The Comms Pad, its growth and chip width, the World (solo) and In Group sets and the built-ins' colors |
 | EDIT-1..29 | Editors | The Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
-| DIAL-1..12 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial |
+| DIAL-1..13 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, In Group off the dial in content |
 | KEY-1..3 | Key bindings | A dial's key as WoW's own binding in Options → Keybindings, Character Specific Keybindings, Toggle Comms Pads |
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
 | LOOK-1..4 | Window | The Comms Pad's Window tab: the section titles' font, border and background, the header's look, size and alignment |
@@ -231,7 +231,7 @@ handshake, brb a white cup, Ready a green check, Drink a blue flask, Summon a pu
 own icon three cyan figures. Click GLHF → party chat reads "GLHF"; Drink → "Drinking"; Summon →
 "Summon please!". Convert to a raid → the same chips send to raid chat; in a battleground or a
 dungeon finder group → instance chat, and the battleground's own set is still first on the pad and
-the dial still opens on its nodes. Leave the group → the In Group section is gone. Result:
+the dial still opens on its nodes (In Group is not on the dial there, DIAL-13). Leave the group → the In Group section is gone. Result:
 
 ## Editors
 
@@ -570,8 +570,8 @@ outside the disc, the ✕ hub, and a gold pointer that follows the cursor. Press
 Escape → it closes and the game menu does not open. Open it; right-click a wedge → it closes and nothing
 is sent. Result:
 
-**DIAL-2. A wedge sends in a boss (the phase 4 exit).** On a raid or M+ boss, press G, click the raid
-or dungeon group (In Group is beside it, so the dial opens on the group ring), then click a callout
+**DIAL-2. A wedge sends in a boss (the phase 4 exit).** On a raid or M+ boss, press G → the dial opens
+straight on the raid or dungeon set's ring (In Group skips the dial in content); click a callout
 wedge → the group sees the line, the dial closes, and there is no "action blocked" error or red
 text. With the dial closed, 1 still fires your action bar's first button. Press G again at once → every
 wedge is dimmed for about a second (the spam guard). Result:
@@ -588,7 +588,7 @@ with an Arathi Basin wedge (the gold wheat sheaf) on E, the first wind left free
 map-wide callouts (groups polish);
 click Lumber Mill, then INC → instance chat shows "INC Lumber Mill": two clicks. Open again and
 press 4 → Lumber Mill's ring opens (the number keys count the shown wedges clockwise from N). (If it opens on the group ring instead, check the Groups tab: Arathi Basin must sit above
-Battleground (generic), In Group and every group active there, and the tab's "Three rings deep" warning names the
+Battleground (generic) and every group active there, and the tab's "Three rings deep" warning names the
 cause; a `/reload` after updating runs the migration that moves the generic set. If the dial does not
 show Arathi Basin at all, the instance id may be wrong: run `/qc diagnostics`, copy the `situation`
 section's instanceID into the "Battleground instance IDs seen" table of
@@ -643,6 +643,14 @@ dial with the hub, then change Wedges per ring → it stays closed. Result:
 LibKa0s catalog's `close` mark, not the round stop button), and during an encounter a Say callout's wedge shows
 the same small gold padlock as a pad chip (PAD-8). With LibKa0s removed (DEGRADED-1) the stop button and the
 pet-battle padlock draw instead, with no error. Result:
+
+**DIAL-13. In Group skips the dial in content.** In the open world with a party, press G → the dial
+shows In Group (alone, it opens on its ring). Enter a dungeon with the party (or start a key) and
+press G → the dial opens straight on the Dungeon (generic) ring, with no ring of groups and no In
+Group wedge; the pad still shows the In Group section after the dungeon set. Settings → Groups → In
+Group → General: Skip on the dial in content is ticked; untick it → the dial opens on the group ring
+again, In Group beside the dungeon set; tick it back. Pick a group inside another (an Arathi Basin
+node) → the box is grayed out. Result:
 
 ## Share
 
@@ -918,7 +926,7 @@ from the client, so this check needs a non-English client pass. Result:
 | INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..3, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet; LOC-1 re-enumerated in phase 5 and owed a non-English client pass; STATE-3 added and PANEL-2 rewritten with `/qc toggle` and Preview as in Master controls (2026-10-19) |
 | SEND-1..5, PAD-1..12 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet; PAD-12 added with In Group, PAD-3 and PAD-4 rewritten with the strip as wide as the pad (2026-10-20, bg buttons); PAD-1 rewritten and PAD-11 added with World (solo) and the built-ins' colors, PAD-3 and PAD-4 rewritten with the strip's marker (2026-10-19, groups polish); PAD-8 added in phase 5 (audit QC-07); PAD-1 rewritten and PAD-9..10 added with the up growth, chip width and the built-in glyphs (2026-10-19) |
 | EDIT-1..29 | Phase 3: the editors | No client pass recorded yet; EDIT-29 added with the preview click's echo (2026-10-20); EDIT-28 added with right-click a group title (2026-10-19); EDIT-27 added with Preview while editing (2026-10-19); EDIT-3, 4, 20 and 22 rewritten and EDIT-25..26 added with Preview as in Master controls, the Dungeon set, the Arena drawer, instance search, the Callouts rows and the glyph sets (2026-10-19); EDIT-1, 2 and 19 rewritten and EDIT-22..24 added with the When drawers, Inherit when conditions and the icon browser's search (2026-10-18); EDIT-2, 4, 5, 6, 11, 14 and ICON-1 rewritten and EDIT-19..21 added when the built-in sets became seeded groups, groups nested and the Preview tab became a table (2026-10-18); EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17); EDIT-9, 13 and ICON-1 rewritten and EDIT-14..17 added with the icon browser and glyph colors (2026-10-18); EDIT-9 rewritten and EDIT-18 added when the token dropdown became the Text label's info glyph (2026-10-18); EDIT-13, 14 and ICON-1 rewritten when the Suggested tab went and the skin stopped waiting for the addon to be enabled (2026-10-18); EDIT-9, 18 and ICON-1 rewritten when the Icon boxes went and the popup took its two-column layout (2026-10-18); EDIT-9, 11 and ICON-1 rewritten with the clear glyph, the Preview gap and the buttons' 2 px inset (2026-10-18) |
-| DIAL-1..12 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-2 and DIAL-4 rewritten with In Group and the four node buttons (2026-10-20, bg buttons); DIAL-4 rewritten with the node set's map-wide wedge (2026-10-19, groups polish); DIAL-9 rewritten when Preview as moved to Master controls (2026-10-19); DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
+| DIAL-1..13 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-2 rewritten and DIAL-13 added with Skip on the dial in content (2026-10-20); DIAL-2 and DIAL-4 rewritten with In Group and the four node buttons (2026-10-20, bg buttons); DIAL-4 rewritten with the node set's map-wide wedge (2026-10-19, groups polish); DIAL-9 rewritten when Preview as moved to Master controls (2026-10-19); DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
 | SHARE-1..6, LOOK-1..2, ICON-1, BG-1..8, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; BG-1 and BG-4 rewritten and BG-7..8 added with the four node buttons and Silvershard Mines' and Temple of Kotmogu's groups (2026-10-20, bg buttons); BG-1 rewritten with Wintergrasp's winds and BG-3..6 added with the battleground objective groups (2026-10-20); BG-1 rewritten with the map-wide wedge (2026-10-19, groups polish); LOOK-2's in-combat step goes through `/qc set`; IDS-1 extended to the journal instances and arenas (2026-10-19) |
 | ICONS-1..3 | Icons and polish (2026-10-19): the Icons tab | No client pass recorded yet |
 | LOOK-3..4, CHIP-1..2, KEY-1..3 | Window, Chip and keys (2026-10-20): the header's look and alignment, the Chip tab, keys as WoW bindings and Toggle Comms Pads | No client pass recorded yet; LOOK-1 rewritten with the Section titles font, PAD-10 with Chip width on the Chip tab, DIAL-6 and DIAL-8 with the dial key as WoW's own binding |

@@ -200,6 +200,17 @@ local ROWS = {
     { path = "group.openInto", instance = "group", type = "bool", default = T.group.openInto,
       page = "groups", group = GENERAL, label = L["Open the dial on this group"],
       desc = L["When this is the first active group on a Comms Dial, the dial opens straight on its ring, and the middle of the dial goes back to the groups."] },
+    -- Skip on the dial in content (modules/Surfaces.lua S.BuildDialPlan): a top-level group a dial
+    -- leaves out while a content group is active on it (In Group ships with it on). A group inside
+    -- another rides its parent's ring, so the row is grayed out for one; its stored value is kept.
+    { path = "group.dialYield", instance = "group", type = "bool", default = T.group.dialYield,
+      page = "groups", group = GENERAL, label = L["Skip on the dial in content"],
+      validate = check(function(v) return type(v) == "boolean", "badChoice" end),
+      disabledIf = function()
+          local gid = NS.State.editing and NS.State.editing.group
+          return gid ~= nil and Lib.IsChild(gid)
+      end,
+      desc = L["While a dungeon, raid, arena, battleground or other content group is active, the Comms Dial leaves this group out. The Comms Pad still shows it."] },
     -- Nesting (2026-10-18-builtins-as-groups-design.md, goal 2): the top-level group this one sits
     -- inside, or none (false). The General tab draws it as its own dropdown of the groups it may take
     -- (settings/Groups.lua); /qc takes a group id or none. Taking a parent takes the group off every

@@ -535,6 +535,7 @@ function Lib.CreateGroup(fields)
         local id = Lib.NewId("g")
         p.groups[id] = { name = fields.name, icon = fields.icon, iconColor = glyphColor(fields.icon, fields.iconColor),
             callouts = callouts, when = copyTable(fields.when) or {}, openInto = fields.openInto == true,
+            dialYield = fields.dialYield == true,
             enabled = fields.enabled ~= false, parent = fields.parent or nil, inheritWhen = fields.inheritWhen ~= false }
         announce("group", id)
         return id
@@ -594,8 +595,8 @@ function Lib.DuplicateGroup(id)
     local g = P().groups[id]
     if not g then return nil, "noGroup" end
     return Lib.CreateGroup({ name = Lib.CopyName(g.name), icon = g.icon, iconColor = g.iconColor, when = g.when,
-        openInto = g.openInto, enabled = g.enabled, callouts = g.callouts, parent = isChild(id) and g.parent or nil,
-        inheritWhen = g.inheritWhen })
+        openInto = g.openInto, dialYield = g.dialYield, enabled = g.enabled, callouts = g.callouts,
+        parent = isChild(id) and g.parent or nil, inheritWhen = g.inheritWhen })
 end
 
 --- The group.parent row's reaction (settings/SchemaMembers.lua): a group that now sits inside another
@@ -744,8 +745,8 @@ local function seedGroup(p, gid, parent, hidden)
     local id = takeId(p, "g")
     p.groups[id] = { name = def.name, icon = def.icon, iconColor = def.iconColor, callouts = callouts,
         when = copyTable(def.when) or {},
-        openInto = def.openInto == true, enabled = true, parent = parent, inheritWhen = true, compass = def.compass,
-        origin = gid }
+        openInto = def.openInto == true, dialYield = def.dialYield == true, enabled = true, parent = parent,
+        inheritWhen = true, compass = def.compass, origin = gid }
     p.seededSets[gid] = true
     return id
 end
@@ -928,8 +929,8 @@ local SURFACE_DEFAULTS = {
 --- false, not nil, so the boot check can see the key: false is "none" and "the default place".
 Lib.TEMPLATES = {
     callout = { name = "", text = "", channel = "smartGroup", icon = false, iconColor = false },
-    group = { name = "", icon = false, iconColor = false, enabled = true, openInto = false, when = {}, parent = false,
-        inheritWhen = true },
+    group = { name = "", icon = false, iconColor = false, enabled = true, openInto = false, dialYield = false, when = {},
+        parent = false, inheritWhen = true },
     pad = { name = "", enabled = true, groupsAs = SURFACE_DEFAULTS.pad.groupsAs, point = false,
         layout = copyTable(SURFACE_DEFAULTS.pad.layout), look = copyTable(SURFACE_DEFAULTS.pad.look),
         icon = copyTable(SURFACE_DEFAULTS.pad.icon), header = copyTable(SURFACE_DEFAULTS.pad.header),
@@ -1447,7 +1448,8 @@ local function importMembers(res, map, tally)
         end
         local f = e.fields
         local id = Lib.CreateGroup({ name = f.name, icon = f.icon, iconColor = f.iconColor, when = f.when,
-            openInto = f.openInto, enabled = f.enabled, inheritWhen = f.inheritWhen, callouts = ids })
+            openInto = f.openInto, dialYield = f.dialYield, enabled = f.enabled, inheritWhen = f.inheritWhen,
+            callouts = ids })
         if id then map[e.id], tally.groups = id, tally.groups + 1 end
     end
     nestImported(res, map, tally)

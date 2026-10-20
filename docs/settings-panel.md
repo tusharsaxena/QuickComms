@@ -59,7 +59,8 @@ band      [ Group v (picker; a green dot after its name marks a group active now
           listed, indented, right after it) ][ New group ]
           [x] Preview while editing (under the picker)
 strip     [ General ][ Callouts ][ When ][ Preview ]
-General   Name, Enabled, Open the dial on this group, then
+General   Name, Enabled, Open the dial on this group, Skip on the dial in content (grayed out for a
+          group inside another), then
           Parent group (None, or a top-level group) beside Inherit when conditions (grayed out
           with no parent), then the icon under an Icon label with Choose icon…, the clear glyph
           and its color swatch (settings/Editors.lua's chooser, no Icon text box), then

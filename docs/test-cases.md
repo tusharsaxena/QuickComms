@@ -964,6 +964,20 @@ Total.
 - surfaces: [nesting] a parent that draws nothing leaves its surface with nothing active
 - surfaces: [inherit] a child that inherits shows wherever its parent's When matches, whatever its own says
 
+### test_dial_yield.lua (11)
+
+- dial yield: In Group is seeded skipping the dial in content; the other seeded sets are not
+- dial yield: in a key the dial leaves In Group out; the pad keeps it
+- dial yield: in a battleground the dial leaves In Group out behind the map's sets
+- dial yield: in an open-world party In Group stays on the dial, beside a group-only user group
+- dial yield: the skip never empties the dial, and a skipping content group triggers nothing
+- dial yield: a place row names content as a content row does
+- dial yield: an open-world content row names no content
+- dial yield: an edit preview of In Group still shows it on the dial
+- dial yield: the row is written through the seam and refuses a non-bool
+- dial yield: General's Skip on the dial in content sits by Open into, grayed out for a child
+- dial yield: the setting travels in a shared string; an old string's group does not skip
+
 ### test_pad_render.lua (20)
 
 - render: Dress builds a chip's regions once, each its own object
@@ -1206,6 +1220,7 @@ Total.
 | test_pad_layout.lua | 19 |
 | test_dial_layout.lua | 18 |
 | test_surfaces.lua | 27 |
+| test_dial_yield.lua | 11 |
 | test_pad_render.lua | 20 |
 | test_pad.lua | 40 |
 | test_dial.lua | 34 |
@@ -1218,4 +1233,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **992** |
+| **Total** | **1003** |
