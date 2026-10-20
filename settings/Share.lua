@@ -155,7 +155,7 @@ function SH.Import()
     local counts = NS.Share.CountText(tally)
     NS.Print(counts ~= "" and L["Imported %s."]:format(counts) or L["Nothing was imported."])
     if tally.dials > 0 then
-        NS.Print(L["An imported dial's key is the one WoW binds to its place in the dial list: see its Binding tab on the Comms Dial page."])
+        NS.Print(L["An imported dial's key is the one WoW binds to its place in the dial list: set it in Options, Keybindings, Ka0s Quick Comms, Open Comms Dial."])
     end
     if looseGroups(res) > 0 then
         NS.Print(L["An imported group is on no pad or dial yet: add it on the Groups tab of the Comms Pad or Comms Dial page."])
