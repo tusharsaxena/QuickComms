@@ -734,7 +734,7 @@ Total.
 - pads page: [glow knobs] a Glow or Glow style write repaints the tab, so the right knobs appear
 - pads page: [B9] Defaults puts the Icons rows back too, and its tooltip names them
 
-### test_page_dials.lua (16)
+### test_page_dials.lua (18)
 
 - dials page: New dial makes a second dial holding every built-in, selects it, and builds QuickCommsDial2
 - dials page: New dial takes the lowest free number, so a delete never leads to two names alike
@@ -752,6 +752,8 @@ Total.
 - dials page: [B9] Icons follows Wheel, carries its headings once each, and writes the dial
 - dials page: [glow knobs] only the selected style's knobs show, and a Glow or Glow style write repaints
 - dials page: [labels] Labels shows or hides the wedges' names and styles them; off grays the font
+- dials page: [slices] Slices writes the fill, border, highlight and pointer, each color with its class color
+- dials page: [slices] every slice texture the dial names ships under media/textures
 
 ### test_page_share.lua (12)
 
@@ -913,13 +915,14 @@ Total.
 - layout: [window] the header row's height moves every row and is the collapsed pad's height
 - layout: [button] a Button height above 0 is the labeled button's height; 0 is automatic; icon-only stays square
 
-### test_dial_layout.lua (19)
+### test_dial_layout.lua (20)
 
 - dial layout: four wedges sit on N, E, S and W, clockwise from the top
 - dial layout: slices are Auto, 4, 6, 8 or 12; a page is 12 at most, 8 on a ring that holds rings
 - dial layout: [auto] one wedge is W, two W and E, three W, N and E, four W, N, E and S; more spread from W
 - dial layout: [review 5] more items than wedges go on plain pages, the rest on the last
-- dial layout: [nav] a paged ring's dots and arrows sit in one row under the disc and its labels
+- dial layout: [nav] a paged ring's pill, dots and arrows sit in one row under the disc and its labels
+- dial layout: [hit] a wedge's hit square fills its slice without reaching the hub or a neighbor
 - dial layout: [exit] Categories with several groups opens on the ring of groups; a group wedge opens its ring
 - dial layout: several groups open on the group ring; one group opens straight on it
 - dial layout: [review 5] Flat puts every callout on the first ring, highest group first, paged
@@ -1035,7 +1038,7 @@ Total.
 - pad: [R4] merged pads, collapsed pads and test mode's placeholder groups have no title to click
 - pad: [bg subgroups] Alterac Valley draws its nineteen objectives two to a row, each title its block wide
 
-### test_dial.lua (32)
+### test_dial.lua (35)
 
 - dial: Apply builds QuickCommsDial<n> with a ring per page, each callout wedge armed with its baked line
 - dial: a refused callout is a dimmed, disarmed wedge; a ring wedge is disarmed
@@ -1068,7 +1071,10 @@ Total.
 - dial: [review 6] on a four- or six-slice dial every node shows, and the number keys pick the shown wedges from N
 - dial: [icons] a wedge draws its glyph in its color; repainted untinted, it is white again
 - dial: [rework] a paged ring turns with its arrows and the Left and Right keys; its dots mark the page
-- dial: [rework] wedges have no backdrop; the disc and the wedges follow the ring radius
+- dial: [rework] wedges have no backdrop; the slices, the wedges and their hit squares follow the ring radius
+- dial: [slices] each place is a tinted slice; a hovered wedge lights its own slice; the border is lines
+- dial: [tooltip] a wedge's tooltip sits outside the dial: above by default, on the Labels tab's side
+- dial: [pointer] the pointer is a catalog glyph, sized and colored by the Slices tab, and can be off
 
 ### test_icon_style.lua (8)
 
@@ -1197,7 +1203,7 @@ Total.
 | test_groups_when.lua | 20 |
 | test_page_groups.lua | 67 |
 | test_page_pads.lua | 24 |
-| test_page_dials.lua | 16 |
+| test_page_dials.lua | 18 |
 | test_page_share.lua | 12 |
 | test_check.lua | 6 |
 | test_send_guard.lua | 10 |
@@ -1207,11 +1213,11 @@ Total.
 | test_edit_preview.lua | 14 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 21 |
-| test_dial_layout.lua | 19 |
+| test_dial_layout.lua | 20 |
 | test_surfaces.lua | 27 |
 | test_pad_render.lua | 21 |
 | test_pad.lua | 43 |
-| test_dial.lua | 32 |
+| test_dial.lua | 35 |
 | test_icon_style.lua | 8 |
 | test_glow.lua | 11 |
 | test_vendor_sync.lua | 3 |
@@ -1221,4 +1227,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **995** |
+| **Total** | **1001** |

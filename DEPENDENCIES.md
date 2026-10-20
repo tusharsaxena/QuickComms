@@ -85,6 +85,16 @@ python3 -c 'from PIL import Image; Image.open("media/logos/quickcomms.logo.png")
 python3 -c 'import PIL; print(PIL.__version__)'
 ```
 
+The same Pillow regenerates the Comms Dial's slice textures: `tools/gen-dial-textures.py` writes
+`media/textures/dial-sector-2.tga` … `dial-sector-12.tga` (one pie slice of an n-slice dial, white
+on transparent) and `media/textures/dial-pill.tga` (the current page's pill). Run it from the repo
+root after changing the shapes; never edit the TGAs by hand. It is not loaded by the client, and
+`.pkgmeta` ignores `tools/`.
+
+```sh
+python3 -I tools/gen-dial-textures.py
+```
+
 **Python 3 (standard library only)**, and only for **re-deriving the client-data extractions**:
 `tools/derive-gameids.py` (the instance ids and `tests/test_gameids.lua`'s map table) and
 `tools/derive-winds.py` (the node winds in `defaults/BuiltIns_Battlegrounds.lua`), with their shared

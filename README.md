@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-995%2F995_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1001%2F1001_passing-green)
 
 Quick Comms puts your usual group callouts one click or one keypress away. "Kick on me", "Lust
 now", "INC Lumber Mill": set them up once and they sit on a Comms Pad or open from a
@@ -37,11 +37,14 @@ Press it: with one group active the dial opens straight on that group's callouts
 shows the groups first, so click one, then click a callout to send it. In a battleground the map's
 set shows its nodes, each where it sits on the map. A ring with more callouts than wedges is paged:
 the arrows under the dial (or the Left and Right arrow keys, or the mouse wheel) turn the pages, and
-the dots show which page you are on. Alterac Valley lists its objectives north to south that way; its
+a gold pill under the dial marks the page you are on. Alterac Valley lists its objectives north to south that way; its
 pad sets them two to a row. The key again, Escape or a right click closes the dial; the number keys
-1 to 8 pick a wedge. On Settings → Comms Dial, the Wheel tab sets the wedges per ring (Auto spreads
-them evenly, up to 12) and the ring's radius, and the Labels tab shows or hides the wedges' names
-and sets their font, size, outline, color and shadow.
+1 to 8 pick a wedge. Hovering a wedge lights its whole slice, and a wedge's tooltip shows outside the
+dial. On Settings → Comms Dial, the Wheel tab sets the wedges per ring (Auto spreads them evenly, up
+to 12) and the ring's radius; the Slices tab colors the slices, the lines between them, the hovered
+slice and the pointer in the middle (its size too, or hides it); the Labels tab shows or hides the
+wedges' names, sets their font, size, outline, color and shadow, and which side of the dial the
+tooltip shows on.
 
 Settings → Groups makes a group and, on its Callouts tab, its callouts: Add callout opens a small
 editor for the name, text, channel and icon (Save keeps it, Cancel drops it). Choose icon… opens

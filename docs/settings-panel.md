@@ -507,15 +507,17 @@ shipped order.
 
 ```
 band     [ Dial v (picker) ][ New dial ]
-strip    [ General ][ Groups ][ Wheel ][ Labels ][ Icons ][ Preview ]
+strip    [ General ][ Groups ][ Wheel ][ Slices ][ Labels ][ Icons ][ Preview ]
 General  Name, Enabled, then Delete dial
 Groups   Show groups as (Categories or Flat), then the dial's groups as a drag-to-reorder list
          with a remove glyph (its priority order, spec §7; it takes the group off the dial and asks
          nothing), then Add a group (top-level groups only)
 Wheel    wedges per ring (Auto by default), ring radius, open at, then Position: X and Y and
          Reset this dial's position
+Slices   Background (the slices' fill), Border (size, then color), Highlight (the hovered
+         slice's fill) and Pointer (Show pointer, size, color), each color with Use class color
 Labels   Show labels, then the labels' Font block (font, size, outline, color, Use class color,
-         shadow), grayed out while labels are off
+         shadow), grayed out while labels are off, then Tooltip (side, offset)
 Icons    the wedges' icons, as the Comms Pad page's Icons tab (a wedge's border is a round ring,
          never wider than the wedge; its icon size keeps the wedge's own size)
 Preview  each ring as the current or previewed situation builds it, wedge by wedge
@@ -535,7 +537,8 @@ Preview  each ring as the current or previewed situation builds it, wedge by wed
   A ring that holds rings takes at most 8 either way, and a node set pinned to its winds keeps its
   eight. A ring with more items is paged: two arrows under the dial (dimmed at an end, no wrap), the
   Left and Right arrow keys (bound only while a paged ring is shown) and the mouse wheel turn its
-  pages, and a dot per page marks the one shown in gold. Ring radius is `dial.radius` (70 to 180
+  pages; under them a gold pill marks the page shown and a gray dot each other page, and each arrow
+  is a round plate in the slices' fill with a chevron, dimmed at an end. Ring radius is `dial.radius` (70 to 180
   pixels, default 100): the wedges' distance from the middle; the disc grows with it, keeping 20
   pixels between a wedge's edge and its own. Open at is `dial.openAt` (its place or the cursor). X
   and Y write the whole `dial.point` row; a refused offset says why and puts the box back. There is
@@ -545,6 +548,18 @@ Preview  each ring as the current or previewed situation builds it, wedge by wed
   library as the Buttons tab's (`dial.label.font|fontSize|fontColor|useClassColorFont|fontFlags|fontShadow`;
   defaults white Friz Quadrata 12 with its shadow, `PadDefaults.DialLabel`), grayed out while Show
   labels is off. A bigger font lifts the ring's title and drops the page row to clear the labels.
+  Under its Tooltip heading, Tooltip side is `dial.label.tooltipSide` (Above, the default; Below,
+  Left, Right) and Tooltip offset `dial.label.tooltipOffset` (0 to 80 pixels, default 8): every
+  dial tooltip (a wedge's, a page arrow's, the hub's Why is this showing?) sits outside the dial,
+  that far above the ring's title, below the page row, or beside the disc past its widest label.
+- **Slices** (2026-10-21): each heading's colors are composed swatch pairs with Use class color.
+  Background is `dial.slice.background`, each slice's fill (dark, as the disc was). Border is
+  `dial.slice.borderSize` (0 to 6 pixels, default 1; 0 draws no lines) and `borderColor`: the
+  spokes between slices and the rim. Highlight is `dial.slice.highlight`, the fill the slice under
+  the mouse takes (gold, faint); each wedge's clickable square fills as much of its slice as a
+  square allows. Pointer is `dial.slice.pointerShow`, `pointerSize` (10 to 48, default 20) and
+  `pointerColor`: the chevron in the hub that turns toward the cursor (`ph:caret-up`), grayed out
+  while Show pointer is off.
 - **No Binding tab** (the dial rework, 2026-10-21): the key is WoW's own binding of the dial's
   Bindings.xml entry, Open Comms Dial <n>, n the dial's place in the dial list, set only in Options →
   Keybindings → Ka0s Quick Comms; it is account-wide unless the player ticks Character Specific
@@ -554,8 +569,8 @@ Preview  each ring as the current or previewed situation builds it, wedge by wed
   and the wedges that open a ring. It is a listing (owner ruling R3); the drawn dial is the
   in-game preview (test mode, Preview as…).
 
-The page's Defaults puts groups-as, wedges per ring, ring radius, open at, the Labels tab and the
-Icons tab back to their defaults and turns the dial on, in one act (`Library.Batch`); the name, groups
+The page's Defaults puts groups-as, wedges per ring, ring radius, open at, the Slices, Labels and
+Icons tabs back to their defaults and turns the dial on, in one act (`Library.Batch`); the name, groups
 and position are kept, and the key, WoW's own binding, is never touched.
 
 ## Share
