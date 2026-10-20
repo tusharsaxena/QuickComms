@@ -14,7 +14,7 @@ NS.PadLayout = NS.PadLayout or {}
 local PL = NS.PadLayout
 
 -- The header row (situation chip, lockdown chip, stale hint, collapse): its default height and range,
--- the Window tab's Header height (defaults/PadStyle.lua; 18 before 2026-10-20).
+-- the Pad header tab's Header height (defaults/PadStyle.lua; 18 before 2026-10-20).
 PL.HEADER_H  = NS.PadDefaults.HEADER_H.default
 PL.HEADER_MIN, PL.HEADER_MAX = NS.PadDefaults.HEADER_H.min, NS.PadDefaults.HEADER_H.max
 PL.PAD       = 4     -- inner padding
@@ -97,12 +97,15 @@ function PL.CellSize(cell, fontSize, iconSize)
     return w, math.max(PL.CHIP_H, sizeOf(fontSize) + PL.CHIP_ROOM, icon + PL.ICON_ROOM)
 end
 
---- A section title row's height for the section titles' font size (never below SECTION_H).
-function PL.TitleHeight(fontSize)
+--- A section title row's height: the Section header tab's height when it is above 0, else automatic,
+--- grown with the section titles' font size (never below SECTION_H).
+function PL.TitleHeight(fontSize, fixed)
+    fixed = math.floor(tonumber(fixed) or 0)
+    if fixed > 0 then return fixed end
     return math.max(PL.SECTION_H, sizeOf(fontSize) + PL.TITLE_ROOM)
 end
 
---- The header row's height: the Window tab's Header height, clamped, or the default.
+--- The header row's height: the Pad header tab's Header height, clamped, or the default.
 function PL.HeaderHeight(h)
     h = tonumber(h)
     if not h then return PL.HEADER_H end
@@ -267,7 +270,8 @@ end
 --- @param layout table the pad's layout table
 --- @param opts table|nil { collapsed = boolean, chip = table (the Chip tab's { width, height }; default:
 ---   the layout table's own), fontSize = number (the chips' label size; a chip grows to hold it), titleSize = number (the section titles' size; a title row grows to hold it; default
----   fontSize), iconSize = number (the Icons tab's; a chip grows to hold it), headerH = number (the
+---   fontSize), titleH = number (the Section header tab's height: above 0 fixes the title rows'
+---   height, 0 or none keeps it automatic), iconSize = number (the Icons tab's; a chip grows to hold it), headerH = number (the
 ---   header row's height, PL.HeaderHeight),
 ---   situation = string (the header's text: a section title equal to it is not drawn),
 ---   minWidth = number (the narrowest the pad may be: what its header row needs, measured by
@@ -287,7 +291,7 @@ function PL.Compute(sections, layout, opts)
     local blocks, contentW = {}, 0
     if not opts.collapsed then
         blocks, contentW = collectBlocks(sections, layout, cw, ch, gap, up,
-            PL.TitleHeight(opts.titleSize or opts.fontSize),
+            PL.TitleHeight(opts.titleSize or opts.fontSize, opts.titleH),
             opts.situation)
     end
     local maxCols = layout.orientation == "grid" and PL.Columns(layout, 1) or nil

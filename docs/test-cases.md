@@ -714,13 +714,13 @@ Total.
 - groups page: [R4] EditGroup in combat prints the settings refusal and changes nothing
 - groups page: [R4] EditGroup of a group that is gone opens nothing
 
-### test_page_pads.lua (17)
+### test_page_pads.lua (20)
 
 - pads page: New pad makes a second pad holding every built-in, selects it, and the pad is built
 - pads page: the Layout rows write the selected pad
 - pads page: Grid columns is grayed out unless the orientation is Grid
 - pads page: X and Y move the pad through its pad.point row; Reset puts it back
-- pads page: Look's visibility reaches the pad's state driver
+- pads page: Main window's visibility reaches the pad's state driver
 - pads page: Groups lists the pad's groups; remove one, add it back at the end, drag to reorder
 - pads page: the remove glyph takes a group off the pad without asking and keeps the group
 - pads page: Delete pad asks, then the pad is gone, its frame released, and the page heals
@@ -728,7 +728,10 @@ Total.
 - pads page: [final 3, 15] Defaults puts the pad's rows back as one act: one rebuild
 - pads page: [final 4] Defaults keeps the pad's position
 - pads page: [final 26] New pad takes the lowest free number, so a delete never leads to two names alike
-- pads page: [phase 5] Window carries the composed Header, Font, Border and Background groups under their headings
+- pads page: [window tabs] the strip reads Layout, Pad header, Section header, Main window, Chip, Icons
+- pads page: [window tabs] Pad header carries Size, Font, Background and Border under their headings
+- pads page: [window tabs] Section header carries Size, Font, Background and Border, and writes the section table
+- pads page: [window tabs] Main window carries Visibility, Background and Border, and no font
 - pads page: [chip] Chip carries Size, Color, Border, Font and Glow, and Chip width left Layout for it
 - pads page: [B9] Icons carries its headings once each, a companion beside each swatch, and writes the pad
 - pads page: [B9] the glow's knobs are grayed out while it is off or in another style; its color never is
@@ -891,10 +894,11 @@ Total.
 - master: /qc test toggles test mode, and in combat says why it will not
 - master: the Test mode row reads and writes the one switch, and Reset all ends it
 
-### test_pad_layout.lua (20)
+### test_pad_layout.lua (21)
 
 - layout: horizontal puts a section's chips on one row under the header
 - layout: a titled section draws its label row first
+- layout: [section header] opts.titleH above 0 fixes the title rows' height; 0 keeps it automatic
 - layout: grid wraps at its column count; vertical is one column
 - layout: the style sets the cell
 - layout: [B3] narrow chips never make the pad narrower than its header needs
@@ -980,7 +984,7 @@ Total.
 - dial yield: General's Skip on the dial in content sits by Open into, grayed out for a child
 - dial yield: the setting travels in a shared string; an old string's group does not skip
 
-### test_pad_render.lua (20)
+### test_pad_render.lua (21)
 
 - render: Dress builds a chip's regions once, each its own object
 - render: [audit QC-07] the chip's padlock is the catalog's lock mark, tinted gold; the Blizzard art is the nil fallback
@@ -999,11 +1003,12 @@ Total.
 - render: [review] the skin's 1px inner line is kept only on the default flat 1px edge
 - render: [review] a chip's label runs to the chip's right edge, on one line
 - render: [phase 5] Use class color takes the player's class color and keeps the swatch's alpha
-- render: [window] the section titles wear the Window tab's Section titles font, gold by default
+- render: [window] the section titles wear the Section header tab's font, gold by default
+- render: [section header] SectionLook: no band by default, then the band's skin and the text's inset
 - render: [icons] a glyph chip is drawn in its color; the chip repainted with another icon is white again
 - render: [B3] a chip's label is one line, and hidden when the chip leaves it no room
 
-### test_pad.lua (41)
+### test_pad.lua (42)
 
 - pad: the default pad shows the M+ callouts, each chip armed with its baked line
 - pad: [review 5] a refused chip is dimmed and disarmed: a click sends and reports nothing
@@ -1029,7 +1034,7 @@ Total.
 - pad: [phase 3] a held drag whose stand-down is canceled in the same combat is stopped at combat end
 - pad: [phase 3] a new drag clears a stale held stop, so the next rebuild re-anchors
 - pad: [phase 3] the header's tooltip says why each group shows, unless the player turned it off
-- pad: [phase 5] the pad wears its Window tab: the titles' font and the edge and body it was given
+- pad: [phase 5] the pad wears its Section header and Main window tabs: the titles' font, the edge and body
 - pad: [window] the header wears its own block: gold outlined 16-point text over nothing by default, then what it is given
 - pad: [window] the header's text starts at the section titles' left edge, in every growth
 - pad: [icon only] the pad is as wide as its chips when the header is narrower, else as the header needs
@@ -1041,6 +1046,7 @@ Total.
 - pad: [B2] up growth pins the bottom edge, puts the header at the bottom and the strip below
 - pad: [R3] the strip reads the pad's name and PREVIEW / TEST MODE, spans the pad, and shows while locked
 - pad: [bg buttons] the strip matches the pad's width through a resize, and below an up-growing pad
+- pad: [section header] each title sits on a band its row wide, dressed by the Section header tab
 - pad: [R4] each drawn title takes a right-click to edit its group; a left-click does nothing
 - pad: [R4] the title's tooltip says Right-click to edit this group
 - pad: [R4] in tabs mode the tab's title edits the group the tab shows; the wheel moves it
@@ -1210,7 +1216,7 @@ Total.
 | test_eui_skin.lua | 10 |
 | test_groups_when.lua | 20 |
 | test_page_groups.lua | 67 |
-| test_page_pads.lua | 17 |
+| test_page_pads.lua | 20 |
 | test_page_dials.lua | 18 |
 | test_page_share.lua | 12 |
 | test_check.lua | 6 |
@@ -1220,12 +1226,12 @@ Total.
 | test_preview.lua | 23 |
 | test_edit_preview.lua | 14 |
 | test_master.lua | 5 |
-| test_pad_layout.lua | 20 |
+| test_pad_layout.lua | 21 |
 | test_dial_layout.lua | 18 |
 | test_surfaces.lua | 27 |
 | test_dial_yield.lua | 12 |
-| test_pad_render.lua | 20 |
-| test_pad.lua | 41 |
+| test_pad_render.lua | 21 |
+| test_pad.lua | 42 |
 | test_dial.lua | 34 |
 | test_icon_style.lua | 8 |
 | test_glow.lua | 11 |
@@ -1236,4 +1242,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1006** |
+| **Total** | **1012** |

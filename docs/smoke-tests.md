@@ -26,7 +26,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | DIAL-1..13 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, In Group off the dial in content |
 | KEY-1..3 | Key bindings | A dial's key as WoW's own binding in Options → Keybindings, Character Specific Keybindings, Toggle Comms Pads |
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
-| LOOK-1..4 | Window | The Comms Pad's Window tab: the section titles' font, border and background, the header's look, size and alignment |
+| LOOK-1..6 | Pad header, Section header, Main window | The Comms Pad's three window tabs: the section titles' font, the pad's border and background, the header's look, size and alignment, the tab strip and headings, the section header's band and height |
 | CHIP-1..2 | Chip tab | The chips' size, color, border and font; the chip glow |
 | ICONS-1..3 | Icons tab | The chips' and wedges' icon look, border and glow triggers |
 | ICON-1 | Icons | Choosing an icon, for a callout and for a group |
@@ -279,7 +279,7 @@ outside a raid, the last line names the lock. Behavior → Explain why groups sh
 
 **EDIT-5. The Comms Pad page.** Comms Pad → Layout: Orientation Vertical, Chip style Label only,
 Scale 1.5 → the pad redraws each time. Type X `200`, Y `-100` → it moves; Reset this pad's position
-→ it returns. Window → Visibility Only out of combat → it hides on the pull with no error. Groups:
+→ it returns. Main window → Visibility Only out of combat → it hides on the pull with no error. Groups:
 drag a group to the top → it comes first on the pad. New pad → a second pad appears holding every
 built-in group you still have (top-level, in shipped order); Delete pad (Yes) → it is gone. Result:
 
@@ -523,13 +523,13 @@ filtered by it; Cancel and open the browser again → the text is still there; `
 empty. Escape with the Wowhead window's box focused closes that window alone; close the browser →
 the Wowhead window closes with it. Result:
 
-**EDIT-25. The Callouts rows and the Window and Chip tabs.** Groups → "Dungeon (generic)" → Callouts → each
+**EDIT-25. The Callouts rows and the window and Chip tabs.** Groups → "Dungeon (generic)" → Callouts → each
 row reads its icon, the name in gold, the channel's short label in its chat color (Party blue,
 Say white) and the start of its text in a muted white, cut at 40
 characters with "…". A callout with no icon shows the question mark; a callout whose text holds a
 `|` shows the bar, not a color change; a Smart channel takes the color of the channel it resolves to
-now (solo: Party). Comms Pad → Window → Visibility, then the Header, Section titles, Border and
-Background headings, each heading once; Comms Pad → Chip → the Size, Color, Border, Font and Glow
+now (solo: Party). Comms Pad → Pad header and Section header → the Size, Font, Background and Border
+headings, Main window → the Visibility, Background and Border headings, each heading once; Comms Pad → Chip → the Size, Color, Border, Font and Glow
 headings, each once. Result:
 
 **EDIT-26. The glyph sets and their credits.** Open the icon browser (EDIT-14) → Glyphs: the count
@@ -711,16 +711,17 @@ it as before. Result:
 
 ## Look
 
-The Comms Pad's Window tab (the Look tab until 2026-10-20; the checks keep their LOOK ids).
+The Comms Pad's Pad header, Section header and Main window tabs (one Window tab until 2026-10-20, the
+Look tab before that; the checks keep their LOOK ids).
 
 **LOOK-1. Section titles.** On a new pad the section titles are gold, 12 points and outlined. Comms
-Pad → Window → Section titles: pick another face, Font size 14, Font flags None, untick Font shadow →
+Pad → Section header → Font: pick another face, Font size 14, Font flags None, untick Font shadow →
 the section titles (In Party, Mythic+…) redraw that way, still
 gold; the chip labels do not change (they are the Chip tab's). Tick Use class color → the titles take
 your class color, and Font color's opacity still applies; untick it and set Font color to red → the
 titles turn red. Result:
 
-**LOOK-2. Border and background.** Border style: a LibSharedMedia border (Blizzard Tooltip, for one),
+**LOOK-2. Border and background.** Comms Pad → Main window → Border style: a LibSharedMedia border (Blizzard Tooltip, for one),
 thickness 3, color red → the pad's edge changes; thickness 0 → no edge. Background: dark blue at 50%
 opacity → the body changes; Use class color → your class color at 50%. The settings panel is closed
 and locked in combat, so the in-combat write goes through the command line: in combat,
@@ -729,7 +730,7 @@ edge lands at combat end. Defaults → the Ka0s look again. Result:
 
 **LOOK-3. The header's look (2026-10-20).** On a new pad the header row (the top row, `World` in the
 open world) is 24 pixels tall (it was 18) with gold 16-point outlined text, no background and no edge
-(the owner's defaults). Comms Pad → Window → Header: Header height 30 → the row grows and every
+(the owner's defaults). Comms Pad → Pad header: Size → Header height 30 → the row grows and every
 section moves down with it; Font size 20, another face, Font flags Thick outline → the situation text
 redraws that way, and during an encounter with a Say callout on the pad the LOCKDOWN chip takes the
 same face and size and stays red; the collapse button grows with it. Background dark red at 60% → a
@@ -743,6 +744,22 @@ title under the header (a party in the open world: `World` over `In Party`). The
 the right). Layout → Growth → Left and down, Right and up, Left and up in turn → still aligned in each;
 Spacing 20 → still aligned. Result:
 
+**LOOK-5. Three window tabs (2026-10-20).** Comms Pad → the strip reads General, Groups, Layout, Pad
+header, Section header, Main window, Chip, Icons (no Window tab). Pad header shows the headings Size,
+Font, Background and Border, each once; Section header the same four; Main window Visibility,
+Background and Border, with no font controls. Change a value on each tab → only that part of the pad
+changes (the header row, the section titles, the pad's body). Defaults on the page → all three tabs go
+back to the owner's look. Result:
+
+**LOOK-6. The section header's band and height (2026-10-20).** Stand where the pad shows section titles
+(a party in the open world). By default no band is drawn behind them. Comms Pad → Section header →
+Background dark blue at 60% → a band behind each title, spanning the pad's inside (a battleground set's
+paired objectives: each band its own block's width, stopping at its neighbor); Border thickness 2,
+color white → an edge around each band, the title text kept clear of it; Use class color on each →
+your class color. Size → Section header height 30 → every title row grows to 30 pixels with its text
+centered and the chips move down with it; 0 → the automatic height again (it reads Automatic). A
+right-click on a title still opens its group. Result:
+
 ## Chip tab
 
 **CHIP-1. Size, color, border and font (2026-10-20).** On a new pad the chips wear the owner's
@@ -753,7 +770,7 @@ only (Layout) → square chips around the icons whatever the size says. Color �
 every chip's body; Use class color → your class color. Border thickness 2, color white → an edge around
 every chip, over the body, never hiding the icon or label; a LibSharedMedia border draws that art; 0 →
 no edge. Font: another face, size 14, Outline, Font color yellow → the chip labels only (the section
-titles keep the Window tab's font); a bigger font grows the automatic height. Defaults → the owner's
+titles keep the Section header tab's font); a bigger font grows the automatic height. Defaults → the owner's
 chips again. In combat, `/qc set pad.chip.width 150` → no error, "updates after combat", wider chips at
 combat end. Result:
 
@@ -920,7 +937,7 @@ code (phase 5):
   editor falls back to the id).
 - **Sent in chat**: the callout tokens' values (`{me}`, `{spec}`, …) come from the client in its own
   language and are escaped like any value (`test_tokens`).
-- **The pads' fonts** (the Window tab's header and section titles, the Chip tab's labels): the default face is LibSharedMedia's "Friz Quadrata TT", which LibSharedMedia
+- **The pads' fonts** (the Pad header and Section header tabs', the Chip tab's labels): the default face is LibSharedMedia's "Friz Quadrata TT", which LibSharedMedia
   does not register on koKR, zhCN or zhTW; a face the machine does not have draws `STANDARD_TEXT_FONT`
   (`Pad_Render.LabelFont`, `test_pad_render`).
 - **Printed**: every chat and report line is English through `NS.L`, the share and import lines
@@ -944,4 +961,4 @@ from the client, so this check needs a non-English client pass. Result:
 | DIAL-1..13 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-2 rewritten and DIAL-13 added with Skip on the dial in content (2026-10-20); DIAL-2 and DIAL-4 rewritten with In Group and the four node buttons (2026-10-20, bg buttons); DIAL-4 rewritten with the node set's map-wide wedge (2026-10-19, groups polish); DIAL-9 rewritten when Preview as moved to Master controls (2026-10-19); DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
 | SHARE-1..6, LOOK-1..2, ICON-1, BG-1..8, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; BG-1 and BG-4 rewritten and BG-7..8 added with the four node buttons and Silvershard Mines' and Temple of Kotmogu's groups (2026-10-20, bg buttons); BG-1 rewritten with Wintergrasp's winds and BG-3..6 added with the battleground objective groups (2026-10-20); BG-1 rewritten with the map-wide wedge (2026-10-19, groups polish); LOOK-2's in-combat step goes through `/qc set`; IDS-1 extended to the journal instances and arenas (2026-10-19) |
 | ICONS-1..3 | Icons and polish (2026-10-19): the Icons tab | No client pass recorded yet; ICONS-1 rewritten with the owner's pad defaults (2026-10-20) |
-| LOOK-3..4, CHIP-1..2, KEY-1..3 | Window, Chip and keys (2026-10-20): the header's look and alignment, the Chip tab, keys as WoW bindings and Toggle Comms Pads | No client pass recorded yet; LOOK-1, LOOK-3 and CHIP-1 rewritten with the owner's pad defaults (2026-10-20); LOOK-1 rewritten with the Section titles font, PAD-10 with Chip width on the Chip tab, DIAL-6 and DIAL-8 with the dial key as WoW's own binding |
+| LOOK-3..6, CHIP-1..2, KEY-1..3 | Window, Chip and keys (2026-10-20): the header's look and alignment, the three window tabs and the section band, the Chip tab, keys as WoW bindings and Toggle Comms Pads | No client pass recorded yet; LOOK-5..6 added and LOOK-1..3 rewritten with the Window tab split into Pad header, Section header and Main window (2026-10-20); LOOK-1, LOOK-3 and CHIP-1 rewritten with the owner's pad defaults (2026-10-20); LOOK-1 rewritten with the Section titles font, PAD-10 with Chip width on the Chip tab, DIAL-6 and DIAL-8 with the dial key as WoW's own binding |

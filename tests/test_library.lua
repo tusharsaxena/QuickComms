@@ -751,25 +751,25 @@ test("library: [review] an imported Look keeps a bool a bool and a color its fou
     local NS, Lib, p = boot()
     local res = NS.Share.Validate({ v = 1, addon = "QuickComms", kind = "bundle",
         pads = { p1 = { name = "Junk look", fields = {
-            ["pad.look.fontShadow"] = "yes", ["pad.look.useClassColorFont"] = { 1, 2, 3 },
+            ["pad.section.fontShadow"] = "yes", ["pad.section.useClassColorFont"] = { 1, 2, 3 },
             ["pad.look.useClassColorBackground"] = 7, ["pad.look.useClassColorBorder"] = true,
-            ["pad.look.fontColor"] = { r = 0.5, g = 0.5, b = 0.5, junk = { a = { b = "x" } } },
+            ["pad.section.fontColor"] = { r = 0.5, g = 0.5, b = 0.5, junk = { a = { b = "x" } } },
             ["pad.look.background"] = { 0.1, 0.2, 0.3 } } } } })
     local tally, map = Lib.Import(res)
-    local look = p.pads[map.p1].look
+    local look, section = p.pads[map.p1].look, p.pads[map.p1].section
     -- red under: no validate on the four bool rows in lookChecks (settings/SchemaMembers.lua)
-    assertEqual(look.fontShadow, true, "the default stands")
-    assertEqual(look.useClassColorFont, false)
+    assertEqual(section.fontShadow, true, "the default stands")
+    assertEqual(section.useClassColorFont, false)
     assertEqual(look.useClassColorBackground, false)
     assertEqual(look.useClassColorBorder, true)
     assertEqual(tally.ignored, 3)
     -- red under: no normalize on the color rows (the junk subtree is stored and exported again)
     local keys = {}
-    for k in pairs(look.fontColor) do keys[#keys + 1] = tostring(k) end
+    for k in pairs(section.fontColor) do keys[#keys + 1] = tostring(k) end
     table.sort(keys)
     assertEqual(table.concat(keys, ","), "a,b,g,r")
-    assertEqual(look.fontColor.r, 0.5)
-    assertEqual(look.fontColor.a, 1)
+    assertEqual(section.fontColor.r, 0.5)
+    assertEqual(section.fontColor.a, 1)
     assertEqual(look.background.r .. "," .. look.background.b .. "," .. look.background.a, "0.1,0.3,1")
 end)
 
@@ -791,10 +791,12 @@ test("library: [phase 5] Prepare gives a pad saved before the Look groups every 
     local NS, Lib, p = boot()
     local pad = p.pads[p.padOrder[1]]
     pad.look = { visibility = "never" }
-    pad.chip, pad.header = nil, { height = 30 }
+    pad.chip, pad.section, pad.header = nil, nil, { height = 30 }
     Lib.Prepare()
     assertEqual(pad.look.visibility, "never", "a stored value is kept")
-    assertEqual(pad.look.font, "Friz Quadrata TT")
+    assertNil(pad.look.font, "the section titles' font left the Main window (2026-10-20)")
+    assertEqual(pad.section.font, "Friz Quadrata TT", "the Section header tab, filled whole")
+    assertEqual(pad.section.height, 0, "automatic")
     assertEqual(pad.look.background.a, 0.92)
     assertEqual(pad.chip.width, 100, "the Chip tab, filled whole")
     assertEqual(pad.header.height, 30, "a stored header height is kept")

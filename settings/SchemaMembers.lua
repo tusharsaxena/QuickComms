@@ -270,17 +270,6 @@ local ROWS = {
       page = "pads", group = L["Layout"], label = L["Position"],
       desc = L["Where the pad sits. Drag it while unlocked, or type an offset."],
       validate = check(Lib.ValidPoint) },
-    { path = "pad.look.visibility", instance = "pad", type = "string", default = T.pad.look.visibility,
-      values = VISIBILITY, page = "pads", group = L["Window"], label = L["Visibility"],
-      desc = L["When this pad shows. General visibility applies on top. When a group is active is decided at the last change out of combat."],
-      validate = oneOf(VISIBILITY) },
-    { path = "pad.look.fade", instance = "pad", type = "string", default = T.pad.look.fade,
-      values = FADE, page = "pads", group = L["Window"], label = L["Fade"],
-      desc = L["Fade the pad out of combat, or until the mouse is over it."],
-      validate = oneOf(FADE) },
-    { path = "pad.look.fadeAlpha", instance = "pad", type = "number", default = T.pad.look.fadeAlpha,
-      min = 0, max = 1, step = 0.05, page = "pads", group = L["Window"], label = L["Faded alpha"],
-      desc = L["How visible a faded pad is."], validate = NUMBER, normalize = clamp(0, 1) },
 
     -- Comms Dial page (spec §11, §13.1). Relaxed is the only interaction in v0.1.0, so there is no
     -- interaction, delay or tap-action row (Quick mode brings them with the C7 upgrade), and no depth
@@ -313,7 +302,7 @@ local ROWS = {
       validate = check(Lib.ValidPoint) },
 }
 
--- ── a pad's Window groups (spec §10.3, §19 row 5; options-ui-§16, §17) ─────────────────────────
+-- ── a pad's window tabs (spec §10.3, §19 row 5; options-ui-§16, §17) ───────────────────────────
 
 -- The font blocks, the border blocks and the background swatches with their class-color companions,
 -- each COMPOSED by the options library (a hand-written copy is anti-pattern #73) and then stamped as
@@ -322,11 +311,11 @@ local ROWS = {
 -- text is about no unit. A background is not a bar, so it takes a swatch and its companion only. On
 -- a degraded load the composers are hollow and these rows are absent.
 --
--- The Window tab (the Look tab until 2026-10-20; its rows keep the `pad.look.` paths) holds, after
--- Visibility, Fade and Faded alpha: the Header block (`pad.header.*`: its height, then a font, a
--- background and a border of its own, all under one heading), the Section titles font
--- (`pad.look.font*`: the section titles only, now that the chips and the header have their own), then
--- the pad's Border and Background.
+-- The Window tab (the Look tab before) became three tabs on 2026-10-20 (owner request), each under
+-- its own headings: Pad header (`pad.header.*`: Size, its Header height; Font; Background; Border),
+-- Section header (`pad.section.*`: Size, its height, 0 automatic; Font, the section titles'; and the
+-- Background and Border of the band behind each title) and Main window (`pad.look.*`, the stored key
+-- kept: Visibility, with Fade and Faded alpha; Background; Border; no font, the owner's call).
 --
 -- The Chip tab (`pad.chip.*`, 2026-10-20) styles the chips themselves: Size (Chip width, moved from
 -- Layout, and Chip height, 0 automatic), Color (the chip's background), Border, Font (the chips'
@@ -381,7 +370,7 @@ local function composedChecks(O)
 end
 
 -- One composed block's rows stamped as pad member rows: `prefix` names the pad's table
--- ("pad.look.", "pad.header."), `defaults` that table's shipped values.
+-- ("pad.look.", "pad.header.", "pad.section.", "pad.chip."), `defaults` that table's shipped values.
 local function stampBlock(out, list, prefix, checks)
     for _, row in ipairs(list) do
         local c = checks[row.path:sub(#prefix + 1)] or {}
@@ -396,31 +385,52 @@ local function blockSpec(prefix, group, subgroup, defaults, extra)
     return spec
 end
 
-local WINDOW = L["Window"]
-local HEADER = L["Header"]
-local LOOK, HEAD = "pad.look.", "pad.header."
-local HEADER_H = NS.PadDefaults.HEADER_H
+-- The three tabs, in strip order: the options library orders a page's tabs by each group's first
+-- row, so these rows come after Layout's and before the Chip tab's. SHOWN is Main window's
+-- Visibility heading (VISIBILITY is that row's choices).
+local PAD_HEADER, SECTION_HEADER, MAIN_WINDOW = L["Pad header"], L["Section header"], L["Main window"]
+local SHOWN = L["Visibility"]
+local LOOK, HEAD, SECT = "pad.look.", "pad.header.", "pad.section."
+local HEADER_H, SECTION_H = NS.PadDefaults.HEADER_H, NS.PadDefaults.SECTION_H
+
+-- One styled tab's Font (when `font`), Background and Border blocks, each under its own heading.
+local function styleBlocks(out, O, checks, prefix, group, defaults, font)
+    if font then stampBlock(out, O.FontGroup(blockSpec(prefix, group, L["Font"], defaults)), prefix, checks) end
+    stampBlock(out, O.ColorPair(blockSpec(prefix, group, L["Background"], defaults,
+        { key = "background", label = L["Background"] })), prefix, checks)
+    stampBlock(out, O.BorderGroup(blockSpec(prefix, group, L["Border"], defaults)), prefix, checks)
+end
 
 local function windowRows()
     local O = NS.addon.Settings.Helpers
     local checks = composedChecks(O)
+    local SIZE = L["Size"]
     local out = {}
-    -- The Header block: its height first, then its font, background and border, under one heading.
     out[1] = { path = HEAD .. "height", instance = "pad", type = "number", default = T.pad.header.height,
-        min = HEADER_H.min, max = HEADER_H.max, step = 1, page = "pads", group = WINDOW, subgroup = HEADER,
+        min = HEADER_H.min, max = HEADER_H.max, step = 1, page = "pads", group = PAD_HEADER, subgroup = SIZE,
         label = L["Header height"], startsLine = true,
         desc = L["How tall the pad's header row is, in pixels: the row with the situation (World, M+, Raid) and the collapse button."],
         validate = NUMBER, normalize = clamp(HEADER_H.min, HEADER_H.max, true) }
-    local hdef = T.pad.header
-    stampBlock(out, O.FontGroup(blockSpec(HEAD, WINDOW, HEADER, hdef)), HEAD, checks)
-    stampBlock(out, O.ColorPair(blockSpec(HEAD, WINDOW, HEADER, hdef, { key = "background", label = L["Background"] })),
-        HEAD, checks)
-    stampBlock(out, O.BorderGroup(blockSpec(HEAD, WINDOW, HEADER, hdef)), HEAD, checks)
-    local ldef = T.pad.look
-    stampBlock(out, O.FontGroup(blockSpec(LOOK, WINDOW, L["Section titles"], ldef)), LOOK, checks)
-    stampBlock(out, O.BorderGroup(blockSpec(LOOK, WINDOW, L["Border"], ldef)), LOOK, checks)
-    stampBlock(out, O.ColorPair(blockSpec(LOOK, WINDOW, L["Background"], ldef, { key = "background", label = L["Background"] })),
-        LOOK, checks)
+    styleBlocks(out, O, checks, HEAD, PAD_HEADER, T.pad.header, true)
+    out[#out + 1] = { path = SECT .. "height", instance = "pad", type = "number", default = T.pad.section.height,
+        min = SECTION_H.min, max = SECTION_H.max, step = 1, page = "pads", group = SECTION_HEADER, subgroup = SIZE,
+        label = L["Section header height (0 = automatic)"], zeroText = L["Automatic"], startsLine = true,
+        desc = L["How tall each section title's row is, in pixels. 0 grows it to hold its font."],
+        validate = NUMBER, normalize = clamp(SECTION_H.min, SECTION_H.max, true) }
+    styleBlocks(out, O, checks, SECT, SECTION_HEADER, T.pad.section, true)
+    -- Main window: Visibility (with Fade and Faded alpha), then its Background and Border; no font.
+    out[#out + 1] = { path = "pad.look.visibility", instance = "pad", type = "string", default = T.pad.look.visibility,
+        values = VISIBILITY, page = "pads", group = MAIN_WINDOW, subgroup = SHOWN, label = L["Visibility"],
+        desc = L["When this pad shows. General visibility applies on top. When a group is active is decided at the last change out of combat."],
+        validate = oneOf(VISIBILITY) }
+    out[#out + 1] = { path = "pad.look.fade", instance = "pad", type = "string", default = T.pad.look.fade,
+        values = FADE, page = "pads", group = MAIN_WINDOW, subgroup = SHOWN, label = L["Fade"],
+        desc = L["Fade the pad out of combat, or until the mouse is over it."],
+        validate = oneOf(FADE) }
+    out[#out + 1] = { path = "pad.look.fadeAlpha", instance = "pad", type = "number", default = T.pad.look.fadeAlpha,
+        min = 0, max = 1, step = 0.05, page = "pads", group = MAIN_WINDOW, subgroup = SHOWN, label = L["Faded alpha"],
+        desc = L["How visible a faded pad is."], validate = NUMBER, normalize = clamp(0, 1) }
+    styleBlocks(out, O, checks, LOOK, MAIN_WINDOW, T.pad.look, false)
     return out
 end
 
@@ -466,7 +476,7 @@ end
 
 for _, row in ipairs(chipRows()) do ROWS[#ROWS + 1] = row end
 
--- The Icons tab's rows (B9, settings/SchemaIcons.lua), with these checks: a pad's after its Window and
+-- The Icons tab's rows (B9, settings/SchemaIcons.lua), with these checks: a pad's after its window and
 -- Chip rows, a dial's after its Wheel rows, so each editor's Icons tab sits there.
 do
     local C = { check = check, choices = choices, oneOf = oneOf, clamp = clamp, NUMBER = NUMBER, BOOL = BOOL,

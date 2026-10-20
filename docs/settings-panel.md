@@ -8,7 +8,7 @@ eagerly at `OnEnable`; each page's body builds on its first show (options-ui-§1
 | Ka0s Quick Comms (landing) | The logo, the TOC notes line and the slash command list, drawn by the library's `BuildLandingPage` |
 | General | `Master controls`, `Behavior` |
 | Groups | One group (a seeded built-in set is one too): `General`, `Callouts`, `When`, `Preview` |
-| Comms Pad | One pad: `General`, `Groups`, `Layout`, `Window`, `Chip`, `Icons` |
+| Comms Pad | One pad: `General`, `Groups`, `Layout`, `Pad header`, `Section header`, `Main window`, `Chip`, `Icons` |
 | Comms Dial | One dial: `General`, `Groups`, `Wheel`, `Icons`, `Binding`, `Preview` |
 | Share | `Export`, `Import` |
 | Profiles | AceDBOptions: switch, copy, reset and delete profiles |
@@ -420,7 +420,7 @@ footer   the selected icon (a glyph in the color) and its name, then Choose and 
 
 ```
 band     [ Pad v (picker) ][ New pad ]
-strip    [ General ][ Groups ][ Layout ][ Window ][ Chip ][ Icons ]
+strip    [ General ][ Groups ][ Layout ][ Pad header ][ Section header ][ Main window ][ Chip ][ Icons ]
 General  Name, Enabled, then Unlock (or Lock) pads and Delete pad
 Groups   Show groups as, then the pad's groups as a drag-to-reorder list with a remove glyph
          (its priority order; it takes the group off the pad and asks nothing), then Add a group
@@ -428,12 +428,15 @@ Groups   Show groups as, then the pad's groups as a drag-to-reorder list with a 
 Layout   orientation, grid columns, growth, chip style, scale, spacing (a chip's label runs to
          its right edge, or to the padlock on a locked chip: no channel letter there, the chip's
          tooltip names the channel), then Position: X and Y and Reset this pad's position
-Window   visibility, fade and faded alpha; then Header (Header height, then a font block, a
-         Background with Use class color and a border block, all for the pad's top row, the one
-         that names the situation: World, M+, Raid), Section titles (face, size, color with Use
-         class color, flags, shadow: the gold group titles), Border (style, thickness, color with
-         Use class color) and Background (its color with Use class color), each composed by the
-         options library (options-ui-§16, §17) under its own heading
+Pad header      the pad's top row, the one that names the situation (World, M+, Raid): Size
+                (Header height), Font (face, size, color with Use class color, flags, shadow),
+                Background (its color with Use class color) and Border (style, thickness, color with
+                Use class color), the blocks composed by the options library (options-ui-§16, §17),
+                each under its own heading
+Section header  each section title's row (the gold group titles): Size (Section header height, 0
+                automatic), Font, and the Background and Border of the band behind each title
+Main window     the pad itself: Visibility (visibility, fade and faded alpha), Background and
+                Border; no font
 Chip     the chips themselves: Size (Chip width, Chip height with 0 automatic), Color (the chip's
          Background with Use class color), Border (the composed block), Font (the chips' labels:
          face, size, color with Use class color, flags, shadow) and Glow (Glow, Glow style, Glow
@@ -444,15 +447,23 @@ Icons    the chips' icons (B9): Size and crop (Icon size, Zoom), Color (Desatura
          class color), then one heading per style's knobs and Offset
 ```
 
-The Window tab was the Look tab until 2026-10-20, and its own rows keep their `pad.look.*` paths; its
-Header block is `pad.header.*`. The Header defaults are the owner's (2026-10-20): 24 pixels tall (it
+Pad header, Section header and Main window were one Window tab until 2026-10-20 (the Look tab before
+that); the owner split it into three, each under its own headings. The options library orders a page's
+tabs by each group's first row (options-ui-§13), so the three tabs' rows sit after Layout's and before
+the Chip tab's in `settings/SchemaMembers.lua`. Main window's rows keep their `pad.look.*` paths; Pad
+header's are `pad.header.*`, Section header's `pad.section.*`. The Pad header defaults are the owner's
+(2026-10-20): 24 pixels tall (it
 was 18), Friz Quadrata at 16 points, gold, outlined, with its shadow, over no background and no edge
 (its edge color white, for when a thickness is set). The header's text starts at the section titles' left
 edge (`PadLayout.PAD`) in every growth direction; the lockdown chip and the stale hint take the
 header's face, size, flags and shadow and keep their own red and gray, and the collapse button is two
-points larger in the header's color. Section titles are the Window tab's Font block, now that the
-chips and the header have their own; by default (the owner's, 2026-10-20) 12 points, gold, outlined,
-with their shadow.
+points larger in the header's color. The section titles take the Section header tab's Font block (it
+was the Window tab's Section titles block, `pad.look.font*`); by default (the owner's, 2026-10-20) 12
+points, gold, outlined, with their shadow. Section header height 0 is automatic, the height a title row
+always had (grown with its font); above 0 every title row is that tall, its text centered in it. The
+tab's Background and Border draw a band behind each title across its row (a packed child's title: its
+block's width, as its right-click frame), with the text kept clear of the edge; by default there is
+none, and the text sits on the titles' left edge as before.
 
 The Chip tab's rows are `pad.chip.*` (settings/SchemaMembers.lua). Chip width moved there from Layout
 (`pad.layout.width` is gone). Chip height 0 is automatic, the height a chip always had (grown to hold
@@ -472,7 +483,7 @@ never grayed out; Border style and thickness are grayed out while Show border is
 and every knob while the glow is off, and a knob also while the glow is in a style it does not apply to.
 Glow when is Always, On hover or After sending (1.5 s from the send result; a dial closes on the send,
 so its wedge glows for 1.5 s from the next open, if that comes within 5 s). The page's Defaults puts the
-Window, Chip and Icons rows back too.
+Pad header, Section header, Main window, Chip and Icons rows back too.
 
 X and Y write the whole `pad.point` row, the same one the drag strip writes; a drag on screen
 updates the boxes. A new pad holds the seeded sets the profile still has as top-level groups, in

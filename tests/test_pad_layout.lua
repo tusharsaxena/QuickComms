@@ -44,6 +44,18 @@ test("layout: a titled section draws its label row first", function()
     assertEqual(box.height, 74)
 end)
 
+test("layout: [section header] opts.titleH above 0 fixes the title rows' height; 0 keeps it automatic", function()
+    local pl = PL()
+    local sections = { { title = "M+", slots = slots(1) } }
+    -- red under: PL.Compute ignoring opts.titleH
+    local box = pl.Compute(sections, H, { titleH = 30 })
+    assertEqual(box.items[1].h, 30)
+    assertEqual(box.items[2].y, 28 + 30, "the chips start below the taller row")
+    assertEqual(pl.Compute(sections, H, { titleH = 0 }).items[1].h, 14, "automatic: the shipped 14")
+    assertEqual(pl.Compute(sections, H, { titleH = 0, titleSize = 20 }).items[1].h, 24, "automatic grows with the font")
+    assertEqual(pl.TitleHeight(20, 8), 8, "a fixed height is kept, even below the font")
+end)
+
 test("layout: grid wraps at its column count; vertical is one column", function()
     local pl = PL()
     local grid = { orientation = "grid", columns = 2, style = "iconLabel", spacing = 4, width = 140 }

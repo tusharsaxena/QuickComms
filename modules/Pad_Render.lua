@@ -7,11 +7,12 @@ local _, NS = ...
 -- when locked, a dim veil when its bake was refused, a dim veil during the spam guard's window, a
 -- gold hover and a flash per send result. The tooltip names the line it sends and the channel it
 -- goes to in WoW's chat color (a smart kind shows the channel it resolved to), or why it sends
--- nothing, and any lock. The pad's Window tab
--- (phase 5; the Look tab until 2026-10-20) is read here as plain values: fonts (LabelFont, for the
--- section titles and the header) and skins (SkinFor, for the pad and its header), which
--- modules/Pad.lua applies out of combat. The header's look (HeaderLook) is its own block on that tab;
--- its situation text starts at the section titles' left edge (PL.PAD), whatever the growth.
+-- nothing, and any lock. The pad's three window tabs (the Window tab until 2026-10-20, the Look tab
+-- before that) are read here as plain values, which modules/Pad.lua applies out of combat: Main
+-- window's skin (SkinFor, for the pad), Pad header's look (HeaderLook: the header row's height, font
+-- and skin; its situation text starts at the section titles' left edge, PL.PAD, whatever the growth)
+-- and Section header's (SectionLook: each title row's height, font, and a band of background and
+-- border behind it, ApplySectionBand).
 -- The Chip tab (ChipLook) dresses each chip: its body, an edge on a plain child laid over it, its
 -- label's font, and a glow around the whole chip (modules/Glow.lua Glow.Chip). The Icons tab (B9) styles the icon through
 -- modules/IconStyle.lua (size, crop, desaturation, alpha, tint, border) and modules/Glow.lua (the
@@ -257,7 +258,7 @@ end
 
 local FLAT_EDGE = "Interface\\Buttons\\WHITE8x8"
 
---- A font block's font (the Window tab's Section titles, the Header's, the Chip tab's): { path, size,
+--- A font block's font (the Section header tab's, the Pad header's, the Chip tab's): { path, size,
 --- flags, r, g, b, a, shadow }. A face this machine does not have is the standard one; "Use class
 --- color" takes the player's class color, keeping the swatch's alpha (NS.ResolveColor). A missing
 --- swatch is `fallback` when given, else white.
@@ -272,10 +273,10 @@ end
 -- The gold of GameFontNormalSmall: the section titles' and the header's default color.
 R.TITLE_COLOR = { r = 1, g = 0.82, b = 0, a = 1 }
 
---- The section titles' font: the Window tab's Section titles block (gold by default, as the titles
+--- The section titles' font: the Section header tab's (`pad.section`; gold by default, as the titles
 --- always were).
-function R.TitleFont(look)
-    return R.LabelFont(look, R.TITLE_COLOR)
+function R.TitleFont(section)
+    return R.LabelFont(section, R.TITLE_COLOR)
 end
 
 --- Draw a font string in a pad's font (R.LabelFont). A face the client refuses falls back to the
@@ -291,12 +292,12 @@ end
 -- with no innerBorder would leave it drawn; this one hides it.
 local NO_INNER = { 0, 0, 0, 0 }
 
---- The skin a pad wears, from its Window tab: the Ka0s skin (NS.SKIN) with the border's art (a
+--- The skin a pad wears, from its Main window tab: the Ka0s skin (NS.SKIN) with the border's art (a
 --- LibSharedMedia border by name; "None", or one this machine does not have, is the flat edge), its
 --- thickness (0 is no edge) and color, and the background color, each through its class-color
 --- companion. The Ka0s 1px inner line belongs to the pad's flat 1px edge only: at thickness 0 it would
 --- be an edge after all, and over a thicker edge or border art it is a gray line that ignores the
---- border's color; `plain` (the header, a chip's edge) never takes it. Art insets the background by a
+--- border's color; `plain` (the header, a section band, a chip's edge) never takes it. Art insets the background by a
 --- quarter of its size, so the body reaches under the art's soft inner edge.
 function R.SkinFor(look, plain)
     look = type(look) == "table" and look or {}
@@ -378,6 +379,30 @@ function R.ApplyHeaderLook(header, hl)
     R.ApplyFont(header.qcLockdown, recolor(hl.font, LOCKDOWN_COLOR))
     R.ApplyFont(header.qcStale, recolor(hl.font, STALE_COLOR))
     if header.qcCollapse then R.ApplyFont(header.qcCollapse.qcText, recolor(hl.font, nil, 2)) end
+end
+
+--- The section headers' look, from the pad's `section` table: { height (0 automatic), font, skin (the
+--- band behind each title: its background and edge, plain), inset (the band's edge, which the title
+--- text keeps clear of), sig }. The defaults draw no band, the text at the titles' old left edge.
+--- `prev` is answered again while its signature still holds, as R.HeaderLook's.
+function R.SectionLook(section, prev)
+    section = type(section) == "table" and section or {}
+    local sig = lookSig(section)
+    if type(prev) == "table" and prev.sig == sig then return prev end
+    local skin = R.SkinFor({ borderStyle = section.borderStyle or "None", borderSize = section.borderSize or 0,
+        borderColor = section.borderColor, useClassColorBorder = section.useClassColorBorder,
+        background = section.background or { 0, 0, 0, 0 },
+        useClassColorBackground = section.useClassColorBackground }, true)
+    return { sig = sig, height = math.max(0, math.floor(tonumber(section.height) or 0)), font = R.TitleFont(section),
+        skin = skin, inset = skin.edgeFile and skin.insets.left or 0 }
+end
+
+--- Dress a section title's band in its look (R.SectionLook); a band already wearing it is not painted
+--- again.
+function R.ApplySectionBand(band, sl)
+    if band.qcLookSig == sl.sig then return end
+    band.qcLookSig = sl.sig
+    NS.ApplySkin(band, sl.skin)
 end
 
 -- ── the Chip tab (2026-10-20) ───────────────────────────────────────────────────────────────

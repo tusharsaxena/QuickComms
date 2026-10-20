@@ -1,5 +1,5 @@
 -- tests/test_page_pads.lua — settings/Pads.lua (spec §10.2-§10.4, §13.1): the pad picker and New pad,
--- General's acts, the Groups priority list, Layout with the X/Y position, and Look. Driven headlessly
+-- General's acts, the Groups priority list, Layout with the X/Y position, and the styled tabs. Driven headlessly
 -- through tests/page_helpers.lua.
 
 local T = _G.QUICKCOMMS_TEST
@@ -89,9 +89,9 @@ test("pads page: X and Y move the pad through its pad.point row; Reset puts it b
     assertEqual(pointOf(inst), "TOP,CENTER,0,-150")
 end)
 
-test("pads page: Look's visibility reaches the pad's state driver", function()
+test("pads page: Main window's visibility reaches the pad's state driver", function()
     local NS, m, P = open()
-    local w = P.tab("pads", "Window")
+    local w = P.tab("pads", "Main window")
     P.find(w, "Dropdown", "Visibility"):__fire("OnValueChanged", "never")
     assertEqual(NS.db.profile.pads.p1.look.visibility, "never")
     assertEqual(m.stateDrivers[NS.Pad.Instance("p1").root].visibility, "hide")
@@ -201,28 +201,63 @@ test("pads page: [final 26] New pad takes the lowest free number, so a delete ne
     assertEqual(NS.db.profile.pads[Pads.Create()].name, "Comms Pad 4")
 end)
 
-test("pads page: [phase 5] Window carries the composed Header, Font, Border and Background groups under their headings", function()
+test("pads page: [window tabs] the strip reads Layout, Pad header, Section header, Main window, Chip, Icons", function()
+    local NS = open()
+    local order, seen = {}, {}
+    for _, row in ipairs(NS.addon.Settings.RowsForPage("pads")) do
+        if row.group and not seen[row.group] then
+            seen[row.group] = true
+            order[#order + 1] = row.group
+        end
+    end
+    -- red under: the Visibility rows left ahead of the header tabs (the library orders tabs by each
+    -- group's first row), or the one Window tab (2026-10-20, owner request)
+    assertEqual(table.concat(order, ","), "General,Groups,Layout,Pad header,Section header,Main window,Chip,Icons")
+end)
+
+test("pads page: [window tabs] Pad header carries Size, Font, Background and Border under their headings", function()
     local NS, _, P = open()
-    local w = P.tab("pads", "Window")
-    for _, heading in ipairs({ "Header", "Section titles", "Border", "Background" }) do
+    local w = P.tab("pads", "Pad header")
+    for _, heading in ipairs({ "Size", "Font", "Background", "Border" }) do
         -- red under: the host's own h.Section above each subgroup (the library draws it from the rows)
         assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
     end
-    -- the header's font, background and border, then the pad's font, border and background
-    assertEqual(#P.all(w, "CheckBox", "Use class color"), 6, "a companion beside each swatch (options-ui-§17)")
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 3, "a companion beside each swatch (options-ui-§17)")
     assertTrue(P.find(w, "ColorPicker", "Font color") ~= nil)
     assertTrue(P.find(w, "ColorPicker", "Border color") ~= nil)
     assertTrue(P.find(w, "ColorPicker", "Background") ~= nil)
-    -- The Header block comes first, so its Font shadow is the first one drawn.
-    local shadows = P.all(w, "CheckBox", "Font shadow")
-    assertEqual(#shadows, 2)
-    shadows[1]:__fire("OnValueChanged", false)
+    P.find(w, "CheckBox", "Font shadow"):__fire("OnValueChanged", false)
     assertFalse(NS.db.profile.pads.p1.header.fontShadow)
-    shadows[2]:__fire("OnValueChanged", false)
-    assertFalse(NS.db.profile.pads.p1.look.fontShadow)
     P.find(w, "Slider", "Header height"):__fire("OnMouseUp", 30)
     assertEqual(NS.db.profile.pads.p1.header.height, 30)
     assertEqual(NS.Pad.Instance("p1").header.__h, 30, "the pad's header row follows")
+end)
+
+test("pads page: [window tabs] Section header carries Size, Font, Background and Border, and writes the section table", function()
+    local NS, _, P = open()
+    local w = P.tab("pads", "Section header")
+    for _, heading in ipairs({ "Size", "Font", "Background", "Border" }) do
+        assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
+    end
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 3, "font, background and border")
+    P.find(w, "CheckBox", "Font shadow"):__fire("OnValueChanged", false)
+    assertFalse(NS.db.profile.pads.p1.section.fontShadow)
+    -- red under: no pad.section.height row
+    P.find(w, "Slider", "Section header height (0 = automatic)"):__fire("OnMouseUp", 22)
+    assertEqual(NS.db.profile.pads.p1.section.height, 22)
+end)
+
+test("pads page: [window tabs] Main window carries Visibility, Background and Border, and no font", function()
+    local NS, _, P = open()
+    local w = P.tab("pads", "Main window")
+    for _, heading in ipairs({ "Visibility", "Background", "Border" }) do
+        assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
+    end
+    assertNil(P.find(w, "ColorPicker", "Font color"), "no font on the Main window (owner's call)")
+    assertNil(P.find(w, "CheckBox", "Font shadow"))
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 2, "background and border")
+    P.find(w, "Slider", "Faded alpha"):__fire("OnMouseUp", 0.5)
+    assertEqual(NS.db.profile.pads.p1.look.fadeAlpha, 0.5)
 end)
 
 -- ── the Chip tab (2026-10-20) ───────────────────────────────────────────────────────────────
