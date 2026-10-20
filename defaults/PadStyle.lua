@@ -77,6 +77,7 @@ function D.DialLabel()
         font = "Friz Quadrata TT", fontSize = 12, fontColor = { r = 1, g = 1, b = 1, a = 1 },
         useClassColorFont = false, fontFlags = "", fontShadow = true,
         tooltipSide = "top", tooltipOffset = 8,
+        offset = 0,   -- the labels' distance from the dial's center; 0 is just past the disc
     }
 end
 
@@ -89,6 +90,7 @@ function D.DialSlice()
         borderSize = 1, borderColor = { r = 1, g = 1, b = 1, a = 0.12 }, useClassColorBorder = false,
         highlight = { r = 1, g = 0.82, b = 0, a = 0.25 }, useClassColorHighlight = false,
         pointerShow = true, pointerSize = 20, pointerColor = { r = 1, g = 0.82, b = 0, a = 1 },
+        pointerOffset = 0,   -- the pointer's distance from the dial's center; 0 is just outside the hub
         useClassColorPointer = false,
     }
 end

@@ -505,6 +505,11 @@ local function sliceRows()
     out[#out + 1] = row(POINTER, { path = SLICEP .. "pointerSize", type = "number", default = sdef.pointerSize,
         min = 10, max = 48, step = 1, label = L["Pointer size"], disabledIf = pointerOff,
         desc = L["How big the pointer is, in pixels."], validate = NUMBER, normalize = clamp(10, 48, true) })
+    out[#out + 1] = row(POINTER, { path = SLICEP .. "pointerOffset", type = "number", default = sdef.pointerOffset,
+        min = 0, max = 150, step = 1, label = L["Pointer offset (0 = automatic)"], zeroText = L["Automatic"],
+        disabledIf = pointerOff, startsLine = true,
+        desc = L["How far the pointer sits from the middle of the dial, in pixels. 0 puts it just outside the middle button."],
+        validate = NUMBER, normalize = clamp(0, 150, true) })
     for _, r in ipairs(pair(POINTER, "pointerColor", L["Pointer color"], "useClassColorPointer")) do
         r.disabledIf = pointerOff
         out[#out + 1] = r
@@ -526,7 +531,12 @@ local function labelRows()
     local out = { { path = LABELP .. "show", instance = "dial", type = "bool", default = ldef.show,
         page = "dials", group = LABELS, label = L["Show labels"], startsLine = true,
         desc = L["Write each wedge's name outside the dial. Off shows the icons alone; the tooltip still names them."],
-        validate = BOOL } }
+        validate = BOOL },
+      { path = LABELP .. "offset", instance = "dial", type = "number", default = ldef.offset,
+        min = 0, max = 300, step = 1, page = "dials", group = LABELS, label = L["Label offset (0 = automatic)"],
+        zeroText = L["Automatic"], disabledIf = hidden,
+        desc = L["How far each label sits from the middle of the dial, in pixels. 0 puts it just outside the dial."],
+        validate = NUMBER, normalize = clamp(0, 300, true) } }
     local font = {}
     stampBlock(font, O.FontGroup(blockSpec(LABELP, LABELS, L["Font"], ldef)), LABELP, composedChecks(O), "dial")
     for _, row in ipairs(font) do

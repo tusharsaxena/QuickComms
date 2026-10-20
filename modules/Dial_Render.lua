@@ -7,10 +7,10 @@ local _, NS = ...
 -- frames: the hub's close mark and pointer on the header; a title, its slices (modules/Dial_Slices.lua)
 -- and, on a paged ring, two page arrows on each ring; and on each wedge an icon (a glyph in its color,
 -- no backdrop of its own since the dial rework, 2026-10-21), its label, a padlock, a dim veil when it
--- sends nothing, the guard's cooling veil and a result flash. Under the mouse a wedge lights its whole
--- slice (the Slices tab's Highlight). The hub carries the stale hint, the lockdown chip and the test
+-- sends nothing, the guard's cooling veil and a result flash. The slice the cursor points into lights
+-- whole (the Slices tab's Highlight), anywhere outside the hub (R.PointerUpdate). The hub carries the stale hint, the lockdown chip and the test
 -- or preview label. The pointer is a plain (unprotected) child of the header that turns toward the
--- cursor, the Slices tab's glyph, size and color: its OnUpdate is set when the header shows and
+-- cursor, the Slices tab's glyph, size, color and offset: its OnUpdate is set when the header shows and
 -- cleared when it hides, so a closed or stood-down dial runs nothing per frame (perf bucket
 -- dialRender). Every tooltip the dial shows sits outside it, on the Labels tab's side, at its offset
 -- (R.ShowTip). The Icons tab (B9) styles each wedge's icon through modules/IconStyle.lua and
@@ -56,7 +56,17 @@ local function circle(frame, layer, size, r, g, b, a)
     return t
 end
 
---- The pointer, while the dial is open: toward the cursor, hidden inside the dead zone.
+-- The ring on screen, among the ones the last rebuild loaded (header.qcRingFrames), or nil.
+local function shownRing(header)
+    for _, ring in ipairs(header.qcRingFrames or {}) do
+        if ring:IsShown() then return ring end
+    end
+    return nil
+end
+
+--- While the dial is open, every frame: the pointer toward the cursor (hidden inside the dead zone,
+--- or when the Slices tab turns it off), and the slice the cursor points into lit, anywhere on the
+--- disc outside the hub (Slices.Track), whether or not it is over the wedge's own square.
 function R.PointerUpdate(pointer)
     local t0 = Perf.on and debugprofilestop()
     local header = pointer.qcHeader
@@ -65,7 +75,7 @@ function R.PointerUpdate(pointer)
     local mx, my = GetCursorPosition()
     local a, ox, oy = DL.Pointer((cx or 0) * scale, (cy or 0) * scale, mx, my, header.qcReach)
     local arrow = pointer.qcArrow
-    if a then
+    if a and header.qcPointerOn ~= false then
         arrow:ClearAllPoints()
         arrow:SetPoint("CENTER", header, "CENTER", ox, oy)
         arrow:SetRotation(-a)
@@ -73,47 +83,63 @@ function R.PointerUpdate(pointer)
     else
         arrow:Hide()
     end
+    local ring = shownRing(header)
+    if ring and scale and scale > 0 then
+        local dx, dy = (mx or 0) / scale - (cx or 0), (my or 0) / scale - (cy or 0)
+        Slices.Track(ring, math.atan2(dx, dy), math.sqrt(dx * dx + dy * dy))
+    end
     if t0 then Perf.Note("dialRender", debugprofilestop() - t0) end
 end
 
---- Build the hub's regions and the pointer, once per header. `onEnter(header)` runs on hover.
+--- Build the hub's regions and the pointer, once per header. `onEnter(header)` runs on hover. The hub,
+--- its close mark, its labels and the pointer sit on a plain, mouse-off frame above the rings
+--- (`qcPointer`, raised by R.RaiseFront), so the slices never draw over them; the header under it
+--- still takes the hub's clicks.
 function R.DressHub(header, onEnter)
     if header.qcDressed then return header end
     header.qcDressed = true
-    header.qcHub = circle(header, "BORDER", DL.HUB, 0.12, 0.12, 0.14, 0.95)
-    header.qcClose = header:CreateTexture(nil, "ARTWORK")
+    local front = CreateFrame("Frame", nil, header)
+    front:SetAllPoints(header)
+    front:EnableMouse(false)
+    front.qcHeader = header
+    header.qcPointer = front
+    header.qcHub = circle(front, "BORDER", DL.HUB, 0.12, 0.12, 0.14, 0.95)
+    header.qcClose = front:CreateTexture(nil, "ARTWORK")
     mark(header.qcClose, "close", CLOSE_ICON, 1.0, 0.35, 0.35)   -- red, as the stop button reads
     header.qcClose:SetSize(DL.HUB - 16, DL.HUB - 16)
     header.qcClose:SetPoint("CENTER", header, "CENTER", 0, 0)
-    header.qcStale = header:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    header.qcStale = front:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     header.qcStale:SetPoint("TOP", header, "BOTTOM", 0, -2)
     header.qcStale:SetText(L["updates after combat"])
     header.qcStale:Hide()
-    header.qcLockdown = header:CreateFontString(nil, "OVERLAY", "GameFontRedSmall")
+    header.qcLockdown = front:CreateFontString(nil, "OVERLAY", "GameFontRedSmall")
     header.qcLockdown:SetPoint("BOTTOM", header, "TOP", 0, 2)
     header.qcLockdown:SetText(L["LOCKDOWN"])
     header.qcLockdown:Hide()
-    header.qcTest = header:CreateFontString(nil, "OVERLAY", "GameFontGreenSmall")
+    header.qcTest = front:CreateFontString(nil, "OVERLAY", "GameFontGreenSmall")
     header.qcTest:SetPoint("BOTTOM", header.qcLockdown, "TOP", 0, 2)
     header.qcTest:Hide()
-    local pointer = CreateFrame("Frame", nil, header)
-    pointer:SetAllPoints(header)
-    pointer.qcHeader = header
-    pointer.qcArrow = pointer:CreateTexture(nil, "OVERLAY")
-    pointer.qcArrow:SetTexture(NS.Icon(POINTER_GLYPH) or POINTER_ICON)
-    pointer.qcArrow:Hide()
-    header.qcPointer = pointer
-    header:HookScript("OnShow", function()
-        if header.qcPointerOn ~= false then pointer:SetScript("OnUpdate", R.PointerUpdate) end
-    end)
+    front.qcArrow = front:CreateTexture(nil, "OVERLAY")
+    front.qcArrow:SetTexture(NS.Icon(POINTER_GLYPH) or POINTER_ICON)
+    front.qcArrow:Hide()
+    header:HookScript("OnShow", function() front:SetScript("OnUpdate", R.PointerUpdate) end)
     header:HookScript("OnHide", function()
-        pointer:SetScript("OnUpdate", nil)
-        pointer.qcArrow:Hide()
+        front:SetScript("OnUpdate", nil)
+        front.qcArrow:Hide()
+        -- the snippet hid the rings first, so clear every one the rebuild loaded
+        for _, ring in ipairs(header.qcRingFrames or {}) do Slices.Track(ring, 0, 0) end
     end)
     header:HookScript("OnEnter", function(self) if onEnter then onEnter(self) end end)
     header.qcHeader = header
     header:HookScript("OnLeave", function() GameTooltip:Hide() end)
     return header
+end
+
+--- Raise the hub's front frame over every ring and wedge (a rebuild may have made new ones), and
+--- hand it the rings the pointer tracks. Insecure: a plain frame's level.
+function R.RaiseFront(header, rings)
+    header.qcRingFrames = rings
+    header.qcPointer:SetFrameLevel((header:GetFrameLevel() or 0) + 20)
 end
 
 -- A color swatch through its class-color companion, as { r, g, b, a }.
@@ -134,41 +160,38 @@ function R.Look(radius, label, slice)
     local show = label.show ~= false
     return { radius = DL.ClampRadius(radius), font = font, show = show, line = show and font.size + 2 or 0,
         tipSide = label.tooltipSide or "top", tipOffset = tonumber(label.tooltipOffset) or 8,
+        labelReach = math.max(0, tonumber(label.offset) or 0),
         fill = color(slice.background, slice.useClassColorBackground, D.background),
         borderSize = math.max(0, tonumber(slice.borderSize) or D.borderSize),
         border = color(slice.borderColor, slice.useClassColorBorder, D.borderColor),
         highlight = color(slice.highlight, slice.useClassColorHighlight, D.highlight),
         pointerShow = slice.pointerShow ~= false, pointerSize = tonumber(slice.pointerSize) or D.pointerSize,
+        pointerOffset = math.max(0, tonumber(slice.pointerOffset) or 0),
         pointer = color(slice.pointerColor, slice.useClassColorPointer, D.pointerColor) }
 end
 
---- The pointer in the dial's look: its size, color and reach (just outside the hub); off, it is hidden
---- and runs nothing.
+--- The pointer in the dial's look: its size, color and reach (the Pointer offset from the hub's
+--- center; 0 is just outside the hub); off, it is hidden (the per-frame update still lights slices).
 function R.PaintPointer(header, look)
     local arrow = header.qcPointer.qcArrow
     arrow:SetSize(look.pointerSize, look.pointerSize)
     arrow:SetVertexColor(look.pointer.r, look.pointer.g, look.pointer.b, look.pointer.a)
-    header.qcReach = DL.PointerReach(look.pointerSize)
+    header.qcReach = look.pointerOffset > 0 and look.pointerOffset or DL.PointerReach(look.pointerSize)
     header.qcPointerOn = look.pointerShow
-    if not look.pointerShow then
-        header.qcPointer:SetScript("OnUpdate", nil)
-        arrow:Hide()
-    elseif header:IsShown() then
-        header.qcPointer:SetScript("OnUpdate", R.PointerUpdate)
-    end
+    if not look.pointerShow then arrow:Hide() end
 end
 
 --- Where the dial's tooltips go (the Labels tab's side and offset): outside the dial, clear of the
 --- ring title above it, the page row below it, or the widest label at either side. `labelWidth` is
 --- the widest label the rebuild drew (0 with none). Kept on the header for R.ShowTip.
 function R.PlaceTips(header, look, labelWidth)
-    local g = DL.Geometry(look.radius, look.line)
+    local g = DL.Geometry(look.radius, look.line, look.labelReach)
     local off, side = look.tipOffset, look.tipSide
     local at
     if side == "bottom" then
         at = { "TOP", 0, g.nav - DL.ARROW / 2 - off }
     elseif side == "left" or side == "right" then
-        local x = g.disc / 2 + (look.show and DL.LABEL_GAP + labelWidth or 0) + off
+        local x = math.max(g.disc / 2, look.show and g.reach + labelWidth or 0) + off
         at = side == "left" and { "RIGHT", -x, 0 } or { "LEFT", x, 0 }
     else
         at = { "BOTTOM", 0, g.title + DL.LINE + off }
@@ -255,7 +278,7 @@ function R.PaintRing(ring, spec, look)
     look = look or R.Look()
     Slices.Paint(ring, spec, look)
     ring.qcTitle:ClearAllPoints()
-    ring.qcTitle:SetPoint("BOTTOM", ring, "CENTER", 0, DL.Geometry(look.radius, look.line).title)
+    ring.qcTitle:SetPoint("BOTTOM", ring, "CENTER", 0, DL.Geometry(look.radius, look.line, look.labelReach).title)
     ring.qcTitle:SetText(R.RingTitle(spec))
 end
 
@@ -295,12 +318,10 @@ function R.DressWedge(btn)
     btn.qcFlash = circle(btn, "OVERLAY", DL.WEDGE, 1, 1, 1, 0.45)
     btn.qcFlash:Hide()
     btn:HookScript("OnEnter", function(self)
-        Slices.Highlight(self, true)
         R.ShowTooltip(self)
         Glow.SetHover(self, true)
     end)
     btn:HookScript("OnLeave", function(self)
-        Slices.Highlight(self, false)
         GameTooltip:Hide()
         Glow.SetHover(self, false)
     end)
@@ -313,11 +334,9 @@ local DEFAULT_LOOK
 --- Show one ring item on a wedge: its icon, its label outside the disc (its `geo.anchor` point at
 --- `geo.lx, geo.ly`, so it reads away from the dial) in the Labels tab's font, or none while labels
 --- are off, a padlock when its callout is locked, and the dim veil when it sends nothing here. `icfg`
---- is the dial's Icons tab (IconStyle.Config; none is the defaults), `look` its R.Look; `at` is its
---- slice ({ index, size, start }), which its hover lights.
-function R.PaintWedge(btn, item, geo, icfg, look, at)
+--- is the dial's Icons tab (IconStyle.Config; none is the defaults), `look` its R.Look.
+function R.PaintWedge(btn, item, geo, icfg, look)
     btn.qcItem = item
-    btn.qcSlice = at
     local slot = item.slot
     DEFAULT_LOOK = DEFAULT_LOOK or IS.Config(nil, "dial")
     icfg = icfg or DEFAULT_LOOK

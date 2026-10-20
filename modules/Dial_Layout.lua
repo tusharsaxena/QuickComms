@@ -77,15 +77,19 @@ function DL.ClampRadius(v)
     return math.max(DL.RADIUS_MIN, math.min(DL.RADIUS_MAX, v))
 end
 
---- The dial's measures at `radius`, with labels `line` pixels tall (0: no labels; nil: DL.LINE): the
---- disc's diameter, the ring title's height above the center (over the N wedge's label, outside the
---- disc, so the two never overlap) and the page row's below it (under the S wedge's label).
-function DL.Geometry(radius, line)
+--- The dial's measures at `radius`, with labels `line` pixels tall (0: no labels; nil: DL.LINE)
+--- anchored `reach` pixels from the center (the Label offset; nil or 0: just past the disc's edge):
+--- the disc's diameter, the labels' reach, the ring title's height above the center (over the N
+--- wedge's label and the disc, so none overlap) and the page row's below it (under the S wedge's
+--- label and the disc).
+function DL.Geometry(radius, line, reach)
     radius = DL.ClampRadius(radius)
     line = tonumber(line) or DL.LINE
     local edge = radius + DL.WEDGE / 2 + DL.RIM
-    local label = line > 0 and edge + DL.LABEL_GAP + line or edge
-    return { radius = radius, disc = 2 * edge, title = label + 4, nav = -(label + 6 + DL.ARROW / 2) }
+    reach = tonumber(reach)
+    if not reach or reach <= 0 then reach = edge + DL.LABEL_GAP end
+    local label = line > 0 and math.max(edge, reach + line) or edge
+    return { radius = radius, disc = 2 * edge, reach = reach, title = label + 4, nav = -(label + 6 + DL.ARROW / 2) }
 end
 
 --- A ring's page length: the dial's fixed slices, or under Auto 12; at most 8 on a ring that holds a
@@ -121,11 +125,11 @@ function DL.Paginate(items, size)
     return pages
 end
 
---- A paged ring's row under the disc at `radius` (labels `line` tall, as Geometry), showing page
+--- A paged ring's row under the disc at `radius` (labels `line` tall at `reach`, as Geometry), showing page
 --- `current` of `pages`: the row's height (`y`, from the hub's center), each indicator's x and width
 --- (the current page a pill, DL.PILL wide; the others dots), and the arrows' x (right; left is its
 --- negative).
-function DL.Nav(pages, radius, line, current)
+function DL.Nav(pages, radius, line, current, reach)
     pages = math.max(1, tonumber(pages) or 1)
     current = tonumber(current) or 1
     local widths, total = {}, 0
@@ -138,7 +142,7 @@ function DL.Nav(pages, radius, line, current)
         dots[p] = round(x + widths[p] / 2)
         x = x + widths[p] + DL.DOT_GAP
     end
-    return { y = round(DL.Geometry(radius, line).nav), dots = dots, widths = widths,
+    return { y = round(DL.Geometry(radius, line, reach).nav), dots = dots, widths = widths,
         arrow = round(total / 2 + 10 + DL.ARROW / 2) }
 end
 
@@ -164,7 +168,7 @@ function DL.PointerReach(size)
 end
 
 -- A label reads outward from the disc (owner, 2026-10-21: wholly outside it): its anchor sits on the
--- circle just past the disc's edge, on the wedge's own bearing. A wedge toward the east has its
+-- circle just past the disc's edge (or at the Label offset), on the wedge's own bearing. A wedge toward the east has its
 -- label's LEFT edge there, toward the west its RIGHT edge; at N and S (within about 17 degrees of the
 -- vertical) its BOTTOM or TOP edge. A long name then runs away from the dial, never over it.
 local SIDEWAYS = 0.3
@@ -178,13 +182,14 @@ end
 
 --- Wedge i of n on a ring whose wedge 1 sits `start` degrees clockwise from N: its angle (radians
 --- clockwise from N), its center, and its label's anchor point (`anchor`, the label's own point) and
---- offset from the wedge's center (`lx`, `ly`).
-function DL.Wedge(i, n, radius, start)
+--- offset from the wedge's center (`lx`, `ly`), `reach` pixels from the dial's center (as Geometry:
+--- nil or 0 is just past the disc's edge).
+function DL.Wedge(i, n, radius, start, reach)
     n = math.max(1, tonumber(n) or 4)
     radius = DL.ClampRadius(radius)
     local a = math.rad(tonumber(start) or 0) + (i - 1) * 2 * math.pi / n
     local sx, sy = math.sin(a), math.cos(a)
-    local out = radius + DL.WEDGE / 2 + DL.RIM + DL.LABEL_GAP   -- the disc's edge, and the gap
+    local out = DL.Geometry(radius, nil, reach).reach
     local x, y = round(radius * sx), round(radius * sy)
     return { angle = a, x = x, y = y, anchor = labelAnchor(sx, sy), lx = round(out * sx) - x, ly = round(out * sy) - y }
 end

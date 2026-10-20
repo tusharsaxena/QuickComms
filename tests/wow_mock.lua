@@ -291,9 +291,27 @@ local function build()
         return false
     end
 
+    -- A region made on a frame knows it (GetParent), so a test can ask which layer drew it.
+    local function regionOn(frame, kind)
+        local r = region(kind)
+        r.__parent = frame
+        r.GetParent = function(x) return x.__parent end
+        return r
+    end
+
     local function dress(frame)
-        frame.CreateTexture = function() return region("Texture") end
-        frame.CreateFontString = function() return region("FontString") end
+        frame.CreateTexture = function(self) return regionOn(self, "Texture") end
+        frame.CreateFontString = function(self) return regionOn(self, "FontString") end
+        -- Frame levels as the client keeps them: a child sits one above its parent until it is set.
+        frame.SetFrameLevel = function(self, level)
+            self.__level = level
+            return self
+        end
+        frame.GetFrameLevel = function(self)
+            if self.__level then return self.__level end
+            local p = rawget(self, "__parent")
+            return (type(p) == "table" and type(rawget(p, "GetFrameLevel")) == "function" and p:GetFrameLevel() or 0) + 1
+        end
         frame.__points = {}
         frame.SetPoint = function(self, point, rel, relPoint, x, y)
             self.__points[#self.__points + 1] = { point, rel, relPoint, x, y }

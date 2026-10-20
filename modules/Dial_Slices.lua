@@ -62,7 +62,7 @@ end
 
 -- Every fill: the slice's texture, the dial's disc across, turned onto its place.
 local function paintFills(ring, spec, look)
-    local disc = DL.Geometry(look.radius, look.line).disc
+    local disc = DL.Geometry(look.radius, look.line, look.labelReach).disc
     for j = 1, math.max(spec.size, #ring.qcFills) do
         local t = nth(ring, ring.qcFills, j, "BACKGROUND", 1)
         if j <= spec.size then
@@ -98,7 +98,7 @@ end
 -- The spokes (from the hub's edge to the rim, between slices) and the rim's segments.
 local function paintBorder(ring, spec, look)
     local thick = look.borderSize
-    local outer = DL.Geometry(look.radius, look.line).disc / 2
+    local outer = DL.Geometry(look.radius, look.line, look.labelReach).disc / 2
     local spokes = (thick > 0 and spec.size > 1) and spec.size or 0
     for j = 1, math.max(spokes, #ring.qcSpokes) do
         local t = nth(ring, ring.qcSpokes, j, "BORDER")
@@ -129,7 +129,7 @@ end
 -- A paged ring's indicators: its own page a gold pill, the others gray dots (DL.Nav).
 local function paintDots(ring, spec, look)
     local pages = (spec.pages or 1) > 1 and spec.pages or 0
-    local nav = DL.Nav(math.max(pages, 1), look.radius, look.line, spec.page)
+    local nav = DL.Nav(math.max(pages, 1), look.radius, look.line, spec.page, look.labelReach)
     local gold = NS.Constants.GOLD
     for p = 1, math.max(pages, #ring.qcDots) do
         local d = nth(ring, ring.qcDots, p, "OVERLAY")
@@ -147,23 +147,39 @@ local function paintDots(ring, spec, look)
     end
 end
 
---- Draw one ring's slices, border and page row in the dial's look (Dial_Render.Look).
+--- Draw one ring's slices, border and page row in the dial's look (Dial_Render.Look), and keep its
+--- shape for Track: the slice count, where wedge 1 sits, the disc and which places hold a wedge.
 function S.Paint(ring, spec, look)
     S.Dress(ring)
+    local used = {}
+    for i, item in ipairs(spec.items or {}) do used[item.wedge or i] = true end
+    ring.qcShape = { size = spec.size, start = tonumber(spec.start) or 0, used = used,
+        disc = DL.Geometry(look.radius, look.line, look.labelReach).disc }
+    ring.qcLit = nil
     paintFills(ring, spec, look)
     paintBorder(ring, spec, look)
     paintDots(ring, spec, look)
 end
 
---- Light (or clear) the slice of the wedge `btn` (its `qcSlice`: { index, size, start }, set when it
---- is painted) on its ring.
-function S.Highlight(btn, on)
-    local ring, at = btn.qcDialRing, btn.qcSlice
-    if not (ring and ring.qcHighlight and at) then return end
-    if on then
-        ring.qcHighlight:SetRotation(-middle(at.index, at.size, at.start))
-        ring.qcHighlight:Show()
+--- Light the slice the cursor points into: `angle` (radians clockwise from N) and `dist` (pixels)
+--- from the hub's center. Outside the hub and inside the disc, the slice holding that bearing lights
+--- when a wedge sits on it; anywhere else (the hub, past the rim, an empty place) none does.
+function S.Track(ring, angle, dist)
+    local shape, hl = ring.qcShape, ring.qcHighlight
+    if not (shape and hl) then return end
+    local j
+    if dist > DL.HUB / 2 and dist <= shape.disc / 2 then
+        local step = 2 * math.pi / shape.size
+        local from = math.rad(shape.start) - step / 2
+        j = math.floor(((angle - from) % (2 * math.pi)) / step) + 1
+        if not shape.used[j] then j = nil end
+    end
+    if j == ring.qcLit then return end
+    ring.qcLit = j
+    if j then
+        hl:SetRotation(-middle(j, shape.size, shape.start))
+        hl:Show()
     else
-        ring.qcHighlight:Hide()
+        hl:Hide()
     end
 end

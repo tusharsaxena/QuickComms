@@ -120,7 +120,7 @@ end
 -- targets the page before or after (0 at an end, where it is dimmed and does nothing). Protected
 -- geometry and visibility: here, under Apply, out of combat.
 local function placeArrows(ring, spec, look)
-    local nav = DL.Nav(spec.pages, look.radius, look.line)
+    local nav = DL.Nav(spec.pages, look.radius, look.line, nil, look.labelReach)
     local paged = (spec.pages or 1) > 1
     for _, a in ipairs({ { ring.qcPrev, -1, spec.prev }, { ring.qcNext, 1, spec.next } }) do
         local btn, side, target = a[1], a[2], a[3]
@@ -135,7 +135,7 @@ end
 -- A wedge's press dims every button and wedge for the guard window (Pad.Cooldown calls Dial.Cooldown).
 local function newWedge(inst, ring)
     local w = R.DressWedge(DS.NewWedge(inst.header, ring, function(_, _, window) NS.Pad.Cooldown(window) end))
-    w.qcHeader, w.qcDialRing = inst.header, ring
+    w.qcHeader = inst.header
     return w
 end
 
@@ -194,12 +194,12 @@ local function placeWedges(inst, ring, spec, icfg, look)
     local grow = (DL.HitSize(spec.size, look.radius, spec.start) - DL.WEDGE) / 2
     for i, item in ipairs(spec.items) do
         local w = NS.Pool.Acquire(ring.qcWedges, function() return newWedge(inst, ring) end)
-        local geo = DL.Wedge(item.wedge or i, spec.size, look.radius, spec.start)
+        local geo = DL.Wedge(item.wedge or i, spec.size, look.radius, spec.start, look.labelReach)
         w:ClearAllPoints()
         w:SetPoint("CENTER", ring, "CENTER", geo.x, geo.y)
         w:SetSize(DL.WEDGE, DL.WEDGE)
         w:SetHitRectInsets(-grow, -grow, -grow, -grow)   -- protected: here, under Apply, out of combat
-        R.PaintWedge(w, item, geo, icfg, look, { index = item.wedge or i, size = spec.size, start = spec.start })
+        R.PaintWedge(w, item, geo, icfg, look)
         arm(w, item)
         if item.slot then
             local list = inst.byCallout[item.slot.calloutId] or {}
@@ -238,7 +238,7 @@ function Dial.Apply(index, id, plan)
     releaseRings(inst)
     local icfg = NS.IconStyle.Config(dial.icon, "dial")
     local look = R.Look(plan.radius, dial.label, dial.slice)
-    local disc = DL.Geometry(look.radius, look.line).disc
+    local disc = DL.Geometry(look.radius, look.line, look.labelReach).disc
     R.PaintPointer(inst.header, look)
     local loaded = {}
     for r, spec in ipairs(plan.rings) do
@@ -252,6 +252,9 @@ function Dial.Apply(index, id, plan)
             wedges = placeWedges(inst, ring, spec, icfg, look) }
     end
     releaseFreeGlows(inst)
+    local frames = {}
+    for r, l in ipairs(loaded) do frames[r] = l.frame end
+    R.RaiseFront(inst.header, frames)
     R.PlaceTips(inst.header, look, widestLabel(inst))
     DS.Load(inst.header, loaded, { openRing = plan.openRing, openAt = plan.test and "center" or dial.openAt })
     applyPoint(inst)
