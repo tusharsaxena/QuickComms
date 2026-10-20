@@ -501,7 +501,7 @@ test("pad: [phase 5] the pad wears its Window tab: the titles' font and the edge
     assertEqual(table.concat(skin.bg, ","), "0.2,0.1,0,1")
 end)
 
-test("pad: [window] the header wears its own block: gold small text over nothing by default, then what it is given", function()
+test("pad: [window] the header wears its own block: gold outlined 16-point text over nothing by default, then what it is given", function()
     local NS = T.enableAddon{ mock = withMedia }
     local skins = {}
     local apply = NS.ApplySkin
@@ -510,10 +510,11 @@ test("pad: [window] the header wears its own block: gold small text over nothing
     NS.Situation.RefreshNow("test")   -- the pad's first build, under the spy
     local header = NS.Pad.Instance("p1").header
     local sit = header.qcSituation
-    assertEqual(table.concat(sit.__color, ","), "1,0.82,0,1", "GameFontNormalSmall's gold, as before")
-    assertEqual(sit.__font[2], 10)
+    assertEqual(table.concat(sit.__color, ","), "1,0.82,0,1", "the owner's default: gold")
+    assertEqual(sit.__font[2], 16, "16 points")
+    assertEqual(sit.__font[3], "OUTLINE", "outlined")
     assertEqual(table.concat(sit.__shadow, ","), "1,-1")
-    assertEqual(header.__h, 22, "slightly larger than the 18 it was")
+    assertEqual(header.__h, 24, "the owner's 24-pixel header (it was 18)")
     -- red under: Pad.Apply skinning the header with the pad's own Look (a second edge and body)
     assertNil(skins[header].edgeFile, "no edge by default")
     assertEqual(skins[header].bg[4], 0, "no background by default")
@@ -550,7 +551,7 @@ test("pad: [window] the header's text starts at the section titles' left edge, i
     end
 end)
 
-test("pad: [chip] a chip wears the Chip tab: the body, edge, label and size it always had, then what it is given", function()
+test("pad: [chip] a chip wears the Chip tab: the owner's default body, edge, label and size, then what it is given", function()
     local NS = T.enableAddon{ mock = withMedia }
     local skins = {}
     local apply = NS.ApplySkin
@@ -559,8 +560,14 @@ test("pad: [chip] a chip wears the Chip tab: the body, edge, label and size it a
     NS.Situation.RefreshNow("test")   -- the pad's first build, under the spy
     local S = NS.SchemaRuntime
     local btn = pull(NS)
-    assertEqual(table.concat(btn.qcBg.__color, ","), "0.1,0.1,0.12,0.9", "the body a chip always had")
-    assertNil(skins[btn.qcEdge].edgeFile, "no edge by default")
+    local gray = 0x3F / 255
+    assertEqual(table.concat(btn.qcBg.__color, ","), table.concat({ gray, gray, gray, 0.25 }, ","),
+        "the owner's default body: #3F3F3F at 25%")
+    -- the owner's default edge: style None is no border art, so its 1 px draws flat
+    assertEqual(skins[btn.qcEdge].edgeFile, "Interface\\Buttons\\WHITE8x8", "a flat edge by default")
+    assertEqual(skins[btn.qcEdge].edgeSize, 1, "1 pixel")
+    assertEqual(table.concat(skins[btn.qcEdge].border, ","), table.concat({ 0xEA / 255, 0xEA / 255, 0xEA / 255, 0.10 }, ","),
+        "#EAEAEA at 10%")
     assertEqual(table.concat(btn.qcLabel.__color, ","), "1,1,1,1", "the small white label")
     assertEqual(btn.__w .. "x" .. btn.__h, "100x24", "the chip's shipped size")
     assertTrue(S.Set("pad.chip.background", { r = 0.3, g = 0, b = 0, a = 0.5 }, "p1"))

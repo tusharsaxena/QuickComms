@@ -282,7 +282,7 @@ test("render: [window] the section titles wear the Window tab's Section titles f
     local R = NS.PadRender
     -- red under: a white default in Library's pad.look.fontColor (the titles were always gold)
     local t = R.TitleFont(NS.Library.TEMPLATES.pad.look)
-    assertEqual(t.r .. "," .. t.g .. "," .. t.b .. "|" .. t.size, "1,0.82,0|10", "the default: gold, as before")
+    assertEqual(t.r .. "," .. t.g .. "," .. t.b .. "|" .. t.size, "1,0.82,0|12", "the owner's default: gold, 12 points")
     t = R.TitleFont({ fontSize = 12, fontColor = { r = 1, g = 0, b = 0, a = 1 } })
     assertEqual(t.r .. "," .. t.g .. "," .. t.b .. "|" .. t.size, "1,0,0|12", "a chosen color reaches the titles")
     t = R.TitleFont({ fontColor = { r = 1, g = 1, b = 1, a = 1 }, useClassColorFont = true })
@@ -323,6 +323,7 @@ test("render: [B3] a chip's label is one line, and hidden when the chip leaves i
     NS.PadRender.Paint(b, ARMED, "iconLabel")
     assertTrue(b.qcLabel:IsShown(), "no width given: shown")
     assertTrue(NS.PadRender.LabelRoom(140, "iconLabel") > 0)
-    assertEqual(NS.PadRender.LabelRoom(34, "iconLabel"), 4, "26 for the icon and its gaps, 4 for the right padding, no channel letter")
-    assertTrue(NS.PadRender.LabelRoom(30, "iconLabel") <= 0)
+    assertEqual(NS.PadRender.LabelRoom(34, "iconLabel"), 8,
+        "22 for the default 16-pixel icon and its gaps, 4 for the right padding, no channel letter")
+    assertTrue(NS.PadRender.LabelRoom(26, "iconLabel") <= 0)
 end)

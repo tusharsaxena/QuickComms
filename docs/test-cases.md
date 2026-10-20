@@ -1029,9 +1029,9 @@ Total.
 - pad: [phase 3] a new drag clears a stale held stop, so the next rebuild re-anchors
 - pad: [phase 3] the header's tooltip says why each group shows, unless the player turned it off
 - pad: [phase 5] the pad wears its Window tab: the titles' font and the edge and body it was given
-- pad: [window] the header wears its own block: gold small text over nothing by default, then what it is given
+- pad: [window] the header wears its own block: gold outlined 16-point text over nothing by default, then what it is given
 - pad: [window] the header's text starts at the section titles' left edge, in every growth
-- pad: [chip] a chip wears the Chip tab: the body, edge, label and size it always had, then what it is given
+- pad: [chip] a chip wears the Chip tab: the owner's default body, edge, label and size, then what it is given
 - pad: [chip] the chip glow is off by default, then wraps the whole chip in its style, and goes with the chip
 - pad: [review 5] a font or border this machine does not have draws the default, with no error
 - pad: [B1] a group named as the header's situation draws no title row of its own
@@ -1084,7 +1084,7 @@ Total.
 
 ### test_icon_style.lua (8)
 
-- icon style: the defaults keep today's look on a chip and on a wedge
+- icon style: the defaults draw the owner's look on a chip and on a wedge
 - icon style: zoom crops through SetTexCoord, desaturate and alpha reach the texture
 - icon style: the tint multiplies a glyph's own color; white keeps it
 - icon style: a pad's icon size feeds the chip's geometry
