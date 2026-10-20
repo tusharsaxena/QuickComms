@@ -92,8 +92,9 @@ test("builtins: [phase 5] every node set pins each node to a wind, at most eight
             if gid ~= "bi.bg.av" then assertTrue(NS.DialLayout.PinNodes(nodes) ~= nil, gid .. " pins every node") end
         end
     end
-    -- the five node sets, and the seven with objectives (bg subgroups)
-    assertEqual(sets, 12)
+    -- the five node sets, the seven with objectives (bg subgroups), Silvershard Mines and Temple of
+    -- Kotmogu (bg buttons)
+    assertEqual(sets, 14)
     assertEqual(BI.groups["bi.bg.ab.lumbermill"].compass, "SW")
     assertEqual(#BI.groups["bi.bg.dwg"].children, 5)
     assertEqual(BI.callouts["bi.bg.dwg.shrine.inc"].text, "INC Shrine")
@@ -316,4 +317,37 @@ test("builtins: [bg buttons] every base-capture node has Attack, Defend, INC and
     assertEqual(BI.callouts["bi.bg.ab.farm.inc"].iconColor, BI.COLOR.orange)
     assertEqual(BI.callouts["bi.bg.ab.farm.clear"].iconColor, BI.COLOR.green)
     assertEqual(BI.callouts["bi.bg.ab.hold"].text, "Hold what we have, defend our bases", "the map-wide callouts stay")
+end)
+
+test("builtins: [bg buttons] Silvershard Mines has its three tracks and the switches, each with four", function()
+    local _, BI = bi()
+    -- red under: Silvershard Mines left flat in defaults/BuiltIns_Battlegrounds.lua
+    assertEqual(childNames(BI, "bi.bg.ssm"), "Lava track,Water track,North track,Switches")
+    assertTrue(BI.groups["bi.bg.ssm"].openInto)
+    assertEqual(rows(BI, "bi.bg.ssm.lava"), "Contest=Contest their cart on the lava track|"
+        .. "Escort=Escort our cart on the lava track|INC=INC on the lava track|Clear=Clear on the lava track")
+    assertEqual(rows(BI, "bi.bg.ssm.switch"), "Flip switch=Flip the track switch|Hold switch=Hold the track switch|"
+        .. "INC=INC at the track switch|Clear=The track switch is clear")
+    for _, child in ipairs(BI.groups["bi.bg.ssm"].children) do
+        assertEqual(BI.groups[child].compass, "free", child .. ": no AreaPOI point to pin")
+    end
+    assertEqual(BI.callouts["bi.bg.ssm.escort"].text, "Escort the cart", "the map-wide callouts stay")
+end)
+
+test("builtins: [bg buttons] Temple of Kotmogu has its four orbs and the center", function()
+    local NS, BI = bi()
+    -- red under: Temple of Kotmogu left flat in defaults/BuiltIns_Battlegrounds.lua
+    assertEqual(childNames(BI, "bi.bg.tok"), "Orange orb,Blue orb,Green orb,Purple orb,Center")
+    assertEqual(rows(BI, "bi.bg.tok.blue"), "Take orb=Take the blue orb|Peel=Peel for our blue orb carrier|"
+        .. "Kill carrier=Kill their blue orb carrier %t|Heals=Our blue orb carrier needs heals")
+    assertEqual(rows(BI, "bi.bg.tok.center"), "Go center=Bring the orbs to the center|Hold center=Hold the center|"
+        .. "INC=INC center|Clear=The center is clear")
+    for _, color in ipairs({ "orange", "blue", "green", "purple" }) do
+        assertEqual(BI.groups["bi.bg.tok." .. color].iconColor, BI.COLOR[color], color .. " orb draws its color")
+    end
+    -- the %t a row's %s fill leaves for the bake
+    local line = NS.Bake.Bake(BI.callouts["bi.bg.tok.green.kill"], BI.SNAPSHOTS["bi.bg.tok"],
+        { ctx = { target = "Traxex" } })
+    assertTrue(line:find("Kill their green orb carrier", 1, true) ~= nil, line)
+    assertEqual(BI.callouts["bi.bg.tok.mid"].text, "Orbs to the middle", "the map-wide callouts stay")
 end)
