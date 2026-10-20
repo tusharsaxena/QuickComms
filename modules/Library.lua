@@ -910,10 +910,11 @@ local SURFACE_DEFAULTS = {
     -- Relaxed is the only interaction in v0.1.0 (the C7 fallback, round-4 record). `delay` and
     -- `tapAction` are kept for the hold, flick and release upgrade, and `depth` until owner ruling R5
     -- gives it a meaning; nothing reads them yet.
-    dial = { mode = "categories", slices = 0, radius = 100, depth = 2, openAt = "center", delay = 0.3,
+    dial = { mode = "categories", slices = 0, radius = 100, iconOffset = 0, depth = 2, openAt = "center", delay = 0.3,
         interaction = "relaxed", tapAction = "first", icon = NS.IconDefaults.For("dial"),
         label = NS.PadDefaults.DialLabel(),     -- the Labels tab (defaults/PadStyle.lua)
-        slice = NS.PadDefaults.DialSlice() },   -- the Slices tab (defaults/PadStyle.lua)
+        slice = NS.PadDefaults.DialSlice(),     -- the Slices tab (defaults/PadStyle.lua)
+        page = NS.PadDefaults.DialPage() },     -- the Paging tab (defaults/PadStyle.lua)
 }
 
 --- The shape of one member of each kind: what every member row's path resolves against (the
@@ -930,9 +931,9 @@ Lib.TEMPLATES = {
     -- `point` is false, not nil, for the same reason as above: false is "the default place". A dial
     -- has no `key`: its key is WoW's own binding of its Open Comms Dial entry (modules/Dial.lua).
     dial = { name = "", enabled = true, mode = SURFACE_DEFAULTS.dial.mode, slices = SURFACE_DEFAULTS.dial.slices,
-        radius = SURFACE_DEFAULTS.dial.radius, openAt = SURFACE_DEFAULTS.dial.openAt, point = false,
+        radius = SURFACE_DEFAULTS.dial.radius, iconOffset = SURFACE_DEFAULTS.dial.iconOffset, openAt = SURFACE_DEFAULTS.dial.openAt, point = false,
         icon = copyTable(SURFACE_DEFAULTS.dial.icon), label = copyTable(SURFACE_DEFAULTS.dial.label),
-        slice = copyTable(SURFACE_DEFAULTS.dial.slice) },
+        slice = copyTable(SURFACE_DEFAULTS.dial.slice), page = copyTable(SURFACE_DEFAULTS.dial.page) },
 }
 
 --- A dial's place when its `point` is unset: the middle of the screen (read at run time by

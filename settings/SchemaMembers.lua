@@ -294,6 +294,11 @@ local ROWS = {
       page = "dials", group = L["Wheel"], label = L["Ring radius"],
       desc = L["How far the wedges sit from the middle of the dial, in pixels. The dial's disc grows with it."],
       validate = NUMBER, normalize = clamp(NS.DialLayout.RADIUS_MIN, NS.DialLayout.RADIUS_MAX, true) },
+    { path = "dial.iconOffset", instance = "dial", type = "number", default = T.dial.iconOffset,
+      min = 0, max = 250, step = 1, zeroText = L["Automatic"],
+      page = "dials", group = L["Wheel"], label = L["Icon offset (0 = automatic)"],
+      desc = L["How far each icon sits from the middle of the dial, in pixels. 0 puts it on the ring radius. The disc keeps its size."],
+      validate = NUMBER, normalize = clamp(0, 250, true) },
     { path = "dial.openAt", instance = "dial", type = "string", default = T.dial.openAt, values = OPEN_AT,
       page = "dials", group = L["Wheel"], label = L["Open at"],
       desc = L["Where the dial opens: at its place (set below), or wherever the cursor is."],
@@ -518,6 +523,52 @@ local function sliceRows()
 end
 
 for _, row in ipairs(sliceRows()) do ROWS[#ROWS + 1] = row end
+
+-- The Comms Dial's Paging tab (2026-10-21): a paged ring's row under the dial. Where it sits, the
+-- arrows (size, spacing, chevron and plate colors) and the page indicators (sizes, spacing and the
+-- current and other pages' colors), each color a composed swatch with its class-color companion;
+-- after the Slices rows, so the tab follows Slices.
+local PAGING, PAGEP = L["Paging"], "dial.page."
+local function pagingRows()
+    local O = NS.addon.Settings.Helpers
+    local checks = composedChecks(O)
+    for _, k in ipairs({ "arrowColor", "plateColor", "currentColor", "dotColor" }) do checks[k] = checks.background end
+    for _, k in ipairs({ "useClassColorArrow", "useClassColorPlate", "useClassColorCurrent", "useClassColorDot" }) do
+        checks[k] = { validate = BOOL }
+    end
+    local pdef = T.dial.page
+    local ARROWS, INDICATOR = L["Arrows"], L["Page indicator"]
+    local function size(subgroup, key, label, lo, hi, desc, first)
+        return { path = PAGEP .. key, instance = "dial", type = "number", default = pdef[key], min = lo, max = hi,
+            step = 1, page = "dials", group = PAGING, subgroup = subgroup, label = label, startsLine = first,
+            desc = desc, validate = NUMBER, normalize = clamp(lo, hi, true) }
+    end
+    local function pair(subgroup, key, label, companion)
+        local out = {}
+        stampBlock(out, O.ColorPair(blockSpec(PAGEP, PAGING, subgroup, pdef,
+            { key = key, label = label, companionKey = companion })), PAGEP, checks, "dial")
+        return out
+    end
+    local out = {
+        size(L["Position"], "offset", L["Offset"], 0, 80,
+            L["How far under the dial's labels the arrows and page indicators sit, in pixels."], true),
+        size(ARROWS, "arrowSize", L["Arrow size"], 12, 48, L["How big each page arrow is, in pixels."], true),
+        size(ARROWS, "arrowGap", L["Arrow spacing"], 0, 60,
+            L["How far the arrows stand from the page indicators, in pixels."]),
+    }
+    for _, r in ipairs(pair(ARROWS, "arrowColor", L["Arrow color"], "useClassColorArrow")) do out[#out + 1] = r end
+    for _, r in ipairs(pair(ARROWS, "plateColor", L["Arrow background"], "useClassColorPlate")) do out[#out + 1] = r end
+    out[#out + 1] = size(INDICATOR, "dotSize", L["Dot size"], 2, 20,
+        L["How big each other page's dot is, and how tall the current page's pill, in pixels."], true)
+    out[#out + 1] = size(INDICATOR, "pillWidth", L["Current page width"], 2, 60,
+        L["How wide the current page's pill is, in pixels. Set it to the dot size for a plain dot."])
+    out[#out + 1] = size(INDICATOR, "dotGap", L["Dot spacing"], 0, 30, L["The gap between page indicators, in pixels."], true)
+    for _, r in ipairs(pair(INDICATOR, "currentColor", L["Current page color"], "useClassColorCurrent")) do out[#out + 1] = r end
+    for _, r in ipairs(pair(INDICATOR, "dotColor", L["Other pages color"], "useClassColorDot")) do out[#out + 1] = r end
+    return out
+end
+
+for _, row in ipairs(pagingRows()) do ROWS[#ROWS + 1] = row end
 
 -- The Comms Dial's Labels tab (dial rework, 2026-10-21): Show labels, then the composed Font block
 -- (as the Buttons tab's), stamped as dial member rows, then where the dial's tooltip goes; before the

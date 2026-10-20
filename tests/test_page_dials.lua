@@ -234,7 +234,7 @@ test("dials page: [B9] Icons follows Wheel, carries its headings once each, and 
     for _, row in ipairs(NS.addon.Settings.RowsForPage("dials")) do
         if row.group and not seen[row.group] then seen[row.group] = true order[#order + 1] = row.group end
     end
-    assertEqual(table.concat(order, ","), "General,Groups,Wheel,Slices,Labels,Icons", "the rows' tabs, in order")
+    assertEqual(table.concat(order, ","), "General,Groups,Wheel,Slices,Paging,Labels,Icons", "the rows' tabs, in order")
     P.find(w, "Slider", "Icon size"):__fire("OnMouseUp", 24)
     P.find(w, "CheckBox", "Show border"):__fire("OnValueChanged", true)
     assertEqual(NS.db.profile.dials.d2.icon.size, 24)
@@ -312,4 +312,34 @@ test("dials page: [slices] every slice texture the dial names ships under media/
     end
     local pill = NS.DialSlices.PILL:gsub("^Interface\\AddOns\\QuickComms\\", ""):gsub("\\", "/")
     assertTrue(io.open(T.root .. "/" .. pill .. ".tga", "rb") ~= nil, pill)
+end)
+
+test("dials page: [paging] Paging sizes, spaces and colors the arrows and page indicators; the dial follows", function()
+    local NS, _, P = open()
+    local w = P.tab("dials", "Paging")
+    for _, heading in ipairs({ "Position", "Arrows", "Page indicator" }) do
+        assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
+    end
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 4, "arrow, background, current and other pages")
+    P.find(w, "Slider", "Arrow size"):__fire("OnMouseUp", 36)
+    assertEqual(NS.db.profile.dials.d2.page.arrowSize, 36)
+    -- red under: size the arrows from DL.ARROW in modules/Dial.lua placeArrows
+    local ring = NS.Dial.Instance("d2").rings.active[1]
+    assertEqual(ring.qcPrev.qcPlate.__size[1], 36)
+    w = P.tab("dials", "Paging")
+    P.find(w, "Slider", "Dot size"):__fire("OnMouseUp", 9)
+    assertEqual(NS.db.profile.dials.d2.page.dotSize, 9)
+    P.ctx("dials").panel.defaultsOnClick()
+    assertEqual(NS.db.profile.dials.d2.page.arrowSize, 24)
+end)
+
+test("dials page: [wheel] Icon offset moves the icons in or out; 0 is the ring radius", function()
+    local NS, _, P = open()
+    local w = P.tab("dials", "Wheel")
+    P.find(w, "Slider", "Icon offset (0 = automatic)"):__fire("OnMouseUp", 70)
+    assertEqual(NS.db.profile.dials.d2.iconOffset, 70)
+    local wedge = NS.Dial.RingWedges("d2", 1)[1]
+    local _, _, _, x, y = wedge:GetPoint(1)
+    -- red under: drop `at` from DL.Wedge (the icon stays on the radius)
+    assertEqual(math.floor(math.sqrt(x * x + y * y) + 0.5), 70)
 end)

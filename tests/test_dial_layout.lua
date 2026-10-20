@@ -92,16 +92,23 @@ end)
 
 test("dial layout: [nav] a paged ring's pill, dots and arrows sit in one row under the disc and its labels", function()
     local L = DL()
-    local nav = L.Nav(3, 100, nil, 2)
+    local g = L.Geometry(100)
+    local nav = L.Nav(3, 2, g)
+    local P = L.PAGING
     -- red under: give every page the same width in DL.Nav
-    assertEqual(table.concat(nav.widths, ","), L.DOT .. "," .. L.PILL .. "," .. L.DOT, "this page is the pill")
+    assertEqual(table.concat(nav.widths, ","), P.dotSize .. "," .. P.pillWidth .. "," .. P.dotSize, "this page is the pill")
     assertEqual(nav.dots[2], 0, "centered")
     assertEqual(nav.dots[1], -nav.dots[3])
-    T.assertTrue(nav.arrow > nav.dots[3] + L.DOT, "the arrows clear the indicators")
-    local g = L.Geometry(100)
-    T.assertTrue(-nav.y - L.ARROW / 2 >= g.disc / 2 + L.LABEL_GAP + L.LINE, "below the S wedge's label")
-    T.assertTrue(L.Nav(3, 100, 0).y > nav.y, "with no labels the row comes up to the disc")
-    T.assertTrue(L.Nav(3, 150).y < nav.y, "a bigger dial pushes it down")
+    T.assertTrue(nav.arrow > nav.dots[3] + P.dotSize, "the arrows clear the indicators")
+    T.assertTrue(-nav.y - P.arrowSize / 2 >= g.disc / 2 + L.LABEL_GAP + L.LINE, "below the S wedge's label")
+    T.assertTrue(L.Nav(3, 1, L.Geometry(100, 0)).y > nav.y, "with no labels the row comes up to the disc")
+    T.assertTrue(L.Nav(3, 1, L.Geometry(150)).y < nav.y, "a bigger dial pushes it down")
+    local pg = { offset = 30, arrowSize = 40, arrowGap = 25, dotSize = 10, pillWidth = 30, dotGap = 12 }
+    local big = L.Nav(3, 1, g, pg)
+    -- red under: read DL.PAGING in DL.Nav whatever the dial's Paging tab says
+    assertEqual(big.y, -(g.below + 30 + 20), "the Paging tab's offset and arrow size")
+    assertEqual(big.widths[1] .. "," .. big.widths[2], "30,10")
+    assertEqual(big.arrow, (30 + 10 + 10 + 2 * 12) / 2 + 25 + 20)
 end)
 
 test("dial layout: [hit] a wedge's hit square fills its slice without reaching the hub or a neighbor", function()
@@ -113,6 +120,10 @@ test("dial layout: [hit] a wedge's hit square fills its slice without reaching t
         local a, b = L.Wedge(1, n, 100), L.Wedge(2, n, 100)
         T.assertTrue(math.max(math.abs(a.x - b.x), math.abs(a.y - b.y)) >= side, n .. ": clear of its neighbor")
     end
+    -- the Icon offset moves the wedges in; the square still clears the hub and the rim
+    local w = L.Wedge(2, 4, 100, 0, nil, 60)
+    assertEqual(w.x, 60, "the icon sits at its offset, the disc keeps the radius")
+    T.assertTrue(60 - L.HitSize(4, 100, 0, 60) / 2 >= L.HUB / 2, "clear of the hub at the offset")
     -- red under: answer DL.WEDGE from DL.HitSize (the old 44-pixel target)
     T.assertTrue(L.HitSize(4, 100) > L.WEDGE + 20, "a quarter slice gets a big square")
     T.assertTrue(L.PointerReach(30) > L.PointerReach(16), "a bigger pointer sits further out")

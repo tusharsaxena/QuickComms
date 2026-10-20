@@ -46,10 +46,7 @@ DL.DEAD    = 8                                 -- inside this, the pointer hides
 DL.KEYS    = 8                                 -- the number keys 1-8 pick wedges
 DL.AUTO    = 0                                 -- slices: one wedge per item, spread evenly
 DL.MAX_SLICES = 12
-DL.ARROW   = 24                                -- a page arrow, square
-DL.DOT     = 6                                 -- a page dot
-DL.PILL    = 18                                -- the current page's pill, as wide as this (DL.DOT tall)
-DL.DOT_GAP = 6                                 -- between one page indicator and the next
+DL.ARROW   = 24                                -- a page arrow, square, by default (the Paging tab)
 DL.ARC     = 64                                -- straight segments drawing the rim
 
 local SLICE_OK = { [DL.AUTO] = true, [4] = true, [6] = true, [8] = true, [12] = true }
@@ -80,8 +77,8 @@ end
 --- The dial's measures at `radius`, with labels `line` pixels tall (0: no labels; nil: DL.LINE)
 --- anchored `reach` pixels from the center (the Label offset; nil or 0: just past the disc's edge):
 --- the disc's diameter, the labels' reach, the ring title's height above the center (over the N
---- wedge's label and the disc, so none overlap) and the page row's below it (under the S wedge's
---- label and the disc).
+--- wedge's label and the disc, so none overlap) and how far below the center the S wedge's label
+--- and the disc end (`below`: the page row starts under it, Nav).
 function DL.Geometry(radius, line, reach)
     radius = DL.ClampRadius(radius)
     line = tonumber(line) or DL.LINE
@@ -89,7 +86,7 @@ function DL.Geometry(radius, line, reach)
     reach = tonumber(reach)
     if not reach or reach <= 0 then reach = edge + DL.LABEL_GAP end
     local label = line > 0 and math.max(edge, reach + line) or edge
-    return { radius = radius, disc = 2 * edge, reach = reach, title = label + 4, nav = -(label + 6 + DL.ARROW / 2) }
+    return { radius = radius, disc = 2 * edge, reach = reach, title = label + 4, below = label }
 end
 
 --- A ring's page length: the dial's fixed slices, or under Auto 12; at most 8 on a ring that holds a
@@ -125,37 +122,55 @@ function DL.Paginate(items, size)
     return pages
 end
 
---- A paged ring's row under the disc at `radius` (labels `line` tall at `reach`, as Geometry), showing page
---- `current` of `pages`: the row's height (`y`, from the hub's center), each indicator's x and width
---- (the current page a pill, DL.PILL wide; the others dots), and the arrows' x (right; left is its
---- negative).
-function DL.Nav(pages, radius, line, current, reach)
+--- The Paging tab's measures when a dial names none (defaults/PadStyle.lua DialPage's).
+DL.PAGING = { arrowSize = DL.ARROW, arrowGap = 10, dotSize = 6, pillWidth = 18, dotGap = 6, offset = 6 }
+
+--- A paged ring's row under the dial (`g`, a Geometry), showing page `current` of `pages`, measured
+--- by the Paging tab (`pg`, DL.PAGING's fields): the row's height (`y`, from the hub's center, `offset`
+--- under the S label and the disc), each indicator's x and width (the current page a pill,
+--- `pillWidth` wide; the others dots), and the arrows' x (right; left is its negative), `arrowGap`
+--- clear of the indicators.
+function DL.Nav(pages, current, g, pg)
     pages = math.max(1, tonumber(pages) or 1)
     current = tonumber(current) or 1
+    g = g or DL.Geometry()
+    pg = pg or DL.PAGING
     local widths, total = {}, 0
     for p = 1, pages do
-        widths[p] = p == current and DL.PILL or DL.DOT
-        total = total + widths[p] + (p > 1 and DL.DOT_GAP or 0)
+        widths[p] = p == current and pg.pillWidth or pg.dotSize
+        total = total + widths[p] + (p > 1 and pg.dotGap or 0)
     end
     local dots, x = {}, -total / 2
     for p = 1, pages do
         dots[p] = round(x + widths[p] / 2)
-        x = x + widths[p] + DL.DOT_GAP
+        x = x + widths[p] + pg.dotGap
     end
-    return { y = round(DL.Geometry(radius, line, reach).nav), dots = dots, widths = widths,
-        arrow = round(total / 2 + 10 + DL.ARROW / 2) }
+    local tall = math.max(pg.arrowSize, pg.dotSize)
+    return { y = round(-(g.below + pg.offset + tall / 2)), bottom = round(-(g.below + pg.offset + tall)),
+        dots = dots, widths = widths, arrow = round(total / 2 + pg.arrowGap + pg.arrowSize / 2) }
 end
 
---- How big a wedge's clickable square is on a ring of n wedges at `radius` (wedge 1 at `start`): as large as the slice
+--- The icons' distance from the center: the Icon offset `at` when it is set (above 0), else the ring
+--- radius.
+function DL.IconReach(radius, at)
+    at = tonumber(at)
+    if at and at > 0 then return at end
+    return DL.ClampRadius(radius)
+end
+
+--- How big a wedge's clickable square is on a ring of n wedges at `radius`, its icons `at` from the
+--- center (IconReach; wedge 1 at `start`): as large as the slice
 --- allows (the buttons are squares, owner ruling 2026-10-21), so hovering most of a slice lights it.
 --- It stops short of the hub, of the disc's edge, and of its neighbors' squares (two squares apart by
 --- (dx, dy) overlap unless one of the two is at least the side), never under the wedge itself.
-function DL.HitSize(n, radius, start)
+function DL.HitSize(n, radius, start, at)
     n = math.max(1, tonumber(n) or 4)
     radius = DL.ClampRadius(radius)
-    local side = math.min(2 * (DL.WEDGE / 2 + DL.RIM), 2 * (radius - DL.HUB / 2 - 4))
+    at = DL.IconReach(radius, at)
+    local edge = radius + DL.WEDGE / 2 + DL.RIM
+    local side = math.min(2 * (edge - at), 2 * (at - DL.HUB / 2 - 4))
     for i = 1, n > 1 and n or 0 do
-        local a, b = DL.Wedge(i, n, radius, start), DL.Wedge(i % n + 1, n, radius, start)
+        local a, b = DL.Wedge(i, n, radius, start, nil, at), DL.Wedge(i % n + 1, n, radius, start, nil, at)
         side = math.min(side, math.max(math.abs(a.x - b.x), math.abs(a.y - b.y)) - 2)
     end
     return math.floor(math.max(DL.WEDGE, side))
@@ -183,14 +198,16 @@ end
 --- Wedge i of n on a ring whose wedge 1 sits `start` degrees clockwise from N: its angle (radians
 --- clockwise from N), its center, and its label's anchor point (`anchor`, the label's own point) and
 --- offset from the wedge's center (`lx`, `ly`), `reach` pixels from the dial's center (as Geometry:
---- nil or 0 is just past the disc's edge).
-function DL.Wedge(i, n, radius, start, reach)
+--- nil or 0 is just past the disc's edge); the wedge itself sits `at` from the center (IconReach:
+--- nil or 0 is the radius).
+function DL.Wedge(i, n, radius, start, reach, at)
     n = math.max(1, tonumber(n) or 4)
     radius = DL.ClampRadius(radius)
     local a = math.rad(tonumber(start) or 0) + (i - 1) * 2 * math.pi / n
     local sx, sy = math.sin(a), math.cos(a)
     local out = DL.Geometry(radius, nil, reach).reach
-    local x, y = round(radius * sx), round(radius * sy)
+    at = DL.IconReach(radius, at)
+    local x, y = round(at * sx), round(at * sy)
     return { angle = a, x = x, y = y, anchor = labelAnchor(sx, sy), lx = round(out * sx) - x, ly = round(out * sy) - y }
 end
 

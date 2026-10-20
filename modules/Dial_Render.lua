@@ -150,12 +150,15 @@ end
 
 --- A dial's look for one rebuild: its radius (clamped); its Labels tab (`dial.label`) as a font
 --- (Pad_Render.LabelFont), whether labels show, their line height (0 when they do not) and where
---- the tooltip goes; and its Slices tab (`dial.slice`) with each color resolved through its class
---- color companion.
-function R.Look(radius, label, slice)
+--- the tooltip goes; its Slices tab (`dial.slice`) and Paging tab (`dial.page`, from `dial`) with each
+--- color resolved through its class color companion; and the Icon offset (`dial.iconOffset`).
+function R.Look(radius, label, slice, dial)
     label = type(label) == "table" and label or {}
     slice = type(slice) == "table" and slice or {}
-    local D = NS.PadDefaults.DialSlice()
+    dial = type(dial) == "table" and dial or {}
+    local page = type(dial.page) == "table" and dial.page or {}
+    local D, P = NS.PadDefaults.DialSlice(), NS.PadDefaults.DialPage()
+    local function n(k) return math.max(0, tonumber(page[k]) or P[k]) end
     local font = NS.PadRender.LabelFont(label)
     local show = label.show ~= false
     return { radius = DL.ClampRadius(radius), font = font, show = show, line = show and font.size + 2 or 0,
@@ -167,7 +170,14 @@ function R.Look(radius, label, slice)
         highlight = color(slice.highlight, slice.useClassColorHighlight, D.highlight),
         pointerShow = slice.pointerShow ~= false, pointerSize = tonumber(slice.pointerSize) or D.pointerSize,
         pointerOffset = math.max(0, tonumber(slice.pointerOffset) or 0),
-        pointer = color(slice.pointerColor, slice.useClassColorPointer, D.pointerColor) }
+        pointer = color(slice.pointerColor, slice.useClassColorPointer, D.pointerColor),
+        iconReach = math.max(0, tonumber(dial.iconOffset) or 0),
+        paging = { offset = n("offset"), arrowSize = math.max(8, n("arrowSize")), arrowGap = n("arrowGap"),
+            dotSize = math.max(2, n("dotSize")), pillWidth = math.max(2, n("pillWidth")), dotGap = n("dotGap"),
+            arrow = color(page.arrowColor, page.useClassColorArrow, P.arrowColor),
+            plate = color(page.plateColor, page.useClassColorPlate, P.plateColor),
+            current = color(page.currentColor, page.useClassColorCurrent, P.currentColor),
+            dot = color(page.dotColor, page.useClassColorDot, P.dotColor) } }
 end
 
 --- The pointer in the dial's look: its size, color and reach (the Pointer offset from the hub's
@@ -189,7 +199,7 @@ function R.PlaceTips(header, look, labelWidth)
     local off, side = look.tipOffset, look.tipSide
     local at
     if side == "bottom" then
-        at = { "TOP", 0, g.nav - DL.ARROW / 2 - off }
+        at = { "TOP", 0, DL.Nav(1, 1, g, look.paging).bottom - off }
     elseif side == "left" or side == "right" then
         local x = math.max(g.disc / 2, look.show and g.reach + labelWidth or 0) + off
         at = side == "left" and { "RIGHT", -x, 0 } or { "LEFT", x, 0 }
@@ -238,7 +248,6 @@ function R.DressArrow(btn, side)
     btn.qcSide = side
     btn.qcPlate = circle(btn, "BACKGROUND", DL.ARROW, 0.06, 0.06, 0.08, 0.80)
     btn.qcIcon = btn:CreateTexture(nil, "ARTWORK")
-    btn.qcIcon:SetSize(DL.ARROW - 10, DL.ARROW - 10)
     btn.qcIcon:SetPoint("CENTER", btn, "CENTER", side == "prev" and -1 or 1, 0)
     btn.qcIcon:SetTexture(NS.Icon(ARROW_ICONS[side][1]) or ARROW_ICONS[side][2])
     btn:HookScript("OnEnter", function(self)
@@ -255,15 +264,18 @@ function R.DressArrow(btn, side)
     return btn
 end
 
---- A page arrow live (a gold chevron: a page lies that way) or dimmed (at an end), on a plate in the
---- slices' fill.
+--- A page arrow live (its chevron in the Paging tab's arrow color: a page lies that way) or dimmed
+--- (at an end), on a plate in the tab's plate color, at the tab's arrow size.
 function R.PaintArrow(btn, live, look)
     btn.qcLive = live and true or false
     btn.qcLook = look
-    local f = look and look.fill or { r = 0.06, g = 0.06, b = 0.08, a = 0.80 }
-    btn.qcPlate:SetVertexColor(f.r, f.g, f.b, math.max(f.a, 0.6))
-    local c, dim = NS.Constants.GOLD, Slices.DIM
-    if live then btn.qcIcon:SetVertexColor(c.r, c.g, c.b, 1) else btn.qcIcon:SetVertexColor(dim, dim, dim, 0.6) end
+    local pg = (look or R.Look()).paging
+    btn.qcPlate:SetSize(pg.arrowSize, pg.arrowSize)
+    btn.qcIcon:SetSize(math.floor(pg.arrowSize * 0.58 + 0.5), math.floor(pg.arrowSize * 0.58 + 0.5))
+    local f = pg.plate
+    btn.qcPlate:SetVertexColor(f.r, f.g, f.b, f.a)
+    local c, dim = pg.arrow, Slices.DIM
+    if live then btn.qcIcon:SetVertexColor(c.r, c.g, c.b, c.a) else btn.qcIcon:SetVertexColor(dim, dim, dim, 0.6) end
 end
 
 --- A ring's title: its name, and its page when it has several ("Arathi Basin (1 of 2)").

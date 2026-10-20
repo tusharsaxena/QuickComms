@@ -126,20 +126,21 @@ local function paintBorder(ring, spec, look)
     end
 end
 
--- A paged ring's indicators: its own page a gold pill, the others gray dots (DL.Nav).
+-- A paged ring's indicators (DL.Nav, the Paging tab): its own page a pill in the current color, the
+-- others dots in the other color.
 local function paintDots(ring, spec, look)
     local pages = (spec.pages or 1) > 1 and spec.pages or 0
-    local nav = DL.Nav(math.max(pages, 1), look.radius, look.line, spec.page, look.labelReach)
-    local gold = NS.Constants.GOLD
+    local pg = look.paging
+    local nav = DL.Nav(math.max(pages, 1), spec.page, DL.Geometry(look.radius, look.line, look.labelReach), pg)
     for p = 1, math.max(pages, #ring.qcDots) do
         local d = nth(ring, ring.qcDots, p, "OVERLAY")
         if p <= pages then
             local current = p == spec.page
             d:SetTexture(current and S.PILL or CIRCLE)
-            d:SetSize(nav.widths[p], DL.DOT)
+            d:SetSize(nav.widths[p], pg.dotSize)
             d:ClearAllPoints()
             d:SetPoint("CENTER", ring, "CENTER", nav.dots[p], nav.y)
-            if current then d:SetVertexColor(gold.r, gold.g, gold.b, 1) else d:SetVertexColor(S.DIM, S.DIM, S.DIM, 0.9) end
+            tint(d, current and pg.current or pg.dot)
             d:Show()
         else
             d:Hide()

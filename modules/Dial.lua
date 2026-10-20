@@ -120,13 +120,13 @@ end
 -- targets the page before or after (0 at an end, where it is dimmed and does nothing). Protected
 -- geometry and visibility: here, under Apply, out of combat.
 local function placeArrows(ring, spec, look)
-    local nav = DL.Nav(spec.pages, look.radius, look.line, nil, look.labelReach)
+    local nav = DL.Nav(spec.pages, spec.page, DL.Geometry(look.radius, look.line, look.labelReach), look.paging)
     local paged = (spec.pages or 1) > 1
     for _, a in ipairs({ { ring.qcPrev, -1, spec.prev }, { ring.qcNext, 1, spec.next } }) do
         local btn, side, target = a[1], a[2], a[3]
         btn:ClearAllPoints()
         btn:SetPoint("CENTER", ring, "CENTER", side * nav.arrow, nav.y)
-        btn:SetSize(DL.ARROW, DL.ARROW)
+        btn:SetSize(look.paging.arrowSize, look.paging.arrowSize)
         btn:SetShown(paged)
         R.PaintArrow(btn, paged and (target or 0) > 0, look)
     end
@@ -191,10 +191,10 @@ end
 -- `wedge`), painted, armed, indexed by callout.
 local function placeWedges(inst, ring, spec, icfg, look)
     local wedges = {}
-    local grow = (DL.HitSize(spec.size, look.radius, spec.start) - DL.WEDGE) / 2
+    local grow = (DL.HitSize(spec.size, look.radius, spec.start, look.iconReach) - DL.WEDGE) / 2
     for i, item in ipairs(spec.items) do
         local w = NS.Pool.Acquire(ring.qcWedges, function() return newWedge(inst, ring) end)
-        local geo = DL.Wedge(item.wedge or i, spec.size, look.radius, spec.start, look.labelReach)
+        local geo = DL.Wedge(item.wedge or i, spec.size, look.radius, spec.start, look.labelReach, look.iconReach)
         w:ClearAllPoints()
         w:SetPoint("CENTER", ring, "CENTER", geo.x, geo.y)
         w:SetSize(DL.WEDGE, DL.WEDGE)
@@ -237,7 +237,7 @@ function Dial.Apply(index, id, plan)
     DS.Close(inst.header)
     releaseRings(inst)
     local icfg = NS.IconStyle.Config(dial.icon, "dial")
-    local look = R.Look(plan.radius, dial.label, dial.slice)
+    local look = R.Look(plan.radius, dial.label, dial.slice, dial)
     local disc = DL.Geometry(look.radius, look.line, look.labelReach).disc
     R.PaintPointer(inst.header, look)
     local loaded = {}

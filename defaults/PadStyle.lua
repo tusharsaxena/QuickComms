@@ -94,3 +94,18 @@ function D.DialSlice()
         useClassColorPointer = false,
     }
 end
+
+--- The Comms Dial's Paging tab (`dial.page.*`, 2026-10-21): a paged ring's row under the dial. Its
+--- distance under the dial's labels; the two arrows (round plates in the slices' fill, gold chevrons)
+--- and how far they stand from the indicators; the indicators, a gold pill for the page shown and a
+--- gray dot for each other page.
+function D.DialPage()
+    return {
+        offset = 6,
+        arrowSize = 24, arrowGap = 10, arrowColor = { r = 1, g = 0.82, b = 0, a = 1 }, useClassColorArrow = false,
+        plateColor = { r = 0.06, g = 0.06, b = 0.08, a = 0.80 }, useClassColorPlate = false,
+        dotSize = 6, pillWidth = 18, dotGap = 6,
+        currentColor = { r = 1, g = 0.82, b = 0, a = 1 }, useClassColorCurrent = false,
+        dotColor = { r = 0.4, g = 0.4, b = 0.4, a = 0.9 }, useClassColorDot = false,
+    }
+end
