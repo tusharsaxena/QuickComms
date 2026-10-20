@@ -213,9 +213,9 @@ Total.
 - diagnostics: the surfaces and send sections name the pads, the armed chips and the guard
 - diagnostics: [phase 3] the surfaces section names the preview
 - diagnostics: [final 21] the settings section lists no member row
-- diagnostics: [phase 4] the dials and bindings sections name each dial, its key and the override bindings
+- diagnostics: [phase 4] the dials and bindings sections name each dial, its key and each entry's WoW binding
 
-### test_compat.lua (13)
+### test_compat.lua (14)
 
 - compat: plain readers pass plain values and drop secrets
 - compat: InstanceInfo with a secret instanceID reads nil, never raises
@@ -230,6 +230,7 @@ Total.
 - compat: [phase 3] SpecInfoByID and ClassName read display names; secret or missing ones are nil
 - compat: [phase 4] BindingAction reads the player's WoW binding; none, a secret or a missing API is nil
 - compat: [final 7] BindingLabel reads the menu's name for an action; [final 8] BindingKey a command's key; secrets are nil
+- compat: [keys] SetBinding and SaveBindings write WoW's own bindings, never in combat or without the API
 
 ### test_restrictions.lua (16)
 
@@ -491,10 +492,10 @@ Total.
 - members: [final 7] what `get group.when` prints types back in
 - members: [final 4] an off-screen pad.point is refused; `/qc reset` brings back a pad's place and clears an icon
 - members: [phase 4] a dial's fields are member rows, and its position goes through SetSurfacePoint
-- members: [review 4] a dial's key is stored upper-case; none clears it; a reserved key or another dial's is refused
-- members: [final 3] a bare, dangling, unknown or repeated modifier is refused; [final 4] modifier order is one key
-- members: [phase 4] the CLI types and prints a dial's key and position
-- members: [phase 4] an off-screen dial.point is refused; `/qc reset` brings the dial back and frees its key
+- members: [review 4] a key is read upper-case in the client's modifier order; none is no key; reserved keys are refused
+- members: [keys] a dial has no key row: its key is WoW's binding, set on the Binding tab, never on the CLI
+- members: [phase 4] the CLI types and prints a dial's position
+- members: [phase 4] an off-screen dial.point is refused; `/qc reset` brings the dial back
 - members: [phase 5] a When's key level prints as it types back in: one level, open below, open above
 - members: [phase 5] a pad's Look rows are composed member rows: checked, clamped, announced
 - members: [icons] a glyph's color is written through the seam by id, typed text read as rrggbb
@@ -712,7 +713,7 @@ Total.
 - groups page: [R4] EditGroup in combat prints the settings refusal and changes nothing
 - groups page: [R4] EditGroup of a group that is gone opens nothing
 
-### test_page_pads.lua (16)
+### test_page_pads.lua (17)
 
 - pads page: New pad makes a second pad holding every built-in, selects it, and the pad is built
 - pads page: the Layout rows write the selected pad
@@ -726,7 +727,8 @@ Total.
 - pads page: [final 3, 15] Defaults puts the pad's rows back as one act: one rebuild
 - pads page: [final 4] Defaults keeps the pad's position
 - pads page: [final 26] New pad takes the lowest free number, so a delete never leads to two names alike
-- pads page: [phase 5] Look carries the composed Font, Border and Background groups under their headings
+- pads page: [phase 5] Window carries the composed Header, Font, Border and Background groups under their headings
+- pads page: [chip] Chip carries Size, Color, Border, Font and Glow, and Chip width left Layout for it
 - pads page: [B9] Icons carries its headings once each, a companion beside each swatch, and writes the pad
 - pads page: [B9] the glow's knobs are grayed out while it is off or in another style; its color never is
 - pads page: [B9] Defaults puts the Icons rows back too, and its tooltip names them
@@ -739,16 +741,16 @@ Total.
 - dials page: Wheel writes wedges per ring and where it opens; X and Y move the dial; Reset puts it back
 - dials page: a refused X or Y says why and puts the box back to the stored offset
 - dials page: Defaults puts the dial's rows back as one act, and keeps its key and position
-- dials page: [review 4] the Binding tab binds the key; another dial's is refused naming it; a WoW key warns and binds
+- dials page: [keys] the Key box sets WoW's own binding and shows what WoW binds; a refusal puts it back
+- dials page: [keys] a key set in Options -> Keybindings shows in the box when the page is shown again
 - dials page: Groups switches Categories and Flat, and reorders the dial's groups
 - dials page: the remove glyph takes a group off the dial without asking and keeps the group
 - dials page: [phase 4] Groups warns when a node set would open three rings deep, and not once it is first
 - dials page: Preview lists the rings wedge by wedge, marking the one the dial opens on
 - dials page: [final 20] at 12 wedges per ring the Preview names each wedge by its clock position
 - dials page: Delete dial asks, then the dial is gone, its header released, and the page heals
-- dials page: [final 7] a WoW conflict names the action as WoW's key bindings menu shows it
-- dials page: [final 8] the Binding tab names this dial's Open Comms Dial entry and sees a key bound there
-- dials page: [final 10] the key line of a dial that is off says the key opens nothing, and warns of no override
+- dials page: [final 7] a key taken from another WoW binding names it as WoW's key bindings menu shows it
+- dials page: [final 8] the Binding tab names this dial's Open Comms Dial entry, and what its key does
 - dials page: [final 11] the page's own plan builds are not timed as a surface's bake
 - dials page: [B9] Icons follows Wheel, carries its headings once each, and writes the dial
 
@@ -761,7 +763,7 @@ Total.
 - share page: [phase 5] Export with nothing ticked says so and opens nothing
 - share page: [phase 5] Import checks a pasted string, reports it, then adds it as new members
 - share page: [review] editing the box after Accept forgets the check: Import never adds the old string
-- share page: [phase 5] an imported dial says it has no key yet
+- share page: [phase 5] an imported dial says where its key comes from
 - share page: [phase 5] an imported group no shared pad or dial lists says where to add it
 - share page: [phase 5] export and import are refused in combat; nothing is made or added
 - share page: [phase 5] a profile switch forgets the ticks and the checked string
@@ -789,7 +791,7 @@ Total.
 - echo: Expire drops only presses older than the window, oldest first
 - queue: a key replaces its earlier entry and keeps its place
 
-### test_sendengine.lua (31)
+### test_sendengine.lua (30)
 
 - sendengine: a send button is a named secure button registered for both edges
 - sendengine: Arm sends exactly the line; Disarm clears both attributes and sends nothing
@@ -820,8 +822,7 @@ Total.
 - sendengine: [phase 4] a dial header is a named click handler for the down edge, hidden; none in combat
 - sendengine: [phase 4] a wedge is wrapped before it is hooked, acts on the up edge, and only a left click is a press
 - sendengine: [phase 4] attributes, frame refs and snippets are written out of combat only, never blocked
-- sendengine: [audit QC-11] the bound-keys line logs on change through DebugChanged, re-armed by a console Clear
-- sendengine: [phase 4] BindKeys replaces the whole set, out of combat only; ClearKeys empties it
+- sendengine: [keys] no override binding is written: a dial's key is WoW's own binding (modules/Dial.lua)
 
 ### test_dial_secure.lua (12)
 
@@ -889,7 +890,7 @@ Total.
 - master: /qc test toggles test mode, and in combat says why it will not
 - master: the Test mode row reads and writes the one switch, and Reset all ends it
 
-### test_pad_layout.lua (17)
+### test_pad_layout.lua (19)
 
 - layout: horizontal puts a section's chips on one row under the header
 - layout: a titled section draws its label row first
@@ -908,6 +909,8 @@ Total.
 - layout: [bg subgroups] a grid pad sets a parent's small child sections side by side
 - layout: [bg subgroups] only one parent's children pack, only in a grid, only while they fit
 - layout: [bg subgroups] packed rows mirror for left growth and stay bottom-aligned growing up
+- layout: [window] the header row's height moves every row and is the collapsed pad's height
+- layout: [chip] a Chip height above 0 is the labeled chip's height; 0 is automatic; icon-only stays square
 
 ### test_dial_layout.lua (18)
 
@@ -979,11 +982,11 @@ Total.
 - render: [review] the skin's 1px inner line is kept only on the default flat 1px edge
 - render: [review] a chip's label runs to the chip's right edge, on one line
 - render: [phase 5] Use class color takes the player's class color and keeps the swatch's alpha
-- render: [phase 5] a section title keeps its gold until the player colors the font
+- render: [window] the section titles wear the Window tab's Section titles font, gold by default
 - render: [icons] a glyph chip is drawn in its color; the chip repainted with another icon is white again
 - render: [B3] a chip's label is one line, and hidden when the chip leaves it no room
 
-### test_pad.lua (36)
+### test_pad.lua (40)
 
 - pad: the default pad shows the M+ callouts, each chip armed with its baked line
 - pad: [review 5] a refused chip is dimmed and disarmed: a click sends and reports nothing
@@ -1009,7 +1012,11 @@ Total.
 - pad: [phase 3] a held drag whose stand-down is canceled in the same combat is stopped at combat end
 - pad: [phase 3] a new drag clears a stale held stop, so the next rebuild re-anchors
 - pad: [phase 3] the header's tooltip says why each group shows, unless the player turned it off
-- pad: [phase 5] the pad wears its Look: the chips' font and the edge and body it was given
+- pad: [phase 5] the pad wears its Window tab: the titles' font and the edge and body it was given
+- pad: [window] the header wears its own block: gold small text over nothing by default, then what it is given
+- pad: [window] the header's text starts at the section titles' left edge, in every growth
+- pad: [chip] a chip wears the Chip tab: the body, edge, label and size it always had, then what it is given
+- pad: [chip] the chip glow is off by default, then wraps the whole chip in its style, and goes with the chip
 - pad: [review 5] a font or border this machine does not have draws the default, with no error
 - pad: [B1] a group named as the header's situation draws no title row of its own
 - pad: [B2] down growth pins the pad's top edge; the header is on top and the strip above
@@ -1022,7 +1029,7 @@ Total.
 - pad: [R4] merged pads, collapsed pads and test mode's placeholder groups have no title to click
 - pad: [bg subgroups] Alterac Valley draws its nineteen objectives two to a row, each title its block wide
 
-### test_dial.lua (29)
+### test_dial.lua (33)
 
 - dial: Apply builds QuickCommsDial<n> with a ring per page, each callout wedge armed with its baked line
 - dial: a refused callout is a dimmed, disarmed wedge; a ring wedge is disarmed
@@ -1030,8 +1037,12 @@ Total.
 - dial: the hub shows the lockdown chip, the stale hint and TEST MODE; the pointer runs only while open
 - dial: a press dims every wedge and chip for the guard window; a drop stays red long enough to reopen and see
 - dial: Release closes, disarms and forgets a dial; HideAll also releases the keys
-- dial: Sync applies each planned dial at its place in the order, binds its key, and opens dial 1 in test mode
-- dial: the first situation read builds the default dial, closed; setting its key binds it
+- dial: Sync applies each planned dial at its place in the order, and opens dial 1 in test mode
+- dial: the first situation read builds the default dial, closed; setting its key is WoW's own binding
+- dial: [keys] a new key unbinds the old one; Escape (no key) clears it; a reserved key is refused
+- dial: [keys] a key bound elsewhere in WoW is taken, with one line naming what it was
+- dial: [keys] in combat a key cannot be set, with one line, and nothing is blocked
+- dial: [keys] a key set in Options -> Keybindings is the dial's key; a dial past the fourth has none
 - dial: [exit] in Arathi Basin the dial opens on the nodes; Lumber Mill, then INC, sends in two clicks
 - dial: [exit] on a raid boss the dial opens and a click on a wedge sends, with nothing blocked
 - dial: [exit] the Categories two-stroke: a group wedge opens its ring, a callout wedge sends
@@ -1039,14 +1050,14 @@ Total.
 - dial: combat start ends test mode and the live dial comes back closed
 - dial: [review 6] test mode ended by a combat whose lockdown began first: no key held, closed at combat end
 - dial: Preview as opens dial 1 on the previewed situation, and its wedges send nothing
-- dial: [review 3] a key or wedge change in combat waits for combat end, behind the hub's stale hint
+- dial: [review 3] a wedge change in combat waits for combat end, behind the hub's stale hint; the key works
 - dial: [review 1] the key opens nothing where no group is active, and is the game's again while disabled
 - dial: [review 3] disabled in combat with the dial open: nothing blocked; combat end hides it and frees the key
-- dial: [review 3] a profile switch in combat waits: the old key still opens the dial, then combat end binds the new
-- dial: a profile switch binds the new profile's key and releases the old one
+- dial: [keys] a profile switch keeps the key: it is WoW's binding, never the profile's
 - dial: Reset position puts every pad and dial back, through their point rows, on one line
 - dial: the hub's tooltip says why each group shows, unless the player turned it off
 - dial: Bindings.xml offers Open Comms Dial 1 to 4, each clicking that dial's header with Toggle
+- dial: [keys] Toggle Comms Pads runs exactly /qc toggle's handler, from a key bound in WoW's menu
 - dial: the key bindings menu's click opens the dial, even while it is hidden
 - dial: [final 2] two dials: opening the second closes the first, and the number keys go with it
 - dial: [final 5] test mode opens dial 1 once: a rebuild keeps it open, and after the player closes it, closed
@@ -1162,7 +1173,7 @@ Total.
 | test_slash.lua | 19 |
 | test_disabled.lua | 21 |
 | test_diagnostics.lua | 10 |
-| test_compat.lua | 13 |
+| test_compat.lua | 14 |
 | test_restrictions.lua | 16 |
 | test_situation.lua | 16 |
 | test_tokens.lua | 8 |
@@ -1180,22 +1191,22 @@ Total.
 | test_eui_skin.lua | 10 |
 | test_groups_when.lua | 20 |
 | test_page_groups.lua | 67 |
-| test_page_pads.lua | 16 |
+| test_page_pads.lua | 17 |
 | test_page_dials.lua | 18 |
 | test_page_share.lua | 12 |
 | test_check.lua | 6 |
 | test_send_guard.lua | 10 |
-| test_sendengine.lua | 31 |
+| test_sendengine.lua | 30 |
 | test_dial_secure.lua | 12 |
 | test_preview.lua | 23 |
 | test_edit_preview.lua | 14 |
 | test_master.lua | 5 |
-| test_pad_layout.lua | 17 |
+| test_pad_layout.lua | 19 |
 | test_dial_layout.lua | 18 |
 | test_surfaces.lua | 27 |
 | test_pad_render.lua | 20 |
-| test_pad.lua | 36 |
-| test_dial.lua | 29 |
+| test_pad.lua | 40 |
+| test_dial.lua | 33 |
 | test_icon_style.lua | 8 |
 | test_glow.lua | 11 |
 | test_vendor_sync.lua | 3 |
@@ -1205,4 +1216,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **979** |
+| **Total** | **990** |

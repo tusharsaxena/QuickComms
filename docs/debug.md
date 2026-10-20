@@ -36,7 +36,7 @@ The addon's sections (`modules/Diagnostics.lua`), in order:
 | `library` | the counts (callouts, groups, pads, dials), `nextId`, `seeded`, and the ids of the active groups under the current situation |
 | `surfaces` | the pads built, whether test mode is on, the previewed situation (`previewAs`, or `off`), and per pad its ordered active groups, its stale hint and its lockdown chip (the pads; the dials have their own section) |
 | `dials` | each built dial: its id, header (`QuickCommsDial<n>`), key, ring count, the ring it opens on, whether it is open, its ordered active groups, its stale hint and its lockdown chip |
-| `bindings` | every override binding the addon holds: the key, and the header and button it clicks |
+| `bindings` | each Open Comms Dial entry and Toggle Comms Pads: the key WoW binds to it (or `none`) and the command (`G -> CLICK QuickCommsDial1:Toggle`) |
 | `send` | the send buttons and how many are armed, each armed one with its pad or dial, callout and escaped line; the combat-end queue's pending keys; the guard (window, last press, time remaining); the echo tracker's counts (pending, sent, dropped, unknown sender, ignored) |
 
 The report reads state only: it calls no client API that changes anything, takes no hold, starts no
@@ -51,8 +51,8 @@ write and the `Prepare` summary), and phase 2's: `Send` (a button, arm or disarm
 `Guard` (a press inside the guard window), `Echo` (a press confirmed `sent` or reported `dropped`),
 `Queue` (an entry queued or replaced, the drain, a drop, the held stand-down) and `Pad` (a pad
 built or moved, a rebuild run or held for combat, test mode on or off), and phase 4's: `Dial` (a dial
-header built, an attribute or header write refused in combat) and `Bind` (the override bindings
-applied, logged only on a change, or refused in combat), and phase 5's: `Share` (an export: what it
+header built, an attribute or header write refused in combat) and `Bind` (a dial's key set in WoW's
+bindings: the entry, the old key and the new; since 2026-10-20), and phase 5's: `Share` (an export: what it
 held and its length); `Library` also logs each import's tally, and the import's field writes share
 one `[Set] import share: N rows` line. The libraries add their own: `Cmd`, `Cfg`, `Launcher`,
 `Lifecycle`, `Perf`. The design's `Resolver` and `Bake` tags (spec §16) are not used: the resolve

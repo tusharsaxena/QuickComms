@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-979%2F979_passing-green)
+![Tests](https://img.shields.io/badge/Tests-990%2F990_passing-green)
 
 Quick Comms puts your usual group callouts one click or one keypress away. "Kick on me", "Lust
 now", "INC Lumber Mill": set them up once and they sit on a Comms Pad or open from a
@@ -27,11 +27,13 @@ and share any of it with a friend as a string you copy and paste.
 Enter a key, a raid, an arena or a battleground (or head out into the open world on your own) and the
 Comms Pad shows the callouts that fit; click one to send it. `/qc unlock` lets you drag the pad, `/qc lock` fixes it, `/qc test` shows
 placeholder chips so you can place it anywhere (the strip above the pad, as wide as the pad, then reads TEST MODE after
-its name, as it reads PREVIEW during a preview), and `/qc toggle` hides every pad until you toggle it
-back or reload. The minimap button's right-click menu has Enabled, Locked, Test mode and Show window.
+its name, as it reads PREVIEW during a preview), and `/qc toggle` (or the Toggle Comms Pads key,
+bound in WoW's Options → Keybindings → Ka0s Quick Comms) hides every pad until you toggle it back or
+reload. The minimap button's right-click menu has Enabled, Locked, Test mode and Show window.
 
-The Comms Dial opens on a key. Pick one on Settings → Comms Dial → Binding (or in WoW's key bindings
-menu), press it, click a group, then click a callout to send it. In a battleground the dial opens
+The Comms Dial opens on a key. Pick one on Settings → Comms Dial → Binding, or bind Open Comms Dial
+in WoW's Options → Keybindings → Ka0s Quick Comms: it is the same key, shared by all your characters
+unless you tick Character Specific Keybindings there. Press it, click a group, then click a callout to send it. In a battleground the dial opens
 straight on the map's nodes, each where it sits on the map, so INC at the Lumber Mill is two
 clicks. Alterac Valley has more objectives than the dial has wedges, so its dial lists them north to
 south a page at a time (More turns the page); its pad sets them two to a row. The key again, Escape
@@ -45,8 +47,10 @@ Reuse
 callout copies a callout from any of your other groups into this one, and each row has an
 edit and a remove button. A group's Parent group setting puts it inside another group: it then
 shows wherever that group does, in a section (or a dial ring) of its own, while its conditions
-match: its parent's, while Inherit when conditions is ticked (the default), else its own. The Preview tab lists each callout beside what it would send where you are. The group's When tab says where it shows, one condition per drawer (click a condition to open it); Comms Pad arranges a pad, and its Look tab sets the font, the border
-and the background, each with a Use class color box. "Preview as…" (or `/qc preview`) shows the pads
+match: its parent's, while Inherit when conditions is ticked (the default), else its own. The Preview tab lists each callout beside what it would send where you are. The group's When tab says where it shows, one condition per drawer (click a condition to open it); Comms Pad arranges a pad: its Window tab styles the pad's header row
+(the one that names where you are), its section titles, border and background, and its Chip tab the
+chips themselves (size, color, border, font and an optional glow), each color with a Use class color
+box. "Preview as…" (or `/qc preview`) shows the pads
 and the dial as they would look somewhere else, and hovering a pad's header or the dial's middle (or
 `/qc why`) tells you why each group is there. While the Groups page is open, every pad and dial shows
 only the group you are editing, sending nothing: a click prints `[QC] /p <text>`, the line it would

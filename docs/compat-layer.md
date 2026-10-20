@@ -48,9 +48,11 @@ with a library-absent body and not counted; their contract is LibKa0s
 | `InstanceName(id)` | `GetRealZoneText` | plain or `nil`; an empty name is `nil` | `nil` | `Preview`, `GroupsWhen` |
 | `SpecInfoByID(id)` | `GetSpecializationInfoByID` | name and icon plain or `nil` | `nil` | `GroupsWhen` |
 | `ClassName(classFile)` | `LOCALIZED_CLASS_NAMES_MALE` | an unsafe key or a secret name is `nil` | `nil` | `GroupsWhen` |
-| `BindingAction(key)` | `GetBindingAction` | a secret, empty or unsafe key is `nil` | `nil` | `settings/Dials.lua` (the Binding tab's warning) |
-| `BindingLabel(action)` | the `BINDING_NAME_<action>` global | an unsafe action, or a secret, empty or non-string label, is `nil` | `nil` | `settings/Dials.lua` (names the conflicting binding) |
-| `BindingKey(command)` | `GetBindingKey` | an unsafe command, or a secret or empty key, is `nil` | `nil` | `settings/Dials.lua` (the key bound in WoW's menu) |
+| `BindingAction(key)` | `GetBindingAction` | a secret, empty or unsafe key is `nil` | `nil` | `modules/Dial.lua` (`BindKey`: the binding a key is taken from) |
+| `BindingLabel(action)` | the `BINDING_NAME_<action>` global | an unsafe action, or a secret, empty or non-string label, is `nil` | `nil` | `modules/Dial.lua` (names the binding a key is taken from) |
+| `BindingKey(command)` | `GetBindingKey` | an unsafe command, or a secret or empty key, is `nil` | `nil` | `modules/Dial.lua` (`KeyOf`, `BindKey`: a dial's key), `modules/Diagnostics.lua` |
+| `SetBinding(key, command)` | `SetBinding` (a nil command unbinds the key) | an unsafe key is refused (`false`) | `false`, and `false` in combat (the game refuses a binding change there) | `modules/Dial.lua` (`BindKey`) |
+| `SaveBindings()` | `SaveBindings(GetCurrentBindingSet())`: the account's set, or the character's while Character Specific Keybindings is ticked | none | `false`, and `false` in combat | `modules/Dial.lua` (`BindKey`) |
 | `ScreenSize()` | `UIParent:GetWidth`, `GetHeight` | either one secret, unknown or not positive is `nil` | `nil` | `Library` (an offset off the screen is refused) |
 | `ChatColor(chatType)` | `ChatTypeInfo` | an unsafe key, or a secret or missing color component, is `nil` | `nil` | `Pad_Render` (a chip's channel in its tooltip; a callout row's channel) |
 | `HasTemplate(name)` | `C_XMLUtil.GetTemplateInfo` | `type()` only: a table answer is `true`, anything else (or a raise) `false` | `nil` (unknown: the caller tries `CreateFrame` under `pcall`) | `settings/ModalWindow.lua` (whether to build the callout popup's and the icon browser's window from `SettingsFrameTemplate`) |
