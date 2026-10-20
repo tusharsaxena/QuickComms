@@ -914,7 +914,7 @@ Total.
 - dial layout: four wedges sit on N, E, S and W, clockwise from the top
 - dial layout: slices are 4, 6, 8 or 12, and 12 only on a ring with no children
 - dial layout: [review 5] more items than wedges go on pages: size-1 each, the rest on the last
-- dial layout: [exit] Categories in Arathi Basin opens on the node ring; Lumber Mill, then INC 3
+- dial layout: [exit] Categories in Arathi Basin opens on the node ring; Lumber Mill, then INC
 - dial layout: without the flag first, Categories opens on the group ring; one group opens straight on it
 - dial layout: [review 5] Flat puts every callout on the first ring, highest group first, with More pages
 - dial layout: [phase 4] a node set below another active group is three rings deep, and named for the warning

@@ -14,7 +14,7 @@ local _, NS = ...
 -- group has the flag, or is the only group (owner ruling R2), the dial opens on its ring and the hub
 -- goes up to the group ring. The wedge count is the dial's slices, never grown; 12 only on a ring with
 -- no children (spec §11.3), and a More wedge is a child, so such a ring gets 8. In Flat a node's
--- callout is titled with its node ("INC 3 · Lumber Mill"); the slot keeps its own name.
+-- callout is titled with its node ("INC · Lumber Mill"); the slot keeps its own name.
 --
 -- DEPTH (spec §11.3: depth 2; depth 3 allowed, with the editor warning). Each ring records its depth,
 -- 1 for the first ring, a later page keeping its first page's. DeepGroups names the node sets whose
