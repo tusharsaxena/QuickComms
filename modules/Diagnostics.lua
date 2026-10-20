@@ -135,10 +135,12 @@ local function dials(out)
 end
 
 -- The key bindings (spec §9.4, §16): each Open Comms Dial entry's key in WoW's own bindings, the
--- command it runs.
+-- command it runs, and the Toggle Comms Pads entry's.
 local function bindings(out)
-    for place = 1, NS.Dial.BINDINGS do
-        local command = NS.Dial.Command(place)
+    local commands = {}
+    for place = 1, NS.Dial.BINDINGS do commands[place] = NS.Dial.Command(place) end
+    commands[#commands + 1] = NS.SlashVerbs.TOGGLE_COMMAND
+    for _, command in ipairs(commands) do
         out:add("Bind", "%s -> %s", tostring(NS.Compat.BindingKey(command) or "none"), command)
     end
 end

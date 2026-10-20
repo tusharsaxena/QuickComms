@@ -641,6 +641,15 @@ local function build()
         if template == "SettingsFrameTemplate" then dressSettingsFrame(f) end
         if ours(f) then dress(f) end
         if type(name) == "string" then M.__named[name] = f end
+        -- A plain Button records its registered clicks too (the client's default is LeftButtonUp), so
+        -- `__click` and a CLICK binding (`__pressKey`) reach one only on an edge it registered.
+        if frameType == "Button" and not (type(template) == "string" and template:find("Secure", 1, true)) then
+            f.__clicks = { "LeftButtonUp" }
+            f.RegisterForClicks = function(self, ...)
+                self.__clicks = { ... }
+                return self
+            end
+        end
         if type(template) == "string" and template:find("Secure", 1, true) then
             if M.inCombat then refuse(f, "CreateFrame") end
             f.__attrs, f.__clicks = {}, {}

@@ -460,12 +460,16 @@ test("dial: Bindings.xml offers Open Comms Dial 1 to 4, each clicking that dial'
     local xml = readFile("Bindings.xml")
     local names = {}
     for name in xml:gmatch('<Binding name="([^"]+)"') do names[#names + 1] = name end
-    assertEqual(#names, NS.Dial.BINDINGS)
-    for i, name in ipairs(names) do
+    assertEqual(#names, NS.Dial.BINDINGS + 1, "the four dials and Toggle Comms Pads")
+    for i = 1, NS.Dial.BINDINGS do
+        local name = names[i]
         assertEqual(name, ("CLICK QuickCommsDial%d:Toggle"):format(i))
         -- red under: drop the rawset loop from modules/Dial.lua (the menu would show the raw name)
         assertEqual(m["BINDING_NAME_" .. name], ("Open Comms Dial %d"):format(i))
     end
+    assertEqual(names[#names], "CLICK QuickCommsTogglePads:LeftButton")
+    -- red under: drop the label's rawset from settings/SlashVerbs.lua
+    assertEqual(m["BINDING_NAME_" .. names[#names]], "Toggle Comms Pads")
     assertTrue(xml:find('header="QUICKCOMMS"', 1, true) ~= nil)
     -- red under: drop the BINDING_HEADER_QUICKCOMMS line from modules/Dial.lua
     assertEqual(rawget(_G, "BINDING_HEADER_QUICKCOMMS"), "Ka0s Quick Comms")
@@ -473,6 +477,27 @@ test("dial: Bindings.xml offers Open Comms Dial 1 to 4, each clicking that dial'
         -- a root file, not a TOC line, as the standard allows (layout-§1, toc-file-§4 (standard v2.80.0))
         assertTrue(rel ~= "Bindings.xml", "the client loads it by name, never through the TOC")
     end
+end)
+
+test("dial: [keys] Toggle Comms Pads runs exactly /qc toggle's handler, from a key bound in WoW's menu", function()
+    local NS, m = live()
+    local calls = 0
+    local toggle = NS.SlashVerbs.TogglePads
+    NS.SlashVerbs.TogglePads = function(...)
+        calls = calls + 1
+        return toggle(...)
+    end
+    m.SetBinding("P", "CLICK QuickCommsTogglePads:LeftButton")   -- bound in Options -> Keybindings
+    m.prints = {}
+    assertTrue(m.__pressKey("P"))
+    -- red under: the button's OnClick doing its own toggle (two handlers for one verb)
+    assertEqual(calls, 1, "one press, one toggle")
+    assertTrue(NS.State.padsHidden, "the pads are hidden for the session")
+    assertTrue(m.prints[1]:find("Comms Pads hidden for this session.", 1, true) ~= nil, m.prints[1])
+    m.__pressKey("P")
+    assertFalse(NS.State.padsHidden == true, "and shown again")
+    assertEqual(calls, 2)
+    assertFalse(m.__named.QuickCommsTogglePads:IsShown(), "the button itself is never seen")
 end)
 
 test("dial: the key bindings menu's click opens the dial, even while it is hidden", function()

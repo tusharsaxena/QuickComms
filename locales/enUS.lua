@@ -884,6 +884,7 @@ L["Pad and dial positions reset."] = "Pad and dial positions reset."
 
 -- The key bindings menu (modules/Dial.lua, Bindings.xml)
 L["Open Comms Dial %d"] = "Open Comms Dial %d"
+L["Toggle Comms Pads"] = "Toggle Comms Pads"
 L["An imported dial's key is the one WoW binds to its place in the dial list: see its Binding tab on the Comms Dial page."] =
     "An imported dial's key is the one WoW binds to its place in the dial list: see its Binding tab on the Comms Dial page."
 L["%s was %s in WoW's key bindings; now it opens this dial."] =
