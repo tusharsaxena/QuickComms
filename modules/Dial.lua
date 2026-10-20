@@ -18,9 +18,8 @@ local _, NS = ...
 -- THE KEY (2026-10-20) is WoW's own binding of the place's Bindings.xml entry ("CLICK
 -- QuickCommsDial<place>:Toggle", Open Comms Dial <place> under Ka0s Quick Comms in Options ->
 -- Keybindings), never a profile field: account-wide unless the player ticks Character Specific
--- Keybindings, the same binding whichever page sets it. BindKey sets it (the Comms Dial page's Key
--- box), out of combat only, through core/Compat.lua: the old key unbound, the new one bound, the set
--- saved. It follows the place, so a dial that moves up the list takes the key of its new place, and
+-- Keybindings. Only that menu sets it (the Comms Dial page's Binding tab retired in the dial rework,
+-- 2026-10-21). It follows the place, so a dial that moves up the list takes the key of its new place, and
 -- a place with no dial, a disabled dial or a stood-down addon leaves the key bound and opening
 -- nothing. Only the first BINDINGS places have an entry, so a dial past them has no key. The guard's dim and the result flash (spec §9.2, §9.3) are insecure and
 -- reach every wedge as they reach every button: Pad.Cooldown calls Dial.Cooldown, and SEND_RESULT
@@ -79,56 +78,6 @@ function Dial.KeyOf(id)
     return command and NS.Compat.BindingKey(command) or nil
 end
 
--- Why a key cannot open a dial (Library.ValidKey's reason codes).
-local KEY_WHY = {
-    badKey = L["A key is one key, with ALT-, CTRL- or SHIFT- in front if you like."],
-    reservedKey = L["Escape, the left and right mouse buttons, the mouse wheel and 1 to 8 without a modifier cannot open a dial: the open dial uses them."],
-}
-
--- Bind `key` (normalized; nil clears) to `command` in place of every key in `olds` (the menu holds
--- two per action; each one that is not `key` is unbound), and save the set.
-local function rebind(command, olds, key)
-    for _, old in ipairs(olds) do
-        if old ~= key then NS.Compat.SetBinding(old, nil) end
-    end
-    local before = key and NS.Compat.BindingAction(key)
-    if key and before ~= command then NS.Compat.SetBinding(key, command) end
-    NS.Compat.SaveBindings()
-    NS.Debug("Bind", "%s: %s -> %s", command, #olds > 0 and table.concat(olds, ",") or "none", tostring(key or "none"))
-    if before and before ~= command then
-        NS.Print(L["%s was %s in WoW's key bindings; now it opens this dial."]:format(key,
-            NS.Compat.BindingLabel(before) or before))
-    end
-end
-
---- Set the dial `id`'s key: WoW's own binding of its place's entry (Bindings.xml), its old key
---- unbound and the set saved, so Options -> Keybindings shows it and it lasts. `key` as captured or
---- typed ("" or "none" clears it). Refused, with one printed line, in combat (the game refuses a
---- binding change), past the BINDINGS places, and for a key the open dial needs.
---- @return boolean set
-function Dial.BindKey(id, key)
-    local place = Dial.PlaceOf(id)
-    local command = Dial.Command(place)
-    if not command then
-        NS.Print(L["Only the first %d dials in the list have a key in WoW's key bindings."]:format(Dial.BINDINGS))
-        return false
-    end
-    if NS.Compat.InCombat() then
-        NS.Print(L["Key bindings can be changed after combat."])
-        return false
-    end
-    local ok, code = NS.Library.ValidKey(key)
-    if not ok then
-        NS.Print(KEY_WHY[code] or tostring(code))
-        return false
-    end
-    key = NS.Library.KeyValue(key) or nil
-    local olds = NS.Compat.BindingKeys(command)
-    if (key and #olds == 1 and olds[1] == key) or (not key and #olds == 0) then return true end
-    rebind(command, olds, key)
-    return true
-end
-
 local byIndex, byId = {}, {}   -- [place] = instance; [dialId] = instance
 local linked = 0               -- how many headers DS.Link last joined
 local displayMode = nil        -- the test or preview mode the last Sync drew dial 1 in ("test", a preview key)
@@ -154,13 +103,32 @@ local function arm(btn, item)
     NS.SendEngine.Disarm(btn)
 end
 
+-- A ring's container, its two page arrows (secure: their click turns the page in combat, through the
+-- header's arrow snippet) and its dressing. Sized per plan in Apply.
 local function newRing(inst)
     local ring = DS.NewRing(inst.header)
+    ring.qcPrev = R.DressArrow(DS.NewArrow(inst.header, ring), "prev")
+    ring.qcNext = R.DressArrow(DS.NewArrow(inst.header, ring), "next")
     R.DressRing(ring)
-    ring:SetSize(DL.DISC, DL.DISC)   -- protected geometry: here, under Apply, out of combat
     ring:SetPoint("CENTER", inst.header, "CENTER", 0, 0)
     ring.qcWedges = NS.Pool.New()
     return ring
+end
+
+-- A ring's arrows: shown on a paged ring, in its row under the disc and the labels (DL.Nav); each
+-- targets the page before or after (0 at an end, where it is dimmed and does nothing). Protected
+-- geometry and visibility: here, under Apply, out of combat.
+local function placeArrows(ring, spec, look)
+    local nav = DL.Nav(spec.pages, look.radius, look.line)
+    local paged = (spec.pages or 1) > 1
+    for _, a in ipairs({ { ring.qcPrev, -1, spec.prev }, { ring.qcNext, 1, spec.next } }) do
+        local btn, side, target = a[1], a[2], a[3]
+        btn:ClearAllPoints()
+        btn:SetPoint("CENTER", ring, "CENTER", side * nav.arrow, nav.y)
+        btn:SetSize(DL.ARROW, DL.ARROW)
+        btn:SetShown(paged)
+        R.PaintArrow(btn, paged and (target or 0) > 0)
+    end
 end
 
 -- A wedge's press dims every button and wedge for the guard window (Pad.Cooldown calls Dial.Cooldown).
@@ -215,17 +183,17 @@ local function hubState(inst, plan)
     }
 end
 
--- One ring's wedges: placed on their compass points (a pinned node on its own wind, Dial_Layout's
+-- One ring's wedges: placed on their compass points at the dial's radius (a pinned node on its own wind, Dial_Layout's
 -- `wedge`), painted, armed, indexed by callout.
-local function placeWedges(inst, ring, spec, icfg)
+local function placeWedges(inst, ring, spec, icfg, look)
     local wedges = {}
     for i, item in ipairs(spec.items) do
         local w = NS.Pool.Acquire(ring.qcWedges, function() return newWedge(inst, ring) end)
-        local geo = DL.Wedge(item.wedge or i, spec.size)
+        local geo = DL.Wedge(item.wedge or i, spec.size, look.radius, spec.start)
         w:ClearAllPoints()
         w:SetPoint("CENTER", ring, "CENTER", geo.x, geo.y)
         w:SetSize(DL.WEDGE, DL.WEDGE)
-        R.PaintWedge(w, item, geo, icfg)
+        R.PaintWedge(w, item, geo, icfg, look)
         arm(w, item)
         if item.slot then
             local list = inst.byCallout[item.slot.calloutId] or {}
@@ -251,13 +219,19 @@ function Dial.Apply(index, id, plan)
     DS.Close(inst.header)
     releaseRings(inst)
     local icfg = NS.IconStyle.Config(dial.icon, "dial")
+    local look = R.Look(plan.radius, dial.label)
+    local disc = DL.Geometry(look.radius, look.line).disc
+    R.SizeDisc(inst.header, disc)
     local loaded = {}
     for r, spec in ipairs(plan.rings) do
         local ring = NS.Pool.Acquire(inst.rings, function() return newRing(inst) end)
         ring:Hide()
-        R.PaintRing(ring, spec)
+        ring:SetSize(disc, disc)   -- protected geometry: here, under Apply, out of combat
+        R.PaintRing(ring, spec, look)
+        placeArrows(ring, spec, look)
         loaded[r] = { frame = ring, parent = spec.parent, prev = spec.prev, next = spec.next,
-            wedges = placeWedges(inst, ring, spec, icfg) }
+            arrows = { prev = ring.qcPrev, next = ring.qcNext },
+            wedges = placeWedges(inst, ring, spec, icfg, look) }
     end
     releaseFreeGlows(inst)
     DS.Load(inst.header, loaded, { openRing = plan.openRing, openAt = plan.test and "center" or dial.openAt })

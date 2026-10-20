@@ -66,3 +66,14 @@ function D.Button()
         useClassColorGlow = false,
     }
 end
+
+--- The Comms Dial's Labels tab (`dial.label.*`, dial rework 2026-10-21): each wedge's name outside
+--- the disc, white Friz Quadrata 12 points with its shadow, as the dial always drew it; `show` off
+--- draws none.
+function D.DialLabel()
+    return {
+        show = true,
+        font = "Friz Quadrata TT", fontSize = 12, fontColor = { r = 1, g = 1, b = 1, a = 1 },
+        useClassColorFont = false, fontFlags = "", fontShadow = true,
+    }
+end

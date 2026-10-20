@@ -1,6 +1,6 @@
 -- tests/test_page_dials.lua — settings/Dials.lua (spec §11, §13.1): the dial picker and New dial,
--- General's acts, Groups (Categories or Flat, the priority list), Wheel with the X/Y position, the
--- Binding tab's key capture and its line, and the Preview tab. Driven headlessly through
+-- General's acts, Groups (Categories or Flat, the priority list), Wheel with the ring radius and the
+-- X/Y position, Labels, and the Preview tab. No Binding tab: the key is set in Options -> Keybindings. Driven headlessly through
 -- tests/page_helpers.lua.
 
 local T = _G.QUICKCOMMS_TEST
@@ -20,10 +20,6 @@ local function open(inputs)
     P.show("Comms Dial")
     NS.addon.Settings.Editors.Select("dial", "d2")
     return NS, m, P
-end
-
-local function key(P)
-    return P.find(P.tab("dials", "Binding"), "Keybinding", "Key")
 end
 
 test("dials page: New dial makes a second dial holding every built-in, selects it, and builds QuickCommsDial2", function()
@@ -62,7 +58,12 @@ end)
 test("dials page: Wheel writes wedges per ring and where it opens; X and Y move the dial; Reset puts it back", function()
     local NS, _, P = open()
     local w = P.tab("dials", "Wheel")
+    assertEqual(NS.db.profile.dials.d2.slices, 0, "Auto by default")
     P.find(w, "Dropdown", "Wedges per ring"):__fire("OnValueChanged", 8)
+    w = P.tab("dials", "Wheel")
+    P.find(w, "Slider", "Ring radius"):__fire("OnMouseUp", 140)
+    assertEqual(NS.db.profile.dials.d2.radius, 140)
+    assertEqual(NS.Surfaces.DialPlans().d2.radius, 140, "the dial rebuilds at its new radius")
     w = P.tab("dials", "Wheel")
     P.find(w, "Dropdown", "Open at"):__fire("OnValueChanged", "cursor")
     assertEqual(NS.db.profile.dials.d2.slices, 8)
@@ -93,57 +94,34 @@ test("dials page: Defaults puts the dial's rows back as one act, and keeps its k
     local NS, m, P = open()
     local S = NS.SchemaRuntime
     S.Set("dial.slices", 8, "d2")
+    S.Set("dial.radius", 150, "d2")
+    S.Set("dial.label.show", false, "d2")
     S.Set("dial.mode", "flat", "d2")
-    assertTrue(NS.Dial.BindKey("d2", "G"))
+    m.SetBinding("G", "CLICK QuickCommsDial1:Toggle")
     S.Set("dial.point", { "CENTER", "CENTER", 0, 120 }, "d2")
     local applied = 0
     local apply = NS.Surfaces.ApplyAll
     NS.Surfaces.ApplyAll = function(...) applied = applied + 1 return apply(...) end
     P.ctx("dials").panel.defaultsOnClick()
     NS.Surfaces.ApplyAll = apply
-    assertEqual(NS.db.profile.dials.d2.slices, 4)
+    assertEqual(NS.db.profile.dials.d2.slices, 0)
+    assertEqual(NS.db.profile.dials.d2.radius, 100)
+    assertTrue(NS.db.profile.dials.d2.label.show)
     assertEqual(NS.db.profile.dials.d2.mode, "categories")
-    -- red under: drop Library.Batch from the page's Defaults (one rebuild, and one re-bind, per row)
+    -- red under: drop Library.Batch from the page's Defaults (one rebuild per row)
     assertEqual(applied, 1)
     -- red under: drop dial.point from settings/Schema.lua's resetExempt
     assertEqual(m.bindingActions.G, "CLICK QuickCommsDial1:Toggle", "WoW's binding: no row, nothing to reset")
     assertEqual(table.concat(NS.db.profile.dials.d2.point, ","), "CENTER,CENTER,0,120")
 end)
 
-test("dials page: [keys] the Key box sets WoW's own binding and shows what WoW binds; a refusal puts it back", function()
-    local NS, m, P = open()
-    key(P):__fire("OnKeyChanged", "SHIFT-G")
-    -- red under: DD.SetKey writing a profile field (Options -> Keybindings would never show it)
-    assertEqual(m.bindingActions["SHIFT-G"], "CLICK QuickCommsDial1:Toggle")
-    assertNil(NS.db.profile.dials.d2.key, "never a profile field")
-    assertTrue(P.hasText(P.tab("dials", "Binding"), "SHIFT-G opens and closes this dial."))
-    assertEqual(key(P).shownKey, "SHIFT-G", "the box shows WoW's binding")
-    local id = NS.addon.Settings.Dials.Create()
-    P.flush()
-    local kb = key(P)
-    assertEqual(kb.shownKey, "", "the second dial has no key yet")
-    P.pressKey(kb, "1")
-    assertEqual(kb.shownKey, "", "an unmodified 1 is refused, and the box goes back")
-    assertNil(m.bindingActions["1"])
-    m.bindingActions.TAB = "TARGETNEARESTENEMY"
-    key(P):__fire("OnKeyChanged", "TAB")
-    assertEqual(m.bindingActions.TAB, "CLICK QuickCommsDial2:Toggle", "taken from Target Nearest Enemy")
-    assertEqual(NS.Dial.KeyOf(id), "TAB")
-    key(P):__fire("OnKeyChanged", "")
-    assertNil(m.bindingActions.TAB, "Escape in the box clears the key")
-    assertNil(NS.Dial.KeyOf(id))
+test("dials page: [dial rework] no Binding tab: the key is set in Options -> Keybindings alone", function()
+    local NS, _, P = open()
+    -- red under: keep { key = BINDING, render = renderBinding } in settings/Dials.lua
+    assertEqual(#P.all(P.tab("dials", "Binding"), "Keybinding", "Key"), 0, "no key capture anywhere")
+    assertNil(NS.addon.Settings.Dials.SetKey)
 end)
 
-test("dials page: [keys] a key set in Options -> Keybindings shows in the box when the page is shown again", function()
-    local NS, m, P = open()
-    local kb = key(P)
-    assertEqual(kb.shownKey, "")
-    m.SetBinding("F", "CLICK QuickCommsDial1:Toggle")   -- the game's own Keybindings page
-    -- red under: no OnShow hook on the Comms Dial page (the box keeps the old key)
-    P.ctx("dials").panel:__fire("OnShow")
-    assertEqual(kb.shownKey, "F")
-    assertEqual(NS.addon.Settings.Dials.KeyLine("d2"), "F opens and closes this dial.")
-end)
 
 test("dials page: Groups switches Categories and Flat, and reorders the dial's groups", function()
     local NS, _, P = open()
@@ -175,32 +153,16 @@ test("dials page: the remove glyph takes a group off the dial without asking and
     assertTrue(NS.Library.Group(gid) ~= nil, "the group is kept")
 end)
 
-test("dials page: [phase 4] Groups warns when a node set would open three rings deep, and not once it is first", function()
-    local NS, _, P = open()
-    local Dials = NS.addon.Settings.Dials
-    assertNil(Dials.DepthWarning("d2"), "the shipped order: every node set opens into itself")
-    local cid = NS.Library.CreateCallout({ name = "Inc", text = "INC", channel = "smartGroup" })
-    local gid = NS.Library.CreateGroup({ name = "Mine" })
-    NS.Library.AddToGroup(gid, cid)
-    NS.Library.OfferGroup(gid)   -- an always-on group, now at the top of every dial
-    P.flush()
-    local warning = Dials.DepthWarning("d2")
-    -- red under: answer nil from DD.DepthWarning (spec §11.3: depth 3 needs the editor warning)
-    assertTrue(warning ~= nil and warning:find("Arathi Basin", 1, true) ~= nil, tostring(warning))
-    assertTrue(P.hasText(P.tab("dials", "Groups"), warning))
-    NS.SchemaRuntime.Set("dial.mode", "flat", "d2")
-    assertNil(Dials.DepthWarning("d2"), "Flat has no depth")
-    NS.SchemaRuntime.Set("dial.mode", "categories", "d2")
-    NS.Library.RemoveGroupFromSurface("dial", "d2", gid)
-    assertNil(Dials.DepthWarning("d2"))
-end)
 
 test("dials page: Preview lists the rings wedge by wedge, marking the one the dial opens on", function()
-    local _, _, P = open(AB)
+    local NS, _, P = open(AB)
     local w = P.tab("dials", "preview")
-    -- phase 5: the nodes are pinned to their winds, on one eight-wedge ring (spec §12.1)
-    assertTrue(P.hasText(w, "Arathi Basin (opens here)"))
-    -- the set's own map-wide callouts take the first free wind (groups polish)
+    -- dial rework: In Group is active in a battleground too, so the dial opens on the groups (Auto: W
+    -- first, clockwise)
+    assertTrue(P.hasText(w, "Comms Dial (opens here)"), table.concat(NS.addon.Settings.Dials.PreviewLines("d2"), "\n"))
+    assertTrue(P.hasText(w, "  1 W: Arathi Basin, opens a ring"))
+    -- phase 5: the nodes are pinned to their winds, on one eight-wedge ring (spec §12.1); the set's
+    -- own map-wide callouts take the first free wind (groups polish)
     assertTrue(P.hasText(w, "  3 E: Arathi Basin, opens a ring"))
     assertTrue(P.hasText(w, "  5 SW: Lumber Mill, opens a ring"))
 end)
@@ -234,48 +196,7 @@ end)
 
 -- ── final review fixes ──────────────────────────────────────────────────────────────────────
 
-test("dials page: [final 7] a key taken from another WoW binding names it as WoW's key bindings menu shows it", function()
-    local NS, m, P = open()
-    m.BINDING_NAME_TARGETNEARESTENEMY = "Target Nearest Enemy"
-    m.bindingActions.TAB = "TARGETNEARESTENEMY"
-    m.prints = {}
-    key(P):__fire("OnKeyChanged", "TAB")
-    -- red under: print the raw token in Dial.BindKey
-    assertTrue(table.concat(m.prints, "\n"):find("TAB was Target Nearest Enemy in WoW's key bindings; now it opens this dial.", 1, true)
-        ~= nil, table.concat(m.prints, "\n"))
-    m.bindingActions.J = "SOMETHING_UNNAMED"
-    m.prints = {}
-    key(P):__fire("OnKeyChanged", "J")
-    assertTrue(table.concat(m.prints, "\n"):find("J was SOMETHING_UNNAMED", 1, true) ~= nil, "no label: the token")
-    assertNil(m.bindingActions.TAB, "the dial's old key went back to nothing")
-    assertEqual(NS.Dial.KeyOf("d2"), "J")
-end)
 
-test("dials page: [final 8] the Binding tab names this dial's Open Comms Dial entry, and what its key does", function()
-    local NS, m, P = open()
-    local Dials = NS.addon.Settings.Dials
-    -- red under: show the fixed "also lists Open Comms Dial 1 to 4" line
-    assertTrue(P.hasText(P.tab("dials", "Binding"), "In WoW's key bindings, under Ka0s Quick Comms, this dial is Open Comms Dial 1."))
-    assertTrue(P.hasText(P.tab("dials", "Binding"), "The key is for every character, unless you tick Character Specific Keybindings there."))
-    assertEqual(Dials.KeyLine("d2"), "No key yet. Click the box and press one, or bind Open Comms Dial 1 in WoW's key bindings: it is the same key.")
-    m.bindingKeys["CLICK QuickCommsDial1:Toggle"] = "F"
-    assertEqual(Dials.KeyLine("d2"), "F opens and closes this dial.")
-    -- red under: DD.KeyLine skipping the dial.enabled and stood-down checks
-    assertTrue(NS.SchemaRuntime.Set("dial.enabled", false, "d2"))
-    assertEqual(Dials.KeyLine("d2"), "F is bound to Open Comms Dial 1 in WoW's key bindings, but this dial is off: it opens nothing until the dial is enabled.")
-    assertTrue(NS.SchemaRuntime.Set("dial.enabled", true, "d2"))
-    local stood = NS.IsStoodDown
-    NS.IsStoodDown = function() return true end
-    assertEqual(Dials.KeyLine("d2"), "F is bound to Open Comms Dial 1 in WoW's key bindings, but Quick Comms is off: it opens nothing until Quick Comms is enabled.")
-    NS.IsStoodDown = stood
-    local ids = {}
-    for i = 1, 4 do ids[i] = Dials.Create() end
-    P.flush()
-    assertEqual(Dials.PlaceLine(ids[4]), "This dial is number 5 in the dial list.")
-    assertEqual(Dials.KeyLine(ids[4]), "No key: WoW's key bindings list Open Comms Dial 1 to 4 only. Move this dial into the first 4 to give it one.")
-    -- red under: an enabled Key box on a dial past the menu's entries
-    assertTrue(key(P).disabled, "the fifth dial's Key box is disabled")
-end)
 
 test("dials page: [final 11] the page's own plan builds are not timed as a surface's bake", function()
     local NS = open(AB)
@@ -290,7 +211,6 @@ test("dials page: [final 11] the page's own plan builds are not timed as a surfa
     local ok, err = pcall(function()
         NS.Library.MoveGroupOnSurface("dial", "d2", #NS.db.profile.dials.d2.groups, 1)
         notes = 0
-        Dials.DepthWarning("d2")
         Dials.PreviewLines("d2")
     end)
     NS.Perf.Note, NS.Perf.on = note, false
@@ -314,9 +234,7 @@ test("dials page: [B9] Icons follows Wheel, carries its headings once each, and 
     for _, row in ipairs(NS.addon.Settings.RowsForPage("dials")) do
         if row.group and not seen[row.group] then seen[row.group] = true order[#order + 1] = row.group end
     end
-    -- The Binding tab has no row (a dial's key is WoW's own binding): the page draws it after Icons.
-    assertEqual(table.concat(order, ","), "General,Groups,Wheel,Icons", "the rows' tabs, in order")
-    assertTrue(P.tab("dials", "Binding") ~= nil, "and the Binding tab is still on the strip")
+    assertEqual(table.concat(order, ","), "General,Groups,Wheel,Labels,Icons", "the rows' tabs, in order")
     P.find(w, "Slider", "Icon size"):__fire("OnMouseUp", 24)
     P.find(w, "CheckBox", "Show border"):__fire("OnValueChanged", true)
     assertEqual(NS.db.profile.dials.d2.icon.size, 24)
@@ -339,4 +257,23 @@ test("dials page: [glow knobs] only the selected style's knobs show, and a Glow 
     assertEqual(#P.all(w, "Heading", "Auto cast sparkles"), 1)
     assertEqual(#P.all(w, "Heading", "Pixel border"), 0)
     assertEqual(#P.all(w, "Heading", "Offset"), 1, "Offset always shows")
+end)
+
+-- ── the Labels tab (dial rework, 2026-10-21) ────────────────────────────────────────────────
+
+test("dials page: [labels] Labels shows or hides the wedges' names and styles them; off grays the font", function()
+    local NS, _, P = open()
+    local w = P.tab("dials", "Labels")
+    for _, label in ipairs({ "Show labels", "Use class color" }) do assertTrue(P.find(w, "CheckBox", label) ~= nil, label) end
+    local wedge = NS.Dial.RingWedges("d2", 1)[1]
+    assertTrue(wedge.qcLabel:IsShown())
+    P.find(w, "CheckBox", "Show labels"):__fire("OnValueChanged", false)
+    assertFalse(NS.db.profile.dials.d2.label.show)
+    -- red under: drop SetShown from R.PaintWedge's label
+    assertFalse(NS.Dial.RingWedges("d2", 1)[1].qcLabel:IsShown(), "the dial rebuilt without names")
+    w = P.tab("dials", "Labels")
+    assertTrue(P.find(w, "Slider", "Font size").disabled, "the font block waits for labels")
+    assertTrue(NS.SchemaRuntime.Set("dial.label.show", true, "d2"))
+    assertTrue(NS.SchemaRuntime.Set("dial.label.fontSize", 18, "d2"))
+    assertEqual(NS.Dial.RingWedges("d2", 1)[1].qcLabel.__font[2], 18)
 end)

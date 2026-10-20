@@ -145,7 +145,6 @@ Kit.run{
         "test_pad_layout",
         "test_dial_layout",
         "test_surfaces",
-        "test_dial_yield",
         "test_pad_render",
         "test_pad",
         "test_dial",

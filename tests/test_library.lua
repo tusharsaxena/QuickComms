@@ -90,7 +90,6 @@ end)
 test("library: a seeded battleground set holds its nodes as groups inside it, in shipped order, with their winds", function()
     local NS, Lib, p = boot()
     local ab = T.seeded(NS, "bi.bg.ab")
-    assertTrue(p.groups[ab].openInto)
     assertEqual(#p.groups[ab].callouts, #NS.BuiltIns.groups["bi.bg.ab"].callouts, "its map-wide callouts")
     local kids = Lib.Children(ab)
     local def = NS.BuiltIns.groups["bi.bg.ab"]
@@ -619,48 +618,6 @@ test("library: [final 2] ValidWhen refuses a value its row can never match, and 
         content = { housing = true } }))
 end)
 
-test("library: [phase 4] keys: upper-cased, none is false; what the open dial uses is reserved", function()
-    local _, Lib = boot()
-    assertEqual(Lib.KeyValue(" shift-g "), "SHIFT-G")
-    assertEqual(Lib.KeyValue("none"), false)
-    assertEqual(Lib.KeyValue(""), false)
-    assertTrue(Lib.ValidKey("SHIFT--"), "the minus key with a modifier")
-    assertTrue(Lib.ValidKey(false))
-    T.assertFalse((Lib.ValidKey("ESCAPE")))
-    T.assertFalse((Lib.ValidKey("ALT-BUTTON2")))
-    -- red under: drop MOUSEWHEELUP from RESERVED_KEYS (the open dial turns its pages with it)
-    T.assertFalse((Lib.ValidKey("SHIFT-MOUSEWHEELUP")))
-    -- red under: drop RESERVED_BARE (an open dial's 1-8 pick its wedges)
-    T.assertFalse((Lib.ValidKey("3")))
-    assertTrue(Lib.ValidKey("CTRL-3"), "a modified number is another key")
-    assertTrue(Lib.ValidKey("9"))
-    T.assertFalse((Lib.ValidKey("SHIFT G")))
-end)
-
-test("library: [final 3] a key is one base key with known modifiers, none twice; a bare or dangling modifier is no key", function()
-    local _, Lib = boot()
-    -- red under: take everything before the last '-' on trust in Lib.ValidKey
-    for _, bad in ipairs({ "SHIFT", "shift-", "CTRL-", "FOO-G", "SHIFT-SHIFT-G", "LSHIFT", "ALT-RCTRL", "-G",
-        "CTRL---", "SHIFT--G" }) do
-        local ok, why = Lib.ValidKey(bad)
-        T.assertFalse(ok, bad)
-        assertEqual(why, "badKey", bad)
-    end
-    assertTrue(Lib.ValidKey("-"), "the minus key")
-    assertTrue(Lib.ValidKey("CTRL--"), "the minus key with a modifier")
-    assertTrue(Lib.ValidKey("META-G"))
-    assertTrue(Lib.ValidKey("ALT-CTRL-SHIFT-F1"))
-end)
-
-test("library: [final 4] modifiers are stored in the client's order, ALT-CTRL-SHIFT-META", function()
-    local _, Lib = boot()
-    -- red under: only trim and upper-case in Lib.KeyValue
-    assertEqual(Lib.KeyValue("shift-ctrl-g"), "CTRL-SHIFT-G")
-    assertEqual(Lib.KeyValue("META-SHIFT-ALT-X"), "ALT-SHIFT-META-X")
-    assertEqual(Lib.KeyValue("shift--"), "SHIFT--")
-    assertEqual(Lib.KeyValue("FOO-G"), "FOO-G", "not a key: kept as typed, for ValidKey to refuse")
-end)
-
 test("library: [phase 4] the generic battleground set moves below the per-battleground sets, once", function()
     local _, Lib = boot()
     local profile = { pads = { p1 = { groups = { "g1", "bi.bg", "bi.bg.ab", "bi.mplus", "bi.bg.wsg" } } },
@@ -1186,20 +1143,6 @@ test("library: [restore] a new pad holds the seeded sets still top-level, in shi
     assertEqual(#want, #NS.BuiltIns.order - 2)
     assertEqual(table.concat(p.pads[id].groups, ","), table.concat(want, ","))
 end)
-
-test("library: [restore] SeededBattleground names a seeded battleground set's key; a node, another set and a copy have none", function()
-    local NS, Lib = boot()
-    local ab = T.seeded(NS, "bi.bg.ab")
-    -- red under: answer nil from Library.SeededBattleground (the dial's depth warning reads it)
-    assertEqual(Lib.SeededBattleground(ab), "ab")
-    assertNil(Lib.SeededBattleground(T.seeded(NS, "bi.bg.ab.farm")), "a node is not a set")
-    assertNil(Lib.SeededBattleground(T.seeded(NS, "bi.mplus")), "not a battleground")
-    local copy = Lib.DuplicateGroup(ab)
-    assertNil(Lib.Group(copy).origin, "a duplicate is the player's own")
-    assertNil(Lib.SeededBattleground(copy))
-    assertNil(Lib.SeededBattleground("g999"))
-end)
-
 
 -- ── Inherit when conditions (2026-10-18-when-drawers-design.md §3) ─────────────────────────
 

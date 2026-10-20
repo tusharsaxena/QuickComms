@@ -9,7 +9,7 @@ local _, NS = ...
 -- seed data. Each profile is given them once as ordinary user groups and callouts under fresh ids,
 -- a battleground's nodes as groups inside its set; each seeded member keeps the shipped id it came
 -- from (`origin`), and a node its compass wind (`compass`). Neither is a tag or a lock: only Library
--- reads `origin` (what Restore puts back, and SeededBattleground for the dial's depth warning).
+-- reads `origin` (what Restore puts back).
 -- ONE OWNER (2026-10-17-callouts-owned-by-groups-design.md): each user callout id sits in exactly
 -- one user group's list. Adding a callout to a group adds a copy, removing one deletes it, and a
 -- deleted group takes its callouts with it.
@@ -128,14 +128,6 @@ local function byOrigin(set, origin)
         if type(m) == "table" and m.origin == origin and (not found or tostring(id) < tostring(found)) then found = id end
     end
     return found
-end
-
---- The battleground key ("ab") of user group `id` when it was seeded from a shipped battleground
---- set ("bi.bg.ab"), a node not included; nil for any other group (the dial's depth warning).
---- @return string|nil
-function Lib.SeededBattleground(id)
-    local g = P().groups[id]
-    return g and type(g.origin) == "string" and g.origin:match("^bi%.bg%.([^.]+)$") or nil
 end
 
 -- Whether any user group's list holds `calloutId`.
@@ -534,8 +526,7 @@ function Lib.CreateGroup(fields)
         end
         local id = Lib.NewId("g")
         p.groups[id] = { name = fields.name, icon = fields.icon, iconColor = glyphColor(fields.icon, fields.iconColor),
-            callouts = callouts, when = copyTable(fields.when) or {}, openInto = fields.openInto == true,
-            dialYield = fields.dialYield == true,
+            callouts = callouts, when = copyTable(fields.when) or {},
             enabled = fields.enabled ~= false, parent = fields.parent or nil, inheritWhen = fields.inheritWhen ~= false }
         announce("group", id)
         return id
@@ -595,7 +586,7 @@ function Lib.DuplicateGroup(id)
     local g = P().groups[id]
     if not g then return nil, "noGroup" end
     return Lib.CreateGroup({ name = Lib.CopyName(g.name), icon = g.icon, iconColor = g.iconColor, when = g.when,
-        openInto = g.openInto, dialYield = g.dialYield, enabled = g.enabled, callouts = g.callouts,
+        enabled = g.enabled, callouts = g.callouts,
         parent = isChild(id) and g.parent or nil, inheritWhen = g.inheritWhen })
 end
 
@@ -745,7 +736,7 @@ local function seedGroup(p, gid, parent, hidden)
     local id = takeId(p, "g")
     p.groups[id] = { name = def.name, icon = def.icon, iconColor = def.iconColor, callouts = callouts,
         when = copyTable(def.when) or {},
-        openInto = def.openInto == true, dialYield = def.dialYield == true, enabled = true, parent = parent,
+        enabled = true, parent = parent,
         inheritWhen = true, compass = def.compass, origin = gid }
     p.seededSets[gid] = true
     return id
@@ -919,8 +910,9 @@ local SURFACE_DEFAULTS = {
     -- Relaxed is the only interaction in v0.1.0 (the C7 fallback, round-4 record). `delay` and
     -- `tapAction` are kept for the hold, flick and release upgrade, and `depth` until owner ruling R5
     -- gives it a meaning; nothing reads them yet.
-    dial = { mode = "categories", slices = 4, depth = 2, openAt = "center", delay = 0.3,
-        interaction = "relaxed", tapAction = "first", icon = NS.IconDefaults.For("dial") },
+    dial = { mode = "categories", slices = 0, radius = 100, depth = 2, openAt = "center", delay = 0.3,
+        interaction = "relaxed", tapAction = "first", icon = NS.IconDefaults.For("dial"),
+        label = NS.PadDefaults.DialLabel() },   -- the Labels tab (defaults/PadStyle.lua)
 }
 
 --- The shape of one member of each kind: what every member row's path resolves against (the
@@ -928,16 +920,17 @@ local SURFACE_DEFAULTS = {
 --- false, not nil, so the boot check can see the key: false is "none" and "the default place".
 Lib.TEMPLATES = {
     callout = { name = "", text = "", channel = "smartGroup", icon = false, iconColor = false },
-    group = { name = "", icon = false, iconColor = false, enabled = true, openInto = false, dialYield = false, when = {},
+    group = { name = "", icon = false, iconColor = false, enabled = true, when = {},
         parent = false, inheritWhen = true },
     pad = { name = "", enabled = true, groupsAs = SURFACE_DEFAULTS.pad.groupsAs, point = false,
         layout = copyTable(SURFACE_DEFAULTS.pad.layout), look = copyTable(SURFACE_DEFAULTS.pad.look),
         icon = copyTable(SURFACE_DEFAULTS.pad.icon), header = copyTable(SURFACE_DEFAULTS.pad.header),
         section = copyTable(SURFACE_DEFAULTS.pad.section), button = copyTable(SURFACE_DEFAULTS.pad.button) },
     -- `point` is false, not nil, for the same reason as above: false is "the default place". A dial
-    -- has no `key`: its key is WoW's own binding (modules/Dial.lua Dial.BindKey).
+    -- has no `key`: its key is WoW's own binding of its Open Comms Dial entry (modules/Dial.lua).
     dial = { name = "", enabled = true, mode = SURFACE_DEFAULTS.dial.mode, slices = SURFACE_DEFAULTS.dial.slices,
-        openAt = SURFACE_DEFAULTS.dial.openAt, point = false, icon = copyTable(SURFACE_DEFAULTS.dial.icon) },
+        radius = SURFACE_DEFAULTS.dial.radius, openAt = SURFACE_DEFAULTS.dial.openAt, point = false,
+        icon = copyTable(SURFACE_DEFAULTS.dial.icon), label = copyTable(SURFACE_DEFAULTS.dial.label) },
 }
 
 --- A dial's place when its `point` is unset: the middle of the screen (read at run time by
@@ -1038,82 +1031,6 @@ end
 function Lib.SetSurfacePoint(kind, sid, point)
     if kind ~= "pad" and kind ~= "dial" then return false end
     return (NS.SchemaRuntime.Set(kind .. ".point", point, sid)) == true
-end
-
--- ── dial keys (spec §9.4, §18) ──────────────────────────────────────────────────────────────
-
--- A dial's key is WoW's own binding of its Open Comms Dial entry since 2026-10-20 (modules/Dial.lua
--- Dial.BindKey), never a profile field: these two read and check a key as typed or captured.
-
--- Keys a dial may not take, because the open dial uses them. Whatever the modifiers: Escape (the game
--- menu, and the open dial's close), the left and right mouse buttons, and the mouse wheel (the open
--- dial turns its pages with it). Without a modifier: 1-8, which pick the open dial's wedges (ALT-1 is
--- another key, and free).
-local RESERVED_KEYS = { ESCAPE = true, BUTTON1 = true, BUTTON2 = true, MOUSEWHEELUP = true, MOUSEWHEELDOWN = true }
-local RESERVED_BARE = { ["1"] = true, ["2"] = true, ["3"] = true, ["4"] = true, ["5"] = true, ["6"] = true,
-    ["7"] = true, ["8"] = true }
-
--- The modifiers a key may carry, in the order the client spells a chord (ALT-CTRL-SHIFT-META-X), and
--- the modifier keys themselves, which are no key on their own: the client never sends a bare SHIFT.
-local MODIFIERS = { "ALT", "CTRL", "SHIFT", "META" }
-local IS_MODIFIER = { ALT = true, CTRL = true, SHIFT = true, META = true }
-local MODIFIER_KEYS = { ALT = true, CTRL = true, SHIFT = true, META = true, LALT = true, RALT = true,
-    LCTRL = true, RCTRL = true, LSHIFT = true, RSHIFT = true, LMETA = true, RMETA = true }
-
--- An upper-cased key split into its modifiers (a set) and its base key, or nil when it is not one key:
--- an empty or dangling part ("SHIFT-", "-G"), an unknown or repeated modifier ("FOO-G",
--- "SHIFT-SHIFT-G"), or a modifier as the base ("SHIFT"). A trailing "--" is the minus key ("CTRL--").
-local function splitKey(t)
-    local base, rest
-    if t == "-" then return {}, "-" end
-    if t:sub(-2) == "--" then
-        base, rest = "-", t:sub(1, -3)
-    else
-        base = t:match("([^%-]+)$")
-        if not base or MODIFIER_KEYS[base] then return nil end
-        if #base == #t then return {}, base end
-        rest = t:sub(1, #t - #base - 1)
-    end
-    if rest == "" then return nil end
-    local mods = {}
-    for part in (rest .. "-"):gmatch("([^%-]*)%-") do
-        if not IS_MODIFIER[part] or mods[part] then return nil end
-        mods[part] = true
-    end
-    return mods, base
-end
-
---- A key as stored: trimmed and upper-cased, its modifiers in the client's order (SHIFT-CTRL-G is
---- CTRL-SHIFT-G, so one chord is one stored key); nil, false, "" and "none" are no key (false). A
---- string that is not one key is kept as typed, for ValidKey to refuse.
---- @return string|false|any
-function Lib.KeyValue(v)
-    if v == nil or v == false then return false end
-    if type(v) ~= "string" then return v end
-    local t = v:match("^%s*(.-)%s*$"):upper()
-    if t == "" or t == "NONE" then return false end
-    local mods, base = splitKey(t)
-    if not mods then return t end
-    local parts = {}
-    for _, m in ipairs(MODIFIERS) do
-        if mods[m] then parts[#parts + 1] = m end
-    end
-    parts[#parts + 1] = base
-    return table.concat(parts, "-")
-end
-
---- Whether `v` is a key a dial may take: no key, or one key name with optional ALT-, CTRL-, SHIFT- or
---- META- modifiers, none twice (no space, at most 40 characters), not a modifier alone, not a reserved
---- key.
---- @return boolean ok, string|nil reason ("badKey" | "reservedKey")
-function Lib.ValidKey(v)
-    v = Lib.KeyValue(v)
-    if v == false then return true end
-    if type(v) ~= "string" or #v > 40 or v:find("%s") then return false, "badKey" end
-    local mods, base = splitKey(v)
-    if not mods then return false, "badKey" end
-    if RESERVED_KEYS[base] or RESERVED_BARE[v] then return false, "reservedKey" end
-    return true
 end
 
 -- ── migrations (core/Database.lua calls these; Library writes the lists) ────────────────────
@@ -1447,7 +1364,7 @@ local function importMembers(res, map, tally)
         end
         local f = e.fields
         local id = Lib.CreateGroup({ name = f.name, icon = f.icon, iconColor = f.iconColor, when = f.when,
-            openInto = f.openInto, dialYield = f.dialYield, enabled = f.enabled, inheritWhen = f.inheritWhen,
+            enabled = f.enabled, inheritWhen = f.inheritWhen,
             callouts = ids })
         if id then map[e.id], tally.groups = id, tally.groups + 1 end
     end

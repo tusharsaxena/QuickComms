@@ -13,9 +13,6 @@ local ID = "bi.group"
 BI.Group(ID, {
     name = L["In Group"], glyph = "ph:users-three", color = C.cyan,
     when = { group = { party = true, raid = true, instance = true } },
-    -- Skip on the dial in content: in a dungeon, raid, arena or battleground the dial opens on that
-    -- content's set, not on a ring of groups; In Group still shows on the pad (modules/Surfaces.lua).
-    dialYield = true,
     callouts = BI.Callouts(ID, "smartGroup", {
         { "hello",  L["Hello"],        L["Hello"],               "ph:hand-waving",   C.gold },
         { "tyff",   L["tyff"],         L["tyff"],                "gi:hot-meal",      C.green },

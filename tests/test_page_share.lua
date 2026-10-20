@@ -152,7 +152,7 @@ end)
 
 test("share page: [phase 5] an imported dial says where its key comes from", function()
     local NS, m, P = open()
-    assertTrue(NS.Dial.BindKey("d2", "G"))
+    m.SetBinding("G", "CLICK QuickCommsDial1:Toggle")
     local text = NS.Share.Encode(NS.Share.Collect({ dial = { d2 = true } }))
     P.tab("share", "Import")
     NS.addon.Settings.Share.Check(text)

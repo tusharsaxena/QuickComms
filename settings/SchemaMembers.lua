@@ -146,8 +146,8 @@ local VISIBILITY = choices({ { "always", L["Always"] }, { "inCombat", L["Only in
 local FADE = choices({ { "none", L["Never"] }, { "outOfCombat", L["Out of combat"] }, { "mouseover", L["Until the mouse is over it"] } })
 local MODE = choices({ { "categories", L["Categories"] }, { "flat", L["Flat"] } })
 local OPEN_AT = choices({ { "center", L["At its place"] }, { "cursor", L["At the cursor"] } })
-local SLICES = {}
-for i, n in ipairs({ 4, 6, 8, 12 }) do SLICES[i] = { value = n, text = tostring(n) } end
+local SLICES = { { value = NS.DialLayout.AUTO, text = L["Auto"] } }
+for _, n in ipairs({ 4, 6, 8, 12 }) do SLICES[#SLICES + 1] = { value = n, text = tostring(n) } end
 
 local ROWS = {
     -- A callout's rows (spec §13.1, as amended 2026-10-17): addressed by id alone, drawn by the callout
@@ -197,20 +197,6 @@ local ROWS = {
     { path = "group.enabled", instance = "group", type = "bool", default = T.group.enabled,
       page = "groups", group = GENERAL, label = L["Enabled"],
       desc = L["Show this group wherever its When matches (its parent's, while Inherit when conditions is ticked). Off keeps the group and its place on every pad."] },
-    { path = "group.openInto", instance = "group", type = "bool", default = T.group.openInto,
-      page = "groups", group = GENERAL, label = L["Open the dial on this group"],
-      desc = L["When this is the first active group on a Comms Dial, the dial opens straight on its ring, and the middle of the dial goes back to the groups."] },
-    -- Skip on the dial in content (modules/Surfaces.lua S.BuildDialPlan): a top-level group a dial
-    -- leaves out while a content group is active on it (In Group ships with it on). A group inside
-    -- another rides its parent's ring, so the row is grayed out for one; its stored value is kept.
-    { path = "group.dialYield", instance = "group", type = "bool", default = T.group.dialYield,
-      page = "groups", group = GENERAL, label = L["Skip on the dial in content"],
-      validate = check(function(v) return type(v) == "boolean", "badChoice" end),
-      disabledIf = function()
-          local gid = NS.State.editing and NS.State.editing.group
-          return gid ~= nil and Lib.IsChild(gid)
-      end,
-      desc = L["While a dungeon, raid, arena, battleground or other content group is active, the Comms Dial leaves this group out. The Comms Pad still shows it."] },
     -- Nesting (2026-10-18-builtins-as-groups-design.md, goal 2): the top-level group this one sits
     -- inside, or none (false). The General tab draws it as its own dropdown of the groups it may take
     -- (settings/Groups.lua); /qc takes a group id or none. Taking a parent takes the group off every
@@ -301,15 +287,20 @@ local ROWS = {
       validate = oneOf(MODE) },
     { path = "dial.slices", instance = "dial", type = "number", default = T.dial.slices, values = SLICES,
       page = "dials", group = L["Wheel"], label = L["Wedges per ring"],
-      desc = L["How many wedges a ring has. A ring with more puts the rest behind More. 12 applies only to a ring of callouts."],
+      desc = L["How many wedges a ring has. Auto spreads a ring's wedges evenly around it, up to 12. A ring with more turns pages with the arrows under the dial. A ring that opens other rings has at most 8."],
       validate = oneOf(SLICES) },
+    { path = "dial.radius", instance = "dial", type = "number", default = T.dial.radius,
+      min = NS.DialLayout.RADIUS_MIN, max = NS.DialLayout.RADIUS_MAX, step = 2,
+      page = "dials", group = L["Wheel"], label = L["Ring radius"],
+      desc = L["How far the wedges sit from the middle of the dial, in pixels. The dial's disc grows with it."],
+      validate = NUMBER, normalize = clamp(NS.DialLayout.RADIUS_MIN, NS.DialLayout.RADIUS_MAX, true) },
     { path = "dial.openAt", instance = "dial", type = "string", default = T.dial.openAt, values = OPEN_AT,
       page = "dials", group = L["Wheel"], label = L["Open at"],
       desc = L["Where the dial opens: at its place (set below), or wherever the cursor is."],
       validate = oneOf(OPEN_AT) },
     -- Position's default is false (the default place), so `/qc reset dial.point` reaches it; the page's
     -- Defaults keeps it (settings/Schema.lua resetExempt), as its tooltip says. As the pad.point row.
-    -- A dial has no key row: its key is WoW's own binding (the Binding tab, modules/Dial.lua BindKey).
+    -- A dial has no key row: its key is WoW's own binding (Options -> Keybindings, modules/Dial.lua).
     { path = "dial.point", instance = "dial", type = "point", default = false,
       page = "dials", group = L["Wheel"], label = L["Position"],
       desc = L["Where the dial opens at its place. Type an offset from the middle of the screen."],
@@ -386,16 +377,17 @@ end
 
 -- One composed block's rows stamped as pad member rows: `prefix` names the pad's table
 -- ("pad.look.", "pad.header.", "pad.section.", "pad.button."), `defaults` that table's shipped values.
-local function stampBlock(out, list, prefix, checks)
+local function stampBlock(out, list, prefix, checks, instance)
     for _, row in ipairs(list) do
         local c = checks[row.path:sub(#prefix + 1)] or {}
-        row.instance, row.validate, row.normalize = "pad", c.validate, c.normalize
+        row.instance, row.validate, row.normalize = instance or "pad", c.validate, c.normalize
         out[#out + 1] = row
     end
 end
 
 local function blockSpec(prefix, group, subgroup, defaults, extra)
-    local spec = { prefix = prefix, page = "pads", group = group, subgroup = subgroup, defaults = defaults }
+    local spec = { prefix = prefix, page = prefix:match("^dial") and "dials" or "pads", group = group,
+        subgroup = subgroup, defaults = defaults }
     for k, v in pairs(extra or {}) do spec[k] = v end
     return spec
 end
@@ -477,6 +469,29 @@ local function buttonRows()
 end
 
 for _, row in ipairs(buttonRows()) do ROWS[#ROWS + 1] = row end
+
+-- The Comms Dial's Labels tab (dial rework, 2026-10-21): Show labels, then the composed Font block
+-- (as the Buttons tab's), stamped as dial member rows; before the dial's Icons rows, so the tab sits
+-- between Wheel and Icons.
+local LABELS, LABELP = L["Labels"], "dial.label."
+local function labelRows()
+    local O = NS.addon.Settings.Helpers
+    local ldef = T.dial.label
+    local function hidden() return NS.SchemaRuntime.Get(LABELP .. "show") == false end
+    local out = { { path = LABELP .. "show", instance = "dial", type = "bool", default = ldef.show,
+        page = "dials", group = LABELS, label = L["Show labels"], startsLine = true,
+        desc = L["Write each wedge's name outside the dial. Off shows the icons alone; the tooltip still names them."],
+        validate = BOOL } }
+    local font = {}
+    stampBlock(font, O.FontGroup(blockSpec(LABELP, LABELS, L["Font"], ldef)), LABELP, composedChecks(O), "dial")
+    for _, row in ipairs(font) do
+        row.disabledIf = hidden
+        out[#out + 1] = row
+    end
+    return out
+end
+
+for _, row in ipairs(labelRows()) do ROWS[#ROWS + 1] = row end
 
 -- The Icons tab's rows (B9, settings/SchemaIcons.lua), with these checks: a pad's after its window and
 -- Button rows, a dial's after its Wheel rows, so each editor's Icons tab sits there.

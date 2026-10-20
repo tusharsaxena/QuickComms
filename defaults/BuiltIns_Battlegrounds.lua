@@ -83,7 +83,7 @@ local function nodeBattleground(key, name, icon, ids, nodes, rows)
             callouts = BI.Callouts(nodeId, "smartGroup", node[6] or rowsFor(NODE, node[2])) })
         children[n] = nodeId
     end
-    BI.Group(id, { name = name, glyph = icon[1], color = icon[2], openInto = true, children = children,
+    BI.Group(id, { name = name, glyph = icon[1], color = icon[2], children = children,
         when = { content = { battleground = true }, battleground = idSet(ids) },
         callouts = BI.Callouts(id, "smartGroup", rows) })
     BI.SNAPSHOTS[id] = BG

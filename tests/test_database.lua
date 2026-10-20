@@ -423,7 +423,7 @@ local function originCount(p, origin)
     return n
 end
 
-test("database: [bg subgroups] step 7 seeds the new objective nodes by origin and opens the flat sets into their ring, once", function()
+test("database: [bg subgroups] step 7 seeds the new objective nodes by origin, once; step 8 drops the retired dial fields", function()
     local NS = T.bootAddon()
     local db, BI = NS.addon.db, NS.BuiltIns
     db.sv.profiles.Old = preSubgroupsProfile(BI)
@@ -444,8 +444,9 @@ test("database: [bg subgroups] step 7 seeds the new objective nodes by origin an
         assertTrue(tonumber(kid:sub(2)) >= 30, "a fresh id above the stored counter: " .. kid)
     end
     assertEqual(p.callouts[p.groups[av[13]].callouts[1]].text, "Attack Iceblood Tower")
-    assertTrue(p.groups.g1.openInto, "a flat set now opens into its ring")
-    assertTrue(p.groups.g3.openInto, "Warsong Gulch too")
+    -- red under: no step 8 in core/Database.lua (dial rework: Open into and Skip on the dial retire)
+    assertNil(p.groups.g1.openInto, "the retired field is gone")
+    assertNil(p.groups.g2.openInto)
     assertEqual(#kidsOf(p, "g3"), 4, "Warsong Gulch's four")
     local ioc = kidsOf(p, "g2")
     assertEqual(#ioc, 7, "Isle of Conquest's five nodes and its two bases")
@@ -456,7 +457,7 @@ test("database: [bg subgroups] step 7 seeds the new objective nodes by origin an
     assertEqual(originCount(p, "bi.bg.tp"), 0, "a set the player deleted stays deleted")
     assertEqual(originCount(p, "bi.bg.tp.ourflag"), 0, "and gains no nodes")
     assertEqual(#kidsOf(p, "g21"), 0, "a set nested in another group takes no nodes (one level)")
-    assertTrue(p.groups.g21.openInto == false, "and keeps its Open into as it was")
+    assertNil(p.groups.g21.openInto, "a nested copy drops it too")
     assertTrue(p.seededSets["bi.bg.wg.fortress"], "they are given all the same, so Prepare adds none later")
     -- the player deletes an AV objective; a second run changes nothing
     local held, callouts = 0, 0
@@ -471,10 +472,12 @@ test("database: [bg subgroups] step 7 seeds the new objective nodes by origin an
     assertEqual(after, held, "a deleted objective stays deleted, and nothing is added twice")
     assertEqual(afterCallouts, callouts)
     assertEqual(originCount(p, "bi.bg.av.vanndar"), 0)
-    -- the stamp at 7 runs no step: an Open into the player turns off later is theirs
-    p.groups.g3.openInto = false
-    NS.addon:RunMigrations()
-    assertTrue(p.groups.g3.openInto == false, "Open into turned off after step 7 stays off")
+    NS.Library.MigrateDialFields({})
+    NS.Library.MigrateDialFields({ groups = "damaged" })
+    local stray = { groups = { g1 = { dialYield = true, openInto = true, name = "X" }, g2 = "damaged" } }
+    NS.Library.MigrateDialFields(stray)
+    assertNil(stray.groups.g1.dialYield)
+    assertEqual(stray.groups.g1.name, "X", "nothing else is touched")
     NS.Library.MigrateBattlegroundNodes({})
     NS.Library.MigrateBattlegroundNodes({ groups = "damaged" })
     NS.Library.MigrateBattlegroundNodes({ groups = { g1 = { origin = "bi.bg.av" } }, seededSets = { ["bi.bg.av"] = true } })
@@ -486,7 +489,7 @@ test("database: [bg subgroups] a fresh profile seeds every objective node once, 
     local av = T.seeded(NS, "bi.bg.av")
     -- red under: Alterac Valley shipped flat
     assertEqual(#Lib.Children(av), 19)
-    assertTrue(p.groups[av].openInto)
+    assertNil(p.groups[av].openInto, "no seeded group carries the retired field")
     assertEqual(#Lib.Children(T.seeded(NS, "bi.bg.ioc")), 7)
     local groups = 0
     for _ in pairs(p.groups) do groups = groups + 1 end
