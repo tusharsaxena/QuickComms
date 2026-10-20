@@ -204,15 +204,15 @@ test("dial: the first situation read builds the default dial, closed; setting it
     assertEqual(m.overrideBindings.G.button, "Toggle")
 end)
 
-test("dial: [exit] in Arathi Basin the dial opens on the nodes; Lumber Mill, then INC 3, sends in two clicks", function()
+test("dial: [exit] in Arathi Basin the dial opens on the nodes; Lumber Mill, then INC, sends in two clicks", function()
     local NS, m = live(AB)
     bindG(NS)
     m.__pressKey("G")
     assertEqual(ringTitle(NS), "Arathi Basin", "open-into: the node set is the first active group")
     m.__click(wedgeTitled(NS, NS.Dial.ShownRing("d2"), "Lumber Mill"))
     assertEqual(ringTitle(NS), "Lumber Mill")
-    m.__click(wedgeTitled(NS, NS.Dial.ShownRing("d2"), "INC 3"))
-    assertEqual(m.sentMacros[#m.sentMacros].text, "/i INC 3 Lumber Mill")
+    m.__click(wedgeTitled(NS, NS.Dial.ShownRing("d2"), "INC"))
+    assertEqual(m.sentMacros[#m.sentMacros].text, "/i INC Lumber Mill")
     assertEqual(#m.sentMacros, 1, "two clicks, one send")
     assertFalse(NS.Dial.IsOpen("d2"))
 end)
@@ -511,7 +511,7 @@ test("dial: [review 6] on a four- or six-slice dial every node shows, and the nu
         m.__pressKey("5")
         assertEqual(ringTitle(NS), "Lumber Mill", slices .. " slices: key 5 is the fifth wedge shown")
         m.__pressKey("3")
-        assertEqual(m.sentMacros[#m.sentMacros].text, "/i INC 3 Lumber Mill")
+        assertEqual(m.sentMacros[#m.sentMacros].text, "/i INC Lumber Mill")
     end
 end)
 

@@ -48,8 +48,8 @@ test("builtins: node sets open into their ring and nest one level", function()
     assertEqual(#ab.children, 5)
     assertTrue(#ab.callouts >= 4, "and map-wide callouts of its own")
     local stables = BI.groups[ab.children[1]]
-    assertEqual(#stables.callouts, 6)
-    assertEqual(BI.callouts[stables.callouts[3]].text, "INC 3 Stables")
+    assertEqual(#stables.callouts, 4)
+    assertEqual(BI.callouts[stables.callouts[3]].text, "INC Stables")
 end)
 
 test("builtins: bake audit, every callout bakes under its set's snapshot", function()
@@ -96,7 +96,7 @@ test("builtins: [phase 5] every node set pins each node to a wind, at most eight
     assertEqual(sets, 12)
     assertEqual(BI.groups["bi.bg.ab.lumbermill"].compass, "SW")
     assertEqual(#BI.groups["bi.bg.dwg"].children, 5)
-    assertEqual(BI.callouts["bi.bg.dwg.shrine.inc2"].text, "INC 2 Shrine")
+    assertEqual(BI.callouts["bi.bg.dwg.shrine.inc"].text, "INC Shrine")
 end)
 
 test("builtins: [B7] every callout ships a catalog glyph, with a color only where it is a glyph", function()
@@ -235,8 +235,9 @@ test("builtins: [bg subgroups] Isle of Conquest gains Our base and Enemy base be
         for i, cid in ipairs(BI.groups[gid].callouts) do out[i] = BI.callouts[cid].text end
         return table.concat(out, "|")
     end
-    assertEqual(texts("bi.bg.ioc.base"), "Defend our base|Walls down at our base")
-    assertEqual(texts("bi.bg.ioc.enemybase"), "Attack the enemy base|Walls down at the enemy base")
+    assertEqual(texts("bi.bg.ioc.base"), "Fight at our base|Defend our base|INC our base|Our base is clear")
+    assertEqual(texts("bi.bg.ioc.enemybase"),
+        "Attack the enemy base|Hold the enemy base|INC at the enemy base|The enemy base is clear")
     assertEqual(BI.groups["bi.bg.ioc.base"].compass, "free", "no fixed place a neutral callout can name")
     assertEqual(BI.groups["bi.bg.ioc.docks"].compass, "W", "the nodes keep their winds")
 end)
@@ -276,4 +277,43 @@ test("builtins: [bg subgroups] no callout names a faction", function()
             assertTrue(not (c.text:find("Alliance") or c.text:find("Horde")), cid .. " is faction neutral")
         end
     end
+end)
+
+-- ── bg buttons (2026-10-20): Attack, Defend, INC and Clear on every base-capture node ─────────
+
+-- A group's callouts as "name=text" pairs, joined.
+local function rows(BI, gid)
+    local out = {}
+    for i, cid in ipairs(BI.groups[gid].callouts) do
+        local c = BI.callouts[cid]
+        out[i] = c.name .. "=" .. c.text
+    end
+    return table.concat(out, "|")
+end
+
+test("builtins: [bg buttons] every base-capture node has Attack, Defend, INC and Clear, as Wintergrasp's workshops do", function()
+    local _, BI = bi()
+    for _, key in ipairs({ "ab", "eots", "bfg", "dwg", "ioc" }) do
+        for _, child in ipairs(BI.groups["bi.bg." .. key].children) do
+            local g = BI.groups[child]
+            -- red under: a node still on the INC 1/2/3/Many/Clear/Help rows in defaults/BuiltIns_Battlegrounds.lua
+            assertEqual(#g.callouts, 4, child .. " has exactly four")
+            local want = { attack = "gi:crossed-swords", defend = "gi:checked-shield", inc = "gi:charging",
+                clear = "gi:check-mark" }
+            for i, short in ipairs({ "attack", "defend", "inc", "clear" }) do
+                assertEqual(g.callouts[i], child .. "." .. short, child)
+                assertEqual(BI.callouts[g.callouts[i]].glyph, want[short], child .. " " .. short)
+            end
+        end
+    end
+    assertEqual(rows(BI, "bi.bg.ab.lumbermill"),
+        "Attack=Attack Lumber Mill|Defend=Defend Lumber Mill|INC=INC Lumber Mill|Clear=Lumber Mill is clear")
+    assertEqual(rows(BI, "bi.bg.eots.flag"),
+        "Take flag=Take the flag|Defend flag=Defend the flag|INC=INC the flag|Clear=The flag is clear")
+    assertEqual(BI.callouts["bi.bg.wg.eastspark.clear"].text, "Eastspark is clear", "Wintergrasp shares the template")
+    assertEqual(BI.callouts["bi.bg.ab.farm.attack"].iconColor, BI.COLOR.red)
+    assertEqual(BI.callouts["bi.bg.ab.farm.defend"].iconColor, BI.COLOR.blue)
+    assertEqual(BI.callouts["bi.bg.ab.farm.inc"].iconColor, BI.COLOR.orange)
+    assertEqual(BI.callouts["bi.bg.ab.farm.clear"].iconColor, BI.COLOR.green)
+    assertEqual(BI.callouts["bi.bg.ab.hold"].text, "Hold what we have, defend our bases", "the map-wide callouts stay")
 end)

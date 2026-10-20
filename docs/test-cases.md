@@ -362,7 +362,7 @@ Total.
 - resolver: [all] All battlegrounds and All dungeons and raids match the whole kind, the listed ids aside
 - resolver: [arena] the arena row matches only in an arena: its listed ids, or all of them
 
-### test_builtins.lua (17)
+### test_builtins.lua (18)
 
 - builtins: the expected top-level sets exist in order
 - builtins: ids are unique, referenced and well formed
@@ -381,6 +381,7 @@ Total.
 - builtins: [bg subgroups] Isle of Conquest gains Our base and Enemy base beside its five nodes
 - builtins: [bg subgroups] the flag maps, Wintergrasp, Ashran, Deephaul Ravine and Seething Shore have objective children
 - builtins: [bg subgroups] no callout names a faction
+- builtins: [bg buttons] every base-capture node has Attack, Defend, INC and Clear, as Wintergrasp's workshops do
 
 ### test_gameids.lua (4)
 
@@ -1027,7 +1028,7 @@ Total.
 - dial: Release closes, disarms and forgets a dial; HideAll also releases the keys
 - dial: Sync applies each planned dial at its place in the order, binds its key, and opens dial 1 in test mode
 - dial: the first situation read builds the default dial, closed; setting its key binds it
-- dial: [exit] in Arathi Basin the dial opens on the nodes; Lumber Mill, then INC 3, sends in two clicks
+- dial: [exit] in Arathi Basin the dial opens on the nodes; Lumber Mill, then INC, sends in two clicks
 - dial: [exit] on a raid boss the dial opens and a click on a wedge sends, with nothing blocked
 - dial: [exit] the Categories two-stroke: a group wedge opens its ring, a callout wedge sends
 - dial: test mode opens dial 1 with placeholder wedges that send nothing, and takes no key
@@ -1165,7 +1166,7 @@ Total.
 | test_bake.lua | 12 |
 | test_share.lua | 37 |
 | test_resolver.lua | 13 |
-| test_builtins.lua | 17 |
+| test_builtins.lua | 18 |
 | test_gameids.lua | 4 |
 | test_library.lua | 78 |
 | test_members.lua | 29 |
@@ -1200,4 +1201,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **974** |
+| **Total** | **975** |

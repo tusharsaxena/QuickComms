@@ -75,7 +75,7 @@ test("surfaces: a node battleground gives one section per node, baked to /i", fu
     assertEqual(#plan.sections, 7)
     assertEqual(plan.sections[1].title, "Arathi Basin")
     assertEqual(plan.sections[3].title, "Lumber Mill")
-    assertEqual(plan.sections[3].slots[3].line, "/i INC 3 Lumber Mill")
+    assertEqual(plan.sections[3].slots[3].line, "/i INC Lumber Mill")
     assertEqual(plan.sections[7].title, "Battleground (generic)")
 end)
 
