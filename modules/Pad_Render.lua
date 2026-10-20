@@ -469,9 +469,9 @@ function R.SetCooling(btn, on)
     btn.qcCool:SetShown(on and true or false)
 end
 
--- The header row's collapse button (square) and its inset from the row's right edge, and the gap
--- before it (R.HeaderMinWidth measures with them).
-local COLLAPSE_W, COLLAPSE_INSET, HEADER_GAP = 16, 2, 4
+-- The header row's collapse button (square) and its inset from the row's right edge, the gap
+-- before it, and the lockdown chip's gap after the situation text (R.HeaderMinWidth measures with them).
+local COLLAPSE_W, COLLAPSE_INSET, HEADER_GAP, LOCKDOWN_GAP = 16, 2, 4, 6
 
 --- Build the header row: the situation chip, the lockdown chip, the stale hint and the collapse
 --- toggle (its button, or a left click anywhere on the row). PREVIEW and TEST MODE are not here: they
@@ -482,7 +482,7 @@ function R.DressHeader(header, onCollapse)
     -- the header spans the pad, and no growth moves a title off it.
     header.qcSituation:SetPoint("LEFT", header, "LEFT", PL.PAD, 0)
     header.qcLockdown = header:CreateFontString(nil, "OVERLAY", "GameFontRedSmall")
-    header.qcLockdown:SetPoint("LEFT", header.qcSituation, "RIGHT", 6, 0)
+    header.qcLockdown:SetPoint("LEFT", header.qcSituation, "RIGHT", LOCKDOWN_GAP, 0)
     header.qcLockdown:SetText(L["LOCKDOWN"])
     local collapse = CreateFrame("Button", nil, header)
     collapse:SetSize(COLLAPSE_W, COLLAPSE_W)
@@ -504,11 +504,15 @@ function R.DressHeader(header, onCollapse)
 end
 
 --- The narrowest the header row may be (modules/Pad.lua hands it to PL.Compute as opts.minWidth):
---- the situation text at its left inset, a gap, and the collapse button at its right inset. Measured
---- in the font and text the row wears now, so ApplyHeaderLook and the text come first. The lockdown
---- chip shows only in combat, when no rebuild runs, so it is not counted.
+--- the situation text at its left inset, the lockdown chip after it while shown, a gap, and the
+--- collapse button at its right inset. Measured in the font, text and chip the row wears now, so
+--- ApplyHeaderLook and PaintHeader come first. The chip counts out of combat too: a PvP match's
+--- lockdown (and a battleground or arena preview) shows it while rebuilds still run.
 function R.HeaderMinWidth(header)
     local w = tonumber(header.qcSituation:GetStringWidth()) or 0
+    if header.qcLockdown:IsShown() then
+        w = w + LOCKDOWN_GAP + (tonumber(header.qcLockdown:GetStringWidth()) or 0)
+    end
     return math.ceil(PL.PAD + w + HEADER_GAP + COLLAPSE_W + COLLAPSE_INSET)
 end
 

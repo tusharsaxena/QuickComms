@@ -573,6 +573,21 @@ test("pad: [icon only] the pad is as wide as its chips when the header is narrow
     assertEqual(inst.root.__w, PL.PAD + 200 + 4 + 16 + 2, "its text, a gap and the collapse button at its inset")
 end)
 
+test("pad: [icon only] a PvP match's lockdown chip, shown out of combat, widens the header row by itself", function()
+    local NS = live()
+    local PL = NS.PadLayout
+    local inst = NS.Pad.Instance("p1")
+    inst.header.qcSituation.GetStringWidth = function() return 70 end
+    inst.header.qcLockdown.GetStringWidth = function() return 60 end
+    assertTrue(NS.SchemaRuntime.Set("pad.layout.style", "icon", "p1"))
+    local plan = planFor(NS)
+    plan.lockdownChip = true -- a say or yell slot locked by lockdown.pvpMatch (Channels' LOCKS.say)
+    assertTrue(NS.Pad.Apply("p1", plan))
+    assertTrue(inst.header.qcLockdown:IsShown(), "the chip is shown")
+    -- red under: the chip left out (it would run under the collapse button and past the edge)
+    assertEqual(inst.root.__w, PL.PAD + 70 + 6 + 60 + 4 + 16 + 2, "the text, the chip at its gap, then the button")
+end)
+
 test("pad: [chip] a chip wears the Chip tab: the owner's default body, edge, label and size, then what it is given", function()
     local NS = T.enableAddon{ mock = withMedia }
     local skins = {}

@@ -243,7 +243,9 @@ and the pad stays as it was. The mouse wheel over the row still switches tabs, a
 grid of 4 columns, in the open world (`World` in the header) → the gap between the last chip and the
 pad's right edge is the same as between the first chip and its left edge (before, the right one was
 wider). Chip style Icon and label → the same even gap. Enter a key, whose header text is longer than
-four icons → the pad widens just enough for the text and the collapse button. Result:
+four icons → the pad widens just enough for the text and the collapse button. With a Say callout in
+the pad's groups, Preview as… an arena → LOCKDOWN shows after the header text and the pad widens for
+it too: it clears the collapse button and stays inside the right edge. Result:
 
 ## Editors
 
