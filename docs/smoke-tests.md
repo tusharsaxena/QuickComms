@@ -233,6 +233,12 @@ own icon three cyan figures. Click GLHF → party chat reads "GLHF"; Drink → "
 dungeon finder group → instance chat, and the battleground's own set is still first on the pad and
 the dial still opens on its nodes (In Group is not on the dial there, DIAL-13). Leave the group → the In Group section is gone. Result:
 
+**PAD-13. Click the header to collapse.** Left-click anywhere on the pad's header row (on "World",
+not only the − button) → the pad folds to its header and the button reads +; click the row again → the
+chips come back. A right-click on the row does nothing. In combat a click prints the one-line refusal
+and the pad stays as it was. The mouse wheel over the row still switches tabs, and hovering it still shows
+"Why is this showing?".
+
 ## Editors
 
 **EDIT-1. A callout and a group on the pad (the phase 3 exit).** Settings → Groups → New group; on
@@ -701,8 +707,9 @@ it as before. Result:
 
 The Comms Pad's Window tab (the Look tab until 2026-10-20; the checks keep their LOOK ids).
 
-**LOOK-1. Section titles.** Comms Pad → Window → Section titles: pick another face, Font size 14,
-Font flags Outline, untick Font shadow → the section titles (In Party, Mythic+…) redraw that way, still
+**LOOK-1. Section titles.** On a new pad the section titles are gold, 12 points and outlined. Comms
+Pad → Window → Section titles: pick another face, Font size 14, Font flags None, untick Font shadow →
+the section titles (In Party, Mythic+…) redraw that way, still
 gold; the chip labels do not change (they are the Chip tab's). Tick Use class color → the titles take
 your class color, and Font color's opacity still applies; untick it and set Font color to red → the
 titles turn red. Result:
@@ -715,14 +722,14 @@ and locked in combat, so the in-combat write goes through the command line: in c
 edge lands at combat end. Defaults → the Ka0s look again. Result:
 
 **LOOK-3. The header's look (2026-10-20).** On a new pad the header row (the top row, `World` in the
-open world) is a little taller than before (22 pixels; it was 18) and otherwise looks as it did: small
-gold text, no background, no edge. Comms Pad → Window → Header: Header height 30 → the row grows and
-every section moves down with it; Font size 14, another face, Font flags Outline → the situation text
+open world) is 24 pixels tall (it was 18) with gold 16-point outlined text, no background and no edge
+(the owner's defaults). Comms Pad → Window → Header: Header height 30 → the row grows and every
+section moves down with it; Font size 20, another face, Font flags Thick outline → the situation text
 redraws that way, and during an encounter with a Say callout on the pad the LOCKDOWN chip takes the
 same face and size and stays red; the collapse button grows with it. Background dark red at 60% → a
 band behind the header only; Border thickness 2, color white → an edge around the header only, with no
 gray inner line; a LibSharedMedia border style draws that art. Use class color on each → your class
-color. Defaults → the header as it was, 22 tall. Result:
+color. Defaults → the owner's header again, 24 tall. Result:
 
 **LOOK-4. The header's text sits on the titles' edge (2026-10-20).** Stand where the pad shows a section
 title under the header (a party in the open world: `World` over `In Party`). The `W` of World and the
@@ -732,15 +739,16 @@ Spacing 20 → still aligned. Result:
 
 ## Chip tab
 
-**CHIP-1. Size, color, border and font (2026-10-20).** On a new pad the chips look as before (the dark
-body, no edge, small white labels). Comms Pad → Chip: Chip width 160 → wider chips; Chip height 40 →
+**CHIP-1. Size, color, border and font (2026-10-20).** On a new pad the chips wear the owner's
+defaults: a faint gray body (#3F3F3F at 25%), a faint 1-pixel light edge (#EAEAEA at 10%), small white
+labels, 16-pixel icons. Comms Pad → Chip: Chip width 160 → wider chips; Chip height 40 →
 taller chips, label and icon centered; Chip height 0 → back to the automatic height; Chip style Icon
 only (Layout) → square chips around the icons whatever the size says. Color → Background red at 50% →
 every chip's body; Use class color → your class color. Border thickness 2, color white → an edge around
 every chip, over the body, never hiding the icon or label; a LibSharedMedia border draws that art; 0 →
 no edge. Font: another face, size 14, Outline, Font color yellow → the chip labels only (the section
-titles keep the Window tab's font); a bigger font grows the automatic height. Defaults → the chips as
-before. In combat, `/qc set pad.chip.width 150` → no error, "updates after combat", wider chips at
+titles keep the Window tab's font); a bigger font grows the automatic height. Defaults → the owner's
+chips again. In combat, `/qc set pad.chip.width 150` → no error, "updates after combat", wider chips at
 combat end. Result:
 
 **CHIP-2. The chip glow (2026-10-20).** Chip → Glow is off by default and Glow style is grayed out.
@@ -776,11 +784,12 @@ ends, then the pads toggle, with no Lua error. `/qc disable`, press P → the di
 
 ## Icons tab
 
-**ICONS-1. Look.** Comms Pad → Icons: Icon size 32 → the chips grow taller around the bigger icons;
+**ICONS-1. Look.** Comms Pad → Icons: Icon size reads 16 on a new pad (an icon-only chip is 24
+pixels square); Icon size 32 → the chips grow taller around the bigger icons;
 Zoom 0.1 → each icon's edge is cropped; Desaturate → gray; Icon opacity 50% → faint; Tint red → a
 white glyph turns red and a colored glyph darker. Show border, thickness 2, color white → a square
 edge over each icon. Comms Dial → Icons: Show border → a round ring behind each wedge's icon; Icon size
-20 → smaller icons, the wedges keep their size. Defaults on each page → the icons as before. Result:
+20 → smaller icons, the wedges keep their size. Defaults on each page → the icons at their defaults again (16 on a pad, 32 on a dial). Result:
 
 **ICONS-2. Glow styles.** Comms Pad → Icons → Glow on: Pixel border → lines run around every icon;
 Auto cast sparkles, Button (rotating rays) and Proc (flipbook) each look different, and each style's
@@ -924,9 +933,9 @@ from the client, so this check needs a non-English client pass. Result:
 | ID | Origin | Why it is owed |
 |---|---|---|
 | INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..3, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet; LOC-1 re-enumerated in phase 5 and owed a non-English client pass; STATE-3 added and PANEL-2 rewritten with `/qc toggle` and Preview as in Master controls (2026-10-19) |
-| SEND-1..5, PAD-1..12 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet; PAD-12 added with In Group, PAD-3 and PAD-4 rewritten with the strip as wide as the pad (2026-10-20, bg buttons); PAD-1 rewritten and PAD-11 added with World (solo) and the built-ins' colors, PAD-3 and PAD-4 rewritten with the strip's marker (2026-10-19, groups polish); PAD-8 added in phase 5 (audit QC-07); PAD-1 rewritten and PAD-9..10 added with the up growth, chip width and the built-in glyphs (2026-10-19) |
+| SEND-1..5, PAD-1..13 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet; PAD-13 added with a click anywhere on the header (2026-10-20); PAD-12 added with In Group, PAD-3 and PAD-4 rewritten with the strip as wide as the pad (2026-10-20, bg buttons); PAD-1 rewritten and PAD-11 added with World (solo) and the built-ins' colors, PAD-3 and PAD-4 rewritten with the strip's marker (2026-10-19, groups polish); PAD-8 added in phase 5 (audit QC-07); PAD-1 rewritten and PAD-9..10 added with the up growth, chip width and the built-in glyphs (2026-10-19) |
 | EDIT-1..29 | Phase 3: the editors | No client pass recorded yet; EDIT-29 added with the preview click's echo (2026-10-20); EDIT-28 added with right-click a group title (2026-10-19); EDIT-27 added with Preview while editing (2026-10-19); EDIT-3, 4, 20 and 22 rewritten and EDIT-25..26 added with Preview as in Master controls, the Dungeon set, the Arena drawer, instance search, the Callouts rows and the glyph sets (2026-10-19); EDIT-1, 2 and 19 rewritten and EDIT-22..24 added with the When drawers, Inherit when conditions and the icon browser's search (2026-10-18); EDIT-2, 4, 5, 6, 11, 14 and ICON-1 rewritten and EDIT-19..21 added when the built-in sets became seeded groups, groups nested and the Preview tab became a table (2026-10-18); EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17); EDIT-9, 13 and ICON-1 rewritten and EDIT-14..17 added with the icon browser and glyph colors (2026-10-18); EDIT-9 rewritten and EDIT-18 added when the token dropdown became the Text label's info glyph (2026-10-18); EDIT-13, 14 and ICON-1 rewritten when the Suggested tab went and the skin stopped waiting for the addon to be enabled (2026-10-18); EDIT-9, 18 and ICON-1 rewritten when the Icon boxes went and the popup took its two-column layout (2026-10-18); EDIT-9, 11 and ICON-1 rewritten with the clear glyph, the Preview gap and the buttons' 2 px inset (2026-10-18) |
 | DIAL-1..13 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-2 rewritten and DIAL-13 added with Skip on the dial in content (2026-10-20); DIAL-2 and DIAL-4 rewritten with In Group and the four node buttons (2026-10-20, bg buttons); DIAL-4 rewritten with the node set's map-wide wedge (2026-10-19, groups polish); DIAL-9 rewritten when Preview as moved to Master controls (2026-10-19); DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
 | SHARE-1..6, LOOK-1..2, ICON-1, BG-1..8, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; BG-1 and BG-4 rewritten and BG-7..8 added with the four node buttons and Silvershard Mines' and Temple of Kotmogu's groups (2026-10-20, bg buttons); BG-1 rewritten with Wintergrasp's winds and BG-3..6 added with the battleground objective groups (2026-10-20); BG-1 rewritten with the map-wide wedge (2026-10-19, groups polish); LOOK-2's in-combat step goes through `/qc set`; IDS-1 extended to the journal instances and arenas (2026-10-19) |
-| ICONS-1..3 | Icons and polish (2026-10-19): the Icons tab | No client pass recorded yet |
-| LOOK-3..4, CHIP-1..2, KEY-1..3 | Window, Chip and keys (2026-10-20): the header's look and alignment, the Chip tab, keys as WoW bindings and Toggle Comms Pads | No client pass recorded yet; LOOK-1 rewritten with the Section titles font, PAD-10 with Chip width on the Chip tab, DIAL-6 and DIAL-8 with the dial key as WoW's own binding |
+| ICONS-1..3 | Icons and polish (2026-10-19): the Icons tab | No client pass recorded yet; ICONS-1 rewritten with the owner's pad defaults (2026-10-20) |
+| LOOK-3..4, CHIP-1..2, KEY-1..3 | Window, Chip and keys (2026-10-20): the header's look and alignment, the Chip tab, keys as WoW bindings and Toggle Comms Pads | No client pass recorded yet; LOOK-1, LOOK-3 and CHIP-1 rewritten with the owner's pad defaults (2026-10-20); LOOK-1 rewritten with the Section titles font, PAD-10 with Chip width on the Chip tab, DIAL-6 and DIAL-8 with the dial key as WoW's own binding |

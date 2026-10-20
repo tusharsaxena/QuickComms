@@ -6,18 +6,18 @@ local _, NS = ...
 -- SURFACE_DEFAULTS and TEMPLATES; settings/SchemaMembers.lua makes the rows; modules/Pad_Render.lua
 -- and modules/Pad.lua draw them.
 --
--- Every default draws what a pad drew before the settings existed, but one: the header row is a
--- little taller (owner, 2026-10-20: "make the header slightly larger"), 22 pixels where it was 18.
--- The header's text is GameFontNormalSmall's (the face, 10 points, gold, its shadow), over no
--- background and no edge. A chip is the 0.10, 0.10, 0.12, 0.90 body with no edge, its label the
--- small white face with its shadow, its height automatic (0: grown to hold its font and icon, as
--- modules/Pad_Layout.lua CellSize always did) and no glow.
+-- The owner's defaults (2026-10-20): the header row 24 pixels (it was 18), its text Friz Quadrata
+-- 16 points, gold, outlined, with its shadow, over no background and no edge (its edge color white
+-- for when a style is picked). A chip is a #3F3F3F body at 25% alpha, a flat 1 px edge #EAEAEA at 10%
+-- ("None" is no border art, not no edge), its label the small white face with its shadow, its height
+-- automatic (0: grown to hold its font and icon, as modules/Pad_Layout.lua CellSize always did) and
+-- no glow.
 
 NS.PadDefaults = NS.PadDefaults or {}
 local D = NS.PadDefaults
 
 -- The header row's height range and default (modules/Pad_Layout.lua reads it through HeaderHeight).
-D.HEADER_H = { min = 14, max = 40, default = 22 }
+D.HEADER_H = { min = 14, max = 40, default = 24 }
 -- A chip's height range: 0 is automatic.
 D.CHIP_H = { min = 0, max = 80 }
 
@@ -26,10 +26,10 @@ D.CHIP_H = { min = 0, max = 80 }
 function D.Header()
     return {
         height = D.HEADER_H.default,
-        font = "Friz Quadrata TT", fontSize = 10, fontColor = { r = 1, g = 0.82, b = 0, a = 1 },
-        useClassColorFont = false, fontFlags = "", fontShadow = true,
+        font = "Friz Quadrata TT", fontSize = 16, fontColor = { r = 1, g = 0.82, b = 0, a = 1 },
+        useClassColorFont = false, fontFlags = "OUTLINE", fontShadow = true,
         background = { r = 0, g = 0, b = 0, a = 0 }, useClassColorBackground = false,
-        borderStyle = "None", borderSize = 0, borderColor = { r = 0, g = 0, b = 0, a = 1 },
+        borderStyle = "None", borderSize = 0, borderColor = { r = 1, g = 1, b = 1, a = 1 },
         useClassColorBorder = false,
     }
 end
@@ -40,8 +40,9 @@ end
 function D.Chip()
     return {
         width = 100, height = 0,
-        background = { r = 0.10, g = 0.10, b = 0.12, a = 0.90 }, useClassColorBackground = false,
-        borderStyle = "None", borderSize = 0, borderColor = { r = 0, g = 0, b = 0, a = 1 },
+        background = { r = 0x3F / 255, g = 0x3F / 255, b = 0x3F / 255, a = 0.25 },
+        useClassColorBackground = false,
+        borderStyle = "None", borderSize = 1, borderColor = { r = 0xEA / 255, g = 0xEA / 255, b = 0xEA / 255, a = 0.10 },
         useClassColorBorder = false,
         font = "Friz Quadrata TT", fontSize = 10, fontColor = { r = 1, g = 1, b = 1, a = 1 },
         useClassColorFont = false, fontFlags = "", fontShadow = true,

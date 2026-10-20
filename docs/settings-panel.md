@@ -445,13 +445,14 @@ Icons    the chips' icons (B9): Size and crop (Icon size, Zoom), Color (Desatura
 ```
 
 The Window tab was the Look tab until 2026-10-20, and its own rows keep their `pad.look.*` paths; its
-Header block is `pad.header.*`. Every Header default draws the header as it was (GameFontNormalSmall's
-face, 10 points, gold, its shadow, over no background and no edge) except its height, 22 where it was
-18 (owner: "make the header slightly larger"). The header's text starts at the section titles' left
+Header block is `pad.header.*`. The Header defaults are the owner's (2026-10-20): 24 pixels tall (it
+was 18), Friz Quadrata at 16 points, gold, outlined, with its shadow, over no background and no edge
+(its edge color white, for when a thickness is set). The header's text starts at the section titles' left
 edge (`PadLayout.PAD`) in every growth direction; the lockdown chip and the stale hint take the
 header's face, size, flags and shadow and keep their own red and gray, and the collapse button is two
-points larger in the header's color. Section titles are the Window tab's Font block, gold by default,
-now that the chips and the header have their own.
+points larger in the header's color. Section titles are the Window tab's Font block, now that the
+chips and the header have their own; by default (the owner's, 2026-10-20) 12 points, gold, outlined,
+with their shadow.
 
 The Chip tab's rows are `pad.chip.*` (settings/SchemaMembers.lua). Chip width moved there from Layout
 (`pad.layout.width` is gone). Chip height 0 is automatic, the height a chip always had (grown to hold
@@ -459,8 +460,11 @@ its font and its icon); above 0 a labeled chip is that tall, never shorter than 
 beside an icon. An icon-only chip stays square around its icon whatever the size says. The chip's edge
 is drawn on a plain child laid over it, so it never hides the icon or label; its glow (off by default)
 is LibCustomGlow's effect around the whole chip in one of the Icons tab's four styles, at that tab's
-knob defaults, on its own key beside the icon's glow, always on while enabled. Every Chip default draws
-the chip as it was: the 0.10, 0.10, 0.12, 0.90 body, no edge, the small white label. Glow style is
+knob defaults, on its own key beside the icon's glow, always on while enabled. The Chip defaults are
+the owner's (2026-10-20): a #3F3F3F body at 25% opacity, a flat 1-pixel #EAEAEA edge at 10% (Border
+style None is no border art, so the thickness draws a plain line), the small white label, the
+automatic height. The Icons tab's Icon size defaults to 16 on a pad (an icon-only chip is 24 square).
+Glow style is
 grayed out while the glow is off; the color pairs never are.
 
 The Icons tab's rows are `pad.icon.*` (settings/SchemaIcons.lua). Every color pair sits on one line and is

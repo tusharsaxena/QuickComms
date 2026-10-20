@@ -903,14 +903,14 @@ end
 
 local SURFACE_DEFAULTS = {
     -- look: the Window tab's rows (settings/SchemaMembers.lua; `look` is the tab's old name, kept as
-    -- the stored key). The font (the section titles' since 2026-10-20: their small gold face with its
-    -- shadow), border and background rows default to the Ka0s skin a pad has always worn: a flat 1px
-    -- black edge ("None" is no border art) and the 0.06, 0.06, 0.08, 0.92 body (spec §10.1).
+    -- the stored key). The font (the section titles' since 2026-10-20; the owner's 12-point gold
+    -- outlined face with its shadow), border and background rows default to the Ka0s skin a pad has
+    -- always worn: a flat 1px black edge ("None" is no border art) and the 0.06, 0.06, 0.08, 0.92 body (spec §10.1).
     pad = { groupsAs = "sections", layout = { orientation = "grid", columns = 4, growth = "right",
         style = "iconLabel", scale = 1.0, spacing = 4 },
         look = { visibility = "always", fade = "none", fadeAlpha = 0.4,
-            font = "Friz Quadrata TT", fontSize = 10, fontColor = { r = 1, g = 0.82, b = 0, a = 1 },
-            useClassColorFont = false, fontFlags = "", fontShadow = true,
+            font = "Friz Quadrata TT", fontSize = 12, fontColor = { r = 1, g = 0.82, b = 0, a = 1 },
+            useClassColorFont = false, fontFlags = "OUTLINE", fontShadow = true,
             borderStyle = "None", borderSize = 1, borderColor = { r = 0, g = 0, b = 0, a = 1 },
             useClassColorBorder = false,
             background = { r = 0.06, g = 0.06, b = 0.08, a = 0.92 }, useClassColorBackground = false },

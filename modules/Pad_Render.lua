@@ -445,7 +445,8 @@ function R.SetCooling(btn, on)
 end
 
 --- Build the header row: the situation chip, the lockdown chip, the stale hint and the collapse
---- toggle. PREVIEW and TEST MODE are not here: they ride the drag strip's label (R.StripLabel).
+--- toggle (its button, or a left click anywhere on the row). PREVIEW and TEST MODE are not here: they
+--- ride the drag strip's label (R.StripLabel).
 function R.DressHeader(header, onCollapse)
     header.qcSituation = header:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     -- At the section titles' left edge (Pad_Layout places them at PL.PAD), in every growth direction:
@@ -461,6 +462,11 @@ function R.DressHeader(header, onCollapse)
     collapse.qcText:SetAllPoints(collapse)
     collapse:SetScript("OnClick", function() onCollapse() end)
     header.qcCollapse = collapse
+    -- A left click anywhere on the row collapses or expands it too (the button is a child, so its own
+    -- click never reaches the row twice).
+    header:SetScript("OnMouseUp", function(_, button)
+        if button == "LeftButton" then onCollapse() end
+    end)
     header.qcStale = header:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     header.qcStale:SetPoint("RIGHT", collapse, "LEFT", -4, 0)
     header.qcStale:SetText(L["updates after combat"])

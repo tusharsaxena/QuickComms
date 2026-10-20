@@ -798,7 +798,7 @@ test("library: [phase 5] Prepare gives a pad saved before the Look groups every 
     assertEqual(pad.look.background.a, 0.92)
     assertEqual(pad.chip.width, 100, "the Chip tab, filled whole")
     assertEqual(pad.header.height, 30, "a stored header height is kept")
-    assertEqual(pad.header.fontSize, 10, "and the header's other fields filled")
+    assertEqual(pad.header.fontSize, 16, "and the header's other fields filled with the owner's defaults")
     assertTrue(pad.look.background ~= NS.Library.TEMPLATES.pad.look.background, "a copy, never the template")
 end)
 

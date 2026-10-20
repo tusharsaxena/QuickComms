@@ -16,7 +16,7 @@ local D = NS.IconDefaults
 
 -- The size ranges: a chip's icon feeds the chip's geometry; a wedge's is drawn inside the fixed
 -- 44-pixel wedge (modules/Dial_Layout.lua DL.WEDGE), so its geometry never changes.
-D.SIZE = { pad = { min = 12, max = 40, default = 20 }, dial = { min = 16, max = 40, default = 32 } }
+D.SIZE = { pad = { min = 12, max = 40, default = 16 }, dial = { min = 16, max = 40, default = 32 } }
 
 D.ZOOM_MAX = 0.25
 D.GLOW_STYLES = { "button", "proc", "pixel", "autocast" }

@@ -34,7 +34,7 @@ end
 
 local function csv(t) return table.concat(t, ",") end
 
-test("icon style: the defaults keep today's look on a chip and on a wedge", function()
+test("icon style: the defaults draw the owner's look on a chip and on a wedge", function()
     local NS = live()
     local chip = rebuild(NS)
     local tex = chip.qcIcon
@@ -42,9 +42,9 @@ test("icon style: the defaults keep today's look on a chip and on a wedge", func
     assertEqual(csv(tex.__texCoord), "0,1,0,1")
     assertFalse(tex.__desaturated)
     assertEqual(tex:GetAlpha(), 1)
-    assertEqual(csv(tex.__size), "20,20")
+    assertEqual(csv(tex.__size), "16,16", "the owner's 16-pixel chip icon")
     assertNil(chip.qcBorder, "no border by default")
-    local w, h = NS.PadLayout.CellSize({ style = "iconLabel", width = 100 }, 10, 20)
+    local w, h = NS.PadLayout.CellSize({ style = "iconLabel", width = 100 }, 10, 16)
     assertEqual(w .. "x" .. h, "100x24", "the shipped chip")
     assertEqual(chip.__h, 24)
     local d = NS.db.profile.dials
@@ -152,7 +152,7 @@ test("icon style: a pad saved before the Icons tab reads like a new one (fillSha
     local did = NS.db.profile.dialOrder[1]
     NS.db.profile.dials[did].icon = { zoom = 0.2 }
     NS.Library.Prepare()
-    assertEqual(NS.db.profile.pads.p1.icon.size, 20)
+    assertEqual(NS.db.profile.pads.p1.icon.size, 16, "the default size")
     assertEqual(NS.db.profile.dials[did].icon.zoom, 0.2, "a stored field is kept")
     assertEqual(NS.db.profile.dials[did].icon.size, 32)
 end)
