@@ -23,8 +23,9 @@ local _, NS = ...
 --              Chip height, 0 automatic), Color (the chip's background), Border, Font (the chips'
 --              labels) and Glow (off by default: its style and color), each under its own heading
 --     Icons    the chips' icons (B9, settings/SchemaIcons.lua): Size and crop, Color (with Tint), the
---              composed Border block and Glow (with its trigger, style, color and each style's knobs),
---              each under its own heading drawn by the library
+--              composed Border block, Glow (its trigger, style and color), Offset, then only the
+--              selected style's knobs (none while the glow is off), each under its own heading drawn
+--              by the library
 --
 -- The band holds the picker and the create action (options-ui-§14). Every field is a member row
 -- (settings/SchemaMembers.lua) written to the selected pad; the pad redraws through LIBRARY_CHANGED
@@ -225,7 +226,7 @@ local function renderLayout(ctx, rows)
         tooltip = L["Put this pad back in its default place."], onClick = function() PD.ResetPoint(id) end }, nil)
 end
 
--- A styled tab (Pad header, Section header, Main window, Chip, Icons) in one call: its rows in schema
+-- A styled tab (Pad header, Section header, Main window, Chip) in one call: its rows in schema
 -- order, whose headings the library draws from each row's subgroup (options-ui-§7, §16: a subsection
 -- is never drawn by the host, so each heading shows once).
 local function renderStyled(ctx, rows)
@@ -235,6 +236,11 @@ local function renderStyled(ctx, rows)
         return
     end
     h.RenderRows(ctx, Ed.Scalar(rows), nil, nil, { noHeadings = true })
+end
+
+-- The Icons tab: as a styled tab, but only the selected glow style's knobs (Settings.ShownIconRows).
+local function renderIcons(ctx, rows)
+    renderStyled(ctx, Settings.ShownIconRows(rows))
 end
 
 local function ids(entries)
@@ -266,7 +272,7 @@ local function render(ctx)
         { key = SECTION_HEADER, render = renderStyled },
         { key = MAIN_WINDOW, render = renderStyled },
         { key = CHIP, render = renderStyled },
-        { key = ICONS, render = renderStyled },
+        { key = ICONS, render = renderIcons },
     })
 end
 

@@ -443,8 +443,9 @@ Chip     the chips themselves: Size (Chip width, Chip height with 0 automatic), 
          color with Use class color)
 Icons    the chips' icons (B9): Size and crop (Icon size, Zoom), Color (Desaturate, Icon opacity,
          Tint with Use class color), Border (the composed block: Show border, style, thickness,
-         color with Use class color) and Glow (Glow, Glow when, Glow style, Glow color with Use
-         class color), then one heading per style's knobs and Offset
+         color with Use class color), Glow (Glow, Glow when, Glow style, Glow color with Use
+         class color), Offset (Glow X offset, Glow Y offset, always drawn), then the selected
+         Glow style's knobs under its heading (none while the glow is off)
 ```
 
 Pad header, Section header and Main window were one Window tab until 2026-10-20 (the Look tab before
@@ -480,7 +481,14 @@ grayed out while the glow is off; the color pairs never are.
 
 The Icons tab's rows are `pad.icon.*` (settings/SchemaIcons.lua). Every color pair sits on one line and is
 never grayed out; Border style and thickness are grayed out while Show border is off; Glow when, Glow style
-and every knob while the glow is off, and a knob also while the glow is in a style it does not apply to.
+and the offsets while the glow is off, and the offsets also under Button, which ignores them. Offset
+sits right after Glow and always shows. A style's knobs (Pixel border, Auto cast sparkles, Button
+(rotating rays), Proc (flipbook)) show only while the glow is on and in that style (owner request,
+2026-10-20; until then every style's knobs showed, grayed out under the others): the tab's render filters
+them (`Settings.ShownIconRows`), the rows stay in the schema, so Defaults, a share import and `/qc set`
+still reach every knob. Glow and Glow style are structural (`Editors.STRUCTURAL`): a write repaints the
+tab on the next frame, its scroll kept, so the right heading appears at once. The Comms Dial page's
+Icons tab does the same.
 Glow when is Always, On hover or After sending (1.5 s from the send result; a dial closes on the send,
 so its wedge glows for 1.5 s from the next open, if that comes within 5 s). The page's Defaults puts the
 Pad header, Section header, Main window, Chip and Icons rows back too.

@@ -13,7 +13,7 @@ local addonName, NS = ...
 -- no page is torn down under the widget whose callback is running; a hidden page is only marked
 -- owed), follows: a LIBRARY_CHANGED with no field (membership, order, Restore) or naming a field in
 -- STRUCTURAL (a name is a picker label; a group's Enabled and When move the active-now dot and the
--- When tab's rows); a SITUATION_CHANGED that changes the set of active
+-- When tab's rows; an Icons tab's Glow and Glow style pick which knob rows it draws); a SITUATION_CHANGED that changes the set of active
 -- groups; TEST_MODE_CHANGED (Preview as…); PROFILE_CHANGED. Any other member-row write is a scalar:
 -- the seam's announce refreshes the widgets in place (Helpers.RefreshAll), and the lines a page draws
 -- itself (Ed.Live) with them. A SITUATION_CHANGED that leaves the active groups alone re-runs only
@@ -86,7 +86,8 @@ local pending, lastActive
 --- The member-row paths whose write changes what a page draws, not only a value in place.
 Ed.STRUCTURAL = { ["callout.name"] = true, ["group.name"] = true, ["group.enabled"] = true,
     ["group.when"] = true, ["group.parent"] = true, ["group.inheritWhen"] = true, ["pad.name"] = true,
-    ["dial.name"] = true }
+    ["dial.name"] = true, ["pad.icon.glowEnabled"] = true, ["pad.icon.glowType"] = true,
+    ["dial.icon.glowEnabled"] = true, ["dial.icon.glowType"] = true }
 
 -- The ids of the groups active under the editors' snapshot, as one comparable string.
 local function activeKey()

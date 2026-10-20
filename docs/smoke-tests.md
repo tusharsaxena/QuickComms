@@ -816,10 +816,13 @@ white glyph turns red and a colored glyph darker. Show border, thickness 2, colo
 edge over each icon. Comms Dial → Icons: Show border → a round ring behind each wedge's icon; Icon size
 20 → smaller icons, the wedges keep their size. Defaults on each page → the icons at their defaults again (16 on a pad, 32 on a dial). Result:
 
-**ICONS-2. Glow styles.** Comms Pad → Icons → Glow on: Pixel border → lines run around every icon;
-Auto cast sparkles, Button (rotating rays) and Proc (flipbook) each look different, and each style's
-knobs gray out under the others. With a full pad glowing in Pixel border, the frame rate stays where
-it was. Result:
+**ICONS-2. Glow styles.** Comms Pad → Icons, glow off → Offset sits right under Glow color, its two
+sliders grayed out, and no style's heading shows below it. Tick Glow → the Pixel border heading and
+its knobs appear under Offset at once, the scroll where it was, and the offsets come alive; lines run
+around every icon. Glow style Auto cast sparkles, Button (rotating rays) and Proc (flipbook) → each
+looks different, and each swaps in only its own heading and knobs; under Button the offsets gray out.
+Untick Glow → the style's heading goes, Offset stays. Comms Dial → Icons → the same. With a full pad
+glowing in Pixel border, the frame rate stays where it was. Result:
 
 **ICONS-3. Glow triggers.** Glow when On hover → only the icon under the mouse glows; in combat too,
 with no error. After sending → a chip glows for about a second and a half after its line is sent,

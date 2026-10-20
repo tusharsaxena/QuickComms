@@ -714,7 +714,7 @@ Total.
 - groups page: [R4] EditGroup in combat prints the settings refusal and changes nothing
 - groups page: [R4] EditGroup of a group that is gone opens nothing
 
-### test_page_pads.lua (20)
+### test_page_pads.lua (23)
 
 - pads page: New pad makes a second pad holding every built-in, selects it, and the pad is built
 - pads page: the Layout rows write the selected pad
@@ -734,10 +734,13 @@ Total.
 - pads page: [window tabs] Main window carries Visibility, Background and Border, and no font
 - pads page: [chip] Chip carries Size, Color, Border, Font and Glow, and Chip width left Layout for it
 - pads page: [B9] Icons carries its headings once each, a companion beside each swatch, and writes the pad
-- pads page: [B9] the glow's knobs are grayed out while it is off or in another style; its color never is
+- pads page: [B9] the offsets are grayed out while the glow is off or in Button; its color never is
+- pads page: [glow knobs] only the selected style's knobs show, and none while the glow is off
+- pads page: [glow knobs] Offset comes right after Glow color, in the schema and on the tab
+- pads page: [glow knobs] a Glow or Glow style write repaints the tab, so the right knobs appear
 - pads page: [B9] Defaults puts the Icons rows back too, and its tooltip names them
 
-### test_page_dials.lua (18)
+### test_page_dials.lua (19)
 
 - dials page: New dial makes a second dial holding every built-in, selects it, and builds QuickCommsDial2
 - dials page: New dial takes the lowest free number, so a delete never leads to two names alike
@@ -757,6 +760,7 @@ Total.
 - dials page: [final 8] the Binding tab names this dial's Open Comms Dial entry, and what its key does
 - dials page: [final 11] the page's own plan builds are not timed as a surface's bake
 - dials page: [B9] Icons follows Wheel, carries its headings once each, and writes the dial
+- dials page: [glow knobs] only the selected style's knobs show, and a Glow or Glow style write repaints
 
 ### test_page_share.lua (12)
 
@@ -1217,8 +1221,8 @@ Total.
 | test_eui_skin.lua | 10 |
 | test_groups_when.lua | 20 |
 | test_page_groups.lua | 67 |
-| test_page_pads.lua | 20 |
-| test_page_dials.lua | 18 |
+| test_page_pads.lua | 23 |
+| test_page_dials.lua | 19 |
 | test_page_share.lua | 12 |
 | test_check.lua | 6 |
 | test_send_guard.lua | 10 |
@@ -1243,4 +1247,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1013** |
+| **Total** | **1017** |
