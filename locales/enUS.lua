@@ -601,13 +601,21 @@ L["Scale"] = "Scale"
 L["This pad's size, on top of the master scale."] = "This pad's size, on top of the master scale."
 L["Spacing"] = "Spacing"
 L["Pixels between chips."] = "Pixels between chips."
-L["Chip width"] = "Chip width"
-L["How wide a labeled chip is."] = "How wide a labeled chip is."
 L["Position"] = "Position"
 L["Where the pad sits. Drag it while unlocked, or type an offset."] = "Where the pad sits. Drag it while unlocked, or type an offset."
 L["Window"] = "Window"
 L["Header"] = "Header"
 L["Header height"] = "Header height"
+L["Section titles"] = "Section titles"
+L["Chip"] = "Chip"
+L["Size"] = "Size"
+L["Chip width"] = "Chip width"
+L["How wide a labeled chip is. An icon-only chip stays square around its icon."] =
+    "How wide a labeled chip is. An icon-only chip stays square around its icon."
+L["Chip height (0 = automatic)"] = "Chip height (0 = automatic)"
+L["How tall a labeled chip is, in pixels. 0 grows it to hold its font and its icon. An icon-only chip stays square around its icon."] =
+    "How tall a labeled chip is, in pixels. 0 grows it to hold its font and its icon. An icon-only chip stays square around its icon."
+L["Draw a glow around each chip."] = "Draw a glow around each chip."
 L["How tall the pad's header row is, in pixels: the row with the situation (World, M+, Raid) and the collapse button."] =
     "How tall the pad's header row is, in pixels: the row with the situation (World, M+, Raid) and the collapse button."
 L["Visibility"] = "Visibility"
@@ -836,8 +844,8 @@ L["Pad"] = "Pad"
 L["Which Comms Pad this page edits."] = "Which Comms Pad this page edits."
 L["New pad"] = "New pad"
 L["Make a new Comms Pad holding the built-in groups, and edit it here."] = "Make a new Comms Pad holding the built-in groups, and edit it here."
-L["Put the selected pad's groups-as, layout, window and icons back to their defaults, and turn it on. Its name, groups and position are kept."] =
-    "Put the selected pad's groups-as, layout, window and icons back to their defaults, and turn it on. Its name, groups and position are kept."
+L["Put the selected pad's groups-as, layout, window, chips and icons back to their defaults, and turn it on. Its name, groups and position are kept."] =
+    "Put the selected pad's groups-as, layout, window, chips and icons back to their defaults, and turn it on. Its name, groups and position are kept."
 
 -- Share page (settings/Share.lua)
 L["Share"] = "Share"

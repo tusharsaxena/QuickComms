@@ -33,3 +33,19 @@ function D.Header()
         useClassColorBorder = false,
     }
 end
+
+--- A pad's `chip` table, fresh. The glow's knobs are not here: a chip's glow takes the Icons tab's
+--- knob defaults (defaults/Icons.lua GLOW_KNOBS), its style and color its own.
+--- @return table
+function D.Chip()
+    return {
+        width = 100, height = 0,
+        background = { r = 0.10, g = 0.10, b = 0.12, a = 0.90 }, useClassColorBackground = false,
+        borderStyle = "None", borderSize = 0, borderColor = { r = 0, g = 0, b = 0, a = 1 },
+        useClassColorBorder = false,
+        font = "Friz Quadrata TT", fontSize = 10, fontColor = { r = 1, g = 1, b = 1, a = 1 },
+        useClassColorFont = false, fontFlags = "", fontShadow = true,
+        glowEnabled = false, glowType = "pixel", glowColor = { r = 1, g = 0.82, b = 0, a = 1 },
+        useClassColorGlow = false,
+    }
+end

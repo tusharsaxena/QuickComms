@@ -902,19 +902,20 @@ end
 
 local SURFACE_DEFAULTS = {
     -- look: the Window tab's rows (settings/SchemaMembers.lua; `look` is the tab's old name, kept as
-    -- the stored key). The font, border and background rows (phase 5, options-ui-§16/§17) default to
-    -- the Ka0s skin a pad has always worn: the chip label's small white face with its shadow, a flat
-    -- 1px black edge ("None" is no border art) and the 0.06, 0.06, 0.08, 0.92 body (spec §10.1).
+    -- the stored key). The font (the section titles' since 2026-10-20: their small gold face with its
+    -- shadow), border and background rows default to the Ka0s skin a pad has always worn: a flat 1px
+    -- black edge ("None" is no border art) and the 0.06, 0.06, 0.08, 0.92 body (spec §10.1).
     pad = { groupsAs = "sections", layout = { orientation = "grid", columns = 4, growth = "right",
-        style = "iconLabel", scale = 1.0, spacing = 4, width = 100 },
+        style = "iconLabel", scale = 1.0, spacing = 4 },
         look = { visibility = "always", fade = "none", fadeAlpha = 0.4,
-            font = "Friz Quadrata TT", fontSize = 10, fontColor = { r = 1, g = 1, b = 1, a = 1 },
+            font = "Friz Quadrata TT", fontSize = 10, fontColor = { r = 1, g = 0.82, b = 0, a = 1 },
             useClassColorFont = false, fontFlags = "", fontShadow = true,
             borderStyle = "None", borderSize = 1, borderColor = { r = 0, g = 0, b = 0, a = 1 },
             useClassColorBorder = false,
             background = { r = 0.06, g = 0.06, b = 0.08, a = 0.92 }, useClassColorBackground = false },
         icon = NS.IconDefaults.For("pad"),   -- the Icons tab (defaults/Icons.lua)
-        header = NS.PadDefaults.Header() },  -- the Window tab's Header block (defaults/PadStyle.lua)
+        header = NS.PadDefaults.Header(),    -- the Window tab's Header block (defaults/PadStyle.lua)
+        chip = NS.PadDefaults.Chip() },      -- the Chip tab (defaults/PadStyle.lua)
     -- Relaxed is the only interaction in v0.1.0 (the C7 fallback, round-4 record). `delay` and
     -- `tapAction` are kept for the hold, flick and release upgrade, and `depth` until owner ruling R5
     -- gives it a meaning; nothing reads them yet.
@@ -931,7 +932,8 @@ Lib.TEMPLATES = {
         inheritWhen = true },
     pad = { name = "", enabled = true, groupsAs = SURFACE_DEFAULTS.pad.groupsAs, point = false,
         layout = copyTable(SURFACE_DEFAULTS.pad.layout), look = copyTable(SURFACE_DEFAULTS.pad.look),
-        icon = copyTable(SURFACE_DEFAULTS.pad.icon), header = copyTable(SURFACE_DEFAULTS.pad.header) },
+        icon = copyTable(SURFACE_DEFAULTS.pad.icon), header = copyTable(SURFACE_DEFAULTS.pad.header),
+        chip = copyTable(SURFACE_DEFAULTS.pad.chip) },
     -- `key` and `point` are false, not nil, for the same reason as above: false is "no key" and "the
     -- default place".
     dial = { name = "", enabled = true, mode = SURFACE_DEFAULTS.dial.mode, slices = SURFACE_DEFAULTS.dial.slices,

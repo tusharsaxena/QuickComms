@@ -479,9 +479,9 @@ local function withMedia(mm)
     lsm.MediaType = {}
 end
 
-test("pad: [phase 5] the pad wears its Look: the chips' font and the edge and body it was given", function()
+test("pad: [phase 5] the pad wears its Window tab: the titles' font and the edge and body it was given", function()
     local NS = T.enableAddon{ mock = withMedia }
-    NS.Situation.ReadInputs = function() return MPLUS end
+    NS.Situation.ReadInputs = function() return AB end
     NS.Situation.RefreshNow("test")
     local skins = {}
     local apply = NS.ApplySkin
@@ -491,8 +491,11 @@ test("pad: [phase 5] the pad wears its Look: the chips' font and the edge and bo
     assertTrue(S.Set("pad.look.fontSize", 13, "p1"))
     assertTrue(S.Set("pad.look.borderStyle", "Tooltip", "p1"))
     assertTrue(S.Set("pad.look.background", { r = 0.2, g = 0.1, b = 0, a = 1 }, "p1"))
-    local label = NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.mplus.pull"))[1].qcLabel
-    assertEqual(label.__font[1] .. "," .. label.__font[2], "Fonts\\ARIALN.TTF,13")
+    local title = NS.Pad.Instance("p1").titles.active[1]
+    assertEqual(title.__font[1] .. "," .. title.__font[2], "Fonts\\ARIALN.TTF,13")
+    local label = NS.Pad.Instance("p1").chips.active[1].qcLabel
+    -- red under: Pad.Apply drawing the chips' labels in the Window tab's font
+    assertTrue(label.__font[2] == 10, "a chip's label keeps the Chip tab's font")
     local skin = skins[NS.Pad.Instance("p1").root]
     assertEqual(skin.edgeFile, "Interface\\Tooltips\\UI-Tooltip-Border")
     assertEqual(table.concat(skin.bg, ","), "0.2,0.1,0,1")
@@ -548,6 +551,56 @@ test("pad: [window] the header's text starts at the section titles' left edge, i
     end
 end)
 
+test("pad: [chip] a chip wears the Chip tab: the body, edge, label and size it always had, then what it is given", function()
+    local NS = T.enableAddon{ mock = withMedia }
+    NS.Situation.ReadInputs = function() return MPLUS end
+    NS.Situation.RefreshNow("test")
+    local skins = {}
+    local apply = NS.ApplySkin
+    NS.ApplySkin = function(frame, skin) skins[frame] = skin return apply(frame, skin) end
+    local S = NS.SchemaRuntime
+    assertTrue(S.Set("pad.chip.fontSize", 10, "p1"))   -- a rebuild, under the spy
+    local btn = pull(NS)
+    assertEqual(table.concat(btn.qcBg.__color, ","), "0.1,0.1,0.12,0.9", "the body a chip always had")
+    assertNil(skins[btn.qcEdge].edgeFile, "no edge by default")
+    assertEqual(table.concat(btn.qcLabel.__color, ","), "1,1,1,1", "the small white label")
+    assertEqual(btn.__w .. "x" .. btn.__h, "100x24", "the chip's shipped size")
+    assertTrue(S.Set("pad.chip.background", { r = 0.3, g = 0, b = 0, a = 0.5 }, "p1"))
+    assertTrue(S.Set("pad.chip.borderSize", 2, "p1"))
+    assertTrue(S.Set("pad.chip.font", "Arial", "p1"))
+    assertTrue(S.Set("pad.chip.width", 150, "p1"))
+    assertTrue(S.Set("pad.chip.height", 40, "p1"))
+    btn = pull(NS)
+    assertEqual(table.concat(btn.qcBg.__color, ","), "0.3,0,0,0.5")
+    -- red under: R.ApplyChipLook skipping the edge (the Border block wired to nothing)
+    assertEqual(skins[btn.qcEdge].edgeFile, "Interface\\Buttons\\WHITE8x8")
+    assertEqual(skins[btn.qcEdge].edgeSize, 2)
+    assertEqual(skins[btn.qcEdge].bg[4], 0, "the edge draws over the chip, never a second body")
+    assertEqual(btn.qcLabel.__font[1], "Fonts\\ARIALN.TTF")
+    assertEqual(btn.__w .. "x" .. btn.__h, "150x40", "Chip width and Chip height")
+end)
+
+test("pad: [chip] the chip glow is off by default, then wraps the whole chip in its style, and goes with the chip", function()
+    local NS = live()
+    local S = NS.SchemaRuntime
+    local btn = pull(NS)
+    assertNil(btn.qcChipGlowStyle, "off by default")
+    assertTrue(S.Set("pad.chip.glowEnabled", true, "p1"))
+    btn = pull(NS)
+    -- red under: R.ApplyChipLook never calling Glow.Chip
+    assertEqual(btn.qcChipGlowStyle, "pixel")
+    assertNil(btn.qcGlowStyle, "the icon's own glow is untouched")
+    local sig = btn.qcChipGlowSig
+    assertTrue(S.Set("pad.chip.glowType", "autocast", "p1"))
+    btn = pull(NS)
+    assertEqual(btn.qcChipGlowStyle, "autocast")
+    assertTrue(btn.qcChipGlowSig ~= sig, "a new style is a new signature")
+    NS.Glow.Release(btn)
+    assertNil(btn.qcChipGlowStyle, "released with the chip")
+    assertTrue(S.Set("pad.chip.glowEnabled", false, "p1"))
+    assertNil(pull(NS).qcChipGlowStyle)
+end)
+
 test("pad: [review 5] a font or border this machine does not have draws the default, with no error", function()
     local NS, m = T.enableAddon{ mock = withMedia }
     m.STANDARD_TEXT_FONT = "Fonts\\FRIZQT__.TTF"
@@ -557,7 +610,7 @@ test("pad: [review 5] a font or border this machine does not have draws the defa
     local apply = NS.ApplySkin
     NS.ApplySkin = function(frame, skin) skins[frame] = skin return apply(frame, skin) end
     -- a shared pad, or a media addon since removed: the names are stored, the media is not here
-    assertTrue(NS.SchemaRuntime.Set("pad.look.font", "Gone Font", "p1"))
+    assertTrue(NS.SchemaRuntime.Set("pad.chip.font", "Gone Font", "p1"))
     assertTrue(NS.SchemaRuntime.Set("pad.look.borderStyle", "Gone Border", "p1"))
     local label = NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.mplus.pull"))[1].qcLabel
     assertEqual(label.__font[1], "Fonts\\FRIZQT__.TTF")

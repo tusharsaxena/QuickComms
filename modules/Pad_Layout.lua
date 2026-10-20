@@ -75,18 +75,25 @@ local function sizeOf(fontSize)
     return tonumber(fontSize) or PL.FONT_SIZE
 end
 
---- One chip's width and height for the pad's style. A labeled chip grows with the Look's font size
---- and the Icons tab's icon size (never below its shipped height); an icon-only chip draws no text
---- and stays square around its icon.
-function PL.CellSize(layout, fontSize, iconSize)
-    layout = type(layout) == "table" and layout or {}
+--- One chip's width and height for the pad's style. `cell` is { style, width, height }: the layout's
+--- style and the Chip tab's size. A labeled chip is `width` wide; its height is `height` when that is
+--- above 0 (never below the icon and its 4 pixels, beside an icon), else automatic: grown with the
+--- chips' font size and the Icons tab's icon size, never below its shipped height. An icon-only chip
+--- draws no text and stays square around its icon, whatever the size says.
+function PL.CellSize(cell, fontSize, iconSize)
+    cell = type(cell) == "table" and cell or {}
     local icon = tonumber(iconSize) or PL.ICON
-    if layout.style == "icon" then
+    if cell.style == "icon" then
         local s = icon + (PL.ICON_ONLY - PL.ICON)
         return s, s
     end
-    local w = math.max(PL.MIN_CHIP_W, tonumber(layout.width) or PL.DEFAULT_W)
-    if layout.style == "label" then return w, math.max(PL.LABEL_H, sizeOf(fontSize) + PL.LABEL_ROOM) end
+    local w = math.max(PL.MIN_CHIP_W, tonumber(cell.width) or PL.DEFAULT_W)
+    local fixed = math.floor(tonumber(cell.height) or 0)
+    if cell.style == "label" then
+        if fixed > 0 then return w, fixed end
+        return w, math.max(PL.LABEL_H, sizeOf(fontSize) + PL.LABEL_ROOM)
+    end
+    if fixed > 0 then return w, math.max(fixed, icon + PL.ICON_ROOM) end
     return w, math.max(PL.CHIP_H, sizeOf(fontSize) + PL.CHIP_ROOM, icon + PL.ICON_ROOM)
 end
 
@@ -258,8 +265,8 @@ end
 --- bottom with the first section just above it; left mirrors each chip row.
 --- @param sections table from VisibleSections
 --- @param layout table the pad's layout table
---- @param opts table|nil { collapsed = boolean, fontSize = number (the chips' label size; a chip grows to
----   hold it), titleSize = number (the section titles' size; a title row grows to hold it; default
+--- @param opts table|nil { collapsed = boolean, chip = table (the Chip tab's { width, height }; default:
+---   the layout table's own), fontSize = number (the chips' label size; a chip grows to hold it), titleSize = number (the section titles' size; a title row grows to hold it; default
 ---   fontSize), iconSize = number (the Icons tab's; a chip grows to hold it), headerH = number (the
 ---   header row's height, PL.HeaderHeight),
 ---   situation = string (the header's text: a section title equal to it is not drawn) }
@@ -268,7 +275,10 @@ end
 function PL.Compute(sections, layout, opts)
     layout = type(layout) == "table" and layout or {}
     opts = type(opts) == "table" and opts or {}
-    local cw, ch = PL.CellSize(layout, opts.fontSize, opts.iconSize)
+    -- The Chip tab's size (opts.chip); a pure caller may hand a layout table that carries its own.
+    local chip = type(opts.chip) == "table" and opts.chip or layout
+    local cw, ch = PL.CellSize({ style = layout.style, width = chip.width, height = chip.height }, opts.fontSize,
+        opts.iconSize)
     local hh = PL.HeaderHeight(opts.headerH)
     local gap = math.max(0, tonumber(layout.spacing) or 4)
     local up = PL.GrowsUp(layout.growth)

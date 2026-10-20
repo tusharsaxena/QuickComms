@@ -11,7 +11,9 @@ local _, NS = ...
 -- (phase 5; the Look tab until 2026-10-20) is read here as plain values: fonts (LabelFont, for the
 -- section titles and the header) and skins (SkinFor, for the pad and its header), which
 -- modules/Pad.lua applies out of combat. The header's look (HeaderLook) is its own block on that tab;
--- its situation text starts at the section titles' left edge (PL.PAD), whatever the growth. The Icons tab (B9) styles the icon through
+-- its situation text starts at the section titles' left edge (PL.PAD), whatever the growth.
+-- The Chip tab (ChipLook) dresses each chip: its body, an edge on a plain child laid over it, its
+-- label's font, and a glow around the whole chip (modules/Glow.lua Glow.Chip). The Icons tab (B9) styles the icon through
 -- modules/IconStyle.lua (size, crop, desaturation, alpha, tint, border) and modules/Glow.lua (the
 -- glow, whose On hover trigger the chip's OnEnter and OnLeave hooks drive).
 
@@ -148,6 +150,10 @@ function R.Dress(btn, onEnter, onLeave)
     btn.qcBg = btn:CreateTexture(nil, "BACKGROUND")
     btn.qcBg:SetAllPoints(btn)
     btn.qcBg:SetColorTexture(0.10, 0.10, 0.12, 0.90)
+    -- The Chip tab's edge and glow host: a plain child laid over the chip, mouse off (ApplyChipLook).
+    btn.qcEdge = CreateFrame("Frame", nil, btn, "BackdropTemplate")
+    btn.qcEdge:SetAllPoints(btn)
+    btn.qcEdge:EnableMouse(false)
     btn.qcIcon = btn:CreateTexture(nil, "ARTWORK")
     btn.qcIcon:SetSize(PL.ICON, PL.ICON)
     btn.qcIcon:SetPoint("LEFT", btn, "LEFT", 2, 0)
@@ -251,32 +257,25 @@ end
 
 local FLAT_EDGE = "Interface\\Buttons\\WHITE8x8"
 
---- A font block's font (the Window tab's, the Header's): { path, size, flags, r, g, b, a, shadow,
---- colored }. A face this machine does not have is the standard one; "Use class color" takes the
---- player's class color, keeping the swatch's alpha (NS.ResolveColor). A missing swatch is `fallback`
---- when given, else white. `colored` is whether the player chose a color: Use class color, or a swatch
---- other than the default white.
+--- A font block's font (the Window tab's Section titles, the Header's, the Chip tab's): { path, size,
+--- flags, r, g, b, a, shadow }. A face this machine does not have is the standard one; "Use class
+--- color" takes the player's class color, keeping the swatch's alpha (NS.ResolveColor). A missing
+--- swatch is `fallback` when given, else white.
 function R.LabelFont(look, fallback)
     look = type(look) == "table" and look or {}
     local r, g, b, a = NS.ResolveColor(look.fontColor or fallback, look.useClassColorFont)
     return { path = NS.MediaFetch("font", look.font) or STANDARD_TEXT_FONT, size = tonumber(look.fontSize) or 10,
         flags = type(look.fontFlags) == "string" and look.fontFlags or "", r = r, g = g, b = b, a = a,
-        shadow = look.fontShadow ~= false,
-        colored = look.useClassColorFont == true or r ~= 1 or g ~= 1 or b ~= 1 }
+        shadow = look.fontShadow ~= false }
 end
 
--- A section title's own color, the gold of the GameFontNormalSmall it is made with.
-R.TITLE_COLOR = { 1, 0.82, 0, 1 }
+-- The gold of GameFontNormalSmall: the section titles' and the header's default color.
+R.TITLE_COLOR = { r = 1, g = 0.82, b = 0, a = 1 }
 
---- A section title's font: the pad's face, size, flags and shadow, in the title's own gold unless the
---- player chose a color for the font (Use class color, or a swatch other than white). The default
---- Window font then changes nothing a pad already showed: gold titles over white chip labels.
-function R.TitleFont(font)
-    if font.colored then return font end
-    local t = {}
-    for k, v in pairs(font) do t[k] = v end
-    t.r, t.g, t.b, t.a = R.TITLE_COLOR[1], R.TITLE_COLOR[2], R.TITLE_COLOR[3], R.TITLE_COLOR[4]
-    return t
+--- The section titles' font: the Window tab's Section titles block (gold by default, as the titles
+--- always were).
+function R.TitleFont(look)
+    return R.LabelFont(look, R.TITLE_COLOR)
 end
 
 --- Draw a font string in a pad's font (R.LabelFont). A face the client refuses falls back to the
@@ -320,7 +319,6 @@ end
 -- button is GameFontNormal's: two points over the header's size, in the header's color.
 local LOCKDOWN_COLOR = { 1, 0.1, 0.1, 1 }
 local STALE_COLOR = { 0.5, 0.5, 0.5, 1 }
-local GOLD = { r = 1, g = 0.82, b = 0, a = 1 }
 
 local function recolor(font, c, grow)
     local t = {}
@@ -335,7 +333,7 @@ end
 --- inner line); the defaults draw no background and no edge.
 function R.HeaderLook(header)
     header = type(header) == "table" and header or {}
-    return { height = PL.HeaderHeight(header.height), font = R.LabelFont(header, GOLD),
+    return { height = PL.HeaderHeight(header.height), font = R.LabelFont(header, R.TITLE_COLOR),
         skin = R.SkinFor({ borderStyle = header.borderStyle or "None", borderSize = header.borderSize or 0,
             borderColor = header.borderColor, useClassColorBorder = header.useClassColorBorder,
             background = header.background or { 0, 0, 0, 0 },
@@ -349,6 +347,32 @@ function R.ApplyHeaderLook(header, hl)
     R.ApplyFont(header.qcLockdown, recolor(hl.font, LOCKDOWN_COLOR))
     R.ApplyFont(header.qcStale, recolor(hl.font, STALE_COLOR))
     if header.qcCollapse then R.ApplyFont(header.qcCollapse.qcText, recolor(hl.font, nil, 2)) end
+end
+
+-- ── the Chip tab (2026-10-20) ───────────────────────────────────────────────────────────────
+
+local CHIP_BG = { 0.10, 0.10, 0.12, 0.90 }
+local CLEAR = { 0, 0, 0, 0 }
+
+--- A chip's look, from the pad's `chip` table: { bg = {r,g,b,a}, edge (a plain skin: the border only,
+--- over no background), font, glow (IconStyle.GlowConfig, false while off) }. The defaults are the
+--- chip as it always was: the 0.10, 0.10, 0.12, 0.90 body, no edge, the small white label, no glow.
+function R.ChipLook(chip)
+    chip = type(chip) == "table" and chip or {}
+    local bg = { NS.ResolveColor(chip.background or CHIP_BG, chip.useClassColorBackground) }
+    local edge = R.SkinFor({ borderStyle = chip.borderStyle or "None", borderSize = chip.borderSize or 0,
+        borderColor = chip.borderColor, useClassColorBorder = chip.useClassColorBorder, background = CLEAR }, true)
+    return { bg = bg, edge = edge, font = R.LabelFont(chip), glow = IS.GlowConfig(chip,
+        tostring(chip.width) .. "x" .. tostring(chip.height)) }
+end
+
+--- Dress a chip in its look (R.ChipLook): its body, its edge, its label's font and its glow.
+function R.ApplyChipLook(btn, cl)
+    btn.qcBg:SetColorTexture(cl.bg[1], cl.bg[2], cl.bg[3], cl.bg[4])
+    NS.ApplySkin(btn.qcEdge, cl.edge)
+    btn.qcEdgeFile = cl.edge.edgeFile   -- recorded for the suites: nil is no edge
+    R.ApplyFont(btn.qcLabel, cl.font)
+    Glow.Chip(btn, cl.glow)
 end
 
 function R.Flash(btn, what)

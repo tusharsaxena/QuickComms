@@ -2,8 +2,9 @@ local _, NS = ...
 -- modules/Pad.lua — the Comms Pad's frames (spec §10.1, §10.3, §10.4).
 --
 -- The root is a plain BackdropTemplate frame wearing the Ka0s skin (NS.ApplySkin), dressed at every
--- rebuild by the pad's Look (Pad_Render.SkinFor: border and background; Pad_Render.LabelFont: the
--- chips' and titles' font; Pad_Render.HeaderLook: the header row's height, font, background and edge);
+-- rebuild by the pad's Window tab (Pad_Render.SkinFor: border and background; Pad_Render.TitleFont:
+-- the section titles' font; Pad_Render.HeaderLook: the header row's height, font, background and
+-- edge) and its Chip tab (Pad_Render.ChipLook: each chip's body, edge, label font and glow);
 -- it becomes protected in combat because its chips are secure. Every chip
 -- IS a send button (spec §9.1),
 -- built by SendEngine, dressed by Pad_Render, pooled per pad with NS.Pool and never destroyed. The
@@ -195,9 +196,9 @@ end
 -- The dial's callout wedges are armed exactly as a chip is (modules/Dial.lua).
 Pad.ArmSlot = arm
 
--- Every chip and section title of the layout, in the pad's font (its Look's font block); a title in
--- its own variant of it (R.TitleFont); each chip's icon in the pad's Icons tab (`icfg`).
-local function place(inst, box, style, font, titleFont, icfg)
+-- Every chip and section title of the layout: each chip in the pad's Chip tab (`clook`, R.ChipLook)
+-- and its icon in the Icons tab (`icfg`); each title in the Window tab's Section titles font.
+local function place(inst, box, style, clook, titleFont, icfg)
     for _, item in ipairs(box.items) do
         if item.kind == "chip" then
             local btn = NS.Pool.Acquire(inst.chips, function() return newChip(inst) end)
@@ -205,7 +206,7 @@ local function place(inst, box, style, font, titleFont, icfg)
             btn:SetPoint("TOPLEFT", inst.root, "TOPLEFT", item.x, -item.y)
             btn:SetSize(item.w, item.h)
             R.Paint(btn, item.slot, style, item.w, icfg)
-            R.ApplyFont(btn.qcLabel, font)
+            R.ApplyChipLook(btn, clook)
             arm(btn, item.slot)
             local list = inst.byCallout[item.slot.calloutId] or {}
             list[#list + 1] = btn
@@ -345,8 +346,9 @@ function Pad.Apply(id, plan)
     local sections = PL.VisibleSections(plan.sections, pad.groupsAs, session("padTab")[id])
     local hstate = headerState(inst, plan)
     local hlook = R.HeaderLook(pad.header)
-    local box = PL.Compute(sections, layout, { collapsed = hstate.collapsed, headerH = hlook.height,
-        fontSize = look.fontSize, situation = hstate.situation, iconSize = icfg.size })
+    local chip = type(pad.chip) == "table" and pad.chip or {}
+    local box = PL.Compute(sections, layout, { collapsed = hstate.collapsed, headerH = hlook.height, chip = chip,
+        fontSize = chip.fontSize, titleSize = look.fontSize, situation = hstate.situation, iconSize = icfg.size })
     inst.root:SetScale(math.max(NS.Library.MIN_SURFACE_SCALE, (tonumber(NS.Setting("scale")) or 1) * (tonumber(layout.scale) or 1)))
     inst.root:SetSize(box.width, box.height)
     inst.width, inst.height = box.width, box.height
@@ -354,8 +356,7 @@ function Pad.Apply(id, plan)
     inst.header:SetHeight(box.headerH)
     R.ApplyHeaderLook(inst.header, hlook)
     NS.ApplySkin(inst.root, R.SkinFor(look))
-    local font = R.LabelFont(look)
-    place(inst, box, layout.style, font, R.TitleFont(font), icfg)
+    place(inst, box, layout.style, R.ChipLook(chip), R.TitleFont(look), icfg)
     NS.Glow.ReleaseFree(inst.chips)
     R.PaintHeader(inst.header, hstate)
     inst.mark = hstate.mark

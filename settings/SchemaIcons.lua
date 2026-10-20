@@ -35,6 +35,8 @@ local GLOW = L["Glow"]
 local WHEN = { { "always", L["Always"] }, { "hover", L["On hover"] }, { "send", L["After sending"] } }
 local STYLES = { { "pixel", L["Pixel border"] }, { "autocast", L["Auto cast sparkles"] },
     { "button", L["Button (rotating rays)"] }, { "proc", L["Proc (flipbook)"] } }
+-- The Chip tab's Glow style takes the same four (settings/SchemaMembers.lua).
+NS.addon.Settings.GLOW_STYLES = STYLES
 
 -- Each knob's heading, label and tooltip, keyed by its defaults/Icons.lua entry.
 local KNOB_TEXT = {

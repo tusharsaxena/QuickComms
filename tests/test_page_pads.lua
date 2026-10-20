@@ -204,7 +204,7 @@ end)
 test("pads page: [phase 5] Window carries the composed Header, Font, Border and Background groups under their headings", function()
     local NS, _, P = open()
     local w = P.tab("pads", "Window")
-    for _, heading in ipairs({ "Header", "Font", "Border", "Background" }) do
+    for _, heading in ipairs({ "Header", "Section titles", "Border", "Background" }) do
         -- red under: the host's own h.Section above each subgroup (the library draws it from the rows)
         assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
     end
@@ -223,6 +223,27 @@ test("pads page: [phase 5] Window carries the composed Header, Font, Border and 
     P.find(w, "Slider", "Header height"):__fire("OnMouseUp", 30)
     assertEqual(NS.db.profile.pads.p1.header.height, 30)
     assertEqual(NS.Pad.Instance("p1").header.__h, 30, "the pad's header row follows")
+end)
+
+-- ── the Chip tab (2026-10-20) ───────────────────────────────────────────────────────────────
+
+test("pads page: [chip] Chip carries Size, Color, Border, Font and Glow, and Chip width left Layout for it", function()
+    local NS, _, P = open()
+    local w = P.tab("pads", "Chip")
+    for _, heading in ipairs({ "Size", "Color", "Border", "Font", "Glow" }) do
+        assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
+    end
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 4, "background, border, font and glow (options-ui-§17)")
+    assertTrue(P.find(w, "Slider", "Glow style") == nil, "a dropdown, not a slider")
+    -- red under: the Glow style row without its disabledIf
+    assertTrue(P.find(w, "Dropdown", "Glow style").disabled, "the glow is off by default")
+    P.find(w, "Slider", "Chip width"):__fire("OnMouseUp", 140)
+    P.find(w, "CheckBox", "Glow"):__fire("OnValueChanged", true)
+    assertEqual(NS.db.profile.pads.p1.chip.width, 140)
+    assertTrue(NS.db.profile.pads.p1.chip.glowEnabled)
+    assertFalse(P.find(P.tab("pads", "Chip"), "Dropdown", "Glow style").disabled)
+    assertNil(P.find(P.tab("pads", "Layout"), "Slider", "Chip width"), "moved to the Chip tab")
+    assertNil(NS.db.profile.pads.p1.layout.width, "and out of the layout table")
 end)
 
 -- ── the Icons tab (B9) ──────────────────────────────────────────────────────────────────────

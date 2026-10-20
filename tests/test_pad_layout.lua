@@ -331,3 +331,22 @@ test("layout: [window] the header row's height moves every row and is the collap
     assertEqual(pl.HeaderHeight(99), 40, "clamped high")
     assertEqual(pl.HeaderHeight(nil), 22, "none is the default")
 end)
+
+test("layout: [chip] a Chip height above 0 is the labeled chip's height; 0 is automatic; icon-only stays square", function()
+    local pl = PL()
+    local _, h = pl.CellSize({ style = "iconLabel", width = 100, height = 40 })
+    assertEqual(h, 40)
+    _, h = pl.CellSize({ style = "iconLabel", width = 100, height = 10 }, nil, 30)
+    assertEqual(h, 34, "never below the icon and its 4 pixels")
+    _, h = pl.CellSize({ style = "label", width = 100, height = 12 })
+    assertEqual(h, 12, "a label-only chip takes it as it is")
+    _, h = pl.CellSize({ style = "iconLabel", width = 100, height = 0 })
+    assertEqual(h, 24, "0: automatic, the shipped height")
+    local w
+    w, h = pl.CellSize({ style = "icon", width = 200, height = 60 })
+    assertEqual(w .. "x" .. h, "28x28")
+    local box = pl.Compute({ { slots = slots(2) } }, H, { chip = { width = 60, height = 30 } })
+    -- red under: PL.Compute reading the chip's size off the layout table
+    assertEqual(chips(box)[2].x, 4 + 60 + 4, "opts.chip's width")
+    assertEqual(chips(box)[1].h, 30, "and its height")
+end)

@@ -2,19 +2,22 @@ local _, NS = ...
 -- settings/Pads.lua — the Comms Pad page (design spec §10.2-§10.4, §13.1): one pad at a time.
 --
 --     band     [ Pad v (picker) ][ New pad ]
---     strip    [ General ][ Groups ][ Layout ][ Window ][ Icons ]
+--     strip    [ General ][ Groups ][ Layout ][ Window ][ Chip ][ Icons ]
 --     General  Name, Enabled, then Unlock (or Lock) pads and Delete pad
 --     Groups   Show groups as, then the pad's groups as a drag-to-reorder list with Remove (its
 --              priority order, spec §7), then Add a group
---     Layout   orientation, grid columns, growth, chip style, scale, spacing, chip width, then
---              Position: X and Y and Reset this pad's position
+--     Layout   orientation, grid columns, growth, chip style, scale, spacing, then Position: X and Y
+--              and Reset this pad's position
 --     Window   visibility, fade and faded alpha; then Header (its height, then a font, a background
---              and a border of its own, for the top row that names the situation), Font (face, size,
---              color with Use class color, flags, shadow), Border (style, thickness, color with Use
---              class color) and Background (its color with Use class color), each composed by the
+--              and a border of its own, for the top row that names the situation), Section titles
+--              (face, size, color with Use class color, flags, shadow), Border (style, thickness, color
+--              with Use class color) and Background (its color with Use class color), each composed by the
 --              options library (options-ui-§16, §17) under its own heading, which the library draws
 --              from the rows' subgroup (once). The Look tab until 2026-10-20: its rows keep their
 --              `pad.look.` paths
+--     Chip     the chips themselves (`pad.chip.*`): Size (Chip width, from Layout until 2026-10-20, and
+--              Chip height, 0 automatic), Color (the chip's background), Border, Font (the chips'
+--              labels) and Glow (off by default: its style and color), each under its own heading
 --     Icons    the chips' icons (B9, settings/SchemaIcons.lua): Size and crop, Color (with Tint), the
 --              composed Border block and Glow (with its trigger, style, color and each style's knobs),
 --              each under its own heading drawn by the library
@@ -37,6 +40,7 @@ local GENERAL = L["General"]
 local GROUPS = L["Groups"]
 local LAYOUT = L["Layout"]
 local WINDOW = L["Window"]
+local CHIP = L["Chip"]
 local ICONS = L["Icons"]
 
 Settings.Pads = Settings.Pads or {}
@@ -227,7 +231,8 @@ local function renderWindow(ctx, rows)
     h.RenderRows(ctx, Ed.Scalar(rows), nil, nil, { noHeadings = true })
 end
 
--- The Icons tab is drawn as Window is: its rows in schema order, the headings the library's.
+-- The Chip and Icons tabs are drawn as Window is: their rows in schema order, the headings the library's.
+local renderChip = renderWindow
 local renderIcons = renderWindow
 
 local function ids(entries)
@@ -256,12 +261,13 @@ local function render(ctx)
         { key = GROUPS, render = renderGroups },
         { key = LAYOUT, render = renderLayout },
         { key = WINDOW, render = renderWindow },
+        { key = CHIP, render = renderChip },
         { key = ICONS, render = renderIcons },
     })
 end
 
 Ed.RegisterPage(PAGE, L["Comms Pad"], "PadsPanel", render, {
-    tooltip = L["Put the selected pad's groups-as, layout, window and icons back to their defaults, and turn it on. Its name, groups and position are kept."],
+    tooltip = L["Put the selected pad's groups-as, layout, window, chips and icons back to their defaults, and turn it on. Its name, groups and position are kept."],
     -- One act (Library.Batch): the pads rebuild once, not once per row.
     onClick = function(ctx) NS.Library.Batch(function() H().RestoreDefaults(PAGE, ctx) end) end,
 })

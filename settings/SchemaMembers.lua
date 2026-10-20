@@ -268,9 +268,6 @@ local ROWS = {
     { path = "pad.layout.spacing", instance = "pad", type = "number", default = T.pad.layout.spacing,
       min = 0, max = 20, step = 1, page = "pads", group = L["Layout"], label = L["Spacing"],
       desc = L["Pixels between chips."], validate = NUMBER, normalize = clamp(0, 20, true) },
-    { path = "pad.layout.width", instance = "pad", type = "number", default = T.pad.layout.width,
-      min = 1, max = 300, step = 1, page = "pads", group = L["Layout"], label = L["Chip width"],
-      desc = L["How wide a labeled chip is."], validate = NUMBER, normalize = clamp(1, 300, true) },
     -- Position's default is false, the default place, so `/qc reset pad.point` brings a pad back; the
     -- page's Defaults keeps the position (settings/Schema.lua resetExempt), as its tooltip says.
     { path = "pad.point", instance = "pad", type = "point", default = false,
@@ -335,8 +332,14 @@ local ROWS = {
 --
 -- The Window tab (the Look tab until 2026-10-20; its rows keep the `pad.look.` paths) holds, after
 -- Visibility, Fade and Faded alpha: the Header block (`pad.header.*`: its height, then a font, a
--- background and a border of its own, all under one heading), the Font (`pad.look.font*`: the chips'
--- labels and the section titles), then the pad's Border and Background.
+-- background and a border of its own, all under one heading), the Section titles font
+-- (`pad.look.font*`: the section titles only, now that the chips and the header have their own), then
+-- the pad's Border and Background.
+--
+-- The Chip tab (`pad.chip.*`, 2026-10-20) styles the chips themselves: Size (Chip width, moved from
+-- Layout, and Chip height, 0 automatic), Color (the chip's background), Border, Font (the chips'
+-- labels only) and Glow (off by default: a LibCustomGlow effect around the whole chip, in one of the
+-- Icons tab's four styles, at that tab's knob defaults).
 
 local function unit01(c) return type(c) == "number" and c >= 0 and c <= 1 end
 
@@ -422,7 +425,7 @@ local function windowRows()
         HEAD, checks)
     stampBlock(out, O.BorderGroup(blockSpec(HEAD, WINDOW, HEADER, hdef)), HEAD, checks)
     local ldef = T.pad.look
-    stampBlock(out, O.FontGroup(blockSpec(LOOK, WINDOW, L["Font"], ldef)), LOOK, checks)
+    stampBlock(out, O.FontGroup(blockSpec(LOOK, WINDOW, L["Section titles"], ldef)), LOOK, checks)
     stampBlock(out, O.BorderGroup(blockSpec(LOOK, WINDOW, L["Border"], ldef)), LOOK, checks)
     stampBlock(out, O.ColorPair(blockSpec(LOOK, WINDOW, L["Background"], ldef, { key = "background", label = L["Background"] })),
         LOOK, checks)
@@ -430,6 +433,46 @@ local function windowRows()
 end
 
 for _, row in ipairs(windowRows()) do ROWS[#ROWS + 1] = row end
+
+local CHIP, CHIPP = L["Chip"], "pad.chip."
+local CHIP_H = NS.PadDefaults.CHIP_H
+
+local function chipRows()
+    local O = NS.addon.Settings.Helpers
+    local checks = composedChecks(O)
+    checks.glowColor = checks.background
+    checks.useClassColorGlow = { validate = BOOL }
+    local cdef = T.pad.chip
+    local SIZE, COLOR, GLOW = L["Size"], L["Color"], L["Glow"]
+    local function glowOff() return NS.SchemaRuntime.Get(CHIPP .. "glowEnabled") ~= true end
+    local styles = choices(NS.addon.Settings.GLOW_STYLES)
+    local function row(subgroup, r)
+        r.instance, r.page, r.group, r.subgroup = "pad", "pads", CHIP, subgroup
+        return r
+    end
+    local out = {
+        row(SIZE, { path = CHIPP .. "width", type = "number", default = cdef.width, min = 1, max = 300, step = 1,
+            label = L["Chip width"], startsLine = true, desc = L["How wide a labeled chip is. An icon-only chip stays square around its icon."],
+            validate = NUMBER, normalize = clamp(1, 300, true) }),
+        row(SIZE, { path = CHIPP .. "height", type = "number", default = cdef.height, min = CHIP_H.min,
+            max = CHIP_H.max, step = 1, label = L["Chip height (0 = automatic)"], zeroText = L["Automatic"],
+            desc = L["How tall a labeled chip is, in pixels. 0 grows it to hold its font and its icon. An icon-only chip stays square around its icon."],
+            validate = NUMBER, normalize = clamp(CHIP_H.min, CHIP_H.max, true) }),
+    }
+    stampBlock(out, O.ColorPair(blockSpec(CHIPP, CHIP, COLOR, cdef, { key = "background", label = L["Background"] })),
+        CHIPP, checks)
+    stampBlock(out, O.BorderGroup(blockSpec(CHIPP, CHIP, L["Border"], cdef)), CHIPP, checks)
+    stampBlock(out, O.FontGroup(blockSpec(CHIPP, CHIP, L["Font"], cdef)), CHIPP, checks)
+    out[#out + 1] = row(GLOW, { path = CHIPP .. "glowEnabled", type = "bool", default = cdef.glowEnabled,
+        label = L["Glow"], desc = L["Draw a glow around each chip."], validate = BOOL, startsLine = true })
+    out[#out + 1] = row(GLOW, { path = CHIPP .. "glowType", type = "string", default = cdef.glowType, values = styles,
+        label = L["Glow style"], desc = L["How the glow looks."], validate = oneOf(styles), disabledIf = glowOff })
+    stampBlock(out, O.ColorPair(blockSpec(CHIPP, CHIP, GLOW, cdef, { key = "glowColor",
+        companionKey = "useClassColorGlow", label = L["Glow color"] })), CHIPP, checks)
+    return out
+end
+
+for _, row in ipairs(chipRows()) do ROWS[#ROWS + 1] = row end
 
 -- The Icons tab's rows (B9, settings/SchemaIcons.lua), with these checks: a pad's after its Look rows,
 -- a dial's after its Wheel rows (before the Binding tab's row), so each editor's Icons tab sits there.
