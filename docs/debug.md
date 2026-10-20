@@ -51,8 +51,8 @@ write and the `Prepare` summary), and phase 2's: `Send` (a button, arm or disarm
 `Guard` (a press inside the guard window), `Echo` (a press confirmed `sent` or reported `dropped`),
 `Queue` (an entry queued or replaced, the drain, a drop, the held stand-down) and `Pad` (a pad
 built or moved, a rebuild run or held for combat, test mode on or off), and phase 4's: `Dial` (a dial
-header built, an attribute or header write refused in combat) and `Bind` (a dial's key set in WoW's
-bindings: the entry, the old key and the new; since 2026-10-20), and phase 5's: `Share` (an export: what it
+header built, an attribute or header write refused in combat) and `Bind` (the diagnostics report's
+bindings section; the Comms Dial page no longer sets a key, since the dial rework of 2026-10-21), and phase 5's: `Share` (an export: what it
 held and its length); `Library` also logs each import's tally, and the import's field writes share
 one `[Set] import share: N rows` line. The libraries add their own: `Cmd`, `Cfg`, `Launcher`,
 `Lifecycle`, `Perf`. The design's `Resolver` and `Bake` tags (spec §16) are not used: the resolve

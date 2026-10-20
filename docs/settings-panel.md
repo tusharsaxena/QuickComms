@@ -9,7 +9,7 @@ eagerly at `OnEnable`; each page's body builds on its first show (options-ui-§1
 | General | `Master controls`, `Behavior` |
 | Groups | One group (a seeded built-in set is one too): `General`, `Callouts`, `When`, `Preview` |
 | Comms Pad | One pad: `General`, `Groups`, `Layout`, `Pad header`, `Section header`, `Window`, `Buttons`, `Icons` |
-| Comms Dial | One dial: `General`, `Groups`, `Wheel`, `Icons`, `Binding`, `Preview` |
+| Comms Dial | One dial: `General`, `Groups`, `Wheel`, `Labels`, `Icons`, `Preview` |
 | Share | `Export`, `Import` |
 | Profiles | AceDBOptions: switch, copy, reset and delete profiles |
 
@@ -34,7 +34,8 @@ Lock frame, `/qc lock|unlock` and the launcher's Locked entry write the same pat
 `/qc test` and the launcher's Test mode entry call the same switch (`Preview.SetTestMode`), which is
 refused in combat. The launcher's Show window entry and the Toggle Comms Pads key binding (Options →
 Keybindings → Ka0s Quick Comms) call `/qc toggle`'s handler (`SlashVerbs.TogglePads`), which hides
-or shows every Comms Pad for the session.
+or shows every Comms Pad and remembers it per character (`db.char.padsHidden`), through a /reload
+and the next login.
 
 Preview as is passed through the composer's `extra` slot, so it lands after the canonical rows and
 before the button pair, never among them: options-ui-§15 as amended in v2.84.0 sanctions that slot
@@ -59,8 +60,7 @@ band      [ Group v (picker; a green dot after its name marks a group active now
           listed, indented, right after it) ][ New group ]
           [x] Preview while editing (under the picker)
 strip     [ General ][ Callouts ][ When ][ Preview ]
-General   Name, Enabled, Open the dial on this group, Skip on the dial in content (grayed out for a
-          group inside another), then
+General   Name, Enabled, then
           Parent group (None, or a top-level group) beside Inherit when conditions (grayed out
           with no parent), then the icon under an Icon label with Choose icon…, the clear glyph
           and its color swatch (settings/Editors.lua's chooser, no Icon text box), then
@@ -507,53 +507,56 @@ shipped order.
 
 ```
 band     [ Dial v (picker) ][ New dial ]
-strip    [ General ][ Groups ][ Wheel ][ Icons ][ Binding ][ Preview ]
+strip    [ General ][ Groups ][ Wheel ][ Labels ][ Icons ][ Preview ]
 General  Name, Enabled, then Delete dial
-Groups   Show groups as (Categories or Flat), the depth-3 warning (spec §11.3), then the dial's
-         groups as a drag-to-reorder list with a remove glyph (its priority order, spec §7; it
-         takes the group off the dial and asks nothing), then Add a group (top-level groups only)
-Wheel    wedges per ring, open at, then Position: X and Y and Reset this dial's position
+Groups   Show groups as (Categories or Flat), then the dial's groups as a drag-to-reorder list
+         with a remove glyph (its priority order, spec §7; it takes the group off the dial and asks
+         nothing), then Add a group (top-level groups only)
+Wheel    wedges per ring (Auto by default), ring radius, open at, then Position: X and Y and
+         Reset this dial's position
+Labels   Show labels, then the labels' Font block (font, size, outline, color, Use class color,
+         shadow), grayed out while labels are off
 Icons    the wedges' icons, as the Comms Pad page's Icons tab (a wedge's border is a round ring,
          never wider than the wedge; its icon size keeps the wedge's own size)
-Binding  how Relaxed mode works, the key capture (WoW's own binding of the dial's Open Comms
-         Dial entry), the key's line, and the dial's place in WoW's key bindings (spec §9.4)
 Preview  each ring as the current or previewed situation builds it, wedge by wedge
 ```
 
 - **General:** Name and Enabled are the `dial.name` and `dial.enabled` rows; Delete dial asks first and keeps the dial's groups and
   callouts (the key belongs to the place, so the dial that moves up takes it).
-- **Groups:** Show groups as is `dial.mode` (Categories or Flat). The warning names each battleground
-  node set that would open three rings deep because a group above it is active there too
-  (`Dial_Layout.DeepGroups`, built under that battleground's preview); it knows a seeded
-  battleground set by its origin (`bi.bg.<key>`) while the set holds groups. The list is the dial's
-  priority order; Add a group appends one.
-- **Wheel:** Wedges per ring is `dial.slices` (4, 6, 8 or 12; a ring that holds a ring takes 8 on a
-  12-wedge dial), Open at is `dial.openAt` (its place or the cursor). X and Y write the whole
-  `dial.point` row; a refused offset says why and puts the box back. There is no depth control
-  (owner ruling R5): depth is spec §11.3's limit, warned about on the Groups tab.
-- **Binding:** a line on how Relaxed mode works; the Key capture box (AceGUI's `Keybinding`; Escape
-  in it clears the key). Since 2026-10-20 the key is no profile field: it is WoW's own binding of the
-  dial's Bindings.xml entry, Open Comms Dial <n>, n the dial's place in the dial list. The box shows
-  that entry's key (`Compat.BindingKey`, GetBindingKey) and sets it through `Dial.BindKey`
-  (`Compat.SetBinding`, the old key unbound, then `Compat.SaveBindings` in the set in force), so
-  Options → Keybindings → Ka0s Quick Comms shows the same key and a key set there shows here (the
-  page re-reads it each time it is shown). It is account-wide unless the player ticks Character
-  Specific Keybindings there. A key taken from another WoW binding prints one line naming it by its
-  menu label (`Compat.BindingLabel`). Out of combat only: in combat the box refuses with one line and
-  goes back. A key the open dial uses (Escape, the mouse buttons and wheel, 1–8 without a modifier)
-  is refused the same way. The key's line says what the key does: opens and closes this dial, or
-  nothing while the dial is off or Quick Comms is stood down, or that there is no key yet. A place
-  line names the Open Comms Dial entry (it moves when a dial above it is deleted) and that the key is
-  for every character unless Character Specific Keybindings is ticked. A dial past the fourth place
-  has no entry: its box is disabled and the line says to move it into the first four.
+- **Groups:** Show groups as is `dial.mode` (Categories or Flat). The list is the dial's priority
+  order; Add a group appends one. A dial opens straight on its one active group's ring, or on the
+  ring of its active groups when there are several (the dial rework, 2026-10-21, retired the Groups
+  page's Open the dial on this group and Skip on the dial in content, and with them this tab's
+  three-rings-deep warning: a battleground's node callouts now sit three rings deep by design,
+  since In Group is active beside the map's set).
+- **Wheel:** Wedges per ring is `dial.slices`: Auto (0, a new dial's default) gives each page one
+  wedge per item from W, clockwise (one W; two W and E; three W, N and E on a four-wedge ring with S
+  empty; four W, N, E and S; past four, evenly spaced), up to 12; or a fixed 4, 6, 8 or 12 from N.
+  A ring that holds rings takes at most 8 either way, and a node set pinned to its winds keeps its
+  eight. A ring with more items is paged: two arrows under the dial (dimmed at an end, no wrap), the
+  Left and Right arrow keys (bound only while a paged ring is shown) and the mouse wheel turn its
+  pages, and a dot per page marks the one shown in gold. Ring radius is `dial.radius` (70 to 180
+  pixels, default 100): the wedges' distance from the middle; the disc grows with it, keeping 20
+  pixels between a wedge's edge and its own. Open at is `dial.openAt` (its place or the cursor). X
+  and Y write the whole `dial.point` row; a refused offset says why and puts the box back. There is
+  no depth control (owner ruling R5).
+- **Labels:** Show labels is `dial.label.show`: each wedge's name, drawn wholly outside the disc (off
+  shows the icons alone; the tooltip still names them). The Font block is composed by the options
+  library as the Buttons tab's (`dial.label.font|fontSize|fontColor|useClassColorFont|fontFlags|fontShadow`;
+  defaults white Friz Quadrata 12 with its shadow, `PadDefaults.DialLabel`), grayed out while Show
+  labels is off. A bigger font lifts the ring's title and drops the page row to clear the labels.
+- **No Binding tab** (the dial rework, 2026-10-21): the key is WoW's own binding of the dial's
+  Bindings.xml entry, Open Comms Dial <n>, n the dial's place in the dial list, set only in Options →
+  Keybindings → Ka0s Quick Comms; it is account-wide unless the player ticks Character Specific
+  Keybindings there, and a dial past the fourth place has no entry.
 - **Preview:** each ring, wedge by wedge, with its compass word (a clock position past eight
-  wedges), marking the ring the dial opens on
+  wedges; under Auto the first wedge is W), marking the ring the dial opens on
   and the wedges that open a ring. It is a listing (owner ruling R3); the drawn dial is the
   in-game preview (test mode, Preview as…).
 
-The page's Defaults puts groups-as, wedges per ring and open at back to their defaults and turns the
-dial on, in one act (`Library.Batch`); the name, groups and position are kept, and the key, WoW's
-own binding, is never touched.
+The page's Defaults puts groups-as, wedges per ring, ring radius, open at, the Labels tab and the
+Icons tab back to their defaults and turns the dial on, in one act (`Library.Batch`); the name, groups
+and position are kept, and the key, WoW's own binding, is never touched.
 
 ## Share
 

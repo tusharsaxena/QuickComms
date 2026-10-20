@@ -16,14 +16,14 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | SLASH-1..2 | Slash | `/qc` and `/quickcomms`, help, a slash collision |
 | PANEL-1..3 | Settings panel | Landing page, General → Master controls, the Defaults button |
 | PROFILE-1..2 | Profiles | The Profiles page and the `profile` verb |
-| STATE-1..3 | State | Enable/disable, the launcher menu, `/qc toggle` |
+| STATE-1..4 | State | Enable/disable, the launcher menu, `/qc toggle`, the pads' hidden state across /reload |
 | COMBAT-1 | Combat | The settings panel in combat |
 | DIAG-1..2 | Diagnostics | The debug console, the report, perf |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
 | SEND-1..5 | Send | Secure sends in keys and on bosses, the spam guard |
 | PAD-1..14 | Pad | The Comms Pad, its growth and button width, the World (solo) and In Group sets and the built-ins' colors, the header click and icon only's width |
 | EDIT-1..29 | Editors | The Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
-| DIAL-1..13 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, In Group off the dial in content |
+| DIAL-1..17 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, the lone-group open and the group ring, page arrows and dots, Auto wedges, the ring radius, the Labels tab |
 | KEY-1..3 | Key bindings | A dial's key as WoW's own binding in Options → Keybindings, Character Specific Keybindings, Toggle Comms Pads |
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
 | LOOK-1..6 | Pad header, Section header, Window | The Comms Pad's three window tabs: the section titles' font, the pad's border and background, the header's look, size and alignment, the tab strip and headings, the section header's band and height |
@@ -93,11 +93,17 @@ and `/qc diagnostics` still answer; the minimap menu's Enabled entry is unticked
 mode and Show window, each ticking the state it shows and toggling it; left-click → the settings
 panel opens. Result:
 
-**STATE-3. Hide the pads for the session.** `/qc toggle` → every Comms Pad hides and the chat says so;
-the minimap menu's Show window is unticked; the dials still open. `/qc test` → the pads show as
-placeholders, and turning it off hides them again. `/qc toggle` → the pads are back. Hide them, pull
-a training dummy and type `/qc toggle` → nothing changes until combat ends, then the pads show, with
-no Lua error. Hide them and `/reload` → the pads show. Result:
+**STATE-3. Hide the pads.** `/qc toggle` → every Comms Pad hides and the chat says "Comms Pads hidden
+on this character until you show them again."; the minimap menu's Show window is unticked; the dials
+still open. `/qc test` → the pads show as placeholders, and turning it off hides them again. `/qc
+toggle` → the pads are back. Hide them, pull a training dummy and type `/qc toggle` → nothing changes
+until combat ends, then the pads show, with no Lua error. Result:
+
+**STATE-4. The hidden state lasts, per character (2026-10-21).** `/qc toggle` → the pads hide.
+`/reload` → they stay hidden. Log out and back in on the same character → still hidden; the minimap
+menu's Show window is unticked. Log a second character → its pads show (its own choice). Back on the
+first, switch profile (Profiles page) → still hidden. `/qc toggle` → shown; `/reload` → still shown.
+Result:
 
 ## Combat
 
@@ -231,7 +237,7 @@ handshake, brb a white cup, Ready a green check, Drink a blue flask, Summon a pu
 own icon three cyan figures. Click GLHF → party chat reads "GLHF"; Drink → "Drinking"; Summon →
 "Summon please!". Convert to a raid → the same buttons send to raid chat; in a battleground or a
 dungeon finder group → instance chat, and the battleground's own set is still first on the pad and
-the dial still opens on its nodes (In Group is not on the dial there, DIAL-13). Leave the group → the In Group section is gone. Result:
+the dial opens on its groups, the battleground's set and In Group among them (DIAL-2). Leave the group → the In Group section is gone. Result:
 
 **PAD-13. Click the header to collapse.** Left-click anywhere on the pad's header row (on "World",
 not only the − button) → the pad folds to its header and the button reads +; click the row again → the
@@ -259,7 +265,7 @@ the pad. Result:
 **EDIT-2. A built-in set is an ordinary group (the phase 3 exit, rewritten 2026-10-18).** Groups →
 pick "Dungeon (generic)" → the picker shows no "(built-in)" tag (in a key it reads `Dungeon (generic)` with the
 green dot after the name, not before it; Comms Pad → Groups and Comms Dial → Groups put it after the name too), and the page draws the same tabs as a
-group of yours, nothing read-only. General: Name, Enabled, Open the dial on this group, Parent group,
+group of yours, nothing read-only. General: Name, Enabled, Parent group,
 the icon with Choose icon…, Duplicate and Delete, then Restore built-in groups; no Customize and no
 read-only line. Callouts: the callout table, exactly as a group of yours draws it (Add callout, Reuse
 callout with Add, a boxed row per callout with its handle, icon, name and channel, edit and remove
@@ -577,48 +583,54 @@ yell goes out, with no `[QC]` line. Result:
 
 ## Dial
 
-**DIAL-1. Open and close (Relaxed).** Settings → Comms Dial → Binding: click Key, press G → the line
-reads "G opens and closes this dial." Close the settings. In a key (any content with an active group),
-press G → the dial opens in the middle of the screen: a dark disc, wedges with icons and white labels
-outside the disc, the ✕ hub, and a gold pointer that follows the cursor. Press G → it closes. Open it;
-Escape → it closes and the game menu does not open. Open it; right-click a wedge → it closes and nothing
-is sent. Result:
+**DIAL-1. Open and close (Relaxed).** Options → Keybindings → Ka0s Quick Comms → Open Comms Dial 1:
+bind G (Settings → Comms Dial has no Binding tab: General, Groups, Wheel, Labels, Icons, Preview).
+In a key (any content with an active group), press G → the dial opens in the middle of the screen: a
+dark disc, wedges with bare icons (no round backdrop behind them) and white labels wholly outside the
+disc, clear space between each icon and the disc's edge, the ✕ hub, and a gold pointer that follows
+the cursor. Press G → it closes. Open it; Escape → it closes and the game menu does not open. Open
+it; right-click a wedge → it closes and nothing is sent. Result:
 
-**DIAL-2. A wedge sends in a boss (the phase 4 exit).** On a raid or M+ boss, press G → the dial opens
-straight on the raid or dungeon set's ring (In Group skips the dial in content); click a callout
-wedge → the group sees the line, the dial closes, and there is no "action blocked" error or red
-text. With the dial closed, 1 still fires your action bar's first button. Press G again at once → every
-wedge is dimmed for about a second (the spam guard). Result:
+**DIAL-2. A wedge sends in a boss (the phase 4 exit; rewritten in the dial rework, 2026-10-21).** In
+a party on a raid or M+ boss, press G → the dial opens on the ring of groups (Dungeon or Raid
+(generic) and In Group: several active groups); click the raid or dungeon set → its callouts; click a
+callout wedge → the group sees the line, the dial closes, and there is no "action blocked" error or
+red text. With the dial closed, 1 still fires your action bar's first button. Press G again at once →
+every wedge is dimmed for about a second (the spam guard). Result:
 
 **DIAL-3. The Categories two-stroke (the phase 4 exit).** With two groups active (an always-on group of
 your own and M+ in a key): press G → the first ring shows the groups; click one → its callouts; click
 a callout → it is sent. Open again, click a group, click the hub → back to the groups; click the hub
 again → the dial closes. Result:
 
-**DIAL-4. The Arathi Basin node dial (the phase 4 exit; pinned in phase 5).** In Arathi Basin, with
-Wedges per ring at 4: press G → the dial opens straight on the nodes, all five on one ring with no
-More, each on its compass wind (Blacksmith N, Gold Mine NE, Farm SE, Lumber Mill SW, Stables NW),
-with an Arathi Basin wedge (the gold wheat sheaf) on E, the first wind left free, that opens the
-map-wide callouts (groups polish);
-click Lumber Mill, then INC → instance chat shows "INC Lumber Mill": two clicks. Open again and
-press 4 → Lumber Mill's ring opens (the number keys count the shown wedges clockwise from N). (If it opens on the group ring instead, check the Groups tab: Arathi Basin must sit above
-Battleground (generic) and every group active there, and the tab's "Three rings deep" warning names the
-cause; a `/reload` after updating runs the migration that moves the generic set. If the dial does not
-show Arathi Basin at all, the instance id may be wrong: run `/qc diagnostics`, copy the `situation`
-section's instanceID into the "Battleground instance IDs seen" table of
-`docs/brainstorm/go-no-go/round-4-build-checks.md`, and file it with this check's ID; BG-2 confirms
-the ids.) Result:
+**DIAL-4. The Arathi Basin node dial (the phase 4 exit; pinned in phase 5; three rings since the dial
+rework).** In Arathi Basin, with Wedges per ring at 4: press G → the ring of groups (Arathi Basin,
+Battleground (generic), In Group); click Arathi Basin → all five nodes on one ring, no page arrows,
+each on its compass wind (Blacksmith N, Gold Mine NE, Farm SE, Lumber Mill SW, Stables NW), with an
+Arathi Basin wedge (the gold wheat sheaf) on E, the first wind left free, that opens the map-wide
+callouts (groups polish); click Lumber Mill, then INC → instance chat shows "INC Lumber Mill". Open
+again, open Arathi Basin and press 5 → Lumber Mill's ring opens (the number keys count the shown
+wedges clockwise from N). (If the dial does not show Arathi Basin at all, the instance id may be
+wrong: run `/qc diagnostics`, copy the `situation` section's instanceID into the "Battleground
+instance IDs seen" table of `docs/brainstorm/go-no-go/round-4-build-checks.md`, and file it with
+this check's ID; BG-2 confirms the ids.) Result:
 
-**DIAL-5. Number keys, the wheel and pages.** Wheel → Wedges per ring 4, in a key: open, press 3 → the
-third wedge's callout is sent; open, scroll down → the next page, up → back; the More wedge does the
-same. After the dial closes, 1–8, Escape and the mouse wheel do what they did before. Result:
+**DIAL-5. Number keys, the wheel, the page arrows and dots (dial rework, 2026-10-21).** Wheel →
+Wedges per ring 4, in a key: open, open a group with more than four callouts, press 3 → the third
+wedge's callout is sent. Open it again → no More wedge; under the dial, below the bottom label, a
+left and a right arrow with a dot per page between them, this page's dot gold and the others gray,
+the left arrow dimmed on page 1. Click the right arrow → page 2, its dot gold, the dial still open and
+nothing sent; on the last page the right arrow is dimmed and does nothing. Left arrow key → back a
+page; Right arrow key → on; scroll down → on, up → back. Click the hub on page 2 → up to the ring of
+groups (not page 1). A ring of one page shows no arrows and no dots, and there the Left and Right
+arrow keys still turn your character. After the dial closes, 1–8, the arrow keys, Escape and the
+mouse wheel do what they did before. Result:
 
-**DIAL-6. Keys taken from WoW, and refused keys.** On the Binding tab set the key to TAB → one chat
-line says TAB was Target Nearest Enemy in WoW's key bindings and now opens this dial; TAB opens the
-dial, and Options → Keybindings shows TAB on Open Comms Dial 1 and nothing on Target Nearest Enemy
-(set it back there afterwards). `/qc disable` → TAB opens nothing (it stays bound: a WoW binding is not
-handed back); `/qc enable` → TAB opens the dial again. Give it 3, or the mouse wheel → refused, saying
-the open dial uses them, and the box goes back; ALT-3 is taken. Result:
+**DIAL-6. The key is set only in WoW's key bindings (dial rework, 2026-10-21).** Options →
+Keybindings → Ka0s Quick Comms → bind Open Comms Dial 1 to TAB (WoW asks to take it from Target
+Nearest Enemy; accept) → TAB opens the dial (set it back afterwards). `/qc disable` → TAB opens
+nothing (it stays bound: a WoW binding is not handed back); `/qc enable` → TAB opens the dial again.
+Settings → Comms Dial: no Binding tab and no Key box on any tab. Result:
 
 **DIAL-7. Open at the cursor, the dial's place, Reset position.** Wheel → Open at → At the cursor →
 press G away from the middle → the dial opens centered on the cursor, in combat too (unverified: a
@@ -633,7 +645,7 @@ opens nothing (still bound in WoW's key bindings). Result:
 
 **DIAL-9. Test mode and Preview as.** Out of combat: `/qc test` → dial 1 opens at its place with
 placeholder wedges and TEST MODE above the hub; clicking sends nothing; 1 still fires the action bar.
-General → Master controls → Preview as → Arathi Basin → the dial opens on the nodes with PREVIEW; nothing
+General → Master controls → Preview as → Arathi Basin → the dial opens on its groups with PREVIEW, and Arathi Basin opens the nodes; nothing
 sends; Escape closes the settings window (not the dial), which ends the preview and closes the dial.
 Turn test mode on, then pull a target dummy → test mode ends; the dial closes at once or, if combat
 won the race, at combat end, and in between 1–8 and Escape still do what they always do. Result:
@@ -644,13 +656,13 @@ why groups show off → no tooltip. `/qc why` lists the dials too; `/qc diagnost
 `bindings` sections naming the key. If a wedge's send is ever reported dropped (the [QC] note), reopen the
 dial within 5 s → that wedge shows red. Result:
 
-**DIAL-11. Mouse-button keys, two dials, labels.** Set the dial's key to BUTTON3 (middle mouse): press it
+**DIAL-11. Mouse-button keys, two dials, labels.** Bind Open Comms Dial 1 to BUTTON3 (middle mouse) in Options → Keybindings: press it
 over the world → the dial opens; press it again with the cursor on a callout wedge → the dial closes
 and nothing is sent; on the hub → it closes. A side button (BUTTON4) click on a wedge also closes
 without sending, and the restricted snippet's other-frame `RunAttribute` raises no error. New dial →
-key H; press G, then H → dial 1 closes and dial 2 opens; press 1 → dial 2's first wedge, never dial
-1's; close it → 1 fires the action bar again. In Preview as Arathi Basin the ring title sits above
-the N wedge's label, and the NE, SE, SW and NW labels read away from their wedges. With test mode on, close the
+bind Open Comms Dial 2 to H; press G, then H → dial 1 closes and dial 2 opens; press 1 → dial 2's first wedge, never dial
+1's; close it → 1 fires the action bar again. In Preview as Arathi Basin (open the set) the ring title sits above
+the N wedge's label, and every label sits outside the disc, reading away from it. With test mode on, close the
 dial with the hub, then change Wedges per ring → it stays closed. Result:
 
 **DIAL-12. The hub's close and the wedge padlock.** Open the dial → the hub carries a red ✕ (the
@@ -658,13 +670,38 @@ LibKa0s catalog's `close` mark, not the round stop button), and during an encoun
 the same small gold padlock as a pad button (PAD-8). With LibKa0s removed (DEGRADED-1) the stop button and the
 pet-battle padlock draw instead, with no error. Result:
 
-**DIAL-13. In Group skips the dial in content.** In the open world with a party, press G → the dial
-shows In Group (alone, it opens on its ring). Enter a dungeon with the party (or start a key) and
-press G → the dial opens straight on the Dungeon (generic) ring, with no ring of groups and no In
-Group wedge; the pad still shows the In Group section after the dungeon set. Settings → Groups → In
-Group → General: Skip on the dial in content is ticked; untick it → the dial opens on the group ring
-again, In Group beside the dungeon set; tick it back. Pick a group inside another (an Arathi Basin
-node) → the box is grayed out. Result:
+**DIAL-13. One group opens straight on it; several open on the groups (dial rework, 2026-10-21).**
+Solo in the open world (World (solo) the only active group), press G → the dial opens straight on
+World (solo)'s callouts, no ring of groups. Join a party in the open world → press G → the ring of
+groups (World (solo) is gone, In Group and any always-on group of yours); click In Group → its
+callouts. Enter a dungeon with the party (or start a key) → the ring of groups shows Dungeon (generic)
+and In Group; click one → its callouts. Settings → Groups → any group → General: no Open the dial
+on this group and no Skip on the dial in content. Result:
+
+**DIAL-14. Auto wedges (dial rework, 2026-10-21).** Settings → Comms Dial → Wheel → Wedges per ring
+shows Auto first; a new dial (New dial) is on Auto. On Auto, with a group of your own holding 1, 2,
+3, 4, then 5 callouts (add them one at a time, Preview as wherever it is active): 1 → the one wedge
+at W (left); 2 → W and E; 3 → W, N and E, with S empty; 4 → W, N, E and S; 5 → five evenly spaced,
+the first at W, going clockwise. The spokes split the ring to match. With 13 or more callouts → 12
+on page 1 and the rest on page 2, behind the arrows. A ring of groups holds at most 8 a page. The
+Preview tab lists wedge 1 as W. Pick 6 → six wedges from N whatever the count. Result:
+
+**DIAL-15. The ring radius (dial rework, 2026-10-21).** Wheel → Ring radius reads 100. Drag it to 160
+→ the dial redraws bigger: the wedges further out, the disc grown with them, the labels still outside
+the disc, the title above the top label and the page arrows below the bottom one. 70 → small, the
+labels still clear of each other at four wedges. In combat, `/qc set dial.radius 140` → no error,
+"updates after combat", the new size at combat end. Defaults → 100. Result:
+
+**DIAL-16. The Labels tab (dial rework, 2026-10-21).** Comms Dial → Labels: Show labels ticked, then a
+Font block (font, size, outline, color, Use class color, shadow). Font size 18, Thick outline, color
+yellow → the wedges' labels redraw that way and the title and page arrows move out to clear them; Use
+class color → your class color; untick the shadow → no shadow. Untick Show labels → the icons alone,
+the font controls grayed out, the title and arrows come in closer; hovering a wedge still names it.
+Defaults → white 12-point labels again. Result:
+
+**DIAL-17. A stored dial keeps its wedges (dial rework, 2026-10-21).** On a profile made before the
+update, the dial keeps its Wedges per ring (4 stays 4; only a new dial starts on Auto); `/reload` →
+no Lua error, and Groups pages carry no Open the dial or Skip on the dial boxes. Result:
 
 ## Share
 
@@ -701,11 +738,11 @@ last ten characters deleted → "That string is damaged or cut short. Copy all o
 
 Clicking Import after any of them prints the same line and adds nothing. Result:
 
-**SHARE-5. A pad and a dial travel unbound.** Give the Comms Dial the key G. Share → Export: tick
-the Comms Pad and the Comms Dial; Export, copy. Switch to `Share test`, import it → chat also says
-"An imported dial has no key yet: give it one on the Comms Dial page."; the new pad sits in the
-default place (not where yours is), the new dial's Binding tab shows no key, and G does nothing on
-this profile until you give one. Switch back → G opens your dial as before. Result:
+**SHARE-5. A pad and a dial travel unbound.** Bind Open Comms Dial 1 to G in Options → Keybindings. Share → Export: tick
+the Comms Pad and the Comms Dial; Export, copy. Switch to `Share test`, import it → chat also says an
+imported dial's key is the one WoW binds to its place in the dial list; the new pad sits in the
+default place (not where yours is), and the new dial (the profile's first) opens on Open Comms Dial
+1's key, G, since the key belongs to the place, not the dial. Switch back → G opens your dial as before. Result:
 
 **SHARE-6. A string that wrapped.** Paste a SHARE-1 string into a chat message or a forum post so it
 breaks across lines, copy it back out with the line breaks, and paste that on Import → Accept reads
@@ -787,24 +824,21 @@ rate where it was; untick Glow → every button glow stops. Result:
 
 ## Key bindings
 
-**KEY-1. A dial's key is WoW's own binding (2026-10-20).** Settings → Comms Dial → Binding: click Key,
-press G. Escape → Options → Keybindings → AddOns → Ka0s Quick Comms → Open Comms Dial 1 shows G. There,
-bind Open Comms Dial 1 to F instead, close Options, reopen Settings → Comms Dial → Binding → the box
-shows F and the line reads "F opens and closes this dial."; F opens the dial and G no longer does (G is
-back to whatever it was before). Escape in the Key box → no key; Options shows none for Open Comms
-Dial 1. Make five dials → the fifth's Key box is grayed out and its line says to move it into the first
-four. In combat, with the settings open, press a key in the box → one chat line says key bindings can
-be changed after combat, and nothing changes. `/reload` → the key is still bound. Result:
+**KEY-1. A dial's key is WoW's own binding (2026-10-20; set only there since the dial rework,
+2026-10-21).** Options → Keybindings → AddOns → Ka0s Quick Comms → bind Open Comms Dial 1 to G → G
+opens the dial. Bind it to F instead → F opens the dial and G no longer does. Clear it → no key, and
+the dial opens on nothing. Make five dials → only Open Comms Dial 1 to 4 are listed, so the fifth
+has no key. `/reload` → the key is still bound. Result:
 
-**KEY-2. Account-wide, unless Character Specific Keybindings (2026-10-20).** Bind G to the dial on one
-character, log a second character → G opens its dial too (the Binding tab shows G). Options →
-Keybindings → tick Character Specific Keybindings on the second character, set the dial's key to H on
-the Binding tab → H opens it here; log back to the first → still G there. Switch profile (Profiles
-page) → the key does not change. Result:
+**KEY-2. Account-wide, unless Character Specific Keybindings (2026-10-20).** Bind G to Open Comms
+Dial 1 on one character, log a second character → G opens its dial too. Options → Keybindings → tick
+Character Specific Keybindings on the second character, bind Open Comms Dial 1 to H there → H opens it
+here; log back to the first → still G there. Switch profile (Profiles page) → the key does not
+change. Result:
 
 **KEY-3. Toggle Comms Pads (2026-10-20).** Options → Keybindings → Ka0s Quick Comms lists Toggle Comms
 Pads after Open Comms Dial 1 to 4. Bind it to P. Press P once → every pad hides and the chat says
-"Comms Pads hidden for this session." (exactly once: one press, one toggle); the minimap menu's Show
+"Comms Pads hidden on this character until you show them again." (exactly once: one press, one toggle); the minimap menu's Show
 window is unticked. Press P → the pads are back. In combat, press P → nothing changes until combat
 ends, then the pads toggle, with no Lua error. `/qc disable`, press P → the disabled line, as
 `/qc toggle` prints. Result:
@@ -850,12 +884,12 @@ Choose icon…: a glyph chosen there shows on its wedge. Result:
 **BG-1. Node winds.** In each node battleground you play (Arathi Basin, Eye of the Storm, Battle for
 Gilneas, Deepwind Gorge, Isle of Conquest, Wintergrasp: the Fortress at the top, Broken Temple top
 left, Sunken Ring top right, Westspark bottom left, Eastspark bottom right, the Towers at the bottom),
-open the dial → the nodes sit where they are on the map,
+open the dial and click the battleground's set on the ring of groups → the nodes sit where they are on the map,
 north up (Arathi Basin: Stables top left, Gold Mine top right, Farm bottom right, Lumber Mill bottom
 left, Blacksmith, the middle node, at the top), and Deepwind Gorge shows five nodes (owner ruling R2).
 One more wedge, drawn as the battleground itself, sits on the first wind no node takes and opens its
 map-wide callouts; the nodes stay pinned around it.
-Lumber Mill, then INC is still two clicks. A node that points the wrong way is filed with this
+Lumber Mill, then INC is two clicks from the set's ring. A node that points the wrong way is filed with this
 check's ID and its battleground. Result:
 
 **BG-2. Battleground instance ids.** In each battleground you play: `/qc diagnostics` → the
@@ -871,8 +905,9 @@ Tower Point, Frostwolf GY, West FW Tower, East FW Tower, Relief Hut, Drek'Thar (
 of its own). Each holds Attack and Defend; a long title stops short at its neighbor, and its buttons
 stay on the grid's columns. The pad fits on screen; note its height. Click Iceblood Tower's Attack →
 `/i Attack Iceblood Tower`. Right-click a title in the second
-column → the Groups page opens on that objective. Open the dial → it opens on Alterac Valley's own
-callouts first, then the objectives a page at a time, More turning the page; an objective's ring
+column → the Groups page opens on that objective. Open the dial and click Alterac Valley on the ring
+of groups → its own callouts first, then the objectives a page at a time, the arrows under the dial
+(or the Left and Right arrow keys) turning the page and the dots marking it; an objective's ring
 holds Attack and Defend. Result:
 
 **BG-4. Isle of Conquest's bases.** In Isle of Conquest: the pad shows Our base and Enemy base side
@@ -883,8 +918,8 @@ faction. On the dial the five nodes stay on their winds, the Isle of Conquest we
 where it was (NE), and Our base and Enemy base take two of the winds left over. Result:
 
 **BG-5. A flag map.** In Warsong Gulch or Twin Peaks: the pad shows the set's map-wide EFC callouts,
-then Our flag, Enemy flag, Our FC and Midfield (Bridge in Twin Peaks), each its own section; the
-dial opens on the set's ring, its own wedge on N and the four groups on the winds after it. Send
+then Our flag, Enemy flag, Our FC and Midfield (Bridge in Twin Peaks), each its own section; on the
+dial (click the set on the ring of groups) the set's ring has its own wedge on N and the four groups on the winds after it. Send
 "INC flag room" → `INC our flag room`; "We have it" → `We have their flag`. The four groups take the
 winds after the set's own wedge in the order they ship, not where they are on the map: which wind
 Our flag or Enemy flag lands on is that order, not geography. The same holds for Ashran, Deephaul Ravine, Seething
@@ -962,10 +997,10 @@ from the client, so this check needs a non-English client pass. Result:
 
 | ID | Origin | Why it is owed |
 |---|---|---|
-| INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..3, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet; LOC-1 re-enumerated in phase 5 and owed a non-English client pass; STATE-3 added and PANEL-2 rewritten with `/qc toggle` and Preview as in Master controls (2026-10-19) |
+| INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..4, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet; STATE-3 rewritten and STATE-4 added with the pads' hidden state kept per character (2026-10-21); LOC-1 re-enumerated in phase 5 and owed a non-English client pass; STATE-3 added and PANEL-2 rewritten with `/qc toggle` and Preview as in Master controls (2026-10-19) |
 | SEND-1..5, PAD-1..14 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet; PAD-14 added with icon only's width (2026-10-20); PAD-13 added with a click anywhere on the header (2026-10-20); PAD-12 added with In Group, PAD-3 and PAD-4 rewritten with the strip as wide as the pad (2026-10-20, bg buttons); PAD-1 rewritten and PAD-11 added with World (solo) and the built-ins' colors, PAD-3 and PAD-4 rewritten with the strip's marker (2026-10-19, groups polish); PAD-8 added in phase 5 (audit QC-07); PAD-1 rewritten and PAD-9..10 added with the up growth, button width and the built-in glyphs (2026-10-19) |
 | EDIT-1..29 | Phase 3: the editors | No client pass recorded yet; EDIT-29 added with the preview click's echo (2026-10-20); EDIT-28 added with right-click a group title (2026-10-19); EDIT-27 added with Preview while editing (2026-10-19); EDIT-3, 4, 20 and 22 rewritten and EDIT-25..26 added with Preview as in Master controls, the Dungeon set, the Arena drawer, instance search, the Callouts rows and the glyph sets (2026-10-19); EDIT-1, 2 and 19 rewritten and EDIT-22..24 added with the When drawers, Inherit when conditions and the icon browser's search (2026-10-18); EDIT-2, 4, 5, 6, 11, 14 and ICON-1 rewritten and EDIT-19..21 added when the built-in sets became seeded groups, groups nested and the Preview tab became a table (2026-10-18); EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17); EDIT-9, 13 and ICON-1 rewritten and EDIT-14..17 added with the icon browser and glyph colors (2026-10-18); EDIT-9 rewritten and EDIT-18 added when the token dropdown became the Text label's info glyph (2026-10-18); EDIT-13, 14 and ICON-1 rewritten when the Suggested tab went and the skin stopped waiting for the addon to be enabled (2026-10-18); EDIT-9, 18 and ICON-1 rewritten when the Icon boxes went and the popup took its two-column layout (2026-10-18); EDIT-9, 11 and ICON-1 rewritten with the clear glyph, the Preview gap and the buttons' 2 px inset (2026-10-18) |
-| DIAL-1..13 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-2 rewritten and DIAL-13 added with Skip on the dial in content (2026-10-20); DIAL-2 and DIAL-4 rewritten with In Group and the four node buttons (2026-10-20, bg buttons); DIAL-4 rewritten with the node set's map-wide wedge (2026-10-19, groups polish); DIAL-9 rewritten when Preview as moved to Master controls (2026-10-19); DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
-| SHARE-1..6, LOOK-1..2, ICON-1, BG-1..8, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; BG-1 and BG-4 rewritten and BG-7..8 added with the four node buttons and Silvershard Mines' and Temple of Kotmogu's groups (2026-10-20, bg buttons); BG-1 rewritten with Wintergrasp's winds and BG-3..6 added with the battleground objective groups (2026-10-20); BG-1 rewritten with the map-wide wedge (2026-10-19, groups polish); LOOK-2's in-combat step goes through `/qc set`; IDS-1 extended to the journal instances and arenas (2026-10-19) |
+| DIAL-1..17 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-1, 2, 4, 5, 6, 9, 11 and 13 rewritten and DIAL-14..17 added with the dial rework (2026-10-21: the lone-group open and the ring of groups, page arrows and dots, Auto wedges, the ring radius, the Labels tab, no Binding tab); DIAL-2 rewritten and DIAL-13 added with Skip on the dial in content (2026-10-20); DIAL-2 and DIAL-4 rewritten with In Group and the four node buttons (2026-10-20, bg buttons); DIAL-4 rewritten with the node set's map-wide wedge (2026-10-19, groups polish); DIAL-9 rewritten when Preview as moved to Master controls (2026-10-19); DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
+| SHARE-1..6, LOOK-1..2, ICON-1, BG-1..8, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; SHARE-5, BG-1, BG-3 and BG-5 rewritten with the dial rework (2026-10-21); BG-1 and BG-4 rewritten and BG-7..8 added with the four node buttons and Silvershard Mines' and Temple of Kotmogu's groups (2026-10-20, bg buttons); BG-1 rewritten with Wintergrasp's winds and BG-3..6 added with the battleground objective groups (2026-10-20); BG-1 rewritten with the map-wide wedge (2026-10-19, groups polish); LOOK-2's in-combat step goes through `/qc set`; IDS-1 extended to the journal instances and arenas (2026-10-19) |
 | ICONS-1..3 | Icons and polish (2026-10-19): the Icons tab | No client pass recorded yet; ICONS-1 rewritten with the owner's pad defaults (2026-10-20) |
-| LOOK-3..6, BUTTON-1..2, KEY-1..3 | Window, Button and keys (2026-10-20): the header's look and alignment, the three window tabs and the section band, the Buttons tab, keys as WoW bindings and Toggle Comms Pads | No client pass recorded yet; LOOK-2, LOOK-5, EDIT-5, EDIT-25 and BUTTON-1..2 reworded with Visibility on General, Main window renamed Window and the Chip tab renamed Buttons (chips became buttons in the UI wording, then internally as `pad.button.*`; 2026-10-20); LOOK-5..6 added and LOOK-1..3 rewritten with the Window tab split into Pad header, Section header and Main window (2026-10-20); LOOK-1, LOOK-3 and BUTTON-1 rewritten with the owner's pad defaults (2026-10-20); LOOK-1 rewritten with the Section titles font, PAD-10 with Button width on the Buttons tab, DIAL-6 and DIAL-8 with the dial key as WoW's own binding |
+| LOOK-3..6, BUTTON-1..2, KEY-1..3 | Window, Button and keys (2026-10-20): the header's look and alignment, the three window tabs and the section band, the Buttons tab, keys as WoW bindings and Toggle Comms Pads | No client pass recorded yet; KEY-1..3 rewritten with the key set only in Options → Keybindings and the pads' hidden state kept per character (2026-10-21); LOOK-2, LOOK-5, EDIT-5, EDIT-25 and BUTTON-1..2 reworded with Visibility on General, Main window renamed Window and the Chip tab renamed Buttons (chips became buttons in the UI wording, then internally as `pad.button.*`; 2026-10-20); LOOK-5..6 added and LOOK-1..3 rewritten with the Window tab split into Pad header, Section header and Main window (2026-10-20); LOOK-1, LOOK-3 and BUTTON-1 rewritten with the owner's pad defaults (2026-10-20); LOOK-1 rewritten with the Section titles font, PAD-10 with Button width on the Buttons tab, DIAL-6 and DIAL-8 with the dial key as WoW's own binding |

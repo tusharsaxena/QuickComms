@@ -91,7 +91,7 @@ Total.
 - perf: the descriptor's SavedVariables global is declared in the TOC
 - launcher: one object, labeled with the brand, the logo as its icon, registered on enable
 - launcher: the right-click menu is Enabled, Locked, Test mode and Show window
-- launcher: Show window calls the handler `/qc toggle` calls and reflects the session flag
+- launcher: Show window calls the handler `/qc toggle` calls and reflects the saved flag
 - launcher: Enabled calls the same handler `/qc disable` calls
 - launcher: degraded, Register says once that there is no minimap button
 - options: the category registers eagerly, with the General page under it
@@ -119,7 +119,7 @@ Total.
 - database: [B2] step 4 rewrites a pad's retired Upward growth as Right and up, once
 - database: [B7] step 5 renames the dungeon set, widens its When and gives seeded callouts their glyphs, once
 - database: [polish] step 6 colors untouched seeded icons and adds the node sets' own callouts, once
-- database: [bg subgroups] step 7 seeds the new objective nodes by origin and opens the flat sets into their ring, once
+- database: [bg subgroups] step 7 seeds the new objective nodes by origin, once; step 8 drops the retired dial fields
 - database: [bg subgroups] a fresh profile seeds every objective node once, and step 7 leaves it as it is
 
 ### test_profile.lua (9)
@@ -128,7 +128,7 @@ Total.
 - profile: collections exist; default nextId is 1, past every seeded id after boot
 - profile: every behavior row resolves through the seam
 - profile: the spam guard clamps to 0.6-2.0 and fallback refuses unknown values
-- profile: schema version target is 7 (the battleground sub-groups)
+- profile: schema version target is 8 (the dial rework)
 - prepare: a callout held by two groups is split into a copy
 - prepare: a split copy of a seeded callout keeps no origin
 - prepare: a callout held by no group is dropped
@@ -156,7 +156,7 @@ Total.
 - schema: a callout write that names no id is refused, even with callouts present
 - schema: [phase 3] a fresh profile has no row off its default; the member rows are not counted
 
-### test_slash.lua (19)
+### test_slash.lua (20)
 
 - slash: NS.COMMANDS is positional triples, every reserved verb present
 - slash: `diagnostics` has no alias of any kind (debug-logging-§14)
@@ -177,6 +177,7 @@ Total.
 - slash: [toggle] `toggle` hides every pad, a second `toggle` shows them again
 - slash: [toggle] test mode shows the pads even while they are hidden
 - slash: [toggle] in combat the flag flips and the driver waits for combat to end
+- slash: [toggle] the hidden state is this character's: a /reload or the next login restores it
 
 ### test_disabled.lua (21)
 
@@ -215,7 +216,7 @@ Total.
 - diagnostics: [final 21] the settings section lists no member row
 - diagnostics: [phase 4] the dials and bindings sections name each dial, its key and each entry's WoW binding
 
-### test_compat.lua (15)
+### test_compat.lua (12)
 
 - compat: plain readers pass plain values and drop secrets
 - compat: InstanceInfo with a secret instanceID reads nil, never raises
@@ -228,10 +229,7 @@ Total.
 - compat: ChatColor reads the client's chat colors and declines what it cannot read
 - compat: [phase 3] InstanceName reads the client's name; a secret, empty or missing one is nil
 - compat: [phase 3] SpecInfoByID and ClassName read display names; secret or missing ones are nil
-- compat: [phase 4] BindingAction reads the player's WoW binding; none, a secret or a missing API is nil
-- compat: [final 7] BindingLabel reads the menu's name for an action; [final 8] BindingKey a command's key; secrets are nil
-- compat: [keys] BindingKeys lists every key a command has (the menu takes two); secrets and a missing API give none
-- compat: [keys] SetBinding and SaveBindings write WoW's own bindings, never in combat or without the API
+- compat: [final 8] BindingKey reads a command's key; a secret or a missing API is nil
 
 ### test_restrictions.lua (16)
 
@@ -369,7 +367,7 @@ Total.
 - builtins: the expected top-level sets exist in order
 - builtins: ids are unique, referenced and well formed
 - builtins: only top-level groups are in the order, and every top-level group is
-- builtins: node sets open into their ring and nest one level
+- builtins: node sets nest one level
 - builtins: bake audit, every callout bakes under its set's snapshot
 - builtins: battlegrounds use smart group; arena uses party; raid lead uses smart lead
 - builtins: [phase 5] every node set pins each node to a wind, at most eight, Deepwind Gorge's five included
@@ -395,7 +393,7 @@ Total.
 - game ids: [instances] INSTANCES are dungeons and raids, cover the season's, and reach past it
 - game ids: [arena] ARENAS are arena maps, one per arena
 
-### test_library.lua (78)
+### test_library.lua (74)
 
 - library: Prepare seeds every shipped set as a group, on one pad and one dial, once
 - library: a seeded group is an ordinary group: its fields, When, callouts and origin
@@ -439,9 +437,6 @@ Total.
 - library: [final 1] Restore, AddToGroup and OfferGroup each send one LIBRARY_CHANGED
 - library: [final 1] one Restore click rebuilds the pads once
 - library: [final 2] ValidWhen refuses a value its row can never match, and names the row and value
-- library: [phase 4] keys: upper-cased, none is false; what the open dial uses is reserved
-- library: [final 3] a key is one base key with known modifiers, none twice; a bare or dangling modifier is no key
-- library: [final 4] modifiers are stored in the client's order, ALT-CTRL-SHIFT-META
 - library: [phase 4] the generic battleground set moves below the per-battleground sets, once
 - library: [phase 5] Import makes every member under a fresh id, its references pointing at the copies
 - library: [review 3] importing the same string twice makes two copies; nothing that existed changes
@@ -471,12 +466,11 @@ Total.
 - library: [restore] a set deleted with its nodes kept brings back only what is missing
 - library: [restore] a set nested in another group keeps its place; its nodes stay out
 - library: [restore] a new pad holds the seeded sets still top-level, in shipped order
-- library: [restore] SeededBattleground names a seeded battleground set's key; a node, another set and a copy have none
 - library: [inherit] a new or seeded group inherits its parent's When; Duplicate and an untick keep false
 - library: [all] ValidWhen takes all on the instance and battleground rows, and on no other
 - library: [arena] ValidWhen takes arena ids and all on the arena row
 
-### test_members.lua (29)
+### test_members.lua (28)
 
 - members: a callout field is written through the seam by instance id, and announced once
 - members: with no id the seam writes the selected member, else the first the page lists, else refuses
@@ -493,8 +487,7 @@ Total.
 - members: [final 7] what `get group.when` prints types back in
 - members: [final 4] an off-screen pad.point is refused; `/qc reset` brings back a pad's place and clears an icon
 - members: [phase 4] a dial's fields are member rows, and its position goes through SetSurfacePoint
-- members: [review 4] a key is read upper-case in the client's modifier order; none is no key; reserved keys are refused
-- members: [keys] a dial has no key row: its key is WoW's binding, set on the Binding tab, never on the CLI
+- members: [keys] a dial has no key row: its key is WoW's binding, set in Options -> Keybindings, never on the CLI
 - members: [phase 4] the CLI types and prints a dial's position
 - members: [phase 4] an off-screen dial.point is refused; `/qc reset` brings the dial back
 - members: [phase 5] a When's key level prints as it types back in: one level, open below, open above
@@ -741,7 +734,7 @@ Total.
 - pads page: [glow knobs] a Glow or Glow style write repaints the tab, so the right knobs appear
 - pads page: [B9] Defaults puts the Icons rows back too, and its tooltip names them
 
-### test_page_dials.lua (19)
+### test_page_dials.lua (16)
 
 - dials page: New dial makes a second dial holding every built-in, selects it, and builds QuickCommsDial2
 - dials page: New dial takes the lowest free number, so a delete never leads to two names alike
@@ -749,19 +742,16 @@ Total.
 - dials page: Wheel writes wedges per ring and where it opens; X and Y move the dial; Reset puts it back
 - dials page: a refused X or Y says why and puts the box back to the stored offset
 - dials page: Defaults puts the dial's rows back as one act, and keeps its key and position
-- dials page: [keys] the Key box sets WoW's own binding and shows what WoW binds; a refusal puts it back
-- dials page: [keys] a key set in Options -> Keybindings shows in the box when the page is shown again
+- dials page: [dial rework] no Binding tab: the key is set in Options -> Keybindings alone
 - dials page: Groups switches Categories and Flat, and reorders the dial's groups
 - dials page: the remove glyph takes a group off the dial without asking and keeps the group
-- dials page: [phase 4] Groups warns when a node set would open three rings deep, and not once it is first
 - dials page: Preview lists the rings wedge by wedge, marking the one the dial opens on
 - dials page: [final 20] at 12 wedges per ring the Preview names each wedge by its clock position
 - dials page: Delete dial asks, then the dial is gone, its header released, and the page heals
-- dials page: [final 7] a key taken from another WoW binding names it as WoW's key bindings menu shows it
-- dials page: [final 8] the Binding tab names this dial's Open Comms Dial entry, and what its key does
 - dials page: [final 11] the page's own plan builds are not timed as a surface's bake
 - dials page: [B9] Icons follows Wheel, carries its headings once each, and writes the dial
 - dials page: [glow knobs] only the selected style's knobs show, and a Glow or Glow style write repaints
+- dials page: [labels] Labels shows or hides the wedges' names and styles them; off grays the font
 
 ### test_page_share.lua (12)
 
@@ -923,18 +913,19 @@ Total.
 - layout: [window] the header row's height moves every row and is the collapsed pad's height
 - layout: [button] a Button height above 0 is the labeled button's height; 0 is automatic; icon-only stays square
 
-### test_dial_layout.lua (18)
+### test_dial_layout.lua (19)
 
 - dial layout: four wedges sit on N, E, S and W, clockwise from the top
-- dial layout: slices are 4, 6, 8 or 12, and 12 only on a ring with no children
-- dial layout: [review 5] more items than wedges go on pages: size-1 each, the rest on the last
-- dial layout: [exit] Categories in Arathi Basin opens on the node ring; Lumber Mill, then INC
-- dial layout: without the flag first, Categories opens on the group ring; one group opens straight on it
-- dial layout: [review 5] Flat puts every callout on the first ring, highest group first, with More pages
-- dial layout: [phase 4] a node set below another active group is three rings deep, and named for the warning
+- dial layout: slices are Auto, 4, 6, 8 or 12; a page is 12 at most, 8 on a ring that holds rings
+- dial layout: [auto] one wedge is W, two W and E, three W, N and E, four W, N, E and S; more spread from W
+- dial layout: [review 5] more items than wedges go on plain pages, the rest on the last
+- dial layout: [nav] a paged ring's dots and arrows sit in one row under the disc and its labels
+- dial layout: [exit] Categories with several groups opens on the ring of groups; a group wedge opens its ring
+- dial layout: several groups open on the group ring; one group opens straight on it
+- dial layout: [review 5] Flat puts every callout on the first ring, highest group first, paged
 - dial layout: nothing to show is no ring at all; an empty group is left out
 - dial layout: the pointer follows the cursor outside the dead zone
-- dial layout: [final 6] a label is anchored by its side, clear of its wedge; the ring title clears the N label
+- dial layout: [final 6] a label is anchored by its side, wholly outside the disc; the ring title clears the N label
 - dial layout: [final 20] past eight wedges each gets its own direction, as a clock position
 - dial layout: [phase 5] a node set's nodes sit on their compass winds; the middle node takes N
 - dial layout: [polish] a node set's own callouts take one wedge on the first free wind; the nodes stay pinned
@@ -973,21 +964,6 @@ Total.
 - surfaces: [nesting] a dial draws a parent's own callouts and a ring per child whose When matches
 - surfaces: [nesting] a parent that draws nothing leaves its surface with nothing active
 - surfaces: [inherit] a child that inherits shows wherever its parent's When matches, whatever its own says
-
-### test_dial_yield.lua (12)
-
-- dial yield: In Group is seeded skipping the dial in content; the other seeded sets are not
-- dial yield: in a key the dial leaves In Group out; the pad keeps it
-- dial yield: in a battleground the dial leaves In Group out behind the map's sets
-- dial yield: in an open-world party In Group stays on the dial, beside a group-only user group
-- dial yield: the skip never empties the dial, and a skipping content group triggers nothing
-- dial yield: a place row names content as a content row does
-- dial yield: an open-world content row names no content
-- dial yield: in the open world a group naming open world and a dungeon keeps In Group on the dial
-- dial yield: an edit preview of In Group still shows it on the dial
-- dial yield: the row is written through the seam and refuses a non-bool
-- dial yield: General's Skip on the dial in content sits by Open into, grayed out for a child
-- dial yield: the setting travels in a shared string; an old string's group does not skip
 
 ### test_pad_render.lua (21)
 
@@ -1059,7 +1035,7 @@ Total.
 - pad: [R4] merged pads, collapsed pads and test mode's placeholder groups have no title to click
 - pad: [bg subgroups] Alterac Valley draws its nineteen objectives two to a row, each title its block wide
 
-### test_dial.lua (34)
+### test_dial.lua (32)
 
 - dial: Apply builds QuickCommsDial<n> with a ring per page, each callout wedge armed with its baked line
 - dial: a refused callout is a dimmed, disarmed wedge; a ring wedge is disarmed
@@ -1068,13 +1044,9 @@ Total.
 - dial: a press dims every wedge and button for the guard window; a drop stays red long enough to reopen and see
 - dial: Release closes, disarms and forgets a dial; HideAll also releases the keys
 - dial: Sync applies each planned dial at its place in the order, and opens dial 1 in test mode
-- dial: the first situation read builds the default dial, closed; setting its key is WoW's own binding
-- dial: [keys] a new key unbinds the old one; Escape (no key) clears it; a reserved key is refused
-- dial: [keys] a new key unbinds both keys the menu holds for the dial; Escape clears both
-- dial: [keys] a key bound elsewhere in WoW is taken, with one line naming what it was
-- dial: [keys] in combat a key cannot be set, with one line, and nothing is blocked
+- dial: the first situation read builds the default dial, closed; its key is WoW's own binding
 - dial: [keys] a key set in Options -> Keybindings is the dial's key; a dial past the fourth has none
-- dial: [exit] in Arathi Basin the dial opens on the nodes; Lumber Mill, then INC, sends in two clicks
+- dial: [exit] in Arathi Basin the dial opens on the groups; the set, Lumber Mill, then INC sends
 - dial: [exit] on a raid boss the dial opens and a click on a wedge sends, with nothing blocked
 - dial: [exit] the Categories two-stroke: a group wedge opens its ring, a callout wedge sends
 - dial: test mode opens dial 1 with placeholder wedges that send nothing, and takes no key
@@ -1095,6 +1067,8 @@ Total.
 - dial: [phase 5] Arathi Basin's node wedges sit on their winds: Lumber Mill is SW, Blacksmith N
 - dial: [review 6] on a four- or six-slice dial every node shows, and the number keys pick the shown wedges from N
 - dial: [icons] a wedge draws its glyph in its color; repainted untinted, it is white again
+- dial: [rework] a paged ring turns with its arrows and the Left and Right keys; its dots mark the page
+- dial: [rework] wedges have no backdrop; the disc and the wedges follow the ring radius
 
 ### test_icon_style.lua (8)
 
@@ -1201,10 +1175,10 @@ Total.
 | test_database.lua | 17 |
 | test_profile.lua | 9 |
 | test_schema.lua | 19 |
-| test_slash.lua | 19 |
+| test_slash.lua | 20 |
 | test_disabled.lua | 21 |
 | test_diagnostics.lua | 10 |
-| test_compat.lua | 15 |
+| test_compat.lua | 12 |
 | test_restrictions.lua | 16 |
 | test_situation.lua | 16 |
 | test_tokens.lua | 8 |
@@ -1214,8 +1188,8 @@ Total.
 | test_resolver.lua | 13 |
 | test_builtins.lua | 21 |
 | test_gameids.lua | 4 |
-| test_library.lua | 78 |
-| test_members.lua | 29 |
+| test_library.lua | 74 |
+| test_members.lua | 28 |
 | test_editors.lua | 17 |
 | test_callout_popup.lua | 38 |
 | test_icon_browser.lua | 36 |
@@ -1223,7 +1197,7 @@ Total.
 | test_groups_when.lua | 20 |
 | test_page_groups.lua | 67 |
 | test_page_pads.lua | 24 |
-| test_page_dials.lua | 19 |
+| test_page_dials.lua | 16 |
 | test_page_share.lua | 12 |
 | test_check.lua | 6 |
 | test_send_guard.lua | 10 |
@@ -1233,12 +1207,11 @@ Total.
 | test_edit_preview.lua | 14 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 21 |
-| test_dial_layout.lua | 18 |
+| test_dial_layout.lua | 19 |
 | test_surfaces.lua | 27 |
-| test_dial_yield.lua | 12 |
 | test_pad_render.lua | 21 |
 | test_pad.lua | 43 |
-| test_dial.lua | 34 |
+| test_dial.lua | 32 |
 | test_icon_style.lua | 8 |
 | test_glow.lua | 11 |
 | test_vendor_sync.lua | 3 |
@@ -1248,4 +1221,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1018** |
+| **Total** | **995** |
