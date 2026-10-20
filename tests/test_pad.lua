@@ -583,7 +583,7 @@ local function measureLikeTheClient(m)
     m.LibStub("LibKa0s-Widgets-1.0").__DragHandleMeasurer = function() return fs end
 end
 
-test("pad: [R3] the strip reads the pad's name and PREVIEW / TEST MODE, grows to fit, and shows while locked", function()
+test("pad: [R3] the strip reads the pad's name and PREVIEW / TEST MODE, spans the pad, and shows while locked", function()
     local NS, m = live()
     measureLikeTheClient(m)
     NS.db.profile.pads.p1.name = "A rather long raid pad name"
@@ -600,7 +600,9 @@ test("pad: [R3] the strip reads the pad's name and PREVIEW / TEST MODE, grows to
     -- red under: ApplyLock hiding the strip on a locked pad in test mode (the marker would vanish)
     assertTrue(inst.handle:IsShown(), "locked, test mode still shows the strip that carries the marker")
     local reserve = inst.handle:Reserve() * 2
-    assertEqual(widths[#widths], 6 * #"A rather long raid pad name  TEST MODE" + reserve, "the strip grows to fit")
+    assertTrue(6 * #"A rather long raid pad name  TEST MODE" + reserve < inst.root.__w, "the label fits the pad")
+    -- red under: ApplyWidth(0) in Pad.ApplyLock (the strip shrinks to its label, narrower than the pad)
+    assertEqual(widths[#widths], inst.root.__w, "the strip spans the pad")
     -- red under: canDrag ignoring the lock now that the strip shows while locked
     inst.handle:__fire("OnDragStart")
     assertFalse(inst.dragging == true, "a locked strip does not drag")
@@ -610,8 +612,37 @@ test("pad: [R3] the strip reads the pad's name and PREVIEW / TEST MODE, grows to
     NS.SchemaRuntime.Set("locked", false)
     NS.Pad.ApplyLock()
     assertTrue(inst.handle:IsShown())
-    assertEqual(widths[#widths], 6 * #"A rather long raid pad name" + reserve, "unlocked, it fits the name alone")
+    assertEqual(widths[#widths], inst.root.__w, "unlocked, it still spans the pad")
+    -- A name longer than the pad widens the strip past it, as the widget's floor allows: never cut off.
+    local long = string.rep("Long name ", 8)
+    NS.db.profile.pads.p1.name = long
+    NS.Pad.Apply("p1", planFor(NS))
+    assertTrue(6 * #long + reserve > inst.root.__w, "this one is wider than the pad")
+    assertEqual(widths[#widths], 6 * #long + reserve, "the strip grows to fit a label wider than the pad")
     assertNil(inst.header.qcTest, "the header carries no marker of its own")
+end)
+
+test("pad: [bg buttons] the strip matches the pad's width through a resize, and below an up-growing pad", function()
+    local NS = live()
+    NS.SchemaRuntime.Set("locked", false)
+    local inst = NS.Pad.Instance("p1")
+    local widths = {}
+    inst.handle.SetWidth = function(_, w) widths[#widths + 1] = w end
+    NS.Pad.Apply("p1", planFor(NS))
+    assertTrue(inst.handle:IsShown())
+    local wide = inst.root.__w
+    -- red under: ApplyWidth(0) in Pad.ApplyLock
+    assertEqual(widths[#widths], wide, "the strip spans the pad")
+    -- a resize: one column narrows the pad, and the strip follows it
+    NS.db.profile.pads.p1.layout.orientation = "vertical"
+    NS.Pad.Apply("p1", planFor(NS))
+    assertTrue(inst.root.__w < wide, "the pad is narrower")
+    assertEqual(widths[#widths], inst.root.__w, "the strip follows the resize")
+    -- up growth: the strip sits below the pad, the same width
+    NS.db.profile.pads.p1.layout.growth = "rightUp"
+    NS.Pad.Apply("p1", planFor(NS))
+    assertEqual(pointsOf(inst.handle), "TOP,QuickCommsPadp1,BOTTOM,0," .. -NS.DRAG_GAP)
+    assertEqual(widths[#widths], inst.root.__w, "below the pad, still its width")
 end)
 
 -- ── groups polish (2026-10-19) R4: right-click a section title to edit its group ─────────────

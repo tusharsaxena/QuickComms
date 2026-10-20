@@ -983,7 +983,7 @@ Total.
 - render: [icons] a glyph chip is drawn in its color; the chip repainted with another icon is white again
 - render: [B3] a chip's label is one line, and hidden when the chip leaves it no room
 
-### test_pad.lua (35)
+### test_pad.lua (36)
 
 - pad: the default pad shows the M+ callouts, each chip armed with its baked line
 - pad: [review 5] a refused chip is dimmed and disarmed: a click sends and reports nothing
@@ -1014,7 +1014,8 @@ Total.
 - pad: [B1] a group named as the header's situation draws no title row of its own
 - pad: [B2] down growth pins the pad's top edge; the header is on top and the strip above
 - pad: [B2] up growth pins the bottom edge, puts the header at the bottom and the strip below
-- pad: [R3] the strip reads the pad's name and PREVIEW / TEST MODE, grows to fit, and shows while locked
+- pad: [R3] the strip reads the pad's name and PREVIEW / TEST MODE, spans the pad, and shows while locked
+- pad: [bg buttons] the strip matches the pad's width through a resize, and below an up-growing pad
 - pad: [R4] each drawn title takes a right-click to edit its group; a left-click does nothing
 - pad: [R4] the title's tooltip says Right-click to edit this group
 - pad: [R4] in tabs mode the tab's title edits the group the tab shows; the wheel moves it
@@ -1193,7 +1194,7 @@ Total.
 | test_dial_layout.lua | 18 |
 | test_surfaces.lua | 27 |
 | test_pad_render.lua | 20 |
-| test_pad.lua | 35 |
+| test_pad.lua | 36 |
 | test_dial.lua | 29 |
 | test_icon_style.lua | 8 |
 | test_glow.lua | 11 |
@@ -1204,4 +1205,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **978** |
+| **Total** | **979** |
