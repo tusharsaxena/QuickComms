@@ -168,6 +168,11 @@ test("render: the header shows the lockdown chip and the stale hint on demand; n
     assertEqual(header.qcCollapse.qcText:GetText(), "+")
     header.qcCollapse:__fire("OnClick")
     assertEqual(collapsed, 1)
+    -- a left click anywhere on the row toggles it too; another button does not
+    header:__fire("OnMouseUp", "LeftButton")
+    assertEqual(collapsed, 2)
+    header:__fire("OnMouseUp", "RightButton")
+    assertEqual(collapsed, 2)
 end)
 
 test("render: the drag-strip seam builds a hidden strip, and answers nil without the library", function()
