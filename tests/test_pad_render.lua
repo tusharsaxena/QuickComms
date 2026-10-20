@@ -38,13 +38,17 @@ test("render: [audit QC-07] the chip's padlock is the catalog's lock mark, tinte
     assertEqual(b2.qcLock.__texture, "Interface\\PetBattles\\PetBattle-LockIcon")
 end)
 
-test("render: an armed chip shows its name, its channel tag in the chat color, no lock, no dim", function()
+test("render: an armed chip shows its name, no channel letter, no lock, no dim; its tooltip names the channel", function()
     local NS, m = T.enableAddon()
     local b = chip(NS, m)
     NS.PadRender.Paint(b, ARMED, "iconLabel")
     assertEqual(b.qcLabel:GetText(), "Pull")
-    assertEqual(b.qcTag:GetText(), "P")
-    assertEqual(b.qcTag.__color[1], 0.67)
+    -- red under: Dress making the qcTag font string again
+    assertTrue(b.qcTag == nil, "no channel letter at the chip's right edge")
+    local lines = NS.PadRender.TooltipLines(ARMED)
+    assertEqual(lines[2], "/p Pull")
+    -- the channel by name, in its chat color (PARTY's 0.67, 0.67, 1)
+    assertEqual(lines[3], "Channel: |cffababffParty|r")
     assertFalse(b.qcLock:IsShown())
     assertFalse(b.qcDim:IsShown())
     assertTrue(b.qcIcon:IsShown())
@@ -62,19 +66,39 @@ test("render: [review 5] a refused chip is dimmed and its tooltip says why", fun
     assertEqual(lines[2], "Callout text cannot start with /.")
 end)
 
+-- The x offset of the label's RIGHT anchor on the chip (the label anchored as the client keeps a
+-- region's anchors: wow_mock's regions record none).
+local function labelEnd(b)
+    for i = 1, b.qcLabel:GetNumPoints() do
+        local p, rel, relPoint, x = b.qcLabel:GetPoint(i)
+        if p == "RIGHT" and rel == b and relPoint == "RIGHT" then return x end
+    end
+end
+
 test("render: a locked chip shows the padlock and names the lock; RefreshLock follows the slot", function()
     local NS, m = T.enableAddon()
     local b = chip(NS, m)
     local slot = { calloutId = "c3", name = "Shout", line = "/s Go", concrete = "say", chatType = "SAY", lock = "lockdown" }
+    m.__anchored(b.qcLabel, {})
+    function b.qcLabel.ClearAllPoints(self) self.__anchors = {}; return self end
     NS.PadRender.Paint(b, slot, "iconLabel")
     assertTrue(b.qcLock:IsShown())
     assertFalse(b.qcDim:IsShown(), "locked is not refused: it stays armed")
+    -- red under: end a locked chip's label at the chip's edge, under the padlock
+    assertEqual(labelEnd(b), -14, "the label ends at the padlock")
     local lines = NS.PadRender.TooltipLines(slot)
     assertEqual(lines[2], "/s Go")
-    assertEqual(lines[3], "Locked: Say and Yell are blocked during this encounter.")
+    assertTrue(lines[3]:find("Say", 1, true) ~= nil, "the channel")
+    assertEqual(lines[4], "Locked: Say and Yell are blocked during this encounter.")
     slot.lock = nil
     NS.PadRender.RefreshLock(b)
     assertFalse(b.qcLock:IsShown())
+    assertEqual(labelEnd(b), -4, "unlocked, the label runs to the chip's edge again")
+    local p1, rel = b.qcLabel:GetPoint(1)
+    assertTrue(p1 == "LEFT" and rel == b.qcIcon, "and still starts at the icon")
+    slot.lock = "lockdown"
+    NS.PadRender.RefreshLock(b)
+    assertEqual(labelEnd(b), -14, "a lock that comes in combat moves the end too")
 end)
 
 test("render: the style decides icon and label", function()
@@ -169,7 +193,11 @@ test("pad render: [phase 3] a previewed slot's tooltip shows its line and says i
     local lines = NS.PadRender.TooltipLines({ name = "Lust", line = "/p Lust", preview = true })
     assertEqual(lines[2], "/p Lust")
     -- [final 9] a previewed wedge shares these lines, so the line names no surface
-    assertEqual(lines[#lines], "Preview: this sends nothing.")
+    assertEqual(lines[#lines - 1], "Preview: this sends nothing.")
+    -- [echo review 2] a click prints the line, and the tooltip says so
+    assertEqual(lines[#lines], "Click to print its line.")
+    local solo = NS.PadRender.TooltipLines({ name = "Me", selfText = "x", preview = true })
+    assertEqual(solo[#solo], "Preview: this sends nothing.", "no line, nothing to print")
 end)
 
 test("render: [phase 5] a pad's Look is a font and a skin; the defaults are the skin a pad always wore", function()
@@ -215,7 +243,7 @@ test("render: [review] the skin's 1px inner line is kept only on the default fla
     assertEqual(R.SkinFor({ borderSize = 3 }).insets.left, 3, "a flat edge insets by its thickness")
 end)
 
-test("render: [review] a chip's label stops short of the channel tag, on one line", function()
+test("render: [review] a chip's label runs to the chip's right edge, on one line", function()
     local NS, m = T.enableAddon()
     local b = chip(NS, m)
     local points, wrap = {}, nil
@@ -226,9 +254,10 @@ test("render: [review] a chip's label stops short of the channel tag, on one lin
     assertEqual(wrap, false, "one line")
     local right
     for _, pt in ipairs(points) do if pt[1] == "RIGHT" then right = pt end end
-    -- red under: R.Paint anchoring the label LEFT only (a large font runs under the tag and off the chip)
+    -- red under: R.Paint anchoring the label LEFT only (a large font runs off the chip)
     assertTrue(right ~= nil, "a right edge")
-    assertTrue(right[2] == b.qcTag, "bounded by the tag")
+    -- red under: the label still bounded by a channel letter (the tag took the width it now uses)
+    assertTrue(right[2] == b and right[3] == "RIGHT" and right[4] == -4, "the chip's right edge, less its padding")
 end)
 
 test("render: [phase 5] Use class color takes the player's class color and keeps the swatch's alpha", function()
@@ -286,6 +315,7 @@ test("render: [B3] a chip's label is one line, and hidden when the chip leaves i
     assertFalse(b.qcLabel:IsShown())
     NS.PadRender.Paint(b, ARMED, "iconLabel")
     assertTrue(b.qcLabel:IsShown(), "no width given: shown")
-    assertTrue(NS.PadRender.LabelRoom(140, "iconLabel", 0) > 0)
-    assertTrue(NS.PadRender.LabelRoom(30, "iconLabel", 10) <= 0, "the tag takes its room too")
+    assertTrue(NS.PadRender.LabelRoom(140, "iconLabel") > 0)
+    assertEqual(NS.PadRender.LabelRoom(34, "iconLabel"), 4, "26 for the icon and its gaps, 4 for the right padding, no channel letter")
+    assertTrue(NS.PadRender.LabelRoom(30, "iconLabel") <= 0)
 end)

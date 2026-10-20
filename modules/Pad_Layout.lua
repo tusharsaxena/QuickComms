@@ -29,13 +29,6 @@ PL.CHIP_ROOM = 10    -- a labeled chip's height past its font size: CHIP_H at FO
 PL.LABEL_ROOM = 8    -- a label-only chip's
 PL.TITLE_ROOM = 4    -- a section title row's
 
-local TAG = { party = "P", raid = "R", instance = "I", raidWarning = "RW", say = "S", yell = "Y" }
-
---- The chip's channel tag: the channel a callout resolved to (a smart kind shows its result).
-function PL.Tag(concrete)
-    return TAG[concrete]
-end
-
 function PL.ClampTab(tab, n)
     n = tonumber(n) or 0
     if n < 1 then return 1 end
@@ -184,6 +177,7 @@ local function collectBlocks(sections, layout, cw, ch, gap, up, th, situation)
     for _, s in ipairs(type(sections) == "table" and sections or {}) do
         local b = sectionBlock(s, layout, cw, ch, gap, up, th, situation)
         if #b.items > 0 then
+            b.parentId = s.parentId
             blocks[#blocks + 1] = b
             if b.cols > 0 then contentW = math.max(contentW, b.cols * cw + (b.cols - 1) * gap) end
         end
@@ -191,14 +185,35 @@ local function collectBlocks(sections, layout, cw, ch, gap, up, th, situation)
     return blocks, contentW
 end
 
--- Stack the blocks under the header in order; answers the y below the last one.
-local function stackBlocks(blocks)
-    local y = PL.HEADER_H + PL.PAD
+-- Whether block `b` joins the row `row` (bg subgroups): in a grid pad, consecutive child sections of
+-- one parent sit side by side while their columns fit the grid's, so a set of many small children
+-- (Alterac Valley's nineteen two-chip objectives) takes half the height. Each block keeps its own
+-- columns, so the chips stay on the grid's columns. Any other section starts its own row.
+local function joins(row, b, maxCols)
+    return maxCols ~= nil and row ~= nil and b.parentId ~= nil and row.parentId == b.parentId
+        and b.cols > 0 and row.cols + b.cols <= maxCols
+end
+
+-- Stack the blocks under the header in order, packing child rows (joins); each block's `left` is its
+-- first column. Answers the y below the last row and the widest row's columns.
+local function stackBlocks(blocks, maxCols)
+    local y, row, widest = PL.HEADER_H + PL.PAD, nil, 0
     for _, b in ipairs(blocks) do
-        b.top = y
-        y = y + b.h + b.trail
+        if joins(row, b, maxCols) then
+            b.top, b.left = row.top, row.cols
+            row.cols = row.cols + b.cols
+            row.packed = true
+            local bottom = b.top + b.h + b.trail
+            if bottom > y then y = bottom end
+        else
+            b.top, b.left = y, 0
+            row = { top = y, cols = b.cols, parentId = b.parentId }
+            y = y + b.h + b.trail
+        end
+        b.row = row
+        widest = math.max(widest, row.cols)
     end
-    return y
+    return y, widest
 end
 
 -- Upward growth mirrors the stack across the pad's height, block by block: the header row becomes
@@ -207,12 +222,20 @@ local function flipBlocks(blocks, height)
     for _, b in ipairs(blocks) do b.top = height - b.top - b.h end
 end
 
--- Every block's items in pad coordinates; "left" mirrors each chip across the pad's width.
-local function flattenBlocks(blocks, mirror, width)
+-- Every block's items in pad coordinates; "left" mirrors each chip across the pad's width. A block in
+-- a packed row moves right by its first column, and its title takes the block's width (`w`), so a
+-- long title stops at its neighbor; left growth mirrors such a title with its block.
+local function flattenBlocks(blocks, mirror, width, step, cw, gap)
     local items = {}
     for _, b in ipairs(blocks) do
+        local dx, bw = (b.left or 0) * step, b.cols * cw + (b.cols - 1) * gap
         for _, it in ipairs(b.items) do
             it.y = b.top + it.y
+            it.x = it.x + dx
+            if it.kind == "title" and b.row and b.row.packed then
+                it.w = bw
+                if mirror then it.x = width - it.x - it.w end
+            end
             if mirror and it.kind == "chip" then it.x = width - it.x - it.w end
             items[#items + 1] = it
         end
@@ -239,11 +262,13 @@ function PL.Compute(sections, layout, opts)
         blocks, contentW = collectBlocks(sections, layout, cw, ch, gap, up, PL.TitleHeight(opts.fontSize),
             opts.situation)
     end
+    local maxCols = layout.orientation == "grid" and PL.Columns(layout, 1) or nil
+    local y, widest = stackBlocks(blocks, maxCols)
+    if widest > 0 then contentW = math.max(contentW, widest * cw + (widest - 1) * gap) end
     local width = math.max(PL.MIN_PAD_W, contentW + 2 * PL.PAD)
-    local y = stackBlocks(blocks)
     local height = #blocks > 0 and (y + PL.PAD) or PL.HEADER_H
     if up then flipBlocks(blocks, height) end
-    local items = flattenBlocks(blocks, MIRROR[layout.growth] == true, width)
+    local items = flattenBlocks(blocks, MIRROR[layout.growth] == true, width, cw + gap, cw, gap)
     return { width = width, height = height, items = items, up = up, headerY = up and (height - PL.HEADER_H) or 0 }
 end
 

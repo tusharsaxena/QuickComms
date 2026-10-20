@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-956%2F956_passing-green)
+![Tests](https://img.shields.io/badge/Tests-974%2F974_passing-green)
 
 Quick Comms puts your usual group callouts one click or one keypress away. "Kick on me", "Lust
 now", "INC 3 Lumber Mill": set them up once and they sit on a Comms Pad or open from a
@@ -13,7 +13,10 @@ secure button, the only kind of send Midnight still allows mid-pull, so it keeps
 on bosses.
 
 It ships with callout sets for Mythic+, raids, arenas, every battleground and the open world when
-you play solo, all switched on, each callout and group with an icon in its own color.
+you play solo, all switched on, each callout and group with an icon in its own color. A
+battleground's set holds a group per objective: every Alterac Valley general, captain, bunker, tower
+and graveyard (Attack and Defend each), both bases on Isle of Conquest, and the flags, workshops,
+events, carts or azerite of the rest, worded the same for either faction.
 You can write your own callouts, sort them into groups, say when each group shows, style the pad,
 and share any of it with a friend as a string you copy and paste.
 
@@ -28,7 +31,9 @@ back or reload. The minimap button's right-click menu has Enabled, Locked, Test 
 The Comms Dial opens on a key. Pick one on Settings → Comms Dial → Binding (or in WoW's key bindings
 menu), press it, click a group, then click a callout to send it. In a battleground the dial opens
 straight on the map's nodes, each where it sits on the map, so INC 3 at the Lumber Mill is two
-clicks. The key again, Escape or a right click closes it; the number keys 1 to 8 pick a wedge.
+clicks. Alterac Valley has more objectives than the dial has wedges, so its dial lists them north to
+south a page at a time (More turns the page); its pad sets them two to a row. The key again, Escape
+or a right click closes it; the number keys 1 to 8 pick a wedge.
 
 Settings → Groups makes a group and, on its Callouts tab, its callouts: Add callout opens a small
 editor for the name, text, channel and icon (Save keeps it, Cancel drops it). Choose icon… opens
@@ -42,9 +47,9 @@ match: its parent's, while Inherit when conditions is ticked (the default), else
 and the background, each with a Use class color box. "Preview as…" (or `/qc preview`) shows the pads
 and the dial as they would look somewhere else, and hovering a pad's header or the dial's middle (or
 `/qc why`) tells you why each group is there. While the Groups page is open, every pad and dial shows
-only the group you are editing, sending nothing (untick Preview while editing, under the Group
-picker, to keep them live). Right-click a group's title on a pad to open it on the Groups page; the
-page stays on the tab you last used.
+only the group you are editing, sending nothing: a click prints `[QC] /p <text>`, the line it would
+have sent (untick Preview while editing, under the Group picker, to keep them live). Right-click a
+group's title on a pad to open it on the Groups page; the page stays on the tab you last used.
 
 To share, open Settings → Share → Export, tick what you want to send and click Export, then copy the
 string with Ctrl+C. To take one in, paste it on the Import tab and click Accept: Quick Comms lists
@@ -111,7 +116,7 @@ than in comments, so nothing gets lost.
 
 | Version | Date | Highlights |
 |---|---|---|
-| 0.1.0 | Unreleased | - The Comms Pad and the Comms Dial, with built-in callouts for Mythic+, raids, arenas, every battleground and the solo open world, sent through secure buttons<br>- Your own callouts and groups (the built-in sets among them, as groups you can edit, and groups inside groups), with conditions for when each group shows, Preview as…, a preview of the group you are editing and Why is this showing?<br>- The spam guard, drop notes, test mode and the lock<br>- The pad's font, border and background, with class colors<br>- Sharing groups (with their callouts), pads and dials as a string<br>- The settings panel, the minimap button, the `/qc` command and the debug tools |
+| 0.1.0 | Unreleased | - The Comms Pad and the Comms Dial, with built-in callouts for Mythic+, raids, arenas, every battleground and the solo open world, sent through secure buttons<br>- Battleground sets with a group per objective: Alterac Valley's generals, captains, bunkers, towers and graveyards, Isle of Conquest's bases, and the objectives of Warsong Gulch, Twin Peaks, Wintergrasp, Ashran, Deephaul Ravine and Seething Shore<br>- Your own callouts and groups (the built-in sets among them, as groups you can edit, and groups inside groups), with conditions for when each group shows, Preview as…, a preview of the group you are editing and Why is this showing?<br>- The spam guard, drop notes, test mode and the lock<br>- The pad's font, border and background, with class colors<br>- Sharing groups (with their callouts), pads and dials as a string<br>- The settings panel, the minimap button, the `/qc` command and the debug tools |
 
 ## Credits
 

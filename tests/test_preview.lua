@@ -271,3 +271,101 @@ test("preview: [final 10] a dungeon preview fills {dungeon}, and the header name
     NS.Preview.SetPreviewAs("raid:mythic")
     assertEqual(NS.Pad.Instance("p1").header.qcSituation:GetText(), "Preview: Raid" .. DOT .. "Mythic")
 end)
+
+-- ── the preview echo (2026-10-20): a previewed press prints the line it would have sent ──────
+
+-- A user group with one callout, shown in the previewed open world (an empty When).
+local function echoGroup(NS, text, channel)
+    local Lib = NS.Library
+    local cid = Lib.CreateCallout({ name = "Echo", text = text, channel = channel })
+    local gid = Lib.CreateGroup({ name = "Echoes", callouts = { cid } })
+    Lib.AddGroupToSurface("pad", "p1", gid, 1)
+    Lib.AddGroupToSurface("dial", "d2", gid, 1)
+    return cid, gid
+end
+
+test("preview: [echo] a previewed chip prints [QC] /<slash> <resolved text>, and still sends nothing", function()
+    local NS, m = live()
+    local cid = echoGroup(NS, "Go {me}", "yell")
+    assertTrue(NS.Preview.SetPreviewAs("world"))
+    local chip = NS.Pad.ChipsFor("p1", cid)[1]
+    assertTrue(chip ~= nil)
+    local results = 0
+    local t = NS.Bus:NewTarget()
+    t:RegisterMessage(NS.MSG.SEND_RESULT, function() results = results + 1 end)
+    local before = #m.sentMacros
+    m.prints = {}
+    m.__click(chip)
+    -- red under: drop `echo = preview and slot.line` from Pad's arm (modules/Pad.lua)
+    assertEqual(#m.prints, 1)
+    assertEqual(m.prints[1], NS.PREFIX .. " /y Go " .. NS.Compat.PlayerName())
+    assertEqual(#m.sentMacros, before, "nothing reaches chat")
+    assertEqual(results, 0, "nothing reported")
+    assertTrue(chip:GetAttribute("macrotext") == nil, "still disarmed")
+end)
+
+test("preview: [echo] the slash follows the channel the previewed situation resolves", function()
+    local NS, m = live()
+    local cid = echoGroup(NS, "Incoming", "smartGroup")
+    assertTrue(NS.Preview.SetPreviewAs("raid:heroic"))
+    m.prints = {}
+    m.__click(NS.Pad.ChipsFor("p1", cid)[1])
+    assertEqual(m.prints[1], NS.PREFIX .. " /raid Incoming")
+end)
+
+test("preview: [echo review 3] a padlocked previewed chip echoes its line, naming no lock", function()
+    local NS, m = live()
+    local cid = echoGroup(NS, "Pull", "raid")
+    assertTrue(NS.Preview.SetPreviewAs("world"))
+    local chip = NS.Pad.ChipsFor("p1", cid)[1]
+    assertTrue(chip ~= nil)
+    m.prints = {}
+    m.__click(chip)
+    -- locks read the real group, not the previewed situation: the echo is what it would send
+    assertEqual(m.prints[1], NS.PREFIX .. " /raid Pull")
+end)
+
+test("preview: [echo] a live chip prints nothing extra", function()
+    local NS, m = live()
+    local cid = echoGroup(NS, "Hello", "say")
+    local chip = NS.Pad.ChipsFor("p1", cid)[1]
+    assertEqual(chip:GetAttribute("macrotext"), "/s Hello")
+    m.prints = {}
+    m.__click(chip)
+    assertEqual(#m.prints, 0)
+    assertEqual(m.sentMacros[#m.sentMacros].text, "/s Hello")
+end)
+
+test("preview: [echo] the edit preview echoes too, and a press in combat prints without writing", function()
+    local NS, m = live()
+    local cid, gid = echoGroup(NS, "Stack", "party")
+    assertTrue(NS.Preview.SetEditPreview(gid))
+    local chip = NS.Pad.ChipsFor("p1", cid)[1]
+    m.prints = {}
+    m.__click(chip)
+    assertEqual(m.prints[1], NS.PREFIX .. " /p Stack")
+    -- In combat (the meta is already baked): a press prints and changes no secure attribute.
+    m.__setCombat(true)
+    local type0, text0 = chip:GetAttribute("type"), chip:GetAttribute("macrotext")
+    NS.SendEngine.OnClick(chip, "LeftButton", false)
+    NS.SendEngine.OnClick(chip, "LeftButton", true)
+    assertEqual(#m.prints, 2)
+    assertEqual(chip:GetAttribute("type"), type0)
+    assertEqual(chip:GetAttribute("macrotext"), text0)
+    assertEqual(#m.blocked, 0)
+    m.__setCombat(false)
+end)
+
+test("preview: [echo] a previewed dial wedge prints the line too", function()
+    local NS, m = live()
+    local cid = echoGroup(NS, "Lust now", "instance")
+    assertTrue(NS.Preview.SetPreviewAs("mplus"))
+    local w = NS.Dial.WedgesFor("d2", cid)[1]
+    assertTrue(w ~= nil, "the previewed dial draws the wedge")
+    assertTrue(w:GetAttribute("macrotext") == nil, "disarmed")
+    local before = #m.sentMacros
+    m.prints = {}
+    m.__click(w)
+    assertEqual(m.prints[#m.prints], NS.PREFIX .. " /i Lust now")
+    assertEqual(#m.sentMacros, before)
+end)

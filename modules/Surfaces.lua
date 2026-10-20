@@ -55,7 +55,8 @@ local function childShown(child, opts)
 end
 
 --- A group's sections: itself; or, for a group with children, its own callouts' section when it has
---- any, then one per child that shows (childShown).
+--- any, then one per child that shows (childShown), each naming its parent (`parentId`: a grid pad
+--- sets a parent's small child sections side by side, Pad_Layout).
 --- @param groupOf function Library.Group
 --- @param opts table|nil { children = Library.Children, active = Resolver.ActiveGroups' answer,
 --- groups = the Resolver's input }
@@ -69,7 +70,7 @@ function S.Sections(groupId, groupOf, opts)
     if #own.callouts > 0 then out[1] = own end
     for _, child in ipairs(kids) do
         local c = childShown(child, opts) and groupOf(child)
-        if c then out[#out + 1] = { groupId = child, title = c.name, callouts = c.callouts or {} } end
+        if c then out[#out + 1] = { groupId = child, title = c.name, callouts = c.callouts or {}, parentId = groupId } end
     end
     return out
 end
@@ -153,7 +154,8 @@ function S.BuildPlan(surfaceId, pad, snap, deps)
                 if slot.lock == "lockdown" then plan.lockdownChip = true end
                 slots[#slots + 1] = slot
             end
-            plan.sections[#plan.sections + 1] = { groupId = sec.groupId, title = sec.title, slots = slots }
+            plan.sections[#plan.sections + 1] = { groupId = sec.groupId, title = sec.title, slots = slots,
+                parentId = sec.parentId }
         end
     end
     -- What is drawn, not what is active: a parent with no callouts of its own whose children all

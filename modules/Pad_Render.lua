@@ -3,10 +3,11 @@ local _, NS = ...
 -- visuals only: textures and font strings on the chips and the header, their text, color and
 -- visibility, which the client allows in combat too. It never touches a secure attribute, a
 -- protected frame's geometry or a protected frame's Show/Hide; modules/Pad.lua does the protected
--- work, out of combat. A chip shows a square icon tile (a glyph in its color), its label, the
--- channel tag in WoW's chat color (a smart kind shows the channel it resolved to), a padlock when
--- locked, a dim veil when its bake was refused, a dim veil during the spam guard's window, a gold hover and a flash per send
--- result. The tooltip names the line it sends, or why it sends nothing, and any lock. The pad's Look
+-- work, out of combat. A chip shows a square icon tile (a glyph in its color), its label, a padlock
+-- when locked, a dim veil when its bake was refused, a dim veil during the spam guard's window, a
+-- gold hover and a flash per send result. The tooltip names the line it sends and the channel it
+-- goes to in WoW's chat color (a smart kind shows the channel it resolved to), or why it sends
+-- nothing, and any lock. The pad's Look
 -- (phase 5) is read here as two plain values, a font (LabelFont) and a skin (SkinFor), which
 -- modules/Pad.lua applies out of combat. The Icons tab (B9) styles the icon through
 -- modules/IconStyle.lua (size, crop, desaturation, alpha, tint, border) and modules/Glow.lua (the
@@ -63,18 +64,37 @@ function R.SituationText(snap, dungeon)
     return text
 end
 
---- A chip's tooltip: its name, then the line it sends or why it sends nothing, then any lock.
+-- The channel a chip's line goes to, by name (the chip shows no channel letter; its tooltip does).
+local CHANNEL_NAME = {
+    party = L["Party"], raid = L["Raid"], instance = L["Instance"], raidWarning = L["Raid warning"],
+    say = L["Say"], yell = L["Yell"],
+}
+
+local function channelLine(concrete)
+    local name = CHANNEL_NAME[concrete]
+    if not name then return nil end
+    local r, g, b = R.ChannelColor(NS.Channels.ChatType(concrete))
+    local function byte(v) return math.floor(v * 255 + 0.5) end
+    return L["Channel: %s"]:format(("|cff%02x%02x%02x%s|r"):format(byte(r), byte(g), byte(b), name))
+end
+
+--- A chip's tooltip: its name, then the line it sends and its channel, or why it sends nothing, then
+--- any lock.
 function R.TooltipLines(slot)
     local lines = { slot.name or "?" }
     if slot.line then
         lines[2] = slot.line
+        lines[3] = channelLine(slot.concrete)
     elseif slot.selfText then
         lines[2] = L["Solo: prints to you, sends nothing."]
     else
         lines[2] = R.REASON_TEXT[slot.reason] or L["Not available here."]
     end
     if slot.lock then lines[#lines + 1] = R.LOCK_TEXT[slot.lock] or tostring(slot.lock) end
-    if slot.preview then lines[#lines + 1] = L["Preview: this sends nothing."] end
+    if slot.preview then
+        lines[#lines + 1] = L["Preview: this sends nothing."]
+        if slot.line then lines[#lines + 1] = L["Click to print its line."] end
+    end
     return lines
 end
 
@@ -85,8 +105,8 @@ function R.SectionTitle(item)
 end
 
 --- A chat type's color (the game's ChatTypeInfo, else Constants.CHAT_COLORS, else SAY's): a chip's
---- tag, and a callout row's channel on the Groups page.
-function R.TagColor(chatType)
+--- channel in its tooltip, and a callout row's channel on the Groups page.
+function R.ChannelColor(chatType)
     local r, g, b = NS.Compat.ChatColor(chatType)
     if r then return r, g, b end
     local c = NS.Constants.CHAT_COLORS[chatType] or NS.Constants.CHAT_COLORS.SAY
@@ -131,8 +151,6 @@ function R.Dress(btn, onEnter, onLeave)
     btn.qcIcon:SetPoint("LEFT", btn, "LEFT", 2, 0)
     btn.qcLabel = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     btn.qcLabel:SetJustifyH("LEFT")
-    btn.qcTag = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    btn.qcTag:SetPoint("RIGHT", btn, "RIGHT", -4, 0)
     btn.qcLock = btn:CreateTexture(nil, "OVERLAY")
     btn.qcLock:SetSize(12, 12)
     btn.qcLock:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -1, -1)
@@ -163,15 +181,31 @@ function R.Dress(btn, onEnter, onLeave)
 end
 
 -- A labeled chip's fixed insets around its label (Dress's anchors): the icon at LEFT+2 and its 4px
--- gap, or the label-only 4px; the 2px before the tag and the tag's own 4px from the right edge.
+-- gap, or the label-only 4px; RIGHT_INSET from the chip's right edge.
 local LABEL_INSET = { label = 4 }
-local TAG_INSET = 2 + 4
+local RIGHT_INSET = 4
+-- On a locked chip the label ends at the padlock (12 wide at TOPRIGHT -1) and a 1px gap, not under it.
+local LOCK_INSET = 14
+
+-- The label's two anchors: from the icon (or the chip's left edge, label only) to the chip's right
+-- edge, or to the padlock's left edge while it shows. Paint and RefreshLock both call it, so a lock
+-- that comes or goes in combat moves the label's end too.
+local function anchorLabel(btn, locked)
+    local label = btn.qcLabel
+    label:ClearAllPoints()
+    if btn.qcLabelOnly then
+        label:SetPoint("LEFT", btn, "LEFT", 4, 0)
+    else
+        label:SetPoint("LEFT", btn.qcIcon, "RIGHT", 4, 0)
+    end
+    label:SetPoint("RIGHT", btn, "RIGHT", -(locked and LOCK_INSET or RIGHT_INSET), 0)
+end
 
 --- The room a chip `w` wide leaves its label, beside the icon `iconSize` wide (unless `style` is label
---- only) and the channel tag `tagW` wide. Zero or less: no room.
-function R.LabelRoom(w, style, tagW, iconSize)
+--- only). Zero or less: no room.
+function R.LabelRoom(w, style, iconSize)
     local left = LABEL_INSET[style] or (2 + (tonumber(iconSize) or PL.ICON) + 4)
-    return (tonumber(w) or 0) - left - TAG_INSET - (tonumber(tagW) or 0)
+    return (tonumber(w) or 0) - left - RIGHT_INSET
 end
 
 -- The Icons tab's defaults, for a paint that names no config (IconStyle.Config of none).
@@ -191,20 +225,14 @@ function R.Paint(btn, slot, style, w, icfg)
     btn.qcIcon:SetShown(style ~= "label")
     IS.PaintBorder(btn, icfg, style ~= "label")
     Glow.Bind(btn, style ~= "label" and icfg.glow or false, slot.calloutId)
-    btn.qcLabel:ClearAllPoints()
-    if style == "label" then
-        btn.qcLabel:SetPoint("LEFT", btn, "LEFT", 4, 0)
-    else
-        btn.qcLabel:SetPoint("LEFT", btn.qcIcon, "RIGHT", 4, 0)
-    end
-    -- One line that stops short of the channel tag, whatever the Look's font size.
-    btn.qcLabel:SetPoint("RIGHT", btn.qcTag, "LEFT", -2, 0)
+    btn.qcLabelOnly = style == "label"
+    -- One line to the chip's right edge (the padlock's, while locked), whatever the Look's font size.
+    -- No channel letter beside it: the channel is in the tooltip (TooltipLines).
+    anchorLabel(btn, slot.lock ~= nil)
     btn.qcLabel:SetWordWrap(false)
     btn.qcLabel:SetMaxLines(1)
     btn.qcLabel:SetText(style == "icon" and "" or (slot.name or "?"))
-    btn.qcTag:SetText(PL.Tag(slot.concrete) or "")
-    btn.qcLabel:SetShown(w == nil or R.LabelRoom(w, style, btn.qcTag:GetStringWidth(), icfg.size) > 0)
-    btn.qcTag:SetTextColor(R.TagColor(slot.chatType or NS.Channels.ChatType(slot.concrete)))
+    btn.qcLabel:SetShown(w == nil or R.LabelRoom(w, style, icfg.size) > 0)
     btn.qcLock:SetShown(slot.lock ~= nil)
     btn.qcDim:SetShown(not live)
     btn.qcCool:Hide()
@@ -212,7 +240,9 @@ function R.Paint(btn, slot, style, w, icfg)
 end
 
 function R.RefreshLock(btn)
-    btn.qcLock:SetShown(btn.qcSlot ~= nil and btn.qcSlot.lock ~= nil)
+    local locked = btn.qcSlot ~= nil and btn.qcSlot.lock ~= nil
+    btn.qcLock:SetShown(locked)
+    anchorLabel(btn, locked)
 end
 
 -- ── the pad's Look (spec §10.3; options-ui-§16, §17) ────────────────────────────────────────

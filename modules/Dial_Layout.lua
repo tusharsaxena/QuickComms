@@ -24,8 +24,9 @@ local _, NS = ...
 -- THE GEOMETRY. Wedges sit clockwise from N, on-axis first: four are N, E, S and W. Offsets are from
 -- the hub's center, y up. A node set's nodes are pinned to their compass winds (spec §12.1): its ring
 -- takes eight wedges, whatever the dial's slices, and is never paged; each node sits on its own wind
--- (PinNodes), a middle node on the first wind left free clockwise from N, and a wind with no node has
--- no wedge. An item carries `wedge`, its place among the ring's `size`; an unpinned item's place is
+-- (PinNodes), a middle node on the first wind left free clockwise from N, a free node (one with no
+-- fixed place on the map: Our base, a flag map's carrier) on the first wind left after those, and a
+-- wind with no node has no wedge. An item carries `wedge`, its place among the ring's `size`; an unpinned item's place is
 -- its index. The number keys pick the shown wedges clockwise from N.
 
 NS.DialLayout = NS.DialLayout or {}
@@ -50,6 +51,9 @@ local WINDS = { "N", "NE", "E", "SE", "S", "SW", "W", "NW" }
 --- The eight winds' wedges on a pinned ring; a node in the middle of the map has DL.MIDDLE.
 DL.WIND_INDEX = { N = 1, NE = 2, E = 3, SE = 4, S = 5, SW = 6, W = 7, NW = 8 }
 DL.MIDDLE = "middle"
+--- A node with no fixed place on the map (bg subgroups): it takes a wind left over by every node with a
+--- wind and every middle one, so a set's own wedge keeps its place when such nodes are added.
+DL.FREE = "free"
 
 local function round(x) return math.floor(x * 100 + 0.5) / 100 end
 
@@ -160,13 +164,13 @@ local function ringEntry(src, entries, pinned)
 end
 
 --- A node set's nodes on their compass winds (spec §12.1): each entry's `wind` (N, NE … NW, or
---- DL.MIDDLE) names its wedge on an eight-wedge ring, and a middle node takes the first wind left free,
---- clockwise from N. Answers the entries, each given its `wedge`, in wedge order; nil when they cannot
+--- DL.MIDDLE or DL.FREE) names its wedge on an eight-wedge ring; a middle node takes the first wind
+--- left free, clockwise from N, and a free node the first left after every middle one. Answers the entries, each given its `wedge`, in wedge order; nil when they cannot
 --- all be pinned (a node with no wind or an unknown one, two on one wind, none, or more than eight).
 --- @return table[]|nil
 function DL.PinNodes(entries)
     if type(entries) ~= "table" or #entries == 0 or #entries > 8 then return nil end
-    local taken, middle = {}, {}
+    local taken, middle, loose = {}, {}, {}
     for _, e in ipairs(entries) do
         local w = DL.WIND_INDEX[e.wind]
         if w and taken[w] then return nil end
@@ -174,14 +178,18 @@ function DL.PinNodes(entries)
             taken[w] = e
         elseif e.wind == DL.MIDDLE then
             middle[#middle + 1] = e
+        elseif e.wind == DL.FREE then
+            loose[#loose + 1] = e
         else
             return nil
         end
     end
     local free = 1
-    for _, e in ipairs(middle) do
-        while taken[free] do free = free + 1 end
-        taken[free] = e
+    for _, list in ipairs({ middle, loose }) do
+        for _, e in ipairs(list) do
+            while taken[free] do free = free + 1 end
+            taken[free] = e
+        end
     end
     local out = {}
     for w = 1, 8 do

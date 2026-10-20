@@ -103,7 +103,7 @@ end
 
 local function groupLabel(gid, active)
     local g = NS.Library.Group(gid)
-    return ((active and active[gid]) and Ed.ACTIVE_DOT or "") .. (g and g.name or gid)
+    return (g and g.name or gid) .. ((active and active[gid]) and Ed.ACTIVE_DOT or "")
 end
 
 --- The groups the pad does not list: top-level user groups by name (a group inside another shows

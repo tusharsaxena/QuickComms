@@ -790,24 +790,52 @@ local function seededTops(p)
     return out
 end
 
--- Prepare's seeding: each shipped set the profile was never given (seededSets) is seeded and put at
--- the end of every pad and dial; a node shipped after its set was given goes inside the set's group
--- while that is a top-level group. A seeded member the player deleted is not seeded again: that is
--- Restore's. `appended` counts the surfaces a set was put on.
-local function seedNew(p, result)
-    local placed = {}
+-- Each node shipped after its set was given (not in seededSets) goes inside the set's group while that
+-- is a top-level group of `p`; otherwise (the set deleted, or nested) it is only marked given. A node
+-- the player deleted is marked, so it never comes back. Answers how many were seeded.
+local function seedNewNodes(p)
+    local n = 0
     for _, top in ipairs(NS.BuiltIns.order) do
-        if not p.seededSets[top] then
-            placed[#placed + 1] = seedSet(p, top)
-        else
+        if p.seededSets[top] then
             local set = byOrigin(p.groups, top)
+            local s = set and p.groups[set]
+            local topLevel = s and not (type(s.parent) == "string" and p.groups[s.parent] ~= nil)
+            -- a node given already (kept, moved or deleted by the player) is passed over
             for _, child in ipairs(NS.BuiltIns.groups[top].children or {}) do
-                if not p.seededSets[child] then
-                    if set and not isChild(set) then seedGroup(p, child, set) else p.seededSets[child] = true end
+                if not p.seededSets[child] and topLevel then
+                    seedGroup(p, child, set)
+                    n = n + 1
+                elseif not p.seededSets[child] then
+                    p.seededSets[child] = true
                 end
             end
         end
     end
+    return n
+end
+
+--- Schema step 7 (bg subgroups) for one stored profile: seedNewNodes on a raw profile already given
+--- its sets (seededSets), its id counter lifted first; a profile never prepared is left to Prepare.
+--- @return number the nodes seeded
+function Lib.SeedNewNodes(profile)
+    if type(profile) ~= "table" or type(profile.seededSets) ~= "table" then return 0 end
+    for _, key in ipairs({ "callouts", "groups", "pads", "dials" }) do
+        if type(profile[key]) ~= "table" then return 0 end
+    end
+    liftNextId(profile)
+    return seedNewNodes(profile)
+end
+
+-- Prepare's seeding: each shipped set the profile was never given (seededSets) is seeded and put at
+-- the end of every pad and dial, and each node shipped after its set was given goes inside it
+-- (seedNewNodes). A seeded member the player deleted is not seeded again: that is Restore's.
+-- `appended` counts the surfaces a set was put on.
+local function seedNew(p, result)
+    local placed = {}
+    for _, top in ipairs(NS.BuiltIns.order) do
+        if not p.seededSets[top] then placed[#placed + 1] = seedSet(p, top) end
+    end
+    seedNewNodes(p)
     result.appended = result.appended + placeEverywhere(p, placed, false)
 end
 

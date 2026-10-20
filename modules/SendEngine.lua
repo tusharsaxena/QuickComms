@@ -107,7 +107,7 @@ function SE.Arm(b, line, meta)
 end
 
 --- Disarm a button: nothing it does reaches chat. `meta` (optional) is what the click hook may
---- still use, such as a solo fallback's local print. Out of combat only.
+--- still use, such as a solo fallback's local print or a previewed slot's echo. Out of combat only.
 --- @return boolean disarmed
 function SE.Disarm(b, meta)
     if inCombat() then
@@ -396,6 +396,12 @@ local function press(b)
     if not meta or NS.IsStoodDown() then return end
     if meta.selfText then
         NS.Print(meta.selfText)
+        return
+    end
+    -- A previewed chip or wedge (disarmed, spec §13.3): the line it would have sent, printed locally
+    -- and nothing more. No attribute is read or written, so a press in combat stays safe.
+    if meta.echo then
+        NS.Print(meta.echo)
         return
     end
     if not (b.qcArmed and meta.chatType) then return end

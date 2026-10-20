@@ -91,7 +91,7 @@ test("icon style: a pad's icon size feeds the chip's geometry", function()
     local chip = rebuild(NS)
     assertEqual(csv(chip.qcIcon.__size), "36,36")
     assertEqual(chip.__h, 40)
-    assertTrue(NS.PadRender.LabelRoom(100, "iconLabel", 0, 36) < NS.PadRender.LabelRoom(100, "iconLabel", 0, 20),
+    assertTrue(NS.PadRender.LabelRoom(100, "iconLabel", 36) < NS.PadRender.LabelRoom(100, "iconLabel", 20),
         "a bigger icon leaves the label less room")
 end)
 

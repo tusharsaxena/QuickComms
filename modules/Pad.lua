@@ -172,11 +172,16 @@ end
 -- lockText reads the slot's live lock (RefreshLocks keeps it current in combat), so a press on a
 -- padlocked chip is explained by its lock, never tracked as a send.
 -- A previewed chip (spec §13.3) keeps its line for the tooltip and is disarmed, and carries neither
--- the solo self-line nor the lock text: a previewed chip sends, prints and reports nothing.
+-- the solo self-line nor the lock text: a previewed chip sends and reports nothing. It carries its
+-- baked line as `echo` instead, which the click hook prints locally ("[QC] /p Pulling next pack"),
+-- so a preview shows what a live press would have sent. The echo names no lock: locks read your real
+-- group, not the previewed situation, so a previewed raid or M+ chip would nearly always carry one.
+-- Baked here, out of combat, so a press in combat only prints a string and writes no attribute.
 local function arm(btn, slot)
     local preview = slot.preview == true
     local meta = { calloutId = slot.calloutId, surfaceId = slot.surfaceId, name = slot.name,
         chatType = slot.chatType, selfText = (not preview) and slot.selfText or nil,
+        echo = preview and slot.line or nil,
         lockText = (not preview) and function() return slot.lock and (R.LOCK_TEXT[slot.lock] or tostring(slot.lock)) end or nil }
     if slot.line and slot.chatType and not preview then
         NS.SendEngine.Arm(btn, slot.line, meta)
@@ -208,6 +213,11 @@ local function place(inst, box, style, font, titleFont, icfg)
             local fs = NS.Pool.Acquire(inst.titles, function() return newTitle(inst) end)
             fs:ClearAllPoints()
             fs:SetPoint("TOPLEFT", inst.root, "TOPLEFT", item.x, -item.y)
+            -- A title in a packed row (Pad_Layout) stops at its block's width, cut short on one line;
+            -- any other sizes to its text (0), as a pooled one may have carried a width.
+            fs:SetWordWrap(false)
+            fs:SetJustifyH("LEFT")
+            fs:SetWidth(item.w > 0 and item.w or 0)
             fs:SetText(R.SectionTitle(item))
             R.ApplyFont(fs, titleFont)
             -- Only a group the profile has: test mode's placeholders ("test.N") name none.
@@ -216,7 +226,7 @@ local function place(inst, box, style, font, titleFont, icfg)
                 hit.qcGroupId = item.groupId
                 hit:ClearAllPoints()
                 hit:SetPoint("TOPLEFT", inst.root, "TOPLEFT", item.x, -item.y)
-                hit:SetSize(math.max(1, box.width - 2 * item.x), item.h)
+                hit:SetSize(math.max(1, item.w > 0 and item.w or (box.width - 2 * item.x)), item.h)
             end
         end
     end

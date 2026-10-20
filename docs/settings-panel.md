@@ -54,7 +54,7 @@ is an ordinary group (2026-10-18-builtins-as-groups-design.md), with no tag, no 
 read-only branch.
 
 ```
-band      [ Group v (picker; a green dot marks a group active now; a group inside another is
+band      [ Group v (picker; a green dot after its name marks a group active now; a group inside another is
           listed, indented, right after it) ][ New group ]
           [x] Preview while editing (under the picker)
 strip     [ General ][ Callouts ][ When ][ Preview ]
@@ -108,10 +108,14 @@ group (options-ui-§13).
 **Preview while editing** (the band, under the picker, the `behavior.previewOnEdit` row; on by
 default, saved): drawn through `O.PageHeader`, the band a picker with another page-wide control
 takes (options-ui-§14), with New group level with the picker's control as PageBanner places it.
+The three are one AceGUI SimpleGroup's children, laid out by Flow (the picker and New group each
+half the band, the checkbox under the picker), so AceGUI shows and sizes them; widgets placed in
+the header frame by hand drew only the picker's label in the client.
 While the Groups page is on screen with it ticked, every enabled pad and dial shows only the selected
 group, with the groups inside it, whatever their When and Enabled (`Preview.SetEditPreview`,
 `Surfaces` `deps.only`): drawn and disarmed as a Preview as plan, `Preview: <group>` on the header,
-dial 1 open. It follows the picker, and ends when the page hides, the settings window closes,
+dial 1 open. Clicking a chip or a wedge sends nothing and prints the line it would have sent
+(`[QC] /p Pulling next pack`). It follows the picker, and ends when the page hides, the settings window closes,
 combat starts (one "Preview ended" line) or the addon stands down; it never starts in combat,
 and it comes back once combat ends while the Groups page is still on screen.
 Preview as and test mode wait behind it and come back when it ends. The page's Defaults ticks it
@@ -419,7 +423,9 @@ General  Name, Enabled, then Unlock (or Lock) pads and Delete pad
 Groups   Show groups as, then the pad's groups as a drag-to-reorder list with a remove glyph
          (its priority order; it takes the group off the pad and asks nothing), then Add a group
          (the top-level groups the pad does not hold: a group inside another shows with it)
-Layout   orientation, grid columns, growth, chip style, scale, spacing, chip width, then
+Layout   orientation, grid columns, growth, chip style, scale, spacing, chip width (a chip's
+         label runs to its right edge, or to the padlock on a locked chip: no channel letter
+         there, the chip's tooltip names the channel; nothing in the panel turned the letter on or off), then
          Position: X and Y and Reset this pad's position
 Look     visibility, fade and faded alpha; then Font (face, size, color with Use class color,
          flags, shadow), Border (style, thickness, color with Use class color) and Background

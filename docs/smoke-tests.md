@@ -22,13 +22,13 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
 | SEND-1..5 | Send | Secure sends in keys and on bosses, the spam guard |
 | PAD-1..11 | Pad | The Comms Pad, its growth and chip width, the World (solo) set and the built-ins' colors |
-| EDIT-1..28 | Editors | The Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
+| EDIT-1..29 | Editors | The Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
 | DIAL-1..12 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial |
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
 | LOOK-1..2 | Look | The Comms Pad's font, border and background |
 | ICONS-1..3 | Icons tab | The chips' and wedges' icon look, border and glow triggers |
 | ICON-1 | Icons | Choosing an icon, for a callout and for a group |
-| BG-1..2 | Battlegrounds | Node winds on the dial; the battleground instance ids |
+| BG-1..6 | Battlegrounds | Node winds on the dial; the battleground instance ids; the objective groups (Alterac Valley, Isle of Conquest's bases, a flag map) and their migration |
 | IDS-1 | Instance ids | The Midnight dungeons and raids |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes |
 
@@ -136,8 +136,9 @@ drops it, the chip flashes red and exactly one `[QC] … may have been dropped b
 prints; if it arrives, no line prints. Never two lines for one press. Result:
 
 **SEND-4. A raid boss (C1).** In a raid (LFR is enough), the pad shows the raid set; on a boss,
-click a `/raid` chip → the raid sees it, the chip flashes gold. A lead callout shows `RW` only when
-you are leader or assist; otherwise its chip carries a padlock and its tooltip says why. A `/raid`
+click a `/raid` chip → the raid sees it, the chip flashes gold. A lead callout's tooltip reads
+`Channel: Raid warning` only when you are leader or assist; otherwise its chip carries a padlock and
+its tooltip says why, and its label stops short of the padlock, not under it. A `/raid`
 line that never arrives during the encounter is C1 failing: record it. Result:
 
 **SEND-5. Rebuilt between pulls in a key (C4).** In a key, between pulls, `/qc set
@@ -151,8 +152,9 @@ The C1–C9 checks of the phase 0 harness (design spec §19) are recorded in
 ## Pad
 
 **PAD-1. First run.** On a fresh profile, enter a key → the default pad shows "Dungeon (generic)" with
-eight chips, each tagged `P`; the header reads `M+ · <dungeon> +<level>`. Hovering a chip shows its
-name and the exact line it sends. Every chip shows its glyph in a color: Lust a red enraged face,
+eight chips, with no channel letter at the right edge of any of them (the label runs to the edge);
+the header reads `M+ · <dungeon> +<level>`. Hovering a chip shows its name, the exact line it sends
+and `Channel: Party` in the party's chat color; a wedge on the Comms Dial shows the same lines. Every chip shows its glyph in a color: Lust a red enraged face,
 Need mana a blue drop, Res me a green ankh, GG a gold trophy, Pulling orange crossed swords, Kick
 order a purple boot, Skipping a cyan figure, Chain pull red chains. Leave the key and zone into a
 normal or heroic dungeon → the same set shows. On a profile saved before this build (it still shows
@@ -200,13 +202,14 @@ before 2026-10-19 moves once on its first load, by up to its height (see Known L
 `docs/ARCHITECTURE.md`); drag it back and it stays. Result:
 
 **PAD-10. Chip width and the section title.** Comms Pad → Layout → Chip width reads 100 on a new
-pad; drag it to 300 → wide chips, each label on one line; down to 30 → the labels cut short, still
+pad; drag it to 300 → wide chips, each label on one line, running to the chip's right edge with no
+channel letter after it; down to 30 → the labels cut short, still
 one line; down to 1 → icon-only slivers, no label and no Lua error. Make a group named `World`, put
 it on the pad and stand in the open world → the header reads `World` and the section under it has
 no second `World` line; rename the group `My world` → its title line is back. Result:
 
 **PAD-11. World (solo) and the built-ins' colors (groups polish).** Out of any group, in the open
-world: the pad shows a World (solo) section of nine chips tagged `S` (Rare spotted a gold spyglass,
+world: the pad shows a World (solo) section of nine chips, each tooltip reading `Channel: Say` (Rare spotted a gold spyglass,
 Elite help a red ogre, Group quest a gold scroll, World boss a red crowned skull, Event here an orange
 bell, Invite me a blue envelope, Thanks green hands, AFK a white cup, Back a cyan arrow).
 Target a mob and click Rare spotted → /say reads "Rare spotted here: <target>"; click Invite me →
@@ -228,7 +231,8 @@ an `Inc` chip; click it → the party sees "INC" with a skull. Leave the key →
 the pad. Result:
 
 **EDIT-2. A built-in set is an ordinary group (the phase 3 exit, rewritten 2026-10-18).** Groups →
-pick "Dungeon (generic)" → the picker shows no "(built-in)" tag, and the page draws the same tabs as a
+pick "Dungeon (generic)" → the picker shows no "(built-in)" tag (in a key it reads `Dungeon (generic)` with the
+green dot after the name, not before it; Comms Pad → Groups and Comms Dial → Groups put it after the name too), and the page draws the same tabs as a
 group of yours, nothing read-only. General: Name, Enabled, Open the dial on this group, Parent group,
 the icon with Choose icon…, Duplicate and Delete, then Restore built-in groups; no Customize and no
 read-only line. Callouts: the callout table, exactly as a group of yours draws it (Add callout, Reuse
@@ -240,7 +244,7 @@ changes. Untick Enabled → in a key the set is gone from the pad; tick it again
 **EDIT-3. Preview as….** Out of combat, in the open world: General → Master controls → Preview as → Arena →
 the pad shows the arena set with `Preview: Arena` on its header and PREVIEW on its drag strip (in
 green, after the pad's name); clicking a chip sends
-nothing; its tooltip says so. The Comms Pad, Comms Dial and Groups pages' General tabs have no
+nothing to chat and prints its line locally (EDIT-29); its tooltip says so. The Comms Pad, Comms Dial and Groups pages' General tabs have no
 Preview as row. Close the settings → the preview ends. `/qc preview raid:heroic` →
 the raid set; pull something → the preview ends with one line and the live chips return. Result:
 
@@ -514,9 +518,12 @@ The README's Credits section names the three sets, their licenses and the Game-i
 Typing in the search box keeps up without a hitch. Result:
 
 **EDIT-27. Preview while editing.** Out of combat, in the open world: Settings → Groups → the band
-shows Preview while editing, ticked, under the Group picker. Pick "Arena" → every pad shows only the
+draws the Group picker's box under its label, New group to its right and level with the box, and
+Preview while editing, ticked, under the Group picker; pick another group and the three are still
+drawn. Pick "Arena" → every pad shows only the
 arena set, with `Preview: Arena` on its header and PREVIEW on its drag strip, and dial 1 opens on it; clicking a chip
-sends nothing. Pick a battleground set → its own callouts and every node show, outside the
+sends nothing to chat and prints one local line, `[QC] /<slash> <text>` (the channel's slash and the
+callout's text with its tokens filled in, `{me}` as your name). Pick a battleground set → its own callouts and every node show, outside the
 battleground. Set General → Master controls → Preview as → Raid · Heroic, then back on Groups → the
 edited group still shows alone; go to another settings page → the pads show the Raid · Heroic
 preview again; close the settings with the X → the live pads. On Groups, untick Preview while
@@ -531,6 +538,15 @@ group in the picker. Pick the Callouts tab, close the settings, right-click a no
 opens on that node, still on Callouts. Set the pad's Groups as to Tabs → right-click the tab's title →
 the group that tab shows. Enter combat and right-click a title → the "cannot open settings during
 combat" line and nothing opens; no error. Result:
+
+**EDIT-29. A preview click echoes its line.** Out of combat, solo in the open world: make a group
+with a callout `Go {me}` on Yell and put it on the pad and the dial. Master controls → Preview as →
+World · Solo → click the chip → one local chat line, `[QC] /y Go <your name>`, and nothing said
+aloud (no yell bubble, nobody else sees it). Change the callout to Smart group and preview Raid ·
+Heroic → the click prints `[QC] /raid Go <your name>`. Open the dial on the preview and click the
+wedge → the same line, and the dial closes. On Groups with Preview while editing ticked, click a chip
+of the edited group → its line prints the same way. End the preview and click the live chip → the
+yell goes out, with no `[QC]` line. Result:
 
 ## Dial
 
@@ -708,7 +724,9 @@ Choose icon…: a glyph chosen there shows on its wedge. Result:
 ## Battlegrounds
 
 **BG-1. Node winds.** In each node battleground you play (Arathi Basin, Eye of the Storm, Battle for
-Gilneas, Deepwind Gorge, Isle of Conquest), open the dial → the nodes sit where they are on the map,
+Gilneas, Deepwind Gorge, Isle of Conquest, Wintergrasp: the Fortress at the top, Broken Temple top
+left, Sunken Ring top right, Westspark bottom left, Eastspark bottom right, the Towers at the bottom),
+open the dial → the nodes sit where they are on the map,
 north up (Arathi Basin: Stables top left, Gold Mine top right, Farm bottom right, Lumber Mill bottom
 left, Blacksmith, the middle node, at the top), and Deepwind Gorge shows five nodes (owner ruling R2).
 One more wedge, drawn as the battleground itself, sits on the first wind no node takes and opens its
@@ -720,6 +738,38 @@ check's ID and its battleground. Result:
 `situation` section's instanceID is one its set lists (`defaults/BuiltIns_Battlegrounds.lua`), and
 the pad and the dial show that set. Write each id into the "Battleground instance IDs seen" table of
 `docs/brainstorm/go-no-go/round-4-build-checks.md`. Result:
+
+**BG-3. Alterac Valley's objectives.** In Alterac Valley, on a default pad: the Alterac Valley
+section (its four map-wide callouts) is followed by 19 objective sections, two to a row, north to
+south: Vanndar, DB North Bunker, Stormpike GY, Aid Station, DB South Bunker, Icewing Bunker,
+Stonehearth GY, Balinda, Stonehearth Bunker, Snowfall GY, Iceblood GY, Galvangar, Iceblood Tower,
+Tower Point, Frostwolf GY, West FW Tower, East FW Tower, Relief Hut, Drek'Thar (the last on a row
+of its own). Each holds Attack and Defend; a long title stops short at its neighbor, and its chips
+stay on the grid's columns. The pad fits on screen; note its height. Click Iceblood Tower's Attack →
+`/i Attack Iceblood Tower`. Right-click a title in the second
+column → the Groups page opens on that objective. Open the dial → it opens on Alterac Valley's own
+callouts first, then the objectives a page at a time, More turning the page; an objective's ring
+holds Attack and Defend. Result:
+
+**BG-4. Isle of Conquest's bases.** In Isle of Conquest: the pad shows Our base (Defend, Walls
+down) and Enemy base (Attack, Walls down) side by side after Refinery; their lines read "Defend our
+base", "Walls down at our base", "Attack the enemy base", "Walls down at the enemy base", the same
+for either faction. On the dial the five nodes stay on their winds, the Isle of Conquest wedge stays
+where it was (NE), and Our base and Enemy base take two of the winds left over. Result:
+
+**BG-5. A flag map.** In Warsong Gulch or Twin Peaks: the pad shows the set's map-wide EFC callouts,
+then Our flag, Enemy flag, Our FC and Midfield (Bridge in Twin Peaks), each its own section; the
+dial opens on the set's ring, its own wedge on N and the four groups on the winds after it. Send
+"INC flag room" → `INC our flag room`; "We have it" → `We have their flag`. The four groups take the
+winds after the set's own wedge in the order they ship, not where they are on the map: which wind
+Our flag or Enemy flag lands on is that order, not geography. The same holds for Ashran, Deephaul Ravine, Seething
+Shore and Isle of Conquest's two bases. Result:
+
+**BG-6. A profile from before the objective groups.** On a profile saved before this build (or a
+copy of one): log in → `/qc diagnostics` shows schema 7; Alterac Valley's set holds its 19 objectives
+and opens into its ring on the dial, Isle of Conquest's holds Our base and Enemy base after its
+nodes, and every callout you had edited still reads as you left it. Delete one objective, `/reload`
+→ it stays deleted. A set you had deleted before the update is still gone. Result:
 
 ## Instance ids
 
@@ -770,7 +820,7 @@ from the client, so this check needs a non-English client pass. Result:
 |---|---|---|
 | INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..3, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet; LOC-1 re-enumerated in phase 5 and owed a non-English client pass; STATE-3 added and PANEL-2 rewritten with `/qc toggle` and Preview as in Master controls (2026-10-19) |
 | SEND-1..5, PAD-1..11 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet; PAD-1 rewritten and PAD-11 added with World (solo) and the built-ins' colors, PAD-3 and PAD-4 rewritten with the strip's marker (2026-10-19, groups polish); PAD-8 added in phase 5 (audit QC-07); PAD-1 rewritten and PAD-9..10 added with the up growth, chip width and the built-in glyphs (2026-10-19) |
-| EDIT-1..28 | Phase 3: the editors | No client pass recorded yet; EDIT-28 added with right-click a group title (2026-10-19); EDIT-27 added with Preview while editing (2026-10-19); EDIT-3, 4, 20 and 22 rewritten and EDIT-25..26 added with Preview as in Master controls, the Dungeon set, the Arena drawer, instance search, the Callouts rows and the glyph sets (2026-10-19); EDIT-1, 2 and 19 rewritten and EDIT-22..24 added with the When drawers, Inherit when conditions and the icon browser's search (2026-10-18); EDIT-2, 4, 5, 6, 11, 14 and ICON-1 rewritten and EDIT-19..21 added when the built-in sets became seeded groups, groups nested and the Preview tab became a table (2026-10-18); EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17); EDIT-9, 13 and ICON-1 rewritten and EDIT-14..17 added with the icon browser and glyph colors (2026-10-18); EDIT-9 rewritten and EDIT-18 added when the token dropdown became the Text label's info glyph (2026-10-18); EDIT-13, 14 and ICON-1 rewritten when the Suggested tab went and the skin stopped waiting for the addon to be enabled (2026-10-18); EDIT-9, 18 and ICON-1 rewritten when the Icon boxes went and the popup took its two-column layout (2026-10-18); EDIT-9, 11 and ICON-1 rewritten with the clear glyph, the Preview gap and the buttons' 2 px inset (2026-10-18) |
+| EDIT-1..29 | Phase 3: the editors | No client pass recorded yet; EDIT-29 added with the preview click's echo (2026-10-20); EDIT-28 added with right-click a group title (2026-10-19); EDIT-27 added with Preview while editing (2026-10-19); EDIT-3, 4, 20 and 22 rewritten and EDIT-25..26 added with Preview as in Master controls, the Dungeon set, the Arena drawer, instance search, the Callouts rows and the glyph sets (2026-10-19); EDIT-1, 2 and 19 rewritten and EDIT-22..24 added with the When drawers, Inherit when conditions and the icon browser's search (2026-10-18); EDIT-2, 4, 5, 6, 11, 14 and ICON-1 rewritten and EDIT-19..21 added when the built-in sets became seeded groups, groups nested and the Preview tab became a table (2026-10-18); EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17); EDIT-9, 13 and ICON-1 rewritten and EDIT-14..17 added with the icon browser and glyph colors (2026-10-18); EDIT-9 rewritten and EDIT-18 added when the token dropdown became the Text label's info glyph (2026-10-18); EDIT-13, 14 and ICON-1 rewritten when the Suggested tab went and the skin stopped waiting for the addon to be enabled (2026-10-18); EDIT-9, 18 and ICON-1 rewritten when the Icon boxes went and the popup took its two-column layout (2026-10-18); EDIT-9, 11 and ICON-1 rewritten with the clear glyph, the Preview gap and the buttons' 2 px inset (2026-10-18) |
 | DIAL-1..12 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-4 rewritten with the node set's map-wide wedge (2026-10-19, groups polish); DIAL-9 rewritten when Preview as moved to Master controls (2026-10-19); DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
-| SHARE-1..6, LOOK-1..2, ICON-1, BG-1..2, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; BG-1 rewritten with the map-wide wedge (2026-10-19, groups polish); LOOK-2's in-combat step goes through `/qc set`; IDS-1 extended to the journal instances and arenas (2026-10-19) |
+| SHARE-1..6, LOOK-1..2, ICON-1, BG-1..6, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; BG-1 rewritten with Wintergrasp's winds and BG-3..6 added with the battleground objective groups (2026-10-20); BG-1 rewritten with the map-wide wedge (2026-10-19, groups polish); LOOK-2's in-combat step goes through `/qc set`; IDS-1 extended to the journal instances and arenas (2026-10-19) |
 | ICONS-1..3 | Icons and polish (2026-10-19): the Icons tab | No client pass recorded yet |

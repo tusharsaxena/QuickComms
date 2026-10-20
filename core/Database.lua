@@ -29,6 +29,9 @@ NS.MIGRATIONS = {
     -- 5 -> 6 (groups polish): seeded groups and callouts take their colored glyphs, and the battleground
     -- node sets their map-wide callouts, wherever the player has not changed them.
     { to = 6, perProfile = true, run = function(_, profile) NS.Library.MigrateBuiltinsPolish(profile) end },
+    -- 6 -> 7 (bg subgroups): the battleground sets' new objective nodes go inside each set's copy, and
+    -- the sets that shipped flat open into their ring, wherever the player has not changed them.
+    { to = 7, perProfile = true, run = function(_, profile) NS.Library.MigrateBattlegroundNodes(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.
