@@ -433,6 +433,19 @@ local function build()
         return t
     end
     function tip.ClearLines(t) t.__lines = {} return t end
+    -- Its anchors, recorded as a region's are, so a tooltip placed by hand (the dial's, outside the
+    -- dial) can be asserted on.
+    tip.__points = {}
+    function tip.ClearAllPoints(t) t.__points = {} return t end
+    function tip.SetPoint(t, point, rel, relPoint, x, y)
+        t.__points[#t.__points + 1] = { point, rel, relPoint, x, y }
+        return t
+    end
+    function tip.GetPoint(t, i)
+        local p = t.__points[i or 1]
+        if not p then return nil end
+        return p[1], p[2], p[3], p[4], p[5]
+    end
     function tip.SetText(t, text)
         t.__lines = { { text } }
         return t

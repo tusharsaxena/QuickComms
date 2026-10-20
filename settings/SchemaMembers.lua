@@ -470,10 +470,55 @@ end
 
 for _, row in ipairs(buttonRows()) do ROWS[#ROWS + 1] = row end
 
+-- The Comms Dial's Slices tab (2026-10-21): each slice's fill, the border (its thickness, then its
+-- color), the hovered slice's fill and the pointer, each color a composed swatch with its class-color
+-- companion, stamped as dial member rows; before the Labels rows, so the tab follows Wheel.
+local SLICES_TAB, SLICEP = L["Slices"], "dial.slice."
+local function sliceRows()
+    local O = NS.addon.Settings.Helpers
+    local checks = composedChecks(O)
+    checks.highlight, checks.pointerColor = checks.background, checks.background
+    checks.useClassColorHighlight, checks.useClassColorPointer = { validate = BOOL }, { validate = BOOL }
+    local sdef = T.dial.slice
+    local BORDER, POINTER = L["Border"], L["Pointer"]
+    local function pointerOff() return NS.SchemaRuntime.Get(SLICEP .. "pointerShow") == false end
+    local function row(subgroup, r)
+        r.instance, r.page, r.group, r.subgroup = "dial", "dials", SLICES_TAB, subgroup
+        return r
+    end
+    local function pair(subgroup, key, label, companion)
+        local out = {}
+        stampBlock(out, O.ColorPair(blockSpec(SLICEP, SLICES_TAB, subgroup, sdef,
+            { key = key, label = label, companionKey = companion })), SLICEP, checks, "dial")
+        return out
+    end
+    local out = pair(L["Background"], "background", L["Slice color"])
+    out[#out + 1] = row(BORDER, { path = SLICEP .. "borderSize", type = "number", default = sdef.borderSize,
+        min = 0, max = 6, step = 1, label = L["Border size"], startsLine = true,
+        desc = L["How thick the lines between slices and round the rim are, in pixels. 0 draws none."],
+        validate = NUMBER, normalize = clamp(0, 6, true) })
+    for _, r in ipairs(pair(BORDER, "borderColor", L["Border color"], "useClassColorBorder")) do out[#out + 1] = r end
+    for _, r in ipairs(pair(L["Highlight"], "highlight", L["Highlight color"])) do out[#out + 1] = r end
+    out[#out + 1] = row(POINTER, { path = SLICEP .. "pointerShow", type = "bool", default = sdef.pointerShow,
+        label = L["Show pointer"], startsLine = true,
+        desc = L["Draw the pointer in the middle of the dial that turns toward the cursor."], validate = BOOL })
+    out[#out + 1] = row(POINTER, { path = SLICEP .. "pointerSize", type = "number", default = sdef.pointerSize,
+        min = 10, max = 48, step = 1, label = L["Pointer size"], disabledIf = pointerOff,
+        desc = L["How big the pointer is, in pixels."], validate = NUMBER, normalize = clamp(10, 48, true) })
+    for _, r in ipairs(pair(POINTER, "pointerColor", L["Pointer color"], "useClassColorPointer")) do
+        r.disabledIf = pointerOff
+        out[#out + 1] = r
+    end
+    return out
+end
+
+for _, row in ipairs(sliceRows()) do ROWS[#ROWS + 1] = row end
+
 -- The Comms Dial's Labels tab (dial rework, 2026-10-21): Show labels, then the composed Font block
--- (as the Buttons tab's), stamped as dial member rows; before the dial's Icons rows, so the tab sits
--- between Wheel and Icons.
+-- (as the Buttons tab's), stamped as dial member rows, then where the dial's tooltip goes; before the
+-- dial's Icons rows, so the tab sits between Slices and Icons.
 local LABELS, LABELP = L["Labels"], "dial.label."
+local TIP_SIDE = choices({ { "top", L["Above"] }, { "bottom", L["Below"] }, { "left", L["Left"] }, { "right", L["Right"] } })
 local function labelRows()
     local O = NS.addon.Settings.Helpers
     local ldef = T.dial.label
@@ -488,6 +533,15 @@ local function labelRows()
         row.disabledIf = hidden
         out[#out + 1] = row
     end
+    local TIP = L["Tooltip"]
+    out[#out + 1] = { path = LABELP .. "tooltipSide", instance = "dial", type = "string", default = ldef.tooltipSide,
+        values = TIP_SIDE, page = "dials", group = LABELS, subgroup = TIP, label = L["Tooltip side"], startsLine = true,
+        desc = L["Which side of the dial a wedge's tooltip shows on. It always sits outside the dial."],
+        validate = oneOf(TIP_SIDE) }
+    out[#out + 1] = { path = LABELP .. "tooltipOffset", instance = "dial", type = "number", default = ldef.tooltipOffset,
+        min = 0, max = 80, step = 1, page = "dials", group = LABELS, subgroup = TIP, label = L["Tooltip offset"],
+        desc = L["How far the tooltip sits from the dial's title, labels or page arrows, in pixels."],
+        validate = NUMBER, normalize = clamp(0, 80, true) }
     return out
 end
 

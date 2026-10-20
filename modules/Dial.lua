@@ -109,6 +109,7 @@ local function newRing(inst)
     local ring = DS.NewRing(inst.header)
     ring.qcPrev = R.DressArrow(DS.NewArrow(inst.header, ring), "prev")
     ring.qcNext = R.DressArrow(DS.NewArrow(inst.header, ring), "next")
+    ring.qcPrev.qcHeader, ring.qcNext.qcHeader = inst.header, inst.header
     R.DressRing(ring)
     ring:SetPoint("CENTER", inst.header, "CENTER", 0, 0)
     ring.qcWedges = NS.Pool.New()
@@ -127,13 +128,15 @@ local function placeArrows(ring, spec, look)
         btn:SetPoint("CENTER", ring, "CENTER", side * nav.arrow, nav.y)
         btn:SetSize(DL.ARROW, DL.ARROW)
         btn:SetShown(paged)
-        R.PaintArrow(btn, paged and (target or 0) > 0)
+        R.PaintArrow(btn, paged and (target or 0) > 0, look)
     end
 end
 
 -- A wedge's press dims every button and wedge for the guard window (Pad.Cooldown calls Dial.Cooldown).
 local function newWedge(inst, ring)
-    return R.DressWedge(DS.NewWedge(inst.header, ring, function(_, _, window) NS.Pad.Cooldown(window) end))
+    local w = R.DressWedge(DS.NewWedge(inst.header, ring, function(_, _, window) NS.Pad.Cooldown(window) end))
+    w.qcHeader, w.qcDialRing = inst.header, ring
+    return w
 end
 
 local function releaseWedge(w)
@@ -183,17 +186,20 @@ local function hubState(inst, plan)
     }
 end
 
--- One ring's wedges: placed on their compass points at the dial's radius (a pinned node on its own wind, Dial_Layout's
+-- One ring's wedges: placed on their compass points at the dial's radius, each clickable over as much
+-- of its slice as a square allows (DL.HitSize: the hit rect grows past the drawn wedge) (a pinned node on its own wind, Dial_Layout's
 -- `wedge`), painted, armed, indexed by callout.
 local function placeWedges(inst, ring, spec, icfg, look)
     local wedges = {}
+    local grow = (DL.HitSize(spec.size, look.radius, spec.start) - DL.WEDGE) / 2
     for i, item in ipairs(spec.items) do
         local w = NS.Pool.Acquire(ring.qcWedges, function() return newWedge(inst, ring) end)
         local geo = DL.Wedge(item.wedge or i, spec.size, look.radius, spec.start)
         w:ClearAllPoints()
         w:SetPoint("CENTER", ring, "CENTER", geo.x, geo.y)
         w:SetSize(DL.WEDGE, DL.WEDGE)
-        R.PaintWedge(w, item, geo, icfg, look)
+        w:SetHitRectInsets(-grow, -grow, -grow, -grow)   -- protected: here, under Apply, out of combat
+        R.PaintWedge(w, item, geo, icfg, look, { index = item.wedge or i, size = spec.size, start = spec.start })
         arm(w, item)
         if item.slot then
             local list = inst.byCallout[item.slot.calloutId] or {}
@@ -203,6 +209,18 @@ local function placeWedges(inst, ring, spec, icfg, look)
         wedges[i] = { button = w, target = item.kind == "ring" and item.target or 0 }
     end
     return wedges
+end
+
+-- The widest label the rebuild drew on a wedge that reads sideways (the tooltip clears it at either
+-- side, R.PlaceTips).
+local function widestLabel(inst)
+    local w = 0
+    for _, ring in ipairs(inst.rings.active) do
+        for _, wedge in ipairs(ring.qcWedges.active) do
+            w = math.max(w, tonumber(wedge.qcLabel:GetStringWidth()) or 0)
+        end
+    end
+    return w
 end
 
 --- Rebuild the dial at `index` (its place in the dial order, which names its header) from a plan.
@@ -219,9 +237,9 @@ function Dial.Apply(index, id, plan)
     DS.Close(inst.header)
     releaseRings(inst)
     local icfg = NS.IconStyle.Config(dial.icon, "dial")
-    local look = R.Look(plan.radius, dial.label)
+    local look = R.Look(plan.radius, dial.label, dial.slice)
     local disc = DL.Geometry(look.radius, look.line).disc
-    R.SizeDisc(inst.header, disc)
+    R.PaintPointer(inst.header, look)
     local loaded = {}
     for r, spec in ipairs(plan.rings) do
         local ring = NS.Pool.Acquire(inst.rings, function() return newRing(inst) end)
@@ -234,6 +252,7 @@ function Dial.Apply(index, id, plan)
             wedges = placeWedges(inst, ring, spec, icfg, look) }
     end
     releaseFreeGlows(inst)
+    R.PlaceTips(inst.header, look, widestLabel(inst))
     DS.Load(inst.header, loaded, { openRing = plan.openRing, openAt = plan.test and "center" or dial.openAt })
     applyPoint(inst)
     inst.header:SetScale(math.max(NS.Library.MIN_SURFACE_SCALE, tonumber(NS.Setting("scale")) or 1))
@@ -347,7 +366,7 @@ end
 --- "Why is this showing?" (spec §13.3) over the hub, unless behavior.whyTooltips is off.
 function Dial.ShowWhy(id, owner)
     if NS.Setting("behavior.whyTooltips") == false then return false end
-    NS.PadRender.ShowLines(owner, L["Why is this showing?"], NS.Surfaces.WhyLines(id))
+    R.ShowTip(owner, L["Why is this showing?"], NS.Surfaces.WhyLines(id))
     return true
 end
 

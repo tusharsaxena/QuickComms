@@ -912,7 +912,8 @@ local SURFACE_DEFAULTS = {
     -- gives it a meaning; nothing reads them yet.
     dial = { mode = "categories", slices = 0, radius = 100, depth = 2, openAt = "center", delay = 0.3,
         interaction = "relaxed", tapAction = "first", icon = NS.IconDefaults.For("dial"),
-        label = NS.PadDefaults.DialLabel() },   -- the Labels tab (defaults/PadStyle.lua)
+        label = NS.PadDefaults.DialLabel(),     -- the Labels tab (defaults/PadStyle.lua)
+        slice = NS.PadDefaults.DialSlice() },   -- the Slices tab (defaults/PadStyle.lua)
 }
 
 --- The shape of one member of each kind: what every member row's path resolves against (the
@@ -930,7 +931,8 @@ Lib.TEMPLATES = {
     -- has no `key`: its key is WoW's own binding of its Open Comms Dial entry (modules/Dial.lua).
     dial = { name = "", enabled = true, mode = SURFACE_DEFAULTS.dial.mode, slices = SURFACE_DEFAULTS.dial.slices,
         radius = SURFACE_DEFAULTS.dial.radius, openAt = SURFACE_DEFAULTS.dial.openAt, point = false,
-        icon = copyTable(SURFACE_DEFAULTS.dial.icon), label = copyTable(SURFACE_DEFAULTS.dial.label) },
+        icon = copyTable(SURFACE_DEFAULTS.dial.icon), label = copyTable(SURFACE_DEFAULTS.dial.label),
+        slice = copyTable(SURFACE_DEFAULTS.dial.slice) },
 }
 
 --- A dial's place when its `point` is unset: the middle of the screen (read at run time by

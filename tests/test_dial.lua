@@ -403,7 +403,7 @@ end)
 test("dial: the hub's tooltip says why each group shows, unless the player turned it off", function()
     local NS = live(AB)
     local shown = {}
-    NS.PadRender.ShowLines = function(_, title, lines) shown[#shown + 1] = { title = title, lines = lines } end
+    NS.DialRender.ShowTip = function(_, title, lines) shown[#shown + 1] = { title = title, lines = lines } end
     local h = NS.Dial.Instance("d2").header
     h:__fire("OnEnter")
     assertEqual(#shown, 1)
@@ -601,7 +601,7 @@ test("dial: [rework] a paged ring turns with its arrows and the Left and Right k
     assertEqual(#m.blocked, 0)
 end)
 
-test("dial: [rework] wedges have no backdrop; the disc and the wedges follow the ring radius", function()
+test("dial: [rework] wedges have no backdrop; the slices, the wedges and their hit squares follow the ring radius", function()
     local NS = live()
     local plan = planOf(NS)
     plan.radius = 140
@@ -610,7 +610,73 @@ test("dial: [rework] wedges have no backdrop; the disc and the wedges follow the
     -- red under: keep R.DressWedge's qcBg circle
     assertNil(w.qcBg, "no round backdrop behind the icon")
     local g = NS.DialLayout.Geometry(140)
-    assertEqual(NS.Dial.Instance("d2").header.qcDisc.__size[1], g.disc)
+    local ring = NS.Dial.Instance("d2").rings.active[2]
+    assertEqual(ring.qcFills[1].__size[1], g.disc, "each slice's fill is the disc across")
     local _, _, _, x, y = w:GetPoint(1)
     assertEqual(math.floor(math.sqrt(x * x + y * y) + 0.5), 140, "the wedge sits on the radius")
+end)
+
+test("dial: [slices] each place is a tinted slice; a hovered wedge lights its own slice; the border is lines", function()
+    local NS = live()
+    local did = "d2"
+    assertTrue(NS.SchemaRuntime.Set("dial.slice.borderSize", 2, did))
+    assertTrue(NS.SchemaRuntime.Set("dial.slice.highlight", { r = 0, g = 1, b = 0, a = 0.5 }, did))
+    assertTrue(NS.Dial.Apply(1, did, planOf(NS)))
+    local ring = NS.Dial.Instance(did).rings.active[2]
+    -- four wedges from N (planOf's fixed four): four fills, each its own quarter
+    assertEqual(ring.qcFills[1].__texture, NS.DialSlices.SectorTexture(4))
+    assertTrue(ring.qcFills[4]:IsShown())
+    assertEqual(ring.qcSpokes[1].__size[1], 2, "spokes as thick as the border")
+    assertEqual(#ring.qcRim, NS.DialLayout.ARC, "the rim in straight segments")
+    local w = NS.Dial.RingWedges(did, 2)[2]
+    assertFalse(ring.qcHighlight:IsShown())
+    -- red under: drop Slices.Highlight from R.DressWedge's OnEnter
+    w:__fire("OnEnter")
+    assertTrue(ring.qcHighlight:IsShown())
+    assertEqual(ring.qcHighlight.__color[2], 1, "the Slices tab's highlight color")
+    w:__fire("OnLeave")
+    assertFalse(ring.qcHighlight:IsShown())
+    assertTrue(NS.SchemaRuntime.Set("dial.slice.borderSize", 0, did))
+    assertTrue(NS.Dial.Apply(1, did, planOf(NS)))
+    assertFalse(ring.qcSpokes[1]:IsShown(), "border 0: no lines")
+    assertEqual(NS.DialSlices.SectorTexture(1), "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask", "one slice is the disc")
+end)
+
+test("dial: [tooltip] a wedge's tooltip sits outside the dial: above by default, on the Labels tab's side", function()
+    local NS, m = live()
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    local h = NS.Dial.Instance("d2").header
+    local w = NS.Dial.RingWedges("d2", 2)[1]
+    w:__fire("OnEnter")
+    local tip = m.GameTooltip
+    -- red under: R.ShowTooltip through PadRender.ShowLines (ANCHOR_TOP, over the dial)
+    assertEqual(tip.__anchor, "ANCHOR_NONE")
+    local p, rel, _, x, y = tip:GetPoint(1)
+    local g = NS.DialLayout.Geometry(100)
+    assertEqual(p .. "," .. tostring(rel == h) .. "," .. x, "BOTTOM,true,0")
+    assertTrue(y >= g.title + 8, "above the ring title, by the offset")
+    assertTrue(NS.SchemaRuntime.Set("dial.label.tooltipSide", "left", "d2"))
+    assertTrue(NS.SchemaRuntime.Set("dial.label.tooltipOffset", 20, "d2"))
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    w:__fire("OnEnter")
+    p, _, _, x = tip:GetPoint(1)
+    assertEqual(p, "RIGHT")
+    assertTrue(x <= -(g.disc / 2 + 20), "left of the disc and its labels, by the offset")
+end)
+
+test("dial: [pointer] the pointer is a catalog glyph, sized and colored by the Slices tab, and can be off", function()
+    local NS = live()
+    assertTrue(NS.SchemaRuntime.Set("dial.slice.pointerSize", 30, "d2"))
+    assertTrue(NS.SchemaRuntime.Set("dial.slice.pointerColor", { r = 0, g = 0, b = 1, a = 1 }, "d2"))
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    local h = NS.Dial.Instance("d2").header
+    local arrow = h.qcPointer.qcArrow
+    assertEqual(arrow.__size[1], 30)
+    assertEqual(arrow.__color[3], 1)
+    assertEqual(h.qcReach, NS.DialLayout.PointerReach(30), "pushed out to clear the hub")
+    assertTrue(NS.SchemaRuntime.Set("dial.slice.pointerShow", false, "d2"))
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    h:Show()
+    -- red under: set the pointer's OnUpdate in the header's OnShow whatever pointerShow says
+    assertNil(h.qcPointer:GetScript("OnUpdate"), "off: nothing runs per frame")
 end)

@@ -234,7 +234,7 @@ test("dials page: [B9] Icons follows Wheel, carries its headings once each, and 
     for _, row in ipairs(NS.addon.Settings.RowsForPage("dials")) do
         if row.group and not seen[row.group] then seen[row.group] = true order[#order + 1] = row.group end
     end
-    assertEqual(table.concat(order, ","), "General,Groups,Wheel,Labels,Icons", "the rows' tabs, in order")
+    assertEqual(table.concat(order, ","), "General,Groups,Wheel,Slices,Labels,Icons", "the rows' tabs, in order")
     P.find(w, "Slider", "Icon size"):__fire("OnMouseUp", 24)
     P.find(w, "CheckBox", "Show border"):__fire("OnValueChanged", true)
     assertEqual(NS.db.profile.dials.d2.icon.size, 24)
@@ -276,4 +276,40 @@ test("dials page: [labels] Labels shows or hides the wedges' names and styles th
     assertTrue(NS.SchemaRuntime.Set("dial.label.show", true, "d2"))
     assertTrue(NS.SchemaRuntime.Set("dial.label.fontSize", 18, "d2"))
     assertEqual(NS.Dial.RingWedges("d2", 1)[1].qcLabel.__font[2], 18)
+end)
+
+test("dials page: [slices] Slices writes the fill, border, highlight and pointer, each color with its class color", function()
+    local NS, _, P = open()
+    local w = P.tab("dials", "Slices")
+    for _, heading in ipairs({ "Background", "Border", "Highlight", "Pointer" }) do
+        assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
+    end
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 4, "fill, border, highlight and pointer")
+    P.find(w, "Slider", "Border size"):__fire("OnMouseUp", 3)
+    assertEqual(NS.db.profile.dials.d2.slice.borderSize, 3)
+    w = P.tab("dials", "Slices")
+    P.find(w, "CheckBox", "Show pointer"):__fire("OnValueChanged", false)
+    w = P.tab("dials", "Slices")
+    -- red under: no disabledIf on the pointer rows
+    assertTrue(P.find(w, "Slider", "Pointer size").disabled)
+    local l = P.tab("dials", "Labels")
+    P.find(l, "Dropdown", "Tooltip side"):__fire("OnValueChanged", "right")
+    assertEqual(NS.db.profile.dials.d2.label.tooltipSide, "right")
+    P.ctx("dials").panel.defaultsOnClick()
+    assertEqual(NS.db.profile.dials.d2.slice.borderSize, 1)
+    assertTrue(NS.db.profile.dials.d2.slice.pointerShow)
+    assertEqual(NS.db.profile.dials.d2.label.tooltipSide, "top")
+end)
+
+test("dials page: [slices] every slice texture the dial names ships under media/textures", function()
+    local NS = open()
+    for n = 2, 12 do
+        local rel = NS.DialSlices.SectorTexture(n):gsub("^Interface\\AddOns\\QuickComms\\", ""):gsub("\\", "/")
+        local fh = io.open(T.root .. "/" .. rel .. ".tga", "rb")
+        -- red under: a sector count tools/gen-dial-textures.py does not write
+        assertTrue(fh ~= nil, rel)
+        if fh then fh:close() end
+    end
+    local pill = NS.DialSlices.PILL:gsub("^Interface\\AddOns\\QuickComms\\", ""):gsub("\\", "/")
+    assertTrue(io.open(T.root .. "/" .. pill .. ".tga", "rb") ~= nil, pill)
 end)

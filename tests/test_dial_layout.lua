@@ -90,15 +90,32 @@ test("dial layout: [review 5] more items than wedges go on plain pages, the rest
     assertEqual(#L.Paginate({ 1, 2, 3, 4 }, 4), 1, "a full ring is one page")
 end)
 
-test("dial layout: [nav] a paged ring's dots and arrows sit in one row under the disc and its labels", function()
+test("dial layout: [nav] a paged ring's pill, dots and arrows sit in one row under the disc and its labels", function()
     local L = DL()
-    local nav = L.Nav(3, 100)
-    assertEqual(table.concat(nav.dots, ","), -L.DOT_STEP .. ",0," .. L.DOT_STEP, "centered")
-    T.assertTrue(nav.arrow > L.DOT_STEP + L.DOT / 2, "the arrows clear the dots")
+    local nav = L.Nav(3, 100, nil, 2)
+    -- red under: give every page the same width in DL.Nav
+    assertEqual(table.concat(nav.widths, ","), L.DOT .. "," .. L.PILL .. "," .. L.DOT, "this page is the pill")
+    assertEqual(nav.dots[2], 0, "centered")
+    assertEqual(nav.dots[1], -nav.dots[3])
+    T.assertTrue(nav.arrow > nav.dots[3] + L.DOT, "the arrows clear the indicators")
     local g = L.Geometry(100)
     T.assertTrue(-nav.y - L.ARROW / 2 >= g.disc / 2 + L.LABEL_GAP + L.LINE, "below the S wedge's label")
     T.assertTrue(L.Nav(3, 100, 0).y > nav.y, "with no labels the row comes up to the disc")
     T.assertTrue(L.Nav(3, 150).y < nav.y, "a bigger dial pushes it down")
+end)
+
+test("dial layout: [hit] a wedge's hit square fills its slice without reaching the hub or a neighbor", function()
+    local L = DL()
+    for _, n in ipairs({ 2, 4, 6, 8, 12 }) do
+        local side = L.HitSize(n, 100)
+        T.assertTrue(side >= L.WEDGE, n .. ": never under the wedge")
+        T.assertTrue(100 - side / 2 >= L.HUB / 2, n .. ": clear of the hub")
+        local a, b = L.Wedge(1, n, 100), L.Wedge(2, n, 100)
+        T.assertTrue(math.max(math.abs(a.x - b.x), math.abs(a.y - b.y)) >= side, n .. ": clear of its neighbor")
+    end
+    -- red under: answer DL.WEDGE from DL.HitSize (the old 44-pixel target)
+    T.assertTrue(L.HitSize(4, 100) > L.WEDGE + 20, "a quarter slice gets a big square")
+    T.assertTrue(L.PointerReach(30) > L.PointerReach(16), "a bigger pointer sits further out")
 end)
 
 test("dial layout: [exit] Categories with several groups opens on the ring of groups; a group wedge opens its ring", function()

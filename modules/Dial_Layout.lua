@@ -41,14 +41,16 @@ DL.HUB     = 40                                -- the hub (the header button)
 DL.RIM     = 20                                -- from a wedge's outer edge to the disc's edge
 DL.LABEL_GAP = 2                               -- a wedge's label starts this far past the wedge's edge
 DL.LINE    = 14                                -- one line of label or title text
-DL.POINTER = DL.HUB / 2 + 8                    -- the pointer's distance from the hub's center
+DL.POINTER = DL.HUB / 2 + 8                    -- the pointer's distance from the hub's center, by default
 DL.DEAD    = 8                                 -- inside this, the pointer hides
 DL.KEYS    = 8                                 -- the number keys 1-8 pick wedges
 DL.AUTO    = 0                                 -- slices: one wedge per item, spread evenly
 DL.MAX_SLICES = 12
-DL.ARROW   = 22                                -- a page arrow, square
-DL.DOT     = 8                                 -- a page dot
-DL.DOT_STEP = 14                               -- from one page dot's center to the next
+DL.ARROW   = 24                                -- a page arrow, square
+DL.DOT     = 6                                 -- a page dot
+DL.PILL    = 18                                -- the current page's pill, as wide as this (DL.DOT tall)
+DL.DOT_GAP = 6                                 -- between one page indicator and the next
+DL.ARC     = 64                                -- straight segments drawing the rim
 
 local SLICE_OK = { [DL.AUTO] = true, [4] = true, [6] = true, [8] = true, [12] = true }
 local WINDS = { "N", "NE", "E", "SE", "S", "SW", "W", "NW" }
@@ -119,15 +121,46 @@ function DL.Paginate(items, size)
     return pages
 end
 
---- A paged ring's row under the disc at `radius` (labels `line` tall, as Geometry): `pages` dots, centered, and an arrow either side;
---- the row's height (`y`, from the hub's center), each dot's x and the arrows' x (right; left is its
+--- A paged ring's row under the disc at `radius` (labels `line` tall, as Geometry), showing page
+--- `current` of `pages`: the row's height (`y`, from the hub's center), each indicator's x and width
+--- (the current page a pill, DL.PILL wide; the others dots), and the arrows' x (right; left is its
 --- negative).
-function DL.Nav(pages, radius, line)
+function DL.Nav(pages, radius, line, current)
     pages = math.max(1, tonumber(pages) or 1)
-    local half = (pages - 1) * DL.DOT_STEP / 2
-    local dots = {}
-    for p = 1, pages do dots[p] = round((p - 1) * DL.DOT_STEP - half) end
-    return { y = round(DL.Geometry(radius, line).nav), dots = dots, arrow = round(half + DL.DOT / 2 + 10 + DL.ARROW / 2) }
+    current = tonumber(current) or 1
+    local widths, total = {}, 0
+    for p = 1, pages do
+        widths[p] = p == current and DL.PILL or DL.DOT
+        total = total + widths[p] + (p > 1 and DL.DOT_GAP or 0)
+    end
+    local dots, x = {}, -total / 2
+    for p = 1, pages do
+        dots[p] = round(x + widths[p] / 2)
+        x = x + widths[p] + DL.DOT_GAP
+    end
+    return { y = round(DL.Geometry(radius, line).nav), dots = dots, widths = widths,
+        arrow = round(total / 2 + 10 + DL.ARROW / 2) }
+end
+
+--- How big a wedge's clickable square is on a ring of n wedges at `radius` (wedge 1 at `start`): as large as the slice
+--- allows (the buttons are squares, owner ruling 2026-10-21), so hovering most of a slice lights it.
+--- It stops short of the hub, of the disc's edge, and of its neighbors' squares (two squares apart by
+--- (dx, dy) overlap unless one of the two is at least the side), never under the wedge itself.
+function DL.HitSize(n, radius, start)
+    n = math.max(1, tonumber(n) or 4)
+    radius = DL.ClampRadius(radius)
+    local side = math.min(2 * (DL.WEDGE / 2 + DL.RIM), 2 * (radius - DL.HUB / 2 - 4))
+    for i = 1, n > 1 and n or 0 do
+        local a, b = DL.Wedge(i, n, radius, start), DL.Wedge(i % n + 1, n, radius, start)
+        side = math.min(side, math.max(math.abs(a.x - b.x), math.abs(a.y - b.y)) - 2)
+    end
+    return math.floor(math.max(DL.WEDGE, side))
+end
+
+--- The pointer's distance from the hub's center for a pointer `size` pixels across: just outside
+--- the hub.
+function DL.PointerReach(size)
+    return DL.HUB / 2 + (tonumber(size) or 16) / 2 + 2
 end
 
 -- A label reads outward from the disc (owner, 2026-10-21: wholly outside it): its anchor sits on the
@@ -156,16 +189,6 @@ function DL.Wedge(i, n, radius, start)
     return { angle = a, x = x, y = y, anchor = labelAnchor(sx, sy), lx = round(out * sx) - x, ly = round(out * sy) - y }
 end
 
---- The spoke between wedge j and wedge j + 1 of n, on a dial of `radius` (wedge 1 at `start`
---- degrees): its center, rotation and length.
-function DL.Spoke(j, n, radius, start)
-    n = math.max(1, tonumber(n) or 4)
-    local a = math.rad(tonumber(start) or 0) + (j - 0.5) * 2 * math.pi / n
-    local inner, outer = DL.HUB / 2 + 4, DL.Geometry(radius).disc / 2 - 4
-    local mid = (inner + outer) / 2
-    return { x = round(mid * math.sin(a)), y = round(mid * math.cos(a)), rotation = -a, length = outer - inner }
-end
-
 --- Wedge i of n (wedge 1 at `start` degrees) as the nearest of the eight compass winds, or past eight
 --- wedges as its clock position ("12", "1", ... "11"), since the winds would give two wedges one word.
 function DL.Direction(i, n, start)
@@ -179,12 +202,14 @@ function DL.Direction(i, n, start)
 end
 
 --- The pointer from the hub's center (cx, cy) toward the cursor (mx, my), both in screen units: its
---- angle (clockwise from N) and its offset from the hub's center. Nil inside the dead zone.
-function DL.Pointer(cx, cy, mx, my)
+--- angle (clockwise from N) and its offset from the hub's center, `reach` out (DL.POINTER when none).
+--- Nil inside the dead zone.
+function DL.Pointer(cx, cy, mx, my, reach)
     local dx, dy = (mx or 0) - (cx or 0), (my or 0) - (cy or 0)
     local d = math.sqrt(dx * dx + dy * dy)
     if d < DL.DEAD then return nil end
-    return math.atan2(dx, dy), round(DL.POINTER * dx / d), round(DL.POINTER * dy / d)
+    reach = tonumber(reach) or DL.POINTER
+    return math.atan2(dx, dy), round(reach * dx / d), round(reach * dy / d)
 end
 
 -- ── the rings ───────────────────────────────────────────────────────────────────────────────

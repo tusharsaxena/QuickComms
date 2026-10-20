@@ -69,11 +69,26 @@ end
 
 --- The Comms Dial's Labels tab (`dial.label.*`, dial rework 2026-10-21): each wedge's name outside
 --- the disc, white Friz Quadrata 12 points with its shadow, as the dial always drew it; `show` off
---- draws none.
+--- draws none. The tooltip shows outside the dial too: above it by default, `tooltipOffset` pixels
+--- clear of the title (or the labels, the page row on the other sides).
 function D.DialLabel()
     return {
         show = true,
         font = "Friz Quadrata TT", fontSize = 12, fontColor = { r = 1, g = 1, b = 1, a = 1 },
         useClassColorFont = false, fontFlags = "", fontShadow = true,
+        tooltipSide = "top", tooltipOffset = 8,
+    }
+end
+
+--- The Comms Dial's Slices tab (`dial.slice.*`, 2026-10-21): each slice's fill (the dial's dark disc,
+--- as it was), the lines between slices and round the rim (`borderSize` 0 draws none), the fill a
+--- hovered slice takes, and the pointer in the hub that turns toward the cursor.
+function D.DialSlice()
+    return {
+        background = { r = 0.06, g = 0.06, b = 0.08, a = 0.80 }, useClassColorBackground = false,
+        borderSize = 1, borderColor = { r = 1, g = 1, b = 1, a = 0.12 }, useClassColorBorder = false,
+        highlight = { r = 1, g = 0.82, b = 0, a = 0.25 }, useClassColorHighlight = false,
+        pointerShow = true, pointerSize = 20, pointerColor = { r = 1, g = 0.82, b = 0, a = 1 },
+        useClassColorPointer = false,
     }
 end
