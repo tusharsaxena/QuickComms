@@ -444,6 +444,10 @@ function R.SetCooling(btn, on)
     btn.qcCool:SetShown(on and true or false)
 end
 
+-- The header row's collapse button (square) and its inset from the row's right edge, and the gap
+-- before it (R.HeaderMinWidth measures with them).
+local COLLAPSE_W, COLLAPSE_INSET, HEADER_GAP = 16, 2, 4
+
 --- Build the header row: the situation chip, the lockdown chip, the stale hint and the collapse
 --- toggle (its button, or a left click anywhere on the row). PREVIEW and TEST MODE are not here: they
 --- ride the drag strip's label (R.StripLabel).
@@ -456,8 +460,8 @@ function R.DressHeader(header, onCollapse)
     header.qcLockdown:SetPoint("LEFT", header.qcSituation, "RIGHT", 6, 0)
     header.qcLockdown:SetText(L["LOCKDOWN"])
     local collapse = CreateFrame("Button", nil, header)
-    collapse:SetSize(16, 16)
-    collapse:SetPoint("RIGHT", header, "RIGHT", -2, 0)
+    collapse:SetSize(COLLAPSE_W, COLLAPSE_W)
+    collapse:SetPoint("RIGHT", header, "RIGHT", -COLLAPSE_INSET, 0)
     collapse.qcText = collapse:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     collapse.qcText:SetAllPoints(collapse)
     collapse:SetScript("OnClick", function() onCollapse() end)
@@ -468,10 +472,19 @@ function R.DressHeader(header, onCollapse)
         if button == "LeftButton" then onCollapse() end
     end)
     header.qcStale = header:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-    header.qcStale:SetPoint("RIGHT", collapse, "LEFT", -4, 0)
+    header.qcStale:SetPoint("RIGHT", collapse, "LEFT", -HEADER_GAP, 0)
     header.qcStale:SetText(L["updates after combat"])
     header.qcLockdown:Hide()
     header.qcStale:Hide()
+end
+
+--- The narrowest the header row may be (modules/Pad.lua hands it to PL.Compute as opts.minWidth):
+--- the situation text at its left inset, a gap, and the collapse button at its right inset. Measured
+--- in the font and text the row wears now, so ApplyHeaderLook and the text come first. The lockdown
+--- chip shows only in combat, when no rebuild runs, so it is not counted.
+function R.HeaderMinWidth(header)
+    local w = tonumber(header.qcSituation:GetStringWidth()) or 0
+    return math.ceil(PL.PAD + w + HEADER_GAP + COLLAPSE_W + COLLAPSE_INSET)
 end
 
 -- GameFontGreenSmall's green (0.1, 1, 0.1), the color the header's marker wore before it moved.

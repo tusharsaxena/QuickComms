@@ -551,6 +551,23 @@ test("pad: [window] the header's text starts at the section titles' left edge, i
     end
 end)
 
+test("pad: [icon only] the pad is as wide as its chips when the header is narrower, else as the header needs", function()
+    local NS = live()
+    local PL = NS.PadLayout
+    local inst = NS.Pad.Instance("p1")
+    local sit = inst.header.qcSituation
+    sit.GetStringWidth = function(self) return 6 * #(self:GetText() or "") end
+    assertTrue(NS.SchemaRuntime.Set("pad.layout.style", "icon", "p1"))
+    local cw = PL.ICON_ONLY
+    local contentW = 4 * cw + 3 * 4
+    -- red under: PL.Compute's fixed 120-pixel floor (116 of chips left 4 spare pixels at the right edge)
+    assertEqual(inst.root.__w, contentW + 2 * PL.PAD, "four 24-pixel columns and the pad's padding")
+    sit.GetStringWidth = function() return 200 end
+    NS.Pad.Apply("p1", planFor(NS))
+    assertEqual(inst.root.__w, NS.PadRender.HeaderMinWidth(inst.header), "a wide header widens the pad")
+    assertEqual(inst.root.__w, PL.PAD + 200 + 4 + 16 + 2, "its text, a gap and the collapse button at its inset")
+end)
+
 test("pad: [chip] a chip wears the Chip tab: the owner's default body, edge, label and size, then what it is given", function()
     local NS = T.enableAddon{ mock = withMedia }
     local skins = {}

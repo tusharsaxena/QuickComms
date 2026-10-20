@@ -891,13 +891,14 @@ Total.
 - master: /qc test toggles test mode, and in combat says why it will not
 - master: the Test mode row reads and writes the one switch, and Reset all ends it
 
-### test_pad_layout.lua (19)
+### test_pad_layout.lua (20)
 
 - layout: horizontal puts a section's chips on one row under the header
 - layout: a titled section draws its label row first
 - layout: grid wraps at its column count; vertical is one column
 - layout: the style sets the cell
 - layout: [B3] narrow chips never make the pad narrower than its header needs
+- layout: [icon only] opts.minWidth is the pad's floor; without it the floor is MIN_PAD_W
 - layout: [B1] a section title equal to the header's situation is not drawn; a tab's title is
 - layout: [review] a larger Look font grows the chip and title rows; the default size changes nothing
 - layout: leftward growth mirrors the row; collapsed is the header alone
@@ -1002,7 +1003,7 @@ Total.
 - render: [icons] a glyph chip is drawn in its color; the chip repainted with another icon is white again
 - render: [B3] a chip's label is one line, and hidden when the chip leaves it no room
 
-### test_pad.lua (40)
+### test_pad.lua (41)
 
 - pad: the default pad shows the M+ callouts, each chip armed with its baked line
 - pad: [review 5] a refused chip is dimmed and disarmed: a click sends and reports nothing
@@ -1031,6 +1032,7 @@ Total.
 - pad: [phase 5] the pad wears its Window tab: the titles' font and the edge and body it was given
 - pad: [window] the header wears its own block: gold outlined 16-point text over nothing by default, then what it is given
 - pad: [window] the header's text starts at the section titles' left edge, in every growth
+- pad: [icon only] the pad is as wide as its chips when the header is narrower, else as the header needs
 - pad: [chip] a chip wears the Chip tab: the owner's default body, edge, label and size, then what it is given
 - pad: [chip] the chip glow is off by default, then wraps the whole chip in its style, and goes with the chip
 - pad: [review 5] a font or border this machine does not have draws the default, with no error
@@ -1218,12 +1220,12 @@ Total.
 | test_preview.lua | 23 |
 | test_edit_preview.lua | 14 |
 | test_master.lua | 5 |
-| test_pad_layout.lua | 19 |
+| test_pad_layout.lua | 20 |
 | test_dial_layout.lua | 18 |
 | test_surfaces.lua | 27 |
 | test_dial_yield.lua | 12 |
 | test_pad_render.lua | 20 |
-| test_pad.lua | 40 |
+| test_pad.lua | 41 |
 | test_dial.lua | 34 |
 | test_icon_style.lua | 8 |
 | test_glow.lua | 11 |
@@ -1234,4 +1236,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1004** |
+| **Total** | **1006** |

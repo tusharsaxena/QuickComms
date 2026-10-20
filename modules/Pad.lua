@@ -349,19 +349,22 @@ function Pad.Apply(id, plan)
     inst.hlook = R.HeaderLook(pad.header, inst.hlook)
     local hlook = inst.hlook
     local chip = type(pad.chip) == "table" and pad.chip or {}
+    -- The header wears its font and text before the layout, so the pad is as wide as the row needs
+    -- (R.HeaderMinWidth), no wider.
+    R.ApplyHeaderLook(inst.header, hlook)
+    R.PaintHeader(inst.header, hstate)
     local box = PL.Compute(sections, layout, { collapsed = hstate.collapsed, headerH = hlook.height, chip = chip,
-        fontSize = chip.fontSize, titleSize = look.fontSize, situation = hstate.situation, iconSize = icfg.size })
+        fontSize = chip.fontSize, titleSize = look.fontSize, situation = hstate.situation, iconSize = icfg.size,
+        minWidth = R.HeaderMinWidth(inst.header) })
     inst.root:SetScale(math.max(NS.Library.MIN_SURFACE_SCALE, (tonumber(NS.Setting("scale")) or 1) * (tonumber(layout.scale) or 1)))
     inst.root:SetSize(box.width, box.height)
     inst.width, inst.height = box.width, box.height
     anchorEdge(inst, box.up)
     inst.header:SetHeight(box.headerH)
-    R.ApplyHeaderLook(inst.header, hlook)
     NS.ApplySkin(inst.root, R.SkinFor(look))
     inst.clook = R.ChipLook(chip, inst.clook)
     place(inst, box, layout.style, inst.clook, R.TitleFont(look), icfg)
     NS.Glow.ReleaseFree(inst.chips)
-    R.PaintHeader(inst.header, hstate)
     inst.mark = hstate.mark
     if inst.handle then inst.handle:SetLabel(R.StripLabel(padName(id), hstate.mark)) end
     Pad.ApplyLock()

@@ -24,7 +24,7 @@ PL.ICON      = NS.IconDefaults.SIZE.pad.default -- the icon tile inside an icon 
 PL.ICON_ONLY = PL.ICON + 8 -- an icon-only chip is square: its icon and 8 pixels
 PL.ICON_ROOM = 4     -- a labeled chip's height past its icon's size
 PL.LABEL_H   = 22    -- label-only chip height
-PL.MIN_PAD_W = 120   -- the narrowest pad: the header's situation text and collapse button need it
+PL.MIN_PAD_W = 120   -- the narrowest pad when the caller measures no header (opts.minWidth)
 PL.MIN_CHIP_W = 1    -- the narrowest labeled chip (its label hides when it has no room)
 PL.DEFAULT_W = 100
 PL.FONT_SIZE = 10    -- the Chip tab's default font size, which the heights above were drawn for
@@ -269,7 +269,9 @@ end
 ---   the layout table's own), fontSize = number (the chips' label size; a chip grows to hold it), titleSize = number (the section titles' size; a title row grows to hold it; default
 ---   fontSize), iconSize = number (the Icons tab's; a chip grows to hold it), headerH = number (the
 ---   header row's height, PL.HeaderHeight),
----   situation = string (the header's text: a section title equal to it is not drawn) }
+---   situation = string (the header's text: a section title equal to it is not drawn),
+---   minWidth = number (the narrowest the pad may be: what its header row needs, measured by
+---   modules/Pad.lua; default PL.MIN_PAD_W) }
 --- @return table { width, height, items, headerY (the header row's top), headerH (its height), up (the
 ---   growth is upward) }
 function PL.Compute(sections, layout, opts)
@@ -291,7 +293,9 @@ function PL.Compute(sections, layout, opts)
     local maxCols = layout.orientation == "grid" and PL.Columns(layout, 1) or nil
     local y, widest = stackBlocks(blocks, maxCols, hh)
     if widest > 0 then contentW = math.max(contentW, widest * cw + (widest - 1) * gap) end
-    local width = math.max(PL.MIN_PAD_W, contentW + 2 * PL.PAD)
+    -- Never narrower than the header row needs: a fixed floor would leave an icon-only pad's spare
+    -- width at its right edge, past the last chip.
+    local width = math.max(tonumber(opts.minWidth) or PL.MIN_PAD_W, contentW + 2 * PL.PAD)
     local height = #blocks > 0 and (y + PL.PAD) or hh
     if up then flipBlocks(blocks, height) end
     local items = flattenBlocks(blocks, MIRROR[layout.growth] == true, width, cw + gap, cw, gap)

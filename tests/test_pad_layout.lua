@@ -80,6 +80,17 @@ test("layout: [B3] narrow chips never make the pad narrower than its header need
     assertEqual(chips(box)[2].x, 18, "the chips keep their own width")
 end)
 
+test("layout: [icon only] opts.minWidth is the pad's floor; without it the floor is MIN_PAD_W", function()
+    local pl = PL()
+    local icon = { orientation = "grid", columns = 4, growth = "right", style = "icon", spacing = 4 }
+    -- red under: PL.Compute ignoring opts.minWidth (four 24-pixel chips padded to 116, floored at 120)
+    assertEqual(pl.Compute({ { slots = slots(4) } }, icon, { minWidth = 60 }).width, 116, "the chips' own width")
+    assertEqual(pl.Compute({ { slots = slots(4) } }, icon, { minWidth = 150 }).width, 150, "the header's")
+    assertEqual(pl.Compute({ { slots = slots(4) } }, icon).width, pl.MIN_PAD_W, "a caller that measures nothing")
+    assertEqual(pl.Compute({ { slots = slots(4) } }, icon, { minWidth = 60, collapsed = true }).width, 60,
+        "collapsed: the header alone")
+end)
+
 test("layout: [B1] a section title equal to the header's situation is not drawn; a tab's title is", function()
     local pl = PL()
     local box = pl.Compute({ { title = "World", slots = slots(1) } }, H, { situation = " world " })
