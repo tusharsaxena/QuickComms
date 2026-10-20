@@ -345,7 +345,9 @@ function Pad.Apply(id, plan)
     local icfg = NS.IconStyle.Config(pad.icon, "pad")
     local sections = PL.VisibleSections(plan.sections, pad.groupsAs, session("padTab")[id])
     local hstate = headerState(inst, plan)
-    local hlook = R.HeaderLook(pad.header)
+    -- The looks the last rebuild built are reused while their settings hold (Pad_Render's signatures).
+    inst.hlook = R.HeaderLook(pad.header, inst.hlook)
+    local hlook = inst.hlook
     local chip = type(pad.chip) == "table" and pad.chip or {}
     local box = PL.Compute(sections, layout, { collapsed = hstate.collapsed, headerH = hlook.height, chip = chip,
         fontSize = chip.fontSize, titleSize = look.fontSize, situation = hstate.situation, iconSize = icfg.size })
@@ -356,7 +358,8 @@ function Pad.Apply(id, plan)
     inst.header:SetHeight(box.headerH)
     R.ApplyHeaderLook(inst.header, hlook)
     NS.ApplySkin(inst.root, R.SkinFor(look))
-    place(inst, box, layout.style, R.ChipLook(chip), R.TitleFont(look), icfg)
+    inst.clook = R.ChipLook(chip, inst.clook)
+    place(inst, box, layout.style, inst.clook, R.TitleFont(look), icfg)
     NS.Glow.ReleaseFree(inst.chips)
     R.PaintHeader(inst.header, hstate)
     inst.mark = hstate.mark

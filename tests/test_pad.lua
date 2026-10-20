@@ -503,12 +503,11 @@ end)
 
 test("pad: [window] the header wears its own block: gold small text over nothing by default, then what it is given", function()
     local NS = T.enableAddon{ mock = withMedia }
-    NS.Situation.ReadInputs = function() return MPLUS end
-    NS.Situation.RefreshNow("test")
     local skins = {}
     local apply = NS.ApplySkin
     NS.ApplySkin = function(frame, skin) skins[frame] = skin return apply(frame, skin) end
-    NS.Surfaces.Request("test")
+    NS.Situation.ReadInputs = function() return MPLUS end
+    NS.Situation.RefreshNow("test")   -- the pad's first build, under the spy
     local header = NS.Pad.Instance("p1").header
     local sit = header.qcSituation
     assertEqual(table.concat(sit.__color, ","), "1,0.82,0,1", "GameFontNormalSmall's gold, as before")
@@ -553,13 +552,12 @@ end)
 
 test("pad: [chip] a chip wears the Chip tab: the body, edge, label and size it always had, then what it is given", function()
     local NS = T.enableAddon{ mock = withMedia }
-    NS.Situation.ReadInputs = function() return MPLUS end
-    NS.Situation.RefreshNow("test")
     local skins = {}
     local apply = NS.ApplySkin
     NS.ApplySkin = function(frame, skin) skins[frame] = skin return apply(frame, skin) end
+    NS.Situation.ReadInputs = function() return MPLUS end
+    NS.Situation.RefreshNow("test")   -- the pad's first build, under the spy
     local S = NS.SchemaRuntime
-    assertTrue(S.Set("pad.chip.fontSize", 10, "p1"))   -- a rebuild, under the spy
     local btn = pull(NS)
     assertEqual(table.concat(btn.qcBg.__color, ","), "0.1,0.1,0.12,0.9", "the body a chip always had")
     assertNil(skins[btn.qcEdge].edgeFile, "no edge by default")
@@ -578,6 +576,10 @@ test("pad: [chip] a chip wears the Chip tab: the body, edge, label and size it a
     assertEqual(skins[btn.qcEdge].bg[4], 0, "the edge draws over the chip, never a second body")
     assertEqual(btn.qcLabel.__font[1], "Fonts\\ARIALN.TTF")
     assertEqual(btn.__w .. "x" .. btn.__h, "150x40", "Chip width and Chip height")
+    skins[btn.qcEdge] = nil
+    assertTrue(S.Set("pad.layout.spacing", 6, "p1"))
+    -- red under: R.ApplyChipLook skinning every chip on every rebuild (the look did not change)
+    assertNil(skins[pull(NS).qcEdge], "a rebuild that changed no chip setting repaints no chip")
 end)
 
 test("pad: [chip] the chip glow is off by default, then wraps the whole chip in its style, and goes with the chip", function()

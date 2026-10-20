@@ -328,20 +328,51 @@ local function recolor(font, c, grow)
     return t
 end
 
---- The header's look, from the pad's `header` table: { height, font, skin }. The font is the header
---- block's (gold by default, GameFontNormalSmall's); the skin its background and edge, plain (no Ka0s
---- inner line); the defaults draw no background and no edge.
-function R.HeaderLook(header)
+-- A header or chip table's signature: every leaf its look reads, and the media its names resolve to
+-- now, so a rebuild that changed none of it reuses the look it built last time and repaints nothing
+-- (HeaderLook, ChipLook and their Apply). The class color is the player's, fixed for the session.
+local SIG_KEYS = { "height", "width", "font", "fontSize", "fontFlags", "fontShadow", "useClassColorFont",
+    "borderStyle", "borderSize", "useClassColorBorder", "useClassColorBackground", "glowEnabled", "glowType",
+    "useClassColorGlow" }
+local SIG_COLORS = { "fontColor", "borderColor", "background", "glowColor" }
+
+local function lookSig(t)
+    local parts = {}
+    for _, k in ipairs(SIG_KEYS) do parts[#parts + 1] = tostring(t[k]) end
+    for _, k in ipairs(SIG_COLORS) do
+        local c = t[k]
+        if type(c) == "table" then
+            parts[#parts + 1] = ("%s,%s,%s,%s"):format(tostring(c.r or c[1]), tostring(c.g or c[2]),
+                tostring(c.b or c[3]), tostring(c.a or c[4]))
+        else
+            parts[#parts + 1] = "-"
+        end
+    end
+    parts[#parts + 1] = tostring(NS.MediaFetch("font", t.font))
+    parts[#parts + 1] = tostring(NS.MediaFetch("border", t.borderStyle))
+    return table.concat(parts, "|")
+end
+
+--- The header's look, from the pad's `header` table: { height, font, skin, sig }. The font is the
+--- header block's (gold by default, GameFontNormalSmall's); the skin its background and edge, plain
+--- (no Ka0s inner line); the defaults draw no background and no edge. `prev`, the look the last
+--- rebuild built, is answered again while its signature still holds.
+function R.HeaderLook(header, prev)
     header = type(header) == "table" and header or {}
-    return { height = PL.HeaderHeight(header.height), font = R.LabelFont(header, R.TITLE_COLOR),
+    local sig = lookSig(header)
+    if type(prev) == "table" and prev.sig == sig then return prev end
+    return { sig = sig, height = PL.HeaderHeight(header.height), font = R.LabelFont(header, R.TITLE_COLOR),
         skin = R.SkinFor({ borderStyle = header.borderStyle or "None", borderSize = header.borderSize or 0,
             borderColor = header.borderColor, useClassColorBorder = header.useClassColorBorder,
             background = header.background or { 0, 0, 0, 0 },
             useClassColorBackground = header.useClassColorBackground }, true) }
 end
 
---- Dress the header row in its look (R.HeaderLook): its skin, and every text in its font.
+--- Dress the header row in its look (R.HeaderLook): its skin, and every text in its font. A look the
+--- header already wears (its signature) is not painted again.
 function R.ApplyHeaderLook(header, hl)
+    if header.qcLookSig == hl.sig then return end
+    header.qcLookSig = hl.sig
     NS.ApplySkin(header, hl.skin)
     R.ApplyFont(header.qcSituation, hl.font)
     R.ApplyFont(header.qcLockdown, recolor(hl.font, LOCKDOWN_COLOR))
@@ -355,23 +386,30 @@ local CHIP_BG = { 0.10, 0.10, 0.12, 0.90 }
 local CLEAR = { 0, 0, 0, 0 }
 
 --- A chip's look, from the pad's `chip` table: { bg = {r,g,b,a}, edge (a plain skin: the border only,
---- over no background), font, glow (IconStyle.GlowConfig, false while off) }. The defaults are the
+--- over no background), font, glow (IconStyle.GlowConfig, false while off), sig }. The defaults are the
 --- chip as it always was: the 0.10, 0.10, 0.12, 0.90 body, no edge, the small white label, no glow.
-function R.ChipLook(chip)
+--- `prev` is answered again while its signature still holds, as R.HeaderLook's.
+function R.ChipLook(chip, prev)
     chip = type(chip) == "table" and chip or {}
+    local sig = lookSig(chip)
+    if type(prev) == "table" and prev.sig == sig then return prev end
     local bg = { NS.ResolveColor(chip.background or CHIP_BG, chip.useClassColorBackground) }
     local edge = R.SkinFor({ borderStyle = chip.borderStyle or "None", borderSize = chip.borderSize or 0,
         borderColor = chip.borderColor, useClassColorBorder = chip.useClassColorBorder, background = CLEAR }, true)
-    return { bg = bg, edge = edge, font = R.LabelFont(chip), glow = IS.GlowConfig(chip,
+    return { sig = sig, bg = bg, edge = edge, font = R.LabelFont(chip), glow = IS.GlowConfig(chip,
         tostring(chip.width) .. "x" .. tostring(chip.height)) }
 end
 
---- Dress a chip in its look (R.ChipLook): its body, its edge, its label's font and its glow.
+--- Dress a chip in its look (R.ChipLook): its body, its edge, its label's font and its glow. A look the
+--- chip already wears (its signature) is not painted again; the glow is handed over every time, since a
+--- chip's release puts its glow out (Glow.Release), and Glow.Chip keeps an unchanged one.
 function R.ApplyChipLook(btn, cl)
-    btn.qcBg:SetColorTexture(cl.bg[1], cl.bg[2], cl.bg[3], cl.bg[4])
-    NS.ApplySkin(btn.qcEdge, cl.edge)
-    btn.qcEdgeFile = cl.edge.edgeFile   -- recorded for the suites: nil is no edge
-    R.ApplyFont(btn.qcLabel, cl.font)
+    if btn.qcLookSig ~= cl.sig then
+        btn.qcLookSig = cl.sig
+        btn.qcBg:SetColorTexture(cl.bg[1], cl.bg[2], cl.bg[3], cl.bg[4])
+        NS.ApplySkin(btn.qcEdge, cl.edge)
+        R.ApplyFont(btn.qcLabel, cl.font)
+    end
     Glow.Chip(btn, cl.glow)
 end
 
