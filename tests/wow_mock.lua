@@ -30,7 +30,8 @@
 --                  owner's; __bindingStacks keeps every owner's, so a ClearBindings hands the key back)
 --   overrideBindings    [key] = { owner, name, button }: SetOverrideBindingClick (refused in combat)
 --   bindingActions      [key] = the action the player's own WoW binding names (GetBindingAction)
---   bindingKeys         [command] = the key the player bound to a command in WoW's menu (GetBindingKey)
+--   bindingKeys         [command] = the first key the player bound to a command in WoW's menu; GetBindingKey
+--                  answers it, then every other key bindingActions names for the command (a second key)
 --   SetBinding(key, command)  WoW's own binding (refused in combat): key -> command in bindingActions,
 --                  and the command's first key in bindingKeys; a nil command unbinds the key
 --   bindingSaves        every SaveBindings(set) call's set, in order (refused in combat)
@@ -715,7 +716,18 @@ local function build()
     end
 
     M.GetBindingAction = function(key) return M.bindingActions[key] or "" end
-    M.GetBindingKey = function(command) return M.bindingKeys[command] end
+    -- Every key bound to `command`: bindingKeys' first, then any other key bindingActions names it
+    -- for (sorted), as the menu holds two per action.
+    M.GetBindingKey = function(command)
+        local first = M.bindingKeys[command]
+        local rest = {}
+        for key, action in pairs(M.bindingActions) do
+            if action == command and key ~= first then rest[#rest + 1] = key end
+        end
+        table.sort(rest)
+        if first == nil then return unpack(rest) end
+        return first, unpack(rest)
+    end
 
     M.SetBinding = function(key, command)
         if M.inCombat then

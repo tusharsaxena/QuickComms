@@ -85,13 +85,16 @@ local KEY_WHY = {
     reservedKey = L["Escape, the left and right mouse buttons, the mouse wheel and 1 to 8 without a modifier cannot open a dial: the open dial uses them."],
 }
 
--- Bind `key` (normalized; false clears) to `command` in place of `old`, and save the set.
-local function rebind(command, old, key)
-    if old then NS.Compat.SetBinding(old, nil) end
+-- Bind `key` (normalized; nil clears) to `command` in place of every key in `olds` (the menu holds
+-- two per action; each one that is not `key` is unbound), and save the set.
+local function rebind(command, olds, key)
+    for _, old in ipairs(olds) do
+        if old ~= key then NS.Compat.SetBinding(old, nil) end
+    end
     local before = key and NS.Compat.BindingAction(key)
-    if key then NS.Compat.SetBinding(key, command) end
+    if key and before ~= command then NS.Compat.SetBinding(key, command) end
     NS.Compat.SaveBindings()
-    NS.Debug("Bind", "%s: %s -> %s", command, tostring(old or "none"), tostring(key or "none"))
+    NS.Debug("Bind", "%s: %s -> %s", command, #olds > 0 and table.concat(olds, ",") or "none", tostring(key or "none"))
     if before and before ~= command then
         NS.Print(L["%s was %s in WoW's key bindings; now it opens this dial."]:format(key,
             NS.Compat.BindingLabel(before) or before))
@@ -120,9 +123,9 @@ function Dial.BindKey(id, key)
         return false
     end
     key = NS.Library.KeyValue(key) or nil
-    local old = NS.Compat.BindingKey(command)
-    if old == key then return true end
-    rebind(command, old, key)
+    local olds = NS.Compat.BindingKeys(command)
+    if (key and #olds == 1 and olds[1] == key) or (not key and #olds == 0) then return true end
+    rebind(command, olds, key)
     return true
 end
 

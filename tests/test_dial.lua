@@ -219,6 +219,26 @@ test("dial: [keys] a new key unbinds the old one; Escape (no key) clears it; a r
     assertEqual(#m.blocked, 0)
 end)
 
+test("dial: [keys] a new key unbinds both keys the menu holds for the dial; Escape clears both", function()
+    local NS, m = live()
+    local command = "CLICK QuickCommsDial1:Toggle"
+    m.SetBinding("J", command)   -- the menu's two keys for Open Comms Dial 1
+    m.SetBinding("K", command)
+    -- red under: only Compat.BindingKey's first key unbound, K still opening the dial
+    assertTrue(NS.Dial.BindKey("d2", "G"))
+    assertNil(m.bindingActions.J)
+    assertNil(m.bindingActions.K, "the second key is unbound too")
+    assertEqual(table.concat(NS.Compat.BindingKeys(command), ","), "G")
+    assertEqual(NS.Dial.KeyOf("d2"), "G")
+    m.SetBinding("K", command)
+    assertTrue(NS.Dial.BindKey("d2", "K"), "the new key is one of the two: the other goes")
+    assertEqual(table.concat(NS.Compat.BindingKeys(command), ","), "K")
+    m.SetBinding("J", command)
+    assertTrue(NS.Dial.BindKey("d2", ""))
+    assertEqual(#NS.Compat.BindingKeys(command), 0, "Escape leaves no key bound")
+    assertEqual(#m.blocked, 0)
+end)
+
 test("dial: [keys] a key bound elsewhere in WoW is taken, with one line naming what it was", function()
     local NS, m = live()
     m.bindingActions.F = "TOGGLEAUTORUN"

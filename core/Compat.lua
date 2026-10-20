@@ -287,6 +287,23 @@ function Compat.BindingKey(command)
     return key
 end
 
+--- Every key the player bound to `command` in WoW's key bindings menu (GetBindingKey answers one
+--- per key; the menu takes two), in order, as a list: empty when there is none or the API is absent.
+--- A secret key is left out.
+--- @return string[] keys
+function Compat.BindingKeys(command)
+    local keys = {}
+    if not (GetBindingKey and Compat.IsSafeKey(command)) then return keys end
+    local function collect(...)
+        for i = 1, select("#", ...) do
+            local key = PlainString((select(i, ...)))
+            if key ~= nil and key ~= "" then keys[#keys + 1] = key end
+        end
+    end
+    collect(GetBindingKey(command))
+    return keys
+end
+
 --- Bind `key` to `command` in WoW's own key bindings (SetBinding), or unbind `key` when `command` is
 --- nil. The game refuses a binding change in combat, so this answers false there, and when the API
 --- is absent; the caller saves the set (SaveBindings) once it is done.
