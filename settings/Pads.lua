@@ -2,12 +2,13 @@ local _, NS = ...
 -- settings/Pads.lua — the Comms Pad page (design spec §10.2-§10.4, §13.1): one pad at a time.
 --
 --     band     [ Pad v (picker) ][ New pad ]
---     strip    [ General ][ Groups ][ Layout ][ Pad header ][ Section header ][ Main window ][ Chip ]
+--     strip    [ General ][ Groups ][ Layout ][ Pad header ][ Section header ][ Window ][ Buttons ]
 --              [ Icons ]
---     General  Name, Enabled, then Unlock (or Lock) pads and Delete pad
+--     General  Name, Enabled, Visibility (with Fade and Faded alpha, `pad.look.*`, under its own
+--              heading; on the Window tab until 2026-10-20), then Unlock (or Lock) pads and Delete pad
 --     Groups   Show groups as, then the pad's groups as a drag-to-reorder list with Remove (its
 --              priority order, spec §7), then Add a group
---     Layout   orientation, grid columns, growth, chip style, scale, spacing, then Position: X and Y
+--     Layout   orientation, grid columns, growth, button style, scale, spacing, then Position: X and Y
 --              and Reset this pad's position
 --     Pad header      the top row that names the situation (`pad.header.*`): Size (Header height),
 --                     Font (face, size, color with Use class color, flags, shadow), Background (its
@@ -16,12 +17,13 @@ local _, NS = ...
 --                     under its own heading, which the library draws from the rows' subgroup (once)
 --     Section header  each section title's row (`pad.section.*`): Size (its height, 0 automatic), Font
 --                     (the titles'), and the Background and Border of the band behind each title
---     Main window     the pad itself (`pad.look.*`, the Look tab's stored key): Visibility (with Fade
---                     and Faded alpha), Background and Border. These three were the one Window tab
---                     until 2026-10-20 (owner request)
---     Chip     the chips themselves (`pad.chip.*`): Size (Chip width, from Layout until 2026-10-20, and
---              Chip height, 0 automatic), Color (the chip's background), Border, Font (the chips'
---              labels) and Glow (off by default: its style and color), each under its own heading
+--     Window          the pad itself (`pad.look.*`, the Look tab's stored key): Background and Border.
+--                     Pad header, Section header and this were one Window tab until 2026-10-20, then
+--                     this was Main window, with Visibility, until that moved to General (owner
+--                     requests)
+--     Buttons  the chips themselves (`pad.chip.*`; the Chip tab until 2026-10-20): Size (Button width,
+--              from Layout until 2026-10-20, and Button height, 0 automatic), Color (the chip's
+--              background), Border, Font (the chips' labels) and Glow (off by default: its style and color), each under its own heading
 --     Icons    the chips' icons (B9, settings/SchemaIcons.lua): Size and crop, Color (with Tint), the
 --              composed Border block, Glow (its trigger, style and color), Offset, then only the
 --              selected style's knobs (none while the glow is off), each under its own heading drawn
@@ -46,8 +48,8 @@ local GROUPS = L["Groups"]
 local LAYOUT = L["Layout"]
 local PAD_HEADER = L["Pad header"]
 local SECTION_HEADER = L["Section header"]
-local MAIN_WINDOW = L["Main window"]
-local CHIP = L["Chip"]
+local WINDOW = L["Window"]
+local CHIP = L["Buttons"]
 local ICONS = L["Icons"]
 
 Settings.Pads = Settings.Pads or {}
@@ -226,7 +228,7 @@ local function renderLayout(ctx, rows)
         tooltip = L["Put this pad back in its default place."], onClick = function() PD.ResetPoint(id) end }, nil)
 end
 
--- A styled tab (Pad header, Section header, Main window, Chip) in one call: its rows in schema
+-- A styled tab (Pad header, Section header, Window, Buttons) in one call: its rows in schema
 -- order, whose headings the library draws from each row's subgroup (options-ui-§7, §16: a subsection
 -- is never drawn by the host, so each heading shows once).
 local function renderStyled(ctx, rows)
@@ -270,14 +272,14 @@ local function render(ctx)
         { key = LAYOUT, render = renderLayout },
         { key = PAD_HEADER, render = renderStyled },
         { key = SECTION_HEADER, render = renderStyled },
-        { key = MAIN_WINDOW, render = renderStyled },
+        { key = WINDOW, render = renderStyled },
         { key = CHIP, render = renderStyled },
         { key = ICONS, render = renderIcons },
     })
 end
 
 Ed.RegisterPage(PAGE, L["Comms Pad"], "PadsPanel", render, {
-    tooltip = L["Put the selected pad's groups-as, layout, headers, window, chips and icons back to their defaults, and turn it on. Its name, groups and position are kept."],
+    tooltip = L["Put the selected pad's groups-as, layout, headers, window, buttons and icons back to their defaults, and turn it on. Its name, groups and position are kept."],
     -- One act (Library.Batch): the pads rebuild once, not once per row.
     onClick = function(ctx) NS.Library.Batch(function() H().RestoreDefaults(PAGE, ctx) end) end,
 })

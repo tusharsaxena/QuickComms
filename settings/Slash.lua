@@ -59,7 +59,7 @@ local COMMANDS = {
         function(rest) runPerf(rest) end},
     {"check",    L["Show the line a callout would send here (never sends)"],
         function(rest) NS.SlashVerbs.Check(rest) end},
-    {"test",     L["Turn test mode on or off (placeholder chips and wedges; it opens dial 1; combat ends it)"],
+    {"test",     L["Turn test mode on or off (placeholder buttons and wedges; it opens dial 1; combat ends it)"],
         function() NS.Preview.ToggleTestMode() end},
     {"preview",  L["Preview the pads and dials as another situation — `/qc preview <name>` or `off`; `/qc preview` lists them"],
         function(rest) NS.SlashVerbs.Preview(rest) end},

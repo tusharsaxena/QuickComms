@@ -52,7 +52,7 @@ NS.SchemaRuntime.AddRows({
       group = BEHAVIOR, label = L["Explain why groups show"],
       desc = L["Show which conditions matched in the pad and dial tooltips."] },
     { path = "behavior.lockdownChip", type = "bool", default = B.lockdownChip, page = "general",
-      group = BEHAVIOR, label = L["Show the lockdown chip"],
+      group = BEHAVIOR, label = L["Show the lockdown tag"],
       desc = L["Show LOCKDOWN on a pad or dial when lockdown is blocking one of its callouts."],
       onChange = rebuild },
     { path = "behavior.sounds", type = "bool", default = B.sounds, page = "general",

@@ -39,7 +39,7 @@ test("pads page: the Layout rows write the selected pad", function()
     local NS, _, P = open()
     local w = P.tab("pads", "Layout")
     P.find(w, "Dropdown", "Orientation"):__fire("OnValueChanged", "vertical")
-    P.find(w, "Dropdown", "Chip style"):__fire("OnValueChanged", "label")
+    P.find(w, "Dropdown", "Button style"):__fire("OnValueChanged", "label")
     P.find(w, "Slider", "Scale"):__fire("OnMouseUp", 1.5)
     local layout = NS.db.profile.pads.p1.layout
     assertEqual(layout.orientation, "vertical")
@@ -89,9 +89,9 @@ test("pads page: X and Y move the pad through its pad.point row; Reset puts it b
     assertEqual(pointOf(inst), "TOP,CENTER,0,-150")
 end)
 
-test("pads page: Main window's visibility reaches the pad's state driver", function()
+test("pads page: General's visibility reaches the pad's state driver", function()
     local NS, m, P = open()
-    local w = P.tab("pads", "Main window")
+    local w = P.tab("pads", "General")
     P.find(w, "Dropdown", "Visibility"):__fire("OnValueChanged", "never")
     assertEqual(NS.db.profile.pads.p1.look.visibility, "never")
     assertEqual(m.stateDrivers[NS.Pad.Instance("p1").root].visibility, "hide")
@@ -201,7 +201,7 @@ test("pads page: [final 26] New pad takes the lowest free number, so a delete ne
     assertEqual(NS.db.profile.pads[Pads.Create()].name, "Comms Pad 4")
 end)
 
-test("pads page: [window tabs] the strip reads Layout, Pad header, Section header, Main window, Chip, Icons", function()
+test("pads page: [window tabs] the strip reads General first, then Layout, Pad header, Section header, Window, Buttons, Icons", function()
     local NS = open()
     local order, seen = {}, {}
     for _, row in ipairs(NS.addon.Settings.RowsForPage("pads")) do
@@ -210,9 +210,10 @@ test("pads page: [window tabs] the strip reads Layout, Pad header, Section heade
             order[#order + 1] = row.group
         end
     end
-    -- red under: the Visibility rows left ahead of the header tabs (the library orders tabs by each
-    -- group's first row), or the one Window tab (2026-10-20, owner request)
-    assertEqual(table.concat(order, ","), "General,Groups,Layout,Pad header,Section header,Main window,Chip,Icons")
+    -- red under: a General row (Visibility's) ahead of Name moving no tab, but a Window row left ahead
+    -- of the header tabs (the library orders tabs by each group's first row), or the one Window tab
+    -- (2026-10-20, owner request)
+    assertEqual(table.concat(order, ","), "General,Groups,Layout,Pad header,Section header,Window,Buttons,Icons")
 end)
 
 test("pads page: [window tabs] Pad header carries Size, Font, Background and Border under their headings", function()
@@ -247,24 +248,38 @@ test("pads page: [window tabs] Section header carries Size, Font, Background and
     assertEqual(NS.db.profile.pads.p1.section.height, 22)
 end)
 
-test("pads page: [window tabs] Main window carries Visibility, Background and Border, and no font", function()
+test("pads page: [window tabs] Window carries Background and Border, and no font and no Visibility", function()
     local NS, _, P = open()
-    local w = P.tab("pads", "Main window")
-    for _, heading in ipairs({ "Visibility", "Background", "Border" }) do
+    local w = P.tab("pads", "Window")
+    for _, heading in ipairs({ "Background", "Border" }) do
         assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
     end
-    assertNil(P.find(w, "ColorPicker", "Font color"), "no font on the Main window (owner's call)")
+    assertNil(P.find(w, "ColorPicker", "Font color"), "no font on the Window (owner's call)")
     assertNil(P.find(w, "CheckBox", "Font shadow"))
+    -- red under: the Visibility rows left on the Window tab (they moved to General, owner request)
+    assertEqual(#P.all(w, "Heading", "Visibility"), 0, "Visibility is on General")
+    assertNil(P.find(w, "Slider", "Faded alpha"))
     assertEqual(#P.all(w, "CheckBox", "Use class color"), 2, "background and border")
+    P.find(w, "CheckBox", "Use class color"):__fire("OnValueChanged", true)
+    assertTrue(NS.db.profile.pads.p1.look.useClassColorBackground, "the first companion is the background's")
+end)
+
+test("pads page: General carries Visibility, Fade and Faded alpha under a Visibility heading, before its buttons", function()
+    local NS, _, P = open()
+    local w = P.tab("pads", "General")
+    -- red under: the Visibility rows left on the Window tab
+    assertEqual(#P.all(w, "Heading", "Visibility"), 1, "Visibility drawn once")
+    assertTrue(P.find(w, "Dropdown", "Fade") ~= nil)
     P.find(w, "Slider", "Faded alpha"):__fire("OnMouseUp", 0.5)
-    assertEqual(NS.db.profile.pads.p1.look.fadeAlpha, 0.5)
+    assertEqual(NS.db.profile.pads.p1.look.fadeAlpha, 0.5, "the path is still pad.look.fadeAlpha")
+    assertTrue(P.find(w, "Button", "Delete pad") ~= nil, "Unlock and Delete stay on General")
 end)
 
 -- ── the Chip tab (2026-10-20) ───────────────────────────────────────────────────────────────
 
-test("pads page: [chip] Chip carries Size, Color, Border, Font and Glow, and Chip width left Layout for it", function()
+test("pads page: [chip] Buttons carries Size, Color, Border, Font and Glow, and Button width left Layout for it", function()
     local NS, _, P = open()
-    local w = P.tab("pads", "Chip")
+    local w = P.tab("pads", "Buttons")
     for _, heading in ipairs({ "Size", "Color", "Border", "Font", "Glow" }) do
         assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
     end
@@ -272,12 +287,12 @@ test("pads page: [chip] Chip carries Size, Color, Border, Font and Glow, and Chi
     assertTrue(P.find(w, "Slider", "Glow style") == nil, "a dropdown, not a slider")
     -- red under: the Glow style row without its disabledIf
     assertTrue(P.find(w, "Dropdown", "Glow style").disabled, "the glow is off by default")
-    P.find(w, "Slider", "Chip width"):__fire("OnMouseUp", 140)
+    P.find(w, "Slider", "Button width"):__fire("OnMouseUp", 140)
     P.find(w, "CheckBox", "Glow"):__fire("OnValueChanged", true)
     assertEqual(NS.db.profile.pads.p1.chip.width, 140)
     assertTrue(NS.db.profile.pads.p1.chip.glowEnabled)
-    assertFalse(P.find(P.tab("pads", "Chip"), "Dropdown", "Glow style").disabled)
-    assertNil(P.find(P.tab("pads", "Layout"), "Slider", "Chip width"), "moved to the Chip tab")
+    assertFalse(P.find(P.tab("pads", "Buttons"), "Dropdown", "Glow style").disabled)
+    assertNil(P.find(P.tab("pads", "Layout"), "Slider", "Button width"), "moved to the Buttons tab")
     assertNil(NS.db.profile.pads.p1.layout.width, "and out of the layout table")
 end)
 

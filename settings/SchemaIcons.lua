@@ -75,7 +75,7 @@ local KNOB_TEXT = {
 
 -- What each kind's rows say about where the icon is.
 local WHERE = {
-    pad = { page = "pads", size = L["How big each chip's icon is, in pixels. A bigger icon makes the chips taller."],
+    pad = { page = "pads", size = L["How big each button's icon is, in pixels. A bigger icon makes the buttons taller."],
         when = L["Always, while the mouse is over the icon, or for a moment after its callout is sent."] },
     dial = { page = "dials", size = L["How big each wedge's icon is, in pixels. The wedges keep their size."],
         when = L["Always, while the mouse is over the icon, or for a moment after its callout is sent. The dial closes on a send, so that moment runs from the next time you open it, within a few seconds."] },
