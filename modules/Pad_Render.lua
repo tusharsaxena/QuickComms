@@ -7,9 +7,11 @@ local _, NS = ...
 -- when locked, a dim veil when its bake was refused, a dim veil during the spam guard's window, a
 -- gold hover and a flash per send result. The tooltip names the line it sends and the channel it
 -- goes to in WoW's chat color (a smart kind shows the channel it resolved to), or why it sends
--- nothing, and any lock. The pad's Look
--- (phase 5) is read here as two plain values, a font (LabelFont) and a skin (SkinFor), which
--- modules/Pad.lua applies out of combat. The Icons tab (B9) styles the icon through
+-- nothing, and any lock. The pad's Window tab
+-- (phase 5; the Look tab until 2026-10-20) is read here as plain values: fonts (LabelFont, for the
+-- section titles and the header) and skins (SkinFor, for the pad and its header), which
+-- modules/Pad.lua applies out of combat. The header's look (HeaderLook) is its own block on that tab;
+-- its situation text starts at the section titles' left edge (PL.PAD), whatever the growth. The Icons tab (B9) styles the icon through
 -- modules/IconStyle.lua (size, crop, desaturation, alpha, tint, border) and modules/Glow.lua (the
 -- glow, whose On hover trigger the chip's OnEnter and OnLeave hooks drive).
 
@@ -249,13 +251,14 @@ end
 
 local FLAT_EDGE = "Interface\\Buttons\\WHITE8x8"
 
---- The font a pad's text is drawn in, from its Look: { path, size, flags, r, g, b, a, shadow, colored }.
---- A face this machine does not have is the standard one; "Use class color" takes the player's class
---- color, keeping the swatch's alpha (NS.ResolveColor). `colored` is whether the player chose a color:
---- Use class color, or a swatch other than the default white.
-function R.LabelFont(look)
+--- A font block's font (the Window tab's, the Header's): { path, size, flags, r, g, b, a, shadow,
+--- colored }. A face this machine does not have is the standard one; "Use class color" takes the
+--- player's class color, keeping the swatch's alpha (NS.ResolveColor). A missing swatch is `fallback`
+--- when given, else white. `colored` is whether the player chose a color: Use class color, or a swatch
+--- other than the default white.
+function R.LabelFont(look, fallback)
     look = type(look) == "table" and look or {}
-    local r, g, b, a = NS.ResolveColor(look.fontColor, look.useClassColorFont)
+    local r, g, b, a = NS.ResolveColor(look.fontColor or fallback, look.useClassColorFont)
     return { path = NS.MediaFetch("font", look.font) or STANDARD_TEXT_FONT, size = tonumber(look.fontSize) or 10,
         flags = type(look.fontFlags) == "string" and look.fontFlags or "", r = r, g = g, b = b, a = a,
         shadow = look.fontShadow ~= false,
@@ -266,8 +269,8 @@ end
 R.TITLE_COLOR = { 1, 0.82, 0, 1 }
 
 --- A section title's font: the pad's face, size, flags and shadow, in the title's own gold unless the
---- player chose a color for the font (Use class color, or a swatch other than white). The default Look
---- then changes nothing a pad already showed: gold titles over white chip labels.
+--- player chose a color for the font (Use class color, or a swatch other than white). The default
+--- Window font then changes nothing a pad already showed: gold titles over white chip labels.
 function R.TitleFont(font)
     if font.colored then return font end
     local t = {}
@@ -289,13 +292,14 @@ end
 -- with no innerBorder would leave it drawn; this one hides it.
 local NO_INNER = { 0, 0, 0, 0 }
 
---- The skin a pad wears, from its Look: the Ka0s skin (NS.SKIN) with the border's art (a LibSharedMedia
---- border by name; "None", or one this machine does not have, is the flat edge), its thickness (0 is
---- no edge) and color, and the background color, each through its class-color companion. The Ka0s
---- 1px inner line belongs to the flat 1px edge only: at thickness 0 it would be an edge after all, and
---- over a thicker edge or border art it is a gray line that ignores the border's color. Art insets the
---- background by a quarter of its size, so the body reaches under the art's soft inner edge.
-function R.SkinFor(look)
+--- The skin a pad wears, from its Window tab: the Ka0s skin (NS.SKIN) with the border's art (a
+--- LibSharedMedia border by name; "None", or one this machine does not have, is the flat edge), its
+--- thickness (0 is no edge) and color, and the background color, each through its class-color
+--- companion. The Ka0s 1px inner line belongs to the pad's flat 1px edge only: at thickness 0 it would
+--- be an edge after all, and over a thicker edge or border art it is a gray line that ignores the
+--- border's color; `plain` (the header, a chip's edge) never takes it. Art insets the background by a
+--- quarter of its size, so the body reaches under the art's soft inner edge.
+function R.SkinFor(look, plain)
     look = type(look) == "table" and look or {}
     local skin = {}
     for k, v in pairs(NS.SKIN or {}) do skin[k] = v end
@@ -305,10 +309,46 @@ function R.SkinFor(look)
     skin.edgeSize = size
     local inset = art and math.floor(size / 4 + 0.5) or size
     skin.insets = { left = inset, right = inset, top = inset, bottom = inset }
-    if art or size ~= 1 then skin.innerBorder = NO_INNER end
+    if plain or art or size ~= 1 then skin.innerBorder = NO_INNER end
     skin.border = { NS.ResolveColor(look.borderColor, look.useClassColorBorder) }
     skin.bg = { NS.ResolveColor(look.background, look.useClassColorBackground) }
     return skin
+end
+
+-- The header's other texts keep their own colors over the header's face, size, flags and shadow: the
+-- lockdown chip GameFontRedSmall's red, the stale hint GameFontDisableSmall's gray. The collapse
+-- button is GameFontNormal's: two points over the header's size, in the header's color.
+local LOCKDOWN_COLOR = { 1, 0.1, 0.1, 1 }
+local STALE_COLOR = { 0.5, 0.5, 0.5, 1 }
+local GOLD = { r = 1, g = 0.82, b = 0, a = 1 }
+
+local function recolor(font, c, grow)
+    local t = {}
+    for k, v in pairs(font) do t[k] = v end
+    if c then t.r, t.g, t.b, t.a = c[1], c[2], c[3], c[4] end
+    t.size = t.size + (grow or 0)
+    return t
+end
+
+--- The header's look, from the pad's `header` table: { height, font, skin }. The font is the header
+--- block's (gold by default, GameFontNormalSmall's); the skin its background and edge, plain (no Ka0s
+--- inner line); the defaults draw no background and no edge.
+function R.HeaderLook(header)
+    header = type(header) == "table" and header or {}
+    return { height = PL.HeaderHeight(header.height), font = R.LabelFont(header, GOLD),
+        skin = R.SkinFor({ borderStyle = header.borderStyle or "None", borderSize = header.borderSize or 0,
+            borderColor = header.borderColor, useClassColorBorder = header.useClassColorBorder,
+            background = header.background or { 0, 0, 0, 0 },
+            useClassColorBackground = header.useClassColorBackground }, true) }
+end
+
+--- Dress the header row in its look (R.HeaderLook): its skin, and every text in its font.
+function R.ApplyHeaderLook(header, hl)
+    NS.ApplySkin(header, hl.skin)
+    R.ApplyFont(header.qcSituation, hl.font)
+    R.ApplyFont(header.qcLockdown, recolor(hl.font, LOCKDOWN_COLOR))
+    R.ApplyFont(header.qcStale, recolor(hl.font, STALE_COLOR))
+    if header.qcCollapse then R.ApplyFont(header.qcCollapse.qcText, recolor(hl.font, nil, 2)) end
 end
 
 function R.Flash(btn, what)
@@ -329,7 +369,9 @@ end
 --- toggle. PREVIEW and TEST MODE are not here: they ride the drag strip's label (R.StripLabel).
 function R.DressHeader(header, onCollapse)
     header.qcSituation = header:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    header.qcSituation:SetPoint("LEFT", header, "LEFT", 6, 0)
+    -- At the section titles' left edge (Pad_Layout places them at PL.PAD), in every growth direction:
+    -- the header spans the pad, and no growth moves a title off it.
+    header.qcSituation:SetPoint("LEFT", header, "LEFT", PL.PAD, 0)
     header.qcLockdown = header:CreateFontString(nil, "OVERLAY", "GameFontRedSmall")
     header.qcLockdown:SetPoint("LEFT", header.qcSituation, "RIGHT", 6, 0)
     header.qcLockdown:SetText(L["LOCKDOWN"])

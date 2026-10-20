@@ -278,15 +278,15 @@ local ROWS = {
       desc = L["Where the pad sits. Drag it while unlocked, or type an offset."],
       validate = check(Lib.ValidPoint) },
     { path = "pad.look.visibility", instance = "pad", type = "string", default = T.pad.look.visibility,
-      values = VISIBILITY, page = "pads", group = L["Look"], label = L["Visibility"],
+      values = VISIBILITY, page = "pads", group = L["Window"], label = L["Visibility"],
       desc = L["When this pad shows. General visibility applies on top. When a group is active is decided at the last change out of combat."],
       validate = oneOf(VISIBILITY) },
     { path = "pad.look.fade", instance = "pad", type = "string", default = T.pad.look.fade,
-      values = FADE, page = "pads", group = L["Look"], label = L["Fade"],
+      values = FADE, page = "pads", group = L["Window"], label = L["Fade"],
       desc = L["Fade the pad out of combat, or until the mouse is over it."],
       validate = oneOf(FADE) },
     { path = "pad.look.fadeAlpha", instance = "pad", type = "number", default = T.pad.look.fadeAlpha,
-      min = 0, max = 1, step = 0.05, page = "pads", group = L["Look"], label = L["Faded alpha"],
+      min = 0, max = 1, step = 0.05, page = "pads", group = L["Window"], label = L["Faded alpha"],
       desc = L["How visible a faded pad is."], validate = NUMBER, normalize = clamp(0, 1) },
 
     -- Comms Dial page (spec §11, §13.1). Relaxed is the only interaction in v0.1.0, so there is no
@@ -324,14 +324,19 @@ local ROWS = {
       validate = keyCheck, normalize = Lib.KeyValue },
 }
 
--- ── a pad's Look groups (spec §10.3, §19 row 5; options-ui-§16, §17) ───────────────────────────
+-- ── a pad's Window groups (spec §10.3, §19 row 5; options-ui-§16, §17) ─────────────────────────
 
--- The font block, the border block and the background swatch with its class-color companion, each
--- COMPOSED by the options library (a hand-written copy is anti-pattern #73) and then stamped as pad
--- member rows: the instance, a check per leaf, and the defaults Library ships (Library.TEMPLATES).
+-- The font blocks, the border blocks and the background swatches with their class-color companions,
+-- each COMPOSED by the options library (a hand-written copy is anti-pattern #73) and then stamped as
+-- pad member rows: the instance, a check per leaf, and the defaults Library ships (Library.TEMPLATES).
 -- The class color is the player's (`classColorSource = "player"`, the composer's default): a pad's
 -- text is about no unit. A background is not a bar, so it takes a swatch and its companion only. On
 -- a degraded load the composers are hollow and these rows are absent.
+--
+-- The Window tab (the Look tab until 2026-10-20; its rows keep the `pad.look.` paths) holds, after
+-- Visibility, Fade and Faded alpha: the Header block (`pad.header.*`: its height, then a font, a
+-- background and a border of its own, all under one heading), the Font (`pad.look.font*`: the chips'
+-- labels and the section titles), then the pad's Border and Background.
 
 local function unit01(c) return type(c) == "number" and c >= 0 and c <= 1 end
 
@@ -360,52 +365,71 @@ local function fourChannels(v)
     return { r = r, g = g, b = b, a = a }
 end
 
-local LOOK = "pad.look."
-local LOOK_DEFAULTS = T.pad.look
-
-local function lookChecks(O)
+-- The checks every composed leaf takes, by its leaf name, whichever block it is in.
+local function composedChecks(O)
     local flags = O.FONT_FLAGS or {}
+    local color = { validate = check(isColor), normalize = fourChannels }
     return {
         font = { validate = check(isName) },
         fontSize = { validate = NUMBER, normalize = clamp(6, 32, true) },
-        fontColor = { validate = check(isColor), normalize = fourChannels },
+        fontColor = color,
         useClassColorFont = { validate = BOOL },
         fontFlags = { validate = check(function(v) return type(v) == "string" and flags[v] ~= nil, "badChoice" end) },
         fontShadow = { validate = BOOL },
         borderStyle = { validate = check(isName) },
         borderSize = { validate = NUMBER, normalize = clamp(0, 16, true) },
-        borderColor = { validate = check(isColor), normalize = fourChannels },
+        borderColor = color,
         useClassColorBorder = { validate = BOOL },
-        background = { validate = check(isColor), normalize = fourChannels },
+        background = color,
         useClassColorBackground = { validate = BOOL },
     }
 end
 
-local function lookSpec(subgroup, extra)
-    local spec = { prefix = LOOK, page = "pads", group = L["Look"], subgroup = subgroup, defaults = LOOK_DEFAULTS }
+-- One composed block's rows stamped as pad member rows: `prefix` names the pad's table
+-- ("pad.look.", "pad.header."), `defaults` that table's shipped values.
+local function stampBlock(out, list, prefix, checks)
+    for _, row in ipairs(list) do
+        local c = checks[row.path:sub(#prefix + 1)] or {}
+        row.instance, row.validate, row.normalize = "pad", c.validate, c.normalize
+        out[#out + 1] = row
+    end
+end
+
+local function blockSpec(prefix, group, subgroup, defaults, extra)
+    local spec = { prefix = prefix, page = "pads", group = group, subgroup = subgroup, defaults = defaults }
     for k, v in pairs(extra or {}) do spec[k] = v end
     return spec
 end
 
-local function lookRows()
+local WINDOW = L["Window"]
+local HEADER = L["Header"]
+local LOOK, HEAD = "pad.look.", "pad.header."
+local HEADER_H = NS.PadDefaults.HEADER_H
+
+local function windowRows()
     local O = NS.addon.Settings.Helpers
-    local checks = lookChecks(O)
+    local checks = composedChecks(O)
     local out = {}
-    for _, list in ipairs({
-        O.FontGroup(lookSpec(L["Font"])),
-        O.BorderGroup(lookSpec(L["Border"])),
-        O.ColorPair(lookSpec(L["Background"], { key = "background", label = L["Background"] })),
-    }) do
-        for _, row in ipairs(list) do
-            local c = checks[row.path:sub(#LOOK + 1)] or {}
-            row.instance, row.validate, row.normalize = "pad", c.validate, c.normalize
-            out[#out + 1] = row
-        end
-    end
+    -- The Header block: its height first, then its font, background and border, under one heading.
+    out[1] = { path = HEAD .. "height", instance = "pad", type = "number", default = T.pad.header.height,
+        min = HEADER_H.min, max = HEADER_H.max, step = 1, page = "pads", group = WINDOW, subgroup = HEADER,
+        label = L["Header height"], startsLine = true,
+        desc = L["How tall the pad's header row is, in pixels: the row with the situation (World, M+, Raid) and the collapse button."],
+        validate = NUMBER, normalize = clamp(HEADER_H.min, HEADER_H.max, true) }
+    local hdef = T.pad.header
+    stampBlock(out, O.FontGroup(blockSpec(HEAD, WINDOW, HEADER, hdef)), HEAD, checks)
+    stampBlock(out, O.ColorPair(blockSpec(HEAD, WINDOW, HEADER, hdef, { key = "background", label = L["Background"] })),
+        HEAD, checks)
+    stampBlock(out, O.BorderGroup(blockSpec(HEAD, WINDOW, HEADER, hdef)), HEAD, checks)
+    local ldef = T.pad.look
+    stampBlock(out, O.FontGroup(blockSpec(LOOK, WINDOW, L["Font"], ldef)), LOOK, checks)
+    stampBlock(out, O.BorderGroup(blockSpec(LOOK, WINDOW, L["Border"], ldef)), LOOK, checks)
+    stampBlock(out, O.ColorPair(blockSpec(LOOK, WINDOW, L["Background"], ldef, { key = "background", label = L["Background"] })),
+        LOOK, checks)
     return out
 end
 
-for _, row in ipairs(lookRows()) do ROWS[#ROWS + 1] = row end
+for _, row in ipairs(windowRows()) do ROWS[#ROWS + 1] = row end
 
 -- The Icons tab's rows (B9, settings/SchemaIcons.lua), with these checks: a pad's after its Look rows,
 -- a dial's after its Wheel rows (before the Binding tab's row), so each editor's Icons tab sits there.

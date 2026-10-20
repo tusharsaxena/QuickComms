@@ -102,6 +102,8 @@ defaults\BuiltIns_Battlegrounds.lua
 defaults\BuiltIns_Group.lua
 # LOAD-BEARING: publishes NS.IconDefaults, which modules\Library.lua reads at load (SURFACE_DEFAULTS).
 defaults\Icons.lua
+# LOAD-BEARING: publishes NS.PadDefaults, which modules\Library.lua reads at load (SURFACE_DEFAULTS).
+defaults\PadStyle.lua
 # Conventional: data (the editors' and Preview as's shipped ids), read at call time
 defaults\GameIds.lua
 # Conventional: data (the When editor's instance and arena lists), read at call time

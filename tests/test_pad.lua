@@ -498,6 +498,56 @@ test("pad: [phase 5] the pad wears its Look: the chips' font and the edge and bo
     assertEqual(table.concat(skin.bg, ","), "0.2,0.1,0,1")
 end)
 
+test("pad: [window] the header wears its own block: gold small text over nothing by default, then what it is given", function()
+    local NS = T.enableAddon{ mock = withMedia }
+    NS.Situation.ReadInputs = function() return MPLUS end
+    NS.Situation.RefreshNow("test")
+    local skins = {}
+    local apply = NS.ApplySkin
+    NS.ApplySkin = function(frame, skin) skins[frame] = skin return apply(frame, skin) end
+    NS.Surfaces.Request("test")
+    local header = NS.Pad.Instance("p1").header
+    local sit = header.qcSituation
+    assertEqual(table.concat(sit.__color, ","), "1,0.82,0,1", "GameFontNormalSmall's gold, as before")
+    assertEqual(sit.__font[2], 10)
+    assertEqual(table.concat(sit.__shadow, ","), "1,-1")
+    assertEqual(header.__h, 22, "slightly larger than the 18 it was")
+    -- red under: Pad.Apply skinning the header with the pad's own Look (a second edge and body)
+    assertNil(skins[header].edgeFile, "no edge by default")
+    assertEqual(skins[header].bg[4], 0, "no background by default")
+    local S = NS.SchemaRuntime
+    assertTrue(S.Set("pad.header.fontSize", 14, "p1"))
+    assertTrue(S.Set("pad.header.font", "Arial", "p1"))
+    assertTrue(S.Set("pad.header.background", { r = 0.1, g = 0.2, b = 0.3, a = 0.5 }, "p1"))
+    assertTrue(S.Set("pad.header.borderSize", 2, "p1"))
+    assertEqual(sit.__font[1] .. "," .. sit.__font[2], "Fonts\\ARIALN.TTF,14")
+    assertEqual(header.qcLockdown.__font[2], 14, "the lockdown chip takes the header's size")
+    assertEqual(table.concat(header.qcLockdown.__color, ","), "1,0.1,0.1,1", "and keeps its red")
+    assertEqual(table.concat(skins[header].bg, ","), "0.1,0.2,0.3,0.5")
+    assertEqual(skins[header].edgeFile, "Interface\\Buttons\\WHITE8x8")
+    assertEqual(skins[header].edgeSize, 2)
+    assertEqual(skins[header].innerBorder[4], 0, "never the Ka0s inner line")
+end)
+
+test("pad: [window] the header's text starts at the section titles' left edge, in every growth", function()
+    local NS = live(AB)
+    local PL = NS.PadLayout
+    local inst = NS.Pad.Instance("p1")
+    for _, growth in ipairs({ "right", "left", "rightUp", "leftUp" }) do
+        assertTrue(NS.SchemaRuntime.Set("pad.layout.growth", growth, "p1"))
+        local point, rel, relPoint, x = inst.header.qcSituation:GetPoint(1)
+        -- red under: the situation anchored at LEFT 6 (a few pixels right of the titles)
+        assertEqual(point .. "," .. relPoint .. "," .. x, "LEFT,LEFT," .. PL.PAD, growth)
+        assertTrue(rel == inst.header, "on the header, which spans the pad")
+        local titles = 0
+        for _, fs in ipairs(inst.titles.active) do
+            local p, r, rp, tx = fs:GetPoint(1)
+            if p == "TOPLEFT" and r == inst.root and rp == "TOPLEFT" and tx == PL.PAD then titles = titles + 1 end
+        end
+        assertTrue(titles > 0, growth .. ": a section title on the same left edge")
+    end
+end)
+
 test("pad: [review 5] a font or border this machine does not have draws the default, with no error", function()
     local NS, m = T.enableAddon{ mock = withMedia }
     m.STANDARD_TEXT_FONT = "Fonts\\FRIZQT__.TTF"

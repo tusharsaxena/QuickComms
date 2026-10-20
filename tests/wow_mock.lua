@@ -255,6 +255,19 @@ local function build()
         function r:SetDesaturated(v) self.__desaturated = v return self end
         function r:SetSize(w, h) self.__size = { w, h } return self end
         function r:GetAlpha() return self.__alpha or 1 end
+        -- Anchors, recorded (the pad header's situation text is asserted on its left edge); no anchor
+        -- answers nil, as the client does.
+        r.__points = {}
+        function r:SetPoint(point, rel, relPoint, x, y)
+            self.__points[#self.__points + 1] = { point, rel, relPoint, x, y }
+            return self
+        end
+        function r:ClearAllPoints() self.__points = {} return self end
+        function r:GetPoint(i)
+            local p = self.__points[i or 1]
+            if not p then return nil end
+            return p[1], p[2], p[3], p[4], p[5]
+        end
         return setmetatable(r, { __index = function(_, key)
             if type(key) ~= "string" then return nil end
             if key:match("^Get") then return function() return 0 end end
@@ -299,6 +312,10 @@ local function build()
         frame.GetEffectiveScale = function() return 1 end
         frame.SetSize = function(self, w, h)
             self.__w, self.__h = w, h
+            return self
+        end
+        frame.SetHeight = function(self, h)
+            self.__h = h
             return self
         end
     end

@@ -3,7 +3,8 @@ local _, NS = ...
 --
 -- The root is a plain BackdropTemplate frame wearing the Ka0s skin (NS.ApplySkin), dressed at every
 -- rebuild by the pad's Look (Pad_Render.SkinFor: border and background; Pad_Render.LabelFont: the
--- chips' and titles' font); it becomes protected in combat because its chips are secure. Every chip
+-- chips' and titles' font; Pad_Render.HeaderLook: the header row's height, font, background and edge);
+-- it becomes protected in combat because its chips are secure. Every chip
 -- IS a send button (spec §9.1),
 -- built by SendEngine, dressed by Pad_Render, pooled per pad with NS.Pool and never destroyed. The
 -- header row (situation chip, lockdown chip, stale hint, collapse) is a plain child;
@@ -245,7 +246,8 @@ local function build(id)
     NS.ApplySkin(root)
     local inst = { id = id, root = root, chips = NS.Pool.New(), titles = NS.Pool.New(), titleHits = NS.Pool.New(),
         byCallout = {}, hover = 0, live = false }
-    local header = CreateFrame("Frame", nil, root)
+    -- A plain BackdropTemplate child: the Window tab's Header block dresses it at every Apply.
+    local header = CreateFrame("Frame", nil, root, "BackdropTemplate")
     header:SetHeight(PL.HEADER_H)
     header:EnableMouse(true)
     header:EnableMouseWheel(true)
@@ -342,12 +344,15 @@ function Pad.Apply(id, plan)
     local icfg = NS.IconStyle.Config(pad.icon, "pad")
     local sections = PL.VisibleSections(plan.sections, pad.groupsAs, session("padTab")[id])
     local hstate = headerState(inst, plan)
-    local box = PL.Compute(sections, layout, { collapsed = hstate.collapsed,
+    local hlook = R.HeaderLook(pad.header)
+    local box = PL.Compute(sections, layout, { collapsed = hstate.collapsed, headerH = hlook.height,
         fontSize = look.fontSize, situation = hstate.situation, iconSize = icfg.size })
     inst.root:SetScale(math.max(NS.Library.MIN_SURFACE_SCALE, (tonumber(NS.Setting("scale")) or 1) * (tonumber(layout.scale) or 1)))
     inst.root:SetSize(box.width, box.height)
     inst.width, inst.height = box.width, box.height
     anchorEdge(inst, box.up)
+    inst.header:SetHeight(box.headerH)
+    R.ApplyHeaderLook(inst.header, hlook)
     NS.ApplySkin(inst.root, R.SkinFor(look))
     local font = R.LabelFont(look)
     place(inst, box, layout.style, font, R.TitleFont(font), icfg)

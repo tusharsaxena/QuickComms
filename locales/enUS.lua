@@ -605,7 +605,11 @@ L["Chip width"] = "Chip width"
 L["How wide a labeled chip is."] = "How wide a labeled chip is."
 L["Position"] = "Position"
 L["Where the pad sits. Drag it while unlocked, or type an offset."] = "Where the pad sits. Drag it while unlocked, or type an offset."
-L["Look"] = "Look"
+L["Window"] = "Window"
+L["Header"] = "Header"
+L["Header height"] = "Header height"
+L["How tall the pad's header row is, in pixels: the row with the situation (World, M+, Raid) and the collapse button."] =
+    "How tall the pad's header row is, in pixels: the row with the situation (World, M+, Raid) and the collapse button."
 L["Visibility"] = "Visibility"
 L["When this pad shows. General visibility applies on top. When a group is active is decided at the last change out of combat."] = "When this pad shows. General visibility applies on top. When a group is active is decided at the last change out of combat."
 L["Fade"] = "Fade"
@@ -832,8 +836,8 @@ L["Pad"] = "Pad"
 L["Which Comms Pad this page edits."] = "Which Comms Pad this page edits."
 L["New pad"] = "New pad"
 L["Make a new Comms Pad holding the built-in groups, and edit it here."] = "Make a new Comms Pad holding the built-in groups, and edit it here."
-L["Put the selected pad's groups-as, layout, look and icons back to their defaults, and turn it on. Its name, groups and position are kept."] =
-    "Put the selected pad's groups-as, layout, look and icons back to their defaults, and turn it on. Its name, groups and position are kept."
+L["Put the selected pad's groups-as, layout, window and icons back to their defaults, and turn it on. Its name, groups and position are kept."] =
+    "Put the selected pad's groups-as, layout, window and icons back to their defaults, and turn it on. Its name, groups and position are kept."
 
 -- Share page (settings/Share.lua)
 L["Share"] = "Share"

@@ -13,7 +13,10 @@ local _, NS = ...
 NS.PadLayout = NS.PadLayout or {}
 local PL = NS.PadLayout
 
-PL.HEADER_H  = 18    -- the header row: situation chip, lockdown chip, stale hint, collapse
+-- The header row (situation chip, lockdown chip, stale hint, collapse): its default height and range,
+-- the Window tab's Header height (defaults/PadStyle.lua; 18 before 2026-10-20).
+PL.HEADER_H  = NS.PadDefaults.HEADER_H.default
+PL.HEADER_MIN, PL.HEADER_MAX = NS.PadDefaults.HEADER_H.min, NS.PadDefaults.HEADER_H.max
 PL.PAD       = 4     -- inner padding
 PL.SECTION_H = 14    -- a section's small-caps label row
 PL.CHIP_H    = 24    -- icon + label chip height
@@ -87,9 +90,16 @@ function PL.CellSize(layout, fontSize, iconSize)
     return w, math.max(PL.CHIP_H, sizeOf(fontSize) + PL.CHIP_ROOM, icon + PL.ICON_ROOM)
 end
 
---- A section title row's height for the Look's font size (never below SECTION_H).
+--- A section title row's height for the section titles' font size (never below SECTION_H).
 function PL.TitleHeight(fontSize)
     return math.max(PL.SECTION_H, sizeOf(fontSize) + PL.TITLE_ROOM)
+end
+
+--- The header row's height: the Window tab's Header height, clamped, or the default.
+function PL.HeaderHeight(h)
+    h = tonumber(h)
+    if not h then return PL.HEADER_H end
+    return math.floor(math.max(PL.HEADER_MIN, math.min(PL.HEADER_MAX, h)) + 0.5)
 end
 
 --- Columns for a section of `count` chips: one row (horizontal), one column (vertical) or N (grid).
@@ -195,9 +205,10 @@ local function joins(row, b, maxCols)
 end
 
 -- Stack the blocks under the header in order, packing child rows (joins); each block's `left` is its
--- first column. Answers the y below the last row and the widest row's columns.
-local function stackBlocks(blocks, maxCols)
-    local y, row, widest = PL.HEADER_H + PL.PAD, nil, 0
+-- first column, below a header row `hh` tall. Answers the y below the last row and the widest row's
+-- columns.
+local function stackBlocks(blocks, maxCols, hh)
+    local y, row, widest = hh + PL.PAD, nil, 0
     for _, b in ipairs(blocks) do
         if joins(row, b, maxCols) then
             b.top, b.left = row.top, row.cols
@@ -247,29 +258,35 @@ end
 --- bottom with the first section just above it; left mirrors each chip row.
 --- @param sections table from VisibleSections
 --- @param layout table the pad's layout table
---- @param opts table|nil { collapsed = boolean, fontSize = number (the Look's; rows grow to hold it),
----   iconSize = number (the Icons tab's; a chip grows to hold it),
+--- @param opts table|nil { collapsed = boolean, fontSize = number (the chips' label size; a chip grows to
+---   hold it), titleSize = number (the section titles' size; a title row grows to hold it; default
+---   fontSize), iconSize = number (the Icons tab's; a chip grows to hold it), headerH = number (the
+---   header row's height, PL.HeaderHeight),
 ---   situation = string (the header's text: a section title equal to it is not drawn) }
---- @return table { width, height, items, headerY (the header row's top), up (the growth is upward) }
+--- @return table { width, height, items, headerY (the header row's top), headerH (its height), up (the
+---   growth is upward) }
 function PL.Compute(sections, layout, opts)
     layout = type(layout) == "table" and layout or {}
     opts = type(opts) == "table" and opts or {}
     local cw, ch = PL.CellSize(layout, opts.fontSize, opts.iconSize)
+    local hh = PL.HeaderHeight(opts.headerH)
     local gap = math.max(0, tonumber(layout.spacing) or 4)
     local up = PL.GrowsUp(layout.growth)
     local blocks, contentW = {}, 0
     if not opts.collapsed then
-        blocks, contentW = collectBlocks(sections, layout, cw, ch, gap, up, PL.TitleHeight(opts.fontSize),
+        blocks, contentW = collectBlocks(sections, layout, cw, ch, gap, up,
+            PL.TitleHeight(opts.titleSize or opts.fontSize),
             opts.situation)
     end
     local maxCols = layout.orientation == "grid" and PL.Columns(layout, 1) or nil
-    local y, widest = stackBlocks(blocks, maxCols)
+    local y, widest = stackBlocks(blocks, maxCols, hh)
     if widest > 0 then contentW = math.max(contentW, widest * cw + (widest - 1) * gap) end
     local width = math.max(PL.MIN_PAD_W, contentW + 2 * PL.PAD)
-    local height = #blocks > 0 and (y + PL.PAD) or PL.HEADER_H
+    local height = #blocks > 0 and (y + PL.PAD) or hh
     if up then flipBlocks(blocks, height) end
     local items = flattenBlocks(blocks, MIRROR[layout.growth] == true, width, cw + gap, cw, gap)
-    return { width = width, height = height, items = items, up = up, headerY = up and (height - PL.HEADER_H) or 0 }
+    return { width = width, height = height, items = items, up = up, headerY = up and (height - hh) or 0,
+        headerH = hh }
 end
 
 --- The pad's visibility as one state-driver expression (spec §10.3). The master visibility applies
