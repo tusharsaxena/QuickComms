@@ -4,13 +4,15 @@ local _, NS = ...
 -- id); every id below is a battleground map in the client's own Map table (build 12.1.5.70340,
 -- matched by tools/derive-gameids.py and tests/test_gameids.lua); in-game confirmation is smoke check
 -- BG-2. Node
--- battlegrounds nest one ring per node with INC 1/2/3/Many/Clear/Help and open into their ring, and
+-- battlegrounds nest one ring per node with Attack/Defend/INC/Clear (bg buttons, 2026-10-20: the four
+-- Wintergrasp's workshops had, in place of INC 1/2/3/Many/Clear/Help) and open into their ring, and
 -- hold a few map-wide callouts of their own (groups polish), which take one wedge on the ring's first
 -- free wind (modules/Dial_Layout.lua). Every set and node carries a catalog glyph named for it.
 -- Objective battlegrounds (bg subgroups, 2026-10-20) nest one ring per objective too, each with its own
 -- callout rows: Alterac Valley's generals, captains, bunkers, towers and graveyards (Attack and Defend
 -- each), the flag maps' flags, carrier and middle, and Wintergrasp's, Ashran's, Deephaul Ravine's and
--- Seething Shore's objectives. Every callout reads the same for either faction (owner ruling: our and
+-- Seething Shore's objectives, Silvershard Mines' tracks and switches and Temple of Kotmogu's
+-- orbs and center (bg buttons). Every callout reads the same for either faction (owner ruling: our and
 -- enemy base, our and enemy flag carrier; no faction condition).
 -- The generic set is declared last, below every per-battleground set.
 
@@ -18,13 +20,14 @@ local BI, L = NS.BuiltIns, NS.L
 local C = BI.COLOR
 local BG = { content = "battleground", group = "raid", instanceGroup = true, lockdown = { pvpMatch = true } }
 
-local INC = {
-    { "inc1",  L["INC 1"],    L["INC 1 %s"],        "gi:person",       C.orange },
-    { "inc2",  L["INC 2"],    L["INC 2 %s"],        "gi:two-shadows",  C.orange },
-    { "inc3",  L["INC 3"],    L["INC 3 %s"],        "gi:three-friends", C.orange },
-    { "many",  L["INC many"], L["INC many %s"],     "gi:meeple-army",  C.red },
-    { "clear", L["Clear"],    L["%s is clear"],     "gi:check-mark",   C.green },
-    { "help",  L["Help"],     L["Need help at %s"], "gi:megaphone",    C.orange },
+-- A node's or objective's four callouts (bg buttons, 2026-10-20): short names, since the section
+-- title names the node; the message names it ("Attack Stables", "Stables is clear"). Every base-capture
+-- node and Wintergrasp's workshops take them.
+local NODE = {
+    { "attack", L["Attack"], L["Attack %s"],   "gi:crossed-swords", C.red },
+    { "defend", L["Defend"], L["Defend %s"],   "gi:checked-shield", C.blue },
+    { "inc",    L["INC"],    L["INC %s"],      "gi:charging",       C.orange },
+    { "clear",  L["Clear"],  L["%s is clear"], "gi:check-mark",     C.green },
 }
 
 local function idSet(ids)
@@ -42,11 +45,12 @@ local BASES = {
     { "ahead",  L["We're ahead"],    L["We're ahead on points, play it safe"], "gi:podium-winner", C.gold },
 }
 
--- Callout rows with `what` put into each one's text: the INC rows for a node, the Attack and Defend
--- rows for an objective.
+-- Callout rows with `what` put into each one's text: the four rows for a node, the Attack and Defend
+-- rows for an objective, a track's or an orb's. Only the %s is filled, so another token (%t) is left
+-- for the bake.
 local function rowsFor(template, what)
-    local out = {}
-    for i, r in ipairs(template) do out[i] = { r[1], r[2], r[3]:format(what), r[4], r[5] } end
+    local out, plain = {}, (what:gsub("%%", "%%%%"))
+    for i, r in ipairs(template) do out[i] = { r[1], r[2], (r[3]:gsub("%%s", plain)), r[4], r[5] } end
     return out
 end
 
@@ -65,8 +69,8 @@ local function objective(fullName) return rowsFor(OBJECTIVE, fullName) end
 -- table (build 12.1.5.70340, via wago.tools, 2026-10-13) by tools/derive-winds.py, which also checks
 -- the lists below: each node's map position against the center of the battleground's nodes, north up;
 -- a node within a third of the farthest node's distance from that center is the middle. Smoke check
--- BG-1 confirms them in game. The glyph and color are the node's icon. A node's callouts are the INC
--- rows named for it, unless it carries its own `rows` (an objective's, bg subgroups). A child with no
+-- BG-1 confirms them in game. The glyph and color are the node's icon. A node's callouts are the four
+-- NODE rows named for it, unless it carries its own `rows` (an objective's, bg subgroups). A child with no
 -- fixed place on the map (Our base, a flag map's carrier) takes the "free" wind (DialLayout.FREE): it
 -- fills a wind left over, after the middle entries; a set with more children than winds (Alterac
 -- Valley's 19) gives them none, and the dial draws its ring unpinned.
@@ -76,19 +80,10 @@ local function nodeBattleground(key, name, icon, ids, nodes, rows)
     for n, node in ipairs(nodes) do
         local nodeId = id .. "." .. node[1]
         BI.Group(nodeId, { name = node[2], parent = id, compass = node[3], glyph = node[4], color = node[5],
-            callouts = BI.Callouts(nodeId, "smartGroup", node[6] or rowsFor(INC, node[2])) })
+            callouts = BI.Callouts(nodeId, "smartGroup", node[6] or rowsFor(NODE, node[2])) })
         children[n] = nodeId
     end
     BI.Group(id, { name = name, glyph = icon[1], color = icon[2], openInto = true, children = children,
-        when = { content = { battleground = true }, battleground = idSet(ids) },
-        callouts = BI.Callouts(id, "smartGroup", rows) })
-    BI.SNAPSHOTS[id] = BG
-end
-
--- A battleground with a flat list of callouts; `icon` is { glyph, color }.
-local function flatBattleground(key, name, icon, ids, rows)
-    local id = "bi.bg." .. key
-    BI.Group(id, { name = name, glyph = icon[1], color = icon[2],
         when = { content = { battleground = true }, battleground = idSet(ids) },
         callouts = BI.Callouts(id, "smartGroup", rows) })
     BI.SNAPSHOTS[id] = BG
@@ -106,7 +101,13 @@ nodeBattleground("eots", L["Eye of the Storm"], { "gi:tornado", C.purple }, { 56
     { "bloodelf", L["Blood Elf Tower"], "SE", "gi:tower-flag", C.red },
     { "draenei", L["Draenei Ruins"], "NE", "gi:crystal-growth", C.purple },
     { "magetower", L["Mage Tower"], "NW", "gi:wizard-staff", C.blue },
-    { "flag", L["the flag"], "middle", "gi:flying-flag", C.gold },
+    -- The flag in the middle is no base: its four rows say what a flag wants.
+    { "flag", L["Flag"], "middle", "gi:flying-flag", C.gold, {
+        { "attack", L["Take flag"],   L["Take the flag"],     "gi:crossed-swords", C.red },
+        { "defend", L["Defend flag"], L["Defend the flag"],   "gi:checked-shield", C.blue },
+        { "inc",    L["INC"],         L["INC the flag"],      "gi:charging",       C.orange },
+        { "clear",  L["Clear"],       L["The flag is clear"], "gi:check-mark",     C.green },
+    } },
 }, {
     BASES[1], BASES[2], BASES[3],
     { "flagcap", L["Cap the flag"],  L["Take the flag to a tower we hold"], "gi:flying-flag", C.gold },
@@ -132,13 +133,18 @@ nodeBattleground("ioc", L["Isle of Conquest"], { "gi:siege-tower", C.red }, { 62
     { "workshop", L["Workshop"], "middle", "gi:gear-hammer", C.orange },
     { "quarry", L["Quarry"], "SE", "gi:stone-pile", C.white },
     { "refinery", L["Refinery"], "NW", "gi:oil-drum", C.gold },
+    -- The two bases take the same four buttons, worded for whose base it is.
     { "base", L["Our base"], "free", "gi:castle-lorc", C.blue, {
-        { "defend", L["Defend"],     L["Defend our base"], "gi:checked-shield", C.blue },
-        { "walls",  L["Walls down"], L["Walls down at our base"], "gi:broken-wall", C.orange },
+        { "attack", L["Attack"], L["Fight at our base"],  "gi:crossed-swords", C.red },
+        { "defend", L["Defend"], L["Defend our base"],    "gi:checked-shield", C.blue },
+        { "inc",    L["INC"],    L["INC our base"],       "gi:charging",       C.orange },
+        { "clear",  L["Clear"],  L["Our base is clear"],  "gi:check-mark",     C.green },
     } },
     { "enemybase", L["Enemy base"], "free", "gi:castle-delapouite", C.red, {
-        { "attack", L["Attack"],     L["Attack the enemy base"], "gi:crossed-swords", C.red },
-        { "walls",  L["Walls down"], L["Walls down at the enemy base"], "gi:broken-wall", C.gold },
+        { "attack", L["Attack"], L["Attack the enemy base"],      "gi:crossed-swords", C.red },
+        { "defend", L["Defend"], L["Hold the enemy base"],        "gi:checked-shield", C.blue },
+        { "inc",    L["INC"],    L["INC at the enemy base"],      "gi:charging",       C.orange },
+        { "clear",  L["Clear"],  L["The enemy base is clear"],    "gi:check-mark",     C.green },
     } },
 }, {
     { "siege",    L["Siege engine"], L["Escort our siege engine"], "gi:siege-ram", C.orange },
@@ -205,12 +211,52 @@ nodeBattleground("tp", L["Twin Peaks"], { "gi:peaks", C.green }, { 726 }, flagCh
     { "killefc",  L["Kill EFC"],       L["Kill the EFC %t"], "gi:bloody-sword", C.red },
     { "fcsafe",   L["FC safe"],        L["FC is safe"], "gi:checked-shield", C.green },
 })
-flatBattleground("ssm", L["Silvershard Mines"], { "gi:mine-wagon", C.gold }, { 727 }, {
+-- Silvershard Mines (bg buttons, 2026-10-20): carts spawn in the middle and roll down three tracks to
+-- their depots, known by the lava, the water and the north (the community's names: the client's
+-- AreaPOI table holds no point on this map), and two switches turn a cart onto another track. A track's
+-- four rows are the node buttons worded for a cart. None has a point to pin, so each takes a free wind.
+local TRACK = {
+    { "attack", L["Contest"], L["Contest their cart on %s"], "gi:crossed-swords", C.red },
+    { "defend", L["Escort"],  L["Escort our cart on %s"],    "gi:guards",         C.blue },
+    { "inc",    L["INC"],     L["INC on %s"],                "gi:charging",       C.orange },
+    { "clear",  L["Clear"],   L["Clear on %s"],              "gi:check-mark",     C.green },
+}
+nodeBattleground("ssm", L["Silvershard Mines"], { "gi:mine-wagon", C.gold }, { 727 }, {
+    { "lava",  L["Lava track"],  "free", "gi:lava",       C.orange, rowsFor(TRACK, L["the lava track"]) },
+    { "water", L["Water track"], "free", "gi:waterfall",  C.blue,   rowsFor(TRACK, L["the water track"]) },
+    { "north", L["North track"], "free", "gi:mine-truck", C.gold,   rowsFor(TRACK, L["the north track"]) },
+    { "switch", L["Switches"],   "free", "gi:lever",      C.cyan, {
+        { "flip",  L["Flip switch"],  L["Flip the track switch"],      "gi:lever",          C.cyan },
+        { "hold",  L["Hold switch"],  L["Hold the track switch"],      "gi:checked-shield", C.blue },
+        { "inc",   L["INC"],          L["INC at the track switch"],    "gi:charging",       C.orange },
+        { "clear", L["Clear"],        L["The track switch is clear"],  "gi:check-mark",     C.green },
+    } },
+}, {
     { "escort",   L["Escort"],         L["Escort the cart"], "gi:mine-wagon", C.blue },
     { "contest",  L["Contest"],        L["Contest the cart"], "gi:crossed-swords", C.red },
     { "help",     L["Cart help"],      L["Need help at a cart"], "gi:megaphone", C.orange },
 })
-flatBattleground("tok", L["Temple of Kotmogu"], { "gi:crystal-ball", C.purple }, { 998 }, {
+-- Temple of Kotmogu (bg buttons): an orb waits in each corner of the temple, orange, blue, green and
+-- purple, and a carrier scores most in the center. The client's AreaPOI table has the orbs' points but
+-- not their colors, so no orb is pinned to a corner: each takes a free wind, the center too.
+local ORB = {
+    { "take",  L["Take orb"],     L["Take the %s"],              "gi:grab",           C.gold },
+    { "peel",  L["Peel"],         L["Peel for our %s carrier"],  "gi:shield-reflect", C.blue },
+    { "kill",  L["Kill carrier"], L["Kill their %s carrier %t"], "gi:bloody-sword",   C.red },
+    { "heals", L["Heals"],        L["Our %s carrier needs heals"], "gi:heart-plus",     C.green },
+}
+nodeBattleground("tok", L["Temple of Kotmogu"], { "gi:crystal-ball", C.purple }, { 998 }, {
+    { "orange", L["Orange orb"], "free", "gi:concentration-orb", C.orange, rowsFor(ORB, L["orange orb"]) },
+    { "blue",   L["Blue orb"],   "free", "gi:concentration-orb", C.blue,   rowsFor(ORB, L["blue orb"]) },
+    { "green",  L["Green orb"],  "free", "gi:concentration-orb", C.green,  rowsFor(ORB, L["green orb"]) },
+    { "purple", L["Purple orb"], "free", "gi:concentration-orb", C.purple, rowsFor(ORB, L["purple orb"]) },
+    { "center", L["Center"],     "free", "gi:triorb",            C.cyan, {
+        { "go",    L["Go center"],   L["Bring the orbs to the center"], "gi:orb-direction",  C.cyan },
+        { "hold",  L["Hold center"], L["Hold the center"],              "gi:checked-shield", C.blue },
+        { "inc",   L["INC"],         L["INC center"],                   "gi:charging",       C.orange },
+        { "clear", L["Clear"],       L["The center is clear"],          "gi:check-mark",     C.green },
+    } },
+}, {
     { "heals",    L["Orb heals"],      L["Orb carrier needs heals"], "gi:heart-plus", C.green },
     { "kill",     L["Kill orb"],       L["Kill orb carrier %t"], "gi:bloody-sword", C.red },
     { "mid",      L["Go mid"],         L["Orbs to the middle"], "gi:orb-direction", C.cyan },
@@ -329,12 +375,6 @@ nodeBattleground("ashran", L["Ashran"], { "gi:sword-clash", C.red }, { 1191 }, {
 -- Wintergrasp: attack and defense swap each battle, so every objective has both. The fortress is
 -- north, its two near workshops either side of it, the two far ones and the three towers south (the
 -- client's AreaPOI table: the towers by Winter's Edge, the middle one; tools/derive-winds.py).
-local WORKSHOP = {
-    { "attack", L["Attack"], L["Attack %s"], "gi:crossed-swords", C.red },
-    { "defend", L["Defend"], L["Defend %s"], "gi:checked-shield", C.blue },
-    { "inc",    L["INC"],    L["INC %s"], "gi:charging", C.orange },
-    { "clear",  L["Clear"],  L["%s is clear"], "gi:check-mark", C.green },
-}
 nodeBattleground("wg", L["Wintergrasp"], { "gi:frozen-orb", C.cyan }, { 2118 }, {
     { "fortress", L["Fortress"], "N", "gi:castle-lorc", C.blue, {
         { "attack",   L["Attack walls"], L["Attack the fortress walls"], "gi:crossed-swords", C.red },
@@ -343,10 +383,10 @@ nodeBattleground("wg", L["Wintergrasp"], { "gi:frozen-orb", C.cyan }, { 2118 }, 
         { "gatedown", L["Gate down"],    L["The fortress gate is down"], "gi:open-gate", C.red },
         { "relic",    L["Relic"],        L["Everyone to the relic"], "gi:holy-grail", C.gold },
     } },
-    { "brokentemple", L["Broken Temple"], "NW", "gi:ancient-ruins", C.purple, rowsFor(WORKSHOP, L["Broken Temple"]) },
-    { "sunkenring", L["Sunken Ring"], "NE", "gi:double-ringed-orb", C.cyan, rowsFor(WORKSHOP, L["Sunken Ring"]) },
-    { "westspark", L["Westspark"], "SW", "gi:anvil", C.orange, rowsFor(WORKSHOP, L["Westspark"]) },
-    { "eastspark", L["Eastspark"], "SE", "gi:anvil", C.gold, rowsFor(WORKSHOP, L["Eastspark"]) },
+    { "brokentemple", L["Broken Temple"], "NW", "gi:ancient-ruins", C.purple, rowsFor(NODE, L["Broken Temple"]) },
+    { "sunkenring", L["Sunken Ring"], "NE", "gi:double-ringed-orb", C.cyan, rowsFor(NODE, L["Sunken Ring"]) },
+    { "westspark", L["Westspark"], "SW", "gi:anvil", C.orange, rowsFor(NODE, L["Westspark"]) },
+    { "eastspark", L["Eastspark"], "SE", "gi:anvil", C.gold, rowsFor(NODE, L["Eastspark"]) },
     { "towers", L["Towers"], "S", "gi:tower-fall", C.red, {
         { "attack", L["Attack towers"], L["Attack the southern towers"], "gi:crossed-swords", C.red },
         { "defend", L["Defend towers"], L["Defend the southern towers"], "gi:checked-shield", C.blue },

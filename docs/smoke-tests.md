@@ -21,14 +21,14 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | DIAG-1..2 | Diagnostics | The debug console, the report, perf |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
 | SEND-1..5 | Send | Secure sends in keys and on bosses, the spam guard |
-| PAD-1..11 | Pad | The Comms Pad, its growth and chip width, the World (solo) set and the built-ins' colors |
+| PAD-1..12 | Pad | The Comms Pad, its growth and chip width, the World (solo) and In Group sets and the built-ins' colors |
 | EDIT-1..29 | Editors | The Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
 | DIAL-1..12 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial |
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
 | LOOK-1..2 | Look | The Comms Pad's font, border and background |
 | ICONS-1..3 | Icons tab | The chips' and wedges' icon look, border and glow triggers |
 | ICON-1 | Icons | Choosing an icon, for a callout and for a group |
-| BG-1..6 | Battlegrounds | Node winds on the dial; the battleground instance ids; the objective groups (Alterac Valley, Isle of Conquest's bases, a flag map) and their migration |
+| BG-1..8 | Battlegrounds | Node winds on the dial; the battleground instance ids; the objective groups (Alterac Valley, Isle of Conquest's bases, a flag map) and their migration; the four node buttons; Silvershard Mines' and Temple of Kotmogu's groups |
 | IDS-1 | Instance ids | The Midnight dungeons and raids |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes |
 
@@ -165,7 +165,8 @@ cleared, keeps the player's choice. Result:
 **PAD-2. The stale hint.** In combat, `/qc set behavior.autoPromote false` → the header shows
 "updates after combat"; when combat ends it clears and the pad has rebuilt. Result:
 
-**PAD-3. Lock, drag, position.** `/qc unlock` → a drag strip appears above the pad; drag it
+**PAD-3. Lock, drag, position.** `/qc unlock` → a drag strip appears above the pad, exactly as wide
+as the pad (add or remove a group so the pad widens or narrows → the strip follows); drag it
 elsewhere; `/reload` → it is where you left it. In combat the strip will not drag, and a drag still
 held when combat starts ends there, with no error. `/qc lock` → the strip is gone (it comes back, undraggable, only to carry PREVIEW or TEST MODE). General → Master
 controls → Reset position → the pad returns to its default place, just below the center. The
@@ -174,7 +175,7 @@ launcher's Locked entry toggles the same lock. Result:
 **PAD-4. Test mode.** `/qc test` → placeholder chips, and the strip above the pad reads
 `Comms Pad  TEST MODE` (TEST MODE in green; the strip shows even while locked, and will not drag
 then; the header has no TEST MODE of its own); clicking one sends nothing. Rename the pad to a long
-name → the strip grows to fit the name and the marker. Pull something → test mode ends with one line and the real chips return. `/qc test` in
+name → the strip stays as wide as the pad while the name and the marker fit, and widens past the pad only for a name too long for it. Pull something → test mode ends with one line and the real chips return. `/qc test` in
 combat → refused with one line. The Master controls checkbox and the launcher entry follow every
 change. Result:
 
@@ -220,6 +221,15 @@ node its own), and no set's callouts are all white. On a profile saved before th
 colors, except one whose icon or color you changed; each node battleground set gains its map-wide
 callouts once, at the end of its list; a battleground set you had deleted does not come back.
 `/reload` again → nothing changes and nothing is added. Result:
+
+**PAD-12. In Group (bg buttons).** Join a party → the pad shows an In Group section of twelve chips
+after the content sets (Hello a gold waving hand, tyff a green meal, Buffs please a purple arm,
+Healthstone a green potion, GLHF a green clover, ggty gold hands, ggnt a cyan thumb, ty a green
+handshake, brb a white cup, Ready a green check, Drink a blue flask, Summon a purple portal), the set's
+own icon three cyan figures. Click GLHF → party chat reads "GLHF"; Drink → "Drinking"; Summon →
+"Summon please!". Convert to a raid → the same chips send to raid chat; in a battleground or a
+dungeon finder group → instance chat, and the battleground's own set is still first on the pad and
+the dial still opens on its nodes. Leave the group → the In Group section is gone. Result:
 
 ## Editors
 
@@ -557,8 +567,9 @@ outside the disc, the ✕ hub, and a gold pointer that follows the cursor. Press
 Escape → it closes and the game menu does not open. Open it; right-click a wedge → it closes and nothing
 is sent. Result:
 
-**DIAL-2. A wedge sends in a boss (the phase 4 exit).** On a raid or M+ boss, press G and click a
-callout wedge → the group sees the line, the dial closes, and there is no "action blocked" error or red
+**DIAL-2. A wedge sends in a boss (the phase 4 exit).** On a raid or M+ boss, press G, click the raid
+or dungeon group (In Group is beside it, so the dial opens on the group ring), then click a callout
+wedge → the group sees the line, the dial closes, and there is no "action blocked" error or red
 text. With the dial closed, 1 still fires your action bar's first button. Press G again at once → every
 wedge is dimmed for about a second (the spam guard). Result:
 
@@ -572,9 +583,9 @@ Wedges per ring at 4: press G → the dial opens straight on the nodes, all five
 More, each on its compass wind (Blacksmith N, Gold Mine NE, Farm SE, Lumber Mill SW, Stables NW),
 with an Arathi Basin wedge (the gold wheat sheaf) on E, the first wind left free, that opens the
 map-wide callouts (groups polish);
-click Lumber Mill, then INC 3 → instance chat shows "INC 3 Lumber Mill": two clicks. Open again and
+click Lumber Mill, then INC → instance chat shows "INC Lumber Mill": two clicks. Open again and
 press 4 → Lumber Mill's ring opens (the number keys count the shown wedges clockwise from N). (If it opens on the group ring instead, check the Groups tab: Arathi Basin must sit above
-Battleground (generic) and every group active there, and the tab's "Three rings deep" warning names the
+Battleground (generic), In Group and every group active there, and the tab's "Three rings deep" warning names the
 cause; a `/reload` after updating runs the migration that moves the generic set. If the dial does not
 show Arathi Basin at all, the instance id may be wrong: run `/qc diagnostics`, copy the `situation`
 section's instanceID into the "Battleground instance IDs seen" table of
@@ -731,7 +742,7 @@ north up (Arathi Basin: Stables top left, Gold Mine top right, Farm bottom right
 left, Blacksmith, the middle node, at the top), and Deepwind Gorge shows five nodes (owner ruling R2).
 One more wedge, drawn as the battleground itself, sits on the first wind no node takes and opens its
 map-wide callouts; the nodes stay pinned around it.
-Lumber Mill, then INC 3 is still two clicks. A node that points the wrong way is filed with this
+Lumber Mill, then INC is still two clicks. A node that points the wrong way is filed with this
 check's ID and its battleground. Result:
 
 **BG-2. Battleground instance ids.** In each battleground you play: `/qc diagnostics` → the
@@ -751,10 +762,11 @@ column → the Groups page opens on that objective. Open the dial → it opens o
 callouts first, then the objectives a page at a time, More turning the page; an objective's ring
 holds Attack and Defend. Result:
 
-**BG-4. Isle of Conquest's bases.** In Isle of Conquest: the pad shows Our base (Defend, Walls
-down) and Enemy base (Attack, Walls down) side by side after Refinery; their lines read "Defend our
-base", "Walls down at our base", "Attack the enemy base", "Walls down at the enemy base", the same
-for either faction. On the dial the five nodes stay on their winds, the Isle of Conquest wedge stays
+**BG-4. Isle of Conquest's bases.** In Isle of Conquest: the pad shows Our base and Enemy base side
+by side after Refinery, each with Attack, Defend, INC and Clear; Our base's lines read "Fight at our
+base", "Defend our base", "INC our base", "Our base is clear", Enemy base's "Attack the enemy base",
+"Hold the enemy base", "INC at the enemy base", "The enemy base is clear", the same for either
+faction. On the dial the five nodes stay on their winds, the Isle of Conquest wedge stays
 where it was (NE), and Our base and Enemy base take two of the winds left over. Result:
 
 **BG-5. A flag map.** In Warsong Gulch or Twin Peaks: the pad shows the set's map-wide EFC callouts,
@@ -770,6 +782,25 @@ copy of one): log in → `/qc diagnostics` shows schema 7; Alterac Valley's set 
 and opens into its ring on the dial, Isle of Conquest's holds Our base and Enemy base after its
 nodes, and every callout you had edited still reads as you left it. Delete one objective, `/reload`
 → it stays deleted. A set you had deleted before the update is still gone. Result:
+
+**BG-7. The four node buttons (bg buttons).** On a reset profile, in Arathi Basin, Eye of the Storm,
+Battle for Gilneas, Deepwind Gorge or Isle of Conquest: every node's section holds Attack (red crossed
+swords), Defend (blue shield), INC (orange charge) and Clear (green check), as Wintergrasp's workshops
+do; Lumber Mill's send "Attack Lumber Mill", "Defend Lumber Mill", "INC Lumber Mill", "Lumber Mill is
+clear". Eye of the Storm's Flag reads Take flag, Defend flag, INC, Clear ("Take the flag", "The flag is
+clear"). Each set's own map-wide callouts (Hold our bases, Zerg next…) are unchanged. Result:
+
+**BG-8. Silvershard Mines and Temple of Kotmogu (bg buttons).** In Silvershard Mines: after the set's
+own Escort, Contest and Cart help, the pad shows Lava track, Water track and North track (Contest,
+Escort, INC, Clear: "Contest their cart on the lava track", "Escort our cart on the lava track", "INC
+on the lava track", "Clear on the lava track") and Switches (Flip switch, Hold switch, INC, Clear).
+Check the track names against what players call them in your games; a name that reads wrong is filed
+with this check's ID. In Temple of Kotmogu: after Orb heals, Kill orb and Go mid, the pad shows Orange
+orb, Blue orb, Green orb and Purple orb, each drawn in its color (Take orb, Peel, Kill carrier, Heals:
+"Take the blue orb", "Peel for our blue orb carrier", "Kill their blue orb carrier <target>", "Our
+blue orb carrier needs heals") and Center (Go center, Hold center, INC, Clear). On the dial both open
+on the set's ring, the groups on the winds left after the set's own wedge, in the order they ship.
+Result:
 
 ## Instance ids
 
@@ -819,8 +850,8 @@ from the client, so this check needs a non-English client pass. Result:
 | ID | Origin | Why it is owed |
 |---|---|---|
 | INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..3, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet; LOC-1 re-enumerated in phase 5 and owed a non-English client pass; STATE-3 added and PANEL-2 rewritten with `/qc toggle` and Preview as in Master controls (2026-10-19) |
-| SEND-1..5, PAD-1..11 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet; PAD-1 rewritten and PAD-11 added with World (solo) and the built-ins' colors, PAD-3 and PAD-4 rewritten with the strip's marker (2026-10-19, groups polish); PAD-8 added in phase 5 (audit QC-07); PAD-1 rewritten and PAD-9..10 added with the up growth, chip width and the built-in glyphs (2026-10-19) |
+| SEND-1..5, PAD-1..12 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet; PAD-12 added with In Group, PAD-3 and PAD-4 rewritten with the strip as wide as the pad (2026-10-20, bg buttons); PAD-1 rewritten and PAD-11 added with World (solo) and the built-ins' colors, PAD-3 and PAD-4 rewritten with the strip's marker (2026-10-19, groups polish); PAD-8 added in phase 5 (audit QC-07); PAD-1 rewritten and PAD-9..10 added with the up growth, chip width and the built-in glyphs (2026-10-19) |
 | EDIT-1..29 | Phase 3: the editors | No client pass recorded yet; EDIT-29 added with the preview click's echo (2026-10-20); EDIT-28 added with right-click a group title (2026-10-19); EDIT-27 added with Preview while editing (2026-10-19); EDIT-3, 4, 20 and 22 rewritten and EDIT-25..26 added with Preview as in Master controls, the Dungeon set, the Arena drawer, instance search, the Callouts rows and the glyph sets (2026-10-19); EDIT-1, 2 and 19 rewritten and EDIT-22..24 added with the When drawers, Inherit when conditions and the icon browser's search (2026-10-18); EDIT-2, 4, 5, 6, 11, 14 and ICON-1 rewritten and EDIT-19..21 added when the built-in sets became seeded groups, groups nested and the Preview tab became a table (2026-10-18); EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17); EDIT-9, 13 and ICON-1 rewritten and EDIT-14..17 added with the icon browser and glyph colors (2026-10-18); EDIT-9 rewritten and EDIT-18 added when the token dropdown became the Text label's info glyph (2026-10-18); EDIT-13, 14 and ICON-1 rewritten when the Suggested tab went and the skin stopped waiting for the addon to be enabled (2026-10-18); EDIT-9, 18 and ICON-1 rewritten when the Icon boxes went and the popup took its two-column layout (2026-10-18); EDIT-9, 11 and ICON-1 rewritten with the clear glyph, the Preview gap and the buttons' 2 px inset (2026-10-18) |
-| DIAL-1..12 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-4 rewritten with the node set's map-wide wedge (2026-10-19, groups polish); DIAL-9 rewritten when Preview as moved to Master controls (2026-10-19); DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
-| SHARE-1..6, LOOK-1..2, ICON-1, BG-1..6, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; BG-1 rewritten with Wintergrasp's winds and BG-3..6 added with the battleground objective groups (2026-10-20); BG-1 rewritten with the map-wide wedge (2026-10-19, groups polish); LOOK-2's in-combat step goes through `/qc set`; IDS-1 extended to the journal instances and arenas (2026-10-19) |
+| DIAL-1..12 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-2 and DIAL-4 rewritten with In Group and the four node buttons (2026-10-20, bg buttons); DIAL-4 rewritten with the node set's map-wide wedge (2026-10-19, groups polish); DIAL-9 rewritten when Preview as moved to Master controls (2026-10-19); DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
+| SHARE-1..6, LOOK-1..2, ICON-1, BG-1..8, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; BG-1 and BG-4 rewritten and BG-7..8 added with the four node buttons and Silvershard Mines' and Temple of Kotmogu's groups (2026-10-20, bg buttons); BG-1 rewritten with Wintergrasp's winds and BG-3..6 added with the battleground objective groups (2026-10-20); BG-1 rewritten with the map-wide wedge (2026-10-19, groups polish); LOOK-2's in-combat step goes through `/qc set`; IDS-1 extended to the journal instances and arenas (2026-10-19) |
 | ICONS-1..3 | Icons and polish (2026-10-19): the Icons tab | No client pass recorded yet |

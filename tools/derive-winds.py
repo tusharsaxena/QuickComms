@@ -75,7 +75,7 @@ def shipped():
     if not starts:
         ct.fail("no nodeBattleground(...) in " + SHIPPED)
     for at, key in starts:
-        end = re.compile(r'^(nodeBattleground|flatBattleground|BI\.Group)\(', re.M).search(text, at + 1)
+        end = re.compile(r'^(nodeBattleground|BI\.Group)\(', re.M).search(text, at + 1)
         body = text[at:end.start() if end else len(text)]
         # a node row: { "key", L["Name"], "WIND", glyph, color[, rows] }
         nodes = {k: w for k, w in re.findall(r'\{ "(\w+)", L\["[^"]+"\], "(\w+)"[ ,}]', body) if w != "free"}

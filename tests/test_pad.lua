@@ -48,7 +48,7 @@ test("pad: the default pad shows the M+ callouts, each chip armed with its baked
     assertEqual(inst.root.__name, "QuickCommsPadp1")
     assertTrue(inst.root:IsShown())
     local _, active = NS.Pool.Counts(inst.chips)
-    assertEqual(active, 8)
+    assertEqual(active, 20, "M+'s eight and In Group's twelve")
     local chip = pull(NS)
     assertEqual(chip:GetAttribute("type"), "macro")
     assertEqual(chip:GetAttribute("macrotext"), "/p Pulling next pack")
@@ -108,12 +108,15 @@ end)
 test("pad: a rebuild with fewer chips parks the rest, disarmed, for the next", function()
     local NS = applied()
     local inst = NS.Pad.Instance("p1")
+    -- M+ alone: In Group (active in any party, bg buttons) off before the count
+    NS.SchemaRuntime.Set("group.enabled", false, T.seeded(NS, "bi.group"))
+    NS.Pad.Apply("p1", planFor(NS))
     local before = NS.SendEngine.ButtonCount()   -- the pad's eight chips and the default dial's wedges
     NS.SchemaRuntime.Set("group.enabled", false, T.seeded(NS, "bi.mplus"))
     NS.Pad.Apply("p1", planFor(NS))
     local free, active = NS.Pool.Counts(inst.chips)
     assertEqual(active, 0)
-    assertEqual(free, 8)
+    assertEqual(free, 20, "the twenty chips M+ and In Group drew, parked")
     assertEqual(#NS.SendEngine.ArmedButtons(), 0)
     NS.SchemaRuntime.Set("group.enabled", true, T.seeded(NS, "bi.mplus"))
     NS.Pad.Apply("p1", planFor(NS))
@@ -198,14 +201,14 @@ test("pad: tabs show one section; the wheel steps them out of combat and is refu
     -- Arathi Basin's own set comes first (phase 4), so its own map-wide callouts are the first tab
     -- (groups polish), then its first node.
     assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.hold")), 1)
-    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.stables.inc1")), 0)
+    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.stables.attack")), 0)
     assertTrue(NS.Pad.Wheel("p1", -1))
-    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.stables.inc1")), 1)
+    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.stables.attack")), 1)
     assertTrue(NS.Pad.Wheel("p1", -1))
-    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.lumbermill.inc1")), 1)
+    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.lumbermill.attack")), 1)
     combat(m, true)
     assertFalse(NS.Pad.Wheel("p1", -1))
-    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.lumbermill.inc1")), 1, "unchanged in combat")
+    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.lumbermill.attack")), 1, "unchanged in combat")
     assertEqual(#m.blocked, 0)
 end)
 
@@ -371,7 +374,7 @@ test("pad: [fix wave] tabs switch on a wheel over a chip or the pad, not only th
     local chip = NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.hold"))[1]
     -- red under: enable the wheel on the header alone
     chip:__fire("OnMouseWheel", -1)
-    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.stables.inc1")), 1)
+    assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.stables.attack")), 1)
     NS.Pad.Instance("p1").root:__fire("OnMouseWheel", 1)
     assertEqual(#NS.Pad.ChipsFor("p1", T.seeded(NS, "bi.bg.ab.hold")), 1, "back to the set's own tab")
 end)
@@ -580,7 +583,7 @@ local function measureLikeTheClient(m)
     m.LibStub("LibKa0s-Widgets-1.0").__DragHandleMeasurer = function() return fs end
 end
 
-test("pad: [R3] the strip reads the pad's name and PREVIEW / TEST MODE, grows to fit, and shows while locked", function()
+test("pad: [R3] the strip reads the pad's name and PREVIEW / TEST MODE, spans the pad, and shows while locked", function()
     local NS, m = live()
     measureLikeTheClient(m)
     NS.db.profile.pads.p1.name = "A rather long raid pad name"
@@ -597,7 +600,9 @@ test("pad: [R3] the strip reads the pad's name and PREVIEW / TEST MODE, grows to
     -- red under: ApplyLock hiding the strip on a locked pad in test mode (the marker would vanish)
     assertTrue(inst.handle:IsShown(), "locked, test mode still shows the strip that carries the marker")
     local reserve = inst.handle:Reserve() * 2
-    assertEqual(widths[#widths], 6 * #"A rather long raid pad name  TEST MODE" + reserve, "the strip grows to fit")
+    assertTrue(6 * #"A rather long raid pad name  TEST MODE" + reserve < inst.root.__w, "the label fits the pad")
+    -- red under: ApplyWidth(0) in Pad.ApplyLock (the strip shrinks to its label, narrower than the pad)
+    assertEqual(widths[#widths], inst.root.__w, "the strip spans the pad")
     -- red under: canDrag ignoring the lock now that the strip shows while locked
     inst.handle:__fire("OnDragStart")
     assertFalse(inst.dragging == true, "a locked strip does not drag")
@@ -607,8 +612,37 @@ test("pad: [R3] the strip reads the pad's name and PREVIEW / TEST MODE, grows to
     NS.SchemaRuntime.Set("locked", false)
     NS.Pad.ApplyLock()
     assertTrue(inst.handle:IsShown())
-    assertEqual(widths[#widths], 6 * #"A rather long raid pad name" + reserve, "unlocked, it fits the name alone")
+    assertEqual(widths[#widths], inst.root.__w, "unlocked, it still spans the pad")
+    -- A name longer than the pad widens the strip past it, as the widget's floor allows: never cut off.
+    local long = string.rep("Long name ", 8)
+    NS.db.profile.pads.p1.name = long
+    NS.Pad.Apply("p1", planFor(NS))
+    assertTrue(6 * #long + reserve > inst.root.__w, "this one is wider than the pad")
+    assertEqual(widths[#widths], 6 * #long + reserve, "the strip grows to fit a label wider than the pad")
     assertNil(inst.header.qcTest, "the header carries no marker of its own")
+end)
+
+test("pad: [bg buttons] the strip matches the pad's width through a resize, and below an up-growing pad", function()
+    local NS = live()
+    NS.SchemaRuntime.Set("locked", false)
+    local inst = NS.Pad.Instance("p1")
+    local widths = {}
+    inst.handle.SetWidth = function(_, w) widths[#widths + 1] = w end
+    NS.Pad.Apply("p1", planFor(NS))
+    assertTrue(inst.handle:IsShown())
+    local wide = inst.root.__w
+    -- red under: ApplyWidth(0) in Pad.ApplyLock
+    assertEqual(widths[#widths], wide, "the strip spans the pad")
+    -- a resize: one column narrows the pad, and the strip follows it
+    NS.db.profile.pads.p1.layout.orientation = "vertical"
+    NS.Pad.Apply("p1", planFor(NS))
+    assertTrue(inst.root.__w < wide, "the pad is narrower")
+    assertEqual(widths[#widths], inst.root.__w, "the strip follows the resize")
+    -- up growth: the strip sits below the pad, the same width
+    NS.db.profile.pads.p1.layout.growth = "rightUp"
+    NS.Pad.Apply("p1", planFor(NS))
+    assertEqual(pointsOf(inst.handle), "TOP,QuickCommsPadp1,BOTTOM,0," .. -NS.DRAG_GAP)
+    assertEqual(widths[#widths], inst.root.__w, "below the pad, still its width")
 end)
 
 -- ── groups polish (2026-10-19) R4: right-click a section title to edit its group ─────────────

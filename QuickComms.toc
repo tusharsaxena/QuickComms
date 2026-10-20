@@ -86,7 +86,7 @@ core\LauncherSetup.lua
 # Defaults
 # LOAD-BEARING: publishes NS.C, which settings\Schema.lua and settings\Panel.lua take at load.
 defaults\Profile.lua
-# LOAD-BEARING: NS.BuiltIns and its helpers, used by the next five files
+# LOAD-BEARING: NS.BuiltIns and its helpers, used by the next six files
 defaults\BuiltIns.lua
 # Conventional: data
 defaults\BuiltIns_MythicPlus.lua
@@ -98,6 +98,8 @@ defaults\BuiltIns_Arena.lua
 defaults\BuiltIns_World.lua
 # Conventional: data
 defaults\BuiltIns_Battlegrounds.lua
+# Conventional: data (declared after the battleground sets: D9)
+defaults\BuiltIns_Group.lua
 # LOAD-BEARING: publishes NS.IconDefaults, which modules\Library.lua reads at load (SURFACE_DEFAULTS).
 defaults\Icons.lua
 # Conventional: data (the editors' and Preview as's shipped ids), read at call time

@@ -13,8 +13,12 @@ test("builtins: the expected top-level sets exist in order", function()
     assertEqual(BI.order[4], "bi.world")
     -- A battleground's own set comes before the generic one, so the dial opens into it (D9, phase 4).
     assertEqual(BI.order[5], "bi.bg.ab")
-    assertEqual(BI.order[#BI.order], "bi.bg")
-    assertTrue(#BI.order >= 19, "generic sets plus one per battleground")
+    -- the generic battleground set after every battleground's own, and In Group after it (bg
+    -- buttons): in a battleground the map's own set is the first active group (D9)
+    assertEqual(BI.order[#BI.order - 1], "bi.bg")
+    assertEqual(BI.order[#BI.order], "bi.group")
+    for i = 5, #BI.order - 2 do assertTrue(BI.order[i]:match("^bi%.bg%.") ~= nil, BI.order[i]) end
+    assertTrue(#BI.order >= 20, "generic sets plus one per battleground")
 end)
 
 test("builtins: ids are unique, referenced and well formed", function()
@@ -48,8 +52,8 @@ test("builtins: node sets open into their ring and nest one level", function()
     assertEqual(#ab.children, 5)
     assertTrue(#ab.callouts >= 4, "and map-wide callouts of its own")
     local stables = BI.groups[ab.children[1]]
-    assertEqual(#stables.callouts, 6)
-    assertEqual(BI.callouts[stables.callouts[3]].text, "INC 3 Stables")
+    assertEqual(#stables.callouts, 4)
+    assertEqual(BI.callouts[stables.callouts[3]].text, "INC Stables")
 end)
 
 test("builtins: bake audit, every callout bakes under its set's snapshot", function()
@@ -92,11 +96,12 @@ test("builtins: [phase 5] every node set pins each node to a wind, at most eight
             if gid ~= "bi.bg.av" then assertTrue(NS.DialLayout.PinNodes(nodes) ~= nil, gid .. " pins every node") end
         end
     end
-    -- the five node sets, and the seven with objectives (bg subgroups)
-    assertEqual(sets, 12)
+    -- the five node sets, the seven with objectives (bg subgroups), Silvershard Mines and Temple of
+    -- Kotmogu (bg buttons)
+    assertEqual(sets, 14)
     assertEqual(BI.groups["bi.bg.ab.lumbermill"].compass, "SW")
     assertEqual(#BI.groups["bi.bg.dwg"].children, 5)
-    assertEqual(BI.callouts["bi.bg.dwg.shrine.inc2"].text, "INC 2 Shrine")
+    assertEqual(BI.callouts["bi.bg.dwg.shrine.inc"].text, "INC Shrine")
 end)
 
 test("builtins: [B7] every callout ships a catalog glyph, with a color only where it is a glyph", function()
@@ -235,8 +240,9 @@ test("builtins: [bg subgroups] Isle of Conquest gains Our base and Enemy base be
         for i, cid in ipairs(BI.groups[gid].callouts) do out[i] = BI.callouts[cid].text end
         return table.concat(out, "|")
     end
-    assertEqual(texts("bi.bg.ioc.base"), "Defend our base|Walls down at our base")
-    assertEqual(texts("bi.bg.ioc.enemybase"), "Attack the enemy base|Walls down at the enemy base")
+    assertEqual(texts("bi.bg.ioc.base"), "Fight at our base|Defend our base|INC our base|Our base is clear")
+    assertEqual(texts("bi.bg.ioc.enemybase"),
+        "Attack the enemy base|Hold the enemy base|INC at the enemy base|The enemy base is clear")
     assertEqual(BI.groups["bi.bg.ioc.base"].compass, "free", "no fixed place a neutral callout can name")
     assertEqual(BI.groups["bi.bg.ioc.docks"].compass, "W", "the nodes keep their winds")
 end)
@@ -276,4 +282,101 @@ test("builtins: [bg subgroups] no callout names a faction", function()
             assertTrue(not (c.text:find("Alliance") or c.text:find("Horde")), cid .. " is faction neutral")
         end
     end
+end)
+
+-- ── bg buttons (2026-10-20): Attack, Defend, INC and Clear on every base-capture node ─────────
+
+-- A group's callouts as "name=text" pairs, joined.
+local function rows(BI, gid)
+    local out = {}
+    for i, cid in ipairs(BI.groups[gid].callouts) do
+        local c = BI.callouts[cid]
+        out[i] = c.name .. "=" .. c.text
+    end
+    return table.concat(out, "|")
+end
+
+test("builtins: [bg buttons] every base-capture node has Attack, Defend, INC and Clear, as Wintergrasp's workshops do", function()
+    local _, BI = bi()
+    for _, key in ipairs({ "ab", "eots", "bfg", "dwg", "ioc" }) do
+        for _, child in ipairs(BI.groups["bi.bg." .. key].children) do
+            local g = BI.groups[child]
+            -- red under: a node still on the INC 1/2/3/Many/Clear/Help rows in defaults/BuiltIns_Battlegrounds.lua
+            assertEqual(#g.callouts, 4, child .. " has exactly four")
+            local want = { attack = "gi:crossed-swords", defend = "gi:checked-shield", inc = "gi:charging",
+                clear = "gi:check-mark" }
+            for i, short in ipairs({ "attack", "defend", "inc", "clear" }) do
+                assertEqual(g.callouts[i], child .. "." .. short, child)
+                assertEqual(BI.callouts[g.callouts[i]].glyph, want[short], child .. " " .. short)
+            end
+        end
+    end
+    assertEqual(rows(BI, "bi.bg.ab.lumbermill"),
+        "Attack=Attack Lumber Mill|Defend=Defend Lumber Mill|INC=INC Lumber Mill|Clear=Lumber Mill is clear")
+    assertEqual(rows(BI, "bi.bg.eots.flag"),
+        "Take flag=Take the flag|Defend flag=Defend the flag|INC=INC the flag|Clear=The flag is clear")
+    assertEqual(BI.callouts["bi.bg.wg.eastspark.clear"].text, "Eastspark is clear", "Wintergrasp shares the template")
+    assertEqual(BI.callouts["bi.bg.ab.farm.attack"].iconColor, BI.COLOR.red)
+    assertEqual(BI.callouts["bi.bg.ab.farm.defend"].iconColor, BI.COLOR.blue)
+    assertEqual(BI.callouts["bi.bg.ab.farm.inc"].iconColor, BI.COLOR.orange)
+    assertEqual(BI.callouts["bi.bg.ab.farm.clear"].iconColor, BI.COLOR.green)
+    assertEqual(BI.callouts["bi.bg.ab.hold"].text, "Hold what we have, defend our bases", "the map-wide callouts stay")
+end)
+
+test("builtins: [bg buttons] Silvershard Mines has its three tracks and the switches, each with four", function()
+    local _, BI = bi()
+    -- red under: Silvershard Mines left flat in defaults/BuiltIns_Battlegrounds.lua
+    assertEqual(childNames(BI, "bi.bg.ssm"), "Lava track,Water track,North track,Switches")
+    assertTrue(BI.groups["bi.bg.ssm"].openInto)
+    assertEqual(rows(BI, "bi.bg.ssm.lava"), "Contest=Contest their cart on the lava track|"
+        .. "Escort=Escort our cart on the lava track|INC=INC on the lava track|Clear=Clear on the lava track")
+    assertEqual(rows(BI, "bi.bg.ssm.switch"), "Flip switch=Flip the track switch|Hold switch=Hold the track switch|"
+        .. "INC=INC at the track switch|Clear=The track switch is clear")
+    for _, child in ipairs(BI.groups["bi.bg.ssm"].children) do
+        assertEqual(BI.groups[child].compass, "free", child .. ": no AreaPOI point to pin")
+    end
+    assertEqual(BI.callouts["bi.bg.ssm.escort"].text, "Escort the cart", "the map-wide callouts stay")
+end)
+
+test("builtins: [bg buttons] Temple of Kotmogu has its four orbs and the center", function()
+    local NS, BI = bi()
+    -- red under: Temple of Kotmogu left flat in defaults/BuiltIns_Battlegrounds.lua
+    assertEqual(childNames(BI, "bi.bg.tok"), "Orange orb,Blue orb,Green orb,Purple orb,Center")
+    assertEqual(rows(BI, "bi.bg.tok.blue"), "Take orb=Take the blue orb|Peel=Peel for our blue orb carrier|"
+        .. "Kill carrier=Kill their blue orb carrier %t|Heals=Our blue orb carrier needs heals")
+    assertEqual(rows(BI, "bi.bg.tok.center"), "Go center=Bring the orbs to the center|Hold center=Hold the center|"
+        .. "INC=INC center|Clear=The center is clear")
+    for _, color in ipairs({ "orange", "blue", "green", "purple" }) do
+        assertEqual(BI.groups["bi.bg.tok." .. color].iconColor, BI.COLOR[color], color .. " orb draws its color")
+    end
+    -- the %t a row's %s fill leaves for the bake
+    local line = NS.Bake.Bake(BI.callouts["bi.bg.tok.green.kill"], BI.SNAPSHOTS["bi.bg.tok"],
+        { ctx = { target = "Traxex" } })
+    assertTrue(line:find("Kill their green orb carrier", 1, true) ~= nil, line)
+    assertEqual(BI.callouts["bi.bg.tok.mid"].text, "Orbs to the middle", "the map-wide callouts stay")
+end)
+
+test("builtins: [bg buttons] In Group is a party, raid and instance group set of short smart-group lines", function()
+    local NS, BI = bi()
+    local g = BI.groups["bi.group"]
+    -- red under: no defaults/BuiltIns_Group.lua (or no TOC line for it)
+    assertTrue(g ~= nil, "the set exists")
+    assertEqual(g.name, "In Group")
+    assertTrue(g.when.group.party and g.when.group.raid and g.when.group.instance, "Party, Raid, Instance group")
+    assertNil(g.when.group.solo)
+    assertNil(g.when.content, "no content condition")
+    assertEqual(rows(BI, "bi.group"), "Hello=Hello|tyff=tyff|Buffs please=Buffs please!|"
+        .. "Healthstone=Healthstone please!|GLHF=GLHF|ggty=ggty|ggnt=ggnt|ty=ty|brb=brb|Ready=Ready|"
+        .. "Drink=Drinking|Summon=Summon please!")
+    for _, cid in ipairs(g.callouts) do assertEqual(BI.callouts[cid].channel, "smartGroup", cid) end
+    assertEqual(g.glyph, "ph:users-three")
+    local snap = BI.SNAPSHOTS["bi.group"]
+    assertEqual(snap.group, "party", "the bake audit checks it in a party")
+    assertEqual(NS.Bake.Bake(BI.callouts["bi.group.glhf"], snap, { ctx = {} }), "/p GLHF")
+    -- active in a party, a raid and a battleground's instance group; not solo
+    local R = NS.Resolver
+    assertTrue(R.Matches(g.when, { group = "party" }))
+    assertTrue(R.Matches(g.when, { group = "raid" }))
+    assertTrue(R.Matches(g.when, { group = "raid", instanceGroup = true, content = "battleground" }))
+    assertTrue(not R.Matches(g.when, { group = "solo" }), "not solo")
 end)

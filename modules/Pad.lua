@@ -346,7 +346,7 @@ function Pad.Apply(id, plan)
         fontSize = look.fontSize, situation = hstate.situation, iconSize = icfg.size })
     inst.root:SetScale(math.max(NS.Library.MIN_SURFACE_SCALE, (tonumber(NS.Setting("scale")) or 1) * (tonumber(layout.scale) or 1)))
     inst.root:SetSize(box.width, box.height)
-    inst.height = box.height
+    inst.width, inst.height = box.width, box.height
     anchorEdge(inst, box.up)
     NS.ApplySkin(inst.root, R.SkinFor(look))
     local font = R.LabelFont(look)
@@ -411,7 +411,10 @@ end
 
 --- The drag strip: shown on a live pad while unlocked, and on a locked one while it draws a preview
 --- or test mode, because the strip carries the PREVIEW / TEST MODE marker (canDrag still refuses a
---- locked drag). The strip is not protected.
+--- locked drag). The strip is not protected. It spans the pad (bg buttons, 2026-10-20): its width is
+--- floored at the pad's, which Apply sets before it calls this, so a resize carries the strip with it;
+--- a label longer than the pad still widens it, as the widget's floor allows. The strip is a child of
+--- the root, so the root's scale is already in both widths.
 function Pad.ApplyLock()
     local locked = isLocked()
     for _, inst in pairs(pads) do
@@ -419,7 +422,7 @@ function Pad.ApplyLock()
             if not inst.live or (locked and not inst.mark) then
                 inst.handle:Hide()
             else
-                inst.handle:ApplyWidth(0)
+                inst.handle:ApplyWidth(inst.width or 0)
                 inst.handle:Show()
             end
         end

@@ -312,7 +312,7 @@ test("groups page: Reuse draws the group part in muted gold and the callout name
     assertEqual(G.MUTED_GOLD, "|cffc9a66b")
     assertEqual(byId[kick].label, "|cffc9a66bMine|r: Kick")
     -- a seeded node is a group like any other: its own name is the group part
-    assertEqual(byId[T.seeded(NS, "bi.bg.ab.stables.inc1")].label, "|cffc9a66bArathi Basin: Stables|r: INC 1")
+    assertEqual(byId[T.seeded(NS, "bi.bg.ab.stables.attack")].label, "|cffc9a66bArathi Basin: Stables|r: Attack")
 end)
 
 test("groups page: Reuse sorts the whole list by group, then callout, ignoring case", function()

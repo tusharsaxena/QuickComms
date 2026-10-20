@@ -127,6 +127,13 @@ absent), as every node set opens into its ring; a copy nested in another group t
 keeps its `openInto`, and an Open into the player turns off after the step is theirs. A
 second run changes nothing. `Library.Prepare` seeds the same nodes on a profile never prepared.
 `NS.SCHEMA_VERSION` is 7.
+No schema step for the bg buttons (2026-10-20, owner ruling: the addon is unreleased, so a profile is
+reset rather than migrated): In Group and Silvershard Mines' and Temple of Kotmogu's groups reach a
+stored profile through `Library.Prepare`'s seeding as any newly shipped set or node (In Group at the
+end of every pad and dial), but a stored node keeps the INC 1/2/3/Many/Clear/Help callouts it was
+seeded with, Isle of Conquest's bases their two, and a stored Silvershard Mines or Temple of Kotmogu
+copy keeps Open into off; a reset profile (or Restore built-in groups, which adds the four new rows beside the old)
+takes the Attack, Defend, INC and Clear rows.
 No schema step for nested groups (2026-10-18): a group without `parent` is top-level, and
 `Library.Prepare` drops a bad one.
 No schema step in phase 5: `Library.Prepare` fills a stored pad's missing layout and look fields from

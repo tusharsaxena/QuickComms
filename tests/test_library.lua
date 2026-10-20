@@ -102,7 +102,7 @@ test("library: a seeded battleground set holds its nodes as groups inside it, in
         assertEqual(p.groups[kid].compass, NS.BuiltIns.groups[def.children[i]].compass)
         assertTrue(Lib.IsChild(kid))
     end
-    assertEqual(p.callouts[p.groups[kids[1]].callouts[3]].text, "INC 3 Stables")
+    assertEqual(p.callouts[p.groups[kids[1]].callouts[3]].text, "INC Stables")
     assertFalse(Lib.AddGroupToSurface("pad", "p1", kids[1]), "a node shows with its set, never by itself")
 end)
 

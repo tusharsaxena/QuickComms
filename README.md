@@ -3,20 +3,22 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-974%2F974_passing-green)
+![Tests](https://img.shields.io/badge/Tests-979%2F979_passing-green)
 
 Quick Comms puts your usual group callouts one click or one keypress away. "Kick on me", "Lust
-now", "INC 3 Lumber Mill": set them up once and they sit on a Comms Pad or open from a
+now", "INC Lumber Mill": set them up once and they sit on a Comms Pad or open from a
 ping-wheel-style Comms Dial. The addon works out where you are, whether that's a Mythic+ key, a raid
 boss, an arena or a battleground, and shows the callouts that fit. Every message goes out through a
 secure button, the only kind of send Midnight still allows mid-pull, so it keeps working in keys and
 on bosses.
 
-It ships with callout sets for Mythic+, raids, arenas, every battleground and the open world when
-you play solo, all switched on, each callout and group with an icon in its own color. A
-battleground's set holds a group per objective: every Alterac Valley general, captain, bunker, tower
-and graveyard (Attack and Defend each), both bases on Isle of Conquest, and the flags, workshops,
-events, carts or azerite of the rest, worded the same for either faction.
+It ships with callout sets for Mythic+, raids, arenas, every battleground, the open world when
+you play solo and any group you are in (In Group: Hello, tyff, GLHF, ggty and the like), all switched
+on, each callout and group with an icon in its own color. A battleground's set holds a group per
+objective: every base-capture node (Attack, Defend, INC and Clear), every Alterac Valley general,
+captain, bunker, tower and graveyard (Attack and Defend each), both bases on Isle of Conquest, Silvershard
+Mines' tracks, Temple of Kotmogu's orbs, and the flags, workshops, events, carts or azerite of the
+rest, worded the same for either faction.
 You can write your own callouts, sort them into groups, say when each group shows, style the pad,
 and share any of it with a friend as a string you copy and paste.
 
@@ -24,13 +26,13 @@ and share any of it with a friend as a string you copy and paste.
 
 Enter a key, a raid, an arena or a battleground (or head out into the open world on your own) and the
 Comms Pad shows the callouts that fit; click one to send it. `/qc unlock` lets you drag the pad, `/qc lock` fixes it, `/qc test` shows
-placeholder chips so you can place it anywhere (the strip above the pad then reads TEST MODE after
+placeholder chips so you can place it anywhere (the strip above the pad, as wide as the pad, then reads TEST MODE after
 its name, as it reads PREVIEW during a preview), and `/qc toggle` hides every pad until you toggle it
 back or reload. The minimap button's right-click menu has Enabled, Locked, Test mode and Show window.
 
 The Comms Dial opens on a key. Pick one on Settings → Comms Dial → Binding (or in WoW's key bindings
 menu), press it, click a group, then click a callout to send it. In a battleground the dial opens
-straight on the map's nodes, each where it sits on the map, so INC 3 at the Lumber Mill is two
+straight on the map's nodes, each where it sits on the map, so INC at the Lumber Mill is two
 clicks. Alterac Valley has more objectives than the dial has wedges, so its dial lists them north to
 south a page at a time (More turns the page); its pad sets them two to a row. The key again, Escape
 or a right click closes it; the number keys 1 to 8 pick a wedge.

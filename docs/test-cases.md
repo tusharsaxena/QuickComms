@@ -362,7 +362,7 @@ Total.
 - resolver: [all] All battlegrounds and All dungeons and raids match the whole kind, the listed ids aside
 - resolver: [arena] the arena row matches only in an arena: its listed ids, or all of them
 
-### test_builtins.lua (17)
+### test_builtins.lua (21)
 
 - builtins: the expected top-level sets exist in order
 - builtins: ids are unique, referenced and well formed
@@ -381,6 +381,10 @@ Total.
 - builtins: [bg subgroups] Isle of Conquest gains Our base and Enemy base beside its five nodes
 - builtins: [bg subgroups] the flag maps, Wintergrasp, Ashran, Deephaul Ravine and Seething Shore have objective children
 - builtins: [bg subgroups] no callout names a faction
+- builtins: [bg buttons] every base-capture node has Attack, Defend, INC and Clear, as Wintergrasp's workshops do
+- builtins: [bg buttons] Silvershard Mines has its three tracks and the switches, each with four
+- builtins: [bg buttons] Temple of Kotmogu has its four orbs and the center
+- builtins: [bg buttons] In Group is a party, raid and instance group set of short smart-group lines
 
 ### test_gameids.lua (4)
 
@@ -910,7 +914,7 @@ Total.
 - dial layout: four wedges sit on N, E, S and W, clockwise from the top
 - dial layout: slices are 4, 6, 8 or 12, and 12 only on a ring with no children
 - dial layout: [review 5] more items than wedges go on pages: size-1 each, the rest on the last
-- dial layout: [exit] Categories in Arathi Basin opens on the node ring; Lumber Mill, then INC 3
+- dial layout: [exit] Categories in Arathi Basin opens on the node ring; Lumber Mill, then INC
 - dial layout: without the flag first, Categories opens on the group ring; one group opens straight on it
 - dial layout: [review 5] Flat puts every callout on the first ring, highest group first, with More pages
 - dial layout: [phase 4] a node set below another active group is three rings deep, and named for the warning
@@ -979,7 +983,7 @@ Total.
 - render: [icons] a glyph chip is drawn in its color; the chip repainted with another icon is white again
 - render: [B3] a chip's label is one line, and hidden when the chip leaves it no room
 
-### test_pad.lua (35)
+### test_pad.lua (36)
 
 - pad: the default pad shows the M+ callouts, each chip armed with its baked line
 - pad: [review 5] a refused chip is dimmed and disarmed: a click sends and reports nothing
@@ -1010,7 +1014,8 @@ Total.
 - pad: [B1] a group named as the header's situation draws no title row of its own
 - pad: [B2] down growth pins the pad's top edge; the header is on top and the strip above
 - pad: [B2] up growth pins the bottom edge, puts the header at the bottom and the strip below
-- pad: [R3] the strip reads the pad's name and PREVIEW / TEST MODE, grows to fit, and shows while locked
+- pad: [R3] the strip reads the pad's name and PREVIEW / TEST MODE, spans the pad, and shows while locked
+- pad: [bg buttons] the strip matches the pad's width through a resize, and below an up-growing pad
 - pad: [R4] each drawn title takes a right-click to edit its group; a left-click does nothing
 - pad: [R4] the title's tooltip says Right-click to edit this group
 - pad: [R4] in tabs mode the tab's title edits the group the tab shows; the wheel moves it
@@ -1027,7 +1032,7 @@ Total.
 - dial: Release closes, disarms and forgets a dial; HideAll also releases the keys
 - dial: Sync applies each planned dial at its place in the order, binds its key, and opens dial 1 in test mode
 - dial: the first situation read builds the default dial, closed; setting its key binds it
-- dial: [exit] in Arathi Basin the dial opens on the nodes; Lumber Mill, then INC 3, sends in two clicks
+- dial: [exit] in Arathi Basin the dial opens on the nodes; Lumber Mill, then INC, sends in two clicks
 - dial: [exit] on a raid boss the dial opens and a click on a wedge sends, with nothing blocked
 - dial: [exit] the Categories two-stroke: a group wedge opens its ring, a callout wedge sends
 - dial: test mode opens dial 1 with placeholder wedges that send nothing, and takes no key
@@ -1165,7 +1170,7 @@ Total.
 | test_bake.lua | 12 |
 | test_share.lua | 37 |
 | test_resolver.lua | 13 |
-| test_builtins.lua | 17 |
+| test_builtins.lua | 21 |
 | test_gameids.lua | 4 |
 | test_library.lua | 78 |
 | test_members.lua | 29 |
@@ -1189,7 +1194,7 @@ Total.
 | test_dial_layout.lua | 18 |
 | test_surfaces.lua | 27 |
 | test_pad_render.lua | 20 |
-| test_pad.lua | 35 |
+| test_pad.lua | 36 |
 | test_dial.lua | 29 |
 | test_icon_style.lua | 8 |
 | test_glow.lua | 11 |
@@ -1200,4 +1205,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **974** |
+| **Total** | **979** |

@@ -18,12 +18,12 @@ local function titles(ring)
     return table.concat(out, ",")
 end
 
--- Arathi Basin as a dial plan hands it over: five nodes, six callouts each, open-into on.
+-- Arathi Basin as a dial plan hands it over: five nodes, four callouts each, open-into on.
 local function ab()
     local children = {}
     for i, node in ipairs({ "Stables", "Lumber Mill", "Blacksmith", "Gold Mine", "Farm" }) do
         local s = {}
-        for k, word in ipairs({ "INC 1", "INC 2", "INC 3", "INC many", "Clear", "Help" }) do
+        for k, word in ipairs({ "Attack", "Defend", "INC", "Clear" }) do
             s[k] = { calloutId = node .. k, name = word, line = "/i " .. word .. " " .. node }
         end
         children[i] = { id = "n" .. i, title = node, slots = s }
@@ -64,7 +64,7 @@ test("dial layout: [review 5] more items than wedges go on pages: size-1 each, t
     assertEqual(#L.Paginate({ 1, 2, 3, 4 }, 4), 1, "a full ring needs no More")
 end)
 
-test("dial layout: [exit] Categories in Arathi Basin opens on the node ring; Lumber Mill, then INC 3", function()
+test("dial layout: [exit] Categories in Arathi Basin opens on the node ring; Lumber Mill, then INC", function()
     local L = DL()
     local generic = { id = "bi.bg", title = "Battleground (generic)", slots = slots("g", 6) }
     local rings, open = L.Rings({ ab(), generic }, { mode = "categories", slices = 4, title = "Comms Dial" })
@@ -76,9 +76,9 @@ test("dial layout: [exit] Categories in Arathi Basin opens on the node ring; Lum
     assertEqual(titles(rings[open]), "Stables,Lumber Mill,Blacksmith,More")
     local mill = rings[rings[open].items[2].target]
     assertEqual(mill.title, "Lumber Mill")
-    assertEqual(titles(mill), "INC 1,INC 2,INC 3,More")
-    assertEqual(mill.items[3].slot.line, "/i INC 3 Lumber Mill")
-    assertEqual(rings[mill.items[4].target].prev, rings[open].items[2].target, "More's page goes back")
+    assertEqual(titles(mill), "Attack,Defend,INC,Clear", "four rows fill a four-wedge ring: no More")
+    assertEqual(mill.items[3].slot.line, "/i INC Lumber Mill")
+    assertEqual(rings[rings[open].items[4].target].prev, open, "More's page goes back")
 end)
 
 test("dial layout: without the flag first, Categories opens on the group ring; one group opens straight on it", function()
@@ -99,9 +99,9 @@ test("dial layout: [review 5] Flat puts every callout on the first ring, highest
     local rings, open = L.Rings({ ab(), { id = "x", title = "X", slots = slots("x", 2) } },
         { mode = "flat", slices = 8, title = "D" })
     assertEqual(open, 1)
-    -- red under: title a Flat node callout with slot.name alone (five wedges would read "INC 1")
-    assertEqual(rings[1].items[1].title, "INC 1 · Stables", "a node's callout names its node")
-    assertEqual(rings[1].items[1].slot.name, "INC 1", "the slot itself is unchanged")
+    -- red under: title a Flat node callout with slot.name alone (five wedges would read "Attack")
+    assertEqual(rings[1].items[1].title, "Attack · Stables", "a node's callout names its node")
+    assertEqual(rings[1].items[1].slot.name, "Attack", "the slot itself is unchanged")
     assertEqual(rings[1].items[8].title, "More")
     assertEqual(rings[1].next, 2)
     assertEqual(rings[2].prev, 1)
@@ -112,7 +112,7 @@ test("dial layout: [review 5] Flat puts every callout on the first ring, highest
             if item.kind == "send" then total = total + 1 end
         end
     end
-    assertEqual(total, 32, "every callout reachable")
+    assertEqual(total, 22, "every callout reachable")
 end)
 
 test("dial layout: [phase 4] a node set below another active group is three rings deep, and named for the warning", function()
@@ -196,7 +196,7 @@ test("dial layout: [phase 5] a node set's nodes sit on their compass winds; the 
     local mill = rings[ring.items[4].target]
     assertEqual(mill.title, "Lumber Mill")
     assertEqual(mill.size, 4, "a node's own ring keeps the dial's slices")
-    assertEqual(mill.items[3].slot.line, "/i INC 3 Lumber Mill", "still two clicks to INC 3 Lumber Mill")
+    assertEqual(mill.items[3].slot.line, "/i INC Lumber Mill", "still two clicks to INC Lumber Mill")
 end)
 
 test("dial layout: [polish] a node set's own callouts take one wedge on the first free wind; the nodes stay pinned", function()

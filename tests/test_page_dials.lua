@@ -203,6 +203,8 @@ test("dials page: [final 20] at 12 wedges per ring the Preview names each wedge 
     local NS, _, P = open()
     assertTrue(NS.SchemaRuntime.Set("dial.mode", "flat", "d2"))
     assertTrue(NS.SchemaRuntime.Set("dial.slices", 12, "d2"))
+    -- M+ alone (In Group's twelve would page the ring, and a paged ring holds eight)
+    assertTrue(NS.SchemaRuntime.Set("group.enabled", false, T.seeded(NS, "bi.group")))
     local w = P.tab("dials", "preview")
     assertTrue(P.hasText(w, "  2 1 o'clock: "), "wedge 2 at 1 o'clock")
     assertTrue(P.hasText(w, "  3 2 o'clock: "))
