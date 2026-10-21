@@ -48,7 +48,7 @@ antialiased by supersampling, and the client tints it with SetVertexColor, as th
 
 | File | Size | Replaces |
 |---|---|---|
-| `dial-disc.tga` | 256² | Every filled circle: the hub's backdrop and circle, Target's dot, the page dots, the arrow plates, the wedge's dim, cooldown and flash discs, and the one-slice dial (today `TempPortraitAlphaMask`). |
+| `dial-disc.tga` | 256² | Every filled circle: the hub's backdrop and circle, Target's dot, the page dots, the arrow plates, the wedge's dim, cooldown and flash discs, the wedge's round icon border (branch review), and the one-slice dial (today `TempPortraitAlphaMask`). |
 | `dial-ring-<k>.tga`, k = 1..12 | 128² | The hollow ring, Target's ring and the backdrop's rim (today `DL.ARC` segments). Ring k has a line of `RING_STEPS[k]` of its diameter, a geometric ladder from 1.25% to 50% (about 1.4× per step). A ring `d` across with a `w` px line draws the step nearest `w/d`, so the error stays under about 18% of the line (under 1 px at the largest line width). |
 | the disc's halves | (texcoords) | The current page's pill, the indicator background and their borders: three pieces (the left half of `dial-disc`, a stretched WHITE8x8 middle, the right half), so the round ends stay round at any width. `dial-pill.tga` is retired. |
 
@@ -120,8 +120,10 @@ color tints the light (shade stays black) and its alpha is Strength.
 - **Masks:** a MaskTexture per slice, using that slice's sector texture and placed and turned like
   the fill. It is created once per slice and reused.
 - **Sprites:** positioned in the slice's own frame (a local x/y turned by the slice's middle angle),
-  the same math as the wedge centers.
-- **One slice (n = 1):** the round mask and `shine-edge-*-1` (a full-disc rim).
+  the same math as the wedge centers. Builder's call (branch review, 2026-10-21): the sprites are
+  drawn for 4 slices, so past 4 their x and width shrink by tan(π/n), and the slice's mask cuts
+  them like the disc.
+- **One slice (n = 1):** `dial-disc.tga` as the mask and `shine-edge-*-1` (a full-disc rim).
 
 ## LibKa0s: not now (owner, 2026-10-21)
 

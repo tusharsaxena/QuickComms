@@ -121,6 +121,7 @@ test("icon style: a wedge's border is a round ring behind its icon, icon plus tw
     assertTrue(NS.Dial.Apply(1, did, plan))
     local w = NS.Dial.RingWedges(did, 1)[1]
     assertTrue(w.qcRing ~= nil and w.qcRing:IsShown())
+    assertEqual(w.qcRing.__texture, NS.DialSlices.DISC, "the dial's own disc, not the portrait mask")
     -- red under: a square backdrop on the round wedge
     assertEqual(csv(w.qcRing.__size), "34,34")
     assertEqual(csv(w.qcBorder), "0,0,0,1")

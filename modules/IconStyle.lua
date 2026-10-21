@@ -37,7 +37,6 @@ IS.SOLID = "Solid"
 IS.SOLID_EDGE = "Interface\\Buttons\\WHITE8X8"
 -- A border style no addon registers any more draws the tooltip's edge, as DropWatcher's does.
 IS.BORDER_FALLBACK = "Interface\\Tooltips\\UI-Tooltip-Border"
-local CIRCLE = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
 
 do
     local LSM = LibStub and LibStub("LibSharedMedia-3.0", true)
@@ -159,7 +158,7 @@ function IS.PaintRing(btn, cfg)
     local ring = btn.qcRing
     if not ring then
         ring = btn:CreateTexture(nil, "BORDER")
-        ring:SetTexture(CIRCLE)
+        ring:SetTexture(NS.DialSlices.DISC)   -- the dial's own disc (tools/gen-dial-textures.py)
         ring:SetPoint("CENTER", btn, "CENTER", 0, 0)
         btn.qcRing = ring
     end

@@ -8,7 +8,7 @@ Writes, under media/textures/ (only this addon draws them, so they are not libra
   dial-sector-<n>.tga   n = 2..12: one slice of an n-slice dial, white on transparent, its apex at
                         the image's center and its middle on the up axis; modules/Dial_Render.lua
                         tints it and turns it onto its wedge (SetRotation about the center). One
-                        slice is the whole disc, drawn with the round mask instead.
+                        slice is the whole disc, drawn with dial-disc.tga instead.
   dial-disc.tga         every filled circle the dial draws (the hub's backdrop and circle, Target's
                         dot, the page dots, the arrow plates, the wedges' veils, the one-slice dial),
                         and, cut in halves by texcoords, the round caps of the current page's pill,

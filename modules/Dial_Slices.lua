@@ -135,7 +135,7 @@ end
 
 local SHINE_KEYS = { "disc", "rim", "soft", "spot", "glow", "streak", "bloom1", "bloom2" }
 local SHINE_SUB = { disc = 3, soft = 3, bloom1 = 3, bloom2 = 4, glow = 4, rim = 5, streak = 6, spot = 6 }
-local MASKED = { disc = true, bloom1 = true, bloom2 = true }
+local MASKED = { disc = true, bloom1 = true, bloom2 = true, spot = true, glow = true, streak = true }
 local BLACK, WHITE = { 0, 0, 0 }, { 1, 1, 1 }
 local BEVEL_LIGHT = math.rad(315)   -- Bevel's light comes from the top left
 
@@ -196,13 +196,16 @@ local function shineLayer(ring, set, key)
     return t
 end
 
--- A sprite on slice j at middle angle `a`: its local point turned by `a` (as place() turns the fill)
--- from the slice's placed center, sized by the placed radius.
-local function placeSprite(t, ring, a, sp)
+-- A sprite on slice j of an n-slice ring at middle angle `a`: its local point turned by `a` (as
+-- place() turns the fill) from the slice's placed center, sized by the placed radius. The sprites are
+-- drawn for a 4-slice ring, so a narrower slice narrows them (their x and width) by its half-angle's
+-- tangent against 4's; the slice's mask cuts whatever still reaches past its edges.
+local function placeSprite(t, ring, n, a, sp)
     local d = ring.qcShape.shift
     local r = (ring.qcShape.disc - 2 * d) / 2
-    local x, y = sp.x * r, -sp.y * r   -- the slice's frame is y down; the ring's is y up
-    t:SetSize(sp.w * r, sp.h * r)
+    local k = n > 4 and math.tan(math.pi / n) or 1
+    local x, y = sp.x * k * r, -sp.y * r   -- the slice's frame is y down; the ring's is y up
+    t:SetSize(sp.w * k * r, sp.h * r)
     t:ClearAllPoints()
     t:SetPoint("CENTER", ring, "CENTER", d * math.sin(a) + x * math.cos(a) + y * math.sin(a),
         d * math.cos(a) - x * math.sin(a) + y * math.cos(a))
@@ -229,7 +232,7 @@ local function paintShine(ring, spec, look)
                 end
                 local t = shineLayer(ring, set, key)
                 t:SetTexture(l[2])
-                if l[5] then placeSprite(t, ring, a, l[5]) else place(t, ring, j, ring.qcShape) end
+                if l[5] then placeSprite(t, ring, n, a, l[5]) else place(t, ring, j, ring.qcShape) end
                 if l[6] then t:SetRotation(0) end
                 t:SetVertexColor(l[3][1], l[3][2], l[3][3], l[4] * shine.alpha)
                 t:Show()

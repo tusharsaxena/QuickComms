@@ -1044,7 +1044,8 @@ the way round. Circle size 4 with Line width 6 → a small solid dot, not a stre
 On a paged ring (Wheel → wedges per ring 4 with more than four callouts in a group): Paging → Dot size
 4 and 20 → the dots are round, the current page's pill has round ends at any Current page width, and
 with Show indicator background on and Dot border 2 the strip behind the row and every border are
-round-ended and smooth; the page arrows' round plates are smooth at Arrow size 12 and 48. Result:
+round-ended and smooth; the page arrows' round plates are smooth at Arrow size 12 and 48. Icons →
+Show border on, Border size 4 → every wedge's round border is smooth too. Result:
 
 ## Shine
 
@@ -1063,18 +1064,20 @@ left behind. Layout → Button style Label only → no shine (no icon is drawn);
 button has no shine. Result:
 
 **SHINE-2. Each look on a dial (2026-10-21).** Open a dial. Dial → Slices → Shine look each of the six
-in turn, at Wheel → wedges per ring 4 and 8, Slice gap 0 and 8, and Ring radius 100 and 180 → every
+in turn, at Wheel → wedges per ring 4, 8 and 12, Slice gap 0 and 8, and Ring radius 100 and 180 → every
 slice takes the look inside its own edges, moving with its slice when the gap opens, and the icons and
-labels sit over it, uncovered. Bevel's light stays at the top left on every slice (the light does not
+labels sit over it, uncovered; Glass orb's highlights and Frosted glass's streak stay inside their
+slice at 12. Bevel's light stays at the top left on every slice (the light does not
 turn with the slices). Gloss cap and Bevel are cut cleanly at each slice's edges at every slice place,
 with no square corner, seam or bleed past the slice (the one client behavior not seen before this
 check; on a fail the spec's fallback applies). Turn a page on a paged ring and switch 8 to 4 → the
 slices no longer used show no shine. Hover a slice → its highlight still shows. Result:
 
 **SHINE-3. A pad and a dial keep their own (2026-10-21).** Set the pad's Shine look to Glass orb and
-the dial's to Rim light → each shows its own; set the pad's to None → the dial keeps Rim light, and the
-reverse. `/reload` → both kept. `/qc diagnostics` → the pad's line reads `p1 button shine=none 85` and
-the dial's slices line ends `shine=rim 85`. Result:
+the dial's to Rim light → each shows its own; set the pad's to None → the dial keeps Rim light.
+`/reload` → both kept. `/qc diagnostics` → the pad's line reads `p1 button shine=none 85` and the
+dial's slices line ends `shine=rim 85`. Then set the pad back to Glass orb and the dial to None → the
+pad keeps Glass orb and the dial shows no shine. Result:
 
 ## Battlegrounds
 

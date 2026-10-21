@@ -31,7 +31,7 @@ local function planOf(NS, opts)
         slot.surfaceId = "d2"
         group.slots[#group.slots + 1] = slot
     end
-    local rings, open = NS.DialLayout.Rings({ group }, { slices = 4, title = "Comms Dial" })
+    local rings, open = NS.DialLayout.Rings({ group }, { slices = opts.slices or 4, title = "Comms Dial" })
     return { kind = "dial", surfaceId = "d2", snapshot = snap, order = { T.seeded(NS, "bi.mplus") }, active = {},
         rings = rings, openRing = open }
 end
@@ -103,7 +103,7 @@ test("dial: [shine] each look builds its recipe on every slice", function()
                 local t, w = set[k], want[k]
                 local what = ("%s slice %d %s"):format(look, j, k)
                 if k == "mask" then
-                    local masked = want.disc or want.bloom1
+                    local masked = want.disc or want.bloom1 or want.spot or want.streak
                     assertEqual(t ~= nil and t:IsShown() or false, masked and true or false, what)
                     if masked then assertEqual(t.__texture, NS.DialSlices.SectorTexture(4), what .. ": the slice's sector") end
                 elseif w then
@@ -118,7 +118,7 @@ test("dial: [shine] each look builds its recipe on every slice", function()
                     assertTrue(t == nil or not t:IsShown(), what .. " hidden")
                 end
             end
-            for _, k in ipairs({ "disc", "bloom1", "bloom2" }) do
+            for _, k in ipairs({ "disc", "bloom1", "bloom2", "spot", "glow", "streak" }) do
                 if set[k] and set[k]:IsShown() then
                     local masks = set[k].__masks or {}
                     assertTrue(masks[1] == set.mask, look .. " " .. k .. ": masked by its slice")
@@ -197,6 +197,30 @@ test("dial: [shine] sprites sit in the slice's frame", function()
     local _, _, _, sx, sy = ring.qcShine[1].streak:GetPoint(1)
     near(sx, 0.95 * R * math.sin(a1), "slice 1's streak on its outer arc, along its bisector (x)")
     near(sy, 0.95 * R * math.cos(a1), "(y)")
+end)
+
+test("dial: [shine] a narrower slice narrows its sprites and its mask cuts them", function()
+    local NS = live()
+    for _, look in ipairs({ "orb", "frost" }) do
+        local ring = shineDial(NS, look, { n = 8, slices = 8 })
+        local shape = ring.qcShape
+        assertEqual(shape.size, 8, look .. ": an 8-slice ring")
+        local R, k = shape.disc / 2, math.tan(math.pi / 8)
+        for j = 1, 8 do
+            local set = ring.qcShine[j]
+            for _, key in ipairs(look == "orb" and { "spot", "glow" } or { "streak" }) do
+                local masks = set[key].__masks or {}
+                assertTrue(masks[1] == set.mask, look .. " slice " .. j .. ": the slice's mask cuts its " .. key)
+            end
+            if look == "orb" then
+                near(set.spot.__size[1], 0.34 * k * R, "slice " .. j .. " spot width")
+                near(set.glow.__size[1], 0.5 * k * R, "slice " .. j .. " glow width")
+                near(set.glow.__size[2], 0.2 * R, "slice " .. j .. " glow height stays")
+            else
+                near(set.streak.__size[1], 0.68 * k * R, "slice " .. j .. " streak width")
+            end
+        end
+    end
 end)
 
 test("dial: [shine] fewer slices hide the rest", function()

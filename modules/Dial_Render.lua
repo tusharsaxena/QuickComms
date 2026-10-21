@@ -236,9 +236,11 @@ end
 --- A dial's look for one rebuild: its radius (clamped); its Slice labels tab (`dial.label`) as a font
 --- (Pad_Render.LabelFont), whether labels show, their line height (0 when they do not) and where
 --- the tooltip goes; its Slices tab (`dial.slice`: the fill, the Slice gap in pixels, the highlight, the
---- Shine heading as `shine`, NS.Shine.Resolve, and the Hub tab's pointer) and Paging tab (`dial.page`, from `dial`: the indicators' background and border
---- included) with each color resolved through its class color companion; the hub (`dial.hub`, hubLook); the Group labels tab (`dial.title`, from `dial`)
---- as `title = { show, font, line }`, its line 0 while off; and the Icon offset (`dial.iconOffset`).
+--- Shine heading as `shine`, NS.Shine.Resolve, and the Hub tab's pointer) and Paging tab
+--- (`dial.page`, from `dial`: the indicators' background and border included) with each color
+--- resolved through its class color companion; the hub (`dial.hub`, hubLook); the Group labels tab
+--- (`dial.title`, from `dial`) as `title = { show, font, line }`, its line 0 while off; and the Icon
+--- offset (`dial.iconOffset`).
 function R.Look(radius, label, slice, dial)
     label = type(label) == "table" and label or {}
     slice = type(slice) == "table" and slice or {}
