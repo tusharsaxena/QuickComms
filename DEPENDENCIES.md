@@ -114,6 +114,10 @@ python3 -I tools/gen-shine-textures.py
 python3 -I -c 'import numpy; print(numpy.__version__)'
 ```
 
+`-I` (isolated mode) leaves the user site-packages out, so the `-I` commands in this section find
+NumPy and Pillow only where apt puts them: a NumPy installed with `pip install --user` fails under `-I` with
+`ModuleNotFoundError: No module named 'numpy'`. Install `python3-numpy` as above, or drop the `-I`.
+
 **Lua 5.1 with the same Pillow and NumPy**, and only for **previewing the shine overlay offline**:
 `tools/render-shine-preview.lua` loads the addon headless through the test harness
 (`tests/loader.lua` over `tests/wow_mock.lua`, the same lifecycle as `tests/run.lua`), builds the
@@ -122,7 +126,8 @@ painted (texture, layer, size, anchors, turn, color, texcoords, masks) to JSON;
 `tools/render-shine-preview.py` composites the dump the way the client blends it (layer order, turned
 quads, vertex color, BLEND, MaskTexture alpha) into
 `docs/superpowers/specs/2026-10-21-shine-overlay/render-dial-4.png`, `render-dial-8.png`,
-`render-dial-12.png` and `render-pad.png`. The Python script runs the Lua one itself. It needs the
+`render-dial-12.png` and `render-pad.png`. The Python script runs the Lua one itself, as `lua` on the `PATH`
+(`tools/render-shine-preview.py`), which must be Lua 5.1. It needs the
 DejaVu Sans font for its labels (any font works; it falls back to Pillow's own). Re-run it after a
 change to the shine's art or recipes and look at the result before an in-game pass: the renders are
 what the code draws, not a copy of the recipe. It is not loaded by the client, and `.pkgmeta` ignores

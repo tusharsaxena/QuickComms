@@ -86,7 +86,7 @@ The button is a secure button armed with one baked line. The game sends the line
 
 ## Today: something changes that a pad draws
 
-`SITUATION_CHANGED`, `LIBRARY_CHANGED`, `PROFILE_CHANGED`, `TEST_MODE_CHANGED` and the settings reactions all call `Surfaces.Request`. Out of combat it rebuilds every enabled pad from the current snapshot (`BuildPlan` → `Pad.Sync`); each button's paint (`PadRender.ApplyButtonLook`) ends with the Buttons tab's shine over the icon it just drew (`NS.Shine.Apply`, from `ButtonLook`'s `shine`, `NS.Shine.Resolve`; None, or no icon, hides it). In combat it files one `surfaces` entry in the combat-end queue, shows the stale hint and sends `SURFACE_REBUILT (id, true)`; at combat end the queue drains, the pads rebuild from the snapshot as it is then, and `COMBAT_QUEUE_DRAINED` clears the hints. `RESTRICTION_CHANGED` re-reads only the padlocks, the lockdown chip and the fade, which change in combat too.
+`SITUATION_CHANGED`, `LIBRARY_CHANGED`, `PROFILE_CHANGED`, `TEST_MODE_CHANGED` and the settings reactions all call `Surfaces.Request`. Out of combat it rebuilds every enabled pad from the current snapshot (`BuildPlan` → `Pad.Sync`); each button's paint (`PadRender.ApplyButtonLook`) ends with the Buttons tab's shine over the whole button (`NS.Shine.Apply`, from `ButtonLook`'s `shine`, `NS.Shine.Resolve`; None hides it). In combat it files one `surfaces` entry in the combat-end queue, shows the stale hint and sends `SURFACE_REBUILT (id, true)`; at combat end the queue drains, the pads rebuild from the snapshot as it is then, and `COMBAT_QUEUE_DRAINED` clears the hints. `RESTRICTION_CHANGED` re-reads only the padlocks, the lockdown chip and the fade, which change in combat too.
 
 ## Today: test mode
 

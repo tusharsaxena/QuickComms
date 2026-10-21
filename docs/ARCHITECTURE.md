@@ -308,7 +308,7 @@ is registered once, as a store, in the Tier 3 table; the documents under it get 
 | Doc | Status | Trigger |
 |---|---|---|
 | `perf-analysis/README.md` | Present | The performance harness is wired (`core/PerfSetup.lua`) |
-| `slash-dispatch.md` | Present | 20 commands in `NS.COMMANDS` |
+| `slash-dispatch.md` | Present | 21 commands in `NS.COMMANDS` |
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Not applicable | The addon carries no client-version workaround of its own yet |
@@ -347,7 +347,8 @@ deviation not in this table is not ratified.
 ### Files over the 1500-line cap
 
 The layout-§1 census of authored `.lua` files over the 1500-line cap. Vendored code (`libs/`,
-`tests/_kit/`) is out of scope; the generators under `tools/` are authored Python, under the cap, and
+`tests/_kit/`) is out of scope; the tools under `tools/` (the Python generators and the shine preview's
+`render-shine-preview.lua`) are authored and under the cap, and
 the repository has no generated data file.
 
 Nothing is over the cap today.
