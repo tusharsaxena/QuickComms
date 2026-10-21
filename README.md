@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1079%2F1079_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1082%2F1082_passing-green)
 
 Quick Comms puts your usual group callouts one click or one keypress away. "Kick on me", "Lust
 now", "INC Lumber Mill": set them up once and they sit on a Comms Pad or open from a
@@ -64,7 +64,7 @@ shows wherever that group does, in a section (or a dial ring) of its own, while 
 match: its parent's, while Inherit when conditions is ticked (the default), else its own. The Preview tab lists each callout beside what it would send where you are. The group's When tab says where it shows, one condition per drawer (click a condition to open it); the Pad page arranges a pad: its General tab names it and sets when it shows (visibility and fade), its Pad header tab styles the header row
 (the one that names where you are: "Quick Comms: World"), its Section header tab the section titles (their height, font and a
 band behind each), its Window tab the pad's border and background, and its Buttons tab the
-buttons themselves (size, color, border, font, an optional glow and an optional shine over the icon, chosen
+buttons themselves (size, color, border, font, an optional glow and an optional shine over the whole button, chosen
 apart from the dial's), each color with a Use class color
 box. "Preview as…" (or `/qc preview`) shows the pads
 and the dial as they would look somewhere else, and hovering a pad's header or the dial's middle (or

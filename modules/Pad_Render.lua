@@ -15,7 +15,7 @@ local _, NS = ...
 -- border behind it, ApplySectionBand).
 -- The Buttons tab (ButtonLook) dresses each button: its body, an edge on a plain child laid over it, its
 -- label's font, a glow around the whole button (modules/Glow.lua Glow.Button) and its Shine heading's
--- overlay over the icon (modules/Shine.lua NS.Shine.Apply; shine overlay, 2026-10-21). The Icons tab (B9) styles the icon through
+-- overlay over the whole button (modules/Shine.lua NS.Shine.Apply; shine overlay, 2026-10-21). The Icons tab (B9) styles the icon through
 -- modules/IconStyle.lua (size, crop, desaturation, alpha, tint, border) and modules/Glow.lua (the
 -- glow, whose On hover trigger the button's OnEnter and OnLeave hooks drive).
 
@@ -447,8 +447,8 @@ end
 --- Dress a button in its look (R.ButtonLook): its body, its edge, its label's font, its glow and its shine.
 --- A look the button already wears (its signature) is not painted again; the glow is handed over every time,
 --- since a button's release puts its glow out (Glow.Release), and Glow.Button keeps an unchanged one. The
---- shine is painted every time too, after R.Paint: it follows the icon this slot drew (none on a label-only
---- button). `w` and `h` are the button's drawn size, part of its glow's signature.
+--- shine is painted every time too, over the whole button `w` x `h` (its drawn size, part of its glow's
+--- signature too), whatever the slot's style.
 function R.ApplyButtonLook(btn, cl, w, h)
     if btn.qcLookSig ~= cl.sig then
         btn.qcLookSig = cl.sig
@@ -457,7 +457,7 @@ function R.ApplyButtonLook(btn, cl, w, h)
         R.ApplyFont(btn.qcLabel, cl.font)
     end
     Glow.Button(btn, sizedGlow(cl, w, h))
-    NS.Shine.Apply(btn, btn.qcIcon, cl.shine)
+    NS.Shine.Apply(btn, cl.shine, w, h)
 end
 
 function R.Flash(btn, what)

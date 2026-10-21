@@ -486,9 +486,11 @@ grayed out while the glow is off; the color pairs never are.
 
 The Shine heading (shine overlay, 2026-10-21) follows Glow: `pad.button.shineLook|shineStrength` and the
 pairs `shineTint`, `shineBloomA`, `shineBloomB` with their Use class color boxes. Shine look is None (the
-default), Gloss cap, Glass orb, Frosted glass, Fluid glass, Bevel or Rim light: one overlay over every
-button's icon (`NS.Shine.Apply`, anchored to the icon, so it follows its size and inset; a button with
-no icon drawn has none), above the icon and below the padlock, the label, the send flash and the hover.
+default), Gloss cap, Glass orb, Frosted glass, Fluid glass, Bevel or Rim light: one overlay over the
+whole of every button (`NS.Shine.Apply`; owner, 2026-10-21: the plate, the icon and the label's chip,
+whatever the Button style), in three pieces so a wide button keeps the look's thin edges and an
+icon-only button is the art whole, above the icon and below the padlock, the label, the send flash and
+the hover.
 Shine strength (0 to 100, step 5, default 85) is its opacity and Shine tint colors its light (its shade
 stays dark). Strength and Tint are grayed out at None; Bloom color A and B (pink and mint) color Fluid
 glass's two blooms and are grayed out under every other look. Each pad keeps its own; the Dial page's
@@ -602,9 +604,10 @@ Preview  each ring as the current or previewed situation builds it, wedge by wed
   Shine (shine overlay, 2026-10-21) is `dial.slice.shine*`, the Buttons tab's heading for the dial's
   slices, with the same looks, range, defaults and gray-outs: each slice takes its own copy of the look,
   placed and turned with its fill (so it follows the gap, the W/E layouts and every slice count), under
-  the wedges' icons. Gloss cap, Frosted glass, Fluid glass and Bevel cut whole-disc art to each slice
-  with a mask; Bevel's light keeps one direction for the whole dial (top left). A dial's look and a
-  pad's are separate settings.
+  the wedges' icons. Each look is the approved mockup's (the spec's "Dial slices"): whole-disc art and
+  Glass orb's bead are cut to each slice with a mask, the bead kept round at every slice count; Bevel's
+  light keeps one direction for the whole dial (top left), its outline shading along each edge. A dial's
+  look and a pad's are separate settings.
 - **Hub** (dial polish, 2026-10-21: its Hub and Pointer headings sat on Slices until then; the
   paths are kept, so saved settings are untouched; the tab follows Slices). Hub is
   `dial.hub.*`: Hub style (Solid circle, the default; Hollow ring; Target, a ring with a dot; Rimmed

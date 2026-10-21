@@ -1052,25 +1052,44 @@ Show border on, Border size 4 → every wedge's round border is smooth too. Resu
 The shine overlay (2026-10-21): Shine look on the Pad page's Buttons tab and the Dial page's Slices
 tab, drawn from `media/textures/shine-*.tga` (`tools/gen-shine-textures.py`).
 
-**SHINE-1. Each look on a pad (2026-10-21).** On a new pad the buttons have no shine (Shine look
-None; Shine strength and Shine tint grayed out, Bloom color A and B grayed out). Pad → Buttons →
-Shine look Gloss cap, Glass orb, Frosted glass, Fluid glass, Bevel and Rim light in turn, each at the
-Icons tab's Icon size 16, 24 and 40 → every button's icon takes the look, sized to the icon and never
-past it; the padlock, the label, the send flash and the hover still read over it. Bloom color A and B
+**SHINE-1. Each look on a pad (2026-10-21; whole button, 2026-10-21).** On a new pad the buttons
+have no shine (Shine look None; Shine strength and Shine tint grayed out, Bloom color A and B grayed
+out). Pad → Buttons → Shine look Gloss cap, Glass orb, Frosted glass, Fluid glass, Bevel and Rim light
+in turn, each at the Icons tab's Icon size 16, 24 and 40 → each look covers the whole button, its
+plate, icon and label, edge to edge, and matches its tile in
+`docs/superpowers/specs/2026-10-21-shine-overlay/render-pad.png`: Gloss cap a bright band over the top
+half with rounded ends; Glass orb a spot at the top left, a glow along the bottom and darker edges;
+Frosted glass a milky wash, a thin bright rim and a streak along the bottom; Fluid glass a haze at the
+top and a pink-to-mint bloom at the bottom; Bevel a light top and left edge and a dark bottom and right
+one; Rim light an edge glow and a short top highlight. On the wide buttons the edges stay as thin as on
+a square one (nothing stretched at the ends); Layout → Button style Icon only → the square buttons
+take the art whole. The padlock, the label, the send flash and the hover still read over it. Bloom color A and B
 are enabled only under Fluid glass; set them to red and blue → its two blooms change color. Shine
 strength 0 → no shine; 100 → the strongest. Shine tint yellow → the light turns yellow, the shade stays
 dark; Use class color → your class color. Fluid glass, then Gloss cap, then None → no bloom or shine is
-left behind. Layout → Button style Label only → no shine (no icon is drawn); a callout whose icon is cleared → its
-button has no shine. Result:
+left behind. Layout → Button style Label only → the buttons keep their shine (it covers the plate, not
+the icon). Result:
 
 **SHINE-2. Each look on a dial (2026-10-21).** Open a dial. Dial → Slices → Shine look each of the six
 in turn, at Wheel → wedges per ring 4, 8 and 12, Slice gap 0 and 8, and Ring radius 100 and 180 → every
 slice takes the look inside its own edges, moving with its slice when the gap opens, and the icons and
-labels sit over it, uncovered; Glass orb's highlights and Frosted glass's streak stay inside their
-slice at 12. Bevel's light stays at the top left on every slice (the light does not
-turn with the slices). Gloss cap and Bevel are cut cleanly at each slice's edges at every slice place,
-with no square corner, seam or bleed past the slice (the one client behavior not seen before this
-check; on a fail the spec's fallback applies). Turn a page on a paged ring and switch 8 to 4 → the
+labels sit over it, uncovered. Each look matches its tile in
+`docs/superpowers/specs/2026-10-21-shine-overlay/render-dial-4.png`, `-8.png` and `-12.png` (the
+addon's own paint, composited offline): Gloss cap a bright band on the outer half of each slice, its
+inner edge one curve around the hub, dark hairlines between slices; Glass orb a bead per slice, its
+corners darker, an elongated highlight near the rim at the slice's left that follows the arc and a soft
+glow toward the hub, the same shape at 4, 8 and 12 (smaller as the slices narrow, never round dots);
+Frosted glass a faint milky wash, thin bright lines along each slice's edges and a bright streak on the
+outer arc of each slice; Fluid glass pink and purple rising out of each slice toward the rim, mint at
+the rim's middle of each slice, and faint light lines between slices (never one even green band); Bevel
+light edges toward the top left and dark ones toward the bottom right, each edge shading along its
+length; Rim light a soft glow just inside the rim and thin light lines between slices. Bevel's light
+stays at the top left on every slice (the light does not turn with the slices). Every masked look
+(Gloss cap, Glass orb, Frosted glass, Fluid glass, Bevel, Rim light) is cut cleanly at each slice's edges at every slice place,
+with no square corner, seam or bleed past the slice (the owner's first screenshots showed the sector
+mask cutting cleanly at 8 slices; Bevel's outline, its upright light seen through the slice's rim as a
+second mask, is new: it should be thin and shade from light to dark along each edge; on a fail the
+spec's fallback applies). Turn a page on a paged ring and switch 8 to 4 → the
 slices no longer used show no shine. Hover a slice → its highlight still shows. Result:
 
 **SHINE-3. A pad and a dial keep their own (2026-10-21).** Set the pad's Shine look to Glass orb and
@@ -1202,4 +1221,4 @@ with its origin and why it is owed, until its pass is recorded:
 | ID | Origin | Why it is owed |
 |---|---|---|
 | ART-1 | Crisp dial art (2026-10-21, shine overlay plan T1) | No client pass recorded yet: the generated disc and ring ladder replace the segmented rings and the portrait mask |
-| SHINE-1..3 | The shine overlay (2026-10-21, plan T2-T5) | No client pass recorded yet; SHINE-2 holds the turned MaskTexture's cut, which the headless mock cannot see |
+| SHINE-1..3 | The shine overlay (2026-10-21, plan T2-T5; the mockup rework and whole-button pads, 2026-10-21) | Owner's first look (2026-10-21, screenshots): the looks did not match the mockups and the pad's shine covered only the icon; reworked, with offline renders from the addon's own paint (`render-*.png`). No client pass of the rework yet; SHINE-2 holds the turned masks' cut, which the headless mock records but cannot draw |

@@ -1142,11 +1142,13 @@ Total.
 - dial: [art] the hub draws textures, not segments
 - dial: [art] the pill is three pieces with round ends
 
-### test_dial_shine.lua (5)
+### test_dial_shine.lua (7)
 
 - dial: [shine] each look builds its recipe on every slice
 - dial: [shine] the overlay follows the slice
+- dial: [shine] the orb's sprites sit on the slice's inscribed circle
 - dial: [shine] sprites sit in the slice's frame
+- dial: [shine] frost's streak and the rim are each slice's own edge set
 - dial: [shine] fewer slices hide the rest
 - dial: [shine] the dial's look leaves the pad alone
 
@@ -1176,14 +1178,15 @@ Total.
 - glow: on a dial, an open later than DROP_SECONDS after the send shows no send glow
 - glow: the stand-down puts out a running send glow even when the frames' release is held
 
-### test_shine.lua (6)
+### test_shine.lua (7)
 
 - shine: the catalog lists None and the six looks
 - shine: every catalog path exists
 - shine: Resolve
-- shine: Apply paints over the icon
+- shine: Apply covers the whole button in three pieces
+- shine: a square button is the art whole
 - shine: blooms only for fluid
-- shine: no icon, no shine
+- shine: the button's own size when none is given
 
 ### test_vendor_sync.lua (3)
 
@@ -1302,10 +1305,10 @@ Total.
 | test_pad_render.lua | 23 |
 | test_pad.lua | 45 |
 | test_dial.lua | 63 |
-| test_dial_shine.lua | 5 |
+| test_dial_shine.lua | 7 |
 | test_icon_style.lua | 9 |
 | test_glow.lua | 11 |
-| test_shine.lua | 6 |
+| test_shine.lua | 7 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -1313,4 +1316,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1079** |
+| **Total** | **1082** |

@@ -10,20 +10,27 @@ tint colors the light; shade stays black) and fades them by the Strength setting
 Looks: gloss (Gloss cap), orb (Glass orb), frost (Frosted glass), fluid (Fluid glass), bevel (Bevel),
 rim (Rim light).
 
-  shine-pad-<look>.tga        128 x 128, over a pad button's icon (SetAllPoints on the icon).
+  shine-pad-<look>.tga        128 x 128, over a whole pad button in three pieces (modules/Shine.lua:
+                              the left half as a cap, the middle column stretched, the right half),
+                              so every edge drawn here stays as thin on a wide button as on a square.
   shine-pad-fluid-bloom1.tga  Fluid glass's two bloom layers, white on transparent, each tinted by
   shine-pad-fluid-bloom2.tga  its own bloom color.
-  shine-dial-<name>.tga       128 x 128, the whole disc (gloss, bevel, fluid-bloom1, fluid-bloom2). A
-                              slice draws one masked by its own sector texture (dial-sector-<n>.tga
-                              as a MaskTexture), placed like the fill, so one texture serves every
-                              slice count. Radial looks turn with the slice; bevel's light is fixed
-                              (the texture is not rotated, the mask is).
-  shine-edge-rim-<n>.tga      n = 1..12, 256 x 256: each slice's own thin rim, shaped exactly like
-                              dial-sector-<n>.tga (n = 1 is the whole disc's rim).
-  shine-edge-soft-<n>.tga     n = 1..12, 128 x 128: each slice's soft edge falloff.
-  shine-spot.tga              64 x 32, the orb's highlight, placed on each slice.
-  shine-glow.tga              64 x 32, the orb's inner glow.
-  shine-streak.tga            128 x 16, the frosted glass's light streak along each slice's rim.
+  shine-dial-<name>.tga       128 x 128, the whole disc (gloss, bevel, bevel-edge, rim, fluid-bloom1,
+                              fluid-bloom2). A slice draws one masked by its own sector texture
+                              (dial-sector-<n>.tga as a MaskTexture), placed like the fill, so one
+                              texture serves every slice count. The radial looks and the blooms turn
+                              with the slice; bevel and bevel-edge are fixed (one light direction for
+                              the dial: the texture is not rotated, the masks are), bevel-edge seen
+                              through the slice's rim as a second mask.
+  shine-edge-rim-<n>.tga      n = 1..12, 256 x 256: each slice's own rim, about one texel, shaped
+                              exactly like dial-sector-<n>.tga (n = 1 is the whole disc's rim).
+  shine-edge-streak-<n>.tga   n = 1..12, 256 x 256: Frosted glass's streak on each slice's arc.
+  shine-spot.tga              64 x 64, the orb's highlight (square: a turn keeps its shape).
+  shine-glow.tga              64 x 64, the orb's inner glow.
+  shine-bead.tga              128 x 128, the orb's vignette: each slice's bulge.
+
+Each dial recipe is the approved mockup card's SVG; tools/render-shine-preview.py renders what the
+addon draws with these files, to check a change against the mockup before an in-game pass.
 
 modules/Shine.lua (NS.Shine) names every file. They are written under media/textures/ (only this
 addon draws them, so they are not library assets); the generator is not loaded by the client, and
@@ -157,33 +164,80 @@ def pad_rim(cv):
 
 
 # ── dial slices ─────────────────────────────────────────────────────────────────────────────────
-# Disc textures (128 x 128, the whole disc, centered): a slice draws one masked by its own sector
-# texture, placed like its fill, so one texture serves every slice count. Edge textures (one pair per
-# slice count, shaped exactly like dial-sector-<n>.tga: apex at the center, middle on the up axis)
-# give each slice its own rim, so neighbouring slices read as separate buttons.
+# Each recipe is the approved mockup's SVG (docs/superpowers/specs/2026-10-21-shine-overlay-design.md
+# names it), drawn on a disc of radius 1 instead of the mockup's 100.
+#
+# Disc textures (the whole disc, centered, up the slice's outward axis): a slice draws one masked by
+# its own sector texture, placed like its fill, so one texture serves every slice count. Edge
+# textures (one per slice count, shaped exactly like dial-sector-<n>.tga: apex at the center, middle
+# on the up axis) give each slice its own rim and Frosted glass's streak along its own arc.
 
 def disc_cut(cv):
     return ramp(cv.r, 1.0, 0.985)                        # nothing past the disc's edge
 
 
+def up(cv):
+    return -cv.y                                         # along the slice's outward axis
+
+
+def diagonal(cv):
+    """0 at the disc's top left (-0.7, -0.7) to 1 at its bottom right (0.7, 0.7): the mockup's one
+    light direction for the whole dial."""
+    return clamp(((cv.x + cv.y) / 2 + 0.7) / 1.4)
+
+
 def dial_gloss(cv):
-    band = ramp(cv.r, 0.55, 0.58) * (0.42 + (0.1 - 0.42) * ramp(cv.r, 0.58, 1.0))
+    # a-ring: nothing to 0.55, 0.42 at 0.57, falling to 0.1 at the rim
+    band = ramp(cv.r, 0.55, 0.57) * (0.42 + (0.1 - 0.42) * ramp(cv.r, 0.57, 1.0))
     cv.light(band * disc_cut(cv))
 
 
+def stops(t, points):
+    """Piecewise linear through (t, value) points."""
+    return np.interp(t, [p[0] for p in points], [p[1] for p in points])
+
+
+# d-siri, along the slice's axis from 0.28 to 1: clear, purple 0.12 at 0.64, pink 0.30 at 0.856,
+# green 0.45 at the rim. Bloom 1 (tinted bloom A, pink) carries the purple and pink, bloom 2 (bloom
+# B, green) the green; past 0.856 the two cross-fade as the gradient's colors do.
+FLUID = [(0.28, 0.0), (0.64, 0.12), (0.856, 0.30), (1.0, 0.45)]
+
+
+def fluid_split(cv):
+    t = up(cv)
+    total = stops(t, FLUID) * (t > 0.28)
+    green = clamp((t - 0.856) / (1.0 - 0.856))
+    a2 = green * total
+    a1 = np.where(a2 < 1, (1 - green) * total / np.maximum(1 - a2, 1e-6), 0)
+    return a1, a2
+
+
 def dial_fluid_bloom1(cv):
-    cv.light(0.3 * ramp(cv.r, 0.45, 0.78) * ramp(cv.r, 1.05, 0.9) * disc_cut(cv))
+    a1, _ = fluid_split(cv)
+    cv.light(a1 * disc_cut(cv))
 
 
 def dial_fluid_bloom2(cv):
-    cv.light(0.45 * ramp(cv.r, 0.76, 1.0) * disc_cut(cv))
+    _, a2 = fluid_split(cv)
+    cv.light(a2 * disc_cut(cv))
 
 
 def dial_bevel(cv):
-    cut = disc_cut(cv)
-    t = clamp(((cv.x + cv.y) / 2 + 0.7) / 1.4)
-    cv.light(0.14 * ramp(t, 0.5, 0.0) * cut)
-    cv.shade(0.28 * ramp(t, 0.5, 1.0) * cut)
+    # e-sshade: white at 0.12 to black at 0.25 along the dial's diagonal
+    t = diagonal(cv)
+    cv.paint(1 - t, (0.12 + 0.13 * t) * disc_cut(cv))
+
+
+def dial_bevel_edge(cv):
+    # e-bev, the slices' outline: white at 0.65 to black at 0.75 along the same diagonal. Drawn through
+    # each slice's rim (shine-edge-rim-<n> as a MaskTexture), so the outline shades along its length.
+    t = diagonal(cv)
+    cv.paint(1 - t, (0.65 + 0.1 * t) * disc_cut(cv))
+
+
+def dial_rim(cv):
+    # g-srim: nothing to 0.82, rising to the rim (the recipe's level is the mockup's 0.3)
+    cv.light(ramp(cv.r, 0.82, 1.0) * disc_cut(cv))
 
 
 def sector_edge(cv, n):
@@ -198,33 +252,46 @@ def sector_edge(cv, n):
 
 
 def edge_rim(n):
+    # The slice's own outline, about one texel (a 1 px line at the stock dial, 284 px across): with its
+    # neighbour's it reads as the mockup's 1.2 px stroke along the shared edge.
     def draw(cv):
         e, inside = sector_edge(cv, n)
-        line = ramp(e, 0.032, 0.02) * ramp(e, 0.0, 0.006)
+        line = ramp(e, 0.013, 0.007) * ramp(e, 0.0, 0.002)
         cv.light(np.where(inside, line, 0) * ramp(cv.r, 0.14, 0.28))
     return draw
 
 
-def edge_soft(n):
+def edge_streak(n):
+    # c-arc: a 2.4 px stroke on the arc at 0.98, brightest at the slice's middle and gone by 45% of its
+    # half-angle (the mockup's +-34 of 70.7 on a quarter), so it keeps its share of every count.
     def draw(cv):
-        e, inside = sector_edge(cv, n)
-        cv.light(np.where(inside, ramp(e, 0.2, 0.0), 0) * ramp(cv.r, 0.12, 0.3))
+        half = math.pi / n
+        phi = np.abs(np.arctan2(cv.x, -cv.y))
+        along = clamp(1 - phi / (0.45 * half))
+        band = ramp(np.abs(cv.r - 0.98), 0.016, 0.008)
+        cv.light(along * band)
     return draw
 
 
 # ── sprites ─────────────────────────────────────────────────────────────────────────────────────
+# Square, their shape inside the inscribed circle, so a sprite turned to any angle keeps all of it.
 
 def spot(cv):
-    cv.light(0.95 * clamp(1 - ellipse_q(cv, 0.5, 0.5, 0.5, 0.5)) ** 1.2)
+    # b-spec at the mockup's 28 x 10: white 0.95 at the middle to clear at the edge
+    cv.light(0.95 * clamp(1 - ellipse_q(cv, 0.5, 0.5, 0.5, 0.5 * 10 / 28)))
 
 
 def glow(cv):
-    cv.light(clamp(1 - ellipse_q(cv, 0.5, 0.5, 0.5, 0.5)) ** 2)
+    # b-glow at 44 x 18 (its level, 0.38, is the recipe's)
+    cv.light(clamp(1 - ellipse_q(cv, 0.5, 0.5, 0.5, 0.5 * 18 / 44)))
 
 
-def streak(cv):
-    along = clamp(1 - np.abs(2 * cv.u - 1)) ** 1.5
-    cv.light(along * np.exp(-((cv.v - 0.5) / 0.22) ** 2))
+def bead(cv):
+    # b-svig: a slice's bulge. Clear to 0.6 of the vignette's radius, black 0.45 at it and past it to
+    # the sprite's edge; the vignette's radius is 0.4 of the sprite's half side, so a sprite 3.5 times
+    # the slice's inscribed radius across its half covers the slice from its apex to its corners.
+    d = np.sqrt((cv.u - 0.5) ** 2 + (cv.v - 0.5) ** 2) / 0.5 / 0.4
+    cv.shade(0.45 * ramp(d, 0.6, 1.0))
 
 
 TEXTURES = [
@@ -240,12 +307,15 @@ TEXTURES = [
     ("shine-dial-fluid-bloom1.tga", 128, 128, dial_fluid_bloom1),
     ("shine-dial-fluid-bloom2.tga", 128, 128, dial_fluid_bloom2),
     ("shine-dial-bevel.tga", 128, 128, dial_bevel),
-    ("shine-spot.tga", 64, 32, spot),
-    ("shine-glow.tga", 64, 32, glow),
-    ("shine-streak.tga", 128, 16, streak),
+    ("shine-dial-bevel-edge.tga", 128, 128, dial_bevel_edge),
+    ("shine-dial-rim.tga", 128, 128, dial_rim),
+    ("shine-spot.tga", 64, 64, spot),
+    ("shine-glow.tga", 64, 64, glow),
+    ("shine-bead.tga", 128, 128, bead),
 ] + [("shine-edge-rim-%d.tga" % n, 256, 256, edge_rim(n)) for n in range(1, 13)] \
-  + [("shine-edge-soft-%d.tga" % n, 128, 128, edge_soft(n)) for n in range(1, 13)
-]
+  + [("shine-edge-streak-%d.tga" % n, 256, 256, edge_streak(n)) for n in range(1, 13)]
+
+RETIRED = ["shine-streak.tga"] + ["shine-edge-soft-%d.tga" % n for n in range(1, 13)]
 
 
 def main():
@@ -257,6 +327,11 @@ def main():
         path = os.path.join(out, name)
         cv.image().save(path, format="TGA", rle=False)
         print("wrote", path)
+    for name in RETIRED:
+        path = os.path.join(out, name)
+        if os.path.exists(path):
+            os.remove(path)
+            print("removed", path)
     return 0
 
 

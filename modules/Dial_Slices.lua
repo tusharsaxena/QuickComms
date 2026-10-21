@@ -21,15 +21,19 @@ local addonName, NS = ...
 -- across and the disc's right half, so the round ends stay round at any width.
 --
 -- THE SHINE (shine overlay, 2026-10-21; the Slices tab's Shine heading, R.Look's `shine`): each
--- place gets an overlay set, ring.qcShine[j] = { disc, mask, rim, soft, spot, glow, streak, bloom1,
--- bloom2 }, each layer made the first time a look draws it (none at None) and hidden when the look
--- or the slice count stops using it. Layers sit at BACKGROUND sublevels 3 to 6, over the fill (1) and
--- the highlight (2) and under the wedges' icons. The slice-shaped layers (the whole-disc art, the
--- per-count rim and soft edge sets of modules/Shine.lua) are placed by place(), as the fill is, so
--- they follow the gap, the W/E layouts and every count; the whole-disc art is cut to its slice by a
--- MaskTexture of the slice's sector, placed the same way (Bevel's art stays upright: one light
--- direction for the whole dial, only its mask turns). The sprites sit at local points of the slice's
--- own frame (y down, the slice pointing up), turned by its middle angle as place() turns the fill.
+-- place gets an overlay set, ring.qcShine[j] = { mask, rimMask, disc, edge, rim, streak, bead, spot,
+-- glow, bloom1, bloom2 }, each layer made the first time a look draws it (none at None) and hidden
+-- when the look or the slice count stops using it. Layers sit at BACKGROUND sublevels 3 to 6, over
+-- the fill (1) and the highlight (2) and under the wedges' icons. Each look is the approved mockup's
+-- SVG recipe (the spec's "Dial slices"). The slice-shaped layers (the whole-disc art, the per-count
+-- rim and streak edge sets of modules/Shine.lua) are placed by place(), as the fill is, so they
+-- follow the gap, the W/E layouts and every count; the whole-disc art is cut to its slice by a
+-- MaskTexture of the slice's sector (`mask`), placed the same way. Bevel's art stays upright (one
+-- light direction for the whole dial, only its masks turn), and its outline is that upright light
+-- seen through the slice's own rim (`rimMask`, the rim edge texture as a mask), so each edge shades
+-- along its length as the mockup's does. Glass orb's sprites are laid out on the slice's inscribed
+-- circle (orbSprites), so the bead keeps the mockup's shape at every count; they sit at local points
+-- of the slice's own frame, turned by its middle angle as place() turns the fill.
 
 NS.DialSlices = NS.DialSlices or {}
 local S = NS.DialSlices
@@ -133,83 +137,136 @@ end
 
 -- ── the shine overlay ──────────────────────────────────────────────────────────────────────────
 
-local SHINE_KEYS = { "disc", "rim", "soft", "spot", "glow", "streak", "bloom1", "bloom2" }
-local SHINE_SUB = { disc = 3, soft = 3, bloom1 = 3, bloom2 = 4, glow = 4, rim = 5, streak = 6, spot = 6 }
-local MASKED = { disc = true, bloom1 = true, bloom2 = true, spot = true, glow = true, streak = true }
-local BLACK, WHITE = { 0, 0, 0 }, { 1, 1, 1 }
-local BEVEL_LIGHT = math.rad(315)   -- Bevel's light comes from the top left
+local SHINE_KEYS = { "disc", "edge", "rim", "streak", "bead", "spot", "glow", "bloom1", "bloom2" }
+local SHINE_SUB = { disc = 3, bead = 3, bloom1 = 3, bloom2 = 4, glow = 4, rim = 5, edge = 5, streak = 6,
+    spot = 6 }
+local MASKED = { disc = true, bloom1 = true, bloom2 = true, bead = true, spot = true, glow = true }
+local RIM_MASKED = { edge = true }
+local BLACK = { 0, 0, 0 }
 
--- A sprite at local (x, y) of the slice's frame, w by h, each a fraction of its placed radius, turned
--- `turn` radians counterclockwise in that frame.
-local function sprite(x, y, w, h, turn)
-    return { x = x, y = y, w = w, h = h, turn = turn or 0 }
+-- A sprite at local (x, out) of the slice's frame (x across, out along its outward axis), side `w`
+-- (the art is square), each a fraction of the placed radius, turned `turn` radians counterclockwise.
+local function sprite(x, out, w, turn)
+    return { x = x, out = out, w = w, turn = turn or 0 }
 end
 
--- One look's layers on a slice of an n-slice ring at middle angle `a` (the spec's "Dial slices"):
--- { key, texture, color, level[, sprite][, upright] }, each level times the Strength alpha.
-local function recipe(shine, n, a)
+-- The inscribed circle of one slice of n (center's distance from the apex, radius), in placed radii:
+-- the whole disc for one slice.
+local function inscribed(n)
+    if n <= 1 then return 0, 1 end
+    local s = math.sin(math.pi / n)
+    return 1 / (1 + s), s / (1 + s)
+end
+
+--- Glass orb's three sprites on a slice of n (b-sl, the mockup's quarter slice, laid on the slice's
+--- inscribed circle of center c and radius p so the bead keeps its shape at every count): the bead
+--- (its vignette, 3.5 p across its half), the spot up and left of the middle, turned to follow the
+--- arc, and the glow below it.
+function S.OrbSprites(n)
+    local c, p = inscribed(n)
+    local sx, so = -0.63 * p, c + 0.48 * p
+    return { bead = sprite(0, c, 7 * p), spot = sprite(sx, so, 0.68 * p, math.atan2(-sx, so)),
+        glow = sprite(0, c - 0.58 * p, 1.06 * p) }
+end
+
+-- One look's layers on a slice of an n-slice ring (the spec's "Dial slices"): { key, texture, color,
+-- level[, sprite][, upright] }, each level times the Strength alpha.
+local function recipe(shine, n)
     local Sh, light, look = NS.Shine, shine.tint, shine.look
-    local rim, soft = Sh.Edge("rim", n), Sh.Edge("soft", n)
+    local rim = Sh.Edge("rim", n)
     if look == "gloss" then
-        return { { "disc", Sh.Texture("dial", "gloss"), light, 1 }, { "rim", rim, light, 0.30 } }
+        return { { "disc", Sh.Texture("dial", "gloss"), light, 1 }, { "rim", rim, BLACK, 0.6 } }
     elseif look == "orb" then
-        return { { "soft", soft, BLACK, 0.50 },
-            { "glow", Sh.Texture("sprite", "glow"), light, 0.45, sprite(0, -0.38, 0.5, 0.2) },
-            { "spot", Sh.Texture("sprite", "spot"), light, 1, sprite(-0.24, -0.80, 0.34, 0.12, math.rad(22)) } }
+        local sp = S.OrbSprites(n)
+        return { { "bead", Sh.Texture("sprite", "bead"), BLACK, 1, sp.bead },
+            { "glow", Sh.Texture("sprite", "glow"), light, 0.38, sp.glow },
+            { "spot", Sh.Texture("sprite", "spot"), light, 1, sp.spot }, { "rim", rim, BLACK, 0.6 } }
     elseif look == "frost" then
-        return { { "disc", FLAT, light, 0.09 }, { "rim", rim, light, 0.55 },
-            { "streak", Sh.Texture("sprite", "streak"), light, 1, sprite(0, -0.95, 0.68, 0.05) } }
+        return { { "disc", FLAT, light, 0.09 }, { "rim", rim, light, 0.5 },
+            { "streak", Sh.Edge("streak", n), light, 1 } }
     elseif look == "fluid" then
         return { { "bloom1", Sh.Texture("dial", "fluid-bloom1"), shine.bloomA, 1 },
-            { "bloom2", Sh.Texture("dial", "fluid-bloom2"), shine.bloomB, 1 }, { "rim", rim, light, 0.35 } }
+            { "bloom2", Sh.Texture("dial", "fluid-bloom2"), shine.bloomB, 1 }, { "rim", rim, light, 0.3 } }
     elseif look == "bevel" then
-        local facing = math.cos(a - BEVEL_LIGHT)
         return { { "disc", Sh.Texture("dial", "bevel"), light, 1, nil, true },
-            { "rim", rim, facing >= 0 and WHITE or BLACK, 0.25 + 0.45 * math.abs(facing) } }
+            { "edge", Sh.Texture("dial", "bevel-edge"), light, 1, nil, true } }
     elseif look == "rim" then
-        return { { "soft", soft, light, 0.35 }, { "rim", rim, light, 0.60 } }
+        return { { "disc", Sh.Texture("dial", "rim"), light, 0.3 }, { "rim", rim, light, 0.5 } }
     end
     return {}
 end
 
--- Place j's mask: its slice's sector, placed and turned as the fill; made on first use.
-local function maskOf(ring, set, j, n)
-    if not set.mask then
-        set.mask = ring:CreateMaskTexture(nil, "BACKGROUND")
-        set.mask:Hide()
+-- Place j's mask `key` ("mask", its slice's sector; "rimMask", its slice's rim): placed and turned as
+-- the fill; made on first use.
+local function maskOf(ring, set, key, j, path)
+    if not set[key] then
+        set[key] = ring:CreateMaskTexture(nil, "BACKGROUND")
+        set[key]:Hide()
     end
-    set.mask:SetTexture(S.SectorTexture(n), "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
-    place(set.mask, ring, j, ring.qcShape)
-    set.mask:Show()
-    return set.mask
+    set[key]:SetTexture(path, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+    place(set[key], ring, j, ring.qcShape)
+    set[key]:Show()
+    return set[key]
 end
 
--- Layer `key` of a set, made on first use (a masked one cut by the set's mask).
+-- Layer `key` of a set, made on first use (a masked one cut by the set's mask, the bevel's outline
+-- by its rim mask).
 local function shineLayer(ring, set, key)
     local t = set[key]
     if not t then
         t = texture(ring, "BACKGROUND", SHINE_SUB[key])
         t:SetBlendMode("BLEND")
         if MASKED[key] then t:AddMaskTexture(set.mask) end
+        if RIM_MASKED[key] then t:AddMaskTexture(set.rimMask) end
         set[key] = t
     end
     return t
 end
 
--- A sprite on slice j of an n-slice ring at middle angle `a`: its local point turned by `a` (as
--- place() turns the fill) from the slice's placed center, sized by the placed radius. The sprites are
--- drawn for a 4-slice ring, so a narrower slice narrows them (their x and width) by its half-angle's
--- tangent against 4's; the slice's mask cuts whatever still reaches past its edges.
-local function placeSprite(t, ring, n, a, sp)
+-- A sprite on a slice at middle angle `a`: its local point turned by `a` (as place() turns the fill)
+-- from the slice's placed apex, sized by the placed radius; the slice's mask cuts whatever reaches
+-- past its edges.
+local function placeSprite(t, ring, a, sp)
     local d = ring.qcShape.shift
     local r = (ring.qcShape.disc - 2 * d) / 2
-    local k = n > 4 and math.tan(math.pi / n) or 1
-    local x, y = sp.x * k * r, -sp.y * r   -- the slice's frame is y down; the ring's is y up
-    t:SetSize(sp.w * k * r, sp.h * r)
+    local x, y = sp.x * r, sp.out * r
+    t:SetSize(sp.w * r, sp.w * r)
     t:ClearAllPoints()
-    t:SetPoint("CENTER", ring, "CENTER", d * math.sin(a) + x * math.cos(a) + y * math.sin(a),
-        d * math.cos(a) - x * math.sin(a) + y * math.cos(a))
+    t:SetPoint("CENTER", ring, "CENTER", (d + y) * math.sin(a) + x * math.cos(a),
+        (d + y) * math.cos(a) - x * math.sin(a))
     t:SetRotation(sp.turn - a)
+end
+
+-- One recipe layer `l` on place j (middle angle `a`) of an n-slice ring: its masks placed first, then
+-- the layer, its texture placed (a sprite at its local point, else as the fill; upright when the
+-- recipe says), tinted and faded by Strength. Marks in `drawn` what it showed.
+local function paintLayer(ring, set, j, a, n, l, alpha, drawn)
+    local key = l[1]
+    if MASKED[key] then
+        maskOf(ring, set, "mask", j, S.SectorTexture(n))
+        drawn.mask = true
+    end
+    if RIM_MASKED[key] then
+        maskOf(ring, set, "rimMask", j, NS.Shine.Edge("rim", n))
+        drawn.rimMask = true
+    end
+    local t = shineLayer(ring, set, key)
+    t:SetTexture(l[2])
+    if l[5] then placeSprite(t, ring, a, l[5]) else place(t, ring, j, ring.qcShape) end
+    if l[6] then t:SetRotation(0) end
+    t:SetVertexColor(l[3][1], l[3][2], l[3][3], l[4] * alpha)
+    t:Show()
+    drawn[key] = true
+end
+
+-- Hide whatever of a set `drawn` does not name (its layers and its masks).
+local function hideUnused(set, drawn)
+    for _, key in ipairs(SHINE_KEYS) do
+        if set[key] and not drawn[key] then set[key]:Hide() end
+    end
+    for _, key in ipairs({ "mask", "rimMask" }) do
+        if set[key] and not drawn[key] then set[key]:Hide() end
+    end
 end
 
 -- Every place's overlay set in the dial's shine (R.Look's `shine`, NS.Shine.Resolve): the look's
@@ -218,34 +275,16 @@ local function paintShine(ring, spec, look)
     local shine = look.shine
     local on = type(shine) == "table" and shine.look ~= "none"
     local n = spec.size
+    local layers = on and recipe(shine, n) or {}
     for j = 1, math.max(on and n or 0, #ring.qcShine) do
         local drawn = {}
         if on and j <= n then
             local set = ring.qcShine[j] or {}
             ring.qcShine[j] = set
             local a = middle(j, ring.qcShape.size, ring.qcShape.start)
-            for _, l in ipairs(recipe(shine, n, a)) do
-                local key = l[1]
-                if MASKED[key] then
-                    maskOf(ring, set, j, n)
-                    drawn.mask = true
-                end
-                local t = shineLayer(ring, set, key)
-                t:SetTexture(l[2])
-                if l[5] then placeSprite(t, ring, n, a, l[5]) else place(t, ring, j, ring.qcShape) end
-                if l[6] then t:SetRotation(0) end
-                t:SetVertexColor(l[3][1], l[3][2], l[3][3], l[4] * shine.alpha)
-                t:Show()
-                drawn[key] = true
-            end
+            for _, l in ipairs(layers) do paintLayer(ring, set, j, a, n, l, shine.alpha, drawn) end
         end
-        local set = ring.qcShine[j]
-        if set then
-            for _, key in ipairs(SHINE_KEYS) do
-                if set[key] and not drawn[key] then set[key]:Hide() end
-            end
-            if set.mask and not drawn.mask then set.mask:Hide() end
-        end
+        if ring.qcShine[j] then hideUnused(ring.qcShine[j], drawn) end
     end
 end
 

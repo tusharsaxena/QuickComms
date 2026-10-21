@@ -41,30 +41,29 @@ local function near(a, b, what)
 end
 -- ── the slices' shine overlay (shine overlay, 2026-10-21) ─────────────────────────────────────
 
-local SHINE_KEYS = { "disc", "mask", "rim", "soft", "spot", "glow", "streak", "bloom1", "bloom2" }
+local SHINE_KEYS = { "disc", "mask", "rimMask", "edge", "rim", "streak", "bead", "spot", "glow", "bloom1",
+    "bloom2" }
 
--- Each look's layers on a slice of an n-slice ring at middle angle `a`: { texture, level, color }
--- (the plan's recipe table; color nil is the tint, white by default).
-local function recipeOf(Sh, look, n, a)
-    local rim, soft = Sh.Edge("rim", n), Sh.Edge("soft", n)
+-- Each look's layers on a slice of an n-slice ring: { texture, level, color } (the mockup's SVG
+-- recipe, the spec's "Dial slices"; color nil is the tint, white by default).
+local function recipeOf(Sh, look, n)
+    local rim = Sh.Edge("rim", n)
     local black = { 0, 0, 0 }
     if look == "gloss" then
-        return { disc = { Sh.Texture("dial", "gloss"), 1 }, rim = { rim, 0.30 } }
+        return { disc = { Sh.Texture("dial", "gloss"), 1 }, rim = { rim, 0.6, black } }
     elseif look == "orb" then
-        return { soft = { soft, 0.50, black }, glow = { Sh.Texture("sprite", "glow"), 0.45 },
-            spot = { Sh.Texture("sprite", "spot"), 1 } }
+        return { bead = { Sh.Texture("sprite", "bead"), 1, black }, glow = { Sh.Texture("sprite", "glow"), 0.38 },
+            spot = { Sh.Texture("sprite", "spot"), 1 }, rim = { rim, 0.6, black } }
     elseif look == "frost" then
-        return { disc = { "Interface\\Buttons\\WHITE8x8", 0.09 }, rim = { rim, 0.55 },
-            streak = { Sh.Texture("sprite", "streak"), 1 } }
+        return { disc = { "Interface\\Buttons\\WHITE8x8", 0.09 }, rim = { rim, 0.5 },
+            streak = { Sh.Edge("streak", n), 1 } }
     elseif look == "fluid" then
         return { bloom1 = { Sh.Texture("dial", "fluid-bloom1"), 1, { 1, 0.604, 0.835 } },
-            bloom2 = { Sh.Texture("dial", "fluid-bloom2"), 1, { 0.541, 1, 0.757 } }, rim = { rim, 0.35 } }
+            bloom2 = { Sh.Texture("dial", "fluid-bloom2"), 1, { 0.541, 1, 0.757 } }, rim = { rim, 0.3 } }
     elseif look == "bevel" then
-        local c = math.cos(a - math.rad(315))
-        return { disc = { Sh.Texture("dial", "bevel"), 1 },
-            rim = { rim, 0.25 + 0.45 * math.abs(c), c >= 0 and { 1, 1, 1 } or black } }
+        return { disc = { Sh.Texture("dial", "bevel"), 1 }, edge = { Sh.Texture("dial", "bevel-edge"), 1 } }
     elseif look == "rim" then
-        return { soft = { soft, 0.35 }, rim = { rim, 0.60 } }
+        return { disc = { Sh.Texture("dial", "rim"), 0.3 }, rim = { rim, 0.5 } }
     end
     return {}
 end
@@ -98,14 +97,18 @@ test("dial: [shine] each look builds its recipe on every slice", function()
         for j = 1, 4 do
             local set = ring.qcShine[j]
             assertTrue(set ~= nil, look .. ": slice " .. j .. " has its set")
-            local want = recipeOf(Sh, look, 4, sliceAngle(shape, j))
+            local want = recipeOf(Sh, look, 4)
             for _, k in ipairs(SHINE_KEYS) do
                 local t, w = set[k], want[k]
                 local what = ("%s slice %d %s"):format(look, j, k)
                 if k == "mask" then
-                    local masked = want.disc or want.bloom1 or want.spot or want.streak
+                    local masked = want.disc or want.bloom1 or want.bead
                     assertEqual(t ~= nil and t:IsShown() or false, masked and true or false, what)
                     if masked then assertEqual(t.__texture, NS.DialSlices.SectorTexture(4), what .. ": the slice's sector") end
+                elseif k == "rimMask" then
+                    -- red under: Bevel's outline tinted per slice instead of seen through its rim
+                    assertEqual(t ~= nil and t:IsShown() or false, want.edge ~= nil, what)
+                    if want.edge then assertEqual(t.__texture, Sh.Edge("rim", 4), what .. ": the slice's rim") end
                 elseif w then
                     assertTrue(t ~= nil and t:IsShown(), what .. " shown")
                     assertEqual(t.__texture, w[1], what .. " texture")
@@ -118,11 +121,15 @@ test("dial: [shine] each look builds its recipe on every slice", function()
                     assertTrue(t == nil or not t:IsShown(), what .. " hidden")
                 end
             end
-            for _, k in ipairs({ "disc", "bloom1", "bloom2", "spot", "glow", "streak" }) do
+            for _, k in ipairs({ "disc", "bloom1", "bloom2", "bead", "spot", "glow" }) do
                 if set[k] and set[k]:IsShown() then
                     local masks = set[k].__masks or {}
                     assertTrue(masks[1] == set.mask, look .. " " .. k .. ": masked by its slice")
                 end
+            end
+            if set.edge and set.edge:IsShown() then
+                local masks = set.edge.__masks or {}
+                assertTrue(masks[1] == set.rimMask and #masks == 1, look .. " edge: seen through its rim only")
             end
         end
     end
@@ -151,74 +158,97 @@ test("dial: [shine] the overlay follows the slice", function()
                 local set, fill = ring.qcShine[j], ring.qcFills[j]
                 local what = ("%s gap=%s n=%s slice %d"):format(look, tostring(case.gap), tostring(case.n), j)
                 -- red under: the overlay anchored at the ring's center, not placed by place()
-                sameAs(set.rim, fill, what .. " rim")
                 sameAs(set.mask, fill, what .. " mask")
                 sameAs(set.disc, fill, what .. " disc", look == "bevel")
+                if look == "bevel" then
+                    -- one light direction: the outline's art upright, its rim mask on the slice
+                    sameAs(set.edge, fill, what .. " edge", true)
+                    sameAs(set.rimMask, fill, what .. " rim mask")
+                else
+                    sameAs(set.rim, fill, what .. " rim")
+                end
             end
         end
         assertTrue(NS.SchemaRuntime.Set("dial.slice.gap", 0, "d2"))
     end
 end)
 
+test("dial: [shine] the orb's sprites sit on the slice's inscribed circle", function()
+    local NS = live()
+    local S = NS.DialSlices
+    -- red under: no S.OrbSprites (the sprites narrowed by tan(pi/n), their height kept)
+    for _, n in ipairs({ 2, 4, 8, 12 }) do
+        local sp = S.OrbSprites(n)
+        local s = math.sin(math.pi / n)
+        local c, p = 1 / (1 + s), s / (1 + s)
+        near(sp.bead.out, c, n .. ": the bead on the circle's center")
+        near(sp.bead.w, 7 * p, n .. ": the bead's vignette covers the slice")
+        near(sp.spot.x, -0.63 * p, n .. ": the spot up and left")
+        near(sp.spot.out, c + 0.48 * p, n .. ": toward the rim")
+        near(sp.spot.w, 0.68 * p, n .. ": the spot's length")
+        near(sp.spot.turn, math.atan2(0.63 * p, c + 0.48 * p), n .. ": turned to follow the arc")
+        near(sp.glow.out, c - 0.58 * p, n .. ": the glow toward the hub")
+        near(sp.glow.w, 1.06 * p, n .. ": the glow's length")
+    end
+    local four = S.OrbSprites(4)
+    near(four.bead.out, 0.586, "a quarter: the mockup's bead at 0.6")
+    near(four.spot.out, 0.785, "the mockup's spot at 0.8")
+    local one = S.OrbSprites(1)
+    near(one.bead.out, 0, "one slice: the bead is the disc")
+    near(one.bead.w, 7, "one slice: the whole disc's bead")
+end)
+
 test("dial: [shine] sprites sit in the slice's frame", function()
     local NS = live()
-    for _, gap in ipairs({ 0, 8 }) do
-        local ring = shineDial(NS, "orb", { gap = gap })
+    for _, case in ipairs({ { gap = 0 }, { gap = 8 }, { gap = 0, n = 8, slices = 8 } }) do
+        local ring = shineDial(NS, "orb", case)
         local shape = ring.qcShape
         local R, d = (shape.disc - 2 * shape.shift) / 2, shape.shift
-        local function at(t, lx, ly, w, h, turn, a, what)
-            local x = lx * R * math.cos(a) - ly * R * math.sin(a)
-            local y = -lx * R * math.sin(a) - ly * R * math.cos(a)
-            local _, _, _, px, py = t:GetPoint(1)
-            near(px, d * math.sin(a) + x, what .. " x")
-            near(py, d * math.cos(a) + y, what .. " y")
-            near(t.__size[1], w * R, what .. " width")
-            near(t.__size[2], h * R, what .. " height")
-            near(t.__rotation, turn - a, what .. " rotation")
+        local sprites = NS.DialSlices.OrbSprites(shape.size)
+        local function at(t, sp, a, what)
+            local px = (d + sp.out * R) * math.sin(a) + sp.x * R * math.cos(a)
+            local py = (d + sp.out * R) * math.cos(a) - sp.x * R * math.sin(a)
+            local _, _, _, x, y = t:GetPoint(1)
+            near(x, px, what .. " x")
+            near(y, py, what .. " y")
+            near(t.__size[1], sp.w * R, what .. " width")
+            near(t.__size[2], sp.w * R, what .. " height: the art is square, so a turn keeps its shape")
+            near(t.__rotation, sp.turn - a, what .. " rotation")
+            local masks = t.__masks or {}
+            assertTrue(masks[1] ~= nil, what .. ": cut by the slice's mask")
         end
         local sawE = false
         for j = 1, shape.size do
             local a = sliceAngle(shape, j)
             local set = ring.qcShine[j]
-            at(set.spot, -0.24, -0.80, 0.34, 0.12, math.rad(22), a, "gap " .. gap .. " slice " .. j .. " spot")
-            at(set.glow, 0, -0.38, 0.5, 0.2, 0, a, "gap " .. gap .. " slice " .. j .. " glow")
-            if math.abs(a % (2 * math.pi) - math.pi / 2) < 1e-6 then
+            local what = ("gap %d n %d slice %d"):format(case.gap, shape.size, j)
+            at(set.bead, sprites.bead, a, what .. " bead")
+            at(set.spot, sprites.spot, a, what .. " spot")
+            at(set.glow, sprites.glow, a, what .. " glow")
+            if shape.size == 4 and math.abs(a % (2 * math.pi) - math.pi / 2) < 1e-6 then
                 sawE = true
-                -- the E slice: local (-0.24, -0.80) turned by 90 degrees is (0.80, 0.24)
+                -- the E slice: local (x, out) turned by 90 degrees is (out, -x)
                 local _, _, _, px, py = set.spot:GetPoint(1)
-                near(px, d + 0.80 * R, "E spot x")
-                near(py, 0.24 * R, "E spot y")
+                near(px, d + sprites.spot.out * R, "E spot x")
+                near(py, -sprites.spot.x * R, "E spot y")
             end
         end
-        assertTrue(sawE, "the ring has an E slice")
+        if shape.size == 4 then assertTrue(sawE, "the ring has an E slice") end
     end
-    local ring = shineDial(NS, "frost", { gap = 0 })
-    local R, a1 = ring.qcShape.disc / 2, sliceAngle(ring.qcShape, 1)
-    local _, _, _, sx, sy = ring.qcShine[1].streak:GetPoint(1)
-    near(sx, 0.95 * R * math.sin(a1), "slice 1's streak on its outer arc, along its bisector (x)")
-    near(sy, 0.95 * R * math.cos(a1), "(y)")
 end)
 
-test("dial: [shine] a narrower slice narrows its sprites and its mask cuts them", function()
+test("dial: [shine] frost's streak and the rim are each slice's own edge set", function()
     local NS = live()
-    for _, look in ipairs({ "orb", "frost" }) do
-        local ring = shineDial(NS, look, { n = 8, slices = 8 })
-        local shape = ring.qcShape
-        assertEqual(shape.size, 8, look .. ": an 8-slice ring")
-        local R, k = shape.disc / 2, math.tan(math.pi / 8)
-        for j = 1, 8 do
+    for _, n in ipairs({ 4, 8 }) do
+        local ring = shineDial(NS, "frost", n == 8 and { n = 8, slices = 8 } or nil)
+        assertEqual(ring.qcShape.size, n)
+        for j = 1, n do
             local set = ring.qcShine[j]
-            for _, key in ipairs(look == "orb" and { "spot", "glow" } or { "streak" }) do
-                local masks = set[key].__masks or {}
-                assertTrue(masks[1] == set.mask, look .. " slice " .. j .. ": the slice's mask cuts its " .. key)
-            end
-            if look == "orb" then
-                near(set.spot.__size[1], 0.34 * k * R, "slice " .. j .. " spot width")
-                near(set.glow.__size[1], 0.5 * k * R, "slice " .. j .. " glow width")
-                near(set.glow.__size[2], 0.2 * R, "slice " .. j .. " glow height stays")
-            else
-                near(set.streak.__size[1], 0.68 * k * R, "slice " .. j .. " streak width")
-            end
+            -- red under: the straight streak sprite on the outer arc
+            assertEqual(set.streak.__texture, NS.Shine.Edge("streak", n), n .. " slice " .. j .. " streak")
+            assertEqual(table.concat(set.streak.__size, ","), table.concat(ring.qcFills[j].__size, ","),
+                "placed as the fill")
+            near(set.streak.__rotation, ring.qcFills[j].__rotation, "turned as the fill")
         end
     end
 end)
@@ -240,7 +270,7 @@ test("dial: [shine] fewer slices hide the rest", function()
         S.Paint(ring, { size = 4, start = 0, items = {} }, look(name))
         -- red under: paintShine looping only to spec.size
         for j = 5, 8 do hidden(ring.qcShine[j], name .. " place " .. j) end
-        for j = 1, 4 do assertTrue(ring.qcShine[j].rim:IsShown() or ring.qcShine[j].soft:IsShown(), name .. " " .. j) end
+        for j = 1, 4 do assertTrue(ring.qcShine[j].rim:IsShown(), name .. " " .. j) end
     end
     S.Paint(ring, { size = 4, start = 0, items = {} }, look("fluid"))
     S.Paint(ring, { size = 4, start = 0, items = {} }, look("gloss"))
@@ -267,7 +297,7 @@ test("dial: [shine] the dial's look leaves the pad alone", function()
     for _, btn in ipairs(NS.Pad.Instance("p1").buttons.active) do
         if btn:IsShown() then
             shown = shown + 1
-            assertTrue(btn.qcShine == nil or not btn.qcShine:IsShown(), "the pad at None carries no shine")
+            assertTrue(btn.qcShine == nil or not btn.qcShine.left:IsShown(), "the pad at None carries no shine")
         end
     end
     assertTrue(shown > 0, "the pad has buttons")
