@@ -8,8 +8,8 @@ eagerly at `OnEnable`; each page's body builds on its first show (options-ui-§1
 | Ka0s Quick Comms (landing) | The logo, the TOC notes line and the slash command list, drawn by the library's `BuildLandingPage` |
 | General | `Master controls`, `Behavior` |
 | Groups | One group (a seeded built-in set is one too): `General`, `Callouts`, `When`, `Preview` |
-| Comms Pad | One pad: `General`, `Groups`, `Layout`, `Pad header`, `Section header`, `Window`, `Buttons`, `Icons` |
-| Comms Dial | One dial: `General`, `Groups`, `Wheel`, `Labels`, `Icons`, `Preview` |
+| Pad | One pad (the Comms Pad page until the dial polish, 2026-10-21): `General`, `Groups`, `Layout`, `Pad header`, `Section header`, `Window`, `Buttons`, `Icons` |
+| Dial | One dial (the Comms Dial page until the dial polish, 2026-10-21): `General`, `Groups`, `Wheel`, `Slices`, `Paging`, `Slice labels`, `Group labels`, `Icons`, `Preview` |
 | Share | `Export`, `Import` |
 | Profiles | AceDBOptions: switch, copy, reset and delete profiles |
 
@@ -80,7 +80,7 @@ Preview   the active-now line, then a table: a gold header row (Callout, What it
 but this one, in the picker's order. A group inside another shows wherever that group is placed (a
 pad draws a section for it, a dial a node ring), gated by its own Enabled and its When (its
 parent's while it inherits, below), while the parent's gate the whole; it is never placed on a pad
-or a dial itself, so picking a parent takes it off every pad and dial in the same act, and None does not put it back (Comms Pad → Groups → Add a
+or a dial itself, so picking a parent takes it off every pad and dial in the same act, and None does not put it back (Pad → Groups → Add a
 group does). Groups go one level deep: the dropdown is idle while this group holds groups, and its
 tooltip names them. A group's children are listed in the order they were made in. Delete on a
 parent asks first and says what happens: the groups inside it become top-level groups, in its place
@@ -242,8 +242,8 @@ user group, so there is no Callouts page and no shared callout.
   2px inset cell (`G.EDGE_INSET`, as under Add callout) leave, and Add is 26px tall, the label-less
   dropdown's height. The gap is a cell rather than the layout's `spaceH`, which would also fall
   between Add and the inset cell.
-- **The list** is the drag-to-reorder list (`Ed.ReorderRows`, shared with Comms Pad → Groups and
-  Comms Dial → Groups). The edit glyph (the catalog's `edit` mark) opens the popup filled in; the
+- **The list** is the drag-to-reorder list (`Ed.ReorderRows`, shared with Pad → Groups and
+  Dial → Groups). The edit glyph (the catalog's `edit` mark) opens the popup filled in; the
   remove glyph (the `transmog-icon-remove` atlas) asks first, then deletes the callout, since
   nothing else holds it. Both carry a tooltip. Each row is an AceGUI Table layout
   (`Ed.RowColumns`): the handle's gutter, the label filling what is left, a 24px cell per 16px
@@ -414,7 +414,7 @@ footer   the selected icon (a glyph in the color) and its name, then Choose and 
 - **Combat**: the library's combat cover lies over its page, as over every settings page, and Choose
   is refused with one line; nothing is written in combat.
 
-## Comms Pad
+## Pad
 
 `settings/Pads.lua`, one pad at a time.
 
@@ -429,7 +429,7 @@ Groups   Show groups as, then the pad's groups as a drag-to-reorder list with a 
 Layout   orientation, grid columns, growth, button style, scale, spacing (a button's label runs
          to its right edge, or to the padlock on a locked button: no channel letter there, the button's
          tooltip names the channel), then Position: X and Y and Reset this pad's position
-Pad header      the pad's top row, the one that names the situation (World, M+, Raid): Size
+Pad header      the pad's top row, the one that names the situation ("Quick Comms: World", M+, Raid): Size
                 (Header height), Font (face, size, color with Use class color, flags, shadow),
                 Background (its color with Use class color) and Border (style, thickness, color with
                 Use class color), the blocks composed by the options library (options-ui-§16, §17),
@@ -491,7 +491,7 @@ sits right after Glow and always shows. A style's knobs (Pixel border, Auto cast
 2026-10-20; until then every style's knobs showed, grayed out under the others): the tab's render filters
 them (`Settings.ShownIconRows`), the rows stay in the schema, so Defaults, a share import and `/qc set`
 still reach every knob. Glow and Glow style are structural (`Editors.STRUCTURAL`): a write repaints the
-tab on the next frame, its scroll kept, so the right heading appears at once. The Comms Dial page's
+tab on the next frame, its scroll kept, so the right heading appears at once. The Dial page's
 Icons tab does the same.
 Glow when is Always, On hover or After sending (1.5 s from the send result; a dial closes on the send,
 so its wedge glows for 1.5 s from the next open, if that comes within 5 s). The page's Defaults puts the
@@ -501,28 +501,33 @@ X and Y write the whole `pad.point` row, the same one the drag strip writes; a d
 updates the boxes. A new pad holds the seeded sets the profile still has as top-level groups, in
 shipped order.
 
-## Comms Dial
+## Dial
 
 `settings/Dials.lua`, one dial at a time.
 
 ```
 band     [ Dial v (picker) ][ New dial ]
-strip    [ General ][ Groups ][ Wheel ][ Slices ][ Paging ][ Labels ][ Icons ][ Preview ]
+strip    [ General ][ Groups ][ Wheel ][ Slices ][ Paging ][ Slice labels ][ Group labels ][ Icons ]
+         [ Preview ]
 General  Name, Enabled, then Delete dial
 Groups   Show groups as (Categories or Flat), then the dial's groups as a drag-to-reorder list
          with a remove glyph (its priority order, spec §7; it takes the group off the dial and asks
          nothing), then Add a group (top-level groups only)
-Wheel    wedges per ring (Auto by default), ring radius, icon offset, open at, then Position: X and Y and
+Wheel    wedges per ring (Auto by default), ring radius, open at, then Position: X and Y and
          Reset this dial's position
-Slices   Background (the slices' fill), Border (size, then color), Highlight (the hovered
-         slice's fill) and Pointer (Show pointer, size, offset, color), each color with Use class color
+Slices   Background (the slices' fill), Gap (Slice gap), Highlight (the hovered slice's fill), Hub
+         (Hub style, Hub size, Circle size, Line width, Backdrop color, Hub border size and color,
+         Circle color) and Pointer (Show pointer, size, offset, color), each color with Use class
+         color
 Paging   a paged ring's row under the dial: Position (offset), Arrows (size, spacing, arrow color,
          arrow background) and Page indicator (dot size, current page width, dot spacing, current
          page color, other pages color), each color with Use class color
-Labels   Show labels, label offset, then the labels' Font block (font, size, outline, color, Use class color,
-         shadow), grayed out while labels are off, then Tooltip (side, offset)
-Icons    the wedges' icons, as the Comms Pad page's Icons tab (a wedge's border is a round ring,
-         never wider than the wedge; its icon size keeps the wedge's own size)
+Slice labels  Show labels, label offset, then the labels' Font block (font, size, outline, color,
+         Use class color, shadow), grayed out while labels are off, then Tooltip (side, offset)
+Group labels  Show group labels (the ring's title above the dial), then its Font block, grayed out
+         while off
+Icons    Icon offset, then the wedges' icons, as the Pad page's Icons tab (a wedge's border is a
+         round ring, never wider than the wedge; its icon size, up to 128, keeps the wedge's own size)
 Preview  each ring as the current or previewed situation builds it, wedge by wedge
 ```
 
@@ -535,20 +540,23 @@ Preview  each ring as the current or previewed situation builds it, wedge by wed
   three-rings-deep warning: a battleground's node callouts now sit three rings deep by design,
   since In Group is active beside the map's set).
 - **Wheel:** Wedges per ring is `dial.slices`: Auto (0, a new dial's default) gives each page one
-  wedge per item from W, clockwise (one W; two W and E; three W, N and E on a four-wedge ring with S
-  empty; four W, N, E and S; past four, evenly spaced), up to 12; or a fixed 4, 6, 8 or 12 from N.
+  wedge per item from W, clockwise (one: the whole disc; two: halves W and E; three: W, N and E on a
+  four-wedge ring with S empty; four: W, N, E and S; past four, evenly spaced), up to 12, and fewer
+  when the icons no longer fit their slices at the icon reach (the Slice gap counted; 128-pixel icons
+  at radius 100 hold about four a page); or a fixed 4, 6, 8 or 12, from W since the dial polish
+  (2026-10-21; from N before): a fixed 4 places one item W, two W and E, three W, N and E, four W, N,
+  E and S, and a fixed 6, 8 or 12 fills its places from W clockwise, the rest drawn empty (never lit,
+  never clicked). The gap never changes a fixed count.
   A ring that holds rings takes at most 8 either way, and a node set pinned to its winds keeps its
   eight. A ring with more items is paged: two arrows under the dial (dimmed at an end, no wrap), the
   Left and Right arrow keys (bound only while a paged ring is shown) and the mouse wheel turn its
   pages; under them a gold pill marks the page shown and a gray dot each other page, and each arrow
   is a round plate in the slices' fill with a chevron, dimmed at an end. Ring radius is `dial.radius` (70 to 180
   pixels, default 100): the wedges' distance from the middle; the disc grows with it, keeping 20
-  pixels between a wedge's edge and its own. Icon offset is `dial.iconOffset` (0 to 250 pixels, 0
-  automatic: the ring radius): the icons' own distance from the middle, the disc keeping its size;
-  each wedge's hit square follows its icon. Open at is `dial.openAt` (its place or the cursor). X
+  pixels between a wedge's edge and its own. Open at is `dial.openAt` (its place or the cursor). X
   and Y write the whole `dial.point` row; a refused offset says why and puts the box back. There is
   no depth control (owner ruling R5).
-- **Labels:** Show labels is `dial.label.show`: each wedge's name, drawn wholly outside the disc (off
+- **Slice labels** (the Labels tab until the dial polish, 2026-10-21; a UI rename, the `dial.label.*` paths kept): Show labels is `dial.label.show`: each wedge's name, drawn wholly outside the disc (off
   shows the icons alone; the tooltip still names them). Label offset is `dial.label.offset` (0 to
   300 pixels, 0 automatic: just past the disc), each label's distance from the middle; the ring's
   title and the page row move out with it, and it grays out with the font. The Font block is composed by the options
@@ -559,16 +567,35 @@ Preview  each ring as the current or previewed situation builds it, wedge by wed
   Left, Right) and Tooltip offset `dial.label.tooltipOffset` (0 to 80 pixels, default 8): every
   dial tooltip (a wedge's, a page arrow's, the hub's Why is this showing?) sits outside the dial,
   that far above the ring's title, below the page row, or beside the disc past its widest label.
+- **Group labels** (dial polish, 2026-10-21): Show group labels is `dial.title.show` (on by default):
+  the ring's title above the dial ("World (solo)", "Comms Dial"). Its Font block is composed as the
+  slice labels' (`dial.title.font|fontSize|fontColor|useClassColorFont|fontFlags|fontShadow`;
+  defaults gold Friz Quadrata 12 with its shadow, `PadDefaults.DialTitle`), grayed out while off; the
+  title is measured with its own line height, so a bigger font lifts it and the tooltip above it.
+- **Icons:** Icon offset (a Wheel row until the dial polish, 2026-10-21; `dial.iconOffset` kept) leads
+  the tab under Size and crop: 0 to 250 pixels, 0 automatic (the ring radius), the icons' own
+  distance from the middle, the disc keeping its size. Icon size reaches 128 on a dial (a pad's stays
+  40): a game icon is 64-pixel art, so past 64 it is upscaled and softer; at the default ring radius
+  icons past about 70 pixels crowd their neighbors, and at 128 a ring wants a radius near 180. The
+  rest is the Pad page's Icons tab.
 - **Slices** (2026-10-21): each heading's colors are composed swatch pairs with Use class color.
-  Background is `dial.slice.background`, each slice's fill (dark, as the disc was). Border is
-  `dial.slice.borderSize` (0 to 6 pixels, default 1; 0 draws no lines) and `borderColor`: the
-  spokes between slices and the rim. Highlight is `dial.slice.highlight`, the fill the slice the
-  cursor points into takes (gold, faint), anywhere on the disc outside the hub; each wedge's
-  clickable square fills as much of its slice as a square allows. Pointer is
+  Background is `dial.slice.background`, each slice's fill (dark, as the disc was). Gap's Slice gap
+  is `dial.slice.gap` (0 to 20 pixels, default 0; the dial polish, 2026-10-21, retired the Border
+  heading): each slice moves out along its middle line and shrinks so its outer edge stays on the
+  disc and a clear strip that wide parts it from its neighbors (one slice has none). Highlight is
+  `dial.slice.highlight`, the fill the slice the cursor points into takes (gold, faint), anywhere on
+  the disc outside the hub, moving with its slice; a click anywhere in a used slice, hub edge to
+  rim, sends it (a point in a gap belongs to the slice whose bearing it is in). Hub (dial polish) is
+  `dial.hub.*`: Hub style (Solid circle, the default; Hollow ring; Target, a ring with a dot; Rimmed
+  disc, a filled circle on a rimmed backdrop), Hub size (24 to 80, default 40: the backdrop's width,
+  where the slices and the pointer start), Circle size (4 to 60, default 22), Line width (1 to 6,
+  grayed out under Solid circle), Backdrop color, Hub border size (0 to 6, default 0; Rimmed disc
+  always draws one), Hub border color and Circle color, each with Use class color; the circle
+  brightens while the cursor is on the hub. Pointer is
   `dial.slice.pointerShow`, `pointerSize` (10 to 48, default 20), `pointerOffset` (0 to 150, 0
   automatic: just outside the hub) and `pointerColor`: the chevron that turns toward the cursor
-  (`ph:caret-up`), grayed out while Show pointer is off. The hub, its ✕ and the pointer always draw
-  over the slices.
+  (`ph:caret-up`), grayed out while Show pointer is off. The hub and the pointer always draw over the
+  slices.
 - **Paging** (2026-10-21): a paged ring's row under the dial. Position's Offset is `dial.page.offset`
   (0 to 80 pixels, default 6) under the labels. Arrows: Arrow size `arrowSize` (12 to 48, default
   24), Arrow spacing `arrowGap` (0 to 60, default 10) from the indicators, Arrow color `arrowColor`
@@ -582,12 +609,12 @@ Preview  each ring as the current or previewed situation builds it, wedge by wed
   Keybindings → Ka0s Quick Comms; it is account-wide unless the player ticks Character Specific
   Keybindings there, and a dial past the fourth place has no entry.
 - **Preview:** each ring, wedge by wedge, with its compass word (a clock position past eight
-  wedges; under Auto the first wedge is W), marking the ring the dial opens on
+  wedges; the first wedge is W, under Auto and, since the dial polish, a fixed count), marking the ring the dial opens on
   and the wedges that open a ring. It is a listing (owner ruling R3); the drawn dial is the
   in-game preview (test mode, Preview as…).
 
-The page's Defaults puts groups-as, wedges per ring, ring radius, icon offset, open at, the Slices, Paging, Labels and
-Icons tabs back to their defaults and turns the dial on, in one act (`Library.Batch`); the name, groups
+The page's Defaults puts groups-as, wedges per ring, ring radius, icon offset, open at, the Slices (Hub
+included), Paging, Slice labels, Group labels and Icons tabs back to their defaults and turns the dial on, in one act (`Library.Batch`); the name, groups
 and position are kept, and the key, WoW's own binding, is never touched.
 
 ## Share

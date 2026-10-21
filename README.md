@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1007%2F1007_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1048%2F1048_passing-green)
 
 Quick Comms puts your usual group callouts one click or one keypress away. "Kick on me", "Lust
 now", "INC Lumber Mill": set them up once and they sit on a Comms Pad or open from a
@@ -38,14 +38,19 @@ shows the groups first, so click one, then click a callout to send it. In a batt
 set shows its nodes, each where it sits on the map. A ring with more callouts than wedges is paged:
 the arrows under the dial (or the Left and Right arrow keys, or the mouse wheel) turn the pages, and
 a gold pill under the dial marks the page you are on. Alterac Valley lists its objectives north to south that way; its
-pad sets them two to a row. The key again, Escape or a right click closes the dial; the number keys
-1 to 8 pick a wedge. The slice the mouse points into lights whole, anywhere outside the middle button, and a wedge's tooltip shows outside the
-dial. On Settings → Comms Dial, the Wheel tab sets the wedges per ring (Auto spreads them evenly, up
-to 12), the ring's radius and the icons' distance from the middle; the Slices tab colors the slices,
-the lines between them, the lit slice and the pointer in the middle (its size and distance too, or
-hides it); the Paging tab sizes, spaces and colors the page arrows and the pill and dots; the Labels
-tab shows or hides the wedges' names, sets their distance from the middle, font, size, outline,
-color and shadow, and which side of the dial the tooltip shows on.
+pad sets them two to a row. The key again, Escape, a right click or a click anywhere outside the
+dial closes it; the number keys 1 to 8 pick a wedge. Slices are laid out from the left (W), going
+clockwise. The slice the mouse points into lights whole, anywhere outside the middle button, a click
+anywhere in it sends it, and its tooltip shows outside the dial. On Settings → Dial, the Wheel tab sets
+the wedges per ring (Auto spreads them evenly, up to 12, and pages sooner when big icons would not
+fit) and the ring's radius; the Slices tab colors the slices, sets the gap between them, colors the
+lit slice, styles the middle button (a solid circle, a hollow ring, a target or a rimmed disc, with
+its size and colors) and sets the pointer (its size, distance and color, or hides it); the Paging
+tab sizes, spaces and colors the page arrows and the pill and dots; the Slice labels tab shows or
+hides the wedges' names, sets their distance from the middle, font, size, outline, color and shadow,
+and which side of the dial the tooltip shows on; the Group labels tab does the same for the ring's
+title above the dial; and the Icons tab sets the icons' distance from the middle and their look, up
+to 128 pixels.
 
 Settings → Groups makes a group and, on its Callouts tab, its callouts: Add callout opens a small
 editor for the name, text, channel and icon (Save keeps it, Cancel drops it). Choose icon… opens
@@ -55,8 +60,8 @@ Reuse
 callout copies a callout from any of your other groups into this one, and each row has an
 edit and a remove button. A group's Parent group setting puts it inside another group: it then
 shows wherever that group does, in a section (or a dial ring) of its own, while its conditions
-match: its parent's, while Inherit when conditions is ticked (the default), else its own. The Preview tab lists each callout beside what it would send where you are. The group's When tab says where it shows, one condition per drawer (click a condition to open it); Comms Pad arranges a pad: its General tab names it and sets when it shows (visibility and fade), its Pad header tab styles the header row
-(the one that names where you are), its Section header tab the section titles (their height, font and a
+match: its parent's, while Inherit when conditions is ticked (the default), else its own. The Preview tab lists each callout beside what it would send where you are. The group's When tab says where it shows, one condition per drawer (click a condition to open it); the Pad page arranges a pad: its General tab names it and sets when it shows (visibility and fade), its Pad header tab styles the header row
+(the one that names where you are: "Quick Comms: World"), its Section header tab the section titles (their height, font and a
 band behind each), its Window tab the pad's border and background, and its Buttons tab the
 buttons themselves (size, color, border, font and an optional glow), each color with a Use class color
 box. "Preview as…" (or `/qc preview`) shows the pads

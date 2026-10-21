@@ -120,7 +120,8 @@ local function surfaces(out)
     end
 end
 
--- One dial's look: the Wheel, Slices, Paging and Labels tabs' values that shape what it draws.
+-- One dial's look: the Wheel, Slices (Hub included), Paging, Slice labels and Group labels tabs' values that
+-- shape what it draws.
 local function dialLook(out, id, d)
     local s, l, pg = d.slice or {}, d.label or {}, d.page or {}
     out:add("Dial", "%s look mode=%s slices=%s radius=%s iconOffset=%s openAt=%s", id, d.mode, d.slices, d.radius,
@@ -130,6 +131,9 @@ local function dialLook(out, id, d)
         l.tooltipOffset)
     out:add("Dial", "%s paging offset=%s arrow=%s gap=%s dot=%s pill=%s dotGap=%s", id, pg.offset, pg.arrowSize,
         pg.arrowGap, pg.dotSize, pg.pillWidth, pg.dotGap)
+    local h, t = d.hub or {}, d.title or {}
+    out:add("Dial", "%s hub style=%s size=%s circle=%s line=%s border=%s groupLabels=%s", id, h.style, h.size,
+        h.circleSize, h.lineWidth, h.borderSize, t.show)
 end
 
 -- One line per ring of a dial's plan: its title, page, wedge count and where wedge 1 sits, the items

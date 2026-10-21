@@ -21,7 +21,7 @@ Each task ends in one commit whose subject starts with `Dial polish T<n>:`. To r
 - [x] T5 Hub styles
 - [x] T6 Labels: Group labels tab, Slice labels rename, Icon offset to Icons, icon size 128
 - [x] T7 Renames: Pad / Dial pages, pad header "Quick Comms: <situation>"
-- [ ] T8 Docs, diagnostics, smoke tests, final gate — push branch
+- [x] T8 Docs, diagnostics, smoke tests, final gate — push branch
 
 ## Global Constraints
 
