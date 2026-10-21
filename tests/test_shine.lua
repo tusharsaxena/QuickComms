@@ -46,11 +46,12 @@ local function shown(set)
     return set ~= nil and (set.left:IsShown() or set.mid:IsShown() or set.right:IsShown())
 end
 
-test("shine: the catalog lists None and the six looks", function()
+test("shine: the catalog lists None and the seven looks", function()
     local NS = T.newAddon()
     -- red under: no modules/Shine.lua (NS.Shine is nil)
     assertTrue(NS.Shine ~= nil, "NS.Shine")
-    assertEqual(csv(NS.Shine.LOOKS), "none,gloss,orb,frost,fluid,bevel,rim")
+    -- red under: no Gloss fade (owner, 2026-10-21), right after Gloss cap
+    assertEqual(csv(NS.Shine.LOOKS), "none,gloss,glossfade,orb,frost,fluid,bevel,rim")
     assertNil(NS.Shine.Texture("pad", "none"), "None draws nothing")
     assertNil(NS.Shine.Texture("pad", "satin"), "an unknown look draws nothing")
 end)
@@ -66,7 +67,7 @@ test("shine: every catalog path exists", function()
     for i = 2, #Sh.LOOKS do add(Sh.Texture("pad", Sh.LOOKS[i]), "pad " .. Sh.LOOKS[i]) end
     add(Sh.Texture("pad", "fluid-bloom1"), "pad bloom 1")
     add(Sh.Texture("pad", "fluid-bloom2"), "pad bloom 2")
-    for _, name in ipairs({ "gloss", "frost", "rim" }) do
+    for _, name in ipairs({ "gloss", "glossfade", "frost", "rim" }) do
         add(Sh.Texture("dial", name), "dial " .. name)
     end
     for _, name in ipairs({ "bead", "fluid-bloom1", "fluid-bloom2" }) do add(Sh.Texture("sprite", name), "sprite " .. name) end
@@ -85,7 +86,7 @@ test("shine: every catalog path exists", function()
         assertTrue(Sh.Edge("streak", n):find("shine%-edge%-streak%-" .. n .. "$") ~= nil, Sh.Edge("streak", n))
     end
     assertEqual(Sh.Edge("rim", 20), Sh.Edge("rim", 12), "a count past the dial's most slices clamps")
-    assertEqual(#paths, 50, "the generator's 50 files")
+    assertEqual(#paths, 52, "the generator's 52 files")
     for _, p in ipairs(paths) do
         local ok, rel = exists(p)
         assertTrue(ok, rel)

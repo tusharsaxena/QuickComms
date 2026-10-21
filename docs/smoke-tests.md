@@ -1054,11 +1054,12 @@ tab, drawn from `media/textures/shine-*.tga` (`tools/gen-shine-textures.py`).
 
 **SHINE-1. Each look on a pad (2026-10-21; whole button, 2026-10-21).** On a new pad the buttons
 have no shine (Shine look None; Shine strength and Shine tint grayed out, Bloom color A and B grayed
-out). Pad → Buttons → Shine look Gloss cap, Glass orb, Frosted glass, Fluid glass, Bevel and Rim light
+out). Pad → Buttons → Shine look Gloss cap, Gloss fade, Glass orb, Frosted glass, Fluid glass, Bevel and Rim light
 in turn, each at the Icons tab's Icon size 16, 24 and 40 → each look covers the whole button, its
 plate, icon and label, edge to edge, and matches its tile in
 `docs/superpowers/specs/2026-10-21-shine-overlay/render-pad.png`: Gloss cap a bright band over the top
-half with rounded ends; Glass orb a soft band of light across the upper third, edges darkening all
+half with rounded ends; Gloss fade (2026-10-21, listed right after Gloss cap) one smooth gradient,
+brightest at the top edge and fading to nothing toward the bottom, with no cap edge; Glass orb a soft band of light across the upper third, edges darkening all
 round and darkest at the bottom, with no spot or dot anywhere (2026-10-21), plainly different from
 None on the wide buttons; Frosted glass a milky wash, milkier toward the edges, a crisp bright rim
 (brightest along the top) and a soft streak of light just under the top edge; Fluid glass a haze at the
@@ -1072,13 +1073,15 @@ dark; Use class color → your class color. Fluid glass, then Gloss cap, then No
 left behind. Layout → Button style Label only → the buttons keep their shine (it covers the plate, not
 the icon). Result:
 
-**SHINE-2. Each look on a dial (2026-10-21).** Open a dial. Dial → Slices → Shine look each of the six
+**SHINE-2. Each look on a dial (2026-10-21).** Open a dial. Dial → Slices → Shine look each of the seven
 in turn, at Wheel → wedges per ring 4, 8 and 12, Slice gap 0 and 8, and Ring radius 100 and 180 → every
 slice takes the look inside its own edges, moving with its slice when the gap opens, and the icons and
 labels sit over it, uncovered. Each look matches its tile in
 `docs/superpowers/specs/2026-10-21-shine-overlay/render-dial-4.png`, `-8.png` and `-12.png` (the
 addon's own paint, composited offline): Gloss cap a bright band on the outer half of each slice, its
-inner edge one curve around the hub, dark hairlines between slices; Glass orb a bead per slice, lit
+inner edge one curve around the hub, dark hairlines between slices; Gloss fade (2026-10-21) the same
+gloss with no falloff edge, nothing at each slice's inner end rising smoothly to its brightest at the
+rim, with the same dark hairlines; Glass orb a bead per slice, lit
 softly in its middle and dark toward its corners, with dark hairlines between slices and no highlight
 spot or dot on any slice (2026-10-21); Frosted glass a milky wash, milkier toward the rim, a crisp
 bright line along the outer arc, faint light lines between slices and a soft line of light just inside
@@ -1088,7 +1091,7 @@ mint band and no wash over the slices' middles (2026-10-21); Bevel every slice r
 (2026-10-21): a light outer arc and left spoke, a dark right spoke and inner end, and a gentle shade
 from light at the outer left to dark at the inner right, turning with its slice (no single light
 direction for the dial); Rim light a soft glow just inside the rim and thin light lines between
-slices. Every masked look (Gloss cap, Glass orb, Frosted glass, Fluid glass, Rim light) is cut cleanly
+slices. Every masked look (Gloss cap, Gloss fade, Glass orb, Frosted glass, Fluid glass, Rim light) is cut cleanly
 at each slice's edges at every slice place, with no square corner, seam or bleed past the slice (the
 owner's first screenshots showed the sector mask cutting cleanly at 8 slices); Bevel is slice-shaped
 art of its own, with no mask. Turn a page on a paged ring and switch 8 to 4 → the

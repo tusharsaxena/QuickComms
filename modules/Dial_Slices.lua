@@ -178,8 +178,8 @@ local FROST_RIM, FLUID_RIM = 0.35, 0.3
 local function recipe(shine, n)
     local Sh, light, look = NS.Shine, shine.tint, shine.look
     local rim = Sh.Edge("rim", n)
-    if look == "gloss" then
-        return { { "disc", Sh.Texture("dial", "gloss"), light, 1 }, { "rim", rim, BLACK, 0.6 } }
+    if look == "gloss" or look == "glossfade" then
+        return { { "disc", Sh.Texture("dial", look), light, 1 }, { "rim", rim, BLACK, 0.6 } }
     elseif look == "orb" then
         return { { "bead", Sh.Texture("sprite", "bead"), light, 1, S.OrbSprites(n).bead },
             { "rim", rim, BLACK, 0.6 } }

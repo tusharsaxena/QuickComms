@@ -53,6 +53,9 @@ local function recipeOf(Sh, look, n)
     local black = { 0, 0, 0 }
     if look == "gloss" then
         return { disc = { Sh.Texture("dial", "gloss"), 1 }, rim = { rim, 0.6, black } }
+    elseif look == "glossfade" then
+        -- red under: no Gloss fade (owner, 2026-10-21): Gloss cap's recipe with its own smooth art
+        return { disc = { Sh.Texture("dial", "glossfade"), 1 }, rim = { rim, 0.6, black } }
     elseif look == "orb" then
         -- red under: the spot and glow sprites (owner, 2026-10-21: no dots), the bead tinted black
         return { bead = { Sh.Texture("sprite", "bead"), 1 }, rim = { rim, 0.6, black } }
@@ -93,7 +96,7 @@ end
 test("dial: [shine] each look builds its recipe on every slice", function()
     local NS = live()
     local Sh = NS.Shine
-    for _, look in ipairs({ "gloss", "orb", "frost", "fluid", "bevel", "rim" }) do
+    for _, look in ipairs({ "gloss", "glossfade", "orb", "frost", "fluid", "bevel", "rim" }) do
         local ring = shineDial(NS, look)
         local shape = ring.qcShape
         assertEqual(shape.size, 4, look .. ": a 4-slice ring")

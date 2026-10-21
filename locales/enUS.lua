@@ -620,6 +620,7 @@ L["Draw a glow around each button."] = "Draw a glow around each button."
 L["Shine"] = "Shine"
 L["Shine look"] = "Shine look"
 L["Gloss cap"] = "Gloss cap"
+L["Gloss fade"] = "Gloss fade"
 L["Glass orb"] = "Glass orb"
 L["Frosted glass"] = "Frosted glass"
 L["Fluid glass"] = "Fluid glass"
@@ -629,8 +630,8 @@ L["Shine strength"] = "Shine strength"
 L["Shine tint"] = "Shine tint"
 L["Bloom color A"] = "Bloom color A"
 L["Bloom color B"] = "Bloom color B"
-L["A glossy overlay: Gloss cap, Glass orb, Frosted glass, Fluid glass, Bevel or Rim light. None draws none."] =
-    "A glossy overlay: Gloss cap, Glass orb, Frosted glass, Fluid glass, Bevel or Rim light. None draws none."
+L["A glossy overlay: Gloss cap, Gloss fade, Glass orb, Frosted glass, Fluid glass, Bevel or Rim light. None draws none."] =
+    "A glossy overlay: Gloss cap, Gloss fade, Glass orb, Frosted glass, Fluid glass, Bevel or Rim light. None draws none."
 L["How strong the shine is, from 0 to 100 percent."] = "How strong the shine is, from 0 to 100 percent."
 L["How tall the pad's header row is, in pixels: the row with the situation (World, M+, Raid) and the collapse button."] =
     "How tall the pad's header row is, in pixels: the row with the situation (World, M+, Raid) and the collapse button."

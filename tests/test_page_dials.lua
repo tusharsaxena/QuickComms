@@ -545,7 +545,8 @@ test("page dials: [shine] the Slices tab has a Shine heading", function()
     local look = rows["dial.slice.shineLook"]
     local ids = {}
     for i, v in ipairs(look.values) do ids[i] = v.value end
-    assertEqual(table.concat(ids, ","), "none,gloss,orb,frost,fluid,bevel,rim", "the seven choices, in order")
+    assertEqual(table.concat(ids, ","), "none,gloss,glossfade,orb,frost,fluid,bevel,rim",
+        "the eight choices, in order (Gloss fade after Gloss cap, owner 2026-10-21)")
     assertEqual(look.default, "none")
     local st = rows["dial.slice.shineStrength"]
     assertEqual(table.concat({ st.min, st.max, st.step, st.default }, ","), "0,100,5,85")

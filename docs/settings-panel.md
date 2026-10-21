@@ -486,7 +486,7 @@ grayed out while the glow is off; the color pairs never are.
 
 The Shine heading (shine overlay, 2026-10-21) follows Glow: `pad.button.shineLook|shineStrength` and the
 pairs `shineTint`, `shineBloomA`, `shineBloomB` with their Use class color boxes. Shine look is None (the
-default), Gloss cap, Glass orb, Frosted glass, Fluid glass, Bevel or Rim light: one overlay over the
+default), Gloss cap, Gloss fade, Glass orb, Frosted glass, Fluid glass, Bevel or Rim light: one overlay over the
 whole of every button (`NS.Shine.Apply`; owner, 2026-10-21: the plate, the icon and the label's chip,
 whatever the Button style), in three pieces so a wide button keeps the look's thin edges and an
 icon-only button is the art whole, above the icon and below the padlock, the label, the send flash and

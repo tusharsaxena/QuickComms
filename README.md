@@ -44,8 +44,8 @@ clockwise. The slice the mouse points into lights whole, anywhere outside the mi
 anywhere in it sends it, and its tooltip shows outside the dial. On Settings → Dial, the Wheel tab sets
 the wedges per ring (Auto spreads them evenly, up to 12, and pages sooner when big icons would not
 fit) and the ring's radius; the Slices tab colors the slices, sets the gap between them, colors the
-lit slice and gives the slices an optional shine (Gloss cap, Glass orb, Frosted glass, Fluid glass,
-Bevel or Rim light, with its strength and tint); the Hub tab styles the middle button (a solid circle, a hollow ring, a target or a rimmed disc, with
+lit slice and gives the slices an optional shine (Gloss cap, Gloss fade, Glass orb, Frosted glass,
+Fluid glass, Bevel or Rim light, with its strength and tint); the Hub tab styles the middle button (a solid circle, a hollow ring, a target or a rimmed disc, with
 its size and colors) and sets the pointer (its size, distance and color, or hides it); the Paging
 tab sizes, spaces and colors the page arrows and the pill and dots; the Slice labels tab shows or
 hides the wedges' names, sets their distance from the middle, font, size, outline, color and shadow,
@@ -138,7 +138,7 @@ than in comments, so nothing gets lost.
 
 | Version | Date | Highlights |
 |---|---|---|
-| 0.1.0 | Unreleased | - The Comms Pad and the Comms Dial, with built-in callouts for Mythic+, raids, arenas, every battleground and the solo open world, sent through secure buttons<br>- Battleground sets with a group per objective: Alterac Valley's generals, captains, bunkers, towers and graveyards, Isle of Conquest's bases, and the objectives of Warsong Gulch, Twin Peaks, Wintergrasp, Ashran, Deephaul Ravine and Seething Shore<br>- Your own callouts and groups (the built-in sets among them, as groups you can edit, and groups inside groups), with conditions for when each group shows, Preview as…, a preview of the group you are editing and Why is this showing?<br>- The spam guard, drop notes, test mode and the lock<br>- The pad's font, border and background, with class colors<br>- An optional shine on the pad's buttons and the dial's slices (six looks), and the dial's own round art<br>- Sharing groups (with their callouts), pads and dials as a string<br>- The settings panel, the minimap button, the `/qc` command and the debug tools |
+| 0.1.0 | Unreleased | - The Comms Pad and the Comms Dial, with built-in callouts for Mythic+, raids, arenas, every battleground and the solo open world, sent through secure buttons<br>- Battleground sets with a group per objective: Alterac Valley's generals, captains, bunkers, towers and graveyards, Isle of Conquest's bases, and the objectives of Warsong Gulch, Twin Peaks, Wintergrasp, Ashran, Deephaul Ravine and Seething Shore<br>- Your own callouts and groups (the built-in sets among them, as groups you can edit, and groups inside groups), with conditions for when each group shows, Preview as…, a preview of the group you are editing and Why is this showing?<br>- The spam guard, drop notes, test mode and the lock<br>- The pad's font, border and background, with class colors<br>- An optional shine on the pad's buttons and the dial's slices (seven looks), and the dial's own round art<br>- Sharing groups (with their callouts), pads and dials as a string<br>- The settings panel, the minimap button, the `/qc` command and the debug tools |
 
 ## Credits
 

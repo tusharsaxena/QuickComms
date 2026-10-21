@@ -7,7 +7,7 @@ Status: built (docs/superpowers/plans/2026-10-21-shine-overlay.md, T1-T5), then 
 owner's first in-game look (2026-10-21, below), and again after the second (2026-10-21, "The owner's
 second look"); its in-game checks are ART-1 and SHINE-1..3 in
 `docs/smoke-tests.md`, pending the owner's run. The art generator is `tools/gen-shine-textures.py`
-(Pillow and NumPy; see DEPENDENCIES.md), and its 50 textures are committed under
+(Pillow and NumPy; see DEPENDENCIES.md), and its 52 textures are committed under
 `media/textures/shine-*.tga`.
 
 **What the addon draws, rendered offline:** `2026-10-21-shine-overlay/render-dial-4.png`,
@@ -74,6 +74,13 @@ and stay as they are. The rest changed (owner, 2026-10-21), each checked in the 
   mint, so the ring reads continuous; the slices' middles carry no wash. Both bloom colors keep their
   meaning. The whole-disc blooms (`shine-dial-fluid-bloom1/2`) are retired. The pad's Fluid glass is
   unchanged.
+- **Gloss fade: a new look** (owner, 2026-10-21: "don't have a fall off between the light and dark
+  area ... make that a gradient ... or create that as a separate artwork with a separate name").
+  Gloss cap stays exactly as it is; Gloss fade (`glossfade`, right after it in `NS.Shine.LOOKS` and the
+  dropdown) is its light as one smooth gradient with no cap edge: on the dial nothing at the slice's
+  inner end rising smoothly to its brightest at the rim, with Gloss cap's dark hairlines; on the pad
+  brightest at the top edge and fading to nothing toward the bottom. Its own art:
+  `shine-dial-glossfade`, `shine-pad-glossfade`.
 - **Bevel: the same on every slice** ("top left has bevels, bottom right does not"). The owner
   overrides the first build's call of one light direction for the whole dial (owner, 2026-10-21): each
   slice is raised in its own frame, a per-count art set (`shine-edge-bevel-<n>`) placed and turned with
@@ -89,8 +96,9 @@ flag it (CLAUDE.md).
 
 ## Goals
 
-1. **Six looks** (owner picked all but Satin sheen): Gloss cap, Glass orb, Frosted glass, Fluid glass,
-   Bevel, Rim light, plus **None** (the default).
+1. **Seven looks** (owner picked all but Satin sheen, and added Gloss fade after the second look):
+   Gloss cap, Gloss fade, Glass orb, Frosted glass, Fluid glass, Bevel, Rim light, plus **None** (the
+   default).
 2. **Chosen separately for pad buttons and dial slices** (owner): a pad's buttons and a dial's slices
    each have their own Look, Strength and Tint, so a pad can be Glass orb while a dial is Rim light,
    or either can be None. They are per member, like every other look setting: each pad and each dial
@@ -140,7 +148,7 @@ three-piece pill. Nothing in a profile changes.
 
 | Where | Path | Type | Default |
 |---|---|---|---|
-| Pad page, Buttons tab, new "Shine" heading | `pad.button.shineLook` | none, gloss, orb, frost, fluid, bevel, rim | none |
+| Pad page, Buttons tab, new "Shine" heading | `pad.button.shineLook` | none, gloss, glossfade, orb, frost, fluid, bevel, rim | none |
 | | `pad.button.shineStrength` | 0–100 %, step 5 | 85 |
 | | `pad.button.shineTint` + `useClassColorShineTint` | color | white |
 | | `pad.button.shineBloomA`, `shineBloomB` (+ class-color companions; Fluid glass only) | color | #ff9ad5, #8affc1 |
@@ -155,9 +163,9 @@ look and strength.
 
 | File | Size | Used by |
 |---|---|---|
-| `shine-pad-<look>.tga` (gloss, orb, frost, fluid, bevel, rim) | 128² | one per pad button, over the whole button in three pieces |
+| `shine-pad-<look>.tga` (gloss, glossfade, orb, frost, fluid, bevel, rim) | 128² | one per pad button, over the whole button in three pieces |
 | `shine-pad-fluid-bloom1/2.tga` | 128² | Fluid glass's two tinted bloom layers |
-| `shine-dial-gloss.tga`, `-rim.tga` (128²), `-frost.tga` (256²) | | the whole disc, cut to each slice by a mask |
+| `shine-dial-gloss.tga`, `-glossfade.tga`, `-rim.tga` (128²), `-frost.tga` (256²) | | the whole disc, cut to each slice by a mask |
 | `shine-edge-rim-<n>.tga`, n = 1..12 | 256² | each slice's own rim, about one texel, shaped exactly like `dial-sector-<n>.tga` |
 | `shine-edge-streak-<n>.tga`, n = 1..12 | 256² | Frosted glass's line of light just inside each slice's left spoke |
 | `shine-edge-bevel-<n>.tga`, n = 1..12 | 256² | Bevel's raised edges and face shade, in the slice's own frame |
@@ -167,7 +175,7 @@ look and strength.
 Retired after the owner's second look (2026-10-21; the generator removes them): `shine-spot`,
 `shine-glow`, `shine-dial-bevel`, `shine-dial-bevel-edge`, `shine-dial-fluid-bloom1/2`.
 
-About 10.6 MB in all, on top of today's 2.8 MB of slice textures. White pixels add light and black
+About 10.7 MB in all, on top of today's 2.8 MB of slice textures. White pixels add light and black
 pixels add shade, so one texture can do both. The client draws them in BLEND mode; SetVertexColor's
 color tints the light (shade stays black) and its alpha is Strength.
 
@@ -200,6 +208,9 @@ color tints the light (shade stays black) and its alpha is Strength.
   - **Gloss cap** (a-ring): the disc gloss, clear to 0.55 of the radius, 42% at 0.57 falling to 10%
     at the rim, masked by the slice's sector; plus the slice's rim in black at 60% (the mockup's dark
     hairlines between slices).
+  - **Gloss fade** (owner, 2026-10-21): Gloss cap's recipe with its own disc art (`shine-dial-glossfade`):
+    no falloff edge, white rising smoothly from nothing at 0.18 of the radius to 50% at the rim (eased,
+    to the power 1.4), masked; plus the black rim at 60%.
   - **Glass orb** (b-sl, no dots: owner, 2026-10-21): on the slice's inscribed circle (center
     c = 1/(1 + sin(π/n)), radius p = c·sin(π/n); for one slice the disc itself), so the bead keeps its
     shape at every count: the bead sprite, 7 p across, tinted by the Tint (its shade stays black), a

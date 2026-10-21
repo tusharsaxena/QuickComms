@@ -20,7 +20,7 @@ local mock = dofile("tests/wow_mock.lua")
 local loadAddon = dofile("tests/loader.lua")(".", mock)
 
 local OUT = arg and arg[1] or "shine-preview.json"
-local LOOKS = { "none", "gloss", "orb", "frost", "fluid", "bevel", "rim" }
+local LOOKS = { "none", "gloss", "glossfade", "orb", "frost", "fluid", "bevel", "rim" }
 local COUNTS = { 4, 8, 12 }
 
 -- ── recording ─────────────────────────────────────────────────────────────────────────────────

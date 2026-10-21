@@ -5,8 +5,8 @@ local addonName, NS = ...
 -- touches a secure attribute or a protected frame's geometry. Painted on Apply (out of combat), as
 -- every other look is.
 --
--- THE CATALOG. Six looks and None (LOOKS): Gloss cap, Glass orb, Frosted glass, Fluid glass, Bevel,
--- Rim light. Every texture is ours, written by tools/gen-shine-textures.py under media/textures/:
+-- THE CATALOG. Seven looks and None (LOOKS): Gloss cap, Gloss fade (owner, 2026-10-21: Gloss cap's
+-- light as one smooth gradient, no cap edge), Glass orb, Frosted glass, Fluid glass, Bevel, Rim light. Every texture is ours, written by tools/gen-shine-textures.py under media/textures/:
 -- white pixels add light, black pixels add shade, alpha is how much. The client draws them in BLEND
 -- mode, SetVertexColor's color tints the light (shade stays black) and its alpha is Strength.
 -- Texture(kind, name) names a file: "pad" (a look, or a Fluid glass bloom), "dial" (the whole-disc
@@ -37,15 +37,15 @@ local Sh = NS.Shine
 local MEDIA = "Interface\\AddOns\\" .. addonName .. "\\media\\textures\\"
 local MAX_SLICES = 12   -- the edge sets' counts (DL.MAX_SLICES; the generator writes 1..12)
 
-Sh.LOOKS = { "none", "gloss", "orb", "frost", "fluid", "bevel", "rim" }
+Sh.LOOKS = { "none", "gloss", "glossfade", "orb", "frost", "fluid", "bevel", "rim" }
 local KNOWN = {}
 for _, look in ipairs(Sh.LOOKS) do KNOWN[look] = true end
 
 -- Every file the generator writes but the edge sets, by kind and name.
 local FILES = {
-    pad = { gloss = true, orb = true, frost = true, fluid = true, bevel = true, rim = true,
+    pad = { gloss = true, glossfade = true, orb = true, frost = true, fluid = true, bevel = true, rim = true,
         ["fluid-bloom1"] = true, ["fluid-bloom2"] = true },
-    dial = { gloss = true, frost = true, rim = true },
+    dial = { gloss = true, glossfade = true, frost = true, rim = true },
     sprite = { bead = true, ["fluid-bloom1"] = true, ["fluid-bloom2"] = true },
 }
 local EDGE = { rim = "rim", streak = "streak", bevel = "bevel", ["edge-rim"] = "rim", ["edge-streak"] = "streak",

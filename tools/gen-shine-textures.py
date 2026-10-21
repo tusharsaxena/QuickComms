@@ -7,15 +7,15 @@ Every texture is light and shade on transparent: white pixels add light, black p
 alpha is how much. The addon draws them with the BLEND mode, tints them with SetVertexColor (the
 tint colors the light; shade stays black) and fades them by the Strength setting (the vertex alpha).
 
-Looks: gloss (Gloss cap), orb (Glass orb), frost (Frosted glass), fluid (Fluid glass), bevel (Bevel),
-rim (Rim light).
+Looks: gloss (Gloss cap), glossfade (Gloss fade), orb (Glass orb), frost (Frosted glass), fluid
+(Fluid glass), bevel (Bevel), rim (Rim light).
 
   shine-pad-<look>.tga        128 x 128, over a whole pad button in three pieces (modules/Shine.lua:
                               the left half as a cap, the middle column stretched, the right half),
                               so every edge drawn here stays as thin on a wide button as on a square.
   shine-pad-fluid-bloom1.tga  Fluid glass's two bloom layers, white on transparent, each tinted by
   shine-pad-fluid-bloom2.tga  its own bloom color.
-  shine-dial-<name>.tga       the whole disc (gloss, frost 256 x 256, rim; 128 x 128 otherwise). A
+  shine-dial-<name>.tga       the whole disc (gloss, glossfade, frost 256 x 256, rim; 128 x 128 otherwise). A
                               slice draws one masked by its own sector texture (dial-sector-<n>.tga
                               as a MaskTexture), placed and turned like the fill, so one texture
                               serves every slice count.
@@ -123,6 +123,12 @@ def smooth(x, a, b):
     return t * t * (3 - 2 * t)
 
 
+def pad_glossfade(cv):
+    # Gloss fade (owner, 2026-10-21): Gloss cap's light with no cap edge, one smooth gradient, brightest
+    # at the top edge and fading to nothing toward the bottom.
+    cv.light(0.62 * smooth(cv.v, 0.92, 0.0) ** 1.5)
+
+
 def pad_orb(cv):
     # A glass bead with no specular dots (owner, 2026-10-21): the button bulges by its shading alone,
     # a soft band of light across its upper third, dark toward every edge and darkest at the bottom.
@@ -195,6 +201,13 @@ def dial_gloss(cv):
     # a-ring: nothing to 0.55, 0.42 at 0.57, falling to 0.1 at the rim
     band = ramp(cv.r, 0.55, 0.57) * (0.42 + (0.1 - 0.42) * ramp(cv.r, 0.57, 1.0))
     cv.light(band * disc_cut(cv))
+
+
+def dial_glossfade(cv):
+    # Gloss fade (owner, 2026-10-21): the same per-slice gloss as Gloss cap with no falloff edge, one
+    # smooth radial gradient, nothing at the slice's inner end (the hub's edge) rising to its brightest
+    # at the rim.
+    cv.light(0.5 * smooth(cv.r, 0.18, 1.0) ** 1.4 * disc_cut(cv))
 
 
 def dial_frost(cv):
@@ -328,6 +341,7 @@ def bead(cv):
 
 TEXTURES = [
     ("shine-pad-gloss.tga", 128, 128, pad_gloss),
+    ("shine-pad-glossfade.tga", 128, 128, pad_glossfade),
     ("shine-pad-orb.tga", 128, 128, pad_orb),
     ("shine-pad-frost.tga", 128, 128, pad_frost),
     ("shine-pad-fluid.tga", 128, 128, pad_fluid),
@@ -336,6 +350,7 @@ TEXTURES = [
     ("shine-pad-bevel.tga", 128, 128, pad_bevel),
     ("shine-pad-rim.tga", 128, 128, pad_rim),
     ("shine-dial-gloss.tga", 128, 128, dial_gloss),
+    ("shine-dial-glossfade.tga", 128, 128, dial_glossfade),
     ("shine-dial-frost.tga", 256, 256, dial_frost),
     ("shine-dial-rim.tga", 128, 128, dial_rim),
     ("shine-bead.tga", 128, 128, bead),

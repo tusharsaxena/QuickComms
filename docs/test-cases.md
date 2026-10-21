@@ -1181,7 +1181,7 @@ Total.
 
 ### test_shine.lua (7)
 
-- shine: the catalog lists None and the six looks
+- shine: the catalog lists None and the seven looks
 - shine: every catalog path exists
 - shine: Resolve
 - shine: Apply covers the whole button in three pieces

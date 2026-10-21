@@ -49,7 +49,7 @@ OUT = os.path.join(ROOT, "docs", "superpowers", "specs", "2026-10-21-shine-overl
 ADDON = "interface\\addons\\quickcomms\\"
 SS = 2
 LAYERS = {"BACKGROUND": 0, "BORDER": 1, "ARTWORK": 2, "OVERLAY": 3}
-LOOK_NAMES = {"none": "None", "gloss": "Gloss cap", "orb": "Glass orb", "frost": "Frosted glass",
+LOOK_NAMES = {"none": "None", "gloss": "Gloss cap", "glossfade": "Gloss fade", "orb": "Glass orb", "frost": "Frosted glass",
               "fluid": "Fluid glass", "bevel": "Bevel", "rim": "Rim light"}
 FONT_PATH = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 

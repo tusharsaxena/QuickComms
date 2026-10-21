@@ -434,8 +434,8 @@ local BUTTON, BUTTONP = L["Buttons"], "pad.button."
 local BUTTON_H = NS.PadDefaults.BUTTON_H
 
 -- The shine overlay's looks (modules/Shine.lua NS.Shine.LOOKS, in its order) by name.
-local SHINE_LABEL = { none = L["None"], gloss = L["Gloss cap"], orb = L["Glass orb"], frost = L["Frosted glass"],
-    fluid = L["Fluid glass"], bevel = L["Bevel"], rim = L["Rim light"] }
+local SHINE_LABEL = { none = L["None"], gloss = L["Gloss cap"], glossfade = L["Gloss fade"], orb = L["Glass orb"],
+    frost = L["Frosted glass"], fluid = L["Fluid glass"], bevel = L["Bevel"], rim = L["Rim light"] }
 local SHINE_LOOK = {}
 for i, look in ipairs(NS.Shine.LOOKS) do SHINE_LOOK[i] = { value = look, text = SHINE_LABEL[look] or look } end
 
@@ -460,7 +460,7 @@ local function shineRows(O, checks, spec)
     local out = {
         base({ path = prefix .. "shineLook", type = "string", default = def.shineLook, values = SHINE_LOOK,
             label = L["Shine look"], startsLine = true,
-            desc = L["A glossy overlay: Gloss cap, Glass orb, Frosted glass, Fluid glass, Bevel or Rim light. None draws none."],
+            desc = L["A glossy overlay: Gloss cap, Gloss fade, Glass orb, Frosted glass, Fluid glass, Bevel or Rim light. None draws none."],
             validate = oneOf(SHINE_LOOK) }),
         base({ path = prefix .. "shineStrength", type = "number", default = def.shineStrength, min = 0, max = 100,
             step = 5, label = L["Shine strength"], disabledIf = off,
