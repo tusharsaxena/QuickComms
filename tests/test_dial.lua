@@ -887,6 +887,19 @@ test("dial: [polish] wedges take no mouse; keys still click by name", function()
     assertEqual(m.sentMacros[1].text, first:GetAttribute("macrotext"), "the number key clicks item 1 by name")
 end)
 
+test("dial: [polish] a built dial closes on a click outside it, in combat", function()
+    local NS, m = live()
+    openPolish(NS, m, 2)
+    local screen = NS.Dial.Instance("d2").screen
+    -- red under: no screen catcher made in build / no `screen` ref handed to DS.Load
+    assertTrue(screen ~= nil and screen:IsShown(), "open from its key, the screen catcher is up")
+    m.inCombat = true
+    m.__click(screen, "RightButton")
+    assertFalse(NS.Dial.IsOpen("d2"))
+    assertEqual(#m.sentMacros, 0)
+    assertEqual(#m.blocked, 0)
+end)
+
 test("dial: [polish] a ring hidden under the hover clears its slice, tooltip and hover glow", function()
     local NS, m = live()
     local ring, cursor, h = openPolish(NS, m, 8)

@@ -173,7 +173,9 @@ end
 local function build(index)
     local header = DS.NewHeader(index)
     header:SetSize(DL.HUB, DL.HUB)   -- protected geometry: here, under Apply, out of combat
-    local inst = { index = index, header = header, rings = NS.Pool.New(), byCallout = {}, live = false }
+    -- The screen catcher (dial polish): a click outside the dial, open from its key, closes it.
+    local inst = { index = index, header = header, screen = DS.NewScreen(header), rings = NS.Pool.New(),
+        byCallout = {}, live = false }
     R.DressHub(header, function(self)
         if inst.id then Dial.ShowWhy(inst.id, self) end
     end)
@@ -276,7 +278,8 @@ function Dial.Apply(index, id, plan)
     for r, l in ipairs(loaded) do frames[r] = l.frame end
     R.RaiseFront(inst.header, frames)
     R.PlaceTips(inst.header, look, widestLabel(inst))
-    DS.Load(inst.header, loaded, { openRing = plan.openRing, openAt = plan.test and "center" or dial.openAt })
+    DS.Load(inst.header, loaded, { openRing = plan.openRing, openAt = plan.test and "center" or dial.openAt,
+        screen = inst.screen })
     applyPoint(inst)
     inst.header:SetScale(math.max(NS.Library.MIN_SURFACE_SCALE, tonumber(NS.Setting("scale")) or 1))
     inst.header:SetAlpha(math.max(0, math.min(1, tonumber(NS.Setting("alpha")) or 1)))

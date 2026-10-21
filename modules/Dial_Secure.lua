@@ -33,6 +33,13 @@ local _, NS = ...
 -- clickbutton-w3 = that wedge forward the click, and the wedge's own wrap (which takes "w<j>" as a left
 -- click) and SendEngine's hook run as for any click. An empty place, the hub area or past the rim does
 -- nothing; any button but the left closes. Works in combat: nothing is written, only read.
+--
+-- THE SCREEN CATCHER (dial polish, 2026-10-21). One full-screen secure button per dial, under the
+-- dial (SendEngine.NewDialScreen), reached by the header's frame ref `screen` (DS.Load, opts.screen).
+-- The show snippet shows it on a key open and hides it on an insecure open (`display`: the settings
+-- window may be open behind the dial and must stay usable); the close snippet hides it. Its wrapped
+-- click, any button on the up edge, closes the dial and does nothing else: while the dial is open from
+-- its key, a click outside it closes it.
 
 NS.DialSecure = NS.DialSecure or {}
 local DS = NS.DialSecure
@@ -98,6 +105,10 @@ for i = 1, count do
     end
 end
 current = r
+local screen = self:GetFrameRef("screen")
+if screen then
+    if display then screen:Hide() else screen:Show() end
+end
 self:ClearBindings()
 if not display then
     self:SetBindingClick(true, "ESCAPE", self, "Close")
@@ -121,6 +132,8 @@ for i = 1, count do
     local ring = self:GetFrameRef("ring" .. i)
     if ring then ring:Hide() end
 end
+local screen = self:GetFrameRef("screen")
+if screen then screen:Hide() end
 current = nil
 display = nil
 self:ClearBindings()
@@ -177,8 +190,16 @@ if not self:GetAttribute("type-w" .. j) then return false end
 return "w" .. j
 ]]
 
+-- The screen catcher (dial polish): any click outside the open dial closes it, on the up edge, and
+-- nothing goes through (the button has no type).
+local SCREEN_PRE = [[
+if down then return false end
+owner:RunAttribute("qc-close")
+return false
+]]
+
 DS.SNIPPETS = { onclick = ONCLICK, open = OPEN, display = DISPLAY, show = SHOW, close = CLOSE, pre = WEDGE_PRE,
-    post = WEDGE_POST, arrow = ARROW_PRE, catcher = CATCHER_PRE }
+    post = WEDGE_POST, arrow = ARROW_PRE, catcher = CATCHER_PRE, screen = SCREEN_PRE }
 
 --- A dial's header (its hub), named for its place in the dial order, carrying its snippets. Out of
 --- combat only; nil in combat.
@@ -212,6 +233,12 @@ function DS.NewCatcher(header, ring)
     return SE.NewDialCatcher(header, ring, CATCHER_PRE)
 end
 
+--- A dial's screen catcher: a full-screen secure button under the dial, its click wrapped by the
+--- screen snippet (any click closes the dial). DS.Load hands it to the header. Out of combat only.
+function DS.NewScreen(header)
+    return SE.NewDialScreen(header, SCREEN_PRE)
+end
+
 -- A catcher's layout: the ring's shape (size, start in degrees, hub and disc across) and, for each
 -- place up to the most a ring has, a forward to the wedge on it; an empty place's two keys are
 -- cleared (the second list), so a place a rebuild emptied forwards nothing.
@@ -236,7 +263,8 @@ end
 --- page arrows ({ prev, next }, each targeting that page), its wedges ({ button, target, place }:
 --- target 0 for a callout, else the ring a click opens; place its slice, 1..size from `start`) and,
 --- when it has one, its catcher with the ring's `shape` ({ size, start, hub, disc }); the ring it opens
---- on and where it opens. Out of combat only.
+--- on and where it opens; and (opts.screen) the dial's screen catcher, as the header's frame ref
+--- `screen`. Out of combat only.
 --- @return boolean loaded
 function DS.Load(header, rings, opts)
     if NS.Compat.InCombat() then return false end
@@ -260,6 +288,7 @@ function DS.Load(header, rings, opts)
         if ring.catcher then SE.SetAttributes(ring.catcher, catcherAttrs(ring)) end
         SE.SetFrameRef(header, "ring" .. r, ring.frame)
     end
+    if opts.screen then SE.SetFrameRef(header, "screen", opts.screen) end
     return SE.SetAttributes(header, attrs)
 end
 

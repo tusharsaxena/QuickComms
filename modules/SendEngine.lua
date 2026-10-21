@@ -24,7 +24,8 @@ local _, NS = ...
 -- containers (SecureFrameTemplate), its wedges (send buttons wrapped by the header's snippets BEFORE
 -- the click hook below, because the client's wrap replaces the script and would drop the hook), each
 -- ring's catcher (a secure button over the disc, wrapped by the header's catcher snippet, that
--- forwards a click to the wedge under the cursor), and every attribute, frame ref and snippet run. A dial's key is WoW's own binding of its header's
+-- forwards a click to the wedge under the cursor), its screen catcher (a full-screen secure button
+-- under the dial whose wrapped click closes it), and every attribute, frame ref and snippet run. A dial's key is WoW's own binding of its header's
 -- Bindings.xml entry since 2026-10-20, set only in Options -> Keybindings, so no binding is written
 -- here.
 --
@@ -197,6 +198,25 @@ function SE.NewDialCatcher(header, ring, pre)
     c:SetAttribute("useOnKeyDown", false)
     c:SetFrameLevel(math.max(0, (header:GetFrameLevel() or 0) - 1))
     return c
+end
+
+--- A dial's screen catcher (dial polish, 2026-10-21): a SecureActionButtonTemplate child of `header`
+--- over the whole screen (SetAllPoints(UIParent)), registered for the up edge only, its click wrapped
+--- by the header's screen snippet, which closes the dial and lets nothing through (it has no type).
+--- It sits under the dial by strata, not level: HIGH, one below the header's DIALOG, because a level
+--- under the header's would tie with the ring catchers' (also the header's level - 1); the client
+--- keeps a child's own strata once set, and every dial frame above it stays in DIALOG. The header's
+--- show snippet shows it only on a key open, its close snippet hides it. Hidden. Nil in combat.
+function SE.NewDialScreen(header, pre)
+    if inCombat() then return nil end
+    local s = CreateFrame("Button", nil, header, "SecureActionButtonTemplate")
+    s:SetFrameStrata("HIGH")
+    s:SetAllPoints(UIParent)
+    s:RegisterForClicks("AnyUp")
+    header:WrapScript(s, "OnClick", pre)
+    s:SetAttribute("useOnKeyDown", false)
+    s:Hide()
+    return s
 end
 
 --- Write several attributes (a header's snippets and ring layout, a wedge's target), and set each key

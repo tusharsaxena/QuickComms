@@ -35,8 +35,9 @@ local function built(opts)
         { frame = frames[2], parent = 1, prev = 0, next = 3, wedges = { wedge(frames[2], "/p two"), wedge(frames[2], "/p three") } },
         { frame = frames[3], parent = 2, prev = 2, next = 0, wedges = { wedge(frames[3], "/p four") } },
     }
-    assertTrue(DS.Load(h, rings, { openRing = opts.openRing or 1, openAt = opts.openAt }))
-    return NS, m, h, frames, rings
+    local screen = opts.screen and DS.NewScreen(h) or nil
+    assertTrue(DS.Load(h, rings, { openRing = opts.openRing or 1, openAt = opts.openAt, screen = screen }))
+    return NS, m, h, frames, rings, screen
 end
 
 local function shown(frames)
@@ -272,4 +273,55 @@ test("dial secure: [polish] catcher and SliceAt agree", function()
         assertTrue(catcher:GetAttribute("clickbutton-w" .. places[1]) ~= nil, "a used place forwards to its wedge")
         if size == 4 then assertNil(catcher:GetAttribute("type-w2"), "an empty place has no type") end
     end
+end)
+
+test("dial secure: [polish] an outside click closes a key-opened dial, in combat", function()
+    local NS, m, h, _, _, screen = built({ screen = true })
+    assertTrue(screen ~= nil and screen.__parent == h, "the screen catcher is the header's child")
+    assertFalse(screen:IsShown(), "hidden until the dial opens")
+    combat(m, true)
+    for _, b in ipairs({ "LeftButton", "RightButton" }) do
+        m.__click(h, "Toggle")
+        -- red under: drop the screen's Show from the show snippet
+        assertTrue(screen:IsShown(), b .. ": open from its key, the screen catcher is up")
+        m.__click(screen, b)
+        -- red under: drop `owner:RunAttribute("qc-close")` from the screen snippet
+        assertFalse(h:IsShown(), b .. ": an outside click closes the dial")
+        assertFalse(screen:IsShown(), b)
+    end
+    assertEqual(#m.sentMacros, 0, "and sends nothing")
+    assertEqual(NS.SendEngine.EchoState().pending, 0)
+    assertEqual(#m.blocked, 0)
+end)
+
+test("dial secure: [polish] display open shows no screen catcher", function()
+    local NS, m, h, _, _, screen = built({ screen = true })
+    assertTrue(NS.DialSecure.Open(h))
+    assertTrue(h:IsShown())
+    -- red under: show the screen in the show snippet whether or not `display` is set
+    assertFalse(screen:IsShown(), "an insecure open (the settings window may be open) leaves the screen clear")
+    m.__click(h, "Toggle")
+    m.__click(h, "Toggle")
+    assertTrue(screen:IsShown(), "opened by the key, the screen catcher is up")
+    m.__click(h, "Toggle")
+    assertTrue(NS.DialSecure.Open(h))
+    assertFalse(screen:IsShown(), "an insecure open after a key open hides it again")
+end)
+
+test("dial secure: [polish] closing hides the screen catcher", function()
+    local _, m, h, _, rings, screen = built({ screen = true })
+    m.__click(h, "Toggle")
+    m.__click(h, "Toggle")
+    -- red under: drop the screen's Hide from the close snippet
+    assertFalse(screen:IsShown(), "the key closes it")
+    m.__click(h, "Toggle")
+    assertTrue(m.__pressKey("ESCAPE"))
+    assertFalse(screen:IsShown(), "Escape closes it")
+    m.__click(h, "Toggle")
+    m.__click(rings[1].wedges[2].button)
+    assertEqual(#m.sentMacros, 1)
+    assertFalse(screen:IsShown(), "a send closes it")
+    m.__click(h, "Toggle")
+    screen:__fire("OnClick", "LeftButton", true)
+    assertTrue(h:IsShown(), "the down edge alone does nothing")
 end)

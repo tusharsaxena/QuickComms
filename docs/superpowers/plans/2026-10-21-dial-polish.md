@@ -17,7 +17,7 @@ Each task ends in one commit whose subject starts with `Dial polish T<n>:`. To r
 - [x] T1 Layout: placement, gap shift, Auto icon-fit cap, SliceAt
 - [x] T2 Slices: border out, gap in, migration step 9
 - [x] T3 Select to the hub: tracker hover, ring catcher, mouse-off wedges
-- [ ] T4 Click outside closes
+- [x] T4 Click outside closes
 - [ ] T5 Hub styles
 - [ ] T6 Labels: Group labels tab, Slice labels rename, Icon offset to Icons, icon size 128
 - [ ] T7 Renames: Pad / Dial pages, pad header "Quick Comms: <situation>"
