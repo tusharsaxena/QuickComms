@@ -840,7 +840,7 @@ window. Result:
 **SHARE-2. Import it, twice.** Profiles → make a profile `Share test`. Share → Import: paste the
 string and click Accept → "Ready to import: 2 callouts, 1 group."; Import → chat says "Imported 2
 callouts, 1 group." and "An imported group is on no pad or dial yet: add it on the Groups tab of the
-Comms Pad or Dial page.", and Groups lists `My keys` with both callouts. Paste and import it
+Pad or Dial page.", and Groups lists `My keys` with both callouts. Paste and import it
 again → a second `My keys`, and the first one is untouched. Result:
 
 **SHARE-3. A string that tries a command.** Paste this on Import and click Accept:
@@ -880,8 +880,8 @@ The Comms Pad's Pad header, Section header and Window tabs (one Window tab until
 Look tab before that, then Main window until it became Window, its visibility rows on General; the
 checks keep their LOOK ids).
 
-**LOOK-1. Section titles.** On a new pad the section titles are gold, 12 points and outlined. Comms
-Pad → Section header → Font: pick another face, Font size 14, Font flags None, untick Font shadow →
+**LOOK-1. Section titles.** On a new pad the section titles are gold, 12 points and outlined. Pad →
+Section header → Font: pick another face, Font size 14, Font flags None, untick Font shadow →
 the section titles (In Party, Mythic+…) redraw that way, still
 gold; the button labels do not change (they are the Buttons tab's). Tick Use class color → the titles take
 your class color, and Font color's opacity still applies; untick it and set Font color to red → the
