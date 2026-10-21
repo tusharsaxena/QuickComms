@@ -84,7 +84,7 @@ function G.Duplicate(id)
         if NS.Library.IsChild(copy) then
             NS.Print(L["%s: the copy is inside %s, beside the original."]:format(g.name, NS.db.profile.groups[g.parent].name))
         else
-            NS.Print(L["%s: the copy is on no pad yet. Add it under Comms Pad > Groups."]:format(g.name))
+            NS.Print(L["%s: the copy is on no pad yet. Add it under Pad > Groups."]:format(g.name))
         end
         Ed.Select("group", copy)
         Ed.RequestRefresh()
@@ -358,7 +358,7 @@ local function renderGeneral(ctx, rows)
     h.InlineButtonPair(ctx,
         { text = L["Duplicate"], tooltip = NS.Library.IsChild(gid)
             and L["Make a copy of this group, with copies of its callouts and the same When. The copy sits in the same parent group, beside this one."]
-            or L["Make a copy of this group, with copies of its callouts and the same When. The copy is on no pad until you add it under Comms Pad > Groups."],
+            or L["Make a copy of this group, with copies of its callouts and the same When. The copy is on no pad until you add it under Pad > Groups."],
           onClick = function() G.Duplicate(gid) end },
         { text = L["Delete"], tooltip = L["Delete this group and its callouts, and take it off every pad. Asks first."],
           onClick = function() G.Delete(gid) end })

@@ -447,3 +447,18 @@ test("page pads: [polish] the page is titled Pad", function()
     -- the default member's name is unchanged (a page title only)
     assertEqual(NS.db.profile.pads.p1.name, "Comms Pad")
 end)
+
+test("page pads: [polish] no user-facing string sends the player to a Comms Pad or Comms Dial page", function()
+    -- red under: any L[...] key or value still naming "the Comms Pad page", "Comms Pad > ..." etc.
+    local fh = assert(io.open(T.root .. "/locales/enUS.lua", "rb"))
+    local src = fh:read("*a")
+    fh:close()
+    for line in src:gmatch("[^\n]+") do
+        if line:find("^L%[") then
+            for _, stale in ipairs({ "Comms Pad page", "Comms Dial page", "Comms Pad >", "Comms Dial >",
+                                     "Comms Pad or Comms Dial page" }) do
+                assertNil(line:find(stale, 1, true), "stale page name in: " .. line)
+            end
+        end
+    end
+end)

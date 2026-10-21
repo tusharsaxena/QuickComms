@@ -145,8 +145,8 @@ Settings.BY_ID_KINDS = BY_ID
 local NO_MEMBER = {
     callout = L["Name the callout id: /qc set callout.<field> <id> <value>."],
     group   = L["No group to edit: make one on the Groups page."],
-    pad     = L["No pad to edit: make one on the Comms Pad page."],
-    dial    = L["No dial to edit: make one on the Comms Dial page."],
+    pad     = L["No pad to edit: make one on the Pad page."],
+    dial    = L["No dial to edit: make one on the Dial page."],
 }
 
 --- The member a kind's rows address when a write names none: the page's selection while it exists,
