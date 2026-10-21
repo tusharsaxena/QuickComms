@@ -53,7 +53,7 @@ Each line has its test in the task that owns the code.
 - [x] T2 Shine art and `NS.Shine` (catalog and the pad painter)
 - [x] T3 Pad buttons: Shine settings and paint
 - [x] T4 Dial slices: Shine settings and paint
-- [ ] T5 Docs, diagnostics, smoke tests, push
+- [x] T5 Docs, diagnostics, smoke tests, push
 
 Commit subjects start with "Shine T<n>:".
 

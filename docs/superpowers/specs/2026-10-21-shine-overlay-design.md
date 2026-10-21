@@ -3,7 +3,8 @@
 Owner request: an optional overlay that gives pad buttons and dial slices a shiny or glossy look.
 Mockups and the generated-art preview: https://claude.ai/artifact/PogWcsjkcyGTsDabhw3K2A
 
-Status: being built (docs/superpowers/plans/2026-10-21-shine-overlay.md). The art generator is
+Status: built (docs/superpowers/plans/2026-10-21-shine-overlay.md, T1-T5); its in-game checks are
+ART-1 and SHINE-1..3 in `docs/smoke-tests.md`, pending the owner's run. The art generator is
 `tools/gen-shine-textures.py` (Pillow and NumPy; see DEPENDENCIES.md), and its 39 textures are
 committed under `media/textures/shine-*.tga`. The prototype's `preview.py` and `preview.png` stay beside
 this file in `2026-10-21-shine-overlay/` (it composites the textures the way the client blends them).

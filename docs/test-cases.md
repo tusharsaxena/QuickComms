@@ -208,7 +208,7 @@ Total.
 - disabled [§7 step 10]: the stand-in latch: perf, then disabled; perf released first leaves it down
 - disabled [§7 step 10]: the stand-in latch: disabled, then perf; enabled first leaves it down
 
-### test_diagnostics.lua (12)
+### test_diagnostics.lua (13)
 
 - diagnostics: the sections are the addon's, in report order
 - diagnostics: the report names the schema, the profile, the holds and the launcher
@@ -222,6 +222,7 @@ Total.
 - diagnostics: [phase 4] the dials and bindings sections name each dial, its key and each entry's WoW binding
 - diagnostics: [dial rework] the report names the pads' hidden state, each dial's look, the ring shown and every ring
 - diagnostics: [debug] the log follows a dial open, a ring shown, a press and a close, once each
+- diagnostics: [shine] the pad's button line and the dial's slices line print the look and strength
 
 ### test_compat.lua (12)
 
@@ -714,7 +715,7 @@ Total.
 - groups page: [R4] EditGroup in combat prints the settings refusal and changes nothing
 - groups page: [R4] EditGroup of a group that is gone opens nothing
 
-### test_page_pads.lua (26)
+### test_page_pads.lua (27)
 
 - pads page: New pad makes a second pad holding every built-in, selects it, and the pad is built
 - pads page: the Layout rows write the selected pad
@@ -734,6 +735,7 @@ Total.
 - pads page: [window tabs] Window carries Background and Border, and no font and no Visibility
 - pads page: General carries Visibility, Fade and Faded alpha under a Visibility heading, before its buttons
 - pads page: [button] Buttons carries Size, Color, Border, Font and Glow, and Button width left Layout for it
+- page pads: [shine] the Buttons tab has a Shine heading
 - pads page: [B9] Icons carries its headings once each, a companion beside each swatch, and writes the pad
 - pads page: [B9] the offsets are grayed out while the glow is off or in Button; its color never is
 - pads page: [glow knobs] only the selected style's knobs show, and none while the glow is off
@@ -743,7 +745,7 @@ Total.
 - page pads: [polish] the page is titled Pad
 - page pads: [polish] no user-facing string sends the player to a Comms Pad or Comms Dial page
 
-### test_page_dials.lua (27)
+### test_page_dials.lua (28)
 
 - dials page: New dial makes a second dial holding every built-in, selects it, and builds QuickCommsDial2
 - dials page: New dial takes the lowest free number, so a delete never leads to two names alike
@@ -772,6 +774,7 @@ Total.
 - page dials: [polish] tabs read Slices, Hub, Paging, Slice labels, Group labels, Icons
 - page dials: [polish] Icon offset is on the Icons tab, not Wheel
 - page dials: [polish] the page is titled Dial
+- page dials: [shine] the Slices tab has a Shine heading
 
 ### test_page_share.lua (12)
 
@@ -937,7 +940,7 @@ Total.
 - layout: [window] the header row's height moves every row and is the collapsed pad's height
 - layout: [button] a Button height above 0 is the labeled button's height; 0 is automatic; icon-only stays square
 
-### test_dial_layout.lua (28)
+### test_dial_layout.lua (29)
 
 - dial layout: four wedges sit on N, E, S and W, clockwise from the top
 - dial layout: slices are Auto, 4, 6, 8 or 12; a page is 12 at most, 8 on a ring that holds rings
@@ -967,6 +970,7 @@ Total.
 - dial layout: [polish] auto cap at 128 px pages the ring
 - dial layout: [polish] SliceAt
 - dial layout: [polish] Rings gives every unpinned item its place
+- dial layout: [art] DL.ARC is gone; every dial texture the dial modules name ships
 
 ### test_surfaces.lua (27)
 
@@ -998,7 +1002,7 @@ Total.
 - surfaces: [nesting] a parent that draws nothing leaves its surface with nothing active
 - surfaces: [inherit] a child that inherits shows wherever its parent's When matches, whatever its own says
 
-### test_pad_render.lua (21)
+### test_pad_render.lua (23)
 
 - render: Dress builds a button's regions once, each its own object
 - render: [audit QC-07] the button's padlock is the catalog's lock mark, tinted gold; the Blizzard art is the nil fallback
@@ -1021,6 +1025,8 @@ Total.
 - render: [section header] SectionLook: no band by default, then the band's skin and the text's inset
 - render: [icons] a glyph button is drawn in its color; the button repainted with another icon is white again
 - render: [B3] a button's label is one line, and hidden when the button leaves it no room
+- pad render: [shine] a look on the Buttons tab paints every button
+- pad render: [shine] the pad's look leaves the dial alone
 
 ### test_pad.lua (45)
 
@@ -1070,7 +1076,7 @@ Total.
 - pad: [polish] header reads Quick Comms: World
 - pad: [polish] header reads Quick Comms: M+ · Windrunner Spire +14
 
-### test_dial.lua (60)
+### test_dial.lua (63)
 
 - dial: Apply builds QuickCommsDial<n> with a ring per page, each callout wedge armed with its baked line
 - dial: a refused callout is a dimmed, disarmed wedge; a ring wedge is disarmed
@@ -1132,6 +1138,17 @@ Total.
 - dial: [polish] hub style rimmed is a filled circle on a backdrop with its own rim
 - dial: [polish] hub size moves the inner edge everywhere
 - dial: [polish] group labels take their font and hide when off
+- dial: [art] RingTexture picks the nearest step
+- dial: [art] the hub draws textures, not segments
+- dial: [art] the pill is three pieces with round ends
+
+### test_dial_shine.lua (5)
+
+- dial: [shine] each look builds its recipe on every slice
+- dial: [shine] the overlay follows the slice
+- dial: [shine] sprites sit in the slice's frame
+- dial: [shine] fewer slices hide the rest
+- dial: [shine] the dial's look leaves the pad alone
 
 ### test_icon_style.lua (9)
 
@@ -1158,6 +1175,15 @@ Total.
 - glow: on a dial, After sending glows again from the next open within DROP_SECONDS
 - glow: on a dial, an open later than DROP_SECONDS after the send shows no send glow
 - glow: the stand-down puts out a running send glow even when the frames' release is held
+
+### test_shine.lua (6)
+
+- shine: the catalog lists None and the six looks
+- shine: every catalog path exists
+- shine: Resolve
+- shine: Apply paints over the icon
+- shine: blooms only for fluid
+- shine: no icon, no shine
 
 ### test_vendor_sync.lua (3)
 
@@ -1241,7 +1267,7 @@ Total.
 | test_schema.lua | 19 |
 | test_slash.lua | 20 |
 | test_disabled.lua | 21 |
-| test_diagnostics.lua | 12 |
+| test_diagnostics.lua | 13 |
 | test_compat.lua | 12 |
 | test_restrictions.lua | 16 |
 | test_situation.lua | 16 |
@@ -1260,8 +1286,8 @@ Total.
 | test_eui_skin.lua | 10 |
 | test_groups_when.lua | 20 |
 | test_page_groups.lua | 67 |
-| test_page_pads.lua | 26 |
-| test_page_dials.lua | 27 |
+| test_page_pads.lua | 27 |
+| test_page_dials.lua | 28 |
 | test_page_share.lua | 12 |
 | test_check.lua | 6 |
 | test_send_guard.lua | 10 |
@@ -1271,13 +1297,15 @@ Total.
 | test_edit_preview.lua | 14 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 21 |
-| test_dial_layout.lua | 28 |
+| test_dial_layout.lua | 29 |
 | test_surfaces.lua | 27 |
-| test_pad_render.lua | 21 |
+| test_pad_render.lua | 23 |
 | test_pad.lua | 45 |
-| test_dial.lua | 60 |
+| test_dial.lua | 63 |
+| test_dial_shine.lua | 5 |
 | test_icon_style.lua | 9 |
 | test_glow.lua | 11 |
+| test_shine.lua | 6 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -1285,4 +1313,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1059** |
+| **Total** | **1079** |
