@@ -3,6 +3,7 @@
 tools/render-shine-preview.lua).
 
     python3 tools/render-shine-preview.py [--json dump.json] [--out DIR] [--bg RRGGBB] [--scenes]
+                                          [--radius 100,150,180]
 
 Run from the repo root. Without --json it first runs `lua tools/render-shine-preview.lua` (the
 addon loaded headless, as the test harness loads it) into a temporary file. It writes, under --out
@@ -13,6 +14,8 @@ addon loaded headless, as the test harness loads it) into a temporary file. It w
   render-pad.png                                             the stock pad's buttons and an icon-only
                                                              pad, one row per look
   --scenes also writes every scene alone (scene-<kind>-<look>-<n>.png).
+  --radius renders the dial at each ring radius listed (default 100); a radius other than 100 is
+  written as render-dial-<n>-r<radius>.png (scene-dial-<look>-<n>-r<radius>.png).
 
 How it draws, as the client does:
   * Layout: every frame and region is laid out from its recorded anchors (SetPoint, SetAllPoints)
@@ -329,17 +332,20 @@ def grid(tiles, cols, gap=10, title=None):
 
 
 def dial_grids(scenes, bg, out_dir, scenes_too):
-    for n in sorted({s["slices"] for s in scenes if s["kind"] == "dial"}):
+    dials = [s for s in scenes if s["kind"] == "dial"]
+    for n, r in sorted({(s["slices"], s.get("radius", 100)) for s in dials}):
         tiles = []
+        tag = "" if r == 100 else "-r%d" % r
         for look in LOOK_NAMES:
-            for s in scenes:
-                if s["kind"] == "dial" and s["slices"] == n and s["look"] == look:
+            for s in dials:
+                if s["slices"] == n and s.get("radius", 100) == r and s["look"] == look:
                     img = dial_tile(s, bg)
                     if scenes_too:
-                        img.save(os.path.join(out_dir, "scene-dial-%s-%d.png" % (look, n)))
+                        img.save(os.path.join(out_dir, "scene-dial-%s-%d%s.png" % (look, n, tag)))
                     tiles.append(label(img, LOOK_NAMES[look]))
-        out = os.path.join(out_dir, "render-dial-%d.png" % n)
-        grid(tiles, 4, title="Comms Dial, stock, %d slices (rendered from the addon's own paint)" % n).save(out)
+        out = os.path.join(out_dir, "render-dial-%d%s.png" % (n, tag))
+        title = "Comms Dial, stock, %d slices, radius %d (rendered from the addon's own paint)" % (n, r)
+        grid(tiles, 4, title=title).save(out)
         print("wrote", out)
 
 
@@ -367,12 +373,13 @@ def main():
     ap.add_argument("--out", default=OUT)
     ap.add_argument("--bg", default="2b2340", help="the scene behind, hex (the mockup's default)")
     ap.add_argument("--scenes", action="store_true")
+    ap.add_argument("--radius", default="100", help="the dial's ring radii, comma-separated")
     args = ap.parse_args()
     bg = tuple(int(args.bg[i:i + 2], 16) for i in (0, 2, 4))
     path = args.json
     if not path:
         path = os.path.join(tempfile.mkdtemp(), "shine-preview.json")
-        subprocess.run(["lua", "tools/render-shine-preview.lua", path], cwd=ROOT, check=True)
+        subprocess.run(["lua", "tools/render-shine-preview.lua", path, args.radius], cwd=ROOT, check=True)
     with open(path) as fh:
         scenes = json.load(fh)["scenes"]
     os.makedirs(args.out, exist_ok=True)

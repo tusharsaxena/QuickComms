@@ -1,13 +1,14 @@
 -- tools/render-shine-preview.lua — the shine overlay's truthful preview, half one (a dev-only tool,
 -- like tools/gen-shine-textures.py; the client never loads it and .pkgmeta ignores tools/).
 --
---     lua tools/render-shine-preview.lua [out.json]        (from the repo root)
+--     lua tools/render-shine-preview.lua [out.json] [radii]   (from the repo root; radii: "100,150")
 --     python3 tools/render-shine-preview.py [out.json] [out_dir]
 --
 -- It loads the addon headless exactly as the test harness does (tests/loader.lua over
 -- tests/wow_mock.lua, the same enableAddon lifecycle as tests/run.lua), so what it dumps is what the
 -- addon's own code painted, never a copy of a recipe. For every shine look (None included) it builds
--- the stock Comms Dial (default profile, the Dungeon set) at 4, 8 and 12 slices and the stock Comms
+-- the stock Comms Dial (default profile, the Dungeon set) at 4, 8 and 12 slices (at each ring radius
+-- of `radii`, comma-separated, 100 when none) and the stock Comms
 -- Pad (its default and an icon-only button), then writes every region those frames hold to JSON:
 -- the frame tree (anchors, sizes, frame levels, shown), and per region its kind, draw layer and
 -- sublevel, texture, size, anchors (or SetAllPoints), rotation, vertex color, blend mode,
@@ -22,6 +23,8 @@ local loadAddon = dofile("tests/loader.lua")(".", mock)
 local OUT = arg and arg[1] or "shine-preview.json"
 local LOOKS = { "none", "gloss", "glossfade", "orb", "frost", "fluid", "bevel", "rim" }
 local COUNTS = { 4, 8, 12 }
+local RADII = {}
+for r in tostring(arg and arg[2] or "100"):gmatch("%d+") do RADII[#RADII + 1] = tonumber(r) end
 
 -- ── recording ─────────────────────────────────────────────────────────────────────────────────
 -- Every frame and region the instance makes, in creation order, so a dump can walk them and the
@@ -214,7 +217,7 @@ end
 local scenes = {}
 
 -- The dial: the stock d2 over the Dungeon set, its first `n` callouts on one ring of `slices`.
-local function dialScene(look, slices)
+local function dialScene(look, slices, radius)
     local NS = boot()
     local snap = NS.Situation.Current()
     local function seeded(origin)
@@ -232,9 +235,10 @@ local function dialScene(look, slices)
         group.slots[#group.slots + 1] = slot
     end
     assert(NS.SchemaRuntime.Set("dial.slice.shineLook", look, "d2"))
+    assert(NS.SchemaRuntime.Set("dial.radius", radius, "d2"))
     local rings, open = NS.DialLayout.Rings({ group }, { slices = slices, title = "Comms Dial" })
     local plan = { kind = "dial", surfaceId = "d2", snapshot = snap, order = { gid }, active = {},
-        rings = rings, openRing = open }
+        rings = rings, openRing = open, radius = radius }
     assert(NS.Dial.Apply(1, "d2", plan))
     local inst = NS.Dial.Instance("d2")
     local ring
@@ -245,7 +249,7 @@ local function dialScene(look, slices)
     for _, r in ipairs(inst.rings.active) do r.__shown = r == ring end
     ring.__shown = true
     ring.qcHighlight:Hide()
-    local s = dumpScene(inst.header, { kind = "dial", look = look, slices = slices, ring = ref(ring),
+    local s = dumpScene(inst.header, { kind = "dial", look = look, slices = slices, radius = radius, ring = ref(ring),
         disc = ring.qcShape.disc })
     scenes[#scenes + 1] = s
 end
@@ -265,7 +269,9 @@ local function padScene(look, style)
 end
 
 for _, look in ipairs(LOOKS) do
-    for _, n in ipairs(COUNTS) do dialScene(look, n) end
+    for _, n in ipairs(COUNTS) do
+        for _, r in ipairs(RADII) do dialScene(look, n, r) end
+    end
     padScene(look)
     padScene(look, "icon")
 end

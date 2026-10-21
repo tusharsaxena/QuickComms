@@ -137,6 +137,7 @@ what the code draws, not a copy of the recipe. It is not loaded by the client, a
 python3 -I tools/render-shine-preview.py            # all four renders
 python3 -I tools/render-shine-preview.py --scenes --out /tmp/shine   # every scene alone, elsewhere
 python3 -I tools/render-shine-preview.py --bg 6a4d6a   # over another scene color (hex)
+python3 -I tools/render-shine-preview.py --radius 100,150,180 --out /tmp/shine   # the dial at those ring radii
 ```
 
 **Python 3 (standard library only)**, and only for **re-deriving the client-data extractions**:
