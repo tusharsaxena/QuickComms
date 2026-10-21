@@ -3,11 +3,10 @@
 Owner request: an optional overlay that gives pad buttons and dial slices a shiny or glossy look.
 Mockups and the generated-art preview: https://claude.ai/artifact/PogWcsjkcyGTsDabhw3K2A
 
-Status: design only, not built. The art prototype sits beside this file in
-`2026-10-21-shine-overlay/`: `gen-shine-textures.py` (the generator, to move to `tools/` when this is
-built; it uses Pillow and NumPy, so DEPENDENCIES.md gains NumPy then), `preview.py` (composites the
-textures the way the client blends them) and `preview.png` (its output). The textures are not
-committed: run the generator to rebuild them.
+Status: being built (docs/superpowers/plans/2026-10-21-shine-overlay.md). The art generator is
+`tools/gen-shine-textures.py` (Pillow and NumPy; see DEPENDENCIES.md), and its 39 textures are
+committed under `media/textures/shine-*.tga`. The prototype's `preview.py` and `preview.png` stay beside
+this file in `2026-10-21-shine-overlay/` (it composites the textures the way the client blends them).
 
 Conformance: the Ka0s WoW Addon Standard applies throughout (schema-driven rows, locales, the green
 gate, docs in the same change). Nothing here is meant to deviate; if building it needs one, stop and

@@ -13,13 +13,21 @@ rim (Rim light).
   shine-pad-<look>.tga        128 x 128, over a pad button's icon (SetAllPoints on the icon).
   shine-pad-fluid-bloom1.tga  Fluid glass's two bloom layers, white on transparent, each tinted by
   shine-pad-fluid-bloom2.tga  its own bloom color.
-  shine-dial-<look>.tga       256 x 256, the whole disc. A slice draws it masked by its own sector
-                              texture (dial-sector-<n>.tga as a MaskTexture), placed like the fill,
-                              so one texture serves every slice count. Radial looks turn with the
-                              slice; bevel's light is fixed (the texture is not rotated, the mask is).
-  shine-dial-fluid-bloom1.tga / -bloom2.tga  as on the pad.
+  shine-dial-<name>.tga       128 x 128, the whole disc (gloss, bevel, fluid-bloom1, fluid-bloom2). A
+                              slice draws one masked by its own sector texture (dial-sector-<n>.tga
+                              as a MaskTexture), placed like the fill, so one texture serves every
+                              slice count. Radial looks turn with the slice; bevel's light is fixed
+                              (the texture is not rotated, the mask is).
+  shine-edge-rim-<n>.tga      n = 1..12, 256 x 256: each slice's own thin rim, shaped exactly like
+                              dial-sector-<n>.tga (n = 1 is the whole disc's rim).
+  shine-edge-soft-<n>.tga     n = 1..12, 128 x 128: each slice's soft edge falloff.
   shine-spot.tga              64 x 32, the orb's highlight, placed on each slice.
+  shine-glow.tga              64 x 32, the orb's inner glow.
   shine-streak.tga            128 x 16, the frosted glass's light streak along each slice's rim.
+
+modules/Shine.lua (NS.Shine) names every file. They are written under media/textures/ (only this
+addon draws them, so they are not library assets); the generator is not loaded by the client, and
+.pkgmeta ignores tools/.
 
 Antialiased by supersampling. Each file is overwritten whole; edit this script, never the output.
 """

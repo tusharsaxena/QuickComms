@@ -140,6 +140,8 @@ modules\Pad_Layout.lua
 modules\IconStyle.lua
 # LOAD-BEARING: publishes NS.Glow, which modules\Pad_Render.lua and modules\Dial_Render.lua take at load; appends to NS.STAND_DOWN.
 modules\Glow.lua
+# Conventional: publishes NS.Shine (the shine overlay's catalog and the pad button painter); read at call time only.
+modules\Shine.lua
 # Conventional: the surfaces' plans and rebuild; calls modules\Pad.lua at run time only
 modules\Surfaces.lua
 # LOAD-BEARING: publishes NS.PadRender, which modules\Pad.lua takes as a load-time upvalue.

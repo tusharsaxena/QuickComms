@@ -98,6 +98,21 @@ root after changing the shapes; never edit the TGAs by hand. It is not loaded by
 python3 -I tools/gen-dial-textures.py
 ```
 
+**NumPy** (with the same Pillow), and only for **regenerating the shine overlay's textures**:
+`tools/gen-shine-textures.py` writes the 39 `media/textures/shine-*.tga` files that
+`modules/Shine.lua` names (a pad look per button, the dial's whole-disc art, the Fluid glass blooms,
+the per-count slice edges and three sprites; light and shade on transparent). Run it from the repo
+root after changing the art; never edit the TGAs by hand. It is not loaded by the client, and
+`.pkgmeta` ignores `tools/`. No other generator needs NumPy.
+
+```sh
+sudo apt-get install -y python3-numpy
+python3 -I tools/gen-shine-textures.py
+
+# verify
+python3 -I -c 'import numpy; print(numpy.__version__)'
+```
+
 **Python 3 (standard library only)**, and only for **re-deriving the client-data extractions**:
 `tools/derive-gameids.py` (the instance ids and `tests/test_gameids.lua`'s map table) and
 `tools/derive-winds.py` (the node winds in `defaults/BuiltIns_Battlegrounds.lua`), with their shared
