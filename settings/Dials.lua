@@ -313,7 +313,7 @@ local function render(ctx)
     })
 end
 
-Ed.RegisterPage(PAGE, L["Comms Dial"], "DialsPanel", render, {
+Ed.RegisterPage(PAGE, L["Dial"], "DialsPanel", render, {
     tooltip = L["Put the selected dial's groups-as, wedges per ring, ring radius, icon offset, where it opens, its slices, paging, labels and icons back to their defaults, and turn it on. Its name, groups and position are kept."],
     -- One act (Library.Batch): the dials rebuild once, not once per row.
     onClick = function(ctx) NS.Library.Batch(function() H().RestoreDefaults(PAGE, ctx) end) end,

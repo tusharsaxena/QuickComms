@@ -440,6 +440,9 @@ L["Help towers"] = "Help towers"
 L["Need help at the southern towers"] = "Need help at the southern towers"
 L["Comms Pad"] = "Comms Pad"
 L["Comms Dial"] = "Comms Dial"
+-- the Pad and Dial pages' sidebar titles (dial polish, 2026-10-21; the member names above stay)
+L["Pad"] = "Pad"
+L["Dial"] = "Dial"
 L["Show the line a callout would send here (never sends)"] = "Show the line a callout would send here (never sends)"
 L["No callout with id %s."] = "No callout with id %s."
 L["%s -> not sent here (%s)"] = "%s -> not sent here (%s)"
@@ -504,6 +507,8 @@ L["Tabs switch after combat."] = "Tabs switch after combat."
 L["The pad can be collapsed or expanded after combat."] = "The pad can be collapsed or expanded after combat."
 L["Pad positions reset."] = "Pad positions reset."
 L["Test mode"] = "Test mode"
+-- the live header: "Quick Comms: M+ · Windrunner Spire +14" (dial polish, 2026-10-21)
+L["Quick Comms: %s"] = "Quick Comms: %s"
 
 -- Library (modules/Library.lua)
 L[" (copy)"] = " (copy)"

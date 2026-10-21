@@ -14,7 +14,7 @@ local function open(inputs)
     NS.Situation.ReadInputs = function() return inputs or MPLUS end
     NS.Situation.RefreshNow("test")
     local P = dofile("tests/page_helpers.lua")(NS, m)
-    P.show("Comms Pad")
+    P.show("Pad")
     NS.addon.Settings.Editors.Select("pad", "p1")
     return NS, m, P
 end
@@ -436,4 +436,14 @@ test("pads page: [B9] Defaults puts the Icons rows back too, and its tooltip nam
     assertEqual(NS.db.profile.pads.p1.icon.zoom, 0)
     assertFalse(NS.db.profile.pads.p1.icon.glowEnabled)
     assertTrue(P.ctx("pads").panel.defaultsTooltip:find("icons", 1, true) ~= nil)
+end)
+
+-- ── renames (dial polish T7) ──────────────────────────────────────────────────────────────
+test("page pads: [polish] the page is titled Pad", function()
+    local NS, m = T.enableAddon()
+    -- red under: settings/Pads.lua still registering the page as L["Comms Pad"]
+    assertTrue(m.__subcategories["Pad"] ~= nil, "the sidebar reads Pad")
+    assertNil(m.__subcategories["Comms Pad"], "no Comms Pad page")
+    -- the default member's name is unchanged (a page title only)
+    assertEqual(NS.db.profile.pads.p1.name, "Comms Pad")
 end)

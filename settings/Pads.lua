@@ -278,7 +278,7 @@ local function render(ctx)
     })
 end
 
-Ed.RegisterPage(PAGE, L["Comms Pad"], "PadsPanel", render, {
+Ed.RegisterPage(PAGE, L["Pad"], "PadsPanel", render, {
     tooltip = L["Put the selected pad's groups-as, layout, headers, window, buttons and icons back to their defaults, and turn it on. Its name, groups and position are kept."],
     -- One act (Library.Batch): the pads rebuild once, not once per row.
     onClick = function(ctx) NS.Library.Batch(function() H().RestoreDefaults(PAGE, ctx) end) end,

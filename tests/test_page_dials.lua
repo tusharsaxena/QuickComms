@@ -17,7 +17,7 @@ local function open(inputs)
     NS.Situation.ReadInputs = function() return inputs or MPLUS end
     NS.Situation.RefreshNow("test")
     local P = dofile("tests/page_helpers.lua")(NS, m)
-    P.show("Comms Dial")
+    P.show("Dial")
     NS.addon.Settings.Editors.Select("dial", "d2")
     return NS, m, P
 end
@@ -440,4 +440,14 @@ test("page dials: [polish] Icon offset is on the Icons tab, not Wheel", function
     assertEqual(first.subgroup, "Size and crop")
     row:__fire("OnMouseUp", 40)
     assertEqual(NS.db.profile.dials.d2.iconOffset, 40, "the path is kept")
+end)
+
+-- ── renames (dial polish T7) ──────────────────────────────────────────────────────────────
+test("page dials: [polish] the page is titled Dial", function()
+    local NS, m = T.enableAddon()
+    -- red under: settings/Dials.lua still registering the page as L["Comms Dial"]
+    assertTrue(m.__subcategories["Dial"] ~= nil, "the sidebar reads Dial")
+    assertNil(m.__subcategories["Comms Dial"], "no Comms Dial page")
+    -- the default member's name is unchanged (a page title only)
+    assertEqual(NS.db.profile.dials.d2.name, "Comms Dial")
 end)

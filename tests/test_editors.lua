@@ -149,7 +149,7 @@ local function probeRows(entries)
     local NS, m, Ed = enabled()
     if type(entries) == "function" then entries = entries(NS, m) end
     local P = dofile("tests/page_helpers.lua")(NS, m)
-    P.show("Comms Pad")
+    P.show("Pad")
     local w = P.during(function() Ed.ReorderRows(P.ctx("pads"), "probe", entries) end)
     return NS, P, w
 end
@@ -275,7 +275,7 @@ local function probeTable(blocks, header)
     local NS, m, Ed = enabled()
     if type(blocks) == "function" then blocks = blocks(NS) end
     local P = dofile("tests/page_helpers.lua")(NS, m)
-    P.show("Comms Pad")
+    P.show("Pad")
     local lists = P.reorderSpy()
     local w = P.during(function() Ed.TableRows(P.ctx("pads"), "probe", blocks, header) end)
     return NS, P, w, lists, Ed
