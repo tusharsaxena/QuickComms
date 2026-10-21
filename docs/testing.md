@@ -89,6 +89,18 @@ The release gate is evaluated by `/dev-copilot:bump-version` from the run's `man
 CCN 15 and `blindFiles` 0 (Task 13 of the phase 5 plan records it). It never gates a commit. The record itself: [`automated-tests/README.md`](automated-tests/README.md).
 For long batteries run through the bounded runner, `~/.claude/dev-copilot/bin/ka0s-bounded`.
 
+## Offline renders of the shine overlay
+
+The mock records what the shine paints but cannot show it, and a hand-drawn preview of the recipe
+once hid that the game drew something else (2026-10-21). `tools/render-shine-preview.py` renders what
+the code actually paints: it runs `tools/render-shine-preview.lua`, which boots the addon through this
+harness (`tests/loader.lua`, `tests/wow_mock.lua`), applies each look to the stock dial (4, 8 and 12
+slices) and the stock pad, and dumps every region; then it composites the dump as the client does.
+The result is `docs/superpowers/specs/2026-10-21-shine-overlay/render-*.png`. It reproduced the owner's
+first in-game screenshots of the old recipes look for look, so it is the check to run after any change
+to `tools/gen-shine-textures.py`, `modules/Shine.lua` or the shine half of `modules/Dial_Slices.lua`,
+before SHINE-1 and SHINE-2. It is not a suite and gates nothing (`DEPENDENCIES.md` has how to run it).
+
 ## In game
 
 [`smoke-tests.md`](smoke-tests.md) — the checks the headless suite cannot make. They are the owner's

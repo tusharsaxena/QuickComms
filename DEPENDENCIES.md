@@ -99,9 +99,10 @@ python3 -I tools/gen-dial-textures.py
 ```
 
 **NumPy** (with the same Pillow), and only for **regenerating the shine overlay's textures**:
-`tools/gen-shine-textures.py` writes the 39 `media/textures/shine-*.tga` files that
+`tools/gen-shine-textures.py` writes the 41 `media/textures/shine-*.tga` files that
 `modules/Shine.lua` names (a pad look per button, the dial's whole-disc art, the Fluid glass blooms,
-the per-count slice edges and three sprites; light and shade on transparent). Run it from the repo
+the per-count slice rims and Frosted glass streaks, and three sprites; light and shade on
+transparent). Run it from the repo
 root after changing the art; never edit the TGAs by hand. It is not loaded by the client, and
 `.pkgmeta` ignores `tools/`. No other generator needs NumPy.
 
@@ -111,6 +112,26 @@ python3 -I tools/gen-shine-textures.py
 
 # verify
 python3 -I -c 'import numpy; print(numpy.__version__)'
+```
+
+**Lua 5.1 with the same Pillow and NumPy**, and only for **previewing the shine overlay offline**:
+`tools/render-shine-preview.lua` loads the addon headless through the test harness
+(`tests/loader.lua` over `tests/wow_mock.lua`, the same lifecycle as `tests/run.lua`), builds the
+stock dial at 4, 8 and 12 slices and the stock pad under every look, and dumps every region they
+painted (texture, layer, size, anchors, turn, color, texcoords, masks) to JSON;
+`tools/render-shine-preview.py` composites the dump the way the client blends it (layer order, turned
+quads, vertex color, BLEND, MaskTexture alpha) into
+`docs/superpowers/specs/2026-10-21-shine-overlay/render-dial-4.png`, `render-dial-8.png`,
+`render-dial-12.png` and `render-pad.png`. The Python script runs the Lua one itself. It needs the
+DejaVu Sans font for its labels (any font works; it falls back to Pillow's own). Re-run it after a
+change to the shine's art or recipes and look at the result before an in-game pass: the renders are
+what the code draws, not a copy of the recipe. It is not loaded by the client, and `.pkgmeta` ignores
+`tools/`.
+
+```sh
+python3 -I tools/render-shine-preview.py            # all four renders
+python3 -I tools/render-shine-preview.py --scenes --out /tmp/shine   # every scene alone, elsewhere
+python3 -I tools/render-shine-preview.py --bg 6a4d6a   # over another scene color (hex)
 ```
 
 **Python 3 (standard library only)**, and only for **re-deriving the client-data extractions**:
