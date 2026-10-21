@@ -49,7 +49,7 @@ test("icon style: the defaults draw the owner's look on a button and on a wedge"
     assertEqual(button.__h, 24)
     local d = NS.db.profile.dials
     local did = NS.db.profile.dialOrder[1]
-    assertEqual(d[did].icon.size, 32)
+    assertEqual(d[did].icon.size, 0, "automatic: 32 at the default radius")
     assertEqual(d[did].icon.glowEnabled, false)
 end)
 
@@ -121,6 +121,7 @@ test("icon style: a wedge's border is a round ring behind its icon, icon plus tw
     assertTrue(NS.Dial.Apply(1, did, plan))
     local w = NS.Dial.RingWedges(did, 1)[1]
     assertTrue(w.qcRing ~= nil and w.qcRing:IsShown())
+    assertEqual(w.qcRing.__texture, NS.DialSlices.DISC, "the dial's own disc, not the portrait mask")
     -- red under: a square backdrop on the round wedge
     assertEqual(csv(w.qcRing.__size), "34,34")
     assertEqual(csv(w.qcBorder), "0,0,0,1")
@@ -154,7 +155,7 @@ test("icon style: a pad saved before the Icons tab reads like a new one (fillSha
     NS.Library.Prepare()
     assertEqual(NS.db.profile.pads.p1.icon.size, 16, "the default size")
     assertEqual(NS.db.profile.dials[did].icon.zoom, 0.2, "a stored field is kept")
-    assertEqual(NS.db.profile.dials[did].icon.size, 32)
+    assertEqual(NS.db.profile.dials[did].icon.size, 0, "automatic")
 end)
 
 test("icon style: [polish] dial icon size reaches 128, pad stays 40", function()
@@ -176,4 +177,38 @@ test("icon style: [polish] dial icon size reaches 128, pad stays 40", function()
         if row.path == "dial.icon.size" then max = row.max end
     end
     assertEqual(max, 128, "the slider reaches 128")
+end)
+
+test("icon style: [autofit] a dial's icon size 0 is automatic: it scales with the ring radius", function()
+    local NS = live()
+    local did = NS.db.profile.dialOrder[1]
+    local function drawn(radius)
+        set(NS, "dial.radius", radius, did)
+        local snap = NS.Situation.Current()
+        local plan = NS.Surfaces.BuildDialPlan(did, NS.db.profile.dials[did], snap, NS.Surfaces.Deps(snap))
+        assertTrue(NS.Dial.Apply(1, did, plan))
+        return csv(NS.Dial.RingWedges(did, 1)[1].qcIcon.__size)
+    end
+    -- red under: a new dial's icon size left at 32
+    assertEqual(NS.db.profile.dials[did].icon.size, 0, "a new dial's icons are automatic")
+    assertEqual(drawn(100), "32,32", "the default radius draws the old default")
+    -- red under: IconStyle.Config clamps 0 up to the row's minimum (16)
+    assertEqual(drawn(150), "48,48")
+    assertEqual(drawn(180), "58,58")
+    set(NS, "dial.icon.size", 40, did)
+    assertEqual(drawn(150), "40,40", "a manual size is kept at any radius")
+    assertEqual(drawn(100), "40,40")
+    assertEqual(NS.IconStyle.Config({ size = 0 }, "dial", 48).size, 48)
+    assertEqual(NS.IconStyle.Config({ size = 0 }, "dial").size, 32, "no wheel to read: the old default")
+    assertEqual(NS.IconStyle.Config({ size = 0 }, "pad").size, 12, "a pad has no automatic size")
+    local row
+    for _, r in ipairs(NS.addon.Settings.RowsForPage("dials")) do
+        if r.path == "dial.icon.size" then row = r end
+    end
+    assertEqual(row.min .. "," .. row.max .. "," .. tostring(row.default), "0,128,0")
+    assertEqual(row.zeroText, NS.L["Automatic"])
+    set(NS, "dial.icon.size", 5, did)
+    assertEqual(NS.db.profile.dials[did].icon.size, 16, "under the minimum but not automatic: the minimum")
+    set(NS, "dial.icon.size", 0, did)
+    assertEqual(NS.db.profile.dials[did].icon.size, 0)
 end)

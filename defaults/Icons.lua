@@ -18,8 +18,11 @@ local D = NS.IconDefaults
 -- 44-pixel wedge (modules/Dial_Layout.lua DL.WEDGE), so the wedge's geometry never changes. A wedge's
 -- reaches 128 (dial polish, 2026-10-21, owner request): Blizzard icons are 64x64 art, so past 64 they
 -- are upscaled (softer, not broken); past about 70 at the default ring radius they crowd their
--- neighbors and want a bigger radius, which is the owner's call (no auto-scaling). Pads stay at 40.
-D.SIZE = { pad = { min = 12, max = 40, default = 16 }, dial = { min = 16, max = 128, default = 32 } }
+-- neighbors and want a bigger radius. Pads stay at 40. A wedge's size also takes 0, automatic
+-- (`auto`; owner, 2026-10-21), a new dial's default: `default` scaled with the ring radius, the
+-- default radius drawing `default` itself (modules/Dial_Layout.lua DL.AutoIconSize).
+D.AUTO_SIZE = 0
+D.SIZE = { pad = { min = 12, max = 40, default = 16 }, dial = { min = 16, max = 128, default = 32, auto = true } }
 
 D.ZOOM_MAX = 0.25
 D.GLOW_STYLES = { "button", "proc", "pixel", "autocast" }
@@ -51,7 +54,7 @@ D.GLOW_KNOBS = {
 --- @return table
 function D.For(kind)
     local t = {
-        size = D.SIZE[kind].default, zoom = 0, desaturate = false, alpha = 1,
+        size = D.SIZE[kind].auto and D.AUTO_SIZE or D.SIZE[kind].default, zoom = 0, desaturate = false, alpha = 1,
         tint = { r = 1, g = 1, b = 1, a = 1 }, useClassColorTint = false,
         borderShow = false, borderStyle = "Solid", borderSize = 1, borderColor = { r = 0, g = 0, b = 0, a = 1 },
         useClassColorBorder = false,

@@ -13,7 +13,7 @@ ignore:
   # - .playwright-mcp  # ONLY once a checkout HAS a .playwright-mcp/ (packaging): dev-only browser-tool scratch; absent today
   - docs             # holds docs/brainstorm/, docs/superpowers/ and the record stores too
   - tests
-  - tools            # dev-only generators (layout-§1): the client-data derivations, Python; never loaded
+  - tools            # dev-only (layout-§1): the client-data derivations, the dial and shine texture generators and the shine preview renderer; never loaded
   - CLAUDE.md        # contributor documentation; README.md and LICENSE ship
   - DEPENDENCIES.md
   - media/logos/*.png   # the editable logo source (layout-§4): committed, never loadable, never shipped

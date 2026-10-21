@@ -345,3 +345,110 @@ test("render: [B3] a button's label is one line, and hidden when the button leav
         "22 for the default 16-pixel icon and its gaps, 4 for the right padding, no channel letter")
     assertTrue(NS.PadRender.LabelRoom(26, "iconLabel") <= 0)
 end)
+
+-- ── the shine overlay (Shine T3) ────────────────────────────────────────────────────────────
+
+local MPLUS = { inInstance = true, instanceType = "party", difficultyID = 8, keystoneActive = true,
+    keyLevel = 12, inGroup = true }
+
+local function livePad()
+    local NS, m = T.enableAddon()
+    NS.Situation.ReadInputs = function() return MPLUS end
+    NS.Situation.RefreshNow("test")
+    return NS, m
+end
+
+local function padButtons(NS)
+    local out = {}
+    for _, btn in ipairs(NS.Pad.Instance("p1").buttons.active) do
+        if btn:IsShown() then out[#out + 1] = btn end
+    end
+    return out
+end
+
+-- Every texture a dial ring holds under its qc* fields (and the lists of them), two levels deep.
+local function shineTextures(ring)
+    local found = {}
+    local function visit(v, depth)
+        if type(v) ~= "table" or depth > 2 then return end
+        if type(v.__texture) == "string" and v.__texture:find("shine-", 1, true) then found[#found + 1] = v end
+        if v.qcShine and v.qcShine.IsShown and v.qcShine:IsShown() then found[#found + 1] = v.qcShine end
+        for k, child in pairs(v) do
+            if (type(k) == "number" or (type(k) == "string" and k:find("^qc"))) and child ~= ring then
+                visit(child, depth + 1)
+            end
+        end
+    end
+    visit(ring, 0)
+    return found
+end
+
+-- A button's shine shown: any of its three pieces (modules/Shine.lua).
+local function shineShown(btn)
+    local set = btn.qcShine
+    return set ~= nil and (set.left:IsShown() or set.mid:IsShown() or set.right:IsShown())
+end
+
+test("pad render: [shine] a look on the Buttons tab paints every button", function()
+    local NS = livePad()
+    local S = NS.SchemaRuntime
+    for _, btn in ipairs(padButtons(NS)) do
+        assertFalse(shineShown(btn), "None by default: no shine")
+    end
+    assertTrue(S.Set("pad.button.shineLook", "gloss", "p1"))
+    local buttons = padButtons(NS)
+    assertTrue(#buttons > 0)
+    for _, btn in ipairs(buttons) do
+        -- red under: R.ApplyButtonLook never calling NS.Shine.Apply
+        assertTrue(shineShown(btn), "every visible button takes the shine")
+        local set = btn.qcShine
+        assertEqual(set.left.__texture, NS.Shine.Texture("pad", "gloss"))
+        -- red under: the shine laid over the icon only (owner, 2026-10-21: the whole button)
+        local _, rel = set.left:GetPoint(1)
+        assertTrue(rel == btn, "the left cap on the button's own corner, not the icon")
+        local _, rrel = set.right:GetPoint(1)
+        assertTrue(rrel == btn, "the right cap on the button's other corner")
+        assertEqual(set.left.__size[1], btn.__h / 2, "a cap half the button's height wide")
+        assertEqual(set.mid:IsShown(), btn.__w > btn.__h, "the middle spans a wide button")
+        assertEqual(set.left.__color[4], 0.85, "the default Strength")
+    end
+    assertTrue(S.Set("pad.button.shineStrength", 40, "p1"))
+    -- red under: the button look's signature leaving out the shine leaves (the old look reused)
+    assertEqual(padButtons(NS)[1].qcShine.left.__color[4], 0.4)
+    assertTrue(S.Set("pad.layout.style", "label", "p1"))
+    for _, btn in ipairs(padButtons(NS)) do
+        assertTrue(shineShown(btn), "a label-only button keeps its shine: it covers the plate, not the icon")
+    end
+    assertTrue(S.Set("pad.layout.style", "icon", "p1"))
+    for _, btn in ipairs(padButtons(NS)) do
+        assertTrue(shineShown(btn), "an icon-only button")
+        assertFalse(btn.qcShine.mid:IsShown(), "is square: no middle")
+    end
+    assertTrue(S.Set("pad.layout.style", "iconLabel", "p1"))
+    assertTrue(S.Set("pad.button.shineLook", "none", "p1"))
+    for _, btn in ipairs(padButtons(NS)) do
+        assertFalse(shineShown(btn), "None hides it")
+    end
+    local look = NS.PadRender.ButtonLook(NS.db.profile.pads.p1.button)
+    assertEqual(look.shine.look, "none", "the look carries its shine")
+end)
+
+test("pad render: [shine] the pad's look leaves the dial alone", function()
+    local NS = livePad()
+    assertTrue(NS.SchemaRuntime.Set("pad.button.shineLook", "orb", "p1"))
+    assertTrue(shineShown(padButtons(NS)[1]), "the pad wears its orb")
+    local snap = NS.Situation.Current()
+    local group = { id = T.seeded(NS, "bi.mplus"), title = "Dungeon (generic)", slots = {} }
+    for i, cid in ipairs(NS.Library.Group(T.seeded(NS, "bi.mplus")).callouts) do
+        if i > 4 then break end
+        local slot = NS.Surfaces.Slot(cid, NS.Library.Callout(cid), snap, { soloFallback = "none", ctx = {} })
+        slot.surfaceId = "d2"
+        group.slots[#group.slots + 1] = slot
+    end
+    local rings, open = NS.DialLayout.Rings({ group }, { slices = 4, title = "Comms Dial" })
+    assertTrue(NS.Dial.Apply(1, "d2", { kind = "dial", surfaceId = "d2", snapshot = snap,
+        order = { T.seeded(NS, "bi.mplus") }, active = {}, rings = rings, openRing = open }))
+    for i, ring in ipairs(NS.Dial.Instance("d2").rings.active) do
+        assertEqual(#shineTextures(ring), 0, "ring " .. i .. ": the dial at None carries no shine")
+    end
+end)

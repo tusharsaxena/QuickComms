@@ -87,12 +87,57 @@ python3 -c 'import PIL; print(PIL.__version__)'
 
 The same Pillow regenerates the Comms Dial's slice textures: `tools/gen-dial-textures.py` writes
 `media/textures/dial-sector-2.tga` … `dial-sector-12.tga` (one pie slice of an n-slice dial, white
-on transparent) and `media/textures/dial-pill.tga` (the current page's pill). Run it from the repo
+on transparent), `media/textures/dial-disc.tga` (every filled circle the dial draws, and in halves
+the round caps of the page pill, the indicators' background and their borders) and
+`media/textures/dial-ring-1.tga` … `dial-ring-12.tga` (the hub's hollow rings and rims, a ladder of
+line widths from 1.25% to 50% of the diameter). Run it from the repo
 root after changing the shapes; never edit the TGAs by hand. It is not loaded by the client, and
 `.pkgmeta` ignores `tools/`.
 
 ```sh
 python3 -I tools/gen-dial-textures.py
+```
+
+**NumPy** (with the same Pillow), and only for **regenerating the shine overlay's textures**:
+`tools/gen-shine-textures.py` writes the 52 `media/textures/shine-*.tga` files (about 10.7 MB) that
+`modules/Shine.lua` names (a pad look per button, the dial's whole-disc art, the per-count slice
+rims, Frosted glass streaks and Bevel edges, and three sprites: Glass orb's bead and Fluid glass's two
+blooms; light and shade on transparent). Run it from the repo
+root after changing the art; never edit the TGAs by hand. It is not loaded by the client, and
+`.pkgmeta` ignores `tools/`. No other generator needs NumPy.
+
+```sh
+sudo apt-get install -y python3-numpy
+python3 -I tools/gen-shine-textures.py
+
+# verify
+python3 -I -c 'import numpy; print(numpy.__version__)'
+```
+
+`-I` (isolated mode) leaves the user site-packages out, so the `-I` commands in this section find
+NumPy and Pillow only where apt puts them: a NumPy installed with `pip install --user` fails under `-I` with
+`ModuleNotFoundError: No module named 'numpy'`. Install `python3-numpy` as above, or drop the `-I`.
+
+**Lua 5.1 with the same Pillow and NumPy**, and only for **previewing the shine overlay offline**:
+`tools/render-shine-preview.lua` loads the addon headless through the test harness
+(`tests/loader.lua` over `tests/wow_mock.lua`, the same lifecycle as `tests/run.lua`), builds the
+stock dial at 4, 8 and 12 slices and the stock pad under every look, and dumps every region they
+painted (texture, layer, size, anchors, turn, color, texcoords, masks) to JSON;
+`tools/render-shine-preview.py` composites the dump the way the client blends it (layer order, turned
+quads, vertex color, BLEND, MaskTexture alpha) into
+`docs/superpowers/specs/2026-10-21-shine-overlay/render-dial-4.png`, `render-dial-8.png`,
+`render-dial-12.png` and `render-pad.png`. The Python script runs the Lua one itself, as `lua` on the `PATH`
+(`tools/render-shine-preview.py`), which must be Lua 5.1. It needs the
+DejaVu Sans font for its labels (any font works; it falls back to Pillow's own). Re-run it after a
+change to the shine's art or recipes and look at the result before an in-game pass: the renders are
+what the code draws, not a copy of the recipe. It is not loaded by the client, and `.pkgmeta` ignores
+`tools/`.
+
+```sh
+python3 -I tools/render-shine-preview.py            # all four renders
+python3 -I tools/render-shine-preview.py --scenes --out /tmp/shine   # every scene alone, elsewhere
+python3 -I tools/render-shine-preview.py --bg 6a4d6a   # over another scene color (hex)
+python3 -I tools/render-shine-preview.py --radius 100,150,180 --out /tmp/shine   # the dial at those ring radii
 ```
 
 **Python 3 (standard library only)**, and only for **re-deriving the client-data extractions**:

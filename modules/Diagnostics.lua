@@ -101,7 +101,8 @@ local function library(out)
     out:add("Library", "active=%s", table.concat(ids, ","))
 end
 
--- The surfaces (spec §16): each pad's active groups, its stale hint, its lockdown chip.
+-- The surfaces (spec §16): each pad's active groups, its stale hint, its lockdown chip; then each pad's
+-- button shine.
 local function surfaces(out)
     local plans = NS.Surfaces.Plans()
     local stale = NS.State.surfaceStale or {}
@@ -118,6 +119,11 @@ local function surfaces(out)
         out:add("Pad", "%s active=%s stale=%s lockdownChip=%s", id, table.concat(plan.order, ","),
             stale[id] == true, plan.lockdownChip)
     end
+    -- each pad's button look: its shine (the Buttons tab's Shine heading) and strength
+    for _, id in ipairs(NS.Pad.Ids()) do
+        local b = (NS.db.profile.pads[id] or {}).button or {}
+        out:add("Pad", "%s button shine=%s %s", id, b.shineLook, b.shineStrength)
+    end
 end
 
 -- One dial's look: the Wheel, Slices, Hub, Paging, Slice labels and Group labels tabs' values that shape
@@ -126,9 +132,9 @@ local function dialLook(out, id, d)
     local s, l, pg = d.slice or {}, d.label or {}, d.page or {}
     out:add("Dial", "%s look mode=%s slices=%s radius=%s iconOffset=%s openAt=%s", id, d.mode, d.slices, d.radius,
         d.iconOffset, d.openAt)
-    out:add("Dial", "%s slices gap=%s pointer=%s size=%s offset=%s labels=%s size=%s offset=%s tooltip=%s/%s", id,
-        s.gap, s.pointerShow, s.pointerSize, s.pointerOffset, l.show, l.fontSize, l.offset, l.tooltipSide,
-        l.tooltipOffset)
+    out:add("Dial", "%s slices gap=%s pointer=%s size=%s offset=%s labels=%s size=%s offset=%s tooltip=%s/%s shine=%s %s",
+        id, s.gap, s.pointerShow, s.pointerSize, s.pointerOffset, l.show, l.fontSize, l.offset, l.tooltipSide,
+        l.tooltipOffset, s.shineLook, s.shineStrength)
     out:add("Dial", "%s paging offset=%s arrow=%s gap=%s dot=%s pill=%s dotGap=%s back=%s pad=%s border=%s", id,
         pg.offset, pg.arrowSize, pg.arrowGap, pg.dotSize, pg.pillWidth, pg.dotGap, pg.dotBackShow, pg.dotBackPadding,
         pg.dotBorder)

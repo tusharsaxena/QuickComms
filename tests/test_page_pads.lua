@@ -283,7 +283,7 @@ test("pads page: [button] Buttons carries Size, Color, Border, Font and Glow, an
     for _, heading in ipairs({ "Size", "Color", "Border", "Font", "Glow" }) do
         assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
     end
-    assertEqual(#P.all(w, "CheckBox", "Use class color"), 4, "background, border, font and glow (options-ui-§17)")
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 7, "background, border, font, glow, then the shine's tint and two blooms (options-ui-§17)")
     assertTrue(P.find(w, "Slider", "Glow style") == nil, "a dropdown, not a slider")
     -- red under: the Glow style row without its disabledIf
     assertTrue(P.find(w, "Dropdown", "Glow style").disabled, "the glow is off by default")
@@ -294,6 +294,57 @@ test("pads page: [button] Buttons carries Size, Color, Border, Font and Glow, an
     assertFalse(P.find(P.tab("pads", "Buttons"), "Dropdown", "Glow style").disabled)
     assertNil(P.find(P.tab("pads", "Layout"), "Slider", "Button width"), "moved to the Buttons tab")
     assertNil(NS.db.profile.pads.p1.layout.width, "and out of the layout table")
+end)
+
+test("page pads: [shine] the Buttons tab has a Shine heading", function()
+    local NS, _, P = open()
+    local rows = {}
+    for _, r in ipairs(NS.addon.Settings.RowsForPage("pads")) do rows[r.path] = r end
+    -- red under: no shine rows in settings/SchemaMembers.lua buttonRows
+    for path, want in pairs({ ["pad.button.shineLook"] = "Shine look", ["pad.button.shineStrength"] = "Shine strength",
+        ["pad.button.shineTint"] = "Shine tint", ["pad.button.shineBloomA"] = "Bloom color A",
+        ["pad.button.shineBloomB"] = "Bloom color B" }) do
+        local r = rows[path]
+        assertTrue(r ~= nil, path)
+        assertEqual(r.label, want, path .. " label")
+        assertEqual(r.group, "Buttons", path .. " tab")
+        assertEqual(r.subgroup, "Shine", path .. " heading")
+    end
+    for _, c in ipairs({ "useClassColorShineTint", "useClassColorShineBloomA", "useClassColorShineBloomB" }) do
+        assertTrue(rows["pad.button." .. c] ~= nil, c .. ": each color with its class color")
+    end
+    local look = rows["pad.button.shineLook"]
+    local ids = {}
+    for i, v in ipairs(look.values) do ids[i] = v.value end
+    assertEqual(table.concat(ids, ","), "none,gloss,glossfade,orb,frost,fluid,bevel,rim",
+        "the eight choices, in order (Gloss fade after Gloss cap, owner 2026-10-21)")
+    assertEqual(look.default, "none")
+    local st = rows["pad.button.shineStrength"]
+    assertEqual(table.concat({ st.min, st.max, st.step, st.default }, ","), "0,100,5,85")
+    local button = NS.db.profile.pads.p1.button
+    assertEqual(button.shineLook, "none", "a new pad draws no shine")
+    assertEqual(button.shineStrength, 85)
+    local w = P.tab("pads", "Buttons")
+    assertEqual(#P.all(w, "Heading", "Shine"), 1, "Shine drawn once")
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 7, "four, then the tint's and the two blooms'")
+    -- red under: no disabledIf on the shine rows
+    assertTrue(P.find(w, "Slider", "Shine strength").disabled, "None grays Strength")
+    assertTrue(P.find(w, "ColorPicker", "Shine tint").disabled, "and Tint")
+    assertTrue(P.find(w, "ColorPicker", "Bloom color A").disabled, "and the blooms")
+    P.find(w, "Dropdown", "Shine look"):__fire("OnValueChanged", "orb")
+    assertEqual(NS.db.profile.pads.p1.button.shineLook, "orb")
+    w = P.tab("pads", "Buttons")
+    assertFalse(P.find(w, "Slider", "Shine strength").disabled)
+    assertFalse(P.find(w, "ColorPicker", "Shine tint").disabled)
+    assertTrue(P.find(w, "ColorPicker", "Bloom color A").disabled, "the blooms are Fluid glass's only")
+    assertTrue(P.find(w, "ColorPicker", "Bloom color B").disabled)
+    NS.SchemaRuntime.Set("pad.button.shineLook", "fluid", "p1")
+    w = P.tab("pads", "Buttons")
+    assertFalse(P.find(w, "ColorPicker", "Bloom color A").disabled)
+    assertFalse(P.find(w, "ColorPicker", "Bloom color B").disabled)
+    assertFalse(NS.SchemaRuntime.Set("pad.button.shineLook", "satin", "p1"), "Satin sheen is not a look")
+    NS.SchemaRuntime.Set("pad.button.shineStrength", 140, "p1")
+    assertEqual(NS.db.profile.pads.p1.button.shineStrength, 100, "Strength stops at 100")
 end)
 
 -- ── the Icons tab (B9) ──────────────────────────────────────────────────────────────────────

@@ -78,7 +78,7 @@ local KNOB_TEXT = {
 local WHERE = {
     pad = { page = "pads", size = L["How big each button's icon is, in pixels. A bigger icon makes the buttons taller."],
         when = L["Always, while the mouse is over the icon, or for a moment after its callout is sent."] },
-    dial = { page = "dials", size = L["How big each wedge's icon is, in pixels. The wedges keep their size."],
+    dial = { page = "dials", size = L["How big each wedge's icon is, in pixels. 0 sizes it to the ring radius: 32 at the default radius, bigger on a bigger wheel. The wedges keep their size."],
         when = L["Always, while the mouse is over the icon, or for a moment after its callout is sent. The dial closes on a send, so that moment runs from the next time you open it, within a few seconds."] },
 }
 
@@ -108,8 +108,19 @@ function NS.addon.Settings.IconRows(kind, C)
     local range = D.SIZE[kind]
     local WHEN_VALUES, STYLE_VALUES = C.choices(WHEN), C.choices(STYLES)
 
-    at(SIZE_CROP, { path = P .. "size", type = "number", default = T.size, min = range.min, max = range.max, step = 1,
-        label = L["Icon size"], desc = where.size, validate = C.NUMBER, normalize = C.clamp(range.min, range.max, true) })
+    -- A dial's Icon size takes 0, automatic (owner, 2026-10-21; the Icon offset's 0 = automatic form):
+    -- the slider starts at 0 and a value under the minimum, not 0, is the minimum.
+    local sizeRow = { path = P .. "size", type = "number", default = T.size, min = range.min, max = range.max, step = 1,
+        label = L["Icon size"], desc = where.size, validate = C.NUMBER, normalize = C.clamp(range.min, range.max, true) }
+    if range.auto then
+        local within = C.clamp(range.min, range.max, true)
+        sizeRow.min, sizeRow.label, sizeRow.zeroText = D.AUTO_SIZE, L["Icon size (0 = automatic)"], L["Automatic"]
+        sizeRow.normalize = function(v)
+            if v < 0.5 then return D.AUTO_SIZE end
+            return within(v)
+        end
+    end
+    at(SIZE_CROP, sizeRow)
     at(SIZE_CROP, { path = P .. "zoom", type = "number", default = T.zoom, min = 0, max = D.ZOOM_MAX, step = 0.01,
         label = L["Zoom"], validate = C.NUMBER, normalize = C.clamp(0, D.ZOOM_MAX),
         desc = L["Crop the icon's edges: 0 shows the whole icon, 0.25 crops a quarter off each side. A little zoom trims the dark edge baked into most game icons."] })

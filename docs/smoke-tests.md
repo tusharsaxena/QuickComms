@@ -30,6 +30,8 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | BUTTON-1..2 | Buttons tab | The buttons' size, color, border and font; the button glow |
 | ICONS-1..3 | Icons tab | The buttons' and wedges' icon look, border and glow triggers |
 | ICON-1 | Icons | Choosing an icon, for a callout and for a group |
+| ART-1 | Art | The dial's round art: the hub's styles, the dots and pill, the indicator background, the borders and the arrow plates |
+| SHINE-1..3 | Shine | The shine overlay: each look on a pad and on a dial, and a pad and a dial keeping their own |
 | BG-1..8 | Battlegrounds | Node winds on the dial; the battleground instance ids; the objective groups (Alterac Valley, Isle of Conquest's bases, a flag map) and their migration; the four node buttons; Silvershard Mines' and Temple of Kotmogu's groups |
 | IDS-1 | Instance ids | The Midnight dungeons and raids |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes |
@@ -180,7 +182,9 @@ held when combat starts ends there, with no error. `/qc lock` → the strip is g
 controls → Reset position → the pad returns to its default place, just below the center. The
 launcher's Locked entry toggles the same lock. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
-**PAD-4. Test mode.** `/qc test` → placeholder buttons, and the strip above the pad reads
+**PAD-4. Test mode.** `/qc test` → placeholder buttons in four groups, Test group 1 to 4, holding 4,
+8, 12 and 16 buttons (2026-10-21), each with a shipped callout's name and icon (Pulling, Lust and
+so on, no name twice), and the strip above the pad reads
 `Comms Pad  TEST MODE` (TEST MODE in green; the strip shows even while locked, and will not drag
 then; the header has no TEST MODE of its own); clicking one sends nothing. Rename the pad to a long
 name → the strip stays as wide as the pad while the name and the marker fit, and widens past the pad only for a name too long for it. Pull something → test mode ends with one line and the real buttons return. `/qc test` in
@@ -660,7 +664,10 @@ dial open: `/qc disable` → no error, the dial keeps working until combat ends,
 opens nothing (still bound in WoW's key bindings). Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 **DIAL-9. Test mode and Preview as.** Out of combat: `/qc test` → dial 1 opens at its place with
-placeholder wedges and TEST MODE above the hub; clicking sends nothing; 1 still fires the action bar.
+placeholder wedges and TEST MODE above the hub: four group wedges, Test group 1 to 4, opening rings of
+4, 8, 12 and 16 callouts with shipped names and icons (2026-10-21; a ring holding more than
+the dial's slices pages); clicking sends nothing; 1 still fires the action bar. `/qc test` again → test mode ends, and
+no Test group or placeholder callout appears on the Groups page or in a new session.
 General → Master controls → Preview as → Arathi Basin → the dial opens on its groups with PREVIEW, and Arathi Basin opens the nodes; nothing
 sends; Escape closes the settings window (not the dial), which ends the preview and closes the dial.
 Turn test mode on, then pull a target dummy → test mode ends; the dial closes at once or, if combat
@@ -852,6 +859,18 @@ settings (`/qc get dial.hub.style` and `/qc get dial.slice.pointerSize` read as 
 size 60 → the dial's hub grows; Defaults → back to 40. Delete every dial → Hub says No dials yet,
 as Slices does. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
+**DIAL-36. Automatic icon offset and size follow the ring radius (2026-10-21).** On a new dial with
+eight wedges (Wheel → Wedges per ring 8), Dial → Icons: Icon offset reads Automatic and Icon size
+(0 = automatic) reads Automatic (`/qc get dial.icon.size` → 0). Ring radius 100 → the icons sit
+roughly in the middle of their slices at 32 pixels, as before. Ring radius 150 → the whole wheel
+scales: each icon keeps the same place in its slice (not out by the rim) and grows to about 48
+pixels. Ring radius 180 → the same place, about 58 pixels, nothing overlapping. Ring radius 70 → the
+same place, about 22 pixels. At every radius a click anywhere in a slice still sends it (DIAL-28),
+and the hovered slice lights the one the icon is in. Icon size 40 → 40 pixels at every radius; drag it
+back to 0 → Automatic. Icon offset 60 → the icons at 60 at every radius. In combat, `/qc set
+dial.radius 150` → "updates after combat", the icons moved and resized at combat end, no error. A
+dial saved before this keeps its stored Icon size (32) until it is set to 0. Result: pending.
+
 ## Share
 
 **SHARE-1. Export a group.** Settings → Groups → New group `My keys`; on its Callouts tab, Add
@@ -1028,6 +1047,79 @@ the popup, a callout with an icon → clear glyph → the icon is the question m
 the button show no icon. A built-in set's General tab ("Dungeon (generic)") has the same Icon row and
 Choose icon…: a glyph chosen there shows on its wedge. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
+## Art
+
+The dial's own round art (crisp dial art, 2026-10-21): `media/textures/dial-disc.tga` and the
+twelve-step ring ladder `dial-ring-1..12.tga`, written by `tools/gen-dial-textures.py`, in place of the
+64-segment rings and the stretched portrait mask.
+
+**ART-1. Round edges at every size (2026-10-21).** Open a dial (its key). Dial → Hub → Hub style
+Solid circle, Hollow ring, Target and Rimmed disc in turn, each at Hub size 24, 40 and 80, and for the
+ring styles Line width 1 and 6 → the backdrop, its rim, the ring, the filled circle and Target's dot
+are smooth round shapes with no flat facets or jagged steps, and the ring's line looks as thick all
+the way round. Circle size 4 with Line width 6 → a small solid dot, not a stretched or missing ring.
+On a paged ring (Wheel → wedges per ring 4 with more than four callouts in a group): Paging → Dot size
+4 and 20 → the dots are round, the current page's pill has round ends at any Current page width, and
+with Show indicator background on and Dot border 2 the strip behind the row and every border are
+round-ended and smooth; the page arrows' round plates are smooth at Arrow size 12 and 48. Icons →
+Show border on, Border size 4 → every wedge's round border is smooth too. Result:
+
+## Shine
+
+The shine overlay (2026-10-21): Shine look on the Pad page's Buttons tab and the Dial page's Slices
+tab, drawn from `media/textures/shine-*.tga` (`tools/gen-shine-textures.py`).
+
+**SHINE-1. Each look on a pad (2026-10-21; whole button, 2026-10-21).** On a new pad the buttons
+have no shine (Shine look None; Shine strength and Shine tint grayed out, Bloom color A and B grayed
+out). Pad → Buttons → Shine look Gloss cap, Gloss fade, Glass orb, Frosted glass, Fluid glass, Bevel and Rim light
+in turn, each at the Icons tab's Icon size 16, 24 and 40 → each look covers the whole button, its
+plate, icon and label, edge to edge, and matches its tile in
+`docs/superpowers/specs/2026-10-21-shine-overlay/render-pad.png`: Gloss cap a bright band over the top
+half with rounded ends; Gloss fade (2026-10-21, listed right after Gloss cap) one smooth gradient,
+brightest at the top edge and fading to nothing toward the bottom, with no cap edge; Glass orb a soft band of light across the upper third, edges darkening all
+round and darkest at the bottom, with no spot or dot anywhere (2026-10-21), plainly different from
+None on the wide buttons; Frosted glass a milky wash, milkier toward the edges, a crisp bright rim
+(brightest along the top) and a soft streak of light just under the top edge; Fluid glass a haze at the
+top and a pink-to-mint bloom at the bottom; Bevel a light top and left edge and a dark bottom and right
+one; Rim light an edge glow and a short top highlight. On the wide buttons the edges stay as thin as on
+a square one (nothing stretched at the ends); Layout → Button style Icon only → the square buttons
+take the art whole. The padlock, the label, the send flash and the hover still read over it. Bloom color A and B
+are enabled only under Fluid glass; set them to red and blue → its two blooms change color. Shine
+strength 0 → no shine; 100 → the strongest. Shine tint yellow → the light turns yellow, the shade stays
+dark; Use class color → your class color. Fluid glass, then Gloss cap, then None → no bloom or shine is
+left behind. Layout → Button style Label only → the buttons keep their shine (it covers the plate, not
+the icon). Result:
+
+**SHINE-2. Each look on a dial (2026-10-21).** Open a dial. Dial → Slices → Shine look each of the seven
+in turn, at Wheel → wedges per ring 4, 8 and 12, Slice gap 0 and 8, and Ring radius 100 and 180 → every
+slice takes the look inside its own edges, moving with its slice when the gap opens, and the icons and
+labels sit over it, uncovered. Each look matches its tile in
+`docs/superpowers/specs/2026-10-21-shine-overlay/render-dial-4.png`, `-8.png` and `-12.png` (the
+addon's own paint, composited offline): Gloss cap a bright band on the outer half of each slice, its
+inner edge one curve around the hub, dark hairlines between slices; Gloss fade (2026-10-21) the same
+gloss with no falloff edge, nothing at each slice's inner end rising smoothly to its brightest at the
+rim, with the same dark hairlines; Glass orb a bead per slice, lit
+softly in its middle and dark toward its corners, with dark hairlines between slices and no highlight
+spot or dot on any slice (2026-10-21); Frosted glass a milky wash, milkier toward the rim, a crisp
+bright line along the outer arc, faint light lines between slices and a soft line of light just inside
+each slice's left spoke; Fluid glass a clean iridescent edge, each slice pink at the middle of its
+outer arc and mint toward its spokes, fading out well before the hub, with a thin light rim, no wide
+mint band and no wash over the slices' middles (2026-10-21); Bevel every slice raised the same way
+(2026-10-21): a light outer arc and left spoke, a dark right spoke and inner end, and a gentle shade
+from light at the outer left to dark at the inner right, turning with its slice (no single light
+direction for the dial); Rim light a soft glow just inside the rim and thin light lines between
+slices. Every masked look (Gloss cap, Gloss fade, Glass orb, Frosted glass, Fluid glass, Rim light) is cut cleanly
+at each slice's edges at every slice place, with no square corner, seam or bleed past the slice (the
+owner's first screenshots showed the sector mask cutting cleanly at 8 slices); Bevel is slice-shaped
+art of its own, with no mask. Turn a page on a paged ring and switch 8 to 4 → the
+slices no longer used show no shine. Hover a slice → its highlight still shows. Result:
+
+**SHINE-3. A pad and a dial keep their own (2026-10-21).** Set the pad's Shine look to Glass orb and
+the dial's to Rim light → each shows its own; set the pad's to None → the dial keeps Rim light.
+`/reload` → both kept. `/qc diagnostics` → the pad's line reads `p1 button shine=none 85` and the
+dial's slices line ends `shine=rim 85`. Then set the pad back to Glass orb and the dial to None → the
+pad keeps Glass orb and the dial shows no shine. Result:
+
 ## Battlegrounds
 
 **BG-1. Node winds.** In each node battleground you play (Arathi Basin, Eye of the Storm, Battle for
@@ -1144,9 +1236,11 @@ from the client, so this check needs a non-English client pass. Result: 2026-10-
 
 ## Pending sign-off
 
-None. The owner ran every check above on 2026-10-21 and reported all of them passed (the client
-build was not recorded). A check added or rewritten after that date is listed here, with its origin
-and why it is owed, until its pass is recorded:
+The owner ran every check above, except those listed here, on 2026-10-21 and reported all of them
+passed (the client build was not recorded). A check added or rewritten after that date is listed here,
+with its origin and why it is owed, until its pass is recorded:
 
 | ID | Origin | Why it is owed |
 |---|---|---|
+| ART-1 | Crisp dial art (2026-10-21, shine overlay plan T1) | No client pass recorded yet: the generated disc and ring ladder replace the segmented rings and the portrait mask |
+| SHINE-1..3 | The shine overlay (2026-10-21, plan T2-T5; the mockup rework and whole-button pads, 2026-10-21) | Owner's first look (2026-10-21, screenshots): the looks did not match the mockups and the pad's shine covered only the icon; reworked, with offline renders from the addon's own paint (`render-*.png`). No client pass of the rework yet; SHINE-2 holds the turned masks' cut, which the headless mock records but cannot draw |

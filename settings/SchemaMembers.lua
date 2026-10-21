@@ -292,7 +292,7 @@ local ROWS = {
     { path = "dial.radius", instance = "dial", type = "number", default = T.dial.radius,
       min = NS.DialLayout.RADIUS_MIN, max = NS.DialLayout.RADIUS_MAX, step = 2,
       page = "dials", group = L["Wheel"], label = L["Ring radius"],
-      desc = L["How far the wedges sit from the middle of the dial, in pixels. The dial's disc grows with it."],
+      desc = L["How big the dial is, in pixels: at the default 100, the icons' distance from its middle. The disc grows with it, and automatic icon offset and size follow it."],
       validate = NUMBER, normalize = clamp(NS.DialLayout.RADIUS_MIN, NS.DialLayout.RADIUS_MAX, true) },
     { path = "dial.openAt", instance = "dial", type = "string", default = T.dial.openAt, values = OPEN_AT,
       page = "dials", group = L["Wheel"], label = L["Open at"],
@@ -433,6 +433,55 @@ for _, row in ipairs(windowRows()) do ROWS[#ROWS + 1] = row end
 local BUTTON, BUTTONP = L["Buttons"], "pad.button."
 local BUTTON_H = NS.PadDefaults.BUTTON_H
 
+-- The shine overlay's looks (modules/Shine.lua NS.Shine.LOOKS, in its order) by name.
+local SHINE_LABEL = { none = L["None"], gloss = L["Gloss cap"], glossfade = L["Gloss fade"], orb = L["Glass orb"],
+    frost = L["Frosted glass"], fluid = L["Fluid glass"], bevel = L["Bevel"], rim = L["Rim light"] }
+local SHINE_LOOK = {}
+for i, look in ipairs(NS.Shine.LOOKS) do SHINE_LOOK[i] = { value = look, text = SHINE_LABEL[look] or look } end
+
+--- A Shine heading's rows (shine overlay, 2026-10-21): the look, its Strength (0 to 100 percent, step
+--- 5), the tint and Fluid glass's two bloom colors, each a composed swatch with its class-color
+--- companion. `spec` names the block: `prefix` ("pad.button."), `instance`, `page`, `tab` and the
+--- shipped `defaults` table. Strength, the tint and the blooms gray out while the look is None, and the
+--- blooms unless it is Fluid glass (as the pointer rows do while Show pointer is off).
+local function shineRows(O, checks, spec)
+    local prefix, def, SHINE = spec.prefix, spec.defaults, L["Shine"]
+    for _, k in ipairs({ "shineTint", "shineBloomA", "shineBloomB" }) do checks[k] = checks.background end
+    for _, k in ipairs({ "useClassColorShineTint", "useClassColorShineBloomA", "useClassColorShineBloomB" }) do
+        checks[k] = { validate = BOOL }
+    end
+    local function lookNow() return NS.SchemaRuntime.Get(prefix .. "shineLook") or def.shineLook end
+    local function off() return lookNow() == "none" end
+    local function notFluid() return lookNow() ~= "fluid" end
+    local function base(r)
+        r.instance, r.page, r.group, r.subgroup = spec.instance, spec.page, spec.tab, SHINE
+        return r
+    end
+    local out = {
+        base({ path = prefix .. "shineLook", type = "string", default = def.shineLook, values = SHINE_LOOK,
+            label = L["Shine look"], startsLine = true,
+            desc = L["A glossy overlay: Gloss cap, Gloss fade, Glass orb, Frosted glass, Fluid glass, Bevel or Rim light. None draws none."],
+            validate = oneOf(SHINE_LOOK) }),
+        base({ path = prefix .. "shineStrength", type = "number", default = def.shineStrength, min = 0, max = 100,
+            step = 5, label = L["Shine strength"], disabledIf = off,
+            desc = L["How strong the shine is, from 0 to 100 percent."], validate = NUMBER,
+            normalize = clamp(0, 100, true) }),
+    }
+    local pairs3 = { { "shineTint", L["Shine tint"], "useClassColorShineTint", off },
+        { "shineBloomA", L["Bloom color A"], "useClassColorShineBloomA", notFluid },
+        { "shineBloomB", L["Bloom color B"], "useClassColorShineBloomB", notFluid } }
+    for _, p in ipairs(pairs3) do
+        local rows = {}
+        stampBlock(rows, O.ColorPair(blockSpec(prefix, spec.tab, SHINE, def,
+            { key = p[1], label = p[2], companionKey = p[3] })), prefix, checks, spec.instance)
+        for _, r in ipairs(rows) do
+            r.disabledIf = p[4]
+            out[#out + 1] = r
+        end
+    end
+    return out
+end
+
 local function buttonRows()
     local O = NS.addon.Settings.Helpers
     local checks = composedChecks(O)
@@ -465,13 +514,18 @@ local function buttonRows()
         label = L["Glow style"], desc = L["How the glow looks."], validate = oneOf(styles), disabledIf = glowOff })
     stampBlock(out, O.ColorPair(blockSpec(BUTTONP, BUTTON, GLOW, cdef, { key = "glowColor",
         companionKey = "useClassColorGlow", label = L["Glow color"] })), BUTTONP, checks)
+    for _, r in ipairs(shineRows(O, checks, { prefix = BUTTONP, instance = "pad", page = "pads", tab = BUTTON,
+        defaults = cdef })) do
+        out[#out + 1] = r
+    end
     return out
 end
 
 for _, row in ipairs(buttonRows()) do ROWS[#ROWS + 1] = row end
 
 -- The Dial page's Slices tab (2026-10-21): each slice's fill, the Slice gap between them (dial polish,
--- which retired the Border heading) and the hovered slice's fill; then the Hub tab (dial polish,
+-- which retired the Border heading), the hovered slice's fill and the Shine heading (shineRows, shine
+-- overlay 2026-10-21); then the Hub tab (dial polish,
 -- 2026-10-21: the Hub and Pointer headings, which sat on Slices until then, their paths kept): the
 -- Hub (hubRows) and the pointer (`dial.slice.pointer*`). Each color a composed swatch with its
 -- class-color companion, stamped as dial member rows. The options library orders a page's tabs by
@@ -541,6 +595,10 @@ local function sliceRows()
         desc = L["The space between slices, in pixels. 0 draws them touching."],
         validate = NUMBER, normalize = clamp(0, 20, true) })
     for _, r in ipairs(pair(L["Highlight"], "highlight", L["Highlight color"])) do out[#out + 1] = r end
+    for _, r in ipairs(shineRows(O, checks, { prefix = SLICEP, instance = "dial", page = "dials", tab = SLICES_TAB,
+        defaults = sdef })) do
+        out[#out + 1] = r
+    end
     checks.circleColor, checks.useClassColorCircle = checks.background, { validate = BOOL }
     for _, r in ipairs(hubRows(O, checks)) do out[#out + 1] = r end
     out[#out + 1] = row(POINTER, { path = SLICEP .. "pointerShow", type = "bool", default = sdef.pointerShow,
@@ -704,7 +762,7 @@ for _, row in ipairs(titleRows()) do ROWS[#ROWS + 1] = row end
 local ICON_OFFSET = { path = "dial.iconOffset", instance = "dial", type = "number", default = T.dial.iconOffset,
     min = 0, max = 250, step = 1, zeroText = L["Automatic"],
     page = "dials", group = L["Icons"], subgroup = L["Size and crop"], label = L["Icon offset (0 = automatic)"],
-    desc = L["How far each icon sits from the middle of the dial, in pixels. 0 puts it on the ring radius. The disc keeps its size."],
+    desc = L["How far each icon sits from the middle of the dial, in pixels. 0 keeps each icon in the same place in its slice at any ring radius: on the ring radius at the default 100, a little inside it on a bigger wheel. The disc keeps its size."],
     validate = NUMBER, normalize = clamp(0, 250, true) }
 do
     local C = { check = check, choices = choices, oneOf = oneOf, clamp = clamp, NUMBER = NUMBER, BOOL = BOOL,

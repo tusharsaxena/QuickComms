@@ -51,7 +51,7 @@ Named suites the standard requires: `test_surface_parity` (testing-§8), `test_v
 `test_pad_render` and `test_pad`, and phase 3's `test_members`, `test_editors`, `test_callout_popup` (the callout popup, which replaced `test_page_callouts`), `test_eui_skin` (its optional EllesmereUI skin, on a mocked EllesmereUI),
 `test_groups_when`, `test_page_groups`, `test_page_pads` and `test_page_share`, and phase 4's
 `test_dial_layout`, `test_dial_secure`, `test_dial` and `test_page_dials`, and phase 5's `test_share`
-and `test_gameids`, the icon browser's `test_icon_browser`, and the Icons tab's `test_icon_style` and `test_glow`. Kit suites, declared by directory:
+and `test_gameids`, the icon browser's `test_icon_browser`, and the Icons tab's `test_icon_style` and `test_glow`, the edit preview's `test_edit_preview`, and the shine overlay's `test_shine` and `test_dial_shine`. Kit suites, declared by directory:
 `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`, `test_lizard_sighted`.
 Every new `tests/test_*.lua` is added to the `suites` list in `tests/run.lua`; the kit fails the run
 in both directions.
@@ -88,6 +88,18 @@ The release gate is evaluated by `/dev-copilot:bump-version` from the run's `man
 (automated-tests-§3): a bundle whose manifest shows all four suites at `pass`, no function above
 CCN 15 and `blindFiles` 0 (Task 13 of the phase 5 plan records it). It never gates a commit. The record itself: [`automated-tests/README.md`](automated-tests/README.md).
 For long batteries run through the bounded runner, `~/.claude/dev-copilot/bin/ka0s-bounded`.
+
+## Offline renders of the shine overlay
+
+The mock records what the shine paints but cannot show it, and a hand-drawn preview of the recipe
+once hid that the game drew something else (2026-10-21). `tools/render-shine-preview.py` renders what
+the code actually paints: it runs `tools/render-shine-preview.lua`, which boots the addon through this
+harness (`tests/loader.lua`, `tests/wow_mock.lua`), applies each look to the stock dial (4, 8 and 12
+slices) and the stock pad, and dumps every region; then it composites the dump as the client does.
+The result is `docs/superpowers/specs/2026-10-21-shine-overlay/render-*.png`. It reproduced the owner's
+first in-game screenshots of the old recipes look for look, so it is the check to run after any change
+to `tools/gen-shine-textures.py`, `modules/Shine.lua` or the shine half of `modules/Dial_Slices.lua`,
+before SHINE-1 and SHINE-2. It is not a suite and gates nothing (`DEPENDENCIES.md` has how to run it).
 
 ## In game
 

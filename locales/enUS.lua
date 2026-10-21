@@ -617,6 +617,22 @@ L["Button height (0 = automatic)"] = "Button height (0 = automatic)"
 L["How tall a labeled button is, in pixels. 0 grows it to hold its font and its icon. An icon-only button stays square around its icon."] =
     "How tall a labeled button is, in pixels. 0 grows it to hold its font and its icon. An icon-only button stays square around its icon."
 L["Draw a glow around each button."] = "Draw a glow around each button."
+L["Shine"] = "Shine"
+L["Shine look"] = "Shine look"
+L["Gloss cap"] = "Gloss cap"
+L["Gloss fade"] = "Gloss fade"
+L["Glass orb"] = "Glass orb"
+L["Frosted glass"] = "Frosted glass"
+L["Fluid glass"] = "Fluid glass"
+L["Bevel"] = "Bevel"
+L["Rim light"] = "Rim light"
+L["Shine strength"] = "Shine strength"
+L["Shine tint"] = "Shine tint"
+L["Bloom color A"] = "Bloom color A"
+L["Bloom color B"] = "Bloom color B"
+L["A glossy overlay: Gloss cap, Gloss fade, Glass orb, Frosted glass, Fluid glass, Bevel or Rim light. None draws none."] =
+    "A glossy overlay: Gloss cap, Gloss fade, Glass orb, Frosted glass, Fluid glass, Bevel or Rim light. None draws none."
+L["How strong the shine is, from 0 to 100 percent."] = "How strong the shine is, from 0 to 100 percent."
 L["How tall the pad's header row is, in pixels: the row with the situation (World, M+, Raid) and the collapse button."] =
     "How tall the pad's header row is, in pixels: the row with the situation (World, M+, Raid) and the collapse button."
 L["Visibility"] = "Visibility"
@@ -871,7 +887,8 @@ L["Auto"] = "Auto"
 L["Ring radius"] = "Ring radius"
 L["Put the selected dial's groups-as, wedges per ring, ring radius, icon offset, where it opens, its slices, paging, labels and icons back to their defaults, and turn it on. Its name, groups and position are kept."] =
     "Put the selected dial's groups-as, wedges per ring, ring radius, icon offset, where it opens, its slices, paging, labels and icons back to their defaults, and turn it on. Its name, groups and position are kept."
-L["How far the wedges sit from the middle of the dial, in pixels. The dial's disc grows with it."] = "How far the wedges sit from the middle of the dial, in pixels. The dial's disc grows with it."
+L["How big the dial is, in pixels: at the default 100, the icons' distance from its middle. The disc grows with it, and automatic icon offset and size follow it."] =
+    "How big the dial is, in pixels: at the default 100, the icons' distance from its middle. The disc grows with it, and automatic icon offset and size follow it."
 L["Open at"] = "Open at"
 L["Where the dial opens: at its place (set below), or wherever the cursor is."] = "Where the dial opens: at its place (set below), or wherever the cursor is."
 L["Where the dial opens at its place. Type an offset from the middle of the screen."] = "Where the dial opens at its place. Type an offset from the middle of the screen."
@@ -1070,7 +1087,8 @@ L["Show pointer"] = "Show pointer"
 L["Draw the pointer in the middle of the dial that turns toward the cursor."] = "Draw the pointer in the middle of the dial that turns toward the cursor."
 L["Pointer size"] = "Pointer size"
 L["Icon offset (0 = automatic)"] = "Icon offset (0 = automatic)"
-L["How far each icon sits from the middle of the dial, in pixels. 0 puts it on the ring radius. The disc keeps its size."] = "How far each icon sits from the middle of the dial, in pixels. 0 puts it on the ring radius. The disc keeps its size."
+L["How far each icon sits from the middle of the dial, in pixels. 0 keeps each icon in the same place in its slice at any ring radius: on the ring radius at the default 100, a little inside it on a bigger wheel. The disc keeps its size."] =
+    "How far each icon sits from the middle of the dial, in pixels. 0 keeps each icon in the same place in its slice at any ring radius: on the ring radius at the default 100, a little inside it on a bigger wheel. The disc keeps its size."
 L["Paging"] = "Paging"
 L["Arrows"] = "Arrows"
 L["Page indicator"] = "Page indicator"
@@ -1239,9 +1257,10 @@ L["How far the glow reaches past the icon's top and bottom, in pixels. Pixel bor
     "How far the glow reaches past the icon's top and bottom, in pixels. Pixel border, Proc and Auto cast styles."
 L["How big each button's icon is, in pixels. A bigger icon makes the buttons taller."] =
     "How big each button's icon is, in pixels. A bigger icon makes the buttons taller."
-L["How big each wedge's icon is, in pixels. The wedges keep their size."] =
-    "How big each wedge's icon is, in pixels. The wedges keep their size."
+L["How big each wedge's icon is, in pixels. 0 sizes it to the ring radius: 32 at the default radius, bigger on a bigger wheel. The wedges keep their size."] =
+    "How big each wedge's icon is, in pixels. 0 sizes it to the ring radius: 32 at the default radius, bigger on a bigger wheel. The wedges keep their size."
 L["Icon size"] = "Icon size"
+L["Icon size (0 = automatic)"] = "Icon size (0 = automatic)"
 L["Zoom"] = "Zoom"
 L["Crop the icon's edges: 0 shows the whole icon, 0.25 crops a quarter off each side. A little zoom trims the dark edge baked into most game icons."] =
     "Crop the icon's edges: 0 shows the whole icon, 0.25 crops a quarter off each side. A little zoom trims the dark edge baked into most game icons."

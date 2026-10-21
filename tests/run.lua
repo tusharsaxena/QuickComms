@@ -175,8 +175,10 @@ Kit.run{
         "test_pad_render",
         "test_pad",
         "test_dial",
+        "test_dial_shine",
         "test_icon_style",
         "test_glow",
+        "test_shine",
         "test_vendor_sync",
         { name = "test_eol",                  dir = "tests/_kit/" },   -- line-endings-§7
         { name = "test_prose",                dir = "tests/_kit/" },   -- localization-§5

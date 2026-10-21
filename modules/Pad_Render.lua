@@ -14,7 +14,8 @@ local _, NS = ...
 -- and Section header's (SectionLook: each title row's height, font, and a band of background and
 -- border behind it, ApplySectionBand).
 -- The Buttons tab (ButtonLook) dresses each button: its body, an edge on a plain child laid over it, its
--- label's font, and a glow around the whole button (modules/Glow.lua Glow.Button). The Icons tab (B9) styles the icon through
+-- label's font, a glow around the whole button (modules/Glow.lua Glow.Button) and its Shine heading's
+-- overlay over the whole button (modules/Shine.lua NS.Shine.Apply; shine overlay, 2026-10-21). The Icons tab (B9) styles the icon through
 -- modules/IconStyle.lua (size, crop, desaturation, alpha, tint, border) and modules/Glow.lua (the
 -- glow, whose On hover trigger the button's OnEnter and OnLeave hooks drive).
 
@@ -334,8 +335,9 @@ end
 -- (HeaderLook, ButtonLook and their Apply). The class color is the player's, fixed for the session.
 local SIG_KEYS = { "height", "width", "font", "fontSize", "fontFlags", "fontShadow", "useClassColorFont",
     "borderStyle", "borderSize", "useClassColorBorder", "useClassColorBackground", "glowEnabled", "glowType",
-    "useClassColorGlow" }
-local SIG_COLORS = { "fontColor", "borderColor", "background", "glowColor" }
+    "useClassColorGlow", "shineLook", "shineStrength", "useClassColorShineTint", "useClassColorShineBloomA",
+    "useClassColorShineBloomB" }
+local SIG_COLORS = { "fontColor", "borderColor", "background", "glowColor", "shineTint", "shineBloomA", "shineBloomB" }
 
 local function lookSig(t)
     local parts = {}
@@ -411,8 +413,9 @@ local BUTTON_BG = { 0.10, 0.10, 0.12, 0.90 }
 local CLEAR = { 0, 0, 0, 0 }
 
 --- A button's look, from the pad's `button` table: { bg = {r,g,b,a}, edge (a plain skin: the border only,
---- over no background), font, glow (IconStyle.GlowConfig, false while off), sig }. The defaults are the
---- button as it always was: the 0.10, 0.10, 0.12, 0.90 body, no edge, the small white label, no glow.
+--- over no background), font, glow (IconStyle.GlowConfig, false while off), shine (NS.Shine.Resolve of
+--- its Shine leaves), sig }. The defaults are the button as it always was: the 0.10, 0.10, 0.12, 0.90
+--- body, no edge, the small white label, no glow, no shine.
 --- `prev` is answered again while its signature still holds, as R.HeaderLook's.
 function R.ButtonLook(button, prev)
     button = type(button) == "table" and button or {}
@@ -422,7 +425,7 @@ function R.ButtonLook(button, prev)
     local edge = R.SkinFor({ borderStyle = button.borderStyle or "None", borderSize = button.borderSize or 0,
         borderColor = button.borderColor, useClassColorBorder = button.useClassColorBorder, background = CLEAR }, true)
     return { sig = sig, bg = bg, edge = edge, font = R.LabelFont(button), glow = IS.GlowConfig(button,
-        tostring(button.width) .. "x" .. tostring(button.height)) }
+        tostring(button.width) .. "x" .. tostring(button.height)), shine = NS.Shine.Resolve(button) }
 end
 
 -- The button glow for a button drawn `w` x `h`: the look's glow, its signature carrying that size, so a
@@ -441,10 +444,11 @@ local function sizedGlow(cl, w, h)
     return sized
 end
 
---- Dress a button in its look (R.ButtonLook): its body, its edge, its label's font and its glow. A look the
---- button already wears (its signature) is not painted again; the glow is handed over every time, since a
---- button's release puts its glow out (Glow.Release), and Glow.Button keeps an unchanged one. `w` and `h`
---- are the button's drawn size, part of its glow's signature.
+--- Dress a button in its look (R.ButtonLook): its body, its edge, its label's font, its glow and its shine.
+--- A look the button already wears (its signature) is not painted again; the glow is handed over every time,
+--- since a button's release puts its glow out (Glow.Release), and Glow.Button keeps an unchanged one. The
+--- shine is painted every time too, over the whole button `w` x `h` (its drawn size, part of its glow's
+--- signature too), whatever the slot's style.
 function R.ApplyButtonLook(btn, cl, w, h)
     if btn.qcLookSig ~= cl.sig then
         btn.qcLookSig = cl.sig
@@ -453,6 +457,7 @@ function R.ApplyButtonLook(btn, cl, w, h)
         R.ApplyFont(btn.qcLabel, cl.font)
     end
     Glow.Button(btn, sizedGlow(cl, w, h))
+    NS.Shine.Apply(btn, cl.shine, w, h)
 end
 
 function R.Flash(btn, what)

@@ -37,7 +37,6 @@ IS.SOLID = "Solid"
 IS.SOLID_EDGE = "Interface\\Buttons\\WHITE8X8"
 -- A border style no addon registers any more draws the tooltip's edge, as DropWatcher's does.
 IS.BORDER_FALLBACK = "Interface\\Tooltips\\UI-Tooltip-Border"
-local CIRCLE = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
 
 do
     local LSM = LibStub and LibStub("LibSharedMedia-3.0", true)
@@ -78,16 +77,21 @@ end
 --- false while its glow is off. `size` joins the signature.
 IS.GlowConfig = glowConfig
 
---- A surface's `icon` table read into what a paint takes. A nil table is the kind's defaults.
+--- A surface's `icon` table read into what a paint takes. A nil table is the kind's defaults. A
+--- dial's size 0 is automatic (D.AUTO_SIZE): `autoSize`, the size for its wheel
+--- (DialLayout.AutoIconSize), or the kind's default size when none is given.
 --- @param icon table|nil the surface's `icon` (pad.icon / dial.icon)
 --- @param kind string "pad" | "dial"
+--- @param autoSize number|nil the automatic size, for a dial
 --- @return table { size, zoom, desaturate, alpha, tint = {r,g,b,a}, border = false|{...}, glow = false|{...} }
-function IS.Config(icon, kind)
+function IS.Config(icon, kind, autoSize)
     local range = D.SIZE[kind] or D.SIZE.pad
     icon = type(icon) == "table" and icon or D.For(kind)
+    local wanted = icon.size
+    if range.auto and tonumber(wanted) == D.AUTO_SIZE then wanted = tonumber(autoSize) or range.default end
     local c = {
         kind = kind,
-        size = math.floor(clamp(icon.size, range.min, range.max, range.default) + 0.5),
+        size = math.floor(clamp(wanted, range.min, range.max, range.default) + 0.5),
         zoom = clamp(icon.zoom, 0, D.ZOOM_MAX, 0),
         desaturate = icon.desaturate == true,
         alpha = clamp(icon.alpha, 0.1, 1, 1),
@@ -159,7 +163,7 @@ function IS.PaintRing(btn, cfg)
     local ring = btn.qcRing
     if not ring then
         ring = btn:CreateTexture(nil, "BORDER")
-        ring:SetTexture(CIRCLE)
+        ring:SetTexture(NS.DialSlices.DISC)   -- the dial's own disc (tools/gen-dial-textures.py)
         ring:SetPoint("CENTER", btn, "CENTER", 0, 0)
         btn.qcRing = ring
     end

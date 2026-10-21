@@ -9,7 +9,7 @@ eagerly at `OnEnable`; each page's body builds on its first show (options-ui-§1
 | General | `Master controls`, `Behavior` |
 | Groups | One group (a seeded built-in set is one too): `General`, `Callouts`, `When`, `Preview` |
 | Pad | One pad (the Comms Pad page until the dial polish, 2026-10-21): `General`, `Groups`, `Layout`, `Pad header`, `Section header`, `Window`, `Buttons`, `Icons` |
-| Dial | One dial (the Comms Dial page until the dial polish, 2026-10-21): `General`, `Groups`, `Wheel`, `Slices`, `Paging`, `Slice labels`, `Group labels`, `Icons`, `Preview` |
+| Dial | One dial (the Comms Dial page until the dial polish, 2026-10-21): `General`, `Groups`, `Wheel`, `Slices`, `Hub`, `Paging`, `Slice labels`, `Group labels`, `Icons`, `Preview` |
 | Share | `Export`, `Import` |
 | Profiles | AceDBOptions: switch, copy, reset and delete profiles |
 
@@ -439,8 +439,9 @@ Section header  each section title's row (the gold group titles): Size (Section 
 Window          the pad itself: Background and Border; no font
 Buttons  the buttons themselves: Size (Button width, Button height with 0 automatic), Color (the
          button's Background with Use class color), Border (the composed block), Font (the labels:
-         face, size, color with Use class color, flags, shadow) and Glow (Glow, Glow style, Glow
-         color with Use class color)
+         face, size, color with Use class color, flags, shadow), Glow (Glow, Glow style, Glow
+         color with Use class color) and Shine (Shine look, Shine strength, Shine tint, Bloom color
+         A and B, each color with Use class color)
 Icons    the buttons' icons (B9): Size and crop (Icon size, Zoom), Color (Desaturate, Icon opacity,
          Tint with Use class color), Border (the composed block: Show border, style, thickness,
          color with Use class color), Glow (Glow, Glow when, Glow style, Glow color with Use
@@ -483,6 +484,18 @@ automatic height. The Icons tab's Icon size defaults to 16 on a pad (an icon-onl
 Glow style is
 grayed out while the glow is off; the color pairs never are.
 
+The Shine heading (shine overlay, 2026-10-21) follows Glow: `pad.button.shineLook|shineStrength` and the
+pairs `shineTint`, `shineBloomA`, `shineBloomB` with their Use class color boxes. Shine look is None (the
+default), Gloss cap, Gloss fade, Glass orb, Frosted glass, Fluid glass, Bevel or Rim light: one overlay over the
+whole of every button (`NS.Shine.Apply`; owner, 2026-10-21: the plate, the icon and the label's chip,
+whatever the Button style), in three pieces so a wide button keeps the look's thin edges and an
+icon-only button is the art whole, above the icon and below the padlock, the label, the send flash and
+the hover.
+Shine strength (0 to 100, step 5, default 85) is its opacity and Shine tint colors its light (its shade
+stays dark). Strength and Tint are grayed out at None; Bloom color A and B (pink and mint) color Fluid
+glass's two blooms and are grayed out under every other look. Each pad keeps its own; the Dial page's
+Slices tab has the same heading for a dial.
+
 The Icons tab's rows are `pad.icon.*` (settings/SchemaIcons.lua). Every color pair sits on one line and is
 never grayed out; Border style and thickness are grayed out while Show border is off; Glow when, Glow style
 and the offsets while the glow is off, and the offsets also under Button, which ignores them. Offset
@@ -507,7 +520,7 @@ shipped order.
 
 ```
 band     [ Dial v (picker) ][ New dial ]
-strip    [ General ][ Groups ][ Wheel ][ Slices ][ Paging ][ Slice labels ][ Group labels ][ Icons ]
+strip    [ General ][ Groups ][ Wheel ][ Slices ][ Hub ][ Paging ][ Slice labels ][ Group labels ][ Icons ]
          [ Preview ]
 General  Name, Enabled, then Delete dial
 Groups   Show groups as (Categories or Flat), then the dial's groups as a drag-to-reorder list
@@ -515,10 +528,12 @@ Groups   Show groups as (Categories or Flat), then the dial's groups as a drag-t
          nothing), then Add a group (top-level groups only)
 Wheel    wedges per ring (Auto by default), ring radius, open at, then Position: X and Y and
          Reset this dial's position
-Slices   Background (the slices' fill), Gap (Slice gap), Highlight (the hovered slice's fill), Hub
-         (Hub style, Hub size, Circle size, Line width, Backdrop color, Hub border size and color,
-         Circle color) and Pointer (Show pointer, size, offset, color), each color with Use class
-         color
+Slices   Background (the slices' fill), Gap (Slice gap), Highlight (the hovered slice's fill) and
+         Shine (Shine look, Shine strength, Shine tint, Bloom color A and B), each color with Use
+         class color
+Hub      Hub (Hub style, Hub size, Circle size, Line width, Backdrop color, Hub border size and
+         color, Circle color) and Pointer (Show pointer, size, offset, color), each color with Use
+         class color
 Paging   a paged ring's row under the dial: Position (offset), Arrows (size, spacing, arrow color,
          arrow background) and Page indicator (dot size, current page width, dot spacing, current
          page color, other pages color), each color with Use class color
@@ -527,7 +542,8 @@ Slice labels  Show labels, label offset, then the labels' Font block (font, size
 Group labels  Show group labels (the ring's title above the dial), then its Font block, grayed out
          while off
 Icons    Icon offset, then the wedges' icons, as the Pad page's Icons tab (a wedge's border is a
-         round ring, never wider than the wedge; its icon size, up to 128, keeps the wedge's own size)
+         round ring, never wider than the wedge; its icon size, up to 128 or 0 automatic, keeps the
+         wedge's own size)
 Preview  each ring as the current or previewed situation builds it, wedge by wedge
 ```
 
@@ -573,11 +589,16 @@ Preview  each ring as the current or previewed situation builds it, wedge by wed
   defaults gold Friz Quadrata 12 with its shadow, `PadDefaults.DialTitle`), grayed out while off; the
   title is measured with its own line height, so a bigger font lifts it and the tooltip above it.
 - **Icons:** Icon offset (a Wheel row until the dial polish, 2026-10-21; `dial.iconOffset` kept) leads
-  the tab under Size and crop: 0 to 250 pixels, 0 automatic (the ring radius), the icons' own
-  distance from the middle, the disc keeping its size. Icon size reaches 128 on a dial (a pad's stays
-  40): a game icon is 64-pixel art, so past 64 it is upscaled and softer; at the default ring radius
-  icons past about 70 pixels crowd their neighbors, and at 128 a ring wants a radius near 180. The
-  rest is the Pad page's Icons tab.
+  the tab under Size and crop: 0 to 250 pixels, 0 automatic, the icons' own distance from the
+  middle, the disc keeping its size. Automatic keeps each icon in the same place in its slice at any
+  ring radius (owner, 2026-10-21): the share of the band from the hub's edge to the disc's edge that
+  the ring radius takes at the default 100 (the radius itself there; about 126 at 140, 133 at 150,
+  152 at 180). Icon size (0 = automatic) reaches 128 on a dial (a pad's stays 40, with no
+  automatic): a game icon is 64-pixel art, so past 64 it is upscaled and softer; at the default ring
+  radius icons past about 70 pixels crowd their neighbors, and at 128 a ring wants a radius near 180.
+  0 (a new dial's default) is automatic: 32 at the default radius, scaled with it (22 at 70, 48 at
+  150, 58 at 180), held under a fixed wedge count to the slice's arc less the Slice gap, and within
+  16 to 128; a value typed under 16 that is not 0 is 16. The rest is the Pad page's Icons tab.
 - **Slices** (2026-10-21): each heading's colors are composed swatch pairs with Use class color.
   Background is `dial.slice.background`, each slice's fill (dark, as the disc was). Gap's Slice gap
   is `dial.slice.gap` (0 to 20 pixels, default 0; the dial polish, 2026-10-21, retired the Border
@@ -586,6 +607,13 @@ Preview  each ring as the current or previewed situation builds it, wedge by wed
   `dial.slice.highlight`, the fill the slice the cursor points into takes (gold, faint), anywhere on
   the disc outside the hub's circle, moving with its slice; a click anywhere in a used slice, the
   hub's edge to the rim, sends it, and a click inside the hub's circle goes up a ring or closes (a point in a gap belongs to the slice whose bearing it is in).
+  Shine (shine overlay, 2026-10-21) is `dial.slice.shine*`, the Buttons tab's heading for the dial's
+  slices, with the same looks, range, defaults and gray-outs: each slice takes its own copy of the look,
+  placed and turned with its fill (so it follows the gap, the W/E layouts and every slice count), under
+  the wedges' icons. Each look is the spec's "Dial slices": whole-disc art, Glass orb's bead and Fluid
+  glass's blooms are cut to each slice with a mask, the bead kept round at every slice count, with no
+  specular dots; Bevel raises every slice the same way, in the slice's own frame (owner, 2026-10-21). A
+  dial's look and a pad's are separate settings.
 - **Hub** (dial polish, 2026-10-21: its Hub and Pointer headings sat on Slices until then; the
   paths are kept, so saved settings are untouched; the tab follows Slices). Hub is
   `dial.hub.*`: Hub style (Solid circle, the default; Hollow ring; Target, a ring with a dot; Rimmed

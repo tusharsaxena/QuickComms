@@ -165,3 +165,19 @@ test("diagnostics: [debug] the log follows a dial open, a ring shown, a press an
     once("press " .. T.seeded(NS, "bi.mplus.pull") .. " on d2 -> PARTY")
     once("d2 closed")
 end)
+
+test("diagnostics: [shine] the pad's button line and the dial's slices line print the look and strength", function()
+    local NS = T.enableAddon()
+    NS.Situation.RefreshNow("test")
+    local text = report(NS)
+    -- red under: no button line in modules/Diagnostics.lua surfaces, or no shine= on dialLook's slices line
+    assertTrue(text:find("p1 button shine=none 85", 1, true) ~= nil, text)
+    assertTrue(text:find("d2 slices gap=0 pointer=true size=20 offset=0 labels=true size=12 offset=0 tooltip=top/8 shine=none 85",
+        1, true) ~= nil, text)
+    NS.SchemaRuntime.Set("pad.button.shineLook", "orb", "p1")
+    NS.SchemaRuntime.Set("pad.button.shineStrength", 40, "p1")
+    NS.SchemaRuntime.Set("dial.slice.shineLook", "bevel", "d2")
+    text = report(NS)
+    assertTrue(text:find("p1 button shine=orb 40", 1, true) ~= nil, text)
+    assertTrue(text:find("tooltip=top/8 shine=bevel 85", 1, true) ~= nil, text)
+end)
