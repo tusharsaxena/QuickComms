@@ -1142,13 +1142,14 @@ Total.
 - dial: [art] the hub draws textures, not segments
 - dial: [art] the pill is three pieces with round ends
 
-### test_dial_shine.lua (7)
+### test_dial_shine.lua (8)
 
 - dial: [shine] each look builds its recipe on every slice
 - dial: [shine] the overlay follows the slice
-- dial: [shine] the orb's sprites sit on the slice's inscribed circle
+- dial: [shine] the orb's bead sits on the slice's inscribed circle, with no dots
+- dial: [shine] fluid's blooms span the slice's outer part
 - dial: [shine] sprites sit in the slice's frame
-- dial: [shine] frost's streak and the rim are each slice's own edge set
+- dial: [shine] frost's streak and Bevel are each slice's own edge set
 - dial: [shine] fewer slices hide the rest
 - dial: [shine] the dial's look leaves the pad alone
 
@@ -1305,7 +1306,7 @@ Total.
 | test_pad_render.lua | 23 |
 | test_pad.lua | 45 |
 | test_dial.lua | 63 |
-| test_dial_shine.lua | 7 |
+| test_dial_shine.lua | 8 |
 | test_icon_style.lua | 9 |
 | test_glow.lua | 11 |
 | test_shine.lua | 7 |
@@ -1316,4 +1317,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1082** |
+| **Total** | **1083** |

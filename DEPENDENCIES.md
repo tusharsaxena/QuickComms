@@ -99,10 +99,10 @@ python3 -I tools/gen-dial-textures.py
 ```
 
 **NumPy** (with the same Pillow), and only for **regenerating the shine overlay's textures**:
-`tools/gen-shine-textures.py` writes the 41 `media/textures/shine-*.tga` files that
-`modules/Shine.lua` names (a pad look per button, the dial's whole-disc art, the Fluid glass blooms,
-the per-count slice rims and Frosted glass streaks, and three sprites; light and shade on
-transparent). Run it from the repo
+`tools/gen-shine-textures.py` writes the 50 `media/textures/shine-*.tga` files (about 10.6 MB) that
+`modules/Shine.lua` names (a pad look per button, the dial's whole-disc art, the per-count slice
+rims, Frosted glass streaks and Bevel edges, and three sprites: Glass orb's bead and Fluid glass's two
+blooms; light and shade on transparent). Run it from the repo
 root after changing the art; never edit the TGAs by hand. It is not loaded by the client, and
 `.pkgmeta` ignores `tools/`. No other generator needs NumPy.
 

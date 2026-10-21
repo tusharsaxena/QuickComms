@@ -604,10 +604,10 @@ Preview  each ring as the current or previewed situation builds it, wedge by wed
   Shine (shine overlay, 2026-10-21) is `dial.slice.shine*`, the Buttons tab's heading for the dial's
   slices, with the same looks, range, defaults and gray-outs: each slice takes its own copy of the look,
   placed and turned with its fill (so it follows the gap, the W/E layouts and every slice count), under
-  the wedges' icons. Each look is the approved mockup's (the spec's "Dial slices"): whole-disc art and
-  Glass orb's bead are cut to each slice with a mask, the bead kept round at every slice count; Bevel's
-  light keeps one direction for the whole dial (top left), its outline shading along each edge. A dial's
-  look and a pad's are separate settings.
+  the wedges' icons. Each look is the spec's "Dial slices": whole-disc art, Glass orb's bead and Fluid
+  glass's blooms are cut to each slice with a mask, the bead kept round at every slice count, with no
+  specular dots; Bevel raises every slice the same way, in the slice's own frame (owner, 2026-10-21). A
+  dial's look and a pad's are separate settings.
 - **Hub** (dial polish, 2026-10-21: its Hub and Pointer headings sat on Slices until then; the
   paths are kept, so saved settings are untouched; the tab follows Slices). Hub is
   `dial.hub.*`: Hub style (Solid circle, the default; Hollow ring; Target, a ring with a dot; Rimmed

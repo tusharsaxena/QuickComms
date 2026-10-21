@@ -66,21 +66,26 @@ test("shine: every catalog path exists", function()
     for i = 2, #Sh.LOOKS do add(Sh.Texture("pad", Sh.LOOKS[i]), "pad " .. Sh.LOOKS[i]) end
     add(Sh.Texture("pad", "fluid-bloom1"), "pad bloom 1")
     add(Sh.Texture("pad", "fluid-bloom2"), "pad bloom 2")
-    for _, name in ipairs({ "gloss", "bevel", "bevel-edge", "rim", "fluid-bloom1", "fluid-bloom2" }) do
+    for _, name in ipairs({ "gloss", "frost", "rim" }) do
         add(Sh.Texture("dial", name), "dial " .. name)
     end
-    for _, name in ipairs({ "spot", "glow", "bead" }) do add(Sh.Texture("sprite", name), "sprite " .. name) end
-    -- red under: the retired soft edge sets and streak sprite still named
-    assertNil(Sh.Texture("sprite", "streak"), "the straight streak sprite is retired")
+    for _, name in ipairs({ "bead", "fluid-bloom1", "fluid-bloom2" }) do add(Sh.Texture("sprite", name), "sprite " .. name) end
+    -- red under: the retired art still named (the orb's dots, Bevel's upright light, the disc blooms)
+    for _, name in ipairs({ "spot", "glow", "streak" }) do assertNil(Sh.Texture("sprite", name), "retired sprite " .. name) end
+    for _, name in ipairs({ "bevel", "bevel-edge", "fluid-bloom1", "fluid-bloom2" }) do
+        assertNil(Sh.Texture("dial", name), "retired dial art " .. name)
+    end
     assertNil(Sh.Edge("soft", 4), "the soft edge sets are retired")
     for n = 1, 12 do
         add(Sh.Edge("rim", n), "rim " .. n)
         add(Sh.Edge("streak", n), "streak " .. n)
+        add(Sh.Edge("bevel", n), "bevel " .. n)
         assertEqual(Sh.Texture("edge-rim", n), Sh.Edge("rim", n), "Texture reaches the edge sets")
+        assertEqual(Sh.Texture("edge-bevel", n), Sh.Edge("bevel", n))
         assertTrue(Sh.Edge("streak", n):find("shine%-edge%-streak%-" .. n .. "$") ~= nil, Sh.Edge("streak", n))
     end
     assertEqual(Sh.Edge("rim", 20), Sh.Edge("rim", 12), "a count past the dial's most slices clamps")
-    assertEqual(#paths, 41, "the generator's 41 files")
+    assertEqual(#paths, 50, "the generator's 50 files")
     for _, p in ipairs(paths) do
         local ok, rel = exists(p)
         assertTrue(ok, rel)

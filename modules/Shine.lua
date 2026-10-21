@@ -10,9 +10,9 @@ local addonName, NS = ...
 -- white pixels add light, black pixels add shade, alpha is how much. The client draws them in BLEND
 -- mode, SetVertexColor's color tints the light (shade stays black) and its alpha is Strength.
 -- Texture(kind, name) names a file: "pad" (a look, or a Fluid glass bloom), "dial" (the whole-disc
--- art a slice draws masked), "sprite" (the orb's bead, spot and glow); Edge(kind, n) names the
--- per-count edge sets ("rim", each slice's outline, or "streak", Frosted glass's light along its arc;
--- shaped like dial-sector-<n>.tga).
+-- art a slice draws masked), "sprite" (Glass orb's bead, Fluid glass's two blooms); Edge(kind, n)
+-- names the per-count edge sets ("rim", each slice's outline; "streak", Frosted glass's light along
+-- one spoke; "bevel", Bevel's raised edges and shade; each shaped like dial-sector-<n>.tga).
 --
 -- RESOLVE reads a look table's flat leaves (shineLook, shineStrength, shineTint and its Use class
 -- color companion, the two bloom colors and theirs; like dial.page.dotBack*) into the paint's values:
@@ -24,7 +24,7 @@ local addonName, NS = ...
 -- label, marks and veils and the HIGHLIGHT hover. A button is a wide chip (120 x 24) and the art is
 -- square, so each layer is three pieces, as the dial's pills are: the art's left half as a cap half
 -- the button's height wide, its middle column stretched across, and its right half; the caps keep
--- the art's edges (a rim, a bevel, the orb's spot) as thin as on a square, and a square button
+-- the art's edges (a rim, a bevel, the gloss cap's end) as thin as on a square, and a square button
 -- (icon only) is the art whole, no middle. Fluid glass adds its two tinted blooms (sublevels 6 and
 -- 7), made only when that look is chosen. A look change hides whatever the new look does not draw.
 -- Nothing here is pad-specific, so a later lift into LibKa0s is a move (the spec's re-check
@@ -45,11 +45,11 @@ for _, look in ipairs(Sh.LOOKS) do KNOWN[look] = true end
 local FILES = {
     pad = { gloss = true, orb = true, frost = true, fluid = true, bevel = true, rim = true,
         ["fluid-bloom1"] = true, ["fluid-bloom2"] = true },
-    dial = { gloss = true, bevel = true, ["bevel-edge"] = true, rim = true, ["fluid-bloom1"] = true,
-        ["fluid-bloom2"] = true },
-    sprite = { spot = true, glow = true, bead = true },
+    dial = { gloss = true, frost = true, rim = true },
+    sprite = { bead = true, ["fluid-bloom1"] = true, ["fluid-bloom2"] = true },
 }
-local EDGE = { rim = "rim", streak = "streak", ["edge-rim"] = "rim", ["edge-streak"] = "streak" }
+local EDGE = { rim = "rim", streak = "streak", bevel = "bevel", ["edge-rim"] = "rim", ["edge-streak"] = "streak",
+    ["edge-bevel"] = "bevel" }
 
 Sh.STRENGTH = 85
 Sh.TINT = { r = 1, g = 1, b = 1, a = 1 }
@@ -58,7 +58,7 @@ Sh.BLOOM_B = { r = 0.541, g = 1, b = 0.757, a = 1 }     -- #8affc1
 
 local SUB_SHINE, SUB_BLOOM1, SUB_BLOOM2 = 5, 6, 7
 
---- The edge texture of kind "rim" or "streak" for one slice of an n-slice dial (n clamped to 1..12).
+--- The edge texture of kind "rim", "streak" or "bevel" for one slice of an n-slice dial (n clamped to 1..12).
 function Sh.Edge(kind, n)
     local set = EDGE[kind]
     if not set then return nil end
@@ -67,7 +67,7 @@ function Sh.Edge(kind, n)
 end
 
 --- The media path of one shine texture, or nil (None, an unknown look, a name the kind has no file
---- for). "edge-rim" and "edge-streak" take the slice count as `name` (Edge).
+--- for). "edge-rim", "edge-streak" and "edge-bevel" take the slice count as `name` (Edge).
 function Sh.Texture(kind, name)
     if EDGE[kind] then return Sh.Edge(kind, name) end
     local names = FILES[kind]

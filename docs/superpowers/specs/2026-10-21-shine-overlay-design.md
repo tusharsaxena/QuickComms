@@ -4,9 +4,10 @@ Owner request: an optional overlay that gives pad buttons and dial slices a shin
 Mockups and the generated-art preview: https://claude.ai/artifact/PogWcsjkcyGTsDabhw3K2A
 
 Status: built (docs/superpowers/plans/2026-10-21-shine-overlay.md, T1-T5), then reworked after the
-owner's first in-game look (2026-10-21, below); its in-game checks are ART-1 and SHINE-1..3 in
+owner's first in-game look (2026-10-21, below), and again after the second (2026-10-21, "The owner's
+second look"); its in-game checks are ART-1 and SHINE-1..3 in
 `docs/smoke-tests.md`, pending the owner's run. The art generator is `tools/gen-shine-textures.py`
-(Pillow and NumPy; see DEPENDENCIES.md), and its 41 textures are committed under
+(Pillow and NumPy; see DEPENDENCIES.md), and its 50 textures are committed under
 `media/textures/shine-*.tga`.
 
 **What the addon draws, rendered offline:** `2026-10-21-shine-overlay/render-dial-4.png`,
@@ -46,6 +47,41 @@ as it was, reproduced each screenshot, and showed why:
 
 Every dial look is now the mockup card's SVG recipe drawn at the slice's count; the dial's
 `shine-edge-soft-<n>` sets and `shine-streak` sprite are retired.
+
+## The owner's second look (2026-10-21)
+
+The owner tried the reworked looks in game (8 slices, stock). Gloss cap and Rim light "look great"
+and stay as they are. The rest changed (owner, 2026-10-21), each checked in the offline renders at 4,
+8 and 12 slices and on the pad:
+
+- **Glass orb: no dots.** The mockup's specular spot and glow read as a dot on every slice ("looks
+  broken"), so both are gone, and so is their art (`shine-spot`, `shine-glow`). The bulge is the shading
+  alone: the bead (`shine-bead`) now carries a broad, faint dome of light inside its vignette, tinted
+  by the Tint, and the dark hairlines stay. The pad's orb lost its spot and its bottom glow too; it is
+  a soft band of light across the button's upper third over edges that darken all round, darkest at
+  the bottom, so it stays plainly different from None on a wide button.
+- **Frosted glass: reworked** ("ok, not awesome"). A milky wash, thin over the hub and milkier toward
+  the rim, with a crisp bright line on the outer arc (`shine-dial-frost`, whole-disc, masked), faint
+  light lines at the spokes, and a soft line of light just inside each slice's left spoke, at the same
+  angle off it at every count (`shine-edge-streak-<n>`, redrawn), so it reads as light caught along one
+  edge of the glass. The pad's: a milky wash, milkier toward the edges, a crisp rim brightest along the
+  top, and a soft streak just under the top edge.
+- **Fluid glass: redesigned** ("looks bad": a muddy mint ring and a murky pink wash). The two blooms
+  are now sprites (`shine-fluid-bloom1/2`, `DialSlices.FluidSprites`) as wide as the slice's chord at
+  the rim, their tops on it: together a clean iridescent edge, pink (bloom A) at the middle of each
+  slice's outer arc crossing to mint (bloom B) toward its spokes, at a constant total, rising steeply
+  to 60% at the rim and gone well before the hub, plus the thin light rim. Neighbours meet mint to
+  mint, so the ring reads continuous; the slices' middles carry no wash. Both bloom colors keep their
+  meaning. The whole-disc blooms (`shine-dial-fluid-bloom1/2`) are retired. The pad's Fluid glass is
+  unchanged.
+- **Bevel: the same on every slice** ("top left has bevels, bottom right does not"). The owner
+  overrides the first build's call of one light direction for the whole dial (owner, 2026-10-21): each
+  slice is raised in its own frame, a per-count art set (`shine-edge-bevel-<n>`) placed and turned with
+  the slice like the fill: light on the outer arc and the left spoke, dark on the right spoke and the
+  inner end, each strongest at the edge and easing inward, mitred at the corners, over a gentle shade
+  from light at the outer left to dark at the inner right. It needs no mask; the upright art
+  (`shine-dial-bevel`, `shine-dial-bevel-edge`) and the rim mask are retired. The pad's Bevel is
+  unchanged.
 
 Conformance: the Ka0s WoW Addon Standard applies throughout (schema-driven rows, locales, the green
 gate, docs in the same change). Nothing here is meant to deviate; if building it needs one, stop and
@@ -121,13 +157,17 @@ look and strength.
 |---|---|---|
 | `shine-pad-<look>.tga` (gloss, orb, frost, fluid, bevel, rim) | 128² | one per pad button, over the whole button in three pieces |
 | `shine-pad-fluid-bloom1/2.tga` | 128² | Fluid glass's two tinted bloom layers |
-| `shine-dial-gloss.tga`, `-bevel.tga`, `-rim.tga`, `-fluid-bloom1/2.tga` | 128² | the whole disc, cut to each slice by a mask |
-| `shine-dial-bevel-edge.tga` | 128² | Bevel's outline light, upright, seen through each slice's rim |
-| `shine-edge-rim-<n>.tga`, n = 1..12 | 256² | each slice's own rim, about one texel, shaped exactly like `dial-sector-<n>.tga`; also Bevel's outline mask |
-| `shine-edge-streak-<n>.tga`, n = 1..12 | 256² | Frosted glass's streak on each slice's arc, brightest at its middle |
-| `shine-spot.tga`, `shine-glow.tga` (64²), `shine-bead.tga` (128²) | small | Glass orb's highlight, inner glow and vignette; square, so a turn keeps their shape |
+| `shine-dial-gloss.tga`, `-rim.tga` (128²), `-frost.tga` (256²) | | the whole disc, cut to each slice by a mask |
+| `shine-edge-rim-<n>.tga`, n = 1..12 | 256² | each slice's own rim, about one texel, shaped exactly like `dial-sector-<n>.tga` |
+| `shine-edge-streak-<n>.tga`, n = 1..12 | 256² | Frosted glass's line of light just inside each slice's left spoke |
+| `shine-edge-bevel-<n>.tga`, n = 1..12 | 256² | Bevel's raised edges and face shade, in the slice's own frame |
+| `shine-bead.tga` | 128² | Glass orb's bulge, a dome of light and a vignette; square, so a turn keeps its shape |
+| `shine-fluid-bloom1/2.tga` | 128² | Fluid glass's two blooms across a slice's outer part |
 
-About 7.3 MB in all, on top of today's 2.8 MB of slice textures. White pixels add light and black
+Retired after the owner's second look (2026-10-21; the generator removes them): `shine-spot`,
+`shine-glow`, `shine-dial-bevel`, `shine-dial-bevel-edge`, `shine-dial-fluid-bloom1/2`.
+
+About 10.6 MB in all, on top of today's 2.8 MB of slice textures. White pixels add light and black
 pixels add shade, so one texture can do both. The client draws them in BLEND mode; SetVertexColor's
 color tints the light (shade stays black) and its alpha is Strength.
 
@@ -140,7 +180,7 @@ color tints the light (shade stays black) and its alpha is Strength.
   (`btn.qcShine = { left, mid, right }`), as the dial's pills are: the art's left half as a cap on the
   button's left corners, half the button's height wide; its middle column (texcoords 0.49 to 0.51)
   stretched between; its right half on the right corners. The caps keep every edge the art draws (a
-  rim, a bevel, the orb's spot, the gloss cap's rounded end) as thin as on a square, and a square
+  rim, a bevel, the gloss cap's rounded end) as thin as on a square, and a square
   button (Icon only) is the art whole, with no middle. A button taller than wide takes caps half its
   width. `NS.Shine.Apply(btn, shine, w, h)` takes the button's drawn size (`R.ApplyButtonLook`'s).
 - Layer: ARTWORK sublevel 5, above the icon. It stays below the OVERLAY marks (the lock, the label,
@@ -155,32 +195,41 @@ color tints the light (shade stays black) and its alpha is Strength.
   therefore follows the slice gap, the W/E layouts and every slice count.
 - Layer: BACKGROUND, above the fill and the hover highlight. The icons sit on the wedge buttons
   above, so they are never covered.
-- Per look, each the mockup card's SVG (radius 100 there, 1 here) at the slice's count:
+- Per look, at the slice's count (radius 1; Gloss cap and Rim light are the mockup card's SVG, radius
+  100 there; the others were redrawn after the owner's second look):
   - **Gloss cap** (a-ring): the disc gloss, clear to 0.55 of the radius, 42% at 0.57 falling to 10%
     at the rim, masked by the slice's sector; plus the slice's rim in black at 60% (the mockup's dark
     hairlines between slices).
-  - **Glass orb** (b-sl): on the slice's inscribed circle (center c = 1/(1 + sin(π/n)), radius
-    p = c·sin(π/n); for one slice the disc itself), so the bead keeps its shape at every count: the
-    bead's vignette (clear to 0.84 p, black 45% from 1.4 p out), the spot (0.68 p long, 0.63 p left
-    of the middle and 0.48 p out, turned to follow the arc) and the glow (1.06 p long, 0.58 p in, at
-    38%); all masked; plus the black rim at 60%.
-  - **Frosted glass** (c-sl): a flat 9% white wash (WHITE8x8, masked), the rim at 50% and the streak
-    edge set (a 2.4% stroke on the arc at 0.98, brightest at the slice's middle and gone by 45% of its
-    half-angle).
-  - **Fluid glass** (d-sl): both blooms (masked, tinted, turned with the slice), together the
-    mockup's gradient along the slice's own axis: clear to 0.28, purple 12% at 0.64 and pink 30% at
-    0.856 (bloom A), crossing to mint 45% at the rim (bloom B); plus the rim at 30%.
-  - **Bevel** (e-sshade, e-bev): the disc shade, white 12% at the top left to black 25% at the bottom
-    right, not rotated (one light direction for the whole dial; only the mask turns); and the outline,
-    the same direction's white 65% to black 75% (`shine-dial-bevel-edge`, upright) seen through the
-    slice's rim as a second mask, so each edge shades along its length.
+  - **Glass orb** (b-sl, no dots: owner, 2026-10-21): on the slice's inscribed circle (center
+    c = 1/(1 + sin(π/n)), radius p = c·sin(π/n); for one slice the disc itself), so the bead keeps its
+    shape at every count: the bead sprite, 7 p across, tinted by the Tint (its shade stays black), a
+    vignette black 50% from 1.4 p out, easing in from 0.77 p, and inside it a broad dome of light,
+    12% at its middle (a little toward the rim) fading by 1.26 p; masked; plus the black rim at 60%.
+  - **Frosted glass** (reworked: owner, 2026-10-21): the frost disc (`shine-dial-frost`, masked: a
+    white wash 5% at the hub rising smoothly to 18% at the rim, and a crisp 85% line on the arc at
+    0.982), the rim at 35%, and the streak edge set (a soft line of light 42% at its peak, about 4.3
+    degrees off the slice's left spoke at every count, fading in from 0.3 to 0.6 of the radius and out
+    from 0.82 to 0.96).
+  - **Fluid glass** (redesigned: owner, 2026-10-21): both blooms as sprites (`FluidSprites`: a square
+    as wide as the slice's chord at the rim, 2 sin(π/n), its top on the rim; the whole disc for one or
+    two slices), masked, tinted bloom A and bloom B, turned with the slice. Across the sprite the
+    gradient runs pink (A) at the middle to mint (B) toward both sides (eased, from 0.05 to 0.42 of the
+    width off the middle), at a constant total that rises from clear at 0.35 of the sprite's height to
+    60% at its top (eased, to the power 2.5); bloom A is drawn first and bloom B over it with the
+    alphas split so the two cross-fade exactly. Plus the rim at 30%.
+  - **Bevel** (the same on every slice: owner, 2026-10-21): the slice's bevel edge set
+    (`shine-edge-bevel-<n>`), placed and turned as the fill, unmasked: bands 0.045 of the radius wide,
+    strongest at the edge and easing inward, light 60% on the outer arc and the left spoke, dark 70% on
+    the right spoke and the inner end (at 0.17), the nearest edge winning at each corner; under them a
+    face shade from white 14% at the outer left to black 14% at the inner right.
   - **Rim light** (g-srim): a radial glow, clear to 0.82 and rising to 30% at the rim, masked; plus the
     rim at 50%.
-- **Masks:** a MaskTexture per slice of its sector texture (`mask`), and for Bevel one of its rim
-  texture (`rimMask`), each placed and turned like the fill, created once per slice and reused.
+- **Masks:** a MaskTexture per slice of its sector texture (`mask`), placed and turned like the fill,
+  created once per slice and reused. Bevel needs none (its art is slice-shaped).
 - **Sprites:** square art, positioned in the slice's own frame (a local x across and a distance out,
   turned by the slice's middle angle), the same math as the wedge centers; the slice's mask cuts them.
-- **One slice (n = 1):** `dial-disc.tga` as the mask and `shine-edge-*-1` (a full-disc rim and arc).
+- **One slice (n = 1):** `dial-disc.tga` as the mask and `shine-edge-*-1` (a full-disc rim, a streak
+  across the top left and a disc bevel lit from the top left).
 
 ## LibKa0s: not now (owner, 2026-10-21)
 
@@ -213,9 +262,11 @@ and `library-stack-§7` asks for two. So:
   and are hidden at None; a square button has no middle; a label-only button keeps its shine. Fluid
   glass's blooms exist only for Fluid glass.
 - Dial: per look, the overlay set per slice and its masks. Masks follow the slice's place and
-  rotation, including with gap 8 and fixed 4 with two items (W/E). Bevel's disc and outline art are not
-  rotated. Glass orb's sprites sit on the slice's inscribed circle, at their local positions turned by
-  the slice, at 4 and 8 slices. Frosted glass's streak is its count's edge set. Nothing is created at None.
+  rotation, including with gap 8 and fixed 4 with two items (W/E). Bevel is its count's edge set,
+  placed and turned as the fill, unmasked. Glass orb's bead sits on the slice's inscribed circle with no
+  spot or glow, and Fluid glass's blooms span the slice's outer part, each at its local position turned
+  by the slice, at 4 and 8 slices. Frosted glass's streak is its count's edge set. Nothing is created
+  at None; the retired layers (the orb's spot and glow, Bevel's outline and rim mask) never are.
 - The offline renders (`tools/render-shine-preview.py`) are re-run after any change to the art or a
   recipe, and looked at against the mockup; they gate nothing.
 - Independence: the pad set to orb and the dial set to none (and the reverse) each paint only their
@@ -226,8 +277,8 @@ and `library-stack-§7` asks for two. So:
 
 - Each look on a pad and on a dial, at icon sizes 24, 40 and 128, and with a slice gap of 0 and 8.
 - **A turned MaskTexture cuts every masked layer cleanly at every slice place.** The owner's first
-  screenshots showed the sector mask cutting cleanly at 8 slices; Bevel's rim used as a mask is new. Fallback: per-slice-count masked textures for Bevel and
-  Gloss (about 2.8 MB more), or Bevel uses only its rim.
+  screenshots showed the sector mask cutting cleanly at 8 slices. Fallback: per-slice-count masked
+  textures for Gloss cap (about 2.8 MB more), as Bevel now is.
 - Readability: Frosted glass and Fluid glass at full strength on busy icons, and every look over a
   pad button's label now that the shine covers it; the Strength default may drop if needed.
 
@@ -237,4 +288,6 @@ and `library-stack-§7` asks for two. So:
   setting is per member.
 - The dial's shine sits under the icons and the pad's sits over them (the action-bar convention).
 - The default Strength is 85%.
+- Bevel's light direction: one for the whole dial in the first build; the owner overrode it
+  (2026-10-21): every slice is raised the same way, in its own frame.
 - Satin sheen is dropped, and so is its letter: the looks keep their mockup letters A–E and G.

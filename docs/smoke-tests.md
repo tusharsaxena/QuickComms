@@ -1058,8 +1058,10 @@ out). Pad → Buttons → Shine look Gloss cap, Glass orb, Frosted glass, Fluid 
 in turn, each at the Icons tab's Icon size 16, 24 and 40 → each look covers the whole button, its
 plate, icon and label, edge to edge, and matches its tile in
 `docs/superpowers/specs/2026-10-21-shine-overlay/render-pad.png`: Gloss cap a bright band over the top
-half with rounded ends; Glass orb a spot at the top left, a glow along the bottom and darker edges;
-Frosted glass a milky wash, a thin bright rim and a streak along the bottom; Fluid glass a haze at the
+half with rounded ends; Glass orb a soft band of light across the upper third, edges darkening all
+round and darkest at the bottom, with no spot or dot anywhere (2026-10-21), plainly different from
+None on the wide buttons; Frosted glass a milky wash, milkier toward the edges, a crisp bright rim
+(brightest along the top) and a soft streak of light just under the top edge; Fluid glass a haze at the
 top and a pink-to-mint bloom at the bottom; Bevel a light top and left edge and a dark bottom and right
 one; Rim light an edge glow and a short top highlight. On the wide buttons the edges stay as thin as on
 a square one (nothing stretched at the ends); Layout → Button style Icon only → the square buttons
@@ -1076,20 +1078,20 @@ slice takes the look inside its own edges, moving with its slice when the gap op
 labels sit over it, uncovered. Each look matches its tile in
 `docs/superpowers/specs/2026-10-21-shine-overlay/render-dial-4.png`, `-8.png` and `-12.png` (the
 addon's own paint, composited offline): Gloss cap a bright band on the outer half of each slice, its
-inner edge one curve around the hub, dark hairlines between slices; Glass orb a bead per slice, its
-corners darker, an elongated highlight near the rim at the slice's left that follows the arc and a soft
-glow toward the hub, the same shape at 4, 8 and 12 (smaller as the slices narrow, never round dots);
-Frosted glass a faint milky wash, thin bright lines along each slice's edges and a bright streak on the
-outer arc of each slice; Fluid glass pink and purple rising out of each slice toward the rim, mint at
-the rim's middle of each slice, and faint light lines between slices (never one even green band); Bevel
-light edges toward the top left and dark ones toward the bottom right, each edge shading along its
-length; Rim light a soft glow just inside the rim and thin light lines between slices. Bevel's light
-stays at the top left on every slice (the light does not turn with the slices). Every masked look
-(Gloss cap, Glass orb, Frosted glass, Fluid glass, Bevel, Rim light) is cut cleanly at each slice's edges at every slice place,
-with no square corner, seam or bleed past the slice (the owner's first screenshots showed the sector
-mask cutting cleanly at 8 slices; Bevel's outline, its upright light seen through the slice's rim as a
-second mask, is new: it should be thin and shade from light to dark along each edge; on a fail the
-spec's fallback applies). Turn a page on a paged ring and switch 8 to 4 → the
+inner edge one curve around the hub, dark hairlines between slices; Glass orb a bead per slice, lit
+softly in its middle and dark toward its corners, with dark hairlines between slices and no highlight
+spot or dot on any slice (2026-10-21); Frosted glass a milky wash, milkier toward the rim, a crisp
+bright line along the outer arc, faint light lines between slices and a soft line of light just inside
+each slice's left spoke; Fluid glass a clean iridescent edge, each slice pink at the middle of its
+outer arc and mint toward its spokes, fading out well before the hub, with a thin light rim, no wide
+mint band and no wash over the slices' middles (2026-10-21); Bevel every slice raised the same way
+(2026-10-21): a light outer arc and left spoke, a dark right spoke and inner end, and a gentle shade
+from light at the outer left to dark at the inner right, turning with its slice (no single light
+direction for the dial); Rim light a soft glow just inside the rim and thin light lines between
+slices. Every masked look (Gloss cap, Glass orb, Frosted glass, Fluid glass, Rim light) is cut cleanly
+at each slice's edges at every slice place, with no square corner, seam or bleed past the slice (the
+owner's first screenshots showed the sector mask cutting cleanly at 8 slices); Bevel is slice-shaped
+art of its own, with no mask. Turn a page on a paged ring and switch 8 to 4 → the
 slices no longer used show no shine. Hover a slice → its highlight still shows. Result:
 
 **SHINE-3. A pad and a dial keep their own (2026-10-21).** Set the pad's Shine look to Glass orb and
