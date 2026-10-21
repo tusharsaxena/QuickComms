@@ -463,3 +463,39 @@ test("dial layout: [polish] Rings gives every unpinned item its place", function
     assertEqual(ring.items[1].wedge .. "," .. ring.items[2].wedge, "1,3", "W and E")
     assertEqual(ring.start, 270)
 end)
+
+-- ── crisp dial art (shine T1, 2026-10-21) ───────────────────────────────────────────────────────
+
+test("dial layout: [art] DL.ARC is gone; every dial texture the dial modules name ships", function()
+    local NS = T.newAddon()
+    -- red under: DL.ARC kept for the hub's segment rings
+    assertNil(NS.DialLayout.ARC, "no segment count")
+    local function exists(path)
+        local rel = path:gsub("^Interface\\AddOns\\QuickComms\\", ""):gsub("\\", "/")
+        local fh = io.open(T.root .. "/" .. rel .. ".tga", "rb")
+        if fh then fh:close() end
+        return fh ~= nil, rel
+    end
+    local named = 0
+    for _, mod in ipairs({ "Dial_Layout", "Dial_Slices", "Dial_Render", "Dial" }) do
+        local fh = assert(io.open(T.root .. "/modules/" .. mod .. ".lua", "rb"))
+        local src = fh:read("*a")
+        fh:close()
+        for name in src:gmatch('"(dial%-[%w%-]+)"') do
+            named = named + 1
+            local ok, rel = exists("Interface\\AddOns\\QuickComms\\media\\textures\\" .. name)
+            T.assertTrue(ok, mod .. " names " .. rel)
+        end
+    end
+    T.assertTrue(named >= 1, "the modules name their art")
+    for n = 1, 12 do
+        local ok, rel = exists(NS.DialSlices.SectorTexture(n))
+        T.assertTrue(ok, rel)
+    end
+    for k = 1, #NS.DialRender.RING_STEPS do
+        local ok, rel = exists(NS.DialRender.RingTexture(100, 99 * NS.DialRender.RING_STEPS[k]))
+        T.assertTrue(ok, rel)
+        T.assertTrue(rel:find("dial%-ring%-" .. k .. "$") ~= nil, "step " .. k .. ": " .. rel)
+    end
+    T.assertTrue(not exists("Interface\\AddOns\\QuickComms\\media\\textures\\dial-pill"), "the pill is retired")
+end)

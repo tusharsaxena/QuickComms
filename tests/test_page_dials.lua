@@ -358,8 +358,8 @@ test("dials page: [slices] every slice texture the dial names ships under media/
         assertTrue(fh ~= nil, rel)
         if fh then fh:close() end
     end
-    local pill = NS.DialSlices.PILL:gsub("^Interface\\AddOns\\QuickComms\\", ""):gsub("\\", "/")
-    assertTrue(io.open(T.root .. "/" .. pill .. ".tga", "rb") ~= nil, pill)
+    local disc = NS.DialSlices.DISC:gsub("^Interface\\AddOns\\QuickComms\\", ""):gsub("\\", "/")
+    assertTrue(io.open(T.root .. "/" .. disc .. ".tga", "rb") ~= nil, disc)
 end)
 
 test("dials page: [paging] Paging sizes, spaces and colors the arrows and page indicators; the dial follows", function()

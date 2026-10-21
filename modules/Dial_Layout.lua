@@ -46,7 +46,6 @@ DL.RADIUS  = 100                               -- a wedge's center from the hub'
 DL.RADIUS_MIN, DL.RADIUS_MAX = 70, 180         -- the Ring radius row's range
 DL.WEDGE   = 44                                -- a wedge button, square
 DL.HUB     = 40                                -- the hub (the header button), by default (dial.hub.size)
-DL.ARC     = 64                                -- straight segments drawing the hub's ring and rim
 DL.RIM     = 20                                -- from a wedge's outer edge to the disc's edge
 DL.LABEL_GAP = 2                               -- a wedge's label starts this far past the wedge's edge
 DL.LINE    = 14                                -- one line of label or title text
