@@ -140,7 +140,7 @@ modules\Pad_Layout.lua
 modules\IconStyle.lua
 # LOAD-BEARING: publishes NS.Glow, which modules\Pad_Render.lua and modules\Dial_Render.lua take at load; appends to NS.STAND_DOWN.
 modules\Glow.lua
-# Conventional: publishes NS.Shine (the shine overlay's catalog and the pad button painter); read at call time only.
+# LOAD-BEARING: publishes NS.Shine (the shine overlay's catalog and the pad button painter), whose LOOKS settings\SchemaMembers.lua reads at file scope; modules\Pad_Render.lua calls it at run time.
 modules\Shine.lua
 # Conventional: the surfaces' plans and rebuild; calls modules\Pad.lua at run time only
 modules\Surfaces.lua
@@ -178,7 +178,7 @@ settings\SchemaRows.lua
 # LOAD-BEARING: publishes Settings.IconRows, which settings\SchemaMembers.lua calls at file scope; reads
 # NS.IconDefaults at file scope.
 settings\SchemaIcons.lua
-# LOAD-BEARING: reads NS.Library.TEMPLATES, NS.Channels.KINDS, Settings.IconRows and NS.SchemaRuntime.AddRows at file scope.
+# LOAD-BEARING: reads NS.Library.TEMPLATES, NS.Channels.KINDS, NS.Shine.LOOKS, Settings.IconRows and NS.SchemaRuntime.AddRows at file scope.
 settings\SchemaMembers.lua
 # LOAD-BEARING: reads NS.C, Settings.Helpers and NS.SchemaRuntime.AddRows at file scope.
 settings\Panel.lua

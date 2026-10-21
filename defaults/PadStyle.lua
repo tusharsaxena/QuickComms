@@ -51,7 +51,10 @@ function D.Section()
 end
 
 --- A pad's `button` table, fresh. The glow's knobs are not here: a button's glow takes the Icons tab's
---- knob defaults (defaults/Icons.lua GLOW_KNOBS), its style and color its own.
+--- knob defaults (defaults/Icons.lua GLOW_KNOBS), its style and color its own. The Shine heading's
+--- leaves (shine overlay, 2026-10-21; modules/Shine.lua) are flat, like `dial.page.dotBack*`: the look
+--- (None by default, so a pad saved before them draws as it did), its Strength (0 to 100 percent), its
+--- tint and Fluid glass's two bloom colors, each with its class-color companion.
 --- @return table
 function D.Button()
     return {
@@ -64,6 +67,10 @@ function D.Button()
         useClassColorFont = false, fontFlags = "", fontShadow = true,
         glowEnabled = false, glowType = "pixel", glowColor = { r = 1, g = 0.82, b = 0, a = 1 },
         useClassColorGlow = false,
+        shineLook = "none", shineStrength = 85,
+        shineTint = { r = 1, g = 1, b = 1, a = 1 }, useClassColorShineTint = false,
+        shineBloomA = { r = 1, g = 0.604, b = 0.835, a = 1 }, useClassColorShineBloomA = false,   -- #ff9ad5
+        shineBloomB = { r = 0.541, g = 1, b = 0.757, a = 1 }, useClassColorShineBloomB = false,   -- #8affc1
     }
 end
 

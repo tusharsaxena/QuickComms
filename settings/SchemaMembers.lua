@@ -433,6 +433,55 @@ for _, row in ipairs(windowRows()) do ROWS[#ROWS + 1] = row end
 local BUTTON, BUTTONP = L["Buttons"], "pad.button."
 local BUTTON_H = NS.PadDefaults.BUTTON_H
 
+-- The shine overlay's looks (modules/Shine.lua NS.Shine.LOOKS, in its order) by name.
+local SHINE_LABEL = { none = L["None"], gloss = L["Gloss cap"], orb = L["Glass orb"], frost = L["Frosted glass"],
+    fluid = L["Fluid glass"], bevel = L["Bevel"], rim = L["Rim light"] }
+local SHINE_LOOK = {}
+for i, look in ipairs(NS.Shine.LOOKS) do SHINE_LOOK[i] = { value = look, text = SHINE_LABEL[look] or look } end
+
+--- A Shine heading's rows (shine overlay, 2026-10-21): the look, its Strength (0 to 100 percent, step
+--- 5), the tint and Fluid glass's two bloom colors, each a composed swatch with its class-color
+--- companion. `spec` names the block: `prefix` ("pad.button."), `instance`, `page`, `tab` and the
+--- shipped `defaults` table. Strength, the tint and the blooms gray out while the look is None, and the
+--- blooms unless it is Fluid glass (as the pointer rows do while Show pointer is off).
+local function shineRows(O, checks, spec)
+    local prefix, def, SHINE = spec.prefix, spec.defaults, L["Shine"]
+    for _, k in ipairs({ "shineTint", "shineBloomA", "shineBloomB" }) do checks[k] = checks.background end
+    for _, k in ipairs({ "useClassColorShineTint", "useClassColorShineBloomA", "useClassColorShineBloomB" }) do
+        checks[k] = { validate = BOOL }
+    end
+    local function lookNow() return NS.SchemaRuntime.Get(prefix .. "shineLook") or def.shineLook end
+    local function off() return lookNow() == "none" end
+    local function notFluid() return lookNow() ~= "fluid" end
+    local function base(r)
+        r.instance, r.page, r.group, r.subgroup = spec.instance, spec.page, spec.tab, SHINE
+        return r
+    end
+    local out = {
+        base({ path = prefix .. "shineLook", type = "string", default = def.shineLook, values = SHINE_LOOK,
+            label = L["Shine look"], startsLine = true,
+            desc = L["A glossy overlay: Gloss cap, Glass orb, Frosted glass, Fluid glass, Bevel or Rim light. None draws none."],
+            validate = oneOf(SHINE_LOOK) }),
+        base({ path = prefix .. "shineStrength", type = "number", default = def.shineStrength, min = 0, max = 100,
+            step = 5, label = L["Shine strength"], disabledIf = off,
+            desc = L["How strong the shine is, from 0 to 100 percent."], validate = NUMBER,
+            normalize = clamp(0, 100, true) }),
+    }
+    local pairs3 = { { "shineTint", L["Shine tint"], "useClassColorShineTint", off },
+        { "shineBloomA", L["Bloom color A"], "useClassColorShineBloomA", notFluid },
+        { "shineBloomB", L["Bloom color B"], "useClassColorShineBloomB", notFluid } }
+    for _, p in ipairs(pairs3) do
+        local rows = {}
+        stampBlock(rows, O.ColorPair(blockSpec(prefix, spec.tab, SHINE, def,
+            { key = p[1], label = p[2], companionKey = p[3] })), prefix, checks, spec.instance)
+        for _, r in ipairs(rows) do
+            r.disabledIf = p[4]
+            out[#out + 1] = r
+        end
+    end
+    return out
+end
+
 local function buttonRows()
     local O = NS.addon.Settings.Helpers
     local checks = composedChecks(O)
@@ -465,6 +514,10 @@ local function buttonRows()
         label = L["Glow style"], desc = L["How the glow looks."], validate = oneOf(styles), disabledIf = glowOff })
     stampBlock(out, O.ColorPair(blockSpec(BUTTONP, BUTTON, GLOW, cdef, { key = "glowColor",
         companionKey = "useClassColorGlow", label = L["Glow color"] })), BUTTONP, checks)
+    for _, r in ipairs(shineRows(O, checks, { prefix = BUTTONP, instance = "pad", page = "pads", tab = BUTTON,
+        defaults = cdef })) do
+        out[#out + 1] = r
+    end
     return out
 end
 
