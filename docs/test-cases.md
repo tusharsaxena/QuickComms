@@ -940,7 +940,7 @@ Total.
 - layout: [window] the header row's height moves every row and is the collapsed pad's height
 - layout: [button] a Button height above 0 is the labeled button's height; 0 is automatic; icon-only stays square
 
-### test_dial_layout.lua (29)
+### test_dial_layout.lua (32)
 
 - dial layout: four wedges sit on N, E, S and W, clockwise from the top
 - dial layout: slices are Auto, 4, 6, 8 or 12; a page is 12 at most, 8 on a ring that holds rings
@@ -971,6 +971,9 @@ Total.
 - dial layout: [polish] SliceAt
 - dial layout: [polish] Rings gives every unpinned item its place
 - dial layout: [art] DL.ARC is gone; every dial texture the dial modules name ships
+- dial layout: [autofit] automatic Icon offset keeps the icon's place in the slice at any radius
+- dial layout: [autofit] automatic icon size scales with the ring and clamps
+- dial layout: [autofit] auto cap reads the automatic reach and icon size
 
 ### test_surfaces.lua (30)
 
@@ -1156,7 +1159,7 @@ Total.
 - dial: [shine] fewer slices hide the rest
 - dial: [shine] the dial's look leaves the pad alone
 
-### test_icon_style.lua (9)
+### test_icon_style.lua (10)
 
 - icon style: the defaults draw the owner's look on a button and on a wedge
 - icon style: zoom crops through SetTexCoord, desaturate and alpha reach the texture
@@ -1167,6 +1170,7 @@ Total.
 - icon style: a wedge's ring never grows past the wedge, so it cannot reach the next wedge or its label
 - icon style: a pad saved before the Icons tab reads like a new one (fillShape backfills `icon`)
 - icon style: [polish] dial icon size reaches 128, pad stays 40
+- icon style: [autofit] a dial's icon size 0 is automatic: it scales with the ring radius
 
 ### test_glow.lua (11)
 
@@ -1304,13 +1308,13 @@ Total.
 | test_edit_preview.lua | 14 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 21 |
-| test_dial_layout.lua | 29 |
+| test_dial_layout.lua | 32 |
 | test_surfaces.lua | 30 |
 | test_pad_render.lua | 23 |
 | test_pad.lua | 45 |
 | test_dial.lua | 63 |
 | test_dial_shine.lua | 8 |
-| test_icon_style.lua | 9 |
+| test_icon_style.lua | 10 |
 | test_glow.lua | 11 |
 | test_shine.lua | 7 |
 | test_vendor_sync.lua | 3 |
@@ -1320,4 +1324,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1086** |
+| **Total** | **1090** |

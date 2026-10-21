@@ -211,7 +211,8 @@ local function placeWedges(inst, ring, spec, icfg, look)
     for i, item in ipairs(spec.items) do
         local w = NS.Pool.Acquire(ring.qcWedges, function() return newWedge(inst, ring) end)
         local place = item.wedge or i
-        local geo = DL.Wedge(place, spec.size, look.radius, spec.start, look.labelReach, look.iconReach)
+        local geo = DL.Wedge(place, spec.size, look.radius, spec.start, look.labelReach, look.iconReach,
+            look.hub.size)
         w:ClearAllPoints()
         w:SetPoint("CENTER", ring, "CENTER", geo.x, geo.y)
         w:SetSize(DL.WEDGE, DL.WEDGE)
@@ -254,8 +255,10 @@ function Dial.Apply(index, id, plan)
     byId[id] = inst
     DS.Close(inst.header)
     releaseRings(inst)
-    local icfg = NS.IconStyle.Config(dial.icon, "dial")
     local look = R.Look(plan.radius, dial.label, dial.slice, dial)
+    -- Icon size 0 is automatic: the size for this ring radius (DialLayout.AutoIconSize)
+    local icfg = NS.IconStyle.Config(dial.icon, "dial",
+        DL.AutoIconSize(look.radius, look.hub.size, dial.slices, look.gap))
     local disc = DL.Geometry(look.radius, look.line, look.labelReach).disc
     -- the header is the hub, its Hub size across (protected geometry: here, out of combat). It takes
     -- no mouse (round hub, 2026-10-21): a square button would take the corners outside the drawn

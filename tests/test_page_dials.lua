@@ -238,7 +238,7 @@ test("dials page: [B9] Icons follows Wheel, carries its headings once each, and 
     end
     assertEqual(table.concat(order, ","), "General,Groups,Wheel,Slices,Hub,Paging,Slice labels,Group labels,Icons",
         "the rows' tabs, in order")
-    P.find(w, "Slider", "Icon size"):__fire("OnMouseUp", 24)
+    P.find(w, "Slider", "Icon size (0 = automatic)"):__fire("OnMouseUp", 24)
     P.find(w, "CheckBox", "Show border"):__fire("OnValueChanged", true)
     assertEqual(NS.db.profile.dials.d2.icon.size, 24)
     assertTrue(NS.db.profile.dials.d2.icon.borderShow)

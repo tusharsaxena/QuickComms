@@ -217,11 +217,13 @@ function S.TestPlan(surfaceId)
 end
 
 -- What Auto's icon fit reads off a dial (Dial_Layout.AutoCap, dial polish): its radius, Icon offset,
--- icon size (defaults/Icons.lua's dial default when unset) and Slice gap.
+-- icon size (0 or unset: automatic, Dial_Layout.ResolveIconSize), Slice gap and Hub size.
 local function dialFit(dial)
     local icon, slice = type(dial.icon) == "table" and dial.icon or {}, type(dial.slice) == "table" and dial.slice or {}
-    return { radius = dial.radius, iconOffset = dial.iconOffset,
-        iconSize = icon.size or NS.IconDefaults.SIZE.dial.default, gap = slice.gap or 0 }
+    local hub = type(dial.hub) == "table" and tonumber(dial.hub.size) or nil
+    local gap = slice.gap or 0
+    return { radius = dial.radius, iconOffset = dial.iconOffset, gap = gap, hub = hub,
+        iconSize = NS.DialLayout.ResolveIconSize(icon.size, dial.radius, hub, dial.slices, gap) }
 end
 
 --- Test mode's dial plan: placeholder groups and wedges that send nothing, laid out as the dial's own

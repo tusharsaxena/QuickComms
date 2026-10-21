@@ -77,16 +77,21 @@ end
 --- false while its glow is off. `size` joins the signature.
 IS.GlowConfig = glowConfig
 
---- A surface's `icon` table read into what a paint takes. A nil table is the kind's defaults.
+--- A surface's `icon` table read into what a paint takes. A nil table is the kind's defaults. A
+--- dial's size 0 is automatic (D.AUTO_SIZE): `autoSize`, the size for its wheel
+--- (DialLayout.AutoIconSize), or the kind's default size when none is given.
 --- @param icon table|nil the surface's `icon` (pad.icon / dial.icon)
 --- @param kind string "pad" | "dial"
+--- @param autoSize number|nil the automatic size, for a dial
 --- @return table { size, zoom, desaturate, alpha, tint = {r,g,b,a}, border = false|{...}, glow = false|{...} }
-function IS.Config(icon, kind)
+function IS.Config(icon, kind, autoSize)
     local range = D.SIZE[kind] or D.SIZE.pad
     icon = type(icon) == "table" and icon or D.For(kind)
+    local wanted = icon.size
+    if range.auto and tonumber(wanted) == D.AUTO_SIZE then wanted = tonumber(autoSize) or range.default end
     local c = {
         kind = kind,
-        size = math.floor(clamp(icon.size, range.min, range.max, range.default) + 0.5),
+        size = math.floor(clamp(wanted, range.min, range.max, range.default) + 0.5),
         zoom = clamp(icon.zoom, 0, D.ZOOM_MAX, 0),
         desaturate = icon.desaturate == true,
         alpha = clamp(icon.alpha, 0.1, 1, 1),

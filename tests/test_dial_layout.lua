@@ -40,8 +40,9 @@ test("dial layout: four wedges sit on N, E, S and W, clockwise from the top", fu
         pts[i] = w.x .. "," .. w.y
     end
     assertEqual(table.concat(pts, " "), "0,100 100,0 0,-100 -100,0", "the default radius")
-    assertEqual(L.Wedge(2, 4, 80).x, 80, "the dial's own radius")
-    assertEqual(L.Wedge(2, 4, 999).x, L.RADIUS_MAX, "clamped to the row's range")
+    -- automatic Icon offset: the radius at the default 100, the same place in the slice elsewhere
+    assertEqual(L.Wedge(2, 4, 80).x, L.IconReach(80, 0), "the dial's own radius")
+    assertEqual(L.Wedge(2, 4, 999).x, L.IconReach(L.RADIUS_MAX, 0), "clamped to the row's range")
     assertEqual(L.Direction(1, 4) .. L.Direction(2, 4) .. L.Direction(3, 4) .. L.Direction(4, 4), "NESW")
     assertEqual(L.Direction(2, 8), "NE")
 end)
@@ -423,7 +424,7 @@ test("dial layout: [polish] auto cap", function()
     assertEqual(L.AutoCap(100, 0, 128, 0), 4, "128 px icons: four a page")
     -- red under: leave the gap out of DL.AutoCap
     assertEqual(L.AutoCap(100, 0, 32, 20), 11, "the gap eats into the arc")
-    assertEqual(L.AutoCap(70, 0, 128, 20), 2)
+    assertEqual(L.AutoCap(70, 0, 128, 20), 3, "automatic reach at 70 sits a little out of the radius")
     assertEqual(L.AutoCap(70, 0, 128, 300), 1, "never below one")
 end)
 
@@ -498,4 +499,50 @@ test("dial layout: [art] DL.ARC is gone; every dial texture the dial modules nam
         T.assertTrue(rel:find("dial%-ring%-" .. k .. "$") ~= nil, "step " .. k .. ": " .. rel)
     end
     T.assertTrue(not exists("Interface\\AddOns\\QuickComms\\media\\textures\\dial-pill"), "the pill is retired")
+end)
+
+test("dial layout: [autofit] automatic Icon offset keeps the icon's place in the slice at any radius", function()
+    local L = DL()
+    -- the band an icon sits in: from the hub's edge to the disc's edge
+    local function rel(radius, hub)
+        hub = hub or L.HUB
+        local edge = L.Geometry(radius).disc / 2
+        return (L.IconReach(radius, 0, hub) - hub / 2) / (edge - hub / 2)
+    end
+    assertEqual(L.IconReach(100, 0), 100, "the default radius keeps its place")
+    local ref = rel(100)
+    for _, r in ipairs({ 70, 150, 180 }) do
+        -- red under: automatic is the ring radius (rel 0.76 at 150, 0.78 at 180)
+        T.assertTrue(math.abs(rel(r) - ref) < 0.005, ("radius %d: %.3f, want %.3f"):format(r, rel(r), ref))
+    end
+    T.assertTrue(L.IconReach(150, 0) < 140, "well inside the outer edge at 150")
+    T.assertTrue(math.abs(rel(150, 80) - ref) < 0.005, "measured from the Hub size's edge")
+    assertEqual(L.IconReach(150, 60), 60, "a manual offset is kept")
+    assertEqual(L.Wedge(2, 4, 150).x, L.IconReach(150, 0), "the wedge sits on the automatic reach")
+    assertEqual(L.Wedge(2, 4, 150, 0, nil, 0, 80).x, L.IconReach(150, 0, 80), "with the dial's hub")
+    assertEqual(L.Wedge(2, 4, 150, 0, nil, 90).x, 90, "a manual offset places the wedge")
+end)
+
+test("dial layout: [autofit] automatic icon size scales with the ring and clamps", function()
+    local L = DL()
+    -- red under: no DL.AutoIconSize
+    assertEqual(L.AutoIconSize(100), 32, "the default radius keeps the default size")
+    assertEqual(L.AutoIconSize(150), 48)
+    assertEqual(L.AutoIconSize(180), 58)
+    assertEqual(L.AutoIconSize(70), 22)
+    assertEqual(L.AutoIconSize(999), 58, "the radius is clamped first")
+    -- a fixed count caps it to the slice's arc at the icon reach, less the gap and FIT_MARGIN
+    local arc = 2 * math.pi * L.IconReach(100, 0) / 12
+    assertEqual(L.AutoIconSize(100, nil, 12, 30), math.floor(arc - 30 - L.FIT_MARGIN), "the arc caps it")
+    assertEqual(L.AutoIconSize(70, nil, 12, 40), 16, "never below the row's minimum")
+    assertEqual(L.AutoIconSize(100, nil, 0, 30), 32, "Auto slices page instead of shrinking")
+    assertEqual(L.ResolveIconSize(0, 150), 48, "0 is automatic")
+    assertEqual(L.ResolveIconSize(40, 150), 40, "a manual size is kept")
+    assertEqual(L.ResolveIconSize(nil, 150), 48, "unset reads as the default, automatic")
+end)
+
+test("dial layout: [autofit] auto cap reads the automatic reach and icon size", function()
+    local L = DL()
+    assertEqual(L.AutoCap(100, 0, L.AutoIconSize(100), 0), 12, "the default dial: no change")
+    assertEqual(L.AutoCap(180, 0, L.AutoIconSize(180), 0), 12, "a bigger wheel's bigger icons still fit twelve")
 end)

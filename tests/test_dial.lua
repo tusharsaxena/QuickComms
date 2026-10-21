@@ -619,7 +619,8 @@ test("dial: [rework] wedges have no backdrop; the slices, the wedges and their h
     local ring = NS.Dial.Instance("d2").rings.active[2]
     assertEqual(ring.qcFills[1].__size[1], g.disc, "each slice's fill is the disc across")
     local _, _, _, x, y = w:GetPoint(1)
-    assertEqual(math.floor(math.sqrt(x * x + y * y) + 0.5), 140, "the wedge sits on the radius")
+    assertEqual(math.floor(math.sqrt(x * x + y * y) + 0.5), math.floor(NS.DialLayout.IconReach(140, 0) + 0.5),
+        "the wedge sits on the automatic reach for the radius")
 end)
 
 test("dial: [slices] each place is a tinted slice; the slice the cursor points into lights, anywhere but the hub", function()

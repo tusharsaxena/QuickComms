@@ -859,6 +859,18 @@ settings (`/qc get dial.hub.style` and `/qc get dial.slice.pointerSize` read as 
 size 60 → the dial's hub grows; Defaults → back to 40. Delete every dial → Hub says No dials yet,
 as Slices does. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
+**DIAL-36. Automatic icon offset and size follow the ring radius (2026-10-21).** On a new dial with
+eight wedges (Wheel → Wedges per ring 8), Dial → Icons: Icon offset reads Automatic and Icon size
+(0 = automatic) reads Automatic (`/qc get dial.icon.size` → 0). Ring radius 100 → the icons sit
+roughly in the middle of their slices at 32 pixels, as before. Ring radius 150 → the whole wheel
+scales: each icon keeps the same place in its slice (not out by the rim) and grows to about 48
+pixels. Ring radius 180 → the same place, about 58 pixels, nothing overlapping. Ring radius 70 → the
+same place, about 22 pixels. At every radius a click anywhere in a slice still sends it (DIAL-28),
+and the hovered slice lights the one the icon is in. Icon size 40 → 40 pixels at every radius; drag it
+back to 0 → Automatic. Icon offset 60 → the icons at 60 at every radius. In combat, `/qc set
+dial.radius 150` → "updates after combat", the icons moved and resized at combat end, no error. A
+dial saved before this keeps its stored Icon size (32) until it is set to 0. Result: pending.
+
 ## Share
 
 **SHARE-1. Export a group.** Settings → Groups → New group `My keys`; on its Callouts tab, Add

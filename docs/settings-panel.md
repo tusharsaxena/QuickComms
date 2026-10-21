@@ -542,7 +542,8 @@ Slice labels  Show labels, label offset, then the labels' Font block (font, size
 Group labels  Show group labels (the ring's title above the dial), then its Font block, grayed out
          while off
 Icons    Icon offset, then the wedges' icons, as the Pad page's Icons tab (a wedge's border is a
-         round ring, never wider than the wedge; its icon size, up to 128, keeps the wedge's own size)
+         round ring, never wider than the wedge; its icon size, up to 128 or 0 automatic, keeps the
+         wedge's own size)
 Preview  each ring as the current or previewed situation builds it, wedge by wedge
 ```
 
@@ -588,11 +589,16 @@ Preview  each ring as the current or previewed situation builds it, wedge by wed
   defaults gold Friz Quadrata 12 with its shadow, `PadDefaults.DialTitle`), grayed out while off; the
   title is measured with its own line height, so a bigger font lifts it and the tooltip above it.
 - **Icons:** Icon offset (a Wheel row until the dial polish, 2026-10-21; `dial.iconOffset` kept) leads
-  the tab under Size and crop: 0 to 250 pixels, 0 automatic (the ring radius), the icons' own
-  distance from the middle, the disc keeping its size. Icon size reaches 128 on a dial (a pad's stays
-  40): a game icon is 64-pixel art, so past 64 it is upscaled and softer; at the default ring radius
-  icons past about 70 pixels crowd their neighbors, and at 128 a ring wants a radius near 180. The
-  rest is the Pad page's Icons tab.
+  the tab under Size and crop: 0 to 250 pixels, 0 automatic, the icons' own distance from the
+  middle, the disc keeping its size. Automatic keeps each icon in the same place in its slice at any
+  ring radius (owner, 2026-10-21): the share of the band from the hub's edge to the disc's edge that
+  the ring radius takes at the default 100 (the radius itself there; about 126 at 140, 133 at 150,
+  152 at 180). Icon size (0 = automatic) reaches 128 on a dial (a pad's stays 40, with no
+  automatic): a game icon is 64-pixel art, so past 64 it is upscaled and softer; at the default ring
+  radius icons past about 70 pixels crowd their neighbors, and at 128 a ring wants a radius near 180.
+  0 (a new dial's default) is automatic: 32 at the default radius, scaled with it (22 at 70, 48 at
+  150, 58 at 180), held under a fixed wedge count to the slice's arc less the Slice gap, and within
+  16 to 128; a value typed under 16 that is not 0 is 16. The rest is the Pad page's Icons tab.
 - **Slices** (2026-10-21): each heading's colors are composed swatch pairs with Use class color.
   Background is `dial.slice.background`, each slice's fill (dark, as the disc was). Gap's Slice gap
   is `dial.slice.gap` (0 to 20 pixels, default 0; the dial polish, 2026-10-21, retired the Border

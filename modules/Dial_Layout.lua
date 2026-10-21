@@ -141,10 +141,10 @@ function DL.SliceShift(gap, n)
 end
 
 --- Auto's icon fit: the most wedges (1..MAX_SLICES) whose arc at the icon reach (IconReach of
---- `radius` and the Icon offset `at`), less the Slice `gap`, still holds an icon of `iconSize` plus
+--- `radius`, the Icon offset `at` and the Hub size `hub`), less the Slice `gap`, still holds an icon of `iconSize` plus
 --- FIT_MARGIN; one when none do.
-function DL.AutoCap(radius, at, iconSize, gap)
-    local around = 2 * math.pi * DL.IconReach(radius, at)
+function DL.AutoCap(radius, at, iconSize, gap, hub)
+    local around = 2 * math.pi * DL.IconReach(radius, at, hub)
     local need = (tonumber(iconSize) or 0) + DL.FIT_MARGIN
     gap = tonumber(gap) or 0
     for n = DL.MAX_SLICES, 1, -1 do
@@ -218,10 +218,45 @@ end
 
 --- The icons' distance from the center: the Icon offset `at` when it is set (above 0), else the ring
 --- radius.
-function DL.IconReach(radius, at)
+-- Where the default dial's icon sits in its slice: the ring radius's share of the band from the
+-- default hub's edge to the disc's edge (80 of 122 pixels), so automatic keeps it at DL.RADIUS there.
+local function discEdge(radius) return radius + DL.WEDGE / 2 + DL.RIM end
+local ICON_SHARE = (DL.RADIUS - DL.HUB / 2) / (discEdge(DL.RADIUS) - DL.HUB / 2)
+
+--- An icon's distance from the hub's center: the Icon offset `at`, or with none (nil or 0,
+--- automatic; owner, 2026-10-21) the same place in its slice at any ring radius: ICON_SHARE of the
+--- way from the hub's edge (`hub` across, DL.HUB when none) to the disc's edge. At the default
+--- radius and hub that is the radius itself.
+function DL.IconReach(radius, at, hub)
     at = tonumber(at)
     if at and at > 0 then return at end
-    return DL.ClampRadius(radius)
+    radius = DL.ClampRadius(radius)
+    local inner = (tonumber(hub) or DL.HUB) / 2
+    return round(inner + ICON_SHARE * (discEdge(radius) - inner))
+end
+
+--- The automatic icon size (the Icons tab's Icon size at 0; owner, 2026-10-21): the dial's default
+--- size scaled with the ring radius (DL.RADIUS draws it), held under a fixed `slices` count to the
+--- slice's arc at the automatic reach less the Slice `gap` and FIT_MARGIN (under Auto the ring
+--- pages instead, AutoCap), then clamped to the Icon size row's range.
+function DL.AutoIconSize(radius, hub, slices, gap)
+    local range = NS.IconDefaults.SIZE.dial
+    radius = DL.ClampRadius(radius)
+    local size = range.default * radius / DL.RADIUS
+    slices = DL.ClampSlices(tonumber(slices) or DL.AUTO)
+    if slices ~= DL.AUTO then
+        local arc = 2 * math.pi * DL.IconReach(radius, 0, hub) / slices
+        size = math.min(size, arc - (tonumber(gap) or 0) - DL.FIT_MARGIN)
+    end
+    return math.max(range.min, math.min(range.max, math.floor(size + 0.5)))
+end
+
+--- A dial's icon size from its stored Icon size: 0 (or none, the default) is AutoIconSize for the
+--- dial's `radius`, `hub`, `slices` and `gap`; anything else is itself (IconStyle.Config clamps it).
+function DL.ResolveIconSize(stored, radius, hub, slices, gap)
+    stored = tonumber(stored) or NS.IconDefaults.For("dial").size
+    if stored > 0 then return stored end
+    return DL.AutoIconSize(radius, hub, slices, gap)
 end
 
 --- The pointer's distance from the hub's center for a pointer `size` pixels across: just outside
@@ -247,14 +282,14 @@ end
 --- clockwise from N), its center, and its label's anchor point (`anchor`, the label's own point) and
 --- offset from the wedge's center (`lx`, `ly`), `reach` pixels from the dial's center (as Geometry:
 --- nil or 0 is just past the disc's edge); the wedge itself sits `at` from the center (IconReach:
---- nil or 0 is the radius).
-function DL.Wedge(i, n, radius, start, reach, at)
+--- nil or 0 is automatic, its place in the slice between the `hub`'s edge and the disc's).
+function DL.Wedge(i, n, radius, start, reach, at, hub)
     n = math.max(1, tonumber(n) or 4)
     radius = DL.ClampRadius(radius)
     local a = math.rad(tonumber(start) or 0) + (i - 1) * 2 * math.pi / n
     local sx, sy = math.sin(a), math.cos(a)
     local out = DL.Geometry(radius, nil, reach).reach
-    at = DL.IconReach(radius, at)
+    at = DL.IconReach(radius, at, hub)
     local x, y = round(at * sx), round(at * sy)
     return { angle = a, x = x, y = y, anchor = labelAnchor(sx, sy), lx = round(out * sx) - x, ly = round(out * sy) - y }
 end
@@ -392,14 +427,14 @@ end
 --- A dial's rings, and the ring it opens on (0: nothing to show).
 --- @param groups table the dial's active groups in its order (see the Interfaces block of Task 3)
 --- @param opts table { mode = "categories"|"flat", slices, title, fit = { radius, iconOffset, iconSize,
----   gap } } (fit: Auto's icon-fit cap, AutoCap; nil: no cap)
+---   gap, hub } } (fit: Auto's icon-fit cap, AutoCap; nil: no cap)
 --- @return table rings, number openRing
 function DL.Rings(groups, opts)
     groups = type(groups) == "table" and groups or {}
     opts = type(opts) == "table" and opts or {}
     local slices = DL.ClampSlices(opts.slices)
     local fit = type(opts.fit) == "table" and opts.fit
-    local cap = fit and DL.AutoCap(fit.radius, fit.iconOffset, fit.iconSize, fit.gap)
+    local cap = fit and DL.AutoCap(fit.radius, fit.iconOffset, fit.iconSize, fit.gap, fit.hub)
     local rings = {}
 
     -- A ring's pages: a pinned ring (a node set's, PinNodes) is one page of eight wedges from N; any
