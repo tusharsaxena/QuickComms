@@ -869,7 +869,7 @@ same place, about 22 pixels. At every radius a click anywhere in a slice still s
 and the hovered slice lights the one the icon is in. Icon size 40 → 40 pixels at every radius; drag it
 back to 0 → Automatic. Icon offset 60 → the icons at 60 at every radius. In combat, `/qc set
 dial.radius 150` → "updates after combat", the icons moved and resized at combat end, no error. A
-dial saved before this keeps its stored Icon size (32) until it is set to 0. Result: pending.
+dial saved before this keeps its stored Icon size (32) until it is set to 0. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 ## Share
 
@@ -1062,7 +1062,7 @@ On a paged ring (Wheel → wedges per ring 4 with more than four callouts in a g
 4 and 20 → the dots are round, the current page's pill has round ends at any Current page width, and
 with Show indicator background on and Dot border 2 the strip behind the row and every border are
 round-ended and smooth; the page arrows' round plates are smooth at Arrow size 12 and 48. Icons →
-Show border on, Border size 4 → every wedge's round border is smooth too. Result:
+Show border on, Border size 4 → every wedge's round border is smooth too. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 ## Shine
 
@@ -1088,7 +1088,7 @@ are enabled only under Fluid glass; set them to red and blue → its two blooms 
 strength 0 → no shine; 100 → the strongest. Shine tint yellow → the light turns yellow, the shade stays
 dark; Use class color → your class color. Fluid glass, then Gloss cap, then None → no bloom or shine is
 left behind. Layout → Button style Label only → the buttons keep their shine (it covers the plate, not
-the icon). Result:
+the icon). Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 **SHINE-2. Each look on a dial (2026-10-21).** Open a dial. Dial → Slices → Shine look each of the seven
 in turn, at Wheel → wedges per ring 4, 8 and 12, Slice gap 0 and 8, and Ring radius 100 and 180 → every
@@ -1112,13 +1112,13 @@ slices. Every masked look (Gloss cap, Gloss fade, Glass orb, Frosted glass, Flui
 at each slice's edges at every slice place, with no square corner, seam or bleed past the slice (the
 owner's first screenshots showed the sector mask cutting cleanly at 8 slices); Bevel is slice-shaped
 art of its own, with no mask. Turn a page on a paged ring and switch 8 to 4 → the
-slices no longer used show no shine. Hover a slice → its highlight still shows. Result:
+slices no longer used show no shine. Hover a slice → its highlight still shows. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 **SHINE-3. A pad and a dial keep their own (2026-10-21).** Set the pad's Shine look to Glass orb and
 the dial's to Rim light → each shows its own; set the pad's to None → the dial keeps Rim light.
 `/reload` → both kept. `/qc diagnostics` → the pad's line reads `p1 button shine=none 85` and the
 dial's slices line ends `shine=rim 85`. Then set the pad back to Glass orb and the dial to None → the
-pad keeps Glass orb and the dial shows no shine. Result:
+pad keeps Glass orb and the dial shows no shine. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 ## Battlegrounds
 
@@ -1236,11 +1236,6 @@ from the client, so this check needs a non-English client pass. Result: 2026-10-
 
 ## Pending sign-off
 
-The owner ran every check above, except those listed here, on 2026-10-21 and reported all of them
-passed (the client build was not recorded). A check added or rewritten after that date is listed here,
-with its origin and why it is owed, until its pass is recorded:
-
-| ID | Origin | Why it is owed |
-|---|---|---|
-| ART-1 | Crisp dial art (2026-10-21, shine overlay plan T1) | No client pass recorded yet: the generated disc and ring ladder replace the segmented rings and the portrait mask |
-| SHINE-1..3 | The shine overlay (2026-10-21, plan T2-T5; the mockup rework and whole-button pads, 2026-10-21) | Owner's first look (2026-10-21, screenshots): the looks did not match the mockups and the pad's shine covered only the icon; reworked, with offline renders from the addon's own paint (`render-*.png`). No client pass of the rework yet; SHINE-2 holds the turned masks' cut, which the headless mock records but cannot draw |
+None. The owner ran every check above on 2026-10-21 and reported all of them passed (the client
+build was not recorded). A check added or rewritten later is listed here, with its origin and why it
+is owed, until its pass is recorded.
