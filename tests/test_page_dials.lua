@@ -288,7 +288,7 @@ test("dials page: [slices] Slices writes the fill, gap and highlight, Hub the po
         assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
     end
     -- red under: the Hub and Pointer rows left on Slices (the Hub tab, dial polish 2026-10-21)
-    assertEqual(#P.all(w, "CheckBox", "Use class color"), 2, "fill and highlight")
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 5, "fill, highlight, then the shine's tint and two blooms")
     P.find(w, "Slider", "Slice gap"):__fire("OnMouseUp", 3)
     assertEqual(NS.db.profile.dials.d2.slice.gap, 3)
     w = P.tab("dials", "Hub")
@@ -522,4 +522,55 @@ test("page dials: [polish] the page is titled Dial", function()
     assertNil(m.__subcategories["Comms Dial"], "no Comms Dial page")
     -- the default member's name is unchanged (a page title only)
     assertEqual(NS.db.profile.dials.d2.name, "Comms Dial")
+end)
+
+test("page dials: [shine] the Slices tab has a Shine heading", function()
+    local NS, _, P = open()
+    local rows = {}
+    for _, r in ipairs(NS.addon.Settings.RowsForPage("dials")) do rows[r.path] = r end
+    -- red under: no shine rows in settings/SchemaMembers.lua sliceRows
+    for path, want in pairs({ ["dial.slice.shineLook"] = "Shine look", ["dial.slice.shineStrength"] = "Shine strength",
+        ["dial.slice.shineTint"] = "Shine tint", ["dial.slice.shineBloomA"] = "Bloom color A",
+        ["dial.slice.shineBloomB"] = "Bloom color B" }) do
+        local r = rows[path]
+        assertTrue(r ~= nil, path)
+        assertEqual(r.label, want, path .. " label")
+        assertEqual(r.group, "Slices", path .. " tab")
+        assertEqual(r.subgroup, "Shine", path .. " heading")
+        assertEqual(r.instance, "dial", path .. ": a dial member row")
+    end
+    for _, c in ipairs({ "useClassColorShineTint", "useClassColorShineBloomA", "useClassColorShineBloomB" }) do
+        assertTrue(rows["dial.slice." .. c] ~= nil, c .. ": each color with its class color")
+    end
+    local look = rows["dial.slice.shineLook"]
+    local ids = {}
+    for i, v in ipairs(look.values) do ids[i] = v.value end
+    assertEqual(table.concat(ids, ","), "none,gloss,orb,frost,fluid,bevel,rim", "the seven choices, in order")
+    assertEqual(look.default, "none")
+    local st = rows["dial.slice.shineStrength"]
+    assertEqual(table.concat({ st.min, st.max, st.step, st.default }, ","), "0,100,5,85")
+    local slice = NS.db.profile.dials.d2.slice
+    assertEqual(slice.shineLook, "none", "a new dial draws no shine")
+    assertEqual(slice.shineStrength, 85)
+    local w = P.tab("dials", "Slices")
+    assertEqual(#P.all(w, "Heading", "Shine"), 1, "Shine drawn once")
+    -- red under: no disabledIf on the shine rows
+    assertTrue(P.find(w, "Slider", "Shine strength").disabled, "None grays Strength")
+    assertTrue(P.find(w, "ColorPicker", "Shine tint").disabled, "and Tint")
+    assertTrue(P.find(w, "ColorPicker", "Bloom color A").disabled, "and the blooms")
+    P.find(w, "Dropdown", "Shine look"):__fire("OnValueChanged", "rim")
+    assertEqual(NS.db.profile.dials.d2.slice.shineLook, "rim")
+    w = P.tab("dials", "Slices")
+    assertFalse(P.find(w, "Slider", "Shine strength").disabled)
+    assertFalse(P.find(w, "ColorPicker", "Shine tint").disabled)
+    assertTrue(P.find(w, "ColorPicker", "Bloom color A").disabled, "the blooms are Fluid glass's only")
+    assertTrue(P.find(w, "ColorPicker", "Bloom color B").disabled)
+    NS.SchemaRuntime.Set("dial.slice.shineLook", "fluid", "d2")
+    w = P.tab("dials", "Slices")
+    assertFalse(P.find(w, "ColorPicker", "Bloom color A").disabled)
+    assertFalse(P.find(w, "ColorPicker", "Bloom color B").disabled)
+    assertFalse(NS.SchemaRuntime.Set("dial.slice.shineLook", "satin", "d2"), "Satin sheen is not a look")
+    NS.SchemaRuntime.Set("dial.slice.shineStrength", 140, "d2")
+    assertEqual(NS.db.profile.dials.d2.slice.shineStrength, 100, "Strength stops at 100")
+    assertEqual(NS.db.profile.pads.p1.button.shineLook, "none", "the dial's look is its own")
 end)

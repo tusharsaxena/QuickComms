@@ -524,7 +524,8 @@ end
 for _, row in ipairs(buttonRows()) do ROWS[#ROWS + 1] = row end
 
 -- The Dial page's Slices tab (2026-10-21): each slice's fill, the Slice gap between them (dial polish,
--- which retired the Border heading) and the hovered slice's fill; then the Hub tab (dial polish,
+-- which retired the Border heading), the hovered slice's fill and the Shine heading (shineRows, shine
+-- overlay 2026-10-21); then the Hub tab (dial polish,
 -- 2026-10-21: the Hub and Pointer headings, which sat on Slices until then, their paths kept): the
 -- Hub (hubRows) and the pointer (`dial.slice.pointer*`). Each color a composed swatch with its
 -- class-color companion, stamped as dial member rows. The options library orders a page's tabs by
@@ -594,6 +595,10 @@ local function sliceRows()
         desc = L["The space between slices, in pixels. 0 draws them touching."],
         validate = NUMBER, normalize = clamp(0, 20, true) })
     for _, r in ipairs(pair(L["Highlight"], "highlight", L["Highlight color"])) do out[#out + 1] = r end
+    for _, r in ipairs(shineRows(O, checks, { prefix = SLICEP, instance = "dial", page = "dials", tab = SLICES_TAB,
+        defaults = sdef })) do
+        out[#out + 1] = r
+    end
     checks.circleColor, checks.useClassColorCircle = checks.background, { validate = BOOL }
     for _, r in ipairs(hubRows(O, checks)) do out[#out + 1] = r end
     out[#out + 1] = row(POINTER, { path = SLICEP .. "pointerShow", type = "bool", default = sdef.pointerShow,

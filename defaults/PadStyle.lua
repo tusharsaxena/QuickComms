@@ -103,7 +103,8 @@ end
 --- as it was), the Slice gap between neighboring slices (pixels, 0 draws them touching; dial polish
 --- 2026-10-21, which retired the Border lines), the fill a hovered slice takes, and the pointer in the
 --- hub that turns toward the cursor (the Hub tab's Pointer heading since dial polish, 2026-10-21; its
---- `dial.slice.*` paths kept).
+--- `dial.slice.*` paths kept). The Shine heading's leaves (shine overlay, 2026-10-21) are the pad
+--- button's (D.Button), the dial's own: None by default, so a dial saved before them draws as it did.
 function D.DialSlice()
     return {
         background = { r = 0.06, g = 0.06, b = 0.08, a = 0.80 }, useClassColorBackground = false,
@@ -112,6 +113,10 @@ function D.DialSlice()
         pointerShow = true, pointerSize = 20, pointerColor = { r = 1, g = 0.82, b = 0, a = 1 },
         pointerOffset = 0,   -- the pointer's distance from the dial's center; 0 is just outside the hub
         useClassColorPointer = false,
+        shineLook = "none", shineStrength = 85,
+        shineTint = { r = 1, g = 1, b = 1, a = 1 }, useClassColorShineTint = false,
+        shineBloomA = { r = 1, g = 0.604, b = 0.835, a = 1 }, useClassColorShineBloomA = false,   -- #ff9ad5
+        shineBloomB = { r = 0.541, g = 1, b = 0.757, a = 1 }, useClassColorShineBloomB = false,   -- #8affc1
     }
 end
 

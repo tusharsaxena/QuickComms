@@ -263,6 +263,15 @@ local function build()
         function r:GetTexture() return self.__texture end
         function r:SetBlendMode(v) self.__blend = v return self end
         function r:GetBlendMode() return self.__blend or "BLEND" end
+        -- Turns and masks (the dial's slices and their shine overlay, modules/Dial_Slices.lua), recorded so
+        -- a test can ask how a texture is turned and what cuts it.
+        function r:SetRotation(v) self.__rotation = v return self end
+        function r:GetRotation() return self.__rotation or 0 end
+        function r:AddMaskTexture(m)
+            self.__masks = self.__masks or {}
+            self.__masks[#self.__masks + 1] = m
+            return self
+        end
         function r:SetColorTexture(cr, cg, cb, ca) self.__color = { cr, cg, cb, ca } return self end
         function r:SetVertexColor(cr, cg, cb, ca) self.__color = { cr, cg, cb, ca } return self end
         function r:SetTextColor(cr, cg, cb, ca) self.__color = { cr, cg, cb, ca } return self end
@@ -325,6 +334,11 @@ local function build()
             return r
         end
         frame.CreateFontString = function(self) return regionOn(self, "FontString") end
+        frame.CreateMaskTexture = function(self, _, layer, _, sub)
+            local r = regionOn(self, "MaskTexture")
+            r.__layer, r.__sublevel = layer, sub
+            return r
+        end
         -- Frame levels as the client keeps them: a child sits one above its parent until it is set.
         frame.SetFrameLevel = function(self, level)
             self.__level = level
