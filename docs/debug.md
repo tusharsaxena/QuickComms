@@ -34,8 +34,8 @@ The addon's sections (`modules/Diagnostics.lua`), in order:
 | `situation` | the snapshot: content, instance, difficulty, key level, group, leadership, class, spec, role, combat, and the active lockdown reasons |
 | `restrictions` | the restriction state: every reason in effect (Map included), the reason the lockdown chip names, `canSendChat`, and the combat flag as Restrictions reads it (the `PLAYER_REGEN` edge first) |
 | `library` | the counts (callouts, groups, pads, dials), `nextId`, `seeded`, and the ids of the active groups under the current situation |
-| `surfaces` | the pads built, whether test mode is on, the previewed situation (`previewAs`, or `off`), and per pad its ordered active groups, its stale hint and its lockdown chip (the pads; the dials have their own section) |
-| `dials` | each built dial: its id, header (`QuickCommsDial<n>`), key, ring count, the ring it opens on, whether it is open, its ordered active groups, its stale hint and its lockdown chip |
+| `surfaces` | the pads built, whether test mode is on, the previewed situation (`previewAs`, or `off`), whether this character's pads are hidden (`padsHidden=`), and per pad its ordered active groups, its stale hint and its lockdown chip (the pads; the dials have their own section) |
+| `dials` | each built dial: its id, header (`QuickCommsDial<n>`), key, ring count, the ring it opens on, whether it is open, its ordered active groups, its stale hint and its lockdown chip; the ring on screen (`shown=`, or `closed`); its look (`look`: mode, slices, radius, icon offset, open at; `slices`: border size, pointer show, size and offset, labels show, size and offset, tooltip side and offset; `paging`: offset, arrow size and gap, dot size, pill width, dot gap); and one line per ring of its plan (title, page of pages, wedge count, start, item count, and the rings its hub, previous and next lead to) |
 | `bindings` | each Open Comms Dial entry and Toggle Comms Pads: the key WoW binds to it (or `none`) and the command (`G -> CLICK QuickCommsDial1:Toggle`) |
 | `send` | the send buttons and how many are armed, each armed one with its pad or dial, callout and escaped line; the combat-end queue's pending keys; the guard (window, last press, time remaining); the echo tracker's counts (pending, sent, dropped, unknown sender, ignored) |
 
@@ -48,10 +48,14 @@ timer and registers no event. It reads no chat and no other addon's data.
 summary, held until logging is turned on), `Migrate`, and the phase 1 feature tags: `Situation`
 (each snapshot change, with the cause), `RES` (each restriction change), `Library` (each registry
 write and the `Prepare` summary), and phase 2's: `Send` (a button, arm or disarm refused in combat),
-`Guard` (a press inside the guard window), `Echo` (a press confirmed `sent` or reported `dropped`),
+`Guard` (a press inside the guard window), `Send` also logs each press (callout, pad or dial, chat type, and `(disarmed)` when it was not armed), `Echo` (a press confirmed `sent` or reported `dropped`),
 `Queue` (an entry queued or replaced, the drain, a drop, the held stand-down) and `Pad` (a pad
-built or moved, a rebuild run or held for combat, test mode on or off), and phase 4's: `Dial` (a dial
-header built, an attribute or header write refused in combat) and `Bind` (the diagnostics report's
+built or moved, a rebuild run or held for combat, test mode on or off, and after each rebuild what
+every pad shows), and phase 4's: `Dial` (a dial header built, an attribute or header write refused in
+combat; since 2026-10-21 also a dial applied at its place (ring count, the ring it opens on, slices,
+radius) or released, each open and close, each ring the snippets show (an open, a group wedge, a page
+turn), and after each rebuild what every dial shows), `Pads` (`/qc toggle` and the Toggle Comms Pads
+key hiding or showing the pads, 2026-10-21: no chat line any more) and `Bind` (the diagnostics report's
 bindings section; the Comms Dial page no longer sets a key, since the dial rework of 2026-10-21), and phase 5's: `Share` (an export: what it
 held and its length); `Library` also logs each import's tally, and the import's field writes share
 one `[Set] import share: N rows` line. The libraries add their own: `Cmd`, `Cfg`, `Launcher`,

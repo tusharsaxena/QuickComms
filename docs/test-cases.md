@@ -203,7 +203,7 @@ Total.
 - disabled [§7 step 10]: the stand-in latch: perf, then disabled; perf released first leaves it down
 - disabled [§7 step 10]: the stand-in latch: disabled, then perf; enabled first leaves it down
 
-### test_diagnostics.lua (10)
+### test_diagnostics.lua (12)
 
 - diagnostics: the sections are the addon's, in report order
 - diagnostics: the report names the schema, the profile, the holds and the launcher
@@ -215,6 +215,8 @@ Total.
 - diagnostics: [phase 3] the surfaces section names the preview
 - diagnostics: [final 21] the settings section lists no member row
 - diagnostics: [phase 4] the dials and bindings sections name each dial, its key and each entry's WoW binding
+- diagnostics: [dial rework] the report names the pads' hidden state, each dial's look, the ring shown and every ring
+- diagnostics: [debug] the log follows a dial open, a ring shown, a press and a close, once each
 
 ### test_compat.lua (12)
 
@@ -1187,7 +1189,7 @@ Total.
 | test_schema.lua | 19 |
 | test_slash.lua | 20 |
 | test_disabled.lua | 21 |
-| test_diagnostics.lua | 10 |
+| test_diagnostics.lua | 12 |
 | test_compat.lua | 12 |
 | test_restrictions.lua | 16 |
 | test_situation.lua | 16 |
@@ -1231,4 +1233,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1005** |
+| **Total** | **1007** |

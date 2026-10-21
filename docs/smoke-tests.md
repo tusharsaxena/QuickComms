@@ -93,8 +93,8 @@ and `/qc diagnostics` still answer; the minimap menu's Enabled entry is unticked
 mode and Show window, each ticking the state it shows and toggling it; left-click → the settings
 panel opens. Result:
 
-**STATE-3. Hide the pads.** `/qc toggle` → every Comms Pad hides and the chat says "Comms Pads hidden
-on this character until you show them again."; the minimap menu's Show window is unticked; the dials
+**STATE-3. Hide the pads.** `/qc toggle` → every Comms Pad hides, and nothing is printed to chat
+(2026-10-21: the debug log has a `[Pads] hidden on this character until shown again` line); the minimap menu's Show window is unticked; the dials
 still open. `/qc test` → the pads show as placeholders, and turning it off hides them again. `/qc
 toggle` → the pads are back. Hide them, pull a training dummy and type `/qc toggle` → nothing changes
 until combat ends, then the pads show, with no Lua error. Result:
@@ -887,8 +887,8 @@ here; log back to the first → still G there. Switch profile (Profiles page) �
 change. Result:
 
 **KEY-3. Toggle Comms Pads (2026-10-20).** Options → Keybindings → Ka0s Quick Comms lists Toggle Comms
-Pads after Open Comms Dial 1 to 4. Bind it to P. Press P once → every pad hides and the chat says
-"Comms Pads hidden on this character until you show them again." (exactly once: one press, one toggle); the minimap menu's Show
+Pads after Open Comms Dial 1 to 4. Bind it to P. Press P once → every pad hides, nothing is printed to chat, and with
+`/qc debug on` the log has exactly one `[Pads] hidden on this character until shown again` line (one press, one toggle); the minimap menu's Show
 window is unticked. Press P → the pads are back. In combat, press P → nothing changes until combat
 ends, then the pads toggle, with no Lua error. `/qc disable`, press P → the disabled line, as
 `/qc toggle` prints. Result:
