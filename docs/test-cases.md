@@ -743,7 +743,7 @@ Total.
 - page pads: [polish] the page is titled Pad
 - page pads: [polish] no user-facing string sends the player to a Comms Pad or Comms Dial page
 
-### test_page_dials.lua (25)
+### test_page_dials.lua (26)
 
 - dials page: New dial makes a second dial holding every built-in, selects it, and builds QuickCommsDial2
 - dials page: New dial takes the lowest free number, so a delete never leads to two names alike
@@ -766,6 +766,7 @@ Total.
 - page dials: [polish] Hub heading rows on the Slices tab
 - dials page: [slices] every slice texture the dial names ships under media/textures
 - dials page: [paging] Paging sizes, spaces and colors the arrows and page indicators; the dial follows
+- page dials: [paging] Page indicator carries the background and border rows, their ranges and defaults
 - dials page: [wheel] Icon offset moves the icons in or out; 0 is the ring radius
 - page dials: [polish] tabs read Slices, Paging, Slice labels, Group labels, Icons
 - page dials: [polish] Icon offset is on the Icons tab, not Wheel
@@ -1068,7 +1069,7 @@ Total.
 - pad: [polish] header reads Quick Comms: World
 - pad: [polish] header reads Quick Comms: M+ · Windrunner Spire +14
 
-### test_dial.lua (58)
+### test_dial.lua (60)
 
 - dial: Apply builds QuickCommsDial<n> with a ring per page, each callout wedge armed with its baked line
 - dial: a refused callout is a dimmed, disarmed wedge; a ring wedge is disarmed
@@ -1106,6 +1107,8 @@ Total.
 - dial slices: [polish] no border lines are drawn
 - dial slices: [polish] a gap shifts each fill outward along its bisector
 - dial slices: [polish] gap 0 draws as before
+- dial: [paging] the indicators sit on a rounded background sized to the row; off hides it
+- dial: [paging] every dot and the pill has a border, its size plus twice the Dot border; 0 draws none
 - dial: [front] the hub, its circle and the pointer draw over the slices
 - dial: [tooltip] a wedge's tooltip sits outside the dial: above by default, on the Labels tab's side
 - dial: [pointer] the pointer is a catalog glyph, sized, colored and placed by the Slices tab, and can be off
@@ -1257,7 +1260,7 @@ Total.
 | test_groups_when.lua | 20 |
 | test_page_groups.lua | 67 |
 | test_page_pads.lua | 26 |
-| test_page_dials.lua | 25 |
+| test_page_dials.lua | 26 |
 | test_page_share.lua | 12 |
 | test_check.lua | 6 |
 | test_send_guard.lua | 10 |
@@ -1271,7 +1274,7 @@ Total.
 | test_surfaces.lua | 27 |
 | test_pad_render.lua | 21 |
 | test_pad.lua | 45 |
-| test_dial.lua | 58 |
+| test_dial.lua | 60 |
 | test_icon_style.lua | 9 |
 | test_glow.lua | 11 |
 | test_vendor_sync.lua | 3 |
@@ -1281,4 +1284,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1055** |
+| **Total** | **1058** |

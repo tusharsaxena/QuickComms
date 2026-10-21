@@ -312,7 +312,11 @@ local function build()
     end
 
     local function dress(frame)
-        frame.CreateTexture = function(self) return regionOn(self, "Texture") end
+        frame.CreateTexture = function(self, _, layer, _, sub)
+            local r = regionOn(self, "Texture")
+            r.__layer, r.__sublevel = layer, sub   -- the draw layer, so a test can ask what sits over what
+            return r
+        end
         frame.CreateFontString = function(self) return regionOn(self, "FontString") end
         -- Frame levels as the client keeps them: a child sits one above its parent until it is set.
         frame.SetFrameLevel = function(self, level)

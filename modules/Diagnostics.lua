@@ -129,8 +129,9 @@ local function dialLook(out, id, d)
     out:add("Dial", "%s slices gap=%s pointer=%s size=%s offset=%s labels=%s size=%s offset=%s tooltip=%s/%s", id,
         s.gap, s.pointerShow, s.pointerSize, s.pointerOffset, l.show, l.fontSize, l.offset, l.tooltipSide,
         l.tooltipOffset)
-    out:add("Dial", "%s paging offset=%s arrow=%s gap=%s dot=%s pill=%s dotGap=%s", id, pg.offset, pg.arrowSize,
-        pg.arrowGap, pg.dotSize, pg.pillWidth, pg.dotGap)
+    out:add("Dial", "%s paging offset=%s arrow=%s gap=%s dot=%s pill=%s dotGap=%s back=%s pad=%s border=%s", id,
+        pg.offset, pg.arrowSize, pg.arrowGap, pg.dotSize, pg.pillWidth, pg.dotGap, pg.dotBackShow, pg.dotBackPadding,
+        pg.dotBorder)
     local h, t = d.hub or {}, d.title or {}
     out:add("Dial", "%s hub style=%s size=%s circle=%s line=%s border=%s groupLabels=%s", id, h.style, h.size,
         h.circleSize, h.lineWidth, h.borderSize, t.show)

@@ -213,8 +213,8 @@ end
 --- A dial's look for one rebuild: its radius (clamped); its Slice labels tab (`dial.label`) as a font
 --- (Pad_Render.LabelFont), whether labels show, their line height (0 when they do not) and where
 --- the tooltip goes; its Slices tab (`dial.slice`: the fill, the Slice gap in pixels, the highlight and
---- the pointer) and Paging tab (`dial.page`, from `dial`) with each color resolved through its class
---- color companion; the hub (`dial.hub`, hubLook); the Group labels tab (`dial.title`, from `dial`)
+--- the pointer) and Paging tab (`dial.page`, from `dial`: the indicators' background and border
+--- included) with each color resolved through its class color companion; the hub (`dial.hub`, hubLook); the Group labels tab (`dial.title`, from `dial`)
 --- as `title = { show, font, line }`, its line 0 while off; and the Icon offset (`dial.iconOffset`).
 function R.Look(radius, label, slice, dial)
     label = type(label) == "table" and label or {}
@@ -243,7 +243,11 @@ function R.Look(radius, label, slice, dial)
             arrow = color(page.arrowColor, page.useClassColorArrow, P.arrowColor),
             plate = color(page.plateColor, page.useClassColorPlate, P.plateColor),
             current = color(page.currentColor, page.useClassColorCurrent, P.currentColor),
-            dot = color(page.dotColor, page.useClassColorDot, P.dotColor) } }
+            dot = color(page.dotColor, page.useClassColorDot, P.dotColor),
+            dotBackShow = page.dotBackShow ~= false, dotBackPadding = n("dotBackPadding"),
+            dotBack = color(page.dotBackColor, page.useClassColorDotBack, P.dotBackColor),
+            dotBorder = n("dotBorder"),
+            dotBorderColor = color(page.dotBorderColor, page.useClassColorDotBorder, P.dotBorderColor) } }
 end
 
 --- The pointer in the dial's look: its size, color and reach (the Pointer offset from the hub's

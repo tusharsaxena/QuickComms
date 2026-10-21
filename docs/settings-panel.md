@@ -602,8 +602,14 @@ Preview  each ring as the current or previewed situation builds it, wedge by wed
   (the chevron, gold) and Arrow background `plateColor` (the round plate, the slices' fill). Page
   indicator: Dot size `dotSize` (2 to 20, default 6; the pill's height too), Current page width
   `pillWidth` (2 to 60, default 18; the dot size makes it a plain dot), Dot spacing `dotGap` (0 to
-  30, default 6), Current page color `currentColor` (gold) and Other pages color `dotColor` (gray).
-  Each color is a composed swatch pair with Use class color.
+  30, default 6), Current page color `currentColor` (gold) and Other pages color `dotColor` (gray);
+  then (dial polish, 2026-10-21, so the row reads on a busy scene) Show indicator background
+  `dotBackShow` (default on), Indicator background `dotBackColor` (the plates' fill) and Background
+  padding `dotBackPadding` (0 to 20, default 4): a rounded strip behind the row, as wide and tall as
+  the indicators and their borders plus the padding each side, its color and padding grayed out
+  while off; Dot border `dotBorder` (0 to 4 pixels, default 1, 0 shows None and draws none) and Dot
+  border color `dotBorderColor` (near black, grayed out at 0): an outline around every dot and the
+  pill. Each color is a composed swatch pair with Use class color.
 - **No Binding tab** (the dial rework, 2026-10-21): the key is WoW's own binding of the dial's
   Bindings.xml entry, Open Comms Dial <n>, n the dial's place in the dial list, set only in Options →
   Keybindings → Ka0s Quick Comms; it is account-wide unless the player ticks Character Specific

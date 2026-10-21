@@ -131,7 +131,7 @@ test("diagnostics: [dial rework] the report names the pads' hidden state, each d
     -- red under: keep border= (the retired slice border) in modules/Diagnostics.lua dialLook
     assertTrue(text:find("d2 slices gap=0 pointer=true size=20 offset=0 labels=true size=12 offset=0 tooltip=top/8", 1, true)
         ~= nil, text)
-    assertTrue(text:find("d2 paging offset=6 arrow=24 gap=10 dot=6 pill=18 dotGap=6", 1, true) ~= nil, text)
+    assertTrue(text:find("d2 paging offset=6 arrow=24 gap=10 dot=6 pill=18 dotGap=6 back=true pad=4 border=1", 1, true) ~= nil, text)
     -- red under: drop the hub line or the group labels' show from modules/Diagnostics.lua dialLook
     assertTrue(text:find("d2 hub style=solid size=40 circle=22 line=2 border=0 groupLabels=true", 1, true) ~= nil, text)
     assertTrue(text:find("d2 ring 1 Comms Dial page=1/1", 1, true) ~= nil, "the ring of groups, M+ and In Group")

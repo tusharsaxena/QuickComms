@@ -195,8 +195,8 @@ DL.PAGING = { arrowSize = DL.ARROW, arrowGap = 10, dotSize = 6, pillWidth = 18, 
 --- A paged ring's row under the dial (`g`, a Geometry), showing page `current` of `pages`, measured
 --- by the Paging tab (`pg`, DL.PAGING's fields): the row's height (`y`, from the hub's center, `offset`
 --- under the S label and the disc), each indicator's x and width (the current page a pill,
---- `pillWidth` wide; the others dots), and the arrows' x (right; left is its negative), `arrowGap`
---- clear of the indicators.
+--- `pillWidth` wide; the others dots), the indicators' width end to end (`total`), and the arrows'
+--- x (right; left is its negative), `arrowGap` clear of the indicators.
 function DL.Nav(pages, current, g, pg)
     pages = math.max(1, tonumber(pages) or 1)
     current = tonumber(current) or 1
@@ -214,7 +214,7 @@ function DL.Nav(pages, current, g, pg)
     end
     local tall = math.max(pg.arrowSize, pg.dotSize)
     return { y = round(-(g.below + pg.offset + tall / 2)), bottom = round(-(g.below + pg.offset + tall)),
-        dots = dots, widths = widths, arrow = round(total / 2 + pg.arrowGap + pg.arrowSize / 2) }
+        dots = dots, widths = widths, total = total, arrow = round(total / 2 + pg.arrowGap + pg.arrowSize / 2) }
 end
 
 --- The icons' distance from the center: the Icon offset `at` when it is set (above 0), else the ring

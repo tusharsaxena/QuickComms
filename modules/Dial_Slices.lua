@@ -14,7 +14,10 @@ local addonName, NS = ...
 -- highlight fill, moved and sized as its slice (Track, from the pointer's per-frame update, which
 -- also hovers the wedge on it: its tooltip and hover glow, since the wedges take no mouse). A paged
 -- ring's page row holds a pill for its own page and a dot for each other one, under the disc
--- (DL.Nav); the arrows either side are secure buttons modules/Dial.lua places.
+-- (DL.Nav); the arrows either side are secure buttons modules/Dial.lua places. Each indicator has a
+-- border, a larger copy of its own texture behind it in the border color, and the row sits on a
+-- rounded background (dial polish, 2026-10-21): the pill texture in three pieces, its two round caps
+-- and its straight middle stretched, so the caps stay round at any width.
 
 NS.DialSlices = NS.DialSlices or {}
 local S = NS.DialSlices
@@ -25,6 +28,7 @@ local MEDIA = "Interface\\AddOns\\" .. addonName .. "\\media\\textures\\"
 local SECTOR = MEDIA .. "dial-sector-%d"
 S.PILL = MEDIA .. "dial-pill"
 S.DIM = 0.4   -- a dot for a page not shown, and an arrow at an end
+local CAP = 0.125   -- dial-pill.tga's round cap, of its width (64 x 16: a cap half its height wide)
 
 --- The texture for one slice of an n-slice ring: the whole disc for one.
 function S.SectorTexture(n)
@@ -50,12 +54,20 @@ local function nth(ring, list, n, layer, sub)
     return list[n]
 end
 
---- Build a ring container's slice textures, once per container: the fills, the highlight and the
---- page indicators, each list grown on first use.
+--- Build a ring container's slice textures, once per container: the fills, the highlight, the page
+--- indicators and their borders (each list grown on first use), and the indicators' background (its
+--- left cap, middle and right cap, under the borders, which sit under the indicators).
 function S.Dress(ring)
     if ring.qcSlicesDressed then return ring end
     ring.qcSlicesDressed = true
-    ring.qcFills, ring.qcDots = {}, {}
+    ring.qcFills, ring.qcDots, ring.qcDotEdges = {}, {}, {}
+    ring.qcDotBack = {}
+    for k, coords in pairs({ left = { 0, CAP }, mid = { CAP, 1 - CAP }, right = { 1 - CAP, 1 } }) do
+        local t = texture(ring, "OVERLAY", -2)
+        t:SetTexture(S.PILL)
+        t:SetTexCoord(coords[1], coords[2], 0, 1)
+        ring.qcDotBack[k] = t
+    end
     ring.qcHighlight = texture(ring, "BACKGROUND", 2)
     return ring
 end
@@ -94,26 +106,60 @@ local function paintFills(ring, spec, look)
     ring.qcHighlight:Hide()
 end
 
+-- The indicators' background, `w` by `h` centered on the row at `y`: the pill's left cap, its
+-- middle stretched across, its right cap; `on` false hides it.
+local function paintBack(ring, on, w, h, y, c)
+    local back, cap = ring.qcDotBack, h / 2
+    local function piece(t, x, width)
+        t:SetSize(width, h)
+        t:ClearAllPoints()
+        t:SetPoint("CENTER", ring, "CENTER", x, y)
+        tint(t, c)
+        t:SetShown(on)
+    end
+    piece(back.left, -(w - cap) / 2, cap)
+    piece(back.mid, 0, w - 2 * cap)
+    piece(back.right, (w - cap) / 2, cap)
+end
+
+-- One indicator `d` (and its border `e`, `edge` pixels wider each side; 0 hides it) at `x`, `y`.
+local function paintDot(ring, d, e, tex, w, h, x, y, c, edge, ec)
+    for _, t in ipairs({ d, e }) do
+        local grow = t == e and 2 * edge or 0
+        t:SetTexture(tex)
+        t:SetSize(w + grow, h + grow)
+        t:ClearAllPoints()
+        t:SetPoint("CENTER", ring, "CENTER", x, y)
+    end
+    tint(d, c)
+    tint(e, ec)
+    d:Show()
+    e:SetShown(edge > 0)
+end
+
 -- A paged ring's indicators (DL.Nav, the Paging tab): its own page a pill in the current color, the
--- others dots in the other color.
+-- others dots in the other color, each with its border, on the background (as wide and tall as the
+-- row and its borders, plus the padding each side).
 local function paintDots(ring, spec, look)
     local pages = (spec.pages or 1) > 1 and spec.pages or 0
     local pg = look.paging
     local nav = DL.Nav(math.max(pages, 1), spec.page, DL.Geometry(look.radius, look.line, look.labelReach), pg)
+    local edge = pg.dotBorder or 0
     for p = 1, math.max(pages, #ring.qcDots) do
         local d = nth(ring, ring.qcDots, p, "OVERLAY")
+        local e = nth(ring, ring.qcDotEdges, p, "OVERLAY", -1)
         if p <= pages then
             local current = p == spec.page
-            d:SetTexture(current and S.PILL or CIRCLE)
-            d:SetSize(nav.widths[p], pg.dotSize)
-            d:ClearAllPoints()
-            d:SetPoint("CENTER", ring, "CENTER", nav.dots[p], nav.y)
-            tint(d, current and pg.current or pg.dot)
-            d:Show()
+            paintDot(ring, d, e, current and S.PILL or CIRCLE, nav.widths[p], pg.dotSize, nav.dots[p], nav.y,
+                current and pg.current or pg.dot, edge, pg.dotBorderColor)
         else
             d:Hide()
+            e:Hide()
         end
     end
+    local pad = 2 * (edge + (pg.dotBackPadding or 0))
+    paintBack(ring, pages > 0 and pg.dotBackShow == true, nav.total + pad, pg.dotSize + pad, nav.y,
+        pg.dotBack or pg.plate)
 end
 
 --- Draw one ring's slices and page row in the dial's look (Dial_Render.Look), and keep its shape

@@ -735,6 +735,66 @@ test("dial slices: [polish] gap 0 draws as before", function()
     end
 end)
 
+-- ── the page indicators' background and border (dial polish, 2026-10-21) ─────────────────────
+
+test("dial: [paging] the indicators sit on a rounded background sized to the row; off hides it", function()
+    local NS = live()
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    local ring = NS.Dial.Instance("d2").rings.active[2]   -- page 1 of 2: the pill (18), a dot (6), a gap (6)
+    local back = ring.qcDotBack
+    -- red under: no background in modules/Dial_Slices.lua paintDots
+    assertTrue(back ~= nil, "the background is drawn")
+    local w, y = 0, select(5, ring.qcDots[1]:GetPoint(1))
+    for _, k in ipairs({ "left", "mid", "right" }) do
+        local t = back[k]
+        assertTrue(t:IsShown(), k .. " shown by default")
+        assertEqual(t.__texture, NS.DialSlices.PILL, k .. " is the pill")
+        assertEqual(t.__size[2], 6 + 2 * 1 + 2 * 4, k .. ": the dot, its border and the padding, tall")
+        assertEqual(select(5, t:GetPoint(1)), y, k .. " centered on the row")
+        assertEqual(table.concat(t.__color, ","), "0.06,0.06,0.08,0.8", k .. " in the plates' color")
+        assertEqual(t.__sublevel, -2, k .. " under the borders")
+        w = w + t.__size[1]
+    end
+    assertEqual(w, 30 + 2 * 1 + 2 * 4, "the row, its border and the padding, wide")
+    assertEqual(back.left.__size[1], back.left.__size[2] / 2, "a round cap: half its height wide")
+    assertEqual(table.concat(back.left.__texCoord, ","), "0,0.125,0,1", "the pill's left cap")
+    assertTrue(NS.SchemaRuntime.Set("dial.page.dotBackPadding", 10, "d2"))
+    assertTrue(NS.SchemaRuntime.Set("dial.page.dotBackColor", { r = 0, g = 0, b = 1, a = 0.5 }, "d2"))
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    assertEqual(back.mid.__size[2], 6 + 2 + 20, "the padding grows it")
+    assertEqual(table.concat(back.mid.__color, ","), "0,0,1,0.5", "in its color")
+    assertTrue(NS.SchemaRuntime.Set("dial.page.dotBackShow", false, "d2"))
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    for _, k in ipairs({ "left", "mid", "right" }) do assertFalse(back[k]:IsShown(), k .. " hidden while off") end
+    assertFalse(NS.Dial.Instance("d2").rings.active[1].qcDotBack.mid:IsShown(), "a ring of one page has none")
+end)
+
+test("dial: [paging] every dot and the pill has a border, its size plus twice the Dot border; 0 draws none", function()
+    local NS = live()
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    local ring = NS.Dial.Instance("d2").rings.active[2]
+    -- red under: no border textures in modules/Dial_Slices.lua paintDots
+    local edges = ring.qcDotEdges
+    assertTrue(edges ~= nil and edges[1] ~= nil, "a border per indicator")
+    assertEqual(table.concat(edges[1].__size, ","), "20,8", "the pill (18 x 6) and 1 each side")
+    assertEqual(table.concat(edges[2].__size, ","), "8,8", "the dot (6) and 1 each side")
+    assertEqual(edges[1].__texture, NS.DialSlices.PILL, "the pill's own shape")
+    assertEqual(edges[2].__texture, ring.qcDots[2].__texture, "the dot's own shape")
+    assertEqual(table.concat(edges[2].__color, ","), "0,0,0,0.9", "near black")
+    assertEqual(edges[2].__sublevel, -1, "over the background, under the dot")
+    assertEqual(select(4, edges[2]:GetPoint(1)), select(4, ring.qcDots[2]:GetPoint(1)), "behind its dot")
+    assertTrue(NS.SchemaRuntime.Set("dial.page.dotBorder", 3, "d2"))
+    assertTrue(NS.SchemaRuntime.Set("dial.page.dotBorderColor", { r = 1, g = 0, b = 0, a = 1 }, "d2"))
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    assertEqual(table.concat(edges[1].__size, ","), "24,12")
+    assertEqual(table.concat(edges[2].__color, ","), "1,0,0,1", "in its color")
+    assertTrue(edges[1]:IsShown() and edges[2]:IsShown())
+    assertTrue(NS.SchemaRuntime.Set("dial.page.dotBorder", 0, "d2"))
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    assertFalse(edges[1]:IsShown() or edges[2]:IsShown(), "0 draws no border")
+    assertEqual(ring.qcDotBack.mid.__size[2], 6 + 8, "nor counts one in the background")
+end)
+
 test("dial: [front] the hub, its circle and the pointer draw over the slices", function()
     local NS = live()
     assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))

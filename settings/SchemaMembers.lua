@@ -561,15 +561,19 @@ end
 for _, row in ipairs(sliceRows()) do ROWS[#ROWS + 1] = row end
 
 -- The Dial page's Paging tab (2026-10-21): a paged ring's row under the dial. Where it sits, the
--- arrows (size, spacing, chevron and plate colors) and the page indicators (sizes, spacing and the
--- current and other pages' colors), each color a composed swatch with its class-color companion;
--- after the Slices rows, so the tab follows Slices.
+-- arrows (size, spacing, chevron and plate colors) and the page indicators (sizes, spacing, the
+-- current and other pages' colors, then their background and border: dial polish, 2026-10-21), each
+-- color a composed swatch with its class-color companion; after the Slices rows, so the tab follows
+-- Slices.
 local PAGING, PAGEP = L["Paging"], "dial.page."
 local function pagingRows()
     local O = NS.addon.Settings.Helpers
     local checks = composedChecks(O)
-    for _, k in ipairs({ "arrowColor", "plateColor", "currentColor", "dotColor" }) do checks[k] = checks.background end
-    for _, k in ipairs({ "useClassColorArrow", "useClassColorPlate", "useClassColorCurrent", "useClassColorDot" }) do
+    for _, k in ipairs({ "arrowColor", "plateColor", "currentColor", "dotColor", "dotBackColor", "dotBorderColor" }) do
+        checks[k] = checks.background
+    end
+    for _, k in ipairs({ "useClassColorArrow", "useClassColorPlate", "useClassColorCurrent", "useClassColorDot",
+        "useClassColorDotBack", "useClassColorDotBorder" }) do
         checks[k] = { validate = BOOL }
     end
     local pdef = T.dial.page
@@ -601,6 +605,28 @@ local function pagingRows()
     out[#out + 1] = size(INDICATOR, "dotGap", L["Dot spacing"], 0, 30, L["The gap between page indicators, in pixels."], true)
     for _, r in ipairs(pair(INDICATOR, "currentColor", L["Current page color"], "useClassColorCurrent")) do out[#out + 1] = r end
     for _, r in ipairs(pair(INDICATOR, "dotColor", L["Other pages color"], "useClassColorDot")) do out[#out + 1] = r end
+    local function backOff() return NS.SchemaRuntime.Get(PAGEP .. "dotBackShow") == false end
+    local function borderOff() return NS.SchemaRuntime.Get(PAGEP .. "dotBorder") == 0 end
+    out[#out + 1] = { path = PAGEP .. "dotBackShow", instance = "dial", type = "bool", default = pdef.dotBackShow,
+        page = "dials", group = PAGING, subgroup = INDICATOR, label = L["Show indicator background"], startsLine = true,
+        desc = L["Draw a rounded background behind the page indicators, so they read on a busy scene."],
+        validate = BOOL }
+    for _, r in ipairs(pair(INDICATOR, "dotBackColor", L["Indicator background"], "useClassColorDotBack")) do
+        r.disabledIf = backOff
+        out[#out + 1] = r
+    end
+    local padding = size(INDICATOR, "dotBackPadding", L["Background padding"], 0, 20,
+        L["How far the background reaches past the page indicators, in pixels."], true)
+    padding.disabledIf = backOff
+    out[#out + 1] = padding
+    local border = size(INDICATOR, "dotBorder", L["Dot border (0 = none)"], 0, 4,
+        L["How wide the outline around each page indicator is, in pixels. 0 draws none."], true)
+    border.zeroText = L["None"]
+    out[#out + 1] = border
+    for _, r in ipairs(pair(INDICATOR, "dotBorderColor", L["Dot border color"], "useClassColorDotBorder")) do
+        r.disabledIf = borderOff
+        out[#out + 1] = r
+    end
     return out
 end
 

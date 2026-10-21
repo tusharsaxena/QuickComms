@@ -367,7 +367,7 @@ test("dials page: [paging] Paging sizes, spaces and colors the arrows and page i
     for _, heading in ipairs({ "Position", "Arrows", "Page indicator" }) do
         assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
     end
-    assertEqual(#P.all(w, "CheckBox", "Use class color"), 4, "arrow, background, current and other pages")
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 6, "arrow, background, current, other pages, indicator background and dot border")
     P.find(w, "Slider", "Arrow size"):__fire("OnMouseUp", 36)
     assertEqual(NS.db.profile.dials.d2.page.arrowSize, 36)
     -- red under: size the arrows from DL.ARROW in modules/Dial.lua placeArrows
@@ -378,6 +378,47 @@ test("dials page: [paging] Paging sizes, spaces and colors the arrows and page i
     assertEqual(NS.db.profile.dials.d2.page.dotSize, 9)
     P.ctx("dials").panel.defaultsOnClick()
     assertEqual(NS.db.profile.dials.d2.page.arrowSize, 24)
+end)
+
+test("page dials: [paging] Page indicator carries the background and border rows, their ranges and defaults", function()
+    local NS, _, P = open()
+    local rows = {}
+    for _, r in ipairs(NS.addon.Settings.RowsForPage("dials")) do rows[r.path] = r end
+    -- red under: no dotBack/dotBorder rows in settings/SchemaMembers.lua pagingRows
+    for path, want in pairs({ ["dial.page.dotBackShow"] = "Show indicator background",
+        ["dial.page.dotBackColor"] = "Indicator background", ["dial.page.dotBackPadding"] = "Background padding",
+        ["dial.page.dotBorder"] = "Dot border (0 = none)", ["dial.page.dotBorderColor"] = "Dot border color" }) do
+        local r = rows[path]
+        assertTrue(r ~= nil, path)
+        assertEqual(r.label, want, path .. " label")
+        assertEqual(r.group, "Paging", path .. " tab")
+        assertEqual(r.subgroup, "Page indicator", path .. " heading")
+    end
+    assertTrue(rows["dial.page.dotBackShow"].default)
+    assertEqual(table.concat({ rows["dial.page.dotBackPadding"].min, rows["dial.page.dotBackPadding"].max,
+        rows["dial.page.dotBackPadding"].default }, ","), "0,20,4")
+    assertEqual(table.concat({ rows["dial.page.dotBorder"].min, rows["dial.page.dotBorder"].max,
+        rows["dial.page.dotBorder"].default }, ","), "0,4,1")
+    assertEqual(rows["dial.page.dotBorder"].zeroText, "None")
+    assertTrue(rows["dial.page.useClassColorDotBack"] ~= nil and rows["dial.page.useClassColorDotBorder"] ~= nil,
+        "each color with its class color")
+    local page = NS.db.profile.dials.d2.page
+    assertTrue(page.dotBackShow, "a new dial's background is on")
+    assertEqual(page.dotBackPadding, 4)
+    assertEqual(page.dotBorder, 1)
+    local w = P.tab("dials", "Paging")
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 6, "four, then the background's and the border's")
+    assertFalse(P.find(w, "Slider", "Background padding").disabled)
+    P.find(w, "CheckBox", "Show indicator background"):__fire("OnValueChanged", false)
+    assertFalse(NS.db.profile.dials.d2.page.dotBackShow)
+    w = P.tab("dials", "Paging")
+    -- red under: no disabledIf on the background rows
+    assertTrue(P.find(w, "Slider", "Background padding").disabled, "off grays the padding")
+    NS.SchemaRuntime.Set("dial.page.dotBorder", 9, "d2")
+    assertEqual(NS.db.profile.dials.d2.page.dotBorder, 4, "the border stops at 4")
+    P.ctx("dials").panel.defaultsOnClick()
+    assertTrue(NS.db.profile.dials.d2.page.dotBackShow)
+    assertEqual(NS.db.profile.dials.d2.page.dotBorder, 1)
 end)
 
 test("dials page: [wheel] Icon offset moves the icons in or out; 0 is the ring radius", function()

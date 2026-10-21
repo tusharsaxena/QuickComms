@@ -23,7 +23,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | SEND-1..5 | Send | Secure sends in keys and on bosses, the spam guard |
 | PAD-1..15 | Pad | The Comms Pad, its growth and button width, the World (solo) and In Group sets and the built-ins' colors, the header click and icon only's width, the header's Quick Comms: text |
 | EDIT-1..30 | Editors | The Pad and Dial page names; the Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
-| DIAL-1..33 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, the lone-group open and the group ring, page arrows and the page row, Auto wedges, the ring radius, the Slice labels tab, the slices and the slice lit by direction, the Slices tab, the pointer, the tooltip outside the dial, the hub over the slices, the pointer, label and icon offsets, the Paging tab; the dial polish: the border gone, the slice gap, placement from W, a slice clicked to the hub in combat, the hub styles, the Group labels tab, Icon offset on Icons, 128-pixel icons, a click outside closing the dial in combat |
+| DIAL-1..34 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, the lone-group open and the group ring, page arrows and the page row, Auto wedges, the ring radius, the Slice labels tab, the slices and the slice lit by direction, the Slices tab, the pointer, the tooltip outside the dial, the hub over the slices, the pointer, label and icon offsets, the Paging tab; the dial polish: the border gone, the slice gap, placement from W, a slice clicked to the hub in combat, the hub styles, the Group labels tab, Icon offset on Icons, 128-pixel icons, a click outside closing the dial in combat, the page indicators' background and border |
 | KEY-1..3 | Key bindings | A dial's key as WoW's own binding in Options → Keybindings, Character Specific Keybindings, Toggle Comms Pads |
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
 | LOOK-1..6 | Pad header, Section header, Window | The Comms Pad's three window tabs: the section titles' font, the pad's border and background, the header's look, size and alignment, the tab strip and headings, the section header's band and height |
@@ -832,6 +832,17 @@ change, no movement); open it, right-click away from it → it closes, no camera
 action-bar button → the dial closes and the action does not fire. In combat on a target dummy, the
 same three → the same, no "action blocked" error. With test mode on (or Preview as…), the dial open
 from the settings window: clicks on the settings window still work and do not close the dial. Result:
+
+**DIAL-34. The page indicators' background and border (dial polish, 2026-10-21).** Open a paged ring
+(Wheel → Wedges per ring 4, a group of eight callouts) over a busy scene (a city, spell effects) →
+under the dial, between the arrow plates, the dots and the gold pill sit on a dark rounded strip,
+round at both ends, and each dot and the pill has a thin dark outline. Dial → Paging → Page
+indicator: Background padding 12 → the strip grows around the row; Indicator background → red → the
+strip turns red; untick Show indicator background → the strip is gone and Indicator background and
+Background padding gray out. Dot border 4 → thicker outlines; Dot border color → white → white
+outlines; Dot border 0 → the slider reads None, no outlines, and Dot border color grays out.
+Defaults → the strip and the 1-pixel outlines are back. `/qc diagnostics` → the dial's paging line ends
+`back=true pad=4 border=1`. Result:
 
 ## Share
 

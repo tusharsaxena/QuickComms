@@ -125,7 +125,9 @@ end
 --- The Dial page's Paging tab (`dial.page.*`, 2026-10-21): a paged ring's row under the dial. Its
 --- distance under the dial's labels; the two arrows (round plates in the slices' fill, gold chevrons)
 --- and how far they stand from the indicators; the indicators, a gold pill for the page shown and a
---- gray dot for each other page.
+--- gray dot for each other page, each with a near-black border `dotBorder` pixels wide (0 draws none),
+--- on a rounded background in the plates' fill, `dotBackPadding` clear of the row (dial polish,
+--- 2026-10-21: they were hard to see on a busy scene).
 function D.DialPage()
     return {
         offset = 6,
@@ -134,5 +136,8 @@ function D.DialPage()
         dotSize = 6, pillWidth = 18, dotGap = 6,
         currentColor = { r = 1, g = 0.82, b = 0, a = 1 }, useClassColorCurrent = false,
         dotColor = { r = 0.4, g = 0.4, b = 0.4, a = 0.9 }, useClassColorDot = false,
+        dotBackShow = true, dotBackPadding = 4,
+        dotBackColor = { r = 0.06, g = 0.06, b = 0.08, a = 0.80 }, useClassColorDotBack = false,
+        dotBorder = 1, dotBorderColor = { r = 0, g = 0, b = 0, a = 0.9 }, useClassColorDotBorder = false,
     }
 end
