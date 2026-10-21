@@ -294,11 +294,6 @@ local ROWS = {
       page = "dials", group = L["Wheel"], label = L["Ring radius"],
       desc = L["How far the wedges sit from the middle of the dial, in pixels. The dial's disc grows with it."],
       validate = NUMBER, normalize = clamp(NS.DialLayout.RADIUS_MIN, NS.DialLayout.RADIUS_MAX, true) },
-    { path = "dial.iconOffset", instance = "dial", type = "number", default = T.dial.iconOffset,
-      min = 0, max = 250, step = 1, zeroText = L["Automatic"],
-      page = "dials", group = L["Wheel"], label = L["Icon offset (0 = automatic)"],
-      desc = L["How far each icon sits from the middle of the dial, in pixels. 0 puts it on the ring radius. The disc keeps its size."],
-      validate = NUMBER, normalize = clamp(0, 250, true) },
     { path = "dial.openAt", instance = "dial", type = "string", default = T.dial.openAt, values = OPEN_AT,
       page = "dials", group = L["Wheel"], label = L["Open at"],
       desc = L["Where the dial opens: at its place (set below), or wherever the cursor is."],
@@ -611,10 +606,11 @@ end
 
 for _, row in ipairs(pagingRows()) do ROWS[#ROWS + 1] = row end
 
--- The Comms Dial's Labels tab (dial rework, 2026-10-21): Show labels, then the composed Font block
--- (as the Buttons tab's), stamped as dial member rows, then where the dial's tooltip goes; before the
--- dial's Icons rows, so the tab sits between Slices and Icons.
-local LABELS, LABELP = L["Labels"], "dial.label."
+-- The Comms Dial's Slice labels tab (dial rework, 2026-10-21; the Labels tab until dial polish
+-- renamed it, its `dial.label.*` paths kept): Show labels, then the composed Font block (as the
+-- Buttons tab's), stamped as dial member rows, then where the dial's tooltip goes; before the Group
+-- labels rows and the dial's Icons rows, so the tabs sit between Paging and Icons.
+local LABELS, LABELP = L["Slice labels"], "dial.label."
 local TIP_SIDE = choices({ { "top", L["Above"] }, { "bottom", L["Below"] }, { "left", L["Left"] }, { "right", L["Right"] } })
 local function labelRows()
     local O = NS.addon.Settings.Helpers
@@ -649,13 +645,44 @@ end
 
 for _, row in ipairs(labelRows()) do ROWS[#ROWS + 1] = row end
 
+-- The Comms Dial's Group labels tab (dial polish, 2026-10-21): the ring's title above the dial. Show
+-- group labels, then the composed Font block under `dial.title.*`, grayed out while off, as the slice
+-- labels' block; after the Slice labels rows, so its tab follows that one.
+local TITLES, TITLEP = L["Group labels"], "dial.title."
+local function titleRows()
+    local O = NS.addon.Settings.Helpers
+    local tdef = T.dial.title
+    local function hidden() return NS.SchemaRuntime.Get(TITLEP .. "show") == false end
+    local out = { { path = TITLEP .. "show", instance = "dial", type = "bool", default = tdef.show,
+        page = "dials", group = TITLES, label = L["Show group labels"], startsLine = true,
+        desc = L["Write the ring's name above the dial."], validate = BOOL } }
+    local font = {}
+    stampBlock(font, O.FontGroup(blockSpec(TITLEP, TITLES, L["Font"], tdef)), TITLEP, composedChecks(O), "dial")
+    for _, row in ipairs(font) do
+        row.disabledIf = hidden
+        out[#out + 1] = row
+    end
+    return out
+end
+
+for _, row in ipairs(titleRows()) do ROWS[#ROWS + 1] = row end
+
 -- The Icons tab's rows (B9, settings/SchemaIcons.lua), with these checks: a pad's after its window and
--- Button rows, a dial's after its Wheel rows, so each editor's Icons tab sits there.
+-- Button rows, a dial's after its Group labels rows, so each editor's Icons tab sits there. A dial's
+-- Icons tab opens with Icon offset (dial polish, 2026-10-21: it was a Wheel row; its path is kept),
+-- the first row under Size and crop. It is spliced here, not listed with the Wheel rows, because the
+-- options library orders a page's tabs by each group's first row.
+local ICON_OFFSET = { path = "dial.iconOffset", instance = "dial", type = "number", default = T.dial.iconOffset,
+    min = 0, max = 250, step = 1, zeroText = L["Automatic"],
+    page = "dials", group = L["Icons"], subgroup = L["Size and crop"], label = L["Icon offset (0 = automatic)"],
+    desc = L["How far each icon sits from the middle of the dial, in pixels. 0 puts it on the ring radius. The disc keeps its size."],
+    validate = NUMBER, normalize = clamp(0, 250, true) }
 do
     local C = { check = check, choices = choices, oneOf = oneOf, clamp = clamp, NUMBER = NUMBER, BOOL = BOOL,
         color = check(isColor), name = check(isName), fourChannels = fourChannels }
     local IconRows = NS.addon.Settings.IconRows
     for _, row in ipairs(IconRows("pad", C)) do ROWS[#ROWS + 1] = row end
+    ROWS[#ROWS + 1] = ICON_OFFSET
     for _, row in ipairs(IconRows("dial", C)) do ROWS[#ROWS + 1] = row end
 end
 

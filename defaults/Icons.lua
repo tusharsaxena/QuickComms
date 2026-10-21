@@ -14,9 +14,12 @@ local _, NS = ...
 NS.IconDefaults = NS.IconDefaults or {}
 local D = NS.IconDefaults
 
--- The size ranges: a button's icon feeds the button's geometry; a wedge's is drawn inside the fixed
--- 44-pixel wedge (modules/Dial_Layout.lua DL.WEDGE), so its geometry never changes.
-D.SIZE = { pad = { min = 12, max = 40, default = 16 }, dial = { min = 16, max = 40, default = 32 } }
+-- The size ranges: a button's icon feeds the button's geometry; a wedge's is drawn on the fixed
+-- 44-pixel wedge (modules/Dial_Layout.lua DL.WEDGE), so the wedge's geometry never changes. A wedge's
+-- reaches 128 (dial polish, 2026-10-21, owner request): Blizzard icons are 64x64 art, so past 64 they
+-- are upscaled (softer, not broken); past about 70 at the default ring radius they crowd their
+-- neighbors and want a bigger radius, which is the owner's call (no auto-scaling). Pads stay at 40.
+D.SIZE = { pad = { min = 12, max = 40, default = 16 }, dial = { min = 16, max = 128, default = 32 } }
 
 D.ZOOM_MAX = 0.25
 D.GLOW_STYLES = { "button", "proc", "pixel", "autocast" }

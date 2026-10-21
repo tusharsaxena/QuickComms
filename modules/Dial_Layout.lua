@@ -85,18 +85,22 @@ function DL.ClampRadius(v)
 end
 
 --- The dial's measures at `radius`, with labels `line` pixels tall (0: no labels; nil: DL.LINE)
---- anchored `reach` pixels from the center (the Label offset; nil or 0: just past the disc's edge):
---- the disc's diameter, the labels' reach, the ring title's height above the center (over the N
---- wedge's label and the disc, so none overlap) and how far below the center the S wedge's label
---- and the disc end (`below`: the page row starts under it, Nav).
-function DL.Geometry(radius, line, reach)
+--- anchored `reach` pixels from the center (the Label offset; nil or 0: just past the disc's edge)
+--- and the ring title `titleLine` pixels tall (the Group labels tab's line; 0: no title; nil:
+--- DL.LINE): the disc's diameter, the labels' reach, the ring title's height above the center (its
+--- bottom, over the N wedge's label and the disc, so none overlap), the title's top (`top`: a tooltip
+--- above the dial starts over it) and how far below the center the S wedge's label and the disc end
+--- (`below`: the page row starts under it, Nav).
+function DL.Geometry(radius, line, reach, titleLine)
     radius = DL.ClampRadius(radius)
     line = tonumber(line) or DL.LINE
     local edge = radius + DL.WEDGE / 2 + DL.RIM
     reach = tonumber(reach)
     if not reach or reach <= 0 then reach = edge + DL.LABEL_GAP end
     local label = line > 0 and math.max(edge, reach + line) or edge
-    return { radius = radius, disc = 2 * edge, reach = reach, title = label + 4, below = label }
+    titleLine = math.max(0, tonumber(titleLine) or DL.LINE)
+    return { radius = radius, disc = 2 * edge, reach = reach, title = label + 4, top = label + 4 + titleLine,
+        below = label }
 end
 
 --- A ring's page length: the dial's fixed slices, or under Auto 12 (at most `cap`, AutoCap's icon

@@ -81,6 +81,17 @@ function D.DialLabel()
     }
 end
 
+--- The Comms Dial's Group labels tab (`dial.title.*`, dial polish 2026-10-21): the ring's title above
+--- the dial ("World (solo)", "Comms Dial"), gold Friz Quadrata 12 points with its shadow, as the
+--- GameFontNormal title it was drawn in; `show` off draws none.
+function D.DialTitle()
+    return {
+        show = true,
+        font = "Friz Quadrata TT", fontSize = 12, fontColor = { r = 1, g = 0.82, b = 0, a = 1 },
+        useClassColorFont = false, fontFlags = "", fontShadow = true,
+    }
+end
+
 --- The Comms Dial's Slices tab (`dial.slice.*`, 2026-10-21): each slice's fill (the dial's dark disc,
 --- as it was), the Slice gap between neighboring slices (pixels, 0 draws them touching; dial polish
 --- 2026-10-21, which retired the Border lines), the fill a hovered slice takes, and the pointer in the

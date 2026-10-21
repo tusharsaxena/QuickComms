@@ -1024,3 +1024,33 @@ test("dial: [polish] hub size moves the inner edge everywhere", function()
     -- red under: DL.PointerReach reading DL.HUB
     assertTrue(h.qcReach > 30, "the pointer sits outside the hub")
 end)
+
+-- ── group labels (dial polish T6): the ring title in its own font ────────────────────────────
+
+test("dial: [polish] group labels take their font and hide when off", function()
+    local NS = live()
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    local ring = NS.Dial.Instance("d2").rings.active[1]
+    local title = ring.qcTitle
+    -- red under: R.PaintRing without the title font (the GameFontNormal template alone)
+    assertEqual(title.__font and title.__font[2], 12, "today's look: 12 points")
+    assertEqual(title.__color[1] .. "," .. title.__color[2] .. "," .. title.__color[3], "1,0.82,0", "gold")
+    assertTrue(title:IsShown())
+    local g = NS.DialLayout.Geometry(100)
+    local header = NS.Dial.Instance("d2").header
+    assertEqual(header.qcTipAt[3], g.title + NS.DialLayout.LINE + 8, "the tooltip clears a 14-pixel title")
+    assertTrue(NS.SchemaRuntime.Set("dial.title.fontSize", 20, "d2"))
+    assertTrue(NS.SchemaRuntime.Set("dial.title.fontColor", { r = 0, g = 1, b = 0, a = 1 }, "d2"))
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    assertEqual(title.__font[2], 20)
+    assertEqual(title.__color[2], 1, "its own color")
+    -- red under: DL.Geometry without the title's own line height (titleLine)
+    assertEqual(NS.DialLayout.Geometry(100, nil, nil, 22).top, g.title + 22)
+    assertEqual(header.qcTipAt[3], g.title + 22 + 8, "the tooltip clears the bigger title")
+    assertEqual(NS.Dial.RingWedges("d2", 1)[1].qcLabel.__font[2], 12, "the slice labels keep theirs")
+    assertTrue(NS.SchemaRuntime.Set("dial.title.show", false, "d2"))
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    -- red under: R.PaintRing leaving the title shown while Show group labels is off
+    assertFalse(title:IsShown(), "off: no title")
+    assertEqual(header.qcTipAt[3], g.title + 8, "and the tooltip takes its place")
+end)

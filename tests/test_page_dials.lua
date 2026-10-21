@@ -236,7 +236,8 @@ test("dials page: [B9] Icons follows Wheel, carries its headings once each, and 
     for _, row in ipairs(NS.addon.Settings.RowsForPage("dials")) do
         if row.group and not seen[row.group] then seen[row.group] = true order[#order + 1] = row.group end
     end
-    assertEqual(table.concat(order, ","), "General,Groups,Wheel,Slices,Paging,Labels,Icons", "the rows' tabs, in order")
+    assertEqual(table.concat(order, ","), "General,Groups,Wheel,Slices,Paging,Slice labels,Group labels,Icons",
+        "the rows' tabs, in order")
     P.find(w, "Slider", "Icon size"):__fire("OnMouseUp", 24)
     P.find(w, "CheckBox", "Show border"):__fire("OnValueChanged", true)
     assertEqual(NS.db.profile.dials.d2.icon.size, 24)
@@ -265,7 +266,7 @@ end)
 
 test("dials page: [labels] Labels shows or hides the wedges' names and styles them; off grays the font", function()
     local NS, _, P = open()
-    local w = P.tab("dials", "Labels")
+    local w = P.tab("dials", "Slice labels")
     for _, label in ipairs({ "Show labels", "Use class color" }) do assertTrue(P.find(w, "CheckBox", label) ~= nil, label) end
     local wedge = NS.Dial.RingWedges("d2", 1)[1]
     assertTrue(wedge.qcLabel:IsShown())
@@ -273,7 +274,7 @@ test("dials page: [labels] Labels shows or hides the wedges' names and styles th
     assertFalse(NS.db.profile.dials.d2.label.show)
     -- red under: drop SetShown from R.PaintWedge's label
     assertFalse(NS.Dial.RingWedges("d2", 1)[1].qcLabel:IsShown(), "the dial rebuilt without names")
-    w = P.tab("dials", "Labels")
+    w = P.tab("dials", "Slice labels")
     assertTrue(P.find(w, "Slider", "Font size").disabled, "the font block waits for labels")
     assertTrue(NS.SchemaRuntime.Set("dial.label.show", true, "d2"))
     assertTrue(NS.SchemaRuntime.Set("dial.label.fontSize", 18, "d2"))
@@ -295,7 +296,7 @@ test("dials page: [slices] Slices writes the fill, gap, highlight and pointer, e
     w = P.tab("dials", "Slices")
     -- red under: no disabledIf on the pointer rows
     assertTrue(P.find(w, "Slider", "Pointer size").disabled)
-    local l = P.tab("dials", "Labels")
+    local l = P.tab("dials", "Slice labels")
     P.find(l, "Dropdown", "Tooltip side"):__fire("OnValueChanged", "right")
     assertEqual(NS.db.profile.dials.d2.label.tooltipSide, "right")
     P.ctx("dials").panel.defaultsOnClick()
@@ -381,11 +382,62 @@ end)
 
 test("dials page: [wheel] Icon offset moves the icons in or out; 0 is the ring radius", function()
     local NS, _, P = open()
-    local w = P.tab("dials", "Wheel")
+    local w = P.tab("dials", "Icons")   -- dial polish T6: the row moved from Wheel to Icons
     P.find(w, "Slider", "Icon offset (0 = automatic)"):__fire("OnMouseUp", 70)
     assertEqual(NS.db.profile.dials.d2.iconOffset, 70)
     local wedge = NS.Dial.RingWedges("d2", 1)[1]
     local _, _, _, x, y = wedge:GetPoint(1)
     -- red under: drop `at` from DL.Wedge (the icon stays on the radius)
     assertEqual(math.floor(math.sqrt(x * x + y * y) + 0.5), 70)
+end)
+
+-- ── labels and icons (dial polish T6) ──────────────────────────────────────────────────────
+
+test("page dials: [polish] tabs read Slices, Paging, Slice labels, Group labels, Icons", function()
+    local NS, _, P = open()
+    local order, seen = {}, {}
+    for _, row in ipairs(NS.addon.Settings.RowsForPage("dials")) do
+        if row.group and not seen[row.group] then seen[row.group] = true order[#order + 1] = row.group end
+    end
+    -- red under: LABELS left at L["Labels"], or no titleRows() after the slice label rows
+    assertEqual(table.concat(order, ","), "General,Groups,Wheel,Slices,Paging,Slice labels,Group labels,Icons")
+    local w = P.tab("dials", "Slice labels")
+    assertTrue(P.find(w, "CheckBox", "Show labels") ~= nil, "Slice labels keeps the dial.label rows")
+    w = P.tab("dials", "Group labels")
+    local show = P.find(w, "CheckBox", "Show group labels")
+    assertTrue(show ~= nil, "Show group labels")
+    assertEqual(#P.all(w, "Heading", "Font"), 1, "the composed Font block, once")
+    assertFalse(P.find(w, "Slider", "Font size").disabled, "on by default: the font block is live")
+    show:__fire("OnValueChanged", false)
+    assertFalse(NS.db.profile.dials.d2.title.show)
+    w = P.tab("dials", "Group labels")
+    -- red under: no disabledIf on the Group labels font rows
+    assertTrue(P.find(w, "Slider", "Font size").disabled, "off grays the font block")
+    assertTrue(NS.SchemaRuntime.Set("dial.title.show", true, "d2"))
+    w = P.tab("dials", "Group labels")
+    P.find(w, "Slider", "Font size"):__fire("OnMouseUp", 16)
+    assertEqual(NS.db.profile.dials.d2.title.fontSize, 16, "the size writes dial.title")
+    assertEqual(NS.db.profile.dials.d2.label.fontSize, 12, "and leaves the slice labels alone")
+    P.ctx("dials").panel.defaultsOnClick()
+    assertTrue(NS.db.profile.dials.d2.title.show)
+    assertEqual(NS.db.profile.dials.d2.title.fontSize, 12)
+end)
+
+test("page dials: [polish] Icon offset is on the Icons tab, not Wheel", function()
+    local NS, _, P = open()
+    local w = P.tab("dials", "Wheel")
+    -- red under: dial.iconOffset's row left in the Wheel group
+    assertNil(P.find(w, "Slider", "Icon offset (0 = automatic)"), "no longer on Wheel")
+    w = P.tab("dials", "Icons")
+    local row = P.find(w, "Slider", "Icon offset (0 = automatic)")
+    assertTrue(row ~= nil, "on Icons")
+    assertEqual(#P.all(w, "Heading", "Size and crop"), 1, "under Size and crop, its heading once")
+    local first
+    for _, r in ipairs(NS.addon.Settings.RowsForPage("dials")) do
+        if r.group == "Icons" then first = first or r end
+    end
+    assertEqual(first.path, "dial.iconOffset", "the tab's first row")
+    assertEqual(first.subgroup, "Size and crop")
+    row:__fire("OnMouseUp", 40)
+    assertEqual(NS.db.profile.dials.d2.iconOffset, 40, "the path is kept")
 end)
