@@ -355,6 +355,8 @@ end
 local function press(b)
     local meta = b.qcMeta
     if not meta or NS.IsStoodDown() then return end
+    NS.Debug(TAG_S, "press %s on %s -> %s%s", tostring(meta.calloutId), tostring(meta.surfaceId),
+        tostring(meta.chatType or "none"), b.qcArmed and "" or " (disarmed)")
     if meta.selfText then
         NS.Print(meta.selfText)
         return

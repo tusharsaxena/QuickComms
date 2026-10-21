@@ -467,7 +467,7 @@ test("dial: [keys] Toggle Comms Pads runs exactly /qc toggle's handler, from a k
     -- red under: the button's OnClick doing its own toggle (two handlers for one verb)
     assertEqual(calls, 1, "one press, one toggle")
     assertTrue(NS.db.char.padsHidden, "the pads are hidden on this character")
-    assertTrue(m.prints[1]:find("Comms Pads hidden on this character until you show them again.", 1, true) ~= nil, m.prints[1])
+    assertEqual(#m.prints, 0, "the toggle says nothing in chat")
     m.__pressKey("P")
     assertFalse(NS.db.char.padsHidden == true, "and shown again")
     assertEqual(calls, 2)

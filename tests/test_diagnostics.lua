@@ -115,3 +115,50 @@ test("diagnostics: [phase 4] the dials and bindings sections name each dial, its
     assertTrue(text:find("none -> CLICK QuickCommsDial2:Toggle", 1, true) ~= nil, text)
     assertTrue(text:find("d2:" .. T.seeded(NS, "bi.mplus.pull") .. " /p Pulling next pack", 1, true) ~= nil, "the armed wedges")
 end)
+
+test("diagnostics: [dial rework] the report names the pads' hidden state, each dial's look, the ring shown and every ring", function()
+    local NS = T.enableAddon()
+    NS.Situation.ReadInputs = function()
+        return { inInstance = true, instanceType = "party", difficultyID = 8, keystoneActive = true,
+            keyLevel = 12, inGroup = true }
+    end
+    NS.Situation.RefreshNow("test")
+    local text = report(NS)
+    -- red under: drop the dial look and ring lines from modules/Diagnostics.lua dials
+    assertTrue(text:find("padsHidden=false (this character)", 1, true) ~= nil, text)
+    assertTrue(text:find("d2 shown=closed", 1, true) ~= nil, text)
+    assertTrue(text:find("d2 look mode=categories slices=0 radius=100 iconOffset=0 openAt=center", 1, true) ~= nil, text)
+    assertTrue(text:find("d2 slices border=1 pointer=true size=20 offset=0 labels=true size=12 offset=0 tooltip=top/8", 1, true)
+        ~= nil, text)
+    assertTrue(text:find("d2 paging offset=6 arrow=24 gap=10 dot=6 pill=18 dotGap=6", 1, true) ~= nil, text)
+    assertTrue(text:find("d2 ring 1 Comms Dial page=1/1", 1, true) ~= nil, "the ring of groups, M+ and In Group")
+end)
+
+test("diagnostics: [debug] the log follows a dial open, a ring shown, a press and a close, once each", function()
+    local NS, _, m = T.enableAddon()
+    NS.Situation.ReadInputs = function()
+        return { inInstance = true, instanceType = "party", difficultyID = 8, keystoneActive = true,
+            keyLevel = 12, inGroup = true }
+    end
+    NS.Situation.RefreshNow("test")
+    report(NS)   -- a run turns logging on
+    NS.DebugLog:Clear()
+    m.SetBinding("G", "CLICK QuickCommsDial1:Toggle")
+    m.__pressKey("G")
+    local inst = NS.Dial.Instance("d2")
+    local groups = inst.rings.active[1].qcWedges.active
+    m.__click(groups[1])
+    m.__click(NS.Dial.RingWedges("d2", NS.Dial.ShownRing("d2"))[1])
+    local log = table.concat(NS.DebugLog.buffer, "\n")
+    local function once(needle)
+        local n = select(2, log:gsub(needle:gsub("%p", "%%%0"), ""))
+        assertEqual(n, 1, needle .. "\n" .. log)
+    end
+    -- red under: no OnShow/OnHide debug hooks on the dial's header in modules/Dial.lua
+    once("d2 opened")
+    once("d2 shows Comms Dial")
+    once("d2 shows Dungeon (generic)")
+    -- red under: no press line in modules/SendEngine.lua press
+    once("press " .. T.seeded(NS, "bi.mplus.pull") .. " on d2 -> PARTY")
+    once("d2 closed")
+end)

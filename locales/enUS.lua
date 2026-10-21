@@ -50,8 +50,6 @@ L["Turn test mode on or off (placeholder buttons and wedges; it opens dial 1; co
     "Turn test mode on or off (placeholder buttons and wedges; it opens dial 1; combat ends it)"
 L["Unlock the Comms Pads so they can be dragged"] = "Unlock the Comms Pads so they can be dragged"
 L["Show or hide every Comms Pad (remembered per character)"] = "Show or hide every Comms Pad (remembered per character)"
-L["Comms Pads hidden on this character until you show them again."] = "Comms Pads hidden on this character until you show them again."
-L["Comms Pads shown."] = "Comms Pads shown."
 L["Write the diagnostics report to the debug console"] =
     "Write the diagnostics report to the debug console"
 

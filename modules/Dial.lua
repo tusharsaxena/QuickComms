@@ -113,6 +113,11 @@ local function newRing(inst)
     R.DressRing(ring)
     ring:SetPoint("CENTER", inst.header, "CENTER", 0, 0)
     ring.qcWedges = NS.Pool.New()
+    -- The debug log: the ring the snippets just showed (an open, a group wedge, a page turn).
+    ring:HookScript("OnShow", function(self)
+        local spec = self.qcSpec
+        if spec then NS.Debug(TAG, "%s shows %s", tostring(inst.id), R.RingTitle(spec)) end
+    end)
     return ring
 end
 
@@ -167,6 +172,9 @@ local function build(index)
     R.DressHub(header, function(self)
         if inst.id then Dial.ShowWhy(inst.id, self) end
     end)
+    -- The debug log: one line per open and close (insecure hooks; the snippets do the work).
+    header:HookScript("OnShow", function() NS.Debug(TAG, "%s opened", tostring(inst.id)) end)
+    header:HookScript("OnHide", function() NS.Debug(TAG, "%s closed", tostring(inst.id)) end)
     -- Insecure, beside the hub's own OnShow hook: a send glow held for a wedge runs on the next open.
     header:HookScript("OnShow", function()
         for _, list in pairs(inst.byCallout) do
@@ -244,6 +252,7 @@ function Dial.Apply(index, id, plan)
     for r, spec in ipairs(plan.rings) do
         local ring = NS.Pool.Acquire(inst.rings, function() return newRing(inst) end)
         ring:Hide()
+        ring.qcSpec = spec
         ring:SetSize(disc, disc)   -- protected geometry: here, under Apply, out of combat
         R.PaintRing(ring, spec, look)
         placeArrows(ring, spec, look)
@@ -261,6 +270,9 @@ function Dial.Apply(index, id, plan)
     inst.header:SetScale(math.max(NS.Library.MIN_SURFACE_SCALE, tonumber(NS.Setting("scale")) or 1))
     inst.header:SetAlpha(math.max(0, math.min(1, tonumber(NS.Setting("alpha")) or 1)))
     R.PaintHub(inst.header, hubState(inst, plan))
+    local opens = plan.rings[plan.openRing]
+    NS.Debug(TAG, "%s at place %s: %s ring(s), opens on %s (%s); slices=%s radius=%s", id, index, #plan.rings,
+        plan.openRing, opens and opens.title or "none", DL.ClampSlices(dial.slices), look.radius)
     return true
 end
 
@@ -275,6 +287,7 @@ function Dial.Release(index)
     releaseFreeGlows(inst)
     DS.Load(inst.header, {}, {})
     if inst.id and byId[inst.id] == inst then byId[inst.id] = nil end
+    NS.Debug(TAG, "released place %s (%s)", index, tostring(inst.id))
     inst.id, inst.plan, inst.live = nil, nil, false
     return true
 end

@@ -72,7 +72,8 @@ function V.TogglePads()
     local hidden = V.PadsShown()
     NS.db.char.padsHidden = hidden
     NS.Surfaces.Request("padsHidden")
-    NS.Print(hidden and L["Comms Pads hidden on this character until you show them again."] or L["Comms Pads shown."])
+    -- Not a chat line (owner, 2026-10-21): the pads showing or going is the answer; the debug log keeps it.
+    NS.Debug("Pads", hidden and "hidden on this character until shown again" or "shown")
 end
 
 -- The key bindings menu's Toggle Comms Pads (Bindings.xml, 2026-10-20): a CLICK on this plain,

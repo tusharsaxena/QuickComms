@@ -400,6 +400,14 @@ function S.ApplyAll(reason)
     for _, id in ipairs(enabledIds("pad")) do NS.addon:SendMessage(NS.MSG.SURFACE_REBUILT, id, false) end
     for _, id in ipairs(enabledIds("dial")) do NS.addon:SendMessage(NS.MSG.SURFACE_REBUILT, id, false) end
     NS.Debug(TAG, "rebuilt %s surface(s) (%s)", n, tostring(reason))
+    for _, id in ipairs(enabledIds("pad")) do
+        local plan = plans[id]
+        if plan then NS.Debug(TAG, "%s shows %s", id, #plan.order > 0 and table.concat(plan.order, ",") or "nothing") end
+    end
+    for _, id in ipairs(enabledIds("dial")) do
+        local plan = dialPlans[id]
+        if plan then NS.Debug("Dial", "%s shows %s", id, #plan.order > 0 and table.concat(plan.order, ",") or "nothing") end
+    end
     return n
 end
 
