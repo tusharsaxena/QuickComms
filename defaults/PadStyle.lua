@@ -67,7 +67,7 @@ function D.Button()
     }
 end
 
---- The Comms Dial's Labels tab (`dial.label.*`, dial rework 2026-10-21): each wedge's name outside
+--- The Dial page's Labels tab (`dial.label.*`, dial rework 2026-10-21): each wedge's name outside
 --- the disc, white Friz Quadrata 12 points with its shadow, as the dial always drew it; `show` off
 --- draws none. The tooltip shows outside the dial too: above it by default, `tooltipOffset` pixels
 --- clear of the title (or the labels, the page row on the other sides).
@@ -81,7 +81,7 @@ function D.DialLabel()
     }
 end
 
---- The Comms Dial's Group labels tab (`dial.title.*`, dial polish 2026-10-21): the ring's title above
+--- The Dial page's Group labels tab (`dial.title.*`, dial polish 2026-10-21): the ring's title above
 --- the dial ("World (solo)", "Comms Dial"), gold Friz Quadrata 12 points with its shadow, as the
 --- GameFontNormal title it was drawn in; `show` off draws none.
 function D.DialTitle()
@@ -92,7 +92,7 @@ function D.DialTitle()
     }
 end
 
---- The Comms Dial's Slices tab (`dial.slice.*`, 2026-10-21): each slice's fill (the dial's dark disc,
+--- The Dial page's Slices tab (`dial.slice.*`, 2026-10-21): each slice's fill (the dial's dark disc,
 --- as it was), the Slice gap between neighboring slices (pixels, 0 draws them touching; dial polish
 --- 2026-10-21, which retired the Border lines), the fill a hovered slice takes, and the pointer in the
 --- hub that turns toward the cursor.
@@ -122,7 +122,7 @@ function D.DialHub()
     }
 end
 
---- The Comms Dial's Paging tab (`dial.page.*`, 2026-10-21): a paged ring's row under the dial. Its
+--- The Dial page's Paging tab (`dial.page.*`, 2026-10-21): a paged ring's row under the dial. Its
 --- distance under the dial's labels; the two arrows (round plates in the slices' fill, gold chevrons)
 --- and how far they stand from the indicators; the indicators, a gold pill for the page shown and a
 --- gray dot for each other page.

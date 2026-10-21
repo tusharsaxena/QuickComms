@@ -217,7 +217,7 @@ local ROWS = {
       desc = L["The conditions under which this group is active. Every condition you set must match; a condition left as Any does not limit the group; within a condition, any value may."],
       validate = check(validWhen) },
 
-    -- Comms Pad page (spec §10.2, §10.3, §13.1).
+    -- Pad page (spec §10.2, §10.3, §13.1).
     { path = "pad.name", instance = "pad", type = "string", dialogControl = "EditBox", maxLetters = Lib.NAME_MAX,
       page = "pads", group = GENERAL, label = L["Name"],
       desc = L["What the drag strip and the lists call this pad. Press Enter to apply."],
@@ -271,7 +271,7 @@ local ROWS = {
       desc = L["Where the pad sits. Drag it while unlocked, or type an offset."],
       validate = check(Lib.ValidPoint) },
 
-    -- Comms Dial page (spec §11, §13.1). Relaxed is the only interaction in v0.1.0, so there is no
+    -- Dial page (spec §11, §13.1). Relaxed is the only interaction in v0.1.0, so there is no
     -- interaction, delay or tap-action row (Quick mode brings them with the C7 upgrade), and no depth
     -- row (owner ruling R5: depth is §11.3's limit, warned about on the Groups tab).
     { path = "dial.name", instance = "dial", type = "string", dialogControl = "EditBox", maxLetters = Lib.NAME_MAX,
@@ -470,7 +470,7 @@ end
 
 for _, row in ipairs(buttonRows()) do ROWS[#ROWS + 1] = row end
 
--- The Comms Dial's Slices tab (2026-10-21): each slice's fill, the Slice gap between them (dial polish,
+-- The Dial page's Slices tab (2026-10-21): each slice's fill, the Slice gap between them (dial polish,
 -- which retired the Border heading), the hovered slice's fill, the Hub (hubRows) and the pointer,
 -- each color a composed swatch with its class-color companion, stamped as dial member rows; before
 -- the Labels rows, so the tab follows Wheel.
@@ -560,7 +560,7 @@ end
 
 for _, row in ipairs(sliceRows()) do ROWS[#ROWS + 1] = row end
 
--- The Comms Dial's Paging tab (2026-10-21): a paged ring's row under the dial. Where it sits, the
+-- The Dial page's Paging tab (2026-10-21): a paged ring's row under the dial. Where it sits, the
 -- arrows (size, spacing, chevron and plate colors) and the page indicators (sizes, spacing and the
 -- current and other pages' colors), each color a composed swatch with its class-color companion;
 -- after the Slices rows, so the tab follows Slices.
@@ -606,7 +606,7 @@ end
 
 for _, row in ipairs(pagingRows()) do ROWS[#ROWS + 1] = row end
 
--- The Comms Dial's Slice labels tab (dial rework, 2026-10-21; the Labels tab until dial polish
+-- The Dial page's Slice labels tab (dial rework, 2026-10-21; the Labels tab until dial polish
 -- renamed it, its `dial.label.*` paths kept): Show labels, then the composed Font block (as the
 -- Buttons tab's), stamped as dial member rows, then where the dial's tooltip goes; before the Group
 -- labels rows and the dial's Icons rows, so the tabs sit between Paging and Icons.
@@ -645,7 +645,7 @@ end
 
 for _, row in ipairs(labelRows()) do ROWS[#ROWS + 1] = row end
 
--- The Comms Dial's Group labels tab (dial polish, 2026-10-21): the ring's title above the dial. Show
+-- The Dial page's Group labels tab (dial polish, 2026-10-21): the ring's title above the dial. Show
 -- group labels, then the composed Font block under `dial.title.*`, grayed out while off, as the slice
 -- labels' block; after the Slice labels rows, so its tab follows that one.
 local TITLES, TITLEP = L["Group labels"], "dial.title."

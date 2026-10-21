@@ -18,7 +18,7 @@ local _, NS = ...
 -- THE KEY (2026-10-20) is WoW's own binding of the place's Bindings.xml entry ("CLICK
 -- QuickCommsDial<place>:Toggle", Open Comms Dial <place> under Ka0s Quick Comms in Options ->
 -- Keybindings), never a profile field: account-wide unless the player ticks Character Specific
--- Keybindings. Only that menu sets it (the Comms Dial page's Binding tab retired in the dial rework,
+-- Keybindings. Only that menu sets it (the Dial page's Binding tab retired in the dial rework,
 -- 2026-10-21). It follows the place, so a dial that moves up the list takes the key of its new place, and
 -- a place with no dial, a disabled dial or a stood-down addon leaves the key bound and opening
 -- nothing. Only the first BINDINGS places have an entry, so a dial past them has no key. The guard's dim and the result flash (spec §9.2, §9.3) are insecure and

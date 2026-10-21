@@ -1,5 +1,5 @@
 local _, NS = ...
--- settings/Pads.lua — the Comms Pad page (design spec §10.2-§10.4, §13.1): one pad at a time.
+-- settings/Pads.lua — the Pad page (design spec §10.2-§10.4, §13.1): one pad at a time.
 --
 --     band     [ Pad v (picker) ][ New pad ]
 --     strip    [ General ][ Groups ][ Layout ][ Pad header ][ Section header ][ Window ][ Buttons ]

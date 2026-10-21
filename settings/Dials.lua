@@ -1,5 +1,5 @@
 local _, NS = ...
--- settings/Dials.lua — the Comms Dial page (design spec §11, §13.1): one dial at a time.
+-- settings/Dials.lua — the Dial page (design spec §11, §13.1): one dial at a time.
 --
 --     band     [ Dial v (picker) ][ New dial ]
 --     strip    [ General ][ Groups ][ Wheel ][ Slices ][ Paging ][ Slice labels ][ Group labels ][ Icons ]
@@ -21,7 +21,7 @@ local _, NS = ...
 --     Group labels  Show group labels (the ring's title above the dial), then its Font block under
 --              `dial.title.*`, grayed out while off (dial polish, 2026-10-21)
 --     Icons    Icon offset (a Wheel row until dial polish; `dial.iconOffset` kept), then the wedges'
---              icons (B9, settings/SchemaIcons.lua), as the Comms Pad page's Icons tab; a wedge's
+--              icons (B9, settings/SchemaIcons.lua), as the Pad page's Icons tab; a wedge's
 --              border is a round ring and its icon size (up to 128) keeps the wedge's own size
 --     Preview  each ring as the current or previewed situation builds it, wedge by wedge
 --
@@ -232,7 +232,7 @@ local function offsetBox(ctx, id, label, axis)
     end }
 end
 
--- The Icons tab: its rows in schema order, the headings the library's (as the Comms Pad page's), and
+-- The Icons tab: its rows in schema order, the headings the library's (as the Pad page's), and
 -- only the selected glow style's knobs (Settings.ShownIconRows).
 local function renderIcons(ctx, rows)
     local h = H()

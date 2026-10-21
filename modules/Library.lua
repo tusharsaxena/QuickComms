@@ -940,7 +940,7 @@ Lib.TEMPLATES = {
 }
 
 --- A dial's place when its `point` is unset: the middle of the screen (read at run time by
---- modules/Dial.lua, the CLI and the Comms Dial page).
+--- modules/Dial.lua, the CLI and the Dial page).
 Lib.DIAL_DEFAULT_POINT = { "CENTER", "CENTER", 0, 0 }
 
 -- A new pad or dial: its kind's defaults, `name` and a copy of `groups`, at the end of its kind's
