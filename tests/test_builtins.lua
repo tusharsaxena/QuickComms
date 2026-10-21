@@ -45,10 +45,10 @@ test("builtins: only top-level groups are in the order, and every top-level grou
     for id, g in pairs(BI.groups) do if g.parent == nil then assertTrue(inOrder[id], "missing " .. id) end end
 end)
 
-test("builtins: node sets open into their ring and nest one level", function()
+test("builtins: node sets nest one level", function()
     local _, BI = bi()
     local ab = BI.groups["bi.bg.ab"]
-    assertTrue(ab.openInto)
+    assertNil(ab.openInto, "no group carries the retired Open into (dial rework)")
     assertEqual(#ab.children, 5)
     assertTrue(#ab.callouts >= 4, "and map-wide callouts of its own")
     local stables = BI.groups[ab.children[1]]
@@ -208,7 +208,6 @@ test("builtins: [bg subgroups] Alterac Valley has every general, captain, bunker
     local av = BI.groups["bi.bg.av"]
     -- red under: Alterac Valley declared flat in defaults/BuiltIns_Battlegrounds.lua
     assertEqual(#(av.children or {}), 19)
-    assertTrue(av.openInto, "opens into its ring, as a node set does")
     assertEqual(childNames(BI, "bi.bg.av"), "Vanndar,DB North Bunker,Stormpike GY,Aid Station,DB South Bunker,"
         .. "Icewing Bunker,Stonehearth GY,Balinda,Stonehearth Bunker,Snowfall GY,Iceblood GY,Galvangar,"
         .. "Iceblood Tower,Tower Point,Frostwolf GY,West FW Tower,East FW Tower,Relief Hut,Drek'Thar")
@@ -260,7 +259,6 @@ test("builtins: [bg subgroups] the flag maps, Wintergrasp, Ashran, Deephaul Ravi
     for gid, names in pairs(want) do
         -- red under: a set left flat in defaults/BuiltIns_Battlegrounds.lua
         assertEqual(childNames(BI, gid), names, gid)
-        assertTrue(BI.groups[gid].openInto, gid .. " opens into its ring")
         assertTrue(#BI.groups[gid].callouts >= 3, gid .. " keeps its map-wide callouts")
         for _, child in ipairs(BI.groups[gid].children) do
             local n = #BI.groups[child].callouts
@@ -327,7 +325,6 @@ test("builtins: [bg buttons] Silvershard Mines has its three tracks and the swit
     local _, BI = bi()
     -- red under: Silvershard Mines left flat in defaults/BuiltIns_Battlegrounds.lua
     assertEqual(childNames(BI, "bi.bg.ssm"), "Lava track,Water track,North track,Switches")
-    assertTrue(BI.groups["bi.bg.ssm"].openInto)
     assertEqual(rows(BI, "bi.bg.ssm.lava"), "Contest=Contest their cart on the lava track|"
         .. "Escort=Escort our cart on the lava track|INC=INC on the lava track|Clear=Clear on the lava track")
     assertEqual(rows(BI, "bi.bg.ssm.switch"), "Flip switch=Flip the track switch|Hold switch=Hold the track switch|"

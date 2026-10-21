@@ -226,7 +226,7 @@ end
 -- own control on its editor page and typed and printed on the CLI by settings/Slash.lua's parse and
 -- format hooks. `color` is a pad's Window and Button swatches (phase 5), which the options library draws
 -- and its CLI parses and prints itself. (A dial's key was a third, `key`, until 2026-10-20: it is
--- WoW's own binding now, set on the Binding tab, never a row.)
+-- WoW's own binding now, set in Options -> Keybindings, never a row.)
 local VALID_TYPES = { bool = true, number = true, string = true, point = true, when = true, color = true }
 
 -- A row carrying BOTH its own get and set owns its storage, so there is no defaults entry at its
@@ -282,6 +282,7 @@ function Settings.BuildDefaults()
     local out = {
         profile = deepcopy(C.PROFILE),
         global  = deepcopy(C.GLOBAL_DEFAULTS),
+        char    = deepcopy(C.CHAR_DEFAULTS),
     }
     for _, def in ipairs(Schema) do
         if def.path and not def.sessionOnly and not GLOBAL[def.path] and not def.instance then

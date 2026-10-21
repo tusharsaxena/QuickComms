@@ -148,67 +148,15 @@ test("compat: [phase 3] SpecInfoByID and ClassName read display names; secret or
     assertNil(NS.Compat.ClassName("WARLOCK"))
 end)
 
-test("compat: [phase 4] BindingAction reads the player's WoW binding; none, a secret or a missing API is nil", function()
+test("compat: [final 8] BindingKey reads a command's key; a secret or a missing API is nil", function()
     local NS, m = T.newAddon()
-    m.bindingActions.G = "MOVEFORWARD"
-    assertEqual(NS.Compat.BindingAction("G"), "MOVEFORWARD")
-    T.assertNil(NS.Compat.BindingAction("H"))
-    m.issecretvalue = T.isSecret
-    m.bindingActions.G = T.secret("MOVEFORWARD")
-    T.assertNil(NS.Compat.BindingAction("G"))
-    m.GetBindingAction = nil
-    T.assertNil(NS.Compat.BindingAction("G"))
-end)
-
-test("compat: [final 7] BindingLabel reads the menu's name for an action; [final 8] BindingKey a command's key; secrets are nil", function()
-    local NS, m = T.newAddon()
-    m.BINDING_NAME_MOVEFORWARD = "Move Forward"
-    assertEqual(NS.Compat.BindingLabel("MOVEFORWARD"), "Move Forward")
-    T.assertNil(NS.Compat.BindingLabel("NOPE"))
     m.bindingKeys["CLICK QuickCommsDial1:Toggle"] = "F"
     assertEqual(NS.Compat.BindingKey("CLICK QuickCommsDial1:Toggle"), "F")
     T.assertNil(NS.Compat.BindingKey("CLICK QuickCommsDial2:Toggle"))
     m.issecretvalue = T.isSecret
-    m.BINDING_NAME_MOVEFORWARD = T.secret("Move Forward")
     m.bindingKeys["CLICK QuickCommsDial1:Toggle"] = T.secret("F")
-    T.assertNil(NS.Compat.BindingLabel("MOVEFORWARD"))
     T.assertNil(NS.Compat.BindingKey("CLICK QuickCommsDial1:Toggle"))
     m.GetBindingKey = nil
     T.assertNil(NS.Compat.BindingKey("CLICK QuickCommsDial1:Toggle"))
 end)
 
-test("compat: [keys] BindingKeys lists every key a command has (the menu takes two); secrets and a missing API give none", function()
-    local NS, m = T.newAddon()
-    local command = "CLICK QuickCommsDial1:Toggle"
-    assertEqual(#NS.Compat.BindingKeys(command), 0)
-    m.SetBinding("F", command)
-    m.SetBinding("SHIFT-F", command)
-    assertEqual(table.concat(NS.Compat.BindingKeys(command), ","), "F,SHIFT-F")
-    assertEqual(NS.Compat.BindingKey(command), "F", "BindingKey stays the first")
-    m.issecretvalue = T.isSecret
-    m.bindingActions.F = nil
-    m.bindingKeys[command] = T.secret("F")
-    assertEqual(table.concat(NS.Compat.BindingKeys(command), ","), "SHIFT-F", "a secret key is left out")
-    m.GetBindingKey = nil
-    assertEqual(#NS.Compat.BindingKeys(command), 0)
-end)
-
-test("compat: [keys] SetBinding and SaveBindings write WoW's own bindings, never in combat or without the API", function()
-    local NS, m = T.newAddon()
-    assertTrue(NS.Compat.SetBinding("G", "CLICK QuickCommsDial1:Toggle"))
-    assertEqual(m.bindingActions.G, "CLICK QuickCommsDial1:Toggle")
-    m.bindingSet = 2   -- Character Specific Keybindings ticked
-    assertTrue(NS.Compat.SaveBindings())
-    assertEqual(m.bindingSaves[1], 2, "saved in the set in force")
-    m.inCombat = true
-    -- red under: Compat.SetBinding without its combat gate (ADDON_ACTION_BLOCKED)
-    T.assertFalse(NS.Compat.SetBinding("H", "CLICK QuickCommsDial1:Toggle"))
-    T.assertFalse(NS.Compat.SaveBindings())
-    assertEqual(#m.blocked, 0)
-    m.inCombat = false
-    assertTrue(NS.Compat.SetBinding("G", nil))
-    T.assertNil(m.bindingActions.G, "a nil command unbinds the key")
-    m.SetBinding, m.SaveBindings = nil, nil
-    T.assertFalse(NS.Compat.SetBinding("G", "CLICK QuickCommsDial1:Toggle"))
-    T.assertFalse(NS.Compat.SaveBindings())
-end)

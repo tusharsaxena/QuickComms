@@ -7,7 +7,7 @@ local _, NS = ...
 --               [x] Preview while editing (behavior.previewOnEdit: every pad and dial shows only
 --               the group picked, while this page is shown; G.SyncEditPreview)
 --     strip     [ General ][ Callouts ][ When ][ Preview ]
---     General   Name, Enabled, Open the dial on this group, then
+--     General   Name, Enabled, then
 --               Parent group (none, or a top-level group; idle while the group holds groups) beside
 --               Inherit when conditions (grayed out with no parent), then
 --               the icon under an Icon label with Choose icon…, the clear glyph and its color swatch

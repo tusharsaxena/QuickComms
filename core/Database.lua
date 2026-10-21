@@ -29,9 +29,12 @@ NS.MIGRATIONS = {
     -- 5 -> 6 (groups polish): seeded groups and callouts take their colored glyphs, and the battleground
     -- node sets their map-wide callouts, wherever the player has not changed them.
     { to = 6, perProfile = true, run = function(_, profile) NS.Library.MigrateBuiltinsPolish(profile) end },
-    -- 6 -> 7 (bg subgroups): the battleground sets' new objective nodes go inside each set's copy, and
-    -- the sets that shipped flat open into their ring, wherever the player has not changed them.
+    -- 6 -> 7 (bg subgroups): the battleground sets' new objective nodes go inside each set's copy,
+    -- wherever the player has not changed them.
     { to = 7, perProfile = true, run = function(_, profile) NS.Library.MigrateBattlegroundNodes(profile) end },
+    -- 7 -> 8 (dial rework, 2026-10-21): groups drop Open the dial on this group and Skip on the dial
+    -- in content; a dial opens on its one active group, or on a ring of them.
+    { to = 8, perProfile = true, run = function(_, profile) NS.Library.MigrateDialFields(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.

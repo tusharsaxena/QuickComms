@@ -257,26 +257,7 @@ function Compat.ClassName(classFile)
     return PlainString(names[classFile])
 end
 
--- ── The dial's key (spec §9.4): WoW's own binding since 2026-10-20 ───────────────────────────────────────────────────────────────
-
---- The action the player's own WoW binding gives `key` (a binding name such as MOVEFORWARD, or a
---- CLICK binding), or nil when it has none, it is secret, or the API is absent. Shown, never matched.
-function Compat.BindingAction(key)
-    if not (GetBindingAction and Compat.IsSafeKey(key)) then return nil end
-    local action = PlainString(GetBindingAction(key))
-    if action == nil or action == "" then return nil end
-    return action
-end
-
---- The name WoW's key bindings menu shows for a binding action (its BINDING_NAME_<action> global,
---- which the client and each addon's Bindings.xml labels set), or nil when it has none or it is not a
---- plain string. Shown, never matched.
-function Compat.BindingLabel(action)
-    if not Compat.IsSafeKey(action) then return nil end
-    local label = PlainString(_G["BINDING_NAME_" .. action])
-    if label == nil or label == "" then return nil end
-    return label
-end
+-- ── The dial's key (spec §9.4): WoW's own binding, set in Options -> Keybindings ───────────────
 
 --- The first key the player bound to `command` in WoW's key bindings menu (GetBindingKey), or nil
 --- when there is none, it is secret, or the API is absent.
@@ -285,42 +266,6 @@ function Compat.BindingKey(command)
     local key = PlainString((GetBindingKey(command)))
     if key == nil or key == "" then return nil end
     return key
-end
-
---- Every key the player bound to `command` in WoW's key bindings menu (GetBindingKey answers one
---- per key; the menu takes two), in order, as a list: empty when there is none or the API is absent.
---- A secret key is left out.
---- @return string[] keys
-function Compat.BindingKeys(command)
-    local keys = {}
-    if not (GetBindingKey and Compat.IsSafeKey(command)) then return keys end
-    local function collect(...)
-        for i = 1, select("#", ...) do
-            local key = PlainString((select(i, ...)))
-            if key ~= nil and key ~= "" then keys[#keys + 1] = key end
-        end
-    end
-    collect(GetBindingKey(command))
-    return keys
-end
-
---- Bind `key` to `command` in WoW's own key bindings (SetBinding), or unbind `key` when `command` is
---- nil. The game refuses a binding change in combat, so this answers false there, and when the API
---- is absent; the caller saves the set (SaveBindings) once it is done.
---- @return boolean set
-function Compat.SetBinding(key, command)
-    if not (SetBinding and Compat.IsSafeKey(key)) or Compat.InCombat() then return false end
-    return SetBinding(key, command) ~= false
-end
-
---- Save WoW's key bindings in the set in force (GetCurrentBindingSet: the account's, or this
---- character's while Character Specific Keybindings is ticked), so a binding survives a reload. False
---- in combat, or when the API is absent.
---- @return boolean saved
-function Compat.SaveBindings()
-    if not (SaveBindings and GetCurrentBindingSet) or Compat.InCombat() then return false end
-    SaveBindings(GetCurrentBindingSet())
-    return true
 end
 
 -- ── The pad (spec §10.1) ─────────────────────────────────────────────────────────────────────

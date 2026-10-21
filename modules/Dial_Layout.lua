@@ -8,44 +8,48 @@ local _, NS = ...
 -- a group with children (a battleground node set, a user parent) holds its own callouts first, then
 -- its nodes (a pinned node set: its own callouts as one more wedge), and each node's ring its
 -- callouts. Flat: the first ring holds every callout, highest group first, a parent's own before its
--- nodes'. A ring with more items than wedges is paged: each
--- page but the last holds size - 1 items and a More wedge to the next page, and a later page's parent
--- and previous are the page before it (the hub and the wheel go back). Open-into (D9): when the first
--- group has the flag, or is the only group (owner ruling R2), the dial opens on its ring and the hub
--- goes up to the group ring. The wedge count is the dial's slices, never grown; 12 only on a ring with
--- no children (spec §11.3), and a More wedge is a child, so such a ring gets 8. In Flat a node's
--- callout is titled with its node ("INC · Lumber Mill"); the slot keeps its own name.
+-- nodes'. A ring with more items than wedges is paged (dial rework, 2026-10-21): plain pages of
+-- `size`, turned by the arrows under the dial (and the wheel and the arrow keys), never a wedge of
+-- their own; every page has the first page's parent, so the hub goes up a ring from any page. A dial
+-- with one group to show opens straight on its ring (owner ruling R2, the only open-into since the
+-- Open the dial on this group flag retired); with several it opens on the ring of groups.
 --
--- DEPTH (spec §11.3: depth 2; depth 3 allowed, with the editor warning). Each ring records its depth,
--- 1 for the first ring, a later page keeping its first page's. DeepGroups names the node sets whose
--- callouts sit three rings deep: a set's ring at depth 2, holding node rings, that is not the ring the
--- dial opens on (open-into skips the group ring, so a set it opens into is depth 2).
+-- THE WEDGE COUNT is the dial's slices: Auto (0, the default) gives each page one wedge per item, at
+-- most 12, starting at W and going clockwise (owner model, 2026-10-21): one is W; two W and E; three
+-- W, N and E (a four-wedge ring, S left empty); four W, N, E and S; past four, evenly spaced from W.
+-- Or a fixed 4, 6, 8 or 12 from N, never grown. A ring that holds
+-- rings takes at most 8 either way (spec §11.3: the number keys 1-8 reach every ring wedge). In Flat a
+-- node's callout is titled with its node ("INC · Lumber Mill"); the slot keeps its own name.
 --
--- THE GEOMETRY. Wedges sit clockwise from N, on-axis first: four are N, E, S and W. Offsets are from
--- the hub's center, y up. A node set's nodes are pinned to their compass winds (spec §12.1): its ring
--- takes eight wedges, whatever the dial's slices, and is never paged; each node sits on its own wind
--- (PinNodes), a middle node on the first wind left free clockwise from N, a free node (one with no
--- fixed place on the map: Our base, a flag map's carrier) on the first wind left after those, and a
--- wind with no node has no wedge. An item carries `wedge`, its place among the ring's `size`; an unpinned item's place is
--- its index. The number keys pick the shown wedges clockwise from N.
+-- THE GEOMETRY. Wedges sit clockwise from the ring's `start` (N, or W under Auto), on-axis first. Offsets are from
+-- the hub's center, y up; the radius is the dial's (`dial.radius`, Geometry), and the disc leaves RIM
+-- between a wedge's edge and its own. A node set's nodes are pinned to their compass winds (spec
+-- §12.1): its ring takes eight wedges, whatever the dial's slices, and is never paged; each node sits
+-- on its own wind (PinNodes), a middle node on the first wind left free clockwise from N, a free node
+-- (one with no fixed place on the map: Our base, a flag map's carrier) on the first wind left after
+-- those, and a wind with no node has no wedge. An item carries `wedge`, its place among the ring's
+-- `size`; an unpinned item's place is its index. The number keys pick the shown wedges in that order. A paged ring's arrows and page dots sit in one row under the disc (Nav).
 
 NS.DialLayout = NS.DialLayout or {}
 local DL = NS.DialLayout
 local L = NS.L
 
-DL.RADIUS  = 92                                -- a wedge's center from the hub's center
+DL.RADIUS  = 100                               -- a wedge's center from the hub's center, by default
+DL.RADIUS_MIN, DL.RADIUS_MAX = 70, 180         -- the Ring radius row's range
 DL.WEDGE   = 44                                -- a wedge button, square
 DL.HUB     = 40                                -- the hub (the header button)
+DL.RIM     = 20                                -- from a wedge's outer edge to the disc's edge
 DL.LABEL_GAP = 2                               -- a wedge's label starts this far past the wedge's edge
 DL.LINE    = 14                                -- one line of label or title text
-DL.DISC    = 2 * (DL.RADIUS + DL.WEDGE / 2 + 8)
--- The ring's title, from the ring's center: above the N wedge's label, so the two never overlap.
-DL.TITLE   = DL.RADIUS + DL.WEDGE / 2 + DL.LABEL_GAP + DL.LINE + 4
-DL.POINTER = DL.HUB / 2 + 8                    -- the pointer's distance from the hub's center
+DL.POINTER = DL.HUB / 2 + 8                    -- the pointer's distance from the hub's center, by default
 DL.DEAD    = 8                                 -- inside this, the pointer hides
 DL.KEYS    = 8                                 -- the number keys 1-8 pick wedges
+DL.AUTO    = 0                                 -- slices: one wedge per item, spread evenly
+DL.MAX_SLICES = 12
+DL.ARROW   = 24                                -- a page arrow, square, by default (the Paging tab)
+DL.ARC     = 64                                -- straight segments drawing the rim
 
-local SLICE_OK = { [4] = true, [6] = true, [8] = true, [12] = true }
+local SLICE_OK = { [DL.AUTO] = true, [4] = true, [6] = true, [8] = true, [12] = true }
 local WINDS = { "N", "NE", "E", "SE", "S", "SW", "W", "NW" }
 
 --- The eight winds' wedges on a pinned ring; a node in the middle of the map has DL.MIDDLE.
@@ -57,77 +61,161 @@ DL.FREE = "free"
 
 local function round(x) return math.floor(x * 100 + 0.5) / 100 end
 
---- A dial's slices: 4, 6, 8 or 12; anything else is the default 4.
+--- A dial's slices: Auto (0), 4, 6, 8 or 12; anything else is Auto.
 function DL.ClampSlices(v)
     if SLICE_OK[v] then return v end
-    return 4
+    return DL.AUTO
 end
 
---- A ring's wedge count: the dial's slices, but 8 on a 12-slice dial for a ring that holds a ring.
-function DL.RingSize(slices, hasChildren)
+--- A dial's ring radius: a number in the row's range, else the default.
+function DL.ClampRadius(v)
+    v = tonumber(v)
+    if not v then return DL.RADIUS end
+    return math.max(DL.RADIUS_MIN, math.min(DL.RADIUS_MAX, v))
+end
+
+--- The dial's measures at `radius`, with labels `line` pixels tall (0: no labels; nil: DL.LINE)
+--- anchored `reach` pixels from the center (the Label offset; nil or 0: just past the disc's edge):
+--- the disc's diameter, the labels' reach, the ring title's height above the center (over the N
+--- wedge's label and the disc, so none overlap) and how far below the center the S wedge's label
+--- and the disc end (`below`: the page row starts under it, Nav).
+function DL.Geometry(radius, line, reach)
+    radius = DL.ClampRadius(radius)
+    line = tonumber(line) or DL.LINE
+    local edge = radius + DL.WEDGE / 2 + DL.RIM
+    reach = tonumber(reach)
+    if not reach or reach <= 0 then reach = edge + DL.LABEL_GAP end
+    local label = line > 0 and math.max(edge, reach + line) or edge
+    return { radius = radius, disc = 2 * edge, reach = reach, title = label + 4, below = label }
+end
+
+--- A ring's page length: the dial's fixed slices, or under Auto 12; at most 8 on a ring that holds a
+--- ring.
+function DL.PageSize(slices, hasChildren)
     slices = DL.ClampSlices(slices)
-    if slices == 12 and hasChildren then return 8 end
-    return slices
+    local cap = hasChildren and DL.KEYS or DL.MAX_SLICES
+    if slices == DL.AUTO then return cap end
+    return math.min(slices, cap)
 end
 
---- Split `items` into pages of `size`: every page but the last keeps size - 1 items, leaving the last
---- wedge for More.
+--- One page's wedges: its wedge count and where wedge 1 sits (degrees clockwise from N). A fixed
+--- count starts at N; Auto has one wedge per item from W, but three items take a four-wedge ring
+--- (W, N, E; S empty).
+--- @return number size, number start
+function DL.PageShape(slices, pageSize, count)
+    if DL.ClampSlices(slices) ~= DL.AUTO then return pageSize, 0 end
+    count = math.max(1, tonumber(count) or 1)
+    return count == 3 and 4 or count, 270
+end
+
+--- Split `items` into pages of `size`, the last holding the rest.
 --- @return table[] pages
 function DL.Paginate(items, size)
     items = type(items) == "table" and items or {}
-    if #items <= size then return { items } end
-    local pages, i, per = {}, 1, size - 1
-    while #items - i + 1 > size do
+    size = math.max(1, tonumber(size) or 1)
+    local pages = {}
+    for i = 1, math.max(#items, 1), size do
         local page = {}
-        for k = i, i + per - 1 do page[#page + 1] = items[k] end
+        for k = i, math.min(i + size - 1, #items) do page[#page + 1] = items[k] end
         pages[#pages + 1] = page
-        i = i + per
     end
-    local last = {}
-    for k = i, #items do last[#last + 1] = items[k] end
-    pages[#pages + 1] = last
     return pages
 end
 
--- A label reads outward from its wedge: a wedge toward the east has its label's LEFT edge just past the
--- wedge's right edge, toward the west its RIGHT edge past the left one; at N and S (within about 17
--- degrees of the vertical) its BOTTOM or TOP edge, past the top or bottom. A long name then runs away
--- from the wedge, never back over its icon.
+--- The Paging tab's measures when a dial names none (defaults/PadStyle.lua DialPage's).
+DL.PAGING = { arrowSize = DL.ARROW, arrowGap = 10, dotSize = 6, pillWidth = 18, dotGap = 6, offset = 6 }
+
+--- A paged ring's row under the dial (`g`, a Geometry), showing page `current` of `pages`, measured
+--- by the Paging tab (`pg`, DL.PAGING's fields): the row's height (`y`, from the hub's center, `offset`
+--- under the S label and the disc), each indicator's x and width (the current page a pill,
+--- `pillWidth` wide; the others dots), and the arrows' x (right; left is its negative), `arrowGap`
+--- clear of the indicators.
+function DL.Nav(pages, current, g, pg)
+    pages = math.max(1, tonumber(pages) or 1)
+    current = tonumber(current) or 1
+    g = g or DL.Geometry()
+    pg = pg or DL.PAGING
+    local widths, total = {}, 0
+    for p = 1, pages do
+        widths[p] = p == current and pg.pillWidth or pg.dotSize
+        total = total + widths[p] + (p > 1 and pg.dotGap or 0)
+    end
+    local dots, x = {}, -total / 2
+    for p = 1, pages do
+        dots[p] = round(x + widths[p] / 2)
+        x = x + widths[p] + pg.dotGap
+    end
+    local tall = math.max(pg.arrowSize, pg.dotSize)
+    return { y = round(-(g.below + pg.offset + tall / 2)), bottom = round(-(g.below + pg.offset + tall)),
+        dots = dots, widths = widths, arrow = round(total / 2 + pg.arrowGap + pg.arrowSize / 2) }
+end
+
+--- The icons' distance from the center: the Icon offset `at` when it is set (above 0), else the ring
+--- radius.
+function DL.IconReach(radius, at)
+    at = tonumber(at)
+    if at and at > 0 then return at end
+    return DL.ClampRadius(radius)
+end
+
+--- How big a wedge's clickable square is on a ring of n wedges at `radius`, its icons `at` from the
+--- center (IconReach; wedge 1 at `start`): as large as the slice
+--- allows (the buttons are squares, owner ruling 2026-10-21), so hovering most of a slice lights it.
+--- It stops short of the hub, of the disc's edge, and of its neighbors' squares (two squares apart by
+--- (dx, dy) overlap unless one of the two is at least the side), never under the wedge itself.
+function DL.HitSize(n, radius, start, at)
+    n = math.max(1, tonumber(n) or 4)
+    radius = DL.ClampRadius(radius)
+    at = DL.IconReach(radius, at)
+    local edge = radius + DL.WEDGE / 2 + DL.RIM
+    local side = math.min(2 * (edge - at), 2 * (at - DL.HUB / 2 - 4))
+    for i = 1, n > 1 and n or 0 do
+        local a, b = DL.Wedge(i, n, radius, start, nil, at), DL.Wedge(i % n + 1, n, radius, start, nil, at)
+        side = math.min(side, math.max(math.abs(a.x - b.x), math.abs(a.y - b.y)) - 2)
+    end
+    return math.floor(math.max(DL.WEDGE, side))
+end
+
+--- The pointer's distance from the hub's center for a pointer `size` pixels across: just outside
+--- the hub.
+function DL.PointerReach(size)
+    return DL.HUB / 2 + (tonumber(size) or 16) / 2 + 2
+end
+
+-- A label reads outward from the disc (owner, 2026-10-21: wholly outside it): its anchor sits on the
+-- circle just past the disc's edge (or at the Label offset), on the wedge's own bearing. A wedge toward the east has its
+-- label's LEFT edge there, toward the west its RIGHT edge; at N and S (within about 17 degrees of the
+-- vertical) its BOTTOM or TOP edge. A long name then runs away from the dial, never over it.
 local SIDEWAYS = 0.3
 
 local function labelAnchor(sx, sy)
-    local edge = DL.WEDGE / 2 + DL.LABEL_GAP
-    if sx > SIDEWAYS then return "LEFT", edge, 0 end
-    if sx < -SIDEWAYS then return "RIGHT", -edge, 0 end
-    if sy >= 0 then return "BOTTOM", 0, edge end
-    return "TOP", 0, -edge
+    if sx > SIDEWAYS then return "LEFT" end
+    if sx < -SIDEWAYS then return "RIGHT" end
+    if sy >= 0 then return "BOTTOM" end
+    return "TOP"
 end
 
---- Wedge i of n: its angle (radians clockwise from N), its center, and its label's anchor point
---- (`anchor`, the label's own point) and offset from the wedge's center (`lx`, `ly`).
-function DL.Wedge(i, n, radius)
+--- Wedge i of n on a ring whose wedge 1 sits `start` degrees clockwise from N: its angle (radians
+--- clockwise from N), its center, and its label's anchor point (`anchor`, the label's own point) and
+--- offset from the wedge's center (`lx`, `ly`), `reach` pixels from the dial's center (as Geometry:
+--- nil or 0 is just past the disc's edge); the wedge itself sits `at` from the center (IconReach:
+--- nil or 0 is the radius).
+function DL.Wedge(i, n, radius, start, reach, at)
     n = math.max(1, tonumber(n) or 4)
-    radius = radius or DL.RADIUS
-    local a = (i - 1) * 2 * math.pi / n
+    radius = DL.ClampRadius(radius)
+    local a = math.rad(tonumber(start) or 0) + (i - 1) * 2 * math.pi / n
     local sx, sy = math.sin(a), math.cos(a)
-    local anchor, lx, ly = labelAnchor(sx, sy)
-    return { angle = a, x = round(radius * sx), y = round(radius * sy), anchor = anchor, lx = lx, ly = ly }
+    local out = DL.Geometry(radius, nil, reach).reach
+    at = DL.IconReach(radius, at)
+    local x, y = round(at * sx), round(at * sy)
+    return { angle = a, x = x, y = y, anchor = labelAnchor(sx, sy), lx = round(out * sx) - x, ly = round(out * sy) - y }
 end
 
---- The spoke between wedge j and wedge j + 1 of n: its center, rotation and length.
-function DL.Spoke(j, n)
+--- Wedge i of n (wedge 1 at `start` degrees) as the nearest of the eight compass winds, or past eight
+--- wedges as its clock position ("12", "1", ... "11"), since the winds would give two wedges one word.
+function DL.Direction(i, n, start)
     n = math.max(1, tonumber(n) or 4)
-    local a = (j - 0.5) * 2 * math.pi / n
-    local inner, outer = DL.HUB / 2 + 4, DL.DISC / 2 - 4
-    local mid = (inner + outer) / 2
-    return { x = round(mid * math.sin(a)), y = round(mid * math.cos(a)), rotation = -a, length = outer - inner }
-end
-
---- Wedge i of n as the nearest of the eight compass winds, or past eight wedges (12) as its clock
---- position ("12", "1", ... "11"), since the winds would give two wedges one word.
-function DL.Direction(i, n)
-    n = math.max(1, tonumber(n) or 4)
-    local deg = (i - 1) * 360 / n
+    local deg = ((tonumber(start) or 0) + (i - 1) * 360 / n) % 360
     if n > #WINDS then
         local hour = math.floor(deg / 30 + 0.5) % 12
         return tostring(hour == 0 and 12 or hour)
@@ -136,12 +224,14 @@ function DL.Direction(i, n)
 end
 
 --- The pointer from the hub's center (cx, cy) toward the cursor (mx, my), both in screen units: its
---- angle (clockwise from N) and its offset from the hub's center. Nil inside the dead zone.
-function DL.Pointer(cx, cy, mx, my)
+--- angle (clockwise from N) and its offset from the hub's center, `reach` out (DL.POINTER when none).
+--- Nil inside the dead zone.
+function DL.Pointer(cx, cy, mx, my, reach)
     local dx, dy = (mx or 0) - (cx or 0), (my or 0) - (cy or 0)
     local d = math.sqrt(dx * dx + dy * dy)
     if d < DL.DEAD then return nil end
-    return math.atan2(dx, dy), round(DL.POINTER * dx / d), round(DL.POINTER * dy / d)
+    reach = tonumber(reach) or DL.POINTER
+    return math.atan2(dx, dy), round(reach * dx / d), round(reach * dy / d)
 end
 
 -- ── the rings ───────────────────────────────────────────────────────────────────────────────
@@ -261,37 +351,37 @@ function DL.Rings(groups, opts)
     local slices = DL.ClampSlices(opts.slices)
     local rings = {}
 
-    -- A ring's wedge count and pages: a pinned ring (a node set's, PinNodes) has eight wedges and one
-    -- page; any other has the dial's slices (RingSize), its items paged behind More.
-    local function shape(entries, pinned)
-        if pinned then return 8, { entries } end
-        local hasChildren = #entries > slices
+    -- A ring's pages: a pinned ring (a node set's, PinNodes) is one page of eight wedges from N; any
+    -- other is paged at the dial's page size (PageSize), each page shaped by PageShape.
+    local function pagesOf(entries, pinned)
+        if pinned then return { { items = entries, size = 8, start = 0 } } end
+        local hasChildren = false
         for _, e in ipairs(entries) do
             if e.kind == "ring" then hasChildren = true end
         end
-        local size = DL.RingSize(slices, hasChildren)
-        return size, DL.Paginate(entries, size)
+        local out = {}
+        for p, items in ipairs(DL.Paginate(entries, DL.PageSize(slices, hasChildren))) do
+            local size, start = DL.PageShape(slices, DL.PageSize(slices, hasChildren), #items)
+            out[p] = { items = items, size = size, start = start }
+        end
+        return out
     end
 
-    -- Add `entries` as one ring (and its pages) under `parent`, at `depth`; then each ring entry's
-    -- own ring, one deeper. Returns the index of the first page.
-    local function addRing(title, entries, parent, depth, pinned)
-        local size, pages = shape(entries, pinned)
+    -- Add `entries` as one ring (and its pages) under `parent`; then each ring entry's own ring.
+    -- Returns the index of the first page.
+    local function addRing(title, entries, parent, pinned)
+        local pages = pagesOf(entries, pinned)
         local first = #rings + 1
-        for p, items in ipairs(pages) do
+        for p, page in ipairs(pages) do
             local idx = #rings + 1
-            rings[idx] = { title = title, page = p, pages = #pages, size = size, items = items, depth = depth,
-                parent = p == 1 and parent or idx - 1, prev = p > 1 and idx - 1 or 0, next = 0 }
-            if p > 1 then
-                local before = rings[idx - 1]
-                before.next = idx
-                before.items[#before.items + 1] = { kind = "ring", target = idx, title = L["More"], more = true }
-            end
+            rings[idx] = { title = title, page = p, pages = #pages, size = page.size, start = page.start,
+                items = page.items, parent = parent, prev = p > 1 and idx - 1 or 0, next = 0 }
+            if p > 1 then rings[idx - 1].next = idx end
         end
         for r = first, first + #pages - 1 do
             for _, item in ipairs(rings[r].items) do
                 if item.sub then
-                    item.target = addRing(item.sub.title, item.sub.entries, r, depth + 1, item.sub.pinned)
+                    item.target = addRing(item.sub.title, item.sub.entries, r, item.sub.pinned)
                     item.sub = nil
                 end
             end
@@ -303,39 +393,16 @@ function DL.Rings(groups, opts)
     if opts.mode == "flat" then
         local entries = flatEntries(groups)
         if #entries == 0 then return rings, 0 end
-        addRing(title, entries, 0, 1)
+        addRing(title, entries, 0)
         return rings, 1
     end
-    local entries, first = {}, nil
+    local entries = {}
     for _, g in ipairs(groups) do
-        local e = groupEntry(g)
-        if e then
-            entries[#entries + 1] = e
-            first = first or { entry = e, openInto = g.openInto == true }
-        end
+        entries[#entries + 1] = groupEntry(g)
     end
     if #entries == 0 then return rings, 0 end
-    addRing(title, entries, 0, 1)
-    -- Owner ruling R2: a single group opens straight on its ring, as open-into does.
-    if first.openInto or #entries == 1 then return rings, first.entry.target end
+    addRing(title, entries, 0)
+    -- Owner ruling R2: a single group opens straight on its ring; several open on the ring of groups.
+    if #entries == 1 then return rings, entries[1].target end
     return rings, 1
-end
-
---- The node sets whose callouts sit three rings deep (spec §11.3: allowed, with the editor
---- warning): each ring at depth 2, first page only, that holds a ring other than More and is not the
---- ring the dial opens on. Their titles, in ring order.
---- @return string[]
-function DL.DeepGroups(rings, openRing)
-    local out = {}
-    for r, ring in ipairs(type(rings) == "table" and rings or {}) do
-        if ring.depth == 2 and ring.page == 1 and r ~= openRing then
-            for _, item in ipairs(ring.items) do
-                if item.kind == "ring" and not item.more then
-                    out[#out + 1] = ring.title
-                    break
-                end
-            end
-        end
-    end
-    return out
 end

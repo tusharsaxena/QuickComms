@@ -146,8 +146,8 @@ local VISIBILITY = choices({ { "always", L["Always"] }, { "inCombat", L["Only in
 local FADE = choices({ { "none", L["Never"] }, { "outOfCombat", L["Out of combat"] }, { "mouseover", L["Until the mouse is over it"] } })
 local MODE = choices({ { "categories", L["Categories"] }, { "flat", L["Flat"] } })
 local OPEN_AT = choices({ { "center", L["At its place"] }, { "cursor", L["At the cursor"] } })
-local SLICES = {}
-for i, n in ipairs({ 4, 6, 8, 12 }) do SLICES[i] = { value = n, text = tostring(n) } end
+local SLICES = { { value = NS.DialLayout.AUTO, text = L["Auto"] } }
+for _, n in ipairs({ 4, 6, 8, 12 }) do SLICES[#SLICES + 1] = { value = n, text = tostring(n) } end
 
 local ROWS = {
     -- A callout's rows (spec §13.1, as amended 2026-10-17): addressed by id alone, drawn by the callout
@@ -197,20 +197,6 @@ local ROWS = {
     { path = "group.enabled", instance = "group", type = "bool", default = T.group.enabled,
       page = "groups", group = GENERAL, label = L["Enabled"],
       desc = L["Show this group wherever its When matches (its parent's, while Inherit when conditions is ticked). Off keeps the group and its place on every pad."] },
-    { path = "group.openInto", instance = "group", type = "bool", default = T.group.openInto,
-      page = "groups", group = GENERAL, label = L["Open the dial on this group"],
-      desc = L["When this is the first active group on a Comms Dial, the dial opens straight on its ring, and the middle of the dial goes back to the groups."] },
-    -- Skip on the dial in content (modules/Surfaces.lua S.BuildDialPlan): a top-level group a dial
-    -- leaves out while a content group is active on it (In Group ships with it on). A group inside
-    -- another rides its parent's ring, so the row is grayed out for one; its stored value is kept.
-    { path = "group.dialYield", instance = "group", type = "bool", default = T.group.dialYield,
-      page = "groups", group = GENERAL, label = L["Skip on the dial in content"],
-      validate = check(function(v) return type(v) == "boolean", "badChoice" end),
-      disabledIf = function()
-          local gid = NS.State.editing and NS.State.editing.group
-          return gid ~= nil and Lib.IsChild(gid)
-      end,
-      desc = L["While a dungeon, raid, arena, battleground or other content group is active, the Comms Dial leaves this group out. The Comms Pad still shows it."] },
     -- Nesting (2026-10-18-builtins-as-groups-design.md, goal 2): the top-level group this one sits
     -- inside, or none (false). The General tab draws it as its own dropdown of the groups it may take
     -- (settings/Groups.lua); /qc takes a group id or none. Taking a parent takes the group off every
@@ -301,15 +287,25 @@ local ROWS = {
       validate = oneOf(MODE) },
     { path = "dial.slices", instance = "dial", type = "number", default = T.dial.slices, values = SLICES,
       page = "dials", group = L["Wheel"], label = L["Wedges per ring"],
-      desc = L["How many wedges a ring has. A ring with more puts the rest behind More. 12 applies only to a ring of callouts."],
+      desc = L["How many wedges a ring has. Auto spreads a ring's wedges evenly around it, up to 12. A ring with more turns pages with the arrows under the dial. A ring that opens other rings has at most 8."],
       validate = oneOf(SLICES) },
+    { path = "dial.radius", instance = "dial", type = "number", default = T.dial.radius,
+      min = NS.DialLayout.RADIUS_MIN, max = NS.DialLayout.RADIUS_MAX, step = 2,
+      page = "dials", group = L["Wheel"], label = L["Ring radius"],
+      desc = L["How far the wedges sit from the middle of the dial, in pixels. The dial's disc grows with it."],
+      validate = NUMBER, normalize = clamp(NS.DialLayout.RADIUS_MIN, NS.DialLayout.RADIUS_MAX, true) },
+    { path = "dial.iconOffset", instance = "dial", type = "number", default = T.dial.iconOffset,
+      min = 0, max = 250, step = 1, zeroText = L["Automatic"],
+      page = "dials", group = L["Wheel"], label = L["Icon offset (0 = automatic)"],
+      desc = L["How far each icon sits from the middle of the dial, in pixels. 0 puts it on the ring radius. The disc keeps its size."],
+      validate = NUMBER, normalize = clamp(0, 250, true) },
     { path = "dial.openAt", instance = "dial", type = "string", default = T.dial.openAt, values = OPEN_AT,
       page = "dials", group = L["Wheel"], label = L["Open at"],
       desc = L["Where the dial opens: at its place (set below), or wherever the cursor is."],
       validate = oneOf(OPEN_AT) },
     -- Position's default is false (the default place), so `/qc reset dial.point` reaches it; the page's
     -- Defaults keeps it (settings/Schema.lua resetExempt), as its tooltip says. As the pad.point row.
-    -- A dial has no key row: its key is WoW's own binding (the Binding tab, modules/Dial.lua BindKey).
+    -- A dial has no key row: its key is WoW's own binding (Options -> Keybindings, modules/Dial.lua).
     { path = "dial.point", instance = "dial", type = "point", default = false,
       page = "dials", group = L["Wheel"], label = L["Position"],
       desc = L["Where the dial opens at its place. Type an offset from the middle of the screen."],
@@ -386,16 +382,17 @@ end
 
 -- One composed block's rows stamped as pad member rows: `prefix` names the pad's table
 -- ("pad.look.", "pad.header.", "pad.section.", "pad.button."), `defaults` that table's shipped values.
-local function stampBlock(out, list, prefix, checks)
+local function stampBlock(out, list, prefix, checks, instance)
     for _, row in ipairs(list) do
         local c = checks[row.path:sub(#prefix + 1)] or {}
-        row.instance, row.validate, row.normalize = "pad", c.validate, c.normalize
+        row.instance, row.validate, row.normalize = instance or "pad", c.validate, c.normalize
         out[#out + 1] = row
     end
 end
 
 local function blockSpec(prefix, group, subgroup, defaults, extra)
-    local spec = { prefix = prefix, page = "pads", group = group, subgroup = subgroup, defaults = defaults }
+    local spec = { prefix = prefix, page = prefix:match("^dial") and "dials" or "pads", group = group,
+        subgroup = subgroup, defaults = defaults }
     for k, v in pairs(extra or {}) do spec[k] = v end
     return spec
 end
@@ -477,6 +474,139 @@ local function buttonRows()
 end
 
 for _, row in ipairs(buttonRows()) do ROWS[#ROWS + 1] = row end
+
+-- The Comms Dial's Slices tab (2026-10-21): each slice's fill, the border (its thickness, then its
+-- color), the hovered slice's fill and the pointer, each color a composed swatch with its class-color
+-- companion, stamped as dial member rows; before the Labels rows, so the tab follows Wheel.
+local SLICES_TAB, SLICEP = L["Slices"], "dial.slice."
+local function sliceRows()
+    local O = NS.addon.Settings.Helpers
+    local checks = composedChecks(O)
+    checks.highlight, checks.pointerColor = checks.background, checks.background
+    checks.useClassColorHighlight, checks.useClassColorPointer = { validate = BOOL }, { validate = BOOL }
+    local sdef = T.dial.slice
+    local BORDER, POINTER = L["Border"], L["Pointer"]
+    local function pointerOff() return NS.SchemaRuntime.Get(SLICEP .. "pointerShow") == false end
+    local function row(subgroup, r)
+        r.instance, r.page, r.group, r.subgroup = "dial", "dials", SLICES_TAB, subgroup
+        return r
+    end
+    local function pair(subgroup, key, label, companion)
+        local out = {}
+        stampBlock(out, O.ColorPair(blockSpec(SLICEP, SLICES_TAB, subgroup, sdef,
+            { key = key, label = label, companionKey = companion })), SLICEP, checks, "dial")
+        return out
+    end
+    local out = pair(L["Background"], "background", L["Slice color"])
+    out[#out + 1] = row(BORDER, { path = SLICEP .. "borderSize", type = "number", default = sdef.borderSize,
+        min = 0, max = 6, step = 1, label = L["Border size"], startsLine = true,
+        desc = L["How thick the lines between slices and round the rim are, in pixels. 0 draws none."],
+        validate = NUMBER, normalize = clamp(0, 6, true) })
+    for _, r in ipairs(pair(BORDER, "borderColor", L["Border color"], "useClassColorBorder")) do out[#out + 1] = r end
+    for _, r in ipairs(pair(L["Highlight"], "highlight", L["Highlight color"])) do out[#out + 1] = r end
+    out[#out + 1] = row(POINTER, { path = SLICEP .. "pointerShow", type = "bool", default = sdef.pointerShow,
+        label = L["Show pointer"], startsLine = true,
+        desc = L["Draw the pointer in the middle of the dial that turns toward the cursor."], validate = BOOL })
+    out[#out + 1] = row(POINTER, { path = SLICEP .. "pointerSize", type = "number", default = sdef.pointerSize,
+        min = 10, max = 48, step = 1, label = L["Pointer size"], disabledIf = pointerOff,
+        desc = L["How big the pointer is, in pixels."], validate = NUMBER, normalize = clamp(10, 48, true) })
+    out[#out + 1] = row(POINTER, { path = SLICEP .. "pointerOffset", type = "number", default = sdef.pointerOffset,
+        min = 0, max = 150, step = 1, label = L["Pointer offset (0 = automatic)"], zeroText = L["Automatic"],
+        disabledIf = pointerOff, startsLine = true,
+        desc = L["How far the pointer sits from the middle of the dial, in pixels. 0 puts it just outside the middle button."],
+        validate = NUMBER, normalize = clamp(0, 150, true) })
+    for _, r in ipairs(pair(POINTER, "pointerColor", L["Pointer color"], "useClassColorPointer")) do
+        r.disabledIf = pointerOff
+        out[#out + 1] = r
+    end
+    return out
+end
+
+for _, row in ipairs(sliceRows()) do ROWS[#ROWS + 1] = row end
+
+-- The Comms Dial's Paging tab (2026-10-21): a paged ring's row under the dial. Where it sits, the
+-- arrows (size, spacing, chevron and plate colors) and the page indicators (sizes, spacing and the
+-- current and other pages' colors), each color a composed swatch with its class-color companion;
+-- after the Slices rows, so the tab follows Slices.
+local PAGING, PAGEP = L["Paging"], "dial.page."
+local function pagingRows()
+    local O = NS.addon.Settings.Helpers
+    local checks = composedChecks(O)
+    for _, k in ipairs({ "arrowColor", "plateColor", "currentColor", "dotColor" }) do checks[k] = checks.background end
+    for _, k in ipairs({ "useClassColorArrow", "useClassColorPlate", "useClassColorCurrent", "useClassColorDot" }) do
+        checks[k] = { validate = BOOL }
+    end
+    local pdef = T.dial.page
+    local ARROWS, INDICATOR = L["Arrows"], L["Page indicator"]
+    local function size(subgroup, key, label, lo, hi, desc, first)
+        return { path = PAGEP .. key, instance = "dial", type = "number", default = pdef[key], min = lo, max = hi,
+            step = 1, page = "dials", group = PAGING, subgroup = subgroup, label = label, startsLine = first,
+            desc = desc, validate = NUMBER, normalize = clamp(lo, hi, true) }
+    end
+    local function pair(subgroup, key, label, companion)
+        local out = {}
+        stampBlock(out, O.ColorPair(blockSpec(PAGEP, PAGING, subgroup, pdef,
+            { key = key, label = label, companionKey = companion })), PAGEP, checks, "dial")
+        return out
+    end
+    local out = {
+        size(L["Position"], "offset", L["Offset"], 0, 80,
+            L["How far under the dial's labels the arrows and page indicators sit, in pixels."], true),
+        size(ARROWS, "arrowSize", L["Arrow size"], 12, 48, L["How big each page arrow is, in pixels."], true),
+        size(ARROWS, "arrowGap", L["Arrow spacing"], 0, 60,
+            L["How far the arrows stand from the page indicators, in pixels."]),
+    }
+    for _, r in ipairs(pair(ARROWS, "arrowColor", L["Arrow color"], "useClassColorArrow")) do out[#out + 1] = r end
+    for _, r in ipairs(pair(ARROWS, "plateColor", L["Arrow background"], "useClassColorPlate")) do out[#out + 1] = r end
+    out[#out + 1] = size(INDICATOR, "dotSize", L["Dot size"], 2, 20,
+        L["How big each other page's dot is, and how tall the current page's pill, in pixels."], true)
+    out[#out + 1] = size(INDICATOR, "pillWidth", L["Current page width"], 2, 60,
+        L["How wide the current page's pill is, in pixels. Set it to the dot size for a plain dot."])
+    out[#out + 1] = size(INDICATOR, "dotGap", L["Dot spacing"], 0, 30, L["The gap between page indicators, in pixels."], true)
+    for _, r in ipairs(pair(INDICATOR, "currentColor", L["Current page color"], "useClassColorCurrent")) do out[#out + 1] = r end
+    for _, r in ipairs(pair(INDICATOR, "dotColor", L["Other pages color"], "useClassColorDot")) do out[#out + 1] = r end
+    return out
+end
+
+for _, row in ipairs(pagingRows()) do ROWS[#ROWS + 1] = row end
+
+-- The Comms Dial's Labels tab (dial rework, 2026-10-21): Show labels, then the composed Font block
+-- (as the Buttons tab's), stamped as dial member rows, then where the dial's tooltip goes; before the
+-- dial's Icons rows, so the tab sits between Slices and Icons.
+local LABELS, LABELP = L["Labels"], "dial.label."
+local TIP_SIDE = choices({ { "top", L["Above"] }, { "bottom", L["Below"] }, { "left", L["Left"] }, { "right", L["Right"] } })
+local function labelRows()
+    local O = NS.addon.Settings.Helpers
+    local ldef = T.dial.label
+    local function hidden() return NS.SchemaRuntime.Get(LABELP .. "show") == false end
+    local out = { { path = LABELP .. "show", instance = "dial", type = "bool", default = ldef.show,
+        page = "dials", group = LABELS, label = L["Show labels"], startsLine = true,
+        desc = L["Write each wedge's name outside the dial. Off shows the icons alone; the tooltip still names them."],
+        validate = BOOL },
+      { path = LABELP .. "offset", instance = "dial", type = "number", default = ldef.offset,
+        min = 0, max = 300, step = 1, page = "dials", group = LABELS, label = L["Label offset (0 = automatic)"],
+        zeroText = L["Automatic"], disabledIf = hidden,
+        desc = L["How far each label sits from the middle of the dial, in pixels. 0 puts it just outside the dial."],
+        validate = NUMBER, normalize = clamp(0, 300, true) } }
+    local font = {}
+    stampBlock(font, O.FontGroup(blockSpec(LABELP, LABELS, L["Font"], ldef)), LABELP, composedChecks(O), "dial")
+    for _, row in ipairs(font) do
+        row.disabledIf = hidden
+        out[#out + 1] = row
+    end
+    local TIP = L["Tooltip"]
+    out[#out + 1] = { path = LABELP .. "tooltipSide", instance = "dial", type = "string", default = ldef.tooltipSide,
+        values = TIP_SIDE, page = "dials", group = LABELS, subgroup = TIP, label = L["Tooltip side"], startsLine = true,
+        desc = L["Which side of the dial a wedge's tooltip shows on. It always sits outside the dial."],
+        validate = oneOf(TIP_SIDE) }
+    out[#out + 1] = { path = LABELP .. "tooltipOffset", instance = "dial", type = "number", default = ldef.tooltipOffset,
+        min = 0, max = 80, step = 1, page = "dials", group = LABELS, subgroup = TIP, label = L["Tooltip offset"],
+        desc = L["How far the tooltip sits from the dial's title, labels or page arrows, in pixels."],
+        validate = NUMBER, normalize = clamp(0, 80, true) }
+    return out
+end
+
+for _, row in ipairs(labelRows()) do ROWS[#ROWS + 1] = row end
 
 -- The Icons tab's rows (B9, settings/SchemaIcons.lua), with these checks: a pad's after its window and
 -- Button rows, a dial's after its Wheel rows, so each editor's Icons tab sits there.

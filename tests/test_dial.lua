@@ -40,7 +40,7 @@ test("dial: Apply builds QuickCommsDial<n> with a ring per page, each callout we
     assertEqual(inst.header:GetName(), "QuickCommsDial1")
     assertFalse(inst.header:IsShown(), "closed until its key opens it")
     local _, rings = NS.Pool.Counts(inst.rings)
-    assertEqual(rings, 4, "the group ring, then three pages of eight callouts on four wedges")
+    assertEqual(rings, 3, "the group ring, then two pages of eight callouts on four wedges")
     local w = NS.Dial.WedgesFor("d2", T.seeded(NS, "bi.mplus.pull"))[1]
     assertEqual(w:GetAttribute("macrotext"), "/p Pulling next pack")
     assertEqual(w.qcLabel:GetText(), "Pulling")
@@ -172,7 +172,10 @@ local function combat(m, on)
     end
 end
 
-local function bindG(NS) assertTrue(NS.Dial.BindKey("d2", "G")) end
+-- The dial's key, as Options -> Keybindings sets it: WoW's own binding of Open Comms Dial 1.
+local function bindG(_, m) m.SetBinding("G", "CLICK QuickCommsDial1:Toggle") end
+
+
 
 local function wedgeTitled(NS, r, title)
     for _, w in ipairs(NS.Dial.RingWedges("d2", r)) do
@@ -181,86 +184,36 @@ local function wedgeTitled(NS, r, title)
     return nil
 end
 
+-- From the ring of groups (the dial opens there when several are active), open the one titled.
+local function pick(NS, m, title)
+    assertEqual(NS.Dial.ShownRing("d2"), 1, "several active groups: the dial opens on the groups")
+    m.__click(wedgeTitled(NS, 1, title))
+end
+
 local function ringTitle(NS)
     local r = NS.Dial.ShownRing("d2")
     return r and NS.Surfaces.DialPlans().d2.rings[r].title
 end
 
-test("dial: the first situation read builds the default dial, closed; setting its key is WoW's own binding", function()
+test("dial: the first situation read builds the default dial, closed; its key is WoW's own binding", function()
     local NS, m = live()
     local inst = NS.Dial.Instance("d2")
     assertTrue(inst ~= nil)
     assertEqual(inst.header:GetName(), "QuickCommsDial1")
     assertFalse(inst.header:IsShown())
-    bindG(NS)
+    bindG(NS, m)
     -- red under: an override binding (SetOverrideBindingClick), which Options -> Keybindings never shows
     assertNil(next(m.overrideBindings), "no override binding")
-    assertEqual(m.bindingActions.G, "CLICK QuickCommsDial1:Toggle", "the Open Comms Dial 1 entry")
-    assertEqual(m.bindingKeys["CLICK QuickCommsDial1:Toggle"], "G")
-    assertEqual(table.concat(m.bindingSaves, ","), "1", "saved in the set in force")
     assertNil(NS.db.profile.dials.d2.key, "never a profile field")
     assertEqual(NS.Dial.KeyOf("d2"), "G")
+    assertNil(NS.Dial.BindKey, "set only in Options -> Keybindings (dial rework)")
+    m.__pressKey("G")
+    assertTrue(NS.Dial.IsOpen("d2"))
 end)
 
-test("dial: [keys] a new key unbinds the old one; Escape (no key) clears it; a reserved key is refused", function()
-    local NS, m = live()
-    bindG(NS)
-    assertTrue(NS.Dial.BindKey("d2", "shift-h"))
-    assertNil(m.bindingActions.G, "the old key is the game's again")
-    assertEqual(m.bindingActions["SHIFT-H"], "CLICK QuickCommsDial1:Toggle", "normalized as the client spells it")
-    m.prints = {}
-    assertFalse(NS.Dial.BindKey("d2", "Escape"))
-    assertTrue(m.prints[1]:find("the open dial uses them", 1, true) ~= nil, m.prints[1])
-    assertFalse(NS.Dial.BindKey("d2", "3"), "1 to 8 pick the open dial's wedges")
-    assertEqual(NS.Dial.KeyOf("d2"), "SHIFT-H", "a refusal changes nothing")
-    assertTrue(NS.Dial.BindKey("d2", ""))
-    assertNil(m.bindingActions["SHIFT-H"])
-    assertNil(NS.Dial.KeyOf("d2"))
-    assertEqual(#m.blocked, 0)
-end)
 
-test("dial: [keys] a new key unbinds both keys the menu holds for the dial; Escape clears both", function()
-    local NS, m = live()
-    local command = "CLICK QuickCommsDial1:Toggle"
-    m.SetBinding("J", command)   -- the menu's two keys for Open Comms Dial 1
-    m.SetBinding("K", command)
-    -- red under: only Compat.BindingKey's first key unbound, K still opening the dial
-    assertTrue(NS.Dial.BindKey("d2", "G"))
-    assertNil(m.bindingActions.J)
-    assertNil(m.bindingActions.K, "the second key is unbound too")
-    assertEqual(table.concat(NS.Compat.BindingKeys(command), ","), "G")
-    assertEqual(NS.Dial.KeyOf("d2"), "G")
-    m.SetBinding("K", command)
-    assertTrue(NS.Dial.BindKey("d2", "K"), "the new key is one of the two: the other goes")
-    assertEqual(table.concat(NS.Compat.BindingKeys(command), ","), "K")
-    m.SetBinding("J", command)
-    assertTrue(NS.Dial.BindKey("d2", ""))
-    assertEqual(#NS.Compat.BindingKeys(command), 0, "Escape leaves no key bound")
-    assertEqual(#m.blocked, 0)
-end)
 
-test("dial: [keys] a key bound elsewhere in WoW is taken, with one line naming what it was", function()
-    local NS, m = live()
-    m.bindingActions.F = "TOGGLEAUTORUN"
-    m.BINDING_NAME_TOGGLEAUTORUN = "Toggle Autorun"
-    m.prints = {}
-    assertTrue(NS.Dial.BindKey("d2", "F"))
-    assertEqual(m.bindingActions.F, "CLICK QuickCommsDial1:Toggle")
-    assertTrue(m.prints[1]:find("F was Toggle Autorun in WoW's key bindings; now it opens this dial.", 1, true) ~= nil,
-        m.prints[1])
-end)
 
-test("dial: [keys] in combat a key cannot be set, with one line, and nothing is blocked", function()
-    local NS, m = live()
-    combat(m, true)
-    m.prints = {}
-    -- red under: Dial.BindKey calling SetBinding in combat (ADDON_ACTION_BLOCKED)
-    assertFalse(NS.Dial.BindKey("d2", "G"))
-    assertEqual(#m.prints, 1)
-    assertTrue(m.prints[1]:find("after combat", 1, true) ~= nil, m.prints[1])
-    assertEqual(#m.blocked, 0)
-    assertNil(m.bindingActions.G)
-end)
 
 test("dial: [keys] a key set in Options -> Keybindings is the dial's key; a dial past the fourth has none", function()
     local NS, m = live()
@@ -272,32 +225,31 @@ test("dial: [keys] a key set in Options -> Keybindings is the dial's key; a dial
     for i = 1, 4 do ids[i] = NS.Library.CreateSurface("dial", "Dial " .. i) end
     assertEqual(NS.Dial.PlaceOf(ids[4]), 5)
     assertNil(NS.Dial.Command(5))
-    m.prints = {}
-    assertFalse(NS.Dial.BindKey(ids[4], "K"))
-    assertTrue(m.prints[1]:find("first 4 dials", 1, true) ~= nil, m.prints[1])
-    assertNil(m.bindingActions.K)
+    assertNil(NS.Dial.KeyOf(ids[4]), "no Open Comms Dial entry past the fourth")
 end)
 
-test("dial: [exit] in Arathi Basin the dial opens on the nodes; Lumber Mill, then INC, sends in two clicks", function()
+test("dial: [exit] in Arathi Basin the dial opens on the groups; the set, Lumber Mill, then INC sends", function()
     local NS, m = live(AB)
-    bindG(NS)
+    bindG(NS, m)
     m.__pressKey("G")
-    assertEqual(ringTitle(NS), "Arathi Basin", "open-into: the node set is the first active group")
+    -- red under: open on the first group's ring in modules/Dial_Layout.lua Rings (In Group is active too)
+    pick(NS, m, "Arathi Basin")
+    assertEqual(ringTitle(NS), "Arathi Basin")
     m.__click(wedgeTitled(NS, NS.Dial.ShownRing("d2"), "Lumber Mill"))
     assertEqual(ringTitle(NS), "Lumber Mill")
     m.__click(wedgeTitled(NS, NS.Dial.ShownRing("d2"), "INC"))
     assertEqual(m.sentMacros[#m.sentMacros].text, "/i INC Lumber Mill")
-    assertEqual(#m.sentMacros, 1, "two clicks, one send")
+    assertEqual(#m.sentMacros, 1, "three clicks, one send")
     assertFalse(NS.Dial.IsOpen("d2"))
 end)
 
 test("dial: [exit] on a raid boss the dial opens and a click on a wedge sends, with nothing blocked", function()
     local NS, m = live(RAID)
-    bindG(NS)
+    bindG(NS, m)
     combat(m, true)
     m.__pressKey("G")
-    -- In Group skips the dial in a raid (group.dialYield): the dial opens on the raid set's ring
-    -- red under: S.BuildDialPlan keeping In Group, which opens the dial on a ring of groups
+    -- In Group is active in a raid too: the dial opens on the groups (dial rework)
+    pick(NS, m, "Raid (generic)")
     assertEqual(ringTitle(NS), "Raid (generic)")
     local w = NS.Dial.RingWedges("d2", NS.Dial.ShownRing("d2"))[1]
     m.__click(w)
@@ -312,7 +264,7 @@ test("dial: [exit] the Categories two-stroke: a group wedge opens its ring, a ca
     local gid = NS.Library.CreateGroup({ name = "Mine" })
     NS.Library.AddToGroup(gid, cid)
     NS.Library.OfferGroup(gid)
-    bindG(NS)
+    bindG(NS, m)
     m.__pressKey("G")
     assertEqual(NS.Dial.ShownRing("d2"), 1, "two active groups: the group ring")
     m.__click(wedgeTitled(NS, 1, "Mine"))
@@ -369,6 +321,7 @@ test("dial: Preview as opens dial 1 on the previewed situation, and its wedges s
     NS.Preview.SetPreviewAs("bg:ab")
     assertTrue(NS.Dial.IsOpen("d2"))
     assertNil(next(m.restrictedBindings), "opened from the settings window: no key taken")
+    pick(NS, m, "Arathi Basin")
     assertEqual(ringTitle(NS), "Arathi Basin")
     m.__click(wedgeTitled(NS, NS.Dial.ShownRing("d2"), "Stables"))
     m.__click(NS.Dial.RingWedges("d2", NS.Dial.ShownRing("d2"))[1])
@@ -378,7 +331,7 @@ end)
 
 test("dial: [review 3] a wedge change in combat waits for combat end, behind the hub's stale hint; the key works", function()
     local NS, m = live()
-    bindG(NS)
+    bindG(NS, m)
     combat(m, true)
     assertTrue(NS.SchemaRuntime.Set("dial.slices", 8, "d2"))
     assertEqual(#m.blocked, 0)
@@ -397,7 +350,7 @@ test("dial: [review 1] the key opens nothing where no group is active, and is th
     -- the World (solo) set is the one active solo in the open world (groups polish): without it, none is
     assertTrue(NS.Library.DeleteGroup(T.seeded(NS, "bi.world")))
     NS.Situation.RefreshNow("test")
-    bindG(NS)
+    bindG(NS, m)
     m.__pressKey("G")
     assertFalse(NS.Dial.IsOpen("d2"), "solo in the open world with no World set: no ring to show")
     NS.SchemaRuntime.Set("enabled", false)
@@ -411,7 +364,7 @@ end)
 
 test("dial: [review 3] disabled in combat with the dial open: nothing blocked; combat end hides it and frees the key", function()
     local NS, m = live()
-    bindG(NS)
+    bindG(NS, m)
     combat(m, true)
     m.__pressKey("G")
     NS.SchemaRuntime.Set("enabled", false)
@@ -425,7 +378,7 @@ end)
 
 test("dial: [keys] a profile switch keeps the key: it is WoW's binding, never the profile's", function()
     local NS, m = live()
-    bindG(NS)
+    bindG(NS, m)
     NS.addon.db:SetProfile("Other")
     -- red under: a key stored in the profile (the Other profile's dial would have none)
     assertEqual(NS.Dial.KeyOf(NS.db.profile.dialOrder[1]), "G", "the first dial in any profile takes place 1's key")
@@ -450,7 +403,7 @@ end)
 test("dial: the hub's tooltip says why each group shows, unless the player turned it off", function()
     local NS = live(AB)
     local shown = {}
-    NS.PadRender.ShowLines = function(_, title, lines) shown[#shown + 1] = { title = title, lines = lines } end
+    NS.DialRender.ShowTip = function(_, title, lines) shown[#shown + 1] = { title = title, lines = lines } end
     local h = NS.Dial.Instance("d2").header
     h:__fire("OnEnter")
     assertEqual(#shown, 1)
@@ -513,10 +466,10 @@ test("dial: [keys] Toggle Comms Pads runs exactly /qc toggle's handler, from a k
     assertTrue(m.__pressKey("P"))
     -- red under: the button's OnClick doing its own toggle (two handlers for one verb)
     assertEqual(calls, 1, "one press, one toggle")
-    assertTrue(NS.State.padsHidden, "the pads are hidden for the session")
-    assertTrue(m.prints[1]:find("Comms Pads hidden for this session.", 1, true) ~= nil, m.prints[1])
+    assertTrue(NS.db.char.padsHidden, "the pads are hidden on this character")
+    assertEqual(#m.prints, 0, "the toggle says nothing in chat")
     m.__pressKey("P")
-    assertFalse(NS.State.padsHidden == true, "and shown again")
+    assertFalse(NS.db.char.padsHidden == true, "and shown again")
     assertEqual(calls, 2)
     assertFalse(m.__named.QuickCommsTogglePads:IsShown(), "the button itself is never seen")
 end)
@@ -533,9 +486,9 @@ end)
 
 test("dial: [final 2] two dials: opening the second closes the first, and the number keys go with it", function()
     local NS, m = live()
-    bindG(NS)
+    bindG(NS, m)
     local other = NS.Library.CreateSurface("dial", "Lead")
-    assertTrue(NS.Dial.BindKey(other, "H"))
+    m.SetBinding("H", "CLICK QuickCommsDial2:Toggle")
     assertTrue(NS.Dial.Instance(other) ~= nil, "the second dial is built")
     m.__pressKey("G")
     assertTrue(NS.Dial.IsOpen("d2"))
@@ -566,8 +519,9 @@ end)
 
 test("dial: [phase 5] Arathi Basin's node wedges sit on their winds: Lumber Mill is SW, Blacksmith N", function()
     local NS, m = live(AB)
-    bindG(NS)
+    bindG(NS, m)
     m.__pressKey("G")
+    pick(NS, m, "Arathi Basin")
     local ring = NS.Dial.ShownRing("d2")
     local function at(title)
         local _, _, _, x, y = wedgeTitled(NS, ring, title):GetPoint(1)
@@ -582,11 +536,12 @@ test("dial: [review 6] on a four- or six-slice dial every node shows, and the nu
     for _, slices in ipairs({ 4, 6 }) do
         local NS, m = live(AB)
         assertTrue(NS.SchemaRuntime.Set("dial.slices", slices, "d2"))
-        bindG(NS)
+        bindG(NS, m)
         m.__pressKey("G")
+        pick(NS, m, "Arathi Basin")
         local r = NS.Dial.ShownRing("d2")
         assertEqual(ringTitle(NS), "Arathi Basin")
-        assertEqual(#NS.Dial.RingWedges("d2", r), 6, slices .. " slices: five nodes and the set's own, no More")
+        assertEqual(#NS.Dial.RingWedges("d2", r), 6, slices .. " slices: five nodes and the set's own, one page")
         -- clockwise from N: Blacksmith (N), Gold Mine (NE), Arathi Basin's own (E), Farm (SE),
         -- Lumber Mill (SW), Stables (NW)
         m.__pressKey("5")
@@ -609,4 +564,166 @@ test("dial: [icons] a wedge draws its glyph in its color; repainted untinted, it
     R.PaintWedge(w, { kind = "ring", title = "Other", icon = star }, geo)
     -- red under: tint only when the item carries a color (a reused wedge keeps the old one)
     assertEqual(table.concat(w.qcIcon.__color, ","), "1,1,1")
+end)
+
+-- ── the dial rework (2026-10-21): page arrows and dots, no icon backdrop, the radius ─────────────
+
+test("dial: [rework] a paged ring turns with its arrows and the Left and Right keys; its dots mark the page", function()
+    local NS, m = live()
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    local inst = NS.Dial.Instance("d2")
+    m.__click(inst.header, "Toggle")
+    assertEqual(NS.Dial.ShownRing("d2"), 2, "page 1 of the group's two")
+    local one, two = inst.rings.active[2], inst.rings.active[3]
+    assertTrue(one.qcPrev:IsShown() and one.qcNext:IsShown(), "a paged ring shows both arrows")
+    assertFalse(one.qcPrev.qcLive, "the left arrow is dimmed on the first page")
+    assertTrue(one.qcNext.qcLive)
+    assertFalse(inst.rings.active[1].qcPrev:IsShown(), "a ring of one page has no arrows")
+    local gold = NS.Constants.GOLD
+    assertEqual(one.qcDots[1].__color[2], gold.g, "page 1's dot is gold")
+    assertEqual(one.qcDots[2].__color[2], 0.4, "page 2's is gray")
+    assertTrue(one.qcDots[2]:IsShown())
+    -- red under: drop DS.NewArrow's wrap (the arrow would be a plain button that turns nothing)
+    m.__click(one.qcNext)
+    assertEqual(NS.Dial.ShownRing("d2"), 3, "the right arrow shows page 2")
+    assertTrue(NS.Dial.IsOpen("d2"), "and sends nothing, so the dial stays open")
+    m.__click(two.qcNext)
+    assertEqual(NS.Dial.ShownRing("d2"), 3, "at the last page the right arrow does nothing")
+    m.__pressKey("LEFT")
+    assertEqual(NS.Dial.ShownRing("d2"), 2, "Left turns back")
+    -- red under: no LEFT/RIGHT SetBindingClick in the show snippet
+    m.__pressKey("RIGHT")
+    assertEqual(NS.Dial.ShownRing("d2"), 3, "Right turns on")
+    m.__click(inst.header, "LeftButton")
+    assertEqual(NS.Dial.ShownRing("d2"), 1, "the hub goes up a ring from any page")
+    assertNil(m.restrictedBindings.LEFT, "a ring of one page leaves the arrow keys to the game")
+    assertEqual(#m.sentMacros, 0)
+    assertEqual(#m.blocked, 0)
+end)
+
+test("dial: [rework] wedges have no backdrop; the slices, the wedges and their hit squares follow the ring radius", function()
+    local NS = live()
+    local plan = planOf(NS)
+    plan.radius = 140
+    assertTrue(NS.Dial.Apply(1, "d2", plan))
+    local w = NS.Dial.WedgesFor("d2", T.seeded(NS, "bi.mplus.pull"))[1]
+    -- red under: keep R.DressWedge's qcBg circle
+    assertNil(w.qcBg, "no round backdrop behind the icon")
+    local g = NS.DialLayout.Geometry(140)
+    local ring = NS.Dial.Instance("d2").rings.active[2]
+    assertEqual(ring.qcFills[1].__size[1], g.disc, "each slice's fill is the disc across")
+    local _, _, _, x, y = w:GetPoint(1)
+    assertEqual(math.floor(math.sqrt(x * x + y * y) + 0.5), 140, "the wedge sits on the radius")
+end)
+
+test("dial: [slices] each place is a tinted slice; the slice the cursor points into lights, anywhere but the hub", function()
+    local NS, m = live()
+    local did = "d2"
+    assertTrue(NS.SchemaRuntime.Set("dial.slice.borderSize", 2, did))
+    assertTrue(NS.SchemaRuntime.Set("dial.slice.highlight", { r = 0, g = 1, b = 0, a = 0.5 }, did))
+    assertTrue(NS.Dial.Apply(1, did, planOf(NS)))
+    local inst = NS.Dial.Instance(did)
+    local h = inst.header
+    local ring = inst.rings.active[2]
+    -- four wedges from N (planOf's fixed four): four fills, each its own quarter
+    assertEqual(ring.qcFills[1].__texture, NS.DialSlices.SectorTexture(4))
+    assertTrue(ring.qcFills[4]:IsShown())
+    assertEqual(ring.qcSpokes[1].__size[1], 2, "spokes as thick as the border")
+    assertEqual(#ring.qcRim, NS.DialLayout.ARC, "the rim in straight segments")
+    m.__click(h, "Toggle")
+    assertEqual(NS.Dial.ShownRing(did), 2)
+    local cx, cy = h:GetCenter()
+    local function at(dx, dy)
+        m.cursor.x, m.cursor.y = (cx + dx) * h:GetEffectiveScale(), (cy + dy) * h:GetEffectiveScale()
+        NS.DialRender.PointerUpdate(h.qcPointer)
+        return ring.qcHighlight:IsShown()
+    end
+    -- red under: light a slice only from a wedge's own OnEnter (its square)
+    assertTrue(at(30, 2), "just outside the hub, toward E: the E slice lights, though the cursor is not on its wedge")
+    assertEqual(ring.qcLit, 2)
+    assertEqual(ring.qcHighlight.__color[2], 1, "the Slices tab's highlight color")
+    assertFalse(at(5, 5), "over the hub: nothing")
+    assertFalse(at(400, 0), "past the rim: nothing")
+    assertTrue(at(-2, -60))
+    assertEqual(ring.qcLit, 3, "toward S")
+    m.__click(h, "Toggle")
+    assertFalse(ring.qcHighlight:IsShown(), "closing clears it")
+    assertTrue(NS.SchemaRuntime.Set("dial.slice.borderSize", 0, did))
+    assertTrue(NS.Dial.Apply(1, did, planOf(NS)))
+    assertFalse(ring.qcSpokes[1]:IsShown(), "border 0: no lines")
+    assertEqual(NS.DialSlices.SectorTexture(1), "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask", "one slice is the disc")
+end)
+
+test("dial: [front] the hub, its close mark and the pointer draw over the slices", function()
+    local NS = live()
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    local inst = NS.Dial.Instance("d2")
+    local front = inst.header.qcPointer
+    -- red under: the hub's circle and close mark on the header, under the rings' fills
+    assertTrue(inst.header.qcHub:GetParent() == front and inst.header.qcClose:GetParent() == front)
+    for _, ring in ipairs(inst.rings.active) do
+        assertTrue(front:GetFrameLevel() > ring:GetFrameLevel(), "above every ring")
+        for _, w in ipairs(ring.qcWedges.active) do assertTrue(front:GetFrameLevel() > w:GetFrameLevel()) end
+    end
+end)
+
+test("dial: [tooltip] a wedge's tooltip sits outside the dial: above by default, on the Labels tab's side", function()
+    local NS, m = live()
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    local h = NS.Dial.Instance("d2").header
+    local w = NS.Dial.RingWedges("d2", 2)[1]
+    w:__fire("OnEnter")
+    local tip = m.GameTooltip
+    -- red under: R.ShowTooltip through PadRender.ShowLines (ANCHOR_TOP, over the dial)
+    assertEqual(tip.__anchor, "ANCHOR_NONE")
+    local p, rel, _, x, y = tip:GetPoint(1)
+    local g = NS.DialLayout.Geometry(100)
+    assertEqual(p .. "," .. tostring(rel == h) .. "," .. x, "BOTTOM,true,0")
+    assertTrue(y >= g.title + 8, "above the ring title, by the offset")
+    assertTrue(NS.SchemaRuntime.Set("dial.label.tooltipSide", "left", "d2"))
+    assertTrue(NS.SchemaRuntime.Set("dial.label.tooltipOffset", 20, "d2"))
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    w:__fire("OnEnter")
+    p, _, _, x = tip:GetPoint(1)
+    assertEqual(p, "RIGHT")
+    assertTrue(x <= -(g.disc / 2 + 20), "left of the disc and its labels, by the offset")
+end)
+
+test("dial: [pointer] the pointer is a catalog glyph, sized, colored and placed by the Slices tab, and can be off", function()
+    local NS = live()
+    assertTrue(NS.SchemaRuntime.Set("dial.slice.pointerSize", 30, "d2"))
+    assertTrue(NS.SchemaRuntime.Set("dial.slice.pointerColor", { r = 0, g = 0, b = 1, a = 1 }, "d2"))
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    local h = NS.Dial.Instance("d2").header
+    local arrow = h.qcPointer.qcArrow
+    assertEqual(arrow.__size[1], 30)
+    assertEqual(arrow.__color[3], 1)
+    assertEqual(h.qcReach, NS.DialLayout.PointerReach(30), "automatic: pushed out to clear the hub")
+    assertTrue(NS.SchemaRuntime.Set("dial.slice.pointerOffset", 70, "d2"))
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    -- red under: ignore pointerOffset in R.PaintPointer
+    assertEqual(h.qcReach, 70, "the Pointer offset, from the center")
+    assertTrue(NS.SchemaRuntime.Set("dial.slice.pointerShow", false, "d2"))
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    h:Show()
+    NS.DialRender.PointerUpdate(h.qcPointer)
+    assertFalse(h.qcPointer.qcArrow:IsShown(), "off: never drawn (the update still lights slices)")
+end)
+
+test("dial: [labels] the Label offset moves every label out from the center; the title and the page row follow", function()
+    local NS = live()
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    local w = NS.Dial.RingWedges("d2", 2)[2]   -- E
+    local _, _, _, x0 = w.qcLabel:GetPoint(1)
+    local _, _, _, wx = w:GetPoint(1)
+    local g = NS.DialLayout.Geometry(100)
+    assertEqual(wx + x0, g.reach, "automatic: just past the disc")
+    assertTrue(NS.SchemaRuntime.Set("dial.label.offset", 220, "d2"))
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    local _, _, _, x1 = w.qcLabel:GetPoint(1)
+    -- red under: drop `reach` from DL.Wedge
+    assertEqual(wx + x1, 220, "220 pixels from the center")
+    local ring = NS.Dial.Instance("d2").rings.active[2]
+    local _, _, _, _, ty = ring.qcTitle:GetPoint(1)
+    assertTrue(ty >= 220 + 14, "the title clears the N label")
 end)

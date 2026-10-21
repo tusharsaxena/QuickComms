@@ -25,9 +25,36 @@ local function newAddon(opts)
     return loadAddon(opts)
 end
 
--- ... plus OnInitialize (ADDON_LOADED): the db exists, migrations have run.
+-- The kit's AceDB fake (tests/_kit/mock_record.lua, vendored) models `profile` and `global` but not
+-- AceDB's `char` section, which this addon uses for the Comms Pads' hidden state (defaults/Profile.lua
+-- CHAR_DEFAULTS). Until the kit models it, this wraps the fake's New once per load: `db.char` is
+-- the SavedVariables root's `char["<name> - <realm>"]`, filled from the `char` defaults as AceDB-3.0
+-- does, so a test can keep the root and boot again, as a /reload would.
+local CHAR_KEY = "Tester - Realm"
+local function withCharSection(m)
+    local AceDB = m.LibStub("AceDB-3.0", true)
+    if not AceDB or AceDB.qcCharShim then return end
+    local new = AceDB.New
+    AceDB.New = function(self, tbl, defaults, ...)
+        local db = new(self, tbl, defaults, ...)
+        db.sv.char = db.sv.char or {}
+        local char = db.sv.char[CHAR_KEY] or {}
+        db.sv.char[CHAR_KEY] = char
+        for k, v in pairs(defaults and defaults.char or {}) do
+            if char[k] == nil then char[k] = v end
+        end
+        db.char = char
+        return db
+    end
+    AceDB.qcCharShim = true
+end
+
+-- ... plus OnInitialize (ADDON_LOADED): the db exists, migrations have run. `opts.sv`, when given, is
+-- the SavedVariables root the client hands back (a /reload or the next login of a saved one).
 local function bootAddon(opts)
     local NS, env, m = newAddon(opts)
+    if opts and opts.sv then _G.QuickCommsDB = opts.sv end
+    withCharSection(m)
     NS.addon:OnInitialize()
     return NS, env, m
 end
@@ -145,7 +172,6 @@ Kit.run{
         "test_pad_layout",
         "test_dial_layout",
         "test_surfaces",
-        "test_dial_yield",
         "test_pad_render",
         "test_pad",
         "test_dial",

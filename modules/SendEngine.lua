@@ -24,8 +24,8 @@ local _, NS = ...
 -- containers (SecureFrameTemplate), its wedges (send buttons wrapped by the header's snippets BEFORE
 -- the click hook below, because the client's wrap replaces the script and would drop the hook), and
 -- every attribute, frame ref and snippet run. A dial's key is WoW's own binding of its header's
--- Bindings.xml entry since 2026-10-20 (modules/Dial.lua BindKey, through core/Compat.lua), so no
--- override binding is written here any more.
+-- Bindings.xml entry since 2026-10-20, set only in Options -> Keybindings, so no binding is written
+-- here.
 --
 -- Stand-down (spec §9.5, slash-commands-§7): Teardown(fn) runs the secure half now or, in combat,
 -- holds it in the one registration a disabled addon may keep: a private AceEvent target listening
@@ -355,6 +355,8 @@ end
 local function press(b)
     local meta = b.qcMeta
     if not meta or NS.IsStoodDown() then return end
+    NS.Debug(TAG_S, "press %s on %s -> %s%s", tostring(meta.calloutId), tostring(meta.surfaceId),
+        tostring(meta.chatType or "none"), b.qcArmed and "" or " (disarmed)")
     if meta.selfText then
         NS.Print(meta.selfText)
         return

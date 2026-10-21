@@ -1,5 +1,6 @@
 -- tests/test_dial_layout.lua — modules/Dial_Layout.lua (spec §11.1, §11.3): the rings a dial's groups
--- make (Categories, Flat, open-into, pages behind More) and the wedges' geometry. Pure.
+-- make (Categories, Flat, a lone group opened into, pages turned by the arrows), Auto's wedge shapes
+-- and the wedges' geometry. Pure.
 
 local T = _G.QUICKCOMMS_TEST
 local test, assertEqual, assertNil = T.test, T.assertEqual, T.assertNil
@@ -18,7 +19,7 @@ local function titles(ring)
     return table.concat(out, ",")
 end
 
--- Arathi Basin as a dial plan hands it over: five nodes, four callouts each, open-into on.
+-- Arathi Basin as a dial plan hands it over: five nodes, four callouts each.
 local function ab()
     local children = {}
     for i, node in ipairs({ "Stables", "Lumber Mill", "Blacksmith", "Gold Mine", "Farm" }) do
@@ -28,7 +29,7 @@ local function ab()
         end
         children[i] = { id = "n" .. i, title = node, slots = s }
     end
-    return { id = "bi.bg.ab", title = "Arathi Basin", openInto = true, children = children }
+    return { id = "bi.bg.ab", title = "Arathi Basin", children = children }
 end
 
 test("dial layout: four wedges sit on N, E, S and W, clockwise from the top", function()
@@ -38,50 +39,119 @@ test("dial layout: four wedges sit on N, E, S and W, clockwise from the top", fu
         local w = L.Wedge(i, 4)
         pts[i] = w.x .. "," .. w.y
     end
-    assertEqual(table.concat(pts, " "), "0,92 92,0 0,-92 -92,0")
-    assertEqual(L.Wedge(2, 4).lx, L.WEDGE / 2 + L.LABEL_GAP, "the label sits outward from the wedge")
+    assertEqual(table.concat(pts, " "), "0,100 100,0 0,-100 -100,0", "the default radius")
+    assertEqual(L.Wedge(2, 4, 80).x, 80, "the dial's own radius")
+    assertEqual(L.Wedge(2, 4, 999).x, L.RADIUS_MAX, "clamped to the row's range")
     assertEqual(L.Direction(1, 4) .. L.Direction(2, 4) .. L.Direction(3, 4) .. L.Direction(4, 4), "NESW")
     assertEqual(L.Direction(2, 8), "NE")
 end)
 
-test("dial layout: slices are 4, 6, 8 or 12, and 12 only on a ring with no children", function()
+test("dial layout: slices are Auto, 4, 6, 8 or 12; a page is 12 at most, 8 on a ring that holds rings", function()
     local L = DL()
     assertEqual(L.ClampSlices(6), 6)
-    assertEqual(L.ClampSlices(5), 4)
-    assertEqual(L.ClampSlices(nil), 4)
-    assertEqual(L.RingSize(12, false), 12)
-    assertEqual(L.RingSize(12, true), 8)
-    assertEqual(L.RingSize(6, true), 6)
+    assertEqual(L.ClampSlices(5), L.AUTO, "anything else is Auto")
+    assertEqual(L.ClampSlices(nil), L.AUTO)
+    assertEqual(L.PageSize(12, false), 12)
+    assertEqual(L.PageSize(12, true), 8)
+    assertEqual(L.PageSize(6, true), 6)
+    assertEqual(L.PageSize(L.AUTO, false), 12, "Auto spreads up to twelve")
+    assertEqual(L.PageSize(L.AUTO, true), 8)
 end)
 
-test("dial layout: [review 5] more items than wedges go on pages: size-1 each, the rest on the last", function()
+test("dial layout: [auto] one wedge is W, two W and E, three W, N and E, four W, N, E and S; more spread from W", function()
     local L = DL()
-    local pages = L.Paginate({ 1, 2, 3, 4, 5, 6, 7, 8 }, 4)
-    assertEqual(#pages, 3)
-    assertEqual(table.concat(pages[1], ","), "1,2,3")
-    assertEqual(table.concat(pages[2], ","), "4,5,6")
-    assertEqual(table.concat(pages[3], ","), "7,8")
-    assertEqual(#L.Paginate({ 1, 2, 3, 4 }, 4), 1, "a full ring needs no More")
+    local function at(n)
+        local size, start = L.PageShape(L.AUTO, 12, n)
+        local out = {}
+        for i = 1, n do out[i] = L.Direction(i, size, start) end
+        return table.concat(out, " ")
+    end
+    -- red under: start Auto at N in modules/Dial_Layout.lua PageShape
+    assertEqual(at(1), "W")
+    assertEqual(at(2), "W E")
+    -- red under: give three items a three-wedge ring (W, NE, SE)
+    assertEqual(at(3), "W N E", "S is left empty")
+    assertEqual(select(1, L.PageShape(L.AUTO, 12, 3)), 4, "three take a four-wedge ring")
+    assertEqual(at(4), "W N E S")
+    assertEqual(at(8), "W NW N NE E SE S SW", "evenly spaced, clockwise from W")
+    assertEqual(select(1, L.PageShape(L.AUTO, 12, 7)), 7, "one wedge per item past four")
+    local size, start = L.PageShape(6, 6, 2)
+    assertEqual(size .. "," .. start, "6,0", "a fixed count keeps its wedges and starts at N")
 end)
 
-test("dial layout: [exit] Categories in Arathi Basin opens on the node ring; Lumber Mill, then INC", function()
+test("dial layout: [review 5] more items than wedges go on plain pages, the rest on the last", function()
+    local L = DL()
+    local pages = L.Paginate({ 1, 2, 3, 4, 5, 6, 7, 8, 9 }, 4)
+    assertEqual(#pages, 3)
+    -- red under: keep the last wedge of each page for More in DL.Paginate
+    assertEqual(table.concat(pages[1], ","), "1,2,3,4")
+    assertEqual(table.concat(pages[2], ","), "5,6,7,8")
+    assertEqual(table.concat(pages[3], ","), "9")
+    assertEqual(#L.Paginate({ 1, 2, 3, 4 }, 4), 1, "a full ring is one page")
+end)
+
+test("dial layout: [nav] a paged ring's pill, dots and arrows sit in one row under the disc and its labels", function()
+    local L = DL()
+    local g = L.Geometry(100)
+    local nav = L.Nav(3, 2, g)
+    local P = L.PAGING
+    -- red under: give every page the same width in DL.Nav
+    assertEqual(table.concat(nav.widths, ","), P.dotSize .. "," .. P.pillWidth .. "," .. P.dotSize, "this page is the pill")
+    assertEqual(nav.dots[2], 0, "centered")
+    assertEqual(nav.dots[1], -nav.dots[3])
+    T.assertTrue(nav.arrow > nav.dots[3] + P.dotSize, "the arrows clear the indicators")
+    T.assertTrue(-nav.y - P.arrowSize / 2 >= g.disc / 2 + L.LABEL_GAP + L.LINE, "below the S wedge's label")
+    T.assertTrue(L.Nav(3, 1, L.Geometry(100, 0)).y > nav.y, "with no labels the row comes up to the disc")
+    T.assertTrue(L.Nav(3, 1, L.Geometry(150)).y < nav.y, "a bigger dial pushes it down")
+    local pg = { offset = 30, arrowSize = 40, arrowGap = 25, dotSize = 10, pillWidth = 30, dotGap = 12 }
+    local big = L.Nav(3, 1, g, pg)
+    -- red under: read DL.PAGING in DL.Nav whatever the dial's Paging tab says
+    assertEqual(big.y, -(g.below + 30 + 20), "the Paging tab's offset and arrow size")
+    assertEqual(big.widths[1] .. "," .. big.widths[2], "30,10")
+    assertEqual(big.arrow, (30 + 10 + 10 + 2 * 12) / 2 + 25 + 20)
+end)
+
+test("dial layout: [hit] a wedge's hit square fills its slice without reaching the hub or a neighbor", function()
+    local L = DL()
+    for _, n in ipairs({ 2, 4, 6, 8, 12 }) do
+        local side = L.HitSize(n, 100)
+        T.assertTrue(side >= L.WEDGE, n .. ": never under the wedge")
+        T.assertTrue(100 - side / 2 >= L.HUB / 2, n .. ": clear of the hub")
+        local a, b = L.Wedge(1, n, 100), L.Wedge(2, n, 100)
+        T.assertTrue(math.max(math.abs(a.x - b.x), math.abs(a.y - b.y)) >= side, n .. ": clear of its neighbor")
+    end
+    -- the Icon offset moves the wedges in; the square still clears the hub and the rim
+    local w = L.Wedge(2, 4, 100, 0, nil, 60)
+    assertEqual(w.x, 60, "the icon sits at its offset, the disc keeps the radius")
+    T.assertTrue(60 - L.HitSize(4, 100, 0, 60) / 2 >= L.HUB / 2, "clear of the hub at the offset")
+    -- red under: answer DL.WEDGE from DL.HitSize (the old 44-pixel target)
+    T.assertTrue(L.HitSize(4, 100) > L.WEDGE + 20, "a quarter slice gets a big square")
+    T.assertTrue(L.PointerReach(30) > L.PointerReach(16), "a bigger pointer sits further out")
+end)
+
+test("dial layout: [exit] Categories with several groups opens on the ring of groups; a group wedge opens its ring", function()
     local L = DL()
     local generic = { id = "bi.bg", title = "Battleground (generic)", slots = slots("g", 6) }
     local rings, open = L.Rings({ ab(), generic }, { mode = "categories", slices = 4, title = "Comms Dial" })
+    -- red under: open on the first group's ring in DL.Rings
+    assertEqual(open, 1, "two groups: the selector first")
     assertEqual(rings[1].title, "Comms Dial")
     assertEqual(titles(rings[1]), "Arathi Basin,Battleground (generic)")
-    -- red under: drop the open-into branch at the end of DL.Rings
-    assertEqual(rings[open].title, "Arathi Basin", "open-into: the first active group has the flag")
-    assertEqual(rings[open].parent, 1, "the hub goes up to the group ring")
-    assertEqual(titles(rings[open]), "Stables,Lumber Mill,Blacksmith,More")
-    local mill = rings[rings[open].items[2].target]
+    local set = rings[rings[1].items[1].target]
+    assertEqual(set.title, "Arathi Basin")
+    assertEqual(set.parent, 1, "the hub goes up to the group ring")
+    assertEqual(titles(set), "Stables,Lumber Mill,Blacksmith,Gold Mine")
+    local mill = rings[set.items[2].target]
     assertEqual(mill.title, "Lumber Mill")
-    assertEqual(titles(mill), "Attack,Defend,INC,Clear", "four rows fill a four-wedge ring: no More")
+    assertEqual(titles(mill), "Attack,Defend,INC,Clear")
     assertEqual(mill.items[3].slot.line, "/i INC Lumber Mill")
-    assertEqual(rings[rings[open].items[4].target].prev, open, "More's page goes back")
+    local two = rings[set.next]
+    assertEqual(titles(two), "Farm", "the fifth node on page 2, no More wedge")
+    assertEqual(two.prev, rings[1].items[1].target)
+    assertEqual(two.parent, 1, "every page goes up to the same ring")
 end)
 
-test("dial layout: without the flag first, Categories opens on the group ring; one group opens straight on it", function()
+test("dial layout: several groups open on the group ring; one group opens straight on it", function()
     local L = DL()
     local mplus = { id = "bi.mplus", title = "M+", slots = slots("m", 3) }
     local mine = { id = "g1", title = "Mine", slots = slots("c", 2) }
@@ -92,9 +162,11 @@ test("dial layout: without the flag first, Categories opens on the group ring; o
     rings, open = L.Rings({ mplus }, { slices = 4 })
     assertEqual(rings[open].title, "M+", "a single group: no stroke for a ring of one")
     assertEqual(rings[open].parent, 1)
+    rings, open = L.Rings({ mplus, { id = "e", title = "Empty", slots = {} } }, {})
+    assertEqual(rings[open].title, "M+", "an empty group is not a second group")
 end)
 
-test("dial layout: [review 5] Flat puts every callout on the first ring, highest group first, with More pages", function()
+test("dial layout: [review 5] Flat puts every callout on the first ring, highest group first, paged", function()
     local L = DL()
     local rings, open = L.Rings({ ab(), { id = "x", title = "X", slots = slots("x", 2) } },
         { mode = "flat", slices = 8, title = "D" })
@@ -102,10 +174,10 @@ test("dial layout: [review 5] Flat puts every callout on the first ring, highest
     -- red under: title a Flat node callout with slot.name alone (five wedges would read "Attack")
     assertEqual(rings[1].items[1].title, "Attack · Stables", "a node's callout names its node")
     assertEqual(rings[1].items[1].slot.name, "Attack", "the slot itself is unchanged")
-    assertEqual(rings[1].items[8].title, "More")
+    assertEqual(#rings[1].items, 8, "a full page, no More wedge")
     assertEqual(rings[1].next, 2)
     assertEqual(rings[2].prev, 1)
-    assertEqual(rings[2].parent, 1, "the hub goes back a page")
+    assertEqual(rings[2].parent, 0, "the hub closes from any page of the first ring")
     local total = 0
     for _, r in ipairs(rings) do
         for _, item in ipairs(r.items) do
@@ -115,19 +187,6 @@ test("dial layout: [review 5] Flat puts every callout on the first ring, highest
     assertEqual(total, 22, "every callout reachable")
 end)
 
-test("dial layout: [phase 4] a node set below another active group is three rings deep, and named for the warning", function()
-    local L = DL()
-    local mine = { id = "g1", title = "Mine", slots = slots("c", 2) }
-    local rings, open = L.Rings({ mine, ab() }, { slices = 4, title = "D" })
-    assertEqual(open, 1, "the first group has no open-into")
-    assertEqual(rings[1].depth, 1)
-    -- red under: answer {} from DL.DeepGroups
-    assertEqual(table.concat(L.DeepGroups(rings, open), ","), "Arathi Basin", "named once, though paged")
-    rings, open = L.Rings({ ab(), mine }, { slices = 4 })
-    assertEqual(#L.DeepGroups(rings, open), 0, "open-into: the nodes are the ring it opens on")
-    rings, open = L.Rings({ mine, ab() }, { mode = "flat", slices = 4 })
-    assertEqual(#L.DeepGroups(rings, open), 0, "Flat has no depth")
-end)
 
 test("dial layout: nothing to show is no ring at all; an empty group is left out", function()
     local L = DL()
@@ -147,18 +206,22 @@ test("dial layout: the pointer follows the cursor outside the dead zone", functi
     assertEqual(y, 0)
 end)
 
-test("dial layout: [final 6] a label is anchored by its side, clear of its wedge; the ring title clears the N label", function()
+test("dial layout: [final 6] a label is anchored by its side, wholly outside the disc; the ring title clears the N label", function()
     local L = DL()
-    local edge = L.WEDGE / 2 + L.LABEL_GAP
-    local want = { { "BOTTOM", 0, edge }, { "LEFT", edge, 0 }, { "TOP", 0, -edge }, { "RIGHT", -edge, 0 } }
+    local g = L.Geometry(100)
+    local want = { "BOTTOM", "LEFT", "TOP", "RIGHT" }
     for i = 1, 4 do
         local w = L.Wedge(i, 4)
-        -- red under: center every label at DL.LABEL outward
-        assertEqual(w.anchor .. " " .. w.lx .. "," .. w.ly, want[i][1] .. " " .. want[i][2] .. "," .. want[i][3], i)
+        assertEqual(w.anchor, want[i], i)
+        -- red under: anchor the label just past the wedge's edge (inside the disc)
+        local d = math.sqrt((w.x + w.lx) ^ 2 + (w.y + w.ly) ^ 2)
+        T.assertTrue(d >= g.disc / 2 + L.LABEL_GAP - 0.5, "label anchor outside the disc: " .. i)
     end
     assertEqual(L.Wedge(2, 12).anchor, "LEFT", "1 o'clock reads to the right")
     assertEqual(L.Wedge(12, 12).anchor, "RIGHT")
-    T.assertTrue(L.TITLE >= L.RADIUS + edge + L.LINE, "the title sits above the N wedge's label")
+    T.assertTrue(g.title >= g.disc / 2 + L.LABEL_GAP + L.LINE, "the title sits above the N wedge's label")
+    T.assertTrue(L.Geometry(100, 20).title > g.title, "a bigger label font lifts the title")
+    T.assertTrue(L.Geometry(140).disc > g.disc, "the disc grows with the radius")
 end)
 
 test("dial layout: [final 20] past eight wedges each gets its own direction, as a clock position", function()
@@ -189,7 +252,7 @@ test("dial layout: [phase 5] a node set's nodes sit on their compass winds; the 
     local ring = rings[open]
     assertEqual(ring.title, "Arathi Basin")
     assertEqual(ring.size, 8, "eight winds, whatever the dial's slices")
-    assertEqual(ring.pages, 1, "never paged: no More")
+    assertEqual(ring.pages, 1, "never paged")
     local at = {}
     for _, item in ipairs(ring.items) do at[#at + 1] = item.title .. "@" .. L.Direction(item.wedge, ring.size) end
     assertEqual(table.concat(at, ","), "Blacksmith@N,Gold Mine@NE,Farm@SE,Lumber Mill@SW,Stables@NW")
@@ -227,7 +290,7 @@ test("dial layout: [review 6] [phase 5] nodes that cannot all be pinned keep the
     local g = abPinned()
     g.children[2].compass = nil
     local rings, open = L.Rings({ g }, { slices = 4 })
-    assertEqual(titles(rings[open]), "Stables,Lumber Mill,Blacksmith,More")
+    assertEqual(titles(rings[open]), "Stables,Lumber Mill,Blacksmith,Gold Mine")
     local two = L.PinNodes({ { wind = "middle", name = "mid" }, { wind = "N", name = "north" } })
     assertEqual(two[1].name .. two[1].wedge .. "," .. two[2].name .. two[2].wedge, "north1,mid2",
         "N is taken, so the middle node takes NE")
@@ -259,30 +322,27 @@ test("dial layout: [bg subgroups] a set with more children than winds falls back
     for i = 1, 19 do
         children[i] = { id = "av" .. i, title = "Node " .. i, slots = slots("n" .. i .. "x", 2) }
     end
-    local g = { id = "bi.bg.av", title = "Alterac Valley", openInto = true, children = children, slots = slots("own", 4) }
+    local g = { id = "bi.bg.av", title = "Alterac Valley", children = children, slots = slots("own", 4) }
     local rings, open = L.Rings({ g }, { mode = "categories", slices = 4 })
     local ring = rings[open]
     -- red under: pin a set whose children carry no winds in modules/Dial_Layout.lua groupEntry
     assertEqual(ring.title, "Alterac Valley", "opens into the set")
     assertEqual(ring.size, 4, "the dial's slices: not the eight winds")
-    assertEqual(titles(ring), "own 1,own 2,own 3,More", "its own callouts first")
-    -- 4 own + 19 nodes = 23 items: seven pages of three and a More, then the last two
-    assertEqual(ring.pages, 8)
+    assertEqual(titles(ring), "own 1,own 2,own 3,own 4", "its own callouts first")
+    -- 4 own + 19 nodes = 23 items: five pages of four, then the last three
+    assertEqual(ring.pages, 6)
     local page, seen = ring, {}
-    while true do
+    while page do
         for _, item in ipairs(page.items) do
-            if item.kind == "ring" and not item.more then seen[#seen + 1] = item.title end
+            if item.kind == "ring" then seen[#seen + 1] = item.title end
         end
-        local last = page.items[#page.items]
-        if not last.more then break end
-        page = rings[last.target]
+        page = page.next > 0 and rings[page.next] or nil
     end
     assertEqual(#seen, 19, "every node is reachable")
     assertEqual(seen[1] .. "," .. seen[19], "Node 1,Node 19", "in the set's order")
-    local two = rings[ring.items[#ring.items].target]
-    assertEqual(titles(two), "own 4,Node 1,Node 2,More", "the nodes follow the set's own callouts")
-    local node = two.items[2]
-    assertEqual(rings[node.target].items[2].slot.name, "n1x 2", "two clicks past the page to Defend")
+    local two = rings[ring.next]
+    assertEqual(titles(two), "Node 1,Node 2,Node 3,Node 4", "the nodes follow the set's own callouts")
+    assertEqual(rings[two.items[1].target].items[2].slot.name, "n1x 2", "two clicks past the page to Defend")
 end)
 
 test("dial layout: [review 6] a pinned ring ignores the dial's slices; Flat keeps its paging", function()
@@ -290,12 +350,12 @@ test("dial layout: [review 6] a pinned ring ignores the dial's slices; Flat keep
     for _, slices in ipairs({ 4, 6 }) do
         local rings, open = L.Rings({ abPinned() }, { mode = "categories", slices = slices })
         assertEqual(rings[open].size, 8, slices .. " slices: the pinned ring has eight wedges")
-        assertEqual(#rings[open].items, 5, slices .. " slices: every node on the one ring, no More")
+        assertEqual(#rings[open].items, 5, slices .. " slices: every node on the one ring, one page")
     end
     -- red under: make shape() answer the pinned shape for every ring in modules/Dial_Layout.lua
     local rings, open = L.Rings({ abPinned() }, { mode = "flat", slices = 4 })
     assertEqual(rings[open].size, 4, "Flat lists the callouts on the dial's own slices")
-    assertEqual(rings[open].pages > 1, true, "and pages them behind More")
+    assertEqual(rings[open].pages > 1, true, "and pages them")
     for _, item in ipairs(rings[open].items) do assertNil(item.wedge, "nothing in Flat is pinned") end
 end)
 

@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1018%2F1018_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1007%2F1007_passing-green)
 
 Quick Comms puts your usual group callouts one click or one keypress away. "Kick on me", "Lust
 now", "INC Lumber Mill": set them up once and they sit on a Comms Pad or open from a
@@ -28,16 +28,24 @@ Enter a key, a raid, an arena or a battleground (or head out into the open world
 Comms Pad shows the callouts that fit; click one to send it. `/qc unlock` lets you drag the pad, `/qc lock` fixes it, `/qc test` shows
 placeholder buttons so you can place it anywhere (the strip above the pad, as wide as the pad, then reads TEST MODE after
 its name, as it reads PREVIEW during a preview), and `/qc toggle` (or the Toggle Comms Pads key,
-bound in WoW's Options → Keybindings → Ka0s Quick Comms) hides every pad until you toggle it back or
-reload. The minimap button's right-click menu has Enabled, Locked, Test mode and Show window.
+bound in WoW's Options → Keybindings → Ka0s Quick Comms) hides every pad until you toggle it back;
+each character remembers it through a reload or a logout. The minimap button's right-click menu has Enabled, Locked, Test mode and Show window.
 
-The Comms Dial opens on a key. Pick one on Settings → Comms Dial → Binding, or bind Open Comms Dial
-in WoW's Options → Keybindings → Ka0s Quick Comms: it is the same key, shared by all your characters
-unless you tick Character Specific Keybindings there. Press it, click a group, then click a callout to send it. In a battleground the dial opens
-straight on the map's nodes, each where it sits on the map, so INC at the Lumber Mill is two
-clicks. Alterac Valley has more objectives than the dial has wedges, so its dial lists them north to
-south a page at a time (More turns the page); its pad sets them two to a row. The key again, Escape
-or a right click closes it; the number keys 1 to 8 pick a wedge.
+The Comms Dial opens on a key: bind Open Comms Dial in WoW's Options → Keybindings → Ka0s Quick
+Comms. It is shared by all your characters unless you tick Character Specific Keybindings there.
+Press it: with one group active the dial opens straight on that group's callouts; with several it
+shows the groups first, so click one, then click a callout to send it. In a battleground the map's
+set shows its nodes, each where it sits on the map. A ring with more callouts than wedges is paged:
+the arrows under the dial (or the Left and Right arrow keys, or the mouse wheel) turn the pages, and
+a gold pill under the dial marks the page you are on. Alterac Valley lists its objectives north to south that way; its
+pad sets them two to a row. The key again, Escape or a right click closes the dial; the number keys
+1 to 8 pick a wedge. The slice the mouse points into lights whole, anywhere outside the middle button, and a wedge's tooltip shows outside the
+dial. On Settings → Comms Dial, the Wheel tab sets the wedges per ring (Auto spreads them evenly, up
+to 12), the ring's radius and the icons' distance from the middle; the Slices tab colors the slices,
+the lines between them, the lit slice and the pointer in the middle (its size and distance too, or
+hides it); the Paging tab sizes, spaces and colors the page arrows and the pill and dots; the Labels
+tab shows or hides the wedges' names, sets their distance from the middle, font, size, outline,
+color and shadow, and which side of the dial the tooltip shows on.
 
 Settings → Groups makes a group and, on its Callouts tab, its callouts: Add callout opens a small
 editor for the name, text, channel and icon (Save keeps it, Cancel drops it). Choose icon… opens
@@ -98,8 +106,8 @@ Everything is configured under **Settings → AddOns → Ka0s Quick Comms**, and
 | `/qc` says the addon is disabled | Type `/qc enable`, or tick **Enable Ka0s Quick Comms** on the General page. |
 | The minimap button is gone | Tick **Minimap button** on the General page. |
 | The pad won't move | Type `/qc unlock` and drag the strip above it; it can't move in combat. |
-| The dial's key does nothing | Check Settings → Comms Dial → Binding. The dial opens only where at least one of its groups is active. |
-| An imported dial won't open | Shared dials arrive without a key. Give it one on Settings → Comms Dial → Binding. |
+| The dial's key does nothing | Check Open Comms Dial in WoW's Options → Keybindings → Ka0s Quick Comms. The dial opens only where at least one of its groups is active. |
+| An imported dial won't open | Shared dials arrive without a key. Bind its Open Comms Dial entry in WoW's Options → Keybindings. |
 | The import says the string is damaged | It was cut short when it was copied. Ask for it again and copy all of it; line breaks and spaces in it are fine. |
 | The import says the string is from a newer Quick Comms | Update the addon, then import it again. |
 | A message didn't arrive and chat says it may have been dropped | The game drops messages sent too close together on a boss. Wait for the buttons to brighten before pressing again. |

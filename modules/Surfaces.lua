@@ -14,8 +14,7 @@ local _, NS = ...
 -- every group inside it, whatever their When, marked and disarmed the same way.
 --
 -- A Comms Dial's plan (spec §11) is the same resolve and bake in rings: its active groups in its
--- order (less a Skip on the dial in content group while a content group is active), a group's
--- children as nodes (each gated by its own When, as on a pad), each slot baked, then
+-- order, a group's children as nodes (each gated by its own When, as on a pad), each slot baked, then
 -- modules/Dial_Layout.lua's Rings.
 --
 -- THE EDGE (below): one entry point, Request, for everything that changes what a pad or a dial
@@ -197,7 +196,7 @@ function S.TestDialPlan(surfaceId, dial)
     end
     local rings, open = NS.DialLayout.Rings(groups, { mode = dial.mode, slices = dial.slices, title = dial.name })
     return { kind = "dial", surfaceId = surfaceId, snapshot = {}, order = {}, rings = rings, openRing = open,
-        lockdownChip = false, hasActive = true, test = true }
+        radius = NS.DialLayout.ClampRadius(dial.radius), lockdownChip = false, hasActive = true, test = true }
 end
 
 --- A "Preview as…" plan (spec §13.3): drawn like test mode (always shown, the header says so) but from
@@ -221,52 +220,9 @@ function S.EachSlot(plan, fn)
     end
 end
 
--- Whether a When names content other than the open world: a content row holding any other token,
--- or a place row (Resolver.ID_ROWS: an instance, battleground or arena, or the whole kind), which
--- matches only inside one.
-local function namesContent(when)
-    if type(when) ~= "table" then return false end
-    for token, on in pairs(type(when.content) == "table" and when.content or {}) do
-        if on == true and token ~= "openWorld" then return true end
-    end
-    for row in pairs(NS.Resolver.ID_ROWS) do
-        for _, on in pairs(type(when[row]) == "table" and when[row] or {}) do
-            if on == true then return true end
-        end
-    end
-    return false
-end
-
--- A dial's order without its Skip on the dial in content groups (group.dialYield) while another
--- group in it, one that does not skip, names content (namesContent): in a key the dial opens on the
--- key's set, not on a ring of groups, and In Group stays on the pad. Only such a group triggers it,
--- so the skip never empties the dial. An edit preview (deps.only) shows its one group regardless,
--- and the open world (snap.content openWorld, or none) keeps every group: a group whose When names
--- open world and a dungeon is active there, but the place is not content.
-local function dialOrder(order, snap, deps)
-    if deps.only then return order end
-    local place = type(snap) == "table" and snap.content or nil
-    if place == nil or place == "openWorld" then return order end
-    local function yields(gid)
-        local g = deps.group(gid)
-        return type(g) == "table" and g.dialYield == true
-    end
-    local content = false
-    for _, gid in ipairs(order) do
-        content = content or (not yields(gid) and namesContent((NS.Resolver.WhenOf(deps.groups, gid))))
-    end
-    if not content then return order end
-    local out = {}
-    for _, gid in ipairs(order) do
-        if not yields(gid) then out[#out + 1] = gid end
-    end
-    return out
-end
-
---- One dial's plan (spec §11): its active groups in its order (D6), less the groups that skip the
---- dial in content (dialOrder), a group's children as nodes (each one that shows, childShown) after
---- its own callouts, each slot baked, then the rings (Dial_Layout.Rings, Categories or Flat,
---- open-into, pages).
+--- One dial's plan (spec §11): its active groups in its order (D6), a group's children as nodes
+--- (each one that shows, childShown) after its own callouts, each slot baked, then the rings
+--- (Dial_Layout.Rings, Categories or Flat, a lone group opened into, pages).
 --- @param dial table profile.dials[surfaceId]
 --- @return table plan
 function S.BuildDialPlan(surfaceId, dial, snap, deps)
@@ -274,10 +230,9 @@ function S.BuildDialPlan(surfaceId, dial, snap, deps)
     local t0 = Perf.on and not deps.unmeasured and debugprofilestop()
     dial = type(dial) == "table" and dial or {}
     local active, order = resolve(dial.groups, snap, deps)
-    order = dialOrder(order, snap, deps)
     local opts = { soloFallback = deps.soloFallback, ctx = deps.ctx }
     local plan = { kind = "dial", surfaceId = surfaceId, snapshot = snap, order = order, active = active,
-        lockdownChip = false, hasActive = false }
+        radius = NS.DialLayout.ClampRadius(dial.radius), lockdownChip = false, hasActive = false }
     local function slotsOf(ids)
         local out = {}
         for _, cid in ipairs(ids or {}) do
@@ -292,7 +247,7 @@ function S.BuildDialPlan(surfaceId, dial, snap, deps)
     local groups = {}
     for _, gid in ipairs(order) do
         local g = deps.group(gid)
-        local entry = { id = gid, title = g.name, icon = g.icon, iconColor = g.iconColor, openInto = g.openInto == true }
+        local entry = { id = gid, title = g.name, icon = g.icon, iconColor = g.iconColor }
         local kids = childrenOf(gid, g, nest)
         if #kids > 0 then
             entry.children = {}
@@ -445,6 +400,14 @@ function S.ApplyAll(reason)
     for _, id in ipairs(enabledIds("pad")) do NS.addon:SendMessage(NS.MSG.SURFACE_REBUILT, id, false) end
     for _, id in ipairs(enabledIds("dial")) do NS.addon:SendMessage(NS.MSG.SURFACE_REBUILT, id, false) end
     NS.Debug(TAG, "rebuilt %s surface(s) (%s)", n, tostring(reason))
+    for _, id in ipairs(enabledIds("pad")) do
+        local plan = plans[id]
+        if plan then NS.Debug(TAG, "%s shows %s", id, #plan.order > 0 and table.concat(plan.order, ",") or "nothing") end
+    end
+    for _, id in ipairs(enabledIds("dial")) do
+        local plan = dialPlans[id]
+        if plan then NS.Debug("Dial", "%s shows %s", id, #plan.order > 0 and table.concat(plan.order, ",") or "nothing") end
+    end
     return n
 end
 

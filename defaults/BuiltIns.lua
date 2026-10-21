@@ -31,8 +31,7 @@ end
 
 --- Declare a group. Top-level groups (no parent) join BI.order in declaration order. `def.glyph`
 --- names its icon in the catalog and `def.color` tints it, as a callout's do (BI.Callout): seeding
---- copies `icon` and `iconColor`, and `glyph` stays for the integrity tests. `def.openInto` and
---- `def.dialYield` seed the group's Open into and Skip on the dial in content.
+--- copies `icon` and `iconColor`, and `glyph` stays for the integrity tests.
 function BI.Group(id, def)
     def.callouts = def.callouts or {}
     def.icon = def.glyph and NS.Icon(def.glyph) or nil

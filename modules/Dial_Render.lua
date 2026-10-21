@@ -4,34 +4,40 @@ local _, NS = ...
 -- allows in combat; it never touches an attribute or a protected frame's geometry or visibility (the
 -- header's snippets show and hide the rings; modules/Dial.lua sizes and places the frames, out of
 -- combat). As modules/Pad_Render.lua dresses a pad's secure buttons, this dresses the dial's secure
--- frames: the dark disc and the hub's close mark on the header, spokes and a title on each ring, and
--- on each wedge an icon (a glyph in its color), its label outside the disc, a padlock, a dim veil when it sends nothing, the
--- guard's cooling veil, a result flash and a gold glow under the mouse (the selected wedge). The hub carries the stale hint, the lockdown chip and the test
+-- frames: the hub's close mark and pointer on the header; a title, its slices (modules/Dial_Slices.lua)
+-- and, on a paged ring, two page arrows on each ring; and on each wedge an icon (a glyph in its color,
+-- no backdrop of its own since the dial rework, 2026-10-21), its label, a padlock, a dim veil when it
+-- sends nothing, the guard's cooling veil and a result flash. The slice the cursor points into lights
+-- whole (the Slices tab's Highlight), anywhere outside the hub (R.PointerUpdate). The hub carries the stale hint, the lockdown chip and the test
 -- or preview label. The pointer is a plain (unprotected) child of the header that turns toward the
--- cursor: its OnUpdate is set when the header shows and cleared when it hides, so a closed or
--- stood-down dial runs nothing per frame (perf bucket dialRender). The Icons tab (B9) styles each
--- wedge's icon through modules/IconStyle.lua (its size inside the fixed wedge, crop, desaturation,
--- alpha, tint, and a round ring for a border) and modules/Glow.lua (the glow, whose On hover trigger
--- the wedge's OnEnter and OnLeave hooks drive).
+-- cursor, the Slices tab's glyph, size, color and offset: its OnUpdate is set when the header shows and
+-- cleared when it hides, so a closed or stood-down dial runs nothing per frame (perf bucket
+-- dialRender). Every tooltip the dial shows sits outside it, on the Labels tab's side, at its offset
+-- (R.ShowTip). The Icons tab (B9) styles each wedge's icon through modules/IconStyle.lua and
+-- modules/Glow.lua (the glow, whose On hover trigger the wedge's OnEnter and OnLeave hooks drive).
 
 NS.DialRender = NS.DialRender or {}
 local R = NS.DialRender
 local DL = NS.DialLayout
 local IS = NS.IconStyle
 local Glow = NS.Glow
+local Slices = NS.DialSlices
 local L = NS.L
 local Perf = NS.Perf
 
 local CIRCLE = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
 local DEFAULT_ICON = "Interface\\Icons\\INV_Misc_QuestionMark"
-local MORE_ICON = "Interface\\ChatFrame\\ChatFrameExpandArrow"
+-- The page arrows' chevrons and the pointer are catalog glyphs too (Phosphor Fill, `ph:`), with these
+-- Blizzard fallbacks.
+local ARROW_ICONS = { prev = { "ph:caret-left", "Interface\\Buttons\\UI-SpellbookIcon-PrevPage-Up" },
+    next = { "ph:caret-right", "Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up" } }
+local POINTER_GLYPH = "ph:caret-up"
 -- The padlock and the hub's close are the shared catalog's `lock` and `close` marks
 -- (library-stack-§8), resolved at draw time; these Blizzard textures are drawn only when the catalog
 -- answers nil (the library absent).
 local LOCK_ICON = "Interface\\PetBattles\\PetBattle-LockIcon"
 local CLOSE_ICON = "Interface\\Buttons\\UI-StopButton"
 local POINTER_ICON = "Interface\\Minimap\\MinimapArrow"
-local SPOKES = 12
 
 -- One catalog mark on `tex`, tinted (the catalog art is white), or the Blizzard fallback untinted.
 local function mark(tex, name, fallback, r, g, b)
@@ -50,16 +56,26 @@ local function circle(frame, layer, size, r, g, b, a)
     return t
 end
 
---- The pointer, while the dial is open: toward the cursor, hidden inside the dead zone.
+-- The ring on screen, among the ones the last rebuild loaded (header.qcRingFrames), or nil.
+local function shownRing(header)
+    for _, ring in ipairs(header.qcRingFrames or {}) do
+        if ring:IsShown() then return ring end
+    end
+    return nil
+end
+
+--- While the dial is open, every frame: the pointer toward the cursor (hidden inside the dead zone,
+--- or when the Slices tab turns it off), and the slice the cursor points into lit, anywhere on the
+--- disc outside the hub (Slices.Track), whether or not it is over the wedge's own square.
 function R.PointerUpdate(pointer)
     local t0 = Perf.on and debugprofilestop()
     local header = pointer.qcHeader
     local cx, cy = header:GetCenter()
     local scale = header:GetEffectiveScale()
     local mx, my = GetCursorPosition()
-    local a, ox, oy = DL.Pointer((cx or 0) * scale, (cy or 0) * scale, mx, my)
+    local a, ox, oy = DL.Pointer((cx or 0) * scale, (cy or 0) * scale, mx, my, header.qcReach)
     local arrow = pointer.qcArrow
-    if a then
+    if a and header.qcPointerOn ~= false then
         arrow:ClearAllPoints()
         arrow:SetPoint("CENTER", header, "CENTER", ox, oy)
         arrow:SetRotation(-a)
@@ -67,48 +83,144 @@ function R.PointerUpdate(pointer)
     else
         arrow:Hide()
     end
+    local ring = shownRing(header)
+    if ring and scale and scale > 0 then
+        local dx, dy = (mx or 0) / scale - (cx or 0), (my or 0) / scale - (cy or 0)
+        Slices.Track(ring, math.atan2(dx, dy), math.sqrt(dx * dx + dy * dy))
+    end
     if t0 then Perf.Note("dialRender", debugprofilestop() - t0) end
 end
 
---- Build the hub's regions and the pointer, once per header. `onEnter(header)` runs on hover.
+--- Build the hub's regions and the pointer, once per header. `onEnter(header)` runs on hover. The hub,
+--- its close mark, its labels and the pointer sit on a plain, mouse-off frame above the rings
+--- (`qcPointer`, raised by R.RaiseFront), so the slices never draw over them; the header under it
+--- still takes the hub's clicks.
 function R.DressHub(header, onEnter)
     if header.qcDressed then return header end
     header.qcDressed = true
-    header.qcDisc = circle(header, "BACKGROUND", DL.DISC, 0.06, 0.06, 0.08, 0.80)
-    header.qcHub = circle(header, "BORDER", DL.HUB, 0.12, 0.12, 0.14, 0.95)
-    header.qcClose = header:CreateTexture(nil, "ARTWORK")
+    local front = CreateFrame("Frame", nil, header)
+    front:SetAllPoints(header)
+    front:EnableMouse(false)
+    front.qcHeader = header
+    header.qcPointer = front
+    header.qcHub = circle(front, "BORDER", DL.HUB, 0.12, 0.12, 0.14, 0.95)
+    header.qcClose = front:CreateTexture(nil, "ARTWORK")
     mark(header.qcClose, "close", CLOSE_ICON, 1.0, 0.35, 0.35)   -- red, as the stop button reads
     header.qcClose:SetSize(DL.HUB - 16, DL.HUB - 16)
     header.qcClose:SetPoint("CENTER", header, "CENTER", 0, 0)
-    header.qcStale = header:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    header.qcStale = front:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     header.qcStale:SetPoint("TOP", header, "BOTTOM", 0, -2)
     header.qcStale:SetText(L["updates after combat"])
     header.qcStale:Hide()
-    header.qcLockdown = header:CreateFontString(nil, "OVERLAY", "GameFontRedSmall")
+    header.qcLockdown = front:CreateFontString(nil, "OVERLAY", "GameFontRedSmall")
     header.qcLockdown:SetPoint("BOTTOM", header, "TOP", 0, 2)
     header.qcLockdown:SetText(L["LOCKDOWN"])
     header.qcLockdown:Hide()
-    header.qcTest = header:CreateFontString(nil, "OVERLAY", "GameFontGreenSmall")
+    header.qcTest = front:CreateFontString(nil, "OVERLAY", "GameFontGreenSmall")
     header.qcTest:SetPoint("BOTTOM", header.qcLockdown, "TOP", 0, 2)
     header.qcTest:Hide()
-    local pointer = CreateFrame("Frame", nil, header)
-    pointer:SetAllPoints(header)
-    pointer.qcHeader = header
-    local gold = NS.Constants.GOLD
-    pointer.qcArrow = pointer:CreateTexture(nil, "OVERLAY")
-    pointer.qcArrow:SetTexture(POINTER_ICON)
-    pointer.qcArrow:SetSize(16, 16)
-    pointer.qcArrow:SetVertexColor(gold.r, gold.g, gold.b, 1)
-    pointer.qcArrow:Hide()
-    header.qcPointer = pointer
-    header:HookScript("OnShow", function() pointer:SetScript("OnUpdate", R.PointerUpdate) end)
+    front.qcArrow = front:CreateTexture(nil, "OVERLAY")
+    front.qcArrow:SetTexture(NS.Icon(POINTER_GLYPH) or POINTER_ICON)
+    front.qcArrow:Hide()
+    header:HookScript("OnShow", function() front:SetScript("OnUpdate", R.PointerUpdate) end)
     header:HookScript("OnHide", function()
-        pointer:SetScript("OnUpdate", nil)
-        pointer.qcArrow:Hide()
+        front:SetScript("OnUpdate", nil)
+        front.qcArrow:Hide()
+        -- the snippet hid the rings first, so clear every one the rebuild loaded
+        for _, ring in ipairs(header.qcRingFrames or {}) do Slices.Track(ring, 0, 0) end
     end)
     header:HookScript("OnEnter", function(self) if onEnter then onEnter(self) end end)
+    header.qcHeader = header
     header:HookScript("OnLeave", function() GameTooltip:Hide() end)
     return header
+end
+
+--- Raise the hub's front frame over every ring and wedge (a rebuild may have made new ones), and
+--- hand it the rings the pointer tracks. Insecure: a plain frame's level.
+function R.RaiseFront(header, rings)
+    header.qcRingFrames = rings
+    header.qcPointer:SetFrameLevel((header:GetFrameLevel() or 0) + 20)
+end
+
+-- A color swatch through its class-color companion, as { r, g, b, a }.
+local function color(c, useClass, fallback)
+    local r, g, b, a = NS.ResolveColor(c or fallback, useClass)
+    return { r = r, g = g, b = b, a = a }
+end
+
+--- A dial's look for one rebuild: its radius (clamped); its Labels tab (`dial.label`) as a font
+--- (Pad_Render.LabelFont), whether labels show, their line height (0 when they do not) and where
+--- the tooltip goes; its Slices tab (`dial.slice`) and Paging tab (`dial.page`, from `dial`) with each
+--- color resolved through its class color companion; and the Icon offset (`dial.iconOffset`).
+function R.Look(radius, label, slice, dial)
+    label = type(label) == "table" and label or {}
+    slice = type(slice) == "table" and slice or {}
+    dial = type(dial) == "table" and dial or {}
+    local page = type(dial.page) == "table" and dial.page or {}
+    local D, P = NS.PadDefaults.DialSlice(), NS.PadDefaults.DialPage()
+    local function n(k) return math.max(0, tonumber(page[k]) or P[k]) end
+    local font = NS.PadRender.LabelFont(label)
+    local show = label.show ~= false
+    return { radius = DL.ClampRadius(radius), font = font, show = show, line = show and font.size + 2 or 0,
+        tipSide = label.tooltipSide or "top", tipOffset = tonumber(label.tooltipOffset) or 8,
+        labelReach = math.max(0, tonumber(label.offset) or 0),
+        fill = color(slice.background, slice.useClassColorBackground, D.background),
+        borderSize = math.max(0, tonumber(slice.borderSize) or D.borderSize),
+        border = color(slice.borderColor, slice.useClassColorBorder, D.borderColor),
+        highlight = color(slice.highlight, slice.useClassColorHighlight, D.highlight),
+        pointerShow = slice.pointerShow ~= false, pointerSize = tonumber(slice.pointerSize) or D.pointerSize,
+        pointerOffset = math.max(0, tonumber(slice.pointerOffset) or 0),
+        pointer = color(slice.pointerColor, slice.useClassColorPointer, D.pointerColor),
+        iconReach = math.max(0, tonumber(dial.iconOffset) or 0),
+        paging = { offset = n("offset"), arrowSize = math.max(8, n("arrowSize")), arrowGap = n("arrowGap"),
+            dotSize = math.max(2, n("dotSize")), pillWidth = math.max(2, n("pillWidth")), dotGap = n("dotGap"),
+            arrow = color(page.arrowColor, page.useClassColorArrow, P.arrowColor),
+            plate = color(page.plateColor, page.useClassColorPlate, P.plateColor),
+            current = color(page.currentColor, page.useClassColorCurrent, P.currentColor),
+            dot = color(page.dotColor, page.useClassColorDot, P.dotColor) } }
+end
+
+--- The pointer in the dial's look: its size, color and reach (the Pointer offset from the hub's
+--- center; 0 is just outside the hub); off, it is hidden (the per-frame update still lights slices).
+function R.PaintPointer(header, look)
+    local arrow = header.qcPointer.qcArrow
+    arrow:SetSize(look.pointerSize, look.pointerSize)
+    arrow:SetVertexColor(look.pointer.r, look.pointer.g, look.pointer.b, look.pointer.a)
+    header.qcReach = look.pointerOffset > 0 and look.pointerOffset or DL.PointerReach(look.pointerSize)
+    header.qcPointerOn = look.pointerShow
+    if not look.pointerShow then arrow:Hide() end
+end
+
+--- Where the dial's tooltips go (the Labels tab's side and offset): outside the dial, clear of the
+--- ring title above it, the page row below it, or the widest label at either side. `labelWidth` is
+--- the widest label the rebuild drew (0 with none). Kept on the header for R.ShowTip.
+function R.PlaceTips(header, look, labelWidth)
+    local g = DL.Geometry(look.radius, look.line, look.labelReach)
+    local off, side = look.tipOffset, look.tipSide
+    local at
+    if side == "bottom" then
+        at = { "TOP", 0, DL.Nav(1, 1, g, look.paging).bottom - off }
+    elseif side == "left" or side == "right" then
+        local x = math.max(g.disc / 2, look.show and g.reach + labelWidth or 0) + off
+        at = side == "left" and { "RIGHT", -x, 0 } or { "LEFT", x, 0 }
+    else
+        at = { "BOTTOM", 0, g.title + DL.LINE + off }
+    end
+    header.qcTipAt = at
+end
+
+--- A dial tooltip for `owner` (a wedge, an arrow or the hub), at the place R.PlaceTips keeps on its
+--- header; above the owner when there is none yet.
+function R.ShowTip(owner, title, lines)
+    local header = owner.qcHeader
+    local at = header and header.qcTipAt
+    if not at then return NS.PadRender.ShowLines(owner, title, lines) end
+    GameTooltip:SetOwner(owner, "ANCHOR_NONE")
+    GameTooltip:ClearAllPoints()
+    GameTooltip:SetPoint(at[1], header, "CENTER", at[2], at[3])
+    GameTooltip:SetText(title)
+    for _, line in ipairs(lines or {}) do GameTooltip:AddLine(line, 1, 1, 1, true) end
+    GameTooltip:Show()
 end
 
 --- The hub's labels: the lockdown chip, the stale hint, and TEST MODE or PREVIEW.
@@ -119,20 +231,51 @@ function R.PaintHub(header, state)
     header.qcTest:SetText(state.testText or "")
 end
 
---- Build a ring container's spokes and title, once per container.
+--- Build a ring container's title and slices, once per container.
 function R.DressRing(ring)
     if ring.qcDressed then return ring end
     ring.qcDressed = true
-    ring.qcSpokes = {}
-    for j = 1, SPOKES do
-        local s = ring:CreateTexture(nil, "BORDER")
-        s:SetColorTexture(1, 1, 1, 0.12)
-        s:Hide()
-        ring.qcSpokes[j] = s
-    end
     ring.qcTitle = ring:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    ring.qcTitle:SetPoint("BOTTOM", ring, "CENTER", 0, DL.TITLE)   -- above the N wedge's label
+    Slices.Dress(ring)
     return ring
+end
+
+--- Build a page arrow, once per button: a round plate in the slices' fill with a chevron on it, and
+--- its tooltip. `side` is "prev" or "next".
+function R.DressArrow(btn, side)
+    if btn.qcDressed then return btn end
+    btn.qcDressed = true
+    btn.qcSide = side
+    btn.qcPlate = circle(btn, "BACKGROUND", DL.ARROW, 0.06, 0.06, 0.08, 0.80)
+    btn.qcIcon = btn:CreateTexture(nil, "ARTWORK")
+    btn.qcIcon:SetPoint("CENTER", btn, "CENTER", side == "prev" and -1 or 1, 0)
+    btn.qcIcon:SetTexture(NS.Icon(ARROW_ICONS[side][1]) or ARROW_ICONS[side][2])
+    btn:HookScript("OnEnter", function(self)
+        if not self.qcLive then return end
+        local h = self.qcLook and self.qcLook.highlight
+        if h then self.qcPlate:SetVertexColor(h.r, h.g, h.b, math.max(h.a, 0.5)) end
+        R.ShowTip(self, side == "prev" and L["Previous page"] or L["Next page"],
+            { L["The Left and Right arrow keys and the mouse wheel turn pages too."] })
+    end)
+    btn:HookScript("OnLeave", function(self)
+        R.PaintArrow(self, self.qcLive, self.qcLook)
+        GameTooltip:Hide()
+    end)
+    return btn
+end
+
+--- A page arrow live (its chevron in the Paging tab's arrow color: a page lies that way) or dimmed
+--- (at an end), on a plate in the tab's plate color, at the tab's arrow size.
+function R.PaintArrow(btn, live, look)
+    btn.qcLive = live and true or false
+    btn.qcLook = look
+    local pg = (look or R.Look()).paging
+    btn.qcPlate:SetSize(pg.arrowSize, pg.arrowSize)
+    btn.qcIcon:SetSize(math.floor(pg.arrowSize * 0.58 + 0.5), math.floor(pg.arrowSize * 0.58 + 0.5))
+    local f = pg.plate
+    btn.qcPlate:SetVertexColor(f.r, f.g, f.b, f.a)
+    local c, dim = pg.arrow, Slices.DIM
+    if live then btn.qcIcon:SetVertexColor(c.r, c.g, c.b, c.a) else btn.qcIcon:SetVertexColor(dim, dim, dim, 0.6) end
 end
 
 --- A ring's title: its name, and its page when it has several ("Arathi Basin (1 of 2)").
@@ -141,20 +284,13 @@ function R.RingTitle(spec)
     return spec.title or ""
 end
 
---- Show one ring's spokes (one between each pair of its wedges) and its title.
-function R.PaintRing(ring, spec)
-    for j, s in ipairs(ring.qcSpokes) do
-        if j <= spec.size then
-            local g = DL.Spoke(j, spec.size)
-            s:ClearAllPoints()
-            s:SetPoint("CENTER", ring, "CENTER", g.x, g.y)
-            s:SetSize(1, g.length)
-            s:SetRotation(g.rotation)
-            s:Show()
-        else
-            s:Hide()
-        end
-    end
+--- Show one ring's slices (modules/Dial_Slices.lua: the fills, the border and the page row) and its
+--- title over the N wedge's label, in the dial's look (R.Look).
+function R.PaintRing(ring, spec, look)
+    look = look or R.Look()
+    Slices.Paint(ring, spec, look)
+    ring.qcTitle:ClearAllPoints()
+    ring.qcTitle:SetPoint("BOTTOM", ring, "CENTER", 0, DL.Geometry(look.radius, look.line, look.labelReach).title)
     ring.qcTitle:SetText(R.RingTitle(spec))
 end
 
@@ -162,7 +298,6 @@ end
 --- any lock), a ring's name and what a click does.
 function R.WedgeLines(item)
     if item.slot then return NS.PadRender.TooltipLines(item.slot) end
-    if item.more then return { L["More"], L["Click for the next page. The mouse wheel turns pages too."] } end
     return { item.title or "?", L["Click to open."] }
 end
 
@@ -172,14 +307,13 @@ function R.ShowTooltip(btn)
     local lines = R.WedgeLines(item)
     local rest = {}
     for i = 2, #lines do rest[#rest + 1] = lines[i] end
-    NS.PadRender.ShowLines(btn, lines[1], rest)
+    R.ShowTip(btn, lines[1], rest)
 end
 
 --- Build a wedge's regions and hover hooks, once per button.
 function R.DressWedge(btn)
     if btn.qcDressed then return btn end
     btn.qcDressed = true
-    btn.qcBg = circle(btn, "BACKGROUND", DL.WEDGE, 0.10, 0.10, 0.12, 0.95)
     btn.qcIcon = btn:CreateTexture(nil, "ARTWORK")
     btn.qcIcon:SetSize(DL.WEDGE - 12, DL.WEDGE - 12)
     btn.qcIcon:SetPoint("CENTER", btn, "CENTER", 0, 0)
@@ -195,8 +329,6 @@ function R.DressWedge(btn)
     btn.qcCool:Hide()
     btn.qcFlash = circle(btn, "OVERLAY", DL.WEDGE, 1, 1, 1, 0.45)
     btn.qcFlash:Hide()
-    local gold = NS.Constants.GOLD
-    btn.qcGlow = circle(btn, "HIGHLIGHT", DL.WEDGE + 8, gold.r, gold.g, gold.b, 0.45)
     btn:HookScript("OnEnter", function(self)
         R.ShowTooltip(self)
         Glow.SetHover(self, true)
@@ -211,24 +343,27 @@ end
 -- The Icons tab's defaults, for a paint that names no config (IconStyle.Config of none).
 local DEFAULT_LOOK
 
---- Show one ring item on a wedge: its icon, its label outward (its `geo.anchor` point at `geo.lx,
---- geo.ly`, so it reads away from the wedge), a padlock when its
---- callout is locked, and the dim veil when it sends nothing here. `icfg` is the dial's Icons tab
---- (IconStyle.Config; none is the defaults).
-function R.PaintWedge(btn, item, geo, icfg)
+--- Show one ring item on a wedge: its icon, its label outside the disc (its `geo.anchor` point at
+--- `geo.lx, geo.ly`, so it reads away from the dial) in the Labels tab's font, or none while labels
+--- are off, a padlock when its callout is locked, and the dim veil when it sends nothing here. `icfg`
+--- is the dial's Icons tab (IconStyle.Config; none is the defaults), `look` its R.Look.
+function R.PaintWedge(btn, item, geo, icfg, look)
     btn.qcItem = item
     local slot = item.slot
     DEFAULT_LOOK = DEFAULT_LOOK or IS.Config(nil, "dial")
     icfg = icfg or DEFAULT_LOOK
-    btn.qcIcon:SetTexture(item.icon or (item.more and MORE_ICON) or DEFAULT_ICON)
+    btn.qcIcon:SetTexture(item.icon or DEFAULT_ICON)
     btn.qcIcon:SetSize(icfg.size, icfg.size)
     IS.ApplyIcon(btn.qcIcon, icfg, NS.Library.IconTint(item.icon, item.iconColor))
     IS.PaintRing(btn, icfg)
     IS.IconFrame(btn)
     Glow.Bind(btn, icfg.glow, slot and slot.calloutId or item.title)
+    look = look or R.Look()
     btn.qcLabel:ClearAllPoints()
     btn.qcLabel:SetPoint(geo.anchor or "CENTER", btn, "CENTER", geo.lx, geo.ly)
+    NS.PadRender.ApplyFont(btn.qcLabel, look.font)
     btn.qcLabel:SetText(item.title or "?")
+    btn.qcLabel:SetShown(look.show)
     btn.qcLock:SetShown(slot ~= nil and slot.lock ~= nil)
     local live = slot == nil or slot.line ~= nil or slot.selfText ~= nil or slot.reason == "testMode"
     btn.qcDim:SetShown(not live)

@@ -66,3 +66,46 @@ function D.Button()
         useClassColorGlow = false,
     }
 end
+
+--- The Comms Dial's Labels tab (`dial.label.*`, dial rework 2026-10-21): each wedge's name outside
+--- the disc, white Friz Quadrata 12 points with its shadow, as the dial always drew it; `show` off
+--- draws none. The tooltip shows outside the dial too: above it by default, `tooltipOffset` pixels
+--- clear of the title (or the labels, the page row on the other sides).
+function D.DialLabel()
+    return {
+        show = true,
+        font = "Friz Quadrata TT", fontSize = 12, fontColor = { r = 1, g = 1, b = 1, a = 1 },
+        useClassColorFont = false, fontFlags = "", fontShadow = true,
+        tooltipSide = "top", tooltipOffset = 8,
+        offset = 0,   -- the labels' distance from the dial's center; 0 is just past the disc
+    }
+end
+
+--- The Comms Dial's Slices tab (`dial.slice.*`, 2026-10-21): each slice's fill (the dial's dark disc,
+--- as it was), the lines between slices and round the rim (`borderSize` 0 draws none), the fill a
+--- hovered slice takes, and the pointer in the hub that turns toward the cursor.
+function D.DialSlice()
+    return {
+        background = { r = 0.06, g = 0.06, b = 0.08, a = 0.80 }, useClassColorBackground = false,
+        borderSize = 1, borderColor = { r = 1, g = 1, b = 1, a = 0.12 }, useClassColorBorder = false,
+        highlight = { r = 1, g = 0.82, b = 0, a = 0.25 }, useClassColorHighlight = false,
+        pointerShow = true, pointerSize = 20, pointerColor = { r = 1, g = 0.82, b = 0, a = 1 },
+        pointerOffset = 0,   -- the pointer's distance from the dial's center; 0 is just outside the hub
+        useClassColorPointer = false,
+    }
+end
+
+--- The Comms Dial's Paging tab (`dial.page.*`, 2026-10-21): a paged ring's row under the dial. Its
+--- distance under the dial's labels; the two arrows (round plates in the slices' fill, gold chevrons)
+--- and how far they stand from the indicators; the indicators, a gold pill for the page shown and a
+--- gray dot for each other page.
+function D.DialPage()
+    return {
+        offset = 6,
+        arrowSize = 24, arrowGap = 10, arrowColor = { r = 1, g = 0.82, b = 0, a = 1 }, useClassColorArrow = false,
+        plateColor = { r = 0.06, g = 0.06, b = 0.08, a = 0.80 }, useClassColorPlate = false,
+        dotSize = 6, pillWidth = 18, dotGap = 6,
+        currentColor = { r = 1, g = 0.82, b = 0, a = 1 }, useClassColorCurrent = false,
+        dotColor = { r = 0.4, g = 0.4, b = 0.4, a = 0.9 }, useClassColorDot = false,
+    }
+end

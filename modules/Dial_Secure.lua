@@ -8,8 +8,8 @@ local _, NS = ...
 -- The snippets below are restricted Lua the client runs in the header's own environment, whose globals
 -- persist from one snippet to the next: `current` is the ring on screen, nil while the dial is closed,
 -- and `display` is set while an insecure open (test mode, Preview as…) holds it. They show and hide the
--- rings, anchor the hub, and bind Escape, the mouse wheel and the number keys 1-8 while the dial is
--- open from its key (SetBindingClick, released by ClearBindings on close) — all allowed in combat. An
+-- rings, anchor the hub, and bind Escape, the mouse wheel, the number keys 1-8 and (on a paged ring)
+-- the Left and Right arrow keys while the dial is open from its key (SetBindingClick, released by ClearBindings on close) — all allowed in combat. An
 -- insecure open takes no key, because the settings window may be open behind it. They NEVER write an attribute: every attribute and frame ref is written out of combat by
 -- DS.Load, through modules/SendEngine.lua, the only secure writer (tests/test_sendengine.lua greps
 -- this file like every other).
@@ -21,7 +21,8 @@ local _, NS = ...
 -- a mouse button closes on its own key: the click lands on the wedge, not on the binding; and only a
 -- left click is a press, SendEngine's click hook skips the rest), a ring wedge (attribute
 -- qc-target > 0) shows its ring and sends nothing, and a callout wedge lets the click through, then
--- closes the dial. Opening a dial closes every other open dial first (its siblings, DS.Link), so only
+-- closes the dial. A page arrow (under the disc of a paged ring) is wrapped the same way but never
+-- sends: its left click shows the page it targets, or does nothing at an end (qc-target 0). Opening a dial closes every other open dial first (its siblings, DS.Link), so only
 -- one holds Escape, the wheel and 1-8.
 
 NS.DialSecure = NS.DialSecure or {}
@@ -93,6 +94,10 @@ if not display then
     self:SetBindingClick(true, "ESCAPE", self, "Close")
     self:SetBindingClick(true, "MOUSEWHEELUP", self, "Prev")
     self:SetBindingClick(true, "MOUSEWHEELDOWN", self, "Next")
+    if (self:GetAttribute("qc-prev-" .. r) or 0) > 0 or (self:GetAttribute("qc-next-" .. r) or 0) > 0 then
+        self:SetBindingClick(true, "LEFT", self, "Prev")
+        self:SetBindingClick(true, "RIGHT", self, "Next")
+    end
     local n = self:GetAttribute("qc-n-" .. r) or 0
     for i = 1, n do
         local name = self:GetAttribute("qc-name-" .. r .. "-" .. i)
@@ -131,8 +136,19 @@ local WEDGE_POST = [[
 owner:RunAttribute("qc-close")
 ]]
 
+local ARROW_PRE = [[
+if down then return false end
+if button ~= "LeftButton" then
+    owner:RunAttribute("qc-close")
+    return false
+end
+local target = self:GetAttribute("qc-target") or 0
+if target > 0 then owner:RunAttribute("qc-show", target) end
+return false
+]]
+
 DS.SNIPPETS = { onclick = ONCLICK, open = OPEN, display = DISPLAY, show = SHOW, close = CLOSE, pre = WEDGE_PRE,
-    post = WEDGE_POST }
+    post = WEDGE_POST, arrow = ARROW_PRE }
 
 --- A dial's header (its hub), named for its place in the dial order, carrying its snippets. Out of
 --- combat only; nil in combat.
@@ -154,9 +170,15 @@ function DS.NewWedge(header, ring, onPress)
     return SE.NewButton(ring, onPress, { header = header, pre = WEDGE_PRE, post = WEDGE_POST })
 end
 
---- Hand the header a plan's rings: per ring its container, its parent, previous and next page, and its
---- wedges ({ button, target }: 0 for a callout, else the ring a click opens); the ring it opens on and
---- where it opens. Out of combat only.
+--- One page arrow: a button in `ring` that sends nothing, its click wrapped by the arrow snippet.
+--- Out of combat only.
+function DS.NewArrow(header, ring)
+    return SE.NewButton(ring, nil, { header = header, pre = ARROW_PRE })
+end
+
+--- Hand the header a plan's rings: per ring its container, its parent, previous and next page, its
+--- page arrows ({ prev, next }, each targeting that page) and its wedges ({ button, target }: 0 for a
+--- callout, else the ring a click opens); the ring it opens on and where it opens. Out of combat only.
 --- @return boolean loaded
 function DS.Load(header, rings, opts)
     if NS.Compat.InCombat() then return false end
@@ -169,6 +191,10 @@ function DS.Load(header, rings, opts)
         attrs["qc-prev-" .. r] = ring.prev or 0
         attrs["qc-next-" .. r] = ring.next or 0
         attrs["qc-n-" .. r] = #ring.wedges
+        if ring.arrows then
+            SE.SetAttributes(ring.arrows.prev, { ["qc-target"] = ring.prev or 0 })
+            SE.SetAttributes(ring.arrows.next, { ["qc-target"] = ring.next or 0 })
+        end
         for i, w in ipairs(ring.wedges) do
             attrs["qc-name-" .. r .. "-" .. i] = w.button:GetName()
             SE.SetAttributes(w.button, { ["qc-target"] = w.target or 0 })

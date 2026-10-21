@@ -150,6 +150,8 @@ modules\Pad.lua
 modules\Dial_Layout.lua
 # LOAD-BEARING: publishes NS.DialSecure, which modules\Dial.lua takes as a load-time upvalue.
 modules\Dial_Secure.lua
+# LOAD-BEARING: publishes NS.DialSlices, which modules\Dial_Render.lua takes as a load-time upvalue.
+modules\Dial_Slices.lua
 # LOAD-BEARING: publishes NS.DialRender, which modules\Dial.lua takes as a load-time upvalue.
 modules\Dial_Render.lua
 # Conventional: the Comms Dial frames; appends to NS.STAND_DOWN / NS.STAND_UP; modules\Surfaces.lua calls it at run time only.

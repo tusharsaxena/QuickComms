@@ -326,27 +326,7 @@ test("members: [phase 4] a dial's fields are member rows, and its position goes 
     assertEqual(NS.db.profile.dials[id].interaction, "relaxed", "Relaxed is the only interaction in v0.1.0")
 end)
 
-test("members: [review 4] a key is read upper-case in the client's modifier order; none is no key; reserved keys are refused", function()
-    local _, _, Lib = boot()
-    assertEqual(Lib.KeyValue("shift-g"), "SHIFT-G")
-    -- red under: only trim and upper-case in Lib.KeyValue (two spellings of one chord)
-    assertEqual(Lib.KeyValue("shift-ctrl-g"), "CTRL-SHIFT-G")
-    assertEqual(Lib.KeyValue("none"), false)
-    assertEqual(Lib.KeyValue(""), false)
-    for _, bad in ipairs({ "SHIFT", "SHIFT-", "FOO-G", "SHIFT-SHIFT-G" }) do
-        local ok, code = Lib.ValidKey(bad)
-        assertFalse(ok, bad)
-        assertEqual(code, "badKey", bad)
-    end
-    for _, reserved in ipairs({ "Escape", "CTRL-BUTTON1", "SHIFT-MOUSEWHEELDOWN", "1" }) do
-        local ok, code = Lib.ValidKey(reserved)
-        assertFalse(ok, reserved)
-        assertEqual(code, "reservedKey", reserved)
-    end
-    assertTrue(Lib.ValidKey("ALT-1"), "a modified number is another key")
-end)
-
-test("members: [keys] a dial has no key row: its key is WoW's binding, set on the Binding tab, never on the CLI", function()
+test("members: [keys] a dial has no key row: its key is WoW's binding, set in Options -> Keybindings, never on the CLI", function()
     local NS, S = boot()
     -- red under: a dial.key member row (a profile field, account-wide WoW bindings out of step)
     assertNil(S.FindRow("dial.key"))

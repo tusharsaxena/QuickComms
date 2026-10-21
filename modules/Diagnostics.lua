@@ -109,6 +109,7 @@ local function surfaces(out)
     out:add("Pad", "testMode=%s", NS.Preview.IsTestMode())
     out:add("Pad", "previewAs=%s", NS.Preview.PreviewAs() or "off")
     out:add("Pad", "editPreview=%s", NS.Preview.EditGroup() or "off")
+    out:add("Pad", "padsHidden=%s (this character)", not NS.SlashVerbs.PadsShown())
     local ids = {}
     for id in pairs(plans) do ids[#ids + 1] = id end
     table.sort(ids)
@@ -119,8 +120,30 @@ local function surfaces(out)
     end
 end
 
+-- One dial's look: the Wheel, Slices, Paging and Labels tabs' values that shape what it draws.
+local function dialLook(out, id, d)
+    local s, l, pg = d.slice or {}, d.label or {}, d.page or {}
+    out:add("Dial", "%s look mode=%s slices=%s radius=%s iconOffset=%s openAt=%s", id, d.mode, d.slices, d.radius,
+        d.iconOffset, d.openAt)
+    out:add("Dial", "%s slices border=%s pointer=%s size=%s offset=%s labels=%s size=%s offset=%s tooltip=%s/%s", id,
+        s.borderSize, s.pointerShow, s.pointerSize, s.pointerOffset, l.show, l.fontSize, l.offset, l.tooltipSide,
+        l.tooltipOffset)
+    out:add("Dial", "%s paging offset=%s arrow=%s gap=%s dot=%s pill=%s dotGap=%s", id, pg.offset, pg.arrowSize,
+        pg.arrowGap, pg.dotSize, pg.pillWidth, pg.dotGap)
+end
+
+-- One line per ring of a dial's plan: its title, page, wedge count and where wedge 1 sits, the items
+-- it holds, and the rings its hub, previous and next lead to.
+local function dialRings(out, id, plan)
+    for r, ring in ipairs(plan.rings or {}) do
+        out:add("Dial", "%s ring %s %s page=%s/%s size=%s start=%s items=%s parent=%s prev=%s next=%s", id, r,
+            ring.title, ring.page, ring.pages, ring.size, ring.start, #ring.items, ring.parent, ring.prev, ring.next)
+    end
+end
+
 -- The dials (spec §16): each built dial's header, key, rings, the ring it opens on, whether it is open
--- now, its active groups, its stale hint and its lockdown chip.
+-- now and the ring on screen, its active groups, its stale hint and its lockdown chip; then its look
+-- and its rings.
 local function dials(out)
     local plans = NS.Surfaces.DialPlans()
     local stale = NS.State.surfaceStale or {}
@@ -131,6 +154,9 @@ local function dials(out)
         out:add("Dial", "%s %s key=%s rings=%s openRing=%s open=%s active=%s stale=%s lockdownChip=%s", id,
             inst.header:GetName(), d and NS.Dial.KeyOf(id), plan and #plan.rings, plan and plan.openRing, NS.Dial.IsOpen(id),
             plan and table.concat(plan.order, ","), stale[id] == true, plan and plan.lockdownChip)
+        out:add("Dial", "%s shown=%s", id, NS.Dial.ShownRing(id) or "closed")
+        if d then dialLook(out, id, d) end
+        if plan then dialRings(out, id, plan) end
     end
 end
 

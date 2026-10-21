@@ -291,9 +291,27 @@ local function build()
         return false
     end
 
+    -- A region made on a frame knows it (GetParent), so a test can ask which layer drew it.
+    local function regionOn(frame, kind)
+        local r = region(kind)
+        r.__parent = frame
+        r.GetParent = function(x) return x.__parent end
+        return r
+    end
+
     local function dress(frame)
-        frame.CreateTexture = function() return region("Texture") end
-        frame.CreateFontString = function() return region("FontString") end
+        frame.CreateTexture = function(self) return regionOn(self, "Texture") end
+        frame.CreateFontString = function(self) return regionOn(self, "FontString") end
+        -- Frame levels as the client keeps them: a child sits one above its parent until it is set.
+        frame.SetFrameLevel = function(self, level)
+            self.__level = level
+            return self
+        end
+        frame.GetFrameLevel = function(self)
+            if self.__level then return self.__level end
+            local p = rawget(self, "__parent")
+            return (type(p) == "table" and type(rawget(p, "GetFrameLevel")) == "function" and p:GetFrameLevel() or 0) + 1
+        end
         frame.__points = {}
         frame.SetPoint = function(self, point, rel, relPoint, x, y)
             self.__points[#self.__points + 1] = { point, rel, relPoint, x, y }
@@ -433,6 +451,19 @@ local function build()
         return t
     end
     function tip.ClearLines(t) t.__lines = {} return t end
+    -- Its anchors, recorded as a region's are, so a tooltip placed by hand (the dial's, outside the
+    -- dial) can be asserted on.
+    tip.__points = {}
+    function tip.ClearAllPoints(t) t.__points = {} return t end
+    function tip.SetPoint(t, point, rel, relPoint, x, y)
+        t.__points[#t.__points + 1] = { point, rel, relPoint, x, y }
+        return t
+    end
+    function tip.GetPoint(t, i)
+        local p = t.__points[i or 1]
+        if not p then return nil end
+        return p[1], p[2], p[3], p[4], p[5]
+    end
     function tip.SetText(t, text)
         t.__lines = { { text } }
         return t
@@ -542,6 +573,39 @@ local function build()
         end
     end
 
+    -- OnShow / OnHide fired on a change, as the client fires them for any frame. They are the addon's
+    -- insecure code, even when a snippet's Show or Hide fires them: the restricted environment's
+    -- privilege is dropped while they run. Every secure frame takes it (a header, and a dial ring the
+    -- header's snippets show and hide).
+    local function liveShow(f)
+        if f.__liveShow then return end
+        f.__liveShow = true
+        local show, hide = f.Show, f.Hide
+        local function fireInsecure(self, script)
+            local depth = secureDepth
+            secureDepth = 0
+            local ok, err = pcall(self.__fire, self, script)
+            secureDepth = depth
+            if not ok then error(err, 0) end
+        end
+        f.Show = function(self)
+            local was = self.__shown
+            show(self)
+            if not was then fireInsecure(self, "OnShow") end
+            return self
+        end
+        f.Hide = function(self)
+            local was = self.__shown
+            hide(self)
+            if was then fireInsecure(self, "OnHide") end
+            return self
+        end
+        f.SetShown = function(self, v)
+            if v then return self:Show() end
+            return self:Hide()
+        end
+    end
+
     -- The SecureHandler template's insecure-side API (refused in combat by protect()), its click (the
     -- `_onclick` snippet), and OnShow / OnHide on a change.
     local function makeHeader(f)
@@ -578,32 +642,7 @@ local function build()
             local body = self.__attrs._onclick
             if type(body) == "string" then runSnippet(self, "self, button, down", body, self, button, down) end
         end
-        -- OnShow / OnHide hooks are the addon's insecure code, even when a snippet's Show or Hide fires
-        -- them: the restricted environment's privilege is dropped while they run.
-        local show, hide = f.Show, f.Hide
-        local function fireInsecure(self, script)
-            local depth = secureDepth
-            secureDepth = 0
-            local ok, err = pcall(self.__fire, self, script)
-            secureDepth = depth
-            if not ok then error(err, 0) end
-        end
-        f.Show = function(self)
-            local was = self.__shown
-            show(self)
-            if not was then fireInsecure(self, "OnShow") end
-            return self
-        end
-        f.Hide = function(self)
-            local was = self.__shown
-            hide(self)
-            if was then fireInsecure(self, "OnHide") end
-            return self
-        end
-        f.SetShown = function(self, v)
-            if v then return self:Show() end
-            return self:Hide()
-        end
+        liveShow(f)
     end
 
     -- ── Blizzard's settings-window template (settings/CalloutPopup.lua's window) ─────────────────
@@ -673,6 +712,7 @@ local function build()
             end
             addHandleMethods(f)
             if template:find("SecureHandler", 1, true) then makeHeader(f) end
+            liveShow(f)
             protect(f)
             local p = parent
             while type(p) == "table" and p ~= M.UIParent do

@@ -43,4 +43,9 @@ NS.C = {
 
     -- schemaVersion is 0, never the current version (savedvariables-§1).
     GLOBAL_DEFAULTS = { schemaVersion = 0, minimap = { hide = false } },
+
+    -- Genuinely per-character (savedvariables-§1's `char`, 2026-10-21): whether `/qc toggle`, the
+    -- launcher's Show window or the Toggle Comms Pads key last hid this character's Comms Pads. It
+    -- survives a /reload and a logout, and follows no profile (settings/SlashVerbs.lua V.TogglePads).
+    CHAR_DEFAULTS = { padsHidden = false },
 }
