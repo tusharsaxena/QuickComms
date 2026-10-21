@@ -790,10 +790,12 @@ battleground node ring (Arathi Basin) keeps its compass winds (DIAL-4). Result:
 restricted `GetMousePosition`, C7).** On a four-wedge ring at radius 100, put the cursor just outside
 the hub toward E, well inside the E icon → the E slice lights and its tooltip shows; click → it sends.
 The same just inside the rim, and next to a neighbor's border. Hold Shift (then Ctrl, then Alt) and
-click the E slice → it still sends. On a 12-wedge ring, a slice's inner corner just outside the hub's
-square → it lights, shows its tooltip and sends; inside the square's corner, diagonally off the hub's
-circle → no slice lights, the hub's circle brightens and a click there goes up a ring or closes (the
-hub's header is square). A click on the hub still goes up a ring or closes; a click on an empty place sends nothing; a right-click anywhere on the disc closes the dial
+click the E slice → it still sends. On a 12-wedge ring, on each diagonal (NE, SE, SW, NW), put the
+cursor just outside the hub's drawn circle → that slice lights, shows its tooltip and sends (the hub
+is round: no dead corner). Just inside the circle → no slice lights, the hub's circle brightens and
+its "Why is this showing?" tooltip shows; move out → both clear. A click inside the circle goes up a
+ring (or closes on the first ring), and so does one with Shift, Ctrl or Alt held. The dial's key
+still opens and closes it; a click on an empty place sends nothing; a right-click anywhere on the disc closes the dial
 and sends nothing. Then in combat on a target dummy, repeat each click → the same, with no "action
 blocked" error and no Lua error. With Slice gap 10, a click in a gap sends the slice whose direction
 it is in. Result:
@@ -802,8 +804,8 @@ it is in. Result:
 default) → a gold filled circle on a dark backdrop, no ✕; Hollow ring → a gold ring; Target → a ring
 with a dot in the middle; Rimmed disc → a rim round the backdrop and a filled circle inside it. Line
 width grayed out under Solid circle and 4 → a thicker ring under Hollow ring. Hub size 70 → a wider hub,
-the slices and the pointer starting at its edge (its square: diagonally the slices start a little
-further out), and a click just outside the square still lands on a slice (DIAL-28); Circle size 40 → a bigger circle. Backdrop color, Hub border size 3 with a red Hub border
+the slices and the pointer starting at its edge in every direction, and a click just outside its
+circle, on a diagonal too, lands on a slice (DIAL-28); Circle size 40 → a bigger circle. Backdrop color, Hub border size 3 with a red Hub border
 color, Circle color green, each Use class color → as set. Hover the hub → the circle brightens; move
 off → it dims. The stale hint, LOCKDOWN and TEST MODE labels sit where they did. Defaults → the gold
 solid circle on the 40-pixel hub. Result:

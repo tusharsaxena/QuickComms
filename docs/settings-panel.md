@@ -584,9 +584,8 @@ Preview  each ring as the current or previewed situation builds it, wedge by wed
   heading): each slice moves out along its middle line and shrinks so its outer edge stays on the
   disc and a clear strip that wide parts it from its neighbors (one slice has none). Highlight is
   `dial.slice.highlight`, the fill the slice the cursor points into takes (gold, faint), anywhere on
-  the disc outside the hub's square (the header that takes the hub's clicks is square, so its corners
-  are the hub's), moving with its slice; a click anywhere in a used slice, the hub's square to the
-  rim, sends it (a point in a gap belongs to the slice whose bearing it is in). Hub (dial polish) is
+  the disc outside the hub's circle, moving with its slice; a click anywhere in a used slice, the
+  hub's edge to the rim, sends it, and a click inside the hub's circle goes up a ring or closes (a point in a gap belongs to the slice whose bearing it is in). Hub (dial polish) is
   `dial.hub.*`: Hub style (Solid circle, the default; Hollow ring; Target, a ring with a dot; Rimmed
   disc, a filled circle on a rimmed backdrop), Hub size (24 to 80, default 40: the backdrop's width,
   where the slices and the pointer start), Circle size (4 to 60, default 22), Line width (1 to 6,

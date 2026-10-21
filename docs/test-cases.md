@@ -22,7 +22,7 @@ Total.
 - repo: every authored file opens with the bootstrap and a comment naming its path
 - repo: the .pkgmeta has no externals and ignores the dev-only entries
 
-### test_mock_secure.lua (26)
+### test_mock_secure.lua (28)
 
 - mock: a secure button keeps its attributes and answers its name
 - mock: SetAttribute in combat is refused and recorded, never applied
@@ -51,6 +51,7 @@ Total.
 - mock secure: GetMousePosition reads the cursor inside a frame, nil outside
 - mock secure: type click forwards to clickbutton-<button>
 - mock secure: a held modifier reads <mod>- and * attributes, never the plain button form
+- mock secure: a header with its mouse off still runs its _onclick from a binding and from Click
 
 ### test_bus.lua (2)
 
@@ -1067,7 +1068,7 @@ Total.
 - pad: [polish] header reads Quick Comms: World
 - pad: [polish] header reads Quick Comms: M+ · Windrunner Spire +14
 
-### test_dial.lua (53)
+### test_dial.lua (58)
 
 - dial: Apply builds QuickCommsDial<n> with a ring per page, each callout wedge armed with its baked line
 - dial: a refused callout is a dimmed, disarmed wedge; a ring wedge is disarmed
@@ -1111,8 +1112,11 @@ Total.
 - dial: [labels] the Label offset moves every label out from the center; the title and the page row follow
 - dial: [polish] a click near the hub sends the lit slice, in combat
 - dial: [polish] a click with a modifier held still sends the slice, in combat
-- dial: [polish] the hub's square corners light nothing and click nothing
-- dial: [polish] a click on an empty place or in the hub sends nothing
+- dial: [polish] just outside the hub's circle, on a diagonal, the slice lights and clicks, in combat
+- dial: [polish] a click inside the hub's circle runs the hub, any modifier held, in combat
+- dial: [polish] the hub's hover shows from the tracker inside its circle and clears outside
+- dial: [polish] the dial's key still opens and closes it with the header's mouse off, in combat
+- dial: [polish] a click on an empty place does nothing; in the hub it sends nothing
 - dial: [polish] hovering anywhere in a slice shows its tooltip
 - dial: [polish] wedges take no mouse; keys still click by name
 - dial: [polish] a built dial closes on a click outside it, in combat
@@ -1224,7 +1228,7 @@ Total.
 | Suite | Cases |
 |-------|------:|
 | test_harness.lua | 11 |
-| test_mock_secure.lua | 27 |
+| test_mock_secure.lua | 28 |
 | test_bus.lua | 2 |
 | test_surface_parity.lua | 15 |
 | test_setup.lua | 27 |
@@ -1267,7 +1271,7 @@ Total.
 | test_surfaces.lua | 27 |
 | test_pad_render.lua | 21 |
 | test_pad.lua | 45 |
-| test_dial.lua | 55 |
+| test_dial.lua | 58 |
 | test_icon_style.lua | 9 |
 | test_glow.lua | 11 |
 | test_vendor_sync.lua | 3 |
@@ -1277,4 +1281,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1051** |
+| **Total** | **1055** |

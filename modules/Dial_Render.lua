@@ -9,8 +9,10 @@ local _, NS = ...
 -- and, on a paged ring, two page arrows on each ring; and on each wedge an icon (a glyph in its color,
 -- no backdrop of its own since the dial rework, 2026-10-21), its label, a padlock, a dim veil when it
 -- sends nothing, the guard's cooling veil and a result flash. The slice the cursor points into lights
--- whole (the Slices tab's Highlight) and is hovered, anywhere outside the hub's square (R.PointerUpdate). The hub carries the stale hint, the lockdown chip and the test
--- or preview label. The pointer is a plain (unprotected) child of the header that turns toward the
+-- whole (the Slices tab's Highlight) and is hovered, anywhere on the disc outside the hub's circle
+-- (R.PointerUpdate); inside it the hub is hovered (its circle brightens and its "Why is this showing?"
+-- tooltip shows, R.HoverHub), from the same update: the header takes no mouse (round hub, 2026-10-21).
+-- The hub carries the stale hint, the lockdown chip and the test or preview label. The pointer is a plain (unprotected) child of the header that turns toward the
 -- cursor, the Slices tab's glyph, size, color and offset: its OnUpdate is set when the header shows and
 -- cleared when it hides, so a closed or stood-down dial runs nothing per frame (perf bucket
 -- dialRender). Every tooltip the dial shows sits outside it, on the Slice labels tab's side, at its offset
@@ -73,8 +75,10 @@ local function track(ring, angle, dist)
 end
 
 --- While the dial is open, every frame: the pointer toward the cursor (hidden inside the dead zone,
---- or when the Slices tab turns it off), and the slice the cursor points into lit and hovered (its
---- wedge's tooltip and hover glow), anywhere on the disc outside the hub's square (Slices.Track).
+--- or when the Slices tab turns it off); the slice the cursor points into lit and hovered (its
+--- wedge's tooltip and hover glow), anywhere on the disc outside the hub's circle (Slices.Track); and
+--- inside that circle the hub hovered (R.HoverHub). A hover leaves before the next one enters, so the
+--- tooltip is the one just entered.
 function R.PointerUpdate(pointer)
     local t0 = Perf.on and debugprofilestop()
     local header = pointer.qcHeader
@@ -91,10 +95,14 @@ function R.PointerUpdate(pointer)
     else
         arrow:Hide()
     end
-    local ring = shownRing(header)
-    if ring and scale and scale > 0 then
+    if scale and scale > 0 then
         local dx, dy = (mx or 0) / scale - (cx or 0), (my or 0) / scale - (cy or 0)
-        track(ring, math.atan2(dx, dy), math.sqrt(dx * dx + dy * dy))
+        local dist = math.sqrt(dx * dx + dy * dy)
+        local onHub = DL.InHub(dist, header.qcHubSize or DL.HUB)
+        if not onHub then R.HoverHub(header, false) end
+        local ring = shownRing(header)
+        if ring then track(ring, math.atan2(dx, dy), dist) end
+        if onHub then R.HoverHub(header, true) end
     end
     if t0 then Perf.Note("dialRender", debugprofilestop() - t0) end
 end
@@ -113,11 +121,28 @@ local function tintCircle(header, lit)
     for _, t in ipairs(header.qcHubRing) do t:SetColorTexture(c.r, c.g, c.b, a) end
 end
 
---- Build the hub's regions and the pointer, once per header. `onEnter(header)` runs on hover. The hub
+--- The hub hovered (`on`) or left: its circle brightens and `header.qcHubEnter(header)` (the "Why is
+--- this showing?" tooltip, from R.DressHub's `onEnter`) runs, or the circle dims and the tooltip hides.
+--- The header takes no mouse (round hub, 2026-10-21), so R.PointerUpdate calls this, not an OnEnter.
+--- Insecure: textures and the tooltip, combat-safe.
+function R.HoverHub(header, on)
+    on = on and true or false
+    if (header.qcHubHovered == true) == on then return end
+    header.qcHubHovered = on or nil
+    tintCircle(header, on)
+    if on then
+        if header.qcHubEnter then header.qcHubEnter(header) end
+    else
+        GameTooltip:Hide()
+    end
+end
+
+--- Build the hub's regions and the pointer, once per header. `onEnter(header)` runs on hover
+--- (R.HoverHub, from the per-frame update inside the hub's circle). The hub
 --- (its backdrop disc `qcHub`, the backdrop's rim `qcHubRim` and the hollow ring `qcHubRing`, each
 --- a list of DL.ARC straight segments, and the filled circle `qcHubDot`), its labels and the pointer
 --- sit on a plain, mouse-off frame above the rings (`qcPointer`, raised by R.RaiseFront), so the
---- slices never draw over them; the header under it still takes the hub's clicks.
+--- slices never draw over them. The header takes no mouse: the ring's catcher takes the hub's clicks.
 function R.DressHub(header, onEnter)
     if header.qcDressed then return header end
     header.qcDressed = true
@@ -147,19 +172,12 @@ function R.DressHub(header, onEnter)
     header:HookScript("OnHide", function()
         front:SetScript("OnUpdate", nil)
         front.qcArrow:Hide()
-        tintCircle(header, false)
+        R.HoverHub(header, false)
         -- the snippet hid the rings first, so clear every one the rebuild loaded
         for _, ring in ipairs(header.qcRingFrames or {}) do track(ring, 0, 0) end
     end)
-    header:HookScript("OnEnter", function(self)
-        tintCircle(self, true)
-        if onEnter then onEnter(self) end
-    end)
+    header.qcHubEnter = onEnter
     header.qcHeader = header
-    header:HookScript("OnLeave", function(self)
-        tintCircle(self, false)
-        GameTooltip:Hide()
-    end)
     return header
 end
 
@@ -286,7 +304,8 @@ function R.PaintHubLook(header, look)
     header.qcHubDot:SetSize(dot, dot)
     header.qcHubDot:SetShown(style ~= "ring")
     header.qcHubCircle = hub.circle
-    tintCircle(header, false)
+    header.qcHubSize = hub.size
+    tintCircle(header, header.qcHubHovered == true)
 end
 
 --- Where the dial's tooltips go (the Slice labels tab's side and offset): outside the dial, clear of
@@ -452,7 +471,7 @@ function R.LeaveWedge(btn)
     Glow.SetHover(btn, false)
 end
 
---- The hover moved on `ring` from place `was` to place `now` (either nil: the hub, past the rim, an
+--- The hover moved on `ring` from place `was` to place `now` (either nil: the hub's circle, past the rim, an
 --- empty place): the wedge left first, then the one entered.
 function R.HoverWedge(ring, was, now)
     local wedges = ring.qcPlaceWedge or {}

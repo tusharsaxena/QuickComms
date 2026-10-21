@@ -154,18 +154,21 @@ function DL.AutoCap(radius, at, iconSize, gap)
     return 1
 end
 
+--- Whether a point `dist` from the center is on the hub (`hub` across): inside its circle, the round
+--- shape it is drawn. The ring's catcher takes the hub's clicks there and the tracker hovers it.
+function DL.InHub(dist, hub)
+    return (tonumber(dist) or 0) <= (tonumber(hub) or 0) / 2
+end
+
 --- The slice of a ring of `size` (place 1 at `start` degrees) under a point at bearing `angle`
---- (radians clockwise from N), `dist` from the center: its index when the point is outside the hub's
---- square (`hub` across: the header that takes the hub's clicks is a square button, so its corners are
---- the hub's too) and on the disc (`disc` across), else nil. Angle only: a point in a slice gap
---- belongs to the slice whose angle it is in. The one function the tracker and the catcher agree on;
---- whether the place holds an item is the caller's check.
+--- (radians clockwise from N), `dist` from the center: its index when the point is past the hub's
+--- circle (`hub` across, DL.InHub) and on the disc (`disc` across), else nil. Angle only: a point in a
+--- slice gap belongs to the slice whose angle it is in. The one function the tracker and the catcher
+--- agree on; whether the place holds an item is the caller's check.
 function DL.SliceAt(angle, dist, size, start, hub, disc)
     dist = tonumber(dist) or 0
     angle = tonumber(angle) or 0
-    local half = (tonumber(hub) or 0) / 2
-    if dist > (tonumber(disc) or 0) / 2 then return nil end
-    if math.abs(dist * math.sin(angle)) <= half and math.abs(dist * math.cos(angle)) <= half then return nil end
+    if DL.InHub(dist, hub) or dist > (tonumber(disc) or 0) / 2 then return nil end
     size = math.max(1, tonumber(size) or 1)
     local step = 2 * math.pi / size
     local from = math.rad(tonumber(start) or 0) - step / 2

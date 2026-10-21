@@ -401,16 +401,22 @@ test("dial: Reset position puts every pad and dial back, through their point row
 end)
 
 test("dial: the hub's tooltip says why each group shows, unless the player turned it off", function()
-    local NS = live(AB)
+    local NS, m = live(AB)
     local shown = {}
     NS.DialRender.ShowTip = function(_, title, lines) shown[#shown + 1] = { title = title, lines = lines } end
     local h = NS.Dial.Instance("d2").header
-    h:__fire("OnEnter")
+    local cx, cy = h:GetCenter()
+    local function at(dx)   -- the per-frame update with the cursor dx east of the hub's center
+        m.cursor.x, m.cursor.y = cx + dx, cy
+        NS.DialRender.PointerUpdate(h.qcPointer)
+    end
+    at(0)
     assertEqual(#shown, 1)
     assertEqual(shown[1].title, "Why is this showing?")
     assertEqual(shown[1].lines[1], "Arathi Basin: Content, Battleground")
     NS.SchemaRuntime.Set("behavior.whyTooltips", false)
-    h:__fire("OnEnter")
+    at(400)
+    at(0)
     assertEqual(#shown, 1)
     assertEqual(NS.Surfaces.WhyLines("d9")[1], "This pad has not been built yet.")
     NS.Preview.SetTestMode(true)
@@ -856,25 +862,94 @@ test("dial: [polish] a click with a modifier held still sends the slice, in comb
     assertEqual(#m.blocked, 0)
 end)
 
-test("dial: [polish] the hub's square corners light nothing and click nothing", function()
+test("dial: [polish] just outside the hub's circle, on a diagonal, the slice lights and clicks, in combat", function()
     local NS, m = live()
     local ring, cursor = openPolish(NS, m, 2)
-    local dx, dy = 18, 10   -- 20.6 px out, bearing ~61 degrees (E): past the hub's circle, in its square
+    local east = ring.qcPlaceWedge[3]
+    local dx, dy = 18, 10   -- 20.6 px out (hub 40: outside its circle), bearing ~61 degrees (E)
     local dist, angle = math.sqrt(dx * dx + dy * dy), math.atan2(dx, dy)
-    assertEqual(NS.DialLayout.SliceAt(angle, 30, 4, 270, 40, 300), 3, "further out on that bearing: E")
-    -- red under: a round hub in DL.SliceAt (dist <= hub / 2)
-    assertNil(NS.DialLayout.SliceAt(angle, dist, 4, 270, 40, 300), "the header's square is the hub's")
+    -- red under: the hub as a square in DL.SliceAt (|dx|, |dy| <= hub / 2)
+    assertEqual(NS.DialLayout.SliceAt(angle, dist, 4, 270, 40, 300), 3, "the round hub ends at 20: E")
+    assertFalse(NS.DialLayout.InHub(dist, 40), "off the hub")
     NS.DialSlices.Track(ring, angle, dist)
-    assertNil(ring.qcLit, "the tracker lights nothing on the header")
+    assertEqual(ring.qcLit, 3, "the tracker lights E there")
     m.inCombat = true
     cursor(dx, dy)
-    -- red under: a round hub in CATCHER_PRE
+    -- red under: the hub as a square in CATCHER_PRE
     m.__click(ring.qcCatcher)
-    assertEqual(#m.sentMacros, 0, "the catcher forwards nothing there")
+    assertEqual(#m.sentMacros, 1, "the catcher forwards it")
+    assertTrue(m.sentMacros[1].frame == east, "to the E wedge, the slice that lit")
     assertEqual(#m.blocked, 0)
 end)
 
-test("dial: [polish] a click on an empty place or in the hub sends nothing", function()
+test("dial: [polish] a click inside the hub's circle runs the hub, any modifier held, in combat", function()
+    local NS, m = live()
+    local ring, cursor, h = openPolish(NS, m, 2)
+    local inst = NS.Dial.Instance("d2")
+    -- red under: the header taking the mouse (its square would hold the corners past the circle)
+    assertFalse(h:IsMouseEnabled(), "the header takes no mouse: the catcher is the hub's mouse")
+    local dx, dy = 12, 9   -- 15 px out: inside the circle
+    assertNil(NS.DialLayout.SliceAt(math.atan2(dx, dy), 15, 4, 270, 40, 300), "no slice there")
+    assertTrue(NS.DialLayout.InHub(15, 40))
+    m.inCombat = true
+    for _, mod in ipairs({ "none", "shift", "ctrl", "alt" }) do
+        m.modifiers = mod == "none" and {} or { [mod] = true }
+        if not NS.Dial.IsOpen("d2") then m.__click(h, "Toggle") end
+        assertEqual(NS.Dial.ShownRing("d2"), 2, mod .. ": open on the callout ring, a child of the groups")
+        cursor(dx, dy)
+        -- red under: CATCHER_PRE answering nothing inside the hub (no qc-up)
+        m.__click(ring.qcCatcher)
+        assertEqual(NS.Dial.ShownRing("d2"), 1, mod .. ": the hub goes up a ring")
+        local top = inst.rings.active[1]
+        m.__click(top.qcCatcher)
+        assertFalse(NS.Dial.IsOpen("d2"), mod .. ": on the first ring the hub closes")
+    end
+    m.modifiers = {}
+    assertEqual(#m.sentMacros, 0, "the hub sends nothing")
+    assertEqual(#m.blocked, 0)
+end)
+
+test("dial: [polish] the hub's hover shows from the tracker inside its circle and clears outside", function()
+    local NS, m = live(AB)
+    local _, cursor, h = openPolish(NS, m, 2)
+    local tip = m.GameTooltip
+    local rest = h.qcHubDot.__color[4]
+    cursor(12, 9)   -- 15 px out: on the hub
+    NS.DialRender.PointerUpdate(h.qcPointer)
+    -- red under: the hub's hover only from the header's OnEnter (it takes no mouse)
+    assertTrue(h.qcHubDot.__color[4] > rest, "the circle brightens")
+    assertTrue(tip.__owner == h and tip:IsShown(), "the hub owns the tooltip")
+    assertEqual(tip.__lines[1][1], "Why is this showing?")
+    cursor(18, 10)   -- 20.6 px out: on E
+    NS.DialRender.PointerUpdate(h.qcPointer)
+    assertEqual(h.qcHubDot.__color[4], rest, "off the hub: dims back")
+    assertFalse(tip.__owner == h, "the hub's tooltip gone")
+    cursor(0, 0)
+    NS.DialRender.PointerUpdate(h.qcPointer)
+    assertTrue(tip.__owner == h and tip:IsShown(), "back on the hub")
+    m.__click(h, "Toggle")
+    assertEqual(h.qcHubDot.__color[4], rest, "closing clears the hub's hover")
+    assertFalse(tip:IsShown())
+end)
+
+test("dial: [polish] the dial's key still opens and closes it with the header's mouse off, in combat", function()
+    local NS, m = live()
+    m.SetBinding("G", "CLICK QuickCommsDial1:Toggle")
+    local h = NS.Dial.Instance("d2").header
+    -- red under: the header taking the mouse
+    assertFalse(h:IsMouseEnabled())
+    m.inCombat = true
+    assertTrue(m.__pressKey("G"))
+    assertTrue(NS.Dial.IsOpen("d2"), "the key opens it")
+    m.__pressKey("ESCAPE")
+    assertFalse(NS.Dial.IsOpen("d2"), "Escape closes it")
+    m.__pressKey("G")
+    m.__pressKey("G")
+    assertFalse(NS.Dial.IsOpen("d2"), "the key closes it")
+    assertEqual(#m.blocked, 0)
+end)
+
+test("dial: [polish] a click on an empty place does nothing; in the hub it sends nothing", function()
     local NS, m = live()
     local ring, cursor = openPolish(NS, m, 2)
     m.inCombat = true
@@ -886,7 +961,7 @@ test("dial: [polish] a click on an empty place or in the hub sends nothing", fun
     cursor(5, 5)
     m.__click(ring.qcCatcher)
     assertEqual(#m.sentMacros, 0)
-    assertTrue(NS.Dial.IsOpen("d2"), "the hub area does nothing on the catcher")
+    assertEqual(NS.Dial.ShownRing("d2"), 1, "the hub goes up a ring, through the catcher")
     assertEqual(#m.blocked, 0)
 end)
 
@@ -906,7 +981,8 @@ test("dial: [polish] hovering anywhere in a slice shows its tooltip", function()
     assertTrue(tip.__owner == ring.qcPlaceWedge[1], "W next")
     cursor(3, 3)
     NS.DialRender.PointerUpdate(h.qcPointer)
-    assertFalse(tip:IsShown(), "into the hub: hidden")
+    assertFalse(tip.__owner == ring.qcPlaceWedge[1], "into the hub: the wedge's tooltip is gone")
+    assertNil(ring.qcLit, "and no slice is lit")
 end)
 
 test("dial: [polish] wedges take no mouse; keys still click by name", function()
@@ -989,10 +1065,10 @@ test("dial: [polish] default hub is a solid gold circle of 22 on a 40 backdrop, 
     assertEqual(shownOf(h.qcHubRing), 0, "no hollow ring")
     assertEqual(shownOf(h.qcHubRim), 0, "no backdrop rim at border size 0")
     local rest = h.qcHubDot.__color[4]
-    h:__fire("OnEnter")
-    -- red under: no brightening in the header's OnEnter hook
+    NS.DialRender.HoverHub(h, true)
+    -- red under: no brightening in R.HoverHub
     assertTrue(h.qcHubDot.__color[4] > rest, "hovered, the circle brightens")
-    h:__fire("OnLeave")
+    NS.DialRender.HoverHub(h, false)
     assertEqual(h.qcHubDot.__color[4], rest, "and dims back")
 end)
 

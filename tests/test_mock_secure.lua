@@ -397,3 +397,21 @@ test("mock secure: a held modifier reads <mod>- and * attributes, never the plai
     m.modifiers = {}
     assertTrue(m.IsShiftKeyDown() == false)
 end)
+
+test("mock secure: a header with its mouse off still runs its _onclick from a binding and from Click", function()
+    local _, m = T.newAddon()
+    local h = m.CreateFrame("Button", "QuickCommsMockMouseOffHeader", m.UIParent, "SecureHandlerClickTemplate")
+    h:RegisterForClicks("AnyDown")
+    h:SetAttribute("_onclick", [[ clicks = (clicks or 0) + 1; last = button ]])
+    h:EnableMouse(false)
+    assertFalse(h:IsMouseEnabled())
+    m.SetBinding("K", "CLICK QuickCommsMockMouseOffHeader:Toggle")
+    m.inCombat = true
+    -- the client routes a key and a Click by name or reference, never through the mouse
+    assertTrue(m.__pressKey("K"))
+    assertEqual(m.__runSnippet(h, "", "return clicks"), 1, "the binding clicks it")
+    assertEqual(m.__runSnippet(h, "", "return last"), "Toggle", "with the binding's button")
+    h:Click("hub")
+    assertEqual(m.__runSnippet(h, "", "return last"), "hub", "Click runs it with the button named")
+    assertEqual(#m.blocked, 0)
+end)

@@ -257,8 +257,12 @@ function Dial.Apply(index, id, plan)
     local icfg = NS.IconStyle.Config(dial.icon, "dial")
     local look = R.Look(plan.radius, dial.label, dial.slice, dial)
     local disc = DL.Geometry(look.radius, look.line, look.labelReach).disc
-    -- the header is the hub, its Hub size across (protected geometry: here, out of combat)
+    -- the header is the hub, its Hub size across (protected geometry: here, out of combat). It takes
+    -- no mouse (round hub, 2026-10-21): a square button would take the corners outside the drawn
+    -- circle, so the ring's catcher takes the hub's clicks inside its circle (DialLayout.InHub) and the
+    -- tracker hovers it; its keys still click it by name.
     inst.header:SetSize(look.hub.size, look.hub.size)
+    inst.header:EnableMouse(false)   -- protected: here, under Apply, out of combat
     R.PaintHubLook(inst.header, look)
     R.PaintPointer(inst.header, look)
     local loaded = {}
