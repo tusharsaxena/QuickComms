@@ -213,24 +213,6 @@ function DL.IconReach(radius, at)
     return DL.ClampRadius(radius)
 end
 
---- How big a wedge's clickable square is on a ring of n wedges at `radius`, its icons `at` from the
---- center (IconReach; wedge 1 at `start`): as large as the slice
---- allows (the buttons are squares, owner ruling 2026-10-21), so hovering most of a slice lights it.
---- It stops short of the hub, of the disc's edge, and of its neighbors' squares (two squares apart by
---- (dx, dy) overlap unless one of the two is at least the side), never under the wedge itself.
-function DL.HitSize(n, radius, start, at)
-    n = math.max(1, tonumber(n) or 4)
-    radius = DL.ClampRadius(radius)
-    at = DL.IconReach(radius, at)
-    local edge = radius + DL.WEDGE / 2 + DL.RIM
-    local side = math.min(2 * (edge - at), 2 * (at - DL.HUB / 2 - 4))
-    for i = 1, n > 1 and n or 0 do
-        local a, b = DL.Wedge(i, n, radius, start, nil, at), DL.Wedge(i % n + 1, n, radius, start, nil, at)
-        side = math.min(side, math.max(math.abs(a.x - b.x), math.abs(a.y - b.y)) - 2)
-    end
-    return math.floor(math.max(DL.WEDGE, side))
-end
-
 --- The pointer's distance from the hub's center for a pointer `size` pixels across: just outside
 --- the hub.
 function DL.PointerReach(size)

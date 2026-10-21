@@ -4,7 +4,8 @@ local _, NS = ...
 -- knob table, the unchanged-repaint no-op and the proc burst spent once).
 --
 -- THE TRIGGER (owner decision 2026-10-19), per pad and per dial, off by default: Always (while the
--- icon is drawn), On hover (OnEnter to OnLeave, hooked insecurely beside the tooltip) or After
+-- icon is drawn), On hover (a pad button's OnEnter to OnLeave, hooked insecurely beside the tooltip;
+-- a dial wedge's from the dial's tracker, Dial_Render.HoverWedge, since wedges take no mouse) or After
 -- sending (SEND_SECONDS from the callout's send result, the same SEND_RESULT edge that flashes the
 -- button; a second result restarts the window). Bind hands a button its surface's glow settings at
 -- every paint; Update decides from them and the button's hover and send state. A dial closes on every

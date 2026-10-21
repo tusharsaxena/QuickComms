@@ -747,7 +747,7 @@ test("dial: [tooltip] a wedge's tooltip sits outside the dial: above by default,
     assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
     local h = NS.Dial.Instance("d2").header
     local w = NS.Dial.RingWedges("d2", 2)[1]
-    w:__fire("OnEnter")
+    NS.DialRender.EnterWedge(w)   -- the tracker's hover (wedges take no mouse since dial polish)
     local tip = m.GameTooltip
     -- red under: R.ShowTooltip through PadRender.ShowLines (ANCHOR_TOP, over the dial)
     assertEqual(tip.__anchor, "ANCHOR_NONE")
@@ -758,7 +758,7 @@ test("dial: [tooltip] a wedge's tooltip sits outside the dial: above by default,
     assertTrue(NS.SchemaRuntime.Set("dial.label.tooltipSide", "left", "d2"))
     assertTrue(NS.SchemaRuntime.Set("dial.label.tooltipOffset", 20, "d2"))
     assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
-    w:__fire("OnEnter")
+    NS.DialRender.EnterWedge(w)
     p, _, _, x = tip:GetPoint(1)
     assertEqual(p, "RIGHT")
     assertTrue(x <= -(g.disc / 2 + 20), "left of the disc and its labels, by the offset")
@@ -801,4 +801,88 @@ test("dial: [labels] the Label offset moves every label out from the center; the
     local ring = NS.Dial.Instance("d2").rings.active[2]
     local _, _, _, _, ty = ring.qcTitle:GetPoint(1)
     assertTrue(ty >= 220 + 14, "the title clears the N label")
+end)
+
+-- ── select to the hub (dial polish T3): the catcher clicks, the tracker hovers ───────────────
+
+-- The default dial on a fixed four with planOf's first `n` callouts, open from its header (as its
+-- key opens it) on that callout ring; answers the ring and a function that puts the cursor (dx, dy)
+-- from the hub's center.
+local function openPolish(NS, m, n)
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS, { n = n })))
+    local inst = NS.Dial.Instance("d2")
+    local h = inst.header
+    m.__click(h, "Toggle")
+    local ring = inst.rings.active[NS.Dial.ShownRing("d2")]
+    local cx, cy = h:GetCenter()
+    local function cursor(dx, dy)
+        m.cursor.x, m.cursor.y = (cx + dx) * h:GetEffectiveScale(), (cy + dy) * h:GetEffectiveScale()
+    end
+    return ring, cursor, h
+end
+
+test("dial: [polish] a click near the hub sends the lit slice, in combat", function()
+    local NS, m = live()
+    local ring, cursor = openPolish(NS, m, 2)
+    local east = ring.qcPlaceWedge[3]
+    assertTrue(east ~= nil and east.qcItem == ring.qcSpec.items[2], "two items on four places: the second is E")
+    m.inCombat = true
+    cursor(25, 0)   -- 25 px east: inside the old dead band between the hub and the wedge's square
+    -- red under: no catcher (a click lands only on a wedge's own square)
+    m.__click(ring.qcCatcher)
+    assertEqual(#m.sentMacros, 1)
+    assertEqual(m.sentMacros[1].text, east:GetAttribute("macrotext"))
+    assertTrue(m.sentMacros[1].frame == east, "forwarded to the E wedge's own button")
+    assertFalse(NS.Dial.IsOpen("d2"), "the dial closes on the send")
+    assertEqual(#m.blocked, 0)
+end)
+
+test("dial: [polish] a click on an empty place or in the hub sends nothing", function()
+    local NS, m = live()
+    local ring, cursor = openPolish(NS, m, 2)
+    m.inCombat = true
+    cursor(0, 40)   -- N: place 2, empty with two items (W, E)
+    -- red under: write type-w<j> for every place in DS.Load, used or not
+    m.__click(ring.qcCatcher)
+    assertEqual(#m.sentMacros, 0)
+    assertTrue(NS.Dial.IsOpen("d2"), "an empty place does nothing")
+    cursor(5, 5)
+    m.__click(ring.qcCatcher)
+    assertEqual(#m.sentMacros, 0)
+    assertTrue(NS.Dial.IsOpen("d2"), "the hub area does nothing on the catcher")
+    assertEqual(#m.blocked, 0)
+end)
+
+test("dial: [polish] hovering anywhere in a slice shows its tooltip", function()
+    local NS, m = live()
+    local ring, cursor, h = openPolish(NS, m, 2)
+    local east = ring.qcPlaceWedge[3]
+    local tip = m.GameTooltip
+    cursor(25, 0)
+    NS.DialRender.PointerUpdate(h.qcPointer)
+    -- red under: show a wedge's tooltip only from its own OnEnter
+    assertTrue(tip.__owner == east, "the lit slice's wedge owns the tooltip")
+    assertTrue(tip:IsShown())
+    assertEqual(tip.__lines[1][1], NS.DialRender.WedgeLines(east.qcItem)[1])
+    cursor(-25, 0)
+    NS.DialRender.PointerUpdate(h.qcPointer)
+    assertTrue(tip.__owner == ring.qcPlaceWedge[1], "W next")
+    cursor(3, 3)
+    NS.DialRender.PointerUpdate(h.qcPointer)
+    assertFalse(tip:IsShown(), "into the hub: hidden")
+end)
+
+test("dial: [polish] wedges take no mouse; keys still click by name", function()
+    local NS, m = live()
+    local ring = openPolish(NS, m, 8)
+    for _, r in ipairs(NS.Dial.Instance("d2").rings.active) do
+        for _, w in ipairs(r.qcWedges.active) do
+            -- red under: keep the wedges mouse-enabled (their grown hit squares)
+            assertFalse(w:IsMouseEnabled(), "a wedge takes no mouse")
+        end
+    end
+    local first = ring.qcWedges.active[1]
+    m.__pressKey("1")
+    assertEqual(#m.sentMacros, 1)
+    assertEqual(m.sentMacros[1].text, first:GetAttribute("macrotext"), "the number key clicks item 1 by name")
 end)

@@ -42,6 +42,12 @@
 --                  a SettingsFrameTemplate frame gets the template's Bg, NineSlice.Text and ClosePanelButton
 --   __pressKey(key)     a key press: a snippet's binding first, then an override binding; false if unbound
 --   __runSnippet(h, params, body, ...)  run restricted source in header h's environment
+-- A secure button's click runs `type = "macro"` (its macrotext) or `type = "click"` (clicks its
+-- `clickbutton` with the same button), each read as `type-<button>` first (SecureButton_
+-- GetModifiedAttribute: LeftButton is "1", a non-mouse name such as "w3" itself); Click(button)
+-- presses it as `__click` does. The restricted GetMousePosition answers the cursor's place over a
+-- frame (fractions from its bottom left; nil outside). An addon Button takes the mouse until
+-- EnableMouse(false) (IsMouseEnabled).
 -- A frame made from a SecureHandler template runs its `_onclick` attribute as a snippet on a click;
 -- its snippets run in its own environment (`h.__env`, globals persist), where the protected calls
 -- refused in combat are allowed. The restricted handle methods raise outside a snippet; a WrapScript
@@ -333,6 +339,14 @@ local function build()
         frame.GetAlpha = function(self) return self.__alpha or 1 end
         frame.GetCenter = function(self) return self.__cx or 0, self.__cy or 0 end
         frame.GetEffectiveScale = function() return 1 end
+        -- Mouse input, as the client keeps it: a Button takes the mouse until told otherwise (the dial's
+        -- wedges are turned off, dial polish 2026-10-21), any other frame does not.
+        frame.__mouse = frame.__frameType == "Button"
+        frame.EnableMouse = function(self, on)
+            self.__mouse = on and true or false
+            return self
+        end
+        frame.IsMouseEnabled = function(self) return self.__mouse == true end
         frame.SetSize = function(self, w, h)
             self.__w, self.__h = w, h
             return self
@@ -483,11 +497,31 @@ local function build()
         return (down and true or false) == (useDown and true or false)
     end
 
-    local function secureOnClick(button, _, down)
-        if not actsOn(button, down) then return end
+    -- SecureButton_GetModifiedAttribute's suffix: a mouse button by its number, any other button name
+    -- (a catcher's "w3") as itself. No modifier keys are modeled.
+    local SUFFIX = { LeftButton = "1", RightButton = "2", MiddleButton = "3", Button4 = "4", Button5 = "5" }
+    local function modified(button, name, mouseButton)
         local a = button.__attrs
-        if a.type == "macro" and type(a.macrotext) == "string" then
-            M.sentMacros[#M.sentMacros + 1] = { text = a.macrotext, at = M.GetTime(), frame = button }
+        local suffix = SUFFIX[mouseButton] or mouseButton
+        local v = suffix and a[name .. "-" .. tostring(suffix)]
+        if v == nil then v = a[name] end
+        return v
+    end
+
+    -- The secure action: a macro runs its macrotext; a click (`type = "click"`) clicks its
+    -- `clickbutton` with the same button, as SECURE_ACTIONS.click does. Both read the attribute for
+    -- the clicking button first (`type-w3`, `clickbutton-w3`), then the plain one.
+    local function secureOnClick(button, mouseButton, down)
+        if not actsOn(button, down) then return end
+        local kind = modified(button, "type", mouseButton)
+        if kind == "macro" then
+            local text = modified(button, "macrotext", mouseButton)
+            if type(text) == "string" then
+                M.sentMacros[#M.sentMacros + 1] = { text = text, at = M.GetTime(), frame = button }
+            end
+        elseif kind == "click" then
+            local delegate = modified(button, "clickbutton", mouseButton)
+            if type(delegate) == "table" and delegate.Click then delegate:Click(mouseButton) end
         end
     end
 
@@ -537,8 +571,36 @@ local function build()
         if secureDepth == 0 then error("wow_mock: " .. name .. " is a restricted-environment call", 3) end
     end
 
+    -- A frame's center for the restricted mouse read: through its CENTER anchor on another of the
+    -- addon's frames (a dial's catcher on its ring, the ring on the header), else its own GetCenter, so
+    -- it agrees with what the insecure side reads off the header.
+    local function centerOf(f)
+        local p = rawget(f, "__points") and f.__points[1]
+        local rel = p and p[2]
+        if p and p[1] == "CENTER" and (p[3] == nil or p[3] == "CENTER") and type(rel) == "table"
+            and rawget(rel, "__points") then
+            local rx, ry = centerOf(rel)
+            return rx + (tonumber(p[4]) or 0), ry + (tonumber(p[5]) or 0)
+        end
+        local cx, cy = f:GetCenter()
+        return tonumber(cx) or 0, tonumber(cy) or 0
+    end
+
     -- What a snippet may call on a handle beyond the frame's own methods.
     local function addHandleMethods(f)
+        -- The cursor over the frame, as fractions of its width and height from its bottom left (the
+        -- client's restricted read); nil when the cursor is outside it or it has no size.
+        f.GetMousePosition = function(self)
+            restricted("GetMousePosition")
+            local w, h = tonumber(rawget(self, "__w")) or 0, tonumber(rawget(self, "__h")) or 0
+            if w <= 0 or h <= 0 then return nil end
+            local cx, cy = centerOf(self)
+            local scale = self:GetEffectiveScale()
+            local x = (M.cursor.x / scale - (cx - w / 2)) / w
+            local y = (M.cursor.y / scale - (cy - h / 2)) / h
+            if x < 0 or x > 1 or y < 0 or y > 1 then return nil end
+            return x, y
+        end
         f.GetFrameRef = function(self, ref)
             restricted("GetFrameRef")
             return self.__frameRefs and self.__frameRefs[ref]
@@ -704,6 +766,9 @@ local function build()
                 return self
             end
             f.__scripts.OnClick = secureOnClick
+            -- Button:Click(button): a virtual press, down then up as `__click` presses it (a
+            -- `type = "click"` forward reaches its delegate this way).
+            f.Click = function(self, mouseButton) M.__click(self, mouseButton) end
             -- A wrap must come before an OnClick hook (makeHeader's WrapScript checks this flag).
             local hook = f.HookScript
             f.HookScript = function(self, script, fn)

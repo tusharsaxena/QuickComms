@@ -222,3 +222,54 @@ test("dial secure: [firewall] no snippet writes an attribute; the ring on screen
         assertTrue(not body:find("SetAttribute", 1, true), name)
     end
 end)
+
+-- One ring of `size` places (place 1 at W) with a catcher over its disc and a callout wedge on each of
+-- `places`, loaded by hand as modules/Dial.lua loads it.
+local function caught(size, places)
+    local NS, m = T.enableAddon()
+    local DS, SE, DL = NS.DialSecure, NS.SendEngine, NS.DialLayout
+    local h = DS.NewHeader(8)
+    local frame = DS.NewRing(h)
+    frame:SetPoint("CENTER", h, "CENTER", 0, 0)
+    local disc = DL.Geometry(100).disc
+    local catcher = DS.NewCatcher(h, frame)
+    catcher:SetSize(disc, disc)
+    catcher:SetPoint("CENTER", frame, "CENTER", 0, 0)
+    local wedges = {}
+    for i, place in ipairs(places) do
+        local b = DS.NewWedge(h, frame)
+        SE.Arm(b, "/p " .. place, { calloutId = "c" .. i, surfaceId = "d9", chatType = "PARTY", name = "w" .. place })
+        wedges[i] = { button = b, target = 0, place = place }
+    end
+    assertTrue(DS.Load(h, { { frame = frame, parent = 0, prev = 0, next = 0, wedges = wedges, catcher = catcher,
+        shape = { size = size, start = DL.START, hub = DL.HUB, disc = disc } } }, {}))
+    return NS, m, h, catcher, disc
+end
+
+test("dial secure: [polish] catcher and SliceAt agree", function()
+    for _, case in ipairs({ { 4, { 1, 3 } }, { 8, { 1, 2, 3 } } }) do
+        local size, places = case[1], case[2]
+        local NS, m, h, catcher, disc = caught(size, places)
+        local DL = NS.DialLayout
+        local used = {}
+        for _, p in ipairs(places) do used[p] = true end
+        local hits = 0
+        for k = 0, 71 do
+            local a = math.rad((k + 0.5) * 5)   -- off every slice edge
+            for _, dist in ipairs({ DL.HUB / 2 + 1, (DL.HUB / 2 + disc / 2) / 2, disc / 2 - 1 }) do
+                m.cursor.x, m.cursor.y = dist * math.sin(a), dist * math.cos(a)
+                local got = m.__runSnippet(h, "self, button, down, owner", NS.DialSecure.SNIPPETS.catcher, catcher,
+                    "LeftButton", false, h)
+                local j = DL.SliceAt(a, dist, size, DL.START, DL.HUB, disc)
+                local want = (j and used[j]) and ("w" .. j) or false
+                -- red under: count the catcher's places from N (drop qc-start) in CATCHER_PRE
+                assertEqual(got, want, ("%d slices, bearing %s, %s px"):format(size, (k + 0.5) * 5, dist))
+                if want then hits = hits + 1 end
+            end
+        end
+        assertTrue(hits > 0, size .. ": some points land on a used slice")
+        assertEqual(catcher:GetAttribute("type-w" .. places[1]), "click")
+        assertTrue(catcher:GetAttribute("clickbutton-w" .. places[1]) ~= nil, "a used place forwards to its wedge")
+        if size == 4 then assertNil(catcher:GetAttribute("type-w2"), "an empty place has no type") end
+    end
+end)

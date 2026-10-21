@@ -104,9 +104,14 @@ local function arm(btn, item)
 end
 
 -- A ring's container, its two page arrows (secure: their click turns the page in combat, through the
--- header's arrow snippet) and its dressing. Sized per plan in Apply.
+-- header's arrow snippet), its catcher (secure: every mouse click on the disc, forwarded to the wedge
+-- under the cursor by the header's catcher snippet, in combat too) and its dressing. Sized per plan in
+-- Apply.
 local function newRing(inst)
     local ring = DS.NewRing(inst.header)
+    ring.qcCatcher = DS.NewCatcher(inst.header, ring)
+    ring.qcCatcher:SetPoint("CENTER", ring, "CENTER", 0, 0)
+    ring.qcPlaceWedge = {}
     ring.qcPrev = R.DressArrow(DS.NewArrow(inst.header, ring), "prev")
     ring.qcNext = R.DressArrow(DS.NewArrow(inst.header, ring), "next")
     ring.qcPrev.qcHeader, ring.qcNext.qcHeader = inst.header, inst.header
@@ -194,19 +199,23 @@ local function hubState(inst, plan)
     }
 end
 
--- One ring's wedges: placed on their compass points at the dial's radius, each clickable over as much
--- of its slice as a square allows (DL.HitSize: the hit rect grows past the drawn wedge) (a pinned node on its own wind, Dial_Layout's
--- `wedge`), painted, armed, indexed by callout.
+-- One ring's wedges: placed on their places at the dial's radius (a pinned node on its own wind,
+-- Dial_Layout's `wedge`), painted, armed, indexed by callout and by place (`ring.qcPlaceWedge`, for the
+-- tracker's hover). A wedge takes no mouse (dial polish, 2026-10-21): the ring's catcher clicks it and
+-- the tracker hovers it, so one function (DL.SliceAt) decides the slice; the number keys still click
+-- it by name.
 local function placeWedges(inst, ring, spec, icfg, look)
     local wedges = {}
-    local grow = (DL.HitSize(spec.size, look.radius, spec.start, look.iconReach) - DL.WEDGE) / 2
+    ring.qcPlaceWedge = {}
     for i, item in ipairs(spec.items) do
         local w = NS.Pool.Acquire(ring.qcWedges, function() return newWedge(inst, ring) end)
-        local geo = DL.Wedge(item.wedge or i, spec.size, look.radius, spec.start, look.labelReach, look.iconReach)
+        local place = item.wedge or i
+        local geo = DL.Wedge(place, spec.size, look.radius, spec.start, look.labelReach, look.iconReach)
         w:ClearAllPoints()
         w:SetPoint("CENTER", ring, "CENTER", geo.x, geo.y)
         w:SetSize(DL.WEDGE, DL.WEDGE)
-        w:SetHitRectInsets(-grow, -grow, -grow, -grow)   -- protected: here, under Apply, out of combat
+        w:EnableMouse(false)   -- protected: here, under Apply, out of combat
+        ring.qcPlaceWedge[place] = w
         R.PaintWedge(w, item, geo, icfg, look)
         arm(w, item)
         if item.slot then
@@ -214,7 +223,7 @@ local function placeWedges(inst, ring, spec, icfg, look)
             list[#list + 1] = w
             inst.byCallout[item.slot.calloutId] = list
         end
-        wedges[i] = { button = w, target = item.kind == "ring" and item.target or 0 }
+        wedges[i] = { button = w, target = item.kind == "ring" and item.target or 0, place = place }
     end
     return wedges
 end
@@ -254,11 +263,13 @@ function Dial.Apply(index, id, plan)
         ring:Hide()
         ring.qcSpec = spec
         ring:SetSize(disc, disc)   -- protected geometry: here, under Apply, out of combat
+        ring.qcCatcher:SetSize(disc, disc)
         R.PaintRing(ring, spec, look)
         placeArrows(ring, spec, look)
         loaded[r] = { frame = ring, parent = spec.parent, prev = spec.prev, next = spec.next,
             arrows = { prev = ring.qcPrev, next = ring.qcNext },
-            wedges = placeWedges(inst, ring, spec, icfg, look) }
+            wedges = placeWedges(inst, ring, spec, icfg, look), catcher = ring.qcCatcher,
+            shape = { size = spec.size, start = tonumber(spec.start) or 0, hub = DL.HUB, disc = disc } }
     end
     releaseFreeGlows(inst)
     local frames = {}

@@ -219,10 +219,13 @@ test("glow: a wedge glows on its icon too, and on hover", function()
     assertTrue(NS.Dial.Apply(1, did, plan))
     assertEqual(#lib.calls, 0)
     local w = NS.Dial.RingWedges(did, 1)[1]
-    w:__fire("OnEnter")
+    local ring = NS.Dial.Instance(did).rings.active[1]
+    local place = w.qcItem.wedge or 1
+    -- the tracker's hover (wedges take no mouse since dial polish): into the wedge's slice, then out
+    NS.DialRender.HoverWedge(ring, nil, place)
     assertEqual(names(lib), "PixelGlow_Start")
     assertTrue(lib.calls[1][2] == w.qcIconFrame)
-    w:__fire("OnLeave")
+    NS.DialRender.HoverWedge(ring, place, nil)
     assertEqual(names(lib), "PixelGlow_Start,PixelGlow_Stop")
 end)
 

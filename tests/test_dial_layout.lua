@@ -112,21 +112,12 @@ test("dial layout: [nav] a paged ring's pill, dots and arrows sit in one row und
     assertEqual(big.arrow, (30 + 10 + 10 + 2 * 12) / 2 + 25 + 20)
 end)
 
-test("dial layout: [hit] a wedge's hit square fills its slice without reaching the hub or a neighbor", function()
+test("dial layout: [hit] the Icon offset moves the wedges in; a bigger pointer sits further out", function()
     local L = DL()
-    for _, n in ipairs({ 2, 4, 6, 8, 12 }) do
-        local side = L.HitSize(n, 100)
-        T.assertTrue(side >= L.WEDGE, n .. ": never under the wedge")
-        T.assertTrue(100 - side / 2 >= L.HUB / 2, n .. ": clear of the hub")
-        local a, b = L.Wedge(1, n, 100), L.Wedge(2, n, 100)
-        T.assertTrue(math.max(math.abs(a.x - b.x), math.abs(a.y - b.y)) >= side, n .. ": clear of its neighbor")
-    end
-    -- the Icon offset moves the wedges in; the square still clears the hub and the rim
     local w = L.Wedge(2, 4, 100, 0, nil, 60)
     assertEqual(w.x, 60, "the icon sits at its offset, the disc keeps the radius")
-    T.assertTrue(60 - L.HitSize(4, 100, 0, 60) / 2 >= L.HUB / 2, "clear of the hub at the offset")
-    -- red under: answer DL.WEDGE from DL.HitSize (the old 44-pixel target)
-    T.assertTrue(L.HitSize(4, 100) > L.WEDGE + 20, "a quarter slice gets a big square")
+    -- red under: keep DL.HitSize (the wedges' grown hit squares retired with the ring catcher)
+    assertNil(L.HitSize, "no hit square: the ring's catcher clicks every point of a slice")
     T.assertTrue(L.PointerReach(30) > L.PointerReach(16), "a bigger pointer sits further out")
 end)
 

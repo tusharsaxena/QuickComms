@@ -11,7 +11,8 @@ local addonName, NS = ...
 -- an "exploded pie": each fill moves out along its own bisector by DL.SliceShift(gap, size) and
 -- shrinks to the disc's radius less that shift, so its rim stays on the disc and its straight edges
 -- sit gap/2 off the spoke line (one slice has no gap). The slice the cursor points into takes the
--- highlight fill, moved and sized as its slice (Track, from the pointer's per-frame update). A paged
+-- highlight fill, moved and sized as its slice (Track, from the pointer's per-frame update, which
+-- also hovers the wedge on it: its tooltip and hover glow, since the wedges take no mouse). A paged
 -- ring's page row holds a pill for its own page and a dot for each other one, under the disc
 -- (DL.Nav); the arrows either side are secure buttons modules/Dial.lua places.
 
@@ -133,13 +134,16 @@ end
 --- Light the slice the cursor points into: `angle` (radians clockwise from N) and `dist` (pixels)
 --- from the hub's center. Outside the hub and inside the disc, the slice holding that bearing
 --- (DL.SliceAt: angle only, so a point in a gap belongs to the slice whose angle it is in) lights
---- when a wedge sits on it; anywhere else (the hub, past the rim, an empty place) none does.
+--- when a wedge sits on it; anywhere else (the hub, past the rim, an empty place) none does. Answers
+--- true, the slice lit before and the slice lit now when that changed (Dial_Render hovers the wedges
+--- on them), else nothing.
 function S.Track(ring, angle, dist)
     local shape, hl = ring.qcShape, ring.qcHighlight
     if not (shape and hl) then return end
     local j = DL.SliceAt(angle, dist, shape.size, shape.start, DL.HUB, shape.disc)
     if j and not shape.used[j] then j = nil end
-    if j == ring.qcLit then return end
+    local was = ring.qcLit
+    if j == was then return end
     ring.qcLit = j
     if j then
         place(hl, ring, j, shape)
@@ -147,4 +151,5 @@ function S.Track(ring, angle, dist)
     else
         hl:Hide()
     end
+    return true, was, j
 end

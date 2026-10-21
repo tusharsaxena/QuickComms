@@ -8,13 +8,15 @@ local _, NS = ...
 -- and, on a paged ring, two page arrows on each ring; and on each wedge an icon (a glyph in its color,
 -- no backdrop of its own since the dial rework, 2026-10-21), its label, a padlock, a dim veil when it
 -- sends nothing, the guard's cooling veil and a result flash. The slice the cursor points into lights
--- whole (the Slices tab's Highlight), anywhere outside the hub (R.PointerUpdate). The hub carries the stale hint, the lockdown chip and the test
+-- whole (the Slices tab's Highlight) and is hovered, anywhere outside the hub (R.PointerUpdate). The hub carries the stale hint, the lockdown chip and the test
 -- or preview label. The pointer is a plain (unprotected) child of the header that turns toward the
 -- cursor, the Slices tab's glyph, size, color and offset: its OnUpdate is set when the header shows and
 -- cleared when it hides, so a closed or stood-down dial runs nothing per frame (perf bucket
 -- dialRender). Every tooltip the dial shows sits outside it, on the Labels tab's side, at its offset
 -- (R.ShowTip). The Icons tab (B9) styles each wedge's icon through modules/IconStyle.lua and
--- modules/Glow.lua (the glow, whose On hover trigger the wedge's OnEnter and OnLeave hooks drive).
+-- modules/Glow.lua (the glow, whose On hover trigger the tracker drives: R.HoverWedge). A wedge takes
+-- no mouse (dial polish, 2026-10-21): the slice the cursor points into is hovered (its wedge's
+-- tooltip and glow) from the per-frame update, and clicked through the ring's secure catcher.
 
 NS.DialRender = NS.DialRender or {}
 local R = NS.DialRender
@@ -64,9 +66,15 @@ local function shownRing(header)
     return nil
 end
 
+-- Light the slice under (angle, dist) on `ring` and, when that changed, move the hover to its wedge.
+local function track(ring, angle, dist)
+    local changed, was, now = Slices.Track(ring, angle, dist)
+    if changed then R.HoverWedge(ring, was, now) end
+end
+
 --- While the dial is open, every frame: the pointer toward the cursor (hidden inside the dead zone,
---- or when the Slices tab turns it off), and the slice the cursor points into lit, anywhere on the
---- disc outside the hub (Slices.Track), whether or not it is over the wedge's own square.
+--- or when the Slices tab turns it off), and the slice the cursor points into lit and hovered (its
+--- wedge's tooltip and hover glow), anywhere on the disc outside the hub (Slices.Track).
 function R.PointerUpdate(pointer)
     local t0 = Perf.on and debugprofilestop()
     local header = pointer.qcHeader
@@ -86,7 +94,7 @@ function R.PointerUpdate(pointer)
     local ring = shownRing(header)
     if ring and scale and scale > 0 then
         local dx, dy = (mx or 0) / scale - (cx or 0), (my or 0) / scale - (cy or 0)
-        Slices.Track(ring, math.atan2(dx, dy), math.sqrt(dx * dx + dy * dy))
+        track(ring, math.atan2(dx, dy), math.sqrt(dx * dx + dy * dy))
     end
     if t0 then Perf.Note("dialRender", debugprofilestop() - t0) end
 end
@@ -127,7 +135,7 @@ function R.DressHub(header, onEnter)
         front:SetScript("OnUpdate", nil)
         front.qcArrow:Hide()
         -- the snippet hid the rings first, so clear every one the rebuild loaded
-        for _, ring in ipairs(header.qcRingFrames or {}) do Slices.Track(ring, 0, 0) end
+        for _, ring in ipairs(header.qcRingFrames or {}) do track(ring, 0, 0) end
     end)
     header:HookScript("OnEnter", function(self) if onEnter then onEnter(self) end end)
     header.qcHeader = header
@@ -310,7 +318,7 @@ function R.ShowTooltip(btn)
     R.ShowTip(btn, lines[1], rest)
 end
 
---- Build a wedge's regions and hover hooks, once per button.
+--- Build a wedge's regions, once per button.
 function R.DressWedge(btn)
     if btn.qcDressed then return btn end
     btn.qcDressed = true
@@ -329,15 +337,28 @@ function R.DressWedge(btn)
     btn.qcCool:Hide()
     btn.qcFlash = circle(btn, "OVERLAY", DL.WEDGE, 1, 1, 1, 0.45)
     btn.qcFlash:Hide()
-    btn:HookScript("OnEnter", function(self)
-        R.ShowTooltip(self)
-        Glow.SetHover(self, true)
-    end)
-    btn:HookScript("OnLeave", function(self)
-        GameTooltip:Hide()
-        Glow.SetHover(self, false)
-    end)
     return btn
+end
+
+--- A wedge hovered: its tooltip and its On hover glow. The wedges take no mouse (dial polish,
+--- 2026-10-21), so the tracker calls this, not an OnEnter.
+function R.EnterWedge(btn)
+    R.ShowTooltip(btn)
+    Glow.SetHover(btn, true)
+end
+
+--- A wedge no longer hovered: the tooltip hidden, its hover glow off.
+function R.LeaveWedge(btn)
+    GameTooltip:Hide()
+    Glow.SetHover(btn, false)
+end
+
+--- The hover moved on `ring` from place `was` to place `now` (either nil: the hub, past the rim, an
+--- empty place): the wedge left first, then the one entered.
+function R.HoverWedge(ring, was, now)
+    local wedges = ring.qcPlaceWedge or {}
+    if was and wedges[was] then R.LeaveWedge(wedges[was]) end
+    if now and wedges[now] then R.EnterWedge(wedges[now]) end
 end
 
 -- The Icons tab's defaults, for a paint that names no config (IconStyle.Config of none).
