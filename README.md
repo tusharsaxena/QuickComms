@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1058%2F1058_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1059%2F1059_passing-green)
 
 Quick Comms puts your usual group callouts one click or one keypress away. "Kick on me", "Lust
 now", "INC Lumber Mill": set them up once and they sit on a Comms Pad or open from a
@@ -43,8 +43,8 @@ dial closes it; the number keys 1 to 8 pick a wedge. Slices are laid out from th
 clockwise. The slice the mouse points into lights whole, anywhere outside the middle button, a click
 anywhere in it sends it, and its tooltip shows outside the dial. On Settings → Dial, the Wheel tab sets
 the wedges per ring (Auto spreads them evenly, up to 12, and pages sooner when big icons would not
-fit) and the ring's radius; the Slices tab colors the slices, sets the gap between them, colors the
-lit slice, styles the middle button (a solid circle, a hollow ring, a target or a rimmed disc, with
+fit) and the ring's radius; the Slices tab colors the slices, sets the gap between them and colors the
+lit slice; the Hub tab styles the middle button (a solid circle, a hollow ring, a target or a rimmed disc, with
 its size and colors) and sets the pointer (its size, distance and color, or hides it); the Paging
 tab sizes, spaces and colors the page arrows and the pill and dots; the Slice labels tab shows or
 hides the wedges' names, sets their distance from the middle, font, size, outline, color and shadow,

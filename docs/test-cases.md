@@ -743,7 +743,7 @@ Total.
 - page pads: [polish] the page is titled Pad
 - page pads: [polish] no user-facing string sends the player to a Comms Pad or Comms Dial page
 
-### test_page_dials.lua (26)
+### test_page_dials.lua (27)
 
 - dials page: New dial makes a second dial holding every built-in, selects it, and builds QuickCommsDial2
 - dials page: New dial takes the lowest free number, so a delete never leads to two names alike
@@ -761,14 +761,15 @@ Total.
 - dials page: [B9] Icons follows Wheel, carries its headings once each, and writes the dial
 - dials page: [glow knobs] only the selected style's knobs show, and a Glow or Glow style write repaints
 - dials page: [labels] Labels shows or hides the wedges' names and styles them; off grays the font
-- dials page: [slices] Slices writes the fill, gap, highlight and pointer, each color with its class color
+- dials page: [slices] Slices writes the fill, gap and highlight, Hub the pointer, each color with its class color
 - page dials: [polish] Slices tab has Slice gap and no Border heading
-- page dials: [polish] Hub heading rows on the Slices tab
+- page dials: [polish] Hub heading rows on the Hub tab
 - dials page: [slices] every slice texture the dial names ships under media/textures
 - dials page: [paging] Paging sizes, spaces and colors the arrows and page indicators; the dial follows
 - page dials: [paging] Page indicator carries the background and border rows, their ranges and defaults
 - dials page: [wheel] Icon offset moves the icons in or out; 0 is the ring radius
-- page dials: [polish] tabs read Slices, Paging, Slice labels, Group labels, Icons
+- page dials: [polish] a Hub tab right after Slices holds the Hub and Pointer headings
+- page dials: [polish] tabs read Slices, Hub, Paging, Slice labels, Group labels, Icons
 - page dials: [polish] Icon offset is on the Icons tab, not Wheel
 - page dials: [polish] the page is titled Dial
 
@@ -1260,7 +1261,7 @@ Total.
 | test_groups_when.lua | 20 |
 | test_page_groups.lua | 67 |
 | test_page_pads.lua | 26 |
-| test_page_dials.lua | 26 |
+| test_page_dials.lua | 27 |
 | test_page_share.lua | 12 |
 | test_check.lua | 6 |
 | test_send_guard.lua | 10 |
@@ -1284,4 +1285,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1058** |
+| **Total** | **1059** |

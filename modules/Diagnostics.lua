@@ -120,8 +120,8 @@ local function surfaces(out)
     end
 end
 
--- One dial's look: the Wheel, Slices (Hub included), Paging, Slice labels and Group labels tabs' values that
--- shape what it draws.
+-- One dial's look: the Wheel, Slices, Hub, Paging, Slice labels and Group labels tabs' values that shape
+-- what it draws.
 local function dialLook(out, id, d)
     local s, l, pg = d.slice or {}, d.label or {}, d.page or {}
     out:add("Dial", "%s look mode=%s slices=%s radius=%s iconOffset=%s openAt=%s", id, d.mode, d.slices, d.radius,

@@ -471,12 +471,15 @@ end
 for _, row in ipairs(buttonRows()) do ROWS[#ROWS + 1] = row end
 
 -- The Dial page's Slices tab (2026-10-21): each slice's fill, the Slice gap between them (dial polish,
--- which retired the Border heading), the hovered slice's fill, the Hub (hubRows) and the pointer,
--- each color a composed swatch with its class-color companion, stamped as dial member rows; before
--- the Labels rows, so the tab follows Wheel.
-local SLICES_TAB, SLICEP = L["Slices"], "dial.slice."
+-- which retired the Border heading) and the hovered slice's fill; then the Hub tab (dial polish,
+-- 2026-10-21: the Hub and Pointer headings, which sat on Slices until then, their paths kept): the
+-- Hub (hubRows) and the pointer (`dial.slice.pointer*`). Each color a composed swatch with its
+-- class-color companion, stamped as dial member rows. The options library orders a page's tabs by
+-- each group's first row, so these rows come after Wheel's and before Paging's, Slices' first, and
+-- the Hub tab follows Slices.
+local SLICES_TAB, HUB_TAB, SLICEP = L["Slices"], L["Hub"], "dial.slice."
 
--- The Slices tab's Hub heading (dial polish, 2026-10-21; `dial.hub.*`, defaults/PadStyle.lua's
+-- The Hub tab's Hub heading (dial polish, 2026-10-21; `dial.hub.*`, defaults/PadStyle.lua's
 -- DialHub): the style, the backdrop's size (the hub's geometry) and the circle's, the ring styles'
 -- line width, then the backdrop's color, its border and the circle's color, each a composed swatch
 -- with its class-color companion (opacity is the swatch's alpha, as every color row's).
@@ -488,13 +491,13 @@ local function hubRows(O, checks)
     local function solid() return (NS.SchemaRuntime.Get(HUBP .. "style") or hdef.style) == "solid" end
     local function size(key, label, lo, hi, desc, extra)
         local r = { path = HUBP .. key, instance = "dial", type = "number", default = hdef[key], min = lo, max = hi,
-            step = 1, page = "dials", group = SLICES_TAB, subgroup = HUB, label = label, desc = desc,
+            step = 1, page = "dials", group = HUB_TAB, subgroup = HUB, label = label, desc = desc,
             validate = NUMBER, normalize = clamp(lo, hi, true) }
         for k, v in pairs(extra or {}) do r[k] = v end
         return r
     end
     local out = { { path = HUBP .. "style", instance = "dial", type = "string", default = hdef.style, values = HUB_STYLE,
-        page = "dials", group = SLICES_TAB, subgroup = HUB, label = L["Hub style"], startsLine = true,
+        page = "dials", group = HUB_TAB, subgroup = HUB, label = L["Hub style"], startsLine = true,
         desc = L["What the middle of the dial draws: a filled circle, a hollow ring, a ring with a dot, or a filled circle on a rimmed disc."],
         validate = oneOf(HUB_STYLE) },
       size("size", L["Hub size"], 24, 80,
@@ -502,7 +505,7 @@ local function hubRows(O, checks)
       size("circleSize", L["Circle size"], 4, 60, L["How wide the circle on the hub is, in pixels."], { startsLine = true }),
       size("lineWidth", L["Line width"], 1, 6, L["How thick the hollow ring is, in pixels."], { disabledIf = solid }) }
     local function pair(key, label, companion)
-        stampBlock(out, O.ColorPair(blockSpec(HUBP, SLICES_TAB, HUB, hdef,
+        stampBlock(out, O.ColorPair(blockSpec(HUBP, HUB_TAB, HUB, hdef,
             { key = key, label = label, companionKey = companion })), HUBP, checks, "dial")
     end
     pair("background", L["Backdrop color"], "useClassColorBackground")
@@ -522,13 +525,13 @@ local function sliceRows()
     local sdef = T.dial.slice
     local POINTER = L["Pointer"]
     local function pointerOff() return NS.SchemaRuntime.Get(SLICEP .. "pointerShow") == false end
-    local function row(subgroup, r)
-        r.instance, r.page, r.group, r.subgroup = "dial", "dials", SLICES_TAB, subgroup
+    local function row(subgroup, r, tab)
+        r.instance, r.page, r.group, r.subgroup = "dial", "dials", tab or SLICES_TAB, subgroup
         return r
     end
-    local function pair(subgroup, key, label, companion)
+    local function pair(subgroup, key, label, companion, tab)
         local out = {}
-        stampBlock(out, O.ColorPair(blockSpec(SLICEP, SLICES_TAB, subgroup, sdef,
+        stampBlock(out, O.ColorPair(blockSpec(SLICEP, tab or SLICES_TAB, subgroup, sdef,
             { key = key, label = label, companionKey = companion })), SLICEP, checks, "dial")
         return out
     end
@@ -542,16 +545,16 @@ local function sliceRows()
     for _, r in ipairs(hubRows(O, checks)) do out[#out + 1] = r end
     out[#out + 1] = row(POINTER, { path = SLICEP .. "pointerShow", type = "bool", default = sdef.pointerShow,
         label = L["Show pointer"], startsLine = true,
-        desc = L["Draw the pointer in the middle of the dial that turns toward the cursor."], validate = BOOL })
+        desc = L["Draw the pointer in the middle of the dial that turns toward the cursor."], validate = BOOL }, HUB_TAB)
     out[#out + 1] = row(POINTER, { path = SLICEP .. "pointerSize", type = "number", default = sdef.pointerSize,
         min = 10, max = 48, step = 1, label = L["Pointer size"], disabledIf = pointerOff,
-        desc = L["How big the pointer is, in pixels."], validate = NUMBER, normalize = clamp(10, 48, true) })
+        desc = L["How big the pointer is, in pixels."], validate = NUMBER, normalize = clamp(10, 48, true) }, HUB_TAB)
     out[#out + 1] = row(POINTER, { path = SLICEP .. "pointerOffset", type = "number", default = sdef.pointerOffset,
         min = 0, max = 150, step = 1, label = L["Pointer offset (0 = automatic)"], zeroText = L["Automatic"],
         disabledIf = pointerOff, startsLine = true,
         desc = L["How far the pointer sits from the middle of the dial, in pixels. 0 puts it just outside the middle button."],
-        validate = NUMBER, normalize = clamp(0, 150, true) })
-    for _, r in ipairs(pair(POINTER, "pointerColor", L["Pointer color"], "useClassColorPointer")) do
+        validate = NUMBER, normalize = clamp(0, 150, true) }, HUB_TAB)
+    for _, r in ipairs(pair(POINTER, "pointerColor", L["Pointer color"], "useClassColorPointer", HUB_TAB)) do
         r.disabledIf = pointerOff
         out[#out + 1] = r
     end

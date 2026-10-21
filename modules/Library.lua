@@ -915,7 +915,7 @@ local SURFACE_DEFAULTS = {
         label = NS.PadDefaults.DialLabel(),     -- the Slice labels tab (defaults/PadStyle.lua)
         title = NS.PadDefaults.DialTitle(),     -- the Group labels tab (defaults/PadStyle.lua)
         slice = NS.PadDefaults.DialSlice(),     -- the Slices tab (defaults/PadStyle.lua)
-        hub = NS.PadDefaults.DialHub(),         -- the Slices tab's Hub heading (defaults/PadStyle.lua)
+        hub = NS.PadDefaults.DialHub(),         -- the Hub tab's Hub heading (defaults/PadStyle.lua)
         page = NS.PadDefaults.DialPage() },     -- the Paging tab (defaults/PadStyle.lua)
 }
 

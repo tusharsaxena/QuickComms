@@ -2,19 +2,21 @@ local _, NS = ...
 -- settings/Dials.lua — the Dial page (design spec §11, §13.1): one dial at a time.
 --
 --     band     [ Dial v (picker) ][ New dial ]
---     strip    [ General ][ Groups ][ Wheel ][ Slices ][ Paging ][ Slice labels ][ Group labels ][ Icons ]
---              [ Preview ]
+--     strip    [ General ][ Groups ][ Wheel ][ Slices ][ Hub ][ Paging ][ Slice labels ][ Group labels ]
+--              [ Icons ][ Preview ]
 --     General  Name, Enabled, then Delete dial
 --     Groups   Show groups as (Categories or Flat), then the dial's groups as a drag-to-reorder list
 --              with Remove (its priority order, spec §7), then Add a group
 --     Wheel    wedges per ring (Auto by default), ring radius, open at, then Position: X and Y and
 --              Reset this dial's position
 --     Slices   Background (the slices' fill), Gap (the slice gap), Highlight (the hovered slice's
---              fill), Hub (style, hub and circle size, line width, backdrop color, border size and
---              color, circle color) and Pointer (show, size, color), each color with its class-color
---              companion
+--              fill), each color with its class-color companion
+--     Hub      Hub (style, hub and circle size, line width, backdrop color, border size and color,
+--              circle color) and Pointer (show, size, offset, color), each color with its class-color
+--              companion (on Slices until dial polish, 2026-10-21; the paths kept)
 --     Paging   a paged ring's row under the dial: Position (offset), Arrows (size, spacing, colors) and
---              Page indicator (dot size, current page width, spacing, colors)
+--              Page indicator (dot size, current page width, spacing, colors, the indicators'
+--              background and border)
 --     Slice labels  Show labels, then the labels' Font block (font, size, outline, color, class
 --              color, shadow), grayed out while labels are off, then Tooltip (side, offset); the
 --              Labels tab until dial polish (2026-10-21) renamed it, its `dial.label.*` paths kept
@@ -49,6 +51,7 @@ local ICONS = L["Icons"]
 local LABELS = L["Slice labels"]
 local TITLES = L["Group labels"]
 local SLICES = L["Slices"]
+local HUB = L["Hub"]
 local PAGING = L["Paging"]
 
 local DIRECTION = { N = L["N"], NE = L["NE"], E = L["E"], SE = L["SE"], S = L["S"], SW = L["SW"], W = L["W"],
@@ -243,7 +246,7 @@ local function renderIcons(ctx, rows)
     h.RenderRows(ctx, Ed.Scalar(Settings.ShownIconRows(rows)), nil, nil, { noHeadings = true })
 end
 
--- The Slices, Paging, Slice labels and Group labels tabs: their rows, under their own headings.
+-- The Slices, Hub, Paging, Slice labels and Group labels tabs: their rows, under their own headings.
 local function renderStyled(ctx, rows)
     local h = H()
     if not selected() then
@@ -304,6 +307,7 @@ local function render(ctx)
         { key = GROUPS, render = renderGroups },
         { key = WHEEL, render = renderWheel },
         { key = SLICES, render = renderStyled },
+        { key = HUB, render = renderStyled },
         { key = PAGING, render = renderStyled },
         { key = LABELS, render = renderStyled },
         { key = TITLES, render = renderStyled },

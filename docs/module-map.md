@@ -75,7 +75,7 @@ The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after Li
 | 21c | `settings/Groups_When.lua` | settings | the Groups page's When editor: a drawer per condition (`H.Drawer`), Select all and Clear (Any), an inheriting group's read-only view |
 | 21d | `settings/Groups.lua` | settings | the Groups page, the same for every group, a seeded built-in set among them (General: Parent group, Inherit when conditions, Restore built-in groups; Callouts: Add callout, Reuse callout, the glyph list; Preview as a table) |
 | 21e | `settings/Pads.lua` | settings | the Pad page (Comms Pad until the dial polish, 2026-10-21) |
-| 21e2 | `settings/Dials.lua` | settings | the Dial page (General, Groups, Wheel, Slices, Paging, Slice labels, Group labels, Icons, Preview) |
+| 21e2 | `settings/Dials.lua` | settings | the Dial page (General, Groups, Wheel, Slices, Hub, Paging, Slice labels, Group labels, Icons, Preview) |
 | 21f | `settings/Share.lua` | settings | the Share page (Export, Import) |
 | 21g | `settings/SlashVerbs.lua` | verbs | `NS.SlashVerbs`: the verb bodies (`check`, `SetLocked` for `lock` / `unlock`, `TogglePads` and `PadsShown` for `toggle`, the hidden state saved per character in `db.char.padsHidden`, `preview`, `why`); the Toggle Comms Pads binding's hidden `QuickCommsTogglePads` button and label |
 | 22 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |

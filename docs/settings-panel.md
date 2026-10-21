@@ -585,7 +585,9 @@ Preview  each ring as the current or previewed situation builds it, wedge by wed
   disc and a clear strip that wide parts it from its neighbors (one slice has none). Highlight is
   `dial.slice.highlight`, the fill the slice the cursor points into takes (gold, faint), anywhere on
   the disc outside the hub's circle, moving with its slice; a click anywhere in a used slice, the
-  hub's edge to the rim, sends it, and a click inside the hub's circle goes up a ring or closes (a point in a gap belongs to the slice whose bearing it is in). Hub (dial polish) is
+  hub's edge to the rim, sends it, and a click inside the hub's circle goes up a ring or closes (a point in a gap belongs to the slice whose bearing it is in).
+- **Hub** (dial polish, 2026-10-21: its Hub and Pointer headings sat on Slices until then; the
+  paths are kept, so saved settings are untouched; the tab follows Slices). Hub is
   `dial.hub.*`: Hub style (Solid circle, the default; Hollow ring; Target, a ring with a dot; Rimmed
   disc, a filled circle on a rimmed backdrop), Hub size (24 to 80, default 40: the backdrop's width,
   where the slices and the pointer start), Circle size (4 to 60, default 22), Line width (1 to 6,
@@ -619,8 +621,8 @@ Preview  each ring as the current or previewed situation builds it, wedge by wed
   and the wedges that open a ring. It is a listing (owner ruling R3); the drawn dial is the
   in-game preview (test mode, Preview as…).
 
-The page's Defaults puts groups-as, wedges per ring, ring radius, icon offset, open at, the Slices (Hub
-included), Paging, Slice labels, Group labels and Icons tabs back to their defaults and turns the dial on, in one act (`Library.Batch`); the name, groups
+The page's Defaults puts groups-as, wedges per ring, ring radius, icon offset, open at, the Slices, Hub,
+Paging, Slice labels, Group labels and Icons tabs back to their defaults and turns the dial on, in one act (`Library.Batch`); the name, groups
 and position are kept, and the key, WoW's own binding, is never touched.
 
 ## Share

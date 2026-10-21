@@ -95,7 +95,8 @@ end
 --- The Dial page's Slices tab (`dial.slice.*`, 2026-10-21): each slice's fill (the dial's dark disc,
 --- as it was), the Slice gap between neighboring slices (pixels, 0 draws them touching; dial polish
 --- 2026-10-21, which retired the Border lines), the fill a hovered slice takes, and the pointer in the
---- hub that turns toward the cursor.
+--- hub that turns toward the cursor (the Hub tab's Pointer heading since dial polish, 2026-10-21; its
+--- `dial.slice.*` paths kept).
 function D.DialSlice()
     return {
         background = { r = 0.06, g = 0.06, b = 0.08, a = 0.80 }, useClassColorBackground = false,
@@ -107,7 +108,7 @@ function D.DialSlice()
     }
 end
 
---- The Comms Dial's hub (`dial.hub.*`, the Slices tab's Hub heading; dial polish 2026-10-21, which
+--- The Comms Dial's hub (`dial.hub.*`, the Hub tab's Hub heading; dial polish 2026-10-21, which
 --- retired the red close mark): a Backdrop disc `size` across (the hub's geometry: the pointer, the
 --- tracker and the catcher start at its edge), with a rim `borderSize` thick (0 draws none; the
 --- Rimmed disc style draws one of at least 2), and a Circle mark `circleSize` across in the style's
