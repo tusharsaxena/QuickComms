@@ -132,9 +132,9 @@ function S.Paint(ring, spec, look)
 end
 
 --- Light the slice the cursor points into: `angle` (radians clockwise from N) and `dist` (pixels)
---- from the hub's center. Outside the hub and inside the disc, the slice holding that bearing
+--- from the hub's center. Outside the hub's square and inside the disc, the slice holding that bearing
 --- (DL.SliceAt: angle only, so a point in a gap belongs to the slice whose angle it is in) lights
---- when a wedge sits on it; anywhere else (the hub, past the rim, an empty place) none does. Answers
+--- when a wedge sits on it; anywhere else (the hub's square, past the rim, an empty place) none does. Answers
 --- true, the slice lit before and the slice lit now when that changed (Dial_Render hovers the wedges
 --- on them), else nothing.
 function S.Track(ring, angle, dist)

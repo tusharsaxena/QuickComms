@@ -29,9 +29,11 @@ local _, NS = ...
 -- button over its disc, under the header's frame level (so the hub keeps its clicks). Its wrapped
 -- click reads the cursor with the restricted GetMousePosition, finds the slice by the same math as
 -- DialLayout.SliceAt from the ring's qc-size, qc-start, qc-hub and qc-disc (written by DS.Load), and
--- answers the slice's name ("w3") when a wedge sits there: the catcher's type-w3 = "click" and
--- clickbutton-w3 = that wedge forward the click, and the wedge's own wrap (which takes "w<j>" as a left
--- click) and SendEngine's hook run as for any click. An empty place, the hub area or past the rim does
+-- answers the slice's name ("w3") when a wedge sits there: the catcher's *type-w3 = "click" and
+-- *clickbutton-w3 = that wedge forward the click (the any-modifier form: the client reads
+-- `shift-type-w3` then `*type-w3`, never the plain key, while a modifier is held), and the wedge's own
+-- wrap (which takes "w<j>" as a left click) and SendEngine's hook run as for any click. An empty place,
+-- the hub's square (the header is a square button, so its corners are the hub's) or past the rim does
 -- nothing; any button but the left closes. Works in combat: nothing is written, only read.
 --
 -- THE SCREEN CATCHER (dial polish, 2026-10-21). One full-screen secure button per dial, under the
@@ -171,8 +173,9 @@ return false
 ]]
 
 -- A ring's catcher (dial polish): the slice under the cursor, by the same math as DialLayout.SliceAt
--- (angle only, past the hub and on the disc), named for its place ("w3") when a wedge sits there; the
--- catcher's type-w<j> / clickbutton-w<j> then click that wedge with that name. Any other button closes.
+-- (angle only, outside the hub's square and on the disc), named for its place ("w3") when a wedge sits
+-- there; the catcher's *type-w<j> / *clickbutton-w<j> (any modifier) then click that wedge with that
+-- name. Any other button closes.
 local CATCHER_PRE = [[
 if down then return false end
 if button ~= "LeftButton" then owner:RunAttribute("qc-close") return false end
@@ -181,12 +184,13 @@ if not x then return false end
 local disc = self:GetAttribute("qc-disc") or 0
 local dx, dy = (x - 0.5) * disc, (y - 0.5) * disc
 local dist = math.sqrt(dx * dx + dy * dy)
-if dist <= (self:GetAttribute("qc-hub") or 0) / 2 or dist > disc / 2 then return false end
+local half = (self:GetAttribute("qc-hub") or 0) / 2
+if dist > disc / 2 or (math.abs(dx) <= half and math.abs(dy) <= half) then return false end
 local size = self:GetAttribute("qc-size") or 1
 local step = 2 * math.pi / size
 local from = math.rad(self:GetAttribute("qc-start") or 0) - step / 2
 local j = math.floor(((math.atan2(dx, dy) - from) % (2 * math.pi)) / step) + 1
-if not self:GetAttribute("type-w" .. j) then return false end
+if not self:GetAttribute("*type-w" .. j) then return false end
 return "w" .. j
 ]]
 
@@ -250,10 +254,10 @@ local function catcherAttrs(ring)
     for i, w in ipairs(ring.wedges) do onPlace[w.place or i] = w.button end
     for j = 1, math.max(NS.DialLayout.MAX_SLICES, shape.size or 0) do
         if onPlace[j] then
-            attrs["type-w" .. j], attrs["clickbutton-w" .. j] = "click", onPlace[j]
+            attrs["*type-w" .. j], attrs["*clickbutton-w" .. j] = "click", onPlace[j]
         else
-            clear[#clear + 1] = "type-w" .. j
-            clear[#clear + 1] = "clickbutton-w" .. j
+            clear[#clear + 1] = "*type-w" .. j
+            clear[#clear + 1] = "*clickbutton-w" .. j
         end
     end
     return attrs, clear

@@ -187,7 +187,7 @@ end
 --- One ring's catcher (dial polish, 2026-10-21): a SecureActionButtonTemplate button in `ring` that
 --- Dial.lua sizes to the disc, registered for the up edge only, its click wrapped by the header's
 --- catcher snippet, which forwards a left click to the wedge whose slice is under the cursor
---- (`type-w<j> = "click"`, written by DialSecure.Load). The wedges above it take no mouse, so every
+--- (`*type-w<j> = "click"`, the any-modifier form, written by DialSecure.Load). The wedges above it take no mouse, so every
 --- mouse click on the disc lands here; its frame level sits under the header's, so the hub still
 --- takes the hub's clicks. Nil in combat.
 function SE.NewDialCatcher(header, ring, pre)

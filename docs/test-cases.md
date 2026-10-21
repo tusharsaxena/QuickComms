@@ -50,6 +50,7 @@ Total.
 - mock: [final 2] two owners binding one key: the newest wins, and clearing it hands the key back
 - mock secure: GetMousePosition reads the cursor inside a frame, nil outside
 - mock secure: type click forwards to clickbutton-<button>
+- mock secure: a held modifier reads <mod>- and * attributes, never the plain button form
 
 ### test_bus.lua (2)
 
@@ -1109,6 +1110,8 @@ Total.
 - dial: [pointer] the pointer is a catalog glyph, sized, colored and placed by the Slices tab, and can be off
 - dial: [labels] the Label offset moves every label out from the center; the title and the page row follow
 - dial: [polish] a click near the hub sends the lit slice, in combat
+- dial: [polish] a click with a modifier held still sends the slice, in combat
+- dial: [polish] the hub's square corners light nothing and click nothing
 - dial: [polish] a click on an empty place or in the hub sends nothing
 - dial: [polish] hovering anywhere in a slice shows its tooltip
 - dial: [polish] wedges take no mouse; keys still click by name
@@ -1221,7 +1224,7 @@ Total.
 | Suite | Cases |
 |-------|------:|
 | test_harness.lua | 11 |
-| test_mock_secure.lua | 26 |
+| test_mock_secure.lua | 27 |
 | test_bus.lua | 2 |
 | test_surface_parity.lua | 15 |
 | test_setup.lua | 27 |
@@ -1264,7 +1267,7 @@ Total.
 | test_surfaces.lua | 27 |
 | test_pad_render.lua | 21 |
 | test_pad.lua | 45 |
-| test_dial.lua | 53 |
+| test_dial.lua | 55 |
 | test_icon_style.lua | 9 |
 | test_glow.lua | 11 |
 | test_vendor_sync.lua | 3 |
@@ -1274,4 +1277,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1048** |
+| **Total** | **1051** |

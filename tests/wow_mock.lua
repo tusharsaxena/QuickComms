@@ -23,6 +23,8 @@
 --   sentMacros     every macrotext a secure click ran: { text, at, frame }
 --   stateDrivers   [frame] = { [state] = expression }
 --   cvars          GetCVarBool's answers ("1" is true); ActionButtonUseKeyDown defaults on
+--   modifiers      { shift, ctrl, alt }: the keys held (IsShiftKeyDown and the rest); a secure click
+--                  reads its attributes with that prefix, as SecureButton_GetModifiedAttribute does
 --   playerGUID     UnitGUID("player")
 --   __click(b[, mouseButton])  a full press: the registered down edge, then the up edge
 --   __setCombat(on)            sets inCombat and re-evaluates every visibility driver
@@ -198,6 +200,10 @@ local function build()
     M.sentMacros   = {}
     M.stateDrivers = {}
     M.cvars        = { ActionButtonUseKeyDown = "1" }
+    M.modifiers    = {}
+    M.IsShiftKeyDown   = function() return M.modifiers.shift == true end
+    M.IsControlKeyDown = function() return M.modifiers.ctrl == true end
+    M.IsAltKeyDown     = function() return M.modifiers.alt == true end
     M.playerGUID   = "Player-1-00000001"
 
     M.GetCVarBool = function(name) return M.cvars[name] == "1" end
@@ -497,20 +503,36 @@ local function build()
         return (down and true or false) == (useDown and true or false)
     end
 
-    -- SecureButton_GetModifiedAttribute's suffix: a mouse button by its number, any other button name
-    -- (a catcher's "w3") as itself. No modifier keys are modeled.
+    -- SecureButton_GetModifiedAttribute: the suffix is a mouse button by its number, any other button
+    -- name (a catcher's "w3") as itself; the prefix is the modifiers held ("alt-ctrl-shift-", in that
+    -- order). It reads <prefix><name>-<suffix>, then *<name>-<suffix>, then <prefix><name>*, *<name>*,
+    -- and last the plain name, so while a modifier is held a plain `type-w3` is never read.
     local SUFFIX = { LeftButton = "1", RightButton = "2", MiddleButton = "3", Button4 = "4", Button5 = "5" }
     local function modified(button, name, mouseButton)
         local a = button.__attrs
+        local mods = M.modifiers or {}
+        local prefix = (mods.alt and "alt-" or "") .. (mods.ctrl and "ctrl-" or "") .. (mods.shift and "shift-" or "")
         local suffix = SUFFIX[mouseButton] or mouseButton
-        local v = suffix and a[name .. "-" .. tostring(suffix)]
-        if v == nil then v = a[name] end
-        return v
+        local keys = {}
+        if suffix then
+            local sfx = "-" .. tostring(suffix)
+            keys[#keys + 1] = prefix .. name .. sfx
+            keys[#keys + 1] = "*" .. name .. sfx
+        end
+        keys[#keys + 1] = prefix .. name .. "*"
+        keys[#keys + 1] = "*" .. name .. "*"
+        keys[#keys + 1] = name
+        for _, k in ipairs(keys) do
+            local v = a[k]
+            if v ~= nil then return v end
+        end
+        return nil
     end
 
     -- The secure action: a macro runs its macrotext; a click (`type = "click"`) clicks its
     -- `clickbutton` with the same button, as SECURE_ACTIONS.click does. Both read the attribute for
-    -- the clicking button first (`type-w3`, `clickbutton-w3`), then the plain one.
+    -- the clicking button first (`type-w3`, `clickbutton-w3`, with the modifier prefix or `*`), then the
+    -- plain one.
     local function secureOnClick(button, mouseButton, down)
         if not actsOn(button, down) then return end
         local kind = modified(button, "type", mouseButton)

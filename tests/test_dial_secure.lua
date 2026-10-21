@@ -269,9 +269,11 @@ test("dial secure: [polish] catcher and SliceAt agree", function()
             end
         end
         assertTrue(hits > 0, size .. ": some points land on a used slice")
-        assertEqual(catcher:GetAttribute("type-w" .. places[1]), "click")
-        assertTrue(catcher:GetAttribute("clickbutton-w" .. places[1]) ~= nil, "a used place forwards to its wedge")
-        if size == 4 then assertNil(catcher:GetAttribute("type-w2"), "an empty place has no type") end
+        -- red under: the plain type-w<j> in catcherAttrs (a modified click never reads it)
+        assertEqual(catcher:GetAttribute("*type-w" .. places[1]), "click", "the any-modifier form")
+        assertTrue(catcher:GetAttribute("*clickbutton-w" .. places[1]) ~= nil, "a used place forwards to its wedge")
+        assertNil(catcher:GetAttribute("type-w" .. places[1]), "no plain form")
+        if size == 4 then assertNil(catcher:GetAttribute("*type-w2"), "an empty place has no type") end
     end
 end)
 

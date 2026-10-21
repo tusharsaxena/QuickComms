@@ -837,6 +837,43 @@ test("dial: [polish] a click near the hub sends the lit slice, in combat", funct
     assertEqual(#m.blocked, 0)
 end)
 
+test("dial: [polish] a click with a modifier held still sends the slice, in combat", function()
+    local NS, m = live()
+    local ring, cursor = openPolish(NS, m, 2)
+    local east = ring.qcPlaceWedge[3]
+    m.inCombat = true
+    for _, mod in ipairs({ "shift", "ctrl", "alt" }) do
+        m.modifiers = { [mod] = true }
+        if not NS.Dial.IsOpen("d2") then m.__click(NS.Dial.Instance("d2").header, "Toggle") end
+        cursor(40, 0)
+        local before = #m.sentMacros
+        -- red under: the catcher's plain type-w<j> / clickbutton-w<j> (never read with a modifier held)
+        m.__click(ring.qcCatcher)
+        assertEqual(#m.sentMacros, before + 1, mod .. " held: the slice sends")
+        assertTrue(m.sentMacros[#m.sentMacros].frame == east, mod .. ": forwarded to the E wedge")
+    end
+    m.modifiers = {}
+    assertEqual(#m.blocked, 0)
+end)
+
+test("dial: [polish] the hub's square corners light nothing and click nothing", function()
+    local NS, m = live()
+    local ring, cursor = openPolish(NS, m, 2)
+    local dx, dy = 18, 10   -- 20.6 px out, bearing ~61 degrees (E): past the hub's circle, in its square
+    local dist, angle = math.sqrt(dx * dx + dy * dy), math.atan2(dx, dy)
+    assertEqual(NS.DialLayout.SliceAt(angle, 30, 4, 270, 40, 300), 3, "further out on that bearing: E")
+    -- red under: a round hub in DL.SliceAt (dist <= hub / 2)
+    assertNil(NS.DialLayout.SliceAt(angle, dist, 4, 270, 40, 300), "the header's square is the hub's")
+    NS.DialSlices.Track(ring, angle, dist)
+    assertNil(ring.qcLit, "the tracker lights nothing on the header")
+    m.inCombat = true
+    cursor(dx, dy)
+    -- red under: a round hub in CATCHER_PRE
+    m.__click(ring.qcCatcher)
+    assertEqual(#m.sentMacros, 0, "the catcher forwards nothing there")
+    assertEqual(#m.blocked, 0)
+end)
+
 test("dial: [polish] a click on an empty place or in the hub sends nothing", function()
     local NS, m = live()
     local ring, cursor = openPolish(NS, m, 2)

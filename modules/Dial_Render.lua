@@ -9,7 +9,7 @@ local _, NS = ...
 -- and, on a paged ring, two page arrows on each ring; and on each wedge an icon (a glyph in its color,
 -- no backdrop of its own since the dial rework, 2026-10-21), its label, a padlock, a dim veil when it
 -- sends nothing, the guard's cooling veil and a result flash. The slice the cursor points into lights
--- whole (the Slices tab's Highlight) and is hovered, anywhere outside the hub (R.PointerUpdate). The hub carries the stale hint, the lockdown chip and the test
+-- whole (the Slices tab's Highlight) and is hovered, anywhere outside the hub's square (R.PointerUpdate). The hub carries the stale hint, the lockdown chip and the test
 -- or preview label. The pointer is a plain (unprotected) child of the header that turns toward the
 -- cursor, the Slices tab's glyph, size, color and offset: its OnUpdate is set when the header shows and
 -- cleared when it hides, so a closed or stood-down dial runs nothing per frame (perf bucket
@@ -74,7 +74,7 @@ end
 
 --- While the dial is open, every frame: the pointer toward the cursor (hidden inside the dead zone,
 --- or when the Slices tab turns it off), and the slice the cursor points into lit and hovered (its
---- wedge's tooltip and hover glow), anywhere on the disc outside the hub (Slices.Track).
+--- wedge's tooltip and hover glow), anywhere on the disc outside the hub's square (Slices.Track).
 function R.PointerUpdate(pointer)
     local t0 = Perf.on and debugprofilestop()
     local header = pointer.qcHeader
