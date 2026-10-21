@@ -8,8 +8,10 @@ local _, NS = ...
 --              with Remove (its priority order, spec §7), then Add a group
 --     Wheel    wedges per ring (Auto by default), ring radius, icon offset, open at, then Position: X and Y and
 --              Reset this dial's position
---     Slices   Background (the slices' fill), Border (size, color), Highlight (the hovered slice's
---              fill) and Pointer (show, size, color), each color with its class-color companion
+--     Slices   Background (the slices' fill), Gap (the slice gap), Highlight (the hovered slice's
+--              fill), Hub (style, hub and circle size, line width, backdrop color, border size and
+--              color, circle color) and Pointer (show, size, color), each color with its class-color
+--              companion
 --     Paging   a paged ring's row under the dial: Position (offset), Arrows (size, spacing, colors) and
 --              Page indicator (dot size, current page width, spacing, colors)
 --     Labels   Show labels, then the labels' Font block (font, size, outline, color, class color,

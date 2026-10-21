@@ -476,10 +476,49 @@ end
 for _, row in ipairs(buttonRows()) do ROWS[#ROWS + 1] = row end
 
 -- The Comms Dial's Slices tab (2026-10-21): each slice's fill, the Slice gap between them (dial polish,
--- which retired the Border heading), the hovered slice's fill and the pointer, each color a composed
--- swatch with its class-color companion, stamped as dial member rows; before the Labels rows, so the
--- tab follows Wheel.
+-- which retired the Border heading), the hovered slice's fill, the Hub (hubRows) and the pointer,
+-- each color a composed swatch with its class-color companion, stamped as dial member rows; before
+-- the Labels rows, so the tab follows Wheel.
 local SLICES_TAB, SLICEP = L["Slices"], "dial.slice."
+
+-- The Slices tab's Hub heading (dial polish, 2026-10-21; `dial.hub.*`, defaults/PadStyle.lua's
+-- DialHub): the style, the backdrop's size (the hub's geometry) and the circle's, the ring styles'
+-- line width, then the backdrop's color, its border and the circle's color, each a composed swatch
+-- with its class-color companion (opacity is the swatch's alpha, as every color row's).
+local HUBP = "dial.hub."
+local HUB_STYLE = choices({ { "solid", L["Solid circle"] }, { "ring", L["Hollow ring"] }, { "target", L["Target"] },
+    { "rimmed", L["Rimmed disc"] } })
+local function hubRows(O, checks)
+    local hdef, HUB = T.dial.hub, L["Hub"]
+    local function solid() return (NS.SchemaRuntime.Get(HUBP .. "style") or hdef.style) == "solid" end
+    local function size(key, label, lo, hi, desc, extra)
+        local r = { path = HUBP .. key, instance = "dial", type = "number", default = hdef[key], min = lo, max = hi,
+            step = 1, page = "dials", group = SLICES_TAB, subgroup = HUB, label = label, desc = desc,
+            validate = NUMBER, normalize = clamp(lo, hi, true) }
+        for k, v in pairs(extra or {}) do r[k] = v end
+        return r
+    end
+    local out = { { path = HUBP .. "style", instance = "dial", type = "string", default = hdef.style, values = HUB_STYLE,
+        page = "dials", group = SLICES_TAB, subgroup = HUB, label = L["Hub style"], startsLine = true,
+        desc = L["What the middle of the dial draws: a filled circle, a hollow ring, a ring with a dot, or a filled circle on a rimmed disc."],
+        validate = oneOf(HUB_STYLE) },
+      size("size", L["Hub size"], 24, 80,
+        L["How wide the middle of the dial is, in pixels. The slices and the pointer start at its edge."]),
+      size("circleSize", L["Circle size"], 4, 60, L["How wide the circle on the hub is, in pixels."], { startsLine = true }),
+      size("lineWidth", L["Line width"], 1, 6, L["How thick the hollow ring is, in pixels."], { disabledIf = solid }) }
+    local function pair(key, label, companion)
+        stampBlock(out, O.ColorPair(blockSpec(HUBP, SLICES_TAB, HUB, hdef,
+            { key = key, label = label, companionKey = companion })), HUBP, checks, "dial")
+    end
+    pair("background", L["Backdrop color"], "useClassColorBackground")
+    out[#out + 1] = size("borderSize", L["Hub border size"], 0, 6,
+        L["How thick the rim around the hub is, in pixels. 0 draws none; Rimmed disc always draws one."],
+        { startsLine = true })
+    pair("borderColor", L["Hub border color"], "useClassColorBorder")
+    pair("circleColor", L["Circle color"], "useClassColorCircle")
+    return out
+end
+
 local function sliceRows()
     local O = NS.addon.Settings.Helpers
     local checks = composedChecks(O)
@@ -504,6 +543,8 @@ local function sliceRows()
         desc = L["The space between slices, in pixels. 0 draws them touching."],
         validate = NUMBER, normalize = clamp(0, 20, true) })
     for _, r in ipairs(pair(L["Highlight"], "highlight", L["Highlight color"])) do out[#out + 1] = r end
+    checks.circleColor, checks.useClassColorCircle = checks.background, { validate = BOOL }
+    for _, r in ipairs(hubRows(O, checks)) do out[#out + 1] = r end
     out[#out + 1] = row(POINTER, { path = SLICEP .. "pointerShow", type = "bool", default = sdef.pointerShow,
         label = L["Show pointer"], startsLine = true,
         desc = L["Draw the pointer in the middle of the dial that turns toward the cursor."], validate = BOOL })

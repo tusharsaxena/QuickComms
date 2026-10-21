@@ -4,7 +4,8 @@ local _, NS = ...
 -- allows in combat; it never touches an attribute or a protected frame's geometry or visibility (the
 -- header's snippets show and hide the rings; modules/Dial.lua sizes and places the frames, out of
 -- combat). As modules/Pad_Render.lua dresses a pad's secure buttons, this dresses the dial's secure
--- frames: the hub's close mark and pointer on the header; a title, its slices (modules/Dial_Slices.lua)
+-- frames: the hub (a backdrop disc and a circle mark in the Hub heading's style, R.PaintHubLook) and
+-- the pointer on the header; a title, its slices (modules/Dial_Slices.lua)
 -- and, on a paged ring, two page arrows on each ring; and on each wedge an icon (a glyph in its color,
 -- no backdrop of its own since the dial rework, 2026-10-21), its label, a padlock, a dim veil when it
 -- sends nothing, the guard's cooling veil and a result flash. The slice the cursor points into lights
@@ -34,11 +35,10 @@ local DEFAULT_ICON = "Interface\\Icons\\INV_Misc_QuestionMark"
 local ARROW_ICONS = { prev = { "ph:caret-left", "Interface\\Buttons\\UI-SpellbookIcon-PrevPage-Up" },
     next = { "ph:caret-right", "Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up" } }
 local POINTER_GLYPH = "ph:caret-up"
--- The padlock and the hub's close are the shared catalog's `lock` and `close` marks
--- (library-stack-§8), resolved at draw time; these Blizzard textures are drawn only when the catalog
--- answers nil (the library absent).
+-- The padlock is the shared catalog's `lock` mark (library-stack-§8), resolved at draw time; this
+-- Blizzard texture is drawn only when the catalog answers nil (the library absent). The hub's red
+-- close mark is retired (dial polish, 2026-10-21): the hub draws its Hub heading's style instead.
 local LOCK_ICON = "Interface\\PetBattles\\PetBattle-LockIcon"
-local CLOSE_ICON = "Interface\\Buttons\\UI-StopButton"
 local POINTER_ICON = "Interface\\Minimap\\MinimapArrow"
 
 -- One catalog mark on `tex`, tinted (the catalog art is white), or the Blizzard fallback untinted.
@@ -99,10 +99,25 @@ function R.PointerUpdate(pointer)
     if t0 then Perf.Note("dialRender", debugprofilestop() - t0) end
 end
 
---- Build the hub's regions and the pointer, once per header. `onEnter(header)` runs on hover. The hub,
---- its close mark, its labels and the pointer sit on a plain, mouse-off frame above the rings
---- (`qcPointer`, raised by R.RaiseFront), so the slices never draw over them; the header under it
---- still takes the hub's clicks.
+-- The hub's circle mark at rest and hovered: its color's alpha times these (the hub is clickable, so
+-- the circle brightens under the cursor).
+local HUB_REST, HUB_LIT = 0.8, 1.0
+
+-- The circle mark (the filled circle and the ring's segments) in the hub's circle color, lit or at
+-- rest. Insecure textures only, so combat-safe.
+local function tintCircle(header, lit)
+    local c = header.qcHubCircle
+    if not c then return end
+    local a = c.a * (lit and HUB_LIT or HUB_REST)
+    header.qcHubDot:SetVertexColor(c.r, c.g, c.b, a)
+    for _, t in ipairs(header.qcHubRing) do t:SetColorTexture(c.r, c.g, c.b, a) end
+end
+
+--- Build the hub's regions and the pointer, once per header. `onEnter(header)` runs on hover. The hub
+--- (its backdrop disc `qcHub`, the backdrop's rim `qcHubRim` and the hollow ring `qcHubRing`, each
+--- a list of DL.ARC straight segments, and the filled circle `qcHubDot`), its labels and the pointer
+--- sit on a plain, mouse-off frame above the rings (`qcPointer`, raised by R.RaiseFront), so the
+--- slices never draw over them; the header under it still takes the hub's clicks.
 function R.DressHub(header, onEnter)
     if header.qcDressed then return header end
     header.qcDressed = true
@@ -112,10 +127,8 @@ function R.DressHub(header, onEnter)
     front.qcHeader = header
     header.qcPointer = front
     header.qcHub = circle(front, "BORDER", DL.HUB, 0.12, 0.12, 0.14, 0.95)
-    header.qcClose = front:CreateTexture(nil, "ARTWORK")
-    mark(header.qcClose, "close", CLOSE_ICON, 1.0, 0.35, 0.35)   -- red, as the stop button reads
-    header.qcClose:SetSize(DL.HUB - 16, DL.HUB - 16)
-    header.qcClose:SetPoint("CENTER", header, "CENTER", 0, 0)
+    header.qcHubRim, header.qcHubRing = {}, {}
+    header.qcHubDot = circle(front, "ARTWORK", 22, 1, 0.82, 0, 1)
     header.qcStale = front:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     header.qcStale:SetPoint("TOP", header, "BOTTOM", 0, -2)
     header.qcStale:SetText(L["updates after combat"])
@@ -134,12 +147,19 @@ function R.DressHub(header, onEnter)
     header:HookScript("OnHide", function()
         front:SetScript("OnUpdate", nil)
         front.qcArrow:Hide()
+        tintCircle(header, false)
         -- the snippet hid the rings first, so clear every one the rebuild loaded
         for _, ring in ipairs(header.qcRingFrames or {}) do track(ring, 0, 0) end
     end)
-    header:HookScript("OnEnter", function(self) if onEnter then onEnter(self) end end)
+    header:HookScript("OnEnter", function(self)
+        tintCircle(self, true)
+        if onEnter then onEnter(self) end
+    end)
     header.qcHeader = header
-    header:HookScript("OnLeave", function() GameTooltip:Hide() end)
+    header:HookScript("OnLeave", function(self)
+        tintCircle(self, false)
+        GameTooltip:Hide()
+    end)
     return header
 end
 
@@ -156,11 +176,27 @@ local function color(c, useClass, fallback)
     return { r = r, g = g, b = b, a = a }
 end
 
+local HUB_STYLES = { solid = true, ring = true, target = true, rimmed = true }
+
+-- The hub's look from its Hub heading (`dial.hub`, defaults/PadStyle.lua's DialHub): the style, the
+-- backdrop's size (the hub's geometry), the circle's size and line width, the backdrop's border
+-- size, and the backdrop, border and circle colors resolved through their class-color companions.
+local function hubLook(hub)
+    hub = type(hub) == "table" and hub or {}
+    local H = NS.PadDefaults.DialHub()
+    local function n(k, lo) return math.max(lo, tonumber(hub[k]) or H[k]) end
+    return { style = HUB_STYLES[hub.style] and hub.style or H.style, size = n("size", 1),
+        circleSize = n("circleSize", 1), lineWidth = n("lineWidth", 1), borderSize = n("borderSize", 0),
+        background = color(hub.background, hub.useClassColorBackground, H.background),
+        border = color(hub.borderColor, hub.useClassColorBorder, H.borderColor),
+        circle = color(hub.circleColor, hub.useClassColorCircle, H.circleColor) }
+end
+
 --- A dial's look for one rebuild: its radius (clamped); its Labels tab (`dial.label`) as a font
 --- (Pad_Render.LabelFont), whether labels show, their line height (0 when they do not) and where
 --- the tooltip goes; its Slices tab (`dial.slice`: the fill, the Slice gap in pixels, the highlight and
 --- the pointer) and Paging tab (`dial.page`, from `dial`) with each color resolved through its class
---- color companion; and the Icon offset (`dial.iconOffset`).
+--- color companion; the hub (`dial.hub`, hubLook); and the Icon offset (`dial.iconOffset`).
 function R.Look(radius, label, slice, dial)
     label = type(label) == "table" and label or {}
     slice = type(slice) == "table" and slice or {}
@@ -179,7 +215,7 @@ function R.Look(radius, label, slice, dial)
         pointerShow = slice.pointerShow ~= false, pointerSize = tonumber(slice.pointerSize) or D.pointerSize,
         pointerOffset = math.max(0, tonumber(slice.pointerOffset) or 0),
         pointer = color(slice.pointerColor, slice.useClassColorPointer, D.pointerColor),
-        iconReach = math.max(0, tonumber(dial.iconOffset) or 0),
+        iconReach = math.max(0, tonumber(dial.iconOffset) or 0), hub = hubLook(dial.hub),
         paging = { offset = n("offset"), arrowSize = math.max(8, n("arrowSize")), arrowGap = n("arrowGap"),
             dotSize = math.max(2, n("dotSize")), pillWidth = math.max(2, n("pillWidth")), dotGap = n("dotGap"),
             arrow = color(page.arrowColor, page.useClassColorArrow, P.arrowColor),
@@ -194,9 +230,59 @@ function R.PaintPointer(header, look)
     local arrow = header.qcPointer.qcArrow
     arrow:SetSize(look.pointerSize, look.pointerSize)
     arrow:SetVertexColor(look.pointer.r, look.pointer.g, look.pointer.b, look.pointer.a)
-    header.qcReach = look.pointerOffset > 0 and look.pointerOffset or DL.PointerReach(look.pointerSize)
+    header.qcReach = look.pointerOffset > 0 and look.pointerOffset
+        or DL.PointerReach(look.pointerSize, look.hub.size)
     header.qcPointerOn = look.pointerShow
     if not look.pointerShow then arrow:Hide() end
+end
+
+-- One circle of DL.ARC straight segments in `list` (grown on first use), `radius` out from the hub's
+-- center to its outer edge, `thick` pixels across, in `c`; `n` 0 hides them all. As the slices' rim
+-- was drawn before dial polish retired it.
+local function arc(header, list, n, radius, thick, c)
+    local r = radius - thick / 2
+    local chord = 2 * r * math.sin(math.pi / DL.ARC) + 1   -- one pixel over, so no seam shows
+    for k = 1, math.max(n, #list) do
+        local t = list[k]
+        if not t then
+            t = header.qcPointer:CreateTexture(nil, "ARTWORK")
+            list[k] = t
+        end
+        if k <= n then
+            local a = (k - 0.5) * 2 * math.pi / DL.ARC
+            t:SetColorTexture(c.r, c.g, c.b, c.a)
+            t:ClearAllPoints()
+            t:SetPoint("CENTER", header, "CENTER", r * math.sin(a), r * math.cos(a))
+            t:SetSize(thick, chord)
+            -- a segment runs along the circle: across its radius, so a quarter turn more
+            t:SetRotation(-a + math.pi / 2)
+            t:Show()
+        else
+            t:Hide()
+        end
+    end
+end
+
+--- The hub in the dial's look (R.Look's `hub`): the backdrop disc its size across in its color,
+--- with a rim of its border size (any style; Rimmed disc at least 2), and the circle mark by style:
+--- `solid` a filled circle of the circle size; `ring` a hollow ring of the circle size, line width
+--- thick; `target` that ring and a dot of a quarter of it (at least 4); `rimmed` the filled circle.
+--- The circle rests dimmer and brightens while the hub is hovered.
+function R.PaintHubLook(header, look)
+    local hub = (look or R.Look()).hub
+    local b = hub.background
+    header.qcHub:SetSize(hub.size, hub.size)
+    header.qcHub:SetVertexColor(b.r, b.g, b.b, b.a)
+    local style, cs = hub.style, hub.circleSize
+    local rim = style == "rimmed" and math.max(hub.borderSize, 2) or hub.borderSize
+    arc(header, header.qcHubRim, rim > 0 and DL.ARC or 0, hub.size / 2, rim, hub.border)
+    local ringed = style == "ring" or style == "target"
+    arc(header, header.qcHubRing, ringed and DL.ARC or 0, cs / 2, hub.lineWidth, hub.circle)
+    local dot = style == "target" and math.max(4, cs / 4) or cs
+    header.qcHubDot:SetSize(dot, dot)
+    header.qcHubDot:SetShown(style ~= "ring")
+    header.qcHubCircle = hub.circle
+    tintCircle(header, false)
 end
 
 --- Where the dial's tooltips go (the Labels tab's side and offset): outside the dial, clear of the

@@ -69,13 +69,13 @@ test("dial: a refused callout is a dimmed, disarmed wedge; a ring wedge is disar
     assertNil(ringWedge:GetAttribute("type"))
 end)
 
-test("dial: [audit QC-07] the hub's close and a wedge's padlock are catalog marks, with the Blizzard art as the nil fallback", function()
+test("dial: [audit QC-07] a wedge's padlock is a catalog mark, with the Blizzard art as the nil fallback (the hub's close retired)", function()
     local NS, m = live()
     NS.Dial.Apply(1, "d2", planOf(NS))
     local h = NS.Dial.Instance("d2").header
-    -- red under: SetTexture(CLOSE_ICON) / SetTexture(LOCK_ICON) unconditionally in modules/Dial_Render.lua
-    assertTrue(NS.Icon("close") ~= nil)
-    assertEqual(h.qcClose.__texture, NS.Icon("close"))
+    -- red under: SetTexture(LOCK_ICON) unconditionally in modules/Dial_Render.lua
+    -- red under: keep the hub's close mark (dial polish retired it for the hub styles)
+    assertNil(h.qcClose)
     local w = NS.Dial.RingWedges("d2", 1)[1]
     assertEqual(w.qcLock.__texture, NS.Icon("lock"))
     local real = NS.Icon
@@ -83,7 +83,7 @@ test("dial: [audit QC-07] the hub's close and a wedge's padlock are catalog mark
     local bare = NS.DialRender.DressHub(m.CreateFrame("Frame", "QuickCommsDialProbe", m.UIParent))
     local wedge = NS.DialRender.DressWedge(m.CreateFrame("Button", "QuickCommsDialProbeWedge", m.UIParent))
     NS.Icon = real
-    assertEqual(bare.qcClose.__texture, "Interface\\Buttons\\UI-StopButton")
+    assertNil(bare.qcClose)
     assertEqual(wedge.qcLock.__texture, "Interface\\PetBattles\\PetBattle-LockIcon")
 end)
 
@@ -729,13 +729,13 @@ test("dial slices: [polish] gap 0 draws as before", function()
     end
 end)
 
-test("dial: [front] the hub, its close mark and the pointer draw over the slices", function()
+test("dial: [front] the hub, its circle and the pointer draw over the slices", function()
     local NS = live()
     assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
     local inst = NS.Dial.Instance("d2")
     local front = inst.header.qcPointer
-    -- red under: the hub's circle and close mark on the header, under the rings' fills
-    assertTrue(inst.header.qcHub:GetParent() == front and inst.header.qcClose:GetParent() == front)
+    -- red under: the hub's backdrop and circle on the header, under the rings' fills
+    assertTrue(inst.header.qcHub:GetParent() == front and inst.header.qcHubDot:GetParent() == front)
     for _, ring in ipairs(inst.rings.active) do
         assertTrue(front:GetFrameLevel() > ring:GetFrameLevel(), "above every ring")
         for _, w in ipairs(ring.qcWedges.active) do assertTrue(front:GetFrameLevel() > w:GetFrameLevel()) end
@@ -919,4 +919,108 @@ test("dial: [polish] a ring hidden under the hover clears its slice, tooltip and
     assertNil(wedge.qcHovered, "its wedge's hover glow off")
     m.__click(inst.header, "LeftButton")   -- the hub goes up a ring
     assertNil(ring.qcLit)
+end)
+
+-- ── hub styles (dial polish T5): a backdrop disc and a circle mark ─────────────────────────────
+
+-- The default dial applied with `hub` written to its dial.hub rows; answers its header.
+local function hubWith(NS, hub)
+    for k, v in pairs(hub or {}) do assertTrue(NS.SchemaRuntime.Set("dial.hub." .. k, v, "d2"), k) end
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    return NS.Dial.Instance("d2").header
+end
+
+-- The distance from the header's center of a region's one anchor.
+local function reachOf(t)
+    local _, _, _, x, y = t:GetPoint(1)
+    return math.sqrt((x or 0) ^ 2 + (y or 0) ^ 2)
+end
+
+test("dial: [polish] default hub is a solid gold circle of 22 on a 40 backdrop, no red X", function()
+    local NS = live()
+    local h = hubWith(NS)
+    -- red under: keep R.DressHub's qcClose (the red stop mark)
+    assertNil(h.qcClose, "the red X is gone")
+    assertEqual(h.__w, 40, "the header is the hub's size")
+    assertTrue(h.qcHub:IsShown())
+    assertEqual(h.qcHub.__size[1], 40, "the backdrop, 40 across")
+    assertEqual(h.qcHub.__color[1], 0.12)
+    -- red under: no qcHubDot / no R.PaintHubLook in Dial.Apply
+    assertTrue(h.qcHubDot:IsShown(), "solid: the circle")
+    assertEqual(h.qcHubDot.__size[1], 22)
+    assertEqual(h.qcHubDot.__color[1] .. "," .. h.qcHubDot.__color[2], "1,0.82", "gold")
+    assertEqual(shownOf(h.qcHubRing), 0, "no hollow ring")
+    assertEqual(shownOf(h.qcHubRim), 0, "no backdrop rim at border size 0")
+    local rest = h.qcHubDot.__color[4]
+    h:__fire("OnEnter")
+    -- red under: no brightening in the header's OnEnter hook
+    assertTrue(h.qcHubDot.__color[4] > rest, "hovered, the circle brightens")
+    h:__fire("OnLeave")
+    assertEqual(h.qcHubDot.__color[4], rest, "and dims back")
+end)
+
+test("dial: [polish] hub style solid draws the backdrop rim when its border size is set", function()
+    local NS = live()
+    local h = hubWith(NS, { style = "solid", borderSize = 3, borderColor = { r = 0, g = 0, b = 1, a = 1 } })
+    assertTrue(h.qcHubDot:IsShown())
+    -- red under: draw the backdrop rim only for the rimmed style
+    assertEqual(shownOf(h.qcHubRim), NS.DialLayout.ARC, "any style draws the backdrop's border")
+    local seg = h.qcHubRim[1]
+    assertEqual(seg.__size[1], 3, "border size thick")
+    assertEqual(seg.__color[3], 1, "in the border color")
+    assertTrue(math.abs(reachOf(seg) - (20 - 1.5)) < 0.01, "on the backdrop's edge")
+end)
+
+test("dial: [polish] hub style ring is a hollow ring of the circle size and line width", function()
+    local NS = live()
+    local h = hubWith(NS, { style = "ring", circleSize = 30, lineWidth = 4 })
+    -- red under: PaintHubLook ignoring the style (solid always)
+    assertFalse(h.qcHubDot:IsShown(), "no filled circle")
+    assertEqual(shownOf(h.qcHubRing), NS.DialLayout.ARC)
+    assertEqual(h.qcHubRing[1].__size[1], 4, "line width thick")
+    assertTrue(math.abs(reachOf(h.qcHubRing[1]) - (15 - 2)) < 0.01, "the circle size across")
+    assertEqual(h.qcHubRing[1].__color[2], 0.82, "in the circle color")
+    assertEqual(shownOf(h.qcHubRim), 0)
+end)
+
+test("dial: [polish] hub style target is a ring with a center dot", function()
+    local NS = live()
+    local h = hubWith(NS, { style = "target", circleSize = 32 })
+    -- red under: target drawn as the ring alone
+    assertEqual(shownOf(h.qcHubRing), NS.DialLayout.ARC)
+    assertTrue(h.qcHubDot:IsShown())
+    assertEqual(h.qcHubDot.__size[1], 8, "a quarter of the circle size")
+    h = hubWith(NS, { circleSize = 8 })
+    assertEqual(h.qcHubDot.__size[1], 4, "never under 4")
+end)
+
+test("dial: [polish] hub style rimmed is a filled circle on a backdrop with its own rim", function()
+    local NS = live()
+    local h = hubWith(NS, { style = "rimmed" })
+    assertTrue(h.qcHubDot:IsShown())
+    assertEqual(h.qcHubDot.__size[1], 22)
+    -- red under: the rimmed style drawn without its rim at border size 0
+    assertEqual(shownOf(h.qcHubRim), NS.DialLayout.ARC, "rimmed at border size 0: a 2 px rim")
+    assertEqual(h.qcHubRim[1].__size[1], 2)
+    assertEqual(shownOf(h.qcHubRing), 0)
+    h = hubWith(NS, { borderSize = 5 })
+    assertEqual(h.qcHubRim[1].__size[1], 5, "the border size when larger")
+end)
+
+test("dial: [polish] hub size moves the inner edge everywhere", function()
+    local NS = live()
+    local h = hubWith(NS, { size = 60 })
+    -- red under: header:SetSize(DL.HUB, DL.HUB) in Dial.build
+    assertEqual(h.__w .. "x" .. h.__h, "60x60", "the header is the hub")
+    assertEqual(h.qcHub.__size[1], 60, "the backdrop")
+    local ring = NS.Dial.Instance("d2").rings.active[2]
+    -- red under: shape.hub = DL.HUB in Dial.Apply
+    assertEqual(ring.qcCatcher:GetAttribute("qc-hub"), 60, "the catcher's inner edge")
+    -- red under: DL.HUB in Slices.Track
+    NS.DialSlices.Track(ring, -math.pi / 2, 29)
+    assertNil(ring.qcLit, "inside the hub: nothing")
+    NS.DialSlices.Track(ring, -math.pi / 2, 31)
+    assertEqual(ring.qcLit, 1, "just past it: W")
+    -- red under: DL.PointerReach reading DL.HUB
+    assertTrue(h.qcReach > 30, "the pointer sits outside the hub")
 end)

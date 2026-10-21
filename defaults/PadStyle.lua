@@ -96,6 +96,21 @@ function D.DialSlice()
     }
 end
 
+--- The Comms Dial's hub (`dial.hub.*`, the Slices tab's Hub heading; dial polish 2026-10-21, which
+--- retired the red close mark): a Backdrop disc `size` across (the hub's geometry: the pointer, the
+--- tracker and the catcher start at its edge), with a rim `borderSize` thick (0 draws none; the
+--- Rimmed disc style draws one of at least 2), and a Circle mark `circleSize` across in the style's
+--- shape (`solid` a filled circle, `ring` a hollow ring `lineWidth` thick, `target` a ring and a
+--- center dot, `rimmed` a filled circle on the rimmed backdrop). Opacity is each color's alpha.
+function D.DialHub()
+    return {
+        style = "solid", size = 40, circleSize = 22, lineWidth = 2,
+        background = { r = 0.12, g = 0.12, b = 0.14, a = 0.95 }, useClassColorBackground = false,
+        borderSize = 0, borderColor = { r = 1, g = 0.82, b = 0, a = 1 }, useClassColorBorder = false,
+        circleColor = { r = 1, g = 0.82, b = 0, a = 1 }, useClassColorCircle = false,
+    }
+end
+
 --- The Comms Dial's Paging tab (`dial.page.*`, 2026-10-21): a paged ring's row under the dial. Its
 --- distance under the dial's labels; the two arrows (round plates in the slices' fill, gold chevrons)
 --- and how far they stand from the indicators; the indicators, a gold pill for the page shown and a

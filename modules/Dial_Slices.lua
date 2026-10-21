@@ -117,15 +117,15 @@ local function paintDots(ring, spec, look)
 end
 
 --- Draw one ring's slices and page row in the dial's look (Dial_Render.Look), and keep its shape
---- for Track: the slice count, where wedge 1 sits, the disc, the gap's shift (DL.SliceShift) and
---- which places hold a wedge.
+--- for Track: the slice count, where wedge 1 sits, the disc, the gap's shift (DL.SliceShift), the
+--- hub across (its Hub size: the tracker's inner edge) and which places hold a wedge.
 function S.Paint(ring, spec, look)
     S.Dress(ring)
     local used = {}
     for i, item in ipairs(spec.items or {}) do used[item.wedge or i] = true end
     ring.qcShape = { size = spec.size, start = tonumber(spec.start) or 0, used = used,
         disc = DL.Geometry(look.radius, look.line, look.labelReach).disc,
-        shift = DL.SliceShift(look.gap, spec.size) }
+        shift = DL.SliceShift(look.gap, spec.size), hub = look.hub and look.hub.size or DL.HUB }
     ring.qcLit = nil
     paintFills(ring, spec, look)
     paintDots(ring, spec, look)
@@ -140,7 +140,7 @@ end
 function S.Track(ring, angle, dist)
     local shape, hl = ring.qcShape, ring.qcHighlight
     if not (shape and hl) then return end
-    local j = DL.SliceAt(angle, dist, shape.size, shape.start, DL.HUB, shape.disc)
+    local j = DL.SliceAt(angle, dist, shape.size, shape.start, shape.hub, shape.disc)
     if j and not shape.used[j] then j = nil end
     local was = ring.qcLit
     if j == was then return end

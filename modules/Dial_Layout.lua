@@ -45,7 +45,8 @@ local L = NS.L
 DL.RADIUS  = 100                               -- a wedge's center from the hub's center, by default
 DL.RADIUS_MIN, DL.RADIUS_MAX = 70, 180         -- the Ring radius row's range
 DL.WEDGE   = 44                                -- a wedge button, square
-DL.HUB     = 40                                -- the hub (the header button)
+DL.HUB     = 40                                -- the hub (the header button), by default (dial.hub.size)
+DL.ARC     = 64                                -- straight segments drawing the hub's ring and rim
 DL.RIM     = 20                                -- from a wedge's outer edge to the disc's edge
 DL.LABEL_GAP = 2                               -- a wedge's label starts this far past the wedge's edge
 DL.LINE    = 14                                -- one line of label or title text
@@ -214,9 +215,9 @@ function DL.IconReach(radius, at)
 end
 
 --- The pointer's distance from the hub's center for a pointer `size` pixels across: just outside
---- the hub.
-function DL.PointerReach(size)
-    return DL.HUB / 2 + (tonumber(size) or 16) / 2 + 2
+--- the hub, `hub` pixels across (DL.HUB when none: the Hub size row, dial polish).
+function DL.PointerReach(size, hub)
+    return (tonumber(hub) or DL.HUB) / 2 + (tonumber(size) or 16) / 2 + 2
 end
 
 -- A label reads outward from the disc (owner, 2026-10-21: wholly outside it): its anchor sits on the

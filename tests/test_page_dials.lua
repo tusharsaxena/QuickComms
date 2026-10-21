@@ -286,7 +286,8 @@ test("dials page: [slices] Slices writes the fill, gap, highlight and pointer, e
     for _, heading in ipairs({ "Background", "Gap", "Highlight", "Pointer" }) do
         assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
     end
-    assertEqual(#P.all(w, "CheckBox", "Use class color"), 3, "fill, highlight and pointer")
+    -- red under: no Hub rows (dial polish T5 adds backdrop, border and circle)
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 6, "fill, highlight, hub backdrop, border, circle and pointer")
     P.find(w, "Slider", "Slice gap"):__fire("OnMouseUp", 3)
     assertEqual(NS.db.profile.dials.d2.slice.gap, 3)
     w = P.tab("dials", "Slices")
@@ -317,6 +318,33 @@ test("page dials: [polish] Slices tab has Slice gap and no Border heading", func
     NS.SchemaRuntime.Set("dial.slice.gap", 21, "d2")
     assertEqual(NS.db.profile.dials.d2.slice.gap, 20, "the gap stops at 20")
     assertFalse((NS.SchemaRuntime.Set("dial.slice.borderSize", 2, "d2")), "the retired row is refused")
+end)
+
+test("page dials: [polish] Hub heading rows on the Slices tab", function()
+    local NS, _, P = open()
+    local w = P.tab("dials", "Slices")
+    -- red under: no hubRows() in settings/SchemaMembers.lua sliceRows
+    assertEqual(#P.all(w, "Heading", "Hub"), 1, "the Hub heading, drawn once")
+    for _, label in ipairs({ "Hub size", "Circle size", "Line width", "Hub border size" }) do
+        assertTrue(P.find(w, "Slider", label) ~= nil, label)
+    end
+    local style = P.find(w, "Dropdown", "Hub style")
+    assertTrue(style ~= nil, "Hub style")
+    -- red under: no disabledIf on Line width (the solid circle has no line)
+    assertTrue(P.find(w, "Slider", "Line width").disabled, "solid: no line width")
+    style:__fire("OnValueChanged", "target")
+    assertEqual(NS.db.profile.dials.d2.hub.style, "target")
+    w = P.tab("dials", "Slices")
+    assertFalse(P.find(w, "Slider", "Line width").disabled, "target: line width")
+    P.find(w, "Slider", "Hub size"):__fire("OnMouseUp", 60)
+    assertEqual(NS.db.profile.dials.d2.hub.size, 60)
+    assertEqual(NS.Dial.Instance("d2").header.__w, 60, "the dial rebuilt with the hub")
+    NS.SchemaRuntime.Set("dial.hub.size", 200, "d2")
+    assertEqual(NS.db.profile.dials.d2.hub.size, 80, "the hub stops at 80")
+    assertFalse((NS.SchemaRuntime.Set("dial.hub.style", "square", "d2")), "an unknown style is refused")
+    P.ctx("dials").panel.defaultsOnClick()
+    assertEqual(NS.db.profile.dials.d2.hub.style, "solid")
+    assertEqual(NS.db.profile.dials.d2.hub.size, 40)
 end)
 
 test("dials page: [slices] every slice texture the dial names ships under media/textures", function()

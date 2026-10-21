@@ -172,7 +172,6 @@ end
 
 local function build(index)
     local header = DS.NewHeader(index)
-    header:SetSize(DL.HUB, DL.HUB)   -- protected geometry: here, under Apply, out of combat
     -- The screen catcher (dial polish): a click outside the dial, open from its key, closes it.
     local inst = { index = index, header = header, screen = DS.NewScreen(header), rings = NS.Pool.New(),
         byCallout = {}, live = false }
@@ -258,6 +257,9 @@ function Dial.Apply(index, id, plan)
     local icfg = NS.IconStyle.Config(dial.icon, "dial")
     local look = R.Look(plan.radius, dial.label, dial.slice, dial)
     local disc = DL.Geometry(look.radius, look.line, look.labelReach).disc
+    -- the header is the hub, its Hub size across (protected geometry: here, out of combat)
+    inst.header:SetSize(look.hub.size, look.hub.size)
+    R.PaintHubLook(inst.header, look)
     R.PaintPointer(inst.header, look)
     local loaded = {}
     for r, spec in ipairs(plan.rings) do
@@ -271,7 +273,7 @@ function Dial.Apply(index, id, plan)
         loaded[r] = { frame = ring, parent = spec.parent, prev = spec.prev, next = spec.next,
             arrows = { prev = ring.qcPrev, next = ring.qcNext },
             wedges = placeWedges(inst, ring, spec, icfg, look), catcher = ring.qcCatcher,
-            shape = { size = spec.size, start = tonumber(spec.start) or 0, hub = DL.HUB, disc = disc } }
+            shape = { size = spec.size, start = tonumber(spec.start) or 0, hub = look.hub.size, disc = disc } }
     end
     releaseFreeGlows(inst)
     local frames = {}
