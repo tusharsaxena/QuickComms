@@ -972,7 +972,7 @@ Total.
 - dial layout: [polish] Rings gives every unpinned item its place
 - dial layout: [art] DL.ARC is gone; every dial texture the dial modules name ships
 
-### test_surfaces.lua (27)
+### test_surfaces.lua (30)
 
 - surfaces: in a key the default pad's plan is the M+ set, baked to /p
 - surfaces: [review 5] a refused callout is a slot with its reason and no line
@@ -982,6 +982,9 @@ Total.
 - surfaces: the bake context fills {me} from the client
 - surfaces: a disabled seeded set leaves the plan
 - surfaces: the test plan is placeholder buttons that carry no line
+- surfaces: test mode's placeholders wear the built-in callouts' names and icons
+- surfaces: test mode's dial holds the four test groups
+- surfaces: test mode writes nothing to the profile
 - surfaces: the first situation read builds the default pad, armed and shown
 - surfaces: ACTIVE_GROUPS_CHANGED is sent once per real change of a pad's active groups
 - surfaces: [review 1] a situation change in combat queues: nothing blocked, stale shows, combat end rebuilds
@@ -1302,7 +1305,7 @@ Total.
 | test_master.lua | 5 |
 | test_pad_layout.lua | 21 |
 | test_dial_layout.lua | 29 |
-| test_surfaces.lua | 27 |
+| test_surfaces.lua | 30 |
 | test_pad_render.lua | 23 |
 | test_pad.lua | 45 |
 | test_dial.lua | 63 |
@@ -1317,4 +1320,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1083** |
+| **Total** | **1086** |

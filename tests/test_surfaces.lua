@@ -124,14 +124,92 @@ test("surfaces: the test plan is placeholder buttons that carry no line", functi
     local plan = NS.Surfaces.TestPlan("p1")
     assertTrue(plan.test)
     assertTrue(plan.hasActive)
-    assertEqual(#plan.sections, 2)
-    for _, sec in ipairs(plan.sections) do
-        assertEqual(#sec.slots, 4)
+    -- red under: two groups of four (owner, 2026-10-21: four groups of 4, 8, 12 and 16)
+    assertEqual(#plan.sections, 4)
+    for s, sec in ipairs(plan.sections) do
+        assertEqual(#sec.slots, 4 * s, "test group " .. s)
+        assertEqual(sec.title, ("Test group %d"):format(s))
         for _, slot in ipairs(sec.slots) do
             assertNil(slot.line)
             assertEqual(slot.reason, "testMode")
         end
     end
+end)
+
+test("surfaces: test mode's placeholders wear the built-in callouts' names and icons", function()
+    local NS = live()
+    local BI, seen = NS.BuiltIns, {}
+    local byName = {}
+    for _, c in pairs(BI.callouts) do byName[c.name] = c end
+    for _, plan in ipairs({ NS.Surfaces.TestPlan("p1"), NS.Surfaces.TestDialPlan("d2", NS.db.profile.dials.d2) }) do
+        local n = 0
+        NS.Surfaces.EachSlot(plan, function(slot)
+            n = n + 1
+            -- red under: "Callout N" placeholders with no icon
+            local c = byName[slot.name]
+            assertTrue(c ~= nil, tostring(slot.name) .. ": a built-in callout's name")
+            assertEqual(slot.icon, c.icon, slot.name .. ": its icon")
+            assertEqual(slot.iconColor, c.iconColor, slot.name .. ": its icon color")
+            assertTrue(slot.calloutId:find("^test%.") ~= nil, slot.name .. ": a placeholder id, no library callout")
+            assertNil(slot.line, slot.name .. ": sends nothing")
+            if plan.kind ~= "dial" then
+                assertTrue(not seen[slot.name], slot.name .. ": each name once across the pad's groups")
+                seen[slot.name] = true
+            end
+        end)
+        assertEqual(n, 40, (plan.kind or "pad") .. ": 4 + 8 + 12 + 16 placeholders")
+    end
+end)
+
+test("surfaces: test mode's dial holds the four test groups", function()
+    local NS = live()
+    local plan = NS.Surfaces.TestDialPlan("d2", NS.db.profile.dials.d2)
+    assertTrue(plan.test)
+    local perGroup = {}
+    for _, ring in ipairs(plan.rings) do
+        for _, item in ipairs(ring.items) do
+            if item.slot then
+                local g = item.slot.calloutId:match("^test%.(%d+)%.")
+                perGroup[g] = (perGroup[g] or 0) + 1
+            end
+        end
+    end
+    for s = 1, 4 do assertEqual(perGroup[tostring(s)], 4 * s, "dial test group " .. s) end
+end)
+
+test("surfaces: test mode writes nothing to the profile", function()
+    local NS = live()
+    -- The profile as text, keys sorted, so any write shows.
+    local function dump(v, out)
+        if type(v) ~= "table" then
+            out[#out + 1] = type(v) .. ":" .. tostring(v)
+            return out
+        end
+        local keys = {}
+        for k in pairs(v) do keys[#keys + 1] = k end
+        table.sort(keys, function(x, y) return tostring(x) < tostring(y) end)
+        out[#out + 1] = "{"
+        for _, k in ipairs(keys) do
+            out[#out + 1] = tostring(k) .. "="
+            dump(v[k], out)
+        end
+        out[#out + 1] = "}"
+        return out
+    end
+    local before = table.concat(dump(NS.db.profile, {}), " ")
+    assertTrue(NS.Preview.SetTestMode(true), "test mode on")
+    assertTrue(NS.Surfaces.Request("test"), "the surfaces rebuilt in test mode")
+    NS.Surfaces.TestPlan("p1")
+    NS.Surfaces.TestDialPlan("d2", NS.db.profile.dials.d2)
+    for id in pairs(NS.db.profile.callouts) do
+        assertTrue(not tostring(id):find("^test%."), "no test callout saved: " .. tostring(id))
+    end
+    for id in pairs(NS.db.profile.groups) do
+        assertTrue(not tostring(id):find("^test%."), "no test group saved: " .. tostring(id))
+    end
+    assertTrue(NS.Preview.SetTestMode(false), "test mode off")
+    -- red under: the placeholders seeded into the library
+    assertEqual(table.concat(dump(NS.db.profile, {}), " "), before, "the profile unchanged")
 end)
 
 -- ── the rebuild edge (Task 11) ──────────────────────────────────────────────────────────────

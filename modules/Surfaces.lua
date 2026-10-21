@@ -8,7 +8,9 @@ local _, NS = ...
 -- with the reason its button's tooltip shows (Bake, §8.3; §18 "a baked line fails validation"). A
 -- locked slot keeps its line and carries the lock (§8.4). Library, Resolver and Bake are reached
 -- through `deps`, so a test can hand in any snapshot. Test mode's plan is placeholder slots that
--- carry no line, drawn through the same render path (preview-mode). A "Preview as…" plan is a real
+-- carry no line, drawn through the same render path (preview-mode): four groups of 4, 8, 12 and 16
+-- (owner, 2026-10-21), each slot wearing a shipped callout's name and icon, read from the seed table
+-- (NS.BuiltIns), never from or into the profile. A "Preview as…" plan is a real
 -- plan for the previewed snapshot, marked so every button is disarmed (spec §13.3). An edit preview's
 -- plan (`deps.only`, the group the Groups page edits) skips the Resolver: that group alone, with
 -- every group inside it, whatever their When, marked and disarmed the same way.
@@ -36,7 +38,7 @@ local Perf = NS.Perf
 
 local ROLE = { TANK = L["Tank"], HEALER = L["Healer"], DAMAGER = L["Damage"] }
 
-S.TEST_SECTIONS, S.TEST_SLOTS = 2, 4
+S.TEST_COUNTS = { 4, 8, 12, 16 }   -- test mode's groups, by how many callouts each holds
 
 -- A group's children: `opts.children` (Library.Children) when given, else the group's own
 -- `children` list (a test's hand-made group).
@@ -165,21 +167,49 @@ function S.BuildPlan(surfaceId, pad, snap, deps)
     return plan
 end
 
--- Test mode's placeholder slots for one section or group: they carry no line and send nothing.
+-- The shipped callouts in the seed table's order (each top-level set's own, then its children's,
+-- depth first), each name once: what test mode's placeholders wear. Read only; built once.
+local samples
+local function testSamples()
+    if samples then return samples end
+    samples = {}
+    local BI, seen = NS.BuiltIns or {}, {}
+    local function walk(id)
+        local g = BI.groups and BI.groups[id]
+        if type(g) ~= "table" then return end
+        for _, cid in ipairs(g.callouts or {}) do
+            local c = BI.callouts[cid]
+            if c and c.name and not seen[c.name] then
+                seen[c.name] = true
+                samples[#samples + 1] = c
+            end
+        end
+        for _, child in ipairs(g.children or {}) do walk(child) end
+    end
+    for _, id in ipairs(BI.order or {}) do walk(id) end
+    return samples
+end
+
+-- Test mode's placeholder slots for group s: they carry no line and send nothing. Each wears the
+-- next shipped callout's name and icon (group 1 the first four, group 2 the next eight, and so on);
+-- past the seed table's end, "Callout N" with no icon.
 local function testSlots(surfaceId, s)
+    local pool, first = testSamples(), 0
+    for k = 1, s - 1 do first = first + S.TEST_COUNTS[k] end
     local slots = {}
-    for i = 1, S.TEST_SLOTS do
+    for i = 1, S.TEST_COUNTS[s] do
+        local c = pool[first + i]
         slots[i] = { calloutId = ("test.%d.%d"):format(s, i), surfaceId = surfaceId,
-            name = L["Callout %d"]:format(i), reason = "testMode",
-            concrete = (i % 2 == 1) and "party" or "raid" }
+            name = c and c.name or L["Callout %d"]:format(i), icon = c and c.icon, iconColor = c and c.iconColor,
+            reason = "testMode", concrete = (i % 2 == 1) and "party" or "raid" }
     end
     return slots
 end
 
---- Test mode's plan: placeholder buttons that send nothing (spec §10.4).
+--- Test mode's plan: placeholder buttons that send nothing (spec §10.4), in four groups.
 function S.TestPlan(surfaceId)
     local sections = {}
-    for s = 1, S.TEST_SECTIONS do
+    for s = 1, #S.TEST_COUNTS do
         sections[s] = { groupId = "test." .. s, title = L["Test group %d"]:format(s), slots = testSlots(surfaceId, s) }
     end
     return { surfaceId = surfaceId, snapshot = {}, order = {}, sections = sections, lockdownChip = false,
@@ -199,7 +229,7 @@ end
 function S.TestDialPlan(surfaceId, dial)
     dial = type(dial) == "table" and dial or {}
     local groups = {}
-    for s = 1, S.TEST_SECTIONS do
+    for s = 1, #S.TEST_COUNTS do
         groups[s] = { id = "test." .. s, title = L["Test group %d"]:format(s), slots = testSlots(surfaceId, s) }
     end
     local rings, open = NS.DialLayout.Rings(groups, { mode = dial.mode, slices = dial.slices, title = dial.name,

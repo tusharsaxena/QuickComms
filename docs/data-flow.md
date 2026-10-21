@@ -90,7 +90,7 @@ The button is a secure button armed with one baked line. The game sends the line
 
 ## Today: test mode
 
-The checkbox, `/qc test` and the launcher entry call `Preview.SetTestMode`. It is refused in combat and stood down, and `RESTRICTION_CHANGED` with the combat edge ends it. `TEST_MODE_CHANGED` makes `Surfaces` draw each pad from `TestPlan`: placeholder buttons, disarmed, that send nothing.
+The checkbox, `/qc test` and the launcher entry call `Preview.SetTestMode`. It is refused in combat and stood down, and `RESTRICTION_CHANGED` with the combat edge ends it. `TEST_MODE_CHANGED` makes `Surfaces` draw each pad from `TestPlan` and each dial from `TestDialPlan`: placeholder buttons and wedges, disarmed, that send nothing, in four groups of 4, 8, 12 and 16 (`Surfaces.TEST_COUNTS`; owner, 2026-10-21), each wearing a shipped callout's name and icon read from the seed table (`NS.BuiltIns`). Nothing of it is written to the profile.
 
 ## Today: an editor writes a member
 
