@@ -35,8 +35,9 @@ local function built(opts)
         { frame = frames[2], parent = 1, prev = 0, next = 3, wedges = { wedge(frames[2], "/p two"), wedge(frames[2], "/p three") } },
         { frame = frames[3], parent = 2, prev = 2, next = 0, wedges = { wedge(frames[3], "/p four") } },
     }
-    assertTrue(DS.Load(h, rings, { openRing = opts.openRing or 1, openAt = opts.openAt }))
-    return NS, m, h, frames, rings
+    local screen = opts.screen and DS.NewScreen(h) or nil
+    assertTrue(DS.Load(h, rings, { openRing = opts.openRing or 1, openAt = opts.openAt, screen = screen }))
+    return NS, m, h, frames, rings, screen
 end
 
 local function shown(frames)
@@ -221,4 +222,108 @@ test("dial secure: [firewall] no snippet writes an attribute; the ring on screen
     for name, body in pairs(NS.DialSecure.SNIPPETS) do
         assertTrue(not body:find("SetAttribute", 1, true), name)
     end
+end)
+
+-- One ring of `size` places (place 1 at W) with a catcher over its disc and a callout wedge on each of
+-- `places`, loaded by hand as modules/Dial.lua loads it.
+local function caught(size, places)
+    local NS, m = T.enableAddon()
+    local DS, SE, DL = NS.DialSecure, NS.SendEngine, NS.DialLayout
+    local h = DS.NewHeader(8)
+    local frame = DS.NewRing(h)
+    frame:SetPoint("CENTER", h, "CENTER", 0, 0)
+    local disc = DL.Geometry(100).disc
+    local catcher = DS.NewCatcher(h, frame)
+    catcher:SetSize(disc, disc)
+    catcher:SetPoint("CENTER", frame, "CENTER", 0, 0)
+    local wedges = {}
+    for i, place in ipairs(places) do
+        local b = DS.NewWedge(h, frame)
+        SE.Arm(b, "/p " .. place, { calloutId = "c" .. i, surfaceId = "d9", chatType = "PARTY", name = "w" .. place })
+        wedges[i] = { button = b, target = 0, place = place }
+    end
+    assertTrue(DS.Load(h, { { frame = frame, parent = 0, prev = 0, next = 0, wedges = wedges, catcher = catcher,
+        shape = { size = size, start = DL.START, hub = DL.HUB, disc = disc } } }, {}))
+    return NS, m, h, catcher, disc
+end
+
+test("dial secure: [polish] catcher and SliceAt agree", function()
+    for _, case in ipairs({ { 4, { 1, 3 } }, { 8, { 1, 2, 3 } } }) do
+        local size, places = case[1], case[2]
+        local NS, m, h, catcher, disc = caught(size, places)
+        local DL = NS.DialLayout
+        local used = {}
+        for _, p in ipairs(places) do used[p] = true end
+        local hits = 0
+        for k = 0, 71 do
+            local a = math.rad((k + 0.5) * 5)   -- off every slice edge
+            for _, dist in ipairs({ DL.HUB / 2 + 1, (DL.HUB / 2 + disc / 2) / 2, disc / 2 - 1 }) do
+                m.cursor.x, m.cursor.y = dist * math.sin(a), dist * math.cos(a)
+                local got = m.__runSnippet(h, "self, button, down, owner", NS.DialSecure.SNIPPETS.catcher, catcher,
+                    "LeftButton", false, h)
+                local j = DL.SliceAt(a, dist, size, DL.START, DL.HUB, disc)
+                local want = (j and used[j]) and ("w" .. j) or false
+                -- red under: count the catcher's places from N (drop qc-start) in CATCHER_PRE
+                assertEqual(got, want, ("%d slices, bearing %s, %s px"):format(size, (k + 0.5) * 5, dist))
+                if want then hits = hits + 1 end
+            end
+        end
+        assertTrue(hits > 0, size .. ": some points land on a used slice")
+        -- red under: the plain type-w<j> in catcherAttrs (a modified click never reads it)
+        assertEqual(catcher:GetAttribute("*type-w" .. places[1]), "click", "the any-modifier form")
+        assertTrue(catcher:GetAttribute("*clickbutton-w" .. places[1]) ~= nil, "a used place forwards to its wedge")
+        assertNil(catcher:GetAttribute("type-w" .. places[1]), "no plain form")
+        if size == 4 then assertNil(catcher:GetAttribute("*type-w2"), "an empty place has no type") end
+    end
+end)
+
+test("dial secure: [polish] an outside click closes a key-opened dial, in combat", function()
+    local NS, m, h, _, _, screen = built({ screen = true })
+    assertTrue(screen ~= nil and screen.__parent == h, "the screen catcher is the header's child")
+    assertFalse(screen:IsShown(), "hidden until the dial opens")
+    combat(m, true)
+    for _, b in ipairs({ "LeftButton", "RightButton" }) do
+        m.__click(h, "Toggle")
+        -- red under: drop the screen's Show from the show snippet
+        assertTrue(screen:IsShown(), b .. ": open from its key, the screen catcher is up")
+        m.__click(screen, b)
+        -- red under: drop `owner:RunAttribute("qc-close")` from the screen snippet
+        assertFalse(h:IsShown(), b .. ": an outside click closes the dial")
+        assertFalse(screen:IsShown(), b)
+    end
+    assertEqual(#m.sentMacros, 0, "and sends nothing")
+    assertEqual(NS.SendEngine.EchoState().pending, 0)
+    assertEqual(#m.blocked, 0)
+end)
+
+test("dial secure: [polish] display open shows no screen catcher", function()
+    local NS, m, h, _, _, screen = built({ screen = true })
+    assertTrue(NS.DialSecure.Open(h))
+    assertTrue(h:IsShown())
+    -- red under: show the screen in the show snippet whether or not `display` is set
+    assertFalse(screen:IsShown(), "an insecure open (the settings window may be open) leaves the screen clear")
+    m.__click(h, "Toggle")
+    m.__click(h, "Toggle")
+    assertTrue(screen:IsShown(), "opened by the key, the screen catcher is up")
+    m.__click(h, "Toggle")
+    assertTrue(NS.DialSecure.Open(h))
+    assertFalse(screen:IsShown(), "an insecure open after a key open hides it again")
+end)
+
+test("dial secure: [polish] closing hides the screen catcher", function()
+    local _, m, h, _, rings, screen = built({ screen = true })
+    m.__click(h, "Toggle")
+    m.__click(h, "Toggle")
+    -- red under: drop the screen's Hide from the close snippet
+    assertFalse(screen:IsShown(), "the key closes it")
+    m.__click(h, "Toggle")
+    assertTrue(m.__pressKey("ESCAPE"))
+    assertFalse(screen:IsShown(), "Escape closes it")
+    m.__click(h, "Toggle")
+    m.__click(rings[1].wedges[2].button)
+    assertEqual(#m.sentMacros, 1)
+    assertFalse(screen:IsShown(), "a send closes it")
+    m.__click(h, "Toggle")
+    screen:__fire("OnClick", "LeftButton", true)
+    assertTrue(h:IsShown(), "the down edge alone does nothing")
 end)

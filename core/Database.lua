@@ -35,6 +35,9 @@ NS.MIGRATIONS = {
     -- 7 -> 8 (dial rework, 2026-10-21): groups drop Open the dial on this group and Skip on the dial
     -- in content; a dial opens on its one active group, or on a ring of them.
     { to = 8, perProfile = true, run = function(_, profile) NS.Library.MigrateDialFields(profile) end },
+    -- 8 -> 9 (dial polish, 2026-10-21): dials drop the Slices tab's retired Border (its size, color and
+    -- class color); a Slice gap parts the slices instead.
+    { to = 9, perProfile = true, run = function(_, profile) NS.Library.MigrateSliceBorder(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.

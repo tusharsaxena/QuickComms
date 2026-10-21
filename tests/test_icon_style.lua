@@ -156,3 +156,24 @@ test("icon style: a pad saved before the Icons tab reads like a new one (fillSha
     assertEqual(NS.db.profile.dials[did].icon.zoom, 0.2, "a stored field is kept")
     assertEqual(NS.db.profile.dials[did].icon.size, 32)
 end)
+
+test("icon style: [polish] dial icon size reaches 128, pad stays 40", function()
+    local NS = live()
+    -- red under: D.SIZE.dial.max left at 40
+    assertEqual(NS.IconDefaults.SIZE.dial.max, 128)
+    assertEqual(NS.IconDefaults.SIZE.pad.max, 40, "pads unchanged")
+    local did = NS.db.profile.dialOrder[1]
+    set(NS, "dial.icon.size", 128, did)
+    assertEqual(NS.db.profile.dials[did].icon.size, 128)
+    set(NS, "dial.icon.size", 200, did)
+    assertEqual(NS.db.profile.dials[did].icon.size, 128, "stops at 128")
+    assertEqual(NS.IconStyle.Config({ size = 128 }, "dial").size, 128, "drawn at 128")
+    assertEqual(NS.IconStyle.Config({ size = 128 }, "pad").size, 40, "a pad's stops at 40")
+    set(NS, "pad.icon.size", 60)
+    assertEqual(NS.db.profile.pads.p1.icon.size, 40)
+    local max
+    for _, row in ipairs(NS.addon.Settings.RowsForPage("dials")) do
+        if row.path == "dial.icon.size" then max = row.max end
+    end
+    assertEqual(max, 128, "the slider reaches 128")
+end)

@@ -912,8 +912,10 @@ local SURFACE_DEFAULTS = {
     -- gives it a meaning; nothing reads them yet.
     dial = { mode = "categories", slices = 0, radius = 100, iconOffset = 0, depth = 2, openAt = "center", delay = 0.3,
         interaction = "relaxed", tapAction = "first", icon = NS.IconDefaults.For("dial"),
-        label = NS.PadDefaults.DialLabel(),     -- the Labels tab (defaults/PadStyle.lua)
+        label = NS.PadDefaults.DialLabel(),     -- the Slice labels tab (defaults/PadStyle.lua)
+        title = NS.PadDefaults.DialTitle(),     -- the Group labels tab (defaults/PadStyle.lua)
         slice = NS.PadDefaults.DialSlice(),     -- the Slices tab (defaults/PadStyle.lua)
+        hub = NS.PadDefaults.DialHub(),         -- the Hub tab's Hub heading (defaults/PadStyle.lua)
         page = NS.PadDefaults.DialPage() },     -- the Paging tab (defaults/PadStyle.lua)
 }
 
@@ -933,11 +935,12 @@ Lib.TEMPLATES = {
     dial = { name = "", enabled = true, mode = SURFACE_DEFAULTS.dial.mode, slices = SURFACE_DEFAULTS.dial.slices,
         radius = SURFACE_DEFAULTS.dial.radius, iconOffset = SURFACE_DEFAULTS.dial.iconOffset, openAt = SURFACE_DEFAULTS.dial.openAt, point = false,
         icon = copyTable(SURFACE_DEFAULTS.dial.icon), label = copyTable(SURFACE_DEFAULTS.dial.label),
-        slice = copyTable(SURFACE_DEFAULTS.dial.slice), page = copyTable(SURFACE_DEFAULTS.dial.page) },
+        title = copyTable(SURFACE_DEFAULTS.dial.title), slice = copyTable(SURFACE_DEFAULTS.dial.slice), hub = copyTable(SURFACE_DEFAULTS.dial.hub),
+        page = copyTable(SURFACE_DEFAULTS.dial.page) },
 }
 
 --- A dial's place when its `point` is unset: the middle of the screen (read at run time by
---- modules/Dial.lua, the CLI and the Comms Dial page).
+--- modules/Dial.lua, the CLI and the Dial page).
 Lib.DIAL_DEFAULT_POINT = { "CENTER", "CENTER", 0, 0 }
 
 -- A new pad or dial: its kind's defaults, `name` and a copy of `groups`, at the end of its kind's

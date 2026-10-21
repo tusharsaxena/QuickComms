@@ -21,9 +21,9 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | DIAG-1..2 | Diagnostics | The debug console, the report, perf |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
 | SEND-1..5 | Send | Secure sends in keys and on bosses, the spam guard |
-| PAD-1..14 | Pad | The Comms Pad, its growth and button width, the World (solo) and In Group sets and the built-ins' colors, the header click and icon only's width |
-| EDIT-1..29 | Editors | The Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
-| DIAL-1..24 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, the lone-group open and the group ring, page arrows and the page row, Auto wedges, the ring radius, the Labels tab, the slices and the slice lit by direction, the Slices tab, the pointer, the tooltip outside the dial, the hub over the slices, the pointer, label and icon offsets, the Paging tab |
+| PAD-1..15 | Pad | The Comms Pad, its growth and button width, the World (solo) and In Group sets and the built-ins' colors, the header click and icon only's width, the header's Quick Comms: text |
+| EDIT-1..30 | Editors | The Pad and Dial page names; the Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
+| DIAL-1..35 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, the lone-group open and the group ring, page arrows and the page row, Auto wedges, the ring radius, the Slice labels tab, the slices and the slice lit by direction, the Slices tab, the pointer, the tooltip outside the dial, the hub over the slices, the pointer, label and icon offsets, the Paging tab; the dial polish: the border gone, the slice gap, placement from W, a slice clicked to the hub in combat, the hub styles, the Group labels tab, Icon offset on Icons, 128-pixel icons, a click outside closing the dial in combat, the page indicators' background and border, the Hub tab |
 | KEY-1..3 | Key bindings | A dial's key as WoW's own binding in Options → Keybindings, Character Specific Keybindings, Toggle Comms Pads |
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
 | LOOK-1..6 | Pad header, Section header, Window | The Comms Pad's three window tabs: the section titles' font, the pad's border and background, the header's look, size and alignment, the tab strip and headings, the section header's band and height |
@@ -161,7 +161,7 @@ The C1–C9 checks of the phase 0 harness (design spec §19) are recorded in
 
 **PAD-1. First run.** On a fresh profile, enter a key → the default pad shows "Dungeon (generic)" with
 eight buttons, with no channel letter at the right edge of any of them (the label runs to the edge);
-the header reads `M+ · <dungeon> +<level>`. Hovering a button shows its name, the exact line it sends
+the header reads `Quick Comms: M+ · <dungeon> +<level>`. Hovering a button shows its name, the exact line it sends
 and `Channel: Party` in the party's chat color; a wedge on the Comms Dial shows the same lines. Every button shows its glyph in a color: Lust a red enraged face,
 Need mana a blue drop, Res me a green ankh, GG a gold trophy, Pulling orange crossed swords, Kick
 order a purple boot, Skipping a cyan figure, Chain pull red chains. Leave the key and zone into a
@@ -200,7 +200,7 @@ shows, no error; after combat the pad is the other profile's. Result:
 its button shows a small gold padlock in its top-right corner (the LibKa0s catalog's `lock` mark, not the pet-battle lock). With LibKa0s removed (DEGRADED-1)
 the pet-battle padlock draws instead, with no error. Result:
 
-**PAD-9. Up growth.** Comms Pad → Layout → Growth offers Right and down, Left and down, Right and up
+**PAD-9. Up growth.** Pad → Layout → Growth offers Right and down, Left and down, Right and up
 and Left and up (no Upward). Right and up → the header row sits at the bottom of the pad and the
 sections stack upward above it; `/qc unlock` → the drag strip sits below the pad. Drag the strip
 somewhere, then add a group to the pad → the pad grows upward and the strip stays where you left it;
@@ -210,11 +210,11 @@ from a top edge that stays put. A profile saved with Upward growth loads as Righ
 before 2026-10-19 moves once on its first load, by up to its height (see Known Limitations in
 `docs/ARCHITECTURE.md`); drag it back and it stays. Result:
 
-**PAD-10. Button width and the section title.** Comms Pad → Buttons → Button width reads 100 on a new
+**PAD-10. Button width and the section title.** Pad → Buttons → Button width reads 100 on a new
 pad, and Layout no longer has it; drag it to 300 → wide buttons, each label on one line, running to the button's right edge with no
 channel letter after it; down to 30 → the labels cut short, still
 one line; down to 1 → icon-only slivers, no label and no Lua error. Make a group named `World`, put
-it on the pad and stand in the open world → the header reads `World` and the section under it has
+it on the pad and stand in the open world → the header reads `Quick Comms: World` and the section under it has
 no second `World` line; rename the group `My world` → its title line is back. Result:
 
 **PAD-11. World (solo) and the built-ins' colors (groups polish).** Out of any group, in the open
@@ -245,13 +245,19 @@ buttons come back. A right-click on the row does nothing. In combat a click prin
 and the pad stays as it was. The mouse wheel over the row still switches tabs, and hovering it still shows
 "Why is this showing?".
 
-**PAD-14. Icon only has no spare width (2026-10-20).** Comms Pad → Layout → Button style Icon only, a
-grid of 4 columns, in the open world (`World` in the header) → the gap between the last button and the
+**PAD-14. Icon only has no spare width (2026-10-20).** Pad → Layout → Button style Icon only, a
+grid of 4 columns, in the open world (`Quick Comms: World` in the header) → the gap between the last button and the
 pad's right edge is the same as between the first button and its left edge (before, the right one was
 wider). Button style Icon and label → the same even gap. Enter a key, whose header text is longer than
 four icons → the pad widens just enough for the text and the collapse button. With a Say callout in
 the pad's groups, Preview as… an arena → LOCKDOWN shows after the header text and the pad widens for
 it too: it clears the collapse button and stays inside the right edge. Result:
+
+**PAD-15. The header reads Quick Comms: (dial polish, 2026-10-21).** Solo in the open world → the pad's
+header reads `Quick Comms: World`; in a key → `Quick Comms: M+ · <dungeon> +<level>` (Windrunner
+Spire +14, for one). A section title that names the situation (a group named `World` in the open world)
+is still hidden under it (PAD-10). Preview as… → `Preview: …`, and test mode → `Test mode`, as before.
+Result:
 
 ## Editors
 
@@ -264,7 +270,7 @@ the pad. Result:
 
 **EDIT-2. A built-in set is an ordinary group (the phase 3 exit, rewritten 2026-10-18).** Groups →
 pick "Dungeon (generic)" → the picker shows no "(built-in)" tag (in a key it reads `Dungeon (generic)` with the
-green dot after the name, not before it; Comms Pad → Groups and Comms Dial → Groups put it after the name too), and the page draws the same tabs as a
+green dot after the name, not before it; Pad → Groups and Dial → Groups put it after the name too), and the page draws the same tabs as a
 group of yours, nothing read-only. General: Name, Enabled, Parent group,
 the icon with Choose icon…, Duplicate and Delete, then Restore built-in groups; no Customize and no
 read-only line. Callouts: the callout table, exactly as a group of yours draws it (Add callout, Reuse
@@ -285,7 +291,7 @@ the raid set; pull something → the preview ends with one line and the live but
 outside a raid, the last line names the lock. Behavior → Explain why groups show off → no tooltip.
 `/qc why` prints the same lines per pad. Result:
 
-**EDIT-5. The Comms Pad page.** Comms Pad → Layout: Orientation Vertical, Button style Label only,
+**EDIT-5. The Pad page.** Pad → Layout: Orientation Vertical, Button style Label only,
 Scale 1.5 → the pad redraws each time. Type X `200`, Y `-100` → it moves; Reset this pad's position
 → it returns. General → Visibility Only out of combat → it hides on the pull with no error. Groups:
 drag a group to the top → it comes first on the pad. New pad → a second pad appears holding every
@@ -351,16 +357,16 @@ edge, Add as tall as the dropdown, and Add callout above spans the same width: t
 Add callout and Add line up, a hair (2 px) short of the list's boxes, and **both buttons' right
 borders are whole** (not shaved by the page's edge). In the list, every row's handle, icon, name and
 glyphs sit centered in its box, and the edit and remove glyphs are small and close to the box's
-right edge (the same on Comms Pad → Groups and Comms Dial → Groups). Pick one of group B's callouts → nothing is added yet; click Add → it is A's
+right edge (the same on Pad → Groups and Dial → Groups). Pick one of group B's callouts → nothing is added yet; click Add → it is A's
 last row. Edit the copy's text and Save → B's original is unchanged (check its row or its button).
 The list has no built-in section: "Dungeon (generic): Lust" is listed like any other group's callout;
 reuse it → a copy you can edit, and the M+ group's Lust is unchanged. Result:
 
 **EDIT-12. The remove glyphs.** On a group's Callouts tab, a row's remove glyph (the red no-entry
 sign; its tooltip reads Remove, "Delete this callout. Asks first.") → the confirmation names the callout;
-No keeps it, Yes deletes it, and Reuse no longer offers it. On Comms Pad → Groups, a row's remove
+No keeps it, Yes deletes it, and Reuse no longer offers it. On Pad → Groups, a row's remove
 glyph (its tooltip: the group itself is kept) → the group leaves that pad at once, with no question, and is still on the Groups page; the
-same on Comms Dial → Groups. Neither list has an edit glyph. Result:
+same on Dial → Groups. Neither list has an edit glyph. Result:
 
 **EDIT-13. The callout popup in EllesmereUI's look.** With EllesmereUI and EllesmereUI Blizzard Skin
 enabled, EllesmereUI's third-party skinning on and QuickComms on in its Third-Party Addons list,
@@ -458,7 +464,7 @@ yet." and no table. Result:
 **EDIT-21. An older profile converts once.** On a profile saved before the built-in sets became
 groups (the owner's, with a hidden built-in callout, one set unticked on the old Built-in tab, and
 one customized copy), `/reload` → no Lua error; the Groups picker lists every built-in set by name,
-with no "(built-in)" tag and no duplicates; Comms Pad → Groups and Comms Dial → Groups list them in
+with no "(built-in)" tag and no duplicates; Pad → Groups and Dial → Groups list them in
 the same places as before; the unticked set is a group with Enabled unticked; the hidden callout is
 missing from its group (Restore built-in groups brings it back); the customized copy is there with
 your edits, in its place, with no stock set beside it. `/reload` again → nothing changes and nothing
@@ -536,8 +542,8 @@ row reads its icon, the name in gold, the channel's short label in its chat colo
 Say white) and the start of its text in a muted white, cut at 40
 characters with "…". A callout with no icon shows the question mark; a callout whose text holds a
 `|` shows the bar, not a color change; a Smart channel takes the color of the channel it resolves to
-now (solo: Party). Comms Pad → Pad header and Section header → the Size, Font, Background and Border
-headings, Window → the Background and Border headings, General → the Visibility heading, each heading once; Comms Pad → Buttons → the Size, Color, Border, Font and Glow
+now (solo: Party). Pad → Pad header and Section header → the Size, Font, Background and Border
+headings, Window → the Background and Border headings, General → the Visibility heading, each heading once; Pad → Buttons → the Size, Color, Border, Font and Glow
 headings, each once. Result:
 
 **EDIT-26. The glyph sets and their credits.** Open the icon browser (EDIT-14) → Glyphs: the count
@@ -581,14 +587,21 @@ wedge → the same line, and the dial closes. On Groups with Preview while editi
 of the edited group → its line prints the same way. End the preview and click the live button → the
 yell goes out, with no `[QC]` line. Result:
 
+**EDIT-30. The Pad and Dial pages (dial polish, 2026-10-21).** Open the settings → the pages under Ka0s
+Quick Comms read General, Groups, Pad, Dial, Share, Profiles (no "Comms Pad" or "Comms Dial" page).
+The default pad and dial are still named Comms Pad and Comms Dial in their pickers, Share → Export
+still lists them by those names, and a dial's ring of groups is still titled Comms Dial. Delete every
+dial, then `/qc set dial.radius 120` → "No dial to edit: make one on the Dial page." Result:
+
 ## Dial
 
 **DIAL-1. Open and close (Relaxed).** Options → Keybindings → Ka0s Quick Comms → Open Comms Dial 1:
-bind G (Settings → Comms Dial has no Binding tab: General, Groups, Wheel, Slices, Labels, Icons, Preview).
+bind G (Settings → Dial has no Binding tab: General, Groups, Wheel, Slices, Hub, Paging, Slice labels, Group labels,
+Icons, Preview).
 In a key (any content with an active group), press G → the dial opens in the middle of the screen: a
-dark disc made of slices, a faint line between each and round the rim, wedges with bare icons (no
+dark disc made of slices with no lines between them (Slice gap 0), wedges with bare icons (no
 round backdrop behind them) and white labels wholly outside the disc, clear space between each icon
-and the disc's edge, the ✕ hub, and a gold chevron pointer just outside the hub that follows the
+and the disc's edge, a gold solid circle on a dark hub, and a gold chevron pointer just outside the hub that follows the
 cursor. Press G → it closes. Open it; Escape → it closes and the game menu does not open. Open
 it; right-click a wedge → it closes and nothing is sent. Result:
 
@@ -633,7 +646,7 @@ mouse wheel do what they did before. Result:
 Keybindings → Ka0s Quick Comms → bind Open Comms Dial 1 to TAB (WoW asks to take it from Target
 Nearest Enemy; accept) → TAB opens the dial (set it back afterwards). `/qc disable` → TAB opens
 nothing (it stays bound: a WoW binding is not handed back); `/qc enable` → TAB opens the dial again.
-Settings → Comms Dial: no Binding tab and no Key box on any tab. Result:
+Settings → Dial: no Binding tab and no Key box on any tab. Result:
 
 **DIAL-7. Open at the cursor, the dial's place, Reset position.** Wheel → Open at → At the cursor →
 press G away from the middle → the dial opens centered on the cursor, in combat too (unverified: a
@@ -668,10 +681,10 @@ bind Open Comms Dial 2 to H; press G, then H → dial 1 closes and dial 2 opens;
 the N wedge's label, and every label sits outside the disc, reading away from it. With test mode on, close the
 dial with the hub, then change Wedges per ring → it stays closed. Result:
 
-**DIAL-12. The hub's close and the wedge padlock.** Open the dial → the hub carries a red ✕ (the
-LibKa0s catalog's `close` mark, not the round stop button), and during an encounter a Say callout's wedge shows
-the same small gold padlock as a pad button (PAD-8). With LibKa0s removed (DEGRADED-1) the stop button and the
-pet-battle padlock draw instead, with no error. Result:
+**DIAL-12. The hub and the wedge padlock (the red ✕ retired in the dial polish, 2026-10-21).** Open the
+dial → the hub is a dark backdrop with a gold circle and no ✕, and during an encounter a Say callout's wedge shows
+the same small gold padlock as a pad button (PAD-8). With LibKa0s removed (DEGRADED-1) the pet-battle padlock
+draws instead, with no error. Result:
 
 **DIAL-13. One group opens straight on it; several open on the groups (dial rework, 2026-10-21).**
 Solo in the open world (World (solo) the only active group), press G → the dial opens straight on
@@ -681,13 +694,13 @@ callouts. Enter a dungeon with the party (or start a key) → the ring of groups
 and In Group; click one → its callouts. Settings → Groups → any group → General: no Open the dial
 on this group and no Skip on the dial in content. Result:
 
-**DIAL-14. Auto wedges (dial rework, 2026-10-21).** Settings → Comms Dial → Wheel → Wedges per ring
+**DIAL-14. Auto wedges (dial rework, 2026-10-21).** Settings → Dial → Wheel → Wedges per ring
 shows Auto first; a new dial (New dial) is on Auto. On Auto, with a group of your own holding 1, 2,
 3, 4, then 5 callouts (add them one at a time, Preview as wherever it is active): 1 → the one wedge
 at W (left); 2 → W and E; 3 → W, N and E, with S empty; 4 → W, N, E and S; 5 → five evenly spaced,
-the first at W, going clockwise. The spokes split the ring to match. With 13 or more callouts → 12
+the first at W, going clockwise. The slices split the ring to match. With 13 or more callouts → 12
 on page 1 and the rest on page 2, behind the arrows. A ring of groups holds at most 8 a page. The
-Preview tab lists wedge 1 as W. Pick 6 → six wedges from N whatever the count. Result:
+Preview tab lists wedge 1 as W. Pick 6 → six slices from W whatever the count (DIAL-27). Result:
 
 **DIAL-15. The ring radius (dial rework, 2026-10-21).** Wheel → Ring radius reads 100. Drag it to 160
 → the dial redraws bigger: the wedges further out, the disc grown with them, the labels still outside
@@ -695,7 +708,7 @@ the disc, the title above the top label and the page arrows below the bottom one
 labels still clear of each other at four wedges. In combat, `/qc set dial.radius 140` → no error,
 "updates after combat", the new size at combat end. Defaults → 100. Result:
 
-**DIAL-16. The Labels tab (dial rework, 2026-10-21).** Comms Dial → Labels: Show labels ticked, then a
+**DIAL-16. The Slice labels tab (dial rework, 2026-10-21; Labels until the dial polish).** Dial → Slice labels: Show labels ticked, then a
 Font block (font, size, outline, color, Use class color, shadow). Font size 18, Thick outline, color
 yellow → the wedges' labels redraw that way and the title and page arrows move out to clear them; Use
 class color → your class color; untick the shadow → no shadow. Untick Show labels → the icons alone,
@@ -709,49 +722,135 @@ no Lua error, and Groups pages carry no Open the dial or Skip on the dial boxes.
 **DIAL-18. The slice under the cursor lights whole (dial slices, 2026-10-21; by direction since the
 hub fix).** Open the dial on a four-wedge ring. Move the mouse just outside the hub toward E, between
 the hub and the E icon, not on it → the whole E slice, hub to rim, takes a faint gold fill. Sweep
-round the hub → the lit slice follows the mouse's direction; over the hub (the ✕) or past the rim →
+round the hub → the lit slice follows the mouse's direction; over the hub or past the rim →
 nothing lights; on a three-callout Auto ring the empty S quarter never lights. Close the dial → the
-fill goes. A click lands on the wedge's square (most of the slice, not the corners nearest the hub).
-In combat → the same, no error. Result:
+fill goes. A click anywhere in the lit slice sends it (DIAL-28). In combat → the same, no error. Result:
 
-**DIAL-19. The Slices tab (dial slices, 2026-10-21).** Comms Dial → Slices: four headings
-(Background, Border, Highlight, Pointer), each color with Use class color. Background a blue → every
-slice fills blue, an empty place (S on a three-callout Auto ring) too. Border size 3, color red → the
-lines between slices and round the rim are thick red; 0 → no lines at all. Highlight green → a
-hovered slice fills green; Use class color → your class color. Defaults → dark slices, faint lines,
+**DIAL-19. The Slices tab (dial slices, 2026-10-21; Border replaced by Gap and Hub added in the dial
+polish; Hub and Pointer on the Hub tab since).** Dial → Slices: three headings (Background, Gap, Highlight), each color with Use class color. Background a blue → every
+slice fills blue, an empty place (S on a three-callout Auto ring) too. No Border heading and
+no lines between the slices (DIAL-25). Highlight green → a
+hovered slice fills green; Use class color → your class color. Defaults → dark slices, no gap,
 the gold highlight. Result:
 
-**DIAL-20. The pointer (dial slices, 2026-10-21).** Slices → Pointer: Pointer size 40 → the chevron
-in the hub is bigger and sits further out so it never covers the ✕; Pointer color white → white;
+**DIAL-20. The pointer (dial slices, 2026-10-21).** Hub → Pointer: Pointer size 40 → the chevron
+in the hub is bigger and sits further out so it never covers the hub's circle; Pointer color white → white;
 Use class color → your class color. Untick Show pointer → no pointer while the dial is open, and its
 size and color are grayed out. Defaults → the gold 20-pixel chevron. Result:
 
 **DIAL-21. The tooltip outside the dial (dial slices, 2026-10-21).** Hover a wedge → its tooltip
 (name, line, channel) shows above the dial, over the ring's title, never over the slices or a label;
-hover the hub → Why is this showing? shows there too. Labels → Tooltip side Below → under the page
+hover the hub → Why is this showing? shows there too. Slice labels → Tooltip side Below → under the page
 arrows (or under the bottom label on a one-page ring); Left → left of the disc, clear of the longest
 label on that side; Right → mirrored. Tooltip offset 40 → each 40 pixels further out. Ring radius
 160 → the tooltip still clears the bigger dial. Result:
 
 **DIAL-22. The hub draws over the slices (2026-10-21).** Open the dial with the default Slices look,
-then Background alpha 100% → the hub's circle and red ✕ stay bright on top; the pointer is drawn over
+then Background alpha 100% → the hub's backdrop and circle stay bright on top; the pointer is drawn over
 the slices; the stale hint, LOCKDOWN and PREVIEW labels near the hub stay readable. Click the hub →
 it still goes up a ring or closes. Result:
 
-**DIAL-23. Pointer, label and icon offsets (2026-10-21).** Slices → Pointer offset 70 → the pointer
-circles 70 pixels from the middle; 0 → back just outside the hub. Labels → Label offset 250 → every
+**DIAL-23. Pointer, label and icon offsets (2026-10-21).** Hub → Pointer offset 70 → the pointer
+circles 70 pixels from the middle; 0 → back just outside the hub. Slice labels → Label offset 250 → every
 label sits further out, the ring title above them and the page row below them; 0 → just past the
-disc; untick Show labels → the offset grays out. Wheel → Icon offset 60 → the icons sit closer to the
-hub, the disc keeps its size and each wedge still lights and clicks; 0 → back on the ring radius.
+disc; untick Show labels → the offset grays out. Icons → Icon offset 60 (a Wheel row until the dial polish) → the icons sit closer to the
+hub, the disc keeps its size and each slice still lights and clicks; 0 → back on the ring radius.
 Result:
 
-**DIAL-24. The Paging tab (2026-10-21).** On a paged ring (World solo), Comms Dial → Paging: three
+**DIAL-24. The Paging tab (2026-10-21).** On a paged ring (World solo), Dial → Paging: three
 headings (Position, Arrows, Page indicator). Offset 30 → the row drops further under the labels.
 Arrow size 40 → bigger round plates and chevrons; Arrow spacing 30 → they stand further from the
 dots; Arrow color white, Arrow background red → as set (the dimmed end arrow stays gray). Dot size
 10, Current page width 10 → the pill becomes a plain dot; Dot spacing 15; Current page color green,
 Other pages color white → as set; Use class color → your class color. Defaults → the gold 24-pixel
 arrows and the 18-by-6 gold pill. Result:
+
+**DIAL-25. The slice border is gone; an older profile loads clean (dial polish, 2026-10-21).** On a
+profile saved before the update with Border size 3 in red: `/reload` → no Lua error; the dial draws no
+lines between its slices and no rim; Dial → Slices has no Border heading; `/qc get dial.slice.borderSize`
+→ an unknown setting. `/qc diagnostics` → its `dials` section's `slices` line reads `gap=0` and names no
+border. Result:
+
+**DIAL-26. The slice gap (dial polish, 2026-10-21).** Dial → Slices → Gap → Slice gap 10 → a clear,
+even strip 10 pixels wide between every pair of slices, straight-edged (parallel, not a wedge), the
+slices' outer edges still on the disc; the lit slice's fill moves with it. On a one-callout Auto ring
+→ the whole disc, no gap. 20 → wider strips, no Lua error. On Auto with 12 or more callouts and Slice
+gap 20 → fewer wedges a page than at 0 (the icons still fit), the rest paged; on a fixed 8 the count
+stays 8. Defaults → 0. Result:
+
+**DIAL-27. Slice placement from W (dial polish, 2026-10-21).** Wheel → Wedges per ring 4, with a group
+of your own holding 1, then 2, 3 and 4 callouts (Preview as wherever it is active): 1 → its wedge W,
+the three other quarters drawn empty; 2 → W and E; 3 → W, N and E, S empty; 4 → W, N, E and S. An
+empty quarter never lights and a click on it sends nothing. Wedges per ring 8 with 2 callouts → the
+two at W and NW (clockwise from W), six empty slices. Wedges per ring 6 → the first slice centered on
+W. The Preview tab lists wedge 1 as W, and the number keys 1–8 still follow the callouts' order. A
+battleground node ring (Arathi Basin) keeps its compass winds (DIAL-4). Result:
+
+**DIAL-28. A slice clicks all the way to the hub, in combat (dial polish, 2026-10-21; owed: the
+restricted `GetMousePosition`, C7).** On a four-wedge ring at radius 100, put the cursor just outside
+the hub toward E, well inside the E icon → the E slice lights and its tooltip shows; click → it sends.
+The same just inside the rim, and next to a neighbor's border. Hold Shift (then Ctrl, then Alt) and
+click the E slice → it still sends. On a 12-wedge ring, on each diagonal (NE, SE, SW, NW), put the
+cursor just outside the hub's drawn circle → that slice lights, shows its tooltip and sends (the hub
+is round: no dead corner). Just inside the circle → no slice lights, the hub's circle brightens and
+its "Why is this showing?" tooltip shows; move out → both clear. A click inside the circle goes up a
+ring (or closes on the first ring), and so does one with Shift, Ctrl or Alt held. The dial's key
+still opens and closes it; a click on an empty place sends nothing; a right-click anywhere on the disc closes the dial
+and sends nothing. Then in combat on a target dummy, repeat each click → the same, with no "action
+blocked" error and no Lua error. With Slice gap 10, a click in a gap sends the slice whose direction
+it is in. Result:
+
+**DIAL-29. The hub styles (dial polish, 2026-10-21).** Dial → Hub → Hub: Hub style Solid circle (the
+default) → a gold filled circle on a dark backdrop, no ✕; Hollow ring → a gold ring; Target → a ring
+with a dot in the middle; Rimmed disc → a rim round the backdrop and a filled circle inside it. Line
+width grayed out under Solid circle and 4 → a thicker ring under Hollow ring. Hub size 70 → a wider hub,
+the slices and the pointer starting at its edge in every direction, and a click just outside its
+circle, on a diagonal too, lands on a slice (DIAL-28); Circle size 40 → a bigger circle. Backdrop color, Hub border size 3 with a red Hub border
+color, Circle color green, each Use class color → as set. Hover the hub → the circle brightens; move
+off → it dims. The stale hint, LOCKDOWN and TEST MODE labels sit where they did. Defaults → the gold
+solid circle on the 40-pixel hub. Result:
+
+**DIAL-30. The Group labels tab (dial polish, 2026-10-21).** Dial → Group labels: Show group labels
+ticked, then a Font block. Font size 18, a different face, Thick outline, color white → the ring's
+title above the dial ("World (solo)", "Comms Dial") redraws that way, lifted to clear the labels, and
+the tooltip above it moves up too; the slice labels are unchanged. Untick Show group labels → no title,
+the font controls grayed out. Defaults → the gold 12-point title. Result:
+
+**DIAL-31. Icon offset on the Icons tab (dial polish, 2026-10-21).** Dial → Wheel → no Icon offset row;
+Dial → Icons → Icon offset is the first row. Icon offset 60 → the icons sit closer to the hub (DIAL-23);
+`/qc set dial.iconOffset 0` → back on the ring radius. Result:
+
+**DIAL-32. Dial icons up to 128 (dial polish, 2026-10-21).** Dial → Icons → Icon size: drag it to 128
+→ no error, the icons drawn big (a game icon softer past 64, not broken; a catalog glyph scaled the
+same); on Auto with five or more callouts at radius 100, fewer icons a page (about four) so they do not
+overlap, the rest behind the page arrows; Ring radius 180 → more fit. Pad → Icons → Icon size still
+stops at 40. Result:
+
+**DIAL-33. A click outside closes the dial, in combat (dial polish, 2026-10-21).** Open the dial with
+its key; left-click the world away from it → the dial closes and nothing else happens (no target
+change, no movement); open it, right-click away from it → it closes, no camera turn; open it, click an
+action-bar button → the dial closes and the action does not fire. In combat on a target dummy, the
+same three → the same, no "action blocked" error. With test mode on (or Preview as…), the dial open
+from the settings window: clicks on the settings window still work and do not close the dial. Result:
+
+**DIAL-34. The page indicators' background and border (dial polish, 2026-10-21).** Open a paged ring
+(Wheel → Wedges per ring 4, a group of eight callouts) over a busy scene (a city, spell effects) →
+under the dial, between the arrow plates, the dots and the gold pill sit on a dark rounded strip,
+round at both ends, and each dot and the pill has a thin dark outline. Dial → Paging → Page
+indicator: Background padding 12 → the strip grows around the row; Indicator background → red → the
+strip turns red; untick Show indicator background → the strip is gone and Indicator background and
+Background padding gray out. Dot border 4 → thicker outlines; Dot border color → white → white
+outlines; Dot border 0 → the slider reads None, no outlines, and Dot border color grays out.
+Defaults → the strip and the 1-pixel outlines are back. `/qc diagnostics` → the dial's paging line ends
+`back=true pad=4 border=1`. Result:
+
+**DIAL-35. The Hub tab (dial polish, 2026-10-21).** Settings → Dial → the strip reads General, Groups,
+Wheel, Slices, Hub, Paging, Slice labels, Group labels, Icons, Preview. Slices holds Background, Gap
+and Highlight only; Hub holds the Hub heading (Hub style, sizes, colors) and the Pointer heading (Show
+pointer, size, offset, color). A dial styled before this change keeps its hub style and pointer
+settings (`/qc get dial.hub.style` and `/qc get dial.slice.pointerSize` read as before). Hub → Hub
+size 60 → the dial's hub grows; Defaults → back to 40. Delete every dial → Hub says No dials yet,
+as Slices does. Result:
 
 ## Share
 
@@ -764,7 +863,7 @@ window. Result:
 **SHARE-2. Import it, twice.** Profiles → make a profile `Share test`. Share → Import: paste the
 string and click Accept → "Ready to import: 2 callouts, 1 group."; Import → chat says "Imported 2
 callouts, 1 group." and "An imported group is on no pad or dial yet: add it on the Groups tab of the
-Comms Pad or Comms Dial page.", and Groups lists `My keys` with both callouts. Paste and import it
+Pad or Dial page.", and Groups lists `My keys` with both callouts. Paste and import it
 again → a second `My keys`, and the first one is untouched. Result:
 
 **SHARE-3. A string that tries a command.** Paste this on Import and click Accept:
@@ -804,14 +903,14 @@ The Comms Pad's Pad header, Section header and Window tabs (one Window tab until
 Look tab before that, then Main window until it became Window, its visibility rows on General; the
 checks keep their LOOK ids).
 
-**LOOK-1. Section titles.** On a new pad the section titles are gold, 12 points and outlined. Comms
-Pad → Section header → Font: pick another face, Font size 14, Font flags None, untick Font shadow →
+**LOOK-1. Section titles.** On a new pad the section titles are gold, 12 points and outlined. Pad →
+Section header → Font: pick another face, Font size 14, Font flags None, untick Font shadow →
 the section titles (In Party, Mythic+…) redraw that way, still
 gold; the button labels do not change (they are the Buttons tab's). Tick Use class color → the titles take
 your class color, and Font color's opacity still applies; untick it and set Font color to red → the
 titles turn red. Result:
 
-**LOOK-2. Border and background.** Comms Pad → Window → Border style: a LibSharedMedia border (Blizzard Tooltip, for one),
+**LOOK-2. Border and background.** Pad → Window → Border style: a LibSharedMedia border (Blizzard Tooltip, for one),
 thickness 3, color red → the pad's edge changes; thickness 0 → no edge. Background: dark blue at 50%
 opacity → the body changes; Use class color → your class color at 50%. The settings panel is closed
 and locked in combat, so the in-combat write goes through the command line: in combat,
@@ -820,7 +919,7 @@ edge lands at combat end. Defaults → the Ka0s look again. Result:
 
 **LOOK-3. The header's look (2026-10-20).** On a new pad the header row (the top row, `World` in the
 open world) is 24 pixels tall (it was 18) with gold 16-point outlined text, no background and no edge
-(the owner's defaults). Comms Pad → Pad header: Size → Header height 30 → the row grows and every
+(the owner's defaults). Pad → Pad header: Size → Header height 30 → the row grows and every
 section moves down with it; Font size 20, another face, Font flags Thick outline → the situation text
 redraws that way, and during an encounter with a Say callout on the pad the LOCKDOWN tag takes the
 same face and size and stays red; the collapse button grows with it. Background dark red at 60% → a
@@ -834,7 +933,7 @@ title under the header (a party in the open world: `World` over `In Party`). The
 the right). Layout → Growth → Left and down, Right and up, Left and up in turn → still aligned in each;
 Spacing 20 → still aligned. Result:
 
-**LOOK-5. Three window tabs (2026-10-20).** Comms Pad → the strip reads General, Groups, Layout, Pad
+**LOOK-5. Three window tabs (2026-10-20).** Pad → the strip reads General, Groups, Layout, Pad
 header, Section header, Window, Buttons, Icons (no Main window or Chip tab). Pad header shows the headings Size,
 Font, Background and Border, each once; Section header the same four; Window Background and
 Border, with no font controls and no Visibility (General has it, under its own heading, above Unlock
@@ -843,7 +942,7 @@ changes (the header row, the section titles, the pad's body). Defaults on the pa
 back to the owner's look. Result:
 
 **LOOK-6. The section header's band and height (2026-10-20).** Stand where the pad shows section titles
-(a party in the open world). By default no band is drawn behind them. Comms Pad → Section header →
+(a party in the open world). By default no band is drawn behind them. Pad → Section header →
 Background dark blue at 60% → a band behind each title, spanning the pad's inside (a battleground set's
 paired objectives: each band its own block's width, stopping at its neighbor); Border thickness 2,
 color white → an edge around each band, the title text kept clear of it; Use class color on each →
@@ -855,7 +954,7 @@ right-click on a title still opens its group. Result:
 
 **BUTTON-1. Size, color, border and font (2026-10-20).** On a new pad the buttons wear the owner's
 defaults: a faint gray body (#3F3F3F at 25%), a faint 1-pixel light edge (#EAEAEA at 10%), small white
-labels, 16-pixel icons. Comms Pad → Buttons: Button width 160 → wider buttons; Button height 40 →
+labels, 16-pixel icons. Pad → Buttons: Button width 160 → wider buttons; Button height 40 →
 taller buttons, label and icon centered; Button height 0 → back to the automatic height; Button style Icon
 only (Layout) → square buttons around the icons whatever the size says. Color → Background red at 50% →
 every button's body; Use class color → your class color. Border thickness 2, color white → an edge around
@@ -895,19 +994,19 @@ ends, then the pads toggle, with no Lua error. `/qc disable`, press P → the di
 
 ## Icons tab
 
-**ICONS-1. Look.** Comms Pad → Icons: Icon size reads 16 on a new pad (an icon-only button is 24
+**ICONS-1. Look.** Pad → Icons: Icon size reads 16 on a new pad (an icon-only button is 24
 pixels square); Icon size 32 → the buttons grow taller around the bigger icons;
 Zoom 0.1 → each icon's edge is cropped; Desaturate → gray; Icon opacity 50% → faint; Tint red → a
 white glyph turns red and a colored glyph darker. Show border, thickness 2, color white → a square
-edge over each icon. Comms Dial → Icons: Show border → a round ring behind each wedge's icon; Icon size
+edge over each icon. Dial → Icons: Show border → a round ring behind each wedge's icon; Icon size
 20 → smaller icons, the wedges keep their size. Defaults on each page → the icons at their defaults again (16 on a pad, 32 on a dial). Result:
 
-**ICONS-2. Glow styles.** Comms Pad → Icons, glow off → Offset sits right under Glow color, its two
+**ICONS-2. Glow styles.** Pad → Icons, glow off → Offset sits right under Glow color, its two
 sliders grayed out, and no style's heading shows below it. Tick Glow → the Pixel border heading and
 its knobs appear under Offset at once, the scroll where it was, and the offsets come alive; lines run
 around every icon. Glow style Auto cast sparkles, Button (rotating rays) and Proc (flipbook) → each
 looks different, and each swaps in only its own heading and knobs; under Button the offsets gray out.
-Untick Glow → the style's heading goes, Offset stays. Comms Dial → Icons → the same. With a full pad
+Untick Glow → the style's heading goes, Offset stays. Dial → Icons → the same. With a full pad
 glowing in Pixel border, the frame rate stays where it was. Result:
 
 **ICONS-3. Glow triggers.** Glow when On hover → only the icon under the mouse glows; in combat too,
@@ -1048,9 +1147,10 @@ from the client, so this check needs a non-English client pass. Result:
 | ID | Origin | Why it is owed |
 |---|---|---|
 | INSTALL-1..3, SLASH-1..2, PANEL-1..3, PROFILE-1..2, STATE-1..4, COMBAT-1, DIAG-1..2, DEGRADED-1, LOC-1 | The phase 0 scaffold | No client pass recorded yet; STATE-3 rewritten and STATE-4 added with the pads' hidden state kept per character (2026-10-21); LOC-1 re-enumerated in phase 5 and owed a non-English client pass; STATE-3 added and PANEL-2 rewritten with `/qc toggle` and Preview as in Master controls (2026-10-19) |
-| SEND-1..5, PAD-1..14 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet; PAD-14 added with icon only's width (2026-10-20); PAD-13 added with a click anywhere on the header (2026-10-20); PAD-12 added with In Group, PAD-3 and PAD-4 rewritten with the strip as wide as the pad (2026-10-20, bg buttons); PAD-1 rewritten and PAD-11 added with World (solo) and the built-ins' colors, PAD-3 and PAD-4 rewritten with the strip's marker (2026-10-19, groups polish); PAD-8 added in phase 5 (audit QC-07); PAD-1 rewritten and PAD-9..10 added with the up growth, button width and the built-in glyphs (2026-10-19) |
-| EDIT-1..29 | Phase 3: the editors | No client pass recorded yet; EDIT-29 added with the preview click's echo (2026-10-20); EDIT-28 added with right-click a group title (2026-10-19); EDIT-27 added with Preview while editing (2026-10-19); EDIT-3, 4, 20 and 22 rewritten and EDIT-25..26 added with Preview as in Master controls, the Dungeon set, the Arena drawer, instance search, the Callouts rows and the glyph sets (2026-10-19); EDIT-1, 2 and 19 rewritten and EDIT-22..24 added with the When drawers, Inherit when conditions and the icon browser's search (2026-10-18); EDIT-2, 4, 5, 6, 11, 14 and ICON-1 rewritten and EDIT-19..21 added when the built-in sets became seeded groups, groups nested and the Preview tab became a table (2026-10-18); EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17); EDIT-9, 13 and ICON-1 rewritten and EDIT-14..17 added with the icon browser and glyph colors (2026-10-18); EDIT-9 rewritten and EDIT-18 added when the token dropdown became the Text label's info glyph (2026-10-18); EDIT-13, 14 and ICON-1 rewritten when the Suggested tab went and the skin stopped waiting for the addon to be enabled (2026-10-18); EDIT-9, 18 and ICON-1 rewritten when the Icon boxes went and the popup took its two-column layout (2026-10-18); EDIT-9, 11 and ICON-1 rewritten with the clear glyph, the Preview gap and the buttons' 2 px inset (2026-10-18) |
-| DIAL-1..24 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-18 rewritten and DIAL-22..24 added (2026-10-21: the slice lit by direction outside the hub, the hub over the slices, the pointer, label and icon offsets, the Paging tab); DIAL-1 and 5 rewritten and DIAL-18..21 added with the dial slices (2026-10-21: whole-slice hover and the grown hit squares, the Slices tab, the pointer, the tooltip outside the dial, the pill-and-dot page row); DIAL-1, 2, 4, 5, 6, 9, 11 and 13 rewritten and DIAL-14..17 added with the dial rework (2026-10-21: the lone-group open and the ring of groups, page arrows and dots, Auto wedges, the ring radius, the Labels tab, no Binding tab); DIAL-2 rewritten and DIAL-13 added with Skip on the dial in content (2026-10-20); DIAL-2 and DIAL-4 rewritten with In Group and the four node buttons (2026-10-20, bg buttons); DIAL-4 rewritten with the node set's map-wide wedge (2026-10-19, groups polish); DIAL-9 rewritten when Preview as moved to Master controls (2026-10-19); DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
+| SEND-1..5, PAD-1..14 | Phase 2: the send engine and the Comms Pad | No client pass recorded yet; PAD-1, PAD-10 and PAD-14 reworded with the header's Quick Comms: text (2026-10-21, dial polish); PAD-14 added with icon only's width (2026-10-20); PAD-13 added with a click anywhere on the header (2026-10-20); PAD-12 added with In Group, PAD-3 and PAD-4 rewritten with the strip as wide as the pad (2026-10-20, bg buttons); PAD-1 rewritten and PAD-11 added with World (solo) and the built-ins' colors, PAD-3 and PAD-4 rewritten with the strip's marker (2026-10-19, groups polish); PAD-8 added in phase 5 (audit QC-07); PAD-1 rewritten and PAD-9..10 added with the up growth, button width and the built-in glyphs (2026-10-19) |
+| EDIT-1..29 | Phase 3: the editors | No client pass recorded yet; every Comms Pad → and Comms Dial → path reworded Pad → and Dial → (2026-10-21, dial polish); EDIT-29 added with the preview click's echo (2026-10-20); EDIT-28 added with right-click a group title (2026-10-19); EDIT-27 added with Preview while editing (2026-10-19); EDIT-3, 4, 20 and 22 rewritten and EDIT-25..26 added with Preview as in Master controls, the Dungeon set, the Arena drawer, instance search, the Callouts rows and the glyph sets (2026-10-19); EDIT-1, 2 and 19 rewritten and EDIT-22..24 added with the When drawers, Inherit when conditions and the icon browser's search (2026-10-18); EDIT-2, 4, 5, 6, 11, 14 and ICON-1 rewritten and EDIT-19..21 added when the built-in sets became seeded groups, groups nested and the Preview tab became a table (2026-10-18); EDIT-1, 7 and 8 rewritten and EDIT-9..12 added when callouts moved into their groups (2026-10-17), SHARE-1 and ICON-1 rewritten with them; EDIT-9 and 10 rewritten and EDIT-13 added when the popup took the settings window's look (2026-10-17); EDIT-9, 13 and ICON-1 rewritten and EDIT-14..17 added with the icon browser and glyph colors (2026-10-18); EDIT-9 rewritten and EDIT-18 added when the token dropdown became the Text label's info glyph (2026-10-18); EDIT-13, 14 and ICON-1 rewritten when the Suggested tab went and the skin stopped waiting for the addon to be enabled (2026-10-18); EDIT-9, 18 and ICON-1 rewritten when the Icon boxes went and the popup took its two-column layout (2026-10-18); EDIT-9, 11 and ICON-1 rewritten with the clear glyph, the Preview gap and the buttons' 2 px inset (2026-10-18) |
+| DIAL-1..24 | Phase 4: the Comms Dial | No client pass recorded yet; DIAL-1, 12, 14, 16, 18, 19, 20, 21, 22 and 23 rewritten with the dial polish (2026-10-21: no border, the hub's circle for the ✕, placement from W, Slice labels, Icon offset on Icons, a slice clicked anywhere); DIAL-18 rewritten and DIAL-22..24 added (2026-10-21: the slice lit by direction outside the hub, the hub over the slices, the pointer, label and icon offsets, the Paging tab); DIAL-1 and 5 rewritten and DIAL-18..21 added with the dial slices (2026-10-21: whole-slice hover and the grown hit squares, the Slices tab, the pointer, the tooltip outside the dial, the pill-and-dot page row); DIAL-1, 2, 4, 5, 6, 9, 11 and 13 rewritten and DIAL-14..17 added with the dial rework (2026-10-21: the lone-group open and the ring of groups, page arrows and dots, Auto wedges, the ring radius, the Labels tab, no Binding tab); DIAL-2 rewritten and DIAL-13 added with Skip on the dial in content (2026-10-20); DIAL-2 and DIAL-4 rewritten with In Group and the four node buttons (2026-10-20, bg buttons); DIAL-4 rewritten with the node set's map-wide wedge (2026-10-19, groups polish); DIAL-9 rewritten when Preview as moved to Master controls (2026-10-19); DIAL-4 rewritten in phase 5 for the pinned ring; DIAL-12 added in phase 5 (audit QC-07) |
+| DIAL-25..35, PAD-15, EDIT-30 | The dial polish (2026-10-21): the border gone and migration step 9, the slice gap, placement from W, a slice clicked to the hub, the hub styles, the Group labels tab, Icon offset on Icons, 128-pixel dial icons, a click outside closing the dial, the Pad and Dial pages, the pad header's Quick Comms: text, the page indicators' background and border, the Hub tab | No client pass recorded yet; DIAL-28 and DIAL-33 owe an in-combat pass, and DIAL-28 is the first in-game test of the restricted `GetMousePosition` (C7): if it fails, the fallback is forwarding tiles |
 | SHARE-1..6, LOOK-1..2, ICON-1, BG-1..8, IDS-1 | Phase 5: share, polish and the instance ids | No client pass recorded yet; SHARE-5, BG-1, BG-3 and BG-5 rewritten with the dial rework (2026-10-21); BG-1 and BG-4 rewritten and BG-7..8 added with the four node buttons and Silvershard Mines' and Temple of Kotmogu's groups (2026-10-20, bg buttons); BG-1 rewritten with Wintergrasp's winds and BG-3..6 added with the battleground objective groups (2026-10-20); BG-1 rewritten with the map-wide wedge (2026-10-19, groups polish); LOOK-2's in-combat step goes through `/qc set`; IDS-1 extended to the journal instances and arenas (2026-10-19) |
 | ICONS-1..3 | Icons and polish (2026-10-19): the Icons tab | No client pass recorded yet; ICONS-1 rewritten with the owner's pad defaults (2026-10-20) |
 | LOOK-3..6, BUTTON-1..2, KEY-1..3 | Window, Button and keys (2026-10-20): the header's look and alignment, the three window tabs and the section band, the Buttons tab, keys as WoW bindings and Toggle Comms Pads | No client pass recorded yet; KEY-1..3 rewritten with the key set only in Options → Keybindings and the pads' hidden state kept per character (2026-10-21); LOOK-2, LOOK-5, EDIT-5, EDIT-25 and BUTTON-1..2 reworded with Visibility on General, Main window renamed Window and the Chip tab renamed Buttons (chips became buttons in the UI wording, then internally as `pad.button.*`; 2026-10-20); LOOK-5..6 added and LOOK-1..3 rewritten with the Window tab split into Pad header, Section header and Main window (2026-10-20); LOOK-1, LOOK-3 and BUTTON-1 rewritten with the owner's pad defaults (2026-10-20); LOOK-1 rewritten with the Section titles font, PAD-10 with Button width on the Buttons tab, DIAL-6 and DIAL-8 with the dial key as WoW's own binding |

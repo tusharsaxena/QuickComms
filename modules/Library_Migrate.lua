@@ -182,3 +182,17 @@ function Lib.MigrateDialFields(profile)
         end
     end
 end
+
+-- The slice leaves the dial polish (2026-10-21) retired: the Slices tab's Border heading. A Slice gap
+-- parts the slices now, and no lines are drawn between them.
+local RETIRED_SLICE_FIELDS = { "borderSize", "borderColor", "useClassColorBorder" }
+
+--- Step 9 (dial polish): every stored dial's slice table drops the retired border leaves.
+function Lib.MigrateSliceBorder(profile)
+    if type(profile) ~= "table" or type(profile.dials) ~= "table" then return end
+    for _, d in pairs(profile.dials) do
+        if type(d) == "table" and type(d.slice) == "table" then
+            for _, k in ipairs(RETIRED_SLICE_FIELDS) do d.slice[k] = nil end
+        end
+    end
+end

@@ -26,8 +26,9 @@ local _, NS = ...
 -- the right heading appears. The options library has no hidden-row field to say this in the row.
 --
 -- settings/SchemaMembers.lua calls Settings.IconRows with its checks and splices the rows into its
--- own list (a pad's after its Look rows; a dial's after its Wheel rows, so the Icons tab follows
--- Wheel), where its loop gives each row the member rows' reaction, Library.Touch: the surfaces
+-- own list (a pad's after its Look rows; a dial's after its Group labels rows and its Icon offset
+-- row, so the Icons tab follows Group labels and opens with Icon offset under Size and crop, dial
+-- polish 2026-10-21), where its loop gives each row the member rows' reaction, Library.Touch: the surfaces
 -- rebuild through LIBRARY_CHANGED, at combat end when they must. On a degraded load the composers are
 -- hollow and the composed rows are absent; modules/IconStyle.lua then reads the stored values or the
 -- defaults.

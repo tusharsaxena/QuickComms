@@ -22,8 +22,10 @@ local _, NS = ...
 -- The Comms Dial (spec §11.2, Relaxed mode): modules/Dial_Secure.lua holds the snippet text and asks
 -- here for the header (a SecureHandlerClickTemplate button named QuickCommsDial<n>), its ring
 -- containers (SecureFrameTemplate), its wedges (send buttons wrapped by the header's snippets BEFORE
--- the click hook below, because the client's wrap replaces the script and would drop the hook), and
--- every attribute, frame ref and snippet run. A dial's key is WoW's own binding of its header's
+-- the click hook below, because the client's wrap replaces the script and would drop the hook), each
+-- ring's catcher (a secure button over the disc, wrapped by the header's catcher snippet, that
+-- forwards a click to the wedge under the cursor), its screen catcher (a full-screen secure button
+-- under the dial whose wrapped click closes it), and every attribute, frame ref and snippet run. A dial's key is WoW's own binding of its header's
 -- Bindings.xml entry since 2026-10-20, set only in Options -> Keybindings, so no binding is written
 -- here.
 --
@@ -182,13 +184,50 @@ function SE.NewDialRing(header)
     return r
 end
 
---- Write several attributes (a header's snippets and ring layout, a wedge's target). Out of combat.
+--- One ring's catcher (dial polish, 2026-10-21): a SecureActionButtonTemplate button in `ring` that
+--- Dial.lua sizes to the disc, registered for the up edge only, its click wrapped by the header's
+--- catcher snippet, which forwards a left click to the wedge whose slice is under the cursor
+--- (`*type-w<j> = "click"`, the any-modifier form, written by DialSecure.Load), and runs the hub's
+--- action inside the hub's circle. The wedges above it and the header (the hub) take no mouse, so every
+--- mouse click on the disc, the hub's included, lands here. Nil in combat.
+function SE.NewDialCatcher(header, ring, pre)
+    if inCombat() then return nil end
+    local c = CreateFrame("Button", nil, ring, "SecureActionButtonTemplate")
+    c:RegisterForClicks("AnyUp")
+    header:WrapScript(c, "OnClick", pre)
+    c:SetAttribute("useOnKeyDown", false)
+    c:SetFrameLevel(math.max(0, (header:GetFrameLevel() or 0) - 1))
+    return c
+end
+
+--- A dial's screen catcher (dial polish, 2026-10-21): a SecureActionButtonTemplate child of `header`
+--- over the whole screen (SetAllPoints(UIParent)), registered for the up edge only, its click wrapped
+--- by the header's screen snippet, which closes the dial and lets nothing through (it has no type).
+--- It sits under the dial by strata, not level: HIGH, one below the header's DIALOG, because a level
+--- under the header's would tie with the ring catchers' (also the header's level - 1); the client
+--- keeps a child's own strata once set, and every dial frame above it stays in DIALOG. The header's
+--- show snippet shows it only on a key open, its close snippet hides it. Hidden. Nil in combat.
+function SE.NewDialScreen(header, pre)
+    if inCombat() then return nil end
+    local s = CreateFrame("Button", nil, header, "SecureActionButtonTemplate")
+    s:SetFrameStrata("HIGH")
+    s:SetAllPoints(UIParent)
+    s:RegisterForClicks("AnyUp")
+    header:WrapScript(s, "OnClick", pre)
+    s:SetAttribute("useOnKeyDown", false)
+    s:Hide()
+    return s
+end
+
+--- Write several attributes (a header's snippets and ring layout, a wedge's target), and set each key
+--- in `clear` (a list, optional: a catcher's empty places) to nil. Out of combat.
 --- @return boolean written
-function SE.SetAttributes(frame, attrs)
+function SE.SetAttributes(frame, attrs, clear)
     if inCombat() then
         NS.Debug("Dial", "attributes refused: in combat")
         return false
     end
+    for _, k in ipairs(clear or {}) do frame:SetAttribute(k, nil) end
     for k, v in pairs(attrs) do frame:SetAttribute(k, v) end
     return true
 end
@@ -390,7 +429,9 @@ end
 --- The OnClick hook every send button carries. Acts once per press, on the edge the secure
 --- template acts on.
 function SE.OnClick(b, mouseButton, down)
-    if b.qcLeftOnly and mouseButton ~= "LeftButton" then return end
+    -- A catcher's forward clicks a wedge with its place's name ("w3"): a left click, as the wedge's
+    -- pre snippet takes it.
+    if b.qcLeftOnly and mouseButton ~= "LeftButton" and not tostring(mouseButton):match("^w%d+$") then return end
     if not G.IsActingEdge(down, useKeyDown(b)) then return end
     local t0 = Perf.on and debugprofilestop()
     press(b)

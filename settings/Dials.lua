@@ -1,21 +1,30 @@
 local _, NS = ...
--- settings/Dials.lua — the Comms Dial page (design spec §11, §13.1): one dial at a time.
+-- settings/Dials.lua — the Dial page (design spec §11, §13.1): one dial at a time.
 --
 --     band     [ Dial v (picker) ][ New dial ]
---     strip    [ General ][ Groups ][ Wheel ][ Slices ][ Paging ][ Labels ][ Icons ][ Preview ]
+--     strip    [ General ][ Groups ][ Wheel ][ Slices ][ Hub ][ Paging ][ Slice labels ][ Group labels ]
+--              [ Icons ][ Preview ]
 --     General  Name, Enabled, then Delete dial
 --     Groups   Show groups as (Categories or Flat), then the dial's groups as a drag-to-reorder list
 --              with Remove (its priority order, spec §7), then Add a group
---     Wheel    wedges per ring (Auto by default), ring radius, icon offset, open at, then Position: X and Y and
+--     Wheel    wedges per ring (Auto by default), ring radius, open at, then Position: X and Y and
 --              Reset this dial's position
---     Slices   Background (the slices' fill), Border (size, color), Highlight (the hovered slice's
---              fill) and Pointer (show, size, color), each color with its class-color companion
+--     Slices   Background (the slices' fill), Gap (the slice gap), Highlight (the hovered slice's
+--              fill), each color with its class-color companion
+--     Hub      Hub (style, hub and circle size, line width, backdrop color, border size and color,
+--              circle color) and Pointer (show, size, offset, color), each color with its class-color
+--              companion (on Slices until dial polish, 2026-10-21; the paths kept)
 --     Paging   a paged ring's row under the dial: Position (offset), Arrows (size, spacing, colors) and
---              Page indicator (dot size, current page width, spacing, colors)
---     Labels   Show labels, then the labels' Font block (font, size, outline, color, class color,
---              shadow), grayed out while labels are off, then Tooltip (side, offset)
---     Icons    the wedges' icons (B9, settings/SchemaIcons.lua), as the Comms Pad page's Icons tab;
---              a wedge's border is a round ring and its icon size keeps the wedge's own size
+--              Page indicator (dot size, current page width, spacing, colors, the indicators'
+--              background and border)
+--     Slice labels  Show labels, then the labels' Font block (font, size, outline, color, class
+--              color, shadow), grayed out while labels are off, then Tooltip (side, offset); the
+--              Labels tab until dial polish (2026-10-21) renamed it, its `dial.label.*` paths kept
+--     Group labels  Show group labels (the ring's title above the dial), then its Font block under
+--              `dial.title.*`, grayed out while off (dial polish, 2026-10-21)
+--     Icons    Icon offset (a Wheel row until dial polish; `dial.iconOffset` kept), then the wedges'
+--              icons (B9, settings/SchemaIcons.lua), as the Pad page's Icons tab; a wedge's
+--              border is a round ring and its icon size (up to 128) keeps the wedge's own size
 --     Preview  each ring as the current or previewed situation builds it, wedge by wedge
 --
 -- The band holds the picker and the create action (options-ui-§14). Every field is a member row
@@ -39,8 +48,10 @@ local GENERAL = L["General"]
 local GROUPS = L["Groups"]
 local WHEEL = L["Wheel"]
 local ICONS = L["Icons"]
-local LABELS = L["Labels"]
+local LABELS = L["Slice labels"]
+local TITLES = L["Group labels"]
 local SLICES = L["Slices"]
+local HUB = L["Hub"]
 local PAGING = L["Paging"]
 
 local DIRECTION = { N = L["N"], NE = L["NE"], E = L["E"], SE = L["SE"], S = L["S"], SW = L["SW"], W = L["W"],
@@ -224,7 +235,7 @@ local function offsetBox(ctx, id, label, axis)
     end }
 end
 
--- The Icons tab: its rows in schema order, the headings the library's (as the Comms Pad page's), and
+-- The Icons tab: its rows in schema order, the headings the library's (as the Pad page's), and
 -- only the selected glow style's knobs (Settings.ShownIconRows).
 local function renderIcons(ctx, rows)
     local h = H()
@@ -235,7 +246,7 @@ local function renderIcons(ctx, rows)
     h.RenderRows(ctx, Ed.Scalar(Settings.ShownIconRows(rows)), nil, nil, { noHeadings = true })
 end
 
--- The Slices, Paging and Labels tabs: their rows, under their own headings.
+-- The Slices, Hub, Paging, Slice labels and Group labels tabs: their rows, under their own headings.
 local function renderStyled(ctx, rows)
     local h = H()
     if not selected() then
@@ -296,15 +307,17 @@ local function render(ctx)
         { key = GROUPS, render = renderGroups },
         { key = WHEEL, render = renderWheel },
         { key = SLICES, render = renderStyled },
+        { key = HUB, render = renderStyled },
         { key = PAGING, render = renderStyled },
         { key = LABELS, render = renderStyled },
+        { key = TITLES, render = renderStyled },
         { key = ICONS, render = renderIcons },
         { key = "preview", label = L["Preview"], tooltip = L["What each ring holds here, or in the preview."],
           render = renderPreview },
     })
 end
 
-Ed.RegisterPage(PAGE, L["Comms Dial"], "DialsPanel", render, {
+Ed.RegisterPage(PAGE, L["Dial"], "DialsPanel", render, {
     tooltip = L["Put the selected dial's groups-as, wedges per ring, ring radius, icon offset, where it opens, its slices, paging, labels and icons back to their defaults, and turn it on. Its name, groups and position are kept."],
     -- One act (Library.Batch): the dials rebuild once, not once per row.
     onClick = function(ctx) NS.Library.Batch(function() H().RestoreDefaults(PAGE, ctx) end) end,

@@ -336,11 +336,16 @@ end
 
 local function headerState(inst, plan)
     local snap = plan.snapshot or {}
+    -- A preview names the situation as its menu does (the dungeon, the raid's difficulty, the
+    -- battleground), not as a live snapshot would read. A live one reads "Quick Comms: <situation>"
+    -- (dial polish, spec item 11); a section title is matched against the situation alone (B1).
+    local said = plan.preview and L["Preview: %s"]:format(NS.Preview.Label(plan.preview))
+        or plan.test and L["Test mode"] or nil
+    local situation = said or R.SituationText(snap, NS.Compat.DungeonName(snap.challengeMapID))
     return {
-        -- A preview names the situation as its menu does (the dungeon, the raid's difficulty, the
-        -- battleground), not as a live snapshot would read.
-        situation = plan.preview and L["Preview: %s"]:format(NS.Preview.Label(plan.preview))
-            or plan.test and L["Test mode"] or R.SituationText(snap, NS.Compat.DungeonName(snap.challengeMapID)),
+        situation = said or L["Quick Comms: %s"]:format(situation),
+        -- what the header says without its prefix: PL.Compute hides a section title equal to it (B1)
+        said = situation,
         -- The strip's marker (R.StripLabel): a preview's, else test mode's (a preview is a test plan).
         mark = plan.preview and L["PREVIEW"] or plan.test and L["TEST MODE"] or nil,
         lockdown = plan.lockdownChip == true and NS.Setting("behavior.lockdownChip") ~= false,
@@ -380,7 +385,7 @@ function Pad.Apply(id, plan)
     R.ApplyHeaderLook(inst.header, hlook)
     R.PaintHeader(inst.header, hstate)
     local box = PL.Compute(sections, layout, { collapsed = hstate.collapsed, headerH = hlook.height, button = button,
-        fontSize = button.fontSize, titleSize = slook.font.size, titleH = slook.height, situation = hstate.situation, iconSize = icfg.size,
+        fontSize = button.fontSize, titleSize = slook.font.size, titleH = slook.height, situation = hstate.said, iconSize = icfg.size,
         minWidth = R.HeaderMinWidth(inst.header) })
     inst.root:SetScale(math.max(NS.Library.MIN_SURFACE_SCALE, (tonumber(NS.Setting("scale")) or 1) * (tonumber(layout.scale) or 1)))
     inst.root:SetSize(box.width, box.height)

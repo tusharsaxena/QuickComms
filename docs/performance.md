@@ -23,7 +23,7 @@ Eight are declared, the design's seven and the Icons tab's `glowStart`, in `core
 | Bucket | Bracketed in | Measures |
 |---|---|---|
 | `situationRefresh` | `modules/Situation.lua` | one situation read: inputs, classify, signature. The `SITUATION_CHANGED` publish runs after the bracket closes; the rebuild it triggers is in `bakeSurface`, `resolverResolve` and `padLayout` |
-| `bakeSurface` | `modules/Surfaces.lua` | one pad's or dial's plan: resolve, order, bake every slot (and, for a dial, the ring layout); the Comms Dial page's own looks at a plan (`deps.unmeasured`) are not counted |
+| `bakeSurface` | `modules/Surfaces.lua` | one pad's or dial's plan: resolve, order, bake every slot (and, for a dial, the ring layout); the Dial page's own looks at a plan (`deps.unmeasured`) are not counted |
 | `resolverResolve` | `modules/Surfaces.lua` | a plan's active groups and their order; declared and noted within `bakeSurface` |
 | `sendClick` | `modules/SendEngine.lua` | the `OnClick` hook on a send button |
 | `padLayout` | `modules/Pad.lua` | one pad's rebuild: geometry, buttons, arm |

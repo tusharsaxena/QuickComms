@@ -22,7 +22,7 @@ Total.
 - repo: every authored file opens with the bootstrap and a comment naming its path
 - repo: the .pkgmeta has no externals and ignores the dev-only entries
 
-### test_mock_secure.lua (24)
+### test_mock_secure.lua (28)
 
 - mock: a secure button keeps its attributes and answers its name
 - mock: SetAttribute in combat is refused and recorded, never applied
@@ -48,6 +48,10 @@ Total.
 - mock: [phase 4] the cursor and a frame's center are numbers a suite can set
 - mock: [final 19] a header's OnShow hook runs insecure: a protected call it makes in combat is blocked
 - mock: [final 2] two owners binding one key: the newest wins, and clearing it hands the key back
+- mock secure: GetMousePosition reads the cursor inside a frame, nil outside
+- mock secure: type click forwards to clickbutton-<button>
+- mock secure: a held modifier reads <mod>- and * attributes, never the plain button form
+- mock secure: a header with its mouse off still runs its _onclick from a binding and from Click
 
 ### test_bus.lua (2)
 
@@ -102,7 +106,7 @@ Total.
 - perf: [review] a refresh whose signature moves notes situationRefresh before the rebuild it publishes
 - perf: [phase 5] the Comms Dial page's Preview notes neither bakeSurface nor resolverResolve
 
-### test_database.lua (17)
+### test_database.lua (18)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the target is the last step's `to`, and the steps climb in order
@@ -120,6 +124,7 @@ Total.
 - database: [B7] step 5 renames the dungeon set, widens its When and gives seeded callouts their glyphs, once
 - database: [polish] step 6 colors untouched seeded icons and adds the node sets' own callouts, once
 - database: [bg subgroups] step 7 seeds the new objective nodes by origin, once; step 8 drops the retired dial fields
+- database: [polish] migrate: step 9 drops the retired slice border
 - database: [bg subgroups] a fresh profile seeds every objective node once, and step 7 leaves it as it is
 
 ### test_profile.lua (9)
@@ -128,7 +133,7 @@ Total.
 - profile: collections exist; default nextId is 1, past every seeded id after boot
 - profile: every behavior row resolves through the seam
 - profile: the spam guard clamps to 0.6-2.0 and fallback refuses unknown values
-- profile: schema version target is 8 (the dial rework)
+- profile: schema version target is 9 (the dial polish)
 - prepare: a callout held by two groups is split into a copy
 - prepare: a split copy of a seeded callout keeps no origin
 - prepare: a callout held by no group is dropped
@@ -709,7 +714,7 @@ Total.
 - groups page: [R4] EditGroup in combat prints the settings refusal and changes nothing
 - groups page: [R4] EditGroup of a group that is gone opens nothing
 
-### test_page_pads.lua (24)
+### test_page_pads.lua (26)
 
 - pads page: New pad makes a second pad holding every built-in, selects it, and the pad is built
 - pads page: the Layout rows write the selected pad
@@ -735,8 +740,10 @@ Total.
 - pads page: [glow knobs] Offset comes right after Glow color, in the schema and on the tab
 - pads page: [glow knobs] a Glow or Glow style write repaints the tab, so the right knobs appear
 - pads page: [B9] Defaults puts the Icons rows back too, and its tooltip names them
+- page pads: [polish] the page is titled Pad
+- page pads: [polish] no user-facing string sends the player to a Comms Pad or Comms Dial page
 
-### test_page_dials.lua (20)
+### test_page_dials.lua (27)
 
 - dials page: New dial makes a second dial holding every built-in, selects it, and builds QuickCommsDial2
 - dials page: New dial takes the lowest free number, so a delete never leads to two names alike
@@ -754,10 +761,17 @@ Total.
 - dials page: [B9] Icons follows Wheel, carries its headings once each, and writes the dial
 - dials page: [glow knobs] only the selected style's knobs show, and a Glow or Glow style write repaints
 - dials page: [labels] Labels shows or hides the wedges' names and styles them; off grays the font
-- dials page: [slices] Slices writes the fill, border, highlight and pointer, each color with its class color
+- dials page: [slices] Slices writes the fill, gap and highlight, Hub the pointer, each color with its class color
+- page dials: [polish] Slices tab has Slice gap and no Border heading
+- page dials: [polish] Hub heading rows on the Hub tab
 - dials page: [slices] every slice texture the dial names ships under media/textures
 - dials page: [paging] Paging sizes, spaces and colors the arrows and page indicators; the dial follows
+- page dials: [paging] Page indicator carries the background and border rows, their ranges and defaults
 - dials page: [wheel] Icon offset moves the icons in or out; 0 is the ring radius
+- page dials: [polish] a Hub tab right after Slices holds the Hub and Pointer headings
+- page dials: [polish] tabs read Slices, Hub, Paging, Slice labels, Group labels, Icons
+- page dials: [polish] Icon offset is on the Icons tab, not Wheel
+- page dials: [polish] the page is titled Dial
 
 ### test_page_share.lua (12)
 
@@ -829,7 +843,7 @@ Total.
 - sendengine: [phase 4] attributes, frame refs and snippets are written out of combat only, never blocked
 - sendengine: [keys] no override binding is written: a dial's key is WoW's own binding (modules/Dial.lua)
 
-### test_dial_secure.lua (12)
+### test_dial_secure.lua (16)
 
 - dial secure: the header is QuickCommsDial<n>, hidden until the toggle opens it; open, the dial owns Escape and 1-8
 - dial secure: [exit] a group wedge opens its ring (the two-stroke); a callout wedge sends once and closes
@@ -843,6 +857,10 @@ Total.
 - dial secure: [final 13] a page turn releases the number keys the new page has no wedge for
 - dial secure: [final 2] opening one dial closes another that is open; closing it leaves no key bound
 - dial secure: [firewall] no snippet writes an attribute; the ring on screen lives in the header's environment
+- dial secure: [polish] catcher and SliceAt agree
+- dial secure: [polish] an outside click closes a key-opened dial, in combat
+- dial secure: [polish] display open shows no screen catcher
+- dial secure: [polish] closing hides the screen catcher
 
 ### test_preview.lua (23)
 
@@ -919,14 +937,14 @@ Total.
 - layout: [window] the header row's height moves every row and is the collapsed pad's height
 - layout: [button] a Button height above 0 is the labeled button's height; 0 is automatic; icon-only stays square
 
-### test_dial_layout.lua (20)
+### test_dial_layout.lua (28)
 
 - dial layout: four wedges sit on N, E, S and W, clockwise from the top
 - dial layout: slices are Auto, 4, 6, 8 or 12; a page is 12 at most, 8 on a ring that holds rings
 - dial layout: [auto] one wedge is W, two W and E, three W, N and E, four W, N, E and S; more spread from W
 - dial layout: [review 5] more items than wedges go on plain pages, the rest on the last
 - dial layout: [nav] a paged ring's pill, dots and arrows sit in one row under the disc and its labels
-- dial layout: [hit] a wedge's hit square fills its slice without reaching the hub or a neighbor
+- dial layout: [hit] the Icon offset moves the wedges in; a bigger pointer sits further out
 - dial layout: [exit] Categories with several groups opens on the ring of groups; a group wedge opens its ring
 - dial layout: several groups open on the group ring; one group opens straight on it
 - dial layout: [review 5] Flat puts every callout on the first ring, highest group first, paged
@@ -941,6 +959,14 @@ Total.
 - dial layout: [bg subgroups] a set with more children than winds falls back to its unpinned, paged ring
 - dial layout: [review 6] a pinned ring ignores the dial's slices; Flat keeps its paging
 - dial layout: [icons] a ring entry carries its group's icon color, a send entry its callout's
+- dial layout: [polish] fixed 4 places 1-4 items W; W,E; W,N,E; W,N,E,S
+- dial layout: [polish] auto keeps its shapes from W
+- dial layout: [polish] fixed 8 with 2 items fills W then clockwise
+- dial layout: [polish] slice shift
+- dial layout: [polish] auto cap
+- dial layout: [polish] auto cap at 128 px pages the ring
+- dial layout: [polish] SliceAt
+- dial layout: [polish] Rings gives every unpinned item its place
 
 ### test_surfaces.lua (27)
 
@@ -996,7 +1022,7 @@ Total.
 - render: [icons] a glyph button is drawn in its color; the button repainted with another icon is white again
 - render: [B3] a button's label is one line, and hidden when the button leaves it no room
 
-### test_pad.lua (43)
+### test_pad.lua (45)
 
 - pad: the default pad shows the M+ callouts, each button armed with its baked line
 - pad: [review 5] a refused button is dimmed and disarmed: a click sends and reports nothing
@@ -1041,12 +1067,14 @@ Total.
 - pad: [R4] in tabs mode the tab's title edits the group the tab shows; the wheel moves it
 - pad: [R4] merged pads, collapsed pads and test mode's placeholder groups have no title to click
 - pad: [bg subgroups] Alterac Valley draws its nineteen objectives two to a row, each title its block wide
+- pad: [polish] header reads Quick Comms: World
+- pad: [polish] header reads Quick Comms: M+ · Windrunner Spire +14
 
-### test_dial.lua (37)
+### test_dial.lua (60)
 
 - dial: Apply builds QuickCommsDial<n> with a ring per page, each callout wedge armed with its baked line
 - dial: a refused callout is a dimmed, disarmed wedge; a ring wedge is disarmed
-- dial: [audit QC-07] the hub's close and a wedge's padlock are catalog marks, with the Blizzard art as the nil fallback
+- dial: [audit QC-07] a wedge's padlock is a catalog mark, with the Blizzard art as the nil fallback (the hub's close retired)
 - dial: the hub shows the lockdown chip, the stale hint and TEST MODE; the pointer runs only while open
 - dial: a press dims every wedge and button for the guard window; a drop stays red long enough to reopen and see
 - dial: Release closes, disarms and forgets a dial; HideAll also releases the keys
@@ -1077,12 +1105,35 @@ Total.
 - dial: [rework] a paged ring turns with its arrows and the Left and Right keys; its dots mark the page
 - dial: [rework] wedges have no backdrop; the slices, the wedges and their hit squares follow the ring radius
 - dial: [slices] each place is a tinted slice; the slice the cursor points into lights, anywhere but the hub
-- dial: [front] the hub, its close mark and the pointer draw over the slices
+- dial slices: [polish] no border lines are drawn
+- dial slices: [polish] a gap shifts each fill outward along its bisector
+- dial slices: [polish] gap 0 draws as before
+- dial: [paging] the indicators sit on a rounded background sized to the row; off hides it
+- dial: [paging] every dot and the pill has a border, its size plus twice the Dot border; 0 draws none
+- dial: [front] the hub, its circle and the pointer draw over the slices
 - dial: [tooltip] a wedge's tooltip sits outside the dial: above by default, on the Labels tab's side
 - dial: [pointer] the pointer is a catalog glyph, sized, colored and placed by the Slices tab, and can be off
 - dial: [labels] the Label offset moves every label out from the center; the title and the page row follow
+- dial: [polish] a click near the hub sends the lit slice, in combat
+- dial: [polish] a click with a modifier held still sends the slice, in combat
+- dial: [polish] just outside the hub's circle, on a diagonal, the slice lights and clicks, in combat
+- dial: [polish] a click inside the hub's circle runs the hub, any modifier held, in combat
+- dial: [polish] the hub's hover shows from the tracker inside its circle and clears outside
+- dial: [polish] the dial's key still opens and closes it with the header's mouse off, in combat
+- dial: [polish] a click on an empty place does nothing; in the hub it sends nothing
+- dial: [polish] hovering anywhere in a slice shows its tooltip
+- dial: [polish] wedges take no mouse; keys still click by name
+- dial: [polish] a built dial closes on a click outside it, in combat
+- dial: [polish] a ring hidden under the hover clears its slice, tooltip and hover glow
+- dial: [polish] default hub is a solid gold circle of 22 on a 40 backdrop, no red X
+- dial: [polish] hub style solid draws the backdrop rim when its border size is set
+- dial: [polish] hub style ring is a hollow ring of the circle size and line width
+- dial: [polish] hub style target is a ring with a center dot
+- dial: [polish] hub style rimmed is a filled circle on a backdrop with its own rim
+- dial: [polish] hub size moves the inner edge everywhere
+- dial: [polish] group labels take their font and hide when off
 
-### test_icon_style.lua (8)
+### test_icon_style.lua (9)
 
 - icon style: the defaults draw the owner's look on a button and on a wedge
 - icon style: zoom crops through SetTexCoord, desaturate and alpha reach the texture
@@ -1092,6 +1143,7 @@ Total.
 - icon style: a wedge's border is a round ring behind its icon, icon plus twice the thickness
 - icon style: a wedge's ring never grows past the wedge, so it cannot reach the next wedge or its label
 - icon style: a pad saved before the Icons tab reads like a new one (fillShape backfills `icon`)
+- icon style: [polish] dial icon size reaches 128, pad stays 40
 
 ### test_glow.lua (11)
 
@@ -1180,11 +1232,11 @@ Total.
 | Suite | Cases |
 |-------|------:|
 | test_harness.lua | 11 |
-| test_mock_secure.lua | 24 |
+| test_mock_secure.lua | 28 |
 | test_bus.lua | 2 |
 | test_surface_parity.lua | 15 |
 | test_setup.lua | 27 |
-| test_database.lua | 17 |
+| test_database.lua | 18 |
 | test_profile.lua | 9 |
 | test_schema.lua | 19 |
 | test_slash.lua | 20 |
@@ -1208,23 +1260,23 @@ Total.
 | test_eui_skin.lua | 10 |
 | test_groups_when.lua | 20 |
 | test_page_groups.lua | 67 |
-| test_page_pads.lua | 24 |
-| test_page_dials.lua | 20 |
+| test_page_pads.lua | 26 |
+| test_page_dials.lua | 27 |
 | test_page_share.lua | 12 |
 | test_check.lua | 6 |
 | test_send_guard.lua | 10 |
 | test_sendengine.lua | 30 |
-| test_dial_secure.lua | 12 |
+| test_dial_secure.lua | 16 |
 | test_preview.lua | 23 |
 | test_edit_preview.lua | 14 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 21 |
-| test_dial_layout.lua | 20 |
+| test_dial_layout.lua | 28 |
 | test_surfaces.lua | 27 |
 | test_pad_render.lua | 21 |
-| test_pad.lua | 43 |
-| test_dial.lua | 37 |
-| test_icon_style.lua | 8 |
+| test_pad.lua | 45 |
+| test_dial.lua | 60 |
+| test_icon_style.lua | 9 |
 | test_glow.lua | 11 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
@@ -1233,4 +1285,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1007** |
+| **Total** | **1059** |

@@ -57,7 +57,7 @@ test("pad: the default pad shows the M+ callouts, each button armed with its bak
     assertEqual(NS.PadRender.TooltipLines(button.qcSlot)[3], "Channel: |cffababffParty|r", "the tooltip names it")
     m.__click(button)
     assertEqual(m.sentMacros[#m.sentMacros].text, "/p Pulling next pack")
-    assertEqual(inst.header.qcSituation:GetText(), "M+ +12")
+    assertEqual(inst.header.qcSituation:GetText(), "Quick Comms: M+ +12")
 end)
 
 test("pad: [review 5] a refused button is dimmed and disarmed: a click sends and reports nothing", function()
@@ -561,7 +561,8 @@ test("pad: [icon only] the pad is as wide as its buttons when the header is narr
     local PL = NS.PadLayout
     local inst = NS.Pad.Instance("p1")
     local sit = inst.header.qcSituation
-    sit.GetStringWidth = function(self) return 6 * #(self:GetText() or "") end
+    -- a narrow header (36 pixels: what "M+ +12" measured before the header read "Quick Comms: ...")
+    sit.GetStringWidth = function() return 36 end
     assertTrue(NS.SchemaRuntime.Set("pad.layout.style", "icon", "p1"))
     local cw = PL.ICON_ONLY
     local contentW = 4 * cw + 3 * 4
@@ -689,7 +690,7 @@ test("pad: [B1] a group named as the header's situation draws no title row of it
     NS.Library.AddGroupToSurface("pad", "p1", gid, 1)
     NS.Pad.Apply("p1", planFor(NS))
     local inst = NS.Pad.Instance("p1")
-    assertEqual(inst.header.qcSituation:GetText(), "M+ +12")
+    assertEqual(inst.header.qcSituation:GetText(), "Quick Comms: M+ +12")
     -- red under: Pad.Apply not passing the situation to PL.Compute
     for _, fs in ipairs(inst.titles.active) do
         assertTrue(fs:GetText() ~= "m+ +12", "the situation is not drawn twice")
@@ -941,4 +942,20 @@ test("pad: [bg subgroups] Alterac Valley draws its nineteen objectives two to a 
     end
     assertEqual(sized, 18, "each paired objective's title stops at its block; the nineteenth has a row to itself")
     assertEqual(sized + auto, #inst.titles.active, "every other title sizes to its text")
+end)
+
+-- ── the header text (dial polish T7) ──────────────────────────────────────────────────────
+test("pad: [polish] header reads Quick Comms: World", function()
+    local NS = applied({})
+    -- red under: Pad.lua's headerState passing R.SituationText bare, with no L["Quick Comms: %s"]
+    assertEqual(NS.Pad.Instance("p1").header.qcSituation:GetText(), "Quick Comms: World")
+end)
+
+test("pad: [polish] header reads Quick Comms: M+ · Windrunner Spire +14", function()
+    local NS = live({ inInstance = true, instanceType = "party", difficultyID = 8, keystoneActive = true,
+        keyLevel = 14, challengeMapID = 999, inGroup = true })
+    NS.Compat.DungeonName = function(id) return id == 999 and "Windrunner Spire" or nil end
+    assertTrue(NS.Pad.Apply("p1", planFor(NS)))
+    -- red under: the prefix missing, or wrapped around the dungeon alone rather than SituationText
+    assertEqual(NS.Pad.Instance("p1").header.qcSituation:GetText(), "Quick Comms: M+ \194\183 Windrunner Spire +14")
 end)

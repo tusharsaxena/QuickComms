@@ -186,6 +186,14 @@ function S.TestPlan(surfaceId)
         hasActive = true, test = true }
 end
 
+-- What Auto's icon fit reads off a dial (Dial_Layout.AutoCap, dial polish): its radius, Icon offset,
+-- icon size (defaults/Icons.lua's dial default when unset) and Slice gap.
+local function dialFit(dial)
+    local icon, slice = type(dial.icon) == "table" and dial.icon or {}, type(dial.slice) == "table" and dial.slice or {}
+    return { radius = dial.radius, iconOffset = dial.iconOffset,
+        iconSize = icon.size or NS.IconDefaults.SIZE.dial.default, gap = slice.gap or 0 }
+end
+
 --- Test mode's dial plan: placeholder groups and wedges that send nothing, laid out as the dial's own
 --- (spec §11.4: test mode shows dial 1 open).
 function S.TestDialPlan(surfaceId, dial)
@@ -194,7 +202,8 @@ function S.TestDialPlan(surfaceId, dial)
     for s = 1, S.TEST_SECTIONS do
         groups[s] = { id = "test." .. s, title = L["Test group %d"]:format(s), slots = testSlots(surfaceId, s) }
     end
-    local rings, open = NS.DialLayout.Rings(groups, { mode = dial.mode, slices = dial.slices, title = dial.name })
+    local rings, open = NS.DialLayout.Rings(groups, { mode = dial.mode, slices = dial.slices, title = dial.name,
+        fit = dialFit(dial) })
     return { kind = "dial", surfaceId = surfaceId, snapshot = {}, order = {}, rings = rings, openRing = open,
         radius = NS.DialLayout.ClampRadius(dial.radius), lockdownChip = false, hasActive = true, test = true }
 end
@@ -264,7 +273,8 @@ function S.BuildDialPlan(surfaceId, dial, snap, deps)
         end
         groups[#groups + 1] = entry
     end
-    plan.rings, plan.openRing = NS.DialLayout.Rings(groups, { mode = dial.mode, slices = dial.slices, title = dial.name })
+    plan.rings, plan.openRing = NS.DialLayout.Rings(groups, { mode = dial.mode, slices = dial.slices, title = dial.name,
+        fit = dialFit(dial) })
     -- As a pad's: what is drawn (a ring), not what is active.
     plan.hasActive = #plan.rings > 0
     if t0 then Perf.Note("bakeSurface", debugprofilestop() - t0) end

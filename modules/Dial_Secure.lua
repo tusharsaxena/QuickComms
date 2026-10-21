@@ -15,8 +15,10 @@ local _, NS = ...
 -- this file like every other).
 --
 -- The header's click (_onclick): Toggle (the dial's key, Bindings.xml) opens or closes; Next and Prev
--- (the wheel) turn a page; a left click is the hub: up a ring, or close on the first ring; anything
--- else (Close from Escape, a right, middle or side mouse button) closes. A wedge's click is wrapped:
+-- (the wheel) turn a page; a left click is the hub (qc-up: up a ring, or close on the first ring);
+-- anything else (Close from Escape) closes. The header takes no mouse (Dial.Apply turns it off, round
+-- hub, 2026-10-21): it is a square, the hub is drawn round, so the ring's catcher takes the hub's clicks
+-- inside its circle and runs qc-up; the keys still click the header by name. A wedge's click is wrapped:
 -- the down edge does nothing (a wedge acts on the up edge), any button but the left closes (a dial on
 -- a mouse button closes on its own key: the click lands on the wedge, not on the binding; and only a
 -- left click is a press, SendEngine's click hook skips the rest), a ring wedge (attribute
@@ -24,6 +26,25 @@ local _, NS = ...
 -- closes the dial. A page arrow (under the disc of a paged ring) is wrapped the same way but never
 -- sends: its left click shows the page it targets, or does nothing at an end (qc-target 0). Opening a dial closes every other open dial first (its siblings, DS.Link), so only
 -- one holds Escape, the wheel and 1-8.
+--
+-- THE CATCHER (dial polish, 2026-10-21). The wedges and the header take no mouse; each ring has one
+-- secure catcher button over its disc, centered on the hub, the only mouse target there. Its wrapped
+-- click reads the cursor with the restricted GetMousePosition, finds the slice by the same math as
+-- DialLayout.SliceAt from the ring's qc-size, qc-start, qc-hub and qc-disc (written by DS.Load), and
+-- answers the slice's name ("w3") when a wedge sits there: the catcher's *type-w3 = "click" and
+-- *clickbutton-w3 = that wedge forward the click (the any-modifier form: the client reads
+-- `shift-type-w3` then `*type-w3`, never the plain key, while a modifier is held), and the wedge's own
+-- wrap (which takes "w<j>" as a left click) and SendEngine's hook run as for any click. Inside the
+-- hub's circle (DialLayout.InHub) a left click, with or without a modifier, runs the header's qc-up
+-- (up a ring, or close on the first ring), as the hub's own click did; an empty place or past the rim
+-- does nothing; any button but the left closes. Works in combat: nothing is written, only read.
+--
+-- THE SCREEN CATCHER (dial polish, 2026-10-21). One full-screen secure button per dial, under the
+-- dial (SendEngine.NewDialScreen), reached by the header's frame ref `screen` (DS.Load, opts.screen).
+-- The show snippet shows it on a key open and hides it on an insecure open (`display`: the settings
+-- window may be open behind the dial and must stay usable); the close snippet hides it. Its wrapped
+-- click, any button on the up edge, closes the dial and does nothing else: while the dial is open from
+-- its key, a click outside it closes it.
 
 NS.DialSecure = NS.DialSecure or {}
 local DS = NS.DialSecure
@@ -46,12 +67,19 @@ elseif button == "Next" or button == "Prev" then
         if to > 0 then self:RunAttribute("qc-show", to) end
     end
 elseif button == "LeftButton" and current then
-    local up = self:GetAttribute("qc-parent-" .. current) or 0
-    if up > 0 then
-        self:RunAttribute("qc-show", up)
-    else
-        self:RunAttribute("qc-close")
-    end
+    self:RunAttribute("qc-up")
+else
+    self:RunAttribute("qc-close")
+end
+]]
+
+-- The hub's action: up a ring, or close on the first ring. The header's left click and the catcher's
+-- click inside the hub's circle run it.
+local UP = [[
+if not current then return end
+local up = self:GetAttribute("qc-parent-" .. current) or 0
+if up > 0 then
+    self:RunAttribute("qc-show", up)
 else
     self:RunAttribute("qc-close")
 end
@@ -89,6 +117,10 @@ for i = 1, count do
     end
 end
 current = r
+local screen = self:GetFrameRef("screen")
+if screen then
+    if display then screen:Hide() else screen:Show() end
+end
 self:ClearBindings()
 if not display then
     self:SetBindingClick(true, "ESCAPE", self, "Close")
@@ -112,6 +144,8 @@ for i = 1, count do
     local ring = self:GetFrameRef("ring" .. i)
     if ring then ring:Hide() end
 end
+local screen = self:GetFrameRef("screen")
+if screen then screen:Hide() end
 current = nil
 display = nil
 self:ClearBindings()
@@ -120,6 +154,7 @@ self:Hide()
 
 local WEDGE_PRE = [[
 if down then return false end
+if button:match("^w%d+$") then button = "LeftButton" end
 if button ~= "LeftButton" then
     owner:RunAttribute("qc-close")
     return false
@@ -147,15 +182,45 @@ if target > 0 then owner:RunAttribute("qc-show", target) end
 return false
 ]]
 
-DS.SNIPPETS = { onclick = ONCLICK, open = OPEN, display = DISPLAY, show = SHOW, close = CLOSE, pre = WEDGE_PRE,
-    post = WEDGE_POST, arrow = ARROW_PRE }
+-- A ring's catcher (dial polish): inside the hub's circle (DialLayout.InHub) the hub's action, any
+-- modifier held; else the slice under the cursor, by the same math as DialLayout.SliceAt (angle only,
+-- on the disc), named for its place ("w3") when a wedge sits there; the catcher's *type-w<j> /
+-- *clickbutton-w<j> (any modifier) then click that wedge with that name. Any other button closes.
+local CATCHER_PRE = [[
+if down then return false end
+if button ~= "LeftButton" then owner:RunAttribute("qc-close") return false end
+local x, y = self:GetMousePosition()
+if not x then return false end
+local disc = self:GetAttribute("qc-disc") or 0
+local dx, dy = (x - 0.5) * disc, (y - 0.5) * disc
+local dist = math.sqrt(dx * dx + dy * dy)
+if dist <= (self:GetAttribute("qc-hub") or 0) / 2 then owner:RunAttribute("qc-up") return false end
+if dist > disc / 2 then return false end
+local size = self:GetAttribute("qc-size") or 1
+local step = 2 * math.pi / size
+local from = math.rad(self:GetAttribute("qc-start") or 0) - step / 2
+local j = math.floor(((math.atan2(dx, dy) - from) % (2 * math.pi)) / step) + 1
+if not self:GetAttribute("*type-w" .. j) then return false end
+return "w" .. j
+]]
+
+-- The screen catcher (dial polish): any click outside the open dial closes it, on the up edge, and
+-- nothing goes through (the button has no type).
+local SCREEN_PRE = [[
+if down then return false end
+owner:RunAttribute("qc-close")
+return false
+]]
+
+DS.SNIPPETS = { onclick = ONCLICK, up = UP, open = OPEN, display = DISPLAY, show = SHOW, close = CLOSE, pre = WEDGE_PRE,
+    post = WEDGE_POST, arrow = ARROW_PRE, catcher = CATCHER_PRE, screen = SCREEN_PRE }
 
 --- A dial's header (its hub), named for its place in the dial order, carrying its snippets. Out of
 --- combat only; nil in combat.
 function DS.NewHeader(index)
     local header = SE.NewDialHeader(DS.HEADER:format(index))
     if not header then return nil end
-    SE.SetAttributes(header, { _onclick = ONCLICK, ["qc-open"] = OPEN, ["qc-display"] = DISPLAY, ["qc-show"] = SHOW,
+    SE.SetAttributes(header, { _onclick = ONCLICK, ["qc-up"] = UP, ["qc-open"] = OPEN, ["qc-display"] = DISPLAY, ["qc-show"] = SHOW,
         ["qc-close"] = CLOSE })
     return header
 end
@@ -176,9 +241,44 @@ function DS.NewArrow(header, ring)
     return SE.NewButton(ring, nil, { header = header, pre = ARROW_PRE })
 end
 
+--- One ring's catcher: a secure button over the ring's disc, its click wrapped by the catcher snippet.
+--- Out of combat only.
+function DS.NewCatcher(header, ring)
+    return SE.NewDialCatcher(header, ring, CATCHER_PRE)
+end
+
+--- A dial's screen catcher: a full-screen secure button under the dial, its click wrapped by the
+--- screen snippet (any click closes the dial). DS.Load hands it to the header. Out of combat only.
+function DS.NewScreen(header)
+    return SE.NewDialScreen(header, SCREEN_PRE)
+end
+
+-- A catcher's layout: the ring's shape (size, start in degrees, hub and disc across) and, for each
+-- place up to the most a ring has, a forward to the wedge on it; an empty place's two keys are
+-- cleared (the second list), so a place a rebuild emptied forwards nothing.
+local function catcherAttrs(ring)
+    local shape = ring.shape or {}
+    local attrs = { ["qc-size"] = shape.size or 1, ["qc-start"] = shape.start or 0, ["qc-hub"] = shape.hub or 0,
+        ["qc-disc"] = shape.disc or 0 }
+    local clear, onPlace = {}, {}
+    for i, w in ipairs(ring.wedges) do onPlace[w.place or i] = w.button end
+    for j = 1, math.max(NS.DialLayout.MAX_SLICES, shape.size or 0) do
+        if onPlace[j] then
+            attrs["*type-w" .. j], attrs["*clickbutton-w" .. j] = "click", onPlace[j]
+        else
+            clear[#clear + 1] = "*type-w" .. j
+            clear[#clear + 1] = "*clickbutton-w" .. j
+        end
+    end
+    return attrs, clear
+end
+
 --- Hand the header a plan's rings: per ring its container, its parent, previous and next page, its
---- page arrows ({ prev, next }, each targeting that page) and its wedges ({ button, target }: 0 for a
---- callout, else the ring a click opens); the ring it opens on and where it opens. Out of combat only.
+--- page arrows ({ prev, next }, each targeting that page), its wedges ({ button, target, place }:
+--- target 0 for a callout, else the ring a click opens; place its slice, 1..size from `start`) and,
+--- when it has one, its catcher with the ring's `shape` ({ size, start, hub, disc }); the ring it opens
+--- on and where it opens; and (opts.screen) the dial's screen catcher, as the header's frame ref
+--- `screen`. Out of combat only.
 --- @return boolean loaded
 function DS.Load(header, rings, opts)
     if NS.Compat.InCombat() then return false end
@@ -199,8 +299,10 @@ function DS.Load(header, rings, opts)
             attrs["qc-name-" .. r .. "-" .. i] = w.button:GetName()
             SE.SetAttributes(w.button, { ["qc-target"] = w.target or 0 })
         end
+        if ring.catcher then SE.SetAttributes(ring.catcher, catcherAttrs(ring)) end
         SE.SetFrameRef(header, "ring" .. r, ring.frame)
     end
+    if opts.screen then SE.SetFrameRef(header, "screen", opts.screen) end
     return SE.SetAttributes(header, attrs)
 end
 

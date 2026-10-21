@@ -1,5 +1,5 @@
 local _, NS = ...
--- settings/Pads.lua — the Comms Pad page (design spec §10.2-§10.4, §13.1): one pad at a time.
+-- settings/Pads.lua — the Pad page (design spec §10.2-§10.4, §13.1): one pad at a time.
 --
 --     band     [ Pad v (picker) ][ New pad ]
 --     strip    [ General ][ Groups ][ Layout ][ Pad header ][ Section header ][ Window ][ Buttons ]
@@ -278,7 +278,7 @@ local function render(ctx)
     })
 end
 
-Ed.RegisterPage(PAGE, L["Comms Pad"], "PadsPanel", render, {
+Ed.RegisterPage(PAGE, L["Pad"], "PadsPanel", render, {
     tooltip = L["Put the selected pad's groups-as, layout, headers, window, buttons and icons back to their defaults, and turn it on. Its name, groups and position are kept."],
     -- One act (Library.Batch): the pads rebuild once, not once per row.
     onClick = function(ctx) NS.Library.Batch(function() H().RestoreDefaults(PAGE, ctx) end) end,

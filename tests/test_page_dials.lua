@@ -17,7 +17,7 @@ local function open(inputs)
     NS.Situation.ReadInputs = function() return inputs or MPLUS end
     NS.Situation.RefreshNow("test")
     local P = dofile("tests/page_helpers.lua")(NS, m)
-    P.show("Comms Dial")
+    P.show("Dial")
     NS.addon.Settings.Editors.Select("dial", "d2")
     return NS, m, P
 end
@@ -174,8 +174,10 @@ test("dials page: [final 20] at 12 wedges per ring the Preview names each wedge 
     -- M+ alone (In Group's twelve would page the ring, and a paged ring holds eight)
     assertTrue(NS.SchemaRuntime.Set("group.enabled", false, T.seeded(NS, "bi.group")))
     local w = P.tab("dials", "preview")
-    assertTrue(P.hasText(w, "  2 1 o'clock: "), "wedge 2 at 1 o'clock")
-    assertTrue(P.hasText(w, "  3 2 o'clock: "))
+    -- red under: start fixed counts at N in modules/Dial_Layout.lua PageShape (wedge 2 at 1 o'clock)
+    assertTrue(P.hasText(w, "  1 9 o'clock: "), "wedge 1 at W, 9 o'clock")
+    assertTrue(P.hasText(w, "  2 10 o'clock: "), "wedge 2 at 10 o'clock")
+    assertTrue(P.hasText(w, "  3 11 o'clock: "))
 end)
 
 test("dials page: Delete dial asks, then the dial is gone, its header released, and the page heals", function()
@@ -234,7 +236,8 @@ test("dials page: [B9] Icons follows Wheel, carries its headings once each, and 
     for _, row in ipairs(NS.addon.Settings.RowsForPage("dials")) do
         if row.group and not seen[row.group] then seen[row.group] = true order[#order + 1] = row.group end
     end
-    assertEqual(table.concat(order, ","), "General,Groups,Wheel,Slices,Paging,Labels,Icons", "the rows' tabs, in order")
+    assertEqual(table.concat(order, ","), "General,Groups,Wheel,Slices,Hub,Paging,Slice labels,Group labels,Icons",
+        "the rows' tabs, in order")
     P.find(w, "Slider", "Icon size"):__fire("OnMouseUp", 24)
     P.find(w, "CheckBox", "Show border"):__fire("OnValueChanged", true)
     assertEqual(NS.db.profile.dials.d2.icon.size, 24)
@@ -263,7 +266,7 @@ end)
 
 test("dials page: [labels] Labels shows or hides the wedges' names and styles them; off grays the font", function()
     local NS, _, P = open()
-    local w = P.tab("dials", "Labels")
+    local w = P.tab("dials", "Slice labels")
     for _, label in ipairs({ "Show labels", "Use class color" }) do assertTrue(P.find(w, "CheckBox", label) ~= nil, label) end
     local wedge = NS.Dial.RingWedges("d2", 1)[1]
     assertTrue(wedge.qcLabel:IsShown())
@@ -271,34 +274,79 @@ test("dials page: [labels] Labels shows or hides the wedges' names and styles th
     assertFalse(NS.db.profile.dials.d2.label.show)
     -- red under: drop SetShown from R.PaintWedge's label
     assertFalse(NS.Dial.RingWedges("d2", 1)[1].qcLabel:IsShown(), "the dial rebuilt without names")
-    w = P.tab("dials", "Labels")
+    w = P.tab("dials", "Slice labels")
     assertTrue(P.find(w, "Slider", "Font size").disabled, "the font block waits for labels")
     assertTrue(NS.SchemaRuntime.Set("dial.label.show", true, "d2"))
     assertTrue(NS.SchemaRuntime.Set("dial.label.fontSize", 18, "d2"))
     assertEqual(NS.Dial.RingWedges("d2", 1)[1].qcLabel.__font[2], 18)
 end)
 
-test("dials page: [slices] Slices writes the fill, border, highlight and pointer, each color with its class color", function()
+test("dials page: [slices] Slices writes the fill, gap and highlight, Hub the pointer, each color with its class color", function()
     local NS, _, P = open()
     local w = P.tab("dials", "Slices")
-    for _, heading in ipairs({ "Background", "Border", "Highlight", "Pointer" }) do
+    for _, heading in ipairs({ "Background", "Gap", "Highlight" }) do
         assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
     end
-    assertEqual(#P.all(w, "CheckBox", "Use class color"), 4, "fill, border, highlight and pointer")
-    P.find(w, "Slider", "Border size"):__fire("OnMouseUp", 3)
-    assertEqual(NS.db.profile.dials.d2.slice.borderSize, 3)
-    w = P.tab("dials", "Slices")
+    -- red under: the Hub and Pointer rows left on Slices (the Hub tab, dial polish 2026-10-21)
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 2, "fill and highlight")
+    P.find(w, "Slider", "Slice gap"):__fire("OnMouseUp", 3)
+    assertEqual(NS.db.profile.dials.d2.slice.gap, 3)
+    w = P.tab("dials", "Hub")
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 4, "hub backdrop, border, circle and pointer")
     P.find(w, "CheckBox", "Show pointer"):__fire("OnValueChanged", false)
-    w = P.tab("dials", "Slices")
+    w = P.tab("dials", "Hub")
     -- red under: no disabledIf on the pointer rows
     assertTrue(P.find(w, "Slider", "Pointer size").disabled)
-    local l = P.tab("dials", "Labels")
+    local l = P.tab("dials", "Slice labels")
     P.find(l, "Dropdown", "Tooltip side"):__fire("OnValueChanged", "right")
     assertEqual(NS.db.profile.dials.d2.label.tooltipSide, "right")
     P.ctx("dials").panel.defaultsOnClick()
-    assertEqual(NS.db.profile.dials.d2.slice.borderSize, 1)
+    assertEqual(NS.db.profile.dials.d2.slice.gap, 0)
     assertTrue(NS.db.profile.dials.d2.slice.pointerShow)
     assertEqual(NS.db.profile.dials.d2.label.tooltipSide, "top")
+end)
+
+test("page dials: [polish] Slices tab has Slice gap and no Border heading", function()
+    local NS, _, P = open()
+    local w = P.tab("dials", "Slices")
+    -- red under: keep the Border rows in settings/SchemaMembers.lua sliceRows
+    assertEqual(#P.all(w, "Heading", "Border"), 0, "the Border heading is gone")
+    assertNil(P.find(w, "Slider", "Border size"), "and its size")
+    -- red under: no dial.slice.gap row
+    local gap = P.find(w, "Slider", "Slice gap")
+    assertTrue(gap ~= nil, "Slice gap is drawn")
+    gap:__fire("OnMouseUp", 20)
+    assertEqual(NS.db.profile.dials.d2.slice.gap, 20)
+    NS.SchemaRuntime.Set("dial.slice.gap", 21, "d2")
+    assertEqual(NS.db.profile.dials.d2.slice.gap, 20, "the gap stops at 20")
+    assertFalse((NS.SchemaRuntime.Set("dial.slice.borderSize", 2, "d2")), "the retired row is refused")
+end)
+
+test("page dials: [polish] Hub heading rows on the Hub tab", function()
+    local NS, _, P = open()
+    local w = P.tab("dials", "Hub")
+    -- red under: no hubRows() in settings/SchemaMembers.lua sliceRows, or its rows left on Slices
+    assertEqual(#P.all(w, "Heading", "Hub"), 1, "the Hub heading, drawn once")
+    for _, label in ipairs({ "Hub size", "Circle size", "Line width", "Hub border size" }) do
+        assertTrue(P.find(w, "Slider", label) ~= nil, label)
+    end
+    local style = P.find(w, "Dropdown", "Hub style")
+    assertTrue(style ~= nil, "Hub style")
+    -- red under: no disabledIf on Line width (the solid circle has no line)
+    assertTrue(P.find(w, "Slider", "Line width").disabled, "solid: no line width")
+    style:__fire("OnValueChanged", "target")
+    assertEqual(NS.db.profile.dials.d2.hub.style, "target")
+    w = P.tab("dials", "Hub")
+    assertFalse(P.find(w, "Slider", "Line width").disabled, "target: line width")
+    P.find(w, "Slider", "Hub size"):__fire("OnMouseUp", 60)
+    assertEqual(NS.db.profile.dials.d2.hub.size, 60)
+    assertEqual(NS.Dial.Instance("d2").header.__w, 60, "the dial rebuilt with the hub")
+    NS.SchemaRuntime.Set("dial.hub.size", 200, "d2")
+    assertEqual(NS.db.profile.dials.d2.hub.size, 80, "the hub stops at 80")
+    assertFalse((NS.SchemaRuntime.Set("dial.hub.style", "square", "d2")), "an unknown style is refused")
+    P.ctx("dials").panel.defaultsOnClick()
+    assertEqual(NS.db.profile.dials.d2.hub.style, "solid")
+    assertEqual(NS.db.profile.dials.d2.hub.size, 40)
 end)
 
 test("dials page: [slices] every slice texture the dial names ships under media/textures", function()
@@ -320,7 +368,7 @@ test("dials page: [paging] Paging sizes, spaces and colors the arrows and page i
     for _, heading in ipairs({ "Position", "Arrows", "Page indicator" }) do
         assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
     end
-    assertEqual(#P.all(w, "CheckBox", "Use class color"), 4, "arrow, background, current and other pages")
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 6, "arrow, background, current, other pages, indicator background and dot border")
     P.find(w, "Slider", "Arrow size"):__fire("OnMouseUp", 36)
     assertEqual(NS.db.profile.dials.d2.page.arrowSize, 36)
     -- red under: size the arrows from DL.ARROW in modules/Dial.lua placeArrows
@@ -333,13 +381,145 @@ test("dials page: [paging] Paging sizes, spaces and colors the arrows and page i
     assertEqual(NS.db.profile.dials.d2.page.arrowSize, 24)
 end)
 
+test("page dials: [paging] Page indicator carries the background and border rows, their ranges and defaults", function()
+    local NS, _, P = open()
+    local rows = {}
+    for _, r in ipairs(NS.addon.Settings.RowsForPage("dials")) do rows[r.path] = r end
+    -- red under: no dotBack/dotBorder rows in settings/SchemaMembers.lua pagingRows
+    for path, want in pairs({ ["dial.page.dotBackShow"] = "Show indicator background",
+        ["dial.page.dotBackColor"] = "Indicator background", ["dial.page.dotBackPadding"] = "Background padding",
+        ["dial.page.dotBorder"] = "Dot border (0 = none)", ["dial.page.dotBorderColor"] = "Dot border color" }) do
+        local r = rows[path]
+        assertTrue(r ~= nil, path)
+        assertEqual(r.label, want, path .. " label")
+        assertEqual(r.group, "Paging", path .. " tab")
+        assertEqual(r.subgroup, "Page indicator", path .. " heading")
+    end
+    assertTrue(rows["dial.page.dotBackShow"].default)
+    assertEqual(table.concat({ rows["dial.page.dotBackPadding"].min, rows["dial.page.dotBackPadding"].max,
+        rows["dial.page.dotBackPadding"].default }, ","), "0,20,4")
+    assertEqual(table.concat({ rows["dial.page.dotBorder"].min, rows["dial.page.dotBorder"].max,
+        rows["dial.page.dotBorder"].default }, ","), "0,4,1")
+    assertEqual(rows["dial.page.dotBorder"].zeroText, "None")
+    assertTrue(rows["dial.page.useClassColorDotBack"] ~= nil and rows["dial.page.useClassColorDotBorder"] ~= nil,
+        "each color with its class color")
+    local page = NS.db.profile.dials.d2.page
+    assertTrue(page.dotBackShow, "a new dial's background is on")
+    assertEqual(page.dotBackPadding, 4)
+    assertEqual(page.dotBorder, 1)
+    local w = P.tab("dials", "Paging")
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 6, "four, then the background's and the border's")
+    assertFalse(P.find(w, "Slider", "Background padding").disabled)
+    P.find(w, "CheckBox", "Show indicator background"):__fire("OnValueChanged", false)
+    assertFalse(NS.db.profile.dials.d2.page.dotBackShow)
+    w = P.tab("dials", "Paging")
+    -- red under: no disabledIf on the background rows
+    assertTrue(P.find(w, "Slider", "Background padding").disabled, "off grays the padding")
+    NS.SchemaRuntime.Set("dial.page.dotBorder", 9, "d2")
+    assertEqual(NS.db.profile.dials.d2.page.dotBorder, 4, "the border stops at 4")
+    P.ctx("dials").panel.defaultsOnClick()
+    assertTrue(NS.db.profile.dials.d2.page.dotBackShow)
+    assertEqual(NS.db.profile.dials.d2.page.dotBorder, 1)
+end)
+
 test("dials page: [wheel] Icon offset moves the icons in or out; 0 is the ring radius", function()
     local NS, _, P = open()
-    local w = P.tab("dials", "Wheel")
+    local w = P.tab("dials", "Icons")   -- dial polish T6: the row moved from Wheel to Icons
     P.find(w, "Slider", "Icon offset (0 = automatic)"):__fire("OnMouseUp", 70)
     assertEqual(NS.db.profile.dials.d2.iconOffset, 70)
     local wedge = NS.Dial.RingWedges("d2", 1)[1]
     local _, _, _, x, y = wedge:GetPoint(1)
     -- red under: drop `at` from DL.Wedge (the icon stays on the radius)
     assertEqual(math.floor(math.sqrt(x * x + y * y) + 0.5), 70)
+end)
+
+test("page dials: [polish] a Hub tab right after Slices holds the Hub and Pointer headings", function()
+    local NS, _, P = open()
+    local order, seen = {}, {}
+    for _, row in ipairs(NS.addon.Settings.RowsForPage("dials")) do
+        if row.group and not seen[row.group] then seen[row.group] = true order[#order + 1] = row.group end
+    end
+    -- red under: the dial.hub.* and pointer rows left in the Slices group
+    local at
+    for i, g in ipairs(order) do if g == "Slices" then at = i end end
+    assertEqual(order[at + 1], "Hub", "Hub follows Slices")
+    local w = P.tab("dials", "Hub")
+    assertEqual(#P.all(w, "Heading", "Hub"), 1, "the Hub heading")
+    assertEqual(#P.all(w, "Heading", "Pointer"), 1, "the Pointer heading")
+    assertTrue(P.find(w, "Dropdown", "Hub style") ~= nil and P.find(w, "CheckBox", "Show pointer") ~= nil)
+    w = P.tab("dials", "Slices")
+    assertEqual(#P.all(w, "Heading", "Hub"), 0, "Slices no longer has Hub")
+    assertEqual(#P.all(w, "Heading", "Pointer"), 0, "nor Pointer")
+    assertNil(P.find(w, "Dropdown", "Hub style"))
+    assertNil(P.find(w, "CheckBox", "Show pointer"))
+    assertTrue(P.find(w, "Slider", "Slice gap") ~= nil, "Slices keeps its own rows")
+    w = P.tab("dials", "Hub")
+    P.find(w, "Slider", "Pointer size"):__fire("OnMouseUp", 30)
+    assertEqual(NS.db.profile.dials.d2.slice.pointerSize, 30, "the paths are kept")
+    for id in pairs(NS.db.profile.dials) do NS.Library.DeleteSurface("dial", id) end
+    P.flush()
+    -- red under: no Hub entry beside Slices in settings/Dials.lua's Ed.Tabs (renderStyled)
+    assertTrue(P.hasText(P.tab("dials", "Hub"), "No dials yet"), "no dial: Hub says so, as Slices does")
+    assertTrue(P.hasText(P.tab("dials", "Slices"), "No dials yet"))
+end)
+
+-- ── labels and icons (dial polish T6) ──────────────────────────────────────────────────────
+
+test("page dials: [polish] tabs read Slices, Hub, Paging, Slice labels, Group labels, Icons", function()
+    local NS, _, P = open()
+    local order, seen = {}, {}
+    for _, row in ipairs(NS.addon.Settings.RowsForPage("dials")) do
+        if row.group and not seen[row.group] then seen[row.group] = true order[#order + 1] = row.group end
+    end
+    -- red under: LABELS left at L["Labels"], or no titleRows() after the slice label rows
+    assertEqual(table.concat(order, ","), "General,Groups,Wheel,Slices,Hub,Paging,Slice labels,Group labels,Icons")
+    local w = P.tab("dials", "Slice labels")
+    assertTrue(P.find(w, "CheckBox", "Show labels") ~= nil, "Slice labels keeps the dial.label rows")
+    w = P.tab("dials", "Group labels")
+    local show = P.find(w, "CheckBox", "Show group labels")
+    assertTrue(show ~= nil, "Show group labels")
+    assertEqual(#P.all(w, "Heading", "Font"), 1, "the composed Font block, once")
+    assertFalse(P.find(w, "Slider", "Font size").disabled, "on by default: the font block is live")
+    show:__fire("OnValueChanged", false)
+    assertFalse(NS.db.profile.dials.d2.title.show)
+    w = P.tab("dials", "Group labels")
+    -- red under: no disabledIf on the Group labels font rows
+    assertTrue(P.find(w, "Slider", "Font size").disabled, "off grays the font block")
+    assertTrue(NS.SchemaRuntime.Set("dial.title.show", true, "d2"))
+    w = P.tab("dials", "Group labels")
+    P.find(w, "Slider", "Font size"):__fire("OnMouseUp", 16)
+    assertEqual(NS.db.profile.dials.d2.title.fontSize, 16, "the size writes dial.title")
+    assertEqual(NS.db.profile.dials.d2.label.fontSize, 12, "and leaves the slice labels alone")
+    P.ctx("dials").panel.defaultsOnClick()
+    assertTrue(NS.db.profile.dials.d2.title.show)
+    assertEqual(NS.db.profile.dials.d2.title.fontSize, 12)
+end)
+
+test("page dials: [polish] Icon offset is on the Icons tab, not Wheel", function()
+    local NS, _, P = open()
+    local w = P.tab("dials", "Wheel")
+    -- red under: dial.iconOffset's row left in the Wheel group
+    assertNil(P.find(w, "Slider", "Icon offset (0 = automatic)"), "no longer on Wheel")
+    w = P.tab("dials", "Icons")
+    local row = P.find(w, "Slider", "Icon offset (0 = automatic)")
+    assertTrue(row ~= nil, "on Icons")
+    assertEqual(#P.all(w, "Heading", "Size and crop"), 1, "under Size and crop, its heading once")
+    local first
+    for _, r in ipairs(NS.addon.Settings.RowsForPage("dials")) do
+        if r.group == "Icons" then first = first or r end
+    end
+    assertEqual(first.path, "dial.iconOffset", "the tab's first row")
+    assertEqual(first.subgroup, "Size and crop")
+    row:__fire("OnMouseUp", 40)
+    assertEqual(NS.db.profile.dials.d2.iconOffset, 40, "the path is kept")
+end)
+
+-- ── renames (dial polish T7) ──────────────────────────────────────────────────────────────
+test("page dials: [polish] the page is titled Dial", function()
+    local NS, m = T.enableAddon()
+    -- red under: settings/Dials.lua still registering the page as L["Comms Dial"]
+    assertTrue(m.__subcategories["Dial"] ~= nil, "the sidebar reads Dial")
+    assertNil(m.__subcategories["Comms Dial"], "no Comms Dial page")
+    -- the default member's name is unchanged (a page title only)
+    assertEqual(NS.db.profile.dials.d2.name, "Comms Dial")
 end)

@@ -67,7 +67,7 @@ function D.Button()
     }
 end
 
---- The Comms Dial's Labels tab (`dial.label.*`, dial rework 2026-10-21): each wedge's name outside
+--- The Dial page's Labels tab (`dial.label.*`, dial rework 2026-10-21): each wedge's name outside
 --- the disc, white Friz Quadrata 12 points with its shadow, as the dial always drew it; `show` off
 --- draws none. The tooltip shows outside the dial too: above it by default, `tooltipOffset` pixels
 --- clear of the title (or the labels, the page row on the other sides).
@@ -81,13 +81,26 @@ function D.DialLabel()
     }
 end
 
---- The Comms Dial's Slices tab (`dial.slice.*`, 2026-10-21): each slice's fill (the dial's dark disc,
---- as it was), the lines between slices and round the rim (`borderSize` 0 draws none), the fill a
---- hovered slice takes, and the pointer in the hub that turns toward the cursor.
+--- The Dial page's Group labels tab (`dial.title.*`, dial polish 2026-10-21): the ring's title above
+--- the dial ("World (solo)", "Comms Dial"), gold Friz Quadrata 12 points with its shadow, as the
+--- GameFontNormal title it was drawn in; `show` off draws none.
+function D.DialTitle()
+    return {
+        show = true,
+        font = "Friz Quadrata TT", fontSize = 12, fontColor = { r = 1, g = 0.82, b = 0, a = 1 },
+        useClassColorFont = false, fontFlags = "", fontShadow = true,
+    }
+end
+
+--- The Dial page's Slices tab (`dial.slice.*`, 2026-10-21): each slice's fill (the dial's dark disc,
+--- as it was), the Slice gap between neighboring slices (pixels, 0 draws them touching; dial polish
+--- 2026-10-21, which retired the Border lines), the fill a hovered slice takes, and the pointer in the
+--- hub that turns toward the cursor (the Hub tab's Pointer heading since dial polish, 2026-10-21; its
+--- `dial.slice.*` paths kept).
 function D.DialSlice()
     return {
         background = { r = 0.06, g = 0.06, b = 0.08, a = 0.80 }, useClassColorBackground = false,
-        borderSize = 1, borderColor = { r = 1, g = 1, b = 1, a = 0.12 }, useClassColorBorder = false,
+        gap = 0,
         highlight = { r = 1, g = 0.82, b = 0, a = 0.25 }, useClassColorHighlight = false,
         pointerShow = true, pointerSize = 20, pointerColor = { r = 1, g = 0.82, b = 0, a = 1 },
         pointerOffset = 0,   -- the pointer's distance from the dial's center; 0 is just outside the hub
@@ -95,10 +108,27 @@ function D.DialSlice()
     }
 end
 
---- The Comms Dial's Paging tab (`dial.page.*`, 2026-10-21): a paged ring's row under the dial. Its
+--- The Comms Dial's hub (`dial.hub.*`, the Hub tab's Hub heading; dial polish 2026-10-21, which
+--- retired the red close mark): a Backdrop disc `size` across (the hub's geometry: the pointer, the
+--- tracker and the catcher start at its edge), with a rim `borderSize` thick (0 draws none; the
+--- Rimmed disc style draws one of at least 2), and a Circle mark `circleSize` across in the style's
+--- shape (`solid` a filled circle, `ring` a hollow ring `lineWidth` thick, `target` a ring and a
+--- center dot, `rimmed` a filled circle on the rimmed backdrop). Opacity is each color's alpha.
+function D.DialHub()
+    return {
+        style = "solid", size = 40, circleSize = 22, lineWidth = 2,
+        background = { r = 0.12, g = 0.12, b = 0.14, a = 0.95 }, useClassColorBackground = false,
+        borderSize = 0, borderColor = { r = 1, g = 0.82, b = 0, a = 1 }, useClassColorBorder = false,
+        circleColor = { r = 1, g = 0.82, b = 0, a = 1 }, useClassColorCircle = false,
+    }
+end
+
+--- The Dial page's Paging tab (`dial.page.*`, 2026-10-21): a paged ring's row under the dial. Its
 --- distance under the dial's labels; the two arrows (round plates in the slices' fill, gold chevrons)
 --- and how far they stand from the indicators; the indicators, a gold pill for the page shown and a
---- gray dot for each other page.
+--- gray dot for each other page, each with a near-black border `dotBorder` pixels wide (0 draws none),
+--- on a rounded background in the plates' fill, `dotBackPadding` clear of the row (dial polish,
+--- 2026-10-21: they were hard to see on a busy scene).
 function D.DialPage()
     return {
         offset = 6,
@@ -107,5 +137,8 @@ function D.DialPage()
         dotSize = 6, pillWidth = 18, dotGap = 6,
         currentColor = { r = 1, g = 0.82, b = 0, a = 1 }, useClassColorCurrent = false,
         dotColor = { r = 0.4, g = 0.4, b = 0.4, a = 0.9 }, useClassColorDot = false,
+        dotBackShow = true, dotBackPadding = 4,
+        dotBackColor = { r = 0.06, g = 0.06, b = 0.08, a = 0.80 }, useClassColorDotBack = false,
+        dotBorder = 1, dotBorderColor = { r = 0, g = 0, b = 0, a = 0.9 }, useClassColorDotBorder = false,
     }
 end
