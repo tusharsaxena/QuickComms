@@ -886,3 +886,24 @@ test("dial: [polish] wedges take no mouse; keys still click by name", function()
     assertEqual(#m.sentMacros, 1)
     assertEqual(m.sentMacros[1].text, first:GetAttribute("macrotext"), "the number key clicks item 1 by name")
 end)
+
+test("dial: [polish] a ring hidden under the hover clears its slice, tooltip and hover glow", function()
+    local NS, m = live()
+    local ring, cursor, h = openPolish(NS, m, 8)
+    local inst = NS.Dial.Instance("d2")
+    local tip = m.GameTooltip
+    cursor(25, 0)
+    NS.DialRender.PointerUpdate(h.qcPointer)
+    local lit = ring.qcLit
+    local wedge = ring.qcPlaceWedge[lit]
+    assertTrue(wedge ~= nil and tip.__owner == wedge and tip:IsShown(), "a slice of page 1 hovered")
+    assertTrue(wedge.qcHovered, "its hover glow on")
+    m.__click(ring.qcNext)   -- the arrow snippet hides page 1 and shows page 2
+    assertEqual(NS.Dial.ShownRing("d2"), 3, "page 2 on screen")
+    -- red under: no OnHide hook on a ring (only the header's OnHide clears the hover)
+    assertFalse(tip:IsShown(), "page 1's tooltip hidden with its ring")
+    assertNil(ring.qcLit, "page 1 has no slice lit")
+    assertNil(wedge.qcHovered, "its wedge's hover glow off")
+    m.__click(inst.header, "LeftButton")   -- the hub goes up a ring
+    assertNil(ring.qcLit)
+end)

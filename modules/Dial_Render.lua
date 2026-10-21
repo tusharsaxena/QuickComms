@@ -245,6 +245,9 @@ function R.DressRing(ring)
     ring.qcDressed = true
     ring.qcTitle = ring:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     Slices.Dress(ring)
+    -- A ring the snippets hide (a page turn, a group wedge, the hub going up) drops its hover: the
+    -- tracker reads only the ring on screen. Insecure and attribute-free, so combat-safe.
+    ring:HookScript("OnHide", function(self) track(self, 0, 0) end)
     return ring
 end
 
