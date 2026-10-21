@@ -150,8 +150,9 @@ end
 
 --- A dial's look for one rebuild: its radius (clamped); its Labels tab (`dial.label`) as a font
 --- (Pad_Render.LabelFont), whether labels show, their line height (0 when they do not) and where
---- the tooltip goes; its Slices tab (`dial.slice`) and Paging tab (`dial.page`, from `dial`) with each
---- color resolved through its class color companion; and the Icon offset (`dial.iconOffset`).
+--- the tooltip goes; its Slices tab (`dial.slice`: the fill, the Slice gap in pixels, the highlight and
+--- the pointer) and Paging tab (`dial.page`, from `dial`) with each color resolved through its class
+--- color companion; and the Icon offset (`dial.iconOffset`).
 function R.Look(radius, label, slice, dial)
     label = type(label) == "table" and label or {}
     slice = type(slice) == "table" and slice or {}
@@ -165,8 +166,7 @@ function R.Look(radius, label, slice, dial)
         tipSide = label.tooltipSide or "top", tipOffset = tonumber(label.tooltipOffset) or 8,
         labelReach = math.max(0, tonumber(label.offset) or 0),
         fill = color(slice.background, slice.useClassColorBackground, D.background),
-        borderSize = math.max(0, tonumber(slice.borderSize) or D.borderSize),
-        border = color(slice.borderColor, slice.useClassColorBorder, D.borderColor),
+        gap = math.max(0, tonumber(slice.gap) or D.gap),
         highlight = color(slice.highlight, slice.useClassColorHighlight, D.highlight),
         pointerShow = slice.pointerShow ~= false, pointerSize = tonumber(slice.pointerSize) or D.pointerSize,
         pointerOffset = math.max(0, tonumber(slice.pointerOffset) or 0),

@@ -619,7 +619,6 @@ end)
 test("dial: [slices] each place is a tinted slice; the slice the cursor points into lights, anywhere but the hub", function()
     local NS, m = live()
     local did = "d2"
-    assertTrue(NS.SchemaRuntime.Set("dial.slice.borderSize", 2, did))
     assertTrue(NS.SchemaRuntime.Set("dial.slice.highlight", { r = 0, g = 1, b = 0, a = 0.5 }, did))
     assertTrue(NS.Dial.Apply(1, did, planOf(NS)))
     local inst = NS.Dial.Instance(did)
@@ -628,8 +627,6 @@ test("dial: [slices] each place is a tinted slice; the slice the cursor points i
     -- four wedges from W (planOf's fixed four): four fills, each its own quarter
     assertEqual(ring.qcFills[1].__texture, NS.DialSlices.SectorTexture(4))
     assertTrue(ring.qcFills[4]:IsShown())
-    assertEqual(ring.qcSpokes[1].__size[1], 2, "spokes as thick as the border")
-    assertEqual(#ring.qcRim, NS.DialLayout.ARC, "the rim in straight segments")
     m.__click(h, "Toggle")
     assertEqual(NS.Dial.ShownRing(did), 2)
     local cx, cy = h:GetCenter()
@@ -649,10 +646,87 @@ test("dial: [slices] each place is a tinted slice; the slice the cursor points i
     assertEqual(ring.qcLit, 4, "toward S")
     m.__click(h, "Toggle")
     assertFalse(ring.qcHighlight:IsShown(), "closing clears it")
-    assertTrue(NS.SchemaRuntime.Set("dial.slice.borderSize", 0, did))
-    assertTrue(NS.Dial.Apply(1, did, planOf(NS)))
-    assertFalse(ring.qcSpokes[1]:IsShown(), "border 0: no lines")
     assertEqual(NS.DialSlices.SectorTexture(1), "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask", "one slice is the disc")
+end)
+
+-- How many of a ring's textures in `list` are shown (none when the list was never made).
+local function shownOf(list)
+    local n = 0
+    for _, t in ipairs(list or {}) do
+        if t:IsShown() then n = n + 1 end
+    end
+    return n
+end
+
+test("dial slices: [polish] no border lines are drawn", function()
+    local NS = live()
+    local did = "d2"
+    -- a profile saved before the border retired still holds its leaves: it rebuilds clean
+    local slice = NS.db.profile.dials[did].slice
+    slice.borderSize, slice.borderColor, slice.useClassColorBorder = 3, { r = 1, g = 0, b = 0, a = 1 }, true
+    assertTrue(NS.Dial.Apply(1, did, planOf(NS)))
+    local ring = NS.Dial.Instance(did).rings.active[2]
+    -- red under: keep paintBorder's spokes and rim in modules/Dial_Slices.lua
+    assertEqual(shownOf(ring.qcSpokes), 0, "no spokes")
+    assertEqual(shownOf(ring.qcRim), 0, "no rim")
+    assertNil(NS.DialRender.Look(100, {}, slice, {}).borderSize, "the look carries no border")
+    assertEqual(shownOf(ring.qcFills), 4, "the four fills still draw")
+end)
+
+-- Fill (or highlight) t's offset from the ring's center and its width.
+local function placeOf(t)
+    local _, _, _, x, y = t:GetPoint(1)
+    return x, y, t.__size[1]
+end
+
+local function near(a, b, what)
+    assertTrue(math.abs(a - b) < 0.01, ("%s: %s vs %s"):format(what, tostring(a), tostring(b)))
+end
+
+test("dial slices: [polish] a gap shifts each fill outward along its bisector", function()
+    local NS, m = live()
+    local did = "d2"
+    assertTrue(NS.SchemaRuntime.Set("dial.slice.gap", 10, did))
+    assertTrue(NS.Dial.Apply(1, did, planOf(NS)))
+    local inst = NS.Dial.Instance(did)
+    local ring = inst.rings.active[2]
+    local shape = ring.qcShape
+    local R, d = shape.disc / 2, NS.DialLayout.SliceShift(10, 4)
+    -- red under: paintFills anchors every fill at the ring's center (no SliceShift)
+    for j = 1, 4 do
+        local a = math.rad(shape.start) + (j - 1) * math.pi / 2
+        local x, y, w = placeOf(ring.qcFills[j])
+        near(x, d * math.sin(a), "fill " .. j .. " x")
+        near(y, d * math.cos(a), "fill " .. j .. " y")
+        near(w, 2 * (R - d), "fill " .. j .. " shrunk so its rim stays on the disc")
+    end
+    local h = inst.header
+    m.__click(h, "Toggle")
+    local cx, cy = h:GetCenter()
+    m.cursor.x, m.cursor.y = (cx + 60) * h:GetEffectiveScale(), (cy + 2) * h:GetEffectiveScale()
+    NS.DialRender.PointerUpdate(h.qcPointer)
+    assertEqual(ring.qcLit, 3, "toward E")
+    -- red under: Track leaves the highlight at the ring's center
+    local hx, hy, hw = placeOf(ring.qcHighlight)
+    local fx, fy, fw = placeOf(ring.qcFills[3])
+    near(hx, fx, "the highlight moves with its slice (x)")
+    near(hy, fy, "the highlight moves with its slice (y)")
+    near(hw, fw, "and takes its size")
+    m.__click(h, "Toggle")
+end)
+
+test("dial slices: [polish] gap 0 draws as before", function()
+    local NS = live()
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    local ring = NS.Dial.Instance("d2").rings.active[2]
+    -- red under: SliceShift without its gap <= 0 guard, or a default gap other than 0
+    assertEqual(NS.db.profile.dials.d2.slice.gap, 0, "the default")
+    for j = 1, 4 do
+        local x, y, w = placeOf(ring.qcFills[j])
+        near(x, 0, "fill " .. j .. " x")
+        near(y, 0, "fill " .. j .. " y")
+        assertEqual(w, ring.qcShape.disc, "the disc across")
+    end
 end)
 
 test("dial: [front] the hub, its close mark and the pointer draw over the slices", function()

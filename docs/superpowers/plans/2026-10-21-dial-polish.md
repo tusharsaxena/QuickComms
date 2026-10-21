@@ -15,7 +15,7 @@
 Each task ends in one commit whose subject starts with `Dial polish T<n>:`. To resume, `git log --oneline master..` and tick what is committed.
 
 - [x] T1 Layout: placement, gap shift, Auto icon-fit cap, SliceAt
-- [ ] T2 Slices: border out, gap in, migration step 9
+- [x] T2 Slices: border out, gap in, migration step 9
 - [ ] T3 Select to the hub: tracker hover, ring catcher, mouse-off wedges
 - [ ] T4 Click outside closes
 - [ ] T5 Hub styles

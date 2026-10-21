@@ -82,12 +82,13 @@ function D.DialLabel()
 end
 
 --- The Comms Dial's Slices tab (`dial.slice.*`, 2026-10-21): each slice's fill (the dial's dark disc,
---- as it was), the lines between slices and round the rim (`borderSize` 0 draws none), the fill a
---- hovered slice takes, and the pointer in the hub that turns toward the cursor.
+--- as it was), the Slice gap between neighboring slices (pixels, 0 draws them touching; dial polish
+--- 2026-10-21, which retired the Border lines), the fill a hovered slice takes, and the pointer in the
+--- hub that turns toward the cursor.
 function D.DialSlice()
     return {
         background = { r = 0.06, g = 0.06, b = 0.08, a = 0.80 }, useClassColorBackground = false,
-        borderSize = 1, borderColor = { r = 1, g = 1, b = 1, a = 0.12 }, useClassColorBorder = false,
+        gap = 0,
         highlight = { r = 1, g = 0.82, b = 0, a = 0.25 }, useClassColorHighlight = false,
         pointerShow = true, pointerSize = 20, pointerColor = { r = 1, g = 0.82, b = 0, a = 1 },
         pointerOffset = 0,   -- the pointer's distance from the dial's center; 0 is just outside the hub

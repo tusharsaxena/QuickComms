@@ -280,15 +280,15 @@ test("dials page: [labels] Labels shows or hides the wedges' names and styles th
     assertEqual(NS.Dial.RingWedges("d2", 1)[1].qcLabel.__font[2], 18)
 end)
 
-test("dials page: [slices] Slices writes the fill, border, highlight and pointer, each color with its class color", function()
+test("dials page: [slices] Slices writes the fill, gap, highlight and pointer, each color with its class color", function()
     local NS, _, P = open()
     local w = P.tab("dials", "Slices")
-    for _, heading in ipairs({ "Background", "Border", "Highlight", "Pointer" }) do
+    for _, heading in ipairs({ "Background", "Gap", "Highlight", "Pointer" }) do
         assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
     end
-    assertEqual(#P.all(w, "CheckBox", "Use class color"), 4, "fill, border, highlight and pointer")
-    P.find(w, "Slider", "Border size"):__fire("OnMouseUp", 3)
-    assertEqual(NS.db.profile.dials.d2.slice.borderSize, 3)
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 3, "fill, highlight and pointer")
+    P.find(w, "Slider", "Slice gap"):__fire("OnMouseUp", 3)
+    assertEqual(NS.db.profile.dials.d2.slice.gap, 3)
     w = P.tab("dials", "Slices")
     P.find(w, "CheckBox", "Show pointer"):__fire("OnValueChanged", false)
     w = P.tab("dials", "Slices")
@@ -298,9 +298,25 @@ test("dials page: [slices] Slices writes the fill, border, highlight and pointer
     P.find(l, "Dropdown", "Tooltip side"):__fire("OnValueChanged", "right")
     assertEqual(NS.db.profile.dials.d2.label.tooltipSide, "right")
     P.ctx("dials").panel.defaultsOnClick()
-    assertEqual(NS.db.profile.dials.d2.slice.borderSize, 1)
+    assertEqual(NS.db.profile.dials.d2.slice.gap, 0)
     assertTrue(NS.db.profile.dials.d2.slice.pointerShow)
     assertEqual(NS.db.profile.dials.d2.label.tooltipSide, "top")
+end)
+
+test("page dials: [polish] Slices tab has Slice gap and no Border heading", function()
+    local NS, _, P = open()
+    local w = P.tab("dials", "Slices")
+    -- red under: keep the Border rows in settings/SchemaMembers.lua sliceRows
+    assertEqual(#P.all(w, "Heading", "Border"), 0, "the Border heading is gone")
+    assertNil(P.find(w, "Slider", "Border size"), "and its size")
+    -- red under: no dial.slice.gap row
+    local gap = P.find(w, "Slider", "Slice gap")
+    assertTrue(gap ~= nil, "Slice gap is drawn")
+    gap:__fire("OnMouseUp", 20)
+    assertEqual(NS.db.profile.dials.d2.slice.gap, 20)
+    NS.SchemaRuntime.Set("dial.slice.gap", 21, "d2")
+    assertEqual(NS.db.profile.dials.d2.slice.gap, 20, "the gap stops at 20")
+    assertFalse((NS.SchemaRuntime.Set("dial.slice.borderSize", 2, "d2")), "the retired row is refused")
 end)
 
 test("dials page: [slices] every slice texture the dial names ships under media/textures", function()

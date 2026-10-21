@@ -483,6 +483,40 @@ test("database: [bg subgroups] step 7 seeds the new objective nodes by origin, o
     NS.Library.MigrateBattlegroundNodes({ groups = { g1 = { origin = "bi.bg.av" } }, seededSets = { ["bi.bg.av"] = true } })
 end)
 
+test("database: [polish] migrate: step 9 drops the retired slice border", function()
+    local NS = T.bootAddon()
+    local db = NS.addon.db
+    local white = { r = 1, g = 1, b = 1, a = 0.12 }
+    db.sv.profiles.Old = { dials = {
+        d1 = { name = "Mine", slice = { borderSize = 3, borderColor = white, useClassColorBorder = true,
+            pointerSize = 30, highlight = { r = 0, g = 1, b = 0, a = 1 } } },
+        d2 = { slice = { borderSize = 0 } }, d3 = {}, d4 = { slice = "damaged" }, d5 = "damaged" } }
+    db.global.schemaVersion = 8
+    NS.addon:RunMigrations()
+    local p = db.sv.profiles.Old
+    -- red under: no step 9 in core/Database.lua
+    assertTrue(db.global.schemaVersion >= 9, "stamped")
+    local s = p.dials.d1.slice
+    assertNil(s.borderSize)
+    assertNil(s.borderColor)
+    assertNil(s.useClassColorBorder)
+    assertEqual(s.pointerSize, 30, "the other leaves are kept")
+    assertEqual(s.highlight.g, 1)
+    assertEqual(p.dials.d1.name, "Mine")
+    assertNil(p.dials.d2.slice.borderSize)
+    assertNil(p.dials.d3.slice, "a dial with no slice table stays without one")
+    assertEqual(p.dials.d4.slice, "damaged")
+    assertEqual(p.dials.d5, "damaged")
+    -- a second run changes nothing
+    db.global.schemaVersion = 8
+    NS.addon:RunMigrations()
+    assertNil(p.dials.d1.slice.borderSize)
+    assertEqual(p.dials.d1.slice.pointerSize, 30)
+    NS.Library.MigrateSliceBorder({})
+    NS.Library.MigrateSliceBorder({ dials = "damaged" })
+    NS.Library.MigrateSliceBorder(nil)
+end)
+
 test("database: [bg subgroups] a fresh profile seeds every objective node once, and step 7 leaves it as it is", function()
     local NS = T.enableAddon()
     local p, BI, Lib = NS.db.profile, NS.BuiltIns, NS.Library

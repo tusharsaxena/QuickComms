@@ -55,7 +55,6 @@ DL.KEYS    = 8                                 -- the number keys 1-8 pick wedge
 DL.AUTO    = 0                                 -- slices: one wedge per item, spread evenly
 DL.MAX_SLICES = 12
 DL.ARROW   = 24                                -- a page arrow, square, by default (the Paging tab)
-DL.ARC     = 64                                -- straight segments drawing the rim
 DL.START   = 270                               -- an unpinned page's place 1: W
 DL.FIT_MARGIN = 4                              -- Auto leaves each icon this much more arc (AutoCap)
 
