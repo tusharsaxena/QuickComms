@@ -625,7 +625,7 @@ test("dial: [slices] each place is a tinted slice; the slice the cursor points i
     local inst = NS.Dial.Instance(did)
     local h = inst.header
     local ring = inst.rings.active[2]
-    -- four wedges from N (planOf's fixed four): four fills, each its own quarter
+    -- four wedges from W (planOf's fixed four): four fills, each its own quarter
     assertEqual(ring.qcFills[1].__texture, NS.DialSlices.SectorTexture(4))
     assertTrue(ring.qcFills[4]:IsShown())
     assertEqual(ring.qcSpokes[1].__size[1], 2, "spokes as thick as the border")
@@ -640,12 +640,13 @@ test("dial: [slices] each place is a tinted slice; the slice the cursor points i
     end
     -- red under: light a slice only from a wedge's own OnEnter (its square)
     assertTrue(at(30, 2), "just outside the hub, toward E: the E slice lights, though the cursor is not on its wedge")
-    assertEqual(ring.qcLit, 2)
+    -- red under: start fixed counts at N in modules/Dial_Layout.lua PageShape (E is place 2)
+    assertEqual(ring.qcLit, 3, "E is place 3, clockwise from W")
     assertEqual(ring.qcHighlight.__color[2], 1, "the Slices tab's highlight color")
     assertFalse(at(5, 5), "over the hub: nothing")
     assertFalse(at(400, 0), "past the rim: nothing")
     assertTrue(at(-2, -60))
-    assertEqual(ring.qcLit, 3, "toward S")
+    assertEqual(ring.qcLit, 4, "toward S")
     m.__click(h, "Toggle")
     assertFalse(ring.qcHighlight:IsShown(), "closing clears it")
     assertTrue(NS.SchemaRuntime.Set("dial.slice.borderSize", 0, did))
@@ -713,7 +714,7 @@ end)
 test("dial: [labels] the Label offset moves every label out from the center; the title and the page row follow", function()
     local NS = live()
     assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
-    local w = NS.Dial.RingWedges("d2", 2)[2]   -- E
+    local w = NS.Dial.RingWedges("d2", 2)[3]   -- E (places from W: W, N, E, S)
     local _, _, _, x0 = w.qcLabel:GetPoint(1)
     local _, _, _, wx = w:GetPoint(1)
     local g = NS.DialLayout.Geometry(100)

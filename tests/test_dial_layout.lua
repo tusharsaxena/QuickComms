@@ -76,7 +76,8 @@ test("dial layout: [auto] one wedge is W, two W and E, three W, N and E, four W,
     assertEqual(at(8), "W NW N NE E SE S SW", "evenly spaced, clockwise from W")
     assertEqual(select(1, L.PageShape(L.AUTO, 12, 7)), 7, "one wedge per item past four")
     local size, start = L.PageShape(6, 6, 2)
-    assertEqual(size .. "," .. start, "6,0", "a fixed count keeps its wedges and starts at N")
+    -- red under: start fixed counts at N in modules/Dial_Layout.lua PageShape
+    assertEqual(size .. "," .. start, "6,270", "a fixed count keeps its wedges and starts at W")
 end)
 
 test("dial layout: [review 5] more items than wedges go on plain pages, the rest on the last", function()
@@ -356,7 +357,7 @@ test("dial layout: [review 6] a pinned ring ignores the dial's slices; Flat keep
     local rings, open = L.Rings({ abPinned() }, { mode = "flat", slices = 4 })
     assertEqual(rings[open].size, 4, "Flat lists the callouts on the dial's own slices")
     assertEqual(rings[open].pages > 1, true, "and pages them")
-    for _, item in ipairs(rings[open].items) do assertNil(item.wedge, "nothing in Flat is pinned") end
+    for i, item in ipairs(rings[open].items) do assertEqual(item.wedge, i, "nothing in Flat is pinned: places in order") end
 end)
 
 test("dial layout: [icons] a ring entry carries its group's icon color, a send entry its callout's", function()
@@ -374,4 +375,100 @@ test("dial layout: [icons] a ring entry carries its group's icon color, a send e
     -- red under: ringEntry / sendEntries without iconColor
     assertEqual(ring and ring.iconColor, "ff0000")
     assertEqual(send and send.iconColor, "00ff00")
+end)
+
+test("dial layout: [polish] fixed 4 places 1-4 items W; W,E; W,N,E; W,N,E,S", function()
+    local L = DL()
+    local want = { { 1 }, { 1, 3 }, { 1, 2, 3 }, { 1, 2, 3, 4 } }
+    local dirs = { "W", "W E", "W N E", "W N E S" }
+    for count = 1, 4 do
+        local size, start, places = L.PageShape(4, 4, count)
+        assertEqual(size .. "," .. start, "4,270", count .. ": four wedges from W")
+        -- red under: give a fixed 4 ring places 1..count (two items at W and N)
+        assertEqual(table.concat(places, ","), table.concat(want[count], ","), count .. " items' places")
+        local out = {}
+        for k = 1, count do out[k] = L.Direction(places[k], size, start) end
+        assertEqual(table.concat(out, " "), dirs[count], count .. " items' directions")
+    end
+end)
+
+test("dial layout: [polish] auto keeps its shapes from W", function()
+    local L = DL()
+    -- red under: a fixed-4 places table for Auto's two items (a four-wedge ring)
+    assertEqual(select(1, L.PageShape(L.AUTO, 12, 1)), 1, "one item: the whole disc")
+    local size, start, places = L.PageShape(L.AUTO, 12, 2)
+    assertEqual(size .. "," .. start, "2,270")
+    assertEqual(L.Direction(places[1], size, start) .. " " .. L.Direction(places[2], size, start), "W E")
+    local three, _, placed = L.PageShape(L.AUTO, 12, 3)
+    assertEqual(three, 4, "three take a four-wedge ring")
+    assertEqual(table.concat(placed, ","), "1,2,3")
+    size, start, places = L.PageShape(L.AUTO, 12, 5)
+    assertEqual(size .. "," .. start, "5,270")
+    assertEqual(table.concat(places, ","), "1,2,3,4,5")
+end)
+
+test("dial layout: [polish] fixed 8 with 2 items fills W then clockwise", function()
+    local L = DL()
+    local size, start, places = L.PageShape(8, 8, 2)
+    assertEqual(size, 8, "a fixed count is never shrunk")
+    assertEqual(table.concat(places, ","), "1,2")
+    -- red under: start fixed counts at N in modules/Dial_Layout.lua PageShape
+    assertEqual(L.Direction(places[1], size, start) .. " " .. L.Direction(places[2], size, start), "W NW")
+end)
+
+test("dial layout: [polish] slice shift", function()
+    local L = DL()
+    -- red under: shift a slice by the whole gap (no 1/sin(pi/n))
+    assertEqual(L.SliceShift(0, 4), 0, "no gap, no shift")
+    assertEqual(L.SliceShift(10, 1), 0, "one slice has no gap")
+    T.assertTrue(math.abs(L.SliceShift(10, 2) - 5) < 0.01, "two halves move gap/2 apart each")
+    T.assertTrue(math.abs(L.SliceShift(10, 4) - 5 / math.sin(math.pi / 4)) < 0.01, "a quarter along its bisector")
+end)
+
+test("dial layout: [polish] auto cap", function()
+    local L = DL()
+    -- red under: ignore the icon size in DL.AutoCap (always MAX_SLICES)
+    assertEqual(L.AutoCap(100, 0, 32, 0), 12, "today's defaults: no change")
+    assertEqual(L.AutoCap(100, 0, 128, 0), 4, "128 px icons: four a page")
+    -- red under: leave the gap out of DL.AutoCap
+    assertEqual(L.AutoCap(100, 0, 32, 20), 11, "the gap eats into the arc")
+    assertEqual(L.AutoCap(70, 0, 128, 20), 2)
+    assertEqual(L.AutoCap(70, 0, 128, 300), 1, "never below one")
+end)
+
+test("dial layout: [polish] auto cap at 128 px pages the ring", function()
+    local L = DL()
+    local rings, open = L.Rings({ { id = "g", title = "G", slots = slots("c", 9) } },
+        { slices = 0, fit = { radius = 100, iconOffset = 0, iconSize = 128, gap = 0 } })
+    local ring = rings[open]
+    -- red under: drop opts.fit in DL.Rings (one page of nine)
+    assertEqual(ring.pages, 3, "nine items at four a page")
+    assertEqual(#ring.items .. "," .. #rings[ring.next].items, "4,4")
+    local three = rings[rings[ring.next].next]
+    assertEqual(#three.items, 1)
+    assertEqual(three.size, 1, "the last page's one item takes the whole disc")
+    local plain = L.Rings({ { id = "g", title = "G", slots = slots("c", 9) } }, { slices = 0 })
+    assertEqual(plain[1].pages, 1, "no fit: no cap")
+end)
+
+test("dial layout: [polish] SliceAt", function()
+    local L = DL()
+    local function at(angle, dist) return L.SliceAt(angle, dist, 4, 270, 40, 300) end
+    -- red under: measure SliceAt's bearing from N instead of from the ring's start
+    assertEqual(at(3 * math.pi / 2, 30), 1, "W")
+    assertEqual(at(0, 30), 2, "N")
+    assertEqual(at(math.pi / 2, 30), 3, "E")
+    -- red under: no hub check in DL.SliceAt
+    assertNil(at(0, 15), "inside the hub")
+    assertNil(at(0, 151), "past the disc")
+    assertEqual(at(7 * math.pi / 4 + 0.01, 30), 2, "just past the W/N boundary")
+end)
+
+test("dial layout: [polish] Rings gives every unpinned item its place", function()
+    local L = DL()
+    local rings, open = L.Rings({ { id = "g", title = "G", slots = slots("c", 2) } }, { slices = 4 })
+    local ring = rings[open]
+    -- red under: leave an unpinned item's wedge nil in DL.Rings (two items at W and N)
+    assertEqual(ring.items[1].wedge .. "," .. ring.items[2].wedge, "1,3", "W and E")
+    assertEqual(ring.start, 270)
 end)

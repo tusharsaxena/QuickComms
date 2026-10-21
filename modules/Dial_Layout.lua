@@ -15,20 +15,28 @@ local _, NS = ...
 -- Open the dial on this group flag retired); with several it opens on the ring of groups.
 --
 -- THE WEDGE COUNT is the dial's slices: Auto (0, the default) gives each page one wedge per item, at
--- most 12, starting at W and going clockwise (owner model, 2026-10-21): one is W; two W and E; three
--- W, N and E (a four-wedge ring, S left empty); four W, N, E and S; past four, evenly spaced from W.
--- Or a fixed 4, 6, 8 or 12 from N, never grown. A ring that holds
--- rings takes at most 8 either way (spec §11.3: the number keys 1-8 reach every ring wedge). In Flat a
--- node's callout is titled with its node ("INC · Lumber Mill"); the slot keeps its own name.
+-- most 12; or a fixed 4, 6, 8 or 12, never grown and never changed by the gap. A ring that holds
+-- rings takes at most 8 either way (spec §11.3: the number keys 1-8 reach every ring wedge). Auto
+-- also fits its icons (dial polish, owner 2026-10-21): a page holds no more wedges than leave each
+-- icon its size plus FIT_MARGIN of arc at the icon reach, less the Slice gap (AutoCap); past that the
+-- ring pages. In Flat a node's callout is titled with its node ("INC · Lumber Mill"); the slot keeps
+-- its own name.
 --
--- THE GEOMETRY. Wedges sit clockwise from the ring's `start` (N, or W under Auto), on-axis first. Offsets are from
+-- THE PLACEMENT (dial polish, one rule for Auto and fixed counts): places are numbered clockwise from
+-- W (START). On four places (Auto's three and four items, a fixed 4 with any count) the items take,
+-- by count: one W; two W and E; three W, N and E; four W, N, E and S; an unused place is an empty
+-- slice. Auto's one item is the whole disc and two are halves (W, E). Five places or more are evenly
+-- spaced, the items filling places 1..k clockwise from W, the rest empty. The number keys 1-8 follow
+-- item order whatever the places.
+--
+-- THE GEOMETRY. Wedges sit clockwise from the ring's `start` (W), on-axis first. Offsets are from
 -- the hub's center, y up; the radius is the dial's (`dial.radius`, Geometry), and the disc leaves RIM
 -- between a wedge's edge and its own. A node set's nodes are pinned to their compass winds (spec
 -- §12.1): its ring takes eight wedges, whatever the dial's slices, and is never paged; each node sits
 -- on its own wind (PinNodes), a middle node on the first wind left free clockwise from N, a free node
 -- (one with no fixed place on the map: Our base, a flag map's carrier) on the first wind left after
 -- those, and a wind with no node has no wedge. An item carries `wedge`, its place among the ring's
--- `size`; an unpinned item's place is its index. The number keys pick the shown wedges in that order. A paged ring's arrows and page dots sit in one row under the disc (Nav).
+-- `size` (an unpinned one's from PageShape). The number keys pick the shown wedges in that order. A paged ring's arrows and page dots sit in one row under the disc (Nav).
 
 NS.DialLayout = NS.DialLayout or {}
 local DL = NS.DialLayout
@@ -48,6 +56,8 @@ DL.AUTO    = 0                                 -- slices: one wedge per item, sp
 DL.MAX_SLICES = 12
 DL.ARROW   = 24                                -- a page arrow, square, by default (the Paging tab)
 DL.ARC     = 64                                -- straight segments drawing the rim
+DL.START   = 270                               -- an unpinned page's place 1: W
+DL.FIT_MARGIN = 4                              -- Auto leaves each icon this much more arc (AutoCap)
 
 local SLICE_OK = { [DL.AUTO] = true, [4] = true, [6] = true, [8] = true, [12] = true }
 local WINDS = { "N", "NE", "E", "SE", "S", "SW", "W", "NW" }
@@ -89,23 +99,69 @@ function DL.Geometry(radius, line, reach)
     return { radius = radius, disc = 2 * edge, reach = reach, title = label + 4, below = label }
 end
 
---- A ring's page length: the dial's fixed slices, or under Auto 12; at most 8 on a ring that holds a
---- ring.
-function DL.PageSize(slices, hasChildren)
+--- A ring's page length: the dial's fixed slices, or under Auto 12 (at most `cap`, AutoCap's icon
+--- fit, when given); at most 8 on a ring that holds a ring.
+function DL.PageSize(slices, hasChildren, cap)
     slices = DL.ClampSlices(slices)
-    local cap = hasChildren and DL.KEYS or DL.MAX_SLICES
-    if slices == DL.AUTO then return cap end
-    return math.min(slices, cap)
+    local most = hasChildren and DL.KEYS or DL.MAX_SLICES
+    if slices == DL.AUTO then return math.min(most, tonumber(cap) or DL.MAX_SLICES) end
+    return math.min(slices, most)
 end
 
---- One page's wedges: its wedge count and where wedge 1 sits (degrees clockwise from N). A fixed
---- count starts at N; Auto has one wedge per item from W, but three items take a four-wedge ring
---- (W, N, E; S empty).
---- @return number size, number start
+-- Four places' items by count (the owner's sheet): W; W, E; W, N, E; W, N, E, S.
+local FOUR = { { 1 }, { 1, 3 }, { 1, 2, 3 }, { 1, 2, 3, 4 } }
+
+--- One page's wedges: its wedge count, where place 1 sits (degrees clockwise from N: always START,
+--- W) and each item's place (`places[i]`, 1-based, clockwise from `start`). A fixed count keeps its
+--- page size; Auto has one wedge per item, but three items take a four-wedge ring (S empty). Four
+--- places take their items by count (FOUR); more are filled in order from W.
+--- @return number size, number start, number[] places
 function DL.PageShape(slices, pageSize, count)
-    if DL.ClampSlices(slices) ~= DL.AUTO then return pageSize, 0 end
     count = math.max(1, tonumber(count) or 1)
-    return count == 3 and 4 or count, 270
+    local size = pageSize
+    if DL.ClampSlices(slices) == DL.AUTO then size = count == 3 and 4 or count end
+    local places = {}
+    if size == 4 and FOUR[count] then
+        for i, place in ipairs(FOUR[count]) do places[i] = place end
+    else
+        for i = 1, count do places[i] = i end
+    end
+    return size, DL.START, places
+end
+
+--- How far a slice moves out along its bisector so neighbors on a ring of n stand `gap` pixels
+--- apart (the exploded pie, dial polish): (gap / 2) / sin(pi / n); none for one slice or no gap.
+function DL.SliceShift(gap, n)
+    gap, n = tonumber(gap) or 0, tonumber(n) or 1
+    if n <= 1 or gap <= 0 then return 0 end
+    return (gap / 2) / math.sin(math.pi / n)
+end
+
+--- Auto's icon fit: the most wedges (1..MAX_SLICES) whose arc at the icon reach (IconReach of
+--- `radius` and the Icon offset `at`), less the Slice `gap`, still holds an icon of `iconSize` plus
+--- FIT_MARGIN; one when none do.
+function DL.AutoCap(radius, at, iconSize, gap)
+    local around = 2 * math.pi * DL.IconReach(radius, at)
+    local need = (tonumber(iconSize) or 0) + DL.FIT_MARGIN
+    gap = tonumber(gap) or 0
+    for n = DL.MAX_SLICES, 1, -1 do
+        if around / n - gap >= need then return n end
+    end
+    return 1
+end
+
+--- The slice of a ring of `size` (place 1 at `start` degrees) under a point at bearing `angle`
+--- (radians clockwise from N), `dist` from the center: its index when the point is past the hub
+--- (`hub` across) and on the disc (`disc` across), else nil. Angle only: a point in a slice gap
+--- belongs to the slice whose angle it is in. The one function the tracker and the catcher agree on;
+--- whether the place holds an item is the caller's check.
+function DL.SliceAt(angle, dist, size, start, hub, disc)
+    dist = tonumber(dist) or 0
+    if dist <= (tonumber(hub) or 0) / 2 or dist > (tonumber(disc) or 0) / 2 then return nil end
+    size = math.max(1, tonumber(size) or 1)
+    local step = 2 * math.pi / size
+    local from = math.rad(tonumber(start) or 0) - step / 2
+    return math.floor(((angle - from) % (2 * math.pi)) / step) + 1
 end
 
 --- Split `items` into pages of `size`, the last holding the rest.
@@ -343,16 +399,20 @@ end
 
 --- A dial's rings, and the ring it opens on (0: nothing to show).
 --- @param groups table the dial's active groups in its order (see the Interfaces block of Task 3)
---- @param opts table { mode = "categories"|"flat", slices, title }
+--- @param opts table { mode = "categories"|"flat", slices, title, fit = { radius, iconOffset, iconSize,
+---   gap } } (fit: Auto's icon-fit cap, AutoCap; nil: no cap)
 --- @return table rings, number openRing
 function DL.Rings(groups, opts)
     groups = type(groups) == "table" and groups or {}
     opts = type(opts) == "table" and opts or {}
     local slices = DL.ClampSlices(opts.slices)
+    local fit = type(opts.fit) == "table" and opts.fit
+    local cap = fit and DL.AutoCap(fit.radius, fit.iconOffset, fit.iconSize, fit.gap)
     local rings = {}
 
     -- A ring's pages: a pinned ring (a node set's, PinNodes) is one page of eight wedges from N; any
-    -- other is paged at the dial's page size (PageSize), each page shaped by PageShape.
+    -- other is paged at the dial's page size (PageSize), each page shaped by PageShape, its items
+    -- given their places.
     local function pagesOf(entries, pinned)
         if pinned then return { { items = entries, size = 8, start = 0 } } end
         local hasChildren = false
@@ -360,8 +420,10 @@ function DL.Rings(groups, opts)
             if e.kind == "ring" then hasChildren = true end
         end
         local out = {}
-        for p, items in ipairs(DL.Paginate(entries, DL.PageSize(slices, hasChildren))) do
-            local size, start = DL.PageShape(slices, DL.PageSize(slices, hasChildren), #items)
+        local pageSize = DL.PageSize(slices, hasChildren, cap)
+        for p, items in ipairs(DL.Paginate(entries, pageSize)) do
+            local size, start, places = DL.PageShape(slices, pageSize, #items)
+            for i, item in ipairs(items) do item.wedge = places[i] end
             out[p] = { items = items, size = size, start = start }
         end
         return out

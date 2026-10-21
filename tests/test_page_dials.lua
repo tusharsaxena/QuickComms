@@ -174,8 +174,10 @@ test("dials page: [final 20] at 12 wedges per ring the Preview names each wedge 
     -- M+ alone (In Group's twelve would page the ring, and a paged ring holds eight)
     assertTrue(NS.SchemaRuntime.Set("group.enabled", false, T.seeded(NS, "bi.group")))
     local w = P.tab("dials", "preview")
-    assertTrue(P.hasText(w, "  2 1 o'clock: "), "wedge 2 at 1 o'clock")
-    assertTrue(P.hasText(w, "  3 2 o'clock: "))
+    -- red under: start fixed counts at N in modules/Dial_Layout.lua PageShape (wedge 2 at 1 o'clock)
+    assertTrue(P.hasText(w, "  1 9 o'clock: "), "wedge 1 at W, 9 o'clock")
+    assertTrue(P.hasText(w, "  2 10 o'clock: "), "wedge 2 at 10 o'clock")
+    assertTrue(P.hasText(w, "  3 11 o'clock: "))
 end)
 
 test("dials page: Delete dial asks, then the dial is gone, its header released, and the page heals", function()
