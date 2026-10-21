@@ -2,7 +2,7 @@
 -- like tools/gen-shine-textures.py; the client never loads it and .pkgmeta ignores tools/).
 --
 --     lua tools/render-shine-preview.lua [out.json] [radii]   (from the repo root; radii: "100,150")
---     python3 tools/render-shine-preview.py [out.json] [out_dir]
+--     python3 tools/render-shine-preview.py [--json out.json] [--out DIR] [--bg RRGGBB] [--scenes]
 --
 -- It loads the addon headless exactly as the test harness does (tests/loader.lua over
 -- tests/wow_mock.lua, the same enableAddon lifecycle as tests/run.lua), so what it dumps is what the
