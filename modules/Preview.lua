@@ -37,14 +37,16 @@ function P.IsTestMode()
     return State.testMode == true
 end
 
---- Turn test mode on or off. A start is refused, with one line, while stood down or in combat.
+--- Turn test mode on or off. A start is refused, with one line, while stood down (by hold:
+--- NS.StoodDownRefusal) or in combat.
 --- @return boolean changed
 function P.SetTestMode(on)
     on = on and true or false
     if on == P.IsTestMode() then return false end
     if on then
-        if NS.IsStoodDown() then
-            NS.Print(NS.SlashCommands:DisabledLine())
+        local refusal = NS.StoodDownRefusal()
+        if refusal then
+            NS.Print(refusal)
             return false
         end
         if fighting() then
@@ -188,7 +190,7 @@ function P.PreviewSnapshot()
 end
 
 --- Preview the pads as `key`, or turn the preview off (nil, "", "off" or "current"). A start is
---- refused, with one line, while stood down or in combat.
+--- refused, with one line, while stood down (by hold: NS.StoodDownRefusal) or in combat.
 --- @return boolean changed
 function P.SetPreviewAs(key)
     if key == nil or key == "" or key == "off" then key = P.CURRENT end
@@ -196,8 +198,9 @@ function P.SetPreviewAs(key)
     local want = key ~= P.CURRENT and key or nil
     if want == State.previewAs then return false end
     if want then
-        if NS.IsStoodDown() then
-            NS.Print(NS.SlashCommands:DisabledLine())
+        local refusal = NS.StoodDownRefusal()
+        if refusal then
+            NS.Print(refusal)
             return false
         end
         if fighting() then

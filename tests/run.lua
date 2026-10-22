@@ -79,6 +79,7 @@ Kit.setSurfaceSource{
     ["LibKa0s-Lifecycle-1.0"] = surfaceNS.Lifecycle,
     ["LibKa0s-Schema-1.0"]    = surfaceMock.LibStub("LibKa0s-Schema-1.0", true),
     ["LibKa0s-Pool-1.0"]      = surfaceMock.LibStub("LibKa0s-Pool-1.0", true),
+    ["LibKa0s-Glow-1.0"]      = surfaceMock.LibStub("LibKa0s-Glow-1.0", true),
 }
 
 -- The table every suite reaches as `local T = _G.QUICKCOMMS_TEST`. Kit.expose merges `test` and the

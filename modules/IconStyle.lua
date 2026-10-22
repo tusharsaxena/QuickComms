@@ -6,6 +6,7 @@ local _, NS = ...
 -- button's icon size changes the button's geometry (modules/Pad_Layout.lua CellSize), so every change
 -- here reaches the screen through a rebuild (LIBRARY_CHANGED -> Surfaces.Request, held behind combat
 -- with the stale hint), never in combat.
+-- Kept in-addon: LibKa0s#56 rejected under library-stack-§7; re-check trigger in docs/ARCHITECTURE.md -> Documented deviations.
 --
 -- CONFIG. Config reads a surface's `icon` table once per rebuild into the values the paint takes:
 -- the zoom clamped, the tint and the border color resolved through their Use class color companions

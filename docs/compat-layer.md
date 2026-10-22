@@ -54,6 +54,6 @@ with a library-absent body and not counted; their contract is LibKa0s
 | `HasTemplate(name)` | `C_XMLUtil.GetTemplateInfo` | `type()` only: a table answer is `true`, anything else (or a raise) `false` | `nil` (unknown: the caller tries `CreateFrame` under `pcall`) | `settings/ModalWindow.lua` (whether to build the callout popup's and the icon browser's window from `SettingsFrameTemplate`) |
 | `MacroIcons(kind)` | `GetLooseMacroIcons` then `GetMacroIcons` (`"spells"`), `GetLooseMacroItemIcons` then `GetMacroItemIcons` (`"items"`), in the order Blizzard's IconDataProvider reads them, each filling the table it is handed (or returning one); a reader that is absent or raises adds nothing | each entry through `PlainNumber`: a secret or non-number entry is dropped | `{}` (the reader absent or raising, an unknown kind, or the client's list not loaded yet) | `settings/IconBrowser_Sources.lua` (the Game icons tab) |
 
-The restriction shims are copied from DropWatcher's `core/Compat.lua`. `tests/test_compat.lua`
-drives the plain readers (secrets dropped, a secret `instanceID` read as `nil`) and the restriction
-readers.
+The restriction shims are copied from DropWatcher's `core/Compat.lua`. LibKa0s#49 deferred them;
+see `ARCHITECTURE.md` -> `## Documented deviations`. `tests/test_compat.lua` drives the plain
+readers (secrets dropped, a secret `instanceID` read as `nil`) and the restriction readers.

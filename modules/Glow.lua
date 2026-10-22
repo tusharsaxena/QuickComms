@@ -1,7 +1,8 @@
 local _, NS = ...
 -- modules/Glow.lua — the Icons tab's glow (B9) on a Comms Pad button's and a Comms Dial wedge's icon:
--- LibCustomGlow-1.0's effect, modeled on DropWatcher modules/Glow.lua (its START/STOP tables, its
--- knob table, the unchanged-repaint no-op and the proc burst spent once).
+-- LibCustomGlow-1.0's effect, drawn through LibKa0s-Glow-1.0 (core/GlowSetup.lua, NS.GlowLib), which
+-- owns the knob-to-argument mapping. The knob table and the trigger stay modeled on DropWatcher
+-- modules/Glow.lua, as do the unchanged-repaint no-op and the proc burst spent once.
 --
 -- THE TRIGGER (owner decision 2026-10-19), per pad and per dial, off by default: Always (while the
 -- icon is drawn), On hover (a pad button's OnEnter to OnLeave, hooked insecurely beside the tooltip;
@@ -32,8 +33,10 @@ local _, NS = ...
 -- drawn with it enabled (Glow.Button, at every paint), in its style and color at the Icons tab's knob
 -- defaults; the same signature rule keeps it across an unchanged rebuild, and Release stops it too.
 --
--- HEADLESS. Without the library (the suites load no libs/ beyond LibKa0s, or a LibStub miss) the
--- decision is still recorded on the button (`qcGlowStyle`, `qcButtonGlowStyle`) and nothing is drawn.
+-- HEADLESS. The driver resolves LibCustomGlow-1.0 at call time, and the seam's stub (LibKa0s absent)
+-- answers false. Either way, without the library (the suites load no libs/ beyond LibKa0s, or a
+-- LibStub miss) the decision is still recorded on the button (`qcGlowStyle`, `qcButtonGlowStyle`)
+-- and nothing is drawn.
 
 NS.Glow = NS.Glow or {}
 local Glow = NS.Glow
@@ -47,41 +50,6 @@ Glow.BUTTON_KEY = "QuickCommsButton"
 Glow.FRAME_LEVEL = 2
 Glow.SEND_SECONDS = 1.5
 
-local function lib() return LibStub and LibStub("LibCustomGlow-1.0", true) or nil end
-
-local function num(v, fallback) return type(v) == "number" and v or fallback end
-
--- Each style's start and stop on frame `f` under `key` (the button style takes none: one per frame).
-local START = {
-    button = function(L, f, c)
-        L.ButtonGlow_Start(f, c.color, num(c.buttonFrequency), Glow.FRAME_LEVEL)
-    end,
-    proc = function(L, f, c, key)
-        L.ProcGlow_Start(f, { color = c.color, startAnim = c.procStartAnim ~= false,
-            duration = num(c.procDuration, 1), xOffset = num(c.xOffset, 0), yOffset = num(c.yOffset, 0),
-            key = key, frameLevel = Glow.FRAME_LEVEL })
-    end,
-    pixel = function(L, f, c, key)
-        -- A length of 0 is automatic (the library sizes the lines from the icon); `border` must be a
-        -- boolean, since the library draws its dark border for nil.
-        local length = num(c.pixelLength, 0)
-        L.PixelGlow_Start(f, c.color, num(c.pixelLines), num(c.pixelFrequency), length > 0 and length or nil,
-            num(c.pixelThickness), num(c.xOffset, 0), num(c.yOffset, 0), c.pixelBorder == true, key,
-            Glow.FRAME_LEVEL)
-    end,
-    autocast = function(L, f, c, key)
-        L.AutoCastGlow_Start(f, c.color, num(c.autocastParticles), num(c.autocastFrequency),
-            num(c.autocastScale), num(c.xOffset, 0), num(c.yOffset, 0), key, Glow.FRAME_LEVEL)
-    end,
-}
-
-local STOP = {
-    button   = function(L, f) L.ButtonGlow_Stop(f) end,
-    proc     = function(L, f, key) L.ProcGlow_Stop(f, key) end,
-    pixel    = function(L, f, key) L.PixelGlow_Stop(f, key) end,
-    autocast = function(L, f, key) L.AutoCastGlow_Stop(f, key) end,
-}
-
 -- The proc style's frame replays its opening burst from its own OnShow, and a rebuild re-shows the
 -- pad; once the effect has been on screen the burst has played, so from then on it shows its loop.
 local function spendBurst(btn)
@@ -94,8 +62,7 @@ end
 --- Stop the effect on a button and forget it (a no-op on a button with none).
 function Glow.Stop(btn)
     if not (btn and btn.qcGlowStyle) then return end
-    local L, stop = lib(), STOP[btn.qcGlowStyle]
-    if L and stop and btn.qcIconFrame then stop(L, btn.qcIconFrame, Glow.KEY) end
+    NS.GlowLib.Stop(btn.qcIconFrame, btn.qcGlowStyle, Glow.KEY)
     btn.qcGlowStyle, btn.qcGlowSig = nil, nil
 end
 
@@ -107,8 +74,7 @@ local function start(btn, g)
     end
     Glow.Stop(btn)
     local t0 = Perf.on and debugprofilestop()
-    local L, fn = lib(), START[g.type]
-    if L and fn and btn.qcIconFrame then fn(L, btn.qcIconFrame, g, Glow.KEY) end
+    NS.GlowLib.Start(btn.qcIconFrame, g.type, g, Glow.KEY, Glow.FRAME_LEVEL)
     btn.qcGlowStyle, btn.qcGlowSig = g.type, g.sig
     spendBurst(btn)
     if t0 then Perf.Note("glowStart", debugprofilestop() - t0) end
@@ -190,8 +156,7 @@ end
 
 local function stopButton(btn)
     if not btn.qcButtonGlowStyle then return end
-    local L, stop = lib(), STOP[btn.qcButtonGlowStyle]
-    if L and stop and btn.qcEdge then stop(L, btn.qcEdge, Glow.BUTTON_KEY) end
+    NS.GlowLib.Stop(btn.qcEdge, btn.qcButtonGlowStyle, Glow.BUTTON_KEY)
     btn.qcButtonGlowStyle, btn.qcButtonGlowSig = nil, nil
 end
 
@@ -202,8 +167,7 @@ function Glow.Button(btn, g)
     if not g then return stopButton(btn) end
     if btn.qcButtonGlowStyle and btn.qcButtonGlowSig == g.sig then return end
     stopButton(btn)
-    local L, fn = lib(), START[g.type]
-    if L and fn and btn.qcEdge then fn(L, btn.qcEdge, g, Glow.BUTTON_KEY) end
+    NS.GlowLib.Start(btn.qcEdge, g.type, g, Glow.BUTTON_KEY, Glow.FRAME_LEVEL)
     btn.qcButtonGlowStyle, btn.qcButtonGlowSig = g.type, g.sig
 end
 

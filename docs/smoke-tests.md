@@ -16,7 +16,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | SLASH-1..2 | Slash | `/qc` and `/quickcomms`, help, a slash collision |
 | PANEL-1..3 | Settings panel | Landing page, General → Master controls, the Defaults button |
 | PROFILE-1..2 | Profiles | The Profiles page and the `profile` verb |
-| STATE-1..4 | State | Enable/disable, the launcher menu, `/qc toggle`, the pads' hidden state across /reload |
+| STATE-1..5 | State | Enable/disable, the launcher menu, `/qc toggle`, the pads' hidden state across /reload |
 | COMBAT-1 | Combat | The settings panel in combat |
 | DIAG-1..2 | Diagnostics | The debug console, the report, perf |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
@@ -28,8 +28,8 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
 | LOOK-1..6 | Pad header, Section header, Window | The Comms Pad's three window tabs: the section titles' font, the pad's border and background, the header's look, size and alignment, the tab strip and headings, the section header's band and height |
 | BUTTON-1..2 | Buttons tab | The buttons' size, color, border and font; the button glow |
-| ICONS-1..3 | Icons tab | The buttons' and wedges' icon look, border and glow triggers |
-| ICON-1 | Icons | Choosing an icon, for a callout and for a group |
+| ICONS-1..4 | Icons tab | The buttons' and wedges' icon look, border and glow triggers; the glows through LibKa0s-Glow-1.0 |
+| ICON-1..3 | Icons | Choosing an icon, for a callout and for a group; the LibKa0s v1.75.0 re-vendor: the icon browser's three sets and the library-drawn marks |
 | ART-1 | Art | The dial's round art: the hub's styles, the dots and pill, the indicator background, the borders and the arrow plates |
 | SHINE-1..3 | Shine | The shine overlay: each look on a pad and on a dial, and a pad and a dial keeping their own |
 | BG-1..8 | Battlegrounds | Node winds on the dial; the battleground instance ids; the objective groups (Alterac Valley, Isle of Conquest's bases, a flag map) and their migration; the four node buttons; Silvershard Mines' and Temple of Kotmogu's groups |
@@ -106,6 +106,13 @@ until combat ends, then the pads show, with no Lua error. Result: 2026-10-21, pa
 menu's Show window is unticked. Log a second character → its pads show (its own choice). Back on the
 first, switch profile (Profiles page) → still hidden. `/qc toggle` → shown; `/reload` → still shown.
 Result: 2026-10-21, pass (the owner's run; client build not recorded).
+
+**STATE-5. A perf capture refuses by its own line (2026-10-22).** Start a perf capture from `/qc
+perf`'s step panel, then press the Toggle Comms Pads key, type `/qc toggle` and `/qc test` → each
+prints `Not available during a performance capture.` once and nothing toggles. Finish the capture →
+the key toggles the pads again. Then `/qc disable` and press the Toggle Comms Pads key → the disabled
+line, `Ka0s Quick Comms is disabled — enable it with /qc enable` (unchanged, as KEY-3). `/qc enable`
+to finish. **Owed**: the headless gate holds the latch directly and cannot drive a real capture.
 
 ## Combat
 
@@ -1081,6 +1088,14 @@ then stops; on a dial, send from a wedge and reopen the dial within a few second
 for about a second and a half from the open, then stops, and a later reopen shows no glow. In combat, `/qc set pad.icon.size 30` → no error, "updates after combat", the bigger
 icons land at combat end. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
+**ICONS-4. Glows through LibKa0s-Glow-1.0 (2026-10-22).** The glows are now drawn by the library's
+driver (LibKa0s#56); nothing should look different. Pad → Icons, Glow on: each style (Pixel border,
+Auto cast sparkles, Button, Proc) × Always / On hover / After sending, on a pad and on a dial → each
+looks as before; Proc's opening burst plays once, not on every rebuild. Pad → Buttons, button glow
+on: each style circles the whole pad button and coexists with the icon glow on the same button. In
+combat, hover a pad button and a dial wedge with On hover → the glow starts and stops, no Lua error,
+no taint message. Result: owed.
+
 ## Icons
 
 **ICON-1. Choosing an icon.** Groups → a group of yours → Callouts → a row's edit glyph → Choose
@@ -1093,6 +1108,19 @@ General tab's icon is the question mark, the wedge shows no icon, and the clear 
 the popup, a callout with an icon → clear glyph → the icon is the question mark, Save → the row and
 the button show no icon. A built-in set's General tab ("Dungeon") has the same Icon row and
 Choose icon…: a glyph chosen there shows on its wedge. Result: 2026-10-21, pass (the owner's run; client build not recorded).
+
+**ICON-2. The icon browser after the v1.75.0 re-vendor (2026-10-22, run item QC-RV, SM-QC-1).**
+`/reload` → no Lua error. Groups → a group of yours → Callouts → a row's edit glyph → Choose icon… →
+the icon browser lists all three sets (Open Iconic, Phosphor, Game-icons) and every glyph draws, in
+each set and in a search's results. `CLAUDE.md` declares `LibKa0s icons: all (icon browser).`, so the
+prune removed nothing; a blank cell means an icon went missing. Result:
+
+**ICON-3. Library-drawn art after the v1.75.0 re-vendor (2026-10-22, run item QC-RV, SM-QC-2).** The
+marks the library draws, and the addon's own, still draw: `/qc debug` → the console's close, copy and
+clear marks; an export from the Share page (SHARE-1) → the copy window's close; Groups → a group →
+When → the id list's info mark; a pad's padlock (lock the pads) and a dial's page arrows and pointer.
+A blank control is the failure: a pruned or undeclared icon resolves to a path and draws nothing.
+Result:
 
 ## Art
 
@@ -1283,6 +1311,13 @@ from the client, so this check needs a non-English client pass. Result: 2026-10-
 
 ## Pending sign-off
 
-None. The owner ran every check above on 2026-10-21 and reported all of them passed (the client
-build was not recorded). A check added or rewritten later is listed here, with its origin and why it
-is owed, until its pass is recorded.
+The owner ran every check above on 2026-10-21 and reported all of them passed (the client build was
+not recorded), except the ones below. A check added or rewritten later is listed here, with its origin
+and why it is owed, until its pass is recorded.
+
+- **ICON-2**, **ICON-3**: added 2026-10-22 by the LibKa0s v1.75.0 re-vendor (QC-RV); owed because the
+  headless gate cannot see whether a declared icon draws.
+- **ICONS-4**: added 2026-10-22 by the LibKa0s-Glow-1.0 adoption (QC-01, origin LibKa0s#56); owed because
+  the headless gate drives a fake LibCustomGlow-1.0 and cannot see the effect drawn.
+- **STATE-5**: added 2026-10-22 by the by-hold refusal (QC-02, origin OWNER_SCOPE F, LibKa0s#58); owed
+  because a real perf capture runs only in the client.
