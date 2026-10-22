@@ -2,6 +2,7 @@ local _, NS = ...
 -- modules/Restrictions.lua — what Blizzard's 12.0 addon restrictions allow right now (spec §8.4,
 -- the lock matrix, and §9, the send engine): whether a chat message may be sent, whether the player
 -- is fighting, and the reason the surfaces' lockdown chip names.
+-- Kept in-addon: LibKa0s#49 rejected under library-stack-§7; re-check trigger in docs/ARCHITECTURE.md -> Documented deviations.
 --
 -- THREE SOURCES, all through core/Compat.lua:
 --   * ADDON_RESTRICTION_STATE_CHANGED (type, state): the type's state as the event said it, kept
