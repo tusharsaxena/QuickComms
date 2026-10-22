@@ -679,7 +679,7 @@ opens nothing (still bound in WoW's key bindings). Result: 2026-10-21, pass (the
 **DIAL-9. Test mode and Preview as.** Out of combat: `/qc test` → dial 1 opens at its place with
 placeholder wedges and TEST MODE above the hub: four group wedges, Test group 1 to 4, opening rings of
 4, 8, 12 and 16 callouts with shipped names and icons (2026-10-21; a ring holding more than
-the dial's slices pages); clicking sends nothing; 1 still fires the action bar. `/qc test` again → test mode ends, and
+the dial's slices pages: its page arrows turn the page, the Left and Right arrow keys and the wheel do not); clicking sends nothing; 1 still fires the action bar. `/qc test` again → test mode ends, and
 no Test group or placeholder callout appears on the Groups page or in a new session.
 General → Master controls → Preview as → Arathi Basin → the dial opens on its groups with PREVIEW, and Arathi Basin opens the nodes; nothing
 sends; Escape closes the settings window (not the dial), which ends the preview and closes the dial.
