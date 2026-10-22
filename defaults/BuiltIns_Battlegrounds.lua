@@ -46,7 +46,7 @@ local BASES = {
 }
 
 -- Callout rows with `what` put into each one's text: the four rows for a node, the Attack and Defend
--- rows for an objective, a track's or an orb's. Only the %s is filled, so another token (%t) is left
+-- rows for an objective, a track's or an orb's. Only the %s is filled, so a chip ({target}) is left
 -- for the bake.
 local function rowsFor(template, what)
     local out, plain = {}, (what:gsub("%%", "%%%%"))
@@ -111,7 +111,7 @@ nodeBattleground("eots", L["Eye of the Storm"], { "gi:tornado", C.purple }, { 56
 }, {
     BASES[1], BASES[2], BASES[3],
     { "flagcap", L["Cap the flag"],  L["Take the flag to a tower we hold"], "gi:flying-flag", C.gold },
-    { "flagkill", L["Kill the EFC"], L["Kill their flag carrier %t"], "gi:bloody-sword", C.red },
+    { "flagkill", L["Kill the EFC"], L["Kill their flag carrier {target}"], "gi:bloody-sword", C.red },
 })
 nodeBattleground("bfg", L["Battle for Gilneas"], { "gi:wolf-howl", C.blue }, { 761 }, {
     { "lighthouse", L["Lighthouse"], "W", "gi:lighthouse", C.gold },
@@ -197,7 +197,7 @@ nodeBattleground("wsg", L["Warsong Gulch"], { "gi:tusks-flag", C.red }, { 489, 2
     { "efctun",   L["EFC tunnel"],     L["EFC in the tunnel"], "gi:flying-flag", C.orange },
     { "efcroof",  L["EFC roof"],       L["EFC on the roof"], "gi:flying-flag", C.orange },
     { "fcheals",  L["FC needs heals"], L["Our FC needs heals"], "gi:heart-plus", C.green },
-    { "killefc",  L["Kill EFC"],       L["Kill the EFC %t"], "gi:bloody-sword", C.red },
+    { "killefc",  L["Kill EFC"],       L["Kill the EFC {target}"], "gi:bloody-sword", C.red },
     { "fcsafe",   L["FC safe"],        L["FC is safe"], "gi:checked-shield", C.green },
 })
 nodeBattleground("tp", L["Twin Peaks"], { "gi:peaks", C.green }, { 726 }, flagChildren({
@@ -208,7 +208,7 @@ nodeBattleground("tp", L["Twin Peaks"], { "gi:peaks", C.green }, { 726 }, flagCh
     { "efcmid",   L["EFC mid"],        L["EFC mid"], "gi:flying-flag", C.orange },
     { "efcwater", L["EFC water"],      L["EFC in the water"], "gi:water-splash", C.blue },
     { "fcheals",  L["FC needs heals"], L["Our FC needs heals"], "gi:heart-plus", C.green },
-    { "killefc",  L["Kill EFC"],       L["Kill the EFC %t"], "gi:bloody-sword", C.red },
+    { "killefc",  L["Kill EFC"],       L["Kill the EFC {target}"], "gi:bloody-sword", C.red },
     { "fcsafe",   L["FC safe"],        L["FC is safe"], "gi:checked-shield", C.green },
 })
 -- Silvershard Mines (bg buttons, 2026-10-20): carts spawn in the middle and roll down three tracks to
@@ -242,7 +242,7 @@ nodeBattleground("ssm", L["Silvershard Mines"], { "gi:mine-wagon", C.gold }, { 7
 local ORB = {
     { "take",  L["Take orb"],     L["Take the %s"],              "gi:grab",           C.gold },
     { "peel",  L["Peel"],         L["Peel for our %s carrier"],  "gi:shield-reflect", C.blue },
-    { "kill",  L["Kill carrier"], L["Kill their %s carrier %t"], "gi:bloody-sword",   C.red },
+    { "kill",  L["Kill carrier"], L["Kill their %s carrier {target}"], "gi:bloody-sword",   C.red },
     { "heals", L["Heals"],        L["Our %s carrier needs heals"], "gi:heart-plus",     C.green },
 }
 nodeBattleground("tok", L["Temple of Kotmogu"], { "gi:crystal-ball", C.purple }, { 998 }, {
@@ -258,7 +258,7 @@ nodeBattleground("tok", L["Temple of Kotmogu"], { "gi:crystal-ball", C.purple },
     } },
 }, {
     { "heals",    L["Orb heals"],      L["Orb carrier needs heals"], "gi:heart-plus", C.green },
-    { "kill",     L["Kill orb"],       L["Kill orb carrier %t"], "gi:bloody-sword", C.red },
+    { "kill",     L["Kill orb"],       L["Kill orb carrier {target}"], "gi:bloody-sword", C.red },
     { "mid",      L["Go mid"],         L["Orbs to the middle"], "gi:orb-direction", C.cyan },
 })
 -- Seething Shore's azerite erupts at random among a dozen sites, three at a time, so its children are
@@ -289,7 +289,7 @@ nodeBattleground("dhr", L["Deephaul Ravine"], { "gi:cave-entrance", C.orange }, 
         { "grab",    L["Grab crystal"],    L["Grab the crystal in the middle"], "gi:crystal-shine", C.gold },
         { "escort",  L["Escort carrier"],  L["Escort our crystal carrier to a capture point"], "gi:guards", C.blue },
         { "heals",   L["Carrier heals"],   L["Our crystal carrier needs heals"], "gi:heart-plus", C.green },
-        { "kill",    L["Kill carrier"],    L["Kill their crystal carrier %t"], "gi:bloody-sword", C.red },
+        { "kill",    L["Kill carrier"],    L["Kill their crystal carrier {target}"], "gi:bloody-sword", C.red },
         { "dropped", L["Crystal dropped"], L["The crystal is dropped, grab it"], "gi:crystal-cluster", C.orange },
     } },
     { "carts", L["Carts"], "free", "gi:mine-truck", C.gold, {
@@ -364,7 +364,7 @@ nodeBattleground("ashran", L["Ashran"], { "gi:sword-clash", C.red }, { 1191 }, {
     { "bosses", L["Bosses"], "free", "gi:ogre", C.purple, {
         { "korlok",   L["Kor'lok"],  L["To Kor'lok, kill their champion"], "gi:ogre", C.purple },
         { "guardian", L["Guardian"], L["Their guardian is coming, focus it"], "gi:crowned-skull", C.red },
-        { "captain",  L["Captain"],  L["Kill their captain %t"], "gi:bloody-sword", C.red },
+        { "captain",  L["Captain"],  L["Kill their captain {target}"], "gi:bloody-sword", C.red },
         { "artifact", L["Artifact"], L["The Ancient Artifact is up, get it"], "gi:relic-blade", C.gold },
     } },
 }, {
@@ -403,7 +403,7 @@ nodeBattleground("wg", L["Wintergrasp"], { "gi:frozen-orb", C.cyan }, { 2118 }, 
 -- default dial, so the dial opens straight on its nodes (D9). Migration step 2 moves it on stored
 -- profiles (modules/Library.lua MoveGenericBattlegroundLast).
 BI.Group("bi.bg", {
-    name = L["Battleground (generic)"], glyph = "gi:flag-objective", color = C.gold,
+    name = L["Battleground"], glyph = "gi:flag-objective", color = C.gold,
     when = { content = { battleground = true } },
     callouts = BI.Callouts("bi.bg", "smartGroup", {
         { "help",    L["Need help"],  L["Need help here"], "gi:megaphone", C.orange },

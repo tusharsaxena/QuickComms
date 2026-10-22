@@ -224,8 +224,11 @@ test("dial secure: [firewall] no snippet writes an attribute; the ring on screen
     end
 end)
 
--- One ring of `size` places (place 1 at W) with a catcher over its disc and a callout wedge on each of
+-- One ring of `size` places (place 1 at W, SHIFTED) with a catcher over its disc and a callout wedge on each of
 -- `places`, loaded by hand as modules/Dial.lua loads it.
+-- A ring start other than N (DL.START since 2026-10-22), so the catcher's qc-start is exercised.
+local SHIFTED = 270
+
 local function caught(size, places)
     local NS, m = T.enableAddon()
     local DS, SE, DL = NS.DialSecure, NS.SendEngine, NS.DialLayout
@@ -243,7 +246,7 @@ local function caught(size, places)
         wedges[i] = { button = b, target = 0, place = place }
     end
     assertTrue(DS.Load(h, { { frame = frame, parent = 0, prev = 0, next = 0, wedges = wedges, catcher = catcher,
-        shape = { size = size, start = DL.START, hub = DL.HUB, disc = disc } } }, {}))
+        shape = { size = size, start = SHIFTED, hub = DL.HUB, disc = disc } } }, {}))
     return NS, m, h, catcher, disc
 end
 
@@ -256,15 +259,15 @@ test("dial secure: [polish] catcher and SliceAt agree", function()
         for _, p in ipairs(places) do used[p] = true end
         local hits = 0
         for k = 0, 71 do
-            local a = math.rad((k + 0.5) * 5)   -- off every slice edge
+            local a = math.rad(k * 5 + 1)   -- off every slice edge
             for _, dist in ipairs({ DL.HUB / 2 + 1, (DL.HUB / 2 + disc / 2) / 2, disc / 2 - 1 }) do
                 m.cursor.x, m.cursor.y = dist * math.sin(a), dist * math.cos(a)
                 local got = m.__runSnippet(h, "self, button, down, owner", NS.DialSecure.SNIPPETS.catcher, catcher,
                     "LeftButton", false, h)
-                local j = DL.SliceAt(a, dist, size, DL.START, DL.HUB, disc)
+                local j = DL.SliceAt(a, dist, size, SHIFTED, DL.HUB, disc)
                 local want = (j and used[j]) and ("w" .. j) or false
                 -- red under: count the catcher's places from N (drop qc-start) in CATCHER_PRE
-                assertEqual(got, want, ("%d slices, bearing %s, %s px"):format(size, (k + 0.5) * 5, dist))
+                assertEqual(got, want, ("%d slices, bearing %s, %s px"):format(size, k * 5 + 1, dist))
                 if want then hits = hits + 1 end
             end
         end

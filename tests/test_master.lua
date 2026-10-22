@@ -29,13 +29,14 @@ local function openMenu(m)
     return root
 end
 
-test("master: the frame defaults are spec §5.1's: always shown, scale and alpha 1, locked", function()
+test("master: the frame defaults are spec §5.1's: always shown, scale and alpha 1; a new profile starts unlocked", function()
     local NS = T.bootAddon()
     local p = NS.db.profile
     assertEqual(p.visibility, "always")
     assertEqual(p.scale, 1.0)
     assertEqual(p.alpha, 1.0)
-    assertEqual(p.locked, true)
+    -- red under: locked = true in defaults/Profile.lua (owner, 2026-10-22: a new profile starts unlocked)
+    assertEqual(p.locked, false)
 end)
 
 test("master: /qc unlock and /qc lock write the Lock frame row's path and confirm on one line", function()
@@ -53,6 +54,8 @@ test("master: the launcher's Locked and Test mode entries call the same handlers
     local boxes = openMenu(m).boxes
     assertEqual(boxes[2].label, "Locked")
     assertEqual(boxes[3].label, "Test mode")
+    boxes[2].click()
+    assertTrue(NS.Setting("locked"), "a new profile is unlocked: the entry locks it")
     boxes[2].click()
     assertFalse(NS.Setting("locked"))
     boxes[3].click()

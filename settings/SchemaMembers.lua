@@ -292,7 +292,7 @@ local ROWS = {
     { path = "dial.radius", instance = "dial", type = "number", default = T.dial.radius,
       min = NS.DialLayout.RADIUS_MIN, max = NS.DialLayout.RADIUS_MAX, step = 2,
       page = "dials", group = L["Wheel"], label = L["Ring radius"],
-      desc = L["How big the dial is, in pixels: at the default 100, the icons' distance from its middle. The disc grows with it, and automatic icon offset and size follow it."],
+      desc = L["How big the dial is, in pixels (120 by default). The disc grows with it, and automatic icon offset and size follow it."],
       validate = NUMBER, normalize = clamp(NS.DialLayout.RADIUS_MIN, NS.DialLayout.RADIUS_MAX, true) },
     { path = "dial.openAt", instance = "dial", type = "string", default = T.dial.openAt, values = OPEN_AT,
       page = "dials", group = L["Wheel"], label = L["Open at"],
@@ -762,7 +762,7 @@ for _, row in ipairs(titleRows()) do ROWS[#ROWS + 1] = row end
 local ICON_OFFSET = { path = "dial.iconOffset", instance = "dial", type = "number", default = T.dial.iconOffset,
     min = 0, max = 250, step = 1, zeroText = L["Automatic"],
     page = "dials", group = L["Icons"], subgroup = L["Size and crop"], label = L["Icon offset (0 = automatic)"],
-    desc = L["How far each icon sits from the middle of the dial, in pixels. 0 keeps each icon in the same place in its slice at any ring radius: on the ring radius at the default 100, a little inside it on a bigger wheel. The disc keeps its size."],
+    desc = L["How far each icon sits from the middle of the dial, in pixels. 0 keeps each icon in the same place in its slice at any ring radius: on the ring radius at 100, a little inside it on a bigger wheel. The disc keeps its size."],
     validate = NUMBER, normalize = clamp(0, 250, true) }
 do
     local C = { check = check, choices = choices, oneOf = oneOf, clamp = clamp, NUMBER = NUMBER, BOOL = BOOL,

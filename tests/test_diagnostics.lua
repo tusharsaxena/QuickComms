@@ -71,9 +71,9 @@ test("diagnostics: the surfaces and send sections name the pads, the armed butto
     NS.Situation.RefreshNow("test")
     local text = report(NS)
     assertTrue(text:find("p1 active=" .. T.seeded(NS, "bi.mplus") .. " stale=false", 1, true) ~= nil, text)
-    -- the pad's 8 buttons, and the default dial's 9 wedges (1 group wedge, then 8 callouts on one Auto
-    -- page) and its two rings' page arrows (2 each, never armed): 21 buttons, 16 armed
-    assertTrue(text:find("buttons=21 armed=16", 1, true) ~= nil, text)
+    -- the pad's 7 buttons, and the default dial's 8 wedges (1 group wedge, then 7 callouts on one Auto
+    -- page) and its two rings' page arrows (2 each, never armed): 19 buttons, 14 armed
+    assertTrue(text:find("buttons=19 armed=14", 1, true) ~= nil, text)
     assertTrue(text:find("p1:" .. T.seeded(NS, "bi.mplus.pull") .. " /p Pulling next pack", 1, true) ~= nil, text)
     assertTrue(text:find("pending -", 1, true) ~= nil, "no queued keys")
     assertTrue(text:find("window=1", 1, true) ~= nil, "the guard")
@@ -127,13 +127,13 @@ test("diagnostics: [dial rework] the report names the pads' hidden state, each d
     -- red under: drop the dial look and ring lines from modules/Diagnostics.lua dials
     assertTrue(text:find("padsHidden=false (this character)", 1, true) ~= nil, text)
     assertTrue(text:find("d2 shown=closed", 1, true) ~= nil, text)
-    assertTrue(text:find("d2 look mode=categories slices=0 radius=100 iconOffset=0 openAt=center", 1, true) ~= nil, text)
+    assertTrue(text:find("d2 look mode=categories slices=0 radius=120 iconOffset=0 openAt=center", 1, true) ~= nil, text)
     -- red under: keep border= (the retired slice border) in modules/Diagnostics.lua dialLook
-    assertTrue(text:find("d2 slices gap=0 pointer=true size=20 offset=0 labels=true size=12 offset=0 tooltip=top/8", 1, true)
+    assertTrue(text:find("d2 slices gap=0 pointer=true size=24 offset=24 labels=true size=12 offset=0 tooltip=top/8", 1, true)
         ~= nil, text)
-    assertTrue(text:find("d2 paging offset=6 arrow=24 gap=10 dot=6 pill=18 dotGap=6 back=true pad=4 border=1", 1, true) ~= nil, text)
+    assertTrue(text:find("d2 paging offset=6 arrow=24 gap=10 dot=8 pill=18 dotGap=6 back=true pad=4 border=2", 1, true) ~= nil, text)
     -- red under: drop the hub line or the group labels' show from modules/Diagnostics.lua dialLook
-    assertTrue(text:find("d2 hub style=solid size=40 circle=22 line=2 border=0 groupLabels=true", 1, true) ~= nil, text)
+    assertTrue(text:find("d2 hub style=solid size=32 circle=24 line=4 border=1 groupLabels=true", 1, true) ~= nil, text)
     assertTrue(text:find("d2 ring 1 Comms Dial page=1/1", 1, true) ~= nil, "the ring of groups, M+ and In Group")
 end)
 
@@ -160,7 +160,7 @@ test("diagnostics: [debug] the log follows a dial open, a ring shown, a press an
     -- red under: no OnShow/OnHide debug hooks on the dial's header in modules/Dial.lua
     once("d2 opened")
     once("d2 shows Comms Dial")
-    once("d2 shows Dungeon (generic)")
+    once("d2 shows Dungeon")
     -- red under: no press line in modules/SendEngine.lua press
     once("press " .. T.seeded(NS, "bi.mplus.pull") .. " on d2 -> PARTY")
     once("d2 closed")
@@ -171,8 +171,8 @@ test("diagnostics: [shine] the pad's button line and the dial's slices line prin
     NS.Situation.RefreshNow("test")
     local text = report(NS)
     -- red under: no button line in modules/Diagnostics.lua surfaces, or no shine= on dialLook's slices line
-    assertTrue(text:find("p1 button shine=none 85", 1, true) ~= nil, text)
-    assertTrue(text:find("d2 slices gap=0 pointer=true size=20 offset=0 labels=true size=12 offset=0 tooltip=top/8 shine=none 85",
+    assertTrue(text:find("p1 button shine=glossfade 80", 1, true) ~= nil, text)
+    assertTrue(text:find("d2 slices gap=0 pointer=true size=24 offset=24 labels=true size=12 offset=0 tooltip=top/8 shine=orb 85",
         1, true) ~= nil, text)
     NS.SchemaRuntime.Set("pad.button.shineLook", "orb", "p1")
     NS.SchemaRuntime.Set("pad.button.shineStrength", 40, "p1")

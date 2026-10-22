@@ -910,7 +910,7 @@ local SURFACE_DEFAULTS = {
     -- Relaxed is the only interaction in v0.1.0 (the C7 fallback, round-4 record). `delay` and
     -- `tapAction` are kept for the hold, flick and release upgrade, and `depth` until owner ruling R5
     -- gives it a meaning; nothing reads them yet.
-    dial = { mode = "categories", slices = 0, radius = 100, iconOffset = 0, depth = 2, openAt = "center", delay = 0.3,
+    dial = { mode = "categories", slices = 0, radius = 120, iconOffset = 0, depth = 2, openAt = "center", delay = 0.3,
         interaction = "relaxed", tapAction = "first", icon = NS.IconDefaults.For("dial"),
         label = NS.PadDefaults.DialLabel(),     -- the Slice labels tab (defaults/PadStyle.lua)
         title = NS.PadDefaults.DialTitle(),     -- the Group labels tab (defaults/PadStyle.lua)

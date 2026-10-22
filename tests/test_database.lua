@@ -264,11 +264,11 @@ test("database: [B7] step 5 renames the dungeon set, widens its When and gives s
     NS.addon:RunMigrations()
     local p = db.sv.profiles.Old
     -- red under: no step 5 in core/Database.lua
-    assertEqual(p.groups.g1.name, "Dungeon (generic)", "an un-renamed set takes the new name")
+    assertEqual(p.groups.g1.name, "Dungeon", "an un-renamed set takes the new name")
     assertTrue(p.groups.g1.when.content.dungeon and p.groups.g1.when.content.mythicPlus, "and the wider When")
     assertEqual(p.groups.g2.name, "My keys", "a renamed set keeps its name")
     assertTrue(p.groups.g2.when.content.dungeon, "its unedited When still widens")
-    assertEqual(p.groups.g3.name, "Dungeon (generic)")
+    assertEqual(p.groups.g3.name, "Dungeon")
     assertNil(p.groups.g3.when.content.dungeon, "an edited When is the player's")
     assertEqual(p.groups.g4.name, "M+ (generic)", "a group of the player's own is not the shipped set")
     assertNil(p.groups.g4.when.content.dungeon)

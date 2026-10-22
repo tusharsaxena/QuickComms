@@ -6,14 +6,14 @@ local C = BI.COLOR
 local ID = "bi.arena"
 
 BI.Group(ID, {
-    name = L["Arena (generic)"], glyph = "gi:arena", color = C.gold,
+    name = L["Arena"], glyph = "gi:arena", color = C.gold,
     when = { content = { arena = true } },
     callouts = BI.Callouts(ID, "party", {
         { "trinket", L["Trinket used"],  L["Trinket used"], "gi:medal", C.gold },
-        { "cc",      L["CC"],            L["CC {rt1} now"], "gi:sheep", C.purple },
-        { "swap",    L["Swap"],          L["Swap to %t"], "gi:cycle", C.orange },
+        { "cc",      L["CC"],            L["CC {target} now"], "gi:sheep", C.purple },
+        { "swap",    L["Swap"],          L["Swap to {target}"], "gi:cycle", C.orange },
         { "incc",    L["I'm in CC"],     L["I'm in CC"], "gi:manacles", C.purple },
-        { "kill",    L["Kill"],          L["Going for kill on %t"], "gi:bloody-sword", C.red },
+        { "kill",    L["Kill"],          L["Going for kill on {target}"], "gi:bloody-sword", C.red },
         { "drink",   L["Drink"],         L["Drink, reset"], "gi:water-flask", C.blue },
     }),
 })

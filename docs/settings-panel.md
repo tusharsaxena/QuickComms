@@ -285,9 +285,9 @@ body     [Name          ] [Channel       ]   the callout.* member rows' labels a
 ```
 
 - **The layout.** Two columns, each the library's button-pair width (`Helpers.BUTTON_PAIR_REL` of
-  the body, the width `InlineButtonPair` gives Cancel and Save, options-ui-§8), with the whole pixels
+  the body, the width `InlineButtonPair` gives Save and Cancel, options-ui-§8), with the whole pixels
   the pair leaves (8 px) as the gutter between them: Name and Channel, the icon with Choose icon…
-  and the clear glyph, and the swatch, Cancel and Save each fill one, so their outer edges meet the Text box's and the Preview rule's,
+  and the clear glyph, and the swatch, Save (left, since 2026-10-22) and Cancel each fill one, so their outer edges meet the Text box's and the Preview rule's,
   and the right column starts at the same place on every line. The pair keeps its width; the popup
   only puts the gutter between its two buttons. The fields are
   drawn by the library's field maker (`RenderField`) into the popup's own lines, not by
@@ -556,25 +556,25 @@ Preview  each ring as the current or previewed situation builds it, wedge by wed
   three-rings-deep warning: a battleground's node callouts now sit three rings deep by design,
   since In Group is active beside the map's set).
 - **Wheel:** Wedges per ring is `dial.slices`: Auto (0, a new dial's default) gives each page one
-  wedge per item from W, clockwise (one: the whole disc; two: halves W and E; three: W, N and E on a
-  four-wedge ring with S empty; four: W, N, E and S; past four, evenly spaced), up to 12, and fewer
+  wedge per item from N, clockwise, evenly spaced (owner, 2026-10-22; from W since the dial polish
+  before): one is the whole disc, its icon at N; two are halves, N and S; three are thirds, N then
+  120 and 240 degrees; and so on, up to 12, and fewer
   when the icons no longer fit their slices at the icon reach (the Slice gap counted; 128-pixel icons
-  at radius 100 hold about four a page); or a fixed 4, 6, 8 or 12, from W since the dial polish
-  (2026-10-21; from N before): a fixed 4 places one item W, two W and E, three W, N and E, four W, N,
-  E and S, and a fixed 6, 8 or 12 fills its places from W clockwise, the rest drawn empty (never lit,
-  never clicked). The gap never changes a fixed count.
+  at radius 100 hold about four a page); or a fixed 4, 6, 8 or 12, from N: a fixed 4 places one
+  item N, two N and S, three N, E and S, four N, E, S and W, and a fixed 6, 8 or 12 fills its places
+  from N clockwise, the rest drawn empty (never lit, never clicked). The gap never changes a fixed count.
   A ring that holds rings takes at most 8 either way, and a node set pinned to its winds keeps its
   eight. A ring with more items is paged: two arrows under the dial (dimmed at an end, no wrap), the
   Left and Right arrow keys (bound only while a paged ring is shown) and the mouse wheel turn its
   pages; under them a gold pill marks the page shown and a gray dot each other page, and each arrow
   is a round plate in the slices' fill with a chevron, dimmed at an end. Ring radius is `dial.radius` (70 to 180
-  pixels, default 100): the wedges' distance from the middle; the disc grows with it, keeping 20
+  pixels, default 120 since 2026-10-22, 100 before): the wedges' distance from the middle; the disc grows with it, keeping 20
   pixels between a wedge's edge and its own. Open at is `dial.openAt` (its place or the cursor). X
   and Y write the whole `dial.point` row; a refused offset says why and puts the box back. There is
   no depth control (owner ruling R5).
 - **Slice labels** (the Labels tab until the dial polish, 2026-10-21; a UI rename, the `dial.label.*` paths kept): Show labels is `dial.label.show`: each wedge's name, drawn wholly outside the disc (off
   shows the icons alone; the tooltip still names them). Label offset is `dial.label.offset` (0 to
-  300 pixels, 0 automatic: just past the disc), each label's distance from the middle; the ring's
+  300 pixels, 0 automatic: 4 pixels past the disc, 2 until 2026-10-22), each label's distance from the middle; the ring's
   title and the page row move out with it, and it grays out with the font. The Font block is composed by the options
   library as the Buttons tab's (`dial.label.font|fontSize|fontColor|useClassColorFont|fontFlags|fontShadow`;
   defaults white Friz Quadrata 12 with its shadow, `PadDefaults.DialLabel`), grayed out while Show
@@ -584,7 +584,7 @@ Preview  each ring as the current or previewed situation builds it, wedge by wed
   dial tooltip (a wedge's, a page arrow's, the hub's Why is this showing?) sits outside the dial,
   that far above the ring's title, below the page row, or beside the disc past its widest label.
 - **Group labels** (dial polish, 2026-10-21): Show group labels is `dial.title.show` (on by default):
-  the ring's title above the dial ("World (solo)", "Comms Dial"). Its Font block is composed as the
+  the ring's title above the dial ("Solo", "Comms Dial"). Its Font block is composed as the
   slice labels' (`dial.title.font|fontSize|fontColor|useClassColorFont|fontFlags|fontShadow`;
   defaults gold Friz Quadrata 12 with its shadow, `PadDefaults.DialTitle`), grayed out while off; the
   title is measured with its own line height, so a bigger font lifts it and the tooltip above it.
@@ -592,12 +592,12 @@ Preview  each ring as the current or previewed situation builds it, wedge by wed
   the tab under Size and crop: 0 to 250 pixels, 0 automatic, the icons' own distance from the
   middle, the disc keeping its size. Automatic keeps each icon in the same place in its slice at any
   ring radius (owner, 2026-10-21): the share of the band from the hub's edge to the disc's edge that
-  the ring radius takes at the default 100 (the radius itself there; about 126 at 140, 133 at 150,
+  the ring radius takes at 100 (the radius itself there; about 113 at the default 120, about 126 at 140, 133 at 150,
   152 at 180). Icon size (0 = automatic) reaches 128 on a dial (a pad's stays 40, with no
   automatic): a game icon is 64-pixel art, so past 64 it is upscaled and softer; at the default ring
   radius icons past about 70 pixels crowd their neighbors, and at 128 a ring wants a radius near 180.
-  0 (a new dial's default) is automatic: 32 at the default radius, scaled with it (22 at 70, 48 at
-  150, 58 at 180), held under a fixed wedge count to the slice's arc less the Slice gap, and within
+  0 (a new dial's default) is automatic: 48 at the default radius, 0.4 of the radius (owner,
+  2026-10-22; 28 at 70, 40 at 100, 60 at 150, 72 at 180), held under a fixed wedge count to the slice's arc less the Slice gap, and within
   16 to 128; a value typed under 16 that is not 0 is 16. The rest is the Pad page's Icons tab.
 - **Slices** (2026-10-21): each heading's colors are composed swatch pairs with Use class color.
   Background is `dial.slice.background`, each slice's fill (dark, as the disc was). Gap's Slice gap
@@ -617,9 +617,9 @@ Preview  each ring as the current or previewed situation builds it, wedge by wed
 - **Hub** (dial polish, 2026-10-21: its Hub and Pointer headings sat on Slices until then; the
   paths are kept, so saved settings are untouched; the tab follows Slices). Hub is
   `dial.hub.*`: Hub style (Solid circle, the default; Hollow ring; Target, a ring with a dot; Rimmed
-  disc, a filled circle on a rimmed backdrop), Hub size (24 to 80, default 40: the backdrop's width,
-  where the slices and the pointer start), Circle size (4 to 60, default 22), Line width (1 to 6,
-  grayed out under Solid circle), Backdrop color, Hub border size (0 to 6, default 0; Rimmed disc
+  disc, a filled circle on a rimmed backdrop), Hub size (24 to 80, default 32 since 2026-10-22: the backdrop's width,
+  where the slices and the pointer start), Circle size (4 to 60, default 24), Line width (1 to 6,
+  grayed out under Solid circle), Backdrop color, Hub border size (0 to 6, default 1; Rimmed disc
   always draws one), Hub border color and Circle color, each with Use class color; the circle
   brightens while the cursor is on the hub. Pointer is
   `dial.slice.pointerShow`, `pointerSize` (10 to 48, default 20), `pointerOffset` (0 to 150, 0

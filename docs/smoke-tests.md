@@ -21,9 +21,9 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | DIAG-1..2 | Diagnostics | The debug console, the report, perf |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
 | SEND-1..5 | Send | Secure sends in keys and on bosses, the spam guard |
-| PAD-1..15 | Pad | The Comms Pad, its growth and button width, the World (solo) and In Group sets and the built-ins' colors, the header click and icon only's width, the header's Quick Comms: text |
-| EDIT-1..30 | Editors | The Pad and Dial page names; the Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
-| DIAL-1..35 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, the lone-group open and the group ring, page arrows and the page row, Auto wedges, the ring radius, the Slice labels tab, the slices and the slice lit by direction, the Slices tab, the pointer, the tooltip outside the dial, the hub over the slices, the pointer, label and icon offsets, the Paging tab; the dial polish: the border gone, the slice gap, placement from W, a slice clicked to the hub in combat, the hub styles, the Group labels tab, Icon offset on Icons, 128-pixel icons, a click outside closing the dial in combat, the page indicators' background and border, the Hub tab |
+| PAD-1..15 | Pad | The Comms Pad, its growth and button width, the Solo and In Group sets and the built-ins' colors, the header click and icon only's width, the header's Quick Comms: text |
+| EDIT-1..32 | Editors | The Pad and Dial page names; the Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
+| DIAL-1..41 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, the lone-group open and the group ring, page arrows and the page row, Auto wedges, the ring radius, the Slice labels tab, the slices and the slice lit by direction, the Slices tab, the pointer, the tooltip outside the dial, the hub over the slices, the pointer, label and icon offsets, the Paging tab; the dial polish: the border gone, the slice gap, placement from W, a slice clicked to the hub in combat, the hub styles, the Group labels tab, Icon offset on Icons, 128-pixel icons, a click outside closing the dial in combat, the page indicators' background and border, the Hub tab; automatic icon offset and size; the 120 radius and 48-pixel icons by default; a right click back a ring; opening where it was closed; slices from N |
 | KEY-1..3 | Key bindings | A dial's key as WoW's own binding in Options → Keybindings, Character Specific Keybindings, Toggle Comms Pads |
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
 | LOOK-1..6 | Pad header, Section header, Window | The Comms Pad's three window tabs: the section titles' font, the pad's border and background, the header's look, size and alignment, the tab strip and headings, the section header's band and height |
@@ -161,7 +161,7 @@ The C1–C9 checks of the phase 0 harness (design spec §19) are recorded in
 
 ## Pad
 
-**PAD-1. First run.** On a fresh profile, enter a key → the default pad shows "Dungeon (generic)" with
+**PAD-1. First run.** On a fresh profile, enter a key → the default pad shows "Dungeon" with
 eight buttons, with no channel letter at the right edge of any of them (the label runs to the edge);
 the header reads `Quick Comms: M+ · <dungeon> +<level>`. Hovering a button shows its name, the exact line it sends
 and `Channel: Party` in the party's chat color; a wedge on the Comms Dial shows the same lines. Every button shows its glyph in a color: Lust a red enraged face,
@@ -169,7 +169,7 @@ Need mana a blue drop, Res me a green ankh, GG a gold trophy, Pulling orange cro
 order a purple boot, Skipping a cyan figure, Chain pull red chains. Leave the key and zone into a
 normal or heroic dungeon → the same set shows. On a profile saved before this build (it still shows
 "M+ (generic)" with the bloodlust spell icon on Lust), `/reload` with this build → the set reads
-"Dungeon (generic)" and Lust shows the red glyph; a set renamed before, or a callout whose icon was
+"Dungeon" and Lust shows the red glyph; a set renamed before, or a callout whose icon was
 cleared, keeps the player's choice. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 **PAD-2. The stale hint.** In combat, `/qc set behavior.autoPromote false` → the header shows
@@ -221,15 +221,15 @@ one line; down to 1 → icon-only slivers, no label and no Lua error. Make a gro
 it on the pad and stand in the open world → the header reads `Quick Comms: World` and the section under it has
 no second `World` line; rename the group `My world` → its title line is back. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
-**PAD-11. World (solo) and the built-ins' colors (groups polish).** Out of any group, in the open
-world: the pad shows a World (solo) section of nine buttons, each tooltip reading `Channel: Say` (Rare spotted a gold spyglass,
+**PAD-11. Solo and the built-ins' colors (groups polish).** Out of any group, in the open
+world: the pad shows a Solo section of seven buttons, each tooltip reading `Channel: Say` (Rare spotted a gold spyglass,
 Elite help a red ogre, Group quest a gold scroll, World boss a red crowned skull, Event here an orange
-bell, Invite me a blue envelope, Thanks green hands, AFK a white cup, Back a cyan arrow).
+bell, Invite me a blue envelope, Thanks green hands).
 Target a mob and click Rare spotted → /say reads "Rare spotted here: <target>"; click Invite me →
 /say reads "Invite please". Join a party → the set is gone. On the Groups page every built-in group's
 icon is a colored glyph named for it (Dungeon a purple gate, Arathi Basin a gold wheat sheaf, each
 node its own), and no set's callouts are all white. On a profile saved before this build, `/reload`
-→ World (solo) is added at the end of every pad and dial; the built-in callouts and groups take their
+→ Solo is added at the end of every pad and dial; the built-in callouts and groups take their
 colors, except one whose icon or color you changed; each node battleground set gains its map-wide
 callouts once, at the end of its list; a battleground set you had deleted does not come back.
 `/reload` again → nothing changes and nothing is added. Result: 2026-10-21, pass (the owner's run; client build not recorded).
@@ -273,7 +273,7 @@ an `Inc` button; click it → the party sees "INC" with a skull. Leave the key �
 the pad. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 **EDIT-2. A built-in set is an ordinary group (the phase 3 exit, rewritten 2026-10-18).** Groups →
-pick "Dungeon (generic)" → the picker shows no "(built-in)" tag (in a key it reads `Dungeon (generic)` with the
+pick "Dungeon" → the picker shows no "(built-in)" tag (in a key it reads `Dungeon` with the
 green dot after the name, not before it; Pad → Groups and Dial → Groups put it after the name too), and the page draws the same tabs as a
 group of yours, nothing read-only. General: Name, Enabled, Parent group,
 the icon with Choose icon…, Duplicate and Delete, then Restore built-in groups; no Customize and no
@@ -290,8 +290,8 @@ nothing to chat and prints its line locally (EDIT-29); its tooltip says so. The 
 Preview as row. Close the settings → the preview ends. `/qc preview raid:heroic` →
 the raid set; pull something → the preview ends with one line and the live buttons return. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
-**EDIT-4. Why is this showing?.** In a key, hover the pad's header → the tooltip lists "Dungeon
-(generic): Content" (and any other group, with its rows); with a `/raid` callout on the pad
+**EDIT-4. Why is this showing?.** In a key, hover the pad's header → the tooltip lists "Dungeon:
+Content" (and any other group, with its rows); with a `/raid` callout on the pad
 outside a raid, the last line names the lock. Behavior → Explain why groups show off → no tooltip.
 `/qc why` prints the same lines per pad. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
@@ -302,14 +302,14 @@ drag a group to the top → it comes first on the pad. New pad → a second pad 
 built-in group you still have (top-level, in shipped order); Delete pad (Yes) → it is gone. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 **EDIT-6. Restore built-in groups (rewritten 2026-10-18; the Share page's Built-in tab is gone).**
-Share has two tabs, Export and Import. Groups → "Raid (generic)" → Delete (Yes) → it is gone from the
-picker and, in a raid, from the pad. On "Dungeon (generic)"'s Callouts tab remove "Lust" (Yes). General →
+Share has two tabs, Export and Import. Groups → "Raid" → Delete (Yes) → it is gone from the
+picker and, in a raid, from the pad. On "Dungeon"'s Callouts tab remove "Lust" (Yes). General →
 Restore built-in groups (no question asked) → one chat line counts the groups and callouts that came
-back; "Raid (generic)" is in the picker again and last on every pad's and dial's Groups list, and
-"Lust" is the last row of Dungeon (generic)'s Callouts. Click Restore again → "nothing to restore", and
+back; "Raid" is in the picker again and last on every pad's and dial's Groups list, and
+"Lust" is the last row of Dungeon's Callouts. Click Restore again → "nothing to restore", and
 nothing is added. Delete "Lumber Mill" (inside "Arathi Basin") → Restore → it is back, indented under
 Arathi Basin in the picker, and in Arathi Basin (or Preview as → Arathi Basin) its wedge is on its
-wind, SW, again. Rename "Dungeon (generic)" → Restore leaves it as it is and adds no second dungeon set. With
+wind, SW, again. Rename "Dungeon" → Restore leaves it as it is and adds no second dungeon set. With
 every group deleted, the "No groups yet" General still offers Restore built-in groups. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 **EDIT-7. An edit during combat.** With a user callout on the pad (its id is `c<n>`: `/qc get
@@ -333,8 +333,8 @@ background as bright as the settings window's, not darkened by the dim around it
 the whole width, an "Icon" label over the icon with Choose icon…, a small red clear glyph and Icon
 color (there is **no Icon text box**), a section's gap (about 18 px) under that row, the Preview
 heading over the baked line,
-a clear gap (about a section's) under that line, and the red Cancel and Save buttons, Cancel on the
-left; there is no Insert a token dropdown. **Alignment:** every label starts exactly over the left
+a clear gap (about a section's) under that line, and the red Save and Cancel buttons, Save on the
+left (since 2026-10-22, owner; Cancel on the left before); there is no Insert a token dropdown. **Alignment:** every label starts exactly over the left
 edge of its box (Name, Channel, Text), the Channel dropdown's left edge meets the Name box's line,
 the icon and the Icon label start on that same line, and so do the Preview rule, the preview line
 and Cancel; in the right column the Channel label, its dropdown, the Icon color swatch and Save all
@@ -363,7 +363,7 @@ borders are whole** (not shaved by the page's edge). In the list, every row's ha
 glyphs sit centered in its box, and the edit and remove glyphs are small and close to the box's
 right edge (the same on Pad → Groups and Dial → Groups). Pick one of group B's callouts → nothing is added yet; click Add → it is A's
 last row. Edit the copy's text and Save → B's original is unchanged (check its row or its button).
-The list has no built-in section: "Dungeon (generic): Lust" is listed like any other group's callout;
+The list has no built-in section: "Dungeon: Lust" is listed like any other group's callout;
 reuse it → a copy you can edit, and the M+ group's Lust is unchanged. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 **EDIT-12. The remove glyphs.** On a group's Callouts tab, a row's remove glyph (the red no-entry
@@ -455,7 +455,7 @@ top-level, on every pad and dial where My keys was. `/qc set group.parent none` 
 makes it top-level; `/qc set group.parent <its own id>` is refused, with a line saying why.
 Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
-**EDIT-20. The Preview table.** Groups → "Dungeon (generic)" → Preview → the active-now line, then a gold
+**EDIT-20. The Preview table.** Groups → "Dungeon" → Preview → the active-now line, then a gold
 header row, "Callout" and "What it sends here", then one box per callout like the Callouts tab's rows
 (switch between the two tabs: the same fill and border, and the same left and right edges): the
 callout's icon (in its color) and name on the left, what it sends here on the right, or, outside a
@@ -541,7 +541,7 @@ filtered by it; Cancel and open the browser again → the text is still there; `
 empty. Escape with the Wowhead window's box focused closes that window alone; close the browser →
 the Wowhead window closes with it. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
-**EDIT-25. The Callouts rows and the window and Buttons tabs.** Groups → "Dungeon (generic)" → Callouts → each
+**EDIT-25. The Callouts rows and the window and Buttons tabs.** Groups → "Dungeon" → Callouts → each
 row reads its icon, the name in gold, the channel's short label in its chat color (Party blue,
 Say white) and the start of its text in a muted white, cut at 40
 characters with "…". A callout with no icon shows the question mark; a callout whose text holds a
@@ -584,7 +584,7 @@ combat" line and nothing opens; no error. Result: 2026-10-21, pass (the owner's 
 
 **EDIT-29. A preview click echoes its line.** Out of combat, solo in the open world: make a group
 with a callout `Go {me}` on Yell and put it on the pad and the dial. Master controls → Preview as →
-World · Solo → click the button → one local chat line, `[QC] /y Go <your name>`, and nothing said
+Solo → click the button → one local chat line, `[QC] /y Go <your name>`, and nothing said
 aloud (no yell bubble, nobody else sees it). Change the callout to Smart group and preview Raid ·
 Heroic → the click prints `[QC] /raid Go <your name>`. Open the dial on the preview and click the
 wedge → the same line, and the dial closes. On Groups with Preview while editing ticked, click a button
@@ -596,6 +596,19 @@ Quick Comms read General, Groups, Pad, Dial, Share, Profiles (no "Comms Pad" or 
 The default pad and dial are still named Comms Pad and Comms Dial in their pickers, Share → Export
 still lists them by those names, and a dial's ring of groups is still titled Comms Dial. Delete every
 dial, then `/qc set dial.radius 120` → "No dial to edit: make one on the Dial page." Result: 2026-10-21, pass (the owner's run; client build not recorded).
+
+**EDIT-31. The callout popup's Save is on the left (owner, 2026-10-22).** Open Edit callout → Save on
+the left, Cancel on the right, each a column wide; Save saves and closes, Cancel closes and changes
+nothing. Result: not yet run.
+
+**EDIT-32. Preview as and the shipped sets (owner, 2026-10-22).** General → Master controls → Preview
+as → Current; one M+ entry (M+ · Windrunner Spire · <spec>); Raid · LFR, Normal, Heroic and Mythic, each
+followed by · The Voidspire; Arena; one BG - <name> entry per battleground; Solo last. On a fresh
+profile the groups read Dungeon, Raid, Arena, Battleground and Solo; Dungeon holds seven callouts
+(Pulling, Lust, Need mana, Skipping, Res me, Chain pull, Kick order), In Group ten (Hello, Summon,
+Buffs please, Healthstone, tyff, brb, Ready, GLHF, ggty, ggnt) and Solo seven. Arena's Swap and Kill
+and every Kill … carrier callout send your target's name ({target}). The pads start unlocked (their
+drag strips show) until Lock pads. Result: not yet run.
 
 ## Dial
 
@@ -611,7 +624,7 @@ it; right-click a wedge → it closes and nothing is sent. Result: 2026-10-21, p
 
 **DIAL-2. A wedge sends in a boss (the phase 4 exit; rewritten in the dial rework, 2026-10-21).** In
 a party on a raid or M+ boss, press G → the dial opens on the ring of groups (Dungeon or Raid
-(generic) and In Group: several active groups); click the raid or dungeon set → its callouts; click a
+and In Group: several active groups); click the raid or dungeon set → its callouts; click a
 callout wedge → the group sees the line, the dial closes, and there is no "action blocked" error or
 red text. With the dial closed, 1 still fires your action bar's first button. Press G again at once →
 every wedge is dimmed for about a second (the spam guard). Result: 2026-10-21, pass (the owner's run; client build not recorded).
@@ -623,7 +636,7 @@ again → the dial closes. Result: 2026-10-21, pass (the owner's run; client bui
 
 **DIAL-4. The Arathi Basin node dial (the phase 4 exit; pinned in phase 5; three rings since the dial
 rework).** In Arathi Basin, with Wedges per ring at 4: press G → the ring of groups (Arathi Basin,
-Battleground (generic), In Group); click Arathi Basin → all five nodes on one ring, no page arrows,
+Battleground, In Group); click Arathi Basin → all five nodes on one ring, no page arrows,
 each on its compass wind (Blacksmith N, Gold Mine NE, Farm SE, Lumber Mill SW, Stables NW), with an
 Arathi Basin wedge (the gold wheat sheaf) on E, the first wind left free, that opens the map-wide
 callouts (groups polish); click Lumber Mill, then INC → instance chat shows "INC Lumber Mill". Open
@@ -694,10 +707,10 @@ the same small gold padlock as a pad button (PAD-8). With LibKa0s removed (DEGRA
 draws instead, with no error. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 **DIAL-13. One group opens straight on it; several open on the groups (dial rework, 2026-10-21).**
-Solo in the open world (World (solo) the only active group), press G → the dial opens straight on
-World (solo)'s callouts, no ring of groups. Join a party in the open world → press G → the ring of
-groups (World (solo) is gone, In Group and any always-on group of yours); click In Group → its
-callouts. Enter a dungeon with the party (or start a key) → the ring of groups shows Dungeon (generic)
+Solo in the open world (Solo the only active group), press G → the dial opens straight on
+Solo's callouts, no ring of groups. Join a party in the open world → press G → the ring of
+groups (Solo is gone, In Group and any always-on group of yours); click In Group → its
+callouts. Enter a dungeon with the party (or start a key) → the ring of groups shows Dungeon
 and In Group; click one → its callouts. Settings → Groups → any group → General: no Open the dial
 on this group and no Skip on the dial in content. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
@@ -819,7 +832,7 @@ solid circle on the 40-pixel hub. Result: 2026-10-21, pass (the owner's run; cli
 
 **DIAL-30. The Group labels tab (dial polish, 2026-10-21).** Dial → Group labels: Show group labels
 ticked, then a Font block. Font size 18, a different face, Thick outline, color white → the ring's
-title above the dial ("World (solo)", "Comms Dial") redraws that way, lifted to clear the labels, and
+title above the dial ("Solo", "Comms Dial") redraws that way, lifted to clear the labels, and
 the tooltip above it moves up too; the slice labels are unchanged. Untick Show group labels → no title,
 the font controls grayed out. Defaults → the gold 12-point title. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
@@ -870,6 +883,40 @@ and the hovered slice lights the one the icon is in. Icon size 40 → 40 pixels 
 back to 0 → Automatic. Icon offset 60 → the icons at 60 at every radius. In combat, `/qc set
 dial.radius 150` → "updates after combat", the icons moved and resized at combat end, no error. A
 dial saved before this keeps its stored Icon size (32) until it is set to 0. Result: 2026-10-21, pass (the owner's run; client build not recorded).
+
+**DIAL-37. A new dial is 120 across with 48-pixel icons (owner, 2026-10-22).** Dials → New dial →
+Wheel → Ring radius reads 120; Icons → Icon size reads Automatic → the icons draw at 48 pixels, in the
+same places as a 120 dial before this change. Ring radius 100 → 40 pixels; 150 → 60; 180 → 72; 70 → 28.
+The dial's Defaults button puts Ring radius back to 120. A dial saved before this keeps its stored
+radius (100). Result: not yet run.
+
+**DIAL-38. A right click on a slice goes back a ring (owner, 2026-10-22).** In a key with two groups
+active, open the dial (the ring of groups), click a group → its callouts. Right-click a slice → back on
+the ring of groups, still open, nothing sent. Right-click a slice there → nothing happens, the dial
+stays open. On a paged group ring, turn to page 2 and right-click a slice → the ring of groups.
+Right-click the middle button → the dial closes. Repeat in combat on a target dummy → the same, no
+"action blocked" error. Result: not yet run.
+
+**DIAL-39. The dial opens where it was closed (owner, 2026-10-22).** Open the dial, click a group, turn
+to its page 2, press the key → it closes. Press it again → the same group on page 2. Escape, a click
+outside and a sent callout leave it the same way. Change a setting (a rebuild) → it still opens there.
+Go up to the ring of groups, close, reopen → the ring of groups. Leave the content so that group is no
+longer active → it opens where the dial opens by default. Test mode shows the default ring and does
+not change where the key opens it. In combat → the same. Result: not yet run.
+
+**DIAL-40. Slices from N; labels a little further out (owner, 2026-10-22).** Wedges per ring Auto:
+with one callout → the whole disc, its icon at the top; two → top and bottom halves; three → thirds,
+the first at the top; four → N, E, S, W; eight → N first, clockwise. Wedges per ring 4 with two
+callouts → N and S, E and W empty; with three → N, E and S. Wedges per ring 12 → the Preview tab lists
+wedge 1 at 12 o'clock. The number keys still follow the callouts' order. A battleground node ring keeps
+its compass winds. Label offset 0 → each label sits a little clear of the disc's edge (4 pixels, 2
+before). Clicks, hover and right-click land on the slice under the cursor, in combat too.
+Result: not yet run.
+
+**DIAL-41. The shipped dial look (owner, 2026-10-22).** On a fresh profile the dial has a 32-pixel
+solid gold hub with a 1-pixel gold rim and a 24-pixel circle, a 24-pixel pointer 24 pixels out,
+outlined slice labels, 16-point outlined group labels, the Orb shine on the slices (gray tint), and
+8-pixel page dots with a 2-pixel border. Result: not yet run.
 
 ## Share
 
@@ -1044,7 +1091,7 @@ wedge on the Comms Dial shows it, and the General tab's icon follows. With that 
 `/qc set group.icon 136012` still sets it. Click the red clear glyph beside Choose icon… → the
 General tab's icon is the question mark, the wedge shows no icon, and the clear glyph goes idle; in
 the popup, a callout with an icon → clear glyph → the icon is the question mark, Save → the row and
-the button show no icon. A built-in set's General tab ("Dungeon (generic)") has the same Icon row and
+the button show no icon. A built-in set's General tab ("Dungeon") has the same Icon row and
 Choose icon…: a glyph chosen there shows on its wedge. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 ## Art
@@ -1197,7 +1244,7 @@ Result: 2026-10-21, pass (the owner's run; client build not recorded).
 (Windrunner Spire 2805, Magisters' Terrace 2811, Nexus-Point Xenas 2915, Maisara Caverns 2874, and
 the four returning dungeons; The Voidspire 2912, The Dreamrift 2939, March on Quel'Danas 2913):
 `/qc diagnostics` → the instanceID matches; a group's When → the Instance drawer → Add the instance
-you are in adds that id. Groups → Preview as lists "M+ · Windrunner Spire" and the other seven by name. On a Devourer
+you are in adds that id. Groups → Preview as lists one M+ entry, "M+ · Windrunner Spire" (since 2026-10-22, owner). On a Devourer
 Demon Hunter, `/qc diagnostics` → the Situation line reads `spec=1480`, and a When's Specialization
 drawer offers Devourer. If you can enter Sporefall (map 1592), note whether it is a raid and its instanceID
 (ruling R4 left it out of the shipped raids). Only after this check passes

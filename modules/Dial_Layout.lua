@@ -22,14 +22,14 @@ local _, NS = ...
 -- ring pages. In Flat a node's callout is titled with its node ("INC · Lumber Mill"); the slot keeps
 -- its own name.
 --
--- THE PLACEMENT (dial polish, one rule for Auto and fixed counts): places are numbered clockwise from
--- W (START). On four places (Auto's three and four items, a fixed 4 with any count) the items take,
--- by count: one W; two W and E; three W, N and E; four W, N, E and S; an unused place is an empty
--- slice. Auto's one item is the whole disc and two are halves (W, E). Five places or more are evenly
--- spaced, the items filling places 1..k clockwise from W, the rest empty. The number keys 1-8 follow
--- item order whatever the places.
+-- THE PLACEMENT (dial polish, one rule for Auto and fixed counts; from N since 2026-10-22, owner,
+-- W before): places are numbered clockwise from N (START). Auto gives each item one place, evenly
+-- spaced: one is the whole disc with its icon at N, two are halves (N, S), three are thirds (N, then
+-- 120 and 240 degrees), and so on. A fixed 4 takes its items by count: one N; two N and S; three N,
+-- E and S; four N, E, S and W; an unused place is an empty slice. A fixed 6, 8 or 12 fills places
+-- 1..k clockwise from N, the rest empty. The number keys 1-8 follow item order whatever the places.
 --
--- THE GEOMETRY. Wedges sit clockwise from the ring's `start` (W), on-axis first. Offsets are from
+-- THE GEOMETRY. Wedges sit clockwise from the ring's `start` (N), on-axis first. Offsets are from
 -- the hub's center, y up; the radius is the dial's (`dial.radius`, Geometry), and the disc leaves RIM
 -- between a wedge's edge and its own. A node set's nodes are pinned to their compass winds (spec
 -- §12.1): its ring takes eight wedges, whatever the dial's slices, and is never paged; each node sits
@@ -42,12 +42,12 @@ NS.DialLayout = NS.DialLayout or {}
 local DL = NS.DialLayout
 local L = NS.L
 
-DL.RADIUS  = 100                               -- a wedge's center from the hub's center, by default
+DL.RADIUS  = 120                               -- a wedge's center from the hub's center, by default
 DL.RADIUS_MIN, DL.RADIUS_MAX = 70, 180         -- the Ring radius row's range
 DL.WEDGE   = 44                                -- a wedge button, square
-DL.HUB     = 40                                -- the hub (the header button), by default (dial.hub.size)
+DL.HUB     = 32                                -- the hub (the header button), by default (dial.hub.size; 40 until 2026-10-22)
 DL.RIM     = 20                                -- from a wedge's outer edge to the disc's edge
-DL.LABEL_GAP = 2                               -- a wedge's label starts this far past the wedge's edge
+DL.LABEL_GAP = 4                               -- a label (Label offset 0) starts this far past the disc's edge (2 until 2026-10-22, owner)
 DL.LINE    = 14                                -- one line of label or title text
 DL.POINTER = DL.HUB / 2 + 8                    -- the pointer's distance from the hub's center, by default
 DL.DEAD    = 8                                 -- inside this, the pointer hides
@@ -55,7 +55,7 @@ DL.KEYS    = 8                                 -- the number keys 1-8 pick wedge
 DL.AUTO    = 0                                 -- slices: one wedge per item, spread evenly
 DL.MAX_SLICES = 12
 DL.ARROW   = 24                                -- a page arrow, square, by default (the Paging tab)
-DL.START   = 270                               -- an unpinned page's place 1: W
+DL.START   = 0                                 -- an unpinned page's place 1: N
 DL.FIT_MARGIN = 4                              -- Auto leaves each icon this much more arc (AutoCap)
 
 local SLICE_OK = { [DL.AUTO] = true, [4] = true, [6] = true, [8] = true, [12] = true }
@@ -111,18 +111,18 @@ function DL.PageSize(slices, hasChildren, cap)
     return math.min(slices, most)
 end
 
--- Four places' items by count (the owner's sheet): W; W, E; W, N, E; W, N, E, S.
+-- A fixed 4's items by count, from N: N; N, S; N, E, S; N, E, S, W.
 local FOUR = { { 1 }, { 1, 3 }, { 1, 2, 3 }, { 1, 2, 3, 4 } }
 
 --- One page's wedges: its wedge count, where place 1 sits (degrees clockwise from N: always START,
---- W) and each item's place (`places[i]`, 1-based, clockwise from `start`). A fixed count keeps its
---- page size; Auto has one wedge per item, but three items take a four-wedge ring (S empty). Four
---- places take their items by count (FOUR); more are filled in order from W.
+--- N) and each item's place (`places[i]`, 1-based, clockwise from `start`). A fixed count keeps its
+--- page size; Auto has one wedge per item, evenly spaced. A fixed 4 takes its items by count (FOUR);
+--- more places are filled in order from N.
 --- @return number size, number start, number[] places
 function DL.PageShape(slices, pageSize, count)
     count = math.max(1, tonumber(count) or 1)
     local size = pageSize
-    if DL.ClampSlices(slices) == DL.AUTO then size = count == 3 and 4 or count end
+    if DL.ClampSlices(slices) == DL.AUTO then size = count end
     local places = {}
     if size == 4 and FOUR[count] then
         for i, place in ipairs(FOUR[count]) do places[i] = place end
@@ -189,7 +189,7 @@ function DL.Paginate(items, size)
 end
 
 --- The Paging tab's measures when a dial names none (defaults/PadStyle.lua DialPage's).
-DL.PAGING = { arrowSize = DL.ARROW, arrowGap = 10, dotSize = 6, pillWidth = 18, dotGap = 6, offset = 6 }
+DL.PAGING = { arrowSize = DL.ARROW, arrowGap = 10, dotSize = 8, pillWidth = 18, dotGap = 6, offset = 6 }
 
 --- A paged ring's row under the dial (`g`, a Geometry), showing page `current` of `pages`, measured
 --- by the Paging tab (`pg`, DL.PAGING's fields): the row's height (`y`, from the hub's center, `offset`
@@ -218,15 +218,18 @@ end
 
 --- The icons' distance from the center: the Icon offset `at` when it is set (above 0), else the ring
 --- radius.
--- Where the default dial's icon sits in its slice: the ring radius's share of the band from the
--- default hub's edge to the disc's edge (80 of 122 pixels), so automatic keeps it at DL.RADIUS there.
+-- Where an automatic icon sits in its slice: a ring radius of ICON_ANCHOR's share of the band from
+-- an ICON_HUB hub's edge to the disc's edge (80 of 122 pixels), so automatic keeps it at the radius
+-- there. ICON_ANCHOR and ICON_HUB are the default radius and hub before 2026-10-22 (owner: the
+-- defaults went to 120 and 32 with the icons left where they sat on that wheel).
 local function discEdge(radius) return radius + DL.WEDGE / 2 + DL.RIM end
-local ICON_SHARE = (DL.RADIUS - DL.HUB / 2) / (discEdge(DL.RADIUS) - DL.HUB / 2)
+local ICON_ANCHOR, ICON_HUB = 100, 40   -- the default radius and hub before 2026-10-22
+local ICON_SHARE = (ICON_ANCHOR - ICON_HUB / 2) / (discEdge(ICON_ANCHOR) - ICON_HUB / 2)
 
 --- An icon's distance from the hub's center: the Icon offset `at`, or with none (nil or 0,
 --- automatic; owner, 2026-10-21) the same place in its slice at any ring radius: ICON_SHARE of the
---- way from the hub's edge (`hub` across, DL.HUB when none) to the disc's edge. At the default
---- radius and hub that is the radius itself.
+--- way from the hub's edge (`hub` across, DL.HUB when none) to the disc's edge. At radius
+--- ICON_ANCHOR and a hub of ICON_HUB that is the radius itself.
 function DL.IconReach(radius, at, hub)
     at = tonumber(at)
     if at and at > 0 then return at end
@@ -236,7 +239,8 @@ function DL.IconReach(radius, at, hub)
 end
 
 --- The automatic icon size (the Icons tab's Icon size at 0; owner, 2026-10-21): the dial's default
---- size scaled with the ring radius (DL.RADIUS draws it), held under a fixed `slices` count to the
+--- size scaled with the ring radius (DL.RADIUS draws it: 48 at 120, 0.4 of the radius; owner,
+--- 2026-10-22), held under a fixed `slices` count to the
 --- slice's arc at the automatic reach less the Slice `gap` and FIT_MARGIN (under Auto the ring
 --- pages instead, AutoCap), then clamped to the Icon size row's range.
 function DL.AutoIconSize(radius, hub, slices, gap)
@@ -330,10 +334,11 @@ local function sendEntries(slots, node)
     return out
 end
 
--- `src`: the group (or node) the ring is, for its title, icon and icon color.
+-- `src`: the group (or node) the ring is, for its title, icon and icon color, and its id (else its
+-- title) for the ring's key.
 local function ringEntry(src, entries, pinned)
     return { kind = "ring", title = src.title, icon = src.icon, iconColor = src.iconColor,
-        sub = { title = src.title, entries = entries, pinned = pinned } }
+        sub = { title = src.title, entries = entries, pinned = pinned, key = tostring(src.id or src.title) } }
 end
 
 --- A node set's nodes on their compass winds (spec §12.1): each entry's `wind` (N, NE … NW, or
@@ -424,7 +429,9 @@ local function flatEntries(groups)
     return out
 end
 
---- A dial's rings, and the ring it opens on (0: nothing to show).
+--- A dial's rings, and the ring it opens on (0: nothing to show). Each ring carries `key`, the path of
+--- group and node ids down to it ("root/<group>/<node>"), the same on every page of it and across
+--- rebuilds, so the dial can open again where it was closed (modules/Dial_Secure.lua OPEN).
 --- @param groups table the dial's active groups in its order (see the Interfaces block of Task 3)
 --- @param opts table { mode = "categories"|"flat", slices, title, fit = { radius, iconOffset, iconSize,
 ---   gap, hub } } (fit: Auto's icon-fit cap, AutoCap; nil: no cap)
@@ -456,21 +463,22 @@ function DL.Rings(groups, opts)
         return out
     end
 
-    -- Add `entries` as one ring (and its pages) under `parent`; then each ring entry's own ring.
-    -- Returns the index of the first page.
-    local function addRing(title, entries, parent, pinned)
+    -- Add `entries` as one ring (and its pages) under `parent`, keyed `key`; then each ring entry's
+    -- own ring. Returns the index of the first page.
+    local function addRing(title, entries, parent, pinned, key)
         local pages = pagesOf(entries, pinned)
         local first = #rings + 1
         for p, page in ipairs(pages) do
             local idx = #rings + 1
-            rings[idx] = { title = title, page = p, pages = #pages, size = page.size, start = page.start,
-                items = page.items, parent = parent, prev = p > 1 and idx - 1 or 0, next = 0 }
+            rings[idx] = { title = title, key = key, page = p, pages = #pages, size = page.size,
+                start = page.start, items = page.items, parent = parent, prev = p > 1 and idx - 1 or 0, next = 0 }
             if p > 1 then rings[idx - 1].next = idx end
         end
         for r = first, first + #pages - 1 do
             for _, item in ipairs(rings[r].items) do
                 if item.sub then
-                    item.target = addRing(item.sub.title, item.sub.entries, r, item.sub.pinned)
+                    item.target = addRing(item.sub.title, item.sub.entries, r, item.sub.pinned,
+                        key .. "/" .. item.sub.key)
                     item.sub = nil
                 end
             end
@@ -482,7 +490,7 @@ function DL.Rings(groups, opts)
     if opts.mode == "flat" then
         local entries = flatEntries(groups)
         if #entries == 0 then return rings, 0 end
-        addRing(title, entries, 0)
+        addRing(title, entries, 0, nil, "root")
         return rings, 1
     end
     local entries = {}
@@ -490,7 +498,7 @@ function DL.Rings(groups, opts)
         entries[#entries + 1] = groupEntry(g)
     end
     if #entries == 0 then return rings, 0 end
-    addRing(title, entries, 0)
+    addRing(title, entries, 0, nil, "root")
     -- Owner ruling R2: a single group opens straight on its ring; several open on the ring of groups.
     if #entries == 1 then return rings, entries[1].target end
     return rings, 1

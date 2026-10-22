@@ -15,7 +15,7 @@ test("check: a seeded callout prints its line and channel", function()
     local NS = boot()
     local lust = T.seeded(NS, "bi.mplus.lust")
     local lines = NS.SlashVerbs.CheckLines(lust)
-    assertEqual(lines[1], lust .. " -> /p Lust on this pack {rt8}")
+    assertEqual(lines[1], lust .. " -> /p Lust on this pack")
     assertTrue(lines[2]:find("party", 1, true) ~= nil)
 end)
 

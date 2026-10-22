@@ -93,6 +93,7 @@ end)
 
 test("preview: [phase 3] Preview as Arena builds the pad from the arena snapshot, every button disarmed", function()
     local NS = live()
+    assertTrue(NS.SchemaRuntime.Set("locked", true))
     local out = heard(NS)
     assertTrue(NS.Preview.SetPreviewAs("arena"))
     assertEqual(table.concat(out, ","), "true")
@@ -197,26 +198,46 @@ test("preview: [phase 3] test mode and Preview as are one switch at a time", fun
     assertFalse(P.SetPreviewAs("nope"))
 end)
 
-test("preview: [phase 3] the menu: Current, M+, each dungeon, each raid difficulty, Arena, each battleground, World", function()
+test("preview: [phase 3] the menu: Current, one M+ dungeon, each raid difficulty, Arena, each battleground, Solo", function()
     local NS = live()
     local P = NS.Preview
-    assertEqual(P.Presets()[1].key, "current")
-    for _, key in ipairs({ "mplus", "mplus:2526", "raid:lfr", "raid:normal", "raid:heroic", "raid:mythic",
-        "arena", "bg:ab", "bg:wsg", "world" }) do
+    local keys = {}
+    for i, e in ipairs(P.Presets()) do keys[i] = e.key end
+    assertEqual(keys[1], "current")
+    -- red under: one entry per season dungeon (owner, 2026-10-22: one M+ entry, one dungeon)
+    assertEqual(table.concat(keys, ",", 2, 6), "mplus,raid:lfr,raid:normal,raid:heroic,raid:mythic")
+    for _, key in ipairs({ "arena", "bg:ab", "bg:wsg", "world" }) do
         assertTrue(P.FindPreset(key) ~= nil, key)
     end
+    assertEqual(keys[#keys], "world", "Solo last")
     assertEqual(P.FindPreset("bg:ab").snapshot.instanceID, 529, "the battleground's lowest id")
     assertEqual(P.FindPreset("raid:heroic").snapshot.difficulty, "heroic")
-    assertEqual(P.FindPreset("mplus:2526").snapshot.instanceID, 2526)
+    assertEqual(P.FindPreset("raid:heroic").snapshot.instanceID, NS.GameIds.RAIDS[1], "the tier's first raid")
+    assertEqual(P.FindPreset("mplus").snapshot.instanceID, 2805, "a current-season dungeon: Windrunner Spire")
     assertTrue(P.FindPreset("nope") == nil)
+end)
+
+test("preview: the menu's labels: one dungeon, each difficulty with the raid, BG - <name>, Solo", function()
+    local NS = live()
+    NS.Compat.SpecName = function() return "Frost" end
+    NS.Compat.InstanceName = function(id)
+        return ({ [2805] = "Windrunner Spire", [2912] = "The Voidspire" })[id]
+    end
+    local P, DOT = NS.Preview, " \194\183 "
+    assertEqual(P.FindPreset("raid:lfr").label, "Raid" .. DOT .. "LFR" .. DOT .. "The Voidspire")
+    assertEqual(P.FindPreset("raid:mythic").label, "Raid" .. DOT .. "Mythic" .. DOT .. "The Voidspire")
+    -- red under: the battleground's name alone
+    assertEqual(P.FindPreset("bg:ab").label, "BG - Arathi Basin")
+    -- red under: "World · Solo"
+    assertEqual(P.FindPreset("world").label, "Solo")
 end)
 
 test("preview: [phase 3] a dungeon entry reads M+ · <dungeon> · <spec> (spec §13.3)", function()
     local NS = live()
     NS.Compat.SpecName = function() return "Frost" end
-    NS.Compat.InstanceName = function(id) return id == 2526 and "Algeth'ar Academy" or nil end
+    NS.Compat.InstanceName = function(id) return id == 2805 and "Windrunner Spire" or nil end
     local DOT = " \194\183 "
-    assertEqual(NS.Preview.FindPreset("mplus:2526").label, "M+" .. DOT .. "Algeth'ar Academy" .. DOT .. "Frost")
+    assertEqual(NS.Preview.FindPreset("mplus").label, "M+" .. DOT .. "Windrunner Spire" .. DOT .. "Frost")
 end)
 
 test("preview: [phase 3] the Preview as row and `/qc preview` drive the same switch", function()
@@ -254,22 +275,22 @@ end)
 
 test("preview: [final 10] a dungeon preview fills {dungeon}, and the header names the preview as its menu does", function()
     local NS = live()
-    NS.Compat.InstanceName = function(id) return id == 2526 and "Algeth'ar Academy" or nil end
+    NS.Compat.InstanceName = function(id) return id == 2805 and "Windrunner Spire" or nil end
     local cid = NS.Library.CreateCallout({ name = "Go", text = "Go {dungeon} +{key}", channel = "party" })
     local gid = NS.Library.CreateGroup({ name = "Mine", callouts = { cid }, when = { content = { mythicPlus = true } } })
     NS.Library.AddGroupToSurface("pad", "p1", gid, 1)
-    assertTrue(NS.Preview.SetPreviewAs("mplus:2526"))
+    assertTrue(NS.Preview.SetPreviewAs("mplus"))
     -- red under: Surfaces.BakeContext reads only the challengeMapID, which a preview has none of
-    assertEqual(NS.Surfaces.BakeContext(NS.Preview.PreviewSnapshot()).dungeon, "Algeth'ar Academy")
+    assertEqual(NS.Surfaces.BakeContext(NS.Preview.PreviewSnapshot()).dungeon, "Windrunner Spire")
     local slot = NS.Surfaces.Plans().p1.sections[1].slots[1]
-    assertEqual(slot.line, "/p Go Algeth'ar Academy +10")
+    assertEqual(slot.line, "/p Go Windrunner Spire +10")
     local DOT = " \194\183 "
     -- red under: the preview header reads SituationText (no dungeon, and every raid reads "Raid")
     local header = NS.Pad.Instance("p1").header.qcSituation:GetText()
-    assertEqual(header, "Preview: " .. NS.Preview.Label("mplus:2526"))
-    assertTrue(header:find("M+" .. DOT .. "Algeth'ar Academy", 1, true) ~= nil, header)
+    assertEqual(header, "Preview: " .. NS.Preview.Label("mplus"))
+    assertTrue(header:find("M+" .. DOT .. "Windrunner Spire", 1, true) ~= nil, header)
     NS.Preview.SetPreviewAs("raid:mythic")
-    assertEqual(NS.Pad.Instance("p1").header.qcSituation:GetText(), "Preview: Raid" .. DOT .. "Mythic")
+    assertTrue(NS.Pad.Instance("p1").header.qcSituation:GetText():find("Preview: Raid" .. DOT .. "Mythic", 1, true) ~= nil)
 end)
 
 -- ── the preview echo (2026-10-20): a previewed press prints the line it would have sent ──────

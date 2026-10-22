@@ -277,7 +277,8 @@ function Dial.Apply(index, id, plan)
         ring.qcCatcher:SetSize(disc, disc)
         R.PaintRing(ring, spec, look)
         placeArrows(ring, spec, look)
-        loaded[r] = { frame = ring, parent = spec.parent, prev = spec.prev, next = spec.next,
+        loaded[r] = { frame = ring, key = spec.key, page = spec.page, parent = spec.parent, prev = spec.prev,
+            next = spec.next,
             arrows = { prev = ring.qcPrev, next = ring.qcNext },
             wedges = placeWedges(inst, ring, spec, icfg, look), catcher = ring.qcCatcher,
             shape = { size = spec.size, start = tonumber(spec.start) or 0, hub = look.hub.size, disc = disc } }

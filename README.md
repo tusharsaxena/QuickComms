@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1090%2F1090_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1095%2F1095_passing-green)
 
 Quick Comms puts your usual group callouts one click or one keypress away. "Kick on me", "Lust
 now", "INC Lumber Mill": set them up once and they sit on a Comms Pad or open from a
@@ -38,9 +38,11 @@ shows the groups first, so click one, then click a callout to send it. In a batt
 set shows its nodes, each where it sits on the map. A ring with more callouts than wedges is paged:
 the arrows under the dial (or the Left and Right arrow keys, or the mouse wheel) turn the pages, and
 a gold pill under the dial marks the page you are on. Alterac Valley lists its objectives north to south that way; its
-pad sets them two to a row. The key again, Escape, a right click or a click anywhere outside the
-dial closes it; the number keys 1 to 8 pick a wedge. Slices are laid out from the left (W), going
-clockwise. The slice the mouse points into lights whole, anywhere outside the middle button, a click
+pad sets them two to a row. A right click on a slice goes back up one ring (on the first ring it does
+nothing). The key again, Escape, a right click on the middle button or a click anywhere outside the
+dial closes it, and the next press opens it where you left it: the same group and page. The number
+keys 1 to 8 pick a wedge. Slices are laid out from the top (N), going
+clockwise and evenly spaced: one is the whole dial, two are top and bottom, three are thirds. The slice the mouse points into lights whole, anywhere outside the middle button, a click
 anywhere in it sends it, and its tooltip shows outside the dial. On Settings → Dial, the Wheel tab sets
 the wedges per ring (Auto spreads them evenly, up to 12, and pages sooner when big icons would not
 fit) and the ring's radius; the Slices tab colors the slices, sets the gap between them, colors the

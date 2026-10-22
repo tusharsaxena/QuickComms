@@ -105,7 +105,7 @@ test("dials page: Defaults puts the dial's rows back as one act, and keeps its k
     P.ctx("dials").panel.defaultsOnClick()
     NS.Surfaces.ApplyAll = apply
     assertEqual(NS.db.profile.dials.d2.slices, 0)
-    assertEqual(NS.db.profile.dials.d2.radius, 100)
+    assertEqual(NS.db.profile.dials.d2.radius, 120)
     assertTrue(NS.db.profile.dials.d2.label.show)
     assertEqual(NS.db.profile.dials.d2.mode, "categories")
     -- red under: drop Library.Batch from the page's Defaults (one rebuild per row)
@@ -157,10 +157,12 @@ end)
 test("dials page: Preview lists the rings wedge by wedge, marking the one the dial opens on", function()
     local NS, _, P = open(AB)
     local w = P.tab("dials", "preview")
-    -- dial rework: In Group is active in a battleground too, so the dial opens on the groups (Auto: W
-    -- first, clockwise)
+    -- dial rework: In Group is active in a battleground too, so the dial opens on the groups (Auto: N
+    -- first, clockwise, evenly spaced: three groups are thirds)
     assertTrue(P.hasText(w, "Comms Dial (opens here)"), table.concat(NS.addon.Settings.Dials.PreviewLines("d2"), "\n"))
-    assertTrue(P.hasText(w, "  1 W: Arathi Basin, opens a ring"))
+    assertTrue(P.hasText(w, "  1 N: Arathi Basin, opens a ring"))
+    assertTrue(P.hasText(w, "  2 SE: Battleground, opens a ring"))
+    assertTrue(P.hasText(w, "  3 SW: In Group, opens a ring"))
     -- phase 5: the nodes are pinned to their winds, on one eight-wedge ring (spec §12.1); the set's
     -- own map-wide callouts take the first free wind (groups polish)
     assertTrue(P.hasText(w, "  3 E: Arathi Basin, opens a ring"))
@@ -174,10 +176,10 @@ test("dials page: [final 20] at 12 wedges per ring the Preview names each wedge 
     -- M+ alone (In Group's twelve would page the ring, and a paged ring holds eight)
     assertTrue(NS.SchemaRuntime.Set("group.enabled", false, T.seeded(NS, "bi.group")))
     local w = P.tab("dials", "preview")
-    -- red under: start fixed counts at N in modules/Dial_Layout.lua PageShape (wedge 2 at 1 o'clock)
-    assertTrue(P.hasText(w, "  1 9 o'clock: "), "wedge 1 at W, 9 o'clock")
-    assertTrue(P.hasText(w, "  2 10 o'clock: "), "wedge 2 at 10 o'clock")
-    assertTrue(P.hasText(w, "  3 11 o'clock: "))
+    -- red under: START at W (270) in modules/Dial_Layout.lua (wedge 1 at 9 o'clock)
+    assertTrue(P.hasText(w, "  1 12 o'clock: "), "wedge 1 at N, 12 o'clock")
+    assertTrue(P.hasText(w, "  2 1 o'clock: "), "wedge 2 at 1 o'clock")
+    assertTrue(P.hasText(w, "  3 2 o'clock: "))
 end)
 
 test("dials page: Delete dial asks, then the dial is gone, its header released, and the page heals", function()
@@ -346,7 +348,7 @@ test("page dials: [polish] Hub heading rows on the Hub tab", function()
     assertFalse((NS.SchemaRuntime.Set("dial.hub.style", "square", "d2")), "an unknown style is refused")
     P.ctx("dials").panel.defaultsOnClick()
     assertEqual(NS.db.profile.dials.d2.hub.style, "solid")
-    assertEqual(NS.db.profile.dials.d2.hub.size, 40)
+    assertEqual(NS.db.profile.dials.d2.hub.size, 32)
 end)
 
 test("dials page: [slices] every slice texture the dial names ships under media/textures", function()
@@ -399,14 +401,14 @@ test("page dials: [paging] Page indicator carries the background and border rows
     assertEqual(table.concat({ rows["dial.page.dotBackPadding"].min, rows["dial.page.dotBackPadding"].max,
         rows["dial.page.dotBackPadding"].default }, ","), "0,20,4")
     assertEqual(table.concat({ rows["dial.page.dotBorder"].min, rows["dial.page.dotBorder"].max,
-        rows["dial.page.dotBorder"].default }, ","), "0,4,1")
+        rows["dial.page.dotBorder"].default }, ","), "0,4,2")
     assertEqual(rows["dial.page.dotBorder"].zeroText, "None")
     assertTrue(rows["dial.page.useClassColorDotBack"] ~= nil and rows["dial.page.useClassColorDotBorder"] ~= nil,
         "each color with its class color")
     local page = NS.db.profile.dials.d2.page
     assertTrue(page.dotBackShow, "a new dial's background is on")
     assertEqual(page.dotBackPadding, 4)
-    assertEqual(page.dotBorder, 1)
+    assertEqual(page.dotBorder, 2)
     local w = P.tab("dials", "Paging")
     assertEqual(#P.all(w, "CheckBox", "Use class color"), 6, "four, then the background's and the border's")
     assertFalse(P.find(w, "Slider", "Background padding").disabled)
@@ -419,7 +421,7 @@ test("page dials: [paging] Page indicator carries the background and border rows
     assertEqual(NS.db.profile.dials.d2.page.dotBorder, 4, "the border stops at 4")
     P.ctx("dials").panel.defaultsOnClick()
     assertTrue(NS.db.profile.dials.d2.page.dotBackShow)
-    assertEqual(NS.db.profile.dials.d2.page.dotBorder, 1)
+    assertEqual(NS.db.profile.dials.d2.page.dotBorder, 2)
 end)
 
 test("dials page: [wheel] Icon offset moves the icons in or out; 0 is the ring radius", function()
@@ -487,12 +489,12 @@ test("page dials: [polish] tabs read Slices, Hub, Paging, Slice labels, Group la
     assertTrue(P.find(w, "Slider", "Font size").disabled, "off grays the font block")
     assertTrue(NS.SchemaRuntime.Set("dial.title.show", true, "d2"))
     w = P.tab("dials", "Group labels")
-    P.find(w, "Slider", "Font size"):__fire("OnMouseUp", 16)
-    assertEqual(NS.db.profile.dials.d2.title.fontSize, 16, "the size writes dial.title")
+    P.find(w, "Slider", "Font size"):__fire("OnMouseUp", 20)
+    assertEqual(NS.db.profile.dials.d2.title.fontSize, 20, "the size writes dial.title")
     assertEqual(NS.db.profile.dials.d2.label.fontSize, 12, "and leaves the slice labels alone")
     P.ctx("dials").panel.defaultsOnClick()
     assertTrue(NS.db.profile.dials.d2.title.show)
-    assertEqual(NS.db.profile.dials.d2.title.fontSize, 12)
+    assertEqual(NS.db.profile.dials.d2.title.fontSize, 16)
 end)
 
 test("page dials: [polish] Icon offset is on the Icons tab, not Wheel", function()
@@ -547,12 +549,13 @@ test("page dials: [shine] the Slices tab has a Shine heading", function()
     for i, v in ipairs(look.values) do ids[i] = v.value end
     assertEqual(table.concat(ids, ","), "none,gloss,glossfade,orb,frost,fluid,bevel,rim",
         "the eight choices, in order (Gloss fade after Gloss cap, owner 2026-10-21)")
-    assertEqual(look.default, "none")
+    assertEqual(look.default, "orb", "the owner's look (2026-10-22)")
     local st = rows["dial.slice.shineStrength"]
     assertEqual(table.concat({ st.min, st.max, st.step, st.default }, ","), "0,100,5,85")
     local slice = NS.db.profile.dials.d2.slice
-    assertEqual(slice.shineLook, "none", "a new dial draws no shine")
+    assertEqual(slice.shineLook, "orb", "a new dial wears the orb")
     assertEqual(slice.shineStrength, 85)
+    assertTrue(NS.SchemaRuntime.Set("dial.slice.shineLook", "none", "d2"))
     local w = P.tab("dials", "Slices")
     assertEqual(#P.all(w, "Heading", "Shine"), 1, "Shine drawn once")
     -- red under: no disabledIf on the shine rows
@@ -573,5 +576,5 @@ test("page dials: [shine] the Slices tab has a Shine heading", function()
     assertFalse(NS.SchemaRuntime.Set("dial.slice.shineLook", "satin", "d2"), "Satin sheen is not a look")
     NS.SchemaRuntime.Set("dial.slice.shineStrength", 140, "d2")
     assertEqual(NS.db.profile.dials.d2.slice.shineStrength, 100, "Strength stops at 100")
-    assertEqual(NS.db.profile.pads.p1.button.shineLook, "none", "the dial's look is its own")
+    assertEqual(NS.db.profile.pads.p1.button.shineLook, "glossfade", "the dial's look is its own")
 end)

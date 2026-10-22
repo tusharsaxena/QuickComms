@@ -412,7 +412,7 @@ test("popup: the info glyph's tooltip lists the tokens, {group1} to {group8} onl
     assertEqual(NS.db.profile.callouts[cid].channel, "party", "hovering writes nothing")
 end)
 
-test("popup: the preview is headed Preview, a gap above Cancel then Save", function()
+test("popup: the preview is headed Preview, a gap above Save then Cancel", function()
     local NS, _, P, Pop = open()
     local gid, cid = withKick(NS)
     local w = P.during(function() Pop.Open(gid, cid) end)
@@ -421,8 +421,8 @@ test("popup: the preview is headed Preview, a gap above Cancel then Save", funct
     assertNil(P.find(w, "Heading", "What it sends here"))
     local order = {}
     for i, b in ipairs(P.all(w, "Button")) do order[b.text] = i end
-    -- red under: hand InlineButtonPair Save first
-    assertTrue(order.Cancel ~= nil and order.Save ~= nil and order.Cancel < order.Save, "Cancel left, Save right")
+    -- red under: hand InlineButtonPair Cancel first (owner, 2026-10-22: Save left)
+    assertTrue(order.Cancel ~= nil and order.Save ~= nil and order.Save < order.Cancel, "Save left, Cancel right")
     -- the body: ... the preview line, a section's gap, then the pair's row
     local body = P.find(w, "SimpleGroup")
     local kids = body.children
@@ -919,15 +919,15 @@ test("popup: every field's label and control share a left edge; Preview's rule a
     assertEqual(select(4, heading.right:GetPoint(1)), -2, "and ends at it")
     -- red under: drop alignButtons (InlineButtonPair's two buttons, no gutter)
     local cancel, save = P.find(w, "Button", "Cancel"), P.find(w, "Button", "Save")
-    assertEqual(cancel.relativeWidth, 0.492, "Cancel keeps the library's pair width: the left column")
-    assertEqual(save.relativeWidth, 0.492, "Save the right one")
+    assertEqual(save.relativeWidth, 0.492, "Save keeps the library's pair width: the left column")
+    assertEqual(cancel.relativeWidth, 0.492, "Cancel the right one")
     local pair
     for _, kid in ipairs(P.find(w, "SimpleGroup").children) do
-        if kid.children and kid.children[1] == cancel then pair = kid end
+        if kid.children and kid.children[1] == save then pair = kid end
     end
     assertEqual(#pair.children, 3)
     assertEqual(pair.children[2].width, GUTTER, "the gutter between them")
-    assertTrue(pair.children[3] == save)
+    assertTrue(pair.children[3] == cancel)
     -- what the popup moved, AceGUI gets back as it made it
     name:__fire("OnRelease")
     channel:__fire("OnRelease")

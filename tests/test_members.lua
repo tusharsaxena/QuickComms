@@ -89,7 +89,7 @@ test("members: a seeded group's fields read and write as any group's; the shippe
     assertTrue((S.Set("group.enabled", false, gid)))
     assertTrue((S.Set("group.when", { content = { raid = true } }, gid)))
     assertEqual(NS.db.profile.groups[gid].name, "Mine")
-    assertEqual(NS.BuiltIns.groups["bi.mplus"].name, "Dungeon (generic)", "the seed data is untouched")
+    assertEqual(NS.BuiltIns.groups["bi.mplus"].name, "Dungeon", "the seed data is untouched")
     assertTrue(NS.BuiltIns.groups["bi.mplus"].when.content.mythicPlus)
     assertFalse((S.Set("group.name", "Mine", "bi.mplus")), "a shipped id is no group")
 end)

@@ -76,6 +76,18 @@ local DOT = " \194\183 "
 local RAID = { { "lfr", 17, L["LFR"] }, { "normal", 14, L["Normal"] }, { "heroic", 15, L["Heroic"] },
     { "mythic", 16, L["Mythic"] } }
 
+-- The one dungeon and the one raid the menu previews (owner, 2026-10-22): a current-season dungeon,
+-- Windrunner Spire (one of Midnight's own), and the tier's first raid; each falls back to the
+-- season's first when a new season's lists no longer hold it (defaults/GameIds.lua).
+local PREVIEW_DUNGEON = 2805
+
+local function seasonPick(list, want)
+    for _, id in ipairs(list) do
+        if id == want then return id end
+    end
+    return list[1]
+end
+
 local function base(fields)
     local live = NS.Situation.Current()
     local s = { classFile = live.classFile, specID = live.specID, role = live.role, character = live.character,
@@ -114,26 +126,28 @@ end
 function P.Presets()
     local out = { { key = P.CURRENT, label = L["Current"] } }
     local spec = NS.Compat.SpecName()
-    out[#out + 1] = { key = "mplus", label = spec and (L["M+"] .. DOT .. spec) or L["M+"], snapshot = mplus(nil) }
-    -- One entry per shipped dungeon (defaults/GameIds.lua), labeled as spec §13.3 lists it.
-    for _, id in ipairs(NS.GameIds.DUNGEONS) do
-        local known = NS.Compat.InstanceName(id)
-        local name = known or L["Instance %d"]:format(id)
-        local label = L["M+"] .. DOT .. name
-        if spec then label = label .. DOT .. spec end
-        out[#out + 1] = { key = "mplus:" .. id, label = label, snapshot = mplus(id, known) }
-    end
+    -- One M+ entry: one current-season dungeon, labeled as spec §13.3 lists it.
+    local id = seasonPick(NS.GameIds.DUNGEONS, PREVIEW_DUNGEON)
+    local known = id and NS.Compat.InstanceName(id)
+    local label = L["M+"]
+    if id then label = label .. DOT .. (known or L["Instance %d"]:format(id)) end
+    if spec then label = label .. DOT .. spec end
+    out[#out + 1] = { key = "mplus", label = label, snapshot = mplus(id, known) }
+    -- Each difficulty in the tier's first raid.
+    local raid = seasonPick(NS.GameIds.RAIDS, nil)
+    local raidName = raid and (NS.Compat.InstanceName(raid) or L["Instance %d"]:format(raid))
     for _, r in ipairs(RAID) do
-        out[#out + 1] = { key = "raid:" .. r[1], label = L["Raid"] .. DOT .. r[3], snapshot = base({ content = "raid",
-            difficultyID = r[2], difficulty = r[1], group = "raid", instanceGroup = r[1] == "lfr" }) }
+        out[#out + 1] = { key = "raid:" .. r[1], label = L["Raid"] .. DOT .. r[3] .. (raidName and DOT .. raidName or ""),
+            snapshot = base({ content = "raid", instanceID = raid, difficultyID = r[2], difficulty = r[1],
+                group = "raid", instanceGroup = r[1] == "lfr" }) }
     end
     out[#out + 1] = { key = "arena", label = L["Arena"], snapshot = base({ content = "arena", group = "party",
         instanceGroup = false, lockdown = { pvpMatch = true } }) }
     for _, bg in ipairs(battlegrounds()) do
-        out[#out + 1] = { key = bg.key, label = bg.label, snapshot = base({ content = "battleground",
+        out[#out + 1] = { key = bg.key, label = L["BG - %s"]:format(bg.label), snapshot = base({ content = "battleground",
             instanceID = bg.instanceID, group = "raid", instanceGroup = true, lockdown = { pvpMatch = true } }) }
     end
-    out[#out + 1] = { key = "world", label = L["World"] .. DOT .. L["Solo"], snapshot = base({ content = "openWorld",
+    out[#out + 1] = { key = "world", label = L["Solo"], snapshot = base({ content = "openWorld",
         group = "solo", leader = false }) }
     return out
 end

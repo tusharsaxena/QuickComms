@@ -48,7 +48,7 @@ test("pad: the default pad shows the M+ callouts, each button armed with its bak
     assertEqual(inst.root.__name, "QuickCommsPadp1")
     assertTrue(inst.root:IsShown())
     local _, active = NS.Pool.Counts(inst.buttons)
-    assertEqual(active, 20, "M+'s eight and In Group's twelve")
+    assertEqual(active, 17, "Dungeon's seven and In Group's ten")
     local button = pull(NS)
     assertEqual(button:GetAttribute("type"), "macro")
     assertEqual(button:GetAttribute("macrotext"), "/p Pulling next pack")
@@ -84,6 +84,7 @@ end)
 
 test("pad: [review 4] a hidden or locked pad still rebuilds; the driver hides; the strip stays hidden", function()
     local NS, m = live()
+    NS.SchemaRuntime.Set("locked", true)   -- a new profile starts unlocked (owner, 2026-10-22)
     NS.SchemaRuntime.Set("visibility", "never")
     NS.Pad.Apply("p1", planFor(NS))
     local inst = NS.Pad.Instance("p1")
@@ -111,12 +112,12 @@ test("pad: a rebuild with fewer buttons parks the rest, disarmed, for the next",
     -- M+ alone: In Group (active in any party, bg buttons) off before the count
     NS.SchemaRuntime.Set("group.enabled", false, T.seeded(NS, "bi.group"))
     NS.Pad.Apply("p1", planFor(NS))
-    local before = NS.SendEngine.ButtonCount()   -- the pad's eight buttons and the default dial's wedges
+    local before = NS.SendEngine.ButtonCount()   -- the pad's seven buttons and the default dial's wedges
     NS.SchemaRuntime.Set("group.enabled", false, T.seeded(NS, "bi.mplus"))
     NS.Pad.Apply("p1", planFor(NS))
     local free, active = NS.Pool.Counts(inst.buttons)
     assertEqual(active, 0)
-    assertEqual(free, 20, "the twenty buttons M+ and In Group drew, parked")
+    assertEqual(free, 17, "the seventeen buttons Dungeon and In Group drew, parked")
     assertEqual(#NS.SendEngine.ArmedButtons(), 0)
     NS.SchemaRuntime.Set("group.enabled", true, T.seeded(NS, "bi.mplus"))
     NS.Pad.Apply("p1", planFor(NS))
@@ -137,6 +138,7 @@ end)
 
 test("pad: the drag saves the point; locked or in combat it does not move; Reset position clears it", function()
     local NS, m = applied()
+    NS.SchemaRuntime.Set("locked", true)   -- a new profile starts unlocked (owner, 2026-10-22)
     local inst = NS.Pad.Instance("p1")
     local p, _, _, _, y = inst.root:GetPoint(1)
     assertEqual(p, "TOP")
@@ -461,7 +463,7 @@ test("pad: [phase 3] the header's tooltip says why each group shows, unless the 
     -- red under: drop the Pad.ShowWhy call from the header's OnEnter
     assertEqual(#shown, 1)
     assertEqual(shown[1].title, "Why is this showing?")
-    assertEqual(shown[1].lines[1], "Dungeon (generic): Content")
+    assertEqual(shown[1].lines[1], "Dungeon: Content")
     header:__fire("OnLeave")
     NS.SchemaRuntime.Set("behavior.whyTooltips", false)
     header:__fire("OnEnter")
@@ -604,8 +606,8 @@ test("pad: [button] a button wears the Buttons tab: the owner's default body, ed
     -- the owner's default edge: style None is no border art, so its 1 px draws flat
     assertEqual(skins[btn.qcEdge].edgeFile, "Interface\\Buttons\\WHITE8x8", "a flat edge by default")
     assertEqual(skins[btn.qcEdge].edgeSize, 1, "1 pixel")
-    assertEqual(table.concat(skins[btn.qcEdge].border, ","), table.concat({ 0xEA / 255, 0xEA / 255, 0xEA / 255, 0.10 }, ","),
-        "#EAEAEA at 10%")
+    assertEqual(table.concat(skins[btn.qcEdge].border, ","), table.concat({ 0x3F / 255, 0x3F / 255, 0x3F / 255, 0.10 }, ","),
+        "#3F3F3F at 10% (owner, 2026-10-22; #EAEAEA before)")
     assertEqual(table.concat(btn.qcLabel.__color, ","), "1,1,1,1", "the small white label")
     assertEqual(btn.__w .. "x" .. btn.__h, "100x24", "the button's shipped size")
     assertTrue(S.Set("pad.button.background", { r = 0.3, g = 0, b = 0, a = 0.5 }, "p1"))
@@ -743,6 +745,7 @@ test("pad: [R3] the strip reads the pad's name and PREVIEW / TEST MODE, spans th
     local NS, m = live()
     measureLikeTheClient(m)
     NS.db.profile.pads.p1.name = "A rather long raid pad name"
+    NS.SchemaRuntime.Set("locked", true)   -- a new profile starts unlocked (owner, 2026-10-22)
     local inst = NS.Pad.Instance("p1")
     local widths = {}
     inst.handle.SetWidth = function(_, w) widths[#widths + 1] = w end

@@ -13,7 +13,7 @@ local BI = NS.BuiltIns
 -- for moving and positioning, white for the neutral. Every shipped glyph takes one, and no set is
 -- white only (tests/test_builtins.lua).
 BI.COLOR = { red = "ff4040", green = "40d040", blue = "4da6ff", gold = "ffd100", orange = "ff9933",
-    purple = "b07cff", cyan = "40d8e0", white = "ffffff" }
+    purple = "b07cff", cyan = "40d8e0", white = "ffffff", crimson = "c41e3a" }
 
 --- Declare a callout. `short` is appended to the group id: "bi.mplus" + "lust" -> "bi.mplus.lust".
 --- `glyph` names its icon in the LibKa0s catalog (B7; library-stack-§8: a shipped mark, never one

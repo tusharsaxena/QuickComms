@@ -61,14 +61,14 @@ function D.Button()
         width = 100, height = 0,
         background = { r = 0x3F / 255, g = 0x3F / 255, b = 0x3F / 255, a = 0.25 },
         useClassColorBackground = false,
-        borderStyle = "None", borderSize = 1, borderColor = { r = 0xEA / 255, g = 0xEA / 255, b = 0xEA / 255, a = 0.10 },
+        borderStyle = "None", borderSize = 1, borderColor = { r = 0x3F / 255, g = 0x3F / 255, b = 0x3F / 255, a = 0.10 },
         useClassColorBorder = false,
         font = "Friz Quadrata TT", fontSize = 10, fontColor = { r = 1, g = 1, b = 1, a = 1 },
-        useClassColorFont = false, fontFlags = "", fontShadow = true,
+        useClassColorFont = false, fontFlags = "OUTLINE", fontShadow = true,
         glowEnabled = false, glowType = "pixel", glowColor = { r = 1, g = 0.82, b = 0, a = 1 },
         useClassColorGlow = false,
-        shineLook = "none", shineStrength = 85,
-        shineTint = { r = 1, g = 1, b = 1, a = 1 }, useClassColorShineTint = false,
+        shineLook = "glossfade", shineStrength = 80,
+        shineTint = { r = 0x1B / 255, g = 0x1B / 255, b = 0x1B / 255, a = 1 }, useClassColorShineTint = false,
         shineBloomA = { r = 1, g = 0.604, b = 0.835, a = 1 }, useClassColorShineBloomA = false,   -- #ff9ad5
         shineBloomB = { r = 0.541, g = 1, b = 0.757, a = 1 }, useClassColorShineBloomB = false,   -- #8affc1
     }
@@ -82,20 +82,20 @@ function D.DialLabel()
     return {
         show = true,
         font = "Friz Quadrata TT", fontSize = 12, fontColor = { r = 1, g = 1, b = 1, a = 1 },
-        useClassColorFont = false, fontFlags = "", fontShadow = true,
+        useClassColorFont = false, fontFlags = "OUTLINE", fontShadow = true,
         tooltipSide = "top", tooltipOffset = 8,
         offset = 0,   -- the labels' distance from the dial's center; 0 is just past the disc
     }
 end
 
 --- The Dial page's Group labels tab (`dial.title.*`, dial polish 2026-10-21): the ring's title above
---- the dial ("World (solo)", "Comms Dial"), gold Friz Quadrata 12 points with its shadow, as the
+--- the dial ("Solo", "Comms Dial"), gold Friz Quadrata 12 points with its shadow, as the
 --- GameFontNormal title it was drawn in; `show` off draws none.
 function D.DialTitle()
     return {
         show = true,
-        font = "Friz Quadrata TT", fontSize = 12, fontColor = { r = 1, g = 0.82, b = 0, a = 1 },
-        useClassColorFont = false, fontFlags = "", fontShadow = true,
+        font = "Friz Quadrata TT", fontSize = 16, fontColor = { r = 1, g = 0.82, b = 0, a = 1 },
+        useClassColorFont = false, fontFlags = "OUTLINE", fontShadow = true,
     }
 end
 
@@ -110,11 +110,11 @@ function D.DialSlice()
         background = { r = 0.06, g = 0.06, b = 0.08, a = 0.80 }, useClassColorBackground = false,
         gap = 0,
         highlight = { r = 1, g = 0.82, b = 0, a = 0.25 }, useClassColorHighlight = false,
-        pointerShow = true, pointerSize = 20, pointerColor = { r = 1, g = 0.82, b = 0, a = 1 },
-        pointerOffset = 0,   -- the pointer's distance from the dial's center; 0 is just outside the hub
+        pointerShow = true, pointerSize = 24, pointerColor = { r = 1, g = 0.82, b = 0, a = 1 },
+        pointerOffset = 24,   -- the pointer's distance from the dial's center; 0 is just outside the hub
         useClassColorPointer = false,
-        shineLook = "none", shineStrength = 85,
-        shineTint = { r = 1, g = 1, b = 1, a = 1 }, useClassColorShineTint = false,
+        shineLook = "orb", shineStrength = 85,
+        shineTint = { r = 0x80 / 255, g = 0x80 / 255, b = 0x80 / 255, a = 1 }, useClassColorShineTint = false,
         shineBloomA = { r = 1, g = 0.604, b = 0.835, a = 1 }, useClassColorShineBloomA = false,   -- #ff9ad5
         shineBloomB = { r = 0.541, g = 1, b = 0.757, a = 1 }, useClassColorShineBloomB = false,   -- #8affc1
     }
@@ -128,9 +128,9 @@ end
 --- center dot, `rimmed` a filled circle on the rimmed backdrop). Opacity is each color's alpha.
 function D.DialHub()
     return {
-        style = "solid", size = 40, circleSize = 22, lineWidth = 2,
+        style = "solid", size = 32, circleSize = 24, lineWidth = 4,
         background = { r = 0.12, g = 0.12, b = 0.14, a = 0.95 }, useClassColorBackground = false,
-        borderSize = 0, borderColor = { r = 1, g = 0.82, b = 0, a = 1 }, useClassColorBorder = false,
+        borderSize = 1, borderColor = { r = 1, g = 0.82, b = 0, a = 1 }, useClassColorBorder = false,
         circleColor = { r = 1, g = 0.82, b = 0, a = 1 }, useClassColorCircle = false,
     }
 end
@@ -146,11 +146,11 @@ function D.DialPage()
         offset = 6,
         arrowSize = 24, arrowGap = 10, arrowColor = { r = 1, g = 0.82, b = 0, a = 1 }, useClassColorArrow = false,
         plateColor = { r = 0.06, g = 0.06, b = 0.08, a = 0.80 }, useClassColorPlate = false,
-        dotSize = 6, pillWidth = 18, dotGap = 6,
+        dotSize = 8, pillWidth = 18, dotGap = 6,
         currentColor = { r = 1, g = 0.82, b = 0, a = 1 }, useClassColorCurrent = false,
         dotColor = { r = 0.4, g = 0.4, b = 0.4, a = 0.9 }, useClassColorDot = false,
         dotBackShow = true, dotBackPadding = 4,
         dotBackColor = { r = 0.06, g = 0.06, b = 0.08, a = 0.80 }, useClassColorDotBack = false,
-        dotBorder = 1, dotBorderColor = { r = 0, g = 0, b = 0, a = 0.9 }, useClassColorDotBorder = false,
+        dotBorder = 2, dotBorderColor = { r = 0, g = 0, b = 0, a = 0.9 }, useClassColorDotBorder = false,
     }
 end

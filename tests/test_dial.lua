@@ -21,7 +21,7 @@ end
 local function planOf(NS, opts)
     opts = opts or {}
     local snap = NS.Situation.Current()
-    local group = { id = T.seeded(NS, "bi.mplus"), title = "Dungeon (generic)", slots = {} }
+    local group = { id = T.seeded(NS, "bi.mplus"), title = "Dungeon", slots = {} }
     for i, cid in ipairs(NS.Library.Group(T.seeded(NS, "bi.mplus")).callouts) do
         if i > (opts.n or 8) then break end
         local slot = NS.Surfaces.Slot(cid, NS.Library.Callout(cid), snap, { soloFallback = "none", ctx = {} })
@@ -249,8 +249,8 @@ test("dial: [exit] on a raid boss the dial opens and a click on a wedge sends, w
     combat(m, true)
     m.__pressKey("G")
     -- In Group is active in a raid too: the dial opens on the groups (dial rework)
-    pick(NS, m, "Raid (generic)")
-    assertEqual(ringTitle(NS), "Raid (generic)")
+    pick(NS, m, "Raid")
+    assertEqual(ringTitle(NS), "Raid")
     local w = NS.Dial.RingWedges("d2", NS.Dial.ShownRing("d2"))[1]
     m.__click(w)
     assertEqual(m.sentMacros[#m.sentMacros].text, "/raid Bloodlust now")
@@ -631,7 +631,7 @@ test("dial: [slices] each place is a tinted slice; the slice the cursor points i
     local inst = NS.Dial.Instance(did)
     local h = inst.header
     local ring = inst.rings.active[2]
-    -- four wedges from W (planOf's fixed four): four fills, each its own quarter
+    -- four wedges from N (planOf's fixed four): four fills, each its own quarter
     assertEqual(ring.qcFills[1].__texture, NS.DialSlices.SectorTexture(4))
     assertTrue(ring.qcFills[4]:IsShown())
     m.__click(h, "Toggle")
@@ -644,13 +644,13 @@ test("dial: [slices] each place is a tinted slice; the slice the cursor points i
     end
     -- red under: light a slice only from a wedge's own OnEnter (its square)
     assertTrue(at(30, 2), "just outside the hub, toward E: the E slice lights, though the cursor is not on its wedge")
-    -- red under: start fixed counts at N in modules/Dial_Layout.lua PageShape (E is place 2)
-    assertEqual(ring.qcLit, 3, "E is place 3, clockwise from W")
+    -- red under: START at W (270) in modules/Dial_Layout.lua (E is place 3)
+    assertEqual(ring.qcLit, 2, "E is place 2, clockwise from N")
     assertEqual(ring.qcHighlight.__color[2], 1, "the Slices tab's highlight color")
     assertFalse(at(5, 5), "over the hub: nothing")
     assertFalse(at(400, 0), "past the rim: nothing")
     assertTrue(at(-2, -60))
-    assertEqual(ring.qcLit, 4, "toward S")
+    assertEqual(ring.qcLit, 3, "toward S")
     m.__click(h, "Toggle")
     assertFalse(ring.qcHighlight:IsShown(), "closing clears it")
     assertEqual(NS.DialSlices.SectorTexture(1), NS.DialSlices.DISC, "one slice is the disc")
@@ -712,10 +712,10 @@ test("dial slices: [polish] a gap shifts each fill outward along its bisector", 
     local cx, cy = h:GetCenter()
     m.cursor.x, m.cursor.y = (cx + 60) * h:GetEffectiveScale(), (cy + 2) * h:GetEffectiveScale()
     NS.DialRender.PointerUpdate(h.qcPointer)
-    assertEqual(ring.qcLit, 3, "toward E")
+    assertEqual(ring.qcLit, 2, "toward E")
     -- red under: Track leaves the highlight at the ring's center
     local hx, hy, hw = placeOf(ring.qcHighlight)
-    local fx, fy, fw = placeOf(ring.qcFills[3])
+    local fx, fy, fw = placeOf(ring.qcFills[2])
     near(hx, fx, "the highlight moves with its slice (x)")
     near(hy, fy, "the highlight moves with its slice (y)")
     near(hw, fw, "and takes its size")
@@ -741,7 +741,7 @@ end)
 test("dial: [paging] the indicators sit on a rounded background sized to the row; off hides it", function()
     local NS = live()
     assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
-    local ring = NS.Dial.Instance("d2").rings.active[2]   -- page 1 of 2: the pill (18), a dot (6), a gap (6)
+    local ring = NS.Dial.Instance("d2").rings.active[2]   -- page 1 of 2: the pill (18), a dot (8), a gap (6)
     local back = ring.qcDotBack
     -- red under: no background in modules/Dial_Slices.lua paintDots
     assertTrue(back ~= nil, "the background is drawn")
@@ -751,19 +751,19 @@ test("dial: [paging] the indicators sit on a rounded background sized to the row
         assertTrue(t:IsShown(), k .. " shown by default")
         assertEqual(t.__texture, k == "mid" and "Interface\\Buttons\\WHITE8x8" or NS.DialSlices.DISC,
             k .. " is a pill piece")
-        assertEqual(t.__size[2], 6 + 2 * 1 + 2 * 4, k .. ": the dot, its border and the padding, tall")
+        assertEqual(t.__size[2], 8 + 2 * 2 + 2 * 4, k .. ": the dot, its border and the padding, tall")
         assertEqual(select(5, t:GetPoint(1)), y, k .. " centered on the row")
         assertEqual(table.concat(t.__color, ","), "0.06,0.06,0.08,0.8", k .. " in the plates' color")
         assertEqual(t.__sublevel, -2, k .. " under the borders")
         w = w + t.__size[1]
     end
-    assertEqual(w, 30 + 2 * 1 + 2 * 4, "the row, its border and the padding, wide")
+    assertEqual(w, 32 + 2 * 2 + 2 * 4, "the row, its border and the padding, wide")
     assertEqual(back.left.__size[1], back.left.__size[2] / 2, "a round cap: half its height wide")
     assertEqual(table.concat(back.left.__texCoord, ","), "0,0.5,0,1", "the disc's left half")
     assertTrue(NS.SchemaRuntime.Set("dial.page.dotBackPadding", 10, "d2"))
     assertTrue(NS.SchemaRuntime.Set("dial.page.dotBackColor", { r = 0, g = 0, b = 1, a = 0.5 }, "d2"))
     assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
-    assertEqual(back.mid.__size[2], 6 + 2 + 20, "the padding grows it")
+    assertEqual(back.mid.__size[2], 8 + 4 + 20, "the padding grows it")
     assertEqual(table.concat(back.mid.__color, ","), "0,0,1,0.5", "in its color")
     assertTrue(NS.SchemaRuntime.Set("dial.page.dotBackShow", false, "d2"))
     assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
@@ -778,9 +778,9 @@ test("dial: [paging] every dot and the pill has a border, its size plus twice th
     -- red under: no border textures in modules/Dial_Slices.lua paintDots
     local edges = ring.qcDotEdges
     assertTrue(edges ~= nil and edges[1] ~= nil, "a border per indicator")
-    assertEqual(table.concat(edges[1].__size, ","), "12,8", "the pill (18 x 6) and 1 each side: its middle")
-    assertEqual(edges[1].__size[1] + 2 * ring.qcDotEdgeCaps[1].left.__size[1], 20, "and its caps")
-    assertEqual(table.concat(edges[2].__size, ","), "8,8", "the dot (6) and 1 each side")
+    assertEqual(table.concat(edges[1].__size, ","), "10,12", "the pill (18 x 8) and 2 each side: its middle")
+    assertEqual(edges[1].__size[1] + 2 * ring.qcDotEdgeCaps[1].left.__size[1], 22, "and its caps")
+    assertEqual(table.concat(edges[2].__size, ","), "12,12", "the dot (8) and 2 each side")
     assertEqual(ring.qcDotEdgeCaps[1].left.__texture, NS.DialSlices.DISC, "the pill's own shape")
     assertEqual(edges[2].__texture, ring.qcDots[2].__texture, "the dot's own shape")
     assertEqual(table.concat(edges[2].__color, ","), "0,0,0,0.9", "near black")
@@ -789,7 +789,7 @@ test("dial: [paging] every dot and the pill has a border, its size plus twice th
     assertTrue(NS.SchemaRuntime.Set("dial.page.dotBorder", 3, "d2"))
     assertTrue(NS.SchemaRuntime.Set("dial.page.dotBorderColor", { r = 1, g = 0, b = 0, a = 1 }, "d2"))
     assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
-    assertEqual(table.concat(edges[1].__size, ","), "12,12")
+    assertEqual(table.concat(edges[1].__size, ","), "10,14")
     assertEqual(edges[1].__size[1] + 2 * ring.qcDotEdgeCaps[1].left.__size[1], 24)
     assertEqual(table.concat(edges[2].__color, ","), "1,0,0,1", "in its color")
     assertTrue(edges[1]:IsShown() and edges[2]:IsShown())
@@ -797,7 +797,7 @@ test("dial: [paging] every dot and the pill has a border, its size plus twice th
     assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
     assertFalse(edges[1]:IsShown() or edges[2]:IsShown(), "0 draws no border")
     assertFalse(ring.qcDotEdgeCaps[1].left:IsShown() or ring.qcDotEdgeCaps[1].right:IsShown(), "nor its caps")
-    assertEqual(ring.qcDotBack.mid.__size[2], 6 + 8, "nor counts one in the background")
+    assertEqual(ring.qcDotBack.mid.__size[2], 8 + 8, "nor counts one in the background")
 end)
 
 test("dial: [front] the hub, its circle and the pointer draw over the slices", function()
@@ -823,7 +823,7 @@ test("dial: [tooltip] a wedge's tooltip sits outside the dial: above by default,
     -- red under: R.ShowTooltip through PadRender.ShowLines (ANCHOR_TOP, over the dial)
     assertEqual(tip.__anchor, "ANCHOR_NONE")
     local p, rel, _, x, y = tip:GetPoint(1)
-    local g = NS.DialLayout.Geometry(100)
+    local g = NS.DialLayout.Geometry(NS.DialLayout.RADIUS)
     assertEqual(p .. "," .. tostring(rel == h) .. "," .. x, "BOTTOM,true,0")
     assertTrue(y >= g.title + 8, "above the ring title, by the offset")
     assertTrue(NS.SchemaRuntime.Set("dial.label.tooltipSide", "left", "d2"))
@@ -839,12 +839,14 @@ test("dial: [pointer] the pointer is a catalog glyph, sized, colored and placed 
     local NS = live()
     assertTrue(NS.SchemaRuntime.Set("dial.slice.pointerSize", 30, "d2"))
     assertTrue(NS.SchemaRuntime.Set("dial.slice.pointerColor", { r = 0, g = 0, b = 1, a = 1 }, "d2"))
+    assertEqual(NS.db.profile.dials.d2.slice.pointerOffset, 24, "a new dial's pointer sits 24 out (owner, 2026-10-22)")
+    assertTrue(NS.SchemaRuntime.Set("dial.slice.pointerOffset", 0, "d2"))
     assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
     local h = NS.Dial.Instance("d2").header
     local arrow = h.qcPointer.qcArrow
     assertEqual(arrow.__size[1], 30)
     assertEqual(arrow.__color[3], 1)
-    assertEqual(h.qcReach, NS.DialLayout.PointerReach(30), "automatic: pushed out to clear the hub")
+    assertEqual(h.qcReach, NS.DialLayout.PointerReach(30, 32), "automatic: pushed out to clear the 32 hub")
     assertTrue(NS.SchemaRuntime.Set("dial.slice.pointerOffset", 70, "d2"))
     assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
     -- red under: ignore pointerOffset in R.PaintPointer
@@ -859,10 +861,10 @@ end)
 test("dial: [labels] the Label offset moves every label out from the center; the title and the page row follow", function()
     local NS = live()
     assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
-    local w = NS.Dial.RingWedges("d2", 2)[3]   -- E (places from W: W, N, E, S)
+    local w = NS.Dial.RingWedges("d2", 2)[2]   -- E (places from N: N, E, S, W)
     local _, _, _, x0 = w.qcLabel:GetPoint(1)
     local _, _, _, wx = w:GetPoint(1)
-    local g = NS.DialLayout.Geometry(100)
+    local g = NS.DialLayout.Geometry(NS.DialLayout.RADIUS)
     assertEqual(wx + x0, g.reach, "automatic: just past the disc")
     assertTrue(NS.SchemaRuntime.Set("dial.label.offset", 220, "d2"))
     assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
@@ -895,15 +897,15 @@ end
 test("dial: [polish] a click near the hub sends the lit slice, in combat", function()
     local NS, m = live()
     local ring, cursor = openPolish(NS, m, 2)
-    local east = ring.qcPlaceWedge[3]
-    assertTrue(east ~= nil and east.qcItem == ring.qcSpec.items[2], "two items on four places: the second is E")
+    local south = ring.qcPlaceWedge[3]
+    assertTrue(south ~= nil and south.qcItem == ring.qcSpec.items[2], "two items on four places: the second is S")
     m.inCombat = true
-    cursor(25, 0)   -- 25 px east: inside the old dead band between the hub and the wedge's square
+    cursor(0, -25)   -- 25 px south: inside the old dead band between the hub and the wedge's square
     -- red under: no catcher (a click lands only on a wedge's own square)
     m.__click(ring.qcCatcher)
     assertEqual(#m.sentMacros, 1)
-    assertEqual(m.sentMacros[1].text, east:GetAttribute("macrotext"))
-    assertTrue(m.sentMacros[1].frame == east, "forwarded to the E wedge's own button")
+    assertEqual(m.sentMacros[1].text, south:GetAttribute("macrotext"))
+    assertTrue(m.sentMacros[1].frame == south, "forwarded to the S wedge's own button")
     assertFalse(NS.Dial.IsOpen("d2"), "the dial closes on the send")
     assertEqual(#m.blocked, 0)
 end)
@@ -911,17 +913,17 @@ end)
 test("dial: [polish] a click with a modifier held still sends the slice, in combat", function()
     local NS, m = live()
     local ring, cursor = openPolish(NS, m, 2)
-    local east = ring.qcPlaceWedge[3]
+    local south = ring.qcPlaceWedge[3]
     m.inCombat = true
     for _, mod in ipairs({ "shift", "ctrl", "alt" }) do
         m.modifiers = { [mod] = true }
         if not NS.Dial.IsOpen("d2") then m.__click(NS.Dial.Instance("d2").header, "Toggle") end
-        cursor(40, 0)
+        cursor(0, -40)
         local before = #m.sentMacros
         -- red under: the catcher's plain type-w<j> / clickbutton-w<j> (never read with a modifier held)
         m.__click(ring.qcCatcher)
         assertEqual(#m.sentMacros, before + 1, mod .. " held: the slice sends")
-        assertTrue(m.sentMacros[#m.sentMacros].frame == east, mod .. ": forwarded to the E wedge")
+        assertTrue(m.sentMacros[#m.sentMacros].frame == south, mod .. ": forwarded to the S wedge")
     end
     m.modifiers = {}
     assertEqual(#m.blocked, 0)
@@ -930,20 +932,20 @@ end)
 test("dial: [polish] just outside the hub's circle, on a diagonal, the slice lights and clicks, in combat", function()
     local NS, m = live()
     local ring, cursor = openPolish(NS, m, 2)
-    local east = ring.qcPlaceWedge[3]
-    local dx, dy = 18, 10   -- 20.6 px out (hub 40: outside its circle), bearing ~61 degrees (E)
+    local south = ring.qcPlaceWedge[3]
+    local dx, dy = 10, -18   -- 20.6 px out (hub 40: outside its circle), bearing ~151 degrees (S)
     local dist, angle = math.sqrt(dx * dx + dy * dy), math.atan2(dx, dy)
     -- red under: the hub as a square in DL.SliceAt (|dx|, |dy| <= hub / 2)
-    assertEqual(NS.DialLayout.SliceAt(angle, dist, 4, 270, 40, 300), 3, "the round hub ends at 20: E")
+    assertEqual(NS.DialLayout.SliceAt(angle, dist, 4, 0, 40, 300), 3, "the round hub ends at 20: S")
     assertFalse(NS.DialLayout.InHub(dist, 40), "off the hub")
     NS.DialSlices.Track(ring, angle, dist)
-    assertEqual(ring.qcLit, 3, "the tracker lights E there")
+    assertEqual(ring.qcLit, 3, "the tracker lights S there")
     m.inCombat = true
     cursor(dx, dy)
     -- red under: the hub as a square in CATCHER_PRE
     m.__click(ring.qcCatcher)
     assertEqual(#m.sentMacros, 1, "the catcher forwards it")
-    assertTrue(m.sentMacros[1].frame == east, "to the E wedge, the slice that lit")
+    assertTrue(m.sentMacros[1].frame == south, "to the S wedge, the slice that lit")
     assertEqual(#m.blocked, 0)
 end)
 
@@ -960,7 +962,9 @@ test("dial: [polish] a click inside the hub's circle runs the hub, any modifier 
     for _, mod in ipairs({ "none", "shift", "ctrl", "alt" }) do
         m.modifiers = mod == "none" and {} or { [mod] = true }
         if not NS.Dial.IsOpen("d2") then m.__click(h, "Toggle") end
-        assertEqual(NS.Dial.ShownRing("d2"), 2, mod .. ": open on the callout ring, a child of the groups")
+        -- the dial opens where it was closed: the first ring after the first pass
+        if NS.Dial.ShownRing("d2") == 1 then m.__click(wedgeTitled(NS, 1, "Dungeon")) end
+        assertEqual(NS.Dial.ShownRing("d2"), 2, mod .. ": on the callout ring, a child of the groups")
         cursor(dx, dy)
         -- red under: CATCHER_PRE answering nothing inside the hub (no qc-up)
         m.__click(ring.qcCatcher)
@@ -974,6 +978,57 @@ test("dial: [polish] a click inside the hub's circle runs the hub, any modifier 
     assertEqual(#m.blocked, 0)
 end)
 
+test("dial: a right click on a slice goes up a ring, and does nothing on the first ring, in combat", function()
+    local NS, m = live()
+    local _, cursor, h = openPolish(NS, m, 8)
+    local inst = NS.Dial.Instance("d2")
+    m.inCombat = true
+    m.__click(h, "Next")
+    assertEqual(NS.Dial.ShownRing("d2"), 3, "the callout ring's second page")
+    cursor(40, 0)
+    -- red under: CATCHER_PRE closing on any button but the left
+    m.__click(inst.rings.active[3].qcCatcher, "RightButton")
+    assertTrue(NS.Dial.IsOpen("d2"), "a right click on a slice keeps the dial open")
+    assertEqual(NS.Dial.ShownRing("d2"), 1, "up to the ring of groups, from any page")
+    m.__click(inst.rings.active[1].qcCatcher, "RightButton")
+    assertTrue(NS.Dial.IsOpen("d2"), "the first ring: nothing")
+    assertEqual(NS.Dial.ShownRing("d2"), 1)
+    cursor(0, 0)
+    m.__click(inst.rings.active[1].qcCatcher, "RightButton")
+    assertFalse(NS.Dial.IsOpen("d2"), "a right click on the hub still closes")
+    assertEqual(#m.sentMacros, 0, "a right click sends nothing")
+    assertEqual(#m.blocked, 0)
+end)
+
+test("dial: a key open shows the ring and page the dial was last closed on, through a rebuild", function()
+    local NS, m = live()
+    local _, _, h = openPolish(NS, m, 8)
+    assertEqual(NS.Dial.ShownRing("d2"), 2, "first open: the ring it opens on")
+    m.__click(h, "Next")
+    m.__click(h, "Toggle")
+    m.inCombat = true
+    m.__click(h, "Toggle")
+    -- red under: OPEN showing qc-openRing alone
+    assertEqual(NS.Dial.ShownRing("d2"), 3, "the same ring, its second page, in combat")
+    m.__click(h, "Close")
+    m.inCombat = false
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS, { n = 8 })))
+    m.__click(h, "Toggle")
+    assertEqual(NS.Dial.ShownRing("d2"), 3, "a rebuild keeps it: rings are found by key and page")
+    m.__click(h, "Toggle")
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS, { n = 4 })))
+    m.__click(h, "Toggle")
+    assertEqual(NS.Dial.ShownRing("d2"), 2, "that page gone: the same ring's first page")
+    m.__click(h, "LeftButton")
+    assertEqual(NS.Dial.ShownRing("d2"), 1)
+    m.__click(h, "Toggle")
+    NS.DialSecure.Open(h)
+    assertEqual(NS.Dial.ShownRing("d2"), 2, "an insecure open (test mode) shows the ring it opens on")
+    NS.DialSecure.Close(h)
+    m.__click(h, "Toggle")
+    assertEqual(NS.Dial.ShownRing("d2"), 1, "and leaves what a key open remembers alone")
+end)
+
 test("dial: [polish] the hub's hover shows from the tracker inside its circle and clears outside", function()
     local NS, m = live(AB)
     local _, cursor, h = openPolish(NS, m, 2)
@@ -985,7 +1040,7 @@ test("dial: [polish] the hub's hover shows from the tracker inside its circle an
     assertTrue(h.qcHubDot.__color[4] > rest, "the circle brightens")
     assertTrue(tip.__owner == h and tip:IsShown(), "the hub owns the tooltip")
     assertEqual(tip.__lines[1][1], "Why is this showing?")
-    cursor(18, 10)   -- 20.6 px out: on E
+    cursor(10, -18)   -- 20.6 px out: on S
     NS.DialRender.PointerUpdate(h.qcPointer)
     assertEqual(h.qcHubDot.__color[4], rest, "off the hub: dims back")
     assertFalse(tip.__owner == h, "the hub's tooltip gone")
@@ -1018,7 +1073,7 @@ test("dial: [polish] a click on an empty place does nothing; in the hub it sends
     local NS, m = live()
     local ring, cursor = openPolish(NS, m, 2)
     m.inCombat = true
-    cursor(0, 40)   -- N: place 2, empty with two items (W, E)
+    cursor(40, 0)   -- E: place 2, empty with two items (N, S)
     -- red under: write type-w<j> for every place in DS.Load, used or not
     m.__click(ring.qcCatcher)
     assertEqual(#m.sentMacros, 0)
@@ -1033,17 +1088,17 @@ end)
 test("dial: [polish] hovering anywhere in a slice shows its tooltip", function()
     local NS, m = live()
     local ring, cursor, h = openPolish(NS, m, 2)
-    local east = ring.qcPlaceWedge[3]
+    local south = ring.qcPlaceWedge[3]
     local tip = m.GameTooltip
-    cursor(25, 0)
+    cursor(0, -25)
     NS.DialRender.PointerUpdate(h.qcPointer)
     -- red under: show a wedge's tooltip only from its own OnEnter
-    assertTrue(tip.__owner == east, "the lit slice's wedge owns the tooltip")
+    assertTrue(tip.__owner == south, "the lit slice's wedge owns the tooltip")
     assertTrue(tip:IsShown())
-    assertEqual(tip.__lines[1][1], NS.DialRender.WedgeLines(east.qcItem)[1])
-    cursor(-25, 0)
+    assertEqual(tip.__lines[1][1], NS.DialRender.WedgeLines(south.qcItem)[1])
+    cursor(0, 25)
     NS.DialRender.PointerUpdate(h.qcPointer)
-    assertTrue(tip.__owner == ring.qcPlaceWedge[1], "W next")
+    assertTrue(tip.__owner == ring.qcPlaceWedge[1], "N next")
     cursor(3, 3)
     NS.DialRender.PointerUpdate(h.qcPointer)
     assertFalse(tip.__owner == ring.qcPlaceWedge[1], "into the hub: the wedge's tooltip is gone")
@@ -1114,21 +1169,22 @@ local function reachOf(t)
     return math.sqrt((x or 0) ^ 2 + (y or 0) ^ 2)
 end
 
-test("dial: [polish] default hub is a solid gold circle of 22 on a 40 backdrop, no red X", function()
+test("dial: [polish] default hub is a solid gold circle of 24 on a 32 backdrop with a 1 px rim, no red X", function()
     local NS = live()
     local h = hubWith(NS)
     -- red under: keep R.DressHub's qcClose (the red stop mark)
     assertNil(h.qcClose, "the red X is gone")
-    assertEqual(h.__w, 40, "the header is the hub's size")
+    assertEqual(h.__w, 32, "the header is the hub's size")
     assertTrue(h.qcHub:IsShown())
-    assertEqual(h.qcHub.__size[1], 40, "the backdrop, 40 across")
+    assertEqual(h.qcHub.__size[1], 32, "the backdrop, 32 across")
     assertEqual(h.qcHub.__color[1], 0.12)
     -- red under: no qcHubDot / no R.PaintHubLook in Dial.Apply
     assertTrue(h.qcHubDot:IsShown(), "solid: the circle")
-    assertEqual(h.qcHubDot.__size[1], 22)
+    assertEqual(h.qcHubDot.__size[1], 24)
     assertEqual(h.qcHubDot.__color[1] .. "," .. h.qcHubDot.__color[2], "1,0.82", "gold")
     assertFalse(h.qcHubRing:IsShown(), "no hollow ring")
-    assertFalse(h.qcHubRim:IsShown(), "no backdrop rim at border size 0")
+    assertTrue(h.qcHubRim:IsShown(), "the backdrop's 1 px border")
+    assertEqual(h.qcHubRim.__texture, NS.DialRender.RingTexture(32, 1))
     local rest = h.qcHubDot.__color[4]
     NS.DialRender.HoverHub(h, true)
     -- red under: no brightening in R.HoverHub
@@ -1144,15 +1200,15 @@ test("dial: [polish] hub style solid draws the backdrop rim when its border size
     -- red under: draw the backdrop rim only for the rimmed style
     assertTrue(h.qcHubRim:IsShown(), "any style draws the backdrop's border")
     local rim = h.qcHubRim
-    assertEqual(rim.__texture, NS.DialRender.RingTexture(40, 3), "border size thick")
+    assertEqual(rim.__texture, NS.DialRender.RingTexture(32, 3), "border size thick")
     assertEqual(rim.__color[3], 1, "in the border color")
-    assertEqual(rim.__size[1], 40, "the backdrop across")
+    assertEqual(rim.__size[1], 32, "the backdrop across")
     assertTrue(reachOf(rim) < 0.01, "centered on the hub")
 end)
 
 test("dial: [polish] hub style ring is a hollow ring of the circle size and line width", function()
     local NS = live()
-    local h = hubWith(NS, { style = "ring", circleSize = 30, lineWidth = 4 })
+    local h = hubWith(NS, { style = "ring", circleSize = 30, lineWidth = 4, borderSize = 0 })
     -- red under: PaintHubLook ignoring the style (solid always)
     assertFalse(h.qcHubDot:IsShown(), "no filled circle")
     assertTrue(h.qcHubRing:IsShown())
@@ -1175,19 +1231,20 @@ end)
 
 test("dial: [polish] hub style rimmed is a filled circle on a backdrop with its own rim", function()
     local NS = live()
-    local h = hubWith(NS, { style = "rimmed" })
+    local h = hubWith(NS, { style = "rimmed", borderSize = 0 })
     assertTrue(h.qcHubDot:IsShown())
-    assertEqual(h.qcHubDot.__size[1], 22)
+    assertEqual(h.qcHubDot.__size[1], 24)
     -- red under: the rimmed style drawn without its rim at border size 0
     assertTrue(h.qcHubRim:IsShown(), "rimmed at border size 0: a 2 px rim")
-    assertEqual(h.qcHubRim.__texture, NS.DialRender.RingTexture(40, 2))
+    assertEqual(h.qcHubRim.__texture, NS.DialRender.RingTexture(32, 2))
     assertFalse(h.qcHubRing:IsShown())
     h = hubWith(NS, { borderSize = 5 })
-    assertEqual(h.qcHubRim.__texture, NS.DialRender.RingTexture(40, 5), "the border size when larger")
+    assertEqual(h.qcHubRim.__texture, NS.DialRender.RingTexture(32, 5), "the border size when larger")
 end)
 
 test("dial: [polish] hub size moves the inner edge everywhere", function()
     local NS = live()
+    assertTrue(NS.SchemaRuntime.Set("dial.slice.pointerOffset", 0, "d2"))   -- automatic: it follows the hub
     local h = hubWith(NS, { size = 60 })
     -- red under: header:SetSize(DL.HUB, DL.HUB) in Dial.build
     assertEqual(h.__w .. "x" .. h.__h, "60x60", "the header is the hub")
@@ -1196,10 +1253,10 @@ test("dial: [polish] hub size moves the inner edge everywhere", function()
     -- red under: shape.hub = DL.HUB in Dial.Apply
     assertEqual(ring.qcCatcher:GetAttribute("qc-hub"), 60, "the catcher's inner edge")
     -- red under: DL.HUB in Slices.Track
-    NS.DialSlices.Track(ring, -math.pi / 2, 29)
+    NS.DialSlices.Track(ring, 0, 29)
     assertNil(ring.qcLit, "inside the hub: nothing")
-    NS.DialSlices.Track(ring, -math.pi / 2, 31)
-    assertEqual(ring.qcLit, 1, "just past it: W")
+    NS.DialSlices.Track(ring, 0, 31)
+    assertEqual(ring.qcLit, 1, "just past it: N")
     -- red under: DL.PointerReach reading DL.HUB
     assertTrue(h.qcReach > 30, "the pointer sits outside the hub")
 end)
@@ -1212,19 +1269,20 @@ test("dial: [polish] group labels take their font and hide when off", function()
     local ring = NS.Dial.Instance("d2").rings.active[1]
     local title = ring.qcTitle
     -- red under: R.PaintRing without the title font (the GameFontNormal template alone)
-    assertEqual(title.__font and title.__font[2], 12, "today's look: 12 points")
+    assertEqual(title.__font and title.__font[2], 16, "the owner's look: 16 points (2026-10-22)")
+    assertEqual(title.__font[3], "OUTLINE", "outlined")
     assertEqual(title.__color[1] .. "," .. title.__color[2] .. "," .. title.__color[3], "1,0.82,0", "gold")
     assertTrue(title:IsShown())
-    local g = NS.DialLayout.Geometry(100)
+    local g = NS.DialLayout.Geometry(NS.DialLayout.RADIUS)
     local header = NS.Dial.Instance("d2").header
-    assertEqual(header.qcTipAt[3], g.title + NS.DialLayout.LINE + 8, "the tooltip clears a 14-pixel title")
+    assertEqual(header.qcTipAt[3], g.title + 18 + 8, "the tooltip clears an 18-pixel title")
     assertTrue(NS.SchemaRuntime.Set("dial.title.fontSize", 20, "d2"))
     assertTrue(NS.SchemaRuntime.Set("dial.title.fontColor", { r = 0, g = 1, b = 0, a = 1 }, "d2"))
     assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
     assertEqual(title.__font[2], 20)
     assertEqual(title.__color[2], 1, "its own color")
     -- red under: DL.Geometry without the title's own line height (titleLine)
-    assertEqual(NS.DialLayout.Geometry(100, nil, nil, 22).top, g.title + 22)
+    assertEqual(NS.DialLayout.Geometry(NS.DialLayout.RADIUS, nil, nil, 22).top, g.title + 22)
     assertEqual(header.qcTipAt[3], g.title + 22 + 8, "the tooltip clears the bigger title")
     assertEqual(NS.Dial.RingWedges("d2", 1)[1].qcLabel.__font[2], 12, "the slice labels keep theirs")
     assertTrue(NS.SchemaRuntime.Set("dial.title.show", false, "d2"))
@@ -1275,14 +1333,14 @@ test("dial: [art] the hub draws textures, not segments", function()
         assertEqual(h.qcHubRing:IsShown(), ringed, style .. ": the hollow ring")
         if ringed then
             assertTrue(isRing(h.qcHubRing), style .. ": a ring texture")
-            assertEqual(h.qcHubRing.__texture, R.RingTexture(22, NS.PadDefaults.DialHub().lineWidth),
+            assertEqual(h.qcHubRing.__texture, R.RingTexture(24, NS.PadDefaults.DialHub().lineWidth),
                 style .. ": circle size and line width")
-            assertEqual(h.qcHubRing.__size[1], 22, style .. ": the circle size across")
+            assertEqual(h.qcHubRing.__size[1], 24, style .. ": the circle size across")
         end
         assertEqual(h.qcHubRim:IsShown(), style == "rimmed", style .. ": the rim at border size 0")
         if style == "rimmed" then
-            assertEqual(h.qcHubRim.__texture, R.RingTexture(40, 2), "a 2 px rim on the 40 backdrop")
-            assertEqual(h.qcHubRim.__size[1], 40)
+            assertEqual(h.qcHubRim.__texture, R.RingTexture(32, 2), "a 2 px rim on the 32 backdrop")
+            assertEqual(h.qcHubRim.__size[1], 32)
         end
         assertEqual(h.qcHub.__texture, S.DISC, style .. ": the backdrop is the disc")
         assertEqual(h.qcHubDot.__texture, S.DISC, style .. ": the circle is the disc")
@@ -1292,7 +1350,7 @@ test("dial: [art] the hub draws textures, not segments", function()
     end
     local h = hubWith(NS, { style = "solid", borderSize = 3, borderColor = { r = 0, g = 0, b = 1, a = 1 } })
     assertTrue(h.qcHubRim:IsShown(), "any style draws the backdrop's border")
-    assertEqual(h.qcHubRim.__texture, R.RingTexture(40, 3))
+    assertEqual(h.qcHubRim.__texture, R.RingTexture(32, 3))
     assertEqual(h.qcHubRim.__color[3], 1, "in the border color")
     local ring = NS.Dial.Instance("d2").rings.active[2]
     local w = NS.Dial.RingWedges("d2", 2)[1]
@@ -1307,7 +1365,7 @@ test("dial: [art] the pill is three pieces with round ends", function()
     local S = NS.DialSlices
     local WHITE = "Interface\\Buttons\\WHITE8x8"
     assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
-    local ring = NS.Dial.Instance("d2").rings.active[2]   -- page 1 of 2: the pill (18 x 6)
+    local ring = NS.Dial.Instance("d2").rings.active[2]   -- page 1 of 2: the pill (18 x 8)
     -- red under: S.PILL, one stretched texture per indicator
     assertNil(S.PILL, "dial-pill.tga is retired")
     local function threePiece(left, mid, right, w, h, what)
@@ -1324,10 +1382,10 @@ test("dial: [art] the pill is three pieces with round ends", function()
         near(select(4, right:GetPoint(1)), mx + (w - h) / 2 + h / 4, what .. ": the right cap abuts it")
     end
     local caps, ecaps = ring.qcDotCaps[1], ring.qcDotEdgeCaps[1]
-    threePiece(caps.left, ring.qcDots[1], caps.right, 18, 6, "the pill")
-    threePiece(ecaps.left, ring.qcDotEdges[1], ecaps.right, 20, 8, "the pill's border")
+    threePiece(caps.left, ring.qcDots[1], caps.right, 18, 8, "the pill")
+    threePiece(ecaps.left, ring.qcDotEdges[1], ecaps.right, 22, 12, "the pill's border")
     local back = ring.qcDotBack
-    threePiece(back.left, back.mid, back.right, 30 + 2 + 8, 6 + 2 + 8, "the background")
+    threePiece(back.left, back.mid, back.right, 32 + 4 + 8, 8 + 4 + 8, "the background")
     assertEqual(ring.qcDots[2].__texture, S.DISC, "a dot is the disc")
     assertFalse(ring.qcDotCaps[2].left:IsShown() or ring.qcDotCaps[2].right:IsShown(), "a dot has no caps")
     assertTrue(caps.left:IsShown() and caps.right:IsShown(), "the pill shows its caps")

@@ -370,7 +370,7 @@ Total.
 - resolver: [all] All battlegrounds and All dungeons and raids match the whole kind, the listed ids aside
 - resolver: [arena] the arena row matches only in an arena: its listed ids, or all of them
 
-### test_builtins.lua (21)
+### test_builtins.lua (22)
 
 - builtins: the expected top-level sets exist in order
 - builtins: ids are unique, referenced and well formed
@@ -380,8 +380,8 @@ Total.
 - builtins: battlegrounds use smart group; arena uses party; raid lead uses smart lead
 - builtins: [phase 5] every node set pins each node to a wind, at most eight, Deepwind Gorge's five included
 - builtins: [B7] every callout ships a catalog glyph, with a color only where it is a glyph
-- builtins: [B7] the generic dungeon set is Dungeon (generic), active in a dungeon and in M+
-- builtins: [polish] World (solo) is a solo open-world set of say callouts
+- builtins: [B7] the generic dungeon set is Dungeon, active in a dungeon and in M+
+- builtins: [polish] Solo is a solo open-world set of say callouts
 - builtins: [polish] every battleground node set has map-wide callouts of its own
 - builtins: [polish] every callout icon has a color, and no group is white only
 - builtins: [polish] every group has a colored catalog glyph for its icon
@@ -392,6 +392,7 @@ Total.
 - builtins: [bg buttons] every base-capture node has Attack, Defend, INC and Clear, as Wintergrasp's workshops do
 - builtins: [bg buttons] Silvershard Mines has its three tracks and the switches, each with four
 - builtins: [bg buttons] Temple of Kotmogu has its four orbs and the center
+- builtins: no shipped callout types a raw %t or %f: each uses the {target} / {focus} chip
 - builtins: [bg buttons] In Group is a party, raid and instance group set of short smart-group lines
 
 ### test_gameids.lua (4)
@@ -546,7 +547,7 @@ Total.
 - popup: Escape and a profile change cancel
 - popup: there is no token dropdown; an info glyph sits right of the Text label
 - popup: the info glyph's tooltip lists the tokens, {group1} to {group8} only for a raid channel
-- popup: the preview is headed Preview, a gap above Cancel then Save
+- popup: the preview is headed Preview, a gap above Save then Cancel
 - callout helpers: TokenHelp folds {group1}-{group8} into one line and names {spell:ID}
 - popup: [icons] Choose icon… opens the browser; its Choose writes the draft's icon, not the callout
 - popup: [icons] a glyph chosen with a color: the draft carries both; the swatch writes the draft's color
@@ -865,7 +866,7 @@ Total.
 - dial secure: [polish] display open shows no screen catcher
 - dial secure: [polish] closing hides the screen catcher
 
-### test_preview.lua (23)
+### test_preview.lua (24)
 
 - preview: test mode turns on and off, announcing each edge once
 - preview: a start in combat is refused with one line
@@ -879,7 +880,8 @@ Total.
 - preview: [phase 3] refused in combat and while disabled, with one line each
 - preview: [review 3] the stand-down ends it silently, and so does closing the settings window
 - preview: [phase 3] test mode and Preview as are one switch at a time
-- preview: [phase 3] the menu: Current, M+, each dungeon, each raid difficulty, Arena, each battleground, World
+- preview: [phase 3] the menu: Current, one M+ dungeon, each raid difficulty, Arena, each battleground, Solo
+- preview: the menu's labels: one dungeon, each difficulty with the raid, BG - <name>, Solo
 - preview: [phase 3] a dungeon entry reads M+ · <dungeon> · <spec> (spec §13.3)
 - preview: [phase 3] the Preview as row and `/qc preview` drive the same switch
 - preview: [final 13] `/qc preview` reads the situation's name without regard to case
@@ -910,7 +912,7 @@ Total.
 
 ### test_master.lua (5)
 
-- master: the frame defaults are spec §5.1's: always shown, scale and alpha 1, locked
+- master: the frame defaults are spec §5.1's: always shown, scale and alpha 1; a new profile starts unlocked
 - master: /qc unlock and /qc lock write the Lock frame row's path and confirm on one line
 - master: the launcher's Locked and Test mode entries call the same handlers
 - master: /qc test toggles test mode, and in combat says why it will not
@@ -940,11 +942,12 @@ Total.
 - layout: [window] the header row's height moves every row and is the collapsed pad's height
 - layout: [button] a Button height above 0 is the labeled button's height; 0 is automatic; icon-only stays square
 
-### test_dial_layout.lua (32)
+### test_dial_layout.lua (33)
 
+- dial layout: every ring carries its key, the path of group and node ids down to it
 - dial layout: four wedges sit on N, E, S and W, clockwise from the top
 - dial layout: slices are Auto, 4, 6, 8 or 12; a page is 12 at most, 8 on a ring that holds rings
-- dial layout: [auto] one wedge is W, two W and E, three W, N and E, four W, N, E and S; more spread from W
+- dial layout: [auto] one wedge per item, evenly spaced clockwise from N
 - dial layout: [review 5] more items than wedges go on plain pages, the rest on the last
 - dial layout: [nav] a paged ring's pill, dots and arrows sit in one row under the disc and its labels
 - dial layout: [hit] the Icon offset moves the wedges in; a bigger pointer sits further out
@@ -962,9 +965,9 @@ Total.
 - dial layout: [bg subgroups] a set with more children than winds falls back to its unpinned, paged ring
 - dial layout: [review 6] a pinned ring ignores the dial's slices; Flat keeps its paging
 - dial layout: [icons] a ring entry carries its group's icon color, a send entry its callout's
-- dial layout: [polish] fixed 4 places 1-4 items W; W,E; W,N,E; W,N,E,S
-- dial layout: [polish] auto keeps its shapes from W
-- dial layout: [polish] fixed 8 with 2 items fills W then clockwise
+- dial layout: [polish] fixed 4 places 1-4 items N; N,S; N,E,S; N,E,S,W
+- dial layout: [polish] auto keeps its shapes from N
+- dial layout: [polish] fixed 8 with 2 items fills N then clockwise
 - dial layout: [polish] slice shift
 - dial layout: [polish] auto cap
 - dial layout: [polish] auto cap at 128 px pages the ring
@@ -1082,7 +1085,7 @@ Total.
 - pad: [polish] header reads Quick Comms: World
 - pad: [polish] header reads Quick Comms: M+ · Windrunner Spire +14
 
-### test_dial.lua (63)
+### test_dial.lua (65)
 
 - dial: Apply builds QuickCommsDial<n> with a ring per page, each callout wedge armed with its baked line
 - dial: a refused callout is a dimmed, disarmed wedge; a ring wedge is disarmed
@@ -1130,6 +1133,8 @@ Total.
 - dial: [polish] a click with a modifier held still sends the slice, in combat
 - dial: [polish] just outside the hub's circle, on a diagonal, the slice lights and clicks, in combat
 - dial: [polish] a click inside the hub's circle runs the hub, any modifier held, in combat
+- dial: a right click on a slice goes up a ring, and does nothing on the first ring, in combat
+- dial: a key open shows the ring and page the dial was last closed on, through a rebuild
 - dial: [polish] the hub's hover shows from the tracker inside its circle and clears outside
 - dial: [polish] the dial's key still opens and closes it with the header's mouse off, in combat
 - dial: [polish] a click on an empty place does nothing; in the hub it sends nothing
@@ -1137,7 +1142,7 @@ Total.
 - dial: [polish] wedges take no mouse; keys still click by name
 - dial: [polish] a built dial closes on a click outside it, in combat
 - dial: [polish] a ring hidden under the hover clears its slice, tooltip and hover glow
-- dial: [polish] default hub is a solid gold circle of 22 on a 40 backdrop, no red X
+- dial: [polish] default hub is a solid gold circle of 24 on a 32 backdrop with a 1 px rim, no red X
 - dial: [polish] hub style solid draws the backdrop rim when its border size is set
 - dial: [polish] hub style ring is a hollow ring of the circle size and line width
 - dial: [polish] hub style target is a ring with a center dot
@@ -1287,7 +1292,7 @@ Total.
 | test_bake.lua | 12 |
 | test_share.lua | 37 |
 | test_resolver.lua | 13 |
-| test_builtins.lua | 21 |
+| test_builtins.lua | 22 |
 | test_gameids.lua | 4 |
 | test_library.lua | 74 |
 | test_members.lua | 28 |
@@ -1304,15 +1309,15 @@ Total.
 | test_send_guard.lua | 10 |
 | test_sendengine.lua | 30 |
 | test_dial_secure.lua | 16 |
-| test_preview.lua | 23 |
+| test_preview.lua | 24 |
 | test_edit_preview.lua | 14 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 21 |
-| test_dial_layout.lua | 32 |
+| test_dial_layout.lua | 33 |
 | test_surfaces.lua | 30 |
 | test_pad_render.lua | 23 |
 | test_pad.lua | 45 |
-| test_dial.lua | 63 |
+| test_dial.lua | 65 |
 | test_dial_shine.lua | 8 |
 | test_icon_style.lua | 10 |
 | test_glow.lua | 11 |
@@ -1324,4 +1329,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1090** |
+| **Total** | **1095** |

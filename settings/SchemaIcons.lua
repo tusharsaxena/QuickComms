@@ -78,7 +78,7 @@ local KNOB_TEXT = {
 local WHERE = {
     pad = { page = "pads", size = L["How big each button's icon is, in pixels. A bigger icon makes the buttons taller."],
         when = L["Always, while the mouse is over the icon, or for a moment after its callout is sent."] },
-    dial = { page = "dials", size = L["How big each wedge's icon is, in pixels. 0 sizes it to the ring radius: 32 at the default radius, bigger on a bigger wheel. The wedges keep their size."],
+    dial = { page = "dials", size = L["How big each wedge's icon is, in pixels. 0 sizes it to the ring radius: 48 at the default 120, bigger on a bigger wheel. The wedges keep their size."],
         when = L["Always, while the mouse is over the icon, or for a moment after its callout is sent. The dial closes on a send, so that moment runs from the next time you open it, within a few seconds."] },
 }
 

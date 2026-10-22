@@ -8,7 +8,7 @@ local addonName, NS = ...
 --              labels, read and written on the draft), with an info glyph beside the Text label
 --              whose tooltip lists the tokens; then the icon under its "Icon" label (the icon as
 --              drawn, Choose icon…, which opens the icon browser over the popup, and a glyph's color
---              swatch: there is no Icon text box), Preview, then Cancel and Save, and under them the
+--              swatch: there is no Icon text box), Preview, then Save and Cancel, and under them the
 --              line that names a field Save refused
 --
 -- THE DRAFT is a plain copy of the callout's four fields and its icon's glyph color (blank for Add:
@@ -66,9 +66,9 @@ local BUTTONS_GAP = 16
 -- The token glyph: GLYPH_GAP right of the Text label's last letter, as tall as the label's letters
 -- (its font's size, kept within GLYPH_MIN to GLYPH_MAX).
 local GLYPH_GAP, GLYPH_MIN, GLYPH_MAX = 4, 10, 12
--- THE COLUMNS. Name and Channel, the icon's Choose icon… and its swatch, and Cancel and Save share
+-- THE COLUMNS. Name and Channel, the icon's Choose icon… and its swatch, and Save and Cancel share
 -- two columns, each the library's button-pair width (Helpers.BUTTON_PAIR_REL of the body, the width
--- InlineButtonPair gives Cancel and Save, options-ui-§8), and the gutter between them is the room
+-- InlineButtonPair gives Save and Cancel, options-ui-§8), and the gutter between them is the room
 -- the pair leaves (column and gutter, below); Text and the Preview rule span both. AceGUI draws an
 -- EditBox's box and a Button's art EDGE in from the widget's left and right edges, so EDGE is where
 -- every visible left edge sits: each field's label is moved EDGE in (AceGUI puts it at 0), the
@@ -356,8 +356,9 @@ local function textLine(h, text)
     return label
 end
 
--- Cancel the left column and Save the right one: InlineButtonPair already sizes each a column
--- wide (BUTTON_PAIR_REL); the gutter goes between them, so Save ends where Text and the rule do.
+-- Save the left column and Cancel the right one (owner, 2026-10-22; Cancel first before):
+-- InlineButtonPair already sizes each a column wide (BUTTON_PAIR_REL); the gutter goes between them,
+-- so Cancel ends where Text and the rule do.
 local function alignButtons(pair)
     local kids = pair and pair.children
     if not (kids and kids[1] and kids[2]) then return end
@@ -390,10 +391,10 @@ local function render()
     end)
     h.AddSpacer(ctx.scroll, BUTTONS_GAP)
     alignButtons(h.InlineButtonPair(ctx,
-        { text = L["Cancel"], tooltip = L["Close without saving. Nothing changes."],
-          onClick = function() Pop.Cancel() end },
         { text = L["Save"], tooltip = L["Save this callout to the group and close."],
-          onClick = function() Pop.Save() end }))
+          onClick = function() Pop.Save() end },
+        { text = L["Cancel"], tooltip = L["Close without saving. Nothing changes."],
+          onClick = function() Pop.Cancel() end }))
     errorRow = textLine(h, "")
     -- Last, so it measures what every refresher before it has just redrawn.
     ctx.refreshers[#ctx.refreshers + 1] = fit

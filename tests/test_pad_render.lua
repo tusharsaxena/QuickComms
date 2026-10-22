@@ -211,7 +211,8 @@ test("render: [phase 5] a pad's Look is a font and a skin; the defaults are the 
     local R, look = NS.PadRender, NS.Library.TEMPLATES.pad.look
     local font = R.LabelFont(NS.Library.TEMPLATES.pad.button)
     assertEqual(font.path, "Fonts\\FRIZQT__.TTF", "no LibSharedMedia here: the standard face")
-    assertEqual(font.size .. "|" .. font.flags .. "|" .. tostring(font.shadow), "10||true")
+    -- red under: no outline (owner, 2026-10-22: OUTLINE)
+    assertEqual(font.size .. "|" .. font.flags .. "|" .. tostring(font.shadow), "10|OUTLINE|true")
     assertEqual(font.r + font.g + font.b + font.a, 4, "a button's label: white")
     local skin = R.SkinFor(look)
     assertEqual(skin.edgeFile, "Interface\\Buttons\\WHITE8x8", "None is the flat Ka0s edge")
@@ -393,7 +394,12 @@ test("pad render: [shine] a look on the Buttons tab paints every button", functi
     local NS = livePad()
     local S = NS.SchemaRuntime
     for _, btn in ipairs(padButtons(NS)) do
-        assertFalse(shineShown(btn), "None by default: no shine")
+        -- red under: shineLook "none" in defaults/PadStyle.lua Button (owner, 2026-10-22: Gloss fade)
+        assertTrue(shineShown(btn), "Gloss fade by default")
+    end
+    assertTrue(S.Set("pad.button.shineLook", "none", "p1"))
+    for _, btn in ipairs(padButtons(NS)) do
+        assertFalse(shineShown(btn), "None: no shine")
     end
     assertTrue(S.Set("pad.button.shineLook", "gloss", "p1"))
     local buttons = padButtons(NS)
@@ -410,7 +416,7 @@ test("pad render: [shine] a look on the Buttons tab paints every button", functi
         assertTrue(rrel == btn, "the right cap on the button's other corner")
         assertEqual(set.left.__size[1], btn.__h / 2, "a cap half the button's height wide")
         assertEqual(set.mid:IsShown(), btn.__w > btn.__h, "the middle spans a wide button")
-        assertEqual(set.left.__color[4], 0.85, "the default Strength")
+        assertEqual(set.left.__color[4], 0.8, "the default Strength (80)")
     end
     assertTrue(S.Set("pad.button.shineStrength", 40, "p1"))
     -- red under: the button look's signature leaving out the shine leaves (the old look reused)
@@ -438,7 +444,7 @@ test("pad render: [shine] the pad's look leaves the dial alone", function()
     assertTrue(NS.SchemaRuntime.Set("pad.button.shineLook", "orb", "p1"))
     assertTrue(shineShown(padButtons(NS)[1]), "the pad wears its orb")
     local snap = NS.Situation.Current()
-    local group = { id = T.seeded(NS, "bi.mplus"), title = "Dungeon (generic)", slots = {} }
+    local group = { id = T.seeded(NS, "bi.mplus"), title = "Dungeon", slots = {} }
     for i, cid in ipairs(NS.Library.Group(T.seeded(NS, "bi.mplus")).callouts) do
         if i > 4 then break end
         local slot = NS.Surfaces.Slot(cid, NS.Library.Callout(cid), snap, { soloFallback = "none", ctx = {} })

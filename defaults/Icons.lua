@@ -20,9 +20,10 @@ local D = NS.IconDefaults
 -- are upscaled (softer, not broken); past about 70 at the default ring radius they crowd their
 -- neighbors and want a bigger radius. Pads stay at 40. A wedge's size also takes 0, automatic
 -- (`auto`; owner, 2026-10-21), a new dial's default: `default` scaled with the ring radius, the
--- default radius drawing `default` itself (modules/Dial_Layout.lua DL.AutoIconSize).
+-- default radius drawing `default` itself (modules/Dial_Layout.lua DL.AutoIconSize). The dial's
+-- default went from 32 to 48 with the default radius from 100 to 120 (owner, 2026-10-22).
 D.AUTO_SIZE = 0
-D.SIZE = { pad = { min = 12, max = 40, default = 16 }, dial = { min = 16, max = 128, default = 32, auto = true } }
+D.SIZE = { pad = { min = 12, max = 40, default = 16 }, dial = { min = 16, max = 128, default = 48, auto = true } }
 
 D.ZOOM_MAX = 0.25
 D.GLOW_STYLES = { "button", "proc", "pixel", "autocast" }

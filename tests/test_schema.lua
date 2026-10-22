@@ -173,8 +173,8 @@ end)
 
 test("schema: degraded, a row-less path not in the list is still refused", function()
     local D = T.bootAddon{ skip = NO_LIBKA0S }
-    assertFalse(D.SchemaRuntime.Set("locked", false))
-    assertEqual(D.addon.db.profile.locked, true, "nothing stored: the default stands")
+    assertFalse(D.SchemaRuntime.Set("locked", true))
+    assertEqual(D.addon.db.profile.locked, false, "nothing stored: the default stands")
 end)
 
 test("schema: [fix wave] the Behavior rows that rebuild the pads resolve Settings.RebuildSurfaces when they run", function()

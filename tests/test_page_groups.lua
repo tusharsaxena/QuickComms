@@ -78,8 +78,8 @@ test("groups page: the picker lists every group by name, a seeded set among them
     assertTrue(at[alpha] < at[mplus] and at[mplus] < at[zed], "one list, by name")
     local label = entries[at[mplus]].label
     assertTrue(label:find("Indicator-Green", 1, true) ~= nil, "active in a key")
-    -- red under: the dot before the name ("<dot> Dungeon (generic)")
-    assertEqual(label, "Dungeon (generic)" .. NS.addon.Settings.Editors.ACTIVE_DOT, "the dot after the name")
+    -- red under: the dot before the name ("<dot> Dungeon")
+    assertEqual(label, "Dungeon" .. NS.addon.Settings.Editors.ACTIVE_DOT, "the dot after the name")
     assertTrue(label:find("(built-in)", 1, true) == nil, "no built-in tag")
     for _, e in ipairs(entries) do assertTrue(e.id:match("^bi%.") == nil, "no shipped id: " .. e.id) end
 end)

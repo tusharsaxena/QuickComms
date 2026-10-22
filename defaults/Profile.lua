@@ -17,7 +17,7 @@ NS.C = {
         visibility = "always",   -- Master controls: General visibility (options-ui-§15)
         scale      = 1.0,        -- Master scale, multiplied into every pad's own scale
         alpha      = 1.0,        -- Master alpha, the ceiling of every pad's fade
-        locked     = true,       -- Lock frame: pads start locked (spec §5.1)
+        locked     = false,      -- Lock frame: a new profile starts unlocked (owner, 2026-10-22; spec §5.1 locked)
 
         behavior = {
             soloFallback = "none",   -- "none" | "self" | "say": smart channels when solo (spec §8.2)

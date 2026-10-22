@@ -24,7 +24,7 @@ end
 local function planOf(NS, opts)
     opts = opts or {}
     local snap = NS.Situation.Current()
-    local group = { id = T.seeded(NS, "bi.mplus"), title = "Dungeon (generic)", slots = {} }
+    local group = { id = T.seeded(NS, "bi.mplus"), title = "Dungeon", slots = {} }
     for i, cid in ipairs(NS.Library.Group(T.seeded(NS, "bi.mplus")).callouts) do
         if i > (opts.n or 8) then break end
         local slot = NS.Surfaces.Slot(cid, NS.Library.Callout(cid), snap, { soloFallback = "none", ctx = {} })
@@ -47,7 +47,8 @@ local SHINE_KEYS = { "disc", "mask", "bevel", "rim", "streak", "bead", "bloom1",
     "rimMask" }
 
 -- Each look's layers on a slice of an n-slice ring: { texture, level, color } (the mockup's SVG
--- recipe, the spec's "Dial slices"; color nil is the tint, white by default).
+-- recipe, the spec's "Dial slices"; color nil is the tint, TINT by default).
+local TINT = 0x80 / 255   -- the dial's default Shine tint (owner, 2026-10-22)
 local function recipeOf(Sh, look, n)
     local rim = Sh.Edge("rim", n)
     local black = { 0, 0, 0 }
@@ -118,7 +119,7 @@ test("dial: [shine] each look builds its recipe on every slice", function()
                     assertEqual(t.__texture, w[1], what .. " texture")
                     assertEqual(t.__layer, "BACKGROUND", what .. " layer")
                     assertTrue(t.__sublevel >= 3 and t.__sublevel <= 6, what .. " above the fill and the highlight")
-                    local c = w[3] or { 1, 1, 1 }
+                    local c = w[3] or { TINT, TINT, TINT }
                     for i = 1, 3 do near(t.__color[i], c[i], what .. " color " .. i) end
                     near(t.__color[4], w[2] * 0.85, what .. " alpha: level x Strength")
                 else
@@ -301,9 +302,11 @@ test("dial: [shine] fewer slices hide the rest", function()
     end
     S.Paint(ring, { size = 4, start = 0, items = {} }, look("none"))
     for j = 1, 8 do hidden(ring.qcShine[j], "none place " .. j) end
-    -- nothing is created at None
+    -- nothing is created at None: a dial built first at None (place 2, a header never built at boot,
+    -- since a new dial now ships the orb)
     local fresh = live()
-    assertTrue(fresh.Dial.Apply(1, "d2", planOf(fresh)))
+    assertTrue(fresh.SchemaRuntime.Set("dial.slice.shineLook", "none", "d2"))
+    assertTrue(fresh.Dial.Apply(2, "d2", planOf(fresh)))
     for _, r in ipairs(fresh.Dial.Instance("d2").rings.active) do
         assertEqual(#r.qcShine, 0, "a dial at None makes no overlay sets")
     end
@@ -311,6 +314,8 @@ end)
 
 test("dial: [shine] the dial's look leaves the pad alone", function()
     local NS = live()
+    assertTrue(NS.SchemaRuntime.Set("pad.button.shineLook", "none", "p1"))
+    NS.Surfaces.ApplyAll("test")
     local ring = shineDial(NS, "orb")
     assertTrue(ring.qcShine[1].bead:IsShown(), "the dial wears its orb")
     local shown = 0

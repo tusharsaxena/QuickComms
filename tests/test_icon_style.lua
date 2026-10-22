@@ -49,7 +49,7 @@ test("icon style: the defaults draw the owner's look on a button and on a wedge"
     assertEqual(button.__h, 24)
     local d = NS.db.profile.dials
     local did = NS.db.profile.dialOrder[1]
-    assertEqual(d[did].icon.size, 0, "automatic: 32 at the default radius")
+    assertEqual(d[did].icon.size, 0, "automatic: 48 at the default radius")
     assertEqual(d[did].icon.glowEnabled, false)
 end)
 
@@ -191,15 +191,16 @@ test("icon style: [autofit] a dial's icon size 0 is automatic: it scales with th
     end
     -- red under: a new dial's icon size left at 32
     assertEqual(NS.db.profile.dials[did].icon.size, 0, "a new dial's icons are automatic")
-    assertEqual(drawn(100), "32,32", "the default radius draws the old default")
+    assertEqual(drawn(120), "48,48", "the default radius draws the default")
+    assertEqual(drawn(100), "40,40")
     -- red under: IconStyle.Config clamps 0 up to the row's minimum (16)
-    assertEqual(drawn(150), "48,48")
-    assertEqual(drawn(180), "58,58")
+    assertEqual(drawn(150), "60,60")
+    assertEqual(drawn(180), "72,72")
     set(NS, "dial.icon.size", 40, did)
     assertEqual(drawn(150), "40,40", "a manual size is kept at any radius")
     assertEqual(drawn(100), "40,40")
     assertEqual(NS.IconStyle.Config({ size = 0 }, "dial", 48).size, 48)
-    assertEqual(NS.IconStyle.Config({ size = 0 }, "dial").size, 32, "no wheel to read: the old default")
+    assertEqual(NS.IconStyle.Config({ size = 0 }, "dial").size, 48, "no wheel to read: the default")
     assertEqual(NS.IconStyle.Config({ size = 0 }, "pad").size, 12, "a pad has no automatic size")
     local row
     for _, r in ipairs(NS.addon.Settings.RowsForPage("dials")) do

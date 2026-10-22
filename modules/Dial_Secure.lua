@@ -7,7 +7,11 @@ local _, NS = ...
 --
 -- The snippets below are restricted Lua the client runs in the header's own environment, whose globals
 -- persist from one snippet to the next: `current` is the ring on screen, nil while the dial is closed,
--- and `display` is set while an insecure open (test mode, Preview as…) holds it. They show and hide the
+-- `display` is set while an insecure open (test mode, Preview as…) holds it, and `lastKey` and
+-- `lastPage` are the ring and page a key open was last closed on (owner, 2026-10-22): the next key open
+-- shows that page of that ring (its `qc-key-<r>` and `qc-page-<r>`, DS.Load, so it outlives a
+-- rebuild), else that ring's first page, else the ring it opens on. An insecure open neither reads nor
+-- writes them. They show and hide the
 -- rings, anchor the hub, and bind Escape, the mouse wheel, the number keys 1-8 and (on a paged ring)
 -- the Left and Right arrow keys while the dial is open from its key (SetBindingClick, released by ClearBindings on close) — all allowed in combat. An
 -- insecure open takes no key, because the settings window may be open behind it. They NEVER write an attribute: every attribute and frame ref is written out of combat by
@@ -37,7 +41,9 @@ local _, NS = ...
 -- wrap (which takes "w<j>" as a left click) and SendEngine's hook run as for any click. Inside the
 -- hub's circle (DialLayout.InHub) a left click, with or without a modifier, runs the header's qc-up
 -- (up a ring, or close on the first ring), as the hub's own click did; an empty place or past the rim
--- does nothing; any button but the left closes. Works in combat: nothing is written, only read.
+-- does nothing; any button but the left closes, but a right click on a slice (owner, 2026-10-22) runs
+-- the header's qc-back: up a ring, or nothing on the first ring. Works in combat: nothing is written,
+-- only read.
 --
 -- THE SCREEN CATCHER (dial polish, 2026-10-21). One full-screen secure button per dial, under the
 -- dial (SendEngine.NewDialScreen), reached by the header's frame ref `screen` (DS.Load, opts.screen).
@@ -85,6 +91,13 @@ else
 end
 ]]
 
+-- A right click on a slice: up a ring, or nothing on the first ring.
+local BACK = [[
+if not current then return end
+local up = self:GetAttribute("qc-parent-" .. current) or 0
+if up > 0 then self:RunAttribute("qc-show", up) end
+]]
+
 local OPEN = [[
 if (self:GetAttribute("qc-rings") or 0) < 1 then return end
 for i = 1, self:GetAttribute("qc-siblings") or 0 do
@@ -96,7 +109,16 @@ if self:GetAttribute("qc-openAt") == "cursor" then
     self:SetPoint("CENTER", "$cursor")
 end
 self:Show()
-self:RunAttribute("qc-show", self:GetAttribute("qc-openRing") or 1)
+local count, at, first = self:GetAttribute("qc-rings") or 0, nil, nil
+if not display and lastKey then
+    for r = 1, count do
+        if self:GetAttribute("qc-key-" .. r) == lastKey then
+            first = first or r
+            if self:GetAttribute("qc-page-" .. r) == lastPage then at = r end
+        end
+    end
+end
+self:RunAttribute("qc-show", at or first or self:GetAttribute("qc-openRing") or 1)
 ]]
 
 -- Opened from the insecure side (test mode, Preview as…), perhaps with the settings window open: the
@@ -139,6 +161,9 @@ end
 ]]
 
 local CLOSE = [[
+if current and not display then
+    lastKey, lastPage = self:GetAttribute("qc-key-" .. current), self:GetAttribute("qc-page-" .. current)
+end
 local count = self:GetAttribute("qc-rings") or 0
 for i = 1, count do
     local ring = self:GetFrameRef("ring" .. i)
@@ -185,17 +210,24 @@ return false
 -- A ring's catcher (dial polish): inside the hub's circle (DialLayout.InHub) the hub's action, any
 -- modifier held; else the slice under the cursor, by the same math as DialLayout.SliceAt (angle only,
 -- on the disc), named for its place ("w3") when a wedge sits there; the catcher's *type-w<j> /
--- *clickbutton-w<j> (any modifier) then click that wedge with that name. Any other button closes.
+-- *clickbutton-w<j> (any modifier) then click that wedge with that name. A right click on a slice is
+-- qc-back; any other button, and a right click on the hub or past the rim, closes.
 local CATCHER_PRE = [[
 if down then return false end
-if button ~= "LeftButton" then owner:RunAttribute("qc-close") return false end
+local right = button == "RightButton"
+if button ~= "LeftButton" and not right then owner:RunAttribute("qc-close") return false end
 local x, y = self:GetMousePosition()
 if not x then return false end
 local disc = self:GetAttribute("qc-disc") or 0
 local dx, dy = (x - 0.5) * disc, (y - 0.5) * disc
 local dist = math.sqrt(dx * dx + dy * dy)
-if dist <= (self:GetAttribute("qc-hub") or 0) / 2 then owner:RunAttribute("qc-up") return false end
-if dist > disc / 2 then return false end
+local onHub, offDisc = dist <= (self:GetAttribute("qc-hub") or 0) / 2, dist > disc / 2
+if right then
+    owner:RunAttribute((onHub or offDisc) and "qc-close" or "qc-back")
+    return false
+end
+if onHub then owner:RunAttribute("qc-up") return false end
+if offDisc then return false end
 local size = self:GetAttribute("qc-size") or 1
 local step = 2 * math.pi / size
 local from = math.rad(self:GetAttribute("qc-start") or 0) - step / 2
@@ -212,7 +244,7 @@ owner:RunAttribute("qc-close")
 return false
 ]]
 
-DS.SNIPPETS = { onclick = ONCLICK, up = UP, open = OPEN, display = DISPLAY, show = SHOW, close = CLOSE, pre = WEDGE_PRE,
+DS.SNIPPETS = { onclick = ONCLICK, up = UP, back = BACK, open = OPEN, display = DISPLAY, show = SHOW, close = CLOSE, pre = WEDGE_PRE,
     post = WEDGE_POST, arrow = ARROW_PRE, catcher = CATCHER_PRE, screen = SCREEN_PRE }
 
 --- A dial's header (its hub), named for its place in the dial order, carrying its snippets. Out of
@@ -220,7 +252,7 @@ DS.SNIPPETS = { onclick = ONCLICK, up = UP, open = OPEN, display = DISPLAY, show
 function DS.NewHeader(index)
     local header = SE.NewDialHeader(DS.HEADER:format(index))
     if not header then return nil end
-    SE.SetAttributes(header, { _onclick = ONCLICK, ["qc-up"] = UP, ["qc-open"] = OPEN, ["qc-display"] = DISPLAY, ["qc-show"] = SHOW,
+    SE.SetAttributes(header, { _onclick = ONCLICK, ["qc-up"] = UP, ["qc-back"] = BACK, ["qc-open"] = OPEN, ["qc-display"] = DISPLAY, ["qc-show"] = SHOW,
         ["qc-close"] = CLOSE })
     return header
 end
@@ -273,7 +305,8 @@ local function catcherAttrs(ring)
     return attrs, clear
 end
 
---- Hand the header a plan's rings: per ring its container, its parent, previous and next page, its
+--- Hand the header a plan's rings: per ring its container, its key and page (where a close leaves the
+--- next open, OPEN), its parent, previous and next page, its
 --- page arrows ({ prev, next }, each targeting that page), its wedges ({ button, target, place }:
 --- target 0 for a callout, else the ring a click opens; place its slice, 1..size from `start`) and,
 --- when it has one, its catcher with the ring's `shape` ({ size, start, hub, disc }); the ring it opens
@@ -288,6 +321,8 @@ function DS.Load(header, rings, opts)
         ["qc-openAt"] = opts.openAt == "cursor" and "cursor" or "center" }
     for r, ring in ipairs(rings) do
         attrs["qc-parent-" .. r] = ring.parent or 0
+        attrs["qc-key-" .. r] = ring.key or ("ring" .. r)
+        attrs["qc-page-" .. r] = ring.page or 1
         attrs["qc-prev-" .. r] = ring.prev or 0
         attrs["qc-next-" .. r] = ring.next or 0
         attrs["qc-n-" .. r] = #ring.wedges

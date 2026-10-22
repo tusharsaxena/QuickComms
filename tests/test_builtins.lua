@@ -120,24 +120,24 @@ test("builtins: [B7] every callout ships a catalog glyph, with a color only wher
     assertEqual(BI.callouts["bi.mplus.lust"].glyph, "gi:enrage")
 end)
 
-test("builtins: [B7] the generic dungeon set is Dungeon (generic), active in a dungeon and in M+", function()
+test("builtins: [B7] the generic dungeon set is Dungeon, active in a dungeon and in M+", function()
     local _, BI = bi()
     local g = BI.groups["bi.mplus"]
-    assertEqual(g.name, "Dungeon (generic)")
+    assertEqual(g.name, "Dungeon")
     assertTrue(g.when.content.dungeon and g.when.content.mythicPlus)
 end)
 
 -- The white the glyphs draw when no color is set; a set must not be all of it.
 local WHITE = "ffffff"
 
-test("builtins: [polish] World (solo) is a solo open-world set of say callouts", function()
+test("builtins: [polish] Solo is a solo open-world set of say callouts", function()
     local NS, BI = bi()
     local g = BI.groups["bi.world"]
     -- red under: no defaults/BuiltIns_World.lua
     assertTrue(g ~= nil, "the set exists")
-    assertEqual(g.name, "World (solo)")
+    assertEqual(g.name, "Solo")
     assertTrue(g.when.content.openWorld and g.when.group.solo, "World, Solo")
-    assertTrue(#g.callouts >= 8, "about eight callouts")
+    assertTrue(#g.callouts >= 7, "about seven callouts")
     for _, cid in ipairs(g.callouts) do
         local ch = BI.callouts[cid].channel
         assertTrue(ch == "say" or ch == "yell", cid .. " speaks out loud, as a solo player can")
@@ -340,17 +340,28 @@ test("builtins: [bg buttons] Temple of Kotmogu has its four orbs and the center"
     -- red under: Temple of Kotmogu left flat in defaults/BuiltIns_Battlegrounds.lua
     assertEqual(childNames(BI, "bi.bg.tok"), "Orange orb,Blue orb,Green orb,Purple orb,Center")
     assertEqual(rows(BI, "bi.bg.tok.blue"), "Take orb=Take the blue orb|Peel=Peel for our blue orb carrier|"
-        .. "Kill carrier=Kill their blue orb carrier %t|Heals=Our blue orb carrier needs heals")
+        .. "Kill carrier=Kill their blue orb carrier {target}|Heals=Our blue orb carrier needs heals")
     assertEqual(rows(BI, "bi.bg.tok.center"), "Go center=Bring the orbs to the center|Hold center=Hold the center|"
         .. "INC=INC center|Clear=The center is clear")
     for _, color in ipairs({ "orange", "blue", "green", "purple" }) do
         assertEqual(BI.groups["bi.bg.tok." .. color].iconColor, BI.COLOR[color], color .. " orb draws its color")
     end
-    -- the %t a row's %s fill leaves for the bake
+    -- the {target} a row's %s fill leaves for the bake
     local line = NS.Bake.Bake(BI.callouts["bi.bg.tok.green.kill"], BI.SNAPSHOTS["bi.bg.tok"],
         { ctx = { target = "Traxex" } })
     assertTrue(line:find("Kill their green orb carrier", 1, true) ~= nil, line)
     assertEqual(BI.callouts["bi.bg.tok.mid"].text, "Orbs to the middle", "the map-wide callouts stay")
+end)
+
+test("builtins: no shipped callout types a raw %t or %f: each uses the {target} / {focus} chip", function()
+    local _, BI = bi()
+    local raw = {}
+    for cid, c in pairs(BI.callouts) do
+        -- red under: a shipped text with a typed %t (owner, 2026-10-22: {target})
+        if c.text:find("%%[tf]") then raw[#raw + 1] = cid end
+    end
+    table.sort(raw)
+    assertEqual(table.concat(raw, ","), "", "every target token is the chip")
 end)
 
 test("builtins: [bg buttons] In Group is a party, raid and instance group set of short smart-group lines", function()
@@ -362,14 +373,13 @@ test("builtins: [bg buttons] In Group is a party, raid and instance group set of
     assertTrue(g.when.group.party and g.when.group.raid and g.when.group.instance, "Party, Raid, Instance group")
     assertNil(g.when.group.solo)
     assertNil(g.when.content, "no content condition")
-    assertEqual(rows(BI, "bi.group"), "Hello=Hello|tyff=tyff|Buffs please=Buffs please!|"
-        .. "Healthstone=Healthstone please!|GLHF=GLHF|ggty=ggty|ggnt=ggnt|ty=ty|brb=brb|Ready=Ready|"
-        .. "Drink=Drinking|Summon=Summon please!")
+    assertEqual(rows(BI, "bi.group"), "Hello=Hello!|Summon=Summon please!|Buffs please=Buffs please!|"
+        .. "Healthstone=Healthstone please!|tyff=tyff|brb=brb|Ready=Ready|GLHF=GLHF!|ggty=ggty|ggnt=ggnt")
     for _, cid in ipairs(g.callouts) do assertEqual(BI.callouts[cid].channel, "smartGroup", cid) end
     assertEqual(g.glyph, "ph:users-three")
     local snap = BI.SNAPSHOTS["bi.group"]
     assertEqual(snap.group, "party", "the bake audit checks it in a party")
-    assertEqual(NS.Bake.Bake(BI.callouts["bi.group.glhf"], snap, { ctx = {} }), "/p GLHF")
+    assertEqual(NS.Bake.Bake(BI.callouts["bi.group.glhf"], snap, { ctx = {} }), "/p GLHF!")
     -- active in a party, a raid and a battleground's instance group; not solo
     local R = NS.Resolver
     assertTrue(R.Matches(g.when, { group = "party" }))

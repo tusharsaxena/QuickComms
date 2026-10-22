@@ -8,7 +8,7 @@ local ID = "bi.raid"
 
 local raid = BI.Callouts(ID, "raid", {
     { "lust",    L["Bloodlust"],     L["Bloodlust now"], "gi:enrage", C.red },
-    { "brez",    L["Battle rez"],    L["Battle rez used on %t"], "gi:angel-wings", C.green },
+    { "brez",    L["Battle rez"],    L["Battle rez used on {target}"], "gi:angel-wings", C.green },
     { "soak",    L["Soak"],          L["Soak {rt3}"], "gi:convergence-target", C.orange },
     { "spread",  L["Spread"],        L["Spread for mechanic"], "gi:divergence", C.cyan },
     { "stack",   L["Stack"],         L["Stack on {rt1}"], "gi:meeple-group", C.white },
@@ -21,7 +21,7 @@ local lead = BI.Callouts(ID, "smartLead", {
 for _, id in ipairs(lead) do raid[#raid + 1] = id end
 
 BI.Group(ID, {
-    name = L["Raid (generic)"], glyph = "gi:dragon-head-lorc", color = C.red,
+    name = L["Raid"], glyph = "gi:dragon-head-lorc", color = C.red,
     when = { content = { raid = true } }, callouts = raid,
 })
 

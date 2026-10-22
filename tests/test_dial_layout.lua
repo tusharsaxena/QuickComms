@@ -32,15 +32,31 @@ local function ab()
     return { id = "bi.bg.ab", title = "Arathi Basin", children = children }
 end
 
+test("dial layout: every ring carries its key, the path of group and node ids down to it", function()
+    local L = DL()
+    local function some(n)
+        local out = {}
+        for i = 1, n do out[i] = { name = "c" .. i } end
+        return out
+    end
+    local rings = L.Rings({ { id = "g1", title = "One", slots = some(2) },
+        { id = "g2", title = "Two", slots = some(9), children = { { id = "n1", title = "Node", slots = some(1) } } } },
+        { slices = 4 })
+    local keys = {}
+    for r, ring in ipairs(rings) do keys[r] = ring.key .. "#" .. ring.page end
+    assertEqual(table.concat(keys, " "), "root#1 root/g1#1 root/g2#1 root/g2#2 root/g2#3 root/g2/n1#1")
+end)
+
 test("dial layout: four wedges sit on N, E, S and W, clockwise from the top", function()
     local L = DL()
     local pts = {}
     for i = 1, 4 do
-        local w = L.Wedge(i, 4)
+        local w = L.Wedge(i, 4, 100, nil, nil, nil, 40)
         pts[i] = w.x .. "," .. w.y
     end
-    assertEqual(table.concat(pts, " "), "0,100 100,0 0,-100 -100,0", "the default radius")
-    -- automatic Icon offset: the radius at the default 100, the same place in the slice elsewhere
+    assertEqual(table.concat(pts, " "), "0,100 100,0 0,-100 -100,0", "radius 100 on a 40 hub")
+    assertEqual(L.Wedge(2, 4).x, L.IconReach(L.RADIUS, 0), "the default radius")
+    -- automatic Icon offset: the radius at 100 on a 40 hub, the same place in the slice elsewhere
     assertEqual(L.Wedge(2, 4, 80).x, L.IconReach(80, 0), "the dial's own radius")
     assertEqual(L.Wedge(2, 4, 999).x, L.IconReach(L.RADIUS_MAX, 0), "clamped to the row's range")
     assertEqual(L.Direction(1, 4) .. L.Direction(2, 4) .. L.Direction(3, 4) .. L.Direction(4, 4), "NESW")
@@ -59,7 +75,7 @@ test("dial layout: slices are Auto, 4, 6, 8 or 12; a page is 12 at most, 8 on a 
     assertEqual(L.PageSize(L.AUTO, true), 8)
 end)
 
-test("dial layout: [auto] one wedge is W, two W and E, three W, N and E, four W, N, E and S; more spread from W", function()
+test("dial layout: [auto] one wedge per item, evenly spaced clockwise from N", function()
     local L = DL()
     local function at(n)
         local size, start = L.PageShape(L.AUTO, 12, n)
@@ -67,18 +83,17 @@ test("dial layout: [auto] one wedge is W, two W and E, three W, N and E, four W,
         for i = 1, n do out[i] = L.Direction(i, size, start) end
         return table.concat(out, " ")
     end
-    -- red under: start Auto at N in modules/Dial_Layout.lua PageShape
-    assertEqual(at(1), "W")
-    assertEqual(at(2), "W E")
-    -- red under: give three items a three-wedge ring (W, NE, SE)
-    assertEqual(at(3), "W N E", "S is left empty")
-    assertEqual(select(1, L.PageShape(L.AUTO, 12, 3)), 4, "three take a four-wedge ring")
-    assertEqual(at(4), "W N E S")
-    assertEqual(at(8), "W NW N NE E SE S SW", "evenly spaced, clockwise from W")
-    assertEqual(select(1, L.PageShape(L.AUTO, 12, 7)), 7, "one wedge per item past four")
+    -- red under: START at W (270) in modules/Dial_Layout.lua (owner, 2026-10-22: from N)
+    assertEqual(at(1), "N")
+    assertEqual(at(2), "N S")
+    -- red under: three items on a four-wedge ring (N, E, S, W empty)
+    assertEqual(at(3), "N SE SW", "thirds: N, 120 and 240 degrees")
+    assertEqual(select(1, L.PageShape(L.AUTO, 12, 3)), 3, "three take a three-wedge ring")
+    assertEqual(at(4), "N E S W")
+    assertEqual(at(8), "N NE E SE S SW W NW", "evenly spaced, clockwise from N")
+    assertEqual(select(1, L.PageShape(L.AUTO, 12, 7)), 7, "one wedge per item")
     local size, start = L.PageShape(6, 6, 2)
-    -- red under: start fixed counts at N in modules/Dial_Layout.lua PageShape
-    assertEqual(size .. "," .. start, "6,270", "a fixed count keeps its wedges and starts at W")
+    assertEqual(size .. "," .. start, "6,0", "a fixed count keeps its wedges and starts at N")
 end)
 
 test("dial layout: [review 5] more items than wedges go on plain pages, the rest on the last", function()
@@ -124,12 +139,12 @@ end)
 
 test("dial layout: [exit] Categories with several groups opens on the ring of groups; a group wedge opens its ring", function()
     local L = DL()
-    local generic = { id = "bi.bg", title = "Battleground (generic)", slots = slots("g", 6) }
+    local generic = { id = "bi.bg", title = "Battleground", slots = slots("g", 6) }
     local rings, open = L.Rings({ ab(), generic }, { mode = "categories", slices = 4, title = "Comms Dial" })
     -- red under: open on the first group's ring in DL.Rings
     assertEqual(open, 1, "two groups: the selector first")
     assertEqual(rings[1].title, "Comms Dial")
-    assertEqual(titles(rings[1]), "Arathi Basin,Battleground (generic)")
+    assertEqual(titles(rings[1]), "Arathi Basin,Battleground")
     local set = rings[rings[1].items[1].target]
     assertEqual(set.title, "Arathi Basin")
     assertEqual(set.parent, 1, "the hub goes up to the group ring")
@@ -369,14 +384,14 @@ test("dial layout: [icons] a ring entry carries its group's icon color, a send e
     assertEqual(send and send.iconColor, "00ff00")
 end)
 
-test("dial layout: [polish] fixed 4 places 1-4 items W; W,E; W,N,E; W,N,E,S", function()
+test("dial layout: [polish] fixed 4 places 1-4 items N; N,S; N,E,S; N,E,S,W", function()
     local L = DL()
     local want = { { 1 }, { 1, 3 }, { 1, 2, 3 }, { 1, 2, 3, 4 } }
-    local dirs = { "W", "W E", "W N E", "W N E S" }
+    local dirs = { "N", "N S", "N E S", "N E S W" }
     for count = 1, 4 do
         local size, start, places = L.PageShape(4, 4, count)
-        assertEqual(size .. "," .. start, "4,270", count .. ": four wedges from W")
-        -- red under: give a fixed 4 ring places 1..count (two items at W and N)
+        assertEqual(size .. "," .. start, "4,0", count .. ": four wedges from N")
+        -- red under: give a fixed 4 ring places 1..count (two items at N and E)
         assertEqual(table.concat(places, ","), table.concat(want[count], ","), count .. " items' places")
         local out = {}
         for k = 1, count do out[k] = L.Direction(places[k], size, start) end
@@ -384,28 +399,28 @@ test("dial layout: [polish] fixed 4 places 1-4 items W; W,E; W,N,E; W,N,E,S", fu
     end
 end)
 
-test("dial layout: [polish] auto keeps its shapes from W", function()
+test("dial layout: [polish] auto keeps its shapes from N", function()
     local L = DL()
     -- red under: a fixed-4 places table for Auto's two items (a four-wedge ring)
     assertEqual(select(1, L.PageShape(L.AUTO, 12, 1)), 1, "one item: the whole disc")
     local size, start, places = L.PageShape(L.AUTO, 12, 2)
-    assertEqual(size .. "," .. start, "2,270")
-    assertEqual(L.Direction(places[1], size, start) .. " " .. L.Direction(places[2], size, start), "W E")
+    assertEqual(size .. "," .. start, "2,0")
+    assertEqual(L.Direction(places[1], size, start) .. " " .. L.Direction(places[2], size, start), "N S")
     local three, _, placed = L.PageShape(L.AUTO, 12, 3)
-    assertEqual(three, 4, "three take a four-wedge ring")
+    assertEqual(three, 3, "three take a three-wedge ring")
     assertEqual(table.concat(placed, ","), "1,2,3")
     size, start, places = L.PageShape(L.AUTO, 12, 5)
-    assertEqual(size .. "," .. start, "5,270")
+    assertEqual(size .. "," .. start, "5,0")
     assertEqual(table.concat(places, ","), "1,2,3,4,5")
 end)
 
-test("dial layout: [polish] fixed 8 with 2 items fills W then clockwise", function()
+test("dial layout: [polish] fixed 8 with 2 items fills N then clockwise", function()
     local L = DL()
     local size, start, places = L.PageShape(8, 8, 2)
     assertEqual(size, 8, "a fixed count is never shrunk")
     assertEqual(table.concat(places, ","), "1,2")
-    -- red under: start fixed counts at N in modules/Dial_Layout.lua PageShape
-    assertEqual(L.Direction(places[1], size, start) .. " " .. L.Direction(places[2], size, start), "W NW")
+    -- red under: START at W (270)
+    assertEqual(L.Direction(places[1], size, start) .. " " .. L.Direction(places[2], size, start), "N NE")
 end)
 
 test("dial layout: [polish] slice shift", function()
@@ -460,9 +475,9 @@ test("dial layout: [polish] Rings gives every unpinned item its place", function
     local L = DL()
     local rings, open = L.Rings({ { id = "g", title = "G", slots = slots("c", 2) } }, { slices = 4 })
     local ring = rings[open]
-    -- red under: leave an unpinned item's wedge nil in DL.Rings (two items at W and N)
-    assertEqual(ring.items[1].wedge .. "," .. ring.items[2].wedge, "1,3", "W and E")
-    assertEqual(ring.start, 270)
+    -- red under: leave an unpinned item's wedge nil in DL.Rings (two items at N and E)
+    assertEqual(ring.items[1].wedge .. "," .. ring.items[2].wedge, "1,3", "N and S")
+    assertEqual(ring.start, 0)
 end)
 
 -- ── crisp dial art (shine T1, 2026-10-21) ───────────────────────────────────────────────────────
@@ -509,7 +524,11 @@ test("dial layout: [autofit] automatic Icon offset keeps the icon's place in the
         local edge = L.Geometry(radius).disc / 2
         return (L.IconReach(radius, 0, hub) - hub / 2) / (edge - hub / 2)
     end
-    assertEqual(L.IconReach(100, 0), 100, "the default radius keeps its place")
+    assertEqual(L.IconReach(100, 0, 40), 100, "radius 100 on a 40 hub keeps its place")
+    -- red under: ICON_SHARE anchored on DL.RADIUS (the icons move out when the default radius did)
+    assertEqual(L.IconReach(120, 0, 40), 113.11, "120 on a 40 hub: where its icons sat before it was the default")
+    -- red under: ICON_SHARE anchored on DL.HUB (the band's share moves when the default hub did)
+    assertEqual(L.IconReach(120, 0), 111.74, "the default 120 on the default 32 hub: the same share of the band")
     local ref = rel(100)
     for _, r in ipairs({ 70, 150, 180 }) do
         -- red under: automatic is the ring radius (rel 0.76 at 150, 0.78 at 180)
@@ -526,23 +545,25 @@ end)
 test("dial layout: [autofit] automatic icon size scales with the ring and clamps", function()
     local L = DL()
     -- red under: no DL.AutoIconSize
-    assertEqual(L.AutoIconSize(100), 32, "the default radius keeps the default size")
-    assertEqual(L.AutoIconSize(150), 48)
-    assertEqual(L.AutoIconSize(180), 58)
-    assertEqual(L.AutoIconSize(70), 22)
-    assertEqual(L.AutoIconSize(999), 58, "the radius is clamped first")
+    -- red under: the 32-at-100 default (owner, 2026-10-22: 48 at 120, 0.4 of the radius)
+    assertEqual(L.AutoIconSize(L.RADIUS), 48, "the default radius keeps the default size")
+    assertEqual(L.AutoIconSize(100), 40)
+    assertEqual(L.AutoIconSize(150), 60)
+    assertEqual(L.AutoIconSize(180), 72)
+    assertEqual(L.AutoIconSize(70), 28)
+    assertEqual(L.AutoIconSize(999), 72, "the radius is clamped first")
     -- a fixed count caps it to the slice's arc at the icon reach, less the gap and FIT_MARGIN
     local arc = 2 * math.pi * L.IconReach(100, 0) / 12
-    assertEqual(L.AutoIconSize(100, nil, 12, 30), math.floor(arc - 30 - L.FIT_MARGIN), "the arc caps it")
+    assertEqual(L.AutoIconSize(100, nil, 12, 30), math.floor(arc - 30 - L.FIT_MARGIN + 0.5), "the arc caps it, rounded")
     assertEqual(L.AutoIconSize(70, nil, 12, 40), 16, "never below the row's minimum")
-    assertEqual(L.AutoIconSize(100, nil, 0, 30), 32, "Auto slices page instead of shrinking")
-    assertEqual(L.ResolveIconSize(0, 150), 48, "0 is automatic")
+    assertEqual(L.AutoIconSize(100, nil, 0, 30), 40, "Auto slices page instead of shrinking")
+    assertEqual(L.ResolveIconSize(0, 150), 60, "0 is automatic")
     assertEqual(L.ResolveIconSize(40, 150), 40, "a manual size is kept")
-    assertEqual(L.ResolveIconSize(nil, 150), 48, "unset reads as the default, automatic")
+    assertEqual(L.ResolveIconSize(nil, 150), 60, "unset reads as the default, automatic")
 end)
 
 test("dial layout: [autofit] auto cap reads the automatic reach and icon size", function()
     local L = DL()
-    assertEqual(L.AutoCap(100, 0, L.AutoIconSize(100), 0), 12, "the default dial: no change")
+    assertEqual(L.AutoCap(L.RADIUS, 0, L.AutoIconSize(L.RADIUS), 0), 12, "the default dial: no change")
     assertEqual(L.AutoCap(180, 0, L.AutoIconSize(180), 0), 12, "a bigger wheel's bigger icons still fit twelve")
 end)
