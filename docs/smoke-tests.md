@@ -29,7 +29,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | LOOK-1..6 | Pad header, Section header, Window | The Comms Pad's three window tabs: the section titles' font, the pad's border and background, the header's look, size and alignment, the tab strip and headings, the section header's band and height |
 | BUTTON-1..2 | Buttons tab | The buttons' size, color, border and font; the button glow |
 | ICONS-1..3 | Icons tab | The buttons' and wedges' icon look, border and glow triggers |
-| ICON-1 | Icons | Choosing an icon, for a callout and for a group |
+| ICON-1..3 | Icons | Choosing an icon, for a callout and for a group; the LibKa0s v1.75.0 re-vendor: the icon browser's three sets and the library-drawn marks |
 | ART-1 | Art | The dial's round art: the hub's styles, the dots and pill, the indicator background, the borders and the arrow plates |
 | SHINE-1..3 | Shine | The shine overlay: each look on a pad and on a dial, and a pad and a dial keeping their own |
 | BG-1..8 | Battlegrounds | Node winds on the dial; the battleground instance ids; the objective groups (Alterac Valley, Isle of Conquest's bases, a flag map) and their migration; the four node buttons; Silvershard Mines' and Temple of Kotmogu's groups |
@@ -1094,6 +1094,19 @@ the popup, a callout with an icon → clear glyph → the icon is the question m
 the button show no icon. A built-in set's General tab ("Dungeon") has the same Icon row and
 Choose icon…: a glyph chosen there shows on its wedge. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
+**ICON-2. The icon browser after the v1.75.0 re-vendor (2026-10-22, run item QC-RV, SM-QC-1).**
+`/reload` → no Lua error. Groups → a group of yours → Callouts → a row's edit glyph → Choose icon… →
+the icon browser lists all three sets (Open Iconic, Phosphor, Game-icons) and every glyph draws, in
+each set and in a search's results. `CLAUDE.md` declares `LibKa0s icons: all (icon browser).`, so the
+prune removed nothing; a blank cell means an icon went missing. Result:
+
+**ICON-3. Library-drawn art after the v1.75.0 re-vendor (2026-10-22, run item QC-RV, SM-QC-2).** The
+marks the library draws, and the addon's own, still draw: `/qc debug` → the console's close, copy and
+clear marks; an export from the Share page (SHARE-1) → the copy window's close; Groups → a group →
+When → the id list's info mark; a pad's padlock (lock the pads) and a dial's page arrows and pointer.
+A blank control is the failure: a pruned or undeclared icon resolves to a path and draws nothing.
+Result:
+
 ## Art
 
 The dial's own round art (crisp dial art, 2026-10-21): `media/textures/dial-disc.tga` and the
@@ -1283,6 +1296,9 @@ from the client, so this check needs a non-English client pass. Result: 2026-10-
 
 ## Pending sign-off
 
-None. The owner ran every check above on 2026-10-21 and reported all of them passed (the client
-build was not recorded). A check added or rewritten later is listed here, with its origin and why it
-is owed, until its pass is recorded.
+The owner ran every check above on 2026-10-21 and reported all of them passed (the client build was
+not recorded), except the ones below. A check added or rewritten later is listed here, with its origin
+and why it is owed, until its pass is recorded.
+
+- **ICON-2**, **ICON-3**: added 2026-10-22 by the LibKa0s v1.75.0 re-vendor (QC-RV); owed because the
+  headless gate cannot see whether a declared icon draws.

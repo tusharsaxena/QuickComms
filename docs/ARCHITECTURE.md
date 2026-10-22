@@ -47,7 +47,7 @@ Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBO
 LibSharedMedia, LibDataBroker, LibDBIcon, LibDeflate and LibSerialize (the share string, spec §15),
 and LibCustomGlow-1.0 (the Icons tab's glows, resolved at call time and optional; versions and
 licenses in `DEPENDENCIES.md`) are vendored under `libs/`, and so is the whole
-LibKa0s v1.74.0 payload, of which thirteen majors are wired, one setup file each (`DEPENDENCIES.md`
+LibKa0s v1.75.0 payload, of which thirteen majors are wired, one setup file each (`DEPENDENCIES.md`
 lists the toolchain):
 
 | Major | Setup file | Gives |

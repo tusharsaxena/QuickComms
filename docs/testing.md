@@ -20,7 +20,7 @@ addon kept as history and never loaded by this one.
 
 ## The harness
 
-`tests/run.lua` on the vendored LibKa0s kit (`tests/_kit/`, revision 39, never edited).
+`tests/run.lua` on the vendored LibKa0s kit (`tests/_kit/`, revision 41, never edited).
 `tests/loader.lua` builds a fresh, isolated addon per case from the TOC's own file list and the
 library files `libs/LibKa0s/LibKa0s.xml` names; `tests/wow_mock.lua` extends the kit's base mock with
 what this addon reads (combat state, the client's addon list, the chat sink and the launcher's two
@@ -82,7 +82,7 @@ the change that moves the count (testing-§5).
 | `lint` | `luacheck .` | **gates** | gates |
 | `tests` | `lua tests/run.lua` | **gates** | gates |
 | `perf` | `lua tests/perf.lua` (offline scenarios; see [`performance.md`](performance.md)) | recorded, never fails a run or blocks a commit | gates |
-| `complexity` | `bash tests/_kit/run-automated-tests.sh --suite complexity` (the sighted shadow) | recorded, never fails a run or blocks a commit | gates, with zero functions above CCN 15 and `blindFiles` 0 |
+| `complexity` | `bash tests/_kit/run-automated-tests.sh --suite complexity` (the sighted shadow) | recorded, never fails a run or blocks a commit | gates, with zero functions above CCN 15 and `blindFiles` 0; a lizard run that crashed or hit its bound is a complexity fail, never a pass (the crashed files are listed apart, `crashedFiles` 0 at release; automated-tests-§3) |
 
 The release gate is evaluated by `/dev-copilot:bump-version` from the run's `manifest.json`
 (automated-tests-§3): a bundle whose manifest shows all four suites at `pass`, no function above
