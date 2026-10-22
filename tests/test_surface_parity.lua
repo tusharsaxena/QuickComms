@@ -147,3 +147,35 @@ test("parity: the Media seam publishes the same NS members on both paths", funct
     -- Members from: grep -nE '^\s*function NS\.[A-Za-z_]+|^\s*NS\.[A-Za-z_]+\s*=' core/MediaSetup.lua
     assertSeamParity("core/MediaSetup.lua", "MediaFont", "Media seam (NS members)")
 end)
+
+test("parity: the Glow seam's stub carries the LibKa0s-Glow-1.0 surface", function()
+    -- red under: drop Stop from core/GlowSetup.lua's stub
+    T.assertSurfaceParity(degraded.GlowLib, "LibKa0s-Glow-1.0")
+end)
+
+test("glow: modules/Glow.lua names no LibCustomGlow-1.0 member; the driver is the one mapping", function()
+    -- red under: restore the START/STOP copy (anti-pattern #47; design-glow §8's review check)
+    local fh = assert(io.open(T.root .. "/modules/Glow.lua", "rb"))
+    local src = fh:read("*a"); fh:close()
+    -- Code lines only: the header comment may name the library it is drawn through.
+    local code = {}
+    for line in src:gmatch("[^\r\n]+") do
+        if not line:match("^%s*%-%-") then code[#code + 1] = line end
+    end
+    code = table.concat(code, "\n")
+    assertTrue(not code:find("Glow_Start", 1, true), "modules/Glow.lua calls a *Glow_Start member")
+    assertTrue(not code:find("Glow_Stop", 1, true), "modules/Glow.lua calls a *Glow_Stop member")
+    assertTrue(not code:find("LibCustomGlow", 1, true), "modules/Glow.lua resolves LibCustomGlow-1.0")
+end)
+
+test("glow: with LibKa0s absent the seam answers false and the button still records its style", function()
+    -- red under: a stub Start that errors (or that a library-absent paint no longer records)
+    local NS = T.newAddon{ skip = NO_LIBKA0S }
+    assertTrue(NS.GlowLib.Start({}, "pixel", {}, "k", 2) == false, "the stub's Start answers false")
+    NS.GlowLib.Stop({}, "pixel", "k")
+    local btn = { qcIconFrame = {} }
+    NS.Glow.Bind(btn, { type = "pixel", when = "always", sig = "s1" }, "c1")
+    assertTrue(btn.qcGlowStyle == "pixel" and btn.qcGlowSig == "s1", "the decision is recorded")
+    NS.Glow.Release(btn)
+    assertTrue(btn.qcGlowStyle == nil, "and released")
+end)

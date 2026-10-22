@@ -58,7 +58,7 @@ Total.
 - bus: every spec §17 message is declared with its exact name
 - bus: no two constants share a name
 
-### test_surface_parity.lua (15)
+### test_surface_parity.lua (18)
 
 - parity: the degraded load really is library-absent, and the live one is not
 - parity: the Core seam's namespace surface survives the library's absence
@@ -75,6 +75,9 @@ Total.
 - parity: the Perf stub carries every Perf member the addon reaches
 - parity: the Env seam publishes the same NS members on both paths
 - parity: the Media seam publishes the same NS members on both paths
+- parity: the Glow seam's stub carries the LibKa0s-Glow-1.0 surface
+- glow: modules/Glow.lua names no LibCustomGlow-1.0 member; the driver is the one mapping
+- glow: with LibKa0s absent the seam answers false and the button still records its style
 
 ### test_setup.lua (27)
 
@@ -1276,7 +1279,7 @@ Total.
 | test_harness.lua | 11 |
 | test_mock_secure.lua | 28 |
 | test_bus.lua | 2 |
-| test_surface_parity.lua | 15 |
+| test_surface_parity.lua | 18 |
 | test_setup.lua | 27 |
 | test_database.lua | 18 |
 | test_profile.lua | 9 |
@@ -1329,4 +1332,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1095** |
+| **Total** | **1098** |

@@ -29,7 +29,7 @@ libs\LibSharedMedia-3.0\lib.xml
 # Conventional: LibKa0s-Launcher-1.0 resolves both at Register time; LibDBIcon needs the two above it.
 libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
 libs\LibDBIcon-1.0\lib.xml
-# Conventional: the icon glows (modules\Glow.lua resolves it at call time). It resolves only LibStub at file load.
+# Conventional: the icon glows (LibKa0s-Glow-1.0 resolves it at call time). It resolves only LibStub at file load.
 libs\LibCustomGlow-1.0\LibCustomGlow-1.0.xml
 # ONE line: the .xml is itself the file list (library-stack-§7). After Ace3.
 libs\LibKa0s\LibKa0s.xml
@@ -64,6 +64,8 @@ core\EnvSetup.lua
 core\PoolSetup.lua
 # Conventional: NS.MakeDragHandle is read inside functions only (modules\Pad.lua).
 core\WidgetsSetup.lua
+# Conventional: NS.GlowLib (the LibKa0s-Glow-1.0 seam) is read inside functions only (modules\Glow.lua).
+core\GlowSetup.lua
 # LOAD-BEARING: publishes NS.MSG (the message catalog) and NS.Bus; every file that names a message
 # takes NS.MSG at load.
 core\Bus.lua

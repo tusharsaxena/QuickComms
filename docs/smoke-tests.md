@@ -28,7 +28,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
 | LOOK-1..6 | Pad header, Section header, Window | The Comms Pad's three window tabs: the section titles' font, the pad's border and background, the header's look, size and alignment, the tab strip and headings, the section header's band and height |
 | BUTTON-1..2 | Buttons tab | The buttons' size, color, border and font; the button glow |
-| ICONS-1..3 | Icons tab | The buttons' and wedges' icon look, border and glow triggers |
+| ICONS-1..4 | Icons tab | The buttons' and wedges' icon look, border and glow triggers; the glows through LibKa0s-Glow-1.0 |
 | ICON-1..3 | Icons | Choosing an icon, for a callout and for a group; the LibKa0s v1.75.0 re-vendor: the icon browser's three sets and the library-drawn marks |
 | ART-1 | Art | The dial's round art: the hub's styles, the dots and pill, the indicator background, the borders and the arrow plates |
 | SHINE-1..3 | Shine | The shine overlay: each look on a pad and on a dial, and a pad and a dial keeping their own |
@@ -1081,6 +1081,14 @@ then stops; on a dial, send from a wedge and reopen the dial within a few second
 for about a second and a half from the open, then stops, and a later reopen shows no glow. In combat, `/qc set pad.icon.size 30` → no error, "updates after combat", the bigger
 icons land at combat end. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
+**ICONS-4. Glows through LibKa0s-Glow-1.0 (2026-10-22).** The glows are now drawn by the library's
+driver (LibKa0s#56); nothing should look different. Pad → Icons, Glow on: each style (Pixel border,
+Auto cast sparkles, Button, Proc) × Always / On hover / After sending, on a pad and on a dial → each
+looks as before; Proc's opening burst plays once, not on every rebuild. Pad → Buttons, button glow
+on: each style circles the whole pad button and coexists with the icon glow on the same button. In
+combat, hover a pad button and a dial wedge with On hover → the glow starts and stops, no Lua error,
+no taint message. Result: owed.
+
 ## Icons
 
 **ICON-1. Choosing an icon.** Groups → a group of yours → Callouts → a row's edit glyph → Choose
@@ -1302,3 +1310,5 @@ and why it is owed, until its pass is recorded.
 
 - **ICON-2**, **ICON-3**: added 2026-10-22 by the LibKa0s v1.75.0 re-vendor (QC-RV); owed because the
   headless gate cannot see whether a declared icon draws.
+- **ICONS-4**: added 2026-10-22 by the LibKa0s-Glow-1.0 adoption (QC-01, origin LibKa0s#56); owed because
+  the headless gate drives a fake LibCustomGlow-1.0 and cannot see the effect drawn.

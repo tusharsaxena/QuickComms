@@ -5,7 +5,7 @@ LibDataBroker, LibDBIcon, LibDeflate, LibSerialize, LibCustomGlow-1.0, LibKa0s v
 
 ## Load order (the TOC)
 
-The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after LibKa0s; `modules/Share.lua` takes both at load. `libs\LibCustomGlow-1.0\LibCustomGlow-1.0.xml` loads before LibKa0s; `modules/Glow.lua` resolves it at call time.
+The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after LibKa0s; `modules/Share.lua` takes both at load. `libs\LibCustomGlow-1.0\LibCustomGlow-1.0.xml` loads before LibKa0s; LibKa0s-Glow-1.0 (`core/GlowSetup.lua`, `NS.GlowLib`) resolves it at call time, for `modules/Glow.lua`.
 
 | # | File | Kind | Responsibility |
 |---|---|---|---|
@@ -20,6 +20,7 @@ The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after Li
 | 7 | `core/EnvSetup.lua` | setup | LibKa0s-Env: `NS.Meta`, `NS.Version` |
 | 8 | `core/PoolSetup.lua` | setup | LibKa0s-Pool: `NS.Pool` (one array pool per pad for its buttons; per dial, its ring containers and each container's wedges) |
 | 8a | `core/WidgetsSetup.lua` | setup | LibKa0s-Widgets: the drag-strip seam, `NS.MakeDragHandle`, and the export window, `NS.MakeCopyWindow` |
+| 8b | `core/GlowSetup.lua` | setup | LibKa0s-Glow: `NS.GlowLib`, the glow driver seam |
 | 9 | `core/Bus.lua` | setup | LibKa0s-Bus: `NS.MSG` (the strict catalog) and `NS.Bus` (tracked receivers) |
 | 10 | `core/LifecycleSetup.lua` | setup | LibKa0s-Lifecycle: the stand-down latch, `NS.IsStoodDown` |
 | 11 | `core/PerfSetup.lua` | setup | LibKa0s-Perf: `NS.Perf`, the declared buckets |
@@ -48,7 +49,7 @@ The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after Li
 | 16l | `modules/Preview.lua` | session state | test mode and "Preview as…": refused in combat, ended at the combat edge; `TEST_MODE_CHANGED` |
 | 16m | `modules/Pad_Layout.lua` | pure | `NS.PadLayout`: pad geometry (the header row's height, `HeaderHeight`; the Buttons tab's size, `CellSize`; up growth puts the header at the bottom; the pad is pinned by its growth edge; a grid pad sets a parent's small child sections side by side), visibility, fade |
 | 16m1 | `modules/IconStyle.lua` | render | `NS.IconStyle`: the Icons tab's look on an icon (`Config`, `ApplyIcon`, `PaintBorder`, `PaintRing`, `IconFrame`); `GlowConfig`, which the Buttons tab's glow reads too |
-| 16m2 | `modules/Glow.lua` | render | `NS.Glow`: the Icons tab's glow (LibCustomGlow-1.0 at call time): `Bind`, `SetHover`, `Sent`, `Release`, `ReleaseFree`; the Buttons tab's glow around the whole button (`Button`, its own key); the `glowStart` perf bucket |
+| 16m2 | `modules/Glow.lua` | render | `NS.Glow`: the Icons tab's glow (LibCustomGlow-1.0 through LibKa0s-Glow-1.0, `NS.GlowLib`): `Bind`, `SetHover`, `Sent`, `Release`, `ReleaseFree`; the Buttons tab's glow around the whole button (`Button`, its own key); the `glowStart` perf bucket |
 | 16m3 | `modules/Shine.lua` | render | `NS.Shine` (shine overlay, 2026-10-21): the looks catalog (`LOOKS`: None and seven looks), the art each names (`Texture`, `Edge`; `media/textures/shine-*.tga`, from `tools/gen-shine-textures.py`), `Resolve` (a look table's flat `shine*` leaves into look, alpha and colors) and `Apply` (a pad button's shine over the whole button in three pieces, the art's halves as caps either side of its stretched middle, ARTWORK 5 under the label, and Fluid glass's two blooms); no pad-specific code. LOAD-BEARING: `settings/SchemaMembers.lua` reads `LOOKS` at file scope |
 | 16n | `modules/Surfaces.lua` | edge | the pads' and dials' plans (a group holding groups draws its own callouts, then a section, or a node ring, per child whose When matches; a dial's plan carries its ring radius), test mode's placeholder plans (four groups of 4, 8, 12 and 16, `TEST_COUNTS`, wearing shipped callouts' names and icons, never saved) and the one rebuild request, queued in combat with the stale hint |
 | 16o | `modules/Pad_Render.lua` | render | `NS.PadRender`: insecure button and header visuals; the Window tab's skin, the Section header tab's look (`SectionLook`: the titles' font, height and band, `ApplySectionBand`), the header's look (`HeaderLook`, `ApplyHeaderLook`) and the width it needs (`HeaderMinWidth`, the pad's floor) and the Buttons tab's (`ButtonLook`, `ApplyButtonLook`; its Shine heading through `NS.Shine.Resolve` and `NS.Shine.Apply`) |
@@ -117,6 +118,7 @@ files they add are listed in design spec §4.2.
 | `tests/test_pad_render.lua` | `Pad_Render`: what a button and the header show (no channel letter: the label runs to the button's edge, or the padlock's while locked; the tooltip names the channel), and the drag-strip seam |
 | `tests/test_icon_style.lua` | `IconStyle`: the defaults keep today's look; zoom, desaturate, alpha, the tint times a glyph's color; a pad's icon size feeds the button's geometry; the button's border and the wedge's round ring, never wider than the wedge; `fillShape` backfills `icon` |
 | `tests/test_glow.lua` | `Glow`: off by default; each style's call and knobs (a fake LibCustomGlow-1.0); an unchanged rebuild calls nothing; On hover and After sending; unused and released buttons stop; no protected call in combat and the Icons write held to combat end; a wedge's glow; a dial's send glow from the next open within `DROP_SECONDS`; the stand-down puts out a send glow whose release is held |
+| `tests/test_surface_parity.lua` | every degradation stub against its live surface (testing-§8), the Glow seam's among them; and the glow adoption's two checks: `modules/Glow.lua` names no LibCustomGlow-1.0 member (the driver is the one mapping), and with LibKa0s absent the seam answers false while a button still records its style |
 | `tests/test_shine.lua` | `Shine`: the looks catalog, the art each look names (every path on disk under `media/textures/`), `Resolve` (an unknown look is None, Strength as alpha, the color fallbacks) and `Apply` (three pieces over the whole button: the layer, the caps' corners and widths, the texcoords, BLEND, the tint and alpha; a square button has no middle; Fluid glass's blooms made only for it; None hides it all) |
 | `tests/test_pad.lua` | `Pad`: armed or disarmed buttons, the visibility driver, the drag strip shown while unlocked (it will not drag while locked or in combat) |
 | `tests/test_members.lua` | the member rows: addressed by instance, selection or the first listed member (a callout by its id alone); a seeded group read and written as any group, a shipped id refused; `Library.Touch` announces each write; the CLI text forms |

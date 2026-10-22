@@ -28,7 +28,7 @@ marked as such rather than listed as a requirement.
   its tag, in one commit with this line.
 - **LibCustomGlow-1.0 is vendored too**: `libs/LibCustomGlow-1.0/` (MIT, minor 24, copied whole from
   the DropWatcher sibling's vendored copy, which came from KickCD's) draws the Icons tab's glows on the
-  Comms Pad's buttons and the Comms Dial's wedges. `modules/Glow.lua` resolves it at call time; without
+  Comms Pad's buttons and the Comms Dial's wedges. LibKa0s-Glow-1.0 (`core/GlowSetup.lua`) resolves it at call time; without
   it no glow is drawn and nothing else changes. Its TOC line sits before `LibKa0s.xml`, and it is
   named in `## OptionalDeps:`.
 
