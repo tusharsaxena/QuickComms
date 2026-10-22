@@ -442,3 +442,72 @@ for _, latch in ipairs(LATCHES) do
         holdsCycle(NS, m, false)
     end)
 end
+
+-- By hold (slash-commands-§7's by-hold refusal, launcher-§6's key press; LibKa0s#58): the dispatcher
+-- gates on the stored switch, so under the perf hold alone a feature verb reaches its handler, and
+-- the handler must not advise `/qc enable` (enabled is already on). It answers the capture line.
+local CAPTURE = "Not available during a performance capture."
+
+local function perfHeld()
+    local NS, m = baseline()
+    NS.Lifecycle:Hold(NS.HOLD_PERF)
+    assertTrue(NS.IsStoodDown(), "the perf hold alone stands the addon down")
+    assertTrue(NS.Setting("enabled") ~= false, "and leaves the stored switch on")
+    m.prints = {}
+    return NS, m
+end
+
+local function oneCaptureLine(m, what)
+    assertEqual(#m.prints, 1, what .. " prints one line")
+    assertTrue(m.prints[1]:find(CAPTURE, 1, true) ~= nil, what .. ": " .. tostring(m.prints[1]))
+    assertTrue(m.prints[1]:find("is disabled", 1, true) == nil, what .. " never advises /qc enable")
+end
+
+-- red under: restore settings/SlashVerbs.lua's `if NS.IsStoodDown() then ... DisabledLine()` refusal
+test("disabled [by hold]: under the perf hold alone, /qc toggle refuses with the capture line and leaves padsHidden alone", function()
+    local NS, m = perfHeld()
+    local before = NS.db.char.padsHidden
+    NS.addon:OnSlashCommand("toggle")
+    oneCaptureLine(m, "/qc toggle")
+    assertEqual(NS.db.char.padsHidden, before, "nothing toggled")
+end)
+
+test("disabled [by hold]: under the perf hold alone, the Toggle Comms Pads key press refuses as /qc toggle does", function()
+    local NS, m = perfHeld()
+    local before = NS.db.char.padsHidden
+    m.SetBinding("P", "CLICK QuickCommsTogglePads:LeftButton")
+    m.__pressKey("P")
+    oneCaptureLine(m, "the Toggle Comms Pads key")
+    assertEqual(NS.db.char.padsHidden, before, "nothing toggled")
+    NS.Lifecycle:Release(NS.HOLD_PERF)
+    m.prints = {}
+    m.__pressKey("P")
+    assertTrue(NS.db.char.padsHidden ~= before, "the capture finished, the key toggles the pads again")
+end)
+
+-- red under: restore modules/Preview.lua's two `NS.IsStoodDown()` -> DisabledLine() refusals
+test("disabled [by hold]: under the perf hold alone, test mode and Preview as refuse with the capture line", function()
+    local NS, m = perfHeld()
+    assertFalse(NS.Preview.SetTestMode(true))
+    oneCaptureLine(m, "test mode")
+    assertFalse(NS.Preview.IsTestMode())
+    m.prints = {}
+    assertFalse(NS.Preview.SetPreviewAs("arena"))
+    oneCaptureLine(m, "Preview as")
+    assertTrue(NS.Preview.PreviewAs() == nil, "no preview started")
+end)
+
+-- a guard, green before and after: the fix must not let the capture line shadow the disabled hold
+test("disabled [by hold]: with both holds the disabled line wins", function()
+    local NS, m = perfHeld()
+    disable(NS)
+    m.prints = {}
+    NS.SlashVerbs.TogglePads()
+    local line = NS.SlashCommands:DisabledLine()
+    assertEqual(#m.prints, 1)
+    assertTrue(m.prints[1]:find(line, 1, true) ~= nil, m.prints[1])
+    m.prints = {}
+    assertFalse(NS.Preview.SetTestMode(true))
+    assertEqual(#m.prints, 1)
+    assertTrue(m.prints[1]:find(line, 1, true) ~= nil, m.prints[1])
+end)

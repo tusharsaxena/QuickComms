@@ -16,7 +16,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | SLASH-1..2 | Slash | `/qc` and `/quickcomms`, help, a slash collision |
 | PANEL-1..3 | Settings panel | Landing page, General → Master controls, the Defaults button |
 | PROFILE-1..2 | Profiles | The Profiles page and the `profile` verb |
-| STATE-1..4 | State | Enable/disable, the launcher menu, `/qc toggle`, the pads' hidden state across /reload |
+| STATE-1..5 | State | Enable/disable, the launcher menu, `/qc toggle`, the pads' hidden state across /reload |
 | COMBAT-1 | Combat | The settings panel in combat |
 | DIAG-1..2 | Diagnostics | The debug console, the report, perf |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
@@ -106,6 +106,13 @@ until combat ends, then the pads show, with no Lua error. Result: 2026-10-21, pa
 menu's Show window is unticked. Log a second character → its pads show (its own choice). Back on the
 first, switch profile (Profiles page) → still hidden. `/qc toggle` → shown; `/reload` → still shown.
 Result: 2026-10-21, pass (the owner's run; client build not recorded).
+
+**STATE-5. A perf capture refuses by its own line (2026-10-22).** Start a perf capture from `/qc
+perf`'s step panel, then press the Toggle Comms Pads key, type `/qc toggle` and `/qc test` → each
+prints `Not available during a performance capture.` once and nothing toggles. Finish the capture →
+the key toggles the pads again. Then `/qc disable` and press the Toggle Comms Pads key → the disabled
+line, `Ka0s Quick Comms is disabled — enable it with /qc enable` (unchanged, as KEY-3). `/qc enable`
+to finish. **Owed**: the headless gate holds the latch directly and cannot drive a real capture.
 
 ## Combat
 
@@ -1312,3 +1319,5 @@ and why it is owed, until its pass is recorded.
   headless gate cannot see whether a declared icon draws.
 - **ICONS-4**: added 2026-10-22 by the LibKa0s-Glow-1.0 adoption (QC-01, origin LibKa0s#56); owed because
   the headless gate drives a fake LibCustomGlow-1.0 and cannot see the effect drawn.
+- **STATE-5**: added 2026-10-22 by the by-hold refusal (QC-02, origin OWNER_SCOPE F, LibKa0s#58); owed
+  because a real perf capture runs only in the client.

@@ -451,6 +451,9 @@ L["%s may not have been sent. %s"] = "%s may not have been sent. %s"
 L["Test mode is not available in combat."] = "Test mode is not available in combat."
 L["Test mode ended: you entered combat."] = "Test mode ended: you entered combat."
 
+-- The stand-down's by-hold refusal under the perf hold alone (core/LifecycleSetup.lua)
+L["Not available during a performance capture."] = "Not available during a performance capture."
+
 -- Surfaces (modules/Surfaces.lua)
 L["Tank"] = "Tank"
 L["Healer"] = "Healer"

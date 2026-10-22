@@ -10,7 +10,9 @@ page covers what is this addon's.
 capture ring, the latch from `core/LifecycleSetup.lua` is handed over so Suspend and Resume take and
 release its `perf` hold, and the `perf` verb is the addon's (`settings/Slash.lua`), printing the
 lines the library returns. A suspended addon is inert through the same stand-down the disabled
-state uses.
+state uses. During a capture, `/qc toggle`, `/qc test`, `/qc preview` and the Toggle Comms Pads key
+answer `Not available during a performance capture.` rather than the disabled line
+(`NS.StoodDownRefusal`).
 
 The harness is wired from the scaffold rather than exempted: the design sends from secure buttons
 during combat and runs an `OnUpdate` while the dial is open, so performance-§12's no-combat-path

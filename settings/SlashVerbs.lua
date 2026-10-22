@@ -66,9 +66,11 @@ end
 --- every Comms Pad, remembered per character (`db.char.padsHidden`, so a /reload or the next login
 --- restores it). The pads' secure visibility driver carries the flag, so the change goes through
 --- Surfaces.Request: now, or at the end of combat with the stale hint meanwhile. Test mode still shows
---- them (an explicit preview); dials are not pads and are not affected.
+--- them (an explicit preview); dials are not pads and are not affected. Stood down, it refuses by
+--- hold (NS.StoodDownRefusal): the disabled line under `disabled`, the capture line under `perf` alone.
 function V.TogglePads()
-    if NS.IsStoodDown() then return NS.Print(NS.SlashCommands:DisabledLine()) end
+    local refusal = NS.StoodDownRefusal()
+    if refusal then return NS.Print(refusal) end
     local hidden = V.PadsShown()
     NS.db.char.padsHidden = hidden
     NS.Surfaces.Request("padsHidden")

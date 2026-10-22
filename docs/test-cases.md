@@ -187,7 +187,7 @@ Total.
 - slash: [toggle] in combat the flag flips and the driver waits for combat to end
 - slash: [toggle] the hidden state is this character's: a /reload or the next login restores it
 
-### test_disabled.lua (21)
+### test_disabled.lua (25)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
 - disabled 2: through /qc disable, nothing is registered, heard or scheduled
@@ -210,6 +210,10 @@ Total.
 - disabled [§7 step 10]: the library latch: disabled, then perf; enabled first leaves it down
 - disabled [§7 step 10]: the stand-in latch: perf, then disabled; perf released first leaves it down
 - disabled [§7 step 10]: the stand-in latch: disabled, then perf; enabled first leaves it down
+- disabled [by hold]: under the perf hold alone, /qc toggle refuses with the capture line and leaves padsHidden alone
+- disabled [by hold]: under the perf hold alone, the Toggle Comms Pads key press refuses as /qc toggle does
+- disabled [by hold]: under the perf hold alone, test mode and Preview as refuse with the capture line
+- disabled [by hold]: with both holds the disabled line wins
 
 ### test_diagnostics.lua (13)
 
@@ -1285,7 +1289,7 @@ Total.
 | test_profile.lua | 9 |
 | test_schema.lua | 19 |
 | test_slash.lua | 20 |
-| test_disabled.lua | 21 |
+| test_disabled.lua | 25 |
 | test_diagnostics.lua | 13 |
 | test_compat.lua | 12 |
 | test_restrictions.lua | 16 |
@@ -1332,4 +1336,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1098** |
+| **Total** | **1102** |
