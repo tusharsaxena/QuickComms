@@ -61,7 +61,7 @@ local COMMANDS = {
         function(rest) NS.SlashVerbs.Check(rest) end},
     {"test",     L["Turn test mode on or off (placeholder buttons and wedges; it opens dial 1; combat ends it)"],
         function() NS.Preview.ToggleTestMode() end},
-    {"preview",  L["Preview the pads and dials as another situation — `/qc preview <name>` or `off`; `/qc preview` lists them"],
+    {"preview",  L["Preview the pads and dials as another situation in a small window — `/qc preview` here, `/qc preview <name>`, `off`, or `list`"],
         function(rest) NS.SlashVerbs.Preview(rest) end},
     {"why",      L["Say why each pad and dial shows the groups it shows"],
         function() NS.SlashVerbs.Why() end},

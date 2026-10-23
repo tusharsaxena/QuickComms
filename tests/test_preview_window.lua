@@ -149,6 +149,49 @@ test("preview window: test mode, the stand-down and `/qc preview off` hide it", 
     assertFalse(NS.PreviewWindow.IsShown(), "/qc preview off")
 end)
 
+test("preview window: bare `/qc preview` opens it on Current; again keeps the situation", function()
+    local NS, m = live()
+    m.prints = {}
+    NS.addon:OnSlashCommand("preview")
+    -- red under: a bare `/qc preview` that prints the menu and starts nothing
+    assertEqual(NS.Preview.PreviewAs(), "current")
+    assertTrue(NS.PreviewWindow.IsShown())
+    assertEqual(win(NS).dropdown._value, "current")
+    assertTrue(m.prints[#m.prints]:find("Previewing: Current", 1, true) ~= nil, m.prints[#m.prints])
+    NS.addon:OnSlashCommand("preview arena")
+    m.prints = {}
+    NS.addon:OnSlashCommand("preview")
+    -- red under: a bare `/qc preview` that always restarts Current
+    assertEqual(NS.Preview.PreviewAs(), "arena")
+    assertTrue(NS.PreviewWindow.IsShown())
+    assertEqual(#m.prints, 1)
+    assertTrue(m.prints[1]:find("Previewing: Arena", 1, true) ~= nil, m.prints[1])
+end)
+
+test("preview window: bare `/qc preview` in combat refuses with one line and shows nothing", function()
+    local NS, m = live(MPLUS)
+    combat(m, true)
+    m.prints = {}
+    NS.addon:OnSlashCommand("preview")
+    assertTrue(NS.Preview.PreviewAs() == nil)
+    assertFalse(NS.PreviewWindow.IsShown())
+    -- red under: a "Previewing:" line printed after the refusal
+    assertEqual(#m.prints, 1)
+    assertTrue(m.prints[1]:find("Preview is not available in combat.", 1, true) ~= nil, m.prints[1])
+    assertEqual(#m.blocked, 0)
+end)
+
+test("preview window: `/qc preview list` changes nothing and shows no window", function()
+    local NS, m = live()
+    m.prints = {}
+    NS.addon:OnSlashCommand("preview list")
+    -- red under: `list` read as a situation name
+    assertTrue(NS.Preview.PreviewAs() == nil)
+    assertFalse(NS.PreviewWindow.IsShown())
+    assertTrue(m.prints[1]:find("Preview as (now: Off):", 1, true) ~= nil, m.prints[1])
+    assertTrue(table.concat(m.prints, "\n"):find("raid:heroic", 1, true) ~= nil)
+end)
+
 test("preview window: a refused start never shows it", function()
     local NS, m = live()
     combat(m, true)

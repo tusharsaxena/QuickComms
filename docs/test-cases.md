@@ -919,6 +919,25 @@ Total.
 - edit preview: the Groups page drawn in combat does not start it
 - edit preview: it comes back when combat ends with the Groups page still on screen
 
+### test_preview_window.lua (16)
+
+- preview window: hidden until a preview starts; SetPreviewAs shows it with the dropdown on that situation
+- preview window: the settings row starts it too and the dropdown follows the slash
+- preview window: the dropdown lists every preset, Current first, and no Off
+- preview window: picking in the dropdown switches the preview
+- preview window: End preview, the close mark and Escape each end the preview and hide it
+- preview window: a hidden parent does not end the preview
+- preview window: combat ends it with the one line and hides the window
+- preview window: test mode, the stand-down and `/qc preview off` hide it
+- preview window: bare `/qc preview` opens it on Current; again keeps the situation
+- preview window: bare `/qc preview` in combat refuses with one line and shows nothing
+- preview window: `/qc preview list` changes nothing and shows no window
+- preview window: a refused start never shows it
+- preview window: closing the settings window keeps the preview and the window
+- preview window: Escape list, strata, movable, and a position kept in the profile
+- preview window: the dropdown's menu closes with the window
+- preview window: degraded install previews without a window
+
 ### test_master.lua (5)
 
 - master: the frame defaults are spec §5.1's: always shown, scale and alpha 1; a new profile starts unlocked
@@ -1320,6 +1339,7 @@ Total.
 | test_dial_secure.lua | 16 |
 | test_preview.lua | 26 |
 | test_edit_preview.lua | 14 |
+| test_preview_window.lua | 16 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 21 |
 | test_dial_layout.lua | 33 |
@@ -1338,4 +1358,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1104** |
+| **Total** | **1120** |

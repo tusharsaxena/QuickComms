@@ -300,6 +300,12 @@ test("preview: [phase 3] the Preview as row and `/qc preview` drive the same swi
     assertTrue(m.prints[#m.prints]:find("Preview off.", 1, true) ~= nil, m.prints[#m.prints])
     m.prints = {}
     NS.addon:OnSlashCommand("preview")
+    -- red under: a bare `/qc preview` that prints the menu (QC-03: it starts Current, the window up)
+    assertEqual(NS.Preview.PreviewAs(), "current")
+    assertTrue(m.prints[#m.prints]:find("Previewing: Current", 1, true) ~= nil, m.prints[#m.prints])
+    assertTrue(NS.PreviewWindow.IsShown())
+    m.prints = {}
+    NS.addon:OnSlashCommand("preview list")
     local text = table.concat(m.prints, "\n")
     assertTrue(text:find("raid:heroic", 1, true) ~= nil, text)
     NS.addon:OnSlashCommand("preview bg:ab")
@@ -307,6 +313,7 @@ test("preview: [phase 3] the Preview as row and `/qc preview` drive the same swi
     m.prints = {}
     NS.addon:OnSlashCommand("preview nope")
     assertTrue(m.prints[1]:find("No situation named nope", 1, true) ~= nil, m.prints[1])
+    assertTrue(m.prints[1]:find("Type /qc preview list for the list.", 1, true) ~= nil, m.prints[1])
 end)
 
 test("preview: [final 13] `/qc preview` reads the situation's name without regard to case", function()
