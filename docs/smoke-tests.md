@@ -299,7 +299,7 @@ nothing to chat and prints its line locally (EDIT-29); its tooltip says so. The 
 Preview as row. Close the settings → the preview and its window stay; End preview in the window
 ends it. `/qc preview raid:heroic` →
 the raid set; pull something → the preview ends with one line and the live buttons return.
-Result: pending (amended 2026-10-23, QC-04: re-run)
+Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 **EDIT-4. Why is this showing?.** In a key, hover the pad's header → the tooltip lists "Dungeon:
 Content" (and any other group, with its rows); with a `/raid` callout on the pad
@@ -586,7 +586,7 @@ live pads). On Groups, untick Preview while
 editing → the live pads at once; tick it → the group again. Enter combat with the page open → the
 pads go live with one "Preview ended" line; leave combat with the page still open → the edited
 group's preview comes back.
-Result: pending (amended 2026-10-23, QC-04: re-run)
+Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 **EDIT-28. Right-click a group title.** Out of combat, in a battleground (or with Preview as →
 Arathi Basin): hover a section title on the pad → the tooltip names the group and says Right-click
@@ -633,45 +633,45 @@ while a Preview as… preview is on, whichever way it started.
 **PREVIEW-1. The settings row opens it.** Out of combat: Settings → General → Master controls →
 Preview as → Solo → the window appears above the settings, its dropdown on Solo, with an End
 preview button; the pads show PREVIEW.
-Result: pending
+Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 **PREVIEW-2. The dropdown and the slash move together.** With PREVIEW-1's preview on, pick Arena in
 the window's dropdown → the pads switch to the arena set and the settings row reads Arena.
 `/qc preview raid:heroic` → the dropdown moves to the Raid · Heroic entry.
-Result: pending
+Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 **PREVIEW-3. It outlives the settings window.** Close the settings window with a preview on → the
 preview and the window stay. Click End preview in the window → the window goes, the pads are live,
 and the settings row reads Off when the settings are reopened.
-Result: pending
+Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 **PREVIEW-4. The close mark and Escape.** With a preview on, click the window's close mark → the
 preview ends. Start one again with the settings open and press Escape → the preview ends and the
 window hides, the settings stay; a second Escape closes the settings.
-Result: pending
+Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 **PREVIEW-5. Combat and Alt+Z.** With a preview on, pull a mob → the window goes with one
 `Preview ended: you entered combat.` line and the live buttons come back. Out of combat, start a
 preview and press Alt+Z → the window hides with the UI; Alt+Z again → it is back and the preview
 never ended.
-Result: pending
+Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 **PREVIEW-6. Test mode, disable and the open menu.** With a preview on, `/qc test` → the window
 goes (test mode has no window). With a preview on, `/qc disable` → the window goes; `/qc enable`.
 With a preview on, open the window's dropdown menu and press Escape → the menu and the window are
 both gone, nothing left floating.
-Result: pending
+Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 **PREVIEW-7. The saved position.** Drag the window somewhere else, end the preview and start it
 again → it opens in the same place. `/reload` and start a preview again → still the dragged place.
-Result: pending
+Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 **PREVIEW-8. Bare `/qc preview` and `list`.** In the open world with no preview on: `/qc preview` →
 chat `Previewing: Current`, the window opens on Current and the pads show PREVIEW. `/qc preview list`
 → the menu prints and nothing changes. `/qc preview nope` → the line points at `/qc preview list`.
 `/qc help` → the preview line reads "Preview the pads and dials as another situation in a small
 window — …".
-Result: pending
+Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 **PREVIEW-9. Every preview looks like live (2026-10-23, run item QC-05, SM-QC-8).** In the open
 world, solo, note how the pad's buttons and the dial's wedge icons look in a live situation (or
@@ -680,7 +680,7 @@ callouts, then Preview as → Dungeon: the dial and pad icons look exactly as in
 fading and no dark circle over the dial's icons; only the PREVIEW labels (the hub's, the pad
 strip's) are added. Click a button and a wedge → nothing is sent. Turn test mode on → its
 placeholders look the same as before.
-Result: pending
+Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 **PREVIEW-10. A click prints what it would send (2026-10-23, run item QC-07, SM-QC-10).** In the
 open world, with no target: `/qc preview`, pick In Group in the window. Click the Hello pad button →
@@ -770,7 +770,7 @@ sends; Escape ends the preview through the preview window (the dial closes, the 
 stays open), and a second Escape closes the settings window.
 Turn test mode on, then pull a target dummy → test mode ends; the dial closes at once or, if combat
 won the race, at combat end, and in between 1–8 and Escape still do what they always do.
-Result: pending (amended 2026-10-23, QC-04: re-run)
+Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 **DIAL-10. The hub and the drop flash.** Hover the hub → "Why is this showing?" lists the groups and their matched rows;
 with a Say callout on the dial during an encounter, LOCKDOWN shows above the hub; Behavior → Explain
@@ -1212,7 +1212,7 @@ it when `/qc preview arena` is typed with the dialog open. With the edit preview
 the Groups page, a callout's or the group's remove glyph: the delete confirm draws over the dial's
 hub; with the dialog open, `/qc resetall`: the reset confirm draws over the dialog and its dim, and
 its Yes / No answer clicks.
-Result: pending
+Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 ## Art
 
@@ -1407,11 +1407,5 @@ The owner ran every check above on 2026-10-21 and reported all of them passed (t
 not recorded). A check added or rewritten later is listed here, with its origin
 and why it is owed, until its pass is recorded.
 
-- PREVIEW-1..8: new with the preview window (2026-10-23 sim/preview/strips run, QC-02 and QC-03).
-- PREVIEW-9: new with QC-05 (2026-10-23), the fix for the faded, veiled preview; owed a first run.
 - PREVIEW-10: new with QC-07 (2026-10-23), a preview or test click prints what it would send; owed a
   first run.
-- ICON-4: new with QC-06 (2026-10-23), the modals moved over the preview dial by strata; amended
-  the same day (QC-06 review) with the preview window's re-show and the confirms; owed a first run.
-- EDIT-3, EDIT-27, DIAL-9: amended 2026-10-23 (QC-04), since closing the settings window no longer
-  ends Preview as and Escape now ends it through the preview window; owed a re-run.
