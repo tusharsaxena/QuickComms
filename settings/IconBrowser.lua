@@ -32,8 +32,9 @@ local addonName, NS = ...
 -- THE GRID IS VIRTUALIZED: COLS x ROWS cell buttons are built once and re-dressed from the tab's
 -- list at the scroll offset, so the Game icons tab's thousands of entries cost a few dozen frames.
 --
--- STACKING. The catcher and the window are in the FULLSCREEN strata, above the popup and its catcher
--- (DIALOG), so the browser is modal to whatever opened it. The swatch is AceGUI's ColorPicker, which
+-- STACKING (QC-06, settings/ModalWindow.lua). The catcher and the window are in the modals'
+-- FULLSCREEN strata, over the preview dial, with the popup; the browser's band of levels
+-- (MW.LEVEL_OVER) is far above the popup's, so it is modal to whatever opened it. The swatch is AceGUI's ColorPicker, which
 -- raises Blizzard's ColorPickerFrame to FULLSCREEN_DIALOG, above the browser; the filter's pull-out
 -- is there too. The picker is not modal, so one the swatch opened is hidden when the browser closes
 -- (Ed.ReleasePicker). ESCAPE hides every shown special frame, so while the browser is open the opener's
@@ -58,7 +59,6 @@ B.COLS, B.ROWS = 12, 7
 local COLS, ROWS = B.COLS, B.ROWS
 local CELL, ICON = 40, 32           -- a cell's pitch, and the icon in it
 local WIDTH, HEIGHT = 560, 594
-local STRATA = "FULLSCREEN"
 -- As settings/CalloutPopup.lua restates them: the pages' left inset and the gap under the body.
 local CONTENT_X, BODY_BOTTOM = 12, 12
 -- The toolbar's band over the grid, and the gap between them (the swatch's row would touch the
@@ -554,7 +554,8 @@ end
 local function build()
     local h = H()
     local w = Settings.ModalWindow.Build({ name = addonName .. "IconBrowser", pageName = addonName .. "IconBrowserPage",
-        title = L["Choose an icon"], width = WIDTH, height = HEIGHT, strata = STRATA,
+        title = L["Choose an icon"], width = WIDTH, height = HEIGHT,
+        strata = Settings.ModalWindow.STRATA, level = Settings.ModalWindow.LEVEL_OVER,
         onClose = function() B.Cancel() end })
     ctx = w.ctx
     B.catcher, B.frame, B.chrome, B.ctx = w.catcher, w.frame, w.chrome, ctx

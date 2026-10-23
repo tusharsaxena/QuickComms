@@ -54,7 +54,7 @@ end
 --- Bake one callout.
 --- @param callout table { text, channel, ... }
 --- @param s table snapshot
---- @param opts table|nil { soloFallback, ctx }
+--- @param opts table|nil { soloFallback, ctx, mock } (`mock`: Tokens.Expand's, a preview's echo only)
 --- @return string|nil line, string|nil reason, table info
 function B.Bake(callout, s, opts)
     opts = type(opts) == "table" and opts or {}
@@ -65,7 +65,7 @@ function B.Bake(callout, s, opts)
     local concrete, reason, selfPrint = NS.Channels.Resolve(callout.channel, s, opts.soloFallback)
     info.selfPrint = selfPrint
     if not concrete then return nil, reason, info end
-    local text, unknown, missing, live = NS.Tokens.Expand(clean, opts.ctx)
+    local text, unknown, missing, live = NS.Tokens.Expand(clean, opts.ctx, opts.mock)
     text = squeeze(text)
     info.concrete, info.unknown, info.missing, info.text = concrete, unknown, missing, text
     if text == "" then return nil, "empty", info end

@@ -499,8 +499,9 @@ local DEFAULT_LOOK
 
 --- Show one ring item on a wedge: its icon, its label outside the disc (its `geo.anchor` point at
 --- `geo.lx, geo.ly`, so it reads away from the dial) in the Slice labels tab's font, or none while labels
---- are off, a padlock when its callout is locked, and the dim veil when it sends nothing here. `icfg`
---- is the dial's Icons tab (IconStyle.Config; none is the defaults), `look` its R.Look.
+--- are off, a padlock when its callout is locked, and the dim veil when it sends nothing here
+--- (PadRender.Veiled: never on a preview or a test placeholder). `icfg` is the dial's Icons tab
+--- (IconStyle.Config; none is the defaults), `look` its R.Look.
 function R.PaintWedge(btn, item, geo, icfg, look)
     btn.qcItem = item
     local slot = item.slot
@@ -519,8 +520,7 @@ function R.PaintWedge(btn, item, geo, icfg, look)
     btn.qcLabel:SetText(item.title or "?")
     btn.qcLabel:SetShown(look.show)
     btn.qcLock:SetShown(slot ~= nil and slot.lock ~= nil)
-    local live = slot == nil or slot.line ~= nil or slot.selfText ~= nil or slot.reason == "testMode"
-    btn.qcDim:SetShown(not live)
+    btn.qcDim:SetShown(NS.PadRender.Veiled(slot))
 end
 
 function R.RefreshLock(btn)

@@ -127,6 +127,16 @@ local function veil(btn, r, g, b, a)
     return t
 end
 
+--- Whether a slot wears the dim veil (qcDim): only a live slot whose bake was refused, one that sends and
+--- prints nothing. A test-mode placeholder and every previewed slot (spec §13.3: the edit preview and
+--- Preview as) draw as live, because a preview is disarmed whatever it baked and only its PREVIEW
+--- labels may differ from live (QC-05: a solo preview veiled every party button and wedge).
+function R.Veiled(slot)
+    if type(slot) ~= "table" then return false end
+    if slot.preview == true or slot.reason == "testMode" then return false end
+    return slot.line == nil and slot.selfText == nil
+end
+
 function R.ShowTooltip(btn)
     local slot = btn.qcSlot
     if not slot then return end
@@ -228,7 +238,6 @@ function R.Paint(btn, slot, style, w, icfg)
     btn.qcSlot = slot
     DEFAULT_LOOK = DEFAULT_LOOK or IS.Config(nil, "pad")
     icfg = icfg or DEFAULT_LOOK
-    local live = slot.line ~= nil or slot.selfText ~= nil or slot.reason == "testMode"
     btn.qcIcon:SetTexture(slot.icon or DEFAULT_ICON)
     btn.qcIcon:SetSize(icfg.size, icfg.size)
     IS.ApplyIcon(btn.qcIcon, icfg, NS.Library.IconTint(slot.icon, slot.iconColor))
@@ -244,7 +253,7 @@ function R.Paint(btn, slot, style, w, icfg)
     btn.qcLabel:SetText(style == "icon" and "" or (slot.name or "?"))
     btn.qcLabel:SetShown(w == nil or R.LabelRoom(w, style, icfg.size) > 0)
     btn.qcLock:SetShown(slot.lock ~= nil)
-    btn.qcDim:SetShown(not live)
+    btn.qcDim:SetShown(R.Veiled(slot))
     btn.qcCool:Hide()
     btn.qcFlash:Hide()
 end

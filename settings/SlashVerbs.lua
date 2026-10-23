@@ -1,7 +1,8 @@
 local _, NS = ...
 -- settings/SlashVerbs.lua — the bodies of the feature verbs settings/Slash.lua's NS.COMMANDS rows
--- call (spec §14). Today: `check`, `lock`, `unlock`, `toggle`, `preview` and `why`. The rows are positional triples; the work lives here so it can
--- be tested without the dispatcher.
+-- call (spec §14). Today: `check`, `lock`, `unlock`, `toggle`, `preview` (bare, a name, `off`, `list`)
+-- and `why`. The rows are positional triples; the work lives here so it can be tested without the
+-- dispatcher.
 
 NS.SlashVerbs = NS.SlashVerbs or {}
 local V = NS.SlashVerbs
@@ -100,23 +101,32 @@ function V.PadsShown()
     return not (char and char.padsHidden == true)
 end
 
---- The lines `/qc preview [name|off]` prints (spec §14): the menu with the one on now, or the result
---- of switching. A refused start prints its own line from Preview.SetPreviewAs.
+--- The lines `/qc preview [name|off|list]` prints (spec §14, design-qc-preview §2.3). Bare starts a
+--- preview of the current situation when nothing is previewed, or keeps the one on, and either way
+--- puts the selector window up; `list` prints the menu with the one on now and changes nothing; a
+--- name or `off` switches. A refused start prints its own line from Preview.SetPreviewAs.
 --- @return string[]
 function V.PreviewLines(rest)
     local P = NS.Preview
     local key = (rest or ""):match("^%s*(%S+)")
     if not key then
-        local out = { L["Preview as (now: %s):"]:format(P.Label(P.PreviewAs() or P.CURRENT)) }
+        if P.PreviewAs() == nil then
+            if not P.SetPreviewAs(P.CURRENT) then return {} end
+        elseif NS.PreviewWindow then
+            NS.PreviewWindow.Sync()
+        end
+        return { L["Previewing: %s"]:format(P.Label(P.PreviewAs())) }
+    end
+    key = key:lower()   -- as the dispatcher reads verbs; every preset key is lower case
+    if key == "list" then
+        local out = { L["Preview as (now: %s):"]:format(P.Label(P.PreviewAs() or P.OFF)) }
         for _, e in ipairs(P.Presets()) do out[#out + 1] = L["  %s: %s"]:format(e.key, e.label) end
         return out
     end
-    key = key:lower()   -- as the dispatcher reads verbs; every preset key is lower case
-    if key == "off" then key = P.CURRENT end
-    if not P.FindPreset(key) then
-        return { L["No situation named %s. Type /qc preview for the list."]:format(key) }
+    if key ~= P.OFF and not P.FindPreset(key) then
+        return { L["No situation named %s. Type /qc preview list for the list."]:format(key) }
     end
-    local want = key ~= P.CURRENT and key or nil
+    local want = key ~= P.OFF and key or nil
     if P.PreviewAs() ~= want and not P.SetPreviewAs(key) then return {} end
     if want then return { L["Previewing: %s"]:format(P.Label(key)) } end
     return { L["Preview off."] }

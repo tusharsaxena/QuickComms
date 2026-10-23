@@ -658,6 +658,7 @@ L["(nothing to edit)"] = "(nothing to edit)"
 
 -- Preview as… (modules/Preview.lua, modules/Pad.lua, modules/Pad_Render.lua)
 L["Current"] = "Current"
+L["Off"] = "Off"
 L["LFR"] = "LFR"
 L["Normal"] = "Normal"
 L["Heroic"] = "Heroic"
@@ -674,13 +675,33 @@ L["Channel: %s"] = "Channel: %s"
 -- Preview as… (modules/Preview.lua, settings/Panel.lua, settings/SlashVerbs.lua)
 L["Instance %d"] = "Instance %d"
 L["Preview as"] = "Preview as"
-L["Draw every pad, and open dial 1, as it would look in another situation. Nothing on them sends. It ends when the settings close or combat starts."] = "Draw every pad, and open dial 1, as it would look in another situation. Nothing on them sends. It ends when the settings close or combat starts."
-L["Preview the pads and dials as another situation — `/qc preview <name>` or `off`; `/qc preview` lists them"] = "Preview the pads and dials as another situation — `/qc preview <name>` or `off`; `/qc preview` lists them"
+L["Draw every pad, and open dial 1, as it would look in another situation. Nothing on them sends. A small window lets you switch it or end it; combat ends it."] = "Draw every pad, and open dial 1, as it would look in another situation. Nothing on them sends. A small window lets you switch it or end it; combat ends it."
+L["Preview the pads and dials as another situation in a small window — `/qc preview` here, `/qc preview <name>`, `off`, or `list`"] = "Preview the pads and dials as another situation in a small window — `/qc preview` here, `/qc preview <name>`, `off`, or `list`"
 L["Preview as (now: %s):"] = "Preview as (now: %s):"
 L["  %s: %s"] = "  %s: %s"
-L["No situation named %s. Type /qc preview for the list."] = "No situation named %s. Type /qc preview for the list."
+L["No situation named %s. Type /qc preview list for the list."] = "No situation named %s. Type /qc preview list for the list."
 L["Previewing: %s"] = "Previewing: %s"
 L["Preview off."] = "Preview off."
+
+-- Preview window (modules/PreviewWindow.lua)
+L["%s - Preview"] = "%s - Preview"
+L["End preview"] = "End preview"
+L["End the preview: the pads and dials go back to live."] = "End the preview: the pads and dials go back to live."
+L["Switch the situation the pads and dials preview."] = "Switch the situation the pads and dials preview."
+
+-- The click preview: what a previewed or test click prints, and the mocks for tokens with no value
+-- right now (modules/Preview.lua, QC-07)
+L["(nothing sent: %s)"] = "(nothing sent: %s)"
+L["%s (test-mode placeholder: nothing sent)"] = "%s (test-mode placeholder: nothing sent)"
+L["<target>"] = "<target>"
+L["<focus>"] = "<focus>"
+L["<group %s>"] = "<group %s>"
+L["<spell %s>"] = "<spell %s>"
+L["<me>"] = "<me>"
+L["<spec>"] = "<spec>"
+L["<role>"] = "<role>"
+L["<key>"] = "<key>"
+L["<dungeon>"] = "<dungeon>"
 
 -- Preview while editing (modules/Preview.lua, modules/Surfaces.lua, settings/Groups.lua)
 L["Editing: %s"] = "Editing: %s"

@@ -400,10 +400,12 @@ local function press(b)
         NS.Print(meta.selfText)
         return
     end
-    -- A previewed button or wedge (disarmed, spec §13.3): the line it would have sent, printed locally
-    -- and nothing more. No attribute is read or written, so a press in combat stays safe.
+    -- A previewed button or wedge (disarmed, spec §13.3) or a test placeholder: the line it would have
+    -- sent, its tokens filled at the click (NS.Preview.FillEcho, QC-07), or why it would send
+    -- nothing, printed locally and nothing more. No attribute is read or written, no guard stamped
+    -- and no echo awaited, so a press in combat stays safe.
     if meta.echo then
-        NS.Print(meta.echo)
+        NS.Print(NS.Preview.FillEcho(meta.echo))
         return
     end
     if not (b.qcArmed and meta.chatType) then return end

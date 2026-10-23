@@ -169,6 +169,7 @@ Kit.run{
         "test_dial_secure",
         "test_preview",
         "test_edit_preview",
+        "test_preview_window",
         "test_master",
         "test_pad_layout",
         "test_dial_layout",

@@ -145,10 +145,14 @@ test("edit preview: closing the settings window and the stand-down end it", func
     local NS, m = live()
     local gid, cid = raidGroup(NS)
     NS.addon.Settings.Register()
+    assertTrue(NS.Preview.SetPreviewAs("arena"))
     NS.Preview.SetEditPreview(gid)
     -- red under: leave the edit preview out of Preview.WatchPanel's OnHide
     m.SettingsPanel:__fire("OnHide")
     assertTrue(NS.Preview.EditGroup() == nil)
+    -- red under: the OnHide also ending Preview as (it outlives the settings window)
+    assertEqual(NS.Preview.PreviewAs(), "arena", "a Preview as underneath survives the close")
+    NS.Preview.SetPreviewAs("off")
     assertTrue(NS.Pad.ButtonsFor("p1", cid)[1] == nil)
     NS.Preview.SetEditPreview(gid)
     NS.SchemaRuntime.Set("enabled", false)
@@ -256,4 +260,75 @@ test("edit preview: it comes back when combat ends with the Groups page still on
     -- red under: drop the Groups page's RESTRICTION_CHANGED listener
     assertEqual(NS.Preview.EditGroup(), gid)
     assertEqual(NS.Surfaces.Plans().p1.editGroup, gid)
+end)
+
+-- ── every preview looks like live (QC-05, owner report 2026-10-23) ──────────────────────────
+--
+-- Opening the Groups page faded every icon and laid a dark circle over the dial's wedges: a preview
+-- bakes against where you are, so solo every party line was refused and the refused-bake veil
+-- (qcDim) covered each disarmed button. A preview stays disarmed, but disarming must not change the
+-- look: only the PREVIEW labels are added.
+
+local MPLUS = { inInstance = true, instanceType = "party", difficultyID = 8, keystoneActive = true,
+    keyLevel = 12, inGroup = true }
+
+local function texLook(t)
+    if not t then return "-" end
+    return table.concat({ tostring(t:IsShown()), tostring(t.__texture), table.concat(t.__color or {}, ","),
+        tostring(t.__alpha or 1), tostring(t.__desaturated or false), table.concat(t.__size or {}, ",") }, "|")
+end
+
+-- Every visual property the render path sets on a pad button or a dial wedge.
+local function look(btn)
+    local out = {}
+    for _, k in ipairs({ "qcIcon", "qcDim", "qcCool", "qcFlash", "qcLock" }) do
+        out[#out + 1] = k .. "=" .. texLook(btn[k])
+    end
+    out[#out + 1] = "label=" .. tostring(btn.qcLabel:IsShown()) .. "|" .. tostring(btn.qcLabel:GetText())
+    out[#out + 1] = "alpha=" .. tostring(btn:GetAlpha())
+    return table.concat(out, "\n")
+end
+
+local function looks(NS, cid)
+    local b = NS.Pad.ButtonsFor("p1", cid)[1]
+    local w = NS.Dial.WedgesFor("d2", cid)[1]
+    assertTrue(b ~= nil, "a pad button")
+    assertTrue(w ~= nil, "a dial wedge")
+    return look(b), look(w), b, w
+end
+
+test("preview: [QC-05] the edit preview and Preview as draw every button and wedge exactly as live", function()
+    local NS, m = T.enableAddon()
+    local inputs = MPLUS
+    NS.Situation.ReadInputs = function() return inputs end
+    NS.Situation.RefreshNow("test")
+    -- A group with no When, so live, the edit preview and Preview as Current all show it.
+    local Lib = NS.Library
+    local cid = Lib.CreateCallout({ name = "Inc", text = "Incoming", channel = "smartGroup", icon = "ph:sword" })
+    local gid = Lib.CreateGroup({ name = "Always", callouts = { cid } })
+    Lib.AddGroupToSurface("pad", "p1", gid, 1)
+    Lib.AddGroupToSurface("dial", "d2", gid, 1)
+    NS.Surfaces.ApplyAll("test")
+    local livePad, liveDial = looks(NS, cid)
+    assertTrue(NS.Pad.ButtonsFor("p1", cid)[1]:GetAttribute("macrotext") ~= nil, "live is armed")
+    -- Solo in the open world, where a party line is refused (no solo fallback).
+    inputs = { inGroup = false }
+    NS.Situation.RefreshNow("test")
+    NS.Surfaces.ApplyAll("test")
+    assertTrue(NS.Pad.ButtonsFor("p1", cid)[1].qcDim:IsShown(), "live, a refused button keeps its veil")
+    assertTrue(NS.Dial.WedgesFor("d2", cid)[1].qcDim:IsShown(), "and a refused wedge too")
+    for _, flavor in ipairs({ "edit", "current" }) do
+        if flavor == "edit" then NS.Preview.SetEditPreview(gid) else NS.Preview.SetPreviewAs("current") end
+        NS.Surfaces.ApplyAll("test")
+        local pad, dial, b, w = looks(NS, cid)
+        -- red under: Pad_Render.Paint and Dial_Render.PaintWedge showing qcDim for a refused preview slot
+        assertEqual(pad, livePad, flavor .. ": the pad button looks as live")
+        assertEqual(dial, liveDial, flavor .. ": the dial wedge looks as live")
+        assertTrue(b:GetAttribute("macrotext") == nil and w:GetAttribute("macrotext") == nil, flavor .. ": disarmed")
+        local before = #m.sentMacros
+        m.__click(b)
+        assertEqual(#m.sentMacros, before, flavor .. ": a click sends nothing")
+        NS.Preview.SetEditPreview(nil)
+        NS.Preview.SetPreviewAs(nil)
+    end
 end)

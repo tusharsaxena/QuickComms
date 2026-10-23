@@ -2,7 +2,8 @@ local _, NS = ...
 -- modules/Tokens.lua — the editor's token chips -> engine tokens and baked values (spec §8.1).
 -- PURE: no client call. Live tokens (%t, %f, {rtN}, {gN}) are expanded by the game at send time;
 -- baked ones ({me}, {spec}, {role}, {key}, {dungeon}, {spell:ID}) come from `ctx`, which the
--- caller fills out of combat.
+-- caller fills out of combat. A preview (QC-07) may pass a `mock`, which fills a baked value that has
+-- none here instead of dropping it.
 
 NS.Tokens = NS.Tokens or {}
 local Tok = NS.Tokens
@@ -25,11 +26,14 @@ local function expandOne(raw, ctx, acc)
         local link = type(ctx.spellLink) == "function" and ctx.spellLink(tonumber(id)) or nil
         if type(link) == "string" and link ~= "" then return link end
         acc.missing[#acc.missing + 1] = raw
-        return ""
+        return acc.mock and acc.mock(name) or ""
     end
     if BAKED[name] then
         local v = ctx[name]
-        if v == nil or v == "" then acc.missing[#acc.missing + 1] = raw return "" end
+        if v == nil or v == "" then
+            acc.missing[#acc.missing + 1] = raw
+            return acc.mock and acc.mock(name) or ""
+        end
         -- a baked value is chat text too: flatten control characters, escape stray pipes (spec §8.3)
         return (tostring(v):gsub("%c", " "):gsub("|", "||"))
     end
@@ -40,10 +44,12 @@ end
 --- Expand every {chip} in `text`.
 --- @param text string|any
 --- @param ctx table|nil baked values (see header)
+--- @param mock function|nil mock(name): the stand-in for a baked value missing here ("key",
+--- "spell:123"), or nil to drop it as a send does (a preview's echo, QC-07)
 --- @return string out, table unknown, table missing, number live
-function Tok.Expand(text, ctx)
+function Tok.Expand(text, ctx, mock)
     ctx = type(ctx) == "table" and ctx or {}
-    local acc = { unknown = {}, missing = {}, live = 0 }
+    local acc = { unknown = {}, missing = {}, live = 0, mock = type(mock) == "function" and mock or nil }
     if type(text) ~= "string" then return "", acc.unknown, acc.missing, 0 end
     local out = text:gsub("{([%w:]+)}", function(raw) return expandOne(raw, ctx, acc) end)
     -- the game also expands a typed %t / %f, so count every one in the output (chips included, once)

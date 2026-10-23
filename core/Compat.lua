@@ -207,6 +207,15 @@ function Compat.PlayerName()
     return PlainString((UnitName("player")))
 end
 
+--- A unit's name, without the realm, or nil when there is no such unit (no target) or its name is
+--- unreadable. Reads only, so a click in combat may call it (the preview echo's %t and %f, QC-07).
+function Compat.UnitDisplayName(unit)
+    if not (UnitExists and UnitName) or not UnitExists(unit) then return nil end
+    local name = PlainString((UnitName(unit)))
+    if name == "" then return nil end
+    return name
+end
+
 --- The current specialization's display name.
 function Compat.SpecName()
     local index = specIndex()

@@ -193,9 +193,11 @@ test("slash: [final 9] test and preview's help, and the Preview as row, speak of
     -- red under: keep the pads-and-buttons-only lines in settings/Slash.lua
     assertTrue(text:find("Turn test mode on or off (placeholder buttons and wedges; it opens dial 1; combat ends it)", 1, true) ~= nil, text)
     assertTrue(text:find("Preview the pads and dials as another situation", 1, true) ~= nil, text)
+    -- red under: the old help row (`/qc preview` lists them)
+    assertTrue(text:find("Preview the pads and dials as another situation in a small window — `/qc preview` here, `/qc preview <name>`, `off`, or `list`", 1, true) ~= nil, text)
     local row = NS.SchemaRuntime.FindRow("state.previewAs")
     do
-        assertEqual(row.desc, "Draw every pad, and open dial 1, as it would look in another situation. Nothing on them sends. It ends when the settings close or combat starts.")
+        assertEqual(row.desc, "Draw every pad, and open dial 1, as it would look in another situation. Nothing on them sends. A small window lets you switch it or end it; combat ends it.")
     end
 end)
 

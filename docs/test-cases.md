@@ -284,7 +284,7 @@ Total.
 - situation: [final 1b] both combat edges reach Current() even under the Combat restriction type
 - situation: [arena] an arena snapshot carries its instanceID, which the arena row matches
 
-### test_tokens.lua (8)
+### test_tokens.lua (9)
 
 - tokens: target and focus become engine tokens and count as live
 - tokens: raid markers by number and name, any case
@@ -294,6 +294,7 @@ Total.
 - tokens: unknown chips stay as typed and are reported
 - tokens: typed %t and %f count as live, chips are not double counted
 - tokens: non-string text expands to empty
+- tokens: a mock fills a baked value missing here, and only when given (the preview echo, QC-07)
 
 ### test_channels.lua (8)
 
@@ -517,7 +518,7 @@ Total.
 - members: [inherit] the Enabled tooltip names whose When a sub-group is shown by
 - members: [arena] the CLI sets the arena row by id, name or all, and prints it back
 
-### test_editors.lua (17)
+### test_editors.lua (18)
 
 - editors: [review 2] Select keeps the selection, and nothing else; Heal keeps a member that exists
 - editors: every membership change asks for one structural repaint, on the next frame
@@ -527,6 +528,7 @@ Total.
 - editors: a profile switch clears every selection
 - editors: the stand-down cancels a pending repaint
 - editors: ConfirmDelete asks first, and only the accepted popup runs the act, once
+- editors: [QC-06] the delete confirm lifts its dialog over the dial and the modals, then hands it back
 - editors: Scalar keeps the rows the flow engine draws, and CancelReorder cancels once
 - editors: a row's remove is a glyph, not a button
 - editors: a row with edit shows the edit glyph and fires it
@@ -578,9 +580,10 @@ Total.
 - popup: every field's label and control share a left edge; Preview's rule and the buttons the columns' edges
 - popup: [icons] an icon that is no texture stays open and names the icon chooser
 
-### test_icon_browser.lua (36)
+### test_icon_browser.lua (37)
 
 - icon browser: the window is the popup's chrome, stacked above the popup and its catcher
+- icon browser: the popup and the browser stack above the preview dial by strata (QC-06)
 - icon browser: tabs in order; the stored icon is preselected and its tab opened
 - icon browser: a click selects, a double-click chooses; Choose hands the opener the icon
 - icon browser: hovering an icon names it, or gives a game icon's texture id
@@ -873,7 +876,7 @@ Total.
 - dial secure: [polish] display open shows no screen catcher
 - dial secure: [polish] closing hides the screen catcher
 
-### test_preview.lua (24)
+### test_preview.lua (34)
 
 - preview: test mode turns on and off, announcing each edge once
 - preview: a start in combat is refused with one line
@@ -882,11 +885,13 @@ Total.
 - preview: the stand-down ends test mode silently, and stood down a start is refused
 - preview: [phase 3] Preview as Arena builds the pad from the arena snapshot, every button disarmed
 - preview: [review 3] a previewed button sends nothing and reports nothing
-- preview: [review 3] a previewed solo button prints nothing, even with the self fallback
+- preview: [review 3] a previewed solo button never prints its self line, even with the self fallback
 - preview: [review 3] combat ends it with one line, and the live buttons come back armed
 - preview: [phase 3] refused in combat and while disabled, with one line each
-- preview: [review 3] the stand-down ends it silently, and so does closing the settings window
+- preview: [review 3] the stand-down ends it silently; closing the settings window leaves it on
 - preview: [phase 3] test mode and Preview as are one switch at a time
+- preview: Current previews where you are, disarmed, and follows a situation change
+- preview: the settings row's choices are Off, then every preset in order
 - preview: [phase 3] the menu: Current, one M+ dungeon, each raid difficulty, Arena, each battleground, Solo
 - preview: the menu's labels: one dungeon, each difficulty with the raid, BG - <name>, Solo
 - preview: [phase 3] a dungeon entry reads M+ · <dungeon> · <spec> (spec §13.3)
@@ -899,8 +904,16 @@ Total.
 - preview: [echo] a live button prints nothing extra
 - preview: [echo] the edit preview echoes too, and a press in combat prints without writing
 - preview: [echo] a previewed dial wedge prints the line too
+- preview: [click] a token with no value right now prints its mock
+- preview: [click] tokens with a value right now print it: the target, the marker, the key
+- preview: [click] a group token reads as its mock outside a raid
+- preview: [click] a callout that would send nothing says why, in the Groups page's words
+- preview: [click] a previewed dial wedge prints the mocked line too
+- preview: [click] a test-mode placeholder prints its label and that it is a placeholder
+- preview: [click] no preview or test click reaches a send API, the guard or the echo tracker
+- preview: [click] a live armed button is unchanged: it sends its line and prints nothing
 
-### test_edit_preview.lua (14)
+### test_edit_preview.lua (15)
 
 - edit preview: every pad shows only the edited group, whatever its When says, and sends nothing
 - edit preview: a battleground set shows its own callouts and every node, outside the battleground
@@ -916,6 +929,26 @@ Total.
 - edit preview: the band's Preview while editing box sits under the picker and turns it off and on
 - edit preview: the Groups page drawn in combat does not start it
 - edit preview: it comes back when combat ends with the Groups page still on screen
+- preview: [QC-05] the edit preview and Preview as draw every button and wedge exactly as live
+
+### test_preview_window.lua (16)
+
+- preview window: hidden until a preview starts; SetPreviewAs shows it with the dropdown on that situation
+- preview window: the settings row starts it too and the dropdown follows the slash
+- preview window: the dropdown lists every preset, Current first, and no Off
+- preview window: picking in the dropdown switches the preview
+- preview window: End preview, the close mark and Escape each end the preview and hide it
+- preview window: a hidden parent does not end the preview
+- preview window: combat ends it with the one line and hides the window
+- preview window: test mode, the stand-down and `/qc preview off` hide it
+- preview window: bare `/qc preview` opens it on Current; again keeps the situation
+- preview window: bare `/qc preview` in combat refuses with one line and shows nothing
+- preview window: `/qc preview list` changes nothing and shows no window
+- preview window: a refused start never shows it
+- preview window: closing the settings window keeps the preview and the window
+- preview window: Escape list, strata, movable, and a position kept in the profile
+- preview window: the dropdown's menu closes with the window
+- preview window: degraded install previews without a window
 
 ### test_master.lua (5)
 
@@ -1294,7 +1327,7 @@ Total.
 | test_compat.lua | 12 |
 | test_restrictions.lua | 16 |
 | test_situation.lua | 16 |
-| test_tokens.lua | 8 |
+| test_tokens.lua | 9 |
 | test_channels.lua | 8 |
 | test_bake.lua | 12 |
 | test_share.lua | 37 |
@@ -1303,9 +1336,9 @@ Total.
 | test_gameids.lua | 4 |
 | test_library.lua | 74 |
 | test_members.lua | 28 |
-| test_editors.lua | 17 |
+| test_editors.lua | 18 |
 | test_callout_popup.lua | 38 |
-| test_icon_browser.lua | 36 |
+| test_icon_browser.lua | 37 |
 | test_eui_skin.lua | 10 |
 | test_groups_when.lua | 20 |
 | test_page_groups.lua | 67 |
@@ -1316,8 +1349,9 @@ Total.
 | test_send_guard.lua | 10 |
 | test_sendengine.lua | 30 |
 | test_dial_secure.lua | 16 |
-| test_preview.lua | 24 |
-| test_edit_preview.lua | 14 |
+| test_preview.lua | 34 |
+| test_edit_preview.lua | 15 |
+| test_preview_window.lua | 16 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 21 |
 | test_dial_layout.lua | 33 |
@@ -1336,4 +1370,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1102** |
+| **Total** | **1132** |
