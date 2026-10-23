@@ -578,9 +578,10 @@ Total.
 - popup: every field's label and control share a left edge; Preview's rule and the buttons the columns' edges
 - popup: [icons] an icon that is no texture stays open and names the icon chooser
 
-### test_icon_browser.lua (36)
+### test_icon_browser.lua (37)
 
 - icon browser: the window is the popup's chrome, stacked above the popup and its catcher
+- icon browser: the popup and the browser stack above the preview dial by strata (QC-06)
 - icon browser: tabs in order; the stored icon is preselected and its tab opened
 - icon browser: a click selects, a double-click chooses; Choose hands the opener the icon
 - icon browser: hovering an icon names it, or gives a game icon's texture id
@@ -1327,7 +1328,7 @@ Total.
 | test_members.lua | 28 |
 | test_editors.lua | 17 |
 | test_callout_popup.lua | 38 |
-| test_icon_browser.lua | 36 |
+| test_icon_browser.lua | 37 |
 | test_eui_skin.lua | 10 |
 | test_groups_when.lua | 20 |
 | test_page_groups.lua | 67 |
@@ -1359,4 +1360,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1121** |
+| **Total** | **1122** |

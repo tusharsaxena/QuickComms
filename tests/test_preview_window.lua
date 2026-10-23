@@ -233,7 +233,14 @@ test("preview window: Escape list, strata, movable, and a position kept in the p
     -- red under: insert into UISpecialFrames on every Sync instead of once at build
     assertEqual(n, 1, "listed once")
     local f = win(NS)
-    assertEqual(rawget(f, "__strata"), "DIALOG")
+    -- red under: leave the window in DIALOG, the preview dial's strata, where the hub draws over it
+    -- (QC-06); FULLSCREEN, under the callout popup's catcher by level
+    assertEqual(rawget(f, "__strata"), "FULLSCREEN")
+    local order = { BACKGROUND = 1, LOW = 2, MEDIUM = 3, HIGH = 4, DIALOG = 5, FULLSCREEN = 6,
+        FULLSCREEN_DIALOG = 7, TOOLTIP = 8 }
+    -- the dial's secure header is DIALOG (modules/SendEngine.lua); the window is over it by strata
+    assertTrue(order[rawget(f, "__strata")] > order.DIALOG, "over the preview dial")
+    assertTrue(f:GetFrameLevel() < NS.addon.Settings.ModalWindow.LEVEL, "under a modal's catcher")
     assertEqual(select(1, f:GetPoint(1)), "TOP", "the default place")
     assertEqual(select(5, f:GetPoint(1)), -140)
     NS.Preview.SetPreviewAs("arena")

@@ -332,8 +332,10 @@ body     [Name          ] [Channel       ]   the callout.* member rows' labels a
   hiding, a profile change, the stand-down, and the callout or its group ceasing to exist (a `/qc`
   write or an import under it), after which a late Save writes nothing. An icon browser opened from
   the popup closes with it, as Cancel.
-- **Fully modal:** a full-screen click-catcher in the `DIALOG` strata covers the settings window, so
-  the page underneath cannot change while a draft is open. Only one popup exists.
+- **Fully modal:** a full-screen click-catcher in the `FULLSCREEN` strata covers the settings window, so
+  the page underneath cannot change while a draft is open. Only one popup exists. `FULLSCREEN` is one
+  strata over the Comms Dial's `DIALOG`, so an open preview dial's hub (its dot and pointer, raised
+  over the dial's header by level) draws under the popup, not over it (QC-06).
 - **EllesmereUI.** With EllesmereUI and its Blizzard Skin module loaded, its third-party skinning on
   and Quick Comms on in its Third-Party Addons list (as the facade's `S.IsEnabled()` reports them;
   Quick Comms never reads EllesmereUI's SavedVariables), `settings/CalloutPopup_Skin.lua` paints the
@@ -356,8 +358,10 @@ body     [Name          ] [Channel       ]   the callout.* member rows' labels a
 `settings/IconBrowser.lua`: where an icon is picked, opened by Choose icon… (or a click on the icon)
 in the callout popup and on a group's General tab. It is not a page. Its window is the popup's
 (`settings/ModalWindow.lua`: Blizzard's `SettingsFrameTemplate`, titled "Ka0s Quick Comms", its close
-X, the gold header), 560 × 594, with its own full-screen catcher in the `FULLSCREEN` strata, above the
-popup and the popup's catcher (`DIALOG`): it is modal to whatever opened it. Only one browser exists,
+X, the gold header), 560 × 594, with its own full-screen catcher in the popup's `FULLSCREEN` strata,
+above the popup and the popup's catcher by a band of levels of its own (`ModalWindow.LEVEL_OVER`, far
+over the popup's `LEVEL`): it is modal to whatever opened it. `FULLSCREEN_DIALOG` stays above it for
+its pull-outs, the color picker and the Wowhead link window. Only one browser exists,
 built on its first open. The EllesmereUI skin paints it as it paints the popup.
 
 ```

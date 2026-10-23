@@ -13,12 +13,19 @@ local _, NS = ...
 -- ends nothing. OnHide also closes the shared dropdown menu (W.CloseMenu, the Widgets contract for
 -- every non-click close path).
 --
--- The look copies LibKa0s's Perf and Sim step panels: BackdropTemplate, DIALOG strata, movable,
+-- The look copies LibKa0s's Perf and Sim step panels: BackdropTemplate, movable,
 -- clamped, the GameFontNormal title, the close mark through the one wrapper (NS.MakeCloseButton,
 -- standalone-windows), NS.ApplySkin. The position PERSISTS in the profile (standalone-windows'
 -- persist MUST): `previewWindow` (defaults/Profile.lua), written on drag stop, read on every show and
 -- on a profile switch. DEGRADED (LibKa0s absent): no window; the slash still previews and prints.
 -- A plain insecure Frame with no secure child: it calls no protected API.
+--
+-- STRATA (QC-06): FULLSCREEN, not the step panels' DIALOG. The preview dial's secure header is in
+-- DIALOG with its hub at the header's level + 20, which would draw over a DIALOG window; the
+-- header's strata is protected in combat, so the window moves instead. It keeps the client's level
+-- for a child of UIParent, far under a modal's catcher (settings/ModalWindow.lua LEVEL), so the
+-- callout popup and the icon browser, also FULLSCREEN, still cover it; its menu
+-- (FULLSCREEN_DIALOG) stays above it.
 
 NS.PreviewWindow = NS.PreviewWindow or {}
 local PW = NS.PreviewWindow
@@ -117,7 +124,7 @@ end
 
 local function chrome(f)
     f:SetSize(WIDTH, HEIGHT)
-    f:SetFrameStrata("DIALOG")
+    f:SetFrameStrata("FULLSCREEN")
     f:EnableMouse(true)
     f:SetMovable(true)
     f:SetClampedToScreen(true)

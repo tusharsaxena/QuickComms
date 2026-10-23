@@ -43,15 +43,22 @@ local function shownCells(B)
     return n
 end
 
--- Record the strata each frame created from here on is set to.
+-- Record the strata, and the last level, each frame created from here on is set to.
 local function strata(m)
     local create = m.CreateFrame
     m.CreateFrame = function(...)
         local f = create(...)
         rawset(f, "SetFrameStrata", function(self, v) rawset(self, "__strata", v); return self end)
+        local setLevel = f.SetFrameLevel
+        rawset(f, "SetFrameLevel", function(self, v)
+            rawset(self, "__setLevel", v)
+            return setLevel(self, v)
+        end)
         return f
     end
 end
+
+local function levelOf(f) return rawget(f, "__setLevel") end
 
 local function listed(list, value)
     for _, v in ipairs(list) do if v == value then return true end end
@@ -72,16 +79,57 @@ test("icon browser: the window is the popup's chrome, stacked above the popup an
     assertEqual(B.frame.__template, "SettingsFrameTemplate")
     assertEqual(B.frame.NineSlice.Text.text, "Ka0s Quick Comms", "the window title is the addon's")
     assertEqual(B.ctx.panel.title:GetText(), "Choose an icon", "the page header")
-    assertEqual(Pop.catcher.__strata, "DIALOG")
-    -- red under: build the browser in the popup's strata (DIALOG): it would share the popup's levels
-    assertEqual(B.catcher.__strata, "FULLSCREEN", "the browser's catcher is above the popup")
+    -- red under: leave the popup in DIALOG, the preview dial's strata (QC-06)
+    assertEqual(Pop.catcher.__strata, "FULLSCREEN")
+    assertEqual(Pop.frame.__strata, "FULLSCREEN")
+    assertEqual(B.catcher.__strata, "FULLSCREEN", "the browser shares the popup's strata")
     assertEqual(B.frame.__strata, "FULLSCREEN")
+    -- red under: build the browser at the popup's levels: the two would tie, level for level
+    assertTrue(levelOf(B.catcher) > levelOf(Pop.frame), "the browser's catcher is above the popup")
     assertEqual(B.frame.__parent, B.catcher, "above its own catcher")
     assertTrue(B.catcher:IsShown())
     B.frame.ClosePanelButton:__fire("OnClick")
     assertFalse(B.IsOpen(), "the close X cancels")
     assertFalse(B.catcher:IsShown())
     assertTrue(Pop.IsOpen(), "the popup stays open")
+end)
+
+-- The client's strata, bottom to top: inside one strata the higher level wins, across two the higher
+-- strata wins whatever the levels.
+local STRATA_ORDER = { BACKGROUND = 1, LOW = 2, MEDIUM = 3, HIGH = 4, DIALOG = 5, FULLSCREEN = 6,
+    FULLSCREEN_DIALOG = 7, TOOLTIP = 8 }
+-- What the client sets the frames QuickComms does not create to: Blizzard's settings window.
+local SETTINGS_STRATA = "HIGH"
+
+local function above(a, b, what)
+    assertTrue(STRATA_ORDER[a] ~= nil and STRATA_ORDER[b] ~= nil, what .. ": a known strata")
+    assertTrue(STRATA_ORDER[a] > STRATA_ORDER[b], what .. " (" .. tostring(a) .. " over " .. tostring(b) .. ")")
+end
+
+test("icon browser: the popup and the browser stack above the preview dial by strata (QC-06)", function()
+    local NS, m, P, B = boot()
+    strata(m)
+    local header = NS.SendEngine.NewDialHeader("QuickCommsStrataTestDial")
+    local Pop = NS.addon.Settings.CalloutPopup
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    local w = P.during(function() Pop.Open(gid) end)
+    P.find(w, "Button", "Choose icon…"):__fire("OnClick")
+    assertTrue(B.IsOpen())
+    local dial = header.__strata
+    assertEqual(dial, "DIALOG", "the dial's secure header keeps its strata")
+    -- red under: the popup or the browser in the dial's strata: the hub's dot and pointer (header
+    -- level + 20) draw over them
+    for _, f in ipairs({ { Pop.catcher, "popup catcher" }, { Pop.frame, "popup" },
+        { B.catcher, "browser catcher" }, { B.frame, "browser" } }) do
+        above(f[1].__strata, dial, f[2] .. " over the dial")
+        above(f[1].__strata, "MEDIUM", f[2] .. " over the pads")
+        above(f[1].__strata, SETTINGS_STRATA, f[2] .. " over the settings window")
+    end
+    -- settings < popup < browser: the browser's band of levels clears the popup's, with room for
+    -- the popup's nested widgets
+    assertTrue(levelOf(B.catcher) - levelOf(Pop.frame) >= 50, "the browser's band")
+    -- the pull-outs, the color picker and the link window stay above the browser by strata
+    above("FULLSCREEN_DIALOG", B.frame.__strata, "the browser's transients")
 end)
 
 test("icon browser: tabs in order; the stored icon is preselected and its tab opened", function()

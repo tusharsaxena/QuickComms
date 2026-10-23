@@ -30,7 +30,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | LOOK-1..6 | Pad header, Section header, Window | The Comms Pad's three window tabs: the section titles' font, the pad's border and background, the header's look, size and alignment, the tab strip and headings, the section header's band and height |
 | BUTTON-1..2 | Buttons tab | The buttons' size, color, border and font; the button glow |
 | ICONS-1..4 | Icons tab | The buttons' and wedges' icon look, border and glow triggers; the glows through LibKa0s-Glow-1.0 |
-| ICON-1..3 | Icons | Choosing an icon, for a callout and for a group; the LibKa0s v1.75.0 re-vendor: the icon browser's three sets and the library-drawn marks |
+| ICON-1..4 | Icons | Choosing an icon, for a callout and for a group; the LibKa0s v1.75.0 re-vendor: the icon browser's three sets and the library-drawn marks; the popup and the browser over the preview dial |
 | ART-1 | Art | The dial's round art: the hub's styles, the dots and pill, the indicator background, the borders and the arrow plates |
 | SHINE-1..3 | Shine | The shine overlay: each look on a pad and on a dial, and a pad and a dial keeping their own |
 | BG-1..8 | Battlegrounds | Node winds on the dial; the battleground instance ids; the objective groups (Alterac Valley, Isle of Conquest's bases, a flag map) and their migration; the four node buttons; Silvershard Mines' and Temple of Kotmogu's groups |
@@ -1189,6 +1189,15 @@ When → the id list's info mark; a pad's padlock (lock the pads) and a dial's p
 A blank control is the failure: a pruned or undeclared icon resolves to a path and draws nothing.
 Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
+**ICON-4. The callout popup and the icon browser over the preview dial (2026-10-23, run item QC-06,
+SM-QC-9).** Open Settings → Groups → a group of yours: the edit preview shows the dial with its hub
+(or Preview as → Dungeon). Callouts → New callout: the dial hub's yellow dot and pointer stay behind
+the dialog, never over it; Edit callout on a row, the same. In the dialog, Choose icon…: the icon browser sits
+above the dialog, and the settings window sits below both. With the browser open, its filter's
+pull-out and the color swatch's picker draw over the browser. Preview as → a situation with the
+preview window shown, then New callout: the dialog covers the preview window too.
+Result: pending
+
 ## Art
 
 The dial's own round art (crisp dial art, 2026-10-21): `media/textures/dial-disc.tga` and the
@@ -1384,5 +1393,7 @@ and why it is owed, until its pass is recorded.
 
 - PREVIEW-1..8: new with the preview window (2026-10-23 sim/preview/strips run, QC-02 and QC-03).
 - PREVIEW-9: new with QC-05 (2026-10-23), the fix for the faded, veiled preview; owed a first run.
+- ICON-4: new with QC-06 (2026-10-23), the modals moved over the preview dial by strata; owed a
+  first run.
 - EDIT-3, EDIT-27, DIAL-9: amended 2026-10-23 (QC-04), since closing the settings window no longer
   ends Preview as and Escape now ends it through the preview window; owed a re-run.

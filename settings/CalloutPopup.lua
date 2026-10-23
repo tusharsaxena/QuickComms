@@ -445,12 +445,13 @@ local function makeBody(h)
 end
 
 -- The popup and its click-catcher (settings/ModalWindow.lua), built once, on the first Open, in
--- the DIALOG strata (above the settings window); the window is the catcher's child, so it draws
--- above it and its dropdowns' pull-outs above both.
+-- the modals' FULLSCREEN strata (MW.STRATA: above the settings window and the preview dial, QC-06)
+-- at the base band of levels; the window is the catcher's child, so it draws above it, and its
+-- dropdowns' pull-outs (FULLSCREEN_DIALOG) above both.
 local function build()
     local h = H()
     local w = Settings.ModalWindow.Build({ name = addonName .. "CalloutPopup", pageName = addonName .. "CalloutPopupPage",
-        title = L["Edit callout"], width = WIDTH, height = HEIGHT, strata = "DIALOG",
+        title = L["Edit callout"], width = WIDTH, height = HEIGHT, strata = Settings.ModalWindow.STRATA,
         onClose = function() Pop.Cancel() end })
     ctx, inset = w.ctx, w.inset
     Pop.catcher = w.catcher

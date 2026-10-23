@@ -14,11 +14,22 @@ local _, NS = ...
 -- dark fill and the shared close mark. Either close calls the caller's `onClose`. The window is a
 -- special frame (Escape hides it); what a hide means is the caller's (its own OnHide hook).
 --
--- STACKING. Everything is set in the caller's strata: the popup's is DIALOG (above the settings
--- window), the browser's FULLSCREEN (above the popup and its catcher). Inside a strata, the levels
--- are fixed: the catcher at LEVEL, the template's Bg at LEVEL + 1 (the template declares it at
--- absolute level 0, which would put it under the catcher's dim), the window with its border at
--- LEVEL + 2, the page at LEVEL + 3 and the close X at LEVEL + 5 (it overlaps the page's top edge).
+-- STACKING (QC-06). Every modal is above the Comms Dial BY STRATA: FULLSCREEN (MW.STRATA), one
+-- over the dial's DIALOG. The dial's secure header (modules/SendEngine.lua) is in DIALOG and the
+-- hub's dot and pointer sit at the header's level + 20 (modules/Dial_Render.lua, RaiseFront): a modal
+-- in DIALOG is in a level race it loses, and the header's strata is not ours to move (a secure
+-- frame's strata is protected in combat). FULLSCREEN is also over the pads (MEDIUM), the dial's
+-- screen catcher (HIGH) and the settings window (HIGH).
+-- The popup and the icon browser share FULLSCREEN and are told apart by a BAND of levels the caller
+-- picks (`spec.level`): the popup's base is LEVEL, the browser's LEVEL_OVER, far above anything the
+-- popup's nested widgets reach, so the browser and its catcher cover the popup. FULLSCREEN_DIALOG
+-- stays free for what must sit over the browser: the AceGUI pull-outs, the color picker, the
+-- library's menu and the browser's link window. Moving the browser up to FULLSCREEN_DIALOG would put
+-- it in a level race with each of those instead.
+-- Inside a band the levels are fixed: the catcher at the base, the template's Bg at base + 1 (the
+-- template declares it at absolute level 0, which would put it under the catcher's dim), the window
+-- with its border at base + 2, the page at base + 3 and the close X at base + 5 (it overlaps the
+-- page's top edge).
 
 local Settings = NS.addon.Settings
 
@@ -31,7 +42,10 @@ local TEMPLATE = "SettingsFrameTemplate"
 MW.INSET_TEMPLATE = { left = 8, top = 24, right = 4, bottom = 5 }
 MW.INSET_PLAIN = { left = 0, top = 0, right = 0, bottom = 0 }
 MW.LEVEL = 10
-local LEVEL = MW.LEVEL
+-- A modal over a modal (the icon browser over the popup): its band's base, in the same strata.
+MW.LEVEL_OVER = 200
+-- The strata of every QuickComms modal: over the dial's DIALOG (STACKING above).
+MW.STRATA = "FULLSCREEN"
 local DIM = { 0, 0, 0, 0.45 }
 
 local function H() return Settings.Helpers end
@@ -56,10 +70,10 @@ end
 
 -- The fallback's chrome: Blizzard's dialog edge over a dark fill under the page, and the shared
 -- close mark.
-local function plainChrome(window, panel, chrome, onClose)
+local function plainChrome(window, panel, chrome, onClose, base)
     local bg = CreateFrame("Frame", nil, window, "BackdropTemplate")
     bg:SetAllPoints(window)
-    bg:SetFrameLevel(LEVEL + 1)
+    bg:SetFrameLevel(base + 1)
     if bg.SetBackdrop then
         bg:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8X8",
@@ -74,11 +88,11 @@ local function plainChrome(window, panel, chrome, onClose)
     chrome.window, chrome.bg, chrome.close = window, bg, closeButton
 end
 
-local function makeCatcher(strata)
+local function makeCatcher(strata, base)
     local catcher = CreateFrame("Button", nil, UIParent)
     catcher:SetAllPoints(UIParent)
     catcher:SetFrameStrata(strata)
-    catcher:SetFrameLevel(LEVEL)
+    catcher:SetFrameLevel(base)
     catcher:EnableMouse(true)
     catcher:EnableMouseWheel(true)
     catcher:SetScript("OnMouseWheel", function() end)
@@ -90,11 +104,13 @@ local function makeCatcher(strata)
 end
 
 --- Build a modal window, hidden. `spec` = { name (the window's global name, also its special-frame
---- entry), pageName (the page panel's), title (the page header's), width, height, strata, onClose
---- (the close X's or the close mark's click) }.
+--- entry), pageName (the page panel's), title (the page header's), width, height, strata, level
+--- (the band's base: MW.LEVEL when nil, MW.LEVEL_OVER for a modal over a modal), onClose (the close
+--- X's or the close mark's click) }.
 --- @return table { catcher, frame, chrome, ctx (the page's panel context), inset }
 function MW.Build(spec)
-    local catcher = makeCatcher(spec.strata)
+    local LEVEL = spec.level or MW.LEVEL
+    local catcher = makeCatcher(spec.strata, LEVEL)
     local window, chrome = makeWindow(spec.name, catcher)
     local inset = chrome.template and MW.INSET_TEMPLATE or MW.INSET_PLAIN
     -- The strata again: a template may name its own, and the window must stay above the catcher.
@@ -121,7 +137,7 @@ function MW.Build(spec)
         chrome.close:SetScript("OnClick", function() spec.onClose() end)
         chrome.close:SetFrameLevel(LEVEL + 5)
     else
-        plainChrome(window, panel, chrome, function() spec.onClose() end)
+        plainChrome(window, panel, chrome, function() spec.onClose() end, LEVEL)
     end
     -- Escape hides a special frame.
     if UISpecialFrames then UISpecialFrames[#UISpecialFrames + 1] = spec.name end
