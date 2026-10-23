@@ -14,7 +14,8 @@ BI.Group(ID, {
     name = L["In Group"], glyph = "ph:users-three", color = C.cyan,
     when = { group = { party = true, raid = true, instance = true } },
     callouts = BI.Callouts(ID, "smartGroup", {
-        { "hello",  L["Hello"],        L["Hello!"],              "ph:hand-waving",   C.gold },
+        { "hello",  L["Hello"],        L["Hello!"],              "ph:hand-waving",   C.sky },
+        { "stone",  L["At Stone"],     L["At stone, WM off."],   "gi:tombstone-sbed", C.purple },
         { "summon", L["Summon"],       L["Summon please!"],      "gi:magic-portal",  C.purple },
         { "buffs",  L["Buffs please"], L["Buffs please!"],       "gi:muscle-up",     C.purple },
         { "hs",     L["Healthstone"],  L["Healthstone please!"], "gi:health-potion", C.purple },

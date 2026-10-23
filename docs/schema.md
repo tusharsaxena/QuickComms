@@ -164,6 +164,10 @@ end of every pad and dial), but a stored node keeps the INC 1/2/3/Many/Clear/Hel
 seeded with, Isle of Conquest's bases their two, and a stored Silvershard Mines or Temple of Kotmogu
 copy kept Open into off (a field the dial rework retired); a reset profile (or Restore built-in groups, which adds the four new rows beside the old)
 takes the Attack, Defend, INC and Clear rows.
+No schema step for the replaced prebuilts (2026-10-23, owner ruling: pre-release, no migration):
+Chain pull's yellow, Hello's sky blue, In Group's At Stone (`bi.group.stone`, 2nd), Solo on General (/1)
+and Solo's `{coordinates}` lines reach only a new profile and Restore built-in groups; a stored
+profile keeps the callouts it was seeded with.
 No schema step for nested groups (2026-10-18): a group without `parent` is top-level, and
 `Library.Prepare` drops a bad one.
 No schema step in phase 5: `Library.Prepare` fills a stored pad's missing layout and look fields from

@@ -389,7 +389,7 @@ Total.
 - resolver: [all] All battlegrounds and All dungeons and raids match the whole kind, the listed ids aside
 - resolver: [arena] the arena row matches only in an arena: its listed ids, or all of them
 
-### test_builtins.lua (22)
+### test_builtins.lua (24)
 
 - builtins: the expected top-level sets exist in order
 - builtins: ids are unique, referenced and well formed
@@ -400,7 +400,9 @@ Total.
 - builtins: [phase 5] every node set pins each node to a wind, at most eight, Deepwind Gorge's five included
 - builtins: [B7] every callout ships a catalog glyph, with a color only where it is a glyph
 - builtins: [B7] the generic dungeon set is Dungeon, active in a dungeon and in M+
-- builtins: [polish] Solo is a solo open-world set of say callouts
+- builtins: [polish] Solo is a solo open-world set of General (/1) callouts
+- builtins: [QF-05] Solo's place lines carry {coordinates}
+- builtins: [QF-05] the owner's edits are the shipped look, with no schema step
 - builtins: [polish] every battleground node set has map-wide callouts of its own
 - builtins: [polish] every callout icon has a color, and no group is white only
 - builtins: [polish] every group has a colored catalog glyph for its icon
@@ -1371,7 +1373,7 @@ Total.
 | test_bake.lua | 12 |
 | test_share.lua | 37 |
 | test_resolver.lua | 13 |
-| test_builtins.lua | 22 |
+| test_builtins.lua | 24 |
 | test_gameids.lua | 4 |
 | test_library.lua | 74 |
 | test_members.lua | 28 |
@@ -1410,4 +1412,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1168** |
+| **Total** | **1170** |

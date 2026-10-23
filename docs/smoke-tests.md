@@ -16,7 +16,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | SLASH-1..2 | Slash | `/qc` and `/quickcomms`, help, a slash collision |
 | PANEL-1..3 | Settings panel | Landing page, General → Master controls, the Defaults button |
 | PROFILE-1..2 | Profiles | The Profiles page and the `profile` verb |
-| STATE-1..5 | State | Enable/disable, the launcher menu, `/qc toggle`, the pads' hidden state across /reload |
+| STATE-1..6 | State | Enable/disable, the launcher menu, `/qc toggle`, the pads' hidden state across /reload, a new profile's prebuilts |
 | COMBAT-1 | Combat | The settings panel in combat |
 | DIAG-1..2 | Diagnostics | The debug console, the report, perf |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
@@ -116,6 +116,16 @@ the key toggles the pads again. Then `/qc disable` and press the Toggle Comms Pa
 line, `Ka0s Quick Comms is disabled — enable it with /qc enable` (unchanged, as KEY-3). `/qc enable`
 to finish. **Owed**: the headless gate holds the latch directly and cannot drive a real capture.
 Result: 2026-10-23, pass (the owner's run; client build not recorded).
+
+**STATE-6. A new profile's prebuilts (2026-10-23, run item QF-05).** Profiles page → create a new
+profile and switch to it. Groups page: Dungeon > Chain pull has yellow chains (`fff468`); In Group
+reads Hello (a sky-blue hand, `3fc7eb`, sending `Hello!`), At Stone 2nd (a purple tombstone, Smart
+group, sending `At stone, WM off.`), then Summon, Buffs please, Healthstone, tyff, brb, Ready, GLHF,
+ggty, ggnt; every Solo callout's channel reads General (/1; Say when not joined); Rare spotted reads
+`Rare spotted: {target} @ {coordinates}`, Elite help `Can anyone help with this elite? {target} @
+{coordinates}`, World boss `World boss up: {target} @ {coordinates}`, Event here `World event
+starting @ {coordinates}, come join`. Switch back to the old profile → its callouts are as you left
+them (no migration). Delete the test profile. Result: pending.
 
 ## Combat
 
@@ -1473,5 +1483,8 @@ and why it is owed, until its pass is recorded.
 - SEND-6: new with QF-04 (2026-10-23), the General (/1) channel: sends on the click, falls back to Say
   when channel 1 is not joined, follows the joins after login and a zone change, a `/2` line is not
   its echo, the tooltip and the Groups row name General; owed a first run.
+- STATE-6: new with QF-05 (2026-10-23), a new profile seeds the replaced prebuilts (the owner's
+  colors, At Stone, Solo on General with {coordinates}) and an old profile keeps its own; owed a first
+  run.
 - TOKEN-1: new with QF-03 (2026-10-23), the {coordinates} token: read at the press, re-armed at the
   combat edge, filled in a preview echo; owed a first run.

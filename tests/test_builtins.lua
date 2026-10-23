@@ -130,7 +130,7 @@ end)
 -- The white the glyphs draw when no color is set; a set must not be all of it.
 local WHITE = "ffffff"
 
-test("builtins: [polish] Solo is a solo open-world set of say callouts", function()
+test("builtins: [polish] Solo is a solo open-world set of General (/1) callouts", function()
     local NS, BI = bi()
     local g = BI.groups["bi.world"]
     -- red under: no defaults/BuiltIns_World.lua
@@ -139,13 +139,46 @@ test("builtins: [polish] Solo is a solo open-world set of say callouts", functio
     assertTrue(g.when.content.openWorld and g.when.group.solo, "World, Solo")
     assertTrue(#g.callouts >= 7, "about seven callouts")
     for _, cid in ipairs(g.callouts) do
-        local ch = BI.callouts[cid].channel
-        assertTrue(ch == "say" or ch == "yell", cid .. " speaks out loud, as a solo player can")
+        -- red under: Solo still on say (owner, 2026-10-23: General /1 instead of say)
+        assertEqual(BI.callouts[cid].channel, "general", cid)
     end
     assertEqual(BI.SNAPSHOTS["bi.world"].content, "openWorld", "the bake audit checks it solo")
     assertEqual(BI.SNAPSHOTS["bi.world"].group, "solo")
+    assertTrue(BI.SNAPSHOTS["bi.world"].general, "the bake audit has channel 1 joined")
     local line = NS.Bake.Bake(BI.callouts["bi.world.thanks"], BI.SNAPSHOTS["bi.world"], { ctx = {} })
-    assertEqual(line, "/s Thanks for the help!")
+    assertEqual(line, "/1 Thanks for the help!")
+    local off = { content = "openWorld", group = "solo", instanceGroup = false, lockdown = {} }
+    line = NS.Bake.Bake(BI.callouts["bi.world.thanks"], off, { ctx = {} })
+    assertEqual(line, "/s Thanks for the help!", "Say when channel 1 is not joined")
+end)
+
+test("builtins: [QF-05] Solo's place lines carry {coordinates}", function()
+    local _, BI = bi()
+    -- red under: the Solo texts without @ {coordinates} (owner, 2026-10-23: "{target} @ {coordinates}")
+    assertEqual(BI.callouts["bi.world.rare"].text, "Rare spotted: {target} @ {coordinates}")
+    assertEqual(BI.callouts["bi.world.elite"].text, "Can anyone help with this elite? {target} @ {coordinates}")
+    assertEqual(BI.callouts["bi.world.boss"].text, "World boss up: {target} @ {coordinates}")
+    assertEqual(BI.callouts["bi.world.event"].text, "World event starting @ {coordinates}, come join")
+    assertEqual(BI.callouts["bi.world.quest"].text, "Anyone want to group up for this quest?", "no fixed place")
+end)
+
+test("builtins: [QF-05] the owner's edits are the shipped look, with no schema step", function()
+    local NS, BI = bi()
+    -- red under: Chain pull still red, Hello still gold (owner's SavedVariables, 2026-10-23)
+    assertEqual(BI.COLOR.yellow, "fff468")
+    assertEqual(BI.COLOR.sky, "3fc7eb")
+    assertEqual(BI.callouts["bi.mplus.chain"].iconColor, "fff468")
+    assertEqual(BI.callouts["bi.group.hello"].iconColor, "3fc7eb")
+    assertEqual(BI.callouts["bi.group.hello"].text, "Hello!", "the owner's exception: not Hello there!")
+    -- red under: no bi.group.stone in defaults/BuiltIns_Group.lua
+    local stone = BI.callouts["bi.group.stone"]
+    assertTrue(stone ~= nil, "At Stone is shipped")
+    assertEqual(stone.channel, "smartGroup")
+    assertEqual(stone.glyph, "gi:tombstone-sbed")
+    assertEqual(stone.iconColor, "b07cff")
+    assertEqual(BI.groups["bi.group"].callouts[2], "bi.group.stone", "2nd in In Group")
+    -- red under: a migration step added for the prebuilts (D4c: no migration)
+    assertEqual(NS.MIGRATIONS[#NS.MIGRATIONS].to, 9)
 end)
 
 test("builtins: [polish] every battleground node set has map-wide callouts of its own", function()
@@ -373,7 +406,7 @@ test("builtins: [bg buttons] In Group is a party, raid and instance group set of
     assertTrue(g.when.group.party and g.when.group.raid and g.when.group.instance, "Party, Raid, Instance group")
     assertNil(g.when.group.solo)
     assertNil(g.when.content, "no content condition")
-    assertEqual(rows(BI, "bi.group"), "Hello=Hello!|Summon=Summon please!|Buffs please=Buffs please!|"
+    assertEqual(rows(BI, "bi.group"), "Hello=Hello!|At Stone=At stone, WM off.|Summon=Summon please!|Buffs please=Buffs please!|"
         .. "Healthstone=Healthstone please!|tyff=tyff|brb=brb|Ready=Ready|GLHF=GLHF!|ggty=ggty|ggnt=ggnt")
     for _, cid in ipairs(g.callouts) do assertEqual(BI.callouts[cid].channel, "smartGroup", cid) end
     assertEqual(g.glyph, "ph:users-three")
