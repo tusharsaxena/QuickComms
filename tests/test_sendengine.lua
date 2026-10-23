@@ -345,6 +345,42 @@ test("send: another player's message on the channel is not our echo", function()
     assertEqual(table.concat(out, ","), "c1@p1=dropped")
 end)
 
+-- A CHAT_MSG_CHANNEL: the channel index is the 8th payload field (QF-04).
+local GENERAL_META = { calloutId = "c1", surfaceId = "p1", chatType = "CHANNEL", name = "Thanks" }
+local function channelEcho(m, index, sender, guid)
+    m.__fire("CHAT_MSG_CHANNEL", "never read", sender or "Testchar-Testrealm", "", "2. Trade", "", "", 2, index,
+        "Trade", 0, 1, guid or m.playerGUID)
+end
+
+test("send: [QF-04] the player's own line on channel 1 is the General echo; on channel 2 it is not", function()
+    local NS, m = T.enableAddon()
+    local out = results(NS)
+    local b = NS.SendEngine.NewButton(m.UIParent)
+    NS.SendEngine.Arm(b, "/1 Thanks", GENERAL_META)
+    m.__now = 100
+    m.__click(b)
+    -- red under: matching CHAT_MSG_CHANNEL by type and sender alone
+    channelEcho(m, 2)
+    assertEqual(NS.SendEngine.EchoState().pending, 1, "a /2 line is not the echo")
+    channelEcho(m, 1, "Other-Testrealm", "Player-1-99999999")
+    assertEqual(NS.SendEngine.EchoState().pending, 1, "another player's General line is not the echo")
+    channelEcho(m, 1)
+    assertEqual(table.concat(out, ","), "c1@p1=sent")
+    assertEqual(NS.SendEngine.EchoState().pending, 0)
+end)
+
+test("send: [QF-04] an unreadable channel index falls to the sender rule", function()
+    local NS, m = T.enableAddon()
+    m.issecretvalue = T.isSecret
+    local out = results(NS)
+    local b = NS.SendEngine.NewButton(m.UIParent)
+    NS.SendEngine.Arm(b, "/1 Thanks", GENERAL_META)
+    m.__now = 100
+    m.__click(b)
+    channelEcho(m, T.secret(1))
+    assertEqual(table.concat(out, ","), "c1@p1=sent")
+end)
+
 test("send: a disarmed button reports nothing and tracks nothing", function()
     local NS, m = T.enableAddon()
     local out = results(NS)

@@ -19,7 +19,9 @@ local G = NS.SendGuard
 -- Seconds a press waits for its echo (spec §9.3; the measured round trip was 0.5-0.75 s).
 G.ECHO_WINDOW = 1.5
 
--- The player's own channels, by the event that echoes them. Never a guild or custom channel (§8.4).
+-- The player's own channels, by the event that echoes them. Never a guild, community or custom
+-- channel; General (/1) is the one numbered channel (2026-10-23, QF-04). CHAT_MSG_CHANNEL fires for
+-- every channel the player is in, so the edge also asks IsGeneralEcho of its channel index.
 G.CHAT_TYPE_BY_EVENT = {
     CHAT_MSG_SAY = "SAY",
     CHAT_MSG_YELL = "YELL",
@@ -30,11 +32,22 @@ G.CHAT_TYPE_BY_EVENT = {
     CHAT_MSG_RAID_WARNING = "RAID_WARNING",
     CHAT_MSG_INSTANCE_CHAT = "INSTANCE_CHAT",
     CHAT_MSG_INSTANCE_CHAT_LEADER = "INSTANCE_CHAT",
+    CHAT_MSG_CHANNEL = "CHANNEL",
 }
 
 G.ECHO_EVENTS = {}
 for event in pairs(G.CHAT_TYPE_BY_EVENT) do G.ECHO_EVENTS[#G.ECHO_EVENTS + 1] = event end
 table.sort(G.ECHO_EVENTS)
+
+--- Whether a CHAT_MSG_CHANNEL's channel index (its 8th payload field) can be General's echo: true
+--- for 1, false for any other number (the line is ignored), nil when unreadable (the sender rule
+--- decides, as for any other echo). Never by text (F7).
+--- @param index number|nil the plain index, or nil
+--- @return boolean|nil
+function G.IsGeneralEcho(index)
+    if type(index) ~= "number" then return nil end
+    return index == 1
+end
 
 -- ── the click and the guard ─────────────────────────────────────────────────────────────────
 

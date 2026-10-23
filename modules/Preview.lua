@@ -102,7 +102,7 @@ end
 local function base(fields)
     local live = NS.Situation.Current()
     local s = { classFile = live.classFile, specID = live.specID, role = live.role, character = live.character,
-        leader = true, assist = false, inCombat = false, lockdown = {} }
+        general = live.general, leader = true, assist = false, inCombat = false, lockdown = {} }
     for k, v in pairs(fields) do s[k] = v end
     return s
 end

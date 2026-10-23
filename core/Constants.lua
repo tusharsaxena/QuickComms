@@ -21,6 +21,7 @@ C.GOLD = { r = 1.0, g = 0.82, b = 0.0 }
 C.CHAT_COLORS = {
     PARTY = { 0.67, 0.67, 1.0 }, RAID = { 1.0, 0.5, 0.0 }, INSTANCE_CHAT = { 1.0, 0.5, 0.0 },
     RAID_WARNING = { 1.0, 0.28, 0.0 }, SAY = { 1.0, 1.0, 1.0 }, YELL = { 1.0, 0.25, 0.25 },
+    CHANNEL1 = { 1.0, 0.75, 0.75 },
 }
 
 -- A button's flash for each send result: gold sent, red dropped, amber guarded (spec §10.1).

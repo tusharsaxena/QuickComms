@@ -233,7 +233,16 @@ local function build()
         PARTY = { r = 0.67, g = 0.67, b = 1.0 }, RAID = { r = 1.0, g = 0.5, b = 0.0 },
         INSTANCE_CHAT = { r = 1.0, g = 0.5, b = 0.0 }, RAID_WARNING = { r = 1.0, g = 0.28, b = 0.0 },
         SAY = { r = 1.0, g = 1.0, b = 1.0 }, YELL = { r = 1.0, g = 0.25, b = 0.25 },
+        CHANNEL1 = { r = 1.0, g = 0.75, b = 0.75 },
     }
+    -- The chat channels the player is in, by number (QF-04): General is joined by default. The
+    -- client's GetChannelName answers id, name, instanceID for a joined channel and 0 otherwise.
+    M.channels = { [1] = "General - Dornogal" }
+    M.GetChannelName = function(id)
+        local name = M.channels[id]
+        if name then return id, name, 0 end
+        return 0, nil, 0
+    end
 
     local function refuse(frame, call)
         M.blocked[#M.blocked + 1] = { frame = frame, call = call }

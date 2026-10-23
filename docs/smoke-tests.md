@@ -20,7 +20,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | COMBAT-1 | Combat | The settings panel in combat |
 | DIAG-1..2 | Diagnostics | The debug console, the report, perf |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
-| SEND-1..5 | Send | Secure sends in keys and on bosses, the spam guard |
+| SEND-1..6 | Send | Secure sends in keys and on bosses, the spam guard, General (/1) with its Say fallback |
 | TOKEN-1 | Tokens | `{coordinates}`: your map position, read at the press, in a preview echo and in combat |
 | PAD-1..15 | Pad | The Comms Pad, its growth and button width, the Solo and In Group sets and the built-ins' colors, the header click and icon only's width, the header's Quick Comms: text |
 | EDIT-1..32 | Editors | The Pad and Dial page names; the Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
@@ -168,6 +168,18 @@ start). Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 The C1–C9 checks of the phase 0 harness (design spec §19) are recorded in
 `docs/brainstorm/go-no-go/`; SEND-4 and SEND-5 repeat C1 and C4 against the shipped addon.
+
+**SEND-6. General (/1) and its Say fallback (2026-10-23, run item QF-04).** Out of combat in the open
+world, make a callout on the channel "General (/1; Say when not joined)" in a group on your pad; its
+Groups row reads `General` in channel 1's color. Hover its button → `Channel: General` in the same
+color. Click it → the line appears in General (`[1. General - <zone>]`), with no "interface action
+blocked" and no drop note. `/reload`, and click it again as soon as the pad shows → `/1` again (the
+automatic join after login reached the snapshot). Take a portal or flight to another zone and click
+it right after the loading screen → still `/1`, in the new zone's General. Type `/leave 1`, click it
+→ the line goes to Say; `/join General`, click → back in General. With a press pending, type a line in
+`/2` (Trade, in a capital) inside about a second → no false "sent" (the `/2` line is not taken as the
+echo; a drop note only if the General line really never arrived).
+Result: pending
 
 ## Tokens
 
@@ -1458,5 +1470,8 @@ and why it is owed, until its pass is recorded.
   preview, its End preview, close mark, Escape and `/qc preview off`; owed a first run.
 - PREVIEW-12: new with QF-01 (2026-10-23), a preview, edit-preview or test dial stays open on a slice
   click while a live one still closes; owed a first run.
+- SEND-6: new with QF-04 (2026-10-23), the General (/1) channel: sends on the click, falls back to Say
+  when channel 1 is not joined, follows the joins after login and a zone change, a `/2` line is not
+  its echo, the tooltip and the Groups row name General; owed a first run.
 - TOKEN-1: new with QF-03 (2026-10-23), the {coordinates} token: read at the press, re-armed at the
   combat edge, filled in a preview echo; owed a first run.

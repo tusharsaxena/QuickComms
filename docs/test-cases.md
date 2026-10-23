@@ -231,7 +231,7 @@ Total.
 - diagnostics: [debug] the log follows a dial open, a ring shown, a press and a close, once each
 - diagnostics: [shine] the pad's button line and the dial's slices line print the look and strength
 
-### test_compat.lua (13)
+### test_compat.lua (14)
 
 - compat: plain readers pass plain values and drop secrets
 - compat: InstanceInfo with a secret instanceID reads nil, never raises
@@ -246,6 +246,7 @@ Total.
 - compat: [phase 3] SpecInfoByID and ClassName read display names; secret or missing ones are nil
 - compat: [final 8] BindingKey reads a command's key; a secret or a missing API is nil
 - compat: [QF-03] Coordinates reads the map position as x, y in percent, one decimal, or nil
+- compat: [QF-04] GeneralJoined is true only for a plain non-zero channel 1 id
 
 ### test_restrictions.lua (16)
 
@@ -266,7 +267,7 @@ Total.
 - restrictions: stood down, nothing is heard; the stand-up announces what is in effect
 - restrictions: [final 1] a lockdown lifting under a higher one is announced
 
-### test_situation.lua (16)
+### test_situation.lua (19)
 
 - situation: classifier truth table (content, group)
 - situation: non-table input classifies as open world solo
@@ -284,6 +285,9 @@ Total.
 - situation: [final 1] on the degraded bus the module takes its own receiver down and up
 - situation: [final 1b] both combat edges reach Current() even under the Combat restriction type
 - situation: [arena] an arena snapshot carries its instanceID, which the arena row matches
+- situation: [QF-04] the snapshot reads General from channel 1 and a join or leave moves the signature
+- situation: [QF-04] CHANNEL_UI_UPDATE and CHAT_MSG_CHANNEL_NOTICE are situation events
+- situation: [QF-04] a channel notice after the automatic join refreshes the snapshot to General
 
 ### test_tokens.lua (10)
 
@@ -298,7 +302,7 @@ Total.
 - tokens: a mock fills a baked value missing here, and only when given (the preview echo, QC-07)
 - tokens: [QF-03] {coordinates} and {coords} bake from ctx.coordinates; missing is dropped and listed, or mocked
 
-### test_channels.lua (8)
+### test_channels.lua (13)
 
 - channels: smartGroup prefers instance, then raid, then party
 - channels: smartGroup solo follows the fallback
@@ -308,6 +312,11 @@ Total.
 - channels: prefixes and chat types
 - channels: the lock matrix
 - channels: [phase 5] the lock matrix has no row for an unknown channel, and reads a missing snapshot as solo
+- channels: [QF-04] general resolves to General when channel 1 is joined, else to Say
+- channels: [QF-04] general's prefix, chat type, color type and locks are Say's
+- channels: [QF-04] a general callout bakes /1 with channel 1 joined and /s without
+- channels: [QF-04] the channel row offers General with its label; Share and the seam accept it
+- channels: [QF-04] a Groups row names General in channel 1's color
 
 ### test_bake.lua (12)
 
@@ -813,7 +822,7 @@ Total.
 - check: [final minor 4] unknown and send-time tokens are listed
 - check: [final minor 4] solo with soloFallback=self says it would print locally
 
-### test_send_guard.lua (10)
+### test_send_guard.lua (11)
 
 - guard: Decide is ok outside the window and guarded inside it
 - guard: Remaining counts down to zero
@@ -825,8 +834,9 @@ Total.
 - echo: a message of another type or after the window matches nothing
 - echo: Expire drops only presses older than the window, oldest first
 - queue: a key replaces its earlier entry and keeps its place
+- echo: [QF-04] only channel 1 is the General echo; an unreadable index is left to the sender rule
 
-### test_sendengine.lua (30)
+### test_sendengine.lua (32)
 
 - sendengine: a send button is a named secure button registered for both edges
 - sendengine: Arm sends exactly the line; Disarm clears both attributes and sends nothing
@@ -849,6 +859,8 @@ Total.
 - send: presses further apart than the guard are never guarded
 - send: an unreadable sender counts as our echo and is never a drop
 - send: another player's message on the channel is not our echo
+- send: [QF-04] the player's own line on channel 1 is the General echo; on channel 2 it is not
+- send: [QF-04] an unreadable channel index falls to the sender rule
 - send: a disarmed button reports nothing and tracks nothing
 - send: a solo self-fallback prints locally and sends nothing
 - send: onPress hears the verdict and the window
@@ -1077,7 +1089,7 @@ Total.
 - surfaces: [nesting] a parent that draws nothing leaves its surface with nothing active
 - surfaces: [inherit] a child that inherits shows wherever its parent's When matches, whatever its own says
 
-### test_pad_render.lua (23)
+### test_pad_render.lua (24)
 
 - render: Dress builds a button's regions once, each its own object
 - render: [audit QC-07] the button's padlock is the catalog's lock mark, tinted gold; the Blizzard art is the nil fallback
@@ -1102,6 +1114,7 @@ Total.
 - render: [B3] a button's label is one line, and hidden when the button leaves it no room
 - pad render: [shine] a look on the Buttons tab paints every button
 - pad render: [shine] the pad's look leaves the dial alone
+- render: [QF-04] a General slot's tooltip names General in channel 1's color
 
 ### test_pad.lua (45)
 
@@ -1350,11 +1363,11 @@ Total.
 | test_slash.lua | 20 |
 | test_disabled.lua | 25 |
 | test_diagnostics.lua | 13 |
-| test_compat.lua | 13 |
+| test_compat.lua | 14 |
 | test_restrictions.lua | 16 |
-| test_situation.lua | 16 |
+| test_situation.lua | 19 |
 | test_tokens.lua | 10 |
-| test_channels.lua | 8 |
+| test_channels.lua | 13 |
 | test_bake.lua | 12 |
 | test_share.lua | 37 |
 | test_resolver.lua | 13 |
@@ -1372,8 +1385,8 @@ Total.
 | test_page_dials.lua | 28 |
 | test_page_share.lua | 12 |
 | test_check.lua | 6 |
-| test_send_guard.lua | 10 |
-| test_sendengine.lua | 30 |
+| test_send_guard.lua | 11 |
+| test_sendengine.lua | 32 |
 | test_dial_secure.lua | 20 |
 | test_preview.lua | 36 |
 | test_edit_preview.lua | 17 |
@@ -1383,7 +1396,7 @@ Total.
 | test_pad_layout.lua | 21 |
 | test_dial_layout.lua | 33 |
 | test_surfaces.lua | 30 |
-| test_pad_render.lua | 23 |
+| test_pad_render.lua | 24 |
 | test_pad.lua | 45 |
 | test_dial.lua | 65 |
 | test_dial_shine.lua | 8 |
@@ -1397,4 +1410,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1155** |
+| **Total** | **1168** |

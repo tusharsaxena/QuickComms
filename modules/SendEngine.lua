@@ -504,6 +504,10 @@ end
 function NS.addon.OnSendEcho(_, event, ...)
     local e = State.sendEcho
     if not (e and e.pending[1]) then return end
+    -- A channel line other than General's (/2 Trade, a custom channel) is never the echo (QF-04).
+    if event == "CHAT_MSG_CHANNEL" and G.IsGeneralEcho(NS.Compat.PlainNumber((select(8, ...)))) == false then
+        return
+    end
     local t0 = Perf.on and debugprofilestop()
     local sender = select(2, ...)
     local guid = select(12, ...)

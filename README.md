@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1155%2F1155_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1168%2F1168_passing-green)
 
 Quick Comms puts your usual group callouts one click or one keypress away. "Kick on me", "Lust
 now", "INC Lumber Mill": set them up once and they sit on a Comms Pad or open from a
@@ -101,7 +101,8 @@ Everything is configured under **Settings → AddOns → Ka0s Quick Comms**, and
 - Each group has conditions for when it applies, such as "in a Mythic+ key" or "I'm the tank". The
   addon checks those against where you are and shows the groups that match, in the order you set.
 - Text is prepared ahead of time, out of combat, and loaded onto secure buttons. Pressing one sends
-  the line to the right channel (say, yell, party, instance, raid or raid warning), even during a boss.
+  the line to the right channel (say, yell, party, instance, raid, raid warning, or General, /1, which
+  falls back to say where you have not joined it), even during a boss.
 - After a press, every button dims for about a second. On a boss the game quietly drops anything
   sent faster than that, so if a line never arrives you get a note in chat.
 - The built-in sets arrive as ordinary groups: change, rename or delete them like your own. Restore

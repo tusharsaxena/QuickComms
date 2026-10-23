@@ -21,4 +21,4 @@ BI.Group(ID, {
     }),
 })
 
-BI.SNAPSHOTS[ID] = { content = "openWorld", group = "solo", instanceGroup = false, lockdown = {} }
+BI.SNAPSHOTS[ID] = { content = "openWorld", group = "solo", instanceGroup = false, general = true, lockdown = {} }

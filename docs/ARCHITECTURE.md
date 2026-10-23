@@ -89,7 +89,7 @@ line: the client reads it there, and the standard allows it (layout-§1, toc-fil
 | `Restrictions` | edge | what Blizzard's addon restrictions allow now (chat, combat, encounter, key, PvP match); owns `PLAYER_REGEN_DISABLED` / `ENABLED`; sends `RESTRICTION_CHANGED` |
 | `Situation` | classifier + edge | `Classify(inputs)` is pure; the edge reads the client through `core/Compat.lua`, coalesces bursts 0.1 s and sends `SITUATION_CHANGED`; `Current()` is the snapshot |
 | `Tokens` | pure | `{rt1}`-style marks and the live `%t` / `%f` tokens; the baked values (`{coordinates}` among them, QF-03); `Expand`, `UsesCoordinates` |
-| `Channels` | pure | the eight kinds (`smartGroup`, `smartLead`, `party`, `raid`, `instance`, `raidWarning`, `say`, `yell`); `Resolve`, `Prefix`, `LockState` |
+| `Channels` | pure | the nine kinds (`smartGroup`, `smartLead`, `party`, `raid`, `instance`, `raidWarning`, `say`, `yell`, `general`); `Resolve`, `Prefix`, `ChatType`, `ColorType`, `LockState`. `general` is chat channel 1 (`/1`, QF-04): General when the snapshot's `general` says channel 1 is joined, else Say, and locked as Say; no guild, community or custom channel is offered. Its echo is `CHAT_MSG_CHANNEL` (chat type `CHANNEL`), its color the client's `CHANNEL1` |
 | `Bake` | pure | callout + snapshot to one macro line or a named refusal; sanitizes the text and baked token values, counts typed `%t` / `%f` as live |
 | `Resolver` | pure | When rules to the active group set (`WhenOf`: a child that inherits is judged by its parent's When; `ID_ROWS`: the place rows, instances, battleground and arena), surface order, the "why" lines |
 | `Library` | registry writer | membership, order, ids, references and seeding of the profile's callouts, groups, pads and dials: the shipped sets seeded once per profile as ordinary groups (`SeedFromOverlay` for migration step 3), `RestoreBuiltins`, and the one-level nesting rules (`ValidParent`, `SettleParent`, `Children`); member fields go through the seam (member rows); `Prepare`; `Batch` (one act, one announce); and `Import`, the one writer of what a share string brings; sends `LIBRARY_CHANGED` |
@@ -222,9 +222,12 @@ same handler as the Master controls row and the launcher entry.
 Every game event is declared in `NS.FEATURE_EVENTS` and registered through `NS.SafeRegisterEvent`,
 so `OnEnable` and the stand-up register exactly that list and the stand-down unregisters it. The list
 holds the situation and restriction edges' rows (zone, key, group, spec and restriction events, and
-the two combat edges, which `Restrictions` owns), and the send engine's nine `CHAT_MSG_*` rows (say,
-yell, party and its leader, raid and its leader, raid warning, instance and its leader), whose
-handler matches an echo to a press without reading the text. The one registration outside
+the two combat edges, which `Restrictions` owns; `CHANNEL_UI_UPDATE` and `CHAT_MSG_CHANNEL_NOTICE`
+refresh the snapshot's `general`, QF-04), and the send engine's ten `CHAT_MSG_*` rows (say, yell,
+party and its leader, raid and its leader, raid warning, instance and its leader, and channel), whose
+handler matches an echo to a press without reading the text. `CHAT_MSG_CHANNEL` fires for every
+channel the player is in, so the handler drops a line whose channel index (the 8th payload field) is
+readable and not 1 (`SendGuard.IsGeneralEcho`) before matching. The one registration outside
 `NS.FEATURE_EVENTS` is `SendEngine`'s private `PLAYER_REGEN_ENABLED` target, which exists only while
 a stand-down is held in combat and is released when it fires (slash-commands-§7).
 

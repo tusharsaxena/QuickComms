@@ -61,6 +61,14 @@ conditions (`group.inheritWhen`, on unless stored `false`) is judged by the pare
 its own (`Resolver.WhenOf`). Deleting a parent (`Library.DeleteGroup`)
 makes its children top-level groups, in its place on every pad and dial, in one act.
 
+## Today: General joined or left
+
+`CHANNEL_UI_UPDATE` or `CHAT_MSG_CHANNEL_NOTICE` (the notice also covers the automatic joins after login
+and the zone's channel swap) → `Situation.Refresh` → `ReadInputs` reads `Compat.GeneralJoined()` into
+the snapshot's `general`, a signature field → a join or leave sends `SITUATION_CHANGED` and the pads
+rebuild, so a `general` callout bakes `/1 text` while channel 1 is joined and `/s text` when it is not
+(QF-04). A notice for any other channel leaves the signature, so nothing rebuilds.
+
 ## Today: a restriction or combat edge
 
 `ADDON_RESTRICTION_STATE_CHANGED` or a `PLAYER_REGEN` edge → `Restrictions` (it owns both

@@ -216,6 +216,7 @@ local PREVIEW_CHARS = 40
 local SHORT_CHANNEL = {
     smartGroup = L["Smart group"], smartLead = L["Smart lead"], party = L["Party"], raid = L["Raid"],
     instance = L["Instance"], raidWarning = L["Raid warning"], say = L["Say"], yell = L["Yell"],
+    general = L["General"],
 }
 
 local function hex(r, g, b)
@@ -226,7 +227,7 @@ end
 -- A smart kind resolves against the editor's snapshot; resolving to nothing (solo) takes PARTY's.
 local function channelColor(kind)
     local concrete = NS.Channels.Resolve(kind, Ed.Snapshot(), NS.Setting("behavior.soloFallback"))
-    return hex(NS.PadRender.ChannelColor(NS.Channels.ChatType(concrete) or "PARTY"))
+    return hex(NS.PadRender.ChannelColor(NS.Channels.ColorType(concrete) or "PARTY"))
 end
 
 local function preview(text)

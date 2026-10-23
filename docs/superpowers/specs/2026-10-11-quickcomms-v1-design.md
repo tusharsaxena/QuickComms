@@ -432,6 +432,8 @@ A locked callout stays visible with a padlock and a tooltip (brainstorm §3.3).
 | party, instance | Not in that kind of group | game rule. **C3 unverified** (battleground `/i`, arena `/p`) |
 | guild, community, custom | Not offered at all in v0.1.0. Lockdown blocks them. | research 01 |
 
+*Superseded in part 2026-10-23 by 2026-10-23-preview-followups-design.md: General (/1) is offered, locked as Say.*
+
 **Unverified checks C1 and C3 (owner, 2026-10-13).** The owner skipped the in-game checks and tests with real messages instead. The primary design stands: these channels send during encounters. If a real message shows `/raid`, `/rw`, battleground `/i` or arena `/p` fails during an encounter, the fallback is the switch: add that channel to the `lockdown.encounter` (or `pvpMatch`) row above, with the same padlock as Say.
 
 **The lockdown chip** shows on a surface only when at least one of its visible callouts is locked *because of lockdown* (brainstorm §3.4).

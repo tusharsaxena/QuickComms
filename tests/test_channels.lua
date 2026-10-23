@@ -84,3 +84,77 @@ test("channels: [phase 5] the lock matrix has no row for an unknown channel, and
     assertEqual(Ch.LockState("party", nil), "notInGroup")
     assertNil(Ch.LockState("say", nil), "no lockdown table is no lockdown")
 end)
+
+-- ── General (/1), QF-04 (2026-10-23 preview follow-ups, D4b) ─────────────────────────────────
+
+test("channels: [QF-04] general resolves to General when channel 1 is joined, else to Say", function()
+    local Ch = ch()
+    -- red under: no general kind (Resolve answers badChannel)
+    assertTrue(Ch.IsKind("general"))
+    assertEqual((Ch.Resolve("general", snap({ general = true }))), "general")
+    local c, reason, selfPrint = Ch.Resolve("general", snap(), "none")
+    assertEqual(c, "say", "not joined: the Say fallback, whatever the solo fallback")
+    assertNil(reason) assertFalse(selfPrint)
+    assertEqual((Ch.Resolve("general", snap({ general = false, group = "party" }))), "say")
+    assertEqual(Ch.KINDS[#Ch.KINDS], "general", "listed after yell")
+end)
+
+test("channels: [QF-04] general's prefix, chat type, color type and locks are Say's", function()
+    local Ch = ch()
+    assertEqual(Ch.Prefix("general"), "/1")
+    assertEqual(Ch.ChatType("general"), "CHANNEL")
+    -- red under: the color asked by ChatType ("CHANNEL" has no color of its own)
+    assertEqual(Ch.ColorType("general"), "CHANNEL1")
+    assertEqual(Ch.ColorType("party"), "PARTY")
+    assertNil(Ch.ColorType("guild"))
+    assertEqual(Ch.LockState("general", snap({ lockdown = { encounter = true } })), "lockdown")
+    assertEqual(Ch.LockState("general", snap({ lockdown = { pvpMatch = true } })), "lockdown")
+    assertNil(Ch.LockState("general", snap({ lockdown = { challengeMode = true } })))
+end)
+
+test("channels: [QF-04] a general callout bakes /1 with channel 1 joined and /s without", function()
+    local NS = T.newAddon()
+    local c = { name = "Thanks", text = "Thanks!", channel = "general" }
+    local line, reason, info = NS.Bake.Bake(c, snap({ general = true }))
+    assertEqual(line, "/1 Thanks!")
+    assertNil(reason)
+    assertEqual(info.concrete, "general")
+    line = NS.Bake.Bake(c, snap())
+    assertEqual(line, "/s Thanks!")
+end)
+
+test("channels: [QF-04] the channel row offers General with its label; Share and the seam accept it", function()
+    local NS = T.bootAddon()
+    local found
+    for _, v in ipairs(NS.SchemaRuntime.FindRow("callout.channel").values) do
+        if v.value == "general" then found = v.text end
+    end
+    -- red under: no CHANNEL_LABEL.general (the row shows the raw id)
+    assertEqual(found, "General (/1; Say when not joined)")
+    local cid = NS.Library.CreateCallout({ name = "Hi", text = "Hi", channel = "say" })
+    assertTrue((NS.SchemaRuntime.Set("callout.channel", "general", cid)))
+    assertEqual(NS.db.profile.callouts[cid].channel, "general")
+    local SH = NS.Share
+    local res = SH.Validate({ v = 1, addon = "QuickComms", kind = "bundle",
+        callouts = { c1 = { name = "Hi", text = "Hi", channel = "general" } } })
+    assertTrue(res.ok)
+    assertEqual(#res.refused, 0)
+end)
+
+test("channels: [QF-04] a Groups row names General in channel 1's color", function()
+    local NS, m = T.enableAddon()
+    NS.Situation.ReadInputs = function() return { general = true } end
+    NS.Situation.RefreshNow("test")
+    local P = dofile("tests/page_helpers.lua")(NS, m)
+    P.show("Groups")
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    NS.Library.CreateCalloutIn(gid, { name = "Wave", text = "o/", channel = "general" })
+    NS.addon.Settings.Editors.Select("group", gid)
+    local want = "|cffffd100Wave|r  |cffffbfbfGeneral|r  |cffb3b3b3o/|r"
+    local found
+    for _, label in ipairs(P.all(P.tab("groups", "callouts"), "Label")) do
+        if label.text == want then found = true end
+    end
+    -- red under: no SHORT_CHANNEL.general, or the row's color asked by ChatType
+    assertTrue(found, "the General row")
+end)

@@ -51,6 +51,8 @@ read_globals = {
   "PlaySound", "SOUNDKIT",
   -- modules/Dial_Render.lua: the pointer follows the cursor.
   "GetCursorPosition",
+  -- core/Compat.lua: whether chat channel 1 (General) is joined (QF-04).
+  "GetChannelName",
   -- core/Compat.lua: the editors' display names (shown, never matched).
   "GetRealZoneText", "GetSpecializationInfoByID", "LOCALIZED_CLASS_NAMES_MALE",
   -- core/Compat.lua: a dial's key is WoW's own binding of its Open Comms Dial entry: read, set, saved
