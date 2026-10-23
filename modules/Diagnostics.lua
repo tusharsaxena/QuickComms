@@ -109,6 +109,7 @@ local function surfaces(out)
     out:joined("Pad", "pads built", NS.Pad.Ids())
     out:add("Pad", "testMode=%s", NS.Preview.IsTestMode())
     out:add("Pad", "previewAs=%s", NS.Preview.PreviewAs() or "off")
+    out:add("Pad", "previewWindow=%s", NS.PreviewWindow and NS.PreviewWindow.IsShown() and "shown" or "hidden")
     out:add("Pad", "editPreview=%s", NS.Preview.EditGroup() or "off")
     out:add("Pad", "padsHidden=%s (this character)", not NS.SlashVerbs.PadsShown())
     local ids = {}

@@ -32,6 +32,8 @@ end
 local function announce()
     NS.addon:SendMessage(NS.MSG.TEST_MODE_CHANGED,
         State.testMode == true or State.previewAs ~= nil or State.editPreview ~= nil)
+    -- The selector window shows exactly while Preview as is on (late-bound: it loads after this file).
+    if NS.PreviewWindow then NS.PreviewWindow.Sync() end
     refreshPanel()
 end
 
@@ -290,6 +292,8 @@ listen()
 
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
     State.testMode, State.previewAs, State.editPreview = nil, nil, nil
+    -- The stand-down announces nothing, so the selector window is told here.
+    if NS.PreviewWindow then NS.PreviewWindow.Sync() end
     if receiver and not NS.Bus.tracked then receiver:UnregisterMessage(NS.MSG.RESTRICTION_CHANGED) end
 end
 NS.STAND_UP[#NS.STAND_UP + 1] = function()

@@ -84,8 +84,11 @@ test("diagnostics: [phase 3] the surfaces section names the preview", function()
     local NS = T.enableAddon()
     NS.Situation.RefreshNow("test")
     assertTrue(report(NS):find("previewAs=off", 1, true) ~= nil)
+    assertTrue(report(NS):find("previewWindow=hidden", 1, true) ~= nil)
     NS.Preview.SetPreviewAs("arena")
     assertTrue(report(NS):find("previewAs=arena", 1, true) ~= nil)
+    -- red under: drop the previewWindow line from modules/Diagnostics.lua
+    assertTrue(report(NS):find("previewWindow=shown", 1, true) ~= nil)
 end)
 
 test("diagnostics: [final 21] the settings section lists no member row", function()

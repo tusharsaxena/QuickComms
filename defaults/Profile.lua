@@ -39,6 +39,9 @@ NS.C = {
         padOrder  = {},
         dialOrder = {},
         seeded    = false, -- set by Library.Prepare once the default pad and dial exist
+
+        -- The Preview as selector window's place (modules/PreviewWindow.lua), written on drag stop.
+        previewWindow = { point = "TOP", relPoint = "TOP", x = 0, y = -140 },
     },
 
     -- schemaVersion is 0, never the current version (savedvariables-§1).
