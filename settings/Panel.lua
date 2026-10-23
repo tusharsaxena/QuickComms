@@ -58,11 +58,11 @@ local MASTER_ROWS, MASTER_TAIL = Helpers.MasterControls{
     -- rows through the composer's `extra` slot, after the mandated rows and never interleaved with
     -- them. The Minimap button / Test mode line is full, so it opens its own line.
     extra            = {
-        { path = "state.previewAs", type = "string", sessionOnly = true, default = "current",
+        { path = "state.previewAs", type = "string", sessionOnly = true, default = "off",
           startsLine = true, label = L["Preview as"],
-          desc = L["Draw every pad, and open dial 1, as it would look in another situation. Nothing on them sends. It ends when the settings close or combat starts."],
+          desc = L["Draw every pad, and open dial 1, as it would look in another situation. Nothing on them sends. A small window lets you switch it or end it; combat ends it."],
           values = function() return NS.Preview.Choices() end,
-          validate = function(v) return NS.Preview.FindPreset(v) ~= nil end },
+          validate = function(v) return v == NS.Preview.OFF or NS.Preview.FindPreset(v) ~= nil end },
     },
     -- Reset position resets every pad and dial anchor (spec §10.4).
     onResetPosition  = function() if NS.Surfaces and NS.Surfaces.ResetPositions then NS.Surfaces.ResetPositions() end end,

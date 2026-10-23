@@ -873,7 +873,7 @@ Total.
 - dial secure: [polish] display open shows no screen catcher
 - dial secure: [polish] closing hides the screen catcher
 
-### test_preview.lua (24)
+### test_preview.lua (26)
 
 - preview: test mode turns on and off, announcing each edge once
 - preview: a start in combat is refused with one line
@@ -885,8 +885,10 @@ Total.
 - preview: [review 3] a previewed solo button prints nothing, even with the self fallback
 - preview: [review 3] combat ends it with one line, and the live buttons come back armed
 - preview: [phase 3] refused in combat and while disabled, with one line each
-- preview: [review 3] the stand-down ends it silently, and so does closing the settings window
+- preview: [review 3] the stand-down ends it silently; closing the settings window leaves it on
 - preview: [phase 3] test mode and Preview as are one switch at a time
+- preview: Current previews where you are, disarmed, and follows a situation change
+- preview: the settings row's choices are Off, then every preset in order
 - preview: [phase 3] the menu: Current, one M+ dungeon, each raid difficulty, Arena, each battleground, Solo
 - preview: the menu's labels: one dungeon, each difficulty with the raid, BG - <name>, Solo
 - preview: [phase 3] a dungeon entry reads M+ · <dungeon> · <spec> (spec §13.3)
@@ -1316,7 +1318,7 @@ Total.
 | test_send_guard.lua | 10 |
 | test_sendengine.lua | 30 |
 | test_dial_secure.lua | 16 |
-| test_preview.lua | 24 |
+| test_preview.lua | 26 |
 | test_edit_preview.lua | 14 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 21 |
@@ -1336,4 +1338,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1102** |
+| **Total** | **1104** |

@@ -195,7 +195,7 @@ test("slash: [final 9] test and preview's help, and the Preview as row, speak of
     assertTrue(text:find("Preview the pads and dials as another situation", 1, true) ~= nil, text)
     local row = NS.SchemaRuntime.FindRow("state.previewAs")
     do
-        assertEqual(row.desc, "Draw every pad, and open dial 1, as it would look in another situation. Nothing on them sends. It ends when the settings close or combat starts.")
+        assertEqual(row.desc, "Draw every pad, and open dial 1, as it would look in another situation. Nothing on them sends. A small window lets you switch it or end it; combat ends it.")
     end
 end)
 

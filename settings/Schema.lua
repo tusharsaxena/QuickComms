@@ -49,9 +49,9 @@ local SESSION = {
         get = function() return NS.Preview ~= nil and NS.Preview.IsTestMode() end,
         set = function(v) if NS.Preview then NS.Preview.SetTestMode(v and true or false) end end,
     },
-    -- Preview as… (spec §13.3): modules/Preview.lua owns the switch; "current" is off.
+    -- Preview as… (spec §13.3): modules/Preview.lua owns the switch; "off" is off.
     ["state.previewAs"] = {
-        get = function() return NS.Preview ~= nil and NS.Preview.PreviewAs() or "current" end,
+        get = function() return NS.Preview ~= nil and NS.Preview.PreviewAs() or "off" end,
         set = function(v) if NS.Preview then NS.Preview.SetPreviewAs(v) end end,
     },
 }

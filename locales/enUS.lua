@@ -658,6 +658,7 @@ L["(nothing to edit)"] = "(nothing to edit)"
 
 -- Preview as… (modules/Preview.lua, modules/Pad.lua, modules/Pad_Render.lua)
 L["Current"] = "Current"
+L["Off"] = "Off"
 L["LFR"] = "LFR"
 L["Normal"] = "Normal"
 L["Heroic"] = "Heroic"
@@ -674,7 +675,7 @@ L["Channel: %s"] = "Channel: %s"
 -- Preview as… (modules/Preview.lua, settings/Panel.lua, settings/SlashVerbs.lua)
 L["Instance %d"] = "Instance %d"
 L["Preview as"] = "Preview as"
-L["Draw every pad, and open dial 1, as it would look in another situation. Nothing on them sends. It ends when the settings close or combat starts."] = "Draw every pad, and open dial 1, as it would look in another situation. Nothing on them sends. It ends when the settings close or combat starts."
+L["Draw every pad, and open dial 1, as it would look in another situation. Nothing on them sends. A small window lets you switch it or end it; combat ends it."] = "Draw every pad, and open dial 1, as it would look in another situation. Nothing on them sends. A small window lets you switch it or end it; combat ends it."
 L["Preview the pads and dials as another situation — `/qc preview <name>` or `off`; `/qc preview` lists them"] = "Preview the pads and dials as another situation — `/qc preview <name>` or `off`; `/qc preview` lists them"
 L["Preview as (now: %s):"] = "Preview as (now: %s):"
 L["  %s: %s"] = "  %s: %s"

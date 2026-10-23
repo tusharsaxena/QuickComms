@@ -57,7 +57,7 @@ test("schema: Preview as sits in Master controls on the General page, after Test
     assertEqual(row.path, "state.previewAs")
     assertTrue(row.sessionOnly == true, "never saved")
     assertTrue(row.startsLine == true, "the Minimap button / Test mode line is full")
-    assertEqual(row.default, "current")
+    assertEqual(row.default, "off")
     for _, r in ipairs(Settings.RowsForPage("groups")) do
         assertTrue(r.path ~= "state.previewAs", "no longer a Groups page row")
     end

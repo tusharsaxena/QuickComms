@@ -171,17 +171,17 @@ test("preview: [phase 3] refused in combat and while disabled, with one line eac
     assertTrue(m.prints[1]:find("is disabled", 1, true) ~= nil, m.prints[1])
 end)
 
-test("preview: [review 3] the stand-down ends it silently, and so does closing the settings window", function()
+test("preview: [review 3] the stand-down ends it silently; closing the settings window leaves it on", function()
     local NS, m = live()
     NS.Preview.SetPreviewAs("arena")
     NS.SchemaRuntime.Set("enabled", false)
     assertTrue(NS.Preview.PreviewAs() == nil)
     NS.SchemaRuntime.Set("enabled", true)
     assertTrue(NS.Preview.SetPreviewAs("arena"))
-    -- red under: drop the WatchPanel call from Settings.Register in settings/Panel.lua
+    -- red under: the WatchPanel OnHide also ending Preview as (it outlives the settings window now)
     m.SettingsPanel:__fire("OnHide")
-    assertTrue(NS.Preview.PreviewAs() == nil)
-    assertTrue(arenaButton(NS) == nil, "back to the open world, where the arena set is not active")
+    assertEqual(NS.Preview.PreviewAs(), "arena")
+    assertTrue(arenaButton(NS) ~= nil, "still drawn as the arena")
 end)
 
 test("preview: [phase 3] test mode and Preview as are one switch at a time", function()
@@ -193,9 +193,50 @@ test("preview: [phase 3] test mode and Preview as are one switch at a time", fun
     assertTrue(P.SetPreviewAs("world"))
     assertFalse(P.IsTestMode(), "the preview replaces test mode")
     assertEqual(NS.Surfaces.Plans().p1.preview, "world")
+    -- red under: `want = key ~= P.CURRENT and key or nil` (Current was the off value)
     assertTrue(P.SetPreviewAs("current"))
+    assertEqual(P.PreviewAs(), "current")
+    assertEqual(NS.Surfaces.Plans().p1.preview, "current")
+    assertTrue(P.SetPreviewAs("off"))
     assertTrue(P.PreviewAs() == nil)
+    assertFalse(P.SetPreviewAs("off"), "already off: no edge")
     assertFalse(P.SetPreviewAs("nope"))
+end)
+
+test("preview: Current previews where you are, disarmed, and follows a situation change", function()
+    local NS = live(WORLD)
+    local inputs = WORLD
+    NS.Situation.ReadInputs = function() return inputs end
+    assertTrue(NS.Preview.SetPreviewAs("current"))
+    local plan = NS.Surfaces.Plans().p1
+    assertEqual(plan.preview, "current")
+    assertEqual(plan.order[1], T.seeded(NS, "bi.world"))
+    local button = NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.world.rare"))[1]
+    assertTrue(button ~= nil, "the solo set is drawn where you are")
+    assertTrue(button:GetAttribute("macrotext") == nil, "disarmed")
+    assertEqual(NS.Pad.Instance("p1").header.qcSituation:GetText(), "Preview: Current")
+    inputs = MPLUS
+    NS.Situation.RefreshNow("test")
+    plan = NS.Surfaces.Plans().p1
+    assertEqual(plan.preview, "current", "still a preview")
+    assertEqual(plan.order[1], T.seeded(NS, "bi.mplus"))
+    local pull = NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.mplus.pull"))[1]
+    assertTrue(pull ~= nil, "the M+ set now")
+    assertTrue(pull:GetAttribute("macrotext") == nil, "still disarmed")
+end)
+
+test("preview: the settings row's choices are Off, then every preset in order", function()
+    local NS = live()
+    local P = NS.Preview
+    local choices = P.Choices()
+    -- red under: the choices starting at Current (Current was the off value)
+    assertEqual(choices[1].value, "off")
+    assertEqual(choices[1].text, "Off")
+    local presets = P.Presets()
+    assertEqual(#choices, #presets + 1)
+    for i, e in ipairs(presets) do assertEqual(choices[i + 1].value, e.key) end
+    assertEqual(P.Label(nil), "Off")
+    assertEqual(P.Label("off"), "Off")
 end)
 
 test("preview: [phase 3] the menu: Current, one M+ dungeon, each raid difficulty, Arena, each battleground, Solo", function()
@@ -243,10 +284,16 @@ end)
 test("preview: [phase 3] the Preview as row and `/qc preview` drive the same switch", function()
     local NS, m = live()
     local S = NS.SchemaRuntime
-    assertEqual(S.Get("state.previewAs"), "current")
+    -- red under: the row reading "current" when off
+    assertEqual(S.Get("state.previewAs"), "off")
     assertTrue(S.Set("state.previewAs", "arena"))
     assertEqual(NS.Preview.PreviewAs(), "arena")
     assertFalse((S.Set("state.previewAs", "nope")), "not a situation")
+    assertTrue(S.Set("state.previewAs", "off"))
+    assertTrue(NS.Preview.PreviewAs() == nil)
+    assertTrue(S.Set("state.previewAs", "current"))
+    assertEqual(NS.Preview.PreviewAs(), "current")
+    assertEqual(S.Get("state.previewAs"), "current")
     m.prints = {}
     NS.addon:OnSlashCommand("preview off")
     assertTrue(NS.Preview.PreviewAs() == nil)

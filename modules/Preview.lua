@@ -1,8 +1,10 @@
 local _, NS = ...
 -- modules/Preview.lua — test mode (spec §10.4, preview-mode, options-ui-§15) and the one sender of
 -- TEST_MODE_CHANGED (spec §17). It holds both flavors of test mode: placeholders, and "Preview as…"
--- (spec §13.3), which builds the pads from a synthetic snapshot. They are one switch at a time. A
--- third, the edit preview (one group, while the Groups page edits it), sits over either.
+-- (spec §13.3), which builds the pads from a synthetic snapshot, or from the live one for Current (a
+-- live preview of where you are). They are one switch at a time. A third, the edit preview (one
+-- group, while the Groups page edits it), sits over either. Preview as ends on "off", a switch to
+-- test mode, combat or the stand-down; closing the settings window ends only the edit preview.
 -- Session-only (NS.State.testMode, never saved): refused while stood down or in combat
 -- with one line, ended when combat starts (while secure writes are still allowed, so the pads swap
 -- back to live buttons at once), and ended by the stand-down. The checkbox, the `test` verb and the
@@ -70,9 +72,13 @@ end
 -- Test mode's second flavor: the pads are built from a synthetic snapshot instead of placeholders,
 -- so they show the groups that situation resolves to (modules/Surfaces.lua marks the plan, and every
 -- previewed button is disarmed). Only where you are changes: the class, specialization, role and
--- character are the live ones. Session-only (NS.State.previewAs).
+-- character are the live ones. Current is a preset too: a live preview of where you are, whose
+-- snapshot is the live one, so it follows a zone change (SITUATION_CHANGED -> Surfaces.Request). It
+-- ends on P.OFF ("off"), test mode, combat or the stand-down, never when the settings window closes.
+-- Session-only (NS.State.previewAs).
 
 P.CURRENT = "current"
+P.OFF = "off"
 local DOT = " \194\183 "
 
 local RAID = { { "lfr", 17, L["LFR"] }, { "normal", 14, L["Normal"] }, { "heroic", 15, L["Heroic"] },
@@ -124,7 +130,8 @@ local function battlegrounds()
     return out
 end
 
---- The "Preview as…" menu, in order (spec §13.3): { key, label, snapshot }; Current has none.
+--- The "Preview as…" menu, in order (spec §13.3): { key, label, snapshot }; Current has none (it
+--- previews the live snapshot, P.PreviewSnapshot).
 function P.Presets()
     local out = { { key = P.CURRENT, label = L["Current"] } }
     local spec = NS.Compat.SpecName()
@@ -162,6 +169,7 @@ function P.FindPreset(key)
 end
 
 function P.Label(key)
+    if key == nil or key == P.OFF then return L["Off"] end
     if key == P.EDIT then
         local g = State.editPreview and NS.Library.Group(State.editPreview)
         return g and g.name or tostring(State.editPreview)
@@ -170,10 +178,10 @@ function P.Label(key)
     return e and e.label or tostring(key)
 end
 
---- The menu as a row's `values` list.
+--- The settings row's `values` list: Off, then every preset (Current included).
 function P.Choices()
-    local out = {}
-    for i, e in ipairs(P.Presets()) do out[i] = { value = e.key, text = e.label } end
+    local out = { { value = P.OFF, text = L["Off"] } }
+    for _, e in ipairs(P.Presets()) do out[#out + 1] = { value = e.key, text = e.label } end
     return out
 end
 
@@ -181,21 +189,24 @@ function P.PreviewAs()
     return State.previewAs
 end
 
---- The previewed snapshot, or nil when "Preview as…" is off.
+--- The previewed snapshot, or nil when "Preview as…" is off. Current answers the live snapshot.
 function P.PreviewSnapshot()
     local key = State.previewAs
     if not key then return nil end
+    if key == P.CURRENT then return NS.Situation.Current() end
     local e = P.FindPreset(key)
     return e and e.snapshot or nil
 end
 
---- Preview the pads as `key`, or turn the preview off (nil, "", "off" or "current"). A start is
---- refused, with one line, while stood down (by hold: NS.StoodDownRefusal) or in combat.
+--- Preview the pads as `key`, or turn the preview off (nil, "" or "off"). A start is refused, with
+--- one line, while stood down (by hold: NS.StoodDownRefusal) or in combat; an unknown key, silently.
 --- @return boolean changed
 function P.SetPreviewAs(key)
-    if key == nil or key == "" or key == "off" then key = P.CURRENT end
-    if not P.FindPreset(key) then return false end
-    local want = key ~= P.CURRENT and key or nil
+    local want
+    if key ~= nil and key ~= "" and key ~= P.OFF then
+        if not P.FindPreset(key) then return false end
+        want = key
+    end
     if want == State.previewAs then return false end
     if want then
         local refusal = NS.StoodDownRefusal()
@@ -244,13 +255,13 @@ end
 
 local watched = setmetatable({}, { __mode = "k" })
 
---- End the preview when the settings window closes (spec §13.3). settings/Panel.lua hands it the
---- client's SettingsPanel once; the hook is insecure and runs only when that window hides.
+--- End the edit preview when the settings window closes. settings/Panel.lua hands it the client's
+--- SettingsPanel once; the hook is insecure and runs only when that window hides. Preview as outlives
+--- the settings window: the preview window carries its end control.
 function P.WatchPanel(frame)
     if type(frame) ~= "table" or type(frame.HookScript) ~= "function" or watched[frame] then return false end
     watched[frame] = true
     frame:HookScript("OnHide", function()
-        if State.previewAs then P.SetPreviewAs(nil) end
         if State.editPreview then P.SetEditPreview(nil) end
     end)
     return true

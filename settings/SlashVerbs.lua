@@ -107,16 +107,15 @@ function V.PreviewLines(rest)
     local P = NS.Preview
     local key = (rest or ""):match("^%s*(%S+)")
     if not key then
-        local out = { L["Preview as (now: %s):"]:format(P.Label(P.PreviewAs() or P.CURRENT)) }
+        local out = { L["Preview as (now: %s):"]:format(P.Label(P.PreviewAs())) }
         for _, e in ipairs(P.Presets()) do out[#out + 1] = L["  %s: %s"]:format(e.key, e.label) end
         return out
     end
     key = key:lower()   -- as the dispatcher reads verbs; every preset key is lower case
-    if key == "off" then key = P.CURRENT end
-    if not P.FindPreset(key) then
+    if key ~= P.OFF and not P.FindPreset(key) then
         return { L["No situation named %s. Type /qc preview for the list."]:format(key) }
     end
-    local want = key ~= P.CURRENT and key or nil
+    local want = key ~= P.OFF and key or nil
     if P.PreviewAs() ~= want and not P.SetPreviewAs(key) then return {} end
     if want then return { L["Previewing: %s"]:format(P.Label(key)) } end
     return { L["Preview off."] }

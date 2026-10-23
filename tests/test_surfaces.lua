@@ -468,7 +468,7 @@ test("surfaces: [phase 3] WhyLines in a key explains the seeded set's matched ro
     local lines = NS.Surfaces.WhyLines("p1")
     assertEqual(lines[1], "Preview as: Arena")
     assertEqual(lines[2], "Arena: Content")
-    NS.Preview.SetPreviewAs("current")
+    NS.Preview.SetPreviewAs("off")
     NS.Preview.SetTestMode(true)
     assertEqual(NS.Surfaces.WhyLines("p1")[1], "Test mode: placeholder buttons that send nothing.")
     assertEqual(NS.Surfaces.WhyLines("p9")[1], "This pad has not been built yet.")
