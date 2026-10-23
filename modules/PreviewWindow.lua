@@ -25,7 +25,9 @@ local _, NS = ...
 -- header's strata is protected in combat, so the window moves instead. It keeps the client's level
 -- for a child of UIParent, far under a modal's catcher (settings/ModalWindow.lua LEVEL), so the
 -- callout popup and the icon browser, also FULLSCREEN, still cover it; its menu
--- (FULLSCREEN_DIALOG) stays above it.
+-- (FULLSCREEN_DIALOG) stays above it. So a show NEVER Raises it: the client's Raise lifts a frame
+-- over everything in its strata, which here is the modals' catchers and bands (a `/qc preview`
+-- typed while the popup is open would put the window over the popup's dim, clickable through it).
 
 NS.PreviewWindow = NS.PreviewWindow or {}
 local PW = NS.PreviewWindow
@@ -177,7 +179,6 @@ function PW.Sync()
     fill(f)
     place()
     f:Show()
-    if f.Raise then f:Raise() end
 end
 
 function PW.IsShown()

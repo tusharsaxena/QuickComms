@@ -351,4 +351,7 @@ function Settings.EnsureResetPopup()
             pout(L["all settings reset to defaults"])
         end,
     }
+    -- Over the preview dial and an open callout popup while shown (settings/ModalWindow.lua
+    -- CONFIRMS, QC-06): `/qc resetall` can be typed with the popup open.
+    Settings.ModalWindow.LiftConfirm(StaticPopupDialogs[Settings.RESET_POPUP])
 end

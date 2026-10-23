@@ -517,7 +517,7 @@ Total.
 - members: [inherit] the Enabled tooltip names whose When a sub-group is shown by
 - members: [arena] the CLI sets the arena row by id, name or all, and prints it back
 
-### test_editors.lua (17)
+### test_editors.lua (18)
 
 - editors: [review 2] Select keeps the selection, and nothing else; Heal keeps a member that exists
 - editors: every membership change asks for one structural repaint, on the next frame
@@ -527,6 +527,7 @@ Total.
 - editors: a profile switch clears every selection
 - editors: the stand-down cancels a pending repaint
 - editors: ConfirmDelete asks first, and only the accepted popup runs the act, once
+- editors: [QC-06] the delete confirm lifts its dialog over the dial and the modals, then hands it back
 - editors: Scalar keeps the rows the flow engine draws, and CancelReorder cancels once
 - editors: a row's remove is a glyph, not a button
 - editors: a row with edit shows the edit glyph and fires it
@@ -1326,7 +1327,7 @@ Total.
 | test_gameids.lua | 4 |
 | test_library.lua | 74 |
 | test_members.lua | 28 |
-| test_editors.lua | 17 |
+| test_editors.lua | 18 |
 | test_callout_popup.lua | 38 |
 | test_icon_browser.lua | 37 |
 | test_eui_skin.lua | 10 |
@@ -1360,4 +1361,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1122** |
+| **Total** | **1123** |

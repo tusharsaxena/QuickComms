@@ -219,6 +219,9 @@ test("preview window: Escape list, strata, movable, and a position kept in the p
     m.CreateFrame = function(...)
         local f = create(...)
         rawset(f, "SetFrameStrata", function(self, v) rawset(self, "__strata", v); return self end)
+        -- The client's Raise: the frame to the top of its strata, over a modal's catcher and band
+        -- there (QC-06 review). red under: Raise the window on every Sync
+        rawset(f, "Raise", function(self) self:SetFrameLevel(10000) end)
         return f
     end
     for _ = 1, 3 do
@@ -244,6 +247,7 @@ test("preview window: Escape list, strata, movable, and a position kept in the p
     assertEqual(select(1, f:GetPoint(1)), "TOP", "the default place")
     assertEqual(select(5, f:GetPoint(1)), -140)
     NS.Preview.SetPreviewAs("arena")
+    assertTrue(f:GetFrameLevel() < NS.addon.Settings.ModalWindow.LEVEL, "a re-show leaves the level alone")
     f:ClearAllPoints()
     f:SetPoint("CENTER", m.UIParent, "CENTER", 50, 20)
     f:__fire("OnDragStop")

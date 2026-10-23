@@ -1195,7 +1195,11 @@ SM-QC-9).** Open Settings → Groups → a group of yours: the edit preview show
 the dialog, never over it; Edit callout on a row, the same. In the dialog, Choose icon…: the icon browser sits
 above the dialog, and the settings window sits below both. With the browser open, its filter's
 pull-out and the color swatch's picker draw over the browser. Preview as → a situation with the
-preview window shown, then New callout: the dialog covers the preview window too.
+preview window shown, then New callout: the dialog covers the preview window too, and stays over
+it when `/qc preview arena` is typed with the dialog open. With the edit preview's dial shown on
+the Groups page, a callout's or the group's remove glyph: the delete confirm draws over the dial's
+hub; with the dialog open, `/qc resetall`: the reset confirm draws over the dialog and its dim, and
+its Yes / No answer clicks.
 Result: pending
 
 ## Art
@@ -1393,7 +1397,7 @@ and why it is owed, until its pass is recorded.
 
 - PREVIEW-1..8: new with the preview window (2026-10-23 sim/preview/strips run, QC-02 and QC-03).
 - PREVIEW-9: new with QC-05 (2026-10-23), the fix for the faded, veiled preview; owed a first run.
-- ICON-4: new with QC-06 (2026-10-23), the modals moved over the preview dial by strata; owed a
-  first run.
+- ICON-4: new with QC-06 (2026-10-23), the modals moved over the preview dial by strata; amended
+  the same day (QC-06 review) with the preview window's re-show and the confirms; owed a first run.
 - EDIT-3, EDIT-27, DIAL-9: amended 2026-10-23 (QC-04), since closing the settings window no longer
   ends Preview as and Escape now ends it through the preview window; owed a re-run.

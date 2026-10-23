@@ -131,6 +131,35 @@ test("editors: ConfirmDelete asks first, and only the accepted popup runs the ac
     assertTrue(m.StaticPopupDialogs[shown[1]].text:find("%s", 1, true) ~= nil, "names what is deleted")
 end)
 
+-- A dialog frame as the client hands it to the definition's OnShow / OnHide: DIALOG, Blizzard's.
+local function dialogFrame()
+    return { strata = "DIALOG",
+        SetFrameStrata = function(self, v) self.strata = v end,
+        GetFrameStrata = function(self) return self.strata end }
+end
+
+test("editors: [QC-06] the delete confirm lifts its dialog over the dial and the modals, then hands it back", function()
+    local NS, m, Ed = enabled()
+    Ed.ConfirmDelete("Lust", function() end)
+    local def = m.StaticPopupDialogs[m.popupsShown[#m.popupsShown][1]]
+    local d = dialogFrame()
+    -- red under: leave the confirm in Blizzard's DIALOG, the dial's strata (the hub draws over it),
+    -- and under the popup's and the browser's FULLSCREEN catchers
+    assertTrue(type(def.OnShow) == "function", "an OnShow")
+    def.OnShow(d)
+    assertEqual(d.strata, NS.addon.Settings.ModalWindow.CONFIRM_STRATA)
+    assertEqual(d.strata, "FULLSCREEN_DIALOG")
+    -- red under: no OnHide (the shared dialog frame would keep the strata for Blizzard's next popup)
+    def.OnHide(d)
+    assertEqual(d.strata, "DIALOG", "the shared frame is handed back as it came")
+    -- A second ask reuses the definition: still lifted, once.
+    Ed.ConfirmDelete("Lust", function() end)
+    def.OnShow(d)
+    assertEqual(d.strata, "FULLSCREEN_DIALOG")
+    def.OnHide(d)
+    assertEqual(d.strata, "DIALOG")
+end)
+
 test("editors: Scalar keeps the rows the flow engine draws, and CancelReorder cancels once", function()
     local _, _, Ed = enabled()
     local rows = Ed.Scalar({ { path = "a", type = "string" }, { path = "b", type = "when" }, { path = "c", type = "number" } })

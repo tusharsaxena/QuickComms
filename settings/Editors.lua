@@ -748,6 +748,8 @@ function Ed.ConfirmDelete(name, onAccept, text)
         preferredIndex = 3,
         OnAccept     = function(_, data) if type(data) == "function" then data() end end,
     }
+    -- Over the preview dial and the modals while shown (settings/ModalWindow.lua CONFIRMS, QC-06).
+    Settings.ModalWindow.LiftConfirm(StaticPopupDialogs[DELETE_POPUP])
     StaticPopupDialogs[DELETE_POPUP].text = text or L["Delete '%s'? This cannot be undone."]
     StaticPopup_Show(DELETE_POPUP, name, nil, onAccept)
 end

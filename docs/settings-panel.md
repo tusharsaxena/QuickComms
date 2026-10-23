@@ -50,7 +50,9 @@ settings ends it with the other session rows.
 Every row writes through the one seam (`NS.SchemaRuntime.Set`), and its reaction is the same one
 the CLI, the launcher and the host verbs trigger (`Settings.REACTIONS` in `settings/Schema.lua`).
 The header's Defaults button and Reset all settings both open the confirmation popup; the global
-reset is a profile reset and never touches the minimap button (options-ui-§12, launcher-§3).
+reset is a profile reset. That confirm, like every delete's, is shown in `FULLSCREEN_DIALOG`, over the
+preview dial and an open callout popup (`ModalWindow.LiftConfirm`, QC-06), and its shared Blizzard
+dialog goes back to its own strata when it hides. The global reset never touches the minimap button (options-ui-§12, launcher-§3).
 
 ## Groups
 

@@ -116,6 +116,14 @@ test("schema: Reset all asks first, through the confirmation popup", function()
     assertTrue(popup ~= nil)
     -- red under: a popup without preferredIndex: slot 3, clear of Blizzard's own
     assertEqual(popup.preferredIndex, 3)
+    -- red under: leave it in Blizzard's DIALOG, under an open callout popup's FULLSCREEN catcher
+    -- (QC-06: `/qc resetall` typed while the popup is open) and in a level race with the dial
+    local d = { strata = "DIALOG", SetFrameStrata = function(self, v) self.strata = v end,
+        GetFrameStrata = function(self) return self.strata end }
+    popup.OnShow(d)
+    assertEqual(d.strata, "FULLSCREEN_DIALOG")
+    popup.OnHide(d)
+    assertEqual(d.strata, "DIALOG")
 end)
 
 test("schema: [audit QC-04] the global reset takes every created member back to a fresh profile, and only this one", function()

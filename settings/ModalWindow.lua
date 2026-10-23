@@ -46,6 +46,9 @@ MW.LEVEL = 10
 MW.LEVEL_OVER = 200
 -- The strata of every QuickComms modal: over the dial's DIALOG (STACKING above).
 MW.STRATA = "FULLSCREEN"
+-- The strata a QuickComms confirm (a Blizzard StaticPopup: the deletes, Reset all) is shown in, one
+-- over the modals' (MW.LiftConfirm).
+MW.CONFIRM_STRATA = "FULLSCREEN_DIALOG"
 local DIM = { 0, 0, 0, 0.45 }
 
 local function H() return Settings.Helpers end
@@ -142,4 +145,28 @@ function MW.Build(spec)
     -- Escape hides a special frame.
     if UISpecialFrames then UISpecialFrames[#UISpecialFrames + 1] = spec.name end
     return { catcher = catcher, frame = window, chrome = chrome, ctx = ctx, inset = inset }
+end
+
+-- CONFIRMS (QC-06 review). QuickComms' confirms are Blizzard StaticPopups, whose dialog frames are
+-- DIALOG: the preview dial's strata, where the hub (header level + 20) races them for the top, and
+-- under the modals' FULLSCREEN catchers (a `/qc resetall` typed while the callout popup is open would
+-- show a confirm nobody can click). A QuickComms confirm lifts its dialog to CONFIRM_STRATA while it
+-- shows and hands the shared frame back in the strata it came in when it hides, so Blizzard's next
+-- popup in that slot is untouched. The strata it came in is kept here, never on Blizzard's frame
+-- (a field written on it would taint it).
+local confirmStrata = setmetatable({}, { __mode = "k" })
+
+--- Lift a StaticPopupDialogs definition `def` (in place) over the dial and the modals while shown.
+function MW.LiftConfirm(def)
+    def.OnShow = function(dialog)
+        if not (dialog and dialog.SetFrameStrata) then return end
+        confirmStrata[dialog] = dialog.GetFrameStrata and dialog:GetFrameStrata() or "DIALOG"
+        dialog:SetFrameStrata(MW.CONFIRM_STRATA)
+    end
+    def.OnHide = function(dialog)
+        if not (dialog and dialog.SetFrameStrata) then return end
+        dialog:SetFrameStrata(confirmStrata[dialog] or "DIALOG")
+        confirmStrata[dialog] = nil
+    end
+    return def
 end
