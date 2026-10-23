@@ -255,6 +255,56 @@ function P.EditGroup()
     return State.editPreview
 end
 
+local function known(key)
+    return P.FindPreset(key) and key or P.CURRENT
+end
+
+-- The preset a battleground When names: the first set whose map it lists, else the first set.
+local function battlegroundKey(ids)
+    local list = battlegrounds()
+    for _, bg in ipairs(list) do
+        if type(ids) == "table" and ids[bg.instanceID] == true then return bg.key end
+    end
+    return list[1] and list[1].key or P.CURRENT
+end
+
+--- The "Preview as…" preset the edit preview bakes under and the window shows (owner 2026-10-23):
+--- the one the group's When names (a child's, its parent's when it inherits, Resolver.WhenOf), in
+--- the menu's own terms: a battleground set's map, M+, the tier's raid (its first ticked difficulty,
+--- else Normal), Arena, Solo; Current for a When with no content (In Group, a group of yours).
+--- @param gid string|nil the group, else the one being edited
+--- @return string key
+function P.EditPresetKey(gid)
+    gid = gid or State.editPreview
+    local when = gid and NS.Resolver.WhenOf(NS.Library.AllGroups(), gid)
+    if type(when) ~= "table" then return P.CURRENT end
+    local content = type(when.content) == "table" and when.content or {}
+    if content.battleground or type(when.battleground) == "table" then
+        return battlegroundKey(when.battleground)
+    end
+    if content.mythicPlus or content.dungeon then return known("mplus") end
+    if content.raid then
+        local ticked = type(when.difficulty) == "table" and when.difficulty or {}
+        for _, r in ipairs(RAID) do
+            if ticked[r[1]] then return known("raid:" .. r[1]) end
+        end
+        return known("raid:normal")
+    end
+    if content.arena then return known("arena") end
+    if content.openWorld then return known("world") end
+    return P.CURRENT
+end
+
+--- The snapshot the edit preview's pads and dials bake under (Surfaces.ApplyAll): its preset's, over
+--- any Preview as, which comes back when it ends. The Groups page keeps judging where you are
+--- (Editors.Snapshot): its active dots and rows are not the preview's.
+function P.EditSnapshot()
+    local key = P.EditPresetKey()
+    if key == P.CURRENT then return NS.Situation.Current() end
+    local e = P.FindPreset(key)
+    return e and e.snapshot or NS.Situation.Current()
+end
+
 --- Preview only group `gid` on every pad and dial, or end that (nil). The off -> on edge prints the
 --- start line unless `quiet`.
 --- @return boolean changed

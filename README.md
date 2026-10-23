@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1170%2F1170_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1171%2F1171_passing-green)
 
 Quick Comms puts your usual group callouts one click or one keypress away. "Kick on me", "Lust
 now", "INC Lumber Mill": set them up once and they sit on a Comms Pad or open from a
@@ -81,9 +81,10 @@ like standing in for a value you have not got right now), or why it would send n
 test button is a placeholder. Hovering a pad's header or the dial's middle (or
 `/qc why`) tells you why each group is there. While the Groups page is open, every pad and dial shows
 only the group you are editing, sending nothing: a click prints `[QC] /p <text>`, the line it would
-have sent, and the preview window comes up titled with the group, so you can preview it under
-another situation; End preview there unticks Preview while editing, under the Group picker, which
-keeps the pads live. Right-click a
+have sent, and the preview window comes up titled with the group and showing the situation it is
+previewed in (the group's own: Alterac Valley for Alterac Valley, Current for one with no content).
+The window is grayed out there, since the Groups page drives it: pick another group to change it,
+or untick Preview while editing, under the Group picker, to keep the pads live. Right-click a
 group's title on a pad to open it on the Groups page; the page stays on the tab you last used.
 
 To share, open Settings → Share → Export, tick what you want to send and click Export, then copy the
@@ -152,7 +153,7 @@ than in comments, so nothing gets lost.
 
 | Version | Date | Highlights |
 |---|---|---|
-| 0.1.0 | Unreleased | - The Comms Pad and the Comms Dial, with built-in callouts for Mythic+, raids, arenas, every battleground and the solo open world, sent through secure buttons<br>- Battleground sets with a group per objective: Alterac Valley's generals, captains, bunkers, towers and graveyards, Isle of Conquest's bases, and the objectives of Warsong Gulch, Twin Peaks, Wintergrasp, Ashran, Deephaul Ravine and Seething Shore<br>- Your own callouts and groups (the built-in sets among them, as groups you can edit, and groups inside groups), with conditions for when each group shows, Preview as…, a preview of the group you are editing and Why is this showing?<br>- A small preview window, opened by `/qc preview` or the Preview as… row, to switch the previewed situation or end the preview<br>- In a preview or test mode, a click on a button or a slice prints what it would have sent, and sends nothing; the dial stays open<br>- The preview window over the group you are editing, to preview it under another situation<br>- A `{coordinates}` token, your map position as you press<br>- The General channel (/1), falling back to say where you have not joined it; the solo open-world callouts use it<br>- The spam guard, drop notes, test mode and the lock<br>- The pad's font, border and background, with class colors<br>- An optional shine on the pad's buttons and the dial's slices (seven looks), and the dial's own round art<br>- Sharing groups (with their callouts), pads and dials as a string<br>- The settings panel, the minimap button, the `/qc` command and the debug tools |
+| 0.1.0 | Unreleased | - The Comms Pad and the Comms Dial, with built-in callouts for Mythic+, raids, arenas, every battleground and the solo open world, sent through secure buttons<br>- Battleground sets with a group per objective: Alterac Valley's generals, captains, bunkers, towers and graveyards, Isle of Conquest's bases, and the objectives of Warsong Gulch, Twin Peaks, Wintergrasp, Ashran, Deephaul Ravine and Seething Shore<br>- Your own callouts and groups (the built-in sets among them, as groups you can edit, and groups inside groups), with conditions for when each group shows, Preview as…, a preview of the group you are editing and Why is this showing?<br>- A small preview window, opened by `/qc preview` or the Preview as… row, to switch the previewed situation or end the preview<br>- In a preview or test mode, a click on a button or a slice prints what it would have sent, and sends nothing; the dial stays open<br>- The preview window over the group you are editing, showing the situation it is previewed in<br>- A `{coordinates}` token, your map position as you press<br>- The General channel (/1), falling back to say where you have not joined it; the solo open-world callouts use it<br>- The spam guard, drop notes, test mode and the lock<br>- The pad's font, border and background, with class colors<br>- An optional shine on the pad's buttons and the dial's slices (seven looks), and the dial's own round art<br>- Sharing groups (with their callouts), pads and dials as a string<br>- The settings panel, the minimap button, the `/qc` command and the debug tools |
 
 ## Credits
 

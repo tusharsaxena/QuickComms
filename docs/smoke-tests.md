@@ -731,17 +731,19 @@ a placeholder slice → one line each: its name and `(test-mode placeholder: not
 preview off`, click Hello → it really sends, as before, and prints nothing extra.
 Result: pending
 
-**PREVIEW-11. The window and start line over the edit preview (2026-10-23, run item QF-02).** Out
+**PREVIEW-11. The window and start line over the edit preview (2026-10-23, run items QF-02 and QF-07).** Out
 of combat, `/qc debug` on, Preview while editing ticked: Settings → Groups → a group of yours → chat
 prints `Previewing: <group> (editing)` once and the preview window opens, titled
-`Ka0s Quick Comms - Preview: <group>`, with Current in its dropdown. Pick another group → the title
-follows and no new line prints. Click a pad button and a dial slice of the edited group → each prints
+`Ka0s Quick Comms - Preview: <group>`, its dropdown on the group's own situation, and the whole
+window grayed out (QF-07, 2026-10-23): hovering the dropdown, End preview or the close mark shows a
+tooltip naming the Groups page, and clicking them does nothing. Pick Alterac Valley → the dropdown
+reads `BG - Alterac Valley`; an AV node → the same; a raid group → `Raid · Normal · <raid>`; In Group
+→ Current; the pads' slashes are that situation's. Pick another group → the title and the dropdown
+follow and no new line prints. Click a pad button and a dial slice of the edited group → each prints
 its `[QC]` line (with `/qc debug` on, a `press ...` debug line shows the click arrived; a missing echo
-with a debug line is the bug, a missing debug line means the click never reached the button). Pick
-Arena in the window's dropdown → the edited group renders under Arena (the header reads the group,
-the slashes are Arena's). End preview → the pads go live, the window goes, and the band's Preview
-while editing box is unticked; tick it → the line and the window again. The close mark → the same as
-End preview. Tick it again, press Escape → the window and the preview go, the box stays ticked, and
+with a debug line is the bug, a missing debug line means the click never reached the button). Untick
+Preview while editing → the pads go live and the window goes; tick it → the line and the window
+again. Press Escape → the window and the preview go, the box stays ticked, and
 it does not come back while the same group stays selected (switching tabs, waiting, a combat end);
 pick another group → it starts again. Pull a mob with it on → `Preview ended: you entered combat.`;
 leave combat with the page open → the window is back with no `Previewing:` line. `/qc preview off`
@@ -1477,7 +1479,8 @@ and why it is owed, until its pass is recorded.
 - PREVIEW-10: new with QC-07 (2026-10-23), a preview or test click prints what it would send; owed a
   first run.
 - PREVIEW-11: new with QF-02 (2026-10-23), the preview window and the start line over the edit
-  preview, its End preview, close mark, Escape and `/qc preview off`; owed a first run.
+  preview, its Escape and `/qc preview off`; reworked by QF-07 (owner, 2026-10-24: the window is
+  locked over the edit preview and its dropdown follows the group's situation); owed a first run.
 - PREVIEW-12: new with QF-01 (2026-10-23), a preview, edit-preview or test dial stays open on a slice
   click while a live one still closes; owed a first run.
 - SEND-6: new with QF-04 (2026-10-23), the General (/1) channel: sends on the click, falls back to Say

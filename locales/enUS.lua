@@ -693,6 +693,7 @@ L["%s - Preview: %s"] = "%s - Preview: %s"
 L["End preview"] = "End preview"
 L["End the preview: the pads and dials go back to live."] = "End the preview: the pads and dials go back to live."
 L["Switch the situation the pads and dials preview."] = "Switch the situation the pads and dials preview."
+L["Following the group you are editing on the Groups page. Pick another group there to change it, or untick Preview while editing to end it."] = "Following the group you are editing on the Groups page. Pick another group there to change it, or untick Preview while editing to end it."
 
 -- The click preview: what a previewed or test click prints, and the mocks for tokens with no value
 -- right now (modules/Preview.lua, QC-07)

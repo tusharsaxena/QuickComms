@@ -26,6 +26,7 @@ committed; on a dirty tree, read the diff and continue it (never `reset --hard` 
 - [ ] QF-04 D4b: the `general` channel kind (/1, Say when not joined)
 - [ ] QF-05 D4: the prebuilts replaced (owner edits, Solo on General, coordinates)
 - [ ] QF-06 Docs sweep, smoke checks, test-cases.md and badge, final gate
+- [ ] QF-07 Owner follow-up (2026-10-24): the window locked over the edit preview, its dropdown on the group's situation
 
 Order: QF-01 and QF-02 are independent; QF-05 needs QF-03 (the token) and QF-04 (the kind).
 
@@ -287,3 +288,14 @@ code; all seven hold, and the spec and this plan are amended in `QF-00: address 
 | 7 | Snapshot freshness: `CHANNEL_UI_UPDATE` alone may miss the automatic joins after login and the zone swap. | `modules/Situation.lua:162-169` | **Accepted** (both remedies). | `CHAT_MSG_CHANNEL_NOTICE` joins `EVENTS` beside `CHANNEL_UI_UPDATE`, and SEND-6 checks Solo bakes `/1` right after login and after a zone change. |
 
 Rejected: none.
+
+## Addendum QF-07 (owner, 2026-10-24)
+
+Smoke of PREVIEW-11 found two faults with Preview while editing on: the dropdown read Current under an
+`Alterac Valley` title, and a pick in it did nothing visible. The owner's fix: over the edit preview the
+window is disabled (dimmed, the dropdown, End preview and the close mark off, a tooltip naming the Groups
+page), and its dropdown follows the group being edited. `Preview.EditPresetKey` maps the group's When
+(its parent's when it inherits) to a preset: a battleground set's map, M+, the tier's raid at its first
+ticked difficulty or Normal, Arena, Solo, else Current. `Preview.EditSnapshot` is what `Surfaces.ApplyAll`
+bakes the edit preview's pads and dials under, so the window names what the pads show; the Groups page
+keeps judging where you are (`Editors.Snapshot`), its active dots and rows unchanged.

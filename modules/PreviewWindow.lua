@@ -3,10 +3,11 @@ local _, NS = ...
 -- library-styled window with a situation dropdown, an End preview button and the close mark, shown
 -- while a "Preview as…" preview is on, whichever way it started (the slash, the settings row, the
 -- window's own dropdown), and while the Groups page's edit preview is on (QF-02, owner 2026-10-23).
--- Plain test mode (placeholders) gets no window. Over the edit preview the title names the group
--- and the dropdown shows Current (it bakes against where you are) until a pick, which is a Preview
--- as the edited group renders under (modules/Surfaces.lua), outliving the settings window as any
--- other does.
+-- Plain test mode (placeholders) gets no window. Over the edit preview the title names the group,
+-- the dropdown shows the preset it bakes under (NS.Preview.EditPresetKey: the group's own situation,
+-- following each group switch), and the window is LOCKED (owner 2026-10-23): dimmed, the dropdown,
+-- End preview and the close mark off, a tooltip naming the Groups page as where it is driven from
+-- (a pick there did nothing visible, and the dropdown read Current under an Alterac Valley title).
 --
 -- ONE function shows or hides it: PW.Sync, which modules/Preview.lua calls from announce() and from
 -- its stand-down entry (late-bound: this file loads after Preview). The window's own controls go
@@ -50,8 +51,23 @@ local GOLD, REST, GRAY = { 1, 0.82, 0 }, { 0.9, 0.9, 0.92 }, { 0.6, 0.6, 0.6 }
 
 local frame
 
+local DIM = 0.45
+
+local function locked()
+    return NS.Preview.EditGroup() ~= nil
+end
+
 local function endPreview()
+    if locked() then return end
     NS.Preview.EndPreview()
+end
+
+-- The locked window's tooltip, on every control: why it is off and where it is driven from.
+local function lockedTip(owner)
+    GameTooltip:SetOwner(owner, "ANCHOR_TOP")
+    GameTooltip:SetText(L["Preview as"])
+    GameTooltip:AddLine(L["Following the group you are editing on the Groups page. Pick another group there to change it, or untick Preview while editing to end it."], 1, 1, 1, true)
+    GameTooltip:Show()
 end
 
 -- The stored point, or the default one (`TOP, UIParent, TOP, 0, -140`) when the profile has none.
@@ -99,11 +115,13 @@ local function makeButton(parent, label, onClick)
     b.__label = fs
     b:SetScript("OnClick", onClick)
     b:SetScript("OnEnter", function(self)
+        if locked() then return lockedTip(self) end
         self.__label:SetTextColor(GOLD[1], GOLD[2], GOLD[3])
         tip(self, label, L["End the preview: the pads and dials go back to live."], NS.SLASH .. " preview off")
     end)
     b:SetScript("OnLeave", function(self)
-        self.__label:SetTextColor(REST[1], REST[2], REST[3])
+        local c = locked() and GRAY or REST
+        self.__label:SetTextColor(c[1], c[2], c[3])
         hideTip()
     end)
     return b
@@ -114,8 +132,11 @@ local function makeDropdown(parent)
     dd:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD, -(TITLE_H + PAD))
     -- One line: a long situation label truncates rather than wrapping out of the box.
     if dd.text and dd.text.SetWordWrap then dd.text:SetWordWrap(false) end
-    dd.onSelect = function(v) NS.Preview.SetPreviewAs(v) end
+    dd.onSelect = function(v)
+        if not locked() then NS.Preview.SetPreviewAs(v) end
+    end
     dd:HookScript("OnEnter", function(self)
+        if locked() then return lockedTip(self) end
         tip(self, L["Preview as"], L["Switch the situation the pads and dials preview."],
             NS.SLASH .. " preview <name>")
     end)
@@ -162,6 +183,10 @@ local function ensure()
     chrome(f)
     f.closeButton = NS.MakeCloseButton(f, endPreview)
     if f.closeButton then f.closeButton:SetPoint("TOPRIGHT", f, "TOPRIGHT", -6, -(TITLE_H - 18) / 2) end
+    if f.closeButton then
+        f.closeButton:HookScript("OnEnter", function(self) if locked() then lockedTip(self) end end)
+        f.closeButton:HookScript("OnLeave", hideTip)
+    end
     f.dropdown = makeDropdown(f)
     f.endButton = makeButton(f, L["End preview"], endPreview)
     f.endButton:SetPoint("LEFT", f.dropdown, "RIGHT", GAP, 0)
@@ -173,14 +198,27 @@ local function ensure()
     return f
 end
 
+-- Locked over the edit preview, live otherwise: each control on or off, dimmed, its label grayed. A
+-- disabled Button still takes OnEnter, so the tooltip says why.
+local function setLocked(f, on)
+    for _, c in ipairs({ f.dropdown, f.endButton, f.closeButton }) do
+        if c.SetEnabled then c:SetEnabled(not on) end
+        c:SetAlpha(on and DIM or 1)
+    end
+    local c = on and GRAY or REST
+    f.endButton.__label:SetTextColor(c[1], c[2], c[3])
+    if on and W.CloseMenu then W.CloseMenu() end
+end
+
 local function fill(f)
     local P = NS.Preview
     local options = {}
     for _, e in ipairs(P.Presets()) do options[#options + 1] = { value = e.key, label = e.label } end
     f.dropdown:SetOptions(options)
-    -- The edit preview alone bakes against the live snapshot, which is what Current is.
-    f.dropdown:SelectValue(P.PreviewAs() or P.CURRENT)
-    if P.EditGroup() ~= nil then
+    local editing = P.EditGroup() ~= nil
+    f.dropdown:SelectValue(editing and P.EditPresetKey() or P.PreviewAs() or P.CURRENT)
+    setLocked(f, editing)
+    if editing then
         f.title:SetText(L["%s - Preview: %s"]:format(NS.BRAND, P.Label(P.EDIT)))
     else
         f.title:SetText(L["%s - Preview"]:format(NS.BRAND))

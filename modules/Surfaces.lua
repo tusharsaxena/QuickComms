@@ -109,8 +109,8 @@ end
 --- The baked token values (spec §8.1), read out of combat. A previewed dungeon has no challenge map
 --- id; its {dungeon} is the name the preview carries. {coordinates} is your position, for the live
 --- snapshot only, known by identity (QF-03): Preview as Current answers that same table
---- (Preview.PreviewSnapshot), and ApplyAll falls back to it for the edit preview alone; a synthetic
---- preset's snapshot is not where you are, so it has none.
+--- (Preview.PreviewSnapshot), and so does the edit preview of a group with no content
+--- (Preview.EditSnapshot); a synthetic preset's snapshot is not where you are, so it has none.
 function S.BakeContext(snap)
     local liveSnap = snap ~= nil and snap == NS.Situation.Current()
     snap = type(snap) == "table" and snap or {}
@@ -426,11 +426,12 @@ end
 function S.ApplyAll(reason)
     if NS.IsStoodDown() or not State.situation then return 0 end
     local preview = NS.Preview.PreviewSnapshot()
-    local snap = preview or NS.Situation.Current()
-    local deps = S.Deps(snap)
-    -- The edit preview sits over Preview as (whose snapshot it still bakes against) and test mode.
+    -- The edit preview sits over Preview as and test mode, and bakes under its group's own situation
+    -- (Preview.EditSnapshot, the preset the selector window shows).
     local edit = NS.Preview.EditGroup()
     if edit and not NS.Library.Group(edit) then edit = nil end
+    local snap = (edit and NS.Preview.EditSnapshot()) or preview or NS.Situation.Current()
+    local deps = S.Deps(snap)
     deps.only = edit
     local test = not edit and preview == nil and NS.Preview.IsTestMode()
     local p = NS.db.profile
