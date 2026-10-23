@@ -66,7 +66,7 @@ end
 local function lockedTip(owner)
     GameTooltip:SetOwner(owner, "ANCHOR_TOP")
     GameTooltip:SetText(L["Preview as"])
-    GameTooltip:AddLine(L["Following the group you are editing on the Groups page. Pick another group there to change it, or untick Preview while editing to end it."], 1, 1, 1, true)
+    GameTooltip:AddLine(L["This window is disabled while you edit a group with Preview while editing on: it follows that group. Pick another group on the Groups page to see a preview of it, or untick Preview while editing to end the preview."], 1, 1, 1, true)
     GameTooltip:Show()
 end
 
@@ -205,9 +205,11 @@ local function ensure()
 end
 
 -- Locked over the edit preview, live otherwise: each control on or off, dimmed, its label grayed. A
--- disabled Button still takes OnEnter, so the tooltip says why.
+-- disabled Button runs no OnEnter in the client unless told to (SetMotionScriptsWhileDisabled, as
+-- LibKa0s's SimPanel does), so it is: the tooltip says why it is off.
 local function setLocked(f, on)
     for _, c in ipairs({ f.dropdown, f.endButton, f.closeButton }) do
+        if c.SetMotionScriptsWhileDisabled then c:SetMotionScriptsWhileDisabled(true) end
         if c.SetEnabled then c:SetEnabled(not on) end
         c:SetAlpha(on and DIM or 1)
     end

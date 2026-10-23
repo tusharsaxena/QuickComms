@@ -343,13 +343,18 @@ test("preview window: [QF-07] over the edit preview it is locked: dimmed, its co
     f.dropdown.onSelect("arena")
     assertTrue(NS.Preview.PreviewAs() == nil, "a pick is ignored")
     assertEqual(NS.Preview.EditGroup(), gid)
+    -- red under: a disabled control the client never sends OnEnter (the owner saw no tooltip)
+    for _, c in ipairs({ f.dropdown, f.endButton, f.closeButton }) do
+        assertTrue(c:GetMotionScriptsWhileDisabled(), "hover reaches a disabled control")
+    end
     f.dropdown:__fire("OnEnter")
     local said = table.concat((function()
         local out = {}
         for _, l in ipairs(m.GameTooltip.__lines) do out[#out + 1] = tostring(l[1]) end
         return out
     end)(), " | ")
-    assertTrue(said:find("Groups page", 1, true) ~= nil, said)
+    assertTrue(said:find("disabled while you edit a group", 1, true) ~= nil, said)
+    assertTrue(said:find("Pick another group", 1, true) ~= nil, said)
     -- Out of the edit preview it is live again.
     NS.addon:OnSlashCommand("preview off")
     assertTrue(NS.Preview.SetPreviewAs("arena"))

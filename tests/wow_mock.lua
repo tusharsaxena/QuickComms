@@ -393,6 +393,13 @@ local function build()
             return self
         end
         frame.GetAlpha = function(self) return self.__alpha or 1 end
+        -- A disabled control runs no OnEnter or OnLeave in the client unless told to
+        -- (SetMotionScriptsWhileDisabled): recorded, so a disabled control's tooltip can be asserted on.
+        frame.SetMotionScriptsWhileDisabled = function(self, on)
+            self.__motionWhileDisabled = on and true or false
+            return self
+        end
+        frame.GetMotionScriptsWhileDisabled = function(self) return self.__motionWhileDisabled == true end
         frame.GetCenter = function(self) return self.__cx or 0, self.__cy or 0 end
         frame.GetEffectiveScale = function() return 1 end
         -- Mouse input, as the client keeps it: a Button takes the mouse until told otherwise (the dial's
