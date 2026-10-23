@@ -16,14 +16,15 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | SLASH-1..2 | Slash | `/qc` and `/quickcomms`, help, a slash collision |
 | PANEL-1..3 | Settings panel | Landing page, General → Master controls, the Defaults button |
 | PROFILE-1..2 | Profiles | The Profiles page and the `profile` verb |
-| STATE-1..5 | State | Enable/disable, the launcher menu, `/qc toggle`, the pads' hidden state across /reload |
+| STATE-1..6 | State | Enable/disable, the launcher menu, `/qc toggle`, the pads' hidden state across /reload, a new profile's prebuilts |
 | COMBAT-1 | Combat | The settings panel in combat |
 | DIAG-1..2 | Diagnostics | The debug console, the report, perf |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
-| SEND-1..5 | Send | Secure sends in keys and on bosses, the spam guard |
+| SEND-1..6 | Send | Secure sends in keys and on bosses, the spam guard, General (/1) with its Say fallback |
+| TOKEN-1 | Tokens | `{coordinates}`: your map position, read at the press, in a preview echo and in combat |
 | PAD-1..15 | Pad | The Comms Pad, its growth and button width, the Solo and In Group sets and the built-ins' colors, the header click and icon only's width, the header's Quick Comms: text |
 | EDIT-1..32 | Editors | The Pad and Dial page names; the Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
-| PREVIEW-1..10 | Preview window | The Preview as selector window: every entry point, the dropdown, End preview, close and Escape, combat, test mode and the stand-down, Alt+Z, the saved position, bare /qc preview and list; every preview drawn as live; a preview or test click prints what it would send |
+| PREVIEW-1..12 | Preview window | The Preview as selector window: every entry point, the dropdown, End preview, close and Escape, combat, test mode and the stand-down, Alt+Z, the saved position, bare /qc preview and list; every preview drawn as live; a preview or test click prints what it would send; a preview dial staying open on a pick |
 | DIAL-1..41 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, the lone-group open and the group ring, page arrows and the page row, Auto wedges, the ring radius, the Slice labels tab, the slices and the slice lit by direction, the Slices tab, the pointer, the tooltip outside the dial, the hub over the slices, the pointer, label and icon offsets, the Paging tab; the dial polish: the border gone, the slice gap, placement from W, a slice clicked to the hub in combat, the hub styles, the Group labels tab, Icon offset on Icons, 128-pixel icons, a click outside closing the dial in combat, the page indicators' background and border, the Hub tab; automatic icon offset and size; the 120 radius and 48-pixel icons by default; a right click back a ring; opening where it was closed; slices from N |
 | KEY-1..3 | Key bindings | A dial's key as WoW's own binding in Options → Keybindings, Character Specific Keybindings, Toggle Comms Pads |
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
@@ -116,6 +117,16 @@ line, `Ka0s Quick Comms is disabled — enable it with /qc enable` (unchanged, a
 to finish. **Owed**: the headless gate holds the latch directly and cannot drive a real capture.
 Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
+**STATE-6. A new profile's prebuilts (2026-10-23, run item QF-05).** Profiles page → create a new
+profile and switch to it. Groups page: Dungeon > Chain pull has yellow chains (`fff468`); In Group
+reads Hello (a sky-blue hand, `3fc7eb`, sending `Hello!`), At Stone 2nd (a purple tombstone, Smart
+group, sending `At stone, WM off.`), then Summon, Buffs please, Healthstone, tyff, brb, Ready, GLHF,
+ggty, ggnt; every Solo callout's channel reads General (/1; Say when not joined); Rare spotted reads
+`Rare spotted: {target} @ {coordinates}`, Elite help `Can anyone help with this elite? {target} @
+{coordinates}`, World boss `World boss up: {target} @ {coordinates}`, Event here `World event
+starting @ {coordinates}, come join`. Switch back to the old profile → its callouts are as you left
+them (no migration). Delete the test profile. Result: 2026-10-24, pass (the owner's run; client build not recorded).
+
 ## Combat
 
 **COMBAT-1. The panel in combat.** Pull a training dummy and type `/qc` → a gray notice that the
@@ -167,6 +178,32 @@ start). Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 The C1–C9 checks of the phase 0 harness (design spec §19) are recorded in
 `docs/brainstorm/go-no-go/`; SEND-4 and SEND-5 repeat C1 and C4 against the shipped addon.
+
+**SEND-6. General (/1) and its Say fallback (2026-10-23, run item QF-04).** Out of combat in the open
+world, make a callout on the channel "General (/1; Say when not joined)" in a group on your pad; its
+Groups row reads `General` in channel 1's color. Hover its button → `Channel: General` in the same
+color. Click it → the line appears in General (`[1. General - <zone>]`), with no "interface action
+blocked" and no drop note. `/reload`, and click it again as soon as the pad shows → `/1` again (the
+automatic join after login reached the snapshot). Take a portal or flight to another zone and click
+it right after the loading screen → still `/1`, in the new zone's General. Type `/leave 1`, click it
+→ the line goes to Say; `/join General`, click → back in General. With a press pending, type a line in
+`/2` (Trade, in a capital) inside about a second → no false "sent" (the `/2` line is not taken as the
+echo; a drop note only if the General line really never arrived).
+Result: 2026-10-24, pass (the owner's run; client build not recorded).
+
+## Tokens
+
+**TOKEN-1. {coordinates} (2026-10-23, run item QF-03).** Out of combat in the open world, make a Say
+callout `{target} @ {coordinates}` in a group on your pad. Target something, click it → chat shows
+`<name> @ 45.2, 61.8`-style numbers matching your position on the world map (one decimal
+each, x then y). Walk a little, click again → the new position, not the old one, with no error and no
+"interface action blocked". Walk again, pull a mob, and click it in combat → it sends the position
+where combat started (not the last out-of-combat one before you walked), and no error. Leave combat.
+`/qc preview`, click it → `[QC] /s <name> @ <where you are>` and nothing is sent; walk, click → the
+echo follows you. Pick M+ in the window, click → `<coordinates>` in place of the numbers. End preview.
+Enter a dungeon, click it → `<name> @` with nothing after the `@`. The callout popup's "i" lists
+{coordinates} with its line of help, and `{coords}` typed works the same.
+Result: 2026-10-24, pass (the owner's run; client build not recorded).
 
 ## Pad
 
@@ -444,12 +481,12 @@ line and changes nothing. Result: 2026-10-21, pass (the owner's run; client buil
 **EDIT-18. The token glyph beside Text.** Edit a party callout (EDIT-9) → a small white "i" sits
 just right of the Text label, no taller than the label's letters, centered on them and clear of the
 box under it. Hover it → a tooltip headed Tokens lists each token with one line of help ({target}, {focus},
-the eight markers, {me}, {spec}, {role}, {key}, {dungeon}, then {spell:ID}), with no
+the eight markers, {me}, {spec}, {role}, {key}, {dungeon}, {coordinates}, then {spell:ID}), with no
 {group1} … {group8} line, and fits on screen without wrapping each line. Pick Raid as the Channel
 and hover again → one {group1} … {group8} line appears (no Save needed). Move off → the tooltip
 hides. Cancel, then open another settings page with text boxes (a group's General tab) and open
 the popup again a few times → no stray "i" appears beside any other box, and the popup shows
-exactly one. Result: 2026-10-21, pass (the owner's run; client build not recorded).
+exactly one. Result: 2026-10-24, pass (the owner's run; client build not recorded); passed 2026-10-21 before {coordinates} joined the list, QF-03).
 
 **EDIT-19. A group inside another.** Make two groups of yours, `My keys` (on the pad, with a
 callout and a When that matches where you are) and `Kicks`. On Kicks' General tab, Parent group →
@@ -692,7 +729,39 @@ callout that would send nothing there (a smart-channel callout under Preview as 
 `[QC] (nothing sent: <reason>)` with the tooltip's reason. `/qc test`, click a placeholder button and
 a placeholder slice → one line each: its name and `(test-mode placeholder: nothing sent)`. `/qc
 preview off`, click Hello → it really sends, as before, and prints nothing extra.
-Result: pending
+Result: 2026-10-24, pass (the owner's run; client build not recorded).
+
+**PREVIEW-11. The window and start line over the edit preview (2026-10-23, run items QF-02 and QF-07).** Out
+of combat, `/qc debug` on, Preview while editing ticked: Settings → Groups → a group of yours → chat
+prints `Previewing: <group> (editing)` once and the preview window opens, titled
+`Ka0s Quick Comms - Preview: <group>`, its dropdown on the group's own situation, and the whole
+window grayed out (QF-07, 2026-10-23): hovering the dropdown, End preview or the close mark shows a
+tooltip saying the window is disabled while you edit a group and to pick another group to see its
+preview, and clicking them does nothing. Pick Alterac Valley → the dropdown
+reads `BG - Alterac Valley`; an AV node → the same; a raid group → `Raid · Normal · <raid>`; In Group
+→ Current; the pads' slashes are that situation's. Pick another group → the title and the dropdown
+follow and no new line prints. Click a pad button and a dial slice of the edited group → each prints
+its `[QC]` line (with `/qc debug` on, a `press ...` debug line shows the click arrived; a missing echo
+with a debug line is the bug, a missing debug line means the click never reached the button). Untick
+Preview while editing → the pads go live and the window goes; tick it → the line and the window
+again. Press Escape → the window and the preview go, the box stays ticked, and
+it does not come back while the same group stays selected (switching tabs, waiting, a combat end);
+pick another group → it starts again. Pull a mob with it on → `Preview ended: you entered combat.`;
+leave combat with the page open → the window is back with no `Previewing:` line. `/qc preview off`
+with only the edit preview on → `Preview off.`, the window goes, the box is unticked. Close the
+settings with the X → the window goes. Press Alt+Z → the window hides with the UI and the preview
+stays on.
+Result: 2026-10-24, pass (the owner's run; client build not recorded).
+
+**PREVIEW-12. A preview dial stays open on a slice click (2026-10-23, run item QF-01).** `/qc
+preview`, pick In Group in the window, open the dial (it opens with the preview). Click a callout
+slice → its `[QC]` line prints and the dial stays open; click another slice → its line too, still
+open. A group slice still opens its ring, the hub still goes up a ring (and closes on the first),
+a right click still goes back, a middle click and Escape still close. `/qc test` → a placeholder
+slice prints its line and the dial stays open. On the Groups page with Preview while editing on, a
+slice of the edited group prints and the dial stays open. `/qc preview off`, open the dial with its
+key, click a slice → it sends and the dial closes, as before; the same in combat.
+Result: 2026-10-24, pass (the owner's run; client build not recorded).
 
 ## Dial
 
@@ -1407,5 +1476,8 @@ The owner ran every check above on 2026-10-21 and reported all of them passed (t
 not recorded). A check added or rewritten later is listed here, with its origin
 and why it is owed, until its pass is recorded.
 
-- PREVIEW-10: new with QC-07 (2026-10-23), a preview or test click prints what it would send; owed a
-  first run.
+EDIT-18, PREVIEW-10, PREVIEW-11, PREVIEW-12, SEND-6, STATE-6 and TOKEN-1 (QC-07 and QF-01 to QF-07)
+passed in the owner's run of 2026-10-24. PREVIEW-11's locked-window tooltip was reworded, and made to
+show on the disabled controls, after that run, on the owner's request.
+
+None.

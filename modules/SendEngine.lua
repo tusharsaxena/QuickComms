@@ -38,6 +38,16 @@ local _, NS = ...
 -- secure path and cannot cancel it. On the acting edge it runs the soft guard (SEND_RESULT
 -- "guarded" inside the window; onPress dims the pads), records the press for the echo tracker and
 -- schedules its expiry. The CHAT_MSG_* rows below match echoes without reading their text.
+--
+-- The press-time re-bake (QF-03): every button also carries one insecure PreClick HOOK. A position
+-- moves while the plan does not, so for a button whose meta carries `rebake` (Pad's arm: an armed
+-- live slot whose text uses {coordinates}) it re-bakes the line, OUT OF COMBAT ONLY, and re-arms
+-- through Arm when the line changed; the secure handler that runs next sends the fresh line. In
+-- combat it returns at once and writes nothing, so the button sends what it last held. The
+-- RESTRICTION_CHANGED edge into combat (still writable at PLAYER_REGEN_DISABLED) re-arms every such
+-- button once (RefreshRebakes), so a press in combat sends the position at the pull. PreClick is the
+-- client's place to adjust a secure action button's attributes before it acts; the line is written
+-- by addon code exactly as Arm writes it at a rebuild, only later.
 
 NS.SendEngine = NS.SendEngine or {}
 local SE = NS.SendEngine
@@ -82,6 +92,7 @@ function SE.NewButton(parent, onPress, wrap)
         b.qcLeftOnly = true
     end
     b:HookScript("OnClick", function(...) SE.OnClick(...) end)
+    b:HookScript("PreClick", function(...) SE.PreClick(...) end)
     b.qcOnPress = onPress
     b.qcArmed = false
     buttons[#buttons + 1] = b
@@ -123,6 +134,30 @@ function SE.Disarm(b, meta)
     end
     b.qcArmed, b.qcMeta = false, meta
     return true
+end
+
+-- Re-arm `b` with its line re-baked now (QF-03), when it carries a `rebake` and is armed. Out of
+-- combat only; a line that did not bake, or did not change, writes nothing.
+local function rebake(b)
+    local meta = b.qcMeta
+    if not (b.qcArmed and meta and meta.rebake) or inCombat() then return false end
+    local t0 = Perf.on and debugprofilestop()
+    local line = meta.rebake()
+    local changed = type(line) == "string" and line ~= b:GetAttribute("macrotext")
+    if changed then SE.Arm(b, line, meta) end
+    if t0 then Perf.Note("coordsRebake", debugprofilestop() - t0) end
+    return changed
+end
+
+--- Re-arm every re-baking button once (the combat edge). Out of combat only.
+--- @return number re-armed
+function SE.RefreshRebakes()
+    local n = 0
+    for _, b in ipairs(buttons) do
+        if rebake(b) then n = n + 1 end
+    end
+    if n > 0 then NS.Debug(TAG_S, "re-baked %s at the combat edge", n) end
+    return n
 end
 
 function SE.ArmedButtons()
@@ -428,16 +463,27 @@ local function press(b)
     if b.qcOnPress then b.qcOnPress(b, verdict, window) end
 end
 
+-- Whether this click edge is the one a press acts on. A catcher's forward clicks a wedge with its
+-- place's name ("w3"): a left click, as the wedge's pre snippet takes it.
+local function actingPress(b, mouseButton, down)
+    if b.qcLeftOnly and mouseButton ~= "LeftButton" and not tostring(mouseButton):match("^w%d+$") then return false end
+    return G.IsActingEdge(down, useKeyDown(b))
+end
+
 --- The OnClick hook every send button carries. Acts once per press, on the edge the secure
 --- template acts on.
 function SE.OnClick(b, mouseButton, down)
-    -- A catcher's forward clicks a wedge with its place's name ("w3"): a left click, as the wedge's
-    -- pre snippet takes it.
-    if b.qcLeftOnly and mouseButton ~= "LeftButton" and not tostring(mouseButton):match("^w%d+$") then return end
-    if not G.IsActingEdge(down, useKeyDown(b)) then return end
+    if not actingPress(b, mouseButton, down) then return end
     local t0 = Perf.on and debugprofilestop()
     press(b)
     if t0 then Perf.Note("sendClick", debugprofilestop() - t0) end
+end
+
+--- The PreClick hook every send button carries: a re-baking button's line, re-armed with where you
+--- are at the press, on the edge the secure template acts on. In combat it returns at once.
+function SE.PreClick(b, mouseButton, down)
+    if inCombat() or not (b.qcMeta and b.qcMeta.rebake) then return end
+    if actingPress(b, mouseButton, down) then rebake(b) end
 end
 
 function SE.GuardState()
@@ -458,6 +504,10 @@ end
 function NS.addon.OnSendEcho(_, event, ...)
     local e = State.sendEcho
     if not (e and e.pending[1]) then return end
+    -- A channel line other than General's (/2 Trade, a custom channel) is never the echo (QF-04).
+    if event == "CHAT_MSG_CHANNEL" and G.IsGeneralEcho(NS.Compat.PlainNumber((select(8, ...)))) == false then
+        return
+    end
     local t0 = Perf.on and debugprofilestop()
     local sender = select(2, ...)
     local guid = select(12, ...)
@@ -474,8 +524,12 @@ end
 
 -- ── the edge ────────────────────────────────────────────────────────────────────────────────
 
+-- Out of lockdown: drain the queue. On the edge into combat (Restrictions says combat while
+-- InCombatLockdown() does not yet), re-arm the re-baking buttons once (QF-03).
 local function onRestrictionChanged()
-    if not inCombat() then SE.Drain("RESTRICTION_CHANGED") end
+    if inCombat() then return end
+    SE.Drain("RESTRICTION_CHANGED")
+    if NS.Restrictions.InCombat() then SE.RefreshRebakes() end
 end
 
 -- Its own target (core/Bus.lua). On the tracked bus the stand-down and stand-up take it down and

@@ -191,7 +191,9 @@ end
 -- pack"), so a preview shows what a live press would have sent; a test placeholder's echo names it
 -- as one. The echo names no lock: locks read your real group, not the previewed situation, so a
 -- previewed raid or M+ button would nearly always carry one. Baked out of combat, so a press in
--- combat only prints a string and writes no attribute.
+-- combat only prints a string and writes no attribute. An armed live slot whose text uses
+-- {coordinates} carries `rebake` (Surfaces.Slot), which SendEngine's PreClick hook calls out of combat
+-- to re-arm the line with where you are at the press (QF-03); no other button carries one.
 local function arm(btn, slot)
     local preview = slot.preview == true
     local meta = { calloutId = slot.calloutId, surfaceId = slot.surfaceId, name = slot.name,
@@ -199,6 +201,7 @@ local function arm(btn, slot)
         echo = (preview or slot.reason == "testMode") and (slot.echo or slot.line) or nil,
         lockText = (not preview) and function() return slot.lock and (R.LOCK_TEXT[slot.lock] or tostring(slot.lock)) end or nil }
     if slot.line and slot.chatType and not preview then
+        meta.rebake = slot.rebake
         NS.SendEngine.Arm(btn, slot.line, meta)
     else
         meta.chatType = nil

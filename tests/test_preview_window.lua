@@ -1,6 +1,6 @@
 -- tests/test_preview_window.lua — the "Preview as…" selector window (modules/PreviewWindow.lua,
--- design-qc-preview §2.2): shown exactly while a Preview as preview is on, from every entry point;
--- its dropdown, End preview, close mark and Escape; combat, test mode, the stand-down; the position
+-- design-qc-preview §2.2): shown while a Preview as preview or the edit preview is on (QF-02), from
+-- every entry point; its dropdown, End preview, close mark and Escape; combat, test mode, the stand-down; the position
 -- kept in the profile; the degraded install.
 
 local T = _G.QUICKCOMMS_TEST
@@ -291,4 +291,231 @@ test("preview window: degraded install previews without a window", function()
     assertEqual(NS.Preview.PreviewAs(), "arena")
     assertTrue(NS.PreviewWindow.__frame() == nil, "no window")
     assertFalse(NS.PreviewWindow.IsShown())
+end)
+
+-- ── the window over the edit preview (QF-02, owner 2026-10-23) ──────────────────────────────────
+--
+-- "Preview while editing" on the Groups page puts the window up too: titled with the group, its
+-- dropdown on the group's own situation and the window locked, since the page drives it (QF-07).
+-- `/qc preview off` ends it and turns the setting off; Escape ends it for the session only, and the
+-- page's own re-syncs leave it off until a new start.
+
+local function editing()
+    local NS, m = live()
+    local P = dofile("tests/page_helpers.lua")(NS, m)
+    local Lib = NS.Library
+    local cid = Lib.CreateCallout({ name = "Inc", text = "Incoming", channel = "party" })
+    local gid = Lib.CreateGroup({ name = "Raid only", callouts = { cid }, when = { content = { raid = true } } })
+    Lib.AddGroupToSurface("pad", "p1", gid, 1)
+    NS.addon.Settings.Editors.Select("group", gid)
+    P.show("Groups")
+    P.flush()
+    return NS, m, P, gid
+end
+
+local function titleOf(NS)
+    local t = win(NS).title
+    return t.text or t:GetText()
+end
+
+test("preview window: [QF-07] over the edit preview it is locked: dimmed, its controls off, a tooltip says why", function()
+    local NS, m, _, gid = editing()
+    assertEqual(NS.Preview.EditGroup(), gid)
+    assertTrue(NS.Preview.PreviewAs() == nil, "no Preview as underneath")
+    assertTrue(NS.PreviewWindow.IsShown(), "the edit preview shows the window")
+    assertEqual(titleOf(NS), "Ka0s Quick Comms - Preview: Raid only")
+    local f = win(NS)
+    -- red under: a window that leaves its controls live over the edit preview
+    assertFalse(f.dropdown:IsEnabled(), "the dropdown is off")
+    assertFalse(f.endButton:IsEnabled(), "End preview is off")
+    assertFalse(f.closeButton:IsEnabled(), "the close mark is off")
+    assertTrue(f.dropdown:GetAlpha() < 1 and f.endButton:GetAlpha() < 1 and f.closeButton:GetAlpha() < 1, "all dimmed")
+    -- A click that reaches them anyway ends nothing.
+    f.endButton:__fire("OnClick", "LeftButton")
+    f.closeButton:__fire("OnClick", "LeftButton")
+    assertEqual(NS.Preview.EditGroup(), gid, "End preview and the close mark end nothing")
+    assertEqual(NS.Setting("behavior.previewOnEdit"), true)
+    -- Preview as ended underneath leaves the window up over the edit preview.
+    NS.addon:OnSlashCommand("preview arena")
+    NS.Preview.SetPreviewAs("off")
+    assertTrue(NS.PreviewWindow.IsShown(), "Preview as off, the edit preview still on")
+    -- A pick that reaches it anyway (the menu was already open) changes nothing.
+    f.dropdown.onSelect("arena")
+    assertTrue(NS.Preview.PreviewAs() == nil, "a pick is ignored")
+    assertEqual(NS.Preview.EditGroup(), gid)
+    -- red under: a disabled control the client never sends OnEnter (the owner saw no tooltip)
+    for _, c in ipairs({ f.dropdown, f.endButton, f.closeButton }) do
+        assertTrue(c:GetMotionScriptsWhileDisabled(), "hover reaches a disabled control")
+    end
+    f.dropdown:__fire("OnEnter")
+    local said = table.concat((function()
+        local out = {}
+        for _, l in ipairs(m.GameTooltip.__lines) do out[#out + 1] = tostring(l[1]) end
+        return out
+    end)(), " | ")
+    assertTrue(said:find("disabled while you edit a group", 1, true) ~= nil, said)
+    assertTrue(said:find("Pick another group", 1, true) ~= nil, said)
+    -- Out of the edit preview it is live again.
+    NS.addon:OnSlashCommand("preview off")
+    assertTrue(NS.Preview.SetPreviewAs("arena"))
+    f = win(NS)
+    assertTrue(f.dropdown:IsEnabled() and f.endButton:IsEnabled(), "Preview as alone: live")
+    assertEqual(f.dropdown:GetAlpha(), 1)
+    f.dropdown.onSelect("world")
+    assertEqual(NS.Preview.PreviewAs(), "world")
+    assertEqual(#m.blocked, 0)
+end)
+
+test("preview window: [QF-07] the dropdown follows the edited group's situation, and the pads bake under it", function()
+    local NS, _, P, gid = editing()
+    -- red under: a dropdown that shows Current over the edit preview
+    assertEqual(NS.Preview.EditPresetKey(gid), "raid:normal")
+    assertEqual(win(NS).dropdown._value, "raid:normal", "a raid group: the tier's raid, Normal")
+    assertEqual(NS.Surfaces.Plans().p1.snapshot.content, "raid", "and the pads bake under it")
+    local function pick(gidTo)
+        P.banner(P.ctx("groups")):__fire("OnValueChanged", gidTo)
+        P.flush()
+        assertEqual(NS.Preview.EditGroup(), gidTo)
+        return win(NS).dropdown._value
+    end
+    assertEqual(pick(T.seeded(NS, "bi.bg.av")), "bg:av", "Alterac Valley")
+    assertEqual(pick(T.seeded(NS, "bi.bg.av.spgy")), "bg:av", "a node takes its battleground's")
+    assertEqual(pick(T.seeded(NS, "bi.mplus")), "mplus")
+    assertEqual(pick(T.seeded(NS, "bi.arena")), "arena")
+    assertEqual(pick(T.seeded(NS, "bi.world")), "world")
+    assertEqual(pick(T.seeded(NS, "bi.group")), "current", "a group with no content: Current")
+    -- Preview as typed while editing is kept underneath; the window still follows the group.
+    NS.addon:OnSlashCommand("preview arena")
+    assertEqual(win(NS).dropdown._value, "current")
+    assertTrue(NS.Preview.EditSnapshot() == NS.Situation.Current(), "the edit preview bakes where you are")
+end)
+
+test("preview window: [QF-07] the dropdown follows a When edited while the group is open", function()
+    local NS, _, P, gid = editing()
+    assertEqual(win(NS).dropdown._value, "raid:normal")
+    -- red under: a dropdown filled only on announce (a When edit re-bakes the pads, no announce)
+    assertTrue((NS.SchemaRuntime.Set("group.when", { content = { arena = true } }, gid)))
+    P.flush()
+    assertEqual(NS.Surfaces.Plans().p1.snapshot.content, "arena")
+    assertEqual(win(NS).dropdown._value, "arena", "the window names what the pads show")
+    assertTrue((NS.SchemaRuntime.Set("group.when", { content = { raid = true }, difficulty = { heroic = true } }, gid)))
+    P.flush()
+    assertEqual(win(NS).dropdown._value, "raid:heroic")
+end)
+
+test("preview window: [QF-07] EditPresetKey maps each kind of When", function()
+    local NS = editing()
+    local Lib, key = NS.Library, NS.Preview.EditPresetKey
+    local function g(when, extra)
+        local f = { name = "G", when = when }
+        for k, v in pairs(extra or {}) do f[k] = v end
+        return Lib.CreateGroup(f)
+    end
+    assertEqual(key(g({ content = { raid = true }, difficulty = { mythic = true, heroic = true } })), "raid:heroic",
+        "the first ticked difficulty in the menu's order")
+    assertEqual(key(g({ content = { raid = true }, difficulty = { story = true } })), "raid:normal")
+    assertEqual(key(T.seeded(NS, "bi.bg")), "bg:ab", "every battleground: the first set")
+    -- red under: an arena id row alone answered Current
+    assertEqual(key(g({ arena = { [572] = true } })), "arena", "an arena id row alone")
+    -- red under: an empty battleground row answered the first battleground
+    assertEqual(key(g({ battleground = {} })), "current", "an empty battleground row is unset")
+    local parent = g({ content = { mythicPlus = true } })
+    assertEqual(key(g({}, { parent = parent })), "mplus", "a child takes its parent's")
+    assertEqual(key(g({ content = { arena = true } }, { parent = parent, inheritWhen = false })), "arena",
+        "a child that does not inherit, its own")
+end)
+
+test("preview window: [QF-02] End preview and the close mark end both and turn Preview while editing off", function()
+    local NS, m = live()
+    local P = dofile("tests/page_helpers.lua")(NS, m)
+    -- Outside the edit preview they are live: they end Preview as.
+    NS.Preview.SetPreviewAs("arena")
+    m.__click(win(NS).endButton)
+    assertTrue(NS.Preview.PreviewAs() == nil, "End preview")
+    assertFalse(NS.PreviewWindow.IsShown())
+    NS.Preview.SetPreviewAs("arena")
+    win(NS).closeButton:__fire("OnClick", "LeftButton")
+    assertTrue(NS.Preview.PreviewAs() == nil, "the close mark")
+    -- Called with the edit preview on (no window control reaches it now; the slash does), it turns
+    -- the setting off and the page's re-syncs leave it off.
+    local NS2, m2, P2, gid = editing()
+    NS2.Preview.EndPreview()
+    assertTrue(NS2.Preview.EditGroup() == nil and NS2.Preview.PreviewAs() == nil)
+    assertEqual(NS2.db.profile.behavior.previewOnEdit, false, "the setting is off")
+    P2.flush()
+    P2.redraw("groups")
+    assertTrue(NS2.Preview.EditGroup() == nil, "and the page's re-syncs leave it off")
+    NS2.SchemaRuntime.Set("behavior.previewOnEdit", true)
+    assertEqual(NS2.Preview.EditGroup(), gid)
+    assertEqual(#m.blocked + #m2.blocked, 0)
+    assertTrue(P ~= nil)
+end)
+
+test("preview window: [QF-02] Escape ends the edit preview for the session, the setting kept, until a new start", function()
+    local NS, m, P, gid = editing()
+    NS.addon:OnSlashCommand("preview arena")
+    assertEqual(NS.Preview.PreviewAs(), "arena", "Preview as underneath")
+    escape(win(NS))
+    assertTrue(NS.Preview.EditGroup() == nil and NS.Preview.PreviewAs() == nil, "Escape ends both")
+    assertFalse(NS.PreviewWindow.IsShown())
+    assertEqual(NS.Setting("behavior.previewOnEdit"), true, "the saved switch is left alone")
+    -- red under: Escape without the dismissal mark (the scheduled refresh's render restarts it)
+    P.flush()
+    assertTrue(NS.Preview.EditGroup() == nil, "the page's refresh leaves it off")
+    assertFalse(NS.PreviewWindow.IsShown())
+    P.redraw("groups")
+    assertTrue(NS.Preview.EditGroup() == nil, "and any later render")
+    combat(m, true)
+    combat(m, false)
+    assertTrue(NS.Preview.EditGroup() == nil, "and a combat end")
+    assertFalse(NS.PreviewWindow.IsShown())
+    -- A group switch is a new start.
+    local mplus = T.seeded(NS, "bi.mplus")
+    P.banner(P.ctx("groups")):__fire("OnValueChanged", mplus)
+    P.flush()
+    assertEqual(NS.Preview.EditGroup(), mplus, "a group switch starts the new group's preview")
+    assertTrue(NS.PreviewWindow.IsShown())
+    -- So is the page hidden and shown again.
+    escape(win(NS))
+    P.flush()
+    assertTrue(NS.Preview.EditGroup() == nil)
+    local panel = P.ctx("groups").panel
+    panel:Hide()
+    panel:__fire("OnHide")
+    P.show("Groups")
+    P.flush()
+    assertEqual(NS.Preview.EditGroup(), mplus, "the page shown again starts it")
+    assertTrue(gid ~= mplus)
+end)
+
+test("preview window: [QF-02] the settings window closing hides it; a hidden UIParent ends nothing", function()
+    local NS, m, _, gid = editing()
+    win(NS):__fire("OnHide")
+    assertEqual(NS.Preview.EditGroup(), gid, "a hidden parent ends nothing")
+    assertTrue(NS.PreviewWindow.IsShown())
+    m.SettingsPanel:__fire("OnHide")
+    assertTrue(NS.Preview.EditGroup() == nil)
+    assertFalse(NS.PreviewWindow.IsShown(), "the window goes with the edit preview")
+    assertEqual(NS.Setting("behavior.previewOnEdit"), true)
+end)
+
+test("preview window: [QF-02] `/qc preview off` ends the edit preview too; with nothing on it writes nothing", function()
+    local NS, m = editing()
+    m.prints = {}
+    -- red under: PreviewLines keyed on PreviewAs() alone
+    NS.addon:OnSlashCommand("preview off")
+    assertTrue(NS.Preview.EditGroup() == nil)
+    assertEqual(NS.db.profile.behavior.previewOnEdit, false)
+    assertFalse(NS.PreviewWindow.IsShown())
+    assertEqual(#m.prints, 1)
+    assertTrue(m.prints[1]:find("Preview off.", 1, true) ~= nil, m.prints[1])
+    local NS2, m2 = live()
+    local set, writes = NS2.SchemaRuntime.Set, 0
+    NS2.SchemaRuntime.Set = function(...) writes = writes + 1; return set(...) end
+    m2.prints = {}
+    NS2.addon:OnSlashCommand("preview off")
+    NS2.SchemaRuntime.Set = set
+    assertEqual(writes, 0, "nothing on: no write")
+    assertEqual(#m2.prints, 1)
+    assertTrue(m2.prints[1]:find("Preview off.", 1, true) ~= nil, m2.prints[1])
 end)

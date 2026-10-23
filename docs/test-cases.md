@@ -231,7 +231,7 @@ Total.
 - diagnostics: [debug] the log follows a dial open, a ring shown, a press and a close, once each
 - diagnostics: [shine] the pad's button line and the dial's slices line print the look and strength
 
-### test_compat.lua (12)
+### test_compat.lua (14)
 
 - compat: plain readers pass plain values and drop secrets
 - compat: InstanceInfo with a secret instanceID reads nil, never raises
@@ -245,6 +245,8 @@ Total.
 - compat: [phase 3] InstanceName reads the client's name; a secret, empty or missing one is nil
 - compat: [phase 3] SpecInfoByID and ClassName read display names; secret or missing ones are nil
 - compat: [final 8] BindingKey reads a command's key; a secret or a missing API is nil
+- compat: [QF-03] Coordinates reads the map position as x, y in percent, one decimal, or nil
+- compat: [QF-04] GeneralJoined is true only for a plain non-zero channel 1 id
 
 ### test_restrictions.lua (16)
 
@@ -265,7 +267,7 @@ Total.
 - restrictions: stood down, nothing is heard; the stand-up announces what is in effect
 - restrictions: [final 1] a lockdown lifting under a higher one is announced
 
-### test_situation.lua (16)
+### test_situation.lua (19)
 
 - situation: classifier truth table (content, group)
 - situation: non-table input classifies as open world solo
@@ -283,8 +285,11 @@ Total.
 - situation: [final 1] on the degraded bus the module takes its own receiver down and up
 - situation: [final 1b] both combat edges reach Current() even under the Combat restriction type
 - situation: [arena] an arena snapshot carries its instanceID, which the arena row matches
+- situation: [QF-04] the snapshot reads General from channel 1 and a join or leave moves the signature
+- situation: [QF-04] CHANNEL_UI_UPDATE and CHAT_MSG_CHANNEL_NOTICE are situation events
+- situation: [QF-04] a channel notice after the automatic join refreshes the snapshot to General
 
-### test_tokens.lua (9)
+### test_tokens.lua (10)
 
 - tokens: target and focus become engine tokens and count as live
 - tokens: raid markers by number and name, any case
@@ -295,8 +300,9 @@ Total.
 - tokens: typed %t and %f count as live, chips are not double counted
 - tokens: non-string text expands to empty
 - tokens: a mock fills a baked value missing here, and only when given (the preview echo, QC-07)
+- tokens: [QF-03] {coordinates} and {coords} bake from ctx.coordinates; missing is dropped and listed, or mocked
 
-### test_channels.lua (8)
+### test_channels.lua (13)
 
 - channels: smartGroup prefers instance, then raid, then party
 - channels: smartGroup solo follows the fallback
@@ -306,6 +312,11 @@ Total.
 - channels: prefixes and chat types
 - channels: the lock matrix
 - channels: [phase 5] the lock matrix has no row for an unknown channel, and reads a missing snapshot as solo
+- channels: [QF-04] general resolves to General when channel 1 is joined, else to Say
+- channels: [QF-04] general's prefix, chat type, color type and locks are Say's
+- channels: [QF-04] a general callout bakes /1 with channel 1 joined and /s without
+- channels: [QF-04] the channel row offers General with its label; Share and the seam accept it
+- channels: [QF-04] a Groups row names General in channel 1's color
 
 ### test_bake.lua (12)
 
@@ -378,7 +389,7 @@ Total.
 - resolver: [all] All battlegrounds and All dungeons and raids match the whole kind, the listed ids aside
 - resolver: [arena] the arena row matches only in an arena: its listed ids, or all of them
 
-### test_builtins.lua (22)
+### test_builtins.lua (24)
 
 - builtins: the expected top-level sets exist in order
 - builtins: ids are unique, referenced and well formed
@@ -389,7 +400,9 @@ Total.
 - builtins: [phase 5] every node set pins each node to a wind, at most eight, Deepwind Gorge's five included
 - builtins: [B7] every callout ships a catalog glyph, with a color only where it is a glyph
 - builtins: [B7] the generic dungeon set is Dungeon, active in a dungeon and in M+
-- builtins: [polish] Solo is a solo open-world set of say callouts
+- builtins: [polish] Solo is a solo open-world set of General (/1) callouts
+- builtins: [QF-05] Solo's place lines carry {coordinates}
+- builtins: [QF-05] the owner's edits are the shipped look, with no schema step
 - builtins: [polish] every battleground node set has map-wide callouts of its own
 - builtins: [polish] every callout icon has a color, and no group is white only
 - builtins: [polish] every group has a colored catalog glyph for its icon
@@ -811,7 +824,7 @@ Total.
 - check: [final minor 4] unknown and send-time tokens are listed
 - check: [final minor 4] solo with soloFallback=self says it would print locally
 
-### test_send_guard.lua (10)
+### test_send_guard.lua (11)
 
 - guard: Decide is ok outside the window and guarded inside it
 - guard: Remaining counts down to zero
@@ -823,8 +836,9 @@ Total.
 - echo: a message of another type or after the window matches nothing
 - echo: Expire drops only presses older than the window, oldest first
 - queue: a key replaces its earlier entry and keeps its place
+- echo: [QF-04] only channel 1 is the General echo; an unreadable index is left to the sender rule
 
-### test_sendengine.lua (30)
+### test_sendengine.lua (32)
 
 - sendengine: a send button is a named secure button registered for both edges
 - sendengine: Arm sends exactly the line; Disarm clears both attributes and sends nothing
@@ -847,6 +861,8 @@ Total.
 - send: presses further apart than the guard are never guarded
 - send: an unreadable sender counts as our echo and is never a drop
 - send: another player's message on the channel is not our echo
+- send: [QF-04] the player's own line on channel 1 is the General echo; on channel 2 it is not
+- send: [QF-04] an unreadable channel index falls to the sender rule
 - send: a disarmed button reports nothing and tracks nothing
 - send: a solo self-fallback prints locally and sends nothing
 - send: onPress hears the verdict and the window
@@ -857,7 +873,7 @@ Total.
 - sendengine: [phase 4] attributes, frame refs and snippets are written out of combat only, never blocked
 - sendengine: [keys] no override binding is written: a dial's key is WoW's own binding (modules/Dial.lua)
 
-### test_dial_secure.lua (16)
+### test_dial_secure.lua (20)
 
 - dial secure: the header is QuickCommsDial<n>, hidden until the toggle opens it; open, the dial owns Escape and 1-8
 - dial secure: [exit] a group wedge opens its ring (the two-stroke); a callout wedge sends once and closes
@@ -875,8 +891,12 @@ Total.
 - dial secure: [polish] an outside click closes a key-opened dial, in combat
 - dial secure: [polish] display open shows no screen catcher
 - dial secure: [polish] closing hides the screen catcher
+- dial secure: [QF-01] a preview dial stays open on a callout pick; nothing is sent
+- dial secure: [QF-01] in a preview the ring wedge, the hub, a right and a middle click still act
+- dial secure: [QF-01] a live dial (no preview, or false) closes on a pick, in and out of combat
+- dial secure: [QF-01] a reload from preview to live clears the flag
 
-### test_preview.lua (34)
+### test_preview.lua (36)
 
 - preview: test mode turns on and off, announcing each edge once
 - preview: a start in combat is refused with one line
@@ -912,8 +932,10 @@ Total.
 - preview: [click] a test-mode placeholder prints its label and that it is a placeholder
 - preview: [click] no preview or test click reaches a send API, the guard or the echo tracker
 - preview: [click] a live armed button is unchanged: it sends its line and prints nothing
+- preview: [QF-01] a slice pick on a previewed, test or edit-preview dial echoes and leaves the dial open
+- preview: [QF-01] after /qc preview off a pick on the live dial sends and closes it
 
-### test_edit_preview.lua (15)
+### test_edit_preview.lua (17)
 
 - edit preview: every pad shows only the edited group, whatever its When says, and sends nothing
 - edit preview: a battleground set shows its own callouts and every node, outside the battleground
@@ -930,8 +952,10 @@ Total.
 - edit preview: the Groups page drawn in combat does not start it
 - edit preview: it comes back when combat ends with the Groups page still on screen
 - preview: [QC-05] the edit preview and Preview as draw every button and wedge exactly as live
+- edit preview: [QF-02] 'Previewing: <group> (editing)' prints on a user start only
+- edit preview: [QF-02] a dial wedge clicked through its ring's catcher with the Groups page shown echoes
 
-### test_preview_window.lua (16)
+### test_preview_window.lua (24)
 
 - preview window: hidden until a preview starts; SetPreviewAs shows it with the dropdown on that situation
 - preview window: the settings row starts it too and the dropdown follows the slash
@@ -949,6 +973,25 @@ Total.
 - preview window: Escape list, strata, movable, and a position kept in the profile
 - preview window: the dropdown's menu closes with the window
 - preview window: degraded install previews without a window
+- preview window: [QF-07] over the edit preview it is locked: dimmed, its controls off, a tooltip says why
+- preview window: [QF-07] the dropdown follows the edited group's situation, and the pads bake under it
+- preview window: [QF-07] the dropdown follows a When edited while the group is open
+- preview window: [QF-07] EditPresetKey maps each kind of When
+- preview window: [QF-02] End preview and the close mark end both and turn Preview while editing off
+- preview window: [QF-02] Escape ends the edit preview for the session, the setting kept, until a new start
+- preview window: [QF-02] the settings window closing hides it; a hidden UIParent ends nothing
+- preview window: [QF-02] `/qc preview off` ends the edit preview too; with nothing on it writes nothing
+
+### test_coordinates.lua (8)
+
+- coordinates: a live button bakes your position, and only a button that uses it re-bakes
+- coordinates: a press after you moved re-arms through PreClick and sends where you are now
+- coordinates: in combat a press writes nothing and sends the line it holds
+- coordinates: the combat edge re-arms each re-baking button once, so a press in combat sends the pull's place
+- coordinates: where the map does not show you, the token is dropped as any missing one
+- coordinates: a Current preview's echo fills the position at the click
+- coordinates: an edit preview's echo fills the position at the click
+- coordinates: a previewed place that is not where you are prints <coordinates>
 
 ### test_master.lua (5)
 
@@ -1051,7 +1094,7 @@ Total.
 - surfaces: [nesting] a parent that draws nothing leaves its surface with nothing active
 - surfaces: [inherit] a child that inherits shows wherever its parent's When matches, whatever its own says
 
-### test_pad_render.lua (23)
+### test_pad_render.lua (24)
 
 - render: Dress builds a button's regions once, each its own object
 - render: [audit QC-07] the button's padlock is the catalog's lock mark, tinted gold; the Blizzard art is the nil fallback
@@ -1076,6 +1119,7 @@ Total.
 - render: [B3] a button's label is one line, and hidden when the button leaves it no room
 - pad render: [shine] a look on the Buttons tab paints every button
 - pad render: [shine] the pad's look leaves the dial alone
+- render: [QF-04] a General slot's tooltip names General in channel 1's color
 
 ### test_pad.lua (45)
 
@@ -1324,15 +1368,15 @@ Total.
 | test_slash.lua | 20 |
 | test_disabled.lua | 25 |
 | test_diagnostics.lua | 13 |
-| test_compat.lua | 12 |
+| test_compat.lua | 14 |
 | test_restrictions.lua | 16 |
-| test_situation.lua | 16 |
-| test_tokens.lua | 9 |
-| test_channels.lua | 8 |
+| test_situation.lua | 19 |
+| test_tokens.lua | 10 |
+| test_channels.lua | 13 |
 | test_bake.lua | 12 |
 | test_share.lua | 37 |
 | test_resolver.lua | 13 |
-| test_builtins.lua | 22 |
+| test_builtins.lua | 24 |
 | test_gameids.lua | 4 |
 | test_library.lua | 74 |
 | test_members.lua | 28 |
@@ -1346,17 +1390,18 @@ Total.
 | test_page_dials.lua | 28 |
 | test_page_share.lua | 12 |
 | test_check.lua | 6 |
-| test_send_guard.lua | 10 |
-| test_sendengine.lua | 30 |
-| test_dial_secure.lua | 16 |
-| test_preview.lua | 34 |
-| test_edit_preview.lua | 15 |
-| test_preview_window.lua | 16 |
+| test_send_guard.lua | 11 |
+| test_sendengine.lua | 32 |
+| test_dial_secure.lua | 20 |
+| test_preview.lua | 36 |
+| test_edit_preview.lua | 17 |
+| test_preview_window.lua | 24 |
+| test_coordinates.lua | 8 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 21 |
 | test_dial_layout.lua | 33 |
 | test_surfaces.lua | 30 |
-| test_pad_render.lua | 23 |
+| test_pad_render.lua | 24 |
 | test_pad.lua | 45 |
 | test_dial.lua | 65 |
 | test_dial_shine.lua | 8 |
@@ -1370,4 +1415,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1132** |
+| **Total** | **1173** |

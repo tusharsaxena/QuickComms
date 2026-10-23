@@ -73,13 +73,13 @@ end
 -- The channel a button's line goes to, by name (the button shows no channel letter; its tooltip does).
 local CHANNEL_NAME = {
     party = L["Party"], raid = L["Raid"], instance = L["Instance"], raidWarning = L["Raid warning"],
-    say = L["Say"], yell = L["Yell"],
+    say = L["Say"], yell = L["Yell"], general = L["General"],
 }
 
 local function channelLine(concrete)
     local name = CHANNEL_NAME[concrete]
     if not name then return nil end
-    local r, g, b = R.ChannelColor(NS.Channels.ChatType(concrete))
+    local r, g, b = R.ChannelColor(NS.Channels.ColorType(concrete))
     local function byte(v) return math.floor(v * 255 + 0.5) end
     return L["Channel: %s"]:format(("|cff%02x%02x%02x%s|r"):format(byte(r), byte(g), byte(b), name))
 end

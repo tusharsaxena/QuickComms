@@ -10,10 +10,11 @@ local BI = NS.BuiltIns
 -- The tints a shipped glyph takes, one per meaning (B7, groups polish): red for attack, a kill or
 -- danger, green for life, all-clear and safety, blue for water, mana and defense, gold for a reward,
 -- lust or a win, orange for an alarm or something incoming, purple for crowd control and magic, cyan
--- for moving and positioning, white for the neutral. Every shipped glyph takes one, and no set is
+-- for moving and positioning, white for the neutral; yellow and sky are the owner's own picks (2026-10-23). Every shipped glyph takes one, and no set is
 -- white only (tests/test_builtins.lua).
 BI.COLOR = { red = "ff4040", green = "40d040", blue = "4da6ff", gold = "ffd100", orange = "ff9933",
-    purple = "b07cff", cyan = "40d8e0", white = "ffffff", crimson = "c41e3a" }
+    purple = "b07cff", cyan = "40d8e0", white = "ffffff", crimson = "c41e3a", yellow = "fff468",
+    sky = "3fc7eb" }
 
 --- Declare a callout. `short` is appended to the group id: "bi.mplus" + "lust" -> "bi.mplus.lust".
 --- `glyph` names its icon in the LibKa0s catalog (B7; library-stack-§8: a shipped mark, never one

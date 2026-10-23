@@ -332,3 +332,78 @@ test("preview: [QC-05] the edit preview and Preview as draw every button and wed
         NS.Preview.SetPreviewAs(nil)
     end
 end)
+
+-- ── the start line and the dial echo (QF-02, owner 2026-10-23) ───────────────────────────────────
+
+local function startLines(m)
+    local n = 0
+    for _, line in ipairs(m.prints) do
+        if line:find("Previewing:", 1, true) then n = n + 1 end
+    end
+    return n
+end
+
+test("edit preview: [QF-02] 'Previewing: <group> (editing)' prints on a user start only", function()
+    local NS, m = live()
+    local P = dofile("tests/page_helpers.lua")(NS, m)
+    local gid = raidGroup(NS)
+    NS.addon.Settings.Editors.Select("group", gid)
+    m.prints = {}
+    P.show("Groups")
+    P.flush()
+    assertEqual(NS.Preview.EditGroup(), gid)
+    -- red under: a SetEditPreview that prints nothing on its start edge
+    assertEqual(startLines(m), 1, "the page shown")
+    assertTrue(m.prints[#m.prints]:find("Previewing: Raid only (editing)", 1, true) ~= nil, m.prints[#m.prints])
+    m.prints = {}
+    local mplus = T.seeded(NS, "bi.mplus")
+    P.banner(P.ctx("groups")):__fire("OnValueChanged", mplus)
+    P.flush()
+    P.redraw("groups")
+    assertEqual(NS.Preview.EditGroup(), mplus)
+    assertEqual(startLines(m), 0, "a group switch and a re-render: no edge")
+    NS.SchemaRuntime.Set("behavior.previewOnEdit", false)
+    m.prints = {}
+    NS.SchemaRuntime.Set("behavior.previewOnEdit", true)
+    assertEqual(startLines(m), 1, "the setting ticked on")
+    -- Combat: Preview's one line, then the restart after it is quiet.
+    m.prints = {}
+    combat(m, true)
+    assertEqual(#m.prints, 1)
+    assertTrue(m.prints[1]:find("Preview ended: you entered combat.", 1, true) ~= nil, m.prints[1])
+    P.redraw("groups")
+    assertEqual(#m.prints, 1, "a refused start in combat is silent")
+    combat(m, false)
+    assertEqual(NS.Preview.EditGroup(), mplus, "the combat end restarts it")
+    assertTrue(NS.PreviewWindow.IsShown(), "with the window")
+    -- red under: onRestrictionChanged not passing `quiet`
+    assertEqual(startLines(m), 0, "no Previewing: line after combat")
+    NS.SchemaRuntime.Set("enabled", false)
+    m.prints = {}
+    P.redraw("groups")
+    assertTrue(NS.Preview.EditGroup() == nil)
+    assertEqual(startLines(m), 0, "stood down: refused, silent")
+    NS.SchemaRuntime.Set("enabled", true)
+end)
+
+-- A mouse pick on an open dial (tests/dial_pick.lua).
+local pickOnDial = dofile("tests/dial_pick.lua")
+
+test("edit preview: [QF-02] a dial wedge clicked through its ring's catcher with the Groups page shown echoes", function()
+    local NS, m, _, gid, cid = page()
+    assertEqual(NS.Preview.EditGroup(), gid)
+    assertTrue(NS.Dial.IsOpen("d2"), "the edit preview opens the dial")
+    local wedge = NS.Dial.WedgesFor("d2", cid)[1]
+    assertTrue(wedge ~= nil and wedge.qcMeta and wedge.qcMeta.echo ~= nil, "the wedge carries its echo")
+    m.prints = {}
+    local before = #m.sentMacros
+    -- red under: drop `echo = preview and slot.line` from Pad's arm (the wedges share it)
+    pickOnDial(NS, m, "d2", wedge)
+    assertEqual(#m.prints, 1, "one echo")
+    assertTrue(m.prints[1]:find(NS.PREFIX, 1, true) == 1, m.prints[1])
+    assertTrue(m.prints[1]:find("Incoming", 1, true) ~= nil or m.prints[1]:find("nothing sent", 1, true) ~= nil,
+        m.prints[1])
+    assertEqual(#m.sentMacros, before, "nothing sent")
+    assertTrue(NS.Dial.IsOpen("d2"), "and the dial stays open")
+    assertEqual(#m.blocked, 0)
+end)

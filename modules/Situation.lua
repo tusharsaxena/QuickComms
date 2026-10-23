@@ -65,13 +65,14 @@ function Sit.Classify(i)
         specID         = i.specID,
         role           = i.role,
         character      = i.character,
+        general        = i.general == true,
         inCombat       = i.inCombat == true,
         lockdown       = {},
     }
 end
 
 local SIGNATURE_FIELDS = { "content", "instanceID", "difficulty", "keyLevel", "challengeMapID", "group",
-    "instanceGroup", "leader", "assist", "classFile", "specID", "role", "character" }
+    "instanceGroup", "leader", "assist", "classFile", "specID", "role", "character", "general" }
 
 --- The fields that decide which groups are active, joined. Combat and lockdown are left out.
 --- @param s table snapshot
@@ -97,7 +98,7 @@ function Sit.ReadInputs()
         challengeMapID = challengeMapID, inGroup = inGroup, inRaid = inRaid,
         inInstanceGroup = inInstanceGroup, isLeader = isLeader, isAssist = isAssist,
         classFile = classFile, specID = specID, role = role, character = character,
-        inHousing = C.InHousing(), inCombat = C.InCombat(),
+        inHousing = C.InHousing(), inCombat = C.InCombat(), general = C.GeneralJoined(),
     }
 end
 
@@ -163,6 +164,10 @@ local EVENTS = {
     "PLAYER_ENTERING_WORLD", "ZONE_CHANGED_NEW_AREA", "CHALLENGE_MODE_START", "CHALLENGE_MODE_COMPLETED",
     "CHALLENGE_MODE_RESET", "GROUP_ROSTER_UPDATE", "PARTY_LEADER_CHANGED", "PLAYER_DIFFICULTY_CHANGED",
     "PLAYER_SPECIALIZATION_CHANGED", "PLAYER_ROLES_ASSIGNED",
+    -- Channel 1 joined or left (QF-04): the notice also covers the automatic joins after login and
+    -- the zone's channel swap, should CHANNEL_UI_UPDATE not fire for them. A notice for any other
+    -- channel leaves the signature, so it rebuilds nothing.
+    "CHANNEL_UI_UPDATE", "CHAT_MSG_CHANNEL_NOTICE",
 }
 for _, event in ipairs(EVENTS) do
     NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { event, "OnSituationEvent" }

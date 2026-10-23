@@ -90,12 +90,29 @@ function S.Slot(calloutId, callout, snap, opts)
     slot.concrete, slot.lock = info.concrete, info.lock
     if line then slot.chatType = NS.Channels.ChatType(info.concrete) end
     if not line and reason == "solo" and info.selfPrint then slot.selfText = NS.Bake.Sanitize(callout.text) end
+    -- {coordinates} moves while the plan does not (QF-03): the slot's line, re-baked with the position
+    -- as it is now, for SendEngine's press-time re-bake. Pad's arm hands it on only for an armed live
+    -- slot. Nil when the line does not bake (over 255 bytes): the button keeps what it holds.
+    if line and NS.Tokens.UsesCoordinates(callout.text) then
+        opts = type(opts) == "table" and opts or {}
+        local base = type(opts.ctx) == "table" and opts.ctx or {}
+        slot.rebake = function()
+            local ctx = {}
+            for k, v in pairs(base) do ctx[k] = v end
+            ctx.coordinates = NS.Compat.Coordinates()
+            return (NS.Bake.Bake(callout, snap, { soloFallback = opts.soloFallback, ctx = ctx }))
+        end
+    end
     return slot
 end
 
 --- The baked token values (spec §8.1), read out of combat. A previewed dungeon has no challenge map
---- id; its {dungeon} is the name the preview carries.
+--- id; its {dungeon} is the name the preview carries. {coordinates} is your position, for the live
+--- snapshot only, known by identity (QF-03): Preview as Current answers that same table
+--- (Preview.PreviewSnapshot), and so does the edit preview of a group with no content
+--- (Preview.EditSnapshot); a synthetic preset's snapshot is not where you are, so it has none.
 function S.BakeContext(snap)
+    local liveSnap = snap ~= nil and snap == NS.Situation.Current()
     snap = type(snap) == "table" and snap or {}
     local C = NS.Compat
     return {
@@ -104,6 +121,7 @@ function S.BakeContext(snap)
         role = ROLE[snap.role],
         key = type(snap.keyLevel) == "number" and tostring(snap.keyLevel) or nil,
         dungeon = C.DungeonName(snap.challengeMapID) or snap.previewDungeon,
+        coordinates = liveSnap and C.Coordinates() or nil,
         spellLink = C.SpellLink,
     }
 end
@@ -408,11 +426,12 @@ end
 function S.ApplyAll(reason)
     if NS.IsStoodDown() or not State.situation then return 0 end
     local preview = NS.Preview.PreviewSnapshot()
-    local snap = preview or NS.Situation.Current()
-    local deps = S.Deps(snap)
-    -- The edit preview sits over Preview as (whose snapshot it still bakes against) and test mode.
+    -- The edit preview sits over Preview as and test mode, and bakes under its group's own situation
+    -- (Preview.EditSnapshot, the preset the selector window shows).
     local edit = NS.Preview.EditGroup()
     if edit and not NS.Library.Group(edit) then edit = nil end
+    local snap = (edit and NS.Preview.EditSnapshot()) or preview or NS.Situation.Current()
+    local deps = S.Deps(snap)
     deps.only = edit
     local test = not edit and preview == nil and NS.Preview.IsTestMode()
     local p = NS.db.profile

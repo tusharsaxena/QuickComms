@@ -45,6 +45,9 @@ with a library-absent body and not counted; their contract is LibKa0s
 | `SpecName()` | `C_SpecializationInfo.GetSpecializationInfo`, else `GetSpecializationInfo` | plain or `nil` | `nil` | `Surfaces` (bakes `{spec}`) |
 | `DungeonName(mapID)` | `C_ChallengeMode.GetMapUIInfo` | plain or `nil` | `nil` | `Surfaces` (bakes `{dungeon}`), `Pad` (the situation chip) |
 | `SpellLink(id)` | `C_Spell.GetSpellLink` | plain or `nil` | `nil` | `Surfaces` (bakes `{spell:ID}`) |
+| `GeneralJoined()` | `GetChannelName(1)` | a secret id is not joined | `false` (no API, or channel 1 not joined: id 0) | `Situation` (the snapshot's `general`, which `Channels.Resolve` reads for the `general` kind) (QF-04) |
+| `PlayerMapPosition()` | `C_Map.GetBestMapForUnit("player")`, `C_Map.GetPlayerMapPosition(mapID, "player")`, its `GetXY` | every value plain; a secret map id, position or coordinate is `nil`; 0, 0 is `nil` | `nil` (no `C_Map`, no map, a restricted map such as an instance) | `Coordinates` |
+| `Coordinates()` | `PlayerMapPosition` | `"45.2, 61.8"` (x, y in percent, one decimal) or `nil`; reads only, so a click in combat may call it | `nil` | `Surfaces` (bakes `{coordinates}`, and its press-time re-bake), `Preview` (the echo, filled at the click) (QF-03) |
 | `InstanceName(id)` | `GetRealZoneText` | plain or `nil`; an empty name is `nil` | `nil` | `Preview`, `GroupsWhen` |
 | `SpecInfoByID(id)` | `GetSpecializationInfoByID` | name and icon plain or `nil` | `nil` | `GroupsWhen` |
 | `ClassName(classFile)` | `LOCALIZED_CLASS_NAMES_MALE` | an unsafe key or a secret name is `nil` | `nil` | `GroupsWhen` |

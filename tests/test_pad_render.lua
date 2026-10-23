@@ -458,3 +458,14 @@ test("pad render: [shine] the pad's look leaves the dial alone", function()
         assertEqual(#shineTextures(ring), 0, "ring " .. i .. ": the dial at None carries no shine")
     end
 end)
+
+test("render: [QF-04] a General slot's tooltip names General in channel 1's color", function()
+    local NS, m = T.enableAddon()
+    local lines = NS.PadRender.TooltipLines({ name = "Thanks", line = "/1 Thanks", concrete = "general" })
+    -- red under: no CHANNEL_NAME.general (no Channel: line), or the color asked by ChatType (Say's white)
+    assertEqual(lines[3], "Channel: |cffffbfbfGeneral|r")
+    m.ChatTypeInfo.CHANNEL1 = nil
+    -- red under: no Constants.CHAT_COLORS.CHANNEL1 (the fallback is Say's white)
+    lines = NS.PadRender.TooltipLines({ name = "Thanks", line = "/1 Thanks", concrete = "general" })
+    assertEqual(lines[3], "Channel: |cffffbfbfGeneral|r")
+end)

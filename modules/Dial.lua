@@ -289,7 +289,7 @@ function Dial.Apply(index, id, plan)
     R.RaiseFront(inst.header, frames)
     R.PlaceTips(inst.header, look, widestLabel(inst))
     DS.Load(inst.header, loaded, { openRing = plan.openRing, openAt = plan.test and "center" or dial.openAt,
-        screen = inst.screen })
+        screen = inst.screen, preview = plan.test == true })
     applyPoint(inst)
     inst.header:SetScale(math.max(NS.Library.MIN_SURFACE_SCALE, tonumber(NS.Setting("scale")) or 1))
     inst.header:SetAlpha(math.max(0, math.min(1, tonumber(NS.Setting("alpha")) or 1)))

@@ -233,3 +233,36 @@ test("situation: [arena] an arena snapshot carries its instanceID, which the are
     assertEqual(s.instanceID, 1505)
     assertTrue((NS.Resolver.Matches({ arena = { [1505] = true } }, s)))
 end)
+
+test("situation: [QF-04] the snapshot reads General from channel 1 and a join or leave moves the signature", function()
+    local NS, m = T.enableAddon()
+    m.channels = { [1] = "General - Dornogal" }
+    -- red under: ReadInputs or Classify without general
+    assertTrue(NS.Situation.Classify(NS.Situation.ReadInputs()).general)
+    m.channels = {}
+    assertFalse(NS.Situation.Classify(NS.Situation.ReadInputs()).general)
+    local joined = NS.Situation.Classify(inputs({ general = true }))
+    local left = NS.Situation.Classify(inputs())
+    -- red under: general not in SIGNATURE_FIELDS
+    assertTrue(NS.Situation.Signature(joined) ~= NS.Situation.Signature(left))
+end)
+
+test("situation: [QF-04] CHANNEL_UI_UPDATE and CHAT_MSG_CHANNEL_NOTICE are situation events", function()
+    local NS = T.newAddon()
+    local declared = {}
+    for _, row in ipairs(NS.FEATURE_EVENTS) do declared[row[1]] = row[2] end
+    assertEqual(declared.CHANNEL_UI_UPDATE, "OnSituationEvent")
+    assertEqual(declared.CHAT_MSG_CHANNEL_NOTICE, "OnSituationEvent")
+end)
+
+test("situation: [QF-04] a channel notice after the automatic join refreshes the snapshot to General", function()
+    local NS, m = T.enableAddon()
+    m.channels = {}
+    NS.Situation.RefreshNow("test")
+    assertFalse(NS.Situation.Current().general)
+    m.channels = { [1] = "General - Dornogal" }
+    -- red under: no CHAT_MSG_CHANNEL_NOTICE in EVENTS (no CHANNEL_UI_UPDATE fired here)
+    m.__fire("CHAT_MSG_CHANNEL_NOTICE", "YOU_CHANGED", "", "", "1. General - Dornogal", "", "", 1, 1, "General")
+    m.__fireTimers()
+    assertTrue(NS.Situation.Current().general)
+end)

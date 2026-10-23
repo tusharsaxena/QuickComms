@@ -1,9 +1,10 @@
 local _, NS = ...
 -- modules/Tokens.lua — the editor's token chips -> engine tokens and baked values (spec §8.1).
 -- PURE: no client call. Live tokens (%t, %f, {rtN}, {gN}) are expanded by the game at send time;
--- baked ones ({me}, {spec}, {role}, {key}, {dungeon}, {spell:ID}) come from `ctx`, which the
--- caller fills out of combat. A preview (QC-07) may pass a `mock`, which fills a baked value that has
--- none here instead of dropping it.
+-- baked ones ({me}, {spec}, {role}, {key}, {dungeon}, {coordinates}, {spell:ID}) come from `ctx`,
+-- which the caller fills out of combat. A preview (QC-07) may pass a `mock`, which fills a baked value
+-- that has none here instead of dropping it. {coords} is typed shorthand for {coordinates}, as {x} is
+-- for {cross}; a live button whose text uses it is re-baked at the press (QF-03, UsesCoordinates).
 
 NS.Tokens = NS.Tokens or {}
 local Tok = NS.Tokens
@@ -12,10 +13,12 @@ Tok.LIVE_NOMINAL = 12   -- bytes each live token is assumed to add when sent (sp
 
 local ENGINE = { target = "%t", focus = "%f" }
 local RT_BY_NAME = { star = 1, circle = 2, diamond = 3, triangle = 4, moon = 5, square = 6, cross = 7, x = 7, skull = 8 }
-local BAKED = { me = true, spec = true, role = true, key = true, dungeon = true }
+local BAKED = { me = true, spec = true, role = true, key = true, dungeon = true, coordinates = true }
+local ALIAS = { coords = "coordinates" }
 
 local function expandOne(raw, ctx, acc)
     local name = raw:lower()
+    name = ALIAS[name] or name
     if ENGINE[name] then return ENGINE[name] end   -- counted from the output in Expand
     local rt = name:match("^rt([1-8])$") or RT_BY_NAME[name]
     if rt then acc.live = acc.live + 1 return "{rt" .. rt .. "}" end
@@ -62,4 +65,12 @@ function Tok.UsesGroupToken(text)
     if type(text) ~= "string" then return false end
     local lower = text:lower()
     return lower:find("{g[1-8]}") ~= nil or lower:find("{group[1-8]}") ~= nil
+end
+
+--- True when `text` uses {coordinates} (or {coords}), the one baked value that moves while a plan
+--- does not: its live button is re-baked at the press (QF-03).
+function Tok.UsesCoordinates(text)
+    if type(text) ~= "string" then return false end
+    local lower = text:lower()
+    return lower:find("{coordinates}", 1, true) ~= nil or lower:find("{coords}", 1, true) ~= nil
 end

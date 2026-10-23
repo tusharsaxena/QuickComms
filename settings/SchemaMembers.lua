@@ -124,7 +124,7 @@ local CHANNEL_LABEL = {
     smartGroup = L["Smart group (instance, raid or party)"],
     smartLead = L["Smart lead (raid warning when you can)"],
     party = L["Party"], raid = L["Raid"], instance = L["Instance"], raidWarning = L["Raid warning"],
-    say = L["Say"], yell = L["Yell"],
+    say = L["Say"], yell = L["Yell"], general = L["General (/1; Say when not joined)"],
 }
 local CHANNELS = {}
 for i, kind in ipairs(NS.Channels.KINDS) do CHANNELS[i] = { value = kind, text = CHANNEL_LABEL[kind] or kind } end
@@ -159,7 +159,7 @@ local ROWS = {
       validate = check(Lib.ValidName) },
     { path = "callout.text", instance = "callout", type = "string", dialogControl = "EditBox",
       maxLetters = 255, page = "callouts", group = GENERAL, label = L["Text"],
-      desc = L["What is sent. Tokens in braces are filled in: {target}, {focus}, {skull}, {me}, {spec}, {key}, {dungeon}, {spell:ID}; in a raid, {group1} to {group8}. Press Enter to apply."],
+      desc = L["What is sent. Tokens in braces are filled in: {target}, {focus}, {skull}, {me}, {spec}, {key}, {dungeon}, {coordinates}, {spell:ID}; in a raid, {group1} to {group8}. Press Enter to apply."],
       validate = check(isText) },
     { path = "callout.channel", instance = "callout", type = "string", default = T.callout.channel,
       values = CHANNELS, page = "callouts", group = GENERAL, label = L["Channel"],

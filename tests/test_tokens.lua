@@ -65,3 +65,27 @@ test("tokens: a mock fills a baked value missing here, and only when given (the 
     assertEqual(#missing, 2, "still reported missing")
     assertEqual((Tok.Expand("+{key} {me}", { me = "Ann" })), "+ Ann", "no mock: dropped, as a send does")
 end)
+
+test("tokens: [QF-03] {coordinates} and {coords} bake from ctx.coordinates; missing is dropped and listed, or mocked", function()
+    local Tok = tok()
+    local ctx = { coordinates = "45.2, 61.8" }
+    -- red under: no `coordinates` in Tokens' BAKED (it stays as an unknown chip)
+    local out, unknown, missing = Tok.Expand("{target} @ {coordinates}", ctx)
+    assertEqual(out, "%t @ 45.2, 61.8")
+    assertEqual(#unknown, 0)
+    assertEqual(#missing, 0)
+    -- red under: no `coords` alias
+    assertEqual((Tok.Expand("at {Coords}", ctx)), "at 45.2, 61.8")
+    local _
+    out, _, missing = Tok.Expand("{target} @ {coordinates}", {})
+    assertEqual(out, "%t @ ", "dropped, as a send does")
+    assertEqual(missing[1], "coordinates")
+    local asked
+    out = Tok.Expand("{target} @ {coords}", {}, function(name) asked = name return "<" .. name .. ">" end)
+    assertEqual(out, "%t @ <coordinates>")
+    assertEqual(asked, "coordinates", "the alias asks the mock by the token's own name")
+    assertTrue(Tok.UsesCoordinates("{target} @ {COORDINATES}"))
+    assertTrue(Tok.UsesCoordinates("at {coords}"))
+    assertFalse(Tok.UsesCoordinates("{dungeon} +{key}"))
+    assertFalse(Tok.UsesCoordinates(nil))
+end)

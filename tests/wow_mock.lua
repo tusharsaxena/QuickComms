@@ -26,7 +26,10 @@
 --   modifiers      { shift, ctrl, alt }: the keys held (IsShiftKeyDown and the rest); a secure click
 --                  reads its attributes with that prefix, as SecureButton_GetModifiedAttribute does
 --   playerGUID     UnitGUID("player")
---   __click(b[, mouseButton])  a full press: the registered down edge, then the up edge
+--   playerMap      C_Map.GetBestMapForUnit("player")'s map id (nil: no map, as in an instance)
+--   playerPos      { x, y } (fractions 0-1): C_Map.GetPlayerMapPosition's GetXY on playerMap (nil: none)
+--   __click(b[, mouseButton])  a full press: the registered down edge, then the up edge; each edge
+--                  runs the button's PreClick script before its OnClick, as the client does
 --   __setCombat(on)            sets inCombat and re-evaluates every visibility driver
 --   restrictedBindings  [key] = { owner, target, button }: what a header's snippet bound with SetBindingClick (the newest
 --                  owner's; __bindingStacks keeps every owner's, so a ClearBindings hands the key back)
@@ -205,6 +208,19 @@ local function build()
     M.IsControlKeyDown = function() return M.modifiers.ctrl == true end
     M.IsAltKeyDown     = function() return M.modifiers.alt == true end
     M.playerGUID   = "Player-1-00000001"
+    M.playerMap    = nil
+    M.playerPos    = nil
+    M.C_Map = {
+        GetBestMapForUnit = function(unit)
+            if unit == "player" then return M.playerMap end
+            return nil
+        end,
+        GetPlayerMapPosition = function(mapID, unit)
+            if unit ~= "player" or mapID == nil or mapID ~= M.playerMap or not M.playerPos then return nil end
+            local pos = M.playerPos
+            return { GetXY = function() return pos[1], pos[2] end }
+        end,
+    }
 
     M.GetCVarBool = function(name) return M.cvars[name] == "1" end
     M.C_CVar      = { GetCVarBool = function(name) return M.cvars[name] == "1" end }
@@ -217,7 +233,16 @@ local function build()
         PARTY = { r = 0.67, g = 0.67, b = 1.0 }, RAID = { r = 1.0, g = 0.5, b = 0.0 },
         INSTANCE_CHAT = { r = 1.0, g = 0.5, b = 0.0 }, RAID_WARNING = { r = 1.0, g = 0.28, b = 0.0 },
         SAY = { r = 1.0, g = 1.0, b = 1.0 }, YELL = { r = 1.0, g = 0.25, b = 0.25 },
+        CHANNEL1 = { r = 1.0, g = 0.75, b = 0.75 },
     }
+    -- The chat channels the player is in, by number (QF-04): General is joined by default. The
+    -- client's GetChannelName answers id, name, instanceID for a joined channel and 0 otherwise.
+    M.channels = { [1] = "General - Dornogal" }
+    M.GetChannelName = function(id)
+        local name = M.channels[id]
+        if name then return id, name, 0 end
+        return 0, nil, 0
+    end
 
     local function refuse(frame, call)
         M.blocked[#M.blocked + 1] = { frame = frame, call = call }
@@ -368,6 +393,13 @@ local function build()
             return self
         end
         frame.GetAlpha = function(self) return self.__alpha or 1 end
+        -- A disabled control runs no OnEnter or OnLeave in the client unless told to
+        -- (SetMotionScriptsWhileDisabled): recorded, so a disabled control's tooltip can be asserted on.
+        frame.SetMotionScriptsWhileDisabled = function(self, on)
+            self.__motionWhileDisabled = on and true or false
+            return self
+        end
+        frame.GetMotionScriptsWhileDisabled = function(self) return self.__motionWhileDisabled == true end
         frame.GetCenter = function(self) return self.__cx or 0, self.__cy or 0 end
         frame.GetEffectiveScale = function() return 1 end
         -- Mouse input, as the client keeps it: a Button takes the mouse until told otherwise (the dial's
@@ -845,8 +877,14 @@ local function build()
             end
             return false
         end
-        if registered("Down") then button:__fire("OnClick", mouseButton, true) end
-        if registered("Up") then button:__fire("OnClick", mouseButton, false) end
+        if registered("Down") then
+            button:__fire("PreClick", mouseButton, true)
+            button:__fire("OnClick", mouseButton, true)
+        end
+        if registered("Up") then
+            button:__fire("PreClick", mouseButton, false)
+            button:__fire("OnClick", mouseButton, false)
+        end
     end
 
     M.SetOverrideBindingClick = function(owner, _, key, name, button)

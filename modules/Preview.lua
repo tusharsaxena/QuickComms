@@ -32,7 +32,8 @@ end
 local function announce()
     NS.addon:SendMessage(NS.MSG.TEST_MODE_CHANGED,
         State.testMode == true or State.previewAs ~= nil or State.editPreview ~= nil)
-    -- The selector window shows exactly while Preview as is on (late-bound: it loads after this file).
+    -- The selector window shows while Preview as or the edit preview is on (late-bound: it loads after
+    -- this file).
     if NS.PreviewWindow then NS.PreviewWindow.Sync() end
     refreshPanel()
 end
@@ -101,7 +102,7 @@ end
 local function base(fields)
     local live = NS.Situation.Current()
     local s = { classFile = live.classFile, specID = live.specID, role = live.role, character = live.character,
-        leader = true, assist = false, inCombat = false, lockdown = {} }
+        general = live.general, leader = true, assist = false, inCombat = false, lockdown = {} }
     for k, v in pairs(fields) do s[k] = v end
     return s
 end
@@ -237,6 +238,16 @@ end
 -- back when it ends. Session-only (NS.State.editPreview). A start in combat or stood down is
 -- refused without a line, because the page asks again on every draw; combat, the stand-down,
 -- the page hiding and the settings window closing end it.
+--
+-- The selector window (modules/PreviewWindow.lua) shows over it too (QF-02, owner 2026-10-23), and
+-- a user-started edge prints "Previewing: <group> (editing)": the page shown, the setting ticked
+-- on. A group switch (no edge), a re-render and the restart after combat (`quiet`) print nothing.
+-- Ending it from the window has two strengths. End preview, the close mark and `/qc preview off`
+-- (P.EndPreview) turn Preview while editing off, since the page restarts the preview on its next
+-- render while the setting is on. Escape (P.DismissEditPreview) leaves the saved switch alone,
+-- because it also closes the settings window: it marks the group dismissed for the session
+-- (NS.State.editPreviewDismissed), and the page's Sync previews nothing while that group stays
+-- selected. A group switch, the page shown again, a write of the setting or End preview clears it.
 
 P.EDIT = "edit"
 
@@ -244,15 +255,110 @@ function P.EditGroup()
     return State.editPreview
 end
 
---- Preview only group `gid` on every pad and dial, or end that (nil).
+local function known(key)
+    return P.FindPreset(key) and key or P.CURRENT
+end
+
+-- A When id row that holds anything (an empty one is unset, as the Resolver reads it).
+local function listed(row)
+    return type(row) == "table" and next(row) ~= nil
+end
+
+-- The preset a battleground When names: the first set whose map it lists, else the first set.
+local function battlegroundKey(ids)
+    local list = battlegrounds()
+    for _, bg in ipairs(list) do
+        if type(ids) == "table" and ids[bg.instanceID] == true then return bg.key end
+    end
+    return list[1] and list[1].key or P.CURRENT
+end
+
+--- The "Preview as…" preset the edit preview bakes under and the window shows (owner 2026-10-23):
+--- the one the group's When names (a child's, its parent's when it inherits, Resolver.WhenOf), in
+--- the menu's own terms: a battleground set's map (a battleground id row alone too), M+, the tier's
+--- raid (its first ticked difficulty, else Normal), Arena (an arena id row alone too), Solo; Current
+--- for a When with no content (In Group, a group of yours).
+--- @param gid string|nil the group, else the one being edited
+--- @return string key
+function P.EditPresetKey(gid)
+    gid = gid or State.editPreview
+    local when = gid and NS.Resolver.WhenOf(NS.Library.AllGroups(), gid)
+    if type(when) ~= "table" then return P.CURRENT end
+    local content = type(when.content) == "table" and when.content or {}
+    if content.battleground or listed(when.battleground) then
+        return battlegroundKey(when.battleground)
+    end
+    if content.mythicPlus or content.dungeon then return known("mplus") end
+    if content.raid then
+        local ticked = type(when.difficulty) == "table" and when.difficulty or {}
+        for _, r in ipairs(RAID) do
+            if ticked[r[1]] then return known("raid:" .. r[1]) end
+        end
+        return known("raid:normal")
+    end
+    if content.arena or listed(when.arena) then return known("arena") end
+    if content.openWorld then return known("world") end
+    return P.CURRENT
+end
+
+--- The snapshot the edit preview's pads and dials bake under (Surfaces.ApplyAll): its preset's, over
+--- any Preview as, which comes back when it ends. The Groups page keeps judging where you are
+--- (Editors.Snapshot): its active dots and rows are not the preview's.
+function P.EditSnapshot()
+    local key = P.EditPresetKey()
+    if key == P.CURRENT then return NS.Situation.Current() end
+    local e = P.FindPreset(key)
+    return e and e.snapshot or NS.Situation.Current()
+end
+
+--- Preview only group `gid` on every pad and dial, or end that (nil). The off -> on edge prints the
+--- start line unless `quiet`.
 --- @return boolean changed
-function P.SetEditPreview(gid)
+function P.SetEditPreview(gid, quiet)
     if gid == State.editPreview then return false end
     if gid ~= nil and (NS.IsStoodDown() or fighting()) then return false end
+    local started = gid ~= nil and State.editPreview == nil
     State.editPreview = gid
     NS.Debug("Pad", "edit preview %s", tostring(gid or "off"))
     announce()
+    if started and not quiet then NS.Print(L["Previewing: %s (editing)"]:format(P.Label(P.EDIT))) end
     return true
+end
+
+--- The group Escape dismissed for this session, or nil (settings/Groups.lua SyncEditPreview).
+function P.EditPreviewDismissed()
+    return State.editPreviewDismissed
+end
+
+function P.ClearEditPreviewDismissal()
+    State.editPreviewDismissed = nil
+end
+
+--- Escape on the selector window: end the edit preview and Preview as for this session, the saved
+--- Preview while editing left on (see the section's header).
+--- @return boolean changed
+function P.DismissEditPreview()
+    if State.editPreview == nil then return false end
+    State.editPreviewDismissed = State.editPreview
+    P.SetEditPreview(nil)
+    P.SetPreviewAs(P.OFF)
+    return true
+end
+
+--- End every preview the selector window shows (End preview, its close mark, `/qc preview off`):
+--- the edit preview with its setting turned off, then Preview as. Test mode is not touched.
+--- @return boolean changed
+function P.EndPreview()
+    State.editPreviewDismissed = nil
+    local changed = false
+    if State.editPreview ~= nil then
+        -- Its onChange runs the Groups page's Sync, which ends the edit preview; the call after it is
+        -- then a no-op, and ends it where the page is not loaded.
+        NS.SchemaRuntime.Set("behavior.previewOnEdit", false)
+        P.SetEditPreview(nil)
+        changed = true
+    end
+    return P.SetPreviewAs(P.OFF) or changed
 end
 
 -- ── the click preview (QC-07, owner request 2026-10-23) ───────────────────────────────────────
@@ -276,7 +382,13 @@ local RT_ICON = "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%s:0|t"
 P.MOCK = {
     target = L["<target>"], focus = L["<focus>"], group = L["<group %s>"], spell = L["<spell %s>"],
     me = L["<me>"], spec = L["<spec>"], role = L["<role>"], key = L["<key>"], dungeon = L["<dungeon>"],
+    coordinates = L["<coordinates>"],
 }
+
+-- {coordinates} in an echo of where you are (QF-03): kept as this literal through the bake, then
+-- filled at the click by FillEcho, so the echo prints where you are when you click, not where the plan
+-- was built. The bake's text cleaning leaves braces alone.
+local COORDS = "{coordinates}"
 
 local function mockBaked(name)
     local id = name:match("^spell:(%d+)$")
@@ -291,8 +403,19 @@ end
 --- @param snap table the previewed snapshot the plan baked against
 function P.SlotEcho(slot, callout, snap)
     if slot.line then
+        -- Never the plan-time position: the live snapshot (Current, the edit preview of a group with no
+        -- content, known by identity as Surfaces.BakeContext knows it) keeps the literal for the click; a synthetic preset,
+        -- which is not where you are, its mock.
+        local ctx = {}
+        for k, v in pairs(NS.Surfaces.BakeContext(snap)) do ctx[k] = v end
+        ctx.coordinates = nil
+        local here = snap ~= nil and snap == NS.Situation.Current()
+        local function mock(name)
+            if name == "coordinates" then return here and COORDS or P.MOCK.coordinates end
+            return mockBaked(name)
+        end
         local line = NS.Bake.Bake(callout, snap, { soloFallback = NS.Setting("behavior.soloFallback"),
-            ctx = NS.Surfaces.BakeContext(snap), mock = mockBaked })
+            ctx = ctx, mock = mock })
         return line or slot.line
     end
     local why = NS.PadRender.REASON_TEXT[slot.reason] or L["Not available here."]
@@ -310,9 +433,14 @@ end
 
 --- At the click (combat-safe: reads only): fill what the game would fill as it sends. %t and %f are
 --- your target's and focus's names, or their mock; a raid marker is its icon, as chat draws it; a
---- raid-group token, which the game expands only in a raid, is its mock.
+--- raid-group token, which the game expands only in a raid, is its mock. {coordinates} (kept by
+--- SlotEcho for an echo of where you are) is your position now, or its mock where there is none.
 function P.FillEcho(text)
     if type(text) ~= "string" then return "" end
+    if text:find(COORDS, 1, true) then
+        local here = (NS.Compat.Coordinates() or P.MOCK.coordinates):gsub("%%", "%%%%")
+        text = text:gsub("{coordinates}", here)
+    end
     text = text:gsub("%%([tf])", function(c)
         if c == "t" then return unitOr("target", P.MOCK.target) end
         return unitOr("focus", P.MOCK.focus)
@@ -358,7 +486,7 @@ end
 listen()
 
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
-    State.testMode, State.previewAs, State.editPreview = nil, nil, nil
+    State.testMode, State.previewAs, State.editPreview, State.editPreviewDismissed = nil, nil, nil, nil
     -- The stand-down announces nothing, so the selector window is told here.
     if NS.PreviewWindow then NS.PreviewWindow.Sync() end
     if receiver and not NS.Bus.tracked then receiver:UnregisterMessage(NS.MSG.RESTRICTION_CHANGED) end

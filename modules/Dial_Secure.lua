@@ -27,7 +27,8 @@ local _, NS = ...
 -- a mouse button closes on its own key: the click lands on the wedge, not on the binding; and only a
 -- left click is a press, SendEngine's click hook skips the rest), a ring wedge (attribute
 -- qc-target > 0) shows its ring and sends nothing, and a callout wedge lets the click through, then
--- closes the dial. A page arrow (under the disc of a paged ring) is wrapped the same way but never
+-- closes the dial, except on a preview or test dial (the header's qc-preview, written by DS.Load out
+-- of combat with the same Load that disarms its wedges), which stays open for the next pick. A page arrow (under the disc of a paged ring) is wrapped the same way but never
 -- sends: its left click shows the page it targets, or does nothing at an end (qc-target 0). Opening a dial closes every other open dial first (its siblings, DS.Link), so only
 -- one holds Escape, the wheel and 1-8.
 --
@@ -192,8 +193,11 @@ end
 return button, "sent"
 ]]
 
+-- A preview or test dial (the header's qc-preview, DS.Load) stays open after a pick, so the player can
+-- try slice after slice (owner, 2026-10-23); a live dial closes as it always has. The snippet only
+-- reads the attribute.
 local WEDGE_POST = [[
-owner:RunAttribute("qc-close")
+if not owner:GetAttribute("qc-preview") then owner:RunAttribute("qc-close") end
 ]]
 
 local ARROW_PRE = [[
@@ -310,15 +314,16 @@ end
 --- page arrows ({ prev, next }, each targeting that page), its wedges ({ button, target, place }:
 --- target 0 for a callout, else the ring a click opens; place its slice, 1..size from `start`) and,
 --- when it has one, its catcher with the ring's `shape` ({ size, start, hub, disc }); the ring it opens
---- on and where it opens; and (opts.screen) the dial's screen catcher, as the header's frame ref
---- `screen`. Out of combat only.
+--- on and where it opens; (opts.screen) the dial's screen catcher, as the header's frame ref
+--- `screen`; and (opts.preview) whether this is a preview or test dial, as `qc-preview` (always
+--- written, false for a live plan, so a reload from a preview to live clears it). Out of combat only.
 --- @return boolean loaded
 function DS.Load(header, rings, opts)
     if NS.Compat.InCombat() then return false end
     opts = opts or {}
     -- The ring it opens on has its own attribute: `qc-open` is the open snippet's.
     local attrs = { ["qc-rings"] = #rings, ["qc-openRing"] = opts.openRing or 1,
-        ["qc-openAt"] = opts.openAt == "cursor" and "cursor" or "center" }
+        ["qc-openAt"] = opts.openAt == "cursor" and "cursor" or "center", ["qc-preview"] = opts.preview == true }
     for r, ring in ipairs(rings) do
         attrs["qc-parent-" .. r] = ring.parent or 0
         attrs["qc-key-" .. r] = ring.key or ("ring" .. r)

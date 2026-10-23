@@ -16,7 +16,7 @@ BI.Group(ID, {
         { "mana",   L["Need mana"],      L["Wait, need mana"], "gi:water-drop", C.blue },
         { "skip",   L["Skipping"],       L["Skipping with invis/shroud"], "gi:invisible", C.cyan },
         { "res",    L["Res me"],         L["Res me pls"], "gi:hospital-cross", C.green },
-        { "chain",  L["Chain pull"],     L["Chain pulling"], "gi:crossed-chains", C.red },
+        { "chain",  L["Chain pull"],     L["Chain pulling"], "gi:crossed-chains", C.yellow },
         { "kicks",  L["Kick order"],     L["Kick order: {rt1} {rt2} {rt3}"], "gi:foot-plaster", C.purple },
     }),
 })

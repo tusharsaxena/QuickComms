@@ -51,7 +51,7 @@ Named suites the standard requires: `test_surface_parity` (testing-§8), `test_v
 `test_pad_render` and `test_pad`, and phase 3's `test_members`, `test_editors`, `test_callout_popup` (the callout popup, which replaced `test_page_callouts`), `test_eui_skin` (its optional EllesmereUI skin, on a mocked EllesmereUI),
 `test_groups_when`, `test_page_groups`, `test_page_pads` and `test_page_share`, and phase 4's
 `test_dial_layout`, `test_dial_secure`, `test_dial` and `test_page_dials`, and phase 5's `test_share`
-and `test_gameids`, the icon browser's `test_icon_browser`, and the Icons tab's `test_icon_style` and `test_glow`, the edit preview's `test_edit_preview`, and the shine overlay's `test_shine` and `test_dial_shine`. Kit suites, declared by directory:
+and `test_gameids`, the icon browser's `test_icon_browser`, and the Icons tab's `test_icon_style` and `test_glow`, the edit preview's `test_edit_preview`, the preview window's `test_preview_window`, the `{coordinates}` token's `test_coordinates`, and the shine overlay's `test_shine` and `test_dial_shine`. Kit suites, declared by directory:
 `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`, `test_lizard_sighted`.
 Every new `tests/test_*.lua` is added to the `suites` list in `tests/run.lua`; the kit fails the run
 in both directions.
@@ -64,6 +64,8 @@ binding. For the icon browser it adds the macro icon lists (`GetMacroIcons`, `Ge
 and the AceGUI Icon and Label widgets' image texture with `SetVertexColor`, which records the tint it was given.
 
 `tests/page_helpers.lua` (not a suite) drives an editor page through the kit's AceGUI recorder: show a page, redraw it, click a tab, find a widget by its label, fire its callback, accept the last popup, and spy on the reorder lists.
+
+`tests/dial_pick.lua` (not a suite) clicks a slice on an open dial as a mouse pick does: it puts the cursor on the slice that holds a wedge and clicks its ring's catcher, first opening the ring that leads there when the wedge sits on one not shown.
 
 `tests/prose_waivers.lua` waives, per file and per word, the British spellings in the frozen
 `docs/brainstorm/` record; nothing written after the scaffold is waived.
