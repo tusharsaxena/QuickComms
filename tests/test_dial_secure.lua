@@ -26,7 +26,9 @@ local function built(opts)
     local h = DS.NewHeader(7)
     local function wedge(ring, line, target)
         local b = DS.NewWedge(h, ring)
-        if line then SE.Arm(b, line, { calloutId = "c-" .. line, surfaceId = "d9", chatType = "PARTY", name = line }) end
+        if line and not opts.disarmed then
+            SE.Arm(b, line, { calloutId = "c-" .. line, surfaceId = "d9", chatType = "PARTY", name = line })
+        end
         return { button = b, target = target or 0 }
     end
     local frames = { DS.NewRing(h), DS.NewRing(h), DS.NewRing(h) }
@@ -36,7 +38,8 @@ local function built(opts)
         { frame = frames[3], parent = 2, prev = 2, next = 0, wedges = { wedge(frames[3], "/p four") } },
     }
     local screen = opts.screen and DS.NewScreen(h) or nil
-    assertTrue(DS.Load(h, rings, { openRing = opts.openRing or 1, openAt = opts.openAt, screen = screen }))
+    assertTrue(DS.Load(h, rings, { openRing = opts.openRing or 1, openAt = opts.openAt, screen = screen,
+        preview = opts.preview }))
     return NS, m, h, frames, rings, screen
 end
 
@@ -329,4 +332,71 @@ test("dial secure: [polish] closing hides the screen catcher", function()
     m.__click(h, "Toggle")
     screen:__fire("OnClick", "LeftButton", true)
     assertTrue(h:IsShown(), "the down edge alone does nothing")
+end)
+
+-- ── a preview or test dial stays open on a pick (QF-01, owner 2026-10-23) ─────────────────────────
+
+test("dial secure: [QF-01] a preview dial stays open on a callout pick; nothing is sent", function()
+    local NS, m, h, frames, rings = built({ preview = true, disarmed = true })
+    assertEqual(h:GetAttribute("qc-preview"), true, "Load writes the flag")
+    assertTrue(NS.DialSecure.Open(h))
+    -- red under: WEDGE_POST closing unconditionally
+    m.__click(rings[1].wedges[2].button)
+    assertTrue(h:IsShown(), "the pick leaves a preview dial open")
+    assertEqual(shown(frames), 1, "on the same ring")
+    m.__click(h, "Toggle")
+    assertFalse(h:IsShown(), "the key closes it")
+    m.__click(h, "Toggle")
+    assertTrue(m.__pressKey("2"))
+    assertTrue(h:IsShown(), "a number-key pick too")
+    assertEqual(#m.sentMacros, 0)
+    assertEqual(NS.SendEngine.EchoState().pending, 0)
+    assertEqual(#m.blocked, 0)
+end)
+
+test("dial secure: [QF-01] in a preview the ring wedge, the hub, a right and a middle click still act", function()
+    local _, m, h, frames, rings = built({ preview = true, disarmed = true })
+    m.__click(h, "Toggle")
+    m.__click(rings[1].wedges[1].button)
+    assertEqual(shown(frames), 2, "a ring wedge opens its ring")
+    m.__click(h, "LeftButton")
+    assertEqual(shown(frames), 1, "the hub goes up")
+    m.__click(rings[1].wedges[1].button)
+    m.__click(rings[2].wedges[1].button, "RightButton")
+    assertFalse(h:IsShown(), "a right click on a wedge still closes")
+    m.__click(h, "Toggle")
+    m.__click(rings[1].wedges[2].button, "MiddleButton")
+    assertFalse(h:IsShown(), "a middle click still closes")
+    m.__click(h, "Toggle")
+    assertTrue(m.__pressKey("ESCAPE"))
+    assertFalse(h:IsShown(), "Escape still closes")
+end)
+
+test("dial secure: [QF-01] a live dial (no preview, or false) closes on a pick, in and out of combat", function()
+    for _, flag in ipairs({ false, "none" }) do
+        local NS, m, h, _, rings = built({ preview = flag ~= "none" and flag or nil })
+        assertEqual(h:GetAttribute("qc-preview"), false, "a live Load writes false")
+        m.__click(h, "Toggle")
+        m.__click(rings[1].wedges[2].button)
+        assertEqual(#m.sentMacros, 1)
+        assertFalse(h:IsShown(), "closed after the send")
+        combat(m, true)
+        m.__click(h, "Toggle")
+        m.__click(rings[1].wedges[2].button)
+        assertEqual(#m.sentMacros, 2)
+        assertFalse(h:IsShown(), "closed after the send, in combat")
+        assertEqual(#m.blocked, 0)
+        assertTrue(NS ~= nil)
+    end
+end)
+
+test("dial secure: [QF-01] a reload from preview to live clears the flag", function()
+    local NS, m, h, frames, rings = built({ preview = true })
+    assertTrue(NS.DialSecure.Load(h, rings, { openRing = 1 }))
+    assertEqual(h:GetAttribute("qc-preview"), false)
+    m.__click(h, "Toggle")
+    m.__click(rings[1].wedges[2].button)
+    -- red under: write the flag only when it is set
+    assertFalse(h:IsShown())
+    assertTrue(frames ~= nil)
 end)

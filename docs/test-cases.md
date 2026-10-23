@@ -857,7 +857,7 @@ Total.
 - sendengine: [phase 4] attributes, frame refs and snippets are written out of combat only, never blocked
 - sendengine: [keys] no override binding is written: a dial's key is WoW's own binding (modules/Dial.lua)
 
-### test_dial_secure.lua (16)
+### test_dial_secure.lua (20)
 
 - dial secure: the header is QuickCommsDial<n>, hidden until the toggle opens it; open, the dial owns Escape and 1-8
 - dial secure: [exit] a group wedge opens its ring (the two-stroke); a callout wedge sends once and closes
@@ -875,8 +875,12 @@ Total.
 - dial secure: [polish] an outside click closes a key-opened dial, in combat
 - dial secure: [polish] display open shows no screen catcher
 - dial secure: [polish] closing hides the screen catcher
+- dial secure: [QF-01] a preview dial stays open on a callout pick; nothing is sent
+- dial secure: [QF-01] in a preview the ring wedge, the hub, a right and a middle click still act
+- dial secure: [QF-01] a live dial (no preview, or false) closes on a pick, in and out of combat
+- dial secure: [QF-01] a reload from preview to live clears the flag
 
-### test_preview.lua (34)
+### test_preview.lua (36)
 
 - preview: test mode turns on and off, announcing each edge once
 - preview: a start in combat is refused with one line
@@ -912,6 +916,8 @@ Total.
 - preview: [click] a test-mode placeholder prints its label and that it is a placeholder
 - preview: [click] no preview or test click reaches a send API, the guard or the echo tracker
 - preview: [click] a live armed button is unchanged: it sends its line and prints nothing
+- preview: [QF-01] a slice pick on a previewed, test or edit-preview dial echoes and leaves the dial open
+- preview: [QF-01] after /qc preview off a pick on the live dial sends and closes it
 
 ### test_edit_preview.lua (15)
 
@@ -1348,8 +1354,8 @@ Total.
 | test_check.lua | 6 |
 | test_send_guard.lua | 10 |
 | test_sendengine.lua | 30 |
-| test_dial_secure.lua | 16 |
-| test_preview.lua | 34 |
+| test_dial_secure.lua | 20 |
+| test_preview.lua | 36 |
 | test_edit_preview.lua | 15 |
 | test_preview_window.lua | 16 |
 | test_master.lua | 5 |
@@ -1370,4 +1376,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1132** |
+| **Total** | **1138** |
