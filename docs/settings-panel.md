@@ -27,7 +27,7 @@ Reset all settings buttons.
 | Master scale (`scale`, 0.5-2) | Master alpha (`alpha`) |
 | Lock frame (`locked`) | Debug console (`state.debugConsole`, session) |
 | Minimap button (`global.minimap.shown`) | Test mode (`state.testMode`, session) |
-| Preview as (`state.previewAs`, session; its own line) | |
+| Preview as (`state.previewAs`, session; its own line: Off first, then every preset) | |
 | Reset position (button: every pad and dial back to its default place, one chat line) | Reset all settings (button, asks first) |
 
 Lock frame, `/qc lock|unlock` and the launcher's Locked entry write the same path; Test mode,
@@ -40,8 +40,11 @@ and the next login.
 Preview as is passed through the composer's `extra` slot, so it lands after the canonical rows and
 before the button pair, never among them: options-ui-§15 as amended in v2.84.0 sanctions that slot
 for page-wide host rows. It draws every pad, and opens dial 1, as another situation would (nothing
-sends); `/qc preview` writes the same session row, and the page follows it (`Preview.announce`
-repaints). It is page-wide, so no editor page draws it, and no page's Defaults reaches it; Reset all
+sends); its choices are Off first, then Current (a live preview of where you are) and every preset.
+A pick other than Off opens the preview window (`modules/PreviewWindow.lua`), the same window
+`/qc preview` opens, and closing the settings window no longer ends it: End preview, Escape or the
+window's close mark do. `/qc preview` writes the same session row, and the page follows it
+(`Preview.announce` repaints). It is page-wide, so no editor page draws it, and no page's Defaults reaches it; Reset all
 settings ends it with the other session rows.
 
 Every row writes through the one seam (`NS.SchemaRuntime.Set`), and its reaction is the same one

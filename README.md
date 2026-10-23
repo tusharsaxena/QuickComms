@@ -69,7 +69,10 @@ band behind each), its Window tab the pad's border and background, and its Butto
 buttons themselves (size, color, border, font, an optional glow and an optional shine over the whole button, chosen
 apart from the dial's), each color with a Use class color
 box. "Preview as…" (or `/qc preview`) shows the pads
-and the dial as they would look somewhere else, and hovering a pad's header or the dial's middle (or
+and the dial as they would look somewhere else. `/qc preview` on its own previews where you are, in
+a small window whose dropdown switches the situation; End preview (or Escape, or its close mark)
+ends it. A preview started from the settings opens the same window and outlives the settings, and
+the window keeps the place you drag it to. Hovering a pad's header or the dial's middle (or
 `/qc why`) tells you why each group is there. While the Groups page is open, every pad and dial shows
 only the group you are editing, sending nothing: a click prints `[QC] /p <text>`, the line it would
 have sent (untick Preview while editing, under the Group picker, to keep them live). Right-click a
@@ -140,7 +143,7 @@ than in comments, so nothing gets lost.
 
 | Version | Date | Highlights |
 |---|---|---|
-| 0.1.0 | Unreleased | - The Comms Pad and the Comms Dial, with built-in callouts for Mythic+, raids, arenas, every battleground and the solo open world, sent through secure buttons<br>- Battleground sets with a group per objective: Alterac Valley's generals, captains, bunkers, towers and graveyards, Isle of Conquest's bases, and the objectives of Warsong Gulch, Twin Peaks, Wintergrasp, Ashran, Deephaul Ravine and Seething Shore<br>- Your own callouts and groups (the built-in sets among them, as groups you can edit, and groups inside groups), with conditions for when each group shows, Preview as…, a preview of the group you are editing and Why is this showing?<br>- The spam guard, drop notes, test mode and the lock<br>- The pad's font, border and background, with class colors<br>- An optional shine on the pad's buttons and the dial's slices (seven looks), and the dial's own round art<br>- Sharing groups (with their callouts), pads and dials as a string<br>- The settings panel, the minimap button, the `/qc` command and the debug tools |
+| 0.1.0 | Unreleased | - The Comms Pad and the Comms Dial, with built-in callouts for Mythic+, raids, arenas, every battleground and the solo open world, sent through secure buttons<br>- Battleground sets with a group per objective: Alterac Valley's generals, captains, bunkers, towers and graveyards, Isle of Conquest's bases, and the objectives of Warsong Gulch, Twin Peaks, Wintergrasp, Ashran, Deephaul Ravine and Seething Shore<br>- Your own callouts and groups (the built-in sets among them, as groups you can edit, and groups inside groups), with conditions for when each group shows, Preview as…, a preview of the group you are editing and Why is this showing?<br>- A small preview window, opened by `/qc preview` or the Preview as… row, to switch the previewed situation or end the preview<br>- The spam guard, drop notes, test mode and the lock<br>- The pad's font, border and background, with class colors<br>- An optional shine on the pad's buttons and the dial's slices (seven looks), and the dial's own round art<br>- Sharing groups (with their callouts), pads and dials as a string<br>- The settings panel, the minimap button, the `/qc` command and the debug tools |
 
 ## Credits
 

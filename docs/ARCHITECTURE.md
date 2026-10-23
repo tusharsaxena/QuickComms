@@ -98,7 +98,8 @@ line: the client reads it there, and the standard allows it (layout-§1, toc-fil
 | `core/WidgetsSetup.lua` | setup | the drag-strip seam: `NS.MakeDragHandle` over LibKa0s-Widgets' `DragHandle`, nil when the library is absent |
 | `modules/SendEngine_Guard.lua` | pure | the soft guard's timing, the acting click edge, the echo tracker and the keyed combat-end queue |
 | `modules/SendEngine.lua` | secure writer | the only secure writer: send buttons, arm and disarm, the combat-end queue, the click hook, the echo events, the held stand-down; and the dial headers and rings, the wedge wrap, frame refs, snippet runs (no override binding since 2026-10-20: a dial's key is WoW's own binding); sends `SEND_RESULT` and `COMBAT_QUEUE_DRAINED` |
-| `modules/Preview.lua` | session state | test mode and "Preview as…" (its second flavor: the menu, the synthetic snapshot): refused in combat, ended at the combat edge; sends `TEST_MODE_CHANGED` |
+| `modules/Preview.lua` | session state | test mode and "Preview as…" (its second flavor: the menu, the synthetic snapshot; Current is a live preview of where you are, and Off is the off value): refused in combat, ended at the combat edge; closing the settings window ends only the edit preview, never Preview as; sends `TEST_MODE_CHANGED` and calls `PreviewWindow.Sync` from its announce and its stand-down |
+| `modules/PreviewWindow.lua` | frames | the "Preview as…" selector window (a situation dropdown with no Off entry, End preview, the close mark), shown exactly while Preview as is on, whichever way it started; `Sync` is its one show-or-hide, called by Preview's announce and stand-down; End preview, the close mark and Escape (`UISpecialFrames`) end the preview, a hidden UIParent (Alt+Z) does not; its place persists in the profile (`previewWindow`, written on drag stop, read on every show and on a profile switch); no window when LibKa0s is absent |
 | `modules/Pad_Layout.lua` | pure | pad geometry (the header row's height, `HeaderHeight`; the Buttons tab's button size, `CellSize`; up growth puts the header at the bottom; the pad is pinned by its growth edge), the sections each groups-as mode draws, the visibility expression, the fade |
 | `modules/Surfaces.lua` | edge | each pad's plan (active groups, sections, baked or refused slots), each dial's plan (the same active groups, its ring radius), test mode's plans (`TestPlan`, `TestDialPlan`: four placeholder groups of 4, 8, 12 and 16 wearing shipped callouts' names and icons from the seed table, never saved; owner 2026-10-21) and rebuild beside the pads, and the one rebuild request, queued in combat with the stale hint; sends `ACTIVE_GROUPS_CHANGED` and `SURFACE_REBUILT` |
 | `modules/IconStyle.lua` | render | the Icons tab's look on a button's or a wedge's icon (B9): `Config` reads a surface's `icon` table once per rebuild; size, crop (`SetTexCoord`), desaturation, alpha, the tint multiplied with a glyph's own color, and the border (a backdrop on a plain child frame over a button's icon; a round ring behind a wedge's) |
@@ -178,7 +179,10 @@ and a profile switch leaves it alone.
 The editors' selection (`NS.State.editing`; no callout is ever selected) and the When editor's open
 drawers (`NS.State.whenOpen`, per group) are session-only. So is the edit preview
 (`NS.State.editPreview`, the group the Groups page shows alone on every pad and dial while Preview
-while editing is on; `behavior.previewOnEdit` is the saved switch). The callout popup's draft is local to
+while editing is on; `behavior.previewOnEdit` is the saved switch). "Preview as…" (`NS.State.previewAs`)
+is session-only too, and outlives the settings window: closing the settings ends the edit preview,
+never Preview as, which ends on End preview, Escape or the close mark of its window, `off`, test mode,
+combat or the stand-down. Its window's place is saved (`previewWindow`, `docs/schema.md`). The callout popup's draft is local to
 `settings/CalloutPopup.lua` and dropped whenever the popup closes. The icon browser's open request,
 its tab, filter, selection and color are local to `settings/IconBrowser.lua` and dropped whenever it
 closes; its search text is local there too and kept for the session; its game icon lists are kept for the session once the client answers with icons. The Share page's session state, `NS.State.share`: `pick` (the members ticked for
@@ -202,14 +206,14 @@ tracked registration down and replay it.
 | `SURFACE_REBUILT` | `SurfaceRebuilt` | `modules/Surfaces.lua`: `true` when a rebuild is held for combat, `false` when it ran | surfaceId (a pad's or a dial's), stale | none |
 | `SEND_RESULT` | `SendResult` | `modules/SendEngine.lua`: `guarded` at the press, then `sent` or `dropped` from the echo, so one press can yield two | calloutId, surfaceId, result | `modules/Pad.lua` (the flash, the sound); `modules/Dial.lua` (the wedges' flash) |
 | `COMBAT_QUEUE_DRAINED` | `CombatQueueDrained` | `modules/SendEngine.lua` `Drain` | count | `modules/Surfaces.lua` (clears the stale hints) |
-| `TEST_MODE_CHANGED` | `TestModeChanged` | `modules/Preview.lua` `SetTestMode`, `SetPreviewAs` and `SetEditPreview` | on (test mode, Preview as… or the edit preview) | `modules/Surfaces.lua` (`Request`, and opens dial 1); the editor pages (repaint) |
+| `TEST_MODE_CHANGED` | `TestModeChanged` | `modules/Preview.lua` `SetTestMode`, `SetPreviewAs` and `SetEditPreview` | on (test mode, Preview as… or the edit preview) | `modules/Surfaces.lua` (`Request`, and opens dial 1); the editor pages (repaint). The preview window is not a listener: Preview calls `PreviewWindow.Sync` directly beside every send, and at the silent stand-down |
 
 ## Slash Commands
 
 `/qc`, alias `/quickcomms`. The reserved verbs (`help config enable disable lock unlock version list
 get set reset resetall profile debug diagnostics perf`; `lock` and `unlock` are slash-commands-§8's,
 the Lock frame row's path through the seam) and the feature verbs `check <id>`, which prints the
-line a callout would send under the current situation and never sends, `test` (test mode), `toggle` (hide or show every Comms Pad, remembered per character in `db.char.padsHidden`, also the launcher's Show window entry), `preview` ("Preview as…") and `why` ("Why is this showing?", for every built pad and dial). The full table, the live-while-disabled set
+line a callout would send under the current situation and never sends, `test` (test mode), `toggle` (hide or show every Comms Pad, remembered per character in `db.char.padsHidden`, also the launcher's Show window entry), `preview` ("Preview as…": bare opens the preview window on where you are, or keeps the preview on; a name switches it, `off` ends it and `list` prints the menu) and `why` ("Why is this showing?", for every built pad and dial). The full table, the live-while-disabled set
 and the handlers are in [`slash-dispatch.md`](slash-dispatch.md). `enable` and `disable` call the
 same handler as the Master controls row and the launcher entry.
 
@@ -254,8 +258,10 @@ Every secure rule lives in one file. `modules/SendEngine.lua` is the only code t
 - Open at the cursor relies on the restricted `SetPoint` accepting `$cursor` (DIAL-7 passed, 2026-10-21); the fallback, if a patch breaks it, is opening at the dial's place.
 - A dial closes on a send, so its guard dim and its drop flash show only on the next open: the dim for the guard window, a drop's red for 5 s; the chat note reports a drop either way.
 - Disabled in combat, a dial keeps working (and its key keeps opening it) until combat ends and the held stand-down finishes.
-- Test mode and Preview as… open the dial without taking any key (`qc-display`), so the settings window behind it keeps Escape and 1–8: on a paged ring the Left and Right arrow keys and the wheel do not turn the page there; the page arrows under the disc do (owner, 2026-10-22: kept as is).
+- Test mode and Preview as… open the dial without taking any key (`qc-display`), so the settings window behind it keeps Escape and 1–8 (under Preview as…, the preview window takes the first Escape): on a paged ring the Left and Right arrow keys and the wheel do not turn the page there; the page arrows under the disc do (owner, 2026-10-22: kept as is).
 - Test mode or Preview as… ended by a combat whose lockdown began first leaves dial 1 open, its placeholder wedges sending nothing and holding no key, until combat ends (the hub or its key closes it sooner).
+- Preview as… outlives the settings window, so dial 1, open in display mode, can stay on screen with no settings behind it; End preview or Escape (through the preview window) ends the preview and closes it, and its hub closes it sooner.
+- With the settings window open and a Preview as… on, the first Escape ends the preview (the preview window is in `UISpecialFrames`) and a second closes the settings, as the callout popup behaves.
 - Battleground node sets are pinned to compass winds derived from the client's map data, not yet checked in game (smoke check BG-1); Flat mode is not pinned.
 - Alterac Valley's 19 objective groups cannot sit on the eight compass winds, so its dial ring is unpinned and paged: its own four callouts first, then the objectives north to south a few wedges a page, turned by the arrows under the dial (six pages on a four-slice dial, three on Auto). Its pad sets the objectives two to a row, still about 560 px tall beside the generic set on a default pad; groups as tabs, or switching the generic set off, shortens it (smoke check BG-3).
 - A battleground's objective groups have no faction condition (owner ruling, 2026-10-20): "Our base" and "Enemy base", "Our flag" and "Enemy flag" read the same for either side, so nothing names Alliance or Horde, and a group is not hidden for the side it does not fit. Seething Shore's groups are the node in front of you and the next spawn, not its dozen sites, because its azerite erupts at random among them.

@@ -23,6 +23,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | SEND-1..5 | Send | Secure sends in keys and on bosses, the spam guard |
 | PAD-1..15 | Pad | The Comms Pad, its growth and button width, the Solo and In Group sets and the built-ins' colors, the header click and icon only's width, the header's Quick Comms: text |
 | EDIT-1..32 | Editors | The Pad and Dial page names; the Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
+| PREVIEW-1..8 | Preview window | The Preview as selector window: every entry point, the dropdown, End preview, close and Escape, combat, test mode and the stand-down, Alt+Z, the saved position, bare /qc preview and list |
 | DIAL-1..41 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, the lone-group open and the group ring, page arrows and the page row, Auto wedges, the ring radius, the Slice labels tab, the slices and the slice lit by direction, the Slices tab, the pointer, the tooltip outside the dial, the hub over the slices, the pointer, label and icon offsets, the Paging tab; the dial polish: the border gone, the slice gap, placement from W, a slice clicked to the hub in combat, the hub styles, the Group labels tab, Icon offset on Icons, 128-pixel icons, a click outside closing the dial in combat, the page indicators' background and border, the Hub tab; automatic icon offset and size; the 120 radius and 48-pixel icons by default; a right click back a ring; opening where it was closed; slices from N |
 | KEY-1..3 | Key bindings | A dial's key as WoW's own binding in Options → Keybindings, Character Specific Keybindings, Toggle Comms Pads |
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
@@ -295,8 +296,10 @@ changes. Untick Enabled → in a key the set is gone from the pad; tick it again
 the pad shows the arena set with `Preview: Arena` on its header and PREVIEW on its drag strip (in
 green, after the pad's name); clicking a button sends
 nothing to chat and prints its line locally (EDIT-29); its tooltip says so. The Comms Pad, Comms Dial and Groups pages' General tabs have no
-Preview as row. Close the settings → the preview ends. `/qc preview raid:heroic` →
-the raid set; pull something → the preview ends with one line and the live buttons return. Result: 2026-10-21, pass (the owner's run; client build not recorded).
+Preview as row. Close the settings → the preview and its window stay; End preview in the window
+ends it. `/qc preview raid:heroic` →
+the raid set; pull something → the preview ends with one line and the live buttons return.
+Result: pending (amended 2026-10-23, QC-04: re-run)
 
 **EDIT-4. Why is this showing?.** In a key, hover the pad's header → the tooltip lists "Dungeon:
 Content" (and any other group, with its rows); with a `/raid` callout on the pad
@@ -577,10 +580,13 @@ sends nothing to chat and prints one local line, `[QC] /<slash> <text>` (the cha
 callout's text with its tokens filled in, `{me}` as your name). Pick a battleground set → its own callouts and every node show, outside the
 battleground. Set General → Master controls → Preview as → Raid · Heroic, then back on Groups → the
 edited group still shows alone; go to another settings page → the pads show the Raid · Heroic
-preview again; close the settings with the X → the live pads. On Groups, untick Preview while
+preview again; close the settings with the X → the edit preview ends, but Preview as stays on
+Raid · Heroic: the pads show the Raid · Heroic preview and its window stays up (End preview → the
+live pads). On Groups, untick Preview while
 editing → the live pads at once; tick it → the group again. Enter combat with the page open → the
 pads go live with one "Preview ended" line; leave combat with the page still open → the edited
-group's preview comes back. Result: 2026-10-21, pass (the owner's run; client build not recorded).
+group's preview comes back.
+Result: pending (amended 2026-10-23, QC-04: re-run)
 
 **EDIT-28. Right-click a group title.** Out of combat, in a battleground (or with Preview as →
 Arathi Basin): hover a section title on the pad → the tooltip names the group and says Right-click
@@ -617,6 +623,55 @@ profile the groups read Dungeon, Raid, Arena, Battleground and Solo; Dungeon hol
 Buffs please, Healthstone, tyff, brb, Ready, GLHF, ggty, ggnt) and Solo seven. Arena's Swap and Kill
 and every Kill … carrier callout send your target's name ({target}). The pads start unlocked (their
 drag strips show) until Lock pads. Result: 2026-10-23, pass (the owner's run; client build not recorded).
+
+## Preview window
+
+The "Preview as…" selector window (`modules/PreviewWindow.lua`, 2026-10-23): a small window titled
+`Ka0s Quick Comms - Preview`, with a situation dropdown, End preview and a close mark, shown exactly
+while a Preview as… preview is on, whichever way it started.
+
+**PREVIEW-1. The settings row opens it.** Out of combat: Settings → General → Master controls →
+Preview as → Solo → the window appears above the settings, its dropdown on Solo, with an End
+preview button; the pads show PREVIEW.
+Result: pending
+
+**PREVIEW-2. The dropdown and the slash move together.** With PREVIEW-1's preview on, pick Arena in
+the window's dropdown → the pads switch to the arena set and the settings row reads Arena.
+`/qc preview raid:heroic` → the dropdown moves to the Raid · Heroic entry.
+Result: pending
+
+**PREVIEW-3. It outlives the settings window.** Close the settings window with a preview on → the
+preview and the window stay. Click End preview in the window → the window goes, the pads are live,
+and the settings row reads Off when the settings are reopened.
+Result: pending
+
+**PREVIEW-4. The close mark and Escape.** With a preview on, click the window's close mark → the
+preview ends. Start one again with the settings open and press Escape → the preview ends and the
+window hides, the settings stay; a second Escape closes the settings.
+Result: pending
+
+**PREVIEW-5. Combat and Alt+Z.** With a preview on, pull a mob → the window goes with one
+`Preview ended: you entered combat.` line and the live buttons come back. Out of combat, start a
+preview and press Alt+Z → the window hides with the UI; Alt+Z again → it is back and the preview
+never ended.
+Result: pending
+
+**PREVIEW-6. Test mode, disable and the open menu.** With a preview on, `/qc test` → the window
+goes (test mode has no window). With a preview on, `/qc disable` → the window goes; `/qc enable`.
+With a preview on, open the window's dropdown menu and press Escape → the menu and the window are
+both gone, nothing left floating.
+Result: pending
+
+**PREVIEW-7. The saved position.** Drag the window somewhere else, end the preview and start it
+again → it opens in the same place. `/reload` and start a preview again → still the dragged place.
+Result: pending
+
+**PREVIEW-8. Bare `/qc preview` and `list`.** In the open world with no preview on: `/qc preview` →
+chat `Previewing: Current`, the window opens on Current and the pads show PREVIEW. `/qc preview list`
+→ the menu prints and nothing changes. `/qc preview nope` → the line points at `/qc preview list`.
+`/qc help` → the preview line reads "Preview the pads and dials as another situation in a small
+window — …".
+Result: pending
 
 ## Dial
 
@@ -690,9 +745,11 @@ placeholder wedges and TEST MODE above the hub: four group wedges, Test group 1 
 the dial's slices pages: its page arrows turn the page, the Left and Right arrow keys and the wheel do not); clicking sends nothing; 1 still fires the action bar. `/qc test` again → test mode ends, and
 no Test group or placeholder callout appears on the Groups page or in a new session.
 General → Master controls → Preview as → Arathi Basin → the dial opens on its groups with PREVIEW, and Arathi Basin opens the nodes; nothing
-sends; Escape closes the settings window (not the dial), which ends the preview and closes the dial.
+sends; Escape ends the preview through the preview window (the dial closes, the settings window
+stays open), and a second Escape closes the settings window.
 Turn test mode on, then pull a target dummy → test mode ends; the dial closes at once or, if combat
-won the race, at combat end, and in between 1–8 and Escape still do what they always do. Result: 2026-10-21, pass (the owner's run; client build not recorded).
+won the race, at combat end, and in between 1–8 and Escape still do what they always do.
+Result: pending (amended 2026-10-23, QC-04: re-run)
 
 **DIAL-10. The hub and the drop flash.** Hover the hub → "Why is this showing?" lists the groups and their matched rows;
 with a Say callout on the dial during an encounter, LOCKDOWN shows above the hub; Behavior → Explain
@@ -1316,4 +1373,6 @@ The owner ran every check above on 2026-10-21 and reported all of them passed (t
 not recorded). A check added or rewritten later is listed here, with its origin
 and why it is owed, until its pass is recorded.
 
-None.
+- PREVIEW-1..8: new with the preview window (2026-10-23 sim/preview/strips run, QC-02 and QC-03).
+- EDIT-3, EDIT-27, DIAL-9: amended 2026-10-23 (QC-04), since closing the settings window no longer
+  ends Preview as and Escape now ends it through the preview window; owed a re-run.
