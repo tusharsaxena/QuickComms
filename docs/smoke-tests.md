@@ -607,7 +607,7 @@ dial, then `/qc set dial.radius 120` → "No dial to edit: make one on the Dial 
 
 **EDIT-31. The callout popup's Save is on the left (owner, 2026-10-22).** Open Edit callout → Save on
 the left, Cancel on the right, each a column wide; Save saves and closes, Cancel closes and changes
-nothing. Result: not yet run.
+nothing. Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 **EDIT-32. Preview as and the shipped sets (owner, 2026-10-22).** General → Master controls → Preview
 as → Current; one M+ entry (M+ · Windrunner Spire · <spec>); Raid · LFR, Normal, Heroic and Mythic, each
@@ -616,7 +616,7 @@ profile the groups read Dungeon, Raid, Arena, Battleground and Solo; Dungeon hol
 (Pulling, Lust, Need mana, Skipping, Res me, Chain pull, Kick order), In Group ten (Hello, Summon,
 Buffs please, Healthstone, tyff, brb, Ready, GLHF, ggty, ggnt) and Solo seven. Arena's Swap and Kill
 and every Kill … carrier callout send your target's name ({target}). The pads start unlocked (their
-drag strips show) until Lock pads. Result: not yet run.
+drag strips show) until Lock pads. Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 ## Dial
 
@@ -896,21 +896,21 @@ dial saved before this keeps its stored Icon size (32) until it is set to 0. Res
 Wheel → Ring radius reads 120; Icons → Icon size reads Automatic → the icons draw at 48 pixels, in the
 same places as a 120 dial before this change. Ring radius 100 → 40 pixels; 150 → 60; 180 → 72; 70 → 28.
 The dial's Defaults button puts Ring radius back to 120. A dial saved before this keeps its stored
-radius (100). Result: not yet run.
+radius (100). Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 **DIAL-38. A right click on a slice goes back a ring (owner, 2026-10-22).** In a key with two groups
 active, open the dial (the ring of groups), click a group → its callouts. Right-click a slice → back on
 the ring of groups, still open, nothing sent. Right-click a slice there → nothing happens, the dial
 stays open. On a paged group ring, turn to page 2 and right-click a slice → the ring of groups.
 Right-click the middle button → the dial closes. Repeat in combat on a target dummy → the same, no
-"action blocked" error. Result: not yet run.
+"action blocked" error. Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 **DIAL-39. The dial opens where it was closed (owner, 2026-10-22).** Open the dial, click a group, turn
 to its page 2, press the key → it closes. Press it again → the same group on page 2. Escape, a click
 outside and a sent callout leave it the same way. Change a setting (a rebuild) → it still opens there.
 Go up to the ring of groups, close, reopen → the ring of groups. Leave the content so that group is no
 longer active → it opens where the dial opens by default. Test mode shows the default ring and does
-not change where the key opens it. In combat → the same. Result: not yet run.
+not change where the key opens it. In combat → the same. Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 **DIAL-40. Slices from N; labels a little further out (owner, 2026-10-22).** Wedges per ring Auto:
 with one callout → the whole disc, its icon at the top; two → top and bottom halves; three → thirds,
@@ -919,12 +919,12 @@ callouts → N and S, E and W empty; with three → N, E and S. Wedges per ring 
 wedge 1 at 12 o'clock. The number keys still follow the callouts' order. A battleground node ring keeps
 its compass winds. Label offset 0 → each label sits a little clear of the disc's edge (4 pixels, 2
 before). Clicks, hover and right-click land on the slice under the cursor, in combat too.
-Result: not yet run.
+Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 **DIAL-41. The shipped dial look (owner, 2026-10-22).** On a fresh profile the dial has a 32-pixel
 solid gold hub with a 1-pixel gold rim and a 24-pixel circle, a 24-pixel pointer 24 pixels out,
 outlined slice labels, 16-point outlined group labels, the Orb shine on the slices (gray tint), and
-8-pixel page dots with a 2-pixel border. Result: not yet run.
+8-pixel page dots with a 2-pixel border. Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 ## Share
 
@@ -1313,5 +1313,7 @@ from the client, so this check needs a non-English client pass. Result: 2026-10-
 ## Pending sign-off
 
 The owner ran every check above on 2026-10-21 and reported all of them passed (the client build was
-not recorded), except the ones below. A check added or rewritten later is listed here, with its origin
+not recorded). A check added or rewritten later is listed here, with its origin
 and why it is owed, until its pass is recorded.
+
+None.
