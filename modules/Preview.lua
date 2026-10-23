@@ -259,6 +259,11 @@ local function known(key)
     return P.FindPreset(key) and key or P.CURRENT
 end
 
+-- A When id row that holds anything (an empty one is unset, as the Resolver reads it).
+local function listed(row)
+    return type(row) == "table" and next(row) ~= nil
+end
+
 -- The preset a battleground When names: the first set whose map it lists, else the first set.
 local function battlegroundKey(ids)
     local list = battlegrounds()
@@ -270,8 +275,9 @@ end
 
 --- The "Preview as…" preset the edit preview bakes under and the window shows (owner 2026-10-23):
 --- the one the group's When names (a child's, its parent's when it inherits, Resolver.WhenOf), in
---- the menu's own terms: a battleground set's map, M+, the tier's raid (its first ticked difficulty,
---- else Normal), Arena, Solo; Current for a When with no content (In Group, a group of yours).
+--- the menu's own terms: a battleground set's map (a battleground id row alone too), M+, the tier's
+--- raid (its first ticked difficulty, else Normal), Arena (an arena id row alone too), Solo; Current
+--- for a When with no content (In Group, a group of yours).
 --- @param gid string|nil the group, else the one being edited
 --- @return string key
 function P.EditPresetKey(gid)
@@ -279,7 +285,7 @@ function P.EditPresetKey(gid)
     local when = gid and NS.Resolver.WhenOf(NS.Library.AllGroups(), gid)
     if type(when) ~= "table" then return P.CURRENT end
     local content = type(when.content) == "table" and when.content or {}
-    if content.battleground or type(when.battleground) == "table" then
+    if content.battleground or listed(when.battleground) then
         return battlegroundKey(when.battleground)
     end
     if content.mythicPlus or content.dungeon then return known("mplus") end
@@ -290,7 +296,7 @@ function P.EditPresetKey(gid)
         end
         return known("raid:normal")
     end
-    if content.arena then return known("arena") end
+    if content.arena or listed(when.arena) then return known("arena") end
     if content.openWorld then return known("world") end
     return P.CURRENT
 end
@@ -397,8 +403,8 @@ end
 --- @param snap table the previewed snapshot the plan baked against
 function P.SlotEcho(slot, callout, snap)
     if slot.line then
-        -- Never the plan-time position: the live snapshot (Current, the edit preview alone, known by
-        -- identity as Surfaces.BakeContext knows it) keeps the literal for the click; a synthetic preset,
+        -- Never the plan-time position: the live snapshot (Current, the edit preview of a group with no
+        -- content, known by identity as Surfaces.BakeContext knows it) keeps the literal for the click; a synthetic preset,
         -- which is not where you are, its mock.
         local ctx = {}
         for k, v in pairs(NS.Surfaces.BakeContext(snap)) do ctx[k] = v end

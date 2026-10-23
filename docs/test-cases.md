@@ -955,7 +955,7 @@ Total.
 - edit preview: [QF-02] 'Previewing: <group> (editing)' prints on a user start only
 - edit preview: [QF-02] a dial wedge clicked through its ring's catcher with the Groups page shown echoes
 
-### test_preview_window.lua (22)
+### test_preview_window.lua (24)
 
 - preview window: hidden until a preview starts; SetPreviewAs shows it with the dropdown on that situation
 - preview window: the settings row starts it too and the dropdown follows the slash
@@ -975,6 +975,8 @@ Total.
 - preview window: degraded install previews without a window
 - preview window: [QF-07] over the edit preview it is locked: dimmed, its controls off, a tooltip says why
 - preview window: [QF-07] the dropdown follows the edited group's situation, and the pads bake under it
+- preview window: [QF-07] the dropdown follows a When edited while the group is open
+- preview window: [QF-07] EditPresetKey maps each kind of When
 - preview window: [QF-02] End preview and the close mark end both and turn Preview while editing off
 - preview window: [QF-02] Escape ends the edit preview for the session, the setting kept, until a new start
 - preview window: [QF-02] the settings window closing hides it; a hidden UIParent ends nothing
@@ -1393,7 +1395,7 @@ Total.
 | test_dial_secure.lua | 20 |
 | test_preview.lua | 36 |
 | test_edit_preview.lua | 17 |
-| test_preview_window.lua | 22 |
+| test_preview_window.lua | 24 |
 | test_coordinates.lua | 8 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 21 |
@@ -1413,4 +1415,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1171** |
+| **Total** | **1173** |

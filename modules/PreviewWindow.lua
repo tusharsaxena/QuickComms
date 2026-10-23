@@ -184,7 +184,13 @@ local function ensure()
     f.closeButton = NS.MakeCloseButton(f, endPreview)
     if f.closeButton then f.closeButton:SetPoint("TOPRIGHT", f, "TOPRIGHT", -6, -(TITLE_H - 18) / 2) end
     if f.closeButton then
-        f.closeButton:HookScript("OnEnter", function(self) if locked() then lockedTip(self) end end)
+        -- Locked, its own hover paint is undone (its OnLeave repaints it at rest) before the tooltip.
+        f.closeButton:HookScript("OnEnter", function(self)
+            if not locked() then return end
+            local rest = self:GetScript("OnLeave")
+            if rest then rest(self) end
+            lockedTip(self)
+        end)
         f.closeButton:HookScript("OnLeave", hideTip)
     end
     f.dropdown = makeDropdown(f)
@@ -251,13 +257,18 @@ function PW.__frame()
     return frame
 end
 
--- A profile switch moves a shown window to that profile's place. With the library absent there is no
+-- A profile switch moves a shown window to that profile's place. A library write re-fills it over the
+-- edit preview: a When edited on the Groups page re-bakes the pads under a new preset with no
+-- announce, and the dropdown names what they show (QF-07). With the library absent there is no
 -- window, so no receiver; the library's tracked bus takes it down and up with the addon.
 if W and NS.Bus.tracked then
     local receiver = NS.Bus:NewTarget()
     if receiver then
         receiver:RegisterMessage(NS.MSG.PROFILE_CHANGED, function()
             if frame and frame:IsShown() then place() end
+        end)
+        receiver:RegisterMessage(NS.MSG.LIBRARY_CHANGED, function()
+            if frame and frame:IsShown() and NS.Preview.EditGroup() ~= nil then fill(frame) end
         end)
     end
 end
