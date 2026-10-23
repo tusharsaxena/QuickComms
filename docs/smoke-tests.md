@@ -23,7 +23,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | SEND-1..5 | Send | Secure sends in keys and on bosses, the spam guard |
 | PAD-1..15 | Pad | The Comms Pad, its growth and button width, the Solo and In Group sets and the built-ins' colors, the header click and icon only's width, the header's Quick Comms: text |
 | EDIT-1..32 | Editors | The Pad and Dial page names; the Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
-| PREVIEW-1..9 | Preview window | The Preview as selector window: every entry point, the dropdown, End preview, close and Escape, combat, test mode and the stand-down, Alt+Z, the saved position, bare /qc preview and list; every preview drawn as live |
+| PREVIEW-1..10 | Preview window | The Preview as selector window: every entry point, the dropdown, End preview, close and Escape, combat, test mode and the stand-down, Alt+Z, the saved position, bare /qc preview and list; every preview drawn as live; a preview or test click prints what it would send |
 | DIAL-1..41 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, the lone-group open and the group ring, page arrows and the page row, Auto wedges, the ring radius, the Slice labels tab, the slices and the slice lit by direction, the Slices tab, the pointer, the tooltip outside the dial, the hub over the slices, the pointer, label and icon offsets, the Paging tab; the dial polish: the border gone, the slice gap, placement from W, a slice clicked to the hub in combat, the hub styles, the Group labels tab, Icon offset on Icons, 128-pixel icons, a click outside closing the dial in combat, the page indicators' background and border, the Hub tab; automatic icon offset and size; the 120 radius and 48-pixel icons by default; a right click back a ring; opening where it was closed; slices from N |
 | KEY-1..3 | Key bindings | A dial's key as WoW's own binding in Options → Keybindings, Character Specific Keybindings, Toggle Comms Pads |
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
@@ -680,6 +680,18 @@ callouts, then Preview as → Dungeon: the dial and pad icons look exactly as in
 fading and no dark circle over the dial's icons; only the PREVIEW labels (the hub's, the pad
 strip's) are added. Click a button and a wedge → nothing is sent. Turn test mode on → its
 placeholders look the same as before.
+Result: pending
+
+**PREVIEW-10. A click prints what it would send (2026-10-23, run item QC-07, SM-QC-10).** In the
+open world, with no target: `/qc preview`, pick In Group in the window. Click the Hello pad button →
+your chat frame shows a `[QC] /p Hello world!`-style line, the slash the previewed situation picks
+and the text with its tokens filled (a callout with `{target}` shows `<target>` while you have no
+target, and your target's name once you have one; a raid marker shows as its icon). Click a dial
+slice → the same kind of line. Nothing appears in party chat, and no button flashes as sent. A
+callout that would send nothing there (a smart-channel callout under Preview as World) prints
+`[QC] (nothing sent: <reason>)` with the tooltip's reason. `/qc test`, click a placeholder button and
+a placeholder slice → one line each: its name and `(test-mode placeholder: nothing sent)`. `/qc
+preview off`, click Hello → it really sends, as before, and prints nothing extra.
 Result: pending
 
 ## Dial
@@ -1397,6 +1409,8 @@ and why it is owed, until its pass is recorded.
 
 - PREVIEW-1..8: new with the preview window (2026-10-23 sim/preview/strips run, QC-02 and QC-03).
 - PREVIEW-9: new with QC-05 (2026-10-23), the fix for the faded, veiled preview; owed a first run.
+- PREVIEW-10: new with QC-07 (2026-10-23), a preview or test click prints what it would send; owed a
+  first run.
 - ICON-4: new with QC-06 (2026-10-23), the modals moved over the preview dial by strata; amended
   the same day (QC-06 review) with the preview window's re-show and the confirms; owed a first run.
 - EDIT-3, EDIT-27, DIAL-9: amended 2026-10-23 (QC-04), since closing the settings window no longer

@@ -56,3 +56,12 @@ end)
 test("tokens: non-string text expands to empty", function()
     assertEqual((tok().Expand(nil)), "")
 end)
+
+test("tokens: a mock fills a baked value missing here, and only when given (the preview echo, QC-07)", function()
+    local Tok = tok()
+    local mock = function(name) return "<" .. name .. ">" end
+    local out, _, missing = Tok.Expand("+{key} {spell:99} {me} {target}", { me = "Ann" }, mock)
+    assertEqual(out, "+<key> <spell:99> Ann %t")
+    assertEqual(#missing, 2, "still reported missing")
+    assertEqual((Tok.Expand("+{key} {me}", { me = "Ann" })), "+ Ann", "no mock: dropped, as a send does")
+end)

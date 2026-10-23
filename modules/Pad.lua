@@ -185,16 +185,18 @@ end
 -- lockText reads the slot's live lock (RefreshLocks keeps it current in combat), so a press on a
 -- padlocked button is explained by its lock, never tracked as a send.
 -- A previewed button (spec §13.3) keeps its line for the tooltip and is disarmed, and carries neither
--- the solo self-line nor the lock text: a previewed button sends and reports nothing. It carries its
--- baked line as `echo` instead, which the click hook prints locally ("[QC] /p Pulling next pack"),
--- so a preview shows what a live press would have sent. The echo names no lock: locks read your real
--- group, not the previewed situation, so a previewed raid or M+ button would nearly always carry one.
--- Baked here, out of combat, so a press in combat only prints a string and writes no attribute.
+-- the solo self-line nor the lock text: a previewed button sends and reports nothing. It carries an
+-- `echo` instead (QC-07: Surfaces.MarkPreview's NS.Preview.SlotEcho, its line with missing tokens
+-- mocked, or why it sends nothing), which the click hook prints locally ("[QC] /p Pulling next
+-- pack"), so a preview shows what a live press would have sent; a test placeholder's echo names it
+-- as one. The echo names no lock: locks read your real group, not the previewed situation, so a
+-- previewed raid or M+ button would nearly always carry one. Baked out of combat, so a press in
+-- combat only prints a string and writes no attribute.
 local function arm(btn, slot)
     local preview = slot.preview == true
     local meta = { calloutId = slot.calloutId, surfaceId = slot.surfaceId, name = slot.name,
         chatType = slot.chatType, selfText = (not preview) and slot.selfText or nil,
-        echo = preview and slot.line or nil,
+        echo = (preview or slot.reason == "testMode") and (slot.echo or slot.line) or nil,
         lockText = (not preview) and function() return slot.lock and (R.LOCK_TEXT[slot.lock] or tostring(slot.lock)) end or nil }
     if slot.line and slot.chatType and not preview then
         NS.SendEngine.Arm(btn, slot.line, meta)

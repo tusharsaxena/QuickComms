@@ -127,7 +127,7 @@ test("preview: [review 3] a previewed button sends nothing and reports nothing",
     assertEqual(results, 0)
 end)
 
-test("preview: [review 3] a previewed solo button prints nothing, even with the self fallback", function()
+test("preview: [review 3] a previewed solo button never prints its self line, even with the self fallback", function()
     local NS, m = live()
     NS.SchemaRuntime.Set("behavior.soloFallback", "self")
     local Lib = NS.Library
@@ -139,8 +139,10 @@ test("preview: [review 3] a previewed solo button prints nothing, even with the 
     assertTrue(button ~= nil, "the user group (an empty When) shows in the previewed open world")
     m.prints = {}
     m.__click(button)
-    -- red under: keep `slot.selfText` in a previewed button's meta (modules/Pad.lua arm)
-    assertEqual(#m.prints, 0)
+    -- red under: keep `slot.selfText` in a previewed button's meta (modules/Pad.lua arm). Since QC-07
+    -- the click says why it would send nothing instead of printing nothing.
+    assertEqual(#m.prints, 1)
+    assertEqual(m.prints[1], NS.PREFIX .. " (nothing sent: " .. NS.PadRender.REASON_TEXT.solo .. ")")
 end)
 
 test("preview: [review 3] combat ends it with one line, and the live buttons come back armed", function()
@@ -443,4 +445,123 @@ test("preview: [echo] a previewed dial wedge prints the line too", function()
     m.__click(w)
     assertEqual(m.prints[#m.prints], NS.PREFIX .. " /i Lust now")
     assertEqual(#m.sentMacros, before)
+end)
+
+-- ── the click preview (QC-07, owner request 2026-10-23): what a press would send, filled or mocked ──
+
+-- Every chat-sending API the client has, as counting spies: a preview or test click must reach none.
+local function sendSpy(m)
+    local calls = { n = 0 }
+    local function spy(name) return function() calls.n = calls.n + 1 calls[#calls + 1] = name end end
+    m.SendChatMessage = spy("SendChatMessage")
+    m.SendAddonMessage = spy("SendAddonMessage")
+    m.C_ChatInfo.SendChatMessage = spy("C_ChatInfo.SendChatMessage")
+    m.C_ChatInfo.SendAddonMessage = spy("C_ChatInfo.SendAddonMessage")
+    return calls
+end
+
+local RT8 = "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_8:0|t"
+
+test("preview: [click] a token with no value right now prints its mock", function()
+    local NS, m = live()
+    local cid = echoGroup(NS, "Hit {target} at +{key}", "party")
+    assertTrue(NS.Preview.SetPreviewAs("world"))
+    m.prints = {}
+    m.__click(NS.Pad.ButtonsFor("p1", cid)[1])
+    -- red under: echo the baked line (`/p Hit %t at +`) instead of NS.Preview.SlotEcho's mocked one
+    assertEqual(m.prints[1], NS.PREFIX .. " /p Hit <target> at +<key>")
+end)
+
+test("preview: [click] tokens with a value right now print it: the target, the marker, the key", function()
+    local NS, m = live()
+    local cid = echoGroup(NS, "{rt8} on {target}, {me} at +{key}", "instance")
+    assertTrue(NS.Preview.SetPreviewAs("mplus"))
+    m.__unitExists.target = true
+    m.UnitName = function(unit) return unit == "target" and "Bossman" or "Testchar" end
+    m.prints = {}
+    m.__click(NS.Pad.ButtonsFor("p1", cid)[1])
+    local key = NS.Preview.PreviewSnapshot().keyLevel
+    assertEqual(m.prints[1], NS.PREFIX .. " /i " .. RT8 .. " on Bossman, Testchar at +" .. tostring(key))
+end)
+
+test("preview: [click] a group token reads as its mock outside a raid", function()
+    local NS, m = live()
+    local cid = echoGroup(NS, "{g2} to the left", "say")
+    assertTrue(NS.Preview.SetPreviewAs("world"))
+    m.prints = {}
+    m.__click(NS.Pad.ButtonsFor("p1", cid)[1])
+    assertEqual(m.prints[1], NS.PREFIX .. " /s <group 2> to the left")
+end)
+
+test("preview: [click] a callout that would send nothing says why, in the Groups page's words", function()
+    local NS, m = live()
+    local cid = echoGroup(NS, "Incoming", "smartGroup")
+    assertTrue(NS.Preview.SetPreviewAs("world"))
+    local button = NS.Pad.ButtonsFor("p1", cid)[1]
+    m.prints = {}
+    m.__click(button)
+    -- red under: echo only a slot with a line (`echo = preview and slot.line`)
+    assertEqual(#m.prints, 1)
+    assertEqual(m.prints[1], NS.PREFIX .. " (nothing sent: " .. NS.PadRender.REASON_TEXT.solo .. ")")
+end)
+
+test("preview: [click] a previewed dial wedge prints the mocked line too", function()
+    local NS, m = live()
+    local cid = echoGroup(NS, "Kick {focus}", "instance")
+    assertTrue(NS.Preview.SetPreviewAs("mplus"))
+    m.prints = {}
+    m.__click(NS.Dial.WedgesFor("d2", cid)[1])
+    assertEqual(m.prints[#m.prints], NS.PREFIX .. " /i Kick <focus>")
+end)
+
+test("preview: [click] a test-mode placeholder prints its label and that it is a placeholder", function()
+    local NS, m = live()
+    assertTrue(NS.Preview.SetTestMode(true))
+    local button = NS.Pad.ButtonsFor("p1", "test.1.1")[1]
+    local wedge = NS.Dial.WedgesFor("d2", "test.1.2")[1]
+    assertTrue(button ~= nil and wedge ~= nil, "test mode draws the placeholders")
+    local names = {}
+    NS.Surfaces.EachSlot(NS.Surfaces.Plans().p1, function(s) names[s.calloutId] = s.name end)
+    m.prints = {}
+    m.__click(button)
+    m.__click(wedge)
+    assertEqual(#m.prints, 2)
+    assertEqual(m.prints[1], NS.PREFIX .. " " .. names["test.1.1"] .. " (test-mode placeholder: nothing sent)")
+    assertEqual(m.prints[2], NS.PREFIX .. " " .. names["test.1.2"] .. " (test-mode placeholder: nothing sent)")
+end)
+
+test("preview: [click] no preview or test click reaches a send API, the guard or the echo tracker", function()
+    local NS, m = live()
+    local cid = echoGroup(NS, "Pull {target}", "party")
+    local calls = sendSpy(m)
+    local results = 0
+    local t = NS.Bus:NewTarget()
+    t:RegisterMessage(NS.MSG.SEND_RESULT, function() results = results + 1 end)
+    local before = #m.sentMacros
+    assertTrue(NS.Preview.SetPreviewAs("world"))
+    m.__click(NS.Pad.ButtonsFor("p1", cid)[1])
+    m.__click(NS.Dial.WedgesFor("d2", cid)[1])
+    NS.Preview.SetPreviewAs("off")
+    assertTrue(NS.Preview.SetTestMode(true))
+    m.__click(NS.Pad.ButtonsFor("p1", "test.1.1")[1])
+    m.__click(NS.Dial.WedgesFor("d2", "test.1.2")[1])
+    assertEqual(calls.n, 0, "no send API: " .. table.concat(calls, ","))
+    assertEqual(#m.sentMacros, before, "no macro ran")
+    assertEqual(results, 0, "nothing reported")
+    assertTrue(NS.State.lastSendAt == nil, "the spam guard is untouched")
+    assertEqual(NS.SendEngine.EchoState().pending, 0, "no echo awaited")
+end)
+
+test("preview: [click] a live armed button is unchanged: it sends its line and prints nothing", function()
+    local NS, m = live()
+    local cid = echoGroup(NS, "Hit {target} {rt8}", "say")
+    local button = NS.Pad.ButtonsFor("p1", cid)[1]
+    assertEqual(button:GetAttribute("type"), "macro")
+    assertEqual(button:GetAttribute("macrotext"), "/s Hit %t {rt8}")
+    assertTrue(button.qcMeta.echo == nil, "a live button carries no echo")
+    m.prints = {}
+    m.__click(button)
+    assertEqual(#m.prints, 0)
+    assertEqual(m.sentMacros[#m.sentMacros].text, "/s Hit %t {rt8}")
+    assertTrue(NS.State.lastSendAt ~= nil, "a live press stamps the guard")
 end)

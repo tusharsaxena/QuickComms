@@ -255,6 +255,73 @@ function P.SetEditPreview(gid)
     return true
 end
 
+-- ── the click preview (QC-07, owner request 2026-10-23) ───────────────────────────────────────
+--
+-- A click on a previewed button or wedge (every flavor: Preview as, Current included, and the edit
+-- preview) or on a test-mode placeholder prints, to your own chat frame only, what a live press would
+-- have sent: "[QC] /p Hello world!". The slash is the baked line's (Channels.Prefix, the Resolver's
+-- choice under the previewed situation); the text is the callout re-baked with MOCK standing in for
+-- every baked value missing here, then, at the click, FillEcho fills what the game fills at send time.
+-- The click arrives through SendEngine's insecure OnClick hook, the one every send button already
+-- carries: it runs after the secure handler, cannot cancel or taint it, and on a disarmed button
+-- (no type) the secure half does nothing. No overlay: one would steal the mouse from the dial's
+-- secure catcher and need an insecure Show/Hide. The echo is baked out of combat with the plan, so
+-- a press only reads unit names and prints a string; it sends nothing, stamps no guard and awaits
+-- no echo. Live (armed) buttons carry no echo and are untouched.
+
+local RT_ICON = "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%s:0|t"
+
+--- The stand-ins for a token with no value right now (one table): engine tokens at the click, baked
+--- values at the bake.
+P.MOCK = {
+    target = L["<target>"], focus = L["<focus>"], group = L["<group %s>"], spell = L["<spell %s>"],
+    me = L["<me>"], spec = L["<spec>"], role = L["<role>"], key = L["<key>"], dungeon = L["<dungeon>"],
+}
+
+local function mockBaked(name)
+    local id = name:match("^spell:(%d+)$")
+    if id then return P.MOCK.spell:format(id) end
+    return P.MOCK[name]
+end
+
+--- What a click on previewed `slot` prints (out of combat, with the plan): its line re-baked with
+--- MOCK for the values missing here, or "(nothing sent: <reason>)" in the words the Groups page and
+--- the Callouts preview use (PadRender.REASON_TEXT).
+--- @param callout table|nil the slot's callout (Library.Callout)
+--- @param snap table the previewed snapshot the plan baked against
+function P.SlotEcho(slot, callout, snap)
+    if slot.line then
+        local line = NS.Bake.Bake(callout, snap, { soloFallback = NS.Setting("behavior.soloFallback"),
+            ctx = NS.Surfaces.BakeContext(snap), mock = mockBaked })
+        return line or slot.line
+    end
+    local why = NS.PadRender.REASON_TEXT[slot.reason] or L["Not available here."]
+    return L["(nothing sent: %s)"]:format(why)
+end
+
+--- What a click on a test-mode placeholder prints: its label, and that it is a placeholder.
+function P.TestEcho(name)
+    return L["%s (test-mode placeholder: nothing sent)"]:format(tostring(name))
+end
+
+local function unitOr(unit, mock)
+    return NS.Compat.UnitDisplayName(unit) or mock
+end
+
+--- At the click (combat-safe: reads only): fill what the game would fill as it sends. %t and %f are
+--- your target's and focus's names, or their mock; a raid marker is its icon, as chat draws it; a
+--- raid-group token, which the game expands only in a raid, is its mock.
+function P.FillEcho(text)
+    if type(text) ~= "string" then return "" end
+    text = text:gsub("%%([tf])", function(c)
+        if c == "t" then return unitOr("target", P.MOCK.target) end
+        return unitOr("focus", P.MOCK.focus)
+    end)
+    text = text:gsub("{rt([1-8])}", function(n) return RT_ICON:format(n) end)
+    text = text:gsub("{g([1-8])}", function(n) return P.MOCK.group:format(n) end)
+    return text
+end
+
 local watched = setmetatable({}, { __mode = "k" })
 
 --- End the edit preview when the settings window closes. settings/Panel.lua hands it the client's

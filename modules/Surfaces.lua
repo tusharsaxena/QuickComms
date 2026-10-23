@@ -202,6 +202,7 @@ local function testSlots(surfaceId, s)
         slots[i] = { calloutId = ("test.%d.%d"):format(s, i), surfaceId = surfaceId,
             name = c and c.name or L["Callout %d"]:format(i), icon = c and c.icon, iconColor = c and c.iconColor,
             reason = "testMode", concrete = (i % 2 == 1) and "party" or "raid" }
+        slots[i].echo = NS.Preview.TestEcho(slots[i].name)
     end
     return slots
 end
@@ -242,10 +243,14 @@ end
 
 --- A "Preview as…" plan (spec §13.3): drawn like test mode (always shown, the header says so) but from
 --- the groups the previewed snapshot resolves to. Every slot keeps its line for the tooltip and is
---- disarmed by the pad, so a previewed button sends nothing.
+--- disarmed by the pad, so a previewed button sends nothing; its click prints its `echo` (QC-07,
+--- NS.Preview.SlotEcho: the line with missing tokens mocked, or why it sends nothing).
 function S.MarkPreview(plan, key)
     plan.test, plan.preview = true, key
-    S.EachSlot(plan, function(slot) slot.preview = true end)
+    S.EachSlot(plan, function(slot)
+        slot.preview = true
+        slot.echo = NS.Preview.SlotEcho(slot, NS.Library.Callout(slot.calloutId), plan.snapshot)
+    end)
     return plan
 end
 

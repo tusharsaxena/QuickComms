@@ -689,6 +689,20 @@ L["End preview"] = "End preview"
 L["End the preview: the pads and dials go back to live."] = "End the preview: the pads and dials go back to live."
 L["Switch the situation the pads and dials preview."] = "Switch the situation the pads and dials preview."
 
+-- The click preview: what a previewed or test click prints, and the mocks for tokens with no value
+-- right now (modules/Preview.lua, QC-07)
+L["(nothing sent: %s)"] = "(nothing sent: %s)"
+L["%s (test-mode placeholder: nothing sent)"] = "%s (test-mode placeholder: nothing sent)"
+L["<target>"] = "<target>"
+L["<focus>"] = "<focus>"
+L["<group %s>"] = "<group %s>"
+L["<spell %s>"] = "<spell %s>"
+L["<me>"] = "<me>"
+L["<spec>"] = "<spec>"
+L["<role>"] = "<role>"
+L["<key>"] = "<key>"
+L["<dungeon>"] = "<dungeon>"
+
 -- Preview while editing (modules/Preview.lua, modules/Surfaces.lua, settings/Groups.lua)
 L["Editing: %s"] = "Editing: %s"
 L["Shown alone while you edit it in the settings. Nothing on it sends."] = "Shown alone while you edit it in the settings. Nothing on it sends."

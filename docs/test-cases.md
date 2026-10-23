@@ -284,7 +284,7 @@ Total.
 - situation: [final 1b] both combat edges reach Current() even under the Combat restriction type
 - situation: [arena] an arena snapshot carries its instanceID, which the arena row matches
 
-### test_tokens.lua (8)
+### test_tokens.lua (9)
 
 - tokens: target and focus become engine tokens and count as live
 - tokens: raid markers by number and name, any case
@@ -294,6 +294,7 @@ Total.
 - tokens: unknown chips stay as typed and are reported
 - tokens: typed %t and %f count as live, chips are not double counted
 - tokens: non-string text expands to empty
+- tokens: a mock fills a baked value missing here, and only when given (the preview echo, QC-07)
 
 ### test_channels.lua (8)
 
@@ -875,7 +876,7 @@ Total.
 - dial secure: [polish] display open shows no screen catcher
 - dial secure: [polish] closing hides the screen catcher
 
-### test_preview.lua (26)
+### test_preview.lua (34)
 
 - preview: test mode turns on and off, announcing each edge once
 - preview: a start in combat is refused with one line
@@ -884,7 +885,7 @@ Total.
 - preview: the stand-down ends test mode silently, and stood down a start is refused
 - preview: [phase 3] Preview as Arena builds the pad from the arena snapshot, every button disarmed
 - preview: [review 3] a previewed button sends nothing and reports nothing
-- preview: [review 3] a previewed solo button prints nothing, even with the self fallback
+- preview: [review 3] a previewed solo button never prints its self line, even with the self fallback
 - preview: [review 3] combat ends it with one line, and the live buttons come back armed
 - preview: [phase 3] refused in combat and while disabled, with one line each
 - preview: [review 3] the stand-down ends it silently; closing the settings window leaves it on
@@ -903,6 +904,14 @@ Total.
 - preview: [echo] a live button prints nothing extra
 - preview: [echo] the edit preview echoes too, and a press in combat prints without writing
 - preview: [echo] a previewed dial wedge prints the line too
+- preview: [click] a token with no value right now prints its mock
+- preview: [click] tokens with a value right now print it: the target, the marker, the key
+- preview: [click] a group token reads as its mock outside a raid
+- preview: [click] a callout that would send nothing says why, in the Groups page's words
+- preview: [click] a previewed dial wedge prints the mocked line too
+- preview: [click] a test-mode placeholder prints its label and that it is a placeholder
+- preview: [click] no preview or test click reaches a send API, the guard or the echo tracker
+- preview: [click] a live armed button is unchanged: it sends its line and prints nothing
 
 ### test_edit_preview.lua (15)
 
@@ -1318,7 +1327,7 @@ Total.
 | test_compat.lua | 12 |
 | test_restrictions.lua | 16 |
 | test_situation.lua | 16 |
-| test_tokens.lua | 8 |
+| test_tokens.lua | 9 |
 | test_channels.lua | 8 |
 | test_bake.lua | 12 |
 | test_share.lua | 37 |
@@ -1340,7 +1349,7 @@ Total.
 | test_send_guard.lua | 10 |
 | test_sendengine.lua | 30 |
 | test_dial_secure.lua | 16 |
-| test_preview.lua | 26 |
+| test_preview.lua | 34 |
 | test_edit_preview.lua | 15 |
 | test_preview_window.lua | 16 |
 | test_master.lua | 5 |
@@ -1361,4 +1370,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1123** |
+| **Total** | **1132** |
