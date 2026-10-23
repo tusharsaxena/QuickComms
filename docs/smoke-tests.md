@@ -23,7 +23,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | SEND-1..5 | Send | Secure sends in keys and on bosses, the spam guard |
 | PAD-1..15 | Pad | The Comms Pad, its growth and button width, the Solo and In Group sets and the built-ins' colors, the header click and icon only's width, the header's Quick Comms: text |
 | EDIT-1..32 | Editors | The Pad and Dial page names; the Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
-| PREVIEW-1..8 | Preview window | The Preview as selector window: every entry point, the dropdown, End preview, close and Escape, combat, test mode and the stand-down, Alt+Z, the saved position, bare /qc preview and list |
+| PREVIEW-1..9 | Preview window | The Preview as selector window: every entry point, the dropdown, End preview, close and Escape, combat, test mode and the stand-down, Alt+Z, the saved position, bare /qc preview and list; every preview drawn as live |
 | DIAL-1..41 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, the lone-group open and the group ring, page arrows and the page row, Auto wedges, the ring radius, the Slice labels tab, the slices and the slice lit by direction, the Slices tab, the pointer, the tooltip outside the dial, the hub over the slices, the pointer, label and icon offsets, the Paging tab; the dial polish: the border gone, the slice gap, placement from W, a slice clicked to the hub in combat, the hub styles, the Group labels tab, Icon offset on Icons, 128-pixel icons, a click outside closing the dial in combat, the page indicators' background and border, the Hub tab; automatic icon offset and size; the 120 radius and 48-pixel icons by default; a right click back a ring; opening where it was closed; slices from N |
 | KEY-1..3 | Key bindings | A dial's key as WoW's own binding in Options → Keybindings, Character Specific Keybindings, Toggle Comms Pads |
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
@@ -671,6 +671,15 @@ chat `Previewing: Current`, the window opens on Current and the pads show PREVIE
 → the menu prints and nothing changes. `/qc preview nope` → the line points at `/qc preview list`.
 `/qc help` → the preview line reads "Preview the pads and dials as another situation in a small
 window — …".
+Result: pending
+
+**PREVIEW-9. Every preview looks like live (2026-10-23, run item QC-05, SM-QC-8).** In the open
+world, solo, note how the pad's buttons and the dial's wedge icons look in a live situation (or
+from a screenshot of one). Open Settings → Groups (the edit preview) on a group with party
+callouts, then Preview as → Dungeon: the dial and pad icons look exactly as in live mode, with no
+fading and no dark circle over the dial's icons; only the PREVIEW labels (the hub's, the pad
+strip's) are added. Click a button and a wedge → nothing is sent. Turn test mode on → its
+placeholders look the same as before.
 Result: pending
 
 ## Dial
@@ -1374,5 +1383,6 @@ not recorded). A check added or rewritten later is listed here, with its origin
 and why it is owed, until its pass is recorded.
 
 - PREVIEW-1..8: new with the preview window (2026-10-23 sim/preview/strips run, QC-02 and QC-03).
+- PREVIEW-9: new with QC-05 (2026-10-23), the fix for the faded, veiled preview; owed a first run.
 - EDIT-3, EDIT-27, DIAL-9: amended 2026-10-23 (QC-04), since closing the settings window no longer
   ends Preview as and Escape now ends it through the preview window; owed a re-run.

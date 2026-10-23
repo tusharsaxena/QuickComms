@@ -902,7 +902,7 @@ Total.
 - preview: [echo] the edit preview echoes too, and a press in combat prints without writing
 - preview: [echo] a previewed dial wedge prints the line too
 
-### test_edit_preview.lua (14)
+### test_edit_preview.lua (15)
 
 - edit preview: every pad shows only the edited group, whatever its When says, and sends nothing
 - edit preview: a battleground set shows its own callouts and every node, outside the battleground
@@ -918,6 +918,7 @@ Total.
 - edit preview: the band's Preview while editing box sits under the picker and turns it off and on
 - edit preview: the Groups page drawn in combat does not start it
 - edit preview: it comes back when combat ends with the Groups page still on screen
+- preview: [QC-05] the edit preview and Preview as draw every button and wedge exactly as live
 
 ### test_preview_window.lua (16)
 
@@ -1338,7 +1339,7 @@ Total.
 | test_sendengine.lua | 30 |
 | test_dial_secure.lua | 16 |
 | test_preview.lua | 26 |
-| test_edit_preview.lua | 14 |
+| test_edit_preview.lua | 15 |
 | test_preview_window.lua | 16 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 21 |
@@ -1358,4 +1359,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1120** |
+| **Total** | **1121** |
