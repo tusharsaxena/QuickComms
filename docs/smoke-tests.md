@@ -113,6 +113,7 @@ prints `Not available during a performance capture.` once and nothing toggles. F
 the key toggles the pads again. Then `/qc disable` and press the Toggle Comms Pads key → the disabled
 line, `Ka0s Quick Comms is disabled — enable it with /qc enable` (unchanged, as KEY-3). `/qc enable`
 to finish. **Owed**: the headless gate holds the latch directly and cannot drive a real capture.
+Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 ## Combat
 
@@ -1094,7 +1095,7 @@ Auto cast sparkles, Button, Proc) × Always / On hover / After sending, on a pad
 looks as before; Proc's opening burst plays once, not on every rebuild. Pad → Buttons, button glow
 on: each style circles the whole pad button and coexists with the icon glow on the same button. In
 combat, hover a pad button and a dial wedge with On hover → the glow starts and stops, no Lua error,
-no taint message. Result: owed.
+no taint message. Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 ## Icons
 
@@ -1113,14 +1114,14 @@ Choose icon…: a glyph chosen there shows on its wedge. Result: 2026-10-21, pas
 `/reload` → no Lua error. Groups → a group of yours → Callouts → a row's edit glyph → Choose icon… →
 the icon browser lists all three sets (Open Iconic, Phosphor, Game-icons) and every glyph draws, in
 each set and in a search's results. `CLAUDE.md` declares `LibKa0s icons: all (icon browser).`, so the
-prune removed nothing; a blank cell means an icon went missing. Result:
+prune removed nothing; a blank cell means an icon went missing. Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 **ICON-3. Library-drawn art after the v1.75.0 re-vendor (2026-10-22, run item QC-RV, SM-QC-2).** The
 marks the library draws, and the addon's own, still draw: `/qc debug` → the console's close, copy and
 clear marks; an export from the Share page (SHARE-1) → the copy window's close; Groups → a group →
 When → the id list's info mark; a pad's padlock (lock the pads) and a dial's page arrows and pointer.
 A blank control is the failure: a pruned or undeclared icon resolves to a path and draws nothing.
-Result:
+Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 ## Art
 
@@ -1314,10 +1315,3 @@ from the client, so this check needs a non-English client pass. Result: 2026-10-
 The owner ran every check above on 2026-10-21 and reported all of them passed (the client build was
 not recorded), except the ones below. A check added or rewritten later is listed here, with its origin
 and why it is owed, until its pass is recorded.
-
-- **ICON-2**, **ICON-3**: added 2026-10-22 by the LibKa0s v1.75.0 re-vendor (QC-RV); owed because the
-  headless gate cannot see whether a declared icon draws.
-- **ICONS-4**: added 2026-10-22 by the LibKa0s-Glow-1.0 adoption (QC-01, origin LibKa0s#56); owed because
-  the headless gate drives a fake LibCustomGlow-1.0 and cannot see the effect drawn.
-- **STATE-5**: added 2026-10-22 by the by-hold refusal (QC-02, origin OWNER_SCOPE F, LibKa0s#58); owed
-  because a real perf capture runs only in the client.
