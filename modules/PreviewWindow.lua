@@ -31,7 +31,7 @@ local TITLE_H, PAD, ROW_H, GAP = 24, 8, 22, 6
 local DROP_W, BUTTON_W = 240, 100
 local WIDTH = PAD + DROP_W + GAP + BUTTON_W + PAD
 local HEIGHT = TITLE_H + PAD + ROW_H + PAD
-local GOLD, REST, GREY = { 1, 0.82, 0 }, { 0.9, 0.9, 0.92 }, { 0.6, 0.6, 0.6 }
+local GOLD, REST, GRAY = { 1, 0.82, 0 }, { 0.9, 0.9, 0.92 }, { 0.6, 0.6, 0.6 }
 
 local frame
 
@@ -58,12 +58,12 @@ local function remember(self)
     NS.db.profile.previewWindow = { point = point, relPoint = relPoint or point, x = x or 0, y = y or 0 }
 end
 
--- A tooltip: a title, a white body, then the typed command in grey.
+-- A tooltip: a title, a white body, then the typed command in gray.
 local function tip(owner, title, body, typed)
     GameTooltip:SetOwner(owner, "ANCHOR_TOP")
     GameTooltip:SetText(title)
     GameTooltip:AddLine(body, 1, 1, 1, true)
-    GameTooltip:AddLine(typed, GREY[1], GREY[2], GREY[3])
+    GameTooltip:AddLine(typed, GRAY[1], GRAY[2], GRAY[3])
     GameTooltip:Show()
 end
 
