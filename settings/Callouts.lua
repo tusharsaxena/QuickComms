@@ -17,7 +17,8 @@ local C = Settings.Callouts
 -- {skull}); a typed {rt1} to {rt8} works the same. {spell:ID} needs an id, so it is not in the
 -- list: the help names it after the list.
 C.TOKENS = { "{target}", "{focus}", "{skull}", "{cross}", "{square}", "{moon}", "{triangle}", "{diamond}",
-    "{circle}", "{star}", "{me}", "{spec}", "{role}", "{key}", "{dungeon}" }
+    "{circle}", "{star}", "{me}", "{spec}", "{role}", "{key}", "{dungeon}",
+    "{coordinates}" }
 
 -- The channels that can resolve to Raid (spec §8.2), where {group1} to {group8} expand.
 local RAID_CAPABLE = { raid = true, raidWarning = true, smartGroup = true, smartLead = true }
@@ -45,6 +46,7 @@ local TOKEN_HELP = {
     ["{role}"]    = L["Your role: tank, healer or damage."],
     ["{key}"]     = L["The keystone level. Empty outside Mythic+."],
     ["{dungeon}"] = L["The keystone dungeon's name. Empty outside Mythic+."],
+    ["{coordinates}"] = L["Your map position, as 45.2, 61.8. Empty where the map does not show you (dungeons, raids)."],
 }
 local GROUP_TOKENS = "{group1} … {group8}"
 local SPELL_TOKEN = "{spell:ID}"

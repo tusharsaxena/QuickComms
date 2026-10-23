@@ -29,6 +29,7 @@ local BUCKETS = {
     { key = "echoMatch" },   -- modules/SendEngine.lua: a CHAT_MSG_* echo while a press waits
     { key = "dialRender" },  -- modules/Dial_Render.lua: the pointer's OnUpdate while a dial is open
     { key = "glowStart" },   -- modules/Glow.lua: one icon glow's start (the Icons tab, B9)
+    { key = "coordsRebake" }, -- modules/SendEngine.lua: a {coordinates} button's press-time re-bake (QF-03)
 }
 
 if not (lib and NS.Lifecycle) then

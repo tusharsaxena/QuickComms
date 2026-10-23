@@ -394,7 +394,7 @@ test("popup: the info glyph's tooltip lists the tokens, {group1} to {group8} onl
     assertTrue(m.GameTooltip.__owner == Pop.tokenGlyph)
     assertEqual(lines[1][1], "Tokens")
     for _, token in ipairs({ "{target}", "{focus}", "{skull}", "{star}", "{me}", "{spec}", "{role}", "{key}",
-        "{dungeon}", "{spell:ID}" }) do
+        "{dungeon}", "{coordinates}", "{spell:ID}" }) do
         local line = tooltipHas(lines, token)
         assertTrue(line ~= nil and type(line[2]) == "string" and line[2] ~= "", token .. " is explained")
     end

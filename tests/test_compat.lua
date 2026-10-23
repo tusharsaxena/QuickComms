@@ -160,3 +160,29 @@ test("compat: [final 8] BindingKey reads a command's key; a secret or a missing 
     T.assertNil(NS.Compat.BindingKey("CLICK QuickCommsDial1:Toggle"))
 end)
 
+
+test("compat: [QF-03] Coordinates reads the map position as x, y in percent, one decimal, or nil", function()
+    local NS, m = T.newAddon()
+    m.issecretvalue = T.isSecret
+    local C = NS.Compat
+    m.playerMap, m.playerPos = 2393, { 0.452, 0.618 }
+    -- red under: no Compat.Coordinates (or a format other than "%.1f, %.1f")
+    assertEqual(C.Coordinates(), "45.2, 61.8")
+    local x, y = C.PlayerMapPosition()
+    assertEqual(("%.1f"):format(x), "45.2")
+    assertEqual(("%.1f"):format(y), "61.8")
+    m.playerMap = nil
+    assertNil(C.Coordinates(), "no map id (an instance)")
+    m.playerMap, m.playerPos = 2393, nil
+    assertNil(C.Coordinates(), "no position on that map")
+    m.playerPos = { 0, 0 }
+    assertNil(C.Coordinates(), "0, 0 is no position")
+    m.playerPos = { T.secret(0.4), 0.5 }
+    assertNil(C.Coordinates(), "a secret value")
+    m.playerPos = { 0.4, 0.5 }
+    m.playerMap = T.secret(2393)
+    assertNil(C.Coordinates(), "a secret map id")
+    m.playerMap = 2393
+    m.C_Map = nil
+    assertNil(C.Coordinates(), "no C_Map")
+end)

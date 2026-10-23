@@ -67,7 +67,9 @@ makes its children top-level groups, in its place on every pad and dial, in one 
 `PLAYER_REGEN` rows) → when the set of blocking reasons moves, `RESTRICTION_CHANGED (reason,
 canSendChat)` → Situation refreshes the snapshot's `lockdown` and `inCombat` in place. The signature
 does not move and no `SITUATION_CHANGED` is sent. `PLAYER_REGEN_ENABLED` also drains SendEngine's
-combat-end queue directly, whether or not the restriction set moved.
+combat-end queue directly, whether or not the restriction set moved. On the edge into combat, still
+writable, SendEngine re-arms each `{coordinates}` button once with the position at the pull
+(`RefreshRebakes`, QF-03).
 
 ## Today: `/qc check <id>`
 
@@ -82,7 +84,7 @@ The verb bakes the line the pad would arm, and never sends it.
 
 ## Today: a callout is pressed
 
-The button is a secure button armed with one baked line. The game sends the line (the secure path; nothing in Lua sends). The button's `OnClick` hook runs on the acting edge: `SendEngine` classifies the press against the last one (`guarded` inside `behavior.spamGuard`, reported at once), records it for the echo tracker, and dims every button for the window. A `CHAT_MSG_*` of the same chat type from the player within 1.5 s makes it `sent`; none makes it `dropped`, with one `[QC]` note. `SEND_RESULT` flashes the button.
+The button is a secure button armed with one baked line. The game sends the line (the secure path; nothing in Lua sends). A button whose text uses `{coordinates}` is re-baked first, in its insecure `PreClick` hook, out of combat only: the line with the position as it is now replaces the armed one when it differs, and the secure handler that runs next sends it (bake → press re-bake, QF-03); in combat it sends what it holds. The button's `OnClick` hook runs on the acting edge: `SendEngine` classifies the press against the last one (`guarded` inside `behavior.spamGuard`, reported at once), records it for the echo tracker, and dims every button for the window. A `CHAT_MSG_*` of the same chat type from the player within 1.5 s makes it `sent`; none makes it `dropped`, with one `[QC]` note. `SEND_RESULT` flashes the button.
 
 ## Today: something changes that a pad draws
 

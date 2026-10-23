@@ -20,7 +20,7 @@ exemption will never apply.
 
 ## The buckets
 
-Eight are declared, the design's seven and the Icons tab's `glowStart`, in `core/PerfSetup.lua`, in report order, each with the file that brackets it:
+Nine are declared, the design's seven, the Icons tab's `glowStart` and the `{coordinates}` re-bake's `coordsRebake`, in `core/PerfSetup.lua`, in report order, each with the file that brackets it:
 
 | Bucket | Bracketed in | Measures |
 |---|---|---|
@@ -32,6 +32,7 @@ Eight are declared, the design's seven and the Icons tab's `glowStart`, in `core
 | `echoMatch` | `modules/SendEngine.lua` | a `CHAT_MSG_*` echo while a press waits |
 | `dialRender` | `modules/Dial_Render.lua` | the pointer's `OnUpdate` while a dial is open: one cursor read, one angle, one texture move |
 | `glowStart` | `modules/Glow.lua` | one icon glow's start (the Icons tab, B9): an effect started or restarted on a button's or a wedge's icon; an unchanged rebuild starts none. The pixel and auto cast styles then run LibCustomGlow-1.0's own `OnUpdate` on every glowing icon while it shows, which this addon does not bracket; smoke step ICONS-2 watches the frame rate with a full pad glowing |
+| `coordsRebake` | `modules/SendEngine.lua` | a `{coordinates}` button's press-time re-bake in its `PreClick` hook, and each one at the combat edge (QF-03): one position read, one bake, at most one re-arm; only buttons whose text uses the token, and never in combat |
 
 Keys are lowerCamelCase, named for the path they time (naming-cheatsheet); until audit QC-12 they
 were dotted (`situation.refresh`, `bake.surface`, …), and no capture under `docs/perf-analysis/` names

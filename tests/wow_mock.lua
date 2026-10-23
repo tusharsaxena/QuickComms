@@ -26,7 +26,10 @@
 --   modifiers      { shift, ctrl, alt }: the keys held (IsShiftKeyDown and the rest); a secure click
 --                  reads its attributes with that prefix, as SecureButton_GetModifiedAttribute does
 --   playerGUID     UnitGUID("player")
---   __click(b[, mouseButton])  a full press: the registered down edge, then the up edge
+--   playerMap      C_Map.GetBestMapForUnit("player")'s map id (nil: no map, as in an instance)
+--   playerPos      { x, y } (fractions 0-1): C_Map.GetPlayerMapPosition's GetXY on playerMap (nil: none)
+--   __click(b[, mouseButton])  a full press: the registered down edge, then the up edge; each edge
+--                  runs the button's PreClick script before its OnClick, as the client does
 --   __setCombat(on)            sets inCombat and re-evaluates every visibility driver
 --   restrictedBindings  [key] = { owner, target, button }: what a header's snippet bound with SetBindingClick (the newest
 --                  owner's; __bindingStacks keeps every owner's, so a ClearBindings hands the key back)
@@ -205,6 +208,19 @@ local function build()
     M.IsControlKeyDown = function() return M.modifiers.ctrl == true end
     M.IsAltKeyDown     = function() return M.modifiers.alt == true end
     M.playerGUID   = "Player-1-00000001"
+    M.playerMap    = nil
+    M.playerPos    = nil
+    M.C_Map = {
+        GetBestMapForUnit = function(unit)
+            if unit == "player" then return M.playerMap end
+            return nil
+        end,
+        GetPlayerMapPosition = function(mapID, unit)
+            if unit ~= "player" or mapID == nil or mapID ~= M.playerMap or not M.playerPos then return nil end
+            local pos = M.playerPos
+            return { GetXY = function() return pos[1], pos[2] end }
+        end,
+    }
 
     M.GetCVarBool = function(name) return M.cvars[name] == "1" end
     M.C_CVar      = { GetCVarBool = function(name) return M.cvars[name] == "1" end }
@@ -845,8 +861,14 @@ local function build()
             end
             return false
         end
-        if registered("Down") then button:__fire("OnClick", mouseButton, true) end
-        if registered("Up") then button:__fire("OnClick", mouseButton, false) end
+        if registered("Down") then
+            button:__fire("PreClick", mouseButton, true)
+            button:__fire("OnClick", mouseButton, true)
+        end
+        if registered("Up") then
+            button:__fire("PreClick", mouseButton, false)
+            button:__fire("OnClick", mouseButton, false)
+        end
     end
 
     M.SetOverrideBindingClick = function(owner, _, key, name, button)

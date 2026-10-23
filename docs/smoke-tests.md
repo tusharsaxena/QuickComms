@@ -21,6 +21,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | DIAG-1..2 | Diagnostics | The debug console, the report, perf |
 | DEGRADED-1 | Degraded | The install with LibKa0s missing |
 | SEND-1..5 | Send | Secure sends in keys and on bosses, the spam guard |
+| TOKEN-1 | Tokens | `{coordinates}`: your map position, read at the press, in a preview echo and in combat |
 | PAD-1..15 | Pad | The Comms Pad, its growth and button width, the Solo and In Group sets and the built-ins' colors, the header click and icon only's width, the header's Quick Comms: text |
 | EDIT-1..32 | Editors | The Pad and Dial page names; the Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
 | PREVIEW-1..12 | Preview window | The Preview as selector window: every entry point, the dropdown, End preview, close and Escape, combat, test mode and the stand-down, Alt+Z, the saved position, bare /qc preview and list; every preview drawn as live; a preview or test click prints what it would send; a preview dial staying open on a pick |
@@ -167,6 +168,20 @@ start). Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 The C1–C9 checks of the phase 0 harness (design spec §19) are recorded in
 `docs/brainstorm/go-no-go/`; SEND-4 and SEND-5 repeat C1 and C4 against the shipped addon.
+
+## Tokens
+
+**TOKEN-1. {coordinates} (2026-10-23, run item QF-03).** Out of combat in the open world, make a Say
+callout `{target} @ {coordinates}` in a group on your pad. Target something, click it → chat shows
+`<name> @ 45.2, 61.8`-style numbers matching your position on the world map (one decimal
+each, x then y). Walk a little, click again → the new position, not the old one, with no error and no
+"interface action blocked". Walk again, pull a mob, and click it in combat → it sends the position
+where combat started (not the last out-of-combat one before you walked), and no error. Leave combat.
+`/qc preview`, click it → `[QC] /s <name> @ <where you are>` and nothing is sent; walk, click → the
+echo follows you. Pick M+ in the window, click → `<coordinates>` in place of the numbers. End preview.
+Enter a dungeon, click it → `<name> @` with nothing after the `@`. The callout popup's "i" lists
+{coordinates} with its line of help, and `{coords}` typed works the same.
+Result: pending
 
 ## Pad
 
@@ -444,12 +459,12 @@ line and changes nothing. Result: 2026-10-21, pass (the owner's run; client buil
 **EDIT-18. The token glyph beside Text.** Edit a party callout (EDIT-9) → a small white "i" sits
 just right of the Text label, no taller than the label's letters, centered on them and clear of the
 box under it. Hover it → a tooltip headed Tokens lists each token with one line of help ({target}, {focus},
-the eight markers, {me}, {spec}, {role}, {key}, {dungeon}, then {spell:ID}), with no
+the eight markers, {me}, {spec}, {role}, {key}, {dungeon}, {coordinates}, then {spell:ID}), with no
 {group1} … {group8} line, and fits on screen without wrapping each line. Pick Raid as the Channel
 and hover again → one {group1} … {group8} line appears (no Save needed). Move off → the tooltip
 hides. Cancel, then open another settings page with text boxes (a group's General tab) and open
 the popup again a few times → no stray "i" appears beside any other box, and the popup shows
-exactly one. Result: 2026-10-21, pass (the owner's run; client build not recorded).
+exactly one. Result: pending (passed 2026-10-21 before {coordinates} joined the list, QF-03)
 
 **EDIT-19. A group inside another.** Make two groups of yours, `My keys` (on the pad, with a
 callout and a When that matches where you are) and `Kicks`. On Kicks' General tab, Parent group →
@@ -1436,9 +1451,12 @@ The owner ran every check above on 2026-10-21 and reported all of them passed (t
 not recorded). A check added or rewritten later is listed here, with its origin
 and why it is owed, until its pass is recorded.
 
+- EDIT-18: rewritten with QF-03 (2026-10-23), the token list gains {coordinates}; owed a re-run.
 - PREVIEW-10: new with QC-07 (2026-10-23), a preview or test click prints what it would send; owed a
   first run.
 - PREVIEW-11: new with QF-02 (2026-10-23), the preview window and the start line over the edit
   preview, its End preview, close mark, Escape and `/qc preview off`; owed a first run.
 - PREVIEW-12: new with QF-01 (2026-10-23), a preview, edit-preview or test dial stays open on a slice
   click while a live one still closes; owed a first run.
+- TOKEN-1: new with QF-03 (2026-10-23), the {coordinates} token: read at the press, re-armed at the
+  combat edge, filled in a preview echo; owed a first run.

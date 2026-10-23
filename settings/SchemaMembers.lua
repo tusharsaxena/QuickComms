@@ -159,7 +159,7 @@ local ROWS = {
       validate = check(Lib.ValidName) },
     { path = "callout.text", instance = "callout", type = "string", dialogControl = "EditBox",
       maxLetters = 255, page = "callouts", group = GENERAL, label = L["Text"],
-      desc = L["What is sent. Tokens in braces are filled in: {target}, {focus}, {skull}, {me}, {spec}, {key}, {dungeon}, {spell:ID}; in a raid, {group1} to {group8}. Press Enter to apply."],
+      desc = L["What is sent. Tokens in braces are filled in: {target}, {focus}, {skull}, {me}, {spec}, {key}, {dungeon}, {coordinates}, {spell:ID}; in a raid, {group1} to {group8}. Press Enter to apply."],
       validate = check(isText) },
     { path = "callout.channel", instance = "callout", type = "string", default = T.callout.channel,
       values = CHANNELS, page = "callouts", group = GENERAL, label = L["Channel"],

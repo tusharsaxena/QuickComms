@@ -231,7 +231,7 @@ Total.
 - diagnostics: [debug] the log follows a dial open, a ring shown, a press and a close, once each
 - diagnostics: [shine] the pad's button line and the dial's slices line print the look and strength
 
-### test_compat.lua (12)
+### test_compat.lua (13)
 
 - compat: plain readers pass plain values and drop secrets
 - compat: InstanceInfo with a secret instanceID reads nil, never raises
@@ -245,6 +245,7 @@ Total.
 - compat: [phase 3] InstanceName reads the client's name; a secret, empty or missing one is nil
 - compat: [phase 3] SpecInfoByID and ClassName read display names; secret or missing ones are nil
 - compat: [final 8] BindingKey reads a command's key; a secret or a missing API is nil
+- compat: [QF-03] Coordinates reads the map position as x, y in percent, one decimal, or nil
 
 ### test_restrictions.lua (16)
 
@@ -284,7 +285,7 @@ Total.
 - situation: [final 1b] both combat edges reach Current() even under the Combat restriction type
 - situation: [arena] an arena snapshot carries its instanceID, which the arena row matches
 
-### test_tokens.lua (9)
+### test_tokens.lua (10)
 
 - tokens: target and focus become engine tokens and count as live
 - tokens: raid markers by number and name, any case
@@ -295,6 +296,7 @@ Total.
 - tokens: typed %t and %f count as live, chips are not double counted
 - tokens: non-string text expands to empty
 - tokens: a mock fills a baked value missing here, and only when given (the preview echo, QC-07)
+- tokens: [QF-03] {coordinates} and {coords} bake from ctx.coordinates; missing is dropped and listed, or mocked
 
 ### test_channels.lua (8)
 
@@ -963,6 +965,17 @@ Total.
 - preview window: [QF-02] the settings window closing hides it; a hidden UIParent ends nothing
 - preview window: [QF-02] `/qc preview off` ends the edit preview too; with nothing on it writes nothing
 
+### test_coordinates.lua (8)
+
+- coordinates: a live button bakes your position, and only a button that uses it re-bakes
+- coordinates: a press after you moved re-arms through PreClick and sends where you are now
+- coordinates: in combat a press writes nothing and sends the line it holds
+- coordinates: the combat edge re-arms each re-baking button once, so a press in combat sends the pull's place
+- coordinates: where the map does not show you, the token is dropped as any missing one
+- coordinates: a Current preview's echo fills the position at the click
+- coordinates: an edit preview's echo fills the position at the click
+- coordinates: a previewed place that is not where you are prints <coordinates>
+
 ### test_master.lua (5)
 
 - master: the frame defaults are spec §5.1's: always shown, scale and alpha 1; a new profile starts unlocked
@@ -1337,10 +1350,10 @@ Total.
 | test_slash.lua | 20 |
 | test_disabled.lua | 25 |
 | test_diagnostics.lua | 13 |
-| test_compat.lua | 12 |
+| test_compat.lua | 13 |
 | test_restrictions.lua | 16 |
 | test_situation.lua | 16 |
-| test_tokens.lua | 9 |
+| test_tokens.lua | 10 |
 | test_channels.lua | 8 |
 | test_bake.lua | 12 |
 | test_share.lua | 37 |
@@ -1365,6 +1378,7 @@ Total.
 | test_preview.lua | 36 |
 | test_edit_preview.lua | 17 |
 | test_preview_window.lua | 21 |
+| test_coordinates.lua | 8 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 21 |
 | test_dial_layout.lua | 33 |
@@ -1383,4 +1397,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1145** |
+| **Total** | **1155** |

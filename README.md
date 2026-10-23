@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1145%2F1145_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1155%2F1155_passing-green)
 
 Quick Comms puts your usual group callouts one click or one keypress away. "Kick on me", "Lust
 now", "INC Lumber Mill": set them up once and they sit on a Comms Pad or open from a
@@ -56,7 +56,9 @@ title above the dial; and the Icons tab sets the icons' distance from the middle
 to 128 pixels.
 
 Settings → Groups makes a group and, on its Callouts tab, its callouts: Add callout opens a small
-editor for the name, text, channel and icon (Save keeps it, Cancel drops it). Choose icon… opens
+editor for the name, text, channel and icon (Save keeps it, Cancel drops it). The text takes tokens in
+braces, such as `{target}`, `{me}`, `{key}` and `{coordinates}` (your map position, `45.2, 61.8`, read as
+you press, so `{target} @ {coordinates}` tells others where a rare is); the "i" beside Text lists them. Choose icon… opens
 a browser with the raid markers, every icon the macro icon picker has and the LibKa0s glyphs, which
 you can color and search (the game's own icons by texture id; the tab points to Wowhead for a name).
 Reuse

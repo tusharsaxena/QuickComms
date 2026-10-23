@@ -326,7 +326,13 @@ local RT_ICON = "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%s:0|t"
 P.MOCK = {
     target = L["<target>"], focus = L["<focus>"], group = L["<group %s>"], spell = L["<spell %s>"],
     me = L["<me>"], spec = L["<spec>"], role = L["<role>"], key = L["<key>"], dungeon = L["<dungeon>"],
+    coordinates = L["<coordinates>"],
 }
+
+-- {coordinates} in an echo of where you are (QF-03): kept as this literal through the bake, then
+-- filled at the click by FillEcho, so the echo prints where you are when you click, not where the plan
+-- was built. The bake's text cleaning leaves braces alone.
+local COORDS = "{coordinates}"
 
 local function mockBaked(name)
     local id = name:match("^spell:(%d+)$")
@@ -341,8 +347,19 @@ end
 --- @param snap table the previewed snapshot the plan baked against
 function P.SlotEcho(slot, callout, snap)
     if slot.line then
+        -- Never the plan-time position: the live snapshot (Current, the edit preview alone, known by
+        -- identity as Surfaces.BakeContext knows it) keeps the literal for the click; a synthetic preset,
+        -- which is not where you are, its mock.
+        local ctx = {}
+        for k, v in pairs(NS.Surfaces.BakeContext(snap)) do ctx[k] = v end
+        ctx.coordinates = nil
+        local here = snap ~= nil and snap == NS.Situation.Current()
+        local function mock(name)
+            if name == "coordinates" then return here and COORDS or P.MOCK.coordinates end
+            return mockBaked(name)
+        end
         local line = NS.Bake.Bake(callout, snap, { soloFallback = NS.Setting("behavior.soloFallback"),
-            ctx = NS.Surfaces.BakeContext(snap), mock = mockBaked })
+            ctx = ctx, mock = mock })
         return line or slot.line
     end
     local why = NS.PadRender.REASON_TEXT[slot.reason] or L["Not available here."]
@@ -360,9 +377,14 @@ end
 
 --- At the click (combat-safe: reads only): fill what the game would fill as it sends. %t and %f are
 --- your target's and focus's names, or their mock; a raid marker is its icon, as chat draws it; a
---- raid-group token, which the game expands only in a raid, is its mock.
+--- raid-group token, which the game expands only in a raid, is its mock. {coordinates} (kept by
+--- SlotEcho for an echo of where you are) is your position now, or its mock where there is none.
 function P.FillEcho(text)
     if type(text) ~= "string" then return "" end
+    if text:find(COORDS, 1, true) then
+        local here = (NS.Compat.Coordinates() or P.MOCK.coordinates):gsub("%%", "%%%%")
+        text = text:gsub("{coordinates}", here)
+    end
     text = text:gsub("%%([tf])", function(c)
         if c == "t" then return unitOr("target", P.MOCK.target) end
         return unitOr("focus", P.MOCK.focus)

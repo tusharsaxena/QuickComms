@@ -199,7 +199,7 @@ function Compat.SenderIsPlayer(sender, guid)
     return realm == myRealm
 end
 
--- ── The bake context (spec §8.1): the values {me}, {spec}, {dungeon} and {spell:ID} bake from ──
+-- ── The bake context (spec §8.1): the values {me}, {spec}, {dungeon}, {coordinates} and {spell:ID} bake from ──
 
 --- The player's name, without the realm.
 function Compat.PlayerName()
@@ -231,6 +231,31 @@ function Compat.DungeonName(mapID)
     local cm = C_ChallengeMode
     if not (PlainNumber(mapID) and cm and cm.GetMapUIInfo) then return nil end
     return PlainString((cm.GetMapUIInfo(mapID)))
+end
+
+--- The player's map position in percent (0-100), `x, y`, or nil: C_Map.GetBestMapForUnit("player"),
+--- then C_Map.GetPlayerMapPosition on that map and its GetXY, every value plain (secret-safe). Nil
+--- when any step is missing, the map is restricted (an instance answers no position) or the position
+--- is 0, 0. Reads only, so a click in combat may call it (QF-03).
+function Compat.PlayerMapPosition()
+    local map = C_Map
+    if not (map and map.GetBestMapForUnit and map.GetPlayerMapPosition) then return nil end
+    local mapID = PlainNumber(map.GetBestMapForUnit("player"))
+    if not mapID then return nil end
+    local pos = map.GetPlayerMapPosition(mapID, "player")
+    if Compat.IsSecret(pos) or type(pos) ~= "table" or type(pos.GetXY) ~= "function" then return nil end
+    local x, y = pos:GetXY()
+    x, y = PlainNumber(x), PlainNumber(y)
+    if not (x and y) or (x == 0 and y == 0) then return nil end
+    return x * 100, y * 100
+end
+
+--- The player's map position as chat text, "45.2, 61.8" (x, y in percent, one decimal), for
+--- {coordinates}; nil where PlayerMapPosition has none.
+function Compat.Coordinates()
+    local x, y = Compat.PlayerMapPosition()
+    if not x then return nil end
+    return ("%.1f, %.1f"):format(x, y)
 end
 
 --- A spell's chat link, for {spell:ID}.
