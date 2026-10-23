@@ -126,10 +126,13 @@ function V.PreviewLines(rest)
     if key ~= P.OFF and not P.FindPreset(key) then
         return { L["No situation named %s. Type /qc preview list for the list."]:format(key) }
     end
-    local want = key ~= P.OFF and key or nil
-    if P.PreviewAs() ~= want and not P.SetPreviewAs(key) then return {} end
-    if want then return { L["Previewing: %s"]:format(P.Label(key)) } end
-    return { L["Preview off."] }
+    if key == P.OFF then
+        -- Every preview the window shows, as its End preview does (QF-02): the edit preview too.
+        if P.PreviewAs() ~= nil or P.EditGroup() ~= nil then P.EndPreview() end
+        return { L["Preview off."] }
+    end
+    if P.PreviewAs() ~= key and not P.SetPreviewAs(key) then return {} end
+    return { L["Previewing: %s"]:format(P.Label(key)) }
 end
 
 function V.Preview(rest)

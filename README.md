@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1138%2F1138_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1145%2F1145_passing-green)
 
 Quick Comms puts your usual group callouts one click or one keypress away. "Kick on me", "Lust
 now", "INC Lumber Mill": set them up once and they sit on a Comms Pad or open from a
@@ -79,7 +79,9 @@ like standing in for a value you have not got right now), or why it would send n
 test button is a placeholder. Hovering a pad's header or the dial's middle (or
 `/qc why`) tells you why each group is there. While the Groups page is open, every pad and dial shows
 only the group you are editing, sending nothing: a click prints `[QC] /p <text>`, the line it would
-have sent (untick Preview while editing, under the Group picker, to keep them live). Right-click a
+have sent, and the preview window comes up titled with the group, so you can preview it under
+another situation; End preview there unticks Preview while editing, under the Group picker, which
+keeps the pads live. Right-click a
 group's title on a pad to open it on the Groups page; the page stays on the tab you last used.
 
 To share, open Settings → Share → Export, tick what you want to send and click Export, then copy the

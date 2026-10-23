@@ -1,16 +1,22 @@
 local _, NS = ...
 -- modules/PreviewWindow.lua — the "Preview as…" selector window (design-qc-preview §2.2): a small
 -- library-styled window with a situation dropdown, an End preview button and the close mark, shown
--- exactly while a "Preview as…" preview is on, whichever way it started (the slash, the settings
--- row, the window's own dropdown). Plain test mode (placeholders) and the edit preview get no window.
+-- while a "Preview as…" preview is on, whichever way it started (the slash, the settings row, the
+-- window's own dropdown), and while the Groups page's edit preview is on (QF-02, owner 2026-10-23).
+-- Plain test mode (placeholders) gets no window. Over the edit preview the title names the group
+-- and the dropdown shows Current (it bakes against where you are) until a pick, which is a Preview
+-- as the edited group renders under (modules/Surfaces.lua), outliving the settings window as any
+-- other does.
 --
 -- ONE function shows or hides it: PW.Sync, which modules/Preview.lua calls from announce() and from
 -- its stand-down entry (late-bound: this file loads after Preview). The window's own controls go
 -- through NS.Preview.SetPreviewAs, so they come back here through announce(); nothing prints.
 --
--- Its close mark, Escape (UISpecialFrames) and End preview all END the preview (owner scope C). A
--- hidden UIParent (Alt+Z, a cinematic) fires OnHide with the frame's own shown flag still on: that
--- ends nothing. OnHide also closes the shared dropdown menu (W.CloseMenu, the Widgets contract for
+-- Its close mark, Escape (UISpecialFrames) and End preview all END the preview (owner scope C). End
+-- preview and the close mark go through NS.Preview.EndPreview, which also turns Preview while
+-- editing off; Escape over the edit preview is NS.Preview.DismissEditPreview, for the session only
+-- (modules/Preview.lua says why). A hidden UIParent (Alt+Z, a cinematic) fires OnHide with the
+-- frame's own shown flag still on: that ends nothing. OnHide also closes the shared dropdown menu (W.CloseMenu, the Widgets contract for
 -- every non-click close path).
 --
 -- The look copies LibKa0s's Perf and Sim step panels: BackdropTemplate, movable,
@@ -45,7 +51,7 @@ local GOLD, REST, GRAY = { 1, 0.82, 0 }, { 0.9, 0.9, 0.92 }, { 0.6, 0.6, 0.6 }
 local frame
 
 local function endPreview()
-    NS.Preview.SetPreviewAs(NS.Preview.OFF)
+    NS.Preview.EndPreview()
 end
 
 -- The stored point, or the default one (`TOP, UIParent, TOP, 0, -140`) when the profile has none.
@@ -118,10 +124,16 @@ local function makeDropdown(parent)
 end
 
 -- Escape and a Hide call clear the frame's own flag; a hidden parent leaves it on. A Sync-driven hide
--- finds the preview already off, so this never recurses.
+-- finds every preview already off, so this never recurses.
 local function onHide(self)
     if W.CloseMenu then W.CloseMenu() end
-    if not self:IsShown() and NS.Preview.PreviewAs() ~= nil then endPreview() end
+    if self:IsShown() then return end
+    local P = NS.Preview
+    if P.EditGroup() ~= nil then
+        P.DismissEditPreview()
+    elseif P.PreviewAs() ~= nil then
+        P.SetPreviewAs(P.OFF)
+    end
 end
 
 local function chrome(f)
@@ -138,7 +150,9 @@ local function chrome(f)
     end)
     local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     title:SetPoint("TOP", f, "TOP", 0, -6)
-    title:SetText(L["%s - Preview"]:format(NS.BRAND))
+    -- One line: a long group name truncates (the width is the window's, inside the close mark).
+    title:SetWidth(WIDTH - 2 * (PAD + 20))
+    if title.SetWordWrap then title:SetWordWrap(false) end
     f.title = title
 end
 
@@ -160,16 +174,25 @@ local function ensure()
 end
 
 local function fill(f)
+    local P = NS.Preview
     local options = {}
-    for _, e in ipairs(NS.Preview.Presets()) do options[#options + 1] = { value = e.key, label = e.label } end
+    for _, e in ipairs(P.Presets()) do options[#options + 1] = { value = e.key, label = e.label } end
     f.dropdown:SetOptions(options)
-    f.dropdown:SelectValue(NS.Preview.PreviewAs())
+    -- The edit preview alone bakes against the live snapshot, which is what Current is.
+    f.dropdown:SelectValue(P.PreviewAs() or P.CURRENT)
+    if P.EditGroup() ~= nil then
+        f.title:SetText(L["%s - Preview: %s"]:format(NS.BRAND, P.Label(P.EDIT)))
+    else
+        f.title:SetText(L["%s - Preview"]:format(NS.BRAND))
+    end
 end
 
---- Show the window while a "Preview as…" preview is on (and the addon stands), hide it otherwise.
---- Re-reads the menu and the selection on every show, so the slash and the settings row move it.
+--- Show the window while a "Preview as…" preview or the edit preview is on (and the addon stands),
+--- hide it otherwise. Re-reads the menu, the selection and the title on every show, so the slash,
+--- the settings row and a group switch move it.
 function PW.Sync()
-    local want = NS.Preview.PreviewAs() ~= nil and not NS.IsStoodDown()
+    local P = NS.Preview
+    local want = (P.PreviewAs() ~= nil or P.EditGroup() ~= nil) and not NS.IsStoodDown()
     if not want then
         if frame then frame:Hide() end
         return

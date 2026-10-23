@@ -919,7 +919,7 @@ Total.
 - preview: [QF-01] a slice pick on a previewed, test or edit-preview dial echoes and leaves the dial open
 - preview: [QF-01] after /qc preview off a pick on the live dial sends and closes it
 
-### test_edit_preview.lua (15)
+### test_edit_preview.lua (17)
 
 - edit preview: every pad shows only the edited group, whatever its When says, and sends nothing
 - edit preview: a battleground set shows its own callouts and every node, outside the battleground
@@ -936,8 +936,10 @@ Total.
 - edit preview: the Groups page drawn in combat does not start it
 - edit preview: it comes back when combat ends with the Groups page still on screen
 - preview: [QC-05] the edit preview and Preview as draw every button and wedge exactly as live
+- edit preview: [QF-02] 'Previewing: <group> (editing)' prints on a user start only
+- edit preview: [QF-02] a dial wedge clicked through its ring's catcher with the Groups page shown echoes
 
-### test_preview_window.lua (16)
+### test_preview_window.lua (21)
 
 - preview window: hidden until a preview starts; SetPreviewAs shows it with the dropdown on that situation
 - preview window: the settings row starts it too and the dropdown follows the slash
@@ -955,6 +957,11 @@ Total.
 - preview window: Escape list, strata, movable, and a position kept in the profile
 - preview window: the dropdown's menu closes with the window
 - preview window: degraded install previews without a window
+- preview window: [QF-02] the edit preview alone shows it, titled with the group, on Current; a pick previews under it
+- preview window: [QF-02] End preview and the close mark end both and turn Preview while editing off
+- preview window: [QF-02] Escape ends the edit preview for the session, the setting kept, until a new start
+- preview window: [QF-02] the settings window closing hides it; a hidden UIParent ends nothing
+- preview window: [QF-02] `/qc preview off` ends the edit preview too; with nothing on it writes nothing
 
 ### test_master.lua (5)
 
@@ -1356,8 +1363,8 @@ Total.
 | test_sendengine.lua | 30 |
 | test_dial_secure.lua | 20 |
 | test_preview.lua | 36 |
-| test_edit_preview.lua | 15 |
-| test_preview_window.lua | 16 |
+| test_edit_preview.lua | 17 |
+| test_preview_window.lua | 21 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 21 |
 | test_dial_layout.lua | 33 |
@@ -1376,4 +1383,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1138** |
+| **Total** | **1145** |

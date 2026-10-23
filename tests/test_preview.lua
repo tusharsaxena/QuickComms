@@ -568,44 +568,8 @@ end)
 
 -- ── a preview or test dial stays open on a pick (QF-01, owner 2026-10-23) ─────────────────────────
 
--- Put the cursor on the open dial's slice that holds `wedge` and click its ring's catcher, as a mouse
--- pick does: scan bearings around the hub until the catcher snippet answers that slice's name.
-local pickOnDial
-function pickOnDial(NS, m, id, wedge)
-    local inst = NS.Dial.Instance(id)
-    local h = inst.header
-    local function placeOf(r, want)
-        for j, w in pairs(inst.rings.active[r].qcPlaceWedge) do if want(w) then return j end end
-    end
-    local home
-    for r in ipairs(inst.rings.active) do
-        if placeOf(r, function(w) return w == wedge end) then home = r end
-    end
-    assertTrue(home ~= nil, "the wedge sits on a ring")
-    local shownRing = NS.Dial.ShownRing(id)
-    if shownRing ~= home then
-        -- the group ring first: its ring wedge opens the callouts' ring
-        local j = placeOf(shownRing, function(w) return w:GetAttribute("qc-target") == home end)
-        assertTrue(j ~= nil, "the shown ring leads to the wedge's ring")
-        pickOnDial(NS, m, id, inst.rings.active[shownRing].qcPlaceWedge[j])
-        assertEqual(NS.Dial.ShownRing(id), home)
-    end
-    local ring = inst.rings.active[home]
-    local place = placeOf(home, function(w) return w == wedge end)
-    local cx, cy = h:GetCenter()
-    local s = h:GetEffectiveScale()
-    for k = 0, 71 do
-        local a = math.rad(k * 5 + 1)
-        m.cursor.x, m.cursor.y = (cx + 60 * math.sin(a)) * s, (cy + 60 * math.cos(a)) * s
-        local got = m.__runSnippet(h, "self, button, down, owner", NS.DialSecure.SNIPPETS.catcher, ring.qcCatcher,
-            "LeftButton", false, h)
-        if got == "w" .. place then
-            m.__click(ring.qcCatcher)
-            return
-        end
-    end
-    error("no bearing lands on the wedge's slice")
-end
+-- A mouse pick on an open dial (tests/dial_pick.lua, shared with test_edit_preview.lua).
+local pickOnDial = dofile("tests/dial_pick.lua")
 
 test("preview: [QF-01] a slice pick on a previewed, test or edit-preview dial echoes and leaves the dial open", function()
     local NS, m = live()

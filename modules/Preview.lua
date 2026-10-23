@@ -32,7 +32,8 @@ end
 local function announce()
     NS.addon:SendMessage(NS.MSG.TEST_MODE_CHANGED,
         State.testMode == true or State.previewAs ~= nil or State.editPreview ~= nil)
-    -- The selector window shows exactly while Preview as is on (late-bound: it loads after this file).
+    -- The selector window shows while Preview as or the edit preview is on (late-bound: it loads after
+    -- this file).
     if NS.PreviewWindow then NS.PreviewWindow.Sync() end
     refreshPanel()
 end
@@ -237,6 +238,16 @@ end
 -- back when it ends. Session-only (NS.State.editPreview). A start in combat or stood down is
 -- refused without a line, because the page asks again on every draw; combat, the stand-down,
 -- the page hiding and the settings window closing end it.
+--
+-- The selector window (modules/PreviewWindow.lua) shows over it too (QF-02, owner 2026-10-23), and
+-- a user-started edge prints "Previewing: <group> (editing)": the page shown, the setting ticked
+-- on. A group switch (no edge), a re-render and the restart after combat (`quiet`) print nothing.
+-- Ending it from the window has two strengths. End preview, the close mark and `/qc preview off`
+-- (P.EndPreview) turn Preview while editing off, since the page restarts the preview on its next
+-- render while the setting is on. Escape (P.DismissEditPreview) leaves the saved switch alone,
+-- because it also closes the settings window: it marks the group dismissed for the session
+-- (NS.State.editPreviewDismissed), and the page's Sync previews nothing while that group stays
+-- selected. A group switch, the page shown again, a write of the setting or End preview clears it.
 
 P.EDIT = "edit"
 
@@ -244,15 +255,54 @@ function P.EditGroup()
     return State.editPreview
 end
 
---- Preview only group `gid` on every pad and dial, or end that (nil).
+--- Preview only group `gid` on every pad and dial, or end that (nil). The off -> on edge prints the
+--- start line unless `quiet`.
 --- @return boolean changed
-function P.SetEditPreview(gid)
+function P.SetEditPreview(gid, quiet)
     if gid == State.editPreview then return false end
     if gid ~= nil and (NS.IsStoodDown() or fighting()) then return false end
+    local started = gid ~= nil and State.editPreview == nil
     State.editPreview = gid
     NS.Debug("Pad", "edit preview %s", tostring(gid or "off"))
     announce()
+    if started and not quiet then NS.Print(L["Previewing: %s (editing)"]:format(P.Label(P.EDIT))) end
     return true
+end
+
+--- The group Escape dismissed for this session, or nil (settings/Groups.lua SyncEditPreview).
+function P.EditPreviewDismissed()
+    return State.editPreviewDismissed
+end
+
+function P.ClearEditPreviewDismissal()
+    State.editPreviewDismissed = nil
+end
+
+--- Escape on the selector window: end the edit preview and Preview as for this session, the saved
+--- Preview while editing left on (see the section's header).
+--- @return boolean changed
+function P.DismissEditPreview()
+    if State.editPreview == nil then return false end
+    State.editPreviewDismissed = State.editPreview
+    P.SetEditPreview(nil)
+    P.SetPreviewAs(P.OFF)
+    return true
+end
+
+--- End every preview the selector window shows (End preview, its close mark, `/qc preview off`):
+--- the edit preview with its setting turned off, then Preview as. Test mode is not touched.
+--- @return boolean changed
+function P.EndPreview()
+    State.editPreviewDismissed = nil
+    local changed = false
+    if State.editPreview ~= nil then
+        -- Its onChange runs the Groups page's Sync, which ends the edit preview; the call after it is
+        -- then a no-op, and ends it where the page is not loaded.
+        NS.SchemaRuntime.Set("behavior.previewOnEdit", false)
+        P.SetEditPreview(nil)
+        changed = true
+    end
+    return P.SetPreviewAs(P.OFF) or changed
 end
 
 -- ── the click preview (QC-07, owner request 2026-10-23) ───────────────────────────────────────
@@ -358,7 +408,7 @@ end
 listen()
 
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
-    State.testMode, State.previewAs, State.editPreview = nil, nil, nil
+    State.testMode, State.previewAs, State.editPreview, State.editPreviewDismissed = nil, nil, nil, nil
     -- The stand-down announces nothing, so the selector window is told here.
     if NS.PreviewWindow then NS.PreviewWindow.Sync() end
     if receiver and not NS.Bus.tracked then receiver:UnregisterMessage(NS.MSG.RESTRICTION_CHANGED) end

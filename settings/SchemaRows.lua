@@ -66,7 +66,11 @@ NS.SchemaRuntime.AddRows({
     { path = "behavior.previewOnEdit", type = "bool", default = B.previewOnEdit, page = "groups",
       group = L["General"], skipRender = true, label = L["Preview while editing"],
       desc = L["While this page is open, every pad and dial shows only the group you are editing, with the groups inside it, whatever its When says. Nothing on them sends. It ends when you leave this page or combat starts."],
-      onChange = function() NS.addon.Settings.Groups.SyncEditPreview() end },
+      -- A write of either value is a new choice: an Escape dismissal (QF-02) is forgotten.
+      onChange = function()
+          NS.Preview.ClearEditPreviewDismissal()
+          NS.addon.Settings.Groups.SyncEditPreview()
+      end },
 })
 
 -- Preview as… (spec §13.3) is not here: it is General › Master controls' extra (settings/Panel.lua).

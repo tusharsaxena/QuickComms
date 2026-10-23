@@ -681,10 +681,12 @@ L["Preview as (now: %s):"] = "Preview as (now: %s):"
 L["  %s: %s"] = "  %s: %s"
 L["No situation named %s. Type /qc preview list for the list."] = "No situation named %s. Type /qc preview list for the list."
 L["Previewing: %s"] = "Previewing: %s"
+L["Previewing: %s (editing)"] = "Previewing: %s (editing)"
 L["Preview off."] = "Preview off."
 
 -- Preview window (modules/PreviewWindow.lua)
 L["%s - Preview"] = "%s - Preview"
+L["%s - Preview: %s"] = "%s - Preview: %s"
 L["End preview"] = "End preview"
 L["End the preview: the pads and dials go back to live."] = "End the preview: the pads and dials go back to live."
 L["Switch the situation the pads and dials preview."] = "Switch the situation the pads and dials preview."

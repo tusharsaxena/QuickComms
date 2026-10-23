@@ -694,6 +694,25 @@ a placeholder slice → one line each: its name and `(test-mode placeholder: not
 preview off`, click Hello → it really sends, as before, and prints nothing extra.
 Result: pending
 
+**PREVIEW-11. The window and start line over the edit preview (2026-10-23, run item QF-02).** Out
+of combat, `/qc debug` on, Preview while editing ticked: Settings → Groups → a group of yours → chat
+prints `Previewing: <group> (editing)` once and the preview window opens, titled
+`Ka0s Quick Comms - Preview: <group>`, with Current in its dropdown. Pick another group → the title
+follows and no new line prints. Click a pad button and a dial slice of the edited group → each prints
+its `[QC]` line (with `/qc debug` on, a `press ...` debug line shows the click arrived; a missing echo
+with a debug line is the bug, a missing debug line means the click never reached the button). Pick
+Arena in the window's dropdown → the edited group renders under Arena (the header reads the group,
+the slashes are Arena's). End preview → the pads go live, the window goes, and the band's Preview
+while editing box is unticked; tick it → the line and the window again. The close mark → the same as
+End preview. Tick it again, press Escape → the window and the preview go, the box stays ticked, and
+it does not come back while the same group stays selected (switching tabs, waiting, a combat end);
+pick another group → it starts again. Pull a mob with it on → `Preview ended: you entered combat.`;
+leave combat with the page open → the window is back with no `Previewing:` line. `/qc preview off`
+with only the edit preview on → `Preview off.`, the window goes, the box is unticked. Close the
+settings with the X → the window goes. Press Alt+Z → the window hides with the UI and the preview
+stays on.
+Result: pending
+
 **PREVIEW-12. A preview dial stays open on a slice click (2026-10-23, run item QF-01).** `/qc
 preview`, pick In Group in the window, open the dial (it opens with the preview). Click a callout
 slice → its `[QC]` line prints and the dial stays open; click another slice → its line too, still
@@ -1419,5 +1438,7 @@ and why it is owed, until its pass is recorded.
 
 - PREVIEW-10: new with QC-07 (2026-10-23), a preview or test click prints what it would send; owed a
   first run.
+- PREVIEW-11: new with QF-02 (2026-10-23), the preview window and the start line over the edit
+  preview, its End preview, close mark, Escape and `/qc preview off`; owed a first run.
 - PREVIEW-12: new with QF-01 (2026-10-23), a preview, edit-preview or test dial stays open on a slice
   click while a live one still closes; owed a first run.

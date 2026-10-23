@@ -535,21 +535,29 @@ end
 --- Preview while editing (2026-10-19 groups polish, C4): while the page is on screen and the
 --- setting is on, every pad and dial shows only the selected group (Preview.SetEditPreview); else
 --- that ends. Run on every draw, on the page's show and hide, and on the setting's write; the
---- preview refuses a start in combat on its own.
-function G.SyncEditPreview()
+--- preview refuses a start in combat on its own. A group Escape dismissed on the preview window
+--- (QF-02) stays off while it is selected; selecting another clears the mark. `quiet` (the restart
+--- after combat) starts it without the "Previewing:" line.
+function G.SyncEditPreview(quiet)
+    local P = NS.Preview
     local gid = Ed.Selected("group")
+    local dismissed = P.EditPreviewDismissed()
+    if dismissed ~= nil and gid ~= dismissed then
+        P.ClearEditPreviewDismissal()
+        dismissed = nil
+    end
     local want = onScreen() and NS.Setting("behavior.previewOnEdit") ~= false and gid ~= nil
-        and NS.Library.Group(gid) ~= nil and gid or nil
-    return NS.Preview.SetEditPreview(want)
+        and gid ~= dismissed and NS.Library.Group(gid) ~= nil and gid or nil
+    return P.SetEditPreview(want, quiet)
 end
 
 -- Combat ends the edit preview (modules/Preview.lua); its end brings it back while the page is
 -- still on screen. RESTRICTION_CHANGED is sent once Restrictions has cleared its combat edge, so the
 -- start is not refused, whichever frame sees PLAYER_REGEN_ENABLED first. In combat it does nothing:
--- the combat edge is Preview's to end (with its one line), whichever target hears it first. Its own
--- target (core/Bus.lua).
+-- the combat edge is Preview's to end (with its one line), whichever target hears it first. The
+-- restart is quiet: the window coming back is the signal. Its own target (core/Bus.lua).
 local function onRestrictionChanged()
-    if not NS.Restrictions.InCombat() then G.SyncEditPreview() end
+    if not NS.Restrictions.InCombat() then G.SyncEditPreview(true) end
 end
 
 local receiver
@@ -758,6 +766,10 @@ Ed.RegisterPage(PAGE, L["Groups"], "GroupsPanel", render, {
     tooltip = L["Turn the selected group back on, stop it opening the dial, turn Inherit when conditions back on, and turn Preview while editing back on. Its name, callouts and own When are kept."],
     onClick = function(ctx) G.RestoreDefaults(ctx) end,
 }, {
-    onShow = function() G.SyncEditPreview() end,
+    -- Reopening the page is a new start: an Escape dismissal (QF-02) is forgotten.
+    onShow = function()
+        NS.Preview.ClearEditPreviewDismissal()
+        G.SyncEditPreview()
+    end,
     onHide = function() NS.Preview.SetEditPreview(nil) end,
 })

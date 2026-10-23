@@ -113,7 +113,9 @@ delete the group, then restore. It is not under the header's Defaults, which res
 group (options-ui-§13).
 
 **Preview while editing** (the band, under the picker, the `behavior.previewOnEdit` row; on by
-default, saved): drawn through `O.PageHeader`, the band a picker with another page-wide control
+default, saved; QF-02: its start prints `Previewing: <group> (editing)` and puts the preview window
+up, titled with the group, whose End preview and close mark untick this box, and whose Escape ends
+the preview for the session with the box left ticked): drawn through `O.PageHeader`, the band a picker with another page-wide control
 takes (options-ui-§14), with New group level with the picker's control as PageBanner places it.
 The three are one AceGUI SimpleGroup's children, laid out by Flow (the picker and New group each
 half the band, the checkbox under the picker), so AceGUI shows and sizes them; widgets placed in
