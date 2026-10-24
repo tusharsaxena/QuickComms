@@ -1,6 +1,6 @@
 -- tests/test_keybinds.lua — the key bindings (item 015; launcher-§6, options-ui-§20): NS.BINDINGS,
 -- the General page's Keybindings tab (LibKa0s-Options-1.0's O.KeybindingsTab, OptionsKeybinds
--- minor 3), and the two ways round it syncs with Options -> Keybindings. The capture, slot, conflict
+-- minor 4), and the two ways round it syncs with Options -> Keybindings. The capture, slot, conflict
 -- and sync mechanics are the library's cases (testing-§8); these pin this addon's half: the strip
 -- ends in Keybindings, the rows are NS.BINDINGS in order with the BINDING_NAME_ labels, a key bound
 -- through the tab is WoW's binding (and the key then does its job), a key set in WoW's menu shows on
