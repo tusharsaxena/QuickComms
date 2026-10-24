@@ -6,7 +6,7 @@ eagerly at `OnEnable`; each page's body builds on its first show (options-ui-§1
 | Page | Covers |
 |---|---|
 | Ka0s Quick Comms (landing) | The logo, the TOC notes line and the slash command list, drawn by the library's `BuildLandingPage` |
-| General | `Master controls`, `Behavior` |
+| General | `Master controls`, `Behavior`, `Keybindings` (last) |
 | Groups | One group (a seeded built-in set is one too): `General`, `Callouts`, `When`, `Preview` |
 | Pad | One pad (the Comms Pad page until the dial polish, 2026-10-21): `General`, `Groups`, `Layout`, `Pad header`, `Section header`, `Window`, `Buttons`, `Icons` |
 | Dial | One dial (the Comms Dial page until the dial polish, 2026-10-21): `General`, `Groups`, `Wheel`, `Slices`, `Hub`, `Paging`, `Slice labels`, `Group labels`, `Icons`, `Preview` |
@@ -33,7 +33,7 @@ Reset all settings buttons.
 Lock frame, `/qc lock|unlock` and the launcher's Locked entry write the same path; Test mode,
 `/qc test` and the launcher's Test mode entry call the same switch (`Preview.SetTestMode`), which is
 refused in combat. The launcher's Show window entry and the Toggle Comms Pads key binding (Options →
-Keybindings → Ka0s Quick Comms) call `/qc toggle`'s handler (`SlashVerbs.TogglePads`), which hides
+Keybindings → Ka0s Quick Comms, or General → Keybindings in this addon's settings) call `/qc toggle`'s handler (`SlashVerbs.TogglePads`), which hides
 or shows every Comms Pad and remembers it per character (`db.char.padsHidden`), through a /reload
 and the next login.
 
@@ -53,6 +53,38 @@ The header's Defaults button and Reset all settings both open the confirmation p
 reset is a profile reset. That confirm, like every delete's, is shown in `FULLSCREEN_DIALOG`, over the
 preview dial and an open callout popup (`ModalWindow.LiftConfirm`, QC-06), and its shared Blizzard
 dialog goes back to its own strata when it hides. The global reset never touches the minimap button (options-ui-§12, launcher-§3).
+The Defaults tooltip ends with the library's *Key bindings are not changed.* (`O.KEYBINDS_UNCHANGED`,
+options-ui-§20).
+
+## General → Keybindings
+
+The General page's **last** tab (item 015, options-ui-§20), drawn by the library: `settings/Panel.lua`
+hands `O.KeybindingsTab({ bindings = NS.BINDINGS, intro = ... })` to `RenderTabbedSchema`'s `opts.tabs`
+with no `before`, so it lands after every group tab. `NS.BINDINGS` (`settings/SlashVerbs.lua`) is
+`Bindings.xml` in order, one row each:
+
+| Row | Command | Tooltip |
+|---|---|---|
+| Toggle Comms Pads | `CLICK QuickCommsTogglePads:LeftButton` | Hides or shows every Comms Pad on this character, as /qc toggle does. |
+| Open Comms Dial 1 to 4 | `CLICK QuickCommsDial<n>:Toggle` | Opens or closes the dial at place <n> in the dial list. |
+
+Each row is the client's `BINDING_NAME_` label, two key slots (left-click to listen, Escape or a
+second click cancels, right-click clears that slot) and Clear. The library's fixed intro heads it
+(*Key bindings are saved by the game, not in your profile. Defaults and Reset all settings leave them
+alone.*), then this addon's one line: *A dial's key follows its place in the dial list: Open Comms
+Dial 1 opens the first dial, and a dial past the fourth has no key.* Under the rows the set line says
+which binding set is in force (all characters, or this character only after Character Specific
+Keybindings), then the outcome line.
+
+The tab and WoW's Options → Keybindings → Ka0s Quick Comms read and write the client's one store
+(`SetBinding`, then `SaveBindings(GetCurrentBindingSet())`), so a key set in either shows in the
+other: the tab repaints on `UPDATE_BINDINGS` while it is on screen and re-reads on the page's show.
+Nothing is kept in the profile, so Defaults, Reset all settings, a profile switch and a share string
+never move a key. In combat every write is refused and a capture in progress is canceled.
+
+This brings back an in-panel key editor: the Dial page's Binding tab (2026-10-20) was retired in the
+dial rework (2026-10-21, `b902e35`), and the owner's item 015 (2026-10-24) supersedes that removal,
+through the library's surface (`LibKa0s v1.77.0`) rather than the retired `Dial.BindKey`.
 
 ## Groups
 
@@ -653,9 +685,10 @@ Preview  each ring as the current or previewed situation builds it, wedge by wed
   border color `dotBorderColor` (near black, grayed out at 0): an outline around every dot and the
   pill. Each color is a composed swatch pair with Use class color.
 - **No Binding tab** (the dial rework, 2026-10-21): the key is WoW's own binding of the dial's
-  Bindings.xml entry, Open Comms Dial <n>, n the dial's place in the dial list, set only in Options →
-  Keybindings → Ka0s Quick Comms; it is account-wide unless the player ticks Character Specific
-  Keybindings there, and a dial past the fourth place has no entry.
+  Bindings.xml entry, Open Comms Dial <n>, n the dial's place in the dial list, set in Options →
+  Keybindings → Ka0s Quick Comms or on General → Keybindings (item 015, 2026-10-24); it is
+  account-wide unless the player ticks Character Specific Keybindings there, and a dial past the
+  fourth place has no entry.
 - **Preview:** each ring, wedge by wedge, with its compass word (a clock position past eight
   wedges; the first wedge is W, under Auto and, since the dial polish, a fixed count), marking the ring the dial opens on
   and the wedges that open a ring. It is a listing (owner ruling R3); the drawn dial is the

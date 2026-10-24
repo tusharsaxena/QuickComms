@@ -26,7 +26,7 @@ local _, NS = ...
 -- ring's catcher (a secure button over the disc, wrapped by the header's catcher snippet, that
 -- forwards a click to the wedge under the cursor), its screen catcher (a full-screen secure button
 -- under the dial whose wrapped click closes it), and every attribute, frame ref and snippet run. A dial's key is WoW's own binding of its header's
--- Bindings.xml entry since 2026-10-20, set only in Options -> Keybindings, so no binding is written
+-- Bindings.xml entry since 2026-10-20, set in Options -> Keybindings or on General > Keybindings (the library's tab, which writes it with SetBinding), so no binding is written
 -- here.
 --
 -- Stand-down (spec §9.5, slash-commands-§7): Teardown(fn) runs the secure half now or, in combat,

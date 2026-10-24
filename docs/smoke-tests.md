@@ -26,7 +26,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | EDIT-1..32 | Editors | The Pad and Dial page names; the Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
 | PREVIEW-1..12 | Preview window | The Preview as selector window: every entry point, the dropdown, End preview, close and Escape, combat, test mode and the stand-down, Alt+Z, the saved position, bare /qc preview and list; every preview drawn as live; a preview or test click prints what it would send; a preview dial staying open on a pick |
 | DIAL-1..41 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, the lone-group open and the group ring, page arrows and the page row, Auto wedges, the ring radius, the Slice labels tab, the slices and the slice lit by direction, the Slices tab, the pointer, the tooltip outside the dial, the hub over the slices, the pointer, label and icon offsets, the Paging tab; the dial polish: the border gone, the slice gap, placement from W, a slice clicked to the hub in combat, the hub styles, the Group labels tab, Icon offset on Icons, 128-pixel icons, a click outside closing the dial in combat, the page indicators' background and border, the Hub tab; automatic icon offset and size; the 120 radius and 48-pixel icons by default; a right click back a ring; opening where it was closed; slices from N |
-| KEY-1..3 | Key bindings | A dial's key as WoW's own binding in Options → Keybindings, Character Specific Keybindings, Toggle Comms Pads |
+| KEY-1..6 | Key bindings | A dial's key as WoW's own binding in Options → Keybindings, Character Specific Keybindings, Toggle Comms Pads; item 015: the Ka0s Quick Comms section of its own, the General → Keybindings tab in sync both ways, its capture and combat refusal |
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
 | LOOK-1..6 | Pad header, Section header, Window | The Comms Pad's three window tabs: the section titles' font, the pad's border and background, the header's look, size and alignment, the tab strip and headings, the section header's band and height |
 | BUTTON-1..2 | Buttons tab | The buttons' size, color, border and font; the button glow |
@@ -1212,6 +1212,33 @@ Pads after Open Comms Dial 1 to 4. Bind it to P. Press P once → every pad hide
 window is unticked. Press P → the pads are back. In combat, press P → nothing changes until combat
 ends, then the pads toggle, with no Lua error. `/qc disable`, press P → the disabled line, as
 `/qc toggle` prints. Result: 2026-10-21, pass (the owner's run; client build not recorded).
+Since item 015 (2026-10-24) Toggle Comms Pads is listed **first**, before Open Comms Dial 1 to 4, in
+a section of its own (KEY-4).
+
+**KEY-4 (SM-QC-KB1). A section of its own (item 015, 2026-10-24).** Options → Keybindings: scroll
+past Blizzard's sections → a section titled **Ka0s Quick Comms** holds, in order, Toggle Comms Pads,
+Open Comms Dial 1, 2, 3 and 4, with these labels; the AddOns section no longer lists them, and there
+is no blank spacer row above them. A key bound before the update (for example Open Comms Dial 1 on G)
+is still bound. Result:
+
+**KEY-5 (SM-QC-KB2). General → Keybindings follows Options → Keybindings, both ways.** Settings → Ka0s
+Quick Comms → General: the last tab is Keybindings; it opens on the intro line, the dial line, then
+the five rows in the same order, each with Key 1, Key 2 and Clear, and under them "Saved for: all
+characters". Bind Toggle Comms Pads to P on the tab → Options → Keybindings → Ka0s Quick Comms shows P
+beside it. Bind Open Comms Dial 2 to H there, come back to the tab → H shows in its row without a
+/reload. Tick Character Specific Keybindings → the tab's line reads "Saved for: this character only";
+bind a key on the tab → it shows in the character set there, and the account set (on another
+character) does not have it. The Defaults button's tooltip ends "Key bindings are not changed.";
+Defaults and Reset all settings leave every key bound. Result:
+
+**KEY-6 (SM-QC-KB3). The key works; Escape cancels; combat refuses.** Bind Open Comms Dial 1 on the tab
+→ the key opens dial 1; bind Toggle Comms Pads → the key hides and shows the pads. Click a slot so it
+reads "Press a key...", press Escape → the capture cancels, the slot shows its key again and the
+settings window stays open. Take a key another action holds (for example bind a dial to TAB) → the
+key moves without a question and the line under the rows names the action that lost it. Enter
+combat with the tab open → a capture in progress stops and the line reads "Key bindings can be
+changed after combat."; click a slot or Clear in combat → nothing is bound or cleared, the same line.
+No Lua error. Result:
 
 ## Icons tab
 

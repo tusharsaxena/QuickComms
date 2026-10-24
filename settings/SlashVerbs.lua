@@ -79,20 +79,38 @@ function V.TogglePads()
     NS.Debug("Pads", hidden and "hidden on this character until shown again" or "shown")
 end
 
--- The key bindings menu's Toggle Comms Pads (Bindings.xml, 2026-10-20): a CLICK on this plain,
--- hidden, named button, whose click runs V.TogglePads, the one handler `/qc toggle` and the launcher's
--- Show window call. A Bindings.xml body runs in the global environment, so the binding reaches the
--- handler through a frame the client finds by name rather than through a global function. Registered
--- for the down edge, as the dial headers are, so one press toggles once. Its label is a global the
--- menu reads by the binding's name, which holds a space and a colon: rawset, as modules/Dial.lua's.
+-- The key bindings menu's Toggle Comms Pads (Bindings.xml, 2026-10-20; launcher-§6): a CLICK on this
+-- plain, hidden, named button, whose click runs V.TogglePads, the one handler `/qc toggle` and the
+-- launcher's Show window call. A Bindings.xml body runs in the global environment, so the binding
+-- reaches the handler through a frame the client finds by name rather than through a global function.
+-- Registered for the down edge, as the dial headers are, so one press toggles once. Its label is a
+-- global the menu reads by the binding's name, which holds a space and a colon: rawset, as
+-- modules/Dial.lua's.
+--
+-- THE CATEGORY (item 015, launcher-§6 as of standard v2.88.0): every Bindings.xml line names
+-- category="BINDING_HEADER_QUICKCOMMS", and the client titles that section of Options -> Keybindings
+-- with this global, the brand. Assigned at file scope, here beside the button, because the client
+-- reads it at registration. An identifier, declared in .luacheckrc `globals` with its reason.
 V.TOGGLE_BUTTON = "QuickCommsTogglePads"
 V.TOGGLE_COMMAND = ("CLICK %s:LeftButton"):format(V.TOGGLE_BUTTON)
+BINDING_HEADER_QUICKCOMMS = NS.BRAND
 do
     local button = CreateFrame("Button", V.TOGGLE_BUTTON, UIParent)
     button:RegisterForClicks("AnyDown")
     button:SetScript("OnClick", function() V.TogglePads() end)
     button:Hide()
     rawset(_G, "BINDING_NAME_" .. V.TOGGLE_COMMAND, L["Toggle Comms Pads"])
+end
+
+-- NS.BINDINGS (launcher-§6): the addon's one bindings table, in Bindings.xml order, Show window first:
+-- Toggle Comms Pads, then Open Comms Dial 1 to Dial.BINDINGS (their labels are modules/Dial.lua's).
+-- The General page's Keybindings tab (settings/Panel.lua, O.KeybindingsTab) draws one row per entry,
+-- and tests/test_dial.lua holds Bindings.xml to it (Kit.assertBindingsXml).
+NS.BINDINGS = { { command = V.TOGGLE_COMMAND,
+                  tooltip = L["Hides or shows every Comms Pad on this character, as /qc toggle does."] } }
+for i = 1, NS.Dial.BINDINGS do
+    NS.BINDINGS[#NS.BINDINGS + 1] = { command = NS.Dial.Command(i),
+        tooltip = L["Opens or closes the dial at place %d in the dial list."]:format(i) }
 end
 
 --- Whether the pads are shown, as far as `/qc toggle` is concerned: this character's last choice.

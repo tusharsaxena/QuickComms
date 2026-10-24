@@ -932,9 +932,15 @@ L["This dial has not been built yet."] = "This dial has not been built yet."
 L["Test mode: placeholder wedges that send nothing."] = "Test mode: placeholder wedges that send nothing."
 L["Pad and dial positions reset."] = "Pad and dial positions reset."
 
--- The key bindings menu (modules/Dial.lua, Bindings.xml)
+-- The key bindings menu and the General page's Keybindings tab (settings/SlashVerbs.lua NS.BINDINGS,
+-- modules/Dial.lua, settings/Panel.lua, Bindings.xml)
 L["Open Comms Dial %d"] = "Open Comms Dial %d"
 L["Toggle Comms Pads"] = "Toggle Comms Pads"
+L["Hides or shows every Comms Pad on this character, as /qc toggle does."] =
+    "Hides or shows every Comms Pad on this character, as /qc toggle does."
+L["Opens or closes the dial at place %d in the dial list."] = "Opens or closes the dial at place %d in the dial list."
+L["A dial's key follows its place in the dial list: Open Comms Dial 1 opens the first dial, and a dial past the fourth has no key."] =
+    "A dial's key follows its place in the dial list: Open Comms Dial 1 opens the first dial, and a dial past the fourth has no key."
 L["An imported dial's key is the one WoW binds to its place in the dial list: set it in Options, Keybindings, Ka0s Quick Comms, Open Comms Dial."] =
     "An imported dial's key is the one WoW binds to its place in the dial list: set it in Options, Keybindings, Ka0s Quick Comms, Open Comms Dial."
 L["Build this dial. A disabled dial keeps its groups and settings, and its key opens nothing."] =

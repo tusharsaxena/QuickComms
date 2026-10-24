@@ -206,7 +206,7 @@ test("dial: the first situation read builds the default dial, closed; its key is
     assertNil(next(m.overrideBindings), "no override binding")
     assertNil(NS.db.profile.dials.d2.key, "never a profile field")
     assertEqual(NS.Dial.KeyOf("d2"), "G")
-    assertNil(NS.Dial.BindKey, "set only in Options -> Keybindings (dial rework)")
+    assertNil(NS.Dial.BindKey, "retired in the dial rework; the library's Keybindings tab writes the key (item 015)")
     m.__pressKey("G")
     assertTrue(NS.Dial.IsOpen("d2"))
 end)
@@ -423,35 +423,30 @@ test("dial: the hub's tooltip says why each group shows, unless the player turne
     assertEqual(NS.Surfaces.WhyLines("d2")[1], "Test mode: placeholder wedges that send nothing.")
 end)
 
--- ── Bindings.xml (Task 8) ───────────────────────────────────────────────────────────────────
+-- ── Bindings.xml (Task 8; launcher-§6 since item 015) ───────────────────────────────────────────────────────────────────
 
-local function readFile(rel)
-    local fh = assert(io.open(T.root .. "/" .. rel, "rb"))
-    local s = fh:read("*a")
-    fh:close()
-    return s
-end
-
-test("dial: Bindings.xml offers Open Comms Dial 1 to 4, each clicking that dial's header with Toggle", function()
+test("dial: Bindings.xml is Toggle Comms Pads, then Open Comms Dial 1 to 4, all in the Ka0s Quick Comms category", function()
     -- A plain global write leaves the chunk's environment for the process's _G (tests/_kit/loader.lua
-    -- makeEnv's __newindex), so the header is read there; cleared first so this load is the writer.
+    -- makeEnv's __newindex), so the category global is read there; cleared first so this load is the
+    -- writer. The labels are rawset into the environment, so the check reads the two together.
     rawset(_G, "BINDING_HEADER_QUICKCOMMS", nil)
     local NS, m = T.newAddon()
-    local xml = readFile("Bindings.xml")
-    local names = {}
-    for name in xml:gmatch('<Binding name="([^"]+)"') do names[#names + 1] = name end
-    assertEqual(#names, NS.Dial.BINDINGS + 1, "the four dials and Toggle Comms Pads")
-    for i = 1, NS.Dial.BINDINGS do
-        local name = names[i]
-        assertEqual(name, ("CLICK QuickCommsDial%d:Toggle"):format(i))
-        -- red under: drop the rawset loop from modules/Dial.lua (the menu would show the raw name)
-        assertEqual(m["BINDING_NAME_" .. name], ("Open Comms Dial %d"):format(i))
-    end
-    assertEqual(names[#names], "CLICK QuickCommsTogglePads:LeftButton")
-    -- red under: drop the label's rawset from settings/SlashVerbs.lua
-    assertEqual(m["BINDING_NAME_" .. names[#names]], "Toggle Comms Pads")
-    assertTrue(xml:find('header="QUICKCOMMS"', 1, true) ~= nil)
-    -- red under: drop the BINDING_HEADER_QUICKCOMMS line from modules/Dial.lua
+    local globals = setmetatable({}, { __index = function(_, k)
+        local v = m[k]
+        if v == nil then v = rawget(_G, k) end
+        return v
+    end })
+    local labels = { ["CLICK QuickCommsTogglePads:LeftButton"] = "Toggle Comms Pads" }
+    for i = 1, NS.Dial.BINDINGS do labels[("CLICK QuickCommsDial%d:Toggle"):format(i)] = ("Open Comms Dial %d"):format(i) end
+    -- red under: header="QUICKCOMMS" or category="ADDONS" on any line, the toggle last, or a label's
+    -- rawset dropped (launcher-§6, Kit.assertBindingsXml)
+    local found = T.assertBindingsXml("Bindings.xml", {
+        category = "BINDING_HEADER_QUICKCOMMS", commands = NS.BINDINGS, brand = NS.BRAND,
+        globals = globals, labels = labels,
+    })
+    assertEqual(#found, NS.Dial.BINDINGS + 1, "Toggle Comms Pads and the four dials")
+    assertEqual(found[1].name, "CLICK QuickCommsTogglePads:LeftButton", "the Show window binding first")
+    -- red under: drop the BINDING_HEADER_QUICKCOMMS line from settings/SlashVerbs.lua
     assertEqual(rawget(_G, "BINDING_HEADER_QUICKCOMMS"), "Ka0s Quick Comms")
     for _, rel in ipairs(T.loadAddon.tocFiles) do
         -- a root file, not a TOC line, as the standard allows (layout-§1, toc-file-§4 (standard v2.80.0))

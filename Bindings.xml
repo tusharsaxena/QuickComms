@@ -1,14 +1,17 @@
 <Bindings>
-	<!-- Ka0s Quick Comms: Open Comms Dial 1-4 (design spec §9.4, P7). Each clicks the dial header at that
-	     place in the dial order (modules/Dial_Secure.lua names them QuickCommsDial<n>) with the Toggle
-	     button. Since 2026-10-20 a dial's key IS one of these bindings: the Comms Dial page's Key box
-	     sets it (modules/Dial.lua Dial.BindKey). The labels are set in modules/Dial.lua. -->
-	<Binding name="CLICK QuickCommsDial1:Toggle" header="QUICKCOMMS" category="ADDONS"/>
-	<Binding name="CLICK QuickCommsDial2:Toggle" category="ADDONS"/>
-	<Binding name="CLICK QuickCommsDial3:Toggle" category="ADDONS"/>
-	<Binding name="CLICK QuickCommsDial4:Toggle" category="ADDONS"/>
-	<!-- Toggle Comms Pads: clicks the plain QuickCommsTogglePads button (settings/SlashVerbs.lua), whose
-	     click runs /qc toggle's handler (V.TogglePads). A CLICK on a named frame, so no global function
-	     is needed here. Its label is set in settings/SlashVerbs.lua. -->
-	<Binding name="CLICK QuickCommsTogglePads:LeftButton" category="ADDONS"/>
+	<!-- Ka0s Quick Comms (launcher-§6): every binding sits in the addon's own category, BINDING_HEADER_QUICKCOMMS,
+	     which Options -> Keybindings titles with the brand, and none carries a header attribute (a blank spacer row there).
+	     The names never change: the client keeps a player's key against the name. The labels, the category
+	     global and NS.BINDINGS (the same commands in this order, which the General page's Keybindings tab
+	     draws) are set in settings/SlashVerbs.lua and modules/Dial.lua.
+	     Toggle Comms Pads, first (the Show window binding): clicks the plain QuickCommsTogglePads button
+	     (settings/SlashVerbs.lua), whose click runs /qc toggle's handler (V.TogglePads). -->
+	<Binding name="CLICK QuickCommsTogglePads:LeftButton" category="BINDING_HEADER_QUICKCOMMS"/>
+	<!-- Open Comms Dial 1-4 (design spec §9.4, P7): each clicks the dial header at that place in the dial
+	     order (modules/Dial_Secure.lua names them QuickCommsDial<n>) with the Toggle button. A dial's key IS
+	     one of these bindings, set in Options -> Keybindings or on General > Keybindings. -->
+	<Binding name="CLICK QuickCommsDial1:Toggle" category="BINDING_HEADER_QUICKCOMMS"/>
+	<Binding name="CLICK QuickCommsDial2:Toggle" category="BINDING_HEADER_QUICKCOMMS"/>
+	<Binding name="CLICK QuickCommsDial3:Toggle" category="BINDING_HEADER_QUICKCOMMS"/>
+	<Binding name="CLICK QuickCommsDial4:Toggle" category="BINDING_HEADER_QUICKCOMMS"/>
 </Bindings>

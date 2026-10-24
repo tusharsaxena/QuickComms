@@ -30,8 +30,8 @@ local _, NS = ...
 -- The band holds the picker and the create action (options-ui-§14). Every field is a member row
 -- (settings/SchemaMembers.lua) written to the selected dial; the dial rebuilds through LIBRARY_CHANGED
 -- -> Surfaces.Request, which waits for combat end when it must. The key is no row and has no tab
--- (dial rework, 2026-10-21): it is WoW's own binding of the dial's Open Comms Dial entry, set only in
--- Options -> Keybindings -> Ka0s Quick Comms. Relaxed is the only interaction in v0.1.0 (the C7
+-- (dial rework, 2026-10-21): it is WoW's own binding of the dial's Open Comms Dial entry, set in
+-- Options -> Keybindings -> Ka0s Quick Comms or on General > Keybindings (item 015). Relaxed is the only interaction in v0.1.0 (the C7
 -- fallback), so there is no delay or tap-action control, and depth is no control (owner ruling R5).
 -- The Preview tab is a listing, not a drawn wheel (owner ruling R3): the wheel itself shows in game
 -- (test mode and Preview as… open dial 1). As settings/Pads.lua: New dial takes the lowest free

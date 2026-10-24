@@ -18,8 +18,9 @@ local _, NS = ...
 -- THE KEY (2026-10-20) is WoW's own binding of the place's Bindings.xml entry ("CLICK
 -- QuickCommsDial<place>:Toggle", Open Comms Dial <place> under Ka0s Quick Comms in Options ->
 -- Keybindings), never a profile field: account-wide unless the player ticks Character Specific
--- Keybindings. Only that menu sets it (the Dial page's Binding tab retired in the dial rework,
--- 2026-10-21). It follows the place, so a dial that moves up the list takes the key of its new place, and
+-- Keybindings. That menu sets it, and so does the General page's Keybindings tab (item 015,
+-- 2026-10-24: the library's editor, which superseded the Dial page's Binding tab retired in the dial
+-- rework, 2026-10-21); both write the client's one store. It follows the place, so a dial that moves up the list takes the key of its new place, and
 -- a place with no dial, a disabled dial or a stood-down addon leaves the key bound and opening
 -- nothing. Only the first BINDINGS places have an entry, so a dial past them has no key. The guard's dim and the result flash (spec §9.2, §9.3) are insecure and
 -- reach every wedge as they reach every button: Pad.Cooldown calls Dial.Cooldown, and SEND_RESULT
@@ -42,14 +43,14 @@ local TAG = "Dial"
 local FLASH_SECONDS = 0.4
 Dial.DROP_SECONDS = 5          -- a drop stays red long enough to reopen the dial and see it
 
--- Bindings.xml's "Open Comms Dial 1-4" (spec §9.4). The key bindings menu reads its header and its
--- entries' labels from these globals by name; the client requires them, so they are the one place
--- this addon writes a global that is not a frame. The header is an identifier, declared in
--- .luacheckrc `globals` with its reason. An entry's label is named after its binding, which holds a
--- space and a colon ("BINDING_NAME_CLICK QuickCommsDial1:Toggle"): no identifier can spell it, so it
--- cannot be declared there, and rawset writes it.
+-- Bindings.xml's "Open Comms Dial 1-4" (spec §9.4). The key bindings menu reads its entries' labels
+-- from these globals by name; the client requires them, so they (with the category global and Toggle
+-- Comms Pads' label, settings/SlashVerbs.lua) are the one place this addon writes a global that is not
+-- a frame. An entry's label is named after its binding, which holds a space and a colon
+-- ("BINDING_NAME_CLICK QuickCommsDial1:Toggle"): no identifier can spell it, so it cannot be declared
+-- in .luacheckrc, and rawset writes it. NS.BINDINGS (settings/SlashVerbs.lua) lists these after
+-- Toggle Comms Pads, in this order.
 Dial.BINDINGS = 4
-BINDING_HEADER_QUICKCOMMS = NS.BRAND
 for i = 1, Dial.BINDINGS do
     rawset(_G, ("BINDING_NAME_CLICK %s:%s"):format(DS.HEADER:format(i), DS.TOGGLE), L["Open Comms Dial %d"]:format(i))
 end

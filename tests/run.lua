@@ -20,9 +20,17 @@ local loadAddon = dofile("tests/loader.lua")(root, mock)
 -- THE THREE FACTORIES. Each returns (NS, env, mock) -- env and mock are the same table -- and each
 -- takes the same `opts` table (tests/loader.lua: skip, mock, and the mock fields). Fresh per call.
 
+-- The mock of the newest instance, behind one table handed to Kit.expose as `mock`: the kit's
+-- Kit.keybindThroughTab reads the harness's mock for LibStub (kit revision 42), and every case here
+-- builds a fresh one, so the view forwards to whichever instance the case made last.
+local currentMock
+local mockView = setmetatable({}, { __index = function(_, k) return currentMock and currentMock[k] end })
+
 -- Every file loaded; nothing run.
 local function newAddon(opts)
-    return loadAddon(opts)
+    local NS, env, m = loadAddon(opts)
+    currentMock = m
+    return NS, env, m
 end
 
 -- The kit's AceDB fake (tests/_kit/mock_record.lua, vendored) models `profile` and `global` but not
@@ -91,6 +99,7 @@ _G.QUICKCOMMS_TEST = Kit.expose{
     loadAddon   = loadAddon,
     root        = root,
     LibStub     = surfaceMock.LibStub,
+    mock        = mockView,
     KIT_VERSION = Kit.VERSION,
     -- The kit's secret-value simulator (tests/_kit/secrets.lua), which Kit.expose leaves out.
     secret      = Kit.secret,
@@ -178,6 +187,7 @@ Kit.run{
         "test_pad_render",
         "test_pad",
         "test_dial",
+        "test_keybinds",
         "test_dial_shine",
         "test_icon_style",
         "test_glow",

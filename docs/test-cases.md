@@ -1193,7 +1193,7 @@ Total.
 - dial: [keys] a profile switch keeps the key: it is WoW's binding, never the profile's
 - dial: Reset position puts every pad and dial back, through their point rows, on one line
 - dial: the hub's tooltip says why each group shows, unless the player turned it off
-- dial: Bindings.xml offers Open Comms Dial 1 to 4, each clicking that dial's header with Toggle
+- dial: Bindings.xml is Toggle Comms Pads, then Open Comms Dial 1 to 4, all in the Ka0s Quick Comms category
 - dial: [keys] Toggle Comms Pads runs exactly /qc toggle's handler, from a key bound in WoW's menu
 - dial: the key bindings menu's click opens the dial, even while it is hidden
 - dial: [final 2] two dials: opening the second closes the first, and the number keys go with it
@@ -1236,6 +1236,15 @@ Total.
 - dial: [art] RingTexture picks the nearest step
 - dial: [art] the hub draws textures, not segments
 - dial: [art] the pill is three pieces with round ends
+
+### test_keybinds.lua (6)
+
+- keybinds: NS.BINDINGS is Toggle Comms Pads, then Open Comms Dial 1 to 4, each with a tooltip
+- keybinds: the General page's strip ends in Keybindings, after every group tab
+- keybinds: the tab's rows are NS.BINDINGS in order, each labeled with its BINDING_NAME_ global
+- keybinds: a key bound through the tab is WoW's binding, saved to the set in force, and the key toggles the pads
+- keybinds: a key set in Options -> Keybindings shows on the tab after UPDATE_BINDINGS
+- keybinds: in combat the tab refuses: no capture starts, no key is bound and nothing is saved
 
 ### test_dial_shine.lua (8)
 
@@ -1404,6 +1413,7 @@ Total.
 | test_pad_render.lua | 24 |
 | test_pad.lua | 45 |
 | test_dial.lua | 65 |
+| test_keybinds.lua | 6 |
 | test_dial_shine.lua | 8 |
 | test_icon_style.lua | 10 |
 | test_glow.lua | 11 |
@@ -1415,4 +1425,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1173** |
+| **Total** | **1179** |
