@@ -486,7 +486,7 @@ test("sendengine: [keys] no override binding is written: a dial's key is WoW's o
     -- red under: a SendEngine.BindKeys left behind (two key systems, one of them invisible in Options)
     assertNil(NS.SendEngine.BindKeys)
     assertNil(NS.SendEngine.ClearKeys)
-    assertNil(NS.Dial.BindKey, "set only in Options -> Keybindings")
+    assertNil(NS.Dial.BindKey, "set by WoW's menu or the library's Keybindings tab, never by Dial")
     m.SetBinding("G", "CLICK QuickCommsDial1:Toggle")
     NS.Surfaces.Request("test")
     assertNil(next(m.overrideBindings))

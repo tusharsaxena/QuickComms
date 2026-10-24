@@ -11,8 +11,10 @@ local _, NS = ...
 -- specializations by specID, characters by Name-Realm; a name is shown, never matched. The list
 -- data is shipped (defaults/GameIds_Instances.lua, defaults/GameIds.lua and the battleground sets);
 -- "Add the instance you are in" covers an id the tables do not list yet. A live line says whether
--- the group is active now, or in the previewed situation, and which row stops it. A group inside another that inherits its When
--- conditions (group.inheritWhen) shows its parent's When here, read-only, under a line that says so.
+-- the group is active now, or in the previewed situation, and which row stops it. Under it, Inherit when
+-- conditions (group.inheritWhen; Settings.Groups.InheritItem, on the General tab until item 020,
+-- QUI-L03), grayed out for a group with no parent: a group inside another that inherits its When
+-- conditions shows its parent's When here, read-only, under a line that says so.
 --
 -- Every change writes the group's WHOLE When through the seam (`group.when`, a structured member
 -- row, settings/SchemaMembers.lua), read fresh from the profile at the click, so two clicks before a
@@ -675,10 +677,11 @@ function W.Render(ctx, gid)
     -- Refreshed in place (Ed.Live): a write to this group or a situation change re-reads it.
     local active = h.TextRow(ctx, W.ActiveText(gid))
     Ed.Live(ctx, function() if active then active:SetText(W.ActiveText(gid)) end end)
+    h.RenderGrid(ctx, { Settings.Groups.InheritItem(gid) })
     local from, inherited = W.Source(gid)
     if inherited then
         local parent = NS.Library.Group(from)
-        h.TextRow(ctx, L["|cffc9a66bUses %s's conditions. Untick Inherit when conditions on the General tab to set this group's own.|r"]
+        h.TextRow(ctx, L["|cffc9a66bUses %s's conditions. Untick Inherit when conditions above to set this group's own.|r"]
             :format(parent.name or from))
     end
     h.TextRow(ctx, L["|cffa0a0a0Every condition you set must match. A condition left as Any does not limit the group.|r"])

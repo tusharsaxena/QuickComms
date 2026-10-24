@@ -14,7 +14,7 @@ NS.PadLayout = NS.PadLayout or {}
 local PL = NS.PadLayout
 
 -- The header row (situation chip, lockdown chip, stale hint, collapse): its default height and range,
--- the Pad header tab's Header height (defaults/PadStyle.lua; 18 before 2026-10-20).
+-- the Header tab's Header height (defaults/PadStyle.lua; 18 before 2026-10-20).
 PL.HEADER_H  = NS.PadDefaults.HEADER_H.default
 PL.HEADER_MIN, PL.HEADER_MAX = NS.PadDefaults.HEADER_H.min, NS.PadDefaults.HEADER_H.max
 PL.PAD       = 4     -- inner padding
@@ -97,7 +97,7 @@ function PL.CellSize(cell, fontSize, iconSize)
     return w, math.max(PL.BUTTON_H, sizeOf(fontSize) + PL.BUTTON_ROOM, icon + PL.ICON_ROOM)
 end
 
---- A section title row's height: the Section header tab's height when it is above 0, else automatic,
+--- A section title row's height: the Section titles tab's height when it is above 0, else automatic,
 --- grown with the section titles' font size (never below SECTION_H).
 function PL.TitleHeight(fontSize, fixed)
     fixed = math.floor(tonumber(fixed) or 0)
@@ -105,7 +105,7 @@ function PL.TitleHeight(fontSize, fixed)
     return math.max(PL.SECTION_H, sizeOf(fontSize) + PL.TITLE_ROOM)
 end
 
---- The header row's height: the Pad header tab's Header height, clamped, or the default.
+--- The header row's height: the Header tab's Header height, clamped, or the default.
 function PL.HeaderHeight(h)
     h = tonumber(h)
     if not h then return PL.HEADER_H end
@@ -270,7 +270,7 @@ end
 --- @param layout table the pad's layout table
 --- @param opts table|nil { collapsed = boolean, button = table (the Buttons tab's { width, height }; default:
 ---   the layout table's own), fontSize = number (the buttons' label size; a button grows to hold it), titleSize = number (the section titles' size; a title row grows to hold it; default
----   fontSize), titleH = number (the Section header tab's height: above 0 fixes the title rows'
+---   fontSize), titleH = number (the Section titles tab's height: above 0 fixes the title rows'
 ---   height, 0 or none keeps it automatic), iconSize = number (the Icons tab's; a button grows to hold it), headerH = number (the
 ---   header row's height, PL.HeaderHeight),
 ---   situation = string (the header's text: a section title equal to it is not drawn),

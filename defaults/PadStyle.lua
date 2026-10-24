@@ -1,6 +1,6 @@
 local _, NS = ...
 -- defaults/PadStyle.lua — the Comms Pad's header, section header and button styling defaults
--- (2026-10-20): the Pad header tab (`pad.header.*`), the Section header tab (`pad.section.*`) and the
+-- (2026-10-20): the Header tab (`pad.header.*`), the Section titles tab (`pad.section.*`) and the
 -- Buttons tab (`pad.button.*`). Every field is a flat leaf of the surface's top-level `header`, `section`
 -- or `button` table, so Library's fillShape backfills a pad saved before the field existed (it fills
 -- one level deep). modules/Library.lua copies these into SURFACE_DEFAULTS and TEMPLATES;
@@ -88,7 +88,7 @@ function D.DialLabel()
     }
 end
 
---- The Dial page's Group labels tab (`dial.title.*`, dial polish 2026-10-21): the ring's title above
+--- The Dial page's Labels tab's Group labels heading (`dial.title.*`, dial polish 2026-10-21): the ring's title above
 --- the dial ("Solo", "Comms Dial"), gold Friz Quadrata 12 points with its shadow, as the
 --- GameFontNormal title it was drawn in; `show` off draws none.
 function D.DialTitle()

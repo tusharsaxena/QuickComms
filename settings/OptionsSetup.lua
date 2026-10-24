@@ -85,6 +85,16 @@ if not lib then
     H.__pages              = function() return {} end
     H.__panels             = function() return {} end
     H.__panelFor           = function() return nil end
+    -- LibKa0s v1.77.0: the Keybindings tab (OptionsKeybinds minor 2) and the strata tooltip
+    -- (OptionsCompose minor 8). No panel renders, so KeybindingsTab gives no tab entry, KeybindRows
+    -- answers nil (the live one's degraded answer) and the two strings are empty.
+    H.KeybindingsTab       = function() return nil end
+    H.KeybindRows          = function() return nil end
+    H.KEYBINDS_UNCHANGED   = ""
+    H.StrataTooltip        = function() return "" end
+    -- LibKa0s v1.77.0 (re-closed, OptionsCompose minor 11): the Reset-all tooltip builder. No
+    -- panel renders, so its text is empty.
+    H.ResetAllTooltip      = function() return "" end
     H.CreateOptionsPanel   = function() sayAtLoad() end
     H.OpenOptionsPanel     = function() sayOnConfig() end
     return

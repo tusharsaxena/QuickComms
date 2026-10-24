@@ -2,30 +2,34 @@ local _, NS = ...
 -- settings/Pads.lua — the Pad page (design spec §10.2-§10.4, §13.1): one pad at a time.
 --
 --     band     [ Pad v (picker) ][ New pad ]
---     strip    [ General ][ Groups ][ Layout ][ Pad header ][ Section header ][ Window ][ Buttons ]
---              [ Icons ]
---     General  Name, Enabled, Visibility (with Fade and Faded alpha, `pad.look.*`, under its own
---              heading; on the Window tab until 2026-10-20), then Unlock (or Lock) pads and Delete pad
---     Groups   Show groups as, then the pad's groups as a drag-to-reorder list with Remove (its
---              priority order, spec §7), then Add a group
---     Layout   orientation, grid columns, growth, button style, scale, spacing, then Position: X and Y
---              and Reset this pad's position
---     Pad header      the top row that names the situation (`pad.header.*`): Size (Header height),
+--     strip    [ General ][ Groups ][ Layout ][ Window ][ Header ][ Section titles ][ Buttons ]
+--              [ Icons ]   (outside in since item 020, QUI-L09; Header and Section titles were Pad
+--              header and Section header until then, QUI-L10)
+--     General  Name, Enable this pad, Visibility (with Fade and Faded opacity, `pad.look.*`, under its
+--              own heading; on the Window tab until 2026-10-20), then Unlock (or Lock) all pads and
+--              Delete pad
+--     Groups   Show groups as, then Add group, then the pad's groups as a drag-to-reorder list with
+--              Remove (its priority order, spec §7); the add control above the list since item 020
+--              (QUI-L07), as the Callouts tab's
+--     Layout   orientation, grid columns, growth, button style, pad scale, button spacing, then
+--              Position: X and Y and Reset this pad's position
+--     Window          the pad itself (`pad.look.*`, the Look tab's stored key): Background and Border.
+--                     Header, Section titles and this were one Window tab until 2026-10-20, then
+--                     this was Main window, with Visibility, until that moved to General (owner
+--                     requests)
+--     Header          the top row that names the situation (`pad.header.*`): Size (Header height),
 --                     Font (face, size, color with Use class color, flags, shadow), Background (its
 --                     color with Use class color) and Border (style, thickness, color with Use class
 --                     color), the blocks composed by the options library (options-ui-§16, §17), each
 --                     under its own heading, which the library draws from the rows' subgroup (once)
---     Section header  each section title's row (`pad.section.*`): Size (its height, 0 automatic), Font
+--     Section titles  each section title's row (`pad.section.*`): Size (its height, 0 automatic), Font
 --                     (the titles'), and the Background and Border of the band behind each title
---     Window          the pad itself (`pad.look.*`, the Look tab's stored key): Background and Border.
---                     Pad header, Section header and this were one Window tab until 2026-10-20, then
---                     this was Main window, with Visibility, until that moved to General (owner
---                     requests)
 --     Buttons  the buttons themselves (`pad.button.*`; the Chip tab, `pad.chip.*`, until 2026-10-20): Size (Button width,
---              from Layout until 2026-10-20, and Button height, 0 automatic), Color (the button's
---              background), Border, Font (the buttons' labels) and Glow (off by default: its style and color), each under its own heading
+--              from Layout until 2026-10-20, and Button height, 0 automatic), Font (the buttons'
+--              labels), Background, Border, Button glow (off by default: its style and color) and
+--              Shine, each under its own heading, in the styled tabs' order (item 020, QUI-L12)
 --     Icons    the buttons' icons (B9, settings/SchemaIcons.lua): Size and crop, Color (with Tint), the
---              composed Border block, Glow (its trigger, style and color), Offset, then only the
+--              composed Border block, Icon glow (its trigger, style, color and offsets), then only the
 --              selected style's knobs (none while the glow is off), each under its own heading drawn
 --              by the library
 --
@@ -46,9 +50,9 @@ local PAGE = "pads"
 local GENERAL = L["General"]
 local GROUPS = L["Groups"]
 local LAYOUT = L["Layout"]
-local PAD_HEADER = L["Pad header"]
-local SECTION_HEADER = L["Section header"]
 local WINDOW = L["Window"]
+local PAD_HEADER = L["Header"]
+local SECTION_HEADER = L["Section titles"]
 local BUTTON = L["Buttons"]
 local ICONS = L["Icons"]
 
@@ -154,10 +158,11 @@ local function renderGeneral(ctx, rows)
         return
     end
     h.RenderRows(ctx, Ed.Scalar(rows), nil, nil, { noHeadings = true })
+    -- The master lock (item 020, QUI-L15: "all", since it moves every pad).
     local locked = NS.Setting("locked") ~= false
     h.InlineButtonPair(ctx,
-        { text = locked and L["Unlock pads"] or L["Lock pads"],
-          tooltip = L["Unlocked, every pad shows a strip to drag it by. The same switch as /qc lock and /qc unlock."],
+        { text = locked and L["Unlock all pads"] or L["Lock all pads"],
+          tooltip = L["Unlocked, every pad shows a strip to drag it by. The same switch as Lock frame on the General page > Master controls, and as /qc lock and /qc unlock."],
           onClick = function()
               NS.SlashVerbs.ToggleLock()
               Ed.RequestRefresh()
@@ -174,9 +179,13 @@ local function renderGroups(ctx, rows)
         return
     end
     h.RenderRows(ctx, Ed.Scalar(rows), nil, nil, { noHeadings = true })
+    -- Above the list, as the Callouts tab's Add callout (item 020, QUI-L07): a long list never pushes
+    -- it out of view.
+    h.RenderGrid(ctx, { Ed.ActionDropdown(L["Add group"], L["Add a group to the end of this pad's list."],
+        PD.AddableGroups(id), function(gid) NS.Library.AddGroupToSurface("pad", id, gid) end) })
     local list = NS.db.profile.pads[id].groups
     if #list == 0 then
-        h.TextRow(ctx, L["This pad lists no group. Add one below."])
+        h.TextRow(ctx, L["This pad lists no group. Add one above."])
     else
         h.TextRow(ctx, L["Higher groups come first on the pad. Drag to reorder."])
         local active = NS.Resolver.ActiveGroups(NS.Library.AllGroups(), Ed.Snapshot())
@@ -188,8 +197,6 @@ local function renderGroups(ctx, rows)
         end
         Ed.ReorderRows(ctx, PAGE, entries, function(from, to) PD.MoveGroup(id, from, to) end)
     end
-    h.RenderGrid(ctx, { Ed.ActionDropdown(L["Add a group"], L["Add a group to the end of this pad's list."],
-        PD.AddableGroups(id), function(gid) NS.Library.AddGroupToSurface("pad", id, gid) end) })
 end
 
 -- One offset box. Its refresher (a scalar refresh, never a situation change) puts it back to the
@@ -228,7 +235,7 @@ local function renderLayout(ctx, rows)
         tooltip = L["Put this pad back in its default place."], onClick = function() PD.ResetPoint(id) end }, nil)
 end
 
--- A styled tab (Pad header, Section header, Window, Buttons) in one call: its rows in schema
+-- A styled tab (Window, Header, Section titles, Buttons) in one call: its rows in schema
 -- order, whose headings the library draws from each row's subgroup (options-ui-§7, §16: a subsection
 -- is never drawn by the host, so each heading shows once).
 local function renderStyled(ctx, rows)
@@ -270,16 +277,16 @@ local function render(ctx)
         { key = GENERAL, render = renderGeneral },
         { key = GROUPS, render = renderGroups },
         { key = LAYOUT, render = renderLayout },
+        { key = WINDOW, render = renderStyled },
         { key = PAD_HEADER, render = renderStyled },
         { key = SECTION_HEADER, render = renderStyled },
-        { key = WINDOW, render = renderStyled },
         { key = BUTTON, render = renderStyled },
         { key = ICONS, render = renderIcons },
     })
 end
 
 Ed.RegisterPage(PAGE, L["Pad"], "PadsPanel", render, {
-    tooltip = L["Put the selected pad's groups-as, layout, headers, window, buttons and icons back to their defaults, and turn it on. Its name, groups and position are kept."],
+    tooltip = L["Put the selected pad's visibility, groups-as, layout, header, section titles, window, buttons and icons back to their defaults, and turn it on. Its name, groups and position are kept."],
     -- One act (Library.Batch): the pads rebuild once, not once per row.
     onClick = function(ctx) NS.Library.Batch(function() H().RestoreDefaults(PAGE, ctx) end) end,
 })

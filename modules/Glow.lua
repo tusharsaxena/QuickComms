@@ -14,7 +14,8 @@ local _, NS = ...
 -- as long as a drop stays red), and the dial's next open within it runs the window again (Shown).
 --
 -- ON THE ICON. The effect is started on the icon's plain child frame (modules/IconStyle.lua
--- IconFrame), FRAME_LEVEL over it, so it circles the icon and sits over the icon's border. The
+-- IconFrame), ICON_GLOW over it (core/Constants.lua LAYERS), so it circles the icon and sits over the
+-- icon's border and under the button's overlay frame (its label, padlock and veils). The
 -- effect's frames are plain children too: the client lets them be made, shown, anchored and animated
 -- in combat, and nothing here makes a protected call (Review Focus 3), so a hover or a send glow
 -- starts and stops in combat as well. Settings changes reach the screen through the rebuild, which
@@ -29,7 +30,8 @@ local _, NS = ...
 --
 -- THE BUTTON GLOW (the Buttons tab, 2026-10-20) is a second effect on a Comms Pad button, around the whole
 -- button: started on the button's edge frame (modules/Pad_Render.lua `qcEdge`, a plain child laid over
--- the button) under its own key, so it never meets the icon's. It has no trigger: on while the button is
+-- the button) under its own key, so it never meets the icon's; BTN_GLOW over the edge frame, so it sits
+-- between the button's border and the icon frame (the LAYERS ladder). It has no trigger: on while the button is
 -- drawn with it enabled (Glow.Button, at every paint), in its style and color at the Icons tab's knob
 -- defaults; the same signature rule keeps it across an unchanged rebuild, and Release stops it too.
 --
@@ -47,7 +49,9 @@ local Perf = NS.Perf
 -- never touched (the button style has no key: one per frame).
 Glow.KEY = "QuickCommsIcon"
 Glow.BUTTON_KEY = "QuickCommsButton"
-Glow.FRAME_LEVEL = 2
+-- LibCustomGlow's frameLevel: each effect at its host's level plus these (core/Constants.lua LAYERS).
+Glow.ICON_LEVEL = NS.Constants.LAYERS.LEVEL.ICON_GLOW
+Glow.BUTTON_LEVEL = NS.Constants.LAYERS.LEVEL.BTN_GLOW
 Glow.SEND_SECONDS = 1.5
 
 -- The proc style's frame replays its opening burst from its own OnShow, and a rebuild re-shows the
@@ -74,7 +78,7 @@ local function start(btn, g)
     end
     Glow.Stop(btn)
     local t0 = Perf.on and debugprofilestop()
-    NS.GlowLib.Start(btn.qcIconFrame, g.type, g, Glow.KEY, Glow.FRAME_LEVEL)
+    NS.GlowLib.Start(btn.qcIconFrame, g.type, g, Glow.KEY, Glow.ICON_LEVEL)
     btn.qcGlowStyle, btn.qcGlowSig = g.type, g.sig
     spendBurst(btn)
     if t0 then Perf.Note("glowStart", debugprofilestop() - t0) end
@@ -167,7 +171,7 @@ function Glow.Button(btn, g)
     if not g then return stopButton(btn) end
     if btn.qcButtonGlowStyle and btn.qcButtonGlowSig == g.sig then return end
     stopButton(btn)
-    NS.GlowLib.Start(btn.qcEdge, g.type, g, Glow.BUTTON_KEY, Glow.FRAME_LEVEL)
+    NS.GlowLib.Start(btn.qcEdge, g.type, g, Glow.BUTTON_KEY, Glow.BUTTON_LEVEL)
     btn.qcButtonGlowStyle, btn.qcButtonGlowSig = g.type, g.sig
 end
 

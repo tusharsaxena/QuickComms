@@ -238,3 +238,54 @@ test("schema: [phase 3] a fresh profile has no row off its default; the member r
     -- red under: drop `and not row.instance` from Settings.CountedByProfileReset (the member rows count)
     assertEqual(NS.SchemaRuntime.CountOffDefault(Settings.CountedByProfileReset), 0)
 end)
+
+-- ── item 020's guard (QC-LY): the layout moves rows, never settings ─────────────────────────────
+
+local function pinValue(v)
+    local t = type(v)
+    if t == "table" then
+        local keys = {}
+        for k in pairs(v) do keys[#keys + 1] = k end
+        table.sort(keys, function(a, b) return tostring(a) < tostring(b) end)
+        local parts = {}
+        for _, k in ipairs(keys) do parts[#parts + 1] = tostring(k) .. "=" .. pinValue(v[k]) end
+        return "{" .. table.concat(parts, ",") .. "}"
+    elseif t == "number" then return ("%.6g"):format(v)
+    elseif t == "string" then return ("%q"):format(v)
+    end
+    return tostring(v)
+end
+
+local function pinLine(row)
+    local d = row.default
+    if type(d) == "function" then d = "<fn>" end
+    local vals = "nil"
+    if type(row.values) == "table" then
+        local vs = {}
+        for i, e in ipairs(row.values) do vs[i] = pinValue(type(e) == "table" and e.value or e) end
+        vals = "[" .. table.concat(vs, ",") .. "]"
+    elseif type(row.values) == "function" then
+        vals = "<fn>"
+    end
+    return table.concat({ tostring(row.type), pinValue(d), pinValue(row.min), pinValue(row.max), pinValue(row.step),
+        vals, tostring(row.sessionOnly == true) }, "|")
+end
+
+test("schema: [layout guard] every stored path, default, range and choice set is as item 020 found it", function()
+    local NS = T.newAddon()
+    local pins = dofile("tests/schema_pins.lua")
+    local seen, count = {}, 0
+    for _, row in ipairs(NS.addon.Settings.Schema) do
+        -- red under: change any row's default, min, max, step or choices, or rename its path
+        assertTrue(pins[row.path] ~= nil, "a row item 020 did not find: " .. row.path)
+        assertEqual(pinLine(row), pins[row.path], row.path)
+        assertFalse(seen[row.path] == true, "one row per path: " .. row.path)
+        seen[row.path], count = true, count + 1
+    end
+    local want = 0
+    for path in pairs(pins) do
+        want = want + 1
+        assertTrue(seen[path] == true, "a row item 020 lost: " .. path)
+    end
+    assertEqual(count, want, "the set of settings is unchanged")
+end)

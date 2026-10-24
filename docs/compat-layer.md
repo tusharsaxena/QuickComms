@@ -51,7 +51,7 @@ with a library-absent body and not counted; their contract is LibKa0s
 | `InstanceName(id)` | `GetRealZoneText` | plain or `nil`; an empty name is `nil` | `nil` | `Preview`, `GroupsWhen` |
 | `SpecInfoByID(id)` | `GetSpecializationInfoByID` | name and icon plain or `nil` | `nil` | `GroupsWhen` |
 | `ClassName(classFile)` | `LOCALIZED_CLASS_NAMES_MALE` | an unsafe key or a secret name is `nil` | `nil` | `GroupsWhen` |
-| `BindingKey(command)` | `GetBindingKey` | an unsafe command, or a secret or empty key, is `nil` | `nil` | `modules/Dial.lua` (`KeyOf`: a dial's key, set only in Options → Keybindings), `modules/Diagnostics.lua` |
+| `BindingKey(command)` | `GetBindingKey` | an unsafe command, or a secret or empty key, is `nil` | `nil` | `modules/Dial.lua` (`KeyOf`: a dial's key, set in Options → Keybindings or on General → Keybindings), `modules/Diagnostics.lua` |
 | `ScreenSize()` | `UIParent:GetWidth`, `GetHeight` | either one secret, unknown or not positive is `nil` | `nil` | `Library` (an offset off the screen is refused) |
 | `ChatColor(chatType)` | `ChatTypeInfo` | an unsafe key, or a secret or missing color component, is `nil` | `nil` | `Pad_Render` (a button's channel in its tooltip; a callout row's channel) |
 | `HasTemplate(name)` | `C_XMLUtil.GetTemplateInfo` | `type()` only: a table answer is `true`, anything else (or a raise) `false` | `nil` (unknown: the caller tries `CreateFrame` under `pcall`) | `settings/ModalWindow.lua` (whether to build the callout popup's and the icon browser's window from `SettingsFrameTemplate`) |

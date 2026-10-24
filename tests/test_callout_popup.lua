@@ -412,12 +412,12 @@ test("popup: the info glyph's tooltip lists the tokens, {group1} to {group8} onl
     assertEqual(NS.db.profile.callouts[cid].channel, "party", "hovering writes nothing")
 end)
 
-test("popup: the preview is headed Preview, a gap above Save then Cancel", function()
+test("popup: the preview is headed What it sends, a gap above Save then Cancel", function()
     local NS, _, P, Pop = open()
     local gid, cid = withKick(NS)
     local w = P.during(function() Pop.Open(gid, cid) end)
     -- red under: keep the What it sends here heading
-    assertTrue(P.find(w, "Heading", "Preview") ~= nil)
+    assertTrue(P.find(w, "Heading", "What it sends") ~= nil)
     assertNil(P.find(w, "Heading", "What it sends here"))
     local order = {}
     for i, b in ipairs(P.all(w, "Button")) do order[b.text] = i end
@@ -533,7 +533,7 @@ test("popup: a section's gap sits above Preview: the fields count as a drawn gro
     local gid = NS.Library.CreateGroup({ name = "Mine" })
     local w = P.during(function() Pop.Open(gid) end)
     local body = P.find(w, "SimpleGroup")
-    local heading = P.find(w, "Heading", "Preview")
+    local heading = P.find(w, "Heading", "What it sends")
     local at
     for i, kid in ipairs(body.children) do if kid == heading then at = i end end
     assertTrue(at ~= nil and at > 2)
@@ -914,7 +914,7 @@ test("popup: every field's label and control share a left edge; Preview's rule a
     assertEqual(point, "TOPLEFT")
     assertEqual(x, -17, "the dropdown's art moved 2 left, onto the boxes' edge")
     assertEqual(y, -14)
-    local heading = P.find(w, "Heading", "Preview")
+    local heading = P.find(w, "Heading", "What it sends")
     assertEqual(select(4, heading.left:GetPoint(1)), 2, "the rule starts at the boxes' edge")
     assertEqual(select(4, heading.right:GetPoint(1)), -2, "and ends at it")
     -- red under: drop alignButtons (InlineButtonPair's two buttons, no gutter)

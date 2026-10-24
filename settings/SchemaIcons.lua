@@ -5,12 +5,14 @@ local _, NS = ...
 -- by the Icons tab of each editor (settings/Pads.lua, settings/Dials.lua), each block under its own
 -- heading, which the options library draws from the rows' subgroup:
 --
---     Size and crop   Icon size, Zoom
+--     Size and crop   Icon size, Zoom (a dial's: Size, offset and crop, with Icon offset beside Icon
+--                     size, item 020 QUI-L27)
 --     Color           Desaturate, Icon opacity, then Tint and its Use class color companion
 --     Border          the composed block (O.BorderGroup with its Show border toggle, options-ui-§16)
---     Glow            Glow, Glow when, Glow style, then Glow color and its Use class color companion
---     Offset          Glow X offset, Glow Y offset (always drawn, right after Glow; owner request
---                     2026-10-20, it closed the tab until then)
+--     Icon glow       Glow, Glow when, Glow style, then Glow color and its Use class color companion,
+--                     then Glow X offset, Glow Y offset (always drawn, right after Glow color; owner
+--                     request 2026-10-20, they closed the tab until then). Headed Glow, with the
+--                     offsets under their own Offset heading, until item 020 (QUI-L13, L14)
 --     the selected style's knobs, under that style's heading (DropWatcher's knob table): Pixel border,
 --                     Auto cast sparkles, Button (rotating rays) or Proc (flipbook)
 --
@@ -26,9 +28,9 @@ local _, NS = ...
 -- the right heading appears. The options library has no hidden-row field to say this in the row.
 --
 -- settings/SchemaMembers.lua calls Settings.IconRows with its checks and splices the rows into its
--- own list (a pad's after its Look rows; a dial's after its Group labels rows and its Icon offset
--- row, so the Icons tab follows Group labels and opens with Icon offset under Size and crop, dial
--- polish 2026-10-21), where its loop gives each row the member rows' reaction, Library.Touch: the surfaces
+-- own list (a pad's after its Look rows; a dial's after its Labels rows, so the Icons tab follows
+-- Labels, with the Icon offset row it hands in spliced after Icon size), where its loop gives each
+-- row the member rows' reaction, Library.Touch: the surfaces
 -- rebuild through LIBRARY_CHANGED, at combat end when they must. On a degraded load the composers are
 -- hollow and the composed rows are absent; modules/IconStyle.lua then reads the stored values or the
 -- defaults.
@@ -37,10 +39,9 @@ local L = NS.L
 local D = NS.IconDefaults
 
 local ICONS = L["Icons"]
-local SIZE_CROP = L["Size and crop"]
 local COLOR = L["Color"]
 local BORDER = L["Border"]
-local GLOW = L["Glow"]
+local GLOW = L["Icon glow"]
 
 local WHEN = { { "always", L["Always"] }, { "hover", L["On hover"] }, { "send", L["After sending"] } }
 local STYLES = { { "pixel", L["Pixel border"] }, { "autocast", L["Auto cast sparkles"] },
@@ -68,17 +69,18 @@ local KNOB_TEXT = {
         L["How many seconds one loop of the flipbook takes. Proc (flipbook) only."] },
     procStartAnim = { L["Proc (flipbook)"], L["Start animation"],
         L["Play the burst that opens the proc glow when it starts. Proc (flipbook) only."] },
-    xOffset = { L["Offset"], L["Glow X offset"],
+    xOffset = { GLOW, L["Glow X offset"],
         L["How far the glow reaches past the icon's sides, in pixels. Pixel border, Proc and Auto cast styles."] },
-    yOffset = { L["Offset"], L["Glow Y offset"],
+    yOffset = { GLOW, L["Glow Y offset"],
         L["How far the glow reaches past the icon's top and bottom, in pixels. Pixel border, Proc and Auto cast styles."] },
 }
 
 -- What each kind's rows say about where the icon is.
 local WHERE = {
-    pad = { page = "pads", size = L["How big each button's icon is, in pixels. A bigger icon makes the buttons taller."],
+    pad = { page = "pads", sizeHeading = L["Size and crop"], size = L["How big each button's icon is, in pixels. A bigger icon makes the buttons taller."],
         when = L["Always, while the mouse is over the icon, or for a moment after its callout is sent."] },
-    dial = { page = "dials", size = L["How big each wedge's icon is, in pixels. 0 sizes it to the ring radius: 48 at the default 120, bigger on a bigger wheel. The wedges keep their size."],
+    dial = { page = "dials", sizeHeading = L["Size, offset and crop"],
+        size = L["How big each slice's icon is, in pixels. 0 sizes it to the ring radius: 48 at the default 120, bigger on a bigger wheel. The slices keep their size."],
         when = L["Always, while the mouse is over the icon, or for a moment after its callout is sent. The dial closes on a send, so that moment runs from the next time you open it, within a few seconds."] },
 }
 
@@ -91,8 +93,9 @@ local OFFSETS = { xOffset = true, yOffset = true }
 --- One kind's Icons rows, in tab order.
 --- @param kind string "pad" | "dial"
 --- @param C table settings/SchemaMembers.lua's checks
+--- @param afterSize table|nil a row drawn beside Icon size, under the same heading (the dial's Icon offset)
 --- @return table rows
-function NS.addon.Settings.IconRows(kind, C)
+function NS.addon.Settings.IconRows(kind, C, afterSize)
     local O = NS.addon.Settings.Helpers
     local P = kind .. ".icon."
     local T = D.For(kind)
@@ -120,7 +123,9 @@ function NS.addon.Settings.IconRows(kind, C)
             return within(v)
         end
     end
+    local SIZE_CROP = where.sizeHeading
     at(SIZE_CROP, sizeRow)
+    if afterSize then at(SIZE_CROP, afterSize) end
     at(SIZE_CROP, { path = P .. "zoom", type = "number", default = T.zoom, min = 0, max = D.ZOOM_MAX, step = 0.01,
         label = L["Zoom"], validate = C.NUMBER, normalize = C.clamp(0, D.ZOOM_MAX),
         desc = L["Crop the icon's edges: 0 shows the whole icon, 0.25 crops a quarter off each side. A little zoom trims the dark edge baked into most game icons."] })

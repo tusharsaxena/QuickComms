@@ -26,9 +26,11 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | EDIT-1..32 | Editors | The Pad and Dial page names; the Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
 | PREVIEW-1..12 | Preview window | The Preview as selector window: every entry point, the dropdown, End preview, close and Escape, combat, test mode and the stand-down, Alt+Z, the saved position, bare /qc preview and list; every preview drawn as live; a preview or test click prints what it would send; a preview dial staying open on a pick |
 | DIAL-1..41 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, the lone-group open and the group ring, page arrows and the page row, Auto wedges, the ring radius, the Slice labels tab, the slices and the slice lit by direction, the Slices tab, the pointer, the tooltip outside the dial, the hub over the slices, the pointer, label and icon offsets, the Paging tab; the dial polish: the border gone, the slice gap, placement from W, a slice clicked to the hub in combat, the hub styles, the Group labels tab, Icon offset on Icons, 128-pixel icons, a click outside closing the dial in combat, the page indicators' background and border, the Hub tab; automatic icon offset and size; the 120 radius and 48-pixel icons by default; a right click back a ring; opening where it was closed; slices from N |
-| KEY-1..3 | Key bindings | A dial's key as WoW's own binding in Options → Keybindings, Character Specific Keybindings, Toggle Comms Pads |
+| LAYOUT-1..5 | Settings layout | Item 020: the General page's Behavior headings and Defaults tooltip; the Groups band on one row, General's order, Inherit on When, What it sends; the Pad strip outside in and its relabels; the Dial strip (Layout, Labels, Ring map) and its headings; no setting lost or changed, through a /reload |
+| LAYER-1..4 | Frame layering | Item 030: a pad button's and a dial wedge's borders, glows, label, padlock and veils in order; the drag strip over a faded pad; the windows, modals and popups still stacked as before |
+| KEY-1..6 | Key bindings | A dial's key as WoW's own binding in Options → Keybindings, Character Specific Keybindings, Toggle Comms Pads; item 015: the Ka0s Quick Comms section of its own, the General → Keybindings tab in sync both ways, its capture and combat refusal |
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
-| LOOK-1..6 | Pad header, Section header, Window | The Comms Pad's three window tabs: the section titles' font, the pad's border and background, the header's look, size and alignment, the tab strip and headings, the section header's band and height |
+| LOOK-1..6 | Window, Header, Section titles (Pad header and Section header before item 020) | The Comms Pad's three window tabs: the section titles' font, the pad's border and background, the header's look, size and alignment, the tab strip and headings, the section header's band and height |
 | BUTTON-1..2 | Buttons tab | The buttons' size, color, border and font; the button glow |
 | ICONS-1..4 | Icons tab | The buttons' and wedges' icon look, border and glow triggers; the glows through LibKa0s-Glow-1.0 |
 | ICON-1..4 | Icons | Choosing an icon, for a callout and for a group; the LibKa0s v1.75.0 re-vendor: the icon browser's three sets and the library-drawn marks; the popup and the browser over the preview dial |
@@ -1212,6 +1214,118 @@ Pads after Open Comms Dial 1 to 4. Bind it to P. Press P once → every pad hide
 window is unticked. Press P → the pads are back. In combat, press P → nothing changes until combat
 ends, then the pads toggle, with no Lua error. `/qc disable`, press P → the disabled line, as
 `/qc toggle` prints. Result: 2026-10-21, pass (the owner's run; client build not recorded).
+Since item 015 (2026-10-24) Toggle Comms Pads is listed **first**, before Open Comms Dial 1 to 4, in
+a section of its own (KEY-4).
+
+**KEY-4 (SM-QC-KB1). A section of its own (item 015, 2026-10-24).** Options → Keybindings: scroll
+past Blizzard's sections → a section titled **Ka0s Quick Comms** holds, in order, Toggle Comms Pads,
+Open Comms Dial 1, 2, 3 and 4, with these labels; the AddOns section no longer lists them, and there
+is no blank spacer row above them. A key bound before the update (for example Open Comms Dial 1 on G)
+is still bound. Result:
+
+**KEY-5 (SM-QC-KB2, SM-QC-RV3; rewritten 2026-10-24 for the one key button). General → Keybindings follows Options → Keybindings, both ways.** Settings → Ka0s
+Quick Comms → General: the last tab is Keybindings; it opens on the intro line, the dial line, then
+the five rows in the same order, each with one key button and Clear (no second key button), and
+under them "Saved for: all characters". Bind Toggle Comms Pads to P on the tab → Options → Keybindings → Ka0s Quick Comms shows P
+beside it. Bind Open Comms Dial 2 to H there, come back to the tab → H shows in its row without a
+/reload. Tick Character Specific Keybindings → the tab's line reads "Saved for: this character only";
+bind a key on the tab → it shows in the character set there, and the account set (on another
+character) does not have it. In Options → Keybindings give Open Comms Dial 2 a second key, J, as well
+as H → the tab's button reads "H +1" and its tooltip names H and J and says the others were set on
+the game's Key Bindings page; Clear on that row → both keys are gone there too. The Defaults button's tooltip ends "Key bindings are not changed.";
+Defaults and Reset all settings leave every key bound. Result:
+
+**KEY-6 (SM-QC-KB3, SM-QC-RV3; rewritten 2026-10-24 for the one key button). The key works; Escape
+cancels; combat refuses.** Bind Open Comms Dial 1 with the row's key button → the key opens dial 1;
+bind Toggle Comms Pads → the key hides and shows the pads. Right-click a bound key button → that key
+is removed and the line reads "Key removed.". Click the key button so it
+reads "Press a key...", press Escape → the capture cancels, the button shows its key again and the
+settings window stays open. Take a key another action holds (for example bind a dial to TAB) → the
+key moves without a question and the line under the rows names the action that lost it. Enter
+combat with the tab open → a capture in progress stops and the line reads "Key bindings can be
+changed after combat."; click the key button or Clear in combat → nothing is bound or cleared, the same line.
+No Lua error. Result:
+
+## Settings layout
+
+Item 020 (2026-10-24): rows moved, regrouped and relabeled, no setting changed. Checks above that
+were written before it use the old names: Pad header is now Header, Section header is Section titles,
+Wheel is Layout, Slice labels and Group labels are one Labels tab, the Groups and Dial Preview tabs
+are What it sends and Ring map, Faded alpha is Faded opacity, Wedges per ring is Slices per ring,
+Add a group is Add group, Unlock pads is Unlock all pads, and the editors' Enabled box is Enable this
+group, pad or dial.
+
+**LAYOUT-1 (SM-QC-LY). General (QUI-L01, L02, L-new2).** Settings → Ka0s Quick Comms → General →
+Behavior → two headings, Sending (When you are solo | Spam guard (seconds), then Play a sound on send |
+Note dropped callouts in chat) and Pads and dials (Put instance-specific groups first | Show the
+LOCKDOWN tag, then Explain why groups show (tooltips)); each still writes what it did (tick Show the
+LOCKDOWN tag off → no LOCKDOWN on a pad). Hover the header's Defaults → the same text as Master
+controls' Reset all settings tooltip, ending "Key bindings are not changed." Result:
+
+**LAYOUT-2 (SM-QC-LY). Groups (QUI-L03 to L08, L34, L-new3).** Groups → the band is one row: the
+Group picker, New group, then Preview while editing, all level, and the strip starts at the same
+height as on Pad and Dial. General → Name | Enable this group, the icon, Parent group alone, Duplicate
+| Delete group, a gap, a gray line "Adds back the built-in groups and callouts you deleted. Changes
+nothing you have.", then Restore built-in groups; no Inherit box here. When → Inherit when conditions
+under the active-now line, grayed out for a group with no parent; on a child, untick it there → its
+own drawers come live, tick it → "Uses <parent>'s conditions. Untick Inherit when conditions above
+…". The fourth tab reads What it sends; the callout popup's heading reads What it sends. Hover
+Defaults → it names the icon and the parent as kept. Result:
+
+**LAYOUT-3 (SM-QC-LY). Pad (QUI-L07, L09 to L15, L18, L36, L-new1, L-new3).** Pad → the strip reads
+General, Groups, Layout, Window, Header, Section titles, Buttons, Icons, and fits as before. General →
+Enable this pad, Faded opacity, Unlock all pads (or Lock all pads; its tooltip names Lock frame on the
+General page > Master controls). Groups → Add group above the list. Layout → Pad scale and Button
+spacing. Buttons → Size, Font, Background (Background color), Border, Button glow, Shine. Icons → Icon
+glow holds the glow offsets, with no Offset heading. Every swatch on Window, Header, Section titles
+and Buttons reads Background color. Result:
+
+**LAYOUT-4 (SM-QC-LY). Dial (QUI-L07, L08, L19, L21 to L29, L35, L-new3).** Dial → the strip reads
+General, Groups, Layout, Slices, Hub, Paging, Labels, Icons, Ring map; note whether it fits one row at
+your UI scale. General → Enable this dial, then the gray line pointing at the General page >
+Keybindings, then Delete dial (no key box). Layout → Slices per ring | Ring radius, Slice gap alone,
+then Position: Open at, X | Y, Reset. Slices → one Colors heading, then Shine. Hub → Hub, Hub border,
+Hub circle, Pointer. Paging → Page row (Distance below labels), Arrows, Page indicator, Indicator
+border, Indicator background (Show indicator background | Background padding). Labels → Slice labels,
+Group labels, then Tooltip; untick Show slice labels → only the slice labels' font grays. Icons → Size,
+offset and crop: Icon size | Icon offset, then Zoom. Ring map lists the rings as Preview did. Result:
+
+**LAYOUT-5 (SM-QC-LY). Nothing lost, nothing changed.** Before updating, note a few values you set
+(a pad's Faded alpha, Section header height, a dial's slice gap, Tooltip side, Dot border, a group's
+Inherit). After the update: each reads the same under its new name and place, the pads and dials
+look as they did, `/qc list` shows every setting (the Behavior rows in their new order), and after a
+`/reload` every value is still there. Each page's Defaults resets what it did before. Result:
+
+## Frame layering
+
+Item 030 (frame-layering, standard v2.88.0; `core/Constants.lua` `NS.Constants.LAYERS`).
+
+**LAYER-1 (SM-QC-ZS1). A pad button's parts in order (QUI-Z02, Z03).** On a Comms Pad: Buttons →
+Border thickness 3, color white, and Glow on; Icons → Border on and Glow Always. Add a callout whose
+text starts with `/` so its button is refused → that button dims **whole**: its edge, the icon's
+border and both glows are under the dim veil, not at full brightness over it. Press an armed button →
+the send flash lights over the glows and the borders. The label and the padlock stay readable over
+the thick border. The icon's border draws over the button's border where they meet; switch the pad to
+Icon only → note whether the icon's border covers the inner half of the button glow (the analysis
+expected it; say if it looks wrong). Hover a button → its tooltip; click it → it still sends (the
+overlay takes no mouse). Result:
+
+**LAYER-2 (SM-QC-ZS2). A dial wedge's parts in order (QUI-Z04).** On a Comms Dial with Icons → Border
+on and Glow Always, open the dial on a ring holding a refused callout → its wedge's icon ring and glow
+are under the dim veil; send from a wedge → the flash covers its icon glow; the labels and padlocks
+read over the icon rings; the hub and pointer still draw over every wedge. Clicking a slice still
+sends. Result:
+
+**LAYER-3 (SM-QC-ZS3). The drag strip over a faded pad (QUI-Z11).** Comms Pad → Fade: out of combat,
+Faded alpha 0.2; unlock the pads (`/qc unlock`) → the pad fades, its drag strip stays at full
+opacity, and dragging it moves the pad; hover the pad → it comes back; lock → the strip hides.
+Result:
+
+**LAYER-4 (SM-QC-ZS4). Nothing else moved (QUI-Z01, Z06, Z09, Z10).** With Preview as… on: the
+preview window sits over the preview dial and under the callout popup's dim; the icon browser opens
+over the popup; its Wowhead link window opens over the browser; a delete confirm opened from the
+popup shows over it and can be clicked; the Share export window opens over a preview dial. Open a dial
+by its key, click outside it → it closes (with the settings window closed). No Lua error. Result:
 
 ## Icons tab
 
@@ -1456,7 +1570,7 @@ code (phase 5):
   editor falls back to the id).
 - **Sent in chat**: the callout tokens' values (`{me}`, `{spec}`, …) come from the client in its own
   language and are escaped like any value (`test_tokens`).
-- **The pads' fonts** (the Pad header and Section header tabs', the Buttons tab's labels): the default face is LibSharedMedia's "Friz Quadrata TT", which LibSharedMedia
+- **The pads' fonts** (the Header and Section titles tabs', the Buttons tab's labels): the default face is LibSharedMedia's "Friz Quadrata TT", which LibSharedMedia
   does not register on koKR, zhCN or zhTW; a face the machine does not have draws `STANDARD_TEXT_FONT`
   (`Pad_Render.LabelFont`, `test_pad_render`).
 - **Printed**: every chat and report line is English through `NS.L`, the share and import lines
@@ -1480,4 +1594,10 @@ EDIT-18, PREVIEW-10, PREVIEW-11, PREVIEW-12, SEND-6, STATE-6 and TOKEN-1 (QC-07 
 passed in the owner's run of 2026-10-24. PREVIEW-11's locked-window tooltip was reworded, and made to
 show on the disabled controls, after that run, on the owner's request.
 
-None.
+LAYER-1 to LAYER-4 (item 030, 2026-10-24): new, not yet run.
+
+LAYOUT-1 to LAYOUT-5 (item 020, QC-LY, 2026-10-24): new, not yet run.
+
+KEY-4 to KEY-6 (item 015, QC-KB, 2026-10-24): new, not yet run. KEY-5 and KEY-6 were rewritten the
+same day for the owner's follow-up (QC-RV3, SM-QC-RV3): one key button and Clear per row, a second
+key shown as `<key> +1` with a tooltip.

@@ -5,7 +5,7 @@ local _, NS = ...
 -- header's snippets show and hide the rings; modules/Dial.lua sizes and places the frames, out of
 -- combat). As modules/Pad_Render.lua dresses a pad's secure buttons, this dresses the dial's secure
 -- frames: the hub (a backdrop disc and a circle mark in the Hub heading's style, R.PaintHubLook) and
--- the pointer on the header; a title (the Group labels tab's font), its slices (modules/Dial_Slices.lua)
+-- the pointer on the header; a title (the Labels tab's Group labels font), its slices (modules/Dial_Slices.lua)
 -- and, on a paged ring, two page arrows on each ring; and on each wedge an icon (a glyph in its color,
 -- no backdrop of its own since the dial rework, 2026-10-21), its label, a padlock, a dim veil when it
 -- sends nothing, the guard's cooling veil and a result flash. The slice the cursor points into lights
@@ -15,7 +15,7 @@ local _, NS = ...
 -- The hub carries the stale hint, the lockdown chip and the test or preview label. The pointer is a plain (unprotected) child of the header that turns toward the
 -- cursor, the Slices tab's glyph, size, color and offset: its OnUpdate is set when the header shows and
 -- cleared when it hides, so a closed or stood-down dial runs nothing per frame (perf bucket
--- dialRender). Every tooltip the dial shows sits outside it, on the Slice labels tab's side, at its offset
+-- dialRender). Every tooltip the dial shows sits outside it, on the Labels tab's Tooltip side, at its offset
 -- (R.ShowTip). The Icons tab (B9) styles each wedge's icon through modules/IconStyle.lua and
 -- modules/Glow.lua (the glow, whose On hover trigger the tracker drives: R.HoverWedge). A wedge takes
 -- no mouse (dial polish, 2026-10-21): the slice the cursor points into is hovered (its wedge's
@@ -29,6 +29,7 @@ local Glow = NS.Glow
 local Slices = NS.DialSlices
 local L = NS.L
 local Perf = NS.Perf
+local LV = NS.Constants.LAYERS.LEVEL
 
 -- The hollow rings (crisp dial art, 2026-10-21): media/textures/dial-ring-<k>.tga, written by
 -- tools/gen-dial-textures.py, ring k's line RING_STEPS[k] of its diameter, a geometric ladder from
@@ -71,8 +72,8 @@ function R.RingTexture(diameter, width)
 end
 
 -- A round texture: the disc, tinted.
-local function circle(frame, layer, size, r, g, b, a)
-    local t = frame:CreateTexture(nil, layer)
+local function circle(frame, layer, size, r, g, b, a, sub)
+    local t = frame:CreateTexture(nil, layer, nil, sub)
     t:SetTexture(Slices.DISC)
     t:SetVertexColor(r, g, b, a)
     t:SetSize(size, size)
@@ -205,10 +206,11 @@ function R.DressHub(header, onEnter)
 end
 
 --- Raise the hub's front frame over every ring and wedge (a rebuild may have made new ones), and
---- hand it the rings the pointer tracks. Insecure: a plain frame's level.
+--- hand it the rings the pointer tracks: DIAL_FRONT over the header (core/Constants.lua LAYERS), above
+--- every wedge's overlay frame (header + 6). Insecure: a plain frame's level.
 function R.RaiseFront(header, rings)
     header.qcRingFrames = rings
-    header.qcPointer:SetFrameLevel((header:GetFrameLevel() or 0) + 20)
+    header.qcPointer:SetFrameLevel((header:GetFrameLevel() or 0) + LV.DIAL_FRONT)
 end
 
 -- A color swatch through its class-color companion, as { r, g, b, a }.
@@ -233,12 +235,12 @@ local function hubLook(hub)
         circle = color(hub.circleColor, hub.useClassColorCircle, H.circleColor) }
 end
 
---- A dial's look for one rebuild: its radius (clamped); its Slice labels tab (`dial.label`) as a font
+--- A dial's look for one rebuild: its radius (clamped); its Labels tab's Slice labels (`dial.label`) as a font
 --- (Pad_Render.LabelFont), whether labels show, their line height (0 when they do not) and where
 --- the tooltip goes; its Slices tab (`dial.slice`: the fill, the Slice gap in pixels, the highlight, the
 --- Shine heading as `shine`, NS.Shine.Resolve, and the Hub tab's pointer) and Paging tab
 --- (`dial.page`, from `dial`: the indicators' background and border included) with each color
---- resolved through its class color companion; the hub (`dial.hub`, hubLook); the Group labels tab
+--- resolved through its class color companion; the hub (`dial.hub`, hubLook); the Labels tab's Group labels
 --- (`dial.title`, from `dial`) as `title = { show, font, line }`, its line 0 while off; and the Icon
 --- offset (`dial.iconOffset`).
 function R.Look(radius, label, slice, dial)
@@ -323,7 +325,7 @@ function R.PaintHubLook(header, look)
     tintCircle(header, header.qcHubHovered == true)
 end
 
---- Where the dial's tooltips go (the Slice labels tab's side and offset): outside the dial, clear of
+--- Where the dial's tooltips go (the Labels tab's Tooltip side and offset): outside the dial, clear of
 --- the ring title above it (its own line height, or none while Group labels are off), the page row below it, or the widest label at either side. `labelWidth` is
 --- the widest label the rebuild drew (0 with none). Kept on the header for R.ShowTip.
 function R.PlaceTips(header, look, labelWidth)
@@ -363,7 +365,7 @@ function R.PaintHub(header, state)
     header.qcTest:SetText(state.testText or "")
 end
 
---- Build a ring container's title (drawn in the Group labels tab's font by R.PaintRing) and slices,
+--- Build a ring container's title (drawn in the Labels tab's Group labels's font by R.PaintRing) and slices,
 --- once per container.
 function R.DressRing(ring)
     if ring.qcDressed then return ring end
@@ -421,7 +423,7 @@ function R.RingTitle(spec)
 end
 
 --- Show one ring's slices (modules/Dial_Slices.lua: the fills and the page row) and its title over
---- the N wedge's label, in the dial's look (R.Look): the Group labels tab's font, or no title while
+--- the N wedge's label, in the dial's look (R.Look): the Labels tab's Group labels's font, or no title while
 --- Show group labels is off.
 function R.PaintRing(ring, spec, look)
     look = look or R.Look()
@@ -451,24 +453,29 @@ function R.ShowTooltip(btn)
     R.ShowTip(btn, lines[1], rest)
 end
 
---- Build a wedge's regions, once per button.
+--- Build a wedge's regions, once per button. The ladder (core/Constants.lua LAYERS), as a pad
+--- button's (QUI-Z04): the icon on the wedge, the icon frame at WEDGE_ICON (IconStyle.IconFrame) with
+--- its glow one over it, and the mouse-off overlay frame at WEDGE_OVER holding the label, the padlock
+--- (OVERLAY 0) and the veils (OVERLAY 1-3).
 function R.DressWedge(btn)
     if btn.qcDressed then return btn end
     btn.qcDressed = true
+    btn.qcIconLevel = LV.WEDGE_ICON
     btn.qcIcon = btn:CreateTexture(nil, "ARTWORK")
     btn.qcIcon:SetSize(DL.WEDGE - 12, DL.WEDGE - 12)
     btn.qcIcon:SetPoint("CENTER", btn, "CENTER", 0, 0)
-    btn.qcLabel = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    btn.qcLock = btn:CreateTexture(nil, "OVERLAY")
+    local over = NS.PadRender.Overlay(btn, LV.WEDGE_OVER)
+    btn.qcLabel = over:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    btn.qcLock = over:CreateTexture(nil, "OVERLAY")
     btn.qcLock:SetSize(14, 14)
     btn.qcLock:SetPoint("TOPRIGHT", btn, "TOPRIGHT", 0, 0)
     local lockTint = NS.Constants.GOLD
     mark(btn.qcLock, "lock", LOCK_ICON, lockTint.r, lockTint.g, lockTint.b)
-    btn.qcDim = circle(btn, "OVERLAY", DL.WEDGE, 0, 0, 0, 0.55)
+    btn.qcDim = circle(over, "OVERLAY", DL.WEDGE, 0, 0, 0, 0.55, 1)
     btn.qcDim:Hide()
-    btn.qcCool = circle(btn, "OVERLAY", DL.WEDGE, 0, 0, 0, 0.35)
+    btn.qcCool = circle(over, "OVERLAY", DL.WEDGE, 0, 0, 0, 0.35, 2)
     btn.qcCool:Hide()
-    btn.qcFlash = circle(btn, "OVERLAY", DL.WEDGE, 1, 1, 1, 0.45)
+    btn.qcFlash = circle(over, "OVERLAY", DL.WEDGE, 1, 1, 1, 0.45, 3)
     btn.qcFlash:Hide()
     return btn
 end
@@ -498,7 +505,7 @@ end
 local DEFAULT_LOOK
 
 --- Show one ring item on a wedge: its icon, its label outside the disc (its `geo.anchor` point at
---- `geo.lx, geo.ly`, so it reads away from the dial) in the Slice labels tab's font, or none while labels
+--- `geo.lx, geo.ly`, so it reads away from the dial) in the Labels tab's Slice labels font, or none while labels
 --- are off, a padlock when its callout is locked, and the dim veil when it sends nothing here
 --- (PadRender.Veiled: never on a preview or a test placeholder). `icfg` is the dial's Icons tab
 --- (IconStyle.Config; none is the defaults), `look` its R.Look.

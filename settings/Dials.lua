@@ -2,38 +2,40 @@ local _, NS = ...
 -- settings/Dials.lua — the Dial page (design spec §11, §13.1): one dial at a time.
 --
 --     band     [ Dial v (picker) ][ New dial ]
---     strip    [ General ][ Groups ][ Wheel ][ Slices ][ Hub ][ Paging ][ Slice labels ][ Group labels ]
---              [ Icons ][ Preview ]
---     General  Name, Enabled, then Delete dial
---     Groups   Show groups as (Categories or Flat), then the dial's groups as a drag-to-reorder list
---              with Remove (its priority order, spec §7), then Add a group
---     Wheel    wedges per ring (Auto by default), ring radius, open at, then Position: X and Y and
---              Reset this dial's position
---     Slices   Background (the slices' fill), Gap (the slice gap), Highlight (the hovered slice's
---              fill), each color with its class-color companion
---     Hub      Hub (style, hub and circle size, line width, backdrop color, border size and color,
---              circle color) and Pointer (show, size, offset, color), each color with its class-color
+--     strip    [ General ][ Groups ][ Layout ][ Slices ][ Hub ][ Paging ][ Labels ][ Icons ]
+--              [ Ring map ]   (item 020: Layout was Wheel, QUI-L22; Labels merges Slice labels and
+--              Group labels, QUI-L19; Ring map was Preview, QUI-L08)
+--     General  Name, Enable this dial, a line pointing at the General page > Keybindings, then
+--              Delete dial
+--     Groups   Show groups as (Categories or Flat), then Add group, then the dial's groups as a
+--              drag-to-reorder list with Remove (its priority order, spec §7)
+--     Layout   slices per ring (Auto by default), ring radius, slice gap, then Position: open at, X
+--              and Y and Reset this dial's position
+--     Slices   Colors (the slices' fill and the hovered slice's), then Shine, each color with its
+--              class-color companion
+--     Hub      Hub (style, size, backdrop color), Hub border (size, color), Hub circle (size, line
+--              width, color) and Pointer (show, size, offset, color), each color with its class-color
 --              companion (on Slices until dial polish, 2026-10-21; the paths kept)
---     Paging   a paged ring's row under the dial: Position (offset), Arrows (size, spacing, colors) and
---              Page indicator (dot size, current page width, spacing, colors, the indicators'
---              background and border)
---     Slice labels  Show labels, then the labels' Font block (font, size, outline, color, class
---              color, shadow), grayed out while labels are off, then Tooltip (side, offset); the
---              Labels tab until dial polish (2026-10-21) renamed it, its `dial.label.*` paths kept
---     Group labels  Show group labels (the ring's title above the dial), then its Font block under
---              `dial.title.*`, grayed out while off (dial polish, 2026-10-21)
---     Icons    Icon offset (a Wheel row until dial polish; `dial.iconOffset` kept), then the wedges'
---              icons (B9, settings/SchemaIcons.lua), as the Pad page's Icons tab; a wedge's
---              border is a round ring and its icon size (up to 128) keeps the wedge's own size
---     Preview  each ring as the current or previewed situation builds it, wedge by wedge
+--     Paging   a paged ring's row under the dial: Page row (its distance below the labels), Arrows
+--              (size, spacing, colors), Page indicator (dot size, current page width, spacing,
+--              colors), Indicator border and Indicator background
+--     Labels   Slice labels (Show slice labels, Label offset, then the labels' Font block, grayed
+--              out while labels are off, `dial.label.*`), Group labels (the ring's title above the
+--              dial: Show group labels, then its Font block under `dial.title.*`, grayed out while
+--              off) and Tooltip (side, offset)
+--     Icons    the slices' icons (B9, settings/SchemaIcons.lua), as the Pad page's Icons tab, Icon
+--              offset beside Icon size (a Wheel row until dial polish; `dial.iconOffset` kept); a
+--              slice's border is a round ring and its icon size (up to 128) keeps the slice's own size
+--     Ring map each ring as the current or previewed situation builds it, slice by slice
 --
 -- The band holds the picker and the create action (options-ui-§14). Every field is a member row
 -- (settings/SchemaMembers.lua) written to the selected dial; the dial rebuilds through LIBRARY_CHANGED
 -- -> Surfaces.Request, which waits for combat end when it must. The key is no row and has no tab
--- (dial rework, 2026-10-21): it is WoW's own binding of the dial's Open Comms Dial entry, set only in
--- Options -> Keybindings -> Ka0s Quick Comms. Relaxed is the only interaction in v0.1.0 (the C7
+-- (dial rework, 2026-10-21): it is WoW's own binding of the dial's Open Comms Dial entry, set in
+-- Options -> Keybindings -> Ka0s Quick Comms or on the General page > Keybindings (item 015), which
+-- the General tab's one gray line points at (item 020, QUI-L29). Relaxed is the only interaction in v0.1.0 (the C7
 -- fallback), so there is no delay or tap-action control, and depth is no control (owner ruling R5).
--- The Preview tab is a listing, not a drawn wheel (owner ruling R3): the wheel itself shows in game
+-- The Ring map tab is a listing, not a drawn wheel (owner ruling R3): the wheel itself shows in game
 -- (test mode and Preview as… open dial 1). As settings/Pads.lua: New dial takes the lowest free
 -- number, a refused X or Y says why and puts the box back, and Defaults is one act (Library.Batch)
 -- that keeps the dial's position.
@@ -46,10 +48,9 @@ local L = NS.L
 local PAGE = "dials"
 local GENERAL = L["General"]
 local GROUPS = L["Groups"]
-local WHEEL = L["Wheel"]
+local LAYOUT = L["Layout"]
 local ICONS = L["Icons"]
-local LABELS = L["Slice labels"]
-local TITLES = L["Group labels"]
+local LABELS = L["Labels"]
 local SLICES = L["Slices"]
 local HUB = L["Hub"]
 local PAGING = L["Paging"]
@@ -122,7 +123,7 @@ function DD.ResetPoint(id)
     return (NS.SchemaRuntime.Set("dial.point", nil, id)) == true
 end
 
--- Plans the page builds to look at (the Preview listing) are not a surface's bake: they stay out of
+-- Plans the page builds to look at (the Ring map listing) are not a surface's bake: they stay out of
 -- the bakeSurface perf bucket.
 local function lookDeps(snap)
     local deps = NS.Surfaces.Deps(snap)
@@ -130,7 +131,7 @@ local function lookDeps(snap)
     return deps
 end
 
---- The Preview tab's lines: each ring as the current or previewed situation builds it.
+--- The Ring map tab's lines: each ring as the current or previewed situation builds it.
 --- @return string[]
 function DD.PreviewLines(id)
     local snap = Ed.Snapshot()
@@ -183,6 +184,8 @@ local function renderGeneral(ctx, rows)
         return
     end
     h.RenderRows(ctx, Ed.Scalar(rows), nil, nil, { noHeadings = true })
+    -- Where the dial's key is set: a static line, no key box and no readout (item 020, QUI-L29).
+    h.TextRow(ctx, L["|cffa0a0a0Set this dial's key on the General page > Keybindings. A dial's key follows its place in the dial order.|r"])
     h.InlineButtonPair(ctx, { text = L["Delete dial"],
         tooltip = L["Delete this dial. Its groups and callouts are kept. Asks first."],
         onClick = function() DD.Delete(id) end }, nil)
@@ -196,9 +199,12 @@ local function renderGroups(ctx, rows)
         return
     end
     h.RenderRows(ctx, Ed.Scalar(rows), nil, nil, { noHeadings = true })
+    -- Above the list, as on the Pad page (item 020, QUI-L07).
+    h.RenderGrid(ctx, { Ed.ActionDropdown(L["Add group"], L["Add a group to the end of this dial's list."],
+        DD.AddableGroups(id), function(gid) NS.Library.AddGroupToSurface("dial", id, gid) end) })
     local list = NS.db.profile.dials[id].groups
     if #list == 0 then
-        h.TextRow(ctx, L["This dial lists no group. Add one below."])
+        h.TextRow(ctx, L["This dial lists no group. Add one above."])
     else
         h.TextRow(ctx, L["Higher groups come first on the dial. Drag to reorder."])
         local active = NS.Resolver.ActiveGroups(NS.Library.AllGroups(), Ed.Snapshot())
@@ -210,8 +216,6 @@ local function renderGroups(ctx, rows)
         end
         Ed.ReorderRows(ctx, PAGE, entries, function(from, to) NS.Library.MoveGroupOnSurface("dial", id, from, to) end)
     end
-    h.RenderGrid(ctx, { Ed.ActionDropdown(L["Add a group"], L["Add a group to the end of this dial's list."],
-        DD.AddableGroups(id), function(gid) NS.Library.AddGroupToSurface("dial", id, gid) end) })
 end
 
 -- One offset box. Its refresher (a scalar refresh) puts it back to the stored point after any write.
@@ -246,7 +250,7 @@ local function renderIcons(ctx, rows)
     h.RenderRows(ctx, Ed.Scalar(Settings.ShownIconRows(rows)), nil, nil, { noHeadings = true })
 end
 
--- The Slices, Hub, Paging, Slice labels and Group labels tabs: their rows, under their own headings.
+-- The Slices, Hub, Paging and Labels tabs: their rows, under their own headings.
 local function renderStyled(ctx, rows)
     local h = H()
     if not selected() then
@@ -256,15 +260,22 @@ local function renderStyled(ctx, rows)
     h.RenderRows(ctx, Ed.Scalar(rows), nil, nil, { noHeadings = true })
 end
 
-local function renderWheel(ctx, rows)
+-- The Layout tab: the geometry rows, then Position, which holds Open at (its tooltip's "set below"),
+-- then X and Y and the reset (item 020, QUI-L21: Open at sat with the geometry until then).
+local function renderLayout(ctx, rows)
     local h = H()
     local id = selected()
     if not id then
         h.TextRow(ctx, NONE)
         return
     end
-    h.RenderRows(ctx, Ed.Scalar(rows), nil, nil, { noHeadings = true })
+    local geometry, place = {}, {}
+    for _, row in ipairs(Ed.Scalar(rows)) do
+        if row.path == "dial.openAt" then place[#place + 1] = row else geometry[#geometry + 1] = row end
+    end
+    h.RenderRows(ctx, geometry, nil, nil, { noHeadings = true })
     h.Section(ctx, L["Position"])
+    h.RenderRows(ctx, place, nil, nil, { noHeadings = true })
     h.RenderGrid(ctx, { offsetBox(ctx, id, L["X offset"], "x"), offsetBox(ctx, id, L["Y offset"], "y") })
     h.InlineButtonPair(ctx, { text = L["Reset this dial's position"],
         tooltip = L["Put this dial back in the middle of the screen."], onClick = function() DD.ResetPoint(id) end }, nil)
@@ -305,20 +316,19 @@ local function render(ctx)
     Ed.Tabs(ctx, PAGE, {
         { key = GENERAL, render = renderGeneral },
         { key = GROUPS, render = renderGroups },
-        { key = WHEEL, render = renderWheel },
+        { key = LAYOUT, render = renderLayout },
         { key = SLICES, render = renderStyled },
         { key = HUB, render = renderStyled },
         { key = PAGING, render = renderStyled },
         { key = LABELS, render = renderStyled },
-        { key = TITLES, render = renderStyled },
         { key = ICONS, render = renderIcons },
-        { key = "preview", label = L["Preview"], tooltip = L["What each ring holds here, or in the preview."],
+        { key = "preview", label = L["Ring map"], tooltip = L["What each ring holds here, or in the preview."],
           render = renderPreview },
     })
 end
 
 Ed.RegisterPage(PAGE, L["Dial"], "DialsPanel", render, {
-    tooltip = L["Put the selected dial's groups-as, wedges per ring, ring radius, icon offset, where it opens, its slices, paging, labels and icons back to their defaults, and turn it on. Its name, groups and position are kept."],
+    tooltip = L["Put the selected dial's groups-as, layout, slices, hub, paging, labels, tooltip placement and icons back to their defaults, and turn it on. Its name, groups, position and key are kept."],
     -- One act (Library.Batch): the dials rebuild once, not once per row.
     onClick = function(ctx) NS.Library.Batch(function() H().RestoreDefaults(PAGE, ctx) end) end,
 })

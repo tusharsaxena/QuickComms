@@ -484,14 +484,16 @@ local function edge(f, side, rgba)
 end
 
 -- The copy window the hint's button shows Wowhead's address in (core/WidgetsSetup.lua's maker, the
--- Share page's export window's), above the browser: FULLSCREEN_DIALOG, over the browser's catcher.
--- Built on first use; nil without the library.
+-- Share page's export window's), above the browser: the POPUP tier (FULLSCREEN_DIALOG, core/Constants.lua
+-- LAYERS), over the browser's catcher. The library's CopyWindow takes no strata (a `strata` option on it
+-- is an open evolution in the standard, STRATA_MODEL LK-05, not in LibKa0s v1.77.0), so the window is
+-- lifted after it is built. Built on first use; nil without the library.
 function B.LinkWindow()
     if linkWin then return linkWin end
     linkWin = NS.MakeCopyWindow({ name = addonName .. "IconLinkWindow", scrollName = addonName .. "IconLinkScroll",
         title = L["Quick Comms: Wowhead icons"], width = 420, height = 120,
         anchorTo = function() return B.frame end })
-    if linkWin then linkWin:GetFrame():SetFrameStrata("FULLSCREEN_DIALOG") end
+    if linkWin then linkWin:GetFrame():SetFrameStrata(NS.Constants.LAYERS.STRATA.POPUP) end
     return linkWin
 end
 

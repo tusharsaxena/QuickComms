@@ -22,9 +22,9 @@ globals = {
   -- settings/ModalWindow.lua: Escape closes the callout popup and the icon browser (special frames,
   -- by name); settings/IconBrowser.lua lifts the popup's out while the browser is open.
   "UISpecialFrames",
-  -- modules/Dial.lua: the key bindings menu's header for Bindings.xml, which the client reads by this
-  -- name (spec §9.4). Its four entry labels hold a space and a colon, so they are rawset beside a
-  -- comment instead of declared here.
+  -- settings/SlashVerbs.lua: the category every Bindings.xml line names, which the client reads by
+  -- this name and shows as the section title in Options -> Keybindings (launcher-§6). The entry
+  -- labels hold a space and a colon, so they are rawset beside a comment instead of declared here.
   "BINDING_HEADER_QUICKCOMMS",
 }
 

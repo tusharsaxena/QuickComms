@@ -142,7 +142,7 @@ Total.
 - prepare: a callout held by no group is dropped
 - prepare: is idempotent after a split
 
-### test_schema.lua (19)
+### test_schema.lua (20)
 
 - schema: every row validates against the defaults
 - schema: a stored row whose path has no default is counted, not passed vacuously
@@ -163,6 +163,7 @@ Total.
 - schema: [audit QC-13] the panel's color codec is written out for the stored { r, g, b, a } shape
 - schema: a callout write that names no id is refused, even with callouts present
 - schema: [phase 3] a fresh profile has no row off its default; the member rows are not counted
+- schema: [layout guard] every stored path, default, range and choice set is as item 020 found it
 
 ### test_slash.lua (20)
 
@@ -569,7 +570,7 @@ Total.
 - popup: Escape and a profile change cancel
 - popup: there is no token dropdown; an info glyph sits right of the Text label
 - popup: the info glyph's tooltip lists the tokens, {group1} to {group8} only for a raid channel
-- popup: the preview is headed Preview, a gap above Save then Cancel
+- popup: the preview is headed What it sends, a gap above Save then Cancel
 - callout helpers: TokenHelp folds {group1}-{group8} into one line and names {spell:ID}
 - popup: [icons] Choose icon… opens the browser; its Choose writes the draft's icon, not the callout
 - popup: [icons] a glyph chosen with a color: the draft carries both; the swatch writes the draft's color
@@ -690,7 +691,7 @@ Total.
 - groups page: the edit glyph opens the popup filled in
 - groups page: [review 3] the remove glyph asks, then deletes the callout
 - groups page: deleting a group deletes its callouts
-- groups page: a seeded set's General is any group's: Name, Enabled, Parent group, the icon, Duplicate, Delete
+- groups page: a seeded set's General is any group's: Name, Enable this group, the icon, Parent group, Duplicate, Delete group
 - groups page: a seeded set's Callouts tab is the callout table: Add callout, Reuse, a row per callout
 - groups page: a seeded set's When tab edits it as any group's; Preview bakes each callout
 - groups page: [review 5] the When tab refuses an upside-down key-level range
@@ -723,14 +724,14 @@ Total.
 - groups page: [nesting] a group that holds groups cannot take a parent: the dropdown is idle and says why
 - groups page: [nesting] the picker lists each child indented under its parent
 - groups page: [nesting] deleting a parent asks, saying its groups become top-level groups in its place
-- groups page: [nesting] a pad's and a dial's Add a group leave out a child
+- groups page: [nesting] a pad's and a dial's Add group leave out a child
 - groups page: [preview table] Preview is the active-now line, then a table: each callout's name beside what it sends
 - groups page: [preview table] a group holding groups shows a titled table for its own callouts, then one per child
 - groups page: [review] a parent with no callouts of its own and one child titles the child's table
 - groups page: [preview table] a situation change rewrites a row's text in place and lays the table out again
 - groups page: [preview table] a group with no callouts says so, with no table
 - groups page: [inherit] a seeded battleground's nodes carry no green dot in the open world
-- groups page: [inherit] General's Inherit when conditions sits beside Parent group, grayed out with no parent
+- groups page: [inherit] When's Inherit when conditions sits at the top of the tab, grayed out with no parent
 - groups page: [inherit] an inheriting group's When tab shows its parent's conditions, read-only
 - groups page: [all] the battleground drawer's All battlegrounds dims and locks the list, which it keeps
 - groups page: [all] a gap separates the Every condition line from the first drawer
@@ -749,21 +750,21 @@ Total.
 - pads page: Groups lists the pad's groups; remove one, add it back at the end, drag to reorder
 - pads page: the remove glyph takes a group off the pad without asking and keeps the group
 - pads page: Delete pad asks, then the pad is gone, its frame released, and the page heals
-- pads page: General's Unlock pads toggles the one lock
+- pads page: General's Unlock all pads toggles the one lock
 - pads page: [final 3, 15] Defaults puts the pad's rows back as one act: one rebuild
 - pads page: [final 4] Defaults keeps the pad's position
 - pads page: [final 26] New pad takes the lowest free number, so a delete never leads to two names alike
-- pads page: [window tabs] the strip reads General first, then Layout, Pad header, Section header, Window, Buttons, Icons
-- pads page: [window tabs] Pad header carries Size, Font, Background and Border under their headings
-- pads page: [window tabs] Section header carries Size, Font, Background and Border, and writes the section table
+- pads page: [window tabs] the strip reads General first, then Layout, Window, Header, Section titles, Buttons, Icons
+- pads page: [window tabs] Header carries Size, Font, Background and Border under their headings
+- pads page: [window tabs] Section titles carries Size, Font, Background and Border, and writes the section table
 - pads page: [window tabs] Window carries Background and Border, and no font and no Visibility
-- pads page: General carries Visibility, Fade and Faded alpha under a Visibility heading, before its buttons
-- pads page: [button] Buttons carries Size, Color, Border, Font and Glow, and Button width left Layout for it
+- pads page: General carries Visibility, Fade and Faded opacity under a Visibility heading, before its buttons
+- pads page: [button] Buttons carries Size, Font, Background, Border and Button glow, and Button width left Layout for it
 - page pads: [shine] the Buttons tab has a Shine heading
 - pads page: [B9] Icons carries its headings once each, a companion beside each swatch, and writes the pad
 - pads page: [B9] the offsets are grayed out while the glow is off or in Button; its color never is
 - pads page: [glow knobs] only the selected style's knobs show, and none while the glow is off
-- pads page: [glow knobs] Offset comes right after Glow color, in the schema and on the tab
+- pads page: [glow knobs] the offsets come right after Glow color, under Icon glow, in the schema and on the tab
 - pads page: [glow knobs] a Glow or Glow style write repaints the tab, so the right knobs appear
 - pads page: [B9] Defaults puts the Icons rows back too, and its tooltip names them
 - page pads: [polish] the page is titled Pad
@@ -774,29 +775,29 @@ Total.
 - dials page: New dial makes a second dial holding every built-in, selects it, and builds QuickCommsDial2
 - dials page: New dial takes the lowest free number, so a delete never leads to two names alike
 - dials page: General has no Preview as (it is in Master controls); Enabled off takes the dial down
-- dials page: Wheel writes wedges per ring and where it opens; X and Y move the dial; Reset puts it back
+- dials page: Layout writes slices per ring and where it opens; X and Y move the dial; Reset puts it back
 - dials page: a refused X or Y says why and puts the box back to the stored offset
 - dials page: Defaults puts the dial's rows back as one act, and keeps its key and position
 - dials page: [dial rework] no Binding tab: the key is set in Options -> Keybindings alone
 - dials page: Groups switches Categories and Flat, and reorders the dial's groups
 - dials page: the remove glyph takes a group off the dial without asking and keeps the group
-- dials page: Preview lists the rings wedge by wedge, marking the one the dial opens on
-- dials page: [final 20] at 12 wedges per ring the Preview names each wedge by its clock position
+- dials page: Ring map lists the rings wedge by wedge, marking the one the dial opens on
+- dials page: [final 20] at 12 slices per ring the Ring map names each wedge by its clock position
 - dials page: Delete dial asks, then the dial is gone, its header released, and the page heals
 - dials page: [final 11] the page's own plan builds are not timed as a surface's bake
-- dials page: [B9] Icons follows Wheel, carries its headings once each, and writes the dial
+- dials page: [B9] Icons follows Labels, carries its headings once each, and writes the dial
 - dials page: [glow knobs] only the selected style's knobs show, and a Glow or Glow style write repaints
 - dials page: [labels] Labels shows or hides the wedges' names and styles them; off grays the font
-- dials page: [slices] Slices writes the fill, gap and highlight, Hub the pointer, each color with its class color
-- page dials: [polish] Slices tab has Slice gap and no Border heading
+- dials page: [slices] Slices writes the fill and highlight, Layout the gap, Hub the pointer, each color with its class color
+- page dials: [polish] Slices tab has no Border heading; Slice gap is on Layout
 - page dials: [polish] Hub heading rows on the Hub tab
 - dials page: [slices] every slice texture the dial names ships under media/textures
 - dials page: [paging] Paging sizes, spaces and colors the arrows and page indicators; the dial follows
-- page dials: [paging] Page indicator carries the background and border rows, their ranges and defaults
+- page dials: [paging] the indicator's background and border rows, their headings, ranges and defaults
 - dials page: [wheel] Icon offset moves the icons in or out; 0 is the ring radius
 - page dials: [polish] a Hub tab right after Slices holds the Hub and Pointer headings
-- page dials: [polish] tabs read Slices, Hub, Paging, Slice labels, Group labels, Icons
-- page dials: [polish] Icon offset is on the Icons tab, not Wheel
+- page dials: [polish] tabs read Slices, Hub, Paging, Labels, Icons
+- page dials: [polish] Icon offset is on the Icons tab, not Layout
 - page dials: [polish] the page is titled Dial
 - page dials: [shine] the Slices tab has a Shine heading
 
@@ -1193,7 +1194,7 @@ Total.
 - dial: [keys] a profile switch keeps the key: it is WoW's binding, never the profile's
 - dial: Reset position puts every pad and dial back, through their point rows, on one line
 - dial: the hub's tooltip says why each group shows, unless the player turned it off
-- dial: Bindings.xml offers Open Comms Dial 1 to 4, each clicking that dial's header with Toggle
+- dial: Bindings.xml is Toggle Comms Pads, then Open Comms Dial 1 to 4, all in the Ka0s Quick Comms category
 - dial: [keys] Toggle Comms Pads runs exactly /qc toggle's handler, from a key bound in WoW's menu
 - dial: the key bindings menu's click opens the dial, even while it is hidden
 - dial: [final 2] two dials: opening the second closes the first, and the number keys go with it
@@ -1236,6 +1237,15 @@ Total.
 - dial: [art] RingTexture picks the nearest step
 - dial: [art] the hub draws textures, not segments
 - dial: [art] the pill is three pieces with round ends
+
+### test_keybinds.lua (6)
+
+- keybinds: NS.BINDINGS is Toggle Comms Pads, then Open Comms Dial 1 to 4, each with a tooltip
+- keybinds: the General page's strip ends in Keybindings, after every group tab
+- keybinds: the tab's rows are NS.BINDINGS in order, each labeled with its BINDING_NAME_ global
+- keybinds: a key bound through the tab is WoW's binding, saved to the set in force, and the key toggles the pads
+- keybinds: a key set in Options -> Keybindings shows on the tab after UPDATE_BINDINGS
+- keybinds: in combat the tab refuses: no capture starts, no key is bound and nothing is saved
 
 ### test_dial_shine.lua (8)
 
@@ -1284,6 +1294,45 @@ Total.
 - shine: a square button is the art whole
 - shine: blooms only for fluid
 - shine: the button's own size when none is given
+
+### test_layers.lua (10)
+
+- layers: NS.Constants.LAYERS names every strata and level once (frame-layering-§5)
+- layers: no strata string and no bare level at any call site (anti-pattern #99)
+- layers: a pad's root is the HUD tier; its header and buttons sit one over it
+- layers: [QUI-Z11] the pad's drag strip ignores the pad's alpha
+- layers: [QUI-Z02/Z03] a pad button's ladder: edge, its glow, icon border, its glow, overlay
+- layers: the dial's header, front, catchers and screen catcher keep their tiers
+- layers: [QUI-Z04] a wedge's ladder: icon border, its glow, then the overlay over both
+- layers: [QUI-Z10] the preview window is the window tier, never toplevel, never raised
+- layers: the modal bands sit over UIParent, each part at its named offset
+- layers: [QUI-Z06] the Share window keeps the window tier; the icon link window is lifted to POPUP
+
+### test_layout.lua (23)
+
+- layout: [general] Behavior reads Sending, then Pads and dials, with the new labels (QUI-L01, L02)
+- layout: [general] the header Defaults carries the library's Reset all settings tooltip (QUI-L-new2)
+- layout: [groups] the band is one row: picker, New group and Preview while editing (QUI-L34)
+- layout: [groups] General: Name | Enable this group, the icon, Parent group, Duplicate | Delete group, then Restore (QUI-L04, L05, L-new3)
+- layout: [groups] When opens with Inherit when conditions, above the hint, grayed with no parent (QUI-L03)
+- layout: [groups] an inheriting group's When says untick Inherit above (QUI-L03)
+- layout: [groups] the listing tab is What it sends, and Defaults names what it keeps (QUI-L06, L08)
+- layout: [pads] the strip runs outside in: Window, Header, Section titles, Buttons, Icons (QUI-L09, L10)
+- layout: [pads] General: Enable this pad, Faded opacity, Unlock all pads (QUI-L-new1, L-new3, L15)
+- layout: [pads] Groups draws Add group above the hint and the list (QUI-L07)
+- layout: [pads] Layout names Pad scale and Button spacing (QUI-L36)
+- layout: [pads] Buttons runs Size, Font, Background, Border, Button glow, Shine (QUI-L12, L13)
+- layout: [pads] Icons folds the glow offsets under Icon glow (QUI-L13, L14)
+- layout: [pads] the Defaults tooltip names every tab it resets (QUI-L18)
+- layout: [dials] the strip: Layout for Wheel, one Labels tab, and Ring map (QUI-L08, L19, L22)
+- layout: [dials] General: Enable this dial, then the key line (QUI-L29, L-new3)
+- layout: [dials] Groups draws Add group above the hint (QUI-L07)
+- layout: [dials] Layout: Slices per ring | Ring radius, Slice gap, then Position with Open at (QUI-L21, L35)
+- layout: [dials] Slices: one Colors heading, then Shine (QUI-L23)
+- layout: [dials] Hub: Hub, Hub border, Hub circle, Pointer, each size beside its color (QUI-L24)
+- layout: [dials] Paging: Page row, Arrows, Page indicator, Indicator border, Indicator background (QUI-L25, L26)
+- layout: [dials] Labels: Slice labels, Group labels, then Tooltip (QUI-L19)
+- layout: [dials] Icons: Size, offset and crop holds Icon size | Icon offset, then Zoom (QUI-L27)
 
 ### test_vendor_sync.lua (3)
 
@@ -1364,7 +1413,7 @@ Total.
 | test_setup.lua | 27 |
 | test_database.lua | 18 |
 | test_profile.lua | 9 |
-| test_schema.lua | 19 |
+| test_schema.lua | 20 |
 | test_slash.lua | 20 |
 | test_disabled.lua | 25 |
 | test_diagnostics.lua | 13 |
@@ -1404,10 +1453,13 @@ Total.
 | test_pad_render.lua | 24 |
 | test_pad.lua | 45 |
 | test_dial.lua | 65 |
+| test_keybinds.lua | 6 |
 | test_dial_shine.lua | 8 |
 | test_icon_style.lua | 10 |
 | test_glow.lua | 11 |
 | test_shine.lua | 7 |
+| test_layers.lua | 10 |
+| test_layout.lua | 23 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -1415,4 +1467,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1173** |
+| **Total** | **1213** |

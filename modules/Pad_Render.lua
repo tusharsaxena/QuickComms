@@ -9,9 +9,9 @@ local _, NS = ...
 -- goes to in WoW's chat color (a smart kind shows the channel it resolved to), or why it sends
 -- nothing, and any lock. The pad's three window tabs (the Window tab until 2026-10-20, the Look tab
 -- before that) are read here as plain values, which modules/Pad.lua applies out of combat: Main
--- window's skin (SkinFor, for the pad), Pad header's look (HeaderLook: the header row's height, font
+-- window's skin (SkinFor, for the pad), Header's look (HeaderLook: the header row's height, font
 -- and skin; its situation text starts at the section titles' left edge, PL.PAD, whatever the growth)
--- and Section header's (SectionLook: each title row's height, font, and a band of background and
+-- and Section titles' (SectionLook: each title row's height, font, and a band of background and
 -- border behind it, ApplySectionBand).
 -- The Buttons tab (ButtonLook) dresses each button: its body, an edge on a plain child laid over it, its
 -- label's font, a glow around the whole button (modules/Glow.lua Glow.Button) and its Shine heading's
@@ -25,6 +25,7 @@ local PL = NS.PadLayout
 local IS = NS.IconStyle
 local Glow = NS.Glow
 local L = NS.L
+local LV = NS.Constants.LAYERS.LEVEL
 
 local DEFAULT_ICON = "Interface\\Icons\\INV_Misc_QuestionMark"
 -- The padlock is the shared catalog's `lock` mark (library-stack-§8), resolved at draw time; this
@@ -119,8 +120,10 @@ function R.ChannelColor(chatType)
     return c[1], c[2], c[3]
 end
 
-local function veil(btn, r, g, b, a)
-    local t = btn:CreateTexture(nil, "OVERLAY")
+-- A state veil over the whole button, drawn on its overlay frame `over` (R.Overlay) at OVERLAY
+-- sublevel `sub`, over the label and padlock (sublevel 0).
+local function veil(btn, over, sub, r, g, b, a)
+    local t = over:CreateTexture(nil, "OVERLAY", nil, sub)
     t:SetAllPoints(btn)
     t:SetColorTexture(r, g, b, a)
     t:Hide()
@@ -155,23 +158,41 @@ function R.ShowLines(owner, title, lines)
     GameTooltip:Show()
 end
 
---- Build a button's regions and hover hooks, once per button.
+--- A button's or a wedge's overlay frame (frame-layering-§3, QUI-Z03/Z04): a plain, mouse-off child at
+--- `offset` over `btn`, above its border and glow frames, holding every region that must read over
+--- them (the label, the padlock and the state veils). Mouse off, so the secure button under it keeps
+--- every click. Made once, out of combat (a button is dressed when it is built).
+function R.Overlay(btn, offset)
+    local over = CreateFrame("Frame", nil, btn)
+    over:SetAllPoints(btn)
+    over:SetFrameLevel(btn:GetFrameLevel() + offset)
+    over:EnableMouse(false)
+    btn.qcOver = over
+    return over
+end
+
+--- Build a button's regions and hover hooks, once per button. The ladder (core/Constants.lua LAYERS):
+--- the fill and icon on the button, the edge frame at BTN_EDGE, the icon frame at BTN_ICON
+--- (IconStyle.IconFrame), each glow one over its host, and the overlay frame at BTN_OVER on top.
 function R.Dress(btn, onEnter, onLeave)
     if btn.qcDressed then return btn end
     btn.qcDressed = true
+    btn.qcIconLevel = LV.BTN_ICON
     btn.qcBg = btn:CreateTexture(nil, "BACKGROUND")
     btn.qcBg:SetAllPoints(btn)
     btn.qcBg:SetColorTexture(0.10, 0.10, 0.12, 0.90)
     -- The Buttons tab's edge and glow host: a plain child laid over the button, mouse off (ApplyButtonLook).
     btn.qcEdge = CreateFrame("Frame", nil, btn, "BackdropTemplate")
     btn.qcEdge:SetAllPoints(btn)
+    btn.qcEdge:SetFrameLevel(btn:GetFrameLevel() + LV.BTN_EDGE)
     btn.qcEdge:EnableMouse(false)
     btn.qcIcon = btn:CreateTexture(nil, "ARTWORK")
     btn.qcIcon:SetSize(PL.ICON, PL.ICON)
     btn.qcIcon:SetPoint("LEFT", btn, "LEFT", 2, 0)
-    btn.qcLabel = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    local over = R.Overlay(btn, LV.BTN_OVER)
+    btn.qcLabel = over:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     btn.qcLabel:SetJustifyH("LEFT")
-    btn.qcLock = btn:CreateTexture(nil, "OVERLAY")
+    btn.qcLock = over:CreateTexture(nil, "OVERLAY")
     btn.qcLock:SetSize(12, 12)
     btn.qcLock:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -1, -1)
     local lockMark = NS.Icon("lock")
@@ -180,9 +201,9 @@ function R.Dress(btn, onEnter, onLeave)
         local gold = NS.Constants.GOLD   -- the catalog art is white; gold as the Blizzard padlock reads
         btn.qcLock:SetVertexColor(gold.r, gold.g, gold.b, 1)
     end
-    btn.qcDim = veil(btn, 0, 0, 0, 0.55)
-    btn.qcCool = veil(btn, 0, 0, 0, 0.35)
-    btn.qcFlash = veil(btn, 1.0, 0.82, 0.0, 0.45)
+    btn.qcDim = veil(btn, over, 1, 0, 0, 0, 0.55)
+    btn.qcCool = veil(btn, over, 2, 0, 0, 0, 0.35)
+    btn.qcFlash = veil(btn, over, 3, 1.0, 0.82, 0.0, 0.45)
     local gold = NS.Constants.GOLD
     local hover = btn:CreateTexture(nil, "HIGHLIGHT")
     hover:SetAllPoints(btn)
@@ -268,7 +289,7 @@ end
 
 local FLAT_EDGE = "Interface\\Buttons\\WHITE8x8"
 
---- A font block's font (the Section header tab's, the Pad header's, the Buttons tab's): { path, size,
+--- A font block's font (the Section titles tab's, the Header tab's, the Buttons tab's): { path, size,
 --- flags, r, g, b, a, shadow }. A face this machine does not have is the standard one; "Use class
 --- color" takes the player's class color, keeping the swatch's alpha (NS.ResolveColor). A missing
 --- swatch is `fallback` when given, else white.
@@ -283,7 +304,7 @@ end
 -- The gold of GameFontNormalSmall: the section titles' and the header's default color.
 R.TITLE_COLOR = { r = 1, g = 0.82, b = 0, a = 1 }
 
---- The section titles' font: the Section header tab's (`pad.section`; gold by default, as the titles
+--- The section titles' font: the Section titles tab's (`pad.section`; gold by default, as the titles
 --- always were).
 function R.TitleFont(section)
     return R.LabelFont(section, R.TITLE_COLOR)

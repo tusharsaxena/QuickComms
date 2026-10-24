@@ -39,6 +39,7 @@ local _, NS = ...
 NS.PreviewWindow = NS.PreviewWindow or {}
 local PW = NS.PreviewWindow
 local L = NS.L
+local LAYERS = NS.Constants.LAYERS
 
 local W = LibStub and LibStub("LibKa0s-Widgets-1.0", true)
 
@@ -159,7 +160,7 @@ end
 
 local function chrome(f)
     f:SetSize(WIDTH, HEIGHT)
-    f:SetFrameStrata("FULLSCREEN")
+    f:SetFrameStrata(LAYERS.STRATA.WINDOW)
     f:EnableMouse(true)
     f:SetMovable(true)
     f:SetClampedToScreen(true)

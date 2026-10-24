@@ -86,7 +86,7 @@ test("glow: each style starts with the knob table's arguments, on the icon, unde
     assertTrue(c[2] == button.qcIconFrame, "the effect is on the icon, not the whole button")
     assertEqual(c[3][1], 1); assertEqual(c[3][2], 0.82); assertEqual(c[3][4], 1)
     assertEqual(c[4], 8); assertEqual(c[5], 0.1); assertNil(c[6]); assertEqual(c[7], 1)
-    assertEqual(c[10], true); assertEqual(c[11], G.KEY); assertEqual(c[12], G.FRAME_LEVEL)
+    assertEqual(c[10], true); assertEqual(c[11], G.KEY); assertEqual(c[12], G.ICON_LEVEL)
     lib.calls = {}
     set(NS, "pad.icon.glowType", "proc")
     rebuild(NS)
@@ -94,14 +94,14 @@ test("glow: each style starts with the knob table's arguments, on the icon, unde
     local proc
     for _, call in ipairs(lib.calls) do if call[1] == "ProcGlow_Start" then proc = call end end
     assertEqual(proc[3].duration, 1); assertEqual(proc[3].startAnim, true); assertEqual(proc[3].key, G.KEY)
-    assertEqual(proc[3].frameLevel, G.FRAME_LEVEL)
+    assertEqual(proc[3].frameLevel, G.ICON_LEVEL)
     lib.calls = {}
     set(NS, "pad.icon.glowType", "button")
     set(NS, "pad.icon.buttonFrequency", 0.5)
     rebuild(NS)
     local btn
     for _, call in ipairs(lib.calls) do if call[1] == "ButtonGlow_Start" then btn = call end end
-    assertEqual(btn[4], 0.5); assertEqual(btn[5], G.FRAME_LEVEL)
+    assertEqual(btn[4], 0.5); assertEqual(btn[5], G.ICON_LEVEL)
     lib.calls = {}
     set(NS, "pad.icon.glowType", "autocast")
     set(NS, "pad.icon.autocastParticles", 6)
@@ -110,7 +110,7 @@ test("glow: each style starts with the knob table's arguments, on the icon, unde
     local ac
     for _, call in ipairs(lib.calls) do if call[1] == "AutoCastGlow_Start" then ac = call end end
     assertEqual(ac[4], 6); assertEqual(ac[5], 0.125); assertEqual(ac[6], 1); assertEqual(ac[7], -3)
-    assertEqual(ac[9], G.KEY); assertEqual(ac[10], G.FRAME_LEVEL)
+    assertEqual(ac[9], G.KEY); assertEqual(ac[10], G.ICON_LEVEL)
     lib.calls = {}
     set(NS, "pad.icon.glowEnabled", false)
     button = rebuild(NS)
