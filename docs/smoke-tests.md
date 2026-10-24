@@ -1221,7 +1221,7 @@ a section of its own (KEY-4).
 past Blizzard's sections → a section titled **Ka0s Quick Comms** holds, in order, Toggle Comms Pads,
 Open Comms Dial 1, 2, 3 and 4, with these labels; the AddOns section no longer lists them, and there
 is no blank spacer row above them. A key bound before the update (for example Open Comms Dial 1 on G)
-is still bound. Result:
+is still bound. Result: 2026-10-24, pass (the owner's run; client build not recorded).
 
 **KEY-5 (SM-QC-KB2, SM-QC-RV3; rewritten 2026-10-24 for the one key button). General → Keybindings follows Options → Keybindings, both ways.** Settings → Ka0s
 Quick Comms → General: the last tab is Keybindings; it opens on the intro line, the dial line, then
@@ -1233,7 +1233,7 @@ bind a key on the tab → it shows in the character set there, and the account s
 character) does not have it. In Options → Keybindings give Open Comms Dial 2 a second key, J, as well
 as H → the tab's button reads "H +1" and its tooltip names H and J and says the others were set on
 the game's Key Bindings page; Clear on that row → both keys are gone there too. The Defaults button's tooltip ends "Key bindings are not changed.";
-Defaults and Reset all settings leave every key bound. Result:
+Defaults and Reset all settings leave every key bound. Result: 2026-10-24, pass (the owner's run; client build not recorded).
 
 **KEY-6 (SM-QC-KB3, SM-QC-RV3; rewritten 2026-10-24 for the one key button). The key works; Escape
 cancels; combat refuses.** Bind Open Comms Dial 1 with the row's key button → the key opens dial 1;
@@ -1244,7 +1244,7 @@ settings window stays open. Take a key another action holds (for example bind a 
 key moves without a question and the line under the rows names the action that lost it. Enter
 combat with the tab open → a capture in progress stops and the line reads "Key bindings can be
 changed after combat."; click the key button or Clear in combat → nothing is bound or cleared, the same line.
-No Lua error. Result:
+No Lua error. Result: 2026-10-24, pass (the owner's run; client build not recorded).
 
 ## Settings layout
 
@@ -1260,7 +1260,7 @@ Behavior → two headings, Sending (When you are solo | Spam guard (seconds), th
 Note dropped callouts in chat) and Pads and dials (Put instance-specific groups first | Show the
 LOCKDOWN tag, then Explain why groups show (tooltips)); each still writes what it did (tick Show the
 LOCKDOWN tag off → no LOCKDOWN on a pad). Hover the header's Defaults → the same text as Master
-controls' Reset all settings tooltip, ending "Key bindings are not changed." Result:
+controls' Reset all settings tooltip, ending "Key bindings are not changed." Result: 2026-10-24, pass (the owner's run; client build not recorded).
 
 **LAYOUT-2 (SM-QC-LY). Groups (QUI-L03 to L08, L34, L-new3).** Groups → the band is one row: the
 Group picker, New group, then Preview while editing, all level, and the strip starts at the same
@@ -1270,7 +1270,7 @@ nothing you have.", then Restore built-in groups; no Inherit box here. When → 
 under the active-now line, grayed out for a group with no parent; on a child, untick it there → its
 own drawers come live, tick it → "Uses <parent>'s conditions. Untick Inherit when conditions above
 …". The fourth tab reads What it sends; the callout popup's heading reads What it sends. Hover
-Defaults → it names the icon and the parent as kept. Result:
+Defaults → it names the icon and the parent as kept. Result: 2026-10-24, pass (the owner's run; client build not recorded).
 
 **LAYOUT-3 (SM-QC-LY). Pad (QUI-L07, L09 to L15, L18, L36, L-new1, L-new3).** Pad → the strip reads
 General, Groups, Layout, Window, Header, Section titles, Buttons, Icons, and fits as before. General →
@@ -1278,7 +1278,7 @@ Enable this pad, Faded opacity, Unlock all pads (or Lock all pads; its tooltip n
 General page > Master controls). Groups → Add group above the list. Layout → Pad scale and Button
 spacing. Buttons → Size, Font, Background (Background color), Border, Button glow, Shine. Icons → Icon
 glow holds the glow offsets, with no Offset heading. Every swatch on Window, Header, Section titles
-and Buttons reads Background color. Result:
+and Buttons reads Background color. Result: 2026-10-24, pass (the owner's run; client build not recorded).
 
 **LAYOUT-4 (SM-QC-LY). Dial (QUI-L07, L08, L19, L21 to L29, L35, L-new3).** Dial → the strip reads
 General, Groups, Layout, Slices, Hub, Paging, Labels, Icons, Ring map; note whether it fits one row at
@@ -1288,13 +1288,13 @@ then Position: Open at, X | Y, Reset. Slices → one Colors heading, then Shine.
 Hub circle, Pointer. Paging → Page row (Distance below labels), Arrows, Page indicator, Indicator
 border, Indicator background (Show indicator background | Background padding). Labels → Slice labels,
 Group labels, then Tooltip; untick Show slice labels → only the slice labels' font grays. Icons → Size,
-offset and crop: Icon size | Icon offset, then Zoom. Ring map lists the rings as Preview did. Result:
+offset and crop: Icon size | Icon offset, then Zoom. Ring map lists the rings as Preview did. Result: 2026-10-24, pass (the owner's run; client build not recorded).
 
 **LAYOUT-5 (SM-QC-LY). Nothing lost, nothing changed.** Before updating, note a few values you set
 (a pad's Faded alpha, Section header height, a dial's slice gap, Tooltip side, Dot border, a group's
 Inherit). After the update: each reads the same under its new name and place, the pads and dials
 look as they did, `/qc list` shows every setting (the Behavior rows in their new order), and after a
-`/reload` every value is still there. Each page's Defaults resets what it did before. Result:
+`/reload` every value is still there. Each page's Defaults resets what it did before. Result: 2026-10-24, pass (the owner's run; client build not recorded).
 
 ## Frame layering
 
@@ -1308,24 +1308,24 @@ the send flash lights over the glows and the borders. The label and the padlock 
 the thick border. The icon's border draws over the button's border where they meet; switch the pad to
 Icon only → note whether the icon's border covers the inner half of the button glow (the analysis
 expected it; say if it looks wrong). Hover a button → its tooltip; click it → it still sends (the
-overlay takes no mouse). Result:
+overlay takes no mouse). Result: 2026-10-24, pass (the owner's run; client build not recorded).
 
 **LAYER-2 (SM-QC-ZS2). A dial wedge's parts in order (QUI-Z04).** On a Comms Dial with Icons → Border
 on and Glow Always, open the dial on a ring holding a refused callout → its wedge's icon ring and glow
 are under the dim veil; send from a wedge → the flash covers its icon glow; the labels and padlocks
 read over the icon rings; the hub and pointer still draw over every wedge. Clicking a slice still
-sends. Result:
+sends. Result: 2026-10-24, pass (the owner's run; client build not recorded).
 
 **LAYER-3 (SM-QC-ZS3). The drag strip over a faded pad (QUI-Z11).** Comms Pad → Fade: out of combat,
 Faded alpha 0.2; unlock the pads (`/qc unlock`) → the pad fades, its drag strip stays at full
 opacity, and dragging it moves the pad; hover the pad → it comes back; lock → the strip hides.
-Result:
+Result: 2026-10-24, pass (the owner's run; client build not recorded).
 
 **LAYER-4 (SM-QC-ZS4). Nothing else moved (QUI-Z01, Z06, Z09, Z10).** With Preview as… on: the
 preview window sits over the preview dial and under the callout popup's dim; the icon browser opens
 over the popup; its Wowhead link window opens over the browser; a delete confirm opened from the
 popup shows over it and can be clicked; the Share export window opens over a preview dial. Open a dial
-by its key, click outside it → it closes (with the settings window closed). No Lua error. Result:
+by its key, click outside it → it closes (with the settings window closed). No Lua error. Result: 2026-10-24, pass (the owner's run; client build not recorded).
 
 ## Icons tab
 
@@ -1592,12 +1592,9 @@ and why it is owed, until its pass is recorded.
 
 EDIT-18, PREVIEW-10, PREVIEW-11, PREVIEW-12, SEND-6, STATE-6 and TOKEN-1 (QC-07 and QF-01 to QF-07)
 passed in the owner's run of 2026-10-24. PREVIEW-11's locked-window tooltip was reworded, and made to
-show on the disabled controls, after that run, on the owner's request.
+show on the disabled controls, after that run, on the owner's request; the owner's later pass of the
+same day covers the reworded check.
 
-LAYER-1 to LAYER-4 (item 030, 2026-10-24): new, not yet run.
-
-LAYOUT-1 to LAYOUT-5 (item 020, QC-LY, 2026-10-24): new, not yet run.
-
-KEY-4 to KEY-6 (item 015, QC-KB, 2026-10-24): new, not yet run. KEY-5 and KEY-6 were rewritten the
-same day for the owner's follow-up (QC-RV3, SM-QC-RV3): one key button and Clear per row, a second
-key shown as `<key> +1` with a tooltip.
+On 2026-10-24 the owner reported that every check of the keybindings, settings layout and frame
+layering run passed (KEY-4 to KEY-6 with the one-key-button follow-up QC-RV3, LAYOUT-1 to LAYOUT-5
+and LAYER-1 to LAYER-4), recorded on each check's Result line. No check is owed.
