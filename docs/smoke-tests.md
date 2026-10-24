@@ -26,6 +26,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | EDIT-1..32 | Editors | The Pad and Dial page names; the Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
 | PREVIEW-1..12 | Preview window | The Preview as selector window: every entry point, the dropdown, End preview, close and Escape, combat, test mode and the stand-down, Alt+Z, the saved position, bare /qc preview and list; every preview drawn as live; a preview or test click prints what it would send; a preview dial staying open on a pick |
 | DIAL-1..41 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, the lone-group open and the group ring, page arrows and the page row, Auto wedges, the ring radius, the Slice labels tab, the slices and the slice lit by direction, the Slices tab, the pointer, the tooltip outside the dial, the hub over the slices, the pointer, label and icon offsets, the Paging tab; the dial polish: the border gone, the slice gap, placement from W, a slice clicked to the hub in combat, the hub styles, the Group labels tab, Icon offset on Icons, 128-pixel icons, a click outside closing the dial in combat, the page indicators' background and border, the Hub tab; automatic icon offset and size; the 120 radius and 48-pixel icons by default; a right click back a ring; opening where it was closed; slices from N |
+| LAYER-1..4 | Frame layering | Item 030: a pad button's and a dial wedge's borders, glows, label, padlock and veils in order; the drag strip over a faded pad; the windows, modals and popups still stacked as before |
 | KEY-1..6 | Key bindings | A dial's key as WoW's own binding in Options → Keybindings, Character Specific Keybindings, Toggle Comms Pads; item 015: the Ka0s Quick Comms section of its own, the General → Keybindings tab in sync both ways, its capture and combat refusal |
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
 | LOOK-1..6 | Pad header, Section header, Window | The Comms Pad's three window tabs: the section titles' font, the pad's border and background, the header's look, size and alignment, the tab strip and headings, the section header's band and height |
@@ -1240,6 +1241,37 @@ combat with the tab open → a capture in progress stops and the line reads "Key
 changed after combat."; click a slot or Clear in combat → nothing is bound or cleared, the same line.
 No Lua error. Result:
 
+## Frame layering
+
+Item 030 (frame-layering, standard v2.88.0; `core/Constants.lua` `NS.Constants.LAYERS`).
+
+**LAYER-1 (SM-QC-ZS1). A pad button's parts in order (QUI-Z02, Z03).** On a Comms Pad: Buttons →
+Border thickness 3, color white, and Glow on; Icons → Border on and Glow Always. Add a callout whose
+text starts with `/` so its button is refused → that button dims **whole**: its edge, the icon's
+border and both glows are under the dim veil, not at full brightness over it. Press an armed button →
+the send flash lights over the glows and the borders. The label and the padlock stay readable over
+the thick border. The icon's border draws over the button's border where they meet; switch the pad to
+Icon only → note whether the icon's border covers the inner half of the button glow (the analysis
+expected it; say if it looks wrong). Hover a button → its tooltip; click it → it still sends (the
+overlay takes no mouse). Result:
+
+**LAYER-2 (SM-QC-ZS2). A dial wedge's parts in order (QUI-Z04).** On a Comms Dial with Icons → Border
+on and Glow Always, open the dial on a ring holding a refused callout → its wedge's icon ring and glow
+are under the dim veil; send from a wedge → the flash covers its icon glow; the labels and padlocks
+read over the icon rings; the hub and pointer still draw over every wedge. Clicking a slice still
+sends. Result:
+
+**LAYER-3 (SM-QC-ZS3). The drag strip over a faded pad (QUI-Z11).** Comms Pad → Fade: out of combat,
+Faded alpha 0.2; unlock the pads (`/qc unlock`) → the pad fades, its drag strip stays at full
+opacity, and dragging it moves the pad; hover the pad → it comes back; lock → the strip hides.
+Result:
+
+**LAYER-4 (SM-QC-ZS4). Nothing else moved (QUI-Z01, Z06, Z09, Z10).** With Preview as… on: the
+preview window sits over the preview dial and under the callout popup's dim; the icon browser opens
+over the popup; its Wowhead link window opens over the browser; a delete confirm opened from the
+popup shows over it and can be clicked; the Share export window opens over a preview dial. Open a dial
+by its key, click outside it → it closes (with the settings window closed). No Lua error. Result:
+
 ## Icons tab
 
 **ICONS-1. Look.** Pad → Icons: Icon size reads 16 on a new pad (an icon-only button is 24
@@ -1507,4 +1539,4 @@ EDIT-18, PREVIEW-10, PREVIEW-11, PREVIEW-12, SEND-6, STATE-6 and TOKEN-1 (QC-07 
 passed in the owner's run of 2026-10-24. PREVIEW-11's locked-window tooltip was reworded, and made to
 show on the disabled controls, after that run, on the owner's request.
 
-None.
+LAYER-1 to LAYER-4 (item 030, 2026-10-24): new, not yet run.

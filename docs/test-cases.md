@@ -1294,6 +1294,19 @@ Total.
 - shine: blooms only for fluid
 - shine: the button's own size when none is given
 
+### test_layers.lua (10)
+
+- layers: NS.Constants.LAYERS names every strata and level once (frame-layering-§5)
+- layers: no strata string and no bare level at any call site (anti-pattern #99)
+- layers: a pad's root is the HUD tier; its header and buttons sit one over it
+- layers: [QUI-Z11] the pad's drag strip ignores the pad's alpha
+- layers: [QUI-Z02/Z03] a pad button's ladder: edge, its glow, icon border, its glow, overlay
+- layers: the dial's header, front, catchers and screen catcher keep their tiers
+- layers: [QUI-Z04] a wedge's ladder: icon border, its glow, then the overlay over both
+- layers: [QUI-Z10] the preview window is the window tier, never toplevel, never raised
+- layers: the modal bands sit over UIParent, each part at its named offset
+- layers: [QUI-Z06] the Share window keeps the window tier; the icon link window is lifted to POPUP
+
 ### test_vendor_sync.lua (3)
 
 - libs/LibKa0s is the LibKa0s release CLAUDE.md says this addon bundles
@@ -1418,6 +1431,7 @@ Total.
 | test_icon_style.lua | 10 |
 | test_glow.lua | 11 |
 | test_shine.lua | 7 |
+| test_layers.lua | 10 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -1425,4 +1439,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1179** |
+| **Total** | **1189** |

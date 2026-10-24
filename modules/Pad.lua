@@ -45,6 +45,7 @@ local R = NS.PadRender
 local State = NS.State
 local L = NS.L
 local Perf = NS.Perf
+local LAYERS = NS.Constants.LAYERS
 
 local TAG = "Pad"
 local FLASH_SECONDS = 0.4
@@ -270,7 +271,7 @@ local function build(id)
     local root = CreateFrame("Frame", "QuickCommsPad" .. id, UIParent, "BackdropTemplate")
     root:SetClampedToScreen(true)
     root:SetMovable(true)
-    root:SetFrameStrata("MEDIUM")
+    root:SetFrameStrata(LAYERS.STRATA.HUD)
     root:EnableMouseWheel(true)
     root:SetScript("OnMouseWheel", function(_, delta) Pad.Wheel(id, delta) end)
     NS.ApplySkin(root)
@@ -293,7 +294,11 @@ local function build(id)
     R.DressHeader(header, function() Pad.ToggleCollapsed(id) end)
     inst.header = header
     -- The label is set again on every Apply (stripLabel), so a rename and a preview reach it.
+    -- ignoreParentAlpha (DragHandle minor 5, QUI-Z11): the strip is the root's child and the root takes
+    -- the pad's alpha (Pad.ApplyAlpha), so without it the strip would fade with the pad while it is
+    -- still clickable (frame-layering-§2).
     inst.handle = NS.MakeDragHandle(root, {
+        ignoreParentAlpha = true,
         label = pad.name or L["Comms Pad"],
         moveFrame = root,
         canDrag = function() return not isLocked() and not inCombat() end,

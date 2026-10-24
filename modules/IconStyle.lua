@@ -120,12 +120,15 @@ function IS.ApplyIcon(tex, cfg, r, g, b)
 end
 
 --- The plain child frame over a button's icon (`btn.qcIcon`): the border's backdrop and the glow's
---- host. Made on first use.
+--- host. Made on first use, at the level its dress named (`btn.qcIconLevel`: a pad button's BTN_ICON,
+--- over its edge frame and that frame's glow; a wedge's WEDGE_ICON), never the default parent + 1
+--- (frame-layering-§3: no tie with the edge frame, QUI-Z02).
 function IS.IconFrame(btn)
     local f = btn.qcIconFrame
     if not f then
         f = CreateFrame("Frame", nil, btn, "BackdropTemplate")
         f:SetAllPoints(btn.qcIcon)
+        f:SetFrameLevel(btn:GetFrameLevel() + (btn.qcIconLevel or NS.Constants.LAYERS.LEVEL.BTN_ICON))
         btn.qcIconFrame = f
     end
     return f

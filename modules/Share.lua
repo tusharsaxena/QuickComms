@@ -694,7 +694,8 @@ function SH.Collect(pick)
 end
 
 --- The export window: the LibKa0s copy window (core/WidgetsSetup.lua), built on first use; nil
---- without the library.
+--- without the library. It keeps the library's FULLSCREEN, the WINDOW tier of core/Constants.lua
+--- LAYERS (over the dial, under the modal bands by level).
 function SH.Window()
     SH.window = SH.window or NS.MakeCopyWindow({ name = "QuickCommsShareWindow", scrollName = "QuickCommsShareScroll",
         title = L["Quick Comms: share string"], width = 560, height = 300 })

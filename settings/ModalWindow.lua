@@ -29,9 +29,13 @@ local _, NS = ...
 -- Inside a band the levels are fixed: the catcher at the base, the template's Bg at base + 1 (the
 -- template declares it at absolute level 0, which would put it under the catcher's dim), the window
 -- with its border at base + 2, the page at base + 3 and the close X at base + 5 (it overlaps the
--- page's top edge).
+-- page's top edge). Every strata and level here is a name in core/Constants.lua LAYERS: a band's base
+-- is UIParent's level plus MODAL or MODAL_OVER (the catcher sits at it), and each part is the base plus
+-- its offset.
 
 local Settings = NS.addon.Settings
+local LAYERS = NS.Constants.LAYERS
+local LV = LAYERS.LEVEL
 
 Settings.ModalWindow = Settings.ModalWindow or {}
 local MW = Settings.ModalWindow
@@ -41,14 +45,15 @@ local TEMPLATE = "SettingsFrameTemplate"
 -- -3,3), under the title bar; the fallback window is the page alone.
 MW.INSET_TEMPLATE = { left = 8, top = 24, right = 4, bottom = 5 }
 MW.INSET_PLAIN = { left = 0, top = 0, right = 0, bottom = 0 }
-MW.LEVEL = 10
+-- Aliases of the layers table, kept for the popup's and the browser's builds.
+MW.LEVEL = LV.MODAL
 -- A modal over a modal (the icon browser over the popup): its band's base, in the same strata.
-MW.LEVEL_OVER = 200
+MW.LEVEL_OVER = LV.MODAL_OVER
 -- The strata of every QuickComms modal: over the dial's DIALOG (STACKING above).
-MW.STRATA = "FULLSCREEN"
+MW.STRATA = LAYERS.STRATA.MODAL
 -- The strata a QuickComms confirm (a Blizzard StaticPopup: the deletes, Reset all) is shown in, one
 -- over the modals' (MW.LiftConfirm).
-MW.CONFIRM_STRATA = "FULLSCREEN_DIALOG"
+MW.CONFIRM_STRATA = LAYERS.STRATA.POPUP
 local DIM = { 0, 0, 0, 0.45 }
 
 local function H() return Settings.Helpers end
@@ -73,10 +78,10 @@ end
 
 -- The fallback's chrome: Blizzard's dialog edge over a dark fill under the page, and the shared
 -- close mark.
-local function plainChrome(window, panel, chrome, onClose, base)
+local function plainChrome(window, panel, chrome, onClose, at)
     local bg = CreateFrame("Frame", nil, window, "BackdropTemplate")
     bg:SetAllPoints(window)
-    bg:SetFrameLevel(base + 1)
+    bg:SetFrameLevel(at(LV.MODAL_BG))
     if bg.SetBackdrop then
         bg:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8X8",
@@ -112,13 +117,15 @@ end
 --- X's or the close mark's click) }.
 --- @return table { catcher, frame, chrome, ctx (the page's panel context), inset }
 function MW.Build(spec)
-    local LEVEL = spec.level or MW.LEVEL
-    local catcher = makeCatcher(spec.strata, LEVEL)
+    -- The band's base: UIParent's level plus the band's offset; every part sits at base + its offset.
+    local base = UIParent:GetFrameLevel() + (spec.level or MW.LEVEL)
+    local function at(offset) return base + offset end
+    local catcher = makeCatcher(spec.strata, base)
     local window, chrome = makeWindow(spec.name, catcher)
     local inset = chrome.template and MW.INSET_TEMPLATE or MW.INSET_PLAIN
     -- The strata again: a template may name its own, and the window must stay above the catcher.
     window:SetFrameStrata(spec.strata)
-    window:SetFrameLevel(LEVEL + 2)
+    window:SetFrameLevel(at(LV.MODAL_WINDOW))
     window:SetSize(spec.width, spec.height)
     window:ClearAllPoints()
     window:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
@@ -130,17 +137,17 @@ function MW.Build(spec)
     panel:ClearAllPoints()
     panel:SetPoint("TOPLEFT", window, "TOPLEFT", inset.left, -inset.top)
     panel:SetPoint("BOTTOMRIGHT", window, "BOTTOMRIGHT", -inset.right, inset.bottom)
-    panel:SetFrameLevel(LEVEL + 3)
+    panel:SetFrameLevel(at(LV.MODAL_PAGE))
     if chrome.template then
         -- The template's Bg, over the catcher's dim and under the border: at its declared level 0
         -- the dim would draw over it, and the window would be darker than the settings window.
-        if chrome.bg then chrome.bg:SetFrameLevel(LEVEL + 1) end
+        if chrome.bg then chrome.bg:SetFrameLevel(at(LV.MODAL_BG)) end
         -- The template's close X (an accepted deviation, docs/ARCHITECTURE.md): a click is the
         -- caller's close, and it sits above the page, whose top edge it overlaps.
         chrome.close:SetScript("OnClick", function() spec.onClose() end)
-        chrome.close:SetFrameLevel(LEVEL + 5)
+        chrome.close:SetFrameLevel(at(LV.MODAL_CLOSE))
     else
-        plainChrome(window, panel, chrome, function() spec.onClose() end, LEVEL)
+        plainChrome(window, panel, chrome, function() spec.onClose() end, at)
     end
     -- Escape hides a special frame.
     if UISpecialFrames then UISpecialFrames[#UISpecialFrames + 1] = spec.name end
@@ -160,12 +167,12 @@ local confirmStrata = setmetatable({}, { __mode = "k" })
 function MW.LiftConfirm(def)
     def.OnShow = function(dialog)
         if not (dialog and dialog.SetFrameStrata) then return end
-        confirmStrata[dialog] = dialog.GetFrameStrata and dialog:GetFrameStrata() or "DIALOG"
+        confirmStrata[dialog] = dialog.GetFrameStrata and dialog:GetFrameStrata() or LAYERS.STRATA.STATIC_POPUP
         dialog:SetFrameStrata(MW.CONFIRM_STRATA)
     end
     def.OnHide = function(dialog)
         if not (dialog and dialog.SetFrameStrata) then return end
-        dialog:SetFrameStrata(confirmStrata[dialog] or "DIALOG")
+        dialog:SetFrameStrata(confirmStrata[dialog] or LAYERS.STRATA.STATIC_POPUP)
         confirmStrata[dialog] = nil
     end
     return def

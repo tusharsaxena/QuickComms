@@ -55,6 +55,7 @@ local G = NS.SendGuard
 local State = NS.State
 local L = NS.L
 local Perf = NS.Perf
+local LAYERS = NS.Constants.LAYERS
 
 local TAG_Q, TAG_S = "Queue", "Send"
 
@@ -205,7 +206,9 @@ function SE.NewDialHeader(name)
     end
     local h = CreateFrame("Button", name, UIParent, "SecureHandlerClickTemplate")
     h:RegisterForClicks("AnyDown")
-    h:SetFrameStrata("DIALOG")
+    -- The secure fixed point (core/Constants.lua LAYERS): chosen first, never moved, since a secure
+    -- frame's strata is protected in combat; everything insecure that must sit over the dial is a tier up.
+    h:SetFrameStrata(LAYERS.STRATA.HUD_POPUP)
     h:Hide()
     return h
 end
@@ -231,7 +234,9 @@ function SE.NewDialCatcher(header, ring, pre)
     c:RegisterForClicks("AnyUp")
     header:WrapScript(c, "OnClick", pre)
     c:SetAttribute("useOnKeyDown", false)
-    c:SetFrameLevel(math.max(0, (header:GetFrameLevel() or 0) - 1))
+    -- Under its own ring (DIAL_CATCHER, -1), deliberately: the ring container draws no region, so
+    -- nothing of the ring covers it, and the wedges over it take no mouse.
+    c:SetFrameLevel(math.max(0, (header:GetFrameLevel() or 0) + LAYERS.LEVEL.DIAL_CATCHER))
     return c
 end
 
@@ -245,7 +250,7 @@ end
 function SE.NewDialScreen(header, pre)
     if inCombat() then return nil end
     local s = CreateFrame("Button", nil, header, "SecureActionButtonTemplate")
-    s:SetFrameStrata("HIGH")
+    s:SetFrameStrata(LAYERS.STRATA.DIAL_SCREEN)
     s:SetAllPoints(UIParent)
     s:RegisterForClicks("AnyUp")
     header:WrapScript(s, "OnClick", pre)

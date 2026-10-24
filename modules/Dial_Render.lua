@@ -29,6 +29,7 @@ local Glow = NS.Glow
 local Slices = NS.DialSlices
 local L = NS.L
 local Perf = NS.Perf
+local LV = NS.Constants.LAYERS.LEVEL
 
 -- The hollow rings (crisp dial art, 2026-10-21): media/textures/dial-ring-<k>.tga, written by
 -- tools/gen-dial-textures.py, ring k's line RING_STEPS[k] of its diameter, a geometric ladder from
@@ -71,8 +72,8 @@ function R.RingTexture(diameter, width)
 end
 
 -- A round texture: the disc, tinted.
-local function circle(frame, layer, size, r, g, b, a)
-    local t = frame:CreateTexture(nil, layer)
+local function circle(frame, layer, size, r, g, b, a, sub)
+    local t = frame:CreateTexture(nil, layer, nil, sub)
     t:SetTexture(Slices.DISC)
     t:SetVertexColor(r, g, b, a)
     t:SetSize(size, size)
@@ -205,10 +206,11 @@ function R.DressHub(header, onEnter)
 end
 
 --- Raise the hub's front frame over every ring and wedge (a rebuild may have made new ones), and
---- hand it the rings the pointer tracks. Insecure: a plain frame's level.
+--- hand it the rings the pointer tracks: DIAL_FRONT over the header (core/Constants.lua LAYERS), above
+--- every wedge's overlay frame (header + 6). Insecure: a plain frame's level.
 function R.RaiseFront(header, rings)
     header.qcRingFrames = rings
-    header.qcPointer:SetFrameLevel((header:GetFrameLevel() or 0) + 20)
+    header.qcPointer:SetFrameLevel((header:GetFrameLevel() or 0) + LV.DIAL_FRONT)
 end
 
 -- A color swatch through its class-color companion, as { r, g, b, a }.
@@ -451,24 +453,29 @@ function R.ShowTooltip(btn)
     R.ShowTip(btn, lines[1], rest)
 end
 
---- Build a wedge's regions, once per button.
+--- Build a wedge's regions, once per button. The ladder (core/Constants.lua LAYERS), as a pad
+--- button's (QUI-Z04): the icon on the wedge, the icon frame at WEDGE_ICON (IconStyle.IconFrame) with
+--- its glow one over it, and the mouse-off overlay frame at WEDGE_OVER holding the label, the padlock
+--- (OVERLAY 0) and the veils (OVERLAY 1-3).
 function R.DressWedge(btn)
     if btn.qcDressed then return btn end
     btn.qcDressed = true
+    btn.qcIconLevel = LV.WEDGE_ICON
     btn.qcIcon = btn:CreateTexture(nil, "ARTWORK")
     btn.qcIcon:SetSize(DL.WEDGE - 12, DL.WEDGE - 12)
     btn.qcIcon:SetPoint("CENTER", btn, "CENTER", 0, 0)
-    btn.qcLabel = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    btn.qcLock = btn:CreateTexture(nil, "OVERLAY")
+    local over = NS.PadRender.Overlay(btn, LV.WEDGE_OVER)
+    btn.qcLabel = over:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    btn.qcLock = over:CreateTexture(nil, "OVERLAY")
     btn.qcLock:SetSize(14, 14)
     btn.qcLock:SetPoint("TOPRIGHT", btn, "TOPRIGHT", 0, 0)
     local lockTint = NS.Constants.GOLD
     mark(btn.qcLock, "lock", LOCK_ICON, lockTint.r, lockTint.g, lockTint.b)
-    btn.qcDim = circle(btn, "OVERLAY", DL.WEDGE, 0, 0, 0, 0.55)
+    btn.qcDim = circle(over, "OVERLAY", DL.WEDGE, 0, 0, 0, 0.55, 1)
     btn.qcDim:Hide()
-    btn.qcCool = circle(btn, "OVERLAY", DL.WEDGE, 0, 0, 0, 0.35)
+    btn.qcCool = circle(over, "OVERLAY", DL.WEDGE, 0, 0, 0, 0.35, 2)
     btn.qcCool:Hide()
-    btn.qcFlash = circle(btn, "OVERLAY", DL.WEDGE, 1, 1, 1, 0.45)
+    btn.qcFlash = circle(over, "OVERLAY", DL.WEDGE, 1, 1, 1, 0.45, 3)
     btn.qcFlash:Hide()
     return btn
 end

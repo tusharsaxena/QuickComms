@@ -1016,6 +1016,11 @@ local function build()
         M.__applyStateDrivers()
     end
 
+    -- UIParent's frame level, as the client answers it: a band over UIParent (settings/ModalWindow.lua's
+    -- catchers, item 030) is its level plus a named offset, and the base's metatable would hand back
+    -- the frame itself.
+    rawset(M.UIParent, "GetFrameLevel", function() return 0 end)
+
     return M
 end
 
