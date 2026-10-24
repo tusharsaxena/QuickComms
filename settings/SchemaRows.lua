@@ -14,6 +14,10 @@ local B = NS.C.PROFILE.behavior
 local function rebuild(...) return NS.addon.Settings.RebuildSurfaces(...) end
 
 local BEHAVIOR  = L["Behavior"]
+-- Behavior's two subjects, each under its own heading (item 020, QUI-L01; options-ui-§7): what a
+-- send does, then what the pads and dials show. The rows are in that order; /qc list follows it.
+local SENDING   = L["Sending"]
+local SURFACES  = L["Pads and dials"]
 local FALLBACKS = { "none", "self", "say" }
 
 local function oneOf(list)
@@ -35,32 +39,33 @@ if not NS.addon.Settings.Helpers.MASTER_GROUP then return end
 
 NS.SchemaRuntime.AddRows({
     { path = "behavior.soloFallback", type = "string", default = B.soloFallback, page = "general",
-      group = BEHAVIOR, label = L["When you are solo"],
+      group = BEHAVIOR, subgroup = SENDING, label = L["When you are solo"],
       desc = L["What a Smart group or Smart lead callout does when you are not in a group."],
       values = { { value = "none", text = L["Do nothing"] }, { value = "self", text = L["Print to me"] },
                  { value = "say", text = L["Send to Say"] } },
       validate = oneOf(FALLBACKS), onChange = rebuild },
     { path = "behavior.spamGuard", type = "number", default = B.spamGuard, page = "general",
-      group = BEHAVIOR, label = L["Spam guard (seconds)"],
+      group = BEHAVIOR, subgroup = SENDING, label = L["Spam guard (seconds)"],
       desc = L["Shortest time between any two callouts. Bosses silently drop messages sent faster than about a second apart."],
       min = 0.6, max = 2.0, step = 0.1,
       validate = isNumber, normalize = clampGuard },
-    { path = "behavior.dropNotes", type = "bool", default = B.dropNotes, page = "general",
-      group = BEHAVIOR, label = L["Note dropped callouts in chat"],
-      desc = L["Print a one-line note when a callout seems to have been dropped by the game."] },
-    { path = "behavior.whyTooltips", type = "bool", default = B.whyTooltips, page = "general",
-      group = BEHAVIOR, label = L["Explain why groups show"],
-      desc = L["Show which conditions matched in the pad and dial tooltips."] },
-    { path = "behavior.lockdownChip", type = "bool", default = B.lockdownChip, page = "general",
-      group = BEHAVIOR, label = L["Show the lockdown tag"],
-      desc = L["Show LOCKDOWN on a pad or dial when lockdown is blocking one of its callouts."],
-      onChange = rebuild },
     { path = "behavior.sounds", type = "bool", default = B.sounds, page = "general",
-      group = BEHAVIOR, label = L["Play a sound on send"], desc = L["A short sound when a callout is sent."] },
+      group = BEHAVIOR, subgroup = SENDING, label = L["Play a sound on send"],
+      desc = L["A short sound when a callout is sent."] },
+    { path = "behavior.dropNotes", type = "bool", default = B.dropNotes, page = "general",
+      group = BEHAVIOR, subgroup = SENDING, label = L["Note dropped callouts in chat"],
+      desc = L["Print a one-line note when a callout seems to have been dropped by the game."] },
     { path = "behavior.autoPromote", type = "bool", default = B.autoPromote, page = "general",
-      group = BEHAVIOR, label = L["Promote specific groups"],
+      group = BEHAVIOR, subgroup = SURFACES, label = L["Put instance-specific groups first"],
       desc = L["Groups for a specific dungeon or battleground move above general ones on each pad and dial."],
       onChange = rebuild },
+    { path = "behavior.lockdownChip", type = "bool", default = B.lockdownChip, page = "general",
+      group = BEHAVIOR, subgroup = SURFACES, label = L["Show the LOCKDOWN tag"],
+      desc = L["Show LOCKDOWN on a pad or dial when lockdown is blocking one of its callouts."],
+      onChange = rebuild },
+    { path = "behavior.whyTooltips", type = "bool", default = B.whyTooltips, page = "general",
+      group = BEHAVIOR, subgroup = SURFACES, label = L["Explain why groups show (tooltips)"],
+      desc = L["Show which conditions matched in the pad and dial tooltips."] },
     -- Drawn by the Groups page's band, under its picker (settings/Groups.lua), never by a tab: on
     -- that page so its Defaults reaches it (options-ui-§13, what the page draws).
     { path = "behavior.previewOnEdit", type = "bool", default = B.previewOnEdit, page = "groups",

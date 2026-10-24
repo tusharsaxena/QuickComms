@@ -26,10 +26,11 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | EDIT-1..32 | Editors | The Pad and Dial page names; the Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
 | PREVIEW-1..12 | Preview window | The Preview as selector window: every entry point, the dropdown, End preview, close and Escape, combat, test mode and the stand-down, Alt+Z, the saved position, bare /qc preview and list; every preview drawn as live; a preview or test click prints what it would send; a preview dial staying open on a pick |
 | DIAL-1..41 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, the lone-group open and the group ring, page arrows and the page row, Auto wedges, the ring radius, the Slice labels tab, the slices and the slice lit by direction, the Slices tab, the pointer, the tooltip outside the dial, the hub over the slices, the pointer, label and icon offsets, the Paging tab; the dial polish: the border gone, the slice gap, placement from W, a slice clicked to the hub in combat, the hub styles, the Group labels tab, Icon offset on Icons, 128-pixel icons, a click outside closing the dial in combat, the page indicators' background and border, the Hub tab; automatic icon offset and size; the 120 radius and 48-pixel icons by default; a right click back a ring; opening where it was closed; slices from N |
+| LAYOUT-1..5 | Settings layout | Item 020: the General page's Behavior headings and Defaults tooltip; the Groups band on one row, General's order, Inherit on When, What it sends; the Pad strip outside in and its relabels; the Dial strip (Layout, Labels, Ring map) and its headings; no setting lost or changed, through a /reload |
 | LAYER-1..4 | Frame layering | Item 030: a pad button's and a dial wedge's borders, glows, label, padlock and veils in order; the drag strip over a faded pad; the windows, modals and popups still stacked as before |
 | KEY-1..6 | Key bindings | A dial's key as WoW's own binding in Options → Keybindings, Character Specific Keybindings, Toggle Comms Pads; item 015: the Ka0s Quick Comms section of its own, the General → Keybindings tab in sync both ways, its capture and combat refusal |
 | SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
-| LOOK-1..6 | Pad header, Section header, Window | The Comms Pad's three window tabs: the section titles' font, the pad's border and background, the header's look, size and alignment, the tab strip and headings, the section header's band and height |
+| LOOK-1..6 | Window, Header, Section titles (Pad header and Section header before item 020) | The Comms Pad's three window tabs: the section titles' font, the pad's border and background, the header's look, size and alignment, the tab strip and headings, the section header's band and height |
 | BUTTON-1..2 | Buttons tab | The buttons' size, color, border and font; the button glow |
 | ICONS-1..4 | Icons tab | The buttons' and wedges' icon look, border and glow triggers; the glows through LibKa0s-Glow-1.0 |
 | ICON-1..4 | Icons | Choosing an icon, for a callout and for a group; the LibKa0s v1.75.0 re-vendor: the icon browser's three sets and the library-drawn marks; the popup and the browser over the preview dial |
@@ -1241,6 +1242,56 @@ combat with the tab open → a capture in progress stops and the line reads "Key
 changed after combat."; click a slot or Clear in combat → nothing is bound or cleared, the same line.
 No Lua error. Result:
 
+## Settings layout
+
+Item 020 (2026-10-24): rows moved, regrouped and relabeled, no setting changed. Checks above that
+were written before it use the old names: Pad header is now Header, Section header is Section titles,
+Wheel is Layout, Slice labels and Group labels are one Labels tab, the Groups and Dial Preview tabs
+are What it sends and Ring map, Faded alpha is Faded opacity, Wedges per ring is Slices per ring,
+Add a group is Add group, Unlock pads is Unlock all pads, and the editors' Enabled box is Enable this
+group, pad or dial.
+
+**LAYOUT-1 (SM-QC-LY). General (QUI-L01, L02, L-new2).** Settings → Ka0s Quick Comms → General →
+Behavior → two headings, Sending (When you are solo | Spam guard (seconds), then Play a sound on send |
+Note dropped callouts in chat) and Pads and dials (Put instance-specific groups first | Show the
+LOCKDOWN tag, then Explain why groups show (tooltips)); each still writes what it did (tick Show the
+LOCKDOWN tag off → no LOCKDOWN on a pad). Hover the header's Defaults → the same text as Master
+controls' Reset all settings tooltip, ending "Key bindings are not changed." Result:
+
+**LAYOUT-2 (SM-QC-LY). Groups (QUI-L03 to L08, L34, L-new3).** Groups → the band is one row: the
+Group picker, New group, then Preview while editing, all level, and the strip starts at the same
+height as on Pad and Dial. General → Name | Enable this group, the icon, Parent group alone, Duplicate
+| Delete group, a gap, a gray line "Adds back the built-in groups and callouts you deleted. Changes
+nothing you have.", then Restore built-in groups; no Inherit box here. When → Inherit when conditions
+under the active-now line, grayed out for a group with no parent; on a child, untick it there → its
+own drawers come live, tick it → "Uses <parent>'s conditions. Untick Inherit when conditions above
+…". The fourth tab reads What it sends; the callout popup's heading reads What it sends. Hover
+Defaults → it names the icon and the parent as kept. Result:
+
+**LAYOUT-3 (SM-QC-LY). Pad (QUI-L07, L09 to L15, L18, L36, L-new1, L-new3).** Pad → the strip reads
+General, Groups, Layout, Window, Header, Section titles, Buttons, Icons, and fits as before. General →
+Enable this pad, Faded opacity, Unlock all pads (or Lock all pads; its tooltip names Lock frame on the
+General page > Master controls). Groups → Add group above the list. Layout → Pad scale and Button
+spacing. Buttons → Size, Font, Background (Background color), Border, Button glow, Shine. Icons → Icon
+glow holds the glow offsets, with no Offset heading. Every swatch on Window, Header, Section titles
+and Buttons reads Background color. Result:
+
+**LAYOUT-4 (SM-QC-LY). Dial (QUI-L07, L08, L19, L21 to L29, L35, L-new3).** Dial → the strip reads
+General, Groups, Layout, Slices, Hub, Paging, Labels, Icons, Ring map; note whether it fits one row at
+your UI scale. General → Enable this dial, then the gray line pointing at the General page >
+Keybindings, then Delete dial (no key box). Layout → Slices per ring | Ring radius, Slice gap alone,
+then Position: Open at, X | Y, Reset. Slices → one Colors heading, then Shine. Hub → Hub, Hub border,
+Hub circle, Pointer. Paging → Page row (Distance below labels), Arrows, Page indicator, Indicator
+border, Indicator background (Show indicator background | Background padding). Labels → Slice labels,
+Group labels, then Tooltip; untick Show slice labels → only the slice labels' font grays. Icons → Size,
+offset and crop: Icon size | Icon offset, then Zoom. Ring map lists the rings as Preview did. Result:
+
+**LAYOUT-5 (SM-QC-LY). Nothing lost, nothing changed.** Before updating, note a few values you set
+(a pad's Faded alpha, Section header height, a dial's slice gap, Tooltip side, Dot border, a group's
+Inherit). After the update: each reads the same under its new name and place, the pads and dials
+look as they did, `/qc list` shows every setting (the Behavior rows in their new order), and after a
+`/reload` every value is still there. Each page's Defaults resets what it did before. Result:
+
 ## Frame layering
 
 Item 030 (frame-layering, standard v2.88.0; `core/Constants.lua` `NS.Constants.LAYERS`).
@@ -1540,3 +1591,5 @@ passed in the owner's run of 2026-10-24. PREVIEW-11's locked-window tooltip was 
 show on the disabled controls, after that run, on the owner's request.
 
 LAYER-1 to LAYER-4 (item 030, 2026-10-24): new, not yet run.
+
+LAYOUT-1 to LAYOUT-5 (item 020, QC-LY, 2026-10-24): new, not yet run.

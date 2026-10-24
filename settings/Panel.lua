@@ -103,12 +103,14 @@ local function renderGeneral(c)
     })
 end
 
+-- The header Defaults is the global reset (showResetPopup), so it carries the library's Reset all
+-- settings tooltip, read from the same descriptor Master controls' button uses, then the key-binding
+-- sentence (item 020, QUI-L-new2; options-ui-§12, §20): one act, described one way.
 local function buildGeneralPage(parentCategory)
     local ctx = Helpers.CreatePanel(addonName .. "GeneralPanel", L["General"], {
         pageKey         = "general",
         defaultsButton  = true,
-        defaultsTooltip = L["Reset every %s setting to its default. Asks for confirmation."]:format(NS.BRAND)
-            .. " " .. Helpers.KEYBINDS_UNCHANGED,
+        defaultsTooltip = Helpers.ResetAllTooltip(Helpers.KEYBINDS_UNCHANGED),
     })
     ctx.panel.defaultsOnClick = showResetPopup
     Helpers.SetRenderer(ctx, renderGeneral)

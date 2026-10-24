@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1189%2F1189_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1213%2F1213_passing-green)
 
 Quick Comms puts your usual group callouts one click or one keypress away. "Kick on me", "Lust
 now", "INC Lumber Mill": set them up once and they sit on a Comms Pad or open from a
@@ -46,17 +46,16 @@ nothing). The key again, Escape, a right click on the middle button or a click a
 dial closes it, and the next press opens it where you left it: the same group and page. The number
 keys 1 to 8 pick a wedge. Slices are laid out from the top (N), going
 clockwise and evenly spaced: one is the whole dial, two are top and bottom, three are thirds. The slice the mouse points into lights whole, anywhere outside the middle button, a click
-anywhere in it sends it, and its tooltip shows outside the dial. On Settings → Dial, the Wheel tab sets
-the wedges per ring (Auto spreads them evenly, up to 12, and pages sooner when big icons would not
-fit) and the ring's radius; the Slices tab colors the slices, sets the gap between them, colors the
-lit slice and gives the slices an optional shine (Gloss cap, Gloss fade, Glass orb, Frosted glass,
+anywhere in it sends it, and its tooltip shows outside the dial. On Settings → Dial, the Layout tab sets
+the slices per ring (Auto spreads them evenly, up to 12, and pages sooner when big icons would not
+fit), the ring's radius, the gap between the slices and where the dial opens; the Slices tab colors
+the slices and the lit slice and gives the slices an optional shine (Gloss cap, Gloss fade, Glass orb, Frosted glass,
 Fluid glass, Bevel or Rim light, with its strength and tint); the Hub tab styles the middle button (a solid circle, a hollow ring, a target or a rimmed disc, with
 its size and colors) and sets the pointer (its size, distance and color, or hides it); the Paging
-tab sizes, spaces and colors the page arrows and the pill and dots; the Slice labels tab shows or
-hides the wedges' names, sets their distance from the middle, font, size, outline, color and shadow,
-and which side of the dial the tooltip shows on; the Group labels tab does the same for the ring's
-title above the dial; and the Icons tab sets the icons' distance from the middle and their look, up
-to 128 pixels.
+tab sizes, spaces and colors the page arrows and the pill and dots; the Labels tab shows or hides
+the slices' names (their distance from the middle, font, size, outline, color and shadow) and the
+ring's title above the dial, and sets which side of the dial the tooltip shows on; and the Icons tab
+sets the icons' size, their distance from the middle and their look, up to 128 pixels.
 
 Settings → Groups makes a group and, on its Callouts tab, its callouts: Add callout opens a small
 editor for the name, text, channel and icon (Save keeps it, Cancel drops it). The text takes tokens in
@@ -68,10 +67,10 @@ Reuse
 callout copies a callout from any of your other groups into this one, and each row has an
 edit and a remove button. A group's Parent group setting puts it inside another group: it then
 shows wherever that group does, in a section (or a dial ring) of its own, while its conditions
-match: its parent's, while Inherit when conditions is ticked (the default), else its own. The Preview tab lists each callout beside what it would send where you are. The group's When tab says where it shows, one condition per drawer (click a condition to open it); the Pad page arranges a pad: its General tab names it and sets when it shows (visibility and fade), its Pad header tab styles the header row
-(the one that names where you are: "Quick Comms: World"), its Section header tab the section titles (their height, font and a
-band behind each), its Window tab the pad's border and background, and its Buttons tab the
-buttons themselves (size, color, border, font, an optional glow and an optional shine over the whole button, chosen
+match: its parent's, while Inherit when conditions is ticked (the default), else its own. The What it sends tab lists each callout beside what it would send where you are. The group's When tab says where it shows, one condition per drawer (click a condition to open it), with Inherit when conditions at its top; the Pad page arranges a pad: its General tab names it and sets when it shows (visibility and fade), its Window tab the pad's border and background, its Header tab styles the header row
+(the one that names where you are: "Quick Comms: World"), its Section titles tab the section titles (their height, font and a
+band behind each), and its Buttons tab the
+buttons themselves (size, font, background, border, an optional glow and an optional shine over the whole button, chosen
 apart from the dial's), each color with a Use class color
 box. "Preview as…" (or `/qc preview`) shows the pads
 and the dial as they would look somewhere else. `/qc preview` on its own previews where you are, in
@@ -87,7 +86,7 @@ only the group you are editing, sending nothing: a click prints `[QC] /p <text>`
 have sent, and the preview window comes up titled with the group and showing the situation it is
 previewed in (the group's own: Alterac Valley for Alterac Valley, Current for one with no content).
 The window is grayed out there, since the Groups page drives it: pick another group to change it,
-or untick Preview while editing, under the Group picker, to keep the pads live. Right-click a
+or untick Preview while editing, beside the Group picker, to keep the pads live. Right-click a
 group's title on a pad to open it on the Groups page; the page stays on the tab you last used.
 
 To share, open Settings → Share → Export, tick what you want to send and click Export, then copy the
@@ -156,7 +155,7 @@ than in comments, so nothing gets lost.
 
 | Version | Date | Highlights |
 |---|---|---|
-| 0.1.0 | Unreleased | - The Comms Pad and the Comms Dial, with built-in callouts for Mythic+, raids, arenas, every battleground and the solo open world, sent through secure buttons<br>- Battleground sets with a group per objective: Alterac Valley's generals, captains, bunkers, towers and graveyards, Isle of Conquest's bases, and the objectives of Warsong Gulch, Twin Peaks, Wintergrasp, Ashran, Deephaul Ravine and Seething Shore<br>- Your own callouts and groups (the built-in sets among them, as groups you can edit, and groups inside groups), with conditions for when each group shows, Preview as…, a preview of the group you are editing and Why is this showing?<br>- A small preview window, opened by `/qc preview` or the Preview as… row, to switch the previewed situation or end the preview<br>- In a preview or test mode, a click on a button or a slice prints what it would have sent, and sends nothing; the dial stays open<br>- The preview window over the group you are editing, showing the situation it is previewed in<br>- A `{coordinates}` token, your map position as you press<br>- The General channel (/1), falling back to say where you have not joined it; the solo open-world callouts use it<br>- The spam guard, drop notes, test mode and the lock<br>- The pad's font, border and background, with class colors<br>- An optional shine on the pad's buttons and the dial's slices (seven looks), and the dial's own round art<br>- Sharing groups (with their callouts), pads and dials as a string<br>- The settings panel, the minimap button, the `/qc` command and the debug tools<br>- Your keys on the General page's Keybindings tab, the same ones WoW's Options → Keybindings → Ka0s Quick Comms shows |
+| 0.1.0 | Unreleased | - The Comms Pad and the Comms Dial, with built-in callouts for Mythic+, raids, arenas, every battleground and the solo open world, sent through secure buttons<br>- Battleground sets with a group per objective: Alterac Valley's generals, captains, bunkers, towers and graveyards, Isle of Conquest's bases, and the objectives of Warsong Gulch, Twin Peaks, Wintergrasp, Ashran, Deephaul Ravine and Seething Shore<br>- Your own callouts and groups (the built-in sets among them, as groups you can edit, and groups inside groups), with conditions for when each group shows, Preview as…, a preview of the group you are editing and Why is this showing?<br>- A small preview window, opened by `/qc preview` or the Preview as… row, to switch the previewed situation or end the preview<br>- In a preview or test mode, a click on a button or a slice prints what it would have sent, and sends nothing; the dial stays open<br>- The preview window over the group you are editing, showing the situation it is previewed in<br>- A `{coordinates}` token, your map position as you press<br>- The General channel (/1), falling back to say where you have not joined it; the solo open-world callouts use it<br>- The spam guard, drop notes, test mode and the lock<br>- The pad's font, border and background, with class colors<br>- An optional shine on the pad's buttons and the dial's slices (seven looks), and the dial's own round art<br>- Sharing groups (with their callouts), pads and dials as a string<br>- The settings panel, the minimap button, the `/qc` command and the debug tools<br>- Your keys on the General page's Keybindings tab, the same ones WoW's Options → Keybindings → Ka0s Quick Comms shows<br>- Settings laid out by subject: Behavior under two headings, the Groups band on one row with Inherit when conditions on the When tab, the Pad tabs from the window inwards, and the Dial's Layout, Labels and Ring map tabs |
 
 ## Credits
 

@@ -2,8 +2,8 @@ local _, NS = ...
 -- modules/Pad.lua — the Comms Pad's frames (spec §10.1, §10.3, §10.4).
 --
 -- The root is a plain BackdropTemplate frame wearing the Ka0s skin (NS.ApplySkin), dressed at every
--- rebuild by the pad's Main window tab (Pad_Render.SkinFor: border and background), its Pad header
--- tab (Pad_Render.HeaderLook: the header row's height, font, background and edge), its Section header
+-- rebuild by the pad's Main window tab (Pad_Render.SkinFor: border and background), its Header
+-- tab (Pad_Render.HeaderLook: the header row's height, font, background and edge), its Section titles
 -- tab (Pad_Render.SectionLook: each title row's height and font, and the band behind it) and its Buttons tab (Pad_Render.ButtonLook: each button's body, edge, label font and glow);
 -- it becomes protected in combat because its buttons are secure. Every button
 -- IS a send button (spec §9.1),
@@ -134,7 +134,7 @@ local function newButton(inst)
 end
 
 -- A section title: its text on a band of its own (a plain BackdropTemplate child of the root, mouse
--- off), which the Section header tab's background and border dress (R.ApplySectionBand). The text is
+-- off), which the Section titles tab's background and border dress (R.ApplySectionBand). The text is
 -- the band's, so the band never draws over it. The pool holds the text; the band goes with it.
 local function newTitle(inst)
     local band = CreateFrame("Frame", nil, inst.root, "BackdropTemplate")
@@ -220,7 +220,7 @@ local function titleWidth(item, box)
 end
 
 -- Every button and section title of the layout: each button in the pad's Buttons tab (`clook`, R.ButtonLook)
--- and its icon in the Icons tab (`icfg`); each title in the Section header tab's look (`slook`,
+-- and its icon in the Icons tab (`icfg`); each title in the Section titles tab's look (`slook`,
 -- R.SectionLook): its band across the row, its text on the band's left edge, clear of its border.
 local function place(inst, box, style, clook, slook, icfg)
     for _, item in ipairs(box.items) do
@@ -277,7 +277,7 @@ local function build(id)
     NS.ApplySkin(root)
     local inst = { id = id, root = root, buttons = NS.Pool.New(), titles = NS.Pool.New(), titleHits = NS.Pool.New(),
         byCallout = {}, hover = 0, live = false }
-    -- A plain BackdropTemplate child: the Pad header tab dresses it at every Apply.
+    -- A plain BackdropTemplate child: the Header tab dresses it at every Apply.
     local header = CreateFrame("Frame", nil, root, "BackdropTemplate")
     header:SetHeight(PL.HEADER_H)
     header:EnableMouse(true)

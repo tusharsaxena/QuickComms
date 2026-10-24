@@ -8,7 +8,7 @@ local addonName, NS = ...
 --              labels, read and written on the draft), with an info glyph beside the Text label
 --              whose tooltip lists the tokens; then the icon under its "Icon" label (the icon as
 --              drawn, Choose icon…, which opens the icon browser over the popup, and a glyph's color
---              swatch: there is no Icon text box), Preview, then Save and Cancel, and under them the
+--              swatch: there is no Icon text box), What it sends (the baked line), then Save and Cancel, and under them the
 --              line that names a field Save refused
 --
 -- THE DRAFT is a plain copy of the callout's four fields and its icon's glyph color (blank for Add:
@@ -69,11 +69,11 @@ local GLYPH_GAP, GLYPH_MIN, GLYPH_MAX = 4, 10, 12
 -- THE COLUMNS. Name and Channel, the icon's Choose icon… and its swatch, and Save and Cancel share
 -- two columns, each the library's button-pair width (Helpers.BUTTON_PAIR_REL of the body, the width
 -- InlineButtonPair gives Save and Cancel, options-ui-§8), and the gutter between them is the room
--- the pair leaves (column and gutter, below); Text and the Preview rule span both. AceGUI draws an
+-- the pair leaves (column and gutter, below); Text and the What it sends rule span both. AceGUI draws an
 -- EditBox's box and a Button's art EDGE in from the widget's left and right edges, so EDGE is where
 -- every visible left edge sits: each field's label is moved EDGE in (AceGUI puts it at 0), the
 -- Channel dropdown DROPDOWN_NUDGE left (its art starts that much further in than an EditBox's), the
--- icon EDGE in (Ed.IconChooser), the Preview rule EDGE in from both sides (AceGUI's Heading draws it
+-- icon EDGE in (Ed.IconChooser), the What it sends rule EDGE in from both sides (AceGUI's Heading draws it
 -- 3 in), and the preview and error lines EDGE in (textLine).
 local EDGE, DROPDOWN_NUDGE = 2, 2
 
@@ -329,13 +329,13 @@ local function renderFields(h, rows)
     ctx.scroll:AddChild(second)
     h.AddSpacer(ctx.scroll, h.ROW_VSPACER)
     for _, field in ipairs(FIELDS) do alignField(out[field]) end
-    -- The rows' group, as RenderRows would leave it: O.Section puts its 10px gap above Preview only
+    -- The rows' group, as RenderRows would leave it: O.Section puts its 10px gap above What it sends only
     -- once a group has been drawn (ctx.lastGroup), and ClearScroll resets it to nil.
     ctx.lastGroup = rows.name.group or true
     return out
 end
 
--- The Preview rule EDGE in from both sides, where the boxes' and the buttons' art ends.
+-- The What it sends rule EDGE in from both sides, where the boxes' and the buttons' art ends.
 local function alignHeading(heading)
     if not heading then return end
     nudge(heading, heading.left, "LEFT", EDGE - 3)
@@ -383,7 +383,8 @@ local function render()
         owner = "popup", lift = { addonName .. "CalloutPopup" },
         columns = { col = column(), gutter = gutter(), inset = EDGE },
     })
-    alignHeading(h.Section(ctx, L["Preview"]))
+    -- The Groups page's term for the same line (item 020, QUI-L08: headed Preview until then).
+    alignHeading(h.Section(ctx, L["What it sends"]))
     -- One label, refreshed in place on every draft write and every situation change.
     local live = textLine(h, table.concat(C.PreviewLines(draft), "\n"))
     Ed.Live(ctx, function()

@@ -2,7 +2,7 @@ local _, NS = ...
 -- settings/Callouts.lua — the callout helpers the editors share (callouts-owned-by-groups spec): the
 -- tokens a channel offers and one line of help for each, and what a callout sends here.
 -- settings/CalloutPopup.lua draws both against its draft (the help is the tooltip on the Text
--- label's info glyph), and settings/Groups.lua's Preview tab names each callout's line. There is
+-- label's info glyph), and settings/Groups.lua's What it sends tab names each callout's line. There is
 -- no Callouts page: a callout is made, edited and removed on its group's Callouts tab.
 
 local QC = NS.addon

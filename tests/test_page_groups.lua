@@ -119,7 +119,8 @@ local function recordParents(m)
 end
 
 -- The band as AceGUI would draw it: one SimpleGroup under the header frame, shown, laid out by
--- Flow, holding the picker and New group (each half the band) and the checkbox under the picker.
+-- Flow, holding the picker, New group and the checkbox on ONE row (item 020, QUI-L34; options-ui-§14).
+local BAND_WIDTHS = { 0.4, 0.25, 0.35 }
 local function assertBand(band, label)
     assertTrue(band ~= nil and band.block ~= nil, label .. ": a block")
     local block = band.block
@@ -132,12 +133,12 @@ local function assertBand(band, label)
     for i, w in ipairs(block.children) do kids[i] = w end
     assertTrue(kids[1] == band.picker and kids[2] == band.action and kids[3] == band.toggle,
         label .. ": picker, New group, then the checkbox, each the block's child")
-    for _, w in ipairs(kids) do
+    for i, w in ipairs(kids) do
         assertFalse(w.__released == true, label .. ": " .. w.type .. " live")
-        assertEqual(w.relativeWidth, 0.5, label .. ": " .. w.type .. " half the band")
+        assertEqual(w.relativeWidth, BAND_WIDTHS[i], label .. ": " .. w.type .. "'s share of the one row")
         assertTrue(w.frame:IsShown(), label .. ": " .. w.type .. " shown, by the block's AddChild")
         if type(block.width) == "number" then
-            assertEqual(w.width, block.width / 2, label .. ": " .. w.type .. " sized by the block's layout")
+            assertEqual(w.width, BAND_WIDTHS[i] * block.width, label .. ": " .. w.type .. " sized by the block's layout")
         end
     end
 end
@@ -196,13 +197,13 @@ test("groups page: General draws the group's rows, no Preview as; Duplicate and 
     assertTrue(tip:find("Preview as", 1, true) == nil, "Defaults no longer reaches Preview as")
     P.find(w, "EditBox", "Name"):__fire("OnEnterPressed", "Kicks")
     assertEqual(NS.db.profile.groups[gid].name, "Kicks")
-    P.find(w, "CheckBox", "Enabled"):__fire("OnValueChanged", false)
+    P.find(w, "CheckBox", "Enable this group"):__fire("OnValueChanged", false)
     assertFalse(NS.db.profile.groups[gid].enabled)
     P.find(w, "Button", "Duplicate"):__fire("OnClick")
     local copy = NS.State.editing.group
     assertTrue(copy ~= gid and NS.db.profile.groups[copy] ~= nil)
     w = P.redraw("groups")
-    P.find(w, "Button", "Delete"):__fire("OnClick")
+    P.find(w, "Button", "Delete group"):__fire("OnClick")
     P.accept()
     assertNil(NS.db.profile.groups[copy])
 end)
@@ -504,7 +505,7 @@ test("groups page: deleting a group deletes its callouts", function()
     local gid, kick, _, lust = withCallouts(NS)
     pick(NS, gid)
     local w = P.redraw("groups")
-    local delete = P.find(w, "Button", "Delete")
+    local delete = P.find(w, "Button", "Delete group")
     delete:__fire("OnClick")
     -- red under: keep the confirmation's "This cannot be undone." alone (it says nothing of the callouts)
     local which = m.popupsShown[#m.popupsShown][1]
@@ -518,7 +519,7 @@ test("groups page: deleting a group deletes its callouts", function()
     assertEqual(m.StaticPopupDialogs[which].text, "Delete '%s'? This cannot be undone.")
 end)
 
-test("groups page: a seeded set's General is any group's: Name, Enabled, Parent group, the icon, Duplicate, Delete", function()
+test("groups page: a seeded set's General is any group's: Name, Enable this group, the icon, Parent group, Duplicate, Delete group", function()
     local NS, _, P = open()
     local raid = T.seeded(NS, "bi.raid")
     pick(NS, raid)
@@ -528,12 +529,12 @@ test("groups page: a seeded set's General is any group's: Name, Enabled, Parent 
     assertNil(P.find(w, "Button", "Customize"))
     P.find(w, "EditBox", "Name"):__fire("OnEnterPressed", "Raid night")
     assertEqual(NS.db.profile.groups[raid].name, "Raid night")
-    P.find(w, "CheckBox", "Enabled"):__fire("OnValueChanged", false)
+    P.find(w, "CheckBox", "Enable this group"):__fire("OnValueChanged", false)
     assertFalse(NS.db.profile.groups[raid].enabled)
     assertTrue(P.find(w, "Dropdown", "Parent group") ~= nil)
     assertTrue(P.find(w, "Button", "Choose icon…") ~= nil)
     assertTrue(P.find(w, "Button", "Duplicate") ~= nil)
-    P.find(w, "Button", "Delete"):__fire("OnClick")
+    P.find(w, "Button", "Delete group"):__fire("OnClick")
     P.accept()
     assertNil(NS.db.profile.groups[raid], "a seeded group is deleted as any other")
 end)
@@ -1184,7 +1185,7 @@ test("groups page: [nesting] deleting a parent asks, saying its groups become to
     NS.SchemaRuntime.Set("group.parent", a, c)
     pick(NS, a)
     local w = P.redraw("groups")
-    P.find(w, "Button", "Delete"):__fire("OnClick")
+    P.find(w, "Button", "Delete group"):__fire("OnClick")
     local which = m.popupsShown[#m.popupsShown][1]
     -- red under: G.Delete asking with the plain group text
     assertTrue(m.StaticPopupDialogs[which].text:find("top-level", 1, true) ~= nil)
@@ -1193,7 +1194,7 @@ test("groups page: [nesting] deleting a parent asks, saying its groups become to
     assertFalse(NS.db.profile.groups[c].parent)
 end)
 
-test("groups page: [nesting] a pad's and a dial's Add a group leave out a child", function()
+test("groups page: [nesting] a pad's and a dial's Add group leave out a child", function()
     local NS = open()
     local Lib = NS.Library
     local a = Lib.CreateGroup({ name = "Alpha" })
@@ -1329,27 +1330,27 @@ test("groups page: [inherit] a seeded battleground's nodes carry no green dot in
     assertFalse(dotted[ab])
 end)
 
-test("groups page: [inherit] General's Inherit when conditions sits beside Parent group, grayed out with no parent", function()
+test("groups page: [inherit] When's Inherit when conditions sits at the top of the tab, grayed out with no parent", function()
     local NS, _, P = open()
     bare(NS)
     local Lib = NS.Library
     local top = Lib.CreateGroup({ name = "Raid night" })
     local kid = Lib.CreateGroup({ name = "Boss 1" })
     pick(NS, top)
-    local w = P.redraw("groups")
+    local w = P.tab("groups", "When")
     local cb = P.find(w, "CheckBox", "Inherit when conditions")
-    -- red under: no Inherit when conditions checkbox on General
+    -- red under: no Inherit when conditions checkbox on When (item 020, QUI-L03: it was on General)
     assertTrue(cb ~= nil)
     assertTrue(cb.disabled, "a group with no parent has nothing to inherit")
     assertTrue(cb.value, "on by default")
     NS.SchemaRuntime.Set("group.parent", top, kid)
     pick(NS, kid)
-    w = P.redraw("groups")
+    w = P.tab("groups", "When")
     cb = P.find(w, "CheckBox", "Inherit when conditions")
     assertFalse(cb.disabled)
     assertTrue(cb.value)
     NS.db.profile.groups[kid].inheritWhen = nil   -- a profile from before the setting
-    w = P.redraw("groups")
+    w = P.tab("groups", "When")
     assertTrue(P.find(w, "CheckBox", "Inherit when conditions").value, "absent reads as on")
     P.find(w, "CheckBox", "Inherit when conditions"):__fire("OnValueChanged", false)
     assertEqual(NS.db.profile.groups[kid].inheritWhen, false, "unticking stores false")
@@ -1367,7 +1368,7 @@ test("groups page: [inherit] an inheriting group's When tab shows its parent's c
     NS.State.whenOpen[kid] = { content = true, role = true }
     local w = P.tab("groups", "When")
     -- red under: draw the group's own When for an inheriting group
-    assertTrue(P.hasText(w, "Uses Raid night's conditions. Untick Inherit when conditions on the General tab to set this group's own."))
+    assertTrue(P.hasText(w, "Uses Raid night's conditions. Untick Inherit when conditions above to set this group's own."))
     assertEqual(P.drawer(w, "Content").__ka0sDrawerSummary, "Raid", "the parent's")
     assertEqual(P.drawer(w, "Role").__ka0sDrawerSummary, "Any", "its own is kept but not shown")
     assertTrue(P.find(w, "CheckBox", "Raid").value)

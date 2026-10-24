@@ -904,16 +904,16 @@ local SURFACE_DEFAULTS = {
             useClassColorBorder = false,
             background = { r = 0.06, g = 0.06, b = 0.08, a = 0.92 }, useClassColorBackground = false },
         icon = NS.IconDefaults.For("pad"),   -- the Icons tab (defaults/Icons.lua)
-        header = NS.PadDefaults.Header(),    -- the Pad header tab (defaults/PadStyle.lua)
-        section = NS.PadDefaults.Section(),  -- the Section header tab (defaults/PadStyle.lua)
+        header = NS.PadDefaults.Header(),    -- the Header tab (defaults/PadStyle.lua)
+        section = NS.PadDefaults.Section(),  -- the Section titles tab (defaults/PadStyle.lua)
         button = NS.PadDefaults.Button() },      -- the Buttons tab (defaults/PadStyle.lua)
     -- Relaxed is the only interaction in v0.1.0 (the C7 fallback, round-4 record). `delay` and
     -- `tapAction` are kept for the hold, flick and release upgrade, and `depth` until owner ruling R5
     -- gives it a meaning; nothing reads them yet.
     dial = { mode = "categories", slices = 0, radius = 120, iconOffset = 0, depth = 2, openAt = "center", delay = 0.3,
         interaction = "relaxed", tapAction = "first", icon = NS.IconDefaults.For("dial"),
-        label = NS.PadDefaults.DialLabel(),     -- the Slice labels tab (defaults/PadStyle.lua)
-        title = NS.PadDefaults.DialTitle(),     -- the Group labels tab (defaults/PadStyle.lua)
+        label = NS.PadDefaults.DialLabel(),     -- the Labels tab's Slice labels (defaults/PadStyle.lua)
+        title = NS.PadDefaults.DialTitle(),     -- the Labels tab's Group labels (defaults/PadStyle.lua)
         slice = NS.PadDefaults.DialSlice(),     -- the Slices tab (defaults/PadStyle.lua)
         hub = NS.PadDefaults.DialHub(),         -- the Hub tab's Hub heading (defaults/PadStyle.lua)
         page = NS.PadDefaults.DialPage() },     -- the Paging tab (defaults/PadStyle.lua)

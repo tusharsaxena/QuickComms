@@ -5,22 +5,25 @@ local _, NS = ...
 --     band      [ Group v (picker; a green dot marks a group active now; a group inside another is
 --               listed indented under it) ][ New group ]
 --               [x] Preview while editing (behavior.previewOnEdit: every pad and dial shows only
---               the group picked, while this page is shown; G.SyncEditPreview)
---     strip     [ General ][ Callouts ][ When ][ Preview ]
---     General   Name, Enabled, then
---               Parent group (none, or a top-level group; idle while the group holds groups) beside
---               Inherit when conditions (grayed out with no parent), then
+--               the group picked, while this page is shown; G.SyncEditPreview), all three on ONE
+--               row (item 020, QUI-L34; options-ui-§14)
+--     strip     [ General ][ Callouts ][ When ][ What it sends ]
+--     General   Name, Enable this group, then
 --               the icon under an Icon label with Choose icon…, the clear glyph and its color swatch
 --               (settings/Editors.lua's chooser, no Icon text box; the icon browser writes icon and
---               color as one act), then Duplicate and Delete, then Restore built-in groups (page-wide:
---               every shipped set, node and callout the profile no longer has comes back).
+--               color as one act), then
+--               Parent group (none, or a top-level group; idle while the group holds groups), then
+--               Duplicate and Delete group, then, after a gap and a gray line saying what it does,
+--               Restore built-in groups (page-wide: every shipped set, node and callout the profile
+--               no longer has comes back). Identity, then placement, then acts (item 020, QUI-L04,
+--               L05); Inherit when conditions moved to When (QUI-L03).
 --     Callouts  Add callout (the callout popup, settings/CalloutPopup.lua), Reuse callout with Add (an
 --               independent copy of another group's callout, spec P2), then its callouts as a
 --               drag-to-reorder list ([icon] gold name, channel in its chat color, muted text cut
 --               at 40 characters) with an edit and a remove glyph each. The group owns its
 --               callouts, so remove deletes the callout (asking first).
---     When      settings/Groups_When.lua
---     Preview   the active-now line, then a table (Ed.TableRows): one boxed row per callout, its name
+--     When      settings/Groups_When.lua, Inherit when conditions at its top (G.InheritItem)
+--     What it sends  (the Preview tab until item 020, QUI-L08) the active-now line, then a table (Ed.TableRows): one boxed row per callout, its name
 --               beside what it sends under the current or previewed situation, or why it sends nothing;
 --               a group holding groups has a titled table for its own callouts, then one per child
 --
@@ -131,7 +134,7 @@ function G.ParentTooltip(gid)
 end
 
 -- The General tab's Parent group dropdown for user group `gid` (a RenderGrid item, half the row as
--- a schema row is): a pick writes the group.parent row through the seam, whose refusal is printed.
+-- a schema row is, alone on its line): a pick writes the group.parent row through the seam, whose refusal is printed.
 local function parentItem(gid)
     return { make = function(_, parent, rel)
         local h = H()
@@ -162,10 +165,11 @@ function G.InheritState(gid)
     return not (g and g.inheritWhen == false), not NS.Library.IsChild(gid)
 end
 
--- The General tab's Inherit when conditions checkbox, beside Parent group (a RenderGrid item): drawn
--- by hand as Parent group is, since the seam reads an absent field as nil and the box reads it as on.
--- A click writes the group.inheritWhen row through the seam, whose refusal is printed.
-local function inheritItem(gid)
+--- The When tab's Inherit when conditions checkbox, at the tab's top (a RenderGrid item; on General
+--- beside Parent group until item 020, QUI-L03): drawn by hand as Parent group is, since the seam
+--- reads an absent field as nil and the box reads it as on. A click writes the group.inheritWhen row
+--- through the seam, whose refusal is printed.
+function G.InheritItem(gid)
     return { make = function(_, parent, rel)
         local h = H()
         local row = Ed.Row("group.inheritWhen")
@@ -202,9 +206,13 @@ function G.RestoreBuiltins()
     return n
 end
 
--- General's last row: Restore built-in groups, alone on its row.
+-- General's last row: Restore built-in groups, alone on its row, set apart from the group's acts by a
+-- gap and a gray line, not a heading (item 020, QUI-L05): it acts on the library, not on the group.
 local function restoreRow(ctx)
-    H().InlineButtonPair(ctx, { text = L["Restore built-in groups"],
+    local h = H()
+    h.AddSpacer(h.EnsureScroll(ctx), h.ROW_VSPACER)
+    h.TextRow(ctx, L["|cffa0a0a0Adds back the built-in groups and callouts you deleted. Changes nothing you have.|r"])
+    h.InlineButtonPair(ctx, { text = L["Restore built-in groups"],
         tooltip = L["Bring back every built-in group, and every built-in callout, you deleted, as new ones: a group at the end of every pad and dial. Nothing you have is changed."],
         onClick = function() G.RestoreBuiltins() end }, nil)
 end
@@ -334,9 +342,8 @@ end
 
 local NONE = L["No groups yet. Click New group to make one."]
 -- The General tab's rows it leaves out of its RenderRows: Parent group (its own dropdown,
--- parentItem), Inherit when conditions (its own checkbox, inheritItem) and the icon's two rows (the
--- chooser draws them).
-local UNDRAWN = { ["group.parent"] = true, ["group.inheritWhen"] = true,
+-- parentItem) and the icon's two rows (the chooser draws them).
+local UNDRAWN = { ["group.parent"] = true,
     ["group.icon"] = true, ["group.iconColor"] = true, ["behavior.previewOnEdit"] = true }
 
 local function renderGeneral(ctx, rows)
@@ -354,14 +361,14 @@ local function renderGeneral(ctx, rows)
         if not UNDRAWN[row.path] then mine[#mine + 1] = row end
     end
     h.RenderRows(ctx, mine, nil, nil, { noHeadings = true })
-    h.RenderGrid(ctx, { parentItem(gid), inheritItem(gid) })
     Ed.IconChooser(ctx, G.IconSpec(gid))
+    h.RenderGrid(ctx, { parentItem(gid) })
     h.InlineButtonPair(ctx,
         { text = L["Duplicate"], tooltip = NS.Library.IsChild(gid)
             and L["Make a copy of this group, with copies of its callouts and the same When. The copy sits in the same parent group, beside this one."]
             or L["Make a copy of this group, with copies of its callouts and the same When. The copy is on no pad until you add it under Pad > Groups."],
           onClick = function() G.Duplicate(gid) end },
-        { text = L["Delete"], tooltip = L["Delete this group and its callouts, and take it off every pad. Asks first."],
+        { text = L["Delete group"], tooltip = L["Delete this group and its callouts, and take it off every pad. Asks first."],
           onClick = function() G.Delete(gid) end })
     restoreRow(ctx)
 end
@@ -495,7 +502,7 @@ function G.PreviewBlocks(gid)
     return blocks
 end
 
--- The Preview tab: the active-now line, then the table (Ed.TableRows), or a line saying the group
+-- The What it sends tab (Preview until item 020, QUI-L08): the active-now line, then the table (Ed.TableRows), or a line saying the group
 -- has no callouts.
 local function renderPreview(ctx)
     local h = H()
@@ -576,9 +583,10 @@ NS.STAND_UP[#NS.STAND_UP + 1] = function()
 end
 
 -- THE BAND (options-ui-§14) through O.PageHeader, which a page with a picker and another page-wide
--- control draws instead of O.PageBanner: the picker in the left half with New group level with its
--- control in the right half, as PageBanner places them, and Preview while editing under the
--- picker.
+-- control draws instead of O.PageBanner: ONE row ("The band is ONE ROW"; item 020, QUI-L34, two rows
+-- until then), the picker, New group, then Preview while editing, their shares of the row in
+-- G.BAND_WIDTHS, and the band as tall as the Pad and Dial pages' (O.BANNER_H), so the three editor
+-- pages start their strips at one height.
 --
 -- ONE AceGUI SimpleGroup holds the three, as PanelMaster's band does (settings/PanelEditor.lua
 -- drawPageHeader). They were once placed by hand, each widget frame SetParent'ed into the header
@@ -596,7 +604,10 @@ end
 -- The block is parented to the handed frame by hand, so it is shown here: AceGUI's pool hands a
 -- SimpleGroup back hidden, and only a parent container's layout would show it (PanelMaster's
 -- comment: its band kept its height and divider and lost what was inside it).
-G.BAND_H = 72
+-- O.BANNER_H's value, the floor PageBanner draws the Pad and Dial bands at; a literal, since this
+-- file reads no library table at load (tests/test_layout.lua pins the two equal).
+G.BAND_H = 44
+G.BAND_WIDTHS = { picker = 0.4, action = 0.25, toggle = 0.35 }
 
 local function refused(kind, subject)
     local check = H().__combatRefused
@@ -616,7 +627,7 @@ local function bandPicker(AceGUI, list, order, selected)
     dd:SetLabel(label)
     dd:SetList(list, order)
     dd:SetValue(selected)
-    dd:SetRelativeWidth(0.5)
+    dd:SetRelativeWidth(G.BAND_WIDTHS.picker)
     dd:SetCallback("OnValueChanged", function(_, _, v)
         -- A change of subject is a structural redraw: refused in combat, as PageBanner's is.
         if refused("banner select", v) then
@@ -636,7 +647,7 @@ local function bandAction(AceGUI)
     local btn = AceGUI:Create("Button")
     local text = L["New group"]
     btn:SetText(text)
-    btn:SetRelativeWidth(0.5)
+    btn:SetRelativeWidth(G.BAND_WIDTHS.action)
     btn:SetCallback("OnClick", function()
         if refused("banner action", text) then return end
         guarded(G.Create)
@@ -649,8 +660,8 @@ local function bandToggle(AceGUI, row)
     local cb = AceGUI:Create("CheckBox")
     cb:SetLabel(row.label)
     cb:SetValue(NS.Setting("behavior.previewOnEdit") ~= false)
-    -- The left half, so the Flow layout puts it on its own row, under the picker.
-    cb:SetRelativeWidth(0.5)
+    -- The rest of the one row, beside New group.
+    cb:SetRelativeWidth(G.BAND_WIDTHS.toggle)
     cb:SetCallback("OnValueChanged", function(_, _, v)
         guarded(function()
             local ok, err, why = NS.SchemaRuntime.Set("behavior.previewOnEdit", v and true or false)
@@ -733,7 +744,7 @@ local function render(ctx)
         { key = "callouts", label = L["Callouts"], tooltip = L["The callouts this group shows, in order."],
           before = WHEN, render = renderCallouts },
         { key = WHEN, render = function(c) Settings.GroupsWhen.Render(c, Ed.Selected("group")) end },
-        { key = "preview", label = L["Preview"], tooltip = L["What each callout sends here, or in the preview."],
+        { key = "preview", label = L["What it sends"], tooltip = L["What each callout sends here, or in the preview."],
           render = renderPreview },
     })
     G.SyncEditPreview()
@@ -764,7 +775,7 @@ function G.RestoreDefaults(ctx)
 end
 
 Ed.RegisterPage(PAGE, L["Groups"], "GroupsPanel", render, {
-    tooltip = L["Turn the selected group back on, stop it opening the dial, turn Inherit when conditions back on, and turn Preview while editing back on. Its name, callouts and own When are kept."],
+    tooltip = L["Turn the selected group back on, turn Inherit when conditions back on, and turn Preview while editing back on. Its name, icon, parent, callouts and own When are kept."],
     onClick = function(ctx) G.RestoreDefaults(ctx) end,
 }, {
     -- Reopening the page is a new start: an Escape dismissal (QF-02) is forgotten.

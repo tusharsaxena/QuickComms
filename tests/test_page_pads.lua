@@ -40,7 +40,7 @@ test("pads page: the Layout rows write the selected pad", function()
     local w = P.tab("pads", "Layout")
     P.find(w, "Dropdown", "Orientation"):__fire("OnValueChanged", "vertical")
     P.find(w, "Dropdown", "Button style"):__fire("OnValueChanged", "label")
-    P.find(w, "Slider", "Scale"):__fire("OnMouseUp", 1.5)
+    P.find(w, "Slider", "Pad scale"):__fire("OnMouseUp", 1.5)
     local layout = NS.db.profile.pads.p1.layout
     assertEqual(layout.orientation, "vertical")
     assertEqual(layout.style, "label")
@@ -107,7 +107,7 @@ test("pads page: Groups lists the pad's groups; remove one, add it back at the e
     P.glyph(w, "remove", 1):__fire("OnClick")
     assertEqual(#NS.db.profile.pads.p1.groups, count - 1)
     w = P.tab("pads", "Groups")
-    P.find(w, "Dropdown", "Add a group"):__fire("OnValueChanged", first)
+    P.find(w, "Dropdown", "Add group"):__fire("OnValueChanged", first)
     assertEqual(NS.db.profile.pads.p1.groups[count], first, "added back at the end")
     P.tab("pads", "Groups")
     lists[#lists].opts.onMove(count, 1)
@@ -147,17 +147,17 @@ test("pads page: Delete pad asks, then the pad is gone, its frame released, and 
     assertEqual(NS.State.editing.pad, "p1")
 end)
 
-test("pads page: General's Unlock pads toggles the one lock", function()
+test("pads page: General's Unlock all pads toggles the one lock", function()
     local NS, _, P = open()
     local w = P.redraw("pads")
     -- red under: draw state.previewAs on the pad's General tab again (it lives in General › Master controls)
     assertTrue(P.find(w, "Dropdown", "Preview as") == nil, "Preview as is in General › Master controls")
     -- a new profile starts unlocked (owner, 2026-10-22)
-    P.find(w, "Button", "Lock pads"):__fire("OnClick")
+    P.find(w, "Button", "Lock all pads"):__fire("OnClick")
     assertTrue(NS.Setting("locked"))
     P.flush()
     w = P.redraw("pads")
-    P.find(w, "Button", "Unlock pads"):__fire("OnClick")
+    P.find(w, "Button", "Unlock all pads"):__fire("OnClick")
     assertFalse(NS.Setting("locked"))
 end)
 
@@ -202,7 +202,7 @@ test("pads page: [final 26] New pad takes the lowest free number, so a delete ne
     assertEqual(NS.db.profile.pads[Pads.Create()].name, "Comms Pad 4")
 end)
 
-test("pads page: [window tabs] the strip reads General first, then Layout, Pad header, Section header, Window, Buttons, Icons", function()
+test("pads page: [window tabs] the strip reads General first, then Layout, Window, Header, Section titles, Buttons, Icons", function()
     local NS = open()
     local order, seen = {}, {}
     for _, row in ipairs(NS.addon.Settings.RowsForPage("pads")) do
@@ -211,15 +211,15 @@ test("pads page: [window tabs] the strip reads General first, then Layout, Pad h
             order[#order + 1] = row.group
         end
     end
-    -- red under: a General row (Visibility's) ahead of Name moving no tab, but a Window row left ahead
-    -- of the header tabs (the library orders tabs by each group's first row), or the one Window tab
-    -- (2026-10-20, owner request)
-    assertEqual(table.concat(order, ","), "General,Groups,Layout,Pad header,Section header,Window,Buttons,Icons")
+    -- red under: a General row (Visibility's) ahead of Name moving no tab, but the header rows left
+    -- ahead of the Window rows (item 020, QUI-L09: outside in; the library orders tabs by each
+    -- group's first row), or the one Window tab (2026-10-20, owner request)
+    assertEqual(table.concat(order, ","), "General,Groups,Layout,Window,Header,Section titles,Buttons,Icons")
 end)
 
-test("pads page: [window tabs] Pad header carries Size, Font, Background and Border under their headings", function()
+test("pads page: [window tabs] Header carries Size, Font, Background and Border under their headings", function()
     local NS, _, P = open()
-    local w = P.tab("pads", "Pad header")
+    local w = P.tab("pads", "Header")
     for _, heading in ipairs({ "Size", "Font", "Background", "Border" }) do
         -- red under: the host's own h.Section above each subgroup (the library draws it from the rows)
         assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
@@ -227,7 +227,7 @@ test("pads page: [window tabs] Pad header carries Size, Font, Background and Bor
     assertEqual(#P.all(w, "CheckBox", "Use class color"), 3, "a companion beside each swatch (options-ui-§17)")
     assertTrue(P.find(w, "ColorPicker", "Font color") ~= nil)
     assertTrue(P.find(w, "ColorPicker", "Border color") ~= nil)
-    assertTrue(P.find(w, "ColorPicker", "Background") ~= nil)
+    assertTrue(P.find(w, "ColorPicker", "Background color") ~= nil)
     P.find(w, "CheckBox", "Font shadow"):__fire("OnValueChanged", false)
     assertFalse(NS.db.profile.pads.p1.header.fontShadow)
     P.find(w, "Slider", "Header height"):__fire("OnMouseUp", 30)
@@ -235,9 +235,9 @@ test("pads page: [window tabs] Pad header carries Size, Font, Background and Bor
     assertEqual(NS.Pad.Instance("p1").header.__h, 30, "the pad's header row follows")
 end)
 
-test("pads page: [window tabs] Section header carries Size, Font, Background and Border, and writes the section table", function()
+test("pads page: [window tabs] Section titles carries Size, Font, Background and Border, and writes the section table", function()
     local NS, _, P = open()
-    local w = P.tab("pads", "Section header")
+    local w = P.tab("pads", "Section titles")
     for _, heading in ipairs({ "Size", "Font", "Background", "Border" }) do
         assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
     end
@@ -245,7 +245,7 @@ test("pads page: [window tabs] Section header carries Size, Font, Background and
     P.find(w, "CheckBox", "Font shadow"):__fire("OnValueChanged", false)
     assertFalse(NS.db.profile.pads.p1.section.fontShadow)
     -- red under: no pad.section.height row
-    P.find(w, "Slider", "Section header height (0 = automatic)"):__fire("OnMouseUp", 22)
+    P.find(w, "Slider", "Section title height (0 = automatic)"):__fire("OnMouseUp", 22)
     assertEqual(NS.db.profile.pads.p1.section.height, 22)
 end)
 
@@ -259,29 +259,29 @@ test("pads page: [window tabs] Window carries Background and Border, and no font
     assertNil(P.find(w, "CheckBox", "Font shadow"))
     -- red under: the Visibility rows left on the Window tab (they moved to General, owner request)
     assertEqual(#P.all(w, "Heading", "Visibility"), 0, "Visibility is on General")
-    assertNil(P.find(w, "Slider", "Faded alpha"))
+    assertNil(P.find(w, "Slider", "Faded opacity"))
     assertEqual(#P.all(w, "CheckBox", "Use class color"), 2, "background and border")
     P.find(w, "CheckBox", "Use class color"):__fire("OnValueChanged", true)
     assertTrue(NS.db.profile.pads.p1.look.useClassColorBackground, "the first companion is the background's")
 end)
 
-test("pads page: General carries Visibility, Fade and Faded alpha under a Visibility heading, before its buttons", function()
+test("pads page: General carries Visibility, Fade and Faded opacity under a Visibility heading, before its buttons", function()
     local NS, _, P = open()
     local w = P.tab("pads", "General")
     -- red under: the Visibility rows left on the Window tab
     assertEqual(#P.all(w, "Heading", "Visibility"), 1, "Visibility drawn once")
     assertTrue(P.find(w, "Dropdown", "Fade") ~= nil)
-    P.find(w, "Slider", "Faded alpha"):__fire("OnMouseUp", 0.5)
+    P.find(w, "Slider", "Faded opacity"):__fire("OnMouseUp", 0.5)
     assertEqual(NS.db.profile.pads.p1.look.fadeAlpha, 0.5, "the path is still pad.look.fadeAlpha")
     assertTrue(P.find(w, "Button", "Delete pad") ~= nil, "Unlock and Delete stay on General")
 end)
 
 -- ── the Buttons tab (2026-10-20) ───────────────────────────────────────────────────────────────
 
-test("pads page: [button] Buttons carries Size, Color, Border, Font and Glow, and Button width left Layout for it", function()
+test("pads page: [button] Buttons carries Size, Font, Background, Border and Button glow, and Button width left Layout for it", function()
     local NS, _, P = open()
     local w = P.tab("pads", "Buttons")
-    for _, heading in ipairs({ "Size", "Color", "Border", "Font", "Glow" }) do
+    for _, heading in ipairs({ "Size", "Font", "Background", "Border", "Button glow" }) do
         assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
     end
     assertEqual(#P.all(w, "CheckBox", "Use class color"), 7, "background, border, font, glow, then the shine's tint and two blooms (options-ui-§17)")
@@ -352,7 +352,7 @@ end)
 
 -- ── the Icons tab (B9) ──────────────────────────────────────────────────────────────────────
 
-local ICON_HEADINGS = { "Size and crop", "Color", "Border", "Glow", "Offset" }
+local ICON_HEADINGS = { "Size and crop", "Color", "Border", "Icon glow" }
 local STYLE_HEADINGS = { pixel = "Pixel border", autocast = "Auto cast sparkles", button = "Button (rotating rays)",
     proc = "Proc (flipbook)" }
 
@@ -437,7 +437,7 @@ test("pads page: [glow knobs] only the selected style's knobs show, and none whi
     assertEqual(NS.db.profile.pads.p1.icon.procDuration, 2)
 end)
 
-test("pads page: [glow knobs] Offset comes right after Glow color, in the schema and on the tab", function()
+test("pads page: [glow knobs] the offsets come right after Glow color, under Icon glow, in the schema and on the tab", function()
     local NS, _, P = open()
     local paths = {}
     for _, row in ipairs(NS.addon.Settings.RowsForPage("pads")) do
@@ -454,9 +454,11 @@ test("pads page: [glow knobs] Offset comes right after Glow color, in the schema
     assertEqual(paths[at + 3], "pad.icon.pixelLines", "then the styles' knobs")
     NS.SchemaRuntime.Set("pad.icon.glowEnabled", true, "p1")
     local w = P.tab("pads", "Icons")
-    local color, offset, pixel = indexOf(w, "ColorPicker", "Glow color"), indexOf(w, "Heading", "Offset"),
+    local color, offset, pixel = indexOf(w, "ColorPicker", "Glow color"), indexOf(w, "Slider", "Glow X offset"),
         indexOf(w, "Heading", "Pixel border")
-    assertTrue(color < offset and offset < pixel, "Glow color, then Offset, then the style's knobs")
+    assertTrue(color < offset and offset < pixel, "Glow color, then the offsets, then the style's knobs")
+    -- red under: KNOB_TEXT's offsets under their own Offset heading (item 020, QUI-L14)
+    assertEqual(#P.all(w, "Heading", "Offset"), 0, "no Offset heading: the offsets are Icon glow's")
 end)
 
 test("pads page: [glow knobs] a Glow or Glow style write repaints the tab, so the right knobs appear", function()

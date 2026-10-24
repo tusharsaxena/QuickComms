@@ -7,9 +7,16 @@ eagerly at `OnEnable`; each page's body builds on its first show (options-ui-§1
 |---|---|
 | Ka0s Quick Comms (landing) | The logo, the TOC notes line and the slash command list, drawn by the library's `BuildLandingPage` |
 | General | `Master controls`, `Behavior`, `Keybindings` (last) |
-| Groups | One group (a seeded built-in set is one too): `General`, `Callouts`, `When`, `Preview` |
-| Pad | One pad (the Comms Pad page until the dial polish, 2026-10-21): `General`, `Groups`, `Layout`, `Pad header`, `Section header`, `Window`, `Buttons`, `Icons` |
-| Dial | One dial (the Comms Dial page until the dial polish, 2026-10-21): `General`, `Groups`, `Wheel`, `Slices`, `Hub`, `Paging`, `Slice labels`, `Group labels`, `Icons`, `Preview` |
+| Groups | One group (a seeded built-in set is one too): `General`, `Callouts`, `When`, `What it sends` |
+| Pad | One pad (the Comms Pad page until the dial polish, 2026-10-21): `General`, `Groups`, `Layout`, `Window`, `Header`, `Section titles`, `Buttons`, `Icons` |
+| Dial | One dial (the Comms Dial page until the dial polish, 2026-10-21): `General`, `Groups`, `Layout`, `Slices`, `Hub`, `Paging`, `Labels`, `Icons`, `Ring map` |
+
+Item 020 (2026-10-24, the settings layout) moved, regrouped and relabeled rows across these pages; no
+setting's stored path, default, range or behavior changed (`tests/test_schema.lua`'s layout guard
+pins every row against `tests/schema_pins.lua`). The renamed tabs: the Groups page's Preview is
+*What it sends*; the Pad page's Pad header and Section header are *Header* and *Section titles*, and
+Window moved ahead of them (outside in); the Dial page's Wheel is *Layout*, Slice labels and Group
+labels are one *Labels* tab, and Preview is *Ring map*.
 | Share | `Export`, `Import` |
 | Profiles | AceDBOptions: switch, copy, reset and delete profiles |
 
@@ -53,8 +60,25 @@ The header's Defaults button and Reset all settings both open the confirmation p
 reset is a profile reset. That confirm, like every delete's, is shown in `FULLSCREEN_DIALOG`, over the
 preview dial and an open callout popup (`ModalWindow.LiftConfirm`, QC-06), and its shared Blizzard
 dialog goes back to its own strata when it hides. The global reset never touches the minimap button (options-ui-§12, launcher-§3).
-The Defaults tooltip ends with the library's *Key bindings are not changed.* (`O.KEYBINDS_UNCHANGED`,
-options-ui-§20).
+The Defaults tooltip is the library's Reset all settings tooltip (`O.ResetAllTooltip`, read from the
+same descriptor Master controls' button uses, so one act is described one way), then *Key bindings
+are not changed.* (`O.KEYBINDS_UNCHANGED`, options-ui-§12, §20; item 020, QUI-L-new2).
+
+## General → Behavior
+
+`settings/SchemaRows.lua`, under two headings (item 020, QUI-L01, L02; options-ui-§7), the rows in
+this order, which `/qc list` follows:
+
+| Heading | Left | Right |
+|---|---|---|
+| Sending | When you are solo (`behavior.soloFallback`) | Spam guard (seconds) (`behavior.spamGuard`) |
+| | Play a sound on send (`behavior.sounds`) | Note dropped callouts in chat (`behavior.dropNotes`) |
+| Pads and dials | Put instance-specific groups first (`behavior.autoPromote`) | Show the LOCKDOWN tag (`behavior.lockdownChip`) |
+| | Explain why groups show (tooltips) (`behavior.whyTooltips`) | |
+
+Put instance-specific groups first was *Promote specific groups*, Explain why groups show (tooltips)
+was *Explain why groups show*, and Show the LOCKDOWN tag was *Show the lockdown tag*; the tooltips
+are unchanged.
 
 ## General → Keybindings
 
@@ -94,22 +118,22 @@ read-only branch.
 
 ```
 band      [ Group v (picker; a green dot after its name marks a group active now; a group inside another is
-          listed, indented, right after it) ][ New group ]
-          [x] Preview while editing (under the picker)
-strip     [ General ][ Callouts ][ When ][ Preview ]
-General   Name, Enabled, then
-          Parent group (None, or a top-level group) beside Inherit when conditions (grayed out
-          with no parent), then the icon under an Icon label with Choose icon…, the clear glyph
-          and its color swatch (settings/Editors.lua's chooser, no Icon text box), then
-          Duplicate and Delete, then Restore built-in groups (page-wide)
+          listed, indented, right after it) ][ New group ][x] Preview while editing   (one row)
+strip     [ General ][ Callouts ][ When ][ What it sends ]
+General   Name, Enable this group, then the icon under an Icon label with Choose icon…, the clear
+          glyph and its color swatch (settings/Editors.lua's chooser, no Icon text box), then
+          Parent group (None, or a top-level group) alone, then Duplicate and Delete group, then a
+          gap, a gray line ("Adds back the built-in groups and callouts you deleted. Changes
+          nothing you have.") and Restore built-in groups (page-wide)
 Callouts  Add callout (the callout popup, blank; across the row), Reuse callout
           with Add at the right edge (both 2px short of it), then its callouts as a drag-to-reorder list, each row the handle,
           the icon (the question mark when none), the name in gold, the channel's short label in
           its chat color (a smart kind resolved against the snapshot; PARTY's when solo) and the
           text in muted white cut at 40 characters with "…", then an edit glyph and a remove glyph
           at the right edge
-When      settings/Groups_When.lua
-Preview   the active-now line, then a table: a gold header row (Callout, What it sends here), then
+When      settings/Groups_When.lua: the active-now line, then Inherit when conditions (grayed out
+          with no parent), then the drawers
+What it sends  the active-now line, then a table: a gold header row (Callout, What it sends here), then
           one boxed row per callout, its icon and name beside its first preview line
 ```
 
@@ -124,19 +148,22 @@ parent asks first and says what happens: the groups inside it become top-level g
 on every pad and dial. Duplicate of a child puts the copy in the same parent (the chat line says
 so); a parent's copy holds no children. The page's Defaults keeps the parent, as it keeps the icon.
 
-**Inherit when conditions** (General, beside Parent group, the `group.inheritWhen` row): while it is
+**Inherit when conditions** (When, at the top of the tab under the active-now line, the
+`group.inheritWhen` row; on General beside Parent group until item 020, QUI-L03, so a group's own
+conditions are now chosen and written on one tab): while it is
 ticked, a group inside another is judged by its parent's When instead of its own
 (`Resolver.WhenOf`); its own stored When is kept, unused, for when it is unticked. It is on for every
 group, a seeded battleground node or one of yours, and a group stored before the setting (no field)
 reads as on; unticking stores `false`. The box is grayed out while Parent group is None, since a
 top-level group has no parent to take a When from. The Group picker's dot, the pad, the dial,
-Preview as, the Preview tab and every "why" line follow it. A write repaints the page (the row is
-structural), and the page's Defaults ticks it again. Tooltip: "Use the parent group's When instead
-of this group's own. This group's own conditions are kept for when you untick it. Only a group
-inside another group inherits."
+Preview as, the What it sends tab and every "why" line follow it. A write repaints the page (the row
+is structural), and the page's Defaults ticks it again. Tooltip: "Use the parent group's When
+instead of this group's own. This group's own conditions are kept for when you untick it. Only a
+group inside another group inherits. Set the parent on the General tab."
 
 **Restore built-in groups** (General's last row, page-wide, and on the empty "No groups yet"
-General): puts back every shipped set, node and callout the profile no longer has, as new ordinary
+General; set apart from the group's own acts by a gap and a gray line, not a heading, since it acts
+on the library, item 020, QUI-L05): puts back every shipped set, node and callout the profile no longer has, as new ordinary
 members: a set at the end of every pad and dial, a node inside its set's group (while that group is
 top-level), a callout at the end of its seeded group. It never changes, moves or overwrites what the
 player has, so it does not ask first, and a second click adds nothing; one chat line says how many
@@ -144,15 +171,18 @@ groups and callouts came back, or that nothing was missing. There is no per-set 
 delete the group, then restore. It is not under the header's Defaults, which resets the selected
 group (options-ui-§13).
 
-**Preview while editing** (the band, under the picker, the `behavior.previewOnEdit` row; on by
+**Preview while editing** (the band, beside New group, the `behavior.previewOnEdit` row; on by
 default, saved; QF-02: its start prints `Previewing: <group> (editing)` and puts the preview window
 up, titled with the group, its dropdown on the group's own situation (`Preview.EditPresetKey`) and
 the whole window grayed out with its controls off and a tooltip naming this page (QF-07, owner
 2026-10-23); its Escape ends the preview for the session with the box left ticked): drawn through `O.PageHeader`, the band a picker with another page-wide control
 takes (options-ui-§14), with New group level with the picker's control as PageBanner places it.
-The three are one AceGUI SimpleGroup's children, laid out by Flow (the picker and New group each
-half the band, the checkbox under the picker), so AceGUI shows and sizes them; widgets placed in
-the header frame by hand drew only the picker's label in the client.
+The three are one AceGUI SimpleGroup's children, laid out by Flow on ONE row (options-ui-§14, "The
+band is ONE ROW"; item 020, QUI-L34: two rows until then): the picker 0.4 of the band, New group 0.25
+and the checkbox the remaining 0.35 (`G.BAND_WIDTHS`), the band 44 pixels tall (`G.BAND_H`, the
+library's `O.BANNER_H`, as the Pad and Dial bands), so the three editor pages start their strips at
+one height. AceGUI shows and sizes them; widgets placed in the header frame by hand drew only the
+picker's label in the client.
 While the Groups page is on screen with it ticked, every enabled pad and dial shows only the selected
 group, with the groups inside it, whatever their When and Enabled (`Preview.SetEditPreview`,
 `Surfaces` `deps.only`): drawn and disarmed as a Preview as plan, `Preview: <group>` on the header,
@@ -171,7 +201,8 @@ session), and the settings window opens on the Groups page itself (`Ed.OpenPage`
 library's settings refusal is printed and the selection is kept. A group the profile no longer has
 (or test mode's placeholder groups, which draw no hit frame) opens nothing.
 
-**Preview** (`Ed.TableRows`, shared with no other page yet): the active-now line, then a table. A
+**What it sends** (the Preview tab until item 020, QUI-L08: "Preview" is kept for the drawn
+previews; `Ed.TableRows`, shared with no other page yet): the active-now line, then a table. A
 gold header row, "Callout" and "What it sends here", sits outside the boxes; each callout's row is a
 box like the Callouts tab's (the same fill, border and left and right edges; a reorder list's row
 with no handle), its icon (in its color) and name in a 220px cell, and its first preview line (what
@@ -235,8 +266,8 @@ header   > Key level                                               10 to 15
   per group and per session (`NS.State.whenOpen`): it survives the repaint a write brings and
   switching groups, and a profile switch closes them all.
 - **An inheriting group** (Inherit when conditions, above) shows its parent's conditions here,
-  read-only: the active-now line, then the muted gold line "Uses <parent>'s conditions. Untick
-  Inherit when conditions on the General tab to set this group's own.", then the gray line, then the
+  read-only: the active-now line, the Inherit when conditions box, then the muted gold line "Uses
+  <parent>'s conditions. Untick Inherit when conditions above to set this group's own.", then the gray line, then the
   parent's When in the same drawers. They open and close (the open set is this group's own), the
   choices are grayed out, and there is no Select all or Clear (Any).
 
@@ -291,7 +322,11 @@ user group, so there is no Callouts page and no shared callout.
   Every fixed column is an explicit `{ width = n }`, since the layout reads a bare number from 1 to
   under 10 as a weight;
   `Ed.RowAlignV` centers every widget in the 30px row.
-- Delete (General) deletes the group's callouts with it, and Duplicate gives the copy copies of them.
+- Delete group (General; *Delete* until item 020, QUI-L04) deletes the group's callouts with it, and
+  Duplicate gives the copy copies of them.
+- The page's Defaults tooltip: "Turn the selected group back on, turn Inherit when conditions back
+  on, and turn Preview while editing back on. Its name, icon, parent, callouts and own When are
+  kept." (item 020, QUI-L06: it promised the reset of the retired Open the dial on this group).
 
 ## The callout popup
 
@@ -317,7 +352,7 @@ body     [Name          ] [Channel       ]   the callout.* member rows' labels a
          [Text  (i)                       ]   across both columns; (i) is the token glyph
          Icon                                 the chooser's label
          [icon] [Choose icon…] [x] Icon color the icon as drawn, the button, the color swatch
-         ---------- Preview ----------         the baked line and its bytes, or why it sends
+         ------- What it sends -------         the baked line and its bytes, or why it sends
                                               nothing, and any lock
          (a gap)
          [Cancel        ] [Save          ]
@@ -327,17 +362,18 @@ body     [Name          ] [Channel       ]   the callout.* member rows' labels a
 - **The layout.** Two columns, each the library's button-pair width (`Helpers.BUTTON_PAIR_REL` of
   the body, the width `InlineButtonPair` gives Save and Cancel, options-ui-§8), with the whole pixels
   the pair leaves (8 px) as the gutter between them: Name and Channel, the icon with Choose icon…
-  and the clear glyph, and the swatch, Save (left, since 2026-10-22) and Cancel each fill one, so their outer edges meet the Text box's and the Preview rule's,
+  and the clear glyph, and the swatch, Save (left, since 2026-10-22) and Cancel each fill one, so their outer edges meet the Text box's and the What it sends rule's,
   and the right column starts at the same place on every line. The pair keeps its width; the popup
   only puts the gutter between its two buttons. The fields are
   drawn by the library's field maker (`RenderField`) into the popup's own lines, not by
   `RenderRows`' half-and-half lines, so the gutter exists. AceGUI draws an EditBox's box and a
   Button's art 2 px in from the widget's edges, so 2 px in is where every visible left edge sits:
   each field's label is moved 2 px in, the Channel dropdown's art 2 px left, the icon 2 px in, the
-  Preview rule 2 px in from both sides (AceGUI's Heading draws it 3 in), and the preview and error
+  What it sends rule 2 px in from both sides (AceGUI's Heading draws it 3 in), and the preview and error
   lines 2 px in. Every anchor the popup moves is put back when AceGUI takes the widget back (an
   `OnRelease` callback per widget), so a pooled frame reaches another addon as AceGUI made it. The
-  Preview heading keeps a section's gap above it (`O.Section`'s 10 px): the popup sets
+  What it sends heading (*Preview* until item 020, QUI-L08: the Groups page's term for the same
+  line) keeps a section's gap above it (`O.Section`'s 10 px): the popup sets
   `ctx.lastGroup` to the fields' group after drawing them, as `RenderRows` would.
 - **No Icon box.** The icon is chosen only with the chooser; the draft still carries it as a
   texture path or id, Save writes it to `callout.icon`, and that row still answers `/qc`.
@@ -346,7 +382,7 @@ body     [Name          ] [Channel       ]   the callout.* member rows' labels a
   color (blank for Add). Choose icon… opens the icon browser over the popup; its Choose writes the
   draft's icon and color, the clear glyph empties both, and the swatch writes the draft's color.
   An icon that is no glyph drops the draft's color. Every control writes the draft, never the
-  profile, and Preview bakes the draft, so it follows each edit before anything is saved. A text
+  profile, and What it sends bakes the draft, so it follows each edit before anything is saved. A text
   box commits to the draft on Enter
   (or its Okay button), as on every page; what a box shows that Enter did not commit is taken into
   the draft before any other draft write, before a seam write's refresh and by Save, so clicking
@@ -464,52 +500,67 @@ footer   the selected icon (a glyph in the color) and its name, then Choose and 
 
 ```
 band     [ Pad v (picker) ][ New pad ]
-strip    [ General ][ Groups ][ Layout ][ Pad header ][ Section header ][ Window ][ Buttons ][ Icons ]
-General  Name, Enabled, Visibility (visibility, fade and faded alpha, under its heading), then
-         Unlock (or Lock) pads and Delete pad
-Groups   Show groups as, then the pad's groups as a drag-to-reorder list with a remove glyph
-         (its priority order; it takes the group off the pad and asks nothing), then Add a group
-         (the top-level groups the pad does not hold: a group inside another shows with it)
-Layout   orientation, grid columns, growth, button style, scale, spacing (a button's label runs
-         to its right edge, or to the padlock on a locked button: no channel letter there, the button's
-         tooltip names the channel), then Position: X and Y and Reset this pad's position
-Pad header      the pad's top row, the one that names the situation ("Quick Comms: World", M+, Raid): Size
+strip    [ General ][ Groups ][ Layout ][ Window ][ Header ][ Section titles ][ Buttons ][ Icons ]
+General  Name, Enable this pad, Visibility (visibility, fade and faded opacity, under its heading),
+         then Unlock (or Lock) all pads and Delete pad
+Groups   Show groups as, then Add group (the top-level groups the pad does not hold: a group
+         inside another shows with it), then the pad's groups as a drag-to-reorder list with a
+         remove glyph (its priority order; it takes the group off the pad and asks nothing)
+Layout   orientation, grid columns, growth, button style, pad scale, button spacing (a button's
+         label runs to its right edge, or to the padlock on a locked button: no channel letter
+         there, the button's tooltip names the channel), then Position: X and Y and Reset this
+         pad's position
+Window          the pad itself: Background (Background color) and Border; no font
+Header          the pad's top row, the one that names the situation ("Quick Comms: World", M+, Raid): Size
                 (Header height), Font (face, size, color with Use class color, flags, shadow),
                 Background (its color with Use class color) and Border (style, thickness, color with
                 Use class color), the blocks composed by the options library (options-ui-§16, §17),
                 each under its own heading
-Section header  each section title's row (the gold group titles): Size (Section header height, 0
+Section titles  each section title's row (the gold group titles): Size (Section title height, 0
                 automatic), Font, and the Background and Border of the band behind each title
-Window          the pad itself: Background and Border; no font
-Buttons  the buttons themselves: Size (Button width, Button height with 0 automatic), Color (the
-         button's Background with Use class color), Border (the composed block), Font (the labels:
-         face, size, color with Use class color, flags, shadow), Glow (Glow, Glow style, Glow
-         color with Use class color) and Shine (Shine look, Shine strength, Shine tint, Bloom color
-         A and B, each color with Use class color)
+Buttons  the buttons themselves: Size (Button width, Button height with 0 automatic), Font (the
+         labels: face, size, color with Use class color, flags, shadow), Background (the button's
+         Background color with Use class color), Border (the composed block), Button glow (Glow,
+         Glow style, Glow color with Use class color) and Shine (Shine look, Shine strength, Shine
+         tint, Bloom color A and B, each color with Use class color)
 Icons    the buttons' icons (B9): Size and crop (Icon size, Zoom), Color (Desaturate, Icon opacity,
          Tint with Use class color), Border (the composed block: Show border, style, thickness,
-         color with Use class color), Glow (Glow, Glow when, Glow style, Glow color with Use
-         class color), Offset (Glow X offset, Glow Y offset, always drawn), then the selected
-         Glow style's knobs under its heading (none while the glow is off)
+         color with Use class color), Icon glow (Glow, Glow when, Glow style, Glow color with Use
+         class color, then Glow X offset and Glow Y offset, always drawn), then the selected Glow
+         style's knobs under its heading (none while the glow is off)
 ```
 
-Pad header, Section header and Window were one Window tab until 2026-10-20 (the Look tab before
+Item 020 (2026-10-24) reordered and relabeled this page, and changed no setting. The strip runs
+outside in, Window, Header, Section titles, Buttons, Icons (QUI-L09; Header and Section titles were
+*Pad header* and *Section header*, QUI-L10). Every styled tab runs its blocks Size, Font, Background,
+Border, then effects, and labels its swatch *Background color* (QUI-L12; the Buttons tab's
+background block was headed *Color*). The Buttons tab's glow is *Button glow* and the Icons tab's
+*Icon glow*, which also holds the two glow offsets (no Offset heading; QUI-L13, L14). The Buttons
+tab's Glow style tooltip ends "Drawn at the Icons tab's default knobs." General's *Enable this pad*
+was *Enabled* and *Faded opacity* was *Faded alpha* (QUI-L-new3, L-new1); *Unlock all pads* / *Lock
+all pads* (the master lock, the same switch as Lock frame on the General page > Master controls) was
+*Unlock pads* / *Lock pads* (QUI-L15). On Groups, *Add group* (was *Add a group*, below the list) sits
+above the list, as the Callouts tab's add controls do (QUI-L07). On Layout, *Pad scale* and *Button
+spacing* were *Scale* and *Spacing*; Pad scale's tooltip says it is multiplied by Master scale on the
+General page > Master controls (QUI-L36).
+
+Header, Section titles and Window were one Window tab until 2026-10-20 (the Look tab before
 that); the owner split it into three, each under its own headings. The third was Main window, with
-Visibility, Fade and Faded alpha, until the owner moved those to General and renamed it Window
+Visibility, Fade and Faded opacity, until the owner moved those to General and renamed it Window
 (2026-10-20); the Buttons tab was the Chip tab until then, and its rows were `pad.chip.*` until the internal
 rename to `pad.button.*` (2026-10-20; no migration: profiles are reset). The options library orders a page's
 tabs by each group's first row (options-ui-§13), so the three tabs' rows sit after Layout's and before
 the Buttons tab's in `settings/SchemaMembers.lua`; General's Visibility rows sit after Name and
-Enabled, so General stays first. Window's and the Visibility rows keep their `pad.look.*` paths; Pad
-header's are `pad.header.*`, Section header's `pad.section.*`. The Pad header defaults are the owner's
+Enabled, so General stays first. Window's and the Visibility rows keep their `pad.look.*` paths; Header's
+are `pad.header.*`, Section titles' `pad.section.*`. The Header defaults are the owner's
 (2026-10-20): 24 pixels tall (it
 was 18), Friz Quadrata at 16 points, gold, outlined, with its shadow, over no background and no edge
 (its edge color white, for when a thickness is set). The header's text starts at the section titles' left
 edge (`PadLayout.PAD`) in every growth direction; the LOCKDOWN tag and the stale hint take the
 header's face, size, flags and shadow and keep their own red and gray, and the collapse button is two
-points larger in the header's color. The section titles take the Section header tab's Font block (it
+points larger in the header's color. The section titles take the Section titles tab's Font block (it
 was the Window tab's Section titles block, `pad.look.font*`); by default (the owner's, 2026-10-20) 12
-points, gold, outlined, with their shadow. Section header height 0 is automatic, the height a title row
+points, gold, outlined, with their shadow. Section title height 0 is automatic, the height a title row
 always had (grown with its font); above 0 every title row is that tall, its text centered in it. The
 tab's Background and Border draw a band behind each title across its row (a packed child's title: its
 block's width, as its right-click frame), with the text kept clear of the edge; by default there is
@@ -528,7 +579,7 @@ automatic height. The Icons tab's Icon size defaults to 16 on a pad (an icon-onl
 Glow style is
 grayed out while the glow is off; the color pairs never are.
 
-The Shine heading (shine overlay, 2026-10-21) follows Glow: `pad.button.shineLook|shineStrength` and the
+The Shine heading (shine overlay, 2026-10-21) follows Button glow: `pad.button.shineLook|shineStrength` and the
 pairs `shineTint`, `shineBloomA`, `shineBloomB` with their Use class color boxes. Shine look is None (the
 default), Gloss cap, Gloss fade, Glass orb, Frosted glass, Fluid glass, Bevel or Rim light: one overlay over the
 whole of every button (`NS.Shine.Apply`; owner, 2026-10-21: the plate, the icon and the label's chip,
@@ -542,8 +593,8 @@ Slices tab has the same heading for a dial.
 
 The Icons tab's rows are `pad.icon.*` (settings/SchemaIcons.lua). Every color pair sits on one line and is
 never grayed out; Border style and thickness are grayed out while Show border is off; Glow when, Glow style
-and the offsets while the glow is off, and the offsets also under Button, which ignores them. Offset
-sits right after Glow and always shows. A style's knobs (Pixel border, Auto cast sparkles, Button
+and the offsets while the glow is off, and the offsets also under Button, which ignores them. The
+offsets sit right after Glow color, under Icon glow, and always show. A style's knobs (Pixel border, Auto cast sparkles, Button
 (rotating rays), Proc (flipbook)) show only while the glow is on and in that style (owner request,
 2026-10-20; until then every style's knobs showed, grayed out under the others): the tab's render filters
 them (`Settings.ShownIconRows`), the rows stay in the schema, so Defaults, a share import and `/qc set`
@@ -552,7 +603,10 @@ tab on the next frame, its scroll kept, so the right heading appears at once. Th
 Icons tab does the same.
 Glow when is Always, On hover or After sending (1.5 s from the send result; a dial closes on the send,
 so its wedge glows for 1.5 s from the next open, if that comes within 5 s). The page's Defaults puts the
-Pad header, Section header, Window, Buttons and Icons rows back too.
+Window, Header, Section titles, Buttons and Icons rows back too, and its tooltip names every tab it
+reaches: "Put the selected pad's visibility, groups-as, layout, header, section titles, window,
+buttons and icons back to their defaults, and turn it on. Its name, groups and position are kept."
+(QUI-L18).
 
 X and Y write the whole `pad.point` row, the same one the drag strip writes; a drag on screen
 updates the boxes. A new pad holds the seeded sets the profile still has as top-level groups, in
@@ -564,42 +618,58 @@ shipped order.
 
 ```
 band     [ Dial v (picker) ][ New dial ]
-strip    [ General ][ Groups ][ Wheel ][ Slices ][ Hub ][ Paging ][ Slice labels ][ Group labels ][ Icons ]
-         [ Preview ]
-General  Name, Enabled, then Delete dial
-Groups   Show groups as (Categories or Flat), then the dial's groups as a drag-to-reorder list
-         with a remove glyph (its priority order, spec §7; it takes the group off the dial and asks
-         nothing), then Add a group (top-level groups only)
-Wheel    wedges per ring (Auto by default), ring radius, open at, then Position: X and Y and
-         Reset this dial's position
-Slices   Background (the slices' fill), Gap (Slice gap), Highlight (the hovered slice's fill) and
+strip    [ General ][ Groups ][ Layout ][ Slices ][ Hub ][ Paging ][ Labels ][ Icons ][ Ring map ]
+General  Name, Enable this dial, a gray line ("Set this dial's key on the General page >
+         Keybindings. A dial's key follows its place in the dial order."), then Delete dial
+Groups   Show groups as (Categories or Flat), then Add group (top-level groups only), then the
+         dial's groups as a drag-to-reorder list with a remove glyph (its priority order, spec §7;
+         it takes the group off the dial and asks nothing)
+Layout   slices per ring (Auto by default), ring radius, then slice gap alone, then Position:
+         open at, X and Y and Reset this dial's position
+Slices   Colors (Slice color, the slices' fill; Highlight color, the hovered slice's fill) and
          Shine (Shine look, Shine strength, Shine tint, Bloom color A and B), each color with Use
          class color
-Hub      Hub (Hub style, Hub size, Circle size, Line width, Backdrop color, Hub border size and
-         color, Circle color) and Pointer (Show pointer, size, offset, color), each color with Use
-         class color
-Paging   a paged ring's row under the dial: Position (offset), Arrows (size, spacing, arrow color,
-         arrow background) and Page indicator (dot size, current page width, dot spacing, current
-         page color, other pages color), each color with Use class color
-Slice labels  Show labels, label offset, then the labels' Font block (font, size, outline, color,
-         Use class color, shadow), grayed out while labels are off, then Tooltip (side, offset)
-Group labels  Show group labels (the ring's title above the dial), then its Font block, grayed out
-         while off
-Icons    Icon offset, then the wedges' icons, as the Pad page's Icons tab (a wedge's border is a
-         round ring, never wider than the wedge; its icon size, up to 128 or 0 automatic, keeps the
-         wedge's own size)
-Preview  each ring as the current or previewed situation builds it, wedge by wedge
+Hub      Hub (Hub style, Hub size, Backdrop color), Hub border (Hub border size, Hub border
+         color), Hub circle (Circle size, Line width, Circle color) and Pointer (Show pointer,
+         size, offset, color), each color with Use class color
+Paging   a paged ring's row under the dial: Page row (Distance below labels), Arrows (size,
+         spacing, arrow color, arrow background), Page indicator (dot size, current page width,
+         dot spacing, current page color, other pages color), Indicator border (dot border, dot
+         border color) and Indicator background (Show indicator background, Background padding,
+         Indicator background), each color with Use class color
+Labels   Slice labels (Show slice labels, label offset, then the labels' Font block: font, size,
+         outline, color, Use class color, shadow; grayed out while slice labels are off), Group
+         labels (Show group labels, the ring's title above the dial, then its Font block, grayed
+         out while off) and Tooltip (side, offset)
+Icons    the slices' icons, as the Pad page's Icons tab, under Size, offset and crop: Icon size |
+         Icon offset, then Zoom (a slice's border is a round ring, never wider than the slice; its
+         icon size, up to 128 or 0 automatic, keeps the slice's own size)
+Ring map each ring as the current or previewed situation builds it, slice by slice
 ```
 
-- **General:** Name and Enabled are the `dial.name` and `dial.enabled` rows; Delete dial asks first and keeps the dial's groups and
+Item 020 (2026-10-24) reordered and relabeled this page, and changed no setting: Wheel is *Layout*,
+the Pad page's name for the same tab (QUI-L22); Slice labels and Group labels are one *Labels* tab
+under two headings, with Tooltip last (QUI-L19); Preview is *Ring map* (QUI-L08), since "Preview"
+names the drawn previews; the Slice gap moved from its own Gap heading on Slices to Layout, beside
+the Auto count it feeds, and Open at to the top of Position (QUI-L21); Slices' Background and
+Highlight headings are one *Colors* heading (QUI-L23); Hub splits into Hub, Hub border and Hub circle,
+each size beside its color (QUI-L24); Paging's Position heading is *Page row*, its Offset *Distance
+below labels* (QUI-L25), and Page indicator splits into Page indicator, Indicator border and Indicator
+background, the padding beside its toggle (QUI-L26); Icons heads its first block *Size, offset and
+crop*, Icon size beside Icon offset (QUI-L27). *Slices per ring* was *Wedges per ring*, *Show slice
+labels* was *Show labels* and *Enable this dial* was *Enabled*; the Dial page's tooltips say slice for
+wedge (QUI-L35). Add group moved above the list (QUI-L07), and General's gray line points at the
+General page > Keybindings, with no key box and no readout (QUI-L29).
+
+- **General:** Name and Enable this dial are the `dial.name` and `dial.enabled` rows; Delete dial asks first and keeps the dial's groups and
   callouts (the key belongs to the place, so the dial that moves up takes it).
 - **Groups:** Show groups as is `dial.mode` (Categories or Flat). The list is the dial's priority
-  order; Add a group appends one. A dial opens straight on its one active group's ring, or on the
+  order; Add group appends one. A dial opens straight on its one active group's ring, or on the
   ring of its active groups when there are several (the dial rework, 2026-10-21, retired the Groups
   page's Open the dial on this group and Skip on the dial in content, and with them this tab's
   three-rings-deep warning: a battleground's node callouts now sit three rings deep by design,
   since In Group is active beside the map's set).
-- **Wheel:** Wedges per ring is `dial.slices`: Auto (0, a new dial's default) gives each page one
+- **Layout:** Slices per ring is `dial.slices`: Auto (0, a new dial's default) gives each page one
   wedge per item from N, clockwise, evenly spaced (owner, 2026-10-22; from W since the dial polish
   before): one is the whole disc, its icon at N; two are halves, N and S; three are thirds, N then
   120 and 240 degrees; and so on, up to 12, and fewer
@@ -613,27 +683,29 @@ Preview  each ring as the current or previewed situation builds it, wedge by wed
   pages; under them a gold pill marks the page shown and a gray dot each other page, and each arrow
   is a round plate in the slices' fill with a chevron, dimmed at an end. Ring radius is `dial.radius` (70 to 180
   pixels, default 120 since 2026-10-22, 100 before): the wedges' distance from the middle; the disc grows with it, keeping 20
-  pixels between a wedge's edge and its own. Open at is `dial.openAt` (its place or the cursor). X
-  and Y write the whole `dial.point` row; a refused offset says why and puts the box back. There is
+  pixels between a wedge's edge and its own. Slice gap (from Slices, item 020) is
+  `dial.slice.gap`, below. Open at is `dial.openAt` (its place or the cursor), the first row under
+  Position. X and Y write the whole `dial.point` row; a refused offset says why and puts the box back. There is
   no depth control (owner ruling R5).
-- **Slice labels** (the Labels tab until the dial polish, 2026-10-21; a UI rename, the `dial.label.*` paths kept): Show labels is `dial.label.show`: each wedge's name, drawn wholly outside the disc (off
+- **Labels > Slice labels** (the Labels tab until the dial polish, 2026-10-21, then its own Slice
+  labels tab until item 020 merged it back; the `dial.label.*` paths kept): Show slice labels is `dial.label.show`: each wedge's name, drawn wholly outside the disc (off
   shows the icons alone; the tooltip still names them). Label offset is `dial.label.offset` (0 to
   300 pixels, 0 automatic: 4 pixels past the disc, 2 until 2026-10-22), each label's distance from the middle; the ring's
   title and the page row move out with it, and it grays out with the font. The Font block is composed by the options
   library as the Buttons tab's (`dial.label.font|fontSize|fontColor|useClassColorFont|fontFlags|fontShadow`;
   defaults white Friz Quadrata 12 with its shadow, `PadDefaults.DialLabel`), grayed out while Show
-  labels is off. A bigger font lifts the ring's title and drops the page row to clear the labels.
-  Under its Tooltip heading, Tooltip side is `dial.label.tooltipSide` (Above, the default; Below,
+  slice labels is off. A bigger font lifts the ring's title and drops the page row to clear the labels.
+  Under the tab's last heading, Tooltip, Tooltip side is `dial.label.tooltipSide` (Above, the default; Below,
   Left, Right) and Tooltip offset `dial.label.tooltipOffset` (0 to 80 pixels, default 8): every
   dial tooltip (a wedge's, a page arrow's, the hub's Why is this showing?) sits outside the dial,
   that far above the ring's title, below the page row, or beside the disc past its widest label.
-- **Group labels** (dial polish, 2026-10-21): Show group labels is `dial.title.show` (on by default):
+- **Labels > Group labels** (dial polish, 2026-10-21; its own tab until item 020): Show group labels is `dial.title.show` (on by default):
   the ring's title above the dial ("Solo", "Comms Dial"). Its Font block is composed as the
   slice labels' (`dial.title.font|fontSize|fontColor|useClassColorFont|fontFlags|fontShadow`;
   defaults gold Friz Quadrata 12 with its shadow, `PadDefaults.DialTitle`), grayed out while off; the
   title is measured with its own line height, so a bigger font lifts it and the tooltip above it.
-- **Icons:** Icon offset (a Wheel row until the dial polish, 2026-10-21; `dial.iconOffset` kept) leads
-  the tab under Size and crop: 0 to 250 pixels, 0 automatic, the icons' own distance from the
+- **Icons:** Icon offset (a Wheel row until the dial polish, 2026-10-21; `dial.iconOffset` kept) sits
+  beside Icon size under Size, offset and crop (it led the tab under Size and crop until item 020): 0 to 250 pixels, 0 automatic, the icons' own distance from the
   middle, the disc keeping its size. Automatic keeps each icon in the same place in its slice at any
   ring radius (owner, 2026-10-21): the share of the band from the hub's edge to the disc's edge that
   the ring radius takes at 100 (the radius itself there; about 113 at the default 120, about 126 at 140, 133 at 150,
@@ -644,23 +716,23 @@ Preview  each ring as the current or previewed situation builds it, wedge by wed
   2026-10-22; 28 at 70, 40 at 100, 60 at 150, 72 at 180), held under a fixed wedge count to the slice's arc less the Slice gap, and within
   16 to 128; a value typed under 16 that is not 0 is 16. The rest is the Pad page's Icons tab.
 - **Slices** (2026-10-21): each heading's colors are composed swatch pairs with Use class color.
-  Background is `dial.slice.background`, each slice's fill (dark, as the disc was). Gap's Slice gap
-  is `dial.slice.gap` (0 to 20 pixels, default 0; the dial polish, 2026-10-21, retired the Border
-  heading): each slice moves out along its middle line and shrinks so its outer edge stays on the
-  disc and a clear strip that wide parts it from its neighbors (one slice has none). Highlight is
+  Under Colors, Slice color is `dial.slice.background`, each slice's fill (dark, as the disc was).
+  The Slice gap, on Layout since item 020, is `dial.slice.gap` (0 to 20 pixels, default 0; the dial
+  polish, 2026-10-21, retired the Border heading): each slice moves out along its middle line and shrinks so its outer edge stays on the
+  disc and a clear strip that wide parts it from its neighbors (one slice has none). Highlight color is
   `dial.slice.highlight`, the fill the slice the cursor points into takes (gold, faint), anywhere on
   the disc outside the hub's circle, moving with its slice; a click anywhere in a used slice, the
   hub's edge to the rim, sends it, and a click inside the hub's circle goes up a ring or closes (a point in a gap belongs to the slice whose bearing it is in).
   Shine (shine overlay, 2026-10-21) is `dial.slice.shine*`, the Buttons tab's heading for the dial's
   slices, with the same looks, range, defaults and gray-outs: each slice takes its own copy of the look,
   placed and turned with its fill (so it follows the gap, the W/E layouts and every slice count), under
-  the wedges' icons. Each look is the spec's "Dial slices": whole-disc art, Glass orb's bead and Fluid
+  the slices' icons. Each look is the spec's "Dial slices": whole-disc art, Glass orb's bead and Fluid
   glass's blooms are cut to each slice with a mask, the bead kept round at every slice count, with no
   specular dots; Bevel raises every slice the same way, in the slice's own frame (owner, 2026-10-21). A
   dial's look and a pad's are separate settings.
 - **Hub** (dial polish, 2026-10-21: its Hub and Pointer headings sat on Slices until then; the
-  paths are kept, so saved settings are untouched; the tab follows Slices). Hub is
-  `dial.hub.*`: Hub style (Solid circle, the default; Hollow ring; Target, a ring with a dot; Rimmed
+  paths are kept, so saved settings are untouched; the tab follows Slices). Hub, Hub border and Hub
+  circle are `dial.hub.*`, each sub-part's size beside its color: Hub style (Solid circle, the default; Hollow ring; Target, a ring with a dot; Rimmed
   disc, a filled circle on a rimmed backdrop), Hub size (24 to 80, default 32 since 2026-10-22: the backdrop's width,
   where the slices and the pointer start), Circle size (4 to 60, default 24), Line width (1 to 6,
   grayed out under Solid circle), Backdrop color, Hub border size (0 to 6, default 1; Rimmed disc
@@ -670,32 +742,35 @@ Preview  each ring as the current or previewed situation builds it, wedge by wed
   automatic: just outside the hub) and `pointerColor`: the chevron that turns toward the cursor
   (`ph:caret-up`), grayed out while Show pointer is off. The hub and the pointer always draw over the
   slices.
-- **Paging** (2026-10-21): a paged ring's row under the dial. Position's Offset is `dial.page.offset`
-  (0 to 80 pixels, default 6) under the labels. Arrows: Arrow size `arrowSize` (12 to 48, default
+- **Paging** (2026-10-21): a paged ring's row under the dial. Page row's Distance below labels is
+  `dial.page.offset` (0 to 80 pixels, default 6) under the labels. Arrows: Arrow size `arrowSize` (12 to 48, default
   24), Arrow spacing `arrowGap` (0 to 60, default 10) from the indicators, Arrow color `arrowColor`
   (the chevron, gold) and Arrow background `plateColor` (the round plate, the slices' fill). Page
   indicator: Dot size `dotSize` (2 to 20, default 6; the pill's height too), Current page width
   `pillWidth` (2 to 60, default 18; the dot size makes it a plain dot), Dot spacing `dotGap` (0 to
   30, default 6), Current page color `currentColor` (gold) and Other pages color `dotColor` (gray);
-  then (dial polish, 2026-10-21, so the row reads on a busy scene) Show indicator background
+  then, under Indicator background (dial polish, 2026-10-21, so the row reads on a busy scene), Show indicator background
   `dotBackShow` (default on), Indicator background `dotBackColor` (the plates' fill) and Background
   padding `dotBackPadding` (0 to 20, default 4): a rounded strip behind the row, as wide and tall as
   the indicators and their borders plus the padding each side, its color and padding grayed out
-  while off; Dot border `dotBorder` (0 to 4 pixels, default 1, 0 shows None and draws none) and Dot
+  while off; under Indicator border, Dot border `dotBorder` (0 to 4 pixels, default 1, 0 shows None and draws none) and Dot
   border color `dotBorderColor` (near black, grayed out at 0): an outline around every dot and the
   pill. Each color is a composed swatch pair with Use class color.
 - **No Binding tab** (the dial rework, 2026-10-21): the key is WoW's own binding of the dial's
   Bindings.xml entry, Open Comms Dial <n>, n the dial's place in the dial list, set in Options →
-  Keybindings → Ka0s Quick Comms or on General → Keybindings (item 015, 2026-10-24); it is
+  Keybindings → Ka0s Quick Comms or on the General page > Keybindings (item 015, 2026-10-24), which
+  the Dial General tab's gray line points at (item 020, QUI-L29); it is
   account-wide unless the player ticks Character Specific Keybindings there, and a dial past the
   fourth place has no entry.
-- **Preview:** each ring, wedge by wedge, with its compass word (a clock position past eight
+- **Ring map** (the Preview tab until item 020, QUI-L08): each ring, slice by slice, with its compass word (a clock position past eight
   wedges; the first wedge is W, under Auto and, since the dial polish, a fixed count), marking the ring the dial opens on
   and the wedges that open a ring. It is a listing (owner ruling R3); the drawn dial is the
   in-game preview (test mode, Preview as…).
 
-The page's Defaults puts groups-as, wedges per ring, ring radius, icon offset, open at, the Slices, Hub,
-Paging, Slice labels, Group labels and Icons tabs back to their defaults and turns the dial on, in one act (`Library.Batch`); the name, groups
+The page's Defaults puts groups-as, the Layout, Slices, Hub, Paging, Labels (with the tooltip
+placement) and Icons tabs back to their defaults (tooltip: "Put the selected dial's groups-as, layout,
+slices, hub, paging, labels, tooltip placement and icons back to their defaults, and turn it on. Its
+name, groups, position and key are kept.", QUI-L28) and turns the dial on, in one act (`Library.Batch`); the name, groups
 and position are kept, and the key, WoW's own binding, is never touched.
 
 ## Share

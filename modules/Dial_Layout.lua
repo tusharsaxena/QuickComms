@@ -85,7 +85,7 @@ end
 
 --- The dial's measures at `radius`, with labels `line` pixels tall (0: no labels; nil: DL.LINE)
 --- anchored `reach` pixels from the center (the Label offset; nil or 0: just past the disc's edge)
---- and the ring title `titleLine` pixels tall (the Group labels tab's line; 0: no title; nil:
+--- and the ring title `titleLine` pixels tall (the Labels tab's Group labels line; 0: no title; nil:
 --- DL.LINE): the disc's diameter, the labels' reach, the ring title's height above the center (its
 --- bottom, over the N wedge's label and the disc, so none overlap), the title's top (`top`: a tooltip
 --- above the dial starts over it) and how far below the center the S wedge's label and the disc end

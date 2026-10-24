@@ -9,9 +9,9 @@ local _, NS = ...
 -- goes to in WoW's chat color (a smart kind shows the channel it resolved to), or why it sends
 -- nothing, and any lock. The pad's three window tabs (the Window tab until 2026-10-20, the Look tab
 -- before that) are read here as plain values, which modules/Pad.lua applies out of combat: Main
--- window's skin (SkinFor, for the pad), Pad header's look (HeaderLook: the header row's height, font
+-- window's skin (SkinFor, for the pad), Header's look (HeaderLook: the header row's height, font
 -- and skin; its situation text starts at the section titles' left edge, PL.PAD, whatever the growth)
--- and Section header's (SectionLook: each title row's height, font, and a band of background and
+-- and Section titles' (SectionLook: each title row's height, font, and a band of background and
 -- border behind it, ApplySectionBand).
 -- The Buttons tab (ButtonLook) dresses each button: its body, an edge on a plain child laid over it, its
 -- label's font, a glow around the whole button (modules/Glow.lua Glow.Button) and its Shine heading's
@@ -289,7 +289,7 @@ end
 
 local FLAT_EDGE = "Interface\\Buttons\\WHITE8x8"
 
---- A font block's font (the Section header tab's, the Pad header's, the Buttons tab's): { path, size,
+--- A font block's font (the Section titles tab's, the Header tab's, the Buttons tab's): { path, size,
 --- flags, r, g, b, a, shadow }. A face this machine does not have is the standard one; "Use class
 --- color" takes the player's class color, keeping the swatch's alpha (NS.ResolveColor). A missing
 --- swatch is `fallback` when given, else white.
@@ -304,7 +304,7 @@ end
 -- The gold of GameFontNormalSmall: the section titles' and the header's default color.
 R.TITLE_COLOR = { r = 1, g = 0.82, b = 0, a = 1 }
 
---- The section titles' font: the Section header tab's (`pad.section`; gold by default, as the titles
+--- The section titles' font: the Section titles tab's (`pad.section`; gold by default, as the titles
 --- always were).
 function R.TitleFont(section)
     return R.LabelFont(section, R.TITLE_COLOR)
