@@ -46,3 +46,24 @@
 - **Gates:** `luacheck .` 0 warnings / 0 errors in 141 files; `lua tests/run.lua` 1189 passed,
   0 failed, 1 skipped (1190 total), `test_vendor_sync` green against the moved tag; no authored `.lua`
   file above 1500 lines (largest `tests/test_page_groups.lua`, 1499).
+
+## Re-vendor after the tag moved again (one key button)
+
+- **Tag moved:** LK-96 re-closed the local annotated tag v1.77.0 for the owner's follow-up to item
+  015 (one key button and Clear per Keybindings row). Old target commit
+  `afae2f75cb7ff61c57156d9a3d8a6b2b9f4c5e10`; new target commit
+  `2f2b2e22b4c9219cd8a4101d7e894681c7aea16e` (tag object `e9b126d961c2970e5b14d0566480f7c1d8b5e5e8`).
+  Payload commits in between: LK-40 (`f627436`, `7790dca`).
+- **Minors moved:** OptionsKeybinds 3 -> 4. Every other library file is byte-identical. The test kit
+  stays at revision 42; `bindings_xml.lua` (`Kit.keybindThroughTab` writes slot 2 through the model
+  on a one-button row) and its README row changed.
+- **Copy:** `libs/LibKa0s/` and `tests/_kit/` replaced whole from `git archive v1.77.0`. The
+  `CLAUDE.md` provenance line stays `v1.77.0`. The tag's `prune-icons.lua` removed nothing
+  (`LibKa0s icons: all (icon browser).`); README credits unchanged.
+- **Contract blocker:** none. No public Options member was added, so the degradation stub in
+  `settings/OptionsSetup.lua` is unchanged and the kit's surface-parity case stays green. No addon
+  test drove slot 2 through the tab (`test_keybinds` binds slot 1 only).
+- **Docs:** the tab's row is described as one key button and Clear, with `<key> +1` and a tooltip
+  when the game's page holds a second key, in `README.md`, `docs/settings-panel.md`,
+  `docs/smoke-tests.md` (KEY-5 and KEY-6 rewritten, pending) and the comment in `settings/Panel.lua`.
+  `Bindings.xml`, `NS.BINDINGS` and the labels are untouched.

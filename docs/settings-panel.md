@@ -92,8 +92,11 @@ with no `before`, so it lands after every group tab. `NS.BINDINGS` (`settings/Sl
 | Toggle Comms Pads | `CLICK QuickCommsTogglePads:LeftButton` | Hides or shows every Comms Pad on this character, as /qc toggle does. |
 | Open Comms Dial 1 to 4 | `CLICK QuickCommsDial<n>:Toggle` | Opens or closes the dial at place <n> in the dial list. |
 
-Each row is the client's `BINDING_NAME_` label, two key slots (left-click to listen, Escape or a
-second click cancels, right-click clears that slot) and Clear. The library's fixed intro heads it
+Each row is the client's `BINDING_NAME_` label, one key button and Clear. The button binds the
+action's first key (left-click to listen, Escape or a second click cancels, right-click removes that
+key and a second one moves up) and shows it; when the game's Options → Keybindings page holds a
+second key for the action, the button reads `<key> +1` and its tooltip names every key and says where
+the others were set. Clear removes every key from the action. The library's fixed intro heads it
 (*Key bindings are saved by the game, not in your profile. Defaults and Reset all settings leave them
 alone.*), then this addon's one line: *A dial's key follows its place in the dial list: Open Comms
 Dial 1 opens the first dial, and a dial past the fourth has no key.* Under the rows the set line says

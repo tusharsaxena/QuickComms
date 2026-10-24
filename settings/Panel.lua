@@ -82,7 +82,8 @@ if Helpers.MASTER_GROUP then AFTER_GROUP[Helpers.MASTER_GROUP] = MASTER_TAIL end
 -- The Keybindings tab (item 015, options-ui-§20): the General page's LAST tab, drawn by the library
 -- (O.KeybindingsTab, LibKa0s-Options-1.0's OptionsKeybinds.lua) with no `before`, so it lands after
 -- every group tab. One row per NS.BINDINGS entry (settings/SlashVerbs.lua): Toggle Comms Pads, then
--- Open Comms Dial 1-4, two key slots and Clear each, writing WoW's own binding to the set in force, so
+-- Open Comms Dial 1-4, one key button and Clear each (a second key set in WoW's menu shows as
+-- "<key> +1", named in the button's tooltip), writing WoW's own binding to the set in force, so
 -- a key set here shows in Options -> Keybindings -> Ka0s Quick Comms and the other way round. The one
 -- host line under the library's intro says a dial's key follows its place. This brings back an
 -- in-panel key editor the dial rework removed (the Dial page's Binding tab, 2026-10-21); the owner's

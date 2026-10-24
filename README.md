@@ -34,7 +34,8 @@ each character remembers it through a reload or a logout. The minimap button's r
 
 The Comms Dial opens on a key: bind Open Comms Dial in WoW's Options → Keybindings → Ka0s Quick
 Comms, or on General → Keybindings in this addon's settings, which lists the same keys (Toggle Comms
-Pads first, then Open Comms Dial 1 to 4, two keys each). A key set in one shows in the other. It is
+Pads first, then Open Comms Dial 1 to 4, each with one key button and Clear; a second key set in
+WoW's menu shows on the button as `<key> +1`, named in its tooltip). A key set in one shows in the other. It is
 shared by all your characters unless you tick Character Specific Keybindings in WoW's Keybindings.
 Press it: with one group active the dial opens straight on that group's callouts; with several it
 shows the groups first, so click one, then click a callout to send it. In a battleground the map's

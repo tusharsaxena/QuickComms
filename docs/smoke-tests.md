@@ -1223,23 +1223,27 @@ Open Comms Dial 1, 2, 3 and 4, with these labels; the AddOns section no longer l
 is no blank spacer row above them. A key bound before the update (for example Open Comms Dial 1 on G)
 is still bound. Result:
 
-**KEY-5 (SM-QC-KB2). General → Keybindings follows Options → Keybindings, both ways.** Settings → Ka0s
+**KEY-5 (SM-QC-KB2, SM-QC-RV3; rewritten 2026-10-24 for the one key button). General → Keybindings follows Options → Keybindings, both ways.** Settings → Ka0s
 Quick Comms → General: the last tab is Keybindings; it opens on the intro line, the dial line, then
-the five rows in the same order, each with Key 1, Key 2 and Clear, and under them "Saved for: all
-characters". Bind Toggle Comms Pads to P on the tab → Options → Keybindings → Ka0s Quick Comms shows P
+the five rows in the same order, each with one key button and Clear (no second key button), and
+under them "Saved for: all characters". Bind Toggle Comms Pads to P on the tab → Options → Keybindings → Ka0s Quick Comms shows P
 beside it. Bind Open Comms Dial 2 to H there, come back to the tab → H shows in its row without a
 /reload. Tick Character Specific Keybindings → the tab's line reads "Saved for: this character only";
 bind a key on the tab → it shows in the character set there, and the account set (on another
-character) does not have it. The Defaults button's tooltip ends "Key bindings are not changed.";
+character) does not have it. In Options → Keybindings give Open Comms Dial 2 a second key, J, as well
+as H → the tab's button reads "H +1" and its tooltip names H and J and says the others were set on
+the game's Key Bindings page; Clear on that row → both keys are gone there too. The Defaults button's tooltip ends "Key bindings are not changed.";
 Defaults and Reset all settings leave every key bound. Result:
 
-**KEY-6 (SM-QC-KB3). The key works; Escape cancels; combat refuses.** Bind Open Comms Dial 1 on the tab
-→ the key opens dial 1; bind Toggle Comms Pads → the key hides and shows the pads. Click a slot so it
-reads "Press a key...", press Escape → the capture cancels, the slot shows its key again and the
+**KEY-6 (SM-QC-KB3, SM-QC-RV3; rewritten 2026-10-24 for the one key button). The key works; Escape
+cancels; combat refuses.** Bind Open Comms Dial 1 with the row's key button → the key opens dial 1;
+bind Toggle Comms Pads → the key hides and shows the pads. Right-click a bound key button → that key
+is removed and the line reads "Key removed.". Click the key button so it
+reads "Press a key...", press Escape → the capture cancels, the button shows its key again and the
 settings window stays open. Take a key another action holds (for example bind a dial to TAB) → the
 key moves without a question and the line under the rows names the action that lost it. Enter
 combat with the tab open → a capture in progress stops and the line reads "Key bindings can be
-changed after combat."; click a slot or Clear in combat → nothing is bound or cleared, the same line.
+changed after combat."; click the key button or Clear in combat → nothing is bound or cleared, the same line.
 No Lua error. Result:
 
 ## Settings layout
@@ -1593,3 +1597,7 @@ show on the disabled controls, after that run, on the owner's request.
 LAYER-1 to LAYER-4 (item 030, 2026-10-24): new, not yet run.
 
 LAYOUT-1 to LAYOUT-5 (item 020, QC-LY, 2026-10-24): new, not yet run.
+
+KEY-4 to KEY-6 (item 015, QC-KB, 2026-10-24): new, not yet run. KEY-5 and KEY-6 were rewritten the
+same day for the owner's follow-up (QC-RV3, SM-QC-RV3): one key button and Clear per row, a second
+key shown as `<key> +1` with a tooltip.
