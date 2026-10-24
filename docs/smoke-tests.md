@@ -1566,7 +1566,7 @@ code (phase 5):
   editor falls back to the id).
 - **Sent in chat**: the callout tokens' values (`{me}`, `{spec}`, …) come from the client in its own
   language and are escaped like any value (`test_tokens`).
-- **The pads' fonts** (the Pad header and Section header tabs', the Buttons tab's labels): the default face is LibSharedMedia's "Friz Quadrata TT", which LibSharedMedia
+- **The pads' fonts** (the Header and Section titles tabs', the Buttons tab's labels): the default face is LibSharedMedia's "Friz Quadrata TT", which LibSharedMedia
   does not register on koKR, zhCN or zhTW; a face the machine does not have draws `STANDARD_TEXT_FONT`
   (`Pad_Render.LabelFont`, `test_pad_render`).
 - **Printed**: every chat and report line is English through `NS.L`, the share and import lines

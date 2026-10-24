@@ -472,10 +472,10 @@ local function renderCallouts(ctx)
     Ed.ReorderRows(ctx, PAGE, entries, function(from, to) G.MoveCallout(gid, from, to) end)
 end
 
--- The Preview table's column headings.
+-- The What it sends table's column headings.
 local PREVIEW_HEADER = { name = L["Callout"], text = L["What it sends here"] }
 
---- What the Preview tab tabulates for group `gid` (Surfaces.Sections: the group; or, for a group
+--- What the What it sends tab tabulates for group `gid` (Surfaces.Sections: the group; or, for a group
 --- holding groups, its own callouts when it has any, then each child): one block per section,
 --- titled when there are several or the one is a child's, each row a callout's name and icon and its first preview line
 --- (Callouts.PreviewLines), read when drawn and again on each live refresh.
