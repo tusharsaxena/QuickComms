@@ -26,3 +26,23 @@
   0 failed, 1 skipped (1174 total), `test_vendor_sync` green against v1.77.0; no authored `.lua`
   file above 1500 lines (largest `tests/test_page_groups.lua`, 1499).
 - **Smoke:** none owed by this re-vendor; QC-KB and QC-ZS write their own.
+
+## Re-vendor after the tag moved (M3)
+
+- **Tag moved:** the local annotated tag v1.77.0 was re-closed by LK-95 for the M3 settings-layout
+  surfaces. Old target commit `78240f7b2d69df27b74fc9280cbfbf7b95dd4f1f`; new target commit
+  `afae2f75cb7ff61c57156d9a3d8a6b2b9f4c5e10` (tag object `b2b8ee25c5f9fa26db146254bf786b366dec986b`).
+  Payload commits in between: LK-30 (`2c744ef`), LK-31 (`e1485fd`, `1e83c89`), LK-32 (`e8adf35`).
+- **Minors moved:** OptionsCompose 8 -> 11. Every other file is byte-identical; the test kit is
+  unchanged (revision 42).
+- **Copy:** `libs/LibKa0s/` and `tests/_kit/` replaced whole from `git archive v1.77.0`. The
+  `CLAUDE.md` provenance line stays `v1.77.0` (it records no sha or kit revision). The tag's
+  `prune-icons.lua` removed nothing (`LibKa0s icons: all (icon browser).`); README credits unchanged.
+- **Contract blocker:** one. The kit's Options surface-parity case failed on the new
+  `ResetAllTooltip`; the library-absent branch of `settings/OptionsSetup.lua` now carries it as an
+  inert member returning `""`.
+- **Adopted here:** nothing. The layout surfaces (OptionsCompose 9-11) are QC-LY's.
+- **Standards:** no drift; the addon's three-place reference names the standard without a version.
+- **Gates:** `luacheck .` 0 warnings / 0 errors in 141 files; `lua tests/run.lua` 1189 passed,
+  0 failed, 1 skipped (1190 total), `test_vendor_sync` green against the moved tag; no authored `.lua`
+  file above 1500 lines (largest `tests/test_page_groups.lua`, 1499).

@@ -92,6 +92,9 @@ if not lib then
     H.KeybindRows          = function() return nil end
     H.KEYBINDS_UNCHANGED   = ""
     H.StrataTooltip        = function() return "" end
+    -- LibKa0s v1.77.0 (re-closed, OptionsCompose minor 11): the Reset-all tooltip builder. No
+    -- panel renders, so its text is empty.
+    H.ResetAllTooltip      = function() return "" end
     H.CreateOptionsPanel   = function() sayAtLoad() end
     H.OpenOptionsPanel     = function() sayOnConfig() end
     return
