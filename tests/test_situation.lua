@@ -236,15 +236,26 @@ end)
 
 test("situation: [QF-04] the snapshot reads General from channel 1 and a join or leave moves the signature", function()
     local NS, m = T.enableAddon()
-    m.channels = { [1] = "General - Dornogal" }
+    m.generalChannel = 1
     -- red under: ReadInputs or Classify without general
     assertTrue(NS.Situation.Classify(NS.Situation.ReadInputs()).general)
-    m.channels = {}
+    m.generalChannel = nil
     assertFalse(NS.Situation.Classify(NS.Situation.ReadInputs()).general)
     local joined = NS.Situation.Classify(inputs({ general = true }))
     local left = NS.Situation.Classify(inputs())
     -- red under: general not in SIGNATURE_FIELDS
     assertTrue(NS.Situation.Signature(joined) ~= NS.Situation.Signature(left))
+end)
+
+test("situation: [F-007] a channel 1 that is not the zone's General leaves general off", function()
+    local NS, m = T.enableAddon()
+    m.generalChannel = 3
+    -- red under: GeneralJoined matching channel 1 by number or by name, not the client's General id
+    assertFalse(NS.Situation.Classify(NS.Situation.ReadInputs()).general)
+    NS.Situation.RefreshNow("test")
+    local c = { name = "Thanks", text = "Thanks!", channel = "general" }
+    local line = NS.Bake.Bake(c, NS.Situation.Current())
+    assertTrue(line:find("^/s ") ~= nil, "falls back to Say, as when General is not joined: " .. tostring(line))
 end)
 
 test("situation: [QF-04] CHANNEL_UI_UPDATE and CHAT_MSG_CHANNEL_NOTICE are situation events", function()
@@ -257,10 +268,10 @@ end)
 
 test("situation: [QF-04] a channel notice after the automatic join refreshes the snapshot to General", function()
     local NS, m = T.enableAddon()
-    m.channels = {}
+    m.generalChannel = nil
     NS.Situation.RefreshNow("test")
     assertFalse(NS.Situation.Current().general)
-    m.channels = { [1] = "General - Dornogal" }
+    m.generalChannel = 1
     -- red under: no CHAT_MSG_CHANNEL_NOTICE in EVENTS (no CHANNEL_UI_UPDATE fired here)
     m.__fire("CHAT_MSG_CHANNEL_NOTICE", "YOU_CHANGED", "", "", "1. General - Dornogal", "", "", 1, 1, "General")
     m.__fireTimers()

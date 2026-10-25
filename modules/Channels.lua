@@ -2,7 +2,8 @@ local _, NS = ...
 -- modules/Channels.lua — channel kinds -> a concrete channel, its slash prefix, and the lock
 -- matrix (spec §8.2, §8.4). PURE. Smart kinds resolve at bake time from the snapshot, because chat
 -- slash commands take no macro conditionals (spec P3). `general` (QF-04, 2026-10-23) is channel 1,
--- `/1`, resolved the same way: General when the snapshot says channel 1 is joined, else Say. Its
+-- `/1`, resolved the same way: General when the snapshot says channel 1 is the zone's General (the
+-- client's own General id, never the channel's localized name: Compat.GeneralJoined), else Say. Its
 -- echo is a CHAT_MSG_CHANNEL (chat type CHANNEL); its color is the client's CHANNEL1 (ColorType).
 
 NS.Channels = NS.Channels or {}

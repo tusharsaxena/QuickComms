@@ -187,16 +187,21 @@ test("compat: [QF-03] Coordinates reads the map position as x, y in percent, one
     assertNil(C.Coordinates(), "no C_Map")
 end)
 
-test("compat: [QF-04] GeneralJoined is true only for a plain non-zero channel 1 id", function()
+test("compat: [QF-04] GeneralJoined is true only when the client names channel 1 as General", function()
     local NS, m = T.newAddon()
     m.issecretvalue = T.isSecret
     local C = NS.Compat
     -- red under: no Compat.GeneralJoined
     assertTrue(C.GeneralJoined())
-    m.channels = {}
-    assertFalse(C.GeneralJoined(), "not joined: 0")
-    m.GetChannelName = function() return T.secret(1) end
+    m.generalChannel = nil
+    assertFalse(C.GeneralJoined(), "not joined")
+    -- red under: GeneralJoined reading GetChannelName(1)'s id (any channel 1 counts)
+    m.generalChannel = 2
+    assertFalse(C.GeneralJoined(), "General moved to /2: channel 1 is some other channel")
+    m.C_ChatInfo.GetGeneralChannelLocalID = function() return T.secret(1) end
     assertFalse(C.GeneralJoined(), "a secret id")
-    m.GetChannelName = nil
+    m.C_ChatInfo.GetGeneralChannelLocalID = nil
     assertFalse(C.GeneralJoined(), "no API")
+    m.C_ChatInfo = nil
+    assertFalse(C.GeneralJoined(), "no C_ChatInfo")
 end)

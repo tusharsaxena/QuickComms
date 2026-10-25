@@ -164,7 +164,7 @@ local EVENTS = {
     "PLAYER_ENTERING_WORLD", "ZONE_CHANGED_NEW_AREA", "CHALLENGE_MODE_START", "CHALLENGE_MODE_COMPLETED",
     "CHALLENGE_MODE_RESET", "GROUP_ROSTER_UPDATE", "PARTY_LEADER_CHANGED", "PLAYER_DIFFICULTY_CHANGED",
     "PLAYER_SPECIALIZATION_CHANGED", "PLAYER_ROLES_ASSIGNED",
-    -- Channel 1 joined or left (QF-04): the notice also covers the automatic joins after login and
+    -- General joined, left or moved off channel 1 (QF-04): the notice also covers the automatic joins after login and
     -- the zone's channel swap, should CHANNEL_UI_UPDATE not fire for them. A notice for any other
     -- channel leaves the signature, so it rebuilds nothing.
     "CHANNEL_UI_UPDATE", "CHAT_MSG_CHANNEL_NOTICE",
@@ -173,8 +173,14 @@ for _, event in ipairs(EVENTS) do
     NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { event, "OnSituationEvent" }
 end
 
+-- Stood down it returns at once: its events are unregistered, so only a dispatch the latch did not
+-- see reaches it, and it must not arm the coalesce timer then (slash-commands-§7, step 6).
 function NS.addon.OnSituationEvent(_, event)
+    if NS.IsStoodDown() then return end
     Sit.Refresh(event)
+    -- A key's end can lift a chat lockdown with no event of its own; the event is this row's (one
+    -- handler per event per object), so it hands the lift to Restrictions rather than registering twice.
+    if event == "CHALLENGE_MODE_COMPLETED" then NS.Restrictions.RefreshAfterLift(event) end
 end
 
 -- RESTRICTION_CHANGED: refresh the current snapshot's lockdown and combat in place. Never moves
