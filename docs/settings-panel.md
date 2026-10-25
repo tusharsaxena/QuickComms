@@ -23,14 +23,14 @@ labels are one *Labels* tab, and Preview is *Ring map*.
 
 Composed by `Helpers.MasterControls` from one declaration (`settings/Panel.lua`), canonical rows in
 canonical order (options-ui-§15). The Comms Pad is positionable, so the block is the full framed
-set, in order: Enable, General visibility, Master scale, Master alpha, Lock frame, Debug console,
+set, in order: Enable, General visibility, Master scale, Master opacity, Lock frame, Debug console,
 Minimap button, Test mode, then the block's one extra row, Preview as, then the Reset position and
 Reset all settings buttons.
 
 | Left | Right |
 |---|---|
 | Enable Ka0s Quick Comms (`enabled`) | General visibility (`visibility`) |
-| Master scale (`scale`, 0.5-2) | Master alpha (`alpha`) |
+| Master scale (`scale`, 0.5-2) | Master opacity (`alpha`) |
 | Lock frame (`locked`) | Debug console (`state.debugConsole`, session) |
 | Minimap button (`global.minimap.shown`) | Test mode (`state.testMode`, session) |
 | Preview as (`state.previewAs`, session; its own line: Off first, then every preset) | |
@@ -124,7 +124,8 @@ band      [ Group v (picker; a green dot after its name marks a group active now
 strip     [ General ][ Callouts ][ When ][ What it sends ]
 General   Name, Enable this group, then the icon under an Icon label with Choose icon…, the clear
           glyph and its color swatch (settings/Editors.lua's chooser, no Icon text box), then
-          Parent group (None, or a top-level group) alone, then Duplicate and Delete group, then a
+          Parent group (None, or a top-level group) alone, then Duplicate group and Delete group…,
+          then a
           gap, a gray line ("Adds back the built-in groups and callouts you deleted. Changes
           nothing you have.") and Restore built-in groups (page-wide)
 Callouts  Add callout (the callout popup, blank; across the row), Reuse callout
@@ -147,7 +148,7 @@ or a dial itself, so picking a parent takes it off every pad and dial in the sam
 group does). Groups go one level deep: the dropdown is idle while this group holds groups, and its
 tooltip names them. A group's children are listed A–Z by name (2026-10-25), here, on the pads and on the dials. Delete on a
 parent asks first and says what happens: the groups inside it become top-level groups, in its place
-on every pad and dial. Duplicate of a child puts the copy in the same parent (the chat line says
+on every pad and dial. Duplicate group on a child puts the copy in the same parent (the chat line says
 so); a parent's copy holds no children. The page's Defaults keeps the parent, as it keeps the icon.
 
 **Inherit when conditions** (When, at the top of the tab under the active-now line, the
@@ -324,8 +325,9 @@ user group, so there is no Callouts page and no shared callout.
   Every fixed column is an explicit `{ width = n }`, since the layout reads a bare number from 1 to
   under 10 as a weight;
   `Ed.RowAlignV` centers every widget in the 30px row.
-- Delete group (General; *Delete* until item 020, QUI-L04) deletes the group's callouts with it, and
-  Duplicate gives the copy copies of them.
+- Delete group… (General; *Delete* until item 020, QUI-L04, and *Delete group* until 2026-10-25,
+  audit QC-19) deletes the group's callouts with it, and Duplicate group (*Duplicate* until then)
+  gives the copy copies of them.
 - The page's Defaults tooltip: "Turn the selected group back on, turn Inherit when conditions back
   on, and turn Preview while editing back on. Its name, icon, parent, callouts and own When are
   kept." (item 020, QUI-L06: it promised the reset of the retired Open the dial on this group).
@@ -426,7 +428,7 @@ body     [Name          ] [Channel       ]   the callout.* member rows' labels a
   over all its window styles), not its Settings-window skin or its window-skin kill switch, which
   its public API does not expose. So the popup matches the settings window behind it only when
   EllesmereUI's Settings window skin is on and its style is the third-party style; otherwise the
-  two can differ (a known limitation, `ARCHITECTURE.md` -> `## Known Limitations`).
+  two can differ (a known limitation, [`known-limitations.md`](known-limitations.md)).
 
 ## The icon browser
 
@@ -504,7 +506,7 @@ footer   the selected icon (a glyph in the color) and its name, then Choose and 
 band     [ Pad v (picker) ][ New pad ]
 strip    [ General ][ Groups ][ Layout ][ Window ][ Header ][ Section titles ][ Buttons ][ Icons ]
 General  Name, Enable this pad, Visibility (visibility, fade and faded opacity, under its heading),
-         then Unlock (or Lock) all pads and Delete pad
+         then Unlock (or Lock) all pads and Delete pad…
 Groups   Show groups as, then Add group (the top-level groups the pad does not hold: a group
          inside another shows with it), then the pad's groups as a drag-to-reorder list with a
          remove glyph (its priority order; it takes the group off the pad and asks nothing)
@@ -622,7 +624,7 @@ shipped order.
 band     [ Dial v (picker) ][ New dial ]
 strip    [ General ][ Groups ][ Layout ][ Slices ][ Hub ][ Paging ][ Labels ][ Icons ][ Ring map ]
 General  Name, Enable this dial, a gray line ("Set this dial's key on the General page >
-         Keybindings. A dial's key follows its place in the dial order."), then Delete dial
+         Keybindings. A dial's key follows its place in the dial order."), then Delete dial…
 Groups   Show groups as (Categories or Flat), then Add group (top-level groups only), then the
          dial's groups as a drag-to-reorder list with a remove glyph (its priority order, spec §7;
          it takes the group off the dial and asks nothing)
@@ -663,7 +665,7 @@ labels* was *Show labels* and *Enable this dial* was *Enabled*; the Dial page's 
 wedge (QUI-L35). Add group moved above the list (QUI-L07), and General's gray line points at the
 General page > Keybindings, with no key box and no readout (QUI-L29).
 
-- **General:** Name and Enable this dial are the `dial.name` and `dial.enabled` rows; Delete dial asks first and keeps the dial's groups and
+- **General:** Name and Enable this dial are the `dial.name` and `dial.enabled` rows; Delete dial… asks first and keeps the dial's groups and
   callouts (the key belongs to the place, so the dial that moves up takes it).
 - **Groups:** Show groups as is `dial.mode` (Categories or Flat). The list is the dial's priority
   order; Add group appends one. A dial opens straight on its one active group's ring, or on the
