@@ -301,3 +301,35 @@ test("slash: [toggle] the hidden state is this character's: a /reload or the nex
     assertFalse(NS2.SlashVerbs.PadsShown(), "a profile switch keeps the character's choice")
     assertTrue(m.stateDrivers ~= m2.stateDrivers, "two loads, two mocks")
 end)
+
+test("slash: [characterization] PreviewLines' every branch: refused starts, a repeat, list's header, off with nothing on", function()
+    local NS = T.enableAddon()
+    local V, P = NS.SlashVerbs, NS.Preview
+    local real = { SetPreviewAs = P.SetPreviewAs, EndPreview = P.EndPreview }
+    local sets, ends = {}, 0
+    P.SetPreviewAs = function(key) sets[#sets + 1] = key; return false end   -- every start refused
+    P.EndPreview = function() ends = ends + 1 end
+    -- red under: V.PreviewLines' dispatch losing a branch or reordering its checks (performance-§11)
+    assertEqual(#V.PreviewLines(""), 0, "a refused bare start prints only its own refusal")
+    assertEqual(sets[1], P.CURRENT)
+    assertEqual(#V.PreviewLines("arena"), 0, "a refused named start too")
+    assertEqual(sets[2], "arena")
+    local off = V.PreviewLines("  OFF  ")
+    assertEqual(off[1], "Preview off.")
+    assertEqual(ends, 0, "nothing on, nothing ended")
+    assertEqual(#sets, 2, "off starts nothing")
+    local list = V.PreviewLines("list")
+    assertEqual(list[1], "Preview as (now: " .. P.Label(P.OFF) .. "):")
+    assertEqual(#list, #P.Presets() + 1)
+    assertEqual(list[2], "  " .. P.Presets()[1].key .. ": " .. P.Presets()[1].label)
+    P.SetPreviewAs = real.SetPreviewAs
+    assertTrue(P.SetPreviewAs("arena"))
+    P.SetPreviewAs = function(key) sets[#sets + 1] = key; return false end
+    assertEqual(V.PreviewLines("Arena")[1], "Previewing: " .. P.Label("arena"), "the one on is kept, not restarted")
+    assertEqual(V.PreviewLines("")[1], "Previewing: " .. P.Label("arena"), "bare keeps the one on")
+    assertEqual(#sets, 2, "neither restarted it")
+    assertEqual(V.PreviewLines("list")[1], "Preview as (now: " .. P.Label("arena") .. "):")
+    P.SetPreviewAs, P.EndPreview = real.SetPreviewAs, real.EndPreview
+    assertEqual(V.PreviewLines("off")[1], "Preview off.")
+    assertTrue(P.PreviewAs() == nil, "off ends the one on")
+end)
