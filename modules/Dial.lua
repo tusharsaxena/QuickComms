@@ -150,8 +150,10 @@ local function newWedge(inst, ring)
     return w
 end
 
+-- A released wedge is parked armed (F-006), as a pad button is: the rebuild takes most of them straight
+-- back, and one given its old line again keeps it with no secure write. Hidden by the pool, it takes
+-- no click while parked; releaseFree disarms whatever the rebuild did not take back.
 local function releaseWedge(w)
-    NS.SendEngine.Disarm(w)
     R.Unflash(w)
     R.SetCooling(w, false)
     w.qcItem = nil
@@ -163,11 +165,15 @@ local function releaseRings(inst)
     inst.byCallout = {}
 end
 
--- Every wedge no ring drew this time loses its glow: the free wedges of the rings in use and of the
--- rings left in the pool.
-local function releaseFreeGlows(inst)
+-- Every wedge no ring drew this time is disarmed (a disarmed one writes nothing) and loses its glow:
+-- the free wedges of the rings in use and of the rings left in the pool. After a rebuild placed its
+-- wedges, and after a release; out of combat, as both are.
+local function releaseFree(inst)
     for _, list in ipairs({ inst.rings.active, inst.rings.free }) do
-        for _, ring in ipairs(list) do NS.Glow.ReleaseFree(ring.qcWedges) end
+        for _, ring in ipairs(list) do
+            for _, w in ipairs(ring.qcWedges.free) do NS.SendEngine.Disarm(w) end
+            NS.Glow.ReleaseFree(ring.qcWedges)
+        end
     end
 end
 
@@ -305,7 +311,7 @@ function Dial.Apply(index, id, plan)
     R.PaintPointer(inst.header, look)
     local loaded = {}
     for r, spec in ipairs(plan.rings) do loaded[r] = loadRing(inst, spec, disc, look, icfg) end
-    releaseFreeGlows(inst)
+    releaseFree(inst)
     local frames = {}
     for r, l in ipairs(loaded) do frames[r] = l.frame end
     R.RaiseFront(inst.header, frames)
@@ -327,7 +333,7 @@ function Dial.Release(index)
     if not inst or inCombat() then return false end
     DS.Close(inst.header)
     releaseRings(inst)
-    releaseFreeGlows(inst)
+    releaseFree(inst)
     DS.Load(inst.header, {}, {})
     if inst.id and byId[inst.id] == inst then byId[inst.id] = nil end
     NS.Debug(TAG, "released place %s (%s)", index, tostring(inst.id))

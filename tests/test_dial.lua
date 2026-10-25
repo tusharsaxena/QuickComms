@@ -758,6 +758,50 @@ test("dial slices: [perf] a reopen on the slice last lit leaves the highlight wh
     m.__click(h, "Toggle")
 end)
 
+-- Every wedge the dial's pools hold but no ring drew: the free wedges of its rings, in use or parked.
+local function parkedWedges(inst)
+    local out = {}
+    for _, list in ipairs({ inst.rings.active, inst.rings.free }) do
+        for _, ring in ipairs(list) do
+            for _, w in ipairs(ring.qcWedges.free) do out[#out + 1] = w end
+        end
+    end
+    return out
+end
+
+test("dial: [F-006] an unchanged rebuild rewrites no wedge's line; a wedge left out carries no type", function()
+    local NS, m = live()
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    local inst = NS.Dial.Instance("d2")
+    local writes, wrapped = 0, {}
+    for _, w in ipairs(NS.SendEngine.ArmedButtons()) do
+        local real = w.SetAttribute
+        wrapped[w] = real
+        w.SetAttribute = function(self, k, v)
+            if k == "type" or k == "macrotext" then writes = writes + 1 end
+            return real(self, k, v)
+        end
+    end
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    for w, real in pairs(wrapped) do w.SetAttribute = real end
+    -- red under: releaseWedge disarming every wedge before the rebuild arms it again
+    assertEqual(writes, 0, "the same plan again writes no line")
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS, { n = 2 })))
+    local parked = parkedWedges(inst)
+    assertTrue(#parked > 0, "two callouts park the wedges eight used")
+    for _, w in ipairs(parked) do
+        -- red under: the rebuild parking wedges armed and never disarming the ones it did not take back
+        assertNil(w:GetAttribute("type"), "a parked wedge sends nothing")
+        assertFalse(w.qcArmed)
+    end
+    assertEqual(#m.blocked, 0, "every write out of combat")
+    assertTrue(NS.Dial.Release(1))
+    for _, w in ipairs(parkedWedges(inst)) do
+        -- red under: Dial.Release parking its wedges without the disarm
+        assertNil(w:GetAttribute("type"), "a released dial's wedges send nothing")
+    end
+end)
+
 test("dial slices: [polish] gap 0 draws as before", function()
     local NS = live()
     assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))

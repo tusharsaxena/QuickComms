@@ -36,7 +36,8 @@ local _, NS = ...
 -- edge's point, so a resize or a reload grows the pad away from the strip and never drifts it.
 -- The Icons tab (B9) is read once per rebuild (IconStyle.Config) and painted on every button; its icon
 -- size feeds the buttons' geometry. A button the rebuild leaves unused, and every button of a released pad,
--- loses its glow (Glow.ReleaseFree); a send result starts an After sending glow (Glow.Sent).
+-- loses its glow (Glow.ReleaseFree) and is disarmed (disarmFree); one the rebuild takes back keeps its
+-- armed line until arm() gives it another (F-006); a send result starts an After sending glow (Glow.Sent).
 
 NS.Pad = NS.Pad or {}
 local Pad = NS.Pad
@@ -176,9 +177,17 @@ local function releaseTitleHit(hit)
     hit.qcGroupId = nil
 end
 
+-- A released button is parked armed (F-006): the rebuild takes most of them straight back, and one
+-- given its old line again keeps it with no secure write (SendEngine.Arm). Hidden by the pool, it
+-- takes no click while parked; disarmFree disarms whatever the rebuild did not take back.
 local function releaseButton(btn)
-    NS.SendEngine.Disarm(btn)
     btn.qcSlot = nil
+end
+
+-- Every parked button disarmed (a disarmed one writes nothing): after a rebuild placed its buttons,
+-- and after a release. Out of combat, as both are.
+local function disarmFree(pool)
+    for _, btn in ipairs(pool.free) do NS.SendEngine.Disarm(btn) end
 end
 
 -- Armed when the slot baked; otherwise disarmed, keeping only what a click may still do (a solo
@@ -435,6 +444,7 @@ function Pad.Apply(id, plan)
     NS.ApplySkin(inst.root, R.SkinFor(look))
     inst.clook = R.ButtonLook(button, inst.clook)
     place(inst, box, layout.style, inst.clook, slook, icfg)
+    disarmFree(inst.buttons)
     NS.Glow.ReleaseFree(inst.buttons)
     finishApply(inst, id, plan, look, hstate)
     if t0 then Perf.Note("padLayout", debugprofilestop() - t0) end
@@ -451,6 +461,7 @@ function Pad.Release(id)
         inst.root:StopMovingOrSizing()
     end
     NS.Pool.ReleaseAll(inst.buttons, releaseButton)
+    disarmFree(inst.buttons)
     NS.Glow.ReleaseFree(inst.buttons)
     NS.Pool.ReleaseAll(inst.titles, releaseTitle)
     NS.Pool.ReleaseAll(inst.titleHits, releaseTitleHit)
