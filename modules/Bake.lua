@@ -19,8 +19,7 @@ local function squeeze(s)
 end
 
 --- The §8.3 sanitizer short of the escape: one line (every control character flattened to a
---- space), runs of whitespace collapsed, trimmed, and a leading "/" refused. Imported text is stored
---- this way (spec §8.3: sanitized when it is imported, and again at every bake); the "|" escape is
+--- space), runs of whitespace collapsed, trimmed, and a leading "/" refused. The "|" escape is
 --- left to the bake, so a stored "|" is never escaped twice.
 --- @return string|nil clean, string|nil reason ("empty" | "startsWithSlash")
 function B.CleanText(text)

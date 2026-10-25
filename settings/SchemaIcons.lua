@@ -22,7 +22,7 @@ local _, NS = ...
 -- is off, and an offset also while the glow is in a style it does not apply to (Button).
 --
 -- A style's knobs show only while the glow is on and in that style (owner request, 2026-10-20): the
--- rows stay in the schema (Defaults, a share import, /qc set and list still reach every knob), and
+-- rows stay in the schema (Defaults, /qc set and list still reach every knob), and
 -- the tab's render filters them through Settings.ShownIconRows. Glow and Glow style are structural
 -- (settings/Editors.lua Ed.STRUCTURAL), so a write to either repaints the tab, its scroll kept, and
 -- the right heading appears. The options library has no hidden-row field to say this in the row.

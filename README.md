@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1213%2F1213_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1157%2F1157_passing-green)
 
 Quick Comms puts your usual group callouts one click or one keypress away. "Kick on me", "Lust
 now", "INC Lumber Mill": set them up once and they sit on a Comms Pad or open from a
@@ -19,8 +19,7 @@ objective: every base-capture node (Attack, Defend, INC and Clear), every Altera
 captain, bunker, tower and graveyard (Attack and Defend each), both bases on Isle of Conquest, Silvershard
 Mines' tracks, Temple of Kotmogu's orbs, and the flags, workshops, events, carts or azerite of the
 rest, worded the same for either faction.
-You can write your own callouts, sort them into groups, say when each group shows, style the pad,
-and share any of it with a friend as a string you copy and paste.
+You can write your own callouts, sort them into groups, say when each group shows, and style the pad.
 
 ## Usage
 
@@ -90,11 +89,6 @@ The window is grayed out there, since the Groups page drives it: pick another gr
 or untick Preview while editing, beside the Group picker, to keep the pads live. Right-click a
 group's title on a pad to open it on the Groups page; the page stays on the tab you last used.
 
-To share, open Settings → Share → Export, tick what you want to send and click Export, then copy the
-string with Ctrl+C. To take one in, paste it on the Import tab and click Accept: Quick Comms lists
-what's in it and anything it left out, and nothing changes until you click Import. Everything
-arrives as a new copy, and a shared pad or dial comes without a key or a screen position.
-
 Everything is configured under **Settings → AddOns → Ka0s Quick Comms**, and `/qc help` (or
 `/quickcomms help`) prints the full command list.
 
@@ -111,8 +105,8 @@ Everything is configured under **Settings → AddOns → Ka0s Quick Comms**, and
   sent faster than that, so if a line never arrives you get a note in chat.
 - The built-in sets arrive as ordinary groups: change, rename or delete them like your own. Restore
   built-in groups (Settings → Groups → General) brings back any built-in group or callout you deleted.
-- A shared string is checked before anything is added. A callout whose text starts with a slash
-  command is left out, and the text is checked again every time a line is prepared.
+- A callout whose text starts with a slash command is refused, and the text is checked again every
+  time a line is prepared.
 
 ## FAQ
 
@@ -120,8 +114,6 @@ Everything is configured under **Settings → AddOns → Ka0s Quick Comms**, and
 |---|---|
 | Does it send anything on its own? | No. A callout is only ever sent when you press its button or its key. |
 | Why secure buttons? | In Midnight an addon can't send chat by itself during a boss, a Mythic+ key or a PvP match. A button you press can, so that's the one way Quick Comms sends anything. |
-| Can a shared string run a command? | No. Callout text is always chat text. A shared callout that starts with a slash is left out, and nothing in a string is ever run. |
-| Will importing overwrite my callouts? | No. Everything in a string arrives as a new copy beside what you have. |
 | Does it work with EllesmereUI? | Yes. With EllesmereUI's Blizzard skins on (and Quick Comms on in its Third-Party Addons list), the callout editor takes the same look as your settings window. Turn it off there, then reload. |
 
 ## Troubleshooting
@@ -132,9 +124,6 @@ Everything is configured under **Settings → AddOns → Ka0s Quick Comms**, and
 | The minimap button is gone | Tick **Minimap button** on the General page. |
 | The pad won't move | Type `/qc unlock` and drag the strip above it; it can't move in combat. |
 | The dial's key does nothing | Check Open Comms Dial in WoW's Options → Keybindings → Ka0s Quick Comms, or on General → Keybindings in this addon's settings. The dial opens only where at least one of its groups is active. |
-| An imported dial won't open | Shared dials arrive without a key. Bind its Open Comms Dial entry in WoW's Options → Keybindings → Ka0s Quick Comms, or on General → Keybindings in this addon's settings. |
-| The import says the string is damaged | It was cut short when it was copied. Ask for it again and copy all of it; line breaks and spaces in it are fine. |
-| The import says the string is from a newer Quick Comms | Update the addon, then import it again. |
 | A message didn't arrive and chat says it may have been dropped | The game drops messages sent too close together on a boss. Wait for the buttons to brighten before pressing again. |
 | Something looks wrong and I want to report it | Follow [Reporting a bug](#reporting-a-bug) below. |
 
@@ -156,7 +145,7 @@ than in comments, so nothing gets lost.
 
 | Version | Date | Highlights |
 |---|---|---|
-| 0.1.0 | Unreleased | - The Comms Pad and the Comms Dial, with built-in callouts for Mythic+, raids, arenas, every battleground and the solo open world, sent through secure buttons<br>- Battleground sets with a group per objective: Alterac Valley's generals, captains, bunkers, towers and graveyards, Isle of Conquest's bases, and the objectives of Warsong Gulch, Twin Peaks, Wintergrasp, Ashran, Deephaul Ravine and Seething Shore<br>- Your own callouts and groups (the built-in sets among them, as groups you can edit, and groups inside groups), with conditions for when each group shows, Preview as…, a preview of the group you are editing and Why is this showing?<br>- A small preview window, opened by `/qc preview` or the Preview as… row, to switch the previewed situation or end the preview<br>- In a preview or test mode, a click on a button or a slice prints what it would have sent, and sends nothing; the dial stays open<br>- The preview window over the group you are editing, showing the situation it is previewed in<br>- A `{coordinates}` token, your map position as you press<br>- The General channel (/1), falling back to say where you have not joined it; the solo open-world callouts use it<br>- The spam guard, drop notes, test mode and the lock<br>- The pad's font, border and background, with class colors<br>- An optional shine on the pad's buttons and the dial's slices (seven looks), and the dial's own round art<br>- Sharing groups (with their callouts), pads and dials as a string<br>- The settings panel, the minimap button, the `/qc` command and the debug tools<br>- Your keys on the General page's Keybindings tab, the same ones WoW's Options → Keybindings → Ka0s Quick Comms shows<br>- Settings laid out by subject: Behavior under two headings, the Groups band on one row with Inherit when conditions on the When tab, the Pad tabs from the window inwards, and the Dial's Layout, Labels and Ring map tabs |
+| 0.1.0 | Unreleased | - The Comms Pad and the Comms Dial, with built-in callouts for Mythic+, raids, arenas, every battleground and the solo open world, sent through secure buttons<br>- Battleground sets with a group per objective: Alterac Valley's generals, captains, bunkers, towers and graveyards, Isle of Conquest's bases, and the objectives of Warsong Gulch, Twin Peaks, Wintergrasp, Ashran, Deephaul Ravine and Seething Shore<br>- Your own callouts and groups (the built-in sets among them, as groups you can edit, and groups inside groups), with conditions for when each group shows, Preview as…, a preview of the group you are editing and Why is this showing?<br>- A small preview window, opened by `/qc preview` or the Preview as… row, to switch the previewed situation or end the preview<br>- In a preview or test mode, a click on a button or a slice prints what it would have sent, and sends nothing; the dial stays open<br>- The preview window over the group you are editing, showing the situation it is previewed in<br>- A `{coordinates}` token, your map position as you press<br>- The General channel (/1), falling back to say where you have not joined it; the solo open-world callouts use it<br>- The spam guard, drop notes, test mode and the lock<br>- The pad's font, border and background, with class colors<br>- An optional shine on the pad's buttons and the dial's slices (seven looks), and the dial's own round art<br>- The settings panel, the minimap button, the `/qc` command and the debug tools<br>- Your keys on the General page's Keybindings tab, the same ones WoW's Options → Keybindings → Ka0s Quick Comms shows<br>- Settings laid out by subject: Behavior under two headings, the Groups band on one row with Inherit when conditions on the When tab, the Pad tabs from the window inwards, and the Dial's Layout, Labels and Ring map tabs |
 
 ## Credits
 

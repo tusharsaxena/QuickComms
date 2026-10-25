@@ -137,7 +137,7 @@ end
 
 local GROUPS_AS = choices({ { "sections", L["Sections"] }, { "merged", L["One list"] }, { "tabs", L["Tabs (the mouse wheel switches)"] } })
 local ORIENTATION = choices({ { "horizontal", L["Horizontal"] }, { "vertical", L["Vertical"] }, { "grid", L["Grid"] } })
--- `up` (Upward) is retired: migration step 4 and Share's import alias read it as rightUp (B2).
+-- `up` (Upward) is retired: migration step 4 reads it as rightUp (B2).
 local GROWTH = choices({ { "right", L["Right and down"] }, { "left", L["Left and down"] },
     { "rightUp", L["Right and up"] }, { "leftUp", L["Left and up"] } })
 local STYLE = choices({ { "iconLabel", L["Icon and label"] }, { "icon", L["Icon only"] }, { "label", L["Label only"] } })
@@ -356,8 +356,8 @@ local function isName(v) return type(v) == "string" and v ~= "", "badChoice" end
 local BOOL = check(function(v) return type(v) == "boolean", "badChoice" end)
 
 -- A checked color rebuilt as { r, g, b, a } (LibKa0s Core's RGBA reads both shapes, alpha 1 when it
--- is absent), so a stored color holds its four channels and nothing else: an import's extra keys
--- never reach SavedVariables.
+-- is absent), so a stored color holds its four channels and nothing else: a written color's extra
+-- keys never reach SavedVariables.
 local Core = LibStub and LibStub("LibKa0s-Core-1.0", true)
 local function fourChannels(v)
     local r, g, b, a

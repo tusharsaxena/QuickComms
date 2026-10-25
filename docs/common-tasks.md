@@ -91,6 +91,3 @@ For a new season or patch: change `SEASON`, `LAUNCH` (and `CURRENT_TIER` if the 
 
 The generators leave a `__pycache__/` beside them; `.gitignore` keeps it out of the repository.
 
-## Change what a share string carries
-
-A new member row of a pad or a dial travels with it on its own (`Share.Portable`: every row of its kind but its name, Enabled, position and key). A new callout or group field needs three places: `exportMember` in `modules/Share.lua`, the kind's entry check above it (`calloutEntry`, `groupEntry`), and `importMembers` in `modules/Library.lua`; pin it in `tests/test_share.lua` and `tests/test_library.lua`. Raise `Share.VERSION` only when an older Quick Comms would misread the new string, and add `MIGRATIONS[old]` lifting an old payload one step.

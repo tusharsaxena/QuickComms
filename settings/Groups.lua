@@ -218,7 +218,7 @@ local function restoreRow(ctx)
 end
 
 -- A callout row (B5): [icon] the name in gold, the channel's short label in its chat color, then the
--- text in muted white, cut at PREVIEW_CHARS characters. User text is drawn literal (Share.Literal),
+-- text in muted white, cut at PREVIEW_CHARS characters. User text is drawn literal (literal below),
 -- so a typed "|" never opens an escape; the cut keeps every row one line (options-ui-§18's stride).
 local PREVIEW_CHARS = 40
 local SHORT_CHANNEL = {
@@ -238,15 +238,21 @@ local function channelColor(kind)
     return hex(NS.PadRender.ChannelColor(NS.Channels.ColorType(concrete) or "PARTY"))
 end
 
+-- Display text with every live "|" escape made literal: a lone "|" doubled to "||", a "||" (what the
+-- game's edit box stores for a typed "|") kept, so it is never doubled again and the answer is stable.
+local function literal(s)
+    return (s:gsub("||", "\1"):gsub("|", "||"):gsub("\1", "||"))
+end
+
 local function preview(text)
     local head = NS.Library.FirstChars(text, PREVIEW_CHARS)
     if #head < #text then head = head .. "…" end
-    return NS.Share.Literal(head)
+    return literal(head)
 end
 
 local function calloutLabel(c, cid)
     if not c then return cid end
-    return ("|cffffd100%s|r  |cff%s%s|r  |cffb3b3b3%s|r"):format(NS.Share.Literal(c.name or cid),
+    return ("|cffffd100%s|r  |cff%s%s|r  |cffb3b3b3%s|r"):format(literal(c.name or cid),
         channelColor(c.channel), SHORT_CHANNEL[c.channel] or tostring(c.channel), preview(c.text or ""))
 end
 

@@ -23,13 +23,12 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | SEND-1..6 | Send | Secure sends in keys and on bosses, the spam guard, General (/1) with its Say fallback |
 | TOKEN-1 | Tokens | `{coordinates}`: your map position, read at the press, in a preview echo and in combat |
 | PAD-1..15 | Pad | The Comms Pad, its growth and button width, the Solo and In Group sets and the built-ins' colors, the header click and icon only's width, the header's Quick Comms: text |
-| EDIT-1..32 | Editors | The Pad and Dial page names; the Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo), Comms Pad and Share pages, Preview as…, Why is this showing?, an older profile's conversion |
+| EDIT-1..32 | Editors | The Pad and Dial page names; the Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo) and Comms Pad pages, Preview as…, Why is this showing?, an older profile's conversion |
 | PREVIEW-1..12 | Preview window | The Preview as selector window: every entry point, the dropdown, End preview, close and Escape, combat, test mode and the stand-down, Alt+Z, the saved position, bare /qc preview and list; every preview drawn as live; a preview or test click prints what it would send; a preview dial staying open on a pick |
 | DIAL-1..41 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, the lone-group open and the group ring, page arrows and the page row, Auto wedges, the ring radius, the Slice labels tab, the slices and the slice lit by direction, the Slices tab, the pointer, the tooltip outside the dial, the hub over the slices, the pointer, label and icon offsets, the Paging tab; the dial polish: the border gone, the slice gap, placement from W, a slice clicked to the hub in combat, the hub styles, the Group labels tab, Icon offset on Icons, 128-pixel icons, a click outside closing the dial in combat, the page indicators' background and border, the Hub tab; automatic icon offset and size; the 120 radius and 48-pixel icons by default; a right click back a ring; opening where it was closed; slices from N |
 | LAYOUT-1..5 | Settings layout | Item 020: the General page's Behavior headings and Defaults tooltip; the Groups band on one row, General's order, Inherit on When, What it sends; the Pad strip outside in and its relabels; the Dial strip (Layout, Labels, Ring map) and its headings; no setting lost or changed, through a /reload |
 | LAYER-1..4 | Frame layering | Item 030: a pad button's and a dial wedge's borders, glows, label, padlock and veils in order; the drag strip over a faded pad; the windows, modals and popups still stacked as before |
 | KEY-1..6 | Key bindings | A dial's key as WoW's own binding in Options → Keybindings, Character Specific Keybindings, Toggle Comms Pads; item 015: the Ka0s Quick Comms section of its own, the General → Keybindings tab in sync both ways, its capture and combat refusal |
-| SHARE-1..6 | Share | Export and import strings, the report, refusals, unbound pads and dials |
 | LOOK-1..6 | Window, Header, Section titles (Pad header and Section header before item 020) | The Comms Pad's three window tabs: the section titles' font, the pad's border and background, the header's look, size and alignment, the tab strip and headings, the section header's band and height |
 | BUTTON-1..2 | Buttons tab | The buttons' size, color, border and font; the button glow |
 | ICONS-1..4 | Icons tab | The buttons' and wedges' icon look, border and glow triggers; the glows through LibKa0s-Glow-1.0 |
@@ -352,7 +351,7 @@ drag a group to the top → it comes first on the pad. New pad → a second pad 
 built-in group you still have (top-level, in shipped order); Delete pad (Yes) → it is gone. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 **EDIT-6. Restore built-in groups (rewritten 2026-10-18; the Share page's Built-in tab is gone).**
-Share has two tabs, Export and Import. Groups → "Raid" → Delete (Yes) → it is gone from the
+Groups → "Raid" → Delete (Yes) → it is gone from the
 picker and, in a raid, from the pad. On "Dungeon"'s Callouts tab remove "Lust" (Yes). General →
 Restore built-in groups (no question asked) → one chat line counts the groups and callouts that came
 back; "Raid" is in the picker again and last on every pad's and dial's Groups list, and
@@ -468,8 +467,7 @@ grid and the footer turns orange. Choose, Save → the button on the pad, the we
 when it is opened again. On a group of yours, General → Choose icon… → a glyph, Choose → then Icon
 color → green → the group's wedge on the dial is green at once. Now choose a raid marker for that
 group → the marker is drawn in its own colors, the swatch grays out, and choosing a glyph again
-shows it white (the color went with the marker). Export the orange callout's group (Share → Export),
-import the string → the copy's glyph is orange too. `/reload` → every color is still there. Result: 2026-10-21, pass (the owner's run; client build not recorded).
+shows it white (the color went with the marker). `/reload` → every color is still there. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 **EDIT-17. What closes the browser.** Open the browser from the popup and press Escape → the browser
 closes and the popup stays open; press Escape again → the popup closes, nothing saved. Open the
@@ -570,8 +568,7 @@ empty When matches anywhere); give it a When of its own (Content → Arena) → 
 wedge and section are gone, the other nodes stay. Tick it again → back to the parent's
 conditions, and the node's own Arena is still there when you untick it once more. On a top-level
 group of yours the box is grayed out. `/qc set group.inheritWhen false` on a selected child unticks
-it; the page's Defaults ticks it again. Export a group with a child that does not inherit (Share →
-Export), import the string → the copy's child does not inherit either. Result: 2026-10-21, pass (the owner's run; client build not recorded).
+it; the page's Defaults ticks it again. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 **EDIT-24. The icon browser's search.** Open the icon browser (EDIT-14) → the toolbar holds a search
 box with a gold magnifier inside its left edge, beside Show on Game icons, beside Icon color on
@@ -645,9 +642,8 @@ of the edited group → its line prints the same way. End the preview and click 
 yell goes out, with no `[QC]` line. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 **EDIT-30. The Pad and Dial pages (dial polish, 2026-10-21).** Open the settings → the pages under Ka0s
-Quick Comms read General, Groups, Pad, Dial, Share, Profiles (no "Comms Pad" or "Comms Dial" page).
-The default pad and dial are still named Comms Pad and Comms Dial in their pickers, Share → Export
-still lists them by those names, and a dial's ring of groups is still titled Comms Dial. Delete every
+Quick Comms read General, Groups, Pad, Dial, Profiles (no "Comms Pad" or "Comms Dial" page).
+The default pad and dial are still named Comms Pad and Comms Dial in their pickers, and a dial's ring of groups is still titled Comms Dial. Delete every
 dial, then `/qc set dial.radius 120` → "No dial to edit: make one on the Dial page." Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 **EDIT-31. The callout popup's Save is on the left (owner, 2026-10-22).** Open Edit callout → Save on
@@ -1075,51 +1071,6 @@ solid gold hub with a 1-pixel gold rim and a 24-pixel circle, a 24-pixel pointer
 outlined slice labels, 16-point outlined group labels, the Orb shine on the slices (gray tint), and
 8-pixel page dots with a 2-pixel border. Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
-## Share
-
-**SHARE-1. Export a group.** Settings → Groups → New group `My keys`; on its Callouts tab, Add
-callout `Kick` (`Kick on me {skull}`, Party) and `Lust` (`Lust now`, Smart group). Share → Export:
-there are no callout checkboxes, only groups, pads and dials; tick `My keys` → the line under the boxes reads "The string will hold 2 callouts, 1 group."; Export → a
-window opens with a string starting `!QC1!`, already selected; Ctrl+C copies it; Escape closes the
-window. Result: 2026-10-21, pass (the owner's run; client build not recorded).
-
-**SHARE-2. Import it, twice.** Profiles → make a profile `Share test`. Share → Import: paste the
-string and click Accept → "Ready to import: 2 callouts, 1 group."; Import → chat says "Imported 2
-callouts, 1 group." and "An imported group is on no pad or dial yet: add it on the Groups tab of the
-Pad or Dial page.", and Groups lists `My keys` with both callouts. Paste and import it
-again → a second `My keys`, and the first one is untouched. Result: 2026-10-21, pass (the owner's run; client build not recorded).
-
-**SHARE-3. A string that tries a command.** Paste this on Import and click Accept:
-
-```
-!QC1!v4CVUjmmuuaybLPIufQdD2kdOwwqHbeZgPYatnrIz8pxLef7RJSVUuuvx6JsEIS4jcZ6rF6CotojB8U4q4TIMYp)xjmgxKcRkuLfQnEafsdOpZrHfgRTUEGrqG4xAb85kHw7WXVIDQ(9oRnW77qTugrTbstxMlzlNGFOHfhZeMdzwG9RN29xAg)rKx1kqemJbRWthE8K8SBtZVT2hr2GVdP3l)intwJGO)A6LQHm86RF)09)
-```
-
-→ "Ready to import: 1 callout, 1 group.", "Left out the callout 'Sneaky': its text starts with /." and
-"1 reference to something the string does not carry was left out."; Import → the group `Smoke test`
-holds `Kick` only, and nothing ran. Result: 2026-10-21, pass (the owner's run; client build not recorded).
-
-**SHARE-4. Damaged, foreign and newer strings.** On Import, Accept each: the SHARE-1 string with its
-last ten characters deleted → "That string is damaged or cut short. Copy all of it again."; `hello`
-→ "That is not a Quick Comms string: one starts with !QC1!."; and this →
-"That string was made by a newer Quick Comms. Update the addon, then import it.":
-
-```
-!QC1!JXWsk9IYV0ckMRGsmLuYpVffyPzMC2oNFU5wStzNzEPKusLMxk5KAtjNyo5KFPLumxcvgRa(
-```
-
-Clicking Import after any of them prints the same line and adds nothing. Result: 2026-10-21, pass (the owner's run; client build not recorded).
-
-**SHARE-5. A pad and a dial travel unbound.** Bind Open Comms Dial 1 to G in Options → Keybindings. Share → Export: tick
-the Comms Pad and the Comms Dial; Export, copy. Switch to `Share test`, import it → chat also says an
-imported dial's key is the one WoW binds to its place in the dial list; the new pad sits in the
-default place (not where yours is), and the new dial (the profile's first) opens on Open Comms Dial
-1's key, G, since the key belongs to the place, not the dial. Switch back → G opens your dial as before. Result: 2026-10-21, pass (the owner's run; client build not recorded).
-
-**SHARE-6. A string that wrapped.** Paste a SHARE-1 string into a chat message or a forum post so it
-breaks across lines, copy it back out with the line breaks, and paste that on Import → Accept reads
-it as before. Result: 2026-10-21, pass (the owner's run; client build not recorded).
-
 ## Look
 
 The Comms Pad's Pad header, Section header and Window tabs (one Window tab until 2026-10-20, the
@@ -1324,7 +1275,7 @@ Result: 2026-10-24, pass (the owner's run; client build not recorded).
 **LAYER-4 (SM-QC-ZS4). Nothing else moved (QUI-Z01, Z06, Z09, Z10).** With Preview as… on: the
 preview window sits over the preview dial and under the callout popup's dim; the icon browser opens
 over the popup; its Wowhead link window opens over the browser; a delete confirm opened from the
-popup shows over it and can be clicked; the Share export window opens over a preview dial. Open a dial
+popup shows over it and can be clicked. Open a dial
 by its key, click outside it → it closes (with the settings window closed). No Lua error. Result: 2026-10-24, pass (the owner's run; client build not recorded).
 
 ## Icons tab
@@ -1379,7 +1330,7 @@ prune removed nothing; a blank cell means an icon went missing. Result: 2026-10-
 
 **ICON-3. Library-drawn art after the v1.75.0 re-vendor (2026-10-22, run item QC-RV, SM-QC-2).** The
 marks the library draws, and the addon's own, still draw: `/qc debug` → the console's close, copy and
-clear marks; an export from the Share page (SHARE-1) → the copy window's close; Groups → a group →
+clear marks; the icon browser's Wowhead link window (Game icons → Copy wowhead.com/icons) → its close; Groups → a group →
 When → the id list's info mark; a pad's padlock (lock the pads) and a dial's page arrows and pointer.
 A blank control is the failure: a pruned or undeclared icon resolves to a path and draws nothing.
 Result: 2026-10-23, pass (the owner's run; client build not recorded).
@@ -1573,11 +1524,11 @@ code (phase 5):
 - **The pads' fonts** (the Header and Section titles tabs', the Buttons tab's labels): the default face is LibSharedMedia's "Friz Quadrata TT", which LibSharedMedia
   does not register on koKR, zhCN or zhTW; a face the machine does not have draws `STANDARD_TEXT_FONT`
   (`Pad_Render.LabelFont`, `test_pad_render`).
-- **Printed**: every chat and report line is English through `NS.L`, the share and import lines
-  included (`test_slash`, `test_diagnostics`, `test_share`, `test_page_share`).
+- **Printed**: every chat and report line is English through `NS.L`
+  (`test_slash`, `test_diagnostics`).
 
 On a deDE or frFR client: `/reload`, run `/qc help` and `/qc diagnostics`; open the Groups page's When
-on an instance and a spec; make a callout with `{spec}`; export a group and import the string → no Lua
+on an instance and a spec; make a callout with `{spec}` → no Lua
 error, no stray `%s` or `%d` in any line, the When's names in the client's language with the ids
 unchanged, and the pad's labels drawn in a font (on koKR, zhCN or zhTW, the client's own). The failure
 looks like a raw format token in chat, a missing label, or a When that stops matching after a locale

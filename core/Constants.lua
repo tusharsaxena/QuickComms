@@ -57,8 +57,7 @@ C.FLASH = {
 --                      tool windows is an open evolution, STRATA_MODEL LK-05, not taken).
 --   FULLSCREEN         WINDOW: the preview window (modules/PreviewWindow.lua), at the client's level,
 --                      NOT toplevel and never Raise()d (a raise would lift it over a modal's catcher in
---                      the same strata, frame-layering-§1's exception), and the Share export window (the
---                      library's CopyWindow, FULLSCREEN by default). MODAL: the callout popup and the icon
+--                      the same strata, frame-layering-§1's exception). MODAL: the callout popup and the icon
 --                      browser (settings/ModalWindow.lua), each a band over UIParent: catcher at the base,
 --                      Bg +1, window +2, page +3, close X +5; the popup's base MODAL (10), the browser's
 --                      MODAL_OVER (200), far over anything the popup's widgets reach.

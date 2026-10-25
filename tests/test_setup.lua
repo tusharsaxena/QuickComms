@@ -306,20 +306,6 @@ test("options: the degraded load completes, and the panel says once that it is u
     end
 end)
 
-test("libs: [phase 5] LibDeflate and LibSerialize are vendored, TOC-listed and loaded before the addon", function()
-    local _, m = T.newAddon()
-    local toc = read("QuickComms.toc")
-    for _, lib in ipairs({ "LibDeflate", "LibSerialize" }) do
-        -- red under: drop the lib's line from QuickComms.toc (the client would never load it)
-        assertTrue(toc:find("libs\\" .. lib .. "\\lib.xml", 1, true) ~= nil, lib .. " has a TOC line")
-        assertTrue(m.LibStub(lib, true) ~= nil, lib .. " registered with LibStub")
-    end
-    local D, S = m.LibStub("LibDeflate"), m.LibStub("LibSerialize")
-    local packed = D:EncodeForPrint(D:CompressDeflate(S:Serialize({ a = 1 })))
-    local ok, back = S:Deserialize(D:DecompressDeflate(D:DecodeForPrint(packed)))
-    assertTrue(ok and back.a == 1, "a round trip through both")
-end)
-
 test("perf: [phase 5] a refresh notes situationRefresh, and each plan resolverResolve inside bakeSurface", function()
     local NS = T.enableAddon()
     local notes = {}

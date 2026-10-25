@@ -1,6 +1,6 @@
 local addonName, NS = ...
 -- core/WidgetsSetup.lua — NS.MakeDragHandle and NS.MakeCopyWindow from LibKa0s-Widgets-1.0: the
--- Comms Pad's drag strip and the Share page's export window.
+-- Comms Pad's drag strip and the icon browser's Wowhead link window.
 --
 -- A seam, nothing else (library-stack-§7), shaped like DropWatcher core/WidgetsSetup.lua: one file
 -- leases the major, and the help mark's art arrives resolved from the addon's media seam
@@ -8,7 +8,7 @@ local addonName, NS = ...
 -- hidden; modules/Pad.lua shows it while the pads are unlocked (KickCD modules/IconGrid_Handle.lua
 -- `IconGrid:ApplyLock`). DEGRADED (the library absent): NS.MakeDragHandle answers nil and a pad
 -- stays where its saved point puts it; NS.MakeCopyWindow answers nil too (the settings panel, and
--- with it the Share page, is unavailable then anyway).
+-- with it the icon browser, is unavailable then anyway).
 
 local W = LibStub and LibStub("LibKa0s-Widgets-1.0", true)
 

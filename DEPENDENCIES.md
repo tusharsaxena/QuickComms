@@ -20,12 +20,6 @@ marked as such rather than listed as a requirement.
   Third-Party Addons list all on, the callout popup takes EllesmereUI's look through its public
   skinning API (`EllesmereUI.RegisterSkin`, read against its `SKINNING_API.md`, apiVersion 3).
   Without it the popup keeps Blizzard's settings-window look and nothing else changes.
-- **The share string's two libraries are vendored like the rest** (design spec §15): LibDeflate
-  `1.0.2-release` (commit `6831edca`, zlib license, kept as `libs/LibDeflate/LICENSE.txt`) from
-  <https://github.com/SafeteeWoW/LibDeflate>, and LibSerialize `v1.2.3` (commit `aa6e50dd`, MIT, kept as
-  `libs/LibSerialize/LICENSE`) from <https://github.com/rossnichols/LibSerialize>. Each folder is the
-  tag's `.lua`, `lib.xml` and license, copied whole and never edited; a new version is a re-copy from
-  its tag, in one commit with this line.
 - **LibCustomGlow-1.0 is vendored too**: `libs/LibCustomGlow-1.0/` (MIT, minor 24, copied whole from
   the DropWatcher sibling's vendored copy, which came from KickCD's) draws the Icons tab's glows on the
   Comms Pad's buttons and the Comms Dial's wedges. LibKa0s-Glow-1.0 (`core/GlowSetup.lua`) resolves it at call time; without

@@ -483,8 +483,8 @@ local function edge(f, side, rgba)
     end
 end
 
--- The copy window the hint's button shows Wowhead's address in (core/WidgetsSetup.lua's maker, the
--- Share page's export window's), above the browser: the POPUP tier (FULLSCREEN_DIALOG, core/Constants.lua
+-- The copy window the hint's button shows Wowhead's address in (core/WidgetsSetup.lua's maker), above
+-- the browser: the POPUP tier (FULLSCREEN_DIALOG, core/Constants.lua
 -- LAYERS), over the browser's catcher. The library's CopyWindow takes no strata (a `strata` option on it
 -- is an open evolution in the standard, STRATA_MODEL LK-05, not in LibKa0s v1.77.0), so the window is
 -- lifted after it is built. Built on first use; nil without the library.

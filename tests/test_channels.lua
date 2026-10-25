@@ -123,7 +123,7 @@ test("channels: [QF-04] a general callout bakes /1 with channel 1 joined and /s 
     assertEqual(line, "/s Thanks!")
 end)
 
-test("channels: [QF-04] the channel row offers General with its label; Share and the seam accept it", function()
+test("channels: [QF-04] the channel row offers General with its label; the seam accepts it", function()
     local NS = T.bootAddon()
     local found
     for _, v in ipairs(NS.SchemaRuntime.FindRow("callout.channel").values) do
@@ -134,11 +134,6 @@ test("channels: [QF-04] the channel row offers General with its label; Share and
     local cid = NS.Library.CreateCallout({ name = "Hi", text = "Hi", channel = "say" })
     assertTrue((NS.SchemaRuntime.Set("callout.channel", "general", cid)))
     assertEqual(NS.db.profile.callouts[cid].channel, "general")
-    local SH = NS.Share
-    local res = SH.Validate({ v = 1, addon = "QuickComms", kind = "bundle",
-        callouts = { c1 = { name = "Hi", text = "Hi", channel = "general" } } })
-    assertTrue(res.ok)
-    assertEqual(#res.refused, 0)
 end)
 
 test("channels: [QF-04] a Groups row names General in channel 1's color", function()
