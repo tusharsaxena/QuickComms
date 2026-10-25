@@ -16,30 +16,44 @@ local RT_BY_NAME = { star = 1, circle = 2, diamond = 3, triangle = 4, moon = 5, 
 local BAKED = { me = true, spec = true, role = true, key = true, dungeon = true, coordinates = true }
 local ALIAS = { coords = "coordinates" }
 
-local function expandOne(raw, ctx, acc)
-    local name = raw:lower()
-    name = ALIAS[name] or name
-    if ENGINE[name] then return ENGINE[name] end   -- counted from the output in Expand
+-- A raid marker or group token, which the game expands (live); nil for any other name.
+local function liveToken(name, acc)
     local rt = name:match("^rt([1-8])$") or RT_BY_NAME[name]
     if rt then acc.live = acc.live + 1 return "{rt" .. rt .. "}" end
     local g = name:match("^group([1-8])$") or name:match("^g([1-8])$")
     if g then acc.live = acc.live + 1 return "{g" .. g .. "}" end
+end
+
+-- A baked value missing here: listed, and the mock's stand-in, else dropped.
+local function missingValue(raw, name, acc)
+    acc.missing[#acc.missing + 1] = raw
+    return acc.mock and acc.mock(name) or ""
+end
+
+-- A {spell:ID} chip's link from ctx.spellLink; nil for any other name.
+local function spellToken(raw, name, ctx, acc)
     local id = name:match("^spell:(%d+)$")
-    if id then
-        local link = type(ctx.spellLink) == "function" and ctx.spellLink(tonumber(id)) or nil
-        if type(link) == "string" and link ~= "" then return link end
-        acc.missing[#acc.missing + 1] = raw
-        return acc.mock and acc.mock(name) or ""
-    end
-    if BAKED[name] then
-        local v = ctx[name]
-        if v == nil or v == "" then
-            acc.missing[#acc.missing + 1] = raw
-            return acc.mock and acc.mock(name) or ""
-        end
-        -- a baked value is chat text too: flatten control characters, escape stray pipes (spec §8.3)
-        return (tostring(v):gsub("%c", " "):gsub("|", "||"))
-    end
+    if not id then return nil end
+    local link = type(ctx.spellLink) == "function" and ctx.spellLink(tonumber(id)) or nil
+    if type(link) == "string" and link ~= "" then return link end
+    return missingValue(raw, name, acc)
+end
+
+-- A baked token's value from ctx; nil for any other name.
+local function bakedToken(raw, name, ctx, acc)
+    if not BAKED[name] then return nil end
+    local v = ctx[name]
+    if v == nil or v == "" then return missingValue(raw, name, acc) end
+    -- a baked value is chat text too: flatten control characters, escape stray pipes (spec §8.3)
+    return (tostring(v):gsub("%c", " "):gsub("|", "||"))
+end
+
+local function expandOne(raw, ctx, acc)
+    local name = raw:lower()
+    name = ALIAS[name] or name
+    if ENGINE[name] then return ENGINE[name] end   -- counted from the output in Expand
+    local out = liveToken(name, acc) or spellToken(raw, name, ctx, acc) or bakedToken(raw, name, ctx, acc)
+    if out then return out end
     acc.unknown[#acc.unknown + 1] = raw
     return "{" .. raw .. "}"
 end

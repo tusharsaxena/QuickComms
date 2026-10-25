@@ -310,6 +310,26 @@ local function battlegroundKey(ids)
     return list[1] and list[1].key or P.CURRENT
 end
 
+-- The kinds of When EditPresetKey reads, in its order, the first the When names winning: each by
+-- its Content ticks, or by an id row that holds anything (`row`), and the preset it bakes under.
+local EDIT_KINDS = {
+    { content = { "battleground" }, row = "battleground",
+        key = function(when) return battlegroundKey(when.battleground) end },
+    { content = { "mythicPlus", "dungeon" }, key = function(when) return seasonKey("mplus:", when.instances) end },
+    { content = { "raid" }, key = function(when) return seasonKey("raid:", when.instances) end },
+    { content = { "arena" }, row = "arena", key = function() return known("arena") end },
+    { content = { "openWorld" }, key = function() return known("world") end },
+}
+
+-- Whether a When names `kind`.
+local function names(kind, when, content)
+    if kind.row and listed(when[kind.row]) then return true end
+    for _, c in ipairs(kind.content) do
+        if content[c] then return true end
+    end
+    return false
+end
+
 --- The "Preview as…" preset the edit preview bakes under and the window shows (owner 2026-10-23):
 --- the one the group's When names (a child's, its parent's when it inherits, Resolver.WhenOf), in
 --- the menu's own terms: a battleground set's map (a battleground id row alone too), the season
@@ -322,13 +342,9 @@ function P.EditPresetKey(gid)
     local when = gid and NS.Resolver.WhenOf(NS.Library.AllGroups(), gid)
     if type(when) ~= "table" then return P.CURRENT end
     local content = type(when.content) == "table" and when.content or {}
-    if content.battleground or listed(when.battleground) then
-        return battlegroundKey(when.battleground)
+    for _, kind in ipairs(EDIT_KINDS) do
+        if names(kind, when, content) then return kind.key(when) end
     end
-    if content.mythicPlus or content.dungeon then return seasonKey("mplus:", when.instances) end
-    if content.raid then return seasonKey("raid:", when.instances) end
-    if content.arena or listed(when.arena) then return known("arena") end
-    if content.openWorld then return known("world") end
     return P.CURRENT
 end
 
