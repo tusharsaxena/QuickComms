@@ -538,6 +538,44 @@ function W.AddHere(gid, row)
     return W.Write(gid, W.Toggle(fresh(gid), row, now, true))
 end
 
+-- W.ResolveValue's resolvers, one per shape of row, each taking (row, trimmed text) and answering
+-- the stored value, or nil and the reason. The character row and the specialization row by name; any
+-- other id row (KIND) by resolveIdValue; every other row is a token row.
+local function refuseTakes(row, text, takes)
+    return nil, L["%s does not take %s. It takes: %s."]:format(NS.Resolver.LABEL[row] or row, text, takes)
+end
+
+-- An id row: its whole kind (where it has one), an id, or a listed name.
+local function resolveIdValue(row, text)
+    if ALL[row] and text:lower() == NS.Resolver.ALL then return NS.Resolver.ALL end
+    local id = KIND[row]().resolve(text, CANDIDATES[row])
+    if id ~= nil then return id end
+    return nil, L["%s does not take %s. It takes an id, or a listed name."]:format(NS.Resolver.LABEL[row] or row, text)
+end
+
+-- A token row (the class row's tokens are NS.GameIds.CLASSES), matched without regard to case.
+local function resolveTokenValue(row, text)
+    local list = row == "class" and NS.GameIds.CLASSES or NS.Resolver.TOKENS[row] or {}
+    local want = text:lower()
+    for _, token in ipairs(list) do
+        if token:lower() == want then return token end
+    end
+    return refuseTakes(row, text, table.concat(list, ", "))
+end
+
+local RESOLVE = {
+    characters = function(_, text)
+        local id = W.CharacterId(text, NS.Situation.Current())
+        if id then return id end
+        return nil, L["A character is Name-Realm, or a name on your realm."]
+    end,
+    spec = function(row, text)
+        local n = wholeId(text)
+        if n then return n end
+        return refuseTakes(row, text, L["a specialization id (a whole number)"])
+    end,
+}
+
 --- One value typed for When row `row` on the command line, as the value the row stores
 --- (localization-§4: ids and tokens, never a name): a token matched without regard to case; an
 --- instance, battleground or arena by its id or its listed name; a specialization by its id; a character
@@ -545,29 +583,8 @@ end
 --- @return any|nil value, string|nil reason
 function W.ResolveValue(row, text)
     text = (text or ""):match("^%s*(.-)%s*$")
-    if row == "characters" then
-        local id = W.CharacterId(text, NS.Situation.Current())
-        if id then return id end
-        return nil, L["A character is Name-Realm, or a name on your realm."]
-    end
-    if ALL[row] and text:lower() == NS.Resolver.ALL then return NS.Resolver.ALL end
-    if KIND[row] then
-        local kind = KIND[row]()
-        local id = kind.resolve(text, CANDIDATES[row])
-        if id ~= nil then return id end
-        return nil, L["%s does not take %s. It takes an id, or a listed name."]:format(NS.Resolver.LABEL[row] or row, text)
-    end
-    if row == "spec" then
-        local n = wholeId(text)
-        if n then return n end
-        return nil, L["%s does not take %s. It takes: %s."]:format(NS.Resolver.LABEL[row], text, L["a specialization id (a whole number)"])
-    end
-    local list = row == "class" and NS.GameIds.CLASSES or NS.Resolver.TOKENS[row] or {}
-    local want = text:lower()
-    for _, token in ipairs(list) do
-        if token:lower() == want then return token end
-    end
-    return nil, L["%s does not take %s. It takes: %s."]:format(NS.Resolver.LABEL[row] or row, text, table.concat(list, ", "))
+    local resolve = RESOLVE[row] or (KIND[row] and resolveIdValue) or resolveTokenValue
+    return resolve(row, text)
 end
 
 local renderIdList
