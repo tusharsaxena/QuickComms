@@ -477,8 +477,10 @@ end
 --- Dress a button in its look (R.ButtonLook): its body, its edge, its label's font, its glow and its shine.
 --- A look the button already wears (its signature) is not painted again; the glow is handed over every time,
 --- since a button's release puts its glow out (Glow.Release), and Glow.Button keeps an unchanged one. The
---- shine is painted every time too, over the whole button `w` x `h` (its drawn size, part of its glow's
---- signature too), whatever the slot's style.
+--- shine covers the whole button `w` x `h` (its drawn size, part of its glow's signature too), whatever the
+--- slot's style, and is painted again only when its look (the table, reused while the signature holds) or
+--- that size moved: a release parks the button and never hides its shine layers, so a button that kept
+--- both still wears it (F-001: the repaint was a fifth of a 12-button rebuild's bytes).
 function R.ApplyButtonLook(btn, cl, w, h)
     if btn.qcLookSig ~= cl.sig then
         btn.qcLookSig = cl.sig
@@ -487,7 +489,10 @@ function R.ApplyButtonLook(btn, cl, w, h)
         R.ApplyFont(btn.qcLabel, cl.font)
     end
     Glow.Button(btn, sizedGlow(cl, w, h))
-    NS.Shine.Apply(btn, cl.shine, w, h)
+    if btn.qcShineLook ~= cl.shine or btn.qcShineW ~= w or btn.qcShineH ~= h then
+        btn.qcShineLook, btn.qcShineW, btn.qcShineH = cl.shine, w, h
+        NS.Shine.Apply(btn, cl.shine, w, h)
+    end
 end
 
 function R.Flash(btn, what)
