@@ -319,7 +319,7 @@ function S.BuildDialPlan(surfaceId, dial, snap, deps)
                 local c = childShown(child, nest) and deps.group(child)
                 if c then
                     entry.children[#entry.children + 1] = { id = child, title = c.name, icon = c.icon,
-                        iconColor = c.iconColor, compass = c.compass, slots = slotsOf(c.callouts) }
+                        iconColor = c.iconColor, slots = slotsOf(c.callouts) }
                 end
             end
             if #(g.callouts or {}) > 0 then entry.slots = slotsOf(g.callouts) end

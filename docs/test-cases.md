@@ -349,7 +349,7 @@ Total.
 - resolver: [all] All battlegrounds and All dungeons and raids match the whole kind, the listed ids aside
 - resolver: [arena] the arena row matches only in an arena: its listed ids, or all of them
 
-### test_builtins.lua (24)
+### test_builtins.lua (26)
 
 - builtins: the expected top-level sets exist in order
 - builtins: ids are unique, referenced and well formed
@@ -357,7 +357,7 @@ Total.
 - builtins: node sets nest one level
 - builtins: bake audit, every callout bakes under its set's snapshot
 - builtins: battlegrounds use smart group; arena uses party; raid lead uses smart lead
-- builtins: [phase 5] every node set pins each node to a wind, at most eight, Deepwind Gorge's five included
+- builtins: [phase 5] the node sets, Deepwind Gorge's five nodes included; no node carries a wind
 - builtins: [B7] every callout ships a catalog glyph, with a color only where it is a glyph
 - builtins: [B7] the generic dungeon set is Dungeon, active in a dungeon and in M+
 - builtins: [polish] Solo is a solo open-world set of General (/1) callouts
@@ -375,6 +375,8 @@ Total.
 - builtins: [bg buttons] Temple of Kotmogu has its four orbs and the center
 - builtins: no shipped callout types a raw %t or %f: each uses the {target} / {focus} chip
 - builtins: [bg buttons] In Group is a party, raid and instance group set of short smart-group lines
+- builtins: a faction-themed battleground's locations take the faction's color, neutral ones gold
+- builtins: a neutral battleground's locations take a color for what they are, never white
 
 ### test_gameids.lua (4)
 
@@ -387,7 +389,7 @@ Total.
 
 - library: Prepare seeds every shipped set as a group, on one pad and one dial, once
 - library: a seeded group is an ordinary group: its fields, When, callouts and origin
-- library: a seeded battleground set holds its nodes as groups inside it, in shipped order, with their winds
+- library: a seeded battleground set holds its nodes as groups inside it, A-Z by name
 - library: callouts validate on create
 - library: whisper channels are refused (owner, issue #7)
 - library: [review 4] deleting a callout clears its group
@@ -441,7 +443,7 @@ Total.
 - library: [nesting] a group takes a top-level group as its parent and leaves every surface
 - library: [nesting] one level only: self, a child, a parent with children, a stranger and a shipped id are refused
 - library: [nesting] none clears the parent: false, empty text and 'none' all do
-- library: [nesting] a group's children are in the order they were made; MemberIds lists them under it
+- library: [nesting] a group's children are A-Z by name; MemberIds lists them under it
 - library: [nesting] deleting a parent makes its children top-level groups in its place on every surface
 - library: [nesting] Duplicate keeps a child inside its parent; a parent's copy holds no children
 - library: [nesting] Prepare drops a bad parent (gone, itself, a chain, a cycle) and takes a child off every surface
@@ -835,7 +837,7 @@ Total.
 - dial secure: [QF-01] a live dial (no preview, or false) closes on a pick, in and out of combat
 - dial secure: [QF-01] a reload from preview to live clears the flag
 
-### test_preview.lua (36)
+### test_preview.lua (35)
 
 - preview: test mode turns on and off, announcing each edge once
 - preview: a start in combat is refused with one line
@@ -851,9 +853,8 @@ Total.
 - preview: [phase 3] test mode and Preview as are one switch at a time
 - preview: Current previews where you are, disarmed, and follows a situation change
 - preview: the settings row's choices are Off, then every preset in order
-- preview: [phase 3] the menu: Current, one M+ dungeon, each raid difficulty, Arena, each battleground, Solo
-- preview: the menu's labels: one dungeon, each difficulty with the raid, BG - <name>, Solo
-- preview: [phase 3] a dungeon entry reads M+ · <dungeon> · <spec> (spec §13.3)
+- preview: the menu: Current, each season dungeon as M+, each season raid at Mythic, Arena, each battleground, Solo
+- preview: the menu's labels: dungeons and raids A-Z by name, Raid · Mythic · <raid>, BG - <name>, Solo
 - preview: [phase 3] the Preview as row and `/qc preview` drive the same switch
 - preview: [final 13] `/qc preview` reads the situation's name without regard to case
 - preview: [final 10] a dungeon preview fills {dungeon}, and the header names the preview as its menu does
@@ -894,7 +895,7 @@ Total.
 - edit preview: [QF-02] 'Previewing: <group> (editing)' prints on a user start only
 - edit preview: [QF-02] a dial wedge clicked through its ring's catcher with the Groups page shown echoes
 
-### test_preview_window.lua (24)
+### test_preview_window.lua (25)
 
 - preview window: hidden until a preview starts; SetPreviewAs shows it with the dropdown on that situation
 - preview window: the settings row starts it too and the dropdown follows the slash
@@ -916,6 +917,7 @@ Total.
 - preview window: [QF-07] the dropdown follows the edited group's situation, and the pads bake under it
 - preview window: [QF-07] the dropdown follows a When edited while the group is open
 - preview window: [QF-07] EditPresetKey maps each kind of When
+- preview window: the edit preview bakes a raid group at Mythic, else its own first difficulty
 - preview window: [QF-02] End preview and the close mark end both and turn Preview while editing off
 - preview window: [QF-02] Escape ends the edit preview for the session, the setting kept, until a new start
 - preview window: [QF-02] the settings window closing hides it; a hidden UIParent ends nothing
@@ -964,7 +966,7 @@ Total.
 - layout: [window] the header row's height moves every row and is the collapsed pad's height
 - layout: [button] a Button height above 0 is the labeled button's height; 0 is automatic; icon-only stays square
 
-### test_dial_layout.lua (33)
+### test_dial_layout.lua (31)
 
 - dial layout: every ring carries its key, the path of group and node ids down to it
 - dial layout: four wedges sit on N, E, S and W, clockwise from the top
@@ -980,12 +982,10 @@ Total.
 - dial layout: the pointer follows the cursor outside the dead zone
 - dial layout: [final 6] a label is anchored by its side, wholly outside the disc; the ring title clears the N label
 - dial layout: [final 20] past eight wedges each gets its own direction, as a clock position
-- dial layout: [phase 5] a node set's nodes sit on their compass winds; the middle node takes N
-- dial layout: [polish] a node set's own callouts take one wedge on the first free wind; the nodes stay pinned
-- dial layout: [review 6] [phase 5] nodes that cannot all be pinned keep their shipped order
-- dial layout: [bg subgroups] a free node takes a wind left after the middle ones; the set's own wedge keeps its place
-- dial layout: [bg subgroups] a set with more children than winds falls back to its unpinned, paged ring
-- dial layout: [review 6] a pinned ring ignores the dial's slices; Flat keeps its paging
+- dial layout: a node set's ring has one slice per item under Auto: no empty slices
+- dial layout: a node set's own callouts take one wedge, first, titled as the set
+- dial layout: a fixed slice count pages a node set's ring like any ring
+- dial layout: [bg subgroups] a set with many children pages its ring, its own wedge first
 - dial layout: [icons] a ring entry carries its group's icon color, a send entry its callout's
 - dial layout: [polish] fixed 4 places 1-4 items N; N,S; N,E,S; N,E,S,W
 - dial layout: [polish] auto keeps its shapes from N
@@ -1137,8 +1137,8 @@ Total.
 - dial: the key bindings menu's click opens the dial, even while it is hidden
 - dial: [final 2] two dials: opening the second closes the first, and the number keys go with it
 - dial: [final 5] test mode opens dial 1 once: a rebuild keeps it open, and after the player closes it, closed
-- dial: [phase 5] Arathi Basin's node wedges sit on their winds: Lumber Mill is SW, Blacksmith N
-- dial: [review 6] on a four- or six-slice dial every node shows, and the number keys pick the shown wedges from N
+- dial: Arathi Basin's ring has six slices: its own wedge at N, then the nodes A-Z
+- dial: a four-slice dial pages Arathi Basin's ring; on six every node shows, and the number keys pick from N
 - dial: [icons] a wedge draws its glyph in its color; repainted untinted, it is white again
 - dial: [rework] a paged ring turns with its arrows and the Left and Right keys; its dots mark the page
 - dial: [rework] wedges have no backdrop; the slices, the wedges and their hit squares follow the ring radius
@@ -1362,7 +1362,7 @@ Total.
 | test_channels.lua | 13 |
 | test_bake.lua | 12 |
 | test_resolver.lua | 13 |
-| test_builtins.lua | 24 |
+| test_builtins.lua | 26 |
 | test_gameids.lua | 4 |
 | test_library.lua | 68 |
 | test_members.lua | 28 |
@@ -1378,13 +1378,13 @@ Total.
 | test_send_guard.lua | 11 |
 | test_sendengine.lua | 32 |
 | test_dial_secure.lua | 20 |
-| test_preview.lua | 36 |
+| test_preview.lua | 35 |
 | test_edit_preview.lua | 17 |
-| test_preview_window.lua | 24 |
+| test_preview_window.lua | 25 |
 | test_coordinates.lua | 8 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 21 |
-| test_dial_layout.lua | 33 |
+| test_dial_layout.lua | 31 |
 | test_surfaces.lua | 30 |
 | test_pad_render.lua | 24 |
 | test_pad.lua | 45 |

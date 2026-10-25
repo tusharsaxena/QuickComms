@@ -163,10 +163,11 @@ test("dials page: Ring map lists the rings wedge by wedge, marking the one the d
     assertTrue(P.hasText(w, "  1 N: Arathi Basin, opens a ring"))
     assertTrue(P.hasText(w, "  2 SE: Battleground, opens a ring"))
     assertTrue(P.hasText(w, "  3 SW: In Group, opens a ring"))
-    -- phase 5: the nodes are pinned to their winds, on one eight-wedge ring (spec §12.1); the set's
-    -- own map-wide callouts take the first free wind (groups polish)
-    assertTrue(P.hasText(w, "  3 E: Arathi Basin, opens a ring"))
+    -- the set's own map-wide callouts take the first wedge (groups polish), then the nodes A-Z, one
+    -- slice each (2026-10-25: no longer pinned to eight winds)
+    assertTrue(P.hasText(w, "  2 NE: Blacksmith, opens a ring"))
     assertTrue(P.hasText(w, "  5 SW: Lumber Mill, opens a ring"))
+    assertTrue(P.hasText(w, "  6 NW: Stables, opens a ring"))
 end)
 
 test("dials page: [final 20] at 12 slices per ring the Ring map names each wedge by its clock position", function()

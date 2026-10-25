@@ -145,7 +145,7 @@ pad draws a section for it, a dial a node ring), gated by its own Enabled and it
 parent's while it inherits, below), while the parent's gate the whole; it is never placed on a pad
 or a dial itself, so picking a parent takes it off every pad and dial in the same act, and None does not put it back (Pad → Groups → Add a
 group does). Groups go one level deep: the dropdown is idle while this group holds groups, and its
-tooltip names them. A group's children are listed in the order they were made in. Delete on a
+tooltip names them. A group's children are listed A–Z by name (2026-10-25), here, on the pads and on the dials. Delete on a
 parent asks first and says what happens: the groups inside it become top-level groups, in its place
 on every pad and dial. Duplicate of a child puts the copy in the same parent (the chat line says
 so); a parent's copy holds no children. The page's Defaults keeps the parent, as it keeps the icon.
@@ -679,8 +679,8 @@ General page > Keybindings, with no key box and no readout (QUI-L29).
   at radius 100 hold about four a page); or a fixed 4, 6, 8 or 12, from N: a fixed 4 places one
   item N, two N and S, three N, E and S, four N, E, S and W, and a fixed 6, 8 or 12 fills its places
   from N clockwise, the rest drawn empty (never lit, never clicked). The gap never changes a fixed count.
-  A ring that holds rings takes at most 8 either way, and a node set pinned to its winds keeps its
-  eight. A ring with more items is paged: two arrows under the dial (dimmed at an end, no wrap), the
+  A ring that holds rings takes at most 8 either way, a battleground node set's included (its own
+  callouts one wedge first, then its nodes A–Z). A ring with more items is paged: two arrows under the dial (dimmed at an end, no wrap), the
   Left and Right arrow keys (bound only while a paged ring is shown) and the mouse wheel turn its
   pages; under them a gold pill marks the page shown and a gray dot each other page, and each arrow
   is a round plate in the slices' fill with a chevron, dimmed at an end. Ring radius is `dial.radius` (70 to 180

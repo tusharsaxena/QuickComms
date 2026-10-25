@@ -53,9 +53,9 @@ end)
 
 test("preview window: the settings row starts it too and the dropdown follows the slash", function()
     local NS = live()
-    NS.SchemaRuntime.Set("state.previewAs", "raid:heroic")
+    NS.SchemaRuntime.Set("state.previewAs", "raid:2912")
     assertTrue(NS.PreviewWindow.IsShown())
-    assertEqual(win(NS).dropdown._value, "raid:heroic")
+    assertEqual(win(NS).dropdown._value, "raid:2912")
     NS.addon:OnSlashCommand("preview bg:ab")
     -- red under: fill the dropdown once at build instead of on every Sync
     assertEqual(win(NS).dropdown._value, "bg:ab")
@@ -189,7 +189,7 @@ test("preview window: `/qc preview list` changes nothing and shows no window", f
     assertTrue(NS.Preview.PreviewAs() == nil)
     assertFalse(NS.PreviewWindow.IsShown())
     assertTrue(m.prints[1]:find("Preview as (now: Off):", 1, true) ~= nil, m.prints[1])
-    assertTrue(table.concat(m.prints, "\n"):find("raid:heroic", 1, true) ~= nil)
+    assertTrue(table.concat(m.prints, "\n"):find("raid:2912", 1, true) ~= nil)
 end)
 
 test("preview window: a refused start never shows it", function()
@@ -369,8 +369,9 @@ end)
 test("preview window: [QF-07] the dropdown follows the edited group's situation, and the pads bake under it", function()
     local NS, _, P, gid = editing()
     -- red under: a dropdown that shows Current over the edit preview
-    assertEqual(NS.Preview.EditPresetKey(gid), "raid:normal")
-    assertEqual(win(NS).dropdown._value, "raid:normal", "a raid group: the tier's raid, Normal")
+    local firstRaid = "raid:" .. NS.Preview.Presets()[2 + #NS.GameIds.DUNGEONS].instanceID
+    assertEqual(NS.Preview.EditPresetKey(gid), firstRaid)
+    assertEqual(win(NS).dropdown._value, firstRaid, "a raid group: the season's first raid, A-Z")
     assertEqual(NS.Surfaces.Plans().p1.snapshot.content, "raid", "and the pads bake under it")
     local function pick(gidTo)
         P.banner(P.ctx("groups")):__fire("OnValueChanged", gidTo)
@@ -380,7 +381,7 @@ test("preview window: [QF-07] the dropdown follows the edited group's situation,
     end
     assertEqual(pick(T.seeded(NS, "bi.bg.av")), "bg:av", "Alterac Valley")
     assertEqual(pick(T.seeded(NS, "bi.bg.av.spgy")), "bg:av", "a node takes its battleground's")
-    assertEqual(pick(T.seeded(NS, "bi.mplus")), "mplus")
+    assertEqual(pick(T.seeded(NS, "bi.mplus")), NS.Preview.Presets()[2].key, "the season's first dungeon, A-Z")
     assertEqual(pick(T.seeded(NS, "bi.arena")), "arena")
     assertEqual(pick(T.seeded(NS, "bi.world")), "world")
     assertEqual(pick(T.seeded(NS, "bi.group")), "current", "a group with no content: Current")
@@ -392,15 +393,15 @@ end)
 
 test("preview window: [QF-07] the dropdown follows a When edited while the group is open", function()
     local NS, _, P, gid = editing()
-    assertEqual(win(NS).dropdown._value, "raid:normal")
+    assertEqual(win(NS).dropdown._value:match("^raid:%d+$") ~= nil, true)
     -- red under: a dropdown filled only on announce (a When edit re-bakes the pads, no announce)
     assertTrue((NS.SchemaRuntime.Set("group.when", { content = { arena = true } }, gid)))
     P.flush()
     assertEqual(NS.Surfaces.Plans().p1.snapshot.content, "arena")
     assertEqual(win(NS).dropdown._value, "arena", "the window names what the pads show")
-    assertTrue((NS.SchemaRuntime.Set("group.when", { content = { raid = true }, difficulty = { heroic = true } }, gid)))
+    assertTrue((NS.SchemaRuntime.Set("group.when", { content = { raid = true }, instances = { [2939] = true } }, gid)))
     P.flush()
-    assertEqual(win(NS).dropdown._value, "raid:heroic")
+    assertEqual(win(NS).dropdown._value, "raid:2939", "the raid its Instance row lists")
 end)
 
 test("preview window: [QF-07] EditPresetKey maps each kind of When", function()
@@ -411,18 +412,42 @@ test("preview window: [QF-07] EditPresetKey maps each kind of When", function()
         for k, v in pairs(extra or {}) do f[k] = v end
         return Lib.CreateGroup(f)
     end
-    assertEqual(key(g({ content = { raid = true }, difficulty = { mythic = true, heroic = true } })), "raid:heroic",
-        "the first ticked difficulty in the menu's order")
-    assertEqual(key(g({ content = { raid = true }, difficulty = { story = true } })), "raid:normal")
+    local firstRaid = "raid:" .. NS.Preview.Presets()[2 + #NS.GameIds.DUNGEONS].instanceID
+    assertEqual(key(g({ content = { raid = true }, difficulty = { heroic = true } })), firstRaid,
+        "no Instance row: the season's first raid")
+    assertEqual(key(g({ content = { raid = true }, instances = { [2913] = true } })), "raid:2913")
+    assertEqual(key(g({ content = { mythicPlus = true }, instances = { [658] = true } })), "mplus:658")
+    assertEqual(key(g({ content = { dungeon = true }, instances = { [1] = true } })), NS.Preview.Presets()[2].key,
+        "an Instance row of no season dungeon: the first")
     assertEqual(key(T.seeded(NS, "bi.bg")), "bg:ab", "every battleground: the first set")
     -- red under: an arena id row alone answered Current
     assertEqual(key(g({ arena = { [572] = true } })), "arena", "an arena id row alone")
     -- red under: an empty battleground row answered the first battleground
     assertEqual(key(g({ battleground = {} })), "current", "an empty battleground row is unset")
     local parent = g({ content = { mythicPlus = true } })
-    assertEqual(key(g({}, { parent = parent })), "mplus", "a child takes its parent's")
+    assertEqual(key(g({}, { parent = parent })), NS.Preview.Presets()[2].key, "a child takes its parent's")
     assertEqual(key(g({ content = { arena = true } }, { parent = parent, inheritWhen = false })), "arena",
         "a child that does not inherit, its own")
+end)
+
+test("preview window: the edit preview bakes a raid group at Mythic, else its own first difficulty", function()
+    local NS = editing()
+    local Lib, P = NS.Library, NS.Preview
+    local function snap(when)
+        local gid = Lib.CreateGroup({ name = "R", when = when })
+        P.SetEditPreview(nil)
+        P.SetEditPreview(gid, true)
+        return P.EditSnapshot()
+    end
+    assertEqual(snap({ content = { raid = true } }).difficulty, "mythic", "no Difficulty row: Mythic")
+    assertEqual(snap({ content = { raid = true }, difficulty = { mythic = true, heroic = true } }).difficulty, "mythic")
+    -- red under: a Heroic-only group previewed at Mythic, where it never shows
+    local s = snap({ content = { raid = true }, difficulty = { heroic = true }, instances = { [2939] = true } })
+    assertEqual(s.difficulty, "heroic")
+    assertEqual(s.difficultyID, 15)
+    assertEqual(s.instanceID, 2939)
+    assertEqual(snap({ content = { raid = true }, difficulty = { story = true } }).difficulty, "normal")
+    P.SetEditPreview(nil)
 end)
 
 test("preview window: [QF-02] End preview and the close mark end both and turn Preview while editing off", function()

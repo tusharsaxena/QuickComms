@@ -44,7 +44,7 @@ test("dial layout: every ring carries its key, the path of group and node ids do
         { slices = 4 })
     local keys = {}
     for r, ring in ipairs(rings) do keys[r] = ring.key .. "#" .. ring.page end
-    assertEqual(table.concat(keys, " "), "root#1 root/g1#1 root/g2#1 root/g2#2 root/g2#3 root/g2/n1#1")
+    assertEqual(table.concat(keys, " "), "root#1 root/g1#1 root/g2#1 root/g2/g2#1 root/g2/g2#2 root/g2/g2#3 root/g2/n1#1")
 end)
 
 test("dial layout: four wedges sit on N, E, S and W, clockwise from the top", function()
@@ -246,125 +246,86 @@ test("dial layout: [final 20] past eight wedges each gets its own direction, as 
     assertEqual(L.Direction(2, 8), "NE", "eight or fewer keep the winds")
 end)
 
--- Arathi Basin with its nodes' winds, as defaults/BuiltIns_Battlegrounds.lua ships them.
-local AB_WINDS = { "NW", "SW", "middle", "NE", "SE" }
-local function abPinned()
-    local g = ab()
-    for i, c in ipairs(g.children) do c.compass = AB_WINDS[i] end
-    return g
-end
-
-test("dial layout: [phase 5] a node set's nodes sit on their compass winds; the middle node takes N", function()
+test("dial layout: a node set's ring has one slice per item under Auto: no empty slices", function()
     local L = DL()
-    local rings, open = L.Rings({ abPinned() }, { mode = "categories", slices = 4, title = "Comms Dial" })
+    local rings, open = L.Rings({ ab() }, { mode = "categories", slices = 0, title = "Comms Dial" })
     local ring = rings[open]
     assertEqual(ring.title, "Arathi Basin")
-    assertEqual(ring.size, 8, "eight winds, whatever the dial's slices")
-    assertEqual(ring.pages, 1, "never paged")
-    local at = {}
-    for _, item in ipairs(ring.items) do at[#at + 1] = item.title .. "@" .. L.Direction(item.wedge, ring.size) end
-    assertEqual(table.concat(at, ","), "Blacksmith@N,Gold Mine@NE,Farm@SE,Lumber Mill@SW,Stables@NW")
-    local mill = rings[ring.items[4].target]
+    -- red under: pin the nodes on eight winds (until 2026-10-25: three of eight slices empty)
+    assertEqual(ring.size, 5, "five nodes, five slices")
+    assertEqual(ring.pages, 1)
+    for i, item in ipairs(ring.items) do assertEqual(item.wedge, i, "places in order from N") end
+    assertEqual(titles(ring), "Stables,Lumber Mill,Blacksmith,Gold Mine,Farm", "the plan's child order")
+    local mill = rings[ring.items[2].target]
     assertEqual(mill.title, "Lumber Mill")
-    assertEqual(mill.size, 4, "a node's own ring keeps the dial's slices")
     assertEqual(mill.items[3].slot.line, "/i INC Lumber Mill", "still two clicks to INC Lumber Mill")
 end)
 
-test("dial layout: [polish] a node set's own callouts take one wedge on the first free wind; the nodes stay pinned", function()
+test("dial layout: a node set's own callouts take one wedge, first, titled as the set", function()
     local L = DL()
-    local g = abPinned()
+    local g = ab()
     g.slots = {}
     for k, word in ipairs({ "Hold", "Zerg", "Ninja", "Rotate", "Ahead" }) do
         g.slots[k] = { calloutId = "own" .. k, name = word, line = "/i " .. word }
     end
-    local rings, open = L.Rings({ g }, { mode = "categories", slices = 4 })
+    local rings, open = L.Rings({ g }, { mode = "categories", slices = 0 })
     local ring = rings[open]
-    -- red under: put a parent's own callouts first on an unpinned ring in modules/Dial_Layout.lua
-    assertEqual(ring.size, 8, "still the eight winds")
-    local at = {}
-    for _, item in ipairs(ring.items) do at[#at + 1] = item.title .. "@" .. L.Direction(item.wedge, ring.size) end
-    assertEqual(table.concat(at, ","), "Blacksmith@N,Gold Mine@NE,Arathi Basin@E,Farm@SE,Lumber Mill@SW,Stables@NW")
-    local own = rings[ring.items[3].target]
+    -- red under: a parent's own callouts one wedge each, before its nodes
+    assertEqual(ring.size, 6, "the set's own wedge and five nodes")
+    assertEqual(titles(ring), "Arathi Basin,Stables,Lumber Mill,Blacksmith,Gold Mine,Farm")
+    local own = rings[ring.items[1].target]
     assertEqual(own.title, "Arathi Basin")
-    assertEqual(own.items[1].slot.line, "/i Hold", "the set's own callouts, on the dial's slices")
+    assertEqual(own.items[1].slot.line, "/i Hold", "the set's own callouts, on their own ring")
+    assertEqual(own.size, 5)
+    local bare = { id = "g", title = "Plain", slots = slots("p", 3), children = { { id = "c", title = "Empty", slots = {} } } }
+    local r2, o2 = L.Rings({ bare }, { slices = 0 })
+    assertEqual(titles(r2[o2]), "p 1,p 2,p 3", "no child shown: a plain group, its callouts a wedge each")
 end)
 
-test("dial layout: [review 6] [phase 5] nodes that cannot all be pinned keep their shipped order", function()
+test("dial layout: a fixed slice count pages a node set's ring like any ring", function()
     local L = DL()
-    assertNil(L.PinNodes({ { wind = "N" }, { wind = "N" } }), "two on one wind")
-    assertNil(L.PinNodes({ { wind = "N" }, { wind = "up" } }), "an unknown wind")
-    assertNil(L.PinNodes({ { wind = "N" }, {} }), "a node with none")
-    assertNil(L.PinNodes({}), "none")
-    local g = abPinned()
-    g.children[2].compass = nil
-    local rings, open = L.Rings({ g }, { slices = 4 })
-    assertEqual(titles(rings[open]), "Stables,Lumber Mill,Blacksmith,Gold Mine")
-    local two = L.PinNodes({ { wind = "middle", name = "mid" }, { wind = "N", name = "north" } })
-    assertEqual(two[1].name .. two[1].wedge .. "," .. two[2].name .. two[2].wedge, "north1,mid2",
-        "N is taken, so the middle node takes NE")
-end)
-
-test("dial layout: [bg subgroups] a free node takes a wind left after the middle ones; the set's own wedge keeps its place", function()
-    local L = DL()
-    local g = abPinned()
-    g.slots = slots("own", 3)
-    for _, name in ipairs({ "Our base", "Enemy base" }) do
-        g.children[#g.children + 1] = { id = name, title = name, compass = "free", slots = slots(name, 2) }
-    end
+    local g = ab()
+    g.slots = slots("own", 2)
     local rings, open = L.Rings({ g }, { mode = "categories", slices = 4 })
     local ring = rings[open]
-    -- red under: drop the `free` wind from modules/Dial_Layout.lua PinNodes (the set unpins)
-    assertEqual(ring.size, 8, "still pinned")
-    local at = {}
-    for _, item in ipairs(ring.items) do at[#at + 1] = item.title .. "@" .. L.Direction(item.wedge, ring.size) end
-    assertEqual(table.concat(at, ","),
-        "Blacksmith@N,Gold Mine@NE,Arathi Basin@E,Farm@SE,Our base@S,Lumber Mill@SW,Enemy base@W,Stables@NW")
-    assertNil(L.PinNodes({ { wind = "free" }, { wind = "free" }, { wind = "free" }, { wind = "free" },
-        { wind = "free" }, { wind = "free" }, { wind = "free" }, { wind = "free" }, { wind = "free" } }),
-        "nine cannot all be pinned")
+    assertEqual(ring.size, 4, "the dial's slices")
+    assertEqual(ring.pages, 2, "own wedge and five nodes: two pages of four")
+    assertEqual(titles(ring), "Arathi Basin,Stables,Lumber Mill,Blacksmith")
+    assertEqual(titles(rings[ring.next]), "Gold Mine,Farm")
+    local rings6, open6 = L.Rings({ g }, { slices = 6 })
+    assertEqual(rings6[open6].pages, 1, "six slices hold all six")
+    -- Flat keeps its paging
+    local flat, fo = L.Rings({ ab() }, { mode = "flat", slices = 4 })
+    assertEqual(flat[fo].size, 4, "Flat lists the callouts on the dial's own slices")
+    assertEqual(flat[fo].pages > 1, true, "and pages them")
 end)
 
-test("dial layout: [bg subgroups] a set with more children than winds falls back to its unpinned, paged ring", function()
+test("dial layout: [bg subgroups] a set with many children pages its ring, its own wedge first", function()
     local L = DL()
     local children = {}
     for i = 1, 19 do
         children[i] = { id = "av" .. i, title = "Node " .. i, slots = slots("n" .. i .. "x", 2) }
     end
     local g = { id = "bi.bg.av", title = "Alterac Valley", children = children, slots = slots("own", 4) }
-    local rings, open = L.Rings({ g }, { mode = "categories", slices = 4 })
+    local rings, open = L.Rings({ g }, { mode = "categories", slices = 0 })
     local ring = rings[open]
-    -- red under: pin a set whose children carry no winds in modules/Dial_Layout.lua groupEntry
     assertEqual(ring.title, "Alterac Valley", "opens into the set")
-    assertEqual(ring.size, 4, "the dial's slices: not the eight winds")
-    assertEqual(titles(ring), "own 1,own 2,own 3,own 4", "its own callouts first")
-    -- 4 own + 19 nodes = 23 items: five pages of four, then the last three
-    assertEqual(ring.pages, 6)
+    assertEqual(ring.size, 8, "Auto: at most eight on a ring that holds rings")
+    assertEqual(ring.items[1].title, "Alterac Valley", "its own callouts, one wedge, first")
+    -- 1 own wedge + 19 nodes = 20 items: pages of eight, eight and four
+    assertEqual(ring.pages, 3)
     local page, seen = ring, {}
     while page do
         for _, item in ipairs(page.items) do
-            if item.kind == "ring" then seen[#seen + 1] = item.title end
+            if item.title ~= "Alterac Valley" then seen[#seen + 1] = item.title end
         end
         page = page.next > 0 and rings[page.next] or nil
     end
     assertEqual(#seen, 19, "every node is reachable")
-    assertEqual(seen[1] .. "," .. seen[19], "Node 1,Node 19", "in the set's order")
-    local two = rings[ring.next]
-    assertEqual(titles(two), "Node 1,Node 2,Node 3,Node 4", "the nodes follow the set's own callouts")
-    assertEqual(rings[two.items[1].target].items[2].slot.name, "n1x 2", "two clicks past the page to Defend")
-end)
-
-test("dial layout: [review 6] a pinned ring ignores the dial's slices; Flat keeps its paging", function()
-    local L = DL()
-    for _, slices in ipairs({ 4, 6 }) do
-        local rings, open = L.Rings({ abPinned() }, { mode = "categories", slices = slices })
-        assertEqual(rings[open].size, 8, slices .. " slices: the pinned ring has eight wedges")
-        assertEqual(#rings[open].items, 5, slices .. " slices: every node on the one ring, one page")
-    end
-    -- red under: make shape() answer the pinned shape for every ring in modules/Dial_Layout.lua
-    local rings, open = L.Rings({ abPinned() }, { mode = "flat", slices = 4 })
-    assertEqual(rings[open].size, 4, "Flat lists the callouts on the dial's own slices")
-    assertEqual(rings[open].pages > 1, true, "and pages them")
-    for i, item in ipairs(rings[open].items) do assertEqual(item.wedge, i, "nothing in Flat is pinned: places in order") end
+    assertEqual(seen[1] .. "," .. seen[19], "Node 1,Node 19", "in the plan's child order")
+    local last = rings[rings[ring.next].next]
+    assertEqual(last.size, 4, "the last page has one slice per item")
+    assertEqual(rings[ring.items[2].target].items[2].slot.name, "n1x 2", "two clicks to Defend")
 end)
 
 test("dial layout: [icons] a ring entry carries its group's icon color, a send entry its callout's", function()

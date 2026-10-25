@@ -241,46 +241,61 @@ test("preview: the settings row's choices are Off, then every preset in order", 
     assertEqual(P.Label("off"), "Off")
 end)
 
-test("preview: [phase 3] the menu: Current, one M+ dungeon, each raid difficulty, Arena, each battleground, Solo", function()
+test("preview: the menu: Current, each season dungeon as M+, each season raid at Mythic, Arena, each battleground, Solo", function()
     local NS = live()
     local P = NS.Preview
     local keys = {}
     for i, e in ipairs(P.Presets()) do keys[i] = e.key end
     assertEqual(keys[1], "current")
-    -- red under: one entry per season dungeon (owner, 2026-10-22: one M+ entry, one dungeon)
-    assertEqual(table.concat(keys, ",", 2, 6), "mplus,raid:lfr,raid:normal,raid:heroic,raid:mythic")
+    local nD, nR = #NS.GameIds.DUNGEONS, #NS.GameIds.RAIDS
+    -- red under: one M+ entry, or a raid entry per difficulty (until 2026-10-25)
+    for i = 2, 1 + nD do assertTrue(keys[i]:match("^mplus:%d+$") ~= nil, keys[i]) end
+    for i = 2 + nD, 1 + nD + nR do assertTrue(keys[i]:match("^raid:%d+$") ~= nil, keys[i]) end
+    assertEqual(keys[2 + nD + nR], "arena")
+    for _, id in ipairs(NS.GameIds.DUNGEONS) do
+        local e = P.FindPreset("mplus:" .. id)
+        assertTrue(e ~= nil, "dungeon " .. id)
+        assertEqual(e.snapshot.instanceID, id)
+        assertEqual(e.snapshot.difficulty, "keystone")
+    end
+    for _, id in ipairs(NS.GameIds.RAIDS) do
+        local e = P.FindPreset("raid:" .. id)
+        assertTrue(e ~= nil, "raid " .. id)
+        assertEqual(e.snapshot.instanceID, id)
+        assertEqual(e.snapshot.difficulty, "mythic", "Mythic only")
+    end
     for _, key in ipairs({ "arena", "bg:ab", "bg:wsg", "world" }) do
         assertTrue(P.FindPreset(key) ~= nil, key)
     end
     assertEqual(keys[#keys], "world", "Solo last")
     assertEqual(P.FindPreset("bg:ab").snapshot.instanceID, 529, "the battleground's lowest id")
-    assertEqual(P.FindPreset("raid:heroic").snapshot.difficulty, "heroic")
-    assertEqual(P.FindPreset("raid:heroic").snapshot.instanceID, NS.GameIds.RAIDS[1], "the tier's first raid")
-    assertEqual(P.FindPreset("mplus").snapshot.instanceID, 2805, "a current-season dungeon: Windrunner Spire")
+    assertTrue(P.FindPreset("mplus") == nil and P.FindPreset("raid:heroic") == nil, "the old keys are gone")
     assertTrue(P.FindPreset("nope") == nil)
 end)
 
-test("preview: the menu's labels: one dungeon, each difficulty with the raid, BG - <name>, Solo", function()
+test("preview: the menu's labels: dungeons and raids A-Z by name, Raid · Mythic · <raid>, BG - <name>, Solo", function()
     local NS = live()
     NS.Compat.SpecName = function() return "Frost" end
-    NS.Compat.InstanceName = function(id)
-        return ({ [2805] = "Windrunner Spire", [2912] = "The Voidspire" })[id]
-    end
+    local names = { [2526] = "Algeth'ar Academy", [658] = "Pit of Saron", [1753] = "Seat of the Triumvirate",
+        [1209] = "Skyreach", [2805] = "Windrunner Spire", [2811] = "Magisters' Terrace",
+        [2915] = "Nexus-Point Xenas", [2874] = "Maisara Caverns",
+        [2912] = "The Voidspire", [2939] = "The Dreamrift", [2913] = "March on Quel'Danas" }
+    NS.Compat.InstanceName = function(id) return names[id] end
     local P, DOT = NS.Preview, " \194\183 "
-    assertEqual(P.FindPreset("raid:lfr").label, "Raid" .. DOT .. "LFR" .. DOT .. "The Voidspire")
-    assertEqual(P.FindPreset("raid:mythic").label, "Raid" .. DOT .. "Mythic" .. DOT .. "The Voidspire")
+    local labels = {}
+    for _, e in ipairs(P.Presets()) do labels[#labels + 1] = e.label end
+    -- red under: the season lists' own order (Algeth'ar, Pit of Saron, ...)
+    assertEqual(labels[2], "M+" .. DOT .. "Algeth'ar Academy" .. DOT .. "Frost")
+    assertEqual(labels[3], "M+" .. DOT .. "Magisters' Terrace" .. DOT .. "Frost")
+    assertEqual(labels[9], "M+" .. DOT .. "Windrunner Spire" .. DOT .. "Frost")
+    assertEqual(labels[10], "Raid" .. DOT .. "Mythic" .. DOT .. "March on Quel'Danas")
+    assertEqual(labels[11], "Raid" .. DOT .. "Mythic" .. DOT .. "The Dreamrift")
+    assertEqual(labels[12], "Raid" .. DOT .. "Mythic" .. DOT .. "The Voidspire")
+    assertEqual(P.FindPreset("mplus:2805").snapshot.previewDungeon, "Windrunner Spire")
     -- red under: the battleground's name alone
     assertEqual(P.FindPreset("bg:ab").label, "BG - Arathi Basin")
     -- red under: "World · Solo"
     assertEqual(P.FindPreset("world").label, "Solo")
-end)
-
-test("preview: [phase 3] a dungeon entry reads M+ · <dungeon> · <spec> (spec §13.3)", function()
-    local NS = live()
-    NS.Compat.SpecName = function() return "Frost" end
-    NS.Compat.InstanceName = function(id) return id == 2805 and "Windrunner Spire" or nil end
-    local DOT = " \194\183 "
-    assertEqual(NS.Preview.FindPreset("mplus").label, "M+" .. DOT .. "Windrunner Spire" .. DOT .. "Frost")
 end)
 
 test("preview: [phase 3] the Preview as row and `/qc preview` drive the same switch", function()
@@ -309,7 +324,7 @@ test("preview: [phase 3] the Preview as row and `/qc preview` drive the same swi
     m.prints = {}
     NS.addon:OnSlashCommand("preview list")
     local text = table.concat(m.prints, "\n")
-    assertTrue(text:find("raid:heroic", 1, true) ~= nil, text)
+    assertTrue(text:find("raid:2912", 1, true) ~= nil, text)
     NS.addon:OnSlashCommand("preview bg:ab")
     assertEqual(NS.Preview.PreviewAs(), "bg:ab")
     m.prints = {}
@@ -335,7 +350,7 @@ test("preview: [final 10] a dungeon preview fills {dungeon}, and the header name
     local cid = NS.Library.CreateCallout({ name = "Go", text = "Go {dungeon} +{key}", channel = "party" })
     local gid = NS.Library.CreateGroup({ name = "Mine", callouts = { cid }, when = { content = { mythicPlus = true } } })
     NS.Library.AddGroupToSurface("pad", "p1", gid, 1)
-    assertTrue(NS.Preview.SetPreviewAs("mplus"))
+    assertTrue(NS.Preview.SetPreviewAs("mplus:2805"))
     -- red under: Surfaces.BakeContext reads only the challengeMapID, which a preview has none of
     assertEqual(NS.Surfaces.BakeContext(NS.Preview.PreviewSnapshot()).dungeon, "Windrunner Spire")
     local slot = NS.Surfaces.Plans().p1.sections[1].slots[1]
@@ -343,9 +358,9 @@ test("preview: [final 10] a dungeon preview fills {dungeon}, and the header name
     local DOT = " \194\183 "
     -- red under: the preview header reads SituationText (no dungeon, and every raid reads "Raid")
     local header = NS.Pad.Instance("p1").header.qcSituation:GetText()
-    assertEqual(header, "Preview: " .. NS.Preview.Label("mplus"))
+    assertEqual(header, "Preview: " .. NS.Preview.Label("mplus:2805"))
     assertTrue(header:find("M+" .. DOT .. "Windrunner Spire", 1, true) ~= nil, header)
-    NS.Preview.SetPreviewAs("raid:mythic")
+    NS.Preview.SetPreviewAs("raid:2912")
     assertTrue(NS.Pad.Instance("p1").header.qcSituation:GetText():find("Preview: Raid" .. DOT .. "Mythic", 1, true) ~= nil)
 end)
 
@@ -384,7 +399,7 @@ end)
 test("preview: [echo] the slash follows the channel the previewed situation resolves", function()
     local NS, m = live()
     local cid = echoGroup(NS, "Incoming", "smartGroup")
-    assertTrue(NS.Preview.SetPreviewAs("raid:heroic"))
+    assertTrue(NS.Preview.SetPreviewAs("raid:2912"))
     m.prints = {}
     m.__click(NS.Pad.ButtonsFor("p1", cid)[1])
     assertEqual(m.prints[1], NS.PREFIX .. " /raid Incoming")
@@ -436,7 +451,7 @@ end)
 test("preview: [echo] a previewed dial wedge prints the line too", function()
     local NS, m = live()
     local cid = echoGroup(NS, "Lust now", "instance")
-    assertTrue(NS.Preview.SetPreviewAs("mplus"))
+    assertTrue(NS.Preview.SetPreviewAs("mplus:2805"))
     local w = NS.Dial.WedgesFor("d2", cid)[1]
     assertTrue(w ~= nil, "the previewed dial draws the wedge")
     assertTrue(w:GetAttribute("macrotext") == nil, "disarmed")
@@ -475,7 +490,7 @@ end)
 test("preview: [click] tokens with a value right now print it: the target, the marker, the key", function()
     local NS, m = live()
     local cid = echoGroup(NS, "{rt8} on {target}, {me} at +{key}", "instance")
-    assertTrue(NS.Preview.SetPreviewAs("mplus"))
+    assertTrue(NS.Preview.SetPreviewAs("mplus:2805"))
     m.__unitExists.target = true
     m.UnitName = function(unit) return unit == "target" and "Bossman" or "Testchar" end
     m.prints = {}
@@ -508,7 +523,7 @@ end)
 test("preview: [click] a previewed dial wedge prints the mocked line too", function()
     local NS, m = live()
     local cid = echoGroup(NS, "Kick {focus}", "instance")
-    assertTrue(NS.Preview.SetPreviewAs("mplus"))
+    assertTrue(NS.Preview.SetPreviewAs("mplus:2805"))
     m.prints = {}
     m.__click(NS.Dial.WedgesFor("d2", cid)[1])
     assertEqual(m.prints[#m.prints], NS.PREFIX .. " /i Kick <focus>")
@@ -574,7 +589,7 @@ local pickOnDial = dofile("tests/dial_pick.lua")
 test("preview: [QF-01] a slice pick on a previewed, test or edit-preview dial echoes and leaves the dial open", function()
     local NS, m = live()
     local cid, gid = echoGroup(NS, "Kick {focus}", "instance")
-    assertTrue(NS.Preview.SetPreviewAs("mplus"))
+    assertTrue(NS.Preview.SetPreviewAs("mplus:2805"))
     assertTrue(NS.Dial.IsOpen("d2"), "a preview opens the dial")
     m.prints = {}
     pickOnDial(NS, m, "d2", NS.Dial.WedgesFor("d2", cid)[1])

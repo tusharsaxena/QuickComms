@@ -90,7 +90,7 @@ addon's root by name, and the standard allows it there (layout-§1, toc-file-§4
 dials' labels are set in `modules/Dial.lua`, Toggle Comms Pads' and the category's in
 `settings/SlashVerbs.lua`.
 
-`tools/` holds the dev-only generators (`derive-gameids.py`, `derive-winds.py` and their shared
+`tools/` holds the dev-only generators (`derive-gameids.py` and its
 `client_tables.py`, `gen-dial-textures.py`, `gen-shine-textures.py`) and the shine preview renderer
 (`render-shine-preview.lua`, which loads the addon headless through the test harness and dumps what it
 painted, and `render-shine-preview.py`, which composites the dump): never loaded by the client or the

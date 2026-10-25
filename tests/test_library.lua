@@ -87,21 +87,23 @@ test("library: a seeded group is an ordinary group: its fields, When, callouts a
     assertNil(p.groups[gid])
 end)
 
-test("library: a seeded battleground set holds its nodes as groups inside it, in shipped order, with their winds", function()
+test("library: a seeded battleground set holds its nodes as groups inside it, A-Z by name", function()
     local NS, Lib, p = boot()
     local ab = T.seeded(NS, "bi.bg.ab")
     assertEqual(#p.groups[ab].callouts, #NS.BuiltIns.groups["bi.bg.ab"].callouts, "its map-wide callouts")
     local kids = Lib.Children(ab)
     local def = NS.BuiltIns.groups["bi.bg.ab"]
     assertEqual(#kids, #def.children)
+    local names = {}
     for i, kid in ipairs(kids) do
-        -- red under: seed a node before its set (the node then holds a lower id than its parent)
-        assertEqual(p.groups[kid].origin, def.children[i])
+        names[i] = p.groups[kid].name
         assertEqual(p.groups[kid].parent, ab)
-        assertEqual(p.groups[kid].compass, NS.BuiltIns.groups[def.children[i]].compass)
         assertTrue(Lib.IsChild(kid))
     end
-    assertEqual(p.callouts[p.groups[kids[1]].callouts[3]].text, "INC Stables")
+    -- red under: Children in made order (the shipped Stables, Lumber Mill, Blacksmith, ...)
+    assertEqual(table.concat(names, ","), "Blacksmith,Farm,Gold Mine,Lumber Mill,Stables")
+    local stables = T.seeded(NS, "bi.bg.ab.stables")
+    assertEqual(p.callouts[p.groups[stables].callouts[3]].text, "INC Stables")
     assertFalse(Lib.AddGroupToSurface("pad", "p1", kids[1]), "a node shows with its set, never by itself")
 end)
 
@@ -179,14 +181,14 @@ end)
 test("library: a node shipped after its set was seeded goes inside the set's group", function()
     local NS, Lib, p = boot()
     local ab = T.seeded(NS, "bi.bg.ab")
-    NS.BuiltIns.Group("bi.bg.ab.new", { name = "New node", parent = "bi.bg.ab", compass = "N",
+    NS.BuiltIns.Group("bi.bg.ab.new", { name = "New node", parent = "bi.bg.ab",
         callouts = NS.BuiltIns.Callouts("bi.bg.ab.new", "smartGroup", { { "inc1", "INC 1", "INC 1 New" } }) })
     table.insert(NS.BuiltIns.groups["bi.bg.ab"].children, "bi.bg.ab.new")
     Lib.Prepare()
     local node = T.seeded(NS, "bi.bg.ab.new")
     assertEqual(p.groups[node].parent, ab)
     local kids = Lib.Children(ab)
-    assertEqual(kids[#kids], node, "after the nodes already there")
+    assertEqual(kids[5], node, "in its place by name, among the nodes already there")
     Lib.Prepare()
     assertEqual(#Lib.Children(ab), #kids, "once")
 end)
@@ -195,7 +197,7 @@ test("library: [review] a set whose stored parent dangles still takes a node shi
     local NS, Lib, p = boot()
     local ab = T.seeded(NS, "bi.bg.ab")
     p.groups[ab].parent = "g999"
-    NS.BuiltIns.Group("bi.bg.ab.new", { name = "New node", parent = "bi.bg.ab", compass = "N",
+    NS.BuiltIns.Group("bi.bg.ab.new", { name = "New node", parent = "bi.bg.ab",
         callouts = NS.BuiltIns.Callouts("bi.bg.ab.new", "smartGroup", { { "inc1", "INC 1", "INC 1 New" } }) })
     table.insert(NS.BuiltIns.groups["bi.bg.ab"].children, "bi.bg.ab.new")
     Lib.Prepare()
@@ -860,7 +862,7 @@ test("library: [nesting] none clears the parent: false, empty text and 'none' al
     end
 end)
 
-test("library: [nesting] a group's children are in the order they were made; MemberIds lists them under it", function()
+test("library: [nesting] a group's children are A-Z by name; MemberIds lists them under it", function()
     local NS, Lib = bare()
     local z = Lib.CreateGroup({ name = "Zed" })
     local a = Lib.CreateGroup({ name = "Alpha" })
@@ -868,10 +870,14 @@ test("library: [nesting] a group's children are in the order they were made; Mem
     local b = Lib.CreateGroup({ name = "Bee" })
     setParent(NS, y, z)
     setParent(NS, b, z)
-    assertEqual(table.concat(Lib.Children(z), ","), y .. "," .. b, "made order, not names")
+    -- red under: made order (Yak, then Bee; until 2026-10-25)
+    assertEqual(table.concat(Lib.Children(z), ","), b .. "," .. y, "names, not made order")
+    local twin = Lib.CreateGroup({ name = "bee" })
+    setParent(NS, twin, z)
+    assertEqual(table.concat(Lib.Children(z), ","), b .. "," .. twin .. "," .. y, "case-insensitive, then made order")
     local ids = Lib.MemberIds("group")
     -- red under: MemberIds sorting every user group by name, children among them
-    assertEqual(table.concat(ids, ","), a .. "," .. z .. "," .. y .. "," .. b)
+    assertEqual(table.concat(ids, ","), a .. "," .. z .. "," .. b .. "," .. twin .. "," .. y)
 end)
 
 test("library: [nesting] deleting a parent makes its children top-level groups in its place on every surface", function()

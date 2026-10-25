@@ -201,16 +201,16 @@ test("pad: tabs show one section; the wheel steps them out of combat and is refu
     NS.db.profile.pads.p1.groupsAs = "tabs"
     NS.Pad.Apply("p1", planFor(NS))
     -- Arathi Basin's own set comes first (phase 4), so its own map-wide callouts are the first tab
-    -- (groups polish), then its first node.
+    -- (groups polish), then its first node by name.
     assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.hold")), 1)
-    assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.stables.attack")), 0)
+    assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.blacksmith.attack")), 0)
     assertTrue(NS.Pad.Wheel("p1", -1))
-    assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.stables.attack")), 1)
+    assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.blacksmith.attack")), 1)
     assertTrue(NS.Pad.Wheel("p1", -1))
-    assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.lumbermill.attack")), 1)
+    assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.farm.attack")), 1)
     combat(m, true)
     assertFalse(NS.Pad.Wheel("p1", -1))
-    assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.lumbermill.attack")), 1, "unchanged in combat")
+    assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.farm.attack")), 1, "unchanged in combat")
     assertEqual(#m.blocked, 0)
 end)
 
@@ -376,7 +376,7 @@ test("pad: [fix wave] tabs switch on a wheel over a button or the pad, not only 
     local button = NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.hold"))[1]
     -- red under: enable the wheel on the header alone
     button:__fire("OnMouseWheel", -1)
-    assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.stables.attack")), 1)
+    assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.blacksmith.attack")), 1)
     NS.Pad.Instance("p1").root:__fire("OnMouseWheel", 1)
     assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.hold")), 1, "back to the set's own tab")
 end)
@@ -933,12 +933,14 @@ test("pad: [bg subgroups] Alterac Valley draws its nineteen objectives two to a 
     assertTrue(NS.Pad.Apply("p1", plan))
     local byGroup = {}
     for _, hit in ipairs(hits(NS)) do byGroup[hit.qcGroupId] = hit end
-    local first, second = byGroup[T.seeded(NS, "bi.bg.av.vanndar")], byGroup[T.seeded(NS, "bi.bg.av.dbnorth")]
+    -- A-Z (2026-10-25): Aid Station and Balinda pair first; Vanndar, the nineteenth, has a row to itself
+    local first, second = byGroup[T.seeded(NS, "bi.bg.av.aidstation")], byGroup[T.seeded(NS, "bi.bg.av.balinda")]
     assertTrue(first ~= nil and second ~= nil, "each objective's title takes a right-click")
     -- the default pad: a four-column grid of 100-pixel buttons, 4 apart
     assertEqual(second.__sz[1], 204, "the second's hit frame is its block wide")
     assertEqual(first.__sz[1], 204)
     assertTrue(byGroup[av].__sz[1] > 204, "the set's own title row spans the pad")
+    assertTrue(byGroup[T.seeded(NS, "bi.bg.av.vanndar")].__sz[1] > 204, "the lone last objective spans its row")
     local sized, auto = 0, 0
     for _, fs in ipairs(inst.titles.active) do
         if fs.__w == 204 then sized = sized + 1 elseif fs.__w == 0 then auto = auto + 1 end

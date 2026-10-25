@@ -23,7 +23,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | SEND-1..6 | Send | Secure sends in keys and on bosses, the spam guard, General (/1) with its Say fallback |
 | TOKEN-1 | Tokens | `{coordinates}`: your map position, read at the press, in a preview echo and in combat |
 | PAD-1..15 | Pad | The Comms Pad, its growth and button width, the Solo and In Group sets and the built-ins' colors, the header click and icon only's width, the header's Quick Comms: text |
-| EDIT-1..32 | Editors | The Pad and Dial page names; the Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo) and Comms Pad pages, Preview as…, Why is this showing?, an older profile's conversion |
+| EDIT-1..33 | Editors | The Pad and Dial page names; the Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo) and Comms Pad pages, Preview as…, Why is this showing?, an older profile's conversion |
 | PREVIEW-1..12 | Preview window | The Preview as selector window: every entry point, the dropdown, End preview, close and Escape, combat, test mode and the stand-down, Alt+Z, the saved position, bare /qc preview and list; every preview drawn as live; a preview or test click prints what it would send; a preview dial staying open on a pick |
 | DIAL-1..41 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, the lone-group open and the group ring, page arrows and the page row, Auto wedges, the ring radius, the Slice labels tab, the slices and the slice lit by direction, the Slices tab, the pointer, the tooltip outside the dial, the hub over the slices, the pointer, label and icon offsets, the Paging tab; the dial polish: the border gone, the slice gap, placement from W, a slice clicked to the hub in combat, the hub styles, the Group labels tab, Icon offset on Icons, 128-pixel icons, a click outside closing the dial in combat, the page indicators' background and border, the Hub tab; automatic icon offset and size; the 120 radius and 48-pixel icons by default; a right click back a ring; opening where it was closed; slices from N |
 | LAYOUT-1..5 | Settings layout | Item 020: the General page's Behavior headings and Defaults tooltip; the Groups band on one row, General's order, Inherit on When, What it sends; the Pad strip outside in and its relabels; the Dial strip (Layout, Labels, Ring map) and its headings; no setting lost or changed, through a /reload |
@@ -35,7 +35,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | ICON-1..4 | Icons | Choosing an icon, for a callout and for a group; the LibKa0s v1.75.0 re-vendor: the icon browser's three sets and the library-drawn marks; the popup and the browser over the preview dial |
 | ART-1 | Art | The dial's round art: the hub's styles, the dots and pill, the indicator background, the borders and the arrow plates |
 | SHINE-1..3 | Shine | The shine overlay: each look on a pad and on a dial, and a pad and a dial keeping their own |
-| BG-1..8 | Battlegrounds | Node winds on the dial; the battleground instance ids; the objective groups (Alterac Valley, Isle of Conquest's bases, a flag map) and their migration; the four node buttons; Silvershard Mines' and Temple of Kotmogu's groups |
+| BG-1..9 | Battlegrounds | Node rings on the dial, one slice per node; the faction and location colors; the battleground instance ids; the objective groups (Alterac Valley, Isle of Conquest's bases, a flag map) and their migration; the four node buttons; Silvershard Mines' and Temple of Kotmogu's groups |
 | IDS-1 | Instance ids | The Midnight dungeons and raids |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes |
 
@@ -335,7 +335,7 @@ the pad shows the arena set with `Preview: Arena` on its header and PREVIEW on i
 green, after the pad's name); clicking a button sends
 nothing to chat and prints its line locally (EDIT-29); its tooltip says so. The Comms Pad, Comms Dial and Groups pages' General tabs have no
 Preview as row. Close the settings → the preview and its window stay; End preview in the window
-ends it. `/qc preview raid:heroic` →
+ends it. `/qc preview raid:2912` →
 the raid set; pull something → the preview ends with one line and the live buttons return.
 Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
@@ -651,13 +651,21 @@ the left, Cancel on the right, each a column wide; Save saves and closes, Cancel
 nothing. Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 **EDIT-32. Preview as and the shipped sets (owner, 2026-10-22).** General → Master controls → Preview
-as → Current; one M+ entry (M+ · Windrunner Spire · <spec>); Raid · LFR, Normal, Heroic and Mythic, each
-followed by · The Voidspire; Arena; one BG - <name> entry per battleground; Solo last. On a fresh
+as → Current; one M+ entry per current-season dungeon (M+ · <dungeon> · <spec>, eight, A–Z: Algeth'ar
+Academy first, Windrunner Spire last); Raid · Mythic · <raid> for each of the three raids, A–Z (March on
+Quel'Danas, The Dreamrift, The Voidspire), and no LFR, Normal or Heroic rows (2026-10-25); Arena; one BG - <name> entry per battleground; Solo last. On a fresh
 profile the groups read Dungeon, Raid, Arena, Battleground and Solo; Dungeon holds seven callouts
 (Pulling, Lust, Need mana, Skipping, Res me, Chain pull, Kick order), In Group ten (Hello, Summon,
 Buffs please, Healthstone, tyff, brb, Ready, GLHF, ggty, ggnt) and Solo seven. Arena's Swap and Kill
 and every Kill … carrier callout send your target's name ({target}). The pads start unlocked (their
-drag strips show) until Lock pads. Result: 2026-10-23, pass (the owner's run; client build not recorded).
+drag strips show) until Lock pads. Result: owed (rewritten 2026-10-25).
+
+**EDIT-33. Nested groups A–Z (2026-10-25).** Groups → the Group picker: the top-level groups A–Z, and
+under Alterac Valley its objectives A–Z (Aid Station, Balinda, DB North Bunker, DB South Bunker,
+Drek'Thar, Frostwolf GY, FW East Tower, FW West Tower, Galvangar, …, Tower Point, Vanndar), Arathi Basin's nodes
+Blacksmith, Farm, Gold Mine, Lumber Mill, Stables. In Arathi Basin the pad's sections and the dial's
+ring (after the set's own wedge) follow the same order. New group `Zed`, then `Alpha`, both inside a
+group of yours → Alpha lists first. Result: owed (new 2026-10-25).
 
 ## Preview window
 
@@ -672,8 +680,8 @@ Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 **PREVIEW-2. The dropdown and the slash move together.** With PREVIEW-1's preview on, pick Arena in
 the window's dropdown → the pads switch to the arena set and the settings row reads Arena.
-`/qc preview raid:heroic` → the dropdown moves to the Raid · Heroic entry.
-Result: 2026-10-23, pass (the owner's run; client build not recorded).
+`/qc preview raid:2912` → the dropdown moves to the Raid · Mythic · The Voidspire entry.
+Result: owed (rewritten 2026-10-25).
 
 **PREVIEW-3. It outlives the settings window.** Close the settings window with a preview on → the
 preview and the window stay. Click End preview in the window → the window goes, the pads are live,
@@ -785,17 +793,17 @@ your own and M+ in a key): press G → the first ring shows the groups; click on
 a callout → it is sent. Open again, click a group, click the hub → back to the groups; click the hub
 again → the dial closes. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
-**DIAL-4. The Arathi Basin node dial (the phase 4 exit; pinned in phase 5; three rings since the dial
-rework).** In Arathi Basin, with Wedges per ring at 4: press G → the ring of groups (Arathi Basin,
-Battleground, In Group); click Arathi Basin → all five nodes on one ring, no page arrows,
-each on its compass wind (Blacksmith N, Gold Mine NE, Farm SE, Lumber Mill SW, Stables NW), with an
-Arathi Basin wedge (the gold wheat sheaf) on E, the first wind left free, that opens the map-wide
-callouts (groups polish); click Lumber Mill, then INC → instance chat shows "INC Lumber Mill". Open
-again, open Arathi Basin and press 5 → Lumber Mill's ring opens (the number keys count the shown
-wedges clockwise from N). (If the dial does not show Arathi Basin at all, the instance id may be
+**DIAL-4. The Arathi Basin node dial (the phase 4 exit; three rings since the dial rework; unpinned
+2026-10-25).** In Arathi Basin, with Slices per ring on Auto: press G → the ring of groups (Arathi
+Basin, Battleground, In Group); click Arathi Basin → six slices and no empty one, no page arrows: the
+Arathi Basin wedge (the gold wheat sheaf) at N, which opens the map-wide callouts (groups polish), then
+clockwise Blacksmith, Farm, Gold Mine, Lumber Mill, Stables; click Lumber Mill, then INC → instance
+chat shows "INC Lumber Mill". Open again, open Arathi Basin and press 5 → Lumber Mill's ring opens
+(the number keys count the shown wedges clockwise from N). With Slices per ring at 4 → two pages, the
+first four, then Lumber Mill and Stables. (If the dial does not show Arathi Basin at all, the instance id may be
 wrong: run `/qc diagnostics`, copy the `situation` section's instanceID into the "Battleground
 instance IDs seen" table of `docs/brainstorm/go-no-go/round-4-build-checks.md`, and file it with
-this check's ID; BG-2 confirms the ids.) Result: 2026-10-21, pass (the owner's run; client build not recorded).
+this check's ID; BG-2 confirms the ids.) Result: owed (rewritten 2026-10-25).
 
 **DIAL-5. Number keys, the wheel, the page arrows and dots (dial rework, 2026-10-21).** Wheel →
 Wedges per ring 4, in a key: open, open a group with more than four callouts, press 3 → the third
@@ -956,8 +964,7 @@ of your own holding 1, then 2, 3 and 4 callouts (Preview as wherever it is activ
 the three other quarters drawn empty; 2 → W and E; 3 → W, N and E, S empty; 4 → W, N, E and S. An
 empty quarter never lights and a click on it sends nothing. Wedges per ring 8 with 2 callouts → the
 two at W and NW (clockwise from W), six empty slices. Wedges per ring 6 → the first slice centered on
-W. The Preview tab lists wedge 1 as W, and the number keys 1–8 still follow the callouts' order. A
-battleground node ring (Arathi Basin) keeps its compass winds (DIAL-4). Result: 2026-10-21, pass (the owner's run; client build not recorded).
+W. The Preview tab lists wedge 1 as W, and the number keys 1–8 still follow the callouts' order. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 **DIAL-28. A slice clicks all the way to the hub, in combat (dial polish, 2026-10-21; owed: the
 restricted `GetMousePosition`, C7).** On a four-wedge ring at radius 100, put the cursor just outside
@@ -1061,8 +1068,7 @@ not change where the key opens it. In combat → the same. Result: 2026-10-23, p
 with one callout → the whole disc, its icon at the top; two → top and bottom halves; three → thirds,
 the first at the top; four → N, E, S, W; eight → N first, clockwise. Wedges per ring 4 with two
 callouts → N and S, E and W empty; with three → N, E and S. Wedges per ring 12 → the Preview tab lists
-wedge 1 at 12 o'clock. The number keys still follow the callouts' order. A battleground node ring keeps
-its compass winds. Label offset 0 → each label sits a little clear of the disc's edge (4 pixels, 2
+wedge 1 at 12 o'clock. The number keys still follow the callouts' order. Label offset 0 → each label sits a little clear of the disc's edge (4 pixels, 2
 before). Clicks, hover and right-click land on the slice under the cursor, in combat too.
 Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
@@ -1423,16 +1429,14 @@ pad keeps Glass orb and the dial shows no shine. Result: 2026-10-21, pass (the o
 
 ## Battlegrounds
 
-**BG-1. Node winds.** In each node battleground you play (Arathi Basin, Eye of the Storm, Battle for
-Gilneas, Deepwind Gorge, Isle of Conquest, Wintergrasp: the Fortress at the top, Broken Temple top
-left, Sunken Ring top right, Westspark bottom left, Eastspark bottom right, the Towers at the bottom),
-open the dial and click the battleground's set on the ring of groups → the nodes sit where they are on the map,
-north up (Arathi Basin: Stables top left, Gold Mine top right, Farm bottom right, Lumber Mill bottom
-left, Blacksmith, the middle node, at the top), and Deepwind Gorge shows five nodes (owner ruling R2).
-One more wedge, drawn as the battleground itself, sits on the first wind no node takes and opens its
-map-wide callouts; the nodes stay pinned around it.
-Lumber Mill, then INC is two clicks from the set's ring. A node that points the wrong way is filed with this
-check's ID and its battleground. Result: 2026-10-21, pass (the owner's run; client build not recorded).
+**BG-1. Node rings (rewritten 2026-10-25: no compass pinning).** In each node battleground you play
+(Arathi Basin, Eye of the Storm, Battle for Gilneas, Deepwind Gorge, Isle of Conquest, Wintergrasp,
+Ashran), with Slices per ring on Auto, open the dial and click the battleground's set on the ring of
+groups → one slice per entry and no empty slice: a wedge drawn as the battleground itself at N (it
+opens its map-wide callouts), then the nodes A–Z clockwise (Arathi Basin six slices, Battle for
+Gilneas four, Ashran six), and Deepwind Gorge shows five nodes (owner ruling R2). Lumber Mill, then
+INC is two clicks from the set's ring. An empty slice, or a node out of A–Z order, is filed with this
+check's ID and its battleground. Result: owed (rewritten 2026-10-25).
 
 **BG-2. Battleground instance ids.** In each battleground you play: `/qc diagnostics` → the
 `situation` section's instanceID is one its set lists (`defaults/BuiltIns_Battlegrounds.lua`), and
@@ -1443,7 +1447,7 @@ the pad and the dial show that set. Write each id into the "Battleground instanc
 section (its four map-wide callouts) is followed by 19 objective sections, two to a row, north to
 south: Vanndar, DB North Bunker, Stormpike GY, Aid Station, DB South Bunker, Icewing Bunker,
 Stonehearth GY, Balinda, Stonehearth Bunker, Snowfall GY, Iceblood GY, Galvangar, Iceblood Tower,
-Tower Point, Frostwolf GY, West FW Tower, East FW Tower, Relief Hut, Drek'Thar (the last on a row
+Tower Point, Frostwolf GY, FW West Tower, FW East Tower, Relief Hut, Drek'Thar (the last on a row
 of its own). Each holds Attack and Defend; a long title stops short at its neighbor, and its buttons
 stay on the grid's columns. The pad fits on screen; note its height. Click Iceblood Tower's Attack →
 `/i Attack Iceblood Tower`. Right-click a title in the second
@@ -1456,16 +1460,14 @@ holds Attack and Defend. Result: 2026-10-21, pass (the owner's run; client build
 by side after Refinery, each with Attack, Defend, INC and Clear; Our base's lines read "Fight at our
 base", "Defend our base", "INC our base", "Our base is clear", Enemy base's "Attack the enemy base",
 "Hold the enemy base", "INC at the enemy base", "The enemy base is clear", the same for either
-faction. On the dial the five nodes stay on their winds, the Isle of Conquest wedge stays
-where it was (NE), and Our base and Enemy base take two of the winds left over. Result: 2026-10-21, pass (the owner's run; client build not recorded).
+faction. On the dial the set's ring has the Isle of Conquest wedge at N, then its seven groups A–Z,
+Our base and Enemy base among them. Result: owed (rewritten 2026-10-25).
 
 **BG-5. A flag map.** In Warsong Gulch or Twin Peaks: the pad shows the set's map-wide EFC callouts,
 then Our flag, Enemy flag, Our FC and Midfield (Bridge in Twin Peaks), each its own section; on the
-dial (click the set on the ring of groups) the set's ring has its own wedge on N and the four groups on the winds after it. Send
-"INC flag room" → `INC our flag room`; "We have it" → `We have their flag`. The four groups take the
-winds after the set's own wedge in the order they ship, not where they are on the map: which wind
-Our flag or Enemy flag lands on is that order, not geography. The same holds for Ashran, Deephaul Ravine, Seething
-Shore and Isle of Conquest's two bases. Result: 2026-10-21, pass (the owner's run; client build not recorded).
+dial (click the set on the ring of groups) the set's ring has its own wedge on N and the four groups
+after it, A–Z, five slices in all. Send "INC flag room" → `INC our flag room`; "We have it" → `We have
+their flag`. The same holds for Ashran, Deephaul Ravine and Seething Shore. Result: owed (rewritten 2026-10-25).
 
 **BG-6. A profile from before the objective groups.** On a profile saved before this build (or a
 copy of one): log in → `/qc diagnostics` shows schema 7; Alterac Valley's set holds its 19 objectives
@@ -1474,11 +1476,11 @@ nodes, and every callout you had edited still reads as you left it. Delete one o
 → it stays deleted. A set you had deleted before the update is still gone. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 **BG-7. The four node buttons (bg buttons).** On a reset profile, in Arathi Basin, Eye of the Storm,
-Battle for Gilneas, Deepwind Gorge or Isle of Conquest: every node's section holds Attack (red crossed
-swords), Defend (blue shield), INC (orange charge) and Clear (green check), as Wintergrasp's workshops
+Battle for Gilneas, Deepwind Gorge or Isle of Conquest: every node's section holds Attack (crimson crossed
+swords), Defend (cyan shield), INC (orange charge) and Clear (green check), as Wintergrasp's workshops
 do; Lumber Mill's send "Attack Lumber Mill", "Defend Lumber Mill", "INC Lumber Mill", "Lumber Mill is
 clear". Eye of the Storm's Flag reads Take flag, Defend flag, INC, Clear ("Take the flag", "The flag is
-clear"). Each set's own map-wide callouts (Hold our bases, Zerg next…) are unchanged. Result: 2026-10-21, pass (the owner's run; client build not recorded).
+clear"). Each set's own map-wide callouts (Hold our bases, Zerg next…) are unchanged. Result: owed (rewritten 2026-10-25).
 
 **BG-8. Silvershard Mines and Temple of Kotmogu (bg buttons).** In Silvershard Mines: after the set's
 own Escort, Contest and Cart help, the pad shows Lava track, Water track and North track (Contest,
@@ -1489,8 +1491,18 @@ with this check's ID. In Temple of Kotmogu: after Orb heals, Kill orb and Go mid
 orb, Blue orb, Green orb and Purple orb, each drawn in its color (Take orb, Peel, Kill carrier, Heals:
 "Take the blue orb", "Peel for our blue orb carrier", "Kill their blue orb carrier <target>", "Our
 blue orb carrier needs heals") and Center (Go center, Hold center, INC, Clear). On the dial both open
-on the set's ring, the groups on the winds left after the set's own wedge, in the order they ship.
-Result: 2026-10-21, pass (the owner's run; client build not recorded).
+on the set's ring, the groups A–Z after the set's own wedge, one slice each.
+Result: owed (rewritten 2026-10-25).
+
+**BG-9. Faction and location colors (2026-10-25).** On a reset profile (the colors are not migrated):
+Alterac Valley's Vanndar, Balinda, both Dun Baldar bunkers, Icewing and Stonehearth Bunker, Stormpike
+and Stonehearth GY and the Aid Station are Alliance blue (#2AA2FF); Drek'Thar, Galvangar, Iceblood
+Tower, Tower Point, both Frostwolf towers, Iceblood and Frostwolf GY and the Relief Hut are Horde red
+(#FF4040); Snowfall GY is gold (#FFD100). Eye of the Storm: Draenei Ruins and Mage Tower blue (Alliance-owned), Blood Elf Tower and Fel Reaver
+Ruins red (Horde-owned). Ashran's Road of Glory is gold. Arathi Basin's Stables are
+brown, Deepwind Gorge's and Isle of Conquest's Quarry stone gray, Isle of Conquest's Hangar sky blue,
+Warsong Gulch's Midfield brown and Twin Peaks' Bridge gray; no battleground icon is white. Under any
+location, Attack is crimson and Defend cyan, on the pad and on the dial. Result: owed (new 2026-10-25).
 
 ## Instance ids
 
@@ -1498,7 +1510,7 @@ Result: 2026-10-21, pass (the owner's run; client build not recorded).
 (Windrunner Spire 2805, Magisters' Terrace 2811, Nexus-Point Xenas 2915, Maisara Caverns 2874, and
 the four returning dungeons; The Voidspire 2912, The Dreamrift 2939, March on Quel'Danas 2913):
 `/qc diagnostics` → the instanceID matches; a group's When → the Instance drawer → Add the instance
-you are in adds that id. Groups → Preview as lists one M+ entry, "M+ · Windrunner Spire" (since 2026-10-22, owner). On a Devourer
+you are in adds that id. Groups → Preview as lists an M+ entry for each of the eight dungeons (since 2026-10-25, owner). On a Devourer
 Demon Hunter, `/qc diagnostics` → the Situation line reads `spec=1480`, and a When's Specialization
 drawer offers Devourer. If you can enter Sporefall (map 1592), note whether it is a raid and its instanceID
 (ruling R4 left it out of the shipped raids). Only after this check passes
@@ -1548,4 +1560,9 @@ same day covers the reworded check.
 
 On 2026-10-24 the owner reported that every check of the keybindings, settings layout and frame
 layering run passed (KEY-4 to KEY-6 with the one-key-button follow-up QC-RV3, LAYOUT-1 to LAYOUT-5
-and LAYER-1 to LAYER-4), recorded on each check's Result line. No check is owed.
+and LAYER-1 to LAYER-4), recorded on each check's Result line.
+
+Owed from the 2026-10-25 run (Preview as for the whole season, nested groups A–Z, unpinned dial rings,
+battleground colors): EDIT-32 and PREVIEW-2 (rewritten for the season's dungeons and Mythic raids),
+EDIT-33 (new), DIAL-4, BG-1, BG-4, BG-5, BG-7 and BG-8 (rewritten for unpinned rings and the new
+action colors) and BG-9 (new).

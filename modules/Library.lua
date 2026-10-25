@@ -8,8 +8,7 @@ local _, NS = ...
 -- SEEDING (2026-10-18-builtins-as-groups-design.md, goal 1): the shipped sets (NS.BuiltIns) are
 -- seed data. Each profile is given them once as ordinary user groups and callouts under fresh ids,
 -- a battleground's nodes as groups inside its set; each seeded member keeps the shipped id it came
--- from (`origin`), and a node its compass wind (`compass`). Neither is a tag or a lock: only Library
--- reads `origin` (what Restore puts back).
+-- from (`origin`). It is not a tag or a lock: only Library reads it (what Restore puts back).
 -- ONE OWNER (2026-10-17-callouts-owned-by-groups-design.md): each user callout id sits in exactly
 -- one user group's list. Adding a callout to a group adds a copy, removing one deletes it, and a
 -- deleted group takes its callouts with it.
@@ -74,15 +73,20 @@ function Lib.IsChild(id)
 end
 local isChild = Lib.IsChild
 
---- The groups inside group `id`, in the order they show on a pad and a dial: the order they were
---- made in (their ids), so a seeded set keeps its shipped node order.
+--- The groups inside group `id`, in the order they show everywhere (the pickers, a pad, a dial): by
+--- name, case-insensitive, then in the order they were made (their ids; owner, 2026-10-25: until
+--- then made order alone, a seeded set's shipped node order).
 --- @return string[]
 function Lib.Children(id)
+    local groups = P().groups
     local out = {}
-    for gid, g in pairs(P().groups) do
+    for gid, g in pairs(groups) do
         if g.parent == id and gid ~= id then out[#out + 1] = gid end
     end
+    local function key(gid) return tostring(groups[gid].name or gid):lower() end
     table.sort(out, function(a, b)
+        local x, y = key(a), key(b)
+        if x ~= y then return x < y end
         if idNumber(a) ~= idNumber(b) then return idNumber(a) < idNumber(b) end
         return a < b
     end)
@@ -737,7 +741,7 @@ local function seedGroup(p, gid, parent, hidden)
     p.groups[id] = { name = def.name, icon = def.icon, iconColor = def.iconColor, callouts = callouts,
         when = copyTable(def.when) or {},
         enabled = true, parent = parent,
-        inheritWhen = true, compass = def.compass, origin = gid }
+        inheritWhen = true, origin = gid }
     p.seededSets[gid] = true
     return id
 end

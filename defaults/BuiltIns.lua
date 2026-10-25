@@ -11,10 +11,15 @@ local BI = NS.BuiltIns
 -- danger, green for life, all-clear and safety, blue for water, mana and defense, gold for a reward,
 -- lust or a win, orange for an alarm or something incoming, purple for crowd control and magic, cyan
 -- for moving and positioning, white for the neutral; yellow and sky are the owner's own picks (2026-10-23). Every shipped glyph takes one, and no set is
--- white only (tests/test_builtins.lua).
+-- white only (tests/test_builtins.lua). A battleground location themed by a faction takes its color
+-- (owner, 2026-10-25): alliance, horde, and neutral for one that is neither in a faction-themed
+-- battleground; brown (wood, earth, a horse) and stone are for what a location is made of. An action
+-- under a location keeps its action's tint: Attack and Contest crimson, Defend and Hold cyan, so
+-- neither reads as a faction.
 BI.COLOR = { red = "ff4040", green = "40d040", blue = "4da6ff", gold = "ffd100", orange = "ff9933",
     purple = "b07cff", cyan = "40d8e0", white = "ffffff", crimson = "c41e3a", yellow = "fff468",
-    sky = "3fc7eb" }
+    sky = "3fc7eb", alliance = "2aa2ff", horde = "ff4040", neutral = "ffd100", brown = "b5793f",
+    stone = "a0a0a0" }
 
 --- Declare a callout. `short` is appended to the group id: "bi.mplus" + "lust" -> "bi.mplus.lust".
 --- `glyph` names its icon in the LibKa0s catalog (B7; library-stack-§8: a shipped mark, never one
