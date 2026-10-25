@@ -323,6 +323,14 @@ end
 -- with no innerBorder would leave it drawn; this one hides it.
 local NO_INNER = { 0, 0, 0, 0 }
 
+-- A look's edge: its thickness (0 to 16, 1 when unset) and its border art (nil for "None", or one this
+-- machine does not have).
+local function edgeOf(look)
+    local size = math.max(0, math.min(16, tonumber(look.borderSize) or 1))
+    local art = look.borderStyle ~= "None" and NS.MediaFetch("border", look.borderStyle) or nil
+    return size, art
+end
+
 --- The skin a pad wears, from its Main window tab: the Ka0s skin (NS.SKIN) with the border's art (a
 --- LibSharedMedia border by name; "None", or one this machine does not have, is the flat edge), its
 --- thickness (0 is no edge) and color, and the background color, each through its class-color
@@ -334,8 +342,7 @@ function R.SkinFor(look, plain)
     look = type(look) == "table" and look or {}
     local skin = {}
     for k, v in pairs(NS.SKIN or {}) do skin[k] = v end
-    local size = math.max(0, math.min(16, tonumber(look.borderSize) or 1))
-    local art = look.borderStyle ~= "None" and NS.MediaFetch("border", look.borderStyle) or nil
+    local size, art = edgeOf(look)
     skin.edgeFile = size > 0 and (art or FLAT_EDGE) or nil
     skin.edgeSize = size
     local inset = art and math.floor(size / 4 + 0.5) or size
