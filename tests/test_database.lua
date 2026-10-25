@@ -311,6 +311,32 @@ test("database: [B7] step 5 renames the dungeon set, widens its When and gives s
     NS.Library.MigrateBuiltins({ groups = "damaged", callouts = { c1 = "damaged" } })
 end)
 
+test("database: [review] step 5 reads a When as the shipped M+ one only when M+ is its one setting", function()
+    local NS = T.bootAddon()
+    local function set(when) return { name = "Dungeon", origin = "bi.mplus", when = when } end
+    local p = { groups = {
+        g1 = set({ content = { mythicPlus = true }, role = {} }),
+        g2 = set({ content = { mythicPlus = true, raid = true } }),
+        g3 = set({ content = { mythicPlus = true, raid = false } }),
+        g4 = set({ content = { raid = true } }),
+        g5 = set({ content = {} }),
+        g6 = set({ content = { mythicPlus = true }, role = "junk" }),
+        g7 = set("junk"),
+        g8 = set({ content = "junk" }),
+    } }
+    NS.Library.MigrateBuiltins(p)
+    local g = p.groups
+    -- red under: oldDungeonWhen counts an empty row as set, or a content key that is off as on
+    assertTrue(g.g1.when.content.dungeon, "an empty row is no setting")
+    assertNil(g.g2.when.content.dungeon, "a second content on is the player's")
+    assertTrue(g.g3.when.content.dungeon, "a content key that is off is no setting")
+    assertNil(g.g4.when.content.dungeon, "M+ off is the player's")
+    assertNil(g.g5.when.content.dungeon)
+    assertNil(g.g6.when.content.dungeon, "a malformed row counts as set")
+    assertEqual(g.g7.when, "junk", "a malformed When is left as it is")
+    assertEqual(g.g8.when.content, "junk")
+end)
+
 -- A profile as builds before step 6 stored it: the seeded sets' game icons and uncolored glyphs, and
 -- Arathi Basin's set with no callouts of its own.
 local function prePolishProfile(BI)
