@@ -138,7 +138,12 @@ Kit.layoutCap = { hub = "docs/ARCHITECTURE.md" }
 
 -- Order is stable. Kit.assertSuiteInventory (called by Kit.run) fails the run in both directions:
 -- a name here with no file, and a test_*.lua on disk (tests/ or tests/_kit/) with no name here.
+-- `jobs = "auto"` fans the suites out across worker processes (testing-§14). Measured 2026-10-25 on
+-- 1175 cases: serial 89.7 s wall, 32.0 s CPU (35%); 71 s of it is one case, test_vendor_sync's byte
+-- check of the 5892-file payload, a single `git cat-file --batch` waiting on ../LibKa0s over the
+-- WSL2 /mnt mount. Sharded: 72.9 s, the same totals, exit code and transcript. `--jobs 1` runs serial.
 Kit.run{
+    jobs   = "auto",
     dir    = "tests/",
     suites = {
         "test_harness",
@@ -168,6 +173,7 @@ Kit.run{
         "test_eui_skin",
         "test_groups_when",
         "test_page_groups",
+        "test_page_groups_nesting",
         "test_page_pads",
         "test_page_dials",
         "test_check",

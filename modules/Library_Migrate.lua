@@ -35,16 +35,26 @@ local OLD_CALLOUT_ICONS = {
     ["bi.mplus.res"]  = "Interface\\Icons\\Spell_Nature_Reincarnation",
 }
 
--- Whether a stored When is the old shipped one: content M+ alone and no other row set.
-local function oldDungeonWhen(when)
-    if type(when) ~= "table" or type(when.content) ~= "table" then return false end
+-- Whether a stored When sets no row but content (an empty row is unset; a malformed one is set).
+local function contentAlone(when)
     for key, row in pairs(when) do
         if key ~= "content" and not (type(row) == "table" and next(row) == nil) then return false end
     end
-    for key, on in pairs(when.content) do
+    return true
+end
+
+-- Whether a stored content row ticks M+ and nothing else.
+local function mythicPlusAlone(content)
+    for key, on in pairs(content) do
         if on and key ~= "mythicPlus" then return false end
     end
-    return when.content.mythicPlus == true
+    return content.mythicPlus == true
+end
+
+-- Whether a stored When is the old shipped one: content M+ alone and no other row set.
+local function oldDungeonWhen(when)
+    return type(when) == "table" and type(when.content) == "table" and contentAlone(when)
+        and mythicPlusAlone(when.content)
 end
 
 local function migrateDungeonSet(groups)

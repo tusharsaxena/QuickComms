@@ -108,7 +108,7 @@ Total.
 - perf: [review] a refresh whose signature moves notes situationRefresh before the rebuild it publishes
 - perf: [phase 5] the Comms Dial page's Preview notes neither bakeSurface nor resolverResolve
 
-### test_database.lua (18)
+### test_database.lua (20)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the target is the last step's `to`, and the steps climb in order
@@ -121,9 +121,11 @@ Total.
 - database: [review] step 3 lifts a stale id counter before it seeds
 - database: step 3 runs once, and the profile loads without duplicates
 - database: step 3 leaves a profile never prepared to Prepare, which seeds it once
+- database: [review] step 3 repairs a raw profile's registry and passes over a junk surface
 - database: the profile defaults carry the Master controls value, and no debug flag
 - database: [B2] step 4 rewrites a pad's retired Upward growth as Right and up, once
 - database: [B7] step 5 renames the dungeon set, widens its When and gives seeded callouts their glyphs, once
+- database: [review] step 5 reads a When as the shipped M+ one only when M+ is its one setting
 - database: [polish] step 6 colors untouched seeded icons and adds the node sets' own callouts, once
 - database: [bg subgroups] step 7 seeds the new objective nodes by origin, once; step 8 drops the retired dial fields
 - database: [polish] migrate: step 9 drops the retired slice border
@@ -164,7 +166,7 @@ Total.
 - schema: [phase 3] a fresh profile has no row off its default; the member rows are not counted
 - schema: [layout guard] every stored path, default, range and choice set is as item 020 found it
 
-### test_slash.lua (20)
+### test_slash.lua (22)
 
 - slash: NS.COMMANDS is positional triples, every reserved verb present
 - slash: `diagnostics` has no alias of any kind (debug-logging-§14)
@@ -175,6 +177,7 @@ Total.
 - slash: `reset` with no path explains itself rather than resetting everything
 - slash: `debug on` turns logging on without opening the console
 - slash: degraded, enable and disable still work and the CLI names the missing library
+- slash: [audit QC-17] degraded, a help row is `/qc verb  desc`, plain, with no em dash or color
 - slash: [audit QC-05] degraded, `debug on`/`off` flip the flag and ack, and `debug diagnostics` routes
 - slash: [phase 3] `why` prints each built pad and why its groups show
 - slash: [phase 4] `why` covers the dials too
@@ -186,8 +189,9 @@ Total.
 - slash: [toggle] test mode shows the pads even while they are hidden
 - slash: [toggle] in combat the flag flips and the driver waits for combat to end
 - slash: [toggle] the hidden state is this character's: a /reload or the next login restores it
+- slash: [characterization] PreviewLines' every branch: refused starts, a repeat, list's header, off with nothing on
 
-### test_disabled.lua (25)
+### test_disabled.lua (26)
 
 - disabled 1: enabled, the addon registers exactly the events it declares
 - disabled 2: through /qc disable, nothing is registered, heard or scheduled
@@ -202,9 +206,10 @@ Total.
 - disabled [§7 step 1]: enabled, the registration set holds events and messages, and the surfaces are drawn
 - disabled [§7 steps 2-4]: through the seam, nothing stays registered, events or messages, and nothing is armed
 - disabled [§7 step 5]: every surface frame that was drawn is hidden
-- disabled [§7 step 6]: every event and message in R_on, fired anyway, runs nothing live; the combat handler, reached directly, writes, prints and shows nothing
+- disabled [§7 step 6]: every event and message in R_on, fired anyway, runs nothing live; every event's handler, reached directly, writes, prints, shows and arms nothing
 - disabled [§7 step 7]: every NS.COMMANDS entry and the bare /qc: reserved verbs answer, feature verbs refuse once and write nothing
 - disabled [§7 step 8]: the launcher's left-click opens the panel and its menu grays every entry but Enabled
+- disabled [§7 step 8]: the Toggle Comms Pads key, pressed while disabled, prints the one refusal line and writes and shows nothing
 - disabled [§7 step 9]: re-enabled, R_on comes back; a setting changed while disabled is what the stand-up builds
 - disabled [§7 step 10]: the library latch: perf, then disabled; perf released first leaves it down
 - disabled [§7 step 10]: the library latch: disabled, then perf; enabled first leaves it down
@@ -246,9 +251,9 @@ Total.
 - compat: [phase 3] SpecInfoByID and ClassName read display names; secret or missing ones are nil
 - compat: [final 8] BindingKey reads a command's key; a secret or a missing API is nil
 - compat: [QF-03] Coordinates reads the map position as x, y in percent, one decimal, or nil
-- compat: [QF-04] GeneralJoined is true only for a plain non-zero channel 1 id
+- compat: [QF-04] GeneralJoined is true only when the client names channel 1 as General
 
-### test_restrictions.lua (16)
+### test_restrictions.lua (20)
 
 - restrictions: nothing restricted, everything allowed and nothing announced
 - restrictions: an encounter stops chat and is the reason; its lift is announced
@@ -263,11 +268,15 @@ Total.
 - restrictions: combat under an encounter announces the change of what is allowed
 - restrictions: a secret payload never raises; a secret state reads as active
 - restrictions: a client without the restriction APIs restricts nothing but combat
-- restrictions: Refresh announces a lift no event reported
+- restrictions: ENCOUNTER_END re-reads a lockdown the client cleared after the last event
+- restrictions: CHALLENGE_MODE_COMPLETED re-reads, through Situation's row
+- restrictions: a lockdown that clears just after the key completes is announced by the late re-read
+- restrictions: a lockdown that clears just after the encounter ends is announced by the late re-read
+- restrictions: the late re-read is canceled by the stand-down
 - restrictions: stood down, nothing is heard; the stand-up announces what is in effect
 - restrictions: [final 1] a lockdown lifting under a higher one is announced
 
-### test_situation.lua (19)
+### test_situation.lua (20)
 
 - situation: classifier truth table (content, group)
 - situation: non-table input classifies as open world solo
@@ -286,14 +295,16 @@ Total.
 - situation: [final 1b] both combat edges reach Current() even under the Combat restriction type
 - situation: [arena] an arena snapshot carries its instanceID, which the arena row matches
 - situation: [QF-04] the snapshot reads General from channel 1 and a join or leave moves the signature
+- situation: [F-007] a channel 1 that is not the zone's General leaves general off
 - situation: [QF-04] CHANNEL_UI_UPDATE and CHAT_MSG_CHANNEL_NOTICE are situation events
 - situation: [QF-04] a channel notice after the automatic join refreshes the snapshot to General
 
-### test_tokens.lua (10)
+### test_tokens.lua (11)
 
 - tokens: target and focus become engine tokens and count as live
 - tokens: raid markers by number and name, any case
 - tokens: group tokens map to {gN}
+- tokens: [review] markers and group tokens count as live; a baked value is flattened, an empty one missing
 - tokens: baked values come from ctx; absent ones are missing
 - tokens: spell links bake through ctx.spellLink; unknown ids are missing
 - tokens: unknown chips stay as typed and are reported
@@ -385,14 +396,13 @@ Total.
 - game ids: [instances] INSTANCES are dungeons and raids, cover the season's, and reach past it
 - game ids: [arena] ARENAS are arena maps, one per arena
 
-### test_library.lua (68)
+### test_library.lua (67)
 
 - library: Prepare seeds every shipped set as a group, on one pad and one dial, once
 - library: a seeded group is an ordinary group: its fields, When, callouts and origin
 - library: a seeded battleground set holds its nodes as groups inside it, A-Z by name
 - library: callouts validate on create
 - library: whisper channels are refused (owner, issue #7)
-- library: [review 4] deleting a callout clears its group
 - library: [review 4] deleting a group clears every surface
 - library: adding a seeded callout copies it (P2); the copy keeps no origin
 - library: [review 5] a newly shipped set is seeded once, at the end of every surface; a deleted one stays deleted
@@ -602,7 +612,7 @@ Total.
 - eui skin: the diagnostics report names its state
 - eui skin: the diagnostics line says, in words, why the skin is or is not on
 
-### test_groups_when.lua (20)
+### test_groups_when.lua (21)
 
 - when: Toggle adds and removes one value, drops an emptied row, and never mutates its input
 - when: [review 5] the key-level range refuses lowest above highest; clearing both drops the row
@@ -616,6 +626,7 @@ Total.
 - when: the battleground names come from the shipped sets, by instanceID
 - when: [final 6] a typed character takes the client's case; the Resolver matches one in any case
 - when: [final 2, 11] ResolveValue maps a typed value onto the token or id its row stores, or refuses it
+- when: [characterization] ResolveValue's every branch: the character, the reason each refusal gives
 - when: [drawers] Summary reads Any while a row is unset, else its values in the row's order
 - when: [drawers] Summary gives the key level and the id rows a short phrase
 - when: [drawers] SelectAll ticks every value the row offers, and never mutates its input
@@ -625,7 +636,7 @@ Total.
 - when: [arena] the arena row: names, Summary, All arenas, the CLI value, and its tooltip
 - when: [arena] Add the arena you are in reads the live snapshot, and refuses outside an arena
 
-### test_page_groups.lua (67)
+### test_page_groups.lua (49)
 
 - groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
 - groups page: the picker lists every group by name, a seeded set among them, active ones dotted
@@ -637,6 +648,7 @@ Total.
 - groups page: Reuse on a seeded group leaves out its own callouts; another group offers them
 - groups page: Reuse draws the group part in muted gold and the callout name in white
 - groups page: Reuse sorts the whole list by group, then callout, ignoring case
+- groups page: [characterization] Reuse's fallbacks: a nameless group or callout by its id, a callout no group holds
 - groups page: Reuse numbers same-named copies so each entry is unambiguous
 - groups page: [review] Reuse names a node's callout with its battleground, so two sets' Farm nodes read apart
 - groups page: the Reuse row stretches the dropdown and puts Add at the right edge, as tall as it
@@ -675,6 +687,9 @@ Total.
 - groups page: [rows] a callout row cuts its text at 40 characters, escapes |, and shows the fallback icon
 - groups page: [rows] a callout row's text cut counts UTF-8 characters, not bytes
 - groups page: [icons] the swatch writes on a drag tick (OnValueChanged) with no confirm, as OK leaves it
+
+### test_page_groups_nesting.lua (19)
+
 - groups page: [nesting] General's Parent group offers the top-level groups but itself; a pick nests the group
 - groups page: [nesting] a group that holds groups cannot take a parent: the dropdown is idle and says why
 - groups page: [nesting] the picker lists each child indented under its parent
@@ -1033,7 +1048,7 @@ Total.
 - surfaces: [nesting] a parent that draws nothing leaves its surface with nothing active
 - surfaces: [inherit] a child that inherits shows wherever its parent's When matches, whatever its own says
 
-### test_pad_render.lua (24)
+### test_pad_render.lua (25)
 
 - render: Dress builds a button's regions once, each its own object
 - render: [audit QC-07] the button's padlock is the catalog's lock mark, tinted gold; the Blizzard art is the nil fallback
@@ -1057,10 +1072,11 @@ Total.
 - render: [icons] a glyph button is drawn in its color; the button repainted with another icon is white again
 - render: [B3] a button's label is one line, and hidden when the button leaves it no room
 - pad render: [shine] a look on the Buttons tab paints every button
+- pad render: [shine] a rebuild that moved neither the look nor a button's size paints no shine
 - pad render: [shine] the pad's look leaves the dial alone
 - render: [QF-04] a General slot's tooltip names General in channel 1's color
 
-### test_pad.lua (45)
+### test_pad.lua (47)
 
 - pad: the default pad shows the M+ callouts, each button armed with its baked line
 - pad: [review 5] a refused button is dimmed and disarmed: a click sends and reports nothing
@@ -1107,8 +1123,10 @@ Total.
 - pad: [bg subgroups] Alterac Valley draws its nineteen objectives two to a row, each title its block wide
 - pad: [polish] header reads Quick Comms: World
 - pad: [polish] header reads Quick Comms: M+ · Windrunner Spire +14
+- pad: [F-006] a rebuild that moved no line rewrites no button's type or macrotext
+- pad: [F-006] after a rebuild, every button outside the active set carries no type and is not armed
 
-### test_dial.lua (65)
+### test_dial.lua (67)
 
 - dial: Apply builds QuickCommsDial<n> with a ring per page, each callout wedge armed with its baked line
 - dial: a refused callout is a dimmed, disarmed wedge; a ring wedge is disarmed
@@ -1145,6 +1163,8 @@ Total.
 - dial: [slices] each place is a tinted slice; the slice the cursor points into lights, anywhere but the hub
 - dial slices: [polish] no border lines are drawn
 - dial slices: [polish] a gap shifts each fill outward along its bisector
+- dial slices: [perf] a reopen on the slice last lit leaves the highlight where it is; a rebuild moves it
+- dial: [F-006] an unchanged rebuild rewrites no wedge's line; a wedge left out carries no type
 - dial slices: [polish] gap 0 draws as before
 - dial: [paging] the indicators sit on a rounded background sized to the row; off hides it
 - dial: [paging] every dot and the pill has a border, its size plus twice the Dot border; 0 draws none
@@ -1233,7 +1253,7 @@ Total.
 - shine: blooms only for fluid
 - shine: the button's own size when none is given
 
-### test_layers.lua (10)
+### test_layers.lua (11)
 
 - layers: NS.Constants.LAYERS names every strata and level once (frame-layering-§5)
 - layers: no strata string and no bare level at any call site (anti-pattern #99)
@@ -1244,6 +1264,7 @@ Total.
 - layers: [QUI-Z04] a wedge's ladder: icon border, its glow, then the overlay over both
 - layers: [QUI-Z10] the preview window is the window tier, never toplevel, never raised
 - layers: the modal bands sit over UIParent, each part at its named offset
+- layers: [audit QC-21] a modal window is clamped, never toplevel, never raised
 - layers: [QUI-Z06] the icon link window is lifted to POPUP
 
 ### test_layout.lua (23)
@@ -1349,29 +1370,30 @@ Total.
 | test_bus.lua | 2 |
 | test_surface_parity.lua | 18 |
 | test_setup.lua | 26 |
-| test_database.lua | 18 |
+| test_database.lua | 20 |
 | test_profile.lua | 9 |
 | test_schema.lua | 20 |
-| test_slash.lua | 20 |
-| test_disabled.lua | 25 |
+| test_slash.lua | 22 |
+| test_disabled.lua | 26 |
 | test_diagnostics.lua | 13 |
 | test_compat.lua | 14 |
-| test_restrictions.lua | 16 |
-| test_situation.lua | 19 |
-| test_tokens.lua | 10 |
+| test_restrictions.lua | 20 |
+| test_situation.lua | 20 |
+| test_tokens.lua | 11 |
 | test_channels.lua | 13 |
 | test_bake.lua | 12 |
 | test_resolver.lua | 13 |
 | test_builtins.lua | 26 |
 | test_gameids.lua | 4 |
-| test_library.lua | 68 |
+| test_library.lua | 67 |
 | test_members.lua | 28 |
 | test_editors.lua | 18 |
 | test_callout_popup.lua | 38 |
 | test_icon_browser.lua | 37 |
 | test_eui_skin.lua | 10 |
-| test_groups_when.lua | 20 |
-| test_page_groups.lua | 67 |
+| test_groups_when.lua | 21 |
+| test_page_groups.lua | 49 |
+| test_page_groups_nesting.lua | 19 |
 | test_page_pads.lua | 27 |
 | test_page_dials.lua | 28 |
 | test_check.lua | 6 |
@@ -1386,15 +1408,15 @@ Total.
 | test_pad_layout.lua | 21 |
 | test_dial_layout.lua | 31 |
 | test_surfaces.lua | 30 |
-| test_pad_render.lua | 24 |
-| test_pad.lua | 45 |
-| test_dial.lua | 65 |
+| test_pad_render.lua | 25 |
+| test_pad.lua | 47 |
+| test_dial.lua | 67 |
 | test_keybinds.lua | 6 |
 | test_dial_shine.lua | 8 |
 | test_icon_style.lua | 10 |
 | test_glow.lua | 11 |
 | test_shine.lua | 7 |
-| test_layers.lua | 10 |
+| test_layers.lua | 11 |
 | test_layout.lua | 23 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
@@ -1403,4 +1425,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1157** |
+| **Total** | **1175** |

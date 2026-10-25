@@ -30,6 +30,11 @@
 -- Raised 2026-10-14: padRebuild12 68960.4 -> 69960.4 bytes/iter (69632 -> 70656) at e0bb552, where the
 -- button and title rows started growing with the Look's font size (the final review's fix): the
 -- geometry now reads the size per rebuild. Re-measured; the cost is that fix's, by design.
+--
+-- Re-measured 2026-10-25 (review F-001, run item RA-01), no ceiling moved: padRebuild12 had risen to
+-- 87026.8 (the shipped Gloss fade shine repainted on every button at every rebuild) and dialOpenClose
+-- to 2317.1 (the dial polish's per-frame tracking re-placing the slice highlight on every light, plus
+-- the wedge tooltip it now shows). Both repaints are guarded now: 66290.8 and 1997.1.
 
 local BYTE_CEILING = {
     bracketCaptureOff = 0,

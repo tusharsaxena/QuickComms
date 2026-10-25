@@ -21,8 +21,9 @@ local _, NS = ...
 -- combat edges and the stand-up; Situation merges it into the snapshot. The flag is in the
 -- signature on its own because the Combat type can put `combat` in the set before the edge does,
 -- and the edge must still announce then. A lockdown that lifts with no event of its
--- own is picked up by the next read, and by Refresh, which the messaging edge (phase 2's
--- SendEngine) calls on ENCOUNTER_END and CHALLENGE_MODE_COMPLETED.
+-- own is picked up by the next read, and by RefreshAfterLift, which re-reads on ENCOUNTER_END
+-- (this module's row) and CHALLENGE_MODE_COMPLETED (Situation's row, forwarded here), now and once
+-- more a moment later, because the client's flag can clear after the event that ends it.
 --
 -- Reasons, in the chip's priority order: encounter, challengeMode, pvpMatch, chat (the Chat
 -- type), chatLockdown, combat. The Map type is tracked and reported but blocks nothing: it goes
@@ -42,10 +43,10 @@ local REASON_BY_NAME = {
     PvPMatch = "pvpMatch", Map = "map", Chat = "chat",
 }
 
--- The reasons that stop a chat message, in the order ActiveReason reports them.
+-- The reasons that stop a chat message, in priority order.
 local CHAT_BLOCKERS = { "encounter", "challengeMode", "pvpMatch", "chat", "chatLockdown" }
 
--- Every reason ActiveReason may answer, in priority order.
+-- Every reason the snapshot may answer, in priority order.
 local PRIORITY = { "encounter", "challengeMode", "pvpMatch", "chat", "chatLockdown", "combat" }
 
 -- ── reading the client ──────────────────────────────────────────────────────────────────────
@@ -95,26 +96,16 @@ local function anyOf(set, list)
     return nil
 end
 
---- True when a chat message (an ask, an offer, an announce) may be sent now.
---- @return boolean
-function R.CanSendChat()
-    return anyOf(R.ActiveSet(), CHAT_BLOCKERS) == nil
-end
-
 --- True while the player is fighting: the PLAYER_REGEN edge, else (before one) the client's flag.
 --- @return boolean
 function R.InCombat()
     return inCombat()
 end
 
---- The reason that matters most now, for the surfaces' lockdown chip, or nil when nothing the addon does
---- is restricted (the Map type alone is nil).
---- @return string|nil
-function R.ActiveReason()
-    return anyOf(R.ActiveSet(), PRIORITY)
-end
-
---- The answers at once, from one read: { reason, canSendChat }.
+--- The answers at once, from one read: { reason, canSendChat }. `reason` is the one that matters
+--- most now, for the surfaces' lockdown chip, or nil when nothing the addon does is restricted (the
+--- Map type alone is nil); `canSendChat` is true when a chat message (an ask, an offer, an announce)
+--- may be sent now.
 --- @return table
 function R.Snapshot()
     local set = R.ActiveSet()
@@ -183,24 +174,57 @@ function R.OnCombatEdge(fighting)
     return changed
 end
 
+-- How long after an encounter or a key ends to read the client once more: the chat lockdown's flag
+-- can clear after the event that ends it, and nothing else would announce the lift.
+local LIFT_DELAY = 1
+
+--- An encounter or a key ended: re-read the client now, and once more LIFT_DELAY later. A second
+--- end inside the window reads now and leaves the one pending re-read where it is.
+--- @param cause string the event, for the debug line
+--- @return boolean changed by the read now
+function R.RefreshAfterLift(cause)
+    local changed = R.Refresh(cause)
+    if not State.restrictionLiftTimer then
+        State.restrictionLiftTimer = NS.addon:ScheduleTimer(function()
+            State.restrictionLiftTimer = nil
+            R.Refresh(tostring(cause) .. "+late")
+        end, LIFT_DELAY)
+    end
+    return changed
+end
+
 -- ── events and the lifecycle ────────────────────────────────────────────────────────────────
+
+-- Every handler below returns at once while stood down: the stand-down unregistered its event, so
+-- only a dispatch the latch did not see reaches it, and a read then would seed state the stand-down
+-- dropped (hints, the edge) or arm the late re-read (slash-commands-§7, step 6).
+local function standing() return not NS.IsStoodDown() end
 
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "ADDON_RESTRICTION_STATE_CHANGED", "OnRestrictionEvent" }
 
 function NS.addon.OnRestrictionEvent(_, _, rtype, state)
-    R.OnRestrictionStateChanged(rtype, state)
+    if standing() then R.OnRestrictionStateChanged(rtype, state) end
 end
 
 -- The two combat edges, handed over here because the flag can lag them.
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_REGEN_DISABLED", "OnRestrictionRegenDisabled" }
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_REGEN_ENABLED", "OnRestrictionRegenEnabled" }
 
-function NS.addon.OnRestrictionRegenDisabled() R.OnCombatEdge(true) end
-function NS.addon.OnRestrictionRegenEnabled() R.OnCombatEdge(false) end
+function NS.addon.OnRestrictionRegenDisabled() if standing() then R.OnCombatEdge(true) end end
+function NS.addon.OnRestrictionRegenEnabled() if standing() then R.OnCombatEdge(false) end end
 
--- Stood down, no event reaches the hints or the edge, so both go stale and are dropped; the
--- stand-up re-reads the client after the bus has replayed its receivers, so they hear it.
+-- An encounter's end (a kill or a wipe). CHALLENGE_MODE_COMPLETED is Situation's row (AceEvent keeps
+-- one handler per event per object), which forwards it to RefreshAfterLift.
+NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "ENCOUNTER_END", "OnRestrictionLiftEvent" }
+
+function NS.addon.OnRestrictionLiftEvent(_, event) if standing() then R.RefreshAfterLift(event) end end
+
+-- Stood down, no event reaches the hints or the edge, so both go stale and are dropped, and the
+-- late re-read is canceled; the stand-up re-reads the client after the bus has replayed its
+-- receivers, so they hear it.
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
+    if State.restrictionLiftTimer then NS.addon:CancelTimer(State.restrictionLiftTimer) end
+    State.restrictionLiftTimer = nil
     State.restrictionHints = nil
     State.combatEdge = nil
     State.restrictionSignature = nil

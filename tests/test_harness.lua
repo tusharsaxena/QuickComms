@@ -144,4 +144,9 @@ test("repo: the .pkgmeta has no externals and ignores the dev-only entries", fun
     for _, entry in ipairs({ ".luacheckrc", ".pkgmeta", ".gitignore", ".gitattributes", "docs", "tests" }) do
         assertTrue(pkg:find("  - " .. entry, 1, true) ~= nil, entry)
     end
+    -- red under: drop either media/logos ignore from .pkgmeta (audit QC-20, layout-§4: the logo
+    -- source and its .jpg render are committed and never shipped)
+    for _, entry in ipairs({ "media/logos/*.png", "media/logos/*.jpg" }) do
+        assertTrue(pkg:find("\n  - " .. entry, 1, true) ~= nil, entry)
+    end
 end)

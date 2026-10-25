@@ -13,6 +13,7 @@
 --   inCombat       InCombatLockdown()'s answer, and UnitAffectingCombat("player")'s
 --   loadedAddons   the names C_AddOns.IsAddOnLoaded answers true for (this addon's own folder is in)
 --   chatLockdown   C_ChatInfo.InChatMessagingLockdown()'s answer
+--   generalChannel C_ChatInfo.GetGeneralChannelLocalID()'s answer (1 by default; nil = not joined)
 --   macroIcons, macroItemIcons  what GetMacroIcons / GetMacroItemIcons fill the handed table with
 --   restrictionStates  C_RestrictedActions' state per Enum.AddOnRestrictionType value (absent = 0)
 --   prints         every line handed to the Lua global `print` (the printer's sink)
@@ -78,10 +79,14 @@ local function build()
         AddOnRestrictionState = { Inactive = 0, Activating = 1, Active = 2 },
     }
 
-    -- C_ChatInfo: chatLockdown is InChatMessagingLockdown's answer.
+    -- C_ChatInfo: chatLockdown is InChatMessagingLockdown's answer; generalChannel is the number the
+    -- zone's General channel holds (QF-04, F-007), GetGeneralChannelLocalID's answer: joined as /1 by
+    -- default, nil when not joined, another number when the player reordered the channels.
     M.chatLockdown = false
+    M.generalChannel = 1
     M.C_ChatInfo = {
         InChatMessagingLockdown = function() return M.chatLockdown end,
+        GetGeneralChannelLocalID = function() return M.generalChannel end,
     }
 
     -- C_RestrictedActions: restrictionStates[type] is the state; absent means Inactive.
@@ -235,14 +240,6 @@ local function build()
         SAY = { r = 1.0, g = 1.0, b = 1.0 }, YELL = { r = 1.0, g = 0.25, b = 0.25 },
         CHANNEL1 = { r = 1.0, g = 0.75, b = 0.75 },
     }
-    -- The chat channels the player is in, by number (QF-04): General is joined by default. The
-    -- client's GetChannelName answers id, name, instanceID for a joined channel and 0 otherwise.
-    M.channels = { [1] = "General - Dornogal" }
-    M.GetChannelName = function(id)
-        local name = M.channels[id]
-        if name then return id, name, 0 end
-        return 0, nil, 0
-    end
 
     local function refuse(frame, call)
         M.blocked[#M.blocked + 1] = { frame = frame, call = call }

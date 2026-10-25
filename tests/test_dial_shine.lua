@@ -94,9 +94,58 @@ local function sliceAngle(shape, j)
     return math.rad(shape.start) + (j - 1) * 2 * math.pi / shape.size
 end
 
+-- A set's mask: shown exactly when the recipe draws whole-disc art or a sprite, as the slice's sector.
+local function checkMask(NS, t, want, what)
+    local masked = want.disc or want.bloom1 or want.bead
+    assertEqual(t ~= nil and t:IsShown() or false, masked and true or false, what)
+    if masked then assertEqual(t.__texture, NS.DialSlices.SectorTexture(4), what .. ": the slice's sector") end
+end
+
+-- One recipe layer `w` ({ texture, level, color }) on texture `t`: shown, its art, its place on the
+-- ladder, its color (the tint when the recipe names none) and its alpha.
+local function checkLayer(t, w, what)
+    assertTrue(t ~= nil and t:IsShown(), what .. " shown")
+    assertEqual(t.__texture, w[1], what .. " texture")
+    assertEqual(t.__layer, "BACKGROUND", what .. " layer")
+    assertTrue(t.__sublevel >= 3 and t.__sublevel <= 6, what .. " above the fill and the highlight")
+    local c = w[3] or { TINT, TINT, TINT }
+    for i = 1, 3 do near(t.__color[i], c[i], what .. " color " .. i) end
+    near(t.__color[4], w[2] * 0.85, what .. " alpha: level x Strength")
+end
+
+-- The masks a set's shown layers wear: the disc art and the sprites by their slice, Bevel by none.
+local function checkMasks(set, look)
+    for _, k in ipairs({ "disc", "bloom1", "bloom2", "bead" }) do
+        if set[k] and set[k]:IsShown() then
+            local masks = set[k].__masks or {}
+            assertTrue(masks[1] == set.mask and #masks == 1, look .. " " .. k .. ": masked by its slice")
+        end
+    end
+    if set.bevel and set.bevel:IsShown() then
+        assertEqual(#(set.bevel.__masks or {}), 0, look .. " bevel: slice-shaped art, no mask")
+    end
+end
+
+-- Slice j's set against its look's recipe: every layer the recipe names drawn as it says, every other
+-- one (the retired ones included) hidden, and the masks.
+local function checkSet(NS, set, look, j)
+    local want = recipeOf(NS.Shine, look, 4)
+    for _, k in ipairs(SHINE_KEYS) do
+        local t, w = set[k], want[k]
+        local what = ("%s slice %d %s"):format(look, j, k)
+        if k == "mask" then
+            checkMask(NS, t, want, what)
+        elseif w then
+            checkLayer(t, w, what)
+        else
+            assertTrue(t == nil or not t:IsShown(), what .. " hidden")
+        end
+    end
+    checkMasks(set, look)
+end
+
 test("dial: [shine] each look builds its recipe on every slice", function()
     local NS = live()
-    local Sh = NS.Shine
     for _, look in ipairs({ "gloss", "glossfade", "orb", "frost", "fluid", "bevel", "rim" }) do
         local ring = shineDial(NS, look)
         local shape = ring.qcShape
@@ -106,35 +155,7 @@ test("dial: [shine] each look builds its recipe on every slice", function()
         for j = 1, 4 do
             local set = ring.qcShine[j]
             assertTrue(set ~= nil, look .. ": slice " .. j .. " has its set")
-            local want = recipeOf(Sh, look, 4)
-            for _, k in ipairs(SHINE_KEYS) do
-                local t, w = set[k], want[k]
-                local what = ("%s slice %d %s"):format(look, j, k)
-                if k == "mask" then
-                    local masked = want.disc or want.bloom1 or want.bead
-                    assertEqual(t ~= nil and t:IsShown() or false, masked and true or false, what)
-                    if masked then assertEqual(t.__texture, NS.DialSlices.SectorTexture(4), what .. ": the slice's sector") end
-                elseif w then
-                    assertTrue(t ~= nil and t:IsShown(), what .. " shown")
-                    assertEqual(t.__texture, w[1], what .. " texture")
-                    assertEqual(t.__layer, "BACKGROUND", what .. " layer")
-                    assertTrue(t.__sublevel >= 3 and t.__sublevel <= 6, what .. " above the fill and the highlight")
-                    local c = w[3] or { TINT, TINT, TINT }
-                    for i = 1, 3 do near(t.__color[i], c[i], what .. " color " .. i) end
-                    near(t.__color[4], w[2] * 0.85, what .. " alpha: level x Strength")
-                else
-                    assertTrue(t == nil or not t:IsShown(), what .. " hidden")
-                end
-            end
-            for _, k in ipairs({ "disc", "bloom1", "bloom2", "bead" }) do
-                if set[k] and set[k]:IsShown() then
-                    local masks = set[k].__masks or {}
-                    assertTrue(masks[1] == set.mask and #masks == 1, look .. " " .. k .. ": masked by its slice")
-                end
-            end
-            if set.bevel and set.bevel:IsShown() then
-                assertEqual(#(set.bevel.__masks or {}), 0, look .. " bevel: slice-shaped art, no mask")
-            end
+            checkSet(NS, set, look, j)
         end
     end
 end)

@@ -150,8 +150,10 @@ local function newWedge(inst, ring)
     return w
 end
 
+-- A released wedge is parked armed (F-006), as a pad button is: the rebuild takes most of them straight
+-- back, and one given its old line again keeps it with no secure write. Hidden by the pool, it takes
+-- no click while parked; releaseFree disarms whatever the rebuild did not take back.
 local function releaseWedge(w)
-    NS.SendEngine.Disarm(w)
     R.Unflash(w)
     R.SetCooling(w, false)
     w.qcItem = nil
@@ -163,11 +165,15 @@ local function releaseRings(inst)
     inst.byCallout = {}
 end
 
--- Every wedge no ring drew this time loses its glow: the free wedges of the rings in use and of the
--- rings left in the pool.
-local function releaseFreeGlows(inst)
+-- Every wedge no ring drew this time is disarmed (a disarmed one writes nothing) and loses its glow:
+-- the free wedges of the rings in use and of the rings left in the pool. After a rebuild placed its
+-- wedges, and after a release; out of combat, as both are.
+local function releaseFree(inst)
     for _, list in ipairs({ inst.rings.active, inst.rings.free }) do
-        for _, ring in ipairs(list) do NS.Glow.ReleaseFree(ring.qcWedges) end
+        for _, ring in ipairs(list) do
+            for _, w in ipairs(ring.qcWedges.free) do NS.SendEngine.Disarm(w) end
+            NS.Glow.ReleaseFree(ring.qcWedges)
+        end
     end
 end
 
@@ -242,6 +248,43 @@ local function widestLabel(inst)
     return w
 end
 
+-- The place's instance now draws dial `id`: the dial it drew before, when another, no longer names it.
+local function rebind(inst, id, plan)
+    if inst.id and inst.id ~= id and byId[inst.id] == inst then byId[inst.id] = nil end
+    inst.id, inst.plan, inst.live = id, plan, true
+    byId[id] = inst
+end
+
+-- Ring r of the plan (`spec`) on a pooled ring: hidden until the snippets show it, sized to the disc
+-- (protected geometry: here, under Apply, out of combat), painted, its arrows and wedges placed.
+-- Answers what DS.Load hands the header for it.
+local function loadRing(inst, spec, disc, look, icfg)
+    local ring = NS.Pool.Acquire(inst.rings, function() return newRing(inst) end)
+    ring:Hide()
+    ring.qcSpec = spec
+    ring:SetSize(disc, disc)   -- protected geometry: here, under Apply, out of combat
+    ring.qcCatcher:SetSize(disc, disc)
+    R.PaintRing(ring, spec, look)
+    placeArrows(ring, spec, look)
+    return { frame = ring, key = spec.key, page = spec.page, parent = spec.parent, prev = spec.prev,
+        next = spec.next,
+        arrows = { prev = ring.qcPrev, next = ring.qcNext },
+        wedges = placeWedges(inst, ring, spec, icfg, look), catcher = ring.qcCatcher,
+        shape = { size = spec.size, start = tonumber(spec.start) or 0, hub = look.hub.size, disc = disc } }
+end
+
+-- The header's master scale and alpha (the Master controls' Scale and Opacity).
+local function scaleHeader(inst)
+    inst.header:SetScale(math.max(NS.Library.MIN_SURFACE_SCALE, tonumber(NS.Setting("scale")) or 1))
+    inst.header:SetAlpha(math.max(0, math.min(1, tonumber(NS.Setting("alpha")) or 1)))
+end
+
+local function logApply(id, index, plan, dial, look)
+    local opens = plan.rings[plan.openRing]
+    NS.Debug(TAG, "%s at place %s: %s ring(s), opens on %s (%s); slices=%s radius=%s", id, index, #plan.rings,
+        plan.openRing, opens and opens.title or "none", DL.ClampSlices(dial.slices), look.radius)
+end
+
 --- Rebuild the dial at `index` (its place in the dial order, which names its header) from a plan.
 --- Out of combat only: Surfaces runs it through RunOrQueue.
 --- @return boolean applied
@@ -250,9 +293,7 @@ function Dial.Apply(index, id, plan)
     local dial = profileDial(id)
     if not (dial and plan) then return false end
     local inst = byIndex[index] or build(index)
-    if inst.id and inst.id ~= id and byId[inst.id] == inst then byId[inst.id] = nil end
-    inst.id, inst.plan, inst.live = id, plan, true
-    byId[id] = inst
+    rebind(inst, id, plan)
     DS.Close(inst.header)
     releaseRings(inst)
     local look = R.Look(plan.radius, dial.label, dial.slice, dial)
@@ -269,21 +310,8 @@ function Dial.Apply(index, id, plan)
     R.PaintHubLook(inst.header, look)
     R.PaintPointer(inst.header, look)
     local loaded = {}
-    for r, spec in ipairs(plan.rings) do
-        local ring = NS.Pool.Acquire(inst.rings, function() return newRing(inst) end)
-        ring:Hide()
-        ring.qcSpec = spec
-        ring:SetSize(disc, disc)   -- protected geometry: here, under Apply, out of combat
-        ring.qcCatcher:SetSize(disc, disc)
-        R.PaintRing(ring, spec, look)
-        placeArrows(ring, spec, look)
-        loaded[r] = { frame = ring, key = spec.key, page = spec.page, parent = spec.parent, prev = spec.prev,
-            next = spec.next,
-            arrows = { prev = ring.qcPrev, next = ring.qcNext },
-            wedges = placeWedges(inst, ring, spec, icfg, look), catcher = ring.qcCatcher,
-            shape = { size = spec.size, start = tonumber(spec.start) or 0, hub = look.hub.size, disc = disc } }
-    end
-    releaseFreeGlows(inst)
+    for r, spec in ipairs(plan.rings) do loaded[r] = loadRing(inst, spec, disc, look, icfg) end
+    releaseFree(inst)
     local frames = {}
     for r, l in ipairs(loaded) do frames[r] = l.frame end
     R.RaiseFront(inst.header, frames)
@@ -291,12 +319,9 @@ function Dial.Apply(index, id, plan)
     DS.Load(inst.header, loaded, { openRing = plan.openRing, openAt = plan.test and "center" or dial.openAt,
         screen = inst.screen, preview = plan.test == true })
     applyPoint(inst)
-    inst.header:SetScale(math.max(NS.Library.MIN_SURFACE_SCALE, tonumber(NS.Setting("scale")) or 1))
-    inst.header:SetAlpha(math.max(0, math.min(1, tonumber(NS.Setting("alpha")) or 1)))
+    scaleHeader(inst)
     R.PaintHub(inst.header, hubState(inst, plan))
-    local opens = plan.rings[plan.openRing]
-    NS.Debug(TAG, "%s at place %s: %s ring(s), opens on %s (%s); slices=%s radius=%s", id, index, #plan.rings,
-        plan.openRing, opens and opens.title or "none", DL.ClampSlices(dial.slices), look.radius)
+    logApply(id, index, plan, dial, look)
     return true
 end
 
@@ -308,7 +333,7 @@ function Dial.Release(index)
     if not inst or inCombat() then return false end
     DS.Close(inst.header)
     releaseRings(inst)
-    releaseFreeGlows(inst)
+    releaseFree(inst)
     DS.Load(inst.header, {}, {})
     if inst.id and byId[inst.id] == inst then byId[inst.id] = nil end
     NS.Debug(TAG, "released place %s (%s)", index, tostring(inst.id))

@@ -196,6 +196,21 @@ test("database: step 3 leaves a profile never prepared to Prepare, which seeds i
     assertTrue(mplus ~= nil and mplus.enabled, "Prepare seeds it as a new profile is seeded")
 end)
 
+test("database: [review] step 3 repairs a raw profile's registry and passes over a junk surface", function()
+    local NS = T.bootAddon()
+    local Lib = NS.Library
+    assertEqual(Lib.SeedFromOverlay("junk"), 0, "a profile that is not a table")
+    local p = { seeded = true, groups = "junk", pads = { p1 = "junk", p2 = { seenBuiltins = {} } } }
+    -- red under: SeedFromOverlay indexes a missing registry key or a surface that is not a table
+    assertEqual(Lib.SeedFromOverlay(p), #NS.BuiltIns.order, "every set is seeded")
+    assertEqual(type(p.callouts), "table")
+    assertEqual(type(p.dials), "table")
+    assertEqual(p.pads.p1, "junk", "a junk surface is left as it is")
+    assertNil(p.pads.p2.groups, "a surface with no list is given none")
+    assertNil(p.pads.p2.seenBuiltins, "and loses its seenBuiltins")
+    assertEqual(Lib.SeedFromOverlay(p), 0, "given its sets: a second call seeds nothing")
+end)
+
 test("database: the profile defaults carry the Master controls value, and no debug flag", function()
     local NS = T.bootAddon()
     local p = NS.addon.db.profile
@@ -294,6 +309,32 @@ test("database: [B7] step 5 renames the dungeon set, widens its When and gives s
     NS.Library.MigrateBuiltins(fresh)
     assertNil(next(fresh), "a fresh profile is left as it is")
     NS.Library.MigrateBuiltins({ groups = "damaged", callouts = { c1 = "damaged" } })
+end)
+
+test("database: [review] step 5 reads a When as the shipped M+ one only when M+ is its one setting", function()
+    local NS = T.bootAddon()
+    local function set(when) return { name = "Dungeon", origin = "bi.mplus", when = when } end
+    local p = { groups = {
+        g1 = set({ content = { mythicPlus = true }, role = {} }),
+        g2 = set({ content = { mythicPlus = true, raid = true } }),
+        g3 = set({ content = { mythicPlus = true, raid = false } }),
+        g4 = set({ content = { raid = true } }),
+        g5 = set({ content = {} }),
+        g6 = set({ content = { mythicPlus = true }, role = "junk" }),
+        g7 = set("junk"),
+        g8 = set({ content = "junk" }),
+    } }
+    NS.Library.MigrateBuiltins(p)
+    local g = p.groups
+    -- red under: oldDungeonWhen counts an empty row as set, or a content key that is off as on
+    assertTrue(g.g1.when.content.dungeon, "an empty row is no setting")
+    assertNil(g.g2.when.content.dungeon, "a second content on is the player's")
+    assertTrue(g.g3.when.content.dungeon, "a content key that is off is no setting")
+    assertNil(g.g4.when.content.dungeon, "M+ off is the player's")
+    assertNil(g.g5.when.content.dungeon)
+    assertNil(g.g6.when.content.dungeon, "a malformed row counts as set")
+    assertEqual(g.g7.when, "junk", "a malformed When is left as it is")
+    assertEqual(g.g8.when.content, "junk")
 end)
 
 -- A profile as builds before step 6 stored it: the seeded sets' game icons and uncolored glyphs, and

@@ -32,7 +32,8 @@ The shipped sets (`NS.BuiltIns`, `defaults/BuiltIns*.lua`) are seed data. A prof
 has never prepared (a new or a reset one) gets the default pad and dial, then every shipped set, in
 shipped order, as ordinary user groups and callouts under fresh ids from `nextId`: each group's
 callouts take their ids before it, and a battleground's nodes come after their set as groups inside
-it (`parent`); `Library.Children` lists a group's children A–Z by name (then made order), so a
+it (`parent`); `Library.Children` lists a group's children A–Z by name (then made order; each name lowercased once
+per call before the sort, not inside the comparator), so a
 set's nodes read alphabetically everywhere (2026-10-25). Each seeded member keeps its
 shipped id as `origin`, and `profile.seededSets` records every set and
 node given. The top-level sets go on the default pad and dial. From then on they are ordinary groups:
@@ -66,8 +67,9 @@ makes its children top-level groups, in its place on every pad and dial, in one 
 `CHANNEL_UI_UPDATE` or `CHAT_MSG_CHANNEL_NOTICE` (the notice also covers the automatic joins after login
 and the zone's channel swap) → `Situation.Refresh` → `ReadInputs` reads `Compat.GeneralJoined()` into
 the snapshot's `general`, a signature field → a join or leave sends `SITUATION_CHANGED` and the pads
-rebuild, so a `general` callout bakes `/1 text` while channel 1 is joined and `/s text` when it is not
-(QF-04). A notice for any other channel leaves the signature, so nothing rebuilds.
+rebuild, so a `general` callout bakes `/1 text` while the client names channel 1 as the zone General
+channel (`C_ChatInfo.GetGeneralChannelLocalID()` answers 1) and `/s text` when it does not: General
+left, moved off `/1`, a custom channel at `/1`, or no plain answer (QF-04, F-007). A notice for any other channel leaves the signature, so nothing rebuilds.
 
 ## Today: a restriction or combat edge
 

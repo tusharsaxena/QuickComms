@@ -14,6 +14,20 @@ census in [`ARCHITECTURE.md`](ARCHITECTURE.md). Toolchain: [`DEPENDENCIES.md`](.
 The suite needs a sibling `../LibKa0s` checkout for the vendor gate's two payload cases (they SKIP
 without it).
 
+### Gate time (testing-§14)
+
+`tests/run.lua` runs the suites sharded (`jobs = "auto"`); `lua tests/run.lua --jobs 1` runs them
+serially, and `--list` is always one serial pass. Measured on 2026-10-25, 1175 cases on a WSL2 `/mnt`
+checkout: serial 89.7 s wall, 32.0 s CPU (35%), and sharded across 16 workers 72.9 s wall, with the
+same totals, exit code and transcript, line for line. One case is most of it: `test_vendor_sync`'s
+byte check of the 5892-file vendored payload (every icon set) takes about 71 s of wall on 1.8 s of
+CPU, nearly all of it one `git cat-file --batch` reading ../LibKa0s over the mount. The kit already
+does the two cheaper fixes: it compiles each source file once per process (181 `loadfile` calls for
+the whole run) and reads the payload's blobs in that one batched call. Without the sibling checkout
+the case SKIPs and the gate is the remaining ~20 s of cases. Each automated-test run records its
+suites' times as `durationMs` in its bundle's `manifest.json` (`automated-tests/<run>/`);
+[`automated-tests/RESULTS.md`](automated-tests/RESULTS.md) rolls the runs up but has no duration column.
+
 `luacheck .` lints everything authored, `tests/` included. It skips `libs/` and `tests/_kit/`
 (vendored), the frozen record stores, and `docs/brainstorm/`, whose go/no-go harness is a throwaway
 addon kept as history and never loaded by this one.
@@ -49,7 +63,9 @@ Named suites the standard requires: `test_surface_parity` (testing-§8), `test_v
 `test_builtins`, `test_library` and `test_check`, and phase 2's `test_mock_secure`, `test_send_guard`,
 `test_sendengine`, `test_preview`, `test_master`, `test_pad_layout`, `test_surfaces`, `test_dial_yield`,
 `test_pad_render` and `test_pad`, and phase 3's `test_members`, `test_editors`, `test_callout_popup` (the callout popup, which replaced `test_page_callouts`), `test_eui_skin` (its optional EllesmereUI skin, on a mocked EllesmereUI),
-`test_groups_when`, `test_page_groups` and `test_page_pads`, and phase 4's
+`test_groups_when`, `test_page_groups`, `test_page_groups_nesting` (split off `test_page_groups` at
+the layout-§1 cap: nested groups, the Preview table, Inherit when conditions and a pad title's
+right-click) and `test_page_pads`, and phase 4's
 `test_dial_layout`, `test_dial_secure`, `test_dial` and `test_page_dials`, and phase 5's
 `test_gameids`, the icon browser's `test_icon_browser`, and the Icons tab's `test_icon_style` and `test_glow`, the edit preview's `test_edit_preview`, the preview window's `test_preview_window`, the `{coordinates}` token's `test_coordinates`, and the shine overlay's `test_shine` and `test_dial_shine`, and the key bindings' `test_keybinds` (item 015: `NS.BINDINGS` and the General page's Keybindings tab, driven with the kit's `Kit.keybindThroughTab`; `tests/run.lua` hands `Kit.expose` a `mock` view that forwards to the newest instance's mock, which the driver reads for `LibStub`), and frame layering's `test_layers` (item 030: `NS.Constants.LAYERS` and every tier it names, through the kit's opt-in frame-layer recorder `tests/_kit/mock_layers.lua`, installed before any source loads through the factory's `opts.mock`; `tests/wow_mock.lua` answers UIParent's frame level, 0, for the modal bands), and the settings layout's `test_layout` (item 020: every page's headings, labels, tab order and placement; `test_schema`'s layout guard pins every row's stored path, default, range and choices against `tests/schema_pins.lua`, so a move that changed a setting fails). Kit suites, declared by directory:
 `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`, `test_lizard_sighted`.
@@ -90,6 +106,11 @@ The release gate is evaluated by `/dev-copilot:bump-version` from the run's `man
 (automated-tests-§3): a bundle whose manifest shows all four suites at `pass`, no function above
 CCN 15 and `blindFiles` 0 (Task 13 of the phase 5 plan records it). It never gates a commit. The record itself: [`automated-tests/README.md`](automated-tests/README.md).
 For long batteries run through the bounded runner, `~/.claude/dev-copilot/bin/ka0s-bounded`.
+
+Measure complexity through the sighted shadow (`tests/_kit/lizard_sighted.lua`), not plain
+`lizard`: lizard reads Lua blind in places and can run past a function's end. Plain
+`lizard -C 15 -w modules/Pad_Layout.lua` reports `PL.VisibleSections` at CCN 16 and 140 lines, while
+the shadow, which the gate uses, gives 11 over its real lines (53 to 71).
 
 ## Offline renders of the shine overlay
 

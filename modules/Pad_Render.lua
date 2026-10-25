@@ -323,6 +323,14 @@ end
 -- with no innerBorder would leave it drawn; this one hides it.
 local NO_INNER = { 0, 0, 0, 0 }
 
+-- A look's edge: its thickness (0 to 16, 1 when unset) and its border art (nil for "None", or one this
+-- machine does not have).
+local function edgeOf(look)
+    local size = math.max(0, math.min(16, tonumber(look.borderSize) or 1))
+    local art = look.borderStyle ~= "None" and NS.MediaFetch("border", look.borderStyle) or nil
+    return size, art
+end
+
 --- The skin a pad wears, from its Main window tab: the Ka0s skin (NS.SKIN) with the border's art (a
 --- LibSharedMedia border by name; "None", or one this machine does not have, is the flat edge), its
 --- thickness (0 is no edge) and color, and the background color, each through its class-color
@@ -334,8 +342,7 @@ function R.SkinFor(look, plain)
     look = type(look) == "table" and look or {}
     local skin = {}
     for k, v in pairs(NS.SKIN or {}) do skin[k] = v end
-    local size = math.max(0, math.min(16, tonumber(look.borderSize) or 1))
-    local art = look.borderStyle ~= "None" and NS.MediaFetch("border", look.borderStyle) or nil
+    local size, art = edgeOf(look)
     skin.edgeFile = size > 0 and (art or FLAT_EDGE) or nil
     skin.edgeSize = size
     local inset = art and math.floor(size / 4 + 0.5) or size
@@ -477,8 +484,10 @@ end
 --- Dress a button in its look (R.ButtonLook): its body, its edge, its label's font, its glow and its shine.
 --- A look the button already wears (its signature) is not painted again; the glow is handed over every time,
 --- since a button's release puts its glow out (Glow.Release), and Glow.Button keeps an unchanged one. The
---- shine is painted every time too, over the whole button `w` x `h` (its drawn size, part of its glow's
---- signature too), whatever the slot's style.
+--- shine covers the whole button `w` x `h` (its drawn size, part of its glow's signature too), whatever the
+--- slot's style, and is painted again only when its look (the table, reused while the signature holds) or
+--- that size moved: a release parks the button and never hides its shine layers, so a button that kept
+--- both still wears it (F-001: the repaint was a fifth of a 12-button rebuild's bytes).
 function R.ApplyButtonLook(btn, cl, w, h)
     if btn.qcLookSig ~= cl.sig then
         btn.qcLookSig = cl.sig
@@ -487,7 +496,10 @@ function R.ApplyButtonLook(btn, cl, w, h)
         R.ApplyFont(btn.qcLabel, cl.font)
     end
     Glow.Button(btn, sizedGlow(cl, w, h))
-    NS.Shine.Apply(btn, cl.shine, w, h)
+    if btn.qcShineLook ~= cl.shine or btn.qcShineW ~= w or btn.qcShineH ~= h then
+        btn.qcShineLook, btn.qcShineW, btn.qcShineH = cl.shine, w, h
+        NS.Shine.Apply(btn, cl.shine, w, h)
+    end
 end
 
 function R.Flash(btn, what)

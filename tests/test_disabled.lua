@@ -15,7 +15,7 @@ local PINNED = {
     "CHANNEL_UI_UPDATE", "CHAT_MSG_CHANNEL", "CHAT_MSG_CHANNEL_NOTICE",
     "CHAT_MSG_INSTANCE_CHAT", "CHAT_MSG_INSTANCE_CHAT_LEADER", "CHAT_MSG_PARTY", "CHAT_MSG_PARTY_LEADER",
     "CHAT_MSG_RAID", "CHAT_MSG_RAID_LEADER", "CHAT_MSG_RAID_WARNING", "CHAT_MSG_SAY", "CHAT_MSG_YELL",
-    "GROUP_ROSTER_UPDATE", "PARTY_LEADER_CHANGED", "PLAYER_DIFFICULTY_CHANGED", "PLAYER_ENTERING_WORLD",
+    "ENCOUNTER_END", "GROUP_ROSTER_UPDATE", "PARTY_LEADER_CHANGED", "PLAYER_DIFFICULTY_CHANGED", "PLAYER_ENTERING_WORLD",
     "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED", "PLAYER_ROLES_ASSIGNED", "PLAYER_SPECIALIZATION_CHANGED",
     "ZONE_CHANGED_NEW_AREA",
 }
@@ -279,7 +279,7 @@ test("disabled [§7 step 5]: every surface frame that was drawn is hidden", func
     assertEqual(countDrawn(snap.F), 0)
 end)
 
-test("disabled [§7 step 6]: every event and message in R_on, fired anyway, runs nothing live; the combat handler, reached directly, writes, prints and shows nothing", function()
+test("disabled [§7 step 6]: every event and message in R_on, fired anyway, runs nothing live; every event's handler, reached directly, writes, prints, shows and arms nothing", function()
     local NS, m, snap = baseline()
     disable(NS)
     m.__resetSvWrites()
@@ -293,11 +293,22 @@ test("disabled [§7 step 6]: every event and message in R_on, fired anyway, runs
     -- red under: register PLAYER_REGEN_DISABLED outside NS.FEATURE_EVENTS (it survives the stand-down)
     ran = ran + m.__fire("PLAYER_REGEN_DISABLED")
     assertEqual(ran, 0, "no live handler reached")
-    -- And at the addon itself: kit 39's __fireUnconditional reaches the method the registration
-    -- named (OnRestrictionRegenDisabled) after the stand-down and answers 1, so reach is proven
-    -- rather than read off a silence; what it runs must still write, print and show nothing.
-    -- red under: re-vendor kit 38 (its __fireUnconditional cannot reach a method-name handler, so 0)
-    assertEqual(m.__fireUnconditional(NS.addon, "PLAYER_REGEN_DISABLED"), 1, "the combat handler reached")
+    -- And at each registration's own target: kit 39's __fireUnconditional reaches the method the
+    -- registration named (OnSituationEvent, OnRestrictionLiftEvent, OnSendEcho, ...) after the
+    -- stand-down and answers 1, so reach is proven per event rather than read off a silence; what
+    -- each runs must still write, print, show and arm nothing.
+    local events = 0
+    for _, r in ipairs(snap.raw) do
+        if r.kind ~= "message" then
+            events = events + 1
+            -- red under: re-vendor kit 38 (its __fireUnconditional cannot reach a method-name handler, so 0)
+            assertTrue(m.__fireUnconditional(r.target or NS.addon, r.event) >= 1, r.event .. " reached its handler")
+        end
+    end
+    assertTrue(events >= #PINNED, "every pinned event was fired at its handler")
+    -- red under: drop the IsStoodDown guard in modules/Situation.lua's OnSituationEvent (it arms the
+    -- coalesce timer) or in modules/Restrictions.lua's handlers (they re-read and arm the late re-read)
+    assertEqual(#m.__timers(), 0, "no handler armed a timer")
     assertEqual(#m.__svWrites(), 0, "no SavedVariables write")
     assertEqual(#m.prints, 0, "no chat line")
     assertEqual(#m.__shownFrames(), shown, "no frame shown")
@@ -380,6 +391,23 @@ test("disabled [§7 step 8]: the launcher's left-click opens the panel and its m
     assertEqual(boxes[3].enabled, false, "Test mode is grayed")
     assertEqual(#m.__svWrites(), 0, "neither click wrote anything")
     assertEqual(#m.__shownFrames(), shown, "neither click showed a frame")
+end)
+
+test("disabled [§7 step 8]: the Toggle Comms Pads key, pressed while disabled, prints the one refusal line and writes and shows nothing", function()
+    local NS, m = baseline()
+    disable(NS)
+    m.SetBinding("P", "CLICK QuickCommsTogglePads:LeftButton")
+    local before = NS.db.char.padsHidden
+    m.__resetSvWrites()
+    m.prints = {}
+    local shown = #m.__shownFrames()
+    m.__pressKey("P")
+    -- red under: drop the StoodDownRefusal check from settings/SlashVerbs.lua's TogglePads
+    assertEqual(#m.prints, 1, "exactly one line")
+    assertTrue(m.prints[1]:find(NS.SlashCommands:DisabledLine(), 1, true) ~= nil, m.prints[1])
+    assertEqual(NS.db.char.padsHidden, before, "nothing toggled")
+    assertEqual(#m.__svWrites(), 0, "no SavedVariables write")
+    assertEqual(#m.__shownFrames(), shown, "no frame shown")
 end)
 
 test("disabled [§7 step 9]: re-enabled, R_on comes back; a setting changed while disabled is what the stand-up builds", function()

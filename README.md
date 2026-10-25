@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1157%2F1157_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1175%2F1175_passing-green)
 
 Quick Comms puts your usual group callouts one click or one keypress away. "Kick on me", "Lust
 now", "INC Lumber Mill": set them up once and they sit on a Comms Pad or open from a
@@ -34,7 +34,7 @@ each character remembers it through a reload or a logout. The minimap button's r
 The Comms Dial opens on a key: bind Open Comms Dial in WoW's Options → Keybindings → Ka0s Quick
 Comms, or on General → Keybindings in this addon's settings, which lists the same keys (Toggle Comms
 Pads first, then Open Comms Dial 1 to 4, each with one key button and Clear; a second key set in
-WoW's menu shows on the button as `<key> +1`, named in its tooltip). A key set in one shows in the other. It is
+WoW's menu shows on the button as `+1` after the first key, and its tooltip names it). A key set in one shows in the other. It is
 shared by all your characters unless you tick Character Specific Keybindings in WoW's Keybindings.
 Press it: with one group active the dial opens straight on that group's callouts; with several it
 shows the groups first, so click one, then click a callout to send it. In a battleground the map's
@@ -78,12 +78,12 @@ a small window whose dropdown switches the situation; End preview (or Escape, or
 ends it. A preview started from the settings opens the same window and outlives the settings, and
 the window keeps the place you drag it to. In a preview or in test mode, clicking a pad button or a
 dial slice sends nothing, and the dial stays open for the next one: it prints, to you alone, what it would have sent (`[QC] /p Hello world!`,
-the channel the previewed situation picks and the text with its tokens filled, `<target>` and the
-like standing in for a value you have not got right now), or why it would send nothing, or that a
+the channel the previewed situation picks and the text with its tokens filled, a placeholder
+standing in for any value you have not got right now, such as a target), or why it would send nothing, or that a
 test button is a placeholder. Hovering a pad's header or the dial's middle (or
 `/qc why`) tells you why each group is there. While the Groups page is open, every pad and dial shows
-only the group you are editing, sending nothing: a click prints `[QC] /p <text>`, the line it would
-have sent, and the preview window comes up titled with the group and showing the situation it is
+only the group you are editing, sending nothing: a click prints the line it would have sent,
+`[QC] /p` and then its text, and the preview window comes up titled with the group and showing the situation it is
 previewed in (the group's own: Alterac Valley for Alterac Valley, Current for one with no content).
 The window is grayed out there, since the Groups page drives it: pick another group to change it,
 or untick Preview while editing, beside the Group picker, to keep the pads live. Right-click a
