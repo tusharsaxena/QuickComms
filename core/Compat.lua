@@ -233,12 +233,15 @@ function Compat.DungeonName(mapID)
     return PlainString((cm.GetMapUIInfo(mapID)))
 end
 
---- True when the player is in chat channel 1 (General, by the client's default order):
---- GetChannelName(1) answers a plain non-zero id. False when not joined, unreadable or absent (QF-04).
+--- True when chat channel 1 is the zone's General channel, as the client identifies it:
+--- C_ChatInfo.GetGeneralChannelLocalID() answers a plain 1 (the number General holds, nil when it is
+--- not joined). Never the channel's name, which is localized (localization-§4): a channel 1 the
+--- player made or reordered there is not General. False when General is elsewhere, not joined,
+--- unreadable or the API is absent, so the `general` kind falls back to Say (QF-04, F-007).
 function Compat.GeneralJoined()
-    if not GetChannelName then return false end
-    local id = PlainNumber((GetChannelName(1)))
-    return id ~= nil and id ~= 0
+    local chat = C_ChatInfo
+    if not (chat and chat.GetGeneralChannelLocalID) then return false end
+    return PlainNumber((chat.GetGeneralChannelLocalID())) == 1
 end
 
 --- The player's map position in percent (0-100), `x, y`, or nil: C_Map.GetBestMapForUnit("player"),

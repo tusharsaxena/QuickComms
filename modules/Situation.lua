@@ -164,7 +164,7 @@ local EVENTS = {
     "PLAYER_ENTERING_WORLD", "ZONE_CHANGED_NEW_AREA", "CHALLENGE_MODE_START", "CHALLENGE_MODE_COMPLETED",
     "CHALLENGE_MODE_RESET", "GROUP_ROSTER_UPDATE", "PARTY_LEADER_CHANGED", "PLAYER_DIFFICULTY_CHANGED",
     "PLAYER_SPECIALIZATION_CHANGED", "PLAYER_ROLES_ASSIGNED",
-    -- Channel 1 joined or left (QF-04): the notice also covers the automatic joins after login and
+    -- General joined, left or moved off channel 1 (QF-04): the notice also covers the automatic joins after login and
     -- the zone's channel swap, should CHANNEL_UI_UPDATE not fire for them. A notice for any other
     -- channel leaves the signature, so it rebuilds nothing.
     "CHANNEL_UI_UPDATE", "CHAT_MSG_CHANNEL_NOTICE",
