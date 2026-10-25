@@ -722,6 +722,42 @@ test("dial slices: [polish] a gap shifts each fill outward along its bisector", 
     m.__click(h, "Toggle")
 end)
 
+test("dial slices: [perf] a reopen on the slice last lit leaves the highlight where it is; a rebuild moves it", function()
+    local NS, m = live()
+    local did = "d2"
+    assertTrue(NS.Dial.Apply(1, did, planOf(NS)))
+    local inst = NS.Dial.Instance(did)
+    local h, ring = inst.header, inst.rings.active[2]
+    local cx, cy = h:GetCenter()
+    m.cursor.x, m.cursor.y = (cx + 60) * h:GetEffectiveScale(), (cy + 2) * h:GetEffectiveScale()
+    m.__click(h, "Toggle")
+    NS.DialRender.PointerUpdate(h.qcPointer)
+    assertEqual(ring.qcLit, 2, "toward E")
+    m.__click(h, "Toggle")
+    local moved, hl = 0, ring.qcHighlight
+    local realSetPoint = hl.SetPoint
+    hl.SetPoint = function(...) moved = moved + 1; return realSetPoint(...) end
+    m.__click(h, "Toggle")
+    NS.DialRender.PointerUpdate(h.qcPointer)
+    -- red under: S.Track placing the highlight on every light (F-001: a fifth of dialOpenClose's bytes)
+    assertEqual(moved, 0, "relit on the slice it already sits on")
+    assertTrue(hl:IsShown())
+    m.__click(h, "Toggle")
+    hl.SetPoint = realSetPoint
+    assertTrue(NS.SchemaRuntime.Set("dial.slice.gap", 10, did))
+    assertTrue(NS.Dial.Apply(1, did, planOf(NS)))
+    ring = inst.rings.active[2]
+    m.__click(h, "Toggle")
+    NS.DialRender.PointerUpdate(h.qcPointer)
+    assertEqual(ring.qcLit, 2)
+    -- red under: the guard keyed on the slice alone (the highlight left at the old gap's place)
+    local hx, hy = placeOf(ring.qcHighlight)
+    local fx, fy = placeOf(ring.qcFills[2])
+    near(hx, fx, "the new shape's place (x)")
+    near(hy, fy, "the new shape's place (y)")
+    m.__click(h, "Toggle")
+end)
+
 test("dial slices: [polish] gap 0 draws as before", function()
     local NS = live()
     assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
