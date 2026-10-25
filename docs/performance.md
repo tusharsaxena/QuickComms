@@ -81,3 +81,9 @@ figures above do not show it; `tests/test_pad.lua` and `tests/test_dial.lua` cou
 
 `/qc perf` opens the step panel; [`perf-analysis/README.md`](perf-analysis/README.md) is the
 capture store and says how a capture becomes a bundle.
+
+The first two captures were taken on 2026-10-25, in Murder Row with a party of five. With nothing
+pressed (`20261025-212400`) no bucket fired. With pad and dial presses in arm A (`20261025-213356`),
+`dialRender`, `sendClick` and `echoMatch` cost 0.123 ms per second of combat in all, about 0.3% of
+that run's +0.61 ms/frame delta. `coordsRebake`, `glowStart` and the rebuild buckets have no in-game
+reading yet; a combat-gated arm never records a rebuild, because one waits for combat to end.

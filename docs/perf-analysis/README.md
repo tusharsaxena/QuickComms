@@ -13,7 +13,7 @@ rather than from when the bundle was written.
 
 | File | What it is |
 |---|---|
-| `report.md` | The text report the client printed after `/qc perf finish` |
+| `report.md` | The text report the client printed after `/qc perf finish`, and the run's lifecycle lines |
 | `dump.json` | The JSON dump, byte for byte as copied out of the client |
 | `ANALYSIS.md` | The write-up, per the standards repo's `PERF_ANALYSIS.md` playbook |
 
@@ -36,8 +36,7 @@ battery in [`automated-tests/`](../automated-tests/RESULTS.md).
 
 ## Captures
 
-No capture has been taken yet: nobody has played this build. The first one is a later, separate run
-of `/dev-copilot:wow-perf-analysis` with a real client paste.
-
 | Stamp | Addon version | Label | What it measured | Bundle |
 |---|---|---|---|---|
+| `20261025-212400` | 0.1.0 | `2026-10-25 21:19` | The first capture, in Murder Row with a party of five. No bucket fired, because nothing was pressed and no dial was opened; the +1.45 ms/frame delta is between two different fights and is not attributable to the addon. | [`20261025-212400/`](20261025-212400/ANALYSIS.md) |
+| `20261025-213356` | 0.1.0 | `2026-10-25 21:30` | Pad and dial presses in arm A: six sends, six echoes and 3.6 s of the open dial cost 0.123 ms per second of combat in all (dialRender 0.106 ms/s); the +0.61 ms/frame delta is barely above the floor, and the buckets are about 0.3% of it. | [`20261025-213356/`](20261025-213356/ANALYSIS.md) |
