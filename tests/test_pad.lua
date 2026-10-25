@@ -964,3 +964,67 @@ test("pad: [polish] header reads Quick Comms: M+ · Windrunner Spire +14", funct
     -- red under: the prefix missing, or wrapped around the dungeon alone rather than SituationText
     assertEqual(NS.Pad.Instance("p1").header.qcSituation:GetText(), "Quick Comms: M+ \194\183 Windrunner Spire +14")
 end)
+
+-- Every secure write of `key` on the pad's buttons while `fn` runs, counted (F-006).
+local function writesDuring(NS, keys, fn)
+    local n, wrapped = 0, {}
+    for _, btn in ipairs(NS.SendEngine.ArmedButtons()) do
+        if not wrapped[btn] then
+            local real = btn.SetAttribute
+            wrapped[btn] = real
+            btn.SetAttribute = function(self, k, v)
+                if keys[k] then n = n + 1 end
+                return real(self, k, v)
+            end
+        end
+    end
+    fn()
+    for btn, real in pairs(wrapped) do btn.SetAttribute = real end
+    return n
+end
+
+test("pad: [F-006] a rebuild that moved no line rewrites no button's type or macrotext", function()
+    local NS = live()
+    local before = pull(NS):GetAttribute("macrotext")
+    local writes = writesDuring(NS, { type = true, macrotext = true }, function()
+        assertTrue(NS.SchemaRuntime.Set("pad.layout.spacing", 6, "p1"))
+    end)
+    -- red under: releaseButton disarming every button before the rebuild arms it again (SE.Arm's
+    -- unchanged-line fast path never firing)
+    assertEqual(writes, 0, "every button kept its line, so none was written")
+    local button = pull(NS)
+    assertEqual(button:GetAttribute("type"), "macro", "still armed")
+    assertEqual(button:GetAttribute("macrotext"), before)
+end)
+
+test("pad: [F-006] after a rebuild, every button outside the active set carries no type and is not armed", function()
+    local inputs = MPLUS
+    local NS, m = T.enableAddon()
+    NS.Situation.ReadInputs = function() return inputs end
+    NS.Situation.RefreshNow("test")
+    local inst = NS.Pad.Instance("p1")
+    local _, wide = NS.Pool.Counts(inst.buttons)
+    inputs = { inInstance = false }
+    NS.Situation.RefreshNow("test")
+    local free, active = NS.Pool.Counts(inst.buttons)
+    assertTrue(active < wide and free > 0, "the solo pad parks buttons the M+ pad used")
+    for _, btn in ipairs(inst.buttons.free) do
+        -- red under: the rebuild parking buttons armed and never disarming the ones it did not take again
+        assertNil(btn:GetAttribute("type"), "a parked button sends nothing")
+        assertNil(btn:GetAttribute("macrotext"))
+        assertFalse(btn.qcArmed)
+        assertFalse(btn:IsShown(), "and is hidden")
+    end
+    local inActive = {}
+    for _, btn in ipairs(inst.buttons.active) do inActive[btn] = true end
+    for _, btn in ipairs(NS.SendEngine.ArmedButtons()) do
+        if btn:GetParent() == inst.root then assertTrue(inActive[btn], "only an active button is armed") end
+    end
+    assertEqual(#m.blocked, 0, "every write out of combat")
+    assertTrue(NS.Pad.Release("p1"))
+    for _, btn in ipairs(inst.buttons.free) do
+        -- red under: Pad.Release parking its buttons without the disarm
+        assertNil(btn:GetAttribute("type"), "a released pad's buttons send nothing")
+        assertFalse(btn.qcArmed)
+    end
+end)

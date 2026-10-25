@@ -722,6 +722,86 @@ test("dial slices: [polish] a gap shifts each fill outward along its bisector", 
     m.__click(h, "Toggle")
 end)
 
+test("dial slices: [perf] a reopen on the slice last lit leaves the highlight where it is; a rebuild moves it", function()
+    local NS, m = live()
+    local did = "d2"
+    assertTrue(NS.Dial.Apply(1, did, planOf(NS)))
+    local inst = NS.Dial.Instance(did)
+    local h, ring = inst.header, inst.rings.active[2]
+    local cx, cy = h:GetCenter()
+    m.cursor.x, m.cursor.y = (cx + 60) * h:GetEffectiveScale(), (cy + 2) * h:GetEffectiveScale()
+    m.__click(h, "Toggle")
+    NS.DialRender.PointerUpdate(h.qcPointer)
+    assertEqual(ring.qcLit, 2, "toward E")
+    m.__click(h, "Toggle")
+    local moved, hl = 0, ring.qcHighlight
+    local realSetPoint = hl.SetPoint
+    hl.SetPoint = function(...) moved = moved + 1; return realSetPoint(...) end
+    m.__click(h, "Toggle")
+    NS.DialRender.PointerUpdate(h.qcPointer)
+    -- red under: S.Track placing the highlight on every light (F-001: a fifth of dialOpenClose's bytes)
+    assertEqual(moved, 0, "relit on the slice it already sits on")
+    assertTrue(hl:IsShown())
+    m.__click(h, "Toggle")
+    hl.SetPoint = realSetPoint
+    assertTrue(NS.SchemaRuntime.Set("dial.slice.gap", 10, did))
+    assertTrue(NS.Dial.Apply(1, did, planOf(NS)))
+    ring = inst.rings.active[2]
+    m.__click(h, "Toggle")
+    NS.DialRender.PointerUpdate(h.qcPointer)
+    assertEqual(ring.qcLit, 2)
+    -- red under: the guard keyed on the slice alone (the highlight left at the old gap's place)
+    local hx, hy = placeOf(ring.qcHighlight)
+    local fx, fy = placeOf(ring.qcFills[2])
+    near(hx, fx, "the new shape's place (x)")
+    near(hy, fy, "the new shape's place (y)")
+    m.__click(h, "Toggle")
+end)
+
+-- Every wedge the dial's pools hold but no ring drew: the free wedges of its rings, in use or parked.
+local function parkedWedges(inst)
+    local out = {}
+    for _, list in ipairs({ inst.rings.active, inst.rings.free }) do
+        for _, ring in ipairs(list) do
+            for _, w in ipairs(ring.qcWedges.free) do out[#out + 1] = w end
+        end
+    end
+    return out
+end
+
+test("dial: [F-006] an unchanged rebuild rewrites no wedge's line; a wedge left out carries no type", function()
+    local NS, m = live()
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    local inst = NS.Dial.Instance("d2")
+    local writes, wrapped = 0, {}
+    for _, w in ipairs(NS.SendEngine.ArmedButtons()) do
+        local real = w.SetAttribute
+        wrapped[w] = real
+        w.SetAttribute = function(self, k, v)
+            if k == "type" or k == "macrotext" then writes = writes + 1 end
+            return real(self, k, v)
+        end
+    end
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    for w, real in pairs(wrapped) do w.SetAttribute = real end
+    -- red under: releaseWedge disarming every wedge before the rebuild arms it again
+    assertEqual(writes, 0, "the same plan again writes no line")
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS, { n = 2 })))
+    local parked = parkedWedges(inst)
+    assertTrue(#parked > 0, "two callouts park the wedges eight used")
+    for _, w in ipairs(parked) do
+        -- red under: the rebuild parking wedges armed and never disarming the ones it did not take back
+        assertNil(w:GetAttribute("type"), "a parked wedge sends nothing")
+        assertFalse(w.qcArmed)
+    end
+    assertEqual(#m.blocked, 0, "every write out of combat")
+    assertTrue(NS.Dial.Release(1))
+    for _, w in ipairs(parkedWedges(inst)) do
+        -- red under: Dial.Release parking its wedges without the disarm
+        assertNil(w:GetAttribute("type"), "a released dial's wedges send nothing")
+    end
+end)
+
 test("dial slices: [polish] gap 0 draws as before", function()
     local NS = live()
     assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))

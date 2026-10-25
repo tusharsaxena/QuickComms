@@ -105,42 +105,58 @@ end
 
 -- ── JSON ──────────────────────────────────────────────────────────────────────────────────────
 
-local function encode(v, out)
-    local t = type(v)
-    if t == "nil" then out[#out + 1] = "null"
-    elseif t == "boolean" then out[#out + 1] = tostring(v)
-    elseif t == "number" then
+local encode
+
+-- A string's escapes: the quote, the backslash, and every control character as \u00XX.
+local function escape(c)
+    if c == '"' then return '\\"' elseif c == "\\" then return "\\\\" end
+    return string.format("\\u%04x", c:byte())
+end
+
+-- A list (or an empty table) as an array, in order.
+local function encodeArray(v, out)
+    out[#out + 1] = "["
+    for i, x in ipairs(v) do
+        if i > 1 then out[#out + 1] = "," end
+        encode(x, out)
+    end
+    out[#out + 1] = "]"
+end
+
+-- Any other table as an object, its keys sorted, so a dump diffs cleanly run to run.
+local function encodeObject(v, out)
+    out[#out + 1] = "{"
+    local first = true
+    local keys = {}
+    for k in pairs(v) do keys[#keys + 1] = tostring(k) end
+    table.sort(keys)
+    for _, k in ipairs(keys) do
+        if not first then out[#out + 1] = "," end
+        first = false
+        encode(k, out)
+        out[#out + 1] = ":"
+        encode(v[k], out)
+    end
+    out[#out + 1] = "}"
+end
+
+-- One writer per Lua type; a type with none (a function, a userdata) writes nothing.
+local ENCODERS = {
+    ["nil"] = function(_, out) out[#out + 1] = "null" end,
+    boolean = function(v, out) out[#out + 1] = tostring(v) end,
+    number = function(v, out)
         if v ~= v or v == math.huge or v == -math.huge then out[#out + 1] = "null"
         else out[#out + 1] = string.format("%.6g", v) end
-    elseif t == "string" then
-        out[#out + 1] = '"' .. v:gsub('[%c"\\]', function(c)
-            if c == '"' then return '\\"' elseif c == "\\" then return "\\\\" end
-            return string.format("\\u%04x", c:byte())
-        end) .. '"'
-    elseif t == "table" then
-        if #v > 0 or next(v) == nil then
-            out[#out + 1] = "["
-            for i, x in ipairs(v) do
-                if i > 1 then out[#out + 1] = "," end
-                encode(x, out)
-            end
-            out[#out + 1] = "]"
-        else
-            out[#out + 1] = "{"
-            local first = true
-            local keys = {}
-            for k in pairs(v) do keys[#keys + 1] = tostring(k) end
-            table.sort(keys)
-            for _, k in ipairs(keys) do
-                if not first then out[#out + 1] = "," end
-                first = false
-                encode(k, out)
-                out[#out + 1] = ":"
-                encode(v[k], out)
-            end
-            out[#out + 1] = "}"
-        end
-    end
+    end,
+    string = function(v, out) out[#out + 1] = '"' .. v:gsub('[%c"\\]', escape) .. '"' end,
+    table = function(v, out)
+        if #v > 0 or next(v) == nil then encodeArray(v, out) else encodeObject(v, out) end
+    end,
+}
+
+encode = function(v, out)
+    local write = ENCODERS[type(v)]
+    if write then write(v, out) end
     return out
 end
 

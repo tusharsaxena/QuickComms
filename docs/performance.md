@@ -49,16 +49,33 @@ when capture is off.
 `lua tests/perf.lua`, outside the green gate (performance-§9), asserting bytes per iteration and
 notes per iteration, never time:
 
-| Scenario | What it shows | Ceiling |
-|---|---|---|
-| `bracketCaptureOff` | the gated bracket shape, capture off, notes nothing and allocates nothing | 0 bytes, 0 notes |
-| `dialPointerCaptureOff` | the hottest bracketed path, the open dial's pointer `OnUpdate`, capture off | 1 KiB, 0 notes |
-| `dialPointerNoHarness` | the same path on an instance with no Perf library; the run fails if capture off allocates more (zero overhead, performance-§9) | 1 KiB, 0 notes |
-| `padRebuild12` | a 12-button pad built from its plan and applied, capture on | 69 KiB, 3 notes (raised from 68 KiB when the rows began to follow the Look's font size) |
-| `dialOpenClose` | the default dial opened, one pointer frame, closed | 2 KiB, 1 note |
-| `situationRefresh` | a situation read whose signature did not move | 2 KiB, 1 note |
+| Scenario | What it shows | Ceiling | Measured 2026-10-25 |
+|---|---|---|---|
+| `bracketCaptureOff` | the gated bracket shape, capture off, notes nothing and allocates nothing | 0 bytes, 0 notes | 0.0 B |
+| `dialPointerCaptureOff` | the hottest bracketed path, the open dial's pointer `OnUpdate`, capture off | 1 KiB, 0 notes | 224.0 B |
+| `dialPointerNoHarness` | the same path on an instance with no Perf library; the run fails if capture off allocates more (zero overhead, performance-§9) | 1 KiB, 0 notes | 224.0 B |
+| `padRebuild12` | a 12-button pad built from its plan and applied, capture on | 69 KiB, 3 notes (raised from 68 KiB when the rows began to follow the Look's font size) | 66290.8 B |
+| `dialOpenClose` | the default dial opened, one pointer frame (which lights a slice and shows its wedge's tooltip), closed | 2 KiB, 1 note | 1997.1 B |
+| `situationRefresh` | a situation read whose signature did not move | 2 KiB, 1 note | 2016.0 B |
 
 The ceilings are the headless mock's figures, rounded up to the next KiB; its catch-all methods allocate a closure per call, so compare runs with runs, never with the client.
+
+**The 2026-10-25 re-measure (review F-001).** Both rebuild scenarios had crept over their ceilings
+without a note. `padRebuild12` stood at 87026.8 B: the shipped Gloss fade shine (owner, 2026-10-22)
+was repainted on every button at every rebuild, outside the look signature. `R.ApplyButtonLook` now
+paints it only when the shine table (reused while the button look's signature holds) or the button's
+drawn size moved, which took the scenario back to 66290.8 B, the figure with the shine off.
+`dialOpenClose` stood at 2317.1 B. Bisected over `239b665..71c85f2`, the rise came from the dial polish
+work rather than the shine merge: `22283b7` (+320 B, the slice gap's placement) and `c8a8994` (+720 B,
+the pointer's per-frame tracking, which now lights the slice under the cursor and hovers its wedge,
+tooltip included). `DialSlices.Track` now moves the highlight only to another slice or another ring
+shape, so the scenario is 1997.1 B; the wedge tooltip it builds is the feature's own cost. No ceiling
+was raised.
+
+A rebuild also stopped disarming every button and wedge before arming it again (review F-006): a
+released one is parked armed, and only the ones the rebuild does not take back are disarmed, so an
+unchanged line costs no secure write. The mock's `SetAttribute` allocates nothing, so the byte
+figures above do not show it; `tests/test_pad.lua` and `tests/test_dial.lua` count the writes.
 
 ## In game
 

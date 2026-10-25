@@ -95,18 +95,10 @@ local function track(ring, angle, dist)
     if changed then R.HoverWedge(ring, was, now) end
 end
 
---- While the dial is open, every frame: the pointer toward the cursor (hidden inside the dead zone,
---- or when the Slices tab turns it off); the slice the cursor points into lit and hovered (its
---- wedge's tooltip and hover glow), anywhere on the disc outside the hub's circle (Slices.Track); and
---- inside that circle the hub hovered (R.HoverHub). A hover leaves before the next one enters, so the
---- tooltip is the one just entered.
-function R.PointerUpdate(pointer)
-    local t0 = Perf.on and debugprofilestop()
-    local header = pointer.qcHeader
-    local cx, cy = header:GetCenter()
-    local scale = header:GetEffectiveScale()
-    local mx, my = GetCursorPosition()
-    local a, ox, oy = DL.Pointer((cx or 0) * scale, (cy or 0) * scale, mx, my, header.qcReach)
+-- The pointer's arrow toward the cursor (mx, my, in screen pixels) from the hub's center (cx, cy, in
+-- the header's units): hidden inside the dead zone, or while the Slices tab turns it off.
+local function aim(pointer, header, cx, cy, scale, mx, my)
+    local a, ox, oy = DL.Pointer(cx * scale, cy * scale, mx, my, header.qcReach)
     local arrow = pointer.qcArrow
     if a and header.qcPointerOn ~= false then
         arrow:ClearAllPoints()
@@ -116,15 +108,34 @@ function R.PointerUpdate(pointer)
     else
         arrow:Hide()
     end
-    if scale and scale > 0 then
-        local dx, dy = (mx or 0) / scale - (cx or 0), (my or 0) / scale - (cy or 0)
-        local dist = math.sqrt(dx * dx + dy * dy)
-        local onHub = DL.InHub(dist, header.qcHubSize or DL.HUB)
-        if not onHub then R.HoverHub(header, false) end
-        local ring = shownRing(header)
-        if ring then track(ring, math.atan2(dx, dy), dist) end
-        if onHub then R.HoverHub(header, true) end
-    end
+end
+
+-- The hover under the cursor: off the hub's circle, the hub left first; the slice it points into
+-- tracked on the ring on screen; on the circle, the hub entered last, so its tooltip is the one shown.
+local function hover(header, cx, cy, scale, mx, my)
+    local dx, dy = (mx or 0) / scale - cx, (my or 0) / scale - cy
+    local dist = math.sqrt(dx * dx + dy * dy)
+    local onHub = DL.InHub(dist, header.qcHubSize or DL.HUB)
+    if not onHub then R.HoverHub(header, false) end
+    local ring = shownRing(header)
+    if ring then track(ring, math.atan2(dx, dy), dist) end
+    if onHub then R.HoverHub(header, true) end
+end
+
+--- While the dial is open, every frame: the pointer toward the cursor (hidden inside the dead zone,
+--- or when the Slices tab turns it off); the slice the cursor points into lit and hovered (its
+--- wedge's tooltip and hover glow), anywhere on the disc outside the hub's circle (Slices.Track); and
+--- inside that circle the hub hovered (R.HoverHub). A hover leaves before the next one enters, so the
+--- tooltip is the one just entered.
+function R.PointerUpdate(pointer)
+    local t0 = Perf.on and debugprofilestop()
+    local header = pointer.qcHeader
+    local cx, cy = header:GetCenter()
+    cx, cy = cx or 0, cy or 0
+    local scale = header:GetEffectiveScale()
+    local mx, my = GetCursorPosition()
+    aim(pointer, header, cx, cy, scale, mx, my)
+    if scale and scale > 0 then hover(header, cx, cy, scale, mx, my) end
     if t0 then Perf.Note("dialRender", debugprofilestop() - t0) end
 end
 
@@ -235,6 +246,36 @@ local function hubLook(hub)
         circle = color(hub.circleColor, hub.useClassColorCircle, H.circleColor) }
 end
 
+-- A settings table, or an empty one in its place.
+local function asTable(t)
+    return type(t) == "table" and t or {}
+end
+
+-- The Labels tab's Group labels (`dial.title`, else the shipped defaults) as { show, font, line }, its
+-- line 0 while off.
+local function titleLook(title)
+    local tl = type(title) == "table" and title or NS.PadDefaults.DialTitle()
+    local tfont, tshow = NS.PadRender.LabelFont(tl, NS.PadRender.TITLE_COLOR), tl.show ~= false
+    return { show = tshow, font = tfont, line = tshow and tfont.size + 2 or 0 }
+end
+
+-- The Paging tab (`dial.page`): the indicators' sizes and gaps, and each color through its class color
+-- companion, the background and border included.
+local function pagingLook(page)
+    local P = NS.PadDefaults.DialPage()
+    local function n(k) return math.max(0, tonumber(page[k]) or P[k]) end
+    return { offset = n("offset"), arrowSize = math.max(8, n("arrowSize")), arrowGap = n("arrowGap"),
+        dotSize = math.max(2, n("dotSize")), pillWidth = math.max(2, n("pillWidth")), dotGap = n("dotGap"),
+        arrow = color(page.arrowColor, page.useClassColorArrow, P.arrowColor),
+        plate = color(page.plateColor, page.useClassColorPlate, P.plateColor),
+        current = color(page.currentColor, page.useClassColorCurrent, P.currentColor),
+        dot = color(page.dotColor, page.useClassColorDot, P.dotColor),
+        dotBackShow = page.dotBackShow ~= false, dotBackPadding = n("dotBackPadding"),
+        dotBack = color(page.dotBackColor, page.useClassColorDotBack, P.dotBackColor),
+        dotBorder = n("dotBorder"),
+        dotBorderColor = color(page.dotBorderColor, page.useClassColorDotBorder, P.dotBorderColor) }
+end
+
 --- A dial's look for one rebuild: its radius (clamped); its Labels tab's Slice labels (`dial.label`) as a font
 --- (Pad_Render.LabelFont), whether labels show, their line height (0 when they do not) and where
 --- the tooltip goes; its Slices tab (`dial.slice`: the fill, the Slice gap in pixels, the highlight, the
@@ -244,16 +285,10 @@ end
 --- (`dial.title`, from `dial`) as `title = { show, font, line }`, its line 0 while off; and the Icon
 --- offset (`dial.iconOffset`).
 function R.Look(radius, label, slice, dial)
-    label = type(label) == "table" and label or {}
-    slice = type(slice) == "table" and slice or {}
-    dial = type(dial) == "table" and dial or {}
-    local page = type(dial.page) == "table" and dial.page or {}
-    local D, P = NS.PadDefaults.DialSlice(), NS.PadDefaults.DialPage()
-    local function n(k) return math.max(0, tonumber(page[k]) or P[k]) end
+    label, slice, dial = asTable(label), asTable(slice), asTable(dial)
+    local D = NS.PadDefaults.DialSlice()
     local font = NS.PadRender.LabelFont(label)
     local show = label.show ~= false
-    local tl = type(dial.title) == "table" and dial.title or NS.PadDefaults.DialTitle()
-    local tfont, tshow = NS.PadRender.LabelFont(tl, NS.PadRender.TITLE_COLOR), tl.show ~= false
     return { radius = DL.ClampRadius(radius), font = font, show = show, line = show and font.size + 2 or 0,
         tipSide = label.tooltipSide or "top", tipOffset = tonumber(label.tooltipOffset) or 8,
         labelReach = math.max(0, tonumber(label.offset) or 0),
@@ -265,17 +300,7 @@ function R.Look(radius, label, slice, dial)
         pointer = color(slice.pointerColor, slice.useClassColorPointer, D.pointerColor),
         shine = NS.Shine.Resolve(slice),   -- the Slices tab's Shine heading (Dial_Slices paints it)
         iconReach = math.max(0, tonumber(dial.iconOffset) or 0), hub = hubLook(dial.hub),
-        title = { show = tshow, font = tfont, line = tshow and tfont.size + 2 or 0 },
-        paging = { offset = n("offset"), arrowSize = math.max(8, n("arrowSize")), arrowGap = n("arrowGap"),
-            dotSize = math.max(2, n("dotSize")), pillWidth = math.max(2, n("pillWidth")), dotGap = n("dotGap"),
-            arrow = color(page.arrowColor, page.useClassColorArrow, P.arrowColor),
-            plate = color(page.plateColor, page.useClassColorPlate, P.plateColor),
-            current = color(page.currentColor, page.useClassColorCurrent, P.currentColor),
-            dot = color(page.dotColor, page.useClassColorDot, P.dotColor),
-            dotBackShow = page.dotBackShow ~= false, dotBackPadding = n("dotBackPadding"),
-            dotBack = color(page.dotBackColor, page.useClassColorDotBack, P.dotBackColor),
-            dotBorder = n("dotBorder"),
-            dotBorderColor = color(page.dotBorderColor, page.useClassColorDotBorder, P.dotBorderColor) } }
+        title = titleLook(dial.title), paging = pagingLook(asTable(dial.page)) }
 end
 
 --- The pointer in the dial's look: its size, color and reach (the Pointer offset from the hub's

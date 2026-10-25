@@ -377,7 +377,9 @@ end
 --- (DL.SliceAt: angle only, so a point in a gap belongs to the slice whose angle it is in) lights
 --- when a wedge sits on it; anywhere else (the hub's circle, past the rim, an empty place) none does. Answers
 --- true, the slice lit before and the slice lit now when that changed (Dial_Render hovers the wedges
---- on them), else nothing.
+--- on them), else nothing. The highlight keeps the place it was last moved to while hidden, so it is
+--- moved again only to another slice or another shape (a rebuild's S.Paint): a dial that closes and
+--- opens on the same slice relights it where it is (F-001).
 function S.Track(ring, angle, dist)
     local shape, hl = ring.qcShape, ring.qcHighlight
     if not (shape and hl) then return end
@@ -387,7 +389,10 @@ function S.Track(ring, angle, dist)
     if j == was then return end
     ring.qcLit = j
     if j then
-        place(hl, ring, j, shape)
+        if hl.qcPlacedAt ~= j or hl.qcPlacedShape ~= shape then
+            hl.qcPlacedAt, hl.qcPlacedShape = j, shape
+            place(hl, ring, j, shape)
+        end
         hl:Show()
     else
         hl:Hide()

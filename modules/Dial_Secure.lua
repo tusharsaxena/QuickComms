@@ -309,6 +309,31 @@ local function catcherAttrs(ring)
     return attrs, clear
 end
 
+-- Ring r's header attributes, into `attrs`: its parent, key, page, previous and next page and wedge count.
+local function ringAttrs(attrs, r, ring)
+    attrs["qc-parent-" .. r] = ring.parent or 0
+    attrs["qc-key-" .. r] = ring.key or ("ring" .. r)
+    attrs["qc-page-" .. r] = ring.page or 1
+    attrs["qc-prev-" .. r] = ring.prev or 0
+    attrs["qc-next-" .. r] = ring.next or 0
+    attrs["qc-n-" .. r] = #ring.wedges
+end
+
+-- Ring r's own buttons: each page arrow's target, each wedge's target (its name into the header's
+-- `attrs`, for the number keys) and the catcher's layout; then the header's frame ref to the ring.
+local function loadRing(header, attrs, r, ring)
+    if ring.arrows then
+        SE.SetAttributes(ring.arrows.prev, { ["qc-target"] = ring.prev or 0 })
+        SE.SetAttributes(ring.arrows.next, { ["qc-target"] = ring.next or 0 })
+    end
+    for i, w in ipairs(ring.wedges) do
+        attrs["qc-name-" .. r .. "-" .. i] = w.button:GetName()
+        SE.SetAttributes(w.button, { ["qc-target"] = w.target or 0 })
+    end
+    if ring.catcher then SE.SetAttributes(ring.catcher, catcherAttrs(ring)) end
+    SE.SetFrameRef(header, "ring" .. r, ring.frame)
+end
+
 --- Hand the header a plan's rings: per ring its container, its key and page (where a close leaves the
 --- next open, OPEN), its parent, previous and next page, its
 --- page arrows ({ prev, next }, each targeting that page), its wedges ({ button, target, place }:
@@ -325,22 +350,8 @@ function DS.Load(header, rings, opts)
     local attrs = { ["qc-rings"] = #rings, ["qc-openRing"] = opts.openRing or 1,
         ["qc-openAt"] = opts.openAt == "cursor" and "cursor" or "center", ["qc-preview"] = opts.preview == true }
     for r, ring in ipairs(rings) do
-        attrs["qc-parent-" .. r] = ring.parent or 0
-        attrs["qc-key-" .. r] = ring.key or ("ring" .. r)
-        attrs["qc-page-" .. r] = ring.page or 1
-        attrs["qc-prev-" .. r] = ring.prev or 0
-        attrs["qc-next-" .. r] = ring.next or 0
-        attrs["qc-n-" .. r] = #ring.wedges
-        if ring.arrows then
-            SE.SetAttributes(ring.arrows.prev, { ["qc-target"] = ring.prev or 0 })
-            SE.SetAttributes(ring.arrows.next, { ["qc-target"] = ring.next or 0 })
-        end
-        for i, w in ipairs(ring.wedges) do
-            attrs["qc-name-" .. r .. "-" .. i] = w.button:GetName()
-            SE.SetAttributes(w.button, { ["qc-target"] = w.target or 0 })
-        end
-        if ring.catcher then SE.SetAttributes(ring.catcher, catcherAttrs(ring)) end
-        SE.SetFrameRef(header, "ring" .. r, ring.frame)
+        ringAttrs(attrs, r, ring)
+        loadRing(header, attrs, r, ring)
     end
     if opts.screen then SE.SetFrameRef(header, "screen", opts.screen) end
     return SE.SetAttributes(header, attrs)
