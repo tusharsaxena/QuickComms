@@ -379,24 +379,34 @@ end
 
 Lib.CHARACTER_MAX = 96   -- bytes of a Name-Realm: a 12-character name and a long realm, both multi-byte
 
+-- A positive whole id: an instance, battleground, arena or specialization.
+local function wholeId(key) return type(key) == "number" and key > 0 and key == math.floor(key) end
+
+-- A Name-Realm: no control or "|" character, at most CHARACTER_MAX bytes.
+local function nameRealm(key)
+    return type(key) == "string" and #key <= Lib.CHARACTER_MAX and not key:find("[%c|]")
+        and key:match("^[^%s%-]+%-%S+$") ~= nil
+end
+
+-- A token the row lists (the class row: NS.GameIds.CLASSES).
+local function listedToken(row, key)
+    local list = row == "class" and NS.GameIds.CLASSES or NS.Resolver.TOKENS[row]
+    for _, token in ipairs(list or {}) do
+        if token == key then return true end
+    end
+    return false
+end
+
 --- Whether `key` is a value the When row `row` can ever match (localization-§4: ids and tokens,
 --- never a name): a token the row lists (NS.Resolver.TOKENS; the class row, NS.GameIds.CLASSES), a
 --- positive whole id (instances, battlegrounds, arenas, specializations), the whole kind on a place
 --- row (NS.Resolver.ID_ROWS, NS.Resolver.ALL), or a Name-Realm (characters: no control or "|"
 --- character, at most CHARACTER_MAX bytes).
 function Lib.ValidWhenValue(row, key)
-    local place = NS.Resolver.ID_ROWS[row]
-    if key == NS.Resolver.ALL and place then return true end
-    if place or row == "spec" then return type(key) == "number" and key > 0 and key == math.floor(key) end
-    if row == "characters" then
-        return type(key) == "string" and #key <= Lib.CHARACTER_MAX and not key:find("[%c|]")
-            and key:match("^[^%s%-]+%-%S+$") ~= nil
-    end
-    local list = row == "class" and NS.GameIds.CLASSES or NS.Resolver.TOKENS[row]
-    for _, token in ipairs(list or {}) do
-        if token == key then return true end
-    end
-    return false
+    if NS.Resolver.ID_ROWS[row] then return key == NS.Resolver.ALL or wholeId(key) end
+    if row == "spec" then return wholeId(key) end
+    if row == "characters" then return nameRealm(key) end
+    return listedToken(row, key)
 end
 
 -- Any other When row: a set of ids or tokens, each mapped to true, each one the row can match.
@@ -1083,6 +1093,42 @@ local function convertRefs(list, map)
     return out
 end
 
+-- Whether step 3 has a profile to convert: one that has its surfaces (`seeded`) and was not yet
+-- given its sets (seededSets).
+local function overlayToSeed(profile)
+    return profile.seeded == true and not (type(profile.seededSets) == "table" and next(profile.seededSets) ~= nil)
+end
+
+-- A customized set counts as given, with every node it ships: its copy stands in for it.
+local function markGiven(profile, top)
+    profile.seededSets[top] = true
+    for _, child in ipairs(NS.BuiltIns.groups[top].children or {}) do profile.seededSets[child] = true end
+end
+
+-- Set `top` seeded in its overlay `o`'s terms: its hidden callouts left out, off if it was off.
+-- @return string the seeded group's id
+local function seedOverlaySet(profile, top, o)
+    local id = seedSet(profile, top, type(o.hidden) == "table" and o.hidden or nil)
+    if o.enabled == false then profile.groups[id].enabled = false end
+    return id
+end
+
+-- One surface converted: its list's references through `map` (convertRefs), then each set shipped
+-- after the surface last loaded (not in its seenBuiltins) at its end, as Prepare would have put it
+-- there before the overlay went; its seenBuiltins goes.
+local function convertSurface(s, map)
+    local seen = type(s.seenBuiltins) == "table" and s.seenBuiltins or nil
+    if type(s.groups) == "table" then
+        s.groups = convertRefs(s.groups, map)
+        for _, top in ipairs(seen and NS.BuiltIns.order or {}) do
+            if not seen[top] and map[top] and not indexOf(s.groups, map[top]) then
+                s.groups[#s.groups + 1] = map[top]
+            end
+        end
+    end
+    s.seenBuiltins = nil
+end
+
 --- Schema step 3 for one stored profile (2026-10-18-builtins-as-groups-design.md, goal 1): the
 --- built-in overlay becomes seeded groups. A profile that has its surfaces (`seeded`) is given every
 --- shipped set as seeded groups (seedSet), each in the set's place on every pad and dial that listed
@@ -1098,9 +1144,7 @@ function Lib.SeedFromOverlay(profile)
     if type(profile) ~= "table" then return 0 end
     local overlays = type(profile.builtins) == "table" and profile.builtins or {}
     profile.builtins = nil
-    if profile.seeded ~= true or (type(profile.seededSets) == "table" and next(profile.seededSets) ~= nil) then
-        return 0
-    end
+    if not overlayToSeed(profile) then return 0 end
     for _, key in ipairs({ "callouts", "groups", "pads", "dials" }) do
         if type(profile[key]) ~= "table" then profile[key] = {} end
     end
@@ -1110,30 +1154,15 @@ function Lib.SeedFromOverlay(profile)
     for _, top in ipairs(NS.BuiltIns.order) do
         local o = type(overlays[top]) == "table" and overlays[top] or {}
         if type(o.customizedAs) == "string" and type(profile.groups[o.customizedAs]) == "table" then
-            profile.seededSets[top] = true
-            for _, child in ipairs(NS.BuiltIns.groups[top].children or {}) do profile.seededSets[child] = true end
+            markGiven(profile, top)
         else
-            map[top] = seedSet(profile, top, type(o.hidden) == "table" and o.hidden or nil)
-            if o.enabled == false then profile.groups[map[top]].enabled = false end
+            map[top] = seedOverlaySet(profile, top, o)
             n = n + 1
         end
     end
     for _, key in ipairs({ "pads", "dials" }) do
         for _, s in pairs(profile[key]) do
-            if type(s) == "table" then
-                local seen = type(s.seenBuiltins) == "table" and s.seenBuiltins or nil
-                if type(s.groups) == "table" then
-                    s.groups = convertRefs(s.groups, map)
-                    -- A set shipped after the surface last loaded (not in its seenBuiltins) goes at
-                    -- its end, as Prepare would have put it there before the overlay went.
-                    for _, top in ipairs(NS.BuiltIns.order) do
-                        if seen and not seen[top] and map[top] and not indexOf(s.groups, map[top]) then
-                            s.groups[#s.groups + 1] = map[top]
-                        end
-                    end
-                end
-                s.seenBuiltins = nil
-            end
+            if type(s) == "table" then convertSurface(s, map) end
         end
     end
     return n
