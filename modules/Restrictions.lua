@@ -195,24 +195,29 @@ end
 
 -- ── events and the lifecycle ────────────────────────────────────────────────────────────────
 
+-- Every handler below returns at once while stood down: the stand-down unregistered its event, so
+-- only a dispatch the latch did not see reaches it, and a read then would seed state the stand-down
+-- dropped (hints, the edge) or arm the late re-read (slash-commands-§7, step 6).
+local function standing() return not NS.IsStoodDown() end
+
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "ADDON_RESTRICTION_STATE_CHANGED", "OnRestrictionEvent" }
 
 function NS.addon.OnRestrictionEvent(_, _, rtype, state)
-    R.OnRestrictionStateChanged(rtype, state)
+    if standing() then R.OnRestrictionStateChanged(rtype, state) end
 end
 
 -- The two combat edges, handed over here because the flag can lag them.
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_REGEN_DISABLED", "OnRestrictionRegenDisabled" }
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_REGEN_ENABLED", "OnRestrictionRegenEnabled" }
 
-function NS.addon.OnRestrictionRegenDisabled() R.OnCombatEdge(true) end
-function NS.addon.OnRestrictionRegenEnabled() R.OnCombatEdge(false) end
+function NS.addon.OnRestrictionRegenDisabled() if standing() then R.OnCombatEdge(true) end end
+function NS.addon.OnRestrictionRegenEnabled() if standing() then R.OnCombatEdge(false) end end
 
 -- An encounter's end (a kill or a wipe). CHALLENGE_MODE_COMPLETED is Situation's row (AceEvent keeps
 -- one handler per event per object), which forwards it to RefreshAfterLift.
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "ENCOUNTER_END", "OnRestrictionLiftEvent" }
 
-function NS.addon.OnRestrictionLiftEvent(_, event) R.RefreshAfterLift(event) end
+function NS.addon.OnRestrictionLiftEvent(_, event) if standing() then R.RefreshAfterLift(event) end end
 
 -- Stood down, no event reaches the hints or the edge, so both go stale and are dropped, and the
 -- late re-read is canceled; the stand-up re-reads the client after the bus has replayed its

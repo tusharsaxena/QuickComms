@@ -173,7 +173,10 @@ for _, event in ipairs(EVENTS) do
     NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { event, "OnSituationEvent" }
 end
 
+-- Stood down it returns at once: its events are unregistered, so only a dispatch the latch did not
+-- see reaches it, and it must not arm the coalesce timer then (slash-commands-§7, step 6).
 function NS.addon.OnSituationEvent(_, event)
+    if NS.IsStoodDown() then return end
     Sit.Refresh(event)
     -- A key's end can lift a chat lockdown with no event of its own; the event is this row's (one
     -- handler per event per object), so it hands the lift to Restrictions rather than registering twice.
