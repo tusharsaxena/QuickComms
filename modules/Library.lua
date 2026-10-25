@@ -480,16 +480,6 @@ function Lib.CreateCallout(fields)
     return id
 end
 
---- Delete a user callout and every reference to it.
-function Lib.DeleteCallout(id)
-    local p = P()
-    if not p.callouts[id] then return false end
-    p.callouts[id] = nil
-    for _, g in pairs(p.groups) do removeAll(g.callouts, id) end
-    announce("callout", id)
-    return true
-end
-
 -- ── groups ──────────────────────────────────────────────────────────────────────────────────
 
 -- A new user callout with `src`'s fields (its icon's color too) and its name unchanged (the copy

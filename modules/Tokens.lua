@@ -60,13 +60,6 @@ function Tok.Expand(text, ctx, mock)
     return out, acc.unknown, acc.missing, acc.live + engine
 end
 
---- True when `text` uses a raid-group token, which expands only in a raid (spec §8.1).
-function Tok.UsesGroupToken(text)
-    if type(text) ~= "string" then return false end
-    local lower = text:lower()
-    return lower:find("{g[1-8]}") ~= nil or lower:find("{group[1-8]}") ~= nil
-end
-
 --- True when `text` uses {coordinates} (or {coords}), the one baked value that moves while a plan
 --- does not: its live button is re-baked at the press (QF-03).
 function Tok.UsesCoordinates(text)
