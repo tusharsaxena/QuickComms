@@ -201,8 +201,7 @@ local function hubState(inst, plan)
     }
 end
 
--- One ring's wedges: placed on their places at the dial's radius (a pinned node on its own wind,
--- Dial_Layout's `wedge`), painted, armed, indexed by callout and by place (`ring.qcPlaceWedge`, for the
+-- One ring's wedges: placed on their places at the dial's radius (Dial_Layout's `wedge`), painted, armed, indexed by callout and by place (`ring.qcPlaceWedge`, for the
 -- tracker's hover). A wedge takes no mouse (dial polish, 2026-10-21): the ring's catcher clicks it and
 -- the tracker hovers it, so one function (DL.SliceAt) decides the slice; the number keys still click
 -- it by name.

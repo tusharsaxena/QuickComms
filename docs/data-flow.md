@@ -34,7 +34,7 @@ shipped order, as ordinary user groups and callouts under fresh ids from `nextId
 callouts take their ids before it, and a battleground's nodes come after their set as groups inside
 it (`parent`); `Library.Children` lists a group's children A–Z by name (then made order), so a
 set's nodes read alphabetically everywhere (2026-10-25). Each seeded member keeps its
-shipped id as `origin`, a node its `compass` wind, and `profile.seededSets` records every set and
+shipped id as `origin`, and `profile.seededSets` records every set and
 node given. The top-level sets go on the default pad and dial. From then on they are ordinary groups:
 every edit, delete and duplicate is the player's, and nothing at draw time reads `NS.BuiltIns` for
 them. A set a later version ships is seeded by the next `Prepare` at the end of every pad and dial;
@@ -55,9 +55,8 @@ A group's `parent` (the `group.parent` row) puts it inside a top-level group, on
 one `Library.Batch`, taking the group off every pad and dial. A rebuild draws a parent where the
 surface lists it: `Surfaces.BuildPlan` gives a pad a section for the parent's own callouts (when it
 has any), then one section per child that the Resolver finds active, in `Library.Children`'s order;
-`Surfaces.BuildDialPlan` gives a dial the parent's own callouts first, then a node ring per active
-child (pinned to the compass winds when every child has one, the parent's own callouts then taking
-one more wedge on the first free wind). The parent's When and Enabled gate the whole family, and a child that inherits its When
+`Surfaces.BuildDialPlan` gives a dial the parent's own callouts first, as one wedge, then a node
+ring per active child, one slice each (no compass pinning since 2026-10-25). The parent's When and Enabled gate the whole family, and a child that inherits its When
 conditions (`group.inheritWhen`, on unless stored `false`) is judged by the parent's When instead of
 its own (`Resolver.WhenOf`). Deleting a parent (`Library.DeleteGroup`)
 makes its children top-level groups, in its place on every pad and dial, in one act.

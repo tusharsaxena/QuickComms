@@ -135,9 +135,8 @@ python3 -I tools/render-shine-preview.py --radius 100,150,180 --out /tmp/shine  
 ```
 
 **Python 3 (standard library only)**, and only for **re-deriving the client-data extractions**:
-`tools/derive-gameids.py` (the instance ids and `tests/test_gameids.lua`'s map table) and
-`tools/derive-winds.py` (the node winds in `defaults/BuiltIns_Battlegrounds.lua`), with their shared
-`tools/client_tables.py`. They download wago.tools' exports of the client's tables and check the
+`tools/derive-gameids.py` (the instance ids and `tests/test_gameids.lua`'s map table), with its
+`tools/client_tables.py`. It downloads wago.tools' exports of the client's tables and checks the
 repository against them; neither is loaded by the client, and `.pkgmeta` ignores `tools/`. How to run
 them: `docs/common-tasks.md` → "Re-derive the client-data extractions".
 

@@ -679,8 +679,8 @@ General page > Keybindings, with no key box and no readout (QUI-L29).
   at radius 100 hold about four a page); or a fixed 4, 6, 8 or 12, from N: a fixed 4 places one
   item N, two N and S, three N, E and S, four N, E, S and W, and a fixed 6, 8 or 12 fills its places
   from N clockwise, the rest drawn empty (never lit, never clicked). The gap never changes a fixed count.
-  A ring that holds rings takes at most 8 either way, and a node set pinned to its winds keeps its
-  eight. A ring with more items is paged: two arrows under the dial (dimmed at an end, no wrap), the
+  A ring that holds rings takes at most 8 either way, a battleground node set's included (its own
+  callouts one wedge first, then its nodes A–Z). A ring with more items is paged: two arrows under the dial (dimmed at an end, no wrap), the
   Left and Right arrow keys (bound only while a paged ring is shown) and the mouse wheel turn its
   pages; under them a gold pill marks the page shown and a gray dot each other page, and each arrow
   is a round plate in the slices' fill with a chevron, dimmed at an end. Ring radius is `dial.radius` (70 to 180

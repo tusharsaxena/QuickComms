@@ -1,4 +1,4 @@
-# tools/client_tables.py — shared by tools/derive-gameids.py and tools/derive-winds.py: fetch the
+# tools/client_tables.py — used by tools/derive-gameids.py: fetch the
 # client's own data tables as wago.tools exports them (CSV), and read one. Dev-only: never loaded by
 # the client or the TOC, and .pkgmeta-ignored (layout-§1, "Where an authored generator lives").
 # Python 3, standard library only.

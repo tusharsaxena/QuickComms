@@ -8,8 +8,7 @@ local _, NS = ...
 -- SEEDING (2026-10-18-builtins-as-groups-design.md, goal 1): the shipped sets (NS.BuiltIns) are
 -- seed data. Each profile is given them once as ordinary user groups and callouts under fresh ids,
 -- a battleground's nodes as groups inside its set; each seeded member keeps the shipped id it came
--- from (`origin`), and a node its compass wind (`compass`). Neither is a tag or a lock: only Library
--- reads `origin` (what Restore puts back).
+-- from (`origin`). It is not a tag or a lock: only Library reads it (what Restore puts back).
 -- ONE OWNER (2026-10-17-callouts-owned-by-groups-design.md): each user callout id sits in exactly
 -- one user group's list. Adding a callout to a group adds a copy, removing one deletes it, and a
 -- deleted group takes its callouts with it.
@@ -742,7 +741,7 @@ local function seedGroup(p, gid, parent, hidden)
     p.groups[id] = { name = def.name, icon = def.icon, iconColor = def.iconColor, callouts = callouts,
         when = copyTable(def.when) or {},
         enabled = true, parent = parent,
-        inheritWhen = true, compass = def.compass, origin = gid }
+        inheritWhen = true, origin = gid }
     p.seededSets[gid] = true
     return id
 end

@@ -5,9 +5,9 @@ local _, NS = ...
 -- THE RINGS. A dial plan's groups, in the dial's order, become a list of rings, each one page of at
 -- most `size` items: a callout (kind "send", its baked slot) or a ring to open (kind "ring", the index
 -- of its target). Categories (D2): the first ring holds the groups; a group's ring holds its callouts;
--- a group with children (a battleground node set, a user parent) holds its own callouts first, then
--- its nodes (a pinned node set: its own callouts as one more wedge), and each node's ring its
--- callouts. Flat: the first ring holds every callout, highest group first, a parent's own before its
+-- a group with children (a battleground node set, a user parent) holds its own callouts as one wedge
+-- first, titled and drawn as the group, then its nodes (Children's order, A-Z), and each node's ring
+-- its callouts. Flat: the first ring holds every callout, highest group first, a parent's own before its
 -- nodes'. A ring with more items than wedges is paged (dial rework, 2026-10-21): plain pages of
 -- `size`, turned by the arrows under the dial (and the wheel and the arrow keys), never a wedge of
 -- their own; every page has the first page's parent, so the hub goes up a ring from any page. A dial
@@ -31,12 +31,9 @@ local _, NS = ...
 --
 -- THE GEOMETRY. Wedges sit clockwise from the ring's `start` (N), on-axis first. Offsets are from
 -- the hub's center, y up; the radius is the dial's (`dial.radius`, Geometry), and the disc leaves RIM
--- between a wedge's edge and its own. A node set's nodes are pinned to their compass winds (spec
--- §12.1): its ring takes eight wedges, whatever the dial's slices, and is never paged; each node sits
--- on its own wind (PinNodes), a middle node on the first wind left free clockwise from N, a free node
--- (one with no fixed place on the map: Our base, a flag map's carrier) on the first wind left after
--- those, and a wind with no node has no wedge. An item carries `wedge`, its place among the ring's
--- `size` (an unpinned one's from PageShape). The number keys pick the shown wedges in that order. A paged ring's arrows and page dots sit in one row under the disc (Nav).
+-- between a wedge's edge and its own. A node set's ring is placed like any other (owner, 2026-10-25:
+-- until then its nodes were pinned to their compass winds on eight wedges, the unused ones drawn
+-- empty). An item carries `wedge`, its place among the ring's `size` (PageShape). The number keys pick the shown wedges in that order. A paged ring's arrows and page dots sit in one row under the disc (Nav).
 
 NS.DialLayout = NS.DialLayout or {}
 local DL = NS.DialLayout
@@ -55,18 +52,12 @@ DL.KEYS    = 8                                 -- the number keys 1-8 pick wedge
 DL.AUTO    = 0                                 -- slices: one wedge per item, spread evenly
 DL.MAX_SLICES = 12
 DL.ARROW   = 24                                -- a page arrow, square, by default (the Paging tab)
-DL.START   = 0                                 -- an unpinned page's place 1: N
+DL.START   = 0                                 -- a page's place 1: N
 DL.FIT_MARGIN = 4                              -- Auto leaves each icon this much more arc (AutoCap)
 
 local SLICE_OK = { [DL.AUTO] = true, [4] = true, [6] = true, [8] = true, [12] = true }
 local WINDS = { "N", "NE", "E", "SE", "S", "SW", "W", "NW" }
 
---- The eight winds' wedges on a pinned ring; a node in the middle of the map has DL.MIDDLE.
-DL.WIND_INDEX = { N = 1, NE = 2, E = 3, SE = 4, S = 5, SW = 6, W = 7, NW = 8 }
-DL.MIDDLE = "middle"
---- A node with no fixed place on the map (bg subgroups): it takes a wind left over by every node with a
---- wind and every middle one, so a set's own wedge keeps its place when such nodes are added.
-DL.FREE = "free"
 
 local function round(x) return math.floor(x * 100 + 0.5) / 100 end
 
@@ -336,79 +327,30 @@ end
 
 -- `src`: the group (or node) the ring is, for its title, icon and icon color, and its id (else its
 -- title) for the ring's key.
-local function ringEntry(src, entries, pinned)
+local function ringEntry(src, entries)
     return { kind = "ring", title = src.title, icon = src.icon, iconColor = src.iconColor,
-        sub = { title = src.title, entries = entries, pinned = pinned, key = tostring(src.id or src.title) } }
+        sub = { title = src.title, entries = entries, key = tostring(src.id or src.title) } }
 end
 
---- A node set's nodes on their compass winds (spec §12.1): each entry's `wind` (N, NE … NW, or
---- DL.MIDDLE or DL.FREE) names its wedge on an eight-wedge ring; a middle node takes the first wind
---- left free, clockwise from N, and a free node the first left after every middle one. Answers the entries, each given its `wedge`, in wedge order; nil when they cannot
---- all be pinned (a node with no wind or an unknown one, two on one wind, none, or more than eight).
---- @return table[]|nil
-function DL.PinNodes(entries)
-    if type(entries) ~= "table" or #entries == 0 or #entries > 8 then return nil end
-    local taken, middle, loose = {}, {}, {}
-    for _, e in ipairs(entries) do
-        local w = DL.WIND_INDEX[e.wind]
-        if w and taken[w] then return nil end
-        if w then
-            taken[w] = e
-        elseif e.wind == DL.MIDDLE then
-            middle[#middle + 1] = e
-        elseif e.wind == DL.FREE then
-            loose[#loose + 1] = e
-        else
-            return nil
-        end
-    end
-    local free = 1
-    for _, list in ipairs({ middle, loose }) do
-        for _, e in ipairs(list) do
-            while taken[free] do free = free + 1 end
-            taken[free] = e
-        end
-    end
-    local out = {}
-    for w = 1, 8 do
-        if taken[w] then
-            taken[w].wedge = w
-            out[#out + 1] = taken[w]
-        end
-    end
-    return out
-end
-
--- A group's entry on the first ring (Categories), or nil when nothing under it can be shown. A node
--- set's nodes are pinned to their winds when every one of them has one; its own callouts (a
--- battleground's map-wide ones, groups polish) then take one wedge of their own, titled and drawn as
--- the set, on the first wind left free (as a middle node does). Otherwise a parent's own callouts come
--- first, then its nodes, on a ring of the dial's slices.
+-- A group's entry on the first ring (Categories), or nil when nothing under it can be shown. A group
+-- with children shown holds its own callouts (a battleground's map-wide ones, groups polish) as one
+-- wedge of their own, titled and drawn as the group, first; then its nodes, on a ring of the dial's
+-- slices, paged past them. With no child shown it is a plain group.
 local function groupEntry(g)
     if type(g.children) == "table" then
         local nodes = {}
         for _, c in ipairs(g.children) do
-            if #(c.slots or {}) > 0 then
-                local node = ringEntry(c, sendEntries(c.slots))
-                node.wind = c.compass
-                nodes[#nodes + 1] = node
-            end
+            if #(c.slots or {}) > 0 then nodes[#nodes + 1] = ringEntry(c, sendEntries(c.slots)) end
         end
         local own = sendEntries(g.slots)
-        local wedges = { unpack(nodes) }
-        if #own > 0 then
-            local general = ringEntry(g, own)
-            general.wind = DL.MIDDLE
-            wedges[#wedges + 1] = general
-        end
-        local pinned = #nodes > 0 and DL.PinNodes(wedges)
-        if pinned then return ringEntry(g, pinned, true) end
-        if #own > 0 then
-            for _, node in ipairs(nodes) do own[#own + 1] = node end
+        if #nodes == 0 then
+            if #own == 0 then return nil end
             return ringEntry(g, own)
         end
-        if #nodes == 0 then return nil end
-        return ringEntry(g, nodes)
+        local wedges = {}
+        if #own > 0 then wedges[1] = ringEntry(g, own) end
+        for _, node in ipairs(nodes) do wedges[#wedges + 1] = node end
+        return ringEntry(g, wedges)
     end
     if #(g.slots or {}) == 0 then return nil end
     return ringEntry(g, sendEntries(g.slots))
@@ -444,11 +386,9 @@ function DL.Rings(groups, opts)
     local cap = fit and DL.AutoCap(fit.radius, fit.iconOffset, fit.iconSize, fit.gap, fit.hub)
     local rings = {}
 
-    -- A ring's pages: a pinned ring (a node set's, PinNodes) is one page of eight wedges from N; any
-    -- other is paged at the dial's page size (PageSize), each page shaped by PageShape, its items
-    -- given their places.
-    local function pagesOf(entries, pinned)
-        if pinned then return { { items = entries, size = 8, start = 0 } } end
+    -- A ring's pages: paged at the dial's page size (PageSize), each page shaped by PageShape, its
+    -- items given their places.
+    local function pagesOf(entries)
         local hasChildren = false
         for _, e in ipairs(entries) do
             if e.kind == "ring" then hasChildren = true end
@@ -465,8 +405,8 @@ function DL.Rings(groups, opts)
 
     -- Add `entries` as one ring (and its pages) under `parent`, keyed `key`; then each ring entry's
     -- own ring. Returns the index of the first page.
-    local function addRing(title, entries, parent, pinned, key)
-        local pages = pagesOf(entries, pinned)
+    local function addRing(title, entries, parent, key)
+        local pages = pagesOf(entries)
         local first = #rings + 1
         for p, page in ipairs(pages) do
             local idx = #rings + 1
@@ -477,8 +417,7 @@ function DL.Rings(groups, opts)
         for r = first, first + #pages - 1 do
             for _, item in ipairs(rings[r].items) do
                 if item.sub then
-                    item.target = addRing(item.sub.title, item.sub.entries, r, item.sub.pinned,
-                        key .. "/" .. item.sub.key)
+                    item.target = addRing(item.sub.title, item.sub.entries, r, key .. "/" .. item.sub.key)
                     item.sub = nil
                 end
             end
@@ -490,7 +429,7 @@ function DL.Rings(groups, opts)
     if opts.mode == "flat" then
         local entries = flatEntries(groups)
         if #entries == 0 then return rings, 0 end
-        addRing(title, entries, 0, nil, "root")
+        addRing(title, entries, 0, "root")
         return rings, 1
     end
     local entries = {}
@@ -498,7 +437,7 @@ function DL.Rings(groups, opts)
         entries[#entries + 1] = groupEntry(g)
     end
     if #entries == 0 then return rings, 0 end
-    addRing(title, entries, 0, nil, "root")
+    addRing(title, entries, 0, "root")
     -- Owner ruling R2: a single group opens straight on its ring; several open on the ring of groups.
     if #entries == 1 then return rings, entries[1].target end
     return rings, 1

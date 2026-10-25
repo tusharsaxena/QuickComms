@@ -181,7 +181,7 @@ end)
 test("library: a node shipped after its set was seeded goes inside the set's group", function()
     local NS, Lib, p = boot()
     local ab = T.seeded(NS, "bi.bg.ab")
-    NS.BuiltIns.Group("bi.bg.ab.new", { name = "New node", parent = "bi.bg.ab", compass = "N",
+    NS.BuiltIns.Group("bi.bg.ab.new", { name = "New node", parent = "bi.bg.ab",
         callouts = NS.BuiltIns.Callouts("bi.bg.ab.new", "smartGroup", { { "inc1", "INC 1", "INC 1 New" } }) })
     table.insert(NS.BuiltIns.groups["bi.bg.ab"].children, "bi.bg.ab.new")
     Lib.Prepare()
@@ -197,7 +197,7 @@ test("library: [review] a set whose stored parent dangles still takes a node shi
     local NS, Lib, p = boot()
     local ab = T.seeded(NS, "bi.bg.ab")
     p.groups[ab].parent = "g999"
-    NS.BuiltIns.Group("bi.bg.ab.new", { name = "New node", parent = "bi.bg.ab", compass = "N",
+    NS.BuiltIns.Group("bi.bg.ab.new", { name = "New node", parent = "bi.bg.ab",
         callouts = NS.BuiltIns.Callouts("bi.bg.ab.new", "smartGroup", { { "inc1", "INC 1", "INC 1 New" } }) })
     table.insert(NS.BuiltIns.groups["bi.bg.ab"].children, "bi.bg.ab.new")
     Lib.Prepare()

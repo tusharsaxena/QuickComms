@@ -126,7 +126,6 @@ test("database: step 3 turns the built-in overlay into seeded groups, each in it
     assertEqual(p.groups.g4.name, "Raid (custom)", "the copy is kept as it was")
     local _, stables = originOf(p, "bi.bg.ab.stables")
     assertEqual(stables.parent, ab, "a node sits inside its set")
-    assertEqual(stables.compass, "NW")
     assertTrue(p.nextId > 6 and p.callouts.c3.name == "Bloodlust", "fresh ids: nothing stored is overwritten")
 end)
 
@@ -398,7 +397,7 @@ local function preSubgroupsProfile(BI)
     p.groups.g3 = { name = "Warsong Gulch", origin = "bi.bg.wsg", openInto = false, enabled = true, when = {},
         callouts = { callout("c3", "bi.bg.wsg.efcmid") } }
     for i, child in ipairs(BI.groups["bi.bg.ioc"].children) do
-        if BI.groups[child].compass ~= "free" then
+        if child ~= "bi.bg.ioc.base" and child ~= "bi.bg.ioc.enemybase" then
             seeded[child] = true
             p.groups["g" .. (10 + i)] = { name = BI.groups[child].name, origin = child, parent = "g2", callouts = {},
                 when = {}, enabled = true }

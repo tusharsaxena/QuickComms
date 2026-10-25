@@ -38,7 +38,7 @@ WoW's menu shows on the button as `<key> +1`, named in its tooltip). A key set i
 shared by all your characters unless you tick Character Specific Keybindings in WoW's Keybindings.
 Press it: with one group active the dial opens straight on that group's callouts; with several it
 shows the groups first, so click one, then click a callout to send it. In a battleground the map's
-set shows its nodes, each where it sits on the map. A ring with more callouts than wedges is paged:
+set shows its map-wide callouts as one slice, then its nodes A to Z, one slice each. A ring with more callouts than wedges is paged:
 the arrows under the dial (or the Left and Right arrow keys, or the mouse wheel) turn the pages, and
 a gold pill under the dial marks the page you are on. Alterac Valley lists its objectives A to Z that way; its
 pad sets them two to a row. A right click on a slice goes back up one ring (on the first ring it does

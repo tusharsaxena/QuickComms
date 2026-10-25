@@ -35,7 +35,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | ICON-1..4 | Icons | Choosing an icon, for a callout and for a group; the LibKa0s v1.75.0 re-vendor: the icon browser's three sets and the library-drawn marks; the popup and the browser over the preview dial |
 | ART-1 | Art | The dial's round art: the hub's styles, the dots and pill, the indicator background, the borders and the arrow plates |
 | SHINE-1..3 | Shine | The shine overlay: each look on a pad and on a dial, and a pad and a dial keeping their own |
-| BG-1..8 | Battlegrounds | Node winds on the dial; the battleground instance ids; the objective groups (Alterac Valley, Isle of Conquest's bases, a flag map) and their migration; the four node buttons; Silvershard Mines' and Temple of Kotmogu's groups |
+| BG-1..8 | Battlegrounds | Node rings on the dial, one slice per node; the battleground instance ids; the objective groups (Alterac Valley, Isle of Conquest's bases, a flag map) and their migration; the four node buttons; Silvershard Mines' and Temple of Kotmogu's groups |
 | IDS-1 | Instance ids | The Midnight dungeons and raids |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes |
 
@@ -786,14 +786,14 @@ your own and M+ in a key): press G → the first ring shows the groups; click on
 a callout → it is sent. Open again, click a group, click the hub → back to the groups; click the hub
 again → the dial closes. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
-**DIAL-4. The Arathi Basin node dial (the phase 4 exit; pinned in phase 5; three rings since the dial
-rework).** In Arathi Basin, with Wedges per ring at 4: press G → the ring of groups (Arathi Basin,
-Battleground, In Group); click Arathi Basin → all five nodes on one ring, no page arrows,
-each on its compass wind (Blacksmith N, Gold Mine NE, Farm SE, Lumber Mill SW, Stables NW), with an
-Arathi Basin wedge (the gold wheat sheaf) on E, the first wind left free, that opens the map-wide
-callouts (groups polish); click Lumber Mill, then INC → instance chat shows "INC Lumber Mill". Open
-again, open Arathi Basin and press 5 → Lumber Mill's ring opens (the number keys count the shown
-wedges clockwise from N). (If the dial does not show Arathi Basin at all, the instance id may be
+**DIAL-4. The Arathi Basin node dial (the phase 4 exit; three rings since the dial rework; unpinned
+2026-10-25).** In Arathi Basin, with Slices per ring on Auto: press G → the ring of groups (Arathi
+Basin, Battleground, In Group); click Arathi Basin → six slices and no empty one, no page arrows: the
+Arathi Basin wedge (the gold wheat sheaf) at N, which opens the map-wide callouts (groups polish), then
+clockwise Blacksmith, Farm, Gold Mine, Lumber Mill, Stables; click Lumber Mill, then INC → instance
+chat shows "INC Lumber Mill". Open again, open Arathi Basin and press 5 → Lumber Mill's ring opens
+(the number keys count the shown wedges clockwise from N). With Slices per ring at 4 → two pages, the
+first four, then Lumber Mill and Stables. (If the dial does not show Arathi Basin at all, the instance id may be
 wrong: run `/qc diagnostics`, copy the `situation` section's instanceID into the "Battleground
 instance IDs seen" table of `docs/brainstorm/go-no-go/round-4-build-checks.md`, and file it with
 this check's ID; BG-2 confirms the ids.) Result: 2026-10-21, pass (the owner's run; client build not recorded).
@@ -957,8 +957,7 @@ of your own holding 1, then 2, 3 and 4 callouts (Preview as wherever it is activ
 the three other quarters drawn empty; 2 → W and E; 3 → W, N and E, S empty; 4 → W, N, E and S. An
 empty quarter never lights and a click on it sends nothing. Wedges per ring 8 with 2 callouts → the
 two at W and NW (clockwise from W), six empty slices. Wedges per ring 6 → the first slice centered on
-W. The Preview tab lists wedge 1 as W, and the number keys 1–8 still follow the callouts' order. A
-battleground node ring (Arathi Basin) keeps its compass winds (DIAL-4). Result: 2026-10-21, pass (the owner's run; client build not recorded).
+W. The Preview tab lists wedge 1 as W, and the number keys 1–8 still follow the callouts' order. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 **DIAL-28. A slice clicks all the way to the hub, in combat (dial polish, 2026-10-21; owed: the
 restricted `GetMousePosition`, C7).** On a four-wedge ring at radius 100, put the cursor just outside
@@ -1062,8 +1061,7 @@ not change where the key opens it. In combat → the same. Result: 2026-10-23, p
 with one callout → the whole disc, its icon at the top; two → top and bottom halves; three → thirds,
 the first at the top; four → N, E, S, W; eight → N first, clockwise. Wedges per ring 4 with two
 callouts → N and S, E and W empty; with three → N, E and S. Wedges per ring 12 → the Preview tab lists
-wedge 1 at 12 o'clock. The number keys still follow the callouts' order. A battleground node ring keeps
-its compass winds. Label offset 0 → each label sits a little clear of the disc's edge (4 pixels, 2
+wedge 1 at 12 o'clock. The number keys still follow the callouts' order. Label offset 0 → each label sits a little clear of the disc's edge (4 pixels, 2
 before). Clicks, hover and right-click land on the slice under the cursor, in combat too.
 Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
@@ -1424,15 +1422,13 @@ pad keeps Glass orb and the dial shows no shine. Result: 2026-10-21, pass (the o
 
 ## Battlegrounds
 
-**BG-1. Node winds.** In each node battleground you play (Arathi Basin, Eye of the Storm, Battle for
-Gilneas, Deepwind Gorge, Isle of Conquest, Wintergrasp: the Fortress at the top, Broken Temple top
-left, Sunken Ring top right, Westspark bottom left, Eastspark bottom right, the Towers at the bottom),
-open the dial and click the battleground's set on the ring of groups → the nodes sit where they are on the map,
-north up (Arathi Basin: Stables top left, Gold Mine top right, Farm bottom right, Lumber Mill bottom
-left, Blacksmith, the middle node, at the top), and Deepwind Gorge shows five nodes (owner ruling R2).
-One more wedge, drawn as the battleground itself, sits on the first wind no node takes and opens its
-map-wide callouts; the nodes stay pinned around it.
-Lumber Mill, then INC is two clicks from the set's ring. A node that points the wrong way is filed with this
+**BG-1. Node rings (rewritten 2026-10-25: no compass pinning).** In each node battleground you play
+(Arathi Basin, Eye of the Storm, Battle for Gilneas, Deepwind Gorge, Isle of Conquest, Wintergrasp,
+Ashran), with Slices per ring on Auto, open the dial and click the battleground's set on the ring of
+groups → one slice per entry and no empty slice: a wedge drawn as the battleground itself at N (it
+opens its map-wide callouts), then the nodes A–Z clockwise (Arathi Basin six slices, Battle for
+Gilneas four, Ashran six), and Deepwind Gorge shows five nodes (owner ruling R2). Lumber Mill, then
+INC is two clicks from the set's ring. An empty slice, or a node out of A–Z order, is filed with this
 check's ID and its battleground. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 **BG-2. Battleground instance ids.** In each battleground you play: `/qc diagnostics` → the
@@ -1457,16 +1453,14 @@ holds Attack and Defend. Result: 2026-10-21, pass (the owner's run; client build
 by side after Refinery, each with Attack, Defend, INC and Clear; Our base's lines read "Fight at our
 base", "Defend our base", "INC our base", "Our base is clear", Enemy base's "Attack the enemy base",
 "Hold the enemy base", "INC at the enemy base", "The enemy base is clear", the same for either
-faction. On the dial the five nodes stay on their winds, the Isle of Conquest wedge stays
-where it was (NE), and Our base and Enemy base take two of the winds left over. Result: 2026-10-21, pass (the owner's run; client build not recorded).
+faction. On the dial the set's ring has the Isle of Conquest wedge at N, then its seven groups A–Z,
+Our base and Enemy base among them. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 **BG-5. A flag map.** In Warsong Gulch or Twin Peaks: the pad shows the set's map-wide EFC callouts,
 then Our flag, Enemy flag, Our FC and Midfield (Bridge in Twin Peaks), each its own section; on the
-dial (click the set on the ring of groups) the set's ring has its own wedge on N and the four groups on the winds after it. Send
-"INC flag room" → `INC our flag room`; "We have it" → `We have their flag`. The four groups take the
-winds after the set's own wedge in the order they ship, not where they are on the map: which wind
-Our flag or Enemy flag lands on is that order, not geography. The same holds for Ashran, Deephaul Ravine, Seething
-Shore and Isle of Conquest's two bases. Result: 2026-10-21, pass (the owner's run; client build not recorded).
+dial (click the set on the ring of groups) the set's ring has its own wedge on N and the four groups
+after it, A–Z, five slices in all. Send "INC flag room" → `INC our flag room`; "We have it" → `We have
+their flag`. The same holds for Ashran, Deephaul Ravine and Seething Shore. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 **BG-6. A profile from before the objective groups.** On a profile saved before this build (or a
 copy of one): log in → `/qc diagnostics` shows schema 7; Alterac Valley's set holds its 19 objectives
@@ -1490,7 +1484,7 @@ with this check's ID. In Temple of Kotmogu: after Orb heals, Kill orb and Go mid
 orb, Blue orb, Green orb and Purple orb, each drawn in its color (Take orb, Peel, Kill carrier, Heals:
 "Take the blue orb", "Peel for our blue orb carrier", "Kill their blue orb carrier <target>", "Our
 blue orb carrier needs heals") and Center (Go center, Hold center, INC, Clear). On the dial both open
-on the set's ring, the groups on the winds left after the set's own wedge, in the order they ship.
+on the set's ring, the groups A–Z after the set's own wedge, one slice each.
 Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 ## Instance ids
