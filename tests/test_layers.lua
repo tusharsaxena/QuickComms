@@ -36,7 +36,7 @@ test("layers: NS.Constants.LAYERS names every strata and level once (frame-layer
     assertEqual(S.HUD, "MEDIUM", "the Comms Pads")
     assertEqual(S.HUD_POPUP, "DIALOG", "the Comms Dial: the secure fixed point")
     assertEqual(S.DIAL_SCREEN, "HIGH", "the dial's screen catcher, one under it")
-    assertEqual(S.WINDOW, "FULLSCREEN", "the preview and Share windows, over the dial")
+    assertEqual(S.WINDOW, "FULLSCREEN", "the preview window, over the dial")
     assertEqual(S.MODAL, "FULLSCREEN", "the popup and the icon browser")
     assertEqual(S.POPUP, "FULLSCREEN_DIALOG", "the lifted confirms and the icon link window")
     -- the modal aliases read the table, so their two callers keep working
@@ -227,13 +227,9 @@ test("layers: the modal bands sit over UIParent, each part at its named offset",
     assertTrue(lv(over.catcher) > lv(w.chrome.close), "a modal over a modal clears the first's band")
 end)
 
-test("layers: [QUI-Z06] the Share window keeps the window tier; the icon link window is lifted to POPUP", function()
+test("layers: [QUI-Z06] the icon link window is lifted to POPUP", function()
     local NS, m = layered()
     local LAYERS = NS.Constants.LAYERS
-    local share = NS.Share.Window()
-    assertTrue(share ~= nil)
-    share:Show("x")
-    assertEqual(m.__layers(m.__named.QuickCommsShareWindow).strata, LAYERS.STRATA.WINDOW, "the library's FULLSCREEN")
     local link = NS.addon.Settings.IconBrowser.LinkWindow()
     assertTrue(link ~= nil)
     assertEqual(m.__layers(link:GetFrame()).strata, LAYERS.STRATA.POPUP, "over the browser's band")

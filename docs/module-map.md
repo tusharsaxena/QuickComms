@@ -1,11 +1,11 @@
 # Module map — Ka0s Quick Comms
 
 Every non-vendored file, its responsibility, and the TOC load order. `libs/` (Ace3, LibSharedMedia,
-LibDataBroker, LibDBIcon, LibDeflate, LibSerialize, LibCustomGlow-1.0, LibKa0s v1.77.0 (media/icons held to CLAUDE.md's `LibKa0s icons:` line, all)) and `tests/_kit/` are vendored and never edited.
+LibDataBroker, LibDBIcon, LibCustomGlow-1.0, LibKa0s v1.77.0 (media/icons held to CLAUDE.md's `LibKa0s icons:` line, all)) and `tests/_kit/` are vendored and never edited.
 
 ## Load order (the TOC)
 
-The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after LibKa0s; `modules/Share.lua` takes both at load. `libs\LibCustomGlow-1.0\LibCustomGlow-1.0.xml` loads before LibKa0s; LibKa0s-Glow-1.0 (`core/GlowSetup.lua`, `NS.GlowLib`) resolves it at call time, for `modules/Glow.lua`.
+`libs\LibCustomGlow-1.0\LibCustomGlow-1.0.xml` loads before LibKa0s; LibKa0s-Glow-1.0 (`core/GlowSetup.lua`, `NS.GlowLib`) resolves it at call time, for `modules/Glow.lua`.
 
 | # | File | Kind | Responsibility |
 |---|---|---|---|
@@ -19,7 +19,7 @@ The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after Li
 | 6 | `core/State.lua` | state | session-only state (`NS.State`): the debug flag; the modules add their own fields (test mode, plans, the queue, the echo, the pad's tab and collapse) |
 | 7 | `core/EnvSetup.lua` | setup | LibKa0s-Env: `NS.Meta`, `NS.Version` |
 | 8 | `core/PoolSetup.lua` | setup | LibKa0s-Pool: `NS.Pool` (one array pool per pad for its buttons; per dial, its ring containers and each container's wedges) |
-| 8a | `core/WidgetsSetup.lua` | setup | LibKa0s-Widgets: the drag-strip seam, `NS.MakeDragHandle`, and the export window, `NS.MakeCopyWindow` |
+| 8a | `core/WidgetsSetup.lua` | setup | LibKa0s-Widgets: the drag-strip seam, `NS.MakeDragHandle`, and the copy window, `NS.MakeCopyWindow` (the icon browser's Wowhead link) |
 | 8b | `core/GlowSetup.lua` | setup | LibKa0s-Glow: `NS.GlowLib`, the glow driver seam |
 | 9 | `core/Bus.lua` | setup | LibKa0s-Bus: `NS.MSG` (the strict catalog) and `NS.Bus` (tracked receivers) |
 | 10 | `core/LifecycleSetup.lua` | setup | LibKa0s-Lifecycle: the stand-down latch, `NS.IsStoodDown`, `NS.StoodDownRefusal` (the by-hold refusal line) |
@@ -43,7 +43,6 @@ The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after Li
 | 16h | `modules/Resolver.lua` | pure | When rules to active groups; `WhenOf` (a child that inherits is judged by its parent's When); `ID_ROWS` (the place rows: instances, battleground, arena) |
 | 16i | `modules/Library.lua` | registry writer | the one writer of the structural registry; `Prepare`; `SetSurfacePoint`; `SetIcon` (a member's icon and its glyph color, one act); the glyph helpers (`IsGlyph`, `ValidIconColor`, `IconTint`, `IconColorFrom`); seeding the shipped sets as ordinary groups and `RestoreBuiltins`; nesting (`ValidParent`, `SettleParent`, `Children`, `IsChild`); `MoveGenericBattlegroundLast` (migration step 2), `SeedFromOverlay` (migration step 3) and `SeedNewNodes` (the node half of Prepare's seeding, which migration step 7 runs on every stored profile) |
 | 16i1 | `modules/Library_Migrate.lua` | registry writer | the registry writer's schemaVersion steps, beside Library (at its line budget): `MigrateGrowth` (migration step 4), `MigrateBuiltins` (step 5), `MigrateBuiltinsPolish` (step 6), `MigrateBattlegroundNodes` (step 7), `MigrateDialFields` (step 8: groups drop the retired `openInto` and `dialYield`) |
-| 16i2 | `modules/Share.lua` | pure + edge | the share string: codec, checks, report; Collect, Export, Apply |
 | 16j | `modules/SendEngine_Guard.lua` | pure | `NS.SendGuard`: the soft guard's timing, the acting click edge, the echo tracker (with `IsGeneralEcho`, the channel-index test), the keyed queue |
 | 16k | `modules/SendEngine.lua` | secure writer | the only secure writer: send buttons, arm and disarm, the combat-end queue, the click hook, the `PreClick` re-bake of a `{coordinates}` button out of combat and its once-per-combat-edge re-arm (`RefreshRebakes`, QF-03), the echo events, the held stand-down; the dial headers and rings, each ring's catcher and each header's screen catcher (`NewDialCatcher`, `NewDialScreen`, dial polish 2026-10-21), the wedge wrap, frame refs and snippet runs (a dial's key is WoW's own binding, set in `modules/Dial.lua`) |
 | 16l | `modules/Preview.lua` | session state | test mode and "Preview as…" (Current a live preview of where you are, Off the off value): refused in combat, ended at the combat edge, never by the settings window closing; `TEST_MODE_CHANGED`, and `PreviewWindow.Sync` from its announce and stand-down; the edit preview's situation (`EditPresetKey`, `EditSnapshot`, QF-07; the window over it locked and re-filled on a library write); the click preview (QC-07: `SlotEcho`, `TestEcho`, `FillEcho`, `MOCK`) |
@@ -79,7 +78,6 @@ The TOC loads `libs\LibDeflate\lib.xml` and `libs\LibSerialize\lib.xml` after Li
 | 21d | `settings/Groups.lua` | settings | the Groups page, the same for every group, a seeded built-in set among them (General: the icon chooser, Parent group, Restore built-in groups; Callouts: Add callout, Reuse callout, the glyph list; When: Inherit when conditions, then settings/Groups_When.lua; What it sends as a table) |
 | 21e | `settings/Pads.lua` | settings | the Pad page (Comms Pad until the dial polish, 2026-10-21) |
 | 21e2 | `settings/Dials.lua` | settings | the Dial page (General, Groups, Layout, Slices, Hub, Paging, Labels, Icons, Ring map) |
-| 21f | `settings/Share.lua` | settings | the Share page (Export, Import) |
 | 21g | `settings/SlashVerbs.lua` | verbs | `NS.SlashVerbs`: the verb bodies (`check`, `SetLocked` for `lock` / `unlock`, `TogglePads` and `PadsShown` for `toggle`, the hidden state saved per character in `db.char.padsHidden`, `preview`, `why`); the Toggle Comms Pads binding's hidden `QuickCommsTogglePads` button and label, the `BINDING_HEADER_QUICKCOMMS` category global, and `NS.BINDINGS` (Bindings.xml in order: Toggle Comms Pads, then Open Comms Dial 1-4) |
 | 22 | `settings/Slash.lua` | setup | `NS.COMMANDS` and the LibKa0s-Slash descriptor |
 | 23 | `settings/Profiles.lua` | settings | the Profiles page (AceDBOptions) |
@@ -143,8 +141,6 @@ files they add are listed in design spec §4.2.
 | `tests/test_keybinds.lua` | the key bindings (item 015): `NS.BINDINGS`' order and labels, the General page's strip ending in Keybindings, the tab's rows, a key bound through the tab (`Kit.keybindThroughTab`) and one set in WoW's menu showing on it after `UPDATE_BINDINGS`, and the combat refusal |
 | `tests/test_dial_shine.lua` | the dial's slice shine (`Dial_Slices`): each look's recipe on every slice (its mask, the sector; Bevel unmasked; the retired dots and upright outline never made), the overlay following its slice (gap 8, a fixed 4 holding two items), Glass orb's bead on the slice's inscribed circle and Fluid glass's blooms across its outer part, each in its frame at 4 and 8 slices, Frosted glass's streak and Bevel set per count, fewer slices hiding the rest, and the dial's look leaving the pad alone |
 | `tests/test_page_dials.lua` | the Dial page |
-| `tests/test_page_share.lua` | the Share page: the Export tab (ticks, what they bring, the string in the copy window) and the Import tab (Accept, the report, Import, the combat refusals), and Defaults |
-| `tests/test_share.lua` | `Share`: the codec, the checks, the sanitizer, the report (pure); a parent and its children travel together, and an import nests them under the new copy |
 | `tests/test_gameids.lua` | the shipped instance and arena ids (`GameIds.lua`, `GameIds_Instances.lua`) against an extraction of the client's Map tables |
 | `tests/page_helpers.lua` | a helper, not a suite: drives an editor page through the kit's AceGUI recorder |
 | `tests/dial_pick.lua` | a helper, not a suite: a mouse pick on an open dial (the cursor on the slice that holds a wedge, then a click on its ring's catcher), for the suites that click one (QF-01, QF-02) |

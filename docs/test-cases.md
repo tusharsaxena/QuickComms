@@ -79,7 +79,7 @@ Total.
 - glow: modules/Glow.lua names no LibCustomGlow-1.0 member; the driver is the one mapping
 - glow: with LibKa0s absent the seam answers false and the button still records its style
 
-### test_setup.lua (27)
+### test_setup.lua (26)
 
 - core: NS.Print is NS.Util.print after AceConsole's embed (architecture-§2)
 - core: the printer tags every line with the cyan [QC] prefix
@@ -104,7 +104,6 @@ Total.
 - options: the category registers eagerly, with the General page under it
 - options: the General page's first group is exactly `Master controls`
 - options: the degraded load completes, and the panel says once that it is unavailable
-- libs: [phase 5] LibDeflate and LibSerialize are vendored, TOC-listed and loaded before the addon
 - perf: [phase 5] a refresh notes situationRefresh, and each plan resolverResolve inside bakeSurface
 - perf: [review] a refresh whose signature moves notes situationRefresh before the rebuild it publishes
 - perf: [phase 5] the Comms Dial page's Preview notes neither bakeSurface nor resolverResolve
@@ -316,7 +315,7 @@ Total.
 - channels: [QF-04] general resolves to General when channel 1 is joined, else to Say
 - channels: [QF-04] general's prefix, chat type, color type and locks are Say's
 - channels: [QF-04] a general callout bakes /1 with channel 1 joined and /s without
-- channels: [QF-04] the channel row offers General with its label; Share and the seam accept it
+- channels: [QF-04] the channel row offers General with its label; the seam accepts it
 - channels: [QF-04] a Groups row names General in channel 1's color
 
 ### test_bake.lua (12)
@@ -333,46 +332,6 @@ Total.
 - bake: baked token values are sanitized; spell links are not
 - bake: a typed %t counts as live
 - bake: [phase 5] CleanText is the sanitizer short of the escape; Sanitize is CleanText, then the escape
-
-### test_share.lua (37)
-
-- share: a string is !QC1! then printable text, and decodes back to the same payload
-- share: [review 1] a pasted string may wrap and carry spaces; a cut-short one is damaged and imports nothing
-- share: a string that is not ours, is empty, is garbage after the prefix or is too large is refused
-- share: a newer version is refused with a line to update; a damaged version is refused
-- share: [review 2] a command or control characters never survive: / is refused, lines are flattened
-- share: ids, channels, names, icons and Whens are checked against the schema
-- share: a pad keeps the shared groups, and only the fields that travel; a shipped id is a dropped reference
-- share: the report counts what arrives, then names each member left out and why
-- share: more members than one string may carry is refused before any is checked
-- share: [review 1] a hand-made string with a NaN reference, a cyclic field or an infinite icon raises nothing
-- share: [review 1] a payload that still raises inside the checks is damaged, never an error
-- share: [review 2] a surface's string fields pass the sanitizer; an empty string is kept for the seam to judge
-- share: SHARE-3's and SHARE-4's strings (docs/smoke-tests.md) read as the checks say
-- share: [review 1] a short string that inflates past MAX_RAW is damaged before it is read
-- share: [fix 1] a shared-reference When or field is refused at once, never expanded
-- share: [fix 1] one table shared across many fields is bounded by MAX_NODES: the string is too large
-- share: [fix 2] one long string referenced 2000 times in a field is refused unread, promptly
-- share: [fix 2] a long name, text or icon is refused unread, promptly
-- share: [fix 2] shared short strings past the payload's text budget make the string too large
-- share: [review] a refused member's malformed id never reaches the report raw: no newline, no live escape
-- share: [review] a 200 KB malformed id gives a short report line
-- share: [review] a name's live | escape is stored and reported as text (||), as a typed | is
-- share: [review] a name that starts with / is a name, never sent: it travels and round-trips
-- share: [review] a nested key in a When or a field passes the sanitizer and the byte budget
-- share import: groups sharing a callout each get their own copy
-- share import: the report counts a shared callout once per group, as the import makes it
-- share import: a callout in no imported group is not imported
-- share: Collect takes a callout only inside its group; a picked callout alone is nothing
-- share: [icons] a glyph's color travels; an old string arrives untinted; a bad color is dropped and counted
-- share: [icons] an export carries each member's color, and the string round-trips it
-- share: [nesting] a picked parent brings its children, and the import nests them under the new copy
-- share: [review] a child picked alone travels without its parent: nothing dropped, and it arrives top-level
-- share: [nesting] a parent the string does not carry, itself, or one inside another is dropped and counted
-- share: [review] a pad's or dial's reference to a group the string nests is dropped and counted
-- share: [inherit] a child's Inherit when conditions travels; an old string's child inherits
-- share: [B2] a pad shared before the growth split carries Upward, which lands as Right and up
-- share: [B9] a pad's and a dial's Icons rows travel; an old string brings none
 
 ### test_resolver.lua (13)
 
@@ -424,7 +383,7 @@ Total.
 - game ids: [instances] INSTANCES are dungeons and raids, cover the season's, and reach past it
 - game ids: [arena] ARENAS are arena maps, one per arena
 
-### test_library.lua (74)
+### test_library.lua (68)
 
 - library: Prepare seeds every shipped set as a group, on one pad and one dial, once
 - library: a seeded group is an ordinary group: its fields, When, callouts and origin
@@ -469,11 +428,6 @@ Total.
 - library: [final 1] one Restore click rebuilds the pads once
 - library: [final 2] ValidWhen refuses a value its row can never match, and names the row and value
 - library: [phase 4] the generic battleground set moves below the per-battleground sets, once
-- library: [phase 5] Import makes every member under a fresh id, its references pointing at the copies
-- library: [review 3] importing the same string twice makes two copies; nothing that existed changes
-- library: [review 4] an imported pad and dial arrive unbound: no key, the default place, no set added
-- library: [review] an imported Look keeps a bool a bool and a color its four channels
-- library: [phase 5] Import is one act: one LIBRARY_CHANGED; a refused result imports nothing
 - library: [phase 5] Prepare gives a pad saved before the Look groups every field it lacks
 - library: adding a user callout to a group adds a copy
 - library: removing a callout from its group deletes it
@@ -483,7 +437,6 @@ Total.
 - library: [icons] a new member keeps a glyph's color, drops it on any other icon, refuses a bad one
 - library: [icons] a copy keeps the color: AddToGroup, DuplicateGroup and a held callout's copy
 - library: [icons] Prepare drops a malformed stored color and keeps a good one
-- library: [icons] an import carries a glyph's color into the fresh copies
 - library: [icons] IconTint draws a glyph's color as r, g, b; no color, a bad one or no glyph is white
 - library: [nesting] a group takes a top-level group as its parent and leaves every surface
 - library: [nesting] one level only: self, a child, a parent with children, a stranger and a shipped id are refused
@@ -800,21 +753,6 @@ Total.
 - page dials: [polish] Icon offset is on the Icons tab, not Layout
 - page dials: [polish] the page is titled Dial
 - page dials: [shine] the Slices tab has a Shine heading
-
-### test_page_share.lua (12)
-
-- share page: two tabs, and a seeded set is ticked and exported as any group, its nodes with it
-- share page: Defaults unticks everything and forgets the checked string; nothing in the profile changes
-- share page: [phase 5] Export ticks a group; its callouts come along, and the string opens in the copy window
-- share page: Export lists groups, pads and dials, and no callouts; a ticked group brings its callouts
-- share page: [phase 5] Export with nothing ticked says so and opens nothing
-- share page: [phase 5] Import checks a pasted string, reports it, then adds it as new members
-- share page: [review] editing the box after Accept forgets the check: Import never adds the old string
-- share page: [phase 5] an imported dial says where its key comes from
-- share page: [phase 5] an imported group no shared pad or dial lists says where to add it
-- share page: [phase 5] export and import are refused in combat; nothing is made or added
-- share page: [phase 5] a profile switch forgets the ticks and the checked string
-- share page: [phase 5] the export window is the LibKa0s copy window, built once and named for the addon
 
 ### test_check.lua (6)
 
@@ -1306,7 +1244,7 @@ Total.
 - layers: [QUI-Z04] a wedge's ladder: icon border, its glow, then the overlay over both
 - layers: [QUI-Z10] the preview window is the window tier, never toplevel, never raised
 - layers: the modal bands sit over UIParent, each part at its named offset
-- layers: [QUI-Z06] the Share window keeps the window tier; the icon link window is lifted to POPUP
+- layers: [QUI-Z06] the icon link window is lifted to POPUP
 
 ### test_layout.lua (23)
 
@@ -1410,7 +1348,7 @@ Total.
 | test_mock_secure.lua | 28 |
 | test_bus.lua | 2 |
 | test_surface_parity.lua | 18 |
-| test_setup.lua | 27 |
+| test_setup.lua | 26 |
 | test_database.lua | 18 |
 | test_profile.lua | 9 |
 | test_schema.lua | 20 |
@@ -1423,11 +1361,10 @@ Total.
 | test_tokens.lua | 10 |
 | test_channels.lua | 13 |
 | test_bake.lua | 12 |
-| test_share.lua | 37 |
 | test_resolver.lua | 13 |
 | test_builtins.lua | 24 |
 | test_gameids.lua | 4 |
-| test_library.lua | 74 |
+| test_library.lua | 68 |
 | test_members.lua | 28 |
 | test_editors.lua | 18 |
 | test_callout_popup.lua | 38 |
@@ -1437,7 +1374,6 @@ Total.
 | test_page_groups.lua | 67 |
 | test_page_pads.lua | 27 |
 | test_page_dials.lua | 28 |
-| test_page_share.lua | 12 |
 | test_check.lua | 6 |
 | test_send_guard.lua | 11 |
 | test_sendengine.lua | 32 |
@@ -1467,4 +1403,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1213** |
+| **Total** | **1157** |

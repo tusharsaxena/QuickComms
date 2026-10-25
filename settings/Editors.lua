@@ -1,6 +1,6 @@
 local addonName, NS = ...
--- settings/Editors.lua — what the editor pages share (design spec §13.1): Groups, Pad, Dial and
--- Share each register here, keep their selection here and repaint through here.
+-- settings/Editors.lua — what the editor pages share (design spec §13.1): Groups, Pad and
+-- Dial each register here, keep their selection here and repaint through here.
 --
 -- THE SELECTION is session state (NS.State.editing[kind], never saved): the member each page edits.
 -- The band's picker sets it (options-ui-§14: the banner is the ONLY picker), and the member rows
@@ -148,9 +148,6 @@ end
 local function onProfileChanged()
     for kind in pairs(State.editing) do State.editing[kind] = nil end
     for gid in pairs(State.whenOpen or {}) do State.whenOpen[gid] = nil end
-    -- The Share page's ticks and checked string name the old profile's ids.
-    State.share.pick = { group = {}, pad = {}, dial = {} }
-    State.share.import = nil
     Ed.RequestRefresh()
 end
 

@@ -17,7 +17,6 @@ pins every row against `tests/schema_pins.lua`). The renamed tabs: the Groups pa
 *What it sends*; the Pad page's Pad header and Section header are *Header* and *Section titles*, and
 Window moved ahead of them (outside in); the Dial page's Wheel is *Layout*, Slice labels and Group
 labels are one *Labels* tab, and Preview is *Ring map*.
-| Share | `Export`, `Import` |
 | Profiles | AceDBOptions: switch, copy, reset and delete profiles |
 
 ## General → Master controls
@@ -106,7 +105,7 @@ Keybindings), then the outcome line.
 The tab and WoW's Options → Keybindings → Ka0s Quick Comms read and write the client's one store
 (`SetBinding`, then `SaveBindings(GetCurrentBindingSet())`), so a key set in either shows in the
 other: the tab repaints on `UPDATE_BINDINGS` while it is on screen and re-reads on the page's show.
-Nothing is kept in the profile, so Defaults, Reset all settings, a profile switch and a share string
+Nothing is kept in the profile, so Defaults, Reset all settings and a profile switch
 never move a key. In combat every write is refused and a capture in progress is canceled.
 
 This brings back an in-panel key editor: the Dial page's Binding tab (2026-10-20) was retired in the
@@ -406,7 +405,7 @@ body     [Name          ] [Channel       ]   the callout.* member rows' labels a
   `Library.CreateCalloutIn` at the end of the group. Then the popup closes.
 - **Cancel**, the close X and Escape drop the draft and write nothing; so do the settings window
   hiding, a profile change, the stand-down, and the callout or its group ceasing to exist (a `/qc`
-  write or an import under it), after which a late Save writes nothing. An icon browser opened from
+  write under it), after which a late Save writes nothing. An icon browser opened from
   the popup closes with it, as Cancel.
 - **Fully modal:** a full-screen click-catcher in the `FULLSCREEN` strata covers the settings window, so
   the page underneath cannot change while a draft is open. Only one popup exists. `FULLSCREEN` is one
@@ -479,7 +478,7 @@ footer   the selected icon (a glyph in the color) and its name, then Choose and 
   id, so the tab searches by id alone and says so: "Search by texture id. To find an icon by its name
   (e.g. ability_cheapshot), look it up on Wowhead and type its id here." Its button, **Copy
   wowhead.com/icons**, shows `https://www.wowhead.com/icons` in a small copy window (the library's
-  `CopyWindow`, as the Share page's export is: `QuickCommsIconLinkWindow`, titled "Quick Comms:
+  `CopyWindow`: `QuickCommsIconLinkWindow`, titled "Quick Comms:
   Wowhead icons", 420 × 120, over the browser), selected for Ctrl+C; the game cannot open a web
   page. It closes with the browser; Escape with its box focused closes it alone.
 - **Pick**: hovering an icon names it (its label, or "Texture id N" for a game icon); a click selects
@@ -600,7 +599,7 @@ and the offsets while the glow is off, and the offsets also under Button, which 
 offsets sit right after Glow color, under Icon glow, and always show. A style's knobs (Pixel border, Auto cast sparkles, Button
 (rotating rays), Proc (flipbook)) show only while the glow is on and in that style (owner request,
 2026-10-20; until then every style's knobs showed, grayed out under the others): the tab's render filters
-them (`Settings.ShownIconRows`), the rows stay in the schema, so Defaults, a share import and `/qc set`
+them (`Settings.ShownIconRows`), the rows stay in the schema, so Defaults and `/qc set`
 still reach every knob. Glow and Glow style are structural (`Editors.STRUCTURAL`): a write repaints the
 tab on the next frame, its scroll kept, so the right heading appears at once. The Dial page's
 Icons tab does the same.
@@ -775,25 +774,6 @@ placement) and Icons tabs back to their defaults (tooltip: "Put the selected dia
 slices, hub, paging, labels, tooltip placement and icons back to their defaults, and turn it on. Its
 name, groups, position and key are kept.", QUI-L28) and turns the dial on, in one act (`Library.Batch`); the name, groups
 and position are kept, and the key, WoW's own binding, is never touched.
-
-## Share
-
-`settings/Share.lua`.
-
-```
-strip     [ Export ][ Import ]
-Export    what travels; a checkbox per group, Comms Pad and Comms Dial, under a heading per
-          kind (a callout travels inside its group); what the string will hold; Export (the string opens, selected, in the copy
-          window) and Clear
-Import    a paste box (its Accept checks the string); the report (spec §15 step 5); Import and
-          Clear
-```
-
-The ticks and the checked string are session state, cleared by a profile switch. Export and Import
-refuse in combat with one line (the panel is locked in combat anyway). Defaults unticks everything
-and forgets the checked string; nothing in the profile changes. A seeded set is ticked and exported
-as any group; ticking a parent (directly, or through a pad or a dial) brings its children, and a
-child ticked alone travels without its parent and arrives top-level.
 
 ## Still to come
 

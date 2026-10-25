@@ -629,121 +629,6 @@ test("library: [phase 4] the generic battleground set moves below the per-battle
     assertEqual(Lib.MoveGenericBattlegroundLast({ pads = "junk" }), 0)
 end)
 
--- ── import (phase 5) ────────────────────────────────────────────────────────────────────────
-
--- A share result for two callouts, a group holding both, a pad and a dial listing the group (the pad
--- a shipped id too, as strings made before the sets were seeded may), checked by modules/Share.lua
--- as an import is.
-local function shared(NS)
-    return NS.Share.Validate({ v = 1, addon = "QuickComms", kind = "bundle",
-        callouts = { c1 = { name = "Kick", text = "Kick on me", channel = "party" },
-            c2 = { name = "Lust", text = "Lust now", channel = "smartGroup", icon = 136012 } },
-        groups = { g1 = { name = "Mine", callouts = { "c2", "c1" }, when = { content = { mythicPlus = true } } } },
-        pads = { p1 = { name = "Their pad", groups = { "g1", "bi.mplus" },
-            fields = { ["pad.layout.columns"] = 6, ["pad.layout.spacing"] = 999 } } },
-        dials = { d2 = { name = "Their dial", groups = { "g1" }, fields = { ["dial.mode"] = "flat" } } },
-    })
-end
-
-test("library: [phase 5] Import makes every member under a fresh id, its references pointing at the copies", function()
-    local NS, Lib, p = boot()
-    local tally, map = Lib.Import(shared(NS))
-    assertEqual(tally.callouts .. tally.groups .. tally.pads .. tally.dials, "2111")
-    local gid = map.g1
-    assertTrue(gid ~= "g1" and p.groups[gid] ~= nil)
-    assertEqual(p.groups[gid].callouts[1], map.c2, "the group's order is kept, pointing at the new copies")
-    assertEqual(p.groups[gid].callouts[2], map.c1)
-    assertTrue(p.groups[gid].when.content.mythicPlus)
-    assertEqual(p.callouts[map.c2].icon, 136012)
-    local pad = p.pads[map.p1]
-    assertEqual(table.concat(pad.groups, ","), gid, "a shipped id is no group: left out")
-    assertEqual(pad.layout.columns, 6)
-    assertEqual(pad.layout.spacing, 20, "the seam clamps what it would clamp for a player")
-    assertEqual(p.padOrder[#p.padOrder], map.p1, "at the end of the pad order")
-    assertEqual(p.dials[map.d2].mode, "flat")
-end)
-
-test("library: [review 3] importing the same string twice makes two copies; nothing that existed changes", function()
-    local NS, Lib, p = boot()
-    local mine = Lib.CreateCallout({ name = "Kick", text = "Mine", channel = "say" })
-    -- the fixture's p1 and d2 are the ids of this profile's own default pad and dial
-    local pad, dial = p.pads.p1, p.dials.d2
-    assertTrue(pad ~= nil and dial ~= nil, "the seeded pad p1 and dial d2")
-    local function shape(s) return s.name .. "|" .. table.concat(s.groups, ",") end
-    local padBefore, dialBefore, padColumns = shape(pad), shape(dial), pad.layout.columns
-    local orderBefore = table.concat(p.padOrder, ",")
-    local _, first = Lib.Import(shared(NS))
-    local _, second = Lib.Import(shared(NS))
-    assertTrue(first.c1 ~= second.c1 and first.c1 ~= mine and second.c1 ~= mine)
-    assertTrue(first.p1 ~= "p1" and first.d2 ~= "d2" and first.p1 ~= second.p1 and first.d2 ~= second.d2,
-        "an overlapping id is never reused")
-    assertTrue(p.pads.p1 == pad and p.dials.d2 == dial, "the same tables")
-    assertEqual(shape(pad), padBefore, "the default pad p1 is unchanged")
-    assertEqual(pad.layout.columns, padColumns)
-    assertEqual(shape(dial), dialBefore, "the default dial d2 is unchanged")
-    assertEqual(table.concat(p.padOrder, ","), orderBefore .. "," .. first.p1 .. "," .. second.p1, "p1 once in the order")
-    assertEqual(p.callouts[mine].text, "Mine")
-    assertEqual(p.callouts[first.c1].name, "Kick", "a name may repeat")
-    assertEqual(p.callouts[second.c1].name, "Kick")
-    assertEqual(p.groups[second.g1].callouts[1], second.c2, "each copy points at its own callouts")
-end)
-
-test("library: [review 4] an imported pad and dial arrive unbound: no key, the default place, no set added", function()
-    local NS, Lib, p = boot()
-    local res = shared(NS)
-    -- a hand-made result that slipped a key and a position past the checks is still refused them
-    res.dials[1].fields["dial.key"] = "G"
-    res.pads[1].fields["pad.point"] = { "TOPLEFT", "TOPLEFT", 10, -10 }
-    local tally, map = Lib.Import(res)
-    local dial, pad = p.dials[map.d2], p.pads[map.p1]
-    -- red under: drop the Share.Portable check from importSurface (the seam itself takes a key)
-    assertTrue(dial.key == nil or dial.key == false, "no key: " .. tostring(dial.key))
-    assertTrue(pad.point == nil or pad.point == false, "the default place")
-    assertEqual(tally.ignored, 2)
-    Lib.Prepare()
-    assertEqual(#pad.groups, 1, "Prepare puts no seeded set on it")
-end)
-
-test("library: [review] an imported Look keeps a bool a bool and a color its four channels", function()
-    local NS, Lib, p = boot()
-    local res = NS.Share.Validate({ v = 1, addon = "QuickComms", kind = "bundle",
-        pads = { p1 = { name = "Junk look", fields = {
-            ["pad.section.fontShadow"] = "yes", ["pad.section.useClassColorFont"] = { 1, 2, 3 },
-            ["pad.look.useClassColorBackground"] = 7, ["pad.look.useClassColorBorder"] = true,
-            ["pad.section.fontColor"] = { r = 0.5, g = 0.5, b = 0.5, junk = { a = { b = "x" } } },
-            ["pad.look.background"] = { 0.1, 0.2, 0.3 } } } } })
-    local tally, map = Lib.Import(res)
-    local look, section = p.pads[map.p1].look, p.pads[map.p1].section
-    -- red under: no validate on the four bool rows in lookChecks (settings/SchemaMembers.lua)
-    assertEqual(section.fontShadow, true, "the default stands")
-    assertEqual(section.useClassColorFont, false)
-    assertEqual(look.useClassColorBackground, false)
-    assertEqual(look.useClassColorBorder, true)
-    assertEqual(tally.ignored, 3)
-    -- red under: no normalize on the color rows (the junk subtree is stored and exported again)
-    local keys = {}
-    for k in pairs(section.fontColor) do keys[#keys + 1] = tostring(k) end
-    table.sort(keys)
-    assertEqual(table.concat(keys, ","), "a,b,g,r")
-    assertEqual(section.fontColor.r, 0.5)
-    assertEqual(section.fontColor.a, 1)
-    assertEqual(look.background.r .. "," .. look.background.b .. "," .. look.background.a, "0.1,0.3,1")
-end)
-
-test("library: [phase 5] Import is one act: one LIBRARY_CHANGED; a refused result imports nothing", function()
-    local NS, Lib, _, sent = boot()
-    local res = shared(NS)
-    for i = #sent, 1, -1 do sent[i] = nil end
-    Lib.Import(res)
-    local n = 0
-    for _, s in ipairs(sent) do if s[1] == NS.MSG.LIBRARY_CHANGED then n = n + 1 end end
-    -- red under: drop Lib.Batch from Lib.Import (one announce per member and per field)
-    assertEqual(n, 1)
-    assertEqual(sent[#sent][2], "callout,dial,group,pad")
-    assertNil(Lib.Import({ ok = false, reason = "newer" }))
-    assertNil(Lib.Import(nil))
-end)
-
 test("library: [phase 5] Prepare gives a pad saved before the Look groups every field it lacks", function()
     local NS, Lib, p = boot()
     local pad = p.pads[p.padOrder[1]]
@@ -841,7 +726,7 @@ test("library: [icons] IsGlyph names a catalog icon by its path; ValidIconColor 
     assertNil(Lib.IsGlyph("Interface\\TargetingFrame\\UI-RaidTargetingIcon_8"), "a raid marker is no glyph")
     assertNil(Lib.IsGlyph(136012))
     assertNil(Lib.IsGlyph(false))
-    -- review focus 4: a path a share string or a saved icon carried before the three icon sets
+    -- review focus 4: a path a saved icon carried before the three icon sets
     -- (LibKa0s v1.74.0) still reads as the same glyph, and a prefixed set's mark resolves to its name
     assertEqual(Lib.IsGlyph("Interface\\AddOns\\QuickComms\\libs\\LibKa0s\\media\\icons\\star"), "star")
     assertEqual(Lib.IsGlyph("Interface\\AddOns\\QuickComms\\libs\\LibKa0s\\media\\icons\\phosphor\\arrow-up"),
@@ -901,18 +786,6 @@ test("library: [icons] Prepare drops a malformed stored color and keeps a good o
     assertNil(p.groups[gid].iconColor)
     assertEqual(p.callouts[good].iconColor, "ff0000")
     assertEqual(Lib.Prepare().repaired, 0, "idempotent")
-end)
-
-test("library: [icons] an import carries a glyph's color into the fresh copies", function()
-    local NS, Lib, p = boot()
-    local star = NS.Icon("star")
-    local res = NS.Share.Validate({ v = 1, addon = "QuickComms", kind = "bundle",
-        callouts = { c1 = { name = "A", text = "a", channel = "say", icon = star, iconColor = "ff0000" } },
-        groups = { g1 = { name = "G", icon = star, iconColor = "00ff00", callouts = { "c1" } } } })
-    local _, map = Lib.Import(res)
-    -- red under: importMembers building the group without iconColor
-    assertEqual(p.groups[map.g1].iconColor, "00ff00")
-    assertEqual(p.callouts[map.c1].iconColor, "ff0000")
 end)
 
 test("library: [icons] IconTint draws a glyph's color as r, g, b; no color, a bad one or no glyph is white", function()

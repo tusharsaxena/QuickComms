@@ -5,7 +5,7 @@
 ## Version: 0.1.0
 ## IconTexture: Interface\AddOns\QuickComms\media\logos\quickcomms.logo.128.tga
 ## SavedVariables: QuickCommsDB, QuickCommsPerfDB
-## OptionalDeps: Ace3, LibStub, CallbackHandler-1.0, LibSharedMedia-3.0, LibDataBroker-1.1, LibDBIcon-1.0, LibDeflate, LibSerialize, LibCustomGlow-1.0, EllesmereUI
+## OptionalDeps: Ace3, LibStub, CallbackHandler-1.0, LibSharedMedia-3.0, LibDataBroker-1.1, LibDBIcon-1.0, LibCustomGlow-1.0, EllesmereUI
 ## DefaultState: enabled
 ## Category-enUS: Chat
 ## X-License: MIT
@@ -33,10 +33,6 @@ libs\LibDBIcon-1.0\lib.xml
 libs\LibCustomGlow-1.0\LibCustomGlow-1.0.xml
 # ONE line: the .xml is itself the file list (library-stack-§7). After Ace3.
 libs\LibKa0s\LibKa0s.xml
-# LOAD-BEARING: modules\Share.lua takes LibDeflate at load (the share string's compression, spec §15).
-libs\LibDeflate\lib.xml
-# LOAD-BEARING: modules\Share.lua takes LibSerialize at load (the share string's payload, spec §15).
-libs\LibSerialize\lib.xml
 
 # Locales
 # LOAD-BEARING: publishes NS.L, which every file below reads at load.
@@ -128,8 +124,6 @@ modules\Resolver.lua
 modules\Library.lua
 # Conventional: the registry writer's schemaVersion steps, called by core\Database.lua's runner at run time
 modules\Library_Migrate.lua
-# Conventional: the share string's codec and checks (pure), and from Task 5 its edge; reads Bake, Library and the seam at run time
-modules\Share.lua
 # LOAD-BEARING: publishes NS.SendGuard, which modules\SendEngine.lua takes as a load-time upvalue.
 modules\SendEngine_Guard.lua
 # LOAD-BEARING: the only secure writer; publishes NS.SendEngine, which modules\Dial_Secure.lua takes as a load-time upvalue; appends to NS.STAND_DOWN / NS.STAND_UP (and, Task 4, NS.FEATURE_EVENTS)
@@ -211,10 +205,8 @@ settings\Groups_When.lua
 settings\Groups.lua
 # LOAD-BEARING: takes Settings.Editors at load and registers the Comms Pad page (after Groups).
 settings\Pads.lua
-# LOAD-BEARING: takes Settings.Editors at load and registers the Comms Dial page (after Comms Pad, before Share).
+# LOAD-BEARING: takes Settings.Editors at load and registers the Comms Dial page (after Comms Pad, before Profiles).
 settings\Dials.lua
-# LOAD-BEARING: takes Settings.Editors at load and registers the Share page (after Comms Dial, before Profiles).
-settings\Share.lua
 # LOAD-BEARING (after modules\Dial.lua): the verb bodies settings\Slash.lua's NS.COMMANDS rows call at run time;
 # makes Bindings.xml's Toggle Comms Pads button (QuickCommsTogglePads), BINDING_HEADER_QUICKCOMMS and NS.BINDINGS at
 # load, the dial rows from Dial.BINDINGS and Dial.Command; reads other modules only inside functions.
