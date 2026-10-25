@@ -13,7 +13,7 @@ Total.
 - harness: the addon's file list is the TOC's, Namespace first and Profiles last
 - harness: every LibKa0s file comes from LibKa0s.xml, in its order
 - harness: every adopted LibKa0s module is the live library, not its stub
-- toc: the fixed field order, a single Retail Interface line and the X-Standard field
+- toc: the fixed field order, a single Retail Interface line, the X-Standard field and the CurseForge id
 - toc: the icon is the 128x128 logo, and the file exists
 - toc: OptionalDeps names only vendored libraries and the optional suites, and no hard Dependencies
 - toc: the landing-page logo exists beside the launcher icon (layout-§4)

@@ -57,23 +57,24 @@ end)
 
 -- ── the TOC ─────────────────────────────────────────────────────────────────────────────────
 
-test("toc: the fixed field order, a single Retail Interface line and the X-Standard field", function()
+test("toc: the fixed field order, a single Retail Interface line, the X-Standard field and the CurseForge id", function()
     local fields, lines = tocFields()
     local order = {}
     for i, kv in ipairs(fields) do order[i] = kv[1] end
     assertEqual(table.concat(order, ","), "Interface,Title,Notes,Author,Version,IconTexture,"
-        .. "SavedVariables,OptionalDeps,DefaultState,Category-enUS,X-License,X-Standard")
+        .. "SavedVariables,OptionalDeps,DefaultState,Category-enUS,X-License,X-Standard,X-Curse-Project-ID")
     assertEqual(field(fields, "Interface"), "120105")
     assertEqual(field(fields, "Title"), "Ka0s Quick Comms")
     assertEqual(field(fields, "X-Standard"), "https://github.com/tusharsaxena/WowAddonStandards")
     assertEqual(field(fields, "SavedVariables"), "QuickCommsDB, QuickCommsPerfDB")
     assertEqual(field(fields, "X-License"), "MIT")
-    -- Unpublished: the project id is a comment, never a placeholder (toc-file-§1).
-    local commented = false
+    -- Published on CurseForge (2026-10-25): the packager uploads into the project this names
+    -- (toc-file-§1), so it is the real id, and the old "not published" comment is gone.
+    -- red under: a placeholder or a mistyped id
+    assertEqual(field(fields, "X-Curse-Project-ID"), "1765410")
     for _, line in ipairs(lines) do
-        if line:find("^# X%-Curse%-Project%-ID:") then commented = true end
+        assertTrue(not line:find("^# X%-Curse%-Project%-ID:"), "no leftover unpublished comment")
     end
-    assertTrue(commented and field(fields, "X-Curse-Project-ID") == nil)
 end)
 
 test("toc: the icon is the 128x128 logo, and the file exists", function()
