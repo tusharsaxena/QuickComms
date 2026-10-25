@@ -332,6 +332,31 @@ test("groups page: Reuse sorts the whole list by group, then callout, ignoring c
     assertEqual(entries[#entries].plain, "zed: b")
 end)
 
+test("groups page: [characterization] Reuse's fallbacks: a nameless group or callout by its id, a callout no group holds", function()
+    local NS = open()
+    local p = NS.db.profile
+    local gid, kick, other, lust = withCallouts(NS)
+    local nameless = NS.Library.CreateCalloutIn(other, { name = "Zap", text = "z", channel = "party" })
+    p.callouts[nameless].name = nil
+    p.groups[gid].name = nil
+    p.callouts.orphan = { name = "Stray", text = "s", channel = "party" }
+    local byId, order = {}, {}
+    for i, e in ipairs(NS.addon.Settings.Groups.ReusableCallouts(other)) do byId[e.id], order[e.id] = e, i end
+    -- red under: G.ReusableCallouts' helpers losing a fallback or the group-less entry (performance-§11)
+    assertEqual(byId[kick].plain, gid .. ": Kick", "a nameless group reads as its id")
+    assertEqual(byId[kick].label, NS.addon.Settings.Groups.MUTED_GOLD .. gid .. "|r: Kick")
+    assertEqual(byId.orphan.plain, "Stray", "a callout no group holds has no group part")
+    assertEqual(byId.orphan.label, "Stray", "and no color")
+    assertEqual(order.orphan, 1, "no group sorts as the empty group, first")
+    assertNil(byId[lust], "the group's own")
+    assertNil(byId[nameless], "the group's own, nameless too")
+    byId = {}
+    for _, e in ipairs(NS.addon.Settings.Groups.ReusableCallouts(gid)) do byId[e.id] = e end
+    assertEqual(byId[nameless].plain, "Other: " .. nameless, "a nameless callout reads as its id")
+    assertNil(byId[kick])
+    assertTrue(byId[kick] == nil and byId[lust].group == nil and byId[lust].name == nil, "only id, label, plain")
+end)
+
 test("groups page: Reuse numbers same-named copies so each entry is unambiguous", function()
     local NS = open()
     local gid, kick, other = withCallouts(NS)
