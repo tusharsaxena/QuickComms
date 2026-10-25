@@ -19,22 +19,22 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | STATE-1..6 | State | Enable/disable, the launcher menu, `/qc toggle`, the pads' hidden state across /reload, a new profile's prebuilts |
 | COMBAT-1 | Combat | The settings panel in combat |
 | DIAG-1..2 | Diagnostics | The debug console, the report, perf |
-| DEGRADED-1 | Degraded | The install with LibKa0s missing |
-| SEND-1..6 | Send | Secure sends in keys and on bosses, the spam guard, General (/1) with its Say fallback |
+| DEGRADED-1..2 | Degraded | The install with LibKa0s missing, and its help rows |
+| SEND-1..7 | Send | Secure sends in keys and on bosses, the spam guard, General (/1) with its Say fallback, the lockdown lift after an encounter or a key |
 | TOKEN-1 | Tokens | `{coordinates}`: your map position, read at the press, in a preview echo and in combat |
-| PAD-1..15 | Pad | The Comms Pad, its growth and button width, the Solo and In Group sets and the built-ins' colors, the header click and icon only's width, the header's Quick Comms: text |
-| EDIT-1..33 | Editors | The Pad and Dial page names; the Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo) and Comms Pad pages, Preview as…, Why is this showing?, an older profile's conversion |
+| PAD-1..17 | Pad | The Comms Pad, its growth and button width, the Solo and In Group sets and the built-ins' colors, the header click and icon only's width, the header's Quick Comms: text |
+| EDIT-1..34 | Editors | The Pad and Dial page names; the Groups (with the callout popup, its EllesmereUI look and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo) and Comms Pad pages, Preview as…, Why is this showing?, an older profile's conversion |
 | PREVIEW-1..12 | Preview window | The Preview as selector window: every entry point, the dropdown, End preview, close and Escape, combat, test mode and the stand-down, Alt+Z, the saved position, bare /qc preview and list; every preview drawn as live; a preview or test click prints what it would send; a preview dial staying open on a pick |
-| DIAL-1..41 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, the lone-group open and the group ring, page arrows and the page row, Auto wedges, the ring radius, the Slice labels tab, the slices and the slice lit by direction, the Slices tab, the pointer, the tooltip outside the dial, the hub over the slices, the pointer, label and icon offsets, the Paging tab; the dial polish: the border gone, the slice gap, placement from W, a slice clicked to the hub in combat, the hub styles, the Group labels tab, Icon offset on Icons, 128-pixel icons, a click outside closing the dial in combat, the page indicators' background and border, the Hub tab; automatic icon offset and size; the 120 radius and 48-pixel icons by default; a right click back a ring; opening where it was closed; slices from N |
+| DIAL-1..43 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, the lone-group open and the group ring, page arrows and the page row, Auto wedges, the ring radius, the Slice labels tab, the slices and the slice lit by direction, the Slices tab, the pointer, the tooltip outside the dial, the hub over the slices, the pointer, label and icon offsets, the Paging tab; the dial polish: the border gone, the slice gap, placement from W, a slice clicked to the hub in combat, the hub styles, the Group labels tab, Icon offset on Icons, 128-pixel icons, a click outside closing the dial in combat, the page indicators' background and border, the Hub tab; automatic icon offset and size; the 120 radius and 48-pixel icons by default; a right click back a ring; opening where it was closed; slices from N |
 | LAYOUT-1..5 | Settings layout | Item 020: the General page's Behavior headings and Defaults tooltip; the Groups band on one row, General's order, Inherit on When, What it sends; the Pad strip outside in and its relabels; the Dial strip (Layout, Labels, Ring map) and its headings; no setting lost or changed, through a /reload |
-| LAYER-1..4 | Frame layering | Item 030: a pad button's and a dial wedge's borders, glows, label, padlock and veils in order; the drag strip over a faded pad; the windows, modals and popups still stacked as before |
+| LAYER-1..5 | Frame layering | Item 030: a pad button's and a dial wedge's borders, glows, label, padlock and veils in order; the drag strip over a faded pad; the windows, modals and popups still stacked as before |
 | KEY-1..6 | Key bindings | A dial's key as WoW's own binding in Options → Keybindings, Character Specific Keybindings, Toggle Comms Pads; item 015: the Ka0s Quick Comms section of its own, the General → Keybindings tab in sync both ways, its capture and combat refusal |
 | LOOK-1..6 | Window, Header, Section titles (Pad header and Section header before item 020) | The Comms Pad's three window tabs: the section titles' font, the pad's border and background, the header's look, size and alignment, the tab strip and headings, the section header's band and height |
 | BUTTON-1..2 | Buttons tab | The buttons' size, color, border and font; the button glow |
 | ICONS-1..4 | Icons tab | The buttons' and wedges' icon look, border and glow triggers; the glows through LibKa0s-Glow-1.0 |
 | ICON-1..4 | Icons | Choosing an icon, for a callout and for a group; the LibKa0s v1.75.0 re-vendor: the icon browser's three sets and the library-drawn marks; the popup and the browser over the preview dial |
 | ART-1 | Art | The dial's round art: the hub's styles, the dots and pill, the indicator background, the borders and the arrow plates |
-| SHINE-1..3 | Shine | The shine overlay: each look on a pad and on a dial, and a pad and a dial keeping their own |
+| SHINE-1..4 | Shine | The shine overlay: each look on a pad and on a dial, and a pad and a dial keeping their own |
 | BG-1..9 | Battlegrounds | Node rings on the dial, one slice per node; the faction and location colors; the battleground instance ids; the objective groups (Alterac Valley, Isle of Conquest's bases, a flag map) and their migration; the four node buttons; Silvershard Mines' and Temple of Kotmogu's groups |
 | IDS-1 | Instance ids | The Midnight dungeons and raids |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes |
@@ -72,7 +72,7 @@ spec §3's phase 0 collision check). Result: 2026-10-21, pass (the owner's run; 
 switching pages back and forth), the notes line, and the slash command list. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 **PANEL-2. Master controls.** General → the `Master controls` tab: Enable Ka0s Quick Comms beside
-General visibility, Master scale beside Master alpha, Lock frame beside Debug console, Minimap button
+General visibility, Master scale beside Master opacity, Lock frame beside Debug console, Minimap button
 beside Test mode, then Preview as alone on its own line, then Reset position beside Reset all
 settings. Ticking Debug console opens the
 console; unticking Minimap button hides the button at once. Result: 2026-10-21, pass (the owner's run; client build not recorded).
@@ -152,6 +152,11 @@ says the library is missing; `/qc disable` and `/qc enable` still work; `/qc lis
 CLI is unavailable; `/qc config` says the settings panel is unavailable. Restore the folder after.
 Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
+**DEGRADED-2. Help without LibKa0s (2026-10-25, audit QC-17).** With `libs\LibKa0s` renamed as in
+DEGRADED-1, `/qc help` → each row reads `/qc <verb>  <description>`: the verb, two spaces, then its
+description, with no em dash between them and no color. Restore the folder after.
+Result: owed (new 2026-10-25).
+
 ## Send
 
 **SEND-1. Trash in a key.** In a Mythic+ key, out of combat and then on trash in combat, click
@@ -180,17 +185,30 @@ start). Result: 2026-10-21, pass (the owner's run; client build not recorded).
 The C1–C9 checks of the phase 0 harness (design spec §19) are recorded in
 `docs/brainstorm/go-no-go/`; SEND-4 and SEND-5 repeat C1 and C4 against the shipped addon.
 
-**SEND-6. General (/1) and its Say fallback (2026-10-23, run item QF-04).** Out of combat in the open
-world, make a callout on the channel "General (/1; Say when not joined)" in a group on your pad; its
-Groups row reads `General` in channel 1's color. Hover its button → `Channel: General` in the same
-color. Click it → the line appears in General (`[1. General - <zone>]`), with no "interface action
-blocked" and no drop note. `/reload`, and click it again as soon as the pad shows → `/1` again (the
-automatic join after login reached the snapshot). Take a portal or flight to another zone and click
-it right after the loading screen → still `/1`, in the new zone's General. Type `/leave 1`, click it
-→ the line goes to Say; `/join General`, click → back in General. With a press pending, type a line in
-`/2` (Trade, in a capital) inside about a second → no false "sent" (the `/2` line is not taken as the
-echo; a drop note only if the General line really never arrived).
-Result: 2026-10-24, pass (the owner's run; client build not recorded).
+**SEND-6. General (/1) and its Say fallback (2026-10-23, run item QF-04; rewritten 2026-10-25, F-007).**
+Out of combat in the open world, make a callout on the channel "General (/1; Say when not joined)" in
+a group on your pad; its Groups row reads `General` in channel 1's color. Hover its button →
+`Channel: General` in the same color. Click it → the line appears in General
+(`[1. General - <zone>]`), with no "interface action blocked" and no drop note. This is also the
+in-client check that `C_ChatInfo.GetGeneralChannelLocalID()` answers 1 for a normal General.
+`/reload`, and click it again as soon as the pad shows → `/1` again (the automatic join after login
+reached the snapshot). Take a portal or flight to another zone and click it right after the loading
+screen → still `/1`, in the new zone's General. Type `/leave 1`, click it → the line goes to Say.
+`/join General` → confirm it came back as `/1`, click → back in General (if the client rejoins it at
+another number, the callout stays on Say: that is the expected fallback, F-007). With General left
+again, `/join <a custom name>` so the custom channel takes `/1` → a General callout goes to Say, not
+to the custom channel. With a press pending, type a line in `/2` (Trade, in a capital) inside about a
+second → no false "sent" (the `/2` line is not taken as the echo; a drop note only if the General line
+really never arrived). Record the client build.
+Result: owed (rewritten 2026-10-25).
+
+**SEND-7. Lockdown lift after an encounter or a key (2026-10-25, F-003).** On a raid boss or in a
+Mythic+ key, put a Say callout on the pad. During the encounter the padlock and the lockdown chip
+show. Kill the boss, or complete the key → within about a second of `ENCOUNTER_END` /
+`CHALLENGE_MODE_COMPLETED` the padlock and the chip clear, and a press prints no "may not have been
+sent" line. Repeat with a wipe (`ENCOUNTER_END` fires then too). Note whether the flag ever clears
+later than the 1 s re-read (a known limitation if it does). Record the client build.
+Result: owed (new 2026-10-25).
 
 ## Tokens
 
@@ -239,7 +257,7 @@ combat → refused with one line. The Master controls checkbox and the launcher 
 change. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 **PAD-5. Visibility and fade.** General visibility "Only out of combat" → the pad hides on the pull
-with no error and returns after; Master alpha 50% → the pad is half transparent. Result: 2026-10-21, pass (the owner's run; client build not recorded).
+with no error and returns after; Master opacity 50% → the pad is half transparent. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 **PAD-6. Disabled mid-combat.** `/qc disable` during combat → no "action blocked" error; the pad
 stays until combat ends, then hides. `/qc enable` → it returns with live buttons. Result: 2026-10-21, pass (the owner's run; client build not recorded).
@@ -258,8 +276,8 @@ somewhere, then add a group to the pad → the pad grows upward and the strip st
 `/reload` → the strip is still there. Left and up → the buttons fill right to left, still upward. Right
 and down → the header is on top again, the strip above, and adding a group grows the pad downward
 from a top edge that stays put. A profile saved with Upward growth loads as Right and up. A pad placed
-before 2026-10-19 moves once on its first load, by up to its height (see Known Limitations in
-`docs/ARCHITECTURE.md`); drag it back and it stays. Result: 2026-10-21, pass (the owner's run; client build not recorded).
+before 2026-10-19 moves once on its first load, by up to its height (see
+`docs/known-limitations.md`); drag it back and it stays. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 **PAD-10. Button width and the section title.** Pad → Buttons → Button width reads 100 on a new
 pad, and Layout no longer has it; drag it to 300 → wide buttons, each label on one line, running to the button's right edge with no
@@ -310,6 +328,15 @@ Spire +14, for one). A section title that names the situation (a group named `Wo
 is still hidden under it (PAD-10). Preview as… → `Preview: …`, and test mode → `Test mode`, as before.
 Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
+**PAD-16. A shrunk pad leaves nothing clickable behind (2026-10-25, F-006).** On an M+ pad (18
+buttons), zone to the open world so the pad shrinks. Click where a removed button used to be →
+nothing is sent and nothing there takes the click. The remaining buttons still send.
+Result: owed (new 2026-10-25).
+
+**PAD-17. A rebuild that moved no line still sends (2026-10-25, F-006).** Change the pad's spacing
+(or any setting that changes no line) and press a button → it still sends its line.
+Result: owed (new 2026-10-25).
+
 ## Editors
 
 **EDIT-1. A callout and a group on the pad (the phase 3 exit).** Settings → Groups → New group; on
@@ -323,7 +350,7 @@ the pad. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 pick "Dungeon" → the picker shows no "(built-in)" tag (in a key it reads `Dungeon` with the
 green dot after the name, not before it; Pad → Groups and Dial → Groups put it after the name too), and the page draws the same tabs as a
 group of yours, nothing read-only. General: Name, Enabled, Parent group,
-the icon with Choose icon…, Duplicate and Delete, then Restore built-in groups; no Customize and no
+the icon with Choose icon…, Duplicate group and Delete group…, then Restore built-in groups; no Customize and no
 read-only line. Callouts: the callout table, exactly as a group of yours draws it (Add callout, Reuse
 callout with Add, a boxed row per callout with its handle, icon, name and channel, edit and remove
 glyphs); no Show checkboxes. When: the editable condition drawers (EDIT-22), Content's summary
@@ -348,7 +375,7 @@ outside a raid, the last line names the lock. Behavior → Explain why groups sh
 Scale 1.5 → the pad redraws each time. Type X `200`, Y `-100` → it moves; Reset this pad's position
 → it returns. General → Visibility Only out of combat → it hides on the pull with no error. Groups:
 drag a group to the top → it comes first on the pad. New pad → a second pad appears holding every
-built-in group you still have (top-level, in shipped order); Delete pad (Yes) → it is gone. Result: 2026-10-21, pass (the owner's run; client build not recorded).
+built-in group you still have (top-level, in shipped order); Delete pad… (Yes) → it is gone. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 **EDIT-6. Restore built-in groups (rewritten 2026-10-18; the Share page's Built-in tab is gone).**
 Groups → "Raid" → Delete (Yes) → it is gone from the
@@ -497,7 +524,7 @@ longer grayed out. Give Kicks a callout → the pad shows My keys' own section, 
 Kicks; the dial (test mode or its key) shows My keys' callouts, then a Kicks wedge that opens its
 ring. Untick Inherit when conditions and give Kicks a When that does not match → its section and
 ring go, My keys stays (EDIT-23 covers inheriting). On My keys' General tab, Parent group is grayed out; its tooltip names
-Kicks. Duplicate Kicks → the chat line says the copy is inside My keys. Delete My keys → the question
+Kicks. Duplicate group on Kicks → the chat line says the copy is inside My keys. Delete My keys → the question
 says the groups inside it become top-level groups in its place; Yes → Kicks and its copy are
 top-level, on every pad and dial where My keys was. `/qc set group.parent none` on a selected child
 makes it top-level; `/qc set group.parent <its own id>` is refused, with a line saying why.
@@ -666,6 +693,11 @@ Drek'Thar, Frostwolf GY, FW East Tower, FW West Tower, Galvangar, …, Tower Poi
 Blacksmith, Farm, Gold Mine, Lumber Mill, Stables. In Arathi Basin the pad's sections and the dial's
 ring (after the set's own wedge) follow the same order. New group `Zed`, then `Alpha`, both inside a
 group of yours → Alpha lists first. Result: 2026-10-25, pass (the owner's run; client build not recorded).
+
+**EDIT-34. The delete and copy buttons' labels (2026-10-25, audit QC-19).** On the Groups, Pads
+and Dials pages' General tabs, each delete button ends in an ellipsis (Delete group…, Delete pad…,
+Delete dial…) and opens its confirm; the Groups page's copy button reads Duplicate group.
+Result: owed (new 2026-10-25).
 
 ## Preview window
 
@@ -1077,6 +1109,14 @@ solid gold hub with a 1-pixel gold rim and a 24-pixel circle, a 24-pixel pointer
 outlined slice labels, 16-point outlined group labels, the Orb shine on the slices (gray tint), and
 8-pixel page dots with a 2-pixel border. Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
+**DIAL-42. A dial that lost wedges (2026-10-25, F-006).** Open a dial whose rebuild dropped wedges
+(fewer callouts than before) → the number keys past the item count do nothing, and a click on an empty
+slice does nothing. Result: owed (new 2026-10-25).
+
+**DIAL-43. The slice highlight on reopen (2026-10-25, F-001).** Open a dial, hover a slice, close
+it, and reopen it with the cursor on the same slice → it lights in place. Change Slice gap, reopen and
+hover → the highlight sits on the shifted slice. Result: owed (new 2026-10-25).
+
 ## Look
 
 The Comms Pad's Pad header, Section header and Window tabs (one Window tab until 2026-10-20, the
@@ -1117,7 +1157,7 @@ Spacing 20 → still aligned. Result: 2026-10-21, pass (the owner's run; client 
 header, Section header, Window, Buttons, Icons (no Main window or Chip tab). Pad header shows the headings Size,
 Font, Background and Border, each once; Section header the same four; Window Background and
 Border, with no font controls and no Visibility (General has it, under its own heading, above Unlock
-pads and Delete pad). Change a value on each tab → only that part of the pad
+pads and Delete pad…). Change a value on each tab → only that part of the pad
 changes (the header row, the section titles, the pad's body). Defaults on the page → all three tabs go
 back to the owner's look. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
@@ -1221,8 +1261,8 @@ controls' Reset all settings tooltip, ending "Key bindings are not changed." Res
 
 **LAYOUT-2 (SM-QC-LY). Groups (QUI-L03 to L08, L34, L-new3).** Groups → the band is one row: the
 Group picker, New group, then Preview while editing, all level, and the strip starts at the same
-height as on Pad and Dial. General → Name | Enable this group, the icon, Parent group alone, Duplicate
-| Delete group, a gap, a gray line "Adds back the built-in groups and callouts you deleted. Changes
+height as on Pad and Dial. General → Name | Enable this group, the icon, Parent group alone, Duplicate group
+| Delete group…, a gap, a gray line "Adds back the built-in groups and callouts you deleted. Changes
 nothing you have.", then Restore built-in groups; no Inherit box here. When → Inherit when conditions
 under the active-now line, grayed out for a group with no parent; on a child, untick it there → its
 own drawers come live, tick it → "Uses <parent>'s conditions. Untick Inherit when conditions above
@@ -1240,7 +1280,7 @@ and Buttons reads Background color. Result: 2026-10-24, pass (the owner's run; c
 **LAYOUT-4 (SM-QC-LY). Dial (QUI-L07, L08, L19, L21 to L29, L35, L-new3).** Dial → the strip reads
 General, Groups, Layout, Slices, Hub, Paging, Labels, Icons, Ring map; note whether it fits one row at
 your UI scale. General → Enable this dial, then the gray line pointing at the General page >
-Keybindings, then Delete dial (no key box). Layout → Slices per ring | Ring radius, Slice gap alone,
+Keybindings, then Delete dial… (no key box). Layout → Slices per ring | Ring radius, Slice gap alone,
 then Position: Open at, X | Y, Reset. Slices → one Colors heading, then Shine. Hub → Hub, Hub border,
 Hub circle, Pointer. Paging → Page row (Distance below labels), Arrows, Page indicator, Indicator
 border, Indicator background (Show indicator background | Background padding). Labels → Slice labels,
@@ -1283,6 +1323,11 @@ preview window sits over the preview dial and under the callout popup's dim; the
 over the popup; its Wowhead link window opens over the browser; a delete confirm opened from the
 popup shows over it and can be clicked. Open a dial
 by its key, click outside it → it closes (with the settings window closed). No Lua error. Result: 2026-10-24, pass (the owner's run; client build not recorded).
+
+**LAYER-5. The modal windows stay on screen and in order (2026-10-25, audit QC-21).** Drag the
+callout popup to each screen edge → it stops at the edge; open the icon browser and do the same → it
+stops too. Click the popup, then Choose icon… → the browser opens over the popup and still covers it.
+Result: owed (new 2026-10-25).
 
 ## Icons tab
 
@@ -1427,6 +1472,11 @@ the dial's to Rim light → each shows its own; set the pad's to None → the di
 dial's slices line ends `shine=rim 85`. Then set the pad back to Glass orb and the dial to None → the
 pad keeps Glass orb and the dial shows no shine. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
+**SHINE-4. The shine re-fits its button (2026-10-25, F-001).** With Gloss fade on, change Button
+width, then Button height, then Layout style to icon only → each time the shine re-fits the button:
+its caps half the button's height wide, and no middle on a square button. A rebuild that changes
+neither (spacing) leaves it drawn as it was. Result: owed (new 2026-10-25).
+
 ## Battlegrounds
 
 **BG-1. Node rings (rewritten 2026-10-25: no compass pinning).** In each node battleground you play
@@ -1566,4 +1616,9 @@ On 2026-10-25 the owner reported that every check of that day's run (Preview as 
 season, nested groups A–Z, unpinned dial rings, battleground colors) passed: EDIT-32 and PREVIEW-2
 (rewritten for the season's dungeons and Mythic raids), EDIT-33 (new), DIAL-4, BG-1, BG-4, BG-5, BG-7
 and BG-8 (rewritten for unpinned rings and the new action colors) and BG-9 (new), recorded on each
-check's Result line. No check is owed.
+check's Result line.
+
+Owed from the review and audit fixes of 2026-10-25: SEND-6 (rewritten for the client-confirmed
+General, F-007), and new SEND-7 (the lockdown lift, F-003), PAD-16, PAD-17 and DIAL-42 (parked
+buttons, F-006), DIAL-43 and SHINE-4 (the cheaper repaints, F-001), DEGRADED-2 (audit QC-17),
+EDIT-34 (audit QC-19) and LAYER-5 (audit QC-21).
