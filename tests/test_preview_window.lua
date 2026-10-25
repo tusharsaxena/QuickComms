@@ -424,6 +424,12 @@ test("preview window: [QF-07] EditPresetKey maps each kind of When", function()
     assertEqual(key(g({ arena = { [572] = true } })), "arena", "an arena id row alone")
     -- red under: an empty battleground row answered the first battleground
     assertEqual(key(g({ battleground = {} })), "current", "an empty battleground row is unset")
+    assertEqual(key(g({ content = { openWorld = true } })), "world", "open world: Solo")
+    -- red under: EditPresetKey's kinds read in another order (battleground, dungeon, raid, arena, world)
+    assertEqual(key(g({ content = { mythicPlus = true, battleground = true } })), "bg:ab", "a battleground first")
+    assertEqual(key(g({ content = { raid = true, dungeon = true } })), NS.Preview.Presets()[2].key, "then a dungeon")
+    assertEqual(key(g({ content = { arena = true, raid = true } })), firstRaid, "then a raid")
+    assertEqual(key(g({ content = { openWorld = true }, arena = { [572] = true } })), "arena", "then an arena")
     local parent = g({ content = { mythicPlus = true } })
     assertEqual(key(g({}, { parent = parent })), NS.Preview.Presets()[2].key, "a child takes its parent's")
     assertEqual(key(g({ content = { arena = true } }, { parent = parent, inheritWhen = false })), "arena",

@@ -21,9 +21,17 @@ end)
 test("tokens: group tokens map to {gN}", function()
     local Tok = tok()
     assertEqual((Tok.Expand("{group3} soak, {g1} stack")), "{g3} soak, {g1} stack")
-    assertTrue(Tok.UsesGroupToken("stack {group2}"))
-    assertTrue(Tok.UsesGroupToken("{g8}"))
-    assertFalse(Tok.UsesGroupToken("{rt8}"))
+end)
+
+test("tokens: [review] markers and group tokens count as live; a baked value is flattened, an empty one missing", function()
+    local Tok = tok()
+    -- red under: expandOne not counting a marker or a group token as live
+    assertEqual(select(4, Tok.Expand("{skull} {rt2} {g3} {group4}")), 4)
+    -- red under: expandOne baking a value's pipe or newline as typed, or an empty value or link as found
+    local out, _, missing = Tok.Expand("{me} {spec} {spell:5}",
+        { me = "a|b\nc", spec = "", spellLink = function() return "" end })
+    assertEqual(out, "a||b c  ")
+    assertEqual(table.concat(missing, ","), "spec,spell:5")
 end)
 
 test("tokens: baked values come from ctx; absent ones are missing", function()
