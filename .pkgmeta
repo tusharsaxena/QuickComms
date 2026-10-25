@@ -18,5 +18,6 @@ ignore:
   - DEPENDENCIES.md
   - media/logos/*.png   # the editable logo source (layout-§4): committed, never loadable, never shipped
   - media/logos/*.jpg   # a .jpg render of the logo, for the project page; same reason
+  - media/screenshots   # project-page images, not loaded by the addon
   - _dev
   - "*.bak"
