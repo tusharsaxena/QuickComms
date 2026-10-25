@@ -78,8 +78,10 @@ test("surfaces: a node battleground gives one section per node, baked to /i", fu
     -- the set's own map-wide callouts first (groups polish), then a section per node
     assertEqual(#plan.sections, 8)
     assertEqual(plan.sections[1].title, "Arathi Basin")
-    assertEqual(plan.sections[3].title, "Lumber Mill")
-    assertEqual(plan.sections[3].slots[3].line, "/i INC Lumber Mill")
+    -- red under: the nodes in made order (Stables, Lumber Mill, ...; until 2026-10-25)
+    assertEqual(plan.sections[2].title, "Blacksmith")
+    assertEqual(plan.sections[5].title, "Lumber Mill")
+    assertEqual(plan.sections[5].slots[3].line, "/i INC Lumber Mill")
     assertEqual(plan.sections[7].title, "Battleground")
 end)
 

@@ -74,15 +74,20 @@ function Lib.IsChild(id)
 end
 local isChild = Lib.IsChild
 
---- The groups inside group `id`, in the order they show on a pad and a dial: the order they were
---- made in (their ids), so a seeded set keeps its shipped node order.
+--- The groups inside group `id`, in the order they show everywhere (the pickers, a pad, a dial): by
+--- name, case-insensitive, then in the order they were made (their ids; owner, 2026-10-25: until
+--- then made order alone, a seeded set's shipped node order).
 --- @return string[]
 function Lib.Children(id)
+    local groups = P().groups
     local out = {}
-    for gid, g in pairs(P().groups) do
+    for gid, g in pairs(groups) do
         if g.parent == id and gid ~= id then out[#out + 1] = gid end
     end
+    local function key(gid) return tostring(groups[gid].name or gid):lower() end
     table.sort(out, function(a, b)
+        local x, y = key(a), key(b)
+        if x ~= y then return x < y end
         if idNumber(a) ~= idNumber(b) then return idNumber(a) < idNumber(b) end
         return a < b
     end)

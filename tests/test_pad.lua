@@ -201,16 +201,16 @@ test("pad: tabs show one section; the wheel steps them out of combat and is refu
     NS.db.profile.pads.p1.groupsAs = "tabs"
     NS.Pad.Apply("p1", planFor(NS))
     -- Arathi Basin's own set comes first (phase 4), so its own map-wide callouts are the first tab
-    -- (groups polish), then its first node.
+    -- (groups polish), then its first node by name.
     assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.hold")), 1)
-    assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.stables.attack")), 0)
+    assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.blacksmith.attack")), 0)
     assertTrue(NS.Pad.Wheel("p1", -1))
-    assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.stables.attack")), 1)
+    assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.blacksmith.attack")), 1)
     assertTrue(NS.Pad.Wheel("p1", -1))
-    assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.lumbermill.attack")), 1)
+    assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.farm.attack")), 1)
     combat(m, true)
     assertFalse(NS.Pad.Wheel("p1", -1))
-    assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.lumbermill.attack")), 1, "unchanged in combat")
+    assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.farm.attack")), 1, "unchanged in combat")
     assertEqual(#m.blocked, 0)
 end)
 
@@ -376,7 +376,7 @@ test("pad: [fix wave] tabs switch on a wheel over a button or the pad, not only 
     local button = NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.hold"))[1]
     -- red under: enable the wheel on the header alone
     button:__fire("OnMouseWheel", -1)
-    assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.stables.attack")), 1)
+    assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.blacksmith.attack")), 1)
     NS.Pad.Instance("p1").root:__fire("OnMouseWheel", 1)
     assertEqual(#NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.bg.ab.hold")), 1, "back to the set's own tab")
 end)

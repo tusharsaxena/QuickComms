@@ -32,7 +32,8 @@ The shipped sets (`NS.BuiltIns`, `defaults/BuiltIns*.lua`) are seed data. A prof
 has never prepared (a new or a reset one) gets the default pad and dial, then every shipped set, in
 shipped order, as ordinary user groups and callouts under fresh ids from `nextId`: each group's
 callouts take their ids before it, and a battleground's nodes come after their set as groups inside
-it (`parent`), so `Library.Children` keeps the shipped node order. Each seeded member keeps its
+it (`parent`); `Library.Children` lists a group's children A–Z by name (then made order), so a
+set's nodes read alphabetically everywhere (2026-10-25). Each seeded member keeps its
 shipped id as `origin`, a node its `compass` wind, and `profile.seededSets` records every set and
 node given. The top-level sets go on the default pad and dial. From then on they are ordinary groups:
 every edit, delete and duplicate is the player's, and nothing at draw time reads `NS.BuiltIns` for

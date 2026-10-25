@@ -145,7 +145,7 @@ pad draws a section for it, a dial a node ring), gated by its own Enabled and it
 parent's while it inherits, below), while the parent's gate the whole; it is never placed on a pad
 or a dial itself, so picking a parent takes it off every pad and dial in the same act, and None does not put it back (Pad → Groups → Add a
 group does). Groups go one level deep: the dropdown is idle while this group holds groups, and its
-tooltip names them. A group's children are listed in the order they were made in. Delete on a
+tooltip names them. A group's children are listed A–Z by name (2026-10-25), here, on the pads and on the dials. Delete on a
 parent asks first and says what happens: the groups inside it become top-level groups, in its place
 on every pad and dial. Duplicate of a child puts the copy in the same parent (the chat line says
 so); a parent's copy holds no children. The page's Defaults keeps the parent, as it keeps the icon.

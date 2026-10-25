@@ -40,7 +40,7 @@ Press it: with one group active the dial opens straight on that group's callouts
 shows the groups first, so click one, then click a callout to send it. In a battleground the map's
 set shows its nodes, each where it sits on the map. A ring with more callouts than wedges is paged:
 the arrows under the dial (or the Left and Right arrow keys, or the mouse wheel) turn the pages, and
-a gold pill under the dial marks the page you are on. Alterac Valley lists its objectives north to south that way; its
+a gold pill under the dial marks the page you are on. Alterac Valley lists its objectives A to Z that way; its
 pad sets them two to a row. A right click on a slice goes back up one ring (on the first ring it does
 nothing). The key again, Escape, a right click on the middle button or a click anywhere outside the
 dial closes it, and the next press opens it where you left it: the same group and page. The number
