@@ -91,10 +91,10 @@ nodeBattleground("ab", L["Arathi Basin"], { "gi:wheat", C.gold }, { 529, 2107, 1
     { "farm", L["Farm"], "gi:barn", C.red },
 }, BASES)
 nodeBattleground("eots", L["Eye of the Storm"], { "gi:tornado", C.purple }, { 566, 968 }, {
-    { "felreaver", L["Fel Reaver Ruins"], "gi:castle-ruins", C.neutral },
+    { "felreaver", L["Fel Reaver Ruins"], "gi:castle-ruins", C.horde },
     { "bloodelf", L["Blood Elf Tower"], "gi:tower-flag", C.horde },
     { "draenei", L["Draenei Ruins"], "gi:crystal-growth", C.alliance },
-    { "magetower", L["Mage Tower"], "gi:wizard-staff", C.neutral },
+    { "magetower", L["Mage Tower"], "gi:wizard-staff", C.alliance },
     -- The flag in the middle is no base: its four rows say what a flag wants.
     { "flag", L["Flag"], "gi:flying-flag", C.gold, {
         { "attack", L["Take flag"],   L["Take the flag"],     "gi:crossed-swords", C.crimson },
@@ -316,8 +316,8 @@ nodeBattleground("av", L["Alterac Valley"], { "gi:snowflake-2", C.blue }, { 30 }
     { "ibtower",    L["Iceblood Tower"],     "gi:watchtower",     C.horde,  objective(L["Iceblood Tower"]) },
     { "towerpoint", L["Tower Point"],        "gi:watchtower",     C.horde,  objective(L["Tower Point"]) },
     { "fwgy",       L["Frostwolf GY"],       "gi:graveyard",      C.horde,  objective(L["Frostwolf Graveyard"]) },
-    { "wfw",        L["West FW Tower"],      "gi:watchtower",     C.horde,  objective(L["West Frostwolf Tower"]) },
-    { "efw",        L["East FW Tower"],      "gi:watchtower",     C.horde,  objective(L["East Frostwolf Tower"]) },
+    { "wfw",        L["FW West Tower"],      "gi:watchtower",     C.horde,  objective(L["West Frostwolf Tower"]) },
+    { "efw",        L["FW East Tower"],      "gi:watchtower",     C.horde,  objective(L["East Frostwolf Tower"]) },
     { "reliefhut",  L["Relief Hut"],         "gi:hut",            C.horde,  objective(L["Frostwolf Relief Hut"]) },
     { "drekthar",   L["Drek'Thar"],          "gi:orc-head",       C.horde,   objective(L["Drek'Thar"]) },
 }, {

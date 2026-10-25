@@ -662,7 +662,7 @@ drag strips show) until Lock pads. Result: owed (rewritten 2026-10-25).
 
 **EDIT-33. Nested groups A–Z (2026-10-25).** Groups → the Group picker: the top-level groups A–Z, and
 under Alterac Valley its objectives A–Z (Aid Station, Balinda, DB North Bunker, DB South Bunker,
-Drek'Thar, East FW Tower, Frostwolf GY, Galvangar, …, Vanndar, West FW Tower), Arathi Basin's nodes
+Drek'Thar, Frostwolf GY, FW East Tower, FW West Tower, Galvangar, …, Tower Point, Vanndar), Arathi Basin's nodes
 Blacksmith, Farm, Gold Mine, Lumber Mill, Stables. In Arathi Basin the pad's sections and the dial's
 ring (after the set's own wedge) follow the same order. New group `Zed`, then `Alpha`, both inside a
 group of yours → Alpha lists first. Result: owed (new 2026-10-25).
@@ -1447,7 +1447,7 @@ the pad and the dial show that set. Write each id into the "Battleground instanc
 section (its four map-wide callouts) is followed by 19 objective sections, two to a row, north to
 south: Vanndar, DB North Bunker, Stormpike GY, Aid Station, DB South Bunker, Icewing Bunker,
 Stonehearth GY, Balinda, Stonehearth Bunker, Snowfall GY, Iceblood GY, Galvangar, Iceblood Tower,
-Tower Point, Frostwolf GY, West FW Tower, East FW Tower, Relief Hut, Drek'Thar (the last on a row
+Tower Point, Frostwolf GY, FW West Tower, FW East Tower, Relief Hut, Drek'Thar (the last on a row
 of its own). Each holds Attack and Defend; a long title stops short at its neighbor, and its buttons
 stay on the grid's columns. The pad fits on screen; note its height. Click Iceblood Tower's Attack →
 `/i Attack Iceblood Tower`. Right-click a title in the second
@@ -1498,8 +1498,8 @@ Result: owed (rewritten 2026-10-25).
 Alterac Valley's Vanndar, Balinda, both Dun Baldar bunkers, Icewing and Stonehearth Bunker, Stormpike
 and Stonehearth GY and the Aid Station are Alliance blue (#2AA2FF); Drek'Thar, Galvangar, Iceblood
 Tower, Tower Point, both Frostwolf towers, Iceblood and Frostwolf GY and the Relief Hut are Horde red
-(#FF4040); Snowfall GY is gold (#FFD100). Eye of the Storm: Draenei Ruins blue, Blood Elf Tower red,
-Fel Reaver Ruins and Mage Tower gold. Ashran's Road of Glory is gold. Arathi Basin's Stables are
+(#FF4040); Snowfall GY is gold (#FFD100). Eye of the Storm: Draenei Ruins and Mage Tower blue (Alliance-owned), Blood Elf Tower and Fel Reaver
+Ruins red (Horde-owned). Ashran's Road of Glory is gold. Arathi Basin's Stables are
 brown, Deepwind Gorge's and Isle of Conquest's Quarry stone gray, Isle of Conquest's Hangar sky blue,
 Warsong Gulch's Midfield brown and Twin Peaks' Bridge gray; no battleground icon is white. Under any
 location, Attack is crimson and Defend cyan, on the pad and on the dial. Result: owed (new 2026-10-25).

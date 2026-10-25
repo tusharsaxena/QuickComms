@@ -240,7 +240,7 @@ test("builtins: [bg subgroups] Alterac Valley has every general, captain, bunker
     assertEqual(#(av.children or {}), 19)
     assertEqual(childNames(BI, "bi.bg.av"), "Vanndar,DB North Bunker,Stormpike GY,Aid Station,DB South Bunker,"
         .. "Icewing Bunker,Stonehearth GY,Balinda,Stonehearth Bunker,Snowfall GY,Iceblood GY,Galvangar,"
-        .. "Iceblood Tower,Tower Point,Frostwolf GY,West FW Tower,East FW Tower,Relief Hut,Drek'Thar")
+        .. "Iceblood Tower,Tower Point,Frostwolf GY,FW West Tower,FW East Tower,Relief Hut,Drek'Thar")
     for _, child in ipairs(av.children) do
         local g = BI.groups[child]
         assertEqual(#g.callouts, 2, child .. " has exactly two")
@@ -431,8 +431,8 @@ test("builtins: a faction-themed battleground's locations take the faction's col
     assertEqual(n, #BI.groups["bi.bg.av"].children, "every Alterac Valley location is themed")
     assertEqual(color("bi.bg.eots.draenei"), C.alliance)
     assertEqual(color("bi.bg.eots.bloodelf"), C.horde)
-    assertEqual(color("bi.bg.eots.felreaver"), C.neutral)
-    assertEqual(color("bi.bg.eots.magetower"), C.neutral)
+    assertEqual(color("bi.bg.eots.felreaver"), C.horde, "Horde-owned")
+    assertEqual(color("bi.bg.eots.magetower"), C.alliance, "Alliance-owned")
     assertEqual(color("bi.bg.ashran.glory"), C.neutral)
     -- the actions under a location keep their own tints
     assertEqual(BI.callouts["bi.bg.av.dbnorth.attack"].iconColor, C.crimson)
