@@ -44,7 +44,7 @@ from its run id with cached results).
 | 1 | Tracks A, B, C, D on `ra/*`, each gate-green | done | `ra/perf` `71ad5f6`, `ra/library` `825a62b`, `ra/settings` `20735fd`, `ra/situation` `d68a7c6` |
 | 2 | Integration: four branches merged into the feature branch, gate green | done | `2df24c0`, `c7c2cee`, `e238b31`, `2b31dd7` |
 | 3 | Track E: docs and config, test inventory and badge, gate green | done | `f2aeb8c`, `ba453b7`, `772b5bf`, `4c5670c`, `d9e8e0a`, this commit (1174 passed, 1 skipped, 1175 total; luacheck 0/0) |
-| 4 | Verify: every RA item checked against the tree; gaps fixed | pending | |
-| 5 | Push the feature branch | pending | |
-| 6 | Track F: automated-test bundle, issue #11 | pending | |
+| 4 | Verify: every RA item checked against the tree; gaps fixed | done | 23 verifiers, 16 clean first pass; gaps fixed in `920bd5e`, `aacdc1d` (1175 passed, 1 skipped; luacheck 0/0; perf green) |
+| 5 | Push the feature branch | done | `aacdc1d` on origin; `ra/*` branches and their four worktrees removed after their merge |
+| 6 | Track F: automated-test bundle, issue #11 | done | bundle `20261025-200510` (green, 0 CCN warnings, band dispositions ruled), this commit; issue #11 closed as not planned (`state:will-not-do`) |
 | 7 | Owner go-ahead → merge, push, delete `ra/*` and the feature branch, worktrees and stashes | pending | |
