@@ -24,8 +24,9 @@ byte check of the 5892-file vendored payload (every icon set) takes about 71 s o
 CPU, nearly all of it one `git cat-file --batch` reading ../LibKa0s over the mount. The kit already
 does the two cheaper fixes: it compiles each source file once per process (181 `loadfile` calls for
 the whole run) and reads the payload's blobs in that one batched call. Without the sibling checkout
-the case SKIPs and the gate is the remaining ~20 s of cases. Each automated-test run records its gate
-time in [`automated-tests/RESULTS.md`](automated-tests/RESULTS.md).
+the case SKIPs and the gate is the remaining ~20 s of cases. Each automated-test run records its
+suites' times as `durationMs` in its bundle's `manifest.json` (`automated-tests/<run>/`);
+[`automated-tests/RESULTS.md`](automated-tests/RESULTS.md) rolls the runs up but has no duration column.
 
 `luacheck .` lints everything authored, `tests/` included. It skips `libs/` and `tests/_kit/`
 (vendored), the frozen record stores, and `docs/brainstorm/`, whose go/no-go harness is a throwaway
