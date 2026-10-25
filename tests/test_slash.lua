@@ -98,6 +98,24 @@ test("slash: degraded, enable and disable still work and the CLI names the missi
     assertFalse(D.IsStoodDown())
 end)
 
+test("slash: [audit QC-17] degraded, a help row is `/qc verb  desc`, plain, with no em dash or color", function()
+    local D, _, m = T.enableAddon{ skip = NO_LIBKA0S }
+    local Sl = D.SlashCommands
+    local first = D.COMMANDS[1]
+    -- red under: put back the stub's `" — "` separator in settings/Slash.lua helpRow
+    assertEqual(Sl:LandingRows()[1], "/qc " .. first[1] .. "  " .. first[2])
+    assertEqual(Sl:HelpRows()[1], "  /qc " .. first[1] .. "  " .. first[2])
+    m.prints = {}
+    D.addon:OnSlashCommand("help")
+    assertEqual(#m.prints, #D.COMMANDS + 1, "the header and one row per verb")
+    for i, entry in ipairs(D.COMMANDS) do
+        -- the chat prefix is the printer's; the row after it is the verb, two spaces and the
+        -- description verbatim (a description may carry its own dash), never a colored verb
+        local body = m.prints[i + 1]:gsub("^|c%x+%[QC%]|r ", "")
+        assertEqual(body, "  /qc " .. entry[1] .. "  " .. entry[2])
+    end
+end)
+
 test("slash: [audit QC-05] degraded, `debug on`/`off` flip the flag and ack, and `debug diagnostics` routes", function()
     local D, _, m = T.enableAddon{ skip = NO_LIBKA0S }
     m.prints = {}
@@ -282,4 +300,36 @@ test("slash: [toggle] the hidden state is this character's: a /reload or the nex
     NS2.addon.db:SetProfile("Other")
     assertFalse(NS2.SlashVerbs.PadsShown(), "a profile switch keeps the character's choice")
     assertTrue(m.stateDrivers ~= m2.stateDrivers, "two loads, two mocks")
+end)
+
+test("slash: [characterization] PreviewLines' every branch: refused starts, a repeat, list's header, off with nothing on", function()
+    local NS = T.enableAddon()
+    local V, P = NS.SlashVerbs, NS.Preview
+    local real = { SetPreviewAs = P.SetPreviewAs, EndPreview = P.EndPreview }
+    local sets, ends = {}, 0
+    P.SetPreviewAs = function(key) sets[#sets + 1] = key; return false end   -- every start refused
+    P.EndPreview = function() ends = ends + 1 end
+    -- red under: V.PreviewLines' dispatch losing a branch or reordering its checks (performance-§11)
+    assertEqual(#V.PreviewLines(""), 0, "a refused bare start prints only its own refusal")
+    assertEqual(sets[1], P.CURRENT)
+    assertEqual(#V.PreviewLines("arena"), 0, "a refused named start too")
+    assertEqual(sets[2], "arena")
+    local off = V.PreviewLines("  OFF  ")
+    assertEqual(off[1], "Preview off.")
+    assertEqual(ends, 0, "nothing on, nothing ended")
+    assertEqual(#sets, 2, "off starts nothing")
+    local list = V.PreviewLines("list")
+    assertEqual(list[1], "Preview as (now: " .. P.Label(P.OFF) .. "):")
+    assertEqual(#list, #P.Presets() + 1)
+    assertEqual(list[2], "  " .. P.Presets()[1].key .. ": " .. P.Presets()[1].label)
+    P.SetPreviewAs = real.SetPreviewAs
+    assertTrue(P.SetPreviewAs("arena"))
+    P.SetPreviewAs = function(key) sets[#sets + 1] = key; return false end
+    assertEqual(V.PreviewLines("Arena")[1], "Previewing: " .. P.Label("arena"), "the one on is kept, not restarted")
+    assertEqual(V.PreviewLines("")[1], "Previewing: " .. P.Label("arena"), "bare keeps the one on")
+    assertEqual(#sets, 2, "neither restarted it")
+    assertEqual(V.PreviewLines("list")[1], "Preview as (now: " .. P.Label("arena") .. "):")
+    P.SetPreviewAs, P.EndPreview = real.SetPreviewAs, real.EndPreview
+    assertEqual(V.PreviewLines("off")[1], "Preview off.")
+    assertTrue(P.PreviewAs() == nil, "off ends the one on")
 end)

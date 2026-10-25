@@ -189,7 +189,7 @@ test("dials page: Delete dial asks, then the dial is gone, its header released, 
     P.flush()
     assertTrue(NS.Dial.Instance(id) ~= nil)
     local w = P.redraw("dials")
-    P.find(w, "Button", "Delete dial"):__fire("OnClick")
+    P.find(w, "Button", "Delete dial…"):__fire("OnClick")
     assertTrue(NS.db.profile.dials[id] ~= nil, "asks first")
     P.accept()
     assertNil(NS.db.profile.dials[id])

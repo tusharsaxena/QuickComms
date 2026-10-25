@@ -130,6 +130,12 @@ function MW.Build(spec)
     window:ClearAllPoints()
     window:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
     window:EnableMouse(true)
+    -- Clamped (frame-layering-§4), but NOT toplevel: a toplevel window is raised to the top of its
+    -- strata on every mouse-down, so the click on the popup's Choose icon… would lift the popup's
+    -- window over the browser's band (MODAL_OVER) just as the browser opens, and the browser and its
+    -- catcher would no longer cover it. The catcher already makes each window the only thing in its
+    -- strata a click reaches, so a raise has nothing to win (docs/ARCHITECTURE.md, register row QC-R6).
+    window:SetClampedToScreen(true)
 
     local ctx = H().CreatePanel(spec.pageName, spec.title, { isMain = true })
     local panel = ctx.panel

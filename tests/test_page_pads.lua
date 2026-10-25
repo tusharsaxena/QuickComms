@@ -137,7 +137,7 @@ test("pads page: Delete pad asks, then the pad is gone, its frame released, and 
     P.flush()
     assertTrue(NS.Pad.Instance(id).live)
     local w = P.redraw("pads")
-    P.find(w, "Button", "Delete pad"):__fire("OnClick")
+    P.find(w, "Button", "Delete pad…"):__fire("OnClick")
     assertTrue(NS.db.profile.pads[id] ~= nil, "asks first")
     P.accept()
     assertNil(NS.db.profile.pads[id])
@@ -273,7 +273,7 @@ test("pads page: General carries Visibility, Fade and Faded opacity under a Visi
     assertTrue(P.find(w, "Dropdown", "Fade") ~= nil)
     P.find(w, "Slider", "Faded opacity"):__fire("OnMouseUp", 0.5)
     assertEqual(NS.db.profile.pads.p1.look.fadeAlpha, 0.5, "the path is still pad.look.fadeAlpha")
-    assertTrue(P.find(w, "Button", "Delete pad") ~= nil, "Unlock and Delete stay on General")
+    assertTrue(P.find(w, "Button", "Delete pad…") ~= nil, "Unlock and Delete stay on General")
 end)
 
 -- ── the Buttons tab (2026-10-20) ───────────────────────────────────────────────────────────────

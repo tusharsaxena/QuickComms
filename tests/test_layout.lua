@@ -130,7 +130,7 @@ test("layout: [groups] General: Name | Enable this group, the icon, Parent group
     local w = P.redraw("groups")
     local name, enable = at(P, w, "EditBox", "Name"), at(P, w, "CheckBox", "Enable this group")
     local icon, parent = at(P, w, "Button", "Choose icon…"), at(P, w, "Dropdown", "Parent group")
-    local dup, del = at(P, w, "Button", "Duplicate"), at(P, w, "Button", "Delete group")
+    local dup, del = at(P, w, "Button", "Duplicate group"), at(P, w, "Button", "Delete group…")
     local hint = textAt(w, "Adds back the built-in groups and callouts you deleted. Changes nothing you have.")
     local restore = at(P, w, "Button", "Restore built-in groups")
     assertTrue(name and enable and icon and parent and dup and del and hint and restore, "every control drawn")
@@ -255,7 +255,7 @@ test("layout: [dials] General: Enable this dial, then the key line (QUI-L29, L-n
     local w = P.tab("dials", "General")
     local enable = at(P, w, "CheckBox", "Enable this dial")
     local line = textAt(w, "Set this dial's key on the General page > Keybindings. A dial's key follows its place in the dial order.")
-    assertTrue(enable ~= nil and line ~= nil and enable < line and line < at(P, w, "Button", "Delete dial"))
+    assertTrue(enable ~= nil and line ~= nil and enable < line and line < at(P, w, "Button", "Delete dial…"))
     assertEqual(#P.all(w, "Keybinding"), 0, "no key box here")
 end)
 
