@@ -98,6 +98,24 @@ test("slash: degraded, enable and disable still work and the CLI names the missi
     assertFalse(D.IsStoodDown())
 end)
 
+test("slash: [audit QC-17] degraded, a help row is `/qc verb  desc`, plain, with no em dash or color", function()
+    local D, _, m = T.enableAddon{ skip = NO_LIBKA0S }
+    local Sl = D.SlashCommands
+    local first = D.COMMANDS[1]
+    -- red under: put back the stub's `" — "` separator in settings/Slash.lua helpRow
+    assertEqual(Sl:LandingRows()[1], "/qc " .. first[1] .. "  " .. first[2])
+    assertEqual(Sl:HelpRows()[1], "  /qc " .. first[1] .. "  " .. first[2])
+    m.prints = {}
+    D.addon:OnSlashCommand("help")
+    assertEqual(#m.prints, #D.COMMANDS + 1, "the header and one row per verb")
+    for i, entry in ipairs(D.COMMANDS) do
+        -- the chat prefix is the printer's; the row after it is the verb, two spaces and the
+        -- description verbatim (a description may carry its own dash), never a colored verb
+        local body = m.prints[i + 1]:gsub("^|c%x+%[QC%]|r ", "")
+        assertEqual(body, "  /qc " .. entry[1] .. "  " .. entry[2])
+    end
+end)
+
 test("slash: [audit QC-05] degraded, `debug on`/`off` flip the flag and ack, and `debug diagnostics` routes", function()
     local D, _, m = T.enableAddon{ skip = NO_LIBKA0S }
     m.prints = {}
