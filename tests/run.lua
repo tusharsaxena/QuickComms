@@ -168,6 +168,7 @@ Kit.run{
         "test_eui_skin",
         "test_groups_when",
         "test_page_groups",
+        "test_page_groups_nesting",
         "test_page_pads",
         "test_page_dials",
         "test_check",
