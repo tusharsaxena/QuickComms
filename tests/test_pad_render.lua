@@ -453,11 +453,16 @@ test("pad render: [shine] a rebuild that moved neither the look nor a button's s
     end
     painted = 0
     NS.Shine.Apply = function(...) painted = painted + 1; return real(...) end
-    assertTrue(S.Set("pad.button.width", 150, "p1"))
+    -- The Layout's Button style resizes every button and leaves pad.button (the look's signature) alone,
+    -- so the look table is reused and only the drawn size can call for the repaint.
+    assertTrue(S.Set("pad.layout.style", "icon", "p1"))
     NS.Shine.Apply = real
     -- red under: the guard left on the look alone (a resized button keeps the old size's caps)
     assertTrue(painted > 0, "a resized button is painted again")
-    assertEqual(padButtons(NS)[1].qcShine.left.__size[1], padButtons(NS)[1].__h / 2)
+    for _, btn in ipairs(padButtons(NS)) do
+        assertEqual(btn.qcShine.left.__size[1], btn.__h / 2, "the caps follow the new height")
+        assertFalse(btn.qcShine.mid:IsShown(), "a square button: no middle")
+    end
 end)
 
 test("pad render: [shine] the pad's look leaves the dial alone", function()

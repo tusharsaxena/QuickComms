@@ -253,7 +253,7 @@ Total.
 - compat: [QF-03] Coordinates reads the map position as x, y in percent, one decimal, or nil
 - compat: [QF-04] GeneralJoined is true only when the client names channel 1 as General
 
-### test_restrictions.lua (19)
+### test_restrictions.lua (20)
 
 - restrictions: nothing restricted, everything allowed and nothing announced
 - restrictions: an encounter stops chat and is the reason; its lift is announced
@@ -270,6 +270,7 @@ Total.
 - restrictions: a client without the restriction APIs restricts nothing but combat
 - restrictions: ENCOUNTER_END re-reads a lockdown the client cleared after the last event
 - restrictions: CHALLENGE_MODE_COMPLETED re-reads, through Situation's row
+- restrictions: a lockdown that clears just after the key completes is announced by the late re-read
 - restrictions: a lockdown that clears just after the encounter ends is announced by the late re-read
 - restrictions: the late re-read is canceled by the stand-down
 - restrictions: stood down, nothing is heard; the stand-up announces what is in effect
@@ -1376,7 +1377,7 @@ Total.
 | test_disabled.lua | 26 |
 | test_diagnostics.lua | 13 |
 | test_compat.lua | 14 |
-| test_restrictions.lua | 19 |
+| test_restrictions.lua | 20 |
 | test_situation.lua | 20 |
 | test_tokens.lua | 11 |
 | test_channels.lua | 13 |
@@ -1424,4 +1425,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1174** |
+| **Total** | **1175** |

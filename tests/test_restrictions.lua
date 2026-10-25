@@ -207,15 +207,32 @@ test("restrictions: CHALLENGE_MODE_COMPLETED re-reads, through Situation's row",
     assertTrue(heard[2][2])
 end)
 
+test("restrictions: a lockdown that clears just after the key completes is announced by the late re-read", function()
+    local NS, m, heard = live()
+    m.chatLockdown = true
+    m.__fire(EVENT, nil, nil)
+    m.__fire("CHALLENGE_MODE_COMPLETED")
+    assertEqual(#heard, 1, "still locked at the event: nothing moved")
+    -- red under: Situation forwarding the key's end to R.Refresh rather than R.RefreshAfterLift
+    assertTrue(NS.State.restrictionLiftTimer ~= nil, "the key's end arms the late re-read too")
+    m.chatLockdown = false
+    m.__fireTimers()
+    assertEqual(#heard, 2, "and it announced the lift")
+    assertTrue(heard[2][2])
+end)
+
 test("restrictions: a lockdown that clears just after the encounter ends is announced by the late re-read", function()
-    local _, m, heard = live()
+    local NS, m, heard = live()
     m.chatLockdown = true
     m.__fire(EVENT, nil, nil)
     m.__fire("ENCOUNTER_END")
     assertEqual(#heard, 1, "still locked at the event: nothing moved")
+    local armed = NS.State.restrictionLiftTimer
     m.chatLockdown = false
     m.__fire("ENCOUNTER_END")
     assertEqual(#heard, 2, "a second end reads now")
+    -- red under: R.RefreshAfterLift arming a re-read on every end (no pending-timer check)
+    assertTrue(armed ~= nil and NS.State.restrictionLiftTimer == armed, "one re-read per window, not one per end")
     m.chatLockdown = true
     m.__fire(EVENT, nil, nil)
     m.chatLockdown = false
