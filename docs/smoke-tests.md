@@ -658,14 +658,14 @@ profile the groups read Dungeon, Raid, Arena, Battleground and Solo; Dungeon hol
 (Pulling, Lust, Need mana, Skipping, Res me, Chain pull, Kick order), In Group ten (Hello, Summon,
 Buffs please, Healthstone, tyff, brb, Ready, GLHF, ggty, ggnt) and Solo seven. Arena's Swap and Kill
 and every Kill … carrier callout send your target's name ({target}). The pads start unlocked (their
-drag strips show) until Lock pads. Result: owed (rewritten 2026-10-25).
+drag strips show) until Lock pads. Result: 2026-10-25, pass (the owner's run; client build not recorded).
 
 **EDIT-33. Nested groups A–Z (2026-10-25).** Groups → the Group picker: the top-level groups A–Z, and
 under Alterac Valley its objectives A–Z (Aid Station, Balinda, DB North Bunker, DB South Bunker,
 Drek'Thar, Frostwolf GY, FW East Tower, FW West Tower, Galvangar, …, Tower Point, Vanndar), Arathi Basin's nodes
 Blacksmith, Farm, Gold Mine, Lumber Mill, Stables. In Arathi Basin the pad's sections and the dial's
 ring (after the set's own wedge) follow the same order. New group `Zed`, then `Alpha`, both inside a
-group of yours → Alpha lists first. Result: owed (new 2026-10-25).
+group of yours → Alpha lists first. Result: 2026-10-25, pass (the owner's run; client build not recorded).
 
 ## Preview window
 
@@ -681,7 +681,7 @@ Result: 2026-10-23, pass (the owner's run; client build not recorded).
 **PREVIEW-2. The dropdown and the slash move together.** With PREVIEW-1's preview on, pick Arena in
 the window's dropdown → the pads switch to the arena set and the settings row reads Arena.
 `/qc preview raid:2912` → the dropdown moves to the Raid · Mythic · The Voidspire entry.
-Result: owed (rewritten 2026-10-25).
+Result: 2026-10-25, pass (the owner's run; client build not recorded).
 
 **PREVIEW-3. It outlives the settings window.** Close the settings window with a preview on → the
 preview and the window stay. Click End preview in the window → the window goes, the pads are live,
@@ -803,7 +803,7 @@ chat shows "INC Lumber Mill". Open again, open Arathi Basin and press 5 → Lumb
 first four, then Lumber Mill and Stables. (If the dial does not show Arathi Basin at all, the instance id may be
 wrong: run `/qc diagnostics`, copy the `situation` section's instanceID into the "Battleground
 instance IDs seen" table of `docs/brainstorm/go-no-go/round-4-build-checks.md`, and file it with
-this check's ID; BG-2 confirms the ids.) Result: owed (rewritten 2026-10-25).
+this check's ID; BG-2 confirms the ids.) Result: 2026-10-25, pass (the owner's run; client build not recorded).
 
 **DIAL-5. Number keys, the wheel, the page arrows and dots (dial rework, 2026-10-21).** Wheel →
 Wedges per ring 4, in a key: open, open a group with more than four callouts, press 3 → the third
@@ -1436,7 +1436,7 @@ groups → one slice per entry and no empty slice: a wedge drawn as the battlegr
 opens its map-wide callouts), then the nodes A–Z clockwise (Arathi Basin six slices, Battle for
 Gilneas four, Ashran six), and Deepwind Gorge shows five nodes (owner ruling R2). Lumber Mill, then
 INC is two clicks from the set's ring. An empty slice, or a node out of A–Z order, is filed with this
-check's ID and its battleground. Result: owed (rewritten 2026-10-25).
+check's ID and its battleground. Result: 2026-10-25, pass (the owner's run; client build not recorded).
 
 **BG-2. Battleground instance ids.** In each battleground you play: `/qc diagnostics` → the
 `situation` section's instanceID is one its set lists (`defaults/BuiltIns_Battlegrounds.lua`), and
@@ -1461,13 +1461,13 @@ by side after Refinery, each with Attack, Defend, INC and Clear; Our base's line
 base", "Defend our base", "INC our base", "Our base is clear", Enemy base's "Attack the enemy base",
 "Hold the enemy base", "INC at the enemy base", "The enemy base is clear", the same for either
 faction. On the dial the set's ring has the Isle of Conquest wedge at N, then its seven groups A–Z,
-Our base and Enemy base among them. Result: owed (rewritten 2026-10-25).
+Our base and Enemy base among them. Result: 2026-10-25, pass (the owner's run; client build not recorded).
 
 **BG-5. A flag map.** In Warsong Gulch or Twin Peaks: the pad shows the set's map-wide EFC callouts,
 then Our flag, Enemy flag, Our FC and Midfield (Bridge in Twin Peaks), each its own section; on the
 dial (click the set on the ring of groups) the set's ring has its own wedge on N and the four groups
 after it, A–Z, five slices in all. Send "INC flag room" → `INC our flag room`; "We have it" → `We have
-their flag`. The same holds for Ashran, Deephaul Ravine and Seething Shore. Result: owed (rewritten 2026-10-25).
+their flag`. The same holds for Ashran, Deephaul Ravine and Seething Shore. Result: 2026-10-25, pass (the owner's run; client build not recorded).
 
 **BG-6. A profile from before the objective groups.** On a profile saved before this build (or a
 copy of one): log in → `/qc diagnostics` shows schema 7; Alterac Valley's set holds its 19 objectives
@@ -1480,7 +1480,7 @@ Battle for Gilneas, Deepwind Gorge or Isle of Conquest: every node's section hol
 swords), Defend (cyan shield), INC (orange charge) and Clear (green check), as Wintergrasp's workshops
 do; Lumber Mill's send "Attack Lumber Mill", "Defend Lumber Mill", "INC Lumber Mill", "Lumber Mill is
 clear". Eye of the Storm's Flag reads Take flag, Defend flag, INC, Clear ("Take the flag", "The flag is
-clear"). Each set's own map-wide callouts (Hold our bases, Zerg next…) are unchanged. Result: owed (rewritten 2026-10-25).
+clear"). Each set's own map-wide callouts (Hold our bases, Zerg next…) are unchanged. Result: 2026-10-25, pass (the owner's run; client build not recorded).
 
 **BG-8. Silvershard Mines and Temple of Kotmogu (bg buttons).** In Silvershard Mines: after the set's
 own Escort, Contest and Cart help, the pad shows Lava track, Water track and North track (Contest,
@@ -1492,7 +1492,7 @@ orb, Blue orb, Green orb and Purple orb, each drawn in its color (Take orb, Peel
 "Take the blue orb", "Peel for our blue orb carrier", "Kill their blue orb carrier <target>", "Our
 blue orb carrier needs heals") and Center (Go center, Hold center, INC, Clear). On the dial both open
 on the set's ring, the groups A–Z after the set's own wedge, one slice each.
-Result: owed (rewritten 2026-10-25).
+Result: 2026-10-25, pass (the owner's run; client build not recorded).
 
 **BG-9. Faction and location colors (2026-10-25).** On a reset profile (the colors are not migrated):
 Alterac Valley's Vanndar, Balinda, both Dun Baldar bunkers, Icewing and Stonehearth Bunker, Stormpike
@@ -1502,7 +1502,7 @@ Tower, Tower Point, both Frostwolf towers, Iceblood and Frostwolf GY and the Rel
 Ruins red (Horde-owned). Ashran's Road of Glory is gold. Arathi Basin's Stables are
 brown, Deepwind Gorge's and Isle of Conquest's Quarry stone gray, Isle of Conquest's Hangar sky blue,
 Warsong Gulch's Midfield brown and Twin Peaks' Bridge gray; no battleground icon is white. Under any
-location, Attack is crimson and Defend cyan, on the pad and on the dial. Result: owed (new 2026-10-25).
+location, Attack is crimson and Defend cyan, on the pad and on the dial. Result: 2026-10-25, pass (the owner's run; client build not recorded).
 
 ## Instance ids
 
@@ -1562,7 +1562,8 @@ On 2026-10-24 the owner reported that every check of the keybindings, settings l
 layering run passed (KEY-4 to KEY-6 with the one-key-button follow-up QC-RV3, LAYOUT-1 to LAYOUT-5
 and LAYER-1 to LAYER-4), recorded on each check's Result line.
 
-Owed from the 2026-10-25 run (Preview as for the whole season, nested groups A–Z, unpinned dial rings,
-battleground colors): EDIT-32 and PREVIEW-2 (rewritten for the season's dungeons and Mythic raids),
-EDIT-33 (new), DIAL-4, BG-1, BG-4, BG-5, BG-7 and BG-8 (rewritten for unpinned rings and the new
-action colors) and BG-9 (new).
+On 2026-10-25 the owner reported that every check of that day's run (Preview as for the whole
+season, nested groups A–Z, unpinned dial rings, battleground colors) passed: EDIT-32 and PREVIEW-2
+(rewritten for the season's dungeons and Mythic raids), EDIT-33 (new), DIAL-4, BG-1, BG-4, BG-5, BG-7
+and BG-8 (rewritten for unpinned rings and the new action colors) and BG-9 (new), recorded on each
+check's Result line. No check is owed.
