@@ -6,7 +6,7 @@ local _, NS = ...
 --              [ Ring map ]   (item 020: Layout was Wheel, QUI-L22; Labels merges Slice labels and
 --              Group labels, QUI-L19; Ring map was Preview, QUI-L08)
 --     General  Name, Enable this dial, a line pointing at the General page > Keybindings, then
---              Delete dial
+--              Delete dial…
 --     Groups   Show groups as (Categories or Flat), then Add group, then the dial's groups as a
 --              drag-to-reorder list with Remove (its priority order, spec §7)
 --     Layout   slices per ring (Auto by default), ring radius, slice gap, then Position: open at, X
@@ -186,7 +186,7 @@ local function renderGeneral(ctx, rows)
     h.RenderRows(ctx, Ed.Scalar(rows), nil, nil, { noHeadings = true })
     -- Where the dial's key is set: a static line, no key box and no readout (item 020, QUI-L29).
     h.TextRow(ctx, L["|cffa0a0a0Set this dial's key on the General page > Keybindings. A dial's key follows its place in the dial order.|r"])
-    h.InlineButtonPair(ctx, { text = L["Delete dial"],
+    h.InlineButtonPair(ctx, { text = L["Delete dial…"],
         tooltip = L["Delete this dial. Its groups and callouts are kept. Asks first."],
         onClick = function() DD.Delete(id) end }, nil)
 end

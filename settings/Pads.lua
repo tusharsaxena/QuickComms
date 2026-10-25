@@ -7,7 +7,7 @@ local _, NS = ...
 --              header and Section header until then, QUI-L10)
 --     General  Name, Enable this pad, Visibility (with Fade and Faded opacity, `pad.look.*`, under its
 --              own heading; on the Window tab until 2026-10-20), then Unlock (or Lock) all pads and
---              Delete pad
+--              Delete pad…
 --     Groups   Show groups as, then Add group, then the pad's groups as a drag-to-reorder list with
 --              Remove (its priority order, spec §7); the add control above the list since item 020
 --              (QUI-L07), as the Callouts tab's
@@ -167,7 +167,7 @@ local function renderGeneral(ctx, rows)
               NS.SlashVerbs.ToggleLock()
               Ed.RequestRefresh()
           end },
-        { text = L["Delete pad"], tooltip = L["Delete this pad. Its groups and callouts are kept. Asks first."],
+        { text = L["Delete pad…"], tooltip = L["Delete this pad. Its groups and callouts are kept. Asks first."],
           onClick = function() PD.Delete(id) end })
 end
 

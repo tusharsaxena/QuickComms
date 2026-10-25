@@ -199,11 +199,11 @@ test("groups page: General draws the group's rows, no Preview as; Duplicate and 
     assertEqual(NS.db.profile.groups[gid].name, "Kicks")
     P.find(w, "CheckBox", "Enable this group"):__fire("OnValueChanged", false)
     assertFalse(NS.db.profile.groups[gid].enabled)
-    P.find(w, "Button", "Duplicate"):__fire("OnClick")
+    P.find(w, "Button", "Duplicate group"):__fire("OnClick")
     local copy = NS.State.editing.group
     assertTrue(copy ~= gid and NS.db.profile.groups[copy] ~= nil)
     w = P.redraw("groups")
-    P.find(w, "Button", "Delete group"):__fire("OnClick")
+    P.find(w, "Button", "Delete group…"):__fire("OnClick")
     P.accept()
     assertNil(NS.db.profile.groups[copy])
 end)
@@ -505,7 +505,7 @@ test("groups page: deleting a group deletes its callouts", function()
     local gid, kick, _, lust = withCallouts(NS)
     pick(NS, gid)
     local w = P.redraw("groups")
-    local delete = P.find(w, "Button", "Delete group")
+    local delete = P.find(w, "Button", "Delete group…")
     delete:__fire("OnClick")
     -- red under: keep the confirmation's "This cannot be undone." alone (it says nothing of the callouts)
     local which = m.popupsShown[#m.popupsShown][1]
@@ -533,8 +533,8 @@ test("groups page: a seeded set's General is any group's: Name, Enable this grou
     assertFalse(NS.db.profile.groups[raid].enabled)
     assertTrue(P.find(w, "Dropdown", "Parent group") ~= nil)
     assertTrue(P.find(w, "Button", "Choose icon…") ~= nil)
-    assertTrue(P.find(w, "Button", "Duplicate") ~= nil)
-    P.find(w, "Button", "Delete group"):__fire("OnClick")
+    assertTrue(P.find(w, "Button", "Duplicate group") ~= nil)
+    P.find(w, "Button", "Delete group…"):__fire("OnClick")
     P.accept()
     assertNil(NS.db.profile.groups[raid], "a seeded group is deleted as any other")
 end)
@@ -712,7 +712,7 @@ test("groups page: [final 12] Duplicate says the copy is on no pad yet", functio
     local w = P.redraw("groups")
     m.prints = {}
     -- red under: drop the printed line from G.Duplicate
-    P.find(w, "Button", "Duplicate"):__fire("OnClick")
+    P.find(w, "Button", "Duplicate group"):__fire("OnClick")
     assertTrue(table.concat(m.prints, "\n"):find("the copy is on no pad yet", 1, true) ~= nil)
 end)
 
@@ -723,7 +723,7 @@ test("groups page: [nesting] a child's Duplicate tooltip says the copy sits in t
     NS.SchemaRuntime.Set("group.parent", a, c)
     pick(NS, c)
     local w = P.redraw("groups")
-    P.find(w, "Button", "Duplicate"):__fire("OnEnter")
+    P.find(w, "Button", "Duplicate group"):__fire("OnEnter")
     local said = {}
     for _, line in ipairs(m.GameTooltip.__lines) do said[#said + 1] = line[1] end
     said = table.concat(said, "\n")
@@ -732,7 +732,7 @@ test("groups page: [nesting] a child's Duplicate tooltip says the copy sits in t
     assertTrue(said:find("on no pad", 1, true) == nil, said)
     pick(NS, a)
     w = P.redraw("groups")
-    P.find(w, "Button", "Duplicate"):__fire("OnEnter")
+    P.find(w, "Button", "Duplicate group"):__fire("OnEnter")
     said = {}
     for _, line in ipairs(m.GameTooltip.__lines) do said[#said + 1] = line[1] end
     assertTrue(table.concat(said, "\n"):find("on no pad", 1, true) ~= nil, "a top-level group's is unchanged")
@@ -1185,7 +1185,7 @@ test("groups page: [nesting] deleting a parent asks, saying its groups become to
     NS.SchemaRuntime.Set("group.parent", a, c)
     pick(NS, a)
     local w = P.redraw("groups")
-    P.find(w, "Button", "Delete group"):__fire("OnClick")
+    P.find(w, "Button", "Delete group…"):__fire("OnClick")
     local which = m.popupsShown[#m.popupsShown][1]
     -- red under: G.Delete asking with the plain group text
     assertTrue(m.StaticPopupDialogs[which].text:find("top-level", 1, true) ~= nil)
