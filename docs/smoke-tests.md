@@ -155,7 +155,7 @@ Result: 2026-10-21, pass (the owner's run; client build not recorded).
 **DEGRADED-2. Help without LibKa0s (2026-10-25, audit QC-17).** With `libs\LibKa0s` renamed as in
 DEGRADED-1, `/qc help` → each row reads `/qc <verb>  <description>`: the verb, two spaces, then its
 description, with no em dash between them and no color. Restore the folder after.
-Result: owed (new 2026-10-25).
+Result: 2026-10-25, pass (the owner's run; client build not recorded).
 
 ## Send
 
@@ -200,7 +200,7 @@ again, `/join <a custom name>` so the custom channel takes `/1` → a General ca
 to the custom channel. With a press pending, type a line in `/2` (Trade, in a capital) inside about a
 second → no false "sent" (the `/2` line is not taken as the echo; a drop note only if the General line
 really never arrived). Record the client build.
-Result: owed (rewritten 2026-10-25).
+Result: 2026-10-25, pass (the owner's run; client build not recorded).
 
 **SEND-7. Lockdown lift after an encounter or a key (2026-10-25, F-003).** On a raid boss or in a
 Mythic+ key, put a Say callout on the pad. During the encounter the padlock and the lockdown chip
@@ -208,7 +208,7 @@ show. Kill the boss, or complete the key → within about a second of `ENCOUNTER
 `CHALLENGE_MODE_COMPLETED` the padlock and the chip clear, and a press prints no "may not have been
 sent" line. Repeat with a wipe (`ENCOUNTER_END` fires then too). Note whether the flag ever clears
 later than the 1 s re-read (a known limitation if it does). Record the client build.
-Result: owed (new 2026-10-25).
+Result: 2026-10-25, pass (the owner's run; client build not recorded).
 
 ## Tokens
 
@@ -331,11 +331,11 @@ Result: 2026-10-21, pass (the owner's run; client build not recorded).
 **PAD-16. A shrunk pad leaves nothing clickable behind (2026-10-25, F-006).** On an M+ pad (18
 buttons), zone to the open world so the pad shrinks. Click where a removed button used to be →
 nothing is sent and nothing there takes the click. The remaining buttons still send.
-Result: owed (new 2026-10-25).
+Result: 2026-10-25, pass (the owner's run; client build not recorded).
 
 **PAD-17. A rebuild that moved no line still sends (2026-10-25, F-006).** Change the pad's spacing
 (or any setting that changes no line) and press a button → it still sends its line.
-Result: owed (new 2026-10-25).
+Result: 2026-10-25, pass (the owner's run; client build not recorded).
 
 ## Editors
 
@@ -697,7 +697,7 @@ group of yours → Alpha lists first. Result: 2026-10-25, pass (the owner's run;
 **EDIT-34. The delete and copy buttons' labels (2026-10-25, audit QC-19).** On the Groups, Pads
 and Dials pages' General tabs, each delete button ends in an ellipsis (Delete group…, Delete pad…,
 Delete dial…) and opens its confirm; the Groups page's copy button reads Duplicate group.
-Result: owed (new 2026-10-25).
+Result: 2026-10-25, pass (the owner's run; client build not recorded).
 
 ## Preview window
 
@@ -1111,11 +1111,11 @@ outlined slice labels, 16-point outlined group labels, the Orb shine on the slic
 
 **DIAL-42. A dial that lost wedges (2026-10-25, F-006).** Open a dial whose rebuild dropped wedges
 (fewer callouts than before) → the number keys past the item count do nothing, and a click on an empty
-slice does nothing. Result: owed (new 2026-10-25).
+slice does nothing. Result: 2026-10-25, pass (the owner's run; client build not recorded).
 
 **DIAL-43. The slice highlight on reopen (2026-10-25, F-001).** Open a dial, hover a slice, close
 it, and reopen it with the cursor on the same slice → it lights in place. Change Slice gap, reopen and
-hover → the highlight sits on the shifted slice. Result: owed (new 2026-10-25).
+hover → the highlight sits on the shifted slice. Result: 2026-10-25, pass (the owner's run; client build not recorded).
 
 ## Look
 
@@ -1327,7 +1327,7 @@ by its key, click outside it → it closes (with the settings window closed). No
 **LAYER-5. The modal windows stay on screen and in order (2026-10-25, audit QC-21).** Drag the
 callout popup to each screen edge → it stops at the edge; open the icon browser and do the same → it
 stops too. Click the popup, then Choose icon… → the browser opens over the popup and still covers it.
-Result: owed (new 2026-10-25).
+Result: 2026-10-25, pass (the owner's run; client build not recorded).
 
 ## Icons tab
 
@@ -1475,7 +1475,7 @@ pad keeps Glass orb and the dial shows no shine. Result: 2026-10-21, pass (the o
 **SHINE-4. The shine re-fits its button (2026-10-25, F-001).** With Gloss fade on, change Button
 width, then Button height, then Layout style to icon only → each time the shine re-fits the button:
 its caps half the button's height wide, and no middle on a square button. A rebuild that changes
-neither (spacing) leaves it drawn as it was. Result: owed (new 2026-10-25).
+neither (spacing) leaves it drawn as it was. Result: 2026-10-25, pass (the owner's run; client build not recorded).
 
 ## Battlegrounds
 
@@ -1618,7 +1618,8 @@ season, nested groups A–Z, unpinned dial rings, battleground colors) passed: E
 and BG-8 (rewritten for unpinned rings and the new action colors) and BG-9 (new), recorded on each
 check's Result line.
 
-Owed from the review and audit fixes of 2026-10-25: SEND-6 (rewritten for the client-confirmed
-General, F-007), and new SEND-7 (the lockdown lift, F-003), PAD-16, PAD-17 and DIAL-42 (parked
-buttons, F-006), DIAL-43 and SHINE-4 (the cheaper repaints, F-001), DEGRADED-2 (audit QC-17),
-EDIT-34 (audit QC-19) and LAYER-5 (audit QC-21).
+The owner reported later on 2026-10-25 that every check of the review and audit fixes passed:
+SEND-6 (rewritten for the client-confirmed General, F-007), and new SEND-7 (the lockdown lift,
+F-003), PAD-16, PAD-17 and DIAL-42 (parked buttons, F-006), DIAL-43 and SHINE-4 (the cheaper
+repaints, F-001), DEGRADED-2 (audit QC-17), EDIT-34 (audit QC-19) and LAYER-5 (audit QC-21),
+recorded on each check's Result line. No check is owed.
