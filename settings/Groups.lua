@@ -261,14 +261,9 @@ end
 local MUTED_GOLD = "|cffc9a66b"
 G.MUTED_GOLD = MUTED_GOLD
 
---- What Reuse callout offers group `gid`: every callout ("<its group>: <name>", a child group as
---- "<its parent>: <it>", so two battlegrounds' same-named nodes read apart) but `gid`'s own (a
---- seeded set's among them, 2026-10-18-builtins-as-groups-design.md), as one list sorted by group,
---- then name, case-insensitively, on the plain text. Entries that would read alike are numbered
---- ("<name> (2)") so each is unambiguous. Each entry is { id, label (the group part in MUTED_GOLD),
---- plain (the label without color) }. Add copies the pick (spec P2).
-function G.ReusableCallouts(gid)
-    local p = NS.db.profile
+-- Reuse's three steps, in order. First, each callout's group part ("<group>", a child group's
+-- "<parent>: <child>"; the first group that holds it wins) and the set of `gid`'s own.
+local function reuseOwners(p, gid)
     local owner, own = {}, {}
     for id, g in pairs(p.groups) do
         for _, cid in ipairs(g.callouts or {}) do
@@ -280,18 +275,20 @@ function G.ReusableCallouts(gid)
             if id == gid then own[cid] = true end
         end
     end
-    local out = {}
-    for id, c in pairs(p.callouts) do
-        if not own[id] then out[#out + 1] = { id = id, group = owner[id], name = c.name or id } end
-    end
-    -- Ties by id, so the numbering below is stable.
-    table.sort(out, function(x, y)
-        local gx, gy = (x.group or ""):lower(), (y.group or ""):lower()
-        if gx ~= gy then return gx < gy end
-        local nx, ny = x.name:lower(), y.name:lower()
-        if nx ~= ny then return nx < ny end
-        return x.id < y.id
-    end)
+    return owner, own
+end
+
+-- Then the order: by group, then name, case-insensitively; ties by id, so the numbering is stable.
+local function reuseBefore(x, y)
+    local gx, gy = (x.group or ""):lower(), (y.group or ""):lower()
+    if gx ~= gy then return gx < gy end
+    local nx, ny = x.name:lower(), y.name:lower()
+    if nx ~= ny then return nx < ny end
+    return x.id < y.id
+end
+
+-- Last, each entry's plain and colored label, a repeat of a plain label numbered ("<name> (2)").
+local function reuseLabel(out)
     local seen = {}
     for _, e in ipairs(out) do
         local plain = e.group and L["%s: %s"]:format(e.group, e.name) or e.name
@@ -302,6 +299,23 @@ function G.ReusableCallouts(gid)
         e.label = e.group and L["%s: %s"]:format(MUTED_GOLD .. e.group .. "|r", name) or name
         e.group, e.name = nil, nil
     end
+end
+
+--- What Reuse callout offers group `gid`: every callout ("<its group>: <name>", a child group as
+--- "<its parent>: <it>", so two battlegrounds' same-named nodes read apart) but `gid`'s own (a
+--- seeded set's among them, 2026-10-18-builtins-as-groups-design.md), as one list sorted by group,
+--- then name, case-insensitively, on the plain text. Entries that would read alike are numbered
+--- ("<name> (2)") so each is unambiguous. Each entry is { id, label (the group part in MUTED_GOLD),
+--- plain (the label without color) }. Add copies the pick (spec P2).
+function G.ReusableCallouts(gid)
+    local p = NS.db.profile
+    local owner, own = reuseOwners(p, gid)
+    local out = {}
+    for id, c in pairs(p.callouts) do
+        if not own[id] then out[#out + 1] = { id = id, group = owner[id], name = c.name or id } end
+    end
+    table.sort(out, reuseBefore)
+    reuseLabel(out)
     return out
 end
 
