@@ -119,6 +119,40 @@ function V.PadsShown()
     return not (char and char.padsHidden == true)
 end
 
+-- `/qc preview` bare: start Current when nothing is previewed, else keep the one on and put the
+-- window up again.
+local function previewBareLines(P)
+    if P.PreviewAs() == nil then
+        if not P.SetPreviewAs(P.CURRENT) then return {} end
+    elseif NS.PreviewWindow then
+        NS.PreviewWindow.Sync()
+    end
+    return { L["Previewing: %s"]:format(P.Label(P.PreviewAs())) }
+end
+
+-- `/qc preview list`: the menu, headed by the one on now; changes nothing.
+local function previewListLines(P)
+    local out = { L["Preview as (now: %s):"]:format(P.Label(P.PreviewAs() or P.OFF)) }
+    for _, e in ipairs(P.Presets()) do out[#out + 1] = L["  %s: %s"]:format(e.key, e.label) end
+    return out
+end
+
+-- `/qc preview off`: every preview the window shows, as its End preview does (QF-02): the edit
+-- preview too.
+local function previewOffLines(P)
+    if P.PreviewAs() ~= nil or P.EditGroup() ~= nil then P.EndPreview() end
+    return { L["Preview off."] }
+end
+
+-- `/qc preview <name>`: switch to a preset, unless it is the one on already.
+local function previewSwitchLines(P, key)
+    if not P.FindPreset(key) then
+        return { L["No situation named %s. Type /qc preview list for the list."]:format(key) }
+    end
+    if P.PreviewAs() ~= key and not P.SetPreviewAs(key) then return {} end
+    return { L["Previewing: %s"]:format(P.Label(key)) }
+end
+
 --- The lines `/qc preview [name|off|list]` prints (spec §14, design-qc-preview §2.3). Bare starts a
 --- preview of the current situation when nothing is previewed, or keeps the one on, and either way
 --- puts the selector window up; `list` prints the menu with the one on now and changes nothing; a
@@ -127,30 +161,11 @@ end
 function V.PreviewLines(rest)
     local P = NS.Preview
     local key = (rest or ""):match("^%s*(%S+)")
-    if not key then
-        if P.PreviewAs() == nil then
-            if not P.SetPreviewAs(P.CURRENT) then return {} end
-        elseif NS.PreviewWindow then
-            NS.PreviewWindow.Sync()
-        end
-        return { L["Previewing: %s"]:format(P.Label(P.PreviewAs())) }
-    end
+    if not key then return previewBareLines(P) end
     key = key:lower()   -- as the dispatcher reads verbs; every preset key is lower case
-    if key == "list" then
-        local out = { L["Preview as (now: %s):"]:format(P.Label(P.PreviewAs() or P.OFF)) }
-        for _, e in ipairs(P.Presets()) do out[#out + 1] = L["  %s: %s"]:format(e.key, e.label) end
-        return out
-    end
-    if key ~= P.OFF and not P.FindPreset(key) then
-        return { L["No situation named %s. Type /qc preview list for the list."]:format(key) }
-    end
-    if key == P.OFF then
-        -- Every preview the window shows, as its End preview does (QF-02): the edit preview too.
-        if P.PreviewAs() ~= nil or P.EditGroup() ~= nil then P.EndPreview() end
-        return { L["Preview off."] }
-    end
-    if P.PreviewAs() ~= key and not P.SetPreviewAs(key) then return {} end
-    return { L["Previewing: %s"]:format(P.Label(key)) }
+    if key == "list" then return previewListLines(P) end
+    if key == P.OFF then return previewOffLines(P) end
+    return previewSwitchLines(P, key)
 end
 
 function V.Preview(rest)
