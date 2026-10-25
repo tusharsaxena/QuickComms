@@ -24,8 +24,8 @@ local BG = { content = "battleground", group = "raid", instanceGroup = true, loc
 -- title names the node; the message names it ("Attack Stables", "Stables is clear"). Every base-capture
 -- node and Wintergrasp's workshops take them.
 local NODE = {
-    { "attack", L["Attack"], L["Attack %s"],   "gi:crossed-swords", C.red },
-    { "defend", L["Defend"], L["Defend %s"],   "gi:checked-shield", C.blue },
+    { "attack", L["Attack"], L["Attack %s"],   "gi:crossed-swords", C.crimson },
+    { "defend", L["Defend"], L["Defend %s"],   "gi:checked-shield", C.cyan },
     { "inc",    L["INC"],    L["INC %s"],      "gi:charging",       C.orange },
     { "clear",  L["Clear"],  L["%s is clear"], "gi:check-mark",     C.green },
 }
@@ -38,7 +38,7 @@ end
 
 -- The map-wide callouts a base-capture battleground holds besides its nodes' rings.
 local BASES = {
-    { "hold",   L["Hold our bases"], L["Hold what we have, defend our bases"], "gi:checked-shield", C.blue },
+    { "hold",   L["Hold our bases"], L["Hold what we have, defend our bases"], "gi:checked-shield", C.cyan },
     { "zerg",   L["Zerg next"],      L["Zerg the next base together"], "gi:meeple-army", C.red },
     { "ninja",  L["Ninja a base"],   L["Ninja an open base, it is unguarded"], "gi:hooded-assassin", C.purple },
     { "rotate", L["Rotate"],         L["Rotate to the base under attack"], "gi:cycle", C.orange },
@@ -57,8 +57,8 @@ end
 -- An Alterac Valley objective's two callouts: short names, since the section title names the
 -- objective; the message names it in full ("Attack Iceblood Tower").
 local OBJECTIVE = {
-    { "attack", L["Attack"], L["Attack %s"], "gi:crossed-swords", C.red },
-    { "defend", L["Defend"], L["Defend %s"], "gi:checked-shield", C.blue },
+    { "attack", L["Attack"], L["Attack %s"], "gi:crossed-swords", C.crimson },
+    { "defend", L["Defend"], L["Defend %s"], "gi:checked-shield", C.cyan },
 }
 local function objective(fullName) return rowsFor(OBJECTIVE, fullName) end
 
@@ -84,21 +84,21 @@ local function nodeBattleground(key, name, icon, ids, nodes, rows)
 end
 
 nodeBattleground("ab", L["Arathi Basin"], { "gi:wheat", C.gold }, { 529, 2107, 1681 }, {
-    { "stables", L["Stables"], "gi:horse-head-lorc", C.white },
+    { "stables", L["Stables"], "gi:horse-head-lorc", C.brown },
     { "lumbermill", L["Lumber Mill"], "gi:wood-axe", C.green },
     { "blacksmith", L["Blacksmith"], "gi:anvil", C.orange },
     { "mine", L["Gold Mine"], "gi:gold-mine", C.gold },
     { "farm", L["Farm"], "gi:barn", C.red },
 }, BASES)
 nodeBattleground("eots", L["Eye of the Storm"], { "gi:tornado", C.purple }, { 566, 968 }, {
-    { "felreaver", L["Fel Reaver Ruins"], "gi:castle-ruins", C.green },
-    { "bloodelf", L["Blood Elf Tower"], "gi:tower-flag", C.red },
-    { "draenei", L["Draenei Ruins"], "gi:crystal-growth", C.purple },
-    { "magetower", L["Mage Tower"], "gi:wizard-staff", C.blue },
+    { "felreaver", L["Fel Reaver Ruins"], "gi:castle-ruins", C.neutral },
+    { "bloodelf", L["Blood Elf Tower"], "gi:tower-flag", C.horde },
+    { "draenei", L["Draenei Ruins"], "gi:crystal-growth", C.alliance },
+    { "magetower", L["Mage Tower"], "gi:wizard-staff", C.neutral },
     -- The flag in the middle is no base: its four rows say what a flag wants.
     { "flag", L["Flag"], "gi:flying-flag", C.gold, {
-        { "attack", L["Take flag"],   L["Take the flag"],     "gi:crossed-swords", C.red },
-        { "defend", L["Defend flag"], L["Defend the flag"],   "gi:checked-shield", C.blue },
+        { "attack", L["Take flag"],   L["Take the flag"],     "gi:crossed-swords", C.crimson },
+        { "defend", L["Defend flag"], L["Defend the flag"],   "gi:checked-shield", C.cyan },
         { "inc",    L["INC"],         L["INC the flag"],      "gi:charging",       C.orange },
         { "clear",  L["Clear"],       L["The flag is clear"], "gi:check-mark",     C.green },
     } },
@@ -117,26 +117,26 @@ nodeBattleground("bfg", L["Battle for Gilneas"], { "gi:wolf-howl", C.blue }, { 7
 nodeBattleground("dwg", L["Deepwind Gorge"], { "gi:whirlwind", C.cyan }, { 1105, 2245 }, {
     { "market", L["Market"], "gi:shop", C.gold },
     { "farm", L["Farm"], "gi:wheat", C.green },
-    { "quarry", L["Quarry"], "gi:stone-block", C.white },
+    { "quarry", L["Quarry"], "gi:stone-block", C.stone },
     { "shrine", L["Shrine"], "gi:shinto-shrine", C.red },
     { "ruins", L["Ruins"], "gi:ancient-ruins", C.purple },
 }, BASES)
 nodeBattleground("ioc", L["Isle of Conquest"], { "gi:siege-tower", C.red }, { 628 }, {
     { "docks", L["Docks"], "gi:anchor", C.blue },
-    { "hangar", L["Hangar"], "gi:airplane", C.white },
+    { "hangar", L["Hangar"], "gi:airplane", C.sky },
     { "workshop", L["Workshop"], "gi:gear-hammer", C.orange },
-    { "quarry", L["Quarry"], "gi:stone-pile", C.white },
+    { "quarry", L["Quarry"], "gi:stone-pile", C.stone },
     { "refinery", L["Refinery"], "gi:oil-drum", C.gold },
     -- The two bases take the same four buttons, worded for whose base it is.
     { "base", L["Our base"], "gi:castle-lorc", C.blue, {
-        { "attack", L["Attack"], L["Fight at our base"],  "gi:crossed-swords", C.red },
-        { "defend", L["Defend"], L["Defend our base"],    "gi:checked-shield", C.blue },
+        { "attack", L["Attack"], L["Fight at our base"],  "gi:crossed-swords", C.crimson },
+        { "defend", L["Defend"], L["Defend our base"],    "gi:checked-shield", C.cyan },
         { "inc",    L["INC"],    L["INC our base"],       "gi:charging",       C.orange },
         { "clear",  L["Clear"],  L["Our base is clear"],  "gi:check-mark",     C.green },
     } },
     { "enemybase", L["Enemy base"], "gi:castle-delapouite", C.red, {
-        { "attack", L["Attack"], L["Attack the enemy base"],      "gi:crossed-swords", C.red },
-        { "defend", L["Defend"], L["Hold the enemy base"],        "gi:checked-shield", C.blue },
+        { "attack", L["Attack"], L["Attack the enemy base"],      "gi:crossed-swords", C.crimson },
+        { "defend", L["Defend"], L["Hold the enemy base"],        "gi:checked-shield", C.cyan },
         { "inc",    L["INC"],    L["INC at the enemy base"],      "gi:charging",       C.orange },
         { "clear",  L["Clear"],  L["The enemy base is clear"],    "gi:check-mark",     C.green },
     } },
@@ -149,7 +149,7 @@ nodeBattleground("ioc", L["Isle of Conquest"], { "gi:siege-tower", C.red }, { 62
 })
 
 -- A flag map's children (Warsong Gulch, Twin Peaks): our flag, their flag, our carrier and the middle,
--- which `mid` names ({ title, its "INC" form, "Push", "clear", "Help", and a fifth row }).
+-- which `mid` names ({ title, its "INC" form, "Push", "clear", "Help", and a fifth row; `color`, its tint }).
 local function flagChildren(mid)
     return {
         { "ourflag", L["Our flag"], "ph:flag-banner", C.blue, {
@@ -160,7 +160,7 @@ local function flagChildren(mid)
             { "clear",    L["Room clear"],    L["Our flag room is clear"], "gi:check-mark", C.green },
         } },
         { "enemyflag", L["Enemy flag"], "gi:pirate-flag", C.red, {
-            { "go",      L["Get their flag"], L["Go get their flag"], "gi:crossed-swords", C.red },
+            { "go",      L["Get their flag"], L["Go get their flag"], "gi:crossed-swords", C.crimson },
             { "have",    L["We have it"],     L["We have their flag"], "gi:flying-flag", C.gold },
             { "dropped", L["Flag dropped"],   L["Their flag is dropped, grab it"], "gi:corner-flag", C.orange },
             { "clear",   L["Room clear"],     L["Their flag room is clear, grab it"], "gi:check-mark", C.green },
@@ -171,7 +171,7 @@ local function flagChildren(mid)
             { "cap",    L["Cap ready"],   L["Cap ready, return our flag"], "gi:checkered-flag", C.gold },
             { "hiding", L["FC hiding"],   L["Our FC is hiding in our base"], "gi:hooded-assassin", C.purple },
         } },
-        { "mid", mid[1], mid[2], C.white, {
+        { "mid", mid[1], mid[2], mid.color, {
             { "inc",   mid[3], mid[4], "gi:charging", C.orange },
             { "push",  mid[5], mid[6], "gi:rally-the-troops", C.red },
             { "clear", mid[7], mid[8], "gi:check-mark", C.green },
@@ -185,6 +185,7 @@ nodeBattleground("wsg", L["Warsong Gulch"], { "gi:tusks-flag", C.red }, { 489, 2
     L["Midfield"], "gi:road", L["INC mid"], L["INC mid"], L["Push mid"], L["Push mid"],
     L["Mid clear"], L["Mid is clear"], L["Help mid"], L["Need help mid"],
     { "regroup", L["Regroup mid"], L["Regroup mid"], "gi:cycle", C.cyan },
+    color = C.brown,
 }), {
     { "efcmid",   L["EFC mid"],        L["EFC mid"], "gi:flying-flag", C.orange },
     { "efctun",   L["EFC tunnel"],     L["EFC in the tunnel"], "gi:flying-flag", C.orange },
@@ -196,7 +197,8 @@ nodeBattleground("wsg", L["Warsong Gulch"], { "gi:tusks-flag", C.red }, { 489, 2
 nodeBattleground("tp", L["Twin Peaks"], { "gi:peaks", C.green }, { 726 }, flagChildren({
     L["Bridge"], "gi:stone-bridge", L["INC bridge"], L["INC bridge"], L["Push bridge"], L["Push the bridge"],
     L["Bridge clear"], L["The bridge is clear"], L["Help bridge"], L["Need help at the bridge"],
-    { "hold", L["Hold bridge"], L["Hold the bridge"], "gi:checked-shield", C.blue },
+    { "hold", L["Hold bridge"], L["Hold the bridge"], "gi:checked-shield", C.cyan },
+    color = C.stone,
 }), {
     { "efcmid",   L["EFC mid"],        L["EFC mid"], "gi:flying-flag", C.orange },
     { "efcwater", L["EFC water"],      L["EFC in the water"], "gi:water-splash", C.blue },
@@ -209,7 +211,7 @@ nodeBattleground("tp", L["Twin Peaks"], { "gi:peaks", C.green }, { 726 }, flagCh
 -- AreaPOI table holds no point on this map), and two switches turn a cart onto another track. A track's
 -- four rows are the node buttons worded for a cart.
 local TRACK = {
-    { "attack", L["Contest"], L["Contest their cart on %s"], "gi:crossed-swords", C.red },
+    { "attack", L["Contest"], L["Contest their cart on %s"], "gi:crossed-swords", C.crimson },
     { "defend", L["Escort"],  L["Escort our cart on %s"],    "gi:guards",         C.blue },
     { "inc",    L["INC"],     L["INC on %s"],                "gi:charging",       C.orange },
     { "clear",  L["Clear"],   L["Clear on %s"],              "gi:check-mark",     C.green },
@@ -220,13 +222,13 @@ nodeBattleground("ssm", L["Silvershard Mines"], { "gi:mine-wagon", C.gold }, { 7
     { "north", L["North track"], "gi:mine-truck", C.gold,   rowsFor(TRACK, L["the north track"]) },
     { "switch", L["Switches"],   "gi:lever",      C.cyan, {
         { "flip",  L["Flip switch"],  L["Flip the track switch"],      "gi:lever",          C.cyan },
-        { "hold",  L["Hold switch"],  L["Hold the track switch"],      "gi:checked-shield", C.blue },
+        { "hold",  L["Hold switch"],  L["Hold the track switch"],      "gi:checked-shield", C.cyan },
         { "inc",   L["INC"],          L["INC at the track switch"],    "gi:charging",       C.orange },
         { "clear", L["Clear"],        L["The track switch is clear"],  "gi:check-mark",     C.green },
     } },
 }, {
     { "escort",   L["Escort"],         L["Escort the cart"], "gi:mine-wagon", C.blue },
-    { "contest",  L["Contest"],        L["Contest the cart"], "gi:crossed-swords", C.red },
+    { "contest",  L["Contest"],        L["Contest the cart"], "gi:crossed-swords", C.crimson },
     { "help",     L["Cart help"],      L["Need help at a cart"], "gi:megaphone", C.orange },
 })
 -- Temple of Kotmogu (bg buttons): an orb waits in each corner of the temple, orange, blue, green and
@@ -244,7 +246,7 @@ nodeBattleground("tok", L["Temple of Kotmogu"], { "gi:crystal-ball", C.purple },
     { "purple", L["Purple orb"], "gi:concentration-orb", C.purple, rowsFor(ORB, L["purple orb"]) },
     { "center", L["Center"],     "gi:triorb",            C.cyan, {
         { "go",    L["Go center"],   L["Bring the orbs to the center"], "gi:orb-direction",  C.cyan },
-        { "hold",  L["Hold center"], L["Hold the center"],              "gi:checked-shield", C.blue },
+        { "hold",  L["Hold center"], L["Hold the center"],              "gi:checked-shield", C.cyan },
         { "inc",   L["INC"],         L["INC center"],                   "gi:charging",       C.orange },
         { "clear", L["Clear"],       L["The center is clear"],          "gi:check-mark",     C.green },
     } },
@@ -261,7 +263,7 @@ nodeBattleground("ss", L["Seething Shore"], { "gi:wave-crest", C.blue }, { 1803 
         { "inc",     L["INC node"],   L["INC this azerite node"], "gi:charging", C.orange },
         { "clear",   L["Node clear"], L["This azerite node is clear"], "gi:check-mark", C.green },
         { "help",    L["Node help"],  L["Need help at this azerite node"], "gi:megaphone", C.orange },
-        { "contest", L["Contest"],    L["Contest their azerite node"], "gi:crossed-swords", C.red },
+        { "contest", L["Contest"],    L["Contest their azerite node"], "gi:crossed-swords", C.crimson },
     } },
     { "spawn", L["New nodes"], "gi:radar-sweep", C.cyan, {
         { "new",     L["New node"],  L["New azerite node up, check the map"], "gi:radar-sweep", C.cyan },
@@ -286,7 +288,7 @@ nodeBattleground("dhr", L["Deephaul Ravine"], { "gi:cave-entrance", C.orange }, 
     } },
     { "carts", L["Carts"], "gi:mine-truck", C.gold, {
         { "escort",  L["Escort cart"],  L["Escort our cart"], "gi:guards", C.blue },
-        { "contest", L["Contest cart"], L["Contest their cart"], "gi:crossed-swords", C.red },
+        { "contest", L["Contest cart"], L["Contest their cart"], "gi:crossed-swords", C.crimson },
         { "inc",     L["INC cart"],     L["INC our cart"], "gi:charging", C.orange },
         { "clear",   L["Cart clear"],   L["Our cart is clear"], "gi:check-mark", C.green },
         { "help",    L["Cart help"],    L["Need help at the cart"], "gi:megaphone", C.orange },
@@ -294,54 +296,54 @@ nodeBattleground("dhr", L["Deephaul Ravine"], { "gi:cave-entrance", C.orange }, 
 }, {
     { "crystal",  L["Crystal"],        L["Need help at the crystal"], "gi:crystal-shine", C.purple },
     { "cart",     L["Cart"],           L["Cart is moving"], "gi:mine-truck", C.gold },
-    { "defend",   L["Defend"],         L["Defend the cart"], "gi:checked-shield", C.blue },
+    { "defend",   L["Defend"],         L["Defend the cart"], "gi:checked-shield", C.cyan },
 })
 -- Alterac Valley: every general, captain, bunker, tower and graveyard, declared north (Dun Baldar) to
 -- south (Frostwolf Keep); they show A-Z by name. A long name is shortened in the title, never in the message.
 nodeBattleground("av", L["Alterac Valley"], { "gi:snowflake-2", C.blue }, { 30 }, {
-    { "vanndar",    L["Vanndar"],            "gi:dwarf-king",     C.gold,   objective(L["Vanndar Stormpike"]) },
-    { "dbnorth",    L["DB North Bunker"],    "gi:guarded-tower",  C.white,  objective(L["Dun Baldar North Bunker"]) },
-    { "spgy",       L["Stormpike GY"],       "gi:graveyard",      C.green,  objective(L["Stormpike Graveyard"]) },
-    { "aidstation", L["Aid Station"],        "gi:first-aid-kit",      C.green,  objective(L["Stormpike Aid Station"]) },
-    { "dbsouth",    L["DB South Bunker"],    "gi:guarded-tower",  C.white,  objective(L["Dun Baldar South Bunker"]) },
-    { "icewing",    L["Icewing Bunker"],     "gi:guarded-tower",  C.white,  objective(L["Icewing Bunker"]) },
-    { "shgy",       L["Stonehearth GY"],     "gi:graveyard",      C.green,  objective(L["Stonehearth Graveyard"]) },
-    { "balinda",    L["Balinda"],            "gi:visored-helm",   C.orange, objective(L["Balinda Stonehearth"]) },
-    { "shbunker",   L["Stonehearth Bunker"], "gi:guarded-tower",  C.white,  objective(L["Stonehearth Bunker"]) },
-    { "snowfall",   L["Snowfall GY"],        "gi:graveyard",      C.green,  objective(L["Snowfall Graveyard"]) },
-    { "ibgy",       L["Iceblood GY"],        "gi:graveyard",      C.green,  objective(L["Iceblood Graveyard"]) },
-    { "galvangar",  L["Galvangar"],          "gi:brutal-helm",    C.orange, objective(L["Galvangar"]) },
-    { "ibtower",    L["Iceblood Tower"],     "gi:watchtower",     C.white,  objective(L["Iceblood Tower"]) },
-    { "towerpoint", L["Tower Point"],        "gi:watchtower",     C.white,  objective(L["Tower Point"]) },
-    { "fwgy",       L["Frostwolf GY"],       "gi:graveyard",      C.green,  objective(L["Frostwolf Graveyard"]) },
-    { "wfw",        L["West FW Tower"],      "gi:watchtower",     C.white,  objective(L["West Frostwolf Tower"]) },
-    { "efw",        L["East FW Tower"],      "gi:watchtower",     C.white,  objective(L["East Frostwolf Tower"]) },
-    { "reliefhut",  L["Relief Hut"],         "gi:hut",            C.green,  objective(L["Frostwolf Relief Hut"]) },
-    { "drekthar",   L["Drek'Thar"],          "gi:orc-head",       C.gold,   objective(L["Drek'Thar"]) },
+    { "vanndar",    L["Vanndar"],            "gi:dwarf-king",     C.alliance,   objective(L["Vanndar Stormpike"]) },
+    { "dbnorth",    L["DB North Bunker"],    "gi:guarded-tower",  C.alliance,  objective(L["Dun Baldar North Bunker"]) },
+    { "spgy",       L["Stormpike GY"],       "gi:graveyard",      C.alliance,  objective(L["Stormpike Graveyard"]) },
+    { "aidstation", L["Aid Station"],        "gi:first-aid-kit",      C.alliance,  objective(L["Stormpike Aid Station"]) },
+    { "dbsouth",    L["DB South Bunker"],    "gi:guarded-tower",  C.alliance,  objective(L["Dun Baldar South Bunker"]) },
+    { "icewing",    L["Icewing Bunker"],     "gi:guarded-tower",  C.alliance,  objective(L["Icewing Bunker"]) },
+    { "shgy",       L["Stonehearth GY"],     "gi:graveyard",      C.alliance,  objective(L["Stonehearth Graveyard"]) },
+    { "balinda",    L["Balinda"],            "gi:visored-helm",   C.alliance, objective(L["Balinda Stonehearth"]) },
+    { "shbunker",   L["Stonehearth Bunker"], "gi:guarded-tower",  C.alliance,  objective(L["Stonehearth Bunker"]) },
+    { "snowfall",   L["Snowfall GY"],        "gi:graveyard",      C.neutral,  objective(L["Snowfall Graveyard"]) },
+    { "ibgy",       L["Iceblood GY"],        "gi:graveyard",      C.horde,  objective(L["Iceblood Graveyard"]) },
+    { "galvangar",  L["Galvangar"],          "gi:brutal-helm",    C.horde, objective(L["Galvangar"]) },
+    { "ibtower",    L["Iceblood Tower"],     "gi:watchtower",     C.horde,  objective(L["Iceblood Tower"]) },
+    { "towerpoint", L["Tower Point"],        "gi:watchtower",     C.horde,  objective(L["Tower Point"]) },
+    { "fwgy",       L["Frostwolf GY"],       "gi:graveyard",      C.horde,  objective(L["Frostwolf Graveyard"]) },
+    { "wfw",        L["West FW Tower"],      "gi:watchtower",     C.horde,  objective(L["West Frostwolf Tower"]) },
+    { "efw",        L["East FW Tower"],      "gi:watchtower",     C.horde,  objective(L["East Frostwolf Tower"]) },
+    { "reliefhut",  L["Relief Hut"],         "gi:hut",            C.horde,  objective(L["Frostwolf Relief Hut"]) },
+    { "drekthar",   L["Drek'Thar"],          "gi:orc-head",       C.horde,   objective(L["Drek'Thar"]) },
 }, {
     { "general",  L["Defend general"], L["Defend our general"], "gi:king", C.gold },
     { "push",     L["Push general"],   L["Push the general"], "gi:rally-the-troops", C.red },
-    { "gy",       L["Graveyard"],      L["Take the graveyard"], "gi:graveyard", C.white },
+    { "gy",       L["Graveyard"],      L["Take the graveyard"], "gi:graveyard", C.green },
     { "tower",    L["Tower"],          L["Tower under attack"], "gi:watchtower", C.orange },
 })
 -- Ashran: the Road of Glory's towers fall one at a time toward a base, and the side events and bosses
 -- run beside it.
 nodeBattleground("ashran", L["Ashran"], { "gi:sword-clash", C.red }, { 1191 }, {
-    { "glory", L["Road of Glory"], "gi:road", C.cyan, {
+    { "glory", L["Road of Glory"], "gi:road", C.neutral, {
         { "push",  L["Push road"],   L["Push the road to the next tower"], "gi:rally-the-troops", C.red },
-        { "hold",  L["Hold road"],   L["Hold the road, defend our tower"], "gi:checked-shield", C.blue },
+        { "hold",  L["Hold road"],   L["Hold the road, defend our tower"], "gi:checked-shield", C.cyan },
         { "taken", L["Tower taken"], L["We took the tower, push on"], "gi:tower-flag", C.gold },
         { "lost",  L["Tower lost"],  L["We lost a tower, regroup at the next one"], "gi:tower-fall", C.orange },
         { "inc",   L["INC road"],    L["INC on the road"], "gi:charging", C.orange },
     } },
     { "base", L["Our base"], "gi:castle-lorc", C.blue, {
-        { "defend", L["Defend base"],   L["Defend our base"], "gi:checked-shield", C.blue },
+        { "defend", L["Defend base"],   L["Defend our base"], "gi:checked-shield", C.cyan },
         { "leader", L["Defend leader"], L["Defend our leader"], "gi:king", C.gold },
         { "inc",    L["INC base"],      L["INC our base"], "gi:charging", C.orange },
         { "clear",  L["Base clear"],    L["Our base is clear"], "gi:check-mark", C.green },
     } },
     { "enemybase", L["Enemy base"], "gi:castle-delapouite", C.red, {
-        { "attack",   L["Attack base"],   L["Attack the enemy base"], "gi:crossed-swords", C.red },
+        { "attack",   L["Attack base"],   L["Attack the enemy base"], "gi:crossed-swords", C.crimson },
         { "leader",   L["Kill leader"],   L["Kill their leader"], "gi:crowned-skull", C.red },
         { "generals", L["Kill generals"], L["Kill their generals"], "gi:bloody-sword", C.orange },
     } },
@@ -367,8 +369,8 @@ nodeBattleground("ashran", L["Ashran"], { "gi:sword-clash", C.red }, { 1191 }, {
 -- north, its two near workshops either side of it, the two far ones and the three towers south.
 nodeBattleground("wg", L["Wintergrasp"], { "gi:frozen-orb", C.cyan }, { 2118 }, {
     { "fortress", L["Fortress"], "gi:castle-lorc", C.blue, {
-        { "attack",   L["Attack walls"], L["Attack the fortress walls"], "gi:crossed-swords", C.red },
-        { "defend",   L["Defend walls"], L["Defend the fortress walls"], "gi:checked-shield", C.blue },
+        { "attack",   L["Attack walls"], L["Attack the fortress walls"], "gi:crossed-swords", C.crimson },
+        { "defend",   L["Defend walls"], L["Defend the fortress walls"], "gi:checked-shield", C.cyan },
         { "walldown", L["Wall down"],    L["A fortress wall is down"], "gi:broken-wall", C.orange },
         { "gatedown", L["Gate down"],    L["The fortress gate is down"], "gi:open-gate", C.red },
         { "relic",    L["Relic"],        L["Everyone to the relic"], "gi:holy-grail", C.gold },
@@ -378,15 +380,15 @@ nodeBattleground("wg", L["Wintergrasp"], { "gi:frozen-orb", C.cyan }, { 2118 }, 
     { "westspark", L["Westspark"], "gi:anvil", C.orange, rowsFor(NODE, L["Westspark"]) },
     { "eastspark", L["Eastspark"], "gi:anvil", C.gold, rowsFor(NODE, L["Eastspark"]) },
     { "towers", L["Towers"], "gi:tower-fall", C.red, {
-        { "attack", L["Attack towers"], L["Attack the southern towers"], "gi:crossed-swords", C.red },
-        { "defend", L["Defend towers"], L["Defend the southern towers"], "gi:checked-shield", C.blue },
+        { "attack", L["Attack towers"], L["Attack the southern towers"], "gi:crossed-swords", C.crimson },
+        { "defend", L["Defend towers"], L["Defend the southern towers"], "gi:checked-shield", C.cyan },
         { "down",   L["Tower down"],    L["A southern tower is down"], "gi:tower-fall", C.gold },
         { "help",   L["Help towers"],   L["Need help at the southern towers"], "gi:megaphone", C.orange },
     } },
 }, {
     { "walls",    L["Walls"],          L["Defend the walls"], "gi:stone-wall", C.blue },
     { "siege",    L["Siege"],          L["Siege engine incoming"], "gi:siege-ram", C.orange },
-    { "workshop", L["Workshop"],       L["Take the workshop"], "gi:anvil", C.white },
+    { "workshop", L["Workshop"],       L["Take the workshop"], "gi:anvil", C.orange },
 })
 
 -- The generic set comes last (phase 4): a battleground's own set is then the first active group on a
@@ -400,7 +402,7 @@ BI.Group("bi.bg", {
         { "inc",     L["INC"],        L["INC {rt8}"], "gi:charging", C.red },
         { "hold",    L["Hold"],       L["Hold this"], "gi:guarded-tower", C.blue },
         { "capping", L["Capping"],    L["Capping"], "gi:flying-flag", C.gold },
-        { "defend",  L["Defend"],     L["Defend"], "gi:checked-shield", C.blue },
+        { "defend",  L["Defend"],     L["Defend"], "gi:checked-shield", C.cyan },
         { "push",    L["Push"],       L["Push now"], "gi:rally-the-troops", C.red },
     }),
 })

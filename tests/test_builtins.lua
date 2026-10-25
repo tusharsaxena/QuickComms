@@ -336,8 +336,9 @@ test("builtins: [bg buttons] every base-capture node has Attack, Defend, INC and
     assertEqual(rows(BI, "bi.bg.eots.flag"),
         "Take flag=Take the flag|Defend flag=Defend the flag|INC=INC the flag|Clear=The flag is clear")
     assertEqual(BI.callouts["bi.bg.wg.eastspark.clear"].text, "Eastspark is clear", "Wintergrasp shares the template")
-    assertEqual(BI.callouts["bi.bg.ab.farm.attack"].iconColor, BI.COLOR.red)
-    assertEqual(BI.callouts["bi.bg.ab.farm.defend"].iconColor, BI.COLOR.blue)
+    -- red under: Attack red and Defend blue, which read as Horde and Alliance beside the locations
+    assertEqual(BI.callouts["bi.bg.ab.farm.attack"].iconColor, BI.COLOR.crimson)
+    assertEqual(BI.callouts["bi.bg.ab.farm.defend"].iconColor, BI.COLOR.cyan)
     assertEqual(BI.callouts["bi.bg.ab.farm.inc"].iconColor, BI.COLOR.orange)
     assertEqual(BI.callouts["bi.bg.ab.farm.clear"].iconColor, BI.COLOR.green)
     assertEqual(BI.callouts["bi.bg.ab.hold"].text, "Hold what we have, defend our bases", "the map-wide callouts stay")
@@ -405,4 +406,54 @@ test("builtins: [bg buttons] In Group is a party, raid and instance group set of
     assertTrue(R.Matches(g.when, { group = "raid" }))
     assertTrue(R.Matches(g.when, { group = "raid", instanceGroup = true, content = "battleground" }))
     assertTrue(not R.Matches(g.when, { group = "solo" }), "not solo")
+end)
+
+test("builtins: a faction-themed battleground's locations take the faction's color, neutral ones gold", function()
+    local _, BI = bi()
+    local C = BI.COLOR
+    assertEqual(C.alliance, "2aa2ff")
+    assertEqual(C.horde, "ff4040")
+    assertEqual(C.neutral, "ffd100")
+    local function color(id) return BI.groups[id].iconColor end
+    local want = {
+        alliance = { "vanndar", "balinda", "dbnorth", "dbsouth", "icewing", "shbunker", "spgy", "shgy", "aidstation" },
+        horde = { "drekthar", "galvangar", "ibtower", "towerpoint", "wfw", "efw", "ibgy", "fwgy", "reliefhut" },
+        neutral = { "snowfall" },
+    }
+    local n = 0
+    for side, keys in pairs(want) do
+        for _, key in ipairs(keys) do
+            n = n + 1
+            -- red under: an Alterac Valley location left white or green
+            assertEqual(color("bi.bg.av." .. key), C[side], key)
+        end
+    end
+    assertEqual(n, #BI.groups["bi.bg.av"].children, "every Alterac Valley location is themed")
+    assertEqual(color("bi.bg.eots.draenei"), C.alliance)
+    assertEqual(color("bi.bg.eots.bloodelf"), C.horde)
+    assertEqual(color("bi.bg.eots.felreaver"), C.neutral)
+    assertEqual(color("bi.bg.eots.magetower"), C.neutral)
+    assertEqual(color("bi.bg.ashran.glory"), C.neutral)
+    -- the actions under a location keep their own tints
+    assertEqual(BI.callouts["bi.bg.av.dbnorth.attack"].iconColor, C.crimson)
+    assertEqual(BI.callouts["bi.bg.av.dbnorth.defend"].iconColor, C.cyan)
+end)
+
+test("builtins: a neutral battleground's locations take a color for what they are, never white", function()
+    local _, BI = bi()
+    local C = BI.COLOR
+    local function color(id) return BI.groups[id].iconColor end
+    assertEqual(color("bi.bg.ab.stables"), C.brown, "a horse")
+    assertEqual(color("bi.bg.dwg.quarry"), C.stone)
+    assertEqual(color("bi.bg.ioc.quarry"), C.stone)
+    assertEqual(color("bi.bg.ioc.hangar"), C.sky, "an airplane")
+    assertEqual(color("bi.bg.wsg.mid"), C.brown, "a road")
+    assertEqual(color("bi.bg.tp.mid"), C.stone, "a stone bridge")
+    for id, g in pairs(BI.groups) do
+        -- red under: any battleground location shipped white
+        if id:match("^bi%.bg%.") then assertTrue(g.iconColor ~= C.white, id) end
+    end
+    for id, c in pairs(BI.callouts) do
+        if id:match("^bi%.bg%.") then assertTrue(c.iconColor ~= C.white, id) end
+    end
 end)
