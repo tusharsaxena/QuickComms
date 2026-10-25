@@ -21,8 +21,9 @@ local _, NS = ...
 -- combat edges and the stand-up; Situation merges it into the snapshot. The flag is in the
 -- signature on its own because the Combat type can put `combat` in the set before the edge does,
 -- and the edge must still announce then. A lockdown that lifts with no event of its
--- own is picked up by the next read, and by Refresh, which the messaging edge (phase 2's
--- SendEngine) calls on ENCOUNTER_END and CHALLENGE_MODE_COMPLETED.
+-- own is picked up by the next read, and by RefreshAfterLift, which re-reads on ENCOUNTER_END
+-- (this module's row) and CHALLENGE_MODE_COMPLETED (Situation's row, forwarded here), now and once
+-- more a moment later, because the client's flag can clear after the event that ends it.
 --
 -- Reasons, in the chip's priority order: encounter, challengeMode, pvpMatch, chat (the Chat
 -- type), chatLockdown, combat. The Map type is tracked and reported but blocks nothing: it goes
@@ -183,6 +184,25 @@ function R.OnCombatEdge(fighting)
     return changed
 end
 
+-- How long after an encounter or a key ends to read the client once more: the chat lockdown's flag
+-- can clear after the event that ends it, and nothing else would announce the lift.
+local LIFT_DELAY = 1
+
+--- An encounter or a key ended: re-read the client now, and once more LIFT_DELAY later. A second
+--- end inside the window reads now and leaves the one pending re-read where it is.
+--- @param cause string the event, for the debug line
+--- @return boolean changed by the read now
+function R.RefreshAfterLift(cause)
+    local changed = R.Refresh(cause)
+    if not State.restrictionLiftTimer then
+        State.restrictionLiftTimer = NS.addon:ScheduleTimer(function()
+            State.restrictionLiftTimer = nil
+            R.Refresh(tostring(cause) .. "+late")
+        end, LIFT_DELAY)
+    end
+    return changed
+end
+
 -- ── events and the lifecycle ────────────────────────────────────────────────────────────────
 
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "ADDON_RESTRICTION_STATE_CHANGED", "OnRestrictionEvent" }
@@ -198,9 +218,18 @@ NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_REGEN_ENABLED", "OnRestric
 function NS.addon.OnRestrictionRegenDisabled() R.OnCombatEdge(true) end
 function NS.addon.OnRestrictionRegenEnabled() R.OnCombatEdge(false) end
 
--- Stood down, no event reaches the hints or the edge, so both go stale and are dropped; the
--- stand-up re-reads the client after the bus has replayed its receivers, so they hear it.
+-- An encounter's end (a kill or a wipe). CHALLENGE_MODE_COMPLETED is Situation's row (AceEvent keeps
+-- one handler per event per object), which forwards it to RefreshAfterLift.
+NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "ENCOUNTER_END", "OnRestrictionLiftEvent" }
+
+function NS.addon.OnRestrictionLiftEvent(_, event) R.RefreshAfterLift(event) end
+
+-- Stood down, no event reaches the hints or the edge, so both go stale and are dropped, and the
+-- late re-read is canceled; the stand-up re-reads the client after the bus has replayed its
+-- receivers, so they hear it.
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
+    if State.restrictionLiftTimer then NS.addon:CancelTimer(State.restrictionLiftTimer) end
+    State.restrictionLiftTimer = nil
     State.restrictionHints = nil
     State.combatEdge = nil
     State.restrictionSignature = nil

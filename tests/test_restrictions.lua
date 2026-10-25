@@ -176,15 +176,60 @@ test("restrictions: a client without the restriction APIs restricts nothing but 
     assertEqual(NS.Restrictions.ActiveReason(), "combat")
 end)
 
-test("restrictions: Refresh announces a lift no event reported", function()
-    local NS, m, heard = live()
+-- A lockdown held, announced through the restriction event, for the lift cases below.
+local function lockedThenCleared(m, heard)
     m.chatLockdown = true
-    assertTrue(NS.Restrictions.Refresh("ENCOUNTER_END"))
+    m.__fire(EVENT, nil, nil)
+    assertEqual(#heard, 1, "the lockdown is announced")
     m.chatLockdown = false
-    assertTrue(NS.Restrictions.CanSendChat())
-    assertTrue(NS.Restrictions.Refresh("ENCOUNTER_END"))
-    assertEqual(#heard, 2)
-    assertFalse(NS.Restrictions.Refresh("ENCOUNTER_END"), "nothing moved")
+end
+
+test("restrictions: ENCOUNTER_END re-reads a lockdown the client cleared after the last event", function()
+    local NS, m, heard = live()
+    lockedThenCleared(m, heard)
+    -- red under: drop the ENCOUNTER_END row from modules/Restrictions.lua
+    assertTrue(m.__fire("ENCOUNTER_END") > 0, "the event is registered")
+    assertEqual(#heard, 2, "the lift no event reported is announced")
+    assertNil(heard[2][1]); assertTrue(heard[2][2], "chat may be sent")
+    assertTrue(NS.Restrictions.Snapshot().canSendChat)
+end)
+
+test("restrictions: CHALLENGE_MODE_COMPLETED re-reads, through Situation's row", function()
+    local _, m, heard = live()
+    lockedThenCleared(m, heard)
+    -- red under: drop the CHALLENGE_MODE_COMPLETED forward in modules/Situation.lua's OnSituationEvent
+    assertTrue(m.__fire("CHALLENGE_MODE_COMPLETED") > 0)
+    assertEqual(#heard, 2, "the lift is announced")
+    assertTrue(heard[2][2])
+end)
+
+test("restrictions: a lockdown that clears just after the encounter ends is announced by the late re-read", function()
+    local _, m, heard = live()
+    m.chatLockdown = true
+    m.__fire(EVENT, nil, nil)
+    m.__fire("ENCOUNTER_END")
+    assertEqual(#heard, 1, "still locked at the event: nothing moved")
+    m.chatLockdown = false
+    m.__fire("ENCOUNTER_END")
+    assertEqual(#heard, 2, "a second end reads now")
+    m.chatLockdown = true
+    m.__fire(EVENT, nil, nil)
+    m.chatLockdown = false
+    -- red under: drop the ScheduleTimer in R.RefreshAfterLift
+    assertTrue(m.__fireTimers() >= 1, "one late re-read was pending")
+    assertEqual(#heard, 4, "and it announced the lift")
+    assertTrue(heard[4][2])
+    assertEqual(m.__fireTimers(), 0, "one re-read per window, not one per end")
+end)
+
+test("restrictions: the late re-read is canceled by the stand-down", function()
+    local NS, m = live()
+    m.__fire("ENCOUNTER_END")
+    assertTrue(NS.State.restrictionLiftTimer ~= nil, "the late re-read is armed")
+    NS.addon:OnSlashCommand("disable")
+    assertNil(NS.State.restrictionLiftTimer)
+    -- red under: drop the CancelTimer from Restrictions' STAND_DOWN step
+    assertEqual(#m.__timers(), 0, "nothing armed while stood down")
 end)
 
 test("restrictions: stood down, nothing is heard; the stand-up announces what is in effect", function()

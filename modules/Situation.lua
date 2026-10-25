@@ -175,6 +175,9 @@ end
 
 function NS.addon.OnSituationEvent(_, event)
     Sit.Refresh(event)
+    -- A key's end can lift a chat lockdown with no event of its own; the event is this row's (one
+    -- handler per event per object), so it hands the lift to Restrictions rather than registering twice.
+    if event == "CHALLENGE_MODE_COMPLETED" then NS.Restrictions.RefreshAfterLift(event) end
 end
 
 -- RESTRICTION_CHANGED: refresh the current snapshot's lockdown and combat in place. Never moves
