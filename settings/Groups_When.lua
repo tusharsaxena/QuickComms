@@ -462,29 +462,36 @@ local COUNT = {
     characters = L["%d characters"],
 }
 
+-- The key level's summary: one level, a range, or an open end.
+local function keyLevelSummary(v)
+    if v.min and v.max then
+        if v.min == v.max then return tostring(v.min) end
+        return L["%d to %d"]:format(v.min, v.max)
+    end
+    if v.min then return L["%d or higher"]:format(v.min) end
+    return L["%d or lower"]:format(v.max)
+end
+
+-- An id row's summary: its whole kind by the checkbox's label, one entry by its name, several by
+-- their count (the whole-kind key is never counted as an id).
+local function idSummary(row, v)
+    if ALL[row] and v[NS.Resolver.ALL] == true then return ALL[row][1] end
+    local only, n = nil, 0
+    for id in pairs(v) do
+        if id ~= NS.Resolver.ALL then only, n = id, n + 1 end
+    end
+    if n == 1 then return (KIND[row]().info(only)) end
+    return COUNT[row]:format(n)
+end
+
 --- A drawer's summary (spec §1): "Any" while the row is unset; else the chosen values in the row's
 --- own order, comma-separated (the drawer cuts a long one with an ellipsis); an id row's one entry by
 --- its name and several by their count; the key level as a short phrase.
 function W.Summary(row, when)
     if not W.IsSet(when, row) then return L["Any"] end
     local v = when[row]
-    if row == "keyLevel" then
-        if v.min and v.max then
-            if v.min == v.max then return tostring(v.min) end
-            return L["%d to %d"]:format(v.min, v.max)
-        end
-        if v.min then return L["%d or higher"]:format(v.min) end
-        return L["%d or lower"]:format(v.max)
-    end
-    if KIND[row] then
-        if ALL[row] and v[NS.Resolver.ALL] == true then return ALL[row][1] end
-        local only, n = nil, 0
-        for id in pairs(v) do
-            if id ~= NS.Resolver.ALL then only, n = id, n + 1 end
-        end
-        if n == 1 then return (KIND[row]().info(only)) end
-        return COUNT[row]:format(n)
-    end
+    if row == "keyLevel" then return keyLevelSummary(v) end
+    if KIND[row] then return idSummary(row, v) end
     local out = {}
     for _, item in ipairs(W.Values(row, when)) do
         if v[item.value] == true then out[#out + 1] = item.text end
