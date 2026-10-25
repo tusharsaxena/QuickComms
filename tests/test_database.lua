@@ -196,6 +196,21 @@ test("database: step 3 leaves a profile never prepared to Prepare, which seeds i
     assertTrue(mplus ~= nil and mplus.enabled, "Prepare seeds it as a new profile is seeded")
 end)
 
+test("database: [review] step 3 repairs a raw profile's registry and passes over a junk surface", function()
+    local NS = T.bootAddon()
+    local Lib = NS.Library
+    assertEqual(Lib.SeedFromOverlay("junk"), 0, "a profile that is not a table")
+    local p = { seeded = true, groups = "junk", pads = { p1 = "junk", p2 = { seenBuiltins = {} } } }
+    -- red under: SeedFromOverlay indexes a missing registry key or a surface that is not a table
+    assertEqual(Lib.SeedFromOverlay(p), #NS.BuiltIns.order, "every set is seeded")
+    assertEqual(type(p.callouts), "table")
+    assertEqual(type(p.dials), "table")
+    assertEqual(p.pads.p1, "junk", "a junk surface is left as it is")
+    assertNil(p.pads.p2.groups, "a surface with no list is given none")
+    assertNil(p.pads.p2.seenBuiltins, "and loses its seenBuiltins")
+    assertEqual(Lib.SeedFromOverlay(p), 0, "given its sets: a second call seeds nothing")
+end)
+
 test("database: the profile defaults carry the Master controls value, and no debug flag", function()
     local NS = T.bootAddon()
     local p = NS.addon.db.profile

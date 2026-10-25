@@ -582,7 +582,7 @@ test("library: [final 1] one Restore click rebuilds the pads once", function()
 end)
 
 test("library: [final 2] ValidWhen refuses a value its row can never match, and names the row and value", function()
-    local _, Lib = boot()
+    local NS, Lib = boot()
     -- red under: Lib.ValidWhen checks only that each key is a string or a number
     local ok, why, row, value = Lib.ValidWhen({ role = { tank = true } })
     assertFalse(ok)
@@ -597,6 +597,10 @@ test("library: [final 2] ValidWhen refuses a value its row can never match, and 
     assertFalse(Lib.ValidWhen({ content = { mplus = true } }))
     assertFalse(Lib.ValidWhen({ spec = { abc = true } }))
     assertFalse(Lib.ValidWhen({ characters = { bob = true } }), "a character is Name-Realm")
+    -- red under: ValidWhenValue accepts the whole kind on a row that is not a place row
+    assertTrue(Lib.ValidWhen({ instances = { [NS.Resolver.ALL] = true } }), "the whole kind on a place row")
+    assertFalse(Lib.ValidWhen({ spec = { [NS.Resolver.ALL] = true } }), "but not on the spec row")
+    assertFalse(Lib.ValidWhen({ role = { [NS.Resolver.ALL] = true } }), "nor on a token row")
     -- [review] red under: ValidWhenValue's old characters pattern (any byte but a space or a minus)
     assertFalse(Lib.ValidWhen({ characters = { ["Bob|T1:99|t-Area52"] = true } }), "no escape character")
     assertFalse(Lib.ValidWhen({ characters = { ["Bo\1b-Area52"] = true } }), "no control character")
