@@ -227,6 +227,21 @@ test("layers: the modal bands sit over UIParent, each part at its named offset",
     assertTrue(lv(over.catcher) > lv(w.chrome.close), "a modal over a modal clears the first's band")
 end)
 
+test("layers: [audit QC-21] a modal window is clamped, never toplevel, never raised", function()
+    local NS, m = layered()
+    local MW = NS.addon.Settings.ModalWindow
+    local w = MW.Build({ name = "QuickCommsLayersClamp", pageName = "QuickCommsLayersClampPage", title = "x",
+        width = 100, height = 100, strata = MW.STRATA, onClose = function() end })
+    local L = m.__layers(w.frame)
+    -- red under: drop window:SetClampedToScreen(true) from MW.Build
+    assertTrue(L.clamped, "a window dragged to the edge stays on screen")
+    -- red under: window:SetToplevel(true) in MW.Build (a click on the popup would lift it over the
+    -- browser's band as the browser opens)
+    assertFalse(L.toplevel, "a toplevel raise would break the level bands")
+    assertEqual(L.raised, 0)
+    assertFalse(m.__layers(w.catcher).toplevel, "nor is its catcher")
+end)
+
 test("layers: [QUI-Z06] the icon link window is lifted to POPUP", function()
     local NS, m = layered()
     local LAYERS = NS.Constants.LAYERS
