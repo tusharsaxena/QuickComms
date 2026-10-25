@@ -933,12 +933,14 @@ test("pad: [bg subgroups] Alterac Valley draws its nineteen objectives two to a 
     assertTrue(NS.Pad.Apply("p1", plan))
     local byGroup = {}
     for _, hit in ipairs(hits(NS)) do byGroup[hit.qcGroupId] = hit end
-    local first, second = byGroup[T.seeded(NS, "bi.bg.av.vanndar")], byGroup[T.seeded(NS, "bi.bg.av.dbnorth")]
+    -- A-Z (2026-10-25): Aid Station and Balinda pair first; Vanndar, the nineteenth, has a row to itself
+    local first, second = byGroup[T.seeded(NS, "bi.bg.av.aidstation")], byGroup[T.seeded(NS, "bi.bg.av.balinda")]
     assertTrue(first ~= nil and second ~= nil, "each objective's title takes a right-click")
     -- the default pad: a four-column grid of 100-pixel buttons, 4 apart
     assertEqual(second.__sz[1], 204, "the second's hit frame is its block wide")
     assertEqual(first.__sz[1], 204)
     assertTrue(byGroup[av].__sz[1] > 204, "the set's own title row spans the pad")
+    assertTrue(byGroup[T.seeded(NS, "bi.bg.av.vanndar")].__sz[1] > 204, "the lone last objective spans its row")
     local sized, auto = 0, 0
     for _, fs in ipairs(inst.titles.active) do
         if fs.__w == 204 then sized = sized + 1 elseif fs.__w == 0 then auto = auto + 1 end
