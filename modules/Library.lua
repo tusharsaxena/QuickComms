@@ -83,9 +83,14 @@ function Lib.Children(id)
     for gid, g in pairs(groups) do
         if g.parent == id and gid ~= id then out[#out + 1] = gid end
     end
-    local function key(gid) return tostring(groups[gid].name or gid):lower() end
+    -- Each child's lowercased name once per call, not twice per comparison.
+    local key = {}
+    for i = 1, #out do
+        local gid = out[i]
+        key[gid] = tostring(groups[gid].name or gid):lower()
+    end
     table.sort(out, function(a, b)
-        local x, y = key(a), key(b)
+        local x, y = key[a], key[b]
         if x ~= y then return x < y end
         if idNumber(a) ~= idNumber(b) then return idNumber(a) < idNumber(b) end
         return a < b
