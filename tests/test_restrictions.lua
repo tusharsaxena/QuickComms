@@ -1,5 +1,5 @@
 -- tests/test_restrictions.lua — modules/Restrictions.lua (spec §8.4 and §9): the answers
--- (ActiveReason, CanSendChat, InCombat) from the restriction event's hints, the client's
+-- (Snapshot's reason and canSendChat, InCombat) from the restriction event's hints, the client's
 -- restriction and chat-lockdown answers and the combat edges; RESTRICTION_CHANGED; the secret
 -- payloads; and the stand-down.
 
@@ -26,8 +26,12 @@ local function installSecrets(m)
     m.canaccessvalue = function(v) return not T.isSecret(v) end
 end
 
+-- The reason that matters most now, and whether chat may be sent: Snapshot's two answers.
+local function reason(R) return R.Snapshot().reason end
+local function canSend(R) return R.Snapshot().canSendChat end
+
 local function answers(R)
-    return ("%s %s %s"):format(tostring(R.ActiveReason()), tostring(R.CanSendChat()), tostring(R.InCombat()))
+    return ("%s %s %s"):format(tostring(reason(R)), tostring(canSend(R)), tostring(R.InCombat()))
 end
 
 test("restrictions: nothing restricted, everything allowed and nothing announced", function()
@@ -57,17 +61,17 @@ test("restrictions: a lift the client does not confirm yet keeps the restriction
     local NS, m, _, RT, RS = live()
     m.restrictionStates[RT.Encounter] = RS.Active
     m.__fire(EVENT, RT.Encounter, RS.Inactive)
-    assertFalse(NS.Restrictions.CanSendChat(), "the client still says Active")
+    assertFalse(canSend(NS.Restrictions), "the client still says Active")
     m.restrictionStates[RT.Encounter] = nil
-    assertTrue(NS.Restrictions.CanSendChat(), "read live, so the next ask sees the lift")
+    assertTrue(canSend(NS.Restrictions), "read live, so the next ask sees the lift")
 end)
 
 test("restrictions: the event's boolean payload is read too", function()
     local NS, m, heard, RT = live()
     m.__fire(EVENT, RT.ChallengeMode, true)
-    assertEqual(NS.Restrictions.ActiveReason(), "challengeMode")
+    assertEqual(reason(NS.Restrictions), "challengeMode")
     m.__fire(EVENT, RT.ChallengeMode, false)
-    assertNil(NS.Restrictions.ActiveReason())
+    assertNil(reason(NS.Restrictions))
     assertEqual(#heard, 2)
 end)
 
@@ -94,14 +98,14 @@ test("restrictions: the reason is the highest in priority", function()
     local NS, m, _, RT, RS = live()
     local R = NS.Restrictions
     m.restrictionStates = { [RT.Combat] = RS.Active, [RT.Chat] = RS.Active, [RT.Encounter] = RS.Active }
-    assertEqual(R.ActiveReason(), "encounter")
+    assertEqual(reason(R), "encounter")
     m.restrictionStates[RT.Encounter] = nil
-    assertEqual(R.ActiveReason(), "chat")
+    assertEqual(reason(R), "chat")
     m.restrictionStates[RT.Chat] = nil
     m.chatLockdown = true
-    assertEqual(R.ActiveReason(), "chatLockdown")
+    assertEqual(reason(R), "chatLockdown")
     m.chatLockdown = false
-    assertEqual(R.ActiveReason(), "combat")
+    assertEqual(reason(R), "combat")
 end)
 
 test("restrictions: a type the client adds later is reported by name and blocks nothing", function()
@@ -118,9 +122,9 @@ test("restrictions: the chat lockdown stops chat, a secret answer too", function
     m.chatLockdown = true
     assertEqual(answers(NS.Restrictions), "chatLockdown false false")
     m.chatLockdown = T.secret(false)
-    assertFalse(NS.Restrictions.CanSendChat(), "a secret lockdown reads as locked")
+    assertFalse(canSend(NS.Restrictions), "a secret lockdown reads as locked")
     m.chatLockdown = false
-    assertTrue(NS.Restrictions.CanSendChat())
+    assertTrue(canSend(NS.Restrictions))
 end)
 
 test("restrictions: the combat edges set InCombat, ahead of the client's flag", function()
@@ -141,7 +145,7 @@ test("restrictions: before any edge, the client's combat flag decides", function
     local NS, m = live()
     m.inCombat = true
     assertTrue(NS.Restrictions.InCombat())
-    assertEqual(NS.Restrictions.ActiveReason(), "combat")
+    assertEqual(reason(NS.Restrictions), "combat")
 end)
 
 test("restrictions: combat under an encounter announces the change of what is allowed", function()
@@ -160,9 +164,9 @@ test("restrictions: a secret payload never raises; a secret state reads as activ
     local NS, m, heard, RT = live()
     installSecrets(m)
     m.__fire(EVENT, RT.Encounter, T.secret(0))
-    assertEqual(NS.Restrictions.ActiveReason(), "encounter")
+    assertEqual(reason(NS.Restrictions), "encounter")
     m.__fire(EVENT, T.secret(RT.Chat), T.secret(2))
-    assertEqual(NS.Restrictions.ActiveReason(), "encounter", "a secret type keys no hint")
+    assertEqual(reason(NS.Restrictions), "encounter", "a secret type keys no hint")
     m.__fire(EVENT, nil, nil)
     assertEqual(#heard, 1)
 end)
@@ -173,7 +177,7 @@ test("restrictions: a client without the restriction APIs restricts nothing but 
     m.C_ChatInfo = nil
     assertEqual(answers(NS.Restrictions), "nil true false")
     m.__fire("PLAYER_REGEN_DISABLED")
-    assertEqual(NS.Restrictions.ActiveReason(), "combat")
+    assertEqual(reason(NS.Restrictions), "combat")
 end)
 
 -- A lockdown held, announced through the restriction event, for the lift cases below.

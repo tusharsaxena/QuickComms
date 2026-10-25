@@ -43,10 +43,10 @@ local REASON_BY_NAME = {
     PvPMatch = "pvpMatch", Map = "map", Chat = "chat",
 }
 
--- The reasons that stop a chat message, in the order ActiveReason reports them.
+-- The reasons that stop a chat message, in priority order.
 local CHAT_BLOCKERS = { "encounter", "challengeMode", "pvpMatch", "chat", "chatLockdown" }
 
--- Every reason ActiveReason may answer, in priority order.
+-- Every reason the snapshot may answer, in priority order.
 local PRIORITY = { "encounter", "challengeMode", "pvpMatch", "chat", "chatLockdown", "combat" }
 
 -- ── reading the client ──────────────────────────────────────────────────────────────────────
@@ -96,26 +96,16 @@ local function anyOf(set, list)
     return nil
 end
 
---- True when a chat message (an ask, an offer, an announce) may be sent now.
---- @return boolean
-function R.CanSendChat()
-    return anyOf(R.ActiveSet(), CHAT_BLOCKERS) == nil
-end
-
 --- True while the player is fighting: the PLAYER_REGEN edge, else (before one) the client's flag.
 --- @return boolean
 function R.InCombat()
     return inCombat()
 end
 
---- The reason that matters most now, for the surfaces' lockdown chip, or nil when nothing the addon does
---- is restricted (the Map type alone is nil).
---- @return string|nil
-function R.ActiveReason()
-    return anyOf(R.ActiveSet(), PRIORITY)
-end
-
---- The answers at once, from one read: { reason, canSendChat }.
+--- The answers at once, from one read: { reason, canSendChat }. `reason` is the one that matters
+--- most now, for the surfaces' lockdown chip, or nil when nothing the addon does is restricted (the
+--- Map type alone is nil); `canSendChat` is true when a chat message (an ask, an offer, an announce)
+--- may be sent now.
 --- @return table
 function R.Snapshot()
     local set = R.ActiveSet()
