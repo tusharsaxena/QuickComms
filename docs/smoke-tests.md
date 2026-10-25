@@ -335,7 +335,7 @@ the pad shows the arena set with `Preview: Arena` on its header and PREVIEW on i
 green, after the pad's name); clicking a button sends
 nothing to chat and prints its line locally (EDIT-29); its tooltip says so. The Comms Pad, Comms Dial and Groups pages' General tabs have no
 Preview as row. Close the settings → the preview and its window stay; End preview in the window
-ends it. `/qc preview raid:heroic` →
+ends it. `/qc preview raid:2912` →
 the raid set; pull something → the preview ends with one line and the live buttons return.
 Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
@@ -651,8 +651,9 @@ the left, Cancel on the right, each a column wide; Save saves and closes, Cancel
 nothing. Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 **EDIT-32. Preview as and the shipped sets (owner, 2026-10-22).** General → Master controls → Preview
-as → Current; one M+ entry (M+ · Windrunner Spire · <spec>); Raid · LFR, Normal, Heroic and Mythic, each
-followed by · The Voidspire; Arena; one BG - <name> entry per battleground; Solo last. On a fresh
+as → Current; one M+ entry per current-season dungeon (M+ · <dungeon> · <spec>, eight, A–Z: Algeth'ar
+Academy first, Windrunner Spire last); Raid · Mythic · <raid> for each of the three raids, A–Z (March on
+Quel'Danas, The Dreamrift, The Voidspire), and no LFR, Normal or Heroic rows (2026-10-25); Arena; one BG - <name> entry per battleground; Solo last. On a fresh
 profile the groups read Dungeon, Raid, Arena, Battleground and Solo; Dungeon holds seven callouts
 (Pulling, Lust, Need mana, Skipping, Res me, Chain pull, Kick order), In Group ten (Hello, Summon,
 Buffs please, Healthstone, tyff, brb, Ready, GLHF, ggty, ggnt) and Solo seven. Arena's Swap and Kill
@@ -672,7 +673,7 @@ Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 **PREVIEW-2. The dropdown and the slash move together.** With PREVIEW-1's preview on, pick Arena in
 the window's dropdown → the pads switch to the arena set and the settings row reads Arena.
-`/qc preview raid:heroic` → the dropdown moves to the Raid · Heroic entry.
+`/qc preview raid:2912` → the dropdown moves to the Raid · Mythic · The Voidspire entry.
 Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 **PREVIEW-3. It outlives the settings window.** Close the settings window with a preview on → the
@@ -1498,7 +1499,7 @@ Result: 2026-10-21, pass (the owner's run; client build not recorded).
 (Windrunner Spire 2805, Magisters' Terrace 2811, Nexus-Point Xenas 2915, Maisara Caverns 2874, and
 the four returning dungeons; The Voidspire 2912, The Dreamrift 2939, March on Quel'Danas 2913):
 `/qc diagnostics` → the instanceID matches; a group's When → the Instance drawer → Add the instance
-you are in adds that id. Groups → Preview as lists one M+ entry, "M+ · Windrunner Spire" (since 2026-10-22, owner). On a Devourer
+you are in adds that id. Groups → Preview as lists an M+ entry for each of the eight dungeons (since 2026-10-25, owner). On a Devourer
 Demon Hunter, `/qc diagnostics` → the Situation line reads `spec=1480`, and a When's Specialization
 drawer offers Devourer. If you can enter Sporefall (map 1592), note whether it is a raid and its instanceID
 (ruling R4 left it out of the shipped raids). Only after this check passes

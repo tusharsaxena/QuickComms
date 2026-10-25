@@ -95,13 +95,13 @@ test("edit preview: it ends back to the live pads, and Preview as and test mode 
     local NS = live()
     local gid, cid = raidGroup(NS)
     local P = NS.Preview
-    assertTrue(P.SetPreviewAs("raid:heroic"))
+    assertTrue(P.SetPreviewAs("raid:2912"))
     P.SetEditPreview(gid)
     assertEqual(NS.Surfaces.Plans().p1.editGroup, gid, "edit preview wins while it is on")
     assertTrue(P.SetEditPreview(nil))
     local plan = NS.Surfaces.Plans().p1
     assertTrue(plan.editGroup == nil)
-    assertEqual(plan.preview, "raid:heroic", "Preview as resumes")
+    assertEqual(plan.preview, "raid:2912", "Preview as resumes")
     P.SetPreviewAs(nil)
     P.SetEditPreview(gid)
     assertTrue(P.SetTestMode(true))

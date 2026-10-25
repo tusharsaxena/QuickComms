@@ -87,16 +87,28 @@ local DOT = " \194\183 "
 local RAID = { { "lfr", 17, L["LFR"] }, { "normal", 14, L["Normal"] }, { "heroic", 15, L["Heroic"] },
     { "mythic", 16, L["Mythic"] } }
 
--- The one dungeon and the one raid the menu previews (owner, 2026-10-22): a current-season dungeon,
--- Windrunner Spire (one of Midnight's own), and the tier's first raid; each falls back to the
--- season's first when a new season's lists no longer hold it (defaults/GameIds.lua).
-local PREVIEW_DUNGEON = 2805
+-- The menu previews every current-season dungeon as M+ and every current-season raid at Mythic
+-- (owner, 2026-10-25; until then one dungeon and one raid at each difficulty), each list A-Z by the
+-- client's name (defaults/GameIds.lua DUNGEONS, RAIDS). The edit preview alone bakes a raid at the
+-- group's own difficulty (P.EditSnapshot), so a Heroic-only group still shows.
+local RAID_DIFFICULTY = RAID[4]
 
-local function seasonPick(list, want)
+local function instanceLabel(id)
+    return NS.Compat.InstanceName(id) or L["Instance %d"]:format(id)
+end
+
+-- { id, name, label } per id, A-Z by label (case-insensitive), then by id.
+local function season(list)
+    local out = {}
     for _, id in ipairs(list) do
-        if id == want then return id end
+        out[#out + 1] = { id = id, name = NS.Compat.InstanceName(id), label = instanceLabel(id) }
     end
-    return list[1]
+    table.sort(out, function(a, b)
+        local x, y = a.label:lower(), b.label:lower()
+        if x ~= y then return x < y end
+        return a.id < b.id
+    end)
+    return out
 end
 
 local function base(fields)
@@ -105,6 +117,11 @@ local function base(fields)
         general = live.general, leader = true, assist = false, inCombat = false, lockdown = {} }
     for k, v in pairs(fields) do s[k] = v end
     return s
+end
+
+local function raidSnapshot(id, r)
+    return base({ content = "raid", instanceID = id, difficultyID = r[2], difficulty = r[1],
+        group = "raid", instanceGroup = r[1] == "lfr" })
 end
 
 -- A dungeon entry carries its display name (`previewDungeon`): a preview has no challengeMapID, so
@@ -138,20 +155,16 @@ end
 function P.Presets()
     local out = { { key = P.CURRENT, label = L["Current"] } }
     local spec = NS.Compat.SpecName()
-    -- One M+ entry: one current-season dungeon, labeled as spec §13.3 lists it.
-    local id = seasonPick(NS.GameIds.DUNGEONS, PREVIEW_DUNGEON)
-    local known = id and NS.Compat.InstanceName(id)
-    local label = L["M+"]
-    if id then label = label .. DOT .. (known or L["Instance %d"]:format(id)) end
-    if spec then label = label .. DOT .. spec end
-    out[#out + 1] = { key = "mplus", label = label, snapshot = mplus(id, known) }
-    -- Each difficulty in the tier's first raid.
-    local raid = seasonPick(NS.GameIds.RAIDS, nil)
-    local raidName = raid and (NS.Compat.InstanceName(raid) or L["Instance %d"]:format(raid))
-    for _, r in ipairs(RAID) do
-        out[#out + 1] = { key = "raid:" .. r[1], label = L["Raid"] .. DOT .. r[3] .. (raidName and DOT .. raidName or ""),
-            snapshot = base({ content = "raid", instanceID = raid, difficultyID = r[2], difficulty = r[1],
-                group = "raid", instanceGroup = r[1] == "lfr" }) }
+    -- Each current-season dungeon as M+, labeled as spec §13.3 lists it.
+    for _, d in ipairs(season(NS.GameIds.DUNGEONS)) do
+        local label = L["M+"] .. DOT .. d.label .. (spec and DOT .. spec or "")
+        out[#out + 1] = { key = "mplus:" .. d.id, label = label, snapshot = mplus(d.id, d.name), instanceID = d.id }
+    end
+    -- Each current-season raid at Mythic.
+    local r = RAID_DIFFICULTY
+    for _, d in ipairs(season(NS.GameIds.RAIDS)) do
+        out[#out + 1] = { key = "raid:" .. d.id, label = L["Raid"] .. DOT .. r[3] .. DOT .. d.label,
+            snapshot = raidSnapshot(d.id, r), instanceID = d.id }
     end
     out[#out + 1] = { key = "arena", label = L["Arena"], snapshot = base({ content = "arena", group = "party",
         instanceGroup = false, lockdown = { pvpMatch = true } }) }
@@ -264,6 +277,30 @@ local function listed(row)
     return type(row) == "table" and next(row) ~= nil
 end
 
+-- The first menu entry under `prefix` ("mplus:", "raid:") whose instance the When's Instance row
+-- lists, else the first under it (A-Z); Current when the season lists none.
+local function seasonKey(prefix, ids)
+    local first
+    for _, e in ipairs(P.Presets()) do
+        if e.key:sub(1, #prefix) == prefix then
+            if type(ids) == "table" and ids[e.instanceID] == true then return e.key end
+            first = first or e.key
+        end
+    end
+    return first or P.CURRENT
+end
+
+-- The raid difficulty the edit preview bakes a raid group under: Mythic, else the first the group's
+-- Difficulty row ticks in RAID's order, else Normal (a Story-only group).
+local function editDifficulty(when)
+    local ticked = type(when.difficulty) == "table" and next(when.difficulty) ~= nil and when.difficulty
+    if not ticked or ticked[RAID_DIFFICULTY[1]] then return RAID_DIFFICULTY end
+    for _, r in ipairs(RAID) do
+        if ticked[r[1]] then return r end
+    end
+    return RAID[2]
+end
+
 -- The preset a battleground When names: the first set whose map it lists, else the first set.
 local function battlegroundKey(ids)
     local list = battlegrounds()
@@ -275,8 +312,8 @@ end
 
 --- The "Preview as…" preset the edit preview bakes under and the window shows (owner 2026-10-23):
 --- the one the group's When names (a child's, its parent's when it inherits, Resolver.WhenOf), in
---- the menu's own terms: a battleground set's map (a battleground id row alone too), M+, the tier's
---- raid (its first ticked difficulty, else Normal), Arena (an arena id row alone too), Solo; Current
+--- the menu's own terms: a battleground set's map (a battleground id row alone too), the season
+--- dungeon or raid its Instance row lists (else the first, A-Z), Arena (an arena id row alone too), Solo; Current
 --- for a When with no content (In Group, a group of yours).
 --- @param gid string|nil the group, else the one being edited
 --- @return string key
@@ -288,14 +325,8 @@ function P.EditPresetKey(gid)
     if content.battleground or listed(when.battleground) then
         return battlegroundKey(when.battleground)
     end
-    if content.mythicPlus or content.dungeon then return known("mplus") end
-    if content.raid then
-        local ticked = type(when.difficulty) == "table" and when.difficulty or {}
-        for _, r in ipairs(RAID) do
-            if ticked[r[1]] then return known("raid:" .. r[1]) end
-        end
-        return known("raid:normal")
-    end
+    if content.mythicPlus or content.dungeon then return seasonKey("mplus:", when.instances) end
+    if content.raid then return seasonKey("raid:", when.instances) end
     if content.arena or listed(when.arena) then return known("arena") end
     if content.openWorld then return known("world") end
     return P.CURRENT
@@ -308,7 +339,14 @@ function P.EditSnapshot()
     local key = P.EditPresetKey()
     if key == P.CURRENT then return NS.Situation.Current() end
     local e = P.FindPreset(key)
-    return e and e.snapshot or NS.Situation.Current()
+    if not e then return NS.Situation.Current() end
+    if e.snapshot.content == "raid" then
+        local gid = State.editPreview
+        local when = gid and NS.Resolver.WhenOf(NS.Library.AllGroups(), gid)
+        local r = type(when) == "table" and editDifficulty(when) or RAID_DIFFICULTY
+        if r ~= RAID_DIFFICULTY then return raidSnapshot(e.instanceID, r) end
+    end
+    return e.snapshot
 end
 
 --- Preview only group `gid` on every pad and dial, or end that (nil). The off -> on edge prints the

@@ -137,7 +137,7 @@ end)
 
 test("coordinates: a previewed place that is not where you are prints <coordinates>", function()
     local NS, m, rare = live()
-    assertTrue(NS.Preview.SetPreviewAs("mplus"))
+    assertTrue(NS.Preview.SetPreviewAs("mplus:2805"))
     local b = button(NS, rare)
     m.prints = {}
     m.__click(b)

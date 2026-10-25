@@ -774,7 +774,7 @@ test("callout helpers: PreviewLines says what a callout sends here, or why it se
     NS.Situation.ReadInputs = function() return {} end
     NS.Situation.RefreshNow("test")
     assertTrue(lines("Stack", "raid"):find("Locked: you are not in a raid.", 1, true) ~= nil)
-    NS.Preview.SetPreviewAs("raid:heroic")
+    NS.Preview.SetPreviewAs("raid:2912")
     assertFalse(lines("Stack", "raid"):find("Locked: you are not in a raid.", 1, true) ~= nil)
     assertTrue(lines("Stack", "raid"):find("Previewing: Raid", 1, true) ~= nil)
 end)
