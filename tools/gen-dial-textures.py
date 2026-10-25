@@ -3,7 +3,7 @@
 
     python3 tools/gen-dial-textures.py
 
-Writes, under media/textures/ (only this addon draws them, so they are not library assets):
+Writes, under media/textures/dial/ (only this addon draws them, so they are not library assets):
 
   dial-sector-<n>.tga   n = 2..12: one slice of an n-slice dial, white on transparent, its apex at
                         the image's center and its middle on the up axis; modules/Dial_Slices.lua
@@ -32,7 +32,7 @@ DISC = 256          # the disc's side: it also draws the one-slice dial
 RING = 128          # a ring's side (a hub is at most 80 px, a dot at most 20 px)
 RING_STEPS = [0.0125 * (40 ** ((k - 1) / 11)) for k in range(1, 13)]   # line / diameter, as Lua's R.RING_STEPS
 SUPER = 4           # samples per pixel side
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, "media", "textures")
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, "media", "textures", "dial")
 
 
 def sector(n):

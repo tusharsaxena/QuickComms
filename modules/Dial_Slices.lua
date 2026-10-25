@@ -5,7 +5,7 @@ local addonName, NS = ...
 --
 -- A ring is drawn as its slices: one fill per wedge place (`spec.size` of them, an empty place
 -- included, so a three-item Auto ring still reads as four quarters), each a tinted pie-slice texture
--- (media/textures/dial-sector-<n>.tga, written by tools/gen-dial-textures.py; one slice is the whole
+-- (media/textures/dial/dial-sector-<n>.tga, written by tools/gen-dial-textures.py; one slice is the whole
 -- disc, dial-disc.tga) turned onto its place about the ring's center. No lines are drawn between
 -- slices (the Slices tab's Border retired, dial polish 2026-10-21): the Slice gap parts them instead,
 -- an "exploded pie": each fill moves out along its own bisector by DL.SliceShift(gap, size) and
@@ -37,7 +37,7 @@ NS.DialSlices = NS.DialSlices or {}
 local S = NS.DialSlices
 local DL = NS.DialLayout
 
-S.MEDIA = "Interface\\AddOns\\" .. addonName .. "\\media\\textures\\"
+S.MEDIA = "Interface\\AddOns\\" .. addonName .. "\\media\\textures\\dial\\"   -- the dial's own art
 local SECTOR = S.MEDIA .. "dial-sector-%d"
 S.DISC = S.MEDIA .. "dial-disc"   -- every filled circle the dial draws (tools/gen-dial-textures.py)
 local FLAT = "Interface\\Buttons\\WHITE8x8"   -- a pill's straight middle

@@ -460,7 +460,7 @@ test("dial layout: [art] DL.ARC is gone; every dial texture the dial modules nam
         fh:close()
         for name in src:gmatch('"(dial%-[%w%-]+)"') do
             named = named + 1
-            local ok, rel = exists("Interface\\AddOns\\QuickComms\\media\\textures\\" .. name)
+            local ok, rel = exists(NS.DialSlices.MEDIA .. name)
             T.assertTrue(ok, mod .. " names " .. rel)
         end
     end
@@ -474,7 +474,7 @@ test("dial layout: [art] DL.ARC is gone; every dial texture the dial modules nam
         T.assertTrue(ok, rel)
         T.assertTrue(rel:find("dial%-ring%-" .. k .. "$") ~= nil, "step " .. k .. ": " .. rel)
     end
-    T.assertTrue(not exists("Interface\\AddOns\\QuickComms\\media\\textures\\dial-pill"), "the pill is retired")
+    T.assertTrue(not exists(NS.DialSlices.MEDIA .. "dial-pill"), "the pill is retired")
 end)
 
 test("dial layout: [autofit] automatic Icon offset keeps the icon's place in the slice at any radius", function()

@@ -33,7 +33,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | BUTTON-1..2 | Buttons tab | The buttons' size, color, border and font; the button glow |
 | ICONS-1..4 | Icons tab | The buttons' and wedges' icon look, border and glow triggers; the glows through LibKa0s-Glow-1.0 |
 | ICON-1..4 | Icons | Choosing an icon, for a callout and for a group; the LibKa0s v1.75.0 re-vendor: the icon browser's three sets and the library-drawn marks; the popup and the browser over the preview dial |
-| ART-1 | Art | The dial's round art: the hub's styles, the dots and pill, the indicator background, the borders and the arrow plates |
+| ART-1..2 | Art | The dial's round art: the hub's styles, the dots and pill, the indicator background, the borders and the arrow plates; every texture loading from its folder |
 | SHINE-1..4 | Shine | The shine overlay: each look on a pad and on a dial, and a pad and a dial keeping their own |
 | BG-1..9 | Battlegrounds | Node rings on the dial, one slice per node; the faction and location colors; the battleground instance ids; the objective groups (Alterac Valley, Isle of Conquest's bases, a flag map) and their migration; the four node buttons; Silvershard Mines' and Temple of Kotmogu's groups |
 | IDS-1 | Instance ids | The Midnight dungeons and raids |
@@ -1401,7 +1401,7 @@ Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
 ## Art
 
-The dial's own round art (crisp dial art, 2026-10-21): `media/textures/dial-disc.tga` and the
+The dial's own round art (crisp dial art, 2026-10-21): `media/textures/dial/dial-disc.tga` and the
 twelve-step ring ladder `dial-ring-1..12.tga`, written by `tools/gen-dial-textures.py`, in place of the
 64-segment rings and the stretched portrait mask.
 
@@ -1419,7 +1419,13 @@ Show border on, Border size 4 → every wedge's round border is smooth too. Resu
 ## Shine
 
 The shine overlay (2026-10-21): Shine look on the Pad page's Buttons tab and the Dial page's Slices
-tab, drawn from `media/textures/shine-*.tga` (`tools/gen-shine-textures.py`).
+tab, drawn from `media/textures/shine/` (a folder per look) (`tools/gen-shine-textures.py`).
+
+**ART-2. Every texture loads from its folder (2026-10-25).** The art moved into `media/textures/dial/`
+and `media/textures/shine/<look>/` (the rim edges in `shine/shared/`). After a full client restart (a
+`/reload` does not pick up moved files): open a dial on its key with each Hub style, at 1, 4 and 12
+slices, then set each of the seven Shine looks on the pad's buttons and on the dial's slices → every
+disc, ring, slice and shine draws as before; a green or blank square is the failure. Result: owed (new 2026-10-25).
 
 **SHINE-1. Each look on a pad (2026-10-21; whole button, 2026-10-21).** On a new pad the buttons
 have no shine (Shine look None; Shine strength and Shine tint grayed out, Bloom color A and B grayed
@@ -1622,4 +1628,6 @@ The owner reported later on 2026-10-25 that every check of the review and audit 
 SEND-6 (rewritten for the client-confirmed General, F-007), and new SEND-7 (the lockdown lift,
 F-003), PAD-16, PAD-17 and DIAL-42 (parked buttons, F-006), DIAL-43 and SHINE-4 (the cheaper
 repaints, F-001), DEGRADED-2 (audit QC-17), EDIT-34 (audit QC-19) and LAYER-5 (audit QC-21),
-recorded on each check's Result line. No check is owed.
+recorded on each check's Result line.
+
+Owed from the texture folders of 2026-10-25: ART-2 (new).

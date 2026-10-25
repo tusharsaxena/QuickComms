@@ -32,9 +32,10 @@ Looks: gloss (Gloss cap), glossfade (Gloss fade), orb (Glass orb), frost (Froste
 Each dial recipe is the spec's "Dial slices"; tools/render-shine-preview.py renders what the
 addon draws with these files, to check a change against the mockup before an in-game pass.
 
-modules/Shine.lua (NS.Shine) names every file. They are written under media/textures/ (only this
-addon draws them, so they are not library assets); the generator is not loaded by the client, and
-.pkgmeta ignores tools/.
+modules/Shine.lua (NS.Shine) names every file. They are written under media/textures/shine/ (only
+this addon draws them, so they are not library assets), one folder per look, holding its pad and dial
+art and the sprites or edge set it draws, and shared/ for the rim edge set six looks draw (folder(),
+the same rule as Shine.Folder); the generator is not loaded by the client, and .pkgmeta ignores tools/.
 
 Antialiased by supersampling. Each file is overwritten whole; edit this script, never the output.
 """
@@ -46,7 +47,7 @@ import numpy as np
 from PIL import Image
 
 SUPER = 4
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, "media", "textures")
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, "media", "textures", "shine")
 
 
 def clamp(x, lo=0.0, hi=1.0):
@@ -366,13 +367,28 @@ RETIRED = ["shine-streak.tga", "shine-spot.tga", "shine-glow.tga", "shine-dial-b
     + ["shine-edge-soft-%d.tga" % n for n in range(1, 13)]
 
 
+# The folder under the output a file goes in (modules/Shine.lua Shine.Folder): its look's, for the
+# pad and dial art and the sprites and edge sets a look draws; shared/ for the rim edges.
+EDGE_FOLDER = {"rim": "shared", "streak": "frost", "bevel": "bevel"}
+SPRITE_FOLDER = {"bead": "orb", "fluid-bloom1": "fluid", "fluid-bloom2": "fluid"}
+
+
+def folder(name):
+    stem = name[len("shine-"):-len(".tga")]
+    if stem.startswith("edge-"):
+        return EDGE_FOLDER[stem.split("-")[1]]
+    if stem.startswith(("pad-", "dial-")):
+        return stem.split("-")[1]
+    return SPRITE_FOLDER[stem]
+
+
 def main():
     out = sys.argv[1] if len(sys.argv) > 1 else OUT
-    os.makedirs(out, exist_ok=True)
     for name, w, h, draw in TEXTURES:
         cv = Canvas(w, h)
         draw(cv)
-        path = os.path.join(out, name)
+        os.makedirs(os.path.join(out, folder(name)), exist_ok=True)
+        path = os.path.join(out, folder(name), name)
         cv.image().save(path, format="TGA", rle=False)
         print("wrote", path)
     for name in RETIRED:

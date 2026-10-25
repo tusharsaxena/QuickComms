@@ -80,10 +80,10 @@ python3 -c 'import PIL; print(PIL.__version__)'
 ```
 
 The same Pillow regenerates the Comms Dial's slice textures: `tools/gen-dial-textures.py` writes
-`media/textures/dial-sector-2.tga` … `dial-sector-12.tga` (one pie slice of an n-slice dial, white
-on transparent), `media/textures/dial-disc.tga` (every filled circle the dial draws, and in halves
+`media/textures/dial/dial-sector-2.tga` … `dial-sector-12.tga` (one pie slice of an n-slice dial, white
+on transparent), `media/textures/dial/dial-disc.tga` (every filled circle the dial draws, and in halves
 the round caps of the page pill, the indicators' background and their borders) and
-`media/textures/dial-ring-1.tga` … `dial-ring-12.tga` (the hub's hollow rings and rims, a ladder of
+`media/textures/dial/dial-ring-1.tga` … `dial-ring-12.tga` (the hub's hollow rings and rims, a ladder of
 line widths from 1.25% to 50% of the diameter). Run it from the repo
 root after changing the shapes; never edit the TGAs by hand. It is not loaded by the client, and
 `.pkgmeta` ignores `tools/`.
@@ -93,7 +93,7 @@ python3 -I tools/gen-dial-textures.py
 ```
 
 **NumPy** (with the same Pillow), and only for **regenerating the shine overlay's textures**:
-`tools/gen-shine-textures.py` writes the 52 `media/textures/shine-*.tga` files (about 10.7 MB) that
+`tools/gen-shine-textures.py` writes the 52 `shine-*.tga` files under `media/textures/shine/` (a folder per look, plus `shared/` for the rim edges six looks draw) (about 10.7 MB) that
 `modules/Shine.lua` names (a pad look per button, the dial's whole-disc art, the per-count slice
 rims, Frosted glass streaks and Bevel edges, and three sprites: Glass orb's bead and Fluid glass's two
 blooms; light and shade on transparent). Run it from the repo

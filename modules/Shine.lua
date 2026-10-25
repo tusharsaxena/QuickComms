@@ -6,7 +6,9 @@ local addonName, NS = ...
 -- every other look is.
 --
 -- THE CATALOG. Seven looks and None (LOOKS): Gloss cap, Gloss fade (owner, 2026-10-21: Gloss cap's
--- light as one smooth gradient, no cap edge), Glass orb, Frosted glass, Fluid glass, Bevel, Rim light. Every texture is ours, written by tools/gen-shine-textures.py under media/textures/:
+-- light as one smooth gradient, no cap edge), Glass orb, Frosted glass, Fluid glass, Bevel, Rim light. Every texture is ours, written by tools/gen-shine-textures.py under media/textures/shine/,
+-- one folder per look (its pad art, its dial art and its sprites or edge set) and shared/ for the rim
+-- edge set six looks draw (Folder):
 -- white pixels add light, black pixels add shade, alpha is how much. The client draws them in BLEND
 -- mode, SetVertexColor's color tints the light (shade stays black) and its alpha is Strength.
 -- Texture(kind, name) names a file: "pad" (a look, or a Fluid glass bloom), "dial" (the whole-disc
@@ -34,7 +36,7 @@ local addonName, NS = ...
 NS.Shine = NS.Shine or {}
 local Sh = NS.Shine
 
-local MEDIA = "Interface\\AddOns\\" .. addonName .. "\\media\\textures\\"
+local MEDIA = "Interface\\AddOns\\" .. addonName .. "\\media\\textures\\shine\\"
 local MAX_SLICES = 12   -- the edge sets' counts (DL.MAX_SLICES; the generator writes 1..12)
 
 Sh.LOOKS = { "none", "gloss", "glossfade", "orb", "frost", "fluid", "bevel", "rim" }
@@ -50,6 +52,18 @@ local FILES = {
 }
 local EDGE = { rim = "rim", streak = "streak", bevel = "bevel", ["edge-rim"] = "rim", ["edge-streak"] = "streak",
     ["edge-bevel"] = "bevel" }
+-- The folder each edge set and each sprite sits in: the look that draws it, else shared/.
+local EDGE_FOLDER = { rim = "shared", streak = "frost", bevel = "bevel" }
+local SPRITE_FOLDER = { bead = "orb", ["fluid-bloom1"] = "fluid", ["fluid-bloom2"] = "fluid" }
+
+--- The folder under media/textures/shine/ holding a file of `kind` named `name`: a pad or dial file
+--- sits in its look's folder (a Fluid glass bloom in fluid/), a sprite in the look that draws it, an
+--- edge set in the look that draws it or in shared/ (the rim edges six looks draw).
+function Sh.Folder(kind, name)
+    if EDGE[kind] then return EDGE_FOLDER[EDGE[kind]] end
+    if kind == "sprite" then return SPRITE_FOLDER[name] end
+    return (tostring(name):match("^%a+"))
+end
 
 Sh.STRENGTH = 85
 Sh.TINT = { r = 1, g = 1, b = 1, a = 1 }
@@ -63,7 +77,7 @@ function Sh.Edge(kind, n)
     local set = EDGE[kind]
     if not set then return nil end
     n = math.max(1, math.min(MAX_SLICES, math.floor(tonumber(n) or 1)))
-    return MEDIA .. "shine-edge-" .. set .. "-" .. n
+    return MEDIA .. EDGE_FOLDER[set] .. "\\shine-edge-" .. set .. "-" .. n
 end
 
 --- The media path of one shine texture, or nil (None, an unknown look, a name the kind has no file
@@ -72,8 +86,9 @@ function Sh.Texture(kind, name)
     if EDGE[kind] then return Sh.Edge(kind, name) end
     local names = FILES[kind]
     if not names or not names[name] then return nil end
-    if kind == "sprite" then return MEDIA .. "shine-" .. name end
-    return MEDIA .. "shine-" .. kind .. "-" .. name
+    local dir = MEDIA .. Sh.Folder(kind, name) .. "\\"
+    if kind == "sprite" then return dir .. "shine-" .. name end
+    return dir .. "shine-" .. kind .. "-" .. name
 end
 
 local function rgb(stored, useClass, fallback)

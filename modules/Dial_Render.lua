@@ -31,7 +31,7 @@ local L = NS.L
 local Perf = NS.Perf
 local LV = NS.Constants.LAYERS.LEVEL
 
--- The hollow rings (crisp dial art, 2026-10-21): media/textures/dial-ring-<k>.tga, written by
+-- The hollow rings (crisp dial art, 2026-10-21): media/textures/dial/dial-ring-<k>.tga, written by
 -- tools/gen-dial-textures.py, ring k's line RING_STEPS[k] of its diameter, a geometric ladder from
 -- 1.25% to 50% (about 1.4x per step). Every filled circle is Slices.DISC.
 local RING = Slices.MEDIA .. "dial-ring-%d"

@@ -1243,10 +1243,11 @@ Total.
 - glow: on a dial, an open later than DROP_SECONDS after the send shows no send glow
 - glow: the stand-down puts out a running send glow even when the frames' release is held
 
-### test_shine.lua (7)
+### test_shine.lua (8)
 
 - shine: the catalog lists None and the seven looks
 - shine: every catalog path exists
+- shine: [folders] each look's art sits in its own folder; the rim edges six looks share in shared/
 - shine: Resolve
 - shine: Apply covers the whole button in three pieces
 - shine: a square button is the art whole
@@ -1415,7 +1416,7 @@ Total.
 | test_dial_shine.lua | 8 |
 | test_icon_style.lua | 10 |
 | test_glow.lua | 11 |
-| test_shine.lua | 7 |
+| test_shine.lua | 8 |
 | test_layers.lua | 11 |
 | test_layout.lua | 23 |
 | test_vendor_sync.lua | 3 |
@@ -1425,4 +1426,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1175** |
+| **Total** | **1176** |
