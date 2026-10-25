@@ -420,44 +420,68 @@ function S.DialPlans()
     return State.dialPlans or {}
 end
 
---- Rebuild every enabled pad and dial from the current snapshot, and re-bind the dials' keys. Out of
---- combat (RunOrQueue's caller).
---- @return number surfaces rebuilt
-function S.ApplyAll(reason)
-    if NS.IsStoodDown() or not State.situation then return 0 end
+-- What this rebuild bakes under: the snapshot, its deps, and which of the edit preview, Preview as and
+-- test mode holds. The edit preview sits over Preview as and test mode, and bakes under its group's own
+-- situation (Preview.EditSnapshot, the preset the selector window shows). `n` counts the plans settled.
+local function rebuildContext()
     local preview = NS.Preview.PreviewSnapshot()
-    -- The edit preview sits over Preview as and test mode, and bakes under its group's own situation
-    -- (Preview.EditSnapshot, the preset the selector window shows).
     local edit = NS.Preview.EditGroup()
     if edit and not NS.Library.Group(edit) then edit = nil end
     local snap = (edit and NS.Preview.EditSnapshot()) or preview or NS.Situation.Current()
     local deps = S.Deps(snap)
     deps.only = edit
-    local test = not edit and preview == nil and NS.Preview.IsTestMode()
-    local p = NS.db.profile
-    local plans, dialPlans, n = {}, {}, 0
-    State.surfaceOrder = State.surfaceOrder or {}
-    local function done(id, plan)
-        if edit then
-            S.MarkPreview(plan, NS.Preview.EDIT)
-            plan.editGroup = edit
-        elseif preview then
-            S.MarkPreview(plan, NS.Preview.PreviewAs())
-        end
-        n = n + 1
-        local sig = table.concat(plan.order, ",")
-        if sig ~= State.surfaceOrder[id] then
-            State.surfaceOrder[id] = sig
-            NS.addon:SendMessage(NS.MSG.ACTIVE_GROUPS_CHANGED, id)
-        end
-        return plan
+    return { preview = preview, edit = edit, snap = snap, deps = deps, n = 0,
+        test = not edit and preview == nil and NS.Preview.IsTestMode() }
+end
+
+-- One built plan, marked as the edit preview's or Preview as's when one holds, counted, and announced
+-- (ACTIVE_GROUPS_CHANGED) when its group order moved.
+local function settle(ctx, id, plan)
+    if ctx.edit then
+        S.MarkPreview(plan, NS.Preview.EDIT)
+        plan.editGroup = ctx.edit
+    elseif ctx.preview then
+        S.MarkPreview(plan, NS.Preview.PreviewAs())
     end
+    ctx.n = ctx.n + 1
+    local sig = table.concat(plan.order, ",")
+    if sig ~= State.surfaceOrder[id] then
+        State.surfaceOrder[id] = sig
+        NS.addon:SendMessage(NS.MSG.ACTIVE_GROUPS_CHANGED, id)
+    end
+    return plan
+end
+
+-- Every enabled pad's and dial's plan, test mode's placeholders while it holds.
+local function buildPlans(ctx, p)
+    local plans, dialPlans = {}, {}
     for _, id in ipairs(enabledIds("pad")) do
-        plans[id] = done(id, test and S.TestPlan(id) or S.BuildPlan(id, p.pads[id], snap, deps))
+        plans[id] = settle(ctx, id, ctx.test and S.TestPlan(id) or S.BuildPlan(id, p.pads[id], ctx.snap, ctx.deps))
     end
     for _, id in ipairs(enabledIds("dial")) do
-        dialPlans[id] = done(id, test and S.TestDialPlan(id, p.dials[id]) or S.BuildDialPlan(id, p.dials[id], snap, deps))
+        dialPlans[id] = settle(ctx, id, ctx.test and S.TestDialPlan(id, p.dials[id])
+            or S.BuildDialPlan(id, p.dials[id], ctx.snap, ctx.deps))
     end
+    return plans, dialPlans
+end
+
+-- What each enabled surface of `kind` shows, to the debug log under `tag`.
+local function logShows(kind, tag, plans)
+    for _, id in ipairs(enabledIds(kind)) do
+        local plan = plans[id]
+        if plan then NS.Debug(tag, "%s shows %s", id, #plan.order > 0 and table.concat(plan.order, ",") or "nothing") end
+    end
+end
+
+--- Rebuild every enabled pad and dial from the current snapshot, and re-bind the dials' keys. Out of
+--- combat (RunOrQueue's caller).
+--- @return number surfaces rebuilt
+function S.ApplyAll(reason)
+    if NS.IsStoodDown() or not State.situation then return 0 end
+    local ctx = rebuildContext()
+    local p = NS.db.profile
+    State.surfaceOrder = State.surfaceOrder or {}
+    local plans, dialPlans = buildPlans(ctx, p)
     State.surfacePlans, State.dialPlans = plans, dialPlans
     local stale = staleSet()
     for id in pairs(stale) do stale[id] = nil end
@@ -465,16 +489,10 @@ function S.ApplyAll(reason)
     NS.Dial.Sync(dialPlans, p.dialOrder)
     for _, id in ipairs(enabledIds("pad")) do NS.addon:SendMessage(NS.MSG.SURFACE_REBUILT, id, false) end
     for _, id in ipairs(enabledIds("dial")) do NS.addon:SendMessage(NS.MSG.SURFACE_REBUILT, id, false) end
-    NS.Debug(TAG, "rebuilt %s surface(s) (%s)", n, tostring(reason))
-    for _, id in ipairs(enabledIds("pad")) do
-        local plan = plans[id]
-        if plan then NS.Debug(TAG, "%s shows %s", id, #plan.order > 0 and table.concat(plan.order, ",") or "nothing") end
-    end
-    for _, id in ipairs(enabledIds("dial")) do
-        local plan = dialPlans[id]
-        if plan then NS.Debug("Dial", "%s shows %s", id, #plan.order > 0 and table.concat(plan.order, ",") or "nothing") end
-    end
-    return n
+    NS.Debug(TAG, "rebuilt %s surface(s) (%s)", ctx.n, tostring(reason))
+    logShows("pad", TAG, plans)
+    logShows("dial", "Dial", dialPlans)
+    return ctx.n
 end
 
 --- Ask for a rebuild: now, or at the end of combat with the stale hint showing meanwhile.
