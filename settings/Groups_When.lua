@@ -450,11 +450,6 @@ local ALL = {
         L["Match in any arena. The arenas listed below are kept, unused, until you untick this."] },
 }
 
---- Whether id row `row` offers the whole-kind checkbox.
-function W.HasAll(row)
-    return ALL[row] ~= nil
-end
-
 --- A copy of `when` with id row `row`'s whole kind on or off; its listed ids are kept either way, and
 --- a row left empty is dropped.
 function W.SetAll(when, row, on)
