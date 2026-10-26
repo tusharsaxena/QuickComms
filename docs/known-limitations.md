@@ -203,8 +203,6 @@ What the addon cannot do, or does only under a condition, and why. The hub,
   `docs/superpowers/specs/2026-10-21-shine-overlay/render-*.png`. A ring between two ladder steps
   draws the nearer, so its line can be up to about 18% off (under 1 pixel at the largest Line width);
   a change to the art is a re-run of the generator, never a hand edit (`DEPENDENCIES.md`).
-- The logo is a placeholder generated for the scaffold; the owner may replace the art (regenerate the
-  TGAs with the recipe in `DEPENDENCIES.md`).
 - `tests/perf.lua`'s byte ceilings are the headless mock's figures (its catch-all methods allocate per
   call); compare them run to run, never with the client.
 - Quick Comms bundles LibKa0s v1.77.0 (owner, 2026-10-25: no re-vendor before v0.1.0). LibStub keeps

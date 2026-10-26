@@ -20,19 +20,23 @@ own.
 
 **_Comms Pad_**
 
-Screenshot coming soon.
+![Comms pad](https://media.forgecdn.net/attachments/2107/1/quickcomms-screenshot-01-png.png)
 
 **_Comms Dial_**
 
-Screenshot coming soon.
+![Comms dial](https://media.forgecdn.net/attachments/2107/2/quickcomms-screenshot-02-png.png)
+
+**_Group editor_**
+
+![Group editor](https://media.forgecdn.net/attachments/2107/3/quickcomms-screenshot-03-png.png)
+
+**_Group situations_**
+
+![Group situations](https://media.forgecdn.net/attachments/2107/4/quickcomms-screenshot-04-png.png)
 
 **_Callout editor_**
 
-Screenshot coming soon.
-
-**_Settings_**
-
-Screenshot coming soon.
+![Callout editor](https://media.forgecdn.net/attachments/2107/5/quickcomms-screenshot-05-png.png)
 
 ## Usage
 
