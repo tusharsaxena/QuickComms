@@ -80,9 +80,9 @@ end)
 
 test("env: the version falls back to the in-code constant when the TOC cannot be read", function()
     local NS = T.newAddon()
-    assertEqual(NS.Version(), "0.1.0")
+    assertEqual(NS.Version(), "1.0.0")
     local D = T.newAddon{ skip = NO_LIBKA0S }
-    assertEqual(D.Version(), "0.1.0")
+    assertEqual(D.Version(), "1.0.0")
 end)
 
 -- ── Bus ─────────────────────────────────────────────────────────────────────────────────────

@@ -32,7 +32,7 @@ Start here, then read the docs:
   `data-flow.md`, `common-tasks.md`, `smoke-tests.md`, …), registered in `docs/ARCHITECTURE.md` ->
   `## Documentation map`.
 - **`DEPENDENCIES.md`** — the toolchain contract: what to install to build, run, test or release.
-- The v0.1.0 design spec and its implementation plan live in `docs/superpowers/`; the brainstorm,
+- The v1.0.0 design spec and its implementation plan live in `docs/superpowers/`; the brainstorm,
   the research and the in-game go/no-go record live in `docs/brainstorm/` as history.
 
 Green gate before every commit: `lua tests/run.lua` and `luacheck .` (0/0). Never edit `libs/` or

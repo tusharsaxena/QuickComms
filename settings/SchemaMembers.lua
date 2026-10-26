@@ -273,7 +273,7 @@ local ROWS = {
       desc = L["Where the pad sits. Drag it while unlocked, or type an offset."],
       validate = check(Lib.ValidPoint) },
 
-    -- Dial page (spec §11, §13.1). Relaxed is the only interaction in v0.1.0, so there is no
+    -- Dial page (spec §11, §13.1). Relaxed is the only interaction in v1.0.0, so there is no
     -- interaction, delay or tap-action row (Quick mode brings them with the C7 upgrade), and no depth
     -- row (owner ruling R5: depth is §11.3's limit, warned about on the Groups tab).
     { path = "dial.name", instance = "dial", type = "string", dialogControl = "EditBox", maxLetters = Lib.NAME_MAX,

@@ -2,7 +2,7 @@
 ## Title: Ka0s Quick Comms
 ## Notes: Context-aware quick callouts on a Comms Pad and a ping-wheel-style Comms Dial, sent through secure buttons so they work in M+ keys and boss pulls
 ## Author: add1kted2ka0s
-## Version: 0.1.0
+## Version: 1.0.0
 ## IconTexture: Interface\AddOns\QuickComms\media\logos\quickcomms.logo.128.tga
 ## SavedVariables: QuickCommsDB, QuickCommsPerfDB
 ## OptionalDeps: Ace3, LibStub, CallbackHandler-1.0, LibSharedMedia-3.0, LibDataBroker-1.1, LibDBIcon-1.0, LibCustomGlow-1.0, EllesmereUI

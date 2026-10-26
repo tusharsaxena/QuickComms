@@ -476,7 +476,7 @@ test("library: [phase 3] ValidWhen accepts every shipped When and refuses bad sh
     end
     assertTrue(Lib.ValidWhen({}))
     assertTrue(Lib.ValidWhen({ instances = { [2526] = true }, keyLevel = { min = 10 } }))
-    assertFalse(Lib.ValidWhen({ combat = { yes = true } }), "not a v0.1.0 condition (spec P1)")
+    assertFalse(Lib.ValidWhen({ combat = { yes = true } }), "not a v1.0.0 condition (spec P1)")
     assertFalse(Lib.ValidWhen({ content = { raid = 1 } }))
     assertFalse(Lib.ValidWhen({ content = "raid" }))
     local ok, why = Lib.ValidWhen({ keyLevel = { min = 12, max = 10 } })

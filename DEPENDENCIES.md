@@ -67,8 +67,7 @@ Versions are pinned only where a version matters: `lua5.1` is hard, `luacheck` a
 **Python 3 with Pillow**, and only for **regenerating** the logo TGAs —
 `media/logos/quickcomms.logo.128.tga` and `media/logos/quickcomms.logo.tga` are committed, so
 nothing is generated at package time. The recipe is layout-§4's, run by hand from the committed
-2000×2000 source when the art changes. (The v0.1.0 source is a placeholder drawn with Pillow for the
-scaffold, a gold speech bubble on a dark disc; owner artwork replaces it the same way.)
+2000×2000 source when the art changes.
 
 ```sh
 sudo apt-get install -y python3-pil

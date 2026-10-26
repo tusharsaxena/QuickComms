@@ -33,7 +33,7 @@ local _, NS = ...
 -- -> Surfaces.Request, which waits for combat end when it must. The key is no row and has no tab
 -- (dial rework, 2026-10-21): it is WoW's own binding of the dial's Open Comms Dial entry, set in
 -- Options -> Keybindings -> Ka0s Quick Comms or on the General page > Keybindings (item 015), which
--- the General tab's one gray line points at (item 020, QUI-L29). Relaxed is the only interaction in v0.1.0 (the C7
+-- the General tab's one gray line points at (item 020, QUI-L29). Relaxed is the only interaction in v1.0.0 (the C7
 -- fallback), so there is no delay or tap-action control, and depth is no control (owner ruling R5).
 -- The Ring map tab is a listing, not a drawn wheel (owner ruling R3): the wheel itself shows in game
 -- (test mode and Preview as… open dial 1). As settings/Pads.lua: New dial takes the lowest free

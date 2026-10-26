@@ -50,7 +50,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 login, the addon listed in the AddOns list with the gold speech-bubble logo. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 **INSTALL-2. Minimap button and broker.** Look at the minimap → the speech-bubble button is there;
-hover it → the tooltip reads `Ka0s Quick Comms  v0.1.0`, `Enabled: Yes`, then the two click hints. A
+hover it → the tooltip reads `Ka0s Quick Comms  v1.0.0`, `Enabled: Yes`, then the two click hints. A
 missing icon (a blank or green square) is the failure. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
 **INSTALL-3. Reload keeps settings.** Untick **Minimap button**, `/reload` → the button stays

@@ -323,7 +323,7 @@ test("members: [phase 4] a dial's fields are member rows, and its position goes 
     assertEqual(Lib.MemberIds("dial")[1], "d2")
     assertEqual(S.Get("dial.openAt"), "center", "no id: the first dial the page lists")
     local id = Lib.CreateSurface("dial", "Lead")
-    assertEqual(NS.db.profile.dials[id].interaction, "relaxed", "Relaxed is the only interaction in v0.1.0")
+    assertEqual(NS.db.profile.dials[id].interaction, "relaxed", "Relaxed is the only interaction in v1.0.0")
 end)
 
 test("members: [keys] a dial has no key row: its key is WoW's binding, set in Options -> Keybindings, never on the CLI", function()

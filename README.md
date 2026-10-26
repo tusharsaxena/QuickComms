@@ -117,7 +117,7 @@ than in comments, so nothing gets lost.
 
 | Version | Date | Highlights |
 |---|---|---|
-| 0.1.0 | Unreleased | - The Comms Pad and the Comms Dial, sent through secure buttons so they work in keys and on bosses<br>- Built-in callouts for Mythic+, raids, arenas, the open world and every battleground, with a group per battleground objective in its side's color<br>- Your own callouts and groups, groups inside groups, and conditions for when each group shows<br>- Preview as… with its own small window, a preview of the group you are editing, and Why is this showing?<br>- Tokens such as `{target}` and `{coordinates}`, and the General channel, falling back to say<br>- The spam guard, drop notes, test mode and the lock<br>- Styling for the pad and the dial: fonts, colors, borders, glows and seven shine looks<br>- Keybindings for the pads and up to four dials, the settings panel, the minimap button and the `/qc` command |
+| 1.0.0 | 2026-10-26 | - First release: the Comms Pad and the Comms Dial, which send through secure buttons so they work in keys and on bosses<br>- Built-in callouts for Mythic+, raids, arenas, the open world and every battleground<br>- Your own callouts and groups, with conditions for when each group shows<br>- Preview as… and test mode, so you can check a setup before a run<br>- Styling, keybindings and a `/qc` command for pads and dials |
 
 ## Credits
 

@@ -916,7 +916,7 @@ local SURFACE_DEFAULTS = {
         header = NS.PadDefaults.Header(),    -- the Header tab (defaults/PadStyle.lua)
         section = NS.PadDefaults.Section(),  -- the Section titles tab (defaults/PadStyle.lua)
         button = NS.PadDefaults.Button() },      -- the Buttons tab (defaults/PadStyle.lua)
-    -- Relaxed is the only interaction in v0.1.0 (the C7 fallback, round-4 record). `delay` and
+    -- Relaxed is the only interaction in v1.0.0 (the C7 fallback, round-4 record). `delay` and
     -- `tapAction` are kept for the hold, flick and release upgrade, and `depth` until owner ruling R5
     -- gives it a meaning; nothing reads them yet.
     dial = { mode = "categories", slices = 0, radius = 120, iconOffset = 0, depth = 2, openAt = "center", delay = 0.3,

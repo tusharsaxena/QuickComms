@@ -37,7 +37,7 @@ test("slash: both chat commands are registered through AceConsole, and both disp
     assertTrue(AC.commands.qc ~= nil and AC.commands.quickcomms ~= nil, "qc and quickcomms")
     m.prints = {}
     AC:__slash("quickcomms", "version")
-    assertTrue(m.prints[1]:find("0.1.0", 1, true) ~= nil, tostring(m.prints[1]))
+    assertTrue(m.prints[1]:find("1.0.0", 1, true) ~= nil, tostring(m.prints[1]))
 end)
 
 test("slash: the bare command opens the settings panel", function()

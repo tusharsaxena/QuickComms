@@ -9,7 +9,7 @@ during chat lockdown, so it works for the whole of a Mythic+ key, a boss pull an
 (design spec §1, in
 [`superpowers/specs/2026-10-11-quickcomms-v1-design.md`](superpowers/specs/2026-10-11-quickcomms-v1-design.md)).
 
-v0.1.0's design carries the callout library (each callout owned by one group, a reuse making a copy;
+v1.0.0's design carries the callout library (each callout owned by one group, a reuse making a copy;
 the 2026-10-17 amendment, which retired callouts shared between groups by reference), the
 situation engine and the resolver, the secure send engine with a soft spam guard (dimming and
 drop notes; no hard guard in combat, spec §9.2), any number of pads and dials, built-in sets for
@@ -47,7 +47,7 @@ for phase 5).
   a callout would send and never sends it.
 - Read combat-only data (unit health, auras, cooldowns): those are secret values in Midnight, and the
   situation engine reads only non-secret inputs.
-- In v0.1.0: callout variants, confirmations, per-callout cooldowns, marks, a key per callout,
+- In v1.0.0: callout variants, confirmations, per-callout cooldowns, marks, a key per callout,
   gamepad support, countdown callouts, an arc layout for pads, analytics, faction-aware wording,
   per-dungeon built-in sets, and any locale beyond enUS (design spec §1), and the hold, flick and
   release dial (C7). Groups nest one level only (2026-10-18 amendment): no group inside a group

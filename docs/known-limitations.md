@@ -205,7 +205,7 @@ What the addon cannot do, or does only under a condition, and why. The hub,
   a change to the art is a re-run of the generator, never a hand edit (`DEPENDENCIES.md`).
 - `tests/perf.lua`'s byte ceilings are the headless mock's figures (its catch-all methods allocate per
   call); compare them run to run, never with the client.
-- Quick Comms bundles LibKa0s v1.77.0 (owner, 2026-10-25: no re-vendor before v0.1.0). LibStub keeps
+- Quick Comms bundles LibKa0s v1.77.0 (owner, 2026-10-25: no re-vendor before v1.0.0). LibStub keeps
   the highest minor of each module, so when another Ka0s addon loaded beside it carries a newer
   LibKa0s (Ka0s Loot History bundles v1.78.0: Core 13, DebugLog 22, Media 7, Options 33, Widgets 16,
   against this addon's 12, 21, 5, 30 and 15), those modules run the newer code, whatever the load
