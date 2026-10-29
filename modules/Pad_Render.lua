@@ -432,7 +432,14 @@ function R.SkinFor(look, plain)
     skin.edgeSize = size
     local inset = art and math.floor(size / 4 + 0.5) or size
     skin.insets = { left = inset, right = inset, top = inset, bottom = inset }
-    if plain or art or size ~= 1 then skin.innerBorder = NO_INNER end
+    -- The inner line is the skin's win.inner, none where the skin has none (a lookSig carries the looks
+    -- generation, so a skin switch repaints it).
+    if plain or art or size ~= 1 or type(NS.Skin.Token("win.inner")) ~= "table" then
+        skin.innerBorder = NO_INNER
+    else
+        local r, g, b, a = NS.Skin.Color("win.inner")
+        skin.innerBorder = { r, g, b, a or 1 }
+    end
     skin.border = { NS.ResolveColor(look.borderColor, look.useClassColorBorder) }
     skin.bg = { NS.ResolveColor(look.background, look.useClassColorBackground) }
     return skin

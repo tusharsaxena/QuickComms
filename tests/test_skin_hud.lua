@@ -247,6 +247,25 @@ test("skin hud: a skin switch repaints the chrome and the faces, and leaves the 
         "the face is the new skin's")
 end)
 
+test("skin hud: a pad window's 1px inner rule is win.inner, none where the skin has none", function()
+    local NS, _, Skin = live()
+    local R = NS.PadRender
+    local flat = { borderStyle = "None", borderSize = 1, borderStyleFromSkin = false }
+    -- red under: R.SkinFor copying NS.SKIN's innerBorder (Ka0s Default's gray under every skin)
+    assertColor(R.SkinFor(flat).innerBorder, { 0.24, 0.24, 0.27, 0.85 }, "today's line under Ka0s Default")
+    Skin:SetChoice(OWNER, "ka0s", OTHER)
+    assertTrue(type(Skin:ResolveSkin(OTHER)["win.inner"]) ~= "table", OTHER .. " has no inner line")
+    assertColor(R.SkinFor(flat).innerBorder, { 0, 0, 0, 0 }, "no line under " .. OTHER)
+    local colored
+    for _, def in ipairs(Skin:Skins()) do
+        if type(Skin:ResolveSkin(def.key)["win.inner"]) == "table" and def.key ~= "ka0s" then colored = def.key; break end
+    end
+    assertTrue(colored ~= nil, "a skin with an inner line of its own")
+    Skin:SetChoice(OWNER, "ka0s", colored)
+    assertColor(R.SkinFor(flat).innerBorder, now(NS, "win.inner"), "the line under " .. colored)
+    assertColor(R.SkinFor(flat, true).innerBorder, { 0, 0, 0, 0 }, "a plain block never takes it")
+end)
+
 test("skin hud: the dial's per-frame update reads no token", function()
     local NS, m = live()
     m.__click(NS.Dial.Instance("d2").header)
