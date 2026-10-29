@@ -413,22 +413,9 @@ body     [Name          ] [Channel       ]   the callout.* member rows' labels a
   the page underneath cannot change while a draft is open. Only one popup exists. `FULLSCREEN` is one
   strata over the Comms Dial's `DIALOG`, so an open preview dial's hub (its dot and pointer, raised
   over the dial's header by level) draws under the popup, not over it (QC-06).
-- **EllesmereUI.** With EllesmereUI and its Blizzard Skin module loaded, its third-party skinning on
-  and Quick Comms on in its Third-Party Addons list (as the facade's `S.IsEnabled()` reports them;
-  Quick Comms never reads EllesmereUI's SavedVariables), `settings/CalloutPopup_Skin.lua` paints the
-  window in EllesmereUI's third-party look: its shell, the border faded, the background
-  hidden and its close X; the page's controls stay stock, as the settings window's do. Quick Comms
-  has no switch of its own for it: EllesmereUI's per-addon entry is the switch, and a skin comes off
-  only with a reload. The fallback window (a client without the template) is not painted: the skin
-  is the settings window's, and that window is not it. The skin does not wait for Quick Comms to
-  be enabled: the popup and the browser are the settings panel's, which stays up while the addon is
-  disabled (slash-commands-§7), so they open in EllesmereUI's look either way. `/qc diagnostics`
-  says why the skin is or is not on (its `why=`, `docs/debug.md`).
-  The skin follows EllesmereUI's third-party switches and its third-party style (a majority vote
-  over all its window styles), not its Settings-window skin or its window-skin kill switch, which
-  its public API does not expose. So the popup matches the settings window behind it only when
-  EllesmereUI's Settings window skin is on and its style is the third-party style; otherwise the
-  two can differ (a known limitation, [`known-limitations.md`](known-limitations.md)).
+- **The skin.** The window wears the skin this addon wears (General > Skin, `core/SkinSetup.lua`),
+  EllesmereUI's look included when the skin source is EllesmereUI; Quick Comms's own EllesmereUI
+  bridge is retired, and EllesmereUI is reached only through LibKa0s-Skin-1.0's `eui` source.
 
 ## The icon browser
 
@@ -439,7 +426,7 @@ X, the gold header), 560 × 594, with its own full-screen catcher in the popup's
 above the popup and the popup's catcher by a band of levels of its own (`ModalWindow.LEVEL_OVER`, far
 over the popup's `LEVEL`): it is modal to whatever opened it. `FULLSCREEN_DIALOG` stays above it for
 its pull-outs, the color picker and the Wowhead link window. Only one browser exists,
-built on its first open. The EllesmereUI skin paints it as it paints the popup.
+built on its first open. It wears the popup's skin.
 
 ```
 window   Blizzard's settings window, titled Ka0s Quick Comms                 (its close X)

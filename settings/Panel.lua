@@ -7,7 +7,8 @@ local addonName, NS = ...
 -- order (options-ui-§15). The Comms Pad is positionable, so the block is the full framed set: General
 -- visibility, Master scale and alpha, Lock frame, Test mode and Reset position (every pad and dial, design spec
 -- §10.3/§10.4). The design's other pages and the
--- General page's Behavior tab (spec §13.1) are added by the settings tasks.
+-- General page's Behavior tab (spec §13.1) are added by the settings tasks; the Skin tab, before
+-- Keybindings, is the library's (skinning-§3).
 
 local QC       = NS.addon
 local Settings = QC.Settings
@@ -96,11 +97,24 @@ local function keybindingsTab()
     })
 end
 
+-- The Skin tab (skinning-§3): the library's own entry (O.AppearanceTab, key "Appearance", labeled
+-- "Skin"): the skin source with EllesmereUI's four conditions, the nine skins, Font and texture,
+-- the Scope, "Copy to every Ka0s addon..." and the note, drawn for the owner core/SkinSetup.lua
+-- registered. `get` and `set` are that file's read and write seams, so a pick lands through
+-- NS.SchemaRuntime.Set like every other setting; the tab calls Skin:SetChoice first, so the live
+-- repaint is the library's and the rows' onChange finds nothing left to apply. Keyed by the group of
+-- the skin.* rows (settings/SchemaRows.lua), so it takes that group's place after Behavior, and its
+-- `before` (the library's default) keeps it ahead of Keybindings. On the degraded path the stub's
+-- entry draws nothing.
+local function skinTab()
+    return Helpers.AppearanceTab({ owner = addonName, get = NS.SkinChoice, set = NS.WriteSkinChoice })
+end
+
 local function renderGeneral(c)
     Helpers.ClearScroll(c)
     Helpers.RenderTabbedSchema(c, "general", AFTER_GROUP, nil, {
         rerender = renderGeneral,
-        tabs     = { keybindingsTab() },
+        tabs     = { skinTab(), keybindingsTab() },
     })
 end
 

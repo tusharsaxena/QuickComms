@@ -62,7 +62,7 @@ Named suites the standard requires: `test_surface_parity` (testing-§8), `test_v
 `test_restrictions`, `test_situation`, `test_tokens`, `test_channels`, `test_bake`, `test_resolver`,
 `test_builtins`, `test_library` and `test_check`, and phase 2's `test_mock_secure`, `test_send_guard`,
 `test_sendengine`, `test_preview`, `test_master`, `test_pad_layout`, `test_surfaces`, `test_dial_yield`,
-`test_pad_render` and `test_pad`, and phase 3's `test_members`, `test_editors`, `test_callout_popup` (the callout popup, which replaced `test_page_callouts`), `test_eui_skin` (its optional EllesmereUI skin, on a mocked EllesmereUI),
+`test_pad_render` and `test_pad`, and phase 3's `test_members`, `test_editors`, `test_callout_popup` (the callout popup, which replaced `test_page_callouts`), 
 `test_groups_when`, `test_page_groups`, `test_page_groups_nesting` (split off `test_page_groups` at
 the layout-§1 cap: nested groups, the Preview table, Inherit when conditions and a pad title's
 right-click) and `test_page_pads`, and phase 4's

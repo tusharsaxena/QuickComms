@@ -599,19 +599,6 @@ Total.
 - icon browser: [sets] the Glyphs filter lists the library's sets and narrows to one
 - icon browser: [sets] a glyph's tooltip names its set, and a Game-icons mark its author
 
-### test_eui_skin.lua (10)
-
-- eui skin: the popup is painted as EllesmereUI paints the settings window when every condition holds
-- eui skin: the icon browser's window is painted the same way, once, when it is built
-- eui skin: a callback that comes after the popup was built paints it at once
-- eui skin: not painted when any condition fails
-- eui skin: never raises without EllesmereUI, or with one that has no RegisterSkin
-- eui skin: a facade missing a primitive, or one that raises, leaves the popup stock
-- eui skin: paints while the addon is disabled (the popup and the browser are the settings panel's)
-- eui skin: the fallback window (no settings-window template) keeps its older look
-- eui skin: the diagnostics report names its state
-- eui skin: the diagnostics line says, in words, why the skin is or is not on
-
 ### test_groups_when.lua (21)
 
 - when: Toggle adds and removes one value, drops an emptied row, and never mutates its input
@@ -1294,6 +1281,33 @@ Total.
 - layout: [dials] Labels: Slice labels, Group labels, then Tooltip (QUI-L19)
 - layout: [dials] Icons: Size, offset and crop holds Icon size | Icon offset, then Zoom (QUI-L27)
 
+### test_skinsetup.lua (24)
+
+- skin seam: the owner is the folder name, and NS.Skin is its facade
+- skin seam: the owner is registered at file load, before the profile store exists
+- skin seam: the read answers Ka0s Default before the profile store exists
+- skin seam: EllesmereUI hears of this addon once, from the library alone
+- skin seam: every owner token is in the qc namespace and answers today's pixels on Ka0s Default
+- skin seam: under another skin an owner token takes its follow token's value
+- skin seam: an owner token reaches a markup escape byte for byte
+- skin seam: Core's window edge is handed the owner
+- skin seam: the drag strip, the Preview dropdown and the reorder list are handed the owner
+- skin seam: the seven skin keys default to Ka0s Default, the picker unseen
+- skin seam: every skin key is a skip-render schema row on the Skin tab
+- skin seam: the skin row's values are every registered skin, in the library's order
+- skin seam: /qc set refuses a skin that is not registered and applies one that is
+- skin seam: /qc set reaches an exception, and only its own half
+- skin seam: the Skin tab is the library's, after Behavior and before Keybindings
+- skin seam: one tab pick is one effective SetChoice, one repaint and no reload
+- skin seam: the tab's Ignore fonts reaches the library and the profile, one repaint
+- skin seam: another addon's copy to every Ka0s addon repaints this one once
+- skin seam: login applies the stored skin, exceptions and overrides
+- skin seam: a profile switch applies the new profile's skin, pages built or not
+- skin seam: Reset all settings puts the skin back on Ka0s Default and applies it
+- skin seam: the diagnostics report names the skin and the EllesmereUI gate
+- skin seam: the degraded facade answers every name the live facade carries
+- skin seam: each host-copy skin token is the live library's Ka0s Default value
+
 ### test_vendor_sync.lua (3)
 
 - libs/LibKa0s is the LibKa0s release CLAUDE.md says this addon bundles
@@ -1391,7 +1405,6 @@ Total.
 | test_editors.lua | 18 |
 | test_callout_popup.lua | 38 |
 | test_icon_browser.lua | 37 |
-| test_eui_skin.lua | 10 |
 | test_groups_when.lua | 21 |
 | test_page_groups.lua | 49 |
 | test_page_groups_nesting.lua | 19 |
@@ -1419,6 +1432,7 @@ Total.
 | test_shine.lua | 8 |
 | test_layers.lua | 11 |
 | test_layout.lua | 23 |
+| test_skinsetup.lua | 24 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -1426,4 +1440,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1176** |
+| **Total** | **1190** |

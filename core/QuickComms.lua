@@ -59,12 +59,16 @@ end
 
 -- ── profiles ────────────────────────────────────────────────────────────────────────────────
 
--- The three profile events share one reaction: migrations, panel refresh, the latch re-read (an
--- incoming profile carries its own answer to `enabled`), then PROFILE_CHANGED for every module that
--- caches a profile value.
+-- The three profile events share one reaction: migrations, the skin, panel refresh, the latch
+-- re-read (an incoming profile carries its own answer to `enabled`), then PROFILE_CHANGED for every
+-- module that caches a profile value.
 local function reloadProfile(self)
     self:RunMigrations()
     NS.Library.Prepare()
+    -- The incoming profile's skin (core/SkinSetup.lua), right after its migrations and before
+    -- anything refreshes or rebuilds: Skin:SetChoice repaints every recorded frame and fires
+    -- OnLooksChanged, whether or not a page or a surface was ever built.
+    NS.ApplySkinChoice()
     local S = self.Settings
     local H = S and S.Helpers
     if H and H.RefreshAll then H.RefreshAll() end
@@ -110,6 +114,10 @@ function QC:OnInitialize()
     -- Before anything reads the profile (savedvariables-§1).
     self:RunMigrations()
     NS.Library.Prepare()
+    -- The skin the active profile names (core/SkinSetup.lua), right after the store and its
+    -- migrations exist: the owner registered at file load, before AceDB, and has worn Ka0s Default
+    -- since. Before any page, pad or dial is built, so the first paint is the profile's.
+    NS.ApplySkinChoice()
 
     if self.db.RegisterCallback then
         self.db.RegisterCallback(self, "OnProfileChanged", function(...) self:OnProfileChanged(...) end)

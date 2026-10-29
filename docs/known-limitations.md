@@ -163,20 +163,10 @@ What the addon cannot do, or does only under a condition, and why. The hub,
 - The callout popup has no scrollbar: its window is as tall as its content, so on a screen too short
   for it (a very large UI scale) it runs past the top and bottom edges, Cancel and Save included;
   Escape still cancels.
-- The callout popup's EllesmereUI skin follows EllesmereUI's third-party switches (its third-party
-  skinning and Quick Comms' entry in its Third-Party Addons list) and its third-party style, a
-  majority vote over all its window styles. It does not follow EllesmereUI's Settings-window skin or
-  its window-skin kill switch, which the public API does not expose. So the popup can differ from the
-  settings window behind it: with window skins killed or the Settings window skin off, the popup wears
-  EllesmereUI's shell over a stock settings window; with the settings window on one style and most
-  windows on the other, the two backdrops differ.
-- The callout popup's EllesmereUI skin (and the icon browser's, the same skin on the same window) is
-  one-way, as EllesmereUI's skins are: turning it off in EllesmereUI takes effect after a reload. It
-  is painted whether or not Quick Comms is enabled: both windows belong to the settings panel, which
-  stays up while the addon is disabled (slash-commands-§7, "What MUST survive"); until 2026-10-18 a
-  disabled addon left them stock. A client without `SettingsFrameTemplate` gets the popup's older look
-  (a plain frame with Blizzard's dialog edge and the shared close mark) instead of the settings
-  window's, and the EllesmereUI skin leaves that fallback window as it is.
+- A change of skin source away from EllesmereUI is one-way, as EllesmereUI's skins are: it takes
+  effect after a reload, which the Skin tab offers. A client without `SettingsFrameTemplate` gets the
+  callout popup's older look (a plain frame with Blizzard's dialog edge and the shared close mark)
+  instead of the settings window's.
 - The icon browser searches game icons by texture id only: the client gives them as texture ids, with
   no names, and has no API that names one, so a game icon is named by its id and a name is looked up
   on Wowhead (the tab's hint; the game cannot open a web page, so the address is shown to copy). No

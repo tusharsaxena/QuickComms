@@ -283,7 +283,8 @@ local function build(id)
     root:SetFrameStrata(LAYERS.STRATA.HUD)
     root:EnableMouseWheel(true)
     root:SetScript("OnMouseWheel", function(_, delta) Pad.Wheel(id, delta) end)
-    NS.ApplySkin(root)
+    -- Core's edge from its own table: a pad has no title band, and the owner's Shell draws one.
+    NS.ApplySkin(root, NS.SKIN)
     local inst = { id = id, root = root, buttons = NS.Pool.New(), titles = NS.Pool.New(), titleHits = NS.Pool.New(),
         byCallout = {}, hover = 0, live = false }
     -- A plain BackdropTemplate child: the Header tab dresses it at every Apply.

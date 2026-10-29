@@ -32,8 +32,7 @@ local addonName, NS = ...
 -- popup has no scrollbar, and the window's height follows the laid-out body (fit, after every
 -- refresh and every error line). It is not a page (no sidebar entry, no banner, no Defaults). A
 -- client without the template gets the old look: a plain frame, Blizzard's dialog edge and the
--- shared close mark. With EllesmereUI's skin on, settings/CalloutPopup_Skin.lua paints the window's
--- chrome (Pop.chrome) as EllesmereUI paints the settings window. FULLY MODAL: a full-screen
+-- shared close mark. Pop.chrome keeps the window's chrome for the skin to paint. FULLY MODAL: a full-screen
 -- click-catcher under it covers the settings window, so the page underneath cannot change while a
 -- draft is open. Only one popup exists, built on its first Open.
 
@@ -464,8 +463,6 @@ local function build()
         settingsWindow:HookScript("OnHide", function() if draft then Pop.Cancel() end end)
     end
     Pop.frame, Pop.chrome = w.frame, w.chrome
-    local skin = Settings.CalloutPopupSkin
-    if skin then skin.TryApply() end
 end
 
 --- Open the popup on user group `groupId`: on callout `calloutId`, filled in, or with no callout

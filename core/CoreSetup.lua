@@ -89,8 +89,15 @@ NS.SafeRegisterEvents    = lib.SafeRegisterEvents
 -- The shared Ka0s window edge and the corner grip, published flat so a module reaches them by name
 -- rather than through a private lookalike (standalone-windows).
 NS.SKIN          = lib.SKIN
-NS.ApplySkin     = lib.ApplySkin
 NS.MakeResizable = lib.MakeResizable
+
+-- WRAPPED, TO SAY WHO IS ASKING (skinning-§1): every library factory that takes an owner is given
+-- one. With no `skin` table the window edge is the owner's skin (core/SkinSetup.lua registers it),
+-- through its facade's Shell, which also draws the skin's top bar; a frame that has no title band
+-- hands NS.SKIN, or a table of its own, and is drawn exactly as before.
+NS.ApplySkin = function(frame, skin)
+    return lib.ApplySkin(frame, skin, addonName)
+end
 
 -- The one class-color resolver (options-ui-§17): a stored swatch through its "Use class color"
 -- companion, the swatch's alpha kept, an unresolvable class falling through to the swatch.

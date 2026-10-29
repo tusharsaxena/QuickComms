@@ -404,6 +404,7 @@ local function newReorder(pageKey, onMove)
     local W = LibStub and LibStub("LibKa0s-Widgets-1.0", true)
     if not (W and W.ReorderList) then return nil end
     local r = W.ReorderList{
+        owner         = addonName,   -- the ghost and drop line wear this addon's skin (skinning-§1)
         stride        = Ed.ROW_H,
         handleIcon    = NS.Icon("segment"),
         handleTooltip = L["Drag to reorder"],

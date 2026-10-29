@@ -1,4 +1,4 @@
-local _, NS = ...
+local addonName, NS = ...
 -- modules/PreviewWindow.lua — the "Preview as…" selector window (design-qc-preview §2.2): a small
 -- library-styled window with a situation dropdown, an End preview button and the close mark, shown
 -- while a "Preview as…" preview is on, whichever way it started (the slash, the settings row, the
@@ -108,7 +108,8 @@ end
 local function makeButton(parent, label, onClick)
     local b = CreateFrame("Button", nil, parent, "BackdropTemplate")
     b:SetSize(BUTTON_W, ROW_H)
-    NS.ApplySkin(b)
+    -- Core's edge from its own table: a button has no title band, and the owner's Shell draws one.
+    NS.ApplySkin(b, NS.SKIN)
     local fs = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     fs:SetPoint("CENTER", 0, 0)
     fs:SetText(label)
@@ -129,7 +130,8 @@ local function makeButton(parent, label, onClick)
 end
 
 local function makeDropdown(parent)
-    local dd = W.Dropdown(parent, DROP_W, { chevron = NS.Icon("chevron-down"), check = NS.Icon("confirm") })
+    local dd = W.Dropdown(parent, DROP_W, { chevron = NS.Icon("chevron-down"), check = NS.Icon("confirm"),
+        owner = addonName })
     dd:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD, -(TITLE_H + PAD))
     -- One line: a long situation label truncates rather than wrapping out of the box.
     if dd.text and dd.text.SetWordWrap then dd.text:SetWordWrap(false) end
@@ -197,7 +199,9 @@ local function ensure()
     f.dropdown = makeDropdown(f)
     f.endButton = makeButton(f, L["End preview"], endPreview)
     f.endButton:SetPoint("LEFT", f.dropdown, "RIGHT", GAP, 0)
-    NS.ApplySkin(f)
+    -- Core's edge from its own table: the window's title sits in a band TITLE_H tall, not the
+    -- skin's top bar.
+    NS.ApplySkin(f, NS.SKIN)
     f:Hide()
     if type(UISpecialFrames) == "table" then table.insert(UISpecialFrames, NAME) end
     f:HookScript("OnHide", onHide)

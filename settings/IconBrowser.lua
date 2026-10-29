@@ -573,8 +573,6 @@ local function build()
     if settingsWindow and settingsWindow.HookScript then
         settingsWindow:HookScript("OnHide", function() if request then B.Cancel() end end)
     end
-    local skin = Settings.CalloutPopupSkin
-    if skin then skin.TryApply() end
 end
 
 -- Hide the browser and drop the request. The request is cleared first, so the frame's own OnHide

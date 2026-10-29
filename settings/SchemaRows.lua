@@ -79,3 +79,50 @@ NS.SchemaRuntime.AddRows({
 })
 
 -- Preview as… (spec §13.3) is not here: it is General › Master controls' extra (settings/Panel.lua).
+
+-- ── General ▸ Skin (skinning-§2, §3) ──
+-- The skin this addon wears, per profile (core/SkinSetup.lua). The tab is the library's
+-- O.AppearanceTab (key "Appearance", labeled "Skin"; settings/Panel.lua), which draws every row
+-- below as its own controls, so each carries `skipRender`; they stay schema rows so the defaults
+-- resolve, both resets reach them, and `/qc get|set skin.skin` validates against `values`. The
+-- group is the tab's key, never translated: the host tab keyed by it takes its place in the strip,
+-- after Behavior and before Keybindings.
+--
+-- Each onChange applies ONLY its own half (core/SkinSetup.lua says why): the tab and another addon's
+-- "Copy to every Ka0s addon" call Skin:SetChoice before they write, so the write is a no-op, and a
+-- bare `/qc set` still repaints. Nothing here asks the surfaces to rebuild.
+local APPEARANCE = "Appearance"
+local SKIN = NS.C.PROFILE.skin
+local function skinRow(leaf, row)
+    row.path, row.default = "skin." .. leaf, SKIN[leaf]
+    row.page, row.group, row.skipRender = "general", APPEARANCE, true
+    return row
+end
+NS.SchemaRuntime.AddRows({
+    skinRow("source", { type = "string", values = NS.SKIN_SOURCE_OPTIONS, label = L["Skin source"],
+        desc = L["Where this addon's look comes from: the Ka0s skin chosen below, or EllesmereUI."],
+        onChange = function(v) NS.ApplySkinChoice(v, nil) end }),
+    skinRow("skin", { type = "string", values = NS.SKIN_OPTIONS, label = L["Skin"],
+        desc = L["The Ka0s skin this addon wears. Changes every window and panel right away."],
+        onChange = function(v) NS.ApplySkinChoice(nil, v) end }),
+    -- The Scope's two exceptions, drawn by the same tab as check boxes.
+    skinRow("ignorePanel", { type = "bool", label = L["Ignore settings panel"],
+        desc = L["Keep this addon's settings panel in the game's own look. Its windows still wear the skin."],
+        onChange = function(v) NS.ApplySkinIgnore(v, nil) end }),
+    skinRow("ignoreFonts", { type = "bool", label = L["Ignore fonts"],
+        desc = L["Keep every font in this addon as the game draws it. The skin still colors the text."],
+        onChange = function(v) NS.ApplySkinIgnore(nil, v) end }),
+    -- The Font and texture section's two overrides, LibSharedMedia keys, "" for the skin's own.
+    -- Free text, not a choice with `values`: a media pack may register its keys after this file
+    -- loads, and `/qc set` takes any key.
+    skinRow("font", { type = "string", label = L["Font"],
+        desc = L["The font this addon's text uses, over the skin's own. Empty keeps the skin's."],
+        onChange = function(v) NS.ApplySkinOverride(v, nil) end }),
+    skinRow("texture", { type = "string", label = L["Texture"],
+        desc = L["The texture this addon's bars use, over the skin's own. Empty keeps the skin's."],
+        onChange = function(v) NS.ApplySkinOverride(nil, v) end }),
+    -- The first-run skin picker's memory: set when the picker closes, so it shows once per
+    -- profile. Drawn by nothing; a reset puts it back to false.
+    skinRow("pickerSeen", { type = "bool", label = L["Skin picker seen"],
+        desc = L["Whether the first-run skin picker was closed on this profile."] }),
+})
