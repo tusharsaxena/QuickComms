@@ -206,3 +206,52 @@ function Lib.MigrateSliceBorder(profile)
         end
     end
 end
+
+-- The HUD style pickers that follow the skin through their "Use the skin's ..." companion (QC-03,
+-- DECISIONS X4: only the faces and the border styles; colors, sizes and flags stay the player's), by
+-- surface kind, as `<block>.<picker>`: each one's companion is `<block>.<picker>FromSkin`.
+Lib.FROM_SKIN_KEYS = {
+    pad = { "look.borderStyle", "header.font", "header.borderStyle", "section.font", "section.borderStyle",
+        "button.font", "button.borderStyle", "icon.borderStyle" },
+    dial = { "icon.borderStyle", "label.font", "title.font" },
+}
+
+-- One stored surface's companions turned on. A companion the surface stores goes through
+-- LibKa0s-Skin-1.0's ResetToSkin, named by its picker, which sets the companion beside a picker that
+-- has one. One it does not store yet (a surface saved before QC-03) is written true here: handed an
+-- absent companion, ResetToSkin cannot tell it is a bool and writes its "@skin" sentinel into the
+-- picker. Without the library every companion is written here; it means nothing until the library
+-- loads, and then it must already say "follow". A block the surface lacks is fillShape's (Prepare
+-- fills it from the template, whose companions are true).
+local function followSkin(surface, keys, resetToSkin)
+    local named = {}
+    for _, key in ipairs(keys) do
+        local block, picker = key:match("^(%w+)%.(%w+)$")
+        local t = surface[block]
+        if type(t) == "table" then
+            local companion = picker .. "FromSkin"
+            if resetToSkin and t[companion] ~= nil then
+                named[#named + 1] = key
+            else
+                t[companion] = true
+            end
+        end
+    end
+    if #named > 0 then resetToSkin(surface, named) end
+end
+
+--- Step 10 (QC-03, the owner's ruling O2): the one-time reset onto the skin. Every stored pad's and
+--- dial's font and border pickers follow the skin again, once, for every player: each block's
+--- companion is turned on. The stored picks are kept (a companion turned off brings them back), and
+--- no color, size or flag is touched. The runner's stamp is what makes it once: a player who turns a
+--- companion off afterwards keeps that pick, because this step never runs again.
+function Lib.MigrateFollowSkin(profile)
+    if type(profile) ~= "table" then return end
+    local Skin = LibStub and LibStub("LibKa0s-Skin-1.0", true)
+    local resetToSkin = Skin and type(Skin.ResetToSkin) == "function" and Skin.ResetToSkin or nil
+    for kind, list in pairs({ pad = profile.pads, dial = profile.dials }) do
+        for _, surface in pairs(type(list) == "table" and list or {}) do
+            if type(surface) == "table" then followSkin(surface, Lib.FROM_SKIN_KEYS[kind], resetToSkin) end
+        end
+    end
+end

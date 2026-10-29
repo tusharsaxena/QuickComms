@@ -14,9 +14,6 @@ C.FONT_MONO_NAME = "JetBrains Mono"
 C.FONT_MONO = NS.MediaFont and NS.MediaFont(C.FONT_MONO_NAME) or _G.STANDARD_TEXT_FONT
     or "Fonts\\FRIZQT__.TTF"
 
--- The Ka0s gold (#FFD100), the logo's and the surfaces' accent.
-C.GOLD = { r = 1.0, g = 0.82, b = 0.0 }
-
 -- A chat type's color (a button's tooltip channel, a callout row's channel): WoW's chat colors, used
 -- when ChatTypeInfo cannot be read (spec §10.1).
 C.CHAT_COLORS = {
@@ -25,10 +22,8 @@ C.CHAT_COLORS = {
     CHANNEL1 = { 1.0, 0.75, 0.75 },
 }
 
--- A button's flash for each send result: gold sent, red dropped, amber guarded (spec §10.1).
-C.FLASH = {
-    sent = { 1.0, 0.82, 0.0 }, dropped = { 0.9, 0.15, 0.15 }, guarded = { 1.0, 0.5, 0.0 },
-}
+-- A button's flash for each send result is the skin's (modules/Pad_Render.lua R.Chrome, QC-03): gold
+-- sent (text.accent), red dropped (qc.dropped), amber guarded (sem.warn), as spec §10.1 drew them.
 
 -- ── LAYERS (frame-layering, standard v2.88.0) ───────────────────────────────────────────────────
 -- Every strata and frame level the addon sets, named once. Every SetFrameStrata and SetFrameLevel in

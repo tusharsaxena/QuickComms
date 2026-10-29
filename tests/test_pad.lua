@@ -489,6 +489,9 @@ test("pad: [phase 5] the pad wears its Section header and Main window tabs: the 
     local apply = NS.ApplySkin
     NS.ApplySkin = function(frame, skin) skins[frame] = skin return apply(frame, skin) end
     local S = NS.SchemaRuntime
+    -- the player's picks, not the skin's (QC-03: the companions default on)
+    assertTrue(S.Set("pad.section.fontFromSkin", false, "p1"))
+    assertTrue(S.Set("pad.look.borderStyleFromSkin", false, "p1"))
     assertTrue(S.Set("pad.section.font", "Arial", "p1"))
     assertTrue(S.Set("pad.section.fontSize", 13, "p1"))
     assertTrue(S.Set("pad.look.borderStyle", "Tooltip", "p1"))
@@ -522,6 +525,7 @@ test("pad: [window] the header wears its own block: gold outlined 16-point text 
     assertEqual(skins[header].bg[4], 0, "no background by default")
     local S = NS.SchemaRuntime
     assertTrue(S.Set("pad.header.fontSize", 14, "p1"))
+    assertTrue(S.Set("pad.header.fontFromSkin", false, "p1"))   -- the player's face (QC-03)
     assertTrue(S.Set("pad.header.font", "Arial", "p1"))
     assertTrue(S.Set("pad.header.background", { r = 0.1, g = 0.2, b = 0.3, a = 0.5 }, "p1"))
     assertTrue(S.Set("pad.header.borderSize", 2, "p1"))
@@ -612,6 +616,7 @@ test("pad: [button] a button wears the Buttons tab: the owner's default body, ed
     assertEqual(btn.__w .. "x" .. btn.__h, "100x24", "the button's shipped size")
     assertTrue(S.Set("pad.button.background", { r = 0.3, g = 0, b = 0, a = 0.5 }, "p1"))
     assertTrue(S.Set("pad.button.borderSize", 2, "p1"))
+    assertTrue(S.Set("pad.button.fontFromSkin", false, "p1"))   -- the player's face (QC-03)
     assertTrue(S.Set("pad.button.font", "Arial", "p1"))
     assertTrue(S.Set("pad.button.width", 150, "p1"))
     assertTrue(S.Set("pad.button.height", 40, "p1"))

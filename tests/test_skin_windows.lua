@@ -20,13 +20,22 @@ local test, assertEqual, assertTrue, assertFalse, fail = T.test, T.assertEqual, 
 local OWNER = "QuickComms"
 local OTHER = "obsidian"
 
--- ── the literal gate, over the window files (QC-03 and QC-04 widen it to the HUD and the pages) ──
+-- ── the literal gate, over the window files and the HUD's (QC-04 widens it to the pages) ──────────
 
 local FILES = {
     "modules/PreviewWindow.lua",
     "settings/ModalWindow.lua",
     "settings/CalloutPopup.lua",
     "settings/IconBrowser.lua",
+    -- QC-03: the HUD (tests/test_skin_hud.lua holds what each draws)
+    "modules/Pad.lua",
+    "modules/Pad_Render.lua",
+    "modules/Pad_Layout.lua",
+    "modules/Dial.lua",
+    "modules/Dial_Render.lua",
+    "modules/Dial_Slices.lua",
+    "modules/IconStyle.lua",
+    "modules/Glow.lua",
 }
 
 -- call name -> the argument positions that hold color components (LootHistory's gate, LH-05).
@@ -41,6 +50,12 @@ local COLOR_ARGS = {
 local ALLOW = {
     { file = "settings/IconBrowser.lua", find = "CHAT_GRAY =",
       why = "the combat refusal's chat line: chat output, not a skinned surface (DECISIONS X7)" },
+    { file = "modules/Pad_Render.lua", find = "L[\"Channel: %s\"]",
+      why = "the channel's name in WoW's chat-type color: a game-meaning color (rung 4)" },
+    { file = "modules/Pad_Render.lua", find = "NO_INNER =",
+      why = "a cleared inner line: no color is drawn, under any skin" },
+    { file = "modules/Dial_Slices.lua", find = "BLACK =",
+      why = "the shine overlay's shading: the player's shine art, never skinned (DECISIONS QuickComms D6)" },
 }
 
 local function code(line) return (line:gsub("%-%-.*$", "")) end

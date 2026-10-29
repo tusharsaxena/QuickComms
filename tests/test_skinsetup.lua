@@ -415,8 +415,9 @@ test("skin seam: each host-copy skin token is the live library's Ka0s Default va
     for name, c in pairs(degraded.SKIN_FALLBACK) do
         n = n + 1
         local want = live[name]
-        assertTrue(type(want) == "table", name .. " is not a library color token")
-        assertColor(c, want, name)
+        assertTrue(want ~= nil, name .. " is not a library token")
+        -- QC-03's HUD reads four scalar tokens too (the face and the border styles and size)
+        if type(want) == "table" then assertColor(c, want, name) else assertEqual(c, want, name) end
     end
     assertTrue(n > 0, "the host copy is empty")
 end)

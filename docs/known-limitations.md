@@ -167,6 +167,11 @@ What the addon cannot do, or does only under a condition, and why. The hub,
   effect after a reload, which the Skin tab offers. A client without `SettingsFrameTemplate` gets the
   callout popup's older shape (a plain frame in the skin's window fill and edge, and the shared close
   mark) instead of the settings window's.
+- A skin change in combat repaints the pads and dials only when combat ends (a rebuild waits for it,
+  with the stale hint meanwhile), as every rebuild does: a face or a border style moves a pad's
+  measured widths, and a secure pad cannot be re-laid out in combat. The one-time reset onto the
+  skin (schema step 10) moves every pad's and dial's faces to the skin's HUD font (Oxanium SemiBold
+  under Ka0s Default) and their border styles to its own; the colors stay the player's.
 - The icon browser searches game icons by texture id only: the client gives them as texture ids, with
   no names, and has no API that names one, so a game icon is named by its id and a name is looked up
   on Wowhead (the tab's hint; the game cannot open a web page, so the address is shown to copy). No

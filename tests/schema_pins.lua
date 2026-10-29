@@ -3,7 +3,8 @@
 -- Item 020 moves, regroups and relabels rows only (the owner's rule), so no path, default, range,
 -- choice set or session flag may change, and no row may be added or removed. tests/test_schema.lua
 -- rebuilds the same line from the live schema and compares. A later change that alters a setting on
--- purpose regenerates the pins in the same commit and says so.
+-- purpose regenerates the pins in the same commit and says so. QC-03 (the skinning rollout, 2026-10-29)
+-- adds the eleven "Use the skin's font / border" companions of the HUD's font and border blocks.
 return {
     ["enabled"] = "bool|true|nil|nil|nil|nil|false",
     ["visibility"] = "string|\"always\"|nil|nil|nil|[]|false",
@@ -64,6 +65,7 @@ return {
     ["dial.point"] = "point|false|nil|nil|nil|nil|false",
     ["pad.header.height"] = "number|24|14|40|1|nil|false",
     ["pad.header.font"] = "string|\"Friz Quadrata TT\"|nil|nil|nil|<fn>|false",
+    ["pad.header.fontFromSkin"] = "bool|true|nil|nil|nil|nil|false",   -- QC-03: follows the skin
     ["pad.header.fontSize"] = "number|16|6|32|1|nil|false",
     ["pad.header.fontColor"] = "color|{a=1,b=0,g=0.82,r=1}|nil|nil|nil|nil|false",
     ["pad.header.useClassColorFont"] = "bool|false|nil|nil|nil|nil|false",
@@ -72,11 +74,13 @@ return {
     ["pad.header.background"] = "color|{a=0,b=0,g=0,r=0}|nil|nil|nil|nil|false",
     ["pad.header.useClassColorBackground"] = "bool|false|nil|nil|nil|nil|false",
     ["pad.header.borderStyle"] = "string|\"None\"|nil|nil|nil|<fn>|false",
+    ["pad.header.borderStyleFromSkin"] = "bool|true|nil|nil|nil|nil|false",   -- QC-03: follows the skin
     ["pad.header.borderSize"] = "number|0|0|16|1|nil|false",
     ["pad.header.borderColor"] = "color|{a=1,b=1,g=1,r=1}|nil|nil|nil|nil|false",
     ["pad.header.useClassColorBorder"] = "bool|false|nil|nil|nil|nil|false",
     ["pad.section.height"] = "number|0|0|40|1|nil|false",
     ["pad.section.font"] = "string|\"Friz Quadrata TT\"|nil|nil|nil|<fn>|false",
+    ["pad.section.fontFromSkin"] = "bool|true|nil|nil|nil|nil|false",   -- QC-03: follows the skin
     ["pad.section.fontSize"] = "number|12|6|32|1|nil|false",
     ["pad.section.fontColor"] = "color|{a=1,b=0,g=0.82,r=1}|nil|nil|nil|nil|false",
     ["pad.section.useClassColorFont"] = "bool|false|nil|nil|nil|nil|false",
@@ -85,12 +89,14 @@ return {
     ["pad.section.background"] = "color|{a=0,b=0,g=0,r=0}|nil|nil|nil|nil|false",
     ["pad.section.useClassColorBackground"] = "bool|false|nil|nil|nil|nil|false",
     ["pad.section.borderStyle"] = "string|\"None\"|nil|nil|nil|<fn>|false",
+    ["pad.section.borderStyleFromSkin"] = "bool|true|nil|nil|nil|nil|false",   -- QC-03: follows the skin
     ["pad.section.borderSize"] = "number|0|0|16|1|nil|false",
     ["pad.section.borderColor"] = "color|{a=1,b=1,g=1,r=1}|nil|nil|nil|nil|false",
     ["pad.section.useClassColorBorder"] = "bool|false|nil|nil|nil|nil|false",
     ["pad.look.background"] = "color|{a=0.92,b=0.08,g=0.06,r=0.06}|nil|nil|nil|nil|false",
     ["pad.look.useClassColorBackground"] = "bool|false|nil|nil|nil|nil|false",
     ["pad.look.borderStyle"] = "string|\"None\"|nil|nil|nil|<fn>|false",
+    ["pad.look.borderStyleFromSkin"] = "bool|true|nil|nil|nil|nil|false",   -- QC-03: follows the skin
     ["pad.look.borderSize"] = "number|1|0|16|1|nil|false",
     ["pad.look.borderColor"] = "color|{a=1,b=0,g=0,r=0}|nil|nil|nil|nil|false",
     ["pad.look.useClassColorBorder"] = "bool|false|nil|nil|nil|nil|false",
@@ -99,10 +105,12 @@ return {
     ["pad.button.background"] = "color|{a=0.25,b=0.247059,g=0.247059,r=0.247059}|nil|nil|nil|nil|false",
     ["pad.button.useClassColorBackground"] = "bool|false|nil|nil|nil|nil|false",
     ["pad.button.borderStyle"] = "string|\"None\"|nil|nil|nil|<fn>|false",
+    ["pad.button.borderStyleFromSkin"] = "bool|true|nil|nil|nil|nil|false",   -- QC-03: follows the skin
     ["pad.button.borderSize"] = "number|1|0|16|1|nil|false",
     ["pad.button.borderColor"] = "color|{a=0.1,b=0.247059,g=0.247059,r=0.247059}|nil|nil|nil|nil|false",
     ["pad.button.useClassColorBorder"] = "bool|false|nil|nil|nil|nil|false",
     ["pad.button.font"] = "string|\"Friz Quadrata TT\"|nil|nil|nil|<fn>|false",
+    ["pad.button.fontFromSkin"] = "bool|true|nil|nil|nil|nil|false",   -- QC-03: follows the skin
     ["pad.button.fontSize"] = "number|10|6|32|1|nil|false",
     ["pad.button.fontColor"] = "color|{a=1,b=1,g=1,r=1}|nil|nil|nil|nil|false",
     ["pad.button.useClassColorFont"] = "bool|false|nil|nil|nil|nil|false",
@@ -173,6 +181,7 @@ return {
     ["dial.label.show"] = "bool|true|nil|nil|nil|nil|false",
     ["dial.label.offset"] = "number|0|0|300|1|nil|false",
     ["dial.label.font"] = "string|\"Friz Quadrata TT\"|nil|nil|nil|<fn>|false",
+    ["dial.label.fontFromSkin"] = "bool|true|nil|nil|nil|nil|false",   -- QC-03: follows the skin
     ["dial.label.fontSize"] = "number|12|6|32|1|nil|false",
     ["dial.label.fontColor"] = "color|{a=1,b=1,g=1,r=1}|nil|nil|nil|nil|false",
     ["dial.label.useClassColorFont"] = "bool|false|nil|nil|nil|nil|false",
@@ -182,6 +191,7 @@ return {
     ["dial.label.tooltipOffset"] = "number|8|0|80|1|nil|false",
     ["dial.title.show"] = "bool|true|nil|nil|nil|nil|false",
     ["dial.title.font"] = "string|\"Friz Quadrata TT\"|nil|nil|nil|<fn>|false",
+    ["dial.title.fontFromSkin"] = "bool|true|nil|nil|nil|nil|false",   -- QC-03: follows the skin
     ["dial.title.fontSize"] = "number|16|6|32|1|nil|false",
     ["dial.title.fontColor"] = "color|{a=1,b=0,g=0.82,r=1}|nil|nil|nil|nil|false",
     ["dial.title.useClassColorFont"] = "bool|false|nil|nil|nil|nil|false",
@@ -195,6 +205,7 @@ return {
     ["pad.icon.useClassColorTint"] = "bool|false|nil|nil|nil|nil|false",
     ["pad.icon.borderShow"] = "bool|false|nil|nil|nil|nil|false",
     ["pad.icon.borderStyle"] = "string|\"Solid\"|nil|nil|nil|<fn>|false",
+    ["pad.icon.borderStyleFromSkin"] = "bool|true|nil|nil|nil|nil|false",   -- QC-03: follows the skin
     ["pad.icon.borderSize"] = "number|1|1|16|1|nil|false",
     ["pad.icon.borderColor"] = "color|{a=1,b=0,g=0,r=0}|nil|nil|nil|nil|false",
     ["pad.icon.useClassColorBorder"] = "bool|false|nil|nil|nil|nil|false",
@@ -225,6 +236,7 @@ return {
     ["dial.icon.useClassColorTint"] = "bool|false|nil|nil|nil|nil|false",
     ["dial.icon.borderShow"] = "bool|false|nil|nil|nil|nil|false",
     ["dial.icon.borderStyle"] = "string|\"Solid\"|nil|nil|nil|<fn>|false",
+    ["dial.icon.borderStyleFromSkin"] = "bool|true|nil|nil|nil|nil|false",   -- QC-03: follows the skin
     ["dial.icon.borderSize"] = "number|1|1|16|1|nil|false",
     ["dial.icon.borderColor"] = "color|{a=1,b=0,g=0,r=0}|nil|nil|nil|nil|false",
     ["dial.icon.useClassColorBorder"] = "bool|false|nil|nil|nil|nil|false",

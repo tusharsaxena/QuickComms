@@ -18,9 +18,20 @@ local _, NS = ...
 -- overlay over the whole button (modules/Shine.lua NS.Shine.Apply; shine overlay, 2026-10-21). The Icons tab (B9) styles the icon through
 -- modules/IconStyle.lua (size, crop, desaturation, alpha, tint, border) and modules/Glow.lua (the
 -- glow, whose On hover trigger the button's OnEnter and OnLeave hooks drive).
+--
+-- THE SKIN (QC-03, skinning-§6; DECISIONS X3, X4). Every font block's face and every border block's
+-- style follow the skin while the block's "Use the skin's font / border" companion is on (the
+-- default): R.FontKey and R.BorderKey read them through NS.Skin.Resolve (hud.font, bar.borderStyle),
+-- the stored pick while it is off. The player's colors, sizes, flags and shadows are always the
+-- player's. The chrome this file draws that no setting names (the padlock, the state veils, the hover
+-- wash, the send flashes, the header's lockdown and stale colors, the strip's marker, the tooltip
+-- lines) reads a token: R.Chrome, read once per look change, Ka0s Default's values today's pixels (the
+-- library's tokens and this addon's own qc.*, core/SkinSetup.lua). A skin change (OnLooksChanged)
+-- moves R.LooksGen, which every look's signature carries, and asks the surfaces for one rebuild.
 
 NS.PadRender = NS.PadRender or {}
 local R = NS.PadRender
+local Skin = NS.Skin
 local PL = NS.PadLayout
 local IS = NS.IconStyle
 local Glow = NS.Glow
@@ -32,6 +43,66 @@ local DEFAULT_ICON = "Interface\\Icons\\INV_Misc_QuestionMark"
 -- Blizzard texture is drawn only when the catalog answers nil (the library absent).
 local LOCK_ICON = "Interface\\PetBattles\\PetBattle-LockIcon"
 local DOT = " \194\183 "
+
+-- ── the skin's chrome (QC-03) ──────────────────────────────────────────────────────────────────
+
+-- Moved by every OnLooksChanged (a skin, an override or an exception change): the generation every
+-- look's signature and every button's chrome stamp carry.
+local looksGen = 0
+local chrome
+
+local function rgba(name)
+    local r, g, b, a = Skin.Color(name)
+    return { r or 1, g or 1, b or 1, a or 1 }
+end
+
+--- The HUD's chrome colors in the applied skin, as { r, g, b, a }, read once per look change (never per
+--- button, never per frame): `lock` the padlock (text.accent), `veil` / `veilCool` the refused and
+--- cooling veils (qc.veil, qc.veilCool), `hover` the hover wash (qc.hover), `flash` the send results
+--- (sent text.accent, dropped qc.dropped, guarded sem.warn), `lockdown` and `stale` the header's and the
+--- hub's tags (qc.lockdown, text.disabled), `preview` the PREVIEW / TEST MODE marks (qc.preview),
+--- `arrowDim` a dial's arrow at an end (qc.arrowDim), `title` a font block's fallback gold
+--- (title.text), `body` a button's fallback fill (btn.bg) and `tip` the tooltip lines (gtip.value).
+function R.Chrome()
+    if chrome and chrome.gen == looksGen then return chrome end
+    chrome = { gen = looksGen, lock = rgba("text.accent"), veil = rgba("qc.veil"), veilCool = rgba("qc.veilCool"),
+        hover = rgba("qc.hover"), lockdown = rgba("qc.lockdown"), stale = rgba("text.disabled"),
+        preview = rgba("qc.preview"), arrowDim = rgba("qc.arrowDim"), title = rgba("title.text"),
+        body = rgba("btn.bg"), tip = rgba("gtip.value"),
+        flash = { sent = rgba("text.accent"), dropped = rgba("qc.dropped"), guarded = rgba("sem.warn") } }
+    return chrome
+end
+
+--- The look generation: moved by every skin change.
+function R.LooksGen() return looksGen end
+
+-- A send flash's wash: its meaning color at this alpha, under every skin.
+local FLASH_ALPHA = 0.45
+
+-- A skin change repaints every pad and dial: one rebuild, which waits for the end of combat on its
+-- own (Surfaces.Request, the stale hint meanwhile); the looks' signatures carry the generation.
+Skin.OnLooksChanged(function()
+    looksGen = looksGen + 1
+    if NS.Surfaces and NS.Surfaces.Request then NS.Surfaces.Request("skin") end
+end)
+
+--- A font block's face as the skin or the player names it: the skin's hud.font while its "Use the
+--- skin's font" companion is on, else the stored pick. An LSM key.
+function R.FontKey(look)
+    return Skin.Resolve("hud.font", look.font, look.fontFromSkin == true)
+end
+
+--- A border block's style as the skin or the player names it: the skin's bar.borderStyle while its
+--- "Use the skin's border" companion is on, else the stored pick. An LSM key, or "None".
+function R.BorderKey(look)
+    return Skin.Resolve("bar.borderStyle", look.borderStyle, look.borderStyleFromSkin == true)
+end
+
+--- The gold a font block falls back to when its swatch is missing (title.text), keyed.
+function R.TitleColor()
+    local c = R.Chrome().title
+    return { r = c[1], g = c[2], b = c[3], a = c[4] }
+end
 
 -- Why a button sends nothing (Bake's and Channels' reasons, spec §8.3/§18; test mode).
 R.REASON_TEXT = {
@@ -121,13 +192,25 @@ function R.ChannelColor(chatType)
 end
 
 -- A state veil over the whole button, drawn on its overlay frame `over` (R.Overlay) at OVERLAY
--- sublevel `sub`, over the label and padlock (sublevel 0).
-local function veil(btn, over, sub, r, g, b, a)
+-- sublevel `sub`, over the label and padlock (sublevel 0); its color is the skin's (paintChrome).
+local function veil(btn, over, sub)
     local t = over:CreateTexture(nil, "OVERLAY", nil, sub)
     t:SetAllPoints(btn)
-    t:SetColorTexture(r, g, b, a)
     t:Hide()
     return t
+end
+
+-- A button's chrome in the applied skin (R.Chrome): the padlock's tint (the catalog art only: the
+-- Blizzard fallback keeps its own gold), the two veils and the hover wash. Once per look change: the
+-- stamp `qcChromeGen` skips a button that already wears it. Insecure textures, combat-safe.
+local function paintChrome(btn)
+    local ch = R.Chrome()
+    if btn.qcChromeGen == ch.gen then return end
+    btn.qcChromeGen = ch.gen
+    if btn.qcLockTinted then btn.qcLock:SetVertexColor(ch.lock[1], ch.lock[2], ch.lock[3], ch.lock[4]) end
+    btn.qcDim:SetColorTexture(ch.veil[1], ch.veil[2], ch.veil[3], ch.veil[4])
+    btn.qcCool:SetColorTexture(ch.veilCool[1], ch.veilCool[2], ch.veilCool[3], ch.veilCool[4])
+    btn.qcHover:SetColorTexture(ch.hover[1], ch.hover[2], ch.hover[3], ch.hover[4])
 end
 
 --- Whether a slot wears the dim veil (qcDim): only a live slot whose bake was refused, one that sends and
@@ -144,8 +227,9 @@ function R.ShowTooltip(btn)
     local slot = btn.qcSlot
     if not slot then return end
     GameTooltip:SetOwner(btn, "ANCHOR_TOP")
+    local tip = R.Chrome().tip
     for i, line in ipairs(R.TooltipLines(slot)) do
-        if i == 1 then GameTooltip:SetText(line) else GameTooltip:AddLine(line, 1, 1, 1, true) end
+        if i == 1 then GameTooltip:SetText(line) else GameTooltip:AddLine(line, tip[1], tip[2], tip[3], true) end
     end
     GameTooltip:Show()
 end
@@ -154,7 +238,8 @@ end
 function R.ShowLines(owner, title, lines)
     GameTooltip:SetOwner(owner, "ANCHOR_TOP")
     GameTooltip:SetText(title)
-    for _, line in ipairs(lines or {}) do GameTooltip:AddLine(line, 1, 1, 1, true) end
+    local tip = R.Chrome().tip
+    for _, line in ipairs(lines or {}) do GameTooltip:AddLine(line, tip[1], tip[2], tip[3], true) end
     GameTooltip:Show()
 end
 
@@ -180,7 +265,8 @@ function R.Dress(btn, onEnter, onLeave)
     btn.qcIconLevel = LV.BTN_ICON
     btn.qcBg = btn:CreateTexture(nil, "BACKGROUND")
     btn.qcBg:SetAllPoints(btn)
-    btn.qcBg:SetColorTexture(0.10, 0.10, 0.12, 0.90)
+    local body = R.Chrome().body   -- until the Buttons tab's look dresses it (ApplyButtonLook)
+    btn.qcBg:SetColorTexture(body[1], body[2], body[3], body[4])
     -- The Buttons tab's edge and glow host: a plain child laid over the button, mouse off (ApplyButtonLook).
     btn.qcEdge = CreateFrame("Frame", nil, btn, "BackdropTemplate")
     btn.qcEdge:SetAllPoints(btn)
@@ -197,17 +283,14 @@ function R.Dress(btn, onEnter, onLeave)
     btn.qcLock:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -1, -1)
     local lockMark = NS.Icon("lock")
     btn.qcLock:SetTexture(lockMark or LOCK_ICON)
-    if lockMark then
-        local gold = NS.Constants.GOLD   -- the catalog art is white; gold as the Blizzard padlock reads
-        btn.qcLock:SetVertexColor(gold.r, gold.g, gold.b, 1)
-    end
-    btn.qcDim = veil(btn, over, 1, 0, 0, 0, 0.55)
-    btn.qcCool = veil(btn, over, 2, 0, 0, 0, 0.35)
-    btn.qcFlash = veil(btn, over, 3, 1.0, 0.82, 0.0, 0.45)
-    local gold = NS.Constants.GOLD
-    local hover = btn:CreateTexture(nil, "HIGHLIGHT")
-    hover:SetAllPoints(btn)
-    hover:SetColorTexture(gold.r, gold.g, gold.b, 0.25)
+    -- the catalog art is white: tinted text.accent, the gold the Blizzard padlock reads (paintChrome)
+    btn.qcLockTinted = lockMark ~= nil
+    btn.qcDim = veil(btn, over, 1)
+    btn.qcCool = veil(btn, over, 2)
+    btn.qcFlash = veil(btn, over, 3)
+    btn.qcHover = btn:CreateTexture(nil, "HIGHLIGHT")
+    btn.qcHover:SetAllPoints(btn)
+    paintChrome(btn)
     btn:HookScript("OnEnter", function(self)
         R.ShowTooltip(self)
         Glow.SetHover(self, true)
@@ -257,6 +340,7 @@ local DEFAULT_LOOK
 --- the pad's Icons tab (IconStyle.Config; none is the defaults).
 function R.Paint(btn, slot, style, w, icfg)
     btn.qcSlot = slot
+    paintChrome(btn)
     DEFAULT_LOOK = DEFAULT_LOOK or IS.Config(nil, "pad")
     icfg = icfg or DEFAULT_LOOK
     btn.qcIcon:SetTexture(slot.icon or DEFAULT_ICON)
@@ -290,24 +374,22 @@ end
 local FLAT_EDGE = "Interface\\Buttons\\WHITE8x8"
 
 --- A font block's font (the Section titles tab's, the Header tab's, the Buttons tab's): { path, size,
---- flags, r, g, b, a, shadow }. A face this machine does not have is the standard one; "Use class
+--- flags, r, g, b, a, shadow }. The face is R.FontKey's (the skin's while it follows, QC-03). A face
+--- this machine does not have is the standard one; "Use class
 --- color" takes the player's class color, keeping the swatch's alpha (NS.ResolveColor). A missing
 --- swatch is `fallback` when given, else white.
 function R.LabelFont(look, fallback)
     look = type(look) == "table" and look or {}
     local r, g, b, a = NS.ResolveColor(look.fontColor or fallback, look.useClassColorFont)
-    return { path = NS.MediaFetch("font", look.font) or STANDARD_TEXT_FONT, size = tonumber(look.fontSize) or 10,
+    return { path = NS.MediaFetch("font", R.FontKey(look)) or STANDARD_TEXT_FONT, size = tonumber(look.fontSize) or 10,
         flags = type(look.fontFlags) == "string" and look.fontFlags or "", r = r, g = g, b = b, a = a,
         shadow = look.fontShadow ~= false }
 end
 
--- The gold of GameFontNormalSmall: the section titles' and the header's default color.
-R.TITLE_COLOR = { r = 1, g = 0.82, b = 0, a = 1 }
-
 --- The section titles' font: the Section titles tab's (`pad.section`; gold by default, as the titles
---- always were).
+--- always were; R.TitleColor when its swatch is missing).
 function R.TitleFont(section)
-    return R.LabelFont(section, R.TITLE_COLOR)
+    return R.LabelFont(section, R.TitleColor())
 end
 
 --- Draw a font string in a pad's font (R.LabelFont). A face the client refuses falls back to the
@@ -322,17 +404,20 @@ end
 -- The inner line, made clear: the frame keeps the child LibKa0s built at its first skin, so a skin
 -- with no innerBorder would leave it drawn; this one hides it.
 local NO_INNER = { 0, 0, 0, 0 }
+-- No fill: a header, a section band or a button's edge frame with no background of its own.
+local CLEAR = { r = 0, g = 0, b = 0, a = 0 }
 
 -- A look's edge: its thickness (0 to 16, 1 when unset) and its border art (nil for "None", or one this
--- machine does not have).
+-- machine does not have). The style is R.BorderKey's: the skin's while it follows (QC-03).
 local function edgeOf(look)
     local size = math.max(0, math.min(16, tonumber(look.borderSize) or 1))
-    local art = look.borderStyle ~= "None" and NS.MediaFetch("border", look.borderStyle) or nil
+    local style = R.BorderKey(look)
+    local art = style ~= "None" and NS.MediaFetch("border", style) or nil
     return size, art
 end
 
 --- The skin a pad wears, from its Main window tab: the Ka0s skin (NS.SKIN) with the border's art (a
---- LibSharedMedia border by name; "None", or one this machine does not have, is the flat edge), its
+--- LibSharedMedia border by name, R.BorderKey; "None", or one this machine does not have, is the flat edge), its
 --- thickness (0 is no edge) and color, and the background color, each through its class-color
 --- companion. The Ka0s 1px inner line belongs to the pad's flat 1px edge only: at thickness 0 it would
 --- be an edge after all, and over a thicker edge or border art it is a gray line that ignores the
@@ -354,10 +439,9 @@ function R.SkinFor(look, plain)
 end
 
 -- The header's other texts keep their own colors over the header's face, size, flags and shadow: the
--- lockdown chip GameFontRedSmall's red, the stale hint GameFontDisableSmall's gray. The collapse
--- button is GameFontNormal's: two points over the header's size, in the header's color.
-local LOCKDOWN_COLOR = { 1, 0.1, 0.1, 1 }
-local STALE_COLOR = { 0.5, 0.5, 0.5, 1 }
+-- lockdown chip qc.lockdown (GameFontRedSmall's red under Ka0s Default), the stale hint text.disabled
+-- (GameFontDisableSmall's gray; R.Chrome). The collapse button is GameFontNormal's: two points over
+-- the header's size, in the header's color.
 
 local function recolor(font, c, grow)
     local t = {}
@@ -367,11 +451,13 @@ local function recolor(font, c, grow)
     return t
 end
 
--- A header or button table's signature: every leaf its look reads, and the media its names resolve to
--- now, so a rebuild that changed none of it reuses the look it built last time and repaints nothing
--- (HeaderLook, ButtonLook and their Apply). The class color is the player's, fixed for the session.
+-- A header or button table's signature: every leaf its look reads, the media its names resolve to
+-- now (through the skin while a companion follows it) and the look generation, so a rebuild that
+-- changed none of it reuses the look it built last time and repaints nothing (HeaderLook, ButtonLook
+-- and their Apply), and a skin change repaints every look. The class color is the player's, fixed
+-- for the session.
 local SIG_KEYS = { "height", "width", "font", "fontSize", "fontFlags", "fontShadow", "useClassColorFont",
-    "borderStyle", "borderSize", "useClassColorBorder", "useClassColorBackground", "glowEnabled", "glowType",
+    "fontFromSkin", "borderStyle", "borderSize", "useClassColorBorder", "borderStyleFromSkin", "useClassColorBackground", "glowEnabled", "glowType",
     "useClassColorGlow", "shineLook", "shineStrength", "useClassColorShineTint", "useClassColorShineBloomA",
     "useClassColorShineBloomB" }
 local SIG_COLORS = { "fontColor", "borderColor", "background", "glowColor", "shineTint", "shineBloomA", "shineBloomB" }
@@ -388,8 +474,10 @@ local function lookSig(t)
             parts[#parts + 1] = "-"
         end
     end
-    parts[#parts + 1] = tostring(NS.MediaFetch("font", t.font))
-    parts[#parts + 1] = tostring(NS.MediaFetch("border", t.borderStyle))
+    local font, border = R.FontKey(t), R.BorderKey(t)
+    parts[#parts + 1] = tostring(font) .. "=" .. tostring(NS.MediaFetch("font", font))
+    parts[#parts + 1] = tostring(border) .. "=" .. tostring(NS.MediaFetch("border", border))
+    parts[#parts + 1] = tostring(looksGen)
     return table.concat(parts, "|")
 end
 
@@ -401,10 +489,11 @@ function R.HeaderLook(header, prev)
     header = type(header) == "table" and header or {}
     local sig = lookSig(header)
     if type(prev) == "table" and prev.sig == sig then return prev end
-    return { sig = sig, height = PL.HeaderHeight(header.height), font = R.LabelFont(header, R.TITLE_COLOR),
+    return { sig = sig, height = PL.HeaderHeight(header.height), font = R.LabelFont(header, R.TitleColor()),
         skin = R.SkinFor({ borderStyle = header.borderStyle or "None", borderSize = header.borderSize or 0,
+            borderStyleFromSkin = header.borderStyleFromSkin,
             borderColor = header.borderColor, useClassColorBorder = header.useClassColorBorder,
-            background = header.background or { 0, 0, 0, 0 },
+            background = header.background or CLEAR,
             useClassColorBackground = header.useClassColorBackground }, true) }
 end
 
@@ -415,8 +504,9 @@ function R.ApplyHeaderLook(header, hl)
     header.qcLookSig = hl.sig
     NS.ApplySkin(header, hl.skin)
     R.ApplyFont(header.qcSituation, hl.font)
-    R.ApplyFont(header.qcLockdown, recolor(hl.font, LOCKDOWN_COLOR))
-    R.ApplyFont(header.qcStale, recolor(hl.font, STALE_COLOR))
+    local ch = R.Chrome()
+    R.ApplyFont(header.qcLockdown, recolor(hl.font, ch.lockdown))
+    R.ApplyFont(header.qcStale, recolor(hl.font, ch.stale))
     if header.qcCollapse then R.ApplyFont(header.qcCollapse.qcText, recolor(hl.font, nil, 2)) end
 end
 
@@ -429,8 +519,9 @@ function R.SectionLook(section, prev)
     local sig = lookSig(section)
     if type(prev) == "table" and prev.sig == sig then return prev end
     local skin = R.SkinFor({ borderStyle = section.borderStyle or "None", borderSize = section.borderSize or 0,
+        borderStyleFromSkin = section.borderStyleFromSkin,
         borderColor = section.borderColor, useClassColorBorder = section.useClassColorBorder,
-        background = section.background or { 0, 0, 0, 0 },
+        background = section.background or CLEAR,
         useClassColorBackground = section.useClassColorBackground }, true)
     return { sig = sig, height = math.max(0, math.floor(tonumber(section.height) or 0)), font = R.TitleFont(section),
         skin = skin, inset = skin.edgeFile and skin.insets.left or 0 }
@@ -446,20 +537,18 @@ end
 
 -- ── the Buttons tab (2026-10-20) ───────────────────────────────────────────────────────────────
 
-local BUTTON_BG = { 0.10, 0.10, 0.12, 0.90 }
-local CLEAR = { 0, 0, 0, 0 }
-
 --- A button's look, from the pad's `button` table: { bg = {r,g,b,a}, edge (a plain skin: the border only,
 --- over no background), font, glow (IconStyle.GlowConfig, false while off), shine (NS.Shine.Resolve of
---- its Shine leaves), sig }. The defaults are the button as it always was: the 0.10, 0.10, 0.12, 0.90
---- body, no edge, the small white label, no glow, no shine.
+--- its Shine leaves), sig }. A missing body color is the skin's btn.bg (R.Chrome: 0.10, 0.10, 0.12, 0.90
+--- under Ka0s Default, the body a button always had).
 --- `prev` is answered again while its signature still holds, as R.HeaderLook's.
 function R.ButtonLook(button, prev)
     button = type(button) == "table" and button or {}
     local sig = lookSig(button)
     if type(prev) == "table" and prev.sig == sig then return prev end
-    local bg = { NS.ResolveColor(button.background or BUTTON_BG, button.useClassColorBackground) }
+    local bg = { NS.ResolveColor(button.background or R.Chrome().body, button.useClassColorBackground) }
     local edge = R.SkinFor({ borderStyle = button.borderStyle or "None", borderSize = button.borderSize or 0,
+        borderStyleFromSkin = button.borderStyleFromSkin,
         borderColor = button.borderColor, useClassColorBorder = button.useClassColorBorder, background = CLEAR }, true)
     return { sig = sig, bg = bg, edge = edge, font = R.LabelFont(button), glow = IS.GlowConfig(button,
         tostring(button.width) .. "x" .. tostring(button.height)), shine = NS.Shine.Resolve(button) }
@@ -502,9 +591,11 @@ function R.ApplyButtonLook(btn, cl, w, h)
     end
 end
 
+--- A send result's flash (spec §10.1): its meaning color in the skin (R.Chrome), at FLASH_ALPHA.
 function R.Flash(btn, what)
-    local c = NS.Constants.FLASH[what] or NS.Constants.FLASH.sent
-    btn.qcFlash:SetColorTexture(c[1], c[2], c[3], 0.45)
+    local flash = R.Chrome().flash
+    local c = flash[what] or flash.sent
+    btn.qcFlash:SetColorTexture(c[1], c[2], c[3], FLASH_ALPHA)
     btn.qcFlash:Show()
 end
 
@@ -563,10 +654,8 @@ function R.HeaderMinWidth(header)
     return math.ceil(PL.PAD + w + HEADER_GAP + COLLAPSE_W + COLLAPSE_INSET)
 end
 
--- GameFontGreenSmall's green (0.1, 1, 0.1), the color the header's marker wore before it moved.
-local MARK_GREEN = "|cff19ff19"
-
---- The drag strip's label: the pad's name, then the marker (PREVIEW or TEST MODE) in green when a
+--- The drag strip's label: the pad's name, then the marker (PREVIEW or TEST MODE) in qc.preview (under
+--- Ka0s Default |cff19ff19, GameFontGreenSmall's green the header's marker wore before it moved) when a
 --- preview or test mode is drawn. The client measures a string without its escapes, so the strip's
 --- Measure grows by the marker's own width.
 --- @param name string
@@ -574,7 +663,7 @@ local MARK_GREEN = "|cff19ff19"
 --- @return string
 function R.StripLabel(name, mark)
     if not mark then return name end
-    return name .. "  " .. MARK_GREEN .. mark .. "|r"
+    return name .. "  " .. (NS.SkinEscape("qc.preview") or "") .. mark .. "|r"
 end
 
 function R.PaintHeader(header, state)

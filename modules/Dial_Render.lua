@@ -20,6 +20,13 @@ local _, NS = ...
 -- modules/Glow.lua (the glow, whose On hover trigger the tracker drives: R.HoverWedge). A wedge takes
 -- no mouse (dial polish, 2026-10-21): the slice the cursor points into is hovered (its wedge's
 -- tooltip and glow) from the per-frame update, and clicked through the ring's secure catcher.
+--
+-- THE SKIN (QC-03). The chrome no setting names reads the pad's token set (Pad_Render.Chrome): the
+-- padlock, the veils and the send flashes on a wedge (painted once per look change, `qcChromeGen`),
+-- the hub's stale, lockdown and test labels (their font objects' faces, the skin's colors), an
+-- arrow at an end, and the tooltip lines. The labels' and the title's faces follow the skin through
+-- Pad_Render.LabelFont. Nothing here reads a token per frame: R.PointerUpdate reads none, and a
+-- rebuild resolves the chrome into the look (R.Look's `chrome`).
 
 NS.DialRender = NS.DialRender or {}
 local R = NS.DialRender
@@ -47,13 +54,16 @@ local POINTER_GLYPH = "ph:caret-up"
 -- Blizzard texture is drawn only when the catalog answers nil (the library absent). The hub's red
 -- close mark is retired (dial polish, 2026-10-21): the hub draws its Hub heading's style instead.
 local LOCK_ICON = "Interface\\PetBattles\\PetBattle-LockIcon"
+-- A send flash's wash alpha: the pad button's (modules/Pad_Render.lua).
+local FLASH_ALPHA = 0.45
 local POINTER_ICON = "Interface\\Minimap\\MinimapArrow"
 
--- One catalog mark on `tex`, tinted (the catalog art is white), or the Blizzard fallback untinted.
-local function mark(tex, name, fallback, r, g, b)
+-- One catalog mark on `tex` (the catalog art is white: the caller tints it), or the Blizzard fallback
+-- untinted. Answers whether the catalog drew it.
+local function mark(tex, name, fallback)
     local path = NS.Icon(name)
     tex:SetTexture(path or fallback)
-    if path then tex:SetVertexColor(r, g, b, 1) end
+    return path ~= nil
 end
 
 --- The ring texture for a ring `diameter` across with a `width` px line: the step whose line over
@@ -71,11 +81,11 @@ function R.RingTexture(diameter, width)
     return RING:format(best)
 end
 
--- A round texture: the disc, tinted.
-local function circle(frame, layer, size, r, g, b, a, sub)
+-- A round texture: the disc, untinted until its painter tints it (the Hub heading's look, a
+-- wedge's chrome, the Paging tab's plate).
+local function circle(frame, layer, size, sub)
     local t = frame:CreateTexture(nil, layer, nil, sub)
     t:SetTexture(Slices.DISC)
-    t:SetVertexColor(r, g, b, a)
     t:SetSize(size, size)
     t:SetPoint("CENTER", frame, "CENTER", 0, 0)
     return t
@@ -183,12 +193,12 @@ function R.DressHub(header, onEnter)
     front:EnableMouse(false)
     front.qcHeader = header
     header.qcPointer = front
-    header.qcHub = circle(front, "BORDER", DL.HUB, 0.12, 0.12, 0.14, 0.95)
-    header.qcHubRim = circle(front, "ARTWORK", DL.HUB, 1, 1, 1, 1)
+    header.qcHub = circle(front, "BORDER", DL.HUB)
+    header.qcHubRim = circle(front, "ARTWORK", DL.HUB)
     header.qcHubRim:Hide()
-    header.qcHubRing = circle(front, "ARTWORK", 22, 1, 1, 1, 1)
+    header.qcHubRing = circle(front, "ARTWORK", 22)
     header.qcHubRing:Hide()
-    header.qcHubDot = circle(front, "ARTWORK", 22, 1, 0.82, 0, 1)
+    header.qcHubDot = circle(front, "ARTWORK", 22)
     header.qcStale = front:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     header.qcStale:SetPoint("TOP", header, "BOTTOM", 0, -2)
     header.qcStale:SetText(L["updates after combat"])
@@ -255,7 +265,7 @@ end
 -- line 0 while off.
 local function titleLook(title)
     local tl = type(title) == "table" and title or NS.PadDefaults.DialTitle()
-    local tfont, tshow = NS.PadRender.LabelFont(tl, NS.PadRender.TITLE_COLOR), tl.show ~= false
+    local tfont, tshow = NS.PadRender.LabelFont(tl, NS.PadRender.TitleColor()), tl.show ~= false
     return { show = tshow, font = tfont, line = tshow and tfont.size + 2 or 0 }
 end
 
@@ -300,7 +310,7 @@ function R.Look(radius, label, slice, dial)
         pointer = color(slice.pointerColor, slice.useClassColorPointer, D.pointerColor),
         shine = NS.Shine.Resolve(slice),   -- the Slices tab's Shine heading (Dial_Slices paints it)
         iconReach = math.max(0, tonumber(dial.iconOffset) or 0), hub = hubLook(dial.hub),
-        title = titleLook(dial.title), paging = pagingLook(asTable(dial.page)) }
+        title = titleLook(dial.title), paging = pagingLook(asTable(dial.page)), chrome = NS.PadRender.Chrome() }
 end
 
 --- The pointer in the dial's look: its size, color and reach (the Pointer offset from the hub's
@@ -348,6 +358,11 @@ function R.PaintHubLook(header, look)
     header.qcHubCircle = hub.circle
     header.qcHubSize = hub.size
     tintCircle(header, header.qcHubHovered == true)
+    -- The hub's labels: their font objects' faces, the skin's colors (stale, lockdown, the preview mark).
+    local ch = (look or R.Look()).chrome
+    header.qcStale:SetTextColor(ch.stale[1], ch.stale[2], ch.stale[3], ch.stale[4])
+    header.qcLockdown:SetTextColor(ch.lockdown[1], ch.lockdown[2], ch.lockdown[3], ch.lockdown[4])
+    header.qcTest:SetTextColor(ch.preview[1], ch.preview[2], ch.preview[3], ch.preview[4])
 end
 
 --- Where the dial's tooltips go (the Labels tab's Tooltip side and offset): outside the dial, clear of
@@ -378,7 +393,8 @@ function R.ShowTip(owner, title, lines)
     GameTooltip:ClearAllPoints()
     GameTooltip:SetPoint(at[1], header, "CENTER", at[2], at[3])
     GameTooltip:SetText(title)
-    for _, line in ipairs(lines or {}) do GameTooltip:AddLine(line, 1, 1, 1, true) end
+    local tip = NS.PadRender.Chrome().tip
+    for _, line in ipairs(lines or {}) do GameTooltip:AddLine(line, tip[1], tip[2], tip[3], true) end
     GameTooltip:Show()
 end
 
@@ -409,7 +425,7 @@ function R.DressArrow(btn, side)
     if btn.qcDressed then return btn end
     btn.qcDressed = true
     btn.qcSide = side
-    btn.qcPlate = circle(btn, "BACKGROUND", DL.ARROW, 0.06, 0.06, 0.08, 0.80)
+    btn.qcPlate = circle(btn, "BACKGROUND", DL.ARROW)
     btn.qcIcon = btn:CreateTexture(nil, "ARTWORK")
     btn.qcIcon:SetPoint("CENTER", btn, "CENTER", side == "prev" and -1 or 1, 0)
     btn.qcIcon:SetTexture(NS.Icon(ARROW_ICONS[side][1]) or ARROW_ICONS[side][2])
@@ -428,17 +444,18 @@ function R.DressArrow(btn, side)
 end
 
 --- A page arrow live (its chevron in the Paging tab's arrow color: a page lies that way) or dimmed
---- (at an end), on a plate in the tab's plate color, at the tab's arrow size.
+--- (at an end: qc.arrowDim, the look's chrome), on a plate in the tab's plate color, at the tab's arrow size.
 function R.PaintArrow(btn, live, look)
     btn.qcLive = live and true or false
     btn.qcLook = look
-    local pg = (look or R.Look()).paging
+    look = look or R.Look()
+    local pg = look.paging
     btn.qcPlate:SetSize(pg.arrowSize, pg.arrowSize)
     btn.qcIcon:SetSize(math.floor(pg.arrowSize * 0.58 + 0.5), math.floor(pg.arrowSize * 0.58 + 0.5))
     local f = pg.plate
     btn.qcPlate:SetVertexColor(f.r, f.g, f.b, f.a)
-    local c, dim = pg.arrow, Slices.DIM
-    if live then btn.qcIcon:SetVertexColor(c.r, c.g, c.b, c.a) else btn.qcIcon:SetVertexColor(dim, dim, dim, 0.6) end
+    local c, dim = pg.arrow, look.chrome.arrowDim
+    if live then btn.qcIcon:SetVertexColor(c.r, c.g, c.b, c.a) else btn.qcIcon:SetVertexColor(dim[1], dim[2], dim[3], dim[4]) end
 end
 
 --- A ring's title: its name, and its page when it has several ("Arathi Basin (1 of 2)").
@@ -478,6 +495,17 @@ function R.ShowTooltip(btn)
     R.ShowTip(btn, lines[1], rest)
 end
 
+-- A wedge's chrome in the applied skin (Pad_Render.Chrome): the padlock's tint (the catalog art only),
+-- the dim and cooling veils. Once per look change (the `qcChromeGen` stamp). Insecure, combat-safe.
+local function paintChrome(btn)
+    local ch = NS.PadRender.Chrome()
+    if btn.qcChromeGen == ch.gen then return end
+    btn.qcChromeGen = ch.gen
+    if btn.qcLockTinted then btn.qcLock:SetVertexColor(ch.lock[1], ch.lock[2], ch.lock[3], ch.lock[4]) end
+    btn.qcDim:SetVertexColor(ch.veil[1], ch.veil[2], ch.veil[3], ch.veil[4])
+    btn.qcCool:SetVertexColor(ch.veilCool[1], ch.veilCool[2], ch.veilCool[3], ch.veilCool[4])
+end
+
 --- Build a wedge's regions, once per button. The ladder (core/Constants.lua LAYERS), as a pad
 --- button's (QUI-Z04): the icon on the wedge, the icon frame at WEDGE_ICON (IconStyle.IconFrame) with
 --- its glow one over it, and the mouse-off overlay frame at WEDGE_OVER holding the label, the padlock
@@ -494,14 +522,14 @@ function R.DressWedge(btn)
     btn.qcLock = over:CreateTexture(nil, "OVERLAY")
     btn.qcLock:SetSize(14, 14)
     btn.qcLock:SetPoint("TOPRIGHT", btn, "TOPRIGHT", 0, 0)
-    local lockTint = NS.Constants.GOLD
-    mark(btn.qcLock, "lock", LOCK_ICON, lockTint.r, lockTint.g, lockTint.b)
-    btn.qcDim = circle(over, "OVERLAY", DL.WEDGE, 0, 0, 0, 0.55, 1)
+    btn.qcLockTinted = mark(btn.qcLock, "lock", LOCK_ICON)
+    btn.qcDim = circle(over, "OVERLAY", DL.WEDGE, 1)
     btn.qcDim:Hide()
-    btn.qcCool = circle(over, "OVERLAY", DL.WEDGE, 0, 0, 0, 0.35, 2)
+    btn.qcCool = circle(over, "OVERLAY", DL.WEDGE, 2)
     btn.qcCool:Hide()
-    btn.qcFlash = circle(over, "OVERLAY", DL.WEDGE, 1, 1, 1, 0.45, 3)
+    btn.qcFlash = circle(over, "OVERLAY", DL.WEDGE, 3)
     btn.qcFlash:Hide()
+    paintChrome(btn)
     return btn
 end
 
@@ -536,6 +564,7 @@ local DEFAULT_LOOK
 --- (IconStyle.Config; none is the defaults), `look` its R.Look.
 function R.PaintWedge(btn, item, geo, icfg, look)
     btn.qcItem = item
+    paintChrome(btn)
     local slot = item.slot
     DEFAULT_LOOK = DEFAULT_LOOK or IS.Config(nil, "dial")
     icfg = icfg or DEFAULT_LOOK
@@ -560,10 +589,12 @@ function R.RefreshLock(btn)
     btn.qcLock:SetShown(slot ~= nil and slot.lock ~= nil)
 end
 
---- A send result on a wedge (spec §9.3): the pad's colors (NS.Constants.FLASH), red for a drop.
+--- A send result on a wedge (spec §9.3): the pad's colors (Pad_Render.Chrome's `flash`), qc.dropped
+--- for a drop, at the pad's wash alpha.
 function R.Flash(btn, what)
-    local c = NS.Constants.FLASH[what] or NS.Constants.FLASH.sent
-    btn.qcFlash:SetVertexColor(c[1], c[2], c[3], 0.45)
+    local flash = NS.PadRender.Chrome().flash
+    local c = flash[what] or flash.sent
+    btn.qcFlash:SetVertexColor(c[1], c[2], c[3], FLASH_ALPHA)
     btn.qcFlash:Show()
 end
 

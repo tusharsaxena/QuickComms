@@ -137,7 +137,7 @@ Total.
 - profile: collections exist; default nextId is 1, past every seeded id after boot
 - profile: every behavior row resolves through the seam
 - profile: the spam guard clamps to 0.6-2.0 and fallback refuses unknown values
-- profile: schema version target is 9 (the dial polish)
+- profile: schema version target is 10 (the one-time reset onto the skin)
 - prepare: a callout held by two groups is split into a copy
 - prepare: a split copy of a seeded callout keeps no origin
 - prepare: a callout held by no group is dropped
@@ -1329,6 +1329,23 @@ Total.
 - skin windows: the browser's empty footer line is qc.note, today's |cffaaaaaa
 - skin windows: the browser's cell tooltip writes its lines in the tooltip tokens
 
+### test_skin_hud.lua (14)
+
+- skin hud: every HUD font and border block follows the skin by default, through a schema row
+- skin hud: a following picker is grayed out and shows the skin's value; off, it is the player's
+- skin hud: a pad's labels, titles and header take hud.font while they follow, the pick when not
+- skin hud: a following face takes the Skin tab's font override, as every face of the owner does
+- skin hud: a pad's border blocks take bar.borderStyle while they follow, the pick when not
+- skin hud: an icon's border takes the skin's icon border while it follows, the pick when not
+- skin hud: a dial's slice labels and ring title take hud.font while they follow
+- skin hud: a pad's chrome is today's pixels under Ka0s Default, each from a token
+- skin hud: a dial's chrome is today's pixels under Ka0s Default, each from a token
+- skin hud: a skin switch repaints the chrome and the faces, and leaves the player's colors
+- skin hud: the dial's per-frame update reads no token
+- skin hud: step 10 turns every stored pad's and dial's companions on, keeping every pick
+- skin hud: without the library step 10 writes the companions itself
+- skin hud: the reset runs once: a companion the player turns off afterwards stays off
+
 ### test_vendor_sync.lua (3)
 
 - libs/LibKa0s is the LibKa0s release CLAUDE.md says this addon bundles
@@ -1455,6 +1472,7 @@ Total.
 | test_layout.lua | 23 |
 | test_skinsetup.lua | 24 |
 | test_skin_windows.lua | 18 |
+| test_skin_hud.lua | 14 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -1462,4 +1480,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1208** |
+| **Total** | **1222** |

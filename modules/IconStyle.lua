@@ -27,6 +27,11 @@ local _, NS = ...
 -- with LibSharedMedia at load under AuraMaster's and DropWatcher's name (the first registration of a
 -- name wins, and theirs is the same texture). Without the media library the name still draws it.
 --
+-- THE SKIN (QC-03, LibKa0s LK-04). While the Border block's "Use the skin's border" companion
+-- (`borderStyleFromSkin`, the composer's `fromSkin = "icon"`) is on, the border's style and thickness
+-- are the skin's icon border (icon.borderStyle, icon.borderSize: Solid 2 px under Ka0s Default); Show
+-- border and the color stay the player's (DECISIONS X4).
+--
 -- HEADLESS. Each decision is recorded on the button (`qcBorder`, the color drawn or nil;
 -- `qcBorderSize`) whatever the frame answers.
 
@@ -100,10 +105,12 @@ function IS.Config(icon, kind, autoSize)
         border = false,
     }
     if icon.borderShow == true then
-        local size = math.floor(clamp(icon.borderSize, 1, 16, 1) + 0.5)
+        local S, follow = NS.Skin, icon.borderStyleFromSkin == true
+        local style = S.Resolve("icon.borderStyle", icon.borderStyle, follow)
+        local size = math.floor(clamp(S.Resolve("icon.borderSize", icon.borderSize, follow), 1, 16, 1) + 0.5)
         local r, g, b, a = NS.ResolveColor(icon.borderColor, icon.useClassColorBorder == true)
         c.border = { size = size, color = { r, g, b, a },
-            backdrop = { edgeFile = borderTexture(icon.borderStyle), edgeSize = size } }
+            backdrop = { edgeFile = borderTexture(style), edgeSize = size } }
     end
     c.glow = glowConfig(icon, c.size)
     return c

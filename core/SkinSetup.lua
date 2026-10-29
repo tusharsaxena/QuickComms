@@ -128,6 +128,14 @@ NS.SKIN_FALLBACK = {
     ["drawer.boxBg"]   = { 0.08, 0.07, 0.05, 0.9 },
     ["drawer.boxBorder"] = { 0.24, 0.2, 0.13, 1 },
     ["log.tag"]        = { byte(0xc9), byte(0xa6), byte(0x6b), 1 },
+    -- QC-03's HUD: a button's fallback fill, the guarded flash, and what a font or border block
+    -- follows while its "Use the skin's ..." companion is on (the face, the border styles and size).
+    ["btn.bg"]         = { 0.1, 0.1, 0.12, 0.9 },
+    ["sem.warn"]       = { 1, 0.5, 0, 1 },
+    ["hud.font"]       = "Ka0s Oxanium SemiBold",
+    ["bar.borderStyle"] = "None",
+    ["icon.borderStyle"] = "Solid",
+    ["icon.borderSize"] = 2,
 }
 
 --- A color token's components AS A CALL SITE WRITES THEM: r, g, b for an opaque color and r, g, b,

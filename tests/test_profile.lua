@@ -49,10 +49,10 @@ test("profile: the spam guard clamps to 0.6-2.0 and fallback refuses unknown val
     assertEqual(NS.Setting("behavior.soloFallback"), "none")
 end)
 
-test("profile: schema version target is 9 (the dial polish)", function()
+test("profile: schema version target is 10 (the one-time reset onto the skin)", function()
     local NS = T.bootAddon()
-    -- red under: no step 9 in core/Database.lua (the slice border retires)
-    assertEqual(NS.SCHEMA_VERSION, 9)
+    -- red under: no step 10 in core/Database.lua (QC-03, O2: the HUD's font and border pickers follow the skin)
+    assertEqual(NS.SCHEMA_VERSION, 10)
     assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
 end)
 
