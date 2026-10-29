@@ -1308,7 +1308,7 @@ Total.
 - skin seam: the degraded facade answers every name the live facade carries
 - skin seam: each host-copy skin token is the live library's Ka0s Default value
 
-### test_skin_windows.lua (18)
+### test_skin_windows.lua (19)
 
 - skin windows: no color literal is left in the window files
 - skin windows: the literal gate is falsifiable: a planted literal of each shape is reported
@@ -1326,10 +1326,11 @@ Total.
 - skin windows: the browser's hint box is the drawer box's tokens, and follows a switch
 - skin windows: the browser's search glyphs are log.tag and qc.markGray, today's pixels
 - skin windows: the browser's texts take their roles, each today's color under Ka0s Default
+- skin windows: the browser's texts keep their font objects' faces (X10), and a switch recolors them
 - skin windows: the browser's empty footer line is qc.note, today's |cffaaaaaa
 - skin windows: the browser's cell tooltip writes its lines in the tooltip tokens
 
-### test_skin_hud.lua (14)
+### test_skin_hud.lua (15)
 
 - skin hud: every HUD font and border block follows the skin by default, through a schema row
 - skin hud: a following picker is grayed out and shows the skin's value; off, it is the player's
@@ -1341,6 +1342,7 @@ Total.
 - skin hud: a pad's chrome is today's pixels under Ka0s Default, each from a token
 - skin hud: a dial's chrome is today's pixels under Ka0s Default, each from a token
 - skin hud: a skin switch repaints the chrome and the faces, and leaves the player's colors
+- skin hud: a pad window's 1px inner rule is win.inner, none where the skin has none
 - skin hud: the dial's per-frame update reads no token
 - skin hud: step 10 turns every stored pad's and dial's companions on, keeping every pick
 - skin hud: without the library step 10 writes the companions itself
@@ -1507,8 +1509,8 @@ Total.
 | test_layers.lua | 11 |
 | test_layout.lua | 23 |
 | test_skinsetup.lua | 24 |
-| test_skin_windows.lua | 18 |
-| test_skin_hud.lua | 14 |
+| test_skin_windows.lua | 19 |
+| test_skin_hud.lua | 15 |
 | test_skin_picker.lua | 18 |
 | test_skin_tools.lua | 12 |
 | test_vendor_sync.lua | 3 |
@@ -1518,4 +1520,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1252** |
+| **Total** | **1254** |
