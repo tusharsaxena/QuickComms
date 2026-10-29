@@ -158,6 +158,38 @@ test("skin tools: without LibKa0s the release work takes the AceGUI callback, an
     assertTrue(ran, "and it runs the host's step")
 end)
 
+-- ── the settings pages' colored lines ──────────────────────────────────────────────────────────
+
+test("skin tools: the pages' colored lines keep today's bytes under Ka0s Default", function()
+    -- red under: an escape left in a locale key, or a token whose Ka0s Default value is not the
+    -- byte the line drew before (a0a0a0 hints, 40ff40 active, ff6060 inactive, c9a66b inherit).
+    local NS = T.enableAddon()
+    local W = NS.addon.Settings.GroupsWhen
+    local snap = NS.Situation.Classify({ inInstance = true, instanceType = "raid", difficultyID = 15 })
+    assertEqual(W.ActiveLine({ when = { content = { raid = true } } }, snap), "|cff40ff40Active now.|r")
+    assertEqual(W.ActiveLine({ enabled = false, when = {} }, snap), "|cffa0a0a0Off: this group is turned off.|r")
+    local line = W.ActiveLine({ when = { content = { mythicPlus = true } } }, snap)
+    assertEqual(line, "|cffff6060Not active now:|r Content does not match.")
+    assertEqual(NS.SkinMarkup("qc.hint", "x"), "|cffa0a0a0x|r")
+    assertEqual(NS.SkinMarkup("log.tag", "x"), "|cffc9a66bx|r")
+    assertEqual(NS.SkinMarkup("text.heading", "x"), "|cffffd100x|r")
+    assertEqual(NS.SkinMarkup("gtip.subtle", "x"), "|cffb3b3b3x|r")
+    assertEqual(NS.addon.Settings.Groups.MutedGold(), "|cffc9a66b")
+end)
+
+test("skin tools: the pages' colored lines move with a skin switch", function()
+    -- red under: an escape built once at file load (a skin switch would never reach the line).
+    local NS, _, m = T.enableAddon()
+    local W = NS.addon.Settings.GroupsWhen
+    local snap = NS.Situation.Classify({ inInstance = true, instanceType = "raid", difficultyID = 15 })
+    local before = W.ActiveLine({ enabled = false, when = {} }, snap)
+    local gold = NS.addon.Settings.Groups.MutedGold()
+    m.LibStub("LibKa0s-Skin-1.0"):SetChoice(OWNER, "ka0s", "obsidian")
+    assertTrue(W.ActiveLine({ enabled = false, when = {} }, snap) ~= before, "the hint gray followed the skin")
+    assertTrue(NS.addon.Settings.Groups.MutedGold() ~= gold, "the Reuse group gold followed the skin")
+    assertTrue(NS.SkinMarkup("no.such.token", "x") == "x", "a token the skin leaves alone draws the text bare")
+end)
+
 -- ── the tool surfaces ────────────────────────────────────────────────────────────────────────────
 
 test("skin tools: the debug console and its copy window are painted for this owner", function()

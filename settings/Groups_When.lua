@@ -223,11 +223,12 @@ function W.ActiveLine(group, snap, previewLabel)
     local ok, _, failed = NS.Resolver.Matches(group and group.when, snap)
     local line
     if group and group.enabled == false then
-        line = L["|cffa0a0a0Off: this group is turned off.|r"]
+        line = NS.SkinMarkup("qc.hint", L["Off: this group is turned off."])
     elseif ok then
-        line = L["|cff40ff40Active now.|r"]
+        line = NS.SkinMarkup("sem.goodAlt", L["Active now."])
     else
-        line = L["|cffff6060Not active now:|r %s does not match."]:format(NS.Resolver.LABEL[failed] or tostring(failed))
+        line = NS.SkinMarkup("qc.inactive", L["Not active now:"]) .. " "
+            .. L["%s does not match."]:format(NS.Resolver.LABEL[failed] or tostring(failed))
     end
     if previewLabel then line = L["In the preview (%s): %s"]:format(previewLabel, line) end
     return line
@@ -317,7 +318,7 @@ local function checkLine(cells)
             if c.tooltip then
                 cb:SetCallback("OnEnter", function(w)
                     GameTooltip:SetOwner(w.frame, "ANCHOR_RIGHT")
-                    GameTooltip:SetText(c.text, 1, 1, 1)
+                    GameTooltip:SetText(c.text, NS.SkinColor("gtip.value"))
                     GameTooltip:AddLine(c.tooltip, nil, nil, nil, true)
                     GameTooltip:Show()
                 end)
@@ -700,10 +701,10 @@ function W.Render(ctx, gid)
     local from, inherited = W.Source(gid)
     if inherited then
         local parent = NS.Library.Group(from)
-        h.TextRow(ctx, L["|cffc9a66bUses %s's conditions. Untick Inherit when conditions above to set this group's own.|r"]
-            :format(parent.name or from))
+        h.TextRow(ctx, NS.SkinMarkup("log.tag", L["Uses %s's conditions. Untick Inherit when conditions above to set this group's own."]
+            :format(parent.name or from)))
     end
-    h.TextRow(ctx, L["|cffa0a0a0Every condition you set must match. A condition left as Any does not limit the group.|r"])
+    h.TextRow(ctx, NS.SkinMarkup("qc.hint", L["Every condition you set must match. A condition left as Any does not limit the group."]))
     h.AddSpacer(h.EnsureScroll(ctx), h.ROW_VSPACER)
     for _, row in ipairs(W.ROWS) do renderDrawer(ctx, gid, row, from) end
 end

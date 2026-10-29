@@ -185,7 +185,8 @@ local function renderGeneral(ctx, rows)
     end
     h.RenderRows(ctx, Ed.Scalar(rows), nil, nil, { noHeadings = true })
     -- Where the dial's key is set: a static line, no key box and no readout (item 020, QUI-L29).
-    h.TextRow(ctx, L["|cffa0a0a0Set this dial's key on the General page > Keybindings. A dial's key follows its place in the dial order.|r"])
+    -- In the settings pages' hint gray (qc.hint, core/SkinSetup.lua).
+    h.TextRow(ctx, NS.SkinMarkup("qc.hint", L["Set this dial's key on the General page > Keybindings. A dial's key follows its place in the dial order."]))
     h.InlineButtonPair(ctx, { text = L["Delete dial…"],
         tooltip = L["Delete this dial. Its groups and callouts are kept. Asks first."],
         onClick = function() DD.Delete(id) end }, nil)

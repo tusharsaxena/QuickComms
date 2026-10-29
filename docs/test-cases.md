@@ -1367,7 +1367,7 @@ Total.
 - skin picker: the gear saves the pick and opens General on its Skin tab
 - skin picker: without LibKa0s nothing shows and nothing raises
 
-### test_skin_tools.lua (10)
+### test_skin_tools.lua (12)
 
 - skin tools: the pages' AceGUI handle is the owner proxy, which paints for this owner
 - skin tools: under the default Scope (Ignore settings panel) a page widget stays stock
@@ -1377,6 +1377,8 @@ Total.
 - skin tools: the icon chooser's swatch release still drops a tracked color picker
 - skin tools: the Profiles page paints AceConfigDialog's tree after each Open
 - skin tools: without LibKa0s the release work takes the AceGUI callback, and nothing paints
+- skin tools: the pages' colored lines keep today's bytes under Ka0s Default
+- skin tools: the pages' colored lines move with a skin switch
 - skin tools: the debug console and its copy window are painted for this owner
 - skin tools: the perf panel is painted for this owner
 
@@ -1508,7 +1510,7 @@ Total.
 | test_skin_windows.lua | 18 |
 | test_skin_hud.lua | 14 |
 | test_skin_picker.lua | 18 |
-| test_skin_tools.lua | 10 |
+| test_skin_tools.lua | 12 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -1516,4 +1518,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1250** |
+| **Total** | **1252** |

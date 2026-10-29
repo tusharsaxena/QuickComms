@@ -33,6 +33,8 @@ local addonName, NS = ...
 --   NS.SkinColor(name)      a color token as a call site writes it (three components when opaque).
 --   NS.SkinEscape(name)     a color token as a "|cffrrggbb" escape, rounded to the byte, so markup
 --                           written as a literal keeps its bytes on Ka0s Default (|cffa0a0a0).
+--   NS.SkinMarkup(name, s)  `s` wrapped in that escape and "|r" (`s` alone for a token the skin
+--                           leaves alone): a settings page's colored line, read at call time.
 --   NS.SkinPaintAce(w)      an AceGUI widget this addon acquired itself, painted for this owner:
 --   NS.SkinPaintAceTree(c)  `Skin:PaintAce` / `Skin:PaintAceTree` with the owner bound (the facade
 --                           carries neither). Nothing while the owner ignores its settings panel
@@ -145,6 +147,8 @@ NS.SKIN_FALLBACK = {
     ["drawer.boxBg"]   = { 0.08, 0.07, 0.05, 0.9 },
     ["drawer.boxBorder"] = { 0.24, 0.2, 0.13, 1 },
     ["log.tag"]        = { byte(0xc9), byte(0xa6), byte(0x6b), 1 },
+    -- QC-04's settings pages: the When drawer's "Active now." (|cff40ff40).
+    ["sem.goodAlt"]    = { 0.25, 1, 0.25, 1 },
     -- QC-03's HUD: a button's fallback fill, the guarded flash, and what a font or border block
     -- follows while its "Use the skin's ..." companion is on (the face, the border styles and size).
     ["btn.bg"]         = { 0.1, 0.1, 0.12, 0.9 },
@@ -174,6 +178,15 @@ function NS.SkinEscape(name)
     if r == nil then return nil end
     local function toByte(v) return math.floor(v * 255 + 0.5) end
     return ("|cff%02x%02x%02x"):format(toByte(r), toByte(g), toByte(b))
+end
+
+--- `text` in a color token, as markup: NS.SkinEscape(name) .. text .. "|r", or `text` alone for a
+--- token the skin leaves alone. The settings pages' hint, state and inherit lines, whose escape
+--- once sat inside the locale key.
+function NS.SkinMarkup(name, text)
+    local esc = NS.SkinEscape(name)
+    if not esc then return text end
+    return esc .. text .. "|r"
 end
 
 NS.SKIN_SOURCE_OPTIONS = {

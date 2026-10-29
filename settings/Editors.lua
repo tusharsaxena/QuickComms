@@ -559,8 +559,9 @@ Ed.TABLE_LAYOUT = addonName .. "TableRow"
 -- under 200px of text room); TABLE_PAD in from each side of the box, TABLE_GAP between the cells,
 -- TABLE_VPAD above and below a text taller than one row.
 Ed.TABLE_NAME_W, Ed.TABLE_PAD, Ed.TABLE_GAP, Ed.TABLE_VPAD = 220, 8, 12, 6
--- The header's gold (the client's NORMAL_FONT_COLOR, the field labels' and the tabs').
-local HEADER_COLOR = { 1, 0.82, 0 }
+-- The header's gold (the client's NORMAL_FONT_COLOR, the field labels' and the tabs'): the skin's
+-- text.heading, read at call time.
+local HEADER_COLOR = "text.heading"
 
 local function cellHeight(child)
     local f = child.frame
@@ -626,8 +627,8 @@ function Ed.TableRows(ctx, pageKey, blocks, header)
             if block.title then h.Section(ctx, block.title) end
             local items = { { wide = true, make = function(_, into)
                 local a, b = tableRow(h, into, header.name, header.text)
-                a:SetColor(HEADER_COLOR[1], HEADER_COLOR[2], HEADER_COLOR[3])
-                b:SetColor(HEADER_COLOR[1], HEADER_COLOR[2], HEADER_COLOR[3])
+                a:SetColor(NS.SkinColor(HEADER_COLOR))
+                b:SetColor(NS.SkinColor(HEADER_COLOR))
                 return true
             end } }
             for _, e in ipairs(block.rows) do

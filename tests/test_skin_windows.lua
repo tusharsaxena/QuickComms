@@ -20,7 +20,7 @@ local test, assertEqual, assertTrue, assertFalse, fail = T.test, T.assertEqual, 
 local OWNER = "QuickComms"
 local OTHER = "obsidian"
 
--- ── the literal gate, over the window files and the HUD's (QC-04 widens it to the pages) ──────────
+-- ── the literal gate, over the window files, the HUD's (QC-03) and the settings pages' (QC-04) ──
 
 local FILES = {
     "modules/PreviewWindow.lua",
@@ -36,6 +36,16 @@ local FILES = {
     "modules/Dial_Slices.lua",
     "modules/IconStyle.lua",
     "modules/Glow.lua",
+    -- QC-04: the settings pages QuickComms draws rows on itself (tests/test_skin_tools.lua holds
+    -- their AceGUI widgets; the schema files are data and carry no color)
+    "settings/Panel.lua",
+    "settings/Pads.lua",
+    "settings/Dials.lua",
+    "settings/Callouts.lua",
+    "settings/Groups.lua",
+    "settings/Groups_When.lua",
+    "settings/Editors.lua",
+    "settings/Profiles.lua",
 }
 
 -- call name -> the argument positions that hold color components (LootHistory's gate, LH-05).
@@ -56,6 +66,10 @@ local ALLOW = {
       why = "a cleared inner line: no color is drawn, under any skin" },
     { file = "modules/Dial_Slices.lua", find = "BLACK =",
       why = "the shine overlay's shading: the player's shine art, never skinned (DECISIONS QuickComms D6)" },
+    { file = "settings/Groups.lua", find = "|cff%s%s|r",
+      why = "a callout's channel in WoW's chat-type color: a game-meaning color (rung 4)" },
+    { file = "settings/Editors.lua", find = "if w.image then w.image:SetVertexColor(1, 1, 1, 1) end",
+      why = "a pooled Label's image put back to AceGUI's stock white on release: no color is drawn" },
 }
 
 local function code(line) return (line:gsub("%-%-.*$", "")) end

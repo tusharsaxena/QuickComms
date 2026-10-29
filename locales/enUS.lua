@@ -809,9 +809,10 @@ L["Specific arenas."] = "Specific arenas."
 L["Specialization %d"] = "Specialization %d"
 L["%s: %s"] = "%s: %s"
 L["%s (%d)"] = "%s (%d)"
-L["|cff40ff40Active now.|r"] = "|cff40ff40Active now.|r"
-L["|cffff6060Not active now:|r %s does not match."] = "|cffff6060Not active now:|r %s does not match."
-L["|cffa0a0a0Off: this group is turned off.|r"] = "|cffa0a0a0Off: this group is turned off.|r"
+L["Active now."] = "Active now."
+L["Not active now:"] = "Not active now:"
+L["%s does not match."] = "%s does not match."
+L["Off: this group is turned off."] = "Off: this group is turned off."
 L["In the preview (%s): %s"] = "In the preview (%s): %s"
 L["A key level is a whole number."] = "A key level is a whole number."
 L["Lowest key level"] = "Lowest key level"
@@ -844,7 +845,8 @@ L["You are not in an arena."] = "You are not in an arena."
 L["Your character is not known yet."] = "Your character is not known yet."
 L["A character is Name-Realm, or a name on your realm."] = "A character is Name-Realm, or a name on your realm."
 L["%s does not take %s. It takes an id, or a listed name."] = "%s does not take %s. It takes an id, or a listed name."
-L["|cffa0a0a0Every condition you set must match. A condition left as Any does not limit the group.|r"] = "|cffa0a0a0Every condition you set must match. A condition left as Any does not limit the group.|r"
+L["Every condition you set must match. A condition left as Any does not limit the group."] =
+    "Every condition you set must match. A condition left as Any does not limit the group."
 L["Any"] = "Any"
 L["%d to %d"] = "%d to %d"
 L["%d or higher"] = "%d or higher"
@@ -857,8 +859,8 @@ L["Select all"] = "Select all"
 L["Tick every choice listed here."] = "Tick every choice listed here."
 L["Clear (Any)"] = "Clear (Any)"
 L["Untick every choice, so this condition does not limit the group."] = "Untick every choice, so this condition does not limit the group."
-L["|cffc9a66bUses %s's conditions. Untick Inherit when conditions above to set this group's own.|r"] =
-    "|cffc9a66bUses %s's conditions. Untick Inherit when conditions above to set this group's own.|r"
+L["Uses %s's conditions. Untick Inherit when conditions above to set this group's own."] =
+    "Uses %s's conditions. Untick Inherit when conditions above to set this group's own."
 
 -- Groups page (settings/Groups.lua)
 L["New group"] = "New group"
@@ -1367,7 +1369,7 @@ L["Sending"] = "Sending"
 L["Size, offset and crop"] = "Size, offset and crop"
 L["How the glow looks. Drawn at the Icons tab's default knobs."] =
     "How the glow looks. Drawn at the Icons tab's default knobs."
-L["|cffa0a0a0Adds back the built-in groups and callouts you deleted. Changes nothing you have.|r"] =
-    "|cffa0a0a0Adds back the built-in groups and callouts you deleted. Changes nothing you have.|r"
-L["|cffa0a0a0Set this dial's key on the General page > Keybindings. A dial's key follows its place in the dial order.|r"] =
-    "|cffa0a0a0Set this dial's key on the General page > Keybindings. A dial's key follows its place in the dial order.|r"
+L["Adds back the built-in groups and callouts you deleted. Changes nothing you have."] =
+    "Adds back the built-in groups and callouts you deleted. Changes nothing you have."
+L["Set this dial's key on the General page > Keybindings. A dial's key follows its place in the dial order."] =
+    "Set this dial's key on the General page > Keybindings. A dial's key follows its place in the dial order."
