@@ -17,9 +17,11 @@ marked as such rather than listed as a requirement.
 - **EllesmereUI, optional and never vendored.** `## OptionalDeps:` also names EllesmereUI, an
   optional suite (library-stack-§6), so it loads first when installed. With it, its Blizzard Skin
   module (EllesmereUIBlizzardSkin), its third-party skinning and Quick Comms' entry in its
-  Third-Party Addons list all on, the callout popup takes EllesmereUI's look through its public
-  skinning API (`EllesmereUI.RegisterSkin`, read against its `SKINNING_API.md`, apiVersion 3).
-  Without it the popup keeps Blizzard's settings-window look and nothing else changes.
+  Third-Party Addons list all on, **EllesmereUI** can be picked as the skin source on General →
+  Skin and the whole addon takes EllesmereUI's look. Quick Comms never calls EllesmereUI itself:
+  LibKa0s-Skin-1.0's `eui` source is the provider (`core/SkinSetup.lua`, skinning-§5), and Quick
+  Comms' own bridge is retired. Without it the skin source stays on the Ka0s skins and nothing else
+  changes.
 - **LibCustomGlow-1.0 is vendored too**: `libs/LibCustomGlow-1.0/` (MIT, minor 24, copied whole from
   the DropWatcher sibling's vendored copy, which came from KickCD's) draws the Icons tab's glows on the
   Comms Pad's buttons and the Comms Dial's wedges. LibKa0s-Glow-1.0 (`core/GlowSetup.lua`) resolves it at call time; without

@@ -585,8 +585,7 @@ test("dial: [rework] a paged ring turns with its arrows and the Left and Right k
     assertFalse(one.qcPrev.qcLive, "the left arrow is dimmed on the first page")
     assertTrue(one.qcNext.qcLive)
     assertFalse(inst.rings.active[1].qcPrev:IsShown(), "a ring of one page has no arrows")
-    local gold = NS.Constants.GOLD
-    assertEqual(one.qcDots[1].__color[2], gold.g, "page 1's dot is gold")
+    assertEqual(one.qcDots[1].__color[2], 0.82, "page 1's dot is gold")
     assertEqual(one.qcDots[2].__color[2], 0.4, "page 2's is gray")
     assertTrue(one.qcDots[2]:IsShown())
     -- red under: drop DS.NewArrow's wrap (the arrow would be a plain button that turns nothing)

@@ -21,6 +21,8 @@ NS.DRAG_GAP = (W and W.DRAG_HANDLE and W.DRAG_HANDLE.GAP) or 2
 function NS.MakeDragHandle(parent, spec)
     if not (W and W.DragHandle) then return nil end
     spec.helpIcon = spec.helpIcon or (NS.Icon and NS.Icon("help")) or nil
+    -- The owner (skinning-§1): the strip wears this addon's skin and follows a switch.
+    spec.owner = addonName
     return W.DragHandle(parent, spec)
 end
 

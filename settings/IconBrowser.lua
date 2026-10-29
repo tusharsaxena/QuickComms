@@ -46,6 +46,17 @@ local addonName, NS = ...
 -- settings window hiding, a profile change, the opener's member ceasing to exist (`valid`), and a
 -- stand-down. In combat the library's cover lies over its page, as over every settings page, and
 -- Choose is refused: nothing is written in combat. Only one browser exists, built on its first Open.
+--
+-- THE SKIN (QC-02). The window is settings/ModalWindow.lua's (stock under Ka0s Default, X10); the
+-- page and the parts drawn here follow the owner's skin. Every color is a token, today's pixel on
+-- Ka0s Default: the selected cell this addon's qc.selStrong (gold at 0.7; it follows list.sel), the
+-- empty footer line qc.note (|cffaaaaaa), the search magnifier log.tag and its clear mark
+-- qc.markGray, the hint box drawer.boxBg / drawer.boxBorder (a settings drawer's box), the texts
+-- their roles (the count text.disabled, the icon's name text.heading, the status and the hint
+-- text.highlight), the tooltip lines gtip.value and the credit gtip.subtle. The scroller is the
+-- skin's ScrollBar, a corridor and a flat knob over its own track (D3: under Ka0s Default too, as
+-- every scroll bar the library paints). The cell's hover highlight stays the client's art (D8).
+-- Host-drawn colors repaint on every looks change.
 
 local QC = NS.addon
 local Settings = QC.Settings
@@ -73,12 +84,14 @@ B.GRID_TOP = TOOLBAR_H + GRID_GAP
 -- its room at the right.
 local TOOL_W, SEARCH_GAP, SEARCH_W, SEARCH_GLYPH = 180, 10, 190, 14
 local SET_W, SWATCH_W, SEARCH_W_GLYPHS = 130, 110, 160
-local GOLD = { 1, 0.82, 0, 0.7 }
-local GRAY = "|cffaaaaaa"
+-- The selected cell's wash and the empty footer line's gray (this addon's own tokens, X1).
+local SELECTED, NOTE = "qc.selStrong", "qc.note"
+-- The combat refusal's chat line. Chat output, not a skinned surface (DECISIONS X7).
+local CHAT_GRAY = "|cffaaaaaa"
 -- The magnifier's muted gold and the clear mark's gray (the approved mockup's), and the hint's box:
 -- the fill and edge of a LibKa0s drawer's box, so it reads as the settings panel does.
-local MUTED_GOLD, MARK_GRAY = { 0.79, 0.65, 0.42 }, { 0.54, 0.54, 0.54 }
-local HINT_FILL, HINT_EDGE = { 0.08, 0.07, 0.05, 0.9 }, { 0.24, 0.2, 0.13, 1 }
+local MUTED_GOLD, MARK_GRAY = "log.tag", "qc.markGray"
+local HINT_FILL, HINT_EDGE = "drawer.boxBg", "drawer.boxBorder"
 B.WOWHEAD_ICONS = "https://www.wowhead.com/icons"
 
 B.TABS = {
@@ -104,10 +117,23 @@ local glyphSet = "all"
 local search = ""
 local ctx, area, grid, slider, status, count, filterDD, setsDD, swatch, preview, nameText, chooseBtn, cancelBtn
 local searchBox, clearMark, hint, hintText, linkBtn, linkWin
+-- The host-drawn parts a looks change repaints: the scroller's track, the hint box's fill and edges,
+-- and each search glyph with its token.
+local track, hintFill, hintEdges, magnifier, clearGlyph
+local glyphs = {}
+-- And each text with its color token: colored, never given a face, so the font object's face stays
+-- under every skin (X10: the browser keeps the stock settings window's look under Ka0s Default, and
+-- S.Text would set the skin's body or title face as well).
+local texts = {}
 local drawing = false
 B.cells = {}
 
 local function H() return Settings.Helpers end
+
+local function paintText(fs, token)
+    texts[fs] = token
+    fs:SetTextColor(NS.SkinColor(token))
+end
 
 -- ── Escape: the opener's special frame, out while the browser is open ───────────────────────
 
@@ -175,7 +201,7 @@ local function drawFooter()
         nameText:SetText(Src.Label(selected))
     else
         preview:Hide()
-        nameText:SetText(GRAY .. L["Click an icon to select it."] .. "|r")
+        nameText:SetText((NS.SkinEscape(NOTE) or "") .. L["Click an icon to select it."] .. "|r")
     end
     chooseBtn:SetDisabled(selected == nil)
 end
@@ -206,8 +232,12 @@ local function tooltip(cell)
     GameTooltip:SetOwner(cell, "ANCHOR_RIGHT")
     GameTooltip:SetText(Src.Label(cell.qcIcon))
     local credit = Src.Credit(cell.qcIcon)
-    if credit then GameTooltip:AddLine(credit, 0.7, 0.7, 0.7, true) end
-    GameTooltip:AddLine(L["Click to select it, double-click to choose it."], 1, 1, 1, true)
+    if credit then
+        local r, g, b = NS.SkinColor("gtip.subtle")
+        GameTooltip:AddLine(credit, r, g, b, true)
+    end
+    local r, g, b = NS.SkinColor("gtip.value")
+    GameTooltip:AddLine(L["Click to select it, double-click to choose it."], r, g, b, true)
     GameTooltip:Show()
 end
 
@@ -342,7 +372,7 @@ local function makeCell(i)
     cell:SetPoint("TOPLEFT", grid, "TOPLEFT", ((i - 1) % COLS) * CELL, -math.floor((i - 1) / COLS) * CELL)
     local sel = cell:CreateTexture(nil, "BACKGROUND")
     sel:SetAllPoints(cell)
-    sel:SetColorTexture(GOLD[1], GOLD[2], GOLD[3], GOLD[4])
+    sel:SetColorTexture(NS.Skin.Color(SELECTED))
     sel:Hide()
     cell.selected = sel
     local icon = cell:CreateTexture(nil, "ARTWORK")
@@ -368,6 +398,7 @@ local function buildGrid()
     grid:SetScript("OnMouseWheel", function(_, delta) setOffset(offset - delta) end)
     for i = 1, COLS * ROWS do B.cells[i] = makeCell(i) end
     status = grid:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    paintText(status, "text.highlight")
     status:SetPoint("CENTER", grid, "CENTER", 0, 0)
     status:Hide()
     slider = CreateFrame("Slider", nil, area)
@@ -378,9 +409,11 @@ local function buildGrid()
     slider:SetThumbTexture("Interface\\Buttons\\UI-ScrollBar-Knob")
     slider:SetValueStep(1)
     slider:SetObeyStepOnDrag(true)
-    local track = slider:CreateTexture(nil, "BACKGROUND")
+    track = slider:CreateTexture(nil, "BACKGROUND")
     track:SetAllPoints(slider)
-    track:SetColorTexture(0, 0, 0, 0.35)
+    -- The skin's corridor and flat knob (D3), the track filled scroll.track and the client's knob
+    -- art faded under a knob of scroll.thumb.
+    NS.Skin.ScrollBar(slider, { track = track })
     slider:SetScript("OnValueChanged", function(_, v) if not drawing then setOffset(v) end end)
     -- The scrollbar sits beside the grid, not in it: it scrolls on the wheel too.
     slider:EnableMouseWheel(true)
@@ -427,15 +460,23 @@ local function buildToolbar(AceGUI)
     H().AttachTooltip(swatch, L["Icon color"], L["The color a glyph is drawn in. White is none."])
     place(swatch, "TOPLEFT", SET_W + SEARCH_GAP, 0)
     count = area:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    paintText(count, "text.disabled")
     count:SetPoint("TOPRIGHT", area, "TOPRIGHT", 0, -6)
 end
 
--- A LibKa0s glyph drawn on `parent` in `rgb`, SEARCH_GLYPH square; no texture without the library.
-local function glyph(parent, name, rgb)
+local function paintGlyph(t, token)
+    local r, g, b = NS.SkinColor(token)
+    t:SetVertexColor(r, g, b)
+end
+
+-- A LibKa0s glyph drawn on `parent` in color token `token`, SEARCH_GLYPH square; no texture without
+-- the library.
+local function glyph(parent, name, token)
     local t = parent:CreateTexture(nil, "OVERLAY")
     t:SetSize(SEARCH_GLYPH, SEARCH_GLYPH)
     t:SetTexture(NS.Icon and NS.Icon(name) or nil)
-    t:SetVertexColor(rgb[1], rgb[2], rgb[3])
+    glyphs[t] = token
+    paintGlyph(t, token)
     return t
 end
 
@@ -458,20 +499,27 @@ local function buildSearch(AceGUI)
         input:HookScript("OnReceiveDrag", applyInsets)
         input:HookScript("OnMouseDown", applyInsets)
     end
-    local mag = glyph(input, "search", MUTED_GOLD)
-    mag:SetPoint("LEFT", input, "LEFT", 0, 0)
+    magnifier = glyph(input, "search", MUTED_GOLD)
+    magnifier:SetPoint("LEFT", input, "LEFT", 0, 0)
     clearMark = CreateFrame("Button", nil, input)
     clearMark:SetSize(SEARCH_GLYPH, SEARCH_GLYPH)
     clearMark:SetPoint("RIGHT", input, "RIGHT", -2, 0)
-    glyph(clearMark, "close", MARK_GRAY):SetPoint("CENTER", clearMark, "CENTER", 0, 0)
+    clearGlyph = glyph(clearMark, "close", MARK_GRAY)
+    clearGlyph:SetPoint("CENTER", clearMark, "CENTER", 0, 0)
     clearMark:SetScript("OnClick", function() B.SetSearch("") end)
     clearMark:Hide()
 end
 
--- A 1px line along `side` of `f`, in `rgba`.
-local function edge(f, side, rgba)
+-- The hint box's fill and its four edges in their tokens.
+local function paintHint()
+    if not hintFill then return end
+    hintFill:SetColorTexture(NS.Skin.Color(HINT_FILL))
+    for _, t in ipairs(hintEdges) do t:SetColorTexture(NS.Skin.Color(HINT_EDGE)) end
+end
+
+-- A 1px line along `side` of `f` (painted by paintHint).
+local function edge(f, side)
     local t = f:CreateTexture(nil, "BORDER")
-    t:SetColorTexture(rgba[1], rgba[2], rgba[3], rgba[4])
     if side == "TOP" or side == "BOTTOM" then
         t:SetPoint(side .. "LEFT", f, side .. "LEFT", 0, 0)
         t:SetPoint(side .. "RIGHT", f, side .. "RIGHT", 0, 0)
@@ -481,6 +529,7 @@ local function edge(f, side, rgba)
         t:SetPoint("BOTTOM" .. side, f, "BOTTOM" .. side, 0, 0)
         t:SetWidth(1)
     end
+    return t
 end
 
 -- The copy window the hint's button shows Wowhead's address in (core/WidgetsSetup.lua's maker), above
@@ -503,10 +552,11 @@ local function buildHint(AceGUI)
     hint:SetPoint("TOPLEFT", grid, "BOTTOMLEFT", 0, -HINT_GAP)
     hint:SetPoint("TOPRIGHT", slider, "BOTTOMRIGHT", 0, -HINT_GAP)
     hint:SetHeight(HINT_H)
-    local bg = hint:CreateTexture(nil, "BACKGROUND")
-    bg:SetAllPoints(hint)
-    bg:SetColorTexture(HINT_FILL[1], HINT_FILL[2], HINT_FILL[3], HINT_FILL[4])
-    for _, side in ipairs({ "TOP", "BOTTOM", "LEFT", "RIGHT" }) do edge(hint, side, HINT_EDGE) end
+    hintFill = hint:CreateTexture(nil, "BACKGROUND")
+    hintFill:SetAllPoints(hint)
+    hintEdges = {}
+    for _, side in ipairs({ "TOP", "BOTTOM", "LEFT", "RIGHT" }) do hintEdges[#hintEdges + 1] = edge(hint, side) end
+    paintHint()
     linkBtn = AceGUI:Create("Button")
     linkBtn:SetText(L["Copy wowhead.com/icons"])
     linkBtn:SetWidth(170)
@@ -521,6 +571,7 @@ local function buildHint(AceGUI)
     linkBtn.frame:SetPoint("RIGHT", hint, "RIGHT", -6, 0)
     linkBtn.frame:Show()
     hintText = hint:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    paintText(hintText, "text.highlight")
     hintText:SetPoint("LEFT", hint, "LEFT", 10, 0)
     hintText:SetPoint("RIGHT", linkBtn.frame, "LEFT", -10, 0)
     hintText:SetJustifyH("LEFT")
@@ -534,6 +585,7 @@ local function buildFooter(AceGUI)
     preview:SetSize(ICON, ICON)
     preview:SetPoint("BOTTOMLEFT", area, "BOTTOMLEFT", 0, 0)
     nameText = area:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    paintText(nameText, "text.heading")
     nameText:SetPoint("LEFT", preview, "RIGHT", 8, 0)
     nameText:SetJustifyH("LEFT")
     nameText:SetWordWrap(false)
@@ -573,8 +625,6 @@ local function build()
     if settingsWindow and settingsWindow.HookScript then
         settingsWindow:HookScript("OnHide", function() if request then B.Cancel() end end)
     end
-    local skin = Settings.CalloutPopupSkin
-    if skin then skin.TryApply() end
 end
 
 -- Hide the browser and drop the request. The request is cleared first, so the frame's own OnHide
@@ -680,7 +730,7 @@ end
 function B.Choose()
     if not request then return false, "notOpen" end
     if NS.Compat.InCombat() then
-        NS.Print(GRAY .. L["cannot choose an icon during combat"] .. "|r")
+        NS.Print(CHAT_GRAY .. L["cannot choose an icon during combat"] .. "|r")
         return false, "combat"
     end
     if selected == nil then return false, "noSelection" end
@@ -713,8 +763,19 @@ end
 function B.Widgets()
     return { filter = filterDD, sets = setsDD, swatch = swatch, choose = chooseBtn, cancel = cancelBtn, slider = slider,
         grid = grid, status = status, count = count, preview = preview, name = nameText, area = area,
-        search = searchBox, clear = clearMark, hint = hint, hintText = hintText, link = linkBtn }
+        search = searchBox, clear = clearMark, hint = hint, hintText = hintText, link = linkBtn,
+        track = track, hintFill = hintFill, hintEdges = hintEdges, magnifier = magnifier, clearGlyph = clearGlyph }
 end
+
+-- A skin switch: every host-drawn color in the new skin, the texts' colors included (the scroller and
+-- the window are the library's recorded paint), and the footer's note line redrawn in its escape.
+NS.Skin.OnLooksChanged(function()
+    for _, cell in ipairs(B.cells) do cell.selected:SetColorTexture(NS.Skin.Color(SELECTED)) end
+    for t, token in pairs(glyphs) do paintGlyph(t, token) end
+    for fs, token in pairs(texts) do paintText(fs, token) end
+    paintHint()
+    if request then drawFooter() end
+end)
 
 -- ── what closes it ──────────────────────────────────────────────────────────────────────────
 

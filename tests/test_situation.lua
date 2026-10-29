@@ -117,7 +117,9 @@ test("situation: stand-down cancels a pending coalesced refresh", function()
     local NS = T.enableAddon()
     local canceled, sent = {}, 0
     NS.addon.ScheduleTimer = function() return "handle-1" end
-    NS.addon.CancelTimer = function(_, h) canceled[#canceled + 1] = h end
+    -- Only this module's handle: the stand-down also cancels the first-run skin picker's login
+    -- timer (core/SkinSetup.lua), scheduled by OnEnable before the stub above.
+    NS.addon.CancelTimer = function(_, h) if h == "handle-1" then canceled[#canceled + 1] = h end end
     NS.addon.SendMessage = function() sent = sent + 1 end
     NS.Situation.Refresh("GROUP_ROSTER_UPDATE")
     NS.StandDown()

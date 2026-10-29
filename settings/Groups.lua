@@ -211,7 +211,7 @@ end
 local function restoreRow(ctx)
     local h = H()
     h.AddSpacer(h.EnsureScroll(ctx), h.ROW_VSPACER)
-    h.TextRow(ctx, L["|cffa0a0a0Adds back the built-in groups and callouts you deleted. Changes nothing you have.|r"])
+    h.TextRow(ctx, NS.SkinMarkup("qc.hint", L["Adds back the built-in groups and callouts you deleted. Changes nothing you have."]))
     h.InlineButtonPair(ctx, { text = L["Restore built-in groups"],
         tooltip = L["Bring back every built-in group, and every built-in callout, you deleted, as new ones: a group at the end of every pad and dial. Nothing you have is changed."],
         onClick = function() G.RestoreBuiltins() end }, nil)
@@ -252,14 +252,17 @@ end
 
 local function calloutLabel(c, cid)
     if not c then return cid end
-    return ("|cffffd100%s|r  |cff%s%s|r  |cffb3b3b3%s|r"):format(literal(c.name or cid),
-        channelColor(c.channel), SHORT_CHANNEL[c.channel] or tostring(c.channel), preview(c.text or ""))
+    -- The name in the heading gold and the preview in the tooltip's subtle gray, read from the skin
+    -- at call time; the channel keeps WoW's chat-type color (a game meaning, rung 4).
+    return ("%s  |cff%s%s|r  %s"):format(NS.SkinMarkup("text.heading", literal(c.name or cid)),
+        channelColor(c.channel), SHORT_CHANNEL[c.channel] or tostring(c.channel),
+        NS.SkinMarkup("gtip.subtle", preview(c.text or "")))
 end
 
 -- The group part of a Reuse entry ("<group>:", a set's "<set>: <child>:") is drawn in the muted
--- gold LibKa0s gives a debug line's tag (DebugLog's c9a66b), the callout's name in white.
-local MUTED_GOLD = "|cffc9a66b"
-G.MUTED_GOLD = MUTED_GOLD
+-- gold LibKa0s gives a debug line's tag (the skin's log.tag, c9a66b under Ka0s Default), the
+-- callout's name in white. An escape read at call time, so a skin switch reaches the next list.
+function G.MutedGold() return NS.SkinEscape("log.tag") or "" end
 
 -- Reuse's three steps, in order. First, each callout's group part ("<group>", a child group's
 -- "<parent>: <child>"; the first group that holds it wins) and the set of `gid`'s own.
@@ -296,7 +299,7 @@ local function reuseLabel(out)
         seen[key] = (seen[key] or 0) + 1
         local name = seen[key] > 1 and L["%s (%d)"]:format(e.name, seen[key]) or e.name
         e.plain = e.group and L["%s: %s"]:format(e.group, name) or name
-        e.label = e.group and L["%s: %s"]:format(MUTED_GOLD .. e.group .. "|r", name) or name
+        e.label = e.group and L["%s: %s"]:format(G.MutedGold() .. e.group .. "|r", name) or name
         e.group, e.name = nil, nil
     end
 end
@@ -305,7 +308,7 @@ end
 --- "<its parent>: <it>", so two battlegrounds' same-named nodes read apart) but `gid`'s own (a
 --- seeded set's among them, 2026-10-18-builtins-as-groups-design.md), as one list sorted by group,
 --- then name, case-insensitively, on the plain text. Entries that would read alike are numbered
---- ("<name> (2)") so each is unambiguous. Each entry is { id, label (the group part in MUTED_GOLD),
+--- ("<name> (2)") so each is unambiguous. Each entry is { id, label (the group part in G.MutedGold()),
 --- plain (the label without color) }. Add copies the pick (spec P2).
 function G.ReusableCallouts(gid)
     local p = NS.db.profile

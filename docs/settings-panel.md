@@ -6,7 +6,7 @@ eagerly at `OnEnable`; each page's body builds on its first show (options-ui-§1
 | Page | Covers |
 |---|---|
 | Ka0s Quick Comms (landing) | The logo, the TOC notes line and the slash command list, drawn by the library's `BuildLandingPage` |
-| General | `Master controls`, `Behavior`, `Keybindings` (last) |
+| General | `Master controls`, `Behavior`, `Skin`, `Keybindings` (last) |
 | Groups | One group (a seeded built-in set is one too): `General`, `Callouts`, `When`, `What it sends` |
 | Pad | One pad (the Comms Pad page until the dial polish, 2026-10-21): `General`, `Groups`, `Layout`, `Window`, `Header`, `Section titles`, `Buttons`, `Icons` |
 | Dial | One dial (the Comms Dial page until the dial polish, 2026-10-21): `General`, `Groups`, `Layout`, `Slices`, `Hub`, `Paging`, `Labels`, `Icons`, `Ring map` |
@@ -79,11 +79,47 @@ Put instance-specific groups first was *Promote specific groups*, Explain why gr
 was *Explain why groups show*, and Show the LOCKDOWN tag was *Show the lockdown tag*; the tooltips
 are unchanged.
 
+## General → Skin
+
+The skin this addon wears (skinning-§2, §3; [ARCHITECTURE.md → Skins](ARCHITECTURE.md#skins)). The
+tab is the library's (`O.AppearanceTab`, OptionsAppearance minor 3, keyed `Appearance` and labeled
+*Skin*), built in `settings/Panel.lua` with `{ owner, get = NS.SkinChoice, set = NS.WriteSkinChoice }`
+and handed to `RenderTabbedSchema`'s `opts.tabs` ahead of Keybindings, so the strip reads Master
+controls, Behavior, Skin, Keybindings. It draws:
+
+| Heading | Rows |
+|---|---|
+| Skin source | *Ka0s skins* or *EllesmereUI* (`skin.source`); EllesmereUI is disabled, with the failing condition and its fix named, unless EllesmereUI can skin this addon |
+| Look | the nine skins three to a line, each with four swatches (`skin.skin`) |
+| Font and texture | **Font** and **Texture** (`skin.font`, `skin.texture`), *Skin's own (…)* first, then every LibSharedMedia font or status bar |
+| Scope | **Ignore settings panel** (`skin.ignorePanel`, on for a new profile) and **Ignore fonts** (`skin.ignoreFonts`) |
+| | **Copy to every Ka0s addon…**, and the note on what skins change |
+
+A pick calls `Skin:SetChoice` first and writes through `NS.WriteSkinChoice` after, so the row's
+`onChange` finds nothing left to apply and the pick is one repaint. The seven rows behind the tab are
+ordinary `skipRender` schema rows in group `Appearance` (`settings/SchemaRows.lua`;
+[schema.md](schema.md)), so the defaults, both resets and `/qc get|set skin.*` reach them;
+`skin.pickerSeen` is drawn by nothing. While **Ignore settings panel** is on, these pages keep the
+client's look under any skin; the pads, the dials and the windows wear the skin either way. Every page
+widget comes from the Options instance's AceGUI handle (the owner's proxy, which paints on Create),
+the host's release work is chained through `NS.SkinOnRelease`, and the Profiles page paints
+AceConfigDialog's tree with `NS.SkinPaintAceTree` after each Open; each widget goes back to the shared
+AceGUI pool stock, so another addon's pages never inherit this skin.
+
+**The first-run picker** is `O.SkinPicker`, a small window titled *Choose a skin for Ka0s Quick
+Comms*: a dropdown of the skins, the eye, the gear, **Apply** and a close control. `core/SkinSetup.lua`
+shows it two seconds after `OnEnable` and after every profile event while the profile's
+`skin.pickerSeen` is false and the addon stands up, held to `PLAYER_REGEN_ENABLED` in combat. A pick
+previews; **Apply** and the gear save it, the gear opening this page on its Skin tab (`page =
+"general"`, `tab = "Appearance"`); the close control and Escape put the stored skin back. The eye turns
+test mode on, so the pads show their placeholders and dial 1 opens under the picker (rollout X6). One
+picker is up at a time across Ka0s addons.
+
 ## General → Keybindings
 
 The General page's **last** tab (item 015, options-ui-§20), drawn by the library: `settings/Panel.lua`
 hands `O.KeybindingsTab({ bindings = NS.BINDINGS, intro = ... })` to `RenderTabbedSchema`'s `opts.tabs`
-with no `before`, so it lands after every group tab. `NS.BINDINGS` (`settings/SlashVerbs.lua`) is
+with no `before`, so it lands after every group tab and the Skin tab. `NS.BINDINGS` (`settings/SlashVerbs.lua`) is
 `Bindings.xml` in order, one row each:
 
 | Row | Command | Tooltip |
@@ -343,8 +379,10 @@ The window and its catcher are `settings/ModalWindow.lua`'s, which the icon brow
 The body is laid out in a plain AceGUI container, not a scroll frame: the popup has **no
 scrollbar**, and the window's height follows the laid-out body, measured again after every draft
 write, situation change and error line. The settings pages keep their always-visible scrollbar.
-A client without the template gets the popup's old look: a plain frame with Blizzard's dialog edge
-and the shared close mark (`NS.MakeCloseButton`). The template's own close X instead of the shared
+A client without the template gets the popup's old shape: a plain frame in the skin's window fill and
+edge (the owner's `Shell`) and the shared close mark (`NS.MakeCloseButton`). Under a skin other than
+Ka0s Default, and under EllesmereUI, the template's chrome is the skin's (painted with
+`opts.stockDefault`, so Ka0s Default keeps the settings window exactly; DECISIONS X10). The template's own close X instead of the shared
 mark is a documented deviation (`ARCHITECTURE.md` → Documented deviations). The window's border,
 title bar and background come from the template, and its `Bg` is lifted over the click-catcher's dim (the
 template declares it at absolute frame level 0), so the popup is as bright as the settings window.
@@ -413,22 +451,9 @@ body     [Name          ] [Channel       ]   the callout.* member rows' labels a
   the page underneath cannot change while a draft is open. Only one popup exists. `FULLSCREEN` is one
   strata over the Comms Dial's `DIALOG`, so an open preview dial's hub (its dot and pointer, raised
   over the dial's header by level) draws under the popup, not over it (QC-06).
-- **EllesmereUI.** With EllesmereUI and its Blizzard Skin module loaded, its third-party skinning on
-  and Quick Comms on in its Third-Party Addons list (as the facade's `S.IsEnabled()` reports them;
-  Quick Comms never reads EllesmereUI's SavedVariables), `settings/CalloutPopup_Skin.lua` paints the
-  window in EllesmereUI's third-party look: its shell, the border faded, the background
-  hidden and its close X; the page's controls stay stock, as the settings window's do. Quick Comms
-  has no switch of its own for it: EllesmereUI's per-addon entry is the switch, and a skin comes off
-  only with a reload. The fallback window (a client without the template) is not painted: the skin
-  is the settings window's, and that window is not it. The skin does not wait for Quick Comms to
-  be enabled: the popup and the browser are the settings panel's, which stays up while the addon is
-  disabled (slash-commands-§7), so they open in EllesmereUI's look either way. `/qc diagnostics`
-  says why the skin is or is not on (its `why=`, `docs/debug.md`).
-  The skin follows EllesmereUI's third-party switches and its third-party style (a majority vote
-  over all its window styles), not its Settings-window skin or its window-skin kill switch, which
-  its public API does not expose. So the popup matches the settings window behind it only when
-  EllesmereUI's Settings window skin is on and its style is the third-party style; otherwise the
-  two can differ (a known limitation, [`known-limitations.md`](known-limitations.md)).
+- **The skin.** The window wears the skin this addon wears (General > Skin, `core/SkinSetup.lua`),
+  EllesmereUI's look included when the skin source is EllesmereUI; Quick Comms's own EllesmereUI
+  bridge is retired, and EllesmereUI is reached only through LibKa0s-Skin-1.0's `eui` source.
 
 ## The icon browser
 
@@ -439,7 +464,7 @@ X, the gold header), 560 × 594, with its own full-screen catcher in the popup's
 above the popup and the popup's catcher by a band of levels of its own (`ModalWindow.LEVEL_OVER`, far
 over the popup's `LEVEL`): it is modal to whatever opened it. `FULLSCREEN_DIALOG` stays above it for
 its pull-outs, the color picker and the Wowhead link window. Only one browser exists,
-built on its first open. The EllesmereUI skin paints it as it paints the popup.
+built on its first open. It wears the popup's skin.
 
 ```
 window   Blizzard's settings window, titled Ka0s Quick Comms                 (its close X)
@@ -548,6 +573,15 @@ above the list, as the Callouts tab's add controls do (QUI-L07). On Layout, *Pad
 spacing* were *Scale* and *Spacing*; Pad scale's tooltip says it is multiplied by Master scale on the
 General page > Master controls (QUI-L36).
 
+The skin (QC-03, 2026-10-29, the skinning rollout): every Font block (Header, Section titles,
+Buttons) ends with **Use the skin's font** (`<block>.fontFromSkin`) and every Border block (Window,
+Header, Section titles, Buttons, Icons) with **Use the skin's border** (`<block>.borderStyleFromSkin`),
+both composed by the options library and on by default. While one is on, its picker (*Font*, or
+*Border style*; on Icons *Border style* and *Border thickness*) is grayed out and shows the skin's
+value, and the stored pick comes back when it is turned off; sizes, colors, flags and shadows stay
+live either way. On Icons the box is grayed while Show border is off. Schema step 10 turned them on
+once on every stored pad ([schema.md](schema.md)).
+
 Header, Section titles and Window were one Window tab until 2026-10-20 (the Look tab before
 that); the owner split it into three, each under its own headings. The third was Main window, with
 Visibility, Fade and Faded opacity, until the owner moved those to General and renamed it Window
@@ -596,7 +630,7 @@ glass's two blooms and are grayed out under every other look. Each pad keeps its
 Slices tab has the same heading for a dial.
 
 The Icons tab's rows are `pad.icon.*` (settings/SchemaIcons.lua). Every color pair sits on one line and is
-never grayed out; Border style and thickness are grayed out while Show border is off; Glow when, Glow style
+never grayed out; Border style and thickness are grayed out while Show border is off or Use the skin's border is on; Glow when, Glow style
 and the offsets while the glow is off, and the offsets also under Button, which ignores them. The
 offsets sit right after Glow color, under Icon glow, and always show. A style's knobs (Pixel border, Auto cast sparkles, Button
 (rotating rays), Proc (flipbook)) show only while the glow is on and in that style (owner request,
@@ -644,9 +678,12 @@ Paging   a paged ring's row under the dial: Page row (Distance below labels), Ar
 Labels   Slice labels (Show slice labels, label offset, then the labels' Font block: font, size,
          outline, color, Use class color, shadow; grayed out while slice labels are off), Group
          labels (Show group labels, the ring's title above the dial, then its Font block, grayed
-         out while off) and Tooltip (side, offset)
+         out while off) and Tooltip (side, offset); each Font block ends with Use the skin's
+         font (`dial.label.fontFromSkin`, `dial.title.fontFromSkin`, on by default: the face is
+         the skin's while ticked, QC-03)
 Icons    the slices' icons, as the Pad page's Icons tab, under Size, offset and crop: Icon size |
-         Icon offset, then Zoom (a slice's border is a round ring, never wider than the slice; its
+         Icon offset, then Zoom (a slice's border is a round ring, never wider than the slice, and
+         follows the skin's icon border while Use the skin's border is ticked; its
          icon size, up to 128 or 0 automatic, keeps the slice's own size)
 Ring map each ring as the current or previewed situation builds it, slice by slice
 ```

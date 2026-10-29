@@ -38,6 +38,10 @@ NS.MIGRATIONS = {
     -- 8 -> 9 (dial polish, 2026-10-21): dials drop the Slices tab's retired Border (its size, color and
     -- class color); a Slice gap parts the slices instead.
     { to = 9, perProfile = true, run = function(_, profile) NS.Library.MigrateSliceBorder(profile) end },
+    -- 9 -> 10 (QC-03, the skinning rollout, the owner's ruling O2): the one-time reset onto the skin.
+    -- Every pad's and dial's font and border pickers follow the skin again, through their "Use the
+    -- skin's ..." companions (LibKa0s-Skin-1.0 ResetToSkin); colors stay the player's (DECISIONS X4).
+    { to = 10, perProfile = true, run = function(_, profile) NS.Library.MigrateFollowSkin(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.

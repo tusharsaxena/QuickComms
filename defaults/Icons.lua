@@ -6,6 +6,8 @@ local _, NS = ...
 -- TEMPLATES; settings/SchemaIcons.lua makes the rows; modules/IconStyle.lua and modules/Glow.lua draw
 -- them. Every default draws an icon exactly as it was drawn before the tab existed: no crop, no
 -- desaturation, opaque, a white tint (a glyph keeps its own color), no border and no glow.
+-- `borderStyleFromSkin` (QC-03) defaults true: a shown border is the skin's icon border (its style and
+-- thickness, modules/IconStyle.lua) until the player turns it off.
 --
 -- The glow knobs, their ranges and defaults are DropWatcher's (settings/SchemaRows.lua GLOW_KNOBS,
 -- shared with KickCD's glow slots); `pixelLength` 0 is automatic (the library sizes the lines from
@@ -58,7 +60,7 @@ function D.For(kind)
         size = D.SIZE[kind].auto and D.AUTO_SIZE or D.SIZE[kind].default, zoom = 0, desaturate = false, alpha = 1,
         tint = { r = 1, g = 1, b = 1, a = 1 }, useClassColorTint = false,
         borderShow = false, borderStyle = "Solid", borderSize = 1, borderColor = { r = 0, g = 0, b = 0, a = 1 },
-        useClassColorBorder = false,
+        useClassColorBorder = false, borderStyleFromSkin = true,
         glowEnabled = false, glowWhen = "always", glowType = "pixel",
         glowColor = { r = 1, g = 0.82, b = 0, a = 1 }, useClassColorGlow = false,
     }

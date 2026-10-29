@@ -163,20 +163,15 @@ What the addon cannot do, or does only under a condition, and why. The hub,
 - The callout popup has no scrollbar: its window is as tall as its content, so on a screen too short
   for it (a very large UI scale) it runs past the top and bottom edges, Cancel and Save included;
   Escape still cancels.
-- The callout popup's EllesmereUI skin follows EllesmereUI's third-party switches (its third-party
-  skinning and Quick Comms' entry in its Third-Party Addons list) and its third-party style, a
-  majority vote over all its window styles. It does not follow EllesmereUI's Settings-window skin or
-  its window-skin kill switch, which the public API does not expose. So the popup can differ from the
-  settings window behind it: with window skins killed or the Settings window skin off, the popup wears
-  EllesmereUI's shell over a stock settings window; with the settings window on one style and most
-  windows on the other, the two backdrops differ.
-- The callout popup's EllesmereUI skin (and the icon browser's, the same skin on the same window) is
-  one-way, as EllesmereUI's skins are: turning it off in EllesmereUI takes effect after a reload. It
-  is painted whether or not Quick Comms is enabled: both windows belong to the settings panel, which
-  stays up while the addon is disabled (slash-commands-§7, "What MUST survive"); until 2026-10-18 a
-  disabled addon left them stock. A client without `SettingsFrameTemplate` gets the popup's older look
-  (a plain frame with Blizzard's dialog edge and the shared close mark) instead of the settings
-  window's, and the EllesmereUI skin leaves that fallback window as it is.
+- A change of skin source away from EllesmereUI is one-way, as EllesmereUI's skins are: it takes
+  effect after a reload, which the Skin tab offers. A client without `SettingsFrameTemplate` gets the
+  callout popup's older shape (a plain frame in the skin's window fill and edge, and the shared close
+  mark) instead of the settings window's.
+- A skin change in combat repaints the pads and dials only when combat ends (a rebuild waits for it,
+  with the stale hint meanwhile), as every rebuild does: a face or a border style moves a pad's
+  measured widths, and a secure pad cannot be re-laid out in combat. The one-time reset onto the
+  skin (schema step 10) moves every pad's and dial's faces to the skin's HUD font (Oxanium SemiBold
+  under Ka0s Default) and their border styles to its own; the colors stay the player's.
 - The icon browser searches game icons by texture id only: the client gives them as texture ids, with
   no names, and has no API that names one, so a game icon is named by its id and a name is looked up
   on Wowhead (the tab's hint; the game cannot open a web page, so the address is shown to copy). No
@@ -205,9 +200,7 @@ What the addon cannot do, or does only under a condition, and why. The hub,
   a change to the art is a re-run of the generator, never a hand edit (`DEPENDENCIES.md`).
 - `tests/perf.lua`'s byte ceilings are the headless mock's figures (its catch-all methods allocate per
   call); compare them run to run, never with the client.
-- Quick Comms bundles LibKa0s v1.77.0 (owner, 2026-10-25: no re-vendor before v1.0.0). LibStub keeps
-  the highest minor of each module, so when another Ka0s addon loaded beside it carries a newer
-  LibKa0s (Ka0s Loot History bundles v1.78.0: Core 13, DebugLog 22, Media 7, Options 33, Widgets 16,
-  against this addon's 12, 21, 5, 30 and 15), those modules run the newer code, whatever the load
-  order. The headless suite measures v1.77.0 only. The remedy is this addon's own re-vendor
+- Quick Comms bundles LibKa0s v1.80.0. LibStub keeps the highest minor of each module, so when another
+  Ka0s addon loaded beside it carries a newer LibKa0s, those modules run the newer code, whatever the
+  load order. The headless suite measures v1.80.0 only. The remedy is this addon's own re-vendor
   (`/dev-copilot:wow-revendor-libka0s`), never an edit under `libs/` (F-010).

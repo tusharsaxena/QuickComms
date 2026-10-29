@@ -301,7 +301,7 @@ test("groups page: Reuse draws the group part in muted gold and the callout name
     local byId = {}
     for _, e in ipairs(G.ReusableCallouts(other)) do byId[e.id] = e end
     -- red under: leave the Reuse labels uncolored
-    assertEqual(G.MUTED_GOLD, "|cffc9a66b")
+    assertEqual(G.MutedGold(), "|cffc9a66b", "the skin's log.tag, exact under Ka0s Default")
     assertEqual(byId[kick].label, "|cffc9a66bMine|r: Kick")
     -- a seeded node is a group like any other: its own name is the group part
     assertEqual(byId[T.seeded(NS, "bi.bg.ab.stables.attack")].label, "|cffc9a66bArathi Basin: Stables|r: Attack")
@@ -344,7 +344,7 @@ test("groups page: [characterization] Reuse's fallbacks: a nameless group or cal
     for i, e in ipairs(NS.addon.Settings.Groups.ReusableCallouts(other)) do byId[e.id], order[e.id] = e, i end
     -- red under: G.ReusableCallouts' helpers losing a fallback or the group-less entry (performance-§11)
     assertEqual(byId[kick].plain, gid .. ": Kick", "a nameless group reads as its id")
-    assertEqual(byId[kick].label, NS.addon.Settings.Groups.MUTED_GOLD .. gid .. "|r: Kick")
+    assertEqual(byId[kick].label, NS.addon.Settings.Groups.MutedGold() .. gid .. "|r: Kick")
     assertEqual(byId.orphan.plain, "Stray", "a callout no group holds has no group part")
     assertEqual(byId.orphan.label, "Stray", "and no color")
     assertEqual(order.orphan, 1, "no group sorts as the empty group, first")

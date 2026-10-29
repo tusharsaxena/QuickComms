@@ -137,7 +137,7 @@ Total.
 - profile: collections exist; default nextId is 1, past every seeded id after boot
 - profile: every behavior row resolves through the seam
 - profile: the spam guard clamps to 0.6-2.0 and fallback refuses unknown values
-- profile: schema version target is 9 (the dial polish)
+- profile: schema version target is 10 (the one-time reset onto the skin)
 - prepare: a callout held by two groups is split into a copy
 - prepare: a split copy of a seeded callout keeps no origin
 - prepare: a callout held by no group is dropped
@@ -598,19 +598,6 @@ Total.
 - icon browser: [sets] a set's prefix is not in its label; Phosphor reads 'Arrow up'
 - icon browser: [sets] the Glyphs filter lists the library's sets and narrows to one
 - icon browser: [sets] a glyph's tooltip names its set, and a Game-icons mark its author
-
-### test_eui_skin.lua (10)
-
-- eui skin: the popup is painted as EllesmereUI paints the settings window when every condition holds
-- eui skin: the icon browser's window is painted the same way, once, when it is built
-- eui skin: a callback that comes after the popup was built paints it at once
-- eui skin: not painted when any condition fails
-- eui skin: never raises without EllesmereUI, or with one that has no RegisterSkin
-- eui skin: a facade missing a primitive, or one that raises, leaves the popup stock
-- eui skin: paints while the addon is disabled (the popup and the browser are the settings panel's)
-- eui skin: the fallback window (no settings-window template) keeps its older look
-- eui skin: the diagnostics report names its state
-- eui skin: the diagnostics line says, in words, why the skin is or is not on
 
 ### test_groups_when.lua (21)
 
@@ -1294,6 +1281,109 @@ Total.
 - layout: [dials] Labels: Slice labels, Group labels, then Tooltip (QUI-L19)
 - layout: [dials] Icons: Size, offset and crop holds Icon size | Icon offset, then Zoom (QUI-L27)
 
+### test_skinsetup.lua (24)
+
+- skin seam: the owner is the folder name, and NS.Skin is its facade
+- skin seam: the owner is registered at file load, before the profile store exists
+- skin seam: the read answers Ka0s Default before the profile store exists
+- skin seam: EllesmereUI hears of this addon once, from the library alone
+- skin seam: every owner token is in the qc namespace and answers today's pixels on Ka0s Default
+- skin seam: under another skin an owner token takes its follow token's value
+- skin seam: an owner token reaches a markup escape byte for byte
+- skin seam: Core's window edge is handed the owner
+- skin seam: the drag strip, the Preview dropdown and the reorder list are handed the owner
+- skin seam: the seven skin keys default to Ka0s Default, the picker unseen
+- skin seam: every skin key is a skip-render schema row on the Skin tab
+- skin seam: the skin row's values are every registered skin, in the library's order
+- skin seam: /qc set refuses a skin that is not registered and applies one that is
+- skin seam: /qc set reaches an exception, and only its own half
+- skin seam: the Skin tab is the library's, after Behavior and before Keybindings
+- skin seam: one tab pick is one effective SetChoice, one repaint and no reload
+- skin seam: the tab's Ignore fonts reaches the library and the profile, one repaint
+- skin seam: another addon's copy to every Ka0s addon repaints this one once
+- skin seam: login applies the stored skin, exceptions and overrides
+- skin seam: a profile switch applies the new profile's skin, pages built or not
+- skin seam: Reset all settings puts the skin back on Ka0s Default and applies it
+- skin seam: the diagnostics report names the skin and the EllesmereUI gate
+- skin seam: the degraded facade answers every name the live facade carries
+- skin seam: each host-copy skin token is the live library's Ka0s Default value
+
+### test_skin_windows.lua (19)
+
+- skin windows: no color literal is left in the window files
+- skin windows: the literal gate is falsifiable: a planted literal of each shape is reported
+- skin windows: the Preview window is the owner's Shell, its title in the top bar
+- skin windows: End preview's label is the step panels' tokens at rest, hovered and locked
+- skin windows: the Preview window's tooltips write their lines in the tooltip tokens
+- skin windows: the modal window's template chrome is stock under Ka0s Default, every call
+- skin windows: the modal window's Bg is the client's under Ka0s Default and faded under a skin
+- skin windows: the modal catcher's dim is qc.modalDim, today's pixel, and follows a switch
+- skin windows: a client without the template gets the owner's Shell, not the dialog edge
+- skin windows: the popup's refused-field line is sem.badAlt, today's |cffff4040
+- skin windows: the popup's token tooltip writes its lines in the tooltip tokens
+- skin windows: the browser's selected cell is qc.selStrong, today's gold at 0.7, and follows
+- skin windows: the browser's scroller is the skin's ScrollBar over its own track
+- skin windows: the browser's hint box is the drawer box's tokens, and follows a switch
+- skin windows: the browser's search glyphs are log.tag and qc.markGray, today's pixels
+- skin windows: the browser's texts take their roles, each today's color under Ka0s Default
+- skin windows: the browser's texts keep their font objects' faces (X10), and a switch recolors them
+- skin windows: the browser's empty footer line is qc.note, today's |cffaaaaaa
+- skin windows: the browser's cell tooltip writes its lines in the tooltip tokens
+
+### test_skin_hud.lua (15)
+
+- skin hud: every HUD font and border block follows the skin by default, through a schema row
+- skin hud: a following picker is grayed out and shows the skin's value; off, it is the player's
+- skin hud: a pad's labels, titles and header take hud.font while they follow, the pick when not
+- skin hud: a following face takes the Skin tab's font override, as every face of the owner does
+- skin hud: a pad's border blocks take bar.borderStyle while they follow, the pick when not
+- skin hud: an icon's border takes the skin's icon border while it follows, the pick when not
+- skin hud: a dial's slice labels and ring title take hud.font while they follow
+- skin hud: a pad's chrome is today's pixels under Ka0s Default, each from a token
+- skin hud: a dial's chrome is today's pixels under Ka0s Default, each from a token
+- skin hud: a skin switch repaints the chrome and the faces, and leaves the player's colors
+- skin hud: a pad window's 1px inner rule is win.inner, none where the skin has none
+- skin hud: the dial's per-frame update reads no token
+- skin hud: step 10 turns every stored pad's and dial's companions on, keeping every pick
+- skin hud: without the library step 10 writes the companions itself
+- skin hud: the reset runs once: a companion the player turns off afterwards stays off
+
+### test_skin_picker.lua (18)
+
+- skin picker: the spec names this owner, its seams, General's Skin tab and the eye
+- skin picker: the eye turns test mode on, and leaves it on
+- skin picker: an unseen profile shows it; a seen one does not
+- skin picker: it shows two seconds after OnEnable, on the login timer
+- skin picker: the stand-down cancels the login timer
+- skin picker: in combat a start waits for PLAYER_REGEN_ENABLED, once
+- skin picker: a held start is dropped by HideSkinPicker
+- skin picker: never while the addon is switched off
+- skin picker: a new profile and a reset profile show it again
+- skin picker: a profile switched off shows no picker on its adoption
+- skin picker: the window's eye is shown and turns test mode on
+- skin picker: the player's close marks it seen; this addon's own hide does not
+- skin picker: the stand-down takes the picker down, unseen
+- skin picker: a pick previews, unsaved; Apply saves it and marks the picker seen
+- skin picker: the close control puts the old skin back, saves nothing, and marks it seen
+- skin picker: a profile switch with a pick pending wears the new profile's skin
+- skin picker: the gear saves the pick and opens General on its Skin tab
+- skin picker: without LibKa0s nothing shows and nothing raises
+
+### test_skin_tools.lua (12)
+
+- skin tools: the pages' AceGUI handle is the owner proxy, which paints for this owner
+- skin tools: under the default Scope (Ignore settings panel) a page widget stays stock
+- skin tools: NS.SkinPaintAceTree paints every widget under a container
+- skin tools: NS.SkinOnRelease runs the host's release work AND the skin's restore
+- skin tools: the host's release work goes through NS.SkinOnRelease, never a callback
+- skin tools: the icon chooser's swatch release still drops a tracked color picker
+- skin tools: the Profiles page paints AceConfigDialog's tree after each Open
+- skin tools: without LibKa0s the release work takes the AceGUI callback, and nothing paints
+- skin tools: the pages' colored lines keep today's bytes under Ka0s Default
+- skin tools: the pages' colored lines move with a skin switch
+- skin tools: the debug console and its copy window are painted for this owner
+- skin tools: the perf panel is painted for this owner
+
 ### test_vendor_sync.lua (3)
 
 - libs/LibKa0s is the LibKa0s release CLAUDE.md says this addon bundles
@@ -1391,7 +1481,6 @@ Total.
 | test_editors.lua | 18 |
 | test_callout_popup.lua | 38 |
 | test_icon_browser.lua | 37 |
-| test_eui_skin.lua | 10 |
 | test_groups_when.lua | 21 |
 | test_page_groups.lua | 49 |
 | test_page_groups_nesting.lua | 19 |
@@ -1419,6 +1508,11 @@ Total.
 | test_shine.lua | 8 |
 | test_layers.lua | 11 |
 | test_layout.lua | 23 |
+| test_skinsetup.lua | 24 |
+| test_skin_windows.lua | 19 |
+| test_skin_hud.lua | 15 |
+| test_skin_picker.lua | 18 |
+| test_skin_tools.lua | 12 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -1426,4 +1520,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1176** |
+| **Total** | **1254** |

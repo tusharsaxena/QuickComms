@@ -30,7 +30,7 @@ test("render: [audit QC-07] the button's padlock is the catalog's lock mark, tin
     -- red under: SetTexture(LOCK_ICON) unconditionally in PadRender.Dress
     assertTrue(NS.Icon("lock") ~= nil)
     assertEqual(b.qcLock.__texture, NS.Icon("lock"))
-    assertEqual(b.qcLock.__color[1], NS.Constants.GOLD.r)
+    assertEqual(b.qcLock.__color[1], NS.Skin.Color("text.accent"), "text.accent (QC-03): Ka0s Default's gold")
     local real = NS.Icon
     NS.Icon = function() return nil end
     local b2 = button(NS, m)

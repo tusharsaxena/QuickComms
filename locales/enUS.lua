@@ -70,6 +70,31 @@ L["unknown command '%s'"] = "unknown command '%s'"
 L["v%s slash commands"] = "v%s slash commands"
 L["|cffFFFF00%s|r takes a setting path: |cffFFFF00%s|r (try |cffFFFF00%s|r). To reset everything: |cffFFFF00%s|r."] =
     "|cffFFFF00%s|r takes a setting path: |cffFFFF00%s|r (try |cffFFFF00%s|r). To reset everything: |cffFFFF00%s|r."
+-- The skin (core/SkinSetup.lua; the General page's Skin tab, settings/SchemaRows.lua)
+L["Ka0s skins"] = "Ka0s skins"
+L["EllesmereUI"] = "EllesmereUI"
+L["Skin source"] = "Skin source"
+L["Where this addon's look comes from: the Ka0s skin chosen below, or EllesmereUI."] =
+    "Where this addon's look comes from: the Ka0s skin chosen below, or EllesmereUI."
+L["Skin"] = "Skin"
+L["The Ka0s skin this addon wears. Changes every window and panel right away."] =
+    "The Ka0s skin this addon wears. Changes every window and panel right away."
+L["Ignore settings panel"] = "Ignore settings panel"
+L["Keep this addon's settings panel in the game's own look. Its windows still wear the skin."] =
+    "Keep this addon's settings panel in the game's own look. Its windows still wear the skin."
+L["Ignore fonts"] = "Ignore fonts"
+L["Keep every font in this addon as the game draws it. The skin still colors the text."] =
+    "Keep every font in this addon as the game draws it. The skin still colors the text."
+L["The font this addon's text uses, over the skin's own. Empty keeps the skin's."] =
+    "The font this addon's text uses, over the skin's own. Empty keeps the skin's."
+L["Texture"] = "Texture"
+L["The texture this addon's bars use, over the skin's own. Empty keeps the skin's."] =
+    "The texture this addon's bars use, over the skin's own. Empty keeps the skin's."
+L["Skin picker seen"] = "Skin picker seen"
+L["Whether the first-run skin picker was closed on this profile."] =
+    "Whether the first-run skin picker was closed on this profile."
+L["Reload your interface (/reload) to finish changing the skin."] =
+    "Reload your interface (/reload) to finish changing the skin."
 L["Behavior"] = "Behavior"
 L["When you are solo"] = "When you are solo"
 L["What a Smart group or Smart lead callout does when you are not in a group."] = "What a Smart group or Smart lead callout does when you are not in a group."
@@ -784,9 +809,10 @@ L["Specific arenas."] = "Specific arenas."
 L["Specialization %d"] = "Specialization %d"
 L["%s: %s"] = "%s: %s"
 L["%s (%d)"] = "%s (%d)"
-L["|cff40ff40Active now.|r"] = "|cff40ff40Active now.|r"
-L["|cffff6060Not active now:|r %s does not match."] = "|cffff6060Not active now:|r %s does not match."
-L["|cffa0a0a0Off: this group is turned off.|r"] = "|cffa0a0a0Off: this group is turned off.|r"
+L["Active now."] = "Active now."
+L["Not active now:"] = "Not active now:"
+L["%s does not match."] = "%s does not match."
+L["Off: this group is turned off."] = "Off: this group is turned off."
 L["In the preview (%s): %s"] = "In the preview (%s): %s"
 L["A key level is a whole number."] = "A key level is a whole number."
 L["Lowest key level"] = "Lowest key level"
@@ -819,7 +845,8 @@ L["You are not in an arena."] = "You are not in an arena."
 L["Your character is not known yet."] = "Your character is not known yet."
 L["A character is Name-Realm, or a name on your realm."] = "A character is Name-Realm, or a name on your realm."
 L["%s does not take %s. It takes an id, or a listed name."] = "%s does not take %s. It takes an id, or a listed name."
-L["|cffa0a0a0Every condition you set must match. A condition left as Any does not limit the group.|r"] = "|cffa0a0a0Every condition you set must match. A condition left as Any does not limit the group.|r"
+L["Every condition you set must match. A condition left as Any does not limit the group."] =
+    "Every condition you set must match. A condition left as Any does not limit the group."
 L["Any"] = "Any"
 L["%d to %d"] = "%d to %d"
 L["%d or higher"] = "%d or higher"
@@ -832,8 +859,8 @@ L["Select all"] = "Select all"
 L["Tick every choice listed here."] = "Tick every choice listed here."
 L["Clear (Any)"] = "Clear (Any)"
 L["Untick every choice, so this condition does not limit the group."] = "Untick every choice, so this condition does not limit the group."
-L["|cffc9a66bUses %s's conditions. Untick Inherit when conditions above to set this group's own.|r"] =
-    "|cffc9a66bUses %s's conditions. Untick Inherit when conditions above to set this group's own.|r"
+L["Uses %s's conditions. Untick Inherit when conditions above to set this group's own."] =
+    "Uses %s's conditions. Untick Inherit when conditions above to set this group's own."
 
 -- Groups page (settings/Groups.lua)
 L["New group"] = "New group"
@@ -1342,7 +1369,7 @@ L["Sending"] = "Sending"
 L["Size, offset and crop"] = "Size, offset and crop"
 L["How the glow looks. Drawn at the Icons tab's default knobs."] =
     "How the glow looks. Drawn at the Icons tab's default knobs."
-L["|cffa0a0a0Adds back the built-in groups and callouts you deleted. Changes nothing you have.|r"] =
-    "|cffa0a0a0Adds back the built-in groups and callouts you deleted. Changes nothing you have.|r"
-L["|cffa0a0a0Set this dial's key on the General page > Keybindings. A dial's key follows its place in the dial order.|r"] =
-    "|cffa0a0a0Set this dial's key on the General page > Keybindings. A dial's key follows its place in the dial order.|r"
+L["Adds back the built-in groups and callouts you deleted. Changes nothing you have."] =
+    "Adds back the built-in groups and callouts you deleted. Changes nothing you have."
+L["Set this dial's key on the General page > Keybindings. A dial's key follows its place in the dial order."] =
+    "Set this dial's key on the General page > Keybindings. A dial's key follows its place in the dial order."

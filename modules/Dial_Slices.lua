@@ -41,7 +41,6 @@ S.MEDIA = "Interface\\AddOns\\" .. addonName .. "\\media\\textures\\dial\\"   --
 local SECTOR = S.MEDIA .. "dial-sector-%d"
 S.DISC = S.MEDIA .. "dial-disc"   -- every filled circle the dial draws (tools/gen-dial-textures.py)
 local FLAT = "Interface\\Buttons\\WHITE8x8"   -- a pill's straight middle
-S.DIM = 0.4   -- an arrow at an end (the dots take the Paging tab's dot color)
 
 --- The texture for one slice of an n-slice ring: the whole disc for one.
 function S.SectorTexture(n)

@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1765410)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1176%2F1176_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1254%2F1254_passing-green)
 
 Quick Comms puts your group callouts one click or one keypress away. "Kick on me", "Lust now",
 "INC Lumber Mill": they sit on a Comms Pad, or open from a ping-wheel style Comms Dial. It knows where
@@ -58,6 +58,11 @@ the channel and an icon, and the text can carry tokens such as `{target}` or `{c
 ordinary groups too, so change or delete whatever you like; Restore built-in groups puts back
 anything you deleted. How the pad and the dial look is up to you, on the Pad and Dial pages.
 
+The whole addon wears a skin: Ka0s Default, or one of eight others, picked on General → Skin (a small
+picker asks once, the first time you log in). The skin sets the windows' colors and the pads' and
+dials' fonts and border styles; the colors you give a pad or a dial stay yours. Untick *Use the skin's
+font* or *Use the skin's border* on a tab to use your own.
+
 To check how things look somewhere else, pick a situation in Preview as… or type `/qc preview`. A
 small window lets you switch situations or end the preview. While you preview, and in test mode, a
 click sends nothing and chat shows you the line it would have sent. Editing a group on the Groups page
@@ -86,7 +91,8 @@ Everything else is under **Settings → AddOns → Ka0s Quick Comms**, and `/qc 
 |---|---|
 | Does it send anything on its own? | No. A callout is only ever sent when you press its button or its key. |
 | Why secure buttons? | In Midnight an addon can't send chat by itself during a boss, a Mythic+ key or a PvP match. A button you press can, so that's the one way Quick Comms sends anything. |
-| Does it work with EllesmereUI? | Yes. With EllesmereUI's Blizzard skins on (and Quick Comms on in its Third-Party Addons list), the callout editor takes the same look as your settings window. Turn it off there, then reload. |
+| Does it work with EllesmereUI? | Yes. With EllesmereUI's third-party skinning on and Quick Comms on in its Third-Party Addons list, pick **EllesmereUI** as the skin source on General → Skin, and Quick Comms takes EllesmereUI's look. Switching back to a Ka0s skin asks for a reload. |
+| Why do my pads look different after updating? | Their fonts and border styles now follow the skin, once, for everyone: Ka0s Default draws Oxanium. Your colors and sizes are kept, and so are your old picks: untick *Use the skin's font* or *Use the skin's border* on the Pad and Dial tabs to get them back. |
 
 ## Troubleshooting
 
@@ -132,3 +138,21 @@ The glyphs in the icon browser come from three icon sets, each shipped with its 
   Sparker, SpencerDub, Starseeker, Viscious Speed, Willdabeast, Zajkonur and Zeromancer. The marks
   were rasterized to 64×64, their background square removed and recolored white so the game can tint
   them; `AUTHORS.txt` names each mark's author, and the icon browser's tooltip does too.
+
+The debug console uses [JetBrains Mono](https://www.jetbrains.com/lp/mono/), licensed under the SIL
+Open Font License 1.1.
+
+Ka0s Default, the skin every profile starts on, draws [Oxanium](https://github.com/sevmeyer/oxanium)
+by The Oxanium Project Authors, also SIL Open Font License 1.1.
+
+The other skins draw on seven more SIL Open Font License 1.1 faces, one family per skin:
+[Inter](https://github.com/rsms/inter) by The Inter Project Authors,
+[Nunito](https://github.com/googlefonts/nunito) by The Nunito Project Authors,
+[Vollkorn](https://github.com/FAlthausen/Vollkorn-Typeface) by The Vollkorn Project Authors,
+[Bitter](https://github.com/solmatas/BitterPro) by The Bitter Project Authors,
+[Philosopher](https://github.com/alexeiva/philosopher) by The Philosopher Project Authors,
+[Fira Sans](https://github.com/mozilla/Fira) by The Mozilla Foundation and Telefonica S.A., and
+[Atkinson Hyperlegible](https://www.brailleinstitute.org/freefont/) by the Braille Institute of
+America. Inter, Nunito, Vollkorn, Bitter and Oxanium are static weights cut from upstream's
+variable fonts. The fonts and the icons are bundled inside the LibKa0s payload, with their license
+text beside them.

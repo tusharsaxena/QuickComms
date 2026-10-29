@@ -21,10 +21,13 @@ suspend takes the same latch's `perf` hold.
 
 ## Today: a profile event
 
-AceDB's switch, copy or reset → `reloadProfile` (`core/QuickComms.lua`): the migrations,
-`Library.Prepare()` (the default pad and dial and the seeded sets once, a newly shipped set seeded,
-the registry repaired, a bad parent dropped, `nextId` lifted), a panel refresh, the latch re-read
-from the incoming profile's `enabled`, then `NS.MSG.PROFILE_CHANGED`.
+AceDB's switch, copy or reset → `reloadProfile` (`core/QuickComms.lua`): the first-run skin picker
+taken down unseen (`NS.HideSkinPicker`), the migrations, `Library.Prepare()` (the default pad and dial
+and the seeded sets once, a newly shipped set seeded, the registry repaired, a bad parent dropped,
+`nextId` lifted), the incoming profile's skin (`NS.ApplySkinChoice`: every recorded frame repainted,
+then `OnLooksChanged`), a panel refresh, the latch re-read from the incoming profile's `enabled`, the
+picker offered again while that profile has not closed it (`NS.MaybeShowSkinPicker`), then
+`NS.MSG.PROFILE_CHANGED`.
 
 ## Today: the built-in sets are seeded
 

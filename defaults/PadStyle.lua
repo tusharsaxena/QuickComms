@@ -14,6 +14,11 @@ local _, NS = ...
 -- #3F3F3F body at 25% alpha, a flat 1 px edge #EAEAEA at 10% ("None" is no border art, not no edge),
 -- its label the small white face with its shadow, its height automatic (0: grown to hold its font
 -- and icon, as modules/Pad_Layout.lua CellSize always did) and no glow.
+--
+-- Every font block's `fontFromSkin` and every border block's `borderStyleFromSkin` (the composers'
+-- "Use the skin's font / border" companions, QC-03) default true (DECISIONS X3): the face is the
+-- skin's hud.font and the style its bar.borderStyle while on (modules/Pad_Render.lua FontKey,
+-- BorderKey); the stored `font` and `borderStyle` are the player's picks, read while off.
 
 NS.PadDefaults = NS.PadDefaults or {}
 local D = NS.PadDefaults
@@ -30,10 +35,10 @@ function D.Header()
     return {
         height = D.HEADER_H.default,
         font = "Friz Quadrata TT", fontSize = 16, fontColor = { r = 1, g = 0.82, b = 0, a = 1 },
-        useClassColorFont = false, fontFlags = "OUTLINE", fontShadow = true,
+        useClassColorFont = false, fontFlags = "OUTLINE", fontShadow = true, fontFromSkin = true,
         background = { r = 0, g = 0, b = 0, a = 0 }, useClassColorBackground = false,
         borderStyle = "None", borderSize = 0, borderColor = { r = 1, g = 1, b = 1, a = 1 },
-        useClassColorBorder = false,
+        useClassColorBorder = false, borderStyleFromSkin = true,
     }
 end
 
@@ -43,10 +48,10 @@ function D.Section()
     return {
         height = 0,
         font = "Friz Quadrata TT", fontSize = 12, fontColor = { r = 1, g = 0.82, b = 0, a = 1 },
-        useClassColorFont = false, fontFlags = "OUTLINE", fontShadow = true,
+        useClassColorFont = false, fontFlags = "OUTLINE", fontShadow = true, fontFromSkin = true,
         background = { r = 0, g = 0, b = 0, a = 0 }, useClassColorBackground = false,
         borderStyle = "None", borderSize = 0, borderColor = { r = 1, g = 1, b = 1, a = 1 },
-        useClassColorBorder = false,
+        useClassColorBorder = false, borderStyleFromSkin = true,
     }
 end
 
@@ -62,9 +67,9 @@ function D.Button()
         background = { r = 0x3F / 255, g = 0x3F / 255, b = 0x3F / 255, a = 0.25 },
         useClassColorBackground = false,
         borderStyle = "None", borderSize = 1, borderColor = { r = 0x3F / 255, g = 0x3F / 255, b = 0x3F / 255, a = 0.10 },
-        useClassColorBorder = false,
+        useClassColorBorder = false, borderStyleFromSkin = true,
         font = "Friz Quadrata TT", fontSize = 10, fontColor = { r = 1, g = 1, b = 1, a = 1 },
-        useClassColorFont = false, fontFlags = "OUTLINE", fontShadow = true,
+        useClassColorFont = false, fontFlags = "OUTLINE", fontShadow = true, fontFromSkin = true,
         glowEnabled = false, glowType = "pixel", glowColor = { r = 1, g = 0.82, b = 0, a = 1 },
         useClassColorGlow = false,
         shineLook = "glossfade", shineStrength = 80,
@@ -82,7 +87,7 @@ function D.DialLabel()
     return {
         show = true,
         font = "Friz Quadrata TT", fontSize = 12, fontColor = { r = 1, g = 1, b = 1, a = 1 },
-        useClassColorFont = false, fontFlags = "OUTLINE", fontShadow = true,
+        useClassColorFont = false, fontFlags = "OUTLINE", fontShadow = true, fontFromSkin = true,
         tooltipSide = "top", tooltipOffset = 8,
         offset = 0,   -- the labels' distance from the dial's center; 0 is just past the disc
     }
@@ -95,7 +100,7 @@ function D.DialTitle()
     return {
         show = true,
         font = "Friz Quadrata TT", fontSize = 16, fontColor = { r = 1, g = 0.82, b = 0, a = 1 },
-        useClassColorFont = false, fontFlags = "OUTLINE", fontShadow = true,
+        useClassColorFont = false, fontFlags = "OUTLINE", fontShadow = true, fontFromSkin = true,
     }
 end
 

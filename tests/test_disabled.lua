@@ -56,6 +56,7 @@ local function probed()
     NS.addon.OnProbe = function() probe.events = probe.events + 1 end
     NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function() probe.downs = probe.downs + 1 end
     NS.STAND_UP[#NS.STAND_UP + 1] = function() probe.ups = probe.ups + 1 end
+    T.settleSkinLogin(m)   -- the client's one PLAYER_LOGIN, as T.enableAddon delivers it
     NS.addon:OnEnable()
     local target = NS.Bus:NewTarget()
     target:RegisterMessage(NS.MSG.PROFILE_CHANGED, function() probe.messages = probe.messages + 1 end)
@@ -144,6 +145,7 @@ end)
 test("disabled 7: a disabled profile loads stood down, with nothing registered", function()
     local NS, _, m = T.bootAddon()
     NS.addon.db.profile.enabled = false
+    T.settleSkinLogin(m)
     NS.addon:OnEnable()
     assertTrue(NS.IsStoodDown())
     assertEqual(registered(m), "")

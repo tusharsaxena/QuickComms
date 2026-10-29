@@ -92,7 +92,7 @@ end)
 
 -- The optional suites the addon integrates with when present (library-stack-§6): OptionalDeps so
 -- they load first, never Dependencies, and the addon whole without them.
-local OPTIONAL_SUITES = { EllesmereUI = true }   -- settings/CalloutPopup_Skin.lua
+local OPTIONAL_SUITES = { EllesmereUI = true }   -- the skin's EllesmereUI source (skinning-§5)
 
 test("toc: OptionalDeps names only vendored libraries and the optional suites, and no hard Dependencies", function()
     local fields = tocFields()

@@ -100,6 +100,7 @@ test("icon style: a button's border is off by default; on, it is a backdrop over
     local button = rebuild(NS)
     assertNil(button.qcIconFrame and button.qcIconFrame.__backdrop)
     set(NS, "pad.icon.borderShow", true)
+    set(NS, "pad.icon.borderStyleFromSkin", false)   -- the player's thickness, not the skin's (QC-03)
     set(NS, "pad.icon.borderSize", 3)
     set(NS, "pad.icon.borderColor", { r = 1, g = 0, b = 0, a = 1 })
     button = rebuild(NS)
@@ -114,6 +115,7 @@ test("icon style: a wedge's border is a round ring behind its icon, icon plus tw
     local NS = live()
     local did = NS.db.profile.dialOrder[1]
     set(NS, "dial.icon.borderShow", true, did)
+    set(NS, "dial.icon.borderStyleFromSkin", false, did)   -- the player's thickness (QC-03)
     set(NS, "dial.icon.borderSize", 2, did)
     set(NS, "dial.icon.size", 30, did)
     local snap = NS.Situation.Current()
@@ -135,6 +137,7 @@ test("icon style: a wedge's ring never grows past the wedge, so it cannot reach 
     local NS = live()
     local did = NS.db.profile.dialOrder[1]
     set(NS, "dial.icon.borderShow", true, did)
+    set(NS, "dial.icon.borderStyleFromSkin", false, did)   -- the player's thickness (QC-03)
     set(NS, "dial.icon.borderSize", 16, did)
     set(NS, "dial.icon.size", 40, did)
     local snap = NS.Situation.Current()

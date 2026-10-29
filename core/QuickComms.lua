@@ -48,6 +48,10 @@ function NS.StandDown()
     for _, row in ipairs(NS.FEATURE_EVENTS) do QC:UnregisterEvent(row[1]) end
     NS.Bus:StandDown()
     runAll(NS.STAND_DOWN)
+    -- The first-run skin picker is a window this addon shows; it goes down unmarked (its pending
+    -- preview put back, a held combat start and the login timer dropped), so it comes back on the
+    -- next login the addon stands up for (core/SkinSetup.lua).
+    if NS.HideSkinPicker then NS.HideSkinPicker() end
 end
 
 --- The latch's standUp: rebuilt from CURRENT state, because settings may change while off.
@@ -59,12 +63,21 @@ end
 
 -- ── profiles ────────────────────────────────────────────────────────────────────────────────
 
--- The three profile events share one reaction: migrations, panel refresh, the latch re-read (an
--- incoming profile carries its own answer to `enabled`), then PROFILE_CHANGED for every module that
--- caches a profile value.
+-- The three profile events share one reaction: migrations, the skin, panel refresh, the latch
+-- re-read (an incoming profile carries its own answer to `enabled`), then PROFILE_CHANGED for every
+-- module that caches a profile value.
 local function reloadProfile(self)
+    -- FIRST, the first-run skin picker down, quietly (core/SkinSetup.lua): a showing belongs to the
+    -- profile it opened on, and taking it down puts back a pending preview (the stored skin, through
+    -- the library's revert), so it lands before NS.ApplySkinChoice below and the new profile's whole
+    -- pair, exceptions and overrides with it, is the last skin written.
+    if NS.HideSkinPicker then NS.HideSkinPicker() end
     self:RunMigrations()
     NS.Library.Prepare()
+    -- The incoming profile's skin (core/SkinSetup.lua), right after its migrations and before
+    -- anything refreshes or rebuilds: Skin:SetChoice repaints every recorded frame and fires
+    -- OnLooksChanged, whether or not a page or a surface was ever built.
+    NS.ApplySkinChoice()
     local S = self.Settings
     local H = S and S.Helpers
     if H and H.RefreshAll then H.RefreshAll() end
@@ -73,6 +86,11 @@ local function reloadProfile(self)
         NS.Lifecycle:Set(NS.HOLD_DISABLED, not storedEnabled(self))
         NS.Lifecycle:Reevaluate()
     end
+    -- The first-run skin picker (core/SkinSetup.lua): a new or reset profile starts from the
+    -- defaults, `pickerSeen` false, so it shows, a fresh showing over the new profile's skin; one
+    -- that has seen it stays down. After the latch re-read the new profile's switch, so a profile
+    -- with the addon switched off shows nothing.
+    if NS.MaybeShowSkinPicker then NS.MaybeShowSkinPicker() end
     self:SendMessage(NS.MSG.PROFILE_CHANGED)
 end
 
@@ -110,6 +128,10 @@ function QC:OnInitialize()
     -- Before anything reads the profile (savedvariables-§1).
     self:RunMigrations()
     NS.Library.Prepare()
+    -- The skin the active profile names (core/SkinSetup.lua), right after the store and its
+    -- migrations exist: the owner registered at file load, before AceDB, and has worn Ka0s Default
+    -- since. Before any page, pad or dial is built, so the first paint is the profile's.
+    NS.ApplySkinChoice()
 
     if self.db.RegisterCallback then
         self.db.RegisterCallback(self, "OnProfileChanged", function(...) self:OnProfileChanged(...) end)
@@ -133,6 +155,13 @@ function QC:OnEnable()
     -- THE LATCH, taken from the stored path. Last, so everything above is up before it can be
     -- taken back down.
     if NS.Lifecycle then NS.Lifecycle:Set(NS.HOLD_DISABLED, not storedEnabled(self)) end
+
+    -- The first-run skin picker (core/SkinSetup.lua), once per UI session (a login or a reload), on
+    -- a profile that has not closed it: two seconds in, off the login spike, after the settings
+    -- category above is registered so its gear has the General page to open. The stored skin was
+    -- applied in OnInitialize; it shows nothing while the latch is down, and in combat it holds
+    -- for PLAYER_REGEN_ENABLED.
+    if NS.ScheduleSkinPicker then NS.ScheduleSkinPicker() end
 end
 
 --- The [Init] session summary (debug-logging-§5): name, version, schema, profile, then state.

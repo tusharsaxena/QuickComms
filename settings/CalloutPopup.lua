@@ -32,8 +32,7 @@ local addonName, NS = ...
 -- popup has no scrollbar, and the window's height follows the laid-out body (fit, after every
 -- refresh and every error line). It is not a page (no sidebar entry, no banner, no Defaults). A
 -- client without the template gets the old look: a plain frame, Blizzard's dialog edge and the
--- shared close mark. With EllesmereUI's skin on, settings/CalloutPopup_Skin.lua paints the window's
--- chrome (Pop.chrome) as EllesmereUI paints the settings window. FULLY MODAL: a full-screen
+-- shared close mark. Pop.chrome keeps the window's chrome for the skin to paint. FULLY MODAL: a full-screen
 -- click-catcher under it covers the settings window, so the page underneath cannot change while a
 -- draft is open. Only one popup exists, built on its first Open.
 
@@ -60,7 +59,9 @@ local WIDTH, HEIGHT = 560, 640   -- HEIGHT until the first fit
 -- tests/test_callout_popup.lua reads BODY_TOP off the body anchor of the panel CreatePanel builds
 -- and CONTENT_X from lib.LAYOUT, so a re-vendor that moves any of them turns it red.
 local BODY_TOP, CONTENT_X, BODY_BOTTOM = 62, 12, 12
-local ERROR_COLOR = "|cffff4040"
+-- The refused-field line's color token: sem.badAlt, today's |cffff4040 on Ka0s Default, built into
+-- the escape when the line is written (QC-02).
+local ERROR_TOKEN = "sem.badAlt"
 -- The gap between the preview and the button pair, a section's worth (two row gaps).
 local BUTTONS_GAP = 16
 -- The token glyph: GLYPH_GAP right of the Text label's last letter, as tall as the label's letters
@@ -193,20 +194,24 @@ local function fit()
 end
 
 local function showError(text)
-    if errorRow then errorRow:SetText(text and (ERROR_COLOR .. text .. "|r") or "") end
+    if errorRow then errorRow:SetText(text and ((NS.SkinEscape(ERROR_TOKEN) or "") .. text .. "|r") or "") end
     fit()
 end
 
 -- The token tooltip: every token the draft's channel offers, one line each (C.TokenHelp), read
--- when it shows, so a channel picked since the render is the one it lists.
+-- when it shows, so a channel picked since the render is the one it lists. Its lines are the
+-- tooltip tokens (QC-02): the title gtip.value, each token gtip.title and what it fills in
+-- gtip.value (white and gold on Ka0s Default, as typed before); the frame stays Blizzard's.
 local function showTokenHelp(owner)
     if not GameTooltip then return end
+    local vr, vg, vb = NS.SkinColor("gtip.value")
+    local tr, tg, tb = NS.SkinColor("gtip.title")
     GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
-    GameTooltip:SetText(L["Tokens"], 1, 1, 1)
+    GameTooltip:SetText(L["Tokens"], vr, vg, vb)
     GameTooltip:AddLine(L["Type a token into the text. It is filled in when the callout is sent."], nil, nil, nil,
         true)
     for _, line in ipairs(C.TokenHelp(draft and draft.channel)) do
-        GameTooltip:AddDoubleLine(line[1], line[2], 1, 0.82, 0, 1, 1, 1)
+        GameTooltip:AddDoubleLine(line[1], line[2], tr, tg, tb, vr, vg, vb)
     end
     GameTooltip:Show()
 end
@@ -219,8 +224,8 @@ end
 -- keeps its landing logo (OptionsWidgets.lua, landingLogo): the glyph is kept ON the box's frame
 -- and reused, so a frame that comes back for the Text box again cannot gain a second one, and it
 -- is hidden when the box is released, so a frame AceGUI hands to any other EditBox does not show
--- it. The release callback is set fresh on every render (AceGUI clears callbacks on release), and
--- the anchor is set again each time, on the label as it is now.
+-- it. The release step is chained fresh on every acquisition (onRelease, below), and the anchor is
+-- set again each time, on the label as it is now.
 local onRelease
 local function tokenGlyph(box)
     local frame, label = box and box.frame, box and box.label
@@ -249,16 +254,17 @@ local function tokenGlyph(box)
     return glyph
 end
 
--- Run `fn` when AceGUI takes widget `w` back: one OnRelease callback per widget per render, set on
--- the first call (AceGUI clears callbacks on release), running every `fn` given since. A widget the
--- popup moves a part of puts it back this way, so the frame AceGUI hands to any other addon's
--- widget next is as AceGUI made it.
+-- Run `fn` when AceGUI takes widget `w` back: one release step per widget per acquisition, chained
+-- on the first call through NS.SkinOnRelease (core/SkinSetup.lua: Skin:OnRelease, so the skin's own
+-- restore of the widget still runs after it; the chain unhooks itself on release), running every
+-- `fn` given since. A widget the popup moves a part of puts it back this way, so the frame AceGUI
+-- hands to any other addon's widget next is as AceGUI made it.
 function onRelease(w, fn)
     local list = releasing[w]
     if not list then
         list = {}
         releasing[w] = list
-        w:SetCallback("OnRelease", function()
+        NS.SkinOnRelease(w, function()
             releasing[w] = nil
             for _, f in ipairs(list) do pcall(f) end
         end)
@@ -464,8 +470,6 @@ local function build()
         settingsWindow:HookScript("OnHide", function() if draft then Pop.Cancel() end end)
     end
     Pop.frame, Pop.chrome = w.frame, w.chrome
-    local skin = Settings.CalloutPopupSkin
-    if skin then skin.TryApply() end
 end
 
 --- Open the popup on user group `groupId`: on callout `calloutId`, filled in, or with no callout

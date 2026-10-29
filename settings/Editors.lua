@@ -366,7 +366,9 @@ function Ed.IconChooser(ctx, spec)
         swatch:SetCallback("OnValueChanged", pick)
         swatch:SetCallback("OnValueConfirmed", pick)
         Ed.TrackPicker(swatch)
-        swatch:SetCallback("OnRelease", function() Ed.ReleasePicker(swatch, true) end)
+        -- Chained onto the swatch's own release (NS.SkinOnRelease, core/SkinSetup.lua), so the skin's
+        -- restore of the widget runs after it.
+        NS.SkinOnRelease(swatch, function() Ed.ReleasePicker(swatch, true) end)
         h.AttachTooltip(swatch, L["Icon color"], L["The color a LibKa0s glyph is drawn in. Only a glyph takes a color; white is none."])
         local function paint()
             local icon, color = spec.get()
@@ -404,6 +406,7 @@ local function newReorder(pageKey, onMove)
     local W = LibStub and LibStub("LibKa0s-Widgets-1.0", true)
     if not (W and W.ReorderList) then return nil end
     local r = W.ReorderList{
+        owner         = addonName,   -- the ghost and drop line wear this addon's skin (skinning-§1)
         stride        = Ed.ROW_H,
         handleIcon    = NS.Icon("segment"),
         handleTooltip = L["Drag to reorder"],
@@ -518,8 +521,9 @@ function Ed.ReorderRows(ctx, pageKey, entries, onMove)
             textToCellEdge(label)
             Ed.Tint(label.image, e.icon, e.iconColor)
             -- AceGUI's Label never resets its image's color on acquire, and its pool is shared with
-            -- every addon: put the tint back to white when the row is released (options-ui-§19).
-            label:SetCallback("OnRelease", function(w)
+            -- every addon: put the tint back to white when the row is released (options-ui-§19),
+            -- chained before the skin's own restore (NS.SkinOnRelease, core/SkinSetup.lua).
+            NS.SkinOnRelease(label, function(w)
                 if w.image then w.image:SetVertexColor(1, 1, 1, 1) end
             end)
             into:AddChild(label)
@@ -555,8 +559,9 @@ Ed.TABLE_LAYOUT = addonName .. "TableRow"
 -- under 200px of text room); TABLE_PAD in from each side of the box, TABLE_GAP between the cells,
 -- TABLE_VPAD above and below a text taller than one row.
 Ed.TABLE_NAME_W, Ed.TABLE_PAD, Ed.TABLE_GAP, Ed.TABLE_VPAD = 220, 8, 12, 6
--- The header's gold (the client's NORMAL_FONT_COLOR, the field labels' and the tabs').
-local HEADER_COLOR = { 1, 0.82, 0 }
+-- The header's gold (the client's NORMAL_FONT_COLOR, the field labels' and the tabs'): the skin's
+-- text.heading, read at call time.
+local HEADER_COLOR = "text.heading"
 
 local function cellHeight(child)
     local f = child.frame
@@ -593,9 +598,10 @@ end
 local function tableRow(h, into, name, text)
     into:SetLayout(Ed.TABLE_LAYOUT)
     -- The row is a pooled SimpleGroup (RenderGrid's), and AceGUI's Release keeps a container's
-    -- layout: give the pool back the constructor's "List", not this two-cell layout. OnRelease
-    -- fires after PauseLayout, so this lays nothing out; Release clears the callback after.
-    into:SetCallback("OnRelease", function(w) w:SetLayout("List") end)
+    -- layout: give the pool back the constructor's "List", not this two-cell layout. The release
+    -- runs after PauseLayout, so this lays nothing out; NS.SkinOnRelease (core/SkinSetup.lua)
+    -- chains it before the skin's own restore, and the chain unhooks itself on release.
+    NS.SkinOnRelease(into, function(w) w:SetLayout("List") end)
     local a, b = h.AceGUI:Create("Label"), h.AceGUI:Create("Label")
     a:SetText(name)
     b:SetText(text)
@@ -621,8 +627,8 @@ function Ed.TableRows(ctx, pageKey, blocks, header)
             if block.title then h.Section(ctx, block.title) end
             local items = { { wide = true, make = function(_, into)
                 local a, b = tableRow(h, into, header.name, header.text)
-                a:SetColor(HEADER_COLOR[1], HEADER_COLOR[2], HEADER_COLOR[3])
-                b:SetColor(HEADER_COLOR[1], HEADER_COLOR[2], HEADER_COLOR[3])
+                a:SetColor(NS.SkinColor(HEADER_COLOR))
+                b:SetColor(NS.SkinColor(HEADER_COLOR))
                 return true
             end } }
             for _, e in ipairs(block.rows) do
@@ -635,7 +641,7 @@ function Ed.TableRows(ctx, pageKey, blocks, header)
                     end
                     Ed.Tint(name.image, e.icon, e.iconColor)
                     -- As a reorder row's label: AceGUI's pool keeps the tint (options-ui-§19).
-                    name:SetCallback("OnRelease", function(w)
+                    NS.SkinOnRelease(name, function(w)
                         if w.image then w.image:SetVertexColor(1, 1, 1, 1) end
                     end)
                     frames[#frames + 1] = into.frame

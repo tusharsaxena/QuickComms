@@ -386,6 +386,9 @@ local function composedChecks(O)
         useClassColorBorder = { validate = BOOL },
         background = color,
         useClassColorBackground = { validate = BOOL },
+        -- The composers' "Use the skin's font / border" companions (QC-03, skinning-§6).
+        fontFromSkin = { validate = BOOL },
+        borderStyleFromSkin = { validate = BOOL },
     }
 end
 
@@ -399,9 +402,12 @@ local function stampBlock(out, list, prefix, checks, instance)
     end
 end
 
+-- Every Font and Border block follows the skin through its companion (QC-03, the composers'
+-- `fromSkin`; DECISIONS X3, X4): the companions default true in defaults/PadStyle.lua, so the spec's
+-- `defaults` carry that. A Background or Shine color pair ignores the field: colors stay the player's.
 local function blockSpec(prefix, group, subgroup, defaults, extra)
     local spec = { prefix = prefix, page = prefix:match("^dial") and "dials" or "pads", group = group,
-        subgroup = subgroup, defaults = defaults }
+        subgroup = subgroup, defaults = defaults, fromSkin = true }
     for k, v in pairs(extra or {}) do spec[k] = v end
     return spec
 end

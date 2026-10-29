@@ -18,7 +18,8 @@ local _, NS = ...
 --
 -- Every color pair is O.ColorPair (options-ui-§17; THE PLAYER'S CLASS: a button is about no unit) and
 -- is never dimmed (anti-pattern #74: the swatch's alpha is read under either mode). Border style and
--- thickness are dimmed while Show border is off; Glow when, Glow style and the offsets while the glow
+-- thickness are dimmed while Show border is off or Use the skin's border is on (that companion is
+-- dimmed with Show border off, and defaults on, QC-03); Glow when, Glow style and the offsets while the glow
 -- is off, and an offset also while the glow is in a style it does not apply to (Button).
 --
 -- A style's knobs show only while the glow is on and in that style (owner request, 2026-10-20): the
@@ -108,6 +109,9 @@ function NS.addon.Settings.IconRows(kind, C, afterSize)
     end
     local function glowOff() return get(P .. "glowEnabled") ~= true end
     local function borderOff() return get(P .. "borderShow") ~= true end
+    -- Border style and thickness are not read while the border follows the skin's icon border either
+    -- (QC-03: the composer's `fromSkin = "icon"` companion, which governs both; LibKa0s LK-04).
+    local function borderFollows() return borderOff() or get(P .. "borderStyleFromSkin") == true end
     local range = D.SIZE[kind]
     local WHEN_VALUES, STYLE_VALUES = C.choices(WHEN), C.choices(STYLES)
 
@@ -141,14 +145,15 @@ function NS.addon.Settings.IconRows(kind, C, afterSize)
     end
     local composed = {
         { COLOR, O.ColorPair(spec(COLOR, { key = "tint", label = L["Tint"] })) },
-        { BORDER, O.BorderGroup(spec(BORDER, { show = true })) },
+        { BORDER, O.BorderGroup(spec(BORDER, { show = true, fromSkin = "icon" })) },
     }
     local checks = {
         tint = { validate = C.color, normalize = C.fourChannels },
         useClassColorTint = { validate = C.BOOL },
         borderShow = { validate = C.BOOL, tooltip = L["Draw a border around each icon."] },
-        borderStyle = { validate = C.name, disabledIf = borderOff },
-        borderSize = { validate = C.NUMBER, normalize = C.clamp(1, 16, true), min = 1, disabledIf = borderOff },
+        borderStyle = { validate = C.name, disabledIf = borderFollows },
+        borderSize = { validate = C.NUMBER, normalize = C.clamp(1, 16, true), min = 1, disabledIf = borderFollows },
+        borderStyleFromSkin = { validate = C.BOOL, disabledIf = borderOff },
         borderColor = { validate = C.color, normalize = C.fourChannels },
         useClassColorBorder = { validate = C.BOOL },
         glowColor = { validate = C.color, normalize = C.fourChannels },
