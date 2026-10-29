@@ -214,6 +214,8 @@ Kit.run{
         "test_skinsetup",
         "test_skin_windows",
         "test_skin_hud",
+        "test_skin_picker",
+        "test_skin_tools",
         "test_vendor_sync",
         { name = "test_eol",                  dir = "tests/_kit/" },   -- line-endings-§7
         { name = "test_prose",                dir = "tests/_kit/" },   -- localization-§5

@@ -224,8 +224,8 @@ end
 -- keeps its landing logo (OptionsWidgets.lua, landingLogo): the glyph is kept ON the box's frame
 -- and reused, so a frame that comes back for the Text box again cannot gain a second one, and it
 -- is hidden when the box is released, so a frame AceGUI hands to any other EditBox does not show
--- it. The release callback is set fresh on every render (AceGUI clears callbacks on release), and
--- the anchor is set again each time, on the label as it is now.
+-- it. The release step is chained fresh on every acquisition (onRelease, below), and the anchor is
+-- set again each time, on the label as it is now.
 local onRelease
 local function tokenGlyph(box)
     local frame, label = box and box.frame, box and box.label
@@ -254,16 +254,17 @@ local function tokenGlyph(box)
     return glyph
 end
 
--- Run `fn` when AceGUI takes widget `w` back: one OnRelease callback per widget per render, set on
--- the first call (AceGUI clears callbacks on release), running every `fn` given since. A widget the
--- popup moves a part of puts it back this way, so the frame AceGUI hands to any other addon's
--- widget next is as AceGUI made it.
+-- Run `fn` when AceGUI takes widget `w` back: one release step per widget per acquisition, chained
+-- on the first call through NS.SkinOnRelease (core/SkinSetup.lua: Skin:OnRelease, so the skin's own
+-- restore of the widget still runs after it; the chain unhooks itself on release), running every
+-- `fn` given since. A widget the popup moves a part of puts it back this way, so the frame AceGUI
+-- hands to any other addon's widget next is as AceGUI made it.
 function onRelease(w, fn)
     local list = releasing[w]
     if not list then
         list = {}
         releasing[w] = list
-        w:SetCallback("OnRelease", function()
+        NS.SkinOnRelease(w, function()
             releasing[w] = nil
             for _, f in ipairs(list) do pcall(f) end
         end)

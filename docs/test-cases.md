@@ -1346,6 +1346,40 @@ Total.
 - skin hud: without the library step 10 writes the companions itself
 - skin hud: the reset runs once: a companion the player turns off afterwards stays off
 
+### test_skin_picker.lua (18)
+
+- skin picker: the spec names this owner, its seams, General's Skin tab and the eye
+- skin picker: the eye turns test mode on, and leaves it on
+- skin picker: an unseen profile shows it; a seen one does not
+- skin picker: it shows two seconds after OnEnable, on the login timer
+- skin picker: the stand-down cancels the login timer
+- skin picker: in combat a start waits for PLAYER_REGEN_ENABLED, once
+- skin picker: a held start is dropped by HideSkinPicker
+- skin picker: never while the addon is switched off
+- skin picker: a new profile and a reset profile show it again
+- skin picker: a profile switched off shows no picker on its adoption
+- skin picker: the window's eye is shown and turns test mode on
+- skin picker: the player's close marks it seen; this addon's own hide does not
+- skin picker: the stand-down takes the picker down, unseen
+- skin picker: a pick previews, unsaved; Apply saves it and marks the picker seen
+- skin picker: the close control puts the old skin back, saves nothing, and marks it seen
+- skin picker: a profile switch with a pick pending wears the new profile's skin
+- skin picker: the gear saves the pick and opens General on its Skin tab
+- skin picker: without LibKa0s nothing shows and nothing raises
+
+### test_skin_tools.lua (10)
+
+- skin tools: the pages' AceGUI handle is the owner proxy, which paints for this owner
+- skin tools: under the default Scope (Ignore settings panel) a page widget stays stock
+- skin tools: NS.SkinPaintAceTree paints every widget under a container
+- skin tools: NS.SkinOnRelease runs the host's release work AND the skin's restore
+- skin tools: the host's release work goes through NS.SkinOnRelease, never a callback
+- skin tools: the icon chooser's swatch release still drops a tracked color picker
+- skin tools: the Profiles page paints AceConfigDialog's tree after each Open
+- skin tools: without LibKa0s the release work takes the AceGUI callback, and nothing paints
+- skin tools: the debug console and its copy window are painted for this owner
+- skin tools: the perf panel is painted for this owner
+
 ### test_vendor_sync.lua (3)
 
 - libs/LibKa0s is the LibKa0s release CLAUDE.md says this addon bundles
@@ -1473,6 +1507,8 @@ Total.
 | test_skinsetup.lua | 24 |
 | test_skin_windows.lua | 18 |
 | test_skin_hud.lua | 14 |
+| test_skin_picker.lua | 18 |
+| test_skin_tools.lua | 10 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -1480,4 +1516,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1222** |
+| **Total** | **1250** |

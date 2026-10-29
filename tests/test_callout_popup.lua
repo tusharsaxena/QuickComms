@@ -381,8 +381,8 @@ test("popup: there is no token dropdown; an info glyph sits right of the Text la
     assertEqual(#Pop.tokenGlyph.__points, 1, "one anchor, set afresh")
     -- released with its box: hidden, so a frame reused by another EditBox does not show it
     local shown = Pop.tokenGlyph
-    again:__fire("OnRelease")
-    -- red under: drop the box's OnRelease callback in settings/CalloutPopup.lua
+    again:Release()
+    -- red under: drop the box's release step (onRelease) in settings/CalloutPopup.lua
     assertFalse(shown:IsShown())
 end)
 
@@ -929,9 +929,9 @@ test("popup: every field's label and control share a left edge; Preview's rule a
     assertEqual(pair.children[2].width, GUTTER, "the gutter between them")
     assertTrue(pair.children[3] == cancel)
     -- what the popup moved, AceGUI gets back as it made it
-    name:__fire("OnRelease")
-    channel:__fire("OnRelease")
-    heading:__fire("OnRelease")
+    name:Release()
+    channel:Release()
+    heading:Release()
     -- red under: drop the restore in nudge (settings/CalloutPopup.lua)
     assertEqual(select(4, name.label:GetPoint(1)), 0, "the label back at 0")
     assertEqual(select(4, channel.label:GetPoint(1)), 0)
@@ -940,7 +940,7 @@ test("popup: every field's label and control share a left edge; Preview's rule a
     assertEqual(select(4, heading.right:GetPoint(1)), -3)
     -- the Text box's release puts its label back and still hides the token glyph
     local glyph = Pop.tokenGlyph
-    text:__fire("OnRelease")
+    text:Release()
     assertEqual(select(4, text.label:GetPoint(1)), 0)
     assertFalse(glyph:IsShown())
 end)

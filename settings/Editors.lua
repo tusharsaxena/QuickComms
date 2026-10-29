@@ -366,7 +366,9 @@ function Ed.IconChooser(ctx, spec)
         swatch:SetCallback("OnValueChanged", pick)
         swatch:SetCallback("OnValueConfirmed", pick)
         Ed.TrackPicker(swatch)
-        swatch:SetCallback("OnRelease", function() Ed.ReleasePicker(swatch, true) end)
+        -- Chained onto the swatch's own release (NS.SkinOnRelease, core/SkinSetup.lua), so the skin's
+        -- restore of the widget runs after it.
+        NS.SkinOnRelease(swatch, function() Ed.ReleasePicker(swatch, true) end)
         h.AttachTooltip(swatch, L["Icon color"], L["The color a LibKa0s glyph is drawn in. Only a glyph takes a color; white is none."])
         local function paint()
             local icon, color = spec.get()
@@ -519,8 +521,9 @@ function Ed.ReorderRows(ctx, pageKey, entries, onMove)
             textToCellEdge(label)
             Ed.Tint(label.image, e.icon, e.iconColor)
             -- AceGUI's Label never resets its image's color on acquire, and its pool is shared with
-            -- every addon: put the tint back to white when the row is released (options-ui-§19).
-            label:SetCallback("OnRelease", function(w)
+            -- every addon: put the tint back to white when the row is released (options-ui-§19),
+            -- chained before the skin's own restore (NS.SkinOnRelease, core/SkinSetup.lua).
+            NS.SkinOnRelease(label, function(w)
                 if w.image then w.image:SetVertexColor(1, 1, 1, 1) end
             end)
             into:AddChild(label)
@@ -594,9 +597,10 @@ end
 local function tableRow(h, into, name, text)
     into:SetLayout(Ed.TABLE_LAYOUT)
     -- The row is a pooled SimpleGroup (RenderGrid's), and AceGUI's Release keeps a container's
-    -- layout: give the pool back the constructor's "List", not this two-cell layout. OnRelease
-    -- fires after PauseLayout, so this lays nothing out; Release clears the callback after.
-    into:SetCallback("OnRelease", function(w) w:SetLayout("List") end)
+    -- layout: give the pool back the constructor's "List", not this two-cell layout. The release
+    -- runs after PauseLayout, so this lays nothing out; NS.SkinOnRelease (core/SkinSetup.lua)
+    -- chains it before the skin's own restore, and the chain unhooks itself on release.
+    NS.SkinOnRelease(into, function(w) w:SetLayout("List") end)
     local a, b = h.AceGUI:Create("Label"), h.AceGUI:Create("Label")
     a:SetText(name)
     b:SetText(text)
@@ -636,7 +640,7 @@ function Ed.TableRows(ctx, pageKey, blocks, header)
                     end
                     Ed.Tint(name.image, e.icon, e.iconColor)
                     -- As a reorder row's label: AceGUI's pool keeps the tint (options-ui-§19).
-                    name:SetCallback("OnRelease", function(w)
+                    NS.SkinOnRelease(name, function(w)
                         if w.image then w.image:SetVertexColor(1, 1, 1, 1) end
                     end)
                     frames[#frames + 1] = into.frame
