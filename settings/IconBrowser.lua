@@ -121,10 +121,19 @@ local searchBox, clearMark, hint, hintText, linkBtn, linkWin
 -- and each search glyph with its token.
 local track, hintFill, hintEdges, magnifier, clearGlyph
 local glyphs = {}
+-- And each text with its color token: colored, never given a face, so the font object's face stays
+-- under every skin (X10: the browser keeps the stock settings window's look under Ka0s Default, and
+-- S.Text would set the skin's body or title face as well).
+local texts = {}
 local drawing = false
 B.cells = {}
 
 local function H() return Settings.Helpers end
+
+local function paintText(fs, token)
+    texts[fs] = token
+    fs:SetTextColor(NS.SkinColor(token))
+end
 
 -- ── Escape: the opener's special frame, out while the browser is open ───────────────────────
 
@@ -389,7 +398,7 @@ local function buildGrid()
     grid:SetScript("OnMouseWheel", function(_, delta) setOffset(offset - delta) end)
     for i = 1, COLS * ROWS do B.cells[i] = makeCell(i) end
     status = grid:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    NS.Skin.Text(status, "text.highlight")
+    paintText(status, "text.highlight")
     status:SetPoint("CENTER", grid, "CENTER", 0, 0)
     status:Hide()
     slider = CreateFrame("Slider", nil, area)
@@ -451,7 +460,7 @@ local function buildToolbar(AceGUI)
     H().AttachTooltip(swatch, L["Icon color"], L["The color a glyph is drawn in. White is none."])
     place(swatch, "TOPLEFT", SET_W + SEARCH_GAP, 0)
     count = area:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-    NS.Skin.Text(count, "disabled")
+    paintText(count, "text.disabled")
     count:SetPoint("TOPRIGHT", area, "TOPRIGHT", 0, -6)
 end
 
@@ -562,7 +571,7 @@ local function buildHint(AceGUI)
     linkBtn.frame:SetPoint("RIGHT", hint, "RIGHT", -6, 0)
     linkBtn.frame:Show()
     hintText = hint:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    NS.Skin.Text(hintText, "text.highlight")
+    paintText(hintText, "text.highlight")
     hintText:SetPoint("LEFT", hint, "LEFT", 10, 0)
     hintText:SetPoint("RIGHT", linkBtn.frame, "LEFT", -10, 0)
     hintText:SetJustifyH("LEFT")
@@ -576,7 +585,7 @@ local function buildFooter(AceGUI)
     preview:SetSize(ICON, ICON)
     preview:SetPoint("BOTTOMLEFT", area, "BOTTOMLEFT", 0, 0)
     nameText = area:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    NS.Skin.Text(nameText, "text.heading")
+    paintText(nameText, "text.heading")
     nameText:SetPoint("LEFT", preview, "RIGHT", 8, 0)
     nameText:SetJustifyH("LEFT")
     nameText:SetWordWrap(false)
@@ -758,11 +767,12 @@ function B.Widgets()
         track = track, hintFill = hintFill, hintEdges = hintEdges, magnifier = magnifier, clearGlyph = clearGlyph }
 end
 
--- A skin switch: every host-drawn color in the new skin (the texts, the scroller and the window are
--- the library's recorded paint), and the footer's note line redrawn in its escape.
+-- A skin switch: every host-drawn color in the new skin, the texts' colors included (the scroller and
+-- the window are the library's recorded paint), and the footer's note line redrawn in its escape.
 NS.Skin.OnLooksChanged(function()
     for _, cell in ipairs(B.cells) do cell.selected:SetColorTexture(NS.Skin.Color(SELECTED)) end
     for t, token in pairs(glyphs) do paintGlyph(t, token) end
+    for fs, token in pairs(texts) do paintText(fs, token) end
     paintHint()
     if request then drawFooter() end
 end)

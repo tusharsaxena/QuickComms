@@ -214,8 +214,8 @@ local function maskable(m)
 end
 
 --- An enabled instance with the paint recorder on, the settings window up and nothing previewed.
-local function boot()
-    local NS, m = T.enableAddon()
+local function boot(mock)
+    local NS, m = T.enableAddon(mock and { mock = mock } or nil)
     dofile("tests/_kit/mock_paint.lua")(m)
     maskable(m)
     NS.Situation.ReadInputs = function() return {} end
@@ -515,6 +515,36 @@ test("skin windows: the browser's texts take their roles, each today's color und
     assertColor(m.__paint(parts.name).textColor, { 1, 0.82, 0, 1 }, "the name is today's gold")
     assertColor(m.__paint(parts.status).textColor, { 1, 1, 1, 1 }, "the status is today's white")
     assertColor(m.__paint(parts.hintText).textColor, { 1, 1, 1, 1 }, "the hint is today's white")
+end)
+
+test("skin windows: the browser's texts keep their font objects' faces (X10), and a switch recolors them", function()
+    -- A LibSharedMedia that answers every face, so S.Text WOULD set one.
+    local NS, m, Skin = boot(function(mm)
+        local lsm = mm.LibStub:NewLibrary("LibSharedMedia-3.0", 1)
+        function lsm.Register() end
+        function lsm.IsValid() return true end
+        function lsm.HashTable() return {} end
+        function lsm.Fetch(_, kind, name) return kind == "font" and ("Fonts\\" .. tostring(name)) or nil end
+        lsm.MediaType = {}
+    end)
+    local _, parts = openBrowser(NS)
+    local want = { count = "GameFontDisableSmall", name = "GameFontNormal", status = "GameFontHighlight",
+        hintText = "GameFontHighlightSmall" }
+    -- red under: NS.Skin.Text (S.Text sets the skin's body / title face as well as the color)
+    local function faces(where)
+        for key, obj in pairs(want) do
+            assertEqual(m.__paint(parts[key]).font, nil, key .. " takes no face " .. where)
+            assertEqual(m.__paint(parts[key]).fontObject, nil, key .. " takes no font object " .. where)
+            assertEqual(m.__paint(parts[key]).template, obj, key .. " keeps " .. obj .. " " .. where)
+        end
+    end
+    faces("under Ka0s Default")
+    Skin:SetChoice(OWNER, "ka0s", OTHER)
+    faces("under " .. OTHER)
+    local base = Skin:ResolveSkin(OTHER)
+    assertColor(m.__paint(parts.count).textColor, base["text.disabled"], "the count under " .. OTHER)
+    assertColor(m.__paint(parts.status).textColor, base["text.highlight"], "the status under " .. OTHER)
+    assertColor(m.__paint(parts.hintText).textColor, base["text.highlight"], "the hint under " .. OTHER)
 end)
 
 test("skin windows: the browser's empty footer line is qc.note, today's |cffaaaaaa", function()
