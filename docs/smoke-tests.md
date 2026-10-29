@@ -1628,8 +1628,9 @@ Header a LibSharedMedia border (Blizzard Tooltip, thickness 3), turn on the pad'
 dial's Slice labels and Group labels their own face, and set a few colors; note them, and do the same
 on a second, inactive profile. Update and log in on the first → every label on the pad and the dial is
 in **Oxanium SemiBold** (the skin's HUD font) in place of the face you picked, each picked border art is
-**None**, the flat edge at the thickness you set, and the icon border is the skin's (Solid, 2 pixels).
-Every color, font size, flag, shadow, height and thickness is as you noted. Each Font block shows *Use
+**None**, the flat edge at the thickness you set, and the icon border is the skin's (Solid, 2 pixels):
+the skin governs that border's thickness too, so an icon border you had at 1 pixel is now 2. Every
+other color, font size, flag, shadow, height and thickness is as you noted. Each Font block shows *Use
 the skin's font* ticked and each Border block *Use the skin's border* ticked, their pickers grayed out
 and showing the skin's choice. The wider face can widen a pad and move where a label is cut or where a
 dial's label ring sits (D11). Untick each box → your old pick comes back at once. `/reload` → still
@@ -1648,8 +1649,10 @@ cooling button, the gold hover wash, the send flashes, the red LOCKDOWN tag and 
 the green PREVIEW and TEST MODE marks, a dimmed page arrow at an end), every settings page, the callout
 popup and the icon browser (Blizzard's settings window exactly, its dim behind; X10), the debug console
 and its Copy window, the perf panel, the drag strip and the reorder lists, the minimap button and its
-tooltip → each looks as before this update. Three changes are expected: the **Preview as** window's
-title and close mark sit in a 30-pixel top bar across the window (D9); the icon browser's scroll bar
+tooltip → each looks as before this update; the icon browser's count, status, hint and selected-icon
+name keep Blizzard's font under every skin. Three changes are expected: the **Preview as** window's
+title and close mark sit in a 30-pixel top bar across the window, the title in the skin's title font
+(Oxanium Bold) instead of Blizzard's (D9); the icon browser's scroll bar
 is a flat knob in a dark corridor instead of Blizzard's knob over a black track (D3); and the
 first-run skin picker is new (SKIN-17). Fail: any other changed color, edge, face or spacing outside
 the pads' and dials' faces and border styles (SKIN-1). Result:
