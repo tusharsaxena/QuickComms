@@ -22,7 +22,13 @@ local addonName, NS = ...
 --
 -- The look copies LibKa0s's Perf and Sim step panels: BackdropTemplate, movable,
 -- clamped, the GameFontNormal title, the close mark through the one wrapper (NS.MakeCloseButton,
--- standalone-windows), NS.ApplySkin. The position PERSISTS in the profile (standalone-windows'
+-- standalone-windows). THE SKIN (QC-02, skinning-§1): the window is the owner's Shell, so it wears
+-- the skin's fill, edge and top bar, and the title and the close mark sit centered in that bar
+-- (`title.height`, the same in every skin; D9). The End preview button is the step panels' box (a
+-- Shell with no top bar) and its label their tokens: sem.stepReady at rest, btn.hover under the
+-- pointer, sem.unknown while locked (D8: today's 0.9/0.9/0.92, gold and 0.6 under Ka0s Default),
+-- repainted on every looks change. The tooltip lines are gtip.value, the typed command
+-- sem.unknown. The position PERSISTS in the profile (standalone-windows'
 -- persist MUST): `previewWindow` (defaults/Profile.lua), written on drag stop, read on every show and
 -- on a profile switch. DEGRADED (LibKa0s absent): no window; the slash still previews and prints.
 -- A plain insecure Frame with no secure child: it calls no protected API.
@@ -48,7 +54,10 @@ local TITLE_H, PAD, ROW_H, GAP = 24, 8, 22, 6
 local DROP_W, BUTTON_W = 240, 100
 local WIDTH = PAD + DROP_W + GAP + BUTTON_W + PAD
 local HEIGHT = TITLE_H + PAD + ROW_H + PAD
-local GOLD, REST, GRAY = { 1, 0.82, 0 }, { 0.9, 0.9, 0.92 }, { 0.6, 0.6, 0.6 }
+-- The End preview label's tokens, by state (the library's SimPanel step buttons').
+local LABEL = { rest = "sem.stepReady", hot = "btn.hover", locked = "sem.unknown" }
+-- The tooltip's typed-command line.
+local TYPED = "sem.unknown"
 
 local frame
 
@@ -56,6 +65,25 @@ local DIM = 0.45
 
 local function locked()
     return NS.Preview.EditGroup() ~= nil
+end
+
+-- The top bar's height, the skin's (`title.height`, skin-invariant): the title and the close mark
+-- are centered in it. TITLE_H without the library (no window is built then).
+local function band()
+    return tonumber(NS.Skin.Token("title.height")) or TITLE_H
+end
+
+-- One tooltip line in a color token: the components read apart, so the wrap flag stays the fifth
+-- argument whatever the token answers.
+local function tipLine(text, token, wrap)
+    local r, g, b = NS.SkinColor(token)
+    GameTooltip:AddLine(text, r, g, b, wrap)
+end
+
+-- The End preview label in its state's token: locked, hovered or at rest.
+local function paintLabel(b, state)
+    local r, g, b2 = NS.SkinColor(LABEL[state or (locked() and "locked" or "rest")])
+    b.__label:SetTextColor(r, g, b2)
 end
 
 local function endPreview()
@@ -67,7 +95,7 @@ end
 local function lockedTip(owner)
     GameTooltip:SetOwner(owner, "ANCHOR_TOP")
     GameTooltip:SetText(L["Preview as"])
-    GameTooltip:AddLine(L["This window is disabled while you edit a group with Preview while editing on: it follows that group. Pick another group on the Groups page to see a preview of it, or untick Preview while editing to end the preview."], 1, 1, 1, true)
+    tipLine(L["This window is disabled while you edit a group with Preview while editing on: it follows that group. Pick another group on the Groups page to see a preview of it, or untick Preview while editing to end the preview."], "gtip.value", true)
     GameTooltip:Show()
 end
 
@@ -90,12 +118,12 @@ local function remember(self)
     NS.db.profile.previewWindow = { point = point, relPoint = relPoint or point, x = x or 0, y = y or 0 }
 end
 
--- A tooltip: a title, a white body, then the typed command in gray.
+-- A tooltip: a title, the body, then the typed command.
 local function tip(owner, title, body, typed)
     GameTooltip:SetOwner(owner, "ANCHOR_TOP")
     GameTooltip:SetText(title)
-    GameTooltip:AddLine(body, 1, 1, 1, true)
-    GameTooltip:AddLine(typed, GRAY[1], GRAY[2], GRAY[3])
+    tipLine(body, "gtip.value", true)
+    tipLine(typed, TYPED)
     GameTooltip:Show()
 end
 
@@ -103,27 +131,25 @@ local function hideTip()
     GameTooltip:Hide()
 end
 
--- The host's flat button (the library's SimPanel makeButton is private): the skin, a centered small
--- label, gold under the pointer.
+-- The host's flat button (the library's SimPanel makeButton is private): the step panels' box (the
+-- owner's Shell with no top bar), a centered small label in the step tokens.
 local function makeButton(parent, label, onClick)
     local b = CreateFrame("Button", nil, parent, "BackdropTemplate")
     b:SetSize(BUTTON_W, ROW_H)
-    -- Core's edge from its own table: a button has no title band, and the owner's Shell draws one.
-    NS.ApplySkin(b, NS.SKIN)
+    NS.Skin.Shell(b, { noTopBar = true })
     local fs = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     fs:SetPoint("CENTER", 0, 0)
     fs:SetText(label)
-    fs:SetTextColor(REST[1], REST[2], REST[3])
     b.__label = fs
+    paintLabel(b, "rest")
     b:SetScript("OnClick", onClick)
     b:SetScript("OnEnter", function(self)
         if locked() then return lockedTip(self) end
-        self.__label:SetTextColor(GOLD[1], GOLD[2], GOLD[3])
+        paintLabel(self, "hot")
         tip(self, label, L["End the preview: the pads and dials go back to live."], NS.SLASH .. " preview off")
     end)
     b:SetScript("OnLeave", function(self)
-        local c = locked() and GRAY or REST
-        self.__label:SetTextColor(c[1], c[2], c[3])
+        paintLabel(self)
         hideTip()
     end)
     return b
@@ -173,7 +199,7 @@ local function chrome(f)
         remember(self)
     end)
     local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    title:SetPoint("TOP", f, "TOP", 0, -6)
+    title:SetPoint("CENTER", f, "TOP", 0, -band() / 2)
     -- One line: a long group name truncates (the width is the window's, inside the close mark).
     title:SetWidth(WIDTH - 2 * (PAD + 20))
     if title.SetWordWrap then title:SetWordWrap(false) end
@@ -185,7 +211,7 @@ local function ensure()
     local f = CreateFrame("Frame", NAME, UIParent, "BackdropTemplate")
     chrome(f)
     f.closeButton = NS.MakeCloseButton(f, endPreview)
-    if f.closeButton then f.closeButton:SetPoint("TOPRIGHT", f, "TOPRIGHT", -6, -(TITLE_H - 18) / 2) end
+    if f.closeButton then f.closeButton:SetPoint("TOPRIGHT", f, "TOPRIGHT", -6, -(band() - 18) / 2) end
     if f.closeButton then
         -- Locked, its own hover paint is undone (its OnLeave repaints it at rest) before the tooltip.
         f.closeButton:HookScript("OnEnter", function(self)
@@ -199,9 +225,8 @@ local function ensure()
     f.dropdown = makeDropdown(f)
     f.endButton = makeButton(f, L["End preview"], endPreview)
     f.endButton:SetPoint("LEFT", f.dropdown, "RIGHT", GAP, 0)
-    -- Core's edge from its own table: the window's title sits in a band TITLE_H tall, not the
-    -- skin's top bar.
-    NS.ApplySkin(f, NS.SKIN)
+    -- The owner's Shell: the skin's fill, edge and top bar, the title's font and color (D9).
+    NS.Skin.Shell(f)
     f:Hide()
     if type(UISpecialFrames) == "table" then table.insert(UISpecialFrames, NAME) end
     f:HookScript("OnHide", onHide)
@@ -218,8 +243,7 @@ local function setLocked(f, on)
         if c.SetEnabled then c:SetEnabled(not on) end
         c:SetAlpha(on and DIM or 1)
     end
-    local c = on and GRAY or REST
-    f.endButton.__label:SetTextColor(c[1], c[2], c[3])
+    paintLabel(f.endButton, on and "locked" or "rest")
     if on and W.CloseMenu then W.CloseMenu() end
 end
 
@@ -268,6 +292,12 @@ end
 -- edit preview: a When edited on the Groups page re-bakes the pads under a new preset with no
 -- announce, and the dropdown names what they show (QF-07). With the library absent there is no
 -- window, so no receiver; the library's tracked bus takes it down and up with the addon.
+-- A skin switch: the label in the new skin's state token (the box and the window are the library's
+-- recorded Shells, repainted before this fires).
+NS.Skin.OnLooksChanged(function()
+    if frame then paintLabel(frame.endButton) end
+end)
+
 if W and NS.Bus.tracked then
     local receiver = NS.Bus:NewTarget()
     if receiver then

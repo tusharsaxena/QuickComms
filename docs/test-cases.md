@@ -1308,6 +1308,27 @@ Total.
 - skin seam: the degraded facade answers every name the live facade carries
 - skin seam: each host-copy skin token is the live library's Ka0s Default value
 
+### test_skin_windows.lua (18)
+
+- skin windows: no color literal is left in the window files
+- skin windows: the literal gate is falsifiable: a planted literal of each shape is reported
+- skin windows: the Preview window is the owner's Shell, its title in the top bar
+- skin windows: End preview's label is the step panels' tokens at rest, hovered and locked
+- skin windows: the Preview window's tooltips write their lines in the tooltip tokens
+- skin windows: the modal window's template chrome is stock under Ka0s Default, every call
+- skin windows: the modal window's Bg is the client's under Ka0s Default and faded under a skin
+- skin windows: the modal catcher's dim is qc.modalDim, today's pixel, and follows a switch
+- skin windows: a client without the template gets the owner's Shell, not the dialog edge
+- skin windows: the popup's refused-field line is sem.badAlt, today's |cffff4040
+- skin windows: the popup's token tooltip writes its lines in the tooltip tokens
+- skin windows: the browser's selected cell is qc.selStrong, today's gold at 0.7, and follows
+- skin windows: the browser's scroller is the skin's ScrollBar over its own track
+- skin windows: the browser's hint box is the drawer box's tokens, and follows a switch
+- skin windows: the browser's search glyphs are log.tag and qc.markGray, today's pixels
+- skin windows: the browser's texts take their roles, each today's color under Ka0s Default
+- skin windows: the browser's empty footer line is qc.note, today's |cffaaaaaa
+- skin windows: the browser's cell tooltip writes its lines in the tooltip tokens
+
 ### test_vendor_sync.lua (3)
 
 - libs/LibKa0s is the LibKa0s release CLAUDE.md says this addon bundles
@@ -1433,6 +1454,7 @@ Total.
 | test_layers.lua | 11 |
 | test_layout.lua | 23 |
 | test_skinsetup.lua | 24 |
+| test_skin_windows.lua | 18 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -1440,4 +1462,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1190** |
+| **Total** | **1208** |

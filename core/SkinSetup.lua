@@ -118,6 +118,16 @@ NS.SKIN_FALLBACK = {
     ["text.disabled"]  = { 0.5, 0.5, 0.5, 1 },
     ["gtip.title"]     = { 1, 0.82, 0, 1 },
     ["gtip.value"]     = { 1, 1, 1, 1 },
+    ["gtip.subtle"]    = { 0.7, 0.7, 0.7, 1 },
+    -- QC-02's windows: the Preview window's button (the step panels' tokens, D8), the popup's
+    -- refused-field line, the icon browser's hint box and magnifier.
+    ["btn.hover"]      = { 1, 0.82, 0, 1 },
+    ["sem.stepReady"]  = { 0.9, 0.9, 0.92, 1 },
+    ["sem.unknown"]    = { 0.6, 0.6, 0.6, 1 },
+    ["sem.badAlt"]     = { 1, 0.25, 0.25, 1 },
+    ["drawer.boxBg"]   = { 0.08, 0.07, 0.05, 0.9 },
+    ["drawer.boxBorder"] = { 0.24, 0.2, 0.13, 1 },
+    ["log.tag"]        = { byte(0xc9), byte(0xa6), byte(0x6b), 1 },
 }
 
 --- A color token's components AS A CALL SITE WRITES THEM: r, g, b for an opaque color and r, g, b,

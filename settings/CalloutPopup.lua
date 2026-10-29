@@ -59,7 +59,9 @@ local WIDTH, HEIGHT = 560, 640   -- HEIGHT until the first fit
 -- tests/test_callout_popup.lua reads BODY_TOP off the body anchor of the panel CreatePanel builds
 -- and CONTENT_X from lib.LAYOUT, so a re-vendor that moves any of them turns it red.
 local BODY_TOP, CONTENT_X, BODY_BOTTOM = 62, 12, 12
-local ERROR_COLOR = "|cffff4040"
+-- The refused-field line's color token: sem.badAlt, today's |cffff4040 on Ka0s Default, built into
+-- the escape when the line is written (QC-02).
+local ERROR_TOKEN = "sem.badAlt"
 -- The gap between the preview and the button pair, a section's worth (two row gaps).
 local BUTTONS_GAP = 16
 -- The token glyph: GLYPH_GAP right of the Text label's last letter, as tall as the label's letters
@@ -192,20 +194,24 @@ local function fit()
 end
 
 local function showError(text)
-    if errorRow then errorRow:SetText(text and (ERROR_COLOR .. text .. "|r") or "") end
+    if errorRow then errorRow:SetText(text and ((NS.SkinEscape(ERROR_TOKEN) or "") .. text .. "|r") or "") end
     fit()
 end
 
 -- The token tooltip: every token the draft's channel offers, one line each (C.TokenHelp), read
--- when it shows, so a channel picked since the render is the one it lists.
+-- when it shows, so a channel picked since the render is the one it lists. Its lines are the
+-- tooltip tokens (QC-02): the title gtip.value, each token gtip.title and what it fills in
+-- gtip.value (white and gold on Ka0s Default, as typed before); the frame stays Blizzard's.
 local function showTokenHelp(owner)
     if not GameTooltip then return end
+    local vr, vg, vb = NS.SkinColor("gtip.value")
+    local tr, tg, tb = NS.SkinColor("gtip.title")
     GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
-    GameTooltip:SetText(L["Tokens"], 1, 1, 1)
+    GameTooltip:SetText(L["Tokens"], vr, vg, vb)
     GameTooltip:AddLine(L["Type a token into the text. It is filled in when the callout is sent."], nil, nil, nil,
         true)
     for _, line in ipairs(C.TokenHelp(draft and draft.channel)) do
-        GameTooltip:AddDoubleLine(line[1], line[2], 1, 0.82, 0, 1, 1, 1)
+        GameTooltip:AddDoubleLine(line[1], line[2], tr, tg, tb, vr, vg, vb)
     end
     GameTooltip:Show()
 end

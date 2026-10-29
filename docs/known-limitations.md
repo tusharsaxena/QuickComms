@@ -165,8 +165,8 @@ What the addon cannot do, or does only under a condition, and why. The hub,
   Escape still cancels.
 - A change of skin source away from EllesmereUI is one-way, as EllesmereUI's skins are: it takes
   effect after a reload, which the Skin tab offers. A client without `SettingsFrameTemplate` gets the
-  callout popup's older look (a plain frame with Blizzard's dialog edge and the shared close mark)
-  instead of the settings window's.
+  callout popup's older shape (a plain frame in the skin's window fill and edge, and the shared close
+  mark) instead of the settings window's.
 - The icon browser searches game icons by texture id only: the client gives them as texture ids, with
   no names, and has no API that names one, so a game icon is named by its id and a name is looked up
   on Wowhead (the tab's hint; the game cannot open a web page, so the address is shown to copy). No

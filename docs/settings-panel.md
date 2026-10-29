@@ -343,8 +343,10 @@ The window and its catcher are `settings/ModalWindow.lua`'s, which the icon brow
 The body is laid out in a plain AceGUI container, not a scroll frame: the popup has **no
 scrollbar**, and the window's height follows the laid-out body, measured again after every draft
 write, situation change and error line. The settings pages keep their always-visible scrollbar.
-A client without the template gets the popup's old look: a plain frame with Blizzard's dialog edge
-and the shared close mark (`NS.MakeCloseButton`). The template's own close X instead of the shared
+A client without the template gets the popup's old shape: a plain frame in the skin's window fill and
+edge (the owner's `Shell`) and the shared close mark (`NS.MakeCloseButton`). Under a skin other than
+Ka0s Default, and under EllesmereUI, the template's chrome is the skin's (painted with
+`opts.stockDefault`, so Ka0s Default keeps the settings window exactly; DECISIONS X10). The template's own close X instead of the shared
 mark is a documented deviation (`ARCHITECTURE.md` → Documented deviations). The window's border,
 title bar and background come from the template, and its `Bg` is lifted over the click-catcher's dim (the
 template declares it at absolute frame level 0), so the popup is as bright as the settings window.

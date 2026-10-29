@@ -10,9 +10,20 @@ local _, NS = ...
 --              rule) and its body, set inside the template's background
 --
 -- A client without the template, or a template that lost a part used here (NineSlice with its
--- title, Bg, ClosePanelButton), gets the older look: a plain frame, Blizzard's dialog edge over a
--- dark fill and the shared close mark. Either close calls the caller's `onClose`. The window is a
--- special frame (Escape hides it); what a hide means is the caller's (its own OnHide hook).
+-- title, Bg, ClosePanelButton), gets the older shape: a plain frame, the owner's window fill and edge
+-- under the page and the shared close mark. Either close calls the caller's `onClose`. The window is
+-- a special frame (Escape hides it); what a hide means is the caller's (its own OnHide hook).
+--
+-- THE SKIN (QC-02; DECISIONS X10, D2; LibKa0s LK-05). The template's chrome is painted through the
+-- owner's facade with `opts.stockDefault` on every call: under Ka0s Default it stays exactly
+-- Blizzard's settings window (the ratified look, docs/ARCHITECTURE.md), under every other skin it is
+-- that skin's window (the template's Bg art faded under the skin's fill), and under EllesmereUI it
+-- is EllesmereUI's (its Shell, its NineSlice fade, its close X; the Bg is no longer faded there, as
+-- the retired settings/CalloutPopup_Skin.lua did by hand, since `stock` is a Ka0s-only option). A
+-- live switch back to Ka0s Default gives the stock window back. The page inside and its controls
+-- follow the skin as every settings page does. The fallback window is the owner's Shell under every
+-- skin (no template to keep). The catcher's dim is this addon's qc.modalDim (Ka0s Default's 0.45
+-- black; it follows cover.dim elsewhere), repainted on every looks change.
 --
 -- STACKING (QC-06). Every modal is above the Comms Dial BY STRATA: FULLSCREEN (MW.STRATA), one
 -- over the dial's DIALOG. The dial's secure header (modules/SendEngine.lua) is in DIALOG and the
@@ -54,10 +65,40 @@ MW.STRATA = LAYERS.STRATA.MODAL
 -- The strata a QuickComms confirm (a Blizzard StaticPopup: the deletes, Reset all) is shown in, one
 -- over the modals' (MW.LiftConfirm).
 MW.CONFIRM_STRATA = LAYERS.STRATA.POPUP
-local DIM = { 0, 0, 0, 0.45 }
+-- The catcher's dim: this addon's own token (core/SkinSetup.lua), today's 0.45 black on Ka0s Default.
+local DIM = "qc.modalDim"
+-- Every catcher's dim texture, repainted on a looks change (weak: a catcher is never freed, but a
+-- test instance's are).
+local dims = setmetatable({}, { __mode = "k" })
 
 local function H() return Settings.Helpers end
 local function isTable(v) return type(v) == "table" end
+
+local function paintDim(dim)
+    dim:SetColorTexture(NS.Skin.Color(DIM))
+end
+
+-- The template's Bg is a FRAME (FlatPanelBackgroundTemplate; Build gives it a frame level), and
+-- Shell's `opts.stock` takes textures only, so its art is handed over as the Bg's texture regions.
+-- (FadeRegions would fade them under Ka0s Default too: it takes no stockDefault.)
+local function bgArt(bg)
+    local out = {}
+    if not (bg and type(bg.GetRegions) == "function") then return out end
+    for _, r in ipairs({ bg:GetRegions() }) do out[#out + 1] = r end
+    return out
+end
+
+-- The template's chrome through the facade, every call kept stock under Ka0s Default (THE SKIN
+-- above). Each primitive is recorded, so a skin switch repaints it with no host call.
+local function skinTemplate(chrome)
+    local S, f = NS.Skin, chrome.window
+    S.Shell(f, { stockDefault = true, stock = bgArt(chrome.bg) })
+    S.FadeNineSlice(f, { stockDefault = true })
+    if isTable(chrome.nineSlice.Text) then
+        S.TitleBar(chrome.nineSlice, { stockDefault = true, text = chrome.nineSlice.Text, noBg = true })
+    end
+    S.CloseButton(chrome.close, { stockDefault = true })
+end
 
 -- The window: the template when the client has it and it still has the parts used here, else a
 -- plain frame. Answers the window and its chrome: what a skin paints, and whether the template drew it.
@@ -76,21 +117,13 @@ local function makeWindow(name, parent)
     return f or CreateFrame("Frame", name, parent), { template = false }
 end
 
--- The fallback's chrome: Blizzard's dialog edge over a dark fill under the page, and the shared
--- close mark.
+-- The fallback's chrome: the owner's window fill and edge under the page (no top bar: the page draws
+-- its own header), and the shared close mark.
 local function plainChrome(window, panel, chrome, onClose, at)
     local bg = CreateFrame("Frame", nil, window, "BackdropTemplate")
     bg:SetAllPoints(window)
     bg:SetFrameLevel(at(LV.MODAL_BG))
-    if bg.SetBackdrop then
-        bg:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8X8",
-            edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-            edgeSize = 32,
-            insets = { left = 11, right = 11, top = 11, bottom = 11 },
-        })
-        bg:SetBackdropColor(0.05, 0.05, 0.05, 0.96)
-    end
+    NS.Skin.Shell(bg, { noTopBar = true })
     local closeButton = NS.MakeCloseButton(panel, onClose)
     if closeButton then closeButton:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -12, -12) end
     chrome.window, chrome.bg, chrome.close = window, bg, closeButton
@@ -106,7 +139,8 @@ local function makeCatcher(strata, base)
     catcher:SetScript("OnMouseWheel", function() end)
     local dim = catcher:CreateTexture(nil, "BACKGROUND")
     dim:SetAllPoints(catcher)
-    dim:SetColorTexture(DIM[1], DIM[2], DIM[3], DIM[4])
+    paintDim(dim)
+    dims[dim] = true
     catcher:Hide()
     return catcher
 end
@@ -152,6 +186,7 @@ function MW.Build(spec)
         -- caller's close, and it sits above the page, whose top edge it overlaps.
         chrome.close:SetScript("OnClick", function() spec.onClose() end)
         chrome.close:SetFrameLevel(at(LV.MODAL_CLOSE))
+        skinTemplate(chrome)
     else
         plainChrome(window, panel, chrome, function() spec.onClose() end, at)
     end
@@ -159,6 +194,11 @@ function MW.Build(spec)
     if UISpecialFrames then UISpecialFrames[#UISpecialFrames + 1] = spec.name end
     return { catcher = catcher, frame = window, chrome = chrome, ctx = ctx, inset = inset }
 end
+
+-- A skin switch: every catcher's dim in the new skin (the chrome is the library's recorded paint).
+NS.Skin.OnLooksChanged(function()
+    for dim in pairs(dims) do paintDim(dim) end
+end)
 
 -- CONFIRMS (QC-06 review). QuickComms' confirms are Blizzard StaticPopups, whose dialog frames are
 -- DIALOG: the preview dial's strata, where the hub (header level + 20) races them for the top, and
