@@ -68,6 +68,17 @@ A file under `settings/` that calls `Settings.Editors.RegisterPage(pageKey, titl
 
 The dial's in-combat behavior is the restricted snippets in `modules/Dial_Secure.lua` (`ONCLICK`, `OPEN`, `DISPLAY`, `SHOW`, `CLOSE`, `WEDGE_PRE`, `WEDGE_POST`). `DISPLAY` (`qc-display`) is the insecure open test mode and Preview as… use: the same open, but it binds no key, so Escape and 1–8 stay free while the settings window is open; a change to `OPEN` or `SHOW` must keep it so. `OPEN` closes every other open dial first (the `sibling<n>` frame refs `DialSecure.Link` writes), so one dial at a time holds Escape, the wheel and 1–8. A snippet may show, hide, anchor and bind, and reads attributes; it never writes one (the firewall greps the file). Anything it needs to know arrives as an attribute written by `DialSecure.Load` out of combat. Pin the change in `tests/test_dial_secure.lua`, in and out of combat; `tests/wow_mock.lua` runs the snippets in the header's own environment.
 
+## Draw a color, a face or a border
+
+Every color a surface draws is a skin token, never a literal: read it through `NS.Skin.Color` or
+`NS.SkinColor(name)` (a settings page's colored line through `NS.SkinMarkup(name, text)`), and a HUD
+face or border style through `NS.Skin.Resolve` beside the block's `<picker>FromSkin` companion. When
+no library token holds the Ka0s Default value exactly, add an owner token to `NS.SKIN_TOKENS` in
+`core/SkinSetup.lua` (named `qc.*`, its `default` today's value, `follow` its nearest library role
+token), and add every library token you read to `NS.SKIN_FALLBACK` there in the same change.
+`tests/test_skin_windows.lua`'s literal gate fails on a color literal in a scanned file, and
+`tests/test_skinsetup.lua` holds the host copy to the library ([ARCHITECTURE.md → Skins](ARCHITECTURE.md#skins)).
+
 ## Regenerate the test inventory
 
 ```sh

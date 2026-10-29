@@ -149,8 +149,10 @@ deletes, Reset all) are Blizzard StaticPopups, `DIALOG` by default: each lifts i
 `FULLSCREEN_DIALOG` while shown and hands the shared frame back in its own strata on hide
 (`ModalWindow.LiftConfirm`), so a confirm is over the dial and over an open popup. While the browser
 is open the popup's name is taken out of `UISpecialFrames` (put back on the next frame after the
-browser closes), so Escape closes the browser only. The EllesmereUI skin paints only those two windows
-with alpha-only primitives, never another Blizzard frame.
+browser closes), so Escape closes the browser only. The skin (a Ka0s skin, or EllesmereUI's through
+LibKa0s-Skin-1.0's `eui` source, since the skinning rollout) paints those two windows' template chrome
+with alpha-only primitives (`FadeNineSlice`, `FadeRegions`, given back under Ka0s Default), never
+another Blizzard frame.
 
 The editor pages touch no frame of a pad: every write reaches a pad through `LIBRARY_CHANGED` →
 `Surfaces.Request`, so a write made in combat (a CLI `set`, a popup accepted after the pull) waits for

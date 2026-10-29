@@ -48,12 +48,13 @@ Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBO
 LibSharedMedia, LibDataBroker, LibDBIcon
 and LibCustomGlow-1.0 (the Icons tab's glows, resolved at call time by LibKa0s-Glow-1.0 and optional; versions and
 licenses in `DEPENDENCIES.md`) are vendored under `libs/`, and so is the whole
-LibKa0s v1.80.0 payload, of which fourteen majors are wired, one setup file each (`DEPENDENCIES.md`
+LibKa0s v1.80.0 payload, of which fifteen majors are wired, one setup file each (`DEPENDENCIES.md`
 lists the toolchain):
 
 | Major | Setup file | Gives |
 |---|---|---|
-| Core | `core/CoreSetup.lua` | the `[QC]` printer, secret-safe stringifier, SafeRegister family, the skin, the close mark, the resize grip, and the class-color resolver (`NS.ResolveColor`) |
+| Core | `core/CoreSetup.lua` | the `[QC]` printer, secret-safe stringifier, SafeRegister family, the window edge (`NS.ApplySkin`, for this owner), the close mark, the resize grip, and the class-color resolver (`NS.ResolveColor`) |
+| Skin | `core/SkinSetup.lua` | the skin this addon wears ([Skins](#skins)): the owner `QuickComms` and its `qc.*` tokens, `NS.Skin` (the owner's facade), the apply and paint helpers, and the first-run skin picker |
 | Media | `core/MediaSetup.lua` | the icon catalog and the monospace face, and `NS.MediaFetch` (a LibSharedMedia entry by name) |
 | Env | `core/EnvSetup.lua` | the addon's own TOC metadata and version |
 | Pool | `core/PoolSetup.lua` | the frame pool (one array pool per pad for its buttons; per dial, one for its ring containers and one per container for its wedges) |
@@ -74,12 +75,12 @@ lists the toolchain):
 setup file holds a descriptor and a degradation stub, and `tests/test_surface_parity.lua` holds every
 stub to the live surface.
 
-On screen: the settings panel, the editor pages, the minimap button, the Comms Pad and the Comms Dial (when its key opens it).
+On screen: the settings panel, the editor pages, the minimap button, the Comms Pad and the Comms Dial (when its key opens it), all in the skin the profile picks ([Skins](#skins)), and once per profile the first-run skin picker.
 
 ## Module Map
 
 Every file, its kind, its TOC position and what it does is in [`module-map.md`](module-map.md). In
-short: `core/` holds the identity, eleven of the setup files, the session state, the addon object and
+short: `core/` holds the identity, twelve of the setup files, the session state, the addon object and
 its lifecycle, and the migration runner; `defaults/` the default values and the shipped built-in sets
 (seed data); `modules/` the modules and the diagnostics sections; `settings/` the schema, the panel
 pages and the slash table and its verb bodies. `Bindings.xml` sits at the root, beside the TOC, and is
@@ -103,7 +104,7 @@ and the host verbs alike; the rows are `settings/Schema.lua`'s `Settings.Schema`
 Master controls rows (`enabled`, `visibility`, `scale`, `alpha` and `locked`, defaults `true`,
 `always`, 1, 1 and `false`; the session rows `state.debugConsole`, `state.testMode` and
 `state.previewAs`; the minimap row), then the Behavior rows (`behavior.*`, spliced in by
-`settings/SchemaRows.lua`), then the member rows (`callout.*`, `group.*`, `pad.*`, `dial.*`,
+`settings/SchemaRows.lua`, with the seven `skin.*` rows the Skin tab draws), then the member rows (`callout.*`, `group.*`, `pad.*`, `dial.*`,
 `settings/SchemaMembers.lua`), each addressed through `Library.Member`. Every module reads a setting
 through `NS.Setting(path)`, which answers the row's default before the database exists; the shared
 reactions are `Settings.REACTIONS`, and `enabled` is `writeThrough` so `/qc enable|disable` still
@@ -191,6 +192,77 @@ refused or locked in combat. The full notes, frame by frame: [`taint.md`](taint.
 Every strata and frame level the addon sets is named once, in `core/Constants.lua`
 `NS.Constants.LAYERS`, whose header comment records the whole stack; `tests/test_layers.lua` pins it.
 
+## Skins
+
+Quick Comms wears a skin from `LibKa0s-Skin-1.0` (skinning-§1, chosen per profile under §2; the
+rollout is Ka0sAddonsCommonTasks `docs/2026-10-29-SKINNING_ROLLOUT/`, after LootHistory's lead). The
+skin reaches the Comms Pads and Dials, the Preview as window, the callout popup and the icon browser,
+the settings pages and the library's own windows.
+
+- **The seam.** `core/SkinSetup.lua` registers the owner `"QuickComms"` (the folder name) at file load
+  with its read and write seams, `NS.SkinChoice` and `NS.WriteSkinChoice` (both through
+  `NS.SchemaRuntime`), and thirteen owner tokens (`qc.veil`, `qc.hover`, `qc.hint`, ...): the colors
+  this addon draws under Ka0s Default that no library token holds exactly, kept at their pixels and
+  each but the two veils following its nearest library role token (rollout X1, X2, X12). It publishes
+  `NS.Skin` (the owner's facade) and the call-site helpers `NS.SkinColor`, `NS.SkinEscape`,
+  `NS.SkinMarkup`, `NS.SkinPaintAce` / `NS.SkinPaintAceTree` / `NS.SkinOnRelease`. The choice is the
+  profile's `skin` block (`source`, `skin`, the Scope's `ignorePanel`, on for a new profile, and
+  `ignoreFonts`, the overrides `font` and `texture`, and `pickerSeen`), seven skip-render rows drawn
+  by the library's **Skin** tab on General, after Behavior and before Keybindings
+  ([schema.md](schema.md), [settings-panel.md](settings-panel.md#general--skin)).
+- **Repaint flow.** `NS.ApplySkinChoice` runs right after the migrations in `OnInitialize` and on
+  every profile switch, copy and reset (`reloadProfile`), applying the stored pair with the stored
+  exceptions and overrides; each Skin row's `onChange` applies only its own half, so a tab pick is one
+  repaint. `Skin:SetChoice` repaints every frame recorded for this owner, then fires
+  `OnLooksChanged`; the pads and dials listen there (`Pad_Render`'s `LooksGen`) and ask `Surfaces` for
+  one rebuild, which waits for combat's end like every rebuild.
+- **The HUD** (skinning-§6). Only faces and border styles follow the skin. Every pad and dial Font
+  block carries *Use the skin's font* (`fontFromSkin`, the skin's `hud.font`) and every Border block
+  *Use the skin's border* (`borderStyleFromSkin`, `bar.borderStyle`; on the Icons tab the skin's icon
+  border, `icon.borderStyle` and `icon.borderSize`), default on (rollout X3); while one is on, its
+  picker is grayed and shows the skin's value, and the stored pick waits for it to be turned off. Every
+  color, size, flag and shadow the player set, the shine and the class colors stay the player's (X4,
+  D5, D6). The HUD's own chrome (the padlock, the veils, the hover wash, the flashes, the LOCKDOWN and
+  stale tags, the PREVIEW and TEST MODE marks, the page arrows) reads tokens once per look change
+  (`Pad_Render.Chrome`), never per frame.
+- **The one-time reset** (the owner's O2). Schema step 10 (`Library.MigrateFollowSkin`) turns every
+  stored pad's and dial's companions on, once, on every stored profile; the picks and the colors are
+  kept. Under Ka0s Default that is a visible change (rollout X5, D11): Oxanium SemiBold in place of the
+  picked faces (Friz Quadrata by default), a picked border art becomes the skin's `None` (the flat
+  edge at the stored thickness), and a shown icon border the skin's Solid 2 px.
+- **The windows.** The Preview as window is the owner's `Shell`, its title and close mark in the
+  skin's top bar (D9). The callout popup and the icon browser keep Blizzard's `SettingsFrameTemplate`
+  under Ka0s Default and are the skin's window under every other skin and under EllesmereUI (X10,
+  `opts.stockDefault`; [Documented deviations](#documented-deviations)); the browser's scroller is the
+  skin's `ScrollBar` (D3). The settings pages, the debug console and its copy window, the perf panel,
+  the drag strip, the reorder lists and the Wowhead copy window are painted by the library for this
+  owner, the settings pages only while **Ignore settings panel** is off; the Profiles page's
+  AceConfigDialog tree through `NS.SkinPaintAceTree`. The settings pages' colored lines are built from
+  tokens at call time (`NS.SkinMarkup`), the locale keys carrying no markup.
+- **The first-run skin picker** (the owner's O3). `NS.MaybeShowSkinPicker` shows the library's picker
+  (`O.SkinPicker`) two seconds after `OnEnable` and after every profile event while the profile's
+  `skin.pickerSeen` is false and the addon stands up; in combat it waits for `PLAYER_REGEN_ENABLED`.
+  A pick only previews; **Apply** and the gear save it (the gear opens General on its Skin tab), and
+  the close control and Escape put the stored skin back; every close the player makes sets
+  `pickerSeen`. Its eye turns test mode on (rollout X6). `NS.HideSkinPicker` (the stand-down, and
+  first on every profile event) takes it down without marking it seen.
+- **EllesmereUI** (skinning-§5). The provider is the library's (`SkinEUI.lua`); Quick Comms' own
+  bridge (`core/EUIBridge.lua`, `settings/CalloutPopup_Skin.lua`) is retired (D1). With source `eui`
+  and its gate holding, EllesmereUI's facade answers the tokens, the HUD's included; otherwise the
+  addon wears its Ka0s skin and the Skin tab names the failing condition. Ka0s to EllesmereUI applies
+  live; back asks for a reload. `/qc diagnostics` prints the gate (`NS.SkinDescribe`, [debug.md](debug.md)).
+- **Not skinned** (skinning-§7): the Blizzard Settings window around the pages, the StaticPopup
+  confirms, `GameTooltip`'s frame (the lines this addon writes take tokens, X8), the minimap button and
+  its tooltip, `ColorPickerFrame` and the LibSharedMedia pull-outs, the landing page's logo, the shine
+  art, the glyph colors a callout or group stores (player data), the channels' chat-type colors (game
+  meaning), and the chat
+  output (the cyan `[QC]` tag and the lines slash-commands mandates, X7).
+- **Degraded.** Without the library `NS.Skin` answers every primitive as a no-op and every token from
+  `NS.SKIN_FALLBACK` (a host copy of Ka0s Default) and the owner tokens' defaults;
+  `tests/test_skinsetup.lua` holds the copy to the live library. `test_skin_windows.lua` (with the
+  color-literal gate over the window, HUD and settings files), `test_skin_hud.lua`,
+  `test_skin_picker.lua` and `test_skin_tools.lua` pin the rest.
+
 ## Known Limitations
 
 The spam guard is soft and an echo can be masked; a rebuild waits for combat, so a button keeps the
@@ -276,7 +348,7 @@ the repository has no generated data file.
 
 Nothing is over the cap today. `tests/test_page_groups.lua` reached it exactly and was split along its
 own section headings (`80a0fbb`, 2026-10-25): 1131 lines now, beside `tests/test_page_groups_nesting.lua`
-at 418. Seven files sit in the 1000-1500 band (`tests/test_dial.lua` 1472, `locales/enUS.lua` 1348,
+at 418. Seven files sit in the 1000-1500 band (`tests/test_dial.lua` 1471, `locales/enUS.lua` 1375,
 `modules/Library.lua` 1340, `tests/test_page_groups.lua` 1131, `tests/test_library.lua` 1057,
-`tests/test_pad.lua` 1030, `tests/wow_mock.lua` 1024); the automated-test record's watch list gives
+`tests/test_pad.lua` 1035, `tests/wow_mock.lua` 1024); the automated-test record's watch list gives
 each its disposition.

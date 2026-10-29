@@ -58,6 +58,11 @@ the channel and an icon, and the text can carry tokens such as `{target}` or `{c
 ordinary groups too, so change or delete whatever you like; Restore built-in groups puts back
 anything you deleted. How the pad and the dial look is up to you, on the Pad and Dial pages.
 
+The whole addon wears a skin: Ka0s Default, or one of eight others, picked on General → Skin (a small
+picker asks once, the first time you log in). The skin sets the windows' colors and the pads' and
+dials' fonts and border styles; the colors you give a pad or a dial stay yours. Untick *Use the skin's
+font* or *Use the skin's border* on a tab to use your own.
+
 To check how things look somewhere else, pick a situation in Preview as… or type `/qc preview`. A
 small window lets you switch situations or end the preview. While you preview, and in test mode, a
 click sends nothing and chat shows you the line it would have sent. Editing a group on the Groups page
@@ -86,7 +91,8 @@ Everything else is under **Settings → AddOns → Ka0s Quick Comms**, and `/qc 
 |---|---|
 | Does it send anything on its own? | No. A callout is only ever sent when you press its button or its key. |
 | Why secure buttons? | In Midnight an addon can't send chat by itself during a boss, a Mythic+ key or a PvP match. A button you press can, so that's the one way Quick Comms sends anything. |
-| Does it work with EllesmereUI? | Yes. With EllesmereUI's Blizzard skins on (and Quick Comms on in its Third-Party Addons list), the callout editor takes the same look as your settings window. Turn it off there, then reload. |
+| Does it work with EllesmereUI? | Yes. With EllesmereUI's third-party skinning on and Quick Comms on in its Third-Party Addons list, pick **EllesmereUI** as the skin source on General → Skin, and Quick Comms takes EllesmereUI's look. Switching back to a Ka0s skin asks for a reload. |
+| Why do my pads look different after updating? | Their fonts and border styles now follow the skin, once, for everyone: Ka0s Default draws Oxanium. Your colors and sizes are kept, and so are your old picks: untick *Use the skin's font* or *Use the skin's border* on the Pad and Dial tabs to get them back. |
 
 ## Troubleshooting
 
