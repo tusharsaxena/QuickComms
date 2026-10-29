@@ -1,0 +1,4 @@
+Independent review (skinning rollout M2, QC): 1 major, 6 minor. Gate at review: 1252/0/1, luacheck 0/0 (143); payload byte-identical to v1.80.0.
+Fixed: [major] icon browser texts changed face under Ka0s Default (X10) -> 83b8dc0 QC-02; [minor] pad 1px inner rule ignored the skin -> 5df98bd QC-03 (R.SkinFor reads win.inner, test red without it); [minor] Preview title face unrecorded + [minor] SKIN-1 icon-border thickness contradiction -> b2ba537 QC-05.
+Declined, recorded for the run report: qc.veil/qc.veilCool keep no follow (cover.dim is skin-invariant, following it would merge the two states) - a deliberate X2 exception; Ed.ACTIVE_DOT keeps Blizzard's Indicator-Green as a meaning glyph (game-meaning exception); dial hub stale/LOCKDOWN/TEST labels keep their client faces by design (Ka0s Default unaffected; cross-skin face parity with the pad header is a follow-up candidate).
+Gate after fixes: 1254/0/1, luacheck 0/0 (143).
