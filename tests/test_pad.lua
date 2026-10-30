@@ -782,7 +782,9 @@ test("pad: [R3] the strip reads the pad's name and PREVIEW / TEST MODE, spans th
     NS.db.profile.pads.p1.name = long
     NS.Pad.Apply("p1", planFor(NS))
     assertTrue(6 * #long + reserve > inst.root.__w, "this one is wider than the pad")
-    assertEqual(widths[#widths], 6 * #long + reserve, "the strip grows to fit a label wider than the pad")
+    -- LibKa0s v1.82.0 (WidgetsDragHandle minor 8): the natural width carries FIT_SLACK, 2 px.
+    local slack = m.LibStub("LibKa0s-Widgets-1.0").DRAG_HANDLE.FIT_SLACK
+    assertEqual(widths[#widths], 6 * #long + slack + reserve, "the strip grows to fit a label wider than the pad")
     assertNil(inst.header.qcTest, "the header carries no marker of its own")
 end)
 

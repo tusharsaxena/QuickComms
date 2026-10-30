@@ -157,7 +157,7 @@ NS.SKIN_FALLBACK = {
     -- follows while its "Use the skin's ..." companion is on (the face, the border styles and size).
     ["btn.bg"]         = { 0.1, 0.1, 0.12, 0.9 },
     ["sem.warn"]       = { 1, 0.5, 0, 1 },
-    ["hud.font"]       = "Ka0s Oxanium SemiBold",
+    ["hud.font"]       = "Ka0s Prototype",
     ["bar.borderStyle"] = "None",
     ["icon.borderStyle"] = "Solid",
     ["icon.borderSize"] = 2,
@@ -455,7 +455,7 @@ if not Skin then
         "GetAccentColor", "GetPanelColor", "GetFont",
         "TitleBar", "Divider", "Footer", "Card", "Slider", "NavItem", "Drawer", "ListRow", "MenuFrame",
         "Tooltip", "Strip", "Cover", "Text", "ChartStyle", "BarStyle", "IconBorder", "GlowColor",
-        "BarTexture",
+        "BarTexture", "FontFlags", "HudFontSize",
     }) do S[name] = noop end
 
     S.Token = token
@@ -477,6 +477,11 @@ if not Skin then
     S.GetFont = function() return _G.STANDARD_TEXT_FONT end
     S.ChartStyle = function() return {} end
     S.BarStyle = function() return {} end
+    -- LibKa0s v1.82.0 (SkinPaintExtras minor 7): never nil, which SetFont would read as no flags or
+    -- refuse. A picked flag as stored; From skin ("@skin") or nothing stored is OUTLINE, Ka0s
+    -- Default's HUD outline. A size as stored when it is a number above 0, else 12, unscaled.
+    S.FontFlags = function(v) if type(v) == "string" and v ~= S.FROM_SKIN then return v end return "OUTLINE" end
+    S.HudFontSize = function(size) local n = tonumber(size) return (n and n > 0) and n or 12 end
 
     NS.Skin = S
     function NS.ApplySkinChoice() return false, false end
