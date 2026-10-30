@@ -386,7 +386,9 @@ A client without the template gets the popup's old shape: a plain frame in the s
 edge (the owner's `Shell`) and the shared close mark (`NS.MakeCloseButton`). Under every skin, Ka0s
 Default included, and under EllesmereUI, the template's chrome is the skin's (DECISIONS X10; LibKa0s
 v1.81.0 retired the stock look under Ka0s Default, R-2, so WoW Default is the skin that shows
-Blizzard's settings window). The template's own close X instead of the shared
+Blizzard's settings window). The page inside it is a settings page and follows the panel Scope, its
+refused-field line and token tooltip included: stock, on Ka0s Default's colors, while the owner
+ignores its settings panel (the default, D-03). The template's own close X instead of the shared
 mark is a documented deviation (`ARCHITECTURE.md` → Documented deviations). The window's border,
 title bar and background come from the template, and its `Bg` is lifted over the click-catcher's dim (the
 template declares it at absolute frame level 0), so the popup is as bright as the settings window.

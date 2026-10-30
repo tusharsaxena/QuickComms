@@ -411,7 +411,14 @@ end)
 
 -- ── the callout popup (W12, W13) ─────────────────────────────────────────────────────────────────
 
-test("skin windows: the popup's refused-field line is sem.badAlt, today's |cffff4040", function()
+--- A probe skin that moves `token` off Ka0s Default's color (no shipped skin moves sem.badAlt or
+--- gtip.value today), so a panel-scoped read is told apart from a live one.
+local function skinWhere(Skin, token)
+    Skin:RegisterSkin({ key = "qcprobe", label = "QC probe", tokens = { [token] = { 0.2, 0.4, 0.6, 1 } } })
+    return "qcprobe"
+end
+
+test("skin windows: the popup's refused-field line is sem.badAlt, today's |cffff4040, panel-scoped (D-03)", function()
     local NS, m, Skin = boot()
     local P = dofile("tests/page_helpers.lua")(NS, m)
     local Pop = NS.addon.Settings.CalloutPopup
@@ -423,9 +430,15 @@ test("skin windows: the popup's refused-field line is sem.badAlt, today's |cffff
         end
     end
     assertEqual(errorLine():sub(1, 10), "|cffff4040", "Ka0s Default's pixel")
-    Skin:SetChoice(OWNER, "ka0s", OTHER)
+    local moved = skinWhere(Skin, "sem.badAlt")
+    Skin:SetChoice(OWNER, "ka0s", moved)
     assertFalse((Pop.Save()))
-    assertEqual(errorLine():sub(1, 10), NS.SkinEscape("sem.badAlt"), "the escape is the token's under " .. OTHER)
+    -- red under: NS.SkinEscape(ERROR_TOKEN) with no panel flag (the skin's red inside a stock page body)
+    assertEqual(errorLine():sub(1, 10), "|cffff4040", "Ka0s Default's red while the panel is ignored, under " .. moved)
+    Skin:SetIgnore(OWNER, false, nil)
+    assertFalse((Pop.Save()))
+    assertEqual(errorLine():sub(1, 10), NS.SkinEscape("sem.badAlt"), "the escape is the token's under " .. moved)
+    assertFalse(errorLine():sub(1, 10) == "|cffff4040", "and it moved")
 end)
 
 test("skin windows: the popup's token tooltip writes its lines in the tooltip tokens", function()
@@ -441,6 +454,22 @@ test("skin windows: the popup's token tooltip writes its lines in the tooltip to
     -- red under: AddDoubleLine(..., 1, 0.82, 0, 1, 1, 1) typed
     assertColor(rgbOf(double), now(NS, "gtip.title"), "the token")
     assertColor(rgbOf(double.right), now(NS, "gtip.value"), "what it fills in")
+end)
+
+test("skin windows: the popup's token tooltip follows the panel Scope (D-03)", function()
+    local NS, m, Skin = boot()
+    local Pop = openPopup(NS)
+    local ka0s = Skin:ResolveSkin(Skin.DEFAULT)
+    local moved = skinWhere(Skin, "gtip.value")
+    Skin:SetChoice(OWNER, "ka0s", moved)
+    local lines = tipColors(m)
+    Pop.tokenGlyph:__fire("OnEnter")
+    -- red under: NS.SkinColor("gtip.value") with no panel flag (the skin's colors over a stock page)
+    assertColor(rgbOf(lines()[1]), ka0s["gtip.value"], "Ka0s Default's title while the panel is ignored")
+    Skin:SetIgnore(OWNER, false, nil)
+    lines = tipColors(m)
+    Pop.tokenGlyph:__fire("OnEnter")
+    assertColor(rgbOf(lines()[1]), Skin:ResolveSkin(moved)["gtip.value"], "the skin's title once the panel is skinned")
 end)
 
 -- ── the icon browser (W14-W21, D3) ───────────────────────────────────────────────────────────────
@@ -521,7 +550,7 @@ test("skin windows: the browser's texts take their roles, each today's color und
     assertColor(m.__paint(parts.hintText).textColor, { 1, 1, 1, 1 }, "the hint is today's white")
 end)
 
-test("skin windows: the browser's texts keep their font objects' faces (X10), and a switch recolors them", function()
+test("skin windows: the browser's texts take the skin's body face (R-2), Ignore fonts gives it back, a switch recolors", function()
     -- A LibSharedMedia that answers every face, so S.Text WOULD set one.
     local NS, m, Skin = boot(function(mm)
         local lsm = mm.LibStub:NewLibrary("LibSharedMedia-3.0", 1)
@@ -531,20 +560,28 @@ test("skin windows: the browser's texts keep their font objects' faces (X10), an
         function lsm.Fetch(_, kind, name) return kind == "font" and ("Fonts\\" .. tostring(name)) or nil end
         lsm.MediaType = {}
     end)
+    -- Ignore fonts first: the mock's template font strings carry no font object to save, so the
+    -- give-back is pinned as "never faced", then the face arriving live when the exception is lifted.
+    Skin:SetIgnore(OWNER, nil, true)
     local _, parts = openBrowser(NS)
     local want = { count = "GameFontDisableSmall", name = "GameFontNormal", status = "GameFontHighlight",
         hintText = "GameFontHighlightSmall" }
-    -- red under: NS.Skin.Text (S.Text sets the skin's body / title face as well as the color)
-    local function faces(where)
-        for key, obj in pairs(want) do
-            assertEqual(m.__paint(parts[key]).font, nil, key .. " takes no face " .. where)
-            assertEqual(m.__paint(parts[key]).fontObject, nil, key .. " takes no font object " .. where)
-            assertEqual(m.__paint(parts[key]).template, obj, key .. " keeps " .. obj .. " " .. where)
+    for key, obj in pairs(want) do
+        local p = m.__paint(parts[key])
+        assertTrue(p.font == nil and p.fontObject == nil and p.template == obj,
+            key .. " keeps " .. obj .. " under Ignore fonts")
+    end
+    -- red under: a color-only paint (SetTextColor), which leaves the font object's face (retired X10)
+    local function faced(where)
+        for key in pairs(want) do
+            local p = m.__paint(parts[key])
+            assertTrue(p.font ~= nil or p.fontObject ~= nil, key .. " takes the skin's face " .. where)
         end
     end
-    faces("under Ka0s Default")
+    Skin:SetIgnore(OWNER, nil, false)
+    faced("under Ka0s Default")
     Skin:SetChoice(OWNER, "ka0s", OTHER)
-    faces("under " .. OTHER)
+    faced("under " .. OTHER)
     local base = Skin:ResolveSkin(OTHER)
     assertColor(m.__paint(parts.count).textColor, base["text.disabled"], "the count under " .. OTHER)
     assertColor(m.__paint(parts.status).textColor, base["text.highlight"], "the status under " .. OTHER)

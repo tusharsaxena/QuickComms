@@ -1308,7 +1308,7 @@ Total.
 - skin seam: the degraded facade answers every name the live facade carries
 - skin seam: each host-copy skin token is the live library's Ka0s Default value
 
-### test_skin_windows.lua (19)
+### test_skin_windows.lua (20)
 
 - skin windows: no color literal is left in the window files
 - skin windows: the literal gate is falsifiable: a planted literal of each shape is reported
@@ -1319,14 +1319,15 @@ Total.
 - skin windows: the modal window's Bg is faded under the skin's window fill, Ka0s Default included
 - skin windows: the modal catcher's dim is qc.modalDim, today's pixel, and follows a switch
 - skin windows: a client without the template gets the owner's Shell, not the dialog edge
-- skin windows: the popup's refused-field line is sem.badAlt, today's |cffff4040
+- skin windows: the popup's refused-field line is sem.badAlt, today's |cffff4040, panel-scoped (D-03)
 - skin windows: the popup's token tooltip writes its lines in the tooltip tokens
+- skin windows: the popup's token tooltip follows the panel Scope (D-03)
 - skin windows: the browser's selected cell is qc.selStrong, today's gold at 0.7, and follows
 - skin windows: the browser's scroller is the skin's ScrollBar over its own track
 - skin windows: the browser's hint box is the drawer box's tokens, and follows a switch
 - skin windows: the browser's search glyphs are log.tag and qc.markGray, today's pixels
 - skin windows: the browser's texts take their roles, each today's color under Ka0s Default
-- skin windows: the browser's texts keep their font objects' faces (X10), and a switch recolors them
+- skin windows: the browser's texts take the skin's body face (R-2), Ignore fonts gives it back, a switch recolors
 - skin windows: the browser's empty footer line is qc.note, today's |cffaaaaaa
 - skin windows: the browser's cell tooltip writes its lines in the tooltip tokens
 
@@ -1514,7 +1515,7 @@ Total.
 | test_layers.lua | 11 |
 | test_layout.lua | 23 |
 | test_skinsetup.lua | 24 |
-| test_skin_windows.lua | 19 |
+| test_skin_windows.lua | 20 |
 | test_skin_hud.lua | 18 |
 | test_skin_picker.lua | 18 |
 | test_skin_tools.lua | 14 |
@@ -1525,4 +1526,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1259** |
+| **Total** | **1260** |

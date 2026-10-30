@@ -1656,14 +1656,15 @@ cooling button, the gold hover wash, the send flashes, the red LOCKDOWN tag and 
 the green PREVIEW and TEST MODE marks, a dimmed page arrow at an end), every settings page (its colored
 lines included), the debug console's and the perf panel's colors, the Copy window, the drag strip and
 its tooltip (gold title, white body), the reorder lists, the minimap button and its tooltip → each
-looks as before this update; the icon browser's count, status, hint and selected-icon name keep
-Blizzard's font under every skin. These changes are expected: the **Preview as** window's title and
+looks as before this update. These changes are expected: the **Preview as** window's title and
 close mark sit in a 30-pixel top bar across the window, the title in the skin's title font (Oxanium
 Bold) instead of Blizzard's (D9); the icon browser's scroll bar is a flat knob in a dark corridor
 instead of Blizzard's knob over a black track (D3); the first-run skin picker is new (SKIN-17); since
 LibKa0s v1.81.0 (R-2) the callout popup and the icon browser wear the **Ka0s window** (dark fill and
 edge, the title in the skin's title color and face, the skin's close X; the dim behind unchanged),
-no longer Blizzard's settings window (SKIN-8); and the library's own strings in the skin's face
+no longer Blizzard's settings window (SKIN-8), and the icon browser's count, status, hint and
+selected-icon name draw **Oxanium** inside it (R-2; **Ignore fonts** gives Blizzard's font back); and
+the library's own strings in the skin's face
 (D-13) draw **Oxanium** where they drew Blizzard's font: the debug console's title-bar labels, the
 perf panel's step and command columns, the drag strip's label and the Preview as window's dropdown
 menu rows. Fail: any other changed color, edge, face or spacing outside the pads' and dials'
@@ -1715,8 +1716,11 @@ R-2; Ka0sAddonsCommonTasks D-06). Pick **WoW Default** → both are Blizzard's s
 fill, edge, title and close X are the skin's, the page's controls follow the skin when **Ignore
 settings panel** is off, the dim behind takes the skin's cover, and in the browser the selected cell,
 the scroll bar and its corridor, the hint box, the search glyphs, the count, name and status lines
-and the footer note take the skin's colors. Back to **Ka0s Default** → the Ka0s window again, with no
-reload. Fail: Blizzard's settings window under Ka0s Default, the template's art showing through a
+and the footer note take the skin's colors and its body font. With **Ignore settings panel** on (the
+default) the popup's page stays stock inside the skinned window: its controls, its red refused-field
+line (EDIT-9) and its token tooltip's colors (EDIT-18) keep Ka0s Default's under every skin; untick it
+→ they follow the skin with the rest of the page (D-03). Back to **Ka0s Default** → the Ka0s window
+again, with no reload. Fail: Blizzard's settings window under Ka0s Default, the template's art showing through a
 skinned window, or a part on the old colors. Result:
 
 **SKIN-9. The settings pages wear the skin when asked.** On a non-default skin, untick **Ignore settings

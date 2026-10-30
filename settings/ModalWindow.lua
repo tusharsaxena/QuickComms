@@ -23,7 +23,8 @@ local _, NS = ...
 -- Shell, its NineSlice fade, its close X; the Bg is not faded there, as the retired
 -- settings/CalloutPopup_Skin.lua did by hand, since `stock` is a Ka0s-only option). The page inside
 -- and its controls follow the skin as every settings page does (stock while the owner ignores its
--- settings panel, the default Scope). The fallback window is the owner's Shell under every
+-- settings panel, the default Scope), and so do the popup's own colored page lines, its refused-field
+-- line and its token tooltip (D-03): the window is a window (D-01), the page in it a settings page. The fallback window is the owner's Shell under every
 -- skin (no template to keep). The catcher's dim is this addon's qc.modalDim (Ka0s Default's 0.45
 -- black; it follows cover.dim elsewhere), repainted on every looks change.
 --

@@ -53,8 +53,8 @@ local addonName, NS = ...
 -- Ka0s Default: the selected cell this addon's qc.selStrong (gold at 0.7; it follows list.sel), the
 -- empty footer line qc.note (|cffaaaaaa), the search magnifier log.tag and its clear mark
 -- qc.markGray, the hint box drawer.boxBg / drawer.boxBorder (a settings drawer's box), the texts
--- their roles (the count text.disabled, the icon's name text.heading, the status and the hint
--- text.highlight), the tooltip lines gtip.value and the credit gtip.subtle. The scroller is the
+-- their roles in the skin's body face (the count text.disabled, the icon's name text.heading, the
+-- status and the hint text.highlight), the tooltip lines gtip.value and the credit gtip.subtle. The scroller is the
 -- skin's ScrollBar, a corridor and a flat knob over its own track (D3: under Ka0s Default too, as
 -- every scroll bar the library paints). The cell's hover highlight stays the client's art (D8).
 -- Host-drawn colors repaint on every looks change.
@@ -122,17 +122,17 @@ local searchBox, clearMark, hint, hintText, linkBtn, linkWin
 -- and each search glyph with its token.
 local track, hintFill, hintEdges, magnifier, clearGlyph
 local glyphs = {}
--- And each text with its color token: colored, never given a face, so the font object's face stays
--- under every skin (X10; S.Text would set the skin's body or title face as well).
-local texts = {}
+-- And each text through the skin's Text with its color token: the token's color and the skin's
+-- body face, replayed by the library on a looks change. LibKa0s v1.81.0 retired the stock look under
+-- Ka0s Default (R-2, Ka0sAddonsCommonTasks D-06), so these strings take Ka0s Default's face inside its
+-- window, as the window's title does; Ignore fonts gives the font objects' faces back.
 local drawing = false
 B.cells = {}
 
 local function H() return Settings.Helpers end
 
 local function paintText(fs, token)
-    texts[fs] = token
-    fs:SetTextColor(NS.SkinColor(token))
+    NS.Skin.Text(fs, token)
 end
 
 -- ── Escape: the opener's special frame, out while the browser is open ───────────────────────
@@ -767,12 +767,11 @@ function B.Widgets()
         track = track, hintFill = hintFill, hintEdges = hintEdges, magnifier = magnifier, clearGlyph = clearGlyph }
 end
 
--- A skin switch: every host-drawn color in the new skin, the texts' colors included (the scroller and
--- the window are the library's recorded paint), and the footer's note line redrawn in its escape.
+-- A skin switch: every host-drawn color in the new skin (the texts, the scroller and the window are
+-- the library's recorded paint), and the footer's note line redrawn in its escape.
 NS.Skin.OnLooksChanged(function()
     for _, cell in ipairs(B.cells) do cell.selected:SetColorTexture(NS.Skin.Color(SELECTED)) end
     for t, token in pairs(glyphs) do paintGlyph(t, token) end
-    for fs, token in pairs(texts) do paintText(fs, token) end
     paintHint()
     if request then drawFooter() end
 end)
