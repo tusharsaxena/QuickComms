@@ -360,7 +360,7 @@ test("skin windows: the modal window's template chrome is stock under Ka0s Defau
     assertTrue(close and close.opts.stockDefault == true, "the close X")
 end)
 
-test("skin windows: the modal window's Bg is the client's under Ka0s Default and faded under a skin", function()
+test("skin windows: the modal window's Bg is faded under the skin's window fill, Ka0s Default included", function()
     local NS, m, Skin = boot()
     -- The template's Bg is a frame whose art is its texture regions (FlatPanelBackgroundTemplate):
     -- the mock's has none, so one is given it, as the client's has.
@@ -372,13 +372,14 @@ test("skin windows: the modal window's Bg is the client's under Ka0s Default and
     end
     openPopup(NS)
     assertTrue(art ~= nil, "the template was built")
-    assertEqual(m.__paint(art).alpha, 1, "Ka0s Default keeps the template's background")
-    -- red under: hand the Bg frame to Shell's `stock` (it takes textures: the art is left), or fade
-    -- it through FadeRegions (no stockDefault: Ka0s Default would lose the settings window's Bg)
+    -- The stock look under Ka0s Default is retired (LibKa0s v1.81.0, R-2; DECISIONS D-06): Ka0s
+    -- Default is the Ka0s window like every other skin's.
+    -- red under: hand the Bg frame to Shell's `stock` (it takes textures: the art is left)
+    assertEqual(m.__paint(art).alpha, 0, "Ka0s Default fades it under its own window fill")
     Skin:SetChoice(OWNER, "ka0s", OTHER)
     assertEqual(m.__paint(art).alpha, 0, OTHER .. " fades it under its own window fill")
     Skin:SetChoice(OWNER, "ka0s", "ka0s")
-    assertEqual(m.__paint(art).alpha, 1, "a live switch back gives it back")
+    assertEqual(m.__paint(art).alpha, 0, "a live switch back keeps it faded")
 end)
 
 test("skin windows: the modal catcher's dim is qc.modalDim, today's pixel, and follows a switch", function()

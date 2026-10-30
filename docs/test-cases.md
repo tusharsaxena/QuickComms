@@ -1316,7 +1316,7 @@ Total.
 - skin windows: End preview's label is the step panels' tokens at rest, hovered and locked
 - skin windows: the Preview window's tooltips write their lines in the tooltip tokens
 - skin windows: the modal window's template chrome is stock under Ka0s Default, every call
-- skin windows: the modal window's Bg is the client's under Ka0s Default and faded under a skin
+- skin windows: the modal window's Bg is faded under the skin's window fill, Ka0s Default included
 - skin windows: the modal catcher's dim is qc.modalDim, today's pixel, and follows a switch
 - skin windows: a client without the template gets the owner's Shell, not the dialog edge
 - skin windows: the popup's refused-field line is sem.badAlt, today's |cffff4040
