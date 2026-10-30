@@ -437,6 +437,22 @@ function NS.MaybeShowSkinPicker()
     return O.SkinPicker(NS.SkinPickerSpec())
 end
 
+--- The reserved `/qc skin` verb's act (LibKa0s v1.82.0, OptionsSkinPicker minor 3, ruling D-16):
+--- O.SkinVerb with the spec the first-run start builds, so it shows the picker a new profile shows
+--- whatever skin.pickerSeen says. The library prints its own lines (combat on every call, queued,
+--- unavailable); without LibKa0s the stub answers nil, "absent" and this prints the library-absent
+--- line. The dispatcher refuses the verb while the addon is disabled (settings/Slash.lua). Answers
+--- the picker's frame, or nil and the reason.
+function NS.RunSkinVerb()
+    local O = options()
+    local win, why
+    if O and type(O.SkinVerb) == "function" then win, why = O.SkinVerb(NS.SkinPickerSpec()) else why = "absent" end
+    if win == nil and why == "absent" and NS.Print then
+        NS.Print(NS.L["%s is unavailable: the LibKa0s library did not load."]:format(NS.SLASH .. " skin"))
+    end
+    return win, why
+end
+
 --- The login start, PICKER_DELAY seconds in; a second call while one waits is a no-op.
 function NS.ScheduleSkinPicker()
     if pickerTimer or not (NS.addon and NS.addon.ScheduleTimer) then return end

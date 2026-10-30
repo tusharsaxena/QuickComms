@@ -9,6 +9,7 @@ settings panel.
 |---|---|---|---|
 | `help` | reserved | yes | the library's index |
 | `config` | reserved | yes | `QC:OpenSettings` |
+| `skin` | reserved (LibKa0s v1.82.0, ruling D-16) | no (refused while disabled) | `NS.RunSkinVerb` (`core/SkinSetup.lua`): LibKa0s's `O.SkinVerb` with the first-run spec, so it opens the skin picker a new profile shows whatever `skin.pickerSeen` says; in combat the library prints a gray line on every call; without LibKa0s it prints `/qc skin is unavailable: the LibKa0s library did not load.` |
 | `enable` / `disable` | reserved | yes | `runEnabled`, writing `enabled` through the seam |
 | `lock` / `unlock` | reserved (slash-commands-§8) | no (refused while disabled) | `NS.SlashVerbs.SetLocked`, writing `locked` through the seam; the Lock frame row and the launcher's Locked entry write the same path |
 | `toggle` | feature | no (refused while disabled; a perf capture alone: the capture line) | `NS.SlashVerbs.TogglePads`: flips this character's `db.char.padsHidden` (saved per character, so a /reload or the next login restores it, and a profile switch leaves it alone) and rebuilds through `Surfaces.Request`, so in combat it waits for combat to end. The pads' visibility driver then says `hide`; test mode still shows them; dials are not affected. It prints nothing to chat (2026-10-21, owner): the pads going or coming back is the answer, and the debug log's `Pads` tag records it. The launcher's Show window entry and the Toggle Comms Pads key binding (Bindings.xml) call the same handler (launcher-§2) |
@@ -40,4 +41,4 @@ Every verb of spec §14 now exists. The verb bodies live in
 `settings/SlashVerbs.lua`; the rows in `settings/Slash.lua` only call them.
 
 With the library absent, the stub in `settings/Slash.lua` dispatches the same table, keeps the
-same live list, and the schema CLI verbs say the library is missing.
+same live list, and the schema CLI verbs and `skin` say the library is missing.
