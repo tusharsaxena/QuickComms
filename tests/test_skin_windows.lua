@@ -4,8 +4,9 @@
 --
 -- What this addon owes and nothing the library pins itself: each window is handed to the owner's
 -- primitives with the options DECISIONS rules (the Preview window a Shell with its title in the top
--- bar, D9; the modal window's template chrome kept stock under Ka0s Default and skinned under every
--- other skin, X10 / LK-05; the icon browser's scroller a skin ScrollBar, D3), every color the host
+-- bar, D9; the modal window's template chrome skinned under every skin, Ka0s Default included since
+-- LibKa0s v1.81.0 retired the stock look, X10 / R-2; the icon browser's scroller a skin ScrollBar,
+-- D3), every color the host
 -- draws itself reads a token (the library's, or this addon's own qc.* where Ka0s Default's pixel has
 -- no exact library token, X1), each answers today's pixels under Ka0s Default and moves with a skin
 -- switch, and no color literal is left in these files.
@@ -342,22 +343,24 @@ local function openPopup(NS)
     return Pop
 end
 
-test("skin windows: the modal window's template chrome is stock under Ka0s Default, every call", function()
+test("skin windows: the modal window's template chrome is painted under every skin, no stock look", function()
     local NS = boot()
     local seen = spy(NS, { "Shell", "FadeNineSlice", "TitleBar", "CloseButton" })
     local Pop = openPopup(NS)
     local f = Pop.frame
-    -- red under: drop stockDefault from any call (that part is faded and repainted under Ka0s
-    -- Default, and the ratified settings-window look is gone, docs/ARCHITECTURE.md)
+    -- The stock look under Ka0s Default is retired (LibKa0s v1.81.0, R-2; DECISIONS D-06): the
+    -- popup and the browser are windows, so Ka0s Default draws its own window there.
+    -- red under: any call still carrying the retired `stockDefault` key
     local shell = callOn(seen.Shell, f)
-    assertTrue(shell and shell.opts.stockDefault == true, "the window's Shell")
+    assertTrue(shell ~= nil and shell.opts.stockDefault == nil, "the window's Shell")
+    assertTrue(type(shell.opts.stock) == "table", "the Bg art is still handed over to fade")
     local fade = callOn(seen.FadeNineSlice, f)
-    assertTrue(fade and fade.opts.stockDefault == true, "the NineSlice")
+    assertTrue(fade ~= nil and (fade.opts == nil or fade.opts.stockDefault == nil), "the NineSlice")
     local bar = callOn(seen.TitleBar, f.NineSlice)
-    assertTrue(bar and bar.opts.stockDefault == true and bar.opts.noBg == true, "the title")
+    assertTrue(bar and bar.opts.stockDefault == nil and bar.opts.noBg == true, "the title")
     assertEqual(bar.opts.text, f.NineSlice.Text, "the title is the template's own text")
     local close = callOn(seen.CloseButton, f.ClosePanelButton)
-    assertTrue(close and close.opts.stockDefault == true, "the close X")
+    assertTrue(close ~= nil and (close.opts == nil or close.opts.stockDefault == nil), "the close X")
 end)
 
 test("skin windows: the modal window's Bg is faded under the skin's window fill, Ka0s Default included", function()

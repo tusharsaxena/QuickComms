@@ -22,7 +22,10 @@ local _, NS = ...
 -- THE SKIN (QC-03, skinning-§6; DECISIONS X3, X4). Every font block's face and every border block's
 -- style follow the skin while the block's "Use the skin's font / border" companion is on (the
 -- default): R.FontKey and R.BorderKey read them through NS.Skin.Resolve (hud.font, bar.borderStyle),
--- the stored pick while it is off. The player's colors, sizes, flags and shadows are always the
+-- the stored pick while it is off. While the owner ignores fonts (the Skin tab's Ignore fonts),
+-- Resolve answers a face block's stored pick whatever its companion says (LibKa0s v1.81.0, R-1), nil
+-- for a stored "@skin", and R.LabelFont draws the standard face for a nil or unknown pick, so no
+-- Ignore-fonts handling lives here. The player's colors, sizes, flags and shadows are always the
 -- player's. The chrome this file draws that no setting names (the padlock, the state veils, the hover
 -- wash, the send flashes, the header's lockdown and stale colors, the strip's marker, the tooltip
 -- lines) reads a token: R.Chrome, read once per look change, Ka0s Default's values today's pixels (the
@@ -87,7 +90,8 @@ Skin.OnLooksChanged(function()
 end)
 
 --- A font block's face as the skin or the player names it: the skin's hud.font while its "Use the
---- skin's font" companion is on, else the stored pick. An LSM key.
+--- skin's font" companion is on, else the stored pick; the stored pick while the owner ignores fonts
+--- (the library's rule, R-1). An LSM key, or nil (the standard face).
 function R.FontKey(look)
     return Skin.Resolve("hud.font", look.font, look.fontFromSkin == true)
 end

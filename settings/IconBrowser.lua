@@ -47,7 +47,8 @@ local addonName, NS = ...
 -- stand-down. In combat the library's cover lies over its page, as over every settings page, and
 -- Choose is refused: nothing is written in combat. Only one browser exists, built on its first Open.
 --
--- THE SKIN (QC-02). The window is settings/ModalWindow.lua's (stock under Ka0s Default, X10); the
+-- THE SKIN (QC-02). The window is settings/ModalWindow.lua's (the skin's window under every skin,
+-- Ka0s Default included since LibKa0s v1.81.0, R-2); the
 -- page and the parts drawn here follow the owner's skin. Every color is a token, today's pixel on
 -- Ka0s Default: the selected cell this addon's qc.selStrong (gold at 0.7; it follows list.sel), the
 -- empty footer line qc.note (|cffaaaaaa), the search magnifier log.tag and its clear mark
@@ -122,8 +123,7 @@ local searchBox, clearMark, hint, hintText, linkBtn, linkWin
 local track, hintFill, hintEdges, magnifier, clearGlyph
 local glyphs = {}
 -- And each text with its color token: colored, never given a face, so the font object's face stays
--- under every skin (X10: the browser keeps the stock settings window's look under Ka0s Default, and
--- S.Text would set the skin's body or title face as well).
+-- under every skin (X10; S.Text would set the skin's body or title face as well).
 local texts = {}
 local drawing = false
 B.cells = {}

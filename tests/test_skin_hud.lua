@@ -8,7 +8,8 @@
 -- flashes, the lockdown and stale tags, the PREVIEW / TEST MODE marks, an arrow at an end, the tooltip
 -- lines) reads a token whose Ka0s Default value is today's pixel, and moves with a skin switch; and the
 -- one-time reset onto the skin (the owner's ruling O2) is schema step 10, which turns every stored
--- companion on once and keeps a pick the player makes afterwards.
+-- companion on once and keeps a pick the player makes afterwards. Ignore fonts reaches the HUD
+-- through the library (LibKa0s v1.81.0, R-1): a following face draws its stored pick while it is on.
 
 local T = _G.QUICKCOMMS_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
@@ -118,6 +119,47 @@ test("skin hud: a pad's labels, titles and header take hud.font while they follo
     set(NS, "pad.button.fontFromSkin", false, "p1")
     assertEqual(firstButton(NS).qcLabel.__font[1], ARIAL, "off: the player's face")
     assertEqual(NS.db.profile.pads.p1.button.font, "Arial", "the pick is stored either way")
+end)
+
+-- Ignore fonts reaches the HUD (LibKa0s v1.81.0, R-1; DECISIONS D-09): while the owner ignores fonts,
+-- Resolve answers the block's stored pick whatever its companion says, so a following block draws the
+-- player's face; a stored pick LibSharedMedia lacks (Friz Quadrata, the default) is the standard face.
+test("skin hud: with Ignore fonts on, a following pad face draws its stored pick, live both ways", function()
+    local NS, _, Skin = live()
+    local inst = NS.Pad.Instance("p1")
+    set(NS, "pad.button.font", "Arial", "p1")
+    assertEqual(NS.db.profile.pads.p1.button.fontFromSkin, true, "the block still follows")
+    assertEqual(firstButton(NS).qcLabel.__font[1], OXANIUM, "following: the skin's face")
+    Skin:SetIgnore(OWNER, nil, true)
+    -- red under: R.FontKey answers hud.font while the companion is on, whatever Ignore fonts says
+    assertEqual(firstButton(NS).qcLabel.__font[1], ARIAL, "Ignore fonts: the stored pick")
+    assertEqual(inst.header.qcSituation.__font[1], STANDARD_TEXT_FONT,
+        "a stored Friz Quadrata LibSharedMedia lacks is the standard face, never the skin's")
+    assertEqual(NS.db.profile.pads.p1.button.fontFromSkin, true, "the companion is left on")
+    Skin:SetIgnore(OWNER, nil, false)
+    assertEqual(firstButton(NS).qcLabel.__font[1], OXANIUM, "untick: the skin's face is back")
+end)
+
+test("skin hud: with Ignore fonts on, the font override does not reach a following HUD face", function()
+    local NS, _, Skin = live()
+    set(NS, "pad.button.font", "Arial", "p1")
+    Skin:SetOverride(OWNER, "Ka0s Oxanium SemiBold", nil)
+    Skin:SetIgnore(OWNER, nil, true)
+    assertEqual(firstButton(NS).qcLabel.__font[1], ARIAL, "the stored pick beats the override")
+    Skin:SetOverride(OWNER, false, nil)
+    Skin:SetIgnore(OWNER, nil, false)
+end)
+
+test("skin hud: with Ignore fonts on, a following dial label draws its stored pick", function()
+    local NS, m, Skin = live()
+    set(NS, "dial.label.font", "Arial", "d2")
+    Skin:SetIgnore(OWNER, nil, true)
+    m.__click(NS.Dial.Instance("d2").header)
+    local wedge = NS.Dial.RingWedges("d2", NS.Dial.ShownRing("d2") or 1)[1]
+    assertEqual(wedge.qcLabel.__font[1], ARIAL, "a slice label: the stored pick")
+    Skin:SetIgnore(OWNER, nil, false)
+    wedge = NS.Dial.RingWedges("d2", NS.Dial.ShownRing("d2") or 1)[1]
+    assertEqual(wedge.qcLabel.__font[1], OXANIUM, "untick: the skin's face")
 end)
 
 test("skin hud: a following face takes the Skin tab's font override, as every face of the owner does", function()

@@ -1315,7 +1315,7 @@ Total.
 - skin windows: the Preview window is the owner's Shell, its title in the top bar
 - skin windows: End preview's label is the step panels' tokens at rest, hovered and locked
 - skin windows: the Preview window's tooltips write their lines in the tooltip tokens
-- skin windows: the modal window's template chrome is stock under Ka0s Default, every call
+- skin windows: the modal window's template chrome is painted under every skin, no stock look
 - skin windows: the modal window's Bg is faded under the skin's window fill, Ka0s Default included
 - skin windows: the modal catcher's dim is qc.modalDim, today's pixel, and follows a switch
 - skin windows: a client without the template gets the owner's Shell, not the dialog edge
@@ -1330,11 +1330,14 @@ Total.
 - skin windows: the browser's empty footer line is qc.note, today's |cffaaaaaa
 - skin windows: the browser's cell tooltip writes its lines in the tooltip tokens
 
-### test_skin_hud.lua (15)
+### test_skin_hud.lua (18)
 
 - skin hud: every HUD font and border block follows the skin by default, through a schema row
 - skin hud: a following picker is grayed out and shows the skin's value; off, it is the player's
 - skin hud: a pad's labels, titles and header take hud.font while they follow, the pick when not
+- skin hud: with Ignore fonts on, a following pad face draws its stored pick, live both ways
+- skin hud: with Ignore fonts on, the font override does not reach a following HUD face
+- skin hud: with Ignore fonts on, a following dial label draws its stored pick
 - skin hud: a following face takes the Skin tab's font override, as every face of the owner does
 - skin hud: a pad's border blocks take bar.borderStyle while they follow, the pick when not
 - skin hud: an icon's border takes the skin's icon border while it follows, the pick when not
@@ -1369,7 +1372,7 @@ Total.
 - skin picker: the gear saves the pick and opens General on its Skin tab
 - skin picker: without LibKa0s nothing shows and nothing raises
 
-### test_skin_tools.lua (12)
+### test_skin_tools.lua (14)
 
 - skin tools: the pages' AceGUI handle is the owner proxy, which paints for this owner
 - skin tools: under the default Scope (Ignore settings panel) a page widget stays stock
@@ -1381,6 +1384,8 @@ Total.
 - skin tools: without LibKa0s the release work takes the AceGUI callback, and nothing paints
 - skin tools: the pages' colored lines keep today's bytes under Ka0s Default
 - skin tools: the pages' colored lines move with a skin switch
+- skin tools: under the default Scope the pages' colored lines stay Ka0s Default's in any skin
+- skin tools: every settings-page host paint reads the panel-scoped color, never the window one
 - skin tools: the debug console and its copy window are painted for this owner
 - skin tools: the perf panel is painted for this owner
 
@@ -1510,9 +1515,9 @@ Total.
 | test_layout.lua | 23 |
 | test_skinsetup.lua | 24 |
 | test_skin_windows.lua | 19 |
-| test_skin_hud.lua | 15 |
+| test_skin_hud.lua | 18 |
 | test_skin_picker.lua | 18 |
-| test_skin_tools.lua | 12 |
+| test_skin_tools.lua | 14 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -1520,4 +1525,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1254** |
+| **Total** | **1259** |

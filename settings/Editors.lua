@@ -627,8 +627,8 @@ function Ed.TableRows(ctx, pageKey, blocks, header)
             if block.title then h.Section(ctx, block.title) end
             local items = { { wide = true, make = function(_, into)
                 local a, b = tableRow(h, into, header.name, header.text)
-                a:SetColor(NS.SkinColor(HEADER_COLOR))
-                b:SetColor(NS.SkinColor(HEADER_COLOR))
+                a:SetColor(NS.SkinColor(HEADER_COLOR, true))
+                b:SetColor(NS.SkinColor(HEADER_COLOR, true))
                 return true
             end } }
             for _, e in ipairs(block.rows) do

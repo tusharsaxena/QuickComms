@@ -14,14 +14,16 @@ local _, NS = ...
 -- under the page and the shared close mark. Either close calls the caller's `onClose`. The window is
 -- a special frame (Escape hides it); what a hide means is the caller's (its own OnHide hook).
 --
--- THE SKIN (QC-02; DECISIONS X10, D2; LibKa0s LK-05). The template's chrome is painted through the
--- owner's facade with `opts.stockDefault` on every call: under Ka0s Default it stays exactly
--- Blizzard's settings window (the ratified look, docs/ARCHITECTURE.md), under every other skin it is
--- that skin's window (the template's Bg art faded under the skin's fill), and under EllesmereUI it
--- is EllesmereUI's (its Shell, its NineSlice fade, its close X; the Bg is no longer faded there, as
--- the retired settings/CalloutPopup_Skin.lua did by hand, since `stock` is a Ka0s-only option). A
--- live switch back to Ka0s Default gives the stock window back. The page inside and its controls
--- follow the skin as every settings page does. The fallback window is the owner's Shell under every
+-- THE SKIN (QC-02; DECISIONS X10, D2; LibKa0s v1.81.0 R-2, Ka0sAddonsCommonTasks D-06). The
+-- template's chrome is painted through the owner's facade under every skin: the popup and the browser
+-- are windows, and LibKa0s v1.81.0 retired the stock look under Ka0s Default, so Ka0s Default draws
+-- its own window here as every other skin draws its own (the template's Bg art faded under the skin's
+-- fill, its NineSlice faded, the title and close X in the skin's colors). A player who wants
+-- Blizzard's settings window picks the WoW Default skin. Under EllesmereUI it is EllesmereUI's (its
+-- Shell, its NineSlice fade, its close X; the Bg is not faded there, as the retired
+-- settings/CalloutPopup_Skin.lua did by hand, since `stock` is a Ka0s-only option). The page inside
+-- and its controls follow the skin as every settings page does (stock while the owner ignores its
+-- settings panel, the default Scope). The fallback window is the owner's Shell under every
 -- skin (no template to keep). The catcher's dim is this addon's qc.modalDim (Ka0s Default's 0.45
 -- black; it follows cover.dim elsewhere), repainted on every looks change.
 --
@@ -79,8 +81,8 @@ local function paintDim(dim)
 end
 
 -- The template's Bg is a FRAME (FlatPanelBackgroundTemplate; Build gives it a frame level), and
--- Shell's `opts.stock` takes textures only, so its art is handed over as the Bg's texture regions.
--- (FadeRegions would fade them under Ka0s Default too: it takes no stockDefault.)
+-- Shell's `opts.stock` takes textures only, so its art is handed over as the Bg's texture regions:
+-- Shell fades them with the rest of the template's art and gives them back when it unpaints.
 local function bgArt(bg)
     local out = {}
     if not (bg and type(bg.GetRegions) == "function") then return out end
@@ -88,16 +90,16 @@ local function bgArt(bg)
     return out
 end
 
--- The template's chrome through the facade, every call kept stock under Ka0s Default (THE SKIN
--- above). Each primitive is recorded, so a skin switch repaints it with no host call.
+-- The template's chrome through the facade, painted under every skin (THE SKIN above). Each
+-- primitive is recorded, so a skin switch repaints it with no host call.
 local function skinTemplate(chrome)
     local S, f = NS.Skin, chrome.window
-    S.Shell(f, { stockDefault = true, stock = bgArt(chrome.bg) })
-    S.FadeNineSlice(f, { stockDefault = true })
+    S.Shell(f, { stock = bgArt(chrome.bg) })
+    S.FadeNineSlice(f)
     if isTable(chrome.nineSlice.Text) then
-        S.TitleBar(chrome.nineSlice, { stockDefault = true, text = chrome.nineSlice.Text, noBg = true })
+        S.TitleBar(chrome.nineSlice, { text = chrome.nineSlice.Text, noBg = true })
     end
-    S.CloseButton(chrome.close, { stockDefault = true })
+    S.CloseButton(chrome.close)
 end
 
 -- The window: the template when the client has it and it still has the parts used here, else a
