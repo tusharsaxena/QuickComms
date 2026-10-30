@@ -235,6 +235,12 @@ the settings pages and the library's own windows.
   kept. Under Ka0s Default that is a visible change (rollout X5, D11): Oxanium SemiBold in place of the
   picked faces (Friz Quadrata by default), a picked border art becomes the skin's `None` (the flat
   edge at the stored thickness), and a shown icon border the skin's Solid 2 px.
+- **Font flags and HUD sizes** (LibKa0s v1.82.0, Ka0sAddonsCommonTasks D-07, D-09). Every font
+  block's Font flags lead with From skin (`"@skin"`, the composer's `flagsFromSkin`), its default,
+  which `Pad_Render.LabelFont` draws through `NS.Skin.FontFlags`, so the Skin tab's Font outline
+  (`skin.outline`) decides; a picked flag wins. Schema step 11 (`Library.MigrateFontFlags`) moved
+  every stored OUTLINE, the old default, to From skin once. A block that follows the skin's face
+  draws at `NS.Skin.HudFontSize(stored)`, and the pad's cells grow with the drawn size.
 - **The windows.** The Preview as window is the owner's `Shell`, its title and close mark in the
   skin's top bar (D9). The callout popup and the icon browser are built from Blizzard's
   `SettingsFrameTemplate` and wear the skin's window under every skin, Ka0s Default included: LibKa0s

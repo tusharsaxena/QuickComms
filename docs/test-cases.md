@@ -137,7 +137,7 @@ Total.
 - profile: collections exist; default nextId is 1, past every seeded id after boot
 - profile: every behavior row resolves through the seam
 - profile: the spam guard clamps to 0.6-2.0 and fallback refuses unknown values
-- profile: schema version target is 10 (the one-time reset onto the skin)
+- profile: schema version target is 11 (the Font flags' move to From skin)
 - prepare: a callout held by two groups is split into a copy
 - prepare: a split copy of a seeded callout keeps no origin
 - prepare: a callout held by no group is dropped
@@ -1394,6 +1394,21 @@ Total.
 - skin verb: refused while the addon is disabled, and no picker shows
 - skin verb: without LibKa0s the verb prints the library-absent line
 
+### test_skin_fonts.lua (12)
+
+- skin fonts: every font block carries the minimum set, its flags led by From skin
+- skin fonts: a fresh pad and dial store From skin, and /qc set takes it and every picked flag
+- skin fonts: From skin follows the Font outline; a picked flag wins under every mode
+- skin fonts: a dial's slice labels and ring title follow the Font outline too
+- skin fonts: under Ignore fonts From skin is OUTLINE, the flags these blocks always had
+- skin fonts: without the library a block's From skin draws OUTLINE
+- skin fonts: step 11 moves a stored OUTLINE to From skin and keeps every other flag
+- skin fonts: step 11 runs once per profile: OUTLINE picked afterwards stays OUTLINE
+- skin fonts: a block on the skin's face draws at the skin's HUD scale; the stored size stays
+- skin fonts: under Ignore fonts a following block draws its stored size
+- skin fonts: a dial's slice labels scale with the skin's HUD size
+- skin fonts: a pad's buttons grow with the size they draw at, not the size they store
+
 ### test_skin_tools.lua (14)
 
 - skin tools: the pages' AceGUI handle is the owner proxy, which paints for this owner
@@ -1541,6 +1556,7 @@ Total.
 | test_skin_picker.lua | 18 |
 | test_skin_outline.lua | 9 |
 | test_skin_verb.lua | 6 |
+| test_skin_fonts.lua | 12 |
 | test_skin_tools.lua | 14 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
@@ -1549,4 +1565,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1275** |
+| **Total** | **1287** |

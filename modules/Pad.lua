@@ -434,16 +434,18 @@ function Pad.Apply(id, plan)
     inst.slook = R.SectionLook(pad.section, inst.slook)
     local slook = inst.slook
     local button = asTable(pad.button)
+    -- The buttons' look first: the cells grow with the size the label draws at (Skin.HudFontSize,
+    -- LibKa0s v1.82.0), not the size the Buttons tab stores.
+    inst.clook = R.ButtonLook(button, inst.clook)
     -- The header wears its font and text before the layout, so the pad is as wide as the row needs
     -- (R.HeaderMinWidth), no wider.
     R.ApplyHeaderLook(inst.header, hlook)
     R.PaintHeader(inst.header, hstate)
     local box = PL.Compute(sections, layout, { collapsed = hstate.collapsed, headerH = hlook.height, button = button,
-        fontSize = button.fontSize, titleSize = slook.font.size, titleH = slook.height, situation = hstate.said, iconSize = icfg.size,
+        fontSize = inst.clook.font.size, titleSize = slook.font.size, titleH = slook.height, situation = hstate.said, iconSize = icfg.size,
         minWidth = R.HeaderMinWidth(inst.header) })
     sizeRoot(inst, layout, box)
     NS.ApplySkin(inst.root, R.SkinFor(look))
-    inst.clook = R.ButtonLook(button, inst.clook)
     place(inst, box, layout.style, inst.clook, slook, icfg)
     disarmFree(inst.buttons)
     NS.Glow.ReleaseFree(inst.buttons)

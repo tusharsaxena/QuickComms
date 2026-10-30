@@ -358,7 +358,7 @@ end
 
 test("skin hud: step 10 turns every stored pad's and dial's companions on, keeping every pick", function()
     local NS = live()
-    assertEqual(NS.SCHEMA_VERSION, 10, "the reset is step 10")
+    assertEqual(NS.MIGRATIONS[10].to, 10, "the reset is step 10")
     local p = oldProfile()
     -- red under: no step, or ResetToSkin handed an absent companion ("@skin" lands in the picker)
     NS.Library.MigrateFollowSkin(p)
@@ -382,7 +382,7 @@ test("skin hud: the reset runs once: a companion the player turns off afterwards
     db.global.schemaVersion = 9
     -- red under: the step missing, or not perProfile (every stored profile is reset)
     NS.addon:RunMigrations()
-    assertEqual(db.global.schemaVersion, 10)
+    assertEqual(db.global.schemaVersion, NS.SCHEMA_VERSION)
     assertEqual(pad.header.fontFromSkin, true, "the one-time reset")
     assertEqual(pad.button.borderStyleFromSkin, true)
     set(NS, "pad.header.fontFromSkin", false, "p1")

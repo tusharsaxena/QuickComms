@@ -170,8 +170,14 @@ What the addon cannot do, or does only under a condition, and why. The hub,
 - A skin change in combat repaints the pads and dials only when combat ends (a rebuild waits for it,
   with the stale hint meanwhile), as every rebuild does: a face or a border style moves a pad's
   measured widths, and a secure pad cannot be re-laid out in combat. The one-time reset onto the
-  skin (schema step 10) moves every pad's and dial's faces to the skin's HUD font (Oxanium SemiBold
-  under Ka0s Default) and their border styles to its own; the colors stay the player's.
+  skin (schema step 10) moves every pad's and dial's faces to the skin's HUD font (Prototype under
+  Ka0s Default since LibKa0s v1.82.0, Oxanium SemiBold before) and their border styles to its own;
+  the colors stay the player's. Step 11 moves every stored OUTLINE Font flags to From skin once, so
+  a player who had picked Outline on purpose now follows the Font outline (the same pixels under
+  its default, All text); picking Outline again keeps it.
+- A block on the skin's face draws at the skin's HUD size (`NS.Skin.HudFontSize`, LibKa0s v1.82.0,
+  D-09), so under Obsidian a stored 12 draws at 13 and the pad's buttons grow with it; the stored
+  size is never rewritten. A block on its own face, or Ignore fonts, draws the stored size.
 - The icon browser searches game icons by texture id only: the client gives them as texture ids, with
   no names, and has no API that names one, so a game icon is named by its id and a name is looked up
   on Wowhead (the tab's hint; the game cannot open a web page, so the address is shown to copy). No

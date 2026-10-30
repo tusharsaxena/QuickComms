@@ -42,6 +42,9 @@ NS.MIGRATIONS = {
     -- Every pad's and dial's font and border pickers follow the skin again, through their "Use the
     -- skin's ..." companions (LibKa0s-Skin-1.0 ResetToSkin); colors stay the player's (DECISIONS X4).
     { to = 10, perProfile = true, run = function(_, profile) NS.Library.MigrateFollowSkin(profile) end },
+    -- 10 -> 11 (LibKa0s v1.82.0, Ka0sAddonsCommonTasks D-07 and Addendum 01): every pad's and dial's
+    -- font block whose Font flags still hold the old default, OUTLINE, moves to From skin once.
+    { to = 11, perProfile = true, run = function(_, profile) NS.Library.MigrateFontFlags(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.

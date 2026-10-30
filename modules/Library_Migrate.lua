@@ -258,3 +258,24 @@ function Lib.MigrateFollowSkin(profile)
         end
     end
 end
+
+-- The font blocks whose Font flags gained From skin (LibKa0s v1.82.0, Ka0sAddonsCommonTasks D-07),
+-- by surface kind, and the flag every one of them shipped with until then.
+Lib.FONT_FLAG_BLOCKS = { pad = { "header", "section", "button" }, dial = { "label", "title" } }
+local OLD_FLAGS_DEFAULT = "OUTLINE"
+
+--- Step 11 (QC-01 of Ka0sAddonsCommonTasks docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK, Addendum 01): a
+--- stored Font flags equal to the old default moves to From skin ("@skin") once, so the block follows
+--- the Skin tab's Font outline; any other flag is the player's pick and stays. The runner's stamp is
+--- what makes it once: OUTLINE picked afterwards is kept. A damaged surface is left as it is.
+function Lib.MigrateFontFlags(profile)
+    if type(profile) ~= "table" then return end
+    for kind, list in pairs({ pad = profile.pads, dial = profile.dials }) do
+        for _, surface in pairs(type(list) == "table" and list or {}) do
+            for _, block in ipairs(type(surface) == "table" and Lib.FONT_FLAG_BLOCKS[kind] or {}) do
+                local t = surface[block]
+                if type(t) == "table" and t.fontFlags == OLD_FLAGS_DEFAULT then t.fontFlags = "@skin" end
+            end
+        end
+    end
+end
