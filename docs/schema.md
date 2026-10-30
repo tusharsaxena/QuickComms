@@ -205,7 +205,15 @@ companion (`<picker>FromSkin`) turned on: a stored companion through LibKa0s-Ski
 `ResetToSkin`, an absent one written `true` (ResetToSkin would write its `"@skin"` sentinel into the
 picker). The picks themselves are kept, and no color, size or flag is touched (DECISIONS X4). The
 stamp makes it once: a companion the player turns off afterwards stays off.
-`NS.SCHEMA_VERSION` is 10.
+Step 11 (LibKa0s v1.82.0, QC-01, 2026-10-30, `perProfile`, `Library.MigrateFontFlags`,
+`modules/Library_Migrate.lua`): Font flags gain From skin (DECISIONS D-07, Addendum 01). Every stored
+pad's `header`, `section` and `button` and every stored dial's `label` and `title`
+(`Library.FONT_FLAG_BLOCKS`) whose `fontFlags` is `"OUTLINE"`, the old default, becomes `"@skin"` once,
+so the block follows the Skin tab's Font outline; any other value (`THICKOUTLINE`, `""`, ...) is the
+player's pick and stays, and a damaged surface is left as it is. A player who explicitly picked OUTLINE
+before the update cannot be told from the default and moves to From skin (Addendum 01 accepts that).
+The stamp makes it once: an OUTLINE picked afterwards stays.
+`NS.SCHEMA_VERSION` is 11.
 No schema step for the bg buttons (2026-10-20, owner ruling: the addon is unreleased, so a profile is
 reset rather than migrated): In Group and Silvershard Mines' and Temple of Kotmogu's groups reach a
 stored profile through `Library.Prepare`'s seeding as any newly shipped set or node (In Group at the
