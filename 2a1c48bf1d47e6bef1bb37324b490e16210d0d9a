@@ -1,0 +1,1 @@
+QC-03 review: no findings. Reviewer re-ran the gate via ka0s-bounded (1296 passed / 0 failed / 1 skipped; luacheck 0/0 in 148 files) and an independent glyph scan (77 files, 0 hits; the only unsafe escaped arrow at core/QuickComms.lua:104 sits in an NS.Debug call, a legitimate skip). Fixed: nothing. Declined: nothing. No review commit needed.
