@@ -1437,6 +1437,10 @@ Total.
 - skin tools: the debug console and its copy window are painted for this owner
 - skin tools: the perf panel is painted for this owner
 
+### test_glyphs.lua (1)
+
+- glyphs: display strings use only characters every shipped skin face draws
+
 ### test_vendor_sync.lua (3)
 
 - libs/LibKa0s is the LibKa0s release CLAUDE.md says this addon bundles
@@ -1570,6 +1574,7 @@ Total.
 | test_skin_fonts.lua | 12 |
 | test_icons_default.lua | 8 |
 | test_skin_tools.lua | 14 |
+| test_glyphs.lua | 1 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -1577,4 +1582,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1295** |
+| **Total** | **1296** |
