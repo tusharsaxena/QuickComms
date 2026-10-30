@@ -261,8 +261,9 @@ end
 
 -- The group part of a Reuse entry ("<group>:", a set's "<set>: <child>:") is drawn in the muted
 -- gold LibKa0s gives a debug line's tag (the skin's log.tag, c9a66b under Ka0s Default), the
--- callout's name in white. An escape read at call time, so a skin switch reaches the next list.
-function G.MutedGold() return NS.SkinEscape("log.tag") or "" end
+-- callout's name in white. An escape read at call time, so a skin switch reaches the next list, and
+-- a settings page's read (Ka0s Default's gold while the owner ignores its settings panel, D-03).
+function G.MutedGold() return NS.SkinEscape("log.tag", true) or "" end
 
 -- Reuse's three steps, in order. First, each callout's group part ("<group>", a child group's
 -- "<parent>: <child>"; the first group that holds it wins) and the set of `gid`'s own.

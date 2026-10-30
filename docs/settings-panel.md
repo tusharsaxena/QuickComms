@@ -92,7 +92,7 @@ controls, Behavior, Skin, Keybindings. It draws:
 | Skin source | *Ka0s skins* or *EllesmereUI* (`skin.source`); EllesmereUI is disabled, with the failing condition and its fix named, unless EllesmereUI can skin this addon |
 | Look | the nine skins three to a line, each with four swatches (`skin.skin`) |
 | Font and texture | **Font** and **Texture** (`skin.font`, `skin.texture`), *Skin's own (…)* first, then every LibSharedMedia font or status bar |
-| Scope | **Ignore settings panel** (`skin.ignorePanel`, on for a new profile) and **Ignore fonts** (`skin.ignoreFonts`) |
+| Scope | **Ignore settings panel** (`skin.ignorePanel`, on for a new profile) and **Ignore fonts** (`skin.ignoreFonts`; it covers the pads' and dials' faces too, LibKa0s v1.81.0) |
 | | **Copy to every Ka0s addon…**, and the note on what skins change |
 
 A pick calls `Skin:SetChoice` first and writes through `NS.WriteSkinChoice` after, so the row's
@@ -100,14 +100,17 @@ A pick calls `Skin:SetChoice` first and writes through `NS.WriteSkinChoice` afte
 ordinary `skipRender` schema rows in group `Appearance` (`settings/SchemaRows.lua`;
 [schema.md](schema.md)), so the defaults, both resets and `/qc get|set skin.*` reach them;
 `skin.pickerSeen` is drawn by nothing. While **Ignore settings panel** is on, these pages keep the
-client's look under any skin; the pads, the dials and the windows wear the skin either way. Every page
+client's look under any skin, their colored lines and the reorder lists included (Ka0s Default's
+colors, D-03); the pads, the dials and the windows (the callout popup and the icon browser among them)
+wear the skin either way. Every page
 widget comes from the Options instance's AceGUI handle (the owner's proxy, which paints on Create),
 the host's release work is chained through `NS.SkinOnRelease`, and the Profiles page paints
 AceConfigDialog's tree with `NS.SkinPaintAceTree` after each Open; each widget goes back to the shared
 AceGUI pool stock, so another addon's pages never inherit this skin.
 
-**The first-run picker** is `O.SkinPicker`, a small window titled *Choose a skin for Ka0s Quick
-Comms*: a dropdown of the skins, the eye, the gear, **Apply** and a close control. `core/SkinSetup.lua`
+**The first-run picker** is `O.SkinPicker`, a small window titled *Choose a skin*, with "Ka0s Quick
+Comms" on its own line above the dropdown (`frame.ownerLabel`; the window widens so it is never cut
+off; LibKa0s v1.81.0): a dropdown of the skins, the eye, the gear, **Apply** and a close control. `core/SkinSetup.lua`
 shows it two seconds after `OnEnable` and after every profile event while the profile's
 `skin.pickerSeen` is false and the addon stands up, held to `PLAYER_REGEN_ENABLED` in combat. A pick
 previews; **Apply** and the gear save it, the gear opening this page on its Skin tab (`page =
@@ -371,24 +374,27 @@ user group, so there is no Callouts page and no shared callout.
 ## The callout popup
 
 `settings/CalloutPopup.lua`: one callout of one user group, new or listed. It is not a page (no
-sidebar entry, no banner, no Defaults). It looks like the settings window: the window is Blizzard's
-own `SettingsFrameTemplate` (its background, its border with the window title "Ka0s Quick Comms",
-and its close X), and inside it the pages' own building blocks draw the rest (the library's panel
+sidebar entry, no banner, no Defaults). The window is built from Blizzard's own
+`SettingsFrameTemplate` (its background, its border with the window title "Ka0s Quick Comms", and
+its close X), painted as the skin's window, and inside it the pages' own building blocks draw the rest (the library's panel
 factory for the header and its gold rule, the Helpers' rows and red button pair, `Ed.IconChooser`).
 The window and its catcher are `settings/ModalWindow.lua`'s, which the icon browser is built from too.
 The body is laid out in a plain AceGUI container, not a scroll frame: the popup has **no
 scrollbar**, and the window's height follows the laid-out body, measured again after every draft
 write, situation change and error line. The settings pages keep their always-visible scrollbar.
 A client without the template gets the popup's old shape: a plain frame in the skin's window fill and
-edge (the owner's `Shell`) and the shared close mark (`NS.MakeCloseButton`). Under a skin other than
-Ka0s Default, and under EllesmereUI, the template's chrome is the skin's (painted with
-`opts.stockDefault`, so Ka0s Default keeps the settings window exactly; DECISIONS X10). The template's own close X instead of the shared
+edge (the owner's `Shell`) and the shared close mark (`NS.MakeCloseButton`). Under every skin, Ka0s
+Default included, and under EllesmereUI, the template's chrome is the skin's (DECISIONS X10; LibKa0s
+v1.81.0 retired the stock look under Ka0s Default, R-2, so WoW Default is the skin that shows
+Blizzard's settings window). The page inside it is a settings page and follows the panel Scope, its
+refused-field line and token tooltip included: stock, on Ka0s Default's colors, while the owner
+ignores its settings panel (the default, D-03). The template's own close X instead of the shared
 mark is a documented deviation (`ARCHITECTURE.md` → Documented deviations). The window's border,
 title bar and background come from the template, and its `Bg` is lifted over the click-catcher's dim (the
 template declares it at absolute frame level 0), so the popup is as bright as the settings window.
 
 ```
-window   Blizzard's settings window, titled Ka0s Quick Comms                 (its close X)
+window   the settings template's window, in the skin, titled Ka0s Quick Comms  (its close X)
 header   New callout / Edit callout, the gold rule under it
 body     [Name          ] [Channel       ]   the callout.* member rows' labels and help
          [Text  (i)                       ]   across both columns; (i) is the token glyph
@@ -467,7 +473,7 @@ its pull-outs, the color picker and the Wowhead link window. Only one browser ex
 built on its first open. It wears the popup's skin.
 
 ```
-window   Blizzard's settings window, titled Ka0s Quick Comms                 (its close X)
+window   the settings template's window, in the skin, titled Ka0s Quick Comms  (its close X)
 header   Choose an icon, the gold rule under it
 tabs     [ Markers ][ Game icons ][ Glyphs ]   (the library's tab strip)
 toolbar  Game icons: Show (All / Spells / Items). Glyphs: Show (All / Open Iconic / Phosphor /

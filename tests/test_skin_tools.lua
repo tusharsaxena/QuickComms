@@ -179,15 +179,62 @@ end)
 
 test("skin tools: the pages' colored lines move with a skin switch", function()
     -- red under: an escape built once at file load (a skin switch would never reach the line).
-    local NS, _, m = T.enableAddon()
+    -- With its settings panel skinned (Ignore settings panel off): under the default Scope the lines
+    -- stay Ka0s Default's (the case below).
+    local NS, _, Skin = skinned()
     local W = NS.addon.Settings.GroupsWhen
     local snap = NS.Situation.Classify({ inInstance = true, instanceType = "raid", difficultyID = 15 })
     local before = W.ActiveLine({ enabled = false, when = {} }, snap)
     local gold = NS.addon.Settings.Groups.MutedGold()
-    m.LibStub("LibKa0s-Skin-1.0"):SetChoice(OWNER, "ka0s", "obsidian")
+    Skin:SetChoice(OWNER, "ka0s", "obsidian")
     assertTrue(W.ActiveLine({ enabled = false, when = {} }, snap) ~= before, "the hint gray followed the skin")
     assertTrue(NS.addon.Settings.Groups.MutedGold() ~= gold, "the Reuse group gold followed the skin")
     assertTrue(NS.SkinMarkup("no.such.token", "x") == "x", "a token the skin leaves alone draws the text bare")
+end)
+
+-- A host paint on a settings page follows the page (Ka0sAddonsCommonTasks D-03; LibKa0s v1.81.0,
+-- R-5): while the owner ignores its settings panel (the default Scope) the page is stock AceGUI, so
+-- every colored line, the Reuse group gold, the table headings and the When drawer's tooltip title
+-- draw Ka0s Default's value, the pixel the page drew before it had a skin, whatever the skin.
+test("skin tools: under the default Scope the pages' colored lines stay Ka0s Default's in any skin", function()
+    local NS, _, m = T.enableAddon()
+    local Skin = m.LibStub("LibKa0s-Skin-1.0")
+    assertEqual((Skin:GetIgnore(OWNER)), true, "Ignore settings panel is on by default")
+    Skin:SetChoice(OWNER, "ka0s", "obsidian")
+    local W = NS.addon.Settings.GroupsWhen
+    local snap = NS.Situation.Classify({ inInstance = true, instanceType = "raid", difficultyID = 15 })
+    -- red under: SkinMarkup / SkinEscape reading the live skin on a stock page (one page, two looks)
+    assertEqual(W.ActiveLine({ enabled = false, when = {} }, snap), "|cffa0a0a0Off: this group is turned off.|r")
+    assertEqual(NS.SkinMarkup("qc.hint", "x"), "|cffa0a0a0x|r")
+    assertEqual(NS.SkinMarkup("text.heading", "x"), "|cffffd100x|r")
+    assertEqual(NS.SkinMarkup("gtip.subtle", "x"), "|cffb3b3b3x|r")
+    assertEqual(NS.addon.Settings.Groups.MutedGold(), "|cffc9a66b")
+    assertEqual(NS.SkinEscape("text.heading", true), "|cffffd100", "a panel read")
+    assertTrue(NS.SkinEscape("text.heading") ~= "|cffffd100", "a window read keeps the skin (D-01)")
+    Skin:SetIgnore(OWNER, false, nil)
+    assertTrue(NS.SkinMarkup("qc.hint", "x") ~= "|cffa0a0a0x|r", "panel skinned: the line follows the skin")
+    assertTrue(NS.addon.Settings.Groups.MutedGold() ~= "|cffc9a66b")
+end)
+
+test("skin tools: every settings-page host paint reads the panel-scoped color, never the window one", function()
+    -- red under: a settings page calling NS.SkinColor / NS.SkinEscape without its panel flag
+    local sites = {
+        { "settings/Editors.lua", 'NS.SkinColor%(HEADER_COLOR, true%)', 2 },
+        { "settings/Groups.lua", 'NS.SkinEscape%("log.tag", true%)', 1 },
+        { "settings/Groups_When.lua", 'NS.SkinColor%("gtip.value", true%)', 1 },
+    }
+    for _, s in ipairs(sites) do
+        local _, n = readFile(s[1]):gsub(s[2], "")
+        assertEqual(n, s[3], s[1])
+    end
+    for _, path in ipairs({ "settings/Editors.lua", "settings/Groups.lua", "settings/Groups_When.lua",
+        "settings/Dials.lua", "settings/Pads.lua", "settings/Callouts.lua" }) do
+        for _, fn in ipairs({ "SkinColor", "SkinEscape" }) do
+            for call in readFile(path):gmatch("NS%." .. fn .. "%b()") do
+                assertTrue(call:find(", true%)$") ~= nil, path .. ": " .. call .. " is not panel-scoped")
+            end
+        end
+    end
 end)
 
 -- ── the tool surfaces ────────────────────────────────────────────────────────────────────────────

@@ -219,10 +219,13 @@ Lib.FROM_SKIN_KEYS = {
 -- One stored surface's companions turned on. A companion the surface stores goes through
 -- LibKa0s-Skin-1.0's ResetToSkin, named by its picker, which sets the companion beside a picker that
 -- has one. One it does not store yet (a surface saved before QC-03) is written true here: handed an
--- absent companion, ResetToSkin cannot tell it is a bool and writes its "@skin" sentinel into the
--- picker. Without the library every companion is written here; it means nothing until the library
--- loads, and then it must already say "follow". A block the surface lacks is fillShape's (Prepare
--- fills it from the template, whose companions are true).
+-- absent companion, a ResetToSkin before LibKa0s v1.81.0 (Skin minor 8) could not tell it is a bool
+-- and wrote its "@skin" sentinel into the picker. Minor 8 fixes that only for a caller that names
+-- the companion or passes `{ companions = true }`; this step shipped before it and is kept as it is
+-- (Ka0sAddonsCommonTasks D-19: a profile that migrates late must get the same result, and a newer
+-- library's fix is harmless beside it). Without the library every companion is written here; it
+-- means nothing until the library loads, and then it must already say "follow". A block the surface
+-- lacks is fillShape's (Prepare fills it from the template, whose companions are true).
 local function followSkin(surface, keys, resetToSkin)
     local named = {}
     for _, key in ipairs(keys) do

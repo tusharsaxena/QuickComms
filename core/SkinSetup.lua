@@ -30,11 +30,15 @@ local addonName, NS = ...
 --   NS.SKIN_OPTIONS         registered skin, in the library's order). settings/SchemaRows.lua reads both.
 --   NS.SKIN_FALLBACK        the host copy of the Ka0s Default tokens the degraded facade answers.
 --   NS.SKIN_TOKENS          this addon's own tokens (below), as RegisterOwner is handed them.
---   NS.SkinColor(name)      a color token as a call site writes it (three components when opaque).
---   NS.SkinEscape(name)     a color token as a "|cffrrggbb" escape, rounded to the byte, so markup
+--   NS.SkinColor(name, p)   a color token as a call site writes it (three components when opaque).
+--                           `p` true marks a settings page's read: Ka0s Default's value while the
+--                           owner ignores its settings panel (D-03), NS.SkinPanelColor's rule.
+--   NS.SkinEscape(name, p)  a color token as a "|cffrrggbb" escape, rounded to the byte, so markup
 --                           written as a literal keeps its bytes on Ka0s Default (|cffa0a0a0).
 --   NS.SkinMarkup(name, s)  `s` wrapped in that escape and "|r" (`s` alone for a token the skin
---                           leaves alone): a settings page's colored line, read at call time.
+--                           leaves alone): a settings page's colored line, read at call time,
+--                           always panel-scoped.
+--   NS.SkinPanelIgnored()   whether the owner ignores its settings panel (Skin:GetIgnore's panel half).
 --   NS.SkinPaintAce(w)      an AceGUI widget this addon acquired itself, painted for this owner:
 --   NS.SkinPaintAceTree(c)  `Skin:PaintAce` / `Skin:PaintAceTree` with the owner bound (the facade
 --                           carries neither). Nothing while the owner ignores its settings panel
@@ -163,28 +167,51 @@ NS.SKIN_FALLBACK = {
 --- a otherwise (the library's own text and vertex rule), so a site that passed three components
 --- before it read a token still passes three on Ka0s Default. nil for a token the skin leaves alone.
 --- Read through NS.Skin at call time, so it answers the live skin, or the host copy degraded.
-function NS.SkinColor(name)
-    local r, g, b, a = NS.Skin.Color(name)
+--- With `panel`, the read is a settings page's (Ka0sAddonsCommonTasks D-03): while this owner ignores
+--- its settings panel (the Scope's Ignore settings panel, on by default) the page is stock AceGUI, so
+--- the answer is Ka0s Default's value (the host copy, NS.SKIN_FALLBACK, or an owner token's
+--- default), the pixel the page drew before it had a skin, and one page never mixes stock and
+--- skinned. Without it the read is a window's or the HUD's, which wear the skin whatever that switch
+--- says (D-01).
+function NS.SkinColor(name, panel)
+    local r, g, b, a = NS.SkinPanelColor(name, panel)
     if r == nil then return nil end
     if a == nil or a == 1 then return r, g, b end
     return r, g, b, a
 end
 
+--- True while this owner ignores its settings panel: the public Skin:GetIgnore panel half, never the
+--- library's internals. Always false without the library (nothing is skinned then).
+function NS.SkinPanelIgnored()
+    if not (Skin and type(Skin.GetIgnore) == "function") then return false end
+    return (Skin:GetIgnore(addonName)) == true
+end
+
+--- A color token's r, g, b, a for a settings page (`panel` true) or anything else (NS.SkinColor).
+function NS.SkinPanelColor(name, panel)
+    if panel and NS.SkinPanelIgnored() then
+        local own = NS.SKIN_TOKENS[name]
+        local c = NS.SKIN_FALLBACK[name] or (own and own.default)
+        if type(c) == "table" then return c[1], c[2], c[3], c[4] or 1 end
+    end
+    return NS.Skin.Color(name)
+end
+
 --- A color token as a "|cffrrggbb" escape, each channel rounded to the nearest byte (.5 is 80), so
 --- markup a call site wrote as a literal keeps its bytes on Ka0s Default. nil for a token the skin
---- leaves alone.
-function NS.SkinEscape(name)
-    local r, g, b = NS.Skin.Color(name)
+--- leaves alone. `panel` as NS.SkinColor's.
+function NS.SkinEscape(name, panel)
+    local r, g, b = NS.SkinPanelColor(name, panel)
     if r == nil then return nil end
     local function toByte(v) return math.floor(v * 255 + 0.5) end
     return ("|cff%02x%02x%02x"):format(toByte(r), toByte(g), toByte(b))
 end
 
---- `text` in a color token, as markup: NS.SkinEscape(name) .. text .. "|r", or `text` alone for a
---- token the skin leaves alone. The settings pages' hint, state and inherit lines, whose escape
---- once sat inside the locale key.
+--- `text` in a color token, as markup: NS.SkinEscape(name, true) .. text .. "|r", or `text` alone
+--- for a token the skin leaves alone. The settings pages' hint, state and inherit lines, whose escape
+--- once sat inside the locale key; always a settings page's read (panel-scoped).
 function NS.SkinMarkup(name, text)
-    local esc = NS.SkinEscape(name)
+    local esc = NS.SkinEscape(name, true)
     if not esc then return text end
     return esc .. text .. "|r"
 end

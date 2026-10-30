@@ -318,7 +318,7 @@ local function checkLine(cells)
             if c.tooltip then
                 cb:SetCallback("OnEnter", function(w)
                     GameTooltip:SetOwner(w.frame, "ANCHOR_RIGHT")
-                    GameTooltip:SetText(c.text, NS.SkinColor("gtip.value"))
+                    GameTooltip:SetText(c.text, NS.SkinColor("gtip.value", true))
                     GameTooltip:AddLine(c.tooltip, nil, nil, nil, true)
                     GameTooltip:Show()
                 end)

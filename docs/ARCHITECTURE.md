@@ -48,7 +48,7 @@ Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBO
 LibSharedMedia, LibDataBroker, LibDBIcon
 and LibCustomGlow-1.0 (the Icons tab's glows, resolved at call time by LibKa0s-Glow-1.0 and optional; versions and
 licenses in `DEPENDENCIES.md`) are vendored under `libs/`, and so is the whole
-LibKa0s v1.80.0 payload, of which fifteen majors are wired, one setup file each (`DEPENDENCIES.md`
+LibKa0s v1.81.0 payload, of which fifteen majors are wired, one setup file each (`DEPENDENCIES.md`
 lists the toolchain):
 
 | Major | Setup file | Gives |
@@ -220,7 +220,11 @@ the settings pages and the library's own windows.
   block carries *Use the skin's font* (`fontFromSkin`, the skin's `hud.font`) and every Border block
   *Use the skin's border* (`borderStyleFromSkin`, `bar.borderStyle`; on the Icons tab the skin's icon
   border, `icon.borderStyle` and `icon.borderSize`), default on (rollout X3); while one is on, its
-  picker is grayed and shows the skin's value, and the stored pick waits for it to be turned off. Every
+  picker is grayed and shows the skin's value, and the stored pick waits for it to be turned off.
+  While the Scope's **Ignore fonts** is on, a following Font block draws its stored pick all the same
+  (LibKa0s v1.81.0, R-1): the library's `Resolve` answers it for `hud.font`, nil for a stored `"@skin"`
+  (the standard face), so `Pad_Render.FontKey` holds no Ignore-fonts handling of its own. Each skin
+  names its own HUD face (R-4). Every
   color, size, flag and shadow the player set, the shine and the class colors stay the player's (X4,
   D5, D6). The HUD's own chrome (the padlock, the veils, the hover wash, the flashes, the LOCKDOWN and
   stale tags, the PREVIEW and TEST MODE marks, the page arrows) reads tokens once per look change
@@ -231,14 +235,20 @@ the settings pages and the library's own windows.
   picked faces (Friz Quadrata by default), a picked border art becomes the skin's `None` (the flat
   edge at the stored thickness), and a shown icon border the skin's Solid 2 px.
 - **The windows.** The Preview as window is the owner's `Shell`, its title and close mark in the
-  skin's top bar (D9). The callout popup and the icon browser keep Blizzard's `SettingsFrameTemplate`
-  under Ka0s Default and are the skin's window under every other skin and under EllesmereUI (X10,
-  `opts.stockDefault`; [Documented deviations](#documented-deviations)); the browser's scroller is the
-  skin's `ScrollBar` (D3). The settings pages, the debug console and its copy window, the perf panel,
+  skin's top bar (D9). The callout popup and the icon browser are built from Blizzard's
+  `SettingsFrameTemplate` and wear the skin's window under every skin, Ka0s Default included: LibKa0s
+  v1.81.0 retired the stock look (R-2, Ka0sAddonsCommonTasks D-06), so the WoW Default skin is the way
+  to Blizzard's settings window ([Documented deviations](#documented-deviations)); the browser's
+  scroller is the skin's `ScrollBar` (D3). They are windows, so **Ignore settings panel** leaves their
+  chrome skinned (D-01). The settings pages, the debug console and its copy window, the perf panel,
   the drag strip, the reorder lists and the Wowhead copy window are painted by the library for this
-  owner, the settings pages only while **Ignore settings panel** is off; the Profiles page's
-  AceConfigDialog tree through `NS.SkinPaintAceTree`. The settings pages' colored lines are built from
-  tokens at call time (`NS.SkinMarkup`), the locale keys carrying no markup.
+  owner, the settings pages and the reorder lists (panel-scoped by default since v1.81.0) only while
+  **Ignore settings panel** is off; the Profiles page's AceConfigDialog tree through
+  `NS.SkinPaintAceTree`. The settings pages' colored lines are built from tokens at call time
+  (`NS.SkinMarkup`, and `NS.SkinColor` / `NS.SkinEscape` with their `panel` flag for the table
+  headings, the Reuse group gold and the When drawer's tooltip title), the locale keys carrying no
+  markup; while **Ignore settings panel** is on they read Ka0s Default's values, so a stock page never
+  carries the skin's colors (D-03).
 - **The first-run skin picker** (the owner's O3). `NS.MaybeShowSkinPicker` shows the library's picker
   (`O.SkinPicker`) two seconds after `OnEnable` and after every profile event while the profile's
   `skin.pickerSeen` is false and the addon stands up; in combat it waits for `PLAYER_REGEN_ENABLED`.
@@ -329,8 +339,8 @@ deviation not in this table is not ratified.
 
 | Rule | What differs | Why | Decided | Re-check trigger |
 |---|---|---|---|---|
-| `standalone-windows`, `library-stack-§8` | One wrapper, and every close control goes through it: the callout popup, and the icon browser built from the same window (`settings/ModalWindow.lua`, since 2026-10-18), close with the X of Blizzard's `SettingsFrameTemplate` (`ClosePanelButton`), not with `NS.MakeCloseButton`; its click is a Cancel. The wrapper stays in `core/CoreSetup.lua`, because the same section requires it, and the fallback window (a client without the template) still draws the shared mark through it, so `grep -rn 'MakeCloseButton(' --include='*.lua' \| grep -v '/libs/'` returns the wrapper's definition and calls to `NS.MakeCloseButton` (the fallback window in `settings/ModalWindow.lua` and `tests/test_setup.lua`), and nothing else | The popup is built from Blizzard's `SettingsFrameTemplate` to match the settings window exactly, and that template brings its own close; the browser reuses the popup's chrome; decided by the owner | 2026-10-17 | The standard ruling on Blizzard-template windows, or the popup and the browser leaving the template |
-| `standalone-windows` | The window edge: the callout popup's edge and frame, and the icon browser's (the same `settings/ModalWindow.lua` window, since 2026-10-18), are Blizzard's `SettingsFrameTemplate` (its NineSlice and `Bg`) under Ka0s Default, not the Ka0s window edge through `ApplySkin`: since the skinning rollout (QC-02, DECISIONS X10) every part is painted through the owner's facade with `opts.stockDefault` (LibKa0s LK-05), so it stays the client's under Ka0s Default and is the skin's window under every other skin and under EllesmereUI. On a client without the template, the fallback window is the owner's `Shell` | Built from Blizzard's settings template so the popup matches the settings window exactly, as the owner asked; the browser reuses the popup's chrome (icon browser spec); decided by the owner | 2026-10-18 | The standard ruling on Blizzard-template or modal windows, or the popup and the browser leaving the template |
+| `standalone-windows`, `library-stack-§8` | One wrapper, and every close control goes through it: the callout popup, and the icon browser built from the same window (`settings/ModalWindow.lua`, since 2026-10-18), close with the X of Blizzard's `SettingsFrameTemplate` (`ClosePanelButton`), not with `NS.MakeCloseButton`; its click is a Cancel. The wrapper stays in `core/CoreSetup.lua`, because the same section requires it, and the fallback window (a client without the template) still draws the shared mark through it, so `grep -rn 'MakeCloseButton(' --include='*.lua' \| grep -v '/libs/'` returns the wrapper's definition and calls to `NS.MakeCloseButton` (the fallback window in `settings/ModalWindow.lua` and `tests/test_setup.lua`), and nothing else | The popup is built from Blizzard's `SettingsFrameTemplate`, and that template brings its own close (painted in the skin's colors under every skin since LibKa0s v1.81.0 retired the stock look, R-2); the browser reuses the popup's chrome; decided by the owner | 2026-10-17 | The standard ruling on Blizzard-template windows, or the popup and the browser leaving the template |
+| `standalone-windows` | The window edge: the callout popup's edge and frame, and the icon browser's (the same `settings/ModalWindow.lua` window, since 2026-10-18), are BUILT from Blizzard's `SettingsFrameTemplate` (its NineSlice and `Bg`), not from the Ka0s window edge through `ApplySkin`. Every part is painted through the owner's facade (QC-02, DECISIONS X10), and since LibKa0s v1.81.0 retired the stock look (R-2; Ka0sAddonsCommonTasks D-06, superseding X10's "stock under Ka0s Default") it is the skin's window under every skin, Ka0s Default included, and under EllesmereUI: the template's art is faded under the skin's fill and edge. On a client without the template, the fallback window is the owner's `Shell` | Built from Blizzard's settings template, as the owner asked; the browser reuses the popup's chrome (icon browser spec); decided by the owner 2026-10-18, its look under Ka0s Default ruled by the owner's R-2 on 2026-10-30 | 2026-10-18 | The standard ruling on Blizzard-template or modal windows, or the popup and the browser leaving the template |
 | `localization-§1` | The icon browser's Glyphs tab labels (`settings/IconBrowser_Sources.lua`, `Src.GlyphLabel`) are derived from the LibKa0s catalog keys and are not routed through `NS.L` | The catalog keys are data that change with the library, and enUS is the only locale; decided by the owner | 2026-10-18 | The first non-enUS locale file, or LibKa0s publishing icon labels |
 | `testing` (the vendored kit owns the AceDB fake) | `tests/run.lua` wraps the kit's AceDB fake once per load to add AceDB's `char` section (`db.char`, the SavedVariables root's `char["Tester - Realm"]`, filled from the `char` defaults), and `bootAddon` takes `opts.sv` to replay a saved root as a /reload would | The kit's fake (`tests/_kit/mock_record.lua`) models only `profile` and `global`, and the Comms Pads' hidden state is genuinely per-character (`db.char.padsHidden`); `tests/_kit/` is never edited here | 2026-10-21 | A kit revision whose AceDB fake models `char` (then drop the shim and re-vendor) |
 | `library-stack-§7`, anti-pattern #47 | The restriction tracker (`modules/Restrictions.lua`: the event hints, the chat lockdown and combat folded into `Snapshot` (reason, canSendChat) and `InCombat`, announced on the reason set plus a combat flag) and its four readers (`core/Compat.lua` `InChatMessagingLockdown`, `RestrictionTypes`, `IsRestrictionStateActive`, `IsRestrictionActive`) are copied from DropWatcher, not taken from LibKa0s | [LibKa0s#49](https://github.com/tusharsaxena/LibKa0s/issues/49) rejected the tracker under bar 3 (a same-author copy under ten days old whose edges already diverged: the two copies' announce edges, answer sets and combat-edge ownership differ, this one signing the full reason set plus a combat flag against DropWatcher's four answers) and deferred the readers (guards, not readers: promotion removes no host line; the first to promote, as Compat minor 2). Recorded in the standard's `standards/standards/open-evolutions.md`, *Further `LibKa0s` modules*, *Recorded rejections, LibKa0s#46–#58* | 2026-10-22 (the LibKa0s v1.75.0 run) | From the record. The tracker: at least two of these hold: a third addon, not a copy, needs a restriction answer set; the two copies converge on one announce edge and one answer set; 12.2 ships with no change to `Enum.AddOnRestrictionType`, the event payload or the chat-blocking classification. The readers: a non-copy addon needs the absent and secret answers and the three readers reconcile |

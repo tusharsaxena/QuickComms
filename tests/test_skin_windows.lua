@@ -4,8 +4,9 @@
 --
 -- What this addon owes and nothing the library pins itself: each window is handed to the owner's
 -- primitives with the options DECISIONS rules (the Preview window a Shell with its title in the top
--- bar, D9; the modal window's template chrome kept stock under Ka0s Default and skinned under every
--- other skin, X10 / LK-05; the icon browser's scroller a skin ScrollBar, D3), every color the host
+-- bar, D9; the modal window's template chrome skinned under every skin, Ka0s Default included since
+-- LibKa0s v1.81.0 retired the stock look, X10 / R-2; the icon browser's scroller a skin ScrollBar,
+-- D3), every color the host
 -- draws itself reads a token (the library's, or this addon's own qc.* where Ka0s Default's pixel has
 -- no exact library token, X1), each answers today's pixels under Ka0s Default and moves with a skin
 -- switch, and no color literal is left in these files.
@@ -342,25 +343,27 @@ local function openPopup(NS)
     return Pop
 end
 
-test("skin windows: the modal window's template chrome is stock under Ka0s Default, every call", function()
+test("skin windows: the modal window's template chrome is painted under every skin, no stock look", function()
     local NS = boot()
     local seen = spy(NS, { "Shell", "FadeNineSlice", "TitleBar", "CloseButton" })
     local Pop = openPopup(NS)
     local f = Pop.frame
-    -- red under: drop stockDefault from any call (that part is faded and repainted under Ka0s
-    -- Default, and the ratified settings-window look is gone, docs/ARCHITECTURE.md)
+    -- The stock look under Ka0s Default is retired (LibKa0s v1.81.0, R-2; DECISIONS D-06): the
+    -- popup and the browser are windows, so Ka0s Default draws its own window there.
+    -- red under: any call still carrying the retired `stockDefault` key
     local shell = callOn(seen.Shell, f)
-    assertTrue(shell and shell.opts.stockDefault == true, "the window's Shell")
+    assertTrue(shell ~= nil and shell.opts.stockDefault == nil, "the window's Shell")
+    assertTrue(type(shell.opts.stock) == "table", "the Bg art is still handed over to fade")
     local fade = callOn(seen.FadeNineSlice, f)
-    assertTrue(fade and fade.opts.stockDefault == true, "the NineSlice")
+    assertTrue(fade ~= nil and (fade.opts == nil or fade.opts.stockDefault == nil), "the NineSlice")
     local bar = callOn(seen.TitleBar, f.NineSlice)
-    assertTrue(bar and bar.opts.stockDefault == true and bar.opts.noBg == true, "the title")
+    assertTrue(bar and bar.opts.stockDefault == nil and bar.opts.noBg == true, "the title")
     assertEqual(bar.opts.text, f.NineSlice.Text, "the title is the template's own text")
     local close = callOn(seen.CloseButton, f.ClosePanelButton)
-    assertTrue(close and close.opts.stockDefault == true, "the close X")
+    assertTrue(close ~= nil and (close.opts == nil or close.opts.stockDefault == nil), "the close X")
 end)
 
-test("skin windows: the modal window's Bg is the client's under Ka0s Default and faded under a skin", function()
+test("skin windows: the modal window's Bg is faded under the skin's window fill, Ka0s Default included", function()
     local NS, m, Skin = boot()
     -- The template's Bg is a frame whose art is its texture regions (FlatPanelBackgroundTemplate):
     -- the mock's has none, so one is given it, as the client's has.
@@ -372,13 +375,14 @@ test("skin windows: the modal window's Bg is the client's under Ka0s Default and
     end
     openPopup(NS)
     assertTrue(art ~= nil, "the template was built")
-    assertEqual(m.__paint(art).alpha, 1, "Ka0s Default keeps the template's background")
-    -- red under: hand the Bg frame to Shell's `stock` (it takes textures: the art is left), or fade
-    -- it through FadeRegions (no stockDefault: Ka0s Default would lose the settings window's Bg)
+    -- The stock look under Ka0s Default is retired (LibKa0s v1.81.0, R-2; DECISIONS D-06): Ka0s
+    -- Default is the Ka0s window like every other skin's.
+    -- red under: hand the Bg frame to Shell's `stock` (it takes textures: the art is left)
+    assertEqual(m.__paint(art).alpha, 0, "Ka0s Default fades it under its own window fill")
     Skin:SetChoice(OWNER, "ka0s", OTHER)
     assertEqual(m.__paint(art).alpha, 0, OTHER .. " fades it under its own window fill")
     Skin:SetChoice(OWNER, "ka0s", "ka0s")
-    assertEqual(m.__paint(art).alpha, 1, "a live switch back gives it back")
+    assertEqual(m.__paint(art).alpha, 0, "a live switch back keeps it faded")
 end)
 
 test("skin windows: the modal catcher's dim is qc.modalDim, today's pixel, and follows a switch", function()
@@ -407,7 +411,14 @@ end)
 
 -- ── the callout popup (W12, W13) ─────────────────────────────────────────────────────────────────
 
-test("skin windows: the popup's refused-field line is sem.badAlt, today's |cffff4040", function()
+--- A probe skin that moves `token` off Ka0s Default's color (no shipped skin moves sem.badAlt or
+--- gtip.value today), so a panel-scoped read is told apart from a live one.
+local function skinWhere(Skin, token)
+    Skin:RegisterSkin({ key = "qcprobe", label = "QC probe", tokens = { [token] = { 0.2, 0.4, 0.6, 1 } } })
+    return "qcprobe"
+end
+
+test("skin windows: the popup's refused-field line is sem.badAlt, today's |cffff4040, panel-scoped (D-03)", function()
     local NS, m, Skin = boot()
     local P = dofile("tests/page_helpers.lua")(NS, m)
     local Pop = NS.addon.Settings.CalloutPopup
@@ -419,9 +430,15 @@ test("skin windows: the popup's refused-field line is sem.badAlt, today's |cffff
         end
     end
     assertEqual(errorLine():sub(1, 10), "|cffff4040", "Ka0s Default's pixel")
-    Skin:SetChoice(OWNER, "ka0s", OTHER)
+    local moved = skinWhere(Skin, "sem.badAlt")
+    Skin:SetChoice(OWNER, "ka0s", moved)
     assertFalse((Pop.Save()))
-    assertEqual(errorLine():sub(1, 10), NS.SkinEscape("sem.badAlt"), "the escape is the token's under " .. OTHER)
+    -- red under: NS.SkinEscape(ERROR_TOKEN) with no panel flag (the skin's red inside a stock page body)
+    assertEqual(errorLine():sub(1, 10), "|cffff4040", "Ka0s Default's red while the panel is ignored, under " .. moved)
+    Skin:SetIgnore(OWNER, false, nil)
+    assertFalse((Pop.Save()))
+    assertEqual(errorLine():sub(1, 10), NS.SkinEscape("sem.badAlt"), "the escape is the token's under " .. moved)
+    assertFalse(errorLine():sub(1, 10) == "|cffff4040", "and it moved")
 end)
 
 test("skin windows: the popup's token tooltip writes its lines in the tooltip tokens", function()
@@ -437,6 +454,22 @@ test("skin windows: the popup's token tooltip writes its lines in the tooltip to
     -- red under: AddDoubleLine(..., 1, 0.82, 0, 1, 1, 1) typed
     assertColor(rgbOf(double), now(NS, "gtip.title"), "the token")
     assertColor(rgbOf(double.right), now(NS, "gtip.value"), "what it fills in")
+end)
+
+test("skin windows: the popup's token tooltip follows the panel Scope (D-03)", function()
+    local NS, m, Skin = boot()
+    local Pop = openPopup(NS)
+    local ka0s = Skin:ResolveSkin(Skin.DEFAULT)
+    local moved = skinWhere(Skin, "gtip.value")
+    Skin:SetChoice(OWNER, "ka0s", moved)
+    local lines = tipColors(m)
+    Pop.tokenGlyph:__fire("OnEnter")
+    -- red under: NS.SkinColor("gtip.value") with no panel flag (the skin's colors over a stock page)
+    assertColor(rgbOf(lines()[1]), ka0s["gtip.value"], "Ka0s Default's title while the panel is ignored")
+    Skin:SetIgnore(OWNER, false, nil)
+    lines = tipColors(m)
+    Pop.tokenGlyph:__fire("OnEnter")
+    assertColor(rgbOf(lines()[1]), Skin:ResolveSkin(moved)["gtip.value"], "the skin's title once the panel is skinned")
 end)
 
 -- ── the icon browser (W14-W21, D3) ───────────────────────────────────────────────────────────────
@@ -517,7 +550,7 @@ test("skin windows: the browser's texts take their roles, each today's color und
     assertColor(m.__paint(parts.hintText).textColor, { 1, 1, 1, 1 }, "the hint is today's white")
 end)
 
-test("skin windows: the browser's texts keep their font objects' faces (X10), and a switch recolors them", function()
+test("skin windows: the browser's texts take the skin's body face (R-2), Ignore fonts gives it back, a switch recolors", function()
     -- A LibSharedMedia that answers every face, so S.Text WOULD set one.
     local NS, m, Skin = boot(function(mm)
         local lsm = mm.LibStub:NewLibrary("LibSharedMedia-3.0", 1)
@@ -527,20 +560,28 @@ test("skin windows: the browser's texts keep their font objects' faces (X10), an
         function lsm.Fetch(_, kind, name) return kind == "font" and ("Fonts\\" .. tostring(name)) or nil end
         lsm.MediaType = {}
     end)
+    -- Ignore fonts first: the mock's template font strings carry no font object to save, so the
+    -- give-back is pinned as "never faced", then the face arriving live when the exception is lifted.
+    Skin:SetIgnore(OWNER, nil, true)
     local _, parts = openBrowser(NS)
     local want = { count = "GameFontDisableSmall", name = "GameFontNormal", status = "GameFontHighlight",
         hintText = "GameFontHighlightSmall" }
-    -- red under: NS.Skin.Text (S.Text sets the skin's body / title face as well as the color)
-    local function faces(where)
-        for key, obj in pairs(want) do
-            assertEqual(m.__paint(parts[key]).font, nil, key .. " takes no face " .. where)
-            assertEqual(m.__paint(parts[key]).fontObject, nil, key .. " takes no font object " .. where)
-            assertEqual(m.__paint(parts[key]).template, obj, key .. " keeps " .. obj .. " " .. where)
+    for key, obj in pairs(want) do
+        local p = m.__paint(parts[key])
+        assertTrue(p.font == nil and p.fontObject == nil and p.template == obj,
+            key .. " keeps " .. obj .. " under Ignore fonts")
+    end
+    -- red under: a color-only paint (SetTextColor), which leaves the font object's face (retired X10)
+    local function faced(where)
+        for key in pairs(want) do
+            local p = m.__paint(parts[key])
+            assertTrue(p.font ~= nil or p.fontObject ~= nil, key .. " takes the skin's face " .. where)
         end
     end
-    faces("under Ka0s Default")
+    Skin:SetIgnore(OWNER, nil, false)
+    faced("under Ka0s Default")
     Skin:SetChoice(OWNER, "ka0s", OTHER)
-    faces("under " .. OTHER)
+    faced("under " .. OTHER)
     local base = Skin:ResolveSkin(OTHER)
     assertColor(m.__paint(parts.count).textColor, base["text.disabled"], "the count under " .. OTHER)
     assertColor(m.__paint(parts.status).textColor, base["text.highlight"], "the status under " .. OTHER)

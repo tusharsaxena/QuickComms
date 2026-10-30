@@ -60,7 +60,9 @@ local WIDTH, HEIGHT = 560, 640   -- HEIGHT until the first fit
 -- and CONTENT_X from lib.LAYOUT, so a re-vendor that moves any of them turns it red.
 local BODY_TOP, CONTENT_X, BODY_BOTTOM = 62, 12, 12
 -- The refused-field line's color token: sem.badAlt, today's |cffff4040 on Ka0s Default, built into
--- the escape when the line is written (QC-02).
+-- the escape when the line is written (QC-02). The line is an AceGUI row of the popup's page, so it
+-- reads the panel Scope as that page's controls do (D-03): Ka0s Default's red while the owner ignores
+-- its settings panel (the default), the skin's otherwise; the window around it is the skin's (D-01).
 local ERROR_TOKEN = "sem.badAlt"
 -- The gap between the preview and the button pair, a section's worth (two row gaps).
 local BUTTONS_GAP = 16
@@ -194,18 +196,20 @@ local function fit()
 end
 
 local function showError(text)
-    if errorRow then errorRow:SetText(text and ((NS.SkinEscape(ERROR_TOKEN) or "") .. text .. "|r") or "") end
+    if errorRow then errorRow:SetText(text and ((NS.SkinEscape(ERROR_TOKEN, true) or "") .. text .. "|r") or "") end
     fit()
 end
 
 -- The token tooltip: every token the draft's channel offers, one line each (C.TokenHelp), read
 -- when it shows, so a channel picked since the render is the one it lists. Its lines are the
 -- tooltip tokens (QC-02): the title gtip.value, each token gtip.title and what it fills in
--- gtip.value (white and gold on Ka0s Default, as typed before); the frame stays Blizzard's.
+-- gtip.value (white and gold on Ka0s Default, as typed before); the frame stays Blizzard's. It is
+-- the page's tooltip (its glyph sits on the Text label), so its colors are panel-scoped (D-03), as
+-- the When drawer's tooltip title is.
 local function showTokenHelp(owner)
     if not GameTooltip then return end
-    local vr, vg, vb = NS.SkinColor("gtip.value")
-    local tr, tg, tb = NS.SkinColor("gtip.title")
+    local vr, vg, vb = NS.SkinColor("gtip.value", true)
+    local tr, tg, tb = NS.SkinColor("gtip.title", true)
     GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
     GameTooltip:SetText(L["Tokens"], vr, vg, vb)
     GameTooltip:AddLine(L["Type a token into the text. It is filled in when the callout is sent."], nil, nil, nil,

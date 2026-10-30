@@ -558,13 +558,27 @@ end)
 
 -- Record every CreateFrame template from here on (nil for none); the frame is still made.
 local function templates(m)
-    local seen = {}
+    local seen = { frames = {} }
     local create = m.CreateFrame
     m.CreateFrame = function(frameType, name, parent, template, ...)
         seen[#seen + 1] = template or false
-        return create(frameType, name, parent, template, ...)
+        local f = create(frameType, name, parent, template, ...)
+        seen.frames[#seen] = f
+        return f
     end
     return seen
+end
+
+-- True when this addon built a BackdropTemplate frame of its own (the fallback's dialog edge). The
+-- skin's Shell lays its fill and edge on a BackdropTemplate holder of its own (LibKa0s marks it as
+-- the library's), which every skin, Ka0s Default included since v1.81.0 (R-2), puts over the
+-- template: that one is the skin's window, not a dialog edge.
+local function ownBackdrop(m, seen)
+    local ours = m.LibStub("LibKa0s-Skin-1.0").__ours or {}
+    for i, v in ipairs(seen) do
+        if v == "BackdropTemplate" and not ours[seen.frames[i]] then return true end
+    end
+    return false
 end
 
 -- Record the frame level each frame created from here on is set to (0 until set). A frame that
@@ -605,7 +619,7 @@ test("popup: the window is Blizzard's settings-window template, and its own clos
     -- red under: build the window as a plain frame with the dialog backdrop
     assertEqual(Pop.frame.__template, "SettingsFrameTemplate")
     assertEqual(Pop.frame.NineSlice.Text.text, "Ka0s Quick Comms", "the window title is the addon's")
-    assertFalse(listed(seen, "BackdropTemplate"), "no UI-DialogBox-Border backdrop over the template")
+    assertFalse(ownBackdrop(m, seen), "no UI-DialogBox-Border backdrop over the template")
     assertEqual(#made, 0, "the template brings its own close (a documented deviation)")
     assertEqual(Pop.frame.__parent, Pop.catcher, "above the click-catcher")
     Pop.frame.ClosePanelButton:__fire("OnClick")

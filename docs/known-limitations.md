@@ -166,7 +166,7 @@ What the addon cannot do, or does only under a condition, and why. The hub,
 - A change of skin source away from EllesmereUI is one-way, as EllesmereUI's skins are: it takes
   effect after a reload, which the Skin tab offers. A client without `SettingsFrameTemplate` gets the
   callout popup's older shape (a plain frame in the skin's window fill and edge, and the shared close
-  mark) instead of the settings window's.
+  mark) instead of the settings template's window.
 - A skin change in combat repaints the pads and dials only when combat ends (a rebuild waits for it,
   with the stale hint meanwhile), as every rebuild does: a face or a border style moves a pad's
   measured widths, and a secure pad cannot be re-laid out in combat. The one-time reset onto the
@@ -200,7 +200,7 @@ What the addon cannot do, or does only under a condition, and why. The hub,
   a change to the art is a re-run of the generator, never a hand edit (`DEPENDENCIES.md`).
 - `tests/perf.lua`'s byte ceilings are the headless mock's figures (its catch-all methods allocate per
   call); compare them run to run, never with the client.
-- Quick Comms bundles LibKa0s v1.80.0. LibStub keeps the highest minor of each module, so when another
+- Quick Comms bundles LibKa0s v1.81.0. LibStub keeps the highest minor of each module, so when another
   Ka0s addon loaded beside it carries a newer LibKa0s, those modules run the newer code, whatever the
-  load order. The headless suite measures v1.80.0 only. The remedy is this addon's own re-vendor
+  load order. The headless suite measures v1.81.0 only. The remedy is this addon's own re-vendor
   (`/dev-copilot:wow-revendor-libka0s`), never an edit under `libs/` (F-010).
