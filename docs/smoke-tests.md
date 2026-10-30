@@ -1407,6 +1407,16 @@ hub; with the dialog open, `/qc resetall`: the reset confirm draws over the dial
 its Yes / No answer clicks.
 Result: 2026-10-23, pass (the owner's run; client build not recorded).
 
+**ICON-5. Test mode's numbered groups and the default icons (QC-02, 2026-10-30, Ka0sAddonsCommonTasks
+`docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK/`, D-21; image-52, image-53).** `/qc test` → dial 1's first
+ring shows four group wedges, Test group 1 to 4, wearing a numbered circle each, ① to ④, in cyan,
+gold, purple and green, where they drew red question marks; open each → its callouts keep their
+shipped glyphs, as before. Make a group of your own with no icon and put it on a dial → its wedge
+draws a white folder; give it a callout with no icon → the callout's pad button and dial wedge draw
+a white speech bubble, and so do its row on the Groups page's Callouts tab and the callout popup's
+icon preview; the group's General tab icon preview shows the folder. Choose an icon, then clear it →
+back to the folder or the bubble. Fail: a question mark anywhere while LibKa0s is loaded. Result:
+
 ## Art
 
 The dial's own round art (crisp dial art, 2026-10-21): `media/textures/dial/dial-disc.tga` and the
@@ -1920,3 +1930,5 @@ each recorded on its Result: line as pass (owner-marked 2026-10-30).
 
 Owed from LibKa0s v1.82.0 (QC-01, 2026-10-30, Ka0sAddonsCommonTasks
 `docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK/`): SKIN-24 to SKIN-28 (new).
+
+Owed from QC-02 (2026-10-30, the same bundle): ICON-5 (new).

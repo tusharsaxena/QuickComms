@@ -1409,6 +1409,17 @@ Total.
 - skin fonts: a dial's slice labels scale with the skin's HUD size
 - skin fonts: a pad's buttons grow with the size they draw at, not the size they store
 
+### test_icons_default.lua (8)
+
+- default icons: test mode's dial rings 1 to 4 wear the numbered glyphs, each tinted
+- default icons: test mode's pad sections carry the same glyphs
+- default icons: the four glyphs ship in the vendored payload
+- default icons: a group's default is the folder, a callout's the speech bubble
+- default icons: without the library the question mark is the one default
+- default icons: a pad button for a callout with no icon draws the speech bubble
+- default icons: a dial's group wedge with no icon draws the folder, a callout's the bubble
+- default icons: the editors' preview shows what the member draws
+
 ### test_skin_tools.lua (14)
 
 - skin tools: the pages' AceGUI handle is the owner proxy, which paints for this owner
@@ -1557,6 +1568,7 @@ Total.
 | test_skin_outline.lua | 9 |
 | test_skin_verb.lua | 6 |
 | test_skin_fonts.lua | 12 |
+| test_icons_default.lua | 8 |
 | test_skin_tools.lua | 14 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
@@ -1565,4 +1577,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1287** |
+| **Total** | **1295** |

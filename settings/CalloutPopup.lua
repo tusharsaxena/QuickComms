@@ -387,6 +387,7 @@ local function render()
     boxes.name, boxes.text = drawn.name, drawn.text
     Pop.tokenGlyph = tokenGlyph(boxes.text)
     Ed.IconChooser(ctx, {
+        kind = "callout",   -- the preview of no icon: the callout default (Ed.NoIcon)
         get = function() return draft and draft.icon, draft and draft.iconColor end,
         choose = function(icon, color) Pop.SetIcon(icon, color) end,
         setColor = function(color) setField("iconColor", color) end,

@@ -350,6 +350,7 @@ function G.IconSpec(gid)
         return g.icon or nil, g.iconColor or nil
     end
     return {
+        kind = "group",   -- the chooser's preview of no icon: the group default (Ed.NoIcon)
         get = stored,
         choose = function(icon, color)
             local ok, why = NS.Library.SetIcon("group", gid, icon or false, color)
@@ -487,7 +488,7 @@ local function renderCallouts(ctx)
     for i, cid in ipairs(list) do
         local c = NS.Library.Callout(cid)
         entries[i] = { id = cid, label = calloutLabel(c, cid), ghost = c and c.name or cid,
-            icon = c and c.icon or Ed.NO_ICON, iconColor = c and c.iconColor or nil,
+            icon = c and c.icon or Ed.NoIcon("callout"), iconColor = c and c.iconColor or nil,
             edit = function() Settings.CalloutPopup.Open(gid, cid) end,
             editTooltip = L["Edit this callout: its name, text, channel and icon."],
             remove = function() G.RemoveCallout(gid, cid) end,

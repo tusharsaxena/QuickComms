@@ -44,7 +44,6 @@ local LV = NS.Constants.LAYERS.LEVEL
 local RING = Slices.MEDIA .. "dial-ring-%d"
 R.RING_STEPS = {}
 for k = 1, 12 do R.RING_STEPS[k] = 0.0125 * (40 ^ ((k - 1) / 11)) end
-local DEFAULT_ICON = "Interface\\Icons\\INV_Misc_QuestionMark"
 -- The page arrows' chevrons and the pointer are catalog glyphs too (Phosphor Fill, `ph:`), with these
 -- Blizzard fallbacks.
 local ARROW_ICONS = { prev = { "ph:caret-left", "Interface\\Buttons\\UI-SpellbookIcon-PrevPage-Up" },
@@ -568,9 +567,12 @@ function R.PaintWedge(btn, item, geo, icfg, look)
     local slot = item.slot
     DEFAULT_LOOK = DEFAULT_LOOK or IS.Config(nil, "dial")
     icfg = icfg or DEFAULT_LOOK
-    btn.qcIcon:SetTexture(item.icon or DEFAULT_ICON)
+    -- A group (a wedge that opens a ring) or callout with no icon draws its default (NS.DefaultIcon,
+    -- D-21), white.
+    local icon = item.icon or NS.DefaultIcon(item.kind == "ring" and "ring" or "callout")
+    btn.qcIcon:SetTexture(icon)
     btn.qcIcon:SetSize(icfg.size, icfg.size)
-    IS.ApplyIcon(btn.qcIcon, icfg, NS.Library.IconTint(item.icon, item.iconColor))
+    IS.ApplyIcon(btn.qcIcon, icfg, NS.Library.IconTint(icon, item.iconColor))
     IS.PaintRing(btn, icfg)
     IS.IconFrame(btn)
     Glow.Bind(btn, icfg.glow, slot and slot.calloutId or item.title)

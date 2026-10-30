@@ -218,6 +218,7 @@ Kit.run{
         "test_skin_outline",
         "test_skin_verb",
         "test_skin_fonts",
+        "test_icons_default",
         "test_skin_tools",
         "test_vendor_sync",
         { name = "test_eol",                  dir = "tests/_kit/" },   -- line-endings-§7

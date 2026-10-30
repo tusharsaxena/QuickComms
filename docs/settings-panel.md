@@ -169,7 +169,7 @@ General   Name, Enable this group, then the icon under an Icon label with Choose
           nothing you have.") and Restore built-in groups (page-wide)
 Callouts  Add callout (the callout popup, blank; across the row), Reuse callout
           with Add at the right edge (both 2px short of it), then its callouts as a drag-to-reorder list, each row the handle,
-          the icon (the question mark when none), the name in gold, the channel's short label in
+          the icon (the callout default, a speech bubble, when none; the question mark only without LibKa0s), the name in gold, the channel's short label in
           its chat color (a smart kind resolved against the snapshot; PARTY's when solo) and the
           text in muted white cut at 40 characters with "…", then an edit glyph and a remove glyph
           at the right edge
@@ -318,7 +318,7 @@ refused Name (any field the library draws) prints its reason too. A seeded set's
 any group's.
 
 **The icon** (General): under an **Icon** label, the icon as the pad and the dial draw
-it (a glyph in its color, a question mark for none), **Choose icon…**, a **clear** glyph (the
+it (a glyph in its color; for none, the group default it draws, a folder, the question mark only without LibKa0s), **Choose icon…**, a **clear** glyph (the
 `transmog-icon-remove` atlas, tooltip *Clear icon*) and the **Icon color** swatch.
 There is no Icon text box: the icon is picked only here, and stored as a texture path or id
 (`group.icon`, which `/qc set` still reaches). A

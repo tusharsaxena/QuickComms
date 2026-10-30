@@ -45,7 +45,6 @@ local Glow = NS.Glow
 local L = NS.L
 local LV = NS.Constants.LAYERS.LEVEL
 
-local DEFAULT_ICON = "Interface\\Icons\\INV_Misc_QuestionMark"
 -- The padlock is the shared catalog's `lock` mark (library-stack-§8), resolved at draw time; this
 -- Blizzard texture is drawn only when the catalog answers nil (the library absent).
 local LOCK_ICON = "Interface\\PetBattles\\PetBattle-LockIcon"
@@ -351,9 +350,11 @@ function R.Paint(btn, slot, style, w, icfg)
     paintChrome(btn)
     DEFAULT_LOOK = DEFAULT_LOOK or IS.Config(nil, "pad")
     icfg = icfg or DEFAULT_LOOK
-    btn.qcIcon:SetTexture(slot.icon or DEFAULT_ICON)
+    -- A callout saved with no icon draws the callout default (NS.DefaultIcon, D-21), white.
+    local icon = slot.icon or NS.DefaultIcon("callout")
+    btn.qcIcon:SetTexture(icon)
     btn.qcIcon:SetSize(icfg.size, icfg.size)
-    IS.ApplyIcon(btn.qcIcon, icfg, NS.Library.IconTint(slot.icon, slot.iconColor))
+    IS.ApplyIcon(btn.qcIcon, icfg, NS.Library.IconTint(icon, slot.iconColor))
     btn.qcIcon:SetShown(style ~= "label")
     IS.PaintBorder(btn, icfg, style ~= "label")
     Glow.Bind(btn, style ~= "label" and icfg.glow or false, slot.calloutId)
