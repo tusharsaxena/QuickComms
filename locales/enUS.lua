@@ -90,6 +90,12 @@ L["The font this addon's text uses, over the skin's own. Empty keeps the skin's.
 L["Texture"] = "Texture"
 L["The texture this addon's bars use, over the skin's own. Empty keeps the skin's."] =
     "The texture this addon's bars use, over the skin's own. Empty keeps the skin's."
+-- The Font outline row (LibKa0s v1.82.0, D-06): the library's three modes, in the Skin tab's words.
+L["Font outline"] = "Font outline"
+L["Where the skin outlines this addon's text: all of it, its HUD text only, or nowhere."] =
+    "Where the skin outlines this addon's text: all of it, its HUD text only, or nowhere."
+L["All text"] = "All text"
+L["HUD text only"] = "HUD text only"
 L["Skin picker seen"] = "Skin picker seen"
 L["Whether the first-run skin picker was closed on this profile."] =
     "Whether the first-run skin picker was closed on this profile."

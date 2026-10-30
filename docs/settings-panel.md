@@ -91,12 +91,12 @@ controls, Behavior, Skin, Keybindings. It draws:
 |---|---|
 | Skin source | *Ka0s skins* or *EllesmereUI* (`skin.source`); EllesmereUI is disabled, with the failing condition and its fix named, unless EllesmereUI can skin this addon |
 | Look | the nine skins three to a line, each with four swatches (`skin.skin`) |
-| Font and texture | **Font** and **Texture** (`skin.font`, `skin.texture`), *Skin's own (…)* first, then every LibSharedMedia font or status bar |
+| Font and texture | **Font** and **Texture** (`skin.font`, `skin.texture`), *Skin's own (…)* first, then every LibSharedMedia font or status bar; under them **Reset font** and **Reset texture**, then **Font outline** (`skin.outline`: *All text*, *HUD text only* or *Off*; LibKa0s v1.82.0) |
 | Scope | **Ignore settings panel** (`skin.ignorePanel`, on for a new profile) and **Ignore fonts** (`skin.ignoreFonts`; it covers the pads' and dials' faces too, LibKa0s v1.81.0) |
 | | **Copy to every Ka0s addon…**, and the note on what skins change |
 
 A pick calls `Skin:SetChoice` first and writes through `NS.WriteSkinChoice` after, so the row's
-`onChange` finds nothing left to apply and the pick is one repaint. The seven rows behind the tab are
+`onChange` finds nothing left to apply and the pick is one repaint. The eight rows behind the tab are
 ordinary `skipRender` schema rows in group `Appearance` (`settings/SchemaRows.lua`;
 [schema.md](schema.md)), so the defaults, both resets and `/qc get|set skin.*` reach them;
 `skin.pickerSeen` is drawn by nothing. While **Ignore settings panel** is on, these pages keep the

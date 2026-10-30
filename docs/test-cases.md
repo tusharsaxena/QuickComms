@@ -1292,7 +1292,7 @@ Total.
 - skin seam: an owner token reaches a markup escape byte for byte
 - skin seam: Core's window edge is handed the owner
 - skin seam: the drag strip, the Preview dropdown and the reorder list are handed the owner
-- skin seam: the seven skin keys default to Ka0s Default, the picker unseen
+- skin seam: the eight skin keys default to Ka0s Default, the picker unseen
 - skin seam: every skin key is a skip-render schema row on the Skin tab
 - skin seam: the skin row's values are every registered skin, in the library's order
 - skin seam: /qc set refuses a skin that is not registered and applies one that is
@@ -1372,6 +1372,18 @@ Total.
 - skin picker: a profile switch with a pick pending wears the new profile's skin
 - skin picker: the gear saves the pick and opens General on its Skin tab
 - skin picker: without LibKa0s nothing shows and nothing raises
+
+### test_skin_outline.lua (9)
+
+- outline: a fresh profile stores All text, the library's default
+- outline: the schema row offers the library's three modes, in its order
+- outline: the write seam stores media.outline, and leaves it alone when it is nil
+- outline: another addon's copy reaches the store through WriteChoice
+- outline: the row's write applies the mode live
+- outline: /qc set refuses a mode the library does not know
+- outline: the stored mode is applied at load
+- outline: a profile switch applies the incoming profile's mode, and back
+- outline: without the skin engine the apply is a quiet no-op
 
 ### test_skin_tools.lua (14)
 
@@ -1518,6 +1530,7 @@ Total.
 | test_skin_windows.lua | 20 |
 | test_skin_hud.lua | 18 |
 | test_skin_picker.lua | 18 |
+| test_skin_outline.lua | 9 |
 | test_skin_tools.lua | 14 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
@@ -1526,4 +1539,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1260** |
+| **Total** | **1269** |

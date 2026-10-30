@@ -23,13 +23,15 @@ return {
     ["behavior.sounds"] = "bool|false|nil|nil|nil|nil|false",
     ["behavior.autoPromote"] = "bool|false|nil|nil|nil|nil|false",
     ["behavior.previewOnEdit"] = "bool|true|nil|nil|nil|nil|false",
-    -- QC-01 (the skinning rollout, 2026-10-29): the seven skin.* rows of the General page's Skin tab.
+    -- QC-01 (the skinning rollout, 2026-10-29): the skin.* rows of the General page's Skin tab, eight
+    -- since the Font outline (LibKa0s v1.82.0, D-06).
     ["skin.source"] = "string|\"ka0s\"|nil|nil|nil|[\"ka0s\",\"eui\"]|false",
     ["skin.skin"] = "string|\"ka0s\"|nil|nil|nil|[\"ka0s\",\"obsidian\",\"azeroth\",\"glass\",\"contrast\",\"ember\",\"wow\",\"midnight\",\"forever\"]|false",
     ["skin.ignorePanel"] = "bool|true|nil|nil|nil|nil|false",
     ["skin.ignoreFonts"] = "bool|false|nil|nil|nil|nil|false",
     ["skin.font"] = "string|\"\"|nil|nil|nil|nil|false",
     ["skin.texture"] = "string|\"\"|nil|nil|nil|nil|false",
+    ["skin.outline"] = "string|\"all\"|nil|nil|nil|[\"all\",\"hud\",\"off\"]|false",
     ["skin.pickerSeen"] = "bool|false|nil|nil|nil|nil|false",
     ["callout.name"] = "string|nil|nil|nil|nil|nil|false",
     ["callout.text"] = "string|nil|nil|nil|nil|nil|false",

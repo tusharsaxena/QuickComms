@@ -207,12 +207,13 @@ the settings pages and the library's own windows.
   `NS.Skin` (the owner's facade) and the call-site helpers `NS.SkinColor`, `NS.SkinEscape`,
   `NS.SkinMarkup`, `NS.SkinPaintAce` / `NS.SkinPaintAceTree` / `NS.SkinOnRelease`. The choice is the
   profile's `skin` block (`source`, `skin`, the Scope's `ignorePanel`, on for a new profile, and
-  `ignoreFonts`, the overrides `font` and `texture`, and `pickerSeen`), seven skip-render rows drawn
+  `ignoreFonts`, the overrides `font` and `texture`, the Font outline `outline`, and `pickerSeen`),
+  eight skip-render rows drawn
   by the library's **Skin** tab on General, after Behavior and before Keybindings
   ([schema.md](schema.md), [settings-panel.md](settings-panel.md#general--skin)).
 - **Repaint flow.** `NS.ApplySkinChoice` runs right after the migrations in `OnInitialize` and on
   every profile switch, copy and reset (`reloadProfile`), applying the stored pair with the stored
-  exceptions and overrides; each Skin row's `onChange` applies only its own half, so a tab pick is one
+  exceptions, overrides and Font outline (`NS.ApplySkinOutline`, `Skin:SetOutline`); each Skin row's `onChange` applies only its own half, so a tab pick is one
   repaint. `Skin:SetChoice` repaints every frame recorded for this owner, then fires
   `OnLooksChanged`; the pads and dials listen there (`Pad_Render`'s `LooksGen`) and ask `Surfaces` for
   one rebuild, which waits for combat's end like every rebuild.
