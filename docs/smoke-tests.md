@@ -403,9 +403,9 @@ longer lists them). Result: 2026-10-21, pass (the owner's run; client build not 
 
 **EDIT-9. The callout popup: look, Save and a refused field.** Groups → a group of yours → Callouts →
 a row's edit glyph (the edit mark; its tooltip is headed Edit) → the popup opens filled in, over a dimmed
-settings window, and looks like the settings window itself: the same background and border, the
-window title "Ka0s Quick Comms" in the top bar and Blizzard's close X at its top right (its
-background as bright as the settings window's, not darkened by the dim around it), then the gold
+settings window, in the skin's window (on **Ka0s Default** the Ka0s window: its dark fill and edge,
+the window title "Ka0s Quick Comms" in the top bar in the skin's title color and face, and the skin's
+close X at its top right; its background not darkened by the dim around it), then the gold
 "Edit callout" header and rule, then Name and Channel side by side, Text on a line of its own across
 the whole width, an "Icon" label over the icon with Choose icon…, a small red clear glyph and Icon
 color (there is **no Icon text box**), a section's gap (about 18 px) under that row, the Preview
@@ -422,7 +422,10 @@ bottom. Clicking the page behind it does nothing. Type more text and press Enter
 the pad still sends the old line; type text long enough that Preview wraps onto another
 line → the window grows with it. Clear the Name and click Save → the popup stays open and a red line names Name;
 nothing changed on the pad, and the window grew to show the red line. Type a name back, click Choose icon… and double-click an icon in the browser, Save → the popup
-closes, the row and the button show the new name, text and icon. Result: 2026-10-21, pass (the owner's run; client build not recorded).
+closes, the row and the button show the new name, text and icon. (Amended by QC-02, 2026-10-30: since
+LibKa0s v1.81.0 retired the stock look, R-2, the popup is the skin's window under Ka0s Default too, no
+longer Blizzard's settings window; WoW Default is the stock look. The 2026-10-21 pass predates it.)
+Result:
 
 **EDIT-10. Cancel leaves nothing behind.** Add callout → type a name and text → Cancel → no new row,
 and `/reload` shows none either. Edit a callout, change its text → press Escape → the old text
@@ -449,11 +452,12 @@ No keeps it, Yes deletes it, and Reuse no longer offers it. On Pad → Groups, a
 glyph (its tooltip: the group itself is kept) → the group leaves that pad at once, with no question, and is still on the Groups page; the
 same on Dial → Groups. Neither list has an edit glyph. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
-**EDIT-13. The callout popup on the skin (rewritten by QC-05, 2026-10-29).** Quick Comms' own
-EllesmereUI bridge is retired (rollout D1): the popup and the icon browser wear the skin this addon
-wears, EllesmereUI's look among them, through LibKa0s. On **Ka0s Default** open the callout popup
-(EDIT-9), then Choose icon… → both are Blizzard's settings window, as before. Settings → General →
-**Skin** → **Azeroth** → open them again → both wear Azeroth's window (SKIN-8). With EllesmereUI set up
+**EDIT-13. The callout popup on the skin (rewritten by QC-05, 2026-10-29; by QC-02, 2026-10-30).**
+Quick Comms' own EllesmereUI bridge is retired (rollout D1): the popup and the icon browser wear the
+skin this addon wears, EllesmereUI's look among them, through LibKa0s. On **Ka0s Default** open the
+callout popup (EDIT-9), then Choose icon… → both wear the Ka0s window (LibKa0s v1.81.0 retired the
+stock look, R-2). **WoW Default** → open them again → both are Blizzard's settings window. Settings →
+General → **Skin** → **Azeroth** → open them again → both wear Azeroth's window (SKIN-8). With EllesmereUI set up
 as SKIN-13 says and **Skin source** on **EllesmereUI** → both wear the same EllesmereUI shell, border
 and close X as the settings window behind them, and `/qc diagnostics`'s integrations section reads
 `skin: source=eui skin=… ellesmereui: ok=true painted=true refused=nil failing=none`. `/qc disable` →
@@ -464,8 +468,8 @@ the Ka0s skin, and `failing=` names the missing condition. Result:
 **EDIT-14. The icon browser: look, tabs and a pick.** Open a callout of yours in the popup (EDIT-9) →
 under the Icon row, the callout's icon (a question mark for none), Choose icon… and Icon color.
 Click Choose icon… → the icon browser opens **over** the popup, which is dimmed behind it (a click on
-the popup does nothing), and looks like it: the settings window's background and border, "Ka0s
-Quick Comms" in the top bar, Blizzard's close X, the gold "Choose an icon" header. The tabs read
+the popup does nothing), and looks like it: the skin's window (the Ka0s window on Ka0s Default, R-2),
+"Ka0s Quick Comms" in the top bar, the skin's close X, the gold "Choose an icon" header. The tabs read
 Markers, Game icons, Glyphs (no Suggested); the callout's icon is selected (gold behind it) on its
 own tab, scrolled into view, and named in the footer; a callout with no icon, or a seeded set's
 spell icon, opens on Markers with nothing selected. On Glyphs, the Icon color row sits clear of the first
@@ -473,7 +477,9 @@ row of icons (a gap between them), and it is gone on Markers. Markers shows the 
 LibKa0s glyph, white, each named on hover (`Arrow circle down`-style names); the count at the right
 follows the tab. Click an icon → it is selected and named in the footer, nothing else changes; Cancel
 → the popup's icon is unchanged. Choose icon… again, double-click the skull → the browser closes and
-the popup shows the skull (the button on the pad does not change until Save). Result: 2026-10-21, pass (the owner's run; client build not recorded).
+the popup shows the skull (the button on the pad does not change until Save). (Amended by QC-02,
+2026-10-30: since LibKa0s v1.81.0 retired the stock look, R-2, the browser is the skin's window under
+Ka0s Default too; the 2026-10-21 pass predates it.) Result:
 
 **EDIT-15. The Game icons tab.** In the browser, Game icons → thousands of icons (the count reads in
 the thousands), the same ones the macro icon selector offers. Scroll with the wheel and drag the
@@ -1593,12 +1599,13 @@ code (phase 5):
 - **Sent in chat**: the callout tokens' values (`{me}`, `{spec}`, …) come from the client in its own
   language and are escaped like any value (`test_tokens`).
 - **The pads' fonts** (the Header and Section titles tabs', the Buttons tab's labels, the dial's
-  labels): the default face is the skin's HUD font while Use the skin's font is ticked (Ka0s Default's
-  Oxanium SemiBold, Friz Quadrata under the other skins; LibKa0s registers a face only for the locales
-  it can draw), else the player's pick (LibSharedMedia's "Friz Quadrata TT" by default), which
+  labels): the default face is the skin's HUD font while Use the skin's font is ticked and Ignore
+  fonts is not (Ka0s Default's Oxanium SemiBold; since LibKa0s v1.81.0 each other skin its own face,
+  SKIN-5; WoW Default Friz Quadrata; LibKa0s registers a face only for the locales it can draw), else
+  the player's pick (LibSharedMedia's "Friz Quadrata TT" by default), which
   LibSharedMedia does not register on koKR, zhCN or zhTW; a face the machine does not have draws
   `STANDARD_TEXT_FONT` (`Pad_Render.LabelFont`, `test_pad_render`). (Amended by QC-05, 2026-10-29, the
-  skinning rollout.)
+  skinning rollout; by QC-02, 2026-10-30, the library follow-ups.)
 - **Printed**: every chat and report line is English through `NS.L`
   (`test_slash`, `test_diagnostics`).
 
@@ -1646,16 +1653,21 @@ it is ticked again. Result:
 **SKIN-3. Ka0s Default elsewhere looks as before.** On **Ka0s Default** with **Ignore settings panel**
 on (the default): the pads' and dials' colors (the gold padlock, the dark veils over a refused or
 cooling button, the gold hover wash, the send flashes, the red LOCKDOWN tag and the gray stale hint,
-the green PREVIEW and TEST MODE marks, a dimmed page arrow at an end), every settings page, the callout
-popup and the icon browser (Blizzard's settings window exactly, its dim behind; X10), the debug console
-and its Copy window, the perf panel, the drag strip and the reorder lists, the minimap button and its
-tooltip → each looks as before this update; the icon browser's count, status, hint and selected-icon
-name keep Blizzard's font under every skin. Three changes are expected: the **Preview as** window's
-title and close mark sit in a 30-pixel top bar across the window, the title in the skin's title font
-(Oxanium Bold) instead of Blizzard's (D9); the icon browser's scroll bar
-is a flat knob in a dark corridor instead of Blizzard's knob over a black track (D3); and the
-first-run skin picker is new (SKIN-17). Fail: any other changed color, edge, face or spacing outside
-the pads' and dials' faces and border styles (SKIN-1). Result:
+the green PREVIEW and TEST MODE marks, a dimmed page arrow at an end), every settings page (its colored
+lines included), the debug console's and the perf panel's colors, the Copy window, the drag strip and
+its tooltip (gold title, white body), the reorder lists, the minimap button and its tooltip → each
+looks as before this update; the icon browser's count, status, hint and selected-icon name keep
+Blizzard's font under every skin. These changes are expected: the **Preview as** window's title and
+close mark sit in a 30-pixel top bar across the window, the title in the skin's title font (Oxanium
+Bold) instead of Blizzard's (D9); the icon browser's scroll bar is a flat knob in a dark corridor
+instead of Blizzard's knob over a black track (D3); the first-run skin picker is new (SKIN-17); since
+LibKa0s v1.81.0 (R-2) the callout popup and the icon browser wear the **Ka0s window** (dark fill and
+edge, the title in the skin's title color and face, the skin's close X; the dim behind unchanged),
+no longer Blizzard's settings window (SKIN-8); and the library's own strings in the skin's face
+(D-13) draw **Oxanium** where they drew Blizzard's font: the debug console's title-bar labels, the
+perf panel's step and command columns, the drag strip's label and the Preview as window's dropdown
+menu rows. Fail: any other changed color, edge, face or spacing outside the pads' and dials'
+faces and border styles (SKIN-1). (Amended by QC-02, 2026-10-30, the library follow-ups.) Result:
 
 **SKIN-4. The Skin tab.** General → the strip reads Master controls, Behavior, **Skin**, Keybindings.
 Skin → **Skin source** (*Ka0s skins* on; *EllesmereUI* disabled with a line saying why unless
@@ -1668,13 +1680,16 @@ change. Pick **Obsidian** → no reload; `/qc get skin.skin` prints `obsidian`. 
 **SKIN-5. Every skin on the pads and dials, live.** With a pad on screen (`/qc test` fills it) and a
 dial open, pick each skin in turn: Obsidian, Azeroth, Glass, High Contrast, Ember, WoW Default, WoW
 Midnight, WoW Forever, then Ka0s Default again → with **no reload** the labels redraw in the skin's HUD
-face (Oxanium SemiBold on Ka0s Default, Friz Quadrata on the others: no other skin names a HUD face),
+face, each skin its own since LibKa0s v1.81.0 (R-4): Obsidian Inter SemiBold, Azeroth Vollkorn Bold,
+Glass Nunito SemiBold, High Contrast Atkinson Bold, Ember Bitter Bold, WoW Default Friz Quadrata, WoW
+Midnight Philosopher Bold, WoW Forever Fira Sans SemiBold, Ka0s Default Oxanium SemiBold;
 a followed border takes the skin's border style, and the padlock, the veils, the hover wash, the
 flashes, the LOCKDOWN and stale tags, the PREVIEW and TEST MODE marks and the page arrows take the
 skin's colors. The colors you set (the buttons' body and edge, the header's and the titles' text and
 bands, the hub, the slices, the dots, the class colors) and the shine stay yours (X4, D5, D6). Fail: a
 pad or dial that keeps the previous skin until `/reload`, a color of yours that changed, or a label
-cut where it was not before on the same face. Result:
+cut where it was not before on the same face. (Amended by QC-02, 2026-10-30: a HUD face per skin,
+R-4.) Result:
 
 **SKIN-6. The *Use the skin's ...* boxes.** On a non-default skin, Pad → Header: untick **Use the
 skin's font** → *Font* comes alive with your pick and the header redraws in it; tick → the skin's face
@@ -1691,15 +1706,18 @@ bar; **End preview** reads in the step panels' colors (light gray at rest, gold 
 the window is locked over the edit preview, PREVIEW-11), and its tooltip lines are readable. Switch
 the skin with the window open → it repaints with no reload. Result:
 
-**SKIN-8. The callout popup and the icon browser (X10, D2, D3).** Open a callout (EDIT-9), then Choose
-icon… → under **Ka0s Default** both are Blizzard's settings window, as before. Pick **Azeroth** with
-both closed and open them again, then switch skins with them open → the window's fill, edge, title and
-close X are the skin's, the page's controls follow the skin when **Ignore settings panel** is off,
-the dim behind takes the skin's cover, and in the browser the selected cell, the scroll bar and its
-corridor, the hint box, the search glyphs, the count, name and status lines and the footer note take
-the skin's colors. Back to **Ka0s Default** → Blizzard's window comes back exactly, with no reload. Fail:
-a skinned frame left on Ka0s Default, the template's art showing through a skinned window, or a part on
-the old colors. Result:
+**SKIN-8. The callout popup and the icon browser (X10, D2, D3; rewritten by QC-02, 2026-10-30).**
+Open a callout (EDIT-9), then Choose icon… → under **Ka0s Default** both wear the **Ka0s window**: the
+template's background and border faded under Ka0s Default's dark fill and edge, the title "Ka0s Quick
+Comms" in the skin's title color and face, the skin's close X (LibKa0s v1.81.0 retired the stock look,
+R-2; Ka0sAddonsCommonTasks D-06). Pick **WoW Default** → both are Blizzard's settings window. Pick
+**Azeroth** with both closed and open them again, then switch skins with them open → the window's
+fill, edge, title and close X are the skin's, the page's controls follow the skin when **Ignore
+settings panel** is off, the dim behind takes the skin's cover, and in the browser the selected cell,
+the scroll bar and its corridor, the hint box, the search glyphs, the count, name and status lines
+and the footer note take the skin's colors. Back to **Ka0s Default** → the Ka0s window again, with no
+reload. Fail: Blizzard's settings window under Ka0s Default, the template's art showing through a
+skinned window, or a part on the old colors. Result:
 
 **SKIN-9. The settings pages wear the skin when asked.** On a non-default skin, untick **Ignore settings
 panel** → General, Groups (the When drawers, the Callouts rows, the Reuse dropdown, What it sends), Pad,
@@ -1707,25 +1725,42 @@ Dial and Profiles repaint in the skin; the colored lines (the gray hints, the Wh
 *Active now.* and red *Not active now:*, an inheriting group's line, the Reuse dropdown's callout name
 and preview) take the skin's colors; under **Ka0s Default** they are the same colors as before. Open
 another addon's settings pages and flip back and forth a few times → the other addon's pages stay stock
-every time. Tick **Ignore settings panel** → this addon's pages are stock again; the pads, dials and
-windows keep the skin. Result:
+every time. Tick **Ignore settings panel** → this addon's pages are stock again, their colored lines
+back on Ka0s Default's colors (the gray hints, the green and red When lines, the muted gold Reuse group
+part, the gold table headings: a stock page never carries the skin's colors, D-03), and the Pad →
+Groups and Dial → Groups reorder lists stock too (their ghost and drop line); the pads, dials,
+windows, the callout popup and the icon browser keep the skin. (Amended by QC-02, 2026-10-30, the
+library follow-ups.) Result:
 
 **SKIN-10. The tool windows follow the skin.** On a non-default skin (Azeroth reads clearest), open
 `/qc debug` and its **Copy** window, `/qc perf`, the icon browser's Wowhead address window (Game icons
-→ the hint), `/qc unlock` for the drag strip, and a Pad → Groups reorder list → each wears the skin.
-Switch back to **Ka0s Default** with the console open → it recolors with no reload and looks as before
-this update. Result:
+→ the hint), `/qc unlock` for the drag strip (its label, and its tooltip's title and body in the
+skin's tooltip colors, R-7), and, with **Ignore settings panel** off, a Pad → Groups reorder list
+(under the default Scope it stays stock, a settings page's widget: SKIN-9) → each wears the skin, the
+resize grip of the console, its Copy window and the perf panel included. Tick **Ignore fonts** → the
+console's title-bar labels, the perf panel's columns and the drag strip's label go back to Blizzard's
+face. Switch back to **Ka0s Default** with the console open → it recolors with no reload, its labels in
+Oxanium (SKIN-3). (Amended by QC-02, 2026-10-30, the library follow-ups.) Result:
 
 **SKIN-11. The Font and texture overrides.** Skin → **Font** → a clearly different face → with no
-reload every pad and dial label whose *Use the skin's font* is ticked takes it, a block with the box
-unticked keeps its own pick, and the windows' and the settings pages' text takes it too; the debug
+reload every pad and dial label whose *Use the skin's font* is ticked takes it (unless **Ignore
+fonts** is on, SKIN-12), a block with the box unticked keeps its own pick, and the windows' and the
+settings pages' text takes it too; the debug
 console keeps its monospace face. Switch skin → the override stays. **Texture** → any status bar →
 nothing on the pads or dials changes (Quick Comms draws no bars). Set both back to *Skin's own* → the
 skin's again. Result:
 
-**SKIN-12. Ignore fonts.** On a non-default skin with **Ignore settings panel** off, tick **Ignore
-fonts** → with no reload the windows' and the settings pages' text goes back to the game's face, its
-colors kept; untick → the skin's face again. Result:
+**SKIN-12. Ignore fonts (rewritten by QC-02, 2026-10-30).** On a non-default skin with **Ignore
+settings panel** off, a pad on screen (`/qc test`) and a dial open, give a pad's Buttons tab a face of
+its own (Morpheus, say) with *Use the skin's font* still ticked, then tick **Ignore fonts** → with no
+reload the windows' and the settings pages' text goes back to the game's face, its colors kept, and
+**the HUD too** (LibKa0s v1.81.0, R-1): every pad and dial label whose *Use the skin's font* is ticked
+draws its own stored face (Morpheus on the buttons, Friz Quadrata where you never picked one), its
+colors, size, flags and shadow unchanged, and the box stays ticked; the Font picker beside it, still
+grayed, previews that stored face. A Font override (SKIN-11) does not reach the HUD while Ignore fonts
+is on. Untick → the skin's face returns on the windows, the pages and every following HUD label,
+live. In combat the pads and dials redraw at combat end. Fail: a following HUD label left on the
+skin's face while Ignore fonts is on, or a box that unticked itself. Result:
 
 **SKIN-13. EllesmereUI on.** With EllesmereUI and EllesmereUI Blizzard Skin loaded, its third-party
 skinning on and Quick Comms on in its Third-Party Addons list → Skin → **Skin source** offers
@@ -1738,8 +1773,9 @@ while their boxes are ticked. Your colors stay yours. `/qc diagnostics` → the 
 
 **SKIN-14. EllesmereUI off.** Turn Quick Comms off in EllesmereUI's Third-Party Addons list (or disable
 EllesmereUI) and `/reload` → on the Skin tab the EllesmereUI choice is disabled, the failing condition
-and its fix are listed, Quick Comms wears its Ka0s skin (the popup is Blizzard's settings window under
-Ka0s Default), and `/qc diagnostics` names the failing condition after `failing=`. Result:
+and its fix are listed, Quick Comms wears its Ka0s skin (the popup is the Ka0s window under Ka0s
+Default, R-2), and `/qc diagnostics` names the failing condition after `failing=`. (Amended by QC-02,
+2026-10-30.) Result:
 
 **SKIN-15. Back from EllesmereUI asks for a reload.** With EllesmereUI as the source, pick **Ka0s
 skins** → a reload is offered; after the reload the Ka0s skin shows on the pads, the dials and every
@@ -1751,13 +1787,14 @@ profile each time with no reload. In combat (a target dummy), `/qc set skin.skin
 error and no taint warning; the windows repaint at once, and the pads and dials at combat end, with
 the stale hint meanwhile (known-limitations). Result:
 
-**SKIN-17. The first-run skin picker (O3, X6).** For a character that never ran this build, log in →
-about two seconds after the world loads a small window titled **Choose a skin for Ka0s Quick Comms**
-opens: a dropdown showing the skin worn now, an **eye** button, a gear button, **Apply** and a close
-mark. It never opens while the addon is switched off, and in combat it waits until combat ends. Create
-a new profile → it opens again; close it, reset the profile → it opens again. Fail: no eye, a title that
-does not name Ka0s Quick Comms, a picker on a profile that already closed it, or one while the addon is
-off. Result:
+**SKIN-17. The first-run skin picker (O3, X6; rewritten by QC-02, 2026-10-30).** For a character that
+never ran this build, log in → about two seconds after the world loads a small window titled **Choose
+a skin** opens (LibKa0s v1.81.0, R-11), with **Ka0s Quick Comms** on its own line above the dropdown,
+whole, never cut off (the window widens to fit it): a dropdown showing the skin worn now, an **eye**
+button, a gear button, **Apply** and a close mark. It never opens while the addon is switched off, and
+in combat it waits until combat ends. Create a new profile → it opens again; close it, reset the
+profile → it opens again. Fail: no eye, a title other than "Choose a skin", an addon name missing or
+cut off, a picker on a profile that already closed it, or one while the addon is off. Result:
 
 **SKIN-18. The picker's eye, preview and Apply.** On a fresh profile, press the eye → test mode turns
 on: every pad shows its placeholders and dial 1 opens, with the picker above them. Pick **Obsidian** →
@@ -1829,3 +1866,12 @@ skinning rollout (Ka0sAddonsCommonTasks `docs/2026-10-29-SKINNING_ROLLOUT/`) and
 EllesmereUI bridge retired, D1); LOOK-1, LOOK-2, LOOK-3, BUTTON-1, ICONS-1 and ART-1 (amended: a face
 or a border style is picked with its *Use the skin's ...* box unticked); and LOC-1 (its fonts note
 rewritten for the skin's HUD font).
+
+**Owed: the library follow-ups (QC-02, 2026-10-30).** Each check below was rewritten or amended for
+LibKa0s v1.81.0 (Ka0sAddonsCommonTasks `docs/2026-10-30-SKIN_LIBRARY_FOLLOWUPS/`: the stock look
+retired under Ka0s Default, R-2; Ignore fonts on the HUD, R-1; a HUD face per skin, R-4; the panel
+Scope on the reorder lists and the settings pages' colored lines, R-5 and D-03; the drag strip's
+tooltip colors, R-7; the picker's title, R-11) and carries an empty `Result:` line until the owner
+runs it: SKIN-3, SKIN-5, SKIN-8, SKIN-9, SKIN-10, SKIN-11, SKIN-12, SKIN-14 and SKIN-17; EDIT-9,
+EDIT-13 and EDIT-14 (the popup and the browser in the Ka0s window under Ka0s Default; EDIT-9's and
+EDIT-14's passes of 2026-10-21 predate it); and LOC-1 (its fonts note).

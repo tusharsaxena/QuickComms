@@ -166,7 +166,7 @@ What the addon cannot do, or does only under a condition, and why. The hub,
 - A change of skin source away from EllesmereUI is one-way, as EllesmereUI's skins are: it takes
   effect after a reload, which the Skin tab offers. A client without `SettingsFrameTemplate` gets the
   callout popup's older shape (a plain frame in the skin's window fill and edge, and the shared close
-  mark) instead of the settings window's.
+  mark) instead of the settings template's window.
 - A skin change in combat repaints the pads and dials only when combat ends (a rebuild waits for it,
   with the stale hint meanwhile), as every rebuild does: a face or a border style moves a pad's
   measured widths, and a secure pad cannot be re-laid out in combat. The one-time reset onto the
