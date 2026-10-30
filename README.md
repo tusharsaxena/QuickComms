@@ -92,7 +92,7 @@ Everything else is under **Settings → AddOns → Ka0s Quick Comms**, and `/qc 
 | Does it send anything on its own? | No. A callout is only ever sent when you press its button or its key. |
 | Why secure buttons? | In Midnight an addon can't send chat by itself during a boss, a Mythic+ key or a PvP match. A button you press can, so that's the one way Quick Comms sends anything. |
 | Does it work with EllesmereUI? | Yes. With EllesmereUI's third-party skinning on and Quick Comms on in its Third-Party Addons list, pick **EllesmereUI** as the skin source on General → Skin, and Quick Comms takes EllesmereUI's look. Switching back to a Ka0s skin asks for a reload. |
-| Why do my pads look different after updating? | Their fonts and border styles now follow the skin, once, for everyone: Ka0s Default draws Oxanium. Your colors and sizes are kept, and so are your old picks: untick *Use the skin's font* or *Use the skin's border* on the Pad and Dial tabs to get them back. |
+| Why do my pads look different after updating? | Their fonts and border styles now follow the skin, once, for everyone: Ka0s Default draws Prototype. Your colors and sizes are kept, and so are your old picks: untick *Use the skin's font* or *Use the skin's border* on the Pad and Dial tabs to get them back. |
 
 ## Troubleshooting
 
@@ -142,17 +142,23 @@ The glyphs in the icon browser come from three icon sets, each shipped with its 
 The debug console uses [JetBrains Mono](https://www.jetbrains.com/lp/mono/), licensed under the SIL
 Open Font License 1.1.
 
-Ka0s Default, the skin every profile starts on, draws [Oxanium](https://github.com/sevmeyer/oxanium)
-by The Oxanium Project Authors, also SIL Open Font License 1.1.
+Ka0s Default, the skin every profile starts on, draws [Prototype](https://www.dafont.com/prototype.font)
+v2.0 (2001). It is **not under the OFL**: "free for personal use, freely distributed with
+Prototype.txt", so the author's `Prototype.txt` ships beside it unchanged, on the owner's ruling of
+2026-10-30. Obsidian draws [Expressway](https://www.dafont.com/expressway.font) Rg Bold 2.100 (2005)
+by Ray Larabie, Typodermic. It is **not under the OFL, and ships against its terms**: its name table
+reads "Do not distribute", and the Typodermic Desktop EULA 2026 puts embedding in software outside the
+free license. It ships on the owner's ruling of 2026-10-30, "Ship it anyways.", with the EULA
+(`Expressway-EULA.pdf`) and its quick guide (`Expressway-EULA-Guide.html`) beside it as the record of
+the terms that ruling overrode. Expressway is a trademark of Typodermic.
 
-The other skins draw on seven more SIL Open Font License 1.1 faces, one family per skin:
-[Inter](https://github.com/rsms/inter) by The Inter Project Authors,
+The other skins draw on six SIL Open Font License 1.1 families, one per skin:
 [Nunito](https://github.com/googlefonts/nunito) by The Nunito Project Authors,
 [Vollkorn](https://github.com/FAlthausen/Vollkorn-Typeface) by The Vollkorn Project Authors,
 [Bitter](https://github.com/solmatas/BitterPro) by The Bitter Project Authors,
 [Philosopher](https://github.com/alexeiva/philosopher) by The Philosopher Project Authors,
-[Fira Sans](https://github.com/mozilla/Fira) by The Mozilla Foundation and Telefonica S.A., and
-[Atkinson Hyperlegible](https://www.brailleinstitute.org/freefont/) by the Braille Institute of
-America. Inter, Nunito, Vollkorn, Bitter and Oxanium are static weights cut from upstream's
+[Fira Sans](https://github.com/mozilla/Fira) (Medium and SemiBold) by The Mozilla Foundation and
+Telefonica S.A., and [Atkinson Hyperlegible](https://www.brailleinstitute.org/freefont/) by the
+Braille Institute of America. Nunito, Vollkorn and Bitter are static weights cut from upstream's
 variable fonts. The fonts and the icons are bundled inside the LibKa0s payload, with their license
 text beside them.

@@ -1835,6 +1835,52 @@ once; `/qc set skin.skin ka0s` → back. `/qc get pad.header.fontFromSkin` → `
 `libs\LibKa0s` aside and `/reload` (DEGRADED-1) → no Lua error and no picker; rename it back and
 `/reload`. Result: pass (owner-marked 2026-10-30).
 
+**SKIN-24. The Font outline (LibKa0s v1.82.0, Ka0sAddonsCommonTasks `docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK/`,
+D-06).** On a fresh client start, General → **Skin** → Font and texture shows **Font outline** under
+**Reset font** and **Reset texture**, set to **All text**; `/qc get skin.outline` → `all`. `/qc test`
+→ every pad label, section title, header, dial slice label and ring title is outlined, and so is the
+settings window's text where the skin paints it. Pick **HUD text only** → the pads and the dial stay
+outlined and the windows' text (the callout popup, the icon browser, the Preview window) loses its
+outline; pick **Off** → the pads and the dial lose theirs too, with no reload. `/reload` → still Off.
+Tick **Ignore fonts** → the Font outline is grayed out and the HUD is outlined again, as it was before
+this release. `/qc set skin.outline thick` → refused with the allowed values. Switch to another profile
+→ it wears its own Font outline (All text on a new one). Fail: a mode that changes nothing on screen,
+a mode lost after the reload, or a Lua error. Result:
+
+**SKIN-25. From skin font flags (D-07, Addendum 01).** Before updating, on a profile set one pad's
+Buttons tab Font flags to **Thick outline** and leave its Header and Section titles on the shipped
+Outline; note a dial's Slice labels flags (Outline by default). Update and log in → Header, Section
+titles and the dial's Slice labels and Group labels read Font flags **From skin**, the first entry of
+the list; the Buttons tab keeps **Thick outline**. With the Font outline on Off, the From skin blocks
+lose their outline and the Thick outline buttons keep theirs. Pick **Outline** on the Header → it
+stays Outline after `/reload` and under Off (a picked flag wins). A new pad and a new dial start on
+From skin. Fail: a picked flag moved to From skin, From skin missing from a Font block, or the
+Header back on From skin after the reload. Result:
+
+**SKIN-26. `/qc skin` (D-16).** On a profile that has closed the first-run picker, `/qc skin` → the
+**Choose a skin** window opens with **Ka0s Quick Comms** on its own line; pick and Apply → saved, as
+SKIN-18. `/qc help` lists `skin` right after `config` as "Choose a skin: open the skin picker". In
+combat (a target dummy), `/qc skin` twice → each prints a gray "cannot open the skin picker during
+combat" line and nothing opens. `/qc disable`, `/qc skin` → the one disabled line, no picker;
+`/qc enable`. With `libs\LibKa0s` renamed aside and a `/reload`, `/qc skin` → "/qc skin is
+unavailable: the LibKa0s library did not load." (rename it back, `/reload`). Result:
+
+**SKIN-27. The HUD size scale (D-09).** On Ka0s Default, give pad 1's Buttons tab Font size 12 with
+*Use the skin's font* ticked and note how wide a button's label is. Pick **Obsidian** → the labels are
+the same width as under Ka0s Default, drawn at a slightly larger size (13), and the buttons grow
+taller to hold them; `/qc get pad.button.fontSize` still prints 12. Untick *Use the skin's font* →
+the label is back to 12 in your own face. Tick **Ignore fonts** → 12 again. Repeat on the dial's Slice
+labels. Fail: a stored size that changed, a label cut off, or a size that moves with the box unticked.
+Result:
+
+**SKIN-28. Width parity of the windows (D-08).** In each skin, with the Font outline on All text (the
+default) and again on Off: open the callout popup (Groups → a callout's Edit), the icon browser
+(Choose icon…), the Preview window (`/qc preview`) and the perf step panel (`/qc perf`), and unlock a
+pad so its drag strip shows → no title, label, button text or tab is cut off or overlaps its
+neighbor, and the drag strip's title fits with its TEST MODE marker under `/qc test`. Compare each
+window with Ka0s Default: its text is about as wide. Fail: an ellipsis or clipped text in any skin,
+or a skin whose text runs clearly wider than Ka0s Default's. Result:
+
 ## Pending sign-off
 
 The owner ran every check above on 2026-10-21 and reported all of them passed (the client build was
@@ -1871,3 +1917,6 @@ SKIN-8 to SKIN-12, SKIN-14 and SKIN-17 then rewritten for LibKa0s v1.81.0); EDIT
 EDIT-14 (the popup and the browser in the Ka0s window under Ka0s Default); LOOK-1, LOOK-2, LOOK-3,
 BUTTON-1, ICONS-1 and ART-1 (amended for the *Use the skin's ...* boxes); and LOC-1 (its fonts note),
 each recorded on its Result: line as pass (owner-marked 2026-10-30).
+
+Owed from LibKa0s v1.82.0 (QC-01, 2026-10-30, Ka0sAddonsCommonTasks
+`docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK/`): SKIN-24 to SKIN-28 (new).
