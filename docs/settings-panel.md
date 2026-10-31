@@ -587,9 +587,9 @@ both composed by the options library and on by default. While one is on, its pic
 *Border style*; on Icons *Border style* and *Border thickness*) is grayed out and shows the skin's
 value, and the stored pick comes back when it is turned off; sizes, colors, flags and shadows stay
 live either way. On Icons the box is grayed while Show border is off. Schema step 10 turned them on
-once on every stored pad ([schema.md](schema.md)). The Font and Border pickers are `LSM30_*` rows;
-this addon ships no SharedMediaWidgets, so the library draws them as `Ka0sMedia_Font` and
-`Ka0sMedia_Border`, each row previewing its face or border (LibKa0s v1.83.0). A Font block's flags
+once on every stored pad ([schema.md](schema.md)). The Font and Border pickers are the
+library's `Ka0sMedia_Font` and `Ka0sMedia_Border`, which the skin paints, each row previewing its face
+or border (LibKa0s v1.83.0; the only media picker since v1.84.0). A Font block's flags
 lead with **From skin**, the default: the Skin tab's Font outline decides, and a picked flag wins.
 
 Header, Section titles and Window were one Window tab until 2026-10-20 (the Look tab before
