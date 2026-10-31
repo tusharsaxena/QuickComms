@@ -38,7 +38,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | BG-1..9 | Battlegrounds | Node rings on the dial, one slice per node; the faction and location colors; the battleground instance ids; the objective groups (Alterac Valley, Isle of Conquest's bases, a flag map) and their migration; the four node buttons; Silvershard Mines' and Temple of Kotmogu's groups |
 | IDS-1 | Instance ids | The Midnight dungeons and raids |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes |
-| SKIN-1..28 | [Skins](#skins) | The skinning rollout: the one-time reset under Ka0s Default, a new pad, dial or profile on the skin, Ka0s Default elsewhere unchanged, the Skin tab, every skin on the pads and dials, the *Use the skin's ...* boxes, the Preview as window, the callout popup and the icon browser, the settings pages, the tool windows, the Font and texture overrides, Ignore fonts, EllesmereUI on and off and the reload back, profiles and combat, the first-run skin picker (its eye, Apply, close, gear, the switch and a profile event, one picker across Ka0s addons), the CLI and the degraded install; LibKa0s v1.82.0: the Font outline, From skin font flags, `/qc skin`, the HUD size scale and the windows' width parity |
+| SKIN-1..29 | [Skins](#skins) | The skinning rollout: the one-time reset under Ka0s Default, a new pad, dial or profile on the skin, Ka0s Default elsewhere unchanged, the Skin tab, every skin on the pads and dials, the *Use the skin's ...* boxes, the Preview as window, the callout popup and the icon browser, the settings pages, the tool windows, the Font and texture overrides, Ignore fonts, EllesmereUI on and off and the reload back, profiles and combat, the first-run skin picker (its eye, Apply, close, gear, the switch and a profile event, one picker across Ka0s addons), the CLI and the degraded install; LibKa0s v1.82.0: the Font outline, From skin font flags, `/qc skin`, the HUD size scale and the windows' width parity |
 
 ## Before you start
 
@@ -1891,6 +1891,12 @@ neighbor, and the drag strip's title fits with its TEST MODE marker under `/qc t
 window with Ka0s Default: its text is about as wide. Fail: an ellipsis or clipped text in any skin,
 or a skin whose text runs clearly wider than Ka0s Default's. Result:
 
+**SKIN-29. Media pickers preview (LibKa0s v1.83.0, options-ui-§23).** Fully restart the client, then open a
+pad's Buttons tab and untick *Use the skin's font* and *Use the skin's border*. Open **Font** → every row draws
+in its own face. Open **Border** → every row shows its art. Pick one of each, `/reload` → the keys stay and
+the pad draws them. Repeat on the Dial's Labels tab Font and an icon's Border. Fail: a plain list of names, a
+row in the wrong face, a pick lost after the reload, or a Lua error. Result:
+
 ## Pending sign-off
 
 The owner ran every check above on 2026-10-21 and reported all of them passed (the client build was
@@ -1936,6 +1942,6 @@ recorded, but LOC-1, SKIN-1, SKIN-2, SKIN-3, SKIN-5 and SKIN-10 were amended for
 Owed from LibKa0s v1.83.0 (QC-F01, 2026-10-31, Ka0sAddonsCommonTasks
 `docs/2026-10-31-FONT_PICKERS_AND_SKIN_FACES/`): SKIN-4, SKIN-5 and SKIN-11 are re-opened for the new
 faces, *Skin's default* and the previewing pickers; SKIN-24 and SKIN-28 run against the new outline
-default, HUD text only, and SKIN-27 and the windows' width checks against the new faces.
+default, HUD text only, and SKIN-27 and the windows' width checks against the new faces. SKIN-29 is new (QC-F02).
 
 Owed from QC-02 (2026-10-30, the same bundle): ICON-5 (new).
