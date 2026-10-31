@@ -32,6 +32,7 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 | Run | Commit | Tree | Version | Lint w/e | Files | Tests | Perf | NLOC | Funcs | Avg NLOC | Avg CCN | Max CCN | CCN warn | Verdict |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| [`20261101-011157`](20261101-011157/) | `7519cd5` | clean | 1.0.0 | 0/0 | 151 | 1303/1/1304 | pass | 37829 | 4230 | 8.0 | 2.5 | 15 | 0 | **green** |
 | [`20261031-213820`](20261031-213820/) | `e63dad2` | clean | 1.0.0 | 0/0 | 151 | 1298/1/1299 | pass | 37776 | 4226 | 8.0 | 2.5 | 15 | 0 | **green** |
 | [`20261031-202243`](20261031-202243/) | `15dde36` | clean | 1.0.0 | 0/0 | 148 | 1297/1/1298 | pass | 37722 | 4221 | 8.0 | 2.5 | 15 | 0 | **green** |
 | [`20261026-113818`](20261026-113818/) | `cdfb373` | clean | 0.1.0 → 1.0.0 | 0/0 | 140 | 1176/1/1177 | pass | 35391 | 3903 | 8.1 | 2.6 | 15 | 0 | **green** |
@@ -42,11 +43,11 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 ## Test suite
 
-**1299 cases** — 1298 passed, 0 failed, 1 skipped. The generated inventory
-[`20261031-213820/test-cases.md`](20261031-213820/test-cases.md) is the authority on which cases existed at this run;
+**1304 cases** — 1303 passed, 0 failed, 1 skipped. The generated inventory
+[`20261101-011157/test-cases.md`](20261101-011157/test-cases.md) is the authority on which cases existed at this run;
 `docs/test-cases.md` is that same list at HEAD.
 
-Moved **1298 → 1299** since the previous run.
+Moved **1299 → 1304** since the previous run.
 
 **1 case(s) reported a `skip`.** A skip is counted in the total and never in `passed`, and at
 the release gate it is NOT EVALUATED rather than passed (`automated-tests-§3`).
@@ -63,23 +64,23 @@ to whoever thinks to open `.luacheckrc`.
 ## Perf
 
 **6 scenarios** from `tests/perf.lua`; the measurements are in
-[`20261031-213820/perf.json`](20261031-213820/perf.json).
+[`20261101-011157/perf.json`](20261101-011157/perf.json).
 
 | `scenario` | `iters` | `ms/iter` | `notes/iter` | `bytes/iter` |
 |---|---|---|---|---|
 | `bracketCaptureOff` | 1000 | 0.00002 | 0.00 | 0.0 |
-| `dialPointerCaptureOff` | 1000 | 0.00308 | 0.00 | 224.0 |
-| `dialPointerNoHarness` | 1000 | 0.00272 | 0.00 | 224.0 |
-| `padRebuild12` | 200 | 0.40603 | 3.00 | 65505.4 |
-| `dialOpenClose` | 200 | 0.03311 | 1.00 | 1984.9 |
-| `situationRefresh` | 500 | 0.00673 | 1.00 | 2016.0 |
+| `dialPointerCaptureOff` | 1000 | 0.00336 | 0.00 | 224.0 |
+| `dialPointerNoHarness` | 1000 | 0.00389 | 0.00 | 224.0 |
+| `padRebuild12` | 200 | 0.50343 | 3.00 | 65745.4 |
+| `dialOpenClose` | 200 | 0.05095 | 1.00 | 1984.9 |
+| `situationRefresh` | 500 | 0.00823 | 1.00 | 2016.0 |
 
 `perf` never fails a run and never blocks a commit — it is recorded, read and compared, not
 thresholded (`performance-§9`). It does gate the **tag** (`automated-tests-§3`).
 
 ## Complexity watch list
 
-Current as of [`20261031-213820`](20261031-213820/) — **this run's measurement, not its diff.** Max CCN **15** across 4226
+Current as of [`20261101-011157`](20261101-011157/) — **this run's measurement, not its diff.** Max CCN **15** across 4230
 functions, **0** of them warned on; 6 file(s) in the 1000–1500 band and 0 over the 1500 cap
 (`layout-§1`).
 
