@@ -1851,11 +1851,13 @@ D-06).** On a fresh client start, General → **Skin** → Font and texture show
 → every pad label, section title, header, dial slice label and ring title is outlined, and the windows'
 text (the callout popup, the icon browser, the Preview window) is not. Pick **All text** → the pads and
 the dial stay outlined and the windows' text takes the outline, and so does the settings window's where
-the skin paints it; a profile that stored All text before this release keeps it. Pick **Off** → the pads and the dial lose theirs too, with no reload. `/reload` → still Off.
+the skin paints it. `/reload` → still All text: a pick made on this release persists. (All text picked on the
+v1.82.0 branch build does not carry over: it was the default there, so AceDB stripped it at logout, and that
+profile opens on HUD text only.) Pick **Off** → the pads and the dial lose theirs too, with no reload. `/reload` → still Off.
 Tick **Ignore fonts** → the Font outline is grayed out and the HUD is outlined again, as it was before
 this release. `/qc set skin.outline thick` → refused with the allowed values. Switch to another profile
 → it wears its own Font outline (HUD text only on a new one). Fail: a mode that changes nothing on screen,
-a mode lost after the reload, or a Lua error. (Amended by QC-F01, 2026-10-31.) Result:
+a mode lost after the reload, or a Lua error. (Amended by QC-F01 and its review, 2026-10-31.) Result:
 
 **SKIN-25. From skin font flags (D-07, Addendum 01).** Before updating, on a profile set one pad's
 Buttons tab Font flags to **Thick outline** and leave its Header and Section titles on the shipped

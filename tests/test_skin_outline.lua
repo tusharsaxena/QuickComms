@@ -61,8 +61,10 @@ test("outline: the row's write applies the mode live", function()
     assertEqual(NS.Skin.Token("font.outline"), "OUTLINE")
 end)
 
-test("outline: a stored All text is kept and applied; nothing migrates it", function()
+test("outline: All text picked under the HUD default persists; nothing migrates it", function()
     -- red under: a step that rewrites a stored "all" to the new default (D-10)
+    -- This pins a pick made on this release. It says nothing about the v1.82.0 branch, where "all" was
+    -- the default and AceDB stripped it at logout, so no profile from that build stored it.
     local first = T.bootAddon()
     first.SchemaRuntime.Set("skin.outline", "all")
     local sv = _G.QuickCommsDB
