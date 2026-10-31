@@ -905,7 +905,7 @@ test("groups page: [icons] General shows the icon, Choose icon… and the swatch
     -- red under: keep the inline grid (Ed.IconPicker) on the General tab
     assertTrue(choose ~= nil, "the chooser's button")
     local preview = P.find(w, "Icon")
-    assertEqual(preview.image[1], Ed.NO_ICON, "no icon yet: the question mark")
+    assertEqual(preview.image[1], Ed.NoIcon("group"), "no icon yet: the group default the group draws")
     assertTrue(P.find(w, "ColorPicker", "Icon color").disabled, "no glyph, no color")
     choose:__fire("OnClick")
     assertTrue(B.IsOpen())
@@ -935,7 +935,7 @@ test("groups page: [icons] General's clear glyph takes the group's icon and colo
     clear:__fire("OnClick")
     assertTrue(not NS.db.profile.groups[gid].icon, "the icon is gone")
     assertTrue(not NS.db.profile.groups[gid].iconColor, "and its color with it")
-    assertEqual(P.find(w, "Icon").image[1], Ed.NO_ICON, "the chooser shows the question mark")
+    assertEqual(P.find(w, "Icon").image[1], Ed.NoIcon("group"), "the chooser shows the group default")
     assertTrue(clear.disabled, "nothing left to take off")
 end)
 
@@ -1093,8 +1093,8 @@ test("groups page: [rows] a callout row cuts its text at 40 characters, escapes 
     pick(NS, gid)
     local w = P.tab("groups", "callouts")
     -- red under: the row's icon only when the callout has one
-    local row = calloutRow(P, w, Ed.NO_ICON)
-    assertTrue(row ~= nil, "a callout with no icon shows the question mark")
+    local row = calloutRow(P, w, Ed.NoIcon("callout"))
+    assertTrue(row ~= nil, "a callout with no icon shows the callout default")
     -- solo: a smart kind resolves to nothing and takes PARTY's color
     assertEqual(row.text, "|cffffd100Long|r  |cffababffSmart group|r  |cffb3b3b3a||b" .. ("x"):rep(37) .. "…|r")
 end)
@@ -1105,7 +1105,7 @@ test("groups page: [rows] a callout row's text cut counts UTF-8 characters, not 
     local gid = NS.Library.CreateGroup({ name = "Mine" })
     NS.Library.CreateCalloutIn(gid, { name = "Uni", text = ("é"):rep(45), channel = "say" })
     pick(NS, gid)
-    local row = calloutRow(P, P.tab("groups", "callouts"), Ed.NO_ICON)
+    local row = calloutRow(P, P.tab("groups", "callouts"), Ed.NoIcon("callout"))
     assertEqual(row.text, "|cffffd100Uni|r  |cffffffffSay|r  |cffb3b3b3" .. ("é"):rep(40) .. "…|r")
     -- a text at the limit is not cut
     local exact = NS.Library.CreateCalloutIn(gid, { name = "Exact", text = ("y"):rep(40), channel = "say" })

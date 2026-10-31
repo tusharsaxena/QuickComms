@@ -215,7 +215,12 @@ Kit.run{
         "test_skin_windows",
         "test_skin_hud",
         "test_skin_picker",
+        "test_skin_outline",
+        "test_skin_verb",
+        "test_skin_fonts",
+        "test_icons_default",
         "test_skin_tools",
+        "test_glyphs",
         "test_vendor_sync",
         { name = "test_eol",                  dir = "tests/_kit/" },   -- line-endings-§7
         { name = "test_prose",                dir = "tests/_kit/" },   -- localization-§5

@@ -25,8 +25,12 @@ local _, NS = ...
 -- the stored pick while it is off. While the owner ignores fonts (the Skin tab's Ignore fonts),
 -- Resolve answers a face block's stored pick whatever its companion says (LibKa0s v1.81.0, R-1), nil
 -- for a stored "@skin", and R.LabelFont draws the standard face for a nil or unknown pick, so no
--- Ignore-fonts handling lives here. The player's colors, sizes, flags and shadows are always the
--- player's. The chrome this file draws that no setting names (the padlock, the state veils, the hover
+-- Ignore-fonts handling lives here. The player's colors and shadows are always the player's. Since
+-- LibKa0s v1.82.0 two more follow the skin (Ka0sAddonsCommonTasks D-07, D-09): a block's Font flags
+-- default to From skin ("@skin"), which NS.Skin.FontFlags resolves through the Skin tab's Font
+-- outline (a picked flag wins), and a block on the skin's face draws at NS.Skin.HudFontSize(its
+-- stored size), scaled by the skin's HUD size so its text is as wide in every skin (its own face,
+-- or Ignore fonts, draws the stored size); the stored size is never written. The chrome this file draws that no setting names (the padlock, the state veils, the hover
 -- wash, the send flashes, the header's lockdown and stale colors, the strip's marker, the tooltip
 -- lines) reads a token: R.Chrome, read once per look change, Ka0s Default's values today's pixels (the
 -- library's tokens and this addon's own qc.*, core/SkinSetup.lua). A skin change (OnLooksChanged)
@@ -41,7 +45,6 @@ local Glow = NS.Glow
 local L = NS.L
 local LV = NS.Constants.LAYERS.LEVEL
 
-local DEFAULT_ICON = "Interface\\Icons\\INV_Misc_QuestionMark"
 -- The padlock is the shared catalog's `lock` mark (library-stack-§8), resolved at draw time; this
 -- Blizzard texture is drawn only when the catalog answers nil (the library absent).
 local LOCK_ICON = "Interface\\PetBattles\\PetBattle-LockIcon"
@@ -347,9 +350,11 @@ function R.Paint(btn, slot, style, w, icfg)
     paintChrome(btn)
     DEFAULT_LOOK = DEFAULT_LOOK or IS.Config(nil, "pad")
     icfg = icfg or DEFAULT_LOOK
-    btn.qcIcon:SetTexture(slot.icon or DEFAULT_ICON)
+    -- A callout saved with no icon draws the callout default (NS.DefaultIcon, D-21), white.
+    local icon = slot.icon or NS.DefaultIcon("callout")
+    btn.qcIcon:SetTexture(icon)
     btn.qcIcon:SetSize(icfg.size, icfg.size)
-    IS.ApplyIcon(btn.qcIcon, icfg, NS.Library.IconTint(slot.icon, slot.iconColor))
+    IS.ApplyIcon(btn.qcIcon, icfg, NS.Library.IconTint(icon, slot.iconColor))
     btn.qcIcon:SetShown(style ~= "label")
     IS.PaintBorder(btn, icfg, style ~= "label")
     Glow.Bind(btn, style ~= "label" and icfg.glow or false, slot.calloutId)
@@ -378,15 +383,18 @@ end
 local FLAT_EDGE = "Interface\\Buttons\\WHITE8x8"
 
 --- A font block's font (the Section titles tab's, the Header tab's, the Buttons tab's): { path, size,
---- flags, r, g, b, a, shadow }. The face is R.FontKey's (the skin's while it follows, QC-03). A face
+--- flags, r, g, b, a, shadow }. The face is R.FontKey's (the skin's while it follows, QC-03); the size
+--- the stored one through Skin.HudFontSize (scaled while the block follows the skin's face) and the
+--- flags the stored ones through Skin.FontFlags (From skin is the Font outline's). A face
 --- this machine does not have is the standard one; "Use class
 --- color" takes the player's class color, keeping the swatch's alpha (NS.ResolveColor). A missing
 --- swatch is `fallback` when given, else white.
 function R.LabelFont(look, fallback)
     look = type(look) == "table" and look or {}
     local r, g, b, a = NS.ResolveColor(look.fontColor or fallback, look.useClassColorFont)
-    return { path = NS.MediaFetch("font", R.FontKey(look)) or STANDARD_TEXT_FONT, size = tonumber(look.fontSize) or 10,
-        flags = type(look.fontFlags) == "string" and look.fontFlags or "", r = r, g = g, b = b, a = a,
+    return { path = NS.MediaFetch("font", R.FontKey(look)) or STANDARD_TEXT_FONT,
+        size = Skin.HudFontSize(tonumber(look.fontSize) or 10, look.fontFromSkin == true),
+        flags = Skin.FontFlags(look.fontFlags), r = r, g = g, b = b, a = a,
         shadow = look.fontShadow ~= false }
 end
 

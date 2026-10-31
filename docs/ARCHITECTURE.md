@@ -48,7 +48,7 @@ Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBO
 LibSharedMedia, LibDataBroker, LibDBIcon
 and LibCustomGlow-1.0 (the Icons tab's glows, resolved at call time by LibKa0s-Glow-1.0 and optional; versions and
 licenses in `DEPENDENCIES.md`) are vendored under `libs/`, and so is the whole
-LibKa0s v1.81.0 payload, of which fifteen majors are wired, one setup file each (`DEPENDENCIES.md`
+LibKa0s v1.83.0 payload, of which fifteen majors are wired, one setup file each (`DEPENDENCIES.md`
 lists the toolchain):
 
 | Major | Setup file | Gives |
@@ -140,7 +140,7 @@ tracked registration down and replay it.
 
 ## Slash Commands
 
-`/qc`, alias `/quickcomms`. The reserved verbs (`help config enable disable lock unlock version list
+`/qc`, alias `/quickcomms`. The reserved verbs (`help config skin enable disable lock unlock version list
 get set reset resetall profile debug diagnostics perf`; `lock` and `unlock` are slash-commands-§8's,
 the Lock frame row's path through the seam) and the feature verbs `check <id>`, which prints the
 line a callout would send under the current situation and never sends, `test` (test mode), `toggle` (hide or show every Comms Pad, remembered per character in `db.char.padsHidden`, also the launcher's Show window entry), `preview` ("Preview as…": bare opens the preview window on where you are, or keeps the preview on; a name switches it, `off` ends it and `list` prints the menu) and `why` ("Why is this showing?", for every built pad and dial). The full table, the live-while-disabled set
@@ -207,12 +207,13 @@ the settings pages and the library's own windows.
   `NS.Skin` (the owner's facade) and the call-site helpers `NS.SkinColor`, `NS.SkinEscape`,
   `NS.SkinMarkup`, `NS.SkinPaintAce` / `NS.SkinPaintAceTree` / `NS.SkinOnRelease`. The choice is the
   profile's `skin` block (`source`, `skin`, the Scope's `ignorePanel`, on for a new profile, and
-  `ignoreFonts`, the overrides `font` and `texture`, and `pickerSeen`), seven skip-render rows drawn
+  `ignoreFonts`, the overrides `font` and `texture`, the Font outline `outline`, and `pickerSeen`),
+  eight skip-render rows drawn
   by the library's **Skin** tab on General, after Behavior and before Keybindings
   ([schema.md](schema.md), [settings-panel.md](settings-panel.md#general--skin)).
 - **Repaint flow.** `NS.ApplySkinChoice` runs right after the migrations in `OnInitialize` and on
   every profile switch, copy and reset (`reloadProfile`), applying the stored pair with the stored
-  exceptions and overrides; each Skin row's `onChange` applies only its own half, so a tab pick is one
+  exceptions, overrides and Font outline (`NS.ApplySkinOutline`, `Skin:SetOutline`); each Skin row's `onChange` applies only its own half, so a tab pick is one
   repaint. `Skin:SetChoice` repaints every frame recorded for this owner, then fires
   `OnLooksChanged`; the pads and dials listen there (`Pad_Render`'s `LooksGen`) and ask `Surfaces` for
   one rebuild, which waits for combat's end like every rebuild.
@@ -225,15 +226,21 @@ the settings pages and the library's own windows.
   (LibKa0s v1.81.0, R-1): the library's `Resolve` answers it for `hud.font`, nil for a stored `"@skin"`
   (the standard face), so `Pad_Render.FontKey` holds no Ignore-fonts handling of its own. Each skin
   names its own HUD face (R-4). Every
-  color, size, flag and shadow the player set, the shine and the class colors stay the player's (X4,
-  D5, D6). The HUD's own chrome (the padlock, the veils, the hover wash, the flashes, the LOCKDOWN and
+  color and shadow the player set, the shine and the class colors stay the player's (X4, D5, D6);
+  stored sizes and flags are under **Font flags and HUD sizes** below. The HUD's own chrome (the padlock, the veils, the hover wash, the flashes, the LOCKDOWN and
   stale tags, the PREVIEW and TEST MODE marks, the page arrows) reads tokens once per look change
   (`Pad_Render.Chrome`), never per frame.
 - **The one-time reset** (the owner's O2). Schema step 10 (`Library.MigrateFollowSkin`) turns every
   stored pad's and dial's companions on, once, on every stored profile; the picks and the colors are
-  kept. Under Ka0s Default that is a visible change (rollout X5, D11): Oxanium SemiBold in place of the
-  picked faces (Friz Quadrata by default), a picked border art becomes the skin's `None` (the flat
+  kept. Under Ka0s Default that is a visible change (rollout X5, D11): the skin's HUD face (Prototype since
+  LibKa0s v1.82.0, Oxanium SemiBold before) in place of the picked faces (Friz Quadrata by default), a picked border art becomes the skin's `None` (the flat
   edge at the stored thickness), and a shown icon border the skin's Solid 2 px.
+- **Font flags and HUD sizes** (LibKa0s v1.82.0, Ka0sAddonsCommonTasks D-07, D-09). Every font
+  block's Font flags lead with From skin (`"@skin"`, the composer's `flagsFromSkin`), its default,
+  which `Pad_Render.LabelFont` draws through `NS.Skin.FontFlags`, so the Skin tab's Font outline
+  (`skin.outline`) decides; a picked flag wins. Schema step 11 (`Library.MigrateFontFlags`) moved
+  every stored OUTLINE, the old default, to From skin once. A block that follows the skin's face
+  draws at `NS.Skin.HudFontSize(stored)`, and the pad's cells grow with the drawn size.
 - **The windows.** The Preview as window is the owner's `Shell`, its title and close mark in the
   skin's top bar (D9). The callout popup and the icon browser are built from Blizzard's
   `SettingsFrameTemplate` and wear the skin's window under every skin, Ka0s Default included: LibKa0s

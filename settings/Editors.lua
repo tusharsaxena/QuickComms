@@ -216,14 +216,18 @@ end
 -- ── the icon (icon browser spec, "Goals") ───────────────────────────────────────────────────
 
 -- Where an editor's icon is chosen (the callout popup, a user group's General tab): an "Icon" label
--- over one row holding the icon as it is drawn (a glyph in its color; a question mark for none),
+-- over one row holding the icon as it is drawn (a glyph in its color; for none, the default the
+-- member draws, Ed.NoIcon),
 -- Choose icon…, which opens the icon browser (settings/IconBrowser.lua) over whatever opened it, and
--- a clear glyph that takes the icon off (the member draws none; idle while there is no icon to take),
+-- a clear glyph that takes the icon off (the member then draws its default: a group the folder, a
+-- callout the speech bubble, NS.DefaultIcon; idle while there is no icon to take),
 -- and the glyph's color swatch, live only while the icon is a glyph (no other icon takes a color).
 -- There is no Icon text box: the icon is stored as a texture path or id (the member's icon row, which /qc
 -- still reaches), and picked only here. Every control writes through `spec`, never the profile
 -- itself, and the row is put back in place (Ed.Live) after any write.
-Ed.NO_ICON = "Interface\\Icons\\INV_Misc_QuestionMark"
+--- What a member of `kind` ("group" or "callout") with no icon draws, so the preview shows it
+--- (QC-02 of Ka0sAddonsCommonTasks docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK, D-21).
+function Ed.NoIcon(kind) return NS.DefaultIcon(kind) end
 local CHOOSER_ICON = 32
 -- The preview is the icon plus CHOOSER_EDGE on each side, so the icon sits CHOOSER_EDGE in from the
 -- row's left edge, where an EditBox's and a Button's own art begins; CHOOSER_GAP clears it from
@@ -317,7 +321,8 @@ function Ed.ReleasePicker(swatch, untrack)
     if picker and picker:IsShown() then picker:Hide() end
 end
 
---- The chooser: its label, then one row. `spec` = { get() -> icon, color; choose(icon, color) (the
+--- The chooser: its label, then one row. `spec` = { kind ("group" or "callout": the default its
+--- preview shows for no icon, Ed.NoIcon); get() -> icon, color; choose(icon, color) (the
 --- browser's Choose, and the clear glyph's choose(nil, nil)); setColor(color|nil) (the swatch); owner, lift, valid (handed to the browser);
 --- columns (optional) = { col, gutter, inset } }. With `columns` (the callout popup) the row keeps to
 --- the editor's two columns: Choose icon… and the clear glyph end where the left column does, `col` wide from the row's
@@ -372,7 +377,7 @@ function Ed.IconChooser(ctx, spec)
         h.AttachTooltip(swatch, L["Icon color"], L["The color a LibKa0s glyph is drawn in. Only a glyph takes a color; white is none."])
         local function paint()
             local icon, color = spec.get()
-            preview:SetImage(icon or Ed.NO_ICON)
+            preview:SetImage(icon or Ed.NoIcon(spec.kind))
             Ed.Tint(preview.image, icon, color)
             swatch:SetColor(NS.Library.IconTint(icon, color))
             swatch:SetDisabled(not NS.Library.IsGlyph(icon))

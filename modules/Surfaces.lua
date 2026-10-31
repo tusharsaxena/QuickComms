@@ -40,6 +40,23 @@ local ROLE = { TANK = L["Tank"], HEALER = L["Healer"], DAMAGER = L["Damage"] }
 
 S.TEST_COUNTS = { 4, 8, 12, 16 }   -- test mode's groups, by how many callouts each holds
 
+-- Test mode's groups' glyphs (QC-02 of Ka0sAddonsCommonTasks docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK,
+-- D-21): a numbered circle each, "Test group N" wearing N, tinted with a BuiltIns.COLOR key, so the
+-- dial's first ring reads as four placeholders where it drew four question marks (image-52).
+S.TEST_GLYPHS = {
+    { "ph:number-circle-one", "cyan" }, { "ph:number-circle-two", "gold" },
+    { "ph:number-circle-three", "purple" }, { "ph:number-circle-four", "green" },
+}
+
+--- Test group s's icon and its tint, read at call time: nil, nil without the library (the member's
+--- default icon is drawn then, NS.DefaultIcon).
+local function testGlyph(s)
+    local g = S.TEST_GLYPHS[s]
+    local icon = g and NS.Icon(g[1]) or nil
+    local colors = NS.BuiltIns and NS.BuiltIns.COLOR or {}
+    return icon, icon and colors[g[2]] or nil
+end
+
 -- A group's children: `opts.children` (Library.Children) when given, else the group's own
 -- `children` list (a test's hand-made group).
 local function childrenOf(groupId, g, opts)
@@ -229,7 +246,9 @@ end
 function S.TestPlan(surfaceId)
     local sections = {}
     for s = 1, #S.TEST_COUNTS do
-        sections[s] = { groupId = "test." .. s, title = L["Test group %d"]:format(s), slots = testSlots(surfaceId, s) }
+        local icon, color = testGlyph(s)
+        sections[s] = { groupId = "test." .. s, title = L["Test group %d"]:format(s), icon = icon, iconColor = color,
+            slots = testSlots(surfaceId, s) }
     end
     return { surfaceId = surfaceId, snapshot = {}, order = {}, sections = sections, lockdownChip = false,
         hasActive = true, test = true }
@@ -251,7 +270,9 @@ function S.TestDialPlan(surfaceId, dial)
     dial = type(dial) == "table" and dial or {}
     local groups = {}
     for s = 1, #S.TEST_COUNTS do
-        groups[s] = { id = "test." .. s, title = L["Test group %d"]:format(s), slots = testSlots(surfaceId, s) }
+        local icon, color = testGlyph(s)
+        groups[s] = { id = "test." .. s, title = L["Test group %d"]:format(s), icon = icon, iconColor = color,
+            slots = testSlots(surfaceId, s) }
     end
     local rings, open = NS.DialLayout.Rings(groups, { mode = dial.mode, slices = dial.slices, title = dial.name,
         fit = dialFit(dial) })

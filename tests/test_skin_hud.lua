@@ -20,7 +20,7 @@ local NO_LIBKA0S = T.loadAddon.libFiles
 local MPLUS = { inInstance = true, instanceType = "party", difficultyID = 8, keystoneActive = true,
     keyLevel = 12, inGroup = true }
 
-local OXANIUM = "Interface\\AddOns\\QuickComms\\libs\\LibKa0s\\fonts\\Oxanium-SemiBold.ttf"
+local PROTOTYPE = "Interface\\AddOns\\QuickComms\\libs\\LibKa0s\\fonts\\Prototype-Regular.ttf"
 local ARIAL = "Fonts\\ARIALN.TTF"
 local TOOLTIP = "Interface\\Tooltips\\UI-Tooltip-Border"
 local FLAT = "Interface\\Buttons\\WHITE8x8"
@@ -29,7 +29,7 @@ local SOLID = "Interface\\Buttons\\WHITE8X8"
 -- A LibSharedMedia that knows Ka0s Default's HUD face, one other face and one border art.
 local function withMedia(mm)
     local lsm = mm.LibStub:NewLibrary("LibSharedMedia-3.0", 1)
-    local media = { font = { Arial = ARIAL, ["Ka0s Oxanium SemiBold"] = OXANIUM }, border = { Tooltip = TOOLTIP } }
+    local media = { font = { Arial = ARIAL, ["Ka0s Prototype"] = PROTOTYPE }, border = { Tooltip = TOOLTIP } }
     function lsm.Register() end
     function lsm.IsValid() return true end
     function lsm.HashTable(_, kind) return media[kind] or {} end
@@ -111,11 +111,11 @@ test("skin hud: a pad's labels, titles and header take hud.font while they follo
     local NS = live()
     local inst = NS.Pad.Instance("p1")
     -- red under: LabelFont reads look.font (Friz Quadrata, the stored pick) whatever the companion
-    assertEqual(firstButton(NS).qcLabel.__font[1], OXANIUM, "a button's label")
-    assertEqual(inst.titles.active[1].__font[1], OXANIUM, "a section title")
-    assertEqual(inst.header.qcSituation.__font[1], OXANIUM, "the header")
+    assertEqual(firstButton(NS).qcLabel.__font[1], PROTOTYPE, "a button's label")
+    assertEqual(inst.titles.active[1].__font[1], PROTOTYPE, "a section title")
+    assertEqual(inst.header.qcSituation.__font[1], PROTOTYPE, "the header")
     set(NS, "pad.button.font", "Arial", "p1")
-    assertEqual(firstButton(NS).qcLabel.__font[1], OXANIUM, "a pick is not read while it follows")
+    assertEqual(firstButton(NS).qcLabel.__font[1], PROTOTYPE, "a pick is not read while it follows")
     set(NS, "pad.button.fontFromSkin", false, "p1")
     assertEqual(firstButton(NS).qcLabel.__font[1], ARIAL, "off: the player's face")
     assertEqual(NS.db.profile.pads.p1.button.font, "Arial", "the pick is stored either way")
@@ -129,7 +129,7 @@ test("skin hud: with Ignore fonts on, a following pad face draws its stored pick
     local inst = NS.Pad.Instance("p1")
     set(NS, "pad.button.font", "Arial", "p1")
     assertEqual(NS.db.profile.pads.p1.button.fontFromSkin, true, "the block still follows")
-    assertEqual(firstButton(NS).qcLabel.__font[1], OXANIUM, "following: the skin's face")
+    assertEqual(firstButton(NS).qcLabel.__font[1], PROTOTYPE, "following: the skin's face")
     Skin:SetIgnore(OWNER, nil, true)
     -- red under: R.FontKey answers hud.font while the companion is on, whatever Ignore fonts says
     assertEqual(firstButton(NS).qcLabel.__font[1], ARIAL, "Ignore fonts: the stored pick")
@@ -137,13 +137,13 @@ test("skin hud: with Ignore fonts on, a following pad face draws its stored pick
         "a stored Friz Quadrata LibSharedMedia lacks is the standard face, never the skin's")
     assertEqual(NS.db.profile.pads.p1.button.fontFromSkin, true, "the companion is left on")
     Skin:SetIgnore(OWNER, nil, false)
-    assertEqual(firstButton(NS).qcLabel.__font[1], OXANIUM, "untick: the skin's face is back")
+    assertEqual(firstButton(NS).qcLabel.__font[1], PROTOTYPE, "untick: the skin's face is back")
 end)
 
 test("skin hud: with Ignore fonts on, the font override does not reach a following HUD face", function()
     local NS, _, Skin = live()
     set(NS, "pad.button.font", "Arial", "p1")
-    Skin:SetOverride(OWNER, "Ka0s Oxanium SemiBold", nil)
+    Skin:SetOverride(OWNER, "Ka0s Prototype", nil)
     Skin:SetIgnore(OWNER, nil, true)
     assertEqual(firstButton(NS).qcLabel.__font[1], ARIAL, "the stored pick beats the override")
     Skin:SetOverride(OWNER, false, nil)
@@ -159,7 +159,7 @@ test("skin hud: with Ignore fonts on, a following dial label draws its stored pi
     assertEqual(wedge.qcLabel.__font[1], ARIAL, "a slice label: the stored pick")
     Skin:SetIgnore(OWNER, nil, false)
     wedge = NS.Dial.RingWedges("d2", NS.Dial.ShownRing("d2") or 1)[1]
-    assertEqual(wedge.qcLabel.__font[1], OXANIUM, "untick: the skin's face")
+    assertEqual(wedge.qcLabel.__font[1], PROTOTYPE, "untick: the skin's face")
 end)
 
 test("skin hud: a following face takes the Skin tab's font override, as every face of the owner does", function()
@@ -167,7 +167,7 @@ test("skin hud: a following face takes the Skin tab's font override, as every fa
     Skin:SetOverride(OWNER, "Arial", nil)
     assertEqual(firstButton(NS).qcLabel.__font[1], ARIAL, "hud.font is the override's")
     Skin:SetOverride(OWNER, false, nil)
-    assertEqual(firstButton(NS).qcLabel.__font[1], OXANIUM)
+    assertEqual(firstButton(NS).qcLabel.__font[1], PROTOTYPE)
 end)
 
 test("skin hud: a pad's border blocks take bar.borderStyle while they follow, the pick when not", function()
@@ -211,7 +211,7 @@ test("skin hud: a dial's slice labels and ring title take hud.font while they fo
     local ring = NS.Dial.ShownRing("d2") or 1
     local wedge = NS.Dial.RingWedges("d2", ring)[1]
     -- red under: the dial's labels read their stored Friz Quadrata
-    assertEqual(wedge.qcLabel.__font[1], OXANIUM, "a slice label")
+    assertEqual(wedge.qcLabel.__font[1], PROTOTYPE, "a slice label")
     set(NS, "dial.label.font", "Arial", "d2")
     set(NS, "dial.label.fontFromSkin", false, "d2")
     wedge = NS.Dial.RingWedges("d2", NS.Dial.ShownRing("d2") or 1)[1]
@@ -358,7 +358,7 @@ end
 
 test("skin hud: step 10 turns every stored pad's and dial's companions on, keeping every pick", function()
     local NS = live()
-    assertEqual(NS.SCHEMA_VERSION, 10, "the reset is step 10")
+    assertEqual(NS.MIGRATIONS[10].to, 10, "the reset is step 10")
     local p = oldProfile()
     -- red under: no step, or ResetToSkin handed an absent companion ("@skin" lands in the picker)
     NS.Library.MigrateFollowSkin(p)
@@ -382,7 +382,7 @@ test("skin hud: the reset runs once: a companion the player turns off afterwards
     db.global.schemaVersion = 9
     -- red under: the step missing, or not perProfile (every stored profile is reset)
     NS.addon:RunMigrations()
-    assertEqual(db.global.schemaVersion, 10)
+    assertEqual(db.global.schemaVersion, NS.SCHEMA_VERSION)
     assertEqual(pad.header.fontFromSkin, true, "the one-time reset")
     assertEqual(pad.button.borderStyleFromSkin, true)
     set(NS, "pad.header.fontFromSkin", false, "p1")

@@ -26,6 +26,22 @@ function NS.MediaFont(name)
     return Media.Font(addonName, name)
 end
 
+-- The icon a member with none of its own draws (QC-02 of Ka0sAddonsCommonTasks
+-- docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK, D-21): a group's folder, a callout's speech bubble, both
+-- catalog glyphs drawn white; Blizzard's question mark only without the library.
+local DEFAULT_GLYPH = { group = "ph:folder-simple", ring = "ph:folder-simple" }
+local DEFAULT_CALLOUT = "ph:chat-circle-dots"
+local NO_LIBRARY_ICON = "Interface\\Icons\\INV_Misc_QuestionMark"
+
+--- The texture a member with no icon draws: `kind` "group" or "ring" (a dial wedge that opens a
+--- ring) is the folder, anything else ("callout", a pad button, a send wedge) the speech bubble.
+--- Never nil: the question mark when the catalog cannot answer.
+--- @param kind string|nil
+--- @return string
+function NS.DefaultIcon(kind)
+    return NS.Icon(DEFAULT_GLYPH[kind] or DEFAULT_CALLOUT) or NO_LIBRARY_ICON
+end
+
 -- At FILE LOAD, not PLAYER_LOGIN: LibSharedMedia is vendored under libs/ and has already run.
 if Media then Media.RegisterLSM(addonName) end
 

@@ -106,6 +106,10 @@ if not lib then
     -- second value, "queued": there is no queue), and HideSkinPicker is a no-op.
     H.SkinPicker           = function() return nil end
     H.HideSkinPicker       = function() end
+    -- The reserved `skin` verb's act (LibKa0s v1.82.0, OptionsSkinPicker minor 3, ruling D-16):
+    -- without the library there is no picker, so it answers nil, "absent" and core/SkinSetup.lua's
+    -- NS.RunSkinVerb prints the library-absent line.
+    H.SkinVerb             = function() return nil, "absent" end
     H.CreateOptionsPanel   = function() sayAtLoad() end
     H.OpenOptionsPanel     = function() sayOnConfig() end
     return

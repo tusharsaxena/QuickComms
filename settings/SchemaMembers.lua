@@ -378,7 +378,10 @@ local function composedChecks(O)
         fontSize = { validate = NUMBER, normalize = clamp(6, 32, true) },
         fontColor = color,
         useClassColorFont = { validate = BOOL },
-        fontFlags = { validate = check(function(v) return type(v) == "string" and flags[v] ~= nil, "badChoice" end) },
+        -- A picked flag, or From skin ("@skin", LibKa0s v1.82.0's flagsFromSkin; D-07).
+        fontFlags = { validate = check(function(v)
+            return type(v) == "string" and (flags[v] ~= nil or v == NS.Skin.FROM_SKIN), "badChoice"
+        end) },
         fontShadow = { validate = BOOL },
         borderStyle = { validate = check(isName) },
         borderSize = { validate = NUMBER, normalize = clamp(0, 16, true) },
@@ -405,9 +408,11 @@ end
 -- Every Font and Border block follows the skin through its companion (QC-03, the composers'
 -- `fromSkin`; DECISIONS X3, X4): the companions default true in defaults/PadStyle.lua, so the spec's
 -- `defaults` carry that. A Background or Shine color pair ignores the field: colors stay the player's.
+-- `flagsFromSkin` (OptionsCompose minor 14, LibKa0s v1.82.0, D-07) leads every Font block's flags with
+-- From skin, its default; `fromSkin` with it is the minimum font setting. Only FontGroup reads it.
 local function blockSpec(prefix, group, subgroup, defaults, extra)
     local spec = { prefix = prefix, page = prefix:match("^dial") and "dials" or "pads", group = group,
-        subgroup = subgroup, defaults = defaults, fromSkin = true }
+        subgroup = subgroup, defaults = defaults, fromSkin = true, flagsFromSkin = true }
     for k, v in pairs(extra or {}) do spec[k] = v end
     return spec
 end

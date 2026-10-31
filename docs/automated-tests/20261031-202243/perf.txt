@@ -1,0 +1,12 @@
+Ka0s Quick Comms — offline perf  (v1.0.0, label 'pre-merge')
+
+scenario                    iters     ms/iter notes/iter  bytes/iter
+bracketCaptureOff            1000     0.00004       0.00         0.0
+dialPointerCaptureOff        1000     0.00533       0.00       224.0
+dialPointerNoHarness         1000     0.00535       0.00       224.0
+padRebuild12                  200     0.75827       3.00     66528.4
+dialOpenClose                 200     0.09640       1.00      1984.9
+situationRefresh              500     0.01327       1.00      2016.0
+
+timings are for orientation only — compare scenarios within a run, never across machines
+wrote docs/automated-tests/20261031-202243/perf.json

@@ -21,7 +21,7 @@ local NO_LIBKA0S = T.loadAddon.libFiles
 
 local KEYS = {
     { "source", "ka0s" }, { "skin", "ka0s" }, { "ignorePanel", true }, { "ignoreFonts", false },
-    { "font", "" }, { "texture", "" }, { "pickerSeen", false },
+    { "font", "" }, { "texture", "" }, { "outline", "hud" }, { "pickerSeen", false },
 }
 
 --- An enabled instance, its Skin major and a counter of this owner's looks changes and reload
@@ -226,7 +226,7 @@ end)
 
 -- ── the keys and the rows ────────────────────────────────────────────────────────────────────────
 
-test("skin seam: the seven skin keys default to Ka0s Default, the picker unseen", function()
+test("skin seam: the eight skin keys default to Ka0s Default, the picker unseen", function()
     -- red under: a default other than today's look, or pickerSeen true (owner ruling O3: every
     -- profile, old and new, gets the first-run picker).
     local NS = T.bootAddon()

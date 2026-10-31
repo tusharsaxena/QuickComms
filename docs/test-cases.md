@@ -137,7 +137,7 @@ Total.
 - profile: collections exist; default nextId is 1, past every seeded id after boot
 - profile: every behavior row resolves through the seam
 - profile: the spam guard clamps to 0.6-2.0 and fallback refuses unknown values
-- profile: schema version target is 10 (the one-time reset onto the skin)
+- profile: schema version target is 11 (the Font flags' move to From skin)
 - prepare: a callout held by two groups is split into a copy
 - prepare: a split copy of a seeded callout keeps no origin
 - prepare: a callout held by no group is dropped
@@ -1292,7 +1292,7 @@ Total.
 - skin seam: an owner token reaches a markup escape byte for byte
 - skin seam: Core's window edge is handed the owner
 - skin seam: the drag strip, the Preview dropdown and the reorder list are handed the owner
-- skin seam: the seven skin keys default to Ka0s Default, the picker unseen
+- skin seam: the eight skin keys default to Ka0s Default, the picker unseen
 - skin seam: every skin key is a skip-render schema row on the Skin tab
 - skin seam: the skin row's values are every registered skin, in the library's order
 - skin seam: /qc set refuses a skin that is not registered and applies one that is
@@ -1373,6 +1373,54 @@ Total.
 - skin picker: the gear saves the pick and opens General on its Skin tab
 - skin picker: without LibKa0s nothing shows and nothing raises
 
+### test_skin_outline.lua (10)
+
+- outline: a fresh profile stores HUD text only, the library's default
+- outline: the schema row offers the library's three modes, in its order
+- outline: the write seam stores media.outline, and leaves it alone when it is nil
+- outline: another addon's copy reaches the store through WriteChoice
+- outline: the row's write applies the mode live
+- outline: All text picked under the HUD default persists; nothing migrates it
+- outline: /qc set refuses a mode the library does not know
+- outline: the stored mode is applied at load
+- outline: a profile switch applies the incoming profile's mode, and back
+- outline: without the skin engine the apply is a quiet no-op
+
+### test_skin_verb.lua (6)
+
+- skin verb: the row sits right after config, with the library's help words
+- skin verb: /qc skin shows the picker on a profile that has closed it
+- skin verb: NS.RunSkinVerb hands O.SkinVerb this addon's first-run spec
+- skin verb: in combat every call prints the library's gray line and shows nothing
+- skin verb: refused while the addon is disabled, and no picker shows
+- skin verb: without LibKa0s the verb prints the library-absent line
+
+### test_skin_fonts.lua (12)
+
+- skin fonts: every font block carries the minimum set, its flags led by From skin
+- skin fonts: a fresh pad and dial store From skin, and /qc set takes it and every picked flag
+- skin fonts: From skin follows the Font outline; a picked flag wins under every mode
+- skin fonts: a dial's slice labels and ring title follow the Font outline too
+- skin fonts: under Ignore fonts From skin is OUTLINE, the flags these blocks always had
+- skin fonts: without the library a block's From skin draws OUTLINE
+- skin fonts: step 11 moves a stored OUTLINE to From skin and keeps every other flag
+- skin fonts: step 11 runs once per profile: OUTLINE picked afterwards stays OUTLINE
+- skin fonts: a block on the skin's face draws at the skin's HUD scale; the stored size stays
+- skin fonts: under Ignore fonts a following block draws its stored size
+- skin fonts: a dial's slice labels scale with the skin's HUD size
+- skin fonts: a pad's buttons grow with the size they draw at, not the size they store
+
+### test_icons_default.lua (8)
+
+- default icons: test mode's dial rings 1 to 4 wear the numbered glyphs, each tinted
+- default icons: test mode's pad sections carry the same glyphs
+- default icons: the four glyphs ship in the vendored payload
+- default icons: a group's default is the folder, a callout's the speech bubble
+- default icons: without the library the question mark is the one default
+- default icons: a pad button for a callout with no icon draws the speech bubble
+- default icons: a dial's group wedge with no icon draws the folder, a callout's the bubble
+- default icons: the editors' preview shows what the member draws
+
 ### test_skin_tools.lua (14)
 
 - skin tools: the pages' AceGUI handle is the owner proxy, which paints for this owner
@@ -1389,6 +1437,10 @@ Total.
 - skin tools: every settings-page host paint reads the panel-scoped color, never the window one
 - skin tools: the debug console and its copy window are painted for this owner
 - skin tools: the perf panel is painted for this owner
+
+### test_glyphs.lua (1)
+
+- glyphs: display strings use only characters every shipped skin face draws
 
 ### test_vendor_sync.lua (3)
 
@@ -1518,7 +1570,12 @@ Total.
 | test_skin_windows.lua | 20 |
 | test_skin_hud.lua | 18 |
 | test_skin_picker.lua | 18 |
+| test_skin_outline.lua | 10 |
+| test_skin_verb.lua | 6 |
+| test_skin_fonts.lua | 12 |
+| test_icons_default.lua | 8 |
 | test_skin_tools.lua | 14 |
+| test_glyphs.lua | 1 |
 | test_vendor_sync.lua | 3 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -1526,4 +1583,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1260** |
+| **Total** | **1297** |

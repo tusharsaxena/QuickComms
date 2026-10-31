@@ -51,6 +51,9 @@ NS.C = {
         skin = {
             source = "ka0s", skin = "ka0s", ignorePanel = true, ignoreFonts = false,
             font = "", texture = "", pickerSeen = false,
+            -- The Font outline (LibKa0s v1.82.0, Skin minor 9, D-06): "all" text, "hud" text
+            -- only (the default since v1.83.0, D-10), or "off". AceDB merges a new key into every profile.
+            outline = "hud",
         },
     },
 
