@@ -1,0 +1,16 @@
+Independent review of QuickComms feat/2026-10-31-font-pickers-skin-faces (QC-F01, QC-F02).
+
+One finding, low, confirmed:
+- docs/smoke-tests.md SKIN-24 required that a profile which stored All text before this release keeps it.
+  Verified against libs/AceDB-3.0/AceDB-3.0.lua removeDefaults and f291948: "all" was the default until
+  v1.83.0, so it was stripped at logout and cannot be stored. The test passed only because the headless
+  boot skips that stripping. Only clients that ran the unmerged 2026-10-30 branch are affected; the code
+  is correct.
+
+Fixed: SKIN-24 reworded (a pick made on this release persists across /reload; a v1.82.0 branch profile
+opens on HUD text only), docs/schema.md note added, test renamed with a comment on what it does not show.
+Rejected: nothing. D-10's "a stored choice stays" remains true of stored values; an explicit All text
+pick on the branch build is lost, which is not recoverable and is recorded, not worked around.
+
+Gate at this head: 1297 passed, 0 failed, 1 skipped; luacheck 0/0; largest Lua file 1471 lines.
+No function changed, so complexity was not re-measured.
