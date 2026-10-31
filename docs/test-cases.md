@@ -1380,7 +1380,7 @@ Total.
 - outline: the write seam stores media.outline, and leaves it alone when it is nil
 - outline: another addon's copy reaches the store through WriteChoice
 - outline: the row's write applies the mode live
-- outline: a stored All text is kept and applied; nothing migrates it
+- outline: All text picked under the HUD default persists; nothing migrates it
 - outline: /qc set refuses a mode the library does not know
 - outline: the stored mode is applied at load
 - outline: a profile switch applies the incoming profile's mode, and back
