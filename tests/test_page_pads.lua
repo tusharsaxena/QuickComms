@@ -284,7 +284,7 @@ test("pads page: [button] Buttons carries Size, Font, Background, Border and But
     for _, heading in ipairs({ "Size", "Font", "Background", "Border", "Button glow" }) do
         assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
     end
-    assertEqual(#P.all(w, "CheckBox", "Use class color"), 7, "background, border, font, glow, then the shine's tint and two blooms (options-ui-§17)")
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 5, "background, border, font, glow, then the shine's tint; the blooms are Fluid glass's (options-ui-§17, §22)")
     assertTrue(P.find(w, "Slider", "Glow style") == nil, "a dropdown, not a slider")
     -- red under: the Glow style row without its disabledIf
     assertTrue(P.find(w, "Dropdown", "Glow style").disabled, "the glow is off by default")
@@ -329,18 +329,18 @@ test("page pads: [shine] the Buttons tab has a Shine heading", function()
     NS.SchemaRuntime.Set("pad.button.shineLook", "none", "p1")
     local w = P.tab("pads", "Buttons")
     assertEqual(#P.all(w, "Heading", "Shine"), 1, "Shine drawn once")
-    assertEqual(#P.all(w, "CheckBox", "Use class color"), 7, "four, then the tint's and the two blooms'")
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 5, "four, then the tint's; the blooms are Fluid glass's")
     -- red under: no disabledIf on the shine rows
     assertTrue(P.find(w, "Slider", "Shine strength").disabled, "None grays Strength")
     assertTrue(P.find(w, "ColorPicker", "Shine tint").disabled, "and Tint")
-    assertTrue(P.find(w, "ColorPicker", "Bloom color A").disabled, "and the blooms")
+    assertNil(P.find(w, "ColorPicker", "Bloom color A"), "the blooms are not drawn at all")
     P.find(w, "Dropdown", "Shine look"):__fire("OnValueChanged", "orb")
     assertEqual(NS.db.profile.pads.p1.button.shineLook, "orb")
     w = P.tab("pads", "Buttons")
     assertFalse(P.find(w, "Slider", "Shine strength").disabled)
     assertFalse(P.find(w, "ColorPicker", "Shine tint").disabled)
-    assertTrue(P.find(w, "ColorPicker", "Bloom color A").disabled, "the blooms are Fluid glass's only")
-    assertTrue(P.find(w, "ColorPicker", "Bloom color B").disabled)
+    assertNil(P.find(w, "ColorPicker", "Bloom color A"), "the blooms are Fluid glass's only")
+    assertNil(P.find(w, "ColorPicker", "Bloom color B"))
     NS.SchemaRuntime.Set("pad.button.shineLook", "fluid", "p1")
     w = P.tab("pads", "Buttons")
     assertFalse(P.find(w, "ColorPicker", "Bloom color A").disabled)
@@ -381,8 +381,8 @@ test("pads page: [B9] Icons carries its headings once each, a companion beside e
         -- red under: the host's own h.Section above each subgroup (the library draws it from the rows)
         assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
     end
-    -- red under: the Icons tab drawn through renderStyled (every knob row)
-    assertEqual(styleHeadings(P, w), "", "the glow is off by default: no style's knobs")
+    -- red under: no shownWhen on a style's knob (every style's knobs)
+    assertEqual(styleHeadings(P, w), "Pixel border", "the glow is off by default: the picked style's knobs, grayed")
     assertEqual(#P.all(w, "CheckBox", "Use class color"), 3, "tint, border and glow (options-ui-§17)")
     assertTrue(P.find(w, "ColorPicker", "Tint") ~= nil)
     assertTrue(P.find(w, "ColorPicker", "Glow color") ~= nil)
@@ -417,13 +417,13 @@ test("pads page: [B9] the offsets are grayed out while the glow is off or in But
     assertTrue(P.find(w, "Slider", "Glow Y offset").disabled)
 end)
 
-test("pads page: [glow knobs] only the selected style's knobs show, and none while the glow is off", function()
+test("pads page: [glow knobs] only the selected style's knobs show, grayed while the glow is off", function()
     local NS, _, P = open()
     NS.SchemaRuntime.Set("pad.icon.glowEnabled", true, "p1")
     for style, heading in pairs(STYLE_HEADINGS) do
         NS.SchemaRuntime.Set("pad.icon.glowType", style, "p1")
         local w = P.tab("pads", "Icons")
-        -- red under: Settings.ShownIconRows answering every row
+        -- red under: no shownWhen on a style's knob
         assertEqual(styleHeadings(P, w), heading, style)
     end
     NS.SchemaRuntime.Set("pad.icon.glowType", "pixel", "p1")
@@ -433,8 +433,9 @@ test("pads page: [glow knobs] only the selected style's knobs show, and none whi
     assertNil(P.find(w, "CheckBox", "Start animation"))
     NS.SchemaRuntime.Set("pad.icon.glowEnabled", false, "p1")
     w = P.tab("pads", "Icons")
-    assertEqual(styleHeadings(P, w), "", "the glow off: no style's knobs")
-    assertNil(P.find(w, "Slider", "Lines"))
+    -- red under: a knob's shownWhen ANDed with Glow (options-ui-22, Hidden is not disabled)
+    assertEqual(styleHeadings(P, w), "Pixel border", "the glow off: the picked style stays, grayed")
+    assertTrue(P.find(w, "Slider", "Lines").disabled)
     assertTrue(P.find(w, "Slider", "Glow X offset") ~= nil, "Offset always shows")
     -- The rows stay in the schema: /qc set and Defaults still reach a hidden knob.
     assertTrue(NS.SchemaRuntime.Set("pad.icon.procDuration", 2, "p1"))
@@ -465,27 +466,47 @@ test("pads page: [glow knobs] the offsets come right after Glow color, under Ico
     assertEqual(#P.all(w, "Heading", "Offset"), 0, "no Offset heading: the offsets are Icon glow's")
 end)
 
-test("pads page: [glow knobs] a Glow or Glow style write repaints the tab, so the right knobs appear", function()
+test("pads page: [glow knobs] a Glow style write drops the old style's knobs and brings its own (LibKa0s#67)", function()
     local NS, _, P = open()
     local Ed = NS.addon.Settings.Editors
     for _, path in ipairs({ "pad.icon.glowEnabled", "pad.icon.glowType", "dial.icon.glowEnabled",
         "dial.icon.glowType" }) do
-        assertTrue(Ed.STRUCTURAL[path], path .. " is structural")
+        assertNil(Ed.STRUCTURAL[path], path .. ": the library re-renders, no host repaint")
     end
     local w = P.tab("pads", "Icons")
+    assertEqual(styleHeadings(P, w), "Pixel border")
     P.find(w, "CheckBox", "Glow"):__fire("OnValueChanged", true)
-    assertTrue(Ed.Pending(), "a structural repaint is asked for")
-    -- red under: drop pad.icon.glowEnabled from Ed.STRUCTURAL (the write refreshes in place only)
-    w = P.during(P.flush)
-    assertEqual(styleHeadings(P, w), "Pixel border", "the repaint draws the default style's knobs")
+    assertFalse(Ed.Pending(), "the box only lifts the gray, in place")
+    assertFalse(P.find(w, "Slider", "Lines").disabled)
     P.find(w, "Dropdown", "Glow style"):__fire("OnValueChanged", "proc")
-    -- red under: drop pad.icon.glowType from Ed.STRUCTURAL
+    -- red under: no shownWhen on a style's knob
     w = P.during(P.flush)
-    assertEqual(styleHeadings(P, w), "Proc (flipbook)")
-    P.find(w, "CheckBox", "Glow"):__fire("OnValueChanged", false)
+    assertEqual(styleHeadings(P, w), "Proc (flipbook)", "the library's one re-render, on the next frame")
+    assertNil(P.find(w, "Slider", "Lines"), "the old style's knob is dropped from the render")
+    P.find(w, "Dropdown", "Glow style"):__fire("OnValueChanged", "pixel")
     w = P.during(P.flush)
-    assertEqual(styleHeadings(P, w), "")
-    assertTrue(P.find(w, "Slider", "Glow X offset") ~= nil)
+    assertEqual(styleHeadings(P, w), "Pixel border", "and comes back")
+    assertTrue(P.find(w, "Slider", "Lines") ~= nil)
+    assertTrue(P.find(w, "Slider", "Glow X offset") ~= nil, "the offsets are not a style's group")
+    assertTrue(NS.SchemaRuntime.Set("pad.icon.procDuration", 2, "p1"), "a hidden knob stays in the schema")
+end)
+
+test("pads page: [shine] the blooms show only under Fluid glass, through the library (LibKa0s#67)", function()
+    local NS, _, P = open()
+    local w = P.tab("pads", "Buttons")
+    -- red under: the blooms grayed by disabledIf again
+    assertNil(P.find(w, "ColorPicker", "Bloom color A"), "the default look draws no bloom row")
+    assertNil(P.find(w, "ColorPicker", "Bloom color B"))
+    P.find(w, "Dropdown", "Shine look"):__fire("OnValueChanged", "fluid")
+    w = P.during(P.flush)
+    assertFalse(P.find(w, "ColorPicker", "Bloom color A").disabled, "they return, live")
+    assertFalse(P.find(w, "ColorPicker", "Bloom color B").disabled)
+    P.find(w, "Dropdown", "Shine look"):__fire("OnValueChanged", "none")
+    w = P.during(P.flush)
+    assertNil(P.find(w, "ColorPicker", "Bloom color A"), "and drop again")
+    assertTrue(P.find(w, "Slider", "Shine strength").disabled, "Strength still grays at None")
+    assertTrue(NS.SchemaRuntime.Set("pad.button.shineBloomA", { r = 1, g = 0, b = 0, a = 1 }, "p1"),
+        "a hidden bloom stays in the schema")
 end)
 
 test("pads page: [B9] Defaults puts the Icons rows back too, and its tooltip names them", function()

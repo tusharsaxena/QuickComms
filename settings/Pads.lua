@@ -230,11 +230,6 @@ local function renderStyled(ctx, rows)
     h.RenderRows(ctx, Ed.Scalar(rows), nil, nil, { noHeadings = true })
 end
 
--- The Icons tab: as a styled tab, but only the selected glow style's knobs (Settings.ShownIconRows).
-local function renderIcons(ctx, rows)
-    renderStyled(ctx, Settings.ShownIconRows(rows))
-end
-
 local function ids(entries)
     local out = {}
     for i, e in ipairs(entries) do out[i] = e.id end
@@ -264,7 +259,7 @@ local function render(ctx)
         { key = PAD_HEADER, render = renderStyled },
         { key = SECTION_HEADER, render = renderStyled },
         { key = BUTTON, render = renderStyled },
-        { key = ICONS, render = renderIcons },
+        { key = ICONS, render = renderStyled },
     })
 end
 

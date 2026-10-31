@@ -636,19 +636,17 @@ icon-only button is the art whole, above the icon and below the padlock, the lab
 the hover.
 Shine strength (0 to 100, step 5, default 85) is its opacity and Shine tint colors its light (its shade
 stays dark). Strength and Tint are grayed out at None; Bloom color A and B (pink and mint) color Fluid
-glass's two blooms and are grayed out under every other look. Each pad keeps its own; the Dial page's
+glass's two blooms and show only under it, through `shownWhen` (options-ui-§22). Each pad keeps its own; the Dial page's
 Slices tab has the same heading for a dial.
 
 The Icons tab's rows are `pad.icon.*` (settings/SchemaIcons.lua). Every color pair sits on one line and is
 never grayed out; Border style and thickness are grayed out while Show border is off or Use the skin's border is on; Glow when, Glow style
 and the offsets while the glow is off, and the offsets also under Button, which ignores them. The
 offsets sit right after Glow color, under Icon glow, and always show. A style's knobs (Pixel border, Auto cast sparkles, Button
-(rotating rays), Proc (flipbook)) show only while the glow is on and in that style (owner request,
-2026-10-20; until then every style's knobs showed, grayed out under the others): the tab's render filters
-them (`Settings.ShownIconRows`), the rows stay in the schema, so Defaults and `/qc set`
-still reach every knob. Glow and Glow style are structural (`Editors.STRUCTURAL`): a write repaints the
-tab on the next frame, its scroll kept, so the right heading appears at once. The Dial page's
-Icons tab does the same.
+(rotating rays), Proc (flipbook)) show only while Glow style picks that style, grayed out while the glow is
+off (options-ui-§22, *Hidden is not disabled*; LibKa0s#67): each row carries `shownWhen`, so the library drops
+it, heading included, and re-renders the page once on the next frame when the style changes. The rows stay
+in the schema, so Defaults and `/qc set` still reach every knob. The Dial page's Icons tab does the same.
 Glow when is Always, On hover or After sending (1.5 s from the send result; a dial closes on the send,
 so its wedge glows for 1.5 s from the next open, if that comes within 5 s). The page's Defaults puts the
 Window, Header, Section titles, Buttons and Icons rows back too, and its tooltip names every tab it

@@ -232,8 +232,10 @@ test("dials page: [B9] Icons follows Labels, carries its headings once each, and
     for _, heading in ipairs({ "Size, offset and crop", "Color", "Border", "Icon glow" }) do
         assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
     end
-    -- red under: Dials' renderIcons without Settings.ShownIconRows
-    assertEqual(#P.all(w, "Heading", "Pixel border"), 0, "the glow is off by default: no style's knobs")
+    -- red under: no shownWhen on a style's knob
+    assertEqual(#P.all(w, "Heading", "Pixel border"), 1, "the glow is off by default: the picked style's knobs, grayed")
+    assertEqual(#P.all(w, "Heading", "Auto cast sparkles"), 0)
+    assertTrue(P.find(w, "Slider", "Lines").disabled)
     assertEqual(#P.all(w, "CheckBox", "Use class color"), 3)
     local order, seen = {}, {}
     for _, row in ipairs(NS.addon.Settings.RowsForPage("dials")) do
@@ -251,13 +253,11 @@ test("dials page: [B9] Icons follows Labels, carries its headings once each, and
     assertTrue(P.ctx("dials").panel.defaultsTooltip:find("icons", 1, true) ~= nil)
 end)
 
-test("dials page: [glow knobs] only the selected style's knobs show, and a Glow or Glow style write repaints", function()
+test("dials page: [glow knobs] a Glow style write drops the old style's knobs and brings its own (LibKa0s#67)", function()
     local _, _, P = open()
     local w = P.tab("dials", "Icons")
     P.find(w, "CheckBox", "Glow"):__fire("OnValueChanged", true)
-    w = P.during(P.flush)
-    assertEqual(#P.all(w, "Heading", "Pixel border"), 1, "the repaint draws the default style's knobs")
-    assertEqual(#P.all(w, "Heading", "Auto cast sparkles"), 0)
+    assertFalse(P.find(w, "Slider", "Lines").disabled, "the box lifts the gray in place")
     P.find(w, "Dropdown", "Glow style"):__fire("OnValueChanged", "autocast")
     w = P.during(P.flush)
     assertEqual(#P.all(w, "Heading", "Auto cast sparkles"), 1)
@@ -291,7 +291,7 @@ test("dials page: [slices] Slices writes the fill and highlight, Layout the gap,
         assertEqual(#P.all(w, "Heading", heading), 1, heading .. " drawn once")
     end
     -- red under: the Hub and Pointer rows left on Slices (the Hub tab, dial polish 2026-10-21)
-    assertEqual(#P.all(w, "CheckBox", "Use class color"), 5, "fill, highlight, then the shine's tint and two blooms")
+    assertEqual(#P.all(w, "CheckBox", "Use class color"), 3, "fill, highlight, then the shine's tint; the blooms are Fluid glass's")
     P.find(P.tab("dials", "Layout"), "Slider", "Slice gap"):__fire("OnMouseUp", 3)
     assertEqual(NS.db.profile.dials.d2.slice.gap, 3)
     w = P.tab("dials", "Hub")
@@ -564,14 +564,14 @@ test("page dials: [shine] the Slices tab has a Shine heading", function()
     -- red under: no disabledIf on the shine rows
     assertTrue(P.find(w, "Slider", "Shine strength").disabled, "None grays Strength")
     assertTrue(P.find(w, "ColorPicker", "Shine tint").disabled, "and Tint")
-    assertTrue(P.find(w, "ColorPicker", "Bloom color A").disabled, "and the blooms")
+    assertNil(P.find(w, "ColorPicker", "Bloom color A"), "the blooms are not drawn at all")
     P.find(w, "Dropdown", "Shine look"):__fire("OnValueChanged", "rim")
     assertEqual(NS.db.profile.dials.d2.slice.shineLook, "rim")
     w = P.tab("dials", "Slices")
     assertFalse(P.find(w, "Slider", "Shine strength").disabled)
     assertFalse(P.find(w, "ColorPicker", "Shine tint").disabled)
-    assertTrue(P.find(w, "ColorPicker", "Bloom color A").disabled, "the blooms are Fluid glass's only")
-    assertTrue(P.find(w, "ColorPicker", "Bloom color B").disabled)
+    assertNil(P.find(w, "ColorPicker", "Bloom color A"), "the blooms are Fluid glass's only")
+    assertNil(P.find(w, "ColorPicker", "Bloom color B"))
     NS.SchemaRuntime.Set("dial.slice.shineLook", "fluid", "d2")
     w = P.tab("dials", "Slices")
     assertFalse(P.find(w, "ColorPicker", "Bloom color A").disabled)

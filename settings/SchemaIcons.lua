@@ -22,11 +22,11 @@ local _, NS = ...
 -- dimmed with Show border off, and defaults on, QC-03); Glow when, Glow style and the offsets while the glow
 -- is off, and an offset also while the glow is in a style it does not apply to (Button).
 --
--- A style's knobs show only while the glow is on and in that style (owner request, 2026-10-20): the
--- rows stay in the schema (Defaults, /qc set and list still reach every knob), and
--- the tab's render filters them through Settings.ShownIconRows. Glow and Glow style are structural
--- (settings/Editors.lua Ed.STRUCTURAL), so a write to either repaints the tab, its scroll kept, and
--- the right heading appears. The options library has no hidden-row field to say this in the row.
+-- A style's knobs show only while Glow style picks that style, each row carrying `shownWhen`, so the
+-- library drops them, heading included, and re-renders the page when the style changes (options-ui-§22,
+-- LibKa0s#67). They are grayed while the glow is off, as §22's "Hidden is not disabled" asks: the group
+-- the selector picks stays on the page with the feature off. The rows stay in the schema (Defaults,
+-- /qc set and list still reach every knob). The offsets are rows of a shown group, so they gray instead.
 --
 -- settings/SchemaMembers.lua calls Settings.IconRows with its checks and splices the rows into its
 -- own list (a pad's after its Look rows; a dial's after its Labels rows, so the Icons tab follows
@@ -87,8 +87,7 @@ local WHERE = {
 
 local function get(path) return NS.SchemaRuntime.Get(path) end
 
--- A style's knob row's path -> the styles it applies to (the offsets are no style's: always drawn).
-local KNOB_STYLES = {}
+-- The two knobs that sit in Icon glow itself, always drawn (the others are a style's own group).
 local OFFSETS = { xOffset = true, yOffset = true }
 
 --- One kind's Icons rows, in tab order.
@@ -179,8 +178,14 @@ function NS.addon.Settings.IconRows(kind, C, afterSize)
     local function knobRow(knob)
         local text = KNOB_TEXT[knob.key]
         local styles = knob.styles
-        local row = { path = P .. knob.key, default = knob.default, label = text[2], desc = text[3],
-            disabledIf = function() return glowOff() or not styles[get(P .. "glowType")] end }
+        local row = { path = P .. knob.key, default = knob.default, label = text[2], desc = text[3] }
+        if OFFSETS[knob.key] then
+            row.disabledIf = function() return glowOff() or not styles[get(P .. "glowType")] end
+        else
+            local picked = {}
+            for style in pairs(styles) do picked[#picked + 1] = style end
+            row.shownWhen, row.disabledIf = { path = P .. "glowType", equals = picked }, glowOff
+        end
         if knob.kind == "bool" then
             row.type, row.validate = "bool", C.BOOL
         else
@@ -188,7 +193,6 @@ function NS.addon.Settings.IconRows(kind, C, afterSize)
             row.validate, row.normalize = C.NUMBER, C.clamp(knob.min, knob.max, knob.step >= 1)
             if knob.key == "pixelLength" then row.zeroText = L["Automatic"] end
         end
-        if not OFFSETS[knob.key] then KNOB_STYLES[row.path] = styles end
         at(text[1], row)
     end
     -- The offsets first, right after Glow; then each style's knobs in the knob table's order.
@@ -199,22 +203,4 @@ function NS.addon.Settings.IconRows(kind, C, afterSize)
         if not OFFSETS[knob.key] then knobRow(knob) end
     end
     return rows
-end
-
---- The Icons tab's rows to draw: every row but a style's knobs while the glow is off or in another
---- style. Its kind's Glow and Glow style are read for the member the page has selected.
---- @param rows table the tab's rows
---- @return table rows
-function NS.addon.Settings.ShownIconRows(rows)
-    local out = {}
-    for _, row in ipairs(rows or {}) do
-        local styles = KNOB_STYLES[row.path]
-        local show = styles == nil
-        if not show then
-            local P = row.instance .. ".icon."
-            show = get(P .. "glowEnabled") == true and styles[get(P .. "glowType")] == true
-        end
-        if show then out[#out + 1] = row end
-    end
-    return out
 end

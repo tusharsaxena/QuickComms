@@ -31,7 +31,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | KEY-1..6 | Key bindings | A dial's key as WoW's own binding in Options → Keybindings, Character Specific Keybindings, Toggle Comms Pads; item 015: the Ka0s Quick Comms section of its own, the General → Keybindings tab in sync both ways, its capture and combat refusal |
 | LOOK-1..7 | Window, Header, Section titles (Pad header and Section header before item 020) | The Comms Pad's three window tabs: the section titles' font, the pad's border and background, the header's look, size and alignment, the tab strip and headings, the section header's band and height; the pad's window repainting only when its look moves |
 | BUTTON-1..2 | Buttons tab | The buttons' size, color, border and font; the button glow |
-| ICONS-1..4 | Icons tab | The buttons' and wedges' icon look, border and glow triggers; the glows through LibKa0s-Glow-1.0 |
+| ICONS-1..5 | Icons tab | The buttons' and wedges' icon look, border and glow triggers; the glows through LibKa0s-Glow-1.0 |
 | ICON-1..5 | Icons | Choosing an icon, for a callout and for a group; the LibKa0s v1.75.0 re-vendor: the icon browser's three sets and the library-drawn marks; the popup and the browser over the preview dial; test mode's numbered groups and the default icons |
 | ART-1..2 | Art | The dial's round art: the hub's styles, the dots and pill, the indicator background, the borders and the arrow plates; every texture loading from its folder |
 | SHINE-1..4 | Shine | The shine overlay: each look on a pad and on a dial, and a pad and a dial keeping their own |
@@ -1359,7 +1359,7 @@ pixels, on Ka0s Default); untick Use the skin's border, thickness 3, color white
 edge over each icon. Dial → Icons: Show border → a round ring behind each wedge's icon; Icon size
 20 → smaller icons, the wedges keep their size. Defaults on each page → the icons at their defaults again (16 on a pad, 32 on a dial). (Amended by QC-05, 2026-10-29: the skinning rollout's Use the skin's border, SKIN-6.) Result: pass (owner-marked 2026-10-30).
 
-**ICONS-2. Glow styles.** Pad → Icons, glow off → Offset sits right under Glow color, its two
+**ICONS-2. Glow styles.** (Amended by QC-67, 2026-11-01: with the glow off the picked style's knobs now show, grayed.) Pad → Icons, glow off → Offset sits right under Glow color, its two
 sliders grayed out, and no style's heading shows below it. Tick Glow → the Pixel border heading and
 its knobs appear under Offset at once, the scroll where it was, and the offsets come alive; lines run
 around every icon. Glow style Auto cast sparkles, Button (rotating rays) and Proc (flipbook) → each
@@ -1380,6 +1380,13 @@ looks as before; Proc's opening burst plays once, not on every rebuild. Pad → 
 on: each style circles the whole pad button and coexists with the icon glow on the same button. In
 combat, hover a pad button and a dial wedge with On hover → the glow starts and stops, no Lua error,
 no taint message. Result: 2026-10-23, pass (the owner's run; client build not recorded).
+
+**ICONS-5. Sections a choice does not use (2026-11-01, LibKa0s#67).** Pad → Icons, glow off → the Pixel
+border heading and its knobs show, grayed. Glow style Proc → Pixel border goes and Proc comes, grayed, on the
+next frame, the scroll kept. Tick Glow → the knobs come alive in place. Pad → Buttons, Shine look Gloss fade →
+no Bloom color rows and no gap where they were; Fluid glass → Bloom color A and B appear, live; None → they
+go, and Shine strength and Shine tint gray. Dial → Slices the same, and Dial → Icons as the pad's.
+`/qc list` still shows every knob and bloom. Result:
 
 ## Icons
 
@@ -1460,8 +1467,7 @@ slices, then set each of the seven Shine looks on the pad's buttons and on the d
 disc, ring, slice and shine draws as before; a green or blank square is the failure. Result: owed (new 2026-10-25).
 
 **SHINE-1. Each look on a pad (2026-10-21; whole button, 2026-10-21).** On a new pad the buttons
-have no shine (Shine look None; Shine strength and Shine tint grayed out, Bloom color A and B grayed
-out). Pad → Buttons → Shine look Gloss cap, Gloss fade, Glass orb, Frosted glass, Fluid glass, Bevel and Rim light
+have no shine (Shine look None; Shine strength and Shine tint grayed out, no Bloom color rows). Pad → Buttons → Shine look Gloss cap, Gloss fade, Glass orb, Frosted glass, Fluid glass, Bevel and Rim light
 in turn, each at the Icons tab's Icon size 16, 24 and 40 → each look covers the whole button, its
 plate, icon and label, edge to edge, and matches its tile in
 `docs/superpowers/specs/2026-10-21-shine-overlay/render-pad.png`: Gloss cap a bright band over the top
@@ -1474,7 +1480,7 @@ top and a pink-to-mint bloom at the bottom; Bevel a light top and left edge and 
 one; Rim light an edge glow and a short top highlight. On the wide buttons the edges stay as thin as on
 a square one (nothing stretched at the ends); Layout → Button style Icon only → the square buttons
 take the art whole. The padlock, the label, the send flash and the hover still read over it. Bloom color A and B
-are enabled only under Fluid glass; set them to red and blue → its two blooms change color. Shine
+show only under Fluid glass; set them to red and blue → its two blooms change color. Shine
 strength 0 → no shine; 100 → the strongest. Shine tint yellow → the light turns yellow, the shade stays
 dark; Use class color → your class color. Fluid glass, then Gloss cap, then None → no bloom or shine is
 left behind. Layout → Button style Label only → the buttons keep their shine (it covers the plate, not

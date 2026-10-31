@@ -697,7 +697,7 @@ Total.
 - groups page: [R4] EditGroup in combat prints the settings refusal and changes nothing
 - groups page: [R4] EditGroup of a group that is gone opens nothing
 
-### test_page_pads.lua (27)
+### test_page_pads.lua (28)
 
 - pads page: New pad makes a second pad holding every built-in, selects it, and the pad is built
 - pads page: the Layout rows write the selected pad
@@ -720,9 +720,10 @@ Total.
 - page pads: [shine] the Buttons tab has a Shine heading
 - pads page: [B9] Icons carries its headings once each, a companion beside each swatch, and writes the pad
 - pads page: [B9] the offsets are grayed out while the glow is off or in Button; its color never is
-- pads page: [glow knobs] only the selected style's knobs show, and none while the glow is off
+- pads page: [glow knobs] only the selected style's knobs show, grayed while the glow is off
 - pads page: [glow knobs] the offsets come right after Glow color, under Icon glow, in the schema and on the tab
-- pads page: [glow knobs] a Glow or Glow style write repaints the tab, so the right knobs appear
+- pads page: [glow knobs] a Glow style write drops the old style's knobs and brings its own (LibKa0s#67)
+- pads page: [shine] the blooms show only under Fluid glass, through the library (LibKa0s#67)
 - pads page: [B9] Defaults puts the Icons rows back too, and its tooltip names them
 - page pads: [polish] the page is titled Pad
 - page pads: [polish] no user-facing string sends the player to a Comms Pad or Comms Dial page
@@ -743,7 +744,7 @@ Total.
 - dials page: Delete dial asks, then the dial is gone, its header released, and the page heals
 - dials page: [final 11] the page's own plan builds are not timed as a surface's bake
 - dials page: [B9] Icons follows Labels, carries its headings once each, and writes the dial
-- dials page: [glow knobs] only the selected style's knobs show, and a Glow or Glow style write repaints
+- dials page: [glow knobs] a Glow style write drops the old style's knobs and brings its own (LibKa0s#67)
 - dials page: [labels] Labels shows or hides the wedges' names and styles them; off grays the font
 - dials page: [slices] Slices writes the fill and highlight, Layout the gap, Hub the pointer, each color with its class color
 - page dials: [polish] Slices tab has no Border heading; Slice gap is on Layout
@@ -1553,7 +1554,7 @@ Total.
 | test_groups_when.lua | 21 |
 | test_page_groups.lua | 49 |
 | test_page_groups_nesting.lua | 19 |
-| test_page_pads.lua | 27 |
+| test_page_pads.lua | 28 |
 | test_page_dials.lua | 28 |
 | test_check.lua | 6 |
 | test_send_guard.lua | 11 |
@@ -1596,4 +1597,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1302** |
+| **Total** | **1303** |

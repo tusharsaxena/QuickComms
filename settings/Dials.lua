@@ -219,18 +219,7 @@ local function renderGroups(ctx, rows)
     end
 end
 
--- The Icons tab: its rows in schema order, the headings the library's (as the Pad page's), and
--- only the selected glow style's knobs (Settings.ShownIconRows).
-local function renderIcons(ctx, rows)
-    local h = H()
-    if not selected() then
-        h.TextRow(ctx, NONE)
-        return
-    end
-    h.RenderRows(ctx, Ed.Scalar(Settings.ShownIconRows(rows)), nil, nil, { noHeadings = true })
-end
-
--- The Slices, Hub, Paging and Labels tabs: their rows, under their own headings.
+-- The Slices, Hub, Paging, Labels and Icons tabs: their rows, under their own headings.
 local function renderStyled(ctx, rows)
     local h = H()
     if not selected() then
@@ -302,7 +291,7 @@ local function render(ctx)
         { key = HUB, render = renderStyled },
         { key = PAGING, render = renderStyled },
         { key = LABELS, render = renderStyled },
-        { key = ICONS, render = renderIcons },
+        { key = ICONS, render = renderStyled },
         { key = "preview", label = L["Ring map"], tooltip = L["What each ring holds here, or in the preview."],
           render = renderPreview },
     })
