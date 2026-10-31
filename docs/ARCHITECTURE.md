@@ -270,7 +270,7 @@ the settings pages and the library's own windows.
   live; back asks for a reload. `/qc diagnostics` prints the gate (`NS.SkinDescribe`, [debug.md](debug.md)).
 - **Not skinned** (skinning-§7): the Blizzard Settings window around the pages, the StaticPopup
   confirms, `GameTooltip`'s frame (the lines this addon writes take tokens, X8), the minimap button and
-  its tooltip, `ColorPickerFrame` and the LibSharedMedia pull-outs, the landing page's logo, the shine
+  its tooltip, `ColorPickerFrame`, the landing page's logo, the shine
   art, the glyph colors a callout or group stores (player data), the channels' chat-type colors (game
   meaning), and the chat
   output (the cyan `[QC]` tag and the lines slash-commands mandates, X7).
