@@ -784,7 +784,7 @@ General page > Keybindings, with no key box and no readout (QUI-L29).
   circle are `dial.hub.*`, each sub-part's size beside its color: Hub style (Solid circle, the default; Hollow ring; Target, a ring with a dot; Rimmed
   disc, a filled circle on a rimmed backdrop), Hub size (24 to 80, default 32 since 2026-10-22: the backdrop's width,
   where the slices and the pointer start), Circle size (4 to 60, default 24), Line width (1 to 6,
-  grayed out under Solid circle), Backdrop color, Hub border size (0 to 6, default 1; Rimmed disc
+  grayed out unless the style draws a ring, under Solid circle and Rimmed disc), Backdrop color, Hub border size (0 to 6, default 1; Rimmed disc
   always draws one), Hub border color and Circle color, each with Use class color; the circle
   brightens while the cursor is on the hub. Pointer is
   `dial.slice.pointerShow`, `pointerSize` (10 to 48, default 20), `pointerOffset` (0 to 150, 0

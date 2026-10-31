@@ -1017,7 +1017,7 @@ it is in. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 **DIAL-29. The hub styles (dial polish, 2026-10-21).** Dial → Hub → Hub: Hub style Solid circle (the
 default) → a gold filled circle on a dark backdrop, no ✕; Hollow ring → a gold ring; Target → a ring
 with a dot in the middle; Rimmed disc → a rim round the backdrop and a filled circle inside it. Line
-width grayed out under Solid circle and 4 → a thicker ring under Hollow ring. Hub size 70 → a wider hub,
+width grayed out under Solid circle and Rimmed disc, and 4 → a thicker ring under Hollow ring. Hub size 70 → a wider hub,
 the slices and the pointer starting at its edge in every direction, and a click just outside its
 circle, on a diagonal too, lands on a slice (DIAL-28); Circle size 40 → a bigger circle. Backdrop color, Hub border size 3 with a red Hub border
 color, Circle color green, each Use class color → as set. Hover the hub → the circle brightens; move

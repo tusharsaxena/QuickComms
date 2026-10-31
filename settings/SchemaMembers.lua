@@ -571,7 +571,12 @@ local HUB_STYLE = choices({ { "solid", L["Solid circle"] }, { "ring", L["Hollow 
     { "rimmed", L["Rimmed disc"] } })
 local function hubRows(O, checks)
     local hdef, HUB, RIM, CIRCLE = T.dial.hub, L["Hub"], L["Hub border"], L["Hub circle"]
-    local function solid() return (NS.SchemaRuntime.Get(HUBP .. "style") or hdef.style) == "solid" end
+    -- Line width is a column of the Hub circle group, which every style shows, so it grays rather than
+    -- hides (options-ui-§22, as the glow offsets do): only Hollow ring and Target draw a ring.
+    local function noRing()
+        local style = NS.SchemaRuntime.Get(HUBP .. "style") or hdef.style
+        return style ~= "ring" and style ~= "target"
+    end
     local function size(subgroup, key, label, lo, hi, desc, extra)
         local r = { path = HUBP .. key, instance = "dial", type = "number", default = hdef[key], min = lo, max = hi,
             step = 1, page = "dials", group = HUB_TAB, subgroup = subgroup, label = label, desc = desc,
@@ -597,7 +602,7 @@ local function hubRows(O, checks)
     out[#out + 1] = size(CIRCLE, "circleSize", L["Circle size"], 4, 60, L["How wide the circle on the hub is, in pixels."],
         { startsLine = true })
     out[#out + 1] = size(CIRCLE, "lineWidth", L["Line width"], 1, 6, L["How thick the hollow ring is, in pixels."],
-        { disabledIf = solid })
+        { disabledIf = noRing })
     pair(CIRCLE, "circleColor", L["Circle color"], "useClassColorCircle")
     return out
 end
