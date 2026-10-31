@@ -174,7 +174,7 @@ What the addon cannot do, or does only under a condition, and why. The hub,
   Ka0s Default since LibKa0s v1.82.0, Oxanium SemiBold before) and their border styles to its own;
   the colors stay the player's. Step 11 moves every stored OUTLINE Font flags to From skin once, so
   a player who had picked Outline on purpose now follows the Font outline (the same pixels under
-  its default, All text); picking Outline again keeps it.
+  its default, HUD text only, because pads and dials are HUD text); picking Outline again keeps it.
 - A block on the skin's face draws at the skin's HUD size (`NS.Skin.HudFontSize`, LibKa0s v1.82.0,
   D-09), so under Obsidian a stored 12 draws at 13 and the pad's buttons grow with it; the stored
   size is never rewritten. A block on its own face, or Ignore fonts, draws the stored size.
@@ -206,7 +206,7 @@ What the addon cannot do, or does only under a condition, and why. The hub,
   a change to the art is a re-run of the generator, never a hand edit (`DEPENDENCIES.md`).
 - `tests/perf.lua`'s byte ceilings are the headless mock's figures (its catch-all methods allocate per
   call); compare them run to run, never with the client.
-- Quick Comms bundles LibKa0s v1.82.0. LibStub keeps the highest minor of each module, so when another
+- Quick Comms bundles LibKa0s v1.83.0. LibStub keeps the highest minor of each module, so when another
   Ka0s addon loaded beside it carries a newer LibKa0s, those modules run the newer code, whatever the
-  load order. The headless suite measures v1.82.0 only. The remedy is this addon's own re-vendor
+  load order. The headless suite measures v1.83.0 only. The remedy is this addon's own re-vendor
   (`/dev-copilot:wow-revendor-libka0s`), never an edit under `libs/` (F-010).

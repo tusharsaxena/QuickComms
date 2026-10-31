@@ -21,7 +21,7 @@ local NO_LIBKA0S = T.loadAddon.libFiles
 
 local KEYS = {
     { "source", "ka0s" }, { "skin", "ka0s" }, { "ignorePanel", true }, { "ignoreFonts", false },
-    { "font", "" }, { "texture", "" }, { "outline", "all" }, { "pickerSeen", false },
+    { "font", "" }, { "texture", "" }, { "outline", "hud" }, { "pickerSeen", false },
 }
 
 --- An enabled instance, its Skin major and a counter of this owner's looks changes and reload

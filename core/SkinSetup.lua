@@ -27,7 +27,7 @@ local addonName, NS = ...
 --                           the stored pair, a nil half keeps that half, false or "" clears it.
 --   NS.ApplySkinOutline(m)  moves the applied Font outline (`Skin:SetOutline`, Skin minor 9, D-06):
 --                           "all" text, "hud" text only or "off"; no argument applies the stored
---                           skin.outline. NS.SkinOutline() reads it ("all" before the store exists).
+--                           skin.outline. NS.SkinOutline() reads it ("hud" before the store exists).
 --   NS.SKIN_OUTLINE_OPTIONS the outline row's values, the library's three modes in its order.
 --   NS.RunSkinVerb()        the reserved `/qc skin` verb's act: O.SkinVerb(NS.SkinPickerSpec()), the
 --                           picker a new profile shows, whatever skin.pickerSeen says (D-16).
@@ -101,7 +101,7 @@ local Skin = LibStub and LibStub("LibKa0s-Skin-1.0", true)
 local SOURCE_PATH, SKIN_PATH = "skin.source", "skin.skin"
 local PANEL_PATH, FONTS_PATH = "skin.ignorePanel", "skin.ignoreFonts"
 local FONT_PATH, TEXTURE_PATH = "skin.font", "skin.texture"
-local OUTLINE_PATH, OUTLINE_DEFAULT = "skin.outline", "all"
+local OUTLINE_PATH, OUTLINE_DEFAULT = "skin.outline", "hud"
 local DEFAULT = "ka0s"
 
 local function byte(n) return n / 255 end
@@ -289,7 +289,7 @@ function NS.WriteSkinChoice(source, skin, ignore, media)
     end
 end
 
---- The stored Font outline, nil-safely: "all" (the library's default) until the store exists.
+--- The stored Font outline, nil-safely: "hud" (the library's default) until the store exists.
 function NS.SkinOutline()
     local S = schema()
     local v = S and S.Get(OUTLINE_PATH)
@@ -590,7 +590,7 @@ end
 
 --- No argument applies the stored Font outline; a mode moves it (the skin.outline row's onChange, a
 --- no-op after the Skin tab already did). A copy without SetOutline (a Skin major before minor 9)
---- moves nothing; the library reads an unknown mode as "all".
+--- moves nothing; the library reads an unknown mode as "hud".
 function NS.ApplySkinOutline(mode)
     if type(Skin.SetOutline) ~= "function" then return false end
     if mode == nil then mode = NS.SkinOutline() end

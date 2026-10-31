@@ -1373,13 +1373,14 @@ Total.
 - skin picker: the gear saves the pick and opens General on its Skin tab
 - skin picker: without LibKa0s nothing shows and nothing raises
 
-### test_skin_outline.lua (9)
+### test_skin_outline.lua (10)
 
-- outline: a fresh profile stores All text, the library's default
+- outline: a fresh profile stores HUD text only, the library's default
 - outline: the schema row offers the library's three modes, in its order
 - outline: the write seam stores media.outline, and leaves it alone when it is nil
 - outline: another addon's copy reaches the store through WriteChoice
 - outline: the row's write applies the mode live
+- outline: a stored All text is kept and applied; nothing migrates it
 - outline: /qc set refuses a mode the library does not know
 - outline: the stored mode is applied at load
 - outline: a profile switch applies the incoming profile's mode, and back
@@ -1569,7 +1570,7 @@ Total.
 | test_skin_windows.lua | 20 |
 | test_skin_hud.lua | 18 |
 | test_skin_picker.lua | 18 |
-| test_skin_outline.lua | 9 |
+| test_skin_outline.lua | 10 |
 | test_skin_verb.lua | 6 |
 | test_skin_fonts.lua | 12 |
 | test_icons_default.lua | 8 |
@@ -1582,4 +1583,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1296** |
+| **Total** | **1297** |

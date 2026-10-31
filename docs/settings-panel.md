@@ -91,7 +91,7 @@ controls, Behavior, Skin, Keybindings. It draws:
 |---|---|
 | Skin source | *Ka0s skins* or *EllesmereUI* (`skin.source`); EllesmereUI is disabled, with the failing condition and its fix named, unless EllesmereUI can skin this addon |
 | Look | the nine skins three to a line, each with four swatches (`skin.skin`) |
-| Font and texture | **Font** and **Texture** (`skin.font`, `skin.texture`), *Skin's own (…)* first, then every LibSharedMedia font or status bar; under them **Reset font** and **Reset texture**, then **Font outline** (`skin.outline`: *All text*, *HUD text only* or *Off*; LibKa0s v1.82.0) |
+| Font and texture | **Font** and **Texture** (`skin.font`, `skin.texture`), *Skin's default (…)* first, then every LibSharedMedia font or status bar; under them **Reset font** and **Reset texture**, then **Font outline** (`skin.outline`: *All text*, *HUD text only*, the default, or *Off*; LibKa0s v1.82.0, default from v1.83.0) |
 | Scope | **Ignore settings panel** (`skin.ignorePanel`, on for a new profile) and **Ignore fonts** (`skin.ignoreFonts`; it covers the pads' and dials' faces too, LibKa0s v1.81.0) |
 | | **Copy to every Ka0s addon…**, and the note on what skins change |
 

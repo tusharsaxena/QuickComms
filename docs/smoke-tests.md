@@ -1611,7 +1611,7 @@ code (phase 5):
 - **The pads' fonts** (the Header and Section titles tabs', the Buttons tab's labels, the dial's
   labels): the default face is the skin's HUD font while Use the skin's font is ticked and Ignore
   fonts is not (Ka0s Default's Prototype since LibKa0s v1.82.0; since LibKa0s v1.81.0 each other skin its own face,
-  SKIN-5; WoW Default Friz Quadrata; LibKa0s registers a face only for the locales it can draw), else
+  SKIN-5; WoW Default Ka0s Friz Quadrata TT since LibKa0s v1.83.0; LibKa0s registers a face only for the locales it can draw), else
   the player's pick (LibSharedMedia's "Friz Quadrata TT" by default), which
   LibSharedMedia does not register on koKR, zhCN or zhTW; a face the machine does not have draws
   `STANDARD_TEXT_FONT` (`Pad_Render.LabelFont`, `test_pad_render`). (Amended by QC-05, 2026-10-29, the
@@ -1683,24 +1683,24 @@ faces and border styles (SKIN-1). (Amended by QC-02, 2026-10-30, the library fol
 **SKIN-4. The Skin tab.** General → the strip reads Master controls, Behavior, **Skin**, Keybindings.
 Skin → **Skin source** (*Ka0s skins* on; *EllesmereUI* disabled with a line saying why unless
 EllesmereUI can skin this addon), the nine skins with their swatches under a **Look** heading,
-**Font and texture** (**Font** and **Texture**, both *Skin's own* in a new profile), the Scope
+**Font and texture** (**Font** and **Texture**, both *Skin's default* in a new profile), the Scope
 (**Ignore settings panel** ticked, **Ignore fonts** unticked), **Copy to every Ka0s addon…** (live with
 another Ka0s addon that uses skins loaded; alone, disabled with its hint) and the note on what skins
-change. Pick **Obsidian** → no reload; `/qc get skin.skin` prints `obsidian`. Result: pass (owner-marked 2026-10-30).
+change. Pick **Obsidian** → no reload; `/qc get skin.skin` prints `obsidian`. (Amended by QC-F01, 2026-10-31: *Skin's default*.) Result:
 
 **SKIN-5. Every skin on the pads and dials, live.** With a pad on screen (`/qc test` fills it) and a
 dial open, pick each skin in turn: Obsidian, Azeroth, Glass, High Contrast, Ember, WoW Default, WoW
 Midnight, WoW Forever, then Ka0s Default again → with **no reload** the labels redraw in the skin's HUD
-face, each skin its own since LibKa0s v1.81.0 (R-4): Obsidian Expressway, Azeroth Vollkorn Bold,
-Glass Nunito SemiBold, High Contrast Atkinson Bold, Ember Bitter Bold, WoW Default Friz Quadrata, WoW
-Midnight Philosopher Bold, WoW Forever Fira Sans SemiBold, Ka0s Default Prototype;
+face, each skin its own since LibKa0s v1.81.0 (R-4): Obsidian Expressway, Azeroth Open Sans Semibold,
+Glass Avant Garde, High Contrast Doris PP, Ember Emblem, WoW Default Ka0s Friz Quadrata TT, WoW
+Midnight Segoe UI Semibold, WoW Forever Fira Sans SemiBold, Ka0s Default Prototype (the faces since LibKa0s v1.83.0, D-06);
 a followed border takes the skin's border style, and the padlock, the veils, the hover wash, the
 flashes, the LOCKDOWN and stale tags, the PREVIEW and TEST MODE marks and the page arrows take the
 skin's colors. The colors you set (the buttons' body and edge, the header's and the titles' text and
 bands, the hub, the slices, the dots, the class colors) and the shine stay yours (X4, D5, D6). Fail: a
 pad or dial that keeps the previous skin until `/reload`, a color of yours that changed, or a label
 cut where it was not before on the same face. (Amended by QC-02, 2026-10-30: a HUD face per skin,
-R-4; by QC-01, 2026-10-30, LibKa0s v1.82.0's faces.) Result: pass (owner-marked 2026-10-30).
+R-4; by QC-01, 2026-10-30, LibKa0s v1.82.0's faces; by QC-F01, 2026-10-31, LibKa0s v1.83.0's faces.) Result:
 
 **SKIN-6. The *Use the skin's ...* boxes.** On a non-default skin, Pad → Header: untick **Use the
 skin's font** → *Font* comes alive with your pick and the header redraws in it; tick → the skin's face
@@ -1761,8 +1761,8 @@ reload every pad and dial label whose *Use the skin's font* is ticked takes it (
 fonts** is on, SKIN-12), a block with the box unticked keeps its own pick, and the windows' and the
 settings pages' text takes it too; the debug
 console keeps its monospace face. Switch skin → the override stays. **Texture** → any status bar →
-nothing on the pads or dials changes (Quick Comms draws no bars). Set both back to *Skin's own* → the
-skin's again. Result: pass (owner-marked 2026-10-30).
+nothing on the pads or dials changes (Quick Comms draws no bars). Set both back to *Skin's default* → the
+skin's again. Open **Font** and **Texture** → every row draws in its own face or beside its bar, *Skin's default (…)* first (LibKa0s v1.83.0, D-08). (Amended by QC-F01, 2026-10-31.) Result:
 
 **SKIN-12. Ignore fonts (rewritten by QC-02, 2026-10-30).** On a non-default skin with **Ignore
 settings panel** off, a pad on screen (`/qc test`) and a dial open, give a pad's Buttons tab a face of
@@ -1847,15 +1847,15 @@ once; `/qc set skin.skin ka0s` → back. `/qc get pad.header.fontFromSkin` → `
 
 **SKIN-24. The Font outline (LibKa0s v1.82.0, Ka0sAddonsCommonTasks `docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK/`,
 D-06).** On a fresh client start, General → **Skin** → Font and texture shows **Font outline** under
-**Reset font** and **Reset texture**, set to **All text**; `/qc get skin.outline` → `all`. `/qc test`
-→ every pad label, section title, header, dial slice label and ring title is outlined, and so is the
-settings window's text where the skin paints it. Pick **HUD text only** → the pads and the dial stay
-outlined and the windows' text (the callout popup, the icon browser, the Preview window) loses its
-outline; pick **Off** → the pads and the dial lose theirs too, with no reload. `/reload` → still Off.
+**Reset font** and **Reset texture**, set to **HUD text only** (the default since LibKa0s v1.83.0, D-10); `/qc get skin.outline` → `hud`. `/qc test`
+→ every pad label, section title, header, dial slice label and ring title is outlined, and the windows'
+text (the callout popup, the icon browser, the Preview window) is not. Pick **All text** → the pads and
+the dial stay outlined and the windows' text takes the outline, and so does the settings window's where
+the skin paints it; a profile that stored All text before this release keeps it. Pick **Off** → the pads and the dial lose theirs too, with no reload. `/reload` → still Off.
 Tick **Ignore fonts** → the Font outline is grayed out and the HUD is outlined again, as it was before
 this release. `/qc set skin.outline thick` → refused with the allowed values. Switch to another profile
-→ it wears its own Font outline (All text on a new one). Fail: a mode that changes nothing on screen,
-a mode lost after the reload, or a Lua error. Result:
+→ it wears its own Font outline (HUD text only on a new one). Fail: a mode that changes nothing on screen,
+a mode lost after the reload, or a Lua error. (Amended by QC-F01, 2026-10-31.) Result:
 
 **SKIN-25. From skin font flags (D-07, Addendum 01).** Before updating, on a profile set one pad's
 Buttons tab Font flags to **Thick outline** and leave its Header and Section titles on the shipped
@@ -1883,8 +1883,8 @@ the label is back to 12 in your own face. Tick **Ignore fonts** → 12 again. Re
 labels. Fail: a stored size that changed, a label cut off, or a size that moves with the box unticked.
 Result:
 
-**SKIN-28. Width parity of the windows (D-08).** In each skin, with the Font outline on All text (the
-default) and again on Off: open the callout popup (Groups → a callout's Edit), the icon browser
+**SKIN-28. Width parity of the windows (D-08).** In each skin, with the Font outline on HUD text only (the
+default), on All text and on Off: open the callout popup (Groups → a callout's Edit), the icon browser
 (Choose icon…), the Preview window (`/qc preview`) and the perf step panel (`/qc perf`), and unlock a
 pad so its drag strip shows → no title, label, button text or tab is cut off or overlaps its
 neighbor, and the drag strip's title fits with its TEST MODE marker under `/qc test`. Compare each
@@ -1932,5 +1932,10 @@ Owed from LibKa0s v1.82.0 (QC-01, 2026-10-30, Ka0sAddonsCommonTasks
 `docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK/`): SKIN-24 to SKIN-28 (new). Their earlier passes stand as
 recorded, but LOC-1, SKIN-1, SKIN-2, SKIN-3, SKIN-5 and SKIN-10 were amended for v1.82.0's faces
 (Prototype for Ka0s Default, Expressway for Obsidian), so a re-run of them is owed too.
+
+Owed from LibKa0s v1.83.0 (QC-F01, 2026-10-31, Ka0sAddonsCommonTasks
+`docs/2026-10-31-FONT_PICKERS_AND_SKIN_FACES/`): SKIN-4, SKIN-5 and SKIN-11 are re-opened for the new
+faces, *Skin's default* and the previewing pickers; SKIN-24 and SKIN-28 run against the new outline
+default, HUD text only, and SKIN-27 and the windows' width checks against the new faces.
 
 Owed from QC-02 (2026-10-30, the same bundle): ICON-5 (new).

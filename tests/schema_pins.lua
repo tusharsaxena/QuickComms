@@ -31,7 +31,7 @@ return {
     ["skin.ignoreFonts"] = "bool|false|nil|nil|nil|nil|false",
     ["skin.font"] = "string|\"\"|nil|nil|nil|nil|false",
     ["skin.texture"] = "string|\"\"|nil|nil|nil|nil|false",
-    ["skin.outline"] = "string|\"all\"|nil|nil|nil|[\"all\",\"hud\",\"off\"]|false",
+    ["skin.outline"] = "string|\"hud\"|nil|nil|nil|[\"all\",\"hud\",\"off\"]|false",
     ["skin.pickerSeen"] = "bool|false|nil|nil|nil|nil|false",
     ["callout.name"] = "string|nil|nil|nil|nil|nil|false",
     ["callout.text"] = "string|nil|nil|nil|nil|nil|false",
