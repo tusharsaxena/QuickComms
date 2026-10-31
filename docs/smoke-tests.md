@@ -1421,7 +1421,7 @@ shipped glyphs, as before. Make a group of your own with no icon and put it on a
 draws a white folder; give it a callout with no icon → the callout's pad button and dial wedge draw
 a white speech bubble, and so do its row on the Groups page's Callouts tab and the callout popup's
 icon preview; the group's General tab icon preview shows the folder. Choose an icon, then clear it →
-back to the folder or the bubble. Fail: a question mark anywhere while LibKa0s is loaded. Result:
+back to the folder or the bubble. Fail: a question mark anywhere while LibKa0s is loaded. Result: Owner reported pass, 2026-10-31.
 
 ## Art
 
@@ -1631,7 +1631,7 @@ error, no stray `%s` or `%d` in any line, the When's names in the client's langu
 unchanged, and the pad's labels drawn in a font (on koKR, zhCN or zhTW, the client's own). The failure
 looks like a raw format token in chat, a missing label, or a When that stops matching after a locale
 switch. **Owed**: the enumeration above is covered headlessly, but the names and the font fallback come
-from the client, so this check needs a non-English client pass. Result: pass (owner-marked 2026-10-30).
+from the client, so this check needs a non-English client pass. Result: pass (owner-marked 2026-10-30). Owner reported pass, 2026-10-31.
 
 ## Skins
 
@@ -1659,12 +1659,12 @@ and showing the skin's choice. The wider face can widen a pad and move where a l
 dial's label ring sits (D11). Untick each box → your old pick comes back at once. `/reload` → still
 unticked and still yours: the reset ran once. Switch to the second profile → it was reset the same way,
 its picks kept. This is the expected change, not a regression. Fail: a color, size or flag that
-moved, a pick lost after unticking, or the boxes ticked again after the reload. (Amended by QC-01, 2026-10-30, LibKa0s v1.82.0's faces.) Result: pass (owner-marked 2026-10-30).
+moved, a pick lost after unticking, or the boxes ticked again after the reload. (Amended by QC-01, 2026-10-30, LibKa0s v1.82.0's faces.) Result: pass (owner-marked 2026-10-30). Owner reported pass, 2026-10-31.
 
 **SKIN-2. A new pad, dial or profile follows the skin (X3).** Pad → New pad, Dial → New dial, and
 Profiles → a new profile → their Font and Border blocks show the *Use the skin's ...* boxes ticked, and
 the labels are Prototype on Ka0s Default. Untick one on a pad, then the page's **Defaults** →
-it is ticked again. (Amended by QC-01, 2026-10-30, LibKa0s v1.82.0's faces.) Result: pass (owner-marked 2026-10-30).
+it is ticked again. (Amended by QC-01, 2026-10-30, LibKa0s v1.82.0's faces.) Result: pass (owner-marked 2026-10-30). Owner reported pass, 2026-10-31.
 
 **SKIN-3. Ka0s Default elsewhere looks as before.** On **Ka0s Default** with **Ignore settings panel**
 on (the default): the pads' and dials' colors (the gold padlock, the dark veils over a refused or
@@ -1684,7 +1684,7 @@ the library's own strings in the skin's face
 (D-13) draw **Prototype** where they drew Blizzard's font: the debug console's title-bar labels, the
 perf panel's step and command columns, the drag strip's label and the Preview as window's dropdown
 menu rows. Fail: any other changed color, edge, face or spacing outside the pads' and dials'
-faces and border styles (SKIN-1). (Amended by QC-02, 2026-10-30, the library follow-ups; by QC-01, 2026-10-30, LibKa0s v1.82.0's faces.) Result: pass (owner-marked 2026-10-30).
+faces and border styles (SKIN-1). (Amended by QC-02, 2026-10-30, the library follow-ups; by QC-01, 2026-10-30, LibKa0s v1.82.0's faces.) Result: pass (owner-marked 2026-10-30). Owner reported pass, 2026-10-31.
 
 **SKIN-4. The Skin tab.** General → the strip reads Master controls, Behavior, **Skin**, Keybindings.
 Skin → **Skin source** (*Ka0s skins* on; *EllesmereUI* disabled with a line saying why unless
@@ -1692,7 +1692,7 @@ EllesmereUI can skin this addon), the nine skins with their swatches under a **L
 **Font and texture** (**Font** and **Texture**, both *Skin's default* in a new profile), the Scope
 (**Ignore settings panel** ticked, **Ignore fonts** unticked), **Copy to every Ka0s addon…** (live with
 another Ka0s addon that uses skins loaded; alone, disabled with its hint) and the note on what skins
-change. Pick **Obsidian** → no reload; `/qc get skin.skin` prints `obsidian`. (Amended by QC-F01, 2026-10-31: *Skin's default*.) Result:
+change. Pick **Obsidian** → no reload; `/qc get skin.skin` prints `obsidian`. (Amended by QC-F01, 2026-10-31: *Skin's default*.) Result: Owner reported pass, 2026-10-31.
 
 **SKIN-5. Every skin on the pads and dials, live.** With a pad on screen (`/qc test` fills it) and a
 dial open, pick each skin in turn: Obsidian, Azeroth, Glass, High Contrast, Ember, WoW Default, WoW
@@ -1706,7 +1706,7 @@ skin's colors. The colors you set (the buttons' body and edge, the header's and 
 bands, the hub, the slices, the dots, the class colors) and the shine stay yours (X4, D5, D6). Fail: a
 pad or dial that keeps the previous skin until `/reload`, a color of yours that changed, or a label
 cut where it was not before on the same face. (Amended by QC-02, 2026-10-30: a HUD face per skin,
-R-4; by QC-01, 2026-10-30, LibKa0s v1.82.0's faces; by QC-F01, 2026-10-31, LibKa0s v1.83.0's faces.) Result:
+R-4; by QC-01, 2026-10-30, LibKa0s v1.82.0's faces; by QC-F01, 2026-10-31, LibKa0s v1.83.0's faces.) Result: Owner reported pass, 2026-10-31.
 
 **SKIN-6. The *Use the skin's ...* boxes.** On a non-default skin, Pad → Header: untick **Use the
 skin's font** → *Font* comes alive with your pick and the header redraws in it; tick → the skin's face
@@ -1760,7 +1760,7 @@ skin's tooltip colors, R-7), and, with **Ignore settings panel** off, a Pad → 
 resize grip of the console, its Copy window and the perf panel included. Tick **Ignore fonts** → the
 console's title-bar labels, the perf panel's columns and the drag strip's label go back to Blizzard's
 face. Switch back to **Ka0s Default** with the console open → it recolors with no reload, its labels in
-Prototype (SKIN-3). (Amended by QC-02, 2026-10-30, the library follow-ups; by QC-01, 2026-10-30, LibKa0s v1.82.0's faces.) Result: pass (owner-marked 2026-10-30).
+Prototype (SKIN-3). (Amended by QC-02, 2026-10-30, the library follow-ups; by QC-01, 2026-10-30, LibKa0s v1.82.0's faces.) Result: pass (owner-marked 2026-10-30). Owner reported pass, 2026-10-31.
 
 **SKIN-11. The Font and texture overrides.** Skin → **Font** → a clearly different face → with no
 reload every pad and dial label whose *Use the skin's font* is ticked takes it (unless **Ignore
@@ -1768,7 +1768,7 @@ fonts** is on, SKIN-12), a block with the box unticked keeps its own pick, and t
 settings pages' text takes it too; the debug
 console keeps its monospace face. Switch skin → the override stays. **Texture** → any status bar →
 nothing on the pads or dials changes (Quick Comms draws no bars). Set both back to *Skin's default* → the
-skin's again. Open **Font** and **Texture** → every row draws in its own face or beside its bar, *Skin's default (…)* first (LibKa0s v1.83.0, D-08). (Amended by QC-F01, 2026-10-31.) Result:
+skin's again. Open **Font** and **Texture** → every row draws in its own face or beside its bar, *Skin's default (…)* first (LibKa0s v1.83.0, D-08). (Amended by QC-F01, 2026-10-31.) Result: Owner reported pass, 2026-10-31.
 
 **SKIN-12. Ignore fonts (rewritten by QC-02, 2026-10-30).** On a non-default skin with **Ignore
 settings panel** off, a pad on screen (`/qc test`) and a dial open, give a pad's Buttons tab a face of
@@ -1863,7 +1863,7 @@ profile opens on HUD text only.) Pick **Off** → the pads and the dial lose the
 Tick **Ignore fonts** → the Font outline is grayed out and the HUD is outlined again, as it was before
 this release. `/qc set skin.outline thick` → refused with the allowed values. Switch to another profile
 → it wears its own Font outline (HUD text only on a new one). Fail: a mode that changes nothing on screen,
-a mode lost after the reload, or a Lua error. (Amended by QC-F01 and its review, 2026-10-31.) Result:
+a mode lost after the reload, or a Lua error. (Amended by QC-F01 and its review, 2026-10-31.) Result: Owner reported pass, 2026-10-31.
 
 **SKIN-25. From skin font flags (D-07, Addendum 01).** Before updating, on a profile set one pad's
 Buttons tab Font flags to **Thick outline** and leave its Header and Section titles on the shipped
@@ -1873,7 +1873,7 @@ the list; the Buttons tab keeps **Thick outline**. With the Font outline on Off,
 lose their outline and the Thick outline buttons keep theirs. Pick **Outline** on the Header → it
 stays Outline after `/reload` and under Off (a picked flag wins). A new pad and a new dial start on
 From skin. Fail: a picked flag moved to From skin, From skin missing from a Font block, or the
-Header back on From skin after the reload. Result:
+Header back on From skin after the reload. Result: Owner reported pass, 2026-10-31.
 
 **SKIN-26. `/qc skin` (D-16).** On a profile that has closed the first-run picker, `/qc skin` → the
 **Choose a skin** window opens with **Ka0s Quick Comms** on its own line; pick and Apply → saved, as
@@ -1881,7 +1881,7 @@ SKIN-18. `/qc help` lists `skin` right after `config` as "Choose a skin: open th
 combat (a target dummy), `/qc skin` twice → each prints a gray "cannot open the skin picker during
 combat" line and nothing opens. `/qc disable`, `/qc skin` → the one disabled line, no picker;
 `/qc enable`. With `libs\LibKa0s` renamed aside and a `/reload`, `/qc skin` → "/qc skin is
-unavailable: the LibKa0s library did not load." (rename it back, `/reload`). Result:
+unavailable: the LibKa0s library did not load." (rename it back, `/reload`). Result: Owner reported pass, 2026-10-31.
 
 **SKIN-27. The HUD size scale (D-09).** On Ka0s Default, give pad 1's Buttons tab Font size 12 with
 *Use the skin's font* ticked and note how wide a button's label is. Pick **Obsidian** → the labels are
@@ -1889,7 +1889,7 @@ the same width as under Ka0s Default, drawn at a slightly larger size (13), and 
 taller to hold them; `/qc get pad.button.fontSize` still prints 12. Untick *Use the skin's font* →
 the label is back to 12 in your own face. Tick **Ignore fonts** → 12 again. Repeat on the dial's Slice
 labels. Fail: a stored size that changed, a label cut off, or a size that moves with the box unticked.
-Result:
+Result: Owner reported pass, 2026-10-31.
 
 **SKIN-28. Width parity of the windows (D-08).** In each skin, with the Font outline on HUD text only (the
 default), on All text and on Off: open the callout popup (Groups → a callout's Edit), the icon browser
@@ -1897,13 +1897,13 @@ default), on All text and on Off: open the callout popup (Groups → a callout's
 pad so its drag strip shows → no title, label, button text or tab is cut off or overlaps its
 neighbor, and the drag strip's title fits with its TEST MODE marker under `/qc test`. Compare each
 window with Ka0s Default: its text is about as wide. Fail: an ellipsis or clipped text in any skin,
-or a skin whose text runs clearly wider than Ka0s Default's. Result:
+or a skin whose text runs clearly wider than Ka0s Default's. Result: Owner reported pass, 2026-10-31.
 
 **SKIN-29. Media pickers preview (LibKa0s v1.83.0, options-ui-§23).** Fully restart the client, then open a
 pad's Buttons tab and untick *Use the skin's font* and *Use the skin's border*. Open **Font** → every row draws
 in its own face. Open **Border** → every row shows its art. Pick one of each, `/reload` → the keys stay and
 the pad draws them. Repeat on the Dial's Labels tab Font and an icon's Border. Fail: a plain list of names, a
-row in the wrong face, a pick lost after the reload, or a Lua error. Result:
+row in the wrong face, a pick lost after the reload, or a Lua error. Result: Owner reported pass, 2026-10-31.
 
 ## Pending sign-off
 
@@ -1942,14 +1942,11 @@ EDIT-14 (the popup and the browser in the Ka0s window under Ka0s Default); LOOK-
 BUTTON-1, ICONS-1 and ART-1 (amended for the *Use the skin's ...* boxes); and LOC-1 (its fonts note),
 each recorded on its Result: line as pass (owner-marked 2026-10-30).
 
-Owed from LibKa0s v1.82.0 (QC-01, 2026-10-30, Ka0sAddonsCommonTasks
-`docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK/`): SKIN-24 to SKIN-28 (new). Their earlier passes stand as
-recorded, but LOC-1, SKIN-1, SKIN-2, SKIN-3, SKIN-5 and SKIN-10 were amended for v1.82.0's faces
-(Prototype for Ka0s Default, Expressway for Obsidian), so a re-run of them is owed too.
+The owner reported on 2026-10-31 that the smoke lists of both of that week's font runs passed
+(Ka0sAddonsCommonTasks `docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK/` and
+`docs/2026-10-31-FONT_PICKERS_AND_SKIN_FACES/`, "everythings works as expected"): SKIN-24 to SKIN-28 and
+ICON-5 (new, QC-01 and QC-02), LOC-1, SKIN-1, SKIN-2, SKIN-3, SKIN-5 and SKIN-10 (amended for v1.82.0's
+faces), SKIN-4, SKIN-5 and SKIN-11 (re-opened by QC-F01) and SKIN-29 (new, QC-F02), recorded on each
+check's Result line.
 
-Owed from LibKa0s v1.83.0 (QC-F01, 2026-10-31, Ka0sAddonsCommonTasks
-`docs/2026-10-31-FONT_PICKERS_AND_SKIN_FACES/`): SKIN-4, SKIN-5 and SKIN-11 are re-opened for the new
-faces, *Skin's default* and the previewing pickers; SKIN-24 and SKIN-28 run against the new outline
-default, HUD text only, and SKIN-27 and the windows' width checks against the new faces. SKIN-29 is new (QC-F02).
-
-Owed from QC-02 (2026-10-30, the same bundle): ICON-5 (new).
+Owed from the findings remediation (FX-QC-PERF, 2026-10-31): LOOK-7 (new).

@@ -28,7 +28,7 @@ the case SKIPs and the gate is the remaining ~20 s of cases. Each automated-test
 suites' times as `durationMs` in its bundle's `manifest.json` (`automated-tests/<run>/`);
 [`automated-tests/RESULTS.md`](automated-tests/RESULTS.md) rolls the runs up but has no duration column.
 
-`luacheck .` lints everything authored, `tests/` included. It skips `libs/` and `tests/_kit/`
+`~/.claude/dev-copilot/bin/ka0s-bounded luacheck .` lints everything authored, `tests/` included. It skips `libs/` and `tests/_kit/`
 (vendored), the frozen record stores, and `docs/brainstorm/`, whose go/no-go harness is a throwaway
 addon kept as history and never loaded by this one.
 
@@ -61,7 +61,7 @@ Named suites the standard requires: `test_surface_parity` (testing-§8), `test_v
 `test_database`, `test_profile`, `test_schema`, `test_slash`, `test_diagnostics`, and phase 1's `test_compat`,
 `test_restrictions`, `test_situation`, `test_tokens`, `test_channels`, `test_bake`, `test_resolver`,
 `test_builtins`, `test_library` and `test_check`, and phase 2's `test_mock_secure`, `test_send_guard`,
-`test_sendengine`, `test_preview`, `test_master`, `test_pad_layout`, `test_surfaces`, `test_dial_yield`,
+`test_sendengine`, `test_preview`, `test_master`, `test_pad_layout`, `test_surfaces`,
 `test_pad_render` and `test_pad`, and phase 3's `test_members`, `test_editors`, `test_callout_popup` (the callout popup, which replaced `test_page_callouts`), 
 `test_groups_when`, `test_page_groups`, `test_page_groups_nesting` (split off `test_page_groups` at
 the layout-§1 cap: nested groups, the Preview table, Inherit when conditions and a pad title's
@@ -97,7 +97,7 @@ the change that moves the count (testing-§5).
 
 | Suite | Command | Commit / run | Release (the tag) |
 |---|---|---|---|
-| `lint` | `luacheck .` | **gates** | gates |
+| `lint` | `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .` | **gates** | gates |
 | `tests` | `lua tests/run.lua` | **gates** | gates |
 | `perf` | `lua tests/perf.lua` (offline scenarios; see [`performance.md`](performance.md)) | recorded, never fails a run or blocks a commit | gates |
 | `complexity` | `bash tests/_kit/run-automated-tests.sh --suite complexity` (the sighted shadow) | recorded, never fails a run or blocks a commit | gates, with zero functions above CCN 15 and `blindFiles` 0; a lizard run that crashed or hit its bound is a complexity fail, never a pass (the crashed files are listed apart, `crashedFiles` 0 at release; automated-tests-§3) |
