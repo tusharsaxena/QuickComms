@@ -196,6 +196,31 @@ function Ed.Scalar(rows)
     return out
 end
 
+local OFFSET_INDEX = { x = 3, y = 4 }
+
+--- A member's Position block for its Layout tab: the X and Y rows, and the hook that draws Reset
+--- under them, from the options library's composer (LibKa0s#59). The stored point is one table row, so
+--- the rows bind to it rather than name a path. They stay typed boxes, not the composer's sliders: a
+--- point takes any place on the screen, and the seam's refusal, printed by `spec.setOffset`, is put
+--- back by the refresh every row write runs.
+--- @param spec table page; point() the point as an array; setOffset(axis, text); tooltip; resetText;
+---   resetTooltip; onReset
+--- @return table rows, function|nil hook key the hook by L["Position"] in RenderRows' afterSubgroup
+function Ed.PositionRows(spec)
+    local rows, hook = H().PositionBlock({
+        page = spec.page, group = L["Layout"], subgroup = L["Position"],
+        labels = { x = L["X offset"], y = L["Y offset"] },
+        tooltips = { x = spec.tooltip, y = spec.tooltip },
+        bind = {
+            get = function(axis) return tostring(spec.point()[OFFSET_INDEX[axis]]) end,
+            set = function(axis, text) return spec.setOffset(axis, text) end,
+        },
+        resetText = spec.resetText, resetTooltip = spec.resetTooltip, onReset = spec.onReset,
+    })
+    for _, row in ipairs(rows) do row.type, row.dialogControl = "string", "EditBox" end
+    return rows, hook
+end
+
 --- A dropdown that acts on the choice at once ("Add a group"), as a RenderGrid item, over the list
 --- `entries`.
 function Ed.ActionDropdown(label, tooltip, entries, onPick)

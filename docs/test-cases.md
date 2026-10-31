@@ -1261,7 +1261,7 @@ Total.
 - layers: [audit QC-21] a modal window is clamped, never toplevel, never raised
 - layers: [QUI-Z06] the icon link window is lifted to POPUP
 
-### test_layout.lua (23)
+### test_layout.lua (27)
 
 - layout: [general] Behavior reads Sending, then Pads and dials, with the new labels (QUI-L01, L02)
 - layout: [general] the header Defaults carries the library's Reset all settings tooltip (QUI-L-new2)
@@ -1286,6 +1286,10 @@ Total.
 - layout: [dials] Paging: Page row, Arrows, Page indicator, Indicator border, Indicator background (QUI-L25, L26)
 - layout: [dials] Labels: Slice labels, Group labels, then Tooltip (QUI-L19)
 - layout: [dials] Icons: Size, offset and crop holds Icon size | Icon offset, then Zoom (QUI-L27)
+- layout: [position] the pad's block is typed boxes under one heading, with their tooltip and Reset
+- layout: [position] the dial's block holds Open at, then the boxes, with their tooltip and Reset
+- layout: [position] the box follows the stored point on a refresh
+- layout: [position] both blocks come from the library's composer
 
 ### test_skinsetup.lua (24)
 
@@ -1574,7 +1578,7 @@ Total.
 | test_glow.lua | 11 |
 | test_shine.lua | 8 |
 | test_layers.lua | 11 |
-| test_layout.lua | 23 |
+| test_layout.lua | 27 |
 | test_skinsetup.lua | 24 |
 | test_skin_windows.lua | 20 |
 | test_skin_hud.lua | 19 |
@@ -1592,4 +1596,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1298** |
+| **Total** | **1302** |

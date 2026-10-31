@@ -304,9 +304,9 @@ local ROWS = {
       min = 0, max = 20, step = 1, page = "dials", group = L["Layout"], label = L["Slice gap"], startsLine = true,
       desc = L["The space between slices, in pixels. 0 draws them touching."],
       validate = NUMBER, normalize = clamp(0, 20, true) },
-    -- Drawn after the Position heading, above X and Y (settings/Dials.lua renderLayout).
+    -- The Position block's first row, above X and Y (settings/Dials.lua renderLayout).
     { path = "dial.openAt", instance = "dial", type = "string", default = T.dial.openAt, values = OPEN_AT,
-      page = "dials", group = L["Layout"], label = L["Open at"],
+      page = "dials", group = L["Layout"], subgroup = L["Position"], label = L["Open at"],
       desc = L["Where the dial opens: at its place (set below), or wherever the cursor is."],
       validate = oneOf(OPEN_AT) },
     -- Position's default is false (the default place), so `/qc reset dial.point` reaches it; the page's
