@@ -149,7 +149,7 @@ them: `docs/common-tasks.md` → "Re-derive the client-data extractions".
 lua tests/run.lua                                     # the suite — must be green
 lua tests/run.lua -j auto                             # same, fanned across CPUs (testing-§14)
 # every run above is bounded by the vendored kit on load (testing-§15); KA0S_KIT_GUARD=off only under a debugger
-luacheck .                                            # must be 0 warnings / 0 errors
+~/.claude/dev-copilot/bin/ka0s-bounded luacheck .     # must be 0 warnings / 0 errors; luacheck loads no kit, so it takes the bounded runner
 bash tests/_kit/run-automated-tests.sh --suite complexity   # the sighted complexity report (release-time);
                                                       # never raw `lizard`, which is blind in Lua (automated-tests-§3)
 ```

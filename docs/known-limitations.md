@@ -178,6 +178,8 @@ What the addon cannot do, or does only under a condition, and why. The hub,
 - A block on the skin's face draws at the skin's HUD size (`NS.Skin.HudFontSize`, LibKa0s v1.82.0,
   D-09), so under Obsidian a stored 12 draws at 13 and the pad's buttons grow with it; the stored
   size is never rewritten. A block on its own face, or Ignore fonts, draws the stored size.
+- The client reads an addon's new files only at start-up, so a font file that arrives with a LibKa0s
+  update needs a full client restart, not `/reload`, before a skin can draw it.
 - The icon browser searches game icons by texture id only: the client gives them as texture ids, with
   no names, and has no API that names one, so a game icon is named by its id and a name is looked up
   on Wowhead (the tab's hint; the game cannot open a web page, so the address is shown to copy). No

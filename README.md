@@ -59,9 +59,10 @@ ordinary groups too, so change or delete whatever you like; Restore built-in gro
 anything you deleted. How the pad and the dial look is up to you, on the Pad and Dial pages.
 
 The whole addon wears a skin: Ka0s Default, or one of eight others, picked on General → Skin (a small
-picker asks once, the first time you log in). The skin sets the windows' colors and the pads' and
+picker asks once, the first time you log in, and `/qc skin` brings it back). The skin sets the windows' colors and the pads' and
 dials' fonts and border styles; the colors you give a pad or a dial stay yours. Untick *Use the skin's
-font* or *Use the skin's border* on a tab to use your own.
+font* or *Use the skin's border* on a tab to use your own. Font outline, on the same Skin tab, says
+which text gets an outline.
 
 To check how things look somewhere else, pick a situation in Preview as… or type `/qc preview`. A
 small window lets you switch situations or end the preview. While you preview, and in test mode, a

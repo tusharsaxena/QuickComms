@@ -140,7 +140,7 @@ tracked registration down and replay it.
 
 ## Slash Commands
 
-`/qc`, alias `/quickcomms`. The reserved verbs (`help config enable disable lock unlock version list
+`/qc`, alias `/quickcomms`. The reserved verbs (`help config skin enable disable lock unlock version list
 get set reset resetall profile debug diagnostics perf`; `lock` and `unlock` are slash-commands-§8's,
 the Lock frame row's path through the seam) and the feature verbs `check <id>`, which prints the
 line a callout would send under the current situation and never sends, `test` (test mode), `toggle` (hide or show every Comms Pad, remembered per character in `db.char.padsHidden`, also the launcher's Show window entry), `preview` ("Preview as…": bare opens the preview window on where you are, or keeps the preview on; a name switches it, `off` ends it and `list` prints the menu) and `why` ("Why is this showing?", for every built pad and dial). The full table, the live-while-disabled set
@@ -226,14 +226,14 @@ the settings pages and the library's own windows.
   (LibKa0s v1.81.0, R-1): the library's `Resolve` answers it for `hud.font`, nil for a stored `"@skin"`
   (the standard face), so `Pad_Render.FontKey` holds no Ignore-fonts handling of its own. Each skin
   names its own HUD face (R-4). Every
-  color, size, flag and shadow the player set, the shine and the class colors stay the player's (X4,
-  D5, D6). The HUD's own chrome (the padlock, the veils, the hover wash, the flashes, the LOCKDOWN and
+  color and shadow the player set, the shine and the class colors stay the player's (X4, D5, D6);
+  stored sizes and flags are under **Font flags and HUD sizes** below. The HUD's own chrome (the padlock, the veils, the hover wash, the flashes, the LOCKDOWN and
   stale tags, the PREVIEW and TEST MODE marks, the page arrows) reads tokens once per look change
   (`Pad_Render.Chrome`), never per frame.
 - **The one-time reset** (the owner's O2). Schema step 10 (`Library.MigrateFollowSkin`) turns every
   stored pad's and dial's companions on, once, on every stored profile; the picks and the colors are
-  kept. Under Ka0s Default that is a visible change (rollout X5, D11): Oxanium SemiBold in place of the
-  picked faces (Friz Quadrata by default), a picked border art becomes the skin's `None` (the flat
+  kept. Under Ka0s Default that is a visible change (rollout X5, D11): the skin's HUD face (Prototype since
+  LibKa0s v1.82.0, Oxanium SemiBold before) in place of the picked faces (Friz Quadrata by default), a picked border art becomes the skin's `None` (the flat
   edge at the stored thickness), and a shown icon border the skin's Solid 2 px.
 - **Font flags and HUD sizes** (LibKa0s v1.82.0, Ka0sAddonsCommonTasks D-07, D-09). Every font
   block's Font flags lead with From skin (`"@skin"`, the composer's `flagsFromSkin`), its default,

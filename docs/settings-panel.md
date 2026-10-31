@@ -91,7 +91,7 @@ controls, Behavior, Skin, Keybindings. It draws:
 |---|---|
 | Skin source | *Ka0s skins* or *EllesmereUI* (`skin.source`); EllesmereUI is disabled, with the failing condition and its fix named, unless EllesmereUI can skin this addon |
 | Look | the nine skins three to a line, each with four swatches (`skin.skin`) |
-| Font and texture | **Font** and **Texture** (`skin.font`, `skin.texture`), *Skin's default (…)* first, then every LibSharedMedia font or status bar; under them **Reset font** and **Reset texture**, then **Font outline** (`skin.outline`: *All text*, *HUD text only*, the default, or *Off*; LibKa0s v1.82.0, default from v1.83.0) |
+| Font and texture | **Font** and **Texture** (`skin.font`, `skin.texture`), *Skin's default (…)* first, then every LibSharedMedia font or status bar, in the library's `Ka0sMedia_*` pickers (each row drawn in its face or texture; LibKa0s v1.83.0); under them **Reset font** and **Reset texture**, then **Font outline** (`skin.outline`: *All text*, *HUD text only*, the default, or *Off*; LibKa0s v1.82.0, default from v1.83.0) |
 | Scope | **Ignore settings panel** (`skin.ignorePanel`, on for a new profile) and **Ignore fonts** (`skin.ignoreFonts`; it covers the pads' and dials' faces too, LibKa0s v1.81.0) |
 | | **Copy to every Ka0s addon…**, and the note on what skins change |
 
@@ -110,13 +110,14 @@ AceGUI pool stock, so another addon's pages never inherit this skin.
 
 **The first-run picker** is `O.SkinPicker`, a small window titled *Choose a skin*, with "Ka0s Quick
 Comms" on its own line above the dropdown (`frame.ownerLabel`; the window widens so it is never cut
-off; LibKa0s v1.81.0): a dropdown of the skins, the eye, the gear, **Apply** and a close control. `core/SkinSetup.lua`
+off; LibKa0s v1.81.0): a dropdown of the skins (each row three swatches and the name in that skin's body face), the eye, the gear, the Skin tab's own rows (**Font** and **Texture** with a reset each, **Font outline**, **Ignore settings panel** and **Ignore fonts**; LibKa0s v1.83.0, LK-A3), **Apply**, **Apply to all Ka0s addons** while another skin owner is registered, and a close control. `core/SkinSetup.lua`
 shows it two seconds after `OnEnable` and after every profile event while the profile's
 `skin.pickerSeen` is false and the addon stands up, held to `PLAYER_REGEN_ENABLED` in combat. A pick
-previews; **Apply** and the gear save it, the gear opening this page on its Skin tab (`page =
+previews; **Apply** and the gear save it and the rows, the gear opening this page on its Skin tab (`page =
 "general"`, `tab = "Appearance"`); the close control and Escape put the stored skin back. The eye turns
 test mode on, so the pads show their placeholders and dial 1 opens under the picker (rollout X6). One
-picker is up at a time across Ka0s addons.
+picker is up at a time across Ka0s addons. `/qc skin` (`NS.RunSkinVerb`) opens the same window on
+demand, whatever `skin.pickerSeen` says.
 
 ## General → Keybindings
 
@@ -586,7 +587,10 @@ both composed by the options library and on by default. While one is on, its pic
 *Border style*; on Icons *Border style* and *Border thickness*) is grayed out and shows the skin's
 value, and the stored pick comes back when it is turned off; sizes, colors, flags and shadows stay
 live either way. On Icons the box is grayed while Show border is off. Schema step 10 turned them on
-once on every stored pad ([schema.md](schema.md)).
+once on every stored pad ([schema.md](schema.md)). The Font and Border pickers are `LSM30_*` rows;
+this addon ships no SharedMediaWidgets, so the library draws them as `Ka0sMedia_Font` and
+`Ka0sMedia_Border`, each row previewing its face or border (LibKa0s v1.83.0). A Font block's flags
+lead with **From skin**, the default: the Skin tab's Font outline decides, and a picked flag wins.
 
 Header, Section titles and Window were one Window tab until 2026-10-20 (the Look tab before
 that); the owner split it into three, each under its own headings. The third was Main window, with

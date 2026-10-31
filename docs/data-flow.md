@@ -121,6 +121,10 @@ Choose icon… (`Ed.IconChooser`, in the callout popup or on a user group's Gene
 
 Every place a member's icon is drawn (a pad's buttons, a dial's wedges and ring wedges, the Groups page's callout rows, the editors' icon, the browser's grid and footer) sets its tint from `Library.IconTint(icon, color)`, white included: a pooled texture keeps the last tint it was given. The slot and ring plans carry `iconColor` beside `icon` (`Surfaces.Slot`, `Surfaces.BuildDialPlan`, `Dial_Layout`).
 
+A member with no icon draws `NS.DefaultIcon(kind)`: the `ph:folder-simple` glyph for a group or a
+dial wedge that opens a ring, `ph:chat-circle-dots` for a callout, and Blizzard's question mark only
+without LibKa0s. Test mode's groups wear numbered glyphs instead (`Surfaces.TEST_GLYPHS`).
+
 ## Today: Preview as…
 
 The menu (`Preview.Presets`, owner 2026-10-25) is Current; one M+ entry per current-season dungeon (`mplus:<id>`, `NS.GameIds.DUNGEONS`, A-Z by the client's name); one Mythic entry per current-season raid (`raid:<id>`, `Raid · Mythic · The Voidspire`, `NS.GameIds.RAIDS`, A-Z); Arena; one `BG - <name>` entry per battleground set; and Solo.
