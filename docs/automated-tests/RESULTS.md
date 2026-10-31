@@ -100,7 +100,7 @@ None.
 |---|---|---|---|
 | 1000–1500 (on notice) | `locales/enUS.lua` | 1383 | Accepted: flat data, one key per player-facing string (localization-§1), no logic; it grows with the UI, not with tangle. |
 | 1000–1500 (on notice) | `modules/Library.lua` | 1340 | On notice: the registry writer holds every membership, order, id and reference write by design (architecture-§5); the import section is gone with Share (2026-10-25), so it shrank. No peel planned for v1.0.0; if it nears 1,500, peel the seeding and restore section (`seedGroup`, `seedNew`, `Lib.RestoreBuiltins`, `Lib.SeedFromOverlay`) into `modules/Library_Seed.lua`. |
-| 1000–1500 (on notice) | `tests/test_dial.lua` | 1471 | Peel next: 28 lines under the cap. Split it along its own groupings (the ring and paging cases, the secure catcher, the look) before it takes another case, as `tests/test_page_groups.lua` was split (2026-10-25). |
+| 1000–1500 (on notice) | `tests/test_dial.lua` | 1471 | Split on 2026-10-31 (FX-QC-SIZE) from 1,471 to 764, along its own groupings: the catcher's cases are `tests/test_dial_catcher.lua`, the look's `tests/test_dial_look.lua`; this row leaves the band at the next run. |
 | 1000–1500 (on notice) | `tests/test_library.lua` | 1057 | Accepted: case count, not tangle; one registry-writer behavior per case. |
 | 1000–1500 (on notice) | `tests/test_pad.lua` | 1037 | Accepted: case count, not tangle; split it along its groupings if it nears 1,400. |
 | 1000–1500 (on notice) | `tests/test_page_groups.lua` | 1131 | Accepted: split on 2026-10-25 (RA-09) from 1,500 to 1,131; its nesting cases now live in `tests/test_page_groups_nesting.lua`. |

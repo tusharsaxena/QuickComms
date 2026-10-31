@@ -365,7 +365,9 @@ the repository has no generated data file.
 
 Nothing is over the cap today. `tests/test_page_groups.lua` reached it exactly and was split along its
 own section headings (`80a0fbb`, 2026-10-25): 1131 lines now, beside `tests/test_page_groups_nesting.lua`
-at 418. Seven files sit in the 1000-1500 band (`tests/test_dial.lua` 1471, `locales/enUS.lua` 1375,
+at 418. `tests/test_dial.lua` was split the same way at 1471 lines (2026-10-31): 764 now, beside
+`tests/test_dial_catcher.lua` at 288 and `tests/test_dial_look.lua` at 388, with their shared helpers in
+`tests/dial_helpers.lua`. Six files sit in the 1000-1500 band (`locales/enUS.lua` 1383,
 `modules/Library.lua` 1340, `tests/test_page_groups.lua` 1131, `tests/test_library.lua` 1057,
-`tests/test_pad.lua` 1035, `tests/wow_mock.lua` 1024); the automated-test record's watch list gives
+`tests/test_pad.lua` 1037, `tests/wow_mock.lua` 1024); the automated-test record's watch list gives
 each its disposition.

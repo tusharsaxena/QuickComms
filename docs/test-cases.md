@@ -1113,7 +1113,7 @@ Total.
 - pad: [F-006] a rebuild that moved no line rewrites no button's type or macrotext
 - pad: [F-006] after a rebuild, every button outside the active set carries no type and is not armed
 
-### test_dial.lua (67)
+### test_dial.lua (38)
 
 - dial: Apply builds QuickCommsDial<n> with a ring per page, each callout wedge armed with its baked line
 - dial: a refused callout is a dimmed, disarmed wedge; a ring wedge is disarmed
@@ -1153,12 +1153,9 @@ Total.
 - dial slices: [perf] a reopen on the slice last lit leaves the highlight where it is; a rebuild moves it
 - dial: [F-006] an unchanged rebuild rewrites no wedge's line; a wedge left out carries no type
 - dial slices: [polish] gap 0 draws as before
-- dial: [paging] the indicators sit on a rounded background sized to the row; off hides it
-- dial: [paging] every dot and the pill has a border, its size plus twice the Dot border; 0 draws none
-- dial: [front] the hub, its circle and the pointer draw over the slices
-- dial: [tooltip] a wedge's tooltip sits outside the dial: above by default, on the Labels tab's side
-- dial: [pointer] the pointer is a catalog glyph, sized, colored and placed by the Slices tab, and can be off
-- dial: [labels] the Label offset moves every label out from the center; the title and the page row follow
+
+### test_dial_catcher.lua (13)
+
 - dial: [polish] a click near the hub sends the lit slice, in combat
 - dial: [polish] a click with a modifier held still sends the slice, in combat
 - dial: [polish] just outside the hub's circle, on a diagonal, the slice lights and clicks, in combat
@@ -1172,6 +1169,15 @@ Total.
 - dial: [polish] wedges take no mouse; keys still click by name
 - dial: [polish] a built dial closes on a click outside it, in combat
 - dial: [polish] a ring hidden under the hover clears its slice, tooltip and hover glow
+
+### test_dial_look.lua (16)
+
+- dial: [paging] the indicators sit on a rounded background sized to the row; off hides it
+- dial: [paging] every dot and the pill has a border, its size plus twice the Dot border; 0 draws none
+- dial: [front] the hub, its circle and the pointer draw over the slices
+- dial: [tooltip] a wedge's tooltip sits outside the dial: above by default, on the Labels tab's side
+- dial: [pointer] the pointer is a catalog glyph, sized, colored and placed by the Slices tab, and can be off
+- dial: [labels] the Label offset moves every label out from the center; the title and the page row follow
 - dial: [polish] default hub is a solid gold circle of 24 on a 32 backdrop with a 1 px rim, no red X
 - dial: [polish] hub style solid draws the backdrop rim when its border size is set
 - dial: [polish] hub style ring is a hollow ring of the circle size and line width
@@ -1559,7 +1565,9 @@ Total.
 | test_surfaces.lua | 30 |
 | test_pad_render.lua | 25 |
 | test_pad.lua | 47 |
-| test_dial.lua | 67 |
+| test_dial.lua | 38 |
+| test_dial_catcher.lua | 13 |
+| test_dial_look.lua | 16 |
 | test_keybinds.lua | 6 |
 | test_dial_shine.lua | 8 |
 | test_icon_style.lua | 10 |
