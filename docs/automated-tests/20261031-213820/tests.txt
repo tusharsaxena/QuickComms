@@ -1,0 +1,1301 @@
+  PASS  harness: the addon's file list is the TOC's, Namespace first and Profiles last
+  PASS  harness: every LibKa0s file comes from LibKa0s.xml, in its order
+  PASS  harness: every adopted LibKa0s module is the live library, not its stub
+  PASS  toc: the fixed field order, a single Retail Interface line, the X-Standard field and the CurseForge id
+  PASS  toc: the icon is the 128x128 logo, and the file exists
+  PASS  toc: OptionalDeps names only vendored libraries and the optional suites, and no hard Dependencies
+  PASS  toc: the landing-page logo exists beside the launcher icon (layout-§4)
+  PASS  repo: no stored copy of the context pack (documentation-§3, anti-pattern #49)
+  PASS  repo: the root doc set is README, the CLAUDE stub, DEPENDENCIES and LICENSE
+  PASS  repo: every authored file opens with the bootstrap and a comment naming its path
+  PASS  repo: the .pkgmeta has no externals and ignores the dev-only entries
+  PASS  mock: a secure button keeps its attributes and answers its name
+  PASS  mock: SetAttribute in combat is refused and recorded, never applied
+  PASS  mock: a secure child protects its ancestors in combat, and only them
+  PASS  mock: a click acts once, on the edge the cvar names, and hooks hear both edges
+  PASS  mock: the useOnKeyDown attribute wins over the cvar
+  PASS  mock: a button with no macrotext sends nothing
+  PASS  mock: a visibility state driver follows combat
+  PASS  mock: registering a state driver in combat is refused
+  PASS  mock: frames under a QuickComms-named root get regions and points of their own
+  PASS  mock: a [nocombat] visibility driver shows out of combat and hides in it
+  PASS  mock: a state-driver condition the mock does not model raises, never skips
+  PASS  mock: a region answers IsVisible as it answers IsShown
+  PASS  mock: moving, levels, movable and clamping are refused in combat on a protected frame
+  PASS  mock: [phase 4] a header's _onclick runs as a snippet, and its globals persist between snippets
+  PASS  mock: [phase 4] in combat a snippet may show a protected frame; insecure code may not
+  PASS  mock: [phase 4] the restricted-only handle calls raise outside a snippet
+  PASS  mock: [phase 4] a wrap's pre snippet can suppress a click, and its message runs the post snippet
+  PASS  mock: [phase 4] a wrap after an OnClick hook raises (the client's wrap discards the hook)
+  PASS  mock: [phase 4] a snippet's key binding routes a key press to a named button until it is cleared
+  PASS  mock: [phase 4] override bindings are refused in combat; a press clicks the bound frame by name
+  PASS  mock: [phase 4] a header's Show and Hide fire OnShow and OnHide on a change; Execute is refused in combat
+  PASS  mock: [phase 4] the cursor and a frame's center are numbers a suite can set
+  PASS  mock: [final 19] a header's OnShow hook runs insecure: a protected call it makes in combat is blocked
+  PASS  mock: [final 2] two owners binding one key: the newest wins, and clearing it hands the key back
+  PASS  mock secure: GetMousePosition reads the cursor inside a frame, nil outside
+  PASS  mock secure: type click forwards to clickbutton-<button>
+  PASS  mock secure: a held modifier reads <mod>- and * attributes, never the plain button form
+  PASS  mock secure: a header with its mouse off still runs its _onclick from a binding and from Click
+  PASS  bus: every spec §17 message is declared with its exact name
+  PASS  bus: no two constants share a name
+  PASS  parity: the degraded load really is library-absent, and the live one is not
+  PASS  parity: the Core seam's namespace surface survives the library's absence
+  PASS  parity: the DebugLog stub carries the whole live surface
+  PASS  parity: the Slash stub carries the whole live surface
+  PASS  parity: the Slash stub's one library string is the library's, byte for byte
+  PASS  parity: the Options helpers stub carries the whole live surface
+  PASS  parity: the Schema host stub's instance carries the whole live instance surface
+  PASS  parity: the Schema host stub carries the library's own members
+  PASS  parity: the Launcher stub carries the whole live surface
+  PASS  parity: the Lifecycle stand-in carries every member of the live latch
+  PASS  parity: the Bus stand-in carries every member of the live bus
+  PASS  parity: the Pool stub carries the LibKa0s-Pool-1.0 surface this addon calls
+  PASS  parity: the Perf stub carries every Perf member the addon reaches
+  PASS  parity: the Env seam publishes the same NS members on both paths
+  PASS  parity: the Media seam publishes the same NS members on both paths
+  PASS  parity: the Glow seam's stub carries the LibKa0s-Glow-1.0 surface
+  PASS  glow: modules/Glow.lua names no LibCustomGlow-1.0 member; the driver is the one mapping
+  PASS  glow: with LibKa0s absent the seam answers false and the button still records its style
+  PASS  core: NS.Print is NS.Util.print after AceConsole's embed (architecture-§2)
+  PASS  core: the printer tags every line with the cyan [QC] prefix
+  PASS  core: the degraded printer says the library is missing once, then tags every line
+  PASS  core: the close-button wrapper passes the addon folder as the third argument
+  PASS  core: no file but the wrapper calls a close-button factory directly
+  PASS  media: FONT_MONO is the shipped face live, and a real client font degraded
+  PASS  env: the version falls back to the in-code constant when the TOC cannot be read
+  PASS  bus: every catalog name is Ka0s_QuickComms_<Event>, and the copy is strict
+  PASS  bus: a tracked target's registrations come down with the stand-down and back with the stand-up
+  PASS  bus: a profile switch sends PROFILE_CHANGED once
+  PASS  perf: every declared bucket has a bracket, and every bracket a declared bucket
+  PASS  perf: [audit QC-12] every bucket key is lowerCamelCase, named for the path it times (naming-cheatsheet)
+  PASS  perf: the live harness is built, and the stub answers the perf verb
+  PASS  perf: the `perf` hold stands the addon down, and the verbs keep answering
+  PASS  perf: the descriptor's SavedVariables global is declared in the TOC
+  PASS  launcher: one object, labeled with the brand, the logo as its icon, registered on enable
+  PASS  launcher: the right-click menu is Enabled, Locked, Test mode and Show window
+  PASS  launcher: Show window calls the handler `/qc toggle` calls and reflects the saved flag
+  PASS  launcher: Enabled calls the same handler `/qc disable` calls
+  PASS  launcher: degraded, Register says once that there is no minimap button
+  PASS  options: the category registers eagerly, with the General page under it
+  PASS  options: the General page's first group is exactly `Master controls`
+  PASS  options: the degraded load completes, and the panel says once that it is unavailable
+  PASS  perf: [phase 5] a refresh notes situationRefresh, and each plan resolverResolve inside bakeSurface
+  PASS  perf: [review] a refresh whose signature moves notes situationRefresh before the rebuild it publishes
+  PASS  perf: [phase 5] the Comms Dial page's Preview notes neither bakeSurface nor resolverResolve
+  PASS  database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
+  PASS  database: the target is the last step's `to`, and the steps climb in order
+  PASS  database: the runner is idempotent, and a stored stamp at the target runs no step
+  PASS  database: a step that raises leaves the stamp where it was
+  PASS  database: a perProfile step runs once for every stored profile
+  PASS  database: [phase 4] step 2 moves the generic battleground set below the per-battleground sets
+  PASS  database: step 3 turns the built-in overlay into seeded groups, each in its set's place
+  PASS  database: [review] step 3 puts a set the pad has not seen at the pad's end
+  PASS  database: [review] step 3 lifts a stale id counter before it seeds
+  PASS  database: step 3 runs once, and the profile loads without duplicates
+  PASS  database: step 3 leaves a profile never prepared to Prepare, which seeds it once
+  PASS  database: [review] step 3 repairs a raw profile's registry and passes over a junk surface
+  PASS  database: the profile defaults carry the Master controls value, and no debug flag
+  PASS  database: [B2] step 4 rewrites a pad's retired Upward growth as Right and up, once
+  PASS  database: [B7] step 5 renames the dungeon set, widens its When and gives seeded callouts their glyphs, once
+  PASS  database: [review] step 5 reads a When as the shipped M+ one only when M+ is its one setting
+  PASS  database: [polish] step 6 colors untouched seeded icons and adds the node sets' own callouts, once
+  PASS  database: [bg subgroups] step 7 seeds the new objective nodes by origin, once; step 8 drops the retired dial fields
+  PASS  database: [polish] migrate: step 9 drops the retired slice border
+  PASS  database: [bg subgroups] a fresh profile seeds every objective node once, and step 7 leaves it as it is
+  PASS  profile: behavior defaults match spec §5.1
+  PASS  profile: collections exist; default nextId is 1, past every seeded id after boot
+  PASS  profile: every behavior row resolves through the seam
+  PASS  profile: the spam guard clamps to 0.6-2.0 and fallback refuses unknown values
+  PASS  profile: schema version target is 11 (the Font flags' move to From skin)
+  PASS  prepare: a callout held by two groups is split into a copy
+  PASS  prepare: a split copy of a seeded callout keeps no origin
+  PASS  prepare: a callout held by no group is dropped
+  PASS  prepare: is idempotent after a split
+  PASS  schema: every row validates against the defaults
+  PASS  schema: a stored row whose path has no default is counted, not passed vacuously
+  PASS  schema: the Minimap button row's backing key resolves against the global defaults
+  PASS  schema: the Master controls rows are the framed canonical set, in the canonical order
+  PASS  schema: Preview as sits in Master controls on the General page, after Test mode, on a line of its own
+  PASS  schema: NS.Setting reads through the seam, and answers the default before the db exists
+  PASS  schema: a page's rows are the rows whose page is its key
+  PASS  schema: an unknown path is refused and stores nothing
+  PASS  schema: the Minimap button row inverts onto LibDBIcon's own hide, with no shown key
+  PASS  schema: neither reset touches the minimap button (launcher-§3)
+  PASS  schema: Reset all asks first, through the confirmation popup
+  PASS  schema: [audit QC-04] the global reset takes every created member back to a fresh profile, and only this one
+  PASS  schema: [audit QC-01] the reset confirmation is options-ui-§12's sentence, verbatim
+  PASS  schema: degraded, `enabled` is written through and still reacts
+  PASS  schema: degraded, a row-less path not in the list is still refused
+  PASS  schema: [fix wave] the Behavior rows that rebuild the pads resolve Settings.RebuildSurfaces when they run
+  PASS  schema: [audit QC-13] the panel's color codec is written out for the stored { r, g, b, a } shape
+  PASS  schema: a callout write that names no id is refused, even with callouts present
+  PASS  schema: [phase 3] a fresh profile has no row off its default; the member rows are not counted
+  PASS  schema: [layout guard] every stored path, default, range and choice set is as item 020 found it
+  PASS  slash: NS.COMMANDS is positional triples, every reserved verb present
+  PASS  slash: `diagnostics` has no alias of any kind (debug-logging-§14)
+  PASS  slash: both chat commands are registered through AceConsole, and both dispatch
+  PASS  slash: the bare command opens the settings panel
+  PASS  slash: enable and disable write `enabled` through the seam and move the latch
+  PASS  slash: `perf` is the addon's verb and prints the harness's lines
+  PASS  slash: `reset` with no path explains itself rather than resetting everything
+  PASS  slash: `debug on` turns logging on without opening the console
+  PASS  slash: degraded, enable and disable still work and the CLI names the missing library
+  PASS  slash: [audit QC-17] degraded, a help row is `/qc verb  desc`, plain, with no em dash or color
+  PASS  slash: [audit QC-05] degraded, `debug on`/`off` flip the flag and ack, and `debug diagnostics` routes
+  PASS  slash: [phase 3] `why` prints each built pad and why its groups show
+  PASS  slash: [phase 4] `why` covers the dials too
+  PASS  slash: [final 16] `why` with nothing built speaks of pads and dials
+  PASS  slash: a callout's rows take its id after the path; with none the write is refused and names the form
+  PASS  slash: [final 9] test and preview's help, and the Preview as row, speak of the dials too
+  PASS  slash: [toggle] the flag is off on a fresh addon and the pads show
+  PASS  slash: [toggle] `toggle` hides every pad, a second `toggle` shows them again
+  PASS  slash: [toggle] test mode shows the pads even while they are hidden
+  PASS  slash: [toggle] in combat the flag flips and the driver waits for combat to end
+  PASS  slash: [toggle] the hidden state is this character's: a /reload or the next login restores it
+  PASS  slash: [characterization] PreviewLines' every branch: refused starts, a repeat, list's header, off with nothing on
+  PASS  disabled 1: enabled, the addon registers exactly the events it declares
+  PASS  disabled 2: through /qc disable, nothing is registered, heard or scheduled
+  PASS  disabled 2: through the write seam, nothing is registered, heard or scheduled
+  PASS  disabled 3: no SavedVariables write from a game event while disabled
+  PASS  disabled 4: every reserved verb keeps answering while disabled
+  PASS  disabled 5: a feature verb answers with the one refusal line and does nothing
+  PASS  disabled 6: the stand-up re-registers from current state and replays the receivers
+  PASS  disabled 7: a disabled profile loads stood down, with nothing registered
+  PASS  disabled 8: the launcher's Enabled entry stays live while disabled
+  PASS  disabled: [final 1] every feature event is declared once (AceEvent keeps one handler per event)
+  PASS  disabled [§7 step 1]: enabled, the registration set holds events and messages, and the surfaces are drawn
+  PASS  disabled [§7 steps 2-4]: through the seam, nothing stays registered, events or messages, and nothing is armed
+  PASS  disabled [§7 step 5]: every surface frame that was drawn is hidden
+  PASS  disabled [§7 step 6]: every event and message in R_on, fired anyway, runs nothing live; every event's handler, reached directly, writes, prints, shows and arms nothing
+  PASS  disabled [§7 step 7]: every NS.COMMANDS entry and the bare /qc: reserved verbs answer, feature verbs refuse once and write nothing
+  PASS  disabled [§7 step 8]: the launcher's left-click opens the panel and its menu grays every entry but Enabled
+  PASS  disabled [§7 step 8]: the Toggle Comms Pads key, pressed while disabled, prints the one refusal line and writes and shows nothing
+  PASS  disabled [§7 step 9]: re-enabled, R_on comes back; a setting changed while disabled is what the stand-up builds
+  PASS  disabled [§7 step 10]: the library latch: perf, then disabled; perf released first leaves it down
+  PASS  disabled [§7 step 10]: the library latch: disabled, then perf; enabled first leaves it down
+  PASS  disabled [§7 step 10]: the stand-in latch: perf, then disabled; perf released first leaves it down
+  PASS  disabled [§7 step 10]: the stand-in latch: disabled, then perf; enabled first leaves it down
+  PASS  disabled [by hold]: under the perf hold alone, /qc toggle refuses with the capture line and leaves padsHidden alone
+  PASS  disabled [by hold]: under the perf hold alone, the Toggle Comms Pads key press refuses as /qc toggle does
+  PASS  disabled [by hold]: under the perf hold alone, test mode and Preview as refuse with the capture line
+  PASS  disabled [by hold]: with both holds the disabled line wins
+  PASS  diagnostics: the sections are the addon's, in report order
+  PASS  diagnostics: the report names the schema, the profile, the holds and the launcher
+  PASS  diagnostics: it runs while stood down and says so, without acting
+  PASS  diagnostics: `enabled` is always listed, and a hidden minimap button is listed
+  PASS  diagnostics: the situation and library sections report the snapshot and the registry
+  PASS  diagnostics: [final 1] the restriction section names the active reasons and canSendChat
+  PASS  diagnostics: the surfaces and send sections name the pads, the armed buttons and the guard
+  PASS  diagnostics: [phase 3] the surfaces section names the preview
+  PASS  diagnostics: [final 21] the settings section lists no member row
+  PASS  diagnostics: [phase 4] the dials and bindings sections name each dial, its key and each entry's WoW binding
+  PASS  diagnostics: [dial rework] the report names the pads' hidden state, each dial's look, the ring shown and every ring
+  PASS  diagnostics: [debug] the log follows a dial open, a ring shown, a press and a close, once each
+  PASS  diagnostics: [shine] the pad's button line and the dial's slices line print the look and strength
+  PASS  compat: plain readers pass plain values and drop secrets
+  PASS  compat: InstanceInfo with a secret instanceID reads nil, never raises
+  PASS  compat: InstanceInfo during a loading screen (all nil) reads safely
+  PASS  compat: [final] an empty-string realm falls back to the normalized realm name
+  PASS  compat: UseKeyDown reads the cvar, and defaults on when it cannot
+  PASS  compat: SenderIsPlayer answers by GUID, then by name, and nil when it cannot read either
+  PASS  compat: [fix wave] SenderIsPlayer: a cross-realm namesake is not the player; an unreadable realm is unknown
+  PASS  compat: HasTemplate answers where C_XMLUtil can, and nil where it cannot
+  PASS  compat: ChatColor reads the client's chat colors and declines what it cannot read
+  PASS  compat: [phase 3] InstanceName reads the client's name; a secret, empty or missing one is nil
+  PASS  compat: [phase 3] SpecInfoByID and ClassName read display names; secret or missing ones are nil
+  PASS  compat: [final 8] BindingKey reads a command's key; a secret or a missing API is nil
+  PASS  compat: [QF-03] Coordinates reads the map position as x, y in percent, one decimal, or nil
+  PASS  compat: [QF-04] GeneralJoined is true only when the client names channel 1 as General
+  PASS  restrictions: nothing restricted, everything allowed and nothing announced
+  PASS  restrictions: an encounter stops chat and is the reason; its lift is announced
+  PASS  restrictions: a lift the client does not confirm yet keeps the restriction
+  PASS  restrictions: the event's boolean payload is read too
+  PASS  restrictions: each type gives its reason; Map blocks nothing
+  PASS  restrictions: the reason is the highest in priority
+  PASS  restrictions: a type the client adds later is reported by name and blocks nothing
+  PASS  restrictions: the chat lockdown stops chat, a secret answer too
+  PASS  restrictions: the combat edges set InCombat, ahead of the client's flag
+  PASS  restrictions: before any edge, the client's combat flag decides
+  PASS  restrictions: combat under an encounter announces the change of what is allowed
+  PASS  restrictions: a secret payload never raises; a secret state reads as active
+  PASS  restrictions: a client without the restriction APIs restricts nothing but combat
+  PASS  restrictions: ENCOUNTER_END re-reads a lockdown the client cleared after the last event
+  PASS  restrictions: CHALLENGE_MODE_COMPLETED re-reads, through Situation's row
+  PASS  restrictions: a lockdown that clears just after the key completes is announced by the late re-read
+  PASS  restrictions: a lockdown that clears just after the encounter ends is announced by the late re-read
+  PASS  restrictions: the late re-read is canceled by the stand-down
+  PASS  restrictions: stood down, nothing is heard; the stand-up announces what is in effect
+  PASS  restrictions: [final 1] a lockdown lifting under a higher one is announced
+  PASS  situation: classifier truth table (content, group)
+  PASS  situation: non-table input classifies as open world solo
+  PASS  situation: difficulty names by id
+  PASS  situation: key level and map only inside M+
+  PASS  situation: signature ignores combat and lockdown
+  PASS  situation: RefreshNow sends SITUATION_CHANGED only when the signature moves
+  PASS  situation: Refresh coalesces a burst into one read
+  PASS  situation: ReadInputs survives a loading screen
+  PASS  situation: stand-down cancels a pending coalesced refresh
+  PASS  situation: snapshot.lockdown mirrors Restrictions.ActiveSet
+  PASS  situation: [final 1] a restriction or combat edge after the refresh reaches Current()
+  PASS  situation: [final 1] Current() before the first refresh reads the combat edge
+  PASS  situation: [final 1] stood down, the receiver is down; stood up, it hears again
+  PASS  situation: [final 1] on the degraded bus the module takes its own receiver down and up
+  PASS  situation: [final 1b] both combat edges reach Current() even under the Combat restriction type
+  PASS  situation: [arena] an arena snapshot carries its instanceID, which the arena row matches
+  PASS  situation: [QF-04] the snapshot reads General from channel 1 and a join or leave moves the signature
+  PASS  situation: [F-007] a channel 1 that is not the zone's General leaves general off
+  PASS  situation: [QF-04] CHANNEL_UI_UPDATE and CHAT_MSG_CHANNEL_NOTICE are situation events
+  PASS  situation: [QF-04] a channel notice after the automatic join refreshes the snapshot to General
+  PASS  tokens: target and focus become engine tokens and count as live
+  PASS  tokens: raid markers by number and name, any case
+  PASS  tokens: group tokens map to {gN}
+  PASS  tokens: [review] markers and group tokens count as live; a baked value is flattened, an empty one missing
+  PASS  tokens: baked values come from ctx; absent ones are missing
+  PASS  tokens: spell links bake through ctx.spellLink; unknown ids are missing
+  PASS  tokens: unknown chips stay as typed and are reported
+  PASS  tokens: typed %t and %f count as live, chips are not double counted
+  PASS  tokens: non-string text expands to empty
+  PASS  tokens: a mock fills a baked value missing here, and only when given (the preview echo, QC-07)
+  PASS  tokens: [QF-03] {coordinates} and {coords} bake from ctx.coordinates; missing is dropped and listed, or mocked
+  PASS  channels: smartGroup prefers instance, then raid, then party
+  PASS  channels: smartGroup solo follows the fallback
+  PASS  channels: smartLead is RW for raid leader/assist and in a home party
+  PASS  channels: fixed kinds pass through; unknown kinds refuse
+  PASS  channels: the whisper kinds are not kinds (owner, issue #7)
+  PASS  channels: prefixes and chat types
+  PASS  channels: the lock matrix
+  PASS  channels: [phase 5] the lock matrix has no row for an unknown channel, and reads a missing snapshot as solo
+  PASS  channels: [QF-04] general resolves to General when channel 1 is joined, else to Say
+  PASS  channels: [QF-04] general's prefix, chat type, color type and locks are Say's
+  PASS  channels: [QF-04] a general callout bakes /1 with channel 1 joined and /s without
+  PASS  channels: [QF-04] the channel row offers General with its label; the seam accepts it
+  PASS  channels: [QF-04] a Groups row names General in channel 1's color
+  PASS  bake: a plain callout bakes to prefix + text
+  PASS  bake: [review 1] a leading slash is refused, even after whitespace
+  PASS  bake: [review 1] newlines and control characters flatten to one line
+  PASS  bake: pipes are escaped, spell links are not
+  PASS  bake: [final minor 5] the 255-byte boundary counts the whole line: prefix, space, text, live tokens
+  PASS  bake: empty or whitespace-only text is refused
+  PASS  bake: solo smart callouts follow the fallback
+  PASS  bake: the lock rides along without blocking the bake
+  PASS  bake: unknown channel and non-table callout refuse
+  PASS  bake: baked token values are sanitized; spell links are not
+  PASS  bake: a typed %t counts as live
+  PASS  bake: [phase 5] CleanText is the sanitizer short of the escape; Sanitize is CleanText, then the escape
+  PASS  resolver: an empty When always matches
+  PASS  resolver: each row matches and fails on its own
+  PASS  resolver: rows AND, values OR, empty rows ignored
+  PASS  resolver: keyLevel never matches outside M+
+  PASS  resolver: ActiveGroups unions enabled matches
+  PASS  resolver: SurfaceOrder keeps the surface's order; autoPromote floats narrower groups
+  PASS  resolver: Explain names the matched rows
+  PASS  resolver: [final] a non-number keyLevel bound is unset, never raises
+  PASS  resolver: [inherit] a child that inherits is judged by its parent's When, not its own
+  PASS  resolver: [inherit] WhenOf names the When that judges a group, and whose it is
+  PASS  resolver: [inherit] SurfaceOrder's narrowness reads the When that judges the group
+  PASS  resolver: [all] All battlegrounds and All dungeons and raids match the whole kind, the listed ids aside
+  PASS  resolver: [arena] the arena row matches only in an arena: its listed ids, or all of them
+  PASS  builtins: the expected top-level sets exist in order
+  PASS  builtins: ids are unique, referenced and well formed
+  PASS  builtins: only top-level groups are in the order, and every top-level group is
+  PASS  builtins: node sets nest one level
+  PASS  builtins: bake audit, every callout bakes under its set's snapshot
+  PASS  builtins: battlegrounds use smart group; arena uses party; raid lead uses smart lead
+  PASS  builtins: [phase 5] the node sets, Deepwind Gorge's five nodes included; no node carries a wind
+  PASS  builtins: [B7] every callout ships a catalog glyph, with a color only where it is a glyph
+  PASS  builtins: [B7] the generic dungeon set is Dungeon, active in a dungeon and in M+
+  PASS  builtins: [polish] Solo is a solo open-world set of General (/1) callouts
+  PASS  builtins: [QF-05] Solo's place lines carry {coordinates}
+  PASS  builtins: [QF-05] the owner's edits are the shipped look, with no schema step
+  PASS  builtins: [polish] every battleground node set has map-wide callouts of its own
+  PASS  builtins: [polish] every callout icon has a color, and no group is white only
+  PASS  builtins: [polish] every group has a colored catalog glyph for its icon
+  PASS  builtins: [bg subgroups] Alterac Valley has every general, captain, bunker, tower and graveyard, north to south
+  PASS  builtins: [bg subgroups] Isle of Conquest gains Our base and Enemy base beside its five nodes
+  PASS  builtins: [bg subgroups] the flag maps, Wintergrasp, Ashran, Deephaul Ravine and Seething Shore have objective children
+  PASS  builtins: [bg subgroups] no callout names a faction
+  PASS  builtins: [bg buttons] every base-capture node has Attack, Defend, INC and Clear, as Wintergrasp's workshops do
+  PASS  builtins: [bg buttons] Silvershard Mines has its three tracks and the switches, each with four
+  PASS  builtins: [bg buttons] Temple of Kotmogu has its four orbs and the center
+  PASS  builtins: no shipped callout types a raw %t or %f: each uses the {target} / {focus} chip
+  PASS  builtins: [bg buttons] In Group is a party, raid and instance group set of short smart-group lines
+  PASS  builtins: a faction-themed battleground's locations take the faction's color, neutral ones gold
+  PASS  builtins: a neutral battleground's locations take a color for what they are, never white
+  PASS  game ids: every battleground set matches only battleground maps, and no map is two sets'
+  PASS  game ids: the shipped dungeons are Mythic+ dungeons and the shipped raids are raids
+  PASS  game ids: [instances] INSTANCES are dungeons and raids, cover the season's, and reach past it
+  PASS  game ids: [arena] ARENAS are arena maps, one per arena
+  PASS  library: Prepare seeds every shipped set as a group, on one pad and one dial, once
+  PASS  library: a seeded group is an ordinary group: its fields, When, callouts and origin
+  PASS  library: a seeded battleground set holds its nodes as groups inside it, A-Z by name
+  PASS  library: callouts validate on create
+  PASS  library: whisper channels are refused (owner, issue #7)
+  PASS  library: [review 4] deleting a group clears every surface
+  PASS  library: adding a seeded callout copies it (P2); the copy keeps no origin
+  PASS  library: [review 5] a newly shipped set is seeded once, at the end of every surface; a deleted one stays deleted
+  PASS  library: a node shipped after its set was seeded goes inside the set's group
+  PASS  library: [review] a set whose stored parent dangles still takes a node shipped after it
+  PASS  library: [review] ValidParent takes a parent whose own stored parent dangles
+  PASS  library: Prepare repairs dangling ids
+  PASS  library: AllGroups is every user group, a seeded node among them
+  PASS  library: every mutation announces LIBRARY_CHANGED
+  PASS  library: no shipped id is a member any more
+  PASS  library: Prepare survives malformed groups and surfaces
+  PASS  library: Prepare repairs the order lists
+  PASS  library: MoveInGroup with a nil target returns false
+  PASS  library: [final 2] a callout whose copy fails validation is refused cleanly, with no hole
+  PASS  library: [final 2] the name cap counts characters, not bytes
+  PASS  library: [final minor 2] Prepare lifts a stale nextId above every existing id
+  PASS  library: [final minor 3] Prepare repairs corrupt top-level registry keys
+  PASS  library: SetSurfacePoint stores a copy of a plain anchor, announces it, and nil clears it
+  PASS  library: SetSurfacePoint refuses an unknown surface or a malformed anchor, and stores nothing
+  PASS  library: [phase 3] a copy's name stays within the 32-character cap, counted in characters
+  PASS  library: duplicating a group copies its callouts
+  PASS  library: [phase 3] CreateGroup keeps only existing user callouts, and validates the When
+  PASS  library: CreateGroup takes a callout no group holds, and copies one a group holds
+  PASS  library: [phase 3] OfferGroup puts a user group first on every pad and dial, once
+  PASS  library: [phase 3] MoveGroupOnSurface reorders a surface's groups and announces it
+  PASS  library: [phase 3] Member answers the live member of each kind
+  PASS  library: [phase 3] Touch announces the member it is handed, and the field
+  PASS  library: [phase 3] MemberIds lists each kind in its picker's order
+  PASS  library: [phase 3] ValidWhen accepts every shipped When and refuses bad shapes
+  PASS  library: [final] a surface's offsets are bounded at its smallest scale, not at 1
+  PASS  library: [phase 3] the point and icon validators
+  PASS  library: [phase 3] every member template holds a value at every field
+  PASS  library: [phase 3] Batch holds the announces and sends one per kind it touched
+  PASS  library: [final 1] Restore, AddToGroup and OfferGroup each send one LIBRARY_CHANGED
+  PASS  library: [final 1] one Restore click rebuilds the pads once
+  PASS  library: [final 2] ValidWhen refuses a value its row can never match, and names the row and value
+  PASS  library: [phase 4] the generic battleground set moves below the per-battleground sets, once
+  PASS  library: [phase 5] Prepare gives a pad saved before the Look groups every field it lacks
+  PASS  library: adding a user callout to a group adds a copy
+  PASS  library: removing a callout from its group deletes it
+  PASS  library: deleting a group deletes its callouts
+  PASS  library: CreateCalloutIn makes and places a callout in one act
+  PASS  library: [icons] IsGlyph names a catalog icon by its path; ValidIconColor takes none or rrggbb
+  PASS  library: [icons] a new member keeps a glyph's color, drops it on any other icon, refuses a bad one
+  PASS  library: [icons] a copy keeps the color: AddToGroup, DuplicateGroup and a held callout's copy
+  PASS  library: [icons] Prepare drops a malformed stored color and keeps a good one
+  PASS  library: [icons] IconTint draws a glyph's color as r, g, b; no color, a bad one or no glyph is white
+  PASS  library: [nesting] a group takes a top-level group as its parent and leaves every surface
+  PASS  library: [nesting] one level only: self, a child, a parent with children, a stranger and a shipped id are refused
+  PASS  library: [nesting] none clears the parent: false, empty text and 'none' all do
+  PASS  library: [nesting] a group's children are A-Z by name; MemberIds lists them under it
+  PASS  library: [nesting] deleting a parent makes its children top-level groups in its place on every surface
+  PASS  library: [nesting] Duplicate keeps a child inside its parent; a parent's copy holds no children
+  PASS  library: [nesting] Prepare drops a bad parent (gone, itself, a chain, a cycle) and takes a child off every surface
+  PASS  library: [restore] a deleted set comes back once, as fresh groups at the end of every surface
+  PASS  library: [restore] a deleted node comes back inside its set; a deleted callout at the end of its group
+  PASS  library: [restore] a set deleted with its nodes kept brings back only what is missing
+  PASS  library: [restore] a set nested in another group keeps its place; its nodes stay out
+  PASS  library: [restore] a new pad holds the seeded sets still top-level, in shipped order
+  PASS  library: [inherit] a new or seeded group inherits its parent's When; Duplicate and an untick keep false
+  PASS  library: [all] ValidWhen takes all on the instance and battleground rows, and on no other
+  PASS  library: [arena] ValidWhen takes arena ids and all on the arena row
+  PASS  members: a callout field is written through the seam by instance id, and announced once
+  PASS  members: with no id the seam writes the selected member, else the first the page lists, else refuses
+  PASS  members: [review 5] a bad name or channel is refused with its reason and stores nothing
+  PASS  members: an icon typed as digits is stored as a texture id; empty text clears it
+  PASS  members: a seeded group's fields read and write as any group's; the shipped set never changes
+  PASS  members: a group's When is one structured row: a valid When stores, a bad one is refused
+  PASS  members: member rows are not AceDB defaults, and each resolves against its template
+  PASS  members: Library's own writers (the pad point, an icon) go through the seam, one announce each
+  PASS  members: the structured rows are typed and printed on the CLI through the descriptor's parse and format
+  PASS  members: [review 1] a callout edited from the CLI in combat waits for combat end, with the stale hint
+  PASS  members: [fix 1] pad.point refuses an unknown anchor name or a non-finite offset; nothing is stored
+  PASS  members: [final 2, 11] the CLI maps When values onto their tokens, and refuses one a row never matches
+  PASS  members: [final 7] what `get group.when` prints types back in
+  PASS  members: [final 4] an off-screen pad.point is refused; `/qc reset` brings back a pad's place and clears an icon
+  PASS  members: [phase 4] a dial's fields are member rows, and its position goes through SetSurfacePoint
+  PASS  members: [keys] a dial has no key row: its key is WoW's binding, set in Options -> Keybindings, never on the CLI
+  PASS  members: [phase 4] the CLI types and prints a dial's position
+  PASS  members: [phase 4] an off-screen dial.point is refused; `/qc reset` brings the dial back
+  PASS  members: [phase 5] a When's key level prints as it types back in: one level, open below, open above
+  PASS  members: [phase 5] a pad's Look rows are composed member rows: checked, clamped, announced
+  PASS  members: [icons] a glyph's color is written through the seam by id, typed text read as rrggbb
+  PASS  members: [icons] a malformed color, a color on no glyph and a shipped id's color are refused
+  PASS  members: [icons] an icon that is no glyph clears the color in the same act; a glyph keeps it
+  PASS  members: [icons] Library.SetIcon writes the icon and its color as one act
+  PASS  members: [icons] `/qc reset` clears a color; a group page's Defaults keeps it with the icon
+  PASS  members: [inherit] group.inheritWhen is a member row: a bool stores and announces, anything else is refused
+  PASS  members: [inherit] the Enabled tooltip names whose When a sub-group is shown by
+  PASS  members: [arena] the CLI sets the arena row by id, name or all, and prints it back
+  PASS  editors: [review 2] Select keeps the selection, and nothing else; Heal keeps a member that exists
+  PASS  editors: every membership change asks for one structural repaint, on the next frame
+  PASS  editors: [phase 3] a scalar member write repaints nothing; a name does
+  PASS  editors: [phase 3] a situation change repaints only when the set of active groups changes
+  PASS  editors: [phase 3] with no page body built, no change schedules a repaint
+  PASS  editors: a profile switch clears every selection
+  PASS  editors: the stand-down cancels a pending repaint
+  PASS  editors: ConfirmDelete asks first, and only the accepted popup runs the act, once
+  PASS  editors: [QC-06] the delete confirm lifts its dialog over the dial and the modals, then hands it back
+  PASS  editors: Scalar keeps the rows the flow engine draws, and CancelReorder cancels once
+  PASS  editors: a row's remove is a glyph, not a button
+  PASS  editors: a row with edit shows the edit glyph and fires it
+  PASS  editors: a row centers its widgets and puts the glyphs at its right edge
+  PASS  editors: [layout] under AceGUI's column rule only the label's column is weighted
+  PASS  editors: Snapshot is the preview's while Preview as is on
+  PASS  editors: [icons] a row's glyph is drawn in its color; a row with none is white
+  PASS  editors: [preview table] TableRows draws a header, then a boxed row per entry: its name in one cell, its text in the other
+  PASS  editors: [preview table] a table row gives its text the width the name leaves, and grows with the text
+  PASS  popup: Add opens blank with Smart group
+  PASS  popup: edit opens filled in
+  PASS  popup: typing changes the draft only, and the preview follows
+  PASS  popup: Save on Add creates the callout at the end of the group, one LIBRARY_CHANGED
+  PASS  popup: Cancel on Add creates nothing and consumes no id
+  PASS  popup: Save on edit writes only the changed fields through the seam
+  PASS  popup: Cancel on edit writes nothing
+  PASS  popup: Save with an empty name stays open and writes nothing
+  PASS  popup: Save takes the text typed into a box without Enter
+  PASS  popup: a pick or a seam write keeps the text typed without Enter
+  PASS  popup: the callout deleted under an open popup closes it; a late Save writes nothing
+  PASS  popup: closing the settings window cancels
+  PASS  popup: Escape and a profile change cancel
+  PASS  popup: there is no token dropdown; an info glyph sits right of the Text label
+  PASS  popup: the info glyph's tooltip lists the tokens, {group1} to {group8} only for a raid channel
+  PASS  popup: the preview is headed What it sends, a gap above Save then Cancel
+  PASS  callout helpers: TokenHelp folds {group1}-{group8} into one line and names {spell:ID}
+  PASS  popup: [icons] Choose icon… opens the browser; its Choose writes the draft's icon, not the callout
+  PASS  popup: [icons] a glyph chosen with a color: the draft carries both; the swatch writes the draft's color
+  PASS  popup: [icons] the clear glyph takes the draft's icon and color off; Save stores no icon
+  PASS  popup: a section's gap sits above Preview: the fields count as a drawn group
+  PASS  popup: [icons] the swatch writes the draft on a drag tick (OnValueChanged) with no confirm, as OK leaves it
+  PASS  popup: the window is Blizzard's settings-window template, and its own close X cancels
+  PASS  popup: the template's background sits over the catcher's dim and under the border
+  PASS  popup: a settings-window template without its close X falls back to the dialog look
+  PASS  popup: a client whose C_XMLUtil says it lacks the template is not asked for it
+  PASS  popup: a client whose C_XMLUtil knows the template gets it
+  PASS  popup: without the template it keeps the dialog look and the shared close mark
+  PASS  popup: no scrollbar; the window's height follows the laid-out body
+  PASS  settings: there is no Callouts page
+  PASS  callout helpers: [phase 3] the token picker offers {group1}-{group8} only when the channel can resolve to Raid
+  PASS  callout helpers: PreviewLines says what a callout sends here, or why it sends nothing
+  PASS  popup: [icons] the draft carries the icon's color; Save writes icon and color in one act
+  PASS  popup: [icons] an icon chosen that is no glyph drops the draft's color, and Save clears it
+  PASS  popup: [icons] Add saves a glyph with its color; a malformed color stays open and names the field
+  PASS  popup: Name and Channel share a line, Text spans both, the icon has no box and sits under an Icon label
+  PASS  popup: every field's label and control share a left edge; Preview's rule and the buttons the columns' edges
+  PASS  popup: [icons] an icon that is no texture stays open and names the icon chooser
+  PASS  icon browser: the window is the popup's chrome, stacked above the popup and its catcher
+  PASS  icon browser: the popup and the browser stack above the preview dial by strata (QC-06)
+  PASS  icon browser: tabs in order; the stored icon is preselected and its tab opened
+  PASS  icon browser: a click selects, a double-click chooses; Choose hands the opener the icon
+  PASS  icon browser: hovering an icon names it, or gives a game icon's texture id
+  PASS  icon browser: Markers is the eight raid markers, in order; no Suggested list is left
+  PASS  icon browser: the grid sits a section gap under the toolbar's row
+  PASS  icon browser: Glyphs is every catalog icon, labeled from its key
+  PASS  icon browser: Game icons is both macro lists, filtered All / Spells / Items
+  PASS  icon browser: the game list not loaded yet says so, and loads on a later visit
+  PASS  icon browser: the grid is virtualized: a fixed set of cells re-dressed as it scrolls
+  PASS  icon browser: a scroll under the pointer re-says the hovered cell's tooltip, or hides it
+  PASS  icon browser: a long name in the footer stops at the Choose button, on one line
+  PASS  icon browser: the wheel over the scrollbar scrolls the grid too
+  PASS  icon browser: a filtered game list holds each icon once (the loose lists overlap the full ones)
+  PASS  icon browser: the color picker its swatch opened closes with the browser, and only that one
+  PASS  icon browser: a chooser's swatch released with the picker up hides it and lets the swatch go
+  PASS  icon browser: the swatch tints every glyph; Choose hands a glyph its color, white as none
+  PASS  icon browser: Escape over the popup closes the browser only; the popup's Escape comes back after
+  PASS  icon browser: the popup closing closes it as Cancel
+  PASS  icon browser: a popup that closes leaves a browser opened by another owner alone
+  PASS  icon browser: Choose is refused in combat; nothing is written
+  PASS  icon browser: a stand-down closes it
+  PASS  icon browser: Compat.MacroIcons reads both lists, plain texture ids only, never raising
+  PASS  icon browser: the area follows the tab band when the chrome learns its width (first open)
+  PASS  icon browser: Compat.MacroIcons reads the loose lists first, as the macro icon selector does
+  PASS  icon browser: Library.IconColorFrom stores a picked color as hex, white as none
+  PASS  icon browser: Src.Search matches a marker by name, a glyph by key or label, a game icon by id
+  PASS  icon browser: the search box filters the tab as you type; the count says N of M
+  PASS  icon browser: the search box keeps its text inset clear of the magnifier after AceGUI resets it
+  PASS  icon browser: Src.Search narrows its last results, and stays correct when the query widens or the list grows
+  PASS  icon browser: the search is kept across tabs and the session's opens, and re-filters each tab
+  PASS  icon browser: Game icons carries the Wowhead hint; its button shows the address in a copy window
+  PASS  icon browser: [sets] Src.Glyphs is built once per set: the same table across searches
+  PASS  icon browser: [sets] a set's prefix is not in its label; Phosphor reads 'Arrow up'
+  PASS  icon browser: [sets] the Glyphs filter lists the library's sets and narrows to one
+  PASS  icon browser: [sets] a glyph's tooltip names its set, and a Game-icons mark its author
+  PASS  when: Toggle adds and removes one value, drops an emptied row, and never mutates its input
+  PASS  when: [review 5] the key-level range refuses lowest above highest; clearing both drops the row
+  PASS  when: [review 5] a typed key level is refused when the range would be upside down, and nothing is stored
+  PASS  when: the specialization row offers the player's class, or the classes the class row picked
+  PASS  when: ActiveLine names the row that does not match
+  PASS  when: [phase 3] a group turned off never reads Active now, as the picker's dot does not
+  PASS  when: CharacterId takes Name-Realm as typed and gives a bare name the player's realm
+  PASS  when: [phase 3] the open rows are session state that a profile switch clears
+  PASS  when: Write stores a group's When through the seam, a seeded one's too, and refuses a shipped id
+  PASS  when: the battleground names come from the shipped sets, by instanceID
+  PASS  when: [final 6] a typed character takes the client's case; the Resolver matches one in any case
+  PASS  when: [final 2, 11] ResolveValue maps a typed value onto the token or id its row stores, or refuses it
+  PASS  when: [characterization] ResolveValue's every branch: the character, the reason each refusal gives
+  PASS  when: [drawers] Summary reads Any while a row is unset, else its values in the row's order
+  PASS  when: [drawers] Summary gives the key level and the id rows a short phrase
+  PASS  when: [drawers] SelectAll ticks every value the row offers, and never mutates its input
+  PASS  when: [inherit] ActiveText judges an inheriting group by its parent's When
+  PASS  when: [all] SetAll turns the whole kind on and off and keeps the listed ids; Summary names it
+  PASS  when: [instances] a typed name finds any journal dungeon or raid, not the season's only
+  PASS  when: [arena] the arena row: names, Summary, All arenas, the CLI value, and its tooltip
+  PASS  when: [arena] Add the arena you are in reads the live snapshot, and refuses outside an arena
+  PASS  groups page: [exit] a new group with a callout and a When shows first on the pad in that situation
+  PASS  groups page: the picker lists every group by name, a seeded set among them, active ones dotted
+  PASS  groups page: [band] the picker, New group and Preview while editing are one SimpleGroup's, after a group switch too
+  PASS  groups page: General draws the group's rows, no Preview as; Duplicate and Delete act
+  PASS  groups page: Callouts drags to reorder, removes, and copies a seeded callout in (P2)
+  PASS  groups page: Add callout opens the popup for this group
+  PASS  groups page: Reuse lists every callout as <group>: <callout>, a seeded one too
+  PASS  groups page: Reuse on a seeded group leaves out its own callouts; another group offers them
+  PASS  groups page: Reuse draws the group part in muted gold and the callout name in white
+  PASS  groups page: Reuse sorts the whole list by group, then callout, ignoring case
+  PASS  groups page: [characterization] Reuse's fallbacks: a nameless group or callout by its id, a callout no group holds
+  PASS  groups page: Reuse numbers same-named copies so each entry is unambiguous
+  PASS  groups page: [review] Reuse names a node's callout with its battleground, so two sets' Farm nodes read apart
+  PASS  groups page: the Reuse row stretches the dropdown and puts Add at the right edge, as tall as it
+  PASS  groups page: Add callout spans the row to EDGE_INSET short of the right edge, as Reuse's Add
+  PASS  groups page: Reuse + Add puts an independent copy at the end
+  PASS  groups page: picking in Reuse alone adds nothing
+  PASS  groups page: the edit glyph opens the popup filled in
+  PASS  groups page: [review 3] the remove glyph asks, then deletes the callout
+  PASS  groups page: deleting a group deletes its callouts
+  PASS  groups page: a seeded set's General is any group's: Name, Enable this group, the icon, Parent group, Duplicate, Delete group
+  PASS  groups page: a seeded set's Callouts tab is the callout table: Add callout, Reuse, a row per callout
+  PASS  groups page: a seeded set's When tab edits it as any group's; Preview bakes each callout
+  PASS  groups page: [review 5] the When tab refuses an upside-down key-level range
+  PASS  groups page: [final 16] New group rebuilds the pads once, however many pads there are
+  PASS  groups page: [final 3, 25] a user group's Defaults: Enabled on, Open the dial off, the rest kept, one rebuild
+  PASS  groups page: [review] a child's Defaults keeps it inside its parent; a named reset takes it out
+  PASS  groups page: [inherit] a child's Defaults ticks Inherit when conditions again and keeps its own When
+  PASS  groups page: [restore] Restore built-in groups brings back a deleted set and says so; again, nothing is missing
+  PASS  groups page: [restore] with every group deleted, General still offers Restore built-in groups
+  PASS  groups page: [final 12] Duplicate says the copy is on no pad yet
+  PASS  groups page: [nesting] a child's Duplicate tooltip says the copy sits in the same parent
+  PASS  groups page: [drawers] the When tab draws one drawer per condition, closed, each with its summary
+  PASS  groups page: [drawers] a header opens and closes its drawer; the open set is per group and survives a repaint
+  PASS  groups page: [drawers] Select all ticks every value; Clear (Any) unsets the condition and keeps the drawer open
+  PASS  groups page: [drawers] an id or key-level drawer has Clear (Any) alone, and Clear unsets it
+  PASS  groups page: [final 20] the Instances row adds a typed id, removes one, and refuses a fraction or a negative
+  PASS  groups page: [final 18] Add the instance you are in reads the instance at the click, not at the draw
+  PASS  groups page: [icons] General shows the icon, Choose icon… and the swatch; the browser's Choose writes the group's icon
+  PASS  groups page: [icons] General's clear glyph takes the group's icon and color off; idle with no icon
+  PASS  groups page: [icons] General has no Icon box: the icon is chosen under an Icon label alone
+  PASS  groups page: [icons] a glyph's swatch writes the group's color; a game icon chosen clears it in the same act
+  PASS  groups page: [icons] the browser closes as Cancel when the settings window hides or the group is deleted
+  PASS  groups page: [icons] a callout row in the Callouts tab draws its glyph in the callout's color
+  PASS  groups page: [icons] a tinted callout row puts its image back to white when released (AceGUI's shared pool)
+  PASS  groups page: [rows] a callout row reads gold name, the channel in its chat color, then the text
+  PASS  groups page: [rows] a callout row cuts its text at 40 characters, escapes |, and shows the fallback icon
+  PASS  groups page: [rows] a callout row's text cut counts UTF-8 characters, not bytes
+  PASS  groups page: [icons] the swatch writes on a drag tick (OnValueChanged) with no confirm, as OK leaves it
+  PASS  groups page: [nesting] General's Parent group offers the top-level groups but itself; a pick nests the group
+  PASS  groups page: [nesting] a group that holds groups cannot take a parent: the dropdown is idle and says why
+  PASS  groups page: [nesting] the picker lists each child indented under its parent
+  PASS  groups page: [nesting] deleting a parent asks, saying its groups become top-level groups in its place
+  PASS  groups page: [nesting] a pad's and a dial's Add group leave out a child
+  PASS  groups page: [preview table] Preview is the active-now line, then a table: each callout's name beside what it sends
+  PASS  groups page: [preview table] a group holding groups shows a titled table for its own callouts, then one per child
+  PASS  groups page: [review] a parent with no callouts of its own and one child titles the child's table
+  PASS  groups page: [preview table] a situation change rewrites a row's text in place and lays the table out again
+  PASS  groups page: [preview table] a group with no callouts says so, with no table
+  PASS  groups page: [inherit] a seeded battleground's nodes carry no green dot in the open world
+  PASS  groups page: [inherit] When's Inherit when conditions sits at the top of the tab, grayed out with no parent
+  PASS  groups page: [inherit] an inheriting group's When tab shows its parent's conditions, read-only
+  PASS  groups page: [all] the battleground drawer's All battlegrounds dims and locks the list, which it keeps
+  PASS  groups page: [all] a gap separates the Every condition line from the first drawer
+  PASS  groups page: [arena] the arena drawer's All arenas dims and locks the list, which it keeps
+  PASS  groups page: [R4] EditGroup opens the Groups page on that group and keeps the tab it was on
+  PASS  groups page: [R4] EditGroup in combat prints the settings refusal and changes nothing
+  PASS  groups page: [R4] EditGroup of a group that is gone opens nothing
+  PASS  pads page: New pad makes a second pad holding every built-in, selects it, and the pad is built
+  PASS  pads page: the Layout rows write the selected pad
+  PASS  pads page: Grid columns is grayed out unless the orientation is Grid
+  PASS  pads page: X and Y move the pad through its pad.point row; Reset puts it back
+  PASS  pads page: General's visibility reaches the pad's state driver
+  PASS  pads page: Groups lists the pad's groups; remove one, add it back at the end, drag to reorder
+  PASS  pads page: the remove glyph takes a group off the pad without asking and keeps the group
+  PASS  pads page: Delete pad asks, then the pad is gone, its frame released, and the page heals
+  PASS  pads page: General's Unlock all pads toggles the one lock
+  PASS  pads page: [final 3, 15] Defaults puts the pad's rows back as one act: one rebuild
+  PASS  pads page: [final 4] Defaults keeps the pad's position
+  PASS  pads page: [final 26] New pad takes the lowest free number, so a delete never leads to two names alike
+  PASS  pads page: [window tabs] the strip reads General first, then Layout, Window, Header, Section titles, Buttons, Icons
+  PASS  pads page: [window tabs] Header carries Size, Font, Background and Border under their headings
+  PASS  pads page: [window tabs] Section titles carries Size, Font, Background and Border, and writes the section table
+  PASS  pads page: [window tabs] Window carries Background and Border, and no font and no Visibility
+  PASS  pads page: General carries Visibility, Fade and Faded opacity under a Visibility heading, before its buttons
+  PASS  pads page: [button] Buttons carries Size, Font, Background, Border and Button glow, and Button width left Layout for it
+  PASS  page pads: [shine] the Buttons tab has a Shine heading
+  PASS  pads page: [B9] Icons carries its headings once each, a companion beside each swatch, and writes the pad
+  PASS  pads page: [B9] the offsets are grayed out while the glow is off or in Button; its color never is
+  PASS  pads page: [glow knobs] only the selected style's knobs show, and none while the glow is off
+  PASS  pads page: [glow knobs] the offsets come right after Glow color, under Icon glow, in the schema and on the tab
+  PASS  pads page: [glow knobs] a Glow or Glow style write repaints the tab, so the right knobs appear
+  PASS  pads page: [B9] Defaults puts the Icons rows back too, and its tooltip names them
+  PASS  page pads: [polish] the page is titled Pad
+  PASS  page pads: [polish] no user-facing string sends the player to a Comms Pad or Comms Dial page
+  PASS  dials page: New dial makes a second dial holding every built-in, selects it, and builds QuickCommsDial2
+  PASS  dials page: New dial takes the lowest free number, so a delete never leads to two names alike
+  PASS  dials page: General has no Preview as (it is in Master controls); Enabled off takes the dial down
+  PASS  dials page: Layout writes slices per ring and where it opens; X and Y move the dial; Reset puts it back
+  PASS  dials page: a refused X or Y says why and puts the box back to the stored offset
+  PASS  dials page: Defaults puts the dial's rows back as one act, and keeps its key and position
+  PASS  dials page: [dial rework] no Binding tab: the key is set in Options -> Keybindings alone
+  PASS  dials page: Groups switches Categories and Flat, and reorders the dial's groups
+  PASS  dials page: the remove glyph takes a group off the dial without asking and keeps the group
+  PASS  dials page: Ring map lists the rings wedge by wedge, marking the one the dial opens on
+  PASS  dials page: [final 20] at 12 slices per ring the Ring map names each wedge by its clock position
+  PASS  dials page: Delete dial asks, then the dial is gone, its header released, and the page heals
+  PASS  dials page: [final 11] the page's own plan builds are not timed as a surface's bake
+  PASS  dials page: [B9] Icons follows Labels, carries its headings once each, and writes the dial
+  PASS  dials page: [glow knobs] only the selected style's knobs show, and a Glow or Glow style write repaints
+  PASS  dials page: [labels] Labels shows or hides the wedges' names and styles them; off grays the font
+  PASS  dials page: [slices] Slices writes the fill and highlight, Layout the gap, Hub the pointer, each color with its class color
+  PASS  page dials: [polish] Slices tab has no Border heading; Slice gap is on Layout
+  PASS  page dials: [polish] Hub heading rows on the Hub tab
+  PASS  dials page: [slices] every slice texture the dial names ships under media/textures
+  PASS  dials page: [paging] Paging sizes, spaces and colors the arrows and page indicators; the dial follows
+  PASS  page dials: [paging] the indicator's background and border rows, their headings, ranges and defaults
+  PASS  dials page: [wheel] Icon offset moves the icons in or out; 0 is the ring radius
+  PASS  page dials: [polish] a Hub tab right after Slices holds the Hub and Pointer headings
+  PASS  page dials: [polish] tabs read Slices, Hub, Paging, Labels, Icons
+  PASS  page dials: [polish] Icon offset is on the Icons tab, not Layout
+  PASS  page dials: [polish] the page is titled Dial
+  PASS  page dials: [shine] the Slices tab has a Shine heading
+  PASS  check: a seeded callout prints its line and channel
+  PASS  check: a refused callout prints the reason
+  PASS  check: an unknown id says so
+  PASS  check: never calls SendChatMessage
+  PASS  check: [final minor 4] unknown and send-time tokens are listed
+  PASS  check: [final minor 4] solo with soloFallback=self says it would print locally
+  PASS  guard: Decide is ok outside the window and guarded inside it
+  PASS  guard: Remaining counts down to zero
+  PASS  guard: the acting edge follows the key-down setting
+  PASS  guard: every echo event maps to one chat type
+  PASS  echo: our own echo consumes the oldest pending press of its type
+  PASS  echo: another player's readable message is ignored
+  PASS  echo: an unreadable sender is unknown, counts as the echo, and is never a drop
+  PASS  echo: a message of another type or after the window matches nothing
+  PASS  echo: Expire drops only presses older than the window, oldest first
+  PASS  queue: a key replaces its earlier entry and keeps its place
+  PASS  echo: [QF-04] only channel 1 is the General echo; an unreadable index is left to the sender rule
+  PASS  sendengine: a send button is a named secure button registered for both edges
+  PASS  sendengine: Arm sends exactly the line; Disarm clears both attributes and sends nothing
+  PASS  sendengine: in combat, building, arming and disarming are declined, so nothing is blocked
+  PASS  sendengine: RunOrQueue runs now out of combat
+  PASS  sendengine: in combat the queue keeps the last write per key and drains once at combat end
+  PASS  sendengine: Drop empties the queue and nothing runs at combat end
+  PASS  sendengine: a failing queued entry is reported and the others still run
+  PASS  sendengine: Teardown in combat holds one PLAYER_REGEN_ENABLED and releases it when it fires
+  PASS  sendengine: [audit QC-06] the held stand-down registers through NS.SafeRegisterEvent, into NS.rejectedEvents
+  PASS  sendengine: [audit QC-06] a refused hold raises nothing and keeps the teardown held
+  PASS  sendengine: CancelTeardown releases the held registration without running it
+  PASS  sendengine: the visibility driver is set out of combat and declined in it
+  PASS  sendengine: [firewall] no other shipped file makes a secure call (spec §9)
+  PASS  sendengine: [fix wave] the firewall's patterns catch every Secure* template and SetAttribute spelling
+  PASS  sendengine: [D12] nothing calls SendChatMessage: the secure button is the one send path
+  PASS  send: one press is one send and one pending echo, though the hook hears both edges
+  PASS  send: [review 3] a double press in a boss: guarded, then dropped, with one note, never canceled
+  PASS  send: the drop note follows behavior.dropNotes
+  PASS  send: presses further apart than the guard are never guarded
+  PASS  send: an unreadable sender counts as our echo and is never a drop
+  PASS  send: another player's message on the channel is not our echo
+  PASS  send: [QF-04] the player's own line on channel 1 is the General echo; on channel 2 it is not
+  PASS  send: [QF-04] an unreadable channel index falls to the sender rule
+  PASS  send: a disarmed button reports nothing and tracks nothing
+  PASS  send: a solo self-fallback prints locally and sends nothing
+  PASS  send: onPress hears the verdict and the window
+  PASS  send: every echo event is a declared feature event
+  PASS  send: the stand-down cancels the echo timers and forgets the presses
+  PASS  sendengine: [phase 4] a dial header is a named click handler for the down edge, hidden; none in combat
+  PASS  sendengine: [phase 4] a wedge is wrapped before it is hooked, acts on the up edge, and only a left click is a press
+  PASS  sendengine: [phase 4] attributes, frame refs and snippets are written out of combat only, never blocked
+  PASS  sendengine: [keys] no override binding is written: a dial's key is WoW's own binding (modules/Dial.lua)
+  PASS  dial secure: the header is QuickCommsDial<n>, hidden until the toggle opens it; open, the dial owns Escape and 1-8
+  PASS  dial secure: [exit] a group wedge opens its ring (the two-stroke); a callout wedge sends once and closes
+  PASS  dial secure: [review 2] right click, Escape and the hub close without sending; the hub goes up a ring first
+  PASS  dial secure: [review 5] the wheel turns pages; the number keys pick the shown ring's wedges
+  PASS  dial secure: [exit] in combat the dial opens, switches rings and sends, with nothing blocked
+  PASS  dial secure: open at the cursor anchors the hub to it; a dial with no ring opens nothing
+  PASS  dial secure: [review 6] Open from the insecure side takes no key; the key still closes it; out of combat only
+  PASS  dial secure: [final 1] a middle or side click on a callout wedge sends nothing and closes; on the hub it closes
+  PASS  dial secure: [final 12] the down edge alone does nothing: no send, no ring switch, the dial stays open
+  PASS  dial secure: [final 13] a page turn releases the number keys the new page has no wedge for
+  PASS  dial secure: [final 2] opening one dial closes another that is open; closing it leaves no key bound
+  PASS  dial secure: [firewall] no snippet writes an attribute; the ring on screen lives in the header's environment
+  PASS  dial secure: [polish] catcher and SliceAt agree
+  PASS  dial secure: [polish] an outside click closes a key-opened dial, in combat
+  PASS  dial secure: [polish] display open shows no screen catcher
+  PASS  dial secure: [polish] closing hides the screen catcher
+  PASS  dial secure: [QF-01] a preview dial stays open on a callout pick; nothing is sent
+  PASS  dial secure: [QF-01] in a preview the ring wedge, the hub, a right and a middle click still act
+  PASS  dial secure: [QF-01] a live dial (no preview, or false) closes on a pick, in and out of combat
+  PASS  dial secure: [QF-01] a reload from preview to live clears the flag
+  PASS  preview: test mode turns on and off, announcing each edge once
+  PASS  preview: a start in combat is refused with one line
+  PASS  preview: the start of combat ends test mode, with one line
+  PASS  preview: test mode still ends when lockdown has already begun at the combat edge
+  PASS  preview: the stand-down ends test mode silently, and stood down a start is refused
+  PASS  preview: [phase 3] Preview as Arena builds the pad from the arena snapshot, every button disarmed
+  PASS  preview: [review 3] a previewed button sends nothing and reports nothing
+  PASS  preview: [review 3] a previewed solo button never prints its self line, even with the self fallback
+  PASS  preview: [review 3] combat ends it with one line, and the live buttons come back armed
+  PASS  preview: [phase 3] refused in combat and while disabled, with one line each
+  PASS  preview: [review 3] the stand-down ends it silently; closing the settings window leaves it on
+  PASS  preview: [phase 3] test mode and Preview as are one switch at a time
+  PASS  preview: Current previews where you are, disarmed, and follows a situation change
+  PASS  preview: the settings row's choices are Off, then every preset in order
+  PASS  preview: the menu: Current, each season dungeon as M+, each season raid at Mythic, Arena, each battleground, Solo
+  PASS  preview: the menu's labels: dungeons and raids A-Z by name, Raid · Mythic · <raid>, BG - <name>, Solo
+  PASS  preview: [phase 3] the Preview as row and `/qc preview` drive the same switch
+  PASS  preview: [final 13] `/qc preview` reads the situation's name without regard to case
+  PASS  preview: [final 10] a dungeon preview fills {dungeon}, and the header names the preview as its menu does
+  PASS  preview: [echo] a previewed button prints [QC] /<slash> <resolved text>, and still sends nothing
+  PASS  preview: [echo] the slash follows the channel the previewed situation resolves
+  PASS  preview: [echo review 3] a padlocked previewed button echoes its line, naming no lock
+  PASS  preview: [echo] a live button prints nothing extra
+  PASS  preview: [echo] the edit preview echoes too, and a press in combat prints without writing
+  PASS  preview: [echo] a previewed dial wedge prints the line too
+  PASS  preview: [click] a token with no value right now prints its mock
+  PASS  preview: [click] tokens with a value right now print it: the target, the marker, the key
+  PASS  preview: [click] a group token reads as its mock outside a raid
+  PASS  preview: [click] a callout that would send nothing says why, in the Groups page's words
+  PASS  preview: [click] a previewed dial wedge prints the mocked line too
+  PASS  preview: [click] a test-mode placeholder prints its label and that it is a placeholder
+  PASS  preview: [click] no preview or test click reaches a send API, the guard or the echo tracker
+  PASS  preview: [click] a live armed button is unchanged: it sends its line and prints nothing
+  PASS  preview: [QF-01] a slice pick on a previewed, test or edit-preview dial echoes and leaves the dial open
+  PASS  preview: [QF-01] after /qc preview off a pick on the live dial sends and closes it
+  PASS  edit preview: every pad shows only the edited group, whatever its When says, and sends nothing
+  PASS  edit preview: a battleground set shows its own callouts and every node, outside the battleground
+  PASS  edit preview: every dial shows only the edited group
+  PASS  edit preview: it ends back to the live pads, and Preview as and test mode come back after it
+  PASS  edit preview: combat ends it with one line and the live buttons come back armed; a start in combat is refused
+  PASS  edit preview: with Preview as on too, combat says so once
+  PASS  edit preview: closing the settings window and the stand-down end it
+  PASS  edit preview: a group deleted while previewed leaves the live pads
+  PASS  edit preview: the why lines say the group is being edited
+  PASS  edit preview: Preview while editing is a saved Behavior setting, on by default, drawn only in the Groups band
+  PASS  edit preview: showing the Groups page previews the selected group; a pick follows; hiding the page ends it
+  PASS  edit preview: the band's Preview while editing box sits under the picker and turns it off and on
+  PASS  edit preview: the Groups page drawn in combat does not start it
+  PASS  edit preview: it comes back when combat ends with the Groups page still on screen
+  PASS  preview: [QC-05] the edit preview and Preview as draw every button and wedge exactly as live
+  PASS  edit preview: [QF-02] 'Previewing: <group> (editing)' prints on a user start only
+  PASS  edit preview: [QF-02] a dial wedge clicked through its ring's catcher with the Groups page shown echoes
+  PASS  preview window: hidden until a preview starts; SetPreviewAs shows it with the dropdown on that situation
+  PASS  preview window: the settings row starts it too and the dropdown follows the slash
+  PASS  preview window: the dropdown lists every preset, Current first, and no Off
+  PASS  preview window: picking in the dropdown switches the preview
+  PASS  preview window: End preview, the close mark and Escape each end the preview and hide it
+  PASS  preview window: a hidden parent does not end the preview
+  PASS  preview window: combat ends it with the one line and hides the window
+  PASS  preview window: test mode, the stand-down and `/qc preview off` hide it
+  PASS  preview window: bare `/qc preview` opens it on Current; again keeps the situation
+  PASS  preview window: bare `/qc preview` in combat refuses with one line and shows nothing
+  PASS  preview window: `/qc preview list` changes nothing and shows no window
+  PASS  preview window: a refused start never shows it
+  PASS  preview window: closing the settings window keeps the preview and the window
+  PASS  preview window: Escape list, strata, movable, and a position kept in the profile
+  PASS  preview window: the dropdown's menu closes with the window
+  PASS  preview window: degraded install previews without a window
+  PASS  preview window: [QF-07] over the edit preview it is locked: dimmed, its controls off, a tooltip says why
+  PASS  preview window: [QF-07] the dropdown follows the edited group's situation, and the pads bake under it
+  PASS  preview window: [QF-07] the dropdown follows a When edited while the group is open
+  PASS  preview window: [QF-07] EditPresetKey maps each kind of When
+  PASS  preview window: the edit preview bakes a raid group at Mythic, else its own first difficulty
+  PASS  preview window: [QF-02] End preview and the close mark end both and turn Preview while editing off
+  PASS  preview window: [QF-02] Escape ends the edit preview for the session, the setting kept, until a new start
+  PASS  preview window: [QF-02] the settings window closing hides it; a hidden UIParent ends nothing
+  PASS  preview window: [QF-02] `/qc preview off` ends the edit preview too; with nothing on it writes nothing
+  PASS  coordinates: a live button bakes your position, and only a button that uses it re-bakes
+  PASS  coordinates: a press after you moved re-arms through PreClick and sends where you are now
+  PASS  coordinates: in combat a press writes nothing and sends the line it holds
+  PASS  coordinates: the combat edge re-arms each re-baking button once, so a press in combat sends the pull's place
+  PASS  coordinates: where the map does not show you, the token is dropped as any missing one
+  PASS  coordinates: a Current preview's echo fills the position at the click
+  PASS  coordinates: an edit preview's echo fills the position at the click
+  PASS  coordinates: a previewed place that is not where you are prints <coordinates>
+  PASS  master: the frame defaults are spec §5.1's: always shown, scale and alpha 1; a new profile starts unlocked
+  PASS  master: /qc unlock and /qc lock write the Lock frame row's path and confirm on one line
+  PASS  master: the launcher's Locked and Test mode entries call the same handlers
+  PASS  master: /qc test toggles test mode, and in combat says why it will not
+  PASS  master: the Test mode row reads and writes the one switch, and Reset all ends it
+  PASS  layout: horizontal puts a section's buttons on one row under the header
+  PASS  layout: a titled section draws its label row first
+  PASS  layout: [section header] opts.titleH above 0 fixes the title rows' height; 0 keeps it automatic
+  PASS  layout: grid wraps at its column count; vertical is one column
+  PASS  layout: the style sets the cell
+  PASS  layout: [B3] narrow buttons never make the pad narrower than its header needs
+  PASS  layout: [icon only] opts.minWidth is the pad's floor; without it the floor is MIN_PAD_W
+  PASS  layout: [B1] a section title equal to the header's situation is not drawn; a tab's title is
+  PASS  layout: [review] a larger Look font grows the button and title rows; the default size changes nothing
+  PASS  layout: leftward growth mirrors the row; collapsed is the header alone
+  PASS  layout: [B2] upward growth puts the header at the bottom and stacks the sections up from it
+  PASS  layout: [B2] the pad's anchor is its growth edge; a drop is converted to that edge exactly
+  PASS  layout: groups-as picks the sections: sections, merged, one tab at a time
+  PASS  layout: the wheel steps tabs and wraps both ways
+  PASS  layout: the visibility expression combines the master and the pad
+  PASS  layout: the fade follows combat and the mouse, under the master alpha
+  PASS  layout: [bg subgroups] a grid pad sets a parent's small child sections side by side
+  PASS  layout: [bg subgroups] only one parent's children pack, only in a grid, only while they fit
+  PASS  layout: [bg subgroups] packed rows mirror for left growth and stay bottom-aligned growing up
+  PASS  layout: [window] the header row's height moves every row and is the collapsed pad's height
+  PASS  layout: [button] a Button height above 0 is the labeled button's height; 0 is automatic; icon-only stays square
+  PASS  dial layout: every ring carries its key, the path of group and node ids down to it
+  PASS  dial layout: four wedges sit on N, E, S and W, clockwise from the top
+  PASS  dial layout: slices are Auto, 4, 6, 8 or 12; a page is 12 at most, 8 on a ring that holds rings
+  PASS  dial layout: [auto] one wedge per item, evenly spaced clockwise from N
+  PASS  dial layout: [review 5] more items than wedges go on plain pages, the rest on the last
+  PASS  dial layout: [nav] a paged ring's pill, dots and arrows sit in one row under the disc and its labels
+  PASS  dial layout: [hit] the Icon offset moves the wedges in; a bigger pointer sits further out
+  PASS  dial layout: [exit] Categories with several groups opens on the ring of groups; a group wedge opens its ring
+  PASS  dial layout: several groups open on the group ring; one group opens straight on it
+  PASS  dial layout: [review 5] Flat puts every callout on the first ring, highest group first, paged
+  PASS  dial layout: nothing to show is no ring at all; an empty group is left out
+  PASS  dial layout: the pointer follows the cursor outside the dead zone
+  PASS  dial layout: [final 6] a label is anchored by its side, wholly outside the disc; the ring title clears the N label
+  PASS  dial layout: [final 20] past eight wedges each gets its own direction, as a clock position
+  PASS  dial layout: a node set's ring has one slice per item under Auto: no empty slices
+  PASS  dial layout: a node set's own callouts take one wedge, first, titled as the set
+  PASS  dial layout: a fixed slice count pages a node set's ring like any ring
+  PASS  dial layout: [bg subgroups] a set with many children pages its ring, its own wedge first
+  PASS  dial layout: [icons] a ring entry carries its group's icon color, a send entry its callout's
+  PASS  dial layout: [polish] fixed 4 places 1-4 items N; N,S; N,E,S; N,E,S,W
+  PASS  dial layout: [polish] auto keeps its shapes from N
+  PASS  dial layout: [polish] fixed 8 with 2 items fills N then clockwise
+  PASS  dial layout: [polish] slice shift
+  PASS  dial layout: [polish] auto cap
+  PASS  dial layout: [polish] auto cap at 128 px pages the ring
+  PASS  dial layout: [polish] SliceAt
+  PASS  dial layout: [polish] Rings gives every unpinned item its place
+  PASS  dial layout: [art] DL.ARC is gone; every dial texture the dial modules name ships
+  PASS  dial layout: [autofit] automatic Icon offset keeps the icon's place in the slice at any radius
+  PASS  dial layout: [autofit] automatic icon size scales with the ring and clamps
+  PASS  dial layout: [autofit] auto cap reads the automatic reach and icon size
+  PASS  surfaces: in a key the default pad's plan is the M+ set, baked to /p
+  PASS  surfaces: [review 5] a refused callout is a slot with its reason and no line
+  PASS  surfaces: a node battleground gives one section per node, baked to /i
+  PASS  surfaces: a Say callout locked by an encounter lights the plan's lockdown chip
+  PASS  surfaces: solo with the self fallback, a smart callout carries the text to print
+  PASS  surfaces: the bake context fills {me} from the client
+  PASS  surfaces: a disabled seeded set leaves the plan
+  PASS  surfaces: the test plan is placeholder buttons that carry no line
+  PASS  surfaces: test mode's placeholders wear the built-in callouts' names and icons
+  PASS  surfaces: test mode's dial holds the four test groups
+  PASS  surfaces: test mode writes nothing to the profile
+  PASS  surfaces: the first situation read builds the default pad, armed and shown
+  PASS  surfaces: ACTIVE_GROUPS_CHANGED is sent once per real change of a pad's active groups
+  PASS  surfaces: [review 1] a situation change in combat queues: nothing blocked, stale shows, combat end rebuilds
+  PASS  surfaces: [review 1] a profile switch in combat queues the new profile's pads
+  PASS  surfaces: [fix wave] enabled in combat (a /reload mid-pull): combat end builds the pad, the queue empties
+  PASS  surfaces: a setting written in combat waits for combat end, with the stale hint
+  PASS  surfaces: an encounter lockdown in combat padlocks a Say button and lights the lockdown chip, nothing blocked
+  PASS  surfaces: test mode draws placeholders that send nothing; combat start brings the live buttons back
+  PASS  surfaces: if lockdown has already begun at the combat edge, test mode's end is queued, not blocked
+  PASS  surfaces: disabled out of combat, every pad hides and every button disarms; enabled, they return
+  PASS  surfaces: [review 2] disabled mid-combat: nothing blocked, one held registration, finished at combat end
+  PASS  surfaces: [fix wave] disabled then enabled inside one combat: the pad is shown and armed after it
+  PASS  surfaces: [phase 3] WhyLines names each shown group in order, then the locks
+  PASS  surfaces: [phase 3] WhyLines in a key explains the seeded set's matched row; a preview says so
+  PASS  surfaces: [icons] a slot carries its callout's icon color, a dial's group entry its group's
+  PASS  surfaces: [nesting] a parent draws its own section, then one per child whose When matches
+  PASS  surfaces: [nesting] a dial draws a parent's own callouts and a ring per child whose When matches
+  PASS  surfaces: [nesting] a parent that draws nothing leaves its surface with nothing active
+  PASS  surfaces: [inherit] a child that inherits shows wherever its parent's When matches, whatever its own says
+  PASS  render: Dress builds a button's regions once, each its own object
+  PASS  render: [audit QC-07] the button's padlock is the catalog's lock mark, tinted gold; the Blizzard art is the nil fallback
+  PASS  render: an armed button shows its name, no channel letter, no lock, no dim; its tooltip names the channel
+  PASS  render: [review 5] a refused button is dimmed and its tooltip says why
+  PASS  render: a locked button shows the padlock and names the lock; RefreshLock follows the slot
+  PASS  render: the style decides icon and label
+  PASS  render: a test-mode button and a solo self-print button are not dimmed, and say what they do
+  PASS  render: flashes take the result's color; the cooldown dims and clears
+  PASS  render: the situation chip names the content, the dungeon and the key
+  PASS  render: the header shows the lockdown chip and the stale hint on demand; no test label
+  PASS  render: the drag-strip seam builds a hidden strip, and answers nil without the library
+  PASS  render: [R3] the strip label is the pad's name, then PREVIEW or TEST MODE in green
+  PASS  pad render: [phase 3] a previewed slot's tooltip shows its line and says it sends nothing
+  PASS  render: [phase 5] a pad's Look is a font and a skin; the defaults are the skin a pad always wore
+  PASS  render: [review] the skin's 1px inner line is kept only on the default flat 1px edge
+  PASS  render: [review] a button's label runs to the button's right edge, on one line
+  PASS  render: [phase 5] Use class color takes the player's class color and keeps the swatch's alpha
+  PASS  render: [window] the section titles wear the Section header tab's font, gold by default
+  PASS  render: [section header] SectionLook: no band by default, then the band's skin and the text's inset
+  PASS  render: [icons] a glyph button is drawn in its color; the button repainted with another icon is white again
+  PASS  render: [B3] a button's label is one line, and hidden when the button leaves it no room
+  PASS  pad render: [shine] a look on the Buttons tab paints every button
+  PASS  pad render: [shine] a rebuild that moved neither the look nor a button's size paints no shine
+  PASS  pad render: [shine] the pad's look leaves the dial alone
+  PASS  render: [QF-04] a General slot's tooltip names General in channel 1's color
+  PASS  pad: the default pad shows the M+ callouts, each button armed with its baked line
+  PASS  pad: [review 5] a refused button is dimmed and disarmed: a click sends and reports nothing
+  PASS  pad: [review 4] a hidden or locked pad still rebuilds; the driver hides; the strip stays hidden
+  PASS  pad: a rebuild with fewer buttons parks the rest, disarmed, for the next
+  PASS  pad: [registry] no file but Library writes a surface's point
+  PASS  pad: the drag saves the point; locked or in combat it does not move; Reset position clears it
+  PASS  pad: [fix 1] combat starting mid-drag ends the drag on the edge; the stop is never blocked
+  PASS  pad: [fix 1] a drag caught after lockdown began is stopped and saved when combat ends
+  PASS  pad: tabs show one section; the wheel steps them out of combat and is refused in it
+  PASS  pad: collapse hides the buttons out of combat and is refused, with one line, in it
+  PASS  pad: a send result flashes its buttons; a press dims every button for the guard window
+  PASS  pad: the fade follows the mouse and combat through SetAlpha alone
+  PASS  pad: Sync releases a pad no plan names: hidden, its buttons disarmed
+  PASS  pad: [fix wave] a profile switch, a switch back and a profile reset each move the pad to that profile's point
+  PASS  pad: [fix wave] a rebuild during a drag leaves the dragged frame where the cursor has it
+  PASS  pad: [fix wave] a held drag survives a profile switch in combat: stopped at combat end, nothing blocked
+  PASS  pad: [fix wave] a held drag on a stand-down in combat is stopped by the held teardown
+  PASS  pad: [fix wave] a locked button's press is not tracked: no guard, no drop, one lock note
+  PASS  pad: [fix wave] tabs switch on a wheel over a button or the pad, not only the header
+  PASS  pad: [fix wave] in combat Reset position, Apply and Release do no protected work; combat end anchors
+  PASS  pad: [review 5] too long, and solo with no fallback: dimmed, disarmed, the reason shown, a click does nothing
+  PASS  pad: [phase 3] a held drag whose stand-down is canceled in the same combat is stopped at combat end
+  PASS  pad: [phase 3] a new drag clears a stale held stop, so the next rebuild re-anchors
+  PASS  pad: [phase 3] the header's tooltip says why each group shows, unless the player turned it off
+  PASS  pad: [phase 5] the pad wears its Section header and Main window tabs: the titles' font, the edge and body
+  PASS  pad: [window] the header wears its own block: gold outlined 16-point text over nothing by default, then what it is given
+  PASS  pad: [window] the header's text starts at the section titles' left edge, in every growth
+  PASS  pad: [icon only] the pad is as wide as its buttons when the header is narrower, else as the header needs
+  PASS  pad: [icon only] a PvP match's lockdown chip, shown out of combat, widens the header row by itself
+  PASS  pad: [button] a button wears the Buttons tab: the owner's default body, edge, label and size, then what it is given
+  PASS  pad: [button] the button glow is off by default, then wraps the whole button in its style, and goes with the button
+  PASS  pad: [review 5] a font or border this machine does not have draws the default, with no error
+  PASS  pad: [B1] a group named as the header's situation draws no title row of its own
+  PASS  pad: [B2] down growth pins the pad's top edge; the header is on top and the strip above
+  PASS  pad: [B2] up growth pins the bottom edge, puts the header at the bottom and the strip below
+  PASS  pad: [R3] the strip reads the pad's name and PREVIEW / TEST MODE, spans the pad, and shows while locked
+  PASS  pad: [bg buttons] the strip matches the pad's width through a resize, and below an up-growing pad
+  PASS  pad: [section header] each title sits on a band its row wide, dressed by the Section header tab
+  PASS  pad: [R4] each drawn title takes a right-click to edit its group; a left-click does nothing
+  PASS  pad: [R4] the title's tooltip says Right-click to edit this group
+  PASS  pad: [R4] in tabs mode the tab's title edits the group the tab shows; the wheel moves it
+  PASS  pad: [R4] merged pads, collapsed pads and test mode's placeholder groups have no title to click
+  PASS  pad: [bg subgroups] Alterac Valley draws its nineteen objectives two to a row, each title its block wide
+  PASS  pad: [polish] header reads Quick Comms: World
+  PASS  pad: [polish] header reads Quick Comms: M+ · Windrunner Spire +14
+  PASS  pad: [F-006] a rebuild that moved no line rewrites no button's type or macrotext
+  PASS  pad: [F-006] after a rebuild, every button outside the active set carries no type and is not armed
+  PASS  dial: Apply builds QuickCommsDial<n> with a ring per page, each callout wedge armed with its baked line
+  PASS  dial: a refused callout is a dimmed, disarmed wedge; a ring wedge is disarmed
+  PASS  dial: [audit QC-07] a wedge's padlock is a catalog mark, with the Blizzard art as the nil fallback (the hub's close retired)
+  PASS  dial: the hub shows the lockdown chip, the stale hint and TEST MODE; the pointer runs only while open
+  PASS  dial: a press dims every wedge and button for the guard window; a drop stays red long enough to reopen and see
+  PASS  dial: Release closes, disarms and forgets a dial; HideAll also releases the keys
+  PASS  dial: Sync applies each planned dial at its place in the order, and opens dial 1 in test mode
+  PASS  dial: the first situation read builds the default dial, closed; its key is WoW's own binding
+  PASS  dial: [keys] a key set in Options -> Keybindings is the dial's key; a dial past the fourth has none
+  PASS  dial: [exit] in Arathi Basin the dial opens on the groups; the set, Lumber Mill, then INC sends
+  PASS  dial: [exit] on a raid boss the dial opens and a click on a wedge sends, with nothing blocked
+  PASS  dial: [exit] the Categories two-stroke: a group wedge opens its ring, a callout wedge sends
+  PASS  dial: test mode opens dial 1 with placeholder wedges that send nothing, and takes no key
+  PASS  dial: combat start ends test mode and the live dial comes back closed
+  PASS  dial: [review 6] test mode ended by a combat whose lockdown began first: no key held, closed at combat end
+  PASS  dial: Preview as opens dial 1 on the previewed situation, and its wedges send nothing
+  PASS  dial: [review 3] a wedge change in combat waits for combat end, behind the hub's stale hint; the key works
+  PASS  dial: [review 1] the key opens nothing where no group is active, and is the game's again while disabled
+  PASS  dial: [review 3] disabled in combat with the dial open: nothing blocked; combat end hides it and frees the key
+  PASS  dial: [keys] a profile switch keeps the key: it is WoW's binding, never the profile's
+  PASS  dial: Reset position puts every pad and dial back, through their point rows, on one line
+  PASS  dial: the hub's tooltip says why each group shows, unless the player turned it off
+  PASS  dial: Bindings.xml is Toggle Comms Pads, then Open Comms Dial 1 to 4, all in the Ka0s Quick Comms category
+  PASS  dial: [keys] Toggle Comms Pads runs exactly /qc toggle's handler, from a key bound in WoW's menu
+  PASS  dial: the key bindings menu's click opens the dial, even while it is hidden
+  PASS  dial: [final 2] two dials: opening the second closes the first, and the number keys go with it
+  PASS  dial: [final 5] test mode opens dial 1 once: a rebuild keeps it open, and after the player closes it, closed
+  PASS  dial: Arathi Basin's ring has six slices: its own wedge at N, then the nodes A-Z
+  PASS  dial: a four-slice dial pages Arathi Basin's ring; on six every node shows, and the number keys pick from N
+  PASS  dial: [icons] a wedge draws its glyph in its color; repainted untinted, it is white again
+  PASS  dial: [rework] a paged ring turns with its arrows and the Left and Right keys; its dots mark the page
+  PASS  dial: [rework] wedges have no backdrop; the slices, the wedges and their hit squares follow the ring radius
+  PASS  dial: [slices] each place is a tinted slice; the slice the cursor points into lights, anywhere but the hub
+  PASS  dial slices: [polish] no border lines are drawn
+  PASS  dial slices: [polish] a gap shifts each fill outward along its bisector
+  PASS  dial slices: [perf] a reopen on the slice last lit leaves the highlight where it is; a rebuild moves it
+  PASS  dial: [F-006] an unchanged rebuild rewrites no wedge's line; a wedge left out carries no type
+  PASS  dial slices: [polish] gap 0 draws as before
+  PASS  dial: [polish] a click near the hub sends the lit slice, in combat
+  PASS  dial: [polish] a click with a modifier held still sends the slice, in combat
+  PASS  dial: [polish] just outside the hub's circle, on a diagonal, the slice lights and clicks, in combat
+  PASS  dial: [polish] a click inside the hub's circle runs the hub, any modifier held, in combat
+  PASS  dial: a right click on a slice goes up a ring, and does nothing on the first ring, in combat
+  PASS  dial: a key open shows the ring and page the dial was last closed on, through a rebuild
+  PASS  dial: [polish] the hub's hover shows from the tracker inside its circle and clears outside
+  PASS  dial: [polish] the dial's key still opens and closes it with the header's mouse off, in combat
+  PASS  dial: [polish] a click on an empty place does nothing; in the hub it sends nothing
+  PASS  dial: [polish] hovering anywhere in a slice shows its tooltip
+  PASS  dial: [polish] wedges take no mouse; keys still click by name
+  PASS  dial: [polish] a built dial closes on a click outside it, in combat
+  PASS  dial: [polish] a ring hidden under the hover clears its slice, tooltip and hover glow
+  PASS  dial: [paging] the indicators sit on a rounded background sized to the row; off hides it
+  PASS  dial: [paging] every dot and the pill has a border, its size plus twice the Dot border; 0 draws none
+  PASS  dial: [front] the hub, its circle and the pointer draw over the slices
+  PASS  dial: [tooltip] a wedge's tooltip sits outside the dial: above by default, on the Labels tab's side
+  PASS  dial: [pointer] the pointer is a catalog glyph, sized, colored and placed by the Slices tab, and can be off
+  PASS  dial: [labels] the Label offset moves every label out from the center; the title and the page row follow
+  PASS  dial: [polish] default hub is a solid gold circle of 24 on a 32 backdrop with a 1 px rim, no red X
+  PASS  dial: [polish] hub style solid draws the backdrop rim when its border size is set
+  PASS  dial: [polish] hub style ring is a hollow ring of the circle size and line width
+  PASS  dial: [polish] hub style target is a ring with a center dot
+  PASS  dial: [polish] hub style rimmed is a filled circle on a backdrop with its own rim
+  PASS  dial: [polish] hub size moves the inner edge everywhere
+  PASS  dial: [polish] group labels take their font and hide when off
+  PASS  dial: [art] RingTexture picks the nearest step
+  PASS  dial: [art] the hub draws textures, not segments
+  PASS  dial: [art] the pill is three pieces with round ends
+  PASS  keybinds: NS.BINDINGS is Toggle Comms Pads, then Open Comms Dial 1 to 4, each with a tooltip
+  PASS  keybinds: the General page's strip ends in Keybindings, after every group tab
+  PASS  keybinds: the tab's rows are NS.BINDINGS in order, each labeled with its BINDING_NAME_ global
+  PASS  keybinds: a key bound through the tab is WoW's binding, saved to the set in force, and the key toggles the pads
+  PASS  keybinds: a key set in Options -> Keybindings shows on the tab after UPDATE_BINDINGS
+  PASS  keybinds: in combat the tab refuses: no capture starts, no key is bound and nothing is saved
+  PASS  dial: [shine] each look builds its recipe on every slice
+  PASS  dial: [shine] the overlay follows the slice
+  PASS  dial: [shine] the orb's bead sits on the slice's inscribed circle, with no dots
+  PASS  dial: [shine] fluid's blooms span the slice's outer part
+  PASS  dial: [shine] sprites sit in the slice's frame
+  PASS  dial: [shine] frost's streak and Bevel are each slice's own edge set
+  PASS  dial: [shine] fewer slices hide the rest
+  PASS  dial: [shine] the dial's look leaves the pad alone
+  PASS  icon style: the defaults draw the owner's look on a button and on a wedge
+  PASS  icon style: zoom crops through SetTexCoord, desaturate and alpha reach the texture
+  PASS  icon style: the tint multiplies a glyph's own color; white keeps it
+  PASS  icon style: a pad's icon size feeds the button's geometry
+  PASS  icon style: a button's border is off by default; on, it is a backdrop over the icon in its color
+  PASS  icon style: a wedge's border is a round ring behind its icon, icon plus twice the thickness
+  PASS  icon style: a wedge's ring never grows past the wedge, so it cannot reach the next wedge or its label
+  PASS  icon style: a pad saved before the Icons tab reads like a new one (fillShape backfills `icon`)
+  PASS  icon style: [polish] dial icon size reaches 128, pad stays 40
+  PASS  icon style: [autofit] a dial's icon size 0 is automatic: it scales with the ring radius
+  PASS  glow: off by default, so a button starts nothing
+  PASS  glow: each style starts with the knob table's arguments, on the icon, under the addon's key
+  PASS  glow: a repaint that changes nothing calls the library not at all; a setting restarts it
+  PASS  glow: On hover starts on enter and stops on leave
+  PASS  glow: After sending glows from the send result for SEND_SECONDS, then stops
+  PASS  glow: a button a rebuild leaves unused stops its glow, and so does every button of a released pad
+  PASS  glow: in combat a hover glow starts and stops with no protected call; an Icons write waits for combat end
+  PASS  glow: a wedge glows on its icon too, and on hover
+  PASS  glow: on a dial, After sending glows again from the next open within DROP_SECONDS
+  PASS  glow: on a dial, an open later than DROP_SECONDS after the send shows no send glow
+  PASS  glow: the stand-down puts out a running send glow even when the frames' release is held
+  PASS  shine: the catalog lists None and the seven looks
+  PASS  shine: every catalog path exists
+  PASS  shine: [folders] each look's art sits in its own folder; the rim edges six looks share in shared/
+  PASS  shine: Resolve
+  PASS  shine: Apply covers the whole button in three pieces
+  PASS  shine: a square button is the art whole
+  PASS  shine: blooms only for fluid
+  PASS  shine: the button's own size when none is given
+  PASS  layers: NS.Constants.LAYERS names every strata and level once (frame-layering-§5)
+  PASS  layers: no strata string and no bare level at any call site (anti-pattern #99)
+  PASS  layers: a pad's root is the HUD tier; its header and buttons sit one over it
+  PASS  layers: [QUI-Z11] the pad's drag strip ignores the pad's alpha
+  PASS  layers: [QUI-Z02/Z03] a pad button's ladder: edge, its glow, icon border, its glow, overlay
+  PASS  layers: the dial's header, front, catchers and screen catcher keep their tiers
+  PASS  layers: [QUI-Z04] a wedge's ladder: icon border, its glow, then the overlay over both
+  PASS  layers: [QUI-Z10] the preview window is the window tier, never toplevel, never raised
+  PASS  layers: the modal bands sit over UIParent, each part at its named offset
+  PASS  layers: [audit QC-21] a modal window is clamped, never toplevel, never raised
+  PASS  layers: [QUI-Z06] the icon link window is lifted to POPUP
+  PASS  layout: [general] Behavior reads Sending, then Pads and dials, with the new labels (QUI-L01, L02)
+  PASS  layout: [general] the header Defaults carries the library's Reset all settings tooltip (QUI-L-new2)
+  PASS  layout: [groups] the band is one row: picker, New group and Preview while editing (QUI-L34)
+  PASS  layout: [groups] General: Name | Enable this group, the icon, Parent group, Duplicate | Delete group, then Restore (QUI-L04, L05, L-new3)
+  PASS  layout: [groups] When opens with Inherit when conditions, above the hint, grayed with no parent (QUI-L03)
+  PASS  layout: [groups] an inheriting group's When says untick Inherit above (QUI-L03)
+  PASS  layout: [groups] the listing tab is What it sends, and Defaults names what it keeps (QUI-L06, L08)
+  PASS  layout: [pads] the strip runs outside in: Window, Header, Section titles, Buttons, Icons (QUI-L09, L10)
+  PASS  layout: [pads] General: Enable this pad, Faded opacity, Unlock all pads (QUI-L-new1, L-new3, L15)
+  PASS  layout: [pads] Groups draws Add group above the hint and the list (QUI-L07)
+  PASS  layout: [pads] Layout names Pad scale and Button spacing (QUI-L36)
+  PASS  layout: [pads] Buttons runs Size, Font, Background, Border, Button glow, Shine (QUI-L12, L13)
+  PASS  layout: [pads] Icons folds the glow offsets under Icon glow (QUI-L13, L14)
+  PASS  layout: [pads] the Defaults tooltip names every tab it resets (QUI-L18)
+  PASS  layout: [dials] the strip: Layout for Wheel, one Labels tab, and Ring map (QUI-L08, L19, L22)
+  PASS  layout: [dials] General: Enable this dial, then the key line (QUI-L29, L-new3)
+  PASS  layout: [dials] Groups draws Add group above the hint (QUI-L07)
+  PASS  layout: [dials] Layout: Slices per ring | Ring radius, Slice gap, then Position with Open at (QUI-L21, L35)
+  PASS  layout: [dials] Slices: one Colors heading, then Shine (QUI-L23)
+  PASS  layout: [dials] Hub: Hub, Hub border, Hub circle, Pointer, each size beside its color (QUI-L24)
+  PASS  layout: [dials] Paging: Page row, Arrows, Page indicator, Indicator border, Indicator background (QUI-L25, L26)
+  PASS  layout: [dials] Labels: Slice labels, Group labels, then Tooltip (QUI-L19)
+  PASS  layout: [dials] Icons: Size, offset and crop holds Icon size | Icon offset, then Zoom (QUI-L27)
+  PASS  skin seam: the owner is the folder name, and NS.Skin is its facade
+  PASS  skin seam: the owner is registered at file load, before the profile store exists
+  PASS  skin seam: the read answers Ka0s Default before the profile store exists
+  PASS  skin seam: EllesmereUI hears of this addon once, from the library alone
+  PASS  skin seam: every owner token is in the qc namespace and answers today's pixels on Ka0s Default
+  PASS  skin seam: under another skin an owner token takes its follow token's value
+  PASS  skin seam: an owner token reaches a markup escape byte for byte
+  PASS  skin seam: Core's window edge is handed the owner
+  PASS  skin seam: the drag strip, the Preview dropdown and the reorder list are handed the owner
+  PASS  skin seam: the eight skin keys default to Ka0s Default, the picker unseen
+  PASS  skin seam: every skin key is a skip-render schema row on the Skin tab
+  PASS  skin seam: the skin row's values are every registered skin, in the library's order
+  PASS  skin seam: /qc set refuses a skin that is not registered and applies one that is
+  PASS  skin seam: /qc set reaches an exception, and only its own half
+  PASS  skin seam: the Skin tab is the library's, after Behavior and before Keybindings
+  PASS  skin seam: one tab pick is one effective SetChoice, one repaint and no reload
+  PASS  skin seam: the tab's Ignore fonts reaches the library and the profile, one repaint
+  PASS  skin seam: another addon's copy to every Ka0s addon repaints this one once
+  PASS  skin seam: login applies the stored skin, exceptions and overrides
+  PASS  skin seam: a profile switch applies the new profile's skin, pages built or not
+  PASS  skin seam: Reset all settings puts the skin back on Ka0s Default and applies it
+  PASS  skin seam: the diagnostics report names the skin and the EllesmereUI gate
+  PASS  skin seam: the degraded facade answers every name the live facade carries
+  PASS  skin seam: each host-copy skin token is the live library's Ka0s Default value
+  PASS  skin windows: no color literal is left in the window files
+  PASS  skin windows: the literal gate is falsifiable: a planted literal of each shape is reported
+  PASS  skin windows: the Preview window is the owner's Shell, its title in the top bar
+  PASS  skin windows: End preview's label is the step panels' tokens at rest, hovered and locked
+  PASS  skin windows: the Preview window's tooltips write their lines in the tooltip tokens
+  PASS  skin windows: the modal window's template chrome is painted under every skin, no stock look
+  PASS  skin windows: the modal window's Bg is faded under the skin's window fill, Ka0s Default included
+  PASS  skin windows: the modal catcher's dim is qc.modalDim, today's pixel, and follows a switch
+  PASS  skin windows: a client without the template gets the owner's Shell, not the dialog edge
+  PASS  skin windows: the popup's refused-field line is sem.badAlt, today's |cffff4040, panel-scoped (D-03)
+  PASS  skin windows: the popup's token tooltip writes its lines in the tooltip tokens
+  PASS  skin windows: the popup's token tooltip follows the panel Scope (D-03)
+  PASS  skin windows: the browser's selected cell is qc.selStrong, today's gold at 0.7, and follows
+  PASS  skin windows: the browser's scroller is the skin's ScrollBar over its own track
+  PASS  skin windows: the browser's hint box is the drawer box's tokens, and follows a switch
+  PASS  skin windows: the browser's search glyphs are log.tag and qc.markGray, today's pixels
+  PASS  skin windows: the browser's texts take their roles, each today's color under Ka0s Default
+  PASS  skin windows: the browser's texts take the skin's body face (R-2), Ignore fonts gives it back, a switch recolors
+  PASS  skin windows: the browser's empty footer line is qc.note, today's |cffaaaaaa
+  PASS  skin windows: the browser's cell tooltip writes its lines in the tooltip tokens
+  PASS  skin hud: every HUD font and border block follows the skin by default, through a schema row
+  PASS  skin hud: a following picker is grayed out and shows the skin's value; off, it is the player's
+  PASS  skin hud: a pad's labels, titles and header take hud.font while they follow, the pick when not
+  PASS  skin hud: with Ignore fonts on, a following pad face draws its stored pick, live both ways
+  PASS  skin hud: with Ignore fonts on, the font override does not reach a following HUD face
+  PASS  skin hud: with Ignore fonts on, a following dial label draws its stored pick
+  PASS  skin hud: a following face takes the Skin tab's font override, as every face of the owner does
+  PASS  skin hud: a pad's border blocks take bar.borderStyle while they follow, the pick when not
+  PASS  skin hud: an icon's border takes the skin's icon border while it follows, the pick when not
+  PASS  skin hud: a dial's slice labels and ring title take hud.font while they follow
+  PASS  skin hud: a pad's chrome is today's pixels under Ka0s Default, each from a token
+  PASS  skin hud: a dial's chrome is today's pixels under Ka0s Default, each from a token
+  PASS  skin hud: a skin switch repaints the chrome and the faces, and leaves the player's colors
+  PASS  skin hud: a pad window's 1px inner rule is win.inner, none where the skin has none
+  PASS  skin hud: a pad's window is repainted when its look or the skin moved, and at no other rebuild
+  PASS  skin hud: the dial's per-frame update reads no token
+  PASS  skin hud: step 10 turns every stored pad's and dial's companions on, keeping every pick
+  PASS  skin hud: without the library step 10 writes the companions itself
+  PASS  skin hud: the reset runs once: a companion the player turns off afterwards stays off
+  PASS  skin picker: the spec names this owner, its seams, General's Skin tab and the eye
+  PASS  skin picker: the eye turns test mode on, and leaves it on
+  PASS  skin picker: an unseen profile shows it; a seen one does not
+  PASS  skin picker: it shows two seconds after OnEnable, on the login timer
+  PASS  skin picker: the stand-down cancels the login timer
+  PASS  skin picker: in combat a start waits for PLAYER_REGEN_ENABLED, once
+  PASS  skin picker: a held start is dropped by HideSkinPicker
+  PASS  skin picker: never while the addon is switched off
+  PASS  skin picker: a new profile and a reset profile show it again
+  PASS  skin picker: a profile switched off shows no picker on its adoption
+  PASS  skin picker: the window's eye is shown and turns test mode on
+  PASS  skin picker: the player's close marks it seen; this addon's own hide does not
+  PASS  skin picker: the stand-down takes the picker down, unseen
+  PASS  skin picker: a pick previews, unsaved; Apply saves it and marks the picker seen
+  PASS  skin picker: the close control puts the old skin back, saves nothing, and marks it seen
+  PASS  skin picker: a profile switch with a pick pending wears the new profile's skin
+  PASS  skin picker: the gear saves the pick and opens General on its Skin tab
+  PASS  skin picker: without LibKa0s nothing shows and nothing raises
+  PASS  outline: a fresh profile stores HUD text only, the library's default
+  PASS  outline: the schema row offers the library's three modes, in its order
+  PASS  outline: the write seam stores media.outline, and leaves it alone when it is nil
+  PASS  outline: another addon's copy reaches the store through WriteChoice
+  PASS  outline: the row's write applies the mode live
+  PASS  outline: All text picked under the HUD default persists; nothing migrates it
+  PASS  outline: /qc set refuses a mode the library does not know
+  PASS  outline: the stored mode is applied at load
+  PASS  outline: a profile switch applies the incoming profile's mode, and back
+  PASS  outline: without the skin engine the apply is a quiet no-op
+  PASS  skin verb: the row sits right after config, with the library's help words
+  PASS  skin verb: /qc skin shows the picker on a profile that has closed it
+  PASS  skin verb: NS.RunSkinVerb hands O.SkinVerb this addon's first-run spec
+  PASS  skin verb: in combat every call prints the library's gray line and shows nothing
+  PASS  skin verb: refused while the addon is disabled, and no picker shows
+  PASS  skin verb: without LibKa0s the verb prints the library-absent line
+  PASS  skin fonts: every font block carries the minimum set, its flags led by From skin
+  PASS  skin fonts: a fresh pad and dial store From skin, and /qc set takes it and every picked flag
+  PASS  skin fonts: From skin follows the Font outline; a picked flag wins under every mode
+  PASS  skin fonts: a dial's slice labels and ring title follow the Font outline too
+  PASS  skin fonts: under Ignore fonts From skin is OUTLINE, the flags these blocks always had
+  PASS  skin fonts: without the library a block's From skin draws OUTLINE
+  PASS  skin fonts: step 11 moves a stored OUTLINE to From skin and keeps every other flag
+  PASS  skin fonts: step 11 runs once per profile: OUTLINE picked afterwards stays OUTLINE
+  PASS  skin fonts: a block on the skin's face draws at the skin's HUD scale; the stored size stays
+  PASS  skin fonts: under Ignore fonts a following block draws its stored size
+  PASS  skin fonts: a dial's slice labels scale with the skin's HUD size
+  PASS  skin fonts: a pad's buttons grow with the size they draw at, not the size they store
+  PASS  default icons: test mode's dial rings 1 to 4 wear the numbered glyphs, each tinted
+  PASS  default icons: test mode's pad sections carry the same glyphs
+  PASS  default icons: the four glyphs ship in the vendored payload
+  PASS  default icons: a group's default is the folder, a callout's the speech bubble
+  PASS  default icons: without the library the question mark is the one default
+  PASS  default icons: a pad button for a callout with no icon draws the speech bubble
+  PASS  default icons: a dial's group wedge with no icon draws the folder, a callout's the bubble
+  PASS  default icons: the editors' preview shows what the member draws
+  PASS  skin tools: the pages' AceGUI handle is the owner proxy, which paints for this owner
+  PASS  skin tools: under the default Scope (Ignore settings panel) a page widget stays stock
+  PASS  skin tools: NS.SkinPaintAceTree paints every widget under a container
+  PASS  skin tools: NS.SkinOnRelease runs the host's release work AND the skin's restore
+  PASS  skin tools: the host's release work goes through NS.SkinOnRelease, never a callback
+  PASS  skin tools: the icon chooser's swatch release still drops a tracked color picker
+  PASS  skin tools: the Profiles page paints AceConfigDialog's tree after each Open
+  PASS  skin tools: without LibKa0s the release work takes the AceGUI callback, and nothing paints
+  PASS  skin tools: the pages' colored lines keep today's bytes under Ka0s Default
+  PASS  skin tools: the pages' colored lines move with a skin switch
+  PASS  skin tools: under the default Scope the pages' colored lines stay Ka0s Default's in any skin
+  PASS  skin tools: every settings-page host paint reads the panel-scoped color, never the window one
+  PASS  skin tools: the debug console and its copy window are painted for this owner
+  PASS  skin tools: the perf panel is painted for this owner
+  PASS  glyphs: display strings use only characters every shipped skin face draws
+  PASS  libs/LibKa0s is the LibKa0s release CLAUDE.md says this addon bundles
+  PASS  tests/_kit is the test kit that shipped with that release
+  PASS  the automated-test runner is recorded executable (100755)
+  PASS  eol: every tracked file carries the terminator .gitattributes declares for it
+  PASS  eol: .gitattributes is line-endings-§5's canonical body for this repo kind
+  PASS  prose: no authored file carries a British spelling from localization-§5's published list
+  PASS  prose: the gate carries localization-§5's two lists whole, and nothing of its own
+  PASS  prose self-test: the carve-out suppresses the named generated folder, and only it
+  PASS  prose self-test: a path the carve-out does not name is not covered by one that looks like it
+  PASS  prose self-test: a carve-out that is not a set of path strings is a failure, not a silence
+  PASS  prose self-test: a TOC's file lines are read as paths, and its directives and comments are not
+  PASS  prose self-test: a .pkgmeta's ignore block is read, and the keys around it are not
+  PASS  prose self-test: an ignore entry covers a path exactly, by folder, and by wildcard
+  PASS  prose self-test: the carve-out admits a generated dump and refuses a file the TOC loads
+  PASS  prose self-test: a waiver-file exclusion meets the same two refusals as the carve-out
+  PASS  prose self-test: each list is refused on the matching rule its own scan uses
+  PASS  prose self-test: the scan and the refusals read the added exclusions through one reader
+  PASS  prose self-test: a narrowing is refused by what it suppresses, not by how it is written
+  PASS  prose self-test: the disclosure names what each entry suppressed, and says when it is bounded
+  PASS  prose self-test: a malformed waived is a failure, not a silence
+  PASS  layoutcap: every authored file over the 1500-line cap is named in the census
+  PASS  layoutcap: no census row outlives the breach it records
+  PASS  layoutcap: every over-cap census row carries one of layout-§1's three terminal states
+  PASS  layoutcap: the census and the exempt set agree about which paths were exempted
+  PASS  layoutcap: an empty census is written as a result rather than left standing empty
+  PASS  layoutcap self-test: the parser reads the census nested under the register, and stops there
+  PASS  layoutcap self-test: a census outside its register, or at the wrong level, is not read
+  PASS  layoutcap self-test: an over-cap file missing from the census is reported, and an exempt one is not
+  PASS  layoutcap self-test: a census row that outlives its breach is reported
+  PASS  layoutcap self-test: an over-cap row that names no terminal state is reported
+  PASS  layoutcap self-test: the census and the exempt set are held to naming the same paths
+  PASS  layoutcap self-test: a census that states nothing is told apart from one that states none
+  PASS  layoutcap self-test: the exempt set takes folders as well as paths
+  PASS  diagnostics contract: both forms run the report
+  PASS  diagnostics contract: the debug word is matched in any case
+  PASS  diagnostics contract: both markers carry the brand and the end counts the report
+  PASS  diagnostics contract: the report appends after what the console already holds
+  PASS  diagnostics contract: the report lands with logging off and turns it on for the session
+  SKIP  diagnostics contract: an addon that opts out lands the report and leaves logging off — this addon keeps the default (Kit.diagnostics.enablesLogging is not false), so its report turns logging on; the case above holds it
+  PASS  diagnostics contract: with logging already on, the report writes no second enable line
+  PASS  diagnostics contract: both forms run while the addon is disabled
+  PASS  diagnostics contract: no other name runs the report
+  PASS  lizard sighted: every hazard lizard loses a function over is neutralized
+  PASS  lizard sighted: fields, strings, comments and look-alike names come through unchanged
+  PASS  lizard sighted: a method definition is rewritten to its dot form with self
+  PASS  lizard sighted: no line is added or removed, CRLF included
+  PASS  lizard sighted: countFunctions counts the keyword, not strings, comments or longer names
+  PASS  lizard sighted: listedCounts reads the per-file table, once per file
+  PASS  lizard sighted: parity names every file whose counts differ, and only those
+  PASS  lizard sighted: lizard lists every function of a hazard fixture once it is sanitized
+
+1298 passed, 0 failed, 1 skipped, 1299 total (16 shards)
