@@ -11,10 +11,12 @@ vendored here: the addon went from v1.77.0 to v1.80.0 in one copy.
 | v1.80.0 | `912f1b4` | `6b0b9c7` | 44 | `2026-10-29-SKINNING_ROLLOUT/` |
 | v1.81.0 | `aefeba9` | `d1b79d1` | 44 | `2026-10-30-SKIN_LIBRARY_FOLLOWUPS/` |
 | v1.82.0 | `277081f` | `2f68eb0` | 45 | `2026-10-30-SKIN_FONTS_AND_FEEDBACK/` |
-| v1.83.0 | `6c816fd` | `f291948`, re-cuts `73370ed`, `15dde36` | 46 | `2026-10-31-FONT_PICKERS_AND_SKIN_FACES/` |
+| v1.83.0 | `6c816fd` | `f291948` (at `3122d87`), re-cuts `73370ed`, `3051fa0`, `15dde36` | 46 | `2026-10-31-FONT_PICKERS_AND_SKIN_FACES/` |
 
-The v1.83.0 tag moved twice while its run was open (LK-A1, LK-A2, then LK-A3); `6c816fd` is where it
-stands, and the addon's payload matches it (`tests/test_vendor_sync.lua`).
+The v1.83.0 tag moved three times while its run was open, and each move was re-vendored here: `73370ed`
+took LK-A1 and LK-A2 (`ec41b22`), `3051fa0` took the picker rows of LK-A3 (`bd4fb11`, five payload
+files) and `15dde36` took the event-free wake of LK-A3 (`6c816fd`, `OptionsSkinPicker.lua` only).
+`6c816fd` is where the tag stands, and the addon's payload matches it (`tests/test_vendor_sync.lua`).
 
 What moved in the library, by file and LibStub minor, for what this addon wires:
 
