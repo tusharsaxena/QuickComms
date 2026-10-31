@@ -29,7 +29,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | LAYOUT-1..5 | Settings layout | Item 020: the General page's Behavior headings and Defaults tooltip; the Groups band on one row, General's order, Inherit on When, What it sends; the Pad strip outside in and its relabels; the Dial strip (Layout, Labels, Ring map) and its headings; no setting lost or changed, through a /reload |
 | LAYER-1..5 | Frame layering | Item 030: a pad button's and a dial wedge's borders, glows, label, padlock and veils in order; the drag strip over a faded pad; the windows, modals and popups still stacked as before |
 | KEY-1..6 | Key bindings | A dial's key as WoW's own binding in Options → Keybindings, Character Specific Keybindings, Toggle Comms Pads; item 015: the Ka0s Quick Comms section of its own, the General → Keybindings tab in sync both ways, its capture and combat refusal |
-| LOOK-1..6 | Window, Header, Section titles (Pad header and Section header before item 020) | The Comms Pad's three window tabs: the section titles' font, the pad's border and background, the header's look, size and alignment, the tab strip and headings, the section header's band and height |
+| LOOK-1..7 | Window, Header, Section titles (Pad header and Section header before item 020) | The Comms Pad's three window tabs: the section titles' font, the pad's border and background, the header's look, size and alignment, the tab strip and headings, the section header's band and height; the pad's window repainting only when its look moves |
 | BUTTON-1..2 | Buttons tab | The buttons' size, color, border and font; the button glow |
 | ICONS-1..4 | Icons tab | The buttons' and wedges' icon look, border and glow triggers; the glows through LibKa0s-Glow-1.0 |
 | ICON-1..5 | Icons | Choosing an icon, for a callout and for a group; the LibKa0s v1.75.0 re-vendor: the icon browser's three sets and the library-drawn marks; the popup and the browser over the preview dial; test mode's numbered groups and the default icons |
@@ -1175,6 +1175,12 @@ color white → an edge around each band, the title text kept clear of it; Use c
 your class color. Size → Section header height 30 → every title row grows to 30 pixels with its text
 centered and the buttons move down with it; 0 → the automatic height again (it reads Automatic). A
 right-click on a title still opens its group. Result: 2026-10-21, pass (the owner's run; client build not recorded).
+
+**LOOK-7. The pad's window repaints when it should (2026-10-31).** A rebuild no longer repaints the pad's
+window when nothing about it changed. On a pad, move Pad → Window's border thickness and its border and
+background colors → each shows at once. Pick another skin on the Skin tab → the pad's edge, background
+and inner line follow it. Change the situation so the pad's buttons rebuild, and `/reload` → the pad
+keeps that look, with no gap in its border. Result:
 
 ## Buttons tab
 

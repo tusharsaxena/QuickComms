@@ -35,6 +35,11 @@
 -- 87026.8 (the shipped Gloss fade shine repainted on every button at every rebuild) and dialOpenClose
 -- to 2317.1 (the dial polish's per-frame tracking re-placing the slice highlight on every light, plus
 -- the wedge tooltip it now shows). Both repaints are guarded now: 66290.8 and 1997.1.
+--
+-- Re-measured 2026-10-31 (findings remediation, FX-QC-PERF), no ceiling moved: padRebuild12 had crept to
+-- 66539.8, under its ceiling, as the skinning runs added tokens to a skin built at every rebuild
+-- (5df98bd the window's win.inner, +128 B; the LibKa0s v1.81.0 re-vendor, +176 B). The pad's root now
+-- keeps its look while the look's signature holds, as the header and buttons do: 65516.8.
 
 local BYTE_CEILING = {
     bracketCaptureOff = 0,

@@ -49,12 +49,12 @@ when capture is off.
 `lua tests/perf.lua`, outside the green gate (performance-§9), asserting bytes per iteration and
 notes per iteration, never time:
 
-| Scenario | What it shows | Ceiling | Measured 2026-10-25 |
+| Scenario | What it shows | Ceiling | Measured 2026-10-31 |
 |---|---|---|---|
 | `bracketCaptureOff` | the gated bracket shape, capture off, notes nothing and allocates nothing | 0 bytes, 0 notes | 0.0 B |
 | `dialPointerCaptureOff` | the hottest bracketed path, the open dial's pointer `OnUpdate`, capture off | 1 KiB, 0 notes | 224.0 B |
 | `dialPointerNoHarness` | the same path on an instance with no Perf library; the run fails if capture off allocates more (zero overhead, performance-§9) | 1 KiB, 0 notes | 224.0 B |
-| `padRebuild12` | a 12-button pad built from its plan and applied, capture on | 69 KiB, 3 notes (raised from 68 KiB when the rows began to follow the Look's font size) | 66290.8 B |
+| `padRebuild12` | a 12-button pad built from its plan and applied, capture on | 69 KiB, 3 notes (raised from 68 KiB when the rows began to follow the Look's font size) | 65516.8 B |
 | `dialOpenClose` | the default dial opened, one pointer frame (which lights a slice and shows its wedge's tooltip), closed | 2 KiB, 1 note | 1997.1 B |
 | `situationRefresh` | a situation read whose signature did not move | 2 KiB, 1 note | 2016.0 B |
 
@@ -76,6 +76,15 @@ A rebuild also stopped disarming every button and wedge before arming it again (
 released one is parked armed, and only the ones the rebuild does not take back are disarmed, so an
 unchanged line costs no secure write. The mock's `SetAttribute` allocates nothing, so the byte
 figures above do not show it; `tests/test_pad.lua` and `tests/test_dial.lua` count the writes.
+
+**The 2026-10-31 re-measure (findings remediation).** The recorded run `20261031-202243` showed every
+timing up against `20261026-113818` and `padRebuild12` up by 337 B. The timings were load: ten
+interleaved runs of `cdfb373` and `2d6213e` on the same machine at the same load gave medians within 11%
+either way (`padRebuild12` 0.434 and 0.437 ms, `dialOpenClose` 0.046 and 0.043 ms), where the recorded
+pair differed by 71%. The bytes were real: `5df98bd` (+128 B, the window's `win.inner` read), the LibKa0s
+v1.81.0 re-vendor (+176 B) and v1.82.0 (+32 B), all spent building a window skin no rebuild had changed.
+`R.WindowLook` now keeps the pad root's skin while its signature holds, as the header, section and
+button looks do, so `padRebuild12` is 65516.8 B, below where it started. No ceiling was raised.
 
 ## In game
 

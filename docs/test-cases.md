@@ -1331,7 +1331,7 @@ Total.
 - skin windows: the browser's empty footer line is qc.note, today's |cffaaaaaa
 - skin windows: the browser's cell tooltip writes its lines in the tooltip tokens
 
-### test_skin_hud.lua (18)
+### test_skin_hud.lua (19)
 
 - skin hud: every HUD font and border block follows the skin by default, through a schema row
 - skin hud: a following picker is grayed out and shows the skin's value; off, it is the player's
@@ -1347,6 +1347,7 @@ Total.
 - skin hud: a dial's chrome is today's pixels under Ka0s Default, each from a token
 - skin hud: a skin switch repaints the chrome and the faces, and leaves the player's colors
 - skin hud: a pad window's 1px inner rule is win.inner, none where the skin has none
+- skin hud: a pad's window is repainted when its look or the skin moved, and at no other rebuild
 - skin hud: the dial's per-frame update reads no token
 - skin hud: step 10 turns every stored pad's and dial's companions on, keeping every pick
 - skin hud: without the library step 10 writes the companions itself
@@ -1568,7 +1569,7 @@ Total.
 | test_layout.lua | 23 |
 | test_skinsetup.lua | 24 |
 | test_skin_windows.lua | 20 |
-| test_skin_hud.lua | 18 |
+| test_skin_hud.lua | 19 |
 | test_skin_picker.lua | 18 |
 | test_skin_outline.lua | 10 |
 | test_skin_verb.lua | 6 |
@@ -1583,4 +1584,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1297** |
+| **Total** | **1298** |
