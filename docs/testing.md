@@ -28,7 +28,7 @@ the case SKIPs and the gate is the remaining ~20 s of cases. Each automated-test
 suites' times as `durationMs` in its bundle's `manifest.json` (`automated-tests/<run>/`);
 [`automated-tests/RESULTS.md`](automated-tests/RESULTS.md) rolls the runs up but has no duration column.
 
-`luacheck .` lints everything authored, `tests/` included. It skips `libs/` and `tests/_kit/`
+`~/.claude/dev-copilot/bin/ka0s-bounded luacheck .` lints everything authored, `tests/` included. It skips `libs/` and `tests/_kit/`
 (vendored), the frozen record stores, and `docs/brainstorm/`, whose go/no-go harness is a throwaway
 addon kept as history and never loaded by this one.
 
@@ -61,12 +61,12 @@ Named suites the standard requires: `test_surface_parity` (testing-§8), `test_v
 `test_database`, `test_profile`, `test_schema`, `test_slash`, `test_diagnostics`, and phase 1's `test_compat`,
 `test_restrictions`, `test_situation`, `test_tokens`, `test_channels`, `test_bake`, `test_resolver`,
 `test_builtins`, `test_library` and `test_check`, and phase 2's `test_mock_secure`, `test_send_guard`,
-`test_sendengine`, `test_preview`, `test_master`, `test_pad_layout`, `test_surfaces`, `test_dial_yield`,
+`test_sendengine`, `test_preview`, `test_master`, `test_pad_layout`, `test_surfaces`,
 `test_pad_render` and `test_pad`, and phase 3's `test_members`, `test_editors`, `test_callout_popup` (the callout popup, which replaced `test_page_callouts`), 
 `test_groups_when`, `test_page_groups`, `test_page_groups_nesting` (split off `test_page_groups` at
 the layout-§1 cap: nested groups, the Preview table, Inherit when conditions and a pad title's
 right-click) and `test_page_pads`, and phase 4's
-`test_dial_layout`, `test_dial_secure`, `test_dial` and `test_page_dials`, and phase 5's
+`test_dial_layout`, `test_dial_secure`, `test_dial` (with `test_dial_catcher` and `test_dial_look`, split off it at the layout-§1 band) and `test_page_dials`, and phase 5's
 `test_gameids`, the icon browser's `test_icon_browser`, and the Icons tab's `test_icon_style` and `test_glow`, the edit preview's `test_edit_preview`, the preview window's `test_preview_window`, the `{coordinates}` token's `test_coordinates`, and the shine overlay's `test_shine` and `test_dial_shine`, and the key bindings' `test_keybinds` (item 015: `NS.BINDINGS` and the General page's Keybindings tab, driven with the kit's `Kit.keybindThroughTab`; `tests/run.lua` hands `Kit.expose` a `mock` view that forwards to the newest instance's mock, which the driver reads for `LibStub`), and frame layering's `test_layers` (item 030: `NS.Constants.LAYERS` and every tier it names, through the kit's opt-in frame-layer recorder `tests/_kit/mock_layers.lua`, installed before any source loads through the factory's `opts.mock`; `tests/wow_mock.lua` answers UIParent's frame level, 0, for the modal bands), and the settings layout's `test_layout` (item 020: every page's headings, labels, tab order and placement; `test_schema`'s layout guard pins every row's stored path, default, range and choices against `tests/schema_pins.lua`, so a move that changed a setting fails), and the skinning rollout's `test_skinsetup` (the seam, the owner tokens, the skin.* rows, the degraded facade), `test_skin_windows` (the windows, and the color-literal gate over the window, HUD and settings files), `test_skin_hud` (the faces, border styles, chrome and schema step 10; Ignore fonts on the HUD since LibKa0s v1.81.0), `test_skin_picker` (the first-run picker; no case pins its title, which is the library's "Choose a skin" with the addon's name on `frame.ownerLabel`), LibKa0s v1.82.0's `test_skin_outline` (the Font outline, `skin.outline`), `test_skin_verb` (`/qc skin`) and `test_skin_fonts` (From skin flags, schema step 11, the HUD size scale), QC-02's `test_icons_default` (test mode's numbered group glyphs, `NS.DefaultIcon` on pads, dials and the editor previews, and the question mark only without the library), `test_glyphs` (the display-glyph guard over the addon's own string literals, the kit's `glyphs.lua`) and `test_skin_tools` (the settings pages' painting and colored lines, panel-scoped under the default Scope, the tool windows). Kit suites, declared by directory:
 `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`, `test_lizard_sighted`.
 Every new `tests/test_*.lua` is added to the `suites` list in `tests/run.lua`; the kit fails the run
@@ -97,7 +97,7 @@ the change that moves the count (testing-§5).
 
 | Suite | Command | Commit / run | Release (the tag) |
 |---|---|---|---|
-| `lint` | `luacheck .` | **gates** | gates |
+| `lint` | `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .` | **gates** | gates |
 | `tests` | `lua tests/run.lua` | **gates** | gates |
 | `perf` | `lua tests/perf.lua` (offline scenarios; see [`performance.md`](performance.md)) | recorded, never fails a run or blocks a commit | gates |
 | `complexity` | `bash tests/_kit/run-automated-tests.sh --suite complexity` (the sighted shadow) | recorded, never fails a run or blocks a commit | gates, with zero functions above CCN 15 and `blindFiles` 0; a lizard run that crashed or hit its bound is a complexity fail, never a pass (the crashed files are listed apart, `crashedFiles` 0 at release; automated-tests-§3) |

@@ -204,6 +204,8 @@ Kit.run{
         "test_pad_render",
         "test_pad",
         "test_dial",
+        "test_dial_catcher",
+        "test_dial_look",
         "test_keybinds",
         "test_dial_shine",
         "test_icon_style",

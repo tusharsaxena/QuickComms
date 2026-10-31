@@ -20,7 +20,6 @@ local DIFFICULTY = {
     [1] = "normal", [2] = "heroic", [23] = "mythic", [8] = "keystone", [205] = "follower",
     [14] = "normal", [15] = "heroic", [16] = "mythic", [17] = "lfr", [7] = "lfr", [220] = "story",
 }
-Sit.DIFFICULTY = DIFFICULTY
 local KEYSTONE, DELVE = 8, 208
 
 local function content(i)

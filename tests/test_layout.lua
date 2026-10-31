@@ -337,3 +337,73 @@ test("layout: [dials] Icons: Size, offset and crop holds Icon size | Icon offset
     assertEqual(#P.all(w, "Heading", "Icon glow"), 1)
     assertTrue(row(NS, "dial.icon.size").desc:find("wedge", 1, true) == nil, "one word: slice")
 end)
+
+-- ── the Position block (LibKa0s#59, QC-ADOPT): pinned on the hand-built block before it moved ─────
+
+-- The block as the player meets it, heading to Reset: "type:label", then each offset box's width.
+local function positionBlock(w)
+    local out, on = {}, false
+    for _, x in ipairs(w) do
+        if x.type == "Heading" and x.text == "Position" then on = true end
+        if on and x.type ~= "SimpleGroup" and x.type ~= "Label" then
+            out[#out + 1] = x.type .. ":" .. tostring(x.labelText or x.text)
+        end
+    end
+    return table.concat(out, ",")
+end
+
+local function tipOf(m, widget)
+    widget:__fire("OnEnter")
+    local out = {}
+    for i, line in ipairs(m.GameTooltip.__lines) do out[i] = line[1] end
+    return table.concat(out, "|")
+end
+
+test("layout: [position] the pad's block is typed boxes under one heading, with their tooltip and Reset", function()
+    local _, m, P = open("Pad", { "pad", "p1" })
+    local w = P.tab("pads", "Layout")
+    assertEqual(positionBlock(w), "Heading:Position,EditBox:X offset,EditBox:Y offset,Button:Reset this pad's position")
+    assertEqual(#P.all(w, "Heading", "Position"), 1, "one heading")
+    local x, y = P.find(w, "EditBox", "X offset"), P.find(w, "EditBox", "Y offset")
+    assertEqual(x.text, "0")
+    assertEqual(y.text, "-150")
+    assertEqual(x.relativeWidth, 0.5)
+    assertEqual(y.relativeWidth, 0.5)
+    assertEqual(tipOf(m, y), "Y offset|Pixels from the pad's anchor. Press Enter to apply.")
+end)
+
+test("layout: [position] the dial's block holds Open at, then the boxes, with their tooltip and Reset", function()
+    local _, m, P = open("Dial", { "dial", "d2" })
+    local w = P.tab("dials", "Layout")
+    assertEqual(positionBlock(w),
+        "Heading:Position,Dropdown:Open at,EditBox:X offset,EditBox:Y offset,Button:Reset this dial's position")
+    assertEqual(#P.all(w, "Heading", "Position"), 1, "one heading")
+    local x = P.find(w, "EditBox", "X offset")
+    assertEqual(x.text, "0")
+    assertEqual(x.relativeWidth, 0.5)
+    assertEqual(tipOf(m, x), "X offset|Pixels from the middle of the screen. Press Enter to apply.")
+end)
+
+test("layout: [position] the box follows the stored point on a refresh", function()
+    local NS, _, P = open("Pad", { "pad", "p1" })
+    local x = P.find(P.tab("pads", "Layout"), "EditBox", "X offset")
+    assertTrue(NS.SchemaRuntime.Set("pad.point", { "CENTER", "CENTER", 77, -150 }, "p1"))
+    NS.addon.Settings.Helpers.RefreshScalars()
+    assertEqual(x.text, "77", "the box follows the stored point on any refresh")
+end)
+
+test("layout: [position] both blocks come from the library's composer", function()
+    local NS, _, P = open("Pad", { "pad", "p1" })
+    local H, calls = NS.addon.Settings.Helpers, {}
+    local compose = H.PositionBlock
+    H.PositionBlock = function(spec)
+        calls[#calls + 1] = spec.page .. ":" .. spec.subgroup
+        return compose(spec)
+    end
+    P.tab("pads", "Layout")
+    P.show("Dial")
+    P.tab("dials", "Layout")
+    H.PositionBlock = compose
+    -- red under: the hand-built offset boxes
+    assertEqual(table.concat(calls, ","), "pads:Position,dials:Position")
+end)

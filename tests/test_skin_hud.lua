@@ -308,6 +308,32 @@ test("skin hud: a pad window's 1px inner rule is win.inner, none where the skin 
     assertColor(R.SkinFor(flat, true).innerBorder, { 0, 0, 0, 0 }, "a plain block never takes it")
 end)
 
+test("skin hud: a pad's window is repainted when its look or the skin moved, and at no other rebuild", function()
+    local NS, _, Skin = live()
+    local root = NS.Pad.Instance("p1").root
+    local painted = 0
+    local apply = NS.ApplySkin
+    NS.ApplySkin = function(frame, skin)
+        if frame == root then painted = painted + 1 end
+        return apply(frame, skin)
+    end
+    local function rebuild()
+        local snap = NS.Situation.Current()
+        NS.Pad.Apply("p1", NS.Surfaces.BuildPlan("p1", NS.db.profile.pads.p1, snap, NS.Surfaces.Deps(snap)))
+    end
+    rebuild()
+    -- red under: Pad.Apply skinning its root on every rebuild (a fresh skin's tables each time)
+    assertEqual(painted, 0, "an unchanged rebuild paints nothing")
+    assertTrue(NS.SchemaRuntime.Set("pad.look.borderSize", 3, "p1"))
+    rebuild()
+    assertEqual(painted, 1, "the Main window tab's change paints once")
+    rebuild()
+    assertEqual(painted, 1, "and only once")
+    Skin:SetChoice(OWNER, "ka0s", OTHER)
+    rebuild()
+    assertEqual(painted, 2, "a skin switch moves the look generation, so the window repaints")
+end)
+
 test("skin hud: the dial's per-frame update reads no token", function()
     local NS, m = live()
     m.__click(NS.Dial.Instance("d2").header)

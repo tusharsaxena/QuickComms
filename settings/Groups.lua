@@ -43,7 +43,6 @@ local WHEN = L["When"]
 
 Settings.Groups = Settings.Groups or {}
 local G = Settings.Groups
-G.PAGE = PAGE
 
 local function H() return Settings.Helpers end
 

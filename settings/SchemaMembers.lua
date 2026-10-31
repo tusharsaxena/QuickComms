@@ -304,9 +304,9 @@ local ROWS = {
       min = 0, max = 20, step = 1, page = "dials", group = L["Layout"], label = L["Slice gap"], startsLine = true,
       desc = L["The space between slices, in pixels. 0 draws them touching."],
       validate = NUMBER, normalize = clamp(0, 20, true) },
-    -- Drawn after the Position heading, above X and Y (settings/Dials.lua renderLayout).
+    -- The Position block's first row, above X and Y (settings/Dials.lua renderLayout).
     { path = "dial.openAt", instance = "dial", type = "string", default = T.dial.openAt, values = OPEN_AT,
-      page = "dials", group = L["Layout"], label = L["Open at"],
+      page = "dials", group = L["Layout"], subgroup = L["Position"], label = L["Open at"],
       desc = L["Where the dial opens: at its place (set below), or wherever the cursor is."],
       validate = oneOf(OPEN_AT) },
     -- Position's default is false (the default place), so `/qc reset dial.point` reaches it; the page's
@@ -467,8 +467,9 @@ for i, look in ipairs(NS.Shine.LOOKS) do SHINE_LOOK[i] = { value = look, text = 
 --- A Shine heading's rows (shine overlay, 2026-10-21): the look, its Strength (0 to 100 percent, step
 --- 5), the tint and Fluid glass's two bloom colors, each a composed swatch with its class-color
 --- companion. `spec` names the block: `prefix` ("pad.button."), `instance`, `page`, `tab` and the
---- shipped `defaults` table. Strength, the tint and the blooms gray out while the look is None, and the
---- blooms unless it is Fluid glass (as the pointer rows do while Show pointer is off).
+--- shipped `defaults` table. Strength and the tint gray out while the look is None (as the pointer rows
+--- do while Show pointer is off). The blooms are Fluid glass's own, so they show only under it
+--- (options-ui-§22, LibKa0s#67).
 local function shineRows(O, checks, spec)
     local prefix, def, SHINE = spec.prefix, spec.defaults, L["Shine"]
     for _, k in ipairs({ "shineTint", "shineBloomA", "shineBloomB" }) do checks[k] = checks.background end
@@ -477,7 +478,7 @@ local function shineRows(O, checks, spec)
     end
     local function lookNow() return NS.SchemaRuntime.Get(prefix .. "shineLook") or def.shineLook end
     local function off() return lookNow() == "none" end
-    local function notFluid() return lookNow() ~= "fluid" end
+    local onlyFluid = { path = prefix .. "shineLook", equals = "fluid" }
     local function base(r)
         r.instance, r.page, r.group, r.subgroup = spec.instance, spec.page, spec.tab, SHINE
         return r
@@ -492,15 +493,15 @@ local function shineRows(O, checks, spec)
             desc = L["How strong the shine is, from 0 to 100 percent."], validate = NUMBER,
             normalize = clamp(0, 100, true) }),
     }
-    local pairs3 = { { "shineTint", L["Shine tint"], "useClassColorShineTint", off },
-        { "shineBloomA", L["Bloom color A"], "useClassColorShineBloomA", notFluid },
-        { "shineBloomB", L["Bloom color B"], "useClassColorShineBloomB", notFluid } }
+    local pairs3 = { { "shineTint", L["Shine tint"], "useClassColorShineTint" },
+        { "shineBloomA", L["Bloom color A"], "useClassColorShineBloomA", onlyFluid },
+        { "shineBloomB", L["Bloom color B"], "useClassColorShineBloomB", onlyFluid } }
     for _, p in ipairs(pairs3) do
         local rows = {}
         stampBlock(rows, O.ColorPair(blockSpec(prefix, spec.tab, SHINE, def,
             { key = p[1], label = p[2], companionKey = p[3] })), prefix, checks, spec.instance)
         for _, r in ipairs(rows) do
-            r.disabledIf = p[4]
+            if p[4] then r.shownWhen = p[4] else r.disabledIf = off end
             out[#out + 1] = r
         end
     end
@@ -570,7 +571,12 @@ local HUB_STYLE = choices({ { "solid", L["Solid circle"] }, { "ring", L["Hollow 
     { "rimmed", L["Rimmed disc"] } })
 local function hubRows(O, checks)
     local hdef, HUB, RIM, CIRCLE = T.dial.hub, L["Hub"], L["Hub border"], L["Hub circle"]
-    local function solid() return (NS.SchemaRuntime.Get(HUBP .. "style") or hdef.style) == "solid" end
+    -- Line width is a column of the Hub circle group, which every style shows, so it grays rather than
+    -- hides (options-ui-§22, as the glow offsets do): only Hollow ring and Target draw a ring.
+    local function noRing()
+        local style = NS.SchemaRuntime.Get(HUBP .. "style") or hdef.style
+        return style ~= "ring" and style ~= "target"
+    end
     local function size(subgroup, key, label, lo, hi, desc, extra)
         local r = { path = HUBP .. key, instance = "dial", type = "number", default = hdef[key], min = lo, max = hi,
             step = 1, page = "dials", group = HUB_TAB, subgroup = subgroup, label = label, desc = desc,
@@ -596,7 +602,7 @@ local function hubRows(O, checks)
     out[#out + 1] = size(CIRCLE, "circleSize", L["Circle size"], 4, 60, L["How wide the circle on the hub is, in pixels."],
         { startsLine = true })
     out[#out + 1] = size(CIRCLE, "lineWidth", L["Line width"], 1, 6, L["How thick the hollow ring is, in pixels."],
-        { disabledIf = solid })
+        { disabledIf = noRing })
     pair(CIRCLE, "circleColor", L["Circle color"], "useClassColorCircle")
     return out
 end

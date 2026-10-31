@@ -219,39 +219,7 @@ local function renderGroups(ctx, rows)
     end
 end
 
--- One offset box. Its refresher (a scalar refresh) puts it back to the stored point after any write.
-local function offsetBox(ctx, id, label, axis)
-    local index = axis == "x" and 3 or 4
-    return { make = function(_, parent, rel)
-        local eb = H().AceGUI:Create("EditBox")
-        eb:SetLabel(label)
-        eb:SetText(tostring(DD.Point(id)[index]))
-        if ctx.refreshers then
-            ctx.refreshers[#ctx.refreshers + 1] = function() eb:SetText(tostring(DD.Point(id)[index])) end
-        end
-        eb:SetRelativeWidth(rel or 0.5)
-        eb:SetCallback("OnEnterPressed", function(_, _, text)
-            -- A refusal (its line already printed) puts the box back to the stored offset.
-            if not DD.SetOffset(id, axis, text) then eb:SetText(tostring(DD.Point(id)[index])) end
-        end)
-        H().AttachTooltip(eb, label, L["Pixels from the middle of the screen. Press Enter to apply."])
-        parent:AddChild(eb)
-        return eb
-    end }
-end
-
--- The Icons tab: its rows in schema order, the headings the library's (as the Pad page's), and
--- only the selected glow style's knobs (Settings.ShownIconRows).
-local function renderIcons(ctx, rows)
-    local h = H()
-    if not selected() then
-        h.TextRow(ctx, NONE)
-        return
-    end
-    h.RenderRows(ctx, Ed.Scalar(Settings.ShownIconRows(rows)), nil, nil, { noHeadings = true })
-end
-
--- The Slices, Hub, Paging and Labels tabs: their rows, under their own headings.
+-- The Slices, Hub, Paging, Labels and Icons tabs: their rows, under their own headings.
 local function renderStyled(ctx, rows)
     local h = H()
     if not selected() then
@@ -261,8 +229,9 @@ local function renderStyled(ctx, rows)
     h.RenderRows(ctx, Ed.Scalar(rows), nil, nil, { noHeadings = true })
 end
 
--- The Layout tab: the geometry rows, then Position, which holds Open at (its tooltip's "set below"),
--- then X and Y and the reset (item 020, QUI-L21: Open at sat with the geometry until then).
+-- The Layout tab: the geometry rows, then Position, whose heading the library draws from the rows'
+-- subgroup: Open at (its tooltip's "set below"), then X and Y and the reset (item 020, QUI-L21: Open at
+-- sat with the geometry until then).
 local function renderLayout(ctx, rows)
     local h = H()
     local id = selected()
@@ -270,16 +239,16 @@ local function renderLayout(ctx, rows)
         h.TextRow(ctx, NONE)
         return
     end
-    local geometry, place = {}, {}
-    for _, row in ipairs(Ed.Scalar(rows)) do
-        if row.path == "dial.openAt" then place[#place + 1] = row else geometry[#geometry + 1] = row end
-    end
-    h.RenderRows(ctx, geometry, nil, nil, { noHeadings = true })
-    h.Section(ctx, L["Position"])
-    h.RenderRows(ctx, place, nil, nil, { noHeadings = true })
-    h.RenderGrid(ctx, { offsetBox(ctx, id, L["X offset"], "x"), offsetBox(ctx, id, L["Y offset"], "y") })
-    h.InlineButtonPair(ctx, { text = L["Reset this dial's position"],
-        tooltip = L["Put this dial back in the middle of the screen."], onClick = function() DD.ResetPoint(id) end }, nil)
+    local list = Ed.Scalar(rows)
+    local place, reset = Ed.PositionRows({
+        page = "dials", tooltip = L["Pixels from the middle of the screen. Press Enter to apply."],
+        point = function() return DD.Point(id) end,
+        setOffset = function(axis, text) return DD.SetOffset(id, axis, text) end,
+        resetText = L["Reset this dial's position"], resetTooltip = L["Put this dial back in the middle of the screen."],
+        onReset = function() DD.ResetPoint(id) end,
+    })
+    for _, row in ipairs(place) do list[#list + 1] = row end
+    h.RenderRows(ctx, list, nil, nil, { noHeadings = true, afterSubgroup = { [L["Position"]] = reset } })
 end
 
 local function renderPreview(ctx)
@@ -322,7 +291,7 @@ local function render(ctx)
         { key = HUB, render = renderStyled },
         { key = PAGING, render = renderStyled },
         { key = LABELS, render = renderStyled },
-        { key = ICONS, render = renderIcons },
+        { key = ICONS, render = renderStyled },
         { key = "preview", label = L["Ring map"], tooltip = L["What each ring holds here, or in the preview."],
           render = renderPreview },
     })

@@ -9,7 +9,7 @@ local _, NS = ...
 -- goes to in WoW's chat color (a smart kind shows the channel it resolved to), or why it sends
 -- nothing, and any lock. The pad's three window tabs (the Window tab until 2026-10-20, the Look tab
 -- before that) are read here as plain values, which modules/Pad.lua applies out of combat: Main
--- window's skin (SkinFor, for the pad), Header's look (HeaderLook: the header row's height, font
+-- window's skin (WindowLook, for the pad), Header's look (HeaderLook: the header row's height, font
 -- and skin; its situation text starts at the section titles' left edge, PL.PAD, whatever the growth)
 -- and Section titles' (SectionLook: each title row's height, font, and a band of background and
 -- border behind it, ApplySectionBand).
@@ -498,6 +498,22 @@ local function lookSig(t)
     parts[#parts + 1] = tostring(border) .. "=" .. tostring(NS.MediaFetch("border", border))
     parts[#parts + 1] = tostring(looksGen)
     return table.concat(parts, "|")
+end
+
+--- The window's look, from the pad's `look` table: { skin (R.SkinFor), sig }. `prev`, the look the last
+--- rebuild built, is answered again while its signature still holds, as R.HeaderLook's.
+function R.WindowLook(look, prev)
+    look = type(look) == "table" and look or {}
+    local sig = lookSig(look)
+    if type(prev) == "table" and prev.sig == sig then return prev end
+    return { sig = sig, skin = R.SkinFor(look) }
+end
+
+--- Dress the pad's root in its look (R.WindowLook); a root already wearing it is not painted again.
+function R.ApplyWindowLook(root, wl)
+    if root.qcLookSig == wl.sig then return end
+    root.qcLookSig = wl.sig
+    NS.ApplySkin(root, wl.skin)
 end
 
 --- The header's look, from the pad's `header` table: { height, font, skin, sig }. The font is the

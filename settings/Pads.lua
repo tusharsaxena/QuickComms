@@ -199,28 +199,6 @@ local function renderGroups(ctx, rows)
     end
 end
 
--- One offset box. Its refresher (a scalar refresh, never a situation change) puts it back to the
--- stored point after any write, the drag's included.
-local function offsetBox(ctx, id, label, axis)
-    local index = axis == "x" and 3 or 4
-    return { make = function(_, parent, rel)
-        local eb = H().AceGUI:Create("EditBox")
-        eb:SetLabel(label)
-        eb:SetText(tostring(PD.Point(id)[index]))
-        if ctx.refreshers then
-            ctx.refreshers[#ctx.refreshers + 1] = function() eb:SetText(tostring(PD.Point(id)[index])) end
-        end
-        eb:SetRelativeWidth(rel or 0.5)
-        eb:SetCallback("OnEnterPressed", function(_, _, text)
-            -- A refusal (its line already printed) puts the box back to the stored offset.
-            if not PD.SetOffset(id, axis, text) then eb:SetText(tostring(PD.Point(id)[index])) end
-        end)
-        H().AttachTooltip(eb, label, L["Pixels from the pad's anchor. Press Enter to apply."])
-        parent:AddChild(eb)
-        return eb
-    end }
-end
-
 local function renderLayout(ctx, rows)
     local h = H()
     local id = selected()
@@ -228,11 +206,16 @@ local function renderLayout(ctx, rows)
         h.TextRow(ctx, NONE)
         return
     end
-    h.RenderRows(ctx, Ed.Scalar(rows), nil, nil, { noHeadings = true })
-    h.Section(ctx, L["Position"])
-    h.RenderGrid(ctx, { offsetBox(ctx, id, L["X offset"], "x"), offsetBox(ctx, id, L["Y offset"], "y") })
-    h.InlineButtonPair(ctx, { text = L["Reset this pad's position"],
-        tooltip = L["Put this pad back in its default place."], onClick = function() PD.ResetPoint(id) end }, nil)
+    local list = Ed.Scalar(rows)
+    local place, reset = Ed.PositionRows({
+        page = "pads", tooltip = L["Pixels from the pad's anchor. Press Enter to apply."],
+        point = function() return PD.Point(id) end,
+        setOffset = function(axis, text) return PD.SetOffset(id, axis, text) end,
+        resetText = L["Reset this pad's position"], resetTooltip = L["Put this pad back in its default place."],
+        onReset = function() PD.ResetPoint(id) end,
+    })
+    for _, row in ipairs(place) do list[#list + 1] = row end
+    h.RenderRows(ctx, list, nil, nil, { noHeadings = true, afterSubgroup = { [L["Position"]] = reset } })
 end
 
 -- A styled tab (Window, Header, Section titles, Buttons) in one call: its rows in schema
@@ -245,11 +228,6 @@ local function renderStyled(ctx, rows)
         return
     end
     h.RenderRows(ctx, Ed.Scalar(rows), nil, nil, { noHeadings = true })
-end
-
--- The Icons tab: as a styled tab, but only the selected glow style's knobs (Settings.ShownIconRows).
-local function renderIcons(ctx, rows)
-    renderStyled(ctx, Settings.ShownIconRows(rows))
 end
 
 local function ids(entries)
@@ -281,7 +259,7 @@ local function render(ctx)
         { key = PAD_HEADER, render = renderStyled },
         { key = SECTION_HEADER, render = renderStyled },
         { key = BUTTON, render = renderStyled },
-        { key = ICONS, render = renderIcons },
+        { key = ICONS, render = renderStyled },
     })
 end
 

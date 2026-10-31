@@ -136,7 +136,6 @@ end
 -- exists, a callout write names no id, or a named id is gone) there is no root, and the write is
 -- refused with a line saying where to make one, or how to name it.
 local INSTANCE = { callout = true, group = true, pad = true, dial = true }
-Settings.INSTANCE_KINDS = INSTANCE
 
 -- The kinds whose rows are addressed by id alone; the CLI reads the id after the path (settings/Slash.lua).
 local BY_ID = { callout = true }

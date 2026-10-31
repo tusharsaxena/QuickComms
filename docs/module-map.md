@@ -1,7 +1,7 @@
 # Module map — Ka0s Quick Comms
 
 Every non-vendored file, its responsibility, and the TOC load order. `libs/` (Ace3, LibSharedMedia,
-LibDataBroker, LibDBIcon, LibCustomGlow-1.0, LibKa0s v1.83.0 (media/icons held to CLAUDE.md's `LibKa0s icons:` line, all)) and `tests/_kit/` are vendored and never edited.
+LibDataBroker, LibDBIcon, LibCustomGlow-1.0, LibKa0s v1.84.0 (media/icons held to CLAUDE.md's `LibKa0s icons:` line, all)) and `tests/_kit/` are vendored and never edited.
 
 ## Load order (the TOC)
 
@@ -147,7 +147,10 @@ files they add are listed in design spec §4.2.
 | `tests/test_page_pads.lua` | the Pad page: picker and New pad, General's acts, the Groups priority list, Layout with X/Y, the tab order, the Window, Header and Section titles tabs, General's Visibility rows, the Buttons tab, the Icons tab |
 | `tests/test_dial_layout.lua` | `Dial_Layout`: rings, pages, the lone-group open, Auto's shapes, placement from N, the slice gap's shift, Auto's icon-fit cap, SliceAt, the arrow, pill and dot row, geometry and labels outside the disc |
 | `tests/test_dial_secure.lua` | `Dial_Secure`: the snippets on a hand-built dial, in and out of combat, the ring catcher and the screen catcher among them, and a preview dial staying open on a pick |
-| `tests/test_dial.lua` | `Dial`: the frames, the rebuild, the keys as WoW's own bindings, the three exit paths, the page arrows, arrow keys and dots, the radius, the slices (fills, border, the slice lit by the cursor's bearing), the hub over the slices, the tooltip's side, the pointer and its offset, the Label offset, `Bindings.xml` and the Toggle Comms Pads binding |
+| `tests/test_dial.lua` | `Dial`: the frames, the rebuild, the keys as WoW's own bindings, the three exit paths, the page arrows, arrow keys and dots, the radius, the slices (fills, border, the slice lit by the cursor's bearing), `Bindings.xml` and the Toggle Comms Pads binding |
+| `tests/test_dial_catcher.lua` | split off `test_dial`: select to the hub, the secure catcher's clicks and the tracker's hover, in and out of combat, a right click back a ring, opening where the dial was closed |
+| `tests/test_dial_look.lua` | split off `test_dial`: how a dial is drawn, the page indicators, the hub over the slices, the tooltip's side, the pointer and its offset, the Label offset, the hub styles, the group labels and the crisp art |
+| `tests/dial_helpers.lua` | not a suite: what the dial suites share (the situations, a live instance, a plan from slots, the combat edge) |
 | `tests/test_keybinds.lua` | the key bindings (item 015): `NS.BINDINGS`' order and labels, the General page's strip ending in Keybindings, the tab's rows, a key bound through the tab (`Kit.keybindThroughTab`) and one set in WoW's menu showing on it after `UPDATE_BINDINGS`, and the combat refusal |
 | `tests/test_dial_shine.lua` | the dial's slice shine (`Dial_Slices`): each look's recipe on every slice (its mask, the sector; Bevel unmasked; the retired dots and upright outline never made), the overlay following its slice (gap 8, a fixed 4 holding two items), Glass orb's bead on the slice's inscribed circle and Fluid glass's blooms across its outer part, each in its frame at 4 and 8 slices, Frosted glass's streak and Bevel set per count, fewer slices hiding the rest, and the dial's look leaving the pad alone |
 | `tests/test_page_dials.lua` | the Dial page |

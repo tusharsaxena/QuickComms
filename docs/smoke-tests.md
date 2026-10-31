@@ -26,19 +26,19 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | EDIT-1..34 | Editors | The Pad and Dial page names; the Groups (with the callout popup, its look on the skin and its token glyph, the icon browser, its search, its glyph sets and glyph colors, the Callouts rows, Reuse and the glyph lists, the built-in sets as ordinary groups and Restore, nested groups and Inherit when conditions, the Preview table, the When drawers, Preview while editing, a pad title's right-click, a preview click's echo) and Comms Pad pages, Preview as…, Why is this showing?, an older profile's conversion |
 | PREVIEW-1..12 | Preview window | The Preview as selector window: every entry point, the dropdown, End preview, close and Escape, combat, test mode and the stand-down, Alt+Z, the saved position, bare /qc preview and list; every preview drawn as live; a preview or test click prints what it would send; a preview dial staying open on a pick |
 | DIAL-1..43 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, the lone-group open and the group ring, page arrows and the page row, Auto wedges, the ring radius, the Slice labels tab, the slices and the slice lit by direction, the Slices tab, the pointer, the tooltip outside the dial, the hub over the slices, the pointer, label and icon offsets, the Paging tab; the dial polish: the border gone, the slice gap, placement from W, a slice clicked to the hub in combat, the hub styles, the Group labels tab, Icon offset on Icons, 128-pixel icons, a click outside closing the dial in combat, the page indicators' background and border, the Hub tab; automatic icon offset and size; the 120 radius and 48-pixel icons by default; a right click back a ring; opening where it was closed; slices from N |
-| LAYOUT-1..5 | Settings layout | Item 020: the General page's Behavior headings and Defaults tooltip; the Groups band on one row, General's order, Inherit on When, What it sends; the Pad strip outside in and its relabels; the Dial strip (Layout, Labels, Ring map) and its headings; no setting lost or changed, through a /reload |
+| LAYOUT-1..6 | Settings layout | Item 020: the General page's Behavior headings and Defaults tooltip; the Groups band on one row, General's order, Inherit on When, What it sends; the Pad strip outside in and its relabels; the Dial strip (Layout, Labels, Ring map) and its headings; no setting lost or changed, through a /reload |
 | LAYER-1..5 | Frame layering | Item 030: a pad button's and a dial wedge's borders, glows, label, padlock and veils in order; the drag strip over a faded pad; the windows, modals and popups still stacked as before |
 | KEY-1..6 | Key bindings | A dial's key as WoW's own binding in Options → Keybindings, Character Specific Keybindings, Toggle Comms Pads; item 015: the Ka0s Quick Comms section of its own, the General → Keybindings tab in sync both ways, its capture and combat refusal |
-| LOOK-1..6 | Window, Header, Section titles (Pad header and Section header before item 020) | The Comms Pad's three window tabs: the section titles' font, the pad's border and background, the header's look, size and alignment, the tab strip and headings, the section header's band and height |
+| LOOK-1..7 | Window, Header, Section titles (Pad header and Section header before item 020) | The Comms Pad's three window tabs: the section titles' font, the pad's border and background, the header's look, size and alignment, the tab strip and headings, the section header's band and height; the pad's window repainting only when its look moves |
 | BUTTON-1..2 | Buttons tab | The buttons' size, color, border and font; the button glow |
-| ICONS-1..4 | Icons tab | The buttons' and wedges' icon look, border and glow triggers; the glows through LibKa0s-Glow-1.0 |
+| ICONS-1..5 | Icons tab | The buttons' and wedges' icon look, border and glow triggers; the glows through LibKa0s-Glow-1.0 |
 | ICON-1..5 | Icons | Choosing an icon, for a callout and for a group; the LibKa0s v1.75.0 re-vendor: the icon browser's three sets and the library-drawn marks; the popup and the browser over the preview dial; test mode's numbered groups and the default icons |
 | ART-1..2 | Art | The dial's round art: the hub's styles, the dots and pill, the indicator background, the borders and the arrow plates; every texture loading from its folder |
 | SHINE-1..4 | Shine | The shine overlay: each look on a pad and on a dial, and a pad and a dial keeping their own |
 | BG-1..9 | Battlegrounds | Node rings on the dial, one slice per node; the faction and location colors; the battleground instance ids; the objective groups (Alterac Valley, Isle of Conquest's bases, a flag map) and their migration; the four node buttons; Silvershard Mines' and Temple of Kotmogu's groups |
 | IDS-1 | Instance ids | The Midnight dungeons and raids |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes |
-| SKIN-1..29 | [Skins](#skins) | The skinning rollout: the one-time reset under Ka0s Default, a new pad, dial or profile on the skin, Ka0s Default elsewhere unchanged, the Skin tab, every skin on the pads and dials, the *Use the skin's ...* boxes, the Preview as window, the callout popup and the icon browser, the settings pages, the tool windows, the Font and texture overrides, Ignore fonts, EllesmereUI on and off and the reload back, profiles and combat, the first-run skin picker (its eye, Apply, close, gear, the switch and a profile event, one picker across Ka0s addons), the CLI and the degraded install; LibKa0s v1.82.0: the Font outline, From skin font flags, `/qc skin`, the HUD size scale and the windows' width parity |
+| SKIN-1..30 | [Skins](#skins) | The skinning rollout: the one-time reset under Ka0s Default, a new pad, dial or profile on the skin, Ka0s Default elsewhere unchanged, the Skin tab, every skin on the pads and dials, the *Use the skin's ...* boxes, the Preview as window, the callout popup and the icon browser, the settings pages, the tool windows, the Font and texture overrides, Ignore fonts, EllesmereUI on and off and the reload back, profiles and combat, the first-run skin picker (its eye, Apply, close, gear, the switch and a profile event, one picker across Ka0s addons), the CLI and the degraded install; LibKa0s v1.82.0: the Font outline, From skin font flags, `/qc skin`, the HUD size scale and the windows' width parity; the skin on the only media picker |
 
 ## Before you start
 
@@ -1017,7 +1017,7 @@ it is in. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 **DIAL-29. The hub styles (dial polish, 2026-10-21).** Dial → Hub → Hub: Hub style Solid circle (the
 default) → a gold filled circle on a dark backdrop, no ✕; Hollow ring → a gold ring; Target → a ring
 with a dot in the middle; Rimmed disc → a rim round the backdrop and a filled circle inside it. Line
-width grayed out under Solid circle and 4 → a thicker ring under Hollow ring. Hub size 70 → a wider hub,
+width grayed out under Solid circle and Rimmed disc, and 4 → a thicker ring under Hollow ring. Hub size 70 → a wider hub,
 the slices and the pointer starting at its edge in every direction, and a click just outside its
 circle, on a diagonal too, lands on a slice (DIAL-28); Circle size 40 → a bigger circle. Backdrop color, Hub border size 3 with a red Hub border
 color, Circle color green, each Use class color → as set. Hover the hub → the circle brightens; move
@@ -1176,6 +1176,12 @@ your class color. Size → Section header height 30 → every title row grows to
 centered and the buttons move down with it; 0 → the automatic height again (it reads Automatic). A
 right-click on a title still opens its group. Result: 2026-10-21, pass (the owner's run; client build not recorded).
 
+**LOOK-7. The pad's window repaints when it should (2026-10-31).** A rebuild no longer repaints the pad's
+window when nothing about it changed. On a pad, move Pad → Window's border thickness and its border and
+background colors → each shows at once. Pick another skin on the Skin tab → the pad's edge, background
+and inner line follow it. Change the situation so the pad's buttons rebuild, and `/reload` → the pad
+keeps that look, with no gap in its border. Result:
+
 ## Buttons tab
 
 **BUTTON-1. Size, color, border and font (2026-10-20).** On a new pad the buttons wear the owner's
@@ -1300,6 +1306,13 @@ Inherit). After the update: each reads the same under its new name and place, th
 look as they did, `/qc list` shows every setting (the Behavior rows in their new order), and after a
 `/reload` every value is still there. Each page's Defaults resets what it did before. Result: 2026-10-24, pass (the owner's run; client build not recorded).
 
+**LAYOUT-6. The Position block (2026-11-01).** The block now comes from the options library (LibKa0s#59)
+and should look as it did. Pad → Layout: one Position heading, X offset | Y offset as typed boxes, then
+Reset this pad's position. Type 40 in X offset and press Enter → the pad moves; type *left* → a line says
+a position is a number of pixels and the box goes back to 40; Reset puts the pad back and both boxes
+follow. Drag the unlocked pad → the boxes follow. Dial → Layout: the same under Position, with Open at
+first. Result:
+
 ## Frame layering
 
 Item 030 (frame-layering, standard v2.88.0; `core/Constants.lua` `NS.Constants.LAYERS`).
@@ -1346,7 +1359,7 @@ pixels, on Ka0s Default); untick Use the skin's border, thickness 3, color white
 edge over each icon. Dial → Icons: Show border → a round ring behind each wedge's icon; Icon size
 20 → smaller icons, the wedges keep their size. Defaults on each page → the icons at their defaults again (16 on a pad, 32 on a dial). (Amended by QC-05, 2026-10-29: the skinning rollout's Use the skin's border, SKIN-6.) Result: pass (owner-marked 2026-10-30).
 
-**ICONS-2. Glow styles.** Pad → Icons, glow off → Offset sits right under Glow color, its two
+**ICONS-2. Glow styles.** (Amended by QC-67, 2026-11-01: with the glow off the picked style's knobs now show, grayed.) Pad → Icons, glow off → Offset sits right under Glow color, its two
 sliders grayed out, and no style's heading shows below it. Tick Glow → the Pixel border heading and
 its knobs appear under Offset at once, the scroll where it was, and the offsets come alive; lines run
 around every icon. Glow style Auto cast sparkles, Button (rotating rays) and Proc (flipbook) → each
@@ -1367,6 +1380,13 @@ looks as before; Proc's opening burst plays once, not on every rebuild. Pad → 
 on: each style circles the whole pad button and coexists with the icon glow on the same button. In
 combat, hover a pad button and a dial wedge with On hover → the glow starts and stops, no Lua error,
 no taint message. Result: 2026-10-23, pass (the owner's run; client build not recorded).
+
+**ICONS-5. Sections a choice does not use (2026-11-01, LibKa0s#67).** Pad → Icons, glow off → the Pixel
+border heading and its knobs show, grayed. Glow style Proc → Pixel border goes and Proc comes, grayed, on the
+next frame, the scroll kept. Tick Glow → the knobs come alive in place. Pad → Buttons, Shine look Gloss fade →
+no Bloom color rows and no gap where they were; Fluid glass → Bloom color A and B appear, live; None → they
+go, and Shine strength and Shine tint gray. Dial → Slices the same, and Dial → Icons as the pad's.
+`/qc list` still shows every knob and bloom. Result:
 
 ## Icons
 
@@ -1415,7 +1435,7 @@ shipped glyphs, as before. Make a group of your own with no icon and put it on a
 draws a white folder; give it a callout with no icon → the callout's pad button and dial wedge draw
 a white speech bubble, and so do its row on the Groups page's Callouts tab and the callout popup's
 icon preview; the group's General tab icon preview shows the folder. Choose an icon, then clear it →
-back to the folder or the bubble. Fail: a question mark anywhere while LibKa0s is loaded. Result:
+back to the folder or the bubble. Fail: a question mark anywhere while LibKa0s is loaded. Result: Owner reported pass, 2026-10-31.
 
 ## Art
 
@@ -1447,8 +1467,7 @@ slices, then set each of the seven Shine looks on the pad's buttons and on the d
 disc, ring, slice and shine draws as before; a green or blank square is the failure. Result: owed (new 2026-10-25).
 
 **SHINE-1. Each look on a pad (2026-10-21; whole button, 2026-10-21).** On a new pad the buttons
-have no shine (Shine look None; Shine strength and Shine tint grayed out, Bloom color A and B grayed
-out). Pad → Buttons → Shine look Gloss cap, Gloss fade, Glass orb, Frosted glass, Fluid glass, Bevel and Rim light
+have no shine (Shine look None; Shine strength and Shine tint grayed out, no Bloom color rows). Pad → Buttons → Shine look Gloss cap, Gloss fade, Glass orb, Frosted glass, Fluid glass, Bevel and Rim light
 in turn, each at the Icons tab's Icon size 16, 24 and 40 → each look covers the whole button, its
 plate, icon and label, edge to edge, and matches its tile in
 `docs/superpowers/specs/2026-10-21-shine-overlay/render-pad.png`: Gloss cap a bright band over the top
@@ -1461,7 +1480,7 @@ top and a pink-to-mint bloom at the bottom; Bevel a light top and left edge and 
 one; Rim light an edge glow and a short top highlight. On the wide buttons the edges stay as thin as on
 a square one (nothing stretched at the ends); Layout → Button style Icon only → the square buttons
 take the art whole. The padlock, the label, the send flash and the hover still read over it. Bloom color A and B
-are enabled only under Fluid glass; set them to red and blue → its two blooms change color. Shine
+show only under Fluid glass; set them to red and blue → its two blooms change color. Shine
 strength 0 → no shine; 100 → the strongest. Shine tint yellow → the light turns yellow, the shade stays
 dark; Use class color → your class color. Fluid glass, then Gloss cap, then None → no bloom or shine is
 left behind. Layout → Button style Label only → the buttons keep their shine (it covers the plate, not
@@ -1625,7 +1644,7 @@ error, no stray `%s` or `%d` in any line, the When's names in the client's langu
 unchanged, and the pad's labels drawn in a font (on koKR, zhCN or zhTW, the client's own). The failure
 looks like a raw format token in chat, a missing label, or a When that stops matching after a locale
 switch. **Owed**: the enumeration above is covered headlessly, but the names and the font fallback come
-from the client, so this check needs a non-English client pass. Result: pass (owner-marked 2026-10-30).
+from the client, so this check needs a non-English client pass. Result: pass (owner-marked 2026-10-30). Owner reported pass, 2026-10-31.
 
 ## Skins
 
@@ -1653,12 +1672,12 @@ and showing the skin's choice. The wider face can widen a pad and move where a l
 dial's label ring sits (D11). Untick each box → your old pick comes back at once. `/reload` → still
 unticked and still yours: the reset ran once. Switch to the second profile → it was reset the same way,
 its picks kept. This is the expected change, not a regression. Fail: a color, size or flag that
-moved, a pick lost after unticking, or the boxes ticked again after the reload. (Amended by QC-01, 2026-10-30, LibKa0s v1.82.0's faces.) Result: pass (owner-marked 2026-10-30).
+moved, a pick lost after unticking, or the boxes ticked again after the reload. (Amended by QC-01, 2026-10-30, LibKa0s v1.82.0's faces.) Result: pass (owner-marked 2026-10-30). Owner reported pass, 2026-10-31.
 
 **SKIN-2. A new pad, dial or profile follows the skin (X3).** Pad → New pad, Dial → New dial, and
 Profiles → a new profile → their Font and Border blocks show the *Use the skin's ...* boxes ticked, and
 the labels are Prototype on Ka0s Default. Untick one on a pad, then the page's **Defaults** →
-it is ticked again. (Amended by QC-01, 2026-10-30, LibKa0s v1.82.0's faces.) Result: pass (owner-marked 2026-10-30).
+it is ticked again. (Amended by QC-01, 2026-10-30, LibKa0s v1.82.0's faces.) Result: pass (owner-marked 2026-10-30). Owner reported pass, 2026-10-31.
 
 **SKIN-3. Ka0s Default elsewhere looks as before.** On **Ka0s Default** with **Ignore settings panel**
 on (the default): the pads' and dials' colors (the gold padlock, the dark veils over a refused or
@@ -1678,7 +1697,7 @@ the library's own strings in the skin's face
 (D-13) draw **Prototype** where they drew Blizzard's font: the debug console's title-bar labels, the
 perf panel's step and command columns, the drag strip's label and the Preview as window's dropdown
 menu rows. Fail: any other changed color, edge, face or spacing outside the pads' and dials'
-faces and border styles (SKIN-1). (Amended by QC-02, 2026-10-30, the library follow-ups; by QC-01, 2026-10-30, LibKa0s v1.82.0's faces.) Result: pass (owner-marked 2026-10-30).
+faces and border styles (SKIN-1). (Amended by QC-02, 2026-10-30, the library follow-ups; by QC-01, 2026-10-30, LibKa0s v1.82.0's faces.) Result: pass (owner-marked 2026-10-30). Owner reported pass, 2026-10-31.
 
 **SKIN-4. The Skin tab.** General → the strip reads Master controls, Behavior, **Skin**, Keybindings.
 Skin → **Skin source** (*Ka0s skins* on; *EllesmereUI* disabled with a line saying why unless
@@ -1686,7 +1705,7 @@ EllesmereUI can skin this addon), the nine skins with their swatches under a **L
 **Font and texture** (**Font** and **Texture**, both *Skin's default* in a new profile), the Scope
 (**Ignore settings panel** ticked, **Ignore fonts** unticked), **Copy to every Ka0s addon…** (live with
 another Ka0s addon that uses skins loaded; alone, disabled with its hint) and the note on what skins
-change. Pick **Obsidian** → no reload; `/qc get skin.skin` prints `obsidian`. (Amended by QC-F01, 2026-10-31: *Skin's default*.) Result:
+change. Pick **Obsidian** → no reload; `/qc get skin.skin` prints `obsidian`. (Amended by QC-F01, 2026-10-31: *Skin's default*.) Result: Owner reported pass, 2026-10-31.
 
 **SKIN-5. Every skin on the pads and dials, live.** With a pad on screen (`/qc test` fills it) and a
 dial open, pick each skin in turn: Obsidian, Azeroth, Glass, High Contrast, Ember, WoW Default, WoW
@@ -1700,7 +1719,7 @@ skin's colors. The colors you set (the buttons' body and edge, the header's and 
 bands, the hub, the slices, the dots, the class colors) and the shine stay yours (X4, D5, D6). Fail: a
 pad or dial that keeps the previous skin until `/reload`, a color of yours that changed, or a label
 cut where it was not before on the same face. (Amended by QC-02, 2026-10-30: a HUD face per skin,
-R-4; by QC-01, 2026-10-30, LibKa0s v1.82.0's faces; by QC-F01, 2026-10-31, LibKa0s v1.83.0's faces.) Result:
+R-4; by QC-01, 2026-10-30, LibKa0s v1.82.0's faces; by QC-F01, 2026-10-31, LibKa0s v1.83.0's faces.) Result: Owner reported pass, 2026-10-31.
 
 **SKIN-6. The *Use the skin's ...* boxes.** On a non-default skin, Pad → Header: untick **Use the
 skin's font** → *Font* comes alive with your pick and the header redraws in it; tick → the skin's face
@@ -1754,7 +1773,7 @@ skin's tooltip colors, R-7), and, with **Ignore settings panel** off, a Pad → 
 resize grip of the console, its Copy window and the perf panel included. Tick **Ignore fonts** → the
 console's title-bar labels, the perf panel's columns and the drag strip's label go back to Blizzard's
 face. Switch back to **Ka0s Default** with the console open → it recolors with no reload, its labels in
-Prototype (SKIN-3). (Amended by QC-02, 2026-10-30, the library follow-ups; by QC-01, 2026-10-30, LibKa0s v1.82.0's faces.) Result: pass (owner-marked 2026-10-30).
+Prototype (SKIN-3). (Amended by QC-02, 2026-10-30, the library follow-ups; by QC-01, 2026-10-30, LibKa0s v1.82.0's faces.) Result: pass (owner-marked 2026-10-30). Owner reported pass, 2026-10-31.
 
 **SKIN-11. The Font and texture overrides.** Skin → **Font** → a clearly different face → with no
 reload every pad and dial label whose *Use the skin's font* is ticked takes it (unless **Ignore
@@ -1762,7 +1781,7 @@ fonts** is on, SKIN-12), a block with the box unticked keeps its own pick, and t
 settings pages' text takes it too; the debug
 console keeps its monospace face. Switch skin → the override stays. **Texture** → any status bar →
 nothing on the pads or dials changes (Quick Comms draws no bars). Set both back to *Skin's default* → the
-skin's again. Open **Font** and **Texture** → every row draws in its own face or beside its bar, *Skin's default (…)* first (LibKa0s v1.83.0, D-08). (Amended by QC-F01, 2026-10-31.) Result:
+skin's again. Open **Font** and **Texture** → every row draws in its own face or beside its bar, *Skin's default (…)* first (LibKa0s v1.83.0, D-08). (Amended by QC-F01, 2026-10-31.) Result: Owner reported pass, 2026-10-31.
 
 **SKIN-12. Ignore fonts (rewritten by QC-02, 2026-10-30).** On a non-default skin with **Ignore
 settings panel** off, a pad on screen (`/qc test`) and a dial open, give a pad's Buttons tab a face of
@@ -1857,7 +1876,7 @@ profile opens on HUD text only.) Pick **Off** → the pads and the dial lose the
 Tick **Ignore fonts** → the Font outline is grayed out and the HUD is outlined again, as it was before
 this release. `/qc set skin.outline thick` → refused with the allowed values. Switch to another profile
 → it wears its own Font outline (HUD text only on a new one). Fail: a mode that changes nothing on screen,
-a mode lost after the reload, or a Lua error. (Amended by QC-F01 and its review, 2026-10-31.) Result:
+a mode lost after the reload, or a Lua error. (Amended by QC-F01 and its review, 2026-10-31.) Result: Owner reported pass, 2026-10-31.
 
 **SKIN-25. From skin font flags (D-07, Addendum 01).** Before updating, on a profile set one pad's
 Buttons tab Font flags to **Thick outline** and leave its Header and Section titles on the shipped
@@ -1867,7 +1886,7 @@ the list; the Buttons tab keeps **Thick outline**. With the Font outline on Off,
 lose their outline and the Thick outline buttons keep theirs. Pick **Outline** on the Header → it
 stays Outline after `/reload` and under Off (a picked flag wins). A new pad and a new dial start on
 From skin. Fail: a picked flag moved to From skin, From skin missing from a Font block, or the
-Header back on From skin after the reload. Result:
+Header back on From skin after the reload. Result: Owner reported pass, 2026-10-31.
 
 **SKIN-26. `/qc skin` (D-16).** On a profile that has closed the first-run picker, `/qc skin` → the
 **Choose a skin** window opens with **Ka0s Quick Comms** on its own line; pick and Apply → saved, as
@@ -1875,7 +1894,7 @@ SKIN-18. `/qc help` lists `skin` right after `config` as "Choose a skin: open th
 combat (a target dummy), `/qc skin` twice → each prints a gray "cannot open the skin picker during
 combat" line and nothing opens. `/qc disable`, `/qc skin` → the one disabled line, no picker;
 `/qc enable`. With `libs\LibKa0s` renamed aside and a `/reload`, `/qc skin` → "/qc skin is
-unavailable: the LibKa0s library did not load." (rename it back, `/reload`). Result:
+unavailable: the LibKa0s library did not load." (rename it back, `/reload`). Result: Owner reported pass, 2026-10-31.
 
 **SKIN-27. The HUD size scale (D-09).** On Ka0s Default, give pad 1's Buttons tab Font size 12 with
 *Use the skin's font* ticked and note how wide a button's label is. Pick **Obsidian** → the labels are
@@ -1883,7 +1902,7 @@ the same width as under Ka0s Default, drawn at a slightly larger size (13), and 
 taller to hold them; `/qc get pad.button.fontSize` still prints 12. Untick *Use the skin's font* →
 the label is back to 12 in your own face. Tick **Ignore fonts** → 12 again. Repeat on the dial's Slice
 labels. Fail: a stored size that changed, a label cut off, or a size that moves with the box unticked.
-Result:
+Result: Owner reported pass, 2026-10-31.
 
 **SKIN-28. Width parity of the windows (D-08).** In each skin, with the Font outline on HUD text only (the
 default), on All text and on Off: open the callout popup (Groups → a callout's Edit), the icon browser
@@ -1891,13 +1910,22 @@ default), on All text and on Off: open the callout popup (Groups → a callout's
 pad so its drag strip shows → no title, label, button text or tab is cut off or overlaps its
 neighbor, and the drag strip's title fits with its TEST MODE marker under `/qc test`. Compare each
 window with Ka0s Default: its text is about as wide. Fail: an ellipsis or clipped text in any skin,
-or a skin whose text runs clearly wider than Ka0s Default's. Result:
+or a skin whose text runs clearly wider than Ka0s Default's. Result: Owner reported pass, 2026-10-31.
 
 **SKIN-29. Media pickers preview (LibKa0s v1.83.0, options-ui-§23).** Fully restart the client, then open a
 pad's Buttons tab and untick *Use the skin's font* and *Use the skin's border*. Open **Font** → every row draws
 in its own face. Open **Border** → every row shows its art. Pick one of each, `/reload` → the keys stay and
 the pad draws them. Repeat on the Dial's Labels tab Font and an icon's Border. Fail: a plain list of names, a
-row in the wrong face, a pick lost after the reload, or a Lua error. Result:
+row in the wrong face, a pick lost after the reload, or a Lua error. Result: Owner reported pass, 2026-10-31.
+
+**SKIN-30. A font row and a border row on the only media picker (M3-MEDIA, 2026-11-01).** On the Skin tab
+turn **Ignore settings panel** off and pick a skin other than Ka0s Default. Pad → Header → untick Use
+the skin's font, open the **Font** dropdown: the closed row and every row of the list wear the skin,
+each face previewed in itself, and a pick reaches the pad's header. Pad → Window → untick Use the skin's
+border, open **Border style**: the same skinned list with a swatch per border, the row lines up with
+its neighbors, and a pick reaches the pad's edge. Switch skins and open both again: they follow it.
+Fail: a stock-looking dropdown, a blank list or a Lua error.
+Result:
 
 ## Pending sign-off
 
@@ -1936,14 +1964,13 @@ EDIT-14 (the popup and the browser in the Ka0s window under Ka0s Default); LOOK-
 BUTTON-1, ICONS-1 and ART-1 (amended for the *Use the skin's ...* boxes); and LOC-1 (its fonts note),
 each recorded on its Result: line as pass (owner-marked 2026-10-30).
 
-Owed from LibKa0s v1.82.0 (QC-01, 2026-10-30, Ka0sAddonsCommonTasks
-`docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK/`): SKIN-24 to SKIN-28 (new). Their earlier passes stand as
-recorded, but LOC-1, SKIN-1, SKIN-2, SKIN-3, SKIN-5 and SKIN-10 were amended for v1.82.0's faces
-(Prototype for Ka0s Default, Expressway for Obsidian), so a re-run of them is owed too.
+The owner reported on 2026-10-31 that the smoke lists of both of that week's font runs passed
+(Ka0sAddonsCommonTasks `docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK/` and
+`docs/2026-10-31-FONT_PICKERS_AND_SKIN_FACES/`, "everythings works as expected"): SKIN-24 to SKIN-28 and
+ICON-5 (new, QC-01 and QC-02), LOC-1, SKIN-1, SKIN-2, SKIN-3, SKIN-5 and SKIN-10 (amended for v1.82.0's
+faces), SKIN-4, SKIN-5 and SKIN-11 (re-opened by QC-F01) and SKIN-29 (new, QC-F02), recorded on each
+check's Result line.
 
-Owed from LibKa0s v1.83.0 (QC-F01, 2026-10-31, Ka0sAddonsCommonTasks
-`docs/2026-10-31-FONT_PICKERS_AND_SKIN_FACES/`): SKIN-4, SKIN-5 and SKIN-11 are re-opened for the new
-faces, *Skin's default* and the previewing pickers; SKIN-24 and SKIN-28 run against the new outline
-default, HUD text only, and SKIN-27 and the windows' width checks against the new faces. SKIN-29 is new (QC-F02).
+Owed from the findings remediation (FX-QC-PERF, 2026-10-31): LOOK-7 (new).
 
-Owed from QC-02 (2026-10-30, the same bundle): ICON-5 (new).
+Open from the same run's re-cut v1.84.0 (M3-MEDIA, `Ka0sMedia_*` the only media picker): SKIN-30 is new.

@@ -48,7 +48,7 @@ Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBO
 LibSharedMedia, LibDataBroker, LibDBIcon
 and LibCustomGlow-1.0 (the Icons tab's glows, resolved at call time by LibKa0s-Glow-1.0 and optional; versions and
 licenses in `DEPENDENCIES.md`) are vendored under `libs/`, and so is the whole
-LibKa0s v1.83.0 payload, of which fifteen majors are wired, one setup file each (`DEPENDENCIES.md`
+LibKa0s v1.84.0 payload, of which fifteen majors are wired, one setup file each (`DEPENDENCIES.md`
 lists the toolchain):
 
 | Major | Setup file | Gives |
@@ -270,7 +270,7 @@ the settings pages and the library's own windows.
   live; back asks for a reload. `/qc diagnostics` prints the gate (`NS.SkinDescribe`, [debug.md](debug.md)).
 - **Not skinned** (skinning-§7): the Blizzard Settings window around the pages, the StaticPopup
   confirms, `GameTooltip`'s frame (the lines this addon writes take tokens, X8), the minimap button and
-  its tooltip, `ColorPickerFrame` and the LibSharedMedia pull-outs, the landing page's logo, the shine
+  its tooltip, `ColorPickerFrame`, the landing page's logo, the shine
   art, the glyph colors a callout or group stores (player data), the channels' chat-type colors (game
   meaning), and the chat
   output (the cyan `[QC]` tag and the lines slash-commands mandates, X7).
@@ -365,7 +365,9 @@ the repository has no generated data file.
 
 Nothing is over the cap today. `tests/test_page_groups.lua` reached it exactly and was split along its
 own section headings (`80a0fbb`, 2026-10-25): 1131 lines now, beside `tests/test_page_groups_nesting.lua`
-at 418. Seven files sit in the 1000-1500 band (`tests/test_dial.lua` 1471, `locales/enUS.lua` 1375,
+at 418. `tests/test_dial.lua` was split the same way at 1471 lines (2026-10-31): 764 now, beside
+`tests/test_dial_catcher.lua` at 288 and `tests/test_dial_look.lua` at 388, with their shared helpers in
+`tests/dial_helpers.lua`. Six files sit in the 1000-1500 band (`locales/enUS.lua` 1383,
 `modules/Library.lua` 1340, `tests/test_page_groups.lua` 1131, `tests/test_library.lua` 1057,
-`tests/test_pad.lua` 1035, `tests/wow_mock.lua` 1024); the automated-test record's watch list gives
+`tests/test_pad.lua` 1037, `tests/wow_mock.lua` 1024); the automated-test record's watch list gives
 each its disposition.

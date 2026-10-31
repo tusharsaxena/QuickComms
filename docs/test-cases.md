@@ -697,7 +697,7 @@ Total.
 - groups page: [R4] EditGroup in combat prints the settings refusal and changes nothing
 - groups page: [R4] EditGroup of a group that is gone opens nothing
 
-### test_page_pads.lua (27)
+### test_page_pads.lua (28)
 
 - pads page: New pad makes a second pad holding every built-in, selects it, and the pad is built
 - pads page: the Layout rows write the selected pad
@@ -720,9 +720,10 @@ Total.
 - page pads: [shine] the Buttons tab has a Shine heading
 - pads page: [B9] Icons carries its headings once each, a companion beside each swatch, and writes the pad
 - pads page: [B9] the offsets are grayed out while the glow is off or in Button; its color never is
-- pads page: [glow knobs] only the selected style's knobs show, and none while the glow is off
+- pads page: [glow knobs] only the selected style's knobs show, grayed while the glow is off
 - pads page: [glow knobs] the offsets come right after Glow color, under Icon glow, in the schema and on the tab
-- pads page: [glow knobs] a Glow or Glow style write repaints the tab, so the right knobs appear
+- pads page: [glow knobs] a Glow style write drops the old style's knobs and brings its own (LibKa0s#67)
+- pads page: [shine] the blooms show only under Fluid glass, through the library (LibKa0s#67)
 - pads page: [B9] Defaults puts the Icons rows back too, and its tooltip names them
 - page pads: [polish] the page is titled Pad
 - page pads: [polish] no user-facing string sends the player to a Comms Pad or Comms Dial page
@@ -743,7 +744,7 @@ Total.
 - dials page: Delete dial asks, then the dial is gone, its header released, and the page heals
 - dials page: [final 11] the page's own plan builds are not timed as a surface's bake
 - dials page: [B9] Icons follows Labels, carries its headings once each, and writes the dial
-- dials page: [glow knobs] only the selected style's knobs show, and a Glow or Glow style write repaints
+- dials page: [glow knobs] a Glow style write drops the old style's knobs and brings its own (LibKa0s#67)
 - dials page: [labels] Labels shows or hides the wedges' names and styles them; off grays the font
 - dials page: [slices] Slices writes the fill and highlight, Layout the gap, Hub the pointer, each color with its class color
 - page dials: [polish] Slices tab has no Border heading; Slice gap is on Layout
@@ -1113,7 +1114,7 @@ Total.
 - pad: [F-006] a rebuild that moved no line rewrites no button's type or macrotext
 - pad: [F-006] after a rebuild, every button outside the active set carries no type and is not armed
 
-### test_dial.lua (67)
+### test_dial.lua (38)
 
 - dial: Apply builds QuickCommsDial<n> with a ring per page, each callout wedge armed with its baked line
 - dial: a refused callout is a dimmed, disarmed wedge; a ring wedge is disarmed
@@ -1153,12 +1154,9 @@ Total.
 - dial slices: [perf] a reopen on the slice last lit leaves the highlight where it is; a rebuild moves it
 - dial: [F-006] an unchanged rebuild rewrites no wedge's line; a wedge left out carries no type
 - dial slices: [polish] gap 0 draws as before
-- dial: [paging] the indicators sit on a rounded background sized to the row; off hides it
-- dial: [paging] every dot and the pill has a border, its size plus twice the Dot border; 0 draws none
-- dial: [front] the hub, its circle and the pointer draw over the slices
-- dial: [tooltip] a wedge's tooltip sits outside the dial: above by default, on the Labels tab's side
-- dial: [pointer] the pointer is a catalog glyph, sized, colored and placed by the Slices tab, and can be off
-- dial: [labels] the Label offset moves every label out from the center; the title and the page row follow
+
+### test_dial_catcher.lua (13)
+
 - dial: [polish] a click near the hub sends the lit slice, in combat
 - dial: [polish] a click with a modifier held still sends the slice, in combat
 - dial: [polish] just outside the hub's circle, on a diagonal, the slice lights and clicks, in combat
@@ -1172,6 +1170,15 @@ Total.
 - dial: [polish] wedges take no mouse; keys still click by name
 - dial: [polish] a built dial closes on a click outside it, in combat
 - dial: [polish] a ring hidden under the hover clears its slice, tooltip and hover glow
+
+### test_dial_look.lua (16)
+
+- dial: [paging] the indicators sit on a rounded background sized to the row; off hides it
+- dial: [paging] every dot and the pill has a border, its size plus twice the Dot border; 0 draws none
+- dial: [front] the hub, its circle and the pointer draw over the slices
+- dial: [tooltip] a wedge's tooltip sits outside the dial: above by default, on the Labels tab's side
+- dial: [pointer] the pointer is a catalog glyph, sized, colored and placed by the Slices tab, and can be off
+- dial: [labels] the Label offset moves every label out from the center; the title and the page row follow
 - dial: [polish] default hub is a solid gold circle of 24 on a 32 backdrop with a 1 px rim, no red X
 - dial: [polish] hub style solid draws the backdrop rim when its border size is set
 - dial: [polish] hub style ring is a hollow ring of the circle size and line width
@@ -1255,7 +1262,7 @@ Total.
 - layers: [audit QC-21] a modal window is clamped, never toplevel, never raised
 - layers: [QUI-Z06] the icon link window is lifted to POPUP
 
-### test_layout.lua (23)
+### test_layout.lua (27)
 
 - layout: [general] Behavior reads Sending, then Pads and dials, with the new labels (QUI-L01, L02)
 - layout: [general] the header Defaults carries the library's Reset all settings tooltip (QUI-L-new2)
@@ -1280,6 +1287,10 @@ Total.
 - layout: [dials] Paging: Page row, Arrows, Page indicator, Indicator border, Indicator background (QUI-L25, L26)
 - layout: [dials] Labels: Slice labels, Group labels, then Tooltip (QUI-L19)
 - layout: [dials] Icons: Size, offset and crop holds Icon size | Icon offset, then Zoom (QUI-L27)
+- layout: [position] the pad's block is typed boxes under one heading, with their tooltip and Reset
+- layout: [position] the dial's block holds Open at, then the boxes, with their tooltip and Reset
+- layout: [position] the box follows the stored point on a refresh
+- layout: [position] both blocks come from the library's composer
 
 ### test_skinsetup.lua (24)
 
@@ -1331,7 +1342,7 @@ Total.
 - skin windows: the browser's empty footer line is qc.note, today's |cffaaaaaa
 - skin windows: the browser's cell tooltip writes its lines in the tooltip tokens
 
-### test_skin_hud.lua (18)
+### test_skin_hud.lua (19)
 
 - skin hud: every HUD font and border block follows the skin by default, through a schema row
 - skin hud: a following picker is grayed out and shows the skin's value; off, it is the player's
@@ -1347,6 +1358,7 @@ Total.
 - skin hud: a dial's chrome is today's pixels under Ka0s Default, each from a token
 - skin hud: a skin switch repaints the chrome and the faces, and leaves the player's colors
 - skin hud: a pad window's 1px inner rule is win.inner, none where the skin has none
+- skin hud: a pad's window is repainted when its look or the skin moved, and at no other rebuild
 - skin hud: the dial's per-frame update reads no token
 - skin hud: step 10 turns every stored pad's and dial's companions on, keeping every pick
 - skin hud: without the library step 10 writes the companions itself
@@ -1542,7 +1554,7 @@ Total.
 | test_groups_when.lua | 21 |
 | test_page_groups.lua | 49 |
 | test_page_groups_nesting.lua | 19 |
-| test_page_pads.lua | 27 |
+| test_page_pads.lua | 28 |
 | test_page_dials.lua | 28 |
 | test_check.lua | 6 |
 | test_send_guard.lua | 11 |
@@ -1558,17 +1570,19 @@ Total.
 | test_surfaces.lua | 30 |
 | test_pad_render.lua | 25 |
 | test_pad.lua | 47 |
-| test_dial.lua | 67 |
+| test_dial.lua | 38 |
+| test_dial_catcher.lua | 13 |
+| test_dial_look.lua | 16 |
 | test_keybinds.lua | 6 |
 | test_dial_shine.lua | 8 |
 | test_icon_style.lua | 10 |
 | test_glow.lua | 11 |
 | test_shine.lua | 8 |
 | test_layers.lua | 11 |
-| test_layout.lua | 23 |
+| test_layout.lua | 27 |
 | test_skinsetup.lua | 24 |
 | test_skin_windows.lua | 20 |
-| test_skin_hud.lua | 18 |
+| test_skin_hud.lua | 19 |
 | test_skin_picker.lua | 18 |
 | test_skin_outline.lua | 10 |
 | test_skin_verb.lua | 6 |
@@ -1583,4 +1597,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1297** |
+| **Total** | **1303** |

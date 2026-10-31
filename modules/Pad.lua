@@ -2,7 +2,7 @@ local _, NS = ...
 -- modules/Pad.lua — the Comms Pad's frames (spec §10.1, §10.3, §10.4).
 --
 -- The root is a plain BackdropTemplate frame wearing the Ka0s skin (NS.ApplySkin), dressed at every
--- rebuild by the pad's Main window tab (Pad_Render.SkinFor: border and background), its Header
+-- rebuild by the pad's Main window tab (Pad_Render.WindowLook: border and background), its Header
 -- tab (Pad_Render.HeaderLook: the header row's height, font, background and edge), its Section titles
 -- tab (Pad_Render.SectionLook: each title row's height and font, and the band behind it) and its Buttons tab (Pad_Render.ButtonLook: each button's body, edge, label font and glow);
 -- it becomes protected in combat because its buttons are secure. Every button
@@ -445,7 +445,8 @@ function Pad.Apply(id, plan)
         fontSize = inst.clook.font.size, titleSize = slook.font.size, titleH = slook.height, situation = hstate.said, iconSize = icfg.size,
         minWidth = R.HeaderMinWidth(inst.header) })
     sizeRoot(inst, layout, box)
-    NS.ApplySkin(inst.root, R.SkinFor(look))
+    inst.wlook = R.WindowLook(look, inst.wlook)
+    R.ApplyWindowLook(inst.root, inst.wlook)
     place(inst, box, layout.style, inst.clook, slook, icfg)
     disarmFree(inst.buttons)
     NS.Glow.ReleaseFree(inst.buttons)

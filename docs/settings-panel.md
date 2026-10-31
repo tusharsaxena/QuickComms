@@ -587,9 +587,9 @@ both composed by the options library and on by default. While one is on, its pic
 *Border style*; on Icons *Border style* and *Border thickness*) is grayed out and shows the skin's
 value, and the stored pick comes back when it is turned off; sizes, colors, flags and shadows stay
 live either way. On Icons the box is grayed while Show border is off. Schema step 10 turned them on
-once on every stored pad ([schema.md](schema.md)). The Font and Border pickers are `LSM30_*` rows;
-this addon ships no SharedMediaWidgets, so the library draws them as `Ka0sMedia_Font` and
-`Ka0sMedia_Border`, each row previewing its face or border (LibKa0s v1.83.0). A Font block's flags
+once on every stored pad ([schema.md](schema.md)). The Font and Border pickers are the
+library's `Ka0sMedia_Font` and `Ka0sMedia_Border`, which the skin paints, each row previewing its face
+or border (LibKa0s v1.83.0; the only media picker since v1.84.0). A Font block's flags
 lead with **From skin**, the default: the Skin tab's Font outline decides, and a picked flag wins.
 
 Header, Section titles and Window were one Window tab until 2026-10-20 (the Look tab before
@@ -636,19 +636,17 @@ icon-only button is the art whole, above the icon and below the padlock, the lab
 the hover.
 Shine strength (0 to 100, step 5, default 85) is its opacity and Shine tint colors its light (its shade
 stays dark). Strength and Tint are grayed out at None; Bloom color A and B (pink and mint) color Fluid
-glass's two blooms and are grayed out under every other look. Each pad keeps its own; the Dial page's
+glass's two blooms and show only under it, through `shownWhen` (options-ui-§22). Each pad keeps its own; the Dial page's
 Slices tab has the same heading for a dial.
 
 The Icons tab's rows are `pad.icon.*` (settings/SchemaIcons.lua). Every color pair sits on one line and is
 never grayed out; Border style and thickness are grayed out while Show border is off or Use the skin's border is on; Glow when, Glow style
 and the offsets while the glow is off, and the offsets also under Button, which ignores them. The
 offsets sit right after Glow color, under Icon glow, and always show. A style's knobs (Pixel border, Auto cast sparkles, Button
-(rotating rays), Proc (flipbook)) show only while the glow is on and in that style (owner request,
-2026-10-20; until then every style's knobs showed, grayed out under the others): the tab's render filters
-them (`Settings.ShownIconRows`), the rows stay in the schema, so Defaults and `/qc set`
-still reach every knob. Glow and Glow style are structural (`Editors.STRUCTURAL`): a write repaints the
-tab on the next frame, its scroll kept, so the right heading appears at once. The Dial page's
-Icons tab does the same.
+(rotating rays), Proc (flipbook)) show only while Glow style picks that style, grayed out while the glow is
+off (options-ui-§22, *Hidden is not disabled*; LibKa0s#67): each row carries `shownWhen`, so the library drops
+it, heading included, and re-renders the page once on the next frame when the style changes. The rows stay
+in the schema, so Defaults and `/qc set` still reach every knob. The Dial page's Icons tab does the same.
 Glow when is Always, On hover or After sending (1.5 s from the send result; a dial closes on the send,
 so its wedge glows for 1.5 s from the next open, if that comes within 5 s). The page's Defaults puts the
 Window, Header, Section titles, Buttons and Icons rows back too, and its tooltip names every tab it
@@ -786,7 +784,7 @@ General page > Keybindings, with no key box and no readout (QUI-L29).
   circle are `dial.hub.*`, each sub-part's size beside its color: Hub style (Solid circle, the default; Hollow ring; Target, a ring with a dot; Rimmed
   disc, a filled circle on a rimmed backdrop), Hub size (24 to 80, default 32 since 2026-10-22: the backdrop's width,
   where the slices and the pointer start), Circle size (4 to 60, default 24), Line width (1 to 6,
-  grayed out under Solid circle), Backdrop color, Hub border size (0 to 6, default 1; Rimmed disc
+  grayed out unless the style draws a ring, under Solid circle and Rimmed disc), Backdrop color, Hub border size (0 to 6, default 1; Rimmed disc
   always draws one), Hub border color and Circle color, each with Use class color; the circle
   brightens while the cursor is on the hub. Pointer is
   `dial.slice.pointerShow`, `pointerSize` (10 to 48, default 20), `pointerOffset` (0 to 150, 0
