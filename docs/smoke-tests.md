@@ -39,6 +39,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | IDS-1 | Instance ids | The Midnight dungeons and raids |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes |
 | ANIM-1..20 | [Animations](#animations) | The dial's open and close, every style by family, Slide's Direction, a send, combat, the stand-down, Alt-Z, a pad having none, text that neither shimmers nor truncates, the old defaults moved |
+| PLOOK-1..11 | [The pad's look per skin](#the-pads-look-per-skin) | The pad in each skin: edges, buttons and shine (the owner's findings of 2026-11-01) |
 | FSKIN-1..11 | [The full skin](#the-full-skin) | Every pad and dial color, the shadow, texture and shine on the skin, Ka0s Default unmoved, the companions off, an existing profile, meaning colors, the ghost |
 | SKIN-1..30 | [Skins](#skins) | The skinning rollout: the one-time reset under Ka0s Default, a new pad, dial or profile on the skin, Ka0s Default elsewhere unchanged, the Skin tab, every skin on the pads and dials, the *Use the skin's ...* boxes, the Preview as window, the callout popup and the icon browser, the settings pages, the tool windows, the Font and texture overrides, Ignore fonts, EllesmereUI on and off and the reload back, profiles and combat, the first-run skin picker (its eye, Apply, close, gear, the switch and a profile event, one picker across Ka0s addons), the CLI and the degraded install; LibKa0s v1.82.0: the Font outline, From skin font flags, `/qc skin`, the HUD size scale and the windows' width parity; the skin on the only media picker |
 
@@ -1186,9 +1187,8 @@ keeps that look, with no gap in its border. Result:
 
 ## Buttons tab
 
-**BUTTON-1. Size, color, border and font (2026-10-20).** On a new pad the buttons wear the owner's
-defaults: a faint gray body (#3F3F3F at 25%), a faint 1-pixel light edge (#EAEAEA at 10%), small white
-labels, 16-pixel icons. Pad → Buttons: Button width 160 → wider buttons; Button height 40 →
+**BUTTON-1. Size, color, border and font (2026-10-20).** On a new pad the buttons wear the fuller Ka0s
+Default look (PLOOK-1, 2026-11-01), small white labels, 16-pixel icons. Pad → Buttons: Button width 160 → wider buttons; Button height 40 →
 taller buttons, label and icon centered; Button height 0 → back to the automatic height; Button style Icon
 only (Layout) → square buttons around the icons whatever the size says. Color → Background red at 50% →
 every button's body; Use class color → your class color. Border thickness 2, color white → an edge around
@@ -1197,7 +1197,7 @@ no edge. Font: untick Use the skin's font, another face, size 14, Outline, Font 
 titles keep the Section header tab's font); a bigger font grows the automatic height. Defaults → the owner's
 buttons again. In combat, `/qc set pad.button.width 150` → no error, "updates after combat", wider buttons at
 combat end. (Amended by QC-05, 2026-10-29: the skinning rollout's Use the skin's font and border,
-SKIN-6.) Result: pass (owner-marked 2026-10-30).
+SKIN-6.) Result: not run (the defaults changed 2026-11-01).
 
 **BUTTON-2. The button glow (2026-10-20).** Buttons → Glow is off by default and Glow style is grayed out.
 Tick Glow → every button glows around its whole edge in Pixel border, gold; Glow style Auto cast
@@ -1508,10 +1508,11 @@ one; Rim light an edge glow and a short top highlight. On the wide buttons the e
 a square one (nothing stretched at the ends); Layout → Button style Icon only → the square buttons
 take the art whole. The padlock, the label, the send flash and the hover still read over it. Bloom color A and B
 show only under Fluid glass; set them to red and blue → its two blooms change color. Shine
-strength 0 → no shine; 100 → the strongest. Shine tint yellow → the light turns yellow, the shade stays
+strength (with Use the skin's shine unticked; ticked, its row is gray and the skin's 55 draws) 0 → no
+shine; 100 → the strongest. Shine tint yellow → the light turns yellow, the shade stays
 dark; Use class color → your class color. Fluid glass, then Gloss cap, then None → no bloom or shine is
 left behind. Layout → Button style Label only → the buttons keep their shine (it covers the plate, not
-the icon). Result: 2026-10-21, pass (the owner's run; client build not recorded).
+the icon). Result: not run (Shine strength's expected result changed 2026-11-01).
 
 **SHINE-2. Each look on a dial (2026-10-21).** Open a dial. Dial → Slices → Shine look each of the seven
 in turn, at Wheel → wedges per ring 4, 8 and 12, Slice gap 0 and 8, and Ring radius 100 and 180 → every
@@ -2044,6 +2045,45 @@ with no square edge to the glow. Result: not run.
 on Scale and fade at 0.15 s and 0.1 s and another with its own picks → after the update the first shows
 Inward spiral at 0.5 s and Outward spiral at 0.3 s, and the second keeps its picks. Result: not run.
 
+## The pad's look per skin
+
+The owner's findings of 2026-11-01. Each check: a pad on screen (`/qc test`), the named skin, every box
+at its default. Compare a hairline with that skin's window edge on the settings or Preview window.
+
+**PLOOK-1. Ka0s Default.** The buttons have a dark body with a soft top-to-bottom gradient and a gentle
+gloss, a thin gray edge, the same icons and colors; restrained next to Obsidian's. The header and titles
+draw no band. Fail: the old flat wash, or a gloss brighter than Obsidian's. Result: not run.
+
+**PLOOK-2. Obsidian.** As before but the gloss is about a third lighter; bands and buttons have hairline
+edges. Result: not run.
+
+**PLOOK-3. Azeroth.** Leather buttons with a lighter gloss, hairline gold-brown band edges. Result: not run.
+
+**PLOOK-4. Glass.** Gloss cap a third lighter; the header and section bands' edges are a thin frosted
+line, not the thick pale frame of 2026-11-01. Result: not run.
+
+**PLOOK-5. High Contrast.** White hairlines on the bands and buttons, no shine. Fail: a band edge visibly
+heavier than a button's. Result: not run.
+
+**PLOOK-6. Ember.** Ember buttons with a lighter gloss, hairline band edges. Result: not run.
+
+**PLOOK-7. WoW Default.** A Blizzard-style pad: dark window with a gray edge, gray header and section
+bands with a thin gray line and gold text, clear red buttons with a soft sheen. Fail: any white band or
+white edge, or buttons dark maroon. Result: not run.
+
+**PLOOK-8. WoW Midnight.** Night-violet buttons, gold hairlines on bands and buttons, a lighter gloss.
+Result: not run.
+
+**PLOOK-9. WoW Forever.** Charcoal buttons with a lighter gloss, hairline band edges. Result: not run.
+
+**PLOOK-10. Strength and the box.** Pad → Buttons and Dial → Slices: with *Use the skin's shine* ticked
+Shine strength is gray; a dial sharing the skin's look reads as light as the pad. Untick it → the row
+wakes, your stored value draws under every skin. Result: not run.
+
+**PLOOK-11. The texture override.** Skin → WoW Default, then pick a Texture on the Skin tab's Font and
+texture section → the buttons take it; back to the skin's own → flat red. A page dot's edge under WoW
+Default is dark, not white. Result: not run.
+
 ## The full skin
 
 LibKa0s v1.85.0 and Ka0sAddonsCommonTasks `docs/2026-11-01-FULL_SKINNING/` (cause D7). Each check names
@@ -2052,14 +2092,15 @@ Obsidian, Azeroth, Glass and High Contrast, whose fills, text and shadows differ
 are added in this build: a full client restart comes first.
 
 **FSKIN-1. Ka0s Default did not move.** New profile on **Ka0s Default**, a pad on screen and a dial open
-→ the buttons' dim body and faint edge, the gold header and titles over no band, white labels, the
+→ the gold header and titles over no band, white labels, the
 slices, the gray hub with its gold rim and circle, the page dots and the Gloss fade and Glass orb
-shines look as they did before this build, text shadows included. Fail: any pixel moved but the
-checks' named ones (a tooltip title, FSKIN-9). Result: owed.
+shines look as they did before this build, text shadows included, but for the pad buttons and the
+shine's strength (PLOOK-1). Fail: any other pixel moved but the checks' named ones (a tooltip title,
+FSKIN-9). Result: owed.
 
 **FSKIN-2. Every pad color follows a skin, live.** Skin → **Obsidian**, then **Azeroth**, a pad on
 screen → with no reload the window fill and edge, the header's and the titles' text, a faint band
-behind each in the skin's title color with an edge at the skin's thickness, the buttons' body, edge and
+behind each in the skin's title color with a hairline edge, the buttons' body, edge and
 label all change. Fail: any of them keeping the last skin. Result: owed.
 
 **FSKIN-3. Every dial color follows a skin, live.** Same, a dial open and paged → the slices, a hovered
@@ -2074,8 +2115,8 @@ under every skin. Result: owed.
 **FSKIN-5. The button texture and the shine.** **Azeroth** → the buttons' bodies take its parchment bar
 texture in the skin's button color; untick *Use the skin's texture* → flat. **Glass** → the pad's shine
 is Gloss cap, the dial's Frosted glass; **High Contrast** → no shine; every other skin keeps the Ka0s
-Default look in its own tint. Untick *Use the skin's shine* → your Shine look and tint under every
-skin. Result: owed.
+Default look in its own tint. Untick *Use the skin's shine* → your Shine look, tint and Strength under
+every skin. Result: owed.
 
 **FSKIN-6. A box unticked keeps your color.** On a pad, untick *Use the skin's color* beside Background
 color and pick red, then switch skins → the red stays; tick the box → the skin's, and your red comes
@@ -2161,3 +2202,7 @@ Owed from issue #13 (2026-11-01): ANIM-1 to ANIM-20 (new; the pad ruling reshape
 
 Owed from the full skin (FS-QC-REC, 2026-11-01): FSKIN-1 to FSKIN-11 (new); SKIN-5, SKIN-11, SKIN-12 and SKIN-13
 (their expected result changed, so each lost its pass mark).
+
+Owed from the pad's looks (FS-QC-FIX, 2026-11-01): PLOOK-1 to PLOOK-11 (new); BUTTON-1 and SHINE-1 (their
+expected result changed, so each lost its pass mark). A re-vendor of LibKa0s v1.85.0 changes four skins'
+border style: re-run PLOOK-3, 4, 6 and 7 on it.

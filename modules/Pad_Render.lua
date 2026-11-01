@@ -464,8 +464,9 @@ local NO_INNER = { 0, 0, 0, 0 }
 local CLEAR = { r = 0, g = 0, b = 0, a = 0 }
 
 -- The tokens a block's fill, edge and thickness follow, by R.SkinFor's `tokens`: the window's are the
--- library's, a band's and a button's the owner tokens that keep their pixels under Ka0s Default.
-R.WINDOW_TOKENS = { bg = "win.bg", edge = "win.border", size = "bar.borderSize" }
+-- library's but for its edge, a band's and a button's the owner tokens: what each is under Ka0s Default,
+-- and what a skin's window tokens cannot say for an edge drawn flat (core/SkinSetup.lua).
+R.WINDOW_TOKENS = { bg = "win.bg", edge = "qc.winEdge", size = "bar.borderSize" }
 R.BAND_TOKENS = { bg = "qc.bandBg", edge = "qc.bandEdge", size = "qc.bandEdgeSize" }
 R.BUTTON_TOKENS = { bg = "qc.btnBg", edge = "qc.btnEdge", size = "bar.borderSize" }
 
@@ -639,11 +640,18 @@ end
 
 -- ── the Buttons tab (2026-10-20) ───────────────────────────────────────────────────────────────
 
+-- The statusbar file a button's body wears, nil for flat: the player's override of the skin's texture,
+-- which a skin's own qc.btnTexture entry would otherwise hide, else the token.
+local function bodyTexture(button)
+    if button.textureFromSkin ~= true then return nil end
+    local _, override = NS.SkinOverride()
+    return NS.MediaFetch("statusbar", override or Skin.Token("qc.btnTexture"))
+end
+
 --- A button's look, from the pad's `button` table: { bg = {r,g,b,a}, texture (a statusbar file the skin
 --- names, nil for the flat body), edge (a plain skin: the border only, over no background), font, glow
 --- (IconStyle.GlowConfig, false while off), shine (NS.Shine.Resolve of its Shine leaves), sig }. A
---- missing body color is the skin's btn.bg (R.Chrome: 0.10, 0.10, 0.12, 0.90 under Ka0s Default, the body
---- a button always had).
+--- missing body color is the skin's btn.bg (R.Chrome: 0.10, 0.10, 0.12, 0.90 under Ka0s Default).
 --- `prev` is answered again while its signature still holds, as R.HeaderLook's.
 function R.ButtonLook(button, prev)
     button = type(button) == "table" and button or {}
@@ -655,10 +663,9 @@ function R.ButtonLook(button, prev)
         borderStyleFromSkin = button.borderStyleFromSkin, borderColorFromSkin = button.borderColorFromSkin,
         borderColor = button.borderColor, useClassColorBorder = button.useClassColorBorder, background = CLEAR },
         true, R.BUTTON_TOKENS)
-    local texture = button.textureFromSkin == true and NS.MediaFetch("statusbar", Skin.Token("qc.btnTexture")) or nil
-    return { sig = sig, bg = bg, texture = texture, edge = edge, font = R.LabelFont(button),
+    return { sig = sig, bg = bg, texture = bodyTexture(button), edge = edge, font = R.LabelFont(button),
         glow = IS.GlowConfig(button, tostring(button.width) .. "x" .. tostring(button.height)),
-        shine = NS.Shine.Resolve(button, "qc.btnShine", "qc.btnShineTint") }
+        shine = NS.Shine.Resolve(button, "qc.btnShine", "qc.btnShineTint", "qc.btnShineStrength") }
 end
 
 -- A button's body: the skin's texture in the look's color, or the flat color. A pooled texture's tint

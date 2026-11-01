@@ -77,6 +77,18 @@ local addonName, NS = ...
 -- draw the refused veil and the cooling veil alike everywhere but Ka0s Default; a black wash over
 -- an icon reads on every skin as it is.
 --
+-- WoW Default's `win.border` is white and its `win.borderSize` 32: they are what its dialog ART is
+-- multiplied by and drawn at, not a color or a thickness for a flat edge, and Glass's 8 is the same
+-- kind of number. So an edge this addon draws flat never reads either as it stands: the window's and a
+-- band's color answer the skin's gray under WoW Default (`skins`), and a band's thickness follows the
+-- bar edge, the hairline a button already wears. That skin's `bar.texture` is the client's dim status
+-- bar art, which multiplies its red buttons down to maroon, so a button there has none.
+--
+-- Three looks are not today's pixels, by the owner's ruling of 2026-11-01: Ka0s Default's button body,
+-- edge, texture and shine tint are the fuller look every other skin's buttons have, and the Strength
+-- of the shine, in every skin, is qc.btnShineStrength and qc.sliceShineStrength, a third under the 80
+-- and 85 it was and one value, so a pad and a dial sharing a look read alike.
+--
 -- ── WHERE IT LOADS ───────────────────────────────────────────────────────────────────────────
 --
 -- Below core/CoreSetup.lua, whose NS.ApplySkin the degraded facade's Shell routes to, and above
@@ -107,6 +119,8 @@ local OUTLINE_PATH, OUTLINE_DEFAULT = "skin.outline", "hud"
 local DEFAULT = "ka0s"
 
 local function byte(n) return n / 255 end
+-- WoW Default's own grays (its tooltip edge, its divider), for an edge drawn flat.
+local WOW_EDGE, WOW_RULE = { byte(0x9A), byte(0x9A), byte(0x9A), 1 }, { byte(0x6E), byte(0x6E), byte(0x6E), 1 }
 
 NS.SKIN_TOKENS = {
     -- QC-G1: the pad button's and the dial wedge's state veils, a refused bake and the spam guard.
@@ -137,23 +151,28 @@ NS.SKIN_TOKENS = {
     -- token's value, today's pixels under Ka0s Default and the token in every other skin. A header's
     -- and a section title's band: nothing drawn, so no fill and no edge.
     ["qc.bandBg"]    = { default = { 0, 0, 0, 0 }, follow = "title.bg" },
-    ["qc.bandEdge"]  = { default = { 1, 1, 1, 1 }, follow = "win.border" },
-    ["qc.bandEdgeSize"] = { default = 0, follow = "win.borderSize" },
-    -- A pad button's body and edge (#3F3F3F at 25% and 10%), and its texture: flat, "" naming none.
-    ["qc.btnBg"]     = { default = { 0x3F / 255, 0x3F / 255, 0x3F / 255, 0.25 }, follow = "btn.bg" },
-    ["qc.btnEdge"]   = { default = { 0x3F / 255, 0x3F / 255, 0x3F / 255, 0.10 }, follow = "btn.border" },
-    ["qc.btnTexture"] = { default = "", follow = "bar.texture" },
-    -- The shine: a look per skin (modules/Shine.lua's names, "none" for none) and a tint. No library
-    -- token names a look, so these two say it themselves.
+    ["qc.bandEdge"]  = { default = { 1, 1, 1, 1 }, follow = "win.border", skins = { wow = WOW_RULE } },
+    ["qc.bandEdgeSize"] = { default = 0, follow = "bar.borderSize" },
+    -- A pad window's edge: win.border, but for the white WoW Default's art is multiplied by.
+    ["qc.winEdge"]   = { default = { 0, 0, 0, 1 }, follow = "win.border", skins = { wow = WOW_EDGE } },
+    -- A pad button's body, edge and texture ("" naming none: WoW Default's red, flat).
+    ["qc.btnBg"]     = { default = { 0.10, 0.10, 0.12, 0.90 }, follow = "btn.bg" },
+    ["qc.btnEdge"]   = { default = { 0.24, 0.24, 0.27, 0.90 }, follow = "btn.border" },
+    ["qc.btnTexture"] = { default = "Ka0s Default", follow = "bar.texture", skins = { wow = "" } },
+    -- The shine: a look per skin (modules/Shine.lua's names, "none" for none), a tint and a Strength
+    -- in percent, one in every skin. No library token names a look or a Strength, so these say it
+    -- themselves.
     ["qc.btnShine"]  = { default = "glossfade", skins = { glass = "gloss", contrast = "none" } },
-    ["qc.btnShineTint"] = { default = { 0x1B / 255, 0x1B / 255, 0x1B / 255, 1 }, follow = "text.muted" },
+    ["qc.btnShineTint"] = { default = { 0x80 / 255, 0x80 / 255, 0x80 / 255, 1 }, follow = "text.muted" },
+    ["qc.btnShineStrength"] = { default = 55 },
     ["qc.sliceShine"] = { default = "orb", skins = { glass = "frost", contrast = "none" } },
     ["qc.sliceShineTint"] = { default = { 0x80 / 255, 0x80 / 255, 0x80 / 255, 1 }, follow = "text.muted" },
+    ["qc.sliceShineStrength"] = { default = 55 },
     -- A dial's fills: its slices and plates (alpha 0.80), its hub, its page dots and their edge.
     ["qc.sliceBg"]   = { default = { 0.06, 0.06, 0.08, 0.80 }, follow = "win.bg" },
     ["qc.hubBg"]     = { default = { 0.12, 0.12, 0.14, 0.95 }, follow = "btn.bg" },
     ["qc.pageDot"]   = { default = { 0.4, 0.4, 0.4, 0.9 }, follow = "text.disabled" },
-    ["qc.pageDotEdge"] = { default = { 0, 0, 0, 0.9 }, follow = "win.border" },
+    ["qc.pageDotEdge"] = { default = { 0, 0, 0, 0.9 }, follow = "win.border", skins = { wow = { 0, 0, 0, 0.9 } } },
     -- An icon's tint: white, every icon as it was, where icon.tint is a gray under Ka0s Default.
     ["qc.iconTint"]  = { default = { 1, 1, 1, 1 }, follow = "icon.tint" },
     -- HUD text's shadow color under a skin that states none: Ka0s Default's hud.shadow is false, and

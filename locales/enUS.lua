@@ -669,7 +669,7 @@ L["Bloom color A"] = "Bloom color A"
 L["Bloom color B"] = "Bloom color B"
 L["A glossy overlay: Gloss cap, Gloss fade, Glass orb, Frosted glass, Fluid glass, Bevel or Rim light. None draws none."] =
     "A glossy overlay: Gloss cap, Gloss fade, Glass orb, Frosted glass, Fluid glass, Bevel or Rim light. None draws none."
-L["How strong the shine is, from 0 to 100 percent."] = "How strong the shine is, from 0 to 100 percent."
+L["How strong the shine is, from 0 to 100 percent, while Use the skin's shine is off."] = "How strong the shine is, from 0 to 100 percent, while Use the skin's shine is off."
 L["How tall the pad's header row is, in pixels: the row with the situation (World, M+, Raid) and the collapse button."] =
     "How tall the pad's header row is, in pixels: the row with the situation (World, M+, Raid) and the collapse button."
 L["Visibility"] = "Visibility"

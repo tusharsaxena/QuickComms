@@ -229,7 +229,8 @@ the settings pages and the library's own windows.
   button's texture and the shine follow too, each through its own companion (`NS.SkinFollow`,
   `Pad_Render.ShadowOf`), which reverses X4, D5 and D6 by the owner's ruling of 2026-11-01. A class color
   comes first and is untouched, a glyph's own color and a game icon keep theirs, and owner tokens
-  (`core/SkinSetup.lua`) hold today's pixels under Ka0s Default;
+  (`core/SkinSetup.lua`) hold today's pixels under Ka0s Default, but for the pad button's fuller body,
+  edge, texture and gloss and the lighter Strength the owner ruled on 2026-11-01;
   stored sizes and flags are under **Font flags and HUD sizes** below. The HUD's own chrome (the padlock, the veils, the hover wash, the flashes, the LOCKDOWN and
   stale tags, the PREVIEW and TEST MODE marks, the page arrows) reads tokens once per look change
   (`Pad_Render.Chrome`), never per frame.

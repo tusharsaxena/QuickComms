@@ -215,6 +215,7 @@ Kit.run{
         "test_dial_layout",
         "test_surfaces",
         "test_pad_render",
+        "test_pad_looks",
         "test_pad",
         "test_dial",
         "test_dial_catcher",
