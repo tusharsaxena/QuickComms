@@ -221,6 +221,126 @@ test("anim dial: nothing here writes a protected call on the header", function()
     end
 end)
 
+-- ── the text on the real dial: no shimmer, no truncation ─────────────────────────────────────────
+
+local function strings(track)
+    local ghost, out = track.ghost, {}
+    for i = 1, ghost.textUsed do
+        for j = 1, ghost.textSubs[i].qcFontUsed do out[#out + 1] = ghost.textSubs[i].qcFont[j] end
+    end
+    return out
+end
+
+test("anim dial: an open scales the text by its own animation, and the landing stops it", function()
+    local NS, m = live()
+    local inst = dial(NS)
+    m.__click(inst.header, "Toggle")
+    local list = strings(inst.track)
+    assertTrue(#list > 0, "the labels were copied")
+    for _, fs in ipairs(list) do
+        assertEqual(fs.__scaleMode, m.Enum.FontStringScaleAnimationMode.Vertex)
+        assertTrue(fs.__scaleGroup.__playing, "it plays")
+        assertEqual(fs.__scaleAnim.__from, 0.8)
+        assertEqual(fs.__scaleAnim.__to, 1)
+        assertEqual(fs.__scaleAnim.__duration, inst.track.duration)
+    end
+    NS.Anim.Step(inst.track, 1)
+    for _, fs in ipairs(list) do assertFalse(fs.__scaleGroup.__playing, "nothing left running") end
+end)
+
+test("anim dial: a reversal restarts the text from the art's scale, with the art", function()
+    local NS, m = live()
+    local inst = dial(NS)
+    m.__click(inst.header, "Toggle")
+    NS.Anim.Step(inst.track, 0.05)
+    local scale = inst.track.pose.scale
+    m.__click(inst.header, "Toggle")
+    assertEqual(inst.track.phase, "close")
+    for _, fs in ipairs(strings(inst.track)) do
+        assertEqual(fs.__scaleAnim.__from, scale)
+        assertEqual(fs.__scaleAnim.__to, 0.8)
+        assertTrue(fs.__scaleGroup.__playing)
+    end
+end)
+
+test("anim dial: a send's slice swells its own text, and the rest keep collapsing", function()
+    local NS, m = live()
+    local inst = dial(NS)
+    m.__click(inst.header, "Toggle")
+    NS.Anim.Step(inst.track, 1)
+    m.__click(inst.header, "Toggle")
+    NS.Anim.Step(inst.track, 1)
+    m.__click(inst.header, "Toggle")
+    NS.Anim.Step(inst.track, 1)
+    local w = NS.Dial.RingWedges("d2", NS.Dial.ShownRing("d2"))[1]
+    m.__click(w)
+    assertEqual(inst.track.emphasis, w.qcGhostGroup)
+    local ghost, swelled, collapsed = inst.track.ghost, 0, 0
+    for i = 1, ghost.textUsed do
+        local sub = ghost.textSubs[i]
+        for j = 1, sub.qcFontUsed do
+            local to = sub.qcFont[j].__scaleAnim.__to
+            if sub.qcGroup == w.qcGhostGroup then
+                assertTrue(to > 1, "the sent place swells")
+                swelled = swelled + 1
+            elseif to == 0.8 then
+                collapsed = collapsed + 1
+            end
+        end
+    end
+    assertTrue(swelled > 0 and collapsed > 0, "both happened")
+end)
+
+test("anim dial: the stand-down leaves no text scaling running", function()
+    local NS, m = live()
+    local inst = dial(NS)
+    m.__click(inst.header, "Toggle")
+    local list = strings(inst.track)
+    NS.SchemaRuntime.Set("enabled", false)
+    for _, fs in ipairs(list) do assertFalse(fs.__scaleGroup.__playing) end
+end)
+
+test("anim dial: a Fan moves no text at all", function()
+    local NS, m = live()
+    local inst = dial(NS)
+    NS.db.profile.dials.d2.anim.openStyle = "fan"
+    m.__click(inst.header, "Toggle")
+    for _, fs in ipairs(strings(inst.track)) do assertFalse(fs.__scaleGroup.__playing == true) end
+end)
+
+test("anim dial: the ghost's text never carries a width", function()
+    local NS, m = live()
+    local inst = dial(NS)
+    m.__click(inst.header, "Toggle")
+    for _, fs in ipairs(strings(inst.track)) do assertNil(fs.__size, "a size is what truncated the title") end
+end)
+
+test("anim compat: the Vertex shim answers nothing when any piece is missing", function()
+    local NS, m = live()
+    local C = NS.Compat
+    assertNil((C.VertexScaleAnimation({})), "a string with no methods")
+    local noop = function() end
+    local fs = { SetScaleAnimationMode = noop, CreateAnimationGroup = function() return {} end }
+    assertNil((C.VertexScaleAnimation(fs)), "a group with no CreateAnimation")
+    local partial = { SetScaleAnimationMode = noop, CreateAnimationGroup = function()
+        return { Play = noop, Stop = noop, CreateAnimation = function() return { SetScaleFrom = noop } end }
+    end }
+    assertNil((C.VertexScaleAnimation(partial)), "an animation short of a setter")
+    local mode, whole
+    whole = { SetScaleAnimationMode = function(_, v) mode = v end, CreateAnimationGroup = function()
+        return { Play = noop, Stop = noop, CreateAnimation = function()
+            return { SetScaleFrom = noop, SetScaleTo = noop, SetOrigin = noop, SetDuration = noop, SetSmoothing = noop }
+        end }
+    end }
+    local group, anim = C.VertexScaleAnimation(whole)
+    assertTrue(group ~= nil and anim ~= nil)
+    assertEqual(mode, 1)
+    local saved = m.Enum
+    m.Enum = nil
+    assertNil((C.VertexScaleAnimation(whole)), "no Enum at all")
+    m.Enum = saved
+end)
+
 -- ── a pad does not animate (the owner's ruling, 2026-11-01): its behavior as before #13 ───────────
 
 test("anim pad: a pad has no track, and its driver shows and hides it at once", function()

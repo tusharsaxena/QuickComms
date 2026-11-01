@@ -38,6 +38,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | BG-1..9 | Battlegrounds | Node rings on the dial, one slice per node; the faction and location colors; the battleground instance ids; the objective groups (Alterac Valley, Isle of Conquest's bases, a flag map) and their migration; the four node buttons; Silvershard Mines' and Temple of Kotmogu's groups |
 | IDS-1 | Instance ids | The Midnight dungeons and raids |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes |
+| ANIM-1..12 | [Animations](#animations) | The dial's open and close, every style, a send, combat, the stand-down, Alt-Z, a pad having none, text that neither shimmers nor truncates |
 | FSKIN-1..11 | [The full skin](#the-full-skin) | Every pad and dial color, the shadow, texture and shine on the skin, Ka0s Default unmoved, the companions off, an existing profile, meaning colors, the ghost |
 | SKIN-1..30 | [Skins](#skins) | The skinning rollout: the one-time reset under Ka0s Default, a new pad, dial or profile on the skin, Ka0s Default elsewhere unchanged, the Skin tab, every skin on the pads and dials, the *Use the skin's ...* boxes, the Preview as window, the callout popup and the icon browser, the settings pages, the tool windows, the Font and texture overrides, Ignore fonts, EllesmereUI on and off and the reload back, profiles and combat, the first-run skin picker (its eye, Apply, close, gear, the switch and a profile event, one picker across Ka0s addons), the CLI and the degraded install; LibKa0s v1.82.0: the Font outline, From skin font flags, `/qc skin`, the HUD size scale and the windows' width parity; the skin on the only media picker |
 
@@ -1995,6 +1996,14 @@ next real close and open play. Result: not run.
 Mouseover → it shows and hides at once, its hover and fade answer at once, and no copy is drawn. On a
 profile that ran this branch's first step 12, `/dump` a pad's `anim` → nil. Result: not run.
 
+**ANIM-12. Text neither shimmers nor truncates.** On the Dial page's Animation tab set Scale and fade at
+0.5 s, then at 2 s, and open and close a dial with a long title ("Quick Comms: World") → the title and
+every label scale smoothly with the art, about the dial's center, with no shimmer, no jitter of the
+letters, no text cut short and no ellipsis at any moment; each string stays on its slice; none jumps at
+the landing. Reverse one mid-animation → the text turns with the art. Send on a slice at 2 s → that
+slice's label pulses with it. A little softness at the small end is Vertex mode on a font that is not a
+slug font; note it if it looks wrong. Result: not run.
+
 ## The full skin
 
 LibKa0s v1.85.0 and Ka0sAddonsCommonTasks `docs/2026-11-01-FULL_SKINNING/` (cause D7). Each check names
@@ -2108,7 +2117,7 @@ Open from the same run's re-cut v1.84.0 (M3-MEDIA, `Ka0sMedia_*` the only media 
 
 Owed from issue #14 (2026-11-01): LAYER-6, LAYER-7, LAYER-8, LAYER-9 (new).
 
-Owed from issue #13 (2026-11-01): ANIM-1 to ANIM-11 (new; the pad ruling reshaped them before any was run).
+Owed from issue #13 (2026-11-01): ANIM-1 to ANIM-12 (new; the pad ruling reshaped them before any was run, and ANIM-12 is the shimmer and truncation fix).
 
 Owed from the full skin (FS-QC-REC, 2026-11-01): FSKIN-1 to FSKIN-11 (new); SKIN-5, SKIN-11, SKIN-12 and SKIN-13
 (their expected result changed, so each lost its pass mark).

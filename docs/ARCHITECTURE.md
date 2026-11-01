@@ -348,7 +348,9 @@ is registered once, as a store, in the Tier 3 table; the documents under it get 
 Issue #13, the dial only (the owner's ruling, 2026-11-01; a pad has none). The dial is shown and hidden
 by secure code, so the animations play on an insecure copy (`modules/Anim_Ghost.lua`) driven by a state
 machine (`modules/Anim.lua`) from `OnShow` and `OnHide` hooks; the real frame's only change is its
-alpha. Settings: `dials[id].anim` ([schema](schema.md)). Why it is safe: [taint](taint.md). Design and rulings:
+alpha. A string takes its scale from its own Scale animation in Vertex mode, on a layer no pose scales,
+never from `SetScale`, so text neither shimmers nor truncates. Settings: `dials[id].anim`
+([schema](schema.md)). Why it is safe: [taint](taint.md). Design and rulings:
 `docs/superpowers/specs/2026-11-01-open-close-animations-design.md`.
 
 ## Documented deviations

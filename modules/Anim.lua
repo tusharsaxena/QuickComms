@@ -2,7 +2,8 @@ local _, NS = ...
 -- modules/Anim.lua — the open and close animations' state machine (#13,
 -- docs/superpowers/specs/2026-11-01-open-close-animations-design.md). One track per dial. A track
 -- tweens a pose ({ alpha, scale, fan }) from wherever it stands to where its phase ends, and
--- modules/Anim_Ghost.lua draws that pose on the surface's insecure copy. The real frames are never
+-- modules/Anim_Ghost.lua draws that pose on the surface's insecure copy; each leg also hands the
+-- copy's text its own client-run scale (G.ScaleText), which never goes through the frame's SetScale. The real frames are never
 -- moved or scaled: a dial is shown and hidden by secure code, which nothing here can delay, and only
 -- its alpha may change in combat (A.Open holds it at 0 under the ghost). Animations are the dial's
 -- alone (the owner's ruling, 2026-11-01): a pad has no track.
@@ -128,6 +129,7 @@ local function begin(track, phase, cfg)
     live[track] = true
     draw(track, 0)
     Ghost.Show(track.ghost)
+    Ghost.ScaleText(track.ghost, from.scale, to.scale, track.duration, phase)
     wake()
 end
 
@@ -160,7 +162,9 @@ end
 --- Name the slice a send went out on: it stays bright and pulses through this close. No effect on a
 --- track that is not closing.
 function A.Emphasize(track, place)
-    if track.phase == "close" then track.emphasis = place end
+    if track.phase ~= "close" or track.emphasis == place then return end
+    track.emphasis = place
+    Ghost.EmphasizeText(track.ghost, place, track.duration - track.t)
 end
 
 --- One tick of a live track (the driver's, a test's).

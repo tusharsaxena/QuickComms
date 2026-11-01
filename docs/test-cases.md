@@ -1190,7 +1190,7 @@ Total.
 - dial: [art] the hub draws textures, not segments
 - dial: [art] the pill is three pieces with round ends
 
-### test_anim.lua (27)
+### test_anim.lua (29)
 
 - anim: a new dial carries the shipped defaults, on for everyone, and a pad has no animation
 - anim: step 12 fills every stored dial, keeps a key already there, and leaves pads alone
@@ -1210,6 +1210,8 @@ Total.
 - anim: the stand-down leaves no track and no OnUpdate running
 - anim: the emphasis is heard only on a close, and an open clears it
 - anim: a missing key reads its own phase's default
+- anim: every leg hands the text its scale, a reversal from where it stands
+- anim: the emphasis tells the text once, over the close's time left
 - anim: a Snap leaves no emphasis behind
 - anim: a step draws with how far along it is, so the pulse moves
 - anim: step 12 walks past a damaged surface and a damaged list
@@ -1220,7 +1222,7 @@ Total.
 - anim: a close never holds a frame that is already down, and a snap off no track releases nothing
 - anim: step 12 takes a value that is no profile quietly
 
-### test_anim_surfaces.lua (31)
+### test_anim_surfaces.lua (38)
 
 - anim dial: a key open plays over a live dial, and it lands with the real alpha back
 - anim dial: a close plays out after the header is already down
@@ -1236,6 +1238,13 @@ Total.
 - anim dial: the preview dial animates its first open, not a rebuild's reopen
 - anim dial: the stand-down leaves the dial's track off and its alpha whole
 - anim dial: nothing here writes a protected call on the header
+- anim dial: an open scales the text by its own animation, and the landing stops it
+- anim dial: a reversal restarts the text from the art's scale, with the art
+- anim dial: a send's slice swells its own text, and the rest keep collapsing
+- anim dial: the stand-down leaves no text scaling running
+- anim dial: a Fan moves no text at all
+- anim dial: the ghost's text never carries a width
+- anim compat: the Vertex shim answers nothing when any piece is missing
 - anim pad: a pad has no track, and its driver shows and hides it at once
 - anim pad: its alpha paths answer as before: master opacity, fade, hover, and combat
 - anim pad: a release and a rebuild touch no animation state
@@ -1254,7 +1263,7 @@ Total.
 - anim surfaces: a track rests at the dial's alpha, the master opacity included
 - anim surfaces: the dial's ghost mirrors the hub and pointer, and each slice's fill by its place
 
-### test_anim_ghost.lua (16)
+### test_anim_ghost.lua (28)
 
 - anim ghost: the stage takes the source's strata and level, and sub-frames keep their stacking
 - anim ghost: a level is held to the room above the stage, and never under it
@@ -1264,7 +1273,7 @@ Total.
 - anim ghost: a color texture the client cannot read back is left out
 - anim ghost: a file texture keeps its art, tint, crop, turn, blend, layer, alpha and desaturation
 - anim ghost: a mask is copied once per source mask, turned, and taken off before the next capture
-- anim ghost: a font string keeps its text, face, color, shadow, alignment and alpha
+- anim ghost: a font string keeps its text, face, color, shadow and alpha
 - anim ghost: a child scaled apart from the root keeps its drawn size and place
 - anim ghost: no rect on any part is no capture, and nothing to draw is none
 - anim ghost: a capture clears the last one's copies, and a reused sub-frame starts whole
@@ -1272,6 +1281,18 @@ Total.
 - anim ghost: a place fades in its turn around the ring
 - anim ghost: the sent place alone stays bright, pulses and fades after its hold
 - anim ghost: a ghost takes no mouse, and nothing it makes does
+- anim ghost: text is on a layer no pose scales, so the client never rasterizes a new size
+- anim ghost: a string's copy can never truncate, whatever its source's rect says
+- anim ghost: a string scales about its own center, on the client's Vertex mode
+- anim ghost: a leg plays the string's scale, and a leg at 1 plays nothing
+- anim ghost: a pose places each string about the dial's center, as the art moves
+- anim ghost: text fades with the pose and the Fan, as the art does
+- anim ghost: the sent place's text pulses with its art, out then back, and other text does not
+- anim ghost: nothing is left playing when the ghost comes down, or at the next capture
+- anim ghost: the animations are pooled with their strings
+- anim ghost: text stacks over its own level's art and under the next one's
+- anim ghost: with no Enum the text fades in place, the art still scaling
+- anim ghost: with no mode setter the text fades in place
 
 ### test_keybinds.lua (6)
 
@@ -1724,9 +1745,9 @@ Total.
 | test_dial.lua | 38 |
 | test_dial_catcher.lua | 13 |
 | test_dial_look.lua | 16 |
-| test_anim.lua | 27 |
-| test_anim_surfaces.lua | 31 |
-| test_anim_ghost.lua | 16 |
+| test_anim.lua | 29 |
+| test_anim_surfaces.lua | 38 |
+| test_anim_ghost.lua | 28 |
 | test_keybinds.lua | 6 |
 | test_dial_shine.lua | 8 |
 | test_icon_style.lua | 10 |
@@ -1752,4 +1773,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1442** |
+| **Total** | **1463** |

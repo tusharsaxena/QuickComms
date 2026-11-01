@@ -36,8 +36,20 @@ local function recFrame(parent)
             return r
         end
     end
-    f.CreateTexture, f.CreateMaskTexture, f.CreateFontString =
-        maker(f.tex, "Texture"), maker(f.masks, "MaskTexture"), maker(f.fonts, "FontString")
+    f.CreateTexture, f.CreateMaskTexture = maker(f.tex, "Texture"), maker(f.masks, "MaskTexture")
+    -- A font string whose animation group and Scale animation are recorders of their own.
+    f.CreateFontString = function()
+        local fs = recorder("FontString")
+        f.fonts[#f.fonts + 1] = fs
+        fs.groups = 0
+        fs.CreateAnimationGroup = function(self)
+            self.groups = self.groups + 1
+            self.group, self.anim = recorder("AnimationGroup"), recorder("Scale")
+            self.group.CreateAnimation = function() return self.anim end
+            return self.group
+        end
+        return fs
+    end
     f.GetFrameLevel = function(self)
         local c = self.calls.SetFrameLevel
         return c and c[1] or 0
@@ -67,7 +79,7 @@ local function region(kind, d)
         GetBlendMode = get(d.blend or "ADD"), GetDrawLayer = function() return "BORDER", 3 end,
         GetNumMaskTextures = get(d.masks and #d.masks or 0),
         GetMaskTexture = function(_, i) return d.masks[i] end,
-        GetText = get(d.text), GetFont = function() return d.face or "Face", 10, "OUTLINE" end,
+        GetText = get(d.text), GetStringWidth = get(d.sw or 80), GetFont = function() return d.face or "Face", 10, "OUTLINE" end,
         GetJustifyH = get("RIGHT"), GetTextColor = function() return 0.5, 0.6, 0.7, 0.8 end,
         GetShadowOffset = function() return 2, -2 end, GetShadowColor = function() return 0, 0, 0, 0.5 end,
         GetFontObject = get(d.object),
@@ -103,7 +115,7 @@ test("anim ghost: the stage takes the source's strata and level, and sub-frames 
     assertEqual(ghost.stage.calls.SetFrameLevel[1], 10)
     assertEqual(ghost.used, 2)
     assertEqual(ghost.subs[1].calls.SetFrameLevel[1], 10, "the root's own level")
-    assertEqual(ghost.subs[2].calls.SetFrameLevel[1], 13, "three over it, as the source")
+    assertEqual(ghost.subs[2].calls.SetFrameLevel[1], 16, "three source levels over it")
 end)
 
 test("anim ghost: a level is held to the room above the stage, and never under it", function()
@@ -112,7 +124,7 @@ test("anim ghost: a level is held to the room above the stage, and never under i
         frame({ level = 1000, regions = { region("Texture", FILE) } }),
         frame({ level = 4, regions = { region("Texture", FILE) } }) } })
     assertTrue(G.Capture(ghost, src, { src }))
-    assertEqual(ghost.subs[1].calls.SetFrameLevel[1], 10 + G.MAX_LEVELS)
+    assertEqual(ghost.subs[1].calls.SetFrameLevel[1], 10 + 2 * G.MAX_LEVELS)
     assertEqual(ghost.subs[2].calls.SetFrameLevel[1], 10)
 end)
 
@@ -194,17 +206,16 @@ test("anim ghost: a mask is copied once per source mask, turned, and taken off b
     assertEqual(sub.tex[1].count.RemoveMaskTexture, 1, "the client stacks masks on a pooled texture")
 end)
 
-test("anim ghost: a font string keeps its text, face, color, shadow, alignment and alpha", function()
+test("anim ghost: a font string keeps its text, face, color, shadow and alpha", function()
     local G, ghost = ghostOn()
     local src = frame({ regions = { region("FontString", { text = "Hi", alpha = 0.7 }), region("FontString", { text = "" }) } })
     assertTrue(G.Capture(ghost, src, { src }))
-    local fs = ghost.subs[1].fonts[1]
-    assertEqual(#ghost.subs[1].fonts, 1, "an empty string draws nothing")
+    local fs = ghost.textSubs[1].fonts[1]
+    assertEqual(#ghost.textSubs[1].fonts, 1, "an empty string draws nothing")
     assertEqual(fs.calls.SetText[1], "Hi")
     assertEqual(fs.calls.SetFont[1], "Face")
     assertEqual(fs.calls.SetFont[3], "OUTLINE")
     assertEqual(fs.calls.SetTextColor[4], 0.8)
-    assertEqual(fs.calls.SetJustifyH[1], "RIGHT")
     assertEqual(fs.calls.SetAlpha[1], 0.7)
     assertEqual(fs.calls.SetShadowOffset[1], 2)
     assertEqual(fs.calls.SetShadowColor[4], 0.5)
@@ -216,7 +227,7 @@ test("anim ghost: a child scaled apart from the root keeps its drawn size and pl
         region("Texture", { file = "art", x = 110, y = 205, w = 10, h = 20 }),
         region("FontString", { text = "Hi", x = 100, y = 200 }) } }) } })
     assertTrue(G.Capture(ghost, src, { src }))
-    local t, fs = ghost.subs[1].tex[1], ghost.subs[1].fonts[1]
+    local t, fs = ghost.subs[1].tex[1], ghost.textSubs[1].fonts[1]
     assertEqual(t.calls.SetSize[1], 20)
     assertEqual(t.calls.SetSize[2], 40)
     assertEqual(t.calls.SetPoint[4], 20)
@@ -302,7 +313,223 @@ end)
 test("anim ghost: a ghost takes no mouse, and nothing it makes does", function()
     local G, ghost = ghostOn()
     assertFalse(ghost.stage.calls.EnableMouse[1])
-    local src = frame({ regions = { region("Texture", FILE) } })
+    assertFalse(ghost.text.calls.EnableMouse[1])
+    local src = frame({ regions = { region("Texture", FILE), region("FontString", { text = "Hi" }) } })
     assertTrue(G.Capture(ghost, src, { src }))
     assertFalse(ghost.subs[1].calls.EnableMouse[1])
+    assertFalse(ghost.textSubs[1].calls.EnableMouse[1])
+end)
+
+-- ── the text: no shimmer, no truncation (the owner's second request after smoke testing #13) ───────
+
+-- A captured ghost with one string 30 right of and 40 over the dial's center, on a place's frame.
+local function withText(d)
+    local G, ghost, NS, m = ghostOn()
+    d = d or {}
+    local src = frame({ x = 100, y = 200, scale = 2, regions = { region("Texture", { file = "art", group = 1 }),
+        region("FontString", { text = "Quick Comms: World", x = 130, y = 240, w = d.w, sw = d.sw, group = 1 }) } })
+    assertTrue(G.Capture(ghost, src, { src }, 2))
+    return G, ghost, ghost.textSubs[1].fonts[1], NS, m
+end
+
+test("anim ghost: text is on a layer no pose scales, so the client never rasterizes a new size", function()
+    local G, ghost, fs, NS = withText()
+    assertEqual(fs.calls.SetScale, nil)
+    assertEqual(ghost.text.calls.SetScale[1], 2, "the source's own scale, once")
+    assertEqual(ghost.text.calls.SetPoint[1], "CENTER", "on the dial's center")
+    assertEqual(ghost.text.calls.SetFrameStrata[1], "HIGH")
+    assertEqual(ghost.text.parent, ghost.stage.parent, "beside the scaled stage, never under it")
+    assertEqual(ghost.textSubs[1].parent, ghost.text)
+    local pose, scales = NS.Anim.Rest(), ghost.text.count.SetScale
+    for _, s in ipairs({ 0.8, 0.9, 1 }) do
+        pose.scale = s
+        G.Pose(ghost, pose, 1, nil, 0)
+    end
+    near(ghost.stage.calls.SetScale[1], 2, "the art still scales")
+    assertEqual(ghost.text.count.SetScale, scales, "the layer does not")
+    assertEqual(ghost.textSubs[1].count.SetScale, 1, "its sub-frame only as a pool resets it")
+    assertEqual(ghost.textSubs[1].calls.SetScale[1], 1)
+    assertEqual(fs.calls.SetScale, nil, "nor the string")
+    assertEqual(#ghost.subs[1].fonts, 0, "no string on the art's frames")
+end)
+
+test("anim ghost: a string's copy can never truncate, whatever its source's rect says", function()
+    local _, ghost, fs = withText({ w = 10, sw = 200 })
+    -- red under: place()'s fixed size on a font string, which is what cut the title short
+    assertEqual(fs.calls.SetSize, nil)
+    assertEqual(fs.calls.SetWidth, nil)
+    assertEqual(fs.calls.SetHeight, nil)
+    assertEqual(fs.calls.SetMaxLines, nil)
+    assertEqual(fs.calls.SetWordWrap[1], false)
+    assertEqual(ghost.textSubs[1].fonts[1], fs)
+end)
+
+test("anim ghost: a string scales about its own center, on the client's Vertex mode", function()
+    local _, _, fs = withText()
+    assertEqual(fs.calls.SetScaleAnimationMode[1], 1, "Enum.FontStringScaleAnimationMode.Vertex")
+    assertEqual(fs.calls.SetJustifyH[1], "CENTER", "Vertex scales from the justification")
+    assertEqual(fs.calls.SetJustifyV[1], "MIDDLE")
+    assertEqual(fs.anim.calls.SetOrigin[1], "CENTER")
+    assertEqual(fs.anim.calls.SetOrigin[2], 0)
+    assertEqual(fs.anim.calls.SetOrigin[3], 0)
+end)
+
+test("anim ghost: a leg plays the string's scale, and a leg at 1 plays nothing", function()
+    local G, ghost, fs = withText()
+    G.ScaleText(ghost, 0.8, 1, 0.5, "open")
+    assertEqual(fs.anim.calls.SetScaleFrom[1], 0.8)
+    assertEqual(fs.anim.calls.SetScaleFrom[2], 0.8)
+    assertEqual(fs.anim.calls.SetScaleTo[1], 1)
+    assertEqual(fs.anim.calls.SetDuration[1], 0.5)
+    assertEqual(fs.anim.calls.SetSmoothing[1], "OUT", "A.Ease decelerates into an open")
+    assertEqual(fs.group.count.Play, 1)
+    local stops = fs.group.count.Stop
+    G.ScaleText(ghost, 0.9, 0.8, 0.2, "close")
+    assertEqual(fs.group.count.Stop, stops + 1, "a reversal restarts it")
+    assertEqual(fs.anim.calls.SetScaleFrom[1], 0.9)
+    assertEqual(fs.anim.calls.SetSmoothing[1], "IN", "and accelerates out of a close")
+    G.ScaleText(ghost, 1, 1, 0.2, "close")
+    assertEqual(fs.group.count.Play, 2, "Fade and Fan keep the text at its size")
+    G.ScaleText(ghost, 0.8, 0.8, 0.2, "close")
+    assertEqual(fs.group.count.Play, 3, "a reversal from the very start holds its size, not 1")
+end)
+
+test("anim ghost: a pose places each string about the dial's center, as the art moves", function()
+    local G, ghost, fs, NS = withText()
+    assertEqual(fs.calls.SetPoint[2], ghost.text)
+    assertEqual(fs.calls.SetPoint[4], 30, "at rest, where its source is")
+    assertEqual(fs.calls.SetPoint[5], 40)
+    local pose = NS.Anim.Rest()
+    pose.scale = 0.5
+    G.Pose(ghost, pose, 1, nil, 0)
+    assertEqual(fs.calls.SetPoint[1], "CENTER")
+    assertEqual(fs.calls.SetPoint[4], 15)
+    assertEqual(fs.calls.SetPoint[5], 20)
+    local moves = fs.count.SetPoint
+    G.Pose(ghost, pose, 1, nil, 0)
+    assertEqual(fs.count.SetPoint, moves, "a pose that did not move writes nothing")
+end)
+
+test("anim ghost: text fades with the pose and the Fan, as the art does", function()
+    local G, ghost, _, NS = withText()
+    local pose = NS.Anim.Rest()
+    pose.alpha, pose.fan = 0.5, 0.25
+    G.Pose(ghost, pose, 0.8, nil, 0)
+    near(ghost.textSubs[1].calls.SetAlpha[1], ghost.subs[1].calls.SetAlpha[1], "the same alpha as its art")
+    near(ghost.textSubs[1].calls.SetAlpha[1], 0.5 * 0.8 * NS.Anim.FanAlpha(0.25, 0))
+end)
+
+test("anim ghost: the sent place's text pulses with its art, out then back, and other text does not", function()
+    local G, ghost, fs, NS = withText()
+    local A = NS.Anim
+    local other = ghost.textSubs[1].qcFont[1]
+    assertEqual(other, fs)
+    G.ScaleText(ghost, 1, 0.8, 0.4, "close")
+    G.EmphasizeText(ghost, 2, 0.4)
+    assertEqual(fs.anim.calls.SetScaleFrom[1], 1, "another place keeps its leg")
+    assertEqual(fs.anim.calls.SetScaleTo[1], 0.8)
+    G.EmphasizeText(ghost, 1, 0.4)
+    near(fs.anim.calls.SetScaleTo[1], 1 + A.EMPHASIS_PULSE)
+    assertEqual(fs.anim.calls.SetScaleFrom[1], 1)
+    near(fs.anim.calls.SetDuration[1], 0.2)
+    assertEqual(fs.anim.calls.SetSmoothing[1], "OUT")
+    local pose = A.Rest()
+    pose.scale = 0.8
+    G.Pose(ghost, pose, 1, 1, 0.25)
+    near(fs.calls.SetPoint[4], 30 * (1 + A.EMPHASIS_PULSE * math.sin(math.pi * 0.25)), "it rides the pulse, not the pose")
+    assertEqual(fs.anim.calls.SetSmoothing[1], "OUT", "still swelling")
+    G.Pose(ghost, pose, 1, 1, 0.5)
+    near(fs.anim.calls.SetScaleFrom[1], 1 + A.EMPHASIS_PULSE, "the way back starts at the height")
+    assertEqual(fs.anim.calls.SetScaleTo[1], 1)
+    near(fs.anim.calls.SetDuration[1], 0.2)
+    assertEqual(fs.anim.calls.SetSmoothing[1], "IN")
+    local plays = fs.group.count.Play
+    G.Pose(ghost, pose, 1, 1, 0.75)
+    assertEqual(fs.group.count.Play, plays, "it turns once")
+end)
+
+test("anim ghost: nothing is left playing when the ghost comes down, or at the next capture", function()
+    local G, ghost, fs = withText()
+    G.Show(ghost)
+    assertEqual(ghost.text.count.Show, 1, "the layer shows with the stage")
+    G.ScaleText(ghost, 0.8, 1, 1, "open")
+    local stops = fs.group.count.Stop
+    G.Hide(ghost)
+    assertEqual(fs.group.count.Stop, stops + 1)
+    assertTrue(ghost.text.count.Hide >= 2, "the layer hides with the stage")
+    G.ScaleText(ghost, 0.8, 1, 1, "open")
+    stops = fs.group.count.Stop
+    local src = frame({ regions = { region("Texture", FILE) } })
+    assertTrue(G.Capture(ghost, src, { src }))
+    assertEqual(fs.group.count.Stop, stops + 1, "a pooled string keeps no scale")
+end)
+
+test("anim ghost: the animations are pooled with their strings", function()
+    local G, ghost, fs = withText()
+    local src = frame({ regions = { region("FontString", { text = "Again" }) } })
+    for _ = 1, 3 do assertTrue(G.Capture(ghost, src, { src })) end
+    assertEqual(ghost.textSubs[1].fonts[1], fs)
+    assertEqual(#ghost.textSubs[1].fonts, 1)
+    assertEqual(fs.groups, 1)
+end)
+
+test("anim ghost: text stacks over its own level's art and under the next one's", function()
+    local G, ghost = ghostOn()
+    local src = frame({ level = 10, regions = { region("Texture", FILE), region("FontString", { text = "Hi" }) },
+        kids = { frame({ level = 11, regions = { region("Texture", FILE) } }) } })
+    assertTrue(G.Capture(ghost, src, { src }))
+    assertEqual(ghost.text.calls.SetFrameLevel[1], 10)
+    local text = ghost.textSubs[1].calls.SetFrameLevel[1]
+    assertTrue(text > ghost.subs[1].calls.SetFrameLevel[1], "over its own art")
+    assertTrue(text < ghost.subs[2].calls.SetFrameLevel[1], "under the next level's")
+end)
+
+-- A missing piece of the API, and what must follow: no scaling at all, in place, never the shimmer.
+local function assertFadesInPlace(G, ghost, fs, NS)
+    assertEqual(fs.group, nil, "no group is kept")
+    G.ScaleText(ghost, 0.8, 1, 1, "open")
+    G.EmphasizeText(ghost, 1, 1)
+    local pose, moves = NS.Anim.Rest(), fs.count.SetPoint
+    pose.scale, pose.alpha = 0.8, 0.5
+    G.Pose(ghost, pose, 1, 1, 0.75)
+    pose.scale = 0.9
+    G.Pose(ghost, pose, 1, nil, 0.75)
+    assertEqual(fs.count.SetPoint, moves, "text stays where it is")
+    assertEqual(fs.calls.SetScale, nil)
+    near(ghost.textSubs[1].calls.SetAlpha[1], 0.5, "and fades")
+    assertEqual(ghost.text.count.SetScale, 1, "its layer never takes the pose")
+end
+
+test("anim ghost: with no Enum the text fades in place, the art still scaling", function()
+    local NS, m = T.enableAddon()
+    local G = NS.AnimGhost
+    m.CreateFrame = function(_, _, parent) return recFrame(parent) end
+    m.Enum.FontStringScaleAnimationMode = nil
+    local ghost = G.New()
+    local src = frame({ regions = { region("Texture", FILE), region("FontString", { text = "Hi", x = 130 }) } })
+    assertTrue(G.Capture(ghost, src, { src }, 1))
+    local fs = ghost.textSubs[1].fonts[1]
+    assertEqual(fs.calls.SetScaleAnimationMode, nil)
+    fs.group = nil
+    assertFadesInPlace(G, ghost, fs, NS)
+    near(ghost.stage.calls.SetScale[1], 0.9, "the art")
+end)
+
+test("anim ghost: with no mode setter the text fades in place", function()
+    local NS, m = T.enableAddon()
+    local G = NS.AnimGhost
+    m.CreateFrame = function(_, _, parent)
+        local f = recFrame(parent)
+        local make = f.CreateFontString
+        f.CreateFontString = function()
+            local fs = make()
+            rawset(fs, "SetScaleAnimationMode", false)
+            return fs
+        end
+        return f
+    end
+    local ghost = G.New()
+    local src = frame({ regions = { region("FontString", { text = "Hi", x = 130 }) } })
+    assertTrue(G.Capture(ghost, src, { src }, 1))
+    assertFadesInPlace(G, ghost, ghost.textSubs[1].fonts[1], NS)
 end)

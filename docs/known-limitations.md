@@ -87,6 +87,12 @@ What the addon cannot do, or does only under a condition, and why. The hub,
   one on the dial (a wedge's dim veil) is left out until the real dial returns. A rebuild's close and
   reopen, and a page turn or group wedge during an open, do not animate: they snap. Pads do not animate
   at all (the owner's ruling, 2026-11-01).
+- **The dial's text scales on the client's clock (#13).** The art's tween is the script's and the
+  glyphs' a Scale animation's, in `Enum.FontStringScaleAnimationMode.Vertex` (12.0), so they can differ
+  slightly mid-animation if the client's `IN` and `OUT` smoothing is not the script's quadratic; a
+  string's position is the script's and stays exact. Vertex mode may pixelate a font that is not a
+  slug font. Where the client lacks the mode or its Enum, text takes no scale at all and fades in place
+  while the art scales; a font-size scale would shimmer, so there is no such fallback.
 
 ## Keys
 

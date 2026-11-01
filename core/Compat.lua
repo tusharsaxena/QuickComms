@@ -18,6 +18,33 @@ Compat.IsSafeKey = CompatLib and CompatLib.IsSafeKey or function(v)
     return v ~= nil
 end
 
+local function hasMethods(object, names)
+    if type(object) ~= "table" then return false end
+    for _, name in ipairs(names) do
+        if type(object[name]) ~= "function" then return false end
+    end
+    return true
+end
+
+local SCALE_GROUP = { "CreateAnimation", "Play", "Stop" }
+local SCALE_ANIM = { "SetScaleFrom", "SetScaleTo", "SetOrigin", "SetDuration", "SetSmoothing" }
+
+--- A Scale animation for font string `fs`, set to run in `Enum.FontStringScaleAnimationMode.Vertex`
+--- (12.0) about the string's center: the group and the animation, or nil when the client lacks any
+--- part of that. FontSize mode, the default, is the shimmer, so there is no fallback to it.
+function Compat.VertexScaleAnimation(fs)
+    local modes = type(Enum) == "table" and Enum.FontStringScaleAnimationMode
+    local vertex = type(modes) == "table" and modes.Vertex or nil
+    if vertex == nil or not hasMethods(fs, { "SetScaleAnimationMode", "CreateAnimationGroup" }) then return nil end
+    local group = fs:CreateAnimationGroup()
+    if not hasMethods(group, SCALE_GROUP) then return nil end
+    local anim = group:CreateAnimation("Scale")
+    if not hasMethods(anim, SCALE_ANIM) then return nil end
+    fs:SetScaleAnimationMode(vertex)
+    anim:SetOrigin("CENTER", 0, 0)
+    return group, anim
+end
+
 --- A plain number, or nil.
 function Compat.PlainNumber(v)
     if Compat.IsSecret(v) or type(v) ~= "number" then return nil end

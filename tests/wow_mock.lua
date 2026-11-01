@@ -77,6 +77,7 @@ local function build()
         AddOnRestrictionType = { Combat = 0, Encounter = 1, ChallengeMode = 2, PvPMatch = 3, Map = 4,
             Chat = 5 },
         AddOnRestrictionState = { Inactive = 0, Activating = 1, Active = 2 },
+        FontStringScaleAnimationMode = { FontSize = 0, Vertex = 1 },
     }
 
     -- C_ChatInfo: chatLockdown is InChatMessagingLockdown's answer; generalChannel is the number the
@@ -360,6 +361,19 @@ local function build()
         r.GetObjectType = function(x) return x.__kind end
         r.GetCenter = function(x) return x.__cx or 0, x.__cy or 0 end
         r.GetFont = function() return "Fonts\\FRIZQT__.TTF", 12, "" end
+        -- A font string's Scale animation (12.0's Vertex mode, the ghost's): what plays, from and to.
+        if kind == "FontString" then
+            r.SetScaleAnimationMode = function(x, mode) x.__scaleMode = mode end
+            r.CreateAnimationGroup = function(x)
+                local anim = { SetScaleFrom = function(a, sx) a.__from = sx end,
+                    SetScaleTo = function(a, sx) a.__to = sx end, SetOrigin = function() end,
+                    SetDuration = function(a, d) a.__duration = d end, SetSmoothing = function() end }
+                local group = { CreateAnimation = function() return anim end,
+                    Play = function(g) g.__playing = true end, Stop = function(g) g.__playing = false end }
+                x.__scaleGroup, x.__scaleAnim = group, anim
+                return group
+            end
+        end
         frame.__regions = frame.__regions or {}
         frame.__regions[#frame.__regions + 1] = r
         return r

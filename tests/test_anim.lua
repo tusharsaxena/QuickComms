@@ -18,6 +18,7 @@ local function track(NS, cfgs)
     NS.AnimGhost.New = function() return {} end
     NS.AnimGhost.Capture = function() return cfgs.captured ~= false end
     NS.AnimGhost.Pose, NS.AnimGhost.Show, NS.AnimGhost.Hide = function() end, function() end, function() end
+    NS.AnimGhost.ScaleText, NS.AnimGhost.EmphasizeText = function() end, function() end
     return NS.Anim.NewTrack(spec), function() return held, released end
 end
 
@@ -259,6 +260,50 @@ test("anim: a missing key reads its own phase's default", function()
     assertEqual(cfg.duration, 0.1)
     assertEqual(cfg.style, "fan")
     assertEqual(A.Config({ openStyle = "none" }, defaults, "open").style, "none")
+end)
+
+test("anim: every leg hands the text its scale, a reversal from where it stands", function()
+    local NS = T.enableAddon()
+    local A = NS.Anim
+    local t = track(NS, { open = SF, close = SF })
+    local legs, shown = {}, false
+    NS.AnimGhost.Show = function() shown = true end
+    NS.AnimGhost.ScaleText = function(_, from, to, duration, phase)
+        legs[#legs + 1] = { from = from, to = to, duration = duration, phase = phase, shown = shown }
+    end
+    A.Open(t)
+    assertEqual(legs[1].from, 0.8)
+    assertEqual(legs[1].to, 1)
+    assertEqual(legs[1].duration, 0.2)
+    assertEqual(legs[1].phase, "open")
+    assertTrue(legs[1].shown, "a hidden string would not play")
+    A.Step(t, 0.05)
+    local scale = t.pose.scale
+    A.Close(t)
+    local way = legs[2]
+    assertEqual(way.from, scale, "no jump")
+    assertEqual(way.to, 0.8)
+    assertEqual(way.duration, t.duration, "the reversal's own time")
+    assertEqual(way.phase, "close")
+end)
+
+test("anim: the emphasis tells the text once, over the close's time left", function()
+    local NS = T.enableAddon()
+    local A = NS.Anim
+    local t = track(NS, { open = SF, close = SF })
+    local heard = {}
+    NS.AnimGhost.EmphasizeText = function(_, place, left) heard[#heard + 1] = { place, left } end
+    A.Open(t)
+    A.Emphasize(t, 3)
+    assertEqual(#heard, 0, "not on an open")
+    A.Snap(t)
+    A.Close(t)
+    A.Step(t, 0.05)
+    A.Emphasize(t, 3)
+    assertEqual(heard[1][1], 3)
+    near(heard[1][2], 0.15, "the time left")
+    A.Emphasize(t, 3)
+    assertEqual(#heard, 1, "the hook and the close both name it: once")
 end)
 
 test("anim: a Snap leaves no emphasis behind", function()

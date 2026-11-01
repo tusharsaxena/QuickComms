@@ -421,8 +421,8 @@ test("skin flip: the ghost wears a skinned string's font object, so its shadow c
     local src, fs = wedge.qcLabel.__fontObject, nil
     assertTrue(src ~= nil)
     local ghost = inst.track.ghost
-    for i = 1, ghost.used do
-        for _, f in ipairs(ghost.subs[i].qcFont) do
+    for i = 1, ghost.textUsed do
+        for _, f in ipairs(ghost.textSubs[i].qcFont) do
             if f.__fontObject == src then fs = f end
         end
     end
@@ -556,6 +556,9 @@ local function rgbOf(line) return { line[2], line[3], line[4], 1 } end
 local function painted()
     local NS, m = live()
     dofile("tests/_kit/mock_paint.lua")(m)
+    -- This suite reads paint; the recorder's regions model no font string's animations, and
+    -- tests/test_anim_surfaces.lua covers the ghost, so a dial here opens at once.
+    NS.Anim.Open, NS.Anim.Close = function() return false end, function() return false end
     m.SettingsPanel:Show()
     return NS, m, skinOf(m)
 end

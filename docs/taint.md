@@ -115,6 +115,11 @@ holds it at 0 under the ghost, and `Anim.Snap` gives it back. The hooks are inse
 `OnShow` and `OnHide`, beside the ones already there; no attribute is read or written, and the snippets
 did not change. A send is the wedge's own click, and the real dial is live under the ghost.
 
+The text's Scale animations (`Compat.VertexScaleAnimation`) sit on the ghost's own insecure strings, on
+an insecure, mouse-off layer anchored to the header as the stage is. `SetScaleAnimationMode` takes a
+plain Enum constant, never a secret value. Nothing about them touches a secure frame, each stops in
+`G.Hide`, and `Anim.Snap` and the stand-down pass through that.
+
 ## Key bindings
 
 The dials' keys are WoW's own key bindings of the `CLICK QuickCommsDial<n>:Toggle` entries, set in
