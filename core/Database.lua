@@ -53,6 +53,8 @@ NS.MIGRATIONS = {
     { to = 14, perProfile = true, run = function(_, profile) NS.Library.MigrateDropPadAnim(profile) end },
     -- 14 -> 15 (#13): a dial still holding the old animation defaults takes the new ones, once.
     { to = 15, perProfile = true, run = function(_, profile) NS.Library.MigrateAnimDefaults(profile) end },
+    -- 15 -> 16 (#13): a dial on the spiral defaults takes Rotate and scale; Scale and fade is retired.
+    { to = 16, perProfile = true, run = function(_, profile) NS.Library.MigrateRotateDefaults(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.

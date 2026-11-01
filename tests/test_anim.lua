@@ -22,16 +22,16 @@ local function track(NS, cfgs)
     return NS.Anim.NewTrack(spec), function() return held, released end
 end
 
-local SF = { style = "scaleFade", duration = 0.2 }
+local SF = { style = "scaleInFade", duration = 0.2 }
 local FADE = { style = "fade", duration = 0.1 }
 
 test("anim: a new dial carries the shipped defaults, on for everyone, and a pad has no animation", function()
     local NS = T.enableAddon()
     local pad, dial = NS.db.profile.pads.p1, NS.db.profile.dials.d2
-    assertEqual(dial.anim.openStyle, "spiralIn")
-    assertEqual(dial.anim.closeStyle, "spiralOut")
-    assertEqual(dial.anim.openDuration, 0.5)
-    assertEqual(dial.anim.closeDuration, 0.3)
+    assertEqual(dial.anim.openStyle, "rotateScale")
+    assertEqual(dial.anim.closeStyle, "rotateScale")
+    assertEqual(dial.anim.openDuration, 0.2)
+    assertEqual(dial.anim.closeDuration, 0.2)
     assertNil(pad.anim, "animations are the dial's alone")
     assertNil(NS.Library.TEMPLATES.pad.anim, "a pad's shape has none to fill in")
     assertNil(NS.PadDefaults.PadAnim)
@@ -43,8 +43,8 @@ test("anim: step 12 fills every stored dial, keeps a key already there, and leav
     -- red under: no step
     NS.Library.MigrateAnim(p)
     assertEqual(p.dials.d.anim.openStyle, "none", "the player's pick stays")
-    assertEqual(p.dials.d.anim.closeStyle, "spiralOut", "a missing key is filled")
-    assertEqual(p.dials.c.anim.openStyle, "spiralIn", "a damaged table is replaced")
+    assertEqual(p.dials.d.anim.closeStyle, "rotateScale", "a missing key is filled")
+    assertEqual(p.dials.c.anim.openStyle, "rotateScale", "a damaged table is replaced")
     assertNil(p.pads.a.anim, "a pad takes no animation")
     NS.Library.MigrateAnim(p)
     assertEqual(p.dials.d.anim.openStyle, "none", "idempotent")
@@ -58,7 +58,7 @@ test("anim: the runner takes an old profile's dials to the defaults and writes n
     db.global.schemaVersion = 11
     NS.addon:RunMigrations()
     assertEqual(db.global.schemaVersion, NS.SCHEMA_VERSION)
-    assertEqual(db.profile.dials.d2.anim.closeStyle, "spiralOut")
+    assertEqual(db.profile.dials.d2.anim.closeStyle, "rotateScale")
     assertNil(db.profile.pads.p1.anim)
 end)
 
@@ -98,7 +98,7 @@ test("anim: each knob writes its own key and nothing else, on the surface it nam
     -- red under: one row writing two keys (the owner's four independent switches, two left)
     assertTrue(Set("dial.anim.closeStyle", "none", "d2"))
     assertEqual(a.closeStyle, "none")
-    assertEqual(a.openStyle, "spiralIn", "the open is untouched")
+    assertEqual(a.openStyle, "rotateScale", "the open is untouched")
     assertTrue(Set("dial.anim.openStyle", "fan", "d2"))
     assertEqual(a.closeStyle, "none", "the close is untouched")
 end)
@@ -116,10 +116,10 @@ end)
 test("anim: the hidden poses match the owner's rulings", function()
     local A = T.enableAddon().Anim
     assertNil(A.Hidden("none"))
-    assertEqual(A.Hidden("scaleFade").scale, 0.8, "about 80%")
+    assertEqual(A.Hidden("scaleInFade").scale, 0.25)
     assertEqual(A.Hidden("fan").fan, 0)
     assertEqual(A.Hidden("fade").scale, 1)
-    for _, gone in ipairs({ "fadeScale", "sideways" }) do assertNil(A.Hidden(gone), gone) end
+    for _, gone in ipairs({ "fadeScale", "scaleFade", "sideways" }) do assertNil(A.Hidden(gone), gone) end
 end)
 
 test("anim: an ease lands exactly, decelerating into an open and accelerating out of a close", function()
@@ -147,7 +147,7 @@ test("anim: an open plays, holds the real frame and lands with it back", functio
     assertEqual(t.phase, "open")
     assertEqual((counts()), 1, "held")
     A.Step(t, 0.1)
-    assertTrue(t.pose.scale > 0.8 and t.pose.scale < 1)
+    assertTrue(t.pose.scale > 0.25 and t.pose.scale < 1)
     A.Step(t, 0.1)
     assertNil(t.phase, "landed")
     assertFalse(A.Running())
@@ -306,7 +306,7 @@ test("anim: every leg hands the text its scale, a reversal from where it stands"
         legs[#legs + 1] = { from = from.scale, to = to.scale, duration = duration, phase = phase, shown = shown }
     end
     A.Open(t)
-    assertEqual(legs[1].from, 0.8)
+    assertEqual(legs[1].from, 0.25)
     assertEqual(legs[1].to, 1)
     assertEqual(legs[1].duration, 0.2)
     assertEqual(legs[1].phase, "open")
@@ -316,7 +316,7 @@ test("anim: every leg hands the text its scale, a reversal from where it stands"
     A.Close(t)
     local way = legs[2]
     assertEqual(way.from, scale, "no jump")
-    assertEqual(way.to, 0.8)
+    assertEqual(way.to, 0.25)
     assertEqual(way.duration, t.duration, "the reversal's own time")
     assertEqual(way.phase, "close")
 end)
@@ -366,7 +366,7 @@ test("anim: step 12 walks past a damaged surface and a damaged list", function()
     local p = { dials = { bad = 3, good = {} } }
     NS.Library.MigrateAnim(p)
     assertEqual(p.dials.bad, 3)
-    assertEqual(p.dials.good.anim.openStyle, "spiralIn")
+    assertEqual(p.dials.good.anim.openStyle, "rotateScale")
 end)
 
 test("anim: step 12 reads a stored false as kept", function()
@@ -382,7 +382,7 @@ test("anim: step 12 runs for every stored profile, not the active one", function
     db.sv.profiles.other = { dials = { x = {} } }
     db.global.schemaVersion = 11
     NS.addon:RunMigrations()
-    assertEqual(db.sv.profiles.other.dials.x.anim.openStyle, "spiralIn")
+    assertEqual(db.sv.profiles.other.dials.x.anim.openStyle, "rotateScale")
 end)
 
 test("anim: two dials never share their anim table", function()
@@ -410,9 +410,12 @@ test("anim: the rows are the owner's: Open and Close on the dial's Animation tab
     local values = {}
     for _, c in ipairs(row("dial.anim.openStyle").values) do
         values[#values + 1] = c.value
-        if c.value == "scaleFade" then assertEqual(c.text, NS.L["Scale and fade"]) end
+        if c.value == "fan" then assertEqual(c.text, NS.L["Fan"]) end
+        assertTrue(c.value ~= "scaleFade", "redundant with Scale in and fade (the owner, 2026-11-01)")
     end
-    assertEqual(values[3], "scaleFade")
+    assertEqual(#values, 20)
+    assertEqual(values[3], "fan")
+    assertNil(rawget(NS.L, "Scale and fade"), "the label went with the style")
     assertEqual(row("dial.anim.openDuration").normalize(9), 2)
     assertFalse(NS.SchemaRuntime.Set("dial.anim.closeStyle", "sideways", "d2"))
 end)
@@ -609,7 +612,7 @@ end)
 test("anim pose: a reversal's time is the e left to travel, floored", function()
     local NS = T.enableAddon()
     local A = NS.Anim
-    local cfg = { style = "scaleFade", duration = 1 }
+    local cfg = { style = "scaleInFade", duration = 1 }
     local t = track(NS, { open = cfg, close = cfg })
     A.Open(t)
     A.Close(t)

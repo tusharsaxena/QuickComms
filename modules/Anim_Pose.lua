@@ -76,7 +76,6 @@ end
 -- The approved mockup's S, key for key but for its pixels, and the owner's two fading scales.
 A.STYLES = {
     fade = { g = function(e, p) p.alpha = e end },
-    scaleFade = { g = function(e, p) p.alpha, p.scale = e, 0.8 + 0.2 * e end },
     fan = { g = function(e, p) p.alpha, p.fan = e, e end },
     scaleIn = { g = function(e, p) p.scale, p.alpha = 0.25 + 0.75 * e, clamp01(e * 4) end },
     scaleInFade = { g = function(e, p) p.scale, p.alpha = 0.25 + 0.75 * e, e end },

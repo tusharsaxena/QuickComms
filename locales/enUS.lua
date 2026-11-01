@@ -1393,7 +1393,6 @@ L["Adds back the built-in groups and callouts you deleted. Changes nothing you h
     "Adds back the built-in groups and callouts you deleted. Changes nothing you have."
 L["Set this dial's key on the General page > Keybindings. A dial's key follows its place in the dial order."] =
     "Set this dial's key on the General page > Keybindings. A dial's key follows its place in the dial order."
-L["Scale and fade"] = "Scale and fade"
 L["Fan"] = "Fan"
 L["Scale in"] = "Scale in"
 L["Scale in and fade"] = "Scale in and fade"

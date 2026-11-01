@@ -861,7 +861,7 @@ end
 -- Direction shows only on Slide. After the Icons rows, so the tab follows Icons. Plain rows: the
 -- degraded load adds them too.
 local ANIM_STYLES = { { value = "none", text = L["None"] }, { value = "fade", text = L["Fade"] },
-    { value = "scaleFade", text = L["Scale and fade"] }, { value = "fan", text = L["Fan"] },
+    { value = "fan", text = L["Fan"] },
     { value = "scaleIn", text = L["Scale in"] }, { value = "scaleInFade", text = L["Scale in and fade"] },
     { value = "scaleOut", text = L["Scale out"] }, { value = "scaleOutFade", text = L["Scale out and fade"] },
     { value = "rotateScale", text = L["Rotate and scale"] }, { value = "spiralOut", text = L["Outward spiral"] },

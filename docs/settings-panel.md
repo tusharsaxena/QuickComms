@@ -839,7 +839,7 @@ The Dial page's last styled tab (a pad has none, the owner's ruling, 2026-11-01)
 heading, each a Style dropdown (None switches that one off), a Duration slider from 0.1 to 2 s in 0.1 s
 steps, hidden while the style is None through `shownWhen` with a list of the other styles
 (options-ui-§22), and a Direction dropdown (Up, Down, Left, Right), shown only on Slide. Both headings
-offer the same 21 entries, in this order: None, Fade, Scale and fade, Fan, Scale in, Scale in and fade,
+offer the same 20 entries, in this order: None, Fade, Fan, Scale in, Scale in and fade,
 Scale out, Scale out and fade, Rotate and scale, Outward spiral, Inward spiral, Orbit, Burst, Stagger pop,
 Pop, Slide, Drop, Squash, Flip, Shatter, Flash. They are member rows, so a write rebuilds the dial and
 Restore defaults covers them.

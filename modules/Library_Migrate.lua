@@ -328,6 +328,36 @@ function Lib.MigrateAnimDefaults(profile)
     end
 end
 
+-- What a dial's Animation tab stored as its default before Rotate and scale, by phase, and the style
+-- that replaces the retired Scale and fade.
+local SPIRAL_ANIM_DEFAULTS = { open = { style = "spiralIn", duration = 0.5 }, close = { style = "spiralOut", duration = 0.3 } }
+local RETIRED_ANIM_STYLE, ANIM_STYLE_HEIR = "scaleFade", "scaleInFade"
+
+-- One phase of one dial. Step 15 ran first, so a Scale and fade still here is a pick, and keeps its
+-- duration under the style it was redundant with.
+local function moveAnimPhase(anim, phase, old, defaults)
+    local style, duration = phase .. "Style", phase .. "Duration"
+    if anim[style] == RETIRED_ANIM_STYLE then
+        anim[style] = ANIM_STYLE_HEIR
+    elseif anim[style] == old.style and anim[duration] == old.duration then
+        anim[style], anim[duration] = defaults[style], defaults[duration]
+    end
+end
+
+-- 15 -> 16 (#13, the owner's rulings): a phase still on its spiral default, style and duration as a
+-- pair, takes the new default, and any stored Scale and fade becomes Scale in and fade, so nothing
+-- stored names a style that no longer exists. Any other pick stays, the directions with it.
+function Lib.MigrateRotateDefaults(profile)
+    if type(profile) ~= "table" then return end
+    local defaults = NS.PadDefaults.DialAnim()
+    for _, surface in pairs(type(profile.dials) == "table" and profile.dials or {}) do
+        local anim = type(surface) == "table" and surface.anim
+        if type(anim) == "table" then
+            for phase, old in pairs(SPIRAL_ANIM_DEFAULTS) do moveAnimPhase(anim, phase, old, defaults) end
+        end
+    end
+end
+
 -- The full skin (LibKa0s v1.85.0, Ka0sAddonsCommonTasks docs/2026-11-01-FULL_SKINNING, D2 to D7): every
 -- companion a surface carries, by kind, as `<block>.<key>`, and each font block's Font flags, whose
 -- reader is on S.FontFlags. No size, no stored color or pick, no class color or its toggle, and neither

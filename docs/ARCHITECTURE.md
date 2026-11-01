@@ -351,8 +351,7 @@ machine (`modules/Anim.lua`) from `OnShow` and `OnHide` hooks; the real frame's 
 alpha. A string takes its scale from its own Scale animation in Vertex mode, on a layer no pose scales,
 never from `SetScale`, so text neither shimmers nor truncates. A style is data
 (`modules/Anim_Pose.lua` `STYLES`), the approved mockup's motion on a flat pose, and the open and the
-close each pick from the same 20 styles and None, by default Inward spiral at 0.5 s and Outward spiral at
-0.3 s. Settings: `dials[id].anim`
+close each pick from the same 19 styles and None, by default Rotate and scale at 0.2 s each. Settings: `dials[id].anim`
 ([schema](schema.md)). Why it is safe: [taint](taint.md). Design and rulings:
 `docs/superpowers/specs/2026-11-01-open-close-animations-design.md`.
 

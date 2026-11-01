@@ -163,7 +163,7 @@ test("anim dial: None on the open leaves the close, and None on the close leaves
     m.__click(inst.header, "Toggle")
     assertEqual(inst.track.phase, "close", "close on")
     NS.Anim.Step(inst.track, 1)
-    a.openStyle, a.closeStyle = "scaleFade", "none"
+    a.openStyle, a.closeStyle = "scaleInFade", "none"
     m.__click(inst.header, "Toggle")
     assertEqual(inst.track.phase, "open", "open on")
     NS.Anim.Step(inst.track, 1)
@@ -231,10 +231,10 @@ local function strings(track)
     return out
 end
 
--- A whole-dial scale, the shipped defaults being per-place.
+-- A whole-dial scale with no turn, the shipped defaults turning too.
 local function scaling(NS)
     local a = NS.db.profile.dials.d2.anim
-    a.openStyle, a.closeStyle, a.openDuration, a.closeDuration = "scaleFade", "scaleFade", 0.15, 0.1
+    a.openStyle, a.closeStyle, a.openDuration, a.closeDuration = "scaleInFade", "scaleInFade", 0.15, 0.1
 end
 
 test("anim dial: an open scales the text by its own animation, and the landing stops it", function()
@@ -247,7 +247,7 @@ test("anim dial: an open scales the text by its own animation, and the landing s
     for _, fs in ipairs(list) do
         assertEqual(fs.__scaleMode, m.Enum.FontStringScaleAnimationMode.Vertex)
         assertTrue(fs.__scaleGroup.__playing, "it plays")
-        assertEqual(fs.__scaleAnim.__from, 0.8)
+        assertEqual(fs.__scaleAnim.__from, 0.25)
         assertEqual(fs.__scaleAnim.__to, 1)
         assertEqual(fs.__scaleAnim.__duration, inst.track.duration)
     end
@@ -266,7 +266,7 @@ test("anim dial: a reversal restarts the text from the art's scale, with the art
     assertEqual(inst.track.phase, "close")
     for _, fs in ipairs(strings(inst.track)) do
         assertEqual(fs.__scaleAnim.__from, scale)
-        assertEqual(fs.__scaleAnim.__to, 0.8)
+        assertEqual(fs.__scaleAnim.__to, 0.25)
         assertTrue(fs.__scaleGroup.__playing)
     end
 end)
@@ -292,7 +292,7 @@ test("anim dial: a send's slice swells its own text, and the rest keep collapsin
             if sub.qcGroup == w.qcGhostGroup then
                 assertTrue(to > 1, "the sent place swells")
                 swelled = swelled + 1
-            elseif to == 0.8 then
+            elseif to == 0.25 then
                 collapsed = collapsed + 1
             end
         end
@@ -529,8 +529,8 @@ test("anim surfaces: a dial reads its own instance's settings, and the kind's de
     NS.db.profile.dials.other = { anim = { openStyle = "none" } }
     di.id = "other"
     assertEqual(di.track.spec.config("open").style, "none", "a second dial's own switch")
-    assertEqual(di.track.spec.config("close").style, "spiralOut", "a dial's missing key is a dial's default")
-    assertEqual(di.track.spec.config("close").duration, 0.3)
+    assertEqual(di.track.spec.config("close").style, "rotateScale", "a dial's missing key is a dial's default")
+    assertEqual(di.track.spec.config("close").duration, 0.2)
 end)
 
 test("anim surfaces: a rebuild's close starts no close at all", function()

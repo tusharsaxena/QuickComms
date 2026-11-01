@@ -143,12 +143,12 @@ function D.DialSlice()
 end
 
 --- A dial's Animation tab (`dial.anim.*`, #13): its open and its close, each on its own. A style of
---- "none" switches that one off; a dial animates by default (the owner's ruling, 2026-11-01), by an
---- inward spiral and an outward one. A direction is read only on Slide, and reads as motion: the
---- defaults rise into place and drop away, as the mockup does.
+--- "none" switches that one off; a dial animates by default (the owner's ruling, 2026-11-01), by
+--- Rotate and scale both ways. A direction is read only on Slide, and reads as motion: the defaults
+--- rise into place and drop away, as the mockup does.
 function D.DialAnim()
-    return { openStyle = "spiralIn", openDuration = 0.5, openDirection = "up",
-        closeStyle = "spiralOut", closeDuration = 0.3, closeDirection = "down" }
+    return { openStyle = "rotateScale", openDuration = 0.2, openDirection = "up",
+        closeStyle = "rotateScale", closeDuration = 0.2, closeDirection = "down" }
 end
 
 --- The Comms Dial's hub (`dial.hub.*`, the Hub tab's Hub heading; dial polish 2026-10-21, which

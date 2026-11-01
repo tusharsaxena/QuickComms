@@ -1239,7 +1239,7 @@ Total.
 - anim pose: a reversal is one plain leg, whatever the knots
 - anim pose: Rotate and scale is offered for both phases, knobs included
 
-### test_anim_styles.lua (158)
+### test_anim_styles.lua (153)
 
 - anim style: the dropdown offers None and every style, the same list for the open and the close
 - anim style: the labels are the owner's
@@ -1253,6 +1253,8 @@ Total.
 - anim style: a Slide with no direction, or a damaged one, rises as the mockup does
 - anim style: Direction is a row per phase, shown only on Slide, each writing its own key
 - anim style: step 15 moves a phase only as a pair, its style and duration both on the old default
+- anim style: step 16 moves the spiral pair to the new default, and every other Scale and fade to Scale in and fade
+- anim style: 15 then 16 lands a pre-15 profile on the new defaults, with nothing naming a retired style
 - anim style: the runner moves every stored profile once, and the stamp holds a later pick
 - anim style: Prepare fills a stored dial's Direction, so a settings read never finds it missing
 - anim style: a profile from before step 12 lands on the new defaults, not the old
@@ -1263,13 +1265,6 @@ Total.
 - anim style fade: combat is the same, with nothing refused, and a stand-down lands it
 - anim style fade: leaves nothing on the ghost for the next style, and never touches it
 - anim style fade: text keeps the Vertex route, with no width
-- anim style scaleFade: rests whole at 1 and shows nothing at 0
-- anim style scaleFade: an open and a close each land with nothing stuck
-- anim style scaleFade: a reversal starts from the pose, both ways, and lands
-- anim style scaleFade: a send fires at once and its slice stays bright where it rests
-- anim style scaleFade: combat is the same, with nothing refused, and a stand-down lands it
-- anim style scaleFade: leaves nothing on the ghost for the next style, and never touches it
-- anim style scaleFade: text keeps the Vertex route, with no width
 - anim style fan: rests whole at 1 and shows nothing at 0
 - anim style fan: an open and a close each land with nothing stuck
 - anim style fan: a reversal starts from the pose, both ways, and lands
@@ -1397,7 +1392,7 @@ Total.
 - anim style flash: leaves nothing on the ghost for the next style, and never touches it
 - anim style flash: text keeps the Vertex route, with no width
 - anim style: Flash blooms through the ring and goes out with the landing
-- anim style: the shipped defaults open by an inward spiral and close by an outward one, on the dial
+- anim style: the shipped defaults open and close by Rotate and scale, on the dial
 - anim style: a Slide's direction reaches the real track, phase by phase
 
 ### test_anim_surfaces.lua (42)
@@ -1948,7 +1943,7 @@ Total.
 | test_dial_catcher.lua | 13 |
 | test_dial_look.lua | 16 |
 | test_anim.lua | 46 |
-| test_anim_styles.lua | 158 |
+| test_anim_styles.lua | 153 |
 | test_anim_surfaces.lua | 42 |
 | test_anim_ghost.lua | 48 |
 | test_keybinds.lua | 6 |
@@ -1976,4 +1971,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1662** |
+| **Total** | **1657** |

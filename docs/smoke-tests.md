@@ -1959,16 +1959,16 @@ Result:
 The issue is #13; the rulings are in `docs/superpowers/specs/2026-11-01-open-close-animations-design.md`.
 
 **ANIM-1. The defaults on an existing profile.** Update with your own profile and open a dial by its key,
-then close it → its slices swirl out of the center to their places over 0.5 s, and spiral away from the
-ring over 0.3 s, about the dial's center, not the cursor. Result: not run.
+then close it → it turns and grows into place over 0.2 s, and turns and shrinks away over 0.2 s, about the
+dial's center, not the cursor. Result: not run.
 
 **ANIM-2. The handoff.** With a Shine look on the Slices tab and a glow on the Icons tab, open and close a
 dial slowly at 0.3 s, on the default skin and on one other → the copy matches the real dial, with no
 visible pop as it lands, no missing slice edges and no double image. Result: not run.
 
-**ANIM-3. The first styles, and the list.** On the Dial page's Animation tab try Fade, Scale and fade, Fan
-and None, open and close, at 0.5 s and at 2 s. The Open and the Close dropdowns each offer the same 21
-entries. While a style is None its Duration is hidden. The Pad page has no Animation tab. Result: not run.
+**ANIM-3. The first styles, and the list.** On the Dial page's Animation tab try Fade, Scale in and fade, Fan
+and None, open and close, at 0.5 s and at 2 s. The Open and the Close dropdowns each offer the same 20
+entries, and Scale and fade is not one of them. While a style is None its Duration is hidden. The Pad page has no Animation tab. Result: not run.
 
 **ANIM-4. The two switches.** Set a dial's Close to None: it leaves at once and still opens animated. Do
 the same for its Open → each changes that one thing on that one dial. Result: not run.
@@ -1997,7 +1997,7 @@ next real close and open play. Result: not run.
 Mouseover → it shows and hides at once, its hover and fade answer at once, and no copy is drawn. On a
 profile that ran this branch's first step 12, `/dump` a pad's `anim` → nil. Result: not run.
 
-**ANIM-12. Text neither shimmers nor truncates.** On the Dial page's Animation tab set Scale and fade at
+**ANIM-12. Text neither shimmers nor truncates.** On the Dial page's Animation tab set Scale in and fade at
 0.5 s, then at 2 s, and open and close a dial with a long title ("Quick Comms: World") → the title and
 every label scale smoothly with the art, about the dial's center, with no shimmer, no jitter of the
 letters, no text cut short and no ellipsis at any moment; each string stays on its slice; none jumps at
@@ -2040,9 +2040,10 @@ what this tries. If the dial only shrinks evenly, the client took the substitute
 **ANIM-19. Flash.** Flash → a soft bloom through the ring that peaks mid-way and is gone at the landing,
 with no square edge to the glow. Result: not run.
 
-**ANIM-20. The old defaults moved.** On a profile that ran this branch before the styles, with a dial still
-on Scale and fade at 0.15 s and 0.1 s and another with its own picks → after the update the first shows
-Inward spiral at 0.5 s and Outward spiral at 0.3 s, and the second keeps its picks. Result: not run.
+**ANIM-20. The old defaults moved.** On a profile that ran this branch before these rulings, with one dial
+still on Inward spiral at 0.5 s and Outward spiral at 0.3 s, one on Scale and fade at 0.7 s, and one with
+other picks → after the update the first shows Rotate and scale at 0.2 s for its open and its close, the
+second Scale in and fade at 0.7 s, and the third keeps its picks. Result: not run.
 
 ## The full skin
 

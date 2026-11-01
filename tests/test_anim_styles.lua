@@ -14,15 +14,13 @@ local function near(a, b, what)
 end
 
 -- The shipped list, in the dropdown's order.
-local STYLES = { "fade", "scaleFade", "fan", "scaleIn", "scaleInFade", "scaleOut", "scaleOutFade", "rotateScale",
+local STYLES = { "fade", "fan", "scaleIn", "scaleInFade", "scaleOut", "scaleOutFade", "rotateScale",
     "spiralOut", "spiralIn", "orbit", "burst", "stagger", "pop", "slide", "drop", "squash", "flip", "shatter",
     "flash" }
 
 -- The approved mockup's own numbers, computed from its `S` at two values of `e`, with its pixel `dy` in
 -- dial radii and turned up-positive. Places 1, 4 and 8 of a ring of 8.
 local MOCK = {
-    { style = "scaleFade", e = 0.25, alpha = 0.25, scale = 0.85 },
-    { style = "scaleFade", e = 0.6, alpha = 0.6, scale = 0.92 },
     { style = "scaleIn", e = 0.25, alpha = 1, scale = 0.4375 },
     { style = "scaleIn", e = 0.6, alpha = 1, scale = 0.7 },
     { style = "scaleOut", e = 0.25, alpha = 0.5, scale = 1.525 },
@@ -104,10 +102,10 @@ end)
 test("anim style: the defaults are the owner's, on a slider still 0.1 to 2 in 0.1 steps", function()
     local NS = T.enableAddon()
     local a = NS.db.profile.dials.d2.anim
-    assertEqual(a.openStyle, "spiralIn")
-    assertEqual(a.closeStyle, "spiralOut")
-    assertEqual(a.openDuration, 0.5)
-    assertEqual(a.closeDuration, 0.3)
+    assertEqual(a.openStyle, "rotateScale")
+    assertEqual(a.closeStyle, "rotateScale")
+    assertEqual(a.openDuration, 0.2)
+    assertEqual(a.closeDuration, 0.2)
     assertEqual(a.openDirection, "up", "a Slide rises into place")
     assertEqual(a.closeDirection, "down", "and drops away, as the mockup")
     for _, key in ipairs({ "open", "close" }) do
@@ -231,14 +229,14 @@ test("anim style: step 15 moves a phase only as a pair, its style and duration b
     -- red under: no step, so a profile from this branch keeps the old default forever
     NS.Library.MigrateAnimDefaults(p)
     local old, mixed, off = p.dials.old.anim, p.dials.mixed.anim, p.dials.off.anim
-    assertEqual(old.openStyle, "spiralIn")
-    assertEqual(old.closeStyle, "spiralOut")
-    assertEqual(old.openDuration, 0.5)
-    assertEqual(old.closeDuration, 0.3)
+    assertEqual(old.openStyle, "rotateScale")
+    assertEqual(old.closeStyle, "rotateScale")
+    assertEqual(old.openDuration, 0.2)
+    assertEqual(old.closeDuration, 0.2)
     assertEqual(mixed.openStyle, "fan", "a pick stays")
-    assertEqual(mixed.closeStyle, "spiralOut")
+    assertEqual(mixed.closeStyle, "rotateScale")
     assertEqual(mixed.openDuration, 0.7, "a pick stays")
-    assertEqual(mixed.closeDuration, 0.3)
+    assertEqual(mixed.closeDuration, 0.2)
     assertEqual(off.openStyle, "none")
     assertEqual(off.closeStyle, "none")
     assertEqual(off.openDuration, 2)
@@ -258,11 +256,76 @@ test("anim style: step 15 moves a phase only as a pair, its style and duration b
     assertNil(p.dials.empty.anim)
     assertNil(p.pads.p.anim)
     NS.Library.MigrateAnimDefaults(p)
-    assertEqual(old.openStyle, "spiralIn", "idempotent")
-    assertEqual(old.closeDuration, 0.3)
+    assertEqual(old.openStyle, "rotateScale", "idempotent")
+    assertEqual(old.closeDuration, 0.2)
     assertEqual(mixed.openDuration, 0.7)
     NS.Library.MigrateAnimDefaults(3)
     NS.Library.MigrateAnimDefaults({ dials = 3 })
+end)
+
+test("anim style: step 16 moves the spiral pair to the new default, and every other Scale and fade to Scale in and fade", function()
+    local NS = T.enableAddon()
+    local p = { dials = { spirals = { anim = { openStyle = "spiralIn", closeStyle = "spiralOut",
+        openDuration = 0.5, closeDuration = 0.3, openDirection = "left", closeDirection = "right" } },
+        retired = { anim = { openStyle = "scaleFade", closeStyle = "scaleFade", openDuration = 0.15, closeDuration = 2 } },
+        noDuration = { anim = { openStyle = "scaleFade" } },
+        lone = { anim = { openStyle = "spiralIn", closeStyle = "spiralOut", openDuration = 0.7, closeDuration = 0.1 } },
+        half = { anim = { openStyle = "spiralIn", closeStyle = "fan", openDuration = 0.5, closeDuration = 0.3 } },
+        crossed = { anim = { openStyle = "spiralOut", closeStyle = "spiralIn", openDuration = 0.5, closeDuration = 0.3 } },
+        off = { anim = { openStyle = "none", closeStyle = "scaleInFade", openDuration = 0.5, closeDuration = 0.3 } },
+        bad = 3, damaged = { anim = 3 }, empty = {} }, pads = { p = { name = "Kept" } } }
+    -- red under: no step, so a stored Scale and fade names a style that no longer exists
+    NS.Library.MigrateRotateDefaults(p)
+    local d = p.dials
+    assertEqual(d.spirals.anim.openStyle, "rotateScale")
+    assertEqual(d.spirals.anim.closeStyle, "rotateScale")
+    assertEqual(d.spirals.anim.openDuration, 0.2)
+    assertEqual(d.spirals.anim.closeDuration, 0.2)
+    assertEqual(d.spirals.anim.openDirection, "left", "a direction is the player's")
+    assertEqual(d.spirals.anim.closeDirection, "right")
+    assertEqual(d.retired.anim.openStyle, "scaleInFade", "even on the older default's duration")
+    assertEqual(d.retired.anim.openDuration, 0.15, "its duration is kept")
+    assertEqual(d.retired.anim.closeStyle, "scaleInFade")
+    assertEqual(d.retired.anim.closeDuration, 2)
+    assertEqual(d.noDuration.anim.openStyle, "scaleInFade")
+    assertNil(d.noDuration.anim.openDuration)
+    -- red under: a style matched alone, or the duration not read, takes a pick for the default
+    assertEqual(d.lone.anim.openStyle, "spiralIn", "0.7 shows the spiral was chosen")
+    assertEqual(d.lone.anim.openDuration, 0.7)
+    assertEqual(d.lone.anim.closeStyle, "spiralOut")
+    assertEqual(d.lone.anim.closeDuration, 0.1)
+    assertEqual(d.half.anim.openStyle, "rotateScale", "each phase is read on its own")
+    assertEqual(d.half.anim.closeStyle, "fan")
+    assertEqual(d.half.anim.closeDuration, 0.3)
+    assertEqual(d.crossed.anim.openStyle, "spiralOut", "never a default of the other phase")
+    assertEqual(d.crossed.anim.closeStyle, "spiralIn")
+    assertEqual(d.crossed.anim.openDuration, 0.5)
+    assertEqual(d.off.anim.openStyle, "none")
+    assertEqual(d.off.anim.closeStyle, "scaleInFade")
+    assertEqual(d.off.anim.closeDuration, 0.3)
+    assertEqual(d.bad, 3)
+    assertEqual(d.damaged.anim, 3, "a damaged value is left as it was found")
+    assertNil(d.empty.anim)
+    assertNil(p.pads.p.anim)
+    NS.Library.MigrateRotateDefaults(p)
+    assertEqual(d.spirals.anim.openDuration, 0.2, "idempotent")
+    assertEqual(d.retired.anim.openDuration, 0.15)
+    assertEqual(d.lone.anim.openStyle, "spiralIn")
+    NS.Library.MigrateRotateDefaults(3)
+    NS.Library.MigrateRotateDefaults({ dials = 3 })
+end)
+
+test("anim style: 15 then 16 lands a pre-15 profile on the new defaults, with nothing naming a retired style", function()
+    local NS = T.enableAddon()
+    local db = NS.addon.db
+    local a = db.profile.dials.d2.anim
+    a.openStyle, a.closeStyle, a.openDuration, a.closeDuration = "scaleFade", "scaleFade", 0.15, 0.7
+    db.global.schemaVersion = 14
+    NS.addon:RunMigrations()
+    assertEqual(a.openStyle, "rotateScale", "step 15's pair lands on today's default")
+    assertEqual(a.openDuration, 0.2)
+    assertEqual(a.closeStyle, "scaleInFade", "a pick step 15 left, for step 16")
+    assertEqual(a.closeDuration, 0.7)
 end)
 
 test("anim style: the runner moves every stored profile once, and the stamp holds a later pick", function()
@@ -273,16 +336,18 @@ test("anim style: the runner moves every stored profile once, and the stamp hold
     db.sv.profiles.other = { dials = { x = { anim = { openStyle = "scaleFade", openDuration = 0.15, closeStyle = "fan" } } } }
     db.global.schemaVersion = 14
     NS.addon:RunMigrations()
-    assertEqual(db.global.schemaVersion, 15)
-    assertEqual(NS.SCHEMA_VERSION, 15)
-    assertEqual(a.openStyle, "spiralIn")
-    assertEqual(a.closeDuration, 0.3)
-    assertEqual(db.sv.profiles.other.dials.x.anim.openStyle, "spiralIn", "not only the active profile")
+    assertEqual(db.global.schemaVersion, 16)
+    assertEqual(NS.SCHEMA_VERSION, 16)
+    assertEqual(a.openStyle, "rotateScale")
+    assertEqual(a.closeDuration, 0.2)
+    assertEqual(db.sv.profiles.other.dials.x.anim.openStyle, "rotateScale", "not only the active profile")
     assertEqual(db.sv.profiles.other.dials.x.anim.closeStyle, "fan")
-    a.openStyle, a.closeDuration = "scaleFade", 0.1
+    a.openStyle, a.openDuration, a.closeStyle, a.closeDuration = "spiralIn", 0.5, "spiralOut", 0.3
     NS.addon:RunMigrations()
-    assertEqual(a.openStyle, "scaleFade", "picked since: the step ran once")
-    assertEqual(a.closeDuration, 0.1)
+    assertEqual(a.openStyle, "spiralIn", "picked since: the step ran once")
+    assertEqual(a.openDuration, 0.5)
+    assertEqual(a.closeStyle, "spiralOut")
+    assertEqual(a.closeDuration, 0.3)
 end)
 
 test("anim style: Prepare fills a stored dial's Direction, so a settings read never finds it missing", function()
@@ -301,8 +366,8 @@ test("anim style: a profile from before step 12 lands on the new defaults, not t
     db.profile.dials.d2.anim = nil
     db.global.schemaVersion = 11
     NS.addon:RunMigrations()
-    assertEqual(db.profile.dials.d2.anim.openStyle, "spiralIn")
-    assertEqual(db.profile.dials.d2.anim.closeDuration, 0.3)
+    assertEqual(db.profile.dials.d2.anim.openStyle, "rotateScale")
+    assertEqual(db.profile.dials.d2.anim.closeDuration, 0.2)
     assertEqual(db.profile.dials.d2.anim.closeDirection, "down")
 end)
 
@@ -514,18 +579,20 @@ test("anim style: Flash blooms through the ring and goes out with the landing", 
     assertLanded(NS, inst, "the flash")
 end)
 
-test("anim style: the shipped defaults open by an inward spiral and close by an outward one, on the dial", function()
+test("anim style: the shipped defaults open and close by Rotate and scale, on the dial", function()
     local NS, m = live()
     assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
     local inst = NS.Dial.Instance("d2")
     m.__click(inst.header, "Toggle")
-    assertEqual(inst.track.duration, 0.5)
-    near(inst.track.pose.places[1].radius, 0, "out of the center")
+    assertEqual(inst.track.duration, 0.2)
+    near(inst.track.pose.scale, 0.45, "from under half size")
+    near(inst.track.pose.rot, -2.1, "turned")
     land(NS, inst)
     m.__click(inst.header, "Toggle")
-    assertEqual(inst.track.duration, 0.3)
-    NS.Anim.Step(inst.track, 0.15)
-    assertTrue(inst.track.pose.places[1].radius > 1, "away from the ring")
+    assertEqual(inst.track.duration, 0.2)
+    NS.Anim.Step(inst.track, 0.1)
+    assertTrue(inst.track.pose.scale < 1, "shrinking")
+    assertTrue(inst.track.pose.rot < 0, "turning away")
     land(NS, inst)
     assertLanded(NS, inst, "the defaults")
 end)
