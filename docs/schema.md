@@ -265,10 +265,10 @@ filled pads too until the owner ruled animations the dial's alone; it never ship
 only cleans a profile that ran it on the feature branch. The stamp runs it once, and it is idempotent.
 Step 15 (2026-11-01, `perProfile`, `Library.MigrateAnimDefaults`, #13): the owner's styles ruling moved
 the Animation tab's defaults. Step 12 is unreleased and writes the new ones for a surface it fills, so
-this only moves a profile that ran it on the feature branch: `openStyle` and `closeStyle` still
-`scaleFade`, `openDuration` still 0.15 and `closeDuration` still 0.1 each take the new default, key by
-key, and any other value stays. A close of 0.1 picked by hand cannot be told from the old default and
-moves too. The stamp runs it once, and it is idempotent. The two direction keys need no step: `fillShape`
+this only moves a profile that ran it on the feature branch. A phase moves only as a pair: `openStyle`
+`scaleFade` with `openDuration` 0.15, and `closeStyle` `scaleFade` with `closeDuration` 0.1, each take
+the new defaults. A lone match sits beside a pick and stays. Scale and fade with 0.1 picked by hand for
+the close cannot be told from the old default and moves too. The stamp runs it once, and it is idempotent. The two direction keys need no step: `fillShape`
 fills them.
 
 A color, Font shadow, the button's texture and the shine each have a `<key>FromSkin` companion, default

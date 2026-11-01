@@ -251,6 +251,40 @@ test("anim: the emphasis is heard only on a close, and an open clears it", funct
     assertNil(t.emphasis, "a reopen drops it")
 end)
 
+test("anim: a reopen during a send starts the sent slice from where it stands, at rest", function()
+    local NS = T.enableAddon()
+    local A = NS.Anim
+    local t = track(NS, { open = { style = "spiralIn", duration = 1 }, close = { style = "spiralOut", duration = 1 } })
+    NS.AnimGhost.New = function() return { size = 4 } end
+    local drawn
+    NS.AnimGhost.Pose = function(_, pose) drawn = drawn or pose.places[2].radius end
+    A.Close(t)
+    A.Step(t, 0.6)
+    A.Emphasize(t, 2)
+    A.Step(t, 0.1)
+    local other = t.pose.places[1].radius
+    assertTrue(other > 1, "the rest are on their way out")
+    drawn = nil
+    A.Open(t)
+    -- red under: the sent slice drew at rest through the close, and the pose never knew
+    near(drawn, 1, "the first frame draws it there")
+    local p = t.pose.places[2]
+    near(p.radius, 1)
+    near(p.angle, 0)
+    near(p.scale, 1)
+    near(p.spin, 0)
+    near(p.alpha, 1)
+    near(t.pose.places[1].radius, other, "the rest go on from their own pose")
+end)
+
+test("anim: settling a place a pose does not have is nothing to do", function()
+    local A = T.enableAddon().Anim
+    A.SettlePlace(A.Rest(), 2)
+    local pose = A.Pose("spiralOut", 0, 4)
+    A.SettlePlace(pose, 9)
+    assertEqual(pose.places[1].radius, 2.1)
+end)
+
 -- ── the rest of the sweep (#13) ──────────────────────────────────────────────────────────────────
 
 test("anim: a missing key reads its own phase's default", function()

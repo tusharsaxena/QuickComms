@@ -95,6 +95,8 @@ local function begin(track, phase, cfg)
     if interrupted then
         e = track.e
         A.Lerp(track.pose, track.pose, 0, from)
+        -- The sent place drew at rest through the close, and the pose never recorded that.
+        if phase == "open" and track.emphasis then A.SettlePlace(from, track.emphasis) end
         duration = duration * math.max(A.REVERSE_FLOOR, math.abs(target - e))
     else
         A.Pose(cfg.style, e, size, from, cfg)

@@ -510,8 +510,9 @@ local function poseArt(ghost, sub, pose, sent, f)
         return
     end
     local turn, s, x, y = motion(ghost, pose, sub.qcGroup)
+    local _, ax, ay = axes(ghost, pose)   -- the stretch runs about the sub-frame's center, so its offset takes it
     scaleSub(sub, s)
-    moveFrame(sub, stage, x / s, y / s)
+    moveFrame(sub, stage, x * ax / s, y * ay / s)
     turnSub(sub, turn)
 end
 

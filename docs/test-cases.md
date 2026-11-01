@@ -1190,7 +1190,7 @@ Total.
 - dial: [art] the hub draws textures, not segments
 - dial: [art] the pill is three pieces with round ends
 
-### test_anim.lua (44)
+### test_anim.lua (46)
 
 - anim: a new dial carries the shipped defaults, on for everyone, and a pad has no animation
 - anim: step 12 fills every stored dial, keeps a key already there, and leaves pads alone
@@ -1209,6 +1209,8 @@ Total.
 - anim: a capture with nothing to draw snaps, and never holds the frame
 - anim: the stand-down leaves no track and no OnUpdate running
 - anim: the emphasis is heard only on a close, and an open clears it
+- anim: a reopen during a send starts the sent slice from where it stands, at rest
+- anim: settling a place a pose does not have is nothing to do
 - anim: a missing key reads its own phase's default
 - anim: every leg hands the text its scale, a reversal from where it stands
 - anim: the emphasis tells the text once, over the close's time left
@@ -1237,7 +1239,7 @@ Total.
 - anim pose: a reversal is one plain leg, whatever the knots
 - anim pose: Rotate and scale is offered for both phases, knobs included
 
-### test_anim_styles.lua (157)
+### test_anim_styles.lua (158)
 
 - anim style: the dropdown offers None and every style, the same list for the open and the close
 - anim style: the labels are the owner's
@@ -1250,8 +1252,9 @@ Total.
 - anim style: Slide's Direction reads as motion: Up rises into place and leaves upward
 - anim style: a Slide with no direction, or a damaged one, rises as the mockup does
 - anim style: Direction is a row per phase, shown only on Slide, each writing its own key
-- anim style: step 15 moves what still holds the old default and leaves any other value
+- anim style: step 15 moves a phase only as a pair, its style and duration both on the old default
 - anim style: the runner moves every stored profile once, and the stamp holds a later pick
+- anim style: Prepare fills a stored dial's Direction, so a settings read never finds it missing
 - anim style: a profile from before step 12 lands on the new defaults, not the old
 - anim style fade: rests whole at 1 and shows nothing at 0
 - anim style fade: an open and a close each land with nothing stuck
@@ -1442,7 +1445,7 @@ Total.
 - anim surfaces: a track rests at the dial's alpha, the master opacity included
 - anim surfaces: the dial's ghost mirrors the hub and pointer, and each slice's fill by its place
 
-### test_anim_ghost.lua (45)
+### test_anim_ghost.lua (48)
 
 - anim ghost: the stage takes the source's strata and level, and sub-frames keep their stacking
 - anim ghost: a level is held to the room above the stage, and never under it
@@ -1486,6 +1489,9 @@ Total.
 - anim ghost: a place fades on its own and the hub on its own
 - anim ghost: a text leg carries each place's own scale
 - anim ghost: one-axis scale is each art frame's Scale animation and each string's, one leg at a time
+- anim ghost: a place and one axis together keep the art on its text
+- anim ghost: a hide stops the one-axis legs, and a recapture stops one still running
+- anim ghost: a recapture forgets the stage's offset, so the same offset lands again
 - anim ghost: a knot's leg is linear, and the sent place leaves the legs
 - anim ghost: where a frame takes no Scale animation, one-axis scale falls back to the smaller, uniform
 - anim ghost: a flash is one additive texture, made on first use, over everything
@@ -1941,10 +1947,10 @@ Total.
 | test_dial.lua | 38 |
 | test_dial_catcher.lua | 13 |
 | test_dial_look.lua | 16 |
-| test_anim.lua | 44 |
-| test_anim_styles.lua | 157 |
+| test_anim.lua | 46 |
+| test_anim_styles.lua | 158 |
 | test_anim_surfaces.lua | 42 |
-| test_anim_ghost.lua | 45 |
+| test_anim_ghost.lua | 48 |
 | test_keybinds.lua | 6 |
 | test_dial_shine.lua | 8 |
 | test_icon_style.lua | 10 |
@@ -1970,4 +1976,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1656** |
+| **Total** | **1662** |

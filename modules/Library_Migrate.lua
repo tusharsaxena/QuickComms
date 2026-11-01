@@ -304,20 +304,25 @@ function Lib.MigrateDropPadAnim(profile)
     end
 end
 
--- What a dial's Animation tab stored as its default before the owner's ruling on the styles.
-local OLD_ANIM_DEFAULTS = { openStyle = "scaleFade", closeStyle = "scaleFade", openDuration = 0.15, closeDuration = 0.1 }
+-- What a dial's Animation tab stored as its default before the owner's ruling on the styles, by phase.
+local OLD_ANIM_DEFAULTS = { open = { style = "scaleFade", duration = 0.15 }, close = { style = "scaleFade", duration = 0.1 } }
 
 -- 14 -> 15 (#13): step 12 is unreleased, and a profile that ran it on the feature branch holds the old
--- default. A value still equal to it takes the new one; any other value is the player's and stays. A
--- close of 0.1 picked by hand cannot be told from the default, and the stamp makes that once.
+-- default. A phase moves only as a pair: its style and its duration both still the old default. A lone
+-- match sits beside a pick, so it is a pick too and stays. Scale and fade with 0.1 picked by hand cannot
+-- be told from the close's default, and the stamp makes that once. The two direction keys need no step:
+-- fillShape fills them when the profile loads, before anything reads them.
 function Lib.MigrateAnimDefaults(profile)
     if type(profile) ~= "table" then return end
     local defaults = NS.PadDefaults.DialAnim()
     for _, surface in pairs(type(profile.dials) == "table" and profile.dials or {}) do
         local anim = type(surface) == "table" and surface.anim
         if type(anim) == "table" then
-            for key, old in pairs(OLD_ANIM_DEFAULTS) do
-                if anim[key] == old then anim[key] = defaults[key] end
+            for phase, old in pairs(OLD_ANIM_DEFAULTS) do
+                local style, duration = phase .. "Style", phase .. "Duration"
+                if anim[style] == old.style and anim[duration] == old.duration then
+                    anim[style], anim[duration] = defaults[style], defaults[duration]
+                end
             end
         end
     end

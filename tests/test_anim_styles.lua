@@ -219,12 +219,14 @@ end)
 
 -- ── the migration ───────────────────────────────────────────────────────────────────────────────
 
-test("anim style: step 15 moves what still holds the old default and leaves any other value", function()
+test("anim style: step 15 moves a phase only as a pair, its style and duration both on the old default", function()
     local NS = T.enableAddon()
     local p = { dials = { old = { anim = { openStyle = "scaleFade", closeStyle = "scaleFade",
         openDuration = 0.15, closeDuration = 0.1 } },
         mixed = { anim = { openStyle = "fan", closeStyle = "scaleFade", openDuration = 0.7, closeDuration = 0.1 } },
         off = { anim = { openStyle = "none", closeStyle = "none", openDuration = 2, closeDuration = 0.2 } },
+        lone = { anim = { openStyle = "scaleFade", closeStyle = "fan", openDuration = 0.5, closeDuration = 0.1 } },
+        loneToo = { anim = { openStyle = "fade", closeStyle = "scaleFade", openDuration = 0.15, closeDuration = 0.4 } },
         bad = 3, damaged = { anim = 3 }, empty = {} }, pads = { p = { name = "Kept" } } }
     -- red under: no step, so a profile from this branch keeps the old default forever
     NS.Library.MigrateAnimDefaults(p)
@@ -241,6 +243,16 @@ test("anim style: step 15 moves what still holds the old default and leaves any 
     assertEqual(off.closeStyle, "none")
     assertEqual(off.openDuration, 2)
     assertEqual(off.closeDuration, 0.2)
+    -- red under: key by key, a lone match is taken for the default and the pick beside it says otherwise
+    local lone, loneToo = p.dials.lone.anim, p.dials.loneToo.anim
+    assertEqual(lone.openStyle, "scaleFade", "0.5 shows Scale and fade was chosen")
+    assertEqual(lone.openDuration, 0.5)
+    assertEqual(lone.closeStyle, "fan")
+    assertEqual(lone.closeDuration, 0.1, "Fan shows 0.1 was chosen")
+    assertEqual(loneToo.openStyle, "fade")
+    assertEqual(loneToo.openDuration, 0.15)
+    assertEqual(loneToo.closeStyle, "scaleFade")
+    assertEqual(loneToo.closeDuration, 0.4)
     assertEqual(p.dials.bad, 3)
     assertEqual(p.dials.damaged.anim, 3, "a damaged value is left as it was found")
     assertNil(p.dials.empty.anim)
@@ -258,7 +270,7 @@ test("anim style: the runner moves every stored profile once, and the stamp hold
     local db = NS.addon.db
     local a = db.profile.dials.d2.anim
     a.openStyle, a.closeStyle, a.openDuration, a.closeDuration = "scaleFade", "scaleFade", 0.15, 0.1
-    db.sv.profiles.other = { dials = { x = { anim = { openStyle = "scaleFade", closeStyle = "fan" } } } }
+    db.sv.profiles.other = { dials = { x = { anim = { openStyle = "scaleFade", openDuration = 0.15, closeStyle = "fan" } } } }
     db.global.schemaVersion = 14
     NS.addon:RunMigrations()
     assertEqual(db.global.schemaVersion, 15)
@@ -271,6 +283,16 @@ test("anim style: the runner moves every stored profile once, and the stamp hold
     NS.addon:RunMigrations()
     assertEqual(a.openStyle, "scaleFade", "picked since: the step ran once")
     assertEqual(a.closeDuration, 0.1)
+end)
+
+test("anim style: Prepare fills a stored dial's Direction, so a settings read never finds it missing", function()
+    local NS = T.enableAddon()
+    local a = NS.db.profile.dials.d2.anim
+    a.openDirection, a.closeDirection = nil, nil
+    NS.Library.Prepare()
+    local Get = NS.SchemaRuntime.Get
+    assertEqual(Get("dial.anim.openDirection", "d2"), "up")
+    assertEqual(Get("dial.anim.closeDirection", "d2"), "down")
 end)
 
 test("anim style: a profile from before step 12 lands on the new defaults, not the old", function()

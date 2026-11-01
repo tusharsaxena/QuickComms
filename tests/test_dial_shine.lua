@@ -259,6 +259,7 @@ test("dial: [shine] sprites sit in the slice's frame", function()
             near(t.__rotation, sp.turn - a, what .. " rotation")
             local masks = t.__masks or {}
             assertTrue(masks[1] ~= nil, what .. ": cut by the slice's mask")
+            assertTrue(t.qcGhostTurn, what .. ": turns with its slice on the ghost")
         end
         local sawE = false
         for j = 1, shape.size do

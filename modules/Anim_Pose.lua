@@ -146,6 +146,12 @@ local function placesOf(into, n)
     return pool
 end
 
+--- Put place `i` of `pose` at rest, if the pose has that place.
+function A.SettlePlace(pose, i)
+    local p = pose.places and pose.places[i]
+    if p then atRest(p, REST_PLACE) end
+end
+
 --- `style` at `e` (0 hidden, 1 rest) on a ring of `n` places, into the buffer `into` when given. Pure but
 --- for `into`. nil for None and an unknown style.
 --- @return table|nil pose

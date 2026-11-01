@@ -739,6 +739,57 @@ test("anim ghost: one-axis scale is each art frame's Scale animation and each st
     near(r.title.calls.SetPoint[5], -15)
 end)
 
+test("anim ghost: a place and one axis together keep the art on its text", function()
+    local G, ghost, NS, r = ring()
+    -- red under: the art's offset unscaled by the axis: the label at 65, its text at 40
+    local pose = withPlace(NS, 4, { radius = 1.5 })
+    pose.scaleY = 0.5
+    G.Pose(ghost, pose, 1, nil, 0)
+    local stretched = r.sub.calls.SetPoint[5] + 30 * 0.5   -- the sub-frame's stretch is about its own center
+    near(stretched, 40, "the art's label")
+    near(r.label.calls.SetPoint[5], 40, "its text")
+    pose = withPlace(NS, 4, { radius = 1.5, scale = 0.5 })
+    pose.scaleY = 0.5
+    G.Pose(ghost, pose, 1, nil, 0)
+    near(r.sub.calls.SetPoint[5], 50, "in the place's own scale")
+    near(r.label.calls.SetPoint[5], (15 + 50) * 0.5)
+    pose = withPlace(NS, 4, { radius = 1.5, angle = math.pi / 2 })
+    pose.scaleX = 0.5
+    G.Pose(ghost, pose, 1, nil, 0)
+    near(r.sub.calls.SetPoint[4], 25, "the other axis")
+    near(r.sub.calls.SetPoint[5], 0)
+end)
+
+test("anim ghost: a hide stops the one-axis legs, and a recapture stops one still running", function()
+    local G, ghost, NS, r = ring()
+    local from = NS.Anim.Rest()
+    from.scaleX = 0.5
+    G.ScaleText(ghost, from, NS.Anim.Rest(), 0.4, "open")
+    -- red under: docs/taint.md's stop gone, or a pooled stretch carried into the next style
+    local stops, hubStops = r.sub.group.count.Stop, r.hub.group.count.Stop
+    G.Hide(ghost)
+    assertEqual(r.sub.group.count.Stop, stops + 1)
+    assertEqual(r.hub.group.count.Stop, hubStops + 1)
+    G.ScaleText(ghost, from, NS.Anim.Rest(), 0.4, "open")
+    stops, hubStops = r.sub.group.count.Stop, r.hub.group.count.Stop
+    assertTrue(G.Capture(ghost, ghost.src, { ghost.src }, 4, SHAPE))
+    assertEqual(r.sub.group.count.Stop, stops + 1, "the leg does not outlive its capture")
+    assertEqual(r.hub.group.count.Stop, hubStops + 1)
+end)
+
+test("anim ghost: a recapture forgets the stage's offset, so the same offset lands again", function()
+    local G, ghost, NS = ring()
+    local pose = NS.Anim.Rest()
+    pose.dy = 0.5
+    G.Pose(ghost, pose, 1, nil, 0)
+    near(ghost.stage.calls.SetPoint[5], 50)
+    assertTrue(G.Capture(ghost, ghost.src, { ghost.src }, 4, SHAPE))
+    near(ghost.stage.calls.SetPoint[5], 0, "a capture anchors it back")
+    -- red under: moveStage's guard still holding 50 skips this, and a snapped Slide starts at 0
+    G.Pose(ghost, pose, 1, nil, 0)
+    near(ghost.stage.calls.SetPoint[5], 50)
+end)
+
 test("anim ghost: a knot's leg is linear, and the sent place leaves the legs", function()
     local G, ghost, NS, r = ring()
     local from, to = NS.Anim.Rest(), NS.Anim.Rest()
