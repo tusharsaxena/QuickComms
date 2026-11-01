@@ -227,3 +227,125 @@ test("anim: the emphasis is heard only on a close, and an open clears it", funct
     A.Open(t)
     assertNil(t.emphasis, "a reopen drops it")
 end)
+
+-- ── the rest of the sweep (#13) ──────────────────────────────────────────────────────────────────
+
+test("anim: a missing key reads its own phase's default, and a pad's direction comes through", function()
+    local A = T.enableAddon().Anim
+    local defaults = { openDuration = 0.15, closeDuration = 0.1, openStyle = "fade", closeStyle = "pop",
+        openDirection = "up", closeDirection = "down" }
+    local cfg = A.Config({}, defaults, "close")
+    assertEqual(cfg.duration, 0.1)
+    assertEqual(cfg.style, "pop")
+    assertEqual(cfg.direction, "down")
+    assertEqual(A.Config({ openDirection = "left" }, defaults, "open").direction, "left")
+end)
+
+test("anim: a Slide's close leaves the way it names, through a live track", function()
+    local NS = T.enableAddon()
+    local t = track(NS, { open = SF, close = { style = "slide", duration = 0.1, direction = "up" } })
+    assertTrue(NS.Anim.Close(t))
+    assertEqual(t.to.y, NS.Anim.SLIDE, "up on a close leaves upward")
+end)
+
+test("anim: a Snap leaves no emphasis behind", function()
+    local NS = T.enableAddon()
+    local A = NS.Anim
+    local t = track(NS, { open = SF, close = SF })
+    A.Close(t)
+    A.Emphasize(t, 2)
+    A.Snap(t)
+    assertNil(t.emphasis)
+end)
+
+test("anim: a step draws with how far along it is, so the pulse moves", function()
+    local NS = T.enableAddon()
+    local A = NS.Anim
+    local t = track(NS, { open = SF, close = SF })
+    local got
+    NS.AnimGhost.Pose = function(_, _, _, _, f) got = f end
+    A.Close(t)
+    A.Step(t, 0.1)
+    assertEqual(got, 0.5)
+end)
+
+test("anim: step 12 walks past a damaged surface and a damaged list", function()
+    local NS = T.enableAddon()
+    local p = { pads = { bad = 3, good = {} }, dials = 3 }
+    NS.Library.MigrateAnim(p)
+    assertEqual(p.pads.bad, 3)
+    assertEqual(p.pads.good.anim.openStyle, "fadeScale")
+    assertEqual(p.dials, 3)
+end)
+
+test("anim: step 12 reads a stored false as kept", function()
+    local NS = T.enableAddon()
+    local p = { pads = { a = { anim = { openStyle = false } } } }
+    NS.Library.MigrateAnim(p)
+    assertEqual(p.pads.a.anim.openStyle, false)
+end)
+
+test("anim: step 12 runs for every stored profile, not the active one", function()
+    local NS = T.enableAddon()
+    local db = NS.addon.db
+    db.sv.profiles.other = { pads = { x = {} } }
+    db.global.schemaVersion = 11
+    NS.addon:RunMigrations()
+    assertEqual(db.sv.profiles.other.pads.x.anim.openStyle, "fadeScale")
+end)
+
+test("anim: two surfaces never share their anim table", function()
+    local NS = T.enableAddon()
+    local T1 = NS.Library.TEMPLATES
+    local p1, p2 = NS.db.profile.pads.p1.anim, T1.pad.anim
+    assertTrue(p1 ~= p2, "a pad's table is its own")
+    assertTrue(NS.db.profile.dials.d2.anim ~= T1.dial.anim, "a dial's table is its own")
+end)
+
+test("anim: the rows are the owner's: Open and Close on an Animation tab, knobs only while they apply", function()
+    local NS = T.enableAddon()
+    local function row(path)
+        for _, r in ipairs(NS.addon.Settings.Schema) do
+            if r.path == path then return r end
+        end
+    end
+    for _, kind in ipairs({ "pad", "dial" }) do
+        local style = row(kind .. ".anim.closeStyle")
+        assertEqual(style.group, NS.L["Animation"])
+        assertEqual(style.subgroup, NS.L["Close"])
+        assertEqual(row(kind .. ".anim.openStyle").subgroup, NS.L["Open"])
+        local d = row(kind .. ".anim.closeDuration")
+        assertEqual(d.shownWhen.path, kind .. ".anim.closeStyle", "its own style hides it")
+        for _, v in ipairs(d.shownWhen.equals) do assertTrue(v ~= "none", "None hides it") end
+    end
+    local dir = row("pad.anim.closeDirection")
+    assertEqual(dir.shownWhen.path, "pad.anim.closeStyle")
+    assertEqual(dir.shownWhen.equals, "slide")
+    assertNil(row("dial.anim.closeDirection"), "a dial has no Slide")
+    local fan = false
+    for _, c in ipairs(row("dial.anim.openStyle").values) do
+        if c.value == "fan" then fan = true end
+        if c.value == "scaleFade" then assertEqual(c.text, NS.L["Scale and fade"]) end
+    end
+    assertTrue(fan, "the dial has its Fan")
+    assertEqual(row("pad.anim.openDuration").normalize(9), 0.3)
+    assertFalse(NS.SchemaRuntime.Set("pad.anim.closeDirection", "sideways", "p1"))
+    assertFalse(NS.SchemaRuntime.Set("pad.anim.closeStyle", "sideways", "p1"))
+end)
+
+test("anim: a close never holds a frame that is already down, and a snap off no track releases nothing", function()
+    local NS = T.enableAddon()
+    local A = NS.Anim
+    local t, counts = track(NS, { open = SF, close = SF })
+    A.Snap(t)
+    assertEqual(select(2, counts()), 0, "nothing was held")
+    A.Close(t)
+    assertEqual((counts()), 0, "a close holds nothing")
+    assertFalse(A.Holding(t), "and Pad.ApplyAlpha may lift it")
+end)
+
+test("anim: step 12 takes a value that is no profile quietly", function()
+    local NS = T.enableAddon()
+    NS.Library.MigrateAnim(3)
+    NS.Library.MigrateAnim(nil)
+end)

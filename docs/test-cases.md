@@ -1190,7 +1190,7 @@ Total.
 - dial: [art] the hub draws textures, not segments
 - dial: [art] the pill is three pieces with round ends
 
-### test_anim.lua (16)
+### test_anim.lua (27)
 
 - anim: a new pad and dial carry the shipped defaults, on for everyone
 - anim: step 12 fills every stored surface and keeps a key already there
@@ -1208,8 +1208,19 @@ Total.
 - anim: a capture with nothing to draw snaps, and never holds the frame
 - anim: the stand-down leaves no track and no OnUpdate running
 - anim: the emphasis is heard only on a close, and an open clears it
+- anim: a missing key reads its own phase's default, and a pad's direction comes through
+- anim: a Slide's close leaves the way it names, through a live track
+- anim: a Snap leaves no emphasis behind
+- anim: a step draws with how far along it is, so the pulse moves
+- anim: step 12 walks past a damaged surface and a damaged list
+- anim: step 12 reads a stored false as kept
+- anim: step 12 runs for every stored profile, not the active one
+- anim: two surfaces never share their anim table
+- anim: the rows are the owner's: Open and Close on an Animation tab, knobs only while they apply
+- anim: a close never holds a frame that is already down, and a snap off no track releases nothing
+- anim: step 12 takes a value that is no profile quietly
 
-### test_anim_surfaces.lua (26)
+### test_anim_surfaces.lua (39)
 
 - anim dial: a key open plays over a live dial, and it lands with the real alpha back
 - anim dial: a close plays out after the header is already down
@@ -1237,6 +1248,38 @@ Total.
 - anim pad: a release snaps, and a stand-down leaves nothing running
 - anim ghost: a color texture copies from what its painter recorded, a file from the client
 - anim ghost: no rect yet snaps instead of guessing, and the strip stays out
+- anim surfaces: a surface reads its own instance's settings, and the kind's defaults when it has none
+- anim surfaces: a rebuild's close starts no close at all
+- anim surfaces: a rebuild snaps a track that was playing
+- anim surfaces: a dial with no ring on screen plays no close
+- anim surfaces: an open interrupted by a hide does not arm the next ring's show
+- anim surfaces: a silent reopen's ring leaves a track alone, and a stood-down ring plays nothing
+- anim surfaces: a stood-down surface plays neither edge
+- anim surfaces: a test mode reopen is silent only for its own show
+- anim surfaces: a released pad's parts leave quietly, and a pad apply's show is no open
+- anim surfaces: the close names the sent place whichever way round the click ran
+- anim surfaces: a stale stamp emphasizes nothing, and a guarded press none
+- anim surfaces: each track rests at its surface's alpha, the dial's master opacity included
+- anim surfaces: the dial's ghost mirrors the hub and pointer, and each slice's fill by its place
+
+### test_anim_ghost.lua (16)
+
+- anim ghost: the stage takes the source's strata and level, and sub-frames keep their stacking
+- anim ghost: a level is held to the room above the stage, and never under it
+- anim ghost: one sub-frame per level and place, so a place stays addressable and a level whole
+- anim ghost: a child takes its place from itself, then its parent, and a root's tag counts
+- anim ghost: only what shows is copied, and the drag strip stays out
+- anim ghost: a color texture draws what its painter recorded, white and unturned
+- anim ghost: a file texture keeps its art, tint, crop, turn, blend, layer, alpha and desaturation
+- anim ghost: a mask is copied once per source mask, turned, and taken off before the next capture
+- anim ghost: a font string keeps its text, face, color, shadow, alignment and alpha
+- anim ghost: a child scaled apart from the root keeps its drawn size and place
+- anim ghost: no rect on any part is no capture, and nothing to draw is none
+- anim ghost: a capture clears the last one's copies, and a reused sub-frame starts whole
+- anim ghost: a pose scales and moves the stage and lays the rest alpha over every sub-frame
+- anim ghost: a place fades in its turn around the ring
+- anim ghost: the sent place alone stays bright, pulses and fades after its hold
+- anim ghost: a ghost takes no mouse, and nothing it makes does
 
 ### test_keybinds.lua (6)
 
@@ -1628,8 +1671,9 @@ Total.
 | test_dial.lua | 38 |
 | test_dial_catcher.lua | 13 |
 | test_dial_look.lua | 16 |
-| test_anim.lua | 16 |
-| test_anim_surfaces.lua | 26 |
+| test_anim.lua | 27 |
+| test_anim_surfaces.lua | 39 |
+| test_anim_ghost.lua | 16 |
 | test_keybinds.lua | 6 |
 | test_dial_shine.lua | 8 |
 | test_icon_style.lua | 10 |
@@ -1654,4 +1698,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1352** |
+| **Total** | **1392** |

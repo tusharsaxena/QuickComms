@@ -374,3 +374,205 @@ test("anim ghost: no rect yet snaps instead of guessing, and the strip stays out
     assertNil(inst.track.phase)
     inst.root.GetCenter = center
 end)
+
+-- ── the rest of the sweep (#13): each case below is red under a mutant the suite let through ─────────
+
+local function counted(NS)
+    local n = { open = 0, close = 0 }
+    local open, close = NS.Anim.Open, NS.Anim.Close
+    NS.Anim.Open = function(...) n.open = n.open + 1 return open(...) end
+    NS.Anim.Close = function(...) n.close = n.close + 1 return close(...) end
+    return n
+end
+
+test("anim surfaces: a surface reads its own instance's settings, and the kind's defaults when it has none", function()
+    local NS = live()
+    local inst, di = pad(NS), dial(NS)
+    local p, d = NS.db.profile.pads, NS.db.profile.dials
+    p.other, d.other = { anim = { openStyle = "none" } }, { anim = { openStyle = "none" } }
+    inst.id, di.id = "other", "other"
+    assertEqual(inst.track.spec.config("open").style, "none", "a second pad's own switch")
+    assertEqual(di.track.spec.config("open").style, "none", "a second dial's own switch")
+    assertEqual(inst.track.spec.config("close").style, "fadeScale", "a pad's missing key is a pad's default")
+    assertEqual(di.track.spec.config("close").style, "scaleFade", "a dial's missing key is a dial's default")
+    assertEqual(inst.track.spec.config("close").direction, "down")
+    assertEqual(di.track.spec.config("close").duration, 0.1)
+end)
+
+test("anim surfaces: a rebuild's close starts no close at all", function()
+    local NS, m = live()
+    local inst = dial(NS)
+    m.__click(inst.header, "Toggle")
+    NS.Anim.Step(inst.track, 1)
+    local n = counted(NS)
+    dial(NS)
+    -- red under: the ring's later show snapping away a close that had already started
+    assertEqual(n.close, 0)
+    assertEqual(n.open, 0)
+end)
+
+test("anim surfaces: a rebuild snaps a track that was playing", function()
+    local NS, m = live()
+    local inst = dial(NS)
+    m.__click(inst.header, "Toggle")
+    assertEqual(inst.track.phase, "open")
+    local held = inst.track
+    NS.Dial.Release(1)
+    assertNil(held.phase)
+    assertEqual(inst.header:GetAlpha(), NS.Setting("alpha") or 1)
+end)
+
+test("anim surfaces: a dial with no ring on screen plays no close", function()
+    local NS = live()
+    local inst = dial(NS)
+    local n = counted(NS)
+    inst.shownRing = nil
+    inst.header:__fire("OnHide")
+    assertEqual(n.close, 0)
+end)
+
+test("anim surfaces: an open interrupted by a hide does not arm the next ring's show", function()
+    local NS, m = live()
+    local inst = dial(NS)
+    inst.opening = true
+    NS.Dial.Closed(inst)
+    assertNil(inst.opening)
+    m.__click(inst.header, "Toggle")
+    assertEqual(inst.track.phase, "open")
+end)
+
+test("anim surfaces: a silent reopen's ring leaves a track alone, and a stood-down ring plays nothing", function()
+    local NS, m = live()
+    local inst = dial(NS)
+    local snaps, snap = 0, NS.Anim.Snap
+    NS.Anim.Snap = function(...) snaps = snaps + 1 return snap(...) end
+    inst.silent = true
+    NS.Dial.RingShown(inst, inst.shownRing)
+    assertEqual(snaps, 0, "a silent reopen is no page turn")
+    inst.silent = nil
+    local n = counted(NS)
+    m.__click(inst.header, "Toggle")
+    NS.Anim.Step(inst.track, 1)
+    local stood = NS.IsStoodDown
+    NS.IsStoodDown = function() return true end
+    inst.opening = true
+    NS.Dial.RingShown(inst, inst.shownRing)
+    assertEqual(n.open, 1, "only the player's open")
+    NS.IsStoodDown = stood
+end)
+
+test("anim surfaces: a stood-down surface plays neither edge", function()
+    local NS, m = live()
+    local inst, di = pad(NS), dial(NS)
+    m.__click(di.header, "Toggle")
+    NS.Anim.Step(di.track, 1)
+    local n = counted(NS)
+    local stood = NS.IsStoodDown
+    NS.IsStoodDown = function() return true end
+    di.header:Hide()
+    assertEqual(n.close, 0, "a dial's close")
+    drive(NS, inst, "hide")
+    assertEqual(n.close, 0, "a pad's close")
+    inst.root:__fire("OnShow")
+    assertEqual(n.open, 0, "a pad's open")
+    NS.IsStoodDown = stood
+end)
+
+test("anim surfaces: a test mode reopen is silent only for its own show", function()
+    local NS = live()
+    local plan = planOf(NS, { test = true })
+    NS.Dial.Sync({ d2 = plan }, { "d2" })
+    local inst = NS.Dial.Instance("d2")
+    NS.Dial.Sync({ d2 = plan }, { "d2" })
+    assertNil(inst.silent, "red under: a rebuild's silence outliving the rebuild")
+end)
+
+test("anim surfaces: a released pad's parts leave quietly, and a pad apply's show is no open", function()
+    local NS = live()
+    local inst = pad(NS)
+    drive(NS, inst, "hide")
+    NS.Anim.Snap(inst.track)
+    drive(NS, inst, "show")
+    NS.Anim.Snap(inst.track)
+    local n = counted(NS)
+    local clear = NS.SendEngine.ClearVisibility
+    local quiet
+    -- the driver comes off with the release: whatever it does to the root plays nothing
+    NS.SendEngine.ClearVisibility = function(root)
+        quiet = inst.silent
+        root:Hide()
+    end
+    assertTrue(NS.Pad.Release("p1"))
+    NS.SendEngine.ClearVisibility = clear
+    assertTrue(quiet)
+    assertEqual(n.close, 0)
+    inst.silent = true
+    inst.root:__fire("OnShow")
+    assertEqual(n.open, 0, "a silent show")
+    inst.silent = nil
+end)
+
+test("anim surfaces: the close names the sent place whichever way round the click ran", function()
+    local NS, m = live()
+    local inst = dial(NS)
+    m.__click(inst.header, "Toggle")
+    NS.Anim.Step(inst.track, 1)
+    local w = NS.Dial.RingWedges("d2", NS.Dial.ShownRing("d2"))[2]
+    -- the hook first, the wrap's close after: the stamp carries the place into the close
+    NS.Dial.Sent(inst, w)
+    assertNil(inst.track.emphasis, "no close yet to hear it")
+    m.__click(inst.header, "Toggle")
+    assertEqual(inst.track.emphasis, w.qcGhostGroup)
+end)
+
+test("anim surfaces: a stale stamp emphasizes nothing, and a guarded press none", function()
+    local NS, m = live()
+    local inst = dial(NS)
+    m.__click(inst.header, "Toggle")
+    NS.Anim.Step(inst.track, 1)
+    inst.sentAt, inst.sentPlace = m.GetTime() - 5, 2
+    m.__click(inst.header, "Toggle")
+    assertNil(inst.track.emphasis, "a send long ago is not this close's")
+    NS.Anim.Step(inst.track, 1)
+    local sent, sendsTo = 0, NS.Dial.Sent
+    NS.Dial.Sent = function(...) sent = sent + 1 return sendsTo(...) end
+    m.__click(inst.header, "Toggle")
+    NS.Anim.Step(inst.track, 1)
+    local w = NS.Dial.RingWedges("d2", NS.Dial.ShownRing("d2"))[1]
+    m.__click(w)
+    assertEqual(sent, 1, "a press the guard let through")
+    m.__click(inst.header, "Toggle")
+    NS.Anim.Step(inst.track, 1)
+    w = NS.Dial.RingWedges("d2", NS.Dial.ShownRing("d2"))[1]
+    m.__click(w)
+    assertEqual(sent, 1, "a guarded press is no send")
+end)
+
+test("anim surfaces: each track rests at its surface's alpha, the dial's master opacity included", function()
+    local NS, m = live()
+    local inst, di = pad(NS), dial(NS)
+    NS.db.profile.alpha = 0.6
+    assertEqual(di.track.spec.restAlpha(), 0.6)
+    assertEqual(inst.track.spec.restAlpha(), 0.6, "a pad's too")
+    m.__click(di.header, "Toggle")
+    NS.Anim.Step(di.track, 1)
+    assertEqual(di.header:GetAlpha(), 0.6, "the dial lands at it, not at 1")
+end)
+
+test("anim surfaces: the dial's ghost mirrors the hub and pointer, and each slice's fill by its place", function()
+    local NS, m = live()
+    local inst = dial(NS)
+    m.__click(inst.header, "Toggle")
+    local roots = inst.track.spec.roots()
+    assertEqual(roots[2], inst.header.qcPointer, "the hub is on the front frame, over the ring")
+    local placed = {}
+    for _, t in ipairs(inst.shownRing.qcFills) do
+        if t.qcGhostGroup then placed[t.qcGhostGroup] = true end
+    end
+    for j = 1, inst.shownRing.qcSpec.size do assertTrue(placed[j], "the fill of place " .. j) end
+    local shineTagged = false
+    for _, t in pairs(inst.shownRing.qcShine[1]) do
+        if type(t) == "table" and t.qcGhostGroup == 1 then shineTagged = true end
+    end
+    assertTrue(shineTagged, "a slice's shine goes with its fill")
+end)
