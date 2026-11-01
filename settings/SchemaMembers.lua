@@ -878,8 +878,8 @@ local function animRows(instance, page, styles, slides)
         out[#out + 1] = base(subgroup, { path = P .. key .. "Style", type = "string", default = def[key .. "Style"],
             values = list, label = L["Style"], startsLine = true, desc = styleDesc, validate = oneOf(list) })
         out[#out + 1] = base(subgroup, { path = P .. key .. "Duration", type = "number", default = def[key .. "Duration"],
-            min = 0.05, max = 0.3, step = 0.01, label = L["Duration (seconds)"], desc = durationDesc, validate = NUMBER,
-            normalize = clamp(0.05, 0.3), shownWhen = { path = P .. key .. "Style", equals = moving } })
+            min = 0.1, max = 2, step = 0.1, label = L["Duration (seconds)"], desc = durationDesc, validate = NUMBER,
+            normalize = clamp(0.1, 2), shownWhen = { path = P .. key .. "Style", equals = moving } })
         if slides then
             out[#out + 1] = base(subgroup, { path = P .. key .. "Direction", type = "string",
                 default = def[key .. "Direction"], values = ANIM_DIRECTIONS, label = L["Direction"], desc = directionDesc,

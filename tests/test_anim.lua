@@ -80,7 +80,7 @@ test("anim: a style or duration out of range is refused or clamped", function()
     assertFalse(Set("dial.anim.openStyle", "pop", "d2"), "Pop is a pad's")
     assertFalse(Set("pad.anim.openStyle", "fan", "p1"), "Fan is a dial's")
     assertTrue(Set("pad.anim.openDuration", 9, "p1"))
-    assertEqual(NS.db.profile.pads.p1.anim.openDuration, 0.3)
+    assertEqual(NS.db.profile.pads.p1.anim.openDuration, 2)
 end)
 
 test("anim: the hidden poses match the owner's rulings", function()
@@ -328,7 +328,7 @@ test("anim: the rows are the owner's: Open and Close on an Animation tab, knobs 
         if c.value == "scaleFade" then assertEqual(c.text, NS.L["Scale and fade"]) end
     end
     assertTrue(fan, "the dial has its Fan")
-    assertEqual(row("pad.anim.openDuration").normalize(9), 0.3)
+    assertEqual(row("pad.anim.openDuration").normalize(9), 2)
     assertFalse(NS.SchemaRuntime.Set("pad.anim.closeDirection", "sideways", "p1"))
     assertFalse(NS.SchemaRuntime.Set("pad.anim.closeStyle", "sideways", "p1"))
 end)

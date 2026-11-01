@@ -18,6 +18,8 @@ Status: the owner's rulings below were taken in an interview on 2026-11-01 and B
 
 **Combat:** the same in and out of combat. Where a surface cannot be animated safely it snaps instantly and never risks taint.
 
+**Duration, amended by the owner the same day:** the slider runs 0.1 to 2 s in 0.1 s steps on all four. This replaces the 0.05 to 0.3 s range above; the defaults stand.
+
 **Interrupts:** a reopen during a close, or a close during an open, reverses from the current alpha and scale, with no jump.
 
 ## Technical design (implementer)
