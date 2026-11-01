@@ -1983,6 +1983,10 @@ QuickComms entry and no "blocked" popup. Result: not run.
 **ANIM-9. The preview.** Turn on Preview as…: the preview dial plays its open. Edit a setting: it rebuilds
 without flickering. A preview pad follows its own pad's Animation tab. Result: not run.
 
+**ANIM-10. Alt-Z.** With a pad on screen and a dial open (Preview as… keeps one open), press Alt-Z twice,
+and watch a short cinematic → nothing plays on the way out or on the way back; both come back whole, at
+their rest alpha. The next real close and open play. Result: not run.
+
 ## Pending sign-off
 
 The owner ran every check above on 2026-10-21 and reported all of them passed (the client build was
@@ -2033,4 +2037,4 @@ Open from the same run's re-cut v1.84.0 (M3-MEDIA, `Ka0sMedia_*` the only media 
 
 Owed from issue #14 (2026-11-01): LAYER-6, LAYER-7, LAYER-8 (new).
 
-Owed from issue #13 (2026-11-01): ANIM-1 to ANIM-9 (new).
+Owed from issue #13 (2026-11-01): ANIM-1 to ANIM-10 (new).

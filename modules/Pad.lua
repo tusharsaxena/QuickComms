@@ -94,13 +94,18 @@ local function newTrack(inst)
     })
 end
 
+-- quietShow: the show that ends a hidden UIParent, which replays no open (Alt-Z, a cinematic).
 local function onRootShown(inst)
-    if inst.silent or NS.IsStoodDown() then return end
+    local quiet = inst.quietShow
+    inst.quietShow = nil
+    if quiet or inst.silent or NS.IsStoodDown() then return end
     NS.Anim.Open(inst.track)
 end
 
--- A hidden UIParent fires OnHide with the root's own flag still on: that is no close.
+-- A hidden UIParent fires OnHide with the root's own flag still on: that is no close, and the OnShow
+-- that ends it is no open.
 local function onRootHidden(inst)
+    if inst.root:IsShown() then inst.quietShow = true end
     if inst.silent or inst.root:IsShown() or NS.IsStoodDown() then return NS.Anim.Snap(inst.track) end
     NS.Anim.Close(inst.track)
 end
@@ -506,7 +511,7 @@ function Pad.Release(id)
     local inst = pads[id]
     if not inst or inCombat() then return false end
     NS.Anim.Snap(inst.track)
-    inst.silent = true
+    inst.silent, inst.quietShow = true, nil
     if inst.dragHeld then
         -- A drag caught after lockdown began, whose queued stop a stand-down dropped.
         inst.dragHeld = nil

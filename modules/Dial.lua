@@ -186,7 +186,7 @@ local function closeSilently(inst)
     NS.Anim.Snap(inst.track)
     inst.silent = true
     DS.Close(inst.header)
-    inst.silent, inst.opening, inst.shownRing = nil, nil, nil
+    inst.silent, inst.opening, inst.shownRing, inst.quietShow = nil, nil, nil, nil
 end
 
 -- A released wedge is parked armed (F-006), as a pad button is: the rebuild takes most of them straight
@@ -235,7 +235,7 @@ local function build(index)
         end
     end)
     -- The animations: an open starts on the ring's OnShow (the snippet shows the ring after the header).
-    header:HookScript("OnShow", function() inst.opening = not inst.silent end)
+    header:HookScript("OnShow", function() Dial.HeaderShown(inst) end)
     header:HookScript("OnHide", function() Dial.Closed(inst) end)
     byIndex[index] = inst
     NS.Debug(TAG, "built %s", header:GetName())
@@ -458,12 +458,24 @@ function Dial.RingShown(inst, ring)
     end
 end
 
+--- The header came up (its insecure OnShow): the ring's OnShow, next, starts the open, unless a silent
+--- rebuild or the end of a hidden UIParent (quietShow, Dial.Closed) brought it back.
+function Dial.HeaderShown(inst)
+    inst.opening = not (inst.silent or inst.quietShow)
+    inst.quietShow = nil
+end
+
 --- The header went down (its insecure OnHide). A hidden UIParent fires this with the header's own flag
---- still on: that is no close, and a silent close or a stand-down plays nothing.
+--- still on: that is no close, and the OnShow that ends it is no open. A silent close or a stand-down
+--- plays nothing.
 function Dial.Closed(inst)
     inst.opening = nil
     if inst.silent or not inst.shownRing then return end
-    if inst.header:IsShown() or NS.IsStoodDown() then return NS.Anim.Snap(inst.track) end
+    if inst.header:IsShown() then
+        inst.quietShow = true
+        return NS.Anim.Snap(inst.track)
+    end
+    if NS.IsStoodDown() then return NS.Anim.Snap(inst.track) end
     NS.Anim.Close(inst.track)
     if inst.sentAt == GetTime() then NS.Anim.Emphasize(inst.track, inst.sentPlace) end
 end

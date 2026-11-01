@@ -1209,7 +1209,7 @@ Total.
 - anim: the stand-down leaves no track and no OnUpdate running
 - anim: the emphasis is heard only on a close, and an open clears it
 
-### test_anim_surfaces.lua (22)
+### test_anim_surfaces.lua (26)
 
 - anim dial: a key open plays over a live dial, and it lands with the real alpha back
 - anim dial: a close plays out after the header is already down
@@ -1218,6 +1218,8 @@ Total.
 - anim dial: a tap-and-release send fires at once, mid-open, and its slice is emphasized
 - anim dial: a cancel has no emphasis
 - anim dial: a page or ring change during an open snaps, with the real alpha back
+- anim dial: the way back from a hidden UIParent is no open
+- anim dial: a rebuild drops a held quiet show
 - anim dial: None on the open leaves the close, and None on the close leaves the open
 - anim dial: a rebuild closes silently, and a shut dial's rebuild plays nothing
 - anim dial: the preview dial animates its first open, not a rebuild's reopen
@@ -1230,6 +1232,8 @@ Total.
 - anim pad: each of the pad's switches is its own, and leaves the dial's alone
 - anim pad: a pad its driver hides at login plays no close
 - anim pad: a hidden UIParent is no close
+- anim pad: the way back from a hidden UIParent is no open
+- anim pad: a release drops a held quiet show
 - anim pad: a release snaps, and a stand-down leaves nothing running
 - anim ghost: a color texture copies from what its painter recorded, a file from the client
 - anim ghost: no rect yet snaps instead of guessing, and the strip stays out
@@ -1309,7 +1313,7 @@ Total.
 - layers: [audit QC-21] a modal window is clamped, never toplevel, never raised
 - layers: [QUI-Z06] the icon link window is lifted to POPUP
 
-### test_layout.lua (27)
+### test_layout.lua (28)
 
 - layout: [general] Behavior reads Sending, then Pads and dials, with the new labels (QUI-L01, L02)
 - layout: [general] the header Defaults carries the library's Reset all settings tooltip (QUI-L-new2)
@@ -1325,6 +1329,7 @@ Total.
 - layout: [pads] Buttons runs Size, Font, Background, Border, Button glow, Shine (QUI-L12, L13)
 - layout: [pads] Icons folds the glow offsets under Icon glow (QUI-L13, L14)
 - layout: [pads] the Defaults tooltip names every tab it resets (QUI-L18)
+- layout: the Defaults tooltips are real locale rows, not the key falling through (#13)
 - layout: [dials] the strip: Layout for Wheel, one Labels tab, and Ring map (QUI-L08, L19, L22)
 - layout: [dials] General: Enable this dial, then the key line (QUI-L29, L-new3)
 - layout: [dials] Groups draws Add group above the hint (QUI-L07)
@@ -1621,14 +1626,14 @@ Total.
 | test_dial_catcher.lua | 13 |
 | test_dial_look.lua | 16 |
 | test_anim.lua | 16 |
-| test_anim_surfaces.lua | 22 |
+| test_anim_surfaces.lua | 26 |
 | test_keybinds.lua | 6 |
 | test_dial_shine.lua | 8 |
 | test_icon_style.lua | 10 |
 | test_glow.lua | 11 |
 | test_shine.lua | 8 |
 | test_layers.lua | 14 |
-| test_layout.lua | 27 |
+| test_layout.lua | 28 |
 | test_skinsetup.lua | 24 |
 | test_skin_windows.lua | 20 |
 | test_skin_hud.lua | 19 |
@@ -1646,4 +1651,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1344** |
+| **Total** | **1349** |

@@ -651,9 +651,9 @@ it, heading included, and re-renders the page once on the next frame when the st
 in the schema, so Defaults and `/qc set` still reach every knob. The Dial page's Icons tab does the same.
 Glow when is Always, On hover or After sending (1.5 s from the send result; a dial closes on the send,
 so its wedge glows for 1.5 s from the next open, if that comes within 5 s). The page's Defaults puts the
-Window, Header, Section titles, Buttons and Icons rows back too, and its tooltip names every tab it
-reaches: "Put the selected pad's visibility, groups-as, layout, header, section titles, window,
-buttons and icons back to their defaults, and turn it on. Its name, groups and position are kept."
+Window, Header, Section titles, Buttons, Icons and Animation rows back too, and its tooltip names every
+tab it reaches: "Put the selected pad's visibility, groups-as, layout, header, section titles, window,
+buttons, icons and animation back to their defaults, and turn it on. Its name, groups and position are kept."
 (QUI-L18).
 
 X and Y write the whole `pad.point` row, the same one the drag strip writes; a drag on screen
@@ -819,8 +819,8 @@ General page > Keybindings, with no key box and no readout (QUI-L29).
   in-game preview (test mode, Preview as…).
 
 The page's Defaults puts groups-as, the Layout, Slices, Hub, Paging, Labels (with the tooltip
-placement) and Icons tabs back to their defaults (tooltip: "Put the selected dial's groups-as, layout,
-slices, hub, paging, labels, tooltip placement and icons back to their defaults, and turn it on. Its
+placement), Icons and Animation tabs back to their defaults (tooltip: "Put the selected dial's
+groups-as, layout, slices, hub, paging, labels, tooltip placement, icons and animation back to their defaults, and turn it on. Its
 name, groups, position and key are kept.", QUI-L28) and turns the dial on, in one act (`Library.Batch`); the name, groups
 and position are kept, and the key, WoW's own binding, is never touched.
 

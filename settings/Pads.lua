@@ -268,7 +268,7 @@ local function render(ctx)
 end
 
 Ed.RegisterPage(PAGE, L["Pad"], "PadsPanel", render, {
-    tooltip = L["Put the selected pad's visibility, groups-as, layout, header, section titles, window, buttons and icons back to their defaults, and turn it on. Its name, groups and position are kept."],
+    tooltip = L["Put the selected pad's visibility, groups-as, layout, header, section titles, window, buttons, icons and animation back to their defaults, and turn it on. Its name, groups and position are kept."],
     -- One act (Library.Batch): the pads rebuild once, not once per row.
     onClick = function(ctx) NS.Library.Batch(function() H().RestoreDefaults(PAGE, ctx) end) end,
 })

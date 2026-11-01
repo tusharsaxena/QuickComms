@@ -233,7 +233,16 @@ end)
 
 test("layout: [pads] the Defaults tooltip names every tab it resets (QUI-L18)", function()
     local _, _, P = open("Pad", { "pad", "p1" })
-    assertEqual(P.ctx("pads").panel.defaultsTooltip, "Put the selected pad's visibility, groups-as, layout, header, section titles, window, buttons and icons back to their defaults, and turn it on. Its name, groups and position are kept.")
+    assertEqual(P.ctx("pads").panel.defaultsTooltip, "Put the selected pad's visibility, groups-as, layout, header, section titles, window, buttons, icons and animation back to their defaults, and turn it on. Its name, groups and position are kept.")
+end)
+
+test("layout: the Defaults tooltips are real locale rows, not the key falling through (#13)", function()
+    local NS, _, P = open("Pad", { "pad", "p1" })
+    local pad = P.ctx("pads").panel.defaultsTooltip
+    assertEqual(rawget(NS.L, pad), pad)
+    local _, _, D = open("Dial", { "dial", "d2" })
+    local dial = D.ctx("dials").panel.defaultsTooltip
+    assertEqual(rawget(NS.L, dial), dial)
 end)
 
 -- ── Dial page ───────────────────────────────────────────────────────────────────────────────

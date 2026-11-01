@@ -928,8 +928,8 @@ L["Pad"] = "Pad"
 L["Which Comms Pad this page edits."] = "Which Comms Pad this page edits."
 L["New pad"] = "New pad"
 L["Make a new Comms Pad holding the built-in groups, and edit it here."] = "Make a new Comms Pad holding the built-in groups, and edit it here."
-L["Put the selected pad's visibility, groups-as, layout, header, section titles, window, buttons and icons back to their defaults, and turn it on. Its name, groups and position are kept."] =
-    "Put the selected pad's visibility, groups-as, layout, header, section titles, window, buttons and icons back to their defaults, and turn it on. Its name, groups and position are kept."
+L["Put the selected pad's visibility, groups-as, layout, header, section titles, window, buttons, icons and animation back to their defaults, and turn it on. Its name, groups and position are kept."] =
+    "Put the selected pad's visibility, groups-as, layout, header, section titles, window, buttons, icons and animation back to their defaults, and turn it on. Its name, groups and position are kept."
 
 -- The Comms Dial's rings (modules/Dial_Layout.lua)
 L["Previous page"] = "Previous page"
@@ -949,8 +949,8 @@ L["How many slices a ring has. Auto spreads a ring's slices evenly around it, up
     "How many slices a ring has. Auto spreads a ring's slices evenly around it, up to 12. A ring with more turns pages with the arrows under the dial. A ring that opens other rings has at most 8."
 L["Auto"] = "Auto"
 L["Ring radius"] = "Ring radius"
-L["Put the selected dial's groups-as, layout, slices, hub, paging, labels, tooltip placement and icons back to their defaults, and turn it on. Its name, groups, position and key are kept."] =
-    "Put the selected dial's groups-as, layout, slices, hub, paging, labels, tooltip placement and icons back to their defaults, and turn it on. Its name, groups, position and key are kept."
+L["Put the selected dial's groups-as, layout, slices, hub, paging, labels, tooltip placement, icons and animation back to their defaults, and turn it on. Its name, groups, position and key are kept."] =
+    "Put the selected dial's groups-as, layout, slices, hub, paging, labels, tooltip placement, icons and animation back to their defaults, and turn it on. Its name, groups, position and key are kept."
 L["How big the dial is, in pixels (120 by default). The disc grows with it, and automatic icon offset and size follow it."] =
     "How big the dial is, in pixels (120 by default). The disc grows with it, and automatic icon offset and size follow it."
 L["Open at"] = "Open at"
