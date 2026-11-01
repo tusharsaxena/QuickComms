@@ -604,7 +604,8 @@ function Pad.Wheel(id, delta)
     if not (inst and inst.plan and pad and pad.groupsAs == "tabs") then return false end
     if inCombat() then
         GameTooltip:SetOwner(inst.header, "ANCHOR_TOP")
-        GameTooltip:SetText(L["Tabs switch after combat."])
+        local tr, tg, tb = NS.SkinColor("gtip.title")
+        GameTooltip:SetText(L["Tabs switch after combat."], tr, tg, tb)
         GameTooltip:Show()
         return false
     end

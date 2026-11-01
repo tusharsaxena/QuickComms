@@ -94,7 +94,7 @@ end
 -- The locked window's tooltip, on every control: why it is off and where it is driven from.
 local function lockedTip(owner)
     GameTooltip:SetOwner(owner, "ANCHOR_TOP")
-    GameTooltip:SetText(L["Preview as"])
+    GameTooltip:SetText(L["Preview as"], NS.SkinColor("gtip.title"))
     tipLine(L["This window is disabled while you edit a group with Preview while editing on: it follows that group. Pick another group on the Groups page to see a preview of it, or untick Preview while editing to end the preview."], "gtip.value", true)
     GameTooltip:Show()
 end
@@ -121,7 +121,7 @@ end
 -- A tooltip: a title, the body, then the typed command.
 local function tip(owner, title, body, typed)
     GameTooltip:SetOwner(owner, "ANCHOR_TOP")
-    GameTooltip:SetText(title)
+    GameTooltip:SetText(title, NS.SkinColor("gtip.title"))
     tipLine(body, "gtip.value", true)
     tipLine(typed, TYPED)
     GameTooltip:Show()
@@ -140,6 +140,7 @@ local function makeButton(parent, label, onClick)
     local fs = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     fs:SetPoint("CENTER", 0, 0)
     fs:SetText(label)
+    NS.Skin.Font(fs)   -- the skin's body face; paintLabel's token is its color
     b.__label = fs
     paintLabel(b, "rest")
     b:SetScript("OnClick", onClick)

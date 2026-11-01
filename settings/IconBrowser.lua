@@ -56,7 +56,8 @@ local addonName, NS = ...
 -- their roles in the skin's body face (the count text.disabled, the icon's name text.heading, the
 -- status and the hint text.highlight), the tooltip lines gtip.value and the credit gtip.subtle. The scroller is the
 -- skin's ScrollBar, a corridor and a flat knob over its own track (D3: under Ka0s Default too, as
--- every scroll bar the library paints). The cell's hover highlight stays the client's art (D8).
+-- every scroll bar the library paints). The cell's hover highlight keeps the client's art, tinted
+-- `list.hoverArt` where a skin has one (paintHover), and stock while the settings page is.
 -- Host-drawn colors repaint on every looks change.
 
 local QC = NS.addon
@@ -230,7 +231,7 @@ end
 local function tooltip(cell)
     if cell.qcIcon == nil or not GameTooltip then return end
     GameTooltip:SetOwner(cell, "ANCHOR_RIGHT")
-    GameTooltip:SetText(Src.Label(cell.qcIcon))
+    GameTooltip:SetText(Src.Label(cell.qcIcon), NS.SkinColor("gtip.title"))
     local credit = Src.Credit(cell.qcIcon)
     if credit then
         local r, g, b = NS.SkinColor("gtip.subtle")
@@ -366,6 +367,12 @@ end
 
 -- ── the window's parts ──────────────────────────────────────────────────────────────────────
 
+-- A cell's hover art, through the page's own rule for it: the Options instance's O.__hoverArt.
+local function paintHover(cell)
+    local O = Settings.Helpers
+    if O and O.__hoverArt and cell.GetHighlightTexture then O.__hoverArt(cell:GetHighlightTexture()) end
+end
+
 local function makeCell(i)
     local cell = CreateFrame("Button", nil, grid)
     cell:SetSize(CELL - 2, CELL - 2)
@@ -380,6 +387,7 @@ local function makeCell(i)
     icon:SetPoint("CENTER", cell, "CENTER", 0, 0)
     cell.icon = icon
     cell:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+    paintHover(cell)
     cell:SetScript("OnClick", function(self) B.Select(self.qcIcon) end)
     cell:SetScript("OnDoubleClick", function(self)
         B.Select(self.qcIcon)
@@ -770,7 +778,10 @@ end
 -- A skin switch: every host-drawn color in the new skin (the texts, the scroller and the window are
 -- the library's recorded paint), and the footer's note line redrawn in its escape.
 NS.Skin.OnLooksChanged(function()
-    for _, cell in ipairs(B.cells) do cell.selected:SetColorTexture(NS.Skin.Color(SELECTED)) end
+    for _, cell in ipairs(B.cells) do
+        cell.selected:SetColorTexture(NS.Skin.Color(SELECTED))
+        paintHover(cell)
+    end
     for t, token in pairs(glyphs) do paintGlyph(t, token) end
     paintHint()
     if request then drawFooter() end

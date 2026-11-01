@@ -440,3 +440,87 @@ test("skin flip: a color texture a library paints on a watched frame reaches the
     t:SetColorTexture(0.1, 0.1, 0.1, 1)
     assertEqual(t.qcGhostColor[1], 0.1, "a repaint moves the record")
 end)
+
+-- ── the host parts of the L causes (FS-QC-FIX) ───────────────────────────────────────────────────
+
+test("skin fix: a tooltip's title takes gtip.title, on a button, a wedge and a titled tip", function()
+    local NS, m = live()
+    local R = NS.PadRender
+    local seen
+    local tip = m.GameTooltip
+    local text = tip.SetText
+    tip.SetText = function(self, line, r, g, b)
+        seen = { line, r, g, b }
+        return text(self, line, r, g, b)
+    end
+    skinOf(m):SetChoice(OWNER, "ka0s", OTHER)
+    local want = color(NS, "gtip.title")
+    -- red under: SetText with no color, which the client draws in its own
+    R.ShowLines(button(NS), "Title", {})
+    assertEqual(seen[2], want[1])
+    seen = nil
+    R.ShowTooltip(button(NS))
+    assertEqual(seen[3], want[2])
+    seen = nil
+    NS.DialRender.ShowTip(NS.Dial.Instance("d2").header, "Title", {})
+    assertEqual(seen[4], want[3])
+end)
+
+test("skin fix: the hub's small labels wear the skin's HUD face and their tokens", function()
+    local NS, m = live()
+    local di = dial(NS)
+    local Skin = skinOf(m)
+    Skin:SetChoice(OWNER, "ka0s", OTHER)
+    NS.Surfaces.ApplyAll("test")
+    local h = (NS.Dial.Instance("d2") or di).header
+    local base = NS.DialRender.Look(120, NS.db.profile.dials.d2.label, NS.db.profile.dials.d2.slice, NS.db.profile.dials.d2).font
+    for _, fs in ipairs({ h.qcStale, h.qcLockdown, h.qcTest }) do
+        assertEqual(fs.__font[1], base.path, "not the client's font object")
+        assertEqual(fs.__font[2], Skin:For(OWNER).HudFontSize(10, true))
+    end
+    assertColor(h.qcLockdown.__color, color(NS, "qc.lockdown"), "the lockdown tag")
+    assertColor(h.qcTest.__color, color(NS, "qc.preview"), "the preview mark")
+end)
+
+test("skin fix: End preview's label takes the skin's body face", function()
+    local NS = live()
+    local fonts = {}
+    local font = NS.Skin.Font
+    NS.Skin.Font = function(fs, ...)
+        fonts[#fonts + 1] = fs
+        return font(fs, ...)
+    end
+    assertTrue(NS.Preview.SetPreviewAs("arena"))
+    assertTrue(#fonts >= 1, "red under: the string left on GameFontNormalSmall")
+end)
+
+test("skin fix: the active dot is the client's while the panel is stock, the Ka0s mark with the Scope cleared", function()
+    local NS, m = live()
+    local Ed = NS.addon.Settings.Editors
+    assertTrue(Ed.ActiveDot():find("Indicator-Green", 1, true) ~= nil, "the Scope's default")
+    skinOf(m):SetIgnore(OWNER, false, nil)
+    assertTrue(Ed.ActiveDot():find("confirm", 1, true) ~= nil, "cleared")
+    assertTrue(Ed.ActiveDot():find("Indicator-Green", 1, true) == nil)
+end)
+
+test("skin fix: the remove mark is marked for the panel, its stock art kept as the way back", function()
+    local NS = live()
+    local Ed = NS.addon.Settings.Editors
+    local got
+    NS.Skin.Mark = function(tex, opts) got = { tex, opts } end
+    local image = { SetAtlas = function(self, a) self.atlas = a end }
+    Ed.RemoveMark(image)
+    assertEqual(image.atlas, "transmog-icon-remove", "drawn stock first: the facade may be a no-op")
+    assertTrue(got[2].panel)
+    assertEqual(got[2].art, NS.Icon("close"))
+    image.atlas = nil
+    got[2].stock(image)
+    assertEqual(image.atlas, "transmog-icon-remove")
+end)
+
+test("skin fix: the panel's tooltip lines take gtip.line, its stock gold under Ignore settings panel", function()
+    local NS = live()
+    local r, g = NS.SkinColor("gtip.line", true)
+    assertEqual(r, 1)
+    assertEqual(g, 0.82)
+end)

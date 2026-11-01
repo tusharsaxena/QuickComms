@@ -212,7 +212,8 @@ local function showTokenHelp(owner)
     local tr, tg, tb = NS.SkinColor("gtip.title", true)
     GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
     GameTooltip:SetText(L["Tokens"], vr, vg, vb)
-    GameTooltip:AddLine(L["Type a token into the text. It is filled in when the callout is sent."], nil, nil, nil,
+    local lr, lg, lb = NS.SkinColor("gtip.line", true)
+    GameTooltip:AddLine(L["Type a token into the text. It is filled in when the callout is sent."], lr, lg, lb,
         true)
     for _, line in ipairs(C.TokenHelp(draft and draft.channel)) do
         GameTooltip:AddDoubleLine(line[1], line[2], tr, tg, tb, vr, vg, vb)
@@ -245,6 +246,7 @@ local function tokenGlyph(box)
         frame.qcTokenGlyph = glyph
     end
     glyph.icon:SetTexture(NS.Icon("info"))
+    NS.Skin.Mark(glyph.icon, { panel = true })
     local _, fontSize = label:GetFont()
     local size = math.max(GLYPH_MIN, math.min(GLYPH_MAX, tonumber(fontSize) or 0))
     glyph:SetSize(size, size)

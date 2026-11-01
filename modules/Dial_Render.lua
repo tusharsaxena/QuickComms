@@ -23,7 +23,7 @@ local _, NS = ...
 --
 -- THE SKIN (QC-03). The chrome no setting names reads the pad's token set (Pad_Render.Chrome): the
 -- padlock, the veils and the send flashes on a wedge (painted once per look change, `qcChromeGen`),
--- the hub's stale, lockdown and test labels (their font objects' faces, the skin's colors), an
+-- the hub's stale, lockdown and test labels (the skin's HUD face and colors, Pad_Render.TagFont), an
 -- arrow at an end, and the tooltip lines. The labels' and the title's faces follow the skin through
 -- Pad_Render.LabelFont. Since LibKa0s v1.85.0 (cause D7) every color of the slices, the hub and the
 -- paging row follows the skin through its own companion (NS.SkinFollow), and the hub's rim its
@@ -153,6 +153,8 @@ end
 -- The hub's circle mark at rest and hovered: its color's alpha times these (the hub is clickable, so
 -- the circle brightens under the cursor).
 local HUB_REST, HUB_LIT = 0.8, 1.0
+-- The hub's small labels' size: the GameFont*Small objects' they replaced (cause L8).
+local HUB_LABEL = 10
 
 -- The circle mark (the filled circle and the hollow ring) in the hub's circle color, lit or at
 -- rest. Insecure textures only, so combat-safe.
@@ -361,11 +363,12 @@ function R.PaintHubLook(header, look)
     header.qcHubCircle = hub.circle
     header.qcHubSize = hub.size
     tintCircle(header, header.qcHubHovered == true)
-    -- The hub's labels: their font objects' faces, the skin's colors (stale, lockdown, the preview mark).
-    local ch = (look or R.Look()).chrome
-    header.qcStale:SetTextColor(ch.stale[1], ch.stale[2], ch.stale[3], ch.stale[4])
-    header.qcLockdown:SetTextColor(ch.lockdown[1], ch.lockdown[2], ch.lockdown[3], ch.lockdown[4])
-    header.qcTest:SetTextColor(ch.preview[1], ch.preview[2], ch.preview[3], ch.preview[4])
+    -- The hub's labels: the skin's HUD face, the skin's colors (stale, lockdown, the preview mark).
+    local full = look or R.Look()
+    local ch, Tag, base = full.chrome, NS.PadRender.TagFont, full.font
+    NS.PadRender.ApplyFont(header.qcStale, Tag(base, ch.stale, HUB_LABEL))
+    NS.PadRender.ApplyFont(header.qcLockdown, Tag(base, ch.lockdown, HUB_LABEL))
+    NS.PadRender.ApplyFont(header.qcTest, Tag(base, ch.preview, HUB_LABEL))
 end
 
 --- Where the dial's tooltips go (the Labels tab's Tooltip side and offset): outside the dial, clear of
@@ -395,8 +398,9 @@ function R.ShowTip(owner, title, lines)
     GameTooltip:SetOwner(owner, "ANCHOR_NONE")
     GameTooltip:ClearAllPoints()
     GameTooltip:SetPoint(at[1], header, "CENTER", at[2], at[3])
-    GameTooltip:SetText(title)
-    local tip = NS.PadRender.Chrome().tip
+    local ch = NS.PadRender.Chrome()
+    local tip, top = ch.tip, ch.tipTitle
+    GameTooltip:SetText(title, top[1], top[2], top[3])
     for _, line in ipairs(lines or {}) do GameTooltip:AddLine(line, tip[1], tip[2], tip[3], true) end
     GameTooltip:Show()
 end

@@ -175,6 +175,7 @@ NS.SKIN_FALLBACK = {
     ["text.disabled"]  = { 0.5, 0.5, 0.5, 1 },
     ["gtip.title"]     = { 1, 0.82, 0, 1 },
     ["gtip.value"]     = { 1, 1, 1, 1 },
+    ["gtip.line"]      = { 1, 0.82, 0, 1 },
     ["gtip.subtle"]    = { 0.7, 0.7, 0.7, 1 },
     -- QC-02's windows: the Preview window's button (the step panels' tokens, D8), the popup's
     -- refused-field line, the icon browser's hint box and magnifier.

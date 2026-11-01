@@ -37,7 +37,14 @@ Ed.ROW_H = 30       -- one reorderable row; the drop arithmetic's stride
 Ed.HANDLE_W = 30    -- the library's handle gutter (LibKa0s-Widgets ROW_BOX.HANDLE_W)
 -- After a name, never before it: the name leads, so a list reads by name and a nested child's indent
 -- stays in front of it.
-Ed.ACTIVE_DOT = " |TInterface\\COMMON\\Indicator-Green:12|t"
+-- The client's green dot while the settings panel is stock; with the Scope cleared the Ka0s mark in
+-- sem.good. A string cannot repaint, so a list writes it again whenever it draws.
+local ACTIVE_STOCK = " |TInterface\\COMMON\\Indicator-Green:12|t"
+function Ed.ActiveDot()
+    local mark = not NS.SkinPanelIgnored() and NS.Icon("confirm")
+    if not mark then return ACTIVE_STOCK end
+    return " " .. NS.Skin.MarkText(mark, 12, "sem.good")
+end
 Ed.pages, Ed.built, Ed.reorders, Ed.redraw, Ed.categories = {}, {}, {}, {}, {}
 
 local function H() return Settings.Helpers end
@@ -371,7 +378,7 @@ function Ed.IconChooser(ctx, spec)
         -- The one way back to no icon (the browser has no "none" cell): choose nothing, as one act.
         local clear = AceGUI:Create("Icon")
         clear:SetImageSize(CLEAR_GLYPH, CLEAR_GLYPH)
-        if clear.image and clear.image.SetAtlas then clear.image:SetAtlas("transmog-icon-remove") end
+        if clear.image and clear.image.SetAtlas then Ed.RemoveMark(clear.image) end
         clear:SetWidth(CLEAR_W)
         clear.userdata.qcGlyph = "clear"
         clear:SetCallback("OnClick", function()
@@ -454,19 +461,29 @@ local GLYPH, GLYPH_W, GLYPH_PAD, ROW_ICON = 16, 24, 3, 18
 -- The label's width as made: wide enough that AceGUI's Label keeps its image left of the text (it
 -- stacks them under 200px of text room). Its cell's anchors decide what it shows.
 local LABEL_W = 400
+local REMOVE_ATLAS = "transmog-icon-remove"
 local GLYPHS = {
     edit   = { texture = function() return NS.Icon("edit") end, title = function() return L["Edit"] end },
-    remove = { atlas = "transmog-icon-remove", title = function() return L["Remove"] end },
+    remove = { atlas = true, title = function() return L["Remove"] end },
 }
+
+--- The remove mark on an AceGUI Icon's image: the client's atlas, or with the Scope cleared the Ka0s
+--- close mark in the skin's tint, live both ways (S.Mark's `panel`).
+function Ed.RemoveMark(image)
+    image:SetAtlas(REMOVE_ATLAS)
+    NS.Skin.Mark(image, { panel = true, art = NS.Icon("close"),
+        stock = function(t) t:SetAtlas(REMOVE_ATLAS) end })
+end
 
 local function addGlyph(h, into, kind, onClick, tooltip)
     local spec = GLYPHS[kind]
     local g = h.AceGUI:Create("Icon")
     g:SetImageSize(GLYPH, GLYPH)
     if spec.atlas then
-        g.image:SetAtlas(spec.atlas)
+        Ed.RemoveMark(g.image)
     else
         g:SetImage(spec.texture())
+        NS.Skin.Mark(g.image, { panel = true })   -- white catalog art, in the skin's tint
     end
     g:SetWidth(GLYPH_W)
     g.userdata.qcGlyph = kind

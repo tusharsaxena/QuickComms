@@ -153,7 +153,7 @@ end
 
 local function groupLabel(gid, active)
     local g = NS.Library.Group(gid)
-    return (g and g.name or gid) .. ((active and active[gid]) and Ed.ACTIVE_DOT or "")
+    return (g and g.name or gid) .. ((active and active[gid]) and Ed.ActiveDot() or "")
 end
 
 --- The groups the dial does not list: top-level user groups by name (a group inside another shows

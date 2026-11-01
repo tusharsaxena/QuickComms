@@ -71,13 +71,14 @@ end
 --- (sent text.accent, dropped qc.dropped, guarded sem.warn), `lockdown` and `stale` the header's and the
 --- hub's tags (qc.lockdown, text.disabled), `preview` the PREVIEW / TEST MODE marks (qc.preview),
 --- `arrowDim` a dial's arrow at an end (qc.arrowDim), `title` a font block's fallback gold
---- (title.text), `body` a button's fallback fill (btn.bg) and `tip` the tooltip lines (gtip.value).
+--- (title.text), `body` a button's fallback fill (btn.bg), `tip` the tooltip lines (gtip.value) and
+--- `tipTitle` their title (gtip.title).
 function R.Chrome()
     if chrome and chrome.gen == looksGen then return chrome end
     chrome = { gen = looksGen, lock = rgba("text.accent"), veil = rgba("qc.veil"), veilCool = rgba("qc.veilCool"),
         hover = rgba("qc.hover"), lockdown = rgba("qc.lockdown"), stale = rgba("text.disabled"),
         preview = rgba("qc.preview"), arrowDim = rgba("qc.arrowDim"), title = rgba("title.text"),
-        body = rgba("btn.bg"), tip = rgba("gtip.value"),
+        body = rgba("btn.bg"), tip = rgba("gtip.value"), tipTitle = rgba("gtip.title"),
         flash = { sent = rgba("text.accent"), dropped = rgba("qc.dropped"), guarded = rgba("sem.warn") } }
     return chrome
 end
@@ -271,9 +272,14 @@ function R.ShowTooltip(btn)
     local slot = btn.qcSlot
     if not slot then return end
     GameTooltip:SetOwner(btn, "ANCHOR_TOP")
-    local tip = R.Chrome().tip
+    local ch = R.Chrome()
+    local tip, title = ch.tip, ch.tipTitle
     for i, line in ipairs(R.TooltipLines(slot)) do
-        if i == 1 then GameTooltip:SetText(line) else GameTooltip:AddLine(line, tip[1], tip[2], tip[3], true) end
+        if i == 1 then
+            GameTooltip:SetText(line, title[1], title[2], title[3])
+        else
+            GameTooltip:AddLine(line, tip[1], tip[2], tip[3], true)
+        end
     end
     GameTooltip:Show()
 end
@@ -281,8 +287,9 @@ end
 --- A titled tooltip of plain lines over `owner` (the pad header's "Why is this showing?").
 function R.ShowLines(owner, title, lines)
     GameTooltip:SetOwner(owner, "ANCHOR_TOP")
-    GameTooltip:SetText(title)
-    local tip = R.Chrome().tip
+    local ch = R.Chrome()
+    local tip, top = ch.tip, ch.tipTitle
+    GameTooltip:SetText(title, top[1], top[2], top[3])
     for _, line in ipairs(lines or {}) do GameTooltip:AddLine(line, tip[1], tip[2], tip[3], true) end
     GameTooltip:Show()
 end
@@ -531,6 +538,14 @@ local function recolor(font, c, grow)
     for k, v in pairs(font) do t[k] = v end
     if c then t.r, t.g, t.b, t.a = c[1], c[2], c[3], c[4] end
     t.size = t.size + (grow or 0)
+    return t
+end
+
+--- A dial hub's small label in the face, flags and shadow of `font` (R.LabelFont), `c` its token's color:
+--- `size` points through the skin's HUD scale, the small font objects' 10 as it always drew.
+function R.TagFont(font, c, size)
+    local t = recolor(font, c)
+    t.size = Skin.HudFontSize(size, true)
     return t
 end
 
