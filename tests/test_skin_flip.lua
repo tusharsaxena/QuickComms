@@ -128,7 +128,7 @@ test("skin flip: the runner moves every stored profile once, and each profile ev
     db.global.schemaVersion = 12
     NS.db.profile.skin.fullSkinReset = false
     NS.addon:RunMigrations()
-    assertEqual(db.global.schemaVersion, 14)
+    assertEqual(db.global.schemaVersion, NS.SCHEMA_VERSION)
     assertTrue(old.pads.a.look.backgroundFromSkin)
     assertTrue(NS.db.profile.skin.fullSkinReset, "the active one too")
     old.pads.a.look.backgroundFromSkin = false

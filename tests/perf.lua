@@ -46,11 +46,16 @@
 -- the ring onto the ghost (modules/Anim_Ghost.lua): twice per iteration, a table per frame walked and
 -- a pooled region's calls, most of it the mock's closure per catch-all call. The scenario was 1997.1
 -- with no ghost, so the rest is the capture's, by design, and only while a surface opens or closes.
+--
+-- Raised 2026-11-01: dialOpenClose 46080 -> 53248 bytes/iter when the shipped defaults became the two
+-- spirals (#13, the owner's ruling), measured 50502.3 against 42437.6 with the same tree on Fade. A
+-- turning place re-anchors each copy, and the mock's SetPoint and ClearAllPoints each make a table the
+-- client does not. modules/Anim_Pose.lua and the tracks' buffers still make none per tick.
 
 local BYTE_CEILING = {
     bracketCaptureOff = 0,
     dialPointerCaptureOff = 1024, dialPointerNoHarness = 1024,
-    padRebuild12 = 70656, dialOpenClose = 46080, situationRefresh = 2048,
+    padRebuild12 = 70656, dialOpenClose = 53248, situationRefresh = 2048,
 }
 local NOTES_PER_ITER = {
     bracketCaptureOff = 0, dialPointerCaptureOff = 0, dialPointerNoHarness = 0,

@@ -51,6 +51,8 @@ NS.MIGRATIONS = {
     { to = 13, perProfile = true, run = function(_, profile) NS.Library.MigrateFullSkin(profile) end },
     -- 13 -> 14 (#13): a pad's Animation table goes, from any profile step 12 reached while it had one.
     { to = 14, perProfile = true, run = function(_, profile) NS.Library.MigrateDropPadAnim(profile) end },
+    -- 14 -> 15 (#13): a dial still holding the old animation defaults takes the new ones, once.
+    { to = 15, perProfile = true, run = function(_, profile) NS.Library.MigrateAnimDefaults(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.

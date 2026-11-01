@@ -14,9 +14,10 @@ local _, NS = ...
 -- A STYLE, in A.STYLES, is { g, w, knots }, every field optional. `g(e, pose, cfg)` writes the whole
 -- dial's keys and `w(e, i, n, place, cfg)` one place's, `i` counted from 0 as the mockup does. Each gets
 -- a pose already at rest and writes only what it moves; `cfg` is A.Config's answer (a Slide's
--- direction). A `w` style fades the hub by the mockup's clamp(e * 2). `knots`, a rising list of e, breaks
+-- direction and phase). A `w` style fades the hub by the mockup's clamp(e * 2). `knots`, a rising list of e, breaks
 -- a fresh open or close into that many more linear legs of the client's scales (modules/Anim_Ghost.lua),
--- for a curve one smoothed leg cannot follow: an overshoot, or a Squash's one axis then the other.
+-- for a curve one smoothed leg cannot follow: an overshoot, or a Squash's one axis then the other. A
+-- scale that overshoots declares them, or its text, which takes one leg per stretch, will not overshoot.
 --
 -- NOTHING PER TICK: A.Pose and A.Lerp write into `into` and keep its place tables in `into.pool`, so a
 -- track's tick makes no table. test_anim.lua pins that.
@@ -27,8 +28,20 @@ local A = NS.Anim
 local REST = { alpha = 1, scale = 1, scaleX = 1, scaleY = 1, rot = 0, dx = 0, dy = 0, fan = 1, hub = 1, flash = 0 }
 local REST_PLACE = { alpha = 1, radius = 1, angle = 0, scale = 1, spin = 0 }
 
+local PI2 = math.pi * 2
+local DIAL_R = 165                  -- the mockup's dial radius in pixels, which its offsets are shares of
+local SLIDE_REACH = 70 / DIAL_R
+local DROP_REACH = 150 / DIAL_R
+local SEED = { 0.31, 0.77, 0.12, 0.93, 0.48, 0.05, 0.66, 0.84 }   -- Shatter's scatter, wrapped past eight
+local PEAK = 1 - 3.8 / 8.7          -- the `e` at which A.Back stands highest
+
+-- Which way a Slide moves, x and y, up and right positive.
+local SLIDE_WAY = { up = { 0, 1 }, down = { 0, -1 }, left = { -1, 0 }, right = { 1, 0 } }
+
 local function clamp01(v) return math.max(0, math.min(1, v)) end
 A.Clamp = clamp01
+
+local function seed(i) return SEED[i % #SEED + 1] end
 
 --- The mockup's overshoot: 0 to 1, past it on the way. Pure.
 function A.Back(e)
@@ -52,12 +65,60 @@ function A.Bounce(e)
     return n * e * e + 0.984375
 end
 
+-- The direction reads as motion (the design's Slide): Up on an open rises into place, and Up on a close
+-- leaves upward, so the hidden end is on the far side for a close. Whichever way, as the mockup's reach.
+local function slide(e, p, cfg)
+    local way = SLIDE_WAY[cfg and cfg.direction] or SLIDE_WAY.up
+    local off = (1 - e) * SLIDE_REACH * ((cfg and cfg.phase == "close") and 1 or -1)
+    p.dx, p.dy, p.alpha = way[1] * off, way[2] * off, e
+end
+
+-- The approved mockup's S, key for key but for its pixels, and the owner's two fading scales.
 A.STYLES = {
     fade = { g = function(e, p) p.alpha = e end },
     scaleFade = { g = function(e, p) p.alpha, p.scale = e, 0.8 + 0.2 * e end },
     fan = { g = function(e, p) p.alpha, p.fan = e, e end },
+    scaleIn = { g = function(e, p) p.scale, p.alpha = 0.25 + 0.75 * e, clamp01(e * 4) end },
+    scaleInFade = { g = function(e, p) p.scale, p.alpha = 0.25 + 0.75 * e, e end },
+    scaleOut = { g = function(e, p) p.scale, p.alpha = 1.7 - 0.7 * e, clamp01(e * 2) end },
+    scaleOutFade = { g = function(e, p) p.scale, p.alpha = 1.7 - 0.7 * e, e end },
     rotateScale = { g = function(e, p)
         p.scale, p.rot, p.alpha = 0.45 + 0.55 * e, (1 - e) * -2.1, clamp01(e * 2.5)
+    end },
+    spiralOut = { w = function(e, _, _, p)
+        p.radius, p.angle, p.alpha = 1 + (1 - e) * 1.1, (1 - e) * 1.8, clamp01(e * 1.6)
+    end },
+    spiralIn = { w = function(e, _, _, p)
+        p.radius, p.angle, p.alpha = e, (1 - e) * -2.4, clamp01(e * 2.5)
+    end },
+    orbit = { w = function(e, i, n, p)
+        p.angle, p.alpha = (1 - e) * -(i / n) * PI2, clamp01(e * 3)
+    end },
+    burst = { w = function(e, _, _, p) p.radius, p.alpha = A.Back(e), clamp01(e * 3) end },
+    stagger = { knots = { 0.2, 0.4, 0.6, 0.8 }, w = function(e, i, n, p)
+        local k = clamp01(e * 1.7 - (i / n) * 0.7)
+        p.scale, p.alpha = A.Back(k), clamp01(k * 3)
+    end },
+    pop = { knots = { 0.3, PEAK }, g = function(e, p)
+        p.scale, p.alpha = 0.7 + 0.3 * A.Back(e), clamp01(e * 3)
+    end },
+    slide = { g = slide },
+    drop = { g = function(e, p) p.dy, p.alpha = (1 - A.Bounce(e)) * DROP_REACH, clamp01(e * 4) end },
+    squash = { knots = { 1 / 2.2, 1.2 / 2.2 }, g = function(e, p)
+        p.scaleX = math.max(0.03, clamp01(e * 2.2))
+        p.scaleY = math.max(0.015, clamp01(e * 2.2 - 1.2))
+        p.alpha = clamp01(e * 8)
+    end },
+    flip = { knots = { 0.25, 0.5, 0.75 }, g = function(e, p)
+        p.scaleX, p.alpha = math.max(0.02, math.sin(e * math.pi / 2)), clamp01(e * 5)
+    end },
+    shatter = { w = function(e, i, _, p)
+        local left, s = 1 - e, seed(i)
+        p.radius, p.angle = 1 + left * (0.5 + s), left * (seed(i + 3) - 0.5) * 2
+        p.spin, p.alpha = left * (s - 0.5) * 4, clamp01(e * 1.4)
+    end },
+    flash = { g = function(e, p)
+        p.scale, p.alpha, p.flash = 0.92 + 0.08 * e, clamp01(e * 2), math.sin(math.pi * clamp01(e)) * 0.8
     end },
 }
 
@@ -167,7 +228,7 @@ function A.Lerp(from, to, e, into)
 end
 
 --- One phase's settings from a surface's `anim` table, filled from `defaults` where a key is missing.
---- @return table { style, duration, direction }
+--- @return table { style, duration, direction, phase }
 function A.Config(anim, defaults, phase)
     anim = type(anim) == "table" and anim or {}
     local function read(key)
@@ -175,5 +236,6 @@ function A.Config(anim, defaults, phase)
         if v == nil then return defaults[phase .. key] end
         return v
     end
-    return { style = read("Style"), duration = tonumber(read("Duration")) or 0, direction = read("Direction") }
+    return { style = read("Style"), duration = tonumber(read("Duration")) or 0, direction = read("Direction"),
+        phase = phase }
 end

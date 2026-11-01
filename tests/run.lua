@@ -220,6 +220,7 @@ Kit.run{
         "test_dial_catcher",
         "test_dial_look",
         "test_anim",
+        "test_anim_styles",
         "test_anim_surfaces",
         "test_anim_ghost",
         "test_keybinds",

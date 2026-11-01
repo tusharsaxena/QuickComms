@@ -855,15 +855,26 @@ do
     for _, row in ipairs(IconRows("dial", C, ICON_OFFSET)) do ROWS[#ROWS + 1] = row end
 end
 
--- The Animation tab (#13): a dial's open and close, each with its own style and duration. The owner's
--- rulings: animations are the dial's alone, no master switch, None switches one off, and its Duration
--- hides while it is None (a shownWhen naming the other styles). After the Icons rows, so the tab
--- follows Icons. Plain rows: the degraded load adds them too.
+-- The Animation tab (#13): a dial's open and close, each with its own style and duration, and every
+-- style offered for both. The owner's rulings: animations are the dial's alone, no master switch, None
+-- switches one off, and its Duration hides while it is None (a shownWhen naming the other styles). A
+-- Direction shows only on Slide. After the Icons rows, so the tab follows Icons. Plain rows: the
+-- degraded load adds them too.
 local ANIM_STYLES = { { value = "none", text = L["None"] }, { value = "fade", text = L["Fade"] },
     { value = "scaleFade", text = L["Scale and fade"] }, { value = "fan", text = L["Fan"] },
-    { value = "rotateScale", text = L["Rotate and scale"] } }
-local ANIM_MOVING = { "fade", "scaleFade", "fan", "rotateScale" }
-local function animRows(subgroup, key, styleDesc, durationDesc)
+    { value = "scaleIn", text = L["Scale in"] }, { value = "scaleInFade", text = L["Scale in and fade"] },
+    { value = "scaleOut", text = L["Scale out"] }, { value = "scaleOutFade", text = L["Scale out and fade"] },
+    { value = "rotateScale", text = L["Rotate and scale"] }, { value = "spiralOut", text = L["Outward spiral"] },
+    { value = "spiralIn", text = L["Inward spiral"] }, { value = "orbit", text = L["Orbit"] },
+    { value = "burst", text = L["Burst"] }, { value = "stagger", text = L["Stagger pop"] },
+    { value = "pop", text = L["Pop"] }, { value = "slide", text = L["Slide"] }, { value = "drop", text = L["Drop"] },
+    { value = "squash", text = L["Squash"] }, { value = "flip", text = L["Flip"] },
+    { value = "shatter", text = L["Shatter"] }, { value = "flash", text = L["Flash"] } }
+local ANIM_MOVING = {}
+for i = 2, #ANIM_STYLES do ANIM_MOVING[#ANIM_MOVING + 1] = ANIM_STYLES[i].value end
+local ANIM_DIRECTIONS = { { value = "up", text = L["Up"] }, { value = "down", text = L["Down"] },
+    { value = "left", text = L["Left"] }, { value = "right", text = L["Right"] } }
+local function animRows(subgroup, key, styleDesc, durationDesc, directionDesc)
     local P, def = "dial.anim.", T.dial.anim
     local function base(r)
         r.instance, r.page, r.group, r.subgroup = "dial", "dials", L["Animation"], subgroup
@@ -874,11 +885,16 @@ local function animRows(subgroup, key, styleDesc, durationDesc)
     ROWS[#ROWS + 1] = base({ path = P .. key .. "Duration", type = "number", default = def[key .. "Duration"],
         min = 0.1, max = 2, step = 0.1, label = L["Duration (seconds)"], desc = durationDesc, validate = NUMBER,
         normalize = clamp(0.1, 2), shownWhen = { path = P .. key .. "Style", equals = ANIM_MOVING } })
+    ROWS[#ROWS + 1] = base({ path = P .. key .. "Direction", type = "string", default = def[key .. "Direction"],
+        values = ANIM_DIRECTIONS, label = L["Direction"], desc = directionDesc, validate = oneOf(ANIM_DIRECTIONS),
+        shownWhen = { path = P .. key .. "Style", equals = { "slide" } } })
 end
 animRows(L["Open"], "open", L["How this appears when it opens. None shows it at once."],
-    L["How long the open takes. A send never waits for it."])
+    L["How long the open takes. A send never waits for it."],
+    L["Which way the dial moves as it slides into place."])
 animRows(L["Close"], "close", L["How this leaves when it closes. None hides it at once."],
-    L["How long the close takes. A send never waits for it."])
+    L["How long the close takes. A send never waits for it."],
+    L["Which way the dial moves as it slides away."])
 
 -- Every member row's reaction: Library.Touch announces the write (LIBRARY_CHANGED, the pads' rebuild),
 -- naming the row's path as the field. A color stays only on a glyph: an icon write that leaves a

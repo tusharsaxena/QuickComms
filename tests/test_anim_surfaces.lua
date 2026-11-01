@@ -231,9 +231,16 @@ local function strings(track)
     return out
 end
 
+-- A whole-dial scale, the shipped defaults being per-place.
+local function scaling(NS)
+    local a = NS.db.profile.dials.d2.anim
+    a.openStyle, a.closeStyle, a.openDuration, a.closeDuration = "scaleFade", "scaleFade", 0.15, 0.1
+end
+
 test("anim dial: an open scales the text by its own animation, and the landing stops it", function()
     local NS, m = live()
     local inst = dial(NS)
+    scaling(NS)
     m.__click(inst.header, "Toggle")
     local list = strings(inst.track)
     assertTrue(#list > 0, "the labels were copied")
@@ -251,6 +258,7 @@ end)
 test("anim dial: a reversal restarts the text from the art's scale, with the art", function()
     local NS, m = live()
     local inst = dial(NS)
+    scaling(NS)
     m.__click(inst.header, "Toggle")
     NS.Anim.Step(inst.track, 0.05)
     local scale = inst.track.pose.scale
@@ -266,6 +274,7 @@ end)
 test("anim dial: a send's slice swells its own text, and the rest keep collapsing", function()
     local NS, m = live()
     local inst = dial(NS)
+    scaling(NS)
     m.__click(inst.header, "Toggle")
     NS.Anim.Step(inst.track, 1)
     m.__click(inst.header, "Toggle")
@@ -520,8 +529,8 @@ test("anim surfaces: a dial reads its own instance's settings, and the kind's de
     NS.db.profile.dials.other = { anim = { openStyle = "none" } }
     di.id = "other"
     assertEqual(di.track.spec.config("open").style, "none", "a second dial's own switch")
-    assertEqual(di.track.spec.config("close").style, "scaleFade", "a dial's missing key is a dial's default")
-    assertEqual(di.track.spec.config("close").duration, 0.1)
+    assertEqual(di.track.spec.config("close").style, "spiralOut", "a dial's missing key is a dial's default")
+    assertEqual(di.track.spec.config("close").duration, 0.3)
 end)
 
 test("anim surfaces: a rebuild's close starts no close at all", function()
