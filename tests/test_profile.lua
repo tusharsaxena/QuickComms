@@ -49,11 +49,11 @@ test("profile: the spam guard clamps to 0.6-2.0 and fallback refuses unknown val
     assertEqual(NS.Setting("behavior.soloFallback"), "none")
 end)
 
-test("profile: schema version target is 13 (the full skin's step)", function()
+test("profile: schema version target is 14 (a pad's Animation table dropped)", function()
     local NS = T.bootAddon()
     -- red under: no step 11 in core/Database.lua (LibKa0s v1.82.0, D-07: a stored OUTLINE moves to
     -- From skin once); step 10 is QC-03's reset onto the skin (O2)
-    assertEqual(NS.SCHEMA_VERSION, 13)
+    assertEqual(NS.SCHEMA_VERSION, 14)
     assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
 end)
 

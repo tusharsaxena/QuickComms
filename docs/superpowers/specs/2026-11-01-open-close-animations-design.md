@@ -22,7 +22,11 @@ Status: the owner's rulings below were taken in an interview on 2026-11-01 and B
 
 **Interrupts:** a reopen during a close, or a close during an open, reverses from the current alpha and scale, with no jump.
 
+**Pads, ruled by the owner after smoke testing, 2026-11-01:** animations are for the dial only. This replaces every line above and below that gives a pad an animation; the dial's rulings stand.
+
 ## Technical design (implementer)
+
+Amended 2026-11-01 by the pad ruling: wherever this section names a pad, its Slide or its Pop, that part came out. A pad behaves as it did before #13, and `pad.anim` is gone: step 12 fills dials only, and step 14 drops the table from a profile that ran the first step 12 on the feature branch. `qcNoGhost`, `qcGhostColor`, `G.Watch` and `A.Holding` had no reader left, and went with it.
 
 **The problem that shapes everything.** Both surfaces are shown and hidden by secure code: the dial by the header's snippets, a pad by its visibility state driver. Neither can be delayed from the insecure side, so by the time an `OnHide` hook runs the real frames are gone; and `SetScale` and `SetPoint` on them are protected in combat. The real frames therefore never move. Only `SetAlpha`, which the client allows on a protected frame and `Pad.ApplyAlpha` already uses in combat, touches them.
 

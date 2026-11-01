@@ -262,13 +262,7 @@ return {
     ["dial.icon.buttonFrequency"] = "number|0.25|0.05|2|0.05|nil|false",
     ["dial.icon.procDuration"] = "number|1|0.25|3|0.25|nil|false",
     ["dial.icon.procStartAnim"] = "bool|true|nil|nil|nil|nil|false",
-    -- #13 (2026-11-01): the Animation tab of every pad and dial.
-    ["pad.anim.openStyle"] = "string|\"fadeScale\"|nil|nil|nil|[\"none\",\"fade\",\"fadeScale\",\"slide\",\"pop\"]|false",
-    ["pad.anim.openDuration"] = "number|0.15|0.1|2|0.1|nil|false",
-    ["pad.anim.openDirection"] = "string|\"up\"|nil|nil|nil|[\"up\",\"down\",\"left\",\"right\"]|false",
-    ["pad.anim.closeStyle"] = "string|\"fadeScale\"|nil|nil|nil|[\"none\",\"fade\",\"fadeScale\",\"slide\",\"pop\"]|false",
-    ["pad.anim.closeDuration"] = "number|0.1|0.1|2|0.1|nil|false",
-    ["pad.anim.closeDirection"] = "string|\"down\"|nil|nil|nil|[\"up\",\"down\",\"left\",\"right\"]|false",
+    -- #13 (2026-11-01): the Animation tab of every dial (a pad has none, the owner's ruling).
     ["dial.anim.openStyle"] = "string|\"scaleFade\"|nil|nil|nil|[\"none\",\"fade\",\"scaleFade\",\"fan\"]|false",
     ["dial.anim.openDuration"] = "number|0.15|0.1|2|0.1|nil|false",
     ["dial.anim.closeStyle"] = "string|\"scaleFade\"|nil|nil|nil|[\"none\",\"fade\",\"scaleFade\",\"fan\"]|false",

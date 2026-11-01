@@ -45,10 +45,12 @@ NS.MIGRATIONS = {
     -- 10 -> 11 (LibKa0s v1.82.0, Ka0sAddonsCommonTasks D-07 and Addendum 01): every pad's and dial's
     -- font block whose Font flags still hold the old default, OUTLINE, moves to From skin once.
     { to = 11, perProfile = true, run = function(_, profile) NS.Library.MigrateFontFlags(profile) end },
-    -- 11 -> 12 (#13): every pad and dial takes the Animation tab's defaults, kept keys kept.
+    -- 11 -> 12 (#13): every dial takes the Animation tab's defaults, kept keys kept.
     { to = 12, perProfile = true, run = function(_, profile) NS.Library.MigrateAnim(profile) end },
     -- 12 -> 13 (LibKa0s v1.85.0, cause D7): every pad and dial onto the full skin, once per profile.
     { to = 13, perProfile = true, run = function(_, profile) NS.Library.MigrateFullSkin(profile) end },
+    -- 13 -> 14 (#13): a pad's Animation table goes, from any profile step 12 reached while it had one.
+    { to = 14, perProfile = true, run = function(_, profile) NS.Library.MigrateDropPadAnim(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.

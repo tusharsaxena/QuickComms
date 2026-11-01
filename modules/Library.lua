@@ -916,8 +916,7 @@ local SURFACE_DEFAULTS = {
         icon = NS.IconDefaults.For("pad"),   -- the Icons tab (defaults/Icons.lua)
         header = NS.PadDefaults.Header(),    -- the Header tab (defaults/PadStyle.lua)
         section = NS.PadDefaults.Section(),  -- the Section titles tab (defaults/PadStyle.lua)
-        button = NS.PadDefaults.Button(),        -- the Buttons tab (defaults/PadStyle.lua)
-        anim = NS.PadDefaults.PadAnim() },       -- the Animation tab (defaults/PadStyle.lua, #13)
+        button = NS.PadDefaults.Button() },      -- the Buttons tab (defaults/PadStyle.lua)
     -- Relaxed is the only interaction in v1.0.0 (the C7 fallback, round-4 record). `delay` and
     -- `tapAction` are kept for the hold, flick and release upgrade, and `depth` until owner ruling R5
     -- gives it a meaning; nothing reads them yet.
@@ -941,8 +940,7 @@ Lib.TEMPLATES = {
     pad = { name = "", enabled = true, groupsAs = SURFACE_DEFAULTS.pad.groupsAs, point = false,
         layout = copyTable(SURFACE_DEFAULTS.pad.layout), look = copyTable(SURFACE_DEFAULTS.pad.look),
         icon = copyTable(SURFACE_DEFAULTS.pad.icon), header = copyTable(SURFACE_DEFAULTS.pad.header),
-        section = copyTable(SURFACE_DEFAULTS.pad.section), button = copyTable(SURFACE_DEFAULTS.pad.button),
-        anim = copyTable(SURFACE_DEFAULTS.pad.anim) },
+        section = copyTable(SURFACE_DEFAULTS.pad.section), button = copyTable(SURFACE_DEFAULTS.pad.button) },
     -- `point` is false, not nil, for the same reason as above: false is "the default place". A dial
     -- has no `key`: its key is WoW's own binding of its Open Comms Dial entry (modules/Dial.lua).
     dial = { name = "", enabled = true, mode = SURFACE_DEFAULTS.dial.mode, slices = SURFACE_DEFAULTS.dial.slices,

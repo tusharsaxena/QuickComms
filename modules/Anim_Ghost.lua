@@ -1,8 +1,7 @@
 local _, NS = ...
--- modules/Anim_Ghost.lua — a surface's insecure copy, the thing the open and close animations actually
--- move (#13, the design's "The ghost"). The dial's header and a pad's root are secure or protected:
--- nothing here may show, hide, place or scale them, and once secure code hides one its regions cannot
--- be seen. So the ghost mirrors them: a plain, mouse-off frame under UIParent, anchored to the real
+-- modules/Anim_Ghost.lua — a dial's insecure copy, the thing the open and close animations actually
+-- move (#13, the design's "The ghost"). The dial's header is secure: nothing here may show, hide,
+-- place or scale it, and once secure code hides it its regions cannot be seen. So the ghost mirrors it: a plain, mouse-off frame under UIParent, anchored to the real
 -- frame's center (an insecure frame may anchor to a protected one; never the other way round), in its
 -- strata, and carrying a copy of each texture and font string it shows.
 --
@@ -10,11 +9,8 @@ local _, NS = ...
 -- the hide cleared the root's own shown flag, not its children's. The stacking holds because regions
 -- are grouped into sub-frames by their source frame's level above the root. A region or frame tagged
 -- `qcGhostGroup` (a dial's place) goes into a sub-frame of its own, which the Fan and the send's
--- emphasis address. `qcNoGhost` leaves a frame out (a pad's drag strip, which ignores the pad's
--- alpha). A color texture cannot be read back, so its painter records `qcGhostColor`: this addon's
--- through Pad_Render's colorFill, a library's through G.Watch on the frames it paints. One with neither
--- a file nor a record is left out. A skinned string's shadow lives on its font object (S.HudFont), so
--- the copy wears the same object. Rects may be missing on a frame never laid out: capture then answers
+-- emphasis address. A color texture cannot be read back, so one with no file or atlas is left out. A
+-- skinned string's shadow lives on its font object (S.HudFont), so the copy wears the same object. Rects may be missing on a frame never laid out: capture then answers
 -- false, and the track snaps (the rulings' fallback, never a guess).
 --
 -- Frames and regions are pooled per ghost, made on first use and never destroyed; making a plain frame
@@ -36,29 +32,6 @@ function G.New()
     stage:SetSize(1, 1)
     stage:Hide()
     return { stage = stage, subs = {}, used = 0, scale = 1, size = 1 }
-end
-
-local function recordingColor(self, r, g, b, a)
-    local c = rawget(self, "qcGhostColor") or {}
-    c[1], c[2], c[3], c[4] = r, g, b, a
-    self.qcGhostColor = c
-    return self.qcSetColor(self, r, g, b, a)
-end
-
-local function watchedTexture(self, ...)
-    local t = self.qcCreateTexture(self, ...)
-    if type(t) == "table" and not rawget(t, "qcSetColor") and t.SetColorTexture then
-        t.qcSetColor, t.SetColorTexture = t.SetColorTexture, recordingColor
-    end
-    return t
-end
-
---- Have every texture made on `frame` from now on record its color texture, as this addon's own
---- painter does, for a frame a library paints: what the client cannot read back, the ghost still has.
---- Once per frame. Insecure fields on our own frames; nothing here runs secure.
-function G.Watch(frame)
-    if rawget(frame, "qcCreateTexture") or not frame.CreateTexture then return end
-    frame.qcCreateTexture, frame.CreateTexture = frame.CreateTexture, watchedTexture
 end
 
 local function resetSub(sub)
@@ -144,21 +117,14 @@ local function paintFile(t, src)
 end
 
 local function copyTexture(ctx, sub, src, factor)
-    local c, atlas, file = src.qcGhostColor, src:GetAtlas(), src:GetTexture()
-    if not (c or atlas or file) then return end
+    if not (src:GetAtlas() or src:GetTexture()) then return end
     local t = pooled(sub, "qcTex", "qcTexUsed", function() return sub:CreateTexture(nil, "ARTWORK") end)
     if not place(t, ctx, src, factor) then
         ctx.failed = true
         return
     end
-    if c then
-        t:SetRotation(0)
-        t:SetColorTexture(c[1], c[2], c[3], c[4])
-        t:SetVertexColor(1, 1, 1, 1)
-    else
-        paintFile(t, src)
-        t:SetVertexColor(src:GetVertexColor())
-    end
+    paintFile(t, src)
+    t:SetVertexColor(src:GetVertexColor())
     t:SetBlendMode(src:GetBlendMode() or "BLEND")
     t:SetDrawLayer(src:GetDrawLayer())
     t:SetAlpha(src:GetAlpha() or 1)
@@ -229,12 +195,12 @@ local function walk(ctx, frame, group)
     local factor = (tonumber(frame:GetEffectiveScale()) or 1) / ctx.scale
     copyRegions(ctx, frame, group, level, factor)
     for _, child in ipairs({ frame:GetChildren() }) do
-        if child:IsShown() and not child.qcNoGhost then walk(ctx, child, child.qcGhostGroup or group) end
+        if child:IsShown() then walk(ctx, child, child.qcGhostGroup or group) end
     end
 end
 
 --- Mirror what `roots` draw onto `ghost`, placed about `src`'s center. `size` is the ring's slices,
---- for the Fan (a pad passes none). Roots are walked whether shown or not: a closing surface has just
+--- for the Fan. Roots are walked whether shown or not: a closing surface has just
 --- been hidden, and a root's children keep their own flags.
 --- @return boolean captured false: nothing to draw, or no rect yet (the track snaps)
 function G.Capture(ghost, src, roots, size)
@@ -248,7 +214,7 @@ function G.Capture(ghost, src, roots, size)
     stage:SetAlpha(1)
     stage:ClearAllPoints()
     stage:SetPoint("CENTER", src, "CENTER", 0, 0)
-    ghost.scale, ghost.src = tonumber(src:GetScale()) or 1, src
+    ghost.scale = tonumber(src:GetScale()) or 1
     local ctx = { ghost = ghost, base = src:GetFrameLevel() or 0, cx = cx, cy = cy, byKey = {}, drawn = 0,
         scale = tonumber(src:GetEffectiveScale()) or 1 }
     for _, root in ipairs(roots) do walk(ctx, root, root.qcGhostGroup) end
@@ -262,15 +228,13 @@ local function emphasized(sub, alpha, stageScale, f)
     sub:SetScale((1 + A.EMPHASIS_PULSE * math.sin(math.pi * f)) / stageScale)
 end
 
---- Draw a pose: the stage scaled and moved, each sub-frame at the pose's alpha times `restAlpha` (the
+--- Draw a pose: the stage scaled, each sub-frame at the pose's alpha times `restAlpha` (the
 --- real frame's alpha at rest), a place through the Fan, and the place `emphasis` names bright and
 --- pulsing, `f` of the way through the close.
 function G.Pose(ghost, pose, restAlpha, emphasis, f)
     local stage = ghost.stage
-    local scale = math.max(0.01, pose.scale)
+    local scale = pose.scale
     stage:SetScale(ghost.scale * scale)
-    stage:ClearAllPoints()
-    stage:SetPoint("CENTER", ghost.src, "CENTER", pose.x / scale, pose.y / scale)
     local alpha = pose.alpha * restAlpha
     for i = 1, ghost.used do
         local sub, group = ghost.subs[i], ghost.subs[i].qcGroup

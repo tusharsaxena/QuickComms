@@ -656,9 +656,9 @@ it, heading included, and re-renders the page once on the next frame when the st
 in the schema, so Defaults and `/qc set` still reach every knob. The Dial page's Icons tab does the same.
 Glow when is Always, On hover or After sending (1.5 s from the send result; a dial closes on the send,
 so its wedge glows for 1.5 s from the next open, if that comes within 5 s). The page's Defaults puts the
-Window, Header, Section titles, Buttons, Icons and Animation rows back too, and its tooltip names every
+Window, Header, Section titles, Buttons and Icons rows back too, and its tooltip names every
 tab it reaches: "Put the selected pad's visibility, groups-as, layout, header, section titles, window,
-buttons, icons and animation back to their defaults, and turn it on. Its name, groups and position are kept."
+buttons and icons back to their defaults, and turn it on. Its name, groups and position are kept."
 (QUI-L18).
 
 X and Y write the whole `pad.point` row, the same one the drag strip writes; a drag on screen
@@ -835,7 +835,7 @@ Quick mode's delay and tap action with the C7 upgrade.
 
 ## The Animation tab (#13)
 
-The Pad and Dial pages' last styled tab: an Open and a Close heading, each a Style dropdown (None
-switches that one off) and a Duration slider, hidden while the style is None through `shownWhen` with a
-list of the other styles (options-ui-§22), and on a pad a Direction shown only on Slide. They are member
-rows, so a write rebuilds the surface and Restore defaults covers them.
+The Dial page's last styled tab (a pad has none, the owner's ruling, 2026-11-01): an Open and a Close
+heading, each a Style dropdown (None switches that one off) and a Duration slider, hidden while the style
+is None through `shownWhen` with a list of the other styles (options-ui-§22). They are member rows, so a
+write rebuilds the dial and Restore defaults covers them.

@@ -1958,27 +1958,25 @@ Result:
 The issue is #13; the rulings are in `docs/superpowers/specs/2026-11-01-open-close-animations-design.md`.
 
 **ANIM-1. The defaults on an existing profile.** Update with your own profile and open a dial by its key,
-then close it; toggle a pad with `/qc toggle` → each scales and fades in and out, from about the dial's
-center, not the cursor. Result: not run.
+then close it → it scales and fades in and out, from about the dial's center, not the cursor. Result:
+not run.
 
 **ANIM-2. The handoff.** With a Shine look on the Slices tab and a glow on the Icons tab, open and close a
 dial slowly at 0.3 s, on the default skin and on one other → the copy matches the real dial, with no
 visible pop as it lands, no missing slice edges and no double image. Result: not run.
 
 **ANIM-3. Every style.** On the Dial page's Animation tab try Fade, Scale and fade, Fan and None, open and
-close. On the Pad page's try Fade, Fade and scale, Slide in each direction, and Pop. While a style is
-None its Duration is hidden; Direction shows only on Slide. Result: not run.
+close. While a style is None its Duration is hidden. The Pad page has no Animation tab. Result: not run.
 
-**ANIM-4. The four switches.** Set a pad's Close to None: it leaves at once and still opens animated. Do
-the same for its Open, the dial's Open and the dial's Close, one at a time → each changes that one thing
-on that one surface. Result: not run.
+**ANIM-4. The two switches.** Set a dial's Close to None: it leaves at once and still opens animated. Do
+the same for its Open → each changes that one thing on that one dial. Result: not run.
 
 **ANIM-5. A quick send, in combat.** In combat, tap the dial's key and click a slice within 0.1 s → the
 line goes out at once; the chosen slice stays bright and pulses while the rest collapse. Press Escape on
 the next open → a plain collapse with no emphasis. Result: not run.
 
-**ANIM-6. Rapid toggling.** Spam the dial's key and `/qc toggle`, in and out of combat → each reverses from
-where it stands with no jump, and the dial and pads end fully opaque or fully gone. Result: not run.
+**ANIM-6. Rapid toggling.** Spam the dial's key, in and out of combat → it reverses from where it stands
+with no jump, and ends fully opaque or fully gone. Result: not run.
 
 **ANIM-7. Taint.** With `/console taintLog 2`, run ANIM-5 and ANIM-6 and read `Logs\taint.log` → no
 QuickComms entry and no "blocked" popup. Result: not run.
@@ -1987,11 +1985,15 @@ QuickComms entry and no "blocked" popup. Result: not run.
 → nothing stays on screen; `/qc enable` brings the surfaces back whole. Result: not run.
 
 **ANIM-9. The preview.** Turn on Preview as…: the preview dial plays its open. Edit a setting: it rebuilds
-without flickering. A preview pad follows its own pad's Animation tab. Result: not run.
+without flickering. Result: not run.
 
-**ANIM-10. Alt-Z.** With a pad on screen and a dial open (Preview as… keeps one open), press Alt-Z twice,
-and watch a short cinematic → nothing plays on the way out or on the way back; both come back whole, at
-their rest alpha. The next real close and open play. Result: not run.
+**ANIM-10. Alt-Z.** With a dial open (Preview as… keeps one open), press Alt-Z twice, and watch a short
+cinematic → nothing plays on the way out or on the way back; it comes back whole, at its rest alpha. The
+next real close and open play. Result: not run.
+
+**ANIM-11. A pad does not animate.** Toggle a pad with `/qc toggle`, in and out of combat, with Fade on
+Mouseover → it shows and hides at once, its hover and fade answer at once, and no copy is drawn. On a
+profile that ran this branch's first step 12, `/dump` a pad's `anim` → nil. Result: not run.
 
 ## The full skin
 
@@ -2049,10 +2051,9 @@ tooltip title on a button, a wedge, the hub, the Preview as window and an icon c
 title color. The hub's stale, lockdown and test labels and End preview are in the skin's face.
 Result: owed.
 
-**FSKIN-10. The animation copy wears the skin.** **Azeroth**, a pad and a dial → open and close each, and
-a dial's Fan → through the animation the copy shows the skin's fills, edges, text with its shadow, and
-a textured button body: no flash of Ka0s Default, no text losing its shadow, no missing band. Result:
-owed.
+**FSKIN-10. The animation copy wears the skin.** **Azeroth**, a dial → open and close it, and its Fan →
+through the animation the copy shows the skin's fills, edges and text with its shadow: no flash of Ka0s
+Default, no text losing its shadow. Result: owed.
 
 **FSKIN-11. The picker's preview.** The first-run picker's eye over a pad → each pick repaints the pad
 and dial in that skin, closing it puts them back. Result: owed.
@@ -2107,7 +2108,7 @@ Open from the same run's re-cut v1.84.0 (M3-MEDIA, `Ka0sMedia_*` the only media 
 
 Owed from issue #14 (2026-11-01): LAYER-6, LAYER-7, LAYER-8, LAYER-9 (new).
 
-Owed from issue #13 (2026-11-01): ANIM-1 to ANIM-10 (new).
+Owed from issue #13 (2026-11-01): ANIM-1 to ANIM-11 (new; the pad ruling reshaped them before any was run).
 
 Owed from the full skin (FS-QC-REC, 2026-11-01): FSKIN-1 to FSKIN-11 (new); SKIN-5, SKIN-11, SKIN-12 and SKIN-13
 (their expected result changed, so each lost its pass mark).

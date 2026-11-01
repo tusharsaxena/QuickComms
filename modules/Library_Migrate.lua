@@ -280,20 +280,27 @@ function Lib.MigrateFontFlags(profile)
     end
 end
 
--- 11 -> 12 (#13): every stored pad and dial takes its Animation tab's defaults, so an existing surface
--- animates after the update (the owner's ruling). A key already there is kept: the step is idempotent.
+-- 11 -> 12 (#13): every stored dial takes its Animation tab's defaults, so an existing dial animates
+-- after the update (the owner's ruling). A key already there is kept: the step is idempotent.
 function Lib.MigrateAnim(profile)
     if type(profile) ~= "table" then return end
-    local shipped = { pads = NS.PadDefaults.PadAnim(), dials = NS.PadDefaults.DialAnim() }
-    for key, defaults in pairs(shipped) do
-        for _, surface in pairs(type(profile[key]) == "table" and profile[key] or {}) do
-            if type(surface) == "table" then
-                if type(surface.anim) ~= "table" then surface.anim = {} end
-                for k, v in pairs(defaults) do
-                    if surface.anim[k] == nil then surface.anim[k] = v end
-                end
+    local defaults = NS.PadDefaults.DialAnim()
+    for _, surface in pairs(type(profile.dials) == "table" and profile.dials or {}) do
+        if type(surface) == "table" then
+            if type(surface.anim) ~= "table" then surface.anim = {} end
+            for k, v in pairs(defaults) do
+                if surface.anim[k] == nil then surface.anim[k] = v end
             end
         end
+    end
+end
+
+-- 13 -> 14 (#13, the owner's ruling that animations are the dial's alone): step 12 first filled pads
+-- too, and a profile that ran it on the feature branch still holds that table. Nothing reads it.
+function Lib.MigrateDropPadAnim(profile)
+    if type(profile) ~= "table" then return end
+    for _, surface in pairs(type(profile.pads) == "table" and profile.pads or {}) do
+        if type(surface) == "table" then surface.anim = nil end
     end
 end
 

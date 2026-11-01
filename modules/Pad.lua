@@ -38,11 +38,6 @@ local _, NS = ...
 -- size feeds the buttons' geometry. A button the rebuild leaves unused, and every button of a released pad,
 -- loses its glow (Glow.ReleaseFree) and is disarmed (disarmFree); one the rebuild takes back keeps its
 -- armed line until arm() gives it another (F-006); a send result starts an After sending glow (Glow.Sent).
---
--- THE ANIMATIONS (#13). The root's insecure OnShow and OnHide hooks drive one track per pad
--- (modules/Anim.lua), played on a copy (modules/Anim_Ghost.lua): the driver still shows and hides the
--- root, and nothing here moves or scales it. Only its alpha changes (Pad.ApplyAlpha holds it at 0 under
--- an open). A release snaps: its buttons are already parked, and a stand-down must leave nothing.
 
 NS.Pad = NS.Pad or {}
 local Pad = NS.Pad
@@ -73,42 +68,6 @@ local function padName(id)
     return pad and pad.name or L["Comms Pad"]
 end
 local function isLocked() return NS.Setting("locked") ~= false end
-
--- The alpha the pad rests at: the master opacity, its fade and its hover.
-local function restAlpha(inst)
-    local pad = profilePad(inst.id)
-    return pad and PL.Alpha(NS.Setting("alpha"), pad.look, NS.Restrictions.InCombat(), inst.hover > 0) or 1
-end
-
-local function newTrack(inst)
-    return NS.Anim.NewTrack({
-        src = inst.root,
-        roots = function() return { inst.root } end,
-        config = function(phase)
-            local pad = profilePad(inst.id)
-            return NS.Anim.Config(pad and pad.anim, NS.PadDefaults.PadAnim(), phase)
-        end,
-        restAlpha = function() return restAlpha(inst) end,
-        hold = function() inst.root:SetAlpha(0) end,
-        release = function() Pad.ApplyAlpha(inst.id) end,
-    })
-end
-
--- quietShow: the show that ends a hidden UIParent, which replays no open (Alt-Z, a cinematic).
-local function onRootShown(inst)
-    local quiet = inst.quietShow
-    inst.quietShow = nil
-    if quiet or inst.silent or NS.IsStoodDown() then return end
-    NS.Anim.Open(inst.track)
-end
-
--- A hidden UIParent fires OnHide with the root's own flag still on: that is no close, and the OnShow
--- that ends it is no open.
-local function onRootHidden(inst)
-    if inst.root:IsShown() then inst.quietShow = true end
-    if inst.silent or inst.root:IsShown() or NS.IsStoodDown() then return NS.Anim.Snap(inst.track) end
-    NS.Anim.Close(inst.track)
-end
 
 local function session(key)
     State[key] = State[key] or {}
@@ -369,11 +328,6 @@ local function build(id)
             return isLocked() and L["Right-click for settings."] or L["Drag to move. Right-click for settings."]
         end } },
     })
-    -- The ghost leaves the strip out: it ignores the pad's alpha, so it never fades with the pad.
-    if inst.handle then inst.handle.qcNoGhost = true end
-    inst.track = newTrack(inst)
-    root:HookScript("OnShow", function() onRootShown(inst) end)
-    root:HookScript("OnHide", function() onRootHidden(inst) end)
     pads[id] = inst
     applyPoint(inst)
     NS.Debug(TAG, "built %s", id)
@@ -454,12 +408,9 @@ local function finishApply(inst, id, plan, look, hstate)
     inst.mark = hstate.mark
     if inst.handle then inst.handle:SetLabel(R.StripLabel(padName(id), hstate.mark)) end
     Pad.ApplyLock()
-    -- A new root starts shown, so a pad its driver hides at login must not play a close.
-    inst.silent = not inst.applied
     NS.SendEngine.SetVisibility(inst.root,
         PL.VisibilityDriver(NS.Setting("visibility"), look.visibility, plan.hasActive, plan.test == true,
             not NS.SlashVerbs.PadsShown()))
-    inst.silent, inst.applied = nil, true
     Pad.ApplyAlpha(id)
 end
 
@@ -510,8 +461,6 @@ end
 function Pad.Release(id)
     local inst = pads[id]
     if not inst or inCombat() then return false end
-    NS.Anim.Snap(inst.track)
-    inst.silent, inst.quietShow = true, nil
     if inst.dragHeld then
         -- A drag caught after lockdown began, whose queued stop a stand-down dropped.
         inst.dragHeld = nil
@@ -525,7 +474,6 @@ function Pad.Release(id)
     inst.byCallout, inst.plan, inst.live, inst.mark = {}, nil, false, nil
     if inst.handle then inst.handle:Hide() end
     NS.SendEngine.ClearVisibility(inst.root)
-    inst.silent = nil
     return true
 end
 
@@ -578,7 +526,7 @@ end
 function Pad.ApplyAlpha(id)
     local inst, pad = pads[id], profilePad(id)
     if not (inst and pad) then return end
-    inst.root:SetAlpha(NS.Anim.Holding(inst.track) and 0 or restAlpha(inst))
+    inst.root:SetAlpha(PL.Alpha(NS.Setting("alpha"), pad.look, NS.Restrictions.InCombat(), inst.hover > 0))
 end
 
 function Pad.SetHover(id, on)

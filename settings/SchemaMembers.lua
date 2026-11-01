@@ -855,45 +855,29 @@ do
     for _, row in ipairs(IconRows("dial", C, ICON_OFFSET)) do ROWS[#ROWS + 1] = row end
 end
 
--- The Animation tab (#13): a pad's and a dial's open and close, each with its own style and duration,
--- and on a pad a Slide direction. The owner's rulings: no master switch, None switches one off, the
--- knobs hide while it is None (a shownWhen naming the other styles), Direction shows only on Slide.
--- After the Icons rows, so the tab follows Icons. Plain rows: the degraded load adds them too.
-local ANIM_LABEL = { none = L["None"], fade = L["Fade"], fadeScale = L["Fade and scale"], slide = L["Slide"],
-    pop = L["Pop"], scaleFade = L["Scale and fade"], fan = L["Fan"] }
-local ANIM_DIRECTIONS = { { value = "up", text = L["Up"] }, { value = "down", text = L["Down"] },
-    { value = "left", text = L["Left"] }, { value = "right", text = L["Right"] } }
-local function animRows(instance, page, styles, slides)
-    local P, def, list, moving = instance .. ".anim.", T[instance].anim, {}, {}
-    for i, style in ipairs(styles) do
-        list[i] = { value = style, text = ANIM_LABEL[style] }
-        if style ~= "none" then moving[#moving + 1] = style end
-    end
-    local function base(subgroup, r)
-        r.instance, r.page, r.group, r.subgroup = instance, page, L["Animation"], subgroup
+-- The Animation tab (#13): a dial's open and close, each with its own style and duration. The owner's
+-- rulings: animations are the dial's alone, no master switch, None switches one off, and its Duration
+-- hides while it is None (a shownWhen naming the other styles). After the Icons rows, so the tab
+-- follows Icons. Plain rows: the degraded load adds them too.
+local ANIM_STYLES = { { value = "none", text = L["None"] }, { value = "fade", text = L["Fade"] },
+    { value = "scaleFade", text = L["Scale and fade"] }, { value = "fan", text = L["Fan"] } }
+local ANIM_MOVING = { "fade", "scaleFade", "fan" }
+local function animRows(subgroup, key, styleDesc, durationDesc)
+    local P, def = "dial.anim.", T.dial.anim
+    local function base(r)
+        r.instance, r.page, r.group, r.subgroup = "dial", "dials", L["Animation"], subgroup
         return r
     end
-    local out = {}
-    local function phase(subgroup, key, styleDesc, durationDesc, directionDesc)
-        out[#out + 1] = base(subgroup, { path = P .. key .. "Style", type = "string", default = def[key .. "Style"],
-            values = list, label = L["Style"], startsLine = true, desc = styleDesc, validate = oneOf(list) })
-        out[#out + 1] = base(subgroup, { path = P .. key .. "Duration", type = "number", default = def[key .. "Duration"],
-            min = 0.1, max = 2, step = 0.1, label = L["Duration (seconds)"], desc = durationDesc, validate = NUMBER,
-            normalize = clamp(0.1, 2), shownWhen = { path = P .. key .. "Style", equals = moving } })
-        if slides then
-            out[#out + 1] = base(subgroup, { path = P .. key .. "Direction", type = "string",
-                default = def[key .. "Direction"], values = ANIM_DIRECTIONS, label = L["Direction"], desc = directionDesc,
-                validate = oneOf(ANIM_DIRECTIONS), shownWhen = { path = P .. key .. "Style", equals = "slide" } })
-        end
-    end
-    phase(L["Open"], "open", L["How this appears when it opens. None shows it at once."],
-        L["How long the open takes. A send never waits for it."], L["Which way it moves as it opens."])
-    phase(L["Close"], "close", L["How this leaves when it closes. None hides it at once."],
-        L["How long the close takes. A send never waits for it."], L["Which way it moves as it closes."])
-    return out
+    ROWS[#ROWS + 1] = base({ path = P .. key .. "Style", type = "string", default = def[key .. "Style"],
+        values = ANIM_STYLES, label = L["Style"], startsLine = true, desc = styleDesc, validate = oneOf(ANIM_STYLES) })
+    ROWS[#ROWS + 1] = base({ path = P .. key .. "Duration", type = "number", default = def[key .. "Duration"],
+        min = 0.1, max = 2, step = 0.1, label = L["Duration (seconds)"], desc = durationDesc, validate = NUMBER,
+        normalize = clamp(0.1, 2), shownWhen = { path = P .. key .. "Style", equals = ANIM_MOVING } })
 end
-for _, row in ipairs(animRows("pad", "pads", { "none", "fade", "fadeScale", "slide", "pop" }, true)) do ROWS[#ROWS + 1] = row end
-for _, row in ipairs(animRows("dial", "dials", { "none", "fade", "scaleFade", "fan" }, false)) do ROWS[#ROWS + 1] = row end
+animRows(L["Open"], "open", L["How this appears when it opens. None shows it at once."],
+    L["How long the open takes. A send never waits for it."])
+animRows(L["Close"], "close", L["How this leaves when it closes. None hides it at once."],
+    L["How long the close takes. A send never waits for it."])
 
 -- Every member row's reaction: Library.Touch announces the write (LIBRARY_CHANGED, the pads' rebuild),
 -- naming the row's path as the field. A color stays only on a glyph: an icon write that leaves a

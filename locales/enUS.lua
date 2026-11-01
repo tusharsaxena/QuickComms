@@ -928,8 +928,8 @@ L["Pad"] = "Pad"
 L["Which Comms Pad this page edits."] = "Which Comms Pad this page edits."
 L["New pad"] = "New pad"
 L["Make a new Comms Pad holding the built-in groups, and edit it here."] = "Make a new Comms Pad holding the built-in groups, and edit it here."
-L["Put the selected pad's visibility, groups-as, layout, header, section titles, window, buttons, icons and animation back to their defaults, and turn it on. Its name, groups and position are kept."] =
-    "Put the selected pad's visibility, groups-as, layout, header, section titles, window, buttons, icons and animation back to their defaults, and turn it on. Its name, groups and position are kept."
+L["Put the selected pad's visibility, groups-as, layout, header, section titles, window, buttons and icons back to their defaults, and turn it on. Its name, groups and position are kept."] =
+    "Put the selected pad's visibility, groups-as, layout, header, section titles, window, buttons and icons back to their defaults, and turn it on. Its name, groups and position are kept."
 
 -- The Comms Dial's rings (modules/Dial_Layout.lua)
 L["Previous page"] = "Previous page"
@@ -1393,26 +1393,18 @@ L["Adds back the built-in groups and callouts you deleted. Changes nothing you h
     "Adds back the built-in groups and callouts you deleted. Changes nothing you have."
 L["Set this dial's key on the General page > Keybindings. A dial's key follows its place in the dial order."] =
     "Set this dial's key on the General page > Keybindings. A dial's key follows its place in the dial order."
-L["Fade and scale"] = "Fade and scale"
-L["Slide"] = "Slide"
-L["Pop"] = "Pop"
 L["Scale and fade"] = "Scale and fade"
 L["Fan"] = "Fan"
-L["Up"] = "Up"
-L["Down"] = "Down"
 L["Animation"] = "Animation"
 L["Open"] = "Open"
 L["Close"] = "Close"
 L["Style"] = "Style"
 L["Duration (seconds)"] = "Duration (seconds)"
-L["Direction"] = "Direction"
 L["How this appears when it opens. None shows it at once."] =
     "How this appears when it opens. None shows it at once."
 L["How long the open takes. A send never waits for it."] =
     "How long the open takes. A send never waits for it."
-L["Which way it moves as it opens."] = "Which way it moves as it opens."
 L["How this leaves when it closes. None hides it at once."] =
     "How this leaves when it closes. None hides it at once."
 L["How long the close takes. A send never waits for it."] =
     "How long the close takes. A send never waits for it."
-L["Which way it moves as it closes."] = "Which way it moves as it closes."

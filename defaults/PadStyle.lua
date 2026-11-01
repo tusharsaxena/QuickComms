@@ -142,15 +142,8 @@ function D.DialSlice()
     }
 end
 
---- A pad's Animation tab (`pad.anim.*`, #13): its open and its close, each on its own. A style of
---- "none" switches that one off; every surface animates by default (the owner's ruling, 2026-11-01).
---- A direction is read only by Slide.
-function D.PadAnim()
-    return { openStyle = "fadeScale", openDuration = 0.15, openDirection = "up",
-        closeStyle = "fadeScale", closeDuration = 0.1, closeDirection = "down" }
-end
-
---- A dial's Animation tab (`dial.anim.*`, #13), as D.PadAnim with the dial's own styles.
+--- A dial's Animation tab (`dial.anim.*`, #13): its open and its close, each on its own. A style of
+--- "none" switches that one off; a dial animates by default (the owner's ruling, 2026-11-01).
 function D.DialAnim()
     return { openStyle = "scaleFade", openDuration = 0.15, closeStyle = "scaleFade", closeDuration = 0.1 }
 end

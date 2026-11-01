@@ -137,7 +137,7 @@ Total.
 - profile: collections exist; default nextId is 1, past every seeded id after boot
 - profile: every behavior row resolves through the seam
 - profile: the spam guard clamps to 0.6-2.0 and fallback refuses unknown values
-- profile: schema version target is 13 (the full skin's step)
+- profile: schema version target is 14 (a pad's Animation table dropped)
 - prepare: a callout held by two groups is split into a copy
 - prepare: a split copy of a seeded callout keeps no origin
 - prepare: a callout held by no group is dropped
@@ -711,7 +711,7 @@ Total.
 - pads page: [final 3, 15] Defaults puts the pad's rows back as one act: one rebuild
 - pads page: [final 4] Defaults keeps the pad's position
 - pads page: [final 26] New pad takes the lowest free number, so a delete never leads to two names alike
-- pads page: [window tabs] the strip reads General first, then Layout, Window, Header, Section titles, Buttons, Icons, Animation
+- pads page: [window tabs] the strip reads General first, then Layout, Window, Header, Section titles, Buttons, Icons
 - pads page: [window tabs] Header carries Size, Font, Background and Border under their headings
 - pads page: [window tabs] Section titles carries Size, Font, Background and Border, and writes the section table
 - pads page: [window tabs] Window carries Background and Border, and no font and no Visibility
@@ -1192,13 +1192,14 @@ Total.
 
 ### test_anim.lua (27)
 
-- anim: a new pad and dial carry the shipped defaults, on for everyone
-- anim: step 12 fills every stored surface and keeps a key already there
-- anim: the runner takes an old profile's pads and dials to the defaults
+- anim: a new dial carries the shipped defaults, on for everyone, and a pad has no animation
+- anim: step 12 fills every stored dial, keeps a key already there, and leaves pads alone
+- anim: the runner takes an old profile's dials to the defaults and writes no pad's
+- anim: step 14 takes a stored pad table from every profile that ran step 12, and nothing else
 - anim: each knob writes its own key and nothing else, on the surface it names
 - anim: a style or duration out of range is refused or clamped
 - anim: the hidden poses match the owner's rulings
-- anim: every ease lands exactly, and Pop overshoots
+- anim: an ease lands exactly, decelerating into an open and accelerating out of a close
 - anim: the Fan is whole at rest, gone when hidden, and sweeps in order
 - anim: an open plays, holds the real frame and lands with it back
 - anim: a close mid-open reverses from where it stands, with no jump
@@ -1208,19 +1209,18 @@ Total.
 - anim: a capture with nothing to draw snaps, and never holds the frame
 - anim: the stand-down leaves no track and no OnUpdate running
 - anim: the emphasis is heard only on a close, and an open clears it
-- anim: a missing key reads its own phase's default, and a pad's direction comes through
-- anim: a Slide's close leaves the way it names, through a live track
+- anim: a missing key reads its own phase's default
 - anim: a Snap leaves no emphasis behind
 - anim: a step draws with how far along it is, so the pulse moves
 - anim: step 12 walks past a damaged surface and a damaged list
 - anim: step 12 reads a stored false as kept
 - anim: step 12 runs for every stored profile, not the active one
-- anim: two surfaces never share their anim table
-- anim: the rows are the owner's: Open and Close on an Animation tab, knobs only while they apply
+- anim: two dials never share their anim table
+- anim: the rows are the owner's: Open and Close on the dial's Animation tab, knobs only while they apply
 - anim: a close never holds a frame that is already down, and a snap off no track releases nothing
 - anim: step 12 takes a value that is no profile quietly
 
-### test_anim_surfaces.lua (39)
+### test_anim_surfaces.lua (31)
 
 - anim dial: a key open plays over a live dial, and it lands with the real alpha back
 - anim dial: a close plays out after the header is already down
@@ -1236,30 +1236,22 @@ Total.
 - anim dial: the preview dial animates its first open, not a rebuild's reopen
 - anim dial: the stand-down leaves the dial's track off and its alpha whole
 - anim dial: nothing here writes a protected call on the header
-- anim pad: the driver's show plays, and the real root lands at its rest alpha
-- anim pad: the driver's hide plays out on the copy
-- anim pad: hover and fade reach the rest alpha, and never lift a held root
-- anim pad: in combat the driver's hide and show play, refusing nothing
-- anim pad: each of the pad's switches is its own, and leaves the dial's alone
-- anim pad: a pad its driver hides at login plays no close
-- anim pad: a hidden UIParent is no close
-- anim pad: the way back from a hidden UIParent is no open
-- anim pad: a release drops a held quiet show
-- anim pad: a release snaps, and a stand-down leaves nothing running
-- anim ghost: a color texture copies from what its painter recorded, a file from the client
-- anim ghost: no rect yet snaps instead of guessing, and the strip stays out
-- anim surfaces: a surface reads its own instance's settings, and the kind's defaults when it has none
+- anim pad: a pad has no track, and its driver shows and hides it at once
+- anim pad: its alpha paths answer as before: master opacity, fade, hover, and combat
+- anim pad: a release and a rebuild touch no animation state
+- anim pad: nothing in a pad's code names the animations
+- anim ghost: no rect yet snaps instead of guessing
+- anim surfaces: a dial reads its own instance's settings, and the kind's defaults when it has none
 - anim surfaces: a rebuild's close starts no close at all
 - anim surfaces: a rebuild snaps a track that was playing
 - anim surfaces: a dial with no ring on screen plays no close
 - anim surfaces: an open interrupted by a hide does not arm the next ring's show
 - anim surfaces: a silent reopen's ring leaves a track alone, and a stood-down ring plays nothing
-- anim surfaces: a stood-down surface plays neither edge
+- anim surfaces: a stood-down dial plays no close
 - anim surfaces: a test mode reopen is silent only for its own show
-- anim surfaces: a released pad's parts leave quietly, and a pad apply's show is no open
 - anim surfaces: the close names the sent place whichever way round the click ran
 - anim surfaces: a stale stamp emphasizes nothing, and a guarded press none
-- anim surfaces: each track rests at its surface's alpha, the dial's master opacity included
+- anim surfaces: a track rests at the dial's alpha, the master opacity included
 - anim surfaces: the dial's ghost mirrors the hub and pointer, and each slice's fill by its place
 
 ### test_anim_ghost.lua (16)
@@ -1268,15 +1260,15 @@ Total.
 - anim ghost: a level is held to the room above the stage, and never under it
 - anim ghost: one sub-frame per level and place, so a place stays addressable and a level whole
 - anim ghost: a child takes its place from itself, then its parent, and a root's tag counts
-- anim ghost: only what shows is copied, and the drag strip stays out
-- anim ghost: a color texture draws what its painter recorded, white and unturned
+- anim ghost: only what shows is copied
+- anim ghost: a color texture the client cannot read back is left out
 - anim ghost: a file texture keeps its art, tint, crop, turn, blend, layer, alpha and desaturation
 - anim ghost: a mask is copied once per source mask, turned, and taken off before the next capture
 - anim ghost: a font string keeps its text, face, color, shadow, alignment and alpha
 - anim ghost: a child scaled apart from the root keeps its drawn size and place
 - anim ghost: no rect on any part is no capture, and nothing to draw is none
 - anim ghost: a capture clears the last one's copies, and a reused sub-frame starts whole
-- anim ghost: a pose scales and moves the stage and lays the rest alpha over every sub-frame
+- anim ghost: a pose scales the stage and lays the rest alpha over every sub-frame
 - anim ghost: a place fades in its turn around the ring
 - anim ghost: the sent place alone stays bright, pulses and fades after its hold
 - anim ghost: a ghost takes no mouse, and nothing it makes does
@@ -1459,7 +1451,7 @@ Total.
 - skin hud: without the library step 10 writes the companions itself
 - skin hud: the reset runs once: a companion the player turns off afterwards stays off
 
-### test_skin_flip.lua (59)
+### test_skin_flip.lua (58)
 
 - skin flip: the step puts every listed companion on, keeps every pick and color, and leaves the rest
 - skin flip: no value but a flag holds the sentinel, and a second run writes nothing
@@ -1482,7 +1474,6 @@ Total.
 - skin flip: a skin switch redraws the shadow on a string that had already drawn
 - skin flip: Ignore fonts leaves the stored shadow standing
 - skin flip: the ghost wears a skinned string's font object, so its shadow comes along
-- skin flip: a color texture a library paints on a watched frame reaches the ghost
 - skin fix: a tooltip's title takes gtip.title, on a button, a wedge and a titled tip
 - skin fix: the hub's small labels wear the skin's HUD face and their tokens
 - skin fix: End preview's label takes the skin's body face
@@ -1734,7 +1725,7 @@ Total.
 | test_dial_catcher.lua | 13 |
 | test_dial_look.lua | 16 |
 | test_anim.lua | 27 |
-| test_anim_surfaces.lua | 39 |
+| test_anim_surfaces.lua | 31 |
 | test_anim_ghost.lua | 16 |
 | test_keybinds.lua | 6 |
 | test_dial_shine.lua | 8 |
@@ -1746,7 +1737,7 @@ Total.
 | test_skinsetup.lua | 24 |
 | test_skin_windows.lua | 20 |
 | test_skin_hud.lua | 19 |
-| test_skin_flip.lua | 59 |
+| test_skin_flip.lua | 58 |
 | test_skin_picker.lua | 20 |
 | test_skin_outline.lua | 10 |
 | test_skin_verb.lua | 7 |
@@ -1761,4 +1752,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1451** |
+| **Total** | **1442** |

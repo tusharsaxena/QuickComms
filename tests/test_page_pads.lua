@@ -202,7 +202,7 @@ test("pads page: [final 26] New pad takes the lowest free number, so a delete ne
     assertEqual(NS.db.profile.pads[Pads.Create()].name, "Comms Pad 4")
 end)
 
-test("pads page: [window tabs] the strip reads General first, then Layout, Window, Header, Section titles, Buttons, Icons, Animation", function()
+test("pads page: [window tabs] the strip reads General first, then Layout, Window, Header, Section titles, Buttons, Icons", function()
     local NS = open()
     local order, seen = {}, {}
     for _, row in ipairs(NS.addon.Settings.RowsForPage("pads")) do
@@ -214,7 +214,7 @@ test("pads page: [window tabs] the strip reads General first, then Layout, Windo
     -- red under: a General row (Visibility's) ahead of Name moving no tab, but the header rows left
     -- ahead of the Window rows (item 020, QUI-L09: outside in; the library orders tabs by each
     -- group's first row), or the one Window tab (2026-10-20, owner request)
-    assertEqual(table.concat(order, ","), "General,Groups,Layout,Window,Header,Section titles,Buttons,Icons,Animation")
+    assertEqual(table.concat(order, ","), "General,Groups,Layout,Window,Header,Section titles,Buttons,Icons")
 end)
 
 test("pads page: [window tabs] Header carries Size, Font, Background and Border under their headings", function()

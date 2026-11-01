@@ -176,7 +176,7 @@ end)
 test("layout: [pads] the strip runs outside in: Window, Header, Section titles, Buttons, Icons (QUI-L09, L10)", function()
     local NS = open("Pad", { "pad", "p1" })
     -- red under: the header rows left ahead of the window rows in windowRows()
-    assertEqual(strip(NS, "pads"), "General,Groups,Layout,Window,Header,Section titles,Buttons,Icons,Animation")
+    assertEqual(strip(NS, "pads"), "General,Groups,Layout,Window,Header,Section titles,Buttons,Icons")
     assertEqual(row(NS, "pad.section.height").label, "Section title height (0 = automatic)")
 end)
 
@@ -233,7 +233,7 @@ end)
 
 test("layout: [pads] the Defaults tooltip names every tab it resets (QUI-L18)", function()
     local _, _, P = open("Pad", { "pad", "p1" })
-    assertEqual(P.ctx("pads").panel.defaultsTooltip, "Put the selected pad's visibility, groups-as, layout, header, section titles, window, buttons, icons and animation back to their defaults, and turn it on. Its name, groups and position are kept.")
+    assertEqual(P.ctx("pads").panel.defaultsTooltip, "Put the selected pad's visibility, groups-as, layout, header, section titles, window, buttons and icons back to their defaults, and turn it on. Its name, groups and position are kept.")
 end)
 
 test("layout: the Defaults tooltips are real locale rows, not the key falling through (#13)", function()

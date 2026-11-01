@@ -105,12 +105,12 @@ showing?" tooltip) follows the cursor inside the hub's circle in the same update
 
 ## The open and close animations (#13)
 
-The dial's header shows and hides in its snippets and a pad's root under its state driver, and neither
-can be delayed from the insecure side; `SetScale` and `SetPoint` on them are protected in combat. So
-nothing moves them. `modules/Anim_Ghost.lua` keeps an insecure, mouse-off copy under UIParent, anchored
+The dial's header shows and hides in its snippets, which cannot be delayed from the insecure side, and
+`SetScale` and `SetPoint` on it are protected in combat. So nothing moves it (a pad has no animation at
+all, the owner's ruling, 2026-11-01). `modules/Anim_Ghost.lua` keeps an insecure, mouse-off copy under UIParent, anchored
 to the real frame (an insecure frame may anchor to a protected one, never the reverse), and plays every
 animation on it. Capture only reads the secure frames. The one write to a real frame is `SetAlpha`,
-which the client allows on a protected frame and `Pad.ApplyAlpha` has always used in combat: an open
+which the client allows on a protected frame and `Pad.ApplyAlpha` uses on a pad in combat: an open
 holds it at 0 under the ghost, and `Anim.Snap` gives it back. The hooks are insecure `HookScript`s on
 `OnShow` and `OnHide`, beside the ones already there; no attribute is read or written, and the snippets
 did not change. A send is the wedge's own click, and the real dial is live under the ghost.

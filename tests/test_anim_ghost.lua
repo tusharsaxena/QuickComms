@@ -57,7 +57,7 @@ local function get(v) return function() return v end end
 -- A source region: a plain table answering what the ghost reads.
 local function region(kind, d)
     d = d or {}
-    return { qcGhostGroup = d.group, qcGhostColor = d.color, GetObjectType = get(kind),
+    return { qcGhostGroup = d.group, GetObjectType = get(kind),
         IsShown = get(d.shown ~= false),
         GetCenter = function() if d.nocenter then return nil end return d.x or 0, d.y or 0 end,
         GetWidth = get(d.w or 10), GetHeight = get(d.h or 20), GetAlpha = get(d.alpha or 1),
@@ -77,7 +77,7 @@ end
 -- A source frame: `regions` and `kids`, its level, strata and scale.
 local function frame(d)
     d = d or {}
-    return { qcGhostGroup = d.group, qcNoGhost = d.noGhost, IsShown = get(d.shown ~= false),
+    return { qcGhostGroup = d.group, IsShown = get(d.shown ~= false),
         GetCenter = function() if d.nocenter then return nil end return d.x or 100, d.y or 200 end,
         GetFrameStrata = get(d.strata or "HIGH"), GetFrameLevel = get(d.level or 10), GetScale = get(d.scale or 1),
         GetEffectiveScale = get(d.eff or 1),
@@ -142,30 +142,20 @@ test("anim ghost: a child takes its place from itself, then its parent, and a ro
     assertEqual(got[3].qcGroup, 3, "an untagged child inherits")
 end)
 
-test("anim ghost: only what shows is copied, and the drag strip stays out", function()
+test("anim ghost: only what shows is copied", function()
     local G, ghost = ghostOn()
     local src = frame({ shown = false, regions = { region("Texture", FILE), region("Texture", { file = "art", shown = false }) },
-        kids = { frame({ level = 11, shown = false, regions = { region("Texture", FILE) } }),
-            frame({ level = 12, noGhost = true, regions = { region("Texture", FILE) } }) } })
+        kids = { frame({ level = 11, shown = false, regions = { region("Texture", FILE) } }) } })
     -- a root is walked hidden (a close captures it just down); its hidden parts are not
     assertTrue(G.Capture(ghost, src, { src }))
     assertEqual(ghost.used, 1)
     assertEqual(ghost.subs[1].qcTexUsed, 1)
 end)
 
-test("anim ghost: a color texture draws what its painter recorded, white and unturned", function()
+test("anim ghost: a color texture the client cannot read back is left out", function()
     local G, ghost = ghostOn()
-    local c = { 0.2, 0.3, 0.4, 0.5 }
-    local src = frame({ regions = { region("Texture", { color = c }) } })
-    assertTrue(G.Capture(ghost, src, { src }))
-    local t = ghost.subs[1].tex[1]
-    assertEqual(t.calls.SetColorTexture[3], 0.4)
-    assertEqual(t.calls.SetColorTexture[4], 0.5)
-    assertEqual(t.calls.SetVertexColor[1], 1, "a pooled texture's old tint would multiply it")
-    assertEqual(t.calls.SetRotation[1], 0, "a pooled texture's old turn")
-    assertNil(t.calls.SetTexture)
     local none = frame({ regions = { region("Texture") } })
-    assertFalse(G.Capture(ghost, none, { none }), "a color with no record is left out, and nothing is left to draw")
+    assertFalse(G.Capture(ghost, none, { none }), "nothing is left to draw")
 end)
 
 test("anim ghost: a file texture keeps its art, tint, crop, turn, blend, layer, alpha and desaturation", function()
@@ -267,20 +257,17 @@ test("anim ghost: a capture clears the last one's copies, and a reused sub-frame
     assertEqual(ghost.subs[2].calls.Hide ~= nil, true, "the spare sub-frame is down")
 end)
 
-test("anim ghost: a pose scales and moves the stage and lays the rest alpha over every sub-frame", function()
+test("anim ghost: a pose scales the stage and lays the rest alpha over every sub-frame", function()
     local G, ghost, NS = ghostOn()
     local src = frame({ scale = 2, regions = { region("Texture", FILE) } })
     assertTrue(G.Capture(ghost, src, { src }))
+    local placed = ghost.stage.count.SetPoint
     local pose = NS.Anim.Rest()
-    pose.alpha, pose.scale, pose.x, pose.y = 0.5, 0.5, 10, -4
+    pose.alpha, pose.scale = 0.5, 0.5
     G.Pose(ghost, pose, 0.8, nil, 0)
     near(ghost.stage.calls.SetScale[1], 1, "the source's own scale counts")
-    near(ghost.stage.calls.SetPoint[4], 20, "an offset is in the scaled stage's units")
-    near(ghost.stage.calls.SetPoint[5], -8)
     near(ghost.subs[1].calls.SetAlpha[1], 0.4)
-    pose.scale = 0
-    G.Pose(ghost, pose, 1, nil, 0)
-    near(ghost.stage.calls.SetScale[1], 0.02, "a Pop's undershoot never reaches 0")
+    assertEqual(ghost.stage.count.SetPoint, placed, "about the dial's center: a pose never moves it")
 end)
 
 test("anim ghost: a place fades in its turn around the ring", function()

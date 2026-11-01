@@ -1,6 +1,6 @@
--- tests/test_anim_surfaces.lua — the open and close animations on the real dial and pad (#13): the
--- ghost's capture, which edges animate, the secure frames left alone, combat, the send, independence
--- of the four switches, and the stand-down.
+-- tests/test_anim_surfaces.lua — the open and close animations on the real dial (#13): the ghost's
+-- capture, which edges animate, the secure frames left alone, combat, the send, independence of the
+-- two switches and the stand-down; and a pad, which has no animation (the owner's ruling, 2026-11-01).
 
 local T = _G.QUICKCOMMS_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -221,158 +221,79 @@ test("anim dial: nothing here writes a protected call on the header", function()
     end
 end)
 
-test("anim pad: the driver's show plays, and the real root lands at its rest alpha", function()
+-- ── a pad does not animate (the owner's ruling, 2026-11-01): its behavior as before #13 ───────────
+
+test("anim pad: a pad has no track, and its driver shows and hides it at once", function()
     local NS = live()
     local inst = pad(NS)
+    assertNil(inst.track, "no track")
+    local n = { open = 0, close = 0 }
+    local open, close = NS.Anim.Open, NS.Anim.Close
+    NS.Anim.Open = function(...) n.open = n.open + 1 return open(...) end
+    NS.Anim.Close = function(...) n.close = n.close + 1 return close(...) end
     drive(NS, inst, "hide")
-    NS.Anim.Snap(inst.track)
-    drive(NS, inst, "show")
-    assertTrue(inst.root:IsShown(), "the driver did not wait")
-    assertEqual(inst.track.phase, "open")
-    assertEqual(inst.root:GetAlpha(), 0)
-    NS.Anim.Step(inst.track, 1)
-    assertNil(inst.track.phase)
-    assertEqual(inst.root:GetAlpha(), 1)
-end)
-
-test("anim pad: the driver's hide plays out on the copy", function()
-    local NS = live()
-    local inst = pad(NS)
-    drive(NS, inst, "hide")
-    assertFalse(inst.root:IsShown(), "the driver did not wait")
-    assertEqual(inst.track.phase, "close")
-    assertTrue(inst.track.ghost.used > 0, "the buttons were mirrored after the hide")
-    NS.Anim.Step(inst.track, 1)
-    assertFalse(NS.Anim.Running())
-end)
-
-test("anim pad: hover and fade reach the rest alpha, and never lift a held root", function()
-    local NS = live()
-    local inst = pad(NS)
-    drive(NS, inst, "hide")
-    NS.Anim.Snap(inst.track)
-    drive(NS, inst, "show")
-    NS.Pad.SetHover("p1", true)
-    assertEqual(inst.root:GetAlpha(), 0, "still under the ghost")
-    NS.Pad.SetHover("p1", false)
-    NS.db.profile.pads.p1.look.fade = "mouseover"
-    NS.db.profile.pads.p1.look.fadeAlpha = 0.4
-    NS.Anim.Step(inst.track, 1)
-    assertEqual(inst.root:GetAlpha(), 0.4, "the alpha it rests at, not 1")
-end)
-
-test("anim pad: in combat the driver's hide and show play, refusing nothing", function()
-    local NS, m = live()
-    local inst = pad(NS)
-    combat(m, true)
-    local blocked = #m.blocked
-    m.stateDrivers[inst.root].visibility = "hide"
-    m.__applyStateDrivers()
-    assertEqual(inst.track.phase, "close")
-    m.stateDrivers[inst.root].visibility = "show"
-    m.__applyStateDrivers()
-    assertEqual(inst.track.phase, "open", "a reopen mid-close")
-    NS.Anim.Step(inst.track, 1)
-    assertEqual(#m.blocked, blocked)
-end)
-
-test("anim pad: each of the pad's switches is its own, and leaves the dial's alone", function()
-    local NS, m = live()
-    local inst, di = pad(NS), dial(NS)
-    NS.db.profile.pads.p1.anim.openStyle = "none"
-    drive(NS, inst, "hide")
-    assertEqual(inst.track.phase, "close", "the pad's close is on")
-    NS.Anim.Step(inst.track, 1)
-    drive(NS, inst, "show")
-    assertNil(inst.track.phase, "the pad's open is off")
-    assertEqual(inst.root:GetAlpha(), 1)
-    m.__click(di.header, "Toggle")
-    assertEqual(di.track.phase, "open", "the dial's open is untouched")
-    NS.Anim.Step(di.track, 1)
-    NS.db.profile.dials.d2.anim.closeStyle = "none"
-    NS.db.profile.pads.p1.anim.openStyle = "pop"
-    drive(NS, inst, "hide")
-    assertEqual(inst.track.phase, "close", "the dial's switch left the pad's close")
-end)
-
-test("anim pad: a pad its driver hides at login plays no close", function()
-    local NS = live()
-    local inst = pad(NS)
-    inst.applied = nil   -- as a root just built: shown, its driver not yet set
-    NS.SchemaRuntime.Set("visibility", "never")
-    pad(NS)
     assertFalse(inst.root:IsShown())
-    -- red under: the first Apply's driver hide on the track
-    assertNil(inst.track.phase)
-    assertFalse(NS.Anim.Running())
-end)
-
-test("anim pad: a hidden UIParent is no close", function()
-    local NS = live()
-    local inst = pad(NS)
-    inst.root:__fire("OnHide")
-    assertNil(inst.track.phase, "its own flag is still on")
-end)
-
-test("anim pad: the way back from a hidden UIParent is no open", function()
-    local NS = live()
-    local inst = pad(NS)
-    NS.Anim.Step(inst.track, 1)
-    local rest = inst.root:GetAlpha()
-    inst.root:__fire("OnHide")
-    inst.root:__fire("OnShow")
-    assertNil(inst.track.phase, "Alt-Z coming back plays nothing")
-    assertEqual(inst.root:GetAlpha(), rest, "no alpha held")
-    drive(NS, inst, "hide")
-    assertEqual(inst.track.phase, "close", "the flag was spent: a real close still plays")
-    NS.Anim.Step(inst.track, 1)
     drive(NS, inst, "show")
-    assertEqual(inst.track.phase, "open", "and so does the next real open")
+    assertTrue(inst.root:IsShown())
+    assertEqual(n.open + n.close, 0, "nothing played")
+    assertFalse(NS.Anim.Running())
+    assertEqual(inst.root:GetAlpha(), 1, "and no alpha held")
 end)
 
-test("anim pad: a release drops a held quiet show", function()
-    local NS = live()
-    local inst = pad(NS)
-    NS.Anim.Step(inst.track, 1)
-    inst.root:__fire("OnHide")
-    assertTrue(NS.Pad.Release("p1"))
-    pad(NS)
-    assertEqual(inst.track.phase, "open", "the rebuilt pad's show is not the quiet one")
-end)
-
-test("anim pad: a release snaps, and a stand-down leaves nothing running", function()
+test("anim pad: its alpha paths answer as before: master opacity, fade, hover, and combat", function()
     local NS, m = live()
     local inst = pad(NS)
-    drive(NS, inst, "hide")
-    assertEqual(inst.track.phase, "close")
+    NS.db.profile.alpha = 0.6
+    NS.Pad.ApplyAlpha("p1")
+    assertEqual(inst.root:GetAlpha(), 0.6)
+    local look = NS.db.profile.pads.p1.look
+    look.fade, look.fadeAlpha = "mouseover", 0.4
+    NS.Pad.ApplyAlpha("p1")
+    assertEqual(inst.root:GetAlpha(), NS.PadLayout.Alpha(0.6, look, false, false))
+    NS.Pad.SetHover("p1", true)
+    assertEqual(inst.root:GetAlpha(), NS.PadLayout.Alpha(0.6, look, false, true), "a hover lifts it at once")
+    NS.Pad.SetHover("p1", false)
+    combat(m, true)
+    NS.Pad.ApplyAlpha("p1")
+    assertEqual(inst.root:GetAlpha(), NS.PadLayout.Alpha(0.6, look, true, false), "SetAlpha is allowed in combat")
+    look.fade = "outOfCombat"
+    NS.Pad.ApplyAlpha("p1")
+    assertEqual(inst.root:GetAlpha(), 0.6, "out of combat's fade lifts in combat")
+    combat(m, false)
+    NS.Pad.ApplyAlpha("p1")
+    assertEqual(inst.root:GetAlpha(), NS.PadLayout.Alpha(0.6, look, false, false), "and comes back after")
+end)
+
+test("anim pad: a release and a rebuild touch no animation state", function()
+    local NS = live()
+    local inst = pad(NS)
     assertTrue(NS.Pad.Release("p1"))
-    assertNil(inst.track.phase)
+    assertNil(inst.silent)
     pad(NS)
-    drive(NS, inst, "show")
-    assertEqual(inst.track.phase, "open")
-    NS.SchemaRuntime.Set("enabled", false)
+    assertNil(inst.track)
     assertFalse(NS.Anim.Running())
-    assertEqual(#m.__timers(), 0)
 end)
 
-test("anim ghost: a color texture copies from what its painter recorded, a file from the client", function()
-    local NS = live()
-    local inst = pad(NS)
-    local btn = inst.buttons.active[1]
-    assertTrue(btn.qcBg.qcGhostColor ~= nil, "the fill records its color")
-    drive(NS, inst, "hide")
-    assertTrue(inst.track.ghost.used > 0)
+test("anim pad: nothing in a pad's code names the animations", function()
+    for _, path in ipairs({ "modules/Pad.lua", "modules/Pad_Render.lua", "settings/Pads.lua" }) do
+        local f = assert(io.open(path, "rb"))
+        local src = f:read("*a")
+        f:close()
+        assertNil(src:find("NS.Anim", 1, true), path)
+        assertNil(src:find("qcGhost", 1, true), path)
+        assertNil(src:find("pad.anim", 1, true), path)
+    end
 end)
 
-test("anim ghost: no rect yet snaps instead of guessing, and the strip stays out", function()
-    local NS = live()
-    local inst = pad(NS)
-    assertTrue(inst.handle.qcNoGhost, "the strip keeps its own alpha")
-    local center = inst.root.GetCenter
-    inst.root.GetCenter = function() return nil end
-    drive(NS, inst, "hide")
+test("anim ghost: no rect yet snaps instead of guessing", function()
+    local NS, m = live()
+    local inst = dial(NS)
+    local center = inst.header.GetCenter
+    inst.header.GetCenter = function() return nil end
+    m.__click(inst.header, "Toggle")
     assertNil(inst.track.phase)
-    inst.root.GetCenter = center
+    assertEqual(inst.header:GetAlpha(), 1, "never left invisible")
+    inst.header.GetCenter = center
 end)
 
 -- ── the rest of the sweep (#13): each case below is red under a mutant the suite let through ─────────
@@ -385,17 +306,13 @@ local function counted(NS)
     return n
 end
 
-test("anim surfaces: a surface reads its own instance's settings, and the kind's defaults when it has none", function()
+test("anim surfaces: a dial reads its own instance's settings, and the kind's defaults when it has none", function()
     local NS = live()
-    local inst, di = pad(NS), dial(NS)
-    local p, d = NS.db.profile.pads, NS.db.profile.dials
-    p.other, d.other = { anim = { openStyle = "none" } }, { anim = { openStyle = "none" } }
-    inst.id, di.id = "other", "other"
-    assertEqual(inst.track.spec.config("open").style, "none", "a second pad's own switch")
+    local di = dial(NS)
+    NS.db.profile.dials.other = { anim = { openStyle = "none" } }
+    di.id = "other"
     assertEqual(di.track.spec.config("open").style, "none", "a second dial's own switch")
-    assertEqual(inst.track.spec.config("close").style, "fadeScale", "a pad's missing key is a pad's default")
     assertEqual(di.track.spec.config("close").style, "scaleFade", "a dial's missing key is a dial's default")
-    assertEqual(inst.track.spec.config("close").direction, "down")
     assertEqual(di.track.spec.config("close").duration, 0.1)
 end)
 
@@ -461,9 +378,9 @@ test("anim surfaces: a silent reopen's ring leaves a track alone, and a stood-do
     NS.IsStoodDown = stood
 end)
 
-test("anim surfaces: a stood-down surface plays neither edge", function()
+test("anim surfaces: a stood-down dial plays no close", function()
     local NS, m = live()
-    local inst, di = pad(NS), dial(NS)
+    local di = dial(NS)
     m.__click(di.header, "Toggle")
     NS.Anim.Step(di.track, 1)
     local n = counted(NS)
@@ -471,10 +388,6 @@ test("anim surfaces: a stood-down surface plays neither edge", function()
     NS.IsStoodDown = function() return true end
     di.header:Hide()
     assertEqual(n.close, 0, "a dial's close")
-    drive(NS, inst, "hide")
-    assertEqual(n.close, 0, "a pad's close")
-    inst.root:__fire("OnShow")
-    assertEqual(n.open, 0, "a pad's open")
     NS.IsStoodDown = stood
 end)
 
@@ -485,31 +398,6 @@ test("anim surfaces: a test mode reopen is silent only for its own show", functi
     local inst = NS.Dial.Instance("d2")
     NS.Dial.Sync({ d2 = plan }, { "d2" })
     assertNil(inst.silent, "red under: a rebuild's silence outliving the rebuild")
-end)
-
-test("anim surfaces: a released pad's parts leave quietly, and a pad apply's show is no open", function()
-    local NS = live()
-    local inst = pad(NS)
-    drive(NS, inst, "hide")
-    NS.Anim.Snap(inst.track)
-    drive(NS, inst, "show")
-    NS.Anim.Snap(inst.track)
-    local n = counted(NS)
-    local clear = NS.SendEngine.ClearVisibility
-    local quiet
-    -- the driver comes off with the release: whatever it does to the root plays nothing
-    NS.SendEngine.ClearVisibility = function(root)
-        quiet = inst.silent
-        root:Hide()
-    end
-    assertTrue(NS.Pad.Release("p1"))
-    NS.SendEngine.ClearVisibility = clear
-    assertTrue(quiet)
-    assertEqual(n.close, 0)
-    inst.silent = true
-    inst.root:__fire("OnShow")
-    assertEqual(n.open, 0, "a silent show")
-    inst.silent = nil
 end)
 
 test("anim surfaces: the close names the sent place whichever way round the click ran", function()
@@ -548,12 +436,11 @@ test("anim surfaces: a stale stamp emphasizes nothing, and a guarded press none"
     assertEqual(sent, 1, "a guarded press is no send")
 end)
 
-test("anim surfaces: each track rests at its surface's alpha, the dial's master opacity included", function()
+test("anim surfaces: a track rests at the dial's alpha, the master opacity included", function()
     local NS, m = live()
-    local inst, di = pad(NS), dial(NS)
+    local di = dial(NS)
     NS.db.profile.alpha = 0.6
     assertEqual(di.track.spec.restAlpha(), 0.6)
-    assertEqual(inst.track.spec.restAlpha(), 0.6, "a pad's too")
     m.__click(di.header, "Toggle")
     NS.Anim.Step(di.track, 1)
     assertEqual(di.header:GetAlpha(), 0.6, "the dial lands at it, not at 1")

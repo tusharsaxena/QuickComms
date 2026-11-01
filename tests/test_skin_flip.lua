@@ -128,7 +128,7 @@ test("skin flip: the runner moves every stored profile once, and each profile ev
     db.global.schemaVersion = 12
     NS.db.profile.skin.fullSkinReset = false
     NS.addon:RunMigrations()
-    assertEqual(db.global.schemaVersion, 13)
+    assertEqual(db.global.schemaVersion, 14)
     assertTrue(old.pads.a.look.backgroundFromSkin)
     assertTrue(NS.db.profile.skin.fullSkinReset, "the active one too")
     old.pads.a.look.backgroundFromSkin = false
@@ -365,9 +365,8 @@ test("skin flip: a textured body draws the file in the look's color, and flat ag
     R.ApplyButtonLook(btn, cl, 100, 24)
     assertEqual(bg.__texture, "art")
     assertColor(bg.__color, cl.bg, "the color on the file")
-    assertNil(bg.qcGhostColor, "the ghost reads the file")
     R.ApplyButtonLook(btn, { sig = "f", bg = { 0.5, 0.6, 0.7, 0.8 }, edge = {}, font = R.LabelFont({}), glow = false }, 100, 24)
-    assertColor(bg.qcGhostColor, { 0.5, 0.6, 0.7, 0.8 }, "the flat body is recorded")
+    assertColor(bg.__color, { 0.5, 0.6, 0.7, 0.8 }, "the flat body")
 end)
 
 test("skin flip: Ka0s Default keeps the shadow the blocks ship with, every other skin draws its own", function()
@@ -414,33 +413,21 @@ test("skin flip: Ignore fonts leaves the stored shadow standing", function()
 end)
 
 test("skin flip: the ghost wears a skinned string's font object, so its shadow comes along", function()
-    local NS = live()
-    local inst = pad(NS)
-    local label = button(NS).qcLabel
-    local src, fs = label.__fontObject, nil
+    local NS, m = live()
+    assertTrue(NS.Dial.Apply(1, "d2", D.planOf(NS)))
+    local inst = NS.Dial.Instance("d2")
+    m.__click(inst.header, "Toggle")
+    local wedge = NS.Dial.RingWedges("d2", NS.Dial.ShownRing("d2"))[1]
+    local src, fs = wedge.qcLabel.__fontObject, nil
     assertTrue(src ~= nil)
-    local track = inst.track
-    track.ghost = track.ghost or NS.AnimGhost.New()
-    assertTrue(NS.AnimGhost.Capture(track.ghost, inst.root, { inst.root }))
-    for i = 1, track.ghost.used do
-        for _, f in ipairs(track.ghost.subs[i].qcFont) do
+    local ghost = inst.track.ghost
+    for i = 1, ghost.used do
+        for _, f in ipairs(ghost.subs[i].qcFont) do
             if f.__fontObject == src then fs = f end
         end
     end
     assertTrue(fs ~= nil, "the copy wears the same object")
     assertColor(fs.__font and { 1, 1, 1, 1 } or nil, { 1, 1, 1, 1 }, "and draws its face")
-end)
-
-test("skin flip: a color texture a library paints on a watched frame reaches the ghost", function()
-    local NS = live()
-    local inst = pad(NS)
-    local t = inst.root:CreateTexture(nil, "BORDER")
-    -- red under: no G.Watch around NS.ApplySkin (the gap docs/known-limitations.md named)
-    t:SetColorTexture(0.2, 0.3, 0.4, 0.5)
-    assertColor(t.__color, { 0.2, 0.3, 0.4, 0.5 }, "it still paints")
-    assertColor(t.qcGhostColor, { 0.2, 0.3, 0.4, 0.5 }, "and the record lets the ghost copy it")
-    t:SetColorTexture(0.1, 0.1, 0.1, 1)
-    assertEqual(t.qcGhostColor[1], 0.1, "a repaint moves the record")
 end)
 
 -- ── the host parts of the L causes (FS-QC-FIX) ───────────────────────────────────────────────────
