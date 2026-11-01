@@ -262,7 +262,8 @@ the settings pages and the library's own windows.
   A pick only previews; **Apply** and the gear save it (the gear opens General on its Skin tab), and
   the close control and Escape put the stored skin back; every close the player makes sets
   `pickerSeen`. Its eye turns test mode on (rollout X6). `NS.HideSkinPicker` (the stand-down, and
-  first on every profile event) takes it down without marking it seen.
+  first on every profile event) takes it down without marking it seen. A show, and `/qc skin`, raise
+  the window, which is `DIALOG` at its inherited level, over a pad at `UIParent + LEVEL.HUD` (#14).
 - **EllesmereUI** (skinning-§5). The provider is the library's (`SkinEUI.lua`); Quick Comms' own
   bridge (`core/EUIBridge.lua`, `settings/CalloutPopup_Skin.lua`) is retired (D1). With source `eui`
   and its gate holding, EllesmereUI's facade answers the tokens, the HUD's included; otherwise the

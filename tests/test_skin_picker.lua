@@ -202,6 +202,31 @@ test("skin picker: a profile switched off shows no picker on its adoption", func
     end)
 end)
 
+-- ── over the pads (#14) ──────────────────────────────────────────────────────────────────────────
+
+test("skin picker: a show raises the window over a pad in its own strata", function()
+    -- red under: no Raise, which leaves the picker at its inherited DIALOG level under a pad's root
+    -- at UIParent + HUD, taking its clicks.
+    local NS, _, O = setup()
+    local raised = 0
+    local real = O.SkinPicker
+    O.SkinPicker = function() return { Raise = function() raised = raised + 1 end } end
+    local ok, err = pcall(NS.MaybeShowSkinPicker)
+    O.SkinPicker = real
+    if not ok then error(err, 0) end
+    assertEqual(raised, 1)
+end)
+
+test("skin picker: a queued show answers as the library did and raises nothing", function()
+    local NS, _, O = setup()
+    local real = O.SkinPicker
+    O.SkinPicker = function() return nil, "queued" end
+    local f, why = NS.MaybeShowSkinPicker()
+    O.SkinPicker = real
+    assertTrue(f == nil, "nothing shown")
+    assertEqual(why, "queued")
+end)
+
 -- ── the real window ──────────────────────────────────────────────────────────────────────────────
 
 --- Run `fn(f, NS, m, O, Skin)` on this addon's real picker, shown.

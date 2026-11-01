@@ -41,3 +41,10 @@ every decision here was taken without asking.
 5. **The cost is accepted.** A pad covers the settings window, and overlapping Blizzard confirms and
    library tool windows until a click raises them. `docs/known-limitations.md` says so, and LAYER-6
    asks the owner to look at it.
+6. **The skin picker is raised on a show (review, 2026-11-01).** Decision 5 missed it: the library's
+   picker is `DIALOG` at its inherited level, so a pad covered it and took its clicks.
+   `NS.MaybeShowSkinPicker` and `NS.RunSkinVerb` now `Raise` the frame the library answers, the host
+   fix, since `libs/` is vendored. It does not reach a picker queued behind another Ka0s addon's, which
+   the library shows later with no hook; that needs a raise on show upstream in LibKa0s's
+   `OptionsSkinPicker`, and until then `docs/known-limitations.md` names it. An open dial still covers
+   the picker: it is a strata up, and it is transient.

@@ -27,7 +27,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | PREVIEW-1..12 | Preview window | The Preview as selector window: every entry point, the dropdown, End preview, close and Escape, combat, test mode and the stand-down, Alt+Z, the saved position, bare /qc preview and list; every preview drawn as live; a preview or test click prints what it would send; a preview dial staying open on a pick |
 | DIAL-1..43 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, the lone-group open and the group ring, page arrows and the page row, Auto wedges, the ring radius, the Slice labels tab, the slices and the slice lit by direction, the Slices tab, the pointer, the tooltip outside the dial, the hub over the slices, the pointer, label and icon offsets, the Paging tab; the dial polish: the border gone, the slice gap, placement from W, a slice clicked to the hub in combat, the hub styles, the Group labels tab, Icon offset on Icons, 128-pixel icons, a click outside closing the dial in combat, the page indicators' background and border, the Hub tab; automatic icon offset and size; the 120 radius and 48-pixel icons by default; a right click back a ring; opening where it was closed; slices from N |
 | LAYOUT-1..6 | Settings layout | Item 020: the General page's Behavior headings and Defaults tooltip; the Groups band on one row, General's order, Inherit on When, What it sends; the Pad strip outside in and its relabels; the Dial strip (Layout, Labels, Ring map) and its headings; no setting lost or changed, through a /reload |
-| LAYER-1..8 | Frame layering | Item 030: a pad button's and a dial wedge's borders, glows, label, padlock and veils in order; the drag strip over a faded pad; the windows, modals and popups still stacked as before; #14: the pads and the dial over other addons' windows, QuickComms' own stack, a click outside the dial |
+| LAYER-1..9 | Frame layering | Item 030: a pad button's and a dial wedge's borders, glows, label, padlock and veils in order; the drag strip over a faded pad; the windows, modals and popups still stacked as before; #14: the pads and the dial over other addons' windows, QuickComms' own stack, a click outside the dial, the skin picker over a pad |
 | KEY-1..6 | Key bindings | A dial's key as WoW's own binding in Options → Keybindings, Character Specific Keybindings, Toggle Comms Pads; item 015: the Ka0s Quick Comms section of its own, the General → Keybindings tab in sync both ways, its capture and combat refusal |
 | LOOK-1..7 | Window, Header, Section titles (Pad header and Section header before item 020) | The Comms Pad's three window tabs: the section titles' font, the pad's border and background, the header's look, size and alignment, the tab strip and headings, the section header's band and height; the pad's window repainting only when its look moves |
 | BUTTON-1..2 | Buttons tab | The buttons' size, color, border and font; the button glow |
@@ -1369,6 +1369,11 @@ window up and click the settings → the dial closes. In combat, open it and cli
 With a key-opened dial and Preview as… on, click the preview window → it takes the click. Result: not
 run.
 
+**LAYER-9. The skin picker over a pad (#14).** Drag a Comms Pad to the upper middle of the screen, then
+run `/qc skin` → the picker draws over the pad and its dropdown, buttons and close click. Close it, set
+`skin.pickerSeen` off (`/qc set skin.pickerSeen false`) and `/reload` → the first-run picker is over the
+pad too. Result: not run.
+
 ## Icons tab
 
 **ICONS-1. Look.** Pad → Icons: Icon size reads 16 on a new pad (an icon-only button is 24
@@ -2035,6 +2040,6 @@ Owed from the findings remediation (FX-QC-PERF, 2026-10-31): LOOK-7 (new).
 
 Open from the same run's re-cut v1.84.0 (M3-MEDIA, `Ka0sMedia_*` the only media picker): SKIN-30 is new.
 
-Owed from issue #14 (2026-11-01): LAYER-6, LAYER-7, LAYER-8 (new).
+Owed from issue #14 (2026-11-01): LAYER-6, LAYER-7, LAYER-8, LAYER-9 (new).
 
 Owed from issue #13 (2026-11-01): ANIM-1 to ANIM-10 (new).

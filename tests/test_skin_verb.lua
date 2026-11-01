@@ -79,6 +79,17 @@ test("skin verb: NS.RunSkinVerb hands O.SkinVerb this addon's first-run spec", f
     assertEqual(why, "queued", "the library's reason, passed on")
 end)
 
+test("skin verb: the window it shows is raised over a pad (#14)", function()
+    local NS = seenProfile()
+    local H = NS.addon.Settings.Helpers
+    local live, raised = H.SkinVerb, 0
+    H.SkinVerb = function() return { Raise = function() raised = raised + 1 end } end
+    local win = NS.RunSkinVerb()
+    H.SkinVerb = live
+    assertTrue(win ~= nil, "the frame is answered")
+    assertEqual(raised, 1)
+end)
+
 test("skin verb: in combat every call prints the library's gray line and shows nothing", function()
     local NS, m, last = seenProfile()
     m.inCombat = true

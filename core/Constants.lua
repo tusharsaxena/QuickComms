@@ -41,7 +41,9 @@ C.CHAT_COLORS = {
 --                      header's collapse button L+2. The Toggle Comms Pads click target is non-visual
 --                      (exempt). A pad covers the settings window (HIGH), and a Blizzard StaticPopup, the
 --                      debug console, the perf panel and the sim panel (DIALOG) where it overlaps them,
---                      until a click raises one of the toplevel ones. QuickComms' own confirms are lifted.
+--                      until a click raises one of the toplevel ones. QuickComms' own confirms are lifted,
+--                      and its skin picker (the library's, DIALOG) is raised over a pad when it shows
+--                      (core/SkinSetup.lua), except a picker queued behind another Ka0s addon's.
 --   FULLSCREEN         One strata, four bands, all over the pads and the settings window, in this order:
 --                      DIAL  HUD_POPUP: the Comms Dial, THE SECURE FIXED POINT (frame-layering-§1). Its
 --                            secure header's strata cannot move in combat, so it is chosen first, one over

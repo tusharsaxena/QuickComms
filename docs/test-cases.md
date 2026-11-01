@@ -1416,7 +1416,7 @@ Total.
 - skin hud: without the library step 10 writes the companions itself
 - skin hud: the reset runs once: a companion the player turns off afterwards stays off
 
-### test_skin_picker.lua (18)
+### test_skin_picker.lua (20)
 
 - skin picker: the spec names this owner, its seams, General's Skin tab and the eye
 - skin picker: the eye turns test mode on, and leaves it on
@@ -1428,6 +1428,8 @@ Total.
 - skin picker: never while the addon is switched off
 - skin picker: a new profile and a reset profile show it again
 - skin picker: a profile switched off shows no picker on its adoption
+- skin picker: a show raises the window over a pad in its own strata
+- skin picker: a queued show answers as the library did and raises nothing
 - skin picker: the window's eye is shown and turns test mode on
 - skin picker: the player's close marks it seen; this addon's own hide does not
 - skin picker: the stand-down takes the picker down, unseen
@@ -1450,11 +1452,12 @@ Total.
 - outline: a profile switch applies the incoming profile's mode, and back
 - outline: without the skin engine the apply is a quiet no-op
 
-### test_skin_verb.lua (6)
+### test_skin_verb.lua (7)
 
 - skin verb: the row sits right after config, with the library's help words
 - skin verb: /qc skin shows the picker on a profile that has closed it
 - skin verb: NS.RunSkinVerb hands O.SkinVerb this addon's first-run spec
+- skin verb: the window it shows is raised over a pad (#14)
 - skin verb: in combat every call prints the library's gray line and shows nothing
 - skin verb: refused while the addon is disabled, and no picker shows
 - skin verb: without LibKa0s the verb prints the library-absent line
@@ -1637,9 +1640,9 @@ Total.
 | test_skinsetup.lua | 24 |
 | test_skin_windows.lua | 20 |
 | test_skin_hud.lua | 19 |
-| test_skin_picker.lua | 18 |
+| test_skin_picker.lua | 20 |
 | test_skin_outline.lua | 10 |
-| test_skin_verb.lua | 6 |
+| test_skin_verb.lua | 7 |
 | test_skin_fonts.lua | 12 |
 | test_icons_default.lua | 8 |
 | test_skin_tools.lua | 14 |
@@ -1651,4 +1654,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1349** |
+| **Total** | **1352** |

@@ -410,6 +410,14 @@ function NS.HideSkinPicker()
     if not ok then error(err, 0) end
 end
 
+--- The library's window sits at its inherited DIALOG level and never raises itself on a show, so a pad
+--- at UIParent + LAYERS.LEVEL.HUD would cover it and take its clicks (#14). A queued picker is not
+--- reached: the library shows it later, with no host hook. Passes the library's answer through.
+local function raisedPicker(win, why)
+    if win and type(win.Raise) == "function" then win:Raise() end
+    return win, why
+end
+
 --- Show the picker when this profile has not seen it: answers the library's frame, or nil,
 --- "queued" while another Ka0s addon's picker is up (it shows when that one closes), or nil.
 function NS.MaybeShowSkinPicker()
@@ -434,7 +442,7 @@ function NS.MaybeShowSkinPicker()
         end
         return nil
     end
-    return O.SkinPicker(NS.SkinPickerSpec())
+    return raisedPicker(O.SkinPicker(NS.SkinPickerSpec()))
 end
 
 --- The reserved `/qc skin` verb's act (LibKa0s v1.82.0, OptionsSkinPicker minor 3, ruling D-16):
@@ -450,7 +458,7 @@ function NS.RunSkinVerb()
     if win == nil and why == "absent" and NS.Print then
         NS.Print(NS.L["%s is unavailable: the LibKa0s library did not load."]:format(NS.SLASH .. " skin"))
     end
-    return win, why
+    return raisedPicker(win, why)
 end
 
 --- The login start, PICKER_DELAY seconds in; a second call while one waits is a no-op.

@@ -65,7 +65,11 @@ What the addon cannot do, or does only under a condition, and why. The hub,
 - The pads sit in `DIALOG` high in its levels, and the dial in `FULLSCREEN` (issue #14), so they draw over
   other addons' windows and over the settings window. A pad also draws over a Blizzard confirm or the
   debug console where they overlap, until a click raises the toplevel one; move the pad if it is in the
-  way. The game's tooltip, menus, pull-outs and QuickComms' own confirms stay above both.
+  way. The game's tooltip, menus, pull-outs and QuickComms' own confirms stay above both. QuickComms' own
+  skin picker is raised over a pad when it shows (first run, `/qc skin`); it stays under an open dial,
+  which is a strata up and closes on the next click. A picker queued behind another Ka0s addon's shows
+  later with no host hook, so it and another addon's picker can still sit under a pad until a click on
+  them raises them.
 - A dial whose groups are all inactive opens nothing when its key is pressed (there is no empty ring).
 - Open at the cursor relies on the restricted `SetPoint` accepting `$cursor` (DIAL-7 passed,
   2026-10-21); the fallback, if a patch breaks it, is opening at the dial's place.
