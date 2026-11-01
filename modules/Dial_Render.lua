@@ -313,7 +313,7 @@ function R.Look(radius, label, slice, dial)
         pointerShow = slice.pointerShow ~= false, pointerSize = tonumber(slice.pointerSize) or D.pointerSize,
         pointerOffset = math.max(0, tonumber(slice.pointerOffset) or 0),
         pointer = color(slice, "pointerColor", "icon.arrow", slice.useClassColorPointer, D.pointerColor),
-        shine = NS.Shine.Resolve(slice, "qc.sliceShine", "qc.sliceShineTint"),   -- the Slices tab's (Dial_Slices paints it)
+        shine = NS.Shine.Resolve(slice, "qc.sliceShine", "qc.sliceShineTint", "qc.sliceShineStrength"),   -- the Slices tab's (Dial_Slices paints it)
         iconReach = math.max(0, tonumber(dial.iconOffset) or 0), hub = hubLook(dial.hub),
         title = titleLook(dial.title), paging = pagingLook(asTable(dial.page)), chrome = NS.PadRender.Chrome() }
 end

@@ -19,7 +19,9 @@ local addonName, NS = ...
 -- RESOLVE reads a look table's flat leaves (shineLook, shineStrength, shineTint and its Use class
 -- color companion, the two bloom colors and theirs; like dial.page.dotBack*) into the paint's values:
 -- the look (an unknown one is None), the alpha (Strength / 100, clamped) and the colors through
--- NS.ResolveColor (THE PLAYER'S CLASS, as every pad color is).
+-- NS.ResolveColor (THE PLAYER'S CLASS, as every pad color is). While Use the skin's shine is on, the
+-- Strength is the skin's too (qc.btnShineStrength, qc.sliceShineStrength), and the stored one stands
+-- for a player who turns it off.
 --
 -- APPLY paints a pad button's shine over the WHOLE button (owner, 2026-10-21: the plate, the icon and
 -- the label's chip, not the icon alone), at ARTWORK sublevel 5: above the icon, below the OVERLAY
@@ -96,16 +98,22 @@ local function rgb(stored, useClass, fallback)
     return { r, g, b }
 end
 
+-- The Strength that draws, in percent: the skin's while the block follows and names a token, else stored.
+local function strengthOf(cfg, follows, token)
+    local skin = follows and token and tonumber(NS.Skin.Token(token))
+    return skin or tonumber(cfg.shineStrength) or Sh.STRENGTH
+end
+
 --- A look table's shine leaves as the paint takes them: { look, alpha, tint, bloomA, bloomB }, each
---- color { r, g, b }. While `shineFromSkin` is on the look and the tint are the skin's, the owner tokens
---- `lookToken` and `tintToken` name (a class-colored tint stays the class's); Strength stays stored.
-function Sh.Resolve(cfg, lookToken, tintToken)
+--- color { r, g, b }. While `shineFromSkin` is on the look, the tint and the Strength are the skin's, the
+--- owner tokens `lookToken`, `tintToken` and `strengthToken` name (a class-colored tint stays the class's).
+function Sh.Resolve(cfg, lookToken, tintToken, strengthToken)
     cfg = type(cfg) == "table" and cfg or {}
     -- NS.SkinFollow's rule: with the library absent the stored look and tint stand, not a token's default.
     local follows = cfg.shineFromSkin == true and lookToken ~= nil and NS.Skin.IsEnabled()
     local name = follows and NS.Skin.Token(lookToken) or cfg.shineLook
     local look = KNOWN[name] and name or "none"
-    local strength = tonumber(cfg.shineStrength) or Sh.STRENGTH
+    local strength = strengthOf(cfg, follows, strengthToken)
     local tint = rgb(cfg.shineTint, cfg.useClassColorShineTint, Sh.TINT)
     if follows and cfg.useClassColorShineTint ~= true then
         local r, g, b = NS.Skin.Color(tintToken)

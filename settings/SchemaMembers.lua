@@ -495,9 +495,10 @@ for i, look in ipairs(NS.Shine.LOOKS) do SHINE_LOOK[i] = { value = look, text = 
 --- A Shine heading's rows (shine overlay, 2026-10-21): the look, its Strength (0 to 100 percent, step
 --- 5), the tint and Fluid glass's two bloom colors, each a composed swatch with its class-color
 --- companion. `spec` names the block: `prefix` ("pad.button."), `instance`, `page`, `tab`, the shipped
---- `defaults` table and the owner tokens `lookToken` and `tintToken` the block follows. Strength and the
---- tint gray out while the look that DRAWS is None (as the pointer rows do while Show pointer is off):
---- the skin's while Use the skin's shine is on, whatever the stored look says. The blooms are Fluid glass's own, so they show only under it
+--- `defaults` table and the owner tokens `lookToken`, `tintToken` and `strengthToken` the block follows.
+--- Strength and the tint gray out while the look that DRAWS is None (as the pointer rows do while Show
+--- pointer is off): the skin's while Use the skin's shine is on, whatever the stored look says. Strength
+--- grays out while that box is on too: the skin's token draws then, and the row keeps its value. The blooms are Fluid glass's own, so they show only under it
 --- (options-ui-§22, LibKa0s#67).
 local function shineRows(O, checks, spec)
     local prefix, def, SHINE = spec.prefix, spec.defaults, L["Shine"]
@@ -511,6 +512,9 @@ local function shineRows(O, checks, spec)
         return NS.Shine.Resolve({ shineFromSkin = follows, shineLook = lookNow() }, spec.lookToken,
             spec.tintToken).look == "none"
     end
+    local function skinStrength()
+        return (NS.Skin.IsEnabled() and NS.SchemaRuntime.Get(prefix .. "shineFromSkin") == true) or off()
+    end
     local onlyFluid = { path = prefix .. "shineLook", equals = "fluid" }
     local function base(r)
         r.instance, r.page, r.group, r.subgroup = spec.instance, spec.page, spec.tab, SHINE
@@ -522,8 +526,9 @@ local function shineRows(O, checks, spec)
             desc = L["A glossy overlay: Gloss cap, Gloss fade, Glass orb, Frosted glass, Fluid glass, Bevel or Rim light. None draws none."],
             validate = oneOf(SHINE_LOOK) }),
         base({ path = prefix .. "shineStrength", type = "number", default = def.shineStrength, min = 0, max = 100,
-            step = 5, label = L["Shine strength"], disabledIf = off,
-            desc = L["How strong the shine is, from 0 to 100 percent."], validate = NUMBER,
+            step = 5, label = L["Shine strength"], disabledIf = skinStrength,
+            desc = L["How strong the shine is, from 0 to 100 percent, while Use the skin's shine is off."],
+            validate = NUMBER,
             normalize = clamp(0, 100, true) }),
     }
     local pairs3 = { { "shineTint", L["Shine tint"], "useClassColorShineTint" },
@@ -579,7 +584,8 @@ local function buttonRows()
     stampBlock(out, O.ColorPair(blockSpec(BUTTONP, BUTTON, GLOW, cdef, { key = "glowColor",
         companionKey = "useClassColorGlow", label = L["Glow color"], follow = true })), BUTTONP, checks)
     for _, r in ipairs(shineRows(O, checks, { prefix = BUTTONP, instance = "pad", page = "pads", tab = BUTTON,
-        defaults = cdef, lookToken = "qc.btnShine", tintToken = "qc.btnShineTint" })) do
+        defaults = cdef, lookToken = "qc.btnShine", tintToken = "qc.btnShineTint",
+        strengthToken = "qc.btnShineStrength" })) do
         out[#out + 1] = r
     end
     return out
@@ -671,7 +677,8 @@ local function sliceRows()
     local out = pair(COLORS, "background", L["Slice color"])
     for _, r in ipairs(pair(COLORS, "highlight", L["Highlight color"])) do out[#out + 1] = r end
     for _, r in ipairs(shineRows(O, checks, { prefix = SLICEP, instance = "dial", page = "dials", tab = SLICES_TAB,
-        defaults = sdef, lookToken = "qc.sliceShine", tintToken = "qc.sliceShineTint" })) do
+        defaults = sdef, lookToken = "qc.sliceShine", tintToken = "qc.sliceShineTint",
+        strengthToken = "qc.sliceShineStrength" })) do
         out[#out + 1] = r
     end
     checks.circleColor, checks.useClassColorCircle = checks.background, { validate = BOOL }

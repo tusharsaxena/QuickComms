@@ -27,8 +27,10 @@ local _, NS = ...
 -- THE FULL SKIN (LibKa0s v1.85.0, Ka0sAddonsCommonTasks docs/2026-11-01-FULL_SKINNING cause D7). Every
 -- color, the shadow and the shine has a "Use the skin's ..." companion, `<key>FromSkin`, default true:
 -- the value beside it is kept, unread while it is on, for a player who turns it off. Where this
--- addon's default differs from the skin's token, an owner token (core/SkinSetup.lua) holds today's
--- pixels under Ka0s Default and follows the library's token everywhere else. A pick's default is the
+-- addon's default differs from the skin's token, an owner token (core/SkinSetup.lua) holds its value
+-- under Ka0s Default and follows the library's token everywhere else, so the button body, edge and shine
+-- tint stored here are what a companion turned off draws, not Ka0s Default's fuller button
+-- (2026-11-01). A pick's default is the
 -- Ka0s pick, so a companion turned off lands on it and not on a client face. Sizes stay stored.
 
 NS.PadDefaults = NS.PadDefaults or {}
@@ -72,7 +74,8 @@ end
 --- knob defaults (defaults/Icons.lua GLOW_KNOBS), its style and color its own. The Shine heading's
 --- leaves (shine overlay, 2026-10-21; modules/Shine.lua) are flat, like `dial.page.dotBack*`: the look,
 --- its Strength (0 to 100 percent), its tint and Fluid glass's two bloom colors, each with its
---- class-color companion. `shineFromSkin` puts the look and the tint on the skin; Strength stays stored.
+--- class-color companion. `shineFromSkin` puts the look, the tint and the Strength on the skin; the
+--- stored Strength draws while it is off.
 --- @return table
 function D.Button()
     return {

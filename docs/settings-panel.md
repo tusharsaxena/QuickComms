@@ -630,9 +630,14 @@ is LibCustomGlow's effect around the whole button in one of the Icons tab's four
 knob defaults, on its own key beside the icon's glow, always on while enabled. The Buttons defaults are
 the owner's (2026-10-20): a #3F3F3F body at 25% opacity, a flat 1-pixel #EAEAEA edge at 10% (Border
 style None is no border art, so the thickness draws a plain line), the small white label, the
-automatic height. The Icons tab's Icon size defaults to 16 on a pad (an icon-only button is 24 square).
+automatic height. Those are the stored values, drawn with their *Use the skin's ...* boxes unticked; ticked,
+the default, Ka0s Default draws the fuller button the owner ruled on 2026-11-01 (`qc.btnBg`, `qc.btnEdge`,
+`qc.btnTexture`, `core/SkinSetup.lua`). The Icons tab's Icon size defaults to 16 on a pad (an icon-only button is 24 square).
 Glow style is
 grayed out while the glow is off; the color pairs never are.
+
+Shine strength is the skin's while *Use the skin's shine* is ticked (55 in every skin, `qc.btnShineStrength`,
+`qc.sliceShineStrength`), and its row grays out and keeps its value; unticked, the stored value draws.
 
 The Shine heading (shine overlay, 2026-10-21) follows Button glow: `pad.button.shineLook|shineStrength` and the
 pairs `shineTint`, `shineBloomA`, `shineBloomB` with their Use class color boxes. Shine look is None (the

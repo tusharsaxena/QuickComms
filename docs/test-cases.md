@@ -1064,6 +1064,29 @@ Total.
 - pad render: [shine] the pad's look leaves the dial alone
 - render: [QF-04] a General slot's tooltip names General in channel 1's color
 
+### test_pad_looks.lua (20)
+
+- pad looks: WoW Default's bands and window edge are no client art's white tint
+- pad looks: WoW Default's bands keep a hairline, not the dialog art's size
+- pad looks: WoW Default's buttons are the skin's red, no bar texture dimming it
+- pad looks: a dial's page dots take no white ring under WoW Default
+- pad looks: the Skin tab's texture override still reaches a button under WoW Default
+- pad looks: WoW Default's real border style paints no white band
+- pad looks: glass's bands and buttons draw a 1 px edge
+- pad looks: midnight's bands and buttons draw a 1 px edge
+- pad looks: contrast's bands and buttons draw a 1 px edge
+- pad looks: obsidian's bands and buttons draw a 1 px edge
+- pad looks: azeroth's bands and buttons draw a 1 px edge
+- pad looks: a section band draws the same 1 px edge as the header's
+- pad looks: Ka0s Default's bands stay undrawn
+- pad looks: a band's stored thickness defers under a skin's None, and a real style wins
+- pad looks: Ka0s Default's buttons are the fuller body, edge, texture and gloss
+- pad looks: every skin's shine is a third lighter, a button's and a slice's alike
+- pad looks: what reaches a button and a slice is the lighter strength
+- pad looks: a player's stored Strength stands with the companion off
+- pad looks: a stored Strength with no strength token is as stored
+- pad looks: with the library absent a button stays flat and its stored Strength draws
+
 ### test_pad.lua (47)
 
 - pad: the default pad shows the M+ callouts, each button armed with its baked line
@@ -1680,7 +1703,7 @@ Total.
 - skin flip: with the library absent the step writes by hand, the record too, and makes no table
 - skin flip: every listed key has a shipped default that says follow
 - skin flip: a font row's default is the Ka0s pick, for a player who turns the companion off
-- skin flip: Ka0s Default draws what the stored defaults drew
+- skin flip: Ka0s Default draws the stored defaults, but for the button the owner ruled fuller
 - skin flip: a skin switch reaches every drawing setter on a pad
 - skin flip: a skin switch reaches the dial's slices, hub, pointer, page row and shine
 - skin flip: with the library absent a stored color and shine draw with their companions on
@@ -1977,6 +2000,7 @@ Total.
 | test_dial_layout.lua | 31 |
 | test_surfaces.lua | 30 |
 | test_pad_render.lua | 25 |
+| test_pad_looks.lua | 20 |
 | test_pad.lua | 47 |
 | test_dial.lua | 38 |
 | test_dial_catcher.lua | 13 |
@@ -2012,4 +2036,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 26 |
 | Skipped | 1 |
-| **Total** | **1690** |
+| **Total** | **1710** |

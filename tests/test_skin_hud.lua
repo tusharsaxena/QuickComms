@@ -190,7 +190,7 @@ test("skin hud: a pad's border blocks take bar.borderStyle while they follow, th
     assertEqual(skins[firstButton(NS).qcEdge].edgeFile, TOOLTIP, "a button's edge, off")
     -- X4: the player's colors are never the skin's
     local bg = firstButton(NS).qcBg.__color
-    assertColor(bg, { 0x3F / 255, 0x3F / 255, 0x3F / 255, 0.25 }, "the owner's button body")
+    assertColor(bg, { 0.10, 0.10, 0.12, 0.90 }, "Ka0s Default's button body (qc.btnBg, it follows)")
 end)
 
 test("skin hud: a real bar.borderStyle in a skin wins over the player's pick while it follows", function()
@@ -301,13 +301,12 @@ end)
 test("skin hud: a skin switch repaints the chrome and the faces, and leaves a color whose companion is off", function()
     local NS, _, Skin = live()
     T.ownLooks(NS)
-    local btn = firstButton(NS)
-    local body = { unpack(btn.qcBg.__color) }
+    local body = { 0x3F / 255, 0x3F / 255, 0x3F / 255, 0.25 }   -- the stored color the companion off draws
     local gen = NS.PadRender.LooksGen()
     -- red under: no OnLooksChanged listener (the HUD keeps Ka0s Default's chrome until a setting moves)
     Skin:SetChoice(OWNER, "ka0s", OTHER)
     assertTrue(NS.PadRender.LooksGen() > gen, "the look generation moved")
-    btn = firstButton(NS)
+    local btn = firstButton(NS)
     assertColor(btn.qcHover.__color, now(NS, "qc.hover"), "the hover wash, " .. OTHER)
     assertColor(btn.qcLock.__color, now(NS, "text.accent"), "the padlock, " .. OTHER)
     assertColor(NS.Pad.Instance("p1").header.qcLockdown.__color, now(NS, "qc.lockdown"), "the lockdown tag")

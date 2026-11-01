@@ -209,11 +209,11 @@ test("skin flip: a font row's default is the Ka0s pick, for a player who turns t
     assertEqual(p.header.borderStyle, "None", "a border style stays None")
 end)
 
-test("skin flip: Ka0s Default draws what the stored defaults drew", function()
+test("skin flip: Ka0s Default draws the stored defaults, but for the button the owner ruled fuller", function()
     local NS = live()
     local inst, di = pad(NS), dial(NS)
     local btn = button(NS)
-    assertColor(btn.qcBg.__color, { 0x3F / 255, 0x3F / 255, 0x3F / 255, 0.25 }, "a button's body")
+    assertColor(btn.qcBg.__color, { 0.10, 0.10, 0.12, 0.90 }, "a button's body (2026-11-01)")
     assertEqual(btn.qcLabel.__color[1], 1, "a button's label stays white")
     local hl = inst.hlook
     assertColor({ hl.font.r, hl.font.g, hl.font.b, hl.font.a }, { 1, 0.82, 0, 1 }, "the header's gold")
@@ -254,7 +254,8 @@ test("skin flip: a skin switch reaches every drawing setter on a pad", function(
     assertColor(drawn[inst.header].bg, color(NS, "title.bg"), "the header's band")
     assertColor(drawn[btn.qcEdge].border, color(NS, "btn.border"), "a button's edge")
     assertEqual(Skin:ResolveSkin(OTHER)["bar.borderStyle"], "None", "this skin states no border of its own")
-    assertEqual(drawn[inst.header].edgeSize, 0, "so the band keeps the player's stored thickness")
+    assertEqual(drawn[inst.header].edgeSize, Skin:ResolveSkin(OTHER)["bar.borderSize"],
+        "and none stored, so the band takes the hairline a button wears")
 end)
 
 test("skin flip: a skin switch reaches the dial's slices, hub, pointer, page row and shine", function()
@@ -716,7 +717,7 @@ local function shineGates(kind, id, prefix, stored)
     assertTrue(S.Set(prefix .. "shineLook", "none", id))
     assertTrue(S.Get(prefix .. "shineFromSkin"), "the step's value")
     -- red under: off() reading only the stored look
-    assertEqual(strength.disabledIf(), false, "the skin's look draws, so its Strength is live")
+    assertTrue(strength.disabledIf(), "the skin's Strength draws, so the stored one is not read")
     assertEqual(tint.disabledIf(), false, "and its tint")
     assertTrue(S.Set(prefix .. "shineFromSkin", false, id))
     assertTrue(strength.disabledIf(), "the stored None governs again")
