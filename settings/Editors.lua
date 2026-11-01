@@ -378,7 +378,7 @@ function Ed.IconChooser(ctx, spec)
         -- The one way back to no icon (the browser has no "none" cell): choose nothing, as one act.
         local clear = AceGUI:Create("Icon")
         clear:SetImageSize(CLEAR_GLYPH, CLEAR_GLYPH)
-        if clear.image and clear.image.SetAtlas then Ed.RemoveMark(clear.image) end
+        if clear.image and clear.image.SetAtlas then Ed.RemoveMark(clear) end
         clear:SetWidth(CLEAR_W)
         clear.userdata.qcGlyph = "clear"
         clear:SetCallback("OnClick", function()
@@ -467,11 +467,23 @@ local GLYPHS = {
     remove = { atlas = true, title = function() return L["Remove"] end },
 }
 
---- The remove mark on an AceGUI Icon's image: the client's atlas, or with the Scope cleared the Ka0s
---- close mark in the skin's tint, live both ways (S.Mark's `panel`).
-function Ed.RemoveMark(image)
-    image:SetAtlas(REMOVE_ATLAS)
-    NS.Skin.Mark(image, { panel = true, art = NS.Icon("close"),
+-- S.Mark on an AceGUI Icon's image, given back when the widget is released: AceGUI's pools are shared
+-- with every addon and Icon's OnAcquire clears neither the skin's record nor the tint, so the next
+-- user of this widget would be repainted on every skin change (options-ui-§19).
+local function markGlyph(widget, opts)
+    local image = widget.image
+    NS.Skin.Mark(image, opts)
+    NS.SkinOnRelease(widget, function(w)
+        NS.SkinUntrack(image)
+        if w.image then w.image:SetVertexColor(1, 1, 1, 1) end
+    end)
+end
+
+--- The remove mark on an AceGUI Icon: the client's atlas, or with the Scope cleared the Ka0s close
+--- mark in the skin's tint, live both ways (S.Mark's `panel`) until the widget is released.
+function Ed.RemoveMark(widget)
+    widget.image:SetAtlas(REMOVE_ATLAS)
+    markGlyph(widget, { panel = true, art = NS.Icon("close"),
         stock = function(t) t:SetAtlas(REMOVE_ATLAS) end })
 end
 
@@ -480,10 +492,10 @@ local function addGlyph(h, into, kind, onClick, tooltip)
     local g = h.AceGUI:Create("Icon")
     g:SetImageSize(GLYPH, GLYPH)
     if spec.atlas then
-        Ed.RemoveMark(g.image)
+        Ed.RemoveMark(g)
     else
         g:SetImage(spec.texture())
-        NS.Skin.Mark(g.image, { panel = true })   -- white catalog art, in the skin's tint
+        markGlyph(g, { panel = true })   -- white catalog art, in the skin's tint
     end
     g:SetWidth(GLYPH_W)
     g.userdata.qcGlyph = kind

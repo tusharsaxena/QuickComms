@@ -1459,7 +1459,7 @@ Total.
 - skin hud: without the library step 10 writes the companions itself
 - skin hud: the reset runs once: a companion the player turns off afterwards stays off
 
-### test_skin_flip.lua (28)
+### test_skin_flip.lua (59)
 
 - skin flip: the step puts every listed companion on, keeps every pick and color, and leaves the rest
 - skin flip: no value but a flag holds the sentinel, and a second run writes nothing
@@ -1489,6 +1489,37 @@ Total.
 - skin fix: the active dot is the client's while the panel is stock, the Ka0s mark with the Scope cleared
 - skin fix: the remove mark is marked for the panel, its stock art kept as the way back
 - skin fix: the panel's tooltip lines take gtip.line, its stock gold under Ignore settings panel
+- skin fix: a released remove mark is forgotten, so a skin change never reaches the widget's next user
+- skin fix: a remove mark redrawn under a stock panel keeps its art until it is released
+- skin fix: a row's Edit glyph takes the tint with the Scope cleared, and gives it back on release
+- skin fix: with the library absent the marks release by callback and forget nothing
+- skin fix: a pad's Shine rows gray by the look that draws, not the stored one
+- skin fix: a dial's Shine rows gray by the look that draws, not the stored one
+- skin fix: the hub's border size grays while its color follows, the two sharing the companion
+- skin fix: a class-colored shine tint stays the class's under another skin
+- skin flip: every *FromSkin key a template ships is on the step's list
+- skin flip: the hub's rim draws the skin's color and thickness
+- skin flip: a paged ring draws the skin's arrow, plate, dots and their back and border
+- skin flip: the hub's small labels take the slice label's face, not another block's
+- skin flip: a button's edge takes the bar's thickness, not the window's
+- skin flip: toggling fontColorFromSkin on a live pad rebuilds the button's look
+- skin flip: toggling fontShadowFromSkin on a live pad rebuilds the button's look
+- skin flip: toggling backgroundFromSkin on a live pad rebuilds the button's look
+- skin flip: toggling borderColorFromSkin on a live pad rebuilds the button's look
+- skin flip: toggling textureFromSkin on a live pad rebuilds the button's look
+- skin flip: toggling glowColorFromSkin on a live pad rebuilds the button's look
+- skin flip: toggling shineFromSkin on a live pad rebuilds the button's look
+- skin fix: the token glyph is white under a stock panel and the skin's tint with the Scope cleared
+- skin fix: the popup's token tooltip draws its first line in gtip.line, panel-scoped
+- skin fix: a When checkbox's tooltip draws its line in gtip.line, panel-scoped
+- skin fix: the Preview window's tooltip titles take gtip.title, locked and at rest
+- skin fix: the browser's cell tooltip title takes gtip.title under the HUD's rule
+- skin fix: a cell's hover art is the client's while the panel is stock, tinted with the Scope cleared
+- skin fix: the pad's combat refusal tooltip takes gtip.title
+- skin fix: the pads page's active dot is the Ka0s mark with the Scope cleared
+- skin fix: the dials page's active dot is the Ka0s mark with the Scope cleared
+- skin fix: the active dot's mark is drawn in sem.good
+- skin fix: the degraded facade answers Ka0s Default for gtip.line and icon.arrow
 
 ### test_skin_picker.lua (20)
 
@@ -1715,7 +1746,7 @@ Total.
 | test_skinsetup.lua | 24 |
 | test_skin_windows.lua | 20 |
 | test_skin_hud.lua | 19 |
-| test_skin_flip.lua | 28 |
+| test_skin_flip.lua | 59 |
 | test_skin_picker.lua | 20 |
 | test_skin_outline.lua | 10 |
 | test_skin_verb.lua | 7 |
@@ -1730,4 +1761,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1420** |
+| **Total** | **1451** |

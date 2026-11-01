@@ -52,6 +52,8 @@ local addonName, NS = ...
 --                           (the Scope's Ignore settings panel, on by default); release restores stock.
 --   NS.SkinOnRelease(w, fn) host release work chained onto the widget's own OnRelease
 --                           (`Skin:OnRelease`), so it and the skin's restore both run, once.
+--   NS.SkinUntrack(region)  forgets a region S.Mark recorded, for a pooled widget handed back (the
+--                           record outlives AceGUI:Release). Nothing without the library.
 --   NS.MaybeShowSkinPicker() the first-run skin picker (LibKa0s OptionsSkinPicker 1, owner ruling
 --                           O3): the Options instance's SkinPicker while the profile's
 --                           `skin.pickerSeen` is false and the addon stands up; held to
@@ -603,6 +605,7 @@ if not Skin then
     function NS.SkinPaintAce() return false end
     function NS.SkinPaintAceTree() return 0 end
     NS.SkinOnRelease = releaseByCallback
+    function NS.SkinUntrack() end   -- nothing recorded it
     return
 end
 
@@ -639,6 +642,10 @@ end
 function NS.SkinOnRelease(widget, fn)
     if type(Skin.OnRelease) ~= "function" then return releaseByCallback(widget, fn) end
     return Skin:OnRelease(widget, fn)
+end
+
+function NS.SkinUntrack(region)
+    if type(Skin.Untrack) == "function" then Skin:Untrack(region) end
 end
 
 function NS.ApplySkinIgnore(panel, fonts)

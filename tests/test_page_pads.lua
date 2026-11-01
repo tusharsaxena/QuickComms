@@ -327,6 +327,7 @@ test("page pads: [shine] the Buttons tab has a Shine heading", function()
     assertEqual(button.shineLook, "glossfade", "a new pad draws Gloss fade")
     assertEqual(button.shineStrength, 80)
     NS.SchemaRuntime.Set("pad.button.shineLook", "none", "p1")
+    NS.SchemaRuntime.Set("pad.button.shineFromSkin", false, "p1")   -- the stored look draws
     local w = P.tab("pads", "Buttons")
     assertEqual(#P.all(w, "Heading", "Shine"), 1, "Shine drawn once")
     assertEqual(#P.all(w, "CheckBox", "Use class color"), 5, "four, then the tint's; the blooms are Fluid glass's")
@@ -502,6 +503,7 @@ test("pads page: [shine] the blooms show only under Fluid glass, through the lib
     w = P.during(P.flush)
     assertFalse(P.find(w, "ColorPicker", "Bloom color A").disabled, "they return, live")
     assertFalse(P.find(w, "ColorPicker", "Bloom color B").disabled)
+    NS.SchemaRuntime.Set("pad.button.shineFromSkin", false, "p1")   -- the stored look draws
     P.find(w, "Dropdown", "Shine look"):__fire("OnValueChanged", "none")
     w = P.during(P.flush)
     assertNil(P.find(w, "ColorPicker", "Bloom color A"), "and drop again")

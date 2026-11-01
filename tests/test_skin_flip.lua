@@ -298,7 +298,9 @@ end)
 
 test("skin flip: a class color comes before the companion, whatever it says", function()
     local NS, m = live()
+    m.RAID_CLASS_COLORS = { MAGE = { r = 0.25, g = 0.75, b = 0.5 } }
     local class = { NS.ResolveColor({ r = 1, g = 1, b = 1, a = 1 }, true) }
+    assertEqual(class[1], 0.25, "a class color the stored white cannot answer")
     skinOf(m):SetChoice(OWNER, "ka0s", OTHER)
     local font = NS.PadRender.LabelFont({ useClassColorFont = true, fontColorFromSkin = true,
         fontColor = { r = 1, g = 1, b = 1, a = 1 } })
@@ -509,7 +511,7 @@ test("skin fix: the remove mark is marked for the panel, its stock art kept as t
     local got
     NS.Skin.Mark = function(tex, opts) got = { tex, opts } end
     local image = { SetAtlas = function(self, a) self.atlas = a end }
-    Ed.RemoveMark(image)
+    Ed.RemoveMark({ image = image })
     assertEqual(image.atlas, "transmog-icon-remove", "drawn stock first: the facade may be a no-op")
     assertTrue(got[2].panel)
     assertEqual(got[2].art, NS.Icon("close"))
@@ -523,4 +525,492 @@ test("skin fix: the panel's tooltip lines take gtip.line, its stock gold under I
     local r, g = NS.SkinColor("gtip.line", true)
     assertEqual(r, 1)
     assertEqual(g, 0.82)
+end)
+
+-- ── the pins the review's mutation sweep asked for (FS-QC-FIX) ───────────────────────────────────
+
+-- A skin's token, read off the skin's own table: what a surface must draw once it moves.
+local function skinToken(Skin, name, token)
+    return Skin:ResolveSkin(name)[token]
+end
+
+-- The first shipped skin where `token` differs from Ka0s Default and, by `others`, from each of them.
+local function skinWhere(Skin, token, others)
+    local base = Skin:ResolveSkin(Skin.DEFAULT)
+    for _, name in ipairs({ OTHER, "azeroth", GLASS, "contrast", "ember", "wow", "midnight", "forever" }) do
+        local c, ok = Skin:ResolveSkin(name)[token], true
+        for _, other in ipairs(others or {}) do
+            local o = Skin:ResolveSkin(name)[other]
+            if not o or (o[1] == c[1] and o[2] == c[2] and o[3] == c[3]) then ok = false end
+        end
+        if ok and (c[1] ~= base[token][1] or c[2] ~= base[token][2] or c[3] ~= base[token][3]) then return name end
+    end
+    error("no shipped skin moves " .. token)
+end
+
+-- Every line a tooltip took, with the color it was told.
+local function tipColors(m)
+    local tip, lines = m.GameTooltip, {}
+    local setText, addLine = tip.SetText, tip.AddLine
+    tip.SetText = function(t, text, r, g, b, ...)
+        lines = { { text, r, g, b } }
+        return setText(t, text, r, g, b, ...)
+    end
+    tip.AddLine = function(t, text, r, g, b, ...)
+        lines[#lines + 1] = { text, r, g, b }
+        return addLine(t, text, r, g, b, ...)
+    end
+    return function() return lines end
+end
+
+local function rgbOf(line) return { line[2], line[3], line[4], 1 } end
+
+-- A live addon whose new frames record their paint, with its settings window up.
+local function painted()
+    local NS, m = live()
+    dofile("tests/_kit/mock_paint.lua")(m)
+    m.SettingsPanel:Show()
+    return NS, m, skinOf(m)
+end
+
+-- A real Texture, as the client's Icon wears, that counts every write reaching it.
+local function spiedTexture(m)
+    local tex = m.CreateFrame("Frame"):CreateTexture()
+    tex.__writes = 0
+    for _, name in ipairs({ "SetAtlas", "SetTexture", "SetVertexColor" }) do
+        local fn = tex[name]
+        rawset(tex, name, function(self, ...)
+            self.__writes = self.__writes + 1
+            return fn(self, ...)
+        end)
+    end
+    return tex
+end
+
+-- ── a pooled Icon's mark ──
+
+local function releasedMark(mark)
+    local NS, m, Skin = painted()
+    local ace = m.LibStub("AceGUI-3.0")
+    local w = ace:Create("Icon")
+    local tex = spiedTexture(m)
+    w.image = tex
+    mark(NS, w)
+    assertTrue(Skin.painted[tex] ~= nil, "the mark is on the skin's record")
+    Skin:SetIgnore(OWNER, false, nil)
+    Skin:SetChoice(OWNER, "ka0s", OTHER)
+    assertColor(m.__paint(tex).vertex, color(NS, "icon.tint"), "live while the widget is ours")
+    ace:Release(w)
+    -- red under: no Untrack on release (the widget goes back to a pool every addon draws from)
+    assertNil(Skin.painted[tex], "the record is gone")
+    assertColor(m.__paint(tex).vertex, { 1, 1, 1, 1 }, "and so is the tint")
+    tex.__writes = 0
+    Skin:SetChoice(OWNER, "ka0s", GLASS)
+    Skin:SetIgnore(OWNER, true, nil)
+    Skin:SetChoice(OWNER, "ka0s", OTHER)
+    assertEqual(tex.__writes, 0, "no skin change reaches the next user's texture")
+end
+
+test("skin fix: a released remove mark is forgotten, so a skin change never reaches the widget's next user", function()
+    releasedMark(function(NS, w) NS.addon.Settings.Editors.RemoveMark(w) end)
+end)
+
+test("skin fix: a remove mark redrawn under a stock panel keeps its art until it is released", function()
+    local NS, m, Skin = painted()
+    local ace = m.LibStub("AceGUI-3.0")
+    local w = ace:Create("Icon")
+    local tex = spiedTexture(m)
+    w.image = tex
+    NS.addon.Settings.Editors.RemoveMark(w)
+    Skin:SetChoice(OWNER, "ka0s", OTHER)
+    assertEqual(m.__paint(tex).atlas, "transmog-icon-remove", "live before the release")
+    ace:Release(w)
+    tex:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
+    Skin:SetChoice(OWNER, "ka0s", GLASS)
+    assertEqual(m.__paint(tex).texture, "Interface\\Icons\\INV_Misc_QuestionMark", "another widget's art stands")
+end)
+
+test("skin fix: a row's Edit glyph takes the tint with the Scope cleared, and gives it back on release", function()
+    local NS, m, Skin = painted()
+    local P = dofile("tests/page_helpers.lua")(NS, m)
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    assertTrue(NS.Library.CreateCalloutIn(gid, { name = "Kick", text = "Kick", channel = "party" }) ~= nil)
+    local ace = m.LibStub("AceGUI-3.0")
+    local create = ace.Create
+    ace.Create = function(self, wtype, ...)
+        local w = create(self, wtype, ...)
+        if wtype == "Icon" then
+            local tex = spiedTexture(m)
+            w.image = tex
+            w.SetImage = function(widget, path) tex:SetTexture(path) return widget end
+        end
+        return w
+    end
+    P.show("Groups")
+    NS.addon.Settings.Editors.Select("group", gid)
+    Skin:SetChoice(OWNER, "ka0s", OTHER)
+    local stock = P.glyph(P.tab("groups", "callouts"), "edit")
+    assertColor(m.__paint(stock.image).vertex, { 1, 1, 1, 1 }, "white while the panel is stock")
+    Skin:SetIgnore(OWNER, false, nil)
+    local g = P.glyph(P.tab("groups", "callouts"), "edit")
+    local image = g.image
+    -- red under: no Mark on the Edit glyph
+    assertColor(m.__paint(image).vertex, color(NS, "icon.tint"), "the skin's tint")
+    assertEqual(m.__paint(image).texture, NS.Icon("edit"), "on the catalog's art")
+    ace:Release(g)
+    assertNil(Skin.painted[image])
+    assertColor(m.__paint(image).vertex, { 1, 1, 1, 1 }, "a recycled glyph keeps no tint")
+end)
+
+test("skin fix: with the library absent the marks release by callback and forget nothing", function()
+    local NS = T.newAddon{ skip = T.loadAddon.libFiles }
+    local tinted
+    local image = { SetAtlas = function() end, SetVertexColor = function(_, r) tinted = r end }
+    local w = { image = image, SetCallback = function(self, name, fn) self[name] = fn end }
+    NS.addon.Settings.Editors.RemoveMark(w)
+    assertTrue(w.OnRelease ~= nil, "the callback is the chain here")
+    w.OnRelease(w)
+    assertEqual(tinted, 1)
+end)
+
+-- ── a row grayed while its value is drawn ──
+
+local function shineGates(kind, id, prefix, stored)
+    local NS, m = live()
+    local P = dofile("tests/page_helpers.lua")(NS, m)
+    local Ed, S = NS.addon.Settings.Editors, NS.SchemaRuntime
+    P.show(kind == "pad" and "Pad" or "Dial")
+    Ed.Select(kind, id)
+    local strength, tint = Ed.Row(prefix .. "shineStrength"), Ed.Row(prefix .. "shineTint")
+    assertTrue(S.Set(prefix .. "shineLook", "none", id))
+    assertTrue(S.Get(prefix .. "shineFromSkin"), "the step's value")
+    -- red under: off() reading only the stored look
+    assertEqual(strength.disabledIf(), false, "the skin's look draws, so its Strength is live")
+    assertEqual(tint.disabledIf(), false, "and its tint")
+    assertTrue(S.Set(prefix .. "shineFromSkin", false, id))
+    assertTrue(strength.disabledIf(), "the stored None governs again")
+    assertTrue(tint.disabledIf())
+    assertTrue(S.Set(prefix .. "shineLook", stored, id))
+    assertEqual(strength.disabledIf(), false, "a stored look draws")
+    assertTrue(S.Set(prefix .. "shineLook", "none", id))
+    assertTrue(S.Set(prefix .. "shineFromSkin", true, id))
+    skinOf(m):SetChoice(OWNER, "ka0s", "contrast")
+    assertTrue(strength.disabledIf(), "High Contrast answers None, whatever is stored")
+    assertTrue(S.Set(prefix .. "shineLook", stored, id))
+    assertTrue(tint.disabledIf(), "a stored look is not read while it follows")
+    assertNil(Ed.Row(prefix .. "shineFromSkin").disabledIf, "the way out is never grayed")
+end
+
+test("skin fix: a pad's Shine rows gray by the look that draws, not the stored one", function()
+    shineGates("pad", "p1", "pad.button.", "rim")
+end)
+
+test("skin fix: a dial's Shine rows gray by the look that draws, not the stored one", function()
+    shineGates("dial", "d2", "dial.slice.", "rim")
+end)
+
+test("skin fix: the hub's border size grays while its color follows, the two sharing the companion", function()
+    local NS, m = live()
+    local P = dofile("tests/page_helpers.lua")(NS, m)
+    local Ed, S = NS.addon.Settings.Editors, NS.SchemaRuntime
+    P.show("Dial")
+    Ed.Select("dial", "d2")
+    local row = Ed.Row("dial.hub.borderSize")
+    assertTrue(row.disabledIf(), "bar.borderSize draws while it follows")
+    assertTrue(S.Set("dial.hub.borderColorFromSkin", false, "d2"))
+    assertEqual(row.disabledIf(), false)
+end)
+
+-- ── class color and the list ──
+
+test("skin fix: a class-colored shine tint stays the class's under another skin", function()
+    local NS, m = live()
+    m.RAID_CLASS_COLORS = { MAGE = { r = 0.25, g = 0.75, b = 0.5 } }
+    local class = { 0.25, 0.75, 0.5 }
+    skinOf(m):SetChoice(OWNER, "ka0s", OTHER)
+    local cfg = NS.PadDefaults.Button()
+    cfg.useClassColorShineTint = true
+    local tr = select(1, NS.Skin.Color("qc.btnShineTint"))
+    assertTrue(tr ~= class[1], "the token would show it")
+    local tint = NS.Shine.Resolve(cfg, "qc.btnShine", "qc.btnShineTint").tint
+    -- red under: the tint's follow not asking after the class color first
+    assertEqual(tint[1], class[1])
+    assertEqual(tint[2], class[2])
+    assertEqual(tint[3], class[3])
+    cfg.useClassColorShineTint = false
+    assertEqual(NS.Shine.Resolve(cfg, "qc.btnShine", "qc.btnShineTint").tint[1], tr, "off, the skin's")
+end)
+
+test("skin flip: every *FromSkin key a template ships is on the step's list", function()
+    local NS = T.enableAddon()
+    local Lib = NS.Library
+    local function walk(kind, surface)
+        local listed = {}
+        for _, key in ipairs(Lib.FULL_SKIN_KEYS[kind]) do listed[key] = true end
+        local seen = 0
+        for block, t in pairs(surface) do
+            if type(t) == "table" then
+                for key in pairs(t) do
+                    if type(key) == "string" and key:find("FromSkin$") then
+                        seen = seen + 1
+                        -- red under: an entry dropped from surfaceKeys, which the forward walk never sees
+                        assertTrue(listed[block .. "." .. key], kind .. ": " .. block .. "." .. key .. " is not listed")
+                    end
+                end
+            end
+        end
+        return seen
+    end
+    assertTrue(walk("pads", Lib.TEMPLATES.pad) > 0)
+    assertTrue(walk("dials", Lib.TEMPLATES.dial) > 0)
+end)
+
+-- ── the dial and the pad off their drawing setters ──
+
+-- NS.Skin.Resolve answering `size` for bar.borderSize: every shipped skin's thickness is 1, the
+-- stored default too, so only a token no skin ships tells the rows apart.
+local function barThickness(NS, size)
+    local resolve = NS.Skin.Resolve
+    NS.Skin.Resolve = function(token, value, follows)
+        if follows and token == "bar.borderSize" then return size end
+        return resolve(token, value, follows)
+    end
+end
+
+test("skin flip: the hub's rim draws the skin's color and thickness", function()
+    local NS, m = live()
+    local di = dial(NS)
+    skinOf(m):SetChoice(OWNER, "ka0s", OTHER)
+    local size = 3
+    barThickness(NS, size)
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    local rim = (NS.Dial.Instance("d2") or di).header.qcHubRim
+    assertTrue(rim:IsShown())
+    assertColor(rim.__color, color(NS, "text.accent"), "the rim's color")
+    assertEqual(rim.__texture, NS.DialRender.RingTexture(NS.db.profile.dials.d2.hub.size, size), "the rim's ring")
+end)
+
+test("skin flip: a paged ring draws the skin's arrow, plate, dots and their back and border", function()
+    local NS, m = live()
+    local S = NS.SchemaRuntime
+    assertTrue(S.Set("dial.page.dotBorder", 2, "d2"))
+    skinOf(m):SetChoice(OWNER, "ka0s", OTHER)
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS, { n = 8, slices = 4 })))
+    local ring = NS.Dial.Instance("d2").rings.active[2]
+    assertTrue(ring.qcNext:IsShown(), "a paged ring")
+    assertColor(ring.qcNext.qcIcon.__color, color(NS, "icon.arrow"), "the arrow")
+    assertColor(ring.qcNext.qcPlate.__color, color(NS, "qc.sliceBg"), "the plate")
+    assertColor(ring.qcDots[2].__color, color(NS, "qc.pageDot"), "a dot")
+    assertColor(ring.qcDots[1].__color, color(NS, "text.accent"), "the current page")
+    assertColor(ring.qcDotEdges[2].__color, color(NS, "qc.pageDotEdge"), "a dot's border")
+    assertColor(ring.qcDotBack.mid.__color, color(NS, "qc.sliceBg"), "the row's back")
+end)
+
+test("skin flip: the hub's small labels take the slice label's face, not another block's", function()
+    local NS, m = live()
+    local S = NS.SchemaRuntime
+    dial(NS)
+    assertTrue(S.Set("dial.label.fontFromSkin", false, "d2"))
+    assertTrue(S.Set("dial.label.font", "Arial Narrow", "d2"))
+    local fetch = NS.MediaFetch
+    NS.MediaFetch = function(kind, name)
+        if kind == "font" and name == "Arial Narrow" then return "Fonts\\ARIALN.TTF" end
+        return fetch(kind, name)
+    end
+    skinOf(m):SetChoice(OWNER, "ka0s", GLASS)
+    assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
+    local h = NS.Dial.Instance("d2").header
+    local want = NS.MediaFetch("font", "Arial Narrow")
+    assertTrue(want ~= nil, "a face this machine has")
+    local d = NS.db.profile.dials.d2
+    assertTrue(want ~= NS.DialRender.Look(120, d.label, d.slice, d).title.font.path, "the title's face would show it")
+    assertEqual(h.qcStale.__font[1], want)
+    assertEqual(h.qcLockdown.__font[1], want)
+    assertEqual(h.qcTest.__font[1], want)
+end)
+
+test("skin flip: a button's edge takes the bar's thickness, not the window's", function()
+    local NS, m = live()
+    local inst = pad(NS)
+    local Skin = skinOf(m)
+    local drawn = {}
+    local apply = NS.ApplySkin
+    NS.ApplySkin = function(frame, skin)
+        drawn[frame] = skin
+        return apply(frame, skin)
+    end
+    barThickness(NS, 3)
+    Skin:SetChoice(OWNER, "ka0s", OTHER)
+    NS.Surfaces.ApplyAll("test")
+    local btn = button(NS)
+    assertEqual(drawn[btn.qcEdge].edgeSize, 3, "the edge's thickness")
+    assertTrue(inst ~= nil)
+end)
+
+for _, key in ipairs({ "fontColorFromSkin", "fontShadowFromSkin", "backgroundFromSkin", "borderColorFromSkin",
+    "textureFromSkin", "glowColorFromSkin", "shineFromSkin" }) do
+    test("skin flip: toggling " .. key .. " on a live pad rebuilds the button's look", function()
+        local NS = live()
+        local R = NS.PadRender
+        pad(NS)
+        local before = R.ButtonLook(NS.db.profile.pads.p1.button)
+        assertTrue(R.ButtonLook(NS.db.profile.pads.p1.button, before) == before, "held while nothing moved")
+        -- red under: the companion missing from SIG_KEYS, so the old look is handed back
+        assertTrue(NS.SchemaRuntime.Set("pad.button." .. key, false, "p1"))
+        assertTrue(R.ButtonLook(NS.db.profile.pads.p1.button, before) ~= before, "a new look")
+    end)
+end
+
+-- ── the host parts of L2 and L6, driven ──
+
+test("skin fix: the token glyph is white under a stock panel and the skin's tint with the Scope cleared", function()
+    local NS, m, Skin = painted()
+    local Pop = NS.addon.Settings.CalloutPopup
+    assertTrue(Pop.Open(NS.Library.CreateGroup({ name = "Mine" })))
+    Skin:SetChoice(OWNER, "ka0s", OTHER)
+    local icon = Pop.tokenGlyph.icon
+    assertColor(m.__paint(icon).vertex, { 1, 1, 1, 1 }, "stock")
+    Skin:SetIgnore(OWNER, false, nil)
+    -- red under: no Mark on the glyph
+    assertColor(m.__paint(icon).vertex, color(NS, "icon.tint"), "cleared, and live")
+end)
+
+test("skin fix: the popup's token tooltip draws its first line in gtip.line, panel-scoped", function()
+    local NS, m, Skin = painted()
+    local Pop = NS.addon.Settings.CalloutPopup
+    assertTrue(Pop.Open(NS.Library.CreateGroup({ name = "Mine" })))
+    local moved = skinWhere(Skin, "gtip.line", { "gtip.value" })
+    Skin:SetChoice(OWNER, "ka0s", moved)
+    local lines = tipColors(m)
+    Pop.tokenGlyph:__fire("OnEnter")
+    assertColor(rgbOf(lines()[2]), { 1, 0.82, 0, 1 }, "stock gold under the panel's Scope")
+    Skin:SetIgnore(OWNER, false, nil)
+    Pop.tokenGlyph:__fire("OnEnter")
+    assertColor(rgbOf(lines()[2]), skinToken(Skin, moved, "gtip.line"), "the skin's, cleared")
+end)
+
+test("skin fix: a When checkbox's tooltip draws its line in gtip.line, panel-scoped", function()
+    local NS, m, Skin = painted()
+    local P = dofile("tests/page_helpers.lua")(NS, m)
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    P.show("Groups")
+    NS.addon.Settings.Editors.Select("group", gid)
+    P.drawer(P.tab("groups", "When"), "Arena"):__fire("OnClick")
+    local cb = P.find(P.tab("groups", "When"), "CheckBox", "All arenas")
+    assertTrue(cb ~= nil, "the whole-kind checkbox on the open drawer")
+    local moved = skinWhere(Skin, "gtip.line", { "gtip.value" })
+    Skin:SetChoice(OWNER, "ka0s", moved)
+    local lines = tipColors(m)
+    cb:__fire("OnEnter")
+    assertColor(rgbOf(lines()[2]), { 1, 0.82, 0, 1 }, "stock gold")
+    Skin:SetIgnore(OWNER, false, nil)
+    cb:__fire("OnEnter")
+    assertColor(rgbOf(lines()[2]), skinToken(Skin, moved, "gtip.line"), "the skin's, cleared")
+end)
+
+test("skin fix: the Preview window's tooltip titles take gtip.title, locked and at rest", function()
+    local NS, m, Skin = painted()
+    local moved = skinWhere(Skin, "gtip.title")
+    Skin:SetChoice(OWNER, "ka0s", moved)
+    assertTrue(NS.Preview.SetPreviewAs("arena"))
+    local f = NS.PreviewWindow.__frame()
+    local lines = tipColors(m)
+    local want = color(NS, "gtip.title")
+    f.endButton:__fire("OnEnter")
+    assertColor(rgbOf(lines()[1]), want, "at rest")
+    local editGroup = NS.Preview.EditGroup
+    NS.Preview.EditGroup = function() return "g1" end
+    f.endButton:__fire("OnEnter")
+    NS.Preview.EditGroup = editGroup
+    assertColor(rgbOf(lines()[1]), want, "locked")
+end)
+
+test("skin fix: the browser's cell tooltip title takes gtip.title under the HUD's rule", function()
+    local NS, m, Skin = painted()
+    local B = NS.addon.Settings.IconBrowser
+    assertTrue(B.Open({ owner = "test", onChoose = function() end }))
+    local moved = skinWhere(Skin, "gtip.title")
+    Skin:SetChoice(OWNER, "ka0s", moved)
+    local cell
+    for _, c in ipairs(B.cells) do if c:IsShown() then cell = c; break end end
+    local lines = tipColors(m)
+    cell:__fire("OnEnter")
+    assertColor(rgbOf(lines()[1]), color(NS, "gtip.title"), "a window of ours: the skin's title")
+end)
+
+test("skin fix: a cell's hover art is the client's while the panel is stock, tinted with the Scope cleared", function()
+    local NS, m, Skin = painted()
+    local B = NS.addon.Settings.IconBrowser
+    assertTrue(B.Open({ owner = "test", onChoose = function() end }))
+    -- The recorder's Button has no highlight region of its own: the client's, as a Texture.
+    local cell, art = B.cells[1], m.CreateFrame("Frame"):CreateTexture()
+    rawset(cell, "GetHighlightTexture", function() return art end)
+    Skin:SetChoice(OWNER, "ka0s", GLASS)
+    assertFalse(m.__paint(art).desaturated, "stock")
+    Skin:SetIgnore(OWNER, false, nil)
+    Skin:SetChoice(OWNER, "ka0s", OTHER)
+    Skin:SetChoice(OWNER, "ka0s", GLASS)
+    local c = Skin:ResolveSkin(GLASS)["list.hoverArt"]
+    assertTrue(type(c) == "table", "a skin that has one")
+    -- red under: paintHover gone, the art left as the client draws it
+    assertTrue(m.__paint(art).desaturated, "desaturated")
+    assertColor(m.__paint(art).vertex, c, "in the skin's hover art color")
+end)
+
+test("skin fix: the pad's combat refusal tooltip takes gtip.title", function()
+    local NS, m = live()
+    local inst = pad(NS)
+    assertTrue(inst ~= nil)
+    NS.db.profile.pads.p1.groupsAs = "tabs"
+    pad(NS)
+    skinOf(m):SetChoice(OWNER, "ka0s", skinWhere(skinOf(m), "gtip.title"))
+    NS.Compat.InCombat = function() return true end
+    local lines = tipColors(m)
+    assertFalse(NS.Pad.Wheel("p1", 1))
+    assertColor(rgbOf(lines()[1]), color(NS, "gtip.title"), "the refusal")
+end)
+
+local function activeLabel(widgets, needle)
+    for _, x in ipairs(widgets) do
+        if type(x.text) == "string" and x.text:find(needle, 1, true) then return x.text end
+    end
+    return nil
+end
+
+for _, page in ipairs({ { "pad", "p1", "Pad", "pads" }, { "dial", "d2", "Dial", "dials" } }) do
+    test("skin fix: the " .. page[4] .. " page's active dot is the Ka0s mark with the Scope cleared", function()
+        local NS, m, Skin = painted()
+        local P = dofile("tests/page_helpers.lua")(NS, m)
+        P.show(page[3])
+        NS.addon.Settings.Editors.Select(page[1], page[2])
+        local w = P.tab(page[4], "Groups")
+        assertTrue(activeLabel(w, "Indicator-Green") ~= nil, "the client's dot while stock")
+        Skin:SetIgnore(OWNER, false, nil)
+        w = P.tab(page[4], "Groups")
+        -- red under: the client's dot typed where the row writes its label
+        assertTrue(activeLabel(w, "Indicator-Green") == nil, "no stock dot left")
+        assertTrue(activeLabel(w, NS.Icon("confirm")) ~= nil, "the mark")
+    end)
+end
+
+test("skin fix: the active dot's mark is drawn in sem.good", function()
+    local NS, _, Skin = painted()
+    Skin:SetIgnore(OWNER, false, nil)
+    Skin:SetChoice(OWNER, "ka0s", OTHER)
+    local c = Skin:ResolveSkin(OTHER)["sem.good"]
+    local tint = Skin:ResolveSkin(OTHER)["icon.tint"]
+    assertTrue(c[1] ~= tint[1] or c[2] ~= tint[2], "a mark that means something")
+    local function byte(x) return math.floor(x * 255 + 0.5) end
+    local want = (":%d:%d:%d|t"):format(byte(c[1]), byte(c[2]), byte(c[3]))
+    assertTrue(NS.addon.Settings.Editors.ActiveDot():find(want, 1, true) ~= nil, "the good color, not the tint")
+end)
+
+test("skin fix: the degraded facade answers Ka0s Default for gtip.line and icon.arrow", function()
+    local live0, lm = T.enableAddon()
+    assertTrue(live0 ~= nil)
+    local base = skinOf(lm):ResolveSkin(skinOf(lm).DEFAULT)
+    local NS = T.newAddon{ skip = T.loadAddon.libFiles }
+    -- red under: a token missing from NS.SKIN_FALLBACK (the arrow and the line would be nil)
+    assertColor(color(NS, "gtip.line"), base["gtip.line"], "gtip.line")
+    assertColor(color(NS, "icon.arrow"), base["icon.arrow"], "icon.arrow")
 end)

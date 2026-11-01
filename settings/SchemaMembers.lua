@@ -493,9 +493,10 @@ for i, look in ipairs(NS.Shine.LOOKS) do SHINE_LOOK[i] = { value = look, text = 
 
 --- A Shine heading's rows (shine overlay, 2026-10-21): the look, its Strength (0 to 100 percent, step
 --- 5), the tint and Fluid glass's two bloom colors, each a composed swatch with its class-color
---- companion. `spec` names the block: `prefix` ("pad.button."), `instance`, `page`, `tab` and the
---- shipped `defaults` table. Strength and the tint gray out while the look is None (as the pointer rows
---- do while Show pointer is off). The blooms are Fluid glass's own, so they show only under it
+--- companion. `spec` names the block: `prefix` ("pad.button."), `instance`, `page`, `tab`, the shipped
+--- `defaults` table and the owner tokens `lookToken` and `tintToken` the block follows. Strength and the
+--- tint gray out while the look that DRAWS is None (as the pointer rows do while Show pointer is off):
+--- the skin's while Use the skin's shine is on, whatever the stored look says. The blooms are Fluid glass's own, so they show only under it
 --- (options-ui-§22, LibKa0s#67).
 local function shineRows(O, checks, spec)
     local prefix, def, SHINE = spec.prefix, spec.defaults, L["Shine"]
@@ -504,7 +505,11 @@ local function shineRows(O, checks, spec)
         checks[k] = { validate = BOOL }
     end
     local function lookNow() return NS.SchemaRuntime.Get(prefix .. "shineLook") or def.shineLook end
-    local function off() return lookNow() == "none" end
+    local function off()
+        local follows = NS.SchemaRuntime.Get(prefix .. "shineFromSkin")
+        return NS.Shine.Resolve({ shineFromSkin = follows, shineLook = lookNow() }, spec.lookToken,
+            spec.tintToken).look == "none"
+    end
     local onlyFluid = { path = prefix .. "shineLook", equals = "fluid" }
     local function base(r)
         r.instance, r.page, r.group, r.subgroup = spec.instance, spec.page, spec.tab, SHINE
@@ -573,7 +578,7 @@ local function buttonRows()
     stampBlock(out, O.ColorPair(blockSpec(BUTTONP, BUTTON, GLOW, cdef, { key = "glowColor",
         companionKey = "useClassColorGlow", label = L["Glow color"], follow = true })), BUTTONP, checks)
     for _, r in ipairs(shineRows(O, checks, { prefix = BUTTONP, instance = "pad", page = "pads", tab = BUTTON,
-        defaults = cdef })) do
+        defaults = cdef, lookToken = "qc.btnShine", tintToken = "qc.btnShineTint" })) do
         out[#out + 1] = r
     end
     return out
@@ -660,7 +665,7 @@ local function sliceRows()
     local out = pair(COLORS, "background", L["Slice color"])
     for _, r in ipairs(pair(COLORS, "highlight", L["Highlight color"])) do out[#out + 1] = r end
     for _, r in ipairs(shineRows(O, checks, { prefix = SLICEP, instance = "dial", page = "dials", tab = SLICES_TAB,
-        defaults = sdef })) do
+        defaults = sdef, lookToken = "qc.sliceShine", tintToken = "qc.sliceShineTint" })) do
         out[#out + 1] = r
     end
     checks.circleColor, checks.useClassColorCircle = checks.background, { validate = BOOL }

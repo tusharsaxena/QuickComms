@@ -567,6 +567,7 @@ test("page dials: [shine] the Slices tab has a Shine heading", function()
     assertEqual(slice.shineLook, "orb", "a new dial wears the orb")
     assertEqual(slice.shineStrength, 85)
     assertTrue(NS.SchemaRuntime.Set("dial.slice.shineLook", "none", "d2"))
+    assertTrue(NS.SchemaRuntime.Set("dial.slice.shineFromSkin", false, "d2"))   -- the stored look draws
     local w = P.tab("dials", "Slices")
     assertEqual(#P.all(w, "Heading", "Shine"), 1, "Shine drawn once")
     -- red under: no disabledIf on the shine rows
