@@ -2054,6 +2054,10 @@ Scale and fade with their durations kept. On Open, Inward spiral spirals the sli
 and Outward spiral spirals them outward from it, each as its label says. Rotate and scale is still the
 default. Result: not run.
 
+**ANIM-22. WoW Default's window border (SF-QC-3).** Wear WoW Default → the pad's window is framed in the
+dialog-box border art the Skin Tester's window wears, not a thin gray line; the header, section bands and
+buttons keep their hairlines. Any other skin → the pad's window is as before. Result: not run.
+
 ## The pad's look per skin
 
 The owner's findings of 2026-11-01. Each check: a pad on screen (`/qc test`), the named skin, every box

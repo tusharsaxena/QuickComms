@@ -153,6 +153,11 @@ NS.SKIN_TOKENS = {
     ["qc.bandBg"]    = { default = { 0, 0, 0, 0 }, follow = "title.bg" },
     ["qc.bandEdge"]  = { default = { 1, 1, 1, 1 }, follow = "win.border", skins = { wow = WOW_RULE } },
     ["qc.bandEdgeSize"] = { default = 0, follow = "bar.borderSize" },
+    -- A pad window's border art, where the skin's own is a thicker frame than bar.borderStyle's (SF-QC-3):
+    -- WoW Default's dialog frame, as the Skin Tester's window wears. "None" in every other skin leaves
+    -- the window on bar.borderStyle and bar.borderSize.
+    ["qc.winBorderStyle"] = { default = "None", skins = { wow = "Blizzard Dialog" } },
+    ["qc.winBorderSize"]  = { default = 0, skins = { wow = 16 } },
     -- A pad window's edge: win.border, but for the white WoW Default's art is multiplied by.
     ["qc.winEdge"]   = { default = { 0, 0, 0, 1 }, follow = "win.border", skins = { wow = WOW_EDGE } },
     -- A pad button's body, edge and texture ("" naming none: WoW Default's red, flat).

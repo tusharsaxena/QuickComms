@@ -467,7 +467,7 @@ local CLEAR = { r = 0, g = 0, b = 0, a = 0 }
 -- library's but for its edge, a band's and a button's the owner tokens: what each is under Ka0s Default,
 -- and what a skin's window tokens cannot say for an edge drawn flat (core/SkinSetup.lua). Only a band
 -- names a thickness: it has none stored by default, so S.BarBorder's None would draw it no edge.
-R.WINDOW_TOKENS = { bg = "win.bg", edge = "qc.winEdge" }
+R.WINDOW_TOKENS = { bg = "win.bg", edge = "qc.winEdge", style = "qc.winBorderStyle", styleSize = "qc.winBorderSize" }
 R.BAND_TOKENS = { bg = "qc.bandBg", edge = "qc.bandEdge", size = "qc.bandEdgeSize" }
 R.BUTTON_TOKENS = { bg = "qc.btnBg", edge = "qc.btnEdge" }
 
@@ -482,6 +482,11 @@ local function edgeOf(look, tokens)
     local follows = look.borderStyleFromSkin == true
     local style, _, drawn = Skin.BarBorder(look.borderStyle, true, stored, follows)
     if follows and tokens.size and (tonumber(drawn) or 0) <= 0 then drawn = Skin.Token(tokens.size) end
+    -- A window's own art, where a skin names one (SF-QC-3): it wins over the bar's style while following.
+    local own = follows and tokens.style and Skin.Token(tokens.style)
+    if type(own) == "string" and own ~= "" and own ~= "None" then
+        style, drawn = own, Skin.Token(tokens.styleSize)
+    end
     local size = math.max(0, math.min(16, tonumber(drawn) or stored))
     local art = style ~= "None" and NS.MediaFetch("border", style) or nil
     return size, art

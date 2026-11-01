@@ -64,6 +64,24 @@ test("pad looks: WoW Default's bands keep a hairline, not the dialog art's size"
     assertTrue(drawn[inst.header].edgeSize <= 2, "the header's edge: " .. tostring(drawn[inst.header].edgeSize))
 end)
 
+test("pad looks: WoW Default's window wears the dialog border art the Skin Tester shows, no other skin does (SF-QC-3)", function()
+    local NS, m = padUnder("wow")
+    anyMedia(NS)
+    local look = { borderStyle = "None", borderSize = 1, borderStyleFromSkin = true }
+    local skin = NS.PadRender.SkinFor(look, false, NS.PadRender.WINDOW_TOKENS)
+    assertEqual(skin.edgeFile, "media:Blizzard Dialog", "the art")
+    assertTrue(skin.edgeSize >= 8, "a thickness that shows it: " .. tostring(skin.edgeSize))
+    -- the band and the button keep their hairline
+    assertTrue(NS.PadRender.SkinFor(look, true, NS.PadRender.BAND_TOKENS).edgeSize <= 2)
+    -- a pad that does not follow the skin keeps its own border
+    local own = NS.PadRender.SkinFor({ borderStyle = "None", borderSize = 1, borderStyleFromSkin = false }, false,
+        NS.PadRender.WINDOW_TOKENS)
+    assertEqual(own.edgeSize, 1)
+    m.LibStub("LibKa0s-Skin-1.0"):SetChoice(OWNER, "ka0s", "glass")
+    local glass = NS.PadRender.SkinFor(look, false, NS.PadRender.WINDOW_TOKENS)
+    assertTrue(glass.edgeFile ~= "media:Blizzard Dialog", "only WoW Default")
+end)
+
 test("pad looks: WoW Default's buttons are the skin's red, no bar texture dimming it", function()
     local NS, _, drawn, _, btn = padUnder("wow")
     local r, g, b, a = NS.Skin.Color("btn.bg")
