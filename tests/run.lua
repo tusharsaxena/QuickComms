@@ -246,6 +246,7 @@ Kit.run{
         "test_layers",
         "test_layout",
         "test_skinsetup",
+        "test_launcher_skin_entry",
         "test_skin_windows",
         "test_skin_hud",
         "test_skin_flip",
