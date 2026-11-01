@@ -2017,7 +2017,7 @@ center, on close each shrinks into it. Scale and fade fades the whole way; Scale
 There is no start-large style. Text stays sharp and whole, as ANIM-12. Result: not run. (SF-QC-1 changed
 the expected result: any earlier pass no longer stands.)
 
-**ANIM-14. The slices moving apart.** Outward spiral, Inward spiral, Orbit and Shatter → each slice's fill,
+**ANIM-14. The slices moving apart.** Inward spiral, Outward spiral, Orbit and Shatter → each slice's fill,
 shine and edge turn as one with no gap opening inside a slice, its icon and label ride with it and stay
 upright, and the hub and title only fade. Orbit's slices start together at the top. Try a ring of 4 and
 of 8. Result: not run.
@@ -2048,9 +2048,11 @@ still on Inward spiral at 0.5 s and Outward spiral at 0.3 s, one on Scale and fa
 other picks → after the update the first shows Rotate and scale at 0.2 s for its open and its close, the
 second Scale and fade at 0.7 s, and the third keeps its picks. Result: not run.
 
-**ANIM-21. The merged scales (SF-QC-1).** On a profile that stored Scale in, Scale out, Scale in and fade
-or Scale out and fade on a dial → after the update they read Scale or Scale and fade with their
-durations kept. Rotate and scale is still the default. Result: not run.
+**ANIM-21. The merged scales and the swapped labels (SF-QC-1, SF-QC-2).** On a profile that stored Scale
+in, Scale out, Scale in and fade or Scale out and fade on a dial → after the update they read Scale or
+Scale and fade with their durations kept. On Open, Inward spiral spirals the slices inward to the center
+and Outward spiral spirals them outward from it, each as its label says. Rotate and scale is still the
+default. Result: not run.
 
 ## The pad's look per skin
 

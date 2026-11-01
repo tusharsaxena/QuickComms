@@ -281,7 +281,8 @@ as history. The stamp runs the step once, and it is idempotent.
 Step 17 (SF-QC-1, `perProfile`, `Library.MigrateMergeScales`): the owner merged Scale in and Scale out
 into Scale, and their fading versions into Scale and fade. A stored `scaleIn` or `scaleOut` becomes
 `scale`, a stored `scaleInFade` or `scaleOutFade` becomes `scaleAndFade`, durations and every other pick
-kept. Idempotent.
+kept. Idempotent. The style ids `spiralOut` and `spiralIn` are unchanged: only their labels swapped
+(SF-QC-2), so the motion each row names matches on Open.
 
 A color, Font shadow, the button's texture and the shine each have a `<key>FromSkin` companion, default
 true (`fontColorFromSkin`, `fontShadowFromSkin`, `backgroundFromSkin`, `borderColorFromSkin`,

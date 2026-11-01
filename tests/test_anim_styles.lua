@@ -81,8 +81,8 @@ test("anim style: the labels are the owner's", function()
     local text = {}
     for _, c in ipairs(row(NS, "dial.anim.openStyle").values) do text[c.value] = c.text end
     local want = { scale = "Scale", scaleAndFade = "Scale and fade",
-        rotateScale = "Rotate and scale", spiralOut = "Outward spiral",
-        spiralIn = "Inward spiral", orbit = "Orbit", burst = "Burst", stagger = "Stagger pop", pop = "Pop",
+        rotateScale = "Rotate and scale", spiralOut = "Inward spiral",
+        spiralIn = "Outward spiral", orbit = "Orbit", burst = "Burst", stagger = "Stagger pop", pop = "Pop",
         slide = "Slide", drop = "Drop", squash = "Squash", flip = "Flip", shatter = "Shatter", flash = "Flash" }
     for value, label in pairs(want) do assertEqual(text[value], label) end
 end)
