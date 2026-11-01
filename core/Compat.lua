@@ -29,6 +29,16 @@ end
 local SCALE_GROUP = { "CreateAnimation", "Play", "Stop" }
 local SCALE_ANIM = { "SetScaleFrom", "SetScaleTo", "SetOrigin", "SetDuration", "SetSmoothing" }
 
+-- A group holding one Scale animation about `object`'s center, or nil if any part is missing.
+local function scaleOn(object)
+    local group = object:CreateAnimationGroup()
+    if not hasMethods(group, SCALE_GROUP) then return nil end
+    local anim = group:CreateAnimation("Scale")
+    if not hasMethods(anim, SCALE_ANIM) then return nil end
+    anim:SetOrigin("CENTER", 0, 0)
+    return group, anim
+end
+
 --- A Scale animation for font string `fs`, set to run in `Enum.FontStringScaleAnimationMode.Vertex`
 --- (12.0) about the string's center: the group and the animation, or nil when the client lacks any
 --- part of that. FontSize mode, the default, is the shimmer, so there is no fallback to it.
@@ -36,13 +46,17 @@ function Compat.VertexScaleAnimation(fs)
     local modes = type(Enum) == "table" and Enum.FontStringScaleAnimationMode
     local vertex = type(modes) == "table" and modes.Vertex or nil
     if vertex == nil or not hasMethods(fs, { "SetScaleAnimationMode", "CreateAnimationGroup" }) then return nil end
-    local group = fs:CreateAnimationGroup()
-    if not hasMethods(group, SCALE_GROUP) then return nil end
-    local anim = group:CreateAnimation("Scale")
-    if not hasMethods(anim, SCALE_ANIM) then return nil end
+    local group, anim = scaleOn(fs)
+    if not group then return nil end
     fs:SetScaleAnimationMode(vertex)
-    anim:SetOrigin("CENTER", 0, 0)
     return group, anim
+end
+
+--- A Scale animation for frame `frame` about its center: the group and the animation, or nil when the
+--- client lacks any part of it. The only way to scale one axis alone (the ghost's art, #13).
+function Compat.StretchAnimation(frame)
+    if not hasMethods(frame, { "CreateAnimationGroup" }) then return nil end
+    return scaleOn(frame)
 end
 
 --- A plain number, or nil.

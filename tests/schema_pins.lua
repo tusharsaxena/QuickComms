@@ -263,9 +263,9 @@ return {
     ["dial.icon.procDuration"] = "number|1|0.25|3|0.25|nil|false",
     ["dial.icon.procStartAnim"] = "bool|true|nil|nil|nil|nil|false",
     -- #13 (2026-11-01): the Animation tab of every dial (a pad has none, the owner's ruling).
-    ["dial.anim.openStyle"] = "string|\"scaleFade\"|nil|nil|nil|[\"none\",\"fade\",\"scaleFade\",\"fan\"]|false",
+    ["dial.anim.openStyle"] = "string|\"scaleFade\"|nil|nil|nil|[\"none\",\"fade\",\"scaleFade\",\"fan\",\"rotateScale\"]|false",
     ["dial.anim.openDuration"] = "number|0.15|0.1|2|0.1|nil|false",
-    ["dial.anim.closeStyle"] = "string|\"scaleFade\"|nil|nil|nil|[\"none\",\"fade\",\"scaleFade\",\"fan\"]|false",
+    ["dial.anim.closeStyle"] = "string|\"scaleFade\"|nil|nil|nil|[\"none\",\"fade\",\"scaleFade\",\"fan\",\"rotateScale\"]|false",
     ["dial.anim.closeDuration"] = "number|0.1|0.1|2|0.1|nil|false",
     -- The full skin (cause D7).
     ["pad.look.backgroundFromSkin"] = "bool|true|nil|nil|nil|nil|false",

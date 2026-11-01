@@ -13,6 +13,8 @@ Writes, under media/textures/dial/ (only this addon draws them, so they are not 
                         dot, the page dots, the arrow plates, the wedges' veils, the one-slice dial),
                         and, cut in halves by texcoords, the round caps of the current page's pill,
                         the indicators' background and their borders: 256 px across.
+  dial-glow.tga         the Flash style's bloom: white, its alpha falling away from the center to
+                        nothing at the edge, additive on the ghost (modules/Anim_Ghost.lua): 128 px.
   dial-ring-<k>.tga     k = 1..12: a hollow ring, its outer edge at the image's edge and its line
                         RING_STEPS[k] of its diameter (a geometric ladder from 1.25% to 50%,
                         0.0125 * 40 ^ ((k - 1) / 11)); modules/Dial_Render.lua's R.RingTexture picks
@@ -78,6 +80,17 @@ def ring(frac):
     return annulus(RING, 1 - 2 * frac)
 
 
+def glow():
+    img = Image.new("L", (RING, RING), 0)
+    px = img.load()
+    c = RING / 2
+    for y in range(RING):
+        for x in range(RING):
+            d = math.hypot(x + 0.5 - c, y + 0.5 - c) / c
+            px[x, y] = int(255 * max(0, 1 - d) ** 1.5)
+    return img
+
+
 def save(alpha, name):
     img = Image.new("RGBA", alpha.size, (255, 255, 255, 0))
     img.putalpha(alpha)
@@ -91,6 +104,7 @@ def main():
     for n in range(2, 13):
         save(sector(n), "dial-sector-%d.tga" % n)
     save(disc(), "dial-disc.tga")
+    save(glow(), "dial-glow.tga")
     for k, frac in enumerate(RING_STEPS, start=1):
         save(ring(frac), "dial-ring-%d.tga" % k)
     return 0

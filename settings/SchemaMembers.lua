@@ -860,8 +860,9 @@ end
 -- hides while it is None (a shownWhen naming the other styles). After the Icons rows, so the tab
 -- follows Icons. Plain rows: the degraded load adds them too.
 local ANIM_STYLES = { { value = "none", text = L["None"] }, { value = "fade", text = L["Fade"] },
-    { value = "scaleFade", text = L["Scale and fade"] }, { value = "fan", text = L["Fan"] } }
-local ANIM_MOVING = { "fade", "scaleFade", "fan" }
+    { value = "scaleFade", text = L["Scale and fade"] }, { value = "fan", text = L["Fan"] },
+    { value = "rotateScale", text = L["Rotate and scale"] } }
+local ANIM_MOVING = { "fade", "scaleFade", "fan", "rotateScale" }
 local function animRows(subgroup, key, styleDesc, durationDesc)
     local P, def = "dial.anim.", T.dial.anim
     local function base(r)

@@ -50,6 +50,12 @@ local function recFrame(parent)
         end
         return fs
     end
+    -- A frame's stretch: its group and Scale animation, recorders of their own.
+    f.CreateAnimationGroup = function(self)
+        self.group, self.anim = recorder("AnimationGroup"), recorder("Scale")
+        self.group.CreateAnimation = function() return self.anim end
+        return self.group
+    end
     f.GetFrameLevel = function(self)
         local c = self.calls.SetFrameLevel
         return c and c[1] or 0
@@ -66,10 +72,13 @@ end
 
 local function get(v) return function() return v end end
 
+-- A leg's end at uniform scale `s`: all G.ScaleText reads of a pose with no places.
+local function sized(s) return { scale = s, scaleX = 1, scaleY = 1 } end
+
 -- A source region: a plain table answering what the ghost reads.
 local function region(kind, d)
     d = d or {}
-    return { qcGhostGroup = d.group, GetObjectType = get(kind),
+    return { qcGhostGroup = d.group, qcGhostTurn = d.turn, GetObjectType = get(kind),
         IsShown = get(d.shown ~= false),
         GetCenter = function() if d.nocenter then return nil end return d.x or 0, d.y or 0 end,
         GetWidth = get(d.w or 10), GetHeight = get(d.h or 20), GetAlpha = get(d.alpha or 1),
@@ -376,7 +385,7 @@ end)
 
 test("anim ghost: a leg plays the string's scale, and a leg at 1 plays nothing", function()
     local G, ghost, fs = withText()
-    G.ScaleText(ghost, 0.8, 1, 0.5, "open")
+    G.ScaleText(ghost, sized(0.8), sized(1), 0.5, "open")
     assertEqual(fs.anim.calls.SetScaleFrom[1], 0.8)
     assertEqual(fs.anim.calls.SetScaleFrom[2], 0.8)
     assertEqual(fs.anim.calls.SetScaleTo[1], 1)
@@ -384,13 +393,13 @@ test("anim ghost: a leg plays the string's scale, and a leg at 1 plays nothing",
     assertEqual(fs.anim.calls.SetSmoothing[1], "OUT", "A.Ease decelerates into an open")
     assertEqual(fs.group.count.Play, 1)
     local stops = fs.group.count.Stop
-    G.ScaleText(ghost, 0.9, 0.8, 0.2, "close")
+    G.ScaleText(ghost, sized(0.9), sized(0.8), 0.2, "close")
     assertEqual(fs.group.count.Stop, stops + 1, "a reversal restarts it")
     assertEqual(fs.anim.calls.SetScaleFrom[1], 0.9)
     assertEqual(fs.anim.calls.SetSmoothing[1], "IN", "and accelerates out of a close")
-    G.ScaleText(ghost, 1, 1, 0.2, "close")
+    G.ScaleText(ghost, sized(1), sized(1), 0.2, "close")
     assertEqual(fs.group.count.Play, 2, "Fade and Fan keep the text at its size")
-    G.ScaleText(ghost, 0.8, 0.8, 0.2, "close")
+    G.ScaleText(ghost, sized(0.8), sized(0.8), 0.2, "close")
     assertEqual(fs.group.count.Play, 3, "a reversal from the very start holds its size, not 1")
 end)
 
@@ -424,7 +433,7 @@ test("anim ghost: the sent place's text pulses with its art, out then back, and 
     local A = NS.Anim
     local other = ghost.textSubs[1].qcFont[1]
     assertEqual(other, fs)
-    G.ScaleText(ghost, 1, 0.8, 0.4, "close")
+    G.ScaleText(ghost, sized(1), sized(0.8), 0.4, "close")
     G.EmphasizeText(ghost, 2, 0.4)
     assertEqual(fs.anim.calls.SetScaleFrom[1], 1, "another place keeps its leg")
     assertEqual(fs.anim.calls.SetScaleTo[1], 0.8)
@@ -452,12 +461,12 @@ test("anim ghost: nothing is left playing when the ghost comes down, or at the n
     local G, ghost, fs = withText()
     G.Show(ghost)
     assertEqual(ghost.text.count.Show, 1, "the layer shows with the stage")
-    G.ScaleText(ghost, 0.8, 1, 1, "open")
+    G.ScaleText(ghost, sized(0.8), sized(1), 1, "open")
     local stops = fs.group.count.Stop
     G.Hide(ghost)
     assertEqual(fs.group.count.Stop, stops + 1)
     assertTrue(ghost.text.count.Hide >= 2, "the layer hides with the stage")
-    G.ScaleText(ghost, 0.8, 1, 1, "open")
+    G.ScaleText(ghost, sized(0.8), sized(1), 1, "open")
     stops = fs.group.count.Stop
     local src = frame({ regions = { region("Texture", FILE) } })
     assertTrue(G.Capture(ghost, src, { src }))
@@ -487,7 +496,7 @@ end)
 -- A missing piece of the API, and what must follow: no scaling at all, in place, never the shimmer.
 local function assertFadesInPlace(G, ghost, fs, NS)
     assertEqual(fs.group, nil, "no group is kept")
-    G.ScaleText(ghost, 0.8, 1, 1, "open")
+    G.ScaleText(ghost, sized(0.8), sized(1), 1, "open")
     G.EmphasizeText(ghost, 1, 1)
     local pose, moves = NS.Anim.Rest(), fs.count.SetPoint
     pose.scale, pose.alpha = 0.8, 0.5
@@ -532,4 +541,257 @@ test("anim ghost: with no mode setter the text fades in place", function()
     local src = frame({ regions = { region("FontString", { text = "Hi", x = 130 }) } })
     assertTrue(G.Capture(ghost, src, { src }, 1))
     assertFadesInPlace(G, ghost, ghost.textSubs[1].fonts[1], NS)
+end)
+
+-- ── the engine's other motions (#13, the dial styles): radial, orbit, spin, place scale, whole-dial
+-- offset, one-axis scale and the flash ─────────────────────────────────────────────────────────────
+
+local SHAPE = { start = 0, disc = 200 }   -- a radius of 100, place 1 of 4 straight up, place 2 at 3 o'clock
+
+-- A ghost of a 4-slice ring: place 1 has a turned fill, a mask, an upright icon and a label at (0, 30);
+-- the hub (no place) is a texture at (0, -5) and a string at (10, -60).
+local function ring()
+    local G, ghost, NS = ghostOn()
+    local mask = region("MaskTexture", { file = "mask", rotation = 0.25, x = 100, y = 205, turn = true })
+    local src = frame({ x = 100, y = 200, regions = {
+        region("Texture", { file = "fill", group = 1, turn = true, rotation = 0.5, x = 100, y = 205, masks = { mask } }),
+        region("Texture", { file = "icon", group = 1, x = 100, y = 230 }),
+        region("FontString", { text = "Label", group = 1, x = 100, y = 230 }),
+        region("Texture", { file = "hub", x = 100, y = 195 }),
+        region("FontString", { text = "Title", x = 110, y = 140 }) } })
+    assertTrue(G.Capture(ghost, src, { src }, 4, SHAPE))
+    local sub, hub = ghost.subs[1], ghost.subs[2]
+    return G, ghost, NS, { sub = sub, hub = hub, fill = sub.tex[1], icon = sub.tex[2], mask = sub.masks[1],
+        label = ghost.textSubs[1].fonts[1], title = ghost.textSubs[2].fonts[1] }
+end
+
+local function withPlace(NS, count, fields)
+    local pose = NS.Anim.Rest()
+    pose.places, pose.count = {}, count
+    for i = 1, count do pose.places[i] = NS.Anim.RestPlace() end
+    for k, v in pairs(fields or {}) do pose.places[1][k] = v end
+    return pose
+end
+
+test("anim ghost: a copy hangs off its sub-frame, so moving the frame moves the slice", function()
+    local _, ghost, _, r = ring()
+    assertEqual(r.fill.calls.SetPoint[2], r.sub, "not the stage")
+    assertEqual(r.mask.calls.SetPoint[2], r.sub, "a mask with it")
+    assertEqual(r.sub.calls.SetPoint[2], ghost.stage)
+    assertEqual(ghost.radius, 100)
+end)
+
+test("anim ghost: a place moves out along its own bisector by a SetPoint on its sub-frame", function()
+    local G, ghost, NS, r = ring()
+    G.Pose(ghost, withPlace(NS, 4, { radius = 1.5 }), 1, nil, 0)
+    near(r.sub.calls.SetPoint[4], 0, "place 1 is straight up")
+    near(r.sub.calls.SetPoint[5], 50, "half a radius")
+    assertEqual(r.hub.count.SetPoint, 1, "the hub has no place")
+end)
+
+test("anim ghost: a place's offset is in its own scale, so its scale never moves it further", function()
+    local G, ghost, NS, r = ring()
+    G.Pose(ghost, withPlace(NS, 4, { radius = 1.5, scale = 0.5 }), 1, nil, 0)
+    assertEqual(r.sub.calls.SetScale[1], 0.5)
+    near(r.sub.calls.SetPoint[5], 100, "50 on screen")
+end)
+
+test("anim ghost: an orbit carries every copy about the center, turns the art and leaves icons upright", function()
+    local G, ghost, NS, r = ring()
+    local turns = r.icon.count.SetRotation
+    G.Pose(ghost, withPlace(NS, 4, { angle = math.pi / 2 }), 1, nil, 0)
+    near(r.fill.calls.SetPoint[4], 5, "clockwise: up goes right")
+    near(r.fill.calls.SetPoint[5], 0)
+    near(r.icon.calls.SetPoint[4], 30)
+    near(r.fill.calls.SetRotation[1], 0.5 - math.pi / 2, "from the base rotation, clockwise is negative")
+    near(r.mask.calls.SetRotation[1], 0.25 - math.pi / 2, "the mask turns as its art")
+    near(r.mask.calls.SetPoint[4], 5)
+    assertEqual(r.icon.count.SetRotation, turns, "an icon stays upright")
+    near(r.label.calls.SetPoint[4], 30, "the label goes with its slice")
+    near(r.label.calls.SetPoint[5], 0)
+end)
+
+test("anim ghost: a whole-dial rotation turns the places, never the hub or the title", function()
+    local G, ghost, NS, r = ring()
+    local pose = NS.Anim.Rest()
+    pose.rot = math.pi
+    local hubMoves, titleMoves = r.hub.tex[1].count.SetPoint, r.title.count.SetPoint
+    G.Pose(ghost, pose, 1, nil, 0)
+    near(r.icon.calls.SetPoint[5], -30)
+    near(r.fill.calls.SetRotation[1], 0.5 - math.pi)
+    assertEqual(r.hub.tex[1].count.SetPoint, hubMoves)
+    assertEqual(r.title.count.SetPoint, titleMoves)
+end)
+
+test("anim ghost: a spin turns the slice about its own offset point, on top of its orbit", function()
+    local G, ghost, NS, r = ring()
+    G.Pose(ghost, withPlace(NS, 4, { radius = 2, spin = math.pi / 2 }), 1, nil, 0)
+    near(r.sub.calls.SetPoint[5], 100, "the offset takes no spin")
+    near(r.icon.calls.SetPoint[4], 30, "its parts do")
+    near(r.fill.calls.SetRotation[1], 0.5 - math.pi / 2)
+    near(r.label.calls.SetPoint[4], 30)
+    near(r.label.calls.SetPoint[5], 100)
+end)
+
+test("anim ghost: a pose that did not turn or move writes nothing to a copy", function()
+    local G, ghost, NS, r = ring()
+    local pose = withPlace(NS, 4, { angle = 1, radius = 1.2 })
+    G.Pose(ghost, pose, 1, nil, 0)
+    local a, b = r.fill.count.SetPoint, r.sub.count.SetPoint
+    G.Pose(ghost, pose, 1, nil, 0)
+    assertEqual(r.fill.count.SetPoint, a)
+    assertEqual(r.sub.count.SetPoint, b)
+end)
+
+test("anim ghost: a capture puts a moved, turned slice back", function()
+    local G, ghost, NS = ring()
+    G.Pose(ghost, withPlace(NS, 4, { angle = 1, radius = 1.2, scale = 0.5 }), 1, nil, 0)
+    local src = frame({ x = 100, y = 200, regions = { region("Texture", { file = "fill", group = 1, x = 100, y = 205 }) } })
+    assertTrue(G.Capture(ghost, src, { src }, 4, SHAPE))
+    local sub = ghost.subs[1]
+    assertEqual(sub.calls.SetPoint[4], 0)
+    assertEqual(sub.calls.SetPoint[5], 0)
+    assertEqual(sub.calls.SetScale[1], 1)
+    G.Pose(ghost, withPlace(NS, 4, { angle = 1 }), 1, nil, 0)
+    near(sub.tex[1].calls.SetPoint[4], 5 * math.sin(1), "the cached turn did not survive")
+end)
+
+test("anim ghost: a whole-dial offset moves the stage and the text, in radii, unscaled by the pose", function()
+    local G, ghost, NS, r = ring()
+    local pose = NS.Anim.Rest()
+    pose.dy, pose.dx, pose.scale = 0.5, -0.25, 0.5
+    G.Pose(ghost, pose, 1, nil, 0)
+    near(ghost.stage.calls.SetPoint[4], -50, "25 on screen, in the stage's scale")
+    near(ghost.stage.calls.SetPoint[5], 100)
+    assertEqual(ghost.stage.calls.SetPoint[2], ghost.src)
+    near(r.title.calls.SetPoint[4], 10 * 0.5 - 25)
+    near(r.title.calls.SetPoint[5], -60 * 0.5 + 50)
+end)
+
+test("anim ghost: the sent place stays put whatever the pose is doing", function()
+    local G, ghost, NS, r = ring()
+    local A = NS.Anim
+    local pose = withPlace(NS, 4, { angle = 1, radius = 2, scale = 0.5, spin = 1 })
+    pose.rot, pose.dy, pose.scale = 1, 0.5, 0.5
+    G.Pose(ghost, pose, 1, nil, 0)
+    G.Pose(ghost, pose, 1, 1, 0.5)
+    local s = 1 + A.EMPHASIS_PULSE
+    near(r.sub.calls.SetPoint[4], 0)
+    near(r.sub.calls.SetPoint[5], -50 / s, "the stage's offset undone")
+    near(r.sub.calls.SetScale[1], s / 0.5)
+    near(r.fill.calls.SetRotation[1], 0.5, "back on its base")
+    near(r.icon.calls.SetPoint[5], 30)
+    near(r.label.calls.SetPoint[5], 30 * s)
+    near(r.label.calls.SetPoint[4], 0)
+end)
+
+test("anim ghost: no scale reaches the client at 0, which raises", function()
+    local G, ghost, NS, r = ring()
+    local pose = withPlace(NS, 4, { scale = 0 })
+    pose.scale = 0
+    G.Pose(ghost, pose, 1, nil, 0)
+    assertTrue(ghost.stage.calls.SetScale[1] > 0)
+    assertTrue(r.sub.calls.SetScale[1] > 0)
+    assertEqual(r.sub.calls.SetScale[1], G.MIN_SCALE)
+    G.ScaleText(ghost, pose, NS.Anim.Rest(), 1, "open")
+    assertTrue(r.label.anim.calls.SetScaleFrom[1] > 0)
+end)
+
+test("anim ghost: a place fades on its own and the hub on its own", function()
+    local G, ghost, NS, r = ring()
+    local pose = withPlace(NS, 4, { alpha = 0.5 })
+    pose.hub = 0.25
+    G.Pose(ghost, pose, 1, nil, 0)
+    near(r.sub.calls.SetAlpha[1], 0.5)
+    near(r.hub.calls.SetAlpha[1], 0.25)
+    near(ghost.textSubs[1].calls.SetAlpha[1], 0.5, "its text with it")
+    near(ghost.textSubs[2].calls.SetAlpha[1], 0.25)
+end)
+
+test("anim ghost: a text leg carries each place's own scale", function()
+    local G, ghost, NS, r = ring()
+    local from = withPlace(NS, 4, { scale = 0.5 })
+    from.scale = 0.5
+    G.ScaleText(ghost, from, NS.Anim.Rest(), 1, "open")
+    near(r.label.anim.calls.SetScaleFrom[1], 0.25)
+    near(r.title.anim.calls.SetScaleFrom[1], 0.5, "the hub's text has no place")
+end)
+
+test("anim ghost: one-axis scale is each art frame's Scale animation and each string's, one leg at a time", function()
+    local G, ghost, NS, r = ring()
+    local from, to = NS.Anim.Rest(), NS.Anim.Rest()
+    from.scaleX, from.scaleY = 0.5, 0.25
+    G.ScaleText(ghost, from, to, 0.4, "open")
+    assertEqual(r.sub.anim.calls.SetScaleFrom[1], 0.5)
+    assertEqual(r.sub.anim.calls.SetScaleFrom[2], 0.25)
+    assertEqual(r.sub.anim.calls.SetScaleTo[1], 1)
+    assertEqual(r.sub.anim.calls.SetDuration[1], 0.4)
+    assertEqual(r.sub.anim.calls.SetOrigin[1], "CENTER")
+    assertEqual(r.sub.group.count.Play, 1)
+    assertEqual(r.hub.group.count.Play, 1, "the hub stretches with the dial")
+    assertEqual(r.title.anim.calls.SetScaleFrom[2], 0.25, "text takes both axes")
+    assertTrue(r.sub.anim.calls.SetEndDelay[1] > 0, "a finished leg holds until the next: it must not snap to 1")
+    G.ScaleText(ghost, to, to, 0.4, "close")
+    assertEqual(r.sub.group.count.Play, 1, "a leg at 1 plays nothing on the art")
+    G.Pose(ghost, from, 1, nil, 0)
+    near(ghost.stage.calls.SetScale[1], 1, "the stage takes only the uniform part")
+    near(r.title.calls.SetPoint[4], 5, "but the text's place takes the axis")
+    near(r.title.calls.SetPoint[5], -15)
+end)
+
+test("anim ghost: a knot's leg is linear, and the sent place leaves the legs", function()
+    local G, ghost, NS, r = ring()
+    local from, to = NS.Anim.Rest(), NS.Anim.Rest()
+    from.scaleX = 0.5
+    G.ScaleText(ghost, from, to, 0.4, "linear")
+    assertEqual(r.sub.anim.calls.SetSmoothing[1], "NONE")
+    local plays, stops = r.sub.group.count.Play, r.sub.group.count.Stop
+    G.EmphasizeText(ghost, 1, 0.4)
+    assertEqual(r.sub.group.count.Stop, stops + 1, "the sent slice drops the stretch")
+    local pulses = r.label.group.count.Play
+    G.ScaleText(ghost, from, to, 0.4, "linear")
+    assertEqual(r.sub.group.count.Play, plays)
+    assertEqual(r.label.group.count.Play, pulses, "nor does a later leg take its text off the pulse")
+    assertEqual(r.hub.group.count.Play, 2, "the rest keep their legs")
+end)
+
+test("anim ghost: where a frame takes no Scale animation, one-axis scale falls back to the smaller, uniform", function()
+    local NS, m = T.enableAddon()
+    local G = NS.AnimGhost
+    m.CreateFrame = function(_, _, parent)
+        local f = recFrame(parent)
+        rawset(f, "CreateAnimationGroup", false)
+        return f
+    end
+    local ghost = G.New()
+    local src = frame({ regions = { region("Texture", FILE), region("FontString", { text = "Hi", x = 130 }) } })
+    assertTrue(G.Capture(ghost, src, { src }, 1))
+    local fs = ghost.textSubs[1].fonts[1]
+    local pose = NS.Anim.Rest()
+    pose.scaleX, pose.scaleY = 0.5, 0.25
+    G.Pose(ghost, pose, 1, nil, 0)
+    near(ghost.stage.calls.SetScale[1], 0.25)
+    G.ScaleText(ghost, pose, NS.Anim.Rest(), 1, "open")
+    near(fs.anim.calls.SetScaleFrom[1], 0.25)
+    near(fs.anim.calls.SetScaleFrom[2], 0.25, "text keeps its shape too")
+end)
+
+test("anim ghost: a flash is one additive texture, made on first use, over everything", function()
+    local G, ghost, NS = ring()
+    assertNil(ghost.flash, "a style with none pays for none")
+    local pose = NS.Anim.Rest()
+    pose.flash = 0.5
+    G.Pose(ghost, pose, 1, nil, 0)
+    local t = ghost.flash
+    assertEqual(t.calls.SetBlendMode[1], "ADD")
+    assertEqual(t.calls.SetAlpha[1], 0.5)
+    assertTrue(t.calls.SetSize[1] > 200, "past the rim")
+    assertTrue(ghost.flashFrame.calls.SetFrameLevel[1] > ghost.textSubs[2].calls.SetFrameLevel[1])
+    pose.flash = 0.25
+    G.Pose(ghost, pose, 1, nil, 0)
+    assertEqual(ghost.flash, t, "one")
+    assertEqual(#ghost.flashFrame.tex, 1)
+    pose.flash = 0
+    G.Pose(ghost, pose, 1, nil, 0)
+    assertEqual(t.count.Hide, 1)
 end)

@@ -1,9 +1,11 @@
 local _, NS = ...
 -- modules/Anim.lua — the open and close animations' state machine (#13,
--- docs/superpowers/specs/2026-11-01-open-close-animations-design.md). One track per dial. A track
--- tweens a pose ({ alpha, scale, fan }) from wherever it stands to where its phase ends, and
--- modules/Anim_Ghost.lua draws that pose on the surface's insecure copy; each leg also hands the
--- copy's text its own client-run scale (G.ScaleText), which never goes through the frame's SetScale. The real frames are never
+-- docs/superpowers/specs/2026-11-01-open-close-animations-design.md). One track per dial. A fresh leg
+-- plays its style's curve (modules/Anim_Pose.lua) along `e`, 0 hidden to 1 at rest; an interrupted one
+-- tweens from the pose it stands in, every place of it, to the new style's end, so two different styles
+-- meet with no jump. modules/Anim_Ghost.lua draws the pose on the surface's insecure copy; each leg also
+-- hands the copy's text and one-axis art their client-run scale (G.ScaleText), which never goes through
+-- a frame's SetScale. Each track owns its pose buffers, so a tick makes no table. The real frames are never
 -- moved or scaled: a dial is shown and hidden by secure code, which nothing here can delay, and only
 -- its alpha may change in combat (A.Open holds it at 0 under the ghost). Animations are the dial's
 -- alone (the owner's ruling, 2026-11-01): a pad has no track.
@@ -21,59 +23,6 @@ A.NONE = "none"
 A.REVERSE_FLOOR = 0.25  -- the shortest reversal, as a share of the setting's duration
 A.EMPHASIS_HOLD = 0.7   -- the share of a close the sent slice stays at full alpha
 A.EMPHASIS_PULSE = 0.08 -- how far it swells at the height of the pulse
-
-local HIDDEN = {
-    fade = { alpha = 0, scale = 1 },
-    scaleFade = { alpha = 0, scale = 0.8 },
-    fan = { alpha = 0, scale = 1, fan = 0 },
-}
-local KEYS = { "alpha", "scale", "fan" }
-
-local function clamp01(v) return math.max(0, math.min(1, v)) end
-
---- The pose a surface rests in.
-function A.Rest()
-    return { alpha = 1, scale = 1, fan = 1 }
-end
-
---- The pose `style` starts an open from or ends a close on, or nil for None and unknown styles. Pure.
-function A.Hidden(style)
-    local h = HIDDEN[style]
-    if not h then return nil end
-    return { alpha = h.alpha, scale = h.scale, fan = h.fan or 1 }
-end
-
---- Eased progress for `f` (0 to 1): decelerating into an open, accelerating out of a close. Pure.
-function A.Ease(phase, f)
-    if phase == "open" then return 1 - (1 - f) * (1 - f) end
-    return f * f
-end
-
---- A slice's alpha at sweep `fan` (0 hidden, 1 rest), `at` (0 to 1) its share of the way around the
---- ring. Every slice is whole at rest. Pure.
-function A.FanAlpha(fan, at)
-    return clamp01(fan * 2 - at)
-end
-
---- `from` to `to` at eased progress `e`, alpha held to 0 to 1. Pure.
-function A.Lerp(from, to, e)
-    local out = {}
-    for _, k in ipairs(KEYS) do out[k] = from[k] + (to[k] - from[k]) * e end
-    out.alpha = clamp01(out.alpha)
-    return out
-end
-
---- One phase's settings from a surface's `anim` table, filled from `defaults` where a key is missing.
---- @return table { style, duration }
-function A.Config(anim, defaults, phase)
-    anim = type(anim) == "table" and anim or {}
-    local function read(key)
-        local v = anim[phase .. key]
-        if v == nil then return defaults[phase .. key] end
-        return v
-    end
-    return { style = read("Style"), duration = tonumber(read("Duration")) or 0 }
-end
 
 -- ── the tracks ──────────────────────────────────────────────────────────────────────────────
 
@@ -98,38 +47,67 @@ local function sleepIfIdle()
 end
 
 --- A surface's track. `spec`: `src` (the real frame), `roots()` (the frames to mirror, then the ring's
---- size for a Fan), `config(phase)` (A.Config's answer), `restAlpha()` (the real frame's alpha at rest),
+--- size and its shape, { start, disc }), `config(phase)` (A.Config's answer), `restAlpha()` (the real frame's alpha at rest),
 --- `hold()` (the real frame goes invisible under the ghost) and `release()` (it comes back).
 function A.NewTrack(spec)
-    return { spec = spec }
+    return { spec = spec, nowBuf = A.Rest(), fromBuf = A.Rest(), toBuf = A.Rest(),
+        legFrom = A.Rest(), legTo = A.Rest() }
 end
 
 local function capture(track)
     track.ghost = track.ghost or Ghost.New()
-    local roots, size = track.spec.roots()
-    return Ghost.Capture(track.ghost, track.spec.src, roots, size)
+    local roots, size, shape = track.spec.roots()
+    return Ghost.Capture(track.ghost, track.spec.src, roots, size, shape)
 end
 
 local function draw(track, f)
     Ghost.Pose(track.ghost, track.pose, track.spec.restAlpha(), track.emphasis, f)
 end
 
+local function styleOf(track)
+    return track.curve and A.STYLES[track.curve]
+end
+
+-- The leg from `e`: the whole way, or, on a fresh curve with knots, a linear one to the next knot.
+local function runLeg(track, e)
+    local style = styleOf(track)
+    local knots, phase = style and style.knots, track.phase
+    if not knots then
+        track.legEnd = nil
+        return Ghost.ScaleText(track.ghost, track.from, track.to, track.duration, phase)
+    end
+    local stop, n = A.NextKnot(knots, e, phase), track.size
+    A.Pose(track.curve, e, n, track.legFrom, track.cfg)
+    A.Pose(track.curve, stop, n, track.legTo, track.cfg)
+    local share = math.abs(A.Unease(phase, stop) - A.Unease(phase, e))
+    track.legEnd = stop ~= track.target and stop or nil
+    Ghost.ScaleText(track.ghost, track.legFrom, track.legTo, share * track.duration, "linear")
+end
+
 -- Into `phase` from wherever the track stands: a fresh open from the style's hidden pose, a fresh
--- close from rest, an interrupted one from the current pose over the time its alpha has left.
+-- close from rest, an interrupted one from the current pose over the share of `e` it has left.
 local function begin(track, phase, cfg)
-    local hidden = A.Hidden(cfg.style)
+    local target = phase == "open" and 1 or 0
+    local size = track.ghost.size or 1
     local interrupted = track.phase ~= nil
-    local from = interrupted and track.pose or (phase == "open" and hidden or A.Rest())
-    local to = phase == "open" and A.Rest() or hidden
-    local duration = cfg.duration
-    if interrupted then duration = duration * math.max(A.REVERSE_FLOOR, math.abs(to.alpha - from.alpha)) end
-    track.phase, track.from, track.to = phase, from, to
-    track.pose, track.t, track.duration = from, 0, math.max(duration, 0.001)
+    local from, duration = track.fromBuf, cfg.duration
+    local e = 1 - target
+    if interrupted then
+        e = track.e
+        A.Lerp(track.pose, track.pose, 0, from)
+        duration = duration * math.max(A.REVERSE_FLOOR, math.abs(target - e))
+    else
+        A.Pose(cfg.style, e, size, from, cfg)
+    end
+    track.phase, track.from, track.to = phase, from, A.Pose(cfg.style, target, size, track.toBuf, cfg)
+    track.curve, track.cfg, track.size, track.target = not interrupted and cfg.style or nil, cfg, size, target
+    track.e, track.start = e, e
+    track.pose, track.t, track.duration = A.Lerp(from, from, 0, track.nowBuf), 0, math.max(duration, 0.001)
     if phase == "open" then track.emphasis = nil end
     live[track] = true
     draw(track, 0)
     Ghost.Show(track.ghost)
-    Ghost.ScaleText(track.ghost, from.scale, to.scale, track.duration, phase)
+    runLeg(track, e)
     wake()
 end
 
@@ -138,7 +116,7 @@ end
 --- @return boolean animating
 function A.Open(track)
     local cfg = track.spec.config("open")
-    if not A.Hidden(cfg.style) or not capture(track) then
+    if not A.STYLES[cfg.style] or not capture(track) then
         A.Snap(track)
         return false
     end
@@ -151,7 +129,7 @@ end
 --- @return boolean animating
 function A.Close(track)
     local cfg = track.spec.config("close")
-    if not A.Hidden(cfg.style) or not capture(track) then
+    if not A.STYLES[cfg.style] or not capture(track) then
         A.Snap(track)
         return false
     end
@@ -172,15 +150,22 @@ function A.Step(track, elapsed)
     if not track.phase then return end
     track.t = track.t + (tonumber(elapsed) or 0)
     local f = math.min(1, track.t / track.duration)
-    track.pose = A.Lerp(track.from, track.to, A.Ease(track.phase, f))
+    local eased = A.Ease(track.phase, f)
+    track.e = track.start + (track.target - track.start) * eased
+    if track.curve then
+        A.Pose(track.curve, track.e, track.size, track.pose, track.cfg)
+    else
+        A.Lerp(track.from, track.to, eased, track.pose)
+    end
     if f >= 1 then return A.Snap(track) end
+    if track.legEnd and (track.e - track.legEnd) * (track.target - 0.5) >= 0 then runLeg(track, track.legEnd) end
     draw(track, f)
 end
 
 --- Off the track, whatever it was doing: nothing running, the ghost hidden, the real frame back.
 function A.Snap(track)
     local was = track.phase
-    track.phase, track.emphasis, track.pose = nil, nil, nil
+    track.phase, track.emphasis, track.pose, track.curve, track.legEnd = nil, nil, nil, nil, nil
     live[track] = nil
     if track.ghost then Ghost.Hide(track.ghost) end
     sleepIfIdle()

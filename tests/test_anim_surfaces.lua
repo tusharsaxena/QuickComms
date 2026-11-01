@@ -341,6 +341,94 @@ test("anim compat: the Vertex shim answers nothing when any piece is missing", f
     m.Enum = saved
 end)
 
+test("anim compat: the stretch shim answers nothing when any piece is missing", function()
+    local NS = live()
+    local C = NS.Compat
+    assertNil((C.StretchAnimation({})), "a frame with no groups")
+    local noop = function() end
+    local origin
+    local anim = { SetScaleFrom = noop, SetScaleTo = noop, SetDuration = noop, SetSmoothing = noop }
+    local frame = { CreateAnimationGroup = function()
+        return { Play = noop, Stop = noop, CreateAnimation = function() return anim end }
+    end }
+    assertNil((C.StretchAnimation(frame)), "an animation short of a setter")
+    anim.SetOrigin = function(_, point) origin = point end
+    local group, got = C.StretchAnimation(frame)
+    assertTrue(group ~= nil)
+    assertEqual(got, anim)
+    assertEqual(origin, "CENTER")
+end)
+
+local function rotating(NS)
+    local a = NS.db.profile.dials.d2.anim
+    a.openStyle, a.closeStyle, a.openDuration, a.closeDuration = "rotateScale", "rotateScale", 0.5, 0.5
+end
+
+test("anim dial: Rotate and scale turns the real ring's fills on the ghost and leaves its icons upright", function()
+    local NS, m = live()
+    rotating(NS)
+    local inst = dial(NS)
+    m.__click(inst.header, "Toggle")
+    local ghost = inst.track.ghost
+    assertEqual(ghost.radius, inst.shownRing.qcShape.disc / 2, "the ring's own disc")
+    NS.Anim.Step(inst.track, 0.1)
+    local turned, moved = 0, 0
+    for i = 1, ghost.used do
+        local sub = ghost.subs[i]
+        if sub.qcGroup and sub.qcTurned ~= 0 then moved = moved + 1 end
+        for j = 1, sub.qcTexUsed do
+            if sub.qcTex[j].qcTurn then turned = turned + 1 end
+        end
+        if not sub.qcGroup then assertEqual(sub.qcTurned, 0, "the hub stays level") end
+    end
+    assertTrue(turned >= inst.shownRing.qcSpec.size, "every fill turns")
+    assertTrue(moved >= inst.shownRing.qcSpec.size)
+    NS.Anim.Step(inst.track, 1)
+    assertNil(inst.track.phase)
+    assertEqual(inst.header:GetAlpha(), 1)
+end)
+
+test("anim dial: Rotate and scale reverses, sends and stands down as every style does, in combat too", function()
+    local NS, m = live()
+    rotating(NS)
+    local inst = dial(NS)
+    combat(m, true)
+    local blocked = #m.blocked
+    m.__click(inst.header, "Toggle")
+    NS.Anim.Step(inst.track, 0.1)
+    local rot = inst.track.pose.rot
+    assertTrue(rot < 0)
+    m.__click(inst.header, "Toggle")
+    assertEqual(inst.track.phase, "close")
+    assertEqual(inst.track.pose.rot, rot, "no jump")
+    NS.Anim.Step(inst.track, 1)
+    assertEqual(#m.blocked, blocked)
+    combat(m, false)
+    m.__click(inst.header, "Toggle")
+    local w = NS.Dial.RingWedges("d2", NS.Dial.ShownRing("d2"))[1]
+    m.__click(w)
+    assertEqual(#m.sentMacros, 1, "the send never waits")
+    NS.Anim.Step(inst.track, 0.01)
+    local ghost = inst.track.ghost
+    for i = 1, ghost.used do
+        if ghost.subs[i].qcGroup == w.qcGhostGroup then assertEqual(ghost.subs[i].qcTurned, 0, "the sent slice stays put") end
+    end
+    NS.SchemaRuntime.Set("enabled", false)
+    assertFalse(NS.Anim.Running())
+    assertEqual(inst.header:GetAlpha(), 1)
+end)
+
+test("anim dial: a lit slice's highlight goes with its place on the ghost", function()
+    local NS, m = live()
+    local inst = dial(NS)
+    m.__click(inst.header, "Toggle")
+    NS.Anim.Step(inst.track, 1)
+    local ring = inst.shownRing
+    NS.DialSlices.Track(ring, 0, ring.qcShape.disc * 0.4)
+    assertEqual(ring.qcHighlight.qcGhostGroup, ring.qcLit)
+    assertTrue(ring.qcHighlight.qcGhostTurn, "and turns with it")
+end)
+
 -- ── a pad does not animate (the owner's ruling, 2026-11-01): its behavior as before #13 ───────────
 
 test("anim pad: a pad has no track, and its driver shows and hides it at once", function()

@@ -1395,6 +1395,7 @@ L["Set this dial's key on the General page > Keybindings. A dial's key follows i
     "Set this dial's key on the General page > Keybindings. A dial's key follows its place in the dial order."
 L["Scale and fade"] = "Scale and fade"
 L["Fan"] = "Fan"
+L["Rotate and scale"] = "Rotate and scale"
 L["Animation"] = "Animation"
 L["Open"] = "Open"
 L["Close"] = "Close"

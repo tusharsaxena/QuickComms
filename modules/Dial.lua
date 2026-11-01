@@ -105,7 +105,7 @@ local function newTrack(inst)
         src = header,
         roots = function()
             local ring = inst.shownRing
-            return { ring, header.qcPointer }, ring and ring.qcSpec and ring.qcSpec.size
+            return { ring, header.qcPointer }, ring and ring.qcSpec and ring.qcSpec.size, ring and ring.qcShape
         end,
         config = function(phase)
             local dial = profileDial(inst.id)

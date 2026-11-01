@@ -53,6 +53,7 @@ end
 local function middle(j, size, start)
     return math.rad(tonumber(start) or 0) + (j - 1) * 2 * math.pi / size
 end
+S.Middle = middle
 
 local function texture(ring, layer, sub)
     local t = ring:CreateTexture(nil, layer, nil, sub)
@@ -111,6 +112,7 @@ local function place(t, ring, j, shape)
     t:ClearAllPoints()
     t:SetPoint("CENTER", ring, "CENTER", d * math.sin(a), d * math.cos(a))
     t:SetRotation(-a)
+    t.qcGhostTurn = true   -- it turns with its slice on the ghost; an icon or a string stays upright
 end
 
 -- Every fill: the slice's texture, the dial's disc across less the gap's shift, on its place.
@@ -236,6 +238,7 @@ local function placeSprite(t, ring, a, sp)
     t:SetPoint("CENTER", ring, "CENTER", (d + y) * math.sin(a) + x * math.cos(a),
         (d + y) * math.cos(a) - x * math.sin(a))
     t:SetRotation(sp.turn - a)
+    t.qcGhostTurn = true
 end
 
 -- One recipe layer `l` on place j (middle angle `a`) of an n-slice ring: its masks placed first, then
@@ -392,6 +395,7 @@ function S.Track(ring, angle, dist)
     if j then
         if hl.qcPlacedAt ~= j or hl.qcPlacedShape ~= shape then
             hl.qcPlacedAt, hl.qcPlacedShape = j, shape
+            hl.qcGhostGroup = j   -- the ghost's place: it goes where its slice goes
             place(hl, ring, j, shape)
         end
         hl:Show()

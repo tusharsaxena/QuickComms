@@ -269,7 +269,7 @@ test("anim: every leg hands the text its scale, a reversal from where it stands"
     local legs, shown = {}, false
     NS.AnimGhost.Show = function() shown = true end
     NS.AnimGhost.ScaleText = function(_, from, to, duration, phase)
-        legs[#legs + 1] = { from = from, to = to, duration = duration, phase = phase, shown = shown }
+        legs[#legs + 1] = { from = from.scale, to = to.scale, duration = duration, phase = phase, shown = shown }
     end
     A.Open(t)
     assertEqual(legs[1].from, 0.8)
@@ -379,7 +379,7 @@ test("anim: the rows are the owner's: Open and Close on the dial's Animation tab
         values[#values + 1] = c.value
         if c.value == "scaleFade" then assertEqual(c.text, NS.L["Scale and fade"]) end
     end
-    assertEqual(table.concat(values, ","), "none,fade,scaleFade,fan")
+    assertEqual(table.concat(values, ","), "none,fade,scaleFade,fan,rotateScale")
     assertEqual(row("dial.anim.openDuration").normalize(9), 2)
     assertFalse(NS.SchemaRuntime.Set("dial.anim.closeStyle", "sideways", "d2"))
 end)
@@ -398,4 +398,248 @@ test("anim: step 12 takes a value that is no profile quietly", function()
     local NS = T.enableAddon()
     NS.Library.MigrateAnim(3)
     NS.Library.MigrateAnim(nil)
+end)
+
+-- ── the pose engine (#13, the dial styles): the mockup's motion as pure functions ───────────────────
+
+local function clamp(v) return math.max(0, math.min(1, v)) end
+
+-- The mockup's Inward spiral, as a style's `w`: the shape every per-place style takes.
+local function spiral(NS)
+    NS.Anim.STYLES.testSpiral = { w = function(e, _, _, p)
+        p.radius, p.angle, p.alpha = e, (1 - e) * -2.4, clamp(e * 2.5)
+    end }
+    return "testSpiral"
+end
+
+test("anim pose: every style is hidden at 0 and whole at 1, and rests as A.Rest", function()
+    local A = T.enableAddon().Anim
+    local rest = A.Rest()
+    for name in pairs(A.STYLES) do
+        local p = A.Pose(name, 1, 4)
+        for _, k in ipairs({ "alpha", "scale", "scaleX", "scaleY", "fan", "hub" }) do near(p[k], 1, name .. " " .. k) end
+        for _, k in ipairs({ "rot", "dx", "dy", "flash" }) do near(p[k], rest[k], name .. " " .. k) end
+        assertEqual(A.Hidden(name, 4).alpha, 0, name .. " hides")
+    end
+end)
+
+test("anim pose: Rotate and scale is the mockup's", function()
+    local A = T.enableAddon().Anim
+    local p = A.Pose("rotateScale", 0.2, 8)
+    near(p.scale, 0.45 + 0.55 * 0.2)
+    near(p.rot, 0.8 * -2.1, "about 120 degrees at the start")
+    near(p.alpha, 0.5)
+    near(A.Pose("rotateScale", 0.6, 8).alpha, 1, "whole well before it lands")
+    assertNil(p.places, "a whole-dial style has none")
+end)
+
+test("anim pose: Back overshoots and Bounce rebounds, both landing exactly, as the mockup's", function()
+    local A = T.enableAddon().Anim
+    near(A.Back(0), 0)
+    near(A.Back(1), 1)
+    assertTrue(A.Back(0.7) > 1, "past it")
+    near(A.Back(0.7), 1 + 0.09 * (2.9 * -0.3 + 1.9))
+    near(A.Bounce(0), 0)
+    near(A.Bounce(1), 1)
+    near(A.Bounce(0.5), 7.5625 * (0.5 - 1.5 / 2.75) ^ 2 + 0.75)
+    assertTrue(A.Bounce(0.72) < A.Bounce(0.6) or A.Bounce(0.8) < A.Bounce(0.72), "it comes back down")
+end)
+
+test("anim pose: a per-place style fills one entry per place, zero-based as the mockup, and fades the hub on its own", function()
+    local NS = T.enableAddon()
+    local A = NS.Anim
+    local seen = {}
+    A.STYLES.testSeen = { w = function(e, i, n, p) seen[#seen + 1] = i .. "/" .. n; p.alpha = e end }
+    local p = A.Pose("testSeen", 0.25, 3)
+    assertEqual(table.concat(seen, ","), "0/3,1/3,2/3")
+    assertEqual(p.count, 3)
+    near(p.places[2].alpha, 0.25)
+    assertEqual(p.places[2].radius, 1, "the rest keeps its rest value")
+    assertEqual(p.alpha, 1, "the whole dial stays whole")
+    near(p.hub, 0.5, "the mockup's hub")
+    A.STYLES.testSeen = nil
+end)
+
+test("anim pose: a style hears its config, for a direction", function()
+    local NS = T.enableAddon()
+    local A = NS.Anim
+    local heard
+    A.STYLES.testDir = { g = function(_, _, cfg) heard = cfg end }
+    A.Pose("testDir", 0.5, 1, nil, { direction = "up" })
+    assertEqual(heard.direction, "up")
+    A.STYLES.testDir = nil
+    assertEqual(A.Config({ openDirection = "left" }, {}, "open").direction, "left")
+end)
+
+test("anim pose: A.Pose and A.Lerp write into a buffer, with no table per tick", function()
+    local NS = T.enableAddon()
+    local A = NS.Anim
+    local name = spiral(NS)
+    local into, other = A.Rest(), A.Rest()
+    A.Pose(name, 0.5, 8, into)
+    A.Pose(name, 0.1, 8, other)
+    assertEqual(A.Pose(name, 0.2, 8, into), into)
+    local places = into.places[3]
+    collectgarbage("stop")
+    local before = collectgarbage("count")
+    for i = 1, 1000 do
+        A.Pose(name, (i % 10) / 10, 8, into)
+        A.Pose("rotateScale", (i % 10) / 10, 8, other)
+        A.Lerp(into, other, 0.5, into)
+        A.Pose(name, 0.5, 8, into)
+    end
+    local grown = collectgarbage("count") - before
+    collectgarbage("restart")
+    assertEqual(into.places[3], places, "the same place table")
+    assertTrue(grown < 1, "kilobytes grown: " .. grown)
+end)
+
+test("anim pose: a buffer left by a per-place style answers no places for a whole-dial one", function()
+    local NS = T.enableAddon()
+    local A = NS.Anim
+    local into = A.Pose(spiral(NS), 0.5, 8)
+    assertTrue(into.places ~= nil)
+    A.Pose("fade", 0.5, 8, into)
+    assertNil(into.places)
+    assertEqual(into.hub, 1)
+end)
+
+test("anim pose: A.Lerp walks every key and every place, a missing side at rest", function()
+    local NS = T.enableAddon()
+    local A = NS.Anim
+    local name = spiral(NS)
+    local a, b = A.Pose(name, 0, 2), A.Rest()
+    b.rot, b.dy, b.flash, b.scaleX = 2, 1, 1, 0.5
+    local m = A.Lerp(a, b, 0.5)
+    near(m.rot, 1)
+    near(m.dy, 0.5)
+    near(m.flash, 0.5)
+    near(m.scaleX, 0.75)
+    near(m.places[2].radius, 0.5, "toward its rest")
+    near(m.places[2].angle, -1.2)
+    assertEqual(m.count, 2)
+    assertNil(A.Lerp(A.Rest(), A.Rest(), 0.5).places)
+end)
+
+test("anim pose: A.Unease undoes A.Ease in e, and a knot is found each way", function()
+    local A = T.enableAddon().Anim
+    for _, f in ipairs({ 0, 0.2, 0.5, 1 }) do
+        near(A.Unease("open", A.Ease("open", f)), f, "open")
+        near(A.Unease("close", 1 - A.Ease("close", f)), f, "close")
+    end
+    local knots = { 0.25, 0.5 }
+    assertEqual(A.NextKnot(knots, 0, "open"), 0.25)
+    assertEqual(A.NextKnot(knots, 0.25, "open"), 0.5)
+    assertEqual(A.NextKnot(knots, 0.5, "open"), 1)
+    assertEqual(A.NextKnot(knots, 1, "close"), 0.5)
+    assertEqual(A.NextKnot(knots, 0.25, "close"), 0)
+end)
+
+test("anim pose: a track plays a style's curve on the same e as the mockup, up an open and down a close", function()
+    local NS = T.enableAddon()
+    local A = NS.Anim
+    local t = track(NS, { open = { style = "rotateScale", duration = 1 }, close = { style = "rotateScale", duration = 1 } })
+    A.Open(t)
+    A.Step(t, 0.5)
+    near(t.pose.scale, A.Pose("rotateScale", 0.75, 1).scale, "1 - (1 - f)^2")
+    A.Step(t, 1)
+    A.Close(t)
+    near(t.pose.scale, 1, "a close starts whole")
+    A.Step(t, 0.5)
+    near(t.pose.scale, A.Pose("rotateScale", 0.75, 1).scale, "1 - f^2")
+    A.Snap(t)
+end)
+
+test("anim pose: a reversal between two styles starts from the pose, every place of it, and lands on the new one", function()
+    local NS = T.enableAddon()
+    local A = NS.Anim
+    local name = spiral(NS)
+    local t = track(NS, { open = { style = name, duration = 1 }, close = { style = "rotateScale", duration = 1 } })
+    NS.AnimGhost.New = function() return { size = 8 } end
+    A.Open(t)
+    A.Step(t, 0.3)
+    local angle, radius = t.pose.places[4].angle, t.pose.places[4].radius
+    local e = t.e
+    assertTrue(A.Close(t))
+    near(t.pose.places[4].angle, angle, "no jump")
+    near(t.pose.places[4].radius, radius)
+    near(t.duration, e, "the way back's share")
+    A.Step(t, t.duration * 0.5)
+    assertTrue(math.abs(t.pose.places[4].angle) < math.abs(angle), "easing out of it")
+    assertTrue(t.pose.rot < 0, "and into the new style")
+    A.Step(t, 1)
+    assertNil(t.phase)
+    A.STYLES[name] = nil
+end)
+
+test("anim pose: a reversal's time is the e left to travel, floored", function()
+    local NS = T.enableAddon()
+    local A = NS.Anim
+    local cfg = { style = "scaleFade", duration = 1 }
+    local t = track(NS, { open = cfg, close = cfg })
+    A.Open(t)
+    A.Close(t)
+    near(t.duration, A.REVERSE_FLOOR, "barely open")
+    A.Snap(t)
+end)
+
+test("anim pose: knots break a fresh curve into linear legs, each from its own pose, and turn once", function()
+    local NS = T.enableAddon()
+    local A = NS.Anim
+    A.STYLES.testKnots = { knots = { 0.5 }, g = function(e, p) p.alpha, p.scaleX = e, 0.5 + 0.5 * e end }
+    local cfg = { style = "testKnots", duration = 1 }
+    local t = track(NS, { open = cfg, close = cfg })
+    local legs = {}
+    NS.AnimGhost.ScaleText = function(_, from, to, duration, phase)
+        legs[#legs + 1] = { from.scaleX, to.scaleX, duration, phase }
+    end
+    A.Open(t)
+    assertEqual(#legs, 1)
+    near(legs[1][1], 0.5)
+    near(legs[1][2], 0.75, "to the knot")
+    near(legs[1][3], A.Unease("open", 0.5), "over its share of the time")
+    assertEqual(legs[1][4], "linear")
+    A.Step(t, 0.1)
+    assertEqual(#legs, 1, "not yet")
+    A.Step(t, 0.3)
+    assertEqual(#legs, 2, "past the knot")
+    near(legs[2][2], 1)
+    A.Step(t, 0.1)
+    assertEqual(#legs, 2, "once")
+    A.Snap(t)
+    A.Close(t)
+    assertEqual(#legs, 3)
+    near(legs[3][1], 1)
+    near(legs[3][2], 0.75, "down to the knot")
+    A.Snap(t)
+    A.STYLES.testKnots = nil
+end)
+
+test("anim pose: a reversal is one plain leg, whatever the knots", function()
+    local NS = T.enableAddon()
+    local A = NS.Anim
+    A.STYLES.testKnots = { knots = { 0.5 }, g = function(e, p) p.alpha = e end }
+    local cfg = { style = "testKnots", duration = 1 }
+    local t = track(NS, { open = cfg, close = cfg })
+    A.Open(t)
+    local phase
+    NS.AnimGhost.ScaleText = function(_, _, _, _, leg) phase = leg end
+    A.Close(t)
+    assertEqual(phase, "close")
+    assertNil(t.legEnd)
+    A.Snap(t)
+    A.STYLES.testKnots = nil
+end)
+
+test("anim pose: Rotate and scale is offered for both phases, knobs included", function()
+    local NS = T.enableAddon()
+    assertTrue(NS.SchemaRuntime.Set("dial.anim.openStyle", "rotateScale", "d2"))
+    assertTrue(NS.SchemaRuntime.Set("dial.anim.closeStyle", "rotateScale", "d2"))
+    for _, r in ipairs(NS.addon.Settings.Schema) do
+        if r.path == "dial.anim.closeDuration" then
+            local shown = false
+            for _, v in ipairs(r.shownWhen.equals) do shown = shown or v == "rotateScale" end
+            assertTrue(shown, "its Duration shows")
+        end
+    end
 end)
