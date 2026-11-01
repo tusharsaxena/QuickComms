@@ -178,8 +178,11 @@ test("skin hud: a pad's border blocks take bar.borderStyle while they follow, th
     NS.ApplySkin = function(frame, skin) skins[frame] = skin return apply(frame, skin) end
     local root = NS.Pad.Instance("p1").root
     set(NS, "pad.look.borderStyle", "Tooltip", "p1")
-    -- red under: edgeOf reads look.borderStyle whatever the companion
-    assertEqual(skins[root].edgeFile, FLAT, "bar.borderStyle is None: the flat edge")
+    -- red under: edgeOf not on S.BarBorder, the skin's None drawing no art over the player's pick
+    assertEqual(skins[root].edgeFile, TOOLTIP, "a skin's None defers to the stored style")
+    set(NS, "pad.look.borderStyle", "None", "p1")
+    assertEqual(skins[root].edgeFile, FLAT, "None all the way down: the flat edge")
+    set(NS, "pad.look.borderStyle", "Tooltip", "p1")
     set(NS, "pad.look.borderStyleFromSkin", false, "p1")
     assertEqual(skins[root].edgeFile, TOOLTIP, "off: the player's art")
     set(NS, "pad.button.borderStyle", "Tooltip", "p1")
@@ -188,6 +191,29 @@ test("skin hud: a pad's border blocks take bar.borderStyle while they follow, th
     -- X4: the player's colors are never the skin's
     local bg = firstButton(NS).qcBg.__color
     assertColor(bg, { 0x3F / 255, 0x3F / 255, 0x3F / 255, 0.25 }, "the owner's button body")
+end)
+
+test("skin hud: a real bar.borderStyle in a skin wins over the player's pick while it follows", function()
+    local NS, m = live()
+    local Skin = m.LibStub("LibKa0s-Skin-1.0")
+    local skins = {}
+    local apply = NS.ApplySkin
+    NS.ApplySkin = function(frame, skin) skins[frame] = skin return apply(frame, skin) end
+    local root = NS.Pad.Instance("p1").root
+    set(NS, "pad.look.borderStyle", "Tooltip", "p1")
+    set(NS, "pad.look.borderSize", 7, "p1")
+    assertEqual(skins[root].edgeSize, 7, "None: the stored thickness")
+    local solid = Skin:ResolveSkin("contrast")
+    assertEqual(solid["bar.borderStyle"], "Solid", "High Contrast states a real style")
+    Skin:SetChoice(OWNER, "ka0s", "contrast")
+    NS.Surfaces.ApplyAll("test")
+    -- red under: edgeOf reading the stored size or style under a real style
+    assertTrue(skins[root].edgeFile ~= TOOLTIP, "the skin's style wins")
+    assertEqual(skins[root].edgeSize, solid["bar.borderSize"], "and its thickness")
+    set(NS, "pad.look.borderStyleFromSkin", false, "p1")
+    assertEqual(skins[root].edgeFile, TOOLTIP, "off: the player's art under every skin")
+    assertEqual(skins[root].edgeSize, 7, "and thickness")
+    Skin:SetChoice(OWNER, "ka0s", "ka0s")
 end)
 
 test("skin hud: an icon's border takes the skin's icon border while it follows, the pick when not", function()

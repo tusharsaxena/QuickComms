@@ -246,7 +246,8 @@ local function tokenGlyph(box)
         frame.qcTokenGlyph = glyph
     end
     glyph.icon:SetTexture(NS.Icon("info"))
-    NS.Skin.Mark(glyph.icon, { panel = true })
+    -- The mark sits on the glyph's frame, not the box's, so S.Mark needs telling whose release gives it back.
+    NS.Skin.Mark(glyph.icon, { panel = true, widget = box })
     local _, fontSize = label:GetFont()
     local size = math.max(GLYPH_MIN, math.min(GLYPH_MAX, tonumber(fontSize) or 0))
     glyph:SetSize(size, size)

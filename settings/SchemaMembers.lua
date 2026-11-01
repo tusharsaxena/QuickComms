@@ -405,7 +405,8 @@ local function stampBlock(out, list, prefix, checks, instance)
     for _, row in ipairs(list) do
         local leaf = row.path:sub(#prefix + 1)
         local c = checks[leaf] or (leaf:match("FromSkin$") and { validate = BOOL }) or {}
-        row.instance, row.validate, row.normalize = instance or "pad", c.validate, c.normalize
+        -- A rule a row came with stays: assigning over it would let the Schema seam write anything.
+        row.instance, row.validate, row.normalize = instance or "pad", row.validate or c.validate, c.normalize
         out[#out + 1] = row
     end
 end
@@ -633,7 +634,12 @@ local function hubRows(O, checks)
     pair(HUB, "background", L["Backdrop color"], "useClassColorBackground")
     out[#out + 1] = size(RIM, "borderSize", L["Hub border size"], 0, 6,
         L["How thick the rim around the hub is, in pixels. 0 draws none; Rimmed disc always draws one."],
-        { startsLine = true, disabledIf = function() return NS.SchemaRuntime.Get(HUBP .. "borderColorFromSkin") == true end })
+        -- The composed border rows' rule: a skin's None leaves the stored thickness drawing, so the row
+        -- grays only while it follows a real style.
+        { startsLine = true, disabledIf = function()
+            local real = NS.Skin.Token("bar.borderStyle")
+            return NS.SchemaRuntime.Get(HUBP .. "borderColorFromSkin") == true and real ~= nil and real ~= "None"
+        end })
     pair(RIM, "borderColor", L["Hub border color"], "useClassColorBorder")
     out[#out + 1] = size(CIRCLE, "circleSize", L["Circle size"], 4, 60, L["How wide the circle on the hub is, in pixels."],
         { startsLine = true })

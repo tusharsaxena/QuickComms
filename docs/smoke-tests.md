@@ -39,7 +39,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | IDS-1 | Instance ids | The Midnight dungeons and raids |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes |
 | ANIM-1..20 | [Animations](#animations) | The dial's open and close, every style by family, Slide's Direction, a send, combat, the stand-down, Alt-Z, a pad having none, text that neither shimmers nor truncates, the old defaults moved |
-| FSKIN-1..11 | [The full skin](#the-full-skin) | Every pad and dial color, the shadow, texture and shine on the skin, Ka0s Default unmoved, the companions off, an existing profile, meaning colors, the ghost |
+| FSKIN-1..12 | [The full skin](#the-full-skin) | Every pad and dial color, the shadow, texture and shine on the skin, Ka0s Default unmoved, the companions off, an existing profile, meaning colors, the ghost |
 | SKIN-1..30 | [Skins](#skins) | The skinning rollout: the one-time reset under Ka0s Default, a new pad, dial or profile on the skin, Ka0s Default elsewhere unchanged, the Skin tab, every skin on the pads and dials, the *Use the skin's ...* boxes, the Preview as window, the callout popup and the icon browser, the settings pages, the tool windows, the Font and texture overrides, Ignore fonts, EllesmereUI on and off and the reload back, profiles and combat, the first-run skin picker (its eye, Apply, close, gear, the switch and a profile event, one picker across Ka0s addons), the CLI and the degraded install; LibKa0s v1.82.0: the Font outline, From skin font flags, `/qc skin`, the HUD size scale and the windows' width parity; the skin on the only media picker |
 
 ## Before you start
@@ -1750,12 +1750,14 @@ R-4; by QC-01, 2026-10-30, LibKa0s v1.82.0's faces; by QC-F01, 2026-10-31, LibKa
 
 **SKIN-6. The *Use the skin's ...* boxes.** On a non-default skin, Pad → Header: untick **Use the
 skin's font** → *Font* comes alive with your pick and the header redraws in it; tick → the skin's face
-again, *Font* grayed showing it. The same for **Use the skin's border** and *Border style* (thickness
-and color stay live either way); the same boxes on Section titles and Buttons, the border box on
+again, *Font* grayed showing it. **Use the skin's border**: under a skin with no border of its own
+(Obsidian) *Border style* and its thickness stay live and draw your pick, ticked or not; under
+**High Contrast**, Azeroth, WoW Default and WoW Midnight, ticked, both gray and the skin's border draws
+(FSKIN-12); the same boxes on Section titles and Buttons, the border box on
 Window, and on the Dial's Labels tab both font blocks' boxes. Pad → Icons and Dial → Icons: with **Show border** off, *Use the skin's
 border* is grayed; with it on and the box ticked, *Border style* and *Border thickness* are grayed and
 the edge is the skin's icon border; untick → yours. Switch skins with a box unticked → that pick is
-kept. Result: pass (owner-marked 2026-10-30).
+kept. (Amended by FS-QC-GATE, 2026-11-01, a skin's None defers.) Result: owed (expected result changed).
 
 **SKIN-7. The Preview as window (D8, D9).** Pick a situation in **Preview as…** under each skin →
 the window wears the skin: its fill, edge and top bar, the title and the close mark centered in the
@@ -2060,8 +2062,8 @@ checks' named ones (a tooltip title, FSKIN-9). Result: owed.
 
 **FSKIN-2. Every pad color follows a skin, live.** Skin → **Obsidian**, then **Azeroth**, a pad on
 screen → with no reload the window fill and edge, the header's and the titles' text, a faint band
-behind each in the skin's title color with an edge at the skin's thickness, the buttons' body, edge and
-label all change. Fail: any of them keeping the last skin. Result: owed.
+behind each in the skin's title color, the buttons' body, edge and label all change. A band's edge
+draws at your stored thickness, none by default, under a skin with no border of its own (FSKIN-12). Fail: any of them keeping the last skin. Result: owed.
 
 **FSKIN-3. Every dial color follows a skin, live.** Same, a dial open and paged → the slices, a hovered
 slice, the hub's disc, rim and circle, the pointer, the page arrows and plates, the pill and dots, the
@@ -2081,7 +2083,8 @@ skin. Result: owed.
 **FSKIN-6. A box unticked keeps your color.** On a pad, untick *Use the skin's color* beside Background
 color and pick red, then switch skins → the red stays; tick the box → the skin's, and your red comes
 back when it is unticked. No swatch grays out. Same on the Hub's Hub border, where the box also gives
-the thickness to the skin: Hub border size grays while it is on. Result: owed.
+the thickness to a skin with a border of its own: under **High Contrast** Hub border size grays while
+it is on; under Obsidian it stays live and your size draws. Result: owed.
 
 **FSKIN-7. An existing profile moves once.** Log in on a profile from before this build with colors of
 your own → every pad and dial follows the skin, the stored colors kept behind the unticked swatches'
@@ -2107,6 +2110,15 @@ Default, no text losing its shadow. Result: owed.
 
 **FSKIN-11. The picker's preview.** The first-run picker's eye over a pad → each pick repaints the pad
 and dial in that skin, closing it puts them back. Result: owed.
+
+**FSKIN-12. A skin's own wash and border.** On a pad's Main window, tick *Use the skin's border*, pick a
+border style of your own and thickness 4. **Obsidian** → your border draws, since this skin has none of
+its own. **High Contrast**, then Azeroth, WoW Default and WoW Midnight → the skin's border wins at its
+own thickness, on the window, the header and titles' bands and the buttons. Untick the box → yours under
+every skin. Ka0s Default with no pick of yours → no band edge and the shipped look. A refused and a
+cooling button → the two veils take each skin's dim color and still read apart, the refused one darker.
+Icon borders and glows differ between skins with the boxes ticked. A send flash keeps its meaning color.
+Result: owed.
 
 ## Pending sign-off
 

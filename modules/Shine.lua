@@ -101,7 +101,8 @@ end
 --- `lookToken` and `tintToken` name (a class-colored tint stays the class's); Strength stays stored.
 function Sh.Resolve(cfg, lookToken, tintToken)
     cfg = type(cfg) == "table" and cfg or {}
-    local follows = cfg.shineFromSkin == true and lookToken ~= nil
+    -- NS.SkinFollow's rule: with the library absent the stored look and tint stand, not a token's default.
+    local follows = cfg.shineFromSkin == true and lookToken ~= nil and NS.Skin.IsEnabled()
     local name = follows and NS.Skin.Token(lookToken) or cfg.shineLook
     local look = KNOWN[name] and name or "none"
     local strength = tonumber(cfg.shineStrength) or Sh.STRENGTH

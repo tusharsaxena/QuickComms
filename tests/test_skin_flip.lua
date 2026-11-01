@@ -253,7 +253,8 @@ test("skin flip: a skin switch reaches every drawing setter on a pad", function(
     assertColor(drawn[inst.root].border, color(NS, "win.border"), "the window's edge")
     assertColor(drawn[inst.header].bg, color(NS, "title.bg"), "the header's band")
     assertColor(drawn[btn.qcEdge].border, color(NS, "btn.border"), "a button's edge")
-    assertEqual(drawn[inst.header].edgeSize, Skin:ResolveSkin(OTHER)["win.borderSize"], "the band's thickness")
+    assertEqual(Skin:ResolveSkin(OTHER)["bar.borderStyle"], "None", "this skin states no border of its own")
+    assertEqual(drawn[inst.header].edgeSize, 0, "so the band keeps the player's stored thickness")
 end)
 
 test("skin flip: a skin switch reaches the dial's slices, hub, pointer, page row and shine", function()
@@ -279,6 +280,32 @@ test("skin flip: a skin switch reaches the dial's slices, hub, pointer, page row
     assertEqual(look.shine.tint[1], tr)
     assertEqual(look.shine.tint[2], tg)
     assertEqual(look.shine.tint[3], tb)
+end)
+
+test("skin flip: with the library absent a stored color and shine draw with their companions on", function()
+    -- red under: a follow read past S.IsEnabled, the degraded S.Color's owner default over the stored one
+    local NS = T.enableAddon{ skip = T.loadAddon.libFiles }
+    assertTrue(NS.Skin.IsEnabled() == false, "the degraded facade")
+    local stored = { r = 0.3, g = 0.2, b = 0.1, a = 0.5 }
+    local r, g, b, a = NS.SkinFollow({ background = stored, backgroundFromSkin = true }, "background", "qc.btnBg")
+    assertColor({ r, g, b, a }, { 0.3, 0.2, 0.1, 0.5 }, "the player's color")
+    local shine = NS.Shine.Resolve({ shineFromSkin = true, shineLook = "rim", shineStrength = 50,
+        shineTint = { r = 0.3, g = 0.2, b = 0.1, a = 1 } }, "qc.btnShine", "qc.btnShineTint")
+    assertEqual(shine.look, "rim", "the player's look")
+    assertColor({ shine.tint[1], shine.tint[2], shine.tint[3], 1 }, { 0.3, 0.2, 0.1, 1 }, "the player's tint")
+end)
+
+test("skin flip: the state veils take each skin's cover.dim, each at its own alpha", function()
+    local NS, m = live()
+    local Skin = skinOf(m)
+    for _, key in ipairs({ "ka0s", OTHER, GLASS }) do
+        Skin:SetChoice(OWNER, "ka0s", key)
+        local chrome = NS.PadRender.Chrome()
+        local dim = color(NS, "cover.dim")
+        -- red under: veils still typed black, or following cover.dim whole and reading alike
+        assertColor(chrome.veil, { dim[1], dim[2], dim[3], 0.55 }, key .. " refused")
+        assertColor(chrome.veilCool, { dim[1], dim[2], dim[3], 0.35 }, key .. " cooling")
+    end
 end)
 
 test("skin flip: a companion off draws the stored value under every skin", function()
@@ -374,11 +401,13 @@ test("skin flip: Ka0s Default keeps the shadow the blocks ship with, every other
     local R, Skin = NS.PadRender, skinOf(m)
     local look = { fontShadow = true, fontShadowFromSkin = true }
     local shadow, follows = R.ShadowOf(look)
-    assertEqual(shadow[1], 1, "offset 1, -1")
-    assertEqual(shadow[6], 1, "opaque black, through qc.shadow")
-    assertFalse(follows)
+    assertTrue(shadow == true and follows == true, "S.HudFont reads qc.shadow")
+    -- red under: no shadowToken, Ka0s Default's hud.shadow false taking the shipped shadow away
+    pad(NS)
+    local object = button(NS).qcLabel.__fontObject
+    assertEqual(object.__shadow[1], 1, "offset 1, -1")
+    assertEqual(select(6, NS.Skin.HudShadow("qc.shadow")), 1, "opaque black, through qc.shadow")
     Skin:SetChoice(OWNER, "ka0s", OTHER)
-    assertTrue(select(2, R.ShadowOf(look)), "S.HudFont reads the skin's")
     look.fontShadowFromSkin = false
     shadow, follows = R.ShadowOf(look)
     assertTrue(shadow == true and follows == false, "off: the stored one")
@@ -652,15 +681,27 @@ test("skin fix: a row's Edit glyph takes the tint with the Scope cleared, and gi
     assertColor(m.__paint(image).vertex, { 1, 1, 1, 1 }, "a recycled glyph keeps no tint")
 end)
 
-test("skin fix: with the library absent the marks release by callback and forget nothing", function()
+test("skin fix: the popup's token glyph gives its mark back when the box is released", function()
+    -- red under: S.Mark with no `widget`: the glyph's texture sits on the glyph, not the box's frame
+    local _, m, Skin = painted()
+    local ace = m.LibStub("AceGUI-3.0")
+    local tex = spiedTexture(m)
+    local box = ace:Create("Icon")
+    Skin:For(OWNER).Mark(tex, { panel = true, widget = box })
+    Skin:SetChoice(OWNER, "ka0s", OTHER)
+    assertTrue(Skin.painted[tex] ~= nil, "recorded while the box is held")
+    ace:Release(box)
+    assertNil(Skin.painted[tex])
+end)
+
+test("skin fix: with the library absent the marks forget nothing and tint nothing", function()
     local NS = T.newAddon{ skip = T.loadAddon.libFiles }
     local tinted
     local image = { SetAtlas = function() end, SetVertexColor = function(_, r) tinted = r end }
     local w = { image = image, SetCallback = function(self, name, fn) self[name] = fn end }
     NS.addon.Settings.Editors.RemoveMark(w)
-    assertTrue(w.OnRelease ~= nil, "the callback is the chain here")
-    w.OnRelease(w)
-    assertEqual(tinted, 1)
+    assertNil(w.OnRelease, "S.Mark is a no-op, so no release work is left to do")
+    assertNil(tinted, "nothing tinted")
 end)
 
 -- ── a row grayed while its value is drawn ──
@@ -699,14 +740,17 @@ test("skin fix: a dial's Shine rows gray by the look that draws, not the stored 
     shineGates("dial", "d2", "dial.slice.", "rim")
 end)
 
-test("skin fix: the hub's border size grays while its color follows, the two sharing the companion", function()
+test("skin fix: the hub's border size grays only while it follows a real style", function()
     local NS, m = live()
     local P = dofile("tests/page_helpers.lua")(NS, m)
     local Ed, S = NS.addon.Settings.Editors, NS.SchemaRuntime
     P.show("Dial")
     Ed.Select("dial", "d2")
     local row = Ed.Row("dial.hub.borderSize")
-    assertTrue(row.disabledIf(), "bar.borderSize draws while it follows")
+    -- red under: a row gray over the stored thickness a skin's None still draws
+    assertEqual(row.disabledIf(), false, "None defers: the stored thickness draws")
+    skinOf(m):SetChoice(OWNER, "ka0s", "contrast")
+    assertTrue(row.disabledIf(), "a real style: bar.borderSize draws")
     assertTrue(S.Set("dial.hub.borderColorFromSkin", false, "d2"))
     assertEqual(row.disabledIf(), false)
 end)
@@ -760,7 +804,11 @@ end)
 -- NS.Skin.Resolve answering `size` for bar.borderSize: every shipped skin's thickness is 1, the
 -- stored default too, so only a token no skin ships tells the rows apart.
 local function barThickness(NS, size)
-    local resolve = NS.Skin.Resolve
+    local resolve, border = NS.Skin.Resolve, NS.Skin.BarBorder
+    NS.Skin.BarBorder = function(style, show, stored, follows)
+        local s, sh, sz = border(style, show, stored, follows)
+        return s, sh, follows and size or sz
+    end
     NS.Skin.Resolve = function(token, value, follows)
         if follows and token == "bar.borderSize" then return size end
         return resolve(token, value, follows)
@@ -931,10 +979,17 @@ end)
 test("skin fix: a cell's hover art is the client's while the panel is stock, tinted with the Scope cleared", function()
     local NS, m, Skin = painted()
     local B = NS.addon.Settings.IconBrowser
+    -- The recorder's Button has no highlight region of its own: the client's, as a Texture, there when
+    -- the cell is made, the one time S.HoverArt is called for it.
+    local art = m.CreateFrame("Frame"):CreateTexture()
+    local create = m.CreateFrame
+    m.CreateFrame = function(kind, ...)
+        local f = create(kind, ...)
+        if kind == "Button" then rawset(f, "GetHighlightTexture", function() return art end) end
+        return f
+    end
     assertTrue(B.Open({ owner = "test", onChoose = function() end }))
-    -- The recorder's Button has no highlight region of its own: the client's, as a Texture.
-    local cell, art = B.cells[1], m.CreateFrame("Frame"):CreateTexture()
-    rawset(cell, "GetHighlightTexture", function() return art end)
+    m.CreateFrame = create
     Skin:SetChoice(OWNER, "ka0s", GLASS)
     assertFalse(m.__paint(art).desaturated, "stock")
     Skin:SetIgnore(OWNER, false, nil)

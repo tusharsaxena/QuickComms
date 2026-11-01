@@ -65,17 +65,24 @@ local function rgba(name)
     return { r or 1, g or 1, b or 1, a or 1 }
 end
 
+local function veilOf(name)
+    local c = rgba("cover.dim")
+    c[4] = rgba(name)[4]
+    return c
+end
+
 --- The HUD's chrome colors in the applied skin, as { r, g, b, a }, read once per look change (never per
 --- button, never per frame): `lock` the padlock (text.accent), `veil` / `veilCool` the refused and
---- cooling veils (qc.veil, qc.veilCool), `hover` the hover wash (qc.hover), `flash` the send results
+--- cooling veils (qc.veil, qc.veilCool, below), `hover` the hover wash (qc.hover), `flash` the send results
 --- (sent text.accent, dropped qc.dropped, guarded sem.warn), `lockdown` and `stale` the header's and the
 --- hub's tags (qc.lockdown, text.disabled), `preview` the PREVIEW / TEST MODE marks (qc.preview),
 --- `arrowDim` a dial's arrow at an end (qc.arrowDim), `title` a font block's fallback gold
 --- (title.text), `body` a button's fallback fill (btn.bg), `tip` the tooltip lines (gtip.value) and
---- `tipTitle` their title (gtip.title).
+--- `tipTitle` their title (gtip.title). The veils are cover.dim's color at their own alphas: each skin
+--- has its own wash, and the alpha is what tells a refused button from a cooling one.
 function R.Chrome()
     if chrome and chrome.gen == looksGen then return chrome end
-    chrome = { gen = looksGen, lock = rgba("text.accent"), veil = rgba("qc.veil"), veilCool = rgba("qc.veilCool"),
+    chrome = { gen = looksGen, lock = rgba("text.accent"), veil = veilOf("qc.veil"), veilCool = veilOf("qc.veilCool"),
         hover = rgba("qc.hover"), lockdown = rgba("qc.lockdown"), stale = rgba("text.disabled"),
         preview = rgba("qc.preview"), arrowDim = rgba("qc.arrowDim"), title = rgba("title.text"),
         body = rgba("btn.bg"), tip = rgba("gtip.value"), tipTitle = rgba("gtip.title"),
@@ -96,22 +103,15 @@ Skin.OnLooksChanged(function()
     if NS.Surfaces and NS.Surfaces.Request then NS.Surfaces.Request("skin") end
 end)
 
--- The shadow Ka0s Default's own no-shadow draws here, as `stored` hands it to S.HudFont: x, y, r, g, b, a.
-local function ownShadow()
-    local r, g, b, a = Skin.Color("qc.shadow")
-    if not r then return false end
-    return { 1, -1, r, g, b, a or 1 }
-end
+-- The token every font block's shadow reads while it follows. The blocks ship with a shadow and
+-- Ka0s Default's hud.shadow is none, so this owner token keeps it there and follows everywhere else.
+local SHADOW_TOKEN = "qc.shadow"
 
 --- What a font block hands S.HudFont as `shadow` and `shadowFromSkin`. Off: its stored one under every
---- skin. On: the skin's, S.HudFont's own reading of S.HudShadow, but for the skin that states none: the
---- blocks ship with a shadow, and Ka0s Default keeps it through the owner token qc.shadow, where the
---- library has no token to name. Ignore fonts (S.HudShadow's nil) leaves the stored one standing.
+--- skin. On: S.HudFont's reading of S.HudShadow(SHADOW_TOKEN); Ignore fonts (S.HudShadow's nil) leaves
+--- the stored one standing.
 function R.ShadowOf(look)
-    local stored = look.fontShadow ~= false
-    if look.fontShadowFromSkin ~= true then return stored, false end
-    if Skin.HudShadow() == false then return ownShadow(), false end
-    return stored, true
+    return look.fontShadow ~= false, look.fontShadowFromSkin == true
 end
 
 --- A font block's face as the skin or the player names it: the skin's hud.font while its "Use the
@@ -452,7 +452,7 @@ local HUD_FONT = {}
 function R.ApplyFont(fs, font)
     if not (fs and font) then return end
     HUD_FONT.face, HUD_FONT.size, HUD_FONT.flags = font.path, font.size, font.flags
-    HUD_FONT.shadow, HUD_FONT.shadowFromSkin = font.shadow, font.shadowFromSkin
+    HUD_FONT.shadow, HUD_FONT.shadowFromSkin, HUD_FONT.shadowToken = font.shadow, font.shadowFromSkin, SHADOW_TOKEN
     Skin.HudFont(fs, HUD_FONT)
     fs:SetTextColor(font.r, font.g, font.b, font.a)
 end
@@ -465,18 +465,18 @@ local CLEAR = { r = 0, g = 0, b = 0, a = 0 }
 
 -- The tokens a block's fill, edge and thickness follow, by R.SkinFor's `tokens`: the window's are the
 -- library's, a band's and a button's the owner tokens that keep their pixels under Ka0s Default.
-R.WINDOW_TOKENS = { bg = "win.bg", edge = "win.border", size = "bar.borderSize" }
-R.BAND_TOKENS = { bg = "qc.bandBg", edge = "qc.bandEdge", size = "qc.bandEdgeSize" }
-R.BUTTON_TOKENS = { bg = "qc.btnBg", edge = "qc.btnEdge", size = "bar.borderSize" }
+R.WINDOW_TOKENS = { bg = "win.bg", edge = "win.border" }
+R.BAND_TOKENS = { bg = "qc.bandBg", edge = "qc.bandEdge" }
+R.BUTTON_TOKENS = { bg = "qc.btnBg", edge = "qc.btnEdge" }
 
 -- A look's edge: its thickness (0 to 16, 1 when unset) and its border art (nil for "None", or one this
--- machine does not have). The style is R.BorderKey's: the skin's while it follows (QC-03), and so is
--- the thickness, the border's companion governing both (the composer's `fromSkin = "bar"`).
-local function edgeOf(look, tokens)
+-- machine does not have), through S.BarBorder: while it follows, a real style in the skin wins with
+-- bar.borderSize, and a skin's None hands back the player's stored style and thickness. A block has no
+-- Show border row, so `show` is always true here.
+local function edgeOf(look)
     local stored = tonumber(look.borderSize) or 1
-    local drawn = Skin.Resolve(tokens.size, stored, look.borderStyleFromSkin == true)
+    local style, _, drawn = Skin.BarBorder(look.borderStyle, true, stored, look.borderStyleFromSkin == true)
     local size = math.max(0, math.min(16, tonumber(drawn) or stored))
-    local style = R.BorderKey(look)
     local art = style ~= "None" and NS.MediaFetch("border", style) or nil
     return size, art
 end
@@ -496,13 +496,13 @@ end
 --- be an edge after all, and over a thicker edge or border art it is a gray line that ignores the
 --- border's color; `plain` (the header, a section band, a button's edge) never takes it. Art insets the background by a
 --- quarter of its size, so the body reaches under the art's soft inner edge. `tokens` (R.WINDOW_TOKENS
---- when none) names what the two colors and the thickness follow while their companions are on.
+--- when none) names what the two colors follow while their companions are on.
 function R.SkinFor(look, plain, tokens)
     look = type(look) == "table" and look or {}
     tokens = tokens or R.WINDOW_TOKENS
     local skin = {}
     for k, v in pairs(NS.SKIN or {}) do skin[k] = v end
-    local size, art = edgeOf(look, tokens)
+    local size, art = edgeOf(look)
     skin.edgeFile = size > 0 and (art or FLAT_EDGE) or nil
     skin.edgeSize = size
     local inset = art and math.floor(size / 4 + 0.5) or size

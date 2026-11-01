@@ -161,7 +161,7 @@ end)
 
 test("skin seam: under another skin an owner token takes its follow token's value", function()
     -- X2: each follows the nearest library role token, so every skin draws it in its own palette;
-    -- the two veils follow nothing and keep their black washes everywhere.
+    -- the two veils hold alphas only: R.Chrome draws them in cover.dim's color (test_skin_flip).
     local NS, _, Skin = setup()
     Skin:SetChoice(OWNER, "ka0s", "obsidian")
     local base = Skin:ResolveSkin("obsidian")

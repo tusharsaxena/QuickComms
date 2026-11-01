@@ -160,6 +160,20 @@ Kit.diagnostics = {
     reset       = function() diagNS = enableAddon() end,
 }
 
+-- The typed-value gate's consumer facts (skinning-§1).
+Kit.skinValues = {
+    rows = {
+        { file = "settings/IconBrowser.lua", substring = 'local CHAT_GRAY = "|cffaaaaaa"',
+          why = "the combat refusal's chat line, built here and printed later: chat stays fixed", cause = "L13" },
+        { file = "settings/IconBrowser.lua", substring = "UI-ScrollBar-Knob",
+          why = "the Slider's required thumb region: S.ScrollBar fades this art under its scroll.thumb knob, so no skin shows it",
+          cause = "L7" },
+    },
+}
+
+-- The skin-switch test's consumer facts (skinning-§1): every surface this addon paints.
+Kit.skinSwitch = dofile("tests/skin_surfaces.lua")(enableAddon)
+
 -- The layout-§1 census lives in the hub; the repository has no generated data to carve out.
 Kit.layoutCap = { hub = "docs/ARCHITECTURE.md" }
 
@@ -247,5 +261,7 @@ Kit.run{
         { name = "test_layout_cap",           dir = "tests/_kit/" },   -- layout-§1
         { name = "test_diagnostics_contract", dir = "tests/_kit/" },   -- debug-logging-§14
         { name = "test_lizard_sighted",       dir = "tests/_kit/" },   -- automated-tests-§3
+        { name = "test_skin_values",          dir = "tests/_kit/" },   -- skinning-§1
+        { name = "test_skin_switch",          dir = "tests/_kit/" },   -- skinning-§1
     },
 }

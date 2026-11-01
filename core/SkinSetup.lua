@@ -52,8 +52,6 @@ local addonName, NS = ...
 --                           (the Scope's Ignore settings panel, on by default); release restores stock.
 --   NS.SkinOnRelease(w, fn) host release work chained onto the widget's own OnRelease
 --                           (`Skin:OnRelease`), so it and the skin's restore both run, once.
---   NS.SkinUntrack(region)  forgets a region S.Mark recorded, for a pooled widget handed back (the
---                           record outlives AceGUI:Release). Nothing without the library.
 --   NS.MaybeShowSkinPicker() the first-run skin picker (LibKa0s OptionsSkinPicker 1, owner ruling
 --                           O3): the Options instance's SkinPicker while the profile's
 --                           `skin.pickerSeen` is false and the addon stands up; held to
@@ -72,10 +70,10 @@ local addonName, NS = ...
 -- inventory's QC-G1..G3 and its near shades (D7, D8), kept at today's pixels (DECISIONS X1) rather
 -- than snapped to the nearest library token. Each is named in this addon's namespace (`qc.`, X2,
 -- X12), carries today's value as `default` and follows the nearest library ROLE token, so every
--- other skin, and EllesmereUI, draws it in its own palette. The two state veils follow nothing:
--- the one black wash in the schema, `cover.dim`, is the same in every skin, so following it would
--- draw the refused veil and the cooling veil alike everywhere but Ka0s Default; a black wash over
--- an icon reads on every skin as it is.
+-- other skin, and EllesmereUI, draws it in its own palette. The two state veils hold only their
+-- alphas: each skin's `cover.dim` is its own (LibKa0s v1.85.0, the owner's ruling of 2026-11-01), so
+-- R.Chrome draws both in that wash's color, and following it whole would draw the refused veil and
+-- the cooling veil alike.
 --
 -- ── WHERE IT LOADS ───────────────────────────────────────────────────────────────────────────
 --
@@ -135,10 +133,10 @@ NS.SKIN_TOKENS = {
     ["qc.note"]      = { default = { byte(170), byte(170), byte(170), 1 }, follow = "text.muted" },
     -- The full skin (LibKa0s v1.85.0, cause D7): where a pad's or a dial's default is not the library
     -- token's value, today's pixels under Ka0s Default and the token in every other skin. A header's
-    -- and a section title's band: nothing drawn, so no fill and no edge.
+    -- and a section title's band: nothing drawn, so no fill and no edge. Its thickness is the player's
+    -- stored one under a skin's None, and bar.borderSize under a real style (S.BarBorder).
     ["qc.bandBg"]    = { default = { 0, 0, 0, 0 }, follow = "title.bg" },
     ["qc.bandEdge"]  = { default = { 1, 1, 1, 1 }, follow = "win.border" },
-    ["qc.bandEdgeSize"] = { default = 0, follow = "win.borderSize" },
     -- A pad button's body and edge (#3F3F3F at 25% and 10%), and its texture: flat, "" naming none.
     ["qc.btnBg"]     = { default = { 0x3F / 255, 0x3F / 255, 0x3F / 255, 0.25 }, follow = "btn.bg" },
     ["qc.btnEdge"]   = { default = { 0x3F / 255, 0x3F / 255, 0x3F / 255, 0.10 }, follow = "btn.border" },
@@ -200,15 +198,19 @@ NS.SKIN_FALLBACK = {
     ["icon.borderSize"] = 2,
     -- The full skin's HUD (cause D7): the tokens a color or a size follows that are not above.
     ["bar.borderSize"] = 1,
+    ["cover.dim"]      = { 0, 0, 0, 0.6 },
     ["icon.arrow"]     = { 1, 0.82, 0, 1 },
     ["icon.border"]    = { 0, 0, 0, 1 },
 }
 
 --- A stored color, or the skin's while its "Use the skin's ..." companion `<key>FromSkin` is on: r, g,
 --- b, a. A class color comes first and is left alone, and a token that answers nothing (a skin that
---- leaves it alone) falls back to the stored color. `look` is the block, `fallback` its missing swatch.
+--- leaves it alone) falls back to the stored color. So does the library's absence: the degraded
+--- facade's S.Color answers a token's default for the panels it paints, and a companion defaults true,
+--- so a read past S.IsEnabled would draw that over the player's color. `look` is the block, `fallback`
+--- its missing swatch.
 function NS.SkinFollow(look, key, token, useClass, fallback)
-    if look[key .. "FromSkin"] == true and not useClass then
+    if look[key .. "FromSkin"] == true and not useClass and NS.Skin.IsEnabled() then
         local r, g, b, a = NS.Skin.Color(token)
         if r then return r, g, b, a or 1 end
     end
@@ -549,7 +551,7 @@ if not Skin then
         "TitleBar", "Divider", "Footer", "Card", "Slider", "NavItem", "Drawer", "ListRow", "MenuFrame",
         "Tooltip", "Strip", "Cover", "Text", "ChartStyle", "BarStyle", "IconBorder", "GlowColor",
         "BarTexture", "FontFlags", "HudFontSize", "Mark", "MarkText", "HudTextColor", "HudLabelColor",
-        "BarFillColor", "HudShadow", "BarGloss", "HudFont",
+        "BarFillColor", "HudShadow", "BarGloss", "HudFont", "BarBorder", "HoverArt",
     }) do S[name] = noop end
 
     S.Token = token
@@ -576,10 +578,12 @@ if not Skin then
     -- Default's HUD outline. A size as stored when it is a number above 0, else 12, unscaled.
     S.FontFlags = function(v) if type(v) == "string" and v ~= S.FROM_SKIN then return v end return "OUTLINE" end
     S.HudFontSize = function(size) local n = tonumber(size) return (n and n > 0) and n or 12 end
-    -- LibKa0s v1.85.0 (SkinPaintExtras minors 9 to 15): HudFont is the one that must draw, a no-op
-    -- would leave a pad with no face. No font object, so a stored shadow does not draw on a 12.0.7
-    -- client with the library absent, which the library's Options document accepts. MarkText still
-    -- answers its markup, untinted: a line is built around it.
+    -- LibKa0s v1.85.0 (SkinPaintExtras minors 9 to 16): HudFont must draw, a no-op would leave a pad
+    -- with no face, and BarBorder must answer the three it is handed, or a pad loses its stored border.
+    -- No font object, so a stored shadow does not draw on a 12.0.7 client with the library absent,
+    -- which the library's Options document accepts. MarkText still answers its markup, untinted: a
+    -- line is built around it.
+    S.BarBorder = function(style, show, size) return style, show, size end
     S.HudFont = function(fs, opts)
         opts = type(opts) == "table" and opts or {}
         local face = opts.face
@@ -605,7 +609,6 @@ if not Skin then
     function NS.SkinPaintAce() return false end
     function NS.SkinPaintAceTree() return 0 end
     NS.SkinOnRelease = releaseByCallback
-    function NS.SkinUntrack() end   -- nothing recorded it
     return
 end
 
@@ -642,10 +645,6 @@ end
 function NS.SkinOnRelease(widget, fn)
     if type(Skin.OnRelease) ~= "function" then return releaseByCallback(widget, fn) end
     return Skin:OnRelease(widget, fn)
-end
-
-function NS.SkinUntrack(region)
-    if type(Skin.Untrack) == "function" then Skin:Untrack(region) end
 end
 
 function NS.ApplySkinIgnore(panel, fonts)

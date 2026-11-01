@@ -205,7 +205,7 @@ the settings pages and the library's own windows.
   this addon draws under Ka0s Default that no library token holds exactly, kept at their pixels and
   each but the two veils following its nearest library role token (rollout X1, X2, X12). It publishes
   `NS.Skin` (the owner's facade) and the call-site helpers `NS.SkinColor`, `NS.SkinEscape`,
-  `NS.SkinMarkup`, `NS.SkinPaintAce` / `NS.SkinPaintAceTree` / `NS.SkinOnRelease` / `NS.SkinUntrack`. The choice is the
+  `NS.SkinMarkup`, `NS.SkinPaintAce` / `NS.SkinPaintAceTree` / `NS.SkinOnRelease`. The choice is the
   profile's `skin` block (`source`, `skin`, the Scope's `ignorePanel`, on for a new profile, and
   `ignoreFonts`, the overrides `font` and `texture`, the Font outline `outline`, and `pickerSeen`),
   eight skip-render rows drawn
@@ -229,7 +229,9 @@ the settings pages and the library's own windows.
   button's texture and the shine follow too, each through its own companion (`NS.SkinFollow`,
   `Pad_Render.ShadowOf`), which reverses X4, D5 and D6 by the owner's ruling of 2026-11-01. A class color
   comes first and is untouched, a glyph's own color and a game icon keep theirs, and owner tokens
-  (`core/SkinSetup.lua`) hold today's pixels under Ka0s Default;
+  (`core/SkinSetup.lua`) hold today's pixels under Ka0s Default. A block's border goes through
+  `S.BarBorder`: a skin's None hands back the player's stored style and thickness, and a real style in
+  a skin wins with `bar.borderSize`. The state veils are each skin's `cover.dim` color at their own alphas;
   stored sizes and flags are under **Font flags and HUD sizes** below. The HUD's own chrome (the padlock, the veils, the hover wash, the flashes, the LOCKDOWN and
   stale tags, the PREVIEW and TEST MODE marks, the page arrows) reads tokens once per look change
   (`Pad_Render.Chrome`), never per frame.

@@ -172,7 +172,10 @@ function NS.addon.Settings.IconRows(kind, C, afterSize)
     local function stamp(list, subgroup)
         for _, row in ipairs(list) do
             local c = checks[row.path:sub(#P + 1)] or {}
-            for k, v in pairs(c) do row[k] = v end
+            -- A rule a row came with stays (the Options document, a host's `spec.extra` stamper).
+            for k, v in pairs(c) do
+                if k ~= "validate" or row.validate == nil then row[k] = v end
+            end
             at(subgroup, row)
         end
     end

@@ -467,23 +467,12 @@ local GLYPHS = {
     remove = { atlas = true, title = function() return L["Remove"] end },
 }
 
--- S.Mark on an AceGUI Icon's image, given back when the widget is released: AceGUI's pools are shared
--- with every addon and Icon's OnAcquire clears neither the skin's record nor the tint, so the next
--- user of this widget would be repainted on every skin change (options-ui-§19).
-local function markGlyph(widget, opts)
-    local image = widget.image
-    NS.Skin.Mark(image, opts)
-    NS.SkinOnRelease(widget, function(w)
-        NS.SkinUntrack(image)
-        if w.image then w.image:SetVertexColor(1, 1, 1, 1) end
-    end)
-end
-
 --- The remove mark on an AceGUI Icon: the client's atlas, or with the Scope cleared the Ka0s close
---- mark in the skin's tint, live both ways (S.Mark's `panel`) until the widget is released.
+--- mark in the skin's tint, live both ways (S.Mark's `panel`). S.Mark gives its record and tint back
+--- when AceGUI takes the widget back, so the next user of the pooled Icon is not repainted.
 function Ed.RemoveMark(widget)
     widget.image:SetAtlas(REMOVE_ATLAS)
-    markGlyph(widget, { panel = true, art = NS.Icon("close"),
+    NS.Skin.Mark(widget.image, { panel = true, widget = widget, art = NS.Icon("close"),
         stock = function(t) t:SetAtlas(REMOVE_ATLAS) end })
 end
 
@@ -495,7 +484,7 @@ local function addGlyph(h, into, kind, onClick, tooltip)
         Ed.RemoveMark(g)
     else
         g:SetImage(spec.texture())
-        markGlyph(g, { panel = true })   -- white catalog art, in the skin's tint
+        NS.Skin.Mark(g.image, { panel = true, widget = g })   -- white catalog art, in the skin's tint
     end
     g:SetWidth(GLYPH_W)
     g.userdata.qcGlyph = kind

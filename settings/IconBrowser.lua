@@ -367,10 +367,10 @@ end
 
 -- ── the window's parts ──────────────────────────────────────────────────────────────────────
 
--- A cell's hover art, through the page's own rule for it: the Options instance's O.__hoverArt.
+-- A cell's hover art: recorded once, so a skin change repaints it with no call here. A cell is this
+-- window's for the session and never goes back to a pool.
 local function paintHover(cell)
-    local O = Settings.Helpers
-    if O and O.__hoverArt and cell.GetHighlightTexture then O.__hoverArt(cell:GetHighlightTexture()) end
+    NS.Skin.HoverArt(cell:GetHighlightTexture(), { panel = true })
 end
 
 local function makeCell(i)
@@ -780,7 +780,6 @@ end
 NS.Skin.OnLooksChanged(function()
     for _, cell in ipairs(B.cells) do
         cell.selected:SetColorTexture(NS.Skin.Color(SELECTED))
-        paintHover(cell)
     end
     for t, token in pairs(glyphs) do paintGlyph(t, token) end
     paintHint()

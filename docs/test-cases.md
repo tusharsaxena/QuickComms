@@ -1647,7 +1647,7 @@ Total.
 - skin windows: the browser's empty footer line is qc.note, today's |cffaaaaaa
 - skin windows: the browser's cell tooltip writes its lines in the tooltip tokens
 
-### test_skin_hud.lua (19)
+### test_skin_hud.lua (20)
 
 - skin hud: every HUD font and border block follows the skin by default, through a schema row
 - skin hud: a following picker is grayed out and shows the skin's value; off, it is the player's
@@ -1657,6 +1657,7 @@ Total.
 - skin hud: with Ignore fonts on, a following dial label draws its stored pick
 - skin hud: a following face takes the Skin tab's font override, as every face of the owner does
 - skin hud: a pad's border blocks take bar.borderStyle while they follow, the pick when not
+- skin hud: a real bar.borderStyle in a skin wins over the player's pick while it follows
 - skin hud: an icon's border takes the skin's icon border while it follows, the pick when not
 - skin hud: a dial's slice labels and ring title take hud.font while they follow
 - skin hud: a pad's chrome is today's pixels under Ka0s Default, each from a token
@@ -1669,7 +1670,7 @@ Total.
 - skin hud: without the library step 10 writes the companions itself
 - skin hud: the reset runs once: a companion the player turns off afterwards stays off
 
-### test_skin_flip.lua (58)
+### test_skin_flip.lua (61)
 
 - skin flip: the step puts every listed companion on, keeps every pick and color, and leaves the rest
 - skin flip: no value but a flag holds the sentinel, and a second run writes nothing
@@ -1682,6 +1683,8 @@ Total.
 - skin flip: Ka0s Default draws what the stored defaults drew
 - skin flip: a skin switch reaches every drawing setter on a pad
 - skin flip: a skin switch reaches the dial's slices, hub, pointer, page row and shine
+- skin flip: with the library absent a stored color and shine draw with their companions on
+- skin flip: the state veils take each skin's cover.dim, each at its own alpha
 - skin flip: a companion off draws the stored value under every skin
 - skin flip: a class color comes before the companion, whatever it says
 - skin flip: a glyph's own color and a game icon keep theirs; the skin's tint reaches a plain glyph
@@ -1701,10 +1704,11 @@ Total.
 - skin fix: a released remove mark is forgotten, so a skin change never reaches the widget's next user
 - skin fix: a remove mark redrawn under a stock panel keeps its art until it is released
 - skin fix: a row's Edit glyph takes the tint with the Scope cleared, and gives it back on release
-- skin fix: with the library absent the marks release by callback and forget nothing
+- skin fix: the popup's token glyph gives its mark back when the box is released
+- skin fix: with the library absent the marks forget nothing and tint nothing
 - skin fix: a pad's Shine rows gray by the look that draws, not the stored one
 - skin fix: a dial's Shine rows gray by the look that draws, not the stored one
-- skin fix: the hub's border size grays while its color follows, the two sharing the companion
+- skin fix: the hub's border size grays only while it follows a real style
 - skin fix: a class-colored shine tint stays the class's under another skin
 - skin flip: every *FromSkin key a template ships is on the step's list
 - skin flip: the hub's rim draws the skin's color and thickness
@@ -1891,6 +1895,41 @@ Total.
 - lizard sighted: parity names every file whose counts differ, and only those
 - lizard sighted: lizard lists every function of a hazard fixture once it is sanitized
 
+### test_skin_values.lua (3)
+
+- skin values: every host row carries its file, substring, why and cause id
+- skin values: no typed value outside the kit's categories and the host's rows
+- skin values: the check is falsifiable, a planted value of each shape is reported
+
+### test_skin_switch.lua (26)
+
+- skin switch: the check is falsifiable, a surface that redraws a literal is reported
+- skin switch: a pad's window changes
+- skin switch: a pad's header changes
+- skin switch: a pad button's body changes
+- skin switch: a pad button's edge changes
+- skin switch: a pad button's label changes
+- skin switch: a pad button's refused veil changes
+- skin switch: a pad button's refused veil changes with the Scope ignored
+- skin switch: a pad button's cooling veil changes
+- skin switch: a pad button's cooling veil changes with the Scope ignored
+- skin switch: a pad button's hover wash changes
+- skin switch: a pad button's hover wash changes with the Scope ignored
+- skin switch: a pad button's padlock changes
+- skin switch: a pad button's padlock changes with the Scope ignored
+- skin switch: a dial's slices changes
+- skin switch: a dial's hub changes
+- skin switch: a dial's pointer changes
+- skin switch: an icon's border changes
+- skin switch: an icon's glow changes
+- skin switch: a pad button's shine changes
+- skin switch: a section title's text changes
+- skin switch: a dial's page dot changes
+- skin switch: the icon browser's selected cell changes
+- skin switch: the icon browser's selected cell changes with the Scope ignored
+- skin switch: a cell's hover art changes
+- skin switch: a settings row's remove mark changes
+
 ## Totals
 
 | Suite | Cases |
@@ -1955,8 +1994,8 @@ Total.
 | test_layout.lua | 28 |
 | test_skinsetup.lua | 24 |
 | test_skin_windows.lua | 20 |
-| test_skin_hud.lua | 19 |
-| test_skin_flip.lua | 58 |
+| test_skin_hud.lua | 20 |
+| test_skin_flip.lua | 61 |
 | test_skin_picker.lua | 20 |
 | test_skin_outline.lua | 10 |
 | test_skin_verb.lua | 7 |
@@ -1970,5 +2009,7 @@ Total.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
+| test_skin_values.lua | 3 |
+| test_skin_switch.lua | 26 |
 | Skipped | 1 |
-| **Total** | **1657** |
+| **Total** | **1690** |
