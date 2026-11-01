@@ -73,14 +73,12 @@ local function slide(e, p, cfg)
     p.dx, p.dy, p.alpha = way[1] * off, way[2] * off, e
 end
 
--- The approved mockup's S, key for key but for its pixels, and the owner's two fading scales.
+-- The approved mockup's S, key for key but for its pixels, and the owner's scale and its fading version.
 A.STYLES = {
     fade = { g = function(e, p) p.alpha = e end },
     fan = { g = function(e, p) p.alpha, p.fan = e, e end },
-    scaleIn = { g = function(e, p) p.scale, p.alpha = 0.25 + 0.75 * e, clamp01(e * 4) end },
-    scaleInFade = { g = function(e, p) p.scale, p.alpha = 0.25 + 0.75 * e, e end },
-    scaleOut = { g = function(e, p) p.scale, p.alpha = 1.7 - 0.7 * e, clamp01(e * 2) end },
-    scaleOutFade = { g = function(e, p) p.scale, p.alpha = 1.7 - 0.7 * e, e end },
+    scale = { g = function(e, p) p.scale, p.alpha = 0.25 + 0.75 * e, clamp01(e * 4) end },
+    scaleAndFade = { g = function(e, p) p.scale, p.alpha = 0.25 + 0.75 * e, e end },
     rotateScale = { g = function(e, p)
         p.scale, p.rot, p.alpha = 0.45 + 0.55 * e, (1 - e) * -2.1, clamp01(e * 2.5)
     end },

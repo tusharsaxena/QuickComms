@@ -1969,8 +1969,8 @@ dial's center, not the cursor. Result: not run.
 dial slowly at 0.3 s, on the default skin and on one other → the copy matches the real dial, with no
 visible pop as it lands, no missing slice edges and no double image. Result: not run.
 
-**ANIM-3. The first styles, and the list.** On the Dial page's Animation tab try Fade, Scale in and fade, Fan
-and None, open and close, at 0.5 s and at 2 s. The Open and the Close dropdowns each offer the same 20
+**ANIM-3. The first styles, and the list.** On the Dial page's Animation tab try Fade, Scale and fade, Fan
+and None, open and close, at 0.5 s and at 2 s. The Open and the Close dropdowns each offer the same 18
 entries, and Scale and fade is not one of them. While a style is None its Duration is hidden. The Pad page has no Animation tab. Result: not run.
 
 **ANIM-4. The two switches.** Set a dial's Close to None: it leaves at once and still opens animated. Do
@@ -2000,7 +2000,7 @@ next real close and open play. Result: not run.
 Mouseover → it shows and hides at once, its hover and fade answer at once, and no copy is drawn. On a
 profile that ran this branch's first step 12, `/dump` a pad's `anim` → nil. Result: not run.
 
-**ANIM-12. Text neither shimmers nor truncates.** On the Dial page's Animation tab set Scale in and fade at
+**ANIM-12. Text neither shimmers nor truncates.** On the Dial page's Animation tab set Scale and fade at
 0.5 s, then at 2 s, and open and close a dial with a long title ("Quick Comms: World") → the title and
 every label scale smoothly with the art, about the dial's center, with no shimmer, no jitter of the
 letters, no text cut short and no ellipsis at any moment; each string stays on its slice; none jumps at
@@ -2012,10 +2012,10 @@ For each family below, set the same style on Open and Close and play it at 0.5 s
 ends with the real dial whole and fully opaque, or fully gone, with no pop at the landing. The first
 in-game trials are marked: nothing but the client can show whether they draw at all.
 
-**ANIM-13. The scales.** Scale in, Scale in and fade, Scale out and Scale out and fade → each grows or
-settles about the dial's center. Scale out on close leaves past full size, toward you. The two "and fade"
-styles fade the whole way; the plain ones reach full alpha early. Text stays sharp and whole, as ANIM-12.
-Result: not run.
+**ANIM-13. The scales.** Scale and Scale and fade → on open each grows from small about the dial's
+center, on close each shrinks into it. Scale and fade fades the whole way; Scale reaches full alpha early.
+There is no start-large style. Text stays sharp and whole, as ANIM-12. Result: not run. (SF-QC-1 changed
+the expected result: any earlier pass no longer stands.)
 
 **ANIM-14. The slices moving apart.** Outward spiral, Inward spiral, Orbit and Shatter → each slice's fill,
 shine and edge turn as one with no gap opening inside a slice, its icon and label ride with it and stay
@@ -2046,7 +2046,11 @@ with no square edge to the glow. Result: not run.
 **ANIM-20. The old defaults moved.** On a profile that ran this branch before these rulings, with one dial
 still on Inward spiral at 0.5 s and Outward spiral at 0.3 s, one on Scale and fade at 0.7 s, and one with
 other picks → after the update the first shows Rotate and scale at 0.2 s for its open and its close, the
-second Scale in and fade at 0.7 s, and the third keeps its picks. Result: not run.
+second Scale and fade at 0.7 s, and the third keeps its picks. Result: not run.
+
+**ANIM-21. The merged scales (SF-QC-1).** On a profile that stored Scale in, Scale out, Scale in and fade
+or Scale out and fade on a dial → after the update they read Scale or Scale and fade with their
+durations kept. Rotate and scale is still the default. Result: not run.
 
 ## The pad's look per skin
 

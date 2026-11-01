@@ -163,7 +163,7 @@ test("anim dial: None on the open leaves the close, and None on the close leaves
     m.__click(inst.header, "Toggle")
     assertEqual(inst.track.phase, "close", "close on")
     NS.Anim.Step(inst.track, 1)
-    a.openStyle, a.closeStyle = "scaleInFade", "none"
+    a.openStyle, a.closeStyle = "scaleAndFade", "none"
     m.__click(inst.header, "Toggle")
     assertEqual(inst.track.phase, "open", "open on")
     NS.Anim.Step(inst.track, 1)
@@ -234,7 +234,7 @@ end
 -- A whole-dial scale with no turn, the shipped defaults turning too.
 local function scaling(NS)
     local a = NS.db.profile.dials.d2.anim
-    a.openStyle, a.closeStyle, a.openDuration, a.closeDuration = "scaleInFade", "scaleInFade", 0.15, 0.1
+    a.openStyle, a.closeStyle, a.openDuration, a.closeDuration = "scaleAndFade", "scaleAndFade", 0.15, 0.1
 end
 
 test("anim dial: an open scales the text by its own animation, and the landing stops it", function()

@@ -875,8 +875,7 @@ end
 -- degraded load adds them too.
 local ANIM_STYLES = { { value = "none", text = L["None"] }, { value = "fade", text = L["Fade"] },
     { value = "fan", text = L["Fan"] },
-    { value = "scaleIn", text = L["Scale in"] }, { value = "scaleInFade", text = L["Scale in and fade"] },
-    { value = "scaleOut", text = L["Scale out"] }, { value = "scaleOutFade", text = L["Scale out and fade"] },
+    { value = "scale", text = L["Scale"] }, { value = "scaleAndFade", text = L["Scale and fade"] },
     { value = "rotateScale", text = L["Rotate and scale"] }, { value = "spiralOut", text = L["Outward spiral"] },
     { value = "spiralIn", text = L["Inward spiral"] }, { value = "orbit", text = L["Orbit"] },
     { value = "burst", text = L["Burst"] }, { value = "stagger", text = L["Stagger pop"] },

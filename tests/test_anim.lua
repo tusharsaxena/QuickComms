@@ -22,7 +22,7 @@ local function track(NS, cfgs)
     return NS.Anim.NewTrack(spec), function() return held, released end
 end
 
-local SF = { style = "scaleInFade", duration = 0.2 }
+local SF = { style = "scaleAndFade", duration = 0.2 }
 local FADE = { style = "fade", duration = 0.1 }
 
 test("anim: a new dial carries the shipped defaults, on for everyone, and a pad has no animation", function()
@@ -116,7 +116,7 @@ end)
 test("anim: the hidden poses match the owner's rulings", function()
     local A = T.enableAddon().Anim
     assertNil(A.Hidden("none"))
-    assertEqual(A.Hidden("scaleInFade").scale, 0.25)
+    assertEqual(A.Hidden("scaleAndFade").scale, 0.25)
     assertEqual(A.Hidden("fan").fan, 0)
     assertEqual(A.Hidden("fade").scale, 1)
     for _, gone in ipairs({ "fadeScale", "scaleFade", "sideways" }) do assertNil(A.Hidden(gone), gone) end
@@ -411,11 +411,11 @@ test("anim: the rows are the owner's: Open and Close on the dial's Animation tab
     for _, c in ipairs(row("dial.anim.openStyle").values) do
         values[#values + 1] = c.value
         if c.value == "fan" then assertEqual(c.text, NS.L["Fan"]) end
-        assertTrue(c.value ~= "scaleFade", "redundant with Scale in and fade (the owner, 2026-11-01)")
+        assertTrue(c.value ~= "scaleFade", "the retired id, merged into Scale and fade (SF-QC-1)")
     end
-    assertEqual(#values, 20)
+    assertEqual(#values, 18)
     assertEqual(values[3], "fan")
-    assertNil(rawget(NS.L, "Scale and fade"), "the label went with the style")
+    assertNil(rawget(NS.L, "Scale in and fade"), "the label went with the style")
     assertEqual(row("dial.anim.openDuration").normalize(9), 2)
     assertFalse(NS.SchemaRuntime.Set("dial.anim.closeStyle", "sideways", "d2"))
 end)
@@ -612,7 +612,7 @@ end)
 test("anim pose: a reversal's time is the e left to travel, floored", function()
     local NS = T.enableAddon()
     local A = NS.Anim
-    local cfg = { style = "scaleInFade", duration = 1 }
+    local cfg = { style = "scaleAndFade", duration = 1 }
     local t = track(NS, { open = cfg, close = cfg })
     A.Open(t)
     A.Close(t)

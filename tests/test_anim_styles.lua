@@ -14,17 +14,15 @@ local function near(a, b, what)
 end
 
 -- The shipped list, in the dropdown's order.
-local STYLES = { "fade", "fan", "scaleIn", "scaleInFade", "scaleOut", "scaleOutFade", "rotateScale",
+local STYLES = { "fade", "fan", "scale", "scaleAndFade", "rotateScale",
     "spiralOut", "spiralIn", "orbit", "burst", "stagger", "pop", "slide", "drop", "squash", "flip", "shatter",
     "flash" }
 
 -- The approved mockup's own numbers, computed from its `S` at two values of `e`, with its pixel `dy` in
 -- dial radii and turned up-positive. Places 1, 4 and 8 of a ring of 8.
 local MOCK = {
-    { style = "scaleIn", e = 0.25, alpha = 1, scale = 0.4375 },
-    { style = "scaleIn", e = 0.6, alpha = 1, scale = 0.7 },
-    { style = "scaleOut", e = 0.25, alpha = 0.5, scale = 1.525 },
-    { style = "scaleOut", e = 0.6, alpha = 1, scale = 1.28 },
+    { style = "scale", e = 0.25, alpha = 1, scale = 0.4375 },
+    { style = "scale", e = 0.6, alpha = 1, scale = 0.7 },
     { style = "rotateScale", e = 0.25, alpha = 0.625, scale = 0.5875, rot = -1.575 },
     { style = "rotateScale", e = 0.6, alpha = 1, scale = 0.78, rot = -0.84 },
     { style = "spiralOut", e = 0.25, places = { [1] = { alpha = 0.4, radius = 1.825, angle = 1.35 }, [4] = { alpha = 0.4, radius = 1.825, angle = 1.35 }, [8] = { alpha = 0.4, radius = 1.825, angle = 1.35 } } },
@@ -82,8 +80,8 @@ test("anim style: the labels are the owner's", function()
     local NS = T.enableAddon()
     local text = {}
     for _, c in ipairs(row(NS, "dial.anim.openStyle").values) do text[c.value] = c.text end
-    local want = { scaleIn = "Scale in", scaleInFade = "Scale in and fade", scaleOut = "Scale out",
-        scaleOutFade = "Scale out and fade", rotateScale = "Rotate and scale", spiralOut = "Outward spiral",
+    local want = { scale = "Scale", scaleAndFade = "Scale and fade",
+        rotateScale = "Rotate and scale", spiralOut = "Outward spiral",
         spiralIn = "Inward spiral", orbit = "Orbit", burst = "Burst", stagger = "Stagger pop", pop = "Pop",
         slide = "Slide", drop = "Drop", squash = "Squash", flip = "Flip", shatter = "Shatter", flash = "Flash" }
     for value, label in pairs(want) do assertEqual(text[value], label) end
@@ -126,9 +124,9 @@ test("anim style: every value of the mockup's motion, up to the extras", functio
     end
 end)
 
-test("anim style: Scale in and fade and Scale out and fade are the same scale with a full-length fade", function()
+test("anim style: Scale and fade is the Scale pose with a full-length fade", function()
     local A = T.enableAddon().Anim
-    for _, pair in ipairs({ { "scaleIn", "scaleInFade" }, { "scaleOut", "scaleOutFade" } }) do
+    for _, pair in ipairs({ { "scale", "scaleAndFade" } }) do
         for _, e in ipairs({ 0, 0.1, 0.5, 0.9, 1 }) do
             local plain, faded = A.Pose(pair[1], e, 8), A.Pose(pair[2], e, 8)
             near(faded.scale, plain.scale, pair[2] .. " scale")
@@ -324,7 +322,7 @@ test("anim style: 15 then 16 lands a pre-15 profile on the new defaults, with no
     NS.addon:RunMigrations()
     assertEqual(a.openStyle, "rotateScale", "step 15's pair lands on today's default")
     assertEqual(a.openDuration, 0.2)
-    assertEqual(a.closeStyle, "scaleInFade", "a pick step 15 left, for step 16")
+    assertEqual(a.closeStyle, "scaleAndFade", "a pick step 15 left, through steps 16 and 17")
     assertEqual(a.closeDuration, 0.7)
 end)
 
@@ -336,8 +334,8 @@ test("anim style: the runner moves every stored profile once, and the stamp hold
     db.sv.profiles.other = { dials = { x = { anim = { openStyle = "scaleFade", openDuration = 0.15, closeStyle = "fan" } } } }
     db.global.schemaVersion = 14
     NS.addon:RunMigrations()
-    assertEqual(db.global.schemaVersion, 16)
-    assertEqual(NS.SCHEMA_VERSION, 16)
+    assertEqual(db.global.schemaVersion, 17)
+    assertEqual(NS.SCHEMA_VERSION, 17)
     assertEqual(a.openStyle, "rotateScale")
     assertEqual(a.closeDuration, 0.2)
     assertEqual(db.sv.profiles.other.dials.x.anim.openStyle, "rotateScale", "not only the active profile")
@@ -610,4 +608,32 @@ test("anim style: a Slide's direction reaches the real track, phase by phase", f
     assertTrue(inst.track.pose.dy > 0, "leaves upward")
     near(inst.track.pose.dx, 0)
     land(NS, inst)
+end)
+
+test("anim style: step 17 merges the scales, keeps durations and everything else, and is idempotent", function()
+    local NS = T.enableAddon()
+    local p = { dials = {
+        a = { anim = { openStyle = "scaleIn", closeStyle = "scaleOut", openDuration = 0.4, closeDuration = 0.6 } },
+        b = { anim = { openStyle = "scaleInFade", closeStyle = "scaleOutFade", openDuration = 0.3, closeDuration = 0.1 } },
+        c = { anim = { openStyle = "rotateScale", closeStyle = "none", openDuration = 0.2 } },
+        bad = 3, damaged = { anim = 3 }, empty = {} }, pads = { p = { name = "Kept" } } }
+    NS.Library.MigrateMergeScales(p)
+    local d = p.dials
+    assertEqual(d.a.anim.openStyle, "scale")
+    assertEqual(d.a.anim.closeStyle, "scale")
+    assertEqual(d.a.anim.openDuration, 0.4)
+    assertEqual(d.a.anim.closeDuration, 0.6)
+    assertEqual(d.b.anim.openStyle, "scaleAndFade")
+    assertEqual(d.b.anim.closeStyle, "scaleAndFade")
+    assertEqual(d.b.anim.closeDuration, 0.1)
+    assertEqual(d.c.anim.openStyle, "rotateScale")
+    assertEqual(d.c.anim.closeStyle, "none")
+    assertEqual(d.bad, 3)
+    assertEqual(d.damaged.anim, 3)
+    assertNil(d.empty.anim)
+    NS.Library.MigrateMergeScales(p)
+    assertEqual(d.a.anim.openStyle, "scale", "idempotent")
+    assertEqual(d.b.anim.closeStyle, "scaleAndFade")
+    NS.Library.MigrateMergeScales(3)
+    NS.Library.MigrateMergeScales({ dials = 3 })
 end)

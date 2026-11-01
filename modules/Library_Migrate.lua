@@ -358,6 +358,20 @@ function Lib.MigrateRotateDefaults(profile)
     end
 end
 
+-- 16 -> 17 (SF-QC-1): Scale in and Scale out are one Scale, their fading versions one Scale and fade.
+-- Durations and every other pick stay. A dial that holds only the merged ids is left as it is.
+local SCALE_MERGE = { scaleIn = "scale", scaleOut = "scale", scaleInFade = "scaleAndFade", scaleOutFade = "scaleAndFade" }
+
+function Lib.MigrateMergeScales(profile)
+    if type(profile) ~= "table" then return end
+    for _, surface in pairs(type(profile.dials) == "table" and profile.dials or {}) do
+        local anim = type(surface) == "table" and surface.anim
+        if type(anim) == "table" then
+            for _, key in ipairs({ "openStyle", "closeStyle" }) do anim[key] = SCALE_MERGE[anim[key]] or anim[key] end
+        end
+    end
+end
+
 -- The full skin (LibKa0s v1.85.0, Ka0sAddonsCommonTasks docs/2026-11-01-FULL_SKINNING, D2 to D7): every
 -- companion a surface carries, by kind, as `<block>.<key>`, and each font block's Font flags, whose
 -- reader is on S.FontFlags. No size, no stored color or pick, no class color or its toggle, and neither

@@ -55,6 +55,8 @@ NS.MIGRATIONS = {
     { to = 15, perProfile = true, run = function(_, profile) NS.Library.MigrateAnimDefaults(profile) end },
     -- 15 -> 16 (#13): a dial on the spiral defaults takes Rotate and scale; Scale and fade is retired.
     { to = 16, perProfile = true, run = function(_, profile) NS.Library.MigrateRotateDefaults(profile) end },
+    -- 16 -> 17 (SF-QC-1): Scale in and out merge into Scale, their fading versions into Scale and fade.
+    { to = 17, perProfile = true, run = function(_, profile) NS.Library.MigrateMergeScales(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.

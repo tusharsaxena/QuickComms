@@ -1394,10 +1394,8 @@ L["Adds back the built-in groups and callouts you deleted. Changes nothing you h
 L["Set this dial's key on the General page > Keybindings. A dial's key follows its place in the dial order."] =
     "Set this dial's key on the General page > Keybindings. A dial's key follows its place in the dial order."
 L["Fan"] = "Fan"
-L["Scale in"] = "Scale in"
-L["Scale in and fade"] = "Scale in and fade"
-L["Scale out"] = "Scale out"
-L["Scale out and fade"] = "Scale out and fade"
+L["Scale"] = "Scale"
+L["Scale and fade"] = "Scale and fade"
 L["Rotate and scale"] = "Rotate and scale"
 L["Outward spiral"] = "Outward spiral"
 L["Inward spiral"] = "Inward spiral"

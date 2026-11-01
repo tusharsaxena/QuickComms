@@ -177,7 +177,7 @@ test("builtins: [QF-05] the owner's edits are the shipped look, with no schema s
     -- red under: a migration step added for the prebuilts (D4c: no migration). Step 10 is QC-03's
     -- reset onto the skin and step 11 the Font flags' move to From skin (LibKa0s v1.82.0); neither
     -- touches a prebuilt.
-    assertEqual(NS.MIGRATIONS[#NS.MIGRATIONS].to, 16)
+    assertEqual(NS.MIGRATIONS[#NS.MIGRATIONS].to, 17)
 end)
 
 test("builtins: [polish] every battleground node set has map-wide callouts of its own", function()

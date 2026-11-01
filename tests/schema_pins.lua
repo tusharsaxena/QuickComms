@@ -263,10 +263,10 @@ return {
     ["dial.icon.procDuration"] = "number|1|0.25|3|0.25|nil|false",
     ["dial.icon.procStartAnim"] = "bool|true|nil|nil|nil|nil|false",
     -- #13 (2026-11-01): the Animation tab of every dial (a pad has none, the owner's ruling).
-    ["dial.anim.openStyle"] = "string|\"rotateScale\"|nil|nil|nil|[\"none\",\"fade\",\"fan\",\"scaleIn\",\"scaleInFade\",\"scaleOut\",\"scaleOutFade\",\"rotateScale\",\"spiralOut\",\"spiralIn\",\"orbit\",\"burst\",\"stagger\",\"pop\",\"slide\",\"drop\",\"squash\",\"flip\",\"shatter\",\"flash\"]|false",
+    ["dial.anim.openStyle"] = "string|\"rotateScale\"|nil|nil|nil|[\"none\",\"fade\",\"fan\",\"scale\",\"scaleAndFade\",\"rotateScale\",\"spiralOut\",\"spiralIn\",\"orbit\",\"burst\",\"stagger\",\"pop\",\"slide\",\"drop\",\"squash\",\"flip\",\"shatter\",\"flash\"]|false",
     ["dial.anim.openDuration"] = "number|0.2|0.1|2|0.1|nil|false",
     ["dial.anim.openDirection"] = "string|\"up\"|nil|nil|nil|[\"up\",\"down\",\"left\",\"right\"]|false",
-    ["dial.anim.closeStyle"] = "string|\"rotateScale\"|nil|nil|nil|[\"none\",\"fade\",\"fan\",\"scaleIn\",\"scaleInFade\",\"scaleOut\",\"scaleOutFade\",\"rotateScale\",\"spiralOut\",\"spiralIn\",\"orbit\",\"burst\",\"stagger\",\"pop\",\"slide\",\"drop\",\"squash\",\"flip\",\"shatter\",\"flash\"]|false",
+    ["dial.anim.closeStyle"] = "string|\"rotateScale\"|nil|nil|nil|[\"none\",\"fade\",\"fan\",\"scale\",\"scaleAndFade\",\"rotateScale\",\"spiralOut\",\"spiralIn\",\"orbit\",\"burst\",\"stagger\",\"pop\",\"slide\",\"drop\",\"squash\",\"flip\",\"shatter\",\"flash\"]|false",
     ["dial.anim.closeDuration"] = "number|0.2|0.1|2|0.1|nil|false",
     ["dial.anim.closeDirection"] = "string|\"down\"|nil|nil|nil|[\"up\",\"down\",\"left\",\"right\"]|false",
     -- The full skin (cause D7).
