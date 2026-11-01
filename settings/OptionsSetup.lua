@@ -39,6 +39,7 @@ if not lib then
     H.AddSpacer            = function() end
     H.Section              = function() end
     H.TextRow              = function() end
+    H.LabelFont            = function() end
     H.AttachTooltip        = function() end
     H.InlineButtonPair     = function() end
     H.RenderField          = function() end

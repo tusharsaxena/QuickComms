@@ -504,7 +504,8 @@ if not Skin then
         "GetAccentColor", "GetPanelColor", "GetFont",
         "TitleBar", "Divider", "Footer", "Card", "Slider", "NavItem", "Drawer", "ListRow", "MenuFrame",
         "Tooltip", "Strip", "Cover", "Text", "ChartStyle", "BarStyle", "IconBorder", "GlowColor",
-        "BarTexture", "FontFlags", "HudFontSize",
+        "BarTexture", "FontFlags", "HudFontSize", "Mark", "MarkText", "HudTextColor", "HudLabelColor",
+        "BarFillColor", "HudShadow", "BarGloss", "HudFont",
     }) do S[name] = noop end
 
     S.Token = token
@@ -531,6 +532,24 @@ if not Skin then
     -- Default's HUD outline. A size as stored when it is a number above 0, else 12, unscaled.
     S.FontFlags = function(v) if type(v) == "string" and v ~= S.FROM_SKIN then return v end return "OUTLINE" end
     S.HudFontSize = function(size) local n = tonumber(size) return (n and n > 0) and n or 12 end
+    -- LibKa0s v1.85.0 (SkinPaintExtras minors 9 to 15): HudFont is the one that must draw, a no-op
+    -- would leave a pad with no face. No font object, so a stored shadow does not draw on a 12.0.7
+    -- client with the library absent, which the library's Options document accepts. MarkText still
+    -- answers its markup, untinted: a line is built around it.
+    S.HudFont = function(fs, opts)
+        opts = type(opts) == "table" and opts or {}
+        local face = opts.face
+        if type(face) ~= "string" or face == "" then face = _G.STANDARD_TEXT_FONT end
+        if type(face) ~= "string" then return nil end
+        fs:SetFont(face, S.HudFontSize(opts.size), S.FontFlags(opts.flags))
+        local on = opts.shadow and true or false
+        fs:SetShadowColor(0, 0, 0, on and 1 or 0)
+        fs:SetShadowOffset(on and 1 or 0, on and -1 or 0)
+    end
+    S.MarkText = function(path, size)
+        size = size or 14
+        return ("|T%s:%d:%d|t"):format(path, size, size)
+    end
 
     NS.Skin = S
     function NS.ApplySkinChoice() return false, false end
