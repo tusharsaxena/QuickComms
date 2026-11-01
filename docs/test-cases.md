@@ -137,7 +137,7 @@ Total.
 - profile: collections exist; default nextId is 1, past every seeded id after boot
 - profile: every behavior row resolves through the seam
 - profile: the spam guard clamps to 0.6-2.0 and fallback refuses unknown values
-- profile: schema version target is 14 (a pad's Animation table dropped)
+- profile: schema version target is 15 (a dial still on the old animation defaults moved)
 - prepare: a callout held by two groups is split into a copy
 - prepare: a split copy of a seeded callout keeps no origin
 - prepare: a callout held by no group is dropped
@@ -1190,7 +1190,7 @@ Total.
 - dial: [art] the hub draws textures, not segments
 - dial: [art] the pill is three pieces with round ends
 
-### test_anim.lua (29)
+### test_anim.lua (44)
 
 - anim: a new dial carries the shipped defaults, on for everyone, and a pad has no animation
 - anim: step 12 fills every stored dial, keeps a key already there, and leaves pads alone
@@ -1221,8 +1221,183 @@ Total.
 - anim: the rows are the owner's: Open and Close on the dial's Animation tab, knobs only while they apply
 - anim: a close never holds a frame that is already down, and a snap off no track releases nothing
 - anim: step 12 takes a value that is no profile quietly
+- anim pose: every style is hidden at 0 and whole at 1, and rests as A.Rest
+- anim pose: Rotate and scale is the mockup's
+- anim pose: Back overshoots and Bounce rebounds, both landing exactly, as the mockup's
+- anim pose: a per-place style fills one entry per place, zero-based as the mockup, and fades the hub on its own
+- anim pose: a style hears its config, for a direction
+- anim pose: A.Pose and A.Lerp write into a buffer, with no table per tick
+- anim pose: a buffer left by a per-place style answers no places for a whole-dial one
+- anim pose: A.Lerp walks every key and every place, a missing side at rest
+- anim pose: A.Unease undoes A.Ease in e, and a knot is found each way
+- anim pose: a track plays a style's curve on the same e as the mockup, up an open and down a close
+- anim pose: a reversal between two styles starts from the pose, every place of it, and lands on the new one
+- anim pose: a reversal's time is the e left to travel, floored
+- anim pose: knots break a fresh curve into linear legs, each from its own pose, and turn once
+- anim pose: a reversal is one plain leg, whatever the knots
+- anim pose: Rotate and scale is offered for both phases, knobs included
 
-### test_anim_surfaces.lua (38)
+### test_anim_styles.lua (157)
+
+- anim style: the dropdown offers None and every style, the same list for the open and the close
+- anim style: the labels are the owner's
+- anim style: every moving style's Duration shows, on both phases, and None hides it
+- anim style: the defaults are the owner's, on a slider still 0.1 to 2 in 0.1 steps
+- anim style: every value of the mockup's motion, up to the extras
+- anim style: Scale in and fade and Scale out and fade are the same scale with a full-length fade
+- anim style: Shatter wraps its seeds on a ring wider than the mockup's eight
+- anim style: an overshoot's text overshoots: Pop and Stagger pop declare their knots
+- anim style: Slide's Direction reads as motion: Up rises into place and leaves upward
+- anim style: a Slide with no direction, or a damaged one, rises as the mockup does
+- anim style: Direction is a row per phase, shown only on Slide, each writing its own key
+- anim style: step 15 moves what still holds the old default and leaves any other value
+- anim style: the runner moves every stored profile once, and the stamp holds a later pick
+- anim style: a profile from before step 12 lands on the new defaults, not the old
+- anim style fade: rests whole at 1 and shows nothing at 0
+- anim style fade: an open and a close each land with nothing stuck
+- anim style fade: a reversal starts from the pose, both ways, and lands
+- anim style fade: a send fires at once and its slice stays bright where it rests
+- anim style fade: combat is the same, with nothing refused, and a stand-down lands it
+- anim style fade: leaves nothing on the ghost for the next style, and never touches it
+- anim style fade: text keeps the Vertex route, with no width
+- anim style scaleFade: rests whole at 1 and shows nothing at 0
+- anim style scaleFade: an open and a close each land with nothing stuck
+- anim style scaleFade: a reversal starts from the pose, both ways, and lands
+- anim style scaleFade: a send fires at once and its slice stays bright where it rests
+- anim style scaleFade: combat is the same, with nothing refused, and a stand-down lands it
+- anim style scaleFade: leaves nothing on the ghost for the next style, and never touches it
+- anim style scaleFade: text keeps the Vertex route, with no width
+- anim style fan: rests whole at 1 and shows nothing at 0
+- anim style fan: an open and a close each land with nothing stuck
+- anim style fan: a reversal starts from the pose, both ways, and lands
+- anim style fan: a send fires at once and its slice stays bright where it rests
+- anim style fan: combat is the same, with nothing refused, and a stand-down lands it
+- anim style fan: leaves nothing on the ghost for the next style, and never touches it
+- anim style fan: text keeps the Vertex route, with no width
+- anim style scaleIn: rests whole at 1 and shows nothing at 0
+- anim style scaleIn: an open and a close each land with nothing stuck
+- anim style scaleIn: a reversal starts from the pose, both ways, and lands
+- anim style scaleIn: a send fires at once and its slice stays bright where it rests
+- anim style scaleIn: combat is the same, with nothing refused, and a stand-down lands it
+- anim style scaleIn: leaves nothing on the ghost for the next style, and never touches it
+- anim style scaleIn: text keeps the Vertex route, with no width
+- anim style scaleInFade: rests whole at 1 and shows nothing at 0
+- anim style scaleInFade: an open and a close each land with nothing stuck
+- anim style scaleInFade: a reversal starts from the pose, both ways, and lands
+- anim style scaleInFade: a send fires at once and its slice stays bright where it rests
+- anim style scaleInFade: combat is the same, with nothing refused, and a stand-down lands it
+- anim style scaleInFade: leaves nothing on the ghost for the next style, and never touches it
+- anim style scaleInFade: text keeps the Vertex route, with no width
+- anim style scaleOut: rests whole at 1 and shows nothing at 0
+- anim style scaleOut: an open and a close each land with nothing stuck
+- anim style scaleOut: a reversal starts from the pose, both ways, and lands
+- anim style scaleOut: a send fires at once and its slice stays bright where it rests
+- anim style scaleOut: combat is the same, with nothing refused, and a stand-down lands it
+- anim style scaleOut: leaves nothing on the ghost for the next style, and never touches it
+- anim style scaleOut: text keeps the Vertex route, with no width
+- anim style scaleOutFade: rests whole at 1 and shows nothing at 0
+- anim style scaleOutFade: an open and a close each land with nothing stuck
+- anim style scaleOutFade: a reversal starts from the pose, both ways, and lands
+- anim style scaleOutFade: a send fires at once and its slice stays bright where it rests
+- anim style scaleOutFade: combat is the same, with nothing refused, and a stand-down lands it
+- anim style scaleOutFade: leaves nothing on the ghost for the next style, and never touches it
+- anim style scaleOutFade: text keeps the Vertex route, with no width
+- anim style rotateScale: rests whole at 1 and shows nothing at 0
+- anim style rotateScale: an open and a close each land with nothing stuck
+- anim style rotateScale: a reversal starts from the pose, both ways, and lands
+- anim style rotateScale: a send fires at once and its slice stays bright where it rests
+- anim style rotateScale: combat is the same, with nothing refused, and a stand-down lands it
+- anim style rotateScale: leaves nothing on the ghost for the next style, and never touches it
+- anim style rotateScale: text keeps the Vertex route, with no width
+- anim style spiralOut: rests whole at 1 and shows nothing at 0
+- anim style spiralOut: an open and a close each land with nothing stuck
+- anim style spiralOut: a reversal starts from the pose, both ways, and lands
+- anim style spiralOut: a send fires at once and its slice stays bright where it rests
+- anim style spiralOut: combat is the same, with nothing refused, and a stand-down lands it
+- anim style spiralOut: leaves nothing on the ghost for the next style, and never touches it
+- anim style spiralOut: text keeps the Vertex route, with no width
+- anim style spiralIn: rests whole at 1 and shows nothing at 0
+- anim style spiralIn: an open and a close each land with nothing stuck
+- anim style spiralIn: a reversal starts from the pose, both ways, and lands
+- anim style spiralIn: a send fires at once and its slice stays bright where it rests
+- anim style spiralIn: combat is the same, with nothing refused, and a stand-down lands it
+- anim style spiralIn: leaves nothing on the ghost for the next style, and never touches it
+- anim style spiralIn: text keeps the Vertex route, with no width
+- anim style orbit: rests whole at 1 and shows nothing at 0
+- anim style orbit: an open and a close each land with nothing stuck
+- anim style orbit: a reversal starts from the pose, both ways, and lands
+- anim style orbit: a send fires at once and its slice stays bright where it rests
+- anim style orbit: combat is the same, with nothing refused, and a stand-down lands it
+- anim style orbit: leaves nothing on the ghost for the next style, and never touches it
+- anim style orbit: text keeps the Vertex route, with no width
+- anim style burst: rests whole at 1 and shows nothing at 0
+- anim style burst: an open and a close each land with nothing stuck
+- anim style burst: a reversal starts from the pose, both ways, and lands
+- anim style burst: a send fires at once and its slice stays bright where it rests
+- anim style burst: combat is the same, with nothing refused, and a stand-down lands it
+- anim style burst: leaves nothing on the ghost for the next style, and never touches it
+- anim style burst: text keeps the Vertex route, with no width
+- anim style stagger: rests whole at 1 and shows nothing at 0
+- anim style stagger: an open and a close each land with nothing stuck
+- anim style stagger: a reversal starts from the pose, both ways, and lands
+- anim style stagger: a send fires at once and its slice stays bright where it rests
+- anim style stagger: combat is the same, with nothing refused, and a stand-down lands it
+- anim style stagger: leaves nothing on the ghost for the next style, and never touches it
+- anim style stagger: text keeps the Vertex route, with no width
+- anim style pop: rests whole at 1 and shows nothing at 0
+- anim style pop: an open and a close each land with nothing stuck
+- anim style pop: a reversal starts from the pose, both ways, and lands
+- anim style pop: a send fires at once and its slice stays bright where it rests
+- anim style pop: combat is the same, with nothing refused, and a stand-down lands it
+- anim style pop: leaves nothing on the ghost for the next style, and never touches it
+- anim style pop: text keeps the Vertex route, with no width
+- anim style slide: rests whole at 1 and shows nothing at 0
+- anim style slide: an open and a close each land with nothing stuck
+- anim style slide: a reversal starts from the pose, both ways, and lands
+- anim style slide: a send fires at once and its slice stays bright where it rests
+- anim style slide: combat is the same, with nothing refused, and a stand-down lands it
+- anim style slide: leaves nothing on the ghost for the next style, and never touches it
+- anim style slide: text keeps the Vertex route, with no width
+- anim style drop: rests whole at 1 and shows nothing at 0
+- anim style drop: an open and a close each land with nothing stuck
+- anim style drop: a reversal starts from the pose, both ways, and lands
+- anim style drop: a send fires at once and its slice stays bright where it rests
+- anim style drop: combat is the same, with nothing refused, and a stand-down lands it
+- anim style drop: leaves nothing on the ghost for the next style, and never touches it
+- anim style drop: text keeps the Vertex route, with no width
+- anim style squash: rests whole at 1 and shows nothing at 0
+- anim style squash: an open and a close each land with nothing stuck
+- anim style squash: a reversal starts from the pose, both ways, and lands
+- anim style squash: a send fires at once and its slice stays bright where it rests
+- anim style squash: combat is the same, with nothing refused, and a stand-down lands it
+- anim style squash: leaves nothing on the ghost for the next style, and never touches it
+- anim style squash: text keeps the Vertex route, with no width
+- anim style flip: rests whole at 1 and shows nothing at 0
+- anim style flip: an open and a close each land with nothing stuck
+- anim style flip: a reversal starts from the pose, both ways, and lands
+- anim style flip: a send fires at once and its slice stays bright where it rests
+- anim style flip: combat is the same, with nothing refused, and a stand-down lands it
+- anim style flip: leaves nothing on the ghost for the next style, and never touches it
+- anim style flip: text keeps the Vertex route, with no width
+- anim style shatter: rests whole at 1 and shows nothing at 0
+- anim style shatter: an open and a close each land with nothing stuck
+- anim style shatter: a reversal starts from the pose, both ways, and lands
+- anim style shatter: a send fires at once and its slice stays bright where it rests
+- anim style shatter: combat is the same, with nothing refused, and a stand-down lands it
+- anim style shatter: leaves nothing on the ghost for the next style, and never touches it
+- anim style shatter: text keeps the Vertex route, with no width
+- anim style flash: rests whole at 1 and shows nothing at 0
+- anim style flash: an open and a close each land with nothing stuck
+- anim style flash: a reversal starts from the pose, both ways, and lands
+- anim style flash: a send fires at once and its slice stays bright where it rests
+- anim style flash: combat is the same, with nothing refused, and a stand-down lands it
+- anim style flash: leaves nothing on the ghost for the next style, and never touches it
+- anim style flash: text keeps the Vertex route, with no width
+- anim style: Flash blooms through the ring and goes out with the landing
+- anim style: the shipped defaults open by an inward spiral and close by an outward one, on the dial
+- anim style: a Slide's direction reaches the real track, phase by phase
+
+### test_anim_surfaces.lua (42)
 
 - anim dial: a key open plays over a live dial, and it lands with the real alpha back
 - anim dial: a close plays out after the header is already down
@@ -1245,6 +1420,10 @@ Total.
 - anim dial: a Fan moves no text at all
 - anim dial: the ghost's text never carries a width
 - anim compat: the Vertex shim answers nothing when any piece is missing
+- anim compat: the stretch shim answers nothing when any piece is missing
+- anim dial: Rotate and scale turns the real ring's fills on the ghost and leaves its icons upright
+- anim dial: Rotate and scale reverses, sends and stands down as every style does, in combat too
+- anim dial: a lit slice's highlight goes with its place on the ghost
 - anim pad: a pad has no track, and its driver shows and hides it at once
 - anim pad: its alpha paths answer as before: master opacity, fade, hover, and combat
 - anim pad: a release and a rebuild touch no animation state
@@ -1263,7 +1442,7 @@ Total.
 - anim surfaces: a track rests at the dial's alpha, the master opacity included
 - anim surfaces: the dial's ghost mirrors the hub and pointer, and each slice's fill by its place
 
-### test_anim_ghost.lua (28)
+### test_anim_ghost.lua (45)
 
 - anim ghost: the stage takes the source's strata and level, and sub-frames keep their stacking
 - anim ghost: a level is held to the room above the stage, and never under it
@@ -1293,6 +1472,23 @@ Total.
 - anim ghost: text stacks over its own level's art and under the next one's
 - anim ghost: with no Enum the text fades in place, the art still scaling
 - anim ghost: with no mode setter the text fades in place
+- anim ghost: a copy hangs off its sub-frame, so moving the frame moves the slice
+- anim ghost: a place moves out along its own bisector by a SetPoint on its sub-frame
+- anim ghost: a place's offset is in its own scale, so its scale never moves it further
+- anim ghost: an orbit carries every copy about the center, turns the art and leaves icons upright
+- anim ghost: a whole-dial rotation turns the places, never the hub or the title
+- anim ghost: a spin turns the slice about its own offset point, on top of its orbit
+- anim ghost: a pose that did not turn or move writes nothing to a copy
+- anim ghost: a capture puts a moved, turned slice back
+- anim ghost: a whole-dial offset moves the stage and the text, in radii, unscaled by the pose
+- anim ghost: the sent place stays put whatever the pose is doing
+- anim ghost: no scale reaches the client at 0, which raises
+- anim ghost: a place fades on its own and the hub on its own
+- anim ghost: a text leg carries each place's own scale
+- anim ghost: one-axis scale is each art frame's Scale animation and each string's, one leg at a time
+- anim ghost: a knot's leg is linear, and the sent place leaves the legs
+- anim ghost: where a frame takes no Scale animation, one-axis scale falls back to the smaller, uniform
+- anim ghost: a flash is one additive texture, made on first use, over everything
 
 ### test_keybinds.lua (6)
 
@@ -1745,9 +1941,10 @@ Total.
 | test_dial.lua | 38 |
 | test_dial_catcher.lua | 13 |
 | test_dial_look.lua | 16 |
-| test_anim.lua | 29 |
-| test_anim_surfaces.lua | 38 |
-| test_anim_ghost.lua | 28 |
+| test_anim.lua | 44 |
+| test_anim_styles.lua | 157 |
+| test_anim_surfaces.lua | 42 |
+| test_anim_ghost.lua | 45 |
 | test_keybinds.lua | 6 |
 | test_dial_shine.lua | 8 |
 | test_icon_style.lua | 10 |
@@ -1773,4 +1970,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1463** |
+| **Total** | **1656** |

@@ -120,6 +120,11 @@ an insecure, mouse-off layer anchored to the header as the stage is. `SetScaleAn
 plain Enum constant, never a secret value. Nothing about them touches a secure frame, each stops in
 `G.Hide`, and `Anim.Snap` and the stand-down pass through that.
 
+Every style draws through the same copy, so none adds a write to a secure frame: a place's offset,
+turn and scale, a turning copy's `SetPoint` and `SetRotation`, each art sub-frame's one-axis Scale
+animation (`Compat.StretchAnimation`) and Flash's additive texture are all on the ghost's own insecure,
+mouse-off frames. The one-axis groups stop in `G.Hide` too.
+
 ## Key bindings
 
 The dials' keys are WoW's own key bindings of the `CLICK QuickCommsDial<n>:Toggle` entries, set in

@@ -38,7 +38,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | BG-1..9 | Battlegrounds | Node rings on the dial, one slice per node; the faction and location colors; the battleground instance ids; the objective groups (Alterac Valley, Isle of Conquest's bases, a flag map) and their migration; the four node buttons; Silvershard Mines' and Temple of Kotmogu's groups |
 | IDS-1 | Instance ids | The Midnight dungeons and raids |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes |
-| ANIM-1..12 | [Animations](#animations) | The dial's open and close, every style, a send, combat, the stand-down, Alt-Z, a pad having none, text that neither shimmers nor truncates |
+| ANIM-1..20 | [Animations](#animations) | The dial's open and close, every style by family, Slide's Direction, a send, combat, the stand-down, Alt-Z, a pad having none, text that neither shimmers nor truncates, the old defaults moved |
 | FSKIN-1..11 | [The full skin](#the-full-skin) | Every pad and dial color, the shadow, texture and shine on the skin, Ka0s Default unmoved, the companions off, an existing profile, meaning colors, the ghost |
 | SKIN-1..30 | [Skins](#skins) | The skinning rollout: the one-time reset under Ka0s Default, a new pad, dial or profile on the skin, Ka0s Default elsewhere unchanged, the Skin tab, every skin on the pads and dials, the *Use the skin's ...* boxes, the Preview as window, the callout popup and the icon browser, the settings pages, the tool windows, the Font and texture overrides, Ignore fonts, EllesmereUI on and off and the reload back, profiles and combat, the first-run skin picker (its eye, Apply, close, gear, the switch and a profile event, one picker across Ka0s addons), the CLI and the degraded install; LibKa0s v1.82.0: the Font outline, From skin font flags, `/qc skin`, the HUD size scale and the windows' width parity; the skin on the only media picker |
 
@@ -1959,15 +1959,16 @@ Result:
 The issue is #13; the rulings are in `docs/superpowers/specs/2026-11-01-open-close-animations-design.md`.
 
 **ANIM-1. The defaults on an existing profile.** Update with your own profile and open a dial by its key,
-then close it → it scales and fades in and out, from about the dial's center, not the cursor. Result:
-not run.
+then close it → its slices swirl out of the center to their places over 0.5 s, and spiral away from the
+ring over 0.3 s, about the dial's center, not the cursor. Result: not run.
 
 **ANIM-2. The handoff.** With a Shine look on the Slices tab and a glow on the Icons tab, open and close a
 dial slowly at 0.3 s, on the default skin and on one other → the copy matches the real dial, with no
 visible pop as it lands, no missing slice edges and no double image. Result: not run.
 
-**ANIM-3. Every style.** On the Dial page's Animation tab try Fade, Scale and fade, Fan and None, open and
-close. While a style is None its Duration is hidden. The Pad page has no Animation tab. Result: not run.
+**ANIM-3. The first styles, and the list.** On the Dial page's Animation tab try Fade, Scale and fade, Fan
+and None, open and close, at 0.5 s and at 2 s. The Open and the Close dropdowns each offer the same 21
+entries. While a style is None its Duration is hidden. The Pad page has no Animation tab. Result: not run.
 
 **ANIM-4. The two switches.** Set a dial's Close to None: it leaves at once and still opens animated. Do
 the same for its Open → each changes that one thing on that one dial. Result: not run.
@@ -2003,6 +2004,45 @@ letters, no text cut short and no ellipsis at any moment; each string stays on i
 the landing. Reverse one mid-animation → the text turns with the art. Send on a slice at 2 s → that
 slice's label pulses with it. A little softness at the small end is Vertex mode on a font that is not a
 slug font; note it if it looks wrong. Result: not run.
+
+For each family below, set the same style on Open and Close and play it at 0.5 s and again at 2 s. Each
+ends with the real dial whole and fully opaque, or fully gone, with no pop at the landing. The first
+in-game trials are marked: nothing but the client can show whether they draw at all.
+
+**ANIM-13. The scales.** Scale in, Scale in and fade, Scale out and Scale out and fade → each grows or
+settles about the dial's center. Scale out on close leaves past full size, toward you. The two "and fade"
+styles fade the whole way; the plain ones reach full alpha early. Text stays sharp and whole, as ANIM-12.
+Result: not run.
+
+**ANIM-14. The slices moving apart.** Outward spiral, Inward spiral, Orbit and Shatter → each slice's fill,
+shine and edge turn as one with no gap opening inside a slice, its icon and label ride with it and stay
+upright, and the hub and title only fade. Orbit's slices start together at the top. Try a ring of 4 and
+of 8. Result: not run.
+
+**ANIM-15. The overshoots.** Burst, Stagger pop and Pop → the small overshoot is visible at 2 s and lands
+with no snap. On Pop and Stagger pop the text overshoots with the art, not behind it. Result: not run.
+
+**ANIM-16. The moves.** Drop bounces to rest. Slide with Direction Up, Down, Left and Right, on Open and on
+Close separately → Up rises into place and leaves upward; the row shows only on Slide; text moves with
+the art. A send during a close leaves the sent slice where it rests. Result: not run.
+
+**ANIM-17. Rotate and scale. First in-game trial.** The ring swings about 120° as it grows and winds back
+as it shrinks → every fill, shine layer and mask turns cleanly about the dial's center, with no slice
+showing its mask's edge; icons and text stay upright; the hub stays level. Note any rotated art that
+reads wrong. Result: not run.
+
+**ANIM-18. Squash and Flip. First in-game trial.** Squash opens from a thin line, one axis then the
+other, and collapses the same way. Flip narrows like a card seen edge-on → the art really stretches on
+one axis, masks and slices included, no frame snaps back to full size at a leg's end or at the landing,
+and the text stretches with it. A Scale animation on a 1×1 frame carrying regions anchored outside it is
+what this tries. If the dial only shrinks evenly, the client took the substitute: note it. Result: not run.
+
+**ANIM-19. Flash.** Flash → a soft bloom through the ring that peaks mid-way and is gone at the landing,
+with no square edge to the glow. Result: not run.
+
+**ANIM-20. The old defaults moved.** On a profile that ran this branch before the styles, with a dial still
+on Scale and fade at 0.15 s and 0.1 s and another with its own picks → after the update the first shows
+Inward spiral at 0.5 s and Outward spiral at 0.3 s, and the second keeps its picks. Result: not run.
 
 ## The full skin
 
@@ -2117,7 +2157,7 @@ Open from the same run's re-cut v1.84.0 (M3-MEDIA, `Ka0sMedia_*` the only media 
 
 Owed from issue #14 (2026-11-01): LAYER-6, LAYER-7, LAYER-8, LAYER-9 (new).
 
-Owed from issue #13 (2026-11-01): ANIM-1 to ANIM-12 (new; the pad ruling reshaped them before any was run, and ANIM-12 is the shimmer and truncation fix).
+Owed from issue #13 (2026-11-01): ANIM-1 to ANIM-20 (new; the pad ruling reshaped them before any was run, ANIM-12 is the shimmer and truncation fix, and ANIM-13 to ANIM-20 are the styles, with ANIM-17 and ANIM-18 the first in-game trials).
 
 Owed from the full skin (FS-QC-REC, 2026-11-01): FSKIN-1 to FSKIN-11 (new); SKIN-5, SKIN-11, SKIN-12 and SKIN-13
 (their expected result changed, so each lost its pass mark).

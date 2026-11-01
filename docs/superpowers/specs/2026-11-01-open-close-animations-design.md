@@ -24,6 +24,8 @@ Status: the owner's rulings below were taken in an interview on 2026-11-01 and B
 
 **Pads, ruled by the owner after smoke testing, 2026-11-01:** animations are for the dial only. This replaces every line above and below that gives a pad an animation; the dial's rulings stand.
 
+**Dial styles, ruled by the owner, 2026-11-01:** every style is built on the approved mockup, whose motion is the spec, and every one is offered for Open and for Close, each picked separately. New styles: Scale in, Scale out, Rotate and scale, Outward spiral, Inward spiral, Orbit, Burst, Stagger pop, Pop, Slide, Drop, Squash, Flip, Shatter, Flash, plus Scale in and fade and Scale out and fade, the same scale with a full-length fade. None, Fade, Scale and fade and Fan stay. Default open: Inward spiral. Default close: Outward spiral. Default durations, the lead's call: 0.5 s open and 0.3 s close. This replaces the style and default lines above. The slider stays 0.1 to 2 s in 0.1 s steps. Slide keeps a Direction dropdown (Up, Down, Left, Right), open and close separately, shown only on Slide. The send emphasis, instant sends, reversal from the current pose, combat parity and the stand-down hold for every style, and a scaled dial's text keeps the Vertex route with no shimmer and no truncation.
+
 ## Technical design (implementer)
 
 Amended 2026-11-01 by the pad ruling: wherever this section names a pad, its Slide or its Pop, that part came out. A pad behaves as it did before #13, and `pad.anim` is gone: step 12 fills dials only, and step 14 drops the table from a profile that ran the first step 12 on the feature branch. `qcNoGhost`, `qcGhostColor`, `G.Watch` and `A.Holding` had no reader left, and went with it.
@@ -74,3 +76,10 @@ Why not a per-tick scrub (`Play` with an offset, then `Pause`) to hold the text 
 - **Flash.** One additive texture (`dial-glow.tga`, generated) on a frame over every level, made the first time a pose asks. A style with no flash pays for nothing.
 - Every scale written is at least `G.MIN_SCALE`, because the client raises on `SetScale(0)`.
 - The send, in any style: the sent place undoes the stage's offset and scale, its copies go back to their rest place and base rotation, and it leaves the one-axis leg.
+
+**The styles (2026-11-01).** Each is one entry in `A.STYLES`, the mockup's `S` key for key, with its pixel offsets as shares of its 165 px radius. The dropdown holds them in the rulings' order; a test pins the mockup's own numbers at two values of `e`.
+
+- **Knots.** Pop and Stagger pop declare them so their text overshoots with the art, since a string's scale is a leg, not a tick. Squash's break where one axis hands to the other, and Flip's follow its sine. The other styles need none: nothing their text scales curves past one smoothed leg, or their text does not scale at all.
+- **Slide** keeps the rule the pad's had: the direction reads as motion, so Up rises into place on an open and leaves upward on a close. `A.Config` now carries the phase for that. The defaults, Up and Down, are the mockup's: it rises from below and drops away.
+- **Shatter** wraps the mockup's eight seeds on a wider ring.
+- **The migration.** Step 12 is unreleased and writes the new defaults for a surface it fills. Step 15 moves a stored value still equal to the old default on a profile from this branch, key by key, and leaves any other value alone. A direction needs no step: `fillShape` fills it.

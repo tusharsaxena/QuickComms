@@ -93,6 +93,14 @@ What the addon cannot do, or does only under a condition, and why. The hub,
   string's position is the script's and stays exact. Vertex mode may pixelate a font that is not a
   slug font. Where the client lacks the mode or its Enum, text takes no scale at all and fades in place
   while the art scales; a font-size scale would shimmer, so there is no such fallback.
+- **Squash and Flip are the client's one-axis stretch (#13).** A frame takes one scale, so one axis needs a
+  Scale animation on each art sub-frame. Where a frame has none, both axes become the smaller, and Squash
+  and Flip read as a shrink. Flip has no perspective: WoW's UI has none, so it is a narrowing width.
+- **What turns and what stays upright (#13).** In Rotate and scale, the spirals, Orbit and Shatter the
+  slice art turns; icons and text keep upright and follow their place, and the hub and title stay level.
+  Shatter's scatter comes from eight seeds, so on a ring wider than eight a slice repeats another's path.
+- **An interrupted animation is a straight tween (#13).** A reversal runs from the pose it stands in to the
+  new style's end, so it has no overshoot, bounce or spiral of its own.
 
 ## Keys
 
