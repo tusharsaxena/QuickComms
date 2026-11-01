@@ -910,8 +910,9 @@ local SURFACE_DEFAULTS = {
         style = "iconLabel", scale = 1.0, spacing = 4 },
         look = { visibility = "always", fade = "none", fadeAlpha = 0.4,
             borderStyle = "None", borderSize = 1, borderColor = { r = 0, g = 0, b = 0, a = 1 },
-            useClassColorBorder = false, borderStyleFromSkin = true,
-            background = { r = 0.06, g = 0.06, b = 0.08, a = 0.92 }, useClassColorBackground = false },
+            useClassColorBorder = false, borderColorFromSkin = true, borderStyleFromSkin = true,
+            background = { r = 0.06, g = 0.06, b = 0.08, a = 0.92 }, useClassColorBackground = false,
+            backgroundFromSkin = true },
         icon = NS.IconDefaults.For("pad"),   -- the Icons tab (defaults/Icons.lua)
         header = NS.PadDefaults.Header(),    -- the Header tab (defaults/PadStyle.lua)
         section = NS.PadDefaults.Section(),  -- the Section titles tab (defaults/PadStyle.lua)

@@ -148,9 +148,13 @@ test("skin seam: every owner token is in the qc namespace and answers today's pi
     for name, def in pairs(NS.SKIN_TOKENS) do
         n = n + 1
         assertTrue(name:sub(1, 3) == "qc.", name .. " is outside this addon's namespace")
-        local r, g, b, a = NS.Skin.Color(name)
-        assertTrue(r ~= nil, name .. " does not resolve: the library refused it")
-        assertColor({ r, g, b, a }, def.default, name)
+        if type(def.default) == "table" then
+            local r, g, b, a = NS.Skin.Color(name)
+            assertTrue(r ~= nil, name .. " does not resolve: the library refused it")
+            assertColor({ r, g, b, a }, def.default, name)
+        else
+            assertEqual(NS.Skin.Token(name), def.default, name)
+        end
     end
     assertTrue(n >= 3, "QC-G1..G3 are owner tokens")
 end)
@@ -163,7 +167,11 @@ test("skin seam: under another skin an owner token takes its follow token's valu
     local base = Skin:ResolveSkin("obsidian")
     for name, def in pairs(NS.SKIN_TOKENS) do
         local r, g, b, a = NS.Skin.Color(name)
-        if def.follow then
+        if type(def.default) ~= "table" then
+            local want = def.default
+            if def.follow then want = base[def.follow] end
+            assertEqual(NS.Skin.Token(name), want, name .. " under Obsidian")
+        elseif def.follow then
             assertColor({ r, g, b, a }, base[def.follow], name .. " under Obsidian")
         else
             assertColor({ r, g, b, a }, def.default, name .. " under Obsidian")

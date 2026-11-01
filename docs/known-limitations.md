@@ -83,8 +83,10 @@ What the addon cannot do, or does only under a condition, and why. The hub,
   with no node were drawn empty.
 
 - **The animations play on a copy (#13).** A copy cannot run what a live frame runs, so an icon's glow
-  freezes for the length of an animation, and a color texture a library painted, which the client cannot
-  read back, is left out of it until the real frame returns. A rebuild's close and reopen, a deleted or
+  freezes for the length of an animation. A color texture a library paints on a frame the copy mirrors
+  is recorded as it is painted (`AnimGhost.Watch`), since the client cannot read one back; one painted
+  on a texture made before the frame was watched is left out until the real frame returns. A rebuild's
+  close and reopen, a deleted or
   disabled pad, and a page turn or group wedge during an open do not animate: they snap.
 
 ## Keys

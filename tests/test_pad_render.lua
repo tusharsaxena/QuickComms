@@ -207,12 +207,13 @@ end)
 
 test("render: [phase 5] a pad's Look is a font and a skin; the defaults are the skin a pad always wore", function()
     local NS, m = T.enableAddon()
+    T.ownLooks(NS)
     m.STANDARD_TEXT_FONT = "Fonts\\FRIZQT__.TTF"
     local R, look = NS.PadRender, NS.Library.TEMPLATES.pad.look
     local font = R.LabelFont(NS.Library.TEMPLATES.pad.button)
     assertEqual(font.path, "Fonts\\FRIZQT__.TTF", "no LibSharedMedia here: the standard face")
     -- red under: no outline (owner, 2026-10-22: OUTLINE)
-    assertEqual(font.size .. "|" .. font.flags .. "|" .. tostring(font.shadow), "10|OUTLINE|true")
+    assertEqual(font.size .. "|" .. font.flags .. "|" .. tostring(font.shadow ~= false), "10|OUTLINE|true")
     assertEqual(font.r + font.g + font.b + font.a, 4, "a button's label: white")
     local skin = R.SkinFor(look)
     assertEqual(skin.edgeFile, "Interface\\Buttons\\WHITE8x8", "None is the flat Ka0s edge")
@@ -392,6 +393,7 @@ end
 
 test("pad render: [shine] a look on the Buttons tab paints every button", function()
     local NS = livePad()
+    T.ownLooks(NS)
     local S = NS.SchemaRuntime
     for _, btn in ipairs(padButtons(NS)) do
         -- red under: shineLook "none" in defaults/PadStyle.lua Button (owner, 2026-10-22: Gloss fade)

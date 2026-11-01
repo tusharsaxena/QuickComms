@@ -14,6 +14,7 @@ local live, planOf, near =
 
 test("dial: [paging] the indicators sit on a rounded background sized to the row; off hides it", function()
     local NS = live()
+    T.ownLooks(NS)
     assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
     local ring = NS.Dial.Instance("d2").rings.active[2]   -- page 1 of 2: the pill (18), a dot (8), a gap (6)
     local back = ring.qcDotBack
@@ -47,6 +48,7 @@ end)
 
 test("dial: [paging] every dot and the pill has a border, its size plus twice the Dot border; 0 draws none", function()
     local NS = live()
+    T.ownLooks(NS)
     assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
     local ring = NS.Dial.Instance("d2").rings.active[2]
     -- red under: no border textures in modules/Dial_Slices.lua paintDots
@@ -111,6 +113,7 @@ end)
 
 test("dial: [pointer] the pointer is a catalog glyph, sized, colored and placed by the Slices tab, and can be off", function()
     local NS = live()
+    T.ownLooks(NS)
     assertTrue(NS.SchemaRuntime.Set("dial.slice.pointerSize", 30, "d2"))
     assertTrue(NS.SchemaRuntime.Set("dial.slice.pointerColor", { r = 0, g = 0, b = 1, a = 1 }, "d2"))
     assertEqual(NS.db.profile.dials.d2.slice.pointerOffset, 24, "a new dial's pointer sits 24 out (owner, 2026-10-22)")
@@ -191,6 +194,7 @@ end)
 
 test("dial: [polish] hub style solid draws the backdrop rim when its border size is set", function()
     local NS = live()
+    T.ownLooks(NS)
     local h = hubWith(NS, { style = "solid", borderSize = 3, borderColor = { r = 0, g = 0, b = 1, a = 1 } })
     assertTrue(h.qcHubDot:IsShown())
     -- red under: draw the backdrop rim only for the rimmed style
@@ -204,6 +208,7 @@ end)
 
 test("dial: [polish] hub style ring is a hollow ring of the circle size and line width", function()
     local NS = live()
+    T.ownLooks(NS)
     local h = hubWith(NS, { style = "ring", circleSize = 30, lineWidth = 4, borderSize = 0 })
     -- red under: PaintHubLook ignoring the style (solid always)
     assertFalse(h.qcHubDot:IsShown(), "no filled circle")
@@ -227,6 +232,7 @@ end)
 
 test("dial: [polish] hub style rimmed is a filled circle on a backdrop with its own rim", function()
     local NS = live()
+    T.ownLooks(NS)
     local h = hubWith(NS, { style = "rimmed", borderSize = 0 })
     assertTrue(h.qcHubDot:IsShown())
     assertEqual(h.qcHubDot.__size[1], 24)
@@ -261,6 +267,7 @@ end)
 
 test("dial: [polish] group labels take their font and hide when off", function()
     local NS = live()
+    T.ownLooks(NS)
     assertTrue(NS.Dial.Apply(1, "d2", planOf(NS)))
     local ring = NS.Dial.Instance("d2").rings.active[1]
     local title = ring.qcTitle
@@ -319,6 +326,7 @@ end)
 
 test("dial: [art] the hub draws textures, not segments", function()
     local NS = live()
+    T.ownLooks(NS)
     local R, S = NS.DialRender, NS.DialSlices
     local function isRing(t) return type(t.__texture) == "string" and t.__texture:find("dial%-ring%-%d+$") ~= nil end
     for _, style in ipairs({ "solid", "ring", "target", "rimmed" }) do

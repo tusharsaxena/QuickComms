@@ -131,6 +131,32 @@ NS.SKIN_TOKENS = {
     -- D8: the icon browser's search clear mark and its gray "Click an icon..." line (|cffaaaaaa).
     ["qc.markGray"]  = { default = { 0.54, 0.54, 0.54, 1 }, follow = "icon.dim" },
     ["qc.note"]      = { default = { byte(170), byte(170), byte(170), 1 }, follow = "text.muted" },
+    -- The full skin (LibKa0s v1.85.0, cause D7): where a pad's or a dial's default is not the library
+    -- token's value, today's pixels under Ka0s Default and the token in every other skin. A header's
+    -- and a section title's band: nothing drawn, so no fill and no edge.
+    ["qc.bandBg"]    = { default = { 0, 0, 0, 0 }, follow = "title.bg" },
+    ["qc.bandEdge"]  = { default = { 1, 1, 1, 1 }, follow = "win.border" },
+    ["qc.bandEdgeSize"] = { default = 0, follow = "win.borderSize" },
+    -- A pad button's body and edge (#3F3F3F at 25% and 10%), and its texture: flat, "" naming none.
+    ["qc.btnBg"]     = { default = { 0x3F / 255, 0x3F / 255, 0x3F / 255, 0.25 }, follow = "btn.bg" },
+    ["qc.btnEdge"]   = { default = { 0x3F / 255, 0x3F / 255, 0x3F / 255, 0.10 }, follow = "btn.border" },
+    ["qc.btnTexture"] = { default = "", follow = "bar.texture" },
+    -- The shine: a look per skin (modules/Shine.lua's names, "none" for none) and a tint. No library
+    -- token names a look, so these two say it themselves.
+    ["qc.btnShine"]  = { default = "glossfade", skins = { glass = "gloss", contrast = "none" } },
+    ["qc.btnShineTint"] = { default = { 0x1B / 255, 0x1B / 255, 0x1B / 255, 1 }, follow = "text.muted" },
+    ["qc.sliceShine"] = { default = "orb", skins = { glass = "frost", contrast = "none" } },
+    ["qc.sliceShineTint"] = { default = { 0x80 / 255, 0x80 / 255, 0x80 / 255, 1 }, follow = "text.muted" },
+    -- A dial's fills: its slices and plates (alpha 0.80), its hub, its page dots and their edge.
+    ["qc.sliceBg"]   = { default = { 0.06, 0.06, 0.08, 0.80 }, follow = "win.bg" },
+    ["qc.hubBg"]     = { default = { 0.12, 0.12, 0.14, 0.95 }, follow = "btn.bg" },
+    ["qc.pageDot"]   = { default = { 0.4, 0.4, 0.4, 0.9 }, follow = "text.disabled" },
+    ["qc.pageDotEdge"] = { default = { 0, 0, 0, 0.9 }, follow = "win.border" },
+    -- An icon's tint: white, every icon as it was, where icon.tint is a gray under Ka0s Default.
+    ["qc.iconTint"]  = { default = { 1, 1, 1, 1 }, follow = "icon.tint" },
+    -- HUD text's shadow color under a skin that states none: Ka0s Default's hud.shadow is false, and
+    -- every font block here ships with a black shadow (R.ShadowOf, modules/Pad_Render.lua).
+    ["qc.shadow"]    = { default = { 0, 0, 0, 1 }, follow = "hud.shadow" },
 }
 
 -- The Ka0s Default tokens the DEGRADED facade answers, copied from the library and limited to the
@@ -169,7 +195,22 @@ NS.SKIN_FALLBACK = {
     ["bar.borderStyle"] = "None",
     ["icon.borderStyle"] = "Solid",
     ["icon.borderSize"] = 2,
+    -- The full skin's HUD (cause D7): the tokens a color or a size follows that are not above.
+    ["bar.borderSize"] = 1,
+    ["icon.arrow"]     = { 1, 0.82, 0, 1 },
+    ["icon.border"]    = { 0, 0, 0, 1 },
 }
+
+--- A stored color, or the skin's while its "Use the skin's ..." companion `<key>FromSkin` is on: r, g,
+--- b, a. A class color comes first and is left alone, and a token that answers nothing (a skin that
+--- leaves it alone) falls back to the stored color. `look` is the block, `fallback` its missing swatch.
+function NS.SkinFollow(look, key, token, useClass, fallback)
+    if look[key .. "FromSkin"] == true and not useClass then
+        local r, g, b, a = NS.Skin.Color(token)
+        if r then return r, g, b, a or 1 end
+    end
+    return NS.ResolveColor(look[key] or fallback, useClass)
+end
 
 --- A color token's components AS A CALL SITE WRITES THEM: r, g, b for an opaque color and r, g, b,
 --- a otherwise (the library's own text and vertex rule), so a site that passed three components

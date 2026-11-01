@@ -30,7 +30,10 @@ local _, NS = ...
 -- THE SKIN (QC-03, LibKa0s LK-04). While the Border block's "Use the skin's border" companion
 -- (`borderStyleFromSkin`, the composer's `fromSkin = "icon"`) is on, the border's style and thickness
 -- are the skin's icon border (icon.borderStyle, icon.borderSize: Solid 2 px under Ka0s Default); Show
--- border and the color stay the player's (DECISIONS X4).
+-- border stays the player's. Since LibKa0s v1.85.0 (cause D7) the border's color, the glow's and the
+-- tint follow too, each through its own companion: icon.border, glow.color and qc.iconTint. The skin's
+-- tint reaches only a plain glyph: a glyph's own color carries meaning and a game icon is art, so
+-- both keep the stored tint (IS.PaintIcon).
 --
 -- HEADLESS. Each decision is recorded on the button (`qcBorder`, the color drawn or nil;
 -- `qcBorderSize`) whatever the frame answers.
@@ -67,7 +70,7 @@ end
 local function glowConfig(icon, size)
     if icon.glowEnabled ~= true then return false end
     local g = { type = icon.glowType, when = icon.glowWhen, size = size }
-    g.color = { NS.ResolveColor(icon.glowColor, icon.useClassColorGlow == true) }
+    g.color = { NS.SkinFollow(icon, "glowColor", "glow.color", icon.useClassColorGlow == true) }
     local parts = { tostring(g.type), tostring(size), table.concat(g.color, ":") }
     for _, knob in ipairs(D.GLOW_KNOBS) do
         local v = icon[knob.key]
@@ -102,13 +105,14 @@ function IS.Config(icon, kind, autoSize)
         desaturate = icon.desaturate == true,
         alpha = clamp(icon.alpha, 0.1, 1, 1),
         tint = { NS.ResolveColor(icon.tint, icon.useClassColorTint == true) },
+        skinTint = { NS.SkinFollow(icon, "tint", "qc.iconTint", icon.useClassColorTint == true) },
         border = false,
     }
     if icon.borderShow == true then
         local S, follow = NS.Skin, icon.borderStyleFromSkin == true
         local style = S.Resolve("icon.borderStyle", icon.borderStyle, follow)
         local size = math.floor(clamp(S.Resolve("icon.borderSize", icon.borderSize, follow), 1, 16, 1) + 0.5)
-        local r, g, b, a = NS.ResolveColor(icon.borderColor, icon.useClassColorBorder == true)
+        local r, g, b, a = NS.SkinFollow(icon, "borderColor", "icon.border", icon.useClassColorBorder == true)
         c.border = { size = size, color = { r, g, b, a },
             backdrop = { edgeFile = borderTexture(style), edgeSize = size } }
     end
@@ -117,13 +121,22 @@ function IS.Config(icon, kind, autoSize)
 end
 
 --- Draw an icon texture with a config: crop, desaturation, the tint times the glyph color `r, g, b`
---- (white for any icon that is no glyph), and the alpha times the tint's.
-function IS.ApplyIcon(tex, cfg, r, g, b)
-    local z, t = cfg.zoom, cfg.tint
+--- (white for any icon that is no glyph), and the alpha times the tint's. `plain` is IS.PaintIcon's:
+--- this icon takes the skin's tint.
+function IS.ApplyIcon(tex, cfg, r, g, b, plain)
+    local z, t = cfg.zoom, plain and cfg.skinTint or cfg.tint
     tex:SetTexCoord(z, 1 - z, z, 1 - z)
     tex:SetDesaturated(cfg.desaturate)
     tex:SetVertexColor((r or 1) * t[1], (g or 1) * t[2], (b or 1) * t[3])
     tex:SetAlpha(cfg.alpha * (t[4] or 1))
+end
+
+--- Draw `icon` with its member's stored `color` (Library.IconTint): the skin's tint on a glyph with no
+--- color of its own, the stored tint on anything else.
+function IS.PaintIcon(tex, cfg, icon, color)
+    local Lib = NS.Library
+    local r, g, b = Lib.IconTint(icon, color)
+    IS.ApplyIcon(tex, cfg, r, g, b, Lib.IsGlyph(icon) and r == 1 and g == 1 and b == 1)
 end
 
 --- The plain child frame over a button's icon (`btn.qcIcon`): the border's backdrop and the glow's

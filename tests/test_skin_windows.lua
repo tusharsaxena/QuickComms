@@ -63,6 +63,8 @@ local ALLOW = {
       why = "the combat refusal's chat line: chat output, not a skinned surface (DECISIONS X7)" },
     { file = "modules/Pad_Render.lua", find = "L[\"Channel: %s\"]",
       why = "the channel's name in WoW's chat-type color: a game-meaning color (rung 4)" },
+    { file = "modules/Pad_Render.lua", find = "t:SetVertexColor(1, 1, 1, 1)",
+      why = "a button's flat body clearing a texture's tint: white draws the color texture as painted" },
     { file = "modules/Pad_Render.lua", find = "NO_INNER =",
       why = "a cleared inner line: no color is drawn, under any skin" },
     { file = "modules/Dial_Slices.lua", find = "BLACK =",

@@ -483,6 +483,7 @@ end
 
 test("pad: [phase 5] the pad wears its Section header and Main window tabs: the titles' font, the edge and body", function()
     local NS = T.enableAddon{ mock = withMedia }
+    T.ownLooks(NS)
     NS.Situation.ReadInputs = function() return AB end
     NS.Situation.RefreshNow("test")
     local skins = {}
@@ -508,6 +509,7 @@ end)
 
 test("pad: [window] the header wears its own block: gold outlined 16-point text over nothing by default, then what it is given", function()
     local NS = T.enableAddon{ mock = withMedia }
+    T.ownLooks(NS)
     local skins = {}
     local apply = NS.ApplySkin
     NS.ApplySkin = function(frame, skin) skins[frame] = skin return apply(frame, skin) end
@@ -597,6 +599,7 @@ end)
 
 test("pad: [button] a button wears the Buttons tab: the owner's default body, edge, label and size, then what it is given", function()
     local NS = T.enableAddon{ mock = withMedia }
+    T.ownLooks(NS)
     local skins = {}
     local apply = NS.ApplySkin
     NS.ApplySkin = function(frame, skin) skins[frame] = skin return apply(frame, skin) end
@@ -819,6 +822,7 @@ end
 
 test("pad: [section header] each title sits on a band its row wide, dressed by the Section header tab", function()
     local NS = live(AB)
+    T.ownLooks(NS)
     local S = NS.SchemaRuntime
     local skins = {}
     local apply = NS.ApplySkin

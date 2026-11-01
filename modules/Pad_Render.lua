@@ -25,7 +25,10 @@ local _, NS = ...
 -- the stored pick while it is off. While the owner ignores fonts (the Skin tab's Ignore fonts),
 -- Resolve answers a face block's stored pick whatever its companion says (LibKa0s v1.81.0, R-1), nil
 -- for a stored "@skin", and R.LabelFont draws the standard face for a nil or unknown pick, so no
--- Ignore-fonts handling lives here. The player's colors and shadows are always the player's. Since
+-- Ignore-fonts handling lives here. Since LibKa0s v1.85.0 (cause D7) every color, the shadow, the
+-- thickness and the button's texture and shine follow too, each through its "Use the skin's ..."
+-- companion (NS.SkinFollow, R.ShadowOf, R.SkinFor, defaults/PadStyle.lua), and a stored value stands
+-- only with its companion off; a class color comes first and is never touched. Since
 -- LibKa0s v1.82.0 two more follow the skin (Ka0sAddonsCommonTasks D-07, D-09): a block's Font flags
 -- default to From skin ("@skin"), which NS.Skin.FontFlags resolves through the Skin tab's Font
 -- outline (a picked flag wins), and a block on the skin's face draws at NS.Skin.HudFontSize(its
@@ -91,6 +94,24 @@ Skin.OnLooksChanged(function()
     looksGen = looksGen + 1
     if NS.Surfaces and NS.Surfaces.Request then NS.Surfaces.Request("skin") end
 end)
+
+-- The shadow Ka0s Default's own no-shadow draws here, as `stored` hands it to S.HudFont: x, y, r, g, b, a.
+local function ownShadow()
+    local r, g, b, a = Skin.Color("qc.shadow")
+    if not r then return false end
+    return { 1, -1, r, g, b, a or 1 }
+end
+
+--- What a font block hands S.HudFont as `shadow` and `shadowFromSkin`. Off: its stored one under every
+--- skin. On: the skin's, S.HudFont's own reading of S.HudShadow, but for the skin that states none: the
+--- blocks ship with a shadow, and Ka0s Default keeps it through the owner token qc.shadow, where the
+--- library has no token to name. Ignore fonts (S.HudShadow's nil) leaves the stored one standing.
+function R.ShadowOf(look)
+    local stored = look.fontShadow ~= false
+    if look.fontShadowFromSkin ~= true then return stored, false end
+    if Skin.HudShadow() == false then return ownShadow(), false end
+    return stored, true
+end
 
 --- A font block's face as the skin or the player names it: the skin's hud.font while its "Use the
 --- skin's font" companion is on, else the stored pick; the stored pick while the owner ignores fonts
@@ -208,7 +229,8 @@ local function veil(btn, over, sub)
 end
 
 -- A color texture, with what it was painted recorded: the client cannot read one back, and the
--- surface's ghost (modules/Anim_Ghost.lua) copies it.
+-- surface's ghost (modules/Anim_Ghost.lua) copies it. The frames the library paints are watched
+-- (paintSkin below), so what it paints is recorded the same way.
 local function colorFill(t, r, g, b, a)
     t:SetColorTexture(r, g, b, a)
     local c = t.qcGhostColor or {}
@@ -227,6 +249,12 @@ local function paintChrome(btn)
     colorFill(btn.qcDim, ch.veil[1], ch.veil[2], ch.veil[3], ch.veil[4])
     colorFill(btn.qcCool, ch.veilCool[1], ch.veilCool[2], ch.veilCool[3], ch.veilCool[4])
     colorFill(btn.qcHover, ch.hover[1], ch.hover[2], ch.hover[3], ch.hover[4])
+end
+
+-- NS.ApplySkin on a frame the ghost copies: a color texture the library makes on it is recorded too.
+local function paintSkin(frame, skin)
+    NS.AnimGhost.Watch(frame)
+    NS.ApplySkin(frame, skin)
 end
 
 --- Whether a slot wears the dim veil (qcDim): only a live slot whose bake was refused, one that sends and
@@ -363,7 +391,7 @@ function R.Paint(btn, slot, style, w, icfg)
     local icon = slot.icon or NS.DefaultIcon("callout")
     btn.qcIcon:SetTexture(icon)
     btn.qcIcon:SetSize(icfg.size, icfg.size)
-    IS.ApplyIcon(btn.qcIcon, icfg, NS.Library.IconTint(icon, slot.iconColor))
+    IS.PaintIcon(btn.qcIcon, icfg, icon, slot.iconColor)
     btn.qcIcon:SetShown(style ~= "label")
     IS.PaintBorder(btn, icfg, style ~= "label")
     Glow.Bind(btn, style ~= "label" and icfg.glow or false, slot.calloutId)
@@ -396,30 +424,46 @@ local FLAT_EDGE = "Interface\\Buttons\\WHITE8x8"
 --- the stored one through Skin.HudFontSize (scaled while the block follows the skin's face) and the
 --- flags the stored ones through Skin.FontFlags (From skin is the Font outline's). A face
 --- this machine does not have is the standard one; "Use class
---- color" takes the player's class color, keeping the swatch's alpha (NS.ResolveColor). A missing
---- swatch is `fallback` when given, else white.
-function R.LabelFont(look, fallback)
+--- color" takes the player's class color, keeping the swatch's alpha (NS.ResolveColor), and "Use the
+--- skin's color" `textGetter`'s answer (Skin.HudTextColor; Skin.HudLabelColor for a header or a title).
+--- A missing swatch is `fallback` when given, else white.
+function R.LabelFont(look, fallback, textGetter)
     look = type(look) == "table" and look or {}
-    local r, g, b, a = NS.ResolveColor(look.fontColor or fallback, look.useClassColorFont)
+    local r, g, b, a
+    if look.fontColorFromSkin == true and not look.useClassColorFont then
+        r, g, b, a = (textGetter or Skin.HudTextColor)()
+    end
+    if r then
+        a = a or 1
+    else
+        r, g, b, a = NS.ResolveColor(look.fontColor or fallback, look.useClassColorFont)
+    end
+    local shadow, shadowFromSkin = R.ShadowOf(look)
     return { path = NS.MediaFetch("font", R.FontKey(look)) or STANDARD_TEXT_FONT,
         size = Skin.HudFontSize(tonumber(look.fontSize) or 10, look.fontFromSkin == true),
         flags = Skin.FontFlags(look.fontFlags), r = r, g = g, b = b, a = a,
-        shadow = look.fontShadow ~= false }
+        shadow = shadow, shadowFromSkin = shadowFromSkin }
 end
 
 --- The section titles' font: the Section titles tab's (`pad.section`; gold by default, as the titles
 --- always were; R.TitleColor when its swatch is missing).
 function R.TitleFont(section)
-    return R.LabelFont(section, R.TitleColor())
+    return R.LabelFont(section, R.TitleColor(), Skin.HudLabelColor)
 end
 
---- Draw a font string in a pad's font (R.LabelFont). A face the client refuses falls back to the
---- standard one.
+-- One table, refilled whole before each call (S.HudFont keeps nothing of it): a rebuild draws a string
+-- per button and per wedge.
+local HUD_FONT = {}
+
+--- Draw a font string in a pad's font (R.LabelFont), through S.HudFont: the one way a 12.0.7 client
+--- draws its shadow. A face the client refuses falls back to the standard one there. The size is
+--- already the drawn one, so S.HudFont does not scale it again.
 function R.ApplyFont(fs, font)
     if not (fs and font) then return end
-    if not fs:SetFont(font.path, font.size, font.flags) then fs:SetFont(STANDARD_TEXT_FONT, font.size, font.flags) end
+    HUD_FONT.face, HUD_FONT.size, HUD_FONT.flags = font.path, font.size, font.flags
+    HUD_FONT.shadow, HUD_FONT.shadowFromSkin = font.shadow, font.shadowFromSkin
+    Skin.HudFont(fs, HUD_FONT)
     fs:SetTextColor(font.r, font.g, font.b, font.a)
-    if font.shadow then fs:SetShadowOffset(1, -1) else fs:SetShadowOffset(0, 0) end
 end
 
 -- The inner line, made clear: the frame keeps the child LibKa0s built at its first skin, so a skin
@@ -428,10 +472,19 @@ local NO_INNER = { 0, 0, 0, 0 }
 -- No fill: a header, a section band or a button's edge frame with no background of its own.
 local CLEAR = { r = 0, g = 0, b = 0, a = 0 }
 
+-- The tokens a block's fill, edge and thickness follow, by R.SkinFor's `tokens`: the window's are the
+-- library's, a band's and a button's the owner tokens that keep their pixels under Ka0s Default.
+R.WINDOW_TOKENS = { bg = "win.bg", edge = "win.border", size = "bar.borderSize" }
+R.BAND_TOKENS = { bg = "qc.bandBg", edge = "qc.bandEdge", size = "qc.bandEdgeSize" }
+R.BUTTON_TOKENS = { bg = "qc.btnBg", edge = "qc.btnEdge", size = "bar.borderSize" }
+
 -- A look's edge: its thickness (0 to 16, 1 when unset) and its border art (nil for "None", or one this
--- machine does not have). The style is R.BorderKey's: the skin's while it follows (QC-03).
-local function edgeOf(look)
-    local size = math.max(0, math.min(16, tonumber(look.borderSize) or 1))
+-- machine does not have). The style is R.BorderKey's: the skin's while it follows (QC-03), and so is
+-- the thickness, the border's companion governing both (the composer's `fromSkin = "bar"`).
+local function edgeOf(look, tokens)
+    local stored = tonumber(look.borderSize) or 1
+    local drawn = Skin.Resolve(tokens.size, stored, look.borderStyleFromSkin == true)
+    local size = math.max(0, math.min(16, tonumber(drawn) or stored))
     local style = R.BorderKey(look)
     local art = style ~= "None" and NS.MediaFetch("border", style) or nil
     return size, art
@@ -443,12 +496,14 @@ end
 --- companion. The Ka0s 1px inner line belongs to the pad's flat 1px edge only: at thickness 0 it would
 --- be an edge after all, and over a thicker edge or border art it is a gray line that ignores the
 --- border's color; `plain` (the header, a section band, a button's edge) never takes it. Art insets the background by a
---- quarter of its size, so the body reaches under the art's soft inner edge.
-function R.SkinFor(look, plain)
+--- quarter of its size, so the body reaches under the art's soft inner edge. `tokens` (R.WINDOW_TOKENS
+--- when none) names what the two colors and the thickness follow while their companions are on.
+function R.SkinFor(look, plain, tokens)
     look = type(look) == "table" and look or {}
+    tokens = tokens or R.WINDOW_TOKENS
     local skin = {}
     for k, v in pairs(NS.SKIN or {}) do skin[k] = v end
-    local size, art = edgeOf(look)
+    local size, art = edgeOf(look, tokens)
     skin.edgeFile = size > 0 and (art or FLAT_EDGE) or nil
     skin.edgeSize = size
     local inset = art and math.floor(size / 4 + 0.5) or size
@@ -461,8 +516,8 @@ function R.SkinFor(look, plain)
         local r, g, b, a = NS.Skin.Color("win.inner")
         skin.innerBorder = { r, g, b, a or 1 }
     end
-    skin.border = { NS.ResolveColor(look.borderColor, look.useClassColorBorder) }
-    skin.bg = { NS.ResolveColor(look.background, look.useClassColorBackground) }
+    skin.border = { NS.SkinFollow(look, "borderColor", tokens.edge, look.useClassColorBorder) }
+    skin.bg = { NS.SkinFollow(look, "background", tokens.bg, look.useClassColorBackground) }
     return skin
 end
 
@@ -482,10 +537,12 @@ end
 -- A header or button table's signature: every leaf its look reads, the media its names resolve to
 -- now (through the skin while a companion follows it) and the look generation, so a rebuild that
 -- changed none of it reuses the look it built last time and repaints nothing (HeaderLook, ButtonLook
--- and their Apply), and a skin change repaints every look. The class color is the player's, fixed
--- for the session.
+-- and their Apply), and a skin change repaints every look: the generation stands for every resolved
+-- token, S.HudFont's shadow included (LibKa0s Options, "A cache in front of S.HudFont"). The class color
+-- is the player's, fixed for the session.
 local SIG_KEYS = { "height", "width", "font", "fontSize", "fontFlags", "fontShadow", "useClassColorFont",
-    "fontFromSkin", "borderStyle", "borderSize", "useClassColorBorder", "borderStyleFromSkin", "useClassColorBackground", "glowEnabled", "glowType",
+    "fontFromSkin", "fontColorFromSkin", "fontShadowFromSkin", "backgroundFromSkin", "borderColorFromSkin",
+    "textureFromSkin", "glowColorFromSkin", "shineFromSkin", "borderStyle", "borderSize", "useClassColorBorder", "borderStyleFromSkin", "useClassColorBackground", "glowEnabled", "glowType",
     "useClassColorGlow", "shineLook", "shineStrength", "useClassColorShineTint", "useClassColorShineBloomA",
     "useClassColorShineBloomB" }
 local SIG_COLORS = { "fontColor", "borderColor", "background", "glowColor", "shineTint", "shineBloomA", "shineBloomB" }
@@ -509,6 +566,15 @@ local function lookSig(t)
     return table.concat(parts, "|")
 end
 
+-- A header's or a section title's band: its skin, plain, on the owner's band tokens.
+local function bandSkin(t)
+    return R.SkinFor({ borderStyle = t.borderStyle or "None", borderSize = t.borderSize or 0,
+        borderStyleFromSkin = t.borderStyleFromSkin, borderColorFromSkin = t.borderColorFromSkin,
+        borderColor = t.borderColor, useClassColorBorder = t.useClassColorBorder,
+        background = t.background or CLEAR, backgroundFromSkin = t.backgroundFromSkin,
+        useClassColorBackground = t.useClassColorBackground }, true, R.BAND_TOKENS)
+end
+
 --- The window's look, from the pad's `look` table: { skin (R.SkinFor), sig }. `prev`, the look the last
 --- rebuild built, is answered again while its signature still holds, as R.HeaderLook's.
 function R.WindowLook(look, prev)
@@ -522,7 +588,7 @@ end
 function R.ApplyWindowLook(root, wl)
     if root.qcLookSig == wl.sig then return end
     root.qcLookSig = wl.sig
-    NS.ApplySkin(root, wl.skin)
+    paintSkin(root, wl.skin)
 end
 
 --- The header's look, from the pad's `header` table: { height, font, skin, sig }. The font is the
@@ -533,12 +599,8 @@ function R.HeaderLook(header, prev)
     header = type(header) == "table" and header or {}
     local sig = lookSig(header)
     if type(prev) == "table" and prev.sig == sig then return prev end
-    return { sig = sig, height = PL.HeaderHeight(header.height), font = R.LabelFont(header, R.TitleColor()),
-        skin = R.SkinFor({ borderStyle = header.borderStyle or "None", borderSize = header.borderSize or 0,
-            borderStyleFromSkin = header.borderStyleFromSkin,
-            borderColor = header.borderColor, useClassColorBorder = header.useClassColorBorder,
-            background = header.background or CLEAR,
-            useClassColorBackground = header.useClassColorBackground }, true) }
+    return { sig = sig, height = PL.HeaderHeight(header.height),
+        font = R.LabelFont(header, R.TitleColor(), Skin.HudLabelColor), skin = bandSkin(header) }
 end
 
 --- Dress the header row in its look (R.HeaderLook): its skin, and every text in its font. A look the
@@ -546,7 +608,7 @@ end
 function R.ApplyHeaderLook(header, hl)
     if header.qcLookSig == hl.sig then return end
     header.qcLookSig = hl.sig
-    NS.ApplySkin(header, hl.skin)
+    paintSkin(header, hl.skin)
     R.ApplyFont(header.qcSituation, hl.font)
     local ch = R.Chrome()
     R.ApplyFont(header.qcLockdown, recolor(hl.font, ch.lockdown))
@@ -562,11 +624,7 @@ function R.SectionLook(section, prev)
     section = type(section) == "table" and section or {}
     local sig = lookSig(section)
     if type(prev) == "table" and prev.sig == sig then return prev end
-    local skin = R.SkinFor({ borderStyle = section.borderStyle or "None", borderSize = section.borderSize or 0,
-        borderStyleFromSkin = section.borderStyleFromSkin,
-        borderColor = section.borderColor, useClassColorBorder = section.useClassColorBorder,
-        background = section.background or CLEAR,
-        useClassColorBackground = section.useClassColorBackground }, true)
+    local skin = bandSkin(section)
     return { sig = sig, height = math.max(0, math.floor(tonumber(section.height) or 0)), font = R.TitleFont(section),
         skin = skin, inset = skin.edgeFile and skin.insets.left or 0 }
 end
@@ -576,26 +634,45 @@ end
 function R.ApplySectionBand(band, sl)
     if band.qcLookSig == sl.sig then return end
     band.qcLookSig = sl.sig
-    NS.ApplySkin(band, sl.skin)
+    paintSkin(band, sl.skin)
 end
 
 -- ── the Buttons tab (2026-10-20) ───────────────────────────────────────────────────────────────
 
---- A button's look, from the pad's `button` table: { bg = {r,g,b,a}, edge (a plain skin: the border only,
---- over no background), font, glow (IconStyle.GlowConfig, false while off), shine (NS.Shine.Resolve of
---- its Shine leaves), sig }. A missing body color is the skin's btn.bg (R.Chrome: 0.10, 0.10, 0.12, 0.90
---- under Ka0s Default, the body a button always had).
+--- A button's look, from the pad's `button` table: { bg = {r,g,b,a}, texture (a statusbar file the skin
+--- names, nil for the flat body), edge (a plain skin: the border only, over no background), font, glow
+--- (IconStyle.GlowConfig, false while off), shine (NS.Shine.Resolve of its Shine leaves), sig }. A
+--- missing body color is the skin's btn.bg (R.Chrome: 0.10, 0.10, 0.12, 0.90 under Ka0s Default, the body
+--- a button always had).
 --- `prev` is answered again while its signature still holds, as R.HeaderLook's.
 function R.ButtonLook(button, prev)
     button = type(button) == "table" and button or {}
     local sig = lookSig(button)
     if type(prev) == "table" and prev.sig == sig then return prev end
-    local bg = { NS.ResolveColor(button.background or R.Chrome().body, button.useClassColorBackground) }
+    local bg = { NS.SkinFollow(button, "background", R.BUTTON_TOKENS.bg, button.useClassColorBackground,
+        R.Chrome().body) }
     local edge = R.SkinFor({ borderStyle = button.borderStyle or "None", borderSize = button.borderSize or 0,
-        borderStyleFromSkin = button.borderStyleFromSkin,
-        borderColor = button.borderColor, useClassColorBorder = button.useClassColorBorder, background = CLEAR }, true)
-    return { sig = sig, bg = bg, edge = edge, font = R.LabelFont(button), glow = IS.GlowConfig(button,
-        tostring(button.width) .. "x" .. tostring(button.height)), shine = NS.Shine.Resolve(button) }
+        borderStyleFromSkin = button.borderStyleFromSkin, borderColorFromSkin = button.borderColorFromSkin,
+        borderColor = button.borderColor, useClassColorBorder = button.useClassColorBorder, background = CLEAR },
+        true, R.BUTTON_TOKENS)
+    local texture = button.textureFromSkin == true and NS.MediaFetch("statusbar", Skin.Token("qc.btnTexture")) or nil
+    return { sig = sig, bg = bg, texture = texture, edge = edge, font = R.LabelFont(button),
+        glow = IS.GlowConfig(button, tostring(button.width) .. "x" .. tostring(button.height)),
+        shine = NS.Shine.Resolve(button, "qc.btnShine", "qc.btnShineTint") }
+end
+
+-- A button's body: the skin's texture in the look's color, or the flat color. A file is read back by
+-- the ghost, so a flat record must not outlive one, and a pooled texture's tint must not outlive it.
+local function paintBody(t, cl)
+    local c = cl.bg
+    if cl.texture then
+        t:SetTexture(cl.texture)
+        t:SetVertexColor(c[1], c[2], c[3], c[4])
+        t.qcGhostColor = nil
+    else
+        t:SetVertexColor(1, 1, 1, 1)
+        colorFill(t, c[1], c[2], c[3], c[4])
+    end
 end
 
 -- The button glow for a button drawn `w` x `h`: the look's glow, its signature carrying that size, so a
@@ -624,8 +701,8 @@ end
 function R.ApplyButtonLook(btn, cl, w, h)
     if btn.qcLookSig ~= cl.sig then
         btn.qcLookSig = cl.sig
-        colorFill(btn.qcBg, cl.bg[1], cl.bg[2], cl.bg[3], cl.bg[4])
-        NS.ApplySkin(btn.qcEdge, cl.edge)
+        paintBody(btn.qcBg, cl)
+        paintSkin(btn.qcEdge, cl.edge)
         R.ApplyFont(btn.qcLabel, cl.font)
     end
     Glow.Button(btn, sizedGlow(cl, w, h))

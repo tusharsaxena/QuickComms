@@ -47,6 +47,8 @@ NS.MIGRATIONS = {
     { to = 11, perProfile = true, run = function(_, profile) NS.Library.MigrateFontFlags(profile) end },
     -- 11 -> 12 (#13): every pad and dial takes the Animation tab's defaults, kept keys kept.
     { to = 12, perProfile = true, run = function(_, profile) NS.Library.MigrateAnim(profile) end },
+    -- 12 -> 13 (LibKa0s v1.85.0, cause D7): every pad and dial onto the full skin, once per profile.
+    { to = 13, perProfile = true, run = function(_, profile) NS.Library.MigrateFullSkin(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.
@@ -69,6 +71,9 @@ function NS:RunMigrations()
             g.schemaVersion = step.to   -- reached only if the step returned
         end
     end
+    -- Step 13's record is per profile and the stamp per account, so a profile that arrives later (an
+    -- import, a copy, a reset) takes it here. It writes nothing to a profile that holds the record.
+    for _, profile in pairs(sv.profiles or {}) do NS.Library.MigrateFullSkin(profile) end
     if from ~= g.schemaVersion and NS.DebugAtEnable then
         NS.DebugAtEnable("Migrate", "v%s -> v%s", from, g.schemaVersion)
     end

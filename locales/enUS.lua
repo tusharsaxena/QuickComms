@@ -1276,6 +1276,18 @@ L["Draw the icons in gray."] = "Draw the icons in gray."
 L["Icon opacity"] = "Icon opacity"
 L["How opaque the icons are."] = "How opaque the icons are."
 L["Tint"] = "Tint"
+-- The full skin's companions (settings/SchemaMembers.lua's followRow, LibKa0s v1.85.0, cause D7)
+L["Use the skin's color"] = "Use the skin's color"
+L["Use the skin's shadow"] = "Use the skin's shadow"
+L["Use the skin's shine"] = "Use the skin's shine"
+L["Use the skin's texture"] = "Use the skin's texture"
+L["Font color"] = "Font color"
+L["Font shadow"] = "Font shadow"
+L["Border color"] = "Border color"
+L["Draw %s from the skin. The %s row keeps its value, and is not read while this is on."] =
+    "Draw %s from the skin. The %s row keeps its value, and is not read while this is on."
+L["Draw the button's body on the skin's bar texture. Off draws it flat."] =
+    "Draw the button's body on the skin's bar texture. Off draws it flat."
 L["Draw a border around each icon."] = "Draw a border around each icon."
 L["Draw a glow around each icon."] = "Draw a glow around each icon."
 L["Glow when"] = "Glow when"

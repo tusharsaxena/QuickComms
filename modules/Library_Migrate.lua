@@ -296,3 +296,80 @@ function Lib.MigrateAnim(profile)
         end
     end
 end
+
+-- The full skin (LibKa0s v1.85.0, Ka0sAddonsCommonTasks docs/2026-11-01-FULL_SKINNING, D2 to D7): every
+-- companion a surface carries, by kind, as `<block>.<key>`, and each font block's Font flags, whose
+-- reader is on S.FontFlags. No size, no stored color or pick, no class color or its toggle, and neither
+-- skin.ignore* value: the step names the companion, and what it governs stays as it was.
+local FONT_KEYS = { "fontFromSkin", "fontColorFromSkin", "fontShadowFromSkin", "fontFlags" }
+local BOX_KEYS = { "backgroundFromSkin", "borderColorFromSkin", "borderStyleFromSkin" }
+local ICON_KEYS = { "tintFromSkin", "borderColorFromSkin", "borderStyleFromSkin", "glowColorFromSkin" }
+
+local function blockKeys(out, block, ...)
+    for _, list in ipairs({ ... }) do
+        for _, key in ipairs(list) do out[#out + 1] = block .. "." .. key end
+    end
+end
+
+local function surfaceKeys()
+    local pad, dial = {}, {}
+    blockKeys(pad, "look", BOX_KEYS)
+    blockKeys(pad, "header", FONT_KEYS, BOX_KEYS)
+    blockKeys(pad, "section", FONT_KEYS, BOX_KEYS)
+    blockKeys(pad, "button", FONT_KEYS, BOX_KEYS, { "textureFromSkin", "glowColorFromSkin", "shineFromSkin" })
+    blockKeys(pad, "icon", ICON_KEYS)
+    blockKeys(dial, "label", FONT_KEYS)
+    blockKeys(dial, "title", FONT_KEYS)
+    blockKeys(dial, "slice", { "backgroundFromSkin", "highlightFromSkin", "pointerColorFromSkin", "shineFromSkin" })
+    blockKeys(dial, "hub", { "backgroundFromSkin", "borderColorFromSkin", "circleColorFromSkin" })
+    blockKeys(dial, "page", { "arrowColorFromSkin", "plateColorFromSkin", "currentColorFromSkin", "dotColorFromSkin",
+        "dotBackColorFromSkin", "dotBorderColorFromSkin" })
+    blockKeys(dial, "icon", ICON_KEYS)
+    return { pads = pad, dials = dial }
+end
+Lib.FULL_SKIN_KEYS = surfaceKeys()
+
+--- Every listed key of `profile`, as dotted paths from the profile's root, one set per stored surface.
+function Lib.FullSkinPaths(profile)
+    local out = {}
+    for kind, keys in pairs(Lib.FULL_SKIN_KEYS) do
+        for id, surface in pairs(type(profile[kind]) == "table" and profile[kind] or {}) do
+            if type(surface) == "table" then
+                for _, key in ipairs(keys) do out[#out + 1] = kind .. "." .. tostring(id) .. "." .. key end
+            end
+        end
+    end
+    return out
+end
+
+-- The no-library arm: FollowOnce's write, by hand. A path through a missing table is skipped, and the
+-- `skin` table is the one table this may create.
+local function followByHand(profile, paths)
+    if type(profile.skin) == "table" and profile.skin.fullSkinReset == true then return end
+    for _, path in ipairs(paths) do
+        local t, leaf = profile, nil
+        for seg in path:gmatch("[^%.]+") do
+            if leaf then t = type(t) == "table" and t[leaf] or nil end
+            leaf = seg
+        end
+        if type(t) == "table" then t[leaf] = leaf:match("FromSkin$") and true or "@skin" end
+    end
+    if type(profile.skin) ~= "table" then profile.skin = {} end
+    profile.skin.fullSkinReset = true
+end
+
+--- Step 13 (LibKa0s v1.85.0, cause D7, the owner's ruling that existing profiles follow the skin): every
+--- stored pad and dial goes onto the skin, once per profile. The record is the profile's own
+--- (`skin.fullSkinReset`, Skin.FollowOnce), so core/Database.lua also runs this on every profile event:
+--- a companion turned off afterwards stays off, and a reset profile runs it against defaults that write
+--- nothing a player can see. The stored colors and picks are kept for a companion turned off.
+function Lib.MigrateFullSkin(profile)
+    if type(profile) ~= "table" then return end
+    local paths = Lib.FullSkinPaths(profile)
+    local Skin = LibStub and LibStub("LibKa0s-Skin-1.0", true)
+    if Skin and type(Skin.FollowOnce) == "function" then
+        Skin.FollowOnce(profile, paths)
+    else
+        followByHand(profile, paths)
+    end
+end

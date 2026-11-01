@@ -11,8 +11,10 @@ local _, NS = ...
 -- are grouped into sub-frames by their source frame's level above the root. A region or frame tagged
 -- `qcGhostGroup` (a dial's place) goes into a sub-frame of its own, which the Fan and the send's
 -- emphasis address. `qcNoGhost` leaves a frame out (a pad's drag strip, which ignores the pad's
--- alpha). A color texture cannot be read back, so its painter records `qcGhostColor`; one with neither
--- a file nor a record is left out. Rects may be missing on a frame never laid out: capture then answers
+-- alpha). A color texture cannot be read back, so its painter records `qcGhostColor`: this addon's
+-- through Pad_Render's colorFill, a library's through G.Watch on the frames it paints. One with neither
+-- a file nor a record is left out. A skinned string's shadow lives on its font object (S.HudFont), so
+-- the copy wears the same object. Rects may be missing on a frame never laid out: capture then answers
 -- false, and the track snaps (the rulings' fallback, never a guess).
 --
 -- Frames and regions are pooled per ghost, made on first use and never destroyed; making a plain frame
@@ -34,6 +36,29 @@ function G.New()
     stage:SetSize(1, 1)
     stage:Hide()
     return { stage = stage, subs = {}, used = 0, scale = 1, size = 1 }
+end
+
+local function recordingColor(self, r, g, b, a)
+    local c = rawget(self, "qcGhostColor") or {}
+    c[1], c[2], c[3], c[4] = r, g, b, a
+    self.qcGhostColor = c
+    return self.qcSetColor(self, r, g, b, a)
+end
+
+local function watchedTexture(self, ...)
+    local t = self.qcCreateTexture(self, ...)
+    if type(t) == "table" and not rawget(t, "qcSetColor") and t.SetColorTexture then
+        t.qcSetColor, t.SetColorTexture = t.SetColorTexture, recordingColor
+    end
+    return t
+end
+
+--- Have every texture made on `frame` from now on record its color texture, as this addon's own
+--- painter does, for a frame a library paints: what the client cannot read back, the ghost still has.
+--- Once per frame. Insecure fields on our own frames; nothing here runs secure.
+function G.Watch(frame)
+    if rawget(frame, "qcCreateTexture") or not frame.CreateTexture then return end
+    frame.qcCreateTexture, frame.CreateTexture = frame.CreateTexture, watchedTexture
 end
 
 local function resetSub(sub)
@@ -158,12 +183,16 @@ local function copyFont(ctx, sub, src, factor)
         ctx.failed = true
         return
     end
-    fs:SetFont(face, size * factor, flags)
+    local object = src:GetFontObject()
+    if type(object) == "table" then fs:SetFontObject(object) end
+    if factor ~= 1 or type(object) ~= "table" then fs:SetFont(face, size * factor, flags) end
     fs:SetWordWrap(false)
     fs:SetJustifyH(src:GetJustifyH() or "CENTER")
     fs:SetTextColor(src:GetTextColor())
-    fs:SetShadowOffset(src:GetShadowOffset())
-    fs:SetShadowColor(src:GetShadowColor())
+    if type(object) ~= "table" then
+        fs:SetShadowOffset(src:GetShadowOffset())
+        fs:SetShadowColor(src:GetShadowColor())
+    end
     fs:SetText(text)
     fs:SetAlpha(src:GetAlpha() or 1)
     fs:Show()

@@ -70,6 +70,7 @@ local function region(kind, d)
         GetText = get(d.text), GetFont = function() return d.face or "Face", 10, "OUTLINE" end,
         GetJustifyH = get("RIGHT"), GetTextColor = function() return 0.5, 0.6, 0.7, 0.8 end,
         GetShadowOffset = function() return 2, -2 end, GetShadowColor = function() return 0, 0, 0, 0.5 end,
+        GetFontObject = get(d.object),
     }
 end
 

@@ -25,7 +25,9 @@ local _, NS = ...
 -- padlock, the veils and the send flashes on a wedge (painted once per look change, `qcChromeGen`),
 -- the hub's stale, lockdown and test labels (their font objects' faces, the skin's colors), an
 -- arrow at an end, and the tooltip lines. The labels' and the title's faces follow the skin through
--- Pad_Render.LabelFont. Nothing here reads a token per frame: R.PointerUpdate reads none, and a
+-- Pad_Render.LabelFont. Since LibKa0s v1.85.0 (cause D7) every color of the slices, the hub and the
+-- paging row follows the skin through its own companion (NS.SkinFollow), and the hub's rim its
+-- thickness with it. Nothing here reads a token per frame: R.PointerUpdate reads none, and a
 -- rebuild resolves the chrome into the look (R.Look's `chrome`).
 
 NS.DialRender = NS.DialRender or {}
@@ -233,9 +235,9 @@ function R.RaiseFront(header, rings)
     header.qcPointer:SetFrameLevel((header:GetFrameLevel() or 0) + LV.DIAL_FRONT)
 end
 
--- A color swatch through its class-color companion, as { r, g, b, a }.
-local function color(c, useClass, fallback)
-    local r, g, b, a = NS.ResolveColor(c or fallback, useClass)
+-- A block's color through its class-color and skin companions (NS.SkinFollow), as { r, g, b, a }.
+local function color(t, key, token, useClass, fallback)
+    local r, g, b, a = NS.SkinFollow(t, key, token, useClass, fallback)
     return { r = r, g = g, b = b, a = a }
 end
 
@@ -243,16 +245,18 @@ local HUB_STYLES = { solid = true, ring = true, target = true, rimmed = true }
 
 -- The hub's look from its Hub heading (`dial.hub`, defaults/PadStyle.lua's DialHub): the style, the
 -- backdrop's size (the hub's geometry), the circle's size and line width, the backdrop's border
--- size, and the backdrop, border and circle colors resolved through their class-color companions.
+-- size (the skin's bar.borderSize while the rim's color follows it: a thickness has no companion of
+-- its own), and the backdrop, border and circle colors resolved through their companions.
 local function hubLook(hub)
     hub = type(hub) == "table" and hub or {}
     local H = NS.PadDefaults.DialHub()
     local function n(k, lo) return math.max(lo, tonumber(hub[k]) or H[k]) end
+    local rim = NS.Skin.Resolve("bar.borderSize", n("borderSize", 0), hub.borderColorFromSkin == true)
     return { style = HUB_STYLES[hub.style] and hub.style or H.style, size = n("size", 1),
-        circleSize = n("circleSize", 1), lineWidth = n("lineWidth", 1), borderSize = n("borderSize", 0),
-        background = color(hub.background, hub.useClassColorBackground, H.background),
-        border = color(hub.borderColor, hub.useClassColorBorder, H.borderColor),
-        circle = color(hub.circleColor, hub.useClassColorCircle, H.circleColor) }
+        circleSize = n("circleSize", 1), lineWidth = n("lineWidth", 1), borderSize = tonumber(rim) or n("borderSize", 0),
+        background = color(hub, "background", "qc.hubBg", hub.useClassColorBackground, H.background),
+        border = color(hub, "borderColor", "text.accent", hub.useClassColorBorder, H.borderColor),
+        circle = color(hub, "circleColor", "text.accent", hub.useClassColorCircle, H.circleColor) }
 end
 
 -- A settings table, or an empty one in its place.
@@ -264,7 +268,7 @@ end
 -- line 0 while off.
 local function titleLook(title)
     local tl = type(title) == "table" and title or NS.PadDefaults.DialTitle()
-    local tfont, tshow = NS.PadRender.LabelFont(tl, NS.PadRender.TitleColor()), tl.show ~= false
+    local tfont, tshow = NS.PadRender.LabelFont(tl, NS.PadRender.TitleColor(), NS.Skin.HudLabelColor), tl.show ~= false
     return { show = tshow, font = tfont, line = tshow and tfont.size + 2 or 0 }
 end
 
@@ -275,14 +279,14 @@ local function pagingLook(page)
     local function n(k) return math.max(0, tonumber(page[k]) or P[k]) end
     return { offset = n("offset"), arrowSize = math.max(8, n("arrowSize")), arrowGap = n("arrowGap"),
         dotSize = math.max(2, n("dotSize")), pillWidth = math.max(2, n("pillWidth")), dotGap = n("dotGap"),
-        arrow = color(page.arrowColor, page.useClassColorArrow, P.arrowColor),
-        plate = color(page.plateColor, page.useClassColorPlate, P.plateColor),
-        current = color(page.currentColor, page.useClassColorCurrent, P.currentColor),
-        dot = color(page.dotColor, page.useClassColorDot, P.dotColor),
+        arrow = color(page, "arrowColor", "icon.arrow", page.useClassColorArrow, P.arrowColor),
+        plate = color(page, "plateColor", "qc.sliceBg", page.useClassColorPlate, P.plateColor),
+        current = color(page, "currentColor", "text.accent", page.useClassColorCurrent, P.currentColor),
+        dot = color(page, "dotColor", "qc.pageDot", page.useClassColorDot, P.dotColor),
         dotBackShow = page.dotBackShow ~= false, dotBackPadding = n("dotBackPadding"),
-        dotBack = color(page.dotBackColor, page.useClassColorDotBack, P.dotBackColor),
+        dotBack = color(page, "dotBackColor", "qc.sliceBg", page.useClassColorDotBack, P.dotBackColor),
         dotBorder = n("dotBorder"),
-        dotBorderColor = color(page.dotBorderColor, page.useClassColorDotBorder, P.dotBorderColor) }
+        dotBorderColor = color(page, "dotBorderColor", "qc.pageDotEdge", page.useClassColorDotBorder, P.dotBorderColor) }
 end
 
 --- A dial's look for one rebuild: its radius (clamped); its Labels tab's Slice labels (`dial.label`) as a font
@@ -301,13 +305,13 @@ function R.Look(radius, label, slice, dial)
     return { radius = DL.ClampRadius(radius), font = font, show = show, line = show and font.size + 2 or 0,
         tipSide = label.tooltipSide or "top", tipOffset = tonumber(label.tooltipOffset) or 8,
         labelReach = math.max(0, tonumber(label.offset) or 0),
-        fill = color(slice.background, slice.useClassColorBackground, D.background),
+        fill = color(slice, "background", "qc.sliceBg", slice.useClassColorBackground, D.background),
         gap = math.max(0, tonumber(slice.gap) or D.gap),
-        highlight = color(slice.highlight, slice.useClassColorHighlight, D.highlight),
+        highlight = color(slice, "highlight", "qc.hover", slice.useClassColorHighlight, D.highlight),
         pointerShow = slice.pointerShow ~= false, pointerSize = tonumber(slice.pointerSize) or D.pointerSize,
         pointerOffset = math.max(0, tonumber(slice.pointerOffset) or 0),
-        pointer = color(slice.pointerColor, slice.useClassColorPointer, D.pointerColor),
-        shine = NS.Shine.Resolve(slice),   -- the Slices tab's Shine heading (Dial_Slices paints it)
+        pointer = color(slice, "pointerColor", "icon.arrow", slice.useClassColorPointer, D.pointerColor),
+        shine = NS.Shine.Resolve(slice, "qc.sliceShine", "qc.sliceShineTint"),   -- the Slices tab's (Dial_Slices paints it)
         iconReach = math.max(0, tonumber(dial.iconOffset) or 0), hub = hubLook(dial.hub),
         title = titleLook(dial.title), paging = pagingLook(asTable(dial.page)), chrome = NS.PadRender.Chrome() }
 end
@@ -572,7 +576,7 @@ function R.PaintWedge(btn, item, geo, icfg, look)
     local icon = item.icon or NS.DefaultIcon(item.kind == "ring" and "ring" or "callout")
     btn.qcIcon:SetTexture(icon)
     btn.qcIcon:SetSize(icfg.size, icfg.size)
-    IS.ApplyIcon(btn.qcIcon, icfg, NS.Library.IconTint(icon, item.iconColor))
+    IS.PaintIcon(btn.qcIcon, icfg, icon, item.iconColor)
     IS.PaintRing(btn, icfg)
     IS.IconFrame(btn)
     Glow.Bind(btn, icfg.glow, slot and slot.calloutId or item.title)

@@ -118,6 +118,19 @@ _G.QUICKCOMMS_TEST = Kit.expose{
     -- The kit's secret-value simulator (tests/_kit/secrets.lua), which Kit.expose leaves out.
     secret      = Kit.secret,
     isSecret    = Kit.isSecret,
+    -- Every stored pad and dial off the skin but for its face: a case that pins a stored color, size
+    -- or look says so here, since a new surface follows the skin (LibKa0s v1.85.0, cause D7).
+    ownLooks    = function(NS)
+        local p = NS.db.profile
+        for kind, keys in pairs(NS.Library.FULL_SKIN_KEYS) do
+            for _, surface in pairs(p[kind]) do
+                for _, key in ipairs(keys) do
+                    local block, leaf = key:match("^(%w+)%.(%w+)$")
+                    if leaf:match("FromSkin$") and leaf ~= "fontFromSkin" and surface[block] then surface[block][leaf] = false end
+                end
+            end
+        end
+    end,
     -- The id a profile's seeded group, else callout, has (the lowest when several do), by the shipped
     -- id it came from: `T.seeded(NS, "bi.mplus.pull")`. Seeded ids are fresh per profile, so a case
     -- names them so. Read from the profile: only Library reads `origin` in shipped code.
@@ -219,6 +232,7 @@ Kit.run{
         "test_skinsetup",
         "test_skin_windows",
         "test_skin_hud",
+        "test_skin_flip",
         "test_skin_picker",
         "test_skin_outline",
         "test_skin_verb",

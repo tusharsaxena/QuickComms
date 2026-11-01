@@ -631,7 +631,7 @@ test("library: [phase 5] Prepare gives a pad saved before the Look groups every 
     Lib.Prepare()
     assertEqual(pad.look.visibility, "never", "a stored value is kept")
     assertNil(pad.look.font, "the section titles' font left the Main window (2026-10-20)")
-    assertEqual(pad.section.font, "Friz Quadrata TT", "the Section header tab, filled whole")
+    assertEqual(pad.section.font, "Ka0s Prototype", "the Section header tab, filled whole")
     assertEqual(pad.section.height, 0, "automatic")
     assertEqual(pad.look.background.a, 0.92)
     assertEqual(pad.button.width, 100, "the Buttons tab, filled whole")

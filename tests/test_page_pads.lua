@@ -454,9 +454,10 @@ test("pads page: [glow knobs] the offsets come right after Glow color, under Ico
     end
     assertTrue(at ~= nil)
     -- red under: the knob loop in the knob table's order (the offsets last)
-    assertEqual(paths[at + 1], "pad.icon.xOffset")
-    assertEqual(paths[at + 2], "pad.icon.yOffset")
-    assertEqual(paths[at + 3], "pad.icon.pixelLines", "then the styles' knobs")
+    assertEqual(paths[at + 1], "pad.icon.glowColorFromSkin", "the color's own Use the skin's color")
+    assertEqual(paths[at + 2], "pad.icon.xOffset")
+    assertEqual(paths[at + 3], "pad.icon.yOffset")
+    assertEqual(paths[at + 4], "pad.icon.pixelLines", "then the styles' knobs")
     NS.SchemaRuntime.Set("pad.icon.glowEnabled", true, "p1")
     local w = P.tab("pads", "Icons")
     local color, offset, pixel = indexOf(w, "ColorPicker", "Glow color"), indexOf(w, "Slider", "Glow X offset"),

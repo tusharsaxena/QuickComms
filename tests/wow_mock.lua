@@ -300,6 +300,15 @@ local function build()
         -- A font string's face, recorded; true as the client answers for a face it accepts.
         function r:SetFont(path, size, flags) self.__font = { path, size, flags } return true end
         function r:SetShadowOffset(x, y) self.__shadow = { x, y } return self end
+        function r:SetShadowColor(cr, cg, cb, ca) self.__shadowColor = { cr, cg, cb, ca } return self end
+        -- The client draws a string in its font object's face and shadow (LibKa0s S.HudFont), so
+        -- wearing one reads as those, what a suite asserts, and GetFontObject answers it for the ghost.
+        function r:SetFontObject(obj)
+            self.__fontObject = obj
+            self.__font, self.__shadow, self.__shadowColor = obj.__font, obj.__shadow, obj.__shadowColor
+            return self
+        end
+        function r:GetFontObject() return self.__fontObject end
         function r:SetAlpha(a) self.__alpha = a return self end
         -- The Icons tab's texture calls (modules/IconStyle.lua), recorded so a crop, a desaturation
         -- and an icon size can be asserted on.
@@ -827,6 +836,15 @@ local function build()
     end
 
     local baseCreateFrame = M.CreateFrame
+    -- A font object, as S.HudFont makes one per string: what it was set, read by SetFontObject above.
+    M.STANDARD_TEXT_FONT = M.STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF"
+    M.CreateFont = function(name)
+        local f = { __name = name, fonts = 0 }
+        function f:SetFont(path, size, flags) self.__font, self.fonts = { path, size, flags }, self.fonts + 1 return true end
+        function f:SetShadowOffset(x, y) self.__shadow = { x, y } end
+        function f:SetShadowColor(r, g, b, a) self.__shadowColor = { r, g, b, a } end
+        return f
+    end
     M.CreateFrame = function(frameType, name, parent, template)
         if type(template) == "string" and M.missingTemplates[template] then
             error("CreateFrame: Couldn't find inherited node \"" .. template .. "\"", 2)

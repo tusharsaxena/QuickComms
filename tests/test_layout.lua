@@ -303,10 +303,10 @@ test("layout: [dials] Hub: Hub, Hub border, Hub circle, Pointer, each size besid
     local NS = open("Dial", { "dial", "d2" })
     local got = {}
     for _, r in ipairs(rowsOf(NS, "dials", "Hub")) do got[#got + 1] = r.path:match("[^.]+$") .. "@" .. r.subgroup end
-    assertEqual(table.concat(got, ","), "style@Hub,size@Hub,background@Hub,useClassColorBackground@Hub,"
-        .. "borderSize@Hub border,borderColor@Hub border,useClassColorBorder@Hub border,"
-        .. "circleSize@Hub circle,lineWidth@Hub circle,circleColor@Hub circle,useClassColorCircle@Hub circle,"
-        .. "pointerShow@Pointer,pointerSize@Pointer,pointerOffset@Pointer,pointerColor@Pointer,useClassColorPointer@Pointer")
+    assertEqual(table.concat(got, ","), "style@Hub,size@Hub,background@Hub,useClassColorBackground@Hub,backgroundFromSkin@Hub,"
+        .. "borderSize@Hub border,borderColor@Hub border,useClassColorBorder@Hub border,borderColorFromSkin@Hub border,"
+        .. "circleSize@Hub circle,lineWidth@Hub circle,circleColor@Hub circle,useClassColorCircle@Hub circle,circleColorFromSkin@Hub circle,"
+        .. "pointerShow@Pointer,pointerSize@Pointer,pointerOffset@Pointer,pointerColor@Pointer,useClassColorPointer@Pointer,pointerColorFromSkin@Pointer")
 end)
 
 test("layout: [dials] Paging: Page row, Arrows, Page indicator, Indicator border, Indicator background (QUI-L25, L26)", function()
@@ -314,12 +314,12 @@ test("layout: [dials] Paging: Page row, Arrows, Page indicator, Indicator border
     local got = {}
     for _, r in ipairs(rowsOf(NS, "dials", "Paging")) do got[#got + 1] = r.path:match("[^.]+$") .. "@" .. r.subgroup end
     assertEqual(table.concat(got, ","), "offset@Page row,arrowSize@Arrows,arrowGap@Arrows,arrowColor@Arrows,"
-        .. "useClassColorArrow@Arrows,plateColor@Arrows,useClassColorPlate@Arrows,"
+        .. "useClassColorArrow@Arrows,arrowColorFromSkin@Arrows,plateColor@Arrows,useClassColorPlate@Arrows,plateColorFromSkin@Arrows,"
         .. "dotSize@Page indicator,pillWidth@Page indicator,dotGap@Page indicator,currentColor@Page indicator,"
-        .. "useClassColorCurrent@Page indicator,dotColor@Page indicator,useClassColorDot@Page indicator,"
-        .. "dotBorder@Indicator border,dotBorderColor@Indicator border,useClassColorDotBorder@Indicator border,"
+        .. "useClassColorCurrent@Page indicator,currentColorFromSkin@Page indicator,dotColor@Page indicator,useClassColorDot@Page indicator,dotColorFromSkin@Page indicator,"
+        .. "dotBorder@Indicator border,dotBorderColor@Indicator border,useClassColorDotBorder@Indicator border,dotBorderColorFromSkin@Indicator border,"
         .. "dotBackShow@Indicator background,dotBackPadding@Indicator background,dotBackColor@Indicator background,"
-        .. "useClassColorDotBack@Indicator background")
+        .. "useClassColorDotBack@Indicator background,dotBackColorFromSkin@Indicator background")
     assertEqual(row(NS, "dial.page.offset").label, "Distance below labels")
     assertFalse(row(NS, "dial.page.dotBackPadding").startsLine == true, "padding pairs with its toggle")
 end)

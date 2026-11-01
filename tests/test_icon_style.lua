@@ -97,6 +97,7 @@ end)
 
 test("icon style: a button's border is off by default; on, it is a backdrop over the icon in its color", function()
     local NS = live()
+    T.ownLooks(NS)
     local button = rebuild(NS)
     assertNil(button.qcIconFrame and button.qcIconFrame.__backdrop)
     set(NS, "pad.icon.borderShow", true)

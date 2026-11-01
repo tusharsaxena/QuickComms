@@ -97,15 +97,23 @@ local function rgb(stored, useClass, fallback)
 end
 
 --- A look table's shine leaves as the paint takes them: { look, alpha, tint, bloomA, bloomB }, each
---- color { r, g, b }.
-function Sh.Resolve(cfg)
+--- color { r, g, b }. While `shineFromSkin` is on the look and the tint are the skin's, the owner tokens
+--- `lookToken` and `tintToken` name (a class-colored tint stays the class's); Strength stays stored.
+function Sh.Resolve(cfg, lookToken, tintToken)
     cfg = type(cfg) == "table" and cfg or {}
-    local look = KNOWN[cfg.shineLook] and cfg.shineLook or "none"
+    local follows = cfg.shineFromSkin == true and lookToken ~= nil
+    local name = follows and NS.Skin.Token(lookToken) or cfg.shineLook
+    local look = KNOWN[name] and name or "none"
     local strength = tonumber(cfg.shineStrength) or Sh.STRENGTH
+    local tint = rgb(cfg.shineTint, cfg.useClassColorShineTint, Sh.TINT)
+    if follows and cfg.useClassColorShineTint ~= true then
+        local r, g, b = NS.Skin.Color(tintToken)
+        if r then tint = { r, g, b } end
+    end
     return {
         look = look,
         alpha = math.max(0, math.min(100, strength)) / 100,
-        tint = rgb(cfg.shineTint, cfg.useClassColorShineTint, Sh.TINT),
+        tint = tint,
         bloomA = rgb(cfg.shineBloomA, cfg.useClassColorShineBloomA, Sh.BLOOM_A),
         bloomB = rgb(cfg.shineBloomB, cfg.useClassColorShineBloomB, Sh.BLOOM_B),
     }

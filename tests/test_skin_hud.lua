@@ -128,12 +128,13 @@ test("skin hud: with Ignore fonts on, a following pad face draws its stored pick
     local NS, _, Skin = live()
     local inst = NS.Pad.Instance("p1")
     set(NS, "pad.button.font", "Arial", "p1")
+    set(NS, "pad.header.font", "Friz Quadrata TT", "p1")
     assertEqual(NS.db.profile.pads.p1.button.fontFromSkin, true, "the block still follows")
     assertEqual(firstButton(NS).qcLabel.__font[1], PROTOTYPE, "following: the skin's face")
     Skin:SetIgnore(OWNER, nil, true)
     -- red under: R.FontKey answers hud.font while the companion is on, whatever Ignore fonts says
     assertEqual(firstButton(NS).qcLabel.__font[1], ARIAL, "Ignore fonts: the stored pick")
-    assertEqual(inst.header.qcSituation.__font[1], STANDARD_TEXT_FONT,
+    assertEqual(inst.header.qcSituation.__font[1], "Fonts\\FRIZQT__.TTF",
         "a stored Friz Quadrata LibSharedMedia lacks is the standard face, never the skin's")
     assertEqual(NS.db.profile.pads.p1.button.fontFromSkin, true, "the companion is left on")
     Skin:SetIgnore(OWNER, nil, false)
@@ -271,8 +272,9 @@ test("skin hud: a dial's chrome is today's pixels under Ka0s Default, each from 
     assertColor(arrow.qcIcon.__color, { 0.4, 0.4, 0.4, 0.6 }, "an arrow at an end")
 end)
 
-test("skin hud: a skin switch repaints the chrome and the faces, and leaves the player's colors", function()
+test("skin hud: a skin switch repaints the chrome and the faces, and leaves a color whose companion is off", function()
     local NS, _, Skin = live()
+    T.ownLooks(NS)
     local btn = firstButton(NS)
     local body = { unpack(btn.qcBg.__color) }
     local gen = NS.PadRender.LooksGen()
@@ -284,7 +286,7 @@ test("skin hud: a skin switch repaints the chrome and the faces, and leaves the 
     assertColor(btn.qcLock.__color, now(NS, "text.accent"), "the padlock, " .. OTHER)
     assertColor(NS.Pad.Instance("p1").header.qcLockdown.__color, now(NS, "qc.lockdown"), "the lockdown tag")
     assertColor(NS.Dial.RingWedges("d2", 1)[1].qcLock.__color, now(NS, "text.accent"), "a wedge's padlock")
-    assertColor(btn.qcBg.__color, body, "the player's button body is untouched (X4)")
+    assertColor(btn.qcBg.__color, body, "the player's button body is untouched")
     assertEqual(NS.PadRender.FontKey(NS.db.profile.pads.p1.button), Skin:ResolveSkin(OTHER)["hud.font"],
         "the face is the new skin's")
 end)

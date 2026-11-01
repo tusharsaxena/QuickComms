@@ -327,6 +327,10 @@ local ROWS = {
 -- text is about no unit. A background is not a bar, so it takes a swatch and its companion only. On
 -- a degraded load the composers are hollow and these rows are absent.
 --
+-- The full skin (LibKa0s v1.85.0, cause D7): a color and Font shadow have no composer row, so each takes
+-- a bool row of its own in `spec.extra` (blockSpec's `follow`, followRow): default on, and the swatch
+-- beside it stays live and keeps its value (options-ui-§17: no disabledIf on a composed pair).
+--
 -- The Window tab (the Look tab before) became three tabs on 2026-10-20 (owner request), each under
 -- its own headings, in strip order outside in since item 020 (QUI-L09): Window (`pad.look.*`, the
 -- stored key kept: Background; Border; no font, the owner's call), Header (`pad.header.*`: Size, its
@@ -399,22 +403,45 @@ end
 -- ("pad.look.", "pad.header.", "pad.section.", "pad.button."), `defaults` that table's shipped values.
 local function stampBlock(out, list, prefix, checks, instance)
     for _, row in ipairs(list) do
-        local c = checks[row.path:sub(#prefix + 1)] or {}
+        local leaf = row.path:sub(#prefix + 1)
+        local c = checks[leaf] or (leaf:match("FromSkin$") and { validate = BOOL }) or {}
         row.instance, row.validate, row.normalize = instance or "pad", c.validate, c.normalize
         out[#out + 1] = row
     end
 end
 
+-- One "Use the skin's ..." row in a block's `spec.extra`: `key` the value it governs, `what` the row's
+-- label, `governs` the row it names (a block's own, so its heading says whose).
+local function followRow(prefix, key, what, governs)
+    return { path = prefix .. key .. "FromSkin", type = "bool", default = true, label = what,
+        desc = L["Draw %s from the skin. The %s row keeps its value, and is not read while this is on."]:format(
+            governs:lower(), governs) }
+end
+
 -- Every Font and Border block follows the skin through its companion (QC-03, the composers'
 -- `fromSkin`; DECISIONS X3, X4): the companions default true in defaults/PadStyle.lua, so the spec's
--- `defaults` carry that. A Background or Shine color pair ignores the field: colors stay the player's.
+-- `defaults` carry that. `follow` (cause D7) adds a color's own row: a swatch's label when it is true.
 -- `flagsFromSkin` (OptionsCompose minor 14, LibKa0s v1.82.0, D-07) leads every Font block's flags with
 -- From skin, its default; `fromSkin` with it is the minimum font setting. Only FontGroup reads it.
 local function blockSpec(prefix, group, subgroup, defaults, extra)
     local spec = { prefix = prefix, page = prefix:match("^dial") and "dials" or "pads", group = group,
         subgroup = subgroup, defaults = defaults, fromSkin = true, flagsFromSkin = true }
     for k, v in pairs(extra or {}) do spec[k] = v end
+    if spec.follow then spec.extra = { followRow(prefix, spec.key, L["Use the skin's color"], spec.label) } end
     return spec
+end
+
+-- A Font block's spec: its color and its shadow each on the skin.
+local function fontSpec(prefix, group, subgroup, defaults)
+    return blockSpec(prefix, group, subgroup, defaults, { extra = {
+        followRow(prefix, "fontColor", L["Use the skin's color"], L["Font color"]),
+        followRow(prefix, "fontShadow", L["Use the skin's shadow"], L["Font shadow"]) } })
+end
+
+-- A Border block's spec: the bar family, so the companion governs the thickness too, and its color.
+local function borderSpec(prefix, group, subgroup, defaults)
+    return blockSpec(prefix, group, subgroup, defaults, { fromSkin = "bar", extra = {
+        followRow(prefix, "borderColor", L["Use the skin's color"], L["Border color"]) } })
 end
 
 -- The three tabs, in strip order: the options library orders a page's tabs by each group's first
@@ -425,10 +452,10 @@ local HEADER_H, SECTION_H = NS.PadDefaults.HEADER_H, NS.PadDefaults.SECTION_H
 
 -- One styled tab's Font (when `font`), Background and Border blocks, each under its own heading.
 local function styleBlocks(out, O, checks, prefix, group, defaults, font)
-    if font then stampBlock(out, O.FontGroup(blockSpec(prefix, group, L["Font"], defaults)), prefix, checks) end
+    if font then stampBlock(out, O.FontGroup(fontSpec(prefix, group, L["Font"], defaults)), prefix, checks) end
     stampBlock(out, O.ColorPair(blockSpec(prefix, group, L["Background"], defaults,
-        { key = "background", label = L["Background color"] })), prefix, checks)
-    stampBlock(out, O.BorderGroup(blockSpec(prefix, group, L["Border"], defaults)), prefix, checks)
+        { key = "background", label = L["Background color"], follow = true })), prefix, checks)
+    stampBlock(out, O.BorderGroup(borderSpec(prefix, group, L["Border"], defaults)), prefix, checks)
 end
 
 local function windowRows()
@@ -499,9 +526,11 @@ local function shineRows(O, checks, spec)
     for _, p in ipairs(pairs3) do
         local rows = {}
         stampBlock(rows, O.ColorPair(blockSpec(prefix, spec.tab, SHINE, def,
-            { key = p[1], label = p[2], companionKey = p[3] })), prefix, checks, spec.instance)
+            { key = p[1], label = p[2], companionKey = p[3], extra = p[1] == "shineTint" and {
+                followRow(prefix, "shine", L["Use the skin's shine"], L["Shine look"]) } or nil })),
+            prefix, checks, spec.instance)
         for _, r in ipairs(rows) do
-            if p[4] then r.shownWhen = p[4] else r.disabledIf = off end
+            if p[4] then r.shownWhen = p[4] elseif r.path ~= prefix .. "shineFromSkin" then r.disabledIf = off end
             out[#out + 1] = r
         end
     end
@@ -530,17 +559,19 @@ local function buttonRows()
             desc = L["How tall a labeled button is, in pixels. 0 grows it to hold its font and its icon. An icon-only button stays square around its icon."],
             validate = NUMBER, normalize = clamp(BUTTON_H.min, BUTTON_H.max, true) }),
     }
-    stampBlock(out, O.FontGroup(blockSpec(BUTTONP, BUTTON, L["Font"], cdef)), BUTTONP, checks)
-    stampBlock(out, O.ColorPair(blockSpec(BUTTONP, BUTTON, BACKGROUND, cdef,
-        { key = "background", label = L["Background color"] })), BUTTONP, checks)
-    stampBlock(out, O.BorderGroup(blockSpec(BUTTONP, BUTTON, L["Border"], cdef)), BUTTONP, checks)
+    stampBlock(out, O.FontGroup(fontSpec(BUTTONP, BUTTON, L["Font"], cdef)), BUTTONP, checks)
+    stampBlock(out, O.ColorPair(blockSpec(BUTTONP, BUTTON, BACKGROUND, cdef, { key = "background",
+        label = L["Background color"], extra = { followRow(BUTTONP, "background", L["Use the skin's color"], L["Background color"]),
+            { path = BUTTONP .. "textureFromSkin", type = "bool", default = true, label = L["Use the skin's texture"],
+                desc = L["Draw the button's body on the skin's bar texture. Off draws it flat."] } } })), BUTTONP, checks)
+    stampBlock(out, O.BorderGroup(borderSpec(BUTTONP, BUTTON, L["Border"], cdef)), BUTTONP, checks)
     out[#out + 1] = row(GLOW, { path = BUTTONP .. "glowEnabled", type = "bool", default = cdef.glowEnabled,
         label = L["Glow"], desc = L["Draw a glow around each button."], validate = BOOL, startsLine = true })
     out[#out + 1] = row(GLOW, { path = BUTTONP .. "glowType", type = "string", default = cdef.glowType, values = styles,
         label = L["Glow style"], desc = L["How the glow looks. Drawn at the Icons tab's default knobs."],
         validate = oneOf(styles), disabledIf = glowOff })
     stampBlock(out, O.ColorPair(blockSpec(BUTTONP, BUTTON, GLOW, cdef, { key = "glowColor",
-        companionKey = "useClassColorGlow", label = L["Glow color"] })), BUTTONP, checks)
+        companionKey = "useClassColorGlow", label = L["Glow color"], follow = true })), BUTTONP, checks)
     for _, r in ipairs(shineRows(O, checks, { prefix = BUTTONP, instance = "pad", page = "pads", tab = BUTTON,
         defaults = cdef })) do
         out[#out + 1] = r
@@ -592,12 +623,12 @@ local function hubRows(O, checks)
         L["How wide the middle of the dial is, in pixels. The slices and the pointer start at its edge."]) }
     local function pair(subgroup, key, label, companion)
         stampBlock(out, O.ColorPair(blockSpec(HUBP, HUB_TAB, subgroup, hdef,
-            { key = key, label = label, companionKey = companion })), HUBP, checks, "dial")
+            { key = key, label = label, companionKey = companion, follow = true })), HUBP, checks, "dial")
     end
     pair(HUB, "background", L["Backdrop color"], "useClassColorBackground")
     out[#out + 1] = size(RIM, "borderSize", L["Hub border size"], 0, 6,
         L["How thick the rim around the hub is, in pixels. 0 draws none; Rimmed disc always draws one."],
-        { startsLine = true })
+        { startsLine = true, disabledIf = function() return NS.SchemaRuntime.Get(HUBP .. "borderColorFromSkin") == true end })
     pair(RIM, "borderColor", L["Hub border color"], "useClassColorBorder")
     out[#out + 1] = size(CIRCLE, "circleSize", L["Circle size"], 4, 60, L["How wide the circle on the hub is, in pixels."],
         { startsLine = true })
@@ -622,7 +653,7 @@ local function sliceRows()
     local function pair(subgroup, key, label, companion, tab)
         local out = {}
         stampBlock(out, O.ColorPair(blockSpec(SLICEP, tab or SLICES_TAB, subgroup, sdef,
-            { key = key, label = label, companionKey = companion })), SLICEP, checks, "dial")
+            { key = key, label = label, companionKey = companion, follow = true })), SLICEP, checks, "dial")
         return out
     end
     local COLORS = L["Colors"]
@@ -682,7 +713,7 @@ local function pagingRows()
     local function pair(subgroup, key, label, companion)
         local out = {}
         stampBlock(out, O.ColorPair(blockSpec(PAGEP, PAGING, subgroup, pdef,
-            { key = key, label = label, companionKey = companion })), PAGEP, checks, "dial")
+            { key = key, label = label, companionKey = companion, follow = true })), PAGEP, checks, "dial")
         return out
     end
     local out = {
@@ -753,7 +784,7 @@ local function labelRows()
         desc = L["How far each label sits from the middle of the dial, in pixels. 0 puts it just outside the dial."],
         validate = NUMBER, normalize = clamp(0, 300, true) } }
     local font = {}
-    stampBlock(font, O.FontGroup(blockSpec(LABELP, LABELS, SLICE_LABELS, ldef)), LABELP, composedChecks(O), "dial")
+    stampBlock(font, O.FontGroup(fontSpec(LABELP, LABELS, SLICE_LABELS, ldef)), LABELP, composedChecks(O), "dial")
     for _, row in ipairs(font) do
         row.disabledIf = hidden
         out[#out + 1] = row
@@ -789,7 +820,7 @@ local function titleRows()
         page = "dials", group = LABELS, subgroup = TITLES, label = L["Show group labels"], startsLine = true,
         desc = L["Write the ring's name above the dial."], validate = BOOL } }
     local font = {}
-    stampBlock(font, O.FontGroup(blockSpec(TITLEP, LABELS, TITLES, tdef)), TITLEP, composedChecks(O), "dial")
+    stampBlock(font, O.FontGroup(fontSpec(TITLEP, LABELS, TITLES, tdef)), TITLEP, composedChecks(O), "dial")
     for _, row in ipairs(font) do
         row.disabledIf = hidden
         out[#out + 1] = row

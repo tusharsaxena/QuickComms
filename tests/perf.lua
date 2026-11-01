@@ -40,11 +40,17 @@
 -- 66539.8, under its ceiling, as the skinning runs added tokens to a skin built at every rebuild
 -- (5df98bd the window's win.inner, +128 B; the LibKa0s v1.81.0 re-vendor, +176 B). The pad's root now
 -- keeps its look while the look's signature holds, as the header and buttons do: 65516.8.
+--
+-- Raised 2026-11-01: dialOpenClose 2048 -> 46080 bytes/iter at the open and close animations (#13),
+-- measured 45077.2 before the full skin's flip and 43109.2 after it. Each open and close now captures
+-- the ring onto the ghost (modules/Anim_Ghost.lua): twice per iteration, a table per frame walked and
+-- a pooled region's calls, most of it the mock's closure per catch-all call. The scenario was 1997.1
+-- with no ghost, so the rest is the capture's, by design, and only while a surface opens or closes.
 
 local BYTE_CEILING = {
     bracketCaptureOff = 0,
     dialPointerCaptureOff = 1024, dialPointerNoHarness = 1024,
-    padRebuild12 = 70656, dialOpenClose = 2048, situationRefresh = 2048,
+    padRebuild12 = 70656, dialOpenClose = 46080, situationRefresh = 2048,
 }
 local NOTES_PER_ITER = {
     bracketCaptureOff = 0, dialPointerCaptureOff = 0, dialPointerNoHarness = 0,
