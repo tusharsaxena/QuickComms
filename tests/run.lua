@@ -206,6 +206,8 @@ Kit.run{
         "test_dial",
         "test_dial_catcher",
         "test_dial_look",
+        "test_anim",
+        "test_anim_surfaces",
         "test_keybinds",
         "test_dial_shine",
         "test_icon_style",

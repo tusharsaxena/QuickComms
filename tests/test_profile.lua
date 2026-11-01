@@ -53,7 +53,7 @@ test("profile: schema version target is 11 (the Font flags' move to From skin)",
     local NS = T.bootAddon()
     -- red under: no step 11 in core/Database.lua (LibKa0s v1.82.0, D-07: a stored OUTLINE moves to
     -- From skin once); step 10 is QC-03's reset onto the skin (O2)
-    assertEqual(NS.SCHEMA_VERSION, 11)
+    assertEqual(NS.SCHEMA_VERSION, 12)
     assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
 end)
 

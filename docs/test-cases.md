@@ -711,7 +711,7 @@ Total.
 - pads page: [final 3, 15] Defaults puts the pad's rows back as one act: one rebuild
 - pads page: [final 4] Defaults keeps the pad's position
 - pads page: [final 26] New pad takes the lowest free number, so a delete never leads to two names alike
-- pads page: [window tabs] the strip reads General first, then Layout, Window, Header, Section titles, Buttons, Icons
+- pads page: [window tabs] the strip reads General first, then Layout, Window, Header, Section titles, Buttons, Icons, Animation
 - pads page: [window tabs] Header carries Size, Font, Background and Border under their headings
 - pads page: [window tabs] Section titles carries Size, Font, Background and Border, and writes the section table
 - pads page: [window tabs] Window carries Background and Border, and no font and no Visibility
@@ -1190,6 +1190,50 @@ Total.
 - dial: [art] the hub draws textures, not segments
 - dial: [art] the pill is three pieces with round ends
 
+### test_anim.lua (16)
+
+- anim: a new pad and dial carry the shipped defaults, on for everyone
+- anim: step 12 fills every stored surface and keeps a key already there
+- anim: the runner takes an old profile's pads and dials to the defaults
+- anim: each knob writes its own key and nothing else, on the surface it names
+- anim: a style or duration out of range is refused or clamped
+- anim: the hidden poses match the owner's rulings
+- anim: every ease lands exactly, and Pop overshoots
+- anim: the Fan is whole at rest, gone when hidden, and sweeps in order
+- anim: an open plays, holds the real frame and lands with it back
+- anim: a close mid-open reverses from where it stands, with no jump
+- anim: a reopen mid-close reverses from where it stands and lands at rest
+- anim: rapid toggling ends on the last call, nothing left held
+- anim: None on one phase snaps that phase and leaves the other playing
+- anim: a capture with nothing to draw snaps, and never holds the frame
+- anim: the stand-down leaves no track and no OnUpdate running
+- anim: the emphasis is heard only on a close, and an open clears it
+
+### test_anim_surfaces.lua (22)
+
+- anim dial: a key open plays over a live dial, and it lands with the real alpha back
+- anim dial: a close plays out after the header is already down
+- anim dial: the ghost mirrors the ring and takes the fills as places
+- anim dial: in combat it plays the same and nothing protected is touched
+- anim dial: a tap-and-release send fires at once, mid-open, and its slice is emphasized
+- anim dial: a cancel has no emphasis
+- anim dial: a page or ring change during an open snaps, with the real alpha back
+- anim dial: None on the open leaves the close, and None on the close leaves the open
+- anim dial: a rebuild closes silently, and a shut dial's rebuild plays nothing
+- anim dial: the preview dial animates its first open, not a rebuild's reopen
+- anim dial: the stand-down leaves the dial's track off and its alpha whole
+- anim dial: nothing here writes a protected call on the header
+- anim pad: the driver's show plays, and the real root lands at its rest alpha
+- anim pad: the driver's hide plays out on the copy
+- anim pad: hover and fade reach the rest alpha, and never lift a held root
+- anim pad: in combat the driver's hide and show play, refusing nothing
+- anim pad: each of the pad's switches is its own, and leaves the dial's alone
+- anim pad: a pad its driver hides at login plays no close
+- anim pad: a hidden UIParent is no close
+- anim pad: a release snaps, and a stand-down leaves nothing running
+- anim ghost: a color texture copies from what its painter recorded, a file from the client
+- anim ghost: no rect yet snaps instead of guessing, and the strip stays out
+
 ### test_keybinds.lua (6)
 
 - keybinds: NS.BINDINGS is Toggle Comms Pads, then Open Comms Dial 1 to 4, each with a tooltip
@@ -1576,6 +1620,8 @@ Total.
 | test_dial.lua | 38 |
 | test_dial_catcher.lua | 13 |
 | test_dial_look.lua | 16 |
+| test_anim.lua | 16 |
+| test_anim_surfaces.lua | 22 |
 | test_keybinds.lua | 6 |
 | test_dial_shine.lua | 8 |
 | test_icon_style.lua | 10 |
@@ -1600,4 +1646,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1306** |
+| **Total** | **1344** |

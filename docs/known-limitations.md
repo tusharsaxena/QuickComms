@@ -78,6 +78,11 @@ What the addon cannot do, or does only under a condition, and why. The hub,
   Until then each seeded node was pinned to its compass wind on an eight-slice ring, and the slices
   with no node were drawn empty.
 
+- **The animations play on a copy (#13).** A copy cannot run what a live frame runs, so an icon's glow
+  freezes for the length of an animation, and a color texture a library painted, which the client cannot
+  read back, is left out of it until the real frame returns. A rebuild's close and reopen, a deleted or
+  disabled pad, and a page turn or group wedge during an open do not animate: they snap.
+
 ## Keys
 
 - A dial's key belongs to its place in the dial order, not to the dial (2026-10-20): it is WoW's

@@ -207,6 +207,15 @@ local function veil(btn, over, sub)
     return t
 end
 
+-- A color texture, with what it was painted recorded: the client cannot read one back, and the
+-- surface's ghost (modules/Anim_Ghost.lua) copies it.
+local function colorFill(t, r, g, b, a)
+    t:SetColorTexture(r, g, b, a)
+    local c = t.qcGhostColor or {}
+    c[1], c[2], c[3], c[4] = r, g, b, a
+    t.qcGhostColor = c
+end
+
 -- A button's chrome in the applied skin (R.Chrome): the padlock's tint (the catalog art only: the
 -- Blizzard fallback keeps its own gold), the two veils and the hover wash. Once per look change: the
 -- stamp `qcChromeGen` skips a button that already wears it. Insecure textures, combat-safe.
@@ -215,9 +224,9 @@ local function paintChrome(btn)
     if btn.qcChromeGen == ch.gen then return end
     btn.qcChromeGen = ch.gen
     if btn.qcLockTinted then btn.qcLock:SetVertexColor(ch.lock[1], ch.lock[2], ch.lock[3], ch.lock[4]) end
-    btn.qcDim:SetColorTexture(ch.veil[1], ch.veil[2], ch.veil[3], ch.veil[4])
-    btn.qcCool:SetColorTexture(ch.veilCool[1], ch.veilCool[2], ch.veilCool[3], ch.veilCool[4])
-    btn.qcHover:SetColorTexture(ch.hover[1], ch.hover[2], ch.hover[3], ch.hover[4])
+    colorFill(btn.qcDim, ch.veil[1], ch.veil[2], ch.veil[3], ch.veil[4])
+    colorFill(btn.qcCool, ch.veilCool[1], ch.veilCool[2], ch.veilCool[3], ch.veilCool[4])
+    colorFill(btn.qcHover, ch.hover[1], ch.hover[2], ch.hover[3], ch.hover[4])
 end
 
 --- Whether a slot wears the dim veil (qcDim): only a live slot whose bake was refused, one that sends and
@@ -273,7 +282,7 @@ function R.Dress(btn, onEnter, onLeave)
     btn.qcBg = btn:CreateTexture(nil, "BACKGROUND")
     btn.qcBg:SetAllPoints(btn)
     local body = R.Chrome().body   -- until the Buttons tab's look dresses it (ApplyButtonLook)
-    btn.qcBg:SetColorTexture(body[1], body[2], body[3], body[4])
+    colorFill(btn.qcBg, body[1], body[2], body[3], body[4])
     -- The Buttons tab's edge and glow host: a plain child laid over the button, mouse off (ApplyButtonLook).
     btn.qcEdge = CreateFrame("Frame", nil, btn, "BackdropTemplate")
     btn.qcEdge:SetAllPoints(btn)
@@ -615,7 +624,7 @@ end
 function R.ApplyButtonLook(btn, cl, w, h)
     if btn.qcLookSig ~= cl.sig then
         btn.qcLookSig = cl.sig
-        btn.qcBg:SetColorTexture(cl.bg[1], cl.bg[2], cl.bg[3], cl.bg[4])
+        colorFill(btn.qcBg, cl.bg[1], cl.bg[2], cl.bg[3], cl.bg[4])
         NS.ApplySkin(btn.qcEdge, cl.edge)
         R.ApplyFont(btn.qcLabel, cl.font)
     end
@@ -630,7 +639,7 @@ end
 function R.Flash(btn, what)
     local flash = R.Chrome().flash
     local c = flash[what] or flash.sent
-    btn.qcFlash:SetColorTexture(c[1], c[2], c[3], FLASH_ALPHA)
+    colorFill(btn.qcFlash, c[1], c[2], c[3], FLASH_ALPHA)
     btn.qcFlash:Show()
 end
 

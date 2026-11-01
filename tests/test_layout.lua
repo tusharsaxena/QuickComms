@@ -176,7 +176,7 @@ end)
 test("layout: [pads] the strip runs outside in: Window, Header, Section titles, Buttons, Icons (QUI-L09, L10)", function()
     local NS = open("Pad", { "pad", "p1" })
     -- red under: the header rows left ahead of the window rows in windowRows()
-    assertEqual(strip(NS, "pads"), "General,Groups,Layout,Window,Header,Section titles,Buttons,Icons")
+    assertEqual(strip(NS, "pads"), "General,Groups,Layout,Window,Header,Section titles,Buttons,Icons,Animation")
     assertEqual(row(NS, "pad.section.height").label, "Section title height (0 = automatic)")
 end)
 
@@ -241,13 +241,13 @@ end)
 test("layout: [dials] the strip: Layout for Wheel, one Labels tab, and Ring map (QUI-L08, L19, L22)", function()
     local NS, _, P = open("Dial", { "dial", "d2" })
     -- red under: the Slice labels and Group labels tabs, or the Wheel tab name
-    assertEqual(strip(NS, "dials"), "General,Groups,Layout,Slices,Hub,Paging,Labels,Icons")
+    assertEqual(strip(NS, "dials"), "General,Groups,Layout,Slices,Hub,Paging,Labels,Icons,Animation")
     assertEqual(hostTabs(NS, P, "dials").preview.label, "Ring map")
     local keys = {}
     for k in pairs(hostTabs(NS, P, "dials")) do keys[#keys + 1] = k end
     table.sort(keys)
-    assertEqual(table.concat(keys, ","), "General,Groups,Hub,Icons,Labels,Layout,Paging,Slices,preview")
-    assertEqual(P.ctx("dials").panel.defaultsTooltip, "Put the selected dial's groups-as, layout, slices, hub, paging, labels, tooltip placement and icons back to their defaults, and turn it on. Its name, groups, position and key are kept.")
+    assertEqual(table.concat(keys, ","), "Animation,General,Groups,Hub,Icons,Labels,Layout,Paging,Slices,preview")
+    assertEqual(P.ctx("dials").panel.defaultsTooltip, "Put the selected dial's groups-as, layout, slices, hub, paging, labels, tooltip placement, icons and animation back to their defaults, and turn it on. Its name, groups, position and key are kept.")
 end)
 
 test("layout: [dials] General: Enable this dial, then the key line (QUI-L29, L-new3)", function()

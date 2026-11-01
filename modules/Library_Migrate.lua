@@ -279,3 +279,20 @@ function Lib.MigrateFontFlags(profile)
         end
     end
 end
+
+-- 11 -> 12 (#13): every stored pad and dial takes its Animation tab's defaults, so an existing surface
+-- animates after the update (the owner's ruling). A key already there is kept: the step is idempotent.
+function Lib.MigrateAnim(profile)
+    if type(profile) ~= "table" then return end
+    local shipped = { pads = NS.PadDefaults.PadAnim(), dials = NS.PadDefaults.DialAnim() }
+    for key, defaults in pairs(shipped) do
+        for _, surface in pairs(type(profile[key]) == "table" and profile[key] or {}) do
+            if type(surface) == "table" then
+                if type(surface.anim) ~= "table" then surface.anim = {} end
+                for k, v in pairs(defaults) do
+                    if surface.anim[k] == nil then surface.anim[k] = v end
+                end
+            end
+        end
+    end
+end

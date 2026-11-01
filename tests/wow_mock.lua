@@ -346,10 +346,19 @@ local function build()
         local r = region(kind)
         r.__parent = frame
         r.GetParent = function(x) return x.__parent end
+        -- What a surface's ghost reads (modules/Anim_Ghost.lua): the region's kind, its center and a
+        -- face, and the frame's list of regions, as GetRegions answers it.
+        r.GetObjectType = function(x) return x.__kind end
+        r.GetCenter = function(x) return x.__cx or 0, x.__cy or 0 end
+        r.GetFont = function() return "Fonts\\FRIZQT__.TTF", 12, "" end
+        frame.__regions = frame.__regions or {}
+        frame.__regions[#frame.__regions + 1] = r
         return r
     end
 
     local function dress(frame)
+        frame.GetRegions = function(self) return unpack(self.__regions or {}) end
+        frame.GetChildren = function(self) return unpack(self.__kids or {}) end
         frame.CreateTexture = function(self, _, layer, _, sub)
             local r = regionOn(self, "Texture")
             r.__layer, r.__sublevel = layer, sub   -- the draw layer, so a test can ask what sits over what
@@ -810,6 +819,13 @@ local function build()
     end
 
     local secureFrames = {}
+    -- A frame's children, as GetChildren answers them (modules/Anim_Ghost.lua walks them).
+    local function adopt(parent, f)
+        if type(parent) ~= "table" then return end
+        parent.__kids = parent.__kids or {}
+        parent.__kids[#parent.__kids + 1] = f
+    end
+
     local baseCreateFrame = M.CreateFrame
     M.CreateFrame = function(frameType, name, parent, template)
         if type(template) == "string" and M.missingTemplates[template] then
@@ -818,6 +834,7 @@ local function build()
         local f = baseCreateFrame(frameType, name, parent, template)
         if template == "SettingsFrameTemplate" then dressSettingsFrame(f) end
         if ours(f) then dress(f) end
+        adopt(parent, f)
         if type(name) == "string" then M.__named[name] = f end
         -- A plain Button records its registered clicks too (the client's default is LeftButtonUp), so
         -- `__click` and a CLICK binding (`__pressKey`) reach one only on an edge it registered.
@@ -982,10 +999,14 @@ local function build()
     M.__applyStateDrivers = function()
         for frame, drivers in pairs(M.stateDrivers) do
             local value = drivers.visibility and evaluate(drivers.visibility)
+            -- OnShow and OnHide fire on a change, as the client fires them for a driven frame.
+            local was = frame.__shown
             if value == "show" then
                 frame.__shown = true
+                if not was then frame:__fire("OnShow") end
             elseif value == "hide" then
                 frame.__shown = false
+                if was then frame:__fire("OnHide") end
             end
         end
     end

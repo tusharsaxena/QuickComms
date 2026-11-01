@@ -218,6 +218,9 @@ end
 local function boot(mock)
     local NS, m = T.enableAddon(mock and { mock = mock } or nil)
     dofile("tests/_kit/mock_paint.lua")(m)
+    -- This suite reads paint. The animations' ghost reads rects the recorder's regions do not model,
+    -- and tests/test_anim_surfaces.lua covers it, so the preview dial here opens at once.
+    NS.Anim.Open, NS.Anim.Close = function() return false end, function() return false end
     maskable(m)
     NS.Situation.ReadInputs = function() return {} end
     NS.Situation.RefreshNow("test")

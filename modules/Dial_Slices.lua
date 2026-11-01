@@ -118,6 +118,7 @@ local function paintFills(ring, spec, look)
     local shape = ring.qcShape
     for j = 1, math.max(spec.size, #ring.qcFills) do
         local t = nth(ring, ring.qcFills, j, "BACKGROUND", 1)
+        t.qcGhostGroup = j   -- the ghost's place (modules/Anim_Ghost.lua): the Fan and a send's emphasis
         if j <= spec.size then
             t:SetTexture(S.SectorTexture(spec.size))
             place(t, ring, j, shape)
@@ -211,10 +212,11 @@ local function maskOf(ring, set, key, j, path)
 end
 
 -- Layer `key` of a set, made on first use (a masked one cut by the set's mask).
-local function shineLayer(ring, set, key)
+local function shineLayer(ring, set, key, j)
     local t = set[key]
     if not t then
         t = texture(ring, "BACKGROUND", SHINE_SUB[key])
+        t.qcGhostGroup = j   -- with its slice's fill, on the ghost's one sub-frame for that place
         t:SetBlendMode("BLEND")
         if MASKED[key] then t:AddMaskTexture(set.mask) end
         set[key] = t
@@ -245,7 +247,7 @@ local function paintLayer(ring, set, j, a, n, l, alpha, drawn)
         maskOf(ring, set, "mask", j, S.SectorTexture(n))
         drawn.mask = true
     end
-    local t = shineLayer(ring, set, key)
+    local t = shineLayer(ring, set, key, j)
     t:SetTexture(l[2])
     if l[5] then placeSprite(t, ring, a, l[5]) else place(t, ring, j, ring.qcShape) end
     t:SetVertexColor(l[3][1], l[3][2], l[3][3], l[4] * alpha)

@@ -241,7 +241,7 @@ test("dials page: [B9] Icons follows Labels, carries its headings once each, and
     for _, row in ipairs(NS.addon.Settings.RowsForPage("dials")) do
         if row.group and not seen[row.group] then seen[row.group] = true order[#order + 1] = row.group end
     end
-    assertEqual(table.concat(order, ","), "General,Groups,Layout,Slices,Hub,Paging,Labels,Icons",
+    assertEqual(table.concat(order, ","), "General,Groups,Layout,Slices,Hub,Paging,Labels,Icons,Animation",
         "the rows' tabs, in order")
     P.find(w, "Slider", "Icon size (0 = automatic)"):__fire("OnMouseUp", 24)
     P.find(w, "CheckBox", "Show border"):__fire("OnValueChanged", true)
@@ -484,7 +484,7 @@ test("page dials: [polish] tabs read Slices, Hub, Paging, Labels, Icons", functi
         if row.group and not seen[row.group] then seen[row.group] = true order[#order + 1] = row.group end
     end
     -- red under: the Slice labels and Group labels tabs apart (item 020, QUI-L19)
-    assertEqual(table.concat(order, ","), "General,Groups,Layout,Slices,Hub,Paging,Labels,Icons")
+    assertEqual(table.concat(order, ","), "General,Groups,Layout,Slices,Hub,Paging,Labels,Icons,Animation")
     local w = P.tab("dials", "Labels")
     assertTrue(P.find(w, "CheckBox", "Show slice labels") ~= nil, "Labels keeps the dial.label rows")
     local show = P.find(w, "CheckBox", "Show group labels")

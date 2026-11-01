@@ -3,7 +3,7 @@ local _, NS = ...
 --
 --     band     [ Pad v (picker) ][ New pad ]
 --     strip    [ General ][ Groups ][ Layout ][ Window ][ Header ][ Section titles ][ Buttons ]
---              [ Icons ]   (outside in since item 020, QUI-L09; Header and Section titles were Pad
+--              [ Icons ][ Animation ]   (outside in since item 020, QUI-L09; Header and Section titles were Pad
 --              header and Section header until then, QUI-L10)
 --     General  Name, Enable this pad, Visibility (with Fade and Faded opacity, `pad.look.*`, under its
 --              own heading; on the Window tab until 2026-10-20), then Unlock (or Lock) all pads and
@@ -32,6 +32,9 @@ local _, NS = ...
 --              composed Border block, Icon glow (its trigger, style, color and offsets), then only the
 --              selected style's knobs (none while the glow is off), each under its own heading drawn
 --              by the library
+--
+--     Animation  the pad's open and close (`pad.anim.*`, #13): under Open and Close, a Style, its Duration
+--              (hidden while the style is None) and a Direction (shown on Slide only)
 --
 -- The band holds the picker and the create action (options-ui-§14). Every field is a member row
 -- (settings/SchemaMembers.lua) written to the selected pad; the pad redraws through LIBRARY_CHANGED
@@ -260,6 +263,7 @@ local function render(ctx)
         { key = SECTION_HEADER, render = renderStyled },
         { key = BUTTON, render = renderStyled },
         { key = ICONS, render = renderStyled },
+        { key = L["Animation"], render = renderStyled },
     })
 end
 

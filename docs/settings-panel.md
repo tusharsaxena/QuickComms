@@ -827,3 +827,10 @@ and position are kept, and the key, WoW's own binding, is never touched.
 ## Still to come
 
 Quick mode's delay and tap action with the C7 upgrade.
+
+## The Animation tab (#13)
+
+The Pad and Dial pages' last styled tab: an Open and a Close heading, each a Style dropdown (None
+switches that one off) and a Duration slider, hidden while the style is None through `shownWhen` with a
+list of the other styles (options-ui-§22), and on a pad a Direction shown only on Slide. They are member
+rows, so a write rebuilds the surface and Restore defaults covers them.

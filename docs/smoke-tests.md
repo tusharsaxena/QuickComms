@@ -1947,6 +1947,42 @@ its neighbors, and a pick reaches the pad's edge. Switch skins and open both aga
 Fail: a stock-looking dropdown, a blank list or a Lua error.
 Result:
 
+## Animations
+
+The issue is #13; the rulings are in `docs/superpowers/specs/2026-11-01-open-close-animations-design.md`.
+
+**ANIM-1. The defaults on an existing profile.** Update with your own profile and open a dial by its key,
+then close it; toggle a pad with `/qc toggle` → each scales and fades in and out, from about the dial's
+center, not the cursor. Result: not run.
+
+**ANIM-2. The handoff.** With a Shine look on the Slices tab and a glow on the Icons tab, open and close a
+dial slowly at 0.3 s, on the default skin and on one other → the copy matches the real dial, with no
+visible pop as it lands, no missing slice edges and no double image. Result: not run.
+
+**ANIM-3. Every style.** On the Dial page's Animation tab try Fade, Scale and fade, Fan and None, open and
+close. On the Pad page's try Fade, Fade and scale, Slide in each direction, and Pop. While a style is
+None its Duration is hidden; Direction shows only on Slide. Result: not run.
+
+**ANIM-4. The four switches.** Set a pad's Close to None: it leaves at once and still opens animated. Do
+the same for its Open, the dial's Open and the dial's Close, one at a time → each changes that one thing
+on that one surface. Result: not run.
+
+**ANIM-5. A quick send, in combat.** In combat, tap the dial's key and click a slice within 0.1 s → the
+line goes out at once; the chosen slice stays bright and pulses while the rest collapse. Press Escape on
+the next open → a plain collapse with no emphasis. Result: not run.
+
+**ANIM-6. Rapid toggling.** Spam the dial's key and `/qc toggle`, in and out of combat → each reverses from
+where it stands with no jump, and the dial and pads end fully opaque or fully gone. Result: not run.
+
+**ANIM-7. Taint.** With `/console taintLog 2`, run ANIM-5 and ANIM-6 and read `Logs\taint.log` → no
+QuickComms entry and no "blocked" popup. Result: not run.
+
+**ANIM-8. The stand-down.** Open a dial and run `/qc disable` during the animation, or start a perf capture
+→ nothing stays on screen; `/qc enable` brings the surfaces back whole. Result: not run.
+
+**ANIM-9. The preview.** Turn on Preview as…: the preview dial plays its open. Edit a setting: it rebuilds
+without flickering. A preview pad follows its own pad's Animation tab. Result: not run.
+
 ## Pending sign-off
 
 The owner ran every check above on 2026-10-21 and reported all of them passed (the client build was
@@ -1996,3 +2032,5 @@ Owed from the findings remediation (FX-QC-PERF, 2026-10-31): LOOK-7 (new).
 Open from the same run's re-cut v1.84.0 (M3-MEDIA, `Ka0sMedia_*` the only media picker): SKIN-30 is new.
 
 Owed from issue #14 (2026-11-01): LAYER-6, LAYER-7, LAYER-8 (new).
+
+Owed from issue #13 (2026-11-01): ANIM-1 to ANIM-9 (new).
