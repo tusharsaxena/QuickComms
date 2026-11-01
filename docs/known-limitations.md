@@ -186,8 +186,9 @@ What the addon cannot do, or does only under a condition, and why. The hub,
   with the stale hint meanwhile), as every rebuild does: a face or a border style moves a pad's
   measured widths, and a secure pad cannot be re-laid out in combat. The one-time reset onto the
   skin (schema step 10) moves every pad's and dial's faces to the skin's HUD font (Prototype under
-  Ka0s Default since LibKa0s v1.82.0, Oxanium SemiBold before) and their border styles to its own;
-  the colors stay the player's. Step 11 moves every stored OUTLINE Font flags to From skin once, so
+  Ka0s Default since LibKa0s v1.82.0, Oxanium SemiBold before) and their border styles to its own.
+  Step 13 does the same for every color, the shadow and the shine; a stored color is kept behind its
+  box. A pad window's and a header's fill stay flat: no skin token names a window texture. Step 11 moves every stored OUTLINE Font flags to From skin once, so
   a player who had picked Outline on purpose now follows the Font outline (the same pixels under
   its default, HUD text only, because pads and dials are HUD text); picking Outline again keeps it.
 - A block on the skin's face draws at the skin's HUD size (`NS.Skin.HudFontSize`, LibKa0s v1.82.0,

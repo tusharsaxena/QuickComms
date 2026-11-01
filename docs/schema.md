@@ -29,6 +29,7 @@ Exactly two (savedvariables-§4):
 | `skin.ignorePanel`, `skin.ignoreFonts` | `true`, `false` | the Skin tab's Scope, `/qc set` | the two exceptions: keep this addon's settings pages stock (on for every profile, the owner's 2026-10-27 call, as LootHistory), keep every font the game's |
 | `skin.font`, `skin.texture` | `""`, `""` | the Skin tab's Font and texture, `/qc set` | the overrides, a LibSharedMedia key each, `""` for the skin's own; free text, so a media pack registering late is still accepted |
 | `skin.outline` | `"hud"` | the Skin tab's Font outline (LibKa0s v1.82.0, Skin minor 9, D-06), `/qc set` | where the skin outlines this addon's text: `all` text, `hud` text only (the default, D-10 of LibKa0s v1.83.0's run; a stored value is never migrated, though `all` picked while it was the default was stripped by AceDB at logout and so reads as `hud`), or `off` (`Skin:SetOutline`); a font block whose flags are *From skin* follows it; Ignore fonts wins. Written through `NS.WriteSkinChoice`'s `media.outline` |
+| `skin.fullSkinReset` | `false` | `Library.MigrateFullSkin` only: no schema row, so no Defaults path walks it | step 13's record, per profile (`Skin.FollowOnce`) |
 | `skin.pickerSeen` | `false` | the first-run skin picker's `onClose` (`core/SkinSetup.lua`), `/qc set` | whether the player closed the first-run picker on this profile (owner ruling O3: `false` for every profile, old or new). Drawn by nothing; a reset puts it back |
 | `nextId` | `1` | `Library.NewId` | the id counter for every user id (`c<n>`, `g<n>`, `p<n>`, `d<n>`); past the seeded sets' ids after the first load |
 | `callouts` | `{}` | `Library` (membership and order); member fields through the seam (member rows) | user callouts keyed by id: name, text, channel (a `Channels.KINDS` kind: `smartGroup`, `smartLead`, `party`, `raid`, `instance`, `raidWarning`, `say`, `yell` or `general`, chat channel 1 with Say where it is not joined, QF-04), icon, and `iconColor` (a LibKa0s glyph's color, `"rrggbb"` lowercase; absent or `false` for none); each id sits in exactly one user group's `callouts` list. A seeded callout also keeps `origin`, the shipped callout id it was copied from (`"bi.mplus.lust"`), which only Library reads |
@@ -250,3 +251,20 @@ Step 12 (2026-11-01, `perProfile`, `Library.MigrateAnim` in `modules/Library_Mig
 stored pad and dial takes the Animation tab's defaults, so an existing surface animates after the
 update (the owner's ruling). A key already there is kept and a table that is not one is replaced, so
 the step is idempotent.
+Step 13 (LibKa0s v1.85.0, 2026-11-01, `perProfile`, `Library.MigrateFullSkin`, cause D7 of
+Ka0sAddonsCommonTasks `docs/2026-11-01-FULL_SKINNING/`): every stored pad and dial goes onto the skin.
+`Library.FULL_SKIN_KEYS` lists, per kind, every `<key>FromSkin` companion and each font block's
+`fontFlags`; `Library.FullSkinPaths` makes them dotted paths from the profile root, and
+`Skin.FollowOnce` sets each companion true, stores `"@skin"` in the flags, and records
+`skin.fullSkinReset`. The record is the profile's, the stamp the account's, so the runner also calls
+the step for every stored profile on every run: a profile that arrives later moves, a companion turned
+off afterwards stays off. The stored colors and picks are kept. No size, class color or `skin.ignore*`
+is listed. With the library absent the same write runs by hand, gated on the same record.
+
+A color, Font shadow, the button's texture and the shine each have a `<key>FromSkin` companion, default
+true (`fontColorFromSkin`, `fontShadowFromSkin`, `backgroundFromSkin`, `borderColorFromSkin`,
+`textureFromSkin`, `glowColorFromSkin`, `shineFromSkin`, and a dial's `highlightFromSkin`,
+`pointerColorFromSkin`, `circleColorFromSkin`, `arrowColorFromSkin`, `plateColorFromSkin`,
+`currentColorFromSkin`, `dotColorFromSkin`, `dotBackColorFromSkin`, `dotBorderColorFromSkin`; an
+icon's `tintFromSkin`). A Font pick's default is `Ka0s Prototype`. A border block's
+`borderStyleFromSkin` governs its thickness too, and `dial.hub.borderColorFromSkin` the hub's rim.

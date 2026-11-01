@@ -225,8 +225,11 @@ the settings pages and the library's own windows.
   While the Scope's **Ignore fonts** is on, a following Font block draws its stored pick all the same
   (LibKa0s v1.81.0, R-1): the library's `Resolve` answers it for `hud.font`, nil for a stored `"@skin"`
   (the standard face), so `Pad_Render.FontKey` holds no Ignore-fonts handling of its own. Each skin
-  names its own HUD face (R-4). Every
-  color and shadow the player set, the shine and the class colors stay the player's (X4, D5, D6);
+  names its own HUD face (R-4). Since LibKa0s v1.85.0 every color, the shadow, the thickness, the
+  button's texture and the shine follow too, each through its own companion (`NS.SkinFollow`,
+  `Pad_Render.ShadowOf`), which reverses X4, D5 and D6 by the owner's ruling of 2026-11-01. A class color
+  comes first and is untouched, a glyph's own color and a game icon keep theirs, and owner tokens
+  (`core/SkinSetup.lua`) hold today's pixels under Ka0s Default;
   stored sizes and flags are under **Font flags and HUD sizes** below. The HUD's own chrome (the padlock, the veils, the hover wash, the flashes, the LOCKDOWN and
   stale tags, the PREVIEW and TEST MODE marks, the page arrows) reads tokens once per look change
   (`Pad_Render.Chrome`), never per frame.

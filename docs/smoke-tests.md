@@ -38,6 +38,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | BG-1..9 | Battlegrounds | Node rings on the dial, one slice per node; the faction and location colors; the battleground instance ids; the objective groups (Alterac Valley, Isle of Conquest's bases, a flag map) and their migration; the four node buttons; Silvershard Mines' and Temple of Kotmogu's groups |
 | IDS-1 | Instance ids | The Midnight dungeons and raids |
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes |
+| FSKIN-1..11 | [The full skin](#the-full-skin) | Every pad and dial color, the shadow, texture and shine on the skin, Ka0s Default unmoved, the companions off, an existing profile, meaning colors, the ghost |
 | SKIN-1..30 | [Skins](#skins) | The skinning rollout: the one-time reset under Ka0s Default, a new pad, dial or profile on the skin, Ka0s Default elsewhere unchanged, the Skin tab, every skin on the pads and dials, the *Use the skin's ...* boxes, the Preview as window, the callout popup and the icon browser, the settings pages, the tool windows, the Font and texture overrides, Ignore fonts, EllesmereUI on and off and the reload back, profiles and combat, the first-run skin picker (its eye, Apply, close, gear, the switch and a profile event, one picker across Ka0s addons), the CLI and the degraded install; LibKa0s v1.82.0: the Font outline, From skin font flags, `/qc skin`, the HUD size scale and the windows' width parity; the skin on the only media picker |
 
 ## Before you start
@@ -1740,11 +1741,11 @@ Glass Avant Garde, High Contrast Doris PP, Ember Emblem, WoW Default Ka0s Friz Q
 Midnight Segoe UI Semibold, WoW Forever Fira Sans SemiBold, Ka0s Default Prototype (the faces since LibKa0s v1.83.0, D-06);
 a followed border takes the skin's border style, and the padlock, the veils, the hover wash, the
 flashes, the LOCKDOWN and stale tags, the PREVIEW and TEST MODE marks and the page arrows take the
-skin's colors. The colors you set (the buttons' body and edge, the header's and the titles' text and
-bands, the hub, the slices, the dots, the class colors) and the shine stay yours (X4, D5, D6). Fail: a
-pad or dial that keeps the previous skin until `/reload`, a color of yours that changed, or a label
+skin's colors, and so does every color with its *Use the skin's ...* box ticked (FSKIN-2, FSKIN-3); a
+class color stays yours. Fail: a
+pad or dial that keeps the previous skin until `/reload`, a class color that changed, or a label
 cut where it was not before on the same face. (Amended by QC-02, 2026-10-30: a HUD face per skin,
-R-4; by QC-01, 2026-10-30, LibKa0s v1.82.0's faces; by QC-F01, 2026-10-31, LibKa0s v1.83.0's faces.) Result: Owner reported pass, 2026-10-31.
+R-4; by QC-01, 2026-10-30, LibKa0s v1.82.0's faces; by QC-F01, 2026-10-31, LibKa0s v1.83.0's faces; by FS-QC-REC, 2026-11-01, the full skin.) Result: owed (expected result changed).
 
 **SKIN-6. The *Use the skin's ...* boxes.** On a non-default skin, Pad → Header: untick **Use the
 skin's font** → *Font* comes alive with your pick and the header redraws in it; tick → the skin's face
@@ -1805,20 +1806,20 @@ reload every pad and dial label whose *Use the skin's font* is ticked takes it (
 fonts** is on, SKIN-12), a block with the box unticked keeps its own pick, and the windows' and the
 settings pages' text takes it too; the debug
 console keeps its monospace face. Switch skin → the override stays. **Texture** → any status bar →
-nothing on the pads or dials changes (Quick Comms draws no bars). Set both back to *Skin's default* → the
-skin's again. Open **Font** and **Texture** → every row draws in its own face or beside its bar, *Skin's default (…)* first (LibKa0s v1.83.0, D-08). (Amended by QC-F01, 2026-10-31.) Result: Owner reported pass, 2026-10-31.
+a pad button whose *Use the skin's texture* is ticked takes it; the dial draws no bars. Set both back to *Skin's default* → the
+skin's again. Open **Font** and **Texture** → every row draws in its own face or beside its bar, *Skin's default (…)* first (LibKa0s v1.83.0, D-08). (Amended by QC-F01, 2026-10-31.) Result: owed (expected result changed).
 
 **SKIN-12. Ignore fonts (rewritten by QC-02, 2026-10-30).** On a non-default skin with **Ignore
 settings panel** off, a pad on screen (`/qc test`) and a dial open, give a pad's Buttons tab a face of
 its own (Morpheus, say) with *Use the skin's font* still ticked, then tick **Ignore fonts** → with no
 reload the windows' and the settings pages' text goes back to the game's face, its colors kept, and
 **the HUD too** (LibKa0s v1.81.0, R-1): every pad and dial label whose *Use the skin's font* is ticked
-draws its own stored face (Morpheus on the buttons, Friz Quadrata where you never picked one), its
+draws its own stored face (Morpheus on the buttons, Ka0s Prototype where you never picked one), its
 colors, size, flags and shadow unchanged, and the box stays ticked; the Font picker beside it, still
 grayed, previews that stored face. A Font override (SKIN-11) does not reach the HUD while Ignore fonts
 is on. Untick → the skin's face returns on the windows, the pages and every following HUD label,
 live. In combat the pads and dials redraw at combat end. Fail: a following HUD label left on the
-skin's face while Ignore fonts is on, or a box that unticked itself. Result: pass (owner-marked 2026-10-30).
+skin's face while Ignore fonts is on, or a box that unticked itself. Result: owed (expected result changed).
 
 **SKIN-13. EllesmereUI on.** With EllesmereUI and EllesmereUI Blizzard Skin loaded, its third-party
 skinning on and Quick Comms on in its Third-Party Addons list → Skin → **Skin source** offers
@@ -1826,8 +1827,8 @@ skinning on and Quick Comms on in its Third-Party Addons list → Skin → **Ski
 shell, border and close X as the settings window behind them does (what EDIT-13 checked before the
 rollout, through Quick Comms' own bridge, now retired: D1), and the Preview as window, the console and
 the perf panel wear it too; the pads' and dials' faces and border styles come from EllesmereUI's look
-while their boxes are ticked. Your colors stay yours. `/qc diagnostics` → the integrations line reads
-`skin: source=eui skin=… ellesmereui: ok=true painted=true refused=nil failing=none`. Result: pass (owner-marked 2026-10-30).
+while their boxes are ticked, and each color with its own box ticked follows it too. `/qc diagnostics` → the integrations line reads
+`skin: source=eui skin=… ellesmereui: ok=true painted=true refused=nil failing=none`. Result: owed (expected result changed).
 
 **SKIN-14. EllesmereUI off.** Turn Quick Comms off in EllesmereUI's Third-Party Addons list (or disable
 EllesmereUI) and `/reload` → on the Skin tab the EllesmereUI choice is disabled, the failing condition
@@ -1992,6 +1993,70 @@ without flickering. A preview pad follows its own pad's Animation tab. Result: n
 and watch a short cinematic → nothing plays on the way out or on the way back; both come back whole, at
 their rest alpha. The next real close and open play. Result: not run.
 
+## The full skin
+
+LibKa0s v1.85.0 and Ka0sAddonsCommonTasks `docs/2026-11-01-FULL_SKINNING/` (cause D7). Each check names
+what it should show; a token that reads the same in two skins cannot show a change, so these use
+Obsidian, Azeroth, Glass and High Contrast, whose fills, text and shadows differ. Windows and files
+are added in this build: a full client restart comes first.
+
+**FSKIN-1. Ka0s Default did not move.** New profile on **Ka0s Default**, a pad on screen and a dial open
+→ the buttons' dim body and faint edge, the gold header and titles over no band, white labels, the
+slices, the gray hub with its gold rim and circle, the page dots and the Gloss fade and Glass orb
+shines look as they did before this build, text shadows included. Fail: any pixel moved but the
+checks' named ones (a tooltip title, FSKIN-9). Result: owed.
+
+**FSKIN-2. Every pad color follows a skin, live.** Skin → **Obsidian**, then **Azeroth**, a pad on
+screen → with no reload the window fill and edge, the header's and the titles' text, a faint band
+behind each in the skin's title color with an edge at the skin's thickness, the buttons' body, edge and
+label all change. Fail: any of them keeping the last skin. Result: owed.
+
+**FSKIN-3. Every dial color follows a skin, live.** Same, a dial open and paged → the slices, a hovered
+slice, the hub's disc, rim and circle, the pointer, the page arrows and plates, the pill and dots, the
+slice labels and the group label all change. In combat they change when combat ends. Result: owed.
+
+**FSKIN-4. Text shadows.** Under **High Contrast** the HUD text's shadow sits 2 pixels off; under
+**Obsidian** 1; under **Ka0s Default** the black 1, -1 they always had. Tick **Ignore fonts** → each
+block's stored shadow. Pad → Buttons → untick *Use the skin's shadow* → its Font shadow box decides
+under every skin. Result: owed.
+
+**FSKIN-5. The button texture and the shine.** **Azeroth** → the buttons' bodies take its parchment bar
+texture in the skin's button color; untick *Use the skin's texture* → flat. **Glass** → the pad's shine
+is Gloss cap, the dial's Frosted glass; **High Contrast** → no shine; every other skin keeps the Ka0s
+Default look in its own tint. Untick *Use the skin's shine* → your Shine look and tint under every
+skin. Result: owed.
+
+**FSKIN-6. A box unticked keeps your color.** On a pad, untick *Use the skin's color* beside Background
+color and pick red, then switch skins → the red stays; tick the box → the skin's, and your red comes
+back when it is unticked. No swatch grays out. Same on the Hub's Hub border, where the box also gives
+the thickness to the skin: Hub border size grays while it is on. Result: owed.
+
+**FSKIN-7. An existing profile moves once.** Log in on a profile from before this build with colors of
+your own → every pad and dial follows the skin, the stored colors kept behind the unticked swatches'
+boxes; `/reload` and untick a box → it stays unticked through a reload, General's Defaults and a profile
+switch and back. Reset this profile → the shipped look. Result: owed.
+
+**FSKIN-8. Meaning stays.** On any non-default skin: a button with **Use class color** on its font or
+background keeps the class color with the skin's box ticked; a callout's colored glyph keeps its color,
+a game icon its art, and only a plain white glyph takes the skin's tint. The send flashes keep their
+meaning colors. Under the default Scope the settings panel stays stock. Result: owed.
+
+**FSKIN-9. The tool marks and tooltips, Scope cleared.** Skin → untick **Ignore settings panel** on
+Azeroth → the Groups, Pads and Dials lists' active marker is a green-toned Ka0s tick, not the client's
+dot; the editors' remove, clear, edit and Tokens glyphs are Ka0s marks in the skin's tint; the icon
+browser's cell hover takes the skin's. Tick it back → all stock, with no reload. On any skin, every
+tooltip title on a button, a wedge, the hub, the Preview as window and an icon cell is in the tooltip
+title color. The hub's stale, lockdown and test labels and End preview are in the skin's face.
+Result: owed.
+
+**FSKIN-10. The animation copy wears the skin.** **Azeroth**, a pad and a dial → open and close each, and
+a dial's Fan → through the animation the copy shows the skin's fills, edges, text with its shadow, and
+a textured button body: no flash of Ka0s Default, no text losing its shadow, no missing band. Result:
+owed.
+
+**FSKIN-11. The picker's preview.** The first-run picker's eye over a pad → each pick repaints the pad
+and dial in that skin, closing it puts them back. Result: owed.
+
 ## Pending sign-off
 
 The owner ran every check above on 2026-10-21 and reported all of them passed (the client build was
@@ -2043,3 +2108,6 @@ Open from the same run's re-cut v1.84.0 (M3-MEDIA, `Ka0sMedia_*` the only media 
 Owed from issue #14 (2026-11-01): LAYER-6, LAYER-7, LAYER-8, LAYER-9 (new).
 
 Owed from issue #13 (2026-11-01): ANIM-1 to ANIM-10 (new).
+
+Owed from the full skin (FS-QC-REC, 2026-11-01): FSKIN-1 to FSKIN-11 (new); SKIN-5, SKIN-11, SKIN-12 and SKIN-13
+(their expected result changed, so each lost its pass mark).

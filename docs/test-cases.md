@@ -137,7 +137,7 @@ Total.
 - profile: collections exist; default nextId is 1, past every seeded id after boot
 - profile: every behavior row resolves through the seam
 - profile: the spam guard clamps to 0.6-2.0 and fallback refuses unknown values
-- profile: schema version target is 11 (the Font flags' move to From skin)
+- profile: schema version target is 13 (the full skin's step)
 - prepare: a callout held by two groups is split into a copy
 - prepare: a split copy of a seeded callout keeps no origin
 - prepare: a callout held by no group is dropped
@@ -1451,13 +1451,44 @@ Total.
 - skin hud: a dial's slice labels and ring title take hud.font while they follow
 - skin hud: a pad's chrome is today's pixels under Ka0s Default, each from a token
 - skin hud: a dial's chrome is today's pixels under Ka0s Default, each from a token
-- skin hud: a skin switch repaints the chrome and the faces, and leaves the player's colors
+- skin hud: a skin switch repaints the chrome and the faces, and leaves a color whose companion is off
 - skin hud: a pad window's 1px inner rule is win.inner, none where the skin has none
 - skin hud: a pad's window is repainted when its look or the skin moved, and at no other rebuild
 - skin hud: the dial's per-frame update reads no token
 - skin hud: step 10 turns every stored pad's and dial's companions on, keeping every pick
 - skin hud: without the library step 10 writes the companions itself
 - skin hud: the reset runs once: a companion the player turns off afterwards stays off
+
+### test_skin_flip.lua (28)
+
+- skin flip: the step puts every listed companion on, keeps every pick and color, and leaves the rest
+- skin flip: no value but a flag holds the sentinel, and a second run writes nothing
+- skin flip: the runner moves every stored profile once, and each profile event only a new one
+- skin flip: a companion turned off stays off through every Defaults path that is not its own
+- skin flip: a profile reset runs the step against defaults that show nothing
+- skin flip: with the library absent the step writes by hand, the record too, and makes no table
+- skin flip: every listed key has a shipped default that says follow
+- skin flip: a font row's default is the Ka0s pick, for a player who turns the companion off
+- skin flip: Ka0s Default draws what the stored defaults drew
+- skin flip: a skin switch reaches every drawing setter on a pad
+- skin flip: a skin switch reaches the dial's slices, hub, pointer, page row and shine
+- skin flip: a companion off draws the stored value under every skin
+- skin flip: a class color comes before the companion, whatever it says
+- skin flip: a glyph's own color and a game icon keep theirs; the skin's tint reaches a plain glyph
+- skin flip: the icon's border and glow take the skin's colors, off the stored ones
+- skin flip: the shine is the skin's look, and its texture a skinned body; off keeps the player's
+- skin flip: a textured body draws the file in the look's color, and flat again clears the tint
+- skin flip: Ka0s Default keeps the shadow the blocks ship with, every other skin draws its own
+- skin flip: a skin switch redraws the shadow on a string that had already drawn
+- skin flip: Ignore fonts leaves the stored shadow standing
+- skin flip: the ghost wears a skinned string's font object, so its shadow comes along
+- skin flip: a color texture a library paints on a watched frame reaches the ghost
+- skin fix: a tooltip's title takes gtip.title, on a button, a wedge and a titled tip
+- skin fix: the hub's small labels wear the skin's HUD face and their tokens
+- skin fix: End preview's label takes the skin's body face
+- skin fix: the active dot is the client's while the panel is stock, the Ka0s mark with the Scope cleared
+- skin fix: the remove mark is marked for the panel, its stock art kept as the way back
+- skin fix: the panel's tooltip lines take gtip.line, its stock gold under Ignore settings panel
 
 ### test_skin_picker.lua (20)
 
@@ -1684,6 +1715,7 @@ Total.
 | test_skinsetup.lua | 24 |
 | test_skin_windows.lua | 20 |
 | test_skin_hud.lua | 19 |
+| test_skin_flip.lua | 28 |
 | test_skin_picker.lua | 20 |
 | test_skin_outline.lua | 10 |
 | test_skin_verb.lua | 7 |
@@ -1698,4 +1730,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1392** |
+| **Total** | **1420** |

@@ -587,7 +587,12 @@ Buttons) ends with **Use the skin's font** (`<block>.fontFromSkin`) and every Bo
 Header, Section titles, Buttons, Icons) with **Use the skin's border** (`<block>.borderStyleFromSkin`),
 both composed by the options library and on by default. While one is on, its picker (*Font*, or
 *Border style*; on Icons *Border style* and *Border thickness*) is grayed out and shows the skin's
-value, and the stored pick comes back when it is turned off; sizes, colors, flags and shadows stay
+value, and the stored pick comes back when it is turned off. The full skin (LibKa0s v1.85.0, cause
+D7) adds a *Use the skin's color* row after every color swatch, *Use the skin's shadow* after Font
+shadow, *Use the skin's texture* after a button's Background and *Use the skin's shine* after a Shine
+tint, each on by default; a swatch is never grayed and keeps its value (options-ui-§17), and the row's
+tooltip says it is not read. A Border block's companion now governs the thickness too (the composer's
+`fromSkin = "bar"`), and the Hub border's color row the hub's rim size. Sizes stay
 live either way. On Icons the box is grayed while Show border is off. Schema step 10 turned them on
 once on every stored pad ([schema.md](schema.md)). The Font and Border pickers are the
 library's `Ka0sMedia_Font` and `Ka0sMedia_Border`, which the skin paints, each row previewing its face
@@ -604,7 +609,7 @@ the Buttons tab's in `settings/SchemaMembers.lua`; General's Visibility rows sit
 Enabled, so General stays first. Window's and the Visibility rows keep their `pad.look.*` paths; Header's
 are `pad.header.*`, Section titles' `pad.section.*`. The Header defaults are the owner's
 (2026-10-20): 24 pixels tall (it
-was 18), Friz Quadrata at 16 points, gold, outlined, with its shadow, over no background and no edge
+was 18), Ka0s Prototype at 16 points, gold, outlined, with its shadow, over no background and no edge
 (its edge color white, for when a thickness is set). The header's text starts at the section titles' left
 edge (`PadLayout.PAD`) in every growth direction; the LOCKDOWN tag and the stale hint take the
 header's face, size, flags and shadow and keep their own red and gray, and the collapse button is two
@@ -744,7 +749,7 @@ General page > Keybindings, with no key box and no readout (QUI-L29).
   300 pixels, 0 automatic: 4 pixels past the disc, 2 until 2026-10-22), each label's distance from the middle; the ring's
   title and the page row move out with it, and it grays out with the font. The Font block is composed by the options
   library as the Buttons tab's (`dial.label.font|fontSize|fontColor|useClassColorFont|fontFlags|fontShadow`;
-  defaults white Friz Quadrata 12 with its shadow, `PadDefaults.DialLabel`), grayed out while Show
+  defaults white Ka0s Prototype 12 with its shadow, `PadDefaults.DialLabel`), grayed out while Show
   slice labels is off. A bigger font lifts the ring's title and drops the page row to clear the labels.
   Under the tab's last heading, Tooltip, Tooltip side is `dial.label.tooltipSide` (Above, the default; Below,
   Left, Right) and Tooltip offset `dial.label.tooltipOffset` (0 to 80 pixels, default 8): every
@@ -753,7 +758,7 @@ General page > Keybindings, with no key box and no readout (QUI-L29).
 - **Labels > Group labels** (dial polish, 2026-10-21; its own tab until item 020): Show group labels is `dial.title.show` (on by default):
   the ring's title above the dial ("Solo", "Comms Dial"). Its Font block is composed as the
   slice labels' (`dial.title.font|fontSize|fontColor|useClassColorFont|fontFlags|fontShadow`;
-  defaults gold Friz Quadrata 12 with its shadow, `PadDefaults.DialTitle`), grayed out while off; the
+  defaults gold Ka0s Prototype 16 with its shadow, `PadDefaults.DialTitle`), grayed out while off; the
   title is measured with its own line height, so a bigger font lifts it and the tooltip above it.
 - **Icons:** Icon offset (a Wheel row until the dial polish, 2026-10-21; `dial.iconOffset` kept) sits
   beside Icon size under Size, offset and crop (it led the tab under Size and crop until item 020): 0 to 250 pixels, 0 automatic, the icons' own distance from the
