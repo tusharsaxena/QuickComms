@@ -28,12 +28,13 @@ local _, NS = ...
 -- skin (no template to keep). The catcher's dim is this addon's qc.modalDim (Ka0s Default's 0.45
 -- black; it follows cover.dim elsewhere), repainted on every looks change.
 --
--- STACKING (QC-06). Every modal is above the Comms Dial BY STRATA: FULLSCREEN (MW.STRATA), one
--- over the dial's DIALOG. The dial's secure header (modules/SendEngine.lua) is in DIALOG and the
--- hub's dot and pointer sit at the header's level + 20 (modules/Dial_Render.lua, RaiseFront): a modal
--- in DIALOG is in a level race it loses, and the header's strata is not ours to move (a secure
--- frame's strata is protected in combat). FULLSCREEN is also over the pads (MEDIUM), the dial's
--- screen catcher (HIGH) and the settings window (HIGH).
+-- STACKING (QC-06, #14). Every modal is above the Comms Dial BY BAND: FULLSCREEN (MW.STRATA), the
+-- strata of the dial's secure header (modules/SendEngine.lua), whose hub's dot and pointer sit at the
+-- header's level + DIAL_FRONT (modules/Dial_Render.lua, RaiseFront). The header's strata is not ours
+-- to move (a secure frame's strata is protected in combat), and no tier over it can hold a modal with
+-- pull-outs (issue #14, core/Constants.lua), so MODAL sits far over the dial's and the preview
+-- window's levels in the one strata. FULLSCREEN is also over the pads (DIALOG) and the settings
+-- window (HIGH).
 -- The popup and the icon browser share FULLSCREEN and are told apart by a BAND of levels the caller
 -- picks (`spec.level`): the popup's base is LEVEL, the browser's LEVEL_OVER, far above anything the
 -- popup's nested widgets reach, so the browser and its catcher cover the popup. FULLSCREEN_DIALOG
@@ -63,7 +64,7 @@ MW.INSET_PLAIN = { left = 0, top = 0, right = 0, bottom = 0 }
 MW.LEVEL = LV.MODAL
 -- A modal over a modal (the icon browser over the popup): its band's base, in the same strata.
 MW.LEVEL_OVER = LV.MODAL_OVER
--- The strata of every QuickComms modal: over the dial's DIALOG (STACKING above).
+-- The strata of every QuickComms modal: the dial's, a band over it (STACKING above).
 MW.STRATA = LAYERS.STRATA.MODAL
 -- The strata a QuickComms confirm (a Blizzard StaticPopup: the deletes, Reset all) is shown in, one
 -- over the modals' (MW.LiftConfirm).
@@ -204,8 +205,8 @@ NS.Skin.OnLooksChanged(function()
 end)
 
 -- CONFIRMS (QC-06 review). QuickComms' confirms are Blizzard StaticPopups, whose dialog frames are
--- DIALOG: the preview dial's strata, where the hub (header level + 20) races them for the top, and
--- under the modals' FULLSCREEN catchers (a `/qc resetall` typed while the callout popup is open would
+-- DIALOG: under a pad's band and the dial, and under the modals' FULLSCREEN catchers (a `/qc resetall`
+-- typed while the callout popup is open would
 -- show a confirm nobody can click). A QuickComms confirm lifts its dialog to CONFIRM_STRATA while it
 -- shows and hands the shared frame back in the strata it came in when it hides, so Blizzard's next
 -- popup in that slot is untouched. The strata it came in is kept here, never on Blizzard's frame

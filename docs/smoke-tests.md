@@ -27,7 +27,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | PREVIEW-1..12 | Preview window | The Preview as selector window: every entry point, the dropdown, End preview, close and Escape, combat, test mode and the stand-down, Alt+Z, the saved position, bare /qc preview and list; every preview drawn as live; a preview or test click prints what it would send; a preview dial staying open on a pick |
 | DIAL-1..43 | Dial | The Comms Dial (Relaxed), its key and Bindings.xml, the battleground node dial, the lone-group open and the group ring, page arrows and the page row, Auto wedges, the ring radius, the Slice labels tab, the slices and the slice lit by direction, the Slices tab, the pointer, the tooltip outside the dial, the hub over the slices, the pointer, label and icon offsets, the Paging tab; the dial polish: the border gone, the slice gap, placement from W, a slice clicked to the hub in combat, the hub styles, the Group labels tab, Icon offset on Icons, 128-pixel icons, a click outside closing the dial in combat, the page indicators' background and border, the Hub tab; automatic icon offset and size; the 120 radius and 48-pixel icons by default; a right click back a ring; opening where it was closed; slices from N |
 | LAYOUT-1..6 | Settings layout | Item 020: the General page's Behavior headings and Defaults tooltip; the Groups band on one row, General's order, Inherit on When, What it sends; the Pad strip outside in and its relabels; the Dial strip (Layout, Labels, Ring map) and its headings; no setting lost or changed, through a /reload |
-| LAYER-1..5 | Frame layering | Item 030: a pad button's and a dial wedge's borders, glows, label, padlock and veils in order; the drag strip over a faded pad; the windows, modals and popups still stacked as before |
+| LAYER-1..8 | Frame layering | Item 030: a pad button's and a dial wedge's borders, glows, label, padlock and veils in order; the drag strip over a faded pad; the windows, modals and popups still stacked as before; #14: the pads and the dial over other addons' windows, QuickComms' own stack, a click outside the dial |
 | KEY-1..6 | Key bindings | A dial's key as WoW's own binding in Options → Keybindings, Character Specific Keybindings, Toggle Comms Pads; item 015: the Ka0s Quick Comms section of its own, the General → Keybindings tab in sync both ways, its capture and combat refusal |
 | LOOK-1..7 | Window, Header, Section titles (Pad header and Section header before item 020) | The Comms Pad's three window tabs: the section titles' font, the pad's border and background, the header's look, size and alignment, the tab strip and headings, the section header's band and height; the pad's window repainting only when its look moves |
 | BUTTON-1..2 | Buttons tab | The buttons' size, color, border and font; the button glow |
@@ -1349,6 +1349,26 @@ callout popup to each screen edge → it stops at the edge; open the icon browse
 stops too. Click the popup, then Choose icon… → the browser opens over the popup and still covers it.
 Result: 2026-10-25, pass (the owner's run; client build not recorded).
 
+**LAYER-6. The pad and the dial over other addons' windows (#14).** Open a bag addon, Details or another
+meter, and a Ka0s window (for example another addon's settings), and drag a Comms Pad over them → the
+pad draws on top of all three and its buttons click. Open a Comms Dial by its key over the same windows
+→ the dial draws on top; clicking a slice sends. Open the debug console (`/qc debug`) under the pad →
+say whether the pad over it reads as wrong. Result: not run.
+
+**LAYER-7. QuickComms' own stack (#14).** Open the settings window with a pad over it → the pad draws
+over the settings. With Preview as… on and dial 1 open: the preview window sits over the preview dial,
+hub included; Edit a callout → its popup and dim cover the pad, the dial and the preview window; Choose
+icon… → the browser opens over the popup; its Wowhead link window opens over the browser; open the popup's
+dropdowns and the color picker → each opens over the popup and the browser; a delete confirm opened from
+the popup shows over everything and can be clicked. Hover a pad button and a slice → the tooltip is over
+both. No Lua error. Result: not run.
+
+**LAYER-8. A click outside a key-opened dial (#14).** Open a dial by its key with a pad on screen. Click
+the pad → the dial closes and the pad's button does not send; open the dial again with the settings
+window up and click the settings → the dial closes. In combat, open it and click the world → it closes.
+With a key-opened dial and Preview as… on, click the preview window → it takes the click. Result: not
+run.
+
 ## Icons tab
 
 **ICONS-1. Look.** Pad → Icons: Icon size reads 16 on a new pad (an icon-only button is 24
@@ -1974,3 +1994,5 @@ check's Result line.
 Owed from the findings remediation (FX-QC-PERF, 2026-10-31): LOOK-7 (new).
 
 Open from the same run's re-cut v1.84.0 (M3-MEDIA, `Ka0sMedia_*` the only media picker): SKIN-30 is new.
+
+Owed from issue #14 (2026-11-01): LAYER-6, LAYER-7, LAYER-8 (new).

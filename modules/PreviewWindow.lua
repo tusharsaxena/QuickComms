@@ -33,10 +33,10 @@ local addonName, NS = ...
 -- on a profile switch. DEGRADED (LibKa0s absent): no window; the slash still previews and prints.
 -- A plain insecure Frame with no secure child: it calls no protected API.
 --
--- STRATA (QC-06): FULLSCREEN, not the step panels' DIALOG. The preview dial's secure header is in
--- DIALOG with its hub at the header's level + 20, which would draw over a DIALOG window; the
--- header's strata is protected in combat, so the window moves instead. It keeps the client's level
--- for a child of UIParent, far under a modal's catcher (settings/ModalWindow.lua LEVEL), so the
+-- STRATA (QC-06, #14): FULLSCREEN, not the step panels' DIALOG. The preview dial's secure header is
+-- in FULLSCREEN too, its hub at the header's level + DIAL_FRONT, and the header's strata is protected
+-- in combat, so the window sits in a band of its own (LAYERS.LEVEL.WINDOW): over the hub, far under a
+-- modal's catcher (settings/ModalWindow.lua LEVEL), so the
 -- callout popup and the icon browser, also FULLSCREEN, still cover it; its menu
 -- (FULLSCREEN_DIALOG) stays above it. So a show NEVER Raises it: the client's Raise lifts a frame
 -- over everything in its strata, which here is the modals' catchers and bands (a `/qc preview`
@@ -189,6 +189,7 @@ end
 local function chrome(f)
     f:SetSize(WIDTH, HEIGHT)
     f:SetFrameStrata(LAYERS.STRATA.WINDOW)
+    f:SetFrameLevel(UIParent:GetFrameLevel() + LAYERS.LEVEL.WINDOW)
     f:EnableMouse(true)
     f:SetMovable(true)
     f:SetClampedToScreen(true)

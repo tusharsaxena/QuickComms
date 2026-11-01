@@ -33,9 +33,10 @@ test("layers: NS.Constants.LAYERS names every strata and level once (frame-layer
     for k, v in pairs(LAYERS.STRATA) do assertTrue(CLIENT_STRATA[v] == true, k .. " is a client strata") end
     for k, v in pairs(LAYERS.LEVEL) do assertTrue(type(v) == "number", k .. " is a level offset") end
     local S = LAYERS.STRATA
-    assertEqual(S.HUD, "MEDIUM", "the Comms Pads")
-    assertEqual(S.HUD_POPUP, "DIALOG", "the Comms Dial: the secure fixed point")
-    assertEqual(S.DIAL_SCREEN, "HIGH", "the dial's screen catcher, one under it")
+    -- red under: the pads in MEDIUM and the dial in DIALOG, under other addons' windows (#14)
+    assertEqual(S.HUD, "DIALOG", "the Comms Pads, over other addons' windows")
+    assertEqual(S.HUD_POPUP, "FULLSCREEN", "the Comms Dial, the secure fixed point: one over the pads")
+    assertEqual(S.DIAL_SCREEN, nil, "the dial's screen catcher is the dial's strata, parted by level")
     assertEqual(S.WINDOW, "FULLSCREEN", "the preview window, over the dial")
     assertEqual(S.MODAL, "FULLSCREEN", "the popup and the icon browser")
     assertEqual(S.POPUP, "FULLSCREEN_DIALOG", "the lifted confirms and the icon link window")
@@ -45,6 +46,18 @@ test("layers: NS.Constants.LAYERS names every strata and level once (frame-layer
     assertEqual(MW.CONFIRM_STRATA, S.POPUP)
     assertEqual(MW.LEVEL, LAYERS.LEVEL.MODAL)
     assertEqual(MW.LEVEL_OVER, LAYERS.LEVEL.MODAL_OVER)
+end)
+
+test("layers: [#14] the bands of the shared FULLSCREEN strata, bottom to top, each clear of the last", function()
+    local NS = T.newAddon()
+    local LV = NS.Constants.LAYERS.LEVEL
+    -- the screen catcher under the ring catchers, which it would tie with at the same level
+    assertTrue(LV.DIAL_SCREEN < LV.DIAL_CATCHER, "the screen catcher under the ring catchers")
+    assertTrue(LV.DIAL + LV.DIAL_SCREEN > 0, "the band's foot is a real level")
+    -- red under: a band that lets the hub front (header + DIAL_FRONT) reach the preview window or a modal
+    assertTrue(LV.DIAL + LV.DIAL_FRONT < LV.WINDOW, "the hub front under the preview window")
+    assertTrue(LV.WINDOW < LV.MODAL, "the preview window under a modal's catcher")
+    assertTrue(LV.MODAL_OVER - LV.MODAL >= 100, "the browser's band clears the popup's widgets")
 end)
 
 -- Every SetFrameStrata / SetFrameLevel call in the shipped code, as { file, line, text }.
@@ -103,7 +116,15 @@ test("layers: a pad's root is the HUD tier; its header and buttons sit one over 
     local btn = NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.mplus.pull"))[1]
     assertEqual(lv(btn), lv(inst.root) + 1)
     assertEqual(lv(inst.header), lv(inst.root) + 1)
-    assertEqual(m.__layers(btn).strata, "MEDIUM", "inherited")
+    assertEqual(m.__layers(btn).strata, NS.Constants.LAYERS.STRATA.HUD, "inherited")
+end)
+
+test("layers: [#14] a pad's root sits at the HUD band over UIParent, set before its children", function()
+    local NS, m = layered()
+    local inst = pad(NS)
+    -- red under: no SetFrameLevel on the root, which leaves it in a level race inside DIALOG
+    assertEqual(lv(inst.root), m.UIParent:GetFrameLevel() + NS.Constants.LAYERS.LEVEL.HUD)
+    assertTrue(lv(inst.handle) > lv(inst.root), "the drag strip rides the band")
 end)
 
 test("layers: [QUI-Z11] the pad's drag strip ignores the pad's alpha", function()
@@ -165,12 +186,47 @@ test("layers: the dial's header, front, catchers and screen catcher keep their t
     local inst = NS.Dial.Instance("d2")
     local H = lv(inst.header)
     assertEqual(m.__layers(inst.header).strata, LAYERS.STRATA.HUD_POPUP)
+    -- red under: no level on the header, where the dial ties with the preview window's old level
+    assertEqual(H, m.UIParent:GetFrameLevel() + LAYERS.LEVEL.DIAL, "the dial's band over UIParent")
     assertEqual(lv(inst.header.qcPointer), H + LAYERS.LEVEL.DIAL_FRONT, "the hub front")
     local screen = NS.SendEngine.NewDialScreen(inst.header, "")
-    assertEqual(m.__layers(screen).strata, LAYERS.STRATA.DIAL_SCREEN, "one strata under the dial")
+    -- red under: the catcher left in HIGH, under a pad in DIALOG, which would take the click instead
+    assertEqual(m.__layers(screen).strata, LAYERS.STRATA.HUD_POPUP, "the dial's strata")
+    assertTrue(H + LAYERS.LEVEL.DIAL_SCREEN < H + LAYERS.LEVEL.DIAL_CATCHER)
+    assertEqual(lv(screen), H + LAYERS.LEVEL.DIAL_SCREEN, "under the dial by level")
     local ring = inst.rings.active[1]
     local catcher = NS.SendEngine.NewDialCatcher(inst.header, ring, "")
     assertEqual(lv(catcher), math.max(0, H + LAYERS.LEVEL.DIAL_CATCHER), "under its ring, by design")
+end)
+
+test("layers: [#14] QuickComms stacks whole: pad < catcher < dial < preview < modals < browser < confirms", function()
+    local NS, m = layered()
+    local LAYERS = NS.Constants.LAYERS
+    local S = LAYERS.STRATA
+    local ORDER = { MEDIUM = 3, HIGH = 4, DIALOG = 5, FULLSCREEN = 6, FULLSCREEN_DIALOG = 7, TOOLTIP = 8 }
+    local function key(f)
+        return ORDER[m.__layers(f).strata] * 100000 + lv(f)
+    end
+    local inst = pad(NS)
+    assertTrue(NS.Dial.Apply(1, "d2", dialPlan(NS)))
+    local header = NS.Dial.Instance("d2").header
+    local screen = NS.SendEngine.NewDialScreen(header, "")
+    NS.Preview.SetPreviewAs("arena")
+    local MW = NS.addon.Settings.ModalWindow
+    local popup = MW.Build({ name = "QuickCommsLayersPop", pageName = "QuickCommsLayersPopPage", title = "x",
+        width = 100, height = 100, strata = MW.STRATA, onClose = function() end })
+    local browser = MW.Build({ name = "QuickCommsLayersBrowser", pageName = "QuickCommsLayersBrowserPage", title = "y",
+        width = 100, height = 100, strata = MW.STRATA, level = MW.LEVEL_OVER, onClose = function() end })
+    local stack = { { inst.root, "a pad" }, { screen, "the dial's screen catcher" }, { header, "the dial" },
+        { header.qcPointer, "the hub front" }, { NS.PreviewWindow.__frame(), "the preview window" },
+        { popup.catcher, "the popup's catcher" }, { popup.chrome.close, "the popup's close X" },
+        { browser.catcher, "the browser's catcher" } }
+    for i = 2, #stack do
+        assertTrue(key(stack[i][1]) > key(stack[i - 1][1]), stack[i][2] .. " over " .. stack[i - 1][2])
+    end
+    -- under TOOLTIP, and under the tier the library's menus, the pull-outs and the confirms use
+    assertTrue(ORDER[S.POPUP] > ORDER[S.MODAL], "the confirms and pull-outs over every window by strata")
+    assertTrue(ORDER[S.POPUP] > ORDER[S.HUD_POPUP], "the confirms and pull-outs over the dial by strata")
 end)
 
 test("layers: [QUI-Z04] a wedge's ladder: icon border, its glow, then the overlay over both", function()
@@ -205,6 +261,7 @@ test("layers: [QUI-Z10] the preview window is the window tier, never toplevel, n
     assertTrue(L.clamped)
     assertFalse(L.toplevel, "the secure fixed point's exception: a raise would lift it over a modal")
     assertEqual(L.raised, 0)
+    assertEqual(lv(f), m.UIParent:GetFrameLevel() + NS.Constants.LAYERS.LEVEL.WINDOW, "its band")
     assertTrue(lv(f) < m.UIParent:GetFrameLevel() + NS.Constants.LAYERS.LEVEL.MODAL, "under a modal's catcher")
 end)
 

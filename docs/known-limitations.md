@@ -62,6 +62,10 @@ What the addon cannot do, or does only under a condition, and why. The hub,
   session.
 - While a dial is open from its key, its full-screen catcher takes every click outside it (it closes
   the dial and does nothing else), so a world click or an action-bar click needs a second press.
+- The pads sit in `DIALOG` high in its levels, and the dial in `FULLSCREEN` (issue #14), so they draw over
+  other addons' windows and over the settings window. A pad also draws over a Blizzard confirm or the
+  debug console where they overlap, until a click raises the toplevel one; move the pad if it is in the
+  way. The game's tooltip, menus, pull-outs and QuickComms' own confirms stay above both.
 - A dial whose groups are all inactive opens nothing when its key is pressed (there is no empty ring).
 - Open at the cursor relies on the restricted `SetPoint` accepting `$cursor` (DIAL-7 passed,
   2026-10-21); the fallback, if a patch breaks it, is opening at the dial's place.

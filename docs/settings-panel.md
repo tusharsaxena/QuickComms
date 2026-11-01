@@ -455,9 +455,11 @@ body     [Name          ] [Channel       ]   the callout.* member rows' labels a
   write under it), after which a late Save writes nothing. An icon browser opened from
   the popup closes with it, as Cancel.
 - **Fully modal:** a full-screen click-catcher in the `FULLSCREEN` strata covers the settings window, so
-  the page underneath cannot change while a draft is open. Only one popup exists. `FULLSCREEN` is one
-  strata over the Comms Dial's `DIALOG`, so an open preview dial's hub (its dot and pointer, raised
-  over the dial's header by level) draws under the popup, not over it (QC-06).
+  the page underneath cannot change while a draft is open. Only one popup exists. The Comms
+  Dial shares `FULLSCREEN` (#14), in a band of levels far under the popup's, so an open preview dial's
+  hub (its dot and pointer, raised over the dial's header by level) draws under the popup, not over it
+  (QC-06). The pads are `DIALOG`: they draw over the settings window where they overlap it, and under
+  the popup.
 - **The skin.** The window wears the skin this addon wears (General > Skin, `core/SkinSetup.lua`),
   EllesmereUI's look included when the skin source is EllesmereUI; Quick Comms's own EllesmereUI
   bridge is retired, and EllesmereUI is reached only through LibKa0s-Skin-1.0's `eui` source.

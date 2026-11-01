@@ -562,7 +562,7 @@ Total.
 ### test_icon_browser.lua (37)
 
 - icon browser: the window is the popup's chrome, stacked above the popup and its catcher
-- icon browser: the popup and the browser stack above the preview dial by strata (QC-06)
+- icon browser: the popup and the browser stack above the preview dial by band (QC-06, #14)
 - icon browser: tabs in order; the stored icon is preselected and its tab opened
 - icon browser: a click selects, a double-click chooses; Choose hands the opener the icon
 - icon browser: hovering an icon names it, or gives a game icon's texture id
@@ -1248,14 +1248,17 @@ Total.
 - shine: blooms only for fluid
 - shine: the button's own size when none is given
 
-### test_layers.lua (11)
+### test_layers.lua (14)
 
 - layers: NS.Constants.LAYERS names every strata and level once (frame-layering-§5)
+- layers: [#14] the bands of the shared FULLSCREEN strata, bottom to top, each clear of the last
 - layers: no strata string and no bare level at any call site (anti-pattern #99)
 - layers: a pad's root is the HUD tier; its header and buttons sit one over it
+- layers: [#14] a pad's root sits at the HUD band over UIParent, set before its children
 - layers: [QUI-Z11] the pad's drag strip ignores the pad's alpha
 - layers: [QUI-Z02/Z03] a pad button's ladder: edge, its glow, icon border, its glow, overlay
 - layers: the dial's header, front, catchers and screen catcher keep their tiers
+- layers: [#14] QuickComms stacks whole: pad < catcher < dial < preview < modals < browser < confirms
 - layers: [QUI-Z04] a wedge's ladder: icon border, its glow, then the overlay over both
 - layers: [QUI-Z10] the preview window is the window tier, never toplevel, never raised
 - layers: the modal bands sit over UIParent, each part at its named offset
@@ -1578,7 +1581,7 @@ Total.
 | test_icon_style.lua | 10 |
 | test_glow.lua | 11 |
 | test_shine.lua | 8 |
-| test_layers.lua | 11 |
+| test_layers.lua | 14 |
 | test_layout.lua | 27 |
 | test_skinsetup.lua | 24 |
 | test_skin_windows.lua | 20 |
@@ -1597,4 +1600,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1303** |
+| **Total** | **1306** |

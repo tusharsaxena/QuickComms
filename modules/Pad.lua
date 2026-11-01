@@ -281,6 +281,8 @@ local function build(id)
     root:SetClampedToScreen(true)
     root:SetMovable(true)
     root:SetFrameStrata(LAYERS.STRATA.HUD)
+    -- Before any child: high in its strata (#14), and they ride it.
+    root:SetFrameLevel(UIParent:GetFrameLevel() + LAYERS.LEVEL.HUD)
     root:EnableMouseWheel(true)
     root:SetScript("OnMouseWheel", function(_, delta) Pad.Wheel(id, delta) end)
     -- Core's edge from its own table: a pad has no title band, and the owner's Shell draws one.

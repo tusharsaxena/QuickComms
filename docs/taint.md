@@ -88,7 +88,7 @@ the only mouse target there and the hub starts and ends at its circle in every d
 still click the header by name (`SetBindingClick`, `CLICK QuickCommsDial<n>:Toggle`).
 
 Each header also has a hidden full-screen catcher (`SendEngine.NewDialScreen`, a child of the header
-set over `UIParent` in the `HIGH` strata, `AnyUp`): the header's show snippet shows it on a key open
+set over `UIParent` in the dial's strata, under the ring catchers by level, `AnyUp`): the header's show snippet shows it on a key open
 (never on an insecure open) and the close snippet hides it, so any click outside the dial runs
 `qc-close` and does nothing else. It is named in the hub's register row for frame-layering-§1/§4
 until the standard rules on catchers behind a secure HUD popup.
@@ -134,8 +134,9 @@ it picks is written in combat.
 
 The popup's window and the icon browser's are Blizzard's `SettingsFrameTemplate`
 (`settings/ModalWindow.lua`), an insecure template with no protected child, each built on its first
-Open. Both sit in the `FULLSCREEN` strata, one over the Comms Dial's `DIALOG`, so a preview dial's hub
-never draws over them (the dial's secure header keeps its strata; `69719ca`, `0901b8c`), and the
+Open. Both sit in the `FULLSCREEN` strata with the Comms Dial, in bands of levels far over the dial's
+(`LAYERS.LEVEL.MODAL`, issue #14), so a preview dial's hub never draws over them (the dial's secure
+header keeps its strata; `69719ca`, `0901b8c`), and the
 browser is above the popup by a band of levels of its own (`ModalWindow.LEVEL_OVER`); its swatch
 raises Blizzard's own `ColorPickerFrame` (AceGUI's ColorPicker widget) to `FULLSCREEN_DIALOG`, above
 it. Both windows are clamped to the screen and deliberately not toplevel: the client raises a
@@ -143,7 +144,7 @@ toplevel frame to the top of its strata on every mouse-down, so the click on the
 would lift the popup over the browser's band as the browser opens (`36e6cd3`; register row for
 frame-layering-§1/§4).
 
-The preview window is `FULLSCREEN` too, at a client level under a modal's catcher, and is never
+The preview window is `FULLSCREEN` too, in a band over the dial's and under a modal's catcher, and is never
 `Raise`d (the client's Raise would lift it over the modals in that strata). Quick Comms' confirms (the
 deletes, Reset all) are Blizzard StaticPopups, `DIALOG` by default: each lifts its dialog to
 `FULLSCREEN_DIALOG` while shown and hands the shared frame back in its own strata on hide
