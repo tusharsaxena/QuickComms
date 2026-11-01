@@ -497,6 +497,14 @@ local function edgeOf(look, tokens)
     return size, art
 end
 
+-- The inner line is the skin's win.inner, none where the skin has none or `none` says so (a lookSig
+-- carries the looks generation, so a skin switch repaints it).
+local function innerLine(none)
+    if none or type(NS.Skin.Token("win.inner")) ~= "table" then return NO_INNER end
+    local r, g, b, a = NS.Skin.Color("win.inner")
+    return { r, g, b, a or 1 }
+end
+
 --- The skin a pad wears, from its Main window tab: the Ka0s skin (NS.SKIN) with the border's art (a
 --- LibSharedMedia border by name, R.BorderKey; "None", or one this machine does not have, is the flat edge), its
 --- thickness (0 is no edge) and color, and the background color, each through its class-color
@@ -515,14 +523,7 @@ function R.SkinFor(look, plain, tokens)
     skin.edgeSize = size
     local inset = art and math.floor(size / 4 + 0.5) or size
     skin.insets = { left = inset, right = inset, top = inset, bottom = inset }
-    -- The inner line is the skin's win.inner, none where the skin has none (a lookSig carries the looks
-    -- generation, so a skin switch repaints it).
-    if plain or art or size ~= 1 or type(NS.Skin.Token("win.inner")) ~= "table" then
-        skin.innerBorder = NO_INNER
-    else
-        local r, g, b, a = NS.Skin.Color("win.inner")
-        skin.innerBorder = { r, g, b, a or 1 }
-    end
+    skin.innerBorder = innerLine(plain or art or size ~= 1)
     skin.border = { NS.SkinFollow(look, "borderColor", tokens.edge, look.useClassColorBorder) }
     skin.bg = { NS.SkinFollow(look, "background", tokens.bg, look.useClassColorBackground) }
     return skin
