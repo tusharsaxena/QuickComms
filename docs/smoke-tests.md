@@ -1197,7 +1197,7 @@ no edge. Font: untick Use the skin's font, another face, size 14, Outline, Font 
 titles keep the Section header tab's font); a bigger font grows the automatic height. Defaults → the owner's
 buttons again. In combat, `/qc set pad.button.width 150` → no error, "updates after combat", wider buttons at
 combat end. (Amended by QC-05, 2026-10-29: the skinning rollout's Use the skin's font and border,
-SKIN-6.) Result: not run (the defaults changed 2026-11-01).
+SKIN-6.) Result: Passed (owner, 2026-11-02).
 
 **BUTTON-2. The button glow (2026-10-20).** Buttons → Glow is off by default and Glow style is grayed out.
 Tick Glow → every button glows around its whole edge in Pixel border, gold; Glow style Auto cast
@@ -1355,7 +1355,7 @@ Result: 2026-10-25, pass (the owner's run; client build not recorded).
 meter, and a Ka0s window (for example another addon's settings), and drag a Comms Pad over them → the
 pad draws on top of all three and its buttons click. Open a Comms Dial by its key over the same windows
 → the dial draws on top; clicking a slice sends. Open the debug console (`/qc debug`) under the pad →
-say whether the pad over it reads as wrong. Result: not run.
+say whether the pad over it reads as wrong. Result: Passed (owner, 2026-11-02).
 
 **LAYER-7. QuickComms' own stack (#14).** Open the settings window with a pad over it → the pad draws
 over the settings. With Preview as… on and dial 1 open: the preview window sits over the preview dial,
@@ -1363,18 +1363,17 @@ hub included; Edit a callout → its popup and dim cover the pad, the dial and t
 icon… → the browser opens over the popup; its Wowhead link window opens over the browser; open the popup's
 dropdowns and the color picker → each opens over the popup and the browser; a delete confirm opened from
 the popup shows over everything and can be clicked. Hover a pad button and a slice → the tooltip is over
-both. No Lua error. Result: not run.
+both. No Lua error. Result: Passed (owner, 2026-11-02).
 
 **LAYER-8. A click outside a key-opened dial (#14).** Open a dial by its key with a pad on screen. Click
 the pad → the dial closes and the pad's button does not send; open the dial again with the settings
 window up and click the settings → the dial closes. In combat, open it and click the world → it closes.
-With a key-opened dial and Preview as… on, click the preview window → it takes the click. Result: not
-run.
+With a key-opened dial and Preview as… on, click the preview window → it takes the click. Result: Passed (owner, 2026-11-02).
 
 **LAYER-9. The skin picker over a pad (#14).** Drag a Comms Pad to the upper middle of the screen, then
 run `/qc skin` → the picker draws over the pad and its dropdown, buttons and close click. Close it, set
 `skin.pickerSeen` off (`/qc set skin.pickerSeen false`) and `/reload` → the first-run picker is over the
-pad too. Result: not run.
+pad too. Result: Passed (owner, 2026-11-02).
 
 ## Icons tab
 
@@ -1512,7 +1511,7 @@ strength (with Use the skin's shine unticked; ticked, its row is gray and the sk
 shine; 100 → the strongest. Shine tint yellow → the light turns yellow, the shade stays
 dark; Use class color → your class color. Fluid glass, then Gloss cap, then None → no bloom or shine is
 left behind. Layout → Button style Label only → the buttons keep their shine (it covers the plate, not
-the icon). Result: not run (Shine strength's expected result changed 2026-11-01).
+the icon). Result: Passed (owner, 2026-11-02).
 
 **SHINE-2. Each look on a dial (2026-10-21).** Open a dial. Dial → Slices → Shine look each of the seven
 in turn, at Wheel → wedges per ring 4, 8 and 12, Slice gap 0 and 8, and Ring radius 100 and 180 → every
@@ -1758,7 +1757,7 @@ again, *Font* grayed showing it. **Use the skin's border**: under a skin with no
 Window, and on the Dial's Labels tab both font blocks' boxes. Pad → Icons and Dial → Icons: with **Show border** off, *Use the skin's
 border* is grayed; with it on and the box ticked, *Border style* and *Border thickness* are grayed and
 the edge is the skin's icon border; untick → yours. Switch skins with a box unticked → that pick is
-kept. (Amended by FS-QC-GATE, 2026-11-01, a skin's None defers.) Result: owed (expected result changed).
+kept. (Amended by FS-QC-GATE, 2026-11-01, a skin's None defers.) Result: Passed (owner, 2026-11-02).
 
 **SKIN-7. The Preview as window (D8, D9).** Pick a situation in **Preview as…** under each skin →
 the window wears the skin: its fill, edge and top bar, the title and the close mark centered in the
@@ -1811,7 +1810,7 @@ fonts** is on, SKIN-12), a block with the box unticked keeps its own pick, and t
 settings pages' text takes it too; the debug
 console keeps its monospace face. Switch skin → the override stays. **Texture** → any status bar →
 a pad button whose *Use the skin's texture* is ticked takes it; the dial draws no bars. Set both back to *Skin's default* → the
-skin's again. Open **Font** and **Texture** → every row draws in its own face or beside its bar, *Skin's default (…)* first (LibKa0s v1.83.0, D-08). (Amended by QC-F01, 2026-10-31.) Result: owed (expected result changed).
+skin's again. Open **Font** and **Texture** → every row draws in its own face or beside its bar, *Skin's default (…)* first (LibKa0s v1.83.0, D-08). (Amended by QC-F01, 2026-10-31.) Result: Passed (owner, 2026-11-02).
 
 **SKIN-12. Ignore fonts (rewritten by QC-02, 2026-10-30).** On a non-default skin with **Ignore
 settings panel** off, a pad on screen (`/qc test`) and a dial open, give a pad's Buttons tab a face of
@@ -1823,7 +1822,7 @@ colors, size, flags and shadow unchanged, and the box stays ticked; the Font pic
 grayed, previews that stored face. A Font override (SKIN-11) does not reach the HUD while Ignore fonts
 is on. Untick → the skin's face returns on the windows, the pages and every following HUD label,
 live. In combat the pads and dials redraw at combat end. Fail: a following HUD label left on the
-skin's face while Ignore fonts is on, or a box that unticked itself. Result: owed (expected result changed).
+skin's face while Ignore fonts is on, or a box that unticked itself. Result: Passed (owner, 2026-11-02).
 
 **SKIN-13. EllesmereUI on.** With EllesmereUI and EllesmereUI Blizzard Skin loaded, its third-party
 skinning on and Quick Comms on in its Third-Party Addons list → Skin → **Skin source** offers
@@ -1832,7 +1831,7 @@ shell, border and close X as the settings window behind them does (what EDIT-13 
 rollout, through Quick Comms' own bridge, now retired: D1), and the Preview as window, the console and
 the perf panel wear it too; the pads' and dials' faces and border styles come from EllesmereUI's look
 while their boxes are ticked, and each color with its own box ticked follows it too. `/qc diagnostics` → the integrations line reads
-`skin: source=eui skin=… ellesmereui: ok=true painted=true refused=nil failing=none`. Result: owed (expected result changed).
+`skin: source=eui skin=… ellesmereui: ok=true painted=true refused=nil failing=none`. Result: Passed (owner, 2026-11-02).
 
 **SKIN-14. EllesmereUI off.** Turn Quick Comms off in EllesmereUI's Third-Party Addons list (or disable
 EllesmereUI) and `/reload` → on the Skin tab the EllesmereUI choice is disabled, the failing condition
@@ -1963,42 +1962,42 @@ The issue is #13; the rulings are in `docs/superpowers/specs/2026-11-01-open-clo
 
 **ANIM-1. The defaults on an existing profile.** Update with your own profile and open a dial by its key,
 then close it → it turns and grows into place over 0.2 s, and turns and shrinks away over 0.2 s, about the
-dial's center, not the cursor. Result: not run.
+dial's center, not the cursor. Result: Passed (owner, 2026-11-02).
 
 **ANIM-2. The handoff.** With a Shine look on the Slices tab and a glow on the Icons tab, open and close a
 dial slowly at 0.3 s, on the default skin and on one other → the copy matches the real dial, with no
-visible pop as it lands, no missing slice edges and no double image. Result: not run.
+visible pop as it lands, no missing slice edges and no double image. Result: Passed (owner, 2026-11-02).
 
 **ANIM-3. The first styles, and the list.** On the Dial page's Animation tab try Fade, Scale and fade, Fan
 and None, open and close, at 0.5 s and at 2 s. The Open and the Close dropdowns each offer the same 18
-entries, and Scale and fade is not one of them. While a style is None its Duration is hidden. The Pad page has no Animation tab. Result: not run.
+entries, and Scale and fade is not one of them. While a style is None its Duration is hidden. The Pad page has no Animation tab. Result: Passed (owner, 2026-11-02).
 
 **ANIM-4. The two switches.** Set a dial's Close to None: it leaves at once and still opens animated. Do
-the same for its Open → each changes that one thing on that one dial. Result: not run.
+the same for its Open → each changes that one thing on that one dial. Result: Passed (owner, 2026-11-02).
 
 **ANIM-5. A quick send, in combat.** In combat, tap the dial's key and click a slice within 0.1 s → the
 line goes out at once; the chosen slice stays bright and pulses while the rest collapse. Press Escape on
-the next open → a plain collapse with no emphasis. Result: not run.
+the next open → a plain collapse with no emphasis. Result: Passed (owner, 2026-11-02).
 
 **ANIM-6. Rapid toggling.** Spam the dial's key, in and out of combat → it reverses from where it stands
-with no jump, and ends fully opaque or fully gone. Result: not run.
+with no jump, and ends fully opaque or fully gone. Result: Passed (owner, 2026-11-02).
 
 **ANIM-7. Taint.** With `/console taintLog 2`, run ANIM-5 and ANIM-6 and read `Logs\taint.log` → no
-QuickComms entry and no "blocked" popup. Result: not run.
+QuickComms entry and no "blocked" popup. Result: Passed (owner, 2026-11-02).
 
 **ANIM-8. The stand-down.** Open a dial and run `/qc disable` during the animation, or start a perf capture
-→ nothing stays on screen; `/qc enable` brings the surfaces back whole. Result: not run.
+→ nothing stays on screen; `/qc enable` brings the surfaces back whole. Result: Passed (owner, 2026-11-02).
 
 **ANIM-9. The preview.** Turn on Preview as…: the preview dial plays its open. Edit a setting: it rebuilds
-without flickering. Result: not run.
+without flickering. Result: Passed (owner, 2026-11-02).
 
 **ANIM-10. Alt-Z.** With a dial open (Preview as… keeps one open), press Alt-Z twice, and watch a short
 cinematic → nothing plays on the way out or on the way back; it comes back whole, at its rest alpha. The
-next real close and open play. Result: not run.
+next real close and open play. Result: Passed (owner, 2026-11-02).
 
 **ANIM-11. A pad does not animate.** Toggle a pad with `/qc toggle`, in and out of combat, with Fade on
 Mouseover → it shows and hides at once, its hover and fade answer at once, and no copy is drawn. On a
-profile that ran this branch's first step 12, `/dump` a pad's `anim` → nil. Result: not run.
+profile that ran this branch's first step 12, `/dump` a pad's `anim` → nil. Result: Passed (owner, 2026-11-02).
 
 **ANIM-12. Text neither shimmers nor truncates.** On the Dial page's Animation tab set Scale and fade at
 0.5 s, then at 2 s, and open and close a dial with a long title ("Quick Comms: World") → the title and
@@ -2006,7 +2005,7 @@ every label scale smoothly with the art, about the dial's center, with no shimme
 letters, no text cut short and no ellipsis at any moment; each string stays on its slice; none jumps at
 the landing. Reverse one mid-animation → the text turns with the art. Send on a slice at 2 s → that
 slice's label pulses with it. A little softness at the small end is Vertex mode on a font that is not a
-slug font; note it if it looks wrong. Result: not run.
+slug font; note it if it looks wrong. Result: Passed (owner, 2026-11-02).
 
 For each family below, set the same style on Open and Close and play it at 0.5 s and again at 2 s. Each
 ends with the real dial whole and fully opaque, or fully gone, with no pop at the landing. The first
@@ -2014,49 +2013,49 @@ in-game trials are marked: nothing but the client can show whether they draw at 
 
 **ANIM-13. The scales.** Scale and Scale and fade → on open each grows from small about the dial's
 center, on close each shrinks into it. Scale and fade fades the whole way; Scale reaches full alpha early.
-There is no start-large style. Text stays sharp and whole, as ANIM-12. Result: not run. (SF-QC-1 changed
+There is no start-large style. Text stays sharp and whole, as ANIM-12. Result: Passed (owner, 2026-11-02). (SF-QC-1 changed
 the expected result: any earlier pass no longer stands.)
 
 **ANIM-14. The slices moving apart.** Inward spiral, Outward spiral, Orbit and Shatter → each slice's fill,
 shine and edge turn as one with no gap opening inside a slice, its icon and label ride with it and stay
 upright, and the hub and title only fade. Orbit's slices start together at the top. Try a ring of 4 and
-of 8. Result: not run.
+of 8. Result: Passed (owner, 2026-11-02).
 
 **ANIM-15. The overshoots.** Burst, Stagger pop and Pop → the small overshoot is visible at 2 s and lands
-with no snap. On Pop and Stagger pop the text overshoots with the art, not behind it. Result: not run.
+with no snap. On Pop and Stagger pop the text overshoots with the art, not behind it. Result: Passed (owner, 2026-11-02).
 
 **ANIM-16. The moves.** Drop bounces to rest. Slide with Direction Up, Down, Left and Right, on Open and on
 Close separately → Up rises into place and leaves upward; the row shows only on Slide; text moves with
-the art. A send during a close leaves the sent slice where it rests. Result: not run.
+the art. A send during a close leaves the sent slice where it rests. Result: Passed (owner, 2026-11-02).
 
 **ANIM-17. Rotate and scale. First in-game trial.** The ring swings about 120° as it grows and winds back
 as it shrinks → every fill, shine layer and mask turns cleanly about the dial's center, with no slice
 showing its mask's edge; icons and text stay upright; the hub stays level. Note any rotated art that
-reads wrong. Result: not run.
+reads wrong. Result: Passed (owner, 2026-11-02).
 
 **ANIM-18. Squash and Flip. First in-game trial.** Squash opens from a thin line, one axis then the
 other, and collapses the same way. Flip narrows like a card seen edge-on → the art really stretches on
 one axis, masks and slices included, no frame snaps back to full size at a leg's end or at the landing,
 and the text stretches with it. A Scale animation on a 1×1 frame carrying regions anchored outside it is
-what this tries. If the dial only shrinks evenly, the client took the substitute: note it. Result: not run.
+what this tries. If the dial only shrinks evenly, the client took the substitute: note it. Result: Passed (owner, 2026-11-02).
 
 **ANIM-19. Flash.** Flash → a soft bloom through the ring that peaks mid-way and is gone at the landing,
-with no square edge to the glow. Result: not run.
+with no square edge to the glow. Result: Passed (owner, 2026-11-02).
 
 **ANIM-20. The old defaults moved.** On a profile that ran this branch before these rulings, with one dial
 still on Inward spiral at 0.5 s and Outward spiral at 0.3 s, one on Scale and fade at 0.7 s, and one with
 other picks → after the update the first shows Rotate and scale at 0.2 s for its open and its close, the
-second Scale and fade at 0.7 s, and the third keeps its picks. Result: not run.
+second Scale and fade at 0.7 s, and the third keeps its picks. Result: Passed (owner, 2026-11-02).
 
 **ANIM-21. The merged scales and the swapped labels (SF-QC-1, SF-QC-2).** On a profile that stored Scale
 in, Scale out, Scale in and fade or Scale out and fade on a dial → after the update they read Scale or
 Scale and fade with their durations kept. On Open, Inward spiral spirals the slices inward to the center
 and Outward spiral spirals them outward from it, each as its label says. Rotate and scale is still the
-default. Result: not run.
+default. Result: Passed (owner, 2026-11-02).
 
 **ANIM-22. WoW Default's window border (SF-QC-3).** Wear WoW Default → the pad's window is framed in the
 dialog-box border art the Skin Tester's window wears, not a thin gray line; the header, section bands and
-buttons keep their hairlines. Any other skin → the pad's window is as before. Result: not run.
+buttons keep their hairlines. Any other skin → the pad's window is as before. Result: Passed (owner, 2026-11-02).
 
 ## The pad's look per skin
 
@@ -2065,37 +2064,37 @@ at its default. Compare a hairline with that skin's window edge on the settings 
 
 **PLOOK-1. Ka0s Default.** The buttons have a dark body with a soft top-to-bottom gradient and a gentle
 gloss, a thin gray edge, the same icons and colors; restrained next to Obsidian's. The header and titles
-draw no band. Fail: the old flat wash, or a gloss brighter than Obsidian's. Result: not run.
+draw no band. Fail: the old flat wash, or a gloss brighter than Obsidian's. Result: Passed (owner, 2026-11-02).
 
 **PLOOK-2. Obsidian.** As before but the gloss is about a third lighter; bands and buttons have hairline
-edges. Result: not run.
+edges. Result: Passed (owner, 2026-11-02).
 
-**PLOOK-3. Azeroth.** Leather buttons with a lighter gloss, hairline gold-brown band edges. Result: not run.
+**PLOOK-3. Azeroth.** Leather buttons with a lighter gloss, hairline gold-brown band edges. Result: Passed (owner, 2026-11-02).
 
 **PLOOK-4. Glass.** Gloss cap a third lighter; the header and section bands' edges are a thin frosted
-line, not the thick pale frame of 2026-11-01. Result: not run.
+line, not the thick pale frame of 2026-11-01. Result: Passed (owner, 2026-11-02).
 
 **PLOOK-5. High Contrast.** White hairlines on the bands and buttons, no shine. Fail: a band edge visibly
-heavier than a button's. Result: not run.
+heavier than a button's. Result: Passed (owner, 2026-11-02).
 
-**PLOOK-6. Ember.** Ember buttons with a lighter gloss, hairline band edges. Result: not run.
+**PLOOK-6. Ember.** Ember buttons with a lighter gloss, hairline band edges. Result: Passed (owner, 2026-11-02).
 
 **PLOOK-7. WoW Default.** A Blizzard-style pad: dark window with a gray edge, gray header and section
 bands with a thin gray line and gold text, clear red buttons with a soft sheen. Fail: any white band or
-white edge, or buttons dark maroon. Result: not run.
+white edge, or buttons dark maroon. Result: Passed (owner, 2026-11-02).
 
 **PLOOK-8. WoW Midnight.** Night-violet buttons, gold hairlines on bands and buttons, a lighter gloss.
-Result: not run.
+Result: Passed (owner, 2026-11-02).
 
-**PLOOK-9. WoW Forever.** Charcoal buttons with a lighter gloss, hairline band edges. Result: not run.
+**PLOOK-9. WoW Forever.** Charcoal buttons with a lighter gloss, hairline band edges. Result: Passed (owner, 2026-11-02).
 
 **PLOOK-10. Strength and the box.** Pad → Buttons and Dial → Slices: with *Use the skin's shine* ticked
 Shine strength is gray; a dial sharing the skin's look reads as light as the pad. Untick it → the row
-wakes, your stored value draws under every skin. Result: not run.
+wakes, your stored value draws under every skin. Result: Passed (owner, 2026-11-02).
 
 **PLOOK-11. The texture override.** Skin → WoW Default, then pick a Texture on the Skin tab's Font and
 texture section → the buttons take it; back to the skin's own → flat red. A page dot's edge under WoW
-Default is dark, not white. Result: not run.
+Default is dark, not white. Result: Passed (owner, 2026-11-02).
 
 ## The full skin
 
@@ -2109,44 +2108,44 @@ are added in this build: a full client restart comes first.
 slices, the gray hub with its gold rim and circle, the page dots and the Gloss fade and Glass orb
 shines look as they did before this build, text shadows included, but for the pad buttons and the
 shine's strength (PLOOK-1). Fail: any other pixel moved but the checks' named ones (a tooltip title,
-FSKIN-9). Result: owed.
+FSKIN-9). Result: Passed (owner, 2026-11-02).
 
 **FSKIN-2. Every pad color follows a skin, live.** Skin → **Obsidian**, then **Azeroth**, a pad on
 screen → with no reload the window fill and edge, the header's and the titles' text, a faint band
 behind each in the skin's title color with a hairline edge, the buttons' body, edge and
 label all change. A thickness of your own on a band draws instead under a skin with no border of its own
-(FSKIN-12). Fail: any of them keeping the last skin. Result: owed.
+(FSKIN-12). Fail: any of them keeping the last skin. Result: Passed (owner, 2026-11-02).
 
 **FSKIN-3. Every dial color follows a skin, live.** Same, a dial open and paged → the slices, a hovered
 slice, the hub's disc, rim and circle, the pointer, the page arrows and plates, the pill and dots, the
-slice labels and the group label all change. In combat they change when combat ends. Result: owed.
+slice labels and the group label all change. In combat they change when combat ends. Result: Passed (owner, 2026-11-02).
 
 **FSKIN-4. Text shadows.** Under **High Contrast** the HUD text's shadow sits 2 pixels off; under
 **Obsidian** 1; under **Ka0s Default** the black 1, -1 they always had. Tick **Ignore fonts** → each
 block's stored shadow. Pad → Buttons → untick *Use the skin's shadow* → its Font shadow box decides
-under every skin. Result: owed.
+under every skin. Result: Passed (owner, 2026-11-02).
 
 **FSKIN-5. The button texture and the shine.** **Azeroth** → the buttons' bodies take its parchment bar
 texture in the skin's button color; untick *Use the skin's texture* → flat. **Glass** → the pad's shine
 is Gloss cap, the dial's Frosted glass; **High Contrast** → no shine; every other skin keeps the Ka0s
 Default look in its own tint. Untick *Use the skin's shine* → your Shine look, tint and Strength under
-every skin. Result: owed.
+every skin. Result: Passed (owner, 2026-11-02).
 
 **FSKIN-6. A box unticked keeps your color.** On a pad, untick *Use the skin's color* beside Background
 color and pick red, then switch skins → the red stays; tick the box → the skin's, and your red comes
 back when it is unticked. No swatch grays out. Same on the Hub's Hub border, where the box also gives
 the thickness to a skin with a border of its own: under **High Contrast** Hub border size grays while
-it is on; under Obsidian it stays live and your size draws. Result: owed.
+it is on; under Obsidian it stays live and your size draws. Result: Passed (owner, 2026-11-02).
 
 **FSKIN-7. An existing profile moves once.** Log in on a profile from before this build with colors of
 your own → every pad and dial follows the skin, the stored colors kept behind the unticked swatches'
 boxes; `/reload` and untick a box → it stays unticked through a reload, General's Defaults and a profile
-switch and back. Reset this profile → the shipped look. Result: owed.
+switch and back. Reset this profile → the shipped look. Result: Passed (owner, 2026-11-02).
 
 **FSKIN-8. Meaning stays.** On any non-default skin: a button with **Use class color** on its font or
 background keeps the class color with the skin's box ticked; a callout's colored glyph keeps its color,
 a game icon its art, and only a plain white glyph takes the skin's tint. The send flashes keep their
-meaning colors. Under the default Scope the settings panel stays stock. Result: owed.
+meaning colors. Under the default Scope the settings panel stays stock. Result: Passed (owner, 2026-11-02).
 
 **FSKIN-9. The tool marks and tooltips, Scope cleared.** Skin → untick **Ignore settings panel** on
 Azeroth → the Groups, Pads and Dials lists' active marker is a green-toned Ka0s tick, not the client's
@@ -2154,14 +2153,14 @@ dot; the editors' remove, clear, edit and Tokens glyphs are Ka0s marks in the sk
 browser's cell hover takes the skin's. Tick it back → all stock, with no reload. On any skin, every
 tooltip title on a button, a wedge, the hub, the Preview as window and an icon cell is in the tooltip
 title color. The hub's stale, lockdown and test labels and End preview are in the skin's face.
-Result: owed.
+Result: Passed (owner, 2026-11-02).
 
 **FSKIN-10. The animation copy wears the skin.** **Azeroth**, a dial → open and close it, and its Fan →
 through the animation the copy shows the skin's fills, edges and text with its shadow: no flash of Ka0s
-Default, no text losing its shadow. Result: owed.
+Default, no text losing its shadow. Result: Passed (owner, 2026-11-02).
 
 **FSKIN-11. The picker's preview.** The first-run picker's eye over a pad → each pick repaints the pad
-and dial in that skin, closing it puts them back. Result: owed.
+and dial in that skin, closing it puts them back. Result: Passed (owner, 2026-11-02).
 
 **FSKIN-12. A skin's own wash and border.** On a pad's Main window, tick *Use the skin's border*, pick a
 border style of your own and thickness 4. **Obsidian** → your border draws, since this skin has none of
@@ -2170,7 +2169,7 @@ own thickness, on the window, the header and titles' bands and the buttons. Unti
 every skin. Ka0s Default with no pick of yours → no band edge and the shipped look. A refused and a
 cooling button → the two veils take each skin's dim color and still read apart, the refused one darker.
 Icon borders and glows differ between skins with the boxes ticked. A send flash keeps its meaning color.
-Result: owed.
+Result: Passed (owner, 2026-11-02).
 
 **FSKIN-13. A stored pick of the deleted Friz lands on Ka0s Ubuntu (R3-FRIZ, step 18).** Before updating,
 untick a pad's Header *Use the skin's font* and set *Font* (or the Skin tab's Font) to *Ka0s Friz Quadrata
@@ -2239,3 +2238,5 @@ expected result changed, so each lost its pass mark). The re-cut LibKa0s v1.85.0
 style of their own, and PLOOK-3, 5, 7 and 8 are written for it.
 
 Owed from the owner's third smoke round (R3-FRIZ, 2026-11-02): FSKIN-13 (new); SKIN-5 names Ka0s Ubuntu for WoW Default and stays owed.
+
+On 2026-11-02 the owner reported that every check on the smoke lists of the full skinning run and its smoke feedback batch (Ka0sAddonsCommonTasks `docs/2026-11-01-FULL_SKINNING/` and `docs/2026-11-01-SMOKE_FEEDBACK/`) passed, apart from DpsRace's clock font, the skinned look of the AceGUI Dropdown and the Ka0sMedia_Font and Ka0sMedia_Statusbar pickers, FadeNineSlice and IconBorder (`docs/2026-11-02-SMOKE_ROUND3/`, R3-SMOKE). Passed, recorded on each `Result:` line as `Passed (owner, 2026-11-02)`: ANIM-1, ANIM-2, ANIM-3, ANIM-4, ANIM-5, ANIM-6, ANIM-7, ANIM-8, ANIM-9, ANIM-10, ANIM-11, ANIM-12, ANIM-13, ANIM-14, ANIM-15, ANIM-16, ANIM-17, ANIM-18, ANIM-19, ANIM-20, ANIM-21, ANIM-22, BUTTON-1, FSKIN-1, FSKIN-2, FSKIN-3, FSKIN-4, FSKIN-5, FSKIN-6, FSKIN-7, FSKIN-8, FSKIN-9, FSKIN-10, FSKIN-11, FSKIN-12, LAYER-6, LAYER-7, LAYER-8, LAYER-9, PLOOK-1, PLOOK-2, PLOOK-3, PLOOK-4, PLOOK-5, PLOOK-6, PLOOK-7, PLOOK-8, PLOOK-9, PLOOK-10, PLOOK-11, SHINE-1, SKIN-6, SKIN-11, SKIN-12 and SKIN-13. Still owed: SKIN-5, whose expected result the third smoke round itself changed after the owner's run.
