@@ -857,6 +857,8 @@ local function build()
         function f:SetFont(path, size, flags) self.__font, self.fonts = { path, size, flags }, self.fonts + 1 return true end
         function f:SetShadowOffset(x, y) self.__shadow = { x, y } end
         function f:SetShadowColor(r, g, b, a) self.__shadowColor = { r, g, b, a } end
+        -- A real font object answers its face (LibKa0s R3-DR-1L reads it back to hold the face).
+        function f:GetFont() local t = self.__font or {} return t[1], t[2], t[3] end
         return f
     end
     M.CreateFrame = function(frameType, name, parent, template)
