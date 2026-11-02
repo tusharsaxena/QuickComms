@@ -112,6 +112,7 @@ if not lib then
     -- without the library there is no picker, so it answers nil, "absent" and core/SkinSetup.lua's
     -- NS.RunSkinVerb prints the library-absent line.
     H.SkinVerb             = function() return nil, "absent" end
+    H.SkinNotice = function() return nil, "unavailable" end
     H.CreateOptionsPanel   = function() sayAtLoad() end
     H.OpenOptionsPanel     = function() sayOnConfig() end
     return
