@@ -334,8 +334,8 @@ test("anim style: the runner moves every stored profile once, and the stamp hold
     db.sv.profiles.other = { dials = { x = { anim = { openStyle = "scaleFade", openDuration = 0.15, closeStyle = "fan" } } } }
     db.global.schemaVersion = 14
     NS.addon:RunMigrations()
-    assertEqual(db.global.schemaVersion, 17)
-    assertEqual(NS.SCHEMA_VERSION, 17)
+    assertEqual(db.global.schemaVersion, 18)
+    assertEqual(NS.SCHEMA_VERSION, 18)
     assertEqual(a.openStyle, "rotateScale")
     assertEqual(a.closeDuration, 0.2)
     assertEqual(db.sv.profiles.other.dials.x.anim.openStyle, "rotateScale", "not only the active profile")

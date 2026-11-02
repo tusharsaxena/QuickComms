@@ -12,6 +12,22 @@ local _, NS = ...
 -- (`db.sv.profiles`, the raw SavedVariables table), not only the active one. Each step is idempotent
 -- against a fresh default profile.
 
+-- The shipped faces LibKa0s retired, each to its successor (R3-FRIZ; LibKa0s R3-L7).
+local RETIRED_FONTS = { ["Ka0s Friz Quadrata TT"] = "Ka0s Ubuntu" }
+
+--- Moves every string naming a retired face, at any depth of `t`, to its successor. Answers how many moved.
+function NS.RetireFonts(t)
+    local n = 0
+    for k, v in pairs(t) do
+        if type(v) == "table" then
+            n = n + NS.RetireFonts(v)
+        elseif RETIRED_FONTS[v] then
+            t[k], n = RETIRED_FONTS[v], n + 1
+        end
+    end
+    return n
+end
+
 -- The steps, in order. `run(sv)` for a global step, `run(sv, profile)` for a `perProfile` one.
 NS.MIGRATIONS = {
     { to = 1, run = function() end },   -- 0 -> 1: the stamp itself
@@ -57,6 +73,10 @@ NS.MIGRATIONS = {
     { to = 16, perProfile = true, run = function(_, profile) NS.Library.MigrateRotateDefaults(profile) end },
     -- 16 -> 17 (SF-QC-1): Scale in and out merge into Scale, their fading versions into Scale and fade.
     { to = 17, perProfile = true, run = function(_, profile) NS.Library.MigrateMergeScales(profile) end },
+    -- 17 -> 18 (R3-FRIZ): LibKa0s v1.85.0 deleted Ka0s Friz Quadrata TT (R3-L7) and WoW Default draws
+    -- Ka0s Ubuntu (R3-L6). A stored pick of the deleted face, a pad's or dial's font or the skin's Font
+    -- override, moves to Ka0s Ubuntu; Blizzard's own "Friz Quadrata TT" stays.
+    { to = 18, perProfile = true, run = function(_, profile) NS.RetireFonts(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.

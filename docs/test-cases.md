@@ -131,7 +131,7 @@ Total.
 - database: [polish] migrate: step 9 drops the retired slice border
 - database: [bg subgroups] a fresh profile seeds every objective node once, and step 7 leaves it as it is
 
-### test_profile.lua (9)
+### test_profile.lua (10)
 
 - profile: behavior defaults match spec §5.1
 - profile: collections exist; default nextId is 1, past every seeded id after boot
@@ -142,6 +142,7 @@ Total.
 - prepare: a split copy of a seeded callout keeps no origin
 - prepare: a callout held by no group is dropped
 - prepare: is idempotent after a split
+- profile: step 18 moves a stored Ka0s Friz Quadrata TT to Ka0s Ubuntu in every profile, Blizzard's Friz kept
 
 ### test_schema.lua (20)
 
@@ -1064,10 +1065,11 @@ Total.
 - pad render: [shine] the pad's look leaves the dial alone
 - render: [QF-04] a General slot's tooltip names General in channel 1's color
 
-### test_pad_looks.lua (20)
+### test_pad_looks.lua (21)
 
 - pad looks: WoW Default's bands and window edge are no client art's white tint
 - pad looks: WoW Default's bands keep a hairline, not the dialog art's size
+- pad looks: WoW Default's window wears the dialog border art the Skin Tester shows, no other skin does (SF-QC-3)
 - pad looks: WoW Default's buttons are the skin's red, no bar texture dimming it
 - pad looks: a dial's page dots take no white ring under WoW Default
 - pad looks: the Skin tab's texture override still reaches a button under WoW Default
@@ -1262,14 +1264,14 @@ Total.
 - anim pose: a reversal is one plain leg, whatever the knots
 - anim pose: Rotate and scale is offered for both phases, knobs included
 
-### test_anim_styles.lua (153)
+### test_anim_styles.lua (140)
 
 - anim style: the dropdown offers None and every style, the same list for the open and the close
 - anim style: the labels are the owner's
 - anim style: every moving style's Duration shows, on both phases, and None hides it
 - anim style: the defaults are the owner's, on a slider still 0.1 to 2 in 0.1 steps
 - anim style: every value of the mockup's motion, up to the extras
-- anim style: Scale in and fade and Scale out and fade are the same scale with a full-length fade
+- anim style: Scale and fade is the Scale pose with a full-length fade
 - anim style: Shatter wraps its seeds on a ring wider than the mockup's eight
 - anim style: an overshoot's text overshoots: Pop and Stagger pop declare their knots
 - anim style: Slide's Direction reads as motion: Up rises into place and leaves upward
@@ -1295,34 +1297,20 @@ Total.
 - anim style fan: combat is the same, with nothing refused, and a stand-down lands it
 - anim style fan: leaves nothing on the ghost for the next style, and never touches it
 - anim style fan: text keeps the Vertex route, with no width
-- anim style scaleIn: rests whole at 1 and shows nothing at 0
-- anim style scaleIn: an open and a close each land with nothing stuck
-- anim style scaleIn: a reversal starts from the pose, both ways, and lands
-- anim style scaleIn: a send fires at once and its slice stays bright where it rests
-- anim style scaleIn: combat is the same, with nothing refused, and a stand-down lands it
-- anim style scaleIn: leaves nothing on the ghost for the next style, and never touches it
-- anim style scaleIn: text keeps the Vertex route, with no width
-- anim style scaleInFade: rests whole at 1 and shows nothing at 0
-- anim style scaleInFade: an open and a close each land with nothing stuck
-- anim style scaleInFade: a reversal starts from the pose, both ways, and lands
-- anim style scaleInFade: a send fires at once and its slice stays bright where it rests
-- anim style scaleInFade: combat is the same, with nothing refused, and a stand-down lands it
-- anim style scaleInFade: leaves nothing on the ghost for the next style, and never touches it
-- anim style scaleInFade: text keeps the Vertex route, with no width
-- anim style scaleOut: rests whole at 1 and shows nothing at 0
-- anim style scaleOut: an open and a close each land with nothing stuck
-- anim style scaleOut: a reversal starts from the pose, both ways, and lands
-- anim style scaleOut: a send fires at once and its slice stays bright where it rests
-- anim style scaleOut: combat is the same, with nothing refused, and a stand-down lands it
-- anim style scaleOut: leaves nothing on the ghost for the next style, and never touches it
-- anim style scaleOut: text keeps the Vertex route, with no width
-- anim style scaleOutFade: rests whole at 1 and shows nothing at 0
-- anim style scaleOutFade: an open and a close each land with nothing stuck
-- anim style scaleOutFade: a reversal starts from the pose, both ways, and lands
-- anim style scaleOutFade: a send fires at once and its slice stays bright where it rests
-- anim style scaleOutFade: combat is the same, with nothing refused, and a stand-down lands it
-- anim style scaleOutFade: leaves nothing on the ghost for the next style, and never touches it
-- anim style scaleOutFade: text keeps the Vertex route, with no width
+- anim style scale: rests whole at 1 and shows nothing at 0
+- anim style scale: an open and a close each land with nothing stuck
+- anim style scale: a reversal starts from the pose, both ways, and lands
+- anim style scale: a send fires at once and its slice stays bright where it rests
+- anim style scale: combat is the same, with nothing refused, and a stand-down lands it
+- anim style scale: leaves nothing on the ghost for the next style, and never touches it
+- anim style scale: text keeps the Vertex route, with no width
+- anim style scaleAndFade: rests whole at 1 and shows nothing at 0
+- anim style scaleAndFade: an open and a close each land with nothing stuck
+- anim style scaleAndFade: a reversal starts from the pose, both ways, and lands
+- anim style scaleAndFade: a send fires at once and its slice stays bright where it rests
+- anim style scaleAndFade: combat is the same, with nothing refused, and a stand-down lands it
+- anim style scaleAndFade: leaves nothing on the ghost for the next style, and never touches it
+- anim style scaleAndFade: text keeps the Vertex route, with no width
 - anim style rotateScale: rests whole at 1 and shows nothing at 0
 - anim style rotateScale: an open and a close each land with nothing stuck
 - anim style rotateScale: a reversal starts from the pose, both ways, and lands
@@ -1417,6 +1405,7 @@ Total.
 - anim style: Flash blooms through the ring and goes out with the landing
 - anim style: the shipped defaults open and close by Rotate and scale, on the dial
 - anim style: a Slide's direction reaches the real track, phase by phase
+- anim style: step 17 merges the scales, keeps durations and everything else, and is idempotent
 
 ### test_anim_surfaces.lua (42)
 
@@ -1646,6 +1635,10 @@ Total.
 - skin seam: the diagnostics report names the skin and the EllesmereUI gate
 - skin seam: the degraded facade answers every name the live facade carries
 - skin seam: each host-copy skin token is the live library's Ka0s Default value
+
+### test_launcher_skin_entry.lua (1)
+
+- launcher descriptor passes openSkinPicker, which runs the skin verb
 
 ### test_skin_windows.lua (20)
 
@@ -1963,7 +1956,7 @@ Total.
 | test_surface_parity.lua | 18 |
 | test_setup.lua | 26 |
 | test_database.lua | 20 |
-| test_profile.lua | 9 |
+| test_profile.lua | 10 |
 | test_schema.lua | 20 |
 | test_slash.lua | 22 |
 | test_disabled.lua | 26 |
@@ -2000,13 +1993,13 @@ Total.
 | test_dial_layout.lua | 31 |
 | test_surfaces.lua | 30 |
 | test_pad_render.lua | 25 |
-| test_pad_looks.lua | 20 |
+| test_pad_looks.lua | 21 |
 | test_pad.lua | 47 |
 | test_dial.lua | 38 |
 | test_dial_catcher.lua | 13 |
 | test_dial_look.lua | 16 |
 | test_anim.lua | 46 |
-| test_anim_styles.lua | 153 |
+| test_anim_styles.lua | 140 |
 | test_anim_surfaces.lua | 42 |
 | test_anim_ghost.lua | 48 |
 | test_keybinds.lua | 6 |
@@ -2017,6 +2010,7 @@ Total.
 | test_layers.lua | 14 |
 | test_layout.lua | 28 |
 | test_skinsetup.lua | 24 |
+| test_launcher_skin_entry.lua | 1 |
 | test_skin_windows.lua | 20 |
 | test_skin_hud.lua | 20 |
 | test_skin_flip.lua | 61 |
@@ -2036,4 +2030,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 26 |
 | Skipped | 1 |
-| **Total** | **1710** |
+| **Total** | **1700** |

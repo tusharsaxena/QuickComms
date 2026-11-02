@@ -284,6 +284,11 @@ into Scale, and their fading versions into Scale and fade. A stored `scaleIn` or
 kept. Idempotent. The style ids `spiralOut` and `spiralIn` are unchanged: only their labels swapped
 (SF-QC-2), so the motion each row names matches on Open.
 
+Step 18 (R3-FRIZ, `perProfile`, `NS.RetireFonts`): LibKa0s v1.85.0 deleted `Ka0s Friz Quadrata TT`
+(R3-L7) and WoW Default draws `Ka0s Ubuntu` in its place (R3-L6). Every stored string naming the deleted
+face, at any depth (a pad's or dial's font, the skin's Font override), becomes `Ka0s Ubuntu`. Blizzard's
+own `Friz Quadrata TT`, the pads' default pick, stays. Idempotent.
+
 A color, Font shadow, the button's texture and the shine each have a `<key>FromSkin` companion, default
 true (`fontColorFromSkin`, `fontShadowFromSkin`, `backgroundFromSkin`, `borderColorFromSkin`,
 `textureFromSkin`, `glowColorFromSkin`, `shineFromSkin`, and a dial's `highlightFromSkin`,

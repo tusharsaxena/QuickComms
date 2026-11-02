@@ -40,7 +40,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | LOC-1 | [Non-English client](#non-english-client) | What a deDE or frFR client changes |
 | ANIM-1..20 | [Animations](#animations) | The dial's open and close, every style by family, Slide's Direction, a send, combat, the stand-down, Alt-Z, a pad having none, text that neither shimmers nor truncates, the old defaults moved |
 | PLOOK-1..11 | [The pad's look per skin](#the-pads-look-per-skin) | The pad in each skin: edges, buttons and shine (the owner's findings of 2026-11-01) |
-| FSKIN-1..12 | [The full skin](#the-full-skin) | Every pad and dial color, the shadow, texture and shine on the skin, Ka0s Default unmoved, the companions off, an existing profile, meaning colors, the ghost |
+| FSKIN-1..13 | [The full skin](#the-full-skin) | Every pad and dial color, the shadow, texture and shine on the skin, Ka0s Default unmoved, the companions off, an existing profile, meaning colors, the ghost, a stored pick of the deleted Friz |
 | SKIN-1..30 | [Skins](#skins) | The skinning rollout: the one-time reset under Ka0s Default, a new pad, dial or profile on the skin, Ka0s Default elsewhere unchanged, the Skin tab, every skin on the pads and dials, the *Use the skin's ...* boxes, the Preview as window, the callout popup and the icon browser, the settings pages, the tool windows, the Font and texture overrides, Ignore fonts, EllesmereUI on and off and the reload back, profiles and combat, the first-run skin picker (its eye, Apply, close, gear, the switch and a profile event, one picker across Ka0s addons), the CLI and the degraded install; LibKa0s v1.82.0: the Font outline, From skin font flags, `/qc skin`, the HUD size scale and the windows' width parity; the skin on the only media picker |
 
 ## Before you start
@@ -1658,7 +1658,7 @@ code (phase 5):
 - **The pads' fonts** (the Header and Section titles tabs', the Buttons tab's labels, the dial's
   labels): the default face is the skin's HUD font while Use the skin's font is ticked and Ignore
   fonts is not (Ka0s Default's Prototype since LibKa0s v1.82.0; since LibKa0s v1.81.0 each other skin its own face,
-  SKIN-5; WoW Default Ka0s Friz Quadrata TT since LibKa0s v1.83.0; LibKa0s registers a face only for the locales it can draw), else
+  SKIN-5; WoW Default Ka0s Ubuntu since R3-FRIZ (Ka0s Friz Quadrata TT from LibKa0s v1.83.0); LibKa0s registers a face only for the locales it can draw), else
   the player's pick (LibSharedMedia's "Friz Quadrata TT" by default), which
   LibSharedMedia does not register on koKR, zhCN or zhTW; a face the machine does not have draws
   `STANDARD_TEXT_FONT` (`Pad_Render.LabelFont`, `test_pad_render`). (Amended by QC-05, 2026-10-29, the
@@ -1739,7 +1739,7 @@ change. Pick **Obsidian** → no reload; `/qc get skin.skin` prints `obsidian`. 
 dial open, pick each skin in turn: Obsidian, Azeroth, Glass, High Contrast, Ember, WoW Default, WoW
 Midnight, WoW Forever, then Ka0s Default again → with **no reload** the labels redraw in the skin's HUD
 face, each skin its own since LibKa0s v1.81.0 (R-4): Obsidian Expressway, Azeroth Open Sans Semibold,
-Glass Avant Garde, High Contrast Doris PP, Ember Emblem, WoW Default Ka0s Friz Quadrata TT, WoW
+Glass Avant Garde, High Contrast Doris PP, Ember Emblem, WoW Default Ka0s Ubuntu, WoW
 Midnight Segoe UI Semibold, WoW Forever Fira Sans SemiBold, Ka0s Default Prototype (the faces since LibKa0s v1.83.0, D-06);
 a followed border takes the skin's border style, and the padlock, the veils, the hover wash, the
 flashes, the LOCKDOWN and stale tags, the PREVIEW and TEST MODE marks and the page arrows take the
@@ -1747,7 +1747,7 @@ skin's colors, and so does every color with its *Use the skin's ...* box ticked 
 class color stays yours. Fail: a
 pad or dial that keeps the previous skin until `/reload`, a class color that changed, or a label
 cut where it was not before on the same face. (Amended by QC-02, 2026-10-30: a HUD face per skin,
-R-4; by QC-01, 2026-10-30, LibKa0s v1.82.0's faces; by QC-F01, 2026-10-31, LibKa0s v1.83.0's faces; by FS-QC-REC, 2026-11-01, the full skin.) Result: owed (expected result changed).
+R-4; by QC-01, 2026-10-30, LibKa0s v1.82.0's faces; by QC-F01, 2026-10-31, LibKa0s v1.83.0's faces; by FS-QC-REC, 2026-11-01, the full skin; by R3-FRIZ, 2026-11-02, WoW Default's Ka0s Ubuntu.) Result: owed (expected result changed).
 
 **SKIN-6. The *Use the skin's ...* boxes.** On a non-default skin, Pad → Header: untick **Use the
 skin's font** → *Font* comes alive with your pick and the header redraws in it; tick → the skin's face
@@ -2172,6 +2172,13 @@ cooling button → the two veils take each skin's dim color and still read apart
 Icon borders and glows differ between skins with the boxes ticked. A send flash keeps its meaning color.
 Result: owed.
 
+**FSKIN-13. A stored pick of the deleted Friz lands on Ka0s Ubuntu (R3-FRIZ, step 18).** Before updating,
+untick a pad's Header *Use the skin's font* and set *Font* (or the Skin tab's Font) to *Ka0s Friz Quadrata
+TT* in two profiles; log out. Update and fully restart the client (a new font file) → the header draws in
+Ubuntu and *Font* reads *Ka0s Ubuntu*; switch to the other profile → the same. A font set to Blizzard's
+own *Friz Quadrata TT* keeps it. Fail: the game's default face, or a row still naming Ka0s Friz Quadrata
+TT. Result: not run
+
 ## Pending sign-off
 
 The owner ran every check above on 2026-10-21 and reported all of them passed (the client build was
@@ -2230,3 +2237,5 @@ Owed from the full skin (FS-QC-REC, 2026-11-01): FSKIN-1 to FSKIN-11 (new); SKIN
 Owed from the pad's looks (FS-QC-FIX, 2026-11-01): PLOOK-1 to PLOOK-11 (new); BUTTON-1 and SHINE-1 (their
 expected result changed, so each lost its pass mark). The re-cut LibKa0s v1.85.0 gives four skins a border
 style of their own, and PLOOK-3, 5, 7 and 8 are written for it.
+
+Owed from the owner's third smoke round (R3-FRIZ, 2026-11-02): FSKIN-13 (new); SKIN-5 names Ka0s Ubuntu for WoW Default and stays owed.
