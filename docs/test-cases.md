@@ -1643,7 +1643,7 @@ Total.
 
 - launcher descriptor passes openSkinPicker, which runs the skin verb
 
-### test_skin_windows.lua (21)
+### test_skin_windows.lua (24)
 
 - skin windows: no color literal is left in the window files
 - skin windows: the literal gate is falsifiable: a planted literal of each shape is reported
@@ -1666,6 +1666,9 @@ Total.
 - skin windows: the browser's empty footer line is qc.note, today's |cffaaaaaa
 - skin windows: the browser's cell tooltip writes its lines in the tooltip tokens
 - skin windows: no window shows a line under its title, in Ka0s Default and after a switch (R4-SEP)
+- skin windows: the Preview window's title and close sit on the band's middle, content under it, every skin (R5-WIN)
+- skin windows: the modal window's title and close X sit on the band's middle, the page under it, every skin (R5-WIN)
+- skin windows: the modal fallback wears the band too, its title and close mark on it (R5-WIN)
 
 ### test_skin_hud.lua (20)
 
@@ -2016,7 +2019,7 @@ Total.
 | test_layout.lua | 28 |
 | test_skinsetup.lua | 24 |
 | test_launcher_skin_entry.lua | 1 |
-| test_skin_windows.lua | 21 |
+| test_skin_windows.lua | 24 |
 | test_skin_hud.lua | 20 |
 | test_skin_flip.lua | 61 |
 | test_skin_picker.lua | 21 |
@@ -2035,4 +2038,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 26 |
 | Skipped | 1 |
-| **Total** | **1705** |
+| **Total** | **1708** |

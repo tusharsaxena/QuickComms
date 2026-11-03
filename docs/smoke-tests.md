@@ -1983,6 +1983,19 @@ font* unticked) → the skin list closes and the Font list opens. Repeat once on
 still closes the window. Fail: a skin list that stays open after any of those presses, or a Lua error.
 Result:
 
+**SKIN-33. Every window's header on its band, like Loot History's (R5-WIN, smoke round 5, items 2 and 5).** On
+**Ka0s Default**, open `/qc preview`, a group's callout popup (Groups → a group of yours → Callouts → a row's edit
+glyph), its **Choose icon…** browser and the browser's Wowhead address window (Game icons → the hint), `/qc debug`
+and its **Copy** window, `/qc perf` and `/qc skin`. Each window shows one title band, flush inside the window
+edge with no strip of body color between the edge and the band, darker than round 4. Each title and close
+mark sits on the band's vertical middle. In the callout popup and the icon browser, the page (its title and gold
+rule) starts under the band and covers none of it. In the Preview window, the dropdown row sits a small gap under
+the band. Switch to WoW Midnight (its 2 px edge) and then Azeroth with the windows open → the same in each skin.
+Under Midnight the band and the header move 1 px down with the edge. Fail: a body-color strip above or beside
+a band, two bands, a page over the band's lower edge, or a title or close mark visibly above or below the band's
+middle in any skin.
+Result:
+
 ## Animations
 
 The issue is #13; the rulings are in `docs/superpowers/specs/2026-11-01-open-close-animations-design.md`.
@@ -2276,4 +2289,4 @@ Owed from the owner's fourth smoke round (R4-SEP and R4-ZOOM, 2026-11-03, Ka0sAd
 
 On 2026-11-02 the owner reported that every check on the smoke lists of the full skinning run and its smoke feedback batch (Ka0sAddonsCommonTasks `docs/2026-11-01-FULL_SKINNING/` and `docs/2026-11-01-SMOKE_FEEDBACK/`) passed, apart from DpsRace's clock font, the skinned look of the AceGUI Dropdown and the Ka0sMedia_Font and Ka0sMedia_Statusbar pickers, FadeNineSlice and IconBorder (`docs/2026-11-02-SMOKE_ROUND3/`, R3-SMOKE). Passed, recorded on each `Result:` line as `Passed (owner, 2026-11-02)`: ANIM-1, ANIM-2, ANIM-3, ANIM-4, ANIM-5, ANIM-6, ANIM-7, ANIM-8, ANIM-9, ANIM-10, ANIM-11, ANIM-12, ANIM-13, ANIM-14, ANIM-15, ANIM-16, ANIM-17, ANIM-18, ANIM-19, ANIM-20, ANIM-21, ANIM-22, BUTTON-1, FSKIN-1, FSKIN-2, FSKIN-3, FSKIN-4, FSKIN-5, FSKIN-6, FSKIN-7, FSKIN-8, FSKIN-9, FSKIN-10, FSKIN-11, FSKIN-12, LAYER-6, LAYER-7, LAYER-8, LAYER-9, PLOOK-1, PLOOK-2, PLOOK-3, PLOOK-4, PLOOK-5, PLOOK-6, PLOOK-7, PLOOK-8, PLOOK-9, PLOOK-10, PLOOK-11, SHINE-1, SKIN-6, SKIN-11, SKIN-12 and SKIN-13. Still owed: SKIN-5, whose expected result the third smoke round itself changed after the owner's run.
 
-Owed from the owner's fifth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND5/`): SKIN-32 (new, R5-RV).
+Owed from the owner's fifth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND5/`): SKIN-32 (new, R5-RV); SKIN-33 (new, R5-WIN).

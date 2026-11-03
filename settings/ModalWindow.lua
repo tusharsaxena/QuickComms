@@ -10,9 +10,17 @@ local _, NS = ...
 --              rule) and its body, set inside the template's background
 --
 -- A client without the template, or a template that lost a part used here (NineSlice with its
--- title, Bg, ClosePanelButton), gets the older shape: a plain frame, the owner's window fill and edge
--- under the page and the shared close mark. Either close calls the caller's `onClose`. The window is
--- a special frame (Escape hides it); what a hide means is the caller's (its own OnHide hook).
+-- title, Bg, ClosePanelButton), gets the older shape: a plain frame, the owner's window fill, edge and
+-- band under the page, a title and the shared close mark. Either close calls the caller's `onClose`.
+-- The window is a special frame (Escape hides it); what a hide means is the caller's (its own OnHide
+-- hook).
+--
+-- THE HEADER (R5-WIN, Ka0sAddonsCommonTasks docs/2026-11-03-SMOKE_ROUND5, items 2 and 5, the lead's
+-- call 3). Both shapes wear the full title band, as Loot History's window does: Shell's band, flush
+-- inside the edge at its own inset and `title.height`. The title and the close are anchored to that
+-- band's middle (S.Header), never to the template's own TOP and TOPRIGHT anchors, and the page starts
+-- under the band (its top is NS.SkinBandBottom, laid again on every looks change), so no page covers
+-- the band's lower edge.
 --
 -- THE SKIN (QC-02; DECISIONS X10, D2; LibKa0s v1.81.0 R-2, Ka0sAddonsCommonTasks D-06). The
 -- template's chrome is painted through the owner's facade under every skin: the popup and the browser
@@ -57,9 +65,11 @@ local MW = Settings.ModalWindow
 
 local TEMPLATE = "SettingsFrameTemplate"
 -- Where the page sits in the window: inside the template's background (its Bg is inset 7,-18 /
--- -3,3), under the title bar; the fallback window is the page alone.
-MW.INSET_TEMPLATE = { left = 8, top = 24, right = 4, bottom = 5 }
-MW.INSET_PLAIN = { left = 0, top = 0, right = 0, bottom = 0 }
+-- -3,3) on the left, right and bottom; the fallback window is the page alone there. Its top is the
+-- band's bottom edge in both (THE HEADER above): `top` is the fallback when no band answers, and each
+-- Build's own inset table carries the live value.
+MW.INSET_TEMPLATE = { left = 8, top = 31, right = 4, bottom = 5 }
+MW.INSET_PLAIN = { left = 0, top = 31, right = 0, bottom = 0 }
 -- Aliases of the layers table, kept for the popup's and the browser's builds.
 MW.LEVEL = LV.MODAL
 -- A modal over a modal (the icon browser over the popup): its band's base, in the same strata.
@@ -74,6 +84,8 @@ local DIM = "qc.modalDim"
 -- Every catcher's dim texture, repainted on a looks change (weak: a catcher is never freed, but a
 -- test instance's are).
 local dims = setmetatable({}, { __mode = "k" })
+-- Every window's page, laid under its band again on a looks change: window -> { panel, inset, banded }.
+local pages = setmetatable({}, { __mode = "k" })
 
 local function H() return Settings.Helpers end
 local function isTable(v) return type(v) == "table" end
@@ -102,6 +114,8 @@ local function skinTemplate(chrome)
         S.TitleBar(chrome.nineSlice, { text = chrome.nineSlice.Text, noBg = true })
     end
     S.CloseButton(chrome.close)
+    -- The template's title and close X on the band (THE HEADER above), off Blizzard's own anchors.
+    S.Header(f, { title = chrome.nineSlice.Text, right = { chrome.close } })
 end
 
 -- The window: the template when the client has it and it still has the parts used here, else a
@@ -121,16 +135,30 @@ local function makeWindow(name, parent)
     return f or CreateFrame("Frame", name, parent), { template = false }
 end
 
--- The fallback's chrome: the owner's window fill and edge under the page (no top bar: the page draws
--- its own header), and the shared close mark.
+-- The fallback's chrome: the owner's window fill, edge and band under the page, the addon's name on
+-- the band as the template's title, and the shared close mark at the band's right (THE HEADER above).
+-- The title is the fill frame's; the page starts under the band, so it covers neither.
 local function plainChrome(window, panel, chrome, onClose, at)
     local bg = CreateFrame("Frame", nil, window, "BackdropTemplate")
     bg:SetAllPoints(window)
     bg:SetFrameLevel(at(LV.MODAL_BG))
-    NS.Skin.Shell(bg, { noTopBar = true })
+    bg.title = bg:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    bg.title:SetText(NS.BRAND)
+    NS.Skin.Shell(bg)
     local closeButton = NS.MakeCloseButton(panel, onClose)
-    if closeButton then closeButton:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -12, -12) end
-    chrome.window, chrome.bg, chrome.close = window, bg, closeButton
+    NS.Skin.Header(bg, { title = bg.title, right = { closeButton } })
+    chrome.window, chrome.bg, chrome.close, chrome.title = window, bg, closeButton, bg.title
+end
+
+-- The page under the band (THE HEADER above): its top is the band's bottom edge, read off the band
+-- of the frame that wears it (the window, or the fallback's fill frame).
+local function layPage(window)
+    local pg = pages[window]
+    if not pg then return end
+    pg.inset.top = NS.SkinBandBottom(pg.banded)
+    pg.panel:ClearAllPoints()
+    pg.panel:SetPoint("TOPLEFT", window, "TOPLEFT", pg.inset.left, -pg.inset.top)
+    pg.panel:SetPoint("BOTTOMRIGHT", window, "BOTTOMRIGHT", -pg.inset.right, pg.inset.bottom)
 end
 
 local function makeCatcher(strata, base)
@@ -160,7 +188,9 @@ function MW.Build(spec)
     local function at(offset) return base + offset end
     local catcher = makeCatcher(spec.strata, base)
     local window, chrome = makeWindow(spec.name, catcher)
-    local inset = chrome.template and MW.INSET_TEMPLATE or MW.INSET_PLAIN
+    local baseInset = chrome.template and MW.INSET_TEMPLATE or MW.INSET_PLAIN
+    local inset = { left = baseInset.left, top = baseInset.top, right = baseInset.right,
+        bottom = baseInset.bottom }
     -- The strata again: a template may name its own, and the window must stay above the catcher.
     window:SetFrameStrata(spec.strata)
     window:SetFrameLevel(at(LV.MODAL_WINDOW))
@@ -178,9 +208,6 @@ function MW.Build(spec)
     local ctx = H().CreatePanel(spec.pageName, spec.title, { isMain = true })
     local panel = ctx.panel
     panel:SetParent(window)
-    panel:ClearAllPoints()
-    panel:SetPoint("TOPLEFT", window, "TOPLEFT", inset.left, -inset.top)
-    panel:SetPoint("BOTTOMRIGHT", window, "BOTTOMRIGHT", -inset.right, inset.bottom)
     panel:SetFrameLevel(at(LV.MODAL_PAGE))
     if chrome.template then
         -- The template's Bg, over the catcher's dim and under the border: at its declared level 0
@@ -194,14 +221,18 @@ function MW.Build(spec)
     else
         plainChrome(window, panel, chrome, function() spec.onClose() end, at)
     end
+    pages[window] = { panel = panel, inset = inset, banded = chrome.template and window or chrome.bg }
+    layPage(window)
     -- Escape hides a special frame.
     if UISpecialFrames then UISpecialFrames[#UISpecialFrames + 1] = spec.name end
     return { catcher = catcher, frame = window, chrome = chrome, ctx = ctx, inset = inset }
 end
 
--- A skin switch: every catcher's dim in the new skin (the chrome is the library's recorded paint).
+-- A skin switch: every catcher's dim in the new skin, and every page under its band again (the chrome
+-- and the header are the library's recorded paint, laid before this fires).
 NS.Skin.OnLooksChanged(function()
     for dim in pairs(dims) do paintDim(dim) end
+    for window in pairs(pages) do layPage(window) end
 end)
 
 -- CONFIRMS (QC-06 review). QuickComms' confirms are Blizzard StaticPopups, whose dialog frames are

@@ -287,6 +287,21 @@ function NS.SkinEscape(name, panel)
     return ("|cff%02x%02x%02x"):format(toByte(r), toByte(g), toByte(b))
 end
 
+--- How far down from `frame`'s top its title band ends, in px: the band S.Shell lays (S.Band, LibKa0s
+--- SkinPaintExtras minor 17: in from a flat edge by `win.borderSize`, else 1, `title.height` high;
+--- flush and 25 px under EllesmereUI), read off the band itself so a window's content starts under it
+--- in every skin (R5-WIN, Ka0sAddonsCommonTasks docs/2026-11-03-SMOKE_ROUND5, item 2). A band that
+--- answers no height yet (before layout, or headless) is `title.height` high; with no band (the
+--- library absent) the answer is a 1 px edge plus `title.height`.
+function NS.SkinBandBottom(frame)
+    local tall = tonumber(NS.Skin.Token("title.height")) or 30
+    local band = NS.Skin.Band and NS.Skin.Band(frame)
+    if type(band) ~= "table" then return 1 + tall end
+    local _, _, _, _, y = band:GetPoint(1)
+    local h = band:GetHeight()
+    return -(tonumber(y) or -1) + ((type(h) == "number" and h > 0) and h or tall)
+end
+
 --- `text` in a color token, as markup: NS.SkinEscape(name, true) .. text .. "|r", or `text` alone
 --- for a token the skin leaves alone. The settings pages' hint, state and inherit lines, whose escape
 --- once sat inside the locale key; always a settings page's read (panel-scoped).

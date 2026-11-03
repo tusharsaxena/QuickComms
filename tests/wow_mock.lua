@@ -819,15 +819,19 @@ local function build()
     -- SettingsFrameTemplate's parentKeys, as Blizzard_SettingsPanelTemplates.xml declares them: Bg
     -- (FlatPanelBackgroundTemplate), NineSlice with its Text (the window title, GameFontNormal), and
     -- ClosePanelButton (UIPanelCloseButtonDefaultAnchors, whose own click hides the window). The
-    -- title records what it is set to (`text`), and Bg answers its alpha (GetAlpha) and its frame level:
-    -- 0 until set, as the template declares it (frameLevel="0", an absolute level, not the parent's
-    -- plus one). A template named in `missingTemplates` raises, as CreateFrame does in a client without it.
+    -- title is a FontString that records what it is set to (`text`), and Bg answers its alpha (GetAlpha)
+    -- and its frame level: 0 until set, as the template declares it (frameLevel="0", an absolute level,
+    -- not the parent's plus one). The title and the close X start on the template's own TOP and
+    -- TOPRIGHT anchors, so a case can tell a header the host placed from one it left where Blizzard put
+    -- it (R5-WIN). A template named in `missingTemplates` raises, as CreateFrame does in a client
+    -- without it.
     M.missingTemplates = {}
     local function dressSettingsFrame(f)
         local nine = M.CreateFrame("Frame", nil, f)
-        local title = {}
-        function title.SetText(t, v) t.text = v; return t end
+        local title = nine:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        function title.SetText(t, v) t.text, t.__text = v, v; return t end
         function title.GetText(t) return t.text end
+        title:SetPoint("TOP", nine, "TOP", 0, -5)
         nine.Text = title
         f.NineSlice = nine
         local bg = M.CreateFrame("Frame", nil, f)
@@ -838,6 +842,7 @@ local function build()
         f.Bg = bg
         local close = M.CreateFrame("Button", nil, f)
         close:SetScript("OnClick", function() f:Hide() end)
+        close:SetPoint("TOPRIGHT", f, "TOPRIGHT", 1, 0)
         f.ClosePanelButton = close
     end
 

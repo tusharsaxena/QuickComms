@@ -50,10 +50,9 @@ local LAYERS = NS.Constants.LAYERS
 local W = LibStub and LibStub("LibKa0s-Widgets-1.0", true)
 
 local NAME = "QuickCommsPreviewWindow"
-local TITLE_H, PAD, ROW_H, GAP = 24, 8, 22, 6
+local PAD, ROW_H, GAP = 8, 22, 6
 local DROP_W, BUTTON_W = 240, 100
 local WIDTH = PAD + DROP_W + GAP + BUTTON_W + PAD
-local HEIGHT = TITLE_H + PAD + ROW_H + PAD
 -- The End preview label's tokens, by state (the library's SimPanel step buttons').
 local LABEL = { rest = "sem.stepReady", hot = "btn.hover", locked = "sem.unknown" }
 -- The tooltip's typed-command line.
@@ -67,10 +66,16 @@ local function locked()
     return NS.Preview.EditGroup() ~= nil
 end
 
--- The top bar's height, the skin's (`title.height`, skin-invariant): the title and the close mark
--- are centered in it. TITLE_H without the library (no window is built then).
-local function band()
-    return tonumber(NS.Skin.Token("title.height")) or TITLE_H
+-- The window under its band, as Loot History's (R5-WIN, Ka0sAddonsCommonTasks
+-- docs/2026-11-03-SMOKE_ROUND5, items 2 and 5): the controls' row GAP under the band's bottom edge
+-- (NS.SkinBandBottom: Shell's band, at its own inset and `title.height`, in every skin), and the
+-- window PAD under the row. Laid on the first show and again on every looks change, since a 2 px edge
+-- or EllesmereUI's 25 px bar moves the band.
+local function layout(f)
+    local top = NS.SkinBandBottom(f)
+    f:SetHeight(top + GAP + ROW_H + PAD)
+    f.dropdown:ClearAllPoints()
+    f.dropdown:SetPoint("TOPLEFT", f, "TOPLEFT", PAD, -(top + GAP))
 end
 
 -- One tooltip line in a color token: the components read apart, so the wrap flag stays the fifth
@@ -159,7 +164,6 @@ end
 local function makeDropdown(parent)
     local dd = W.Dropdown(parent, DROP_W, { chevron = NS.Icon("chevron-down"), check = NS.Icon("confirm"),
         owner = addonName })
-    dd:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD, -(TITLE_H + PAD))
     -- One line: a long situation label truncates rather than wrapping out of the box.
     if dd.text and dd.text.SetWordWrap then dd.text:SetWordWrap(false) end
     dd.onSelect = function(v)
@@ -188,7 +192,7 @@ local function onHide(self)
 end
 
 local function chrome(f)
-    f:SetSize(WIDTH, HEIGHT)
+    f:SetWidth(WIDTH)
     f:SetFrameStrata(LAYERS.STRATA.WINDOW)
     f:SetFrameLevel(UIParent:GetFrameLevel() + LAYERS.LEVEL.WINDOW)
     f:EnableMouse(true)
@@ -200,8 +204,8 @@ local function chrome(f)
         self:StopMovingOrSizing()
         remember(self)
     end)
+    -- The title and the close mark are placed on the band by S.Header (ensure, below).
     local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    title:SetPoint("CENTER", f, "TOP", 0, -band() / 2)
     -- One line: a long group name truncates (the width is the window's, inside the close mark).
     title:SetWidth(WIDTH - 2 * (PAD + 20))
     if title.SetWordWrap then title:SetWordWrap(false) end
@@ -213,7 +217,6 @@ local function ensure()
     local f = CreateFrame("Frame", NAME, UIParent, "BackdropTemplate")
     chrome(f)
     f.closeButton = NS.MakeCloseButton(f, endPreview)
-    if f.closeButton then f.closeButton:SetPoint("TOPRIGHT", f, "TOPRIGHT", -6, -(band() - 18) / 2) end
     if f.closeButton then
         -- Locked, its own hover paint is undone (its OnLeave repaints it at rest) before the tooltip.
         f.closeButton:HookScript("OnEnter", function(self)
@@ -229,6 +232,11 @@ local function ensure()
     f.endButton:SetPoint("LEFT", f.dropdown, "RIGHT", GAP, 0)
     -- The owner's Shell: the skin's fill, edge and top bar, the title's font and color (D9).
     NS.Skin.Shell(f)
+    -- The header on the band (LibKa0s S.Header, R5-L3): the title by the skin's `title.align`, the
+    -- close mark at the band's right, each on the band's middle in every skin. Recorded, so a switch
+    -- places them again.
+    NS.Skin.Header(f, { title = f.title, right = { f.closeButton } })
+    layout(f)
     f:Hide()
     if type(UISpecialFrames) == "table" then table.insert(UISpecialFrames, NAME) end
     f:HookScript("OnHide", onHide)
@@ -297,7 +305,9 @@ end
 -- A skin switch: the label in the new skin's state token (the box and the window are the library's
 -- recorded Shells, repainted before this fires).
 NS.Skin.OnLooksChanged(function()
-    if frame then paintLabel(frame.endButton) end
+    if not frame then return end
+    paintLabel(frame.endButton)
+    layout(frame)
 end)
 
 if W and NS.Bus.tracked then
