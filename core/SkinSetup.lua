@@ -623,6 +623,7 @@ if not Skin then
         "Tooltip", "Strip", "Cover", "Text", "ChartStyle", "BarStyle", "IconBorder", "GlowColor",
         "BarTexture", "FontFlags", "HudFontSize", "Mark", "MarkText", "HudTextColor", "HudLabelColor",
         "BarFillColor", "HudShadow", "BarGloss", "HudFont", "BarBorder", "HoverArt",
+        "Band", "Header",
     }) do S[name] = noop end
 
     S.Token = token

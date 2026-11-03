@@ -1976,6 +1976,13 @@ header's rule, not the window's. The console's footer rule and the browser's hin
 Fail: a line under any window's title band in any skin.
 Result:
 
+**SKIN-32. The skin picker's list closes on an outside press (R5-RV, LibKa0s R5-L4, smoke round 5).** Open
+`/qc skin` and open its skin list. Press the window body → the list closes. Open it again and press the game
+world → it closes. Open it again and press the settings page's **Font** dropdown (Pad → Header, *Use the skin's
+font* unticked) → the skin list closes and the Font list opens. Repeat once on the Skin tab's picker. Escape
+still closes the window. Fail: a skin list that stays open after any of those presses, or a Lua error.
+Result:
+
 ## Animations
 
 The issue is #13; the rulings are in `docs/superpowers/specs/2026-11-01-open-close-animations-design.md`.
@@ -2268,3 +2275,5 @@ Owed from the owner's third smoke round (R3-FRIZ, 2026-11-02): FSKIN-13 (new); S
 Owed from the owner's fourth smoke round (R4-SEP and R4-ZOOM, 2026-11-03, Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND4/`): SKIN-31 and ICONS-6 (new).
 
 On 2026-11-02 the owner reported that every check on the smoke lists of the full skinning run and its smoke feedback batch (Ka0sAddonsCommonTasks `docs/2026-11-01-FULL_SKINNING/` and `docs/2026-11-01-SMOKE_FEEDBACK/`) passed, apart from DpsRace's clock font, the skinned look of the AceGUI Dropdown and the Ka0sMedia_Font and Ka0sMedia_Statusbar pickers, FadeNineSlice and IconBorder (`docs/2026-11-02-SMOKE_ROUND3/`, R3-SMOKE). Passed, recorded on each `Result:` line as `Passed (owner, 2026-11-02)`: ANIM-1, ANIM-2, ANIM-3, ANIM-4, ANIM-5, ANIM-6, ANIM-7, ANIM-8, ANIM-9, ANIM-10, ANIM-11, ANIM-12, ANIM-13, ANIM-14, ANIM-15, ANIM-16, ANIM-17, ANIM-18, ANIM-19, ANIM-20, ANIM-21, ANIM-22, BUTTON-1, FSKIN-1, FSKIN-2, FSKIN-3, FSKIN-4, FSKIN-5, FSKIN-6, FSKIN-7, FSKIN-8, FSKIN-9, FSKIN-10, FSKIN-11, FSKIN-12, LAYER-6, LAYER-7, LAYER-8, LAYER-9, PLOOK-1, PLOOK-2, PLOOK-3, PLOOK-4, PLOOK-5, PLOOK-6, PLOOK-7, PLOOK-8, PLOOK-9, PLOOK-10, PLOOK-11, SHINE-1, SKIN-6, SKIN-11, SKIN-12 and SKIN-13. Still owed: SKIN-5, whose expected result the third smoke round itself changed after the owner's run.
+
+Owed from the owner's fifth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND5/`): SKIN-32 (new, R5-RV).
