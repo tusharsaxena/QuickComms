@@ -146,13 +146,15 @@ NS.SKIN_TOKENS = {
     ["qc.markGray"]  = { default = { 0.54, 0.54, 0.54, 1 }, follow = "icon.dim" },
     ["qc.note"]      = { default = { byte(170), byte(170), byte(170), 1 }, follow = "text.muted" },
     -- The full skin (LibKa0s v1.85.0, cause D7): where a pad's or a dial's default is not the library
-    -- token's value, today's pixels under Ka0s Default and the token in every other skin. A header's
-    -- and a section title's band: nothing drawn, so no fill and no edge. A real style in a skin draws at
-    -- bar.borderSize (S.BarBorder); under a skin's None a stored thickness stands, and with none stored
-    -- the band takes qc.bandEdgeSize, the hairline a button wears (R.SkinFor).
-    ["qc.bandBg"]    = { default = { 0, 0, 0, 0 }, follow = "title.bg" },
+    -- token's value, today's pixels under Ka0s Default and the token in every other skin. A section
+    -- title's band draws no band in any skin (R5-QC1, Ka0sAddonsCommonTasks
+    -- docs/2026-11-03-SMOKE_ROUND5, the lead's call 5): no fill, and no edge while it follows the skin
+    -- (R.BAND_TOKENS' `bare`), so the pad's header is its only band. The edge color is for a border
+    -- the player stores. The header's own band is the library's title band (S.TitleBar); qc.headEdge is
+    -- the edge of a border the player stores on the header.
+    ["qc.bandBg"]    = { default = { 0, 0, 0, 0 } },
     ["qc.bandEdge"]  = { default = { 1, 1, 1, 1 }, follow = "win.border", skins = { wow = WOW_RULE } },
-    ["qc.bandEdgeSize"] = { default = 0, follow = "bar.borderSize" },
+    ["qc.headEdge"]  = { default = { 1, 1, 1, 1 }, follow = "win.border", skins = { wow = WOW_RULE } },
     -- A pad window's border art, where the skin's own is a thicker frame than bar.borderStyle's (SF-QC-3):
     -- WoW Default's dialog frame, as the Skin Tester's window wears. "None" in every other skin leaves
     -- the window on bar.borderStyle and bar.borderSize.

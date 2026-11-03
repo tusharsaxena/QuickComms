@@ -578,8 +578,12 @@ test("pad: [icon only] the pad is as wide as its buttons when the header is narr
     assertEqual(inst.root.__w, contentW + 2 * PL.PAD, "four 24-pixel columns and the pad's padding")
     sit.GetStringWidth = function() return 200 end
     NS.Pad.Apply("p1", planFor(NS))
-    assertEqual(inst.root.__w, NS.PadRender.HeaderMinWidth(inst.header), "a wide header widens the pad")
-    assertEqual(inst.root.__w, PL.PAD + 200 + 4 + 16 + 2, "its text, a gap and the collapse button at its inset")
+    -- The header row stands inside the window's edge on both sides (R5-QC1: Ka0s Default's 1 px edge
+    -- and its inner rule, 2 px a side), so the pad is that much wider than the row.
+    assertEqual(inst.wlook.edge, 2, "Ka0s Default's header inset")
+    assertEqual(inst.root.__w, NS.PadRender.HeaderMinWidth(inst.header) + 4, "a wide header widens the pad")
+    assertEqual(inst.root.__w, PL.PAD + 200 + 4 + 16 + 2 + 4,
+        "its text, a gap and the collapse button at its inset, inside the edges")
 end)
 
 test("pad: [icon only] a PvP match's lockdown chip, shown out of combat, widens the header row by itself", function()
@@ -594,7 +598,8 @@ test("pad: [icon only] a PvP match's lockdown chip, shown out of combat, widens 
     assertTrue(NS.Pad.Apply("p1", plan))
     assertTrue(inst.header.qcLockdown:IsShown(), "the lockdown chip is shown")
     -- red under: the lockdown chip left out (it would run under the collapse button and past the edge)
-    assertEqual(inst.root.__w, PL.PAD + 70 + 6 + 60 + 4 + 16 + 2, "the text, the lockdown chip at its gap, then the button")
+    assertEqual(inst.root.__w, PL.PAD + 70 + 6 + 60 + 4 + 16 + 2 + 2 * inst.wlook.edge,
+        "the text, the lockdown chip at its gap, then the button, inside the edges (R5-QC1)")
 end)
 
 test("pad: [button] a button wears the Buttons tab: the owner's default body, edge, label and size, then what it is given", function()
@@ -712,7 +717,8 @@ test("pad: [B2] down growth pins the pad's top edge; the header is on top and th
     local inst = NS.Pad.Instance("p1")
     -- red under: applyPoint anchoring the stored CENTER point (a resize drifts both ways)
     assertEqual(pointOf(inst), "TOP,CENTER,0,-150")
-    assertEqual(pointsOf(inst.header), "TOPLEFT,QuickCommsPadp1,TOPLEFT,0,0 | TOPRIGHT,QuickCommsPadp1,TOPRIGHT,0,0")
+    -- Inside the window's edge and its inner rule (R5-QC1; round 4 had it at 0,0, over the edge).
+    assertEqual(pointsOf(inst.header), "TOPLEFT,QuickCommsPadp1,TOPLEFT,2,-2 | TOPRIGHT,QuickCommsPadp1,TOPRIGHT,-2,-2")
     assertEqual(pointsOf(inst.handle), "BOTTOM,QuickCommsPadp1,TOP,0," .. NS.DRAG_GAP)
 end)
 
@@ -723,7 +729,7 @@ test("pad: [B2] up growth pins the bottom edge, puts the header at the bottom an
     local inst = NS.Pad.Instance("p1")
     assertEqual(pointOf(inst), "BOTTOM,CENTER,0,-150")
     assertEqual(pointsOf(inst.header),
-        "BOTTOMLEFT,QuickCommsPadp1,BOTTOMLEFT,0,0 | BOTTOMRIGHT,QuickCommsPadp1,BOTTOMRIGHT,0,0")
+        "BOTTOMLEFT,QuickCommsPadp1,BOTTOMLEFT,2,2 | BOTTOMRIGHT,QuickCommsPadp1,BOTTOMRIGHT,-2,2")
     assertEqual(pointsOf(inst.handle), "TOP,QuickCommsPadp1,BOTTOM,0," .. -NS.DRAG_GAP)
     -- A drop is saved as the bottom edge, so the reload and every resize keep the strip where it was.
     local h = inst.root.__h
@@ -735,8 +741,8 @@ test("pad: [B2] up growth pins the bottom edge, puts the header at the bottom an
     assertTrue(inst.root.__h < h, "collapsed is shorter")
     NS.db.profile.pads.p1.layout.growth = "right"
     NS.Pad.ToggleCollapsed("p1")
-    assertEqual(pointsOf(inst.header), "TOPLEFT,QuickCommsPadp1,TOPLEFT,0,0 | TOPRIGHT,QuickCommsPadp1,TOPRIGHT,0,0",
-        "a growth change re-anchors the header")
+    assertEqual(pointsOf(inst.header), "TOPLEFT,QuickCommsPadp1,TOPLEFT,2,-2 | TOPRIGHT,QuickCommsPadp1,TOPRIGHT,-2,-2",
+        "a growth change re-anchors the header, inside the edge (R5-QC1)")
 end)
 
 -- The client measures a string without its color escapes; the stand-in does the same, 6 per letter.

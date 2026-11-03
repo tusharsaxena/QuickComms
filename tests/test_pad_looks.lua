@@ -52,16 +52,20 @@ end
 -- ── WoW Default ──
 
 test("pad looks: WoW Default's bands and window edge are no client art's white tint", function()
-    local _, _, drawn, inst = padUnder("wow")
-    -- red under: qc.bandEdge and the window's edge following win.border, the white a dialog art multiplies by
-    notWhite(drawn[inst.header].border, "the header's edge")
+    local NS, _, drawn, inst = padUnder("wow")
+    -- red under: qc.bandEdge, qc.headEdge and the window's edge following win.border, the white a dialog
+    -- art multiplies by. The header and the section bands draw no edge while they follow (R5-QC1), so
+    -- their tint is for a border the player stores.
+    notWhite({ NS.Skin.Color("qc.bandEdge") }, "a section band's stored edge")
+    notWhite({ NS.Skin.Color("qc.headEdge") }, "the header's stored edge")
     notWhite(drawn[inst.root].border, "the window's edge")
 end)
 
-test("pad looks: WoW Default's bands keep a hairline, not the dialog art's size", function()
+test("pad looks: WoW Default's bands never take the dialog art's size", function()
     local _, _, drawn, inst = padUnder("wow")
-    -- red under: qc.bandEdgeSize following win.borderSize, 32 for the art, clamped to a solid 16 px bar
-    assertTrue(drawn[inst.header].edgeSize <= 2, "the header's edge: " .. tostring(drawn[inst.header].edgeSize))
+    -- red under: a band edge following win.borderSize, 32 for the art, clamped to a solid 16 px bar.
+    -- Since R5-QC1 a following band draws none at all.
+    assertEqual(drawn[inst.header].edgeSize, 0, "the header's edge")
 end)
 
 test("pad looks: WoW Default's window wears the dialog border art the Skin Tester shows, no other skin does (SF-QC-3)", function()
@@ -71,8 +75,8 @@ test("pad looks: WoW Default's window wears the dialog border art the Skin Teste
     local skin = NS.PadRender.SkinFor(look, false, NS.PadRender.WINDOW_TOKENS)
     assertEqual(skin.edgeFile, "media:Blizzard Dialog", "the art")
     assertTrue(skin.edgeSize >= 8, "a thickness that shows it: " .. tostring(skin.edgeSize))
-    -- the band and the button keep their hairline
-    assertTrue(NS.PadRender.SkinFor(look, true, NS.PadRender.BAND_TOKENS).edgeSize <= 2)
+    -- a band takes none of it: while it follows it draws no edge (R5-QC1)
+    assertEqual(NS.PadRender.SkinFor(look, true, NS.PadRender.BAND_TOKENS).edgeSize, 0)
     -- a pad that does not follow the skin keeps its own border
     local own = NS.PadRender.SkinFor({ borderStyle = "None", borderSize = 1, borderStyleFromSkin = false }, false,
         NS.PadRender.WINDOW_TOKENS)
@@ -107,27 +111,29 @@ test("pad looks: the Skin tab's texture override still reaches a button under Wo
 end)
 
 -- WoW Default's bar.borderStyle is a real style, the tooltip's art at 2: tinted by the owner tokens,
--- that art draws no white.
+-- that art draws no white. A button wears it; the header and the section bands, borderless bands in
+-- every skin WoW Default included (R5-QC1, the lead's call 5), do not, unless the player stores one.
 test("pad looks: WoW Default's real border style paints no white band", function()
     local NS, m, drawn, inst, btn = padUnder("wow")
     local tokens = m.LibStub("LibKa0s-Skin-1.0"):ResolveSkin("wow")
     assertEqual(tokens["bar.borderStyle"], "Blizzard Tooltip", "the style this case is about")
     assertEqual(tokens["bar.borderSize"], 2, "and its thickness")
     local gray, edge = { 0x6E / 255, 0x6E / 255, 0x6E / 255, 1 }, { 0x9A / 255, 0x9A / 255, 0x9A / 255, 1 }
-    -- red under: a band's art tinted win.border, the white WoW Default's dialog art is multiplied by
-    assertColor(drawn[inst.header].border, gray, "the header's art")
     assertColor(drawn[inst.root].border, edge, "the window's art")
-    assertEqual(drawn[inst.header].edgeSize, 2, "the header at the skin's thickness")
-    assertEqual(drawn[btn.qcEdge].edgeSize, 2, "a button too")
+    -- red under the round 4 band: the header wearing the tooltip art at 2
+    assertTrue(drawn[inst.header].edgeFile == nil, "the header is a borderless band")
+    assertEqual(drawn[btn.qcEdge].edgeSize, 2, "a button at the skin's thickness")
     notWhite(drawn[btn.qcEdge].border, "a button's art")
-    notWhite(drawn[inst.header].bg, "the header's fill")
     anyMedia(NS)
     local R = NS.PadRender
     local p = NS.db.profile.pads.p1
-    local header = R.SkinFor(p.header, true, R.BAND_TOKENS)
-    assertEqual(header.edgeFile, "media:Blizzard Tooltip", "the art is the skin's, not the flat edge")
-    assertColor(header.border, gray, "and the header's tint stays on it")
-    assertColor(R.SectionLook(p.section).skin.border, gray, "a section band's")
+    assertTrue(R.SectionLook(p.section).skin.edgeFile == nil, "a section band is borderless too")
+    -- a border the player stores on the header draws, in the header's own tint
+    local stored = { borderStyle = "Blizzard Tooltip", borderSize = 2, borderStyleFromSkin = false,
+        borderColorFromSkin = true }
+    local header = R.SkinFor(stored, true, R.HEADER_TOKENS)
+    assertEqual(header.edgeFile, "media:Blizzard Tooltip", "the stored art")
+    assertColor(header.border, gray, "tinted qc.headEdge, no white")
 end)
 
 -- ── the edges ──
@@ -135,17 +141,19 @@ end)
 for _, key in ipairs({ "glass", "midnight", "contrast", "obsidian", "azeroth" }) do
     test("pad looks: " .. key .. "'s bands and buttons draw a 1 px edge", function()
         local _, _, drawn, inst, btn = padUnder(key)
-        -- red under: qc.bandEdgeSize following win.borderSize (Glass's 8, the others' 2)
-        assertEqual(drawn[inst.header].edgeSize, 1, "the header's band")
+        -- red under: a band edge following win.borderSize (Glass's 8, the others' 2). The header is a
+        -- borderless band since R5-QC1 (round 4 drew it a 1 px hairline).
+        assertEqual(drawn[inst.header].edgeSize, 0, "the header's band")
         assertEqual(drawn[btn.qcEdge].edgeSize, 1, "a button")
         assertEqual(drawn[inst.root].edgeSize, 1, "the window")
     end)
 end
 
-test("pad looks: a section band draws the same 1 px edge as the header's", function()
+test("pad looks: a section band draws no edge while it follows, as the header draws none", function()
     local NS = padUnder("glass")
     local sl = NS.PadRender.SectionLook(NS.db.profile.pads.p1.section)
-    assertEqual(sl.skin.edgeSize, 1)
+    -- red under the round 4 hairline (qc.bandEdgeSize): the section band boxed like a second header
+    assertEqual(sl.skin.edgeSize, 0)
 end)
 
 test("pad looks: Ka0s Default's bands stay undrawn", function()
@@ -154,16 +162,19 @@ test("pad looks: Ka0s Default's bands stay undrawn", function()
     assertNil(drawn[inst.header].edgeFile, "no art")
 end)
 
-test("pad looks: a band's stored thickness defers under a skin's None, and a real style wins", function()
+test("pad looks: a following band draws no edge in any skin; a border the player stores draws as stored", function()
     local NS, m, drawn, inst = padUnder("obsidian")
-    assertEqual(m.LibStub("LibKa0s-Skin-1.0"):ResolveSkin("obsidian")["bar.borderStyle"], "None", "no border of its own")
     assertTrue(NS.SchemaRuntime.Set("pad.header.borderSize", 4, "p1"))
     NS.Surfaces.ApplyAll("test")
-    -- red under: the hairline token over a thickness the player stored
-    assertEqual(drawn[inst.header].edgeSize, 4, "None: the player's")
+    -- R5-QC1: while the border follows the skin the header is a borderless band, whatever thickness is
+    -- stored under it (round 4 drew that thickness under a skin's None, the skin's under a real style)
+    assertEqual(drawn[inst.header].edgeSize, 0, "following: no edge")
+    NS.db.profile.pads.p1.header.borderStyleFromSkin = false
+    NS.Surfaces.ApplyAll("test")
+    assertEqual(drawn[inst.header].edgeSize, 4, "stored: the player's")
     m.LibStub("LibKa0s-Skin-1.0"):SetChoice(OWNER, "ka0s", "azeroth")
     NS.Surfaces.ApplyAll("test")
-    assertEqual(drawn[inst.header].edgeSize, 1, "a real style: the skin's")
+    assertEqual(drawn[inst.header].edgeSize, 4, "stored: the player's in every skin")
 end)
 
 -- ── Ka0s Default's buttons ──

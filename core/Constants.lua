@@ -95,6 +95,10 @@ C.LAYERS = {
     LEVEL = {
         -- a pad's root (base: UIParent), high in DIALOG (#14)
         HUD = 1000,
+        -- a pad's header band and its header row (base: the pad's root; R5-QC1): the band over the
+        -- root's own backdrop, the header's texts and button over the band
+        PAD_BAND = 1,
+        PAD_HEADER = 2,
         -- a pad button (base: the button)
         BTN_EDGE = 1,
         BTN_ICON = 3,

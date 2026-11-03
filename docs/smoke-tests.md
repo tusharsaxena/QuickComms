@@ -2094,8 +2094,10 @@ and Outward spiral spirals them outward from it, each as its label says. Rotate 
 default. Result: Passed (owner, 2026-11-02).
 
 **ANIM-22. WoW Default's window border (SF-QC-3).** Wear WoW Default → the pad's window is framed in the
-dialog-box border art the Skin Tester's window wears, not a thin gray line; the header, section bands and
-buttons keep their hairlines. Any other skin → the pad's window is as before. Result: Passed (owner, 2026-11-02).
+dialog-box border art the Skin Tester's window wears, not a thin gray line; the buttons keep their
+hairlines, and the header's title band and the section titles draw no line (amended by R5-QC1, smoke round
+5). Any other skin → the pad's window is as before.
+Result:
 
 ## The pad's look per skin
 
@@ -2103,30 +2105,39 @@ The owner's findings of 2026-11-01. Each check: a pad on screen (`/qc test`), th
 at its default. Compare a hairline with that skin's window edge on the settings or Preview window.
 
 **PLOOK-1. Ka0s Default.** The buttons have a dark body with a soft top-to-bottom gradient and a gentle
-gloss, a thin gray edge, the same icons and colors; restrained next to Obsidian's. The header and titles
-draw no band. Fail: the old flat wash, or a gloss brighter than Obsidian's. Result: Passed (owner, 2026-11-02).
+gloss, a thin gray edge, the same icons and colors; restrained next to Obsidian's. The header wears the
+dark gold title band (PLOOK-12) and the section titles draw no band. Fail: the old flat wash, or a gloss
+brighter than Obsidian's. Amended by R5-QC1 (smoke round 5): the header is the skin's title band with no edge, and section titles draw no band.
+Result:
 
-**PLOOK-2. Obsidian.** As before but the gloss is about a third lighter; bands and buttons have hairline
-edges. Result: Passed (owner, 2026-11-02).
+**PLOOK-2. Obsidian.** As before but the gloss is about a third lighter; buttons have hairline
+edges. Amended by R5-QC1 (smoke round 5): the header is the skin's title band with no edge, and section titles draw no band.
+Result:
 
-**PLOOK-3. Azeroth.** Leather buttons with a lighter gloss, hairline gold-brown band edges. Result: Passed (owner, 2026-11-02).
+**PLOOK-3. Azeroth.** Leather buttons with a lighter gloss. Amended by R5-QC1 (smoke round 5): the header is the skin's title band with no edge, and section titles draw no band.
+Result:
 
-**PLOOK-4. Glass.** Gloss cap a third lighter; the header and section bands' edges are a thin frosted
-line, not the thick pale frame of 2026-11-01. Result: Passed (owner, 2026-11-02).
+**PLOOK-4. Glass.** Gloss cap a third lighter; no thick pale frame on the header or any section title, as
+on 2026-11-01. Amended by R5-QC1 (smoke round 5): the header is the skin's title band with no edge, and section titles draw no band.
+Result:
 
-**PLOOK-5. High Contrast.** White hairlines on the bands and buttons, no shine. Fail: a band edge visibly
-heavier than a button's. Result: Passed (owner, 2026-11-02).
+**PLOOK-5. High Contrast.** White hairlines on the buttons, no shine. Fail: an edge around the header or a
+section title. Amended by R5-QC1 (smoke round 5): the header is the skin's title band with no edge, and section titles draw no band.
+Result:
 
-**PLOOK-6. Ember.** Ember buttons with a lighter gloss, hairline band edges. Result: Passed (owner, 2026-11-02).
+**PLOOK-6. Ember.** Ember buttons with a lighter gloss. Amended by R5-QC1 (smoke round 5): the header is the skin's title band with no edge, and section titles draw no band.
+Result:
 
-**PLOOK-7. WoW Default.** A Blizzard-style pad: dark window with a gray edge, gray header and section
-bands with a thin gray line and gold text, clear red buttons with a soft sheen. Fail: any white band or
-white edge, or buttons dark maroon. Result: Passed (owner, 2026-11-02).
+**PLOOK-7. WoW Default.** A Blizzard-style pad: dark window with a gray edge, a gray title band under the
+header with gold text and no line around it, section titles on no band, clear red buttons with a soft sheen.
+Fail: any white band or white edge, or buttons dark maroon. Amended by R5-QC1 (smoke round 5): the header is the skin's title band with no edge, and section titles draw no band.
+Result:
 
-**PLOOK-8. WoW Midnight.** Night-violet buttons, gold hairlines on bands and buttons, a lighter gloss.
-Result: Passed (owner, 2026-11-02).
+**PLOOK-8. WoW Midnight.** Night-violet buttons, gold hairlines on the buttons, a lighter gloss. Amended by R5-QC1 (smoke round 5): the header is the skin's title band with no edge, and section titles draw no band.
+Result:
 
-**PLOOK-9. WoW Forever.** Charcoal buttons with a lighter gloss, hairline band edges. Result: Passed (owner, 2026-11-02).
+**PLOOK-9. WoW Forever.** Charcoal buttons with a lighter gloss. Amended by R5-QC1 (smoke round 5): the header is the skin's title band with no edge, and section titles draw no band.
+Result:
 
 **PLOOK-10. Strength and the box.** Pad → Buttons and Dial → Slices: with *Use the skin's shine* ticked
 Shine strength is gray; a dial sharing the skin's look reads as light as the pad. Untick it → the row
@@ -2135,6 +2146,24 @@ wakes, your stored value draws under every skin. Result: Passed (owner, 2026-11-
 **PLOOK-11. The texture override.** Skin → WoW Default, then pick a Texture on the Skin tab's Font and
 texture section → the buttons take it; back to the skin's own → flat red. A page dot's edge under WoW
 Default is dark, not white. Result: Passed (owner, 2026-11-02).
+
+**PLOOK-12. The pad's header is a title band, like Loot History's (R5-QC1, smoke round 5, item 4, images 40
+and 41).** With a Comms Pad shown (a section such as "Solo" on it), on **Ka0s Default**: the header row ("Quick
+Comms: ...", the "-" button) wears the dark gold title band, darker than round 4, with its gradient. The band
+sits inside the pad's black edge and gray inner rule, with the edge and the rule showing all round it as Loot
+History's band does, and no body-color strip between them. The header text stays left, the "-" stays right,
+and both sit on the band's vertical middle. The "Solo" section title draws no band of its own. Switch to
+Obsidian, Azeroth, Ember, WoW Midnight and WoW Default: the header shows each skin's own title band
+(Ember, Midnight and WoW Default with a gradient), with no edge or box of its own in any skin. Under WoW
+Default the band sits inside the dialog art and the art is not cut across. The section titles draw no band in
+any skin. The header text stays readable on the band. Collapse the pad with "-": it is exactly the band and
+the edge around it. Set the pad to grow up (Pad → Layout → growth up): the band is the pad's bottom row, inside
+the edge, with the same gradient direction (lighter at the top). Pad → Header: untick *Use the skin's
+background* and pick a color: the band goes and the picked color fills the row. Tick it again: the band is
+back. Tick *Use class color* for the background: the class color, no band. Fail: no band, two stacked boxes,
+a band over the window edge or rule, a body-color strip around the band, a section band, an edge around the
+header, or the stored color drawn over a gradient.
+Result:
 
 ## The full skin
 
@@ -2205,11 +2234,12 @@ and dial in that skin, closing it puts them back. Result: Passed (owner, 2026-11
 **FSKIN-12. A skin's own wash and border.** On a pad's Main window, tick *Use the skin's border*, pick a
 border style of your own and thickness 4. **Obsidian** → your border draws, since this skin has none of
 its own. **High Contrast**, then Azeroth, WoW Default and WoW Midnight → the skin's border wins at its
-own thickness, on the window, the header and titles' bands and the buttons. Untick the box → yours under
-every skin. Ka0s Default with no pick of yours → no band edge and the shipped look. A refused and a
+own thickness, on the window and the buttons; the header's title band and the section titles draw no edge
+while they follow the skin (amended by R5-QC1, smoke round 5). Untick the box → yours under every skin. Ka0s
+Default with no pick of yours → no band edge and the shipped look. A refused and a
 cooling button → the two veils take each skin's dim color and still read apart, the refused one darker.
 Icon borders and glows differ between skins with the boxes ticked. A send flash keeps its meaning color.
-Result: Passed (owner, 2026-11-02).
+Result:
 
 **FSKIN-13. A stored pick of the deleted Friz lands on Ka0s Ubuntu (R3-FRIZ, step 18).** Before updating,
 untick a pad's Header *Use the skin's font* and set *Font* (or the Skin tab's Font) to *Ka0s Friz Quadrata
@@ -2289,4 +2319,4 @@ Owed from the owner's fourth smoke round (R4-SEP and R4-ZOOM, 2026-11-03, Ka0sAd
 
 On 2026-11-02 the owner reported that every check on the smoke lists of the full skinning run and its smoke feedback batch (Ka0sAddonsCommonTasks `docs/2026-11-01-FULL_SKINNING/` and `docs/2026-11-01-SMOKE_FEEDBACK/`) passed, apart from DpsRace's clock font, the skinned look of the AceGUI Dropdown and the Ka0sMedia_Font and Ka0sMedia_Statusbar pickers, FadeNineSlice and IconBorder (`docs/2026-11-02-SMOKE_ROUND3/`, R3-SMOKE). Passed, recorded on each `Result:` line as `Passed (owner, 2026-11-02)`: ANIM-1, ANIM-2, ANIM-3, ANIM-4, ANIM-5, ANIM-6, ANIM-7, ANIM-8, ANIM-9, ANIM-10, ANIM-11, ANIM-12, ANIM-13, ANIM-14, ANIM-15, ANIM-16, ANIM-17, ANIM-18, ANIM-19, ANIM-20, ANIM-21, ANIM-22, BUTTON-1, FSKIN-1, FSKIN-2, FSKIN-3, FSKIN-4, FSKIN-5, FSKIN-6, FSKIN-7, FSKIN-8, FSKIN-9, FSKIN-10, FSKIN-11, FSKIN-12, LAYER-6, LAYER-7, LAYER-8, LAYER-9, PLOOK-1, PLOOK-2, PLOOK-3, PLOOK-4, PLOOK-5, PLOOK-6, PLOOK-7, PLOOK-8, PLOOK-9, PLOOK-10, PLOOK-11, SHINE-1, SKIN-6, SKIN-11, SKIN-12 and SKIN-13. Still owed: SKIN-5, whose expected result the third smoke round itself changed after the owner's run.
 
-Owed from the owner's fifth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND5/`): SKIN-32 (new, R5-RV); SKIN-33 (new, R5-WIN).
+Owed from the owner's fifth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND5/`): SKIN-32 (new, R5-RV); SKIN-33 (new, R5-WIN); PLOOK-12 (new, R5-QC1); PLOOK-1 to PLOOK-9, ANIM-22 and FSKIN-12 (R5-QC1 changed their expected result, so each lost its pass mark).

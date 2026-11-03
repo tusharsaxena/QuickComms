@@ -281,9 +281,9 @@ end
 
 -- The pad's width and height. Never narrower than the header row needs: a fixed floor would leave an
 -- icon-only pad's spare width at its right edge, past the last button. With no block, the header row alone.
-local function boxSize(blocks, y, contentW, minWidth, hh)
+local function boxSize(blocks, y, contentW, minWidth, hh, edge)
     local width = math.max(tonumber(minWidth) or PL.MIN_PAD_W, contentW + 2 * PL.PAD)
-    return width, #blocks > 0 and (y + PL.PAD) or hh
+    return width, #blocks > 0 and (y + PL.PAD) or (hh + 2 * edge)
 end
 
 --- Place every title row and button. Down growth keeps the header on top; up growth puts it at the
@@ -297,25 +297,28 @@ end
 ---   header row's height, PL.HeaderHeight),
 ---   situation = string (the header's text: a section title equal to it is not drawn),
 ---   minWidth = number (the narrowest the pad may be: what its header row needs, measured by
----   modules/Pad.lua; default PL.MIN_PAD_W) }
---- @return table { width, height, items, headerY (the header row's top), headerH (its height), up (the
----   growth is upward) }
+---   modules/Pad.lua; default PL.MIN_PAD_W), edge = number (how far in from the pad's edge the header
+---   row stands, R5-QC1: the rows start under it, and a pad with no row is the header and the edge
+---   above and below it; default 0) }
+--- @return table { width, height, items, headerY (the header row's top), headerH (its height), edge, up
+---   (the growth is upward) }
 function PL.Compute(sections, layout, opts)
     layout = type(layout) == "table" and layout or {}
     opts = type(opts) == "table" and opts or {}
     local cw, ch = cellOf(layout, opts)
     local hh = PL.HeaderHeight(opts.headerH)
+    local edge = math.max(0, tonumber(opts.edge) or 0)
     local gap = math.max(0, tonumber(layout.spacing) or 4)
     local up = PL.GrowsUp(layout.growth)
     local blocks, contentW = blocksOf(sections, layout, opts, cw, ch, gap, up)
     local maxCols = layout.orientation == "grid" and PL.Columns(layout, 1) or nil
-    local y, widest = stackBlocks(blocks, maxCols, hh)
+    local y, widest = stackBlocks(blocks, maxCols, hh + edge)
     if widest > 0 then contentW = math.max(contentW, widest * cw + (widest - 1) * gap) end
-    local width, height = boxSize(blocks, y, contentW, opts.minWidth, hh)
+    local width, height = boxSize(blocks, y, contentW, opts.minWidth, hh, edge)
     if up then flipBlocks(blocks, height) end
     local items = flattenBlocks(blocks, MIRROR[layout.growth] == true, width, cw + gap, cw, gap)
-    return { width = width, height = height, items = items, up = up, headerY = up and (height - hh) or 0,
-        headerH = hh }
+    return { width = width, height = height, items = items, up = up,
+        headerY = up and (height - hh - edge) or edge, headerH = hh, edge = edge }
 end
 
 --- The pad's visibility as one state-driver expression (spec §10.3). The master visibility applies

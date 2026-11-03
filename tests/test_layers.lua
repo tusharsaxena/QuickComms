@@ -106,7 +106,7 @@ local function pad(NS)
     return NS.Pad.Instance("p1")
 end
 
-test("layers: a pad's root is the HUD tier; its header and buttons sit one over it", function()
+test("layers: a pad's root is the HUD tier; its band and buttons sit one over it, its header two", function()
     local NS, m = layered()
     local inst = pad(NS)
     local L = m.__layers(inst.root)
@@ -115,7 +115,11 @@ test("layers: a pad's root is the HUD tier; its header and buttons sit one over 
     assertFalse(L.toplevel, "a HUD is not toplevel")
     local btn = NS.Pad.ButtonsFor("p1", T.seeded(NS, "bi.mplus.pull"))[1]
     assertEqual(lv(btn), lv(inst.root) + 1)
-    assertEqual(lv(inst.header), lv(inst.root) + 1)
+    -- R5-QC1: the header's band one over the root (never level with its backdrop), the header and its
+    -- texts over the band (round 4 had the header one over the root, with no band)
+    assertEqual(lv(inst.headBand), lv(inst.root) + NS.Constants.LAYERS.LEVEL.PAD_BAND)
+    assertEqual(lv(inst.header), lv(inst.root) + NS.Constants.LAYERS.LEVEL.PAD_HEADER)
+    assertEqual(lv(inst.header), lv(inst.root) + 2)
     assertEqual(m.__layers(btn).strata, NS.Constants.LAYERS.STRATA.HUD, "inherited")
 end)
 

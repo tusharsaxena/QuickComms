@@ -251,11 +251,13 @@ test("skin flip: a skin switch reaches every drawing setter on a pad", function(
     assertColor(inst.header.qcSituation.__color, color(NS, "hud.label"), "the header's text")
     assertColor(drawn[inst.root].bg, color(NS, "win.bg"), "the window's fill")
     assertColor(drawn[inst.root].border, color(NS, "win.border"), "the window's edge")
-    assertColor(drawn[inst.header].bg, color(NS, "title.bg"), "the header's band")
+    -- The header's band is the library's title band on its own frame (R5-QC1, tests/test_pad_header.lua);
+    -- the header's backdrop over it is clear (round 4 drew title.bg flat on it).
+    assertTrue(m.LibStub("LibKa0s-Skin-1.0").painted[inst.headBand].calls.TitleBar ~= nil, "the header's band")
+    assertEqual(drawn[inst.header].bg[4], 0, "the header itself clear over its band")
     assertColor(drawn[btn.qcEdge].border, color(NS, "btn.border"), "a button's edge")
-    assertEqual(Skin:ResolveSkin(OTHER)["bar.borderStyle"], "None", "this skin states no border of its own")
-    assertEqual(drawn[inst.header].edgeSize, Skin:ResolveSkin(OTHER)["bar.borderSize"],
-        "and none stored, so the band takes the hairline a button wears")
+    -- red under the round 4 hairline (qc.bandEdgeSize): the header's band is borderless in every skin
+    assertEqual(drawn[inst.header].edgeSize, 0, "the header draws no edge")
 end)
 
 test("skin flip: a skin switch reaches the dial's slices, hub, pointer, page row and shine", function()

@@ -1068,7 +1068,7 @@ Total.
 ### test_pad_looks.lua (21)
 
 - pad looks: WoW Default's bands and window edge are no client art's white tint
-- pad looks: WoW Default's bands keep a hairline, not the dialog art's size
+- pad looks: WoW Default's bands never take the dialog art's size
 - pad looks: WoW Default's window wears the dialog border art the Skin Tester shows, no other skin does (SF-QC-3)
 - pad looks: WoW Default's buttons are the skin's red, no bar texture dimming it
 - pad looks: a dial's page dots take no white ring under WoW Default
@@ -1079,15 +1079,26 @@ Total.
 - pad looks: contrast's bands and buttons draw a 1 px edge
 - pad looks: obsidian's bands and buttons draw a 1 px edge
 - pad looks: azeroth's bands and buttons draw a 1 px edge
-- pad looks: a section band draws the same 1 px edge as the header's
+- pad looks: a section band draws no edge while it follows, as the header draws none
 - pad looks: Ka0s Default's bands stay undrawn
-- pad looks: a band's stored thickness defers under a skin's None, and a real style wins
+- pad looks: a following band draws no edge in any skin; a border the player stores draws as stored
 - pad looks: Ka0s Default's buttons are the fuller body, edge, texture and gloss
 - pad looks: every skin's shine is a third lighter, a button's and a slice's alike
 - pad looks: what reaches a button and a slice is the lighter strength
 - pad looks: a player's stored Strength stands with the companion off
 - pad looks: a stored Strength with no strength token is as stored
 - pad looks: with the library absent a button stays flat and its stored Strength draws
+
+### test_pad_header.lua (8)
+
+- pad header: the header is the library's title band in every skin, borderless, the header itself clear
+- pad header: the band and the header sit over the root, never level with its backdrop
+- pad header: the header sits flush inside the window edge, down growth and up, in every skin
+- pad header: the rows start under the band, and a collapsed pad is the band and its edges
+- pad header: the text stays left, the collapse button right, each on the band's middle
+- pad header: a section band draws no band in any skin, so the header is the only band
+- pad header: a section band the player dresses still draws what was stored
+- pad header: the band stands down when the header stops following the skin, and comes back
 
 ### test_pad.lua (47)
 
@@ -1569,7 +1580,7 @@ Total.
 - layers: NS.Constants.LAYERS names every strata and level once (frame-layering-§5)
 - layers: [#14] the bands of the shared FULLSCREEN strata, bottom to top, each clear of the last
 - layers: no strata string and no bare level at any call site (anti-pattern #99)
-- layers: a pad's root is the HUD tier; its header and buttons sit one over it
+- layers: a pad's root is the HUD tier; its band and buttons sit one over it, its header two
 - layers: [#14] a pad's root sits at the HUD band over UIParent, set before its children
 - layers: [QUI-Z11] the pad's drag strip ignores the pad's alpha
 - layers: [QUI-Z02/Z03] a pad button's ladder: edge, its glow, icon border, its glow, overlay
@@ -2002,6 +2013,7 @@ Total.
 | test_surfaces.lua | 30 |
 | test_pad_render.lua | 25 |
 | test_pad_looks.lua | 21 |
+| test_pad_header.lua | 8 |
 | test_pad.lua | 47 |
 | test_dial.lua | 38 |
 | test_dial_catcher.lua | 13 |
@@ -2038,4 +2050,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 26 |
 | Skipped | 1 |
-| **Total** | **1708** |
+| **Total** | **1716** |
