@@ -62,6 +62,14 @@ What the addon cannot do, or does only under a condition, and why. The hub,
   session.
 - While a dial is open from its key, its full-screen catcher takes every click outside it (it closes
   the dial and does nothing else), so a world click or an action-bar click needs a second press.
+- The pads sit in `DIALOG` high in its levels, and the dial in `FULLSCREEN` (issue #14), so they draw over
+  other addons' windows and over the settings window. A pad also draws over a Blizzard confirm or the
+  debug console where they overlap, until a click raises the toplevel one; move the pad if it is in the
+  way. The game's tooltip, menus, pull-outs and QuickComms' own confirms stay above both. QuickComms' own
+  skin picker is raised over a pad when it shows (first run, `/qc skin`); it stays under an open dial,
+  which is a strata up and closes on the next click. A picker queued behind another Ka0s addon's shows
+  later with no host hook, so it and another addon's picker can still sit under a pad until a click on
+  them raises them.
 - A dial whose groups are all inactive opens nothing when its key is pressed (there is no empty ring).
 - Open at the cursor relies on the restricted `SetPoint` accepting `$cursor` (DIAL-7 passed,
   2026-10-21); the fallback, if a patch breaks it, is opening at the dial's place.
@@ -73,6 +81,26 @@ What the addon cannot do, or does only under a condition, and why. The hub,
   under Auto, A–Z after the set's own wedge, so a node's slice does not match where it is on the map.
   Until then each seeded node was pinned to its compass wind on an eight-slice ring, and the slices
   with no node were drawn empty.
+
+- **The dial's animations play on a copy (#13).** A copy cannot run what a live frame runs, so an icon's
+  glow freezes for the length of an animation. A color texture cannot be read back from the client, so
+  one on the dial (a wedge's dim veil) is left out until the real dial returns. A rebuild's close and
+  reopen, and a page turn or group wedge during an open, do not animate: they snap. Pads do not animate
+  at all (the owner's ruling, 2026-11-01).
+- **The dial's text scales on the client's clock (#13).** The art's tween is the script's and the
+  glyphs' a Scale animation's, in `Enum.FontStringScaleAnimationMode.Vertex` (12.0), so they can differ
+  slightly mid-animation if the client's `IN` and `OUT` smoothing is not the script's quadratic; a
+  string's position is the script's and stays exact. Vertex mode may pixelate a font that is not a
+  slug font. Where the client lacks the mode or its Enum, text takes no scale at all and fades in place
+  while the art scales; a font-size scale would shimmer, so there is no such fallback.
+- **Squash and Flip are the client's one-axis stretch (#13).** A frame takes one scale, so one axis needs a
+  Scale animation on each art sub-frame. Where a frame has none, both axes become the smaller, and Squash
+  and Flip read as a shrink. Flip has no perspective: WoW's UI has none, so it is a narrowing width.
+- **What turns and what stays upright (#13).** In Rotate and scale, the spirals, Orbit and Shatter the
+  slice art turns; icons and text keep upright and follow their place, and the hub and title stay level.
+  Shatter's scatter comes from eight seeds, so on a ring wider than eight a slice repeats another's path.
+- **An interrupted animation is a straight tween (#13).** A reversal runs from the pose it stands in to the
+  new style's end, so it has no overshoot, bounce or spiral of its own.
 
 ## Keys
 
@@ -171,8 +199,9 @@ What the addon cannot do, or does only under a condition, and why. The hub,
   with the stale hint meanwhile), as every rebuild does: a face or a border style moves a pad's
   measured widths, and a secure pad cannot be re-laid out in combat. The one-time reset onto the
   skin (schema step 10) moves every pad's and dial's faces to the skin's HUD font (Prototype under
-  Ka0s Default since LibKa0s v1.82.0, Oxanium SemiBold before) and their border styles to its own;
-  the colors stay the player's. Step 11 moves every stored OUTLINE Font flags to From skin once, so
+  Ka0s Default since LibKa0s v1.82.0, Oxanium SemiBold before) and their border styles to its own.
+  Step 13 does the same for every color, the shadow and the shine; a stored color is kept behind its
+  box. A pad window's and a header's fill stay flat: no skin token names a window texture. Step 11 moves every stored OUTLINE Font flags to From skin once, so
   a player who had picked Outline on purpose now follows the Font outline (the same pixels under
   its default, HUD text only, because pads and dials are HUD text); picking Outline again keeps it.
 - A block on the skin's face draws at the skin's HUD size (`NS.Skin.HudFontSize`, LibKa0s v1.82.0,

@@ -63,6 +63,8 @@ local ALLOW = {
       why = "the combat refusal's chat line: chat output, not a skinned surface (DECISIONS X7)" },
     { file = "modules/Pad_Render.lua", find = "L[\"Channel: %s\"]",
       why = "the channel's name in WoW's chat-type color: a game-meaning color (rung 4)" },
+    { file = "modules/Pad_Render.lua", find = "t:SetVertexColor(1, 1, 1, 1)",
+      why = "a button's flat body clearing a texture's tint: white draws the color texture as painted" },
     { file = "modules/Pad_Render.lua", find = "NO_INNER =",
       why = "a cleared inner line: no color is drawn, under any skin" },
     { file = "modules/Dial_Slices.lua", find = "BLACK =",
@@ -218,6 +220,9 @@ end
 local function boot(mock)
     local NS, m = T.enableAddon(mock and { mock = mock } or nil)
     dofile("tests/_kit/mock_paint.lua")(m)
+    -- This suite reads paint. The animations' ghost reads rects the recorder's regions do not model,
+    -- and tests/test_anim_surfaces.lua covers it, so the preview dial here opens at once.
+    NS.Anim.Open, NS.Anim.Close = function() return false end, function() return false end
     maskable(m)
     NS.Situation.ReadInputs = function() return {} end
     NS.Situation.RefreshNow("test")
@@ -290,14 +295,8 @@ test("skin windows: the Preview window is the owner's Shell, its title in the to
     assertFalse(type(shell.opts) == "table" and shell.opts.noTopBar, "the window carries the top bar")
     local button = callOn(seen.Shell, f.endButton)
     assertTrue(button ~= nil and button.opts.noTopBar == true, "End preview is a Shell box with no top bar")
-    -- red under: keep the title at TOP -6 (it sat 6px into a 30px bar, D9)
-    local band = NS.Skin.Token("title.height")
-    local p = f.title.__points[#f.title.__points]
-    assertEqual(p[1], "CENTER")
-    assertEqual(p[3], "TOP")
-    assertEqual(p[5], -band / 2, "the title centered in the top bar")
-    local c = f.closeButton.__points[#f.closeButton.__points]
-    assertEqual(c[5], -(band - 18) / 2, "the close mark centered in the top bar")
+    -- Where the title and the close mark sit in that bar (on the band's middle, in every skin) is the
+    -- R5-WIN case below; round 4 pinned them at CENTER of TOP -title.height/2, half a px high.
 end)
 
 test("skin windows: End preview's label is the step panels' tokens at rest, hovered and locked", function()
@@ -402,8 +401,9 @@ test("skin windows: a client without the template gets the owner's Shell, not th
     local Pop = openPopup(NS)
     assertFalse(Pop.chrome.template)
     local shell = callOn(seen.Shell, Pop.chrome.bg)
-    -- red under: keep the UI-DialogBox-Border backdrop typed over a 0.05 fill (D2)
-    assertTrue(shell ~= nil and shell.opts.noTopBar == true, "the fallback's fill and edge are the skin's")
+    -- red under: keep the UI-DialogBox-Border backdrop typed over a 0.05 fill (D2). Its band (no
+    -- noTopBar since R5-WIN) is the fallback case below.
+    assertTrue(shell ~= nil, "the fallback's fill and edge are the skin's")
     local backdrop = m.__paint(Pop.chrome.bg).backdrop
     assertFalse(backdrop ~= nil and tostring(backdrop.edgeFile):find("DialogBox", 1, true) ~= nil,
         "no Blizzard dialog edge")
@@ -610,4 +610,159 @@ test("skin windows: the browser's cell tooltip writes its lines in the tooltip t
     local got = lines()
     -- red under: AddLine(..., 1, 1, 1, true) typed
     assertColor(rgbOf(got[#got]), now(NS, "gtip.value"), "what a click does")
+end)
+
+-- ── no line under any window title (R4-SEP) ──────────────────────────────────────────────────────
+
+-- The owner's "no separator line below header" (Ka0sAddonsCommonTasks docs/2026-11-03-SMOKE_ROUND4,
+-- R4_SIGNOFF.md, the Skin Tester's showroom the reference): no window this addon shows draws a line
+-- under its title band. The Preview window and the modal windows never made one; the debug console,
+-- its copy window, the perf panel and the browser's link window are the library's, which stopped
+-- drawing it in the LibKa0s v1.85.0 round 4 re-cut. A divider that is present must at least be hidden.
+-- The settings page header's rule inside the modal windows is a page header's, not the window's, and
+-- stays (R4_SIGNOFF.md); this case does not read it.
+local function noRule(f, what)
+    assertTrue(f ~= nil, what .. " was built")
+    local divider = rawget(f, "divider")
+    assertTrue(divider == nil or not divider:IsShown(), what .. " shows no line under its title")
+end
+
+test("skin windows: no window shows a line under its title, in Ka0s Default and after a switch (R4-SEP)", function()
+    local NS, _, Skin = boot()
+    local function windows()
+        local list = { { previewWindow(NS), "the Preview window" } }
+        local Pop = openPopup(NS)
+        list[#list + 1] = { Pop.frame, "the callout popup" }
+        local B = openBrowser(NS)
+        list[#list + 1] = { B.frame, "the icon browser" }
+        local link = B.LinkWindow()
+        list[#list + 1] = { link and link:GetFrame(), "the browser's link window" }
+        NS.DebugLog:Show()
+        list[#list + 1] = { NS.DebugLog._frameForTest, "the debug console" }
+        NS.DebugLog:ShowCopy()
+        list[#list + 1] = { NS.DebugLog._copyFrameForTest, "the console's copy window" }
+        NS.Perf.ShowPanel()
+        list[#list + 1] = { NS.Perf.__panel and NS.Perf.__panel(), "the perf panel" }
+        return list
+    end
+    local list = windows()
+    -- red under: the R4-RV payload, whose console made a divider and whose ApplySkin showed it
+    for _, w in ipairs(list) do noRule(w[1], w[2]) end
+    -- a live switch repaints every window (the facade records each primitive): still no line
+    Skin:SetChoice(OWNER, "ka0s", OTHER)
+    for _, w in ipairs(list) do noRule(w[1], w[2] .. " under " .. OTHER) end
+    NS.Perf.HidePanel()
+end)
+
+-- ── every header on its band, every page under it (R5-WIN) ───────────────────────────────────────
+
+-- The owner's round 5 items 2 and 5 (Ka0sAddonsCommonTasks docs/2026-11-03-SMOKE_ROUND5, the lead's
+-- calls 2, 3 and 6): each window this addon builds looks like Loot History's. The band sits flush
+-- inside the edge at Shell's own inset (S.Band: `win.borderSize` in from a flat edge, else 1) and
+-- `title.height`; every header child is anchored LEFT, CENTER or RIGHT to that band at y 0 (S.Header),
+-- so it sits on the band's middle in every skin; and the content starts under the band, never over
+-- it. The debug console, its copy window, the perf panel and the browser's link window are the
+-- library's, which pins them itself (LibKa0s tests/test_header_band.lua).
+local CENTERED = { LEFT = true, CENTER = true, RIGHT = true }
+
+local function skinKeys(Skin)
+    local out = {}
+    for _, def in ipairs(Skin:Skins()) do out[#out + 1] = def.key end
+    return out
+end
+
+--- Where Shell lays the band under `key`: its inset and its height.
+local function bandAt(Skin, key)
+    local t = Skin:ResolveSkin(key)
+    local inset = (t["win.borderStyle"] or "flat") == "flat" and t["win.borderSize"] or 1
+    return inset, t["title.height"] or 30
+end
+
+local function assertOnBand(region, band, what)
+    local points = rawget(region, "__points") or {}
+    assertTrue(#points >= 1 and #points <= 2, what .. ": anchored")
+    for _, p in ipairs(points) do
+        assertTrue(CENTERED[p[1]], ("%s: a %s point, never TOP*"):format(what, tostring(p[1])))
+        assertEqual(p[3], p[1], what .. ": to the band's own " .. tostring(p[1]))
+        assertTrue(p[2] == band, what .. ": anchored to the band")
+        assertEqual(p[5], 0, what .. ": y 0, the band's middle")
+    end
+end
+
+local function assertBand(band, f, inset, h, what)
+    assertTrue(band ~= nil, what .. ": a band")
+    local p = band.__points[1]
+    assertTrue(p ~= nil and p[2] == f, what .. ": the band is the window's")
+    assertEqual(p[4] .. "," .. p[5], inset .. "," .. -inset, what .. ": flush inside the edge")
+    assertEqual(band.__h, h, what .. ": title.height")
+end
+
+--- `region`'s first anchor (TOPLEFT to `f`'s TOPLEFT) as "x,y".
+local function topLeft(region, f, what)
+    for _, p in ipairs(rawget(region, "__points") or {}) do
+        if p[1] == "TOPLEFT" then
+            assertTrue(p[2] == f and p[3] == "TOPLEFT", what .. ": on the window's top left")
+            return p[4] .. "," .. p[5]
+        end
+    end
+    fail(what .. ": no TOPLEFT anchor")
+end
+
+test("skin windows: the Preview window's title and close sit on the band's middle, content under it, every skin (R5-WIN)", function()
+    local NS, _, Skin = boot()
+    local f = previewWindow(NS)
+    for _, key in ipairs(skinKeys(Skin)) do
+        Skin:SetChoice(OWNER, "ka0s", key)
+        local inset, h = bandAt(Skin, key)
+        local band = NS.Skin.Band(f)
+        assertBand(band, f, inset, h, key)
+        -- red under: the title at CENTER of TOP -title.height/2 and the close at TOPRIGHT -6 (round 4):
+        -- 0.5 px over the band's middle at a 1 px inset, a px more under a 2 px edge
+        assertOnBand(f.title, band, key .. ": the title")
+        assertOnBand(f.closeButton, band, key .. ": the close mark")
+        -- red under: the dropdown at TOP -(24 + 8), one px under a 30 px band at inset 1, on it at 2
+        assertEqual(topLeft(f.dropdown, f, key), "8," .. -(inset + h + 6), key .. ": the row 6 px under the band")
+        assertEqual(f.__h, inset + h + 6 + 22 + 8, key .. ": the window holds the band, the row and its pad")
+    end
+end)
+
+test("skin windows: the modal window's title and close X sit on the band's middle, the page under it, every skin (R5-WIN)", function()
+    local NS, _, Skin = boot()
+    local Pop = openPopup(NS)
+    local B = openBrowser(NS)
+    for _, key in ipairs(skinKeys(Skin)) do
+        Skin:SetChoice(OWNER, "ka0s", key)
+        local inset, h = bandAt(Skin, key)
+        for _, w in ipairs({ { Pop.frame, "the callout popup" }, { B.frame, "the icon browser" } }) do
+            local f, what = w[1], key .. ": " .. w[2]
+            local band = NS.Skin.Band(f)
+            assertBand(band, f, inset, h, what)
+            -- red under: the template's own anchors (NineSlice.Text TOP -5, ClosePanelButton TOPRIGHT)
+            assertOnBand(f.NineSlice.Text, band, what .. ": the title")
+            assertOnBand(f.ClosePanelButton, band, what .. ": the close X")
+        end
+        -- red under: MW.INSET_TEMPLATE.top 24, which laid the page's top 6 or 7 px over a 30 px band
+        assertEqual(topLeft(B.ctx.panel, B.frame, key), "8," .. -(inset + h), key .. ": the page starts under the band")
+    end
+end)
+
+test("skin windows: the modal fallback wears the band too, its title and close mark on it (R5-WIN)", function()
+    local NS, m, Skin = boot()
+    m.missingTemplates.SettingsFrameTemplate = true
+    local seen = spy(NS, { "Shell" })
+    local Pop = openPopup(NS)
+    local bg = Pop.chrome.bg
+    -- red under: Shell(bg, { noTopBar = true }) (round 4: the page drew its own header, no band)
+    local shell = callOn(seen.Shell, bg)
+    assertTrue(shell ~= nil and not (type(shell.opts) == "table" and shell.opts.noTopBar), "the fallback has the band")
+    for _, key in ipairs(skinKeys(Skin)) do
+        Skin:SetChoice(OWNER, "ka0s", key)
+        local inset, h = bandAt(Skin, key)
+        local band = NS.Skin.Band(bg)
+        assertBand(band, bg, inset, h, key)
+        assertTrue(Pop.chrome.title ~= nil, key .. ": the fallback has a window title")
+        assertEqual(Pop.chrome.title:GetText(), NS.BRAND, key .. ": the addon's name, as the template's")
+        assertOnBand(Pop.chrome.title, band, key .. ": the title")
+        assertOnBand(Pop.chrome.close, band, key .. ": the close mark")
+    end
 end)

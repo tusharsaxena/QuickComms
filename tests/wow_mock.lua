@@ -77,6 +77,7 @@ local function build()
         AddOnRestrictionType = { Combat = 0, Encounter = 1, ChallengeMode = 2, PvPMatch = 3, Map = 4,
             Chat = 5 },
         AddOnRestrictionState = { Inactive = 0, Activating = 1, Active = 2 },
+        FontStringScaleAnimationMode = { FontSize = 0, Vertex = 1 },
     }
 
     -- C_ChatInfo: chatLockdown is InChatMessagingLockdown's answer; generalChannel is the number the
@@ -300,6 +301,15 @@ local function build()
         -- A font string's face, recorded; true as the client answers for a face it accepts.
         function r:SetFont(path, size, flags) self.__font = { path, size, flags } return true end
         function r:SetShadowOffset(x, y) self.__shadow = { x, y } return self end
+        function r:SetShadowColor(cr, cg, cb, ca) self.__shadowColor = { cr, cg, cb, ca } return self end
+        -- The client draws a string in its font object's face and shadow (LibKa0s S.HudFont), so
+        -- wearing one reads as those, what a suite asserts, and GetFontObject answers it for the ghost.
+        function r:SetFontObject(obj)
+            self.__fontObject = obj
+            self.__font, self.__shadow, self.__shadowColor = obj.__font, obj.__shadow, obj.__shadowColor
+            return self
+        end
+        function r:GetFontObject() return self.__fontObject end
         function r:SetAlpha(a) self.__alpha = a return self end
         -- The Icons tab's texture calls (modules/IconStyle.lua), recorded so a crop, a desaturation
         -- and an icon size can be asserted on.
@@ -346,10 +356,32 @@ local function build()
         local r = region(kind)
         r.__parent = frame
         r.GetParent = function(x) return x.__parent end
+        -- What a surface's ghost reads (modules/Anim_Ghost.lua): the region's kind, its center and a
+        -- face, and the frame's list of regions, as GetRegions answers it.
+        r.GetObjectType = function(x) return x.__kind end
+        r.GetCenter = function(x) return x.__cx or 0, x.__cy or 0 end
+        r.GetFont = function() return "Fonts\\FRIZQT__.TTF", 12, "" end
+        -- A font string's Scale animation (12.0's Vertex mode, the ghost's): what plays, from and to.
+        if kind == "FontString" then
+            r.SetScaleAnimationMode = function(x, mode) x.__scaleMode = mode end
+            r.CreateAnimationGroup = function(x)
+                local anim = { SetScaleFrom = function(a, sx) a.__from = sx end,
+                    SetScaleTo = function(a, sx) a.__to = sx end, SetOrigin = function() end,
+                    SetDuration = function(a, d) a.__duration = d end, SetSmoothing = function() end }
+                local group = { CreateAnimation = function() return anim end,
+                    Play = function(g) g.__playing = true end, Stop = function(g) g.__playing = false end }
+                x.__scaleGroup, x.__scaleAnim = group, anim
+                return group
+            end
+        end
+        frame.__regions = frame.__regions or {}
+        frame.__regions[#frame.__regions + 1] = r
         return r
     end
 
     local function dress(frame)
+        frame.GetRegions = function(self) return unpack(self.__regions or {}) end
+        frame.GetChildren = function(self) return unpack(self.__kids or {}) end
         frame.CreateTexture = function(self, _, layer, _, sub)
             local r = regionOn(self, "Texture")
             r.__layer, r.__sublevel = layer, sub   -- the draw layer, so a test can ask what sits over what
@@ -787,15 +819,19 @@ local function build()
     -- SettingsFrameTemplate's parentKeys, as Blizzard_SettingsPanelTemplates.xml declares them: Bg
     -- (FlatPanelBackgroundTemplate), NineSlice with its Text (the window title, GameFontNormal), and
     -- ClosePanelButton (UIPanelCloseButtonDefaultAnchors, whose own click hides the window). The
-    -- title records what it is set to (`text`), and Bg answers its alpha (GetAlpha) and its frame level:
-    -- 0 until set, as the template declares it (frameLevel="0", an absolute level, not the parent's
-    -- plus one). A template named in `missingTemplates` raises, as CreateFrame does in a client without it.
+    -- title is a FontString that records what it is set to (`text`), and Bg answers its alpha (GetAlpha)
+    -- and its frame level: 0 until set, as the template declares it (frameLevel="0", an absolute level,
+    -- not the parent's plus one). The title and the close X start on the template's own TOP and
+    -- TOPRIGHT anchors, so a case can tell a header the host placed from one it left where Blizzard put
+    -- it (R5-WIN). A template named in `missingTemplates` raises, as CreateFrame does in a client
+    -- without it.
     M.missingTemplates = {}
     local function dressSettingsFrame(f)
         local nine = M.CreateFrame("Frame", nil, f)
-        local title = {}
-        function title.SetText(t, v) t.text = v; return t end
+        local title = nine:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        function title.SetText(t, v) t.text, t.__text = v, v; return t end
         function title.GetText(t) return t.text end
+        title:SetPoint("TOP", nine, "TOP", 0, -5)
         nine.Text = title
         f.NineSlice = nine
         local bg = M.CreateFrame("Frame", nil, f)
@@ -806,11 +842,30 @@ local function build()
         f.Bg = bg
         local close = M.CreateFrame("Button", nil, f)
         close:SetScript("OnClick", function() f:Hide() end)
+        close:SetPoint("TOPRIGHT", f, "TOPRIGHT", 1, 0)
         f.ClosePanelButton = close
     end
 
     local secureFrames = {}
+    -- A frame's children, as GetChildren answers them (modules/Anim_Ghost.lua walks them).
+    local function adopt(parent, f)
+        if type(parent) ~= "table" then return end
+        parent.__kids = parent.__kids or {}
+        parent.__kids[#parent.__kids + 1] = f
+    end
+
     local baseCreateFrame = M.CreateFrame
+    -- A font object, as S.HudFont makes one per string: what it was set, read by SetFontObject above.
+    M.STANDARD_TEXT_FONT = M.STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF"
+    M.CreateFont = function(name)
+        local f = { __name = name, fonts = 0 }
+        function f:SetFont(path, size, flags) self.__font, self.fonts = { path, size, flags }, self.fonts + 1 return true end
+        function f:SetShadowOffset(x, y) self.__shadow = { x, y } end
+        function f:SetShadowColor(r, g, b, a) self.__shadowColor = { r, g, b, a } end
+        -- A real font object answers its face (LibKa0s R3-DR-1L reads it back to hold the face).
+        function f:GetFont() local t = self.__font or {} return t[1], t[2], t[3] end
+        return f
+    end
     M.CreateFrame = function(frameType, name, parent, template)
         if type(template) == "string" and M.missingTemplates[template] then
             error("CreateFrame: Couldn't find inherited node \"" .. template .. "\"", 2)
@@ -818,6 +873,7 @@ local function build()
         local f = baseCreateFrame(frameType, name, parent, template)
         if template == "SettingsFrameTemplate" then dressSettingsFrame(f) end
         if ours(f) then dress(f) end
+        adopt(parent, f)
         if type(name) == "string" then M.__named[name] = f end
         -- A plain Button records its registered clicks too (the client's default is LeftButtonUp), so
         -- `__click` and a CLICK binding (`__pressKey`) reach one only on an edge it registered.
@@ -982,10 +1038,14 @@ local function build()
     M.__applyStateDrivers = function()
         for frame, drivers in pairs(M.stateDrivers) do
             local value = drivers.visibility and evaluate(drivers.visibility)
+            -- OnShow and OnHide fire on a change, as the client fires them for a driven frame.
+            local was = frame.__shown
             if value == "show" then
                 frame.__shown = true
+                if not was then frame:__fire("OnShow") end
             elseif value == "hide" then
                 frame.__shown = false
+                if was then frame:__fire("OnHide") end
             end
         end
     end

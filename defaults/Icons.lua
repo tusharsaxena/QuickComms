@@ -5,9 +5,12 @@ local _, NS = ...
 -- existed (it fills one level deep). modules/Library.lua copies these into SURFACE_DEFAULTS and
 -- TEMPLATES; settings/SchemaIcons.lua makes the rows; modules/IconStyle.lua and modules/Glow.lua draw
 -- them. Every default draws an icon exactly as it was drawn before the tab existed: no crop, no
--- desaturation, opaque, a white tint (a glyph keeps its own color), no border and no glow.
+-- desaturation, opaque, a white tint (a glyph keeps its own color), no border and no glow. Since R4-ZOOM
+-- (smoke round 4) a game icon is still cropped 0.07 a side at Zoom 0, past Blizzard's native edge
+-- (modules/IconStyle.lua IS.NATIVE_CROP); a glyph or a raid marker is not.
 -- `borderStyleFromSkin` (QC-03) defaults true: a shown border is the skin's icon border (its style and
--- thickness, modules/IconStyle.lua) until the player turns it off.
+-- thickness, modules/IconStyle.lua) until the player turns it off. `tintFromSkin`,
+-- `borderColorFromSkin` and `glowColorFromSkin` (LibKa0s v1.85.0, cause D7) default true too.
 --
 -- The glow knobs, their ranges and defaults are DropWatcher's (settings/SchemaRows.lua GLOW_KNOBS,
 -- shared with KickCD's glow slots); `pixelLength` 0 is automatic (the library sizes the lines from
@@ -58,11 +61,11 @@ D.GLOW_KNOBS = {
 function D.For(kind)
     local t = {
         size = D.SIZE[kind].auto and D.AUTO_SIZE or D.SIZE[kind].default, zoom = 0, desaturate = false, alpha = 1,
-        tint = { r = 1, g = 1, b = 1, a = 1 }, useClassColorTint = false,
+        tint = { r = 1, g = 1, b = 1, a = 1 }, useClassColorTint = false, tintFromSkin = true,
         borderShow = false, borderStyle = "Solid", borderSize = 1, borderColor = { r = 0, g = 0, b = 0, a = 1 },
-        useClassColorBorder = false, borderStyleFromSkin = true,
+        useClassColorBorder = false, borderColorFromSkin = true, borderStyleFromSkin = true,
         glowEnabled = false, glowWhen = "always", glowType = "pixel",
-        glowColor = { r = 1, g = 0.82, b = 0, a = 1 }, useClassColorGlow = false,
+        glowColor = { r = 1, g = 0.82, b = 0, a = 1 }, useClassColorGlow = false, glowColorFromSkin = true,
     }
     for _, knob in ipairs(D.GLOW_KNOBS) do t[knob.key] = knob.default end
     return t

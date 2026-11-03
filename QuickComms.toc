@@ -144,6 +144,12 @@ modules\Glow.lua
 modules\Shine.lua
 # Conventional: the surfaces' plans and rebuild; calls modules\Pad.lua at run time only
 modules\Surfaces.lua
+# LOAD-BEARING: fills NS.Anim's pure half (the poses and styles), which modules\Anim.lua and modules\Anim_Ghost.lua read.
+modules\Anim_Pose.lua
+# LOAD-BEARING: publishes NS.AnimGhost, which modules\Anim.lua takes as a load-time upvalue.
+modules\Anim_Ghost.lua
+# LOAD-BEARING: publishes NS.Anim, which modules\Pad.lua and modules\Dial.lua read at build time; appends to NS.STAND_DOWN.
+modules\Anim.lua
 # LOAD-BEARING: publishes NS.PadRender, which modules\Pad.lua takes as a load-time upvalue.
 modules\Pad_Render.lua
 # Conventional: the Comms Pad frames; appends to NS.STAND_DOWN / NS.STAND_UP

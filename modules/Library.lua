@@ -910,8 +910,9 @@ local SURFACE_DEFAULTS = {
         style = "iconLabel", scale = 1.0, spacing = 4 },
         look = { visibility = "always", fade = "none", fadeAlpha = 0.4,
             borderStyle = "None", borderSize = 1, borderColor = { r = 0, g = 0, b = 0, a = 1 },
-            useClassColorBorder = false, borderStyleFromSkin = true,
-            background = { r = 0.06, g = 0.06, b = 0.08, a = 0.92 }, useClassColorBackground = false },
+            useClassColorBorder = false, borderColorFromSkin = true, borderStyleFromSkin = true,
+            background = { r = 0.06, g = 0.06, b = 0.08, a = 0.92 }, useClassColorBackground = false,
+            backgroundFromSkin = true },
         icon = NS.IconDefaults.For("pad"),   -- the Icons tab (defaults/Icons.lua)
         header = NS.PadDefaults.Header(),    -- the Header tab (defaults/PadStyle.lua)
         section = NS.PadDefaults.Section(),  -- the Section titles tab (defaults/PadStyle.lua)
@@ -925,7 +926,8 @@ local SURFACE_DEFAULTS = {
         title = NS.PadDefaults.DialTitle(),     -- the Labels tab's Group labels (defaults/PadStyle.lua)
         slice = NS.PadDefaults.DialSlice(),     -- the Slices tab (defaults/PadStyle.lua)
         hub = NS.PadDefaults.DialHub(),         -- the Hub tab's Hub heading (defaults/PadStyle.lua)
-        page = NS.PadDefaults.DialPage() },     -- the Paging tab (defaults/PadStyle.lua)
+        page = NS.PadDefaults.DialPage(),       -- the Paging tab (defaults/PadStyle.lua)
+        anim = NS.PadDefaults.DialAnim() },     -- the Animation tab (defaults/PadStyle.lua, #13)
 }
 
 --- The shape of one member of each kind: what every member row's path resolves against (the
@@ -945,7 +947,7 @@ Lib.TEMPLATES = {
         radius = SURFACE_DEFAULTS.dial.radius, iconOffset = SURFACE_DEFAULTS.dial.iconOffset, openAt = SURFACE_DEFAULTS.dial.openAt, point = false,
         icon = copyTable(SURFACE_DEFAULTS.dial.icon), label = copyTable(SURFACE_DEFAULTS.dial.label),
         title = copyTable(SURFACE_DEFAULTS.dial.title), slice = copyTable(SURFACE_DEFAULTS.dial.slice), hub = copyTable(SURFACE_DEFAULTS.dial.hub),
-        page = copyTable(SURFACE_DEFAULTS.dial.page) },
+        page = copyTable(SURFACE_DEFAULTS.dial.page), anim = copyTable(SURFACE_DEFAULTS.dial.anim) },
 }
 
 --- A dial's place when its `point` is unset: the middle of the screen (read at run time by

@@ -131,7 +131,7 @@ function NS.addon.Settings.IconRows(kind, C, afterSize)
     if afterSize then at(SIZE_CROP, afterSize) end
     at(SIZE_CROP, { path = P .. "zoom", type = "number", default = T.zoom, min = 0, max = D.ZOOM_MAX, step = 0.01,
         label = L["Zoom"], validate = C.NUMBER, normalize = C.clamp(0, D.ZOOM_MAX),
-        desc = L["Crop the icon's edges: 0 shows the whole icon, 0.25 crops a quarter off each side. A little zoom trims the dark edge baked into most game icons."] })
+        desc = L["Crop the icon's edges: 0.25 crops a quarter off each side. A game icon is always cropped at least 0.07 a side, so its baked-in dark edge never shows; at 0 a glyph or a raid marker shows whole."] })
     at(COLOR, { path = P .. "desaturate", type = "bool", default = T.desaturate, label = L["Desaturate"],
         desc = L["Draw the icons in gray."], validate = C.BOOL })
     at(COLOR, { path = P .. "alpha", type = "number", default = T.alpha, min = 0.1, max = 1, step = 0.05,
@@ -142,9 +142,17 @@ function NS.addon.Settings.IconRows(kind, C, afterSize)
         for k, v in pairs(extra or {}) do s[k] = v end
         return s
     end
+    -- Cause D7: the color's own "Use the skin's color" row (settings/SchemaMembers.lua's followRow).
+    local function follow(key, governs)
+        return { path = P .. key .. "FromSkin", type = "bool", default = true, label = L["Use the skin's color"],
+            desc = L["Draw %s from the skin. The %s row keeps its value, and is not read while this is on."]:format(
+                governs:lower(), governs) }
+    end
     local composed = {
-        { COLOR, O.ColorPair(spec(COLOR, { key = "tint", label = L["Tint"] })) },
-        { BORDER, O.BorderGroup(spec(BORDER, { show = true, fromSkin = "icon" })) },
+        { COLOR, O.ColorPair(spec(COLOR, { key = "tint", label = L["Tint"],
+            extra = { follow("tint", L["Tint"]) } })) },
+        { BORDER, O.BorderGroup(spec(BORDER, { show = true, fromSkin = "icon",
+            extra = { follow("borderColor", L["Border color"]) } })) },
     }
     local checks = {
         tint = { validate = C.color, normalize = C.fourChannels },
@@ -157,11 +165,17 @@ function NS.addon.Settings.IconRows(kind, C, afterSize)
         useClassColorBorder = { validate = C.BOOL },
         glowColor = { validate = C.color, normalize = C.fourChannels },
         useClassColorGlow = { validate = C.BOOL },
+        tintFromSkin = { validate = C.BOOL },
+        borderColorFromSkin = { validate = C.BOOL },
+        glowColorFromSkin = { validate = C.BOOL },
     }
     local function stamp(list, subgroup)
         for _, row in ipairs(list) do
             local c = checks[row.path:sub(#P + 1)] or {}
-            for k, v in pairs(c) do row[k] = v end
+            -- A rule a row came with stays (the Options document, a host's `spec.extra` stamper).
+            for k, v in pairs(c) do
+                if k ~= "validate" or row.validate == nil then row[k] = v end
+            end
             at(subgroup, row)
         end
     end
@@ -173,7 +187,8 @@ function NS.addon.Settings.IconRows(kind, C, afterSize)
         desc = where.when, validate = C.oneOf(WHEN_VALUES), disabledIf = glowOff })
     at(GLOW, { path = P .. "glowType", type = "string", default = T.glowType, values = STYLE_VALUES, label = L["Glow style"],
         desc = L["How the glow looks."], validate = C.oneOf(STYLE_VALUES), disabledIf = glowOff })
-    stamp(O.ColorPair(spec(GLOW, { key = "glowColor", companionKey = "useClassColorGlow", label = L["Glow color"] })), GLOW)
+    stamp(O.ColorPair(spec(GLOW, { key = "glowColor", companionKey = "useClassColorGlow", label = L["Glow color"],
+        extra = { follow("glowColor", L["Glow color"]) } })), GLOW)
 
     local function knobRow(knob)
         local text = KNOB_TEXT[knob.key]

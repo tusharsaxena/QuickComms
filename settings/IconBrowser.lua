@@ -56,7 +56,8 @@ local addonName, NS = ...
 -- their roles in the skin's body face (the count text.disabled, the icon's name text.heading, the
 -- status and the hint text.highlight), the tooltip lines gtip.value and the credit gtip.subtle. The scroller is the
 -- skin's ScrollBar, a corridor and a flat knob over its own track (D3: under Ka0s Default too, as
--- every scroll bar the library paints). The cell's hover highlight stays the client's art (D8).
+-- every scroll bar the library paints). The cell's hover highlight keeps the client's art, tinted
+-- `list.hoverArt` where a skin has one (paintHover), and stock while the settings page is.
 -- Host-drawn colors repaint on every looks change.
 
 local QC = NS.addon
@@ -117,6 +118,8 @@ local tab, filter, list, total, loaded, selected, color, offset = FIRST_TAB, "al
 local glyphSet = "all"
 local search = ""
 local ctx, area, grid, slider, status, count, filterDD, setsDD, swatch, preview, nameText, chooseBtn, cancelBtn
+-- The footer preview's edge holder (IconStyle.WindowEdge keeps the edge frame on it, R5-ICON).
+local footerIcon = {}
 local searchBox, clearMark, hint, hintText, linkBtn, linkWin
 -- The host-drawn parts a looks change repaints: the scroller's track, the hint box's fill and edges,
 -- and each search glyph with its token.
@@ -188,6 +191,8 @@ local function dressCell(cell, v)
         return
     end
     cell.icon:SetTexture(v)
+    -- Game icon art cropped and edged, a glyph or a marker whole (R5-ICON, IconStyle.WindowIcon).
+    NS.IconStyle.WindowIcon(cell, cell, cell.icon, v)
     cell.icon:SetVertexColor(NS.Library.IconTint(v, color))
     cell.selected:SetShown(v == selected)
     cell:Show()
@@ -196,11 +201,13 @@ end
 local function drawFooter()
     if selected ~= nil then
         preview:SetTexture(selected)
+        NS.IconStyle.WindowIcon(footerIcon, area, preview, selected)
         preview:SetVertexColor(NS.Library.IconTint(selected, color))
         preview:Show()
         nameText:SetText(Src.Label(selected))
     else
         preview:Hide()
+        NS.IconStyle.WindowEdge(footerIcon, area, preview, false)
         nameText:SetText((NS.SkinEscape(NOTE) or "") .. L["Click an icon to select it."] .. "|r")
     end
     chooseBtn:SetDisabled(selected == nil)
@@ -230,7 +237,7 @@ end
 local function tooltip(cell)
     if cell.qcIcon == nil or not GameTooltip then return end
     GameTooltip:SetOwner(cell, "ANCHOR_RIGHT")
-    GameTooltip:SetText(Src.Label(cell.qcIcon))
+    GameTooltip:SetText(Src.Label(cell.qcIcon), NS.SkinColor("gtip.title"))
     local credit = Src.Credit(cell.qcIcon)
     if credit then
         local r, g, b = NS.SkinColor("gtip.subtle")
@@ -366,6 +373,12 @@ end
 
 -- ── the window's parts ──────────────────────────────────────────────────────────────────────
 
+-- A cell's hover art: recorded once, so a skin change repaints it with no call here. A cell is this
+-- window's for the session and never goes back to a pool.
+local function paintHover(cell)
+    NS.Skin.HoverArt(cell:GetHighlightTexture(), { panel = true })
+end
+
 local function makeCell(i)
     local cell = CreateFrame("Button", nil, grid)
     cell:SetSize(CELL - 2, CELL - 2)
@@ -380,6 +393,7 @@ local function makeCell(i)
     icon:SetPoint("CENTER", cell, "CENTER", 0, 0)
     cell.icon = icon
     cell:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+    paintHover(cell)
     cell:SetScript("OnClick", function(self) B.Select(self.qcIcon) end)
     cell:SetScript("OnDoubleClick", function(self)
         B.Select(self.qcIcon)
@@ -762,7 +776,8 @@ end
 --- The toolbar's and the footer's widgets (for tests).
 function B.Widgets()
     return { filter = filterDD, sets = setsDD, swatch = swatch, choose = chooseBtn, cancel = cancelBtn, slider = slider,
-        grid = grid, status = status, count = count, preview = preview, name = nameText, area = area,
+        grid = grid, status = status, count = count, preview = preview, previewEdge = footerIcon.qcIconEdge,
+        name = nameText, area = area,
         search = searchBox, clear = clearMark, hint = hint, hintText = hintText, link = linkBtn,
         track = track, hintFill = hintFill, hintEdges = hintEdges, magnifier = magnifier, clearGlyph = clearGlyph }
 end
@@ -770,7 +785,9 @@ end
 -- A skin switch: every host-drawn color in the new skin (the texts, the scroller and the window are
 -- the library's recorded paint), and the footer's note line redrawn in its escape.
 NS.Skin.OnLooksChanged(function()
-    for _, cell in ipairs(B.cells) do cell.selected:SetColorTexture(NS.Skin.Color(SELECTED)) end
+    for _, cell in ipairs(B.cells) do
+        cell.selected:SetColorTexture(NS.Skin.Color(SELECTED))
+    end
     for t, token in pairs(glyphs) do paintGlyph(t, token) end
     paintHint()
     if request then drawFooter() end

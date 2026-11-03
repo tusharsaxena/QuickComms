@@ -576,6 +576,7 @@ end)
 
 test("dial: [slices] each place is a tinted slice; the slice the cursor points into lights, anywhere but the hub", function()
     local NS, m = live()
+    T.ownLooks(NS)
     local did = "d2"
     assertTrue(NS.SchemaRuntime.Set("dial.slice.highlight", { r = 0, g = 1, b = 0, a = 0.5 }, did))
     assertTrue(NS.Dial.Apply(1, did, planOf(NS)))

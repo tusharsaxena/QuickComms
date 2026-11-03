@@ -6,9 +6,9 @@
 load, and is read inside functions only. There is one family file; no `core/Compat<Topic>.lua`
 exists.
 
-**Thirty-one shims**, counted the way documentation-§3 counts them
-(`cat core/Compat*.lua | grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'` answers `31`, recounted
-2026-10-25), one row each below. The two
+**Thirty-two shims**, counted the way documentation-§3 counts them
+(`cat core/Compat*.lua | grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'` answers `32`, recounted
+2026-11-01), one row each below. The two
 secret guards, `IsSecret` and `IsSafeKey`, are `LibKa0s-Compat-1.0`'s members, wired by assignment
 with a library-absent body and not counted; their contract is LibKa0s
 `docs/api/Compat/version-1-docs.md`.
@@ -58,6 +58,7 @@ with a library-absent body and not counted; their contract is LibKa0s
 | `ChatColor(chatType)` | `ChatTypeInfo` | an unsafe key, or a secret or missing color component, is `nil` | `nil` | `Pad_Render` (a button's channel in its tooltip; a callout row's channel) |
 | `HasTemplate(name)` | `C_XMLUtil.GetTemplateInfo` | `type()` only: a table answer is `true`, anything else (or a raise) `false` | `nil` (unknown: the caller tries `CreateFrame` under `pcall`) | `settings/ModalWindow.lua` (whether to build the callout popup's and the icon browser's window from `SettingsFrameTemplate`) |
 | `MacroIcons(kind)` | `GetLooseMacroIcons` then `GetMacroIcons` (`"spells"`), `GetLooseMacroItemIcons` then `GetMacroItemIcons` (`"items"`), in the order Blizzard's IconDataProvider reads them, each filling the table it is handed (or returning one); a reader that is absent or raises adds nothing | each entry through `PlainNumber`: a secret or non-number entry is dropped | `{}` (the reader absent or raising, an unknown kind, or the client's list not loaded yet) | `settings/IconBrowser_Sources.lua` (the Game icons tab) |
+| `VertexScaleAnimation(fs)` | `Enum.FontStringScaleAnimationMode.Vertex`, `FontString:SetScaleAnimationMode` (12.0), `CreateAnimationGroup`, a Scale animation's setters | none: it reads no game state and passes a plain Enum constant | `nil` when any piece is missing: the string fades in place | `AnimGhost` |
 
 The restriction shims are copied from DropWatcher's `core/Compat.lua`. LibKa0s#49 deferred them;
 see `ARCHITECTURE.md` -> `## Documented deviations`. `tests/test_compat.lua` drives the plain

@@ -236,18 +236,27 @@ test("layout: [pads] the Defaults tooltip names every tab it resets (QUI-L18)", 
     assertEqual(P.ctx("pads").panel.defaultsTooltip, "Put the selected pad's visibility, groups-as, layout, header, section titles, window, buttons and icons back to their defaults, and turn it on. Its name, groups and position are kept.")
 end)
 
+test("layout: the Defaults tooltips are real locale rows, not the key falling through (#13)", function()
+    local NS, _, P = open("Pad", { "pad", "p1" })
+    local pad = P.ctx("pads").panel.defaultsTooltip
+    assertEqual(rawget(NS.L, pad), pad)
+    local _, _, D = open("Dial", { "dial", "d2" })
+    local dial = D.ctx("dials").panel.defaultsTooltip
+    assertEqual(rawget(NS.L, dial), dial)
+end)
+
 -- ── Dial page ───────────────────────────────────────────────────────────────────────────────
 
 test("layout: [dials] the strip: Layout for Wheel, one Labels tab, and Ring map (QUI-L08, L19, L22)", function()
     local NS, _, P = open("Dial", { "dial", "d2" })
     -- red under: the Slice labels and Group labels tabs, or the Wheel tab name
-    assertEqual(strip(NS, "dials"), "General,Groups,Layout,Slices,Hub,Paging,Labels,Icons")
+    assertEqual(strip(NS, "dials"), "General,Groups,Layout,Slices,Hub,Paging,Labels,Icons,Animation")
     assertEqual(hostTabs(NS, P, "dials").preview.label, "Ring map")
     local keys = {}
     for k in pairs(hostTabs(NS, P, "dials")) do keys[#keys + 1] = k end
     table.sort(keys)
-    assertEqual(table.concat(keys, ","), "General,Groups,Hub,Icons,Labels,Layout,Paging,Slices,preview")
-    assertEqual(P.ctx("dials").panel.defaultsTooltip, "Put the selected dial's groups-as, layout, slices, hub, paging, labels, tooltip placement and icons back to their defaults, and turn it on. Its name, groups, position and key are kept.")
+    assertEqual(table.concat(keys, ","), "Animation,General,Groups,Hub,Icons,Labels,Layout,Paging,Slices,preview")
+    assertEqual(P.ctx("dials").panel.defaultsTooltip, "Put the selected dial's groups-as, layout, slices, hub, paging, labels, tooltip placement, icons and animation back to their defaults, and turn it on. Its name, groups, position and key are kept.")
 end)
 
 test("layout: [dials] General: Enable this dial, then the key line (QUI-L29, L-new3)", function()
@@ -294,10 +303,10 @@ test("layout: [dials] Hub: Hub, Hub border, Hub circle, Pointer, each size besid
     local NS = open("Dial", { "dial", "d2" })
     local got = {}
     for _, r in ipairs(rowsOf(NS, "dials", "Hub")) do got[#got + 1] = r.path:match("[^.]+$") .. "@" .. r.subgroup end
-    assertEqual(table.concat(got, ","), "style@Hub,size@Hub,background@Hub,useClassColorBackground@Hub,"
-        .. "borderSize@Hub border,borderColor@Hub border,useClassColorBorder@Hub border,"
-        .. "circleSize@Hub circle,lineWidth@Hub circle,circleColor@Hub circle,useClassColorCircle@Hub circle,"
-        .. "pointerShow@Pointer,pointerSize@Pointer,pointerOffset@Pointer,pointerColor@Pointer,useClassColorPointer@Pointer")
+    assertEqual(table.concat(got, ","), "style@Hub,size@Hub,background@Hub,useClassColorBackground@Hub,backgroundFromSkin@Hub,"
+        .. "borderSize@Hub border,borderColor@Hub border,useClassColorBorder@Hub border,borderColorFromSkin@Hub border,"
+        .. "circleSize@Hub circle,lineWidth@Hub circle,circleColor@Hub circle,useClassColorCircle@Hub circle,circleColorFromSkin@Hub circle,"
+        .. "pointerShow@Pointer,pointerSize@Pointer,pointerOffset@Pointer,pointerColor@Pointer,useClassColorPointer@Pointer,pointerColorFromSkin@Pointer")
 end)
 
 test("layout: [dials] Paging: Page row, Arrows, Page indicator, Indicator border, Indicator background (QUI-L25, L26)", function()
@@ -305,12 +314,12 @@ test("layout: [dials] Paging: Page row, Arrows, Page indicator, Indicator border
     local got = {}
     for _, r in ipairs(rowsOf(NS, "dials", "Paging")) do got[#got + 1] = r.path:match("[^.]+$") .. "@" .. r.subgroup end
     assertEqual(table.concat(got, ","), "offset@Page row,arrowSize@Arrows,arrowGap@Arrows,arrowColor@Arrows,"
-        .. "useClassColorArrow@Arrows,plateColor@Arrows,useClassColorPlate@Arrows,"
+        .. "useClassColorArrow@Arrows,arrowColorFromSkin@Arrows,plateColor@Arrows,useClassColorPlate@Arrows,plateColorFromSkin@Arrows,"
         .. "dotSize@Page indicator,pillWidth@Page indicator,dotGap@Page indicator,currentColor@Page indicator,"
-        .. "useClassColorCurrent@Page indicator,dotColor@Page indicator,useClassColorDot@Page indicator,"
-        .. "dotBorder@Indicator border,dotBorderColor@Indicator border,useClassColorDotBorder@Indicator border,"
+        .. "useClassColorCurrent@Page indicator,currentColorFromSkin@Page indicator,dotColor@Page indicator,useClassColorDot@Page indicator,dotColorFromSkin@Page indicator,"
+        .. "dotBorder@Indicator border,dotBorderColor@Indicator border,useClassColorDotBorder@Indicator border,dotBorderColorFromSkin@Indicator border,"
         .. "dotBackShow@Indicator background,dotBackPadding@Indicator background,dotBackColor@Indicator background,"
-        .. "useClassColorDotBack@Indicator background")
+        .. "useClassColorDotBack@Indicator background,dotBackColorFromSkin@Indicator background")
     assertEqual(row(NS, "dial.page.offset").label, "Distance below labels")
     assertFalse(row(NS, "dial.page.dotBackPadding").startsLine == true, "padding pairs with its toggle")
 end)

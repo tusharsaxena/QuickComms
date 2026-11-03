@@ -207,8 +207,9 @@ function SE.NewDialHeader(name)
     local h = CreateFrame("Button", name, UIParent, "SecureHandlerClickTemplate")
     h:RegisterForClicks("AnyDown")
     -- The secure fixed point (core/Constants.lua LAYERS): chosen first, never moved, since a secure
-    -- frame's strata is protected in combat; everything insecure that must sit over the dial is a tier up.
+    -- frame's strata is protected in combat; what must sit over the dial is a band up in it, or a tier.
     h:SetFrameStrata(LAYERS.STRATA.HUD_POPUP)
+    h:SetFrameLevel(UIParent:GetFrameLevel() + LAYERS.LEVEL.DIAL)
     h:Hide()
     return h
 end
@@ -243,14 +244,14 @@ end
 --- A dial's screen catcher (dial polish, 2026-10-21): a SecureActionButtonTemplate child of `header`
 --- over the whole screen (SetAllPoints(UIParent)), registered for the up edge only, its click wrapped
 --- by the header's screen snippet, which closes the dial and lets nothing through (it has no type).
---- It sits under the dial by strata, not level: HIGH, one below the header's DIALOG, because a level
---- under the header's would tie with the ring catchers' (also the header's level - 1); the client
---- keeps a child's own strata once set, and every dial frame above it stays in DIALOG. The header's
+--- It sits under the dial in the dial's strata (#14), so it also covers a pad, at DIAL_SCREEN: below the
+--- ring catchers' level (the header's - 1), which it would tie with one higher. The modals and the
+--- preview window are bands over the dial, so a click on one reaches it, not this. The header's
 --- show snippet shows it only on a key open, its close snippet hides it. Hidden. Nil in combat.
 function SE.NewDialScreen(header, pre)
     if inCombat() then return nil end
     local s = CreateFrame("Button", nil, header, "SecureActionButtonTemplate")
-    s:SetFrameStrata(LAYERS.STRATA.DIAL_SCREEN)
+    s:SetFrameLevel(math.max(0, (header:GetFrameLevel() or 0) + LAYERS.LEVEL.DIAL_SCREEN))
     s:SetAllPoints(UIParent)
     s:RegisterForClicks("AnyUp")
     header:WrapScript(s, "OnClick", pre)

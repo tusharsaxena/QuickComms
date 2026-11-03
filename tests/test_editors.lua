@@ -143,7 +143,7 @@ test("editors: [QC-06] the delete confirm lifts its dialog over the dial and the
     Ed.ConfirmDelete("Lust", function() end)
     local def = m.StaticPopupDialogs[m.popupsShown[#m.popupsShown][1]]
     local d = dialogFrame()
-    -- red under: leave the confirm in Blizzard's DIALOG, the dial's strata (the hub draws over it),
+    -- red under: leave the confirm in Blizzard's DIALOG, under the pads' band and the dial,
     -- and under the popup's and the browser's FULLSCREEN catchers
     assertTrue(type(def.OnShow) == "function", "an OnShow")
     def.OnShow(d)

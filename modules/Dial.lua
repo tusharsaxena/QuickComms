@@ -30,6 +30,11 @@ local _, NS = ...
 -- unused, and every wedge of a released dial, loses its glow (Glow.ReleaseFree), and a send result
 -- starts an After sending glow (Glow.Sent) held for DROP_SECONDS: the send closed the dial, so the
 -- next open within that time runs the glow again (Glow.Shown, from the header's OnShow).
+--
+-- THE ANIMATIONS (#13). The header's and rings' insecure OnShow and OnHide hooks drive one track per
+-- instance (modules/Anim.lua), played on a copy (modules/Anim_Ghost.lua): nothing here delays, moves or
+-- scales a secure frame, and a wedge's press still sends in the same click. `inst.silent` keeps a
+-- rebuild's close and reopen off the track, or every settings edit would flicker a preview dial.
 
 NS.Dial = NS.Dial or {}
 local Dial = NS.Dial
@@ -90,6 +95,28 @@ end
 
 local function inCombat() return NS.Compat.InCombat() end
 
+local function restAlpha()
+    return math.max(0, math.min(1, tonumber(NS.Setting("alpha")) or 1))
+end
+
+local function newTrack(inst)
+    local header = inst.header
+    return NS.Anim.NewTrack({
+        src = header,
+        roots = function()
+            local ring = inst.shownRing
+            return { ring, header.qcPointer }, ring and ring.qcSpec and ring.qcSpec.size, ring and ring.qcShape
+        end,
+        config = function(phase)
+            local dial = profileDial(inst.id)
+            return NS.Anim.Config(dial and dial.anim, NS.PadDefaults.DialAnim(), phase)
+        end,
+        restAlpha = restAlpha,
+        hold = function() header:SetAlpha(0) end,
+        release = function() header:SetAlpha(restAlpha()) end,
+    })
+end
+
 local function applyPoint(inst)
     local dial = profileDial(inst.id)
     -- Read here, not at load: Library is not a load-time upvalue of this file.
@@ -123,6 +150,7 @@ local function newRing(inst)
     ring:HookScript("OnShow", function(self)
         local spec = self.qcSpec
         if spec then NS.Debug(TAG, "%s shows %s", tostring(inst.id), R.RingTitle(spec)) end
+        Dial.RingShown(inst, self)
     end)
     return ring
 end
@@ -145,9 +173,20 @@ end
 
 -- A wedge's press dims every button and wedge for the guard window (Pad.Cooldown calls Dial.Cooldown).
 local function newWedge(inst, ring)
-    local w = R.DressWedge(DS.NewWedge(inst.header, ring, function(_, _, window) NS.Pad.Cooldown(window) end))
+    local w = R.DressWedge(DS.NewWedge(inst.header, ring, function(btn, verdict, window)
+        NS.Pad.Cooldown(window)
+        if verdict ~= "guarded" then Dial.Sent(inst, btn) end
+    end))
     w.qcHeader = inst.header
     return w
+end
+
+-- Close quietly: a rebuild or a release is not the player closing the dial.
+local function closeSilently(inst)
+    NS.Anim.Snap(inst.track)
+    inst.silent = true
+    DS.Close(inst.header)
+    inst.silent, inst.opening, inst.shownRing, inst.quietShow = nil, nil, nil, nil
 end
 
 -- A released wedge is parked armed (F-006), as a pad button is: the rebuild takes most of them straight
@@ -182,6 +221,7 @@ local function build(index)
     -- The screen catcher (dial polish): a click outside the dial, open from its key, closes it.
     local inst = { index = index, header = header, screen = DS.NewScreen(header), rings = NS.Pool.New(),
         byCallout = {}, live = false }
+    inst.track = newTrack(inst)
     R.DressHub(header, function(self)
         if inst.id then Dial.ShowWhy(inst.id, self) end
     end)
@@ -194,6 +234,9 @@ local function build(index)
             for _, w in ipairs(list) do NS.Glow.Shown(w) end
         end
     end)
+    -- The animations: an open starts on the ring's OnShow (the snippet shows the ring after the header).
+    header:HookScript("OnShow", function() Dial.HeaderShown(inst) end)
+    header:HookScript("OnHide", function() Dial.Closed(inst) end)
     byIndex[index] = inst
     NS.Debug(TAG, "built %s", header:GetName())
     return inst
@@ -217,6 +260,7 @@ local function placeWedges(inst, ring, spec, icfg, look)
     for i, item in ipairs(spec.items) do
         local w = NS.Pool.Acquire(ring.qcWedges, function() return newWedge(inst, ring) end)
         local place = item.wedge or i
+        w.qcGhostGroup = place   -- with its slice's fill, on the ghost (modules/Anim_Ghost.lua)
         local geo = DL.Wedge(place, spec.size, look.radius, spec.start, look.labelReach, look.iconReach,
             look.hub.size)
         w:ClearAllPoints()
@@ -294,7 +338,7 @@ function Dial.Apply(index, id, plan)
     if not (dial and plan) then return false end
     local inst = byIndex[index] or build(index)
     rebind(inst, id, plan)
-    DS.Close(inst.header)
+    closeSilently(inst)
     releaseRings(inst)
     local look = R.Look(plan.radius, dial.label, dial.slice, dial)
     -- Icon size 0 is automatic: the size for this ring radius (DialLayout.AutoIconSize)
@@ -331,7 +375,7 @@ end
 function Dial.Release(index)
     local inst = byIndex[index]
     if not inst or inCombat() then return false end
-    DS.Close(inst.header)
+    closeSilently(inst)
     releaseRings(inst)
     releaseFree(inst)
     DS.Load(inst.header, {}, {})
@@ -367,7 +411,13 @@ end
 local function openDisplay(plans, order, first, wasOpen)
     local plan = first and plans[order[first]]
     local mode = plan and plan.test and (plan.preview or "test") or nil
-    if mode and (mode ~= displayMode or wasOpen[first]) then DS.Open(byIndex[first].header) end
+    if mode and (mode ~= displayMode or wasOpen[first]) then
+        -- A dial this rebuild closed comes straight back: only a mode's first open animates.
+        local inst = byIndex[first]
+        inst.silent = mode == displayMode
+        DS.Open(inst.header)
+        inst.silent = nil
+    end
     displayMode = mode
 end
 
@@ -394,6 +444,49 @@ function Dial.HideAll()
 end
 
 -- ── insecure updates, allowed in combat ─────────────────────────────────────────────────────
+
+--- A ring came on screen (its insecure OnShow). On an open the track starts; on a page turn or a group
+--- wedge during an animation the ghost holds the wrong ring, so the track snaps.
+function Dial.RingShown(inst, ring)
+    inst.shownRing = ring
+    if NS.IsStoodDown() then return end
+    if inst.opening then
+        inst.opening = nil
+        NS.Anim.Open(inst.track)
+    elseif not inst.silent then
+        NS.Anim.Snap(inst.track)
+    end
+end
+
+--- The header came up (its insecure OnShow): the ring's OnShow, next, starts the open, unless a silent
+--- rebuild or the end of a hidden UIParent (quietShow, Dial.Closed) brought it back.
+function Dial.HeaderShown(inst)
+    inst.opening = not (inst.silent or inst.quietShow)
+    inst.quietShow = nil
+end
+
+--- The header went down (its insecure OnHide). A hidden UIParent fires this with the header's own flag
+--- still on: that is no close, and the OnShow that ends it is no open. A silent close or a stand-down
+--- plays nothing.
+function Dial.Closed(inst)
+    inst.opening = nil
+    if inst.silent or not inst.shownRing then return end
+    if inst.header:IsShown() then
+        inst.quietShow = true
+        return NS.Anim.Snap(inst.track)
+    end
+    if NS.IsStoodDown() then return NS.Anim.Snap(inst.track) end
+    NS.Anim.Close(inst.track)
+    if inst.sentAt == GetTime() then NS.Anim.Emphasize(inst.track, inst.sentPlace) end
+end
+
+--- A wedge sent (a press the guard let through). The close may have started already or may come next
+--- in this click, depending on how the client orders the hook and the wrap, so both are covered: the
+--- track hears it now, and Dial.Closed reads the stamp.
+function Dial.Sent(inst, btn)
+    inst.sentAt, inst.sentPlace = GetTime(), btn.qcGhostGroup
+    NS.Anim.Emphasize(inst.track, btn.qcGhostGroup)
+end
 
 local function forEachWedge(fn)
     for _, inst in pairs(byIndex) do

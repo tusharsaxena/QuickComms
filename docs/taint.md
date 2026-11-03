@@ -88,7 +88,7 @@ the only mouse target there and the hub starts and ends at its circle in every d
 still click the header by name (`SetBindingClick`, `CLICK QuickCommsDial<n>:Toggle`).
 
 Each header also has a hidden full-screen catcher (`SendEngine.NewDialScreen`, a child of the header
-set over `UIParent` in the `HIGH` strata, `AnyUp`): the header's show snippet shows it on a key open
+set over `UIParent` in the dial's strata, under the ring catchers by level, `AnyUp`): the header's show snippet shows it on a key open
 (never on an insecure open) and the close snippet hides it, so any click outside the dial runs
 `qc-close` and does nothing else. It is named in the hub's register row for frame-layering-§1/§4
 until the standard rules on catchers behind a secure HUD popup.
@@ -102,6 +102,28 @@ raised over the rings (an insecure call). The lit slice follows the cursor's bea
 the pointer's per-frame update, and the hub's hover (its circle brightened, its "Why is this
 showing?" tooltip) follows the cursor inside the hub's circle in the same update
 (`DialRender.HoverHub`, no header `OnEnter`), so both work in combat with no protected call.
+
+## The open and close animations (#13)
+
+The dial's header shows and hides in its snippets, which cannot be delayed from the insecure side, and
+`SetScale` and `SetPoint` on it are protected in combat. So nothing moves it (a pad has no animation at
+all, the owner's ruling, 2026-11-01). `modules/Anim_Ghost.lua` keeps an insecure, mouse-off copy under UIParent, anchored
+to the real frame (an insecure frame may anchor to a protected one, never the reverse), and plays every
+animation on it. Capture only reads the secure frames. The one write to a real frame is `SetAlpha`,
+which the client allows on a protected frame and `Pad.ApplyAlpha` uses on a pad in combat: an open
+holds it at 0 under the ghost, and `Anim.Snap` gives it back. The hooks are insecure `HookScript`s on
+`OnShow` and `OnHide`, beside the ones already there; no attribute is read or written, and the snippets
+did not change. A send is the wedge's own click, and the real dial is live under the ghost.
+
+The text's Scale animations (`Compat.VertexScaleAnimation`) sit on the ghost's own insecure strings, on
+an insecure, mouse-off layer anchored to the header as the stage is. `SetScaleAnimationMode` takes a
+plain Enum constant, never a secret value. Nothing about them touches a secure frame, each stops in
+`G.Hide`, and `Anim.Snap` and the stand-down pass through that.
+
+Every style draws through the same copy, so none adds a write to a secure frame: a place's offset,
+turn and scale, a turning copy's `SetPoint` and `SetRotation`, each art sub-frame's one-axis Scale
+animation (`Compat.StretchAnimation`) and Flash's additive texture are all on the ghost's own insecure,
+mouse-off frames. The one-axis groups stop in `G.Hide` too.
 
 ## Key bindings
 
@@ -134,8 +156,9 @@ it picks is written in combat.
 
 The popup's window and the icon browser's are Blizzard's `SettingsFrameTemplate`
 (`settings/ModalWindow.lua`), an insecure template with no protected child, each built on its first
-Open. Both sit in the `FULLSCREEN` strata, one over the Comms Dial's `DIALOG`, so a preview dial's hub
-never draws over them (the dial's secure header keeps its strata; `69719ca`, `0901b8c`), and the
+Open. Both sit in the `FULLSCREEN` strata with the Comms Dial, in bands of levels far over the dial's
+(`LAYERS.LEVEL.MODAL`, issue #14), so a preview dial's hub never draws over them (the dial's secure
+header keeps its strata; `69719ca`, `0901b8c`), and the
 browser is above the popup by a band of levels of its own (`ModalWindow.LEVEL_OVER`); its swatch
 raises Blizzard's own `ColorPickerFrame` (AceGUI's ColorPicker widget) to `FULLSCREEN_DIALOG`, above
 it. Both windows are clamped to the screen and deliberately not toplevel: the client raises a
@@ -143,7 +166,7 @@ toplevel frame to the top of its strata on every mouse-down, so the click on the
 would lift the popup over the browser's band as the browser opens (`36e6cd3`; register row for
 frame-layering-§1/§4).
 
-The preview window is `FULLSCREEN` too, at a client level under a modal's catcher, and is never
+The preview window is `FULLSCREEN` too, in a band over the dial's and under a modal's catcher, and is never
 `Raise`d (the client's Raise would lift it over the modals in that strata). Quick Comms' confirms (the
 deletes, Reset all) are Blizzard StaticPopups, `DIALOG` by default: each lifts its dialog to
 `FULLSCREEN_DIALOG` while shown and hands the shared frame back in its own strata on hide

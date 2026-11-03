@@ -131,17 +131,18 @@ Total.
 - database: [polish] migrate: step 9 drops the retired slice border
 - database: [bg subgroups] a fresh profile seeds every objective node once, and step 7 leaves it as it is
 
-### test_profile.lua (9)
+### test_profile.lua (10)
 
 - profile: behavior defaults match spec §5.1
 - profile: collections exist; default nextId is 1, past every seeded id after boot
 - profile: every behavior row resolves through the seam
 - profile: the spam guard clamps to 0.6-2.0 and fallback refuses unknown values
-- profile: schema version target is 11 (the Font flags' move to From skin)
+- profile: schema version target is 15 (a dial still on the old animation defaults moved)
 - prepare: a callout held by two groups is split into a copy
 - prepare: a split copy of a seeded callout keeps no origin
 - prepare: a callout held by no group is dropped
 - prepare: is idempotent after a split
+- profile: step 18 moves a stored Ka0s Friz Quadrata TT to Ka0s Ubuntu in every profile, Blizzard's Friz kept
 
 ### test_schema.lua (20)
 
@@ -562,7 +563,7 @@ Total.
 ### test_icon_browser.lua (37)
 
 - icon browser: the window is the popup's chrome, stacked above the popup and its catcher
-- icon browser: the popup and the browser stack above the preview dial by strata (QC-06)
+- icon browser: the popup and the browser stack above the preview dial by band (QC-06, #14)
 - icon browser: tabs in order; the stored icon is preselected and its tab opened
 - icon browser: a click selects, a double-click chooses; Choose hands the opener the icon
 - icon browser: hovering an icon names it, or gives a game icon's texture id
@@ -598,6 +599,14 @@ Total.
 - icon browser: [sets] a set's prefix is not in its label; Phosphor reads 'Arrow up'
 - icon browser: [sets] the Glyphs filter lists the library's sets and narrows to one
 - icon browser: [sets] a glyph's tooltip names its set, and a Game-icons mark its author
+
+### test_window_icons.lua (5)
+
+- window icons: a game icon in the browser's grid is cropped and edged; a glyph and a marker are not
+- window icons: the browser's footer preview of a game icon is cropped and edged
+- window icons: under the Scope's Ignore settings panel (the default) a game icon is cropped, not edged
+- window icons: an AceGUI image of a game icon is cropped through SetImage and edged on a frame of the addon's own
+- window icons: the callout popup's icon chooser frames a game icon
 
 ### test_groups_when.lua (21)
 
@@ -1064,6 +1073,42 @@ Total.
 - pad render: [shine] the pad's look leaves the dial alone
 - render: [QF-04] a General slot's tooltip names General in channel 1's color
 
+### test_pad_looks.lua (21)
+
+- pad looks: WoW Default's bands and window edge are no client art's white tint
+- pad looks: WoW Default's bands never take the dialog art's size
+- pad looks: WoW Default's window wears the dialog border art the Skin Tester shows, no other skin does (SF-QC-3)
+- pad looks: WoW Default's buttons are the skin's red, no bar texture dimming it
+- pad looks: a dial's page dots take no white ring under WoW Default
+- pad looks: the Skin tab's texture override still reaches a button under WoW Default
+- pad looks: WoW Default's real border style paints no white band
+- pad looks: glass's bands and buttons draw a 1 px edge
+- pad looks: midnight's bands and buttons draw a 1 px edge
+- pad looks: contrast's bands and buttons draw a 1 px edge
+- pad looks: obsidian's bands and buttons draw a 1 px edge
+- pad looks: azeroth's bands and buttons draw a 1 px edge
+- pad looks: a section band draws no edge while it follows, as the header draws none
+- pad looks: Ka0s Default's bands stay undrawn
+- pad looks: a following band never draws a skin's own border; a border the player sets draws as set
+- pad looks: Ka0s Default's buttons are the fuller body, edge, texture and gloss
+- pad looks: every skin's shine is a third lighter, a button's and a slice's alike
+- pad looks: what reaches a button and a slice is the lighter strength
+- pad looks: a player's stored Strength stands with the companion off
+- pad looks: a stored Strength with no strength token is as stored
+- pad looks: with the library absent a button stays flat and its stored Strength draws
+
+### test_pad_header.lua (9)
+
+- pad header: the header is the library's title band in every skin, borderless, the header itself clear
+- pad header: the band and the header sit over the root, never level with its backdrop
+- pad header: the header sits flush inside the window edge, down growth and up, in every skin
+- pad header: the rows start under the band, and a collapsed pad is the band and its edges
+- pad header: the text stays left, the collapse button right, each on the band's middle
+- pad header: a section band draws no band in any skin, so the header is the only band
+- pad header: a section band the player dresses still draws what was stored
+- pad header: the band stands down when the header's background stops following the skin, and comes back
+- pad header: under a skin with no border of its own, a border set while following still draws
+
 ### test_pad.lua (47)
 
 - pad: the default pad shows the M+ callouts, each button armed with its baked line
@@ -1190,6 +1235,294 @@ Total.
 - dial: [art] the hub draws textures, not segments
 - dial: [art] the pill is three pieces with round ends
 
+### test_anim.lua (46)
+
+- anim: a new dial carries the shipped defaults, on for everyone, and a pad has no animation
+- anim: step 12 fills every stored dial, keeps a key already there, and leaves pads alone
+- anim: the runner takes an old profile's dials to the defaults and writes no pad's
+- anim: step 14 takes a stored pad table from every profile that ran step 12, and nothing else
+- anim: each knob writes its own key and nothing else, on the surface it names
+- anim: a style or duration out of range is refused or clamped
+- anim: the hidden poses match the owner's rulings
+- anim: an ease lands exactly, decelerating into an open and accelerating out of a close
+- anim: the Fan is whole at rest, gone when hidden, and sweeps in order
+- anim: an open plays, holds the real frame and lands with it back
+- anim: a close mid-open reverses from where it stands, with no jump
+- anim: a reopen mid-close reverses from where it stands and lands at rest
+- anim: rapid toggling ends on the last call, nothing left held
+- anim: None on one phase snaps that phase and leaves the other playing
+- anim: a capture with nothing to draw snaps, and never holds the frame
+- anim: the stand-down leaves no track and no OnUpdate running
+- anim: the emphasis is heard only on a close, and an open clears it
+- anim: a reopen during a send starts the sent slice from where it stands, at rest
+- anim: settling a place a pose does not have is nothing to do
+- anim: a missing key reads its own phase's default
+- anim: every leg hands the text its scale, a reversal from where it stands
+- anim: the emphasis tells the text once, over the close's time left
+- anim: a Snap leaves no emphasis behind
+- anim: a step draws with how far along it is, so the pulse moves
+- anim: step 12 walks past a damaged surface and a damaged list
+- anim: step 12 reads a stored false as kept
+- anim: step 12 runs for every stored profile, not the active one
+- anim: two dials never share their anim table
+- anim: the rows are the owner's: Open and Close on the dial's Animation tab, knobs only while they apply
+- anim: a close never holds a frame that is already down, and a snap off no track releases nothing
+- anim: step 12 takes a value that is no profile quietly
+- anim pose: every style is hidden at 0 and whole at 1, and rests as A.Rest
+- anim pose: Rotate and scale is the mockup's
+- anim pose: Back overshoots and Bounce rebounds, both landing exactly, as the mockup's
+- anim pose: a per-place style fills one entry per place, zero-based as the mockup, and fades the hub on its own
+- anim pose: a style hears its config, for a direction
+- anim pose: A.Pose and A.Lerp write into a buffer, with no table per tick
+- anim pose: a buffer left by a per-place style answers no places for a whole-dial one
+- anim pose: A.Lerp walks every key and every place, a missing side at rest
+- anim pose: A.Unease undoes A.Ease in e, and a knot is found each way
+- anim pose: a track plays a style's curve on the same e as the mockup, up an open and down a close
+- anim pose: a reversal between two styles starts from the pose, every place of it, and lands on the new one
+- anim pose: a reversal's time is the e left to travel, floored
+- anim pose: knots break a fresh curve into linear legs, each from its own pose, and turn once
+- anim pose: a reversal is one plain leg, whatever the knots
+- anim pose: Rotate and scale is offered for both phases, knobs included
+
+### test_anim_styles.lua (140)
+
+- anim style: the dropdown offers None and every style, the same list for the open and the close
+- anim style: the labels are the owner's
+- anim style: every moving style's Duration shows, on both phases, and None hides it
+- anim style: the defaults are the owner's, on a slider still 0.1 to 2 in 0.1 steps
+- anim style: every value of the mockup's motion, up to the extras
+- anim style: Scale and fade is the Scale pose with a full-length fade
+- anim style: Shatter wraps its seeds on a ring wider than the mockup's eight
+- anim style: an overshoot's text overshoots: Pop and Stagger pop declare their knots
+- anim style: Slide's Direction reads as motion: Up rises into place and leaves upward
+- anim style: a Slide with no direction, or a damaged one, rises as the mockup does
+- anim style: Direction is a row per phase, shown only on Slide, each writing its own key
+- anim style: step 15 moves a phase only as a pair, its style and duration both on the old default
+- anim style: step 16 moves the spiral pair to the new default, and every other Scale and fade to Scale in and fade
+- anim style: 15 then 16 lands a pre-15 profile on the new defaults, with nothing naming a retired style
+- anim style: the runner moves every stored profile once, and the stamp holds a later pick
+- anim style: Prepare fills a stored dial's Direction, so a settings read never finds it missing
+- anim style: a profile from before step 12 lands on the new defaults, not the old
+- anim style fade: rests whole at 1 and shows nothing at 0
+- anim style fade: an open and a close each land with nothing stuck
+- anim style fade: a reversal starts from the pose, both ways, and lands
+- anim style fade: a send fires at once and its slice stays bright where it rests
+- anim style fade: combat is the same, with nothing refused, and a stand-down lands it
+- anim style fade: leaves nothing on the ghost for the next style, and never touches it
+- anim style fade: text keeps the Vertex route, with no width
+- anim style fan: rests whole at 1 and shows nothing at 0
+- anim style fan: an open and a close each land with nothing stuck
+- anim style fan: a reversal starts from the pose, both ways, and lands
+- anim style fan: a send fires at once and its slice stays bright where it rests
+- anim style fan: combat is the same, with nothing refused, and a stand-down lands it
+- anim style fan: leaves nothing on the ghost for the next style, and never touches it
+- anim style fan: text keeps the Vertex route, with no width
+- anim style scale: rests whole at 1 and shows nothing at 0
+- anim style scale: an open and a close each land with nothing stuck
+- anim style scale: a reversal starts from the pose, both ways, and lands
+- anim style scale: a send fires at once and its slice stays bright where it rests
+- anim style scale: combat is the same, with nothing refused, and a stand-down lands it
+- anim style scale: leaves nothing on the ghost for the next style, and never touches it
+- anim style scale: text keeps the Vertex route, with no width
+- anim style scaleAndFade: rests whole at 1 and shows nothing at 0
+- anim style scaleAndFade: an open and a close each land with nothing stuck
+- anim style scaleAndFade: a reversal starts from the pose, both ways, and lands
+- anim style scaleAndFade: a send fires at once and its slice stays bright where it rests
+- anim style scaleAndFade: combat is the same, with nothing refused, and a stand-down lands it
+- anim style scaleAndFade: leaves nothing on the ghost for the next style, and never touches it
+- anim style scaleAndFade: text keeps the Vertex route, with no width
+- anim style rotateScale: rests whole at 1 and shows nothing at 0
+- anim style rotateScale: an open and a close each land with nothing stuck
+- anim style rotateScale: a reversal starts from the pose, both ways, and lands
+- anim style rotateScale: a send fires at once and its slice stays bright where it rests
+- anim style rotateScale: combat is the same, with nothing refused, and a stand-down lands it
+- anim style rotateScale: leaves nothing on the ghost for the next style, and never touches it
+- anim style rotateScale: text keeps the Vertex route, with no width
+- anim style spiralOut: rests whole at 1 and shows nothing at 0
+- anim style spiralOut: an open and a close each land with nothing stuck
+- anim style spiralOut: a reversal starts from the pose, both ways, and lands
+- anim style spiralOut: a send fires at once and its slice stays bright where it rests
+- anim style spiralOut: combat is the same, with nothing refused, and a stand-down lands it
+- anim style spiralOut: leaves nothing on the ghost for the next style, and never touches it
+- anim style spiralOut: text keeps the Vertex route, with no width
+- anim style spiralIn: rests whole at 1 and shows nothing at 0
+- anim style spiralIn: an open and a close each land with nothing stuck
+- anim style spiralIn: a reversal starts from the pose, both ways, and lands
+- anim style spiralIn: a send fires at once and its slice stays bright where it rests
+- anim style spiralIn: combat is the same, with nothing refused, and a stand-down lands it
+- anim style spiralIn: leaves nothing on the ghost for the next style, and never touches it
+- anim style spiralIn: text keeps the Vertex route, with no width
+- anim style orbit: rests whole at 1 and shows nothing at 0
+- anim style orbit: an open and a close each land with nothing stuck
+- anim style orbit: a reversal starts from the pose, both ways, and lands
+- anim style orbit: a send fires at once and its slice stays bright where it rests
+- anim style orbit: combat is the same, with nothing refused, and a stand-down lands it
+- anim style orbit: leaves nothing on the ghost for the next style, and never touches it
+- anim style orbit: text keeps the Vertex route, with no width
+- anim style burst: rests whole at 1 and shows nothing at 0
+- anim style burst: an open and a close each land with nothing stuck
+- anim style burst: a reversal starts from the pose, both ways, and lands
+- anim style burst: a send fires at once and its slice stays bright where it rests
+- anim style burst: combat is the same, with nothing refused, and a stand-down lands it
+- anim style burst: leaves nothing on the ghost for the next style, and never touches it
+- anim style burst: text keeps the Vertex route, with no width
+- anim style stagger: rests whole at 1 and shows nothing at 0
+- anim style stagger: an open and a close each land with nothing stuck
+- anim style stagger: a reversal starts from the pose, both ways, and lands
+- anim style stagger: a send fires at once and its slice stays bright where it rests
+- anim style stagger: combat is the same, with nothing refused, and a stand-down lands it
+- anim style stagger: leaves nothing on the ghost for the next style, and never touches it
+- anim style stagger: text keeps the Vertex route, with no width
+- anim style pop: rests whole at 1 and shows nothing at 0
+- anim style pop: an open and a close each land with nothing stuck
+- anim style pop: a reversal starts from the pose, both ways, and lands
+- anim style pop: a send fires at once and its slice stays bright where it rests
+- anim style pop: combat is the same, with nothing refused, and a stand-down lands it
+- anim style pop: leaves nothing on the ghost for the next style, and never touches it
+- anim style pop: text keeps the Vertex route, with no width
+- anim style slide: rests whole at 1 and shows nothing at 0
+- anim style slide: an open and a close each land with nothing stuck
+- anim style slide: a reversal starts from the pose, both ways, and lands
+- anim style slide: a send fires at once and its slice stays bright where it rests
+- anim style slide: combat is the same, with nothing refused, and a stand-down lands it
+- anim style slide: leaves nothing on the ghost for the next style, and never touches it
+- anim style slide: text keeps the Vertex route, with no width
+- anim style drop: rests whole at 1 and shows nothing at 0
+- anim style drop: an open and a close each land with nothing stuck
+- anim style drop: a reversal starts from the pose, both ways, and lands
+- anim style drop: a send fires at once and its slice stays bright where it rests
+- anim style drop: combat is the same, with nothing refused, and a stand-down lands it
+- anim style drop: leaves nothing on the ghost for the next style, and never touches it
+- anim style drop: text keeps the Vertex route, with no width
+- anim style squash: rests whole at 1 and shows nothing at 0
+- anim style squash: an open and a close each land with nothing stuck
+- anim style squash: a reversal starts from the pose, both ways, and lands
+- anim style squash: a send fires at once and its slice stays bright where it rests
+- anim style squash: combat is the same, with nothing refused, and a stand-down lands it
+- anim style squash: leaves nothing on the ghost for the next style, and never touches it
+- anim style squash: text keeps the Vertex route, with no width
+- anim style flip: rests whole at 1 and shows nothing at 0
+- anim style flip: an open and a close each land with nothing stuck
+- anim style flip: a reversal starts from the pose, both ways, and lands
+- anim style flip: a send fires at once and its slice stays bright where it rests
+- anim style flip: combat is the same, with nothing refused, and a stand-down lands it
+- anim style flip: leaves nothing on the ghost for the next style, and never touches it
+- anim style flip: text keeps the Vertex route, with no width
+- anim style shatter: rests whole at 1 and shows nothing at 0
+- anim style shatter: an open and a close each land with nothing stuck
+- anim style shatter: a reversal starts from the pose, both ways, and lands
+- anim style shatter: a send fires at once and its slice stays bright where it rests
+- anim style shatter: combat is the same, with nothing refused, and a stand-down lands it
+- anim style shatter: leaves nothing on the ghost for the next style, and never touches it
+- anim style shatter: text keeps the Vertex route, with no width
+- anim style flash: rests whole at 1 and shows nothing at 0
+- anim style flash: an open and a close each land with nothing stuck
+- anim style flash: a reversal starts from the pose, both ways, and lands
+- anim style flash: a send fires at once and its slice stays bright where it rests
+- anim style flash: combat is the same, with nothing refused, and a stand-down lands it
+- anim style flash: leaves nothing on the ghost for the next style, and never touches it
+- anim style flash: text keeps the Vertex route, with no width
+- anim style: Flash blooms through the ring and goes out with the landing
+- anim style: the shipped defaults open and close by Rotate and scale, on the dial
+- anim style: a Slide's direction reaches the real track, phase by phase
+- anim style: step 17 merges the scales, keeps durations and everything else, and is idempotent
+
+### test_anim_surfaces.lua (42)
+
+- anim dial: a key open plays over a live dial, and it lands with the real alpha back
+- anim dial: a close plays out after the header is already down
+- anim dial: the ghost mirrors the ring and takes the fills as places
+- anim dial: in combat it plays the same and nothing protected is touched
+- anim dial: a tap-and-release send fires at once, mid-open, and its slice is emphasized
+- anim dial: a cancel has no emphasis
+- anim dial: a page or ring change during an open snaps, with the real alpha back
+- anim dial: the way back from a hidden UIParent is no open
+- anim dial: a rebuild drops a held quiet show
+- anim dial: None on the open leaves the close, and None on the close leaves the open
+- anim dial: a rebuild closes silently, and a shut dial's rebuild plays nothing
+- anim dial: the preview dial animates its first open, not a rebuild's reopen
+- anim dial: the stand-down leaves the dial's track off and its alpha whole
+- anim dial: nothing here writes a protected call on the header
+- anim dial: an open scales the text by its own animation, and the landing stops it
+- anim dial: a reversal restarts the text from the art's scale, with the art
+- anim dial: a send's slice swells its own text, and the rest keep collapsing
+- anim dial: the stand-down leaves no text scaling running
+- anim dial: a Fan moves no text at all
+- anim dial: the ghost's text never carries a width
+- anim compat: the Vertex shim answers nothing when any piece is missing
+- anim compat: the stretch shim answers nothing when any piece is missing
+- anim dial: Rotate and scale turns the real ring's fills on the ghost and leaves its icons upright
+- anim dial: Rotate and scale reverses, sends and stands down as every style does, in combat too
+- anim dial: a lit slice's highlight goes with its place on the ghost
+- anim pad: a pad has no track, and its driver shows and hides it at once
+- anim pad: its alpha paths answer as before: master opacity, fade, hover, and combat
+- anim pad: a release and a rebuild touch no animation state
+- anim pad: nothing in a pad's code names the animations
+- anim ghost: no rect yet snaps instead of guessing
+- anim surfaces: a dial reads its own instance's settings, and the kind's defaults when it has none
+- anim surfaces: a rebuild's close starts no close at all
+- anim surfaces: a rebuild snaps a track that was playing
+- anim surfaces: a dial with no ring on screen plays no close
+- anim surfaces: an open interrupted by a hide does not arm the next ring's show
+- anim surfaces: a silent reopen's ring leaves a track alone, and a stood-down ring plays nothing
+- anim surfaces: a stood-down dial plays no close
+- anim surfaces: a test mode reopen is silent only for its own show
+- anim surfaces: the close names the sent place whichever way round the click ran
+- anim surfaces: a stale stamp emphasizes nothing, and a guarded press none
+- anim surfaces: a track rests at the dial's alpha, the master opacity included
+- anim surfaces: the dial's ghost mirrors the hub and pointer, and each slice's fill by its place
+
+### test_anim_ghost.lua (48)
+
+- anim ghost: the stage takes the source's strata and level, and sub-frames keep their stacking
+- anim ghost: a level is held to the room above the stage, and never under it
+- anim ghost: one sub-frame per level and place, so a place stays addressable and a level whole
+- anim ghost: a child takes its place from itself, then its parent, and a root's tag counts
+- anim ghost: only what shows is copied
+- anim ghost: a color texture the client cannot read back is left out
+- anim ghost: a file texture keeps its art, tint, crop, turn, blend, layer, alpha and desaturation
+- anim ghost: a mask is copied once per source mask, turned, and taken off before the next capture
+- anim ghost: a font string keeps its text, face, color, shadow and alpha
+- anim ghost: a child scaled apart from the root keeps its drawn size and place
+- anim ghost: no rect on any part is no capture, and nothing to draw is none
+- anim ghost: a capture clears the last one's copies, and a reused sub-frame starts whole
+- anim ghost: a pose scales the stage and lays the rest alpha over every sub-frame
+- anim ghost: a place fades in its turn around the ring
+- anim ghost: the sent place alone stays bright, pulses and fades after its hold
+- anim ghost: a ghost takes no mouse, and nothing it makes does
+- anim ghost: text is on a layer no pose scales, so the client never rasterizes a new size
+- anim ghost: a string's copy can never truncate, whatever its source's rect says
+- anim ghost: a string scales about its own center, on the client's Vertex mode
+- anim ghost: a leg plays the string's scale, and a leg at 1 plays nothing
+- anim ghost: a pose places each string about the dial's center, as the art moves
+- anim ghost: text fades with the pose and the Fan, as the art does
+- anim ghost: the sent place's text pulses with its art, out then back, and other text does not
+- anim ghost: nothing is left playing when the ghost comes down, or at the next capture
+- anim ghost: the animations are pooled with their strings
+- anim ghost: text stacks over its own level's art and under the next one's
+- anim ghost: with no Enum the text fades in place, the art still scaling
+- anim ghost: with no mode setter the text fades in place
+- anim ghost: a copy hangs off its sub-frame, so moving the frame moves the slice
+- anim ghost: a place moves out along its own bisector by a SetPoint on its sub-frame
+- anim ghost: a place's offset is in its own scale, so its scale never moves it further
+- anim ghost: an orbit carries every copy about the center, turns the art and leaves icons upright
+- anim ghost: a whole-dial rotation turns the places, never the hub or the title
+- anim ghost: a spin turns the slice about its own offset point, on top of its orbit
+- anim ghost: a pose that did not turn or move writes nothing to a copy
+- anim ghost: a capture puts a moved, turned slice back
+- anim ghost: a whole-dial offset moves the stage and the text, in radii, unscaled by the pose
+- anim ghost: the sent place stays put whatever the pose is doing
+- anim ghost: no scale reaches the client at 0, which raises
+- anim ghost: a place fades on its own and the hub on its own
+- anim ghost: a text leg carries each place's own scale
+- anim ghost: one-axis scale is each art frame's Scale animation and each string's, one leg at a time
+- anim ghost: a place and one axis together keep the art on its text
+- anim ghost: a hide stops the one-axis legs, and a recapture stops one still running
+- anim ghost: a recapture forgets the stage's offset, so the same offset lands again
+- anim ghost: a knot's leg is linear, and the sent place leaves the legs
+- anim ghost: where a frame takes no Scale animation, one-axis scale falls back to the smaller, uniform
+- anim ghost: a flash is one additive texture, made on first use, over everything
+
 ### test_keybinds.lua (6)
 
 - keybinds: NS.BINDINGS is Toggle Comms Pads, then Open Comms Dial 1 to 4, each with a tooltip
@@ -1210,7 +1543,7 @@ Total.
 - dial: [shine] fewer slices hide the rest
 - dial: [shine] the dial's look leaves the pad alone
 
-### test_icon_style.lua (10)
+### test_icon_style.lua (13)
 
 - icon style: the defaults draw the owner's look on a button and on a wedge
 - icon style: zoom crops through SetTexCoord, desaturate and alpha reach the texture
@@ -1222,6 +1555,9 @@ Total.
 - icon style: a pad saved before the Icons tab reads like a new one (fillShape backfills `icon`)
 - icon style: [polish] dial icon size reaches 128, pad stays 40
 - icon style: [autofit] a dial's icon size 0 is automatic: it scales with the ring radius
+- icon style: a game icon on the HUD is cropped past Blizzard's native edge, 0.07 a side at least (R4-ZOOM)
+- icon style: a glyph and a raid marker keep Zoom's crop, the whole mark at 0 (R4-ZOOM)
+- icon style: every HUD icon site paints through IS.PaintIcon, so the floor reaches it (R4-ZOOM)
 
 ### test_glow.lua (11)
 
@@ -1248,21 +1584,24 @@ Total.
 - shine: blooms only for fluid
 - shine: the button's own size when none is given
 
-### test_layers.lua (11)
+### test_layers.lua (14)
 
 - layers: NS.Constants.LAYERS names every strata and level once (frame-layering-§5)
+- layers: [#14] the bands of the shared FULLSCREEN strata, bottom to top, each clear of the last
 - layers: no strata string and no bare level at any call site (anti-pattern #99)
-- layers: a pad's root is the HUD tier; its header and buttons sit one over it
+- layers: a pad's root is the HUD tier; its band and buttons sit one over it, its header two
+- layers: [#14] a pad's root sits at the HUD band over UIParent, set before its children
 - layers: [QUI-Z11] the pad's drag strip ignores the pad's alpha
 - layers: [QUI-Z02/Z03] a pad button's ladder: edge, its glow, icon border, its glow, overlay
 - layers: the dial's header, front, catchers and screen catcher keep their tiers
+- layers: [#14] QuickComms stacks whole: pad < catcher < dial < preview < modals < browser < confirms
 - layers: [QUI-Z04] a wedge's ladder: icon border, its glow, then the overlay over both
 - layers: [QUI-Z10] the preview window is the window tier, never toplevel, never raised
 - layers: the modal bands sit over UIParent, each part at its named offset
 - layers: [audit QC-21] a modal window is clamped, never toplevel, never raised
 - layers: [QUI-Z06] the icon link window is lifted to POPUP
 
-### test_layout.lua (27)
+### test_layout.lua (28)
 
 - layout: [general] Behavior reads Sending, then Pads and dials, with the new labels (QUI-L01, L02)
 - layout: [general] the header Defaults carries the library's Reset all settings tooltip (QUI-L-new2)
@@ -1278,6 +1617,7 @@ Total.
 - layout: [pads] Buttons runs Size, Font, Background, Border, Button glow, Shine (QUI-L12, L13)
 - layout: [pads] Icons folds the glow offsets under Icon glow (QUI-L13, L14)
 - layout: [pads] the Defaults tooltip names every tab it resets (QUI-L18)
+- layout: the Defaults tooltips are real locale rows, not the key falling through (#13)
 - layout: [dials] the strip: Layout for Wheel, one Labels tab, and Ring map (QUI-L08, L19, L22)
 - layout: [dials] General: Enable this dial, then the key line (QUI-L29, L-new3)
 - layout: [dials] Groups draws Add group above the hint (QUI-L07)
@@ -1319,7 +1659,11 @@ Total.
 - skin seam: the degraded facade answers every name the live facade carries
 - skin seam: each host-copy skin token is the live library's Ka0s Default value
 
-### test_skin_windows.lua (20)
+### test_launcher_skin_entry.lua (1)
+
+- launcher descriptor passes openSkinPicker, which runs the skin verb
+
+### test_skin_windows.lua (24)
 
 - skin windows: no color literal is left in the window files
 - skin windows: the literal gate is falsifiable: a planted literal of each shape is reported
@@ -1341,8 +1685,12 @@ Total.
 - skin windows: the browser's texts take the skin's body face (R-2), Ignore fonts gives it back, a switch recolors
 - skin windows: the browser's empty footer line is qc.note, today's |cffaaaaaa
 - skin windows: the browser's cell tooltip writes its lines in the tooltip tokens
+- skin windows: no window shows a line under its title, in Ka0s Default and after a switch (R4-SEP)
+- skin windows: the Preview window's title and close sit on the band's middle, content under it, every skin (R5-WIN)
+- skin windows: the modal window's title and close X sit on the band's middle, the page under it, every skin (R5-WIN)
+- skin windows: the modal fallback wears the band too, its title and close mark on it (R5-WIN)
 
-### test_skin_hud.lua (19)
+### test_skin_hud.lua (20)
 
 - skin hud: every HUD font and border block follows the skin by default, through a schema row
 - skin hud: a following picker is grayed out and shows the skin's value; off, it is the player's
@@ -1352,11 +1700,12 @@ Total.
 - skin hud: with Ignore fonts on, a following dial label draws its stored pick
 - skin hud: a following face takes the Skin tab's font override, as every face of the owner does
 - skin hud: a pad's border blocks take bar.borderStyle while they follow, the pick when not
+- skin hud: a real bar.borderStyle in a skin wins over the player's pick while it follows
 - skin hud: an icon's border takes the skin's icon border while it follows, the pick when not
 - skin hud: a dial's slice labels and ring title take hud.font while they follow
 - skin hud: a pad's chrome is today's pixels under Ka0s Default, each from a token
 - skin hud: a dial's chrome is today's pixels under Ka0s Default, each from a token
-- skin hud: a skin switch repaints the chrome and the faces, and leaves the player's colors
+- skin hud: a skin switch repaints the chrome and the faces, and leaves a color whose companion is off
 - skin hud: a pad window's 1px inner rule is win.inner, none where the skin has none
 - skin hud: a pad's window is repainted when its look or the skin moved, and at no other rebuild
 - skin hud: the dial's per-frame update reads no token
@@ -1364,10 +1713,75 @@ Total.
 - skin hud: without the library step 10 writes the companions itself
 - skin hud: the reset runs once: a companion the player turns off afterwards stays off
 
-### test_skin_picker.lua (18)
+### test_skin_flip.lua (61)
+
+- skin flip: the step puts every listed companion on, keeps every pick and color, and leaves the rest
+- skin flip: no value but a flag holds the sentinel, and a second run writes nothing
+- skin flip: the runner moves every stored profile once, and each profile event only a new one
+- skin flip: a companion turned off stays off through every Defaults path that is not its own
+- skin flip: a profile reset runs the step against defaults that show nothing
+- skin flip: with the library absent the step writes by hand, the record too, and makes no table
+- skin flip: every listed key has a shipped default that says follow
+- skin flip: a font row's default is the Ka0s pick, for a player who turns the companion off
+- skin flip: Ka0s Default draws the stored defaults, but for the button the owner ruled fuller
+- skin flip: a skin switch reaches every drawing setter on a pad
+- skin flip: a skin switch reaches the dial's slices, hub, pointer, page row and shine
+- skin flip: with the library absent a stored color and shine draw with their companions on
+- skin flip: the state veils take each skin's cover.dim, each at its own alpha
+- skin flip: a companion off draws the stored value under every skin
+- skin flip: a class color comes before the companion, whatever it says
+- skin flip: a glyph's own color and a game icon keep theirs; the skin's tint reaches a plain glyph
+- skin flip: the icon's border and glow take the skin's colors, off the stored ones
+- skin flip: the shine is the skin's look, and its texture a skinned body; off keeps the player's
+- skin flip: a textured body draws the file in the look's color, and flat again clears the tint
+- skin flip: Ka0s Default keeps the shadow the blocks ship with, every other skin draws its own
+- skin flip: a skin switch redraws the shadow on a string that had already drawn
+- skin flip: Ignore fonts leaves the stored shadow standing
+- skin flip: the ghost wears a skinned string's font object, so its shadow comes along
+- skin fix: a tooltip's title takes gtip.title, on a button, a wedge and a titled tip
+- skin fix: the hub's small labels wear the skin's HUD face and their tokens
+- skin fix: End preview's label takes the skin's body face
+- skin fix: the active dot is the client's while the panel is stock, the Ka0s mark with the Scope cleared
+- skin fix: the remove mark is marked for the panel, its stock art kept as the way back
+- skin fix: the panel's tooltip lines take gtip.line, its stock gold under Ignore settings panel
+- skin fix: a released remove mark is forgotten, so a skin change never reaches the widget's next user
+- skin fix: a remove mark redrawn under a stock panel keeps its art until it is released
+- skin fix: a row's Edit glyph takes the tint with the Scope cleared, and gives it back on release
+- skin fix: the popup's token glyph gives its mark back when the box is released
+- skin fix: with the library absent the marks forget nothing and tint nothing
+- skin fix: a pad's Shine rows gray by the look that draws, not the stored one
+- skin fix: a dial's Shine rows gray by the look that draws, not the stored one
+- skin fix: the hub's border size grays only while it follows a real style
+- skin fix: a class-colored shine tint stays the class's under another skin
+- skin flip: every *FromSkin key a template ships is on the step's list
+- skin flip: the hub's rim draws the skin's color and thickness
+- skin flip: a paged ring draws the skin's arrow, plate, dots and their back and border
+- skin flip: the hub's small labels take the slice label's face, not another block's
+- skin flip: a button's edge takes the bar's thickness, not the window's
+- skin flip: toggling fontColorFromSkin on a live pad rebuilds the button's look
+- skin flip: toggling fontShadowFromSkin on a live pad rebuilds the button's look
+- skin flip: toggling backgroundFromSkin on a live pad rebuilds the button's look
+- skin flip: toggling borderColorFromSkin on a live pad rebuilds the button's look
+- skin flip: toggling textureFromSkin on a live pad rebuilds the button's look
+- skin flip: toggling glowColorFromSkin on a live pad rebuilds the button's look
+- skin flip: toggling shineFromSkin on a live pad rebuilds the button's look
+- skin fix: the token glyph is white under a stock panel and the skin's tint with the Scope cleared
+- skin fix: the popup's token tooltip draws its first line in gtip.line, panel-scoped
+- skin fix: a When checkbox's tooltip draws its line in gtip.line, panel-scoped
+- skin fix: the Preview window's tooltip titles take gtip.title, locked and at rest
+- skin fix: the browser's cell tooltip title takes gtip.title under the HUD's rule
+- skin fix: a cell's hover art is the client's while the panel is stock, tinted with the Scope cleared
+- skin fix: the pad's combat refusal tooltip takes gtip.title
+- skin fix: the pads page's active dot is the Ka0s mark with the Scope cleared
+- skin fix: the dials page's active dot is the Ka0s mark with the Scope cleared
+- skin fix: the active dot's mark is drawn in sem.good
+- skin fix: the degraded facade answers Ka0s Default for gtip.line and icon.arrow
+
+### test_skin_picker.lua (28)
 
 - skin picker: the spec names this owner, its seams, General's Skin tab and the eye
-- skin picker: the eye turns test mode on, and leaves it on
+- skin picker: the preview hook goes through test mode's own seam and reads the launcher's state
+- skin picker: the picker's enter and restore are quiet where test mode refuses; the eye's is not
 - skin picker: an unseen profile shows it; a seen one does not
 - skin picker: it shows two seconds after OnEnable, on the login timer
 - skin picker: the stand-down cancels the login timer
@@ -1376,13 +1790,22 @@ Total.
 - skin picker: never while the addon is switched off
 - skin picker: a new profile and a reset profile show it again
 - skin picker: a profile switched off shows no picker on its adoption
-- skin picker: the window's eye is shown and turns test mode on
+- skin picker: a show raises the window over a pad in its own strata
+- skin picker: a queued show answers as the library did and raises nothing
+- skin picker: opened with the pads hidden it enters test mode, and stays in front
+- skin picker: the eye toggles test mode off and on, and its paint follows
+- skin picker: every close puts test mode back off when the picker turned it on
+- skin picker: a mode on at open that the eye turned off is on again after the close
+- skin picker: pads already shown are left alone; the eye still previews and the close undoes it
+- skin picker: test mode turned on by /qc test while the picker is up stays on at the close
+- skin picker: in combat the picker's enter is refused quietly and nothing is undone
 - skin picker: the player's close marks it seen; this addon's own hide does not
 - skin picker: the stand-down takes the picker down, unseen
 - skin picker: a pick previews, unsaved; Apply saves it and marks the picker seen
 - skin picker: the close control puts the old skin back, saves nothing, and marks it seen
 - skin picker: a profile switch with a pick pending wears the new profile's skin
 - skin picker: the gear saves the pick and opens General on its Skin tab
+- skin picker: the window shows no line under its title, before and after a switch (R4-SEP)
 - skin picker: without LibKa0s nothing shows and nothing raises
 
 ### test_skin_outline.lua (10)
@@ -1398,11 +1821,12 @@ Total.
 - outline: a profile switch applies the incoming profile's mode, and back
 - outline: without the skin engine the apply is a quiet no-op
 
-### test_skin_verb.lua (6)
+### test_skin_verb.lua (7)
 
 - skin verb: the row sits right after config, with the library's help words
 - skin verb: /qc skin shows the picker on a profile that has closed it
 - skin verb: NS.RunSkinVerb hands O.SkinVerb this addon's first-run spec
+- skin verb: the window it shows is raised over a pad (#14)
 - skin verb: in combat every call prints the library's gray line and shows nothing
 - skin verb: refused while the addon is disabled, and no picker shows
 - skin verb: without LibKa0s the verb prints the library-absent line
@@ -1522,6 +1946,41 @@ Total.
 - lizard sighted: parity names every file whose counts differ, and only those
 - lizard sighted: lizard lists every function of a hazard fixture once it is sanitized
 
+### test_skin_values.lua (3)
+
+- skin values: every host row carries its file, substring, why and cause id
+- skin values: no typed value outside the kit's categories and the host's rows
+- skin values: the check is falsifiable, a planted value of each shape is reported
+
+### test_skin_switch.lua (26)
+
+- skin switch: the check is falsifiable, a surface that redraws a literal is reported
+- skin switch: a pad's window changes
+- skin switch: a pad's header changes
+- skin switch: a pad button's body changes
+- skin switch: a pad button's edge changes
+- skin switch: a pad button's label changes
+- skin switch: a pad button's refused veil changes
+- skin switch: a pad button's refused veil changes with the Scope ignored
+- skin switch: a pad button's cooling veil changes
+- skin switch: a pad button's cooling veil changes with the Scope ignored
+- skin switch: a pad button's hover wash changes
+- skin switch: a pad button's hover wash changes with the Scope ignored
+- skin switch: a pad button's padlock changes
+- skin switch: a pad button's padlock changes with the Scope ignored
+- skin switch: a dial's slices changes
+- skin switch: a dial's hub changes
+- skin switch: a dial's pointer changes
+- skin switch: an icon's border changes
+- skin switch: an icon's glow changes
+- skin switch: a pad button's shine changes
+- skin switch: a section title's text changes
+- skin switch: a dial's page dot changes
+- skin switch: the icon browser's selected cell changes
+- skin switch: the icon browser's selected cell changes with the Scope ignored
+- skin switch: a cell's hover art changes
+- skin switch: a settings row's remove mark changes
+
 ## Totals
 
 | Suite | Cases |
@@ -1532,7 +1991,7 @@ Total.
 | test_surface_parity.lua | 18 |
 | test_setup.lua | 26 |
 | test_database.lua | 20 |
-| test_profile.lua | 9 |
+| test_profile.lua | 10 |
 | test_schema.lua | 20 |
 | test_slash.lua | 22 |
 | test_disabled.lua | 26 |
@@ -1551,6 +2010,7 @@ Total.
 | test_editors.lua | 18 |
 | test_callout_popup.lua | 38 |
 | test_icon_browser.lua | 37 |
+| test_window_icons.lua | 5 |
 | test_groups_when.lua | 21 |
 | test_page_groups.lua | 49 |
 | test_page_groups_nesting.lua | 19 |
@@ -1569,23 +2029,31 @@ Total.
 | test_dial_layout.lua | 31 |
 | test_surfaces.lua | 30 |
 | test_pad_render.lua | 25 |
+| test_pad_looks.lua | 21 |
+| test_pad_header.lua | 9 |
 | test_pad.lua | 47 |
 | test_dial.lua | 38 |
 | test_dial_catcher.lua | 13 |
 | test_dial_look.lua | 16 |
+| test_anim.lua | 46 |
+| test_anim_styles.lua | 140 |
+| test_anim_surfaces.lua | 42 |
+| test_anim_ghost.lua | 48 |
 | test_keybinds.lua | 6 |
 | test_dial_shine.lua | 8 |
-| test_icon_style.lua | 10 |
+| test_icon_style.lua | 13 |
 | test_glow.lua | 11 |
 | test_shine.lua | 8 |
-| test_layers.lua | 11 |
-| test_layout.lua | 27 |
+| test_layers.lua | 14 |
+| test_layout.lua | 28 |
 | test_skinsetup.lua | 24 |
-| test_skin_windows.lua | 20 |
-| test_skin_hud.lua | 19 |
-| test_skin_picker.lua | 18 |
+| test_launcher_skin_entry.lua | 1 |
+| test_skin_windows.lua | 24 |
+| test_skin_hud.lua | 20 |
+| test_skin_flip.lua | 61 |
+| test_skin_picker.lua | 28 |
 | test_skin_outline.lua | 10 |
-| test_skin_verb.lua | 6 |
+| test_skin_verb.lua | 7 |
 | test_skin_fonts.lua | 12 |
 | test_icons_default.lua | 8 |
 | test_skin_tools.lua | 14 |
@@ -1596,5 +2064,7 @@ Total.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
+| test_skin_values.lua | 3 |
+| test_skin_switch.lua | 26 |
 | Skipped | 1 |
-| **Total** | **1303** |
+| **Total** | **1729** |

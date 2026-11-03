@@ -32,6 +32,11 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 | Run | Commit | Tree | Version | Lint w/e | Files | Tests | Perf | NLOC | Funcs | Avg NLOC | Avg CCN | Max CCN | CCN warn | Verdict |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| [`20261104-042401`](20261104-042401/) | `7455a75` | clean | 1.0.0 | 0/0 | 164 | 1729/1/1730 | pass | 44043 | 4977 | 8.0 | 2.4 | 15 | 0 | **green** |
+| [`20261102-005112`](20261102-005112/) | `e015b6d` | clean | 1.0.0 | 0/0 | 161 | 1698/1/1699 | pass | 43233 | 4880 | 8.0 | 2.4 | 15 | 0 | **green** |
+| [`20261101-210705`](20261101-210705/) | `32bf98d` | clean | 1.0.0 | 0/0 | 161 | 1710/1/1711 | pass | 43181 | 4878 | 8.0 | 2.4 | 15 | 0 | **green** |
+| [`20261101-203759`](20261101-203759/) | `00db040` | clean | 1.0.0 | 0/0 | 160 | 1690/1/1691 | pass | 42988 | 4851 | 8.0 | 2.4 | 15 | 0 | **green** |
+| [`20261101-160020`](20261101-160020/) | `12afcd3` | clean | 1.0.0 | 0/0 | 157 | 1420/1/1421 | pass | 40490 | 4552 | 8.0 | 2.5 | 15 | 0 | **green** |
 | [`20261101-030530`](20261101-030530/) | `d16c027` | clean | 1.0.0 | 0/0 | 151 | 1303/1/1304 | pass | 37829 | 4230 | 8.0 | 2.5 | 15 | 0 | **green** |
 | [`20261101-011157`](20261101-011157/) | `7519cd5` | clean | 1.0.0 | 0/0 | 151 | 1303/1/1304 | pass | 37829 | 4230 | 8.0 | 2.5 | 15 | 0 | **green** |
 | [`20261031-213820`](20261031-213820/) | `e63dad2` | clean | 1.0.0 | 0/0 | 151 | 1298/1/1299 | pass | 37776 | 4226 | 8.0 | 2.5 | 15 | 0 | **green** |
@@ -44,18 +49,18 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 ## Test suite
 
-**1304 cases** — 1303 passed, 0 failed, 1 skipped. The generated inventory
-[`20261101-030530/test-cases.md`](20261101-030530/test-cases.md) is the authority on which cases existed at this run;
+**1730 cases** — 1729 passed, 0 failed, 1 skipped. The generated inventory
+[`20261104-042401/test-cases.md`](20261104-042401/test-cases.md) is the authority on which cases existed at this run;
 `docs/test-cases.md` is that same list at HEAD.
 
-Unchanged from the previous run at 1304 cases.
+Moved **1699 → 1730** since the previous run.
 
 **1 case(s) reported a `skip`.** A skip is counted in the total and never in `passed`, and at
 the release gate it is NOT EVALUATED rather than passed (`automated-tests-§3`).
 
 ## Lint
 
-**0 warnings / 0 errors over 151 files** (`luacheck .`).
+**0 warnings / 0 errors over 164 files** (`luacheck .`).
 
 Read that figure with its scope attached: `.luacheckrc` excludes 7 path(s) from it — `libs/`, `docs/audits/`, `docs/reviews/`, `docs/revendor/`, `docs/brainstorm/`, `_dev/`, `tests/_kit/` —
 so nothing under them is in the count above. A `0/0` that never moves is partly a statement about
@@ -65,24 +70,24 @@ to whoever thinks to open `.luacheckrc`.
 ## Perf
 
 **6 scenarios** from `tests/perf.lua`; the measurements are in
-[`20261101-030530/perf.json`](20261101-030530/perf.json).
+[`20261104-042401/perf.json`](20261104-042401/perf.json).
 
 | `scenario` | `iters` | `ms/iter` | `notes/iter` | `bytes/iter` |
 |---|---|---|---|---|
-| `bracketCaptureOff` | 1000 | 0.00002 | 0.00 | 0.0 |
-| `dialPointerCaptureOff` | 1000 | 0.00393 | 0.00 | 224.0 |
-| `dialPointerNoHarness` | 1000 | 0.00374 | 0.00 | 224.0 |
-| `padRebuild12` | 200 | 0.44362 | 3.00 | 65745.4 |
-| `dialOpenClose` | 200 | 0.05175 | 1.00 | 1984.9 |
-| `situationRefresh` | 500 | 0.00646 | 1.00 | 2016.0 |
+| `bracketCaptureOff` | 1000 | 0.00003 | 0.00 | 0.0 |
+| `dialPointerCaptureOff` | 1000 | 0.00305 | 0.00 | 224.0 |
+| `dialPointerNoHarness` | 1000 | 0.00329 | 0.00 | 224.0 |
+| `padRebuild12` | 200 | 0.58205 | 3.00 | 68081.5 |
+| `dialOpenClose` | 200 | 0.38954 | 1.00 | 46028.1 |
+| `situationRefresh` | 500 | 0.01686 | 1.00 | 2016.0 |
 
 `perf` never fails a run and never blocks a commit — it is recorded, read and compared, not
 thresholded (`performance-§9`). It does gate the **tag** (`automated-tests-§3`).
 
 ## Complexity watch list
 
-Current as of [`20261101-030530`](20261101-030530/) — **this run's measurement, not its diff.** Max CCN **15** across 4230
-functions, **0** of them warned on; 6 file(s) in the 1000–1500 band and 0 over the 1500 cap
+Current as of [`20261104-042401`](20261104-042401/) — **this run's measurement, not its diff.** Max CCN **15** across 4977
+functions, **0** of them warned on; 7 file(s) in the 1000–1500 band and 0 over the 1500 cap
 (`layout-§1`).
 
 Every row below is generated from this run's own `lizard` output. **The `Disposition` column is
@@ -101,12 +106,13 @@ None.
 
 | Band | File | LOC | Disposition |
 |---|---|---|---|
-| 1000–1500 (on notice) | `locales/enUS.lua` | 1383 | Accepted: flat data, one key per player-facing string (localization-§1), no logic; it grows with the UI, not with tangle. |
-| 1000–1500 (on notice) | `modules/Library.lua` | 1340 | On notice: the registry writer holds every membership, order, id and reference write by design (architecture-§5); the import section is gone with Share (2026-10-25), so it shrank. No peel planned for v1.0.0; if it nears 1,500, peel the seeding and restore section (`seedGroup`, `seedNew`, `Lib.RestoreBuiltins`, `Lib.SeedFromOverlay`) into `modules/Library_Seed.lua`. |
+| 1000–1500 (on notice) | `locales/enUS.lua` | 1431 | Accepted: flat data, one key per player-facing string (localization-§1), no logic; it grows with the UI, not with tangle. |
+| 1000–1500 (on notice) | `modules/Library.lua` | 1342 | On notice: the registry writer holds every membership, order, id and reference write by design (architecture-§5); the import section is gone with Share (2026-10-25), so it shrank. No peel planned for v1.0.0; if it nears 1,500, peel the seeding and restore section (`seedGroup`, `seedNew`, `Lib.RestoreBuiltins`, `Lib.SeedFromOverlay`) into `modules/Library_Seed.lua`. |
 | 1000–1500 (on notice) | `tests/test_library.lua` | 1057 | Accepted: case count, not tangle; one registry-writer behavior per case. |
-| 1000–1500 (on notice) | `tests/test_pad.lua` | 1037 | Accepted: case count, not tangle; split it along its groupings if it nears 1,400. |
+| 1000–1500 (on notice) | `tests/test_pad.lua` | 1047 | Accepted: case count, not tangle; split it along its groupings if it nears 1,400. |
 | 1000–1500 (on notice) | `tests/test_page_groups.lua` | 1131 | Accepted: split on 2026-10-25 (RA-09) from 1,500 to 1,131; its nesting cases now live in `tests/test_page_groups_nesting.lua`. |
-| 1000–1500 (on notice) | `tests/wow_mock.lua` | 1024 | Accepted: the addon's thin extender over the kit's mock_base, one client API per stub; it grows with the API surface the addon reads. |
+| 1000–1500 (on notice) | `tests/test_skin_flip.lua` | 1064 | Accepted: crossed 2026-11-01; case count, not tangle; one skin behavior per case. Split at its section rules if it nears 1,400. |
+| 1000–1500 (on notice) | `tests/wow_mock.lua` | 1084 | Accepted: the addon's thin extender over the kit's mock_base, one client API per stub; it grows with the API surface the addon reads. |
 
 `lizard` counts every `and`/`or` short-circuit as a decision, so in Lua a run of
 `t.k = rec.k or D.k` defaulting lines scores high with no visible branching at all: a large CCN

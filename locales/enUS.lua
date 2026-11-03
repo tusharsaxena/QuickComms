@@ -669,7 +669,7 @@ L["Bloom color A"] = "Bloom color A"
 L["Bloom color B"] = "Bloom color B"
 L["A glossy overlay: Gloss cap, Gloss fade, Glass orb, Frosted glass, Fluid glass, Bevel or Rim light. None draws none."] =
     "A glossy overlay: Gloss cap, Gloss fade, Glass orb, Frosted glass, Fluid glass, Bevel or Rim light. None draws none."
-L["How strong the shine is, from 0 to 100 percent."] = "How strong the shine is, from 0 to 100 percent."
+L["How strong the shine is, from 0 to 100 percent, while Use the skin's shine is off."] = "How strong the shine is, from 0 to 100 percent, while Use the skin's shine is off."
 L["How tall the pad's header row is, in pixels: the row with the situation (World, M+, Raid) and the collapse button."] =
     "How tall the pad's header row is, in pixels: the row with the situation (World, M+, Raid) and the collapse button."
 L["Visibility"] = "Visibility"
@@ -949,8 +949,8 @@ L["How many slices a ring has. Auto spreads a ring's slices evenly around it, up
     "How many slices a ring has. Auto spreads a ring's slices evenly around it, up to 12. A ring with more turns pages with the arrows under the dial. A ring that opens other rings has at most 8."
 L["Auto"] = "Auto"
 L["Ring radius"] = "Ring radius"
-L["Put the selected dial's groups-as, layout, slices, hub, paging, labels, tooltip placement and icons back to their defaults, and turn it on. Its name, groups, position and key are kept."] =
-    "Put the selected dial's groups-as, layout, slices, hub, paging, labels, tooltip placement and icons back to their defaults, and turn it on. Its name, groups, position and key are kept."
+L["Put the selected dial's groups-as, layout, slices, hub, paging, labels, tooltip placement, icons and animation back to their defaults, and turn it on. Its name, groups, position and key are kept."] =
+    "Put the selected dial's groups-as, layout, slices, hub, paging, labels, tooltip placement, icons and animation back to their defaults, and turn it on. Its name, groups, position and key are kept."
 L["How big the dial is, in pixels (120 by default). The disc grows with it, and automatic icon offset and size follow it."] =
     "How big the dial is, in pixels (120 by default). The disc grows with it, and automatic icon offset and size follow it."
 L["Open at"] = "Open at"
@@ -1269,13 +1269,25 @@ L["How big each slice's icon is, in pixels. 0 sizes it to the ring radius: 48 at
 L["Icon size"] = "Icon size"
 L["Icon size (0 = automatic)"] = "Icon size (0 = automatic)"
 L["Zoom"] = "Zoom"
-L["Crop the icon's edges: 0 shows the whole icon, 0.25 crops a quarter off each side. A little zoom trims the dark edge baked into most game icons."] =
-    "Crop the icon's edges: 0 shows the whole icon, 0.25 crops a quarter off each side. A little zoom trims the dark edge baked into most game icons."
+L["Crop the icon's edges: 0.25 crops a quarter off each side. A game icon is always cropped at least 0.07 a side, so its baked-in dark edge never shows; at 0 a glyph or a raid marker shows whole."] =
+    "Crop the icon's edges: 0.25 crops a quarter off each side. A game icon is always cropped at least 0.07 a side, so its baked-in dark edge never shows; at 0 a glyph or a raid marker shows whole."
 L["Desaturate"] = "Desaturate"
 L["Draw the icons in gray."] = "Draw the icons in gray."
 L["Icon opacity"] = "Icon opacity"
 L["How opaque the icons are."] = "How opaque the icons are."
 L["Tint"] = "Tint"
+-- The full skin's companions (settings/SchemaMembers.lua's followRow, LibKa0s v1.85.0, cause D7)
+L["Use the skin's color"] = "Use the skin's color"
+L["Use the skin's shadow"] = "Use the skin's shadow"
+L["Use the skin's shine"] = "Use the skin's shine"
+L["Use the skin's texture"] = "Use the skin's texture"
+L["Font color"] = "Font color"
+L["Font shadow"] = "Font shadow"
+L["Border color"] = "Border color"
+L["Draw %s from the skin. The %s row keeps its value, and is not read while this is on."] =
+    "Draw %s from the skin. The %s row keeps its value, and is not read while this is on."
+L["Draw the button's body on the skin's bar texture. Off draws it flat."] =
+    "Draw the button's body on the skin's bar texture. Off draws it flat."
 L["Draw a border around each icon."] = "Draw a border around each icon."
 L["Draw a glow around each icon."] = "Draw a glow around each icon."
 L["Glow when"] = "Glow when"
@@ -1381,3 +1393,39 @@ L["Adds back the built-in groups and callouts you deleted. Changes nothing you h
     "Adds back the built-in groups and callouts you deleted. Changes nothing you have."
 L["Set this dial's key on the General page > Keybindings. A dial's key follows its place in the dial order."] =
     "Set this dial's key on the General page > Keybindings. A dial's key follows its place in the dial order."
+L["Fan"] = "Fan"
+L["Scale"] = "Scale"
+L["Scale and fade"] = "Scale and fade"
+L["Rotate and scale"] = "Rotate and scale"
+L["Outward spiral"] = "Outward spiral"
+L["Inward spiral"] = "Inward spiral"
+L["Orbit"] = "Orbit"
+L["Burst"] = "Burst"
+L["Stagger pop"] = "Stagger pop"
+L["Pop"] = "Pop"
+L["Slide"] = "Slide"
+L["Drop"] = "Drop"
+L["Squash"] = "Squash"
+L["Flip"] = "Flip"
+L["Shatter"] = "Shatter"
+L["Flash"] = "Flash"
+L["Up"] = "Up"
+L["Down"] = "Down"
+L["Direction"] = "Direction"
+L["Which way the dial moves as it slides into place."] =
+    "Which way the dial moves as it slides into place."
+L["Which way the dial moves as it slides away."] =
+    "Which way the dial moves as it slides away."
+L["Animation"] = "Animation"
+L["Open"] = "Open"
+L["Close"] = "Close"
+L["Style"] = "Style"
+L["Duration (seconds)"] = "Duration (seconds)"
+L["How this appears when it opens. None shows it at once."] =
+    "How this appears when it opens. None shows it at once."
+L["How long the open takes. A send never waits for it."] =
+    "How long the open takes. A send never waits for it."
+L["How this leaves when it closes. None hides it at once."] =
+    "How this leaves when it closes. None hides it at once."
+L["How long the close takes. A send never waits for it."] =
+    "How long the close takes. A send never waits for it."

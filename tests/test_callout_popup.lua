@@ -718,7 +718,9 @@ test("popup: no scrollbar; the window's height follows the laid-out body", funct
     P.find(w, "EditBox", "Text"):__fire("OnEnterPressed", "Pull")
     assertTrue((body.layoutCount or 0) > laid, "laid out again before it is measured")
     local first = heights[#heights]
-    -- The window: the template's title bar (24) and bottom inset (5), where the library's
+    -- The window: the title band's bottom edge (31: Shell's band at a 1 px inset and title.height 30
+    -- under Ka0s Default; it was the template's 24 until R5-WIN laid the page under the band) and the
+    -- bottom inset (5), where the library's
     -- CreatePanel starts the page's body (read off the panel it built: its header plus its own
     -- offset), the chrome gap, the body and its 12 under it. The popup restates the body's start as
     -- BODY_TOP and the pages' inset as CONTENT_X (settings/CalloutPopup.lua): red under a re-vendor
@@ -729,7 +731,7 @@ test("popup: no scrollbar; the window's height follows the laid-out body", funct
     assertEqual(point, "TOPLEFT")
     assertEqual(rel, panel)
     assertEqual(relPoint, "TOPLEFT")
-    assertEqual(first, 24 + (-y) + LAYOUT.CHROME_GAP + 300 + 12 + 5,
+    assertEqual(first, 31 + (-y) + LAYOUT.CHROME_GAP + 300 + 12 + 5,
         "the body plus the chrome around it")
     assertEqual(LAYOUT.CONTENT_LEFT, 12, "the pages' left inset, restated as CONTENT_X")
     -- the error line grows the body: the window follows it

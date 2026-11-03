@@ -4,7 +4,9 @@
 -- choice set or session flag may change, and no row may be added or removed. tests/test_schema.lua
 -- rebuilds the same line from the live schema and compares. A later change that alters a setting on
 -- purpose regenerates the pins in the same commit and says so. QC-03 (the skinning rollout, 2026-10-29)
--- adds the eleven "Use the skin's font / border" companions of the HUD's font and border blocks.
+-- adds the eleven "Use the skin's font / border" companions of the HUD's font and border blocks. The
+-- full skin (LibKa0s v1.85.0, cause D7) adds a companion per color, shadow, texture and shine, and moves
+-- the Font rows' default to the Ka0s pick.
 return {
     ["enabled"] = "bool|true|nil|nil|nil|nil|false",
     ["visibility"] = "string|\"always\"|nil|nil|nil|[]|false",
@@ -66,7 +68,7 @@ return {
     ["dial.openAt"] = "string|\"center\"|nil|nil|nil|[\"center\",\"cursor\"]|false",
     ["dial.point"] = "point|false|nil|nil|nil|nil|false",
     ["pad.header.height"] = "number|24|14|40|1|nil|false",
-    ["pad.header.font"] = "string|\"Friz Quadrata TT\"|nil|nil|nil|<fn>|false",
+    ["pad.header.font"] = "string|\"Ka0s Prototype\"|nil|nil|nil|<fn>|false",
     ["pad.header.fontFromSkin"] = "bool|true|nil|nil|nil|nil|false",   -- QC-03: follows the skin
     ["pad.header.fontSize"] = "number|16|6|32|1|nil|false",
     ["pad.header.fontColor"] = "color|{a=1,b=0,g=0.82,r=1}|nil|nil|nil|nil|false",
@@ -81,7 +83,7 @@ return {
     ["pad.header.borderColor"] = "color|{a=1,b=1,g=1,r=1}|nil|nil|nil|nil|false",
     ["pad.header.useClassColorBorder"] = "bool|false|nil|nil|nil|nil|false",
     ["pad.section.height"] = "number|0|0|40|1|nil|false",
-    ["pad.section.font"] = "string|\"Friz Quadrata TT\"|nil|nil|nil|<fn>|false",
+    ["pad.section.font"] = "string|\"Ka0s Prototype\"|nil|nil|nil|<fn>|false",
     ["pad.section.fontFromSkin"] = "bool|true|nil|nil|nil|nil|false",   -- QC-03: follows the skin
     ["pad.section.fontSize"] = "number|12|6|32|1|nil|false",
     ["pad.section.fontColor"] = "color|{a=1,b=0,g=0.82,r=1}|nil|nil|nil|nil|false",
@@ -111,7 +113,7 @@ return {
     ["pad.button.borderSize"] = "number|1|0|16|1|nil|false",
     ["pad.button.borderColor"] = "color|{a=0.1,b=0.247059,g=0.247059,r=0.247059}|nil|nil|nil|nil|false",
     ["pad.button.useClassColorBorder"] = "bool|false|nil|nil|nil|nil|false",
-    ["pad.button.font"] = "string|\"Friz Quadrata TT\"|nil|nil|nil|<fn>|false",
+    ["pad.button.font"] = "string|\"Ka0s Prototype\"|nil|nil|nil|<fn>|false",
     ["pad.button.fontFromSkin"] = "bool|true|nil|nil|nil|nil|false",   -- QC-03: follows the skin
     ["pad.button.fontSize"] = "number|10|6|32|1|nil|false",
     ["pad.button.fontColor"] = "color|{a=1,b=1,g=1,r=1}|nil|nil|nil|nil|false",
@@ -182,7 +184,7 @@ return {
     ["dial.page.useClassColorDotBorder"] = "bool|false|nil|nil|nil|nil|false",
     ["dial.label.show"] = "bool|true|nil|nil|nil|nil|false",
     ["dial.label.offset"] = "number|0|0|300|1|nil|false",
-    ["dial.label.font"] = "string|\"Friz Quadrata TT\"|nil|nil|nil|<fn>|false",
+    ["dial.label.font"] = "string|\"Ka0s Prototype\"|nil|nil|nil|<fn>|false",
     ["dial.label.fontFromSkin"] = "bool|true|nil|nil|nil|nil|false",   -- QC-03: follows the skin
     ["dial.label.fontSize"] = "number|12|6|32|1|nil|false",
     ["dial.label.fontColor"] = "color|{a=1,b=1,g=1,r=1}|nil|nil|nil|nil|false",
@@ -192,7 +194,7 @@ return {
     ["dial.label.tooltipSide"] = "string|\"top\"|nil|nil|nil|[\"top\",\"bottom\",\"left\",\"right\"]|false",
     ["dial.label.tooltipOffset"] = "number|8|0|80|1|nil|false",
     ["dial.title.show"] = "bool|true|nil|nil|nil|nil|false",
-    ["dial.title.font"] = "string|\"Friz Quadrata TT\"|nil|nil|nil|<fn>|false",
+    ["dial.title.font"] = "string|\"Ka0s Prototype\"|nil|nil|nil|<fn>|false",
     ["dial.title.fontFromSkin"] = "bool|true|nil|nil|nil|nil|false",   -- QC-03: follows the skin
     ["dial.title.fontSize"] = "number|16|6|32|1|nil|false",
     ["dial.title.fontColor"] = "color|{a=1,b=0,g=0.82,r=1}|nil|nil|nil|nil|false",
@@ -260,4 +262,52 @@ return {
     ["dial.icon.buttonFrequency"] = "number|0.25|0.05|2|0.05|nil|false",
     ["dial.icon.procDuration"] = "number|1|0.25|3|0.25|nil|false",
     ["dial.icon.procStartAnim"] = "bool|true|nil|nil|nil|nil|false",
+    -- #13 (2026-11-01): the Animation tab of every dial (a pad has none, the owner's ruling).
+    ["dial.anim.openStyle"] = "string|\"rotateScale\"|nil|nil|nil|[\"none\",\"fade\",\"fan\",\"scale\",\"scaleAndFade\",\"rotateScale\",\"spiralOut\",\"spiralIn\",\"orbit\",\"burst\",\"stagger\",\"pop\",\"slide\",\"drop\",\"squash\",\"flip\",\"shatter\",\"flash\"]|false",
+    ["dial.anim.openDuration"] = "number|0.2|0.1|2|0.1|nil|false",
+    ["dial.anim.openDirection"] = "string|\"up\"|nil|nil|nil|[\"up\",\"down\",\"left\",\"right\"]|false",
+    ["dial.anim.closeStyle"] = "string|\"rotateScale\"|nil|nil|nil|[\"none\",\"fade\",\"fan\",\"scale\",\"scaleAndFade\",\"rotateScale\",\"spiralOut\",\"spiralIn\",\"orbit\",\"burst\",\"stagger\",\"pop\",\"slide\",\"drop\",\"squash\",\"flip\",\"shatter\",\"flash\"]|false",
+    ["dial.anim.closeDuration"] = "number|0.2|0.1|2|0.1|nil|false",
+    ["dial.anim.closeDirection"] = "string|\"down\"|nil|nil|nil|[\"up\",\"down\",\"left\",\"right\"]|false",
+    -- The full skin (cause D7).
+    ["pad.look.backgroundFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["pad.look.borderColorFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["pad.header.fontColorFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["pad.header.fontShadowFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["pad.header.backgroundFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["pad.header.borderColorFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["pad.section.fontColorFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["pad.section.fontShadowFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["pad.section.backgroundFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["pad.section.borderColorFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["pad.button.fontColorFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["pad.button.fontShadowFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["pad.button.backgroundFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["pad.button.borderColorFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["pad.button.textureFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["pad.button.glowColorFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["pad.button.shineFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["pad.icon.tintFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["pad.icon.borderColorFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["pad.icon.glowColorFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["dial.icon.tintFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["dial.icon.borderColorFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["dial.icon.glowColorFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["dial.label.fontColorFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["dial.label.fontShadowFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["dial.title.fontColorFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["dial.title.fontShadowFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["dial.slice.backgroundFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["dial.slice.highlightFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["dial.slice.pointerColorFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["dial.slice.shineFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["dial.hub.backgroundFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["dial.hub.borderColorFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["dial.hub.circleColorFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["dial.page.arrowColorFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["dial.page.plateColorFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["dial.page.currentColorFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["dial.page.dotColorFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["dial.page.dotBackColorFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["dial.page.dotBorderColorFromSkin"] = "bool|true|nil|nil|nil|nil|false",
 }

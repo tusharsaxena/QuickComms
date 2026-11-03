@@ -128,12 +128,13 @@ test("skin hud: with Ignore fonts on, a following pad face draws its stored pick
     local NS, _, Skin = live()
     local inst = NS.Pad.Instance("p1")
     set(NS, "pad.button.font", "Arial", "p1")
+    set(NS, "pad.header.font", "Friz Quadrata TT", "p1")
     assertEqual(NS.db.profile.pads.p1.button.fontFromSkin, true, "the block still follows")
     assertEqual(firstButton(NS).qcLabel.__font[1], PROTOTYPE, "following: the skin's face")
     Skin:SetIgnore(OWNER, nil, true)
     -- red under: R.FontKey answers hud.font while the companion is on, whatever Ignore fonts says
     assertEqual(firstButton(NS).qcLabel.__font[1], ARIAL, "Ignore fonts: the stored pick")
-    assertEqual(inst.header.qcSituation.__font[1], STANDARD_TEXT_FONT,
+    assertEqual(inst.header.qcSituation.__font[1], "Fonts\\FRIZQT__.TTF",
         "a stored Friz Quadrata LibSharedMedia lacks is the standard face, never the skin's")
     assertEqual(NS.db.profile.pads.p1.button.fontFromSkin, true, "the companion is left on")
     Skin:SetIgnore(OWNER, nil, false)
@@ -177,8 +178,11 @@ test("skin hud: a pad's border blocks take bar.borderStyle while they follow, th
     NS.ApplySkin = function(frame, skin) skins[frame] = skin return apply(frame, skin) end
     local root = NS.Pad.Instance("p1").root
     set(NS, "pad.look.borderStyle", "Tooltip", "p1")
-    -- red under: edgeOf reads look.borderStyle whatever the companion
-    assertEqual(skins[root].edgeFile, FLAT, "bar.borderStyle is None: the flat edge")
+    -- red under: edgeOf not on S.BarBorder, the skin's None drawing no art over the player's pick
+    assertEqual(skins[root].edgeFile, TOOLTIP, "a skin's None defers to the stored style")
+    set(NS, "pad.look.borderStyle", "None", "p1")
+    assertEqual(skins[root].edgeFile, FLAT, "None all the way down: the flat edge")
+    set(NS, "pad.look.borderStyle", "Tooltip", "p1")
     set(NS, "pad.look.borderStyleFromSkin", false, "p1")
     assertEqual(skins[root].edgeFile, TOOLTIP, "off: the player's art")
     set(NS, "pad.button.borderStyle", "Tooltip", "p1")
@@ -186,7 +190,30 @@ test("skin hud: a pad's border blocks take bar.borderStyle while they follow, th
     assertEqual(skins[firstButton(NS).qcEdge].edgeFile, TOOLTIP, "a button's edge, off")
     -- X4: the player's colors are never the skin's
     local bg = firstButton(NS).qcBg.__color
-    assertColor(bg, { 0x3F / 255, 0x3F / 255, 0x3F / 255, 0.25 }, "the owner's button body")
+    assertColor(bg, { 0.10, 0.10, 0.12, 0.90 }, "Ka0s Default's button body (qc.btnBg, it follows)")
+end)
+
+test("skin hud: a real bar.borderStyle in a skin wins over the player's pick while it follows", function()
+    local NS, m = live()
+    local Skin = m.LibStub("LibKa0s-Skin-1.0")
+    local skins = {}
+    local apply = NS.ApplySkin
+    NS.ApplySkin = function(frame, skin) skins[frame] = skin return apply(frame, skin) end
+    local root = NS.Pad.Instance("p1").root
+    set(NS, "pad.look.borderStyle", "Tooltip", "p1")
+    set(NS, "pad.look.borderSize", 7, "p1")
+    assertEqual(skins[root].edgeSize, 7, "None: the stored thickness")
+    local solid = Skin:ResolveSkin("contrast")
+    assertEqual(solid["bar.borderStyle"], "Solid", "High Contrast states a real style")
+    Skin:SetChoice(OWNER, "ka0s", "contrast")
+    NS.Surfaces.ApplyAll("test")
+    -- red under: edgeOf reading the stored size or style under a real style
+    assertTrue(skins[root].edgeFile ~= TOOLTIP, "the skin's style wins")
+    assertEqual(skins[root].edgeSize, solid["bar.borderSize"], "and its thickness")
+    set(NS, "pad.look.borderStyleFromSkin", false, "p1")
+    assertEqual(skins[root].edgeFile, TOOLTIP, "off: the player's art under every skin")
+    assertEqual(skins[root].edgeSize, 7, "and thickness")
+    Skin:SetChoice(OWNER, "ka0s", "ka0s")
 end)
 
 test("skin hud: an icon's border takes the skin's icon border while it follows, the pick when not", function()
@@ -271,20 +298,20 @@ test("skin hud: a dial's chrome is today's pixels under Ka0s Default, each from 
     assertColor(arrow.qcIcon.__color, { 0.4, 0.4, 0.4, 0.6 }, "an arrow at an end")
 end)
 
-test("skin hud: a skin switch repaints the chrome and the faces, and leaves the player's colors", function()
+test("skin hud: a skin switch repaints the chrome and the faces, and leaves a color whose companion is off", function()
     local NS, _, Skin = live()
-    local btn = firstButton(NS)
-    local body = { unpack(btn.qcBg.__color) }
+    T.ownLooks(NS)
+    local body = { 0x3F / 255, 0x3F / 255, 0x3F / 255, 0.25 }   -- the stored color the companion off draws
     local gen = NS.PadRender.LooksGen()
     -- red under: no OnLooksChanged listener (the HUD keeps Ka0s Default's chrome until a setting moves)
     Skin:SetChoice(OWNER, "ka0s", OTHER)
     assertTrue(NS.PadRender.LooksGen() > gen, "the look generation moved")
-    btn = firstButton(NS)
+    local btn = firstButton(NS)
     assertColor(btn.qcHover.__color, now(NS, "qc.hover"), "the hover wash, " .. OTHER)
     assertColor(btn.qcLock.__color, now(NS, "text.accent"), "the padlock, " .. OTHER)
     assertColor(NS.Pad.Instance("p1").header.qcLockdown.__color, now(NS, "qc.lockdown"), "the lockdown tag")
     assertColor(NS.Dial.RingWedges("d2", 1)[1].qcLock.__color, now(NS, "text.accent"), "a wedge's padlock")
-    assertColor(btn.qcBg.__color, body, "the player's button body is untouched (X4)")
+    assertColor(btn.qcBg.__color, body, "the player's button body is untouched")
     assertEqual(NS.PadRender.FontKey(NS.db.profile.pads.p1.button), Skin:ResolveSkin(OTHER)["hud.font"],
         "the face is the new skin's")
 end)

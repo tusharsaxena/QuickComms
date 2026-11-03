@@ -118,6 +118,19 @@ _G.QUICKCOMMS_TEST = Kit.expose{
     -- The kit's secret-value simulator (tests/_kit/secrets.lua), which Kit.expose leaves out.
     secret      = Kit.secret,
     isSecret    = Kit.isSecret,
+    -- Every stored pad and dial off the skin but for its face: a case that pins a stored color, size
+    -- or look says so here, since a new surface follows the skin (LibKa0s v1.85.0, cause D7).
+    ownLooks    = function(NS)
+        local p = NS.db.profile
+        for kind, keys in pairs(NS.Library.FULL_SKIN_KEYS) do
+            for _, surface in pairs(p[kind]) do
+                for _, key in ipairs(keys) do
+                    local block, leaf = key:match("^(%w+)%.(%w+)$")
+                    if leaf:match("FromSkin$") and leaf ~= "fontFromSkin" and surface[block] then surface[block][leaf] = false end
+                end
+            end
+        end
+    end,
     -- The id a profile's seeded group, else callout, has (the lowest when several do), by the shipped
     -- id it came from: `T.seeded(NS, "bi.mplus.pull")`. Seeded ids are fresh per profile, so a case
     -- names them so. Read from the profile: only Library reads `origin` in shipped code.
@@ -146,6 +159,20 @@ Kit.diagnostics = {
     setDisabled = function(off) diagNS.SchemaRuntime.Set("enabled", not off) end,
     reset       = function() diagNS = enableAddon() end,
 }
+
+-- The typed-value gate's consumer facts (skinning-§1).
+Kit.skinValues = {
+    rows = {
+        { file = "settings/IconBrowser.lua", substring = 'local CHAT_GRAY = "|cffaaaaaa"',
+          why = "the combat refusal's chat line, built here and printed later: chat stays fixed", cause = "L13" },
+        { file = "settings/IconBrowser.lua", substring = "UI-ScrollBar-Knob",
+          why = "the Slider's required thumb region: S.ScrollBar fades this art under its scroll.thumb knob, so no skin shows it",
+          cause = "L7" },
+    },
+}
+
+-- The skin-switch test's consumer facts (skinning-§1): every surface this addon paints.
+Kit.skinSwitch = dofile("tests/skin_surfaces.lua")(enableAddon)
 
 -- The layout-§1 census lives in the hub; the repository has no generated data to carve out.
 Kit.layoutCap = { hub = "docs/ARCHITECTURE.md" }
@@ -184,6 +211,7 @@ Kit.run{
         "test_editors",
         "test_callout_popup",
         "test_icon_browser",
+        "test_window_icons",
         "test_groups_when",
         "test_page_groups",
         "test_page_groups_nesting",
@@ -202,10 +230,16 @@ Kit.run{
         "test_dial_layout",
         "test_surfaces",
         "test_pad_render",
+        "test_pad_looks",
+        "test_pad_header",
         "test_pad",
         "test_dial",
         "test_dial_catcher",
         "test_dial_look",
+        "test_anim",
+        "test_anim_styles",
+        "test_anim_surfaces",
+        "test_anim_ghost",
         "test_keybinds",
         "test_dial_shine",
         "test_icon_style",
@@ -214,8 +248,10 @@ Kit.run{
         "test_layers",
         "test_layout",
         "test_skinsetup",
+        "test_launcher_skin_entry",
         "test_skin_windows",
         "test_skin_hud",
+        "test_skin_flip",
         "test_skin_picker",
         "test_skin_outline",
         "test_skin_verb",
@@ -229,5 +265,7 @@ Kit.run{
         { name = "test_layout_cap",           dir = "tests/_kit/" },   -- layout-§1
         { name = "test_diagnostics_contract", dir = "tests/_kit/" },   -- debug-logging-§14
         { name = "test_lizard_sighted",       dir = "tests/_kit/" },   -- automated-tests-§3
+        { name = "test_skin_values",          dir = "tests/_kit/" },   -- skinning-§1
+        { name = "test_skin_switch",          dir = "tests/_kit/" },   -- skinning-§1
     },
 }

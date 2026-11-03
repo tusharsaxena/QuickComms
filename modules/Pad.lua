@@ -281,14 +281,27 @@ local function build(id)
     root:SetClampedToScreen(true)
     root:SetMovable(true)
     root:SetFrameStrata(LAYERS.STRATA.HUD)
+    -- Before any child: high in its strata (#14), and they ride it.
+    root:SetFrameLevel(UIParent:GetFrameLevel() + LAYERS.LEVEL.HUD)
     root:EnableMouseWheel(true)
     root:SetScript("OnMouseWheel", function(_, delta) Pad.Wheel(id, delta) end)
     -- Core's edge from its own table: a pad has no title band, and the owner's Shell draws one.
     NS.ApplySkin(root, NS.SKIN)
     local inst = { id = id, root = root, buttons = NS.Pool.New(), titles = NS.Pool.New(), titleHits = NS.Pool.New(),
         byCallout = {}, hover = 0, live = false }
-    -- A plain BackdropTemplate child: the Header tab dresses it at every Apply.
+    -- A plain BackdropTemplate child: the Header tab dresses it at every Apply. Under it, on its rect,
+    -- the header's band (R5-QC1): a plain frame the library's S.TitleBar paints (R.ApplyHeaderLook).
+    -- Its own frame, never the header's backdrop, which the Header tab's stored look owns: two
+    -- painters on one backdrop would clobber each other. The band one level over the root and the
+    -- header over the band, so neither ties with the root's own backdrop.
     local header = CreateFrame("Frame", nil, root, "BackdropTemplate")
+    local band = CreateFrame("Frame", nil, root)
+    band:SetFrameLevel(root:GetFrameLevel() + LAYERS.LEVEL.PAD_BAND)
+    band:SetPoint("TOPLEFT", header, "TOPLEFT", 0, 0)
+    band:SetPoint("BOTTOMRIGHT", header, "BOTTOMRIGHT", 0, 0)
+    band:Hide()
+    header:SetFrameLevel(root:GetFrameLevel() + LAYERS.LEVEL.PAD_HEADER)
+    header.qcHeadBand = band
     header:SetHeight(PL.HEADER_H)
     header:EnableMouse(true)
     header:EnableMouseWheel(true)
@@ -302,7 +315,7 @@ local function build(id)
         Pad.SetHover(id, false)
     end)
     R.DressHeader(header, function() Pad.ToggleCollapsed(id) end)
-    inst.header = header
+    inst.header, inst.headBand = header, band
     -- The label is set again on every Apply (stripLabel), so a rename and a preview reach it.
     -- ignoreParentAlpha (DragHandle minor 5, QUI-Z11): the strip is the root's child and the root takes
     -- the pad's alpha (Pad.ApplyAlpha), so without it the strip would fade with the pad while it is
@@ -333,16 +346,17 @@ local function build(id)
 end
 
 -- The header row and the drag strip on the growth edge: on top (the strip above) for down growth, at
--- the bottom (the strip below) for up growth. Out of combat, from Apply.
-local function anchorEdge(inst, up)
-    local root, header = inst.root, inst.header
+-- the bottom (the strip below) for up growth. The row stands `edge` in from the window's edge on three
+-- sides (R5-QC1, Loot History's band: R.WindowLook's edge). Out of combat, from Apply.
+local function anchorEdge(inst, up, edge)
+    local root, header, e = inst.root, inst.header, edge or 0
     header:ClearAllPoints()
     if up then
-        header:SetPoint("BOTTOMLEFT", root, "BOTTOMLEFT", 0, 0)
-        header:SetPoint("BOTTOMRIGHT", root, "BOTTOMRIGHT", 0, 0)
+        header:SetPoint("BOTTOMLEFT", root, "BOTTOMLEFT", e, e)
+        header:SetPoint("BOTTOMRIGHT", root, "BOTTOMRIGHT", -e, e)
     else
-        header:SetPoint("TOPLEFT", root, "TOPLEFT", 0, 0)
-        header:SetPoint("TOPRIGHT", root, "TOPRIGHT", 0, 0)
+        header:SetPoint("TOPLEFT", root, "TOPLEFT", e, -e)
+        header:SetPoint("TOPRIGHT", root, "TOPRIGHT", -e, -e)
     end
     if inst.handle then
         inst.handle:ClearAllPoints()
@@ -397,7 +411,7 @@ local function sizeRoot(inst, layout, box)
     inst.root:SetScale(rootScale(layout))
     inst.root:SetSize(box.width, box.height)
     inst.width, inst.height = box.width, box.height
-    anchorEdge(inst, box.up)
+    anchorEdge(inst, box.up, box.edge)
     inst.header:SetHeight(box.headerH)
 end
 
@@ -441,11 +455,13 @@ function Pad.Apply(id, plan)
     -- (R.HeaderMinWidth), no wider.
     R.ApplyHeaderLook(inst.header, hlook)
     R.PaintHeader(inst.header, hstate)
+    -- The window's look before the layout: its edge is how far in the header stands (R5-QC1).
+    inst.wlook = R.WindowLook(look, inst.wlook)
+    local edge = inst.wlook.edge
     local box = PL.Compute(sections, layout, { collapsed = hstate.collapsed, headerH = hlook.height, button = button,
         fontSize = inst.clook.font.size, titleSize = slook.font.size, titleH = slook.height, situation = hstate.said, iconSize = icfg.size,
-        minWidth = R.HeaderMinWidth(inst.header) })
+        minWidth = R.HeaderMinWidth(inst.header) + 2 * edge, edge = edge })
     sizeRoot(inst, layout, box)
-    inst.wlook = R.WindowLook(look, inst.wlook)
     R.ApplyWindowLook(inst.root, inst.wlook)
     place(inst, box, layout.style, inst.clook, slook, icfg)
     disarmFree(inst.buttons)
@@ -550,7 +566,8 @@ function Pad.Wheel(id, delta)
     if not (inst and inst.plan and pad and pad.groupsAs == "tabs") then return false end
     if inCombat() then
         GameTooltip:SetOwner(inst.header, "ANCHOR_TOP")
-        GameTooltip:SetText(L["Tabs switch after combat."])
+        local tr, tg, tb = NS.SkinColor("gtip.title")
+        GameTooltip:SetText(L["Tabs switch after combat."], tr, tg, tb)
         GameTooltip:Show()
         return false
     end

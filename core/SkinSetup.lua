@@ -70,10 +70,22 @@ local addonName, NS = ...
 -- inventory's QC-G1..G3 and its near shades (D7, D8), kept at today's pixels (DECISIONS X1) rather
 -- than snapped to the nearest library token. Each is named in this addon's namespace (`qc.`, X2,
 -- X12), carries today's value as `default` and follows the nearest library ROLE token, so every
--- other skin, and EllesmereUI, draws it in its own palette. The two state veils follow nothing:
--- the one black wash in the schema, `cover.dim`, is the same in every skin, so following it would
--- draw the refused veil and the cooling veil alike everywhere but Ka0s Default; a black wash over
--- an icon reads on every skin as it is.
+-- other skin, and EllesmereUI, draws it in its own palette. The two state veils hold only their
+-- alphas: each skin's `cover.dim` is its own (LibKa0s v1.85.0, the owner's ruling of 2026-11-01), so
+-- R.Chrome draws both in that wash's color, and following it whole would draw the refused veil and
+-- the cooling veil alike.
+--
+-- WoW Default's `win.border` is white and its `win.borderSize` 32: they are what its dialog ART is
+-- multiplied by and drawn at, not a color or a thickness for a flat edge, and Glass's 8 is the same
+-- kind of number. So an edge this addon draws flat never reads either as it stands: the window's and a
+-- band's color answer the skin's gray under WoW Default (`skins`), and a band's thickness follows the
+-- bar edge, the hairline a button already wears. That skin's `bar.texture` is the client's dim status
+-- bar art, which multiplies its red buttons down to maroon, so a button there has none.
+--
+-- Three looks are not today's pixels, by the owner's ruling of 2026-11-01: Ka0s Default's button body,
+-- edge, texture and shine tint are the fuller look every other skin's buttons have, and the Strength
+-- of the shine, in every skin, is qc.btnShineStrength and qc.sliceShineStrength, a third under the 80
+-- and 85 it was and one value, so a pad and a dial sharing a look read alike.
 --
 -- ── WHERE IT LOADS ───────────────────────────────────────────────────────────────────────────
 --
@@ -105,6 +117,8 @@ local OUTLINE_PATH, OUTLINE_DEFAULT = "skin.outline", "hud"
 local DEFAULT = "ka0s"
 
 local function byte(n) return n / 255 end
+-- WoW Default's own grays (its tooltip edge, its divider), for an edge drawn flat.
+local WOW_EDGE, WOW_RULE = { byte(0x9A), byte(0x9A), byte(0x9A), 1 }, { byte(0x6E), byte(0x6E), byte(0x6E), 1 }
 
 NS.SKIN_TOKENS = {
     -- QC-G1: the pad button's and the dial wedge's state veils, a refused bake and the spam guard.
@@ -131,6 +145,46 @@ NS.SKIN_TOKENS = {
     -- D8: the icon browser's search clear mark and its gray "Click an icon..." line (|cffaaaaaa).
     ["qc.markGray"]  = { default = { 0.54, 0.54, 0.54, 1 }, follow = "icon.dim" },
     ["qc.note"]      = { default = { byte(170), byte(170), byte(170), 1 }, follow = "text.muted" },
+    -- The full skin (LibKa0s v1.85.0, cause D7): where a pad's or a dial's default is not the library
+    -- token's value, today's pixels under Ka0s Default and the token in every other skin. A section
+    -- title's band draws no band in any skin (R5-QC1, Ka0sAddonsCommonTasks
+    -- docs/2026-11-03-SMOKE_ROUND5, the lead's call 5): no fill, and no edge while it follows the skin
+    -- (R.BAND_TOKENS' `bare`), so the pad's header is its only band. The edge color is for a border
+    -- the player stores. The header's own band is the library's title band (S.TitleBar); qc.headEdge is
+    -- the edge of a border the player stores on the header.
+    ["qc.bandBg"]    = { default = { 0, 0, 0, 0 } },
+    ["qc.bandEdge"]  = { default = { 1, 1, 1, 1 }, follow = "win.border", skins = { wow = WOW_RULE } },
+    ["qc.headEdge"]  = { default = { 1, 1, 1, 1 }, follow = "win.border", skins = { wow = WOW_RULE } },
+    -- A pad window's border art, where the skin's own is a thicker frame than bar.borderStyle's (SF-QC-3):
+    -- WoW Default's dialog frame, as the Skin Tester's window wears. "None" in every other skin leaves
+    -- the window on bar.borderStyle and bar.borderSize.
+    ["qc.winBorderStyle"] = { default = "None", skins = { wow = "Blizzard Dialog" } },
+    ["qc.winBorderSize"]  = { default = 0, skins = { wow = 16 } },
+    -- A pad window's edge: win.border, but for the white WoW Default's art is multiplied by.
+    ["qc.winEdge"]   = { default = { 0, 0, 0, 1 }, follow = "win.border", skins = { wow = WOW_EDGE } },
+    -- A pad button's body, edge and texture ("" naming none: WoW Default's red, flat).
+    ["qc.btnBg"]     = { default = { 0.10, 0.10, 0.12, 0.90 }, follow = "btn.bg" },
+    ["qc.btnEdge"]   = { default = { 0.24, 0.24, 0.27, 0.90 }, follow = "btn.border" },
+    ["qc.btnTexture"] = { default = "Ka0s Default", follow = "bar.texture", skins = { wow = "" } },
+    -- The shine: a look per skin (modules/Shine.lua's names, "none" for none), a tint and a Strength
+    -- in percent, one in every skin. No library token names a look or a Strength, so these say it
+    -- themselves.
+    ["qc.btnShine"]  = { default = "glossfade", skins = { glass = "gloss", contrast = "none" } },
+    ["qc.btnShineTint"] = { default = { 0x80 / 255, 0x80 / 255, 0x80 / 255, 1 }, follow = "text.muted" },
+    ["qc.btnShineStrength"] = { default = 55 },
+    ["qc.sliceShine"] = { default = "orb", skins = { glass = "frost", contrast = "none" } },
+    ["qc.sliceShineTint"] = { default = { 0x80 / 255, 0x80 / 255, 0x80 / 255, 1 }, follow = "text.muted" },
+    ["qc.sliceShineStrength"] = { default = 55 },
+    -- A dial's fills: its slices and plates (alpha 0.80), its hub, its page dots and their edge.
+    ["qc.sliceBg"]   = { default = { 0.06, 0.06, 0.08, 0.80 }, follow = "win.bg" },
+    ["qc.hubBg"]     = { default = { 0.12, 0.12, 0.14, 0.95 }, follow = "btn.bg" },
+    ["qc.pageDot"]   = { default = { 0.4, 0.4, 0.4, 0.9 }, follow = "text.disabled" },
+    ["qc.pageDotEdge"] = { default = { 0, 0, 0, 0.9 }, follow = "win.border", skins = { wow = { 0, 0, 0, 0.9 } } },
+    -- An icon's tint: white, every icon as it was, where icon.tint is a gray under Ka0s Default.
+    ["qc.iconTint"]  = { default = { 1, 1, 1, 1 }, follow = "icon.tint" },
+    -- HUD text's shadow color under a skin that states none: Ka0s Default's hud.shadow is false, and
+    -- every font block here ships with a black shadow (R.ShadowOf, modules/Pad_Render.lua).
+    ["qc.shadow"]    = { default = { 0, 0, 0, 1 }, follow = "hud.shadow" },
 }
 
 -- The Ka0s Default tokens the DEGRADED facade answers, copied from the library and limited to the
@@ -149,6 +203,7 @@ NS.SKIN_FALLBACK = {
     ["text.disabled"]  = { 0.5, 0.5, 0.5, 1 },
     ["gtip.title"]     = { 1, 0.82, 0, 1 },
     ["gtip.value"]     = { 1, 1, 1, 1 },
+    ["gtip.line"]      = { 1, 0.82, 0, 1 },
     ["gtip.subtle"]    = { 0.7, 0.7, 0.7, 1 },
     -- QC-02's windows: the Preview window's button (the step panels' tokens, D8), the popup's
     -- refused-field line, the icon browser's hint box and magnifier.
@@ -168,8 +223,27 @@ NS.SKIN_FALLBACK = {
     ["hud.font"]       = "Ka0s Prototype",
     ["bar.borderStyle"] = "None",
     ["icon.borderStyle"] = "Solid",
-    ["icon.borderSize"] = 2,
+    ["icon.borderSize"] = 1,   -- 1 px in every skin since LibKa0s v1.85.0 R3-FIX
+    -- The full skin's HUD (cause D7): the tokens a color or a size follows that are not above.
+    ["bar.borderSize"] = 1,
+    ["cover.dim"]      = { 0, 0, 0, 0.6 },
+    ["icon.arrow"]     = { 1, 0.82, 0, 1 },
+    ["icon.border"]    = { 0, 0, 0, 1 },
 }
+
+--- A stored color, or the skin's while its "Use the skin's ..." companion `<key>FromSkin` is on: r, g,
+--- b, a. A class color comes first and is left alone, and a token that answers nothing (a skin that
+--- leaves it alone) falls back to the stored color. So does the library's absence: the degraded
+--- facade's S.Color answers a token's default for the panels it paints, and a companion defaults true,
+--- so a read past S.IsEnabled would draw that over the player's color. `look` is the block, `fallback`
+--- its missing swatch.
+function NS.SkinFollow(look, key, token, useClass, fallback)
+    if look[key .. "FromSkin"] == true and not useClass and NS.Skin.IsEnabled() then
+        local r, g, b, a = NS.Skin.Color(token)
+        if r then return r, g, b, a or 1 end
+    end
+    return NS.ResolveColor(look[key] or fallback, useClass)
+end
 
 --- A color token's components AS A CALL SITE WRITES THEM: r, g, b for an opaque color and r, g, b,
 --- a otherwise (the library's own text and vertex rule), so a site that passed three components
@@ -213,6 +287,21 @@ function NS.SkinEscape(name, panel)
     if r == nil then return nil end
     local function toByte(v) return math.floor(v * 255 + 0.5) end
     return ("|cff%02x%02x%02x"):format(toByte(r), toByte(g), toByte(b))
+end
+
+--- How far down from `frame`'s top its title band ends, in px: the band S.Shell lays (S.Band, LibKa0s
+--- SkinPaintExtras minor 17: in from a flat edge by `win.borderSize`, else 1, `title.height` high;
+--- flush and 25 px under EllesmereUI), read off the band itself so a window's content starts under it
+--- in every skin (R5-WIN, Ka0sAddonsCommonTasks docs/2026-11-03-SMOKE_ROUND5, item 2). A band that
+--- answers no height yet (before layout, or headless) is `title.height` high; with no band (the
+--- library absent) the answer is a 1 px edge plus `title.height`.
+function NS.SkinBandBottom(frame)
+    local tall = tonumber(NS.Skin.Token("title.height")) or 30
+    local band = NS.Skin.Band and NS.Skin.Band(frame)
+    if type(band) ~= "table" then return 1 + tall end
+    local _, _, _, _, y = band:GetPoint(1)
+    local h = band:GetHeight()
+    return -(tonumber(y) or -1) + ((type(h) == "number" and h > 0) and h or tall)
 end
 
 --- `text` in a color token, as markup: NS.SkinEscape(name, true) .. text .. "|r", or `text` alone
@@ -328,10 +417,17 @@ end
 -- `skin.pickerSeen`, through NS.SchemaRuntime.Set. A close this addon makes itself
 -- (NS.HideSkinPicker: the stand-down, a profile event) is not the player's and writes nothing.
 --
--- THE EYE (the rollout's X6). Test mode (modules/Preview.lua), session state that writes nothing:
--- every pad shows its placeholders and dial 1 opens, so the player sees the skin on this addon's
--- HUD; the library raises its window over them once onPreview returns. A start test mode refuses
--- (stood down, in combat) prints its own line.
+-- THE EYE (the rollout's X6; spec.preview since R6-PV, LibKa0s OptionsSkinPicker 11). Test mode
+-- (modules/Preview.lua), session state that writes nothing: every pad shows its placeholders and
+-- dial 1 opens, so the player sees the skin on this addon's HUD. The mode is "test" (`/qc test`), and
+-- the main surface is the pads (the launcher's Show window, `/qc toggle`'s hide). A picker that shows
+-- with the pads hidden and test mode off enters test mode; the eye toggles it; every close puts it
+-- back as the picker found it (the library undoes only what it or the eye moved, so a `/qc test`
+-- made while the picker is up stays). Every enter and exit is NS.Preview.SetTestMode, the one seam
+-- `/qc test`, the launcher and the panel's checkbox use, so they stay in step and its refusals hold.
+-- The eye's refused start (stood down, in combat) prints test mode's own line; the picker's own
+-- enter and restore are refused quietly, since the player did not ask for them. Starting test mode
+-- ends a running "Preview as" (modules/Preview.lua), and the close does not bring it back.
 --
 -- PREVIEW. A pick only previews: the Skin major moves and every recorded frame repaints, but `set`
 -- (NS.WriteSkinChoice) runs only on Apply, the gear or Apply to all. The close control and Escape
@@ -352,12 +448,31 @@ local function options()
     return S and S.Helpers
 end
 
---- The eye: test mode on, unless it already is (the header above).
-local function previewSkin()
-    local P = NS.Preview
-    if not (P and P.SetTestMode and P.IsTestMode) then return end
-    if not P.IsTestMode() then P.SetTestMode(true) end
+--- True while test mode would refuse a start: stood down, or in combat (modules/Preview.lua's rule).
+local function testRefused()
+    if NS.StoodDownRefusal and NS.StoodDownRefusal() then return true end
+    local R, C = NS.Restrictions, NS.Compat
+    return (R and R.InCombat and R.InCombat()) or (C and C.InCombat and C.InCombat()) or false
 end
+
+--- spec.preview (the header above): test mode through NS.Preview, read and written at call time.
+--- `enter` answers false when refused, the library's "nothing moved".
+local PREVIEW = {
+    mode = "test",
+    enter = function(why)
+        local P = NS.Preview
+        if not P then return false end
+        if why ~= "eye" and testRefused() then return false end
+        return P.SetTestMode(true)
+    end,
+    exit = function()
+        local P = NS.Preview
+        if not P then return false end
+        return P.SetTestMode(false)
+    end,
+    isActive = function() return NS.Preview ~= nil and NS.Preview.IsTestMode() end,
+    isShown = function() return NS.SlashVerbs ~= nil and NS.SlashVerbs.PadsShown() end,
+}
 
 --- The player's close: the picker seen, and nothing else. The library's put-back already wears the
 --- stored choice, so the skin is not this callback's to move.
@@ -373,7 +488,7 @@ function NS.SkinPickerSpec()
         -- The gear: O.OpenOptionsPanel("general"), the key settings/Panel.lua gave
         -- RegisterOptionsPage, then O.SelectTab("general", "Appearance"), the Skin tab's key.
         page = "general", tab = "Appearance",
-        onPreview = previewSkin, onClose = pickerClosed,
+        preview = PREVIEW, onClose = pickerClosed,
     }
 end
 
@@ -410,6 +525,14 @@ function NS.HideSkinPicker()
     if not ok then error(err, 0) end
 end
 
+--- The library's window sits at its inherited DIALOG level and never raises itself on a show, so a pad
+--- at UIParent + LAYERS.LEVEL.HUD would cover it and take its clicks (#14). A queued picker is not
+--- reached: the library shows it later, with no host hook. Passes the library's answer through.
+local function raisedPicker(win, why)
+    if win and type(win.Raise) == "function" then win:Raise() end
+    return win, why
+end
+
 --- Show the picker when this profile has not seen it: answers the library's frame, or nil,
 --- "queued" while another Ka0s addon's picker is up (it shows when that one closes), or nil.
 function NS.MaybeShowSkinPicker()
@@ -434,7 +557,52 @@ function NS.MaybeShowSkinPicker()
         end
         return nil
     end
-    return O.SkinPicker(NS.SkinPickerSpec())
+    return raisedPicker(O.SkinPicker(NS.SkinPickerSpec()))
+end
+
+-- ── the one-time skin notice (LibKa0s OptionsSkinPicker minor 9, SG-L3) ────────────────────────
+-- A release that wants every account to learn skins exist raises lib.SKIN_NOTICE_VERSION. The first
+-- addon to ask in a session claims the notice and shows the picker; every other addon records the
+-- version and stays quiet. The record is `db.global.skinNotice`, a number: account-wide, so a profile
+-- switch never shows it twice. In combat nothing is claimed; it asks again every NOTICE_RETRY seconds until combat ends.
+local NOTICE_RETRY = 5   -- seconds between asks while the player is in combat
+local noticeWaiting = false
+
+local function noticeGlobal()
+    local d = NS.db or (NS.addon and NS.addon.db)
+    return d and d.global or nil
+end
+
+local noticeStore = {
+    get = function() local g = noticeGlobal(); return g and g.skinNotice or nil end,
+    set = function(v) local g = noticeGlobal(); if g then g.skinNotice = v end end,
+}
+
+function NS.MaybeShowSkinNotice()
+    local O = options()
+    if not (O and type(O.SkinNotice) == "function" and noticeGlobal()) then return nil, "unavailable" end
+    if NS.IsStoodDown and NS.IsStoodDown() then
+        -- A stood-down addon shows nothing, but a seen record still silences the rest (SG-L3).
+        O.SkinNotice(nil, noticeStore, true)
+        return nil, "standdown"
+    end
+    local spec = NS.SkinPickerSpec()
+    local frame, why = raisedPicker(O.SkinNotice(spec, noticeStore))
+    if why == "combat" and not noticeWaiting and type(_G.C_Timer) == "table" and _G.C_Timer.After then
+        noticeWaiting = true
+        _G.C_Timer.After(NOTICE_RETRY, function()
+            noticeWaiting = false
+            NS.MaybeShowSkinNotice()
+        end)
+    end
+    return frame, why
+end
+
+local pickerFirstRun = NS.MaybeShowSkinPicker
+function NS.MaybeShowSkinPicker()
+    local frame, why = NS.MaybeShowSkinNotice()
+    if frame or why == "queued" then return frame, why end
+    return pickerFirstRun()
 end
 
 --- The reserved `/qc skin` verb's act (LibKa0s v1.82.0, OptionsSkinPicker minor 3, ruling D-16):
@@ -450,7 +618,7 @@ function NS.RunSkinVerb()
     if win == nil and why == "absent" and NS.Print then
         NS.Print(NS.L["%s is unavailable: the LibKa0s library did not load."]:format(NS.SLASH .. " skin"))
     end
-    return win, why
+    return raisedPicker(win, why)
 end
 
 --- The login start, PICKER_DELAY seconds in; a second call while one waits is a no-op.
@@ -496,7 +664,9 @@ if not Skin then
         "GetAccentColor", "GetPanelColor", "GetFont",
         "TitleBar", "Divider", "Footer", "Card", "Slider", "NavItem", "Drawer", "ListRow", "MenuFrame",
         "Tooltip", "Strip", "Cover", "Text", "ChartStyle", "BarStyle", "IconBorder", "GlowColor",
-        "BarTexture", "FontFlags", "HudFontSize",
+        "BarTexture", "FontFlags", "HudFontSize", "Mark", "MarkText", "HudTextColor", "HudLabelColor",
+        "BarFillColor", "HudShadow", "BarGloss", "HudFont", "BarBorder", "HoverArt",
+        "Band", "Header",
     }) do S[name] = noop end
 
     S.Token = token
@@ -523,6 +693,26 @@ if not Skin then
     -- Default's HUD outline. A size as stored when it is a number above 0, else 12, unscaled.
     S.FontFlags = function(v) if type(v) == "string" and v ~= S.FROM_SKIN then return v end return "OUTLINE" end
     S.HudFontSize = function(size) local n = tonumber(size) return (n and n > 0) and n or 12 end
+    -- LibKa0s v1.85.0 (SkinPaintExtras minors 9 to 16): HudFont must draw, a no-op would leave a pad
+    -- with no face, and BarBorder must answer the three it is handed, or a pad loses its stored border.
+    -- No font object, so a stored shadow does not draw on a 12.0.7 client with the library absent,
+    -- which the library's Options document accepts. MarkText still answers its markup, untinted: a
+    -- line is built around it.
+    S.BarBorder = function(style, show, size) return style, show, size end
+    S.HudFont = function(fs, opts)
+        opts = type(opts) == "table" and opts or {}
+        local face = opts.face
+        if type(face) ~= "string" or face == "" then face = _G.STANDARD_TEXT_FONT end
+        if type(face) ~= "string" then return nil end
+        fs:SetFont(face, S.HudFontSize(opts.size), S.FontFlags(opts.flags))
+        local on = opts.shadow and true or false
+        fs:SetShadowColor(0, 0, 0, on and 1 or 0)
+        fs:SetShadowOffset(on and 1 or 0, on and -1 or 0)
+    end
+    S.MarkText = function(path, size)
+        size = size or 14
+        return ("|T%s:%d:%d|t"):format(path, size, size)
+    end
 
     NS.Skin = S
     function NS.ApplySkinChoice() return false, false end

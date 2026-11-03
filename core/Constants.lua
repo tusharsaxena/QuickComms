@@ -30,32 +30,39 @@ C.CHAT_COLORS = {
 -- core/, modules/ and settings/ reads this table (tests/test_layers.lua greps for a literal), and every
 -- level is `base:GetFrameLevel() + LEVEL.<NAME>`, never absolute.
 --
--- THE STACK, bottom to top (strata separates roles, level orders within one):
---   MEDIUM             HUD: the Comms Pads (modules/Pad.lua). Root L; header, title bands, title hit
---                      frames, buttons and the drag strip at L+1 (the strip lies outside the root's
---                      rect, 2 px past its edge, and ignores the pad's alpha; the hit frame draws nothing
---                      and its band takes no mouse, so neither needs a band of its own); the header's
---                      collapse button L+2. The Toggle Comms Pads click target is non-visual (exempt).
---   HIGH               DIAL_SCREEN: the dial's full-screen catcher (SendEngine.NewDialScreen), one strata
---                      under the dial. It ties with Blizzard's Settings panel (HIGH, toplevel): a click on
---                      an open Settings window while a key-opened dial is up reaches the settings, not the
---                      catcher. Known and rare; DIALOG would tie with the ring catchers, FULLSCREEN would
---                      cover the dial and take every slice click (QUI-Z09, kept as is).
---   DIALOG             HUD_POPUP: the Comms Dial, THE SECURE FIXED POINT (frame-layering-§1). Its secure
---                      header's strata cannot move in combat, so it is chosen first and every insecure
---                      frame that must sit over it moves up a tier (QC-06). Header H; ring containers
---                      H+1; wedges and page arrows H+2; the ring catchers at H + DIAL_CATCHER (-1),
---                      deliberately under their own ring, which draws no region; the hub front at
---                      H + DIAL_FRONT (+20). The library's debug console, perf panel and sim panel are
---                      DIALOG and toplevel too (LibKa0s v1.77.0): the dial's hub and wedges can draw over
---                      them where they overlap (developer-facing; a `strata` option on the library's
---                      tool windows is an open evolution, STRATA_MODEL LK-05, not taken).
---   FULLSCREEN         WINDOW: the preview window (modules/PreviewWindow.lua), at the client's level,
---                      NOT toplevel and never Raise()d (a raise would lift it over a modal's catcher in
---                      the same strata, frame-layering-§1's exception). MODAL: the callout popup and the icon
---                      browser (settings/ModalWindow.lua), each a band over UIParent: catcher at the base,
---                      Bg +1, window +2, page +3, close X +5; the popup's base MODAL (10), the browser's
---                      MODAL_OVER (200), far over anything the popup's widgets reach.
+-- THE STACK, bottom to top (strata separates roles, level orders within one). Issue #14 lifted the pads
+-- and the dial over other addons' windows, which mostly sit in MEDIUM, HIGH and DIALOG; every band named
+-- here is a level over UIParent, so the tier stays clear of a low-level neighbor in the same strata:
+--   DIALOG             HUD: the Comms Pads (modules/Pad.lua), a deviation (docs/ARCHITECTURE.md, register:
+--                      frame-layering-§1 T1). Root L = UIParent + HUD, set before any child; header, title
+--                      bands, title hit frames, buttons and the drag strip at L+1 (the strip lies outside
+--                      the root's rect, 2 px past its edge, and ignores the pad's alpha; the hit frame
+--                      draws nothing and its band takes no mouse, so neither needs a band of its own); the
+--                      header's collapse button L+2. The Toggle Comms Pads click target is non-visual
+--                      (exempt). A pad covers the settings window (HIGH), and a Blizzard StaticPopup, the
+--                      debug console, the perf panel and the sim panel (DIALOG) where it overlaps them,
+--                      until a click raises one of the toplevel ones. QuickComms' own confirms are lifted,
+--                      and its skin picker (the library's, DIALOG) is raised over a pad when it shows
+--                      (core/SkinSetup.lua), except a picker queued behind another Ka0s addon's.
+--   FULLSCREEN         One strata, four bands, all over the pads and the settings window, in this order:
+--                      DIAL  HUD_POPUP: the Comms Dial, THE SECURE FIXED POINT (frame-layering-§1). Its
+--                            secure header's strata cannot move in combat, so it is chosen first, one over
+--                            the pads (§4). Header H = UIParent + DIAL; the screen catcher
+--                            (SendEngine.NewDialScreen, a key open only) at H + DIAL_SCREEN (-2), under the
+--                            ring catchers it would tie with; the ring catchers at H + DIAL_CATCHER (-1),
+--                            deliberately under their own ring, which draws no region; ring containers
+--                            H+1; wedges and page arrows H+2; the hub front at H + DIAL_FRONT (+20). NOT
+--                            FULLSCREEN_DIALOG, as the issue proposed: the modals and the preview window
+--                            must cover a preview dial, and the only tier over that one is TOOLTIP, where
+--                            their menus and pull-outs could not open over them.
+--                      WINDOW: the preview window (modules/PreviewWindow.lua), UIParent + WINDOW, over the
+--                            hub front, NOT toplevel and never Raise()d (a raise would lift it over a
+--                            modal's catcher, frame-layering-§1's exception).
+--                      MODAL: the callout popup and the icon browser (settings/ModalWindow.lua), each a
+--                            band over UIParent: catcher at the base, Bg +1, window +2, page +3, close X
+--                            +5; the popup's base MODAL, the browser's MODAL_OVER, far over anything the
+--                            popup's widgets and its combat cover (page + 100) reach.
+--                      The library's CopyWindow is here too, at its inherited level, under all four.
 --   FULLSCREEN_DIALOG  POPUP: QuickComms' confirms (Blizzard StaticPopups lifted while shown and handed
 --                      back on hide, ModalWindow.LiftConfirm) and the icon browser's Wowhead link window
 --                      (a CopyWindow lifted after the library builds it). Also the library's menus, the
@@ -76,9 +83,8 @@ C.CHAT_COLORS = {
 -- Glow levels are LibCustomGlow's `frameLevel`: the effect sits at its host's level plus it.
 C.LAYERS = {
     STRATA = {
-        HUD = "MEDIUM",
-        DIAL_SCREEN = "HIGH",
-        HUD_POPUP = "DIALOG",
+        HUD = "DIALOG",
+        HUD_POPUP = "FULLSCREEN",
         WINDOW = "FULLSCREEN",
         MODAL = "FULLSCREEN",
         POPUP = "FULLSCREEN_DIALOG",
@@ -87,6 +93,12 @@ C.LAYERS = {
         STATIC_POPUP = "DIALOG",
     },
     LEVEL = {
+        -- a pad's root (base: UIParent), high in DIALOG (#14)
+        HUD = 1000,
+        -- a pad's header band and its header row (base: the pad's root; R5-QC1): the band over the
+        -- root's own backdrop, the header's texts and button over the band
+        PAD_BAND = 1,
+        PAD_HEADER = 2,
         -- a pad button (base: the button)
         BTN_EDGE = 1,
         BTN_ICON = 3,
@@ -97,12 +109,16 @@ C.LAYERS = {
         -- glow effects (base: their host frame)
         BTN_GLOW = 1,
         ICON_GLOW = 1,
-        -- the dial (base: its header)
+        -- the dial (base: UIParent for the header, the header for its parts)
+        DIAL = 1000,
         DIAL_FRONT = 20,
         DIAL_CATCHER = -1,
+        DIAL_SCREEN = -2,
+        -- the preview window (base: UIParent): over the hub front, under a modal's catcher
+        WINDOW = 1100,
         -- the modal bands (base: UIParent for the band, the band's catcher for its parts)
-        MODAL = 10,
-        MODAL_OVER = 200,
+        MODAL = 1200,
+        MODAL_OVER = 1400,
         MODAL_BG = 1,
         MODAL_WINDOW = 2,
         MODAL_PAGE = 3,

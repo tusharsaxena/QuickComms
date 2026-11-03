@@ -146,6 +146,7 @@ end
 
 test("dial: [shine] each look builds its recipe on every slice", function()
     local NS = live()
+    T.ownLooks(NS)
     for _, look in ipairs({ "gloss", "glossfade", "orb", "frost", "fluid", "bevel", "rim" }) do
         local ring = shineDial(NS, look)
         local shape = ring.qcShape
@@ -162,6 +163,7 @@ end)
 
 test("dial: [shine] the overlay follows the slice", function()
     local NS = live()
+    T.ownLooks(NS)
     local function sameAs(t, fill, what)
         assertEqual(table.concat(t.__size, ","), table.concat(fill.__size, ","), what .. ": the fill's size")
         local _, rel, _, x, y = t:GetPoint(1)
@@ -238,6 +240,7 @@ end)
 
 test("dial: [shine] sprites sit in the slice's frame", function()
     local NS = live()
+    T.ownLooks(NS)
     for _, case in ipairs({ { gap = 0, look = "orb" }, { gap = 8, look = "orb" }, { gap = 0, n = 8, slices = 8, look = "orb" },
         { gap = 8, look = "fluid" }, { gap = 0, n = 8, slices = 8, look = "fluid" } }) do
         local ring = shineDial(NS, case.look, case)
@@ -256,6 +259,7 @@ test("dial: [shine] sprites sit in the slice's frame", function()
             near(t.__rotation, sp.turn - a, what .. " rotation")
             local masks = t.__masks or {}
             assertTrue(masks[1] ~= nil, what .. ": cut by the slice's mask")
+            assertTrue(t.qcGhostTurn, what .. ": turns with its slice on the ghost")
         end
         local sawE = false
         for j = 1, shape.size do
@@ -278,6 +282,7 @@ end)
 
 test("dial: [shine] frost's streak and Bevel are each slice's own edge set", function()
     local NS = live()
+    T.ownLooks(NS)
     for _, case in ipairs({ { "frost", "streak" }, { "bevel", "bevel" } }) do
         for _, n in ipairs({ 4, 8 }) do
             local ring = shineDial(NS, case[1], n == 8 and { n = 8, slices = 8 } or nil)
@@ -297,6 +302,7 @@ end)
 
 test("dial: [shine] fewer slices hide the rest", function()
     local NS = live()
+    T.ownLooks(NS)
     local S = NS.DialSlices
     local ring = shineDial(NS, "fluid")
     local function look(name)
@@ -326,6 +332,7 @@ test("dial: [shine] fewer slices hide the rest", function()
     -- nothing is created at None: a dial built first at None (place 2, a header never built at boot,
     -- since a new dial now ships the orb)
     local fresh = live()
+    T.ownLooks(fresh)
     assertTrue(fresh.SchemaRuntime.Set("dial.slice.shineLook", "none", "d2"))
     assertTrue(fresh.Dial.Apply(2, "d2", planOf(fresh)))
     for _, r in ipairs(fresh.Dial.Instance("d2").rings.active) do
@@ -335,6 +342,7 @@ end)
 
 test("dial: [shine] the dial's look leaves the pad alone", function()
     local NS = live()
+    T.ownLooks(NS)
     assertTrue(NS.SchemaRuntime.Set("pad.button.shineLook", "none", "p1"))
     NS.Surfaces.ApplyAll("test")
     local ring = shineDial(NS, "orb")

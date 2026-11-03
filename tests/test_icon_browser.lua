@@ -106,7 +106,7 @@ local function above(a, b, what)
     assertTrue(STRATA_ORDER[a] > STRATA_ORDER[b], what .. " (" .. tostring(a) .. " over " .. tostring(b) .. ")")
 end
 
-test("icon browser: the popup and the browser stack above the preview dial by strata (QC-06)", function()
+test("icon browser: the popup and the browser stack above the preview dial by band (QC-06, #14)", function()
     local NS, m, P, B = boot()
     strata(m)
     local header = NS.SendEngine.NewDialHeader("QuickCommsStrataTestDial")
@@ -115,14 +115,17 @@ test("icon browser: the popup and the browser stack above the preview dial by st
     local w = P.during(function() Pop.Open(gid) end)
     P.find(w, "Button", "Choose icon…"):__fire("OnClick")
     assertTrue(B.IsOpen())
+    local LAYERS = NS.Constants.LAYERS
     local dial = header.__strata
-    assertEqual(dial, "DIALOG", "the dial's secure header keeps its strata")
-    -- red under: the popup or the browser in the dial's strata: the hub's dot and pointer (header
-    -- level + 20) draw over them
+    assertEqual(dial, LAYERS.STRATA.HUD_POPUP, "the dial's secure header keeps its strata")
+    -- red under: a modal band under the dial's in their shared strata: the hub's dot and pointer
+    -- (header level + DIAL_FRONT) draw over them
+    local hub = levelOf(header) + LAYERS.LEVEL.DIAL_FRONT
     for _, f in ipairs({ { Pop.catcher, "popup catcher" }, { Pop.frame, "popup" },
         { B.catcher, "browser catcher" }, { B.frame, "browser" } }) do
-        above(f[1].__strata, dial, f[2] .. " over the dial")
-        above(f[1].__strata, "MEDIUM", f[2] .. " over the pads")
+        assertEqual(f[1].__strata, dial, f[2] .. " shares the dial's strata")
+        assertTrue(levelOf(f[1]) > hub, f[2] .. " over the dial's hub")
+        above(f[1].__strata, LAYERS.STRATA.HUD, f[2] .. " over the pads")
         above(f[1].__strata, SETTINGS_STRATA, f[2] .. " over the settings window")
     end
     -- settings < popup < browser: the browser's band of levels clears the popup's, with room for

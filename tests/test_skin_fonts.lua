@@ -129,7 +129,7 @@ end
 
 test("skin fonts: step 11 moves a stored OUTLINE to From skin and keeps every other flag", function()
     local NS = live()
-    assertEqual(NS.SCHEMA_VERSION, 11, "the move is step 11")
+    assertEqual(NS.MIGRATIONS[11].to, 11, "the move is step 11")
     local p = storedProfile()
     -- red under: no step
     NS.Library.MigrateFontFlags(p)
@@ -150,7 +150,7 @@ test("skin fonts: step 11 runs once per profile: OUTLINE picked afterwards stays
     db.global.schemaVersion = 10
     -- red under: the step missing, or not perProfile
     NS.addon:RunMigrations()
-    assertEqual(db.global.schemaVersion, 11)
+    assertEqual(db.global.schemaVersion, NS.SCHEMA_VERSION)
     assertEqual(db.profile.pads.p1.header.fontFlags, "@skin", "the one-time move")
     set(NS, "pad.header.fontFlags", "OUTLINE", "p1")
     NS.addon:RunMigrations()

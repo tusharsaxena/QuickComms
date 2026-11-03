@@ -37,7 +37,14 @@ Ed.ROW_H = 30       -- one reorderable row; the drop arithmetic's stride
 Ed.HANDLE_W = 30    -- the library's handle gutter (LibKa0s-Widgets ROW_BOX.HANDLE_W)
 -- After a name, never before it: the name leads, so a list reads by name and a nested child's indent
 -- stays in front of it.
-Ed.ACTIVE_DOT = " |TInterface\\COMMON\\Indicator-Green:12|t"
+-- The client's green dot while the settings panel is stock; with the Scope cleared the Ka0s mark in
+-- sem.good. A string cannot repaint, so a list writes it again whenever it draws.
+local ACTIVE_STOCK = " |TInterface\\COMMON\\Indicator-Green:12|t"
+function Ed.ActiveDot()
+    local mark = not NS.SkinPanelIgnored() and NS.Icon("confirm")
+    if not mark then return ACTIVE_STOCK end
+    return " " .. NS.Skin.MarkText(mark, 12, "sem.good")
+end
 Ed.pages, Ed.built, Ed.reorders, Ed.redraw, Ed.categories = {}, {}, {}, {}, {}
 
 local function H() return Settings.Helpers end
@@ -371,7 +378,7 @@ function Ed.IconChooser(ctx, spec)
         -- The one way back to no icon (the browser has no "none" cell): choose nothing, as one act.
         local clear = AceGUI:Create("Icon")
         clear:SetImageSize(CLEAR_GLYPH, CLEAR_GLYPH)
-        if clear.image and clear.image.SetAtlas then clear.image:SetAtlas("transmog-icon-remove") end
+        if clear.image and clear.image.SetAtlas then Ed.RemoveMark(clear) end
         clear:SetWidth(CLEAR_W)
         clear.userdata.qcGlyph = "clear"
         clear:SetCallback("OnClick", function()
@@ -401,7 +408,7 @@ function Ed.IconChooser(ctx, spec)
         h.AttachTooltip(swatch, L["Icon color"], L["The color a LibKa0s glyph is drawn in. Only a glyph takes a color; white is none."])
         local function paint()
             local icon, color = spec.get()
-            preview:SetImage(icon or Ed.NoIcon(spec.kind))
+            Ed.FramedImage(preview, icon or Ed.NoIcon(spec.kind))
             Ed.Tint(preview.image, icon, color)
             swatch:SetColor(NS.Library.IconTint(icon, color))
             swatch:SetDisabled(not NS.Library.IsGlyph(icon))
@@ -454,19 +461,30 @@ local GLYPH, GLYPH_W, GLYPH_PAD, ROW_ICON = 16, 24, 3, 18
 -- The label's width as made: wide enough that AceGUI's Label keeps its image left of the text (it
 -- stacks them under 200px of text room). Its cell's anchors decide what it shows.
 local LABEL_W = 400
+local REMOVE_ATLAS = "transmog-icon-remove"
 local GLYPHS = {
     edit   = { texture = function() return NS.Icon("edit") end, title = function() return L["Edit"] end },
-    remove = { atlas = "transmog-icon-remove", title = function() return L["Remove"] end },
+    remove = { atlas = true, title = function() return L["Remove"] end },
 }
+
+--- The remove mark on an AceGUI Icon: the client's atlas, or with the Scope cleared the Ka0s close
+--- mark in the skin's tint, live both ways (S.Mark's `panel`). S.Mark gives its record and tint back
+--- when AceGUI takes the widget back, so the next user of the pooled Icon is not repainted.
+function Ed.RemoveMark(widget)
+    widget.image:SetAtlas(REMOVE_ATLAS)
+    NS.Skin.Mark(widget.image, { panel = true, widget = widget, art = NS.Icon("close"),
+        stock = function(t) t:SetAtlas(REMOVE_ATLAS) end })
+end
 
 local function addGlyph(h, into, kind, onClick, tooltip)
     local spec = GLYPHS[kind]
     local g = h.AceGUI:Create("Icon")
     g:SetImageSize(GLYPH, GLYPH)
     if spec.atlas then
-        g.image:SetAtlas(spec.atlas)
+        Ed.RemoveMark(g)
     else
         g:SetImage(spec.texture())
+        NS.Skin.Mark(g.image, { panel = true, widget = g })   -- white catalog art, in the skin's tint
     end
     g:SetWidth(GLYPH_W)
     g.userdata.qcGlyph = kind
@@ -514,6 +532,25 @@ function Ed.Tint(texture, icon, color)
     if texture then texture:SetVertexColor(NS.Library.IconTint(icon, color)) end
 end
 
+--- `widget` (an AceGUI Label or Icon) drawing `icon`, framed as a window's game icon (R5-ICON,
+--- IconStyle.WindowIcon's rule): game icon art cropped through SetImage's own texcoords, which AceGUI
+--- resets on the next SetImage, so the pooled widget needs no undo, and edged on a frame of this
+--- addon's own laid over the image, never on AceGUI's pooled image, handed back on release
+--- (NS.SkinOnRelease). A glyph or a raid marker is drawn whole, with no edge.
+function Ed.FramedImage(widget, icon)
+    local IS = NS.IconStyle
+    local native = IS.NativeEdge(icon)
+    if native then widget:SetImage(icon, unpack(IS.WINDOW_CROP)) else widget:SetImage(icon) end
+    IS.WindowEdge(widget, widget.frame, widget.image, native)
+    if widget.qcIconEdge and not widget.qcIconRelease then
+        widget.qcIconRelease = true
+        NS.SkinOnRelease(widget, function(w)
+            w.qcIconRelease = nil
+            IS.WindowEdge(w, nil, nil, false)
+        end)
+    end
+end
+
 --- One uniform row per entry ({ id, label, icon = texture|nil, iconColor = "rrggbb"|nil, edit = fn|nil, editTooltip = string|nil,
 --- remove = fn|nil, removeTooltip = string|nil, ghost = string|nil (the drag copy's text; default label) }): the library's handle in the gutter at the left, the
 --- entry's icon (when set, a glyph in its color) and its label, then the edit and remove glyphs at the
@@ -543,7 +580,7 @@ function Ed.ReorderRows(ctx, pageKey, entries, onMove)
             local label = AceGUI:Create("Label")
             label:SetText(e.label)
             if e.icon then
-                label:SetImage(e.icon)
+                Ed.FramedImage(label, e.icon)
                 label:SetImageSize(ROW_ICON, ROW_ICON)
             end
             label:SetWidth(LABEL_W)
@@ -665,7 +702,7 @@ function Ed.TableRows(ctx, pageKey, blocks, header)
                     local shown = e.text()
                     local name, text = tableRow(h, into, e.label, shown)
                     if e.icon then
-                        name:SetImage(e.icon)
+                        Ed.FramedImage(name, e.icon)
                         name:SetImageSize(ROW_ICON, ROW_ICON)
                     end
                     Ed.Tint(name.image, e.icon, e.iconColor)

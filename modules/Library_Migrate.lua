@@ -279,3 +279,172 @@ function Lib.MigrateFontFlags(profile)
         end
     end
 end
+
+-- 11 -> 12 (#13): every stored dial takes its Animation tab's defaults, so an existing dial animates
+-- after the update (the owner's ruling). A key already there is kept: the step is idempotent.
+function Lib.MigrateAnim(profile)
+    if type(profile) ~= "table" then return end
+    local defaults = NS.PadDefaults.DialAnim()
+    for _, surface in pairs(type(profile.dials) == "table" and profile.dials or {}) do
+        if type(surface) == "table" then
+            if type(surface.anim) ~= "table" then surface.anim = {} end
+            for k, v in pairs(defaults) do
+                if surface.anim[k] == nil then surface.anim[k] = v end
+            end
+        end
+    end
+end
+
+-- 13 -> 14 (#13, the owner's ruling that animations are the dial's alone): step 12 first filled pads
+-- too, and a profile that ran it on the feature branch still holds that table. Nothing reads it.
+function Lib.MigrateDropPadAnim(profile)
+    if type(profile) ~= "table" then return end
+    for _, surface in pairs(type(profile.pads) == "table" and profile.pads or {}) do
+        if type(surface) == "table" then surface.anim = nil end
+    end
+end
+
+-- What a dial's Animation tab stored as its default before the owner's ruling on the styles, by phase.
+local OLD_ANIM_DEFAULTS = { open = { style = "scaleFade", duration = 0.15 }, close = { style = "scaleFade", duration = 0.1 } }
+
+-- 14 -> 15 (#13): step 12 is unreleased, and a profile that ran it on the feature branch holds the old
+-- default. A phase moves only as a pair: its style and its duration both still the old default. A lone
+-- match sits beside a pick, so it is a pick too and stays. Scale and fade with 0.1 picked by hand cannot
+-- be told from the close's default, and the stamp makes that once. The two direction keys need no step:
+-- fillShape fills them when the profile loads, before anything reads them.
+function Lib.MigrateAnimDefaults(profile)
+    if type(profile) ~= "table" then return end
+    local defaults = NS.PadDefaults.DialAnim()
+    for _, surface in pairs(type(profile.dials) == "table" and profile.dials or {}) do
+        local anim = type(surface) == "table" and surface.anim
+        if type(anim) == "table" then
+            for phase, old in pairs(OLD_ANIM_DEFAULTS) do
+                local style, duration = phase .. "Style", phase .. "Duration"
+                if anim[style] == old.style and anim[duration] == old.duration then
+                    anim[style], anim[duration] = defaults[style], defaults[duration]
+                end
+            end
+        end
+    end
+end
+
+-- What a dial's Animation tab stored as its default before Rotate and scale, by phase, and the style
+-- that replaces the retired Scale and fade.
+local SPIRAL_ANIM_DEFAULTS = { open = { style = "spiralIn", duration = 0.5 }, close = { style = "spiralOut", duration = 0.3 } }
+local RETIRED_ANIM_STYLE, ANIM_STYLE_HEIR = "scaleFade", "scaleInFade"
+
+-- One phase of one dial. Step 15 ran first, so a Scale and fade still here is a pick, and keeps its
+-- duration under the style it was redundant with.
+local function moveAnimPhase(anim, phase, old, defaults)
+    local style, duration = phase .. "Style", phase .. "Duration"
+    if anim[style] == RETIRED_ANIM_STYLE then
+        anim[style] = ANIM_STYLE_HEIR
+    elseif anim[style] == old.style and anim[duration] == old.duration then
+        anim[style], anim[duration] = defaults[style], defaults[duration]
+    end
+end
+
+-- 15 -> 16 (#13, the owner's rulings): a phase still on its spiral default, style and duration as a
+-- pair, takes the new default, and any stored Scale and fade becomes Scale in and fade, so nothing
+-- stored names a style that no longer exists. Any other pick stays, the directions with it.
+function Lib.MigrateRotateDefaults(profile)
+    if type(profile) ~= "table" then return end
+    local defaults = NS.PadDefaults.DialAnim()
+    for _, surface in pairs(type(profile.dials) == "table" and profile.dials or {}) do
+        local anim = type(surface) == "table" and surface.anim
+        if type(anim) == "table" then
+            for phase, old in pairs(SPIRAL_ANIM_DEFAULTS) do moveAnimPhase(anim, phase, old, defaults) end
+        end
+    end
+end
+
+-- 16 -> 17 (SF-QC-1): Scale in and Scale out are one Scale, their fading versions one Scale and fade.
+-- Durations and every other pick stay. A dial that holds only the merged ids is left as it is.
+local SCALE_MERGE = { scaleIn = "scale", scaleOut = "scale", scaleInFade = "scaleAndFade", scaleOutFade = "scaleAndFade" }
+
+function Lib.MigrateMergeScales(profile)
+    if type(profile) ~= "table" then return end
+    for _, surface in pairs(type(profile.dials) == "table" and profile.dials or {}) do
+        local anim = type(surface) == "table" and surface.anim
+        if type(anim) == "table" then
+            for _, key in ipairs({ "openStyle", "closeStyle" }) do anim[key] = SCALE_MERGE[anim[key]] or anim[key] end
+        end
+    end
+end
+
+-- The full skin (LibKa0s v1.85.0, Ka0sAddonsCommonTasks docs/2026-11-01-FULL_SKINNING, D2 to D7): every
+-- companion a surface carries, by kind, as `<block>.<key>`, and each font block's Font flags, whose
+-- reader is on S.FontFlags. No size, no stored color or pick, no class color or its toggle, and neither
+-- skin.ignore* value: the step names the companion, and what it governs stays as it was.
+local FONT_KEYS = { "fontFromSkin", "fontColorFromSkin", "fontShadowFromSkin", "fontFlags" }
+local BOX_KEYS = { "backgroundFromSkin", "borderColorFromSkin", "borderStyleFromSkin" }
+local ICON_KEYS = { "tintFromSkin", "borderColorFromSkin", "borderStyleFromSkin", "glowColorFromSkin" }
+
+local function blockKeys(out, block, ...)
+    for _, list in ipairs({ ... }) do
+        for _, key in ipairs(list) do out[#out + 1] = block .. "." .. key end
+    end
+end
+
+local function surfaceKeys()
+    local pad, dial = {}, {}
+    blockKeys(pad, "look", BOX_KEYS)
+    blockKeys(pad, "header", FONT_KEYS, BOX_KEYS)
+    blockKeys(pad, "section", FONT_KEYS, BOX_KEYS)
+    blockKeys(pad, "button", FONT_KEYS, BOX_KEYS, { "textureFromSkin", "glowColorFromSkin", "shineFromSkin" })
+    blockKeys(pad, "icon", ICON_KEYS)
+    blockKeys(dial, "label", FONT_KEYS)
+    blockKeys(dial, "title", FONT_KEYS)
+    blockKeys(dial, "slice", { "backgroundFromSkin", "highlightFromSkin", "pointerColorFromSkin", "shineFromSkin" })
+    blockKeys(dial, "hub", { "backgroundFromSkin", "borderColorFromSkin", "circleColorFromSkin" })
+    blockKeys(dial, "page", { "arrowColorFromSkin", "plateColorFromSkin", "currentColorFromSkin", "dotColorFromSkin",
+        "dotBackColorFromSkin", "dotBorderColorFromSkin" })
+    blockKeys(dial, "icon", ICON_KEYS)
+    return { pads = pad, dials = dial }
+end
+Lib.FULL_SKIN_KEYS = surfaceKeys()
+
+--- Every listed key of `profile`, as dotted paths from the profile's root, one set per stored surface.
+function Lib.FullSkinPaths(profile)
+    local out = {}
+    for kind, keys in pairs(Lib.FULL_SKIN_KEYS) do
+        for id, surface in pairs(type(profile[kind]) == "table" and profile[kind] or {}) do
+            if type(surface) == "table" then
+                for _, key in ipairs(keys) do out[#out + 1] = kind .. "." .. tostring(id) .. "." .. key end
+            end
+        end
+    end
+    return out
+end
+
+-- The no-library arm: FollowOnce's write, by hand. A path through a missing table is skipped, and the
+-- `skin` table is the one table this may create.
+local function followByHand(profile, paths)
+    if type(profile.skin) == "table" and profile.skin.fullSkinReset == true then return end
+    for _, path in ipairs(paths) do
+        local t, leaf = profile, nil
+        for seg in path:gmatch("[^%.]+") do
+            if leaf then t = type(t) == "table" and t[leaf] or nil end
+            leaf = seg
+        end
+        if type(t) == "table" then t[leaf] = leaf:match("FromSkin$") and true or "@skin" end
+    end
+    if type(profile.skin) ~= "table" then profile.skin = {} end
+    profile.skin.fullSkinReset = true
+end
+
+--- Step 13 (LibKa0s v1.85.0, cause D7, the owner's ruling that existing profiles follow the skin): every
+--- stored pad and dial goes onto the skin, once per profile. The record is the profile's own
+--- (`skin.fullSkinReset`, Skin.FollowOnce), so core/Database.lua also runs this on every profile event:
+--- a companion turned off afterwards stays off, and a reset profile runs it against defaults that write
+--- nothing a player can see. The stored colors and picks are kept for a companion turned off.
+function Lib.MigrateFullSkin(profile)
+    if type(profile) ~= "table" then return end
+    local paths = Lib.FullSkinPaths(profile)
+    local Skin = LibStub and LibStub("LibKa0s-Skin-1.0", true)
+    if Skin and type(Skin.FollowOnce) == "function" then
+        Skin.FollowOnce(profile, paths)
+    else
+        followByHand(profile, paths)
+    end
+end

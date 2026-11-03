@@ -54,6 +54,9 @@ NS.C = {
             -- The Font outline (LibKa0s v1.82.0, Skin minor 9, D-06): "all" text, "hud" text
             -- only (the default since v1.83.0, D-10), or "off". AceDB merges a new key into every profile.
             outline = "hud",
+            -- The record of the one step onto the full skin (LibKa0s Skin.FollowOnce,
+            -- modules/Library_Migrate.lua). No schema row, so no Defaults path walks it.
+            fullSkinReset = false,
         },
     },
 

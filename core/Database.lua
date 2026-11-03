@@ -12,6 +12,22 @@ local _, NS = ...
 -- (`db.sv.profiles`, the raw SavedVariables table), not only the active one. Each step is idempotent
 -- against a fresh default profile.
 
+-- The shipped faces LibKa0s retired, each to its successor (R3-FRIZ; LibKa0s R3-L7).
+local RETIRED_FONTS = { ["Ka0s Friz Quadrata TT"] = "Ka0s Ubuntu" }
+
+--- Moves every string naming a retired face, at any depth of `t`, to its successor. Answers how many moved.
+function NS.RetireFonts(t)
+    local n = 0
+    for k, v in pairs(t) do
+        if type(v) == "table" then
+            n = n + NS.RetireFonts(v)
+        elseif RETIRED_FONTS[v] then
+            t[k], n = RETIRED_FONTS[v], n + 1
+        end
+    end
+    return n
+end
+
 -- The steps, in order. `run(sv)` for a global step, `run(sv, profile)` for a `perProfile` one.
 NS.MIGRATIONS = {
     { to = 1, run = function() end },   -- 0 -> 1: the stamp itself
@@ -45,6 +61,22 @@ NS.MIGRATIONS = {
     -- 10 -> 11 (LibKa0s v1.82.0, Ka0sAddonsCommonTasks D-07 and Addendum 01): every pad's and dial's
     -- font block whose Font flags still hold the old default, OUTLINE, moves to From skin once.
     { to = 11, perProfile = true, run = function(_, profile) NS.Library.MigrateFontFlags(profile) end },
+    -- 11 -> 12 (#13): every dial takes the Animation tab's defaults, kept keys kept.
+    { to = 12, perProfile = true, run = function(_, profile) NS.Library.MigrateAnim(profile) end },
+    -- 12 -> 13 (LibKa0s v1.85.0, cause D7): every pad and dial onto the full skin, once per profile.
+    { to = 13, perProfile = true, run = function(_, profile) NS.Library.MigrateFullSkin(profile) end },
+    -- 13 -> 14 (#13): a pad's Animation table goes, from any profile step 12 reached while it had one.
+    { to = 14, perProfile = true, run = function(_, profile) NS.Library.MigrateDropPadAnim(profile) end },
+    -- 14 -> 15 (#13): a dial still holding the old animation defaults takes the new ones, once.
+    { to = 15, perProfile = true, run = function(_, profile) NS.Library.MigrateAnimDefaults(profile) end },
+    -- 15 -> 16 (#13): a dial on the spiral defaults takes Rotate and scale; Scale and fade is retired.
+    { to = 16, perProfile = true, run = function(_, profile) NS.Library.MigrateRotateDefaults(profile) end },
+    -- 16 -> 17 (SF-QC-1): Scale in and out merge into Scale, their fading versions into Scale and fade.
+    { to = 17, perProfile = true, run = function(_, profile) NS.Library.MigrateMergeScales(profile) end },
+    -- 17 -> 18 (R3-FRIZ): LibKa0s v1.85.0 deleted Ka0s Friz Quadrata TT (R3-L7) and WoW Default draws
+    -- Ka0s Ubuntu (R3-L6). A stored pick of the deleted face, a pad's or dial's font or the skin's Font
+    -- override, moves to Ka0s Ubuntu; Blizzard's own "Friz Quadrata TT" stays.
+    { to = 18, perProfile = true, run = function(_, profile) NS.RetireFonts(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.
@@ -67,6 +99,9 @@ function NS:RunMigrations()
             g.schemaVersion = step.to   -- reached only if the step returned
         end
     end
+    -- Step 13's record is per profile and the stamp per account, so a profile that arrives later (an
+    -- import, a copy, a reset) takes it here. It writes nothing to a profile that holds the record.
+    for _, profile in pairs(sv.profiles or {}) do NS.Library.MigrateFullSkin(profile) end
     if from ~= g.schemaVersion and NS.DebugAtEnable then
         NS.DebugAtEnable("Migrate", "v%s -> v%s", from, g.schemaVersion)
     end
