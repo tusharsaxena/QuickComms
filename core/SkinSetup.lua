@@ -221,7 +221,7 @@ NS.SKIN_FALLBACK = {
     ["hud.font"]       = "Ka0s Prototype",
     ["bar.borderStyle"] = "None",
     ["icon.borderStyle"] = "Solid",
-    ["icon.borderSize"] = 2,
+    ["icon.borderSize"] = 1,   -- 1 px in every skin since LibKa0s v1.85.0 R3-FIX
     -- The full skin's HUD (cause D7): the tokens a color or a size follows that are not above.
     ["bar.borderSize"] = 1,
     ["cover.dim"]      = { 0, 0, 0, 0.6 },

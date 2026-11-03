@@ -1691,15 +1691,15 @@ Header a LibSharedMedia border (Blizzard Tooltip, thickness 3), turn on the pad'
 dial's Slice labels and Group labels their own face, and set a few colors; note them, and do the same
 on a second, inactive profile. Update and log in on the first → every label on the pad and the dial is
 in **Prototype** (the skin's HUD font since LibKa0s v1.82.0) in place of the face you picked, each picked border art is
-**None**, the flat edge at the thickness you set, and the icon border is the skin's (Solid, 2 pixels):
-the skin governs that border's thickness too, so an icon border you had at 1 pixel is now 2. Every
+**None**, the flat edge at the thickness you set, and the icon border is the skin's (Solid, 1 pixel, 2 until LibKa0s v1.85.0's R3-FIX):
+the skin governs that border's thickness too, so an icon border you had at 3 pixels is now 1. Every
 other color, font size, flag, shadow, height and thickness is as you noted. Each Font block shows *Use
 the skin's font* ticked and each Border block *Use the skin's border* ticked, their pickers grayed out
 and showing the skin's choice. The wider face can widen a pad and move where a label is cut or where a
 dial's label ring sits (D11). Untick each box → your old pick comes back at once. `/reload` → still
 unticked and still yours: the reset ran once. Switch to the second profile → it was reset the same way,
 its picks kept. This is the expected change, not a regression. Fail: a color, size or flag that
-moved, a pick lost after unticking, or the boxes ticked again after the reload. (Amended by QC-01, 2026-10-30, LibKa0s v1.82.0's faces.) Result: pass (owner-marked 2026-10-30). Owner reported pass, 2026-10-31.
+moved, a pick lost after unticking, or the boxes ticked again after the reload. (Amended by QC-01, 2026-10-30, LibKa0s v1.82.0's faces.) Re-opened by R3-FIX: the skin's icon border is 1 pixel. Result: not run
 
 **SKIN-2. A new pad, dial or profile follows the skin (X3).** Pad → New pad, Dial → New dial, and
 Profiles → a new profile → their Font and Border blocks show the *Use the skin's ...* boxes ticked, and
@@ -2177,6 +2177,12 @@ TT* in two profiles; log out. Update and fully restart the client (a new font fi
 Ubuntu and *Font* reads *Ka0s Ubuntu*; switch to the other profile → the same. A font set to Blizzard's
 own *Friz Quadrata TT* keeps it. Fail: the game's default face, or a row still naming Ka0s Friz Quadrata
 TT. Result: not run
+
+**FSKIN-14. The pad's icon border is 1 pixel in every skin (R3-FIX).** Turn on a pad's Icons border with
+*Use the skin's border* ticked, open the pad, then pick Ka0s Default, Azeroth, Ember, WoW Midnight and WoW
+Default → every icon's border is a flat 1-pixel edge in each, never 2 pixels and never the tooltip-style
+edge WoW Default drew before. Untick the box → your own style and thickness come back. Fail: a 2-pixel or
+tooltip edge under any skin. Result: not run
 
 ## Pending sign-off
 

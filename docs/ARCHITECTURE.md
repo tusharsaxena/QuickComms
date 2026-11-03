@@ -241,7 +241,7 @@ the settings pages and the library's own windows.
   stored pad's and dial's companions on, once, on every stored profile; the picks and the colors are
   kept. Under Ka0s Default that is a visible change (rollout X5, D11): the skin's HUD face (Prototype since
   LibKa0s v1.82.0, Oxanium SemiBold before) in place of the picked faces (Friz Quadrata by default), a picked border art becomes the skin's `None` (the flat
-  edge at the stored thickness), and a shown icon border the skin's Solid 2 px.
+  edge at the stored thickness), and a shown icon border the skin's Solid 1 px (2 px until LibKa0s v1.85.0's R3-FIX).
 - **Font flags and HUD sizes** (LibKa0s v1.82.0, Ka0sAddonsCommonTasks D-07, D-09). Every font
   block's Font flags lead with From skin (`"@skin"`, the composer's `flagsFromSkin`), its default,
   which `Pad_Render.LabelFont` draws through `NS.Skin.FontFlags`, so the Skin tab's Font outline

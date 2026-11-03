@@ -29,7 +29,7 @@ local _, NS = ...
 --
 -- THE SKIN (QC-03, LibKa0s LK-04). While the Border block's "Use the skin's border" companion
 -- (`borderStyleFromSkin`, the composer's `fromSkin = "icon"`) is on, the border's style and thickness
--- are the skin's icon border (icon.borderStyle, icon.borderSize: Solid 2 px under Ka0s Default); Show
+-- are the skin's icon border (icon.borderStyle, icon.borderSize: Solid 1 px in every skin); Show
 -- border stays the player's. Since LibKa0s v1.85.0 (cause D7) the border's color, the glow's and the
 -- tint follow too, each through its own companion: icon.border, glow.color and qc.iconTint. The skin's
 -- tint reaches only a plain glyph: a glyph's own color carries meaning and a game icon is art, so
