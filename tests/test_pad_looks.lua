@@ -162,13 +162,17 @@ test("pad looks: Ka0s Default's bands stay undrawn", function()
     assertNil(drawn[inst.header].edgeFile, "no art")
 end)
 
-test("pad looks: a following band draws no edge in any skin; a border the player stores draws as stored", function()
+test("pad looks: a following band never draws a skin's own border; a border the player sets draws as set", function()
     local NS, m, drawn, inst = padUnder("obsidian")
     assertTrue(NS.SchemaRuntime.Set("pad.header.borderSize", 4, "p1"))
     NS.Surfaces.ApplyAll("test")
-    -- R5-QC1: while the border follows the skin the header is a borderless band, whatever thickness is
-    -- stored under it (round 4 drew that thickness under a skin's None, the skin's under a real style)
-    assertEqual(drawn[inst.header].edgeSize, 0, "following: no edge")
+    -- R5-QC1: a band is borderless while it follows a skin with a real style of its own; under a
+    -- skin's None the thickness row stays live (OptionsCompose minor 18), so what the player set draws
+    assertEqual(drawn[inst.header].edgeSize, 4, "following a skin's None: the player's")
+    m.LibStub("LibKa0s-Skin-1.0"):SetChoice(OWNER, "ka0s", "wow")
+    NS.Surfaces.ApplyAll("test")
+    assertTrue(drawn[inst.header].edgeFile == nil, "following WoW Default's real style: no edge")
+    m.LibStub("LibKa0s-Skin-1.0"):SetChoice(OWNER, "ka0s", "obsidian")
     NS.db.profile.pads.p1.header.borderStyleFromSkin = false
     NS.Surfaces.ApplyAll("test")
     assertEqual(drawn[inst.header].edgeSize, 4, "stored: the player's")

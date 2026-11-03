@@ -7,7 +7,7 @@
 -- as each section band ("Solo"), so the pad read as two stacked boxes and no header. The ruling:
 --   - the header wears the library's title band (S.TitleBar: title.bg, or the title.bgTop / bgBottom
 --     gradient), on its own frame: two painters sharing the header's one backdrop would clobber each
---     other (the skeptic). The band sits at root + 1 and the header, clear and edgeless, at root + 2,
+--     other (the skeptic). The band sits at root + 1 and the header, clear, at root + 2,
 --     so nothing ties with the root's own backdrop;
 --   - on its own tokens (R.HEADER_TOKENS), never the section bands';
 --   - a borderless band in every skin, WoW Default included;
@@ -15,8 +15,9 @@
 --     and the rule show around it as Loot History's do; at the bottom for up growth, the same gradient;
 --   - section bands draw no band in any skin, so the header is the only band;
 --   - the text stays left (the pad is compact), every header child on the band's middle;
---   - the band stands down when the header stops following the skin (Use the skin's background off, a
---     class color, or a stored border), and the stored look draws as before.
+--   - the band stands down when the header's background stops following the skin (Use the skin's
+--     background off, or a class color), and the stored look draws as before; a border the player
+--     sets draws on the header over the band (a real style in a skin never does).
 
 local T = _G.QUICKCOMMS_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
@@ -195,7 +196,7 @@ end)
 
 -- ── standing down ─────────────────────────────────────────────────────────────────────────────────
 
-test("pad header: the band stands down when the header stops following the skin, and comes back", function()
+test("pad header: the band stands down when the header's background stops following the skin, and comes back", function()
     local NS, _, _, drawn = live()
     local hdr = NS.db.profile.pads.p1.header
     hdr.backgroundFromSkin, hdr.background = false, { r = 0.2, g = 0.3, b = 0.4, a = 1 }
@@ -207,12 +208,38 @@ test("pad header: the band stands down when the header stops following the skin,
     inst = applyPad(NS)
     assertFalse(inst.headBand:IsShown(), "a class color: no band")
     hdr.useClassColorBackground = false
-    hdr.borderStyleFromSkin, hdr.borderStyle, hdr.borderSize = false, "None", 2
-    inst = applyPad(NS)
-    assertFalse(inst.headBand:IsShown(), "a stored border: the stored look, no band")
-    assertEqual(drawn[inst.header].edgeSize, 2, "the stored thickness draws")
-    hdr.borderStyleFromSkin = true
+    hdr.backgroundFromSkin = true
     inst = applyPad(NS)
     assertTrue(inst.headBand:IsShown(), "following again: the band is back")
     assertEqual(drawn[inst.header].bg[4], 0, "the header clear over it again")
+    -- A border is not a background: Use the skin's border off keeps the band (the background still
+    -- follows), and the stored edge draws on the header over it (R5-QC1 review).
+    hdr.borderStyleFromSkin, hdr.borderStyle, hdr.borderSize = false, "None", 2
+    inst = applyPad(NS)
+    assertTrue(inst.headBand:IsShown(), "a stored border: the band stays")
+    assertEqual(drawn[inst.header].bg[4], 0, "a stored border: the header still clear over the band")
+    assertEqual(drawn[inst.header].edgeSize, 2, "a stored border: the stored thickness draws")
+end)
+
+test("pad header: under a skin with no border of its own, a border set while following still draws", function()
+    -- Under a skin's None (Ka0s Default) the Border style and thickness rows stay live while Use the
+    -- skin's border is ticked (LibKa0s OptionsCompose minor 18), and S.BarBorder hands back what the
+    -- player set, so a band draws it (LOOK-3, LOOK-6). Only a real style in a skin is dropped on a band
+    -- (the lead's call 5: borderless in every skin, WoW Default included).
+    local NS, _, Skin, drawn = live()
+    local hdr, sec = NS.db.profile.pads.p1.header, NS.db.profile.pads.p1.section
+    hdr.borderSize, sec.borderSize = 2, 2
+    local inst = applyPad(NS)
+    -- red under: a `bare` band drawing no edge at all while it follows, so the live rows do nothing
+    assertTrue(inst.headBand:IsShown(), "Ka0s Default: the band shows")
+    assertEqual(drawn[inst.header].edgeSize, 2, "Ka0s Default: the header's thickness draws over the band")
+    assertTrue(drawn[inst.header].edgeFile ~= nil, "Ka0s Default: the header draws its edge")
+    assertEqual(drawn[inst.header].bg[4], 0, "Ka0s Default: the header still clear over the band")
+    local s = drawn[inst.titles.active[1].qcBand]
+    assertEqual(s.edgeSize, 2, "Ka0s Default: a section title's thickness draws")
+    assertTrue(s.edgeFile ~= nil, "Ka0s Default: a section title draws its edge")
+    inst = switch(NS, Skin, "wow")
+    assertTrue(drawn[inst.header].edgeFile == nil, "WoW Default: its real style is not drawn on the header")
+    assertTrue(drawn[inst.titles.active[1].qcBand].edgeFile == nil,
+        "WoW Default: its real style is not drawn on a section title")
 end)

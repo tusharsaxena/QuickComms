@@ -1089,7 +1089,7 @@ Total.
 - pad looks: azeroth's bands and buttons draw a 1 px edge
 - pad looks: a section band draws no edge while it follows, as the header draws none
 - pad looks: Ka0s Default's bands stay undrawn
-- pad looks: a following band draws no edge in any skin; a border the player stores draws as stored
+- pad looks: a following band never draws a skin's own border; a border the player sets draws as set
 - pad looks: Ka0s Default's buttons are the fuller body, edge, texture and gloss
 - pad looks: every skin's shine is a third lighter, a button's and a slice's alike
 - pad looks: what reaches a button and a slice is the lighter strength
@@ -1097,7 +1097,7 @@ Total.
 - pad looks: a stored Strength with no strength token is as stored
 - pad looks: with the library absent a button stays flat and its stored Strength draws
 
-### test_pad_header.lua (8)
+### test_pad_header.lua (9)
 
 - pad header: the header is the library's title band in every skin, borderless, the header itself clear
 - pad header: the band and the header sit over the root, never level with its backdrop
@@ -1106,7 +1106,8 @@ Total.
 - pad header: the text stays left, the collapse button right, each on the band's middle
 - pad header: a section band draws no band in any skin, so the header is the only band
 - pad header: a section band the player dresses still draws what was stored
-- pad header: the band stands down when the header stops following the skin, and comes back
+- pad header: the band stands down when the header's background stops following the skin, and comes back
+- pad header: under a skin with no border of its own, a border set while following still draws
 
 ### test_pad.lua (47)
 
@@ -2022,7 +2023,7 @@ Total.
 | test_surfaces.lua | 30 |
 | test_pad_render.lua | 25 |
 | test_pad_looks.lua | 21 |
-| test_pad_header.lua | 8 |
+| test_pad_header.lua | 9 |
 | test_pad.lua | 47 |
 | test_dial.lua | 38 |
 | test_dial_catcher.lua | 13 |
@@ -2059,4 +2060,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 26 |
 | Skipped | 1 |
-| **Total** | **1721** |
+| **Total** | **1722** |

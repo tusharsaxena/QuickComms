@@ -1154,7 +1154,10 @@ band behind the header only; Border thickness 2, color white → an edge around 
 gray inner line; with Use the skin's border unticked, a LibSharedMedia border style draws that art. Use class color on each → your class
 color. Defaults → the owner's header again, 24 tall, in the skin's face. (Amended by QC-05,
 2026-10-29: the skinning rollout's Use the skin's font and border, SKIN-6; the header's default face
-is the skin's HUD font, SKIN-1.) Result: pass (owner-marked 2026-10-30).
+is the skin's HUD font, SKIN-1.) Amended by R5-QC1 (smoke round 5): by default the header wears the
+skin's title band (PLOOK-12), not no background; the dark red draws with *Use the skin's background*
+unticked, and under Ka0s Default the Border thickness 2 draws around the header over the band with *Use the
+skin's border* still ticked. Result:
 
 **LOOK-4. The header's text sits on the titles' edge (2026-10-20).** Stand where the pad shows a section
 title under the header (a party in the open world: `World` over `In Party`). The `W` of World and the
@@ -2172,7 +2175,9 @@ any skin. The header text stays readable on the band. Collapse the pad with "-":
 the edge around it. Set the pad to grow up (Pad → Layout → growth up): the band is the pad's bottom row, inside
 the edge, with the same gradient direction (lighter at the top). Pad → Header: untick *Use the skin's
 background* and pick a color: the band goes and the picked color fills the row. Tick it again: the band is
-back. Tick *Use class color* for the background: the class color, no band. Fail: no band, two stacked boxes,
+back. Tick *Use class color* for the background: the class color, no band. Untick it, and on Ka0s Default set
+the header's Border thickness to 2 with *Use the skin's border* still ticked: a 2 px edge around the band,
+the band kept; switch to WoW Default: no edge (a skin's own style never draws on the band). Fail: no band, two stacked boxes,
 a band over the window edge or rule, a body-color strip around the band, a section band, an edge around the
 header, or the stored color drawn over a gradient.
 Result:
@@ -2185,17 +2190,19 @@ Obsidian, Azeroth, Glass and High Contrast, whose fills, text and shadows differ
 are added in this build: a full client restart comes first.
 
 **FSKIN-1. Ka0s Default did not move.** New profile on **Ka0s Default**, a pad on screen and a dial open
-→ the gold header and titles over no band, white labels, the
+→ the gold header on the skin's dark gold title band (R5-QC1, smoke round 5, PLOOK-12) and the titles over
+no band, white labels, the
 slices, the gray hub with its gold rim and circle, the page dots and the Gloss fade and Glass orb
 shines look as they did before this build, text shadows included, but for the pad buttons and the
 shine's strength (PLOOK-1). Fail: any other pixel moved but the checks' named ones (a tooltip title,
-FSKIN-9). Result: Passed (owner, 2026-11-02).
+FSKIN-9). Amended by R5-QC1 (smoke round 5): the header's title band. Result:
 
 **FSKIN-2. Every pad color follows a skin, live.** Skin → **Obsidian**, then **Azeroth**, a pad on
-screen → with no reload the window fill and edge, the header's and the titles' text, a faint band
-behind each in the skin's title color with a hairline edge, the buttons' body, edge and
+screen → with no reload the window fill and edge, the header's and the titles' text, the header's title
+band in the skin's title colors with no edge and no band behind a section title (amended by R5-QC1, smoke
+round 5), the buttons' body, edge and
 label all change. A thickness of your own on a band draws instead under a skin with no border of its own
-(FSKIN-12). Fail: any of them keeping the last skin. Result: Passed (owner, 2026-11-02).
+(FSKIN-12). Fail: any of them keeping the last skin. Result:
 
 **FSKIN-3. Every dial color follows a skin, live.** Same, a dial open and paged → the slices, a hovered
 slice, the hub's disc, rim and circle, the pointer, the page arrows and plates, the pill and dots, the
@@ -2331,4 +2338,4 @@ Owed from the owner's fourth smoke round (R4-SEP and R4-ZOOM, 2026-11-03, Ka0sAd
 
 On 2026-11-02 the owner reported that every check on the smoke lists of the full skinning run and its smoke feedback batch (Ka0sAddonsCommonTasks `docs/2026-11-01-FULL_SKINNING/` and `docs/2026-11-01-SMOKE_FEEDBACK/`) passed, apart from DpsRace's clock font, the skinned look of the AceGUI Dropdown and the Ka0sMedia_Font and Ka0sMedia_Statusbar pickers, FadeNineSlice and IconBorder (`docs/2026-11-02-SMOKE_ROUND3/`, R3-SMOKE). Passed, recorded on each `Result:` line as `Passed (owner, 2026-11-02)`: ANIM-1, ANIM-2, ANIM-3, ANIM-4, ANIM-5, ANIM-6, ANIM-7, ANIM-8, ANIM-9, ANIM-10, ANIM-11, ANIM-12, ANIM-13, ANIM-14, ANIM-15, ANIM-16, ANIM-17, ANIM-18, ANIM-19, ANIM-20, ANIM-21, ANIM-22, BUTTON-1, FSKIN-1, FSKIN-2, FSKIN-3, FSKIN-4, FSKIN-5, FSKIN-6, FSKIN-7, FSKIN-8, FSKIN-9, FSKIN-10, FSKIN-11, FSKIN-12, LAYER-6, LAYER-7, LAYER-8, LAYER-9, PLOOK-1, PLOOK-2, PLOOK-3, PLOOK-4, PLOOK-5, PLOOK-6, PLOOK-7, PLOOK-8, PLOOK-9, PLOOK-10, PLOOK-11, SHINE-1, SKIN-6, SKIN-11, SKIN-12 and SKIN-13. Still owed: SKIN-5, whose expected result the third smoke round itself changed after the owner's run.
 
-Owed from the owner's fifth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND5/`): SKIN-32 (new, R5-RV); SKIN-33 (new, R5-WIN); PLOOK-12 (new, R5-QC1); ICONS-7 (new, R5-ICON); PLOOK-1 to PLOOK-9, ANIM-22 and FSKIN-12 (R5-QC1 changed their expected result, so each lost its pass mark).
+Owed from the owner's fifth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND5/`): SKIN-32 (new, R5-RV); SKIN-33 (new, R5-WIN); PLOOK-12 (new, R5-QC1); ICONS-7 (new, R5-ICON); PLOOK-1 to PLOOK-9, ANIM-22 and FSKIN-12 (R5-QC1 changed their expected result, so each lost its pass mark); LOOK-3, FSKIN-1 and FSKIN-2 (the R5-QC1 review found their expected result stale against the header's band, so each lost its pass mark).

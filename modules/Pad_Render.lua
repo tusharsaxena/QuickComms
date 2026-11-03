@@ -466,9 +466,10 @@ local CLEAR = { r = 0, g = 0, b = 0, a = 0 }
 -- The tokens a block's fill, edge and thickness follow, by R.SkinFor's `tokens`: the window's are the
 -- library's but for its edge, a band's and a button's the owner tokens: what each is under Ka0s Default,
 -- and what a skin's window tokens cannot say for an edge drawn flat (core/SkinSetup.lua). A `bare`
--- block draws no edge while its border follows the skin, in any skin (R5-QC1): a section band, whose
--- fill is clear in every skin too, and the header, whose band is the library's title band with no
--- edge, as Loot History's (R.HeaderLook). A border the player stores still draws on either.
+-- block never draws a skin's own border style (R5-QC1): a section band, whose fill is clear in every
+-- skin too, and the header, whose band is the library's title band with no edge, as Loot History's
+-- (R.HeaderLook). A border the player sets still draws on either: with Use the skin's border off, or
+-- under a skin's None, where its rows stay live (LibKa0s OptionsCompose minor 18).
 R.WINDOW_TOKENS = { bg = "win.bg", edge = "qc.winEdge", style = "qc.winBorderStyle", styleSize = "qc.winBorderSize" }
 R.BAND_TOKENS = { bg = "qc.bandBg", edge = "qc.bandEdge", bare = true }
 R.HEADER_TOKENS = { bg = "title.bg", edge = "qc.headEdge", bare = true }
@@ -477,11 +478,17 @@ R.BUTTON_TOKENS = { bg = "qc.btnBg", edge = "qc.btnEdge" }
 -- A look's edge: its thickness (0 to 16, 1 when unset) and its border art (nil for "None", or one this
 -- machine does not have), through S.BarBorder: while it follows, a real style in the skin wins with
 -- bar.borderSize, and a skin's None hands back the player's stored style and thickness. A block has no
--- Show border row, so `show` is always true here. A `bare` block that follows draws none.
+-- Show border row, so `show` is always true here. A `bare` block that follows a skin with a real style
+-- of its own draws none; under a skin's None it draws what the player set (by default nothing).
+local function skinStyled()
+    local own = Skin.Token("bar.borderStyle")
+    return type(own) == "string" and own ~= "" and own ~= "None"
+end
+
 local function edgeOf(look, tokens)
     local stored = tonumber(look.borderSize) or 1
     local follows = look.borderStyleFromSkin == true
-    if follows and tokens.bare then return 0, nil end
+    if follows and tokens.bare and skinStyled() then return 0, nil end
     local style, _, drawn = Skin.BarBorder(look.borderStyle, true, stored, follows)
     -- A window's own art, where a skin names one (SF-QC-3): it wins over the bar's style while following.
     local own = follows and tokens.style and Skin.Token(tokens.style)
@@ -587,17 +594,23 @@ local function bandSkin(t, tokens)
         useClassColorBackground = t.useClassColorBackground }, true, tokens or R.BAND_TOKENS)
 end
 
--- The header's own backdrop while the library's band is under it: no fill and no edge.
-local BANDED = { background = CLEAR, backgroundFromSkin = false, borderStyle = "None", borderSize = 0,
-    borderStyleFromSkin = false }
+-- The header's own backdrop while the library's band is under it: no fill, and the header's own
+-- border (a `bare` edge: none from a skin's style, the player's where set), drawn over the band.
+local function banded(header)
+    local t = { background = CLEAR, backgroundFromSkin = false }
+    for _, k in ipairs({ "borderStyle", "borderSize", "borderStyleFromSkin", "borderColorFromSkin",
+        "borderColor", "useClassColorBorder" }) do
+        t[k] = header[k]
+    end
+    return t
+end
 
 --- True while the pad's header wears the library's title band (R5-QC1): its background follows the
---- skin, no class color is set, and its border follows the skin too. Otherwise the stored look draws,
---- on the header's own tokens.
+--- skin and no class color is set. Otherwise the stored background draws, on the header's own tokens.
+--- The border is not the band's: a border the player sets draws on the header either way.
 function R.HeaderBanded(header)
     header = type(header) == "table" and header or {}
     return header.backgroundFromSkin == true and header.useClassColorBackground ~= true
-        and header.borderStyleFromSkin ~= false
 end
 
 --- How far in from the pad's edge its header stands (R5-QC1, Loot History's band): the window's
@@ -629,24 +642,26 @@ end
 
 --- The header's look, from the pad's `header` table: { height, font, skin, banded, sig }. The font is
 --- the header block's (gold by default, GameFontNormalSmall's). While it is `banded` (R.HeaderBanded,
---- the defaults) the header's own skin is clear and edgeless over the library's title band; otherwise
---- it is the stored background and edge, plain (no Ka0s inner line), on the header's own tokens.
+--- the defaults) the header's own skin is clear over the library's title band, with the header's own
+--- `bare` edge (none from a skin's style; the player's, where set); otherwise it is the stored
+--- background and edge, plain (no Ka0s inner line), on the header's own tokens.
 --- `prev`, the look the last rebuild built, is answered again while its signature still holds.
 function R.HeaderLook(header, prev)
     header = type(header) == "table" and header or {}
     local sig = lookSig(header)
     if type(prev) == "table" and prev.sig == sig then return prev end
-    local banded = R.HeaderBanded(header)
-    return { sig = sig, height = PL.HeaderHeight(header.height), banded = banded,
+    local isBanded = R.HeaderBanded(header)
+    return { sig = sig, height = PL.HeaderHeight(header.height), banded = isBanded,
         font = R.LabelFont(header, R.TitleColor(), Skin.HudLabelColor),
-        skin = bandSkin(banded and BANDED or header, R.HEADER_TOKENS) }
+        skin = bandSkin(isBanded and banded(header) or header, R.HEADER_TOKENS) }
 end
 
 --- Dress the header row in its look (R.HeaderLook): its skin, its band, and every text in its font. A
 --- look the header already wears (its signature) is not painted again. The band (`header.qcHeadBand`,
 --- modules/Pad.lua) is the library's title band (S.TitleBar: title.bg, or the title.bgTop / bgBottom
 --- gradient), recorded so a skin switch repaints it; it is hidden, and the stored look drawn, when
---- the header stops following the skin. The same gradient draws on a bottom row (up growth).
+--- the header's background stops following the skin. The same gradient draws on a bottom row (up
+--- growth).
 function R.ApplyHeaderLook(header, hl)
     if header.qcLookSig == hl.sig then return end
     header.qcLookSig = hl.sig
