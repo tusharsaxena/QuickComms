@@ -1,0 +1,1 @@
+R6-RV reviewed ok (smoke round 6, independent reviewer, 2026-11-04): libs/LibKa0s and tests/_kit are byte-identical to LibKa0s v1.85.0 (79d043d) per diff -r against git archive; CLAUDE.md provenance says v1.85.0; SKIN-34 added with a blank Result. Gate re-run fresh at bc76816: 1729 passed, 0 failed, 1 skipped; luacheck 0/0; no authored .lua over 1500 lines.
