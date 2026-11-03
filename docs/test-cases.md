@@ -1640,7 +1640,7 @@ Total.
 
 - launcher descriptor passes openSkinPicker, which runs the skin verb
 
-### test_skin_windows.lua (20)
+### test_skin_windows.lua (21)
 
 - skin windows: no color literal is left in the window files
 - skin windows: the literal gate is falsifiable: a planted literal of each shape is reported
@@ -1662,6 +1662,7 @@ Total.
 - skin windows: the browser's texts take the skin's body face (R-2), Ignore fonts gives it back, a switch recolors
 - skin windows: the browser's empty footer line is qc.note, today's |cffaaaaaa
 - skin windows: the browser's cell tooltip writes its lines in the tooltip tokens
+- skin windows: no window shows a line under its title, in Ka0s Default and after a switch (R4-SEP)
 
 ### test_skin_hud.lua (20)
 
@@ -2011,7 +2012,7 @@ Total.
 | test_layout.lua | 28 |
 | test_skinsetup.lua | 24 |
 | test_launcher_skin_entry.lua | 1 |
-| test_skin_windows.lua | 20 |
+| test_skin_windows.lua | 21 |
 | test_skin_hud.lua | 20 |
 | test_skin_flip.lua | 61 |
 | test_skin_picker.lua | 20 |
@@ -2030,4 +2031,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 26 |
 | Skipped | 1 |
-| **Total** | **1700** |
+| **Total** | **1701** |

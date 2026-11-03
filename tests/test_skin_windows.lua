@@ -616,3 +616,45 @@ test("skin windows: the browser's cell tooltip writes its lines in the tooltip t
     -- red under: AddLine(..., 1, 1, 1, true) typed
     assertColor(rgbOf(got[#got]), now(NS, "gtip.value"), "what a click does")
 end)
+
+-- ── no line under any window title (R4-SEP) ──────────────────────────────────────────────────────
+
+-- The owner's "no separator line below header" (Ka0sAddonsCommonTasks docs/2026-11-03-SMOKE_ROUND4,
+-- R4_SIGNOFF.md, the Skin Tester's showroom the reference): no window this addon shows draws a line
+-- under its title band. The Preview window and the modal windows never made one; the debug console,
+-- its copy window, the perf panel and the browser's link window are the library's, which stopped
+-- drawing it in the LibKa0s v1.85.0 round 4 re-cut. A divider that is present must at least be hidden.
+-- The settings page header's rule inside the modal windows is a page header's, not the window's, and
+-- stays (R4_SIGNOFF.md); this case does not read it.
+local function noRule(f, what)
+    assertTrue(f ~= nil, what .. " was built")
+    local divider = rawget(f, "divider")
+    assertTrue(divider == nil or not divider:IsShown(), what .. " shows no line under its title")
+end
+
+test("skin windows: no window shows a line under its title, in Ka0s Default and after a switch (R4-SEP)", function()
+    local NS, _, Skin = boot()
+    local function windows()
+        local list = { { previewWindow(NS), "the Preview window" } }
+        local Pop = openPopup(NS)
+        list[#list + 1] = { Pop.frame, "the callout popup" }
+        local B = openBrowser(NS)
+        list[#list + 1] = { B.frame, "the icon browser" }
+        local link = B.LinkWindow()
+        list[#list + 1] = { link and link:GetFrame(), "the browser's link window" }
+        NS.DebugLog:Show()
+        list[#list + 1] = { NS.DebugLog._frameForTest, "the debug console" }
+        NS.DebugLog:ShowCopy()
+        list[#list + 1] = { NS.DebugLog._copyFrameForTest, "the console's copy window" }
+        NS.Perf.ShowPanel()
+        list[#list + 1] = { NS.Perf.__panel and NS.Perf.__panel(), "the perf panel" }
+        return list
+    end
+    local list = windows()
+    -- red under: the R4-RV payload, whose console made a divider and whose ApplySkin showed it
+    for _, w in ipairs(list) do noRule(w[1], w[2]) end
+    -- a live switch repaints every window (the facade records each primitive): still no line
+    Skin:SetChoice(OWNER, "ka0s", OTHER)
+    for _, w in ipairs(list) do noRule(w[1], w[2] .. " under " .. OTHER) end
+    NS.Perf.HidePanel()
+end)
