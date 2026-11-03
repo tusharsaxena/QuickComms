@@ -1777,10 +1777,11 @@ Total.
 - skin fix: the active dot's mark is drawn in sem.good
 - skin fix: the degraded facade answers Ka0s Default for gtip.line and icon.arrow
 
-### test_skin_picker.lua (21)
+### test_skin_picker.lua (28)
 
 - skin picker: the spec names this owner, its seams, General's Skin tab and the eye
-- skin picker: the eye turns test mode on, and leaves it on
+- skin picker: the preview hook goes through test mode's own seam and reads the launcher's state
+- skin picker: the picker's enter and restore are quiet where test mode refuses; the eye's is not
 - skin picker: an unseen profile shows it; a seen one does not
 - skin picker: it shows two seconds after OnEnable, on the login timer
 - skin picker: the stand-down cancels the login timer
@@ -1791,7 +1792,13 @@ Total.
 - skin picker: a profile switched off shows no picker on its adoption
 - skin picker: a show raises the window over a pad in its own strata
 - skin picker: a queued show answers as the library did and raises nothing
-- skin picker: the window's eye is shown and turns test mode on
+- skin picker: opened with the pads hidden it enters test mode, and stays in front
+- skin picker: the eye toggles test mode off and on, and its paint follows
+- skin picker: every close puts test mode back off when the picker turned it on
+- skin picker: a mode on at open that the eye turned off is on again after the close
+- skin picker: pads already shown are left alone; the eye still previews and the close undoes it
+- skin picker: test mode turned on by /qc test while the picker is up stays on at the close
+- skin picker: in combat the picker's enter is refused quietly and nothing is undone
 - skin picker: the player's close marks it seen; this addon's own hide does not
 - skin picker: the stand-down takes the picker down, unseen
 - skin picker: a pick previews, unsaved; Apply saves it and marks the picker seen
@@ -2044,7 +2051,7 @@ Total.
 | test_skin_windows.lua | 24 |
 | test_skin_hud.lua | 20 |
 | test_skin_flip.lua | 61 |
-| test_skin_picker.lua | 21 |
+| test_skin_picker.lua | 28 |
 | test_skin_outline.lua | 10 |
 | test_skin_verb.lua | 7 |
 | test_skin_fonts.lua | 12 |
@@ -2060,4 +2067,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 26 |
 | Skipped | 1 |
-| **Total** | **1722** |
+| **Total** | **1729** |

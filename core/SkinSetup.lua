@@ -417,10 +417,17 @@ end
 -- `skin.pickerSeen`, through NS.SchemaRuntime.Set. A close this addon makes itself
 -- (NS.HideSkinPicker: the stand-down, a profile event) is not the player's and writes nothing.
 --
--- THE EYE (the rollout's X6). Test mode (modules/Preview.lua), session state that writes nothing:
--- every pad shows its placeholders and dial 1 opens, so the player sees the skin on this addon's
--- HUD; the library raises its window over them once onPreview returns. A start test mode refuses
--- (stood down, in combat) prints its own line.
+-- THE EYE (the rollout's X6; spec.preview since R6-PV, LibKa0s OptionsSkinPicker 11). Test mode
+-- (modules/Preview.lua), session state that writes nothing: every pad shows its placeholders and
+-- dial 1 opens, so the player sees the skin on this addon's HUD. The mode is "test" (`/qc test`), and
+-- the main surface is the pads (the launcher's Show window, `/qc toggle`'s hide). A picker that shows
+-- with the pads hidden and test mode off enters test mode; the eye toggles it; every close puts it
+-- back as the picker found it (the library undoes only what it or the eye moved, so a `/qc test`
+-- made while the picker is up stays). Every enter and exit is NS.Preview.SetTestMode, the one seam
+-- `/qc test`, the launcher and the panel's checkbox use, so they stay in step and its refusals hold.
+-- The eye's refused start (stood down, in combat) prints test mode's own line; the picker's own
+-- enter and restore are refused quietly, since the player did not ask for them. Starting test mode
+-- ends a running "Preview as" (modules/Preview.lua), and the close does not bring it back.
 --
 -- PREVIEW. A pick only previews: the Skin major moves and every recorded frame repaints, but `set`
 -- (NS.WriteSkinChoice) runs only on Apply, the gear or Apply to all. The close control and Escape
@@ -441,12 +448,31 @@ local function options()
     return S and S.Helpers
 end
 
---- The eye: test mode on, unless it already is (the header above).
-local function previewSkin()
-    local P = NS.Preview
-    if not (P and P.SetTestMode and P.IsTestMode) then return end
-    if not P.IsTestMode() then P.SetTestMode(true) end
+--- True while test mode would refuse a start: stood down, or in combat (modules/Preview.lua's rule).
+local function testRefused()
+    if NS.StoodDownRefusal and NS.StoodDownRefusal() then return true end
+    local R, C = NS.Restrictions, NS.Compat
+    return (R and R.InCombat and R.InCombat()) or (C and C.InCombat and C.InCombat()) or false
 end
+
+--- spec.preview (the header above): test mode through NS.Preview, read and written at call time.
+--- `enter` answers false when refused, the library's "nothing moved".
+local PREVIEW = {
+    mode = "test",
+    enter = function(why)
+        local P = NS.Preview
+        if not P then return false end
+        if why ~= "eye" and testRefused() then return false end
+        return P.SetTestMode(true)
+    end,
+    exit = function()
+        local P = NS.Preview
+        if not P then return false end
+        return P.SetTestMode(false)
+    end,
+    isActive = function() return NS.Preview ~= nil and NS.Preview.IsTestMode() end,
+    isShown = function() return NS.SlashVerbs ~= nil and NS.SlashVerbs.PadsShown() end,
+}
 
 --- The player's close: the picker seen, and nothing else. The library's put-back already wears the
 --- stored choice, so the skin is not this callback's to move.
@@ -462,7 +488,7 @@ function NS.SkinPickerSpec()
         -- The gear: O.OpenOptionsPanel("general"), the key settings/Panel.lua gave
         -- RegisterOptionsPage, then O.SelectTab("general", "Appearance"), the Skin tab's key.
         page = "general", tab = "Appearance",
-        onPreview = previewSkin, onClose = pickerClosed,
+        preview = PREVIEW, onClose = pickerClosed,
     }
 end
 

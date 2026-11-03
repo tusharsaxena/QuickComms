@@ -268,7 +268,11 @@ the settings pages and the library's own windows.
   `skin.pickerSeen` is false and the addon stands up; in combat it waits for `PLAYER_REGEN_ENABLED`.
   A pick only previews; **Apply** and the gear save it (the gear opens General on its Skin tab), and
   the close control and Escape put the stored skin back; every close the player makes sets
-  `pickerSeen`. Its eye turns test mode on (rollout X6). `NS.HideSkinPicker` (the stand-down, and
+  `pickerSeen`. Its eye is `spec.preview` in test mode (R6-PV, LibKa0s OptionsSkinPicker 11): a
+  picker that shows with the pads hidden (`/qc toggle`) and test mode off turns test mode on; the eye
+  toggles it, lit while on; every close puts it back as the picker found it. Each enter and exit is
+  `NS.Preview.SetTestMode`, the seam `/qc test`, the launcher and the panel use; the picker's own enter
+  and restore are refused quietly in combat or stood down. `NS.HideSkinPicker` (the stand-down, and
   first on every profile event) takes it down without marking it seen. A show, and `/qc skin`, raise
   the window, which is `DIALOG` at its inherited level, over a pad at `UIParent + LEVEL.HUD` (#14).
 - **EllesmereUI** (skinning-§5). The provider is the library's (`SkinEUI.lua`); Quick Comms' own

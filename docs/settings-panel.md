@@ -114,8 +114,12 @@ off; LibKa0s v1.81.0): a dropdown of the skins (each row three swatches and the 
 shows it two seconds after `OnEnable` and after every profile event while the profile's
 `skin.pickerSeen` is false and the addon stands up, held to `PLAYER_REGEN_ENABLED` in combat. A pick
 previews; **Apply** and the gear save it and the rows, the gear opening this page on its Skin tab (`page =
-"general"`, `tab = "Appearance"`); the close control and Escape put the stored skin back. The eye turns
-test mode on, so the pads show their placeholders and dial 1 opens under the picker (rollout X6). One
+"general"`, `tab = "Appearance"`); the close control and Escape put the stored skin back. The eye is
+test mode (`spec.preview`, R6-PV): opened with the pads hidden and test mode off, the picker turns test
+mode on, so the pads show their placeholders and dial 1 opens under it; the eye toggles test mode, lit
+while on and dimmed while off, and the **Test mode** checkbox follows; every close puts test mode back
+as it was when the picker opened. With the pads shown the picker enters nothing, and the eye still
+does. One
 picker is up at a time across Ka0s addons. `/qc skin` (`NS.RunSkinVerb`) opens the same window on
 demand, whatever `skin.pickerSeen` says.
 

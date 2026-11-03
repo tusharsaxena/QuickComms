@@ -2018,6 +2018,23 @@ window opened with is back after the two closes that did not apply. Fail: a Lua 
 `OptionsSkinPicker.lua`, or a close that leaves the picked skin showing.
 Result:
 
+**SKIN-35. The picker's eye is test mode, entered at show and put back at every close (R6-PV, smoke
+round 6).** Test mode off. `/qc toggle` to hide the pads, then `/qc skin` with the pads hidden → test
+mode turns on: every pad shows its placeholders and dial 1 opens, the settings panel's **Test mode**
+checkbox and the launcher's Test mode entry read on, and the picker stays in front of the pads and the
+dial. The eye is lit; hover it → "test mode is on". Press the eye → test mode turns off, the eye dims,
+its tooltip says off; press it again → on and lit. Close the picker with its close mark → test mode is
+off and the pads are hidden, as before the picker opened. Repeat the open and close by Escape, by
+**Apply** and by the gear → each time test mode is off after the close. Then `/qc test` to turn test
+mode on first, `/qc skin`, press the eye (test mode off) and close → test mode is on again. Then `/qc
+toggle` to show the pads, test mode off, `/qc skin` → nothing enters (the pads already show); the eye
+turns test mode on and the close turns it off. Last, with the pads hidden, `/qc skin` (test mode on),
+then pull a target dummy → test mode ends with its own combat line; close the picker in combat → no
+further line. Test mode is session state, so a `/reload` with the picker up leaves it off. Fail: test
+mode left on after a close the picker turned it on for, left off after a close the eye turned it off
+for, the picker behind a pad or the dial, or a second chat line at the close in combat.
+Result:
+
 ## Animations
 
 The issue is #13; the rulings are in `docs/superpowers/specs/2026-11-01-open-close-animations-design.md`.
@@ -2347,4 +2364,4 @@ On 2026-11-02 the owner reported that every check on the smoke lists of the full
 
 Owed from the owner's fifth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND5/`): SKIN-32 (new, R5-RV); SKIN-33 (new, R5-WIN); PLOOK-12 (new, R5-QC1); ICONS-7 (new, R5-ICON); PLOOK-1 to PLOOK-9, ANIM-22 and FSKIN-12 (R5-QC1 changed their expected result, so each lost its pass mark); LOOK-3, FSKIN-1 and FSKIN-2 (the R5-QC1 review found their expected result stale against the header's band, so each lost its pass mark).
 
-Owed from the owner's sixth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND6/`): SKIN-34 (new, R6-RV).
+Owed from the owner's sixth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND6/`): SKIN-34 (new, R6-RV); SKIN-35 (new, R6-PV).
