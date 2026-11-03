@@ -217,3 +217,53 @@ test("icon style: [autofit] a dial's icon size 0 is automatic: it scales with th
     set(NS, "dial.icon.size", 0, did)
     assertEqual(NS.db.profile.dials[did].icon.size, 0)
 end)
+
+-- ── R4-ZOOM: no native icon edge on the HUD ──────────────────────────────────────────────────────
+
+-- The owner (Ka0sAddonsCommonTasks docs/2026-11-03-SMOKE_ROUND4/R4_SIGNOFF.md): HUD icons keep their
+-- black edge and never show Blizzard's rounded native icon edge inside it. A game icon's art carries
+-- that edge, so a pad button's and a dial wedge's game icon is cropped at least IS.NATIVE_CROP (0.07,
+-- the library's IconBorder zoom) a side whatever Zoom says; a larger Zoom stands. A LibKa0s glyph and
+-- a raid marker have no such edge, so Zoom alone crops them (0 shows the whole mark).
+
+local made = 0
+local function crop(NS, m, icon, zoom)
+    local IS = NS.IconStyle
+    local look = NS.IconDefaults.For("pad")
+    look.zoom = zoom or 0
+    made = made + 1
+    local tex = m.CreateFrame("Frame", "QuickCommsCropTest" .. made, m.UIParent):CreateTexture()
+    IS.PaintIcon(tex, IS.Config(look, "pad"), icon, nil)
+    return csv(tex.__texCoord)
+end
+
+test("icon style: a game icon on the HUD is cropped past Blizzard's native edge, 0.07 a side at least (R4-ZOOM)", function()
+    local NS, m = live()
+    assertEqual(NS.IconStyle.NATIVE_CROP, 0.07, "the library IconBorder's zoom")
+    -- red under: IS.ApplyIcon cropping by Zoom alone (0,1,0,1: the native edge shows)
+    assertEqual(crop(NS, m, 136243), "0.07,0.93,0.07,0.93", "a texture id at Zoom 0")
+    assertEqual(crop(NS, m, "Interface\\Icons\\Spell_Nature_Bloodlust"), "0.07,0.93,0.07,0.93",
+        "a game icon path at Zoom 0")
+    assertEqual(crop(NS, m, "136243", 0.05), "0.07,0.93,0.07,0.93", "a typed texture id under the floor")
+    assertEqual(crop(NS, m, 136243, 0.1), "0.1,0.9,0.1,0.9", "a larger Zoom stands")
+    assertEqual(crop(NS, m, 136243, 0.25), "0.25,0.75,0.25,0.75", "the largest Zoom stands")
+end)
+
+test("icon style: a glyph and a raid marker keep Zoom's crop, the whole mark at 0 (R4-ZOOM)", function()
+    local NS, m = live()
+    -- red under: the floor reaching every icon (a glyph's or a marker's art clipped at its edges)
+    assertEqual(crop(NS, m, NS.DefaultIcon("callout")), "0,1,0,1", "a LibKa0s glyph")
+    assertEqual(crop(NS, m, "Interface\\TargetingFrame\\UI-RaidTargetingIcon_8"), "0,1,0,1", "a raid marker")
+    assertEqual(crop(NS, m, NS.DefaultIcon("callout"), 0.1), "0.1,0.9,0.1,0.9", "Zoom still crops a glyph")
+end)
+
+test("icon style: every HUD icon site paints through IS.PaintIcon, so the floor reaches it (R4-ZOOM)", function()
+    -- red under: a pad button or a dial wedge setting its icon's crop by itself
+    for _, path in ipairs({ "modules/Pad_Render.lua", "modules/Dial_Render.lua" }) do
+        local fh = assert(io.open(path, "rb"))
+        local src = fh:read("*a")
+        fh:close()
+        assertTrue(src:find("IS%.PaintIcon%(btn%.qcIcon") ~= nil, path .. " paints its icon through IS.PaintIcon")
+        assertTrue(src:find("SetTexCoord") == nil, path .. " sets no crop of its own")
+    end
+end)

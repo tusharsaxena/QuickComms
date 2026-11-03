@@ -31,7 +31,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | KEY-1..6 | Key bindings | A dial's key as WoW's own binding in Options → Keybindings, Character Specific Keybindings, Toggle Comms Pads; item 015: the Ka0s Quick Comms section of its own, the General → Keybindings tab in sync both ways, its capture and combat refusal |
 | LOOK-1..7 | Window, Header, Section titles (Pad header and Section header before item 020) | The Comms Pad's three window tabs: the section titles' font, the pad's border and background, the header's look, size and alignment, the tab strip and headings, the section header's band and height; the pad's window repainting only when its look moves |
 | BUTTON-1..2 | Buttons tab | The buttons' size, color, border and font; the button glow |
-| ICONS-1..5 | Icons tab | The buttons' and wedges' icon look, border and glow triggers; the glows through LibKa0s-Glow-1.0 |
+| ICONS-1..6 | Icons tab | The buttons' and wedges' icon look, border and glow triggers; the glows through LibKa0s-Glow-1.0; no native icon edge on the HUD |
 | ICON-1..5 | Icons | Choosing an icon, for a callout and for a group; the LibKa0s v1.75.0 re-vendor: the icon browser's three sets and the library-drawn marks; the popup and the browser over the preview dial; test mode's numbered groups and the default icons |
 | ART-1..2 | Art | The dial's round art: the hub's styles, the dots and pill, the indicator background, the borders and the arrow plates; every texture loading from its folder |
 | SHINE-1..4 | Shine | The shine overlay: each look on a pad and on a dial, and a pad and a dial keeping their own |
@@ -1414,6 +1414,15 @@ no Bloom color rows and no gap where they were; Fluid glass → Bloom color A an
 go, and Shine strength and Shine tint gray. Dial → Slices the same, and Dial → Icons as the pad's.
 `/qc list` still shows every knob and bloom. Result:
 
+**ICONS-6. No native icon edge on the HUD (R4-ZOOM, smoke round 4).** Give a pad's callout and a dial's
+callout a game icon (Choose icon… → Game icons, e.g. Bloodlust), set Pad → Icons and Dial → Icons Zoom to
+0 and tick Show border. On **Ka0s Default** → each game icon sits inside its black edge with no rounded
+dark rim and no lighter corner of Blizzard's own icon edge showing between them; untick Show border →
+still no rim at the icon's edge. Zoom 0.05 → no change; Zoom 0.15 → the icon crops further. A glyph (the
+default speech bubble) and a raid marker at Zoom 0 → whole, nothing clipped at their edges. Repeat under
+Obsidian. Fail: a rounded or dark native edge inside any game icon's border on a pad or a dial.
+Result:
+
 ## Icons
 
 **ICON-1. Choosing an icon.** Groups → a group of yours → Callouts → a row's edit glyph → Choose
@@ -2256,6 +2265,6 @@ style of their own, and PLOOK-3, 5, 7 and 8 are written for it.
 
 Owed from the owner's third smoke round (R3-FRIZ, 2026-11-02): FSKIN-13 (new); SKIN-5 names Ka0s Ubuntu for WoW Default and stays owed.
 
-Owed from the owner's fourth smoke round (R4-SEP, 2026-11-03, Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND4/`): SKIN-31 (new).
+Owed from the owner's fourth smoke round (R4-SEP and R4-ZOOM, 2026-11-03, Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND4/`): SKIN-31 and ICONS-6 (new).
 
 On 2026-11-02 the owner reported that every check on the smoke lists of the full skinning run and its smoke feedback batch (Ka0sAddonsCommonTasks `docs/2026-11-01-FULL_SKINNING/` and `docs/2026-11-01-SMOKE_FEEDBACK/`) passed, apart from DpsRace's clock font, the skinned look of the AceGUI Dropdown and the Ka0sMedia_Font and Ka0sMedia_Statusbar pickers, FadeNineSlice and IconBorder (`docs/2026-11-02-SMOKE_ROUND3/`, R3-SMOKE). Passed, recorded on each `Result:` line as `Passed (owner, 2026-11-02)`: ANIM-1, ANIM-2, ANIM-3, ANIM-4, ANIM-5, ANIM-6, ANIM-7, ANIM-8, ANIM-9, ANIM-10, ANIM-11, ANIM-12, ANIM-13, ANIM-14, ANIM-15, ANIM-16, ANIM-17, ANIM-18, ANIM-19, ANIM-20, ANIM-21, ANIM-22, BUTTON-1, FSKIN-1, FSKIN-2, FSKIN-3, FSKIN-4, FSKIN-5, FSKIN-6, FSKIN-7, FSKIN-8, FSKIN-9, FSKIN-10, FSKIN-11, FSKIN-12, LAYER-6, LAYER-7, LAYER-8, LAYER-9, PLOOK-1, PLOOK-2, PLOOK-3, PLOOK-4, PLOOK-5, PLOOK-6, PLOOK-7, PLOOK-8, PLOOK-9, PLOOK-10, PLOOK-11, SHINE-1, SKIN-6, SKIN-11, SKIN-12 and SKIN-13. Still owed: SKIN-5, whose expected result the third smoke round itself changed after the owner's run.

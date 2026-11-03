@@ -5,7 +5,9 @@ local _, NS = ...
 -- existed (it fills one level deep). modules/Library.lua copies these into SURFACE_DEFAULTS and
 -- TEMPLATES; settings/SchemaIcons.lua makes the rows; modules/IconStyle.lua and modules/Glow.lua draw
 -- them. Every default draws an icon exactly as it was drawn before the tab existed: no crop, no
--- desaturation, opaque, a white tint (a glyph keeps its own color), no border and no glow.
+-- desaturation, opaque, a white tint (a glyph keeps its own color), no border and no glow. Since R4-ZOOM
+-- (smoke round 4) a game icon is still cropped 0.07 a side at Zoom 0, past Blizzard's native edge
+-- (modules/IconStyle.lua IS.NATIVE_CROP); a glyph or a raid marker is not.
 -- `borderStyleFromSkin` (QC-03) defaults true: a shown border is the skin's icon border (its style and
 -- thickness, modules/IconStyle.lua) until the player turns it off. `tintFromSkin`,
 -- `borderColorFromSkin` and `glowColorFromSkin` (LibKa0s v1.85.0, cause D7) default true too.

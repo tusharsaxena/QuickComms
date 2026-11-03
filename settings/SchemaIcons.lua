@@ -131,7 +131,7 @@ function NS.addon.Settings.IconRows(kind, C, afterSize)
     if afterSize then at(SIZE_CROP, afterSize) end
     at(SIZE_CROP, { path = P .. "zoom", type = "number", default = T.zoom, min = 0, max = D.ZOOM_MAX, step = 0.01,
         label = L["Zoom"], validate = C.NUMBER, normalize = C.clamp(0, D.ZOOM_MAX),
-        desc = L["Crop the icon's edges: 0 shows the whole icon, 0.25 crops a quarter off each side. A little zoom trims the dark edge baked into most game icons."] })
+        desc = L["Crop the icon's edges: 0.25 crops a quarter off each side. A game icon is always cropped at least 0.07 a side, so its baked-in dark edge never shows; at 0 a glyph or a raid marker shows whole."] })
     at(COLOR, { path = P .. "desaturate", type = "bool", default = T.desaturate, label = L["Desaturate"],
         desc = L["Draw the icons in gray."], validate = C.BOOL })
     at(COLOR, { path = P .. "alpha", type = "number", default = T.alpha, min = 0.1, max = 1, step = 0.05,

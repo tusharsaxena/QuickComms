@@ -35,6 +35,12 @@ local _, NS = ...
 -- tint reaches only a plain glyph: a glyph's own color carries meaning and a game icon is art, so
 -- both keep the stored tint (IS.PaintIcon).
 --
+-- NO NATIVE EDGE (R4-ZOOM, Ka0sAddonsCommonTasks docs/2026-11-03-SMOKE_ROUND4/R4_SIGNOFF.md). A game
+-- icon's art carries Blizzard's own rounded dark edge, which the owner never wants to see on the HUD,
+-- inside a border or not. So a game icon is cropped at least IS.NATIVE_CROP a side (0.07, the
+-- library IconBorder's zoom) whatever Zoom says, and a larger Zoom stands. A LibKa0s glyph and a raid
+-- marker carry no such edge, so Zoom alone crops them and 0 still shows the whole mark (IS.NativeEdge).
+--
 -- HEADLESS. Each decision is recorded on the button (`qcBorder`, the color drawn or nil;
 -- `qcBorderSize`) whatever the frame answers.
 
@@ -46,6 +52,10 @@ IS.SOLID = "Solid"
 IS.SOLID_EDGE = "Interface\\Buttons\\WHITE8X8"
 -- A border style no addon registers any more draws the tooltip's edge, as DropWatcher's does.
 IS.BORDER_FALLBACK = "Interface\\Tooltips\\UI-Tooltip-Border"
+-- The least crop a side of an icon whose art has Blizzard's native edge (NO NATIVE EDGE above).
+IS.NATIVE_CROP = 0.07
+-- A raid target marker's path (settings/IconBrowser_Sources.lua MarkerPath): art with no native edge.
+local MARKER = "UI%-RaidTargetingIcon_"
 
 do
     local LSM = LibStub and LibStub("LibSharedMedia-3.0", true)
@@ -120,11 +130,20 @@ function IS.Config(icon, kind, autoSize)
     return c
 end
 
+--- Whether icon `v` is art with Blizzard's native edge: anything but a LibKa0s glyph or a raid marker
+--- (a texture id, a game icon's path, the question mark the degraded install draws).
+function IS.NativeEdge(v)
+    if v == nil or v == false then return false end
+    if NS.Library.IsGlyph(v) then return false end
+    return not (type(v) == "string" and v:find(MARKER) ~= nil)
+end
+
 --- Draw an icon texture with a config: crop, desaturation, the tint times the glyph color `r, g, b`
 --- (white for any icon that is no glyph), and the alpha times the tint's. `plain` is IS.PaintIcon's:
---- this icon takes the skin's tint.
-function IS.ApplyIcon(tex, cfg, r, g, b, plain)
+--- this icon takes the skin's tint. `native` (IS.NativeEdge) crops at least IS.NATIVE_CROP a side.
+function IS.ApplyIcon(tex, cfg, r, g, b, plain, native)
     local z, t = cfg.zoom, plain and cfg.skinTint or cfg.tint
+    if native and z < IS.NATIVE_CROP then z = IS.NATIVE_CROP end
     tex:SetTexCoord(z, 1 - z, z, 1 - z)
     tex:SetDesaturated(cfg.desaturate)
     tex:SetVertexColor((r or 1) * t[1], (g or 1) * t[2], (b or 1) * t[3])
@@ -136,7 +155,7 @@ end
 function IS.PaintIcon(tex, cfg, icon, color)
     local Lib = NS.Library
     local r, g, b = Lib.IconTint(icon, color)
-    IS.ApplyIcon(tex, cfg, r, g, b, Lib.IsGlyph(icon) and r == 1 and g == 1 and b == 1)
+    IS.ApplyIcon(tex, cfg, r, g, b, Lib.IsGlyph(icon) and r == 1 and g == 1 and b == 1, IS.NativeEdge(icon))
 end
 
 --- The plain child frame over a button's icon (`btn.qcIcon`): the border's backdrop and the glow's

@@ -1523,7 +1523,7 @@ Total.
 - dial: [shine] fewer slices hide the rest
 - dial: [shine] the dial's look leaves the pad alone
 
-### test_icon_style.lua (10)
+### test_icon_style.lua (13)
 
 - icon style: the defaults draw the owner's look on a button and on a wedge
 - icon style: zoom crops through SetTexCoord, desaturate and alpha reach the texture
@@ -1535,6 +1535,9 @@ Total.
 - icon style: a pad saved before the Icons tab reads like a new one (fillShape backfills `icon`)
 - icon style: [polish] dial icon size reaches 128, pad stays 40
 - icon style: [autofit] a dial's icon size 0 is automatic: it scales with the ring radius
+- icon style: a game icon on the HUD is cropped past Blizzard's native edge, 0.07 a side at least (R4-ZOOM)
+- icon style: a glyph and a raid marker keep Zoom's crop, the whole mark at 0 (R4-ZOOM)
+- icon style: every HUD icon site paints through IS.PaintIcon, so the floor reaches it (R4-ZOOM)
 
 ### test_glow.lua (11)
 
@@ -2005,7 +2008,7 @@ Total.
 | test_anim_ghost.lua | 48 |
 | test_keybinds.lua | 6 |
 | test_dial_shine.lua | 8 |
-| test_icon_style.lua | 10 |
+| test_icon_style.lua | 13 |
 | test_glow.lua | 11 |
 | test_shine.lua | 8 |
 | test_layers.lua | 14 |
@@ -2031,4 +2034,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 26 |
 | Skipped | 1 |
-| **Total** | **1701** |
+| **Total** | **1704** |

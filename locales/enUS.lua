@@ -1269,8 +1269,8 @@ L["How big each slice's icon is, in pixels. 0 sizes it to the ring radius: 48 at
 L["Icon size"] = "Icon size"
 L["Icon size (0 = automatic)"] = "Icon size (0 = automatic)"
 L["Zoom"] = "Zoom"
-L["Crop the icon's edges: 0 shows the whole icon, 0.25 crops a quarter off each side. A little zoom trims the dark edge baked into most game icons."] =
-    "Crop the icon's edges: 0 shows the whole icon, 0.25 crops a quarter off each side. A little zoom trims the dark edge baked into most game icons."
+L["Crop the icon's edges: 0.25 crops a quarter off each side. A game icon is always cropped at least 0.07 a side, so its baked-in dark edge never shows; at 0 a glyph or a raid marker shows whole."] =
+    "Crop the icon's edges: 0.25 crops a quarter off each side. A game icon is always cropped at least 0.07 a side, so its baked-in dark edge never shows; at 0 a glyph or a raid marker shows whole."
 L["Desaturate"] = "Desaturate"
 L["Draw the icons in gray."] = "Draw the icons in gray."
 L["Icon opacity"] = "Icon opacity"
