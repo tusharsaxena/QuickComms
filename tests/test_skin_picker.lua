@@ -333,6 +333,19 @@ test("skin picker: the gear saves the pick and opens General on its Skin tab", o
     if not ok then error(err, 0) end
 end))
 
+-- The owner's "no separator line below header", skin selectors named (Ka0sAddonsCommonTasks
+-- docs/2026-11-03-SMOKE_ROUND4/R4_SIGNOFF.md, R4-SEP): the picker is a window, so no line under its
+-- title, before and after a live switch. A divider that is present must at least be hidden.
+test("skin picker: the window shows no line under its title, before and after a switch (R4-SEP)", onWindow(function(f, _, _, _, Skin)
+    local function noRule(what)
+        local divider = rawget(f, "divider")
+        assertTrue(divider == nil or not divider:IsShown(), what)
+    end
+    noRule("no line under the picker's title")
+    Skin:SetChoice(OWNER, "ka0s", "obsidian")
+    noRule("no line under the picker's title under Obsidian")
+end))
+
 -- ── without the library ──────────────────────────────────────────────────────────────────────────
 
 test("skin picker: without LibKa0s nothing shows and nothing raises", function()

@@ -1754,7 +1754,7 @@ Total.
 - skin fix: the active dot's mark is drawn in sem.good
 - skin fix: the degraded facade answers Ka0s Default for gtip.line and icon.arrow
 
-### test_skin_picker.lua (20)
+### test_skin_picker.lua (21)
 
 - skin picker: the spec names this owner, its seams, General's Skin tab and the eye
 - skin picker: the eye turns test mode on, and leaves it on
@@ -1775,6 +1775,7 @@ Total.
 - skin picker: the close control puts the old skin back, saves nothing, and marks it seen
 - skin picker: a profile switch with a pick pending wears the new profile's skin
 - skin picker: the gear saves the pick and opens General on its Skin tab
+- skin picker: the window shows no line under its title, before and after a switch (R4-SEP)
 - skin picker: without LibKa0s nothing shows and nothing raises
 
 ### test_skin_outline.lua (10)
@@ -2018,7 +2019,7 @@ Total.
 | test_skin_windows.lua | 21 |
 | test_skin_hud.lua | 20 |
 | test_skin_flip.lua | 61 |
-| test_skin_picker.lua | 20 |
+| test_skin_picker.lua | 21 |
 | test_skin_outline.lua | 10 |
 | test_skin_verb.lua | 7 |
 | test_skin_fonts.lua | 12 |
@@ -2034,4 +2035,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 26 |
 | Skipped | 1 |
-| **Total** | **1704** |
+| **Total** | **1705** |

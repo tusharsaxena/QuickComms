@@ -1968,7 +1968,7 @@ Result:
 **SKIN-31. No line under any window title (R4-SEP, smoke round 4).** On **Ka0s Default**, open `/qc
 preview` (the Preview as window), `/qc debug` and its **Copy** window, `/qc perf`, a group's callout popup
 (Groups → a group of yours → Callouts → a row's edit glyph), its **Choose icon…** browser and the browser's Wowhead address window (Game
-icons → the hint) → each title band meets the window body with no line between them, like the Skin
+icons → the hint), and the skin picker (`/qc skin`) → each title band meets the window body with no line between them, like the Skin
 Tester showroom's (`/st show`); under Ka0s Default the band is the dark gold gradient. Switch to
 Obsidian, then Azeroth, with the windows open → still no line under any title. Inside the callout popup
 and the icon browser, the settings page header's gold rule under the page title stays: it is a page
