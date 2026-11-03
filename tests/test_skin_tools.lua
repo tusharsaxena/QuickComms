@@ -115,7 +115,8 @@ test("skin tools: the host's release work goes through NS.SkinOnRelease, never a
         end
     end
     assertEqual(#hits, 0, "a host OnRelease callback:\n  " .. table.concat(hits, "\n  "))
-    assertEqual(chained, 5, "the popup's release list, the swatch, the reorder label, the table row, the table name")
+    assertEqual(chained, 6, "the popup's release list, the swatch, the reorder label, the table row, the table name, "
+        .. "a framed icon's edge (R5-ICON, Ed.FramedImage)")
 end)
 
 test("skin tools: the icon chooser's swatch release still drops a tracked color picker", function()

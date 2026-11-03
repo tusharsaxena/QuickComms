@@ -408,7 +408,7 @@ function Ed.IconChooser(ctx, spec)
         h.AttachTooltip(swatch, L["Icon color"], L["The color a LibKa0s glyph is drawn in. Only a glyph takes a color; white is none."])
         local function paint()
             local icon, color = spec.get()
-            preview:SetImage(icon or Ed.NoIcon(spec.kind))
+            Ed.FramedImage(preview, icon or Ed.NoIcon(spec.kind))
             Ed.Tint(preview.image, icon, color)
             swatch:SetColor(NS.Library.IconTint(icon, color))
             swatch:SetDisabled(not NS.Library.IsGlyph(icon))
@@ -532,6 +532,25 @@ function Ed.Tint(texture, icon, color)
     if texture then texture:SetVertexColor(NS.Library.IconTint(icon, color)) end
 end
 
+--- `widget` (an AceGUI Label or Icon) drawing `icon`, framed as a window's game icon (R5-ICON,
+--- IconStyle.WindowIcon's rule): game icon art cropped through SetImage's own texcoords, which AceGUI
+--- resets on the next SetImage, so the pooled widget needs no undo, and edged on a frame of this
+--- addon's own laid over the image, never on AceGUI's pooled image, handed back on release
+--- (NS.SkinOnRelease). A glyph or a raid marker is drawn whole, with no edge.
+function Ed.FramedImage(widget, icon)
+    local IS = NS.IconStyle
+    local native = IS.NativeEdge(icon)
+    if native then widget:SetImage(icon, unpack(IS.WINDOW_CROP)) else widget:SetImage(icon) end
+    IS.WindowEdge(widget, widget.frame, widget.image, native)
+    if widget.qcIconEdge and not widget.qcIconRelease then
+        widget.qcIconRelease = true
+        NS.SkinOnRelease(widget, function(w)
+            w.qcIconRelease = nil
+            IS.WindowEdge(w, nil, nil, false)
+        end)
+    end
+end
+
 --- One uniform row per entry ({ id, label, icon = texture|nil, iconColor = "rrggbb"|nil, edit = fn|nil, editTooltip = string|nil,
 --- remove = fn|nil, removeTooltip = string|nil, ghost = string|nil (the drag copy's text; default label) }): the library's handle in the gutter at the left, the
 --- entry's icon (when set, a glyph in its color) and its label, then the edit and remove glyphs at the
@@ -561,7 +580,7 @@ function Ed.ReorderRows(ctx, pageKey, entries, onMove)
             local label = AceGUI:Create("Label")
             label:SetText(e.label)
             if e.icon then
-                label:SetImage(e.icon)
+                Ed.FramedImage(label, e.icon)
                 label:SetImageSize(ROW_ICON, ROW_ICON)
             end
             label:SetWidth(LABEL_W)
@@ -683,7 +702,7 @@ function Ed.TableRows(ctx, pageKey, blocks, header)
                     local shown = e.text()
                     local name, text = tableRow(h, into, e.label, shown)
                     if e.icon then
-                        name:SetImage(e.icon)
+                        Ed.FramedImage(name, e.icon)
                         name:SetImageSize(ROW_ICON, ROW_ICON)
                     end
                     Ed.Tint(name.image, e.icon, e.iconColor)

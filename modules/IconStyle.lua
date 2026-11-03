@@ -138,6 +138,51 @@ function IS.NativeEdge(v)
     return not (type(v) == "string" and v:find(MARKER) ~= nil)
 end
 
+-- ── window icons (R5-ICON) ─────────────────────────────────────────────────────────────────────────
+
+-- Game icon art in a window or on a settings page (Ka0sAddonsCommonTasks docs/2026-11-03-SMOKE_ROUND5,
+-- the lead's call 9; LibKa0s docs/api/README.md "Icon art: the rule"): cropped IS.NATIVE_CROP a side
+-- and edged 1 physical px in icon.outline (S.IconBorder, no `hud`), on a frame of this addon's own
+-- laid over the art, never on the art itself: an AceGUI widget's image is pooled across every addon,
+-- and an edge recorded on it would outlive the widget. The edge follows the settings page's Scope as
+-- the library's id list does: none while this owner ignores its settings panel. A glyph and a raid
+-- marker (IS.NativeEdge false) are drawn whole and take no edge.
+IS.WINDOW_CROP = { IS.NATIVE_CROP, 1 - IS.NATIVE_CROP, IS.NATIVE_CROP, 1 - IS.NATIVE_CROP }
+local WINDOW_EDGE = { fromSkin = true, zoom = false }
+local spareEdges = {}
+
+--- Lay `holder`'s edge frame over `tex` (a child of `parent`) while `on`, else hand it back. The frame
+--- is kept on `holder.qcIconEdge`; one handed back is hidden and reused by the next icon.
+function IS.WindowEdge(holder, parent, tex, on)
+    local e = holder.qcIconEdge
+    if on and not NS.SkinPanelIgnored() then
+        if not e then
+            e = table.remove(spareEdges) or CreateFrame("Frame")
+            holder.qcIconEdge = e
+        end
+        e:SetParent(parent)
+        e:ClearAllPoints()
+        e:SetAllPoints(tex)
+        e:Show()
+        NS.Skin.IconBorder(e, WINDOW_EDGE)
+        return
+    end
+    if not e then return end
+    holder.qcIconEdge = nil
+    e:Hide()
+    e:ClearAllPoints()
+    spareEdges[#spareEdges + 1] = e
+end
+
+--- A window's own texture `tex` drawing `icon`: cropped and edged when it is game icon art, whole and
+--- bare otherwise. `holder` keeps the edge (the cell, the window's widget table).
+function IS.WindowIcon(holder, parent, tex, icon)
+    local native = IS.NativeEdge(icon)
+    if native then tex:SetTexCoord(unpack(IS.WINDOW_CROP)) else tex:SetTexCoord(0, 1, 0, 1) end
+    IS.WindowEdge(holder, parent, tex, native)
+    return native
+end
+
 --- Draw an icon texture with a config: crop, desaturation, the tint times the glyph color `r, g, b`
 --- (white for any icon that is no glyph), and the alpha times the tint's. `plain` is IS.PaintIcon's:
 --- this icon takes the skin's tint. `native` (IS.NativeEdge) crops at least IS.NATIVE_CROP a side.

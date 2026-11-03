@@ -118,6 +118,8 @@ local tab, filter, list, total, loaded, selected, color, offset = FIRST_TAB, "al
 local glyphSet = "all"
 local search = ""
 local ctx, area, grid, slider, status, count, filterDD, setsDD, swatch, preview, nameText, chooseBtn, cancelBtn
+-- The footer preview's edge holder (IconStyle.WindowEdge keeps the edge frame on it, R5-ICON).
+local footerIcon = {}
 local searchBox, clearMark, hint, hintText, linkBtn, linkWin
 -- The host-drawn parts a looks change repaints: the scroller's track, the hint box's fill and edges,
 -- and each search glyph with its token.
@@ -189,6 +191,8 @@ local function dressCell(cell, v)
         return
     end
     cell.icon:SetTexture(v)
+    -- Game icon art cropped and edged, a glyph or a marker whole (R5-ICON, IconStyle.WindowIcon).
+    NS.IconStyle.WindowIcon(cell, cell, cell.icon, v)
     cell.icon:SetVertexColor(NS.Library.IconTint(v, color))
     cell.selected:SetShown(v == selected)
     cell:Show()
@@ -197,11 +201,13 @@ end
 local function drawFooter()
     if selected ~= nil then
         preview:SetTexture(selected)
+        NS.IconStyle.WindowIcon(footerIcon, area, preview, selected)
         preview:SetVertexColor(NS.Library.IconTint(selected, color))
         preview:Show()
         nameText:SetText(Src.Label(selected))
     else
         preview:Hide()
+        NS.IconStyle.WindowEdge(footerIcon, area, preview, false)
         nameText:SetText((NS.SkinEscape(NOTE) or "") .. L["Click an icon to select it."] .. "|r")
     end
     chooseBtn:SetDisabled(selected == nil)
@@ -770,7 +776,8 @@ end
 --- The toolbar's and the footer's widgets (for tests).
 function B.Widgets()
     return { filter = filterDD, sets = setsDD, swatch = swatch, choose = chooseBtn, cancel = cancelBtn, slider = slider,
-        grid = grid, status = status, count = count, preview = preview, name = nameText, area = area,
+        grid = grid, status = status, count = count, preview = preview, previewEdge = footerIcon.qcIconEdge,
+        name = nameText, area = area,
         search = searchBox, clear = clearMark, hint = hint, hintText = hintText, link = linkBtn,
         track = track, hintFill = hintFill, hintEdges = hintEdges, magnifier = magnifier, clearGlyph = clearGlyph }
 end

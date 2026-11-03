@@ -600,6 +600,14 @@ Total.
 - icon browser: [sets] the Glyphs filter lists the library's sets and narrows to one
 - icon browser: [sets] a glyph's tooltip names its set, and a Game-icons mark its author
 
+### test_window_icons.lua (5)
+
+- window icons: a game icon in the browser's grid is cropped and edged; a glyph and a marker are not
+- window icons: the browser's footer preview of a game icon is cropped and edged
+- window icons: under the Scope's Ignore settings panel (the default) a game icon is cropped, not edged
+- window icons: an AceGUI image of a game icon is cropped through SetImage and edged on a frame of the addon's own
+- window icons: the callout popup's icon chooser frames a game icon
+
 ### test_groups_when.lua (21)
 
 - when: Toggle adds and removes one value, drops an emptied row, and never mutates its input
@@ -1994,6 +2002,7 @@ Total.
 | test_editors.lua | 18 |
 | test_callout_popup.lua | 38 |
 | test_icon_browser.lua | 37 |
+| test_window_icons.lua | 5 |
 | test_groups_when.lua | 21 |
 | test_page_groups.lua | 49 |
 | test_page_groups_nesting.lua | 19 |
@@ -2050,4 +2059,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 26 |
 | Skipped | 1 |
-| **Total** | **1716** |
+| **Total** | **1721** |

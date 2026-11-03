@@ -211,6 +211,7 @@ Kit.run{
         "test_editors",
         "test_callout_popup",
         "test_icon_browser",
+        "test_window_icons",
         "test_groups_when",
         "test_page_groups",
         "test_page_groups_nesting",

@@ -1423,6 +1423,18 @@ default speech bubble) and a raid marker at Zoom 0 → whole, nothing clipped at
 Obsidian. Fail: a rounded or dark native edge inside any game icon's border on a pad or a dial.
 Result:
 
+**ICONS-7. Game icons in the windows and settings pages are framed (R5-ICON, smoke round 5, item 7).** On the
+Skin tab untick **Ignore settings panel**. Open a group's callout popup and **Choose icon…** → Game icons:
+every game icon in the grid sits inside a 1 px gray outline with no rounded dark rim or lighter corner of
+Blizzard's own edge showing; click one → the footer preview is framed the same. Choose it → the popup's icon
+chooser shows it framed. On the Groups page, a callout with a game icon → its row's icon and the Preview
+table's icon are framed. Markers and Glyphs tabs, and a callout with the default speech bubble or a raid
+marker → those draw whole, with no outline. Switch skins → the outline follows the skin's icon outline.
+Tick **Ignore settings panel** again and reopen → the game icons stay cropped (no native rim), with no Ka0s
+outline, as the library's own id lists. Fail: a native rim on any game icon, an outline on a glyph or a
+marker, or an outline left behind on a row that no longer shows an icon.
+Result:
+
 ## Icons
 
 **ICON-1. Choosing an icon.** Groups → a group of yours → Callouts → a row's edit glyph → Choose
@@ -2319,4 +2331,4 @@ Owed from the owner's fourth smoke round (R4-SEP and R4-ZOOM, 2026-11-03, Ka0sAd
 
 On 2026-11-02 the owner reported that every check on the smoke lists of the full skinning run and its smoke feedback batch (Ka0sAddonsCommonTasks `docs/2026-11-01-FULL_SKINNING/` and `docs/2026-11-01-SMOKE_FEEDBACK/`) passed, apart from DpsRace's clock font, the skinned look of the AceGUI Dropdown and the Ka0sMedia_Font and Ka0sMedia_Statusbar pickers, FadeNineSlice and IconBorder (`docs/2026-11-02-SMOKE_ROUND3/`, R3-SMOKE). Passed, recorded on each `Result:` line as `Passed (owner, 2026-11-02)`: ANIM-1, ANIM-2, ANIM-3, ANIM-4, ANIM-5, ANIM-6, ANIM-7, ANIM-8, ANIM-9, ANIM-10, ANIM-11, ANIM-12, ANIM-13, ANIM-14, ANIM-15, ANIM-16, ANIM-17, ANIM-18, ANIM-19, ANIM-20, ANIM-21, ANIM-22, BUTTON-1, FSKIN-1, FSKIN-2, FSKIN-3, FSKIN-4, FSKIN-5, FSKIN-6, FSKIN-7, FSKIN-8, FSKIN-9, FSKIN-10, FSKIN-11, FSKIN-12, LAYER-6, LAYER-7, LAYER-8, LAYER-9, PLOOK-1, PLOOK-2, PLOOK-3, PLOOK-4, PLOOK-5, PLOOK-6, PLOOK-7, PLOOK-8, PLOOK-9, PLOOK-10, PLOOK-11, SHINE-1, SKIN-6, SKIN-11, SKIN-12 and SKIN-13. Still owed: SKIN-5, whose expected result the third smoke round itself changed after the owner's run.
 
-Owed from the owner's fifth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND5/`): SKIN-32 (new, R5-RV); SKIN-33 (new, R5-WIN); PLOOK-12 (new, R5-QC1); PLOOK-1 to PLOOK-9, ANIM-22 and FSKIN-12 (R5-QC1 changed their expected result, so each lost its pass mark).
+Owed from the owner's fifth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND5/`): SKIN-32 (new, R5-RV); SKIN-33 (new, R5-WIN); PLOOK-12 (new, R5-QC1); ICONS-7 (new, R5-ICON); PLOOK-1 to PLOOK-9, ANIM-22 and FSKIN-12 (R5-QC1 changed their expected result, so each lost its pass mark).
