@@ -14,7 +14,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 |---|---|---|
 | INSTALL-1..3 | Install | Load, reload, first run, the logo |
 | SLASH-1..2 | Slash | `/qc` and `/quickcomms`, help, a slash collision |
-| PANEL-1..3 | Settings panel | Landing page, General → Master controls, the Defaults button |
+| PANEL-1..4 | Settings panel | Landing page, General → Master controls, the Defaults button, no Sim mode row |
 | PROFILE-1..2 | Profiles | The Profiles page and the `profile` verb |
 | STATE-1..6 | State | Enable/disable, the launcher menu, `/qc toggle`, the pads' hidden state across /reload, a new profile's prebuilts |
 | COMBAT-1 | Combat | The settings panel in combat |
@@ -83,6 +83,12 @@ console; unticking Minimap button hides the button at once. Result: 2026-10-21, 
 
 **PANEL-3. Defaults and Reset all.** Hide the minimap button, untick Enable, press the header's
 Defaults button and accept → Enable is ticked again and the minimap button stays hidden. Result: 2026-10-21, pass (the owner's run; client build not recorded).
+
+**PANEL-4. No Sim mode row at LibKa0s compose minor 19 (R6-RV2, smoke round 6).** After a full client
+restart, General → the `Master controls` tab → the rows are exactly PANEL-2's, in PANEL-2's pairs, and
+there is no Sim mode checkbox: Quick Comms has no simulation, so it passes no sim hooks. No Lua error
+from `OptionsCompose.lua`. Fail: a Sim mode row, a row out of its PANEL-2 pair, or a Lua error.
+Result:
 
 ## Profiles
 
@@ -2364,4 +2370,4 @@ On 2026-11-02 the owner reported that every check on the smoke lists of the full
 
 Owed from the owner's fifth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND5/`): SKIN-32 (new, R5-RV); SKIN-33 (new, R5-WIN); PLOOK-12 (new, R5-QC1); ICONS-7 (new, R5-ICON); PLOOK-1 to PLOOK-9, ANIM-22 and FSKIN-12 (R5-QC1 changed their expected result, so each lost its pass mark); LOOK-3, FSKIN-1 and FSKIN-2 (the R5-QC1 review found their expected result stale against the header's band, so each lost its pass mark).
 
-Owed from the owner's sixth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND6/`): SKIN-34 (new, R6-RV); SKIN-35 (new, R6-PV).
+Owed from the owner's sixth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND6/`): SKIN-34 (new, R6-RV); SKIN-35 (new, R6-PV); PANEL-4 (new, R6-RV2).
