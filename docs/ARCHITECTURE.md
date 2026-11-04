@@ -202,9 +202,11 @@ the settings pages and the library's own windows.
 
 - **The seam.** `core/SkinSetup.lua` registers the owner `"QuickComms"` (the folder name) at file load
   with its read and write seams, `NS.SkinChoice` and `NS.WriteSkinChoice` (both through
-  `NS.SchemaRuntime`), and thirteen owner tokens (`qc.veil`, `qc.hover`, `qc.hint`, ...): the colors
+  `NS.SchemaRuntime`), and ten owner tokens (`qc.veil`, `qc.hover`, `qc.hint`, ...): the colors
   this addon draws under Ka0s Default that no library token holds exactly, kept at their pixels and
-  each but the two veils following its nearest library role token (rollout X1, X2, X12). It publishes
+  each but the two veils following its nearest library role token (rollout X1, X2, X12). The icon
+  browser's three (`qc.selStrong`, `qc.markGray`, `qc.note`) left with it for the library's own
+  `ib.*` tokens at the LibKa0s v1.86.0 promotion. It publishes
   `NS.Skin` (the owner's facade) and the call-site helpers `NS.SkinColor`, `NS.SkinEscape`,
   `NS.SkinMarkup`, `NS.SkinPaintAce` / `NS.SkinPaintAceTree` / `NS.SkinOnRelease`. The choice is the
   profile's `skin` block (`source`, `skin`, the Scope's `ignorePanel`, on for a new profile, and
@@ -392,7 +394,7 @@ Nothing is over the cap today. `tests/test_page_groups.lua` reached it exactly a
 own section headings (`80a0fbb`, 2026-10-25): 1131 lines now, beside `tests/test_page_groups_nesting.lua`
 at 418. `tests/test_dial.lua` was split the same way at 1471 lines (2026-10-31): 764 now, beside
 `tests/test_dial_catcher.lua` at 288 and `tests/test_dial_look.lua` at 388, with their shared helpers in
-`tests/dial_helpers.lua`. Six files sit in the 1000-1500 band (`locales/enUS.lua` 1383,
+`tests/dial_helpers.lua`. Seven files sit in the 1000-1500 band (`locales/enUS.lua` 1383,
 `modules/Library.lua` 1324, `tests/test_page_groups.lua` 1131, `tests/test_library.lua` 1057,
-`tests/test_pad.lua` 1047, `tests/wow_mock.lua` 1084; counted at the LibKa0s v1.86.0 re-vendor); the automated-test record's watch list gives
+`tests/test_pad.lua` 1047, `tests/wow_mock.lua` 1084, `tests/test_skin_flip.lua` 1064; counted at the LibKa0s v1.86.0 re-vendor); the automated-test record's watch list gives
 each its disposition.
