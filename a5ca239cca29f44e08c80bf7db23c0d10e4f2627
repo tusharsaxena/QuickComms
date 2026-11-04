@@ -1,1 +1,3 @@
 ka0s-review (R7 adversarial reviewer, 2026-11-04): R7-RD README /qc skin sentence checked against core/SkinSetup.lua PREVIEW (mode test, eye via NS.Preview.SetTestMode, restore on close) and libs/LibKa0s/OptionsSkinPicker.lua. Hover-preview claim was wrong in 352561a and fixed by a5ca239; a5ca239's 'closing without Apply puts back the skin' missed the gear route, which saves; fixed in 9b585ee. Gate fresh: 1729 passed/0 failed/1 skipped, luacheck 0/0, largest file 1431 lines, README CRLF.
+
+Earlier review (restored): R7 independent review (R7-RD fix): reviewer's own correction of 352561a; README sentence checked against core/SkinSetup.lua PREVIEW and libs/LibKa0s/OptionsSkinPicker.lua. CRLF kept. Gate green (1729/0/1, luacheck 0/0).
