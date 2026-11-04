@@ -64,6 +64,10 @@ dials' fonts and border styles; the colors you give a pad or a dial stay yours. 
 font* or *Use the skin's border* on a tab to use your own. Font outline, on the same Skin tab, says
 which text gets an outline.
 
+`/qc skin` opens the skin picker. Hover or select a skin to preview it on the windows, and Apply keeps
+it. The eye turns test mode on or off, so the pads show their placeholder buttons while you choose; closing
+the picker puts test mode back the way it was.
+
 To check how things look somewhere else, pick a situation in Preview as… or type `/qc preview`. A
 small window lets you switch situations or end the preview. While you preview, and in test mode, a
 click sends nothing and chat shows you the line it would have sent. Editing a group on the Groups page
