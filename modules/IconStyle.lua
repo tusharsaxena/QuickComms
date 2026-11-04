@@ -54,7 +54,8 @@ IS.SOLID_EDGE = "Interface\\Buttons\\WHITE8X8"
 IS.BORDER_FALLBACK = "Interface\\Tooltips\\UI-Tooltip-Border"
 -- The least crop a side of an icon whose art has Blizzard's native edge (NO NATIVE EDGE above).
 IS.NATIVE_CROP = 0.07
--- A raid target marker's path (settings/IconBrowser_Sources.lua MarkerPath): art with no native edge.
+-- A raid target marker's path (libs/LibKa0s/IconBrowserSources.lua Src.MarkerPath): art with no native
+-- edge.
 local MARKER = "UI%-RaidTargetingIcon_"
 
 do
