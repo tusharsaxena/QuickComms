@@ -348,16 +348,28 @@ test("icon browser: a popup that closes leaves a browser opened by another owner
     assertFalse(B.IsOpen(), "a profile change closes any")
 end)
 
-test("icon browser: a stand-down closes it and refuses an open; a stand-up lets it open again", function()
+test("icon browser: a stand-down closes it; the settings still edit while disabled, so it opens again", function()
     local NS, _, _, B = boot()
     openOn(B, nil)
     NS.SchemaRuntime.Set("enabled", false)
     -- red under: drop the browser's NS.STAND_DOWN entry
     assertFalse(B.IsOpen())
-    -- red under: Cancel alone on a stand-down (the library's StandDown also refuses an open)
-    assertFalse(B.Open({ owner = "test", onChoose = function() end }), "refused while stood down")
+    -- red under: the library's StandDown on a stand-down (it also refuses an open, which the browser
+    -- did not before the promotion: a group's or a callout's Choose icon... edits while disabled, as
+    -- every settings page and the callout popup do)
+    assertTrue(B.Open({ owner = "test", onChoose = function() end }), "opens while disabled, as before")
+    B.Cancel()
     NS.SchemaRuntime.Set("enabled", true)
-    assertTrue(B.Open({ owner = "test", onChoose = function() end }), "it opens again after a stand-up")
+    assertTrue(B.Open({ owner = "test", onChoose = function() end }), "and after a stand-up")
+end)
+
+test("icon browser: a stand-down before the first open leaves the browser openable", function()
+    local NS, _, _, B = boot()
+    NS.SchemaRuntime.Set("enabled", false)
+    -- red under: hand a browser built while stood down the library's StandDown
+    assertTrue(B.Open({ owner = "test", onChoose = function() end }), "built while disabled, it opens")
+    B.Cancel()
+    NS.SchemaRuntime.Set("enabled", true)
 end)
 
 -- ── the glyph helpers: aliases of the library's ─────────────────────────────────────────────

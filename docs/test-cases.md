@@ -560,7 +560,7 @@ Total.
 - popup: every field's label and control share a left edge; Preview's rule and the buttons the columns' edges
 - popup: [icons] an icon that is no texture stays open and names the icon chooser
 
-### test_icon_browser.lua (13)
+### test_icon_browser.lua (14)
 
 - icon browser: Settings.IconBrowser is one LibKa0s browser, built with the host's spec
 - icon browser: the window is the popup's chrome, stacked above the popup and its catcher
@@ -573,7 +573,8 @@ Total.
 - icon browser: Escape over the popup closes the browser only; the popup's Escape comes back after
 - icon browser: the popup closing, the settings window hiding, a profile change and a deletion close it
 - icon browser: a popup that closes leaves a browser opened by another owner alone
-- icon browser: a stand-down closes it and refuses an open; a stand-up lets it open again
+- icon browser: a stand-down closes it; the settings still edit while disabled, so it opens again
+- icon browser: a stand-down before the first open leaves the browser openable
 - icon browser: Library's glyph helpers answer as the library's, with the addon's reason code
 
 ### test_window_icons.lua (5)
@@ -1985,7 +1986,7 @@ Total.
 | test_members.lua | 28 |
 | test_editors.lua | 18 |
 | test_callout_popup.lua | 38 |
-| test_icon_browser.lua | 13 |
+| test_icon_browser.lua | 14 |
 | test_window_icons.lua | 5 |
 | test_groups_when.lua | 21 |
 | test_page_groups.lua | 49 |
@@ -2043,4 +2044,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 26 |
 | Skipped | 1 |
-| **Total** | **1705** |
+| **Total** | **1706** |

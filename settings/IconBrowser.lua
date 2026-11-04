@@ -23,8 +23,10 @@ local addonName, NS = ...
 --
 -- And what closes it, as Cancel, stays this addon's: its opener closing (the popup's close calls
 -- Cancel("popup")), the settings window hiding, a profile change, the opener's member ceasing to
--- exist (LIBRARY_CHANGED, the request's `valid`: Revalidate) and a stand-down (StandDown, which also
--- refuses an Open until the stand-up). The library registers no bus message.
+-- exist (LIBRARY_CHANGED, the request's `valid`: Revalidate) and a stand-down (Cancel only: the
+-- library's StandDown would also refuse an Open until the stand-up, and the browser opened while
+-- disabled before the promotion, since a group's or a callout's Choose icon... edits then as every
+-- settings page does). The library registers no bus message.
 --
 -- THE SKIN. The browser draws through this addon's skin owner; its four owner tokens (ib.selStrong,
 -- ib.note, ib.markGray, ib.modalDim) are laid onto the owner by the library on the first build, with
@@ -39,7 +41,6 @@ Settings.IconBrowser = Settings.IconBrowser or {}
 local B = Settings.IconBrowser
 
 local browser
-local down = false
 local cancel   -- what closes it, below
 
 -- The words this addon shows differently from the library's English (spec.L, read with rawget).
@@ -67,7 +68,6 @@ function B.Browser()
         trackPicker = function(swatch) Settings.Editors.TrackPicker(swatch) end,
         releasePicker = function(swatch) Settings.Editors.ReleasePicker(swatch) end,
     })
-    if down then browser:StandDown() end
     -- The settings window hiding closes it, as Cancel. Hooked when the browser is made, as the
     -- browser was built here before: its openers live in that window, so it exists by then.
     local settingsWindow = _G.SettingsPanel
@@ -130,14 +130,11 @@ end
 listen()
 
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
-    down = true
-    if browser then browser:StandDown() end
+    cancel()
     if receiver and not NS.Bus.tracked then
         for _, h in ipairs(HANDLERS) do receiver:UnregisterMessage(h[1]) end
     end
 end
 NS.STAND_UP[#NS.STAND_UP + 1] = function()
-    down = false
-    if browser then browser:StandUp() end
     if not NS.Bus.tracked then listen() end
 end
