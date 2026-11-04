@@ -383,7 +383,7 @@ sidebar entry, no banner, no Defaults). The window is built from Blizzard's own
 `SettingsFrameTemplate` (its background, its border with the window title "Ka0s Quick Comms", and
 its close X), painted as the skin's window, and inside it the pages' own building blocks draw the rest (the library's panel
 factory for the header and its gold rule, the Helpers' rows and red button pair, `Ed.IconChooser`).
-The window and its catcher are `settings/ModalWindow.lua`'s, which the icon browser is built from too.
+The window and its catcher are `settings/ModalWindow.lua`'s; the icon browser's are the same window, lifted into LibKa0s-IconBrowser-1.0 at v1.86.0.
 The body is laid out in a plain AceGUI container, not a scroll frame: the popup has **no
 scrollbar**, and the window's height follows the laid-out body, measured again after every draft
 write, situation change and error line. The settings pages keep their always-visible scrollbar.
@@ -470,12 +470,16 @@ body     [Name          ] [Channel       ]   the callout.* member rows' labels a
 
 ## The icon browser
 
-`settings/IconBrowser.lua`: where an icon is picked, opened by Choose icon… (or a click on the icon)
-in the callout popup and on a group's General tab. It is not a page. Its window is the popup's
-(`settings/ModalWindow.lua`: Blizzard's `SettingsFrameTemplate`, titled "Ka0s Quick Comms", its close
-X, the gold header), 560 × 594, with its own full-screen catcher in the popup's `FULLSCREEN` strata,
-above the popup and the popup's catcher by a band of levels of its own (`ModalWindow.LEVEL_OVER`, far
-over the popup's `LEVEL`): it is modal to whatever opened it. `FULLSCREEN_DIALOG` stays above it for
+Where an icon is picked, opened by Choose icon… (or a click on the icon) in the callout popup and on
+a group's General tab. It is not a page. Since LibKa0s v1.86.0 the browser is the library's
+(LibKa0s-IconBrowser-1.0, promoted out of this addon; its document is LibKa0s
+`docs/api/IconBrowser/version-1.1.1-docs.md`), and `settings/IconBrowser.lua` is the adapter that builds
+it with this addon's spec and keeps `Settings.IconBrowser`'s surface; what follows is unchanged for
+the player. Its window is the popup's (Blizzard's `SettingsFrameTemplate`, titled "Ka0s Quick Comms",
+its close X, the gold header), 560 × 594, with its own full-screen catcher in the popup's
+`FULLSCREEN` strata, above the popup and the popup's catcher by a band of levels of its own
+(`LAYERS.LEVEL.MODAL_OVER`, far over the popup's `MODAL`, handed to the library as `spec.layers`): it
+is modal to whatever opened it. `FULLSCREEN_DIALOG` stays above it for
 its pull-outs, the color picker and the Wowhead link window. Only one browser exists,
 built on its first open. It wears the popup's skin.
 
@@ -495,12 +499,12 @@ footer   the selected icon (a glyph in the color) and its name, then Choose and 
 
 - **Markers**: the eight raid target markers. **Game icons**: every
   icon the macro icon selector offers (the loose lists and then `GetMacroIcons` for spells, the
-  same for items, through `Compat.MacroIcons`), as texture ids, each once, filtered All / Spells / Items; until the client has
+  same for items, through the library's `MacroIcons`), as texture ids, each once, filtered All / Spells / Items; until the client has
   loaded its own icon list the tab says so, and the list is read again on the next visit. **Glyphs**:
-  every icon of the LibKa0s catalog (`NS.IconNames`, about 5,800 marks in three sets: Open Iconic,
+  every icon of the LibKa0s catalog (the library's `Glyphs`, about 5,800 marks in three sets: Open Iconic,
   Phosphor `ph:`, Game-icons `gi:`), named from its catalog key without the set's prefix
   ("arrow-circle-down" reads "Arrow circle down", "ph:arrow-up" "Arrow up"; the curated glyphs keep
-  their localized labels), filtered All or one set (the sets read from `NS.IconSets`; each open
+  their localized labels), filtered All or one set (the sets read from the catalog's `ICON_SETS`; each open
   starts on All, a tab switch keeps the choice). A glyph's tooltip adds its set's name, and a
   Game-icons mark its author ("Game-icons, by Lorc", as CC BY 3.0 asks; README `## Credits`). Each
   set's list is built once for the session, so a keystroke re-filters it without rebuilding it.

@@ -174,15 +174,6 @@ function IS.WindowEdge(holder, parent, tex, on)
     spareEdges[#spareEdges + 1] = e
 end
 
---- A window's own texture `tex` drawing `icon`: cropped and edged when it is game icon art, whole and
---- bare otherwise. `holder` keeps the edge (the cell, the window's widget table).
-function IS.WindowIcon(holder, parent, tex, icon)
-    local native = IS.NativeEdge(icon)
-    if native then tex:SetTexCoord(unpack(IS.WINDOW_CROP)) else tex:SetTexCoord(0, 1, 0, 1) end
-    IS.WindowEdge(holder, parent, tex, native)
-    return native
-end
-
 --- Draw an icon texture with a config: crop, desaturation, the tint times the glyph color `r, g, b`
 --- (white for any icon that is no glyph), and the alpha times the tint's. `plain` is IS.PaintIcon's:
 --- this icon takes the skin's tint. `native` (IS.NativeEdge) crops at least IS.NATIVE_CROP a side.

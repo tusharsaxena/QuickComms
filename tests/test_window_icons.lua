@@ -38,9 +38,11 @@ local function whole(coords, what)
     assertTrue(coords == nil or table.concat(coords, ",") == "0,1,0,1", what .. ": the whole art")
 end
 
---- `holder`'s edge frame, shown and painted as a window icon's (icon.outline, no hud, no zoom).
-local function assertEdged(Skin, holder, what)
-    local e = holder.qcIconEdge
+--- `holder`'s edge frame, shown and painted as a window icon's (icon.outline, no hud, no zoom). The
+--- icon browser's cells keep it on `ibIconEdge` (LibKa0s IconBrowserWindow.lua's W.Edge), this
+--- addon's own holders on `qcIconEdge` (modules/IconStyle.lua's WindowEdge): `field` picks.
+local function assertEdged(Skin, holder, what, field)
+    local e = holder[field or "qcIconEdge"]
     assertTrue(e ~= nil and e:IsShown(), what .. ": an edge frame of the addon's own")
     local rec = Skin.painted[e]
     local call = rec and rec.calls.IconBorder
@@ -49,14 +51,14 @@ local function assertEdged(Skin, holder, what)
     assertTrue(opts.fromSkin == true and not opts.hud, what .. ": icon.outline, a window's edge")
 end
 
-local function assertBare(holder, what)
-    local e = holder.qcIconEdge
+local function assertBare(holder, what, field)
+    local e = holder[field or "qcIconEdge"]
     assertTrue(e == nil or not e:IsShown(), what .. ": no edge")
 end
 
 local function cellFor(B, icon)
     for _, c in ipairs(B.cells) do
-        if c:IsShown() and c.qcIcon == icon then return c end
+        if c:IsShown() and c.ibIcon == icon then return c end
     end
     return nil
 end
@@ -77,15 +79,15 @@ test("window icons: a game icon in the browser's grid is cropped and edged; a gl
     assertTrue(cell ~= nil, "the game icon is drawn")
     -- red under: cell.icon:SetTexture(v) alone, the full 0..1 art and its native bevel, no edge
     crop(cell.icon.__texCoord, "a game icon")
-    assertEdged(Skin, cell, "a game icon")
+    assertEdged(Skin, cell, "a game icon", "ibIconEdge")
     B.SetTab("markers")
     local marker = cellFor(B, SKULL)
     whole(marker.icon.__texCoord, "a raid marker")
-    assertBare(marker, "a raid marker")
+    assertBare(marker, "a raid marker", "ibIconEdge")
     B.SetTab("glyphs")
     local glyph = cellFor(B, NS.Icon("star"))
     whole(glyph.icon.__texCoord, "a glyph")
-    assertBare(glyph, "a glyph")
+    assertBare(glyph, "a glyph", "ibIconEdge")
     B.Cancel()
 end)
 
@@ -111,7 +113,7 @@ test("window icons: under the Scope's Ignore settings panel (the default) a game
     local cell = cellFor(B, GAME)
     crop(cell.icon.__texCoord, "a game icon")
     -- as the library's id list: a stock settings page wears no Ka0s edge
-    assertBare(cell, "a game icon on a stock page")
+    assertBare(cell, "a game icon on a stock page", "ibIconEdge")
     B.Cancel()
 end)
 

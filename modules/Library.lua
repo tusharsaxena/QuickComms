@@ -262,23 +262,12 @@ function Lib.ValidIcon(v)
     return false, "badIcon"
 end
 
--- Each LibKa0s catalog icon's texture path mapped to its catalog name, built on the first ask (the
--- catalog is fixed for the session; NS.IconNames, library-stack-§8). Empty without the library.
-local glyphNames
-
 --- The LibKa0s catalog name of icon `v` when it is one of the catalog's glyphs (white on transparent,
---- so it takes a tint), else nil: a game icon, a raid marker or any other texture.
+--- so it takes a tint), else nil: a game icon, a raid marker or any other texture. The library's
+--- IsGlyph (core/IconBrowserSetup.lua), which reads a glyph path at any Ka0s addon's folder.
 --- @return string|nil
 function Lib.IsGlyph(v)
-    if type(v) ~= "string" then return nil end
-    if not glyphNames then
-        glyphNames = {}
-        for _, name in ipairs(NS.IconNames()) do
-            local path = NS.Icon(name)
-            if path then glyphNames[path] = name end
-        end
-    end
-    return glyphNames[v]
+    return NS.IconBrowserLib.IsGlyph(v)
 end
 
 --- A glyph's color as stored: six lowercase hex digits ("rrggbb"), from text that may carry spaces,
@@ -292,11 +281,11 @@ function Lib.IconColorValue(v)
     return t
 end
 
---- Whether `v` is a stored glyph color: none (nil or false) or six lowercase hex digits.
+--- Whether `v` is a stored glyph color: none (nil or false) or six lowercase hex digits. The
+--- library's ValidColor, refusing with this addon's own reason code (a /qc set error names it).
 --- @return boolean ok, string|nil reason
 function Lib.ValidIconColor(v)
-    if v == nil or v == false then return true end
-    if type(v) == "string" and v:match("^%x%x%x%x%x%x$") and v == v:lower() then return true end
+    if NS.IconBrowserLib.ValidColor(v) then return true end
     return false, "badIconColor"
 end
 
@@ -305,22 +294,15 @@ end
 --- this, white included, since a pooled texture keeps the last tint it was given.
 --- @return number r, number g, number b
 function Lib.IconTint(icon, color)
-    if type(color) ~= "string" or not Lib.ValidIconColor(color) or not Lib.IsGlyph(icon) then return 1, 1, 1 end
-    return tonumber(color:sub(1, 2), 16) / 255, tonumber(color:sub(3, 4), 16) / 255, tonumber(color:sub(5, 6), 16) / 255
+    if not Lib.IsGlyph(icon) then return 1, 1, 1 end
+    return NS.IconBrowserLib.Tint(color)
 end
 
 --- The stored glyph color for a picked r, g, b (0..1, as the color picker answers): six lowercase
---- hex digits, or false (none) for white, which is how an untinted glyph is drawn. A channel out of
---- range is clamped.
+--- hex digits, or false (none) for white. The library's ColorFrom.
 --- @return string|false
 function Lib.IconColorFrom(r, g, b)
-    local function byte(v)
-        v = tonumber(v) or 1
-        return math.floor(math.max(0, math.min(1, v)) * 255 + 0.5)
-    end
-    local hex = ("%02x%02x%02x"):format(byte(r), byte(g), byte(b))
-    if hex == "ffffff" then return false end
-    return hex
+    return NS.IconBrowserLib.ColorFrom(r, g, b)
 end
 
 -- The color a member made with `icon` and `color` keeps: the color only when the icon is a glyph,

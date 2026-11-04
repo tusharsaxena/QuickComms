@@ -78,7 +78,7 @@ in both directions.
 snippets run in the header's own environment with protected calls allowed in combat; `WrapScript`
 (raising if a hook came first), `SetFrameRef`, `Execute`, override bindings, `GetBindingAction`, the
 cursor, and `__pressKey(key)`, which routes a key through a snippet's binding, then an override
-binding. For the icon browser it adds the macro icon lists (`GetMacroIcons`, `GetMacroItemIcons`)
+binding. For the icon browser (the library's since LibKa0s v1.86.0) it adds the macro icon lists (`GetMacroIcons`, `GetMacroItemIcons`)
 and the AceGUI Icon and Label widgets' image texture with `SetVertexColor`, which records the tint it was given.
 
 `tests/page_helpers.lua` (not a suite) drives an editor page through the kit's AceGUI recorder: show a page, redraw it, click a tab, find a widget by its label, fire its callback, accept the last popup, and spy on the reorder lists.

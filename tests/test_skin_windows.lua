@@ -59,8 +59,6 @@ local COLOR_ARGS = {
 -- What is not chrome: each entry names one file, a plain substring the line carries, and why. An
 -- entry that matches nothing fails the gate, so the list cannot outlive what it excuses.
 local ALLOW = {
-    { file = "settings/IconBrowser.lua", find = "CHAT_GRAY =",
-      why = "the combat refusal's chat line: chat output, not a skinned surface (DECISIONS X7)" },
     { file = "modules/Pad_Render.lua", find = "L[\"Channel: %s\"]",
       why = "the channel's name in WoW's chat-type color: a game-meaning color (rung 4)" },
     { file = "modules/Pad_Render.lua", find = "t:SetVertexColor(1, 1, 1, 1)",
@@ -493,7 +491,7 @@ local function openBrowser(NS, icon, m)
     return B, B.Widgets()
 end
 
-test("skin windows: the browser's selected cell is qc.selStrong, today's gold at 0.7, and follows", function()
+test("skin windows: the browser's selected cell is ib.selStrong, today's gold at 0.7, and follows", function()
     local NS, m, Skin = boot()
     local B = openBrowser(NS, SKULL)
     local sel = B.cells[1].selected
@@ -527,7 +525,7 @@ test("skin windows: the browser's hint box is the drawer box's tokens, and follo
     assertColor(m.__paint(parts.hintEdges[1]).color, base["drawer.boxBorder"], "an edge under " .. OTHER)
 end)
 
-test("skin windows: the browser's search glyphs are log.tag and qc.markGray, today's pixels", function()
+test("skin windows: the browser's search glyphs are log.tag and ib.markGray, today's pixels", function()
     local NS, m, Skin = boot()
     local _, parts = openBrowser(NS, nil, m)
     -- red under: MUTED_GOLD / MARK_GRAY typed
@@ -588,14 +586,14 @@ test("skin windows: the browser's texts take the skin's body face (R-2), Ignore 
     assertColor(m.__paint(parts.hintText).textColor, base["text.highlight"], "the hint under " .. OTHER)
 end)
 
-test("skin windows: the browser's empty footer line is qc.note, today's |cffaaaaaa", function()
+test("skin windows: the browser's empty footer line is ib.note, today's |cffaaaaaa", function()
     local NS, m, Skin = boot()
     local _, parts = openBrowser(NS)
     local text = m.__paint(parts.name).text
     -- red under: GRAY = "|cffaaaaaa" typed
     assertEqual(text:sub(1, 10), "|cffaaaaaa")
     Skin:SetChoice(OWNER, "ka0s", OTHER)
-    assertEqual(m.__paint(parts.name).text:sub(1, 10), NS.SkinEscape("qc.note"),
+    assertEqual(m.__paint(parts.name).text:sub(1, 10), NS.SkinEscape("ib.note"),
         "a skin switch redraws the footer in the token's escape")
 end)
 
