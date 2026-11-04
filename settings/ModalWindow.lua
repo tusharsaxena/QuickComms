@@ -1,6 +1,8 @@
 local _, NS = ...
--- settings/ModalWindow.lua — the window the callout popup (settings/CalloutPopup.lua) and the icon
--- browser (settings/IconBrowser.lua) are each built in, once, on their first Open.
+-- settings/ModalWindow.lua — the window the callout popup (settings/CalloutPopup.lua) is built in,
+-- once, on its first Open. The icon browser's window is LibKa0s-IconBrowser-1.0's since v1.86.0
+-- (libs/LibKa0s/IconBrowserWindow.lua); settings/IconBrowser.lua hands it this addon's bands through
+-- spec.layers.
 --
 --     catcher  a full-screen button that swallows every click and wheel, with a dim over what it
 --              covers: the window is MODAL to whatever is under it
@@ -23,8 +25,8 @@ local _, NS = ...
 -- the band's lower edge.
 --
 -- THE SKIN (QC-02; DECISIONS X10, D2; LibKa0s v1.81.0 R-2, Ka0sAddonsCommonTasks D-06). The
--- template's chrome is painted through the owner's facade under every skin: the popup and the browser
--- are windows, and LibKa0s v1.81.0 retired the stock look under Ka0s Default, so Ka0s Default draws
+-- template's chrome is painted through the owner's facade under every skin: the popup is a window,
+-- and LibKa0s v1.81.0 retired the stock look under Ka0s Default, so Ka0s Default draws
 -- its own window here as every other skin draws its own (the template's Bg art faded under the skin's
 -- fill, its NineSlice faded, the title and close X in the skin's colors). A player who wants
 -- Blizzard's settings window picks the WoW Default skin. Under EllesmereUI it is EllesmereUI's (its
@@ -43,18 +45,19 @@ local _, NS = ...
 -- pull-outs (issue #14, core/Constants.lua), so MODAL sits far over the dial's and the preview
 -- window's levels in the one strata. FULLSCREEN is also over the pads (DIALOG) and the settings
 -- window (HIGH).
--- The popup and the icon browser share FULLSCREEN and are told apart by a BAND of levels the caller
--- picks (`spec.level`): the popup's base is LEVEL, the browser's LEVEL_OVER, far above anything the
--- popup's nested widgets reach, so the browser and its catcher cover the popup. FULLSCREEN_DIALOG
--- stays free for what must sit over the browser: the AceGUI pull-outs, the color picker, the
--- library's menu and the browser's link window. Moving the browser up to FULLSCREEN_DIALOG would put
--- it in a level race with each of those instead.
+-- The popup and the icon browser share FULLSCREEN and are told apart by a BAND of levels: the popup's
+-- base is LEVEL (`spec.level` when nil), and the browser's, LAYERS.LEVEL.MODAL_OVER, reaches the
+-- library's window through spec.layers.over (settings/IconBrowser.lua), far above anything the popup's
+-- nested widgets reach, so the browser and its catcher cover the popup. FULLSCREEN_DIALOG stays free
+-- for what must sit over the browser: the AceGUI pull-outs, the color picker, the library's menu and
+-- the browser's link window. Moving the browser up to FULLSCREEN_DIALOG would put it in a level race
+-- with each of those instead.
 -- Inside a band the levels are fixed: the catcher at the base, the template's Bg at base + 1 (the
 -- template declares it at absolute level 0, which would put it under the catcher's dim), the window
 -- with its border at base + 2, the page at base + 3 and the close X at base + 5 (it overlaps the
 -- page's top edge). Every strata and level here is a name in core/Constants.lua LAYERS: a band's base
--- is UIParent's level plus MODAL or MODAL_OVER (the catcher sits at it), and each part is the base plus
--- its offset.
+-- is UIParent's level plus `spec.level` (MODAL for the popup; the catcher sits at it), and each part is
+-- the base plus its offset.
 
 local Settings = NS.addon.Settings
 local LAYERS = NS.Constants.LAYERS
@@ -70,10 +73,9 @@ local TEMPLATE = "SettingsFrameTemplate"
 -- Build's own inset table carries the live value.
 MW.INSET_TEMPLATE = { left = 8, top = 31, right = 4, bottom = 5 }
 MW.INSET_PLAIN = { left = 0, top = 31, right = 0, bottom = 0 }
--- Aliases of the layers table, kept for the popup's and the browser's builds.
+-- Aliases of the layers table, kept for the popup's build. No LEVEL_OVER: the one modal over a modal
+-- (the icon browser) is the library's, banded through spec.layers.over (settings/IconBrowser.lua).
 MW.LEVEL = LV.MODAL
--- A modal over a modal (the icon browser over the popup): its band's base, in the same strata.
-MW.LEVEL_OVER = LV.MODAL_OVER
 -- The strata of every QuickComms modal: the dial's, a band over it (STACKING above).
 MW.STRATA = LAYERS.STRATA.MODAL
 -- The strata a QuickComms confirm (a Blizzard StaticPopup: the deletes, Reset all) is shown in, one
@@ -179,7 +181,7 @@ end
 
 --- Build a modal window, hidden. `spec` = { name (the window's global name, also its special-frame
 --- entry), pageName (the page panel's), title (the page header's), width, height, strata, level
---- (the band's base: MW.LEVEL when nil, MW.LEVEL_OVER for a modal over a modal), onClose (the close
+--- (the band's base: MW.LEVEL when nil, LAYERS.LEVEL.MODAL_OVER for a modal over a modal), onClose (the close
 --- X's or the close mark's click) }.
 --- @return table { catcher, frame, chrome, ctx (the page's panel context), inset }
 function MW.Build(spec)
@@ -200,7 +202,7 @@ function MW.Build(spec)
     window:EnableMouse(true)
     -- Clamped (frame-layering-§4), but NOT toplevel: a toplevel window is raised to the top of its
     -- strata on every mouse-down, so the click on the popup's Choose icon… would lift the popup's
-    -- window over the browser's band (MODAL_OVER) just as the browser opens, and the browser and its
+    -- window over the library browser's band (MODAL_OVER) just as the browser opens, and the browser and its
     -- catcher would no longer cover it. The catcher already makes each window the only thing in its
     -- strata a click reaches, so a raise has nothing to win (docs/ARCHITECTURE.md, register row QC-R6).
     window:SetClampedToScreen(true)

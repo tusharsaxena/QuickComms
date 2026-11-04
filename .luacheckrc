@@ -74,11 +74,10 @@ files["core/EUIBridge.lua"] = {
 }
 
 -- Compat.HasTemplate: whether the client has an XML template (the callout popup's window). Scoped
--- here so no feature file reads it directly (compat).
--- Compat.MacroIcons: the macro icon selector's lists (the icon browser's Game icons tab).
+-- here so no feature file reads it directly (compat). The macro icon lists left with Compat.MacroIcons
+-- for LibKa0s-IconBrowser-1.0 (v1.86.0), which reads them itself.
 files["core/Compat.lua"] = {
-  read_globals = { "C_XMLUtil", "GetMacroIcons", "GetMacroItemIcons", "GetLooseMacroIcons",
-    "GetLooseMacroItemIcons" },
+  read_globals = { "C_XMLUtil" },
 }
 
 -- QC:SlashEnabled and QC:OnSlashCommand are methods on the addon object by calling convention;

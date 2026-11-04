@@ -45,7 +45,9 @@ test("layers: NS.Constants.LAYERS names every strata and level once (frame-layer
     assertEqual(MW.STRATA, S.MODAL)
     assertEqual(MW.CONFIRM_STRATA, S.POPUP)
     assertEqual(MW.LEVEL, LAYERS.LEVEL.MODAL)
-    assertEqual(MW.LEVEL_OVER, LAYERS.LEVEL.MODAL_OVER)
+    -- red under: keep MW.LEVEL_OVER; the browser's band reaches the library through spec.layers.over
+    -- (settings/IconBrowser.lua), so ModalWindow builds the popup's band alone
+    assertTrue(MW.LEVEL_OVER == nil, "no browser band here: the library's window takes LAYERS.LEVEL.MODAL_OVER")
 end)
 
 test("layers: [#14] the bands of the shared FULLSCREEN strata, bottom to top, each clear of the last", function()
@@ -220,7 +222,7 @@ test("layers: [#14] QuickComms stacks whole: pad < catcher < dial < preview < mo
     local popup = MW.Build({ name = "QuickCommsLayersPop", pageName = "QuickCommsLayersPopPage", title = "x",
         width = 100, height = 100, strata = MW.STRATA, onClose = function() end })
     local browser = MW.Build({ name = "QuickCommsLayersBrowser", pageName = "QuickCommsLayersBrowserPage", title = "y",
-        width = 100, height = 100, strata = MW.STRATA, level = MW.LEVEL_OVER, onClose = function() end })
+        width = 100, height = 100, strata = MW.STRATA, level = LAYERS.LEVEL.MODAL_OVER, onClose = function() end })
     local stack = { { inst.root, "a pad" }, { screen, "the dial's screen catcher" }, { header, "the dial" },
         { header.qcPointer, "the hub front" }, { NS.PreviewWindow.__frame(), "the preview window" },
         { popup.catcher, "the popup's catcher" }, { popup.chrome.close, "the popup's close X" },
@@ -283,7 +285,7 @@ test("layers: the modal bands sit over UIParent, each part at its named offset",
     assertEqual(lv(w.ctx.panel), base + LAYERS.LEVEL.MODAL_PAGE)
     assertEqual(lv(w.chrome.close), base + LAYERS.LEVEL.MODAL_CLOSE)
     local over = MW.Build({ name = "QuickCommsLayersOver", pageName = "QuickCommsLayersOverPage", title = "y",
-        width = 100, height = 100, strata = MW.STRATA, level = MW.LEVEL_OVER, onClose = function() end })
+        width = 100, height = 100, strata = MW.STRATA, level = LAYERS.LEVEL.MODAL_OVER, onClose = function() end })
     assertEqual(lv(over.catcher), m.UIParent:GetFrameLevel() + LAYERS.LEVEL.MODAL_OVER)
     assertTrue(lv(over.catcher) > lv(w.chrome.close), "a modal over a modal clears the first's band")
 end)
