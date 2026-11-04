@@ -1,0 +1,1 @@
+R7 independent review (R7-RD fix): reviewer's own correction of 352561a; README sentence checked against core/SkinSetup.lua PREVIEW and libs/LibKa0s/OptionsSkinPicker.lua. CRLF kept. Gate green (1729/0/1, luacheck 0/0).
