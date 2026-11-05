@@ -126,8 +126,6 @@ NS.SKIN_TOKENS = {
     ["qc.veilCool"]  = { default = { 0, 0, 0, 0.35 } },
     -- QC-G2: the pad button's hover wash, gold at a quarter.
     ["qc.hover"]     = { default = { 1, 0.82, 0, 0.25 }, follow = "list.hover" },
-    -- QC-G3: the icon browser's selected cell, gold at 0.7 behind the icon.
-    ["qc.selStrong"] = { default = { 1, 0.82, 0, 0.7 }, follow = "list.sel" },
     -- D7's near shades. The settings pages' gray hint lines (|cffa0a0a0).
     ["qc.hint"]      = { default = { byte(160), byte(160), byte(160), 1 }, follow = "text.muted" },
     -- The When drawer's "Not active now" (|cffff6060).
@@ -138,13 +136,11 @@ NS.SKIN_TOKENS = {
     ["qc.lockdown"]  = { default = { 1, 0.1, 0.1, 1 }, follow = "sem.statusBad" },
     -- The send flash of a callout the game seems to have dropped.
     ["qc.dropped"]   = { default = { 0.9, 0.15, 0.15, 1 }, follow = "sem.bad" },
-    -- The callout popup's and the icon browser's catcher dim over the settings window.
+    -- The callout popup's catcher dim over the settings window (the icon browser's is the library's
+    -- ib.modalDim, LibKa0s v1.86.0, at the same value).
     ["qc.modalDim"]  = { default = { 0, 0, 0, 0.45 }, follow = "cover.dim" },
     -- A dial's page arrow at an end of its pages.
     ["qc.arrowDim"]  = { default = { 0.4, 0.4, 0.4, 0.6 }, follow = "text.disabled" },
-    -- D8: the icon browser's search clear mark and its gray "Click an icon..." line (|cffaaaaaa).
-    ["qc.markGray"]  = { default = { 0.54, 0.54, 0.54, 1 }, follow = "icon.dim" },
-    ["qc.note"]      = { default = { byte(170), byte(170), byte(170), 1 }, follow = "text.muted" },
     -- The full skin (LibKa0s v1.85.0, cause D7): where a pad's or a dial's default is not the library
     -- token's value, today's pixels under Ka0s Default and the token in every other skin. A section
     -- title's band draws no band in any skin (R5-QC1, Ka0sAddonsCommonTasks

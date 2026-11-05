@@ -560,45 +560,22 @@ Total.
 - popup: every field's label and control share a left edge; Preview's rule and the buttons the columns' edges
 - popup: [icons] an icon that is no texture stays open and names the icon chooser
 
-### test_icon_browser.lua (37)
+### test_icon_browser.lua (14)
 
+- icon browser: Settings.IconBrowser is one LibKa0s browser, built with the host's spec
 - icon browser: the window is the popup's chrome, stacked above the popup and its catcher
 - icon browser: the popup and the browser stack above the preview dial by band (QC-06, #14)
-- icon browser: tabs in order; the stored icon is preselected and its tab opened
 - icon browser: a click selects, a double-click chooses; Choose hands the opener the icon
-- icon browser: hovering an icon names it, or gives a game icon's texture id
-- icon browser: Markers is the eight raid markers, in order; no Suggested list is left
-- icon browser: the grid sits a section gap under the toolbar's row
-- icon browser: Glyphs is every catalog icon, labeled from its key
-- icon browser: Game icons is both macro lists, filtered All / Spells / Items
-- icon browser: the game list not loaded yet says so, and loads on a later visit
-- icon browser: the grid is virtualized: a fixed set of cells re-dressed as it scrolls
-- icon browser: a scroll under the pointer re-says the hovered cell's tooltip, or hides it
-- icon browser: a long name in the footer stops at the Choose button, on one line
-- icon browser: the wheel over the scrollbar scrolls the grid too
-- icon browser: a filtered game list holds each icon once (the loose lists overlap the full ones)
-- icon browser: the color picker its swatch opened closes with the browser, and only that one
+- icon browser: the swatch is tracked by the editors' picker, which closes with the browser
 - icon browser: a chooser's swatch released with the picker up hides it and lets the swatch go
-- icon browser: the swatch tints every glyph; Choose hands a glyph its color, white as none
+- icon browser: the Wowhead address shows in the addon's copy window, over the browser
+- icon browser: Choose is refused in combat; the chat line is the addon's print
 - icon browser: Escape over the popup closes the browser only; the popup's Escape comes back after
-- icon browser: the popup closing closes it as Cancel
+- icon browser: the popup closing, the settings window hiding, a profile change and a deletion close it
 - icon browser: a popup that closes leaves a browser opened by another owner alone
-- icon browser: Choose is refused in combat; nothing is written
-- icon browser: a stand-down closes it
-- icon browser: Compat.MacroIcons reads both lists, plain texture ids only, never raising
-- icon browser: the area follows the tab band when the chrome learns its width (first open)
-- icon browser: Compat.MacroIcons reads the loose lists first, as the macro icon selector does
-- icon browser: Library.IconColorFrom stores a picked color as hex, white as none
-- icon browser: Src.Search matches a marker by name, a glyph by key or label, a game icon by id
-- icon browser: the search box filters the tab as you type; the count says N of M
-- icon browser: the search box keeps its text inset clear of the magnifier after AceGUI resets it
-- icon browser: Src.Search narrows its last results, and stays correct when the query widens or the list grows
-- icon browser: the search is kept across tabs and the session's opens, and re-filters each tab
-- icon browser: Game icons carries the Wowhead hint; its button shows the address in a copy window
-- icon browser: [sets] Src.Glyphs is built once per set: the same table across searches
-- icon browser: [sets] a set's prefix is not in its label; Phosphor reads 'Arrow up'
-- icon browser: [sets] the Glyphs filter lists the library's sets and narrows to one
-- icon browser: [sets] a glyph's tooltip names its set, and a Game-icons mark its author
+- icon browser: a stand-down closes it; the settings still edit while disabled, so it opens again
+- icon browser: a stand-down before the first open leaves the browser openable
+- icon browser: Library's glyph helpers answer as the library's, with the addon's reason code
 
 ### test_window_icons.lua (5)
 
@@ -1677,13 +1654,13 @@ Total.
 - skin windows: the popup's refused-field line is sem.badAlt, today's |cffff4040, panel-scoped (D-03)
 - skin windows: the popup's token tooltip writes its lines in the tooltip tokens
 - skin windows: the popup's token tooltip follows the panel Scope (D-03)
-- skin windows: the browser's selected cell is qc.selStrong, today's gold at 0.7, and follows
+- skin windows: the browser's selected cell is ib.selStrong, today's gold at 0.7, and follows
 - skin windows: the browser's scroller is the skin's ScrollBar over its own track
 - skin windows: the browser's hint box is the drawer box's tokens, and follows a switch
-- skin windows: the browser's search glyphs are log.tag and qc.markGray, today's pixels
+- skin windows: the browser's search glyphs are log.tag and ib.markGray, today's pixels
 - skin windows: the browser's texts take their roles, each today's color under Ka0s Default
 - skin windows: the browser's texts take the skin's body face (R-2), Ignore fonts gives it back, a switch recolors
-- skin windows: the browser's empty footer line is qc.note, today's |cffaaaaaa
+- skin windows: the browser's empty footer line is ib.note, today's |cffaaaaaa
 - skin windows: the browser's cell tooltip writes its lines in the tooltip tokens
 - skin windows: no window shows a line under its title, in Ka0s Default and after a switch (R4-SEP)
 - skin windows: the Preview window's title and close sit on the band's middle, content under it, every skin (R5-WIN)
@@ -2009,7 +1986,7 @@ Total.
 | test_members.lua | 28 |
 | test_editors.lua | 18 |
 | test_callout_popup.lua | 38 |
-| test_icon_browser.lua | 37 |
+| test_icon_browser.lua | 14 |
 | test_window_icons.lua | 5 |
 | test_groups_when.lua | 21 |
 | test_page_groups.lua | 49 |
@@ -2067,4 +2044,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 26 |
 | Skipped | 1 |
-| **Total** | **1729** |
+| **Total** | **1706** |

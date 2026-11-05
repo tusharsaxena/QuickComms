@@ -185,7 +185,6 @@ test("skin seam: an owner token reaches a markup escape byte for byte", function
     assertEqual(NS.SkinEscape("qc.hint"), "|cffa0a0a0")
     assertEqual(NS.SkinEscape("qc.inactive"), "|cffff6060")
     assertEqual(NS.SkinEscape("qc.preview"), "|cff19ff19")
-    assertEqual(NS.SkinEscape("qc.note"), "|cffaaaaaa")
 end)
 
 -- ── the owner handed to every factory (skinning-§1) ──────────────────────────────────────────────

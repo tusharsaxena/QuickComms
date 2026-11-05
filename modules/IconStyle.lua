@@ -54,7 +54,8 @@ IS.SOLID_EDGE = "Interface\\Buttons\\WHITE8X8"
 IS.BORDER_FALLBACK = "Interface\\Tooltips\\UI-Tooltip-Border"
 -- The least crop a side of an icon whose art has Blizzard's native edge (NO NATIVE EDGE above).
 IS.NATIVE_CROP = 0.07
--- A raid target marker's path (settings/IconBrowser_Sources.lua MarkerPath): art with no native edge.
+-- A raid target marker's path (libs/LibKa0s/IconBrowserSources.lua Src.MarkerPath): art with no native
+-- edge.
 local MARKER = "UI%-RaidTargetingIcon_"
 
 do
@@ -172,15 +173,6 @@ function IS.WindowEdge(holder, parent, tex, on)
     e:Hide()
     e:ClearAllPoints()
     spareEdges[#spareEdges + 1] = e
-end
-
---- A window's own texture `tex` drawing `icon`: cropped and edged when it is game icon art, whole and
---- bare otherwise. `holder` keeps the edge (the cell, the window's widget table).
-function IS.WindowIcon(holder, parent, tex, icon)
-    local native = IS.NativeEdge(icon)
-    if native then tex:SetTexCoord(unpack(IS.WINDOW_CROP)) else tex:SetTexCoord(0, 1, 0, 1) end
-    IS.WindowEdge(holder, parent, tex, native)
-    return native
 end
 
 --- Draw an icon texture with a config: crop, desaturation, the tint times the glyph color `r, g, b`

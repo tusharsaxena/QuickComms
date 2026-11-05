@@ -59,27 +59,3 @@ function NS.MediaFetch(kind, name)
     if ok and type(path) == "string" and path ~= "" then return path end
     return nil
 end
-
---- The icon catalog's names, in its order (library-stack-§8: a catalog is enumerated, never
---- hard-coded), or an empty list when the library is absent. The icon picker reads it
---- (settings/Editors.lua).
---- @return string[]
-function NS.IconNames()
-    return Media and Media.ICONS or {}
-end
-
---- The icon catalog's sets ({ id, prefix, dir, label, license }, in the order a browser lists them),
---- or an empty list when the library is absent or predates them (LibKa0s-Media minor 5).
---- @return table[]
-function NS.IconSets()
-    return Media and Media.ICON_SETS or {}
-end
-
---- The author of one catalog icon, for the sets whose license asks for attribution per mark
---- (Game-icons, CC BY 3.0), or nil: another set's mark, an unknown name, no library.
---- @param name string  a catalog name, e.g. "gi:sword-wound"
---- @return string|nil
-function NS.IconAuthor(name)
-    if not (Media and Media.IconAuthor) then return nil end
-    return Media.IconAuthor(name)
-end

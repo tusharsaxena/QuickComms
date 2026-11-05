@@ -58,10 +58,12 @@ C.CHAT_COLORS = {
 --                      WINDOW: the preview window (modules/PreviewWindow.lua), UIParent + WINDOW, over the
 --                            hub front, NOT toplevel and never Raise()d (a raise would lift it over a
 --                            modal's catcher, frame-layering-§1's exception).
---                      MODAL: the callout popup and the icon browser (settings/ModalWindow.lua), each a
---                            band over UIParent: catcher at the base, Bg +1, window +2, page +3, close X
---                            +5; the popup's base MODAL, the browser's MODAL_OVER, far over anything the
---                            popup's widgets and its combat cover (page + 100) reach.
+--                      MODAL: the callout popup (settings/ModalWindow.lua) and the icon browser
+--                            (LibKa0s-IconBrowser-1.0's IconBrowserWindow.lua, handed STRATA.MODAL and
+--                            MODAL_OVER through spec.layers in settings/IconBrowser.lua), each a band over
+--                            UIParent: catcher at the base, Bg +1, window +2, page +3, close X +5; the
+--                            popup's base MODAL, the browser's MODAL_OVER, far over anything the popup's
+--                            widgets and its combat cover (page + 100) reach.
 --                      The library's CopyWindow is here too, at its inherited level, under all four.
 --   FULLSCREEN_DIALOG  POPUP: QuickComms' confirms (Blizzard StaticPopups lifted while shown and handed
 --                      back on hide, ModalWindow.LiftConfirm) and the icon browser's Wowhead link window

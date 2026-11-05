@@ -533,7 +533,7 @@ function Ed.Tint(texture, icon, color)
 end
 
 --- `widget` (an AceGUI Label or Icon) drawing `icon`, framed as a window's game icon (R5-ICON,
---- IconStyle.WindowIcon's rule): game icon art cropped through SetImage's own texcoords, which AceGUI
+--- the icon browser's rule, LibKa0s IconBrowserWindow.lua's W.Icon): game icon art cropped through SetImage's own texcoords, which AceGUI
 --- resets on the next SetImage, so the pooled widget needs no undo, and edged on a frame of this
 --- addon's own laid over the image, never on AceGUI's pooled image, handed back on release
 --- (NS.SkinOnRelease). A glyph or a raid marker is drawn whole, with no edge.

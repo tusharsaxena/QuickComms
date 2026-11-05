@@ -162,13 +162,9 @@ Kit.diagnostics = {
 
 -- The typed-value gate's consumer facts (skinning-§1).
 Kit.skinValues = {
-    rows = {
-        { file = "settings/IconBrowser.lua", substring = 'local CHAT_GRAY = "|cffaaaaaa"',
-          why = "the combat refusal's chat line, built here and printed later: chat stays fixed", cause = "L13" },
-        { file = "settings/IconBrowser.lua", substring = "UI-ScrollBar-Knob",
-          why = "the Slider's required thumb region: S.ScrollBar fades this art under its scroll.thumb knob, so no skin shows it",
-          cause = "L7" },
-    },
+    -- None since LibKa0s v1.86.0: the two rows were the icon browser's (its combat chat line and the
+    -- Slider's thumb art), which moved into the library with it.
+    rows = {},
 }
 
 -- The skin-switch test's consumer facts (skinning-§1): every surface this addon paints.

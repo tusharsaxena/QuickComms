@@ -53,6 +53,9 @@ core\Compat.lua
 core\SkinSetup.lua
 # LOAD-BEARING: publishes NS.MediaFont, which core\Constants.lua resolves FONT_MONO from at load.
 core\MediaSetup.lua
+# Conventional: publishes NS.IconBrowserLib (the LibKa0s-IconBrowser-1.0 seam), read inside functions only
+# (modules\Library.lua's glyph helpers, settings\IconBrowser.lua).
+core\IconBrowserSetup.lua
 # Conventional: data only, apart from FONT_MONO, resolved from the seam above.
 core\Constants.lua
 # Conventional: session-only state (NS.State); modules and settings take NS.State at load, which the folder order (core before modules and settings) pins; within # Core its position is free.
@@ -194,11 +197,10 @@ settings\Editors.lua
 # LOAD-BEARING: takes Settings.Editors at load; publishes Settings.Callouts (the token list and the
 # preview lines), which settings\CalloutPopup.lua takes at load and settings\Groups.lua reads at run time.
 settings\Callouts.lua
-# Conventional: publishes Settings.ModalWindow, the window settings\CalloutPopup.lua and settings\IconBrowser.lua build at run time.
+# Conventional: publishes Settings.ModalWindow, the window settings\CalloutPopup.lua builds at run time.
 settings\ModalWindow.lua
-# LOAD-BEARING: publishes Settings.IconBrowserSources, which settings\IconBrowser.lua takes at load.
-settings\IconBrowser_Sources.lua
-# Conventional: publishes Settings.IconBrowser; settings\Editors.lua and settings\CalloutPopup.lua open it at run time only.
+# Conventional: publishes Settings.IconBrowser, the adapter over LibKa0s-IconBrowser-1.0; settings\Editors.lua and
+# settings\CalloutPopup.lua open it at run time only.
 settings\IconBrowser.lua
 # LOAD-BEARING: takes Settings.Editors and Settings.Callouts at load and publishes Settings.CalloutPopup;
 # settings\Groups.lua opens it at run time only.

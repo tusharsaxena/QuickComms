@@ -135,8 +135,9 @@ Session-only, in `NS.State` (`core/State.lua` declares the shared ones) and rese
 
 Local to one file, never in `NS.State`: the callout popup's draft (`settings/CalloutPopup.lua`,
 dropped whenever the popup closes); the icon browser's open request, tab, filter, selection and color
-(`settings/IconBrowser.lua`, dropped whenever it closes), its search text (kept for the session) and
-its game icon lists (kept for the session once the client answers with icons).
+(the LibKa0s-IconBrowser-1.0 browser `settings/IconBrowser.lua` builds, dropped whenever it closes), its
+search text (kept for the session) and the library's game icon lists (kept for the session once the
+client answers with icons).
 
 ## Migrations
 
