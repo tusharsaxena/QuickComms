@@ -331,7 +331,7 @@ is registered once, as a store, in the Tier 3 table; the documents under it get 
 | `slash-dispatch.md` | Present | 21 commands in `NS.COMMANDS` |
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
-| `midnight-quirks.md` | Not applicable | The addon carries no client-version workaround of its own yet |
+| `midnight-quirks.md` | Present | Always, from standard v2.102.0: the vendored client-quirks catalog (client-quirks-§1); the addon's own section is empty |
 | `compat-layer.md` | Present | `core/Compat.lua` publishes three or more shims (the count and its grep are in the page) |
 | `taint.md` | Present | The hub's Taint Notes passed ~60 lines (documentation-§3 spill) |
 | `known-limitations.md` | Present | The hub's Known Limitations passed ~60 lines (documentation-§3 spill) |
