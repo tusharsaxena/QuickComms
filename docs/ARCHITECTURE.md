@@ -328,7 +328,7 @@ is registered once, as a store, in the Tier 3 table; the documents under it get 
 | Doc | Status | Trigger |
 |---|---|---|
 | `perf-analysis/README.md` | Present | The performance harness is wired (`core/PerfSetup.lua`) |
-| `slash-dispatch.md` | Present | 21 commands in `NS.COMMANDS` |
+| `slash-dispatch.md` | Present | `NS.COMMANDS` carries eight or more commands (22 as measured on 2026-11-06) |
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Present | Always, from standard v2.102.0: the vendored client-quirks catalog (client-quirks-§1); the addon's own section is empty |
