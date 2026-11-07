@@ -6,7 +6,7 @@
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
 ![Tests](https://img.shields.io/badge/Tests-1706%2F1706_passing-green)
 
-Quick Comms puts your group callouts one click or one keypress away. "Kick on me", "Lust now",
+Retail only for now; WoW Forever support is planned. Quick Comms puts your group callouts one click or one keypress away. "Kick on me", "Lust now",
 "INC Lumber Mill": they sit on a Comms Pad, or open from a ping-wheel style Comms Dial. It knows where
 you are (a Mythic+ key, a raid, an arena, a battleground or the open world) and shows the callouts
 that fit. Every message goes out through a button you press, the one way Midnight still lets an addon
