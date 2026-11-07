@@ -14,6 +14,7 @@ marked as such rather than listed as a requirement.
 - **Nothing else.** Every library is vendored under `libs/` and committed (library-stack), so the
   player installs no separate library addon. `## OptionalDeps:` names the vendored libs for load
   ordering, not as things to download.
+  Ace3: WoWUIDev/Ace3@ac3d1225 (untagged master; LibKa0s#76).
 - **EllesmereUI, optional and never vendored.** `## OptionalDeps:` also names EllesmereUI, an
   optional suite (library-stack-§6), so it loads first when installed. With it, its Blizzard Skin
   module (EllesmereUIBlizzardSkin), its third-party skinning and Quick Comms' entry in its

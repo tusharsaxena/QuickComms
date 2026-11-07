@@ -173,6 +173,10 @@ Kit.skinSwitch = dofile("tests/skin_surfaces.lua")(enableAddon)
 -- The layout-§1 census lives in the hub; the repository has no generated data to carve out.
 Kit.layoutCap = { hub = "docs/ARCHITECTURE.md" }
 
+-- The missing-globals gate (kit revision 53) reads this addon's tracked source; tools/ runs on a
+-- developer's machine and never ships.
+Kit.clientGlobals = { skip = { "tools/" } }
+
 -- Order is stable. Kit.assertSuiteInventory (called by Kit.run) fails the run in both directions:
 -- a name here with no file, and a test_*.lua on disk (tests/ or tests/_kit/) with no name here.
 -- `jobs = "auto"` fans the suites out across worker processes (testing-§14). Measured 2026-10-25 on
@@ -263,5 +267,6 @@ Kit.run{
         { name = "test_lizard_sighted",       dir = "tests/_kit/" },   -- automated-tests-§3
         { name = "test_skin_values",          dir = "tests/_kit/" },   -- skinning-§1
         { name = "test_skin_switch",          dir = "tests/_kit/" },   -- skinning-§1
+        { name = "test_client_globals", dir = "tests/_kit/" },   -- clients-§6
     },
 }
