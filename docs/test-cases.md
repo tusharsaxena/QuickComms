@@ -268,6 +268,14 @@ Total.
 - identity: /qc why opens with the role and where it came from; the diagnostics print both
 - identity: the spec row lists the client's specs through LibKa0s Role, else the shipped seed
 
+### test_probe.lua (5)
+
+- probe: records the place, the situation, the role, the spec, the talent groups and the emotes
+- probe: probes append in order, keep the newest PROBE_KEEP, and clear empties every client
+- probe: refused in combat with one line, recording nothing; an unknown word names the forms
+- probe: never a new SavedVariables global, and the TOC lists none for it
+- probe: secret or missing client answers are stored as nil, never as the value
+
 ### test_restrictions.lua (20)
 
 - restrictions: nothing restricted, everything allowed and nothing announced
@@ -2010,6 +2018,7 @@ Total.
 | test_diagnostics.lua | 13 |
 | test_compat.lua | 15 |
 | test_identity.lua | 10 |
+| test_probe.lua | 5 |
 | test_restrictions.lua | 20 |
 | test_situation.lua | 20 |
 | test_tokens.lua | 11 |
@@ -2082,4 +2091,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1732** |
+| **Total** | **1737** |

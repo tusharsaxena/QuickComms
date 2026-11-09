@@ -286,6 +286,68 @@ function Compat.PlayerIdentity()
     return classFile, specID, role, Compat.CharacterKey(), source, detail
 end
 
+-- ── The probe's readers (QFE-F5, design §4.5): what /qc probe records, each value plain or nil ───
+
+-- A plain boolean, or nil for a secret or no answer.
+local function plainBool(v)
+    if v == nil or Compat.IsSecret(v) then return nil end
+    return v and true or false
+end
+
+--- Every value IsInInstance() and GetInstanceInfo() return, by name, each plain or nil (the
+--- probe's record of the place, so Forever's ids and kinds can be read off a saved file).
+--- @return table
+function Compat.ProbeInstance()
+    local out = {}
+    if IsInInstance then
+        local inInstance, kind = IsInInstance()
+        out.inInstance, out.inInstanceType = plainBool(inInstance), PlainString(kind)
+    end
+    if not GetInstanceInfo then return out end
+    local name, instanceType, difficultyID, difficultyName, maxPlayers, dynamicDifficulty, isDynamic,
+        instanceID, instanceGroupSize, lfgDungeonID = GetInstanceInfo()
+    out.name, out.instanceType = PlainString(name), PlainString(instanceType)
+    out.difficultyID, out.difficultyName = PlainNumber(difficultyID), PlainString(difficultyName)
+    out.maxPlayers, out.dynamicDifficulty = PlainNumber(maxPlayers), PlainNumber(dynamicDifficulty)
+    out.isDynamic, out.instanceID = plainBool(isDynamic), PlainNumber(instanceID)
+    out.instanceGroupSize, out.lfgDungeonID = PlainNumber(instanceGroupSize), PlainNumber(lfgDungeonID)
+    return out
+end
+
+--- The active spec's id and name, each plain or nil (the situation's spec ladder).
+function Compat.ActiveSpec()
+    return activeSpec()
+end
+
+--- The talent groups LibKa0s Role reads the role from (Role.Groups: `{ index, id, name, spent }`
+--- rows, plain copies), empty where the library or the trees are absent (Retail answers none).
+--- @return table[]
+function Compat.TalentGroups()
+    local out = {}
+    if not (RoleLib and RoleLib.Groups) then return out end
+    for _, g in ipairs(RoleLib.Groups()) do
+        out[#out + 1] = { index = PlainNumber(g.index), id = PlainNumber(g.id), name = PlainString(g.name),
+            spent = PlainNumber(g.spent) }
+    end
+    return out
+end
+
+-- How far the emote scan reads when the client names no MAXEMOTEINDEX (628 on both clients today).
+local EMOTE_SCAN_MAX = 1000
+
+--- The emote tokens this client has, in index order: every EMOTEn_TOKEN global from 1 to
+--- MAXEMOTEINDEX, as Blizzard's own chat code walks them (the indices are not contiguous).
+--- @return string[]
+function Compat.EmoteTokens()
+    local max = PlainNumber(_G.MAXEMOTEINDEX) or EMOTE_SCAN_MAX
+    local out = {}
+    for i = 1, max do
+        local token = PlainString(_G["EMOTE" .. i .. "_TOKEN"])
+        if token and token ~= "" then out[#out + 1] = token end
+    end
+    return out
+end
+
 --- True inside a house or plot (housing).
 function Compat.InHousing()
     local h = C_Housing

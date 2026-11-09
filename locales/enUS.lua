@@ -1403,3 +1403,20 @@ L["Type a first name and surname, then press Enter or Add."] =
     "Type a first name and surname, then press Enter or Add."
 L["A character is a first name and surname."] = "A character is a first name and surname."
 L["a first name and surname"] = "a first name and surname"
+
+-- The probe (QFE-F5: settings/SlashVerbs.lua ProbeLines, the `probe` row in settings/Slash.lua)
+L["Record where you are, your role and the client's emotes in the saved settings — `/qc probe`, or `/qc probe clear`"] =
+    "Record where you are, your role and the client's emotes in the saved settings — `/qc probe`, or `/qc probe clear`"
+L["Probe %d saved for %s (QuickCommsDB.global.probes; /qc probe clear empties it)."] =
+    "Probe %d saved for %s (QuickCommsDB.global.probes; /qc probe clear empties it)."
+L["  place: %s, type %s, difficulty %s (%s), %s players, instance %s"] =
+    "  place: %s, type %s, difficulty %s (%s), %s players, instance %s"
+L["  content: %s; group: %s; role: %s"] = "  content: %s; group: %s; role: %s"
+L["  spec: %s (%s); talent groups: %s; emotes: %d"] = "  spec: %s (%s); talent groups: %s; emotes: %d"
+L["none"] = "none"
+L["Probes cleared: %d removed."] = "Probes cleared: %d removed."
+L["/qc probe records where you are; /qc probe clear empties the records."] =
+    "/qc probe records where you are; /qc probe clear empties the records."
+L["The probe is not available in combat."] = "The probe is not available in combat."
+L["The probe is not available before the saved settings load."] =
+    "The probe is not available before the saved settings load."

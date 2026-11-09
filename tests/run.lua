@@ -227,6 +227,7 @@ Kit.run{
         "test_diagnostics",
         "test_compat",
         "test_identity",
+        "test_probe",
         "test_restrictions", "test_situation",
         "test_tokens",
         "test_channels",

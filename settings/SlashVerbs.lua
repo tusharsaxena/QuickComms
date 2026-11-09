@@ -1,8 +1,8 @@
 local _, NS = ...
 -- settings/SlashVerbs.lua — the bodies of the feature verbs settings/Slash.lua's NS.COMMANDS rows
--- call (spec §14). Today: `check`, `lock`, `unlock`, `toggle`, `preview` (bare, a name, `off`, `list`)
--- and `why`. The rows are positional triples; the work lives here so it can be tested without the
--- dispatcher.
+-- call (spec §14). Today: `check`, `lock`, `unlock`, `toggle`, `preview` (bare, a name, `off`, `list`),
+-- `why` and `probe` (bare or `clear`). The rows are positional triples; the work lives here so it
+-- can be tested without the dispatcher.
 
 NS.SlashVerbs = NS.SlashVerbs or {}
 local V = NS.SlashVerbs
@@ -202,4 +202,116 @@ end
 
 function V.Why()
     for _, line in ipairs(V.WhyLines()) do NS.Print(line) end
+end
+
+-- ── /qc probe (QFE-F5, design §4.5, C4) ─────────────────────────────────────────────────────
+--
+-- A record of where the player is, as the client reports it, for checking the WoW Forever seeds
+-- (instance ids, difficulty ids, content kinds, talent trees, emote tokens) off a saved file. It
+-- writes into this addon's own SavedVariables, `QuickCommsDB.global.probes[<client key>]`, an array
+-- in probe order (never a new SavedVariables global, owner-rulings C4); `/qc probe clear` empties
+-- it. Out of combat only: the emote scan reads several hundred globals. Both clients. The chat gets
+-- a short summary; the full record is in the file once the client writes it (at logout or /reload).
+
+-- The newest records a client keeps; an older one is dropped as a new one lands.
+V.PROBE_KEEP = 50
+
+-- The snapshot's fields a probe keeps (modules/Situation.lua Classify).
+local PROBE_SITUATION = { "content", "instanceID", "difficultyID", "difficulty", "keyLevel", "challengeMapID",
+    "group", "instanceGroup", "classFile", "specID", "character" }
+
+-- The probe store, `db.global.probes`, made on first use when `create`; nil before the database.
+local function probeStore(create)
+    local g = NS.db and NS.db.global
+    if type(g) ~= "table" then return nil end
+    if type(g.probes) ~= "table" then
+        if not create then return nil end
+        g.probes = {}
+    end
+    return g.probes
+end
+
+--- One probe record, read now (never stored): the place, the situation, the role, the spec, the
+--- talent groups and the client's emote tokens.
+--- @return table
+function V.ProbeRecord()
+    local C = NS.Compat
+    local snap = NS.Situation.Classify(NS.Situation.ReadInputs())
+    local situation = {}
+    for _, field in ipairs(PROBE_SITUATION) do situation[field] = snap[field] end
+    local specID, specName = C.ActiveSpec()
+    local tokens = C.EmoteTokens()
+    return {
+        client = C.ClientKey(),
+        time = GetServerTime and C.PlainNumber(GetServerTime()) or nil,
+        instance = C.ProbeInstance(),
+        content = snap.content,
+        situation = situation,
+        role = { role = snap.role, source = snap.roleSource, detail = snap.roleDetail },
+        spec = { id = specID, name = specName },
+        groups = C.TalentGroups(),
+        emotes = { count = #tokens, tokens = tokens },
+    }
+end
+
+local function orDash(v)
+    if v == nil then return "-" end
+    return tostring(v)
+end
+
+-- "Protection 31, Arms 0", or "none".
+local function groupsText(groups)
+    local parts = {}
+    for i, g in ipairs(groups) do parts[i] = ("%s %s"):format(orDash(g.name), orDash(g.spent)) end
+    if #parts == 0 then return L["none"] end
+    return table.concat(parts, ", ")
+end
+
+--- The lines `/qc probe` prints for a stored record and its place in the list.
+--- @return string[]
+function V.ProbeSummary(rec, n)
+    local i = rec.instance
+    return {
+        L["Probe %d saved for %s (QuickCommsDB.global.probes; /qc probe clear empties it)."]:format(n, rec.client),
+        L["  place: %s, type %s, difficulty %s (%s), %s players, instance %s"]:format(orDash(i.name),
+            orDash(i.instanceType), orDash(i.difficultyID), orDash(i.difficultyName), orDash(i.maxPlayers),
+            orDash(i.instanceID)),
+        L["  content: %s; group: %s; role: %s"]:format(orDash(rec.content), orDash(rec.situation.group),
+            NS.Situation.DescribeRole(rec.role.role, rec.role.source, rec.role.detail)),
+        L["  spec: %s (%s); talent groups: %s; emotes: %d"]:format(orDash(rec.spec.name), orDash(rec.spec.id),
+            groupsText(rec.groups), rec.emotes.count),
+    }
+end
+
+-- `/qc probe clear`: every client's records go.
+local function probeClearLines()
+    local store = probeStore(false)
+    local removed = 0
+    for _, list in pairs(store or {}) do
+        if type(list) == "table" then removed = removed + #list end
+    end
+    if store then NS.db.global.probes = nil end
+    return { L["Probes cleared: %d removed."]:format(removed) }
+end
+
+--- The lines `/qc probe [clear]` prints. Bare records a probe and summarizes it; refused in combat
+--- with one line; `clear` empties the store (any time); anything else names the two forms.
+--- @return string[]
+function V.ProbeLines(rest)
+    local word = ((rest or ""):match("^%s*(%S+)") or ""):lower()
+    if word == "clear" then return probeClearLines() end
+    if word ~= "" then return { L["/qc probe records where you are; /qc probe clear empties the records."] } end
+    if NS.Restrictions.InCombat() or NS.Compat.InCombat() then return { L["The probe is not available in combat."] } end
+    local store = probeStore(true)
+    if not store then return { L["The probe is not available before the saved settings load."] } end
+    local rec = V.ProbeRecord()
+    local list = type(store[rec.client]) == "table" and store[rec.client] or {}
+    store[rec.client] = list
+    list[#list + 1] = rec
+    while #list > V.PROBE_KEEP do table.remove(list, 1) end
+    return V.ProbeSummary(rec, #list)
+end
+
+function V.Probe(rest)
+    for _, line in ipairs(V.ProbeLines(rest)) do NS.Print(line) end
 end

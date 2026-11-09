@@ -2385,6 +2385,24 @@ talent-tree-to-role map is MATCHED, NOT CONFIRMED until FOREVER-18 passes for a 
   line's `unknownSender` stays 0. The Specialization row lists your class's one Forever spec by name.
   Result: owed
 
+The probe (QFE-F5; **code:** `settings/SlashVerbs.lua` `ProbeLines`, `core/Compat.lua` `ProbeInstance`,
+`TalentGroups`, `EmoteTokens`). Both clients; the records confirm the MATCHED ids above.
+
+- **FOREVER-22. `/qc probe` in every Forever instance visited.** Out of combat, in each Forever
+  dungeon, raid and battleground you enter (and once in the open world), type `/qc probe` → four chat
+  lines: *Probe N saved for forever (...)*, then the place (its name, type, difficulty id and name,
+  max players and instance id), then the content kind, group and role, then the spec, the talent
+  groups with their points and the emote count (a few hundred). In combat → one line, *The probe is
+  not available in combat.*, and nothing is recorded. Log out, then send Claude
+  `_forever_/WTF/Account/<ACCOUNT>/SavedVariables/QuickComms.lua`: its `global.probes.forever` holds one
+  record per probe, each with every `GetInstanceInfo` value, the situation, the role and source, the
+  spec and the emote tokens. Record any place whose content kind or instance id differs from
+  `defaults/GameIds_Clients.lua`. Result: owed
+- **FOREVER-23. `/qc probe` on Retail, and `probe clear`.** On Retail, type `/qc probe` in the open world
+  → the same four lines, *saved for retail*, with no talent groups (*none*). Then `/qc probe clear` →
+  *Probes cleared: N removed.*, N being the probes taken on this client; after a /reload the
+  file has no `probes` table. `/qc help` lists `probe`. Result: owed
+
 ## Pending sign-off
 
 The owner ran every check above on 2026-10-21 and reported all of them passed (the client build was

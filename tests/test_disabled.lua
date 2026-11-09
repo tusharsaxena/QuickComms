@@ -321,7 +321,7 @@ end)
 -- The verbs that act on a running addon (slash-commands-§2's feature-verb SHOULD, taken), and the
 -- reserved `skin` (LibKa0s v1.82.0, D-16), which is refused while disabled too.
 local FEATURE_VERBS = { lock = true, unlock = true, check = true, test = true, preview = true, why = true,
-    toggle = true, skin = true }
+    toggle = true, skin = true, probe = true }
 
 test("disabled [§7 step 7]: every NS.COMMANDS entry and the bare /qc: reserved verbs answer, feature verbs refuse once and write nothing", function()
     local NS, m = baseline()

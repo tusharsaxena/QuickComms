@@ -167,7 +167,7 @@ tracked registration down and replay it.
 `/qc`, alias `/quickcomms`. The reserved verbs (`help config skin enable disable lock unlock version list
 get set reset resetall profile debug diagnostics perf`; `lock` and `unlock` are slash-commands-§8's,
 the Lock frame row's path through the seam) and the feature verbs `check <id>`, which prints the
-line a callout would send under the current situation and never sends, `test` (test mode), `toggle` (hide or show every Comms Pad, remembered per character in `db.char.padsHidden`, also the launcher's Show window entry), `preview` ("Preview as…": bare opens the preview window on where you are, or keeps the preview on; a name switches it, `off` ends it and `list` prints the menu) and `why` ("Why is this showing?", for every built pad and dial). The full table, the live-while-disabled set
+line a callout would send under the current situation and never sends, `test` (test mode), `toggle` (hide or show every Comms Pad, remembered per character in `db.char.padsHidden`, also the launcher's Show window entry), `preview` ("Preview as…": bare opens the preview window on where you are, or keeps the preview on; a name switches it, `off` ends it and `list` prints the menu) `why` ("Why is this showing?", for every built pad and dial) and `probe` (QFE-F5: records the place, the situation, the role, the talent groups and the client's emote tokens in `global.probes`, out of combat; `probe clear` empties it). The full table, the live-while-disabled set
 and the handlers are in [`slash-dispatch.md`](slash-dispatch.md). `enable` and `disable` call the
 same handler as the Master controls row and the launcher entry.
 
