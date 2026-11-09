@@ -29,7 +29,7 @@ this page describes what exists.
 
 ## Overview
 
-A Retail addon that puts context-aware group callouts on a Comms Pad and a Comms Dial and sends them
+A Retail and WoW Forever addon that puts context-aware group callouts on a Comms Pad and a Comms Dial and sends them
 through secure buttons, so they work during chat lockdown in Mythic+ keys, boss pulls and PvP
 matches ([`scope.md`](scope.md)). At the end of phase 5 the data layer feeds the secure send engine, the
 Comms Pads and the Comms Dials, and the player edits groups (with their When, their callouts, each group owning its own, and an
@@ -97,6 +97,25 @@ every write. The render modules (`Pad_Render`, `Dial_Render`, `Dial_Slices`, `Ic
 `Shine`) paint insecure visuals, and the frame modules (`Pad`, `Dial`, `PreviewWindow`) own the
 frames and pools. `Preview` holds test mode and the two previews as session state, and the settings
 files build the panel pages, the callout popup and the icon browser.
+
+### Per-client features
+
+The addon serves Retail and WoW Forever from one codebase (clients-§1; the roster's Clients value is
+`Retail · Forever`; `## Interface: 120105, 16001`). Every difference is gated through
+`LibKa0s-Compat-1.0`'s `IsForever()` / `ClientKey()` and per-client seed lists (clients-§5), never an interface number.
+The headless suite runs under both kit profiles (clients-§6), and the kit's missing-globals suite checks
+the tracked source against both clients' API sets.
+
+| Feature | Retail | WoW Forever | Where |
+|---|---|---|---|
+| Comms Pads, Comms Dials, the secure send path, the throttle and the dropped-line note | yes | yes, the same path (the owner's ruling R4) | `modules/SendEngine.lua`, `modules/Pad.lua`, `modules/Dial.lua` |
+| Settings panel, slash verbs, launcher, diagnostics, profiles | yes | yes | `settings/`, `core/LauncherSetup.lua` |
+| The default skin | Ka0s Default | WoW Forever | `NS.DEFAULT_SKIN = Skin:DefaultSkin()`, `core/SkinSetup.lua` |
+| A strata read handed back to the client | plain | a secret read takes a fallback: the ghost the dial's `HUD_POPUP`, a lifted confirm Blizzard's `DIALOG` | `Compat.FrameStrata`, `core/Compat.lua` |
+
+The content kinds, the place lists, the spec and role reads, the probe and the emote callouts land
+per client with their items of the Forever port (Ka0sAddonsCommonTasks
+`docs/2026-11-10-QUICKCOMMS_FOREVER_EMOTES/00_DESIGN.md`), each adding its row here.
 
 ## Settings Schema
 
@@ -297,7 +316,8 @@ the settings pages and the library's own windows.
 
 ## Known Limitations
 
-The spam guard is soft and an echo can be masked; a rebuild waits for combat, so a button keeps the
+The addon serves Retail and WoW Forever (Interface 120105, 16001), one codebase and no Classic
+flavor ([Per-client features](#per-client-features)). The spam guard is soft and an echo can be masked; a rebuild waits for combat, so a button keeps the
 line it last held; General is sent only when the client confirms channel 1 is General, else Say; a
 lockdown that clears late can keep its padlock until the next event; the dial is Relaxed only and its
 key belongs to its place in the dial order; a few battleground and instance names are ours or

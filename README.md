@@ -1,12 +1,12 @@
 # Quick Comms
 
-![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5-purple)
+![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5_and_Forever_1.60.1-purple)
 ![CurseForge Version](https://img.shields.io/curseforge/v/1765410)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1706%2F1706_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1713%2F1713_passing-green)
 
-Retail only for now; WoW Forever support is planned. Quick Comms puts your group callouts one click or one keypress away. "Kick on me", "Lust now",
+Supports Retail and WoW Forever. Quick Comms puts your group callouts one click or one keypress away. "Kick on me", "Lust now",
 "INC Lumber Mill": they sit on a Comms Pad, or open from a ping-wheel style Comms Dial. It knows where
 you are (a Mythic+ key, a raid, an arena, a battleground or the open world) and shows the callouts
 that fit. Every message goes out through a button you press, the one way Midnight still lets an addon

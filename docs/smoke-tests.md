@@ -41,10 +41,14 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | ANIM-1..20 | [Animations](#animations) | The dial's open and close, every style by family, Slide's Direction, a send, combat, the stand-down, Alt-Z, a pad having none, text that neither shimmers nor truncates, the old defaults moved |
 | PLOOK-1..11 | [The pad's look per skin](#the-pads-look-per-skin) | The pad in each skin: edges, buttons and shine (the owner's findings of 2026-11-01) |
 | FSKIN-1..13 | [The full skin](#the-full-skin) | Every pad and dial color, the shadow, texture and shine on the skin, Ka0s Default unmoved, the companions off, an existing profile, meaning colors, the ghost, a stored pick of the deleted Friz |
+| FOREVER-1..11 | [WoW Forever](#wow-forever) | The core re-run on a live WoW Forever client: the AddOns list, a clean load, the settings panel and the launcher, the default skin per client, a pad's secure send in the open world, a dial's open, send and animations (the strata guard), a lifted confirm, the key bindings, profiles across a full restart, diagnostics, enable and disable; later items of the port add theirs |
 | SKIN-1..31 | [Skins](#skins) | The skinning rollout: the one-time reset under Ka0s Default, a new pad, dial or profile on the skin, Ka0s Default elsewhere unchanged, the Skin tab, every skin on the pads and dials, the *Use the skin's ...* boxes, the Preview as window, the callout popup and the icon browser, the settings pages, the tool windows, the Font and texture overrides, Ignore fonts, EllesmereUI on and off and the reload back, profiles and combat, the first-run skin picker (its eye, Apply, close, gear, the switch and a profile event, one picker across Ka0s addons), the CLI and the degraded install; LibKa0s v1.82.0: the Font outline, From skin font flags, `/qc skin`, the HUD size scale and the windows' width parity; the skin on the only media picker; no line under any window title |
 
 ## Before you start
 
+- **Clients (clients-§6).** The addon serves Retail and WoW Forever. Every check outside the
+  [WoW Forever](#wow-forever) section runs on **Retail**, where its recorded result was taken. That
+  section names the checks to run on a live **Forever** client.
 - Install the addon folder as `Interface\AddOns\QuickComms` and `/reload`.
 - Keep the debug console closed unless a check opens it; `/qc debug` opens it.
 
@@ -2303,6 +2307,28 @@ Default → every icon's border is a flat 1-pixel edge in each, never 2 pixels a
 edge WoW Default drew before. Untick the box → your own style and thickness come back. Fail: a 2-pixel or
 tooltip edge under any skin. Result: not run
 
+## WoW Forever
+
+**Client: WoW Forever** (1.60.1, interface 16001), every check here. The rest of this file is Retail's; these checks re-run its core on Forever, where the client draws its own frames and keeps its own `WTF`. Every Retail rule above holds: zero Lua errors, no taint warning, nothing sent that you did not press. The content kinds, place lists, role, probe and emote checks join this section with their items of the port (Ka0sAddonsCommonTasks `docs/2026-11-10-QUICKCOMMS_FOREVER_EMOTES/`).
+
+**Code:** `QuickComms.toc` (the two-number `## Interface:` line), `core/SkinSetup.lua` (`NS.DEFAULT_SKIN`), `core/Compat.lua` (`Compat.FrameStrata`, the strata guard), `modules/Anim_Ghost.lua` and `settings/ModalWindow.lua` (its two readers), `modules/SendEngine.lua` (the secure send path, unchanged on Forever).
+
+**Setup.** Link the checkout into the Forever client once, from an elevated Windows prompt, then fully restart the client:
+`mklink /d "G:\Games\Blizzard\World of Warcraft\_forever_\Interface\AddOns\QuickComms" "D:\Profile\Users\Tushar\Documents\GIT\QuickComms"`.
+Forever's SavedVariables are `_forever_/WTF/Account/<ACCOUNT>/SavedVariables/QuickComms.lua`. Props: a second character or a friend to group with, for FOREVER-5.
+
+- **FOREVER-1. The AddOns list.** At character select → **Ka0s Quick Comms** is listed with its logo and is **not** marked *Out of date*, and "Load out of date AddOns" does not need to be ticked for it to load. Result: owed
+- **FOREVER-2. A fresh install loads clean.** With no `QuickComms.lua` in Forever's SavedVariables, log in → zero Lua errors and no chat line at login (INSTALL-1); `/qc version` prints the version. Result: owed
+- **FOREVER-3. The settings panel and the launcher.** `/qc config` → the settings open on the landing page, and General, Groups, Comms Pad, Comms Dial and Profiles each draw with no error. The minimap button shows the speech-bubble logo; left-click → the settings open; right-click → the four entries Enabled, Locked, Test mode and Show window, each ticking its state (STATE-2). Result: owed
+- **FOREVER-4. The default skin per client.** On a fresh Forever profile (create one on the Profiles page) → `/qc get skin.skin` reads `forever`, and General → Skin shows **WoW Forever** selected. On Retail, a fresh profile reads `ka0s` (Ka0s Default). Then pick Obsidian, then Ka0s Default, then WoW Forever on Forever → the pads, the dial and the settings windows repaint each time, with no error. Result: owed
+- **FOREVER-5. A pad sends through its secure button.** In the open world, grouped with a second character → the pad shows its open-world set. Click a button → its line goes to the channel it names, once, and the spam guard dims every button for about a second as on Retail (SEND-3). Out of the group, solo → the solo set shows and a click follows Behavior's solo fallback. Result: owed
+- **FOREVER-6. A dial opens, sends and animates (the strata guard).** Bind Open Comms Dial 1 (Options → Keybindings → Ka0s Quick Comms), press it → the dial opens with its open animation and no Lua error mentioning a secret value or a strata; pick a wedge → its line is sent and the dial closes with its close animation; open it in combat on a training dummy and pick a wedge → it sends (DIAL-1, ANIM-1). Result: owed
+- **FOREVER-7. A lifted confirm (the strata guard).** With a dial bound, open **Groups**, pick a group and click **Delete group…** → the confirm draws over the settings window and over the dial if it is open, and **No** takes the click. Then open the game menu and **Log Out**, and cancel it → Blizzard's own popup draws where it always does, under nothing of this addon's. Result: owed
+- **FOREVER-8. The key bindings.** Options → Keybindings → the **Ka0s Quick Comms** section lists Open Comms Dial 1 and Toggle Comms Pads, and General → Keybindings shows the same keys (KEY-3, KEY-4, KEY-5). Result: owed
+- **FOREVER-9. Profiles across a full restart.** Create profile `SmokeTest` on the Profiles page, move a pad there, then **exit the client completely** and start it again → the same profile is active and the pad is where you left it. Switch back and delete `SmokeTest` afterwards. Result: owed
+- **FOREVER-10. Diagnostics.** `/qc diagnostics` → the console opens with the sections DIAG-1 names and no Lua error, and the report's `client:` line reads `version=1.60.1` and `interface=16001`. Result: owed
+- **FOREVER-11. Enable and disable.** `/qc disable` → every pad and dial stands down and `/qc help`, `/qc version` and `/qc diagnostics` still answer; `/qc enable` → they return, as on Retail (STATE-1). Result: owed
+
 ## Pending sign-off
 
 The owner ran every check above on 2026-10-21 and reported all of them passed (the client build was
@@ -2371,3 +2397,6 @@ On 2026-11-02 the owner reported that every check on the smoke lists of the full
 Owed from the owner's fifth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND5/`): SKIN-32 (new, R5-RV); SKIN-33 (new, R5-WIN); PLOOK-12 (new, R5-QC1); ICONS-7 (new, R5-ICON); PLOOK-1 to PLOOK-9, ANIM-22 and FSKIN-12 (R5-QC1 changed their expected result, so each lost its pass mark); LOOK-3, FSKIN-1 and FSKIN-2 (the R5-QC1 review found their expected result stale against the header's band, so each lost its pass mark).
 
 Owed from the owner's sixth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND6/`): SKIN-34 (new, R6-RV); SKIN-35 (new, R6-PV); PANEL-4 (new, R6-RV2).
+
+Owed from the WoW Forever port (QFE-F2, Ka0sAddonsCommonTasks `docs/2026-11-10-QUICKCOMMS_FOREVER_EMOTES/`): FOREVER-1 to
+FOREVER-11, new, each with its `Result:` line reading `owed`.

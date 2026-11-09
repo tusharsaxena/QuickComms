@@ -18,6 +18,9 @@ Mythic+, raid, arena, battlegrounds and the solo open world (seeded into each pr
 level, the settings panel with *Preview as…* and *Why is this showing?*. Export and import strings were built in phase 5 and
 removed on 2026-10-25, before release, to be rebuilt later (tracked in the GitHub issues).
 
+It serves **Retail Midnight and WoW Forever** (Interface 120105, 16001) from one codebase
+([`ARCHITECTURE.md`](ARCHITECTURE.md) → *Per-client features*).
+
 ## What exists at the end of phase 5
 
 The data layer: the situation snapshot and the restriction state, the token and channel rules, the
