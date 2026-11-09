@@ -1381,3 +1381,25 @@ L["How this leaves when it closes. None hides it at once."] =
     "How this leaves when it closes. None hides it at once."
 L["How long the close takes. A send never waits for it."] =
     "How long the close takes. A send never waits for it."
+
+-- The role and the long character names (QFE-F4: modules/Situation.lua DescribeRole, settings/SchemaRows.lua
+-- the Role row, settings/Groups_When.lua and settings/SchemaMembers.lua on WoW Forever)
+L["%s, from your specialization"] = "%s, from your specialization"
+L["%s, from your specialization: %s"] = "%s, from your specialization: %s"
+L["%s, from your talents"] = "%s, from your talents"
+L["%s, from your talents: %s"] = "%s, from your talents: %s"
+L["%s, the last role read on this character"] = "%s, the last role read on this character"
+L["%s, the role your group gave you"] = "%s, the role your group gave you"
+L["%s, your choice on the General page"] = "%s, your choice on the General page"
+L["not known yet"] = "not known yet"
+L["Your role: %s."] = "Your role: %s."
+L["Your role"] = "Your role"
+L["Automatic (%s)"] = "Automatic (%s)"
+L["Automatic now: %s."] = "Automatic now: %s."
+L["The role the Role condition matches on this character. Automatic reads it from the game."] =
+    "The role the Role condition matches on this character. Automatic reads it from the game."
+L["Specific characters, by first name and surname."] = "Specific characters, by first name and surname."
+L["Type a first name and surname, then press Enter or Add."] =
+    "Type a first name and surname, then press Enter or Add."
+L["A character is a first name and surname."] = "A character is a first name and surname."
+L["a first name and surname"] = "a first name and surname"

@@ -112,6 +112,8 @@ function Compat.Leadership()
     return leader, assist
 end
 
+local RoleLib = LibStub and LibStub("LibKa0s-Role-1.0", true)
+
 local function specIndex()
     local si = C_SpecializationInfo
     if si and si.GetSpecialization then return PlainNumber(si.GetSpecialization()) end
@@ -120,14 +122,49 @@ local function specIndex()
 end
 
 local function specInfo(index)
-    if not index then return nil, nil end
+    if not index then return nil, nil, nil end
     local get = (C_SpecializationInfo and C_SpecializationInfo.GetSpecializationInfo) or GetSpecializationInfo
-    if not get then return nil, nil end
-    local id, _, _, _, role = get(index)
-    return PlainNumber(id), PlainString(role)
+    if not get then return nil, nil, nil end
+    local id, name, _, _, role = get(index)
+    return PlainNumber(id), PlainString(name), PlainString(role)
+end
+
+-- The active spec: specID, name. LibKa0s Role's Spec (Compat's spec ladder, both clients) where the
+-- library is loaded, else the same ladder read here.
+local function activeSpec()
+    if RoleLib and RoleLib.Spec then
+        local id, name = RoleLib.Spec()
+        return PlainNumber(id), PlainString(name)
+    end
+    local id, name = specInfo(specIndex())
+    return id, name
+end
+
+--- Whether character names are unique per region (LibKa0s Compat.RegionalNames: true on WoW
+--- Forever). A character is then "First Surname", with no realm, in chat and in a When. False
+--- without the library, so a degraded install keeps the Name-Realm forms. Feature detection, never
+--- a client check (clients-§3).
+function Compat.RegionalNames()
+    return CompatLib ~= nil and CompatLib.RegionalNames ~= nil and CompatLib.RegionalNames() == true
+end
+
+-- A unit's character name, without a realm: "First Surname" with regional names, UnitName's name
+-- otherwise (LibKa0s Compat.UnitCharacterName; UnitName where the library is absent). Plain or nil.
+local function characterName(unit)
+    if not UnitName then return nil end
+    local name
+    if CompatLib and CompatLib.UnitCharacterName then
+        name = CompatLib.UnitCharacterName(unit)
+    else
+        name = UnitName(unit)
+    end
+    name = PlainString(name)
+    if name == "" then return nil end
+    return name
 end
 
 -- The player's name and normalized realm (the realm as chat senders carry it), each plain or nil.
+-- Retail's form only: with regional names UnitFullName's second value is a surname, never a realm.
 local function playerFullName()
     local name, realm
     if UnitFullName then name, realm = UnitFullName("player") end
@@ -138,18 +175,115 @@ local function playerFullName()
     return name, realm
 end
 
---- classFile, specID, role (TANK/HEALER/DAMAGER or nil), character ("Name-Realm" or nil).
-function Compat.PlayerIdentity()
-    local classFile = UnitClass and PlainString(select(2, UnitClass("player"))) or nil
-    local specID, specRole = specInfo(specIndex())
-    local role = UnitGroupRolesAssigned and PlainString(UnitGroupRolesAssigned("player")) or nil
-    if role == nil or role == "NONE" then role = specRole end
+--- The player's character as a When's character row stores it, or nil until the client can say:
+--- with regional names LibKa0s Compat.CharacterKey(), "First Surname" (the first name alone for a
+--- character with no surname); otherwise "Name-Realm", the realm normalized as chat senders carry it
+--- (the form every saved When already holds, so Retail's are untouched).
+function Compat.CharacterKey()
+    if Compat.RegionalNames() and CompatLib.CharacterKey then
+        local key = PlainString(CompatLib.CharacterKey())
+        if key == "" then return nil end
+        return key
+    end
     local name, realm
     if UnitFullName then name, realm = UnitFullName("player") end
     name, realm = PlainString(name), PlainString(realm)
     if (not realm or realm == "") and GetNormalizedRealmName then realm = PlainString(GetNormalizedRealmName()) end
-    local character = name and realm and (name .. "-" .. realm) or nil
-    return classFile, specID, role, character
+    return name and realm and (name .. "-" .. realm) or nil
+end
+
+-- ── The role (QFE-F4, design §4.4): LibKa0s Role, its store this character's db.char.role ──────
+
+local VALID_ROLE = { TANK = true, HEALER = true, DAMAGER = true }
+
+--- This character's role store (`db.char.role`: the player's override and the last answer), made on
+--- first use; nil before the database exists.
+function Compat.RoleStore()
+    local char = NS.db and NS.db.char
+    if type(char) ~= "table" then return nil end
+    if type(char.role) ~= "table" then char.role = {} end
+    return char.role
+end
+
+-- The library-absent ladder: the override, the group's assignment, the spec API's role.
+local function fallbackRole(store)
+    local override = store and store.override
+    if VALID_ROLE[override] then return override, "override", nil end
+    local assigned = UnitGroupRolesAssigned and PlainString(UnitGroupRolesAssigned("player")) or nil
+    if VALID_ROLE[assigned] then return assigned, "assigned", nil end
+    local _, name, role = specInfo(specIndex())
+    if VALID_ROLE[role] then return role, "spec", name end
+    return nil, nil, nil
+end
+
+local function resolveRole(store)
+    if RoleLib and RoleLib.Resolve then return RoleLib.Resolve(store) end
+    return fallbackRole(store)
+end
+
+--- The role the player plays: role (TANK/HEALER/DAMAGER or nil), source ("override", "assigned",
+--- "talents", "spec", "saved" or nil) and detail (the talent group's or the spec's name, or nil):
+--- LibKa0s Role.Resolve over this character's store (Role's order, owner-rulings C1).
+function Compat.PlayerRole()
+    return resolveRole(Compat.RoleStore())
+end
+
+--- What Automatic answers, with the player's own pick set aside: role, source, detail. The store is
+--- copied, so the override stays and the saved answer is not moved.
+function Compat.AutomaticRole()
+    local store = Compat.RoleStore()
+    local copy
+    if store then
+        copy = {}
+        if type(store.last) == "table" then copy.last = { role = store.last.role, specID = store.last.specID } end
+    end
+    return resolveRole(copy)
+end
+
+--- The player's own pick, or nil for Automatic.
+function Compat.RoleOverride()
+    local store = Compat.RoleStore()
+    local v = store and store.override
+    if VALID_ROLE[v] then return v end
+    return nil
+end
+
+--- Set the player's pick (TANK/HEALER/DAMAGER), or nil for Automatic: LibKa0s Role.SetOverride on
+--- this character's store. False when there is no store yet or the role is not one of the three.
+--- @return boolean
+function Compat.SetRoleOverride(role)
+    local store = Compat.RoleStore()
+    if not store or (role ~= nil and not VALID_ROLE[role]) then return false end
+    if RoleLib and RoleLib.SetOverride then
+        RoleLib.SetOverride(store, role)
+    else
+        store.override = role
+    end
+    return true
+end
+
+--- The specializations a class has, as the When editor's spec row lists them: an array of
+--- `{ id, name }`, from LibKa0s Role.SpecsForClass (read from the client on both clients, so WoW
+--- Forever needs no seed); empty when the library or the client cannot say (the caller then falls
+--- back to NS.GameIds.SPECS).
+function Compat.SpecsForClass(classFile)
+    local out = {}
+    if not (RoleLib and RoleLib.SpecsForClass and Compat.IsSafeKey(classFile)) then return out end
+    for _, spec in ipairs(RoleLib.SpecsForClass(classFile)) do
+        local id = PlainNumber(spec.id)
+        if id and id > 0 then out[#out + 1] = { id = id, name = PlainString(spec.name) } end
+    end
+    return out
+end
+
+--- classFile, specID, role (TANK/HEALER/DAMAGER or nil), character (Compat.CharacterKey or nil),
+--- then the role's source and detail (Compat.PlayerRole). The first four are the situation's
+--- signature fields; the last two ride along for /qc why and the diagnostics.
+function Compat.PlayerIdentity()
+    local classFile = UnitClass and PlainString(select(2, UnitClass("player"))) or nil
+    local specID = activeSpec()
+    local role, source, detail = Compat.PlayerRole()
+    return classFile, specID, role, Compat.CharacterKey(), source, detail
 end
 
 --- True inside a house or plot (housing).
@@ -231,6 +365,12 @@ function Compat.SenderIsPlayer(sender, guid)
     if g and me then return g == me end
     local name = PlainString(sender)
     if not name then return nil end
+    -- Regional names (WoW Forever): the sender is "First Surname" with no realm, as is the player.
+    if Compat.RegionalNames() then
+        local mine = characterName("player")
+        if not mine then return nil end
+        return name == mine
+    end
     local mine, myRealm = playerFullName()
     if not mine then return nil end
     local bare, realm = name:match("^([^%-]+)%-(.+)$")
@@ -242,29 +382,24 @@ end
 
 -- ── The bake context (spec §8.1): the values {me}, {spec}, {dungeon}, {coordinates} and {spell:ID} bake from ──
 
---- The player's name, without the realm.
+--- The player's name, without the realm: "First Surname" with regional names (WoW Forever), the
+--- name alone otherwise (LibKa0s Compat.UnitCharacterName).
 function Compat.PlayerName()
-    if not UnitName then return nil end
-    return PlainString((UnitName("player")))
+    return characterName("player")
 end
 
---- A unit's name, without the realm, or nil when there is no such unit (no target) or its name is
---- unreadable. Reads only, so a click in combat may call it (the preview echo's %t and %f, QC-07).
+--- A unit's name, without the realm ("First Surname" with regional names), or nil when there is no
+--- such unit (no target) or its name is unreadable. Reads only, so a click in combat may call it (the
+--- preview echo's %t and %f, QC-07).
 function Compat.UnitDisplayName(unit)
     if not (UnitExists and UnitName) or not UnitExists(unit) then return nil end
-    local name = PlainString((UnitName(unit)))
-    if name == "" then return nil end
-    return name
+    return characterName(unit)
 end
 
 --- The current specialization's display name.
 function Compat.SpecName()
-    local index = specIndex()
-    if not index then return nil end
-    local get = (C_SpecializationInfo and C_SpecializationInfo.GetSpecializationInfo) or GetSpecializationInfo
-    if not get then return nil end
-    local _, name = get(index)
-    return PlainString(name)
+    local _, name = activeSpec()
+    return name
 end
 
 --- A Mythic+ dungeon's display name from its challenge map id.

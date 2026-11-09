@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1765410)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1722%2F1722_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1732%2F1732_passing-green)
 
 Supports Retail and WoW Forever. Quick Comms puts your group callouts one click or one keypress away. "Kick on me", "Lust now",
 "INC Lumber Mill": they sit on a Comms Pad, or open from a ping-wheel style Comms Dial. It knows where
@@ -54,7 +54,9 @@ next press opens it where you left off.
 
 Your own callouts live on the Groups page. Add callout opens a small editor for the name, the text,
 the channel and an icon, and the text can carry tokens such as `{target}` or `{coordinates}` (the
-"i" beside it lists them all). A group's When tab says where it shows. The built-in groups are
+"i" beside it lists them all). A group's When tab says where it shows. Its Role condition follows
+the role you play, read from the game (on WoW Forever, from the talent tree you spent most in); pick
+your own on General → Behavior → Role, saved per character. The built-in groups are
 ordinary groups too, so change or delete whatever you like; Restore built-in groups puts back
 anything you deleted. How the pad and the dial look is up to you, on the Pad and Dial pages.
 

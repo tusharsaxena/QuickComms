@@ -11,6 +11,7 @@ NS.Situation = NS.Situation or {}
 local Sit = NS.Situation
 local State = NS.State
 local Perf = NS.Perf
+local L = NS.L
 
 local TAG = "Situation"
 local COALESCE = 0.1
@@ -63,6 +64,10 @@ function Sit.Classify(i)
         classFile      = i.classFile,
         specID         = i.specID,
         role           = i.role,
+        -- Where the role came from (LibKa0s Role.Resolve's source and detail): shown by /qc why and
+        -- the diagnostics, never part of the signature.
+        roleSource     = i.roleSource,
+        roleDetail     = i.roleDetail,
         character      = i.character,
         general        = i.general == true,
         inCombat       = i.inCombat == true,
@@ -90,13 +95,14 @@ function Sit.ReadInputs()
     local keystoneActive, keyLevel, challengeMapID = C.ActiveKeystone()
     local inGroup, inRaid, inInstanceGroup = C.GroupShape()
     local isLeader, isAssist = C.Leadership()
-    local classFile, specID, role, character = C.PlayerIdentity()
+    local classFile, specID, role, character, roleSource, roleDetail = C.PlayerIdentity()
     return {
         inInstance = inInstance, instanceType = instanceType, difficultyID = difficultyID,
         instanceID = instanceID, keystoneActive = keystoneActive, keyLevel = keyLevel,
         challengeMapID = challengeMapID, inGroup = inGroup, inRaid = inRaid,
         inInstanceGroup = inInstanceGroup, isLeader = isLeader, isAssist = isAssist,
         classFile = classFile, specID = specID, role = role, character = character,
+        roleSource = roleSource, roleDetail = roleDetail,
         inHousing = C.InHousing(), inCombat = C.InCombat(), general = C.GeneralJoined(),
     }
 end
@@ -154,6 +160,30 @@ function Sit.Refresh(reason)
     end, COALESCE)
 end
 
+local ROLE_NAME = { TANK = L["Tank"], HEALER = L["Healer"], DAMAGER = L["Damage"] }
+local ROLE_FROM = {
+    override = L["%s, your choice on the General page"],
+    assigned = L["%s, the role your group gave you"],
+    talents  = L["%s, from your talents"],
+    spec     = L["%s, from your specialization"],
+    saved    = L["%s, the last role read on this character"],
+}
+local ROLE_FROM_DETAIL = {
+    talents = L["%s, from your talents: %s"],
+    spec    = L["%s, from your specialization: %s"],
+}
+
+--- A role and where it came from, as one phrase ("Tank, from your talents: Protection"); "not known
+--- yet" for no role. The source and detail are Compat.PlayerRole's.
+--- @return string
+function Sit.DescribeRole(role, source, detail)
+    local name = ROLE_NAME[role]
+    if not name then return L["not known yet"] end
+    if detail and ROLE_FROM_DETAIL[source] then return ROLE_FROM_DETAIL[source]:format(name, detail) end
+    if ROLE_FROM[source] then return ROLE_FROM[source]:format(name) end
+    return name
+end
+
 --- The current snapshot, classified live (without a message) before the first refresh.
 function Sit.Current()
     return State.situation or withRestrictions(Sit.Classify(Sit.ReadInputs()))
@@ -163,6 +193,9 @@ local EVENTS = {
     "PLAYER_ENTERING_WORLD", "ZONE_CHANGED_NEW_AREA", "CHALLENGE_MODE_START", "CHALLENGE_MODE_COMPLETED",
     "CHALLENGE_MODE_RESET", "GROUP_ROSTER_UPDATE", "PARTY_LEADER_CHANGED", "PLAYER_DIFFICULTY_CHANGED",
     "PLAYER_SPECIALIZATION_CHANGED", "PLAYER_ROLES_ASSIGNED",
+    -- Talents committed (QFE-F4): on WoW Forever the role Automatic reads is the talent tree with the
+    -- most points (LibKa0s Role), and a respec there changes no specialization. Both clients have it.
+    "TRAIT_CONFIG_UPDATED",
     -- General joined, left or moved off channel 1 (QF-04): the notice also covers the automatic joins after login and
     -- the zone's channel swap, should CHANNEL_UI_UPDATE not fire for them. A notice for any other
     -- channel leaves the signature, so it rebuilds nothing.

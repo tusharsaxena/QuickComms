@@ -100,6 +100,7 @@ per-character (savedvariables-§1): `defaults/Profile.lua` `CHAR_DEFAULTS`, merg
 | Key | Default | What it is |
 |---|---|---|
 | `padsHidden` | `false` | whether `/qc toggle`, the launcher's Show window or the Toggle Comms Pads key last hid this character's Comms Pads (2026-10-21; a session-only `NS.State.padsHidden` until then); a /reload or the next login restores it |
+| `role` | `{}` | LibKa0s Role's store (QFE-F4): `override`, the General page's **Role** pick (`TANK`, `HEALER` or `DAMAGER`; absent is Automatic), written through the `role` schema row (`settings/Schema.lua` `CHAR`, `/qc set role <auto|TANK|HEALER|DAMAGER>`), and `last` (`{ role, specID }`), the last answer, which the library writes on every read |
 
 ## Named non-setting state (architecture-§5)
 
@@ -111,6 +112,7 @@ Saved:
 | Key | Owner | Writers | What it is |
 |---|---|---|---|
 | `profile.previewWindow` | `modules/PreviewWindow.lua` | `remember`, the window's drag stop | the Preview as window's place (above) |
+| `char.role.last` | `libs/LibKa0s/Role.lua` (vendored) | `Role.Resolve`, called by `core/Compat.lua` `Compat.PlayerRole` on every situation read | the last role read on this character (above); `char.role.override` is the `role` row's, through the seam |
 | `char.padsHidden` | `settings/SlashVerbs.lua` | `V.TogglePads`, reached by `/qc toggle`, the launcher's Show window entry and the Toggle Comms Pads key | whether this character's Comms Pads are hidden (above) |
 | `global.minimap.minimapPos` | LibDBIcon | LibDBIcon's own drag write, into the table `core/LauncherSetup.lua` hands it | the minimap button's angle |
 | the structural registry: membership of `callouts`, `groups`, `pads` and `dials`, `padOrder`, `dialOrder`, each group's `callouts` and each surface's `groups`, `nextId`, `seeded`, `seededSets`, a seeded member's `origin` | `modules/Library.lua` | Library's own functions and its schemaVersion steps in `modules/Library_Migrate.lua` (the same `NS.Library`); panel pages and slash verbs call it or the seam and never write these keys | above |

@@ -104,7 +104,9 @@ end
 local function whenTakes(row)
     if NS.Resolver.ID_ROWS[row] then return L["an instance id (a whole number)"] end
     if row == "spec" then return L["a specialization id (a whole number)"] end
-    if row == "characters" then return L["Name-Realm"] end
+    if row == "characters" then
+        return NS.Compat.RegionalNames() and L["a first name and surname"] or L["Name-Realm"]
+    end
     local list = row == "class" and NS.GameIds.CLASSES or NS.Resolver.TOKENS[row] or {}
     return table.concat(list, ", ")
 end

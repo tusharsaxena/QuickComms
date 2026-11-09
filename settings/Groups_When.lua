@@ -8,7 +8,8 @@ local _, NS = ...
 -- one line per entry with Remove) for instances, battlegrounds, arenas and characters; under them
 -- Select all (a checkbox list) and Clear (Any). Values are ids and tokens, never localized names
 -- (localization-§4): instances, battlegrounds and arenas by instanceID, classes by classFile,
--- specializations by specID, characters by Name-Realm; a name is shown, never matched. The list
+-- specializations by specID, characters by Name-Realm (on WoW Forever, whose names are unique per
+-- region, by "First Surname", the long form chat and the client show); a name is shown, never matched. The list
 -- data is shipped (defaults/GameIds_Instances.lua, defaults/GameIds.lua and the battleground sets);
 -- "Add the instance you are in" covers an id the tables do not list yet. A live line says whether
 -- the group is active now, or in the previewed situation, and which row stops it. Under it, Inherit when
@@ -72,6 +73,16 @@ W.TIP = {
     battleground = L["Specific battlegrounds."],
     arena = L["Specific arenas."],
 }
+
+-- The character row's words where names are unique per region (WoW Forever): no realm, the first
+-- name and surname together (NS.Compat.RegionalNames, asked when drawn).
+local REGIONAL_TIP = L["Specific characters, by first name and surname."]
+
+--- A drawer's tooltip (W.TIP, the character row's by the client's name form).
+function W.Tip(row)
+    if row == "characters" and NS.Compat.RegionalNames() then return REGIONAL_TIP end
+    return W.TIP[row]
+end
 
 local function copy(t)
     if type(t) ~= "table" then return t end
@@ -157,11 +168,24 @@ local function nameCase(name)
     return name:sub(1, 1):upper() .. name:sub(2):lower()
 end
 
+-- With regional names (WoW Forever): "First Surname", or a first name alone, each word in the
+-- client's case and one space between them. No realm: a hyphen, or more than two words, is nil.
+local function regionalCharacterId(typed)
+    if typed == "" or typed:find("%-") then return nil end
+    local words = {}
+    for word in typed:gmatch("%S+") do words[#words + 1] = nameCase(word) end
+    if #words > 2 then return nil end
+    return table.concat(words, " ")
+end
+
 --- A typed character as Name-Realm, the name in the client's case: with the typed realm when it
 --- carries one, else with the player's realm. Nil for an empty name, a space, or an empty part.
+--- Where names are unique per region (WoW Forever) it is the long form instead: "First Surname", or
+--- a first name alone, with no realm (NS.Compat.RegionalNames).
 --- @param live table a snapshot (its `character` is the player's Name-Realm)
 function W.CharacterId(text, live)
     local typed = (text or ""):match("^%s*(.-)%s*$")
+    if NS.Compat.RegionalNames() then return regionalCharacterId(typed) end
     if typed == "" or typed:find("%s") then return nil end
     local name, realm = typed:match("^([^%-]*)%-(.*)$")
     if not name then
@@ -211,15 +235,26 @@ local function specClasses(when)
     return classes
 end
 
+-- A class's specializations as the client lists them (LibKa0s Role.SpecsForClass, both clients,
+-- QFE-F4), else the shipped seed (NS.GameIds.SPECS: Retail's, for a client that cannot say).
+local function classSpecs(cf)
+    local live = NS.Compat.SpecsForClass(cf)
+    if #live > 0 then return live end
+    local out = {}
+    for i, specID in ipairs(NS.GameIds.SPECS[cf] or {}) do out[i] = { id = specID } end
+    return out
+end
+
 local function specValues(when)
     local out, seen = {}, {}
-    local function add(specID)
+    local function add(specID, name)
         if seen[specID] then return end
         seen[specID] = true
-        out[#out + 1] = { value = specID, text = NS.Compat.SpecInfoByID(specID) or L["Specialization %d"]:format(specID) }
+        out[#out + 1] = { value = specID,
+            text = name or NS.Compat.SpecInfoByID(specID) or L["Specialization %d"]:format(specID) }
     end
     for _, cf in ipairs(specClasses(when)) do
-        for _, specID in ipairs(NS.GameIds.SPECS[cf] or {}) do add(specID) end
+        for _, spec in ipairs(classSpecs(cf)) do add(spec.id, spec.name) end
     end
     local chosen = {}
     for specID in pairs(type(when) == "table" and when.spec or {}) do chosen[#chosen + 1] = specID end
@@ -463,6 +498,14 @@ local ADD = {
     characters = { L["Add a character"], L["Type Name-Realm, or a name on your realm, then press Enter or Add."],
         L["Add this character"] },
 }
+local REGIONAL_ADD = { L["Add a character"], L["Type a first name and surname, then press Enter or Add."],
+    L["Add this character"] }
+
+-- An id row's add box words (ADD; the character row's by the client's name form).
+local function addWords(row)
+    if row == "characters" and NS.Compat.RegionalNames() then return REGIONAL_ADD end
+    return ADD[row]
+end
 
 -- The id rows with a whole-kind checkbox on top of their drawer (NS.Resolver.ALL), and its label and
 -- tooltip. The character row has none: every character is what Any already means.
@@ -592,6 +635,7 @@ local RESOLVE = {
     characters = function(_, text)
         local id = W.CharacterId(text, NS.Situation.Current())
         if id then return id end
+        if NS.Compat.RegionalNames() then return nil, L["A character is a first name and surname."] end
         return nil, L["A character is Name-Realm, or a name on your realm."]
     end,
     spec = function(row, text)
@@ -634,7 +678,7 @@ renderIdList = function(ctx, gid, row)
     local h = H()
     h.IdList(ctx, {
         kind = KIND[row](),
-        label = ADD[row][1], tooltip = ADD[row][2],
+        label = addWords(row)[1], tooltip = addWords(row)[2],
         candidates = CANDIDATES[row],
         emptyText = L["None yet."],
         entries = function()
@@ -651,7 +695,7 @@ renderIdList = function(ctx, gid, row)
         onRemove = function(id) W.Write(gid, W.Toggle(fresh(gid), row, id, false)) end,
     })
     -- Always drawn, and read at the click (W.AddHere): a zone change does not redraw the tab.
-    h.InlineButtonPair(ctx, { text = ADD[row][3], tooltip = ADD[row][2],
+    h.InlineButtonPair(ctx, { text = addWords(row)[3], tooltip = addWords(row)[2],
         onClick = function() W.AddHere(gid, row) end }, nil)
 end
 
@@ -698,7 +742,7 @@ local function renderDrawer(ctx, gid, row, from)
     local readOnly = from ~= gid
     H().Drawer(ctx, {
         label = label,
-        tooltip = W.TIP[row],
+        tooltip = W.Tip(row),
         summary = function() return W.Summary(row, fresh(from)) end,
         set = function() return W.IsSet(fresh(from), row) end,
         -- The library re-renders the page after the toggle; nothing else to refresh here.

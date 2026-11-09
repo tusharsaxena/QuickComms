@@ -67,5 +67,7 @@ NS.C = {
     -- Genuinely per-character (savedvariables-§1's `char`, 2026-10-21): whether `/qc toggle`, the
     -- launcher's Show window or the Toggle Comms Pads key last hid this character's Comms Pads. It
     -- survives a /reload and a logout, and follows no profile (settings/SlashVerbs.lua V.TogglePads).
-    CHAR_DEFAULTS = { padsHidden = false },
+    -- And LibKa0s Role's store (QFE-F4): `override`, the General page's Role pick (nil is Automatic),
+    -- and `last`, the last role read, which the library writes (core/Compat.lua Compat.RoleStore).
+    CHAR_DEFAULTS = { padsHidden = false, role = {} },
 }

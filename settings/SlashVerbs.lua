@@ -172,12 +172,15 @@ function V.Preview(rest)
     for _, line in ipairs(V.PreviewLines(rest)) do NS.Print(line) end
 end
 
---- The lines `/qc why` prints (spec §14): every built pad, in the pad order, then every built dial, in
---- the dial order, each followed by why it shows what it shows (Surfaces.WhyLines).
+--- The lines `/qc why` prints (spec §14): the role the When editor's Role row matches and where it
+--- came from (QFE-F4), then every built pad, in the pad order, then every built dial, in the dial
+--- order, each followed by why it shows what it shows (Surfaces.WhyLines).
 --- @return string[]
 function V.WhyLines()
     local p = NS.db and NS.db.profile
+    local s = NS.Situation.Current()
     local out = {}
+    local roleLine = L["Your role: %s."]:format(NS.Situation.DescribeRole(s.role, s.roleSource, s.roleDetail))
     if p then
         local kinds = {
             { set = p.pads, order = p.padOrder, plans = NS.Surfaces.Plans() },
@@ -193,6 +196,7 @@ function V.WhyLines()
         end
     end
     if #out == 0 then out[1] = L["Nothing is showing: no pad or dial has been built yet."] end
+    table.insert(out, 1, roleLine)
     return out
 end
 

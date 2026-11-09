@@ -88,10 +88,12 @@ test("layout: [general] Behavior reads Sending, then Pads and dials, with the ne
     local NS = open("General")
     local rows = rowsOf(NS, "general", "Behavior")
     -- red under: the old order (soloFallback, spamGuard, dropNotes, whyTooltips, lockdownChip, ...)
+    -- QFE-F4 adds Your role last (the Role row, this character's).
     assertEqual(paths(rows), "behavior.soloFallback,behavior.spamGuard,behavior.sounds,behavior.dropNotes,"
-        .. "behavior.autoPromote,behavior.lockdownChip,behavior.whyTooltips")
+        .. "behavior.autoPromote,behavior.lockdownChip,behavior.whyTooltips,role")
     for i = 1, 4 do assertEqual(rows[i].subgroup, "Sending", rows[i].path) end
     for i = 5, 7 do assertEqual(rows[i].subgroup, "Pads and dials", rows[i].path) end
+    assertEqual(rows[8].subgroup, "Your role")
     assertEqual(row(NS, "behavior.autoPromote").label, "Put instance-specific groups first")
     assertEqual(row(NS, "behavior.whyTooltips").label, "Explain why groups show (tooltips)")
     assertEqual(row(NS, "behavior.lockdownChip").label, "Show the LOCKDOWN tag")

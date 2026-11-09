@@ -8,6 +8,7 @@
 -- full skin (LibKa0s v1.85.0, cause D7) adds a companion per color, shadow, texture and shine, and moves
 -- the Font rows' default to the Ka0s pick. QFE-F1 (LibKa0s v1.95.0) makes the skin.skin default the
 -- client's default skin, Ka0s Default on Retail and WoW Forever on Forever, read from the kit profile.
+-- QFE-F4 adds the Role row.
 local CLIENT_SKIN = dofile("tests/_kit/mock_client.lua").current() == "forever" and "forever" or "ka0s"
 return {
     ["enabled"] = "bool|true|nil|nil|nil|nil|false",
@@ -27,6 +28,9 @@ return {
     ["behavior.sounds"] = "bool|false|nil|nil|nil|nil|false",
     ["behavior.autoPromote"] = "bool|false|nil|nil|nil|nil|false",
     ["behavior.previewOnEdit"] = "bool|true|nil|nil|nil|nil|false",
+    -- QFE-F4 (the Forever port, design §4.4): General > Behavior > Your role, this character's Role
+    -- pick (db.char.role through LibKa0s Role), Automatic by default; its choices name what Automatic found.
+    ["role"] = "string|\"auto\"|nil|nil|nil|<fn>|false",
     -- QC-01 (the skinning rollout, 2026-10-29): the skin.* rows of the General page's Skin tab, eight
     -- since the Font outline (LibKa0s v1.82.0, D-06).
     ["skin.source"] = "string|\"ka0s\"|nil|nil|nil|[\"ka0s\",\"eui\"]|false",

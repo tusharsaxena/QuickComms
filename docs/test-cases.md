@@ -255,6 +255,19 @@ Total.
 - compat: [QF-03] Coordinates reads the map position as x, y in percent, one decimal, or nil
 - compat: [QF-04] GeneralJoined is true only when the client names channel 1 as General
 
+### test_identity.lua (10)
+
+- identity: without regional names the character is Name-Realm and the names carry no realm
+- identity: with regional names the character, {me} and a unit are First Surname, never a realm
+- identity: with regional names a chat sender is the player by the long form alone
+- identity: the When editor takes and shows the long form where names are regional
+- identity: the role is LibKa0s Role's answer over db.char.role; an override wins and is saved
+- identity: the snapshot carries the role's source and detail; the signature does not
+- identity: without LibKa0s Role the role still reads: the pick, the group's, then the spec's
+- identity: the General page's Role row writes this character's pick and refreshes the situation
+- identity: /qc why opens with the role and where it came from; the diagnostics print both
+- identity: the spec row lists the client's specs through LibKa0s Role, else the shipped seed
+
 ### test_restrictions.lua (20)
 
 - restrictions: nothing restricted, everything allowed and nothing announced
@@ -1996,6 +2009,7 @@ Total.
 | test_disabled.lua | 26 |
 | test_diagnostics.lua | 13 |
 | test_compat.lua | 15 |
+| test_identity.lua | 10 |
 | test_restrictions.lua | 20 |
 | test_situation.lua | 20 |
 | test_tokens.lua | 11 |
@@ -2068,4 +2082,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1722** |
+| **Total** | **1732** |

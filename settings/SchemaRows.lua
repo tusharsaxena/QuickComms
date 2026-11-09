@@ -78,6 +78,34 @@ NS.SchemaRuntime.AddRows({
       end },
 })
 
+-- ── General ▸ Behavior ▸ Your role (QFE-F4, design §4.4) ──
+-- The role the When editor's Role row matches, per character: Automatic (LibKa0s Role.Resolve: the
+-- group's assignment, then on WoW Forever the talent tree with the most points, then the spec) or the
+-- player's own pick. Stored in db.char.role, not the profile (settings/Schema.lua CHAR binds its get
+-- and set). The Automatic entry, and the tooltip, name what Automatic found and where.
+local ROLE_CHOICES = { "auto", "TANK", "HEALER", "DAMAGER" }
+local function automaticPhrase()
+    return NS.Situation.DescribeRole(NS.Compat.AutomaticRole())
+end
+local roleRow = {
+    path = NS.addon.Settings.ROLE_PATH, type = "string", default = "auto", page = "general",
+    group = BEHAVIOR, subgroup = L["Your role"], label = L["Role"],
+    desc = L["The role the Role condition matches on this character. Automatic reads it from the game."],
+    values = function()
+        return { { value = "auto", text = L["Automatic (%s)"]:format(automaticPhrase()) },
+            { value = "TANK", text = L["Tank"] }, { value = "HEALER", text = L["Healer"] },
+            { value = "DAMAGER", text = L["Damage"] } }
+    end,
+    validate = oneOf(ROLE_CHOICES),
+}
+-- The tooltip is read when the row is drawn, so it names what Automatic answers then.
+setmetatable(roleRow, { __index = function(row, key)
+    if key ~= "tooltip" then return nil end
+    return row.desc .. " " .. L["Automatic now: %s."]:format(automaticPhrase())
+end })
+NS.addon.Settings.StampClosureRows({ roleRow })
+NS.SchemaRuntime.AddRows({ roleRow })
+
 -- Preview as… (spec §13.3) is not here: it is General › Master controls' extra (settings/Panel.lua).
 
 -- ── General ▸ Skin (skinning-§2, §3) ──

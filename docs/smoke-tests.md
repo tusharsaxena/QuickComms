@@ -2307,6 +2307,28 @@ Default → every icon's border is a flat 1-pixel edge in each, never 2 pixels a
 edge WoW Default drew before. Untick the box → your own style and thickness come back. Fail: a 2-pixel or
 tooltip edge under any skin. Result: not run
 
+## Role and character
+
+**Client: Retail** unless the check says otherwise; FOREVER-18 to FOREVER-21 re-run these on WoW
+Forever. **Code:** `core/Compat.lua` (`CharacterKey`, `PlayerRole`, `SetRoleOverride`,
+`SpecsForClass`), `libs/LibKa0s/Role.lua` (vendored), `settings/Schema.lua` and
+`settings/SchemaRows.lua` (the Role row), `settings/Groups_When.lua` (the Character and Specialization
+rows), `modules/Situation.lua` (`DescribeRole`), `settings/SlashVerbs.lua` (`/qc why`).
+
+- **ROLE-1. The Role row (Retail).** General → Behavior → **Your role** → the **Role** dropdown reads
+  *Automatic (Tank, from your specialization: Protection)*, or your own spec and role; its tooltip
+  ends *Automatic now: ...* with the same phrase. Pick **Healer** → a group whose When ticks only Role
+  Healer shows on the pad at once, with no /reload; `/qc why` opens with *Your role: Healer, your
+  choice on the General page.* Switch to another profile → the Role row still reads Healer (it is per
+  character). Pick **Automatic** → the pad goes back, and `/qc why` names the spec again. Result: owed
+- **ROLE-2. The group's role wins over the spec (Retail).** Join a dungeon finder group as a role
+  other than your spec's → `/qc why` reads *Your role: <that role>, the role your group gave you.*;
+  `/qc diagnostics` shows `roleSource=assigned`. Result: owed
+- **ROLE-3. The Character and Specialization rows (Retail).** Groups → any group → When → **Character**
+  → **Add this character** → your `Name-Realm` is listed, as before. **Specialization** → your class's
+  specs are listed by name. A group saved before this change with a Character entry still matches.
+  Result: owed
+
 ## WoW Forever
 
 **Client: WoW Forever** (1.60.1, interface 16001), every check here. The rest of this file is Retail's; these checks re-run its core on Forever, where the client draws its own frames and keeps its own `WTF`. Every Retail rule above holds: zero Lua errors, no taint warning, nothing sent that you did not press. The content kinds, place lists, role, probe and emote checks join this section with their items of the port (Ka0sAddonsCommonTasks `docs/2026-11-10-QUICKCOMMS_FOREVER_EMOTES/`).
@@ -2337,6 +2359,31 @@ The content kinds, place lists and seeds (QFE-F3; **code:** `defaults/GameIds_Cl
 - **FOREVER-15. The token help leaves out {dungeon}.** Edit any callout and hover the info glyph beside **Text** → the token list has `{key}` but no `{dungeon}`. On Retail it lists both (unchanged). Result: owed
 - **FOREVER-16. The classic-era ids match in game (confirms the MATCHED ids).** Zone into each place you can reach, then `/qc why`: in any listed dungeon → the snapshot's content reads `dungeon` and its instance id is the one `defaults/GameIds_Clients.lua` lists for it; in Molten Core, Onyxia's Lair or another listed raid → `raid` and its listed id; in Warsong Gulch, Arathi Basin and Alterac Valley → `battleground`, and that battleground's own set shows on the pad and opens on the dial (its id is 489, 529 or 30, or the newer map id its set also lists). Record any id that differs, and the ids of Scarlet Monastery, Scholomance and Zul'Gurub, which are not listed yet. Result: owed
 - **FOREVER-17. A profile copied from Retail still works.** Copy a Retail `QuickComms.lua` (with its Dungeon and Arena sets) into Forever's SavedVariables while the client is closed, then log in → zero Lua errors; the Dungeon and Arena groups are still on the Groups page and editable, and their When still shows its other rows; **Restore built-in groups** adds nothing for them. Put the original file back afterwards. Result: owed
+
+The role and the long character names (QFE-F4; **code:** as **Role and character** above). Forever's
+talent-tree-to-role map is MATCHED, NOT CONFIRMED until FOREVER-18 passes for a hybrid class.
+
+- **FOREVER-18. Automatic reads the talent tree.** On a hybrid (a warrior, paladin or druid), with
+  most points in the tank tree and no group role assigned → General → Behavior → **Role** reads
+  *Automatic (Tank, from your talents: Protection)*, or the tree's own name; respec most points into a
+  damage tree → after the respec it reads Damage with that tree's name, and a group whose When ticks
+  only Role Tank stops showing. Record the tree names shown and any class whose answer is wrong.
+  Result: owed
+- **FOREVER-19. The Role pick (Forever).** Pick **Healer** → `/qc why` opens with *Your role: Healer,
+  your choice on the General page.*; `/qc diagnostics` shows `role=HEALER` and
+  `roleSource=override ... override=HEALER`; log out and back in → still Healer. Pick **Automatic** →
+  the talent answer comes back. Result: owed
+- **FOREVER-20. The character row and {me} use the long form.** Groups → any group → When →
+  **Character** → **Add this character** → your first name and surname are listed (`First Surname`, no
+  realm, no hyphen); the drawer's tooltip says *by first name and surname*. Type a friend's
+  `first surname` in lower case and press Enter → it is listed as `First Surname`. A group whose
+  Character lists only you shows; one listing only the friend does not. A callout whose text holds
+  `{me}` sends your first name and surname. Result: owed
+- **FOREVER-21. Your own lines count as yours.** With Behavior's *Note dropped callouts in chat* on,
+  send ten callouts a little over a second apart in a group → no *dropped* note appears for any of
+  them (the echo of your own line, sent as `First Surname`, is matched). `/qc diagnostics` → the Echo
+  line's `unknownSender` stays 0. The Specialization row lists your class's one Forever spec by name.
+  Result: owed
 
 ## Pending sign-off
 
@@ -2408,4 +2455,5 @@ Owed from the owner's fifth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-
 Owed from the owner's sixth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND6/`): SKIN-34 (new, R6-RV); SKIN-35 (new, R6-PV); PANEL-4 (new, R6-RV2).
 
 Owed from the WoW Forever port (QFE-F2, Ka0sAddonsCommonTasks `docs/2026-11-10-QUICKCOMMS_FOREVER_EMOTES/`): FOREVER-1 to
-FOREVER-11, new, each with its `Result:` line reading `owed`. From QFE-F3: FOREVER-12 to FOREVER-17, new, each owed.
+FOREVER-11, new, each with its `Result:` line reading `owed`. From QFE-F3: FOREVER-12 to FOREVER-17, new, each owed. From QFE-F4: ROLE-1 to ROLE-3 (Retail) and
+FOREVER-18 to FOREVER-21, new, each owed.
