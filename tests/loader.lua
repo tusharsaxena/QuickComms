@@ -45,6 +45,8 @@ return function(root, mockBuilder)
     ---   opts.skip      = { "<relative path>", ... } omits those files: the degraded-install cases
     ---                    load the addon with the library genuinely ABSENT (testing-§8).
     ---   opts.mock      = function(mock) end runs against the fresh mock before any source loads.
+    ---   opts.afterLibs = function(mock) end runs once the LibKa0s files have loaded and before the
+    ---                    addon's first file does (tests/run.lua's newAddon pins the default skin there).
     ---   opts.<field>   for each MOCK_OPTS name, seeds that mock field.
     local function build(opts)
         opts = opts or {}
@@ -63,7 +65,12 @@ return function(root, mockBuilder)
         -- instance's saved tables would otherwise be adopted by this one.
         _G.QuickCommsDB, _G.QuickCommsPerfDB = nil, nil
 
+        local libsDone = false
         for _, src in ipairs(sources) do
+            if not src.lib and not libsDone then
+                libsDone = true
+                if type(opts.afterLibs) == "function" then opts.afterLibs(mock) end
+            end
             if not skipSet[src.path] then
                 local chunk = chunkFor(src.path)
                 setfenv(chunk, env)

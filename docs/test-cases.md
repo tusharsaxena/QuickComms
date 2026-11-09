@@ -237,7 +237,7 @@ Total.
 - diagnostics: [debug] the log follows a dial open, a ring shown, a press and a close, once each
 - diagnostics: [shine] the pad's button line and the dial's slices line print the look and strength
 
-### test_compat.lua (14)
+### test_compat.lua (15)
 
 - compat: plain readers pass plain values and drop secrets
 - compat: InstanceInfo with a secret instanceID reads nil, never raises
@@ -251,6 +251,7 @@ Total.
 - compat: [phase 3] InstanceName reads the client's name; a secret, empty or missing one is nil
 - compat: [phase 3] SpecInfoByID and ClassName read display names; secret or missing ones are nil
 - compat: [final 8] BindingKey reads a command's key; a secret or a missing API is nil
+- compat: [QFE-F1] FrameStrata answers a plain strata, else the fallback (a secret on WoW Forever)
 - compat: [QF-03] Coordinates reads the map position as x, y in percent, one decimal, or nil
 - compat: [QF-04] GeneralJoined is true only when the client names channel 1 as General
 
@@ -498,7 +499,7 @@ Total.
 - members: [inherit] the Enabled tooltip names whose When a sub-group is shown by
 - members: [arena] the CLI sets the arena row by id, name or all, and prints it back
 
-### test_editors.lua (18)
+### test_editors.lua (19)
 
 - editors: [review 2] Select keeps the selection, and nothing else; Heal keeps a member that exists
 - editors: every membership change asks for one structural repaint, on the next frame
@@ -509,6 +510,7 @@ Total.
 - editors: the stand-down cancels a pending repaint
 - editors: ConfirmDelete asks first, and only the accepted popup runs the act, once
 - editors: [QC-06] the delete confirm lifts its dialog over the dial and the modals, then hands it back
+- editors: [QFE-F1] a confirm whose dialog strata reads secret is handed back in Blizzard's DIALOG
 - editors: Scalar keeps the rows the flow engine draws, and CancelReorder cancels once
 - editors: a row's remove is a glyph, not a button
 - editors: a row with edit shows the edit glyph and fires it
@@ -1449,9 +1451,10 @@ Total.
 - anim surfaces: a track rests at the dial's alpha, the master opacity included
 - anim surfaces: the dial's ghost mirrors the hub and pointer, and each slice's fill by its place
 
-### test_anim_ghost.lua (48)
+### test_anim_ghost.lua (49)
 
 - anim ghost: the stage takes the source's strata and level, and sub-frames keep their stacking
+- anim ghost: [QFE-F1] a secret source strata never reaches the stage; it takes the dial's
 - anim ghost: a level is held to the room above the stage, and never under it
 - anim ghost: one sub-frame per level and place, so a place stays addressable and a level whole
 - anim ghost: a child takes its place from itself, then its parent, and a root's tag counts
@@ -1609,18 +1612,19 @@ Total.
 - layout: [position] the box follows the stored point on a refresh
 - layout: [position] both blocks come from the library's composer
 
-### test_skinsetup.lua (24)
+### test_skinsetup.lua (25)
 
 - skin seam: the owner is the folder name, and NS.Skin is its facade
 - skin seam: the owner is registered at file load, before the profile store exists
-- skin seam: the read answers Ka0s Default before the profile store exists
+- skin seam: the read answers the client's default skin before the profile store exists
+- skin seam: NS.DEFAULT_SKIN is the client's default skin, Ka0s Default without the library
 - skin seam: EllesmereUI hears of this addon once, from the library alone
 - skin seam: every owner token is in the qc namespace and answers today's pixels on Ka0s Default
 - skin seam: under another skin an owner token takes its follow token's value
 - skin seam: an owner token reaches a markup escape byte for byte
 - skin seam: Core's window edge is handed the owner
 - skin seam: the drag strip, the Preview dropdown and the reorder list are handed the owner
-- skin seam: the eight skin keys default to Ka0s Default, the picker unseen
+- skin seam: the eight skin keys default to the client's default skin, the picker unseen
 - skin seam: every skin key is a skip-render schema row on the Skin tab
 - skin seam: the skin row's values are every registered skin, in the library's order
 - skin seam: /qc set refuses a skin that is not registered and applies one that is
@@ -1958,6 +1962,12 @@ Total.
 - skin switch: a cell's hover art changes
 - skin switch: a settings row's remove mark changes
 
+### test_client_globals.lua (3)
+
+- client globals: no call of a global a client lacks
+- client globals: every allowlist row has a reason and a finding to excuse
+- client globals: the check is falsifiable, a planted bare call is flagged for both clients
+
 ## Totals
 
 | Suite | Cases |
@@ -1973,7 +1983,7 @@ Total.
 | test_slash.lua | 22 |
 | test_disabled.lua | 26 |
 | test_diagnostics.lua | 13 |
-| test_compat.lua | 14 |
+| test_compat.lua | 15 |
 | test_restrictions.lua | 20 |
 | test_situation.lua | 20 |
 | test_tokens.lua | 11 |
@@ -1984,7 +1994,7 @@ Total.
 | test_gameids.lua | 4 |
 | test_library.lua | 67 |
 | test_members.lua | 28 |
-| test_editors.lua | 18 |
+| test_editors.lua | 19 |
 | test_callout_popup.lua | 38 |
 | test_icon_browser.lua | 14 |
 | test_window_icons.lua | 5 |
@@ -2015,7 +2025,7 @@ Total.
 | test_anim.lua | 46 |
 | test_anim_styles.lua | 140 |
 | test_anim_surfaces.lua | 42 |
-| test_anim_ghost.lua | 48 |
+| test_anim_ghost.lua | 49 |
 | test_keybinds.lua | 6 |
 | test_dial_shine.lua | 8 |
 | test_icon_style.lua | 13 |
@@ -2023,7 +2033,7 @@ Total.
 | test_shine.lua | 8 |
 | test_layers.lua | 14 |
 | test_layout.lua | 28 |
-| test_skinsetup.lua | 24 |
+| test_skinsetup.lua | 25 |
 | test_launcher_skin_entry.lua | 1 |
 | test_skin_windows.lua | 24 |
 | test_skin_hud.lua | 20 |
@@ -2043,5 +2053,6 @@ Total.
 | test_lizard_sighted.lua | 8 |
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 26 |
+| test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1706** |
+| **Total** | **1713** |

@@ -161,6 +161,20 @@ test("compat: [final 8] BindingKey reads a command's key; a secret or a missing 
 end)
 
 
+test("compat: [QFE-F1] FrameStrata answers a plain strata, else the fallback (a secret on WoW Forever)", function()
+    local NS, m = T.newAddon()
+    m.issecretvalue = T.isSecret
+    local C = NS.Compat
+    local function f(v) return { GetFrameStrata = function() return v end } end
+    -- red under: no Compat.FrameStrata, or one that hands a secret strata back
+    assertEqual(C.FrameStrata(f("HIGH"), "DIALOG"), "HIGH")
+    assertEqual(C.FrameStrata(f(T.secret("HIGH")), "DIALOG"), "DIALOG", "a secret strata")
+    assertEqual(C.FrameStrata(f(nil), "DIALOG"), "DIALOG", "no strata")
+    assertEqual(C.FrameStrata(f(7), "DIALOG"), "DIALOG", "not a string")
+    assertEqual(C.FrameStrata({}, "DIALOG"), "DIALOG", "no GetFrameStrata")
+    assertEqual(C.FrameStrata(nil, "DIALOG"), "DIALOG", "no frame")
+end)
+
 test("compat: [QF-03] Coordinates reads the map position as x, y in percent, one decimal, or nil", function()
     local NS, m = T.newAddon()
     m.issecretvalue = T.isSecret

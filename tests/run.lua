@@ -26,8 +26,30 @@ local loadAddon = dofile("tests/loader.lua")(root, mock)
 local currentMock
 local mockView = setmetatable({}, { __index = function(_, k) return currentMock and currentMock[k] end })
 
+-- THE DEFAULT SKIN EVERY CASE BOOTS ON. Since LibKa0s v1.94.0 (Skin minor 18) the default skin is the
+-- client's: WoW Forever under the kit's forever profile, Ka0s Default under retail (core/SkinSetup.lua's
+-- NS.DEFAULT_SKIN). Most suites pin Ka0s Default's pixels, so the factories choose Ka0s Default by name
+-- on both profiles: the Skin major's per-client table answers "ka0s" for every client before the
+-- addon's first file reads it. A case that pins the client's own default passes `opts.clientSkin = true`
+-- and boots on what the profile's client really answers (tests/test_skinsetup.lua, tests/test_schema.lua).
+local function pinKa0sDefault(m)
+    local skinLib = m.LibStub and m.LibStub("LibKa0s-Skin-1.0", true)
+    if skinLib and type(skinLib.CLIENT_DEFAULTS) == "table" then
+        local pinned = {}
+        for client in pairs(skinLib.CLIENT_DEFAULTS) do pinned[client] = skinLib.DEFAULT end
+        skinLib.CLIENT_DEFAULTS = pinned
+    end
+end
+
 -- Every file loaded; nothing run.
 local function newAddon(opts)
+    if not (opts and opts.clientSkin) then
+        local given = opts or {}
+        opts = setmetatable({ afterLibs = function(m)
+            pinKa0sDefault(m)
+            if type(given.afterLibs) == "function" then given.afterLibs(m) end
+        end }, { __index = given })
+    end
     local NS, env, m = loadAddon(opts)
     currentMock = m
     return NS, env, m

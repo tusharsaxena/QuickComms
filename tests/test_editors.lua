@@ -160,6 +160,21 @@ test("editors: [QC-06] the delete confirm lifts its dialog over the dial and the
     assertEqual(d.strata, "DIALOG")
 end)
 
+test("editors: [QFE-F1] a confirm whose dialog strata reads secret is handed back in Blizzard's DIALOG", function()
+    local NS, m, Ed = enabled()
+    m.issecretvalue = T.isSecret
+    Ed.ConfirmDelete("Lust", function() end)
+    local def = m.StaticPopupDialogs[m.popupsShown[#m.popupsShown][1]]
+    local d = dialogFrame()
+    d.strata = T.secret("DIALOG")
+    def.OnShow(d)
+    assertEqual(d.strata, NS.addon.Settings.ModalWindow.CONFIRM_STRATA)
+    def.OnHide(d)
+    -- red under: the secret read kept and handed back to SetFrameStrata
+    assertEqual(d.strata, NS.Constants.LAYERS.STRATA.STATIC_POPUP)
+    assertFalse(T.isSecret(d.strata), "a plain strata")
+end)
+
 test("editors: Scalar keeps the rows the flow engine draws, and CancelReorder cancels once", function()
     local _, _, Ed = enabled()
     local rows = Ed.Scalar({ { path = "a", type = "string" }, { path = "b", type = "when" }, { path = "c", type = "number" } })

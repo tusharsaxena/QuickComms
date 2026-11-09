@@ -285,6 +285,16 @@ function Compat.GeneralJoined()
     return PlainNumber((chat.GetGeneralChannelLocalID())) == 1
 end
 
+--- A frame's strata as a plain string, or `fallback` when the read is secret (WoW Forever can hand a
+--- strata back secret, Enum.SecretAspect.FrameStrata), not a string, or the frame has no reader.
+--- Asked before a strata read is stored or handed back to SetFrameStrata (QFE-F1).
+function Compat.FrameStrata(frame, fallback)
+    if not (frame and frame.GetFrameStrata) then return fallback end
+    local strata = frame:GetFrameStrata()
+    if Compat.IsSecret(strata) or type(strata) ~= "string" then return fallback end
+    return strata
+end
+
 --- The player's map position in percent (0-100), `x, y`, or nil: C_Map.GetBestMapForUnit("player"),
 --- then C_Map.GetPlayerMapPosition on that map and its GetXY, every value plain (secret-safe). Nil
 --- when any step is missing, the map is restricted (an instance answers no position) or the position
