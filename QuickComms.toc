@@ -111,6 +111,7 @@ defaults\PadStyle.lua
 defaults\GameIds.lua
 # Conventional: data (the When editor's instance and arena lists), read at call time
 defaults\GameIds_Instances.lua
+defaults\GameIds_Clients.lua
 
 # Modules
 # Conventional: read by Situation at call time; appends to NS.FEATURE_EVENTS / STAND_DOWN / STAND_UP

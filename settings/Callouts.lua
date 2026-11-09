@@ -24,10 +24,13 @@ C.TOKENS = { "{target}", "{focus}", "{skull}", "{cross}", "{square}", "{moon}", 
 local RAID_CAPABLE = { raid = true, raidWarning = true, smartGroup = true, smartLead = true }
 
 --- The tokens offered for a channel: C.TOKENS, plus {group1} to {group8} only when the channel can
---- resolve to Raid (spec §8.1).
+--- resolve to Raid (spec §8.1). A token this client does not offer (NS.GameIds.HIDDEN_TOKENS: {dungeon}
+--- on WoW Forever, which has no Mythic+, QFE-F3) is left out; typed, it still bakes as anywhere.
 function C.TokensFor(channel)
-    local out = {}
-    for i, token in ipairs(C.TOKENS) do out[i] = token end
+    local out, hiddenTokens = {}, NS.GameIds.HIDDEN_TOKENS or {}
+    for _, token in ipairs(C.TOKENS) do
+        if not hiddenTokens[token] then out[#out + 1] = token end
+    end
     if RAID_CAPABLE[channel] then
         for n = 1, 8 do out[#out + 1] = "{group" .. n .. "}" end
     end

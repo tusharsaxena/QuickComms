@@ -391,12 +391,24 @@ Total.
 - builtins: a faction-themed battleground's locations take the faction's color, neutral ones gold
 - builtins: a neutral battleground's locations take a color for what they are, never white
 
-### test_gameids.lua (4)
+### test_gameids.lua (5)
 
 - game ids: every battleground set matches only battleground maps, and no map is two sets'
 - game ids: the shipped dungeons are Mythic+ dungeons and the shipped raids are raids
 - game ids: [instances] INSTANCES are dungeons and raids, cover the season's, and reach past it
 - game ids: [arena] ARENAS are arena maps, one per arena
+- game ids: [QFE-F3] every WoW Forever id has its Retail CLIENT_MAPS row, of its kind
+
+### test_client_data.lua (8)
+
+- client data: [QFE-F3] the lists are the client's, picked once by ClientKey
+- client data: [QFE-F3] UseClient replaces the whole pick, BATTLEGROUND_SETS included
+- client data: [QFE-F3] the When editor's content kinds and drawers are the client's
+- client data: [QFE-F3] Preview as... offers the client's dungeons, raids and battlegrounds
+- client data: [QFE-F3] a fresh profile seeds the client's sets: no Dungeon or Arena set on Forever
+- client data: [QFE-F3] a set held from Retail still loads, matches and keeps its callouts on Forever
+- client data: [QFE-F3] the battleground row suggests the seeded sets' maps
+- client data: [QFE-F3] the token help leaves {dungeon} out on Forever
 
 ### test_library.lua (67)
 
@@ -1991,7 +2003,8 @@ Total.
 | test_bake.lua | 12 |
 | test_resolver.lua | 13 |
 | test_builtins.lua | 26 |
-| test_gameids.lua | 4 |
+| test_gameids.lua | 5 |
+| test_client_data.lua | 8 |
 | test_library.lua | 67 |
 | test_members.lua | 28 |
 | test_editors.lua | 19 |
@@ -2055,4 +2068,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1713** |
+| **Total** | **1722** |

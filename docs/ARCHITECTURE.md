@@ -112,9 +112,13 @@ the tracked source against both clients' API sets.
 | Settings panel, slash verbs, launcher, diagnostics, profiles | yes | yes | `settings/`, `core/LauncherSetup.lua` |
 | The default skin | Ka0s Default | WoW Forever | `NS.DEFAULT_SKIN = Skin:DefaultSkin()`, `core/SkinSetup.lua` |
 | A strata read handed back to the client | plain | a secret read takes a fallback: the ghost the dial's `HUD_POPUP`, a lifted confirm Blizzard's `DIALOG` | `Compat.FrameStrata`, `core/Compat.lua` |
+| Content kinds offered (the When editor's Content row, Preview as...) | all nine | open world, dungeon, raid and battleground; Mythic+, delve, scenario, arena and housing are hidden. The classify step is the same, and a stored When that names a hidden kind still loads and matches (UI and seeds only, rulings R1, C3) | `HIDDEN_CONTENT`, `defaults/GameIds_Clients.lua`; `settings/Groups_When.lua`, `modules/Preview.lua` |
+| The When editor's drawers | every row | no Difficulty, Key level or Arena drawer | `HIDDEN_ROWS`, `W.Rows()` |
+| The callout text's token help | every token | no `{dungeon}` (typed, it still bakes) | `HIDDEN_TOKENS`, `Callouts.TokensFor` |
+| Place lists (Preview as..., the Instance row) | the season's dungeons and raids, every journal instance, every arena | the classic-era dungeons and a Forever raid list (Molten Core, Onyxia's Lair, Blackwing Lair, both Ahn'Qiraj, Naxxramas) by their Retail map ids, MATCHED, NOT CONFIRMED IN GAME; no arena list | `BY_CLIENT`, `defaults/GameIds_Clients.lua` |
+| Built-in sets seeded and restored | every set | no Dungeon (Mythic+) or Arena set; of the battlegrounds Warsong Gulch, Arathi Basin and Alterac Valley, with Retail's ids and objective callouts, then the generic Battleground set | `SKIP_BUILTINS`, `BATTLEGROUND_SETS`, `BuiltIns.Seeded()`, `modules/Library.lua` |
 
-The content kinds, the place lists, the spec and role reads, the probe and the emote callouts land
-per client with their items of the Forever port (Ka0sAddonsCommonTasks
+The spec and role reads, the probe and the emote callouts land per client with their items of the Forever port (Ka0sAddonsCommonTasks
 `docs/2026-11-10-QUICKCOMMS_FOREVER_EMOTES/00_DESIGN.md`), each adding its row here.
 
 ## Settings Schema

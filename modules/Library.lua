@@ -762,11 +762,11 @@ local function placeEverywhere(p, ids, notify)
     return n
 end
 
--- The seeded sets a new pad or dial holds: each shipped set's group while it is a top-level group,
--- in shipped order.
+-- The seeded sets a new pad or dial holds: each set this client ships (BuiltIns.Seeded, QFE-F3) whose
+-- group is a top-level group, in shipped order.
 local function seededTops(p)
     local out = {}
-    for _, top in ipairs(NS.BuiltIns.order) do
+    for _, top in ipairs(NS.BuiltIns.Seeded()) do
         local id = byOrigin(p.groups, top)
         if id and not isChild(id) then out[#out + 1] = id end
     end
@@ -811,11 +811,12 @@ end
 
 -- Prepare's seeding: each shipped set the profile was never given (seededSets) is seeded and put at
 -- the end of every pad and dial, and each node shipped after its set was given goes inside it
--- (seedNewNodes). A seeded member the player deleted is not seeded again: that is Restore's.
--- `appended` counts the surfaces a set was put on.
+-- (seedNewNodes). A seeded member the player deleted is not seeded again: that is Restore's. Only the
+-- sets this client ships (BuiltIns.Seeded): WoW Forever seeds no Dungeon (Mythic+) or Arena set and
+-- only its battlegrounds (QFE-F3). `appended` counts the surfaces a set was put on.
 local function seedNew(p, result)
     local placed = {}
-    for _, top in ipairs(NS.BuiltIns.order) do
+    for _, top in ipairs(NS.BuiltIns.Seeded()) do
         if not p.seededSets[top] then placed[#placed + 1] = seedSet(p, top) end
     end
     seedNewNodes(p)
@@ -845,7 +846,9 @@ end
 --- longer has (no member keeps its origin) comes back as a fresh ordinary member: a set as a
 --- top-level group at the end of every pad and dial, a node inside its set's group while that is a
 --- top-level group, a callout at the end of its seeded group. What the player still has is never
---- changed, moved or overwritten, so a second run adds nothing. One act (Batch).
+--- changed, moved or overwritten, so a second run adds nothing. One act (Batch). Only the sets this
+--- client ships come back (BuiltIns.Seeded, QFE-F3); one it does not ship that the profile holds keeps
+--- its callouts restored.
 --- @return table { groups = n, callouts = n }: what came back
 function Lib.RestoreBuiltins()
     local p = P()
@@ -859,18 +862,21 @@ function Lib.RestoreBuiltins()
         end
         for _, top in ipairs(NS.BuiltIns.order) do
             local set = byOrigin(p.groups, top)
-            if set then
-                n.callouts = n.callouts + restoreCallouts(p, set, top)
-            else
-                set = seed(top)
-                placed[#placed + 1] = set
-            end
-            for _, child in ipairs(NS.BuiltIns.groups[top].children or {}) do
-                local node = byOrigin(p.groups, child)
-                if node then
-                    n.callouts = n.callouts + restoreCallouts(p, node, child)
-                elseif Lib.ValidParent(set) then
-                    seed(child, set)
+            -- a set this client does not ship and the profile lacks stays gone, nodes and all (QFE-F3)
+            if set or NS.BuiltIns.Ships(top) then
+                if set then
+                    n.callouts = n.callouts + restoreCallouts(p, set, top)
+                else
+                    set = seed(top)
+                    placed[#placed + 1] = set
+                end
+                for _, child in ipairs(NS.BuiltIns.groups[top].children or {}) do
+                    local node = byOrigin(p.groups, child)
+                    if node then
+                        n.callouts = n.callouts + restoreCallouts(p, node, child)
+                    elseif Lib.ValidParent(set) then
+                        seed(child, set)
+                    end
                 end
             end
         end

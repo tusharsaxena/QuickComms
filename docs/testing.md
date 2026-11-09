@@ -102,7 +102,10 @@ The runner (`tests/_kit/run-automated-tests.sh`) passes the environment through,
 `KA0S_KIT_CLIENT=forever` picks the kit profile for its `tests` suite. The addon serves Retail and WoW
 Forever, so the `tests` suite gates under **both** profiles (clients-§6). The harness boots every case
 on Ka0s Default by name under both profiles, because most suites pin its pixels; a case that pins the
-client's own default skin passes `clientSkin = true` (`tests/run.lua`).
+client's own default skin passes `clientSkin = true` (`tests/run.lua`). In the same way it boots every
+case on Retail's game data (`NS.GameIds.UseClient("retail")` after the load), because most suites pin
+Retail's built-in sets and lists; a case that pins the client's own (WoW Forever's lists, hidden kinds
+and seeds, `defaults/GameIds_Clients.lua`) passes `clientData = true`, as `test_client_data` does.
 
 | Suite | Command | Commit / run | Release (the tag) |
 |---|---|---|---|

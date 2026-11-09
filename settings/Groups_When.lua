@@ -36,6 +36,17 @@ local W = Settings.GroupsWhen
 W.ROWS = { "content", "instances", "difficulty", "keyLevel", "group", "leadership", "class", "spec", "role",
     "characters", "battleground", "arena" }
 
+--- The rows this client's editor draws, in W.ROWS order: every one but NS.GameIds.HIDDEN_ROWS (WoW
+--- Forever draws no Difficulty, Key level or Arena drawer, QFE-F3). A stored value in a hidden row
+--- still matches (NS.Resolver reads every row); the editor only does not offer it.
+function W.Rows()
+    local hiddenRows, out = NS.GameIds.HIDDEN_ROWS or {}, {}
+    for _, row in ipairs(W.ROWS) do
+        if not hiddenRows[row] then out[#out + 1] = row end
+    end
+    return out
+end
+
 -- The labels of the token rows' values. The tokens themselves, and their order, are
 -- NS.Resolver.TOKENS (read at call time), which Library.ValidWhen checks against too.
 local LABELS = {
@@ -125,9 +136,17 @@ function W.BattlegroundName(id)
     return battlegroundNames()[id] or W.InstanceName(id)
 end
 
+-- The battleground row's suggestions: the maps of the battleground sets this client ships
+-- (BuiltIns.Seeded, QFE-F3). A stored id of another set is still named (W.BattlegroundName).
 local function battlegroundIds()
     local out = {}
-    for id in pairs(battlegroundNames()) do out[#out + 1] = id end
+    for _, gid in ipairs(NS.BuiltIns.Seeded()) do
+        local def = NS.BuiltIns.groups[gid]
+        local ids = def.when and def.when.battleground
+        if type(ids) == "table" then
+            for id in pairs(ids) do out[#out + 1] = id end
+        end
+    end
     table.sort(out)
     return out
 end
@@ -161,9 +180,13 @@ local function tokenValues(row)
     return out
 end
 
+-- The content kinds this client offers (every one but NS.GameIds.HIDDEN_CONTENT: WoW Forever offers no
+-- Mythic+, delve, scenario, arena or housing, QFE-F3), so Select all ticks only these.
 local function contentValues()
-    local out = {}
-    for i, v in ipairs(NS.Resolver.TOKENS.content) do out[i] = { value = v, text = NS.PadRender.CONTENT[v] or v } end
+    local hiddenKinds, out = NS.GameIds.HIDDEN_CONTENT or {}, {}
+    for _, v in ipairs(NS.Resolver.TOKENS.content) do
+        if not hiddenKinds[v] then out[#out + 1] = { value = v, text = NS.PadRender.CONTENT[v] or v } end
+    end
     return out
 end
 
@@ -707,5 +730,5 @@ function W.Render(ctx, gid)
     end
     h.TextRow(ctx, NS.SkinMarkup("qc.hint", L["Every condition you set must match. A condition left as Any does not limit the group."]))
     h.AddSpacer(h.EnsureScroll(ctx), h.ROW_VSPACER)
-    for _, row in ipairs(W.ROWS) do renderDrawer(ctx, gid, row, from) end
+    for _, row in ipairs(W.Rows()) do renderDrawer(ctx, gid, row, from) end
 end

@@ -51,6 +51,11 @@ local function newAddon(opts)
         end }, { __index = given })
     end
     local NS, env, m = loadAddon(opts)
+    -- THE GAME DATA EVERY CASE BOOTS ON (QFE-F3): Retail's lists and seeds, on both kit profiles, as
+    -- with the skin above: most suites pin Retail's built-in sets (the Dungeon set, the arena, every
+    -- battleground). A case that pins the client's own (WoW Forever's lists, hidden kinds and seeds)
+    -- passes `opts.clientData = true` (tests/test_client_data.lua).
+    if not (opts and opts.clientData) and NS.GameIds and NS.GameIds.UseClient then NS.GameIds.UseClient("retail") end
     currentMock = m
     return NS, env, m
 end
@@ -228,6 +233,7 @@ Kit.run{
         "test_resolver",
         "test_builtins",
         "test_gameids",
+        "test_client_data",
         "test_library",
         "test_members",
         "test_editors",

@@ -285,6 +285,20 @@ function Compat.GeneralJoined()
     return PlainNumber((chat.GetGeneralChannelLocalID())) == 1
 end
 
+--- The client's key, "retail" or "forever" (clients-§3): LibKa0s Compat's ClientKey, the one place the
+--- question is answered (from WOW_PROJECT_ID, never an interface number). Retail when the library is
+--- absent or the project constants say neither, so a degraded install keeps the Retail lists.
+--- Asked once at load by defaults/GameIds_Clients.lua (QFE-F3).
+function Compat.ClientKey()
+    local key = CompatLib and CompatLib.ClientKey and CompatLib.ClientKey() or nil
+    return key == "forever" and "forever" or "retail"
+end
+
+--- Whether this is a WoW Forever client (Compat.ClientKey).
+function Compat.IsForever()
+    return Compat.ClientKey() == "forever"
+end
+
 --- A frame's strata as a plain string, or `fallback` when the read is secret (WoW Forever can hand a
 --- strata back secret, Enum.SecretAspect.FrameStrata), not a string, or the frame has no reader.
 --- Asked before a strata read is stored or handed back to SetFrameStrata (QFE-F1).

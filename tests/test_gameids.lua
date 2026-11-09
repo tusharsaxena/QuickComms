@@ -337,3 +337,30 @@ test("game ids: [arena] ARENAS are arena maps, one per arena", function()
     noDuplicates(G.ARENAS, "ARENAS")
     assertEqual(#G.ARENAS, 16, "the client's 18 arena maps, less the two legacy copies")
 end)
+
+test("game ids: [QFE-F3] every WoW Forever id has its Retail CLIENT_MAPS row, of its kind", function()
+    local NS = T.newAddon()
+    local F = NS.GameIds.BY_CLIENT.forever
+    -- MATCHED, NOT CONFIRMED IN GAME: the classic-era map ids, taken from Retail's own lists
+    for _, id in ipairs(F.DUNGEONS) do
+        local row = CLIENT_MAPS[id]
+        -- red under: a Forever id Retail's lists do not hold (Zul'Gurub's raid, 309)
+        assertTrue(row ~= nil and row.type == PARTY and not row.challenge, id .. " is a dungeon map, no Mythic+")
+    end
+    for _, id in ipairs(F.RAIDS) do
+        local row = CLIENT_MAPS[id]
+        assertTrue(row ~= nil and row.type == RAID, id .. " is a raid map")
+    end
+    local retail = {}
+    for _, id in ipairs(NS.GameIds.BY_CLIENT.retail.INSTANCES) do retail[id] = true end
+    for _, id in ipairs(F.INSTANCES) do assertTrue(retail[id], id .. " is in Retail's INSTANCES") end
+    noDuplicates(F.INSTANCES, "Forever's INSTANCES")
+    local sets = battlegroundIds(NS)
+    for key in pairs(F.BATTLEGROUND_SETS) do
+        local ids = sets["bi.bg." .. key]
+        assertTrue(ids ~= nil and #ids > 0, key .. " is a shipped battleground set")
+        for _, id in ipairs(ids) do assertEqual(CLIENT_MAPS[id].type, PVP, key .. ": " .. id) end
+    end
+    assertEqual(#F.DUNGEONS, 17)
+    assertEqual(#F.RAIDS, 6)
+end)
