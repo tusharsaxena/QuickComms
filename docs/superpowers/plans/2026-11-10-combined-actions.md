@@ -86,10 +86,10 @@ listed task if the owner rules otherwise:
 
 | id | task | state | commit |
 |---|---|---|---|
-| CA-M0-1 | Commit the spec and this plan | todo | |
-| CA-M0-2 | `tests/test_locale.lua`: the locale union gates | todo | |
-| CA-M0-3 | Split settings-only strings into `locales/enUS_Settings.lua` | todo | |
-| CA-M0-4 | M0 docs | todo | |
+| CA-M0-1 | Commit the spec and this plan | done | 367c71e |
+| CA-M0-2 | `tests/test_locale.lua`: the locale union gates | done | a343b5e |
+| CA-M0-3 | Split settings-only strings into `locales/enUS_Settings.lua` | done | 1ac626d |
+| CA-M0-4 | M0 docs | done | (this commit) |
 | CA-M0-5 | M0 checkpoint | todo | |
 | CA-M1-1 | Mock: ping, marker and target surfaces | todo | |
 | CA-M1-2 | Compat: ping, marker, target and rights readers | todo | |

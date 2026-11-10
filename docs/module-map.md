@@ -9,7 +9,8 @@ LibDataBroker, LibDBIcon, LibCustomGlow-1.0, LibKa0s v1.95.0 (media/icons held t
 
 | # | File | Kind | Responsibility |
 |---|---|---|---|
-| 1 | `locales/enUS.lua` | data | `NS.L`, the metatable fallback; the key is the English string |
+| 1 | `locales/enUS.lua` | data | `NS.L`, the metatable fallback; the key is the English string. The only file that creates `NS.L`; it holds every key a `core/`, `defaults/` or `modules/` file reads |
+| 1a | `locales/enUS_Settings.lua` | data | the strings only `settings/` reads, assigned into `NS.L` (localization-§6, the split at the cap); its TOC line is LOAD-BEARING. A key any file outside `settings/` reads stays in `enUS.lua` (`tests/test_locale.lua`) |
 | 2 | `core/Namespace.lua` | data | name, version, brand, the cyan `[QC]` tag, the slash and its alias |
 | 3 | `core/CoreSetup.lua` | setup | LibKa0s-Core: the printer, the secret-safe stringifier, the SafeRegister family, the skin, the close-button wrapper, the resize grip, the class-color resolver |
 | 3a | `core/Compat.lua` | compat | `NS.Compat`: the only caller of version-variant or optional client APIs, and the secret guards ([`compat-layer.md`](compat-layer.md)) |

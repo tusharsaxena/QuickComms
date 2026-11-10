@@ -58,7 +58,11 @@ every degradation stub is tested: by a real load, never by a hand-written stub (
 
 Named suites the standard requires: `test_surface_parity` (testing-§8), `test_vendor_sync`
 (testing-§11, delegating to the kit), `test_disabled` (slash-commands-§7). The addon's own:
-`test_harness` (the load and the repository's shape), `test_bus`, `test_setup` (each adopted module's wiring),
+`test_harness` (the load and the repository's shape), `test_locale` (the locale union gates over every
+enUS file the TOC loads: raw coverage of every literal `L["..."]` read, no dead key, no key defined
+twice, its dynamic-read allowlist, each topic file's LOAD-BEARING TOC line, and the placement both ways:
+an `enUS_Settings.lua` key is read only under `settings/`, an `enUS.lua` key has a reader outside it),
+`test_bus`, `test_setup` (each adopted module's wiring),
 `test_database`, `test_profile`, `test_schema`, `test_slash`, `test_diagnostics`, and phase 1's `test_compat`,
 `test_restrictions`, `test_situation`, `test_tokens`, `test_channels`, `test_bake`, `test_resolver`,
 `test_builtins`, `test_library` and `test_check`, and phase 2's `test_mock_secure`, `test_send_guard`,

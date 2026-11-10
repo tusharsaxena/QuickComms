@@ -84,7 +84,9 @@ Every file, its kind, its TOC position and what it does is in [`module-map.md`](
 short: `core/` holds the identity, twelve of the setup files, the session state, the addon object and
 its lifecycle, and the migration runner; `defaults/` the default values and the shipped built-in sets
 (seed data); `modules/` the modules and the diagnostics sections; `settings/` the schema, the panel
-pages and the slash table and its verb bodies. `Bindings.xml` sits at the root, beside the TOC, and is
+pages and the slash table and its verb bodies. `locales/` holds the base locale, `enUS.lua` (the only
+file that creates `NS.L`), and its topic file `enUS_Settings.lua`, which holds the strings only
+`settings/` reads (localization-§6). `Bindings.xml` sits at the root, beside the TOC, and is
 not a TOC line: the client reads it there, and the standard allows it (layout-§1, toc-file-§4
 (standard v2.80.0)).
 
@@ -421,9 +423,11 @@ Nothing is over the cap today. `tests/test_page_groups.lua` reached it exactly a
 own section headings (`80a0fbb`, 2026-10-25): 1131 lines now, beside `tests/test_page_groups_nesting.lua`
 at 418. `tests/test_dial.lua` was split the same way at 1471 lines (2026-10-31): 764 now, beside
 `tests/test_dial_catcher.lua` at 288 and `tests/test_dial_look.lua` at 388, with their shared helpers in
-`tests/dial_helpers.lua`. Seven files sit in the 1000-1500 band (`locales/enUS.lua` 1459,
-`modules/Library.lua` 1358, `tests/test_page_groups.lua` 1131, `tests/test_library.lua` 1057,
-`tests/test_pad.lua` 1049, `tests/wow_mock.lua` 1084, `tests/test_skin_flip.lua` 1064; recounted on the
-Forever port and emotes branch, 2026-11-10); the automated-test record's watch list gives each its
-disposition. `locales/enUS.lua` is 41 lines under the cap and on notice: a batch of strings that
-would cross 1500 splits or trims it first.
+`tests/dial_helpers.lua`. `locales/enUS.lua` reached 1474 lines and was split along localization-§6
+(CA-M0-3, 2026-11-11): the strings only `settings/` reads moved into the topic file
+`locales/enUS_Settings.lua`, so `enUS.lua` is 693 lines now, beside `enUS_Settings.lua` at 826, and
+`tests/test_locale.lua` holds the union gates and the placement both ways. Six files sit in the
+1000-1500 band (`modules/Library.lua` 1358, `tests/test_page_groups.lua` 1131, `tests/test_library.lua`
+1057, `tests/test_pad.lua` 1049, `tests/wow_mock.lua` 1084, `tests/test_skin_flip.lua` 1064; recounted on
+the combined actions branch, 2026-11-11); the automated-test record's watch list gives each its
+disposition.
