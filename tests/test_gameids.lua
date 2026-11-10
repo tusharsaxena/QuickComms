@@ -252,6 +252,51 @@ local CLIENT_MAPS = {
     [2759] = { type = 4, challenge = false },  -- Cage of Carnage
 }
 
+-- WoW Forever's own extraction, the same way: the Map table's InstanceType and name for every id
+-- defaults/GameIds_Clients.lua ships for Forever (its dungeons, its raids, and the Forever map ids its
+-- battleground sets carry), as exported from Forever build 1.60.1.70862 (product wowf) by wago.tools.
+-- Not authored data: `tools/derive-gameids.py --forever` re-derives every row and fails on a difference.
+local FOREVER_MAPS = {
+    [389] = { type = 1, name = "Ragefire Chasm" },
+    [36] = { type = 1, name = "Deadmines" },
+    [43] = { type = 1, name = "Wailing Caverns" },
+    [33] = { type = 1, name = "Shadowfang Keep" },
+    [48] = { type = 1, name = "Blackfathom Deeps" },
+    [34] = { type = 1, name = "Stormwind Stockade" },
+    [90] = { type = 1, name = "Gnomeregan" },
+    [47] = { type = 1, name = "Razorfen Kraul" },
+    [189] = { type = 1, name = "Scarlet Monastery" },
+    [129] = { type = 1, name = "Razorfen Downs" },
+    [70] = { type = 1, name = "Uldaman" },
+    [209] = { type = 1, name = "Zul'Farrak" },
+    [349] = { type = 1, name = "Maraudon" },
+    [109] = { type = 1, name = "Sunken Temple" },
+    [230] = { type = 1, name = "Blackrock Depths" },
+    [229] = { type = 1, name = "Blackrock Spire" },
+    [429] = { type = 1, name = "Dire Maul" },
+    [289] = { type = 1, name = "Scholomance" },
+    [329] = { type = 1, name = "Stratholme" },
+    [2959] = { type = 1, name = "City of Dalaran" },
+    [2970] = { type = 1, name = "The Drowned City" },
+    [2974] = { type = 1, name = "Blackmaw Hold" },
+    [2994] = { type = 1, name = "Alcaz Prison" },
+    [2998] = { type = 1, name = "Excavation Site: Wetlands" },
+    [2999] = { type = 1, name = "Ruins of Lordaeron" },
+    [3001] = { type = 1, name = "The Shaper's Terrace" },
+    [3039] = { type = 1, name = "Krol'dok Stronghold" },
+    [3065] = { type = 1, name = "The Hall of Thanes" },
+    [409] = { type = 2, name = "Molten Core" },
+    [249] = { type = 2, name = "Onyxia's Lair" },
+    [469] = { type = 2, name = "Blackwing Lair" },
+    [309] = { type = 2, name = "Zul'Gurub" },
+    [509] = { type = 2, name = "Ruins of Ahn'Qiraj" },
+    [531] = { type = 2, name = "Ahn'Qiraj Temple" },
+    [533] = { type = 2, name = "Naxxramas" },
+    [489] = { type = 3, name = "Warsong Gulch" },
+    [529] = { type = 3, name = "Arathi Basin" },
+    [30] = { type = 3, name = "Alterac Valley" },
+}
+
 -- Every battleground set's ids: { setId = { id, ... } }.
 local function battlegroundIds(NS)
     local out = {}
@@ -338,29 +383,40 @@ test("game ids: [arena] ARENAS are arena maps, one per arena", function()
     assertEqual(#G.ARENAS, 16, "the client's 18 arena maps, less the two legacy copies")
 end)
 
-test("game ids: [QFE-F3] every WoW Forever id has its Retail CLIENT_MAPS row, of its kind", function()
+test("game ids: [QFE-F3] every WoW Forever id has its FOREVER_MAPS row, of its kind", function()
     local NS = T.newAddon()
     local F = NS.GameIds.BY_CLIENT.forever
-    -- MATCHED, NOT CONFIRMED IN GAME: the classic-era map ids, taken from Retail's own lists
+    local shipped = {}
+    -- derived from Forever's own Map and LFGDungeons tables (build 1.60.1.70862)
     for _, id in ipairs(F.DUNGEONS) do
-        local row = CLIENT_MAPS[id]
-        -- red under: a Forever id Retail's lists do not hold (Zul'Gurub's raid, 309)
-        assertTrue(row ~= nil and row.type == PARTY and not row.challenge, id .. " is a dungeon map, no Mythic+")
+        local row = FOREVER_MAPS[id]
+        -- red under: a Forever dungeon id Forever's Map does not hold as a party map
+        assertTrue(row ~= nil and row.type == PARTY, id .. " is a Forever dungeon map")
+        shipped[id] = true
     end
     for _, id in ipairs(F.RAIDS) do
-        local row = CLIENT_MAPS[id]
-        assertTrue(row ~= nil and row.type == RAID, id .. " is a raid map")
+        local row = FOREVER_MAPS[id]
+        assertTrue(row ~= nil and row.type == RAID, id .. " is a Forever raid map")
+        shipped[id] = true
     end
-    local retail = {}
-    for _, id in ipairs(NS.GameIds.BY_CLIENT.retail.INSTANCES) do retail[id] = true end
-    for _, id in ipairs(F.INSTANCES) do assertTrue(retail[id], id .. " is in Retail's INSTANCES") end
     noDuplicates(F.INSTANCES, "Forever's INSTANCES")
     local sets = battlegroundIds(NS)
     for key in pairs(F.BATTLEGROUND_SETS) do
-        local ids = sets["bi.bg." .. key]
+        local ids, own = sets["bi.bg." .. key], 0
         assertTrue(ids ~= nil and #ids > 0, key .. " is a shipped battleground set")
-        for _, id in ipairs(ids) do assertEqual(CLIENT_MAPS[id].type, PVP, key .. ": " .. id) end
+        for _, id in ipairs(ids) do
+            local row = FOREVER_MAPS[id]
+            if row then
+                assertEqual(row.type, PVP, key .. ": " .. id .. " is a Forever battleground map")
+                own, shipped[id] = own + 1, true
+            else
+                -- a newer map id the set also carries for Retail; the generator proves Forever has no such map
+                assertEqual(CLIENT_MAPS[id].type, PVP, key .. ": " .. id .. " is Retail's battleground map")
+            end
+        end
+        assertTrue(own > 0, key .. " carries a Forever map id")
     end
-    assertEqual(#F.DUNGEONS, 17)
-    assertEqual(#F.RAIDS, 6)
+    for id in pairs(FOREVER_MAPS) do assertTrue(shipped[id], id .. "'s FOREVER_MAPS row is for a shipped id") end
+    assertEqual(#F.DUNGEONS, 28, "the dungeons Forever's dungeon finder queues (D1, D2)")
+    assertEqual(#F.RAIDS, 7, "the six raids of ruling R1, and Zul'Gurub (D1)")
 end)

@@ -49,9 +49,10 @@ test("client data: [QFE-F3] the lists are the client's, picked once by ClientKey
         assertTrue(G[name] == G.BY_CLIENT[CLIENT][name], name .. " is " .. CLIENT .. "'s")
     end
     if FOREVER then
-        assertEqual(#G.DUNGEONS, 17, "the classic-era dungeons Retail lists")
-        assertEqual(joined(G.RAIDS), "409,249,469,509,531,533", "Forever's raids (ruling R1)")
-        assertEqual(#G.INSTANCES, #G.DUNGEONS + #G.RAIDS, "the classic-era subset")
+        -- red under: the 17 classic-era dungeons alone (no 189, 289 or the dungeon finder's nine, D1/D2)
+        assertEqual(#G.DUNGEONS, 28, "the dungeons Forever's dungeon finder queues")
+        assertEqual(joined(G.RAIDS), "409,249,469,309,509,531,533", "Forever's raids (ruling R1, D1)")
+        assertEqual(#G.INSTANCES, #G.DUNGEONS + #G.RAIDS, "Forever's dungeons and raids")
         assertEqual(#G.ARENAS, 0, "no arena")
     else
         assertEqual(#G.DUNGEONS, 8, "the season's eight, unchanged")

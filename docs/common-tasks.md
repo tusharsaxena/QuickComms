@@ -98,5 +98,14 @@ python3 -I tools/derive-gameids.py --fetch "$D" && python3 -I tools/derive-gamei
 
 For a new season or patch: change `SEASON`, `LAUNCH` (and `CURRENT_TIER` if the journal renumbers it) at the top of `tools/derive-gameids.py`, run it, and read every `MISMATCH:`, `NOT SHIPPED:` and `DROPPED:` line (`DROPPED_ARENAS` at the top of the script lists the legacy arena maps left out; a new arena map that shares a shipped one's name fails until it is listed there or replaces it); change the shipped lists and the test's rows to match only after reading them, then run it again until it prints `OK`. A new shipped id gets its `CLIENT_MAPS` row from the block the script prints (an `INSTANCES` or `ARENAS` id without one is a `MISMATCH:` line carrying the row to paste). Update the build named in the headers (`defaults/GameIds.lua`, `defaults/GameIds_Instances.lua`, `tests/test_gameids.lua`) with the build `--fetch` printed. A match is not an in-game confirmation: the headers say "matched" until smoke checks BG-2 and IDS-1 pass.
 
+WoW Forever's lists (`defaults/GameIds_Clients.lua`'s `FOREVER_DUNGEONS` and `FOREVER_RAIDS`, and the Forever map ids its battleground sets carry) and `tests/test_gameids.lua`'s `FOREVER_MAPS` come from Forever's own tables the same way. `--forever` fetches them at the build `FOREVER_BUILD` names (wago.tools serves product `wowf` by `?build=`; an export of any other build fails) and checks them:
+
+```sh
+D="$(mktemp -d)/forever"
+python3 -I tools/derive-gameids.py --forever --fetch "$D" && python3 -I tools/derive-gameids.py --forever "$D"
+```
+
+It fails on a `FOREVER_MAPS` row that differs from Map, on a dungeon list that is not exactly the party maps the dungeon finder queues (LFGDungeons TypeID 0, joined to Map by name through `LFG_NAMES` at the top of the script, because LFGDungeons' MapID is 0 on every Forever row), on a queued raid not listed, on a battleground id of the wrong kind, and on any arena map (D4). It prints every party, raid and battleground map not shipped as `NOT SHIPPED:` for the owner's ruling, and a set's newer Retail map id as `RETAIL ONLY:`. For a new Forever build: change `FOREVER_BUILD`, run it, read every line, change the lists and `FOREVER_MAPS` (from the block it prints) only after reading them, and update the build named in `defaults/GameIds_Clients.lua` and `tests/test_gameids.lua`. The in-game check is `/qc probe ids`.
+
 The generators leave a `__pycache__/` beside them; `.gitignore` keeps it out of the repository.
 

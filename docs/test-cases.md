@@ -449,7 +449,7 @@ Total.
 - game ids: the shipped dungeons are Mythic+ dungeons and the shipped raids are raids
 - game ids: [instances] INSTANCES are dungeons and raids, cover the season's, and reach past it
 - game ids: [arena] ARENAS are arena maps, one per arena
-- game ids: [QFE-F3] every WoW Forever id has its Retail CLIENT_MAPS row, of its kind
+- game ids: [QFE-F3] every WoW Forever id has its FOREVER_MAPS row, of its kind
 
 ### test_client_data.lua (9)
 

@@ -4,7 +4,7 @@ local _, NS = ...
 -- and defaults/GameIds_Instances.lua hold Retail's lists. This file keeps them as BY_CLIENT.retail,
 -- holds WoW Forever's beside them, and puts the client's own under the names every reader uses
 -- (G.DUNGEONS, G.RAIDS, G.INSTANCES, G.ARENAS), so no reader asks which client it is.
---   DUNGEONS, RAIDS     Preview as...'s lists: Retail's season, Forever's classic-era dungeons and raids.
+--   DUNGEONS, RAIDS     Preview as...'s lists: Retail's season, Forever's own dungeons and raids.
 --   INSTANCES, ARENAS   the When editor's suggestions.
 --   HIDDEN_CONTENT      the content kinds the When editor and Preview as... do not offer. The classify
 --                       step is the same on both clients, and a stored When that names one still loads
@@ -18,13 +18,14 @@ local _, NS = ...
 --                       id, in place of the one it declares (BuiltIns.WhenOf). Seeds only: a copy
 --                       already stored keeps the When it has.
 --   BATTLEGROUND_SETS   the battleground sets seeded, by key (bi.bg.<key>); nil seeds every one.
--- WoW Forever's ids are MATCHED, NOT CONFIRMED IN GAME: each is a classic-era map id taken from
--- Retail's own lists (its CLIENT_MAPS row in tests/test_gameids.lua), on the reading that Forever
--- keeps the classic map ids (owner ruling R2: map ids, then the probe). The probe and smoke checks
--- FOREVER-12 to FOREVER-17 confirm them; this note says CONFIRMED only after those pass. Left out
--- until the probe names their Forever ids, because Retail lists only their remakes: Scarlet
--- Monastery (classic 189; Retail 1004), Scholomance (classic 289; Retail 1007) and Zul'Gurub's raid
--- (classic 309; Retail 859, the dungeon).
+-- WoW Forever's ids are derived from Forever's own Map and LFGDungeons tables (build 1.60.1.70862):
+-- each is a Map row of its kind (its FOREVER_MAPS row in tests/test_gameids.lua), and the dungeons
+-- are exactly the party maps the dungeon finder queues (LFGDungeons TypeID 0, joined to Map by name,
+-- since its MapID is 0 on every Forever row). tools/derive-gameids.py --forever re-derives and checks
+-- them (docs/common-tasks.md). The in-game check is `/qc probe ids`. Left out (the lead's call D3,
+-- QuickComms#21): the raid and party maps the dungeon finder does not queue, which the generator
+-- prints as NOT SHIPPED for the owner's ruling, and Darkspear Islands and Battle for Gilneas, which
+-- get no built-in set. Forever has no arena map, so no arena list (D4).
 
 NS.GameIds = NS.GameIds or {}
 local G = NS.GameIds
@@ -38,22 +39,35 @@ local FOREVER_DUNGEONS = {
     34,   -- Stormwind Stockade
     90,   -- Gnomeregan
     47,   -- Razorfen Kraul
+    189,  -- Scarlet Monastery (D1)
     129,  -- Razorfen Downs
     70,   -- Uldaman
     209,  -- Zul'Farrak
     349,  -- Maraudon
     109,  -- Sunken Temple
     230,  -- Blackrock Depths
-    229,  -- Lower Blackrock Spire (classic Blackrock Spire, both halves)
-    429,  -- Dire Maul
+    229,  -- Blackrock Spire (the dungeon finder's Lower and Upper Blackrock Spire)
+    429,  -- Dire Maul (the dungeon finder's East, West and North)
+    289,  -- Scholomance (D1)
     329,  -- Stratholme
+    -- Forever's own dungeons, which its dungeon finder queues (D2), by map id
+    2959, -- City of Dalaran
+    2970, -- The Drowned City
+    2974, -- Blackmaw Hold
+    2994, -- Alcaz Prison
+    2998, -- Excavation Site: Wetlands
+    2999, -- Ruins of Lordaeron
+    3001, -- The Shaper's Terrace
+    3039, -- Krol'dok Stronghold
+    3065, -- The Hall of Thanes
 }
 
--- A new list of raids for Forever (owner ruling R1), by their Retail map ids.
+-- A new list of raids for Forever (owner ruling R1), by Forever's map ids.
 local FOREVER_RAIDS = {
     409,  -- Molten Core
     249,  -- Onyxia's Lair
     469,  -- Blackwing Lair
+    309,  -- Zul'Gurub (D1)
     509,  -- Ruins of Ahn'Qiraj
     531,  -- Temple of Ahn'Qiraj
     533,  -- Naxxramas
