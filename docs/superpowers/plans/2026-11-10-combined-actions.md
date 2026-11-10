@@ -89,8 +89,8 @@ listed task if the owner rules otherwise:
 | CA-M0-1 | Commit the spec and this plan | done | 367c71e |
 | CA-M0-2 | `tests/test_locale.lua`: the locale union gates | done | a343b5e |
 | CA-M0-3 | Split settings-only strings into `locales/enUS_Settings.lua` | done | 1ac626d |
-| CA-M0-4 | M0 docs | done | (this commit) |
-| CA-M0-5 | M0 checkpoint | todo | |
+| CA-M0-4 | M0 docs | done | a84354d |
+| CA-M0-5 | M0 checkpoint | done | (this commit) |
 | CA-M1-1 | Mock: ping, marker and target surfaces | todo | |
 | CA-M1-2 | Compat: ping, marker, target and rights readers | todo | |
 | CA-M1-3 | Library: `ValidPing`, `ValidMarker`, `HasAction`, the M1 one-action rule | todo | |
@@ -153,6 +153,7 @@ listed task if the owner rules otherwise:
 | milestone | date | gate: retail / forever / luacheck | head | pushed |
 |---|---|---|---|---|
 | baseline | 2026-11-10 | 1780/0/1 skip; 1780/0/1 skip; 0/0 (172 files) | 37a1e7b | n/a |
+| M0 | 2026-11-11 | 1791/0/1 skip; 1791/0/1 skip; 0/0 (174 files) | a84354d | yes (no R fix commits in M0; no owner ruling asks at M0) |
 
 ---
 
