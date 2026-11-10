@@ -122,7 +122,9 @@ modules\Situation.lua
 modules\Tokens.lua
 # Conventional: pure
 modules\Channels.lua
-# Conventional: pure; calls Tokens and Channels at call time
+# Conventional: pure apart from one read of the client's emote globals, through Compat, at the first call
+modules\Emotes.lua
+# Conventional: pure; calls Tokens, Channels and Emotes at call time
 modules\Bake.lua
 # Conventional: pure
 modules\Resolver.lua

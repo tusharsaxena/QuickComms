@@ -348,6 +348,44 @@ function Compat.EmoteTokens()
     return out
 end
 
+--- The client's own slash command for each emote token (QFE-E2): EMOTEn_TOKEN to EMOTEn_CMD1, the
+--- client's localized first command, read over the same indices as EmoteTokens. A token listed twice
+--- (INCOMING at 157 and 304, FLEE at 160 and 306) keeps its FIRST index's command, so FLEE is /flee,
+--- not the later /retreat. A token with no plain command, or one that is not one "/word", is left
+--- out. Answers the map and its tokens in index order.
+--- @return table<string,string> commands, string[] order
+function Compat.EmoteCommands()
+    local max = PlainNumber(_G.MAXEMOTEINDEX) or EMOTE_SCAN_MAX
+    local map, order = {}, {}
+    for i = 1, max do
+        local token = PlainString(_G["EMOTE" .. i .. "_TOKEN"])
+        local cmd = PlainString(_G["EMOTE" .. i .. "_CMD1"])
+        if token and token ~= "" and not map[token] and cmd and cmd:find("^/[^%s/|]+$") then
+            map[token] = cmd
+            order[#order + 1] = token
+        end
+    end
+    return map, order
+end
+
+local function plainList(list)
+    local out = {}
+    if type(list) ~= "table" then return out end
+    for _, v in ipairs(list) do
+        local s = PlainString(v)
+        if s and s ~= "" then out[#out + 1] = s end
+    end
+    return out
+end
+
+--- The client's two emote menus (ChatEmoteConstants.lua, byte-identical on Retail and WoW Forever):
+--- the speech emotes, which play a voice line (TextEmoteSpeechList), and the animated ones
+--- (EmoteList). Copies, in the client's order; empty where a list is missing.
+--- @return string[] speech, string[] animated
+function Compat.EmoteLists()
+    return plainList(_G.TextEmoteSpeechList), plainList(_G.EmoteList)
+end
+
 --- True inside a house or plot (housing).
 function Compat.InHousing()
     local h = C_Housing

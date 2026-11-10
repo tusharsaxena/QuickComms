@@ -143,6 +143,8 @@ R.REASON_TEXT = {
     badCallout = L["This callout is damaged."],
     noCallout = L["This callout no longer exists."],
     testMode = L["Test mode: a placeholder that sends nothing."],
+    noEmote = L["This callout has no game emote."],
+    unknownEmote = L["This game emote is not on this client."],
 }
 
 -- Why a locked button may not reach anyone (Channels.LockState, spec §8.4).
@@ -174,7 +176,7 @@ end
 -- The channel a button's line goes to, by name (the button shows no channel letter; its tooltip does).
 local CHANNEL_NAME = {
     party = L["Party"], raid = L["Raid"], instance = L["Instance"], raidWarning = L["Raid warning"],
-    say = L["Say"], yell = L["Yell"], general = L["General"], emote = L["Emote"],
+    say = L["Say"], yell = L["Yell"], general = L["General"], emote = L["Emote"], gameEmote = L["Game emote"],
 }
 
 local function channelLine(concrete)

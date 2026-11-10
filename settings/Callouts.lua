@@ -87,13 +87,18 @@ function C.PreviewLines(callout)
         { soloFallback = NS.Setting("behavior.soloFallback"), ctx = NS.Surfaces.BakeContext(snap) })
     local R = NS.PadRender
     local out = {}
-    if line then
+    if line and info.concrete == "gameEmote" then
+        -- A game emote (QFE-E2): the client's command, on your target as the game does it.
+        out[1] = L["Emotes: %s"]:format(line)
+        if NS.Emotes.IsVoice(info.emote) then out[2] = L["A voice emote: it also plays its sound."] end
+    elseif line then
         out[1] = L["Sends: %s"]:format(line)
         out[2] = L["%d of 255 bytes"]:format(info.length)
     elseif reason == "solo" and info.selfPrint then
         out[1] = L["Solo: prints to you, sends nothing."]
     else
         out[1] = L["Sends nothing here: %s"]:format(R.REASON_TEXT[reason] or tostring(reason))
+        if reason == "unknownEmote" then out[#out + 1] = L["Emote token: %s"]:format(tostring(info.emote)) end
         if info.length then out[2] = L["%d of 255 bytes"]:format(info.length) end
     end
     if info.lock then out[#out + 1] = R.LOCK_TEXT[info.lock] or tostring(info.lock) end

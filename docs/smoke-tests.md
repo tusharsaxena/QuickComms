@@ -2408,7 +2408,8 @@ The probe (QFE-F5; **code:** `settings/SlashVerbs.lua` `ProbeLines`, `core/Compa
 **Client: Retail, then WoW Forever**, every check here (QuickComms#15, Ka0sAddonsCommonTasks
 `docs/2026-11-10-QUICKCOMMS_FOREVER_EMOTES/`). **Code:** `modules/Channels.lua` (the `emote` kind),
 `modules/SendEngine_Guard.lua` (the `CHAT_MSG_EMOTE` echo row), `settings/SchemaMembers.lua`,
-`settings/Groups.lua` and `modules/Pad_Render.lua` (its labels).
+`settings/Groups.lua` and `modules/Pad_Render.lua` (its labels); for the game emotes
+`modules/Emotes.lua`, `modules/Bake.lua` (`BakeEmote`) and `settings/CalloutPopup.lua` (the picker).
 
 - **EMOTE-1. A custom emote callout sends /e (QFE-E1).** Out of combat in the open world, solo, edit a
   callout in a group on your pad → the **Channel** dropdown lists **Emote** last, after General. Pick it
@@ -2424,6 +2425,35 @@ The probe (QFE-F5; **code:** `settings/SlashVerbs.lua` `ProbeLines`, `core/Compa
   during this encounter.*; the lockdown chip shows as for a Say callout (SEND-7). Kill the boss or wipe
   → the padlock clears. Record whether the game actually refuses the emote during the encounter.
   Result: owed
+
+- **EMOTE-3. A game emote callout performs the game's emote (QFE-E2).** Out of combat in the open
+  world, target a nearby player or NPC, and edit a callout in a group on your pad → the **Channel**
+  dropdown lists **Game emote** last. Pick it → the Text box gives way to a **Game emote** box. Type
+  `po` → a list hangs under the box with `/point` among its rows; pick it → the Name, if empty, becomes
+  `/point`, and What it sends reads `Emotes: /point`. Save → its Groups row reads `/point  Game emote
+  /point` with the channel in the emote color. Click its button → your character points at your
+  target and chat shows the game's own line (`You point at <target>.`), once, with no "interface action
+  blocked" and no drop note (`/qc debug on` shows an `Echo` line ending `sent`: the
+  `CHAT_MSG_TEXT_EMOTE` echo is matched). With no target it points ahead as `/point` typed does.
+  Repeat on WoW Forever. Result: owed
+- **EMOTE-4. The picker's order, its voice marks and the name rule (QFE-E2).** In the Game emote box
+  type `o` → the first rows are speech emotes (`/incoming (voice)`, `/oom (voice)`...), then the
+  animated ones (`/bow`, `/point`...), then the rest; the arrow keys and Enter pick from the
+  list. Rename the callout `Look`, then pick `/wave` → the name stays `Look`. Pick `/oom` on a new
+  callout → What it sends adds *A voice emote: it also plays its sound.*; its button plays the voice
+  line. Typing `/wave` and pressing Enter without picking a row also picks it. Switch the channel back
+  to Say → the Text box returns; Save → the callout sends its text and keeps no emote
+  (`/qc get callout.emote <id>` prints false). Result: owed
+- **EMOTE-5. Preview, throttle and an unknown token (QFE-E2).** Turn on **Preview as... → World** and
+  click the `/point` button → one `[QC] would emote /point` line and no emote. Turn preview off and
+  press it twice quickly → the second press is dimmed by the guard as for chat. Then run
+  `/qc set callout.emote <id> NOTANEMOTE` → the button shows as unavailable and its tooltip reads
+  *This game emote is not on this client.*; the callout editor's What it sends adds *Emote token:
+  NOTANEMOTE*; its Groups row reads `NOTANEMOTE (not on this client)`. Result: owed
+- **EMOTE-6. A game emote during an encounter (QFE-E2, Retail).** On a raid boss → the `/point`
+  button carries the padlock as a Say callout does (EMOTE-2). Record whether the game would refuse
+  `/point` typed by hand during the encounter: if it does not, the lock is stricter than it needs to be
+  and is a follow-up. Result: owed
 
 ## Pending sign-off
 
@@ -2496,4 +2526,4 @@ Owed from the owner's sixth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-
 
 Owed from the WoW Forever port (QFE-F2, Ka0sAddonsCommonTasks `docs/2026-11-10-QUICKCOMMS_FOREVER_EMOTES/`): FOREVER-1 to
 FOREVER-11, new, each with its `Result:` line reading `owed`. From QFE-F3: FOREVER-12 to FOREVER-17, new, each owed. From QFE-F4: ROLE-1 to ROLE-3 (Retail) and
-FOREVER-18 to FOREVER-21, new, each owed. From QFE-E1: EMOTE-1 and EMOTE-2, new, each owed.
+FOREVER-18 to FOREVER-21, new, each owed. From QFE-E1: EMOTE-1 and EMOTE-2, new, each owed. From QFE-E2: EMOTE-3 to EMOTE-6, new, each owed.

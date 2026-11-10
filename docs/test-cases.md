@@ -357,6 +357,24 @@ Total.
 - channels: [QFE-E1] the channel row offers Emote; the seam accepts it
 - channels: [QFE-E1] a Groups row names Emote in the emote color; a tooltip names its channel
 
+### test_emotes.lua (15)
+
+- emotes: [QFE-E2] the map is EMOTEn_TOKEN to EMOTEn_CMD1 over the client's indices, first index wins
+- emotes: [QFE-E2] the picker lists speech emotes first, marked as voice, then the animated, then the rest
+- emotes: [QFE-E2] Find takes a command or a token; Search matches either, in the picker's order
+- emotes: [QFE-E2] the map is built once, on the first read
+- emotes: [QFE-E2] a game emote bakes the client's command, never the text
+- emotes: [QFE-E2] an unknown or missing token bakes nothing and says why
+- emotes: [QFE-E2] a game emote locks as Say does
+- emotes: [QFE-E2] the library stores the token, copies keep it, and the seam writes it
+- emotes: [QFE-E2] the channel row offers Game emote; a Groups row previews the command
+- emotes: [QFE-E2] a pad button arms the command, and its echo is the player's CHAT_MSG_TEXT_EMOTE
+- emotes: [QFE-E2] a previewed game emote prints would emote /point and sends nothing
+- emotes: [QFE-E2] picking Game emote swaps the Text box for the emote picker; a pick names the callout
+- emotes: [QFE-E2] Save with Game emote and no pick stays open and names the picker
+- emotes: [QFE-E2] a user name is kept, and leaving Game emote drops the token on Save
+- emotes: [QFE-E2] the popup's preview names the emote, and an unknown token's reason
+
 ### test_bake.lua (12)
 
 - bake: a plain callout bakes to prefix + text
@@ -2030,6 +2048,7 @@ Total.
 | test_situation.lua | 20 |
 | test_tokens.lua | 11 |
 | test_channels.lua | 18 |
+| test_emotes.lua | 15 |
 | test_bake.lua | 12 |
 | test_resolver.lua | 13 |
 | test_builtins.lua | 26 |
@@ -2098,4 +2117,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1744** |
+| **Total** | **1759** |

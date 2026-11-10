@@ -7,12 +7,15 @@ local _, NS = ...
 -- echo is a CHAT_MSG_CHANNEL (chat type CHANNEL); its color is the client's CHANNEL1 (ColorType).
 -- `emote` (QFE-E1, QuickComms#15) is a custom emote, `/e`: chat type EMOTE, echoed by CHAT_MSG_EMOTE, and
 -- locked as Say is. It sends the same on Retail and WoW Forever, solo or grouped.
+-- `gameEmote` (QFE-E2) is one of the game's own emotes: the callout carries a token, not text, and its
+-- line is the client's command for it (modules/Emotes.lua), so it has no prefix. Its echo is
+-- CHAT_MSG_TEXT_EMOTE (chat type TEXT_EMOTE); it locks as Say does.
 
 NS.Channels = NS.Channels or {}
 local Ch = NS.Channels
 
 Ch.KINDS = { "smartGroup", "smartLead", "party", "raid", "instance", "raidWarning", "say", "yell", "general",
-    "emote" }
+    "emote", "gameEmote" }
 
 local PREFIX = {
     say = "/s", yell = "/y", party = "/p", raid = "/raid", instance = "/i", raidWarning = "/rw",
@@ -20,7 +23,7 @@ local PREFIX = {
 }
 local CHAT_TYPE = {
     say = "SAY", yell = "YELL", party = "PARTY", raid = "RAID", instance = "INSTANCE_CHAT",
-    raidWarning = "RAID_WARNING", general = "CHANNEL", emote = "EMOTE",
+    raidWarning = "RAID_WARNING", general = "CHANNEL", emote = "EMOTE", gameEmote = "TEXT_EMOTE",
 }
 -- The chat color a concrete channel shows in (ChatTypeInfo's key): its chat type, except General,
 -- whose CHANNEL type has no color of its own; the client colors channel 1 as CHANNEL1.
@@ -29,6 +32,8 @@ local IS_KIND = {}
 for _, k in ipairs(Ch.KINDS) do IS_KIND[k] = true end
 
 function Ch.IsKind(kind) return IS_KIND[kind] == true end
+--- True for the game-emote kind (QFE-E2): a token, not text, and no prefix.
+function Ch.IsGameEmote(kind) return kind == "gameEmote" end
 function Ch.Prefix(concrete) return PREFIX[concrete] end
 function Ch.ChatType(concrete) return CHAT_TYPE[concrete] end
 function Ch.ColorType(concrete) return COLOR_TYPE[concrete] or CHAT_TYPE[concrete] end
@@ -54,7 +59,7 @@ end
 function Ch.Resolve(kind, s, soloFallback)
     s = type(s) == "table" and s or {}
     if kind == "general" then return s.general == true and "general" or "say", nil, false end
-    if PREFIX[kind] then return kind, nil, false end
+    if PREFIX[kind] or kind == "gameEmote" then return kind, nil, false end
     local concrete
     if kind == "smartGroup" then concrete = smartGroup(s)
     elseif kind == "smartLead" then concrete = smartLead(s)
@@ -90,6 +95,7 @@ local LOCKS = {
 LOCKS.yell = LOCKS.say
 LOCKS.general = LOCKS.say
 LOCKS.emote = LOCKS.say
+LOCKS.gameEmote = LOCKS.say
 
 --- Why a concrete channel can't send right now, or nil (spec §8.4). The slot stays visible.
 function Ch.LockState(concrete, s)

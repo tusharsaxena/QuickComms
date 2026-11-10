@@ -231,6 +231,7 @@ Kit.run{
         "test_restrictions", "test_situation",
         "test_tokens",
         "test_channels",
+        "test_emotes",
         "test_bake",
         "test_resolver",
         "test_builtins",

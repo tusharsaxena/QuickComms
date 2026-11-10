@@ -167,7 +167,9 @@ test("channels: [QFE-E1] emote is a fixed kind: /e, chat type EMOTE, the client'
     assertEqual(Ch.Prefix("emote"), "/e")
     assertEqual(Ch.ChatType("emote"), "EMOTE")
     assertEqual(Ch.ColorType("emote"), "EMOTE")
-    assertEqual(Ch.KINDS[#Ch.KINDS], "emote", "listed after general")
+    local at = {}
+    for i, k in ipairs(Ch.KINDS) do at[k] = i end
+    assertEqual(at.emote, at.general + 1, "listed after general")
 end)
 
 test("channels: [QFE-E1] emote locks as Say does", function()

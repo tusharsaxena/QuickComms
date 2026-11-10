@@ -482,6 +482,9 @@ end
 --- @param callout table|nil the slot's callout (Library.Callout)
 --- @param snap table the previewed snapshot the plan baked against
 function P.SlotEcho(slot, callout, snap)
+    -- A game emote (QFE-E2) names what it would do: "would emote /point". Its line is the client's
+    -- command, so there is nothing to re-bake.
+    if slot.line and slot.concrete == "gameEmote" then return L["would emote %s"]:format(slot.line) end
     if slot.line then
         -- Never the plan-time position: the live snapshot (Current, the edit preview of a group with no
         -- content, known by identity as Surfaces.BakeContext knows it) keeps the literal for the click; a synthetic preset,

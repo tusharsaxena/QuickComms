@@ -177,8 +177,8 @@ Every game event is declared in `NS.FEATURE_EVENTS` and registered through `NS.S
 so `OnEnable` and the stand-up register exactly that list and the stand-down unregisters it. The list
 holds the situation and restriction edges' rows (zone, key, group, spec and restriction events, and
 the two combat edges, which `Restrictions` owns; `CHANNEL_UI_UPDATE` and `CHAT_MSG_CHANNEL_NOTICE`
-refresh the snapshot's `general`, QF-04), and the send engine's eleven `CHAT_MSG_*` rows (say, yell,
-party and its leader, raid and its leader, raid warning, instance and its leader, channel, and emote), whose
+refresh the snapshot's `general`, QF-04), and the send engine's twelve `CHAT_MSG_*` rows (say, yell,
+party and its leader, raid and its leader, raid warning, instance and its leader, channel, emote, and text emote for a game emote), whose
 handler matches an echo to a press without reading the text. `CHAT_MSG_CHANNEL` fires for every
 channel the player is in, so the handler drops a line whose channel index (the 8th payload field) is
 readable and not 1 (`SendGuard.IsGeneralEcho`) before matching. The one registration outside
