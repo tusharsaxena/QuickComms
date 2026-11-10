@@ -421,7 +421,9 @@ Nothing is over the cap today. `tests/test_page_groups.lua` reached it exactly a
 own section headings (`80a0fbb`, 2026-10-25): 1131 lines now, beside `tests/test_page_groups_nesting.lua`
 at 418. `tests/test_dial.lua` was split the same way at 1471 lines (2026-10-31): 764 now, beside
 `tests/test_dial_catcher.lua` at 288 and `tests/test_dial_look.lua` at 388, with their shared helpers in
-`tests/dial_helpers.lua`. Seven files sit in the 1000-1500 band (`locales/enUS.lua` 1383,
-`modules/Library.lua` 1324, `tests/test_page_groups.lua` 1131, `tests/test_library.lua` 1057,
-`tests/test_pad.lua` 1047, `tests/wow_mock.lua` 1084, `tests/test_skin_flip.lua` 1064; counted at the LibKa0s v1.86.0 re-vendor); the automated-test record's watch list gives
-each its disposition.
+`tests/dial_helpers.lua`. Seven files sit in the 1000-1500 band (`locales/enUS.lua` 1459,
+`modules/Library.lua` 1358, `tests/test_page_groups.lua` 1131, `tests/test_library.lua` 1057,
+`tests/test_pad.lua` 1049, `tests/wow_mock.lua` 1084, `tests/test_skin_flip.lua` 1064; recounted on the
+Forever port and emotes branch, 2026-11-10); the automated-test record's watch list gives each its
+disposition. `locales/enUS.lua` is 41 lines under the cap and on notice: a batch of strings that
+would cross 1500 splits or trims it first.
