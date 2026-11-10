@@ -594,3 +594,68 @@ test("surfaces: [inherit] a child that inherits shows wherever its parent's When
     -- red under: R.ActiveGroups judging the child by its own arena When
     assertTrue(shown, "in a key, by its parent's When")
 end)
+
+-- ── the slot's action lists and the arm gate (CA-M1-8, combined actions §3) ─────────────────────
+
+local function none(fields)
+    local c = { name = "Act", text = "", channel = "gameEmote", emote = false, ping = false, marker = false }
+    for k, v in pairs(fields) do c[k] = v end
+    return c
+end
+
+test("surfaces: [CA-M1-8] a slot carries its baked actions, chat types and locks; the skipped ones apart", function()
+    local NS, m = live()
+    local snap = { group = "party", instanceGroup = false, lockdown = { encounter = true } }
+    m.SLASH_TARGET_MARKER1 = nil
+    -- S.Slot bakes any table: a Line beside a ping (M2 lets a callout hold both; the slot already does)
+    local slot = NS.Surfaces.Slot("c1", { name = "Go", text = "go", channel = "say", ping = "attack", marker = 8 },
+        snap, {})
+    -- red under: S.Slot baking the Line alone
+    assertEqual(slot.line, "/s go\n/ping [@target,exists] 1")
+    assertEqual(#slot.actions, 2)
+    assertEqual(slot.actions[1].kind, "line") assertEqual(slot.actions[2].kind, "ping")
+    assertEqual(#slot.skipped, 1) assertEqual(slot.skipped[1].kind, "marker")
+    assertEqual(slot.skipped[1].reason, "noMarker")
+    assertEqual(table.concat(slot.chatTypes, ","), "SAY")
+    assertEqual(slot.chatType, slot.chatTypes[1])
+    assertEqual(table.concat(slot.locks, ","), "lockdown")
+    assertEqual(slot.lock, "lockdown")
+    assertNil(slot.reason)
+end)
+
+test("surfaces: [CA-M1-8] a ping-only and a marker-only callout arm; one whose only action was skipped does not", function()
+    local NS, m = live()
+    local ping = userCallout(NS, none{ name = "Ping", ping = "attack" })
+    local mark = userCallout(NS, none{ name = "Mark", marker = 8 })
+    local pb, mb = NS.Pad.ButtonsFor("p1", ping)[1], NS.Pad.ButtonsFor("p1", mark)[1]
+    -- red under: arm() gating on slot.chatType
+    assertTrue(pb.qcArmed, "ping-only arms")
+    assertEqual(pb:GetAttribute("macrotext"), "/ping [@target,exists] 1")
+    assertTrue(mb.qcArmed, "marker-only arms")
+    assertEqual(mb:GetAttribute("macrotext"), "/tm [@target,exists] !8")
+    assertEqual(#pb.qcMeta.actions, 1)
+    assertEqual(pb.qcMeta.actions[1].kind, "ping")
+    m.SLASH_PING1 = nil
+    local gone = userCallout(NS, none{ name = "NoPing", ping = "warning" })
+    local slot = slotOf(planFor(NS), gone)
+    assertNil(slot.line) assertEqual(slot.reason, "noPing")
+    assertEqual(#slot.actions, 0) assertEqual(slot.skipped[1].reason, "noPing")
+    assertFalse(NS.Pad.ButtonsFor("p1", gone)[1].qcArmed, "nothing baked, nothing armed")
+end)
+
+test("surfaces: [CA-M1-8] RefreshLocks relocks each action and lights the chip when any is lockdown", function()
+    local NS = live()
+    local snap = { group = "party", instanceGroup = false, lockdown = {} }
+    local slot = NS.Surfaces.Slot("c1", { name = "Go", text = "go", channel = "say", ping = "attack" }, snap, {})
+    assertNil(slot.lock)
+    assertEqual(#slot.locks, 0)
+    local plan = { sections = { { slots = { slot } } } }
+    NS.State.surfacePlans = { p1 = plan }
+    NS.Situation.Current = function() return { group = "party", instanceGroup = false, lockdown = { encounter = true } } end
+    NS.Situation.Restamp = function() end
+    NS.Surfaces.RefreshLocks()
+    -- red under: RefreshLocks reading slot.concrete alone
+    assertEqual(slot.lock, "lockdown")
+    assertEqual(table.concat(slot.locks, ","), "lockdown")
+    assertTrue(plan.lockdownChip)
+end)

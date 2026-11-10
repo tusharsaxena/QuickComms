@@ -204,13 +204,17 @@ end
 -- combat only prints a string and writes no attribute. An armed live slot whose text uses
 -- {coordinates} carries `rebake` (Surfaces.Slot), which SendEngine's PreClick hook calls out of combat
 -- to re-arm the line with where you are at the press (QF-03); no other button carries one.
+-- A slot arms when at least one of its actions baked (combined actions §3): a ping-only or a
+-- marker-only callout has no chat type and still arms. The meta carries the baked actions, their
+-- chat types and locks, and the skipped ones.
 local function arm(btn, slot)
     local preview = slot.preview == true
     local meta = { calloutId = slot.calloutId, surfaceId = slot.surfaceId, name = slot.name,
-        chatType = slot.chatType, selfText = (not preview) and slot.selfText or nil,
+        chatType = slot.chatType, chatTypes = slot.chatTypes, actions = slot.actions, locks = slot.locks,
+        skipped = slot.skipped, selfText = (not preview) and slot.selfText or nil,
         echo = (preview or slot.reason == "testMode") and (slot.echo or slot.line) or nil,
         lockText = (not preview) and function() return slot.lock and (R.LOCK_TEXT[slot.lock] or tostring(slot.lock)) end or nil }
-    if slot.line and slot.chatType and not preview then
+    if slot.line and slot.actions and #slot.actions > 0 and not preview then
         meta.rebake = slot.rebake
         NS.SendEngine.Arm(btn, slot.line, meta)
     else

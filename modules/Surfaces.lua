@@ -94,7 +94,28 @@ function S.Sections(groupId, groupOf, opts)
     return out
 end
 
---- One button's slot: the baked line, or the reason there is none.
+-- A slot's lists from its baked actions (combined actions §3): each chat action's chat type, each
+-- lock in action order (slot.lock the first), and slot.concrete the first concrete, for readers
+-- not yet moved to the lists. Run at the bake and by RefreshLocks.
+local function slotLocks(slot)
+    local locks = {}
+    for _, a in ipairs(slot.actions) do
+        if a.lock then locks[#locks + 1] = a.lock end
+    end
+    slot.locks, slot.lock = locks, locks[1]
+end
+
+--- True when any of the slot's baked actions is under the encounter lockdown (the lockdown chip).
+function S.SlotLockdown(slot)
+    for _, lock in ipairs(slot.locks or {}) do
+        if lock == "lockdown" then return true end
+    end
+    return slot.lock == "lockdown"
+end
+
+--- One button's slot: the baked macro (every set action that baked, one line each), or the reason
+--- there is none. slot.actions holds only the baked actions, slot.skipped the rest (combined
+--- actions §3), so the arm gate and the press never wait on an action that is not in the macro.
 function S.Slot(calloutId, callout, snap, opts)
     local slot = { calloutId = calloutId }
     if type(callout) ~= "table" then
@@ -102,22 +123,30 @@ function S.Slot(calloutId, callout, snap, opts)
         return slot
     end
     slot.name, slot.icon, slot.iconColor = callout.name, callout.icon, callout.iconColor
-    local line, reason, info = NS.Bake.Bake(callout, snap, opts)
-    slot.line, slot.reason = line, reason
-    slot.concrete, slot.lock = info.concrete, info.lock
-    if line then slot.chatType = NS.Channels.ChatType(info.concrete) end
-    if not line and reason == "solo" and info.selfPrint then slot.selfText = NS.Bake.Sanitize(callout.text) end
-    -- {coordinates} moves while the plan does not (QF-03): the slot's line, re-baked with the position
+    local macro, reason, info = NS.Bake.BakeActions(callout, snap, opts)
+    slot.line, slot.reason = macro, reason
+    slot.actions, slot.skipped, slot.chatTypes = info.baked, {}, {}
+    for _, a in ipairs(info.actions) do
+        if not a.line then slot.skipped[#slot.skipped + 1] = a end
+        if a.kind == "line" and a.reason == "solo" and a.selfPrint then slot.selfText = NS.Bake.Sanitize(callout.text) end
+    end
+    for _, a in ipairs(info.baked) do
+        if a.chatType then slot.chatTypes[#slot.chatTypes + 1] = a.chatType end
+        slot.concrete = slot.concrete or a.concrete
+    end
+    slot.chatType = slot.chatTypes[1]
+    slotLocks(slot)
+    -- {coordinates} moves while the plan does not (QF-03): the slot's macro, re-baked with the position
     -- as it is now, for SendEngine's press-time re-bake. Pad's arm hands it on only for an armed live
-    -- slot. Nil when the line does not bake (over 255 bytes): the button keeps what it holds.
-    if line and NS.Tokens.UsesCoordinates(callout.text) then
+    -- slot. Nil when nothing bakes: the button keeps what it holds.
+    if macro and NS.Tokens.UsesCoordinates(callout.text) then
         opts = type(opts) == "table" and opts or {}
         local base = type(opts.ctx) == "table" and opts.ctx or {}
         slot.rebake = function()
             local ctx = {}
             for k, v in pairs(base) do ctx[k] = v end
             ctx.coordinates = NS.Compat.Coordinates()
-            return (NS.Bake.Bake(callout, snap, { soloFallback = opts.soloFallback, ctx = ctx }))
+            return NS.Bake.BakeActions(callout, snap, { soloFallback = opts.soloFallback, ctx = ctx })
         end
     end
     return slot
@@ -188,7 +217,7 @@ function S.BuildPlan(surfaceId, pad, snap, deps)
             for _, cid in ipairs(sec.callouts) do
                 local slot = S.Slot(cid, deps.callout(cid), snap, opts)
                 slot.surfaceId = surfaceId
-                if slot.lock == "lockdown" then plan.lockdownChip = true end
+                if S.SlotLockdown(slot) then plan.lockdownChip = true end
                 slots[#slots + 1] = slot
             end
             plan.sections[#plan.sections + 1] = { groupId = sec.groupId, title = sec.title, slots = slots,
@@ -323,7 +352,7 @@ function S.BuildDialPlan(surfaceId, dial, snap, deps)
         for _, cid in ipairs(ids or {}) do
             local slot = S.Slot(cid, deps.callout(cid), snap, opts)
             slot.surfaceId = surfaceId
-            if slot.lock == "lockdown" then plan.lockdownChip = true end
+            if S.SlotLockdown(slot) then plan.lockdownChip = true end
             out[#out + 1] = slot
         end
         return out
@@ -549,8 +578,15 @@ function S.RefreshLocks()
         if plan.test then return false end
         plan.lockdownChip = false
         S.EachSlot(plan, function(slot)
-            if slot.concrete then slot.lock = NS.Channels.LockState(slot.concrete, snap) end
-            if slot.lock == "lockdown" then plan.lockdownChip = true end
+            if slot.actions then
+                for _, a in ipairs(slot.actions) do
+                    if a.concrete then a.lock = NS.Channels.LockState(a.concrete, snap) end
+                end
+                slotLocks(slot)
+            elseif slot.concrete then
+                slot.lock = NS.Channels.LockState(slot.concrete, snap)
+            end
+            if S.SlotLockdown(slot) then plan.lockdownChip = true end
         end)
         return true
     end
