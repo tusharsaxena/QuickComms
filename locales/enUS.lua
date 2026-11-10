@@ -135,7 +135,6 @@ L["Character"] = "Character"
 L["always on"] = "always on"
 
 -- Built-in callout sets (defaults/BuiltIns_*.lua)
-L["Dungeon (generic)"] = "Dungeon (generic)"
 L["Pulling"] = "Pulling"
 L["Pulling next pack"] = "Pulling next pack"
 L["Lust"] = "Lust"
@@ -184,7 +183,6 @@ L["Push"] = "Push"
 L["Push now"] = "Push now"
 L["Clear"] = "Clear"
 L["%s is clear"] = "%s is clear"
-L["Help"] = "Help"
 L["Arathi Basin"] = "Arathi Basin"
 L["Stables"] = "Stables"
 L["Lumber Mill"] = "Lumber Mill"
@@ -991,8 +989,6 @@ L["Hides or shows every Comms Pad on this character, as /qc toggle does."] =
 L["Opens or closes the dial at place %d in the dial list."] = "Opens or closes the dial at place %d in the dial list."
 L["A dial's key follows its place in the dial list: Open Comms Dial 1 opens the first dial, and a dial past the fourth has no key."] =
     "A dial's key follows its place in the dial list: Open Comms Dial 1 opens the first dial, and a dial past the fourth has no key."
-L["An imported dial's key is the one WoW binds to its place in the dial list: set it in Options, Keybindings, Ka0s Quick Comms, Open Comms Dial."] =
-    "An imported dial's key is the one WoW binds to its place in the dial list: set it in Options, Keybindings, Ka0s Quick Comms, Open Comms Dial."
 L["Build this dial. A disabled dial keeps its groups and settings, and its key opens nothing."] =
     "Build this dial. A disabled dial keeps its groups and settings, and its key opens nothing."
 L["Delete this dial. Its groups and callouts are kept. Asks first."] =
