@@ -432,24 +432,34 @@ local function useKeyDown(b)
     return v == true
 end
 
+local function hasActions(meta)
+    return type(meta.actions) == "table" and #meta.actions > 0
+end
+
+-- The press (combined actions §4). One G.Decide, one lastSendAt stamp and one qcOnPress per press,
+-- however many actions it has (D7). Each chat action awaits its echo; a press with no chat action
+-- has nothing to echo, so it reports "sent" at once (D16: the flash is not a confirmation).
 local function press(b)
     local meta = b.qcMeta
     if not meta or NS.IsStoodDown() then return end
     NS.Debug(TAG_S, "press %s on %s -> %s%s", tostring(meta.calloutId), tostring(meta.surfaceId),
         tostring(meta.chatType or "none"), b.qcArmed and "" or " (disarmed)")
-    if meta.selfText then
-        NS.Print(meta.selfText)
-        return
-    end
     -- A previewed button or wedge (disarmed, spec §13.3) or a test placeholder: the line it would have
     -- sent, its tokens filled at the click (NS.Preview.FillEcho, QC-07), or why it would send
     -- nothing, printed locally and nothing more. No attribute is read or written, no guard stamped
-    -- and no echo awaited, so a press in combat stays safe.
+    -- and no echo awaited, so a press in combat stays safe. It comes before the self line, so a
+    -- previewed press prints what every action would do and never acts.
     if meta.echo then
         NS.Print(NS.Preview.FillEcho(meta.echo))
         return
     end
-    if not (b.qcArmed and meta.chatType) then return end
+    -- The solo self line (the Line's "self" fallback): printed, and the press goes on only for the
+    -- other actions that baked.
+    if meta.selfText then
+        NS.Print(meta.selfText)
+        if not hasActions(meta) then return end
+    end
+    if not (b.qcArmed and hasActions(meta)) then return end
     -- A padlocked button stays armed (spec §8.4), but the game is expected to refuse it: no echo is
     -- awaited and no guard stamped, so a refusal is never blamed on the spam guard.
     local lockText = meta.lockText and meta.lockText()
@@ -463,9 +473,14 @@ local function press(b)
     local window = NS.Setting("behavior.spamGuard")
     local verdict = G.Decide(now, State.lastSendAt, window)
     State.lastSendAt = now
-    G.Record(echoState(), now, meta.chatType, meta)
-    scheduleExpiry()
+    local chatType = meta.chatTypes and meta.chatTypes[1] or meta.chatType
     if verdict == "guarded" then result(meta, "guarded") end
+    if chatType then
+        G.Record(echoState(), now, chatType, meta)
+        scheduleExpiry()
+    else
+        result(meta, "sent")
+    end
     if b.qcOnPress then b.qcOnPress(b, verdict, window) end
 end
 

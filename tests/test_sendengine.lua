@@ -241,7 +241,8 @@ end)
 
 -- ── the click, the guard and the echo (spec §9.2, §9.3) ─────────────────────────────────────
 
-local META = { calloutId = "c1", surfaceId = "p1", chatType = "PARTY", name = "Pull" }
+-- A Line-only press, as Pad's arm hands it on: its baked actions ride the meta (CA-M1-9).
+local META = { calloutId = "c1", surfaceId = "p1", chatType = "PARTY", name = "Pull", actions = { { kind = "line" } } }
 
 local function armed(NS, m, meta)
     local b = NS.SendEngine.NewButton(m.UIParent)
@@ -346,7 +347,8 @@ test("send: another player's message on the channel is not our echo", function()
 end)
 
 -- A CHAT_MSG_CHANNEL: the channel index is the 8th payload field (QF-04).
-local GENERAL_META = { calloutId = "c1", surfaceId = "p1", chatType = "CHANNEL", name = "Thanks" }
+local GENERAL_META = { calloutId = "c1", surfaceId = "p1", chatType = "CHANNEL", name = "Thanks",
+    actions = { { kind = "line" } } }
 local function channelEcho(m, index, sender, guid)
     m.__fire("CHAT_MSG_CHANNEL", "never read", sender or "Testchar-Testrealm", "", "2. Trade", "", "", 2, index,
         "Trade", 0, 1, guid or m.playerGUID)
@@ -396,7 +398,8 @@ test("send: [QFE-E1] the player's CHAT_MSG_EMOTE is an emote press's echo; anoth
     local NS, m = T.enableAddon()
     local out = results(NS)
     local b = NS.SendEngine.NewButton(m.UIParent)
-    NS.SendEngine.Arm(b, "/e waves", { calloutId = "c1", surfaceId = "p1", chatType = "EMOTE", name = "Wave" })
+    NS.SendEngine.Arm(b, "/e waves", { calloutId = "c1", surfaceId = "p1", chatType = "EMOTE", name = "Wave",
+        actions = { { kind = "line" } } })
     m.__now = 100
     m.__click(b)
     echo(m, "CHAT_MSG_SAY")
@@ -508,4 +511,89 @@ test("sendengine: [keys] no override binding is written: a dial's key is WoW's o
     m.SetBinding("G", "CLICK QuickCommsDial1:Toggle")
     NS.Surfaces.Request("test")
     assertNil(next(m.overrideBindings))
+end)
+
+-- ── the press on its actions (CA-M1-9, combined actions §4) ────────────────────────────────────
+
+local PING_META = { calloutId = "c2", surfaceId = "p1", name = "Ping", chatTypes = {},
+    actions = { { kind = "ping", line = "/ping [@target,exists] 1" } } }
+
+test("send: [CA-M1-9] a ping-only press decides once, stamps once, dims once, and reports sent at once (D16)", function()
+    local NS, m = T.enableAddon()
+    local out = results(NS)
+    local b = NS.SendEngine.NewButton(m.UIParent)
+    NS.SendEngine.Arm(b, "/ping [@target,exists] 1", PING_META)
+    local decided, pressed = 0, 0
+    local decide = NS.SendGuard.Decide
+    NS.SendGuard.Decide = function(...) decided = decided + 1 return decide(...) end
+    b.qcOnPress = function() pressed = pressed + 1 end
+    m.__now = 200
+    m.__click(b)
+    assertEqual(m.sentLines()[1], "/ping [@target,exists] 1")
+    -- red under: the gate reading meta.chatType
+    assertEqual(decided, 1) assertEqual(pressed, 1)
+    assertEqual(NS.SendEngine.GuardState().last, 200)
+    assertEqual(table.concat(out, ","), "c2@p1=sent", "no echo to wait for")
+    assertEqual(NS.SendEngine.EchoState().pending, 0)
+end)
+
+test("send: [CA-M1-9] in combat an armed ping-only button runs its macro, nothing blocked", function()
+    local NS, m = T.enableAddon()
+    local b = NS.SendEngine.NewButton(m.UIParent)
+    NS.SendEngine.Arm(b, "/tm [@target,exists] !8", { calloutId = "c3", surfaceId = "p1", name = "Skull",
+        chatTypes = {}, actions = { { kind = "marker", line = "/tm [@target,exists] !8" } } })
+    combat(m, true)
+    m.__click(b)
+    assertEqual(#m.sentMacros, 1)
+    assertEqual(m.sentMacros[1].text, "/tm [@target,exists] !8")
+    assertEqual(#m.blocked, 0)
+end)
+
+test("send: [CA-M1-9] an armed button with no action ticks nothing", function()
+    local NS, m = T.enableAddon()
+    local out = results(NS)
+    local b = NS.SendEngine.NewButton(m.UIParent)
+    NS.SendEngine.Arm(b, "/p x", { calloutId = "c4", surfaceId = "p1", name = "X", chatType = "PARTY", actions = {} })
+    local pressed = 0
+    b.qcOnPress = function() pressed = pressed + 1 end
+    m.__click(b)
+    -- red under: the gate reading meta.chatType
+    assertEqual(pressed, 0) assertEqual(#out, 0)
+    assertEqual(NS.SendEngine.EchoState().pending, 0)
+end)
+
+test("send: [CA-M1-9] the echo prints before the self line; the self line returns only with no action left", function()
+    local NS, m = T.enableAddon()
+    local b = NS.SendEngine.NewButton(m.UIParent)
+    NS.SendEngine.Disarm(b, { calloutId = "c5", surfaceId = "p1", selfText = "self", echo = "would send" })
+    m.prints = {}
+    m.__click(b)
+    -- red under: selfText printed and returned first
+    assertEqual(#m.prints, 1)
+    assertTrue(m.prints[1]:find("would send", 1, true) ~= nil, m.prints[1])
+    -- a solo Line beside a ping: the self line prints, and the ping still goes
+    local out = results(NS)
+    local a = NS.SendEngine.NewButton(m.UIParent)
+    NS.SendEngine.Arm(a, "/ping [@target,exists] 1", { calloutId = "c6", surfaceId = "p1", name = "Both",
+        selfText = "Incoming", chatTypes = {}, actions = { { kind = "ping", line = "/ping [@target,exists] 1" } } })
+    m.prints = {}
+    m.__click(a)
+    assertEqual(#m.prints, 1)
+    assertTrue(m.prints[1]:find("Incoming", 1, true) ~= nil)
+    assertEqual(table.concat(out, ","), "c6@p1=sent")
+end)
+
+test("send: [CA-M1-9] no file names C_Ping.SendMacroPing: a ping runs from the secure macro only", function()
+    for _, rel in ipairs(T.loadAddon.tocFiles) do
+        assertTrue(not read(rel):find("SendMacroPing", 1, true), rel)
+    end
+end)
+
+test("send: [CA-M1-9] the tooltip's reasons name a callout with no action and a missing ping or marker command", function()
+    local NS = T.newAddon()
+    local R = NS.PadRender.REASON_TEXT
+    -- red under: no REASON_TEXT rows for noAction, noPing, noMarker
+    assertEqual(R.noAction, NS.L["This callout has no action."])
+    assertEqual(R.noPing, NS.L["Pings are not on this client."])
+    assertEqual(R.noMarker, NS.L["Raid markers are not on this client."])
 end)

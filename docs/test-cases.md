@@ -903,7 +903,7 @@ Total.
 - queue: a key replaces its earlier entry and keeps its place
 - echo: [QF-04] only channel 1 is the General echo; an unreadable index is left to the sender rule
 
-### test_sendengine.lua (33)
+### test_sendengine.lua (39)
 
 - sendengine: a send button is a named secure button registered for both edges
 - sendengine: Arm sends exactly the line; Disarm clears both attributes and sends nothing
@@ -938,6 +938,12 @@ Total.
 - sendengine: [phase 4] a wedge is wrapped before it is hooked, acts on the up edge, and only a left click is a press
 - sendengine: [phase 4] attributes, frame refs and snippets are written out of combat only, never blocked
 - sendengine: [keys] no override binding is written: a dial's key is WoW's own binding (modules/Dial.lua)
+- send: [CA-M1-9] a ping-only press decides once, stamps once, dims once, and reports sent at once (D16)
+- send: [CA-M1-9] in combat an armed ping-only button runs its macro, nothing blocked
+- send: [CA-M1-9] an armed button with no action ticks nothing
+- send: [CA-M1-9] the echo prints before the self line; the self line returns only with no action left
+- send: [CA-M1-9] no file names C_Ping.SendMacroPing: a ping runs from the secure macro only
+- send: [CA-M1-9] the tooltip's reasons name a callout with no action and a missing ping or marker command
 
 ### test_dial_secure.lua (20)
 
@@ -2148,7 +2154,7 @@ Total.
 | test_page_dials.lua | 28 |
 | test_check.lua | 6 |
 | test_send_guard.lua | 11 |
-| test_sendengine.lua | 33 |
+| test_sendengine.lua | 39 |
 | test_dial_secure.lua | 20 |
 | test_preview.lua | 36 |
 | test_edit_preview.lua | 17 |
@@ -2198,4 +2204,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1836** |
+| **Total** | **1842** |

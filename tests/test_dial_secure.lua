@@ -27,7 +27,8 @@ local function built(opts)
     local function wedge(ring, line, target)
         local b = DS.NewWedge(h, ring)
         if line and not opts.disarmed then
-            SE.Arm(b, line, { calloutId = "c-" .. line, surfaceId = "d9", chatType = "PARTY", name = line })
+            SE.Arm(b, line, { calloutId = "c-" .. line, surfaceId = "d9", chatType = "PARTY", name = line,
+                actions = { { kind = "line" } } })
         end
         return { button = b, target = target or 0 }
     end
@@ -204,7 +205,8 @@ test("dial secure: [final 2] opening one dial closes another that is open; closi
     local h2 = DS.NewHeader(8)
     local f = DS.NewRing(h2)
     local b = DS.NewWedge(h2, f)
-    SE.Arm(b, "/p other", { calloutId = "c-o", surfaceId = "d8", chatType = "PARTY", name = "o" })
+    SE.Arm(b, "/p other", { calloutId = "c-o", surfaceId = "d8", chatType = "PARTY", name = "o",
+        actions = { { kind = "line" } } })
     assertTrue(DS.Load(h2, { { frame = f, parent = 0, prev = 0, next = 0, wedges = { { button = b, target = 0 } } } }, {}))
     assertTrue(DS.Link({ h, h2 }))
     m.__click(h, "Toggle")
@@ -245,7 +247,8 @@ local function caught(size, places)
     local wedges = {}
     for i, place in ipairs(places) do
         local b = DS.NewWedge(h, frame)
-        SE.Arm(b, "/p " .. place, { calloutId = "c" .. i, surfaceId = "d9", chatType = "PARTY", name = "w" .. place })
+        SE.Arm(b, "/p " .. place, { calloutId = "c" .. i, surfaceId = "d9", chatType = "PARTY", name = "w" .. place,
+            actions = { { kind = "line" } } })
         wedges[i] = { button = b, target = 0, place = place }
     end
     assertTrue(DS.Load(h, { { frame = frame, parent = 0, prev = 0, next = 0, wedges = wedges, catcher = catcher,

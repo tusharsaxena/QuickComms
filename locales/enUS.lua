@@ -476,6 +476,11 @@ L["This callout has no game emote."] = "This callout has no game emote."
 L["This game emote is not on this client."] = "This game emote is not on this client."
 L["would emote %s"] = "would emote %s"
 
+-- Pings and raid target markers (combined actions §3, §5, §6): why a callout bakes nothing.
+L["This callout has no action."] = "This callout has no action."
+L["Pings are not on this client."] = "Pings are not on this client."
+L["Raid markers are not on this client."] = "Raid markers are not on this client."
+
 -- Preview as… (modules/Preview.lua, modules/Pad.lua, modules/Pad_Render.lua)
 L["Current"] = "Current"
 L["Off"] = "Off"

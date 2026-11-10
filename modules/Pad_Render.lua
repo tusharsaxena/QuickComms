@@ -145,6 +145,9 @@ R.REASON_TEXT = {
     testMode = L["Test mode: a placeholder that sends nothing."],
     noEmote = L["This callout has no game emote."],
     unknownEmote = L["This game emote is not on this client."],
+    noAction = L["This callout has no action."],
+    noPing = L["Pings are not on this client."],
+    noMarker = L["Raid markers are not on this client."],
 }
 
 -- Why a locked button may not reach anyone (Channels.LockState, spec §8.4).
