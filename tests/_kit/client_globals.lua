@@ -342,10 +342,6 @@ local function rowTakes(row, hit)
   return row.name == hit.name and (row.path == nil or hit.file:sub(1, #row.path) == row.path)
 end
 
---- Sort findings against the kit's built-in rows and the addon's own: answers `bad` (findings in
---- `clients` no row takes), `problems` (a row with no name or no reason) and `stale` (an addon row
---- no finding in EITHER client reaches). An addon row is `{ name, reason }` with an optional `path`
---- prefix; a name-only row excuses that name in addon code too, so scope it where it can be.
 --- Whether an addon allowlist row is malformed: no name, no reason, or a path that is no string.
 local function badRow(row)
   return type(row.name) ~= "string" or row.name == "" or type(row.reason) ~= "string" or row.reason == ""
@@ -365,6 +361,10 @@ local function takenBy(hit, allow, used)
   return taken
 end
 
+--- Sort findings against the kit's built-in rows and the addon's own: answers `bad` (findings in
+--- `clients` no row takes), `problems` (a row with no name or no reason) and `stale` (an addon row
+--- no finding in EITHER client reaches). An addon row is `{ name, reason }` with an optional `path`
+--- prefix; a name-only row excuses that name in addon code too, so scope it where it can be.
 function CG.judge(found, allow, clients)
   local want, used, bad, problems, stale = {}, {}, {}, {}, {}
   for _, c in ipairs(clients) do want[c] = true end
