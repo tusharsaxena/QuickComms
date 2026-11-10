@@ -79,7 +79,10 @@ files["core/EUIBridge.lua"] = {
 -- here so no feature file reads it directly (compat). The macro icon lists left with Compat.MacroIcons
 -- for LibKa0s-IconBrowser-1.0 (v1.86.0), which reads them itself.
 files["core/Compat.lua"] = {
-  read_globals = { "C_XMLUtil" },
+  read_globals = { "C_XMLUtil",
+    -- the ids probe's readers (QuickComms#21, /qc probe ids), each guarded for absence at call time
+    "GetLFDChoiceOrder", "GetLFGDungeonInfo", "GetNumRandomDungeons", "GetLFGRandomDungeonInfo",
+    "GetNumBattlegroundTypes", "C_PvP" },
 }
 
 -- QC:SlashEnabled and QC:OnSlashCommand are methods on the addon object by calling convention;

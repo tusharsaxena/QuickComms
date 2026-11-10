@@ -1442,8 +1442,8 @@ L["A character is a first name and surname."] = "A character is a first name and
 L["a first name and surname"] = "a first name and surname"
 
 -- The probe (QFE-F5: settings/SlashVerbs.lua ProbeLines, the `probe` row in settings/Slash.lua)
-L["Record where you are, your role and the client's emotes in the saved settings — `/qc probe`, or `/qc probe clear`"] =
-    "Record where you are, your role and the client's emotes in the saved settings — `/qc probe`, or `/qc probe clear`"
+L["Record where you are, your role and the client's emotes, or with `ids` the client's map, dungeon finder and battleground names, in the saved settings — `/qc probe`, `/qc probe ids`, or `/qc probe clear`"] =
+    "Record where you are, your role and the client's emotes, or with `ids` the client's map, dungeon finder and battleground names, in the saved settings — `/qc probe`, `/qc probe ids`, or `/qc probe clear`"
 L["Probe %d saved for %s (QuickCommsDB.global.probes; /qc probe clear empties it)."] =
     "Probe %d saved for %s (QuickCommsDB.global.probes; /qc probe clear empties it)."
 L["  place: %s, type %s, difficulty %s (%s), %s players, instance %s"] =
@@ -1452,8 +1452,18 @@ L["  content: %s; group: %s; role: %s"] = "  content: %s; group: %s; role: %s"
 L["  spec: %s (%s); talent groups: %s; emotes: %d"] = "  spec: %s (%s); talent groups: %s; emotes: %d"
 L["none"] = "none"
 L["Probes cleared: %d removed."] = "Probes cleared: %d removed."
-L["/qc probe records where you are; /qc probe clear empties the records."] =
-    "/qc probe records where you are; /qc probe clear empties the records."
+L["/qc probe records where you are; /qc probe ids records the client's map, dungeon finder and battleground names; /qc probe clear empties the records."] =
+    "/qc probe records where you are; /qc probe ids records the client's map, dungeon finder and battleground names; /qc probe clear empties the records."
 L["The probe is not available in combat."] = "The probe is not available in combat."
 L["The probe is not available before the saved settings load."] =
     "The probe is not available before the saved settings load."
+-- The ids probe (QuickComms#21: settings/SlashVerbs.lua ProbeIdsSummary)
+L["Ids probe %d saved for %s (QuickCommsDB.global.probes; /qc probe clear empties it)."] =
+    "Ids probe %d saved for %s (QuickCommsDB.global.probes; /qc probe clear empties it)."
+L["  map names read: %d of ids 0 to %d; dungeon finder: %d entries; battlegrounds: %d"] =
+    "  map names read: %d of ids 0 to %d; dungeon finder: %d entries; battlegrounds: %d"
+L["  shipped ids the client does not name: %s"] = "  shipped ids the client does not name: %s"
+L["  dungeon finder names no shipped id carries: %s"] = "  dungeon finder names no shipped id carries: %s"
+L["dungeon %d"] = "dungeon %d"
+L["raid %d"] = "raid %d"
+L["battleground set %s (%s)"] = "battleground set %s (%s)"

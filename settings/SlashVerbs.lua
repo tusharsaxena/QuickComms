@@ -1,7 +1,7 @@
 local _, NS = ...
 -- settings/SlashVerbs.lua — the bodies of the feature verbs settings/Slash.lua's NS.COMMANDS rows
 -- call (spec §14). Today: `check`, `lock`, `unlock`, `toggle`, `preview` (bare, a name, `off`, `list`),
--- `why` and `probe` (bare or `clear`). The rows are positional triples; the work lives here so it
+-- `why` and `probe` (bare, `ids` or `clear`). The rows are positional triples; the work lives here so it
 -- can be tested without the dispatcher.
 
 NS.SlashVerbs = NS.SlashVerbs or {}
@@ -283,6 +283,105 @@ function V.ProbeSummary(rec, n)
     }
 end
 
+-- ── /qc probe ids (QuickComms#21, the forever-ids design "#1 in game") ──────────────────────
+--
+-- The client's own names, read with no travel, for checking the shipped ids (defaults/GameIds_Clients.lua
+-- and the battleground sets) off a saved file: every map id 0..PROBE_MAP_MAX GetRealZoneText names, the
+-- dungeon finder's list and the battlegrounds. One `kind = "ids"` record in the same store, under the
+-- same PROBE_KEEP cap. The chat gets how many maps were named, each shipped id the client does not
+-- name, and each dungeon finder name no shipped id carries.
+
+-- The last map id the sweep reads (the highest Forever or Retail id is under it today).
+V.PROBE_MAP_MAX = 4000
+
+--- One ids record, read now (never stored).
+--- @return table
+function V.ProbeIdsRecord()
+    local C = NS.Compat
+    return {
+        kind = "ids",
+        client = C.ClientKey(),
+        time = GetServerTime and C.PlainNumber(GetServerTime()) or nil,
+        maps = C.ProbeMapNames(V.PROBE_MAP_MAX),
+        lfg = C.ProbeDungeonFinder(),
+        battlegrounds = C.ProbeBattlegrounds(),
+    }
+end
+
+-- This client's shipped battleground sets that match on ids, in seeding order: { key, ids }, the
+-- ids sorted. A set carries both clients' map ids, so it is checked as a whole.
+local function shippedBattlegroundSets()
+    local BI, out = NS.BuiltIns, {}
+    for _, gid in ipairs(BI.Seeded()) do
+        local when = BI.groups[gid].when
+        if when and when.battleground then
+            local ids = {}
+            for id in pairs(when.battleground) do ids[#ids + 1] = id end
+            table.sort(ids)
+            out[#out + 1] = { key = gid:match("^bi%.bg%.(.+)$") or gid, ids = ids }
+        end
+    end
+    return out
+end
+
+-- The shipped ids the record's maps do not name, as text pieces, and the names it gives the rest.
+local function unnamedShipped(maps)
+    local G, missing, names = NS.GameIds, {}, {}
+    for _, kind in ipairs({ { G.DUNGEONS, L["dungeon %d"] }, { G.RAIDS, L["raid %d"] } }) do
+        for _, id in ipairs(kind[1] or {}) do
+            if maps[id] then names[maps[id]] = true else missing[#missing + 1] = kind[2]:format(id) end
+        end
+    end
+    for _, s in ipairs(shippedBattlegroundSets()) do
+        local named = false
+        for _, id in ipairs(s.ids) do
+            if maps[id] then names[maps[id]], named = true, true end
+        end
+        if not named then missing[#missing + 1] = L["battleground set %s (%s)"]:format(s.key, table.concat(s.ids, ", ")) end
+    end
+    return missing, names
+end
+
+-- The dungeon finder's names (random entries left out) that no shipped id carries: neither a name
+-- the client gives a shipped id, nor an entry whose lfgMapID is one.
+local function uncarriedFinderNames(lfg, names)
+    local G, shipped, out, seen = NS.GameIds, {}, {}, {}
+    for _, list in ipairs({ G.DUNGEONS or {}, G.RAIDS or {} }) do
+        for _, id in ipairs(list) do shipped[id] = true end
+    end
+    for _, s in ipairs(shippedBattlegroundSets()) do
+        for _, id in ipairs(s.ids) do shipped[id] = true end
+    end
+    for _, e in ipairs(lfg) do
+        local n = e.name
+        if n and not e.random and not names[n] and not (e.mapID and shipped[e.mapID]) and not seen[n] then
+            seen[n] = true
+            out[#out + 1] = n
+        end
+    end
+    return out
+end
+
+local function listOrNone(list)
+    if #list == 0 then return L["none"] end
+    return table.concat(list, ", ")
+end
+
+--- The lines `/qc probe ids` prints for a stored ids record and its place in the list.
+--- @return string[]
+function V.ProbeIdsSummary(rec, n)
+    local count = 0
+    for _ in pairs(rec.maps) do count = count + 1 end
+    local missing, names = unnamedShipped(rec.maps)
+    return {
+        L["Ids probe %d saved for %s (QuickCommsDB.global.probes; /qc probe clear empties it)."]:format(n, rec.client),
+        L["  map names read: %d of ids 0 to %d; dungeon finder: %d entries; battlegrounds: %d"]:format(count,
+            V.PROBE_MAP_MAX, #rec.lfg, #rec.battlegrounds),
+        L["  shipped ids the client does not name: %s"]:format(listOrNone(missing)),
+        L["  dungeon finder names no shipped id carries: %s"]:format(listOrNone(uncarriedFinderNames(rec.lfg, names))),
+    }
+end
+
 -- `/qc probe clear`: every client's records go.
 local function probeClearLines()
     local store = probeStore(false)
@@ -294,21 +393,26 @@ local function probeClearLines()
     return { L["Probes cleared: %d removed."]:format(removed) }
 end
 
---- The lines `/qc probe [clear]` prints. Bare records a probe and summarizes it; refused in combat
---- with one line; `clear` empties the store (any time); anything else names the two forms.
+--- The lines `/qc probe [ids|clear]` prints. Bare records the place and summarizes it, `ids` records
+--- the client's map, dungeon finder and battleground names and summarizes them; either is refused in
+--- combat with one line. `clear` empties the store (any time); anything else names the three forms.
 --- @return string[]
 function V.ProbeLines(rest)
     local word = ((rest or ""):match("^%s*(%S+)") or ""):lower()
     if word == "clear" then return probeClearLines() end
-    if word ~= "" then return { L["/qc probe records where you are; /qc probe clear empties the records."] } end
+    if word ~= "" and word ~= "ids" then
+        return { L["/qc probe records where you are; /qc probe ids records the client's map, dungeon finder and battleground names; /qc probe clear empties the records."] }
+    end
     if NS.Restrictions.InCombat() or NS.Compat.InCombat() then return { L["The probe is not available in combat."] } end
     local store = probeStore(true)
     if not store then return { L["The probe is not available before the saved settings load."] } end
-    local rec = V.ProbeRecord()
+    local ids = word == "ids"
+    local rec = ids and V.ProbeIdsRecord() or V.ProbeRecord()
     local list = type(store[rec.client]) == "table" and store[rec.client] or {}
     store[rec.client] = list
     list[#list + 1] = rec
     while #list > V.PROBE_KEEP do table.remove(list, 1) end
+    if ids then return V.ProbeIdsSummary(rec, #list) end
     return V.ProbeSummary(rec, #list)
 end
 

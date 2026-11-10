@@ -314,6 +314,97 @@ function Compat.ProbeInstance()
     return out
 end
 
+-- ── The ids probe's readers (QuickComms#21, the forever-ids design "#1 in game") ─────────────
+-- What `/qc probe ids` reads with no travel. Every call is guarded (an absent API, one that throws
+-- or one that answers the wrong shape reads as nothing) and every value goes through the Plain
+-- readers, so a secret is left out or stored as nil.
+
+-- `f(...)`'s returns, packed after its ok flag, or nil when f is not a function or throws.
+local function guarded(f, ...)
+    if type(f) ~= "function" then return nil end
+    local r = { pcall(f, ...) }
+    if not r[1] then return nil end
+    return r
+end
+
+-- A plain table to index, or nil.
+local function plainTable(v)
+    if type(v) ~= "table" or Compat.IsSecret(v) then return nil end
+    return v
+end
+
+--- Every map id 0..`max` the client names (GetRealZoneText takes a map id), as `{ [id] = name }`,
+--- the non-empty plain names only.
+--- @return table<number,string>
+function Compat.ProbeMapNames(max)
+    local out = {}
+    local read = GetRealZoneText
+    if type(read) ~= "function" then return out end
+    for id = 0, max do
+        local r = guarded(read, id)
+        local name = r and PlainString(r[2])
+        if name and name ~= "" then out[id] = name end
+    end
+    return out
+end
+
+-- One dungeon finder entry by id: GetLFGDungeonInfo's name, type and subtype, and its 22nd return,
+-- lfgMapID (LFGUtil.lua reads it so), each plain or nil.
+local function lfgEntry(id)
+    local r = guarded(GetLFGDungeonInfo, id) or {}
+    return { id = id, name = PlainString(r[2]), typeID = PlainNumber(r[3]), subtypeID = PlainNumber(r[4]),
+        mapID = PlainNumber(r[23]) }
+end
+
+--- The dungeon finder's list as the client gives it: every id of GetLFDChoiceOrder (the specific
+--- dungeons, a negative id being no dungeon), then each random entry (GetNumRandomDungeons and
+--- GetLFGRandomDungeonInfo, marked `random`), each `{ id, name, typeID, subtypeID, mapID }`.
+--- @return table[]
+function Compat.ProbeDungeonFinder()
+    local out, seen = {}, {}
+    local function add(id, random, name)
+        id = PlainNumber(id)
+        if not id or id < 0 or seen[id] then return end
+        seen[id] = true
+        local e = lfgEntry(id)
+        e.name = e.name or PlainString(name)
+        e.random = random or nil
+        out[#out + 1] = e
+    end
+    local r = guarded(GetLFDChoiceOrder)
+    for _, id in ipairs(r and plainTable(r[2]) or {}) do add(id) end
+    r = guarded(GetNumRandomDungeons)
+    for i = 1, r and PlainNumber(r[2]) or 0 do
+        local info = guarded(GetLFGRandomDungeonInfo, i)
+        if info then add(info[2], true, info[3]) end
+    end
+    return out
+end
+
+-- How many battleground types are read at most, whatever GetNumBattlegroundTypes says.
+local BATTLEGROUND_MAX = 100
+
+--- The battlegrounds the client lists: C_PvP.GetBattlegroundInfo over 1..GetNumBattlegroundTypes
+--- (Mainline's PVPUI walks them so; both clients have no global GetBattlegroundInfo), each
+--- `{ index, name, battlegroundID, mapID, isRandom }`, plain or nil.
+--- @return table[]
+function Compat.ProbeBattlegrounds()
+    local out = {}
+    local pvp = plainTable(C_PvP)
+    local read = pvp and pvp.GetBattlegroundInfo
+    local r = guarded(GetNumBattlegroundTypes)
+    local n = math.min(r and PlainNumber(r[2]) or 0, BATTLEGROUND_MAX)
+    for i = 1, n do
+        local info = guarded(read, i)
+        info = info and plainTable(info[2])
+        if info then
+            out[#out + 1] = { index = i, name = PlainString(info.name), battlegroundID = PlainNumber(info.battlegroundID),
+                mapID = PlainNumber(info.mapID), isRandom = plainBool(info.isRandom) }
+        end
+    end
+    return out
+end
+
 --- The active spec's id and name, each plain or nil (the situation's spec ladder).
 function Compat.ActiveSpec()
     return activeSpec()
