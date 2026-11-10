@@ -647,6 +647,81 @@ function Compat.UseKeyDown()
     return v == true
 end
 
+-- ── Pings and raid target markers (spec §4 step 5, §5, §6): plain reads, safe in combat ─────────
+
+--- The client's localized /ping command (SLASH_PING1), or nil when the client has no ping system
+--- (no C_Ping) or no such command. A Spanish client answers "/aviso".
+function Compat.PingCommand()
+    if C_Ping == nil then return nil end
+    return PlainString(_G.SLASH_PING1)
+end
+
+--- The client's localized /tm command (SLASH_TARGET_MARKER1), or nil.
+function Compat.MarkerCommand()
+    return PlainString(_G.SLASH_TARGET_MARKER1)
+end
+
+local function pingsEnabled(ping)
+    if not ping.IsPingSystemEnabled then return nil end
+    local on = plainBool(ping.IsPingSystemEnabled())
+    if on == nil then return nil end
+    local cv = C_CVar
+    local get = (cv and cv.GetCVarBool) or GetCVarBool
+    if on and get then
+        local pref = plainBool(get("enablePings"))
+        if pref == nil then return nil end
+        on = pref
+    end
+    return on
+end
+
+--- "off" (the ping system or the player's enablePings cvar is off), "cooldown" (the ping cooldown
+--- runs: endTimeMs past GetTime()*1000, Blizzard_PingUI's own clock base), "ok", or nil when the
+--- answer cannot be read (no C_Ping, a secret flag). An unreadable end time is no known cooldown.
+function Compat.PingState()
+    local ping = C_Ping
+    if type(ping) ~= "table" then return nil end
+    local on = pingsEnabled(ping)
+    if on == nil then return nil end
+    if not on then return "off" end
+    local info = ping.GetCooldownInfo and ping.GetCooldownInfo()
+    if type(info) == "table" and not Compat.IsSecret(info) and GetTime then
+        local endMs, now = PlainNumber(info.endTimeMs), PlainNumber(GetTime())
+        if endMs and now and endMs > now * 1000 then return "cooldown" end
+    end
+    return "ok"
+end
+
+--- Whether the player has a target: a plain boolean, or nil when it cannot be read.
+function Compat.TargetExists()
+    if not UnitExists then return nil end
+    return plainBool(UnitExists("target"))
+end
+
+--- Whether `unit` can carry a raid target marker (CanBeRaidTarget): plain, or nil when unknown.
+function Compat.CanMark(unit)
+    if not CanBeRaidTarget then return nil end
+    return plainBool(CanBeRaidTarget(unit))
+end
+
+--- True in a raid group (a secret reads false).
+function Compat.InRaid()
+    return IsInRaid ~= nil and plainTrue(IsInRaid())
+end
+
+--- True when the raid has made everyone an assistant (a secret reads false).
+function Compat.EveryoneAssistant()
+    return IsEveryoneAssistant ~= nil and plainTrue(IsEveryoneAssistant())
+end
+
+--- "noRights" in a raid without leader, assist or everyone-assistant; "ok" otherwise (a party, or
+--- solo: every member may mark). Both of Leadership's returns are read.
+function Compat.MarkerRights()
+    local leader, assist = Compat.Leadership()
+    if Compat.InRaid() and not (leader or assist) and not Compat.EveryoneAssistant() then return "noRights" end
+    return "ok"
+end
+
 --- Whether a chat line came from the player: true, false, or nil when neither the GUID nor the
 --- name can be read (secret or absent). Never compares a secret. Without the GUID the full name
 --- decides: a sender with a realm is the player only on the player's own realm (a cross-realm

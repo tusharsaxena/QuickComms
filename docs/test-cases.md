@@ -258,7 +258,7 @@ Total.
 - diagnostics: [debug] the log follows a dial open, a ring shown, a press and a close, once each
 - diagnostics: [shine] the pad's button line and the dial's slices line print the look and strength
 
-### test_compat.lua (15)
+### test_compat.lua (20)
 
 - compat: plain readers pass plain values and drop secrets
 - compat: InstanceInfo with a secret instanceID reads nil, never raises
@@ -275,6 +275,11 @@ Total.
 - compat: [QFE-F1] FrameStrata answers a plain strata, else the fallback (a secret on WoW Forever)
 - compat: [QF-03] Coordinates reads the map position as x, y in percent, one decimal, or nil
 - compat: [QF-04] GeneralJoined is true only when the client names channel 1 as General
+- compat: [CA-M1-2] PingCommand and MarkerCommand read the localized commands, nil when absent or secret
+- compat: [CA-M1-2] PingState answers off, cooldown or ok, and nil when it cannot read
+- compat: [CA-M1-2] TargetExists and CanMark are plain booleans, nil on a secret or a missing API
+- compat: [CA-M1-2] InRaid and EveryoneAssistant are plain, a secret reads false
+- compat: [CA-M1-2] MarkerRights: a raid needs leader, assist or everyone-assistant; a party may mark
 
 ### test_identity.lua (11)
 
@@ -2083,7 +2088,7 @@ Total.
 | test_slash.lua | 22 |
 | test_disabled.lua | 26 |
 | test_diagnostics.lua | 13 |
-| test_compat.lua | 15 |
+| test_compat.lua | 20 |
 | test_identity.lua | 11 |
 | test_probe.lua | 18 |
 | test_restrictions.lua | 20 |
@@ -2159,4 +2164,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1797** |
+| **Total** | **1802** |

@@ -219,3 +219,106 @@ test("compat: [QF-04] GeneralJoined is true only when the client names channel 1
     m.C_ChatInfo = nil
     assertFalse(C.GeneralJoined(), "no C_ChatInfo")
 end)
+
+-- ── pings and raid target markers (CA-M1-2, spec §4 step 5, §5, §6) ────────────────────────────
+
+test("compat: [CA-M1-2] PingCommand and MarkerCommand read the localized commands, nil when absent or secret", function()
+    local NS, m = T.newAddon()
+    m.issecretvalue = T.isSecret
+    local C = NS.Compat
+    -- red under: no Compat.PingCommand / Compat.MarkerCommand
+    assertEqual(C.PingCommand(), "/ping")
+    assertEqual(C.MarkerCommand(), "/tm")
+    m.SLASH_PING1, m.SLASH_TARGET_MARKER1 = "/aviso", "/mo"
+    assertEqual(C.PingCommand(), "/aviso", "a localized client's command")
+    assertEqual(C.MarkerCommand(), "/mo")
+    m.SLASH_PING1, m.SLASH_TARGET_MARKER1 = T.secret("/ping"), T.secret("/tm")
+    assertNil(C.PingCommand(), "a secret command")
+    assertNil(C.MarkerCommand())
+    m.SLASH_PING1, m.SLASH_TARGET_MARKER1 = nil, nil
+    assertNil(C.PingCommand(), "no global")
+    assertNil(C.MarkerCommand())
+    m.SLASH_PING1 = "/ping"
+    m.C_Ping = nil
+    assertNil(C.PingCommand(), "no C_Ping: the client has no ping system")
+end)
+
+test("compat: [CA-M1-2] PingState answers off, cooldown or ok, and nil when it cannot read", function()
+    local NS, m = T.newAddon()
+    m.issecretvalue = T.isSecret
+    local C = NS.Compat
+    assertEqual(C.PingState(), "ok")
+    m.pingEnabled = false
+    assertEqual(C.PingState(), "off", "the system is off")
+    m.pingEnabled = true
+    m.cvars.enablePings = "0"
+    assertEqual(C.PingState(), "off", "the player turned pings off")
+    m.cvars.enablePings = "1"
+    m.__now = 10
+    m.pingCooldownEndMs = 10500
+    -- red under: comparing endTimeMs with GetTime() in seconds (Blizzard_PingUI's base is ms)
+    assertEqual(C.PingState(), "cooldown")
+    m.pingCooldownEndMs = 9000
+    assertEqual(C.PingState(), "ok", "a cooldown that has ended")
+    m.pingCooldownEndMs = T.secret(10500)
+    assertEqual(C.PingState(), "ok", "a secret end time is not a known cooldown")
+    m.pingCooldownEndMs = 0
+    m.pingEnabled = T.secret(false)
+    assertNil(C.PingState(), "a secret enabled flag is unknown")
+    m.pingEnabled = true
+    m.C_Ping = nil
+    assertNil(C.PingState(), "no ping system")
+end)
+
+test("compat: [CA-M1-2] TargetExists and CanMark are plain booleans, nil on a secret or a missing API", function()
+    local NS, m = T.newAddon()
+    m.issecretvalue = T.isSecret
+    local C = NS.Compat
+    assertFalse(C.TargetExists())
+    m.__unitExists.target = true
+    assertTrue(C.TargetExists())
+    m.__unitExists.target = T.secret(false)
+    -- red under: `not UnitExists("target")` (a secret is truthy here and raises in the client)
+    assertNil(C.TargetExists(), "a secret is unknown")
+    assertTrue(C.CanMark("target"))
+    m.raidTargetable = false
+    assertFalse(C.CanMark("target"))
+    m.raidTargetable = T.secret(false)
+    assertNil(C.CanMark("target"), "a secret is unknown")
+    m.CanBeRaidTarget = nil
+    assertNil(C.CanMark("target"), "no API")
+end)
+
+test("compat: [CA-M1-2] InRaid and EveryoneAssistant are plain, a secret reads false", function()
+    local NS, m = T.newAddon()
+    m.issecretvalue = T.isSecret
+    local C = NS.Compat
+    assertFalse(C.InRaid())
+    assertFalse(C.EveryoneAssistant())
+    m.__context.inRaid, m.everyoneAssist = true, true
+    assertTrue(C.InRaid())
+    assertTrue(C.EveryoneAssistant())
+    m.__context.inRaid, m.everyoneAssist = T.secret(true), T.secret(true)
+    assertFalse(C.InRaid())
+    assertFalse(C.EveryoneAssistant())
+    m.IsEveryoneAssistant = nil
+    assertFalse(C.EveryoneAssistant(), "no API")
+end)
+
+test("compat: [CA-M1-2] MarkerRights: a raid needs leader, assist or everyone-assistant; a party may mark", function()
+    local NS, m = T.newAddon()
+    m.issecretvalue = T.isSecret
+    local C = NS.Compat
+    assertEqual(C.MarkerRights(), "ok", "solo")
+    m.__context.inGroup = true
+    assertEqual(C.MarkerRights(), "ok", "a party")
+    m.__context.inRaid = true
+    assertEqual(C.MarkerRights(), "noRights", "a raid member without leader or assist")
+    m.isAssist = true
+    -- red under: `not Compat.Leadership()` (reads only the first return: an assistant has no rights)
+    assertEqual(C.MarkerRights(), "ok", "an assistant")
+    m.isAssist, m.isLeader = false, true
+    assertEqual(C.MarkerRights(), "ok", "the leader")
+    m.isLeader, m.everyoneAssist = false, true
+    assertEqual(C.MarkerRights(), "ok", "everyone is an assistant")
+end)
