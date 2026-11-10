@@ -72,7 +72,9 @@ The member rows address a member's fields through the seam (`settings/SchemaMemb
 shipped sets in `NS.BuiltIns` are seed data: a profile is given them once as ordinary groups and
 callouts (fresh ids from `nextId`; each group's callouts take their ids before it, a set's nodes
 after it, so the nodes keep their shipped order), placed on the default pad and dial, a battleground's
-nodes inside its set. `Library.Prepare` is the load
+nodes inside its set. Each group copies the When its set declares, unless this client names another
+(`BuiltIns.WhenOf`, `NS.GameIds.BUILTIN_WHEN`; on WoW Forever the Dungeon set's copy has content
+Dungeon alone, QFE-C7). `Library.Prepare` is the load
 pass, run after `RunMigrations` on `OnInitialize` and on every profile event: it makes the default
 pad and dial and seeds the sets once, seeds a set a later version ships (one `seededSets` does not
 list) at the end of every pad and dial, normalizes malformed shapes, drops a malformed stored

@@ -61,6 +61,18 @@ function BI.Ships(id)
     return true
 end
 
+--- The When shipped group `id` is seeded and restored with on this client (QFE-C7): its entry in
+--- NS.GameIds.BUILTIN_WHEN (WoW Forever's Dungeon set matches dungeons alone), else the one it
+--- declares. Read at call time, as BI.Ships is. The caller copies it; the declaration never changes.
+--- @return table|nil
+function BI.WhenOf(id)
+    local G = NS.GameIds or {}
+    local override = G.BUILTIN_WHEN and G.BUILTIN_WHEN[id]
+    if override then return override end
+    local def = BI.groups[id]
+    return def and def.when
+end
+
 --- The top-level sets this client seeds, in BI.order's order (BI.Ships).
 --- @return string[]
 function BI.Seeded()

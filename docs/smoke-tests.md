@@ -2355,8 +2355,8 @@ The content kinds, place lists and seeds (QFE-F3; **code:** `defaults/GameIds_Cl
 
 - **FOREVER-12. The When editor offers Forever's kinds.** Groups → pick any group → When → open **Content** → it lists exactly Open world, Dungeon, Raid and Battleground (no Mythic+, Delve, Scenario, Arena or Housing); **Select all** ticks those four only. The drawers listed are Content, Instance, Group, Leader or assist, Class, Specialization, Role, Character and Battleground: no **Difficulty**, **Key level** or **Arena** drawer. Open **Instance** and type `Molten` → Molten Core is suggested; type `Algeth` → nothing is suggested. On Retail the same group shows all nine kinds and every drawer (unchanged). Result: owed
 - **FOREVER-13. Preview as... lists Forever's places.** Settings → General → **Preview as...** → the menu reads Current, then the 17 classic dungeons as `Dungeon · <name>`, A-Z, then the six raids (Molten Core, Onyxia's Lair, Blackwing Lair, both Ahn'Qiraj raids, Naxxramas) as `Raid · <name>`, A-Z and with no difficulty named, then `BG - Arathi Basin`, `BG - Warsong Gulch`, `BG - Alterac Valley` and Solo. There is no `M+` entry and no Arena. Pick `Dungeon · Deadmines` → the pads show the groups whose Content ticks Dungeon; pick `BG - Warsong Gulch` → the Warsong Gulch set shows; then turn the preview off. Every name reads as the client names it, not `Instance <number>`. Result: owed
-- **FOREVER-14. A fresh profile seeds Forever's sets.** Profiles → create `SmokeSeeds` → Groups lists Raid, World, Arathi Basin, Warsong Gulch, Alterac Valley (each opening into its objectives, as on Retail), Battleground and In group, and **no** Dungeon set, Arena set or any other battleground (Eye of the Storm, Twin Peaks and the rest are absent). **Restore built-in groups** → `0` groups come back. Delete Warsong Gulch, then **Restore built-in groups** → it comes back with its nodes, and the Dungeon and Arena sets still do not. Switch back and delete `SmokeSeeds` afterwards. Result: owed
-- **FOREVER-15. The token help leaves out {dungeon}.** Edit any callout and hover the info glyph beside **Text** → the token list has `{key}` but no `{dungeon}`. On Retail it lists both (unchanged). Result: owed
+- **FOREVER-14. A fresh profile seeds Forever's sets.** Profiles → create `SmokeSeeds` → Groups lists Dungeon, Raid, Solo, Emotes, Arathi Basin, Warsong Gulch, Alterac Valley (each opening into its objectives, as on Retail), Battleground and In Group, and **no** Arena set or any other battleground (Eye of the Storm, Twin Peaks and the rest are absent). **Restore built-in groups** → `0` groups come back. Delete Warsong Gulch, then **Restore built-in groups** → it comes back with its nodes, and the Arena set still does not. Switch back and delete `SmokeSeeds` afterwards. Result: owed
+- **FOREVER-15. The token help leaves out {dungeon} and {key}.** Edit any callout and hover the info glyph beside **Text** → the token list has `{spec}` and `{role}` but no `{dungeon}` and no `{key}`. On Retail it lists both (unchanged). Result: owed
 - **FOREVER-16. The classic-era ids match in game (confirms the MATCHED ids).** Zone into each place you can reach, then `/qc why`: in any listed dungeon → the snapshot's content reads `dungeon` and its instance id is the one `defaults/GameIds_Clients.lua` lists for it; in Molten Core, Onyxia's Lair or another listed raid → `raid` and its listed id; in Warsong Gulch, Arathi Basin and Alterac Valley → `battleground`, and that battleground's own set shows on the pad and opens on the dial (its id is 489, 529 or 30, or the newer map id its set also lists). Record any id that differs, and the ids of Scarlet Monastery, Scholomance and Zul'Gurub, which are not listed yet. Result: owed
 - **FOREVER-17. A profile copied from Retail still works.** Copy a Retail `QuickComms.lua` (with its Dungeon and Arena sets) into Forever's SavedVariables while the client is closed, then log in → zero Lua errors; the Dungeon and Arena groups are still on the Groups page and editable, and their When still shows its other rows; **Restore built-in groups** adds nothing for them. Put the original file back afterwards. Result: owed
 
@@ -2402,6 +2402,17 @@ The probe (QFE-F5; **code:** `settings/SlashVerbs.lua` `ProbeLines`, `core/Compa
   → the same four lines, *saved for retail*, with no talent groups (*none*). Then `/qc probe clear` →
   *Probes cleared: N removed.*, N being the probes taken on this client; after a /reload the
   file has no `probes` table. `/qc help` lists `probe`. Result: owed
+
+The Dungeon set on Forever (QFE-C7, the lead's call; **code:** `defaults/GameIds_Clients.lua`
+`BUILTIN_WHEN`, `defaults/BuiltIns.lua` `WhenOf`, `modules/Library.lua` `seedGroup`).
+
+- **FOREVER-24. The Dungeon set matches dungeons alone.** On a fresh Forever profile (FOREVER-14's
+  `SmokeSeeds`), Groups → **Dungeon** → When → **Content** has Dungeon ticked and nothing else, and
+  there is no Key level drawer. Zone into any listed dungeon, grouped or solo → the pad shows the
+  Dungeon set and the dial opens on it, and `/qc why` names it active. In the open world it is not
+  shown. Delete it, then **Restore built-in groups** → it comes back with its seven callouts and the
+  same dungeon-only When. On Retail a fresh profile's Dungeon set still ticks Dungeon and Mythic+
+  (unchanged). Result: owed
 
 ## Emotes
 
@@ -2540,4 +2551,4 @@ Owed from the owner's sixth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-
 
 Owed from the WoW Forever port (QFE-F2, Ka0sAddonsCommonTasks `docs/2026-11-10-QUICKCOMMS_FOREVER_EMOTES/`): FOREVER-1 to
 FOREVER-11, new, each with its `Result:` line reading `owed`. From QFE-F3: FOREVER-12 to FOREVER-17, new, each owed. From QFE-F4: ROLE-1 to ROLE-3 (Retail) and
-FOREVER-18 to FOREVER-21, new, each owed. From QFE-E1: EMOTE-1 and EMOTE-2, new, each owed. From QFE-E2: EMOTE-3 to EMOTE-6, new, each owed. From QFE-E3: EMOTE-7 and EMOTE-8, new, each owed.
+FOREVER-18 to FOREVER-21, new, each owed. From QFE-E1: EMOTE-1 and EMOTE-2, new, each owed. From QFE-E2: EMOTE-3 to EMOTE-6, new, each owed. From QFE-E3: EMOTE-7 and EMOTE-8, new, each owed. From QFE-C7 (QFE-REV): FOREVER-24, new, owed; FOREVER-14 and FOREVER-15 have a changed expected result and stay owed.

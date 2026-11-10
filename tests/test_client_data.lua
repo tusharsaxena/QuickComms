@@ -64,11 +64,13 @@ test("client data: [QFE-F3] UseClient replaces the whole pick, BATTLEGROUND_SETS
     local NS = T.newAddon({ clientData = true })
     local G = NS.GameIds
     G.UseClient("forever")
-    assertTrue(G.BATTLEGROUND_SETS ~= nil and G.SKIP_BUILTINS["bi.mplus"] == true)
+    assertTrue(G.BATTLEGROUND_SETS ~= nil and G.SKIP_BUILTINS["bi.arena"] == true)
+    assertTrue(G.BUILTIN_WHEN["bi.mplus"] ~= nil, "Forever's Dungeon When")
     G.UseClient("retail")
     -- red under: a loop over the picked table's pairs, which leaves Forever's nil-in-Retail key behind
     assertNil(G.BATTLEGROUND_SETS)
-    assertNil(G.SKIP_BUILTINS["bi.mplus"])
+    assertNil(G.SKIP_BUILTINS["bi.arena"])
+    assertNil(G.BUILTIN_WHEN["bi.mplus"], "Retail's Dungeon When is the declared one")
     G.UseClient("classic")
     assertEqual(G.CLIENT, "retail", "an unknown key is Retail")
 end)
@@ -128,13 +130,13 @@ test("client data: [QFE-F3] Preview as... offers the client's dungeons, raids an
     end
 end)
 
-test("client data: [QFE-F3] a fresh profile seeds the client's sets: no Dungeon or Arena set on Forever", function()
+test("client data: [QFE-F3] a fresh profile seeds the client's sets: no Arena set on Forever", function()
     local NS = T.bootAddon({ clientData = true })
     local p, BI = NS.db.profile, NS.BuiltIns
     local have = origins(p)
     -- red under: seedNew walking BuiltIns.order whole on Forever
-    assertEqual(have["bi.mplus"], (not FOREVER) or nil, "the Dungeon (Mythic+) set")
     assertEqual(have["bi.arena"], (not FOREVER) or nil, "the Arena set")
+    assertTrue(have["bi.mplus"], "the Dungeon set, on both clients (C7)")
     assertTrue(have["bi.raid"] and have["bi.world"] and have["bi.bg"] and have["bi.group"], "the rest")
     local bgs = {}
     for origin in pairs(have) do
@@ -151,22 +153,60 @@ test("client data: [QFE-F3] a fresh profile seeds the client's sets: no Dungeon 
     -- Restore brings back what the client ships and nothing else
     local n = NS.Library.RestoreBuiltins()
     assertEqual(n.groups, 0, "nothing missing")
-    assertEqual(origins(p)["bi.mplus"], (not FOREVER) or nil, "Restore seeds no Dungeon set on Forever")
+    assertEqual(origins(p)["bi.arena"], (not FOREVER) or nil, "Restore seeds no Arena set on Forever")
+end)
+
+-- The Dungeon set's When (C7): Retail's matches any dungeon, a keystone run included; Forever has no
+-- Mythic+, so its copy matches the content kind dungeon alone, with no key level.
+local function dungeonWhen(when)
+    local kinds = {}
+    for kind, on in pairs(when.content or {}) do
+        if on then kinds[#kinds + 1] = kind end
+    end
+    local rows = {}
+    for row in pairs(when) do rows[#rows + 1] = row end
+    return joined(sorted(kinds)) .. "|" .. joined(sorted(rows))
+end
+
+test("client data: [QFE-C7] the Dungeon set seeds on both clients, dungeon only on Forever", function()
+    local NS = T.bootAddon({ clientData = true })
+    local p, Lib = NS.db.profile, NS.Library
+    local gid = T.seeded(NS, "bi.mplus")
+    assertTrue(gid ~= nil, "a fresh profile holds the Dungeon set")
+    -- red under: seedGroup copying the declared When on Forever (dungeon + mythicPlus)
+    local want = FOREVER and "dungeon|content" or "dungeon,mythicPlus|content"
+    assertEqual(dungeonWhen(p.groups[gid].when), want, "its When")
+    assertTrue(NS.Resolver.Matches(p.groups[gid].when, { content = "dungeon" }), "a dungeon matches")
+    assertEqual(NS.Resolver.Matches(p.groups[gid].when, { content = "mythicPlus" }) == true, not FOREVER,
+        "a keystone run matches only on Retail")
+    assertEqual(#p.groups[gid].callouts, #NS.BuiltIns.groups["bi.mplus"].callouts, "every callout")
+    -- the shipped declaration is never changed by the per-client When
+    assertEqual(dungeonWhen(NS.BuiltIns.groups["bi.mplus"].when), "dungeon,mythicPlus|content")
+    -- deleted, Restore brings it back with the client's When
+    assertTrue(Lib.DeleteGroup(gid))
+    assertNil(T.seeded(NS, "bi.mplus"))
+    assertEqual(Lib.RestoreBuiltins().groups >= 1, true, "Restore brings it back")
+    local back = T.seeded(NS, "bi.mplus")
+    assertTrue(back ~= nil)
+    assertEqual(dungeonWhen(p.groups[back].when), want, "Restore's copy has the client's When too")
+    -- a seeded copy's When is its own table, not the override's
+    p.groups[back].when.content.raid = true
+    assertNil((NS.GameIds.BUILTIN_WHEN["bi.mplus"] or NS.BuiltIns.groups["bi.mplus"].when).content.raid)
 end)
 
 test("client data: [QFE-F3] a set held from Retail still loads, matches and keeps its callouts on Forever", function()
     local NS = T.bootAddon({ clientData = true })
     local G, p, Lib = NS.GameIds, NS.db.profile, NS.Library
-    -- a profile copied from Retail: Retail's Restore gives it the Dungeon set
+    -- a profile copied from Retail: Retail's Restore gives it the Arena set
     G.UseClient("retail")
     Lib.RestoreBuiltins()
-    local mplus = T.seeded(NS, "bi.mplus")
-    assertTrue(mplus ~= nil, "a Retail profile's Dungeon set")
+    local arena = T.seeded(NS, "bi.arena")
+    assertTrue(arena ~= nil, "a Retail profile's Arena set")
     G.UseClient("forever")
     local n = Lib.RestoreBuiltins()
     assertEqual(n.groups, 0, "nothing new on Forever")
-    assertTrue(p.groups[mplus] ~= nil, "the set is kept")
-    local ok = NS.Resolver.Matches(p.groups[mplus].when, { content = "mythicPlus" })
+    assertTrue(p.groups[arena] ~= nil, "the set is kept")
+    local ok = NS.Resolver.Matches(p.groups[arena].when, { content = "arena" })
     assertTrue(ok, "a hidden kind still matches")
 end)
 
@@ -180,14 +220,17 @@ test("client data: [QFE-F3] the battleground row suggests the seeded sets' maps"
     assertEqual(W.BattlegroundName(726), "Twin Peaks", "a stored id of another set is still named")
 end)
 
-test("client data: [QFE-F3] the token help leaves {dungeon} out on Forever", function()
+test("client data: [QFE-F3] the token help leaves {dungeon} and {key} out on Forever", function()
     local NS = T.bootAddon({ clientData = true })
     local C = NS.addon.Settings.Callouts
     local tokens = joined(C.TokensFor("party"))
     -- red under: TokensFor offering C.TOKENS whole on Forever
     assertEqual(tokens:find("{dungeon}", 1, true) ~= nil, not FOREVER)
-    assertTrue(tokens:find("{key}", 1, true) ~= nil, "the rest stay")
+    -- red under: HIDDEN_TOKENS naming {dungeon} alone ({key} is Mythic+ only too, C7)
+    assertEqual(tokens:find("{key}", 1, true) ~= nil, not FOREVER)
+    assertTrue(tokens:find("{spec}", 1, true) ~= nil, "the rest stay")
     local help = {}
     for _, row in ipairs(C.TokenHelp("party")) do help[#help + 1] = row[1] end
     assertEqual(joined(help):find("{dungeon}", 1, true) ~= nil, not FOREVER)
+    assertEqual(joined(help):find("{key}", 1, true) ~= nil, not FOREVER)
 end)

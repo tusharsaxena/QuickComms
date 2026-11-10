@@ -735,7 +735,7 @@ local function seedGroup(p, gid, parent, hidden)
     end
     local id = takeId(p, "g")
     p.groups[id] = { name = def.name, icon = def.icon, iconColor = def.iconColor, callouts = callouts,
-        when = copyTable(def.when) or {},
+        when = copyTable(NS.BuiltIns.WhenOf(gid)) or {},
         enabled = true, parent = parent,
         inheritWhen = true, origin = gid }
     p.seededSets[gid] = true
@@ -840,8 +840,8 @@ end
 -- Prepare's seeding: each shipped set the profile was never given (seededSets) is seeded and put at
 -- the end of every pad and dial, and each node shipped after its set was given goes inside it
 -- (seedNewNodes). A seeded member the player deleted is not seeded again: that is Restore's. Only the
--- sets this client ships (BuiltIns.Seeded): WoW Forever seeds no Dungeon (Mythic+) or Arena set and
--- only its battlegrounds (QFE-F3). `appended` counts the surfaces a set was put on.
+-- sets this client ships (BuiltIns.Seeded): WoW Forever seeds no Arena set and only its battlegrounds
+-- (QFE-F3), and its Dungeon set matches dungeons alone (BuiltIns.WhenOf, QFE-C7). `appended` counts the surfaces a set was put on.
 local function seedNew(p, result)
     local placed = {}
     for _, top in ipairs(NS.BuiltIns.Seeded()) do

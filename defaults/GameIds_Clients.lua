@@ -11,8 +11,12 @@ local _, NS = ...
 --                       and matches: hiding is UI and seeds only (owner ruling R1, Claude's call C3).
 --   HIDDEN_ROWS         the When rows the editor does not draw (the key level, the difficulty, whose
 --                       Forever ids are unknown until probed, and the arena list).
---   HIDDEN_TOKENS       the callout tokens the text's help does not offer ({dungeon} is Mythic+ only).
+--   HIDDEN_TOKENS       the callout tokens the text's help does not offer ({dungeon} and {key} are
+--                       Mythic+ only).
 --   SKIP_BUILTINS       the shipped top-level sets this client does not seed or restore.
+--   BUILTIN_WHEN        the When a shipped group is seeded and restored with on this client, by shipped
+--                       id, in place of the one it declares (BuiltIns.WhenOf). Seeds only: a copy
+--                       already stored keeps the When it has.
 --   BATTLEGROUND_SETS   the battleground sets seeded, by key (bi.bg.<key>); nil seeds every one.
 -- WoW Forever's ids are MATCHED, NOT CONFIRMED IN GAME: each is a classic-era map id taken from
 -- Retail's own lists (its CLIENT_MAPS row in tests/test_gameids.lua), on the reading that Forever
@@ -71,7 +75,7 @@ end
 G.BY_CLIENT = {
     retail = {
         DUNGEONS = G.DUNGEONS, RAIDS = G.RAIDS, INSTANCES = G.INSTANCES, ARENAS = G.ARENAS,
-        HIDDEN_CONTENT = {}, HIDDEN_ROWS = {}, HIDDEN_TOKENS = {}, SKIP_BUILTINS = {},
+        HIDDEN_CONTENT = {}, HIDDEN_ROWS = {}, HIDDEN_TOKENS = {}, SKIP_BUILTINS = {}, BUILTIN_WHEN = {},
         BATTLEGROUND_SETS = nil,
     },
     forever = {
@@ -80,9 +84,12 @@ G.BY_CLIENT = {
         ARENAS = {},
         HIDDEN_CONTENT = set({ "mythicPlus", "delve", "scenario", "arena", "housing" }),
         HIDDEN_ROWS = set({ "difficulty", "keyLevel", "arena" }),
-        HIDDEN_TOKENS = set({ "{dungeon}" }),
-        -- the Dungeon set (bi.mplus, which matches Mythic+ too) and the Arena set (Claude's call C3)
-        SKIP_BUILTINS = set({ "bi.mplus", "bi.arena" }),
+        HIDDEN_TOKENS = set({ "{dungeon}", "{key}" }),
+        -- the Arena set (Claude's call C3)
+        SKIP_BUILTINS = set({ "bi.arena" }),
+        -- the Dungeon set (bi.mplus) matches the content kind dungeon alone: Forever has no Mythic+ and
+        -- no key level (the lead's call C7)
+        BUILTIN_WHEN = { ["bi.mplus"] = { content = { dungeon = true } } },
         -- Warsong Gulch, Arathi Basin and Alterac Valley, with the ids and callouts Retail's sets carry
         BATTLEGROUND_SETS = set({ "wsg", "ab", "av" }),
     },
@@ -91,7 +98,7 @@ G.BY_CLIENT = {
 -- Every name a client's table sets, so a pick replaces the other client's whole (Retail's
 -- BATTLEGROUND_SETS is nil).
 local KEYS = { "DUNGEONS", "RAIDS", "INSTANCES", "ARENAS", "HIDDEN_CONTENT", "HIDDEN_ROWS", "HIDDEN_TOKENS",
-    "SKIP_BUILTINS", "BATTLEGROUND_SETS" }
+    "SKIP_BUILTINS", "BUILTIN_WHEN", "BATTLEGROUND_SETS" }
 
 --- Put client `key`'s data ("retail" | "forever"; anything else is Retail) under the names every
 --- reader uses. Called once below. The headless harness calls it once more after a load, with
