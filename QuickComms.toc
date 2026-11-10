@@ -37,6 +37,8 @@ libs\LibKa0s\LibKa0s.xml
 # Locales
 # LOAD-BEARING: publishes NS.L, which every file below reads at load.
 locales\enUS.lua
+# LOAD-BEARING: fills NS.L, which locales\enUS.lua creates, at file load.
+locales\enUS_Settings.lua
 
 # Core -- dependency-correct order (layout-§1)
 # LOAD-BEARING: publishes NS.name, NS.BRAND, NS.PREFIX and NS.SLASH, read at load below.

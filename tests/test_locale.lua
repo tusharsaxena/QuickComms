@@ -246,3 +246,41 @@ test("locale: no key is defined twice, in one enUS file or across two", function
     end
     assertEqual(#twice, 0, "keys defined more than once:\n" .. table.concat(twice, "\n"))
 end)
+
+-- ── placement, both ways (localization-§6: a key sits with its first reader in TOC order) ──────
+-- settings/ loads after modules/, defaults/ and core/, so a key any of those reads stays in enUS.lua
+-- and a key only settings/ reads lives in enUS_Settings.lua.
+
+local function definedIn(rel)
+    local keys = {}
+    for _, hit in ipairs(scan(read(rel))) do if hit.key and hit.assigned then keys[#keys + 1] = hit.key end end
+    return keys
+end
+
+local function underSettings(rel) return rel:match("^settings/") ~= nil end
+
+test("locale: the TOC loads locales/enUS_Settings.lua", function()
+    local found = false
+    for _, rel in ipairs(localeFiles()) do if rel == "locales/enUS_Settings.lua" then found = true end end
+    assertTrue(found, "the settings-only strings have their own file")
+end)
+
+test("locale: every enUS_Settings.lua key is read only under settings/", function()
+    local reads, wrong = readers(), {}
+    for _, key in ipairs(definedIn("locales/enUS_Settings.lua")) do
+        for _, rel in ipairs(sorted(reads[key] or {})) do
+            if not underSettings(rel) then wrong[#wrong + 1] = ("%s:%d %q"):format(rel, reads[key][rel], key) end
+        end
+    end
+    assertEqual(#wrong, 0, "read outside settings/, so they belong in enUS.lua:\n" .. table.concat(wrong, "\n"))
+end)
+
+test("locale: every enUS.lua key has a reader outside settings/", function()
+    local reads, wrong = readers(), {}
+    for _, key in ipairs(definedIn("locales/enUS.lua")) do
+        local outside = DYNAMIC_READS[key] ~= nil
+        for rel in pairs(reads[key] or {}) do if not underSettings(rel) then outside = true end end
+        if not outside then wrong[#wrong + 1] = ("%q"):format(key) end
+    end
+    assertEqual(#wrong, 0, "read only under settings/, so they belong in enUS_Settings.lua:\n" .. table.concat(wrong, "\n"))
+end)

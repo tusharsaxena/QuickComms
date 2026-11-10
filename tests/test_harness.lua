@@ -31,7 +31,10 @@ test("harness: the addon's file list is the TOC's, Namespace first and Profiles 
     local files = T.loadAddon.tocFiles
     assertTrue(#files >= 20, "the TOC lists the addon's files")
     assertEqual(files[1], "locales/enUS.lua")
-    assertEqual(files[2], "core/Namespace.lua")
+    -- The enUS topic files (localization-§6) load contiguously after it, then Namespace.
+    local n = 1
+    while files[n + 1] and files[n + 1]:match("^locales/enUS_") do n = n + 1 end
+    assertEqual(files[n + 1], "core/Namespace.lua")
     assertEqual(files[#files], "settings/Profiles.lua")
 end)
 

@@ -22,7 +22,7 @@ Total.
 - repo: every authored file opens with the bootstrap and a comment naming its path
 - repo: the .pkgmeta has no externals and ignores the dev-only entries
 
-### test_locale.lua (8)
+### test_locale.lua (11)
 
 - locale: the scan reads literal L reads, field reads and definitions, and skips comments and strings
 - locale: the enUS files come from the TOC, enUS.lua first and the topic files contiguous after it
@@ -32,6 +32,9 @@ Total.
 - locale: no key is dead (defined in an enUS file and read by no addon file)
 - locale: every dynamic L read is accounted for in the allowlist
 - locale: no key is defined twice, in one enUS file or across two
+- locale: the TOC loads locales/enUS_Settings.lua
+- locale: every enUS_Settings.lua key is read only under settings/
+- locale: every enUS.lua key has a reader outside settings/
 
 ### test_mock_secure.lua (28)
 
@@ -2063,7 +2066,7 @@ Total.
 | Suite | Cases |
 |-------|------:|
 | test_harness.lua | 11 |
-| test_locale.lua | 8 |
+| test_locale.lua | 11 |
 | test_mock_secure.lua | 28 |
 | test_bus.lua | 2 |
 | test_surface_parity.lua | 18 |
@@ -2150,4 +2153,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1788** |
+| **Total** | **1791** |
