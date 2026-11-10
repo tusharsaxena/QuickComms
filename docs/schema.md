@@ -103,7 +103,7 @@ per-character (savedvariables-§1): `defaults/Profile.lua` `CHAR_DEFAULTS`, merg
 | Key | Default | What it is |
 |---|---|---|
 | `padsHidden` | `false` | whether `/qc toggle`, the launcher's Show window or the Toggle Comms Pads key last hid this character's Comms Pads (2026-10-21; a session-only `NS.State.padsHidden` until then); a /reload or the next login restores it |
-| `role` | `{}` | LibKa0s Role's store (QFE-F4): `override`, the General page's **Role** pick (`TANK`, `HEALER` or `DAMAGER`; absent is Automatic), written through the `role` schema row (`settings/Schema.lua` `CHAR`, `/qc set role <auto|TANK|HEALER|DAMAGER>`), and `last` (`{ role, specID }`), the last answer, which the library writes on every read |
+| `role` | `{}` | LibKa0s Role's store (QFE-F4): `override`, the General page's **Role** pick (`TANK`, `HEALER` or `DAMAGER`; absent is Automatic), written through the `role` schema row (`settings/Schema.lua` `CHAR`, `/qc set role <auto|TANK|HEALER|DAMAGER>`), and `last` (`{ role, specID }`), the last answer read from the client (the group's assigned role, the Forever talents or the spec), which the library writes on each such read; an override is never written there, so clearing it cannot come back as the saved role |
 
 ## Named non-setting state (architecture-§5)
 

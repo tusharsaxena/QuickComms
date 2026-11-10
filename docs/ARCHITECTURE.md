@@ -48,7 +48,7 @@ Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBO
 LibSharedMedia, LibDataBroker, LibDBIcon
 and LibCustomGlow-1.0 (the Icons tab's glows, resolved at call time by LibKa0s-Glow-1.0 and optional; versions and
 licenses in `DEPENDENCIES.md`) are vendored under `libs/`, and so is the whole
-LibKa0s v1.91.0 payload, of which sixteen majors are wired, one setup file each (`DEPENDENCIES.md`
+LibKa0s v1.95.0 payload, of which sixteen majors are wired, one setup file each (`DEPENDENCIES.md`
 lists the toolchain):
 
 | Major | Setup file | Gives |
@@ -71,7 +71,7 @@ lists the toolchain):
 | Slash | `settings/Slash.lua` | the `/qc` dispatcher |
 
 `LibKa0s-Compat-1.0` is wired for its two secret guards only (`IsSecret`, `IsSafeKey`, assigned in
-`core/Compat.lua` with a library-absent body); `LibKa0s-Item-1.0` is vendored and not wired; and of the Widgets major
+`core/Compat.lua` with a library-absent body); `LibKa0s-Role-1.0` is wired in `core/Compat.lua` too (the role and the class's specializations, QFE-F4, each with a library-absent fallback); `LibKa0s-Item-1.0` is vendored and not wired; and of the Widgets major
 `DragHandle`, `ReorderList` and `CopyWindow` are used. Each
 setup file holds a descriptor and a degradation stub, and `tests/test_surface_parity.lua` holds every
 stub to the live surface.
