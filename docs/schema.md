@@ -92,7 +92,7 @@ nothing.
 | `schemaVersion` | `0` | the migration stamp; the runner owns it |
 | `minimap.hide` | `false` | LibDBIcon's own key; the Minimap button row inverts onto it, and no `shown` twin exists (launcher-§3) |
 | `minimap.minimapPos` | absent | LibDBIcon's own write |
-| `probes` | absent | `/qc probe`'s records (QFE-F5): `probes[<client key>]` is an array, oldest first, of the newest 50 records (`client`, `time`, `instance`, `content`, `situation`, `role`, `spec`, `groups`, `emotes`); `/qc probe clear` removes the table |
+| `probes` | absent | `/qc probe`'s records (QFE-F5): `probes[<client key>]` is an array, oldest first, of the newest 50 records of either form. A place record (bare `/qc probe`) has no `kind` and holds `client`, `time`, `instance`, `content`, `situation`, `role`, `spec`, `groups`, `emotes`. An ids record (`/qc probe ids`, QuickComms#21) holds `kind = "ids"`, `client`, `time`, `maps` (`{ [map id] = name }`, every id 0..4000 `GetRealZoneText` names), `lfg` (the dungeon finder's entries in its order, each `{ id, name, typeID, subtypeID, mapID }`, `mapID` being `GetLFGDungeonInfo`'s 22nd return, lfgMapID, and a random entry also `random = true`), `battlegrounds` (`{ index, name, battlegroundID, mapID, isRandom }` per `C_PvP.GetBattlegroundInfo` row) and `groupFinder` (the group finder's activities, each once and at most 2000, in the order `C_LFGList.GetAvailableCategories` then `GetAvailableActivities` give them, each `{ id, name, categoryID, mapID, maxNumPlayers, isPvp }` from `GetActivityInfoTable`'s `fullName`, `categoryID`, `mapID`, `maxNumPlayers` and `isPvpActivity`). A value the client gives as a secret, or not at all, is absent; `/qc probe clear` removes the table |
 
 ## `QuickCommsDB.char` (per character)
 
@@ -117,7 +117,7 @@ Saved:
 | `profile.previewWindow` | `modules/PreviewWindow.lua` | `remember`, the window's drag stop | the Preview as window's place (above) |
 | `char.role.last` | `libs/LibKa0s/Role.lua` (vendored) | `Role.Resolve`, called by `core/Compat.lua` `Compat.PlayerRole` on every situation read | the last role read on this character (above); `char.role.override` is the `role` row's, through the seam |
 | `char.padsHidden` | `settings/SlashVerbs.lua` | `V.TogglePads`, reached by `/qc toggle`, the launcher's Show window entry and the Toggle Comms Pads key | whether this character's Comms Pads are hidden (above) |
-| `global.probes` | `settings/SlashVerbs.lua` | `V.ProbeLines`, reached by `/qc probe` (appends) and `/qc probe clear` (removes it) | the probe records (above) |
+| `global.probes` | `settings/SlashVerbs.lua` | `V.ProbeLines`, reached by `/qc probe` and `/qc probe ids` (each appends) and `/qc probe clear` (removes it) | the probe records (above) |
 | `global.minimap.minimapPos` | LibDBIcon | LibDBIcon's own drag write, into the table `core/LauncherSetup.lua` hands it | the minimap button's angle |
 | the structural registry: membership of `callouts`, `groups`, `pads` and `dials`, `padOrder`, `dialOrder`, each group's `callouts` and each surface's `groups`, `nextId`, `seeded`, `seededSets`, a seeded member's `origin` | `modules/Library.lua` | Library's own functions and its schemaVersion steps in `modules/Library_Migrate.lua` (the same `NS.Library`); panel pages and slash verbs call it or the seam and never write these keys | above |
 | `global.schemaVersion` | `core/Database.lua` | the migration runner, after each step returns | the migration stamp |

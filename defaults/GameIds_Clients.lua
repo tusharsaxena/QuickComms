@@ -4,7 +4,7 @@ local _, NS = ...
 -- and defaults/GameIds_Instances.lua hold Retail's lists. This file keeps them as BY_CLIENT.retail,
 -- holds WoW Forever's beside them, and puts the client's own under the names every reader uses
 -- (G.DUNGEONS, G.RAIDS, G.INSTANCES, G.ARENAS), so no reader asks which client it is.
---   DUNGEONS, RAIDS     Preview as...'s lists: Retail's season, Forever's classic-era dungeons and raids.
+--   DUNGEONS, RAIDS     Preview as...'s lists: Retail's season, Forever's own dungeons and raids.
 --   INSTANCES, ARENAS   the When editor's suggestions.
 --   HIDDEN_CONTENT      the content kinds the When editor and Preview as... do not offer. The classify
 --                       step is the same on both clients, and a stored When that names one still loads
@@ -18,13 +18,13 @@ local _, NS = ...
 --                       id, in place of the one it declares (BuiltIns.WhenOf). Seeds only: a copy
 --                       already stored keeps the When it has.
 --   BATTLEGROUND_SETS   the battleground sets seeded, by key (bi.bg.<key>); nil seeds every one.
--- WoW Forever's ids are MATCHED, NOT CONFIRMED IN GAME: each is a classic-era map id taken from
--- Retail's own lists (its CLIENT_MAPS row in tests/test_gameids.lua), on the reading that Forever
--- keeps the classic map ids (owner ruling R2: map ids, then the probe). The probe and smoke checks
--- FOREVER-12 to FOREVER-17 confirm them; this note says CONFIRMED only after those pass. Left out
--- until the probe names their Forever ids, because Retail lists only their remakes: Scarlet
--- Monastery (classic 189; Retail 1004), Scholomance (classic 289; Retail 1007) and Zul'Gurub's raid
--- (classic 309; Retail 859, the dungeon).
+-- WoW Forever's ids are derived from Forever's own GroupFinderActivity and Map tables (build
+-- 1.60.1.70862), joined on map id (the forever-ids design, D3-R and D5, QuickComms#21): each is a Map
+-- row of its kind (its FOREVER_MAPS row in tests/test_gameids.lua), the dungeons are exactly the party
+-- maps the group finder lists and the raids exactly its raid maps. tools/derive-gameids.py --forever
+-- re-derives and checks them (docs/common-tasks.md). The in-game check is `/qc probe ids`. Darkspear
+-- Islands, a battleground the group finder lists, gets no built-in set (the battleground kind still
+-- matches it). Forever has no arena map, so no arena list (D4).
 
 NS.GameIds = NS.GameIds or {}
 local G = NS.GameIds
@@ -38,25 +38,47 @@ local FOREVER_DUNGEONS = {
     34,   -- Stormwind Stockade
     90,   -- Gnomeregan
     47,   -- Razorfen Kraul
+    189,  -- Scarlet Monastery (D1)
     129,  -- Razorfen Downs
     70,   -- Uldaman
     209,  -- Zul'Farrak
     349,  -- Maraudon
     109,  -- Sunken Temple
     230,  -- Blackrock Depths
-    229,  -- Lower Blackrock Spire (classic Blackrock Spire, both halves)
-    429,  -- Dire Maul
+    229,  -- Blackrock Spire (the group finder's Lower and Upper Blackrock Spire)
+    429,  -- Dire Maul (the group finder's East, West and North)
+    289,  -- Scholomance (D1)
     329,  -- Stratholme
+    -- Forever's own dungeons, which its group finder lists (D2), by map id
+    2959, -- City of Dalaran
+    2970, -- The Drowned City
+    2974, -- Blackmaw Hold
+    2994, -- Alcaz Prison
+    2998, -- Excavation Site: Wetlands
+    2999, -- Ruins of Lordaeron
+    3001, -- The Shaper's Terrace
+    3039, -- Krol'dok Stronghold
+    3065, -- The Hall of Thanes
+    -- the other party maps the group finder lists (D3-R), in its order
+    2784, -- Demon Fall Canyon
+    2875, -- Karazhan Crypts
 }
 
--- A new list of raids for Forever (owner ruling R1), by their Retail map ids.
+-- A new list of raids for Forever (owner ruling R1), by Forever's map ids.
 local FOREVER_RAIDS = {
     409,  -- Molten Core
     249,  -- Onyxia's Lair
     469,  -- Blackwing Lair
+    309,  -- Zul'Gurub (D1)
     509,  -- Ruins of Ahn'Qiraj
     531,  -- Temple of Ahn'Qiraj
     533,  -- Naxxramas
+    -- the other raid maps the group finder lists (D3-R), in its order
+    2791, -- Storm Cliffs
+    2789, -- The Tainted Scar
+    2804, -- The Crystal Vale
+    2832, -- Nightmare Grove
+    2856, -- Scarlet Enclave
 }
 
 local function concat(a, b)

@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1765410)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1768%2F1768_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1780%2F1780_passing-green)
 
 Supports Retail and WoW Forever. Quick Comms puts your group callouts one click or one keypress away. "Kick on me", "Lust now",
 "INC Lumber Mill": they sit on a Comms Pad, or open from a ping-wheel style Comms Dial. It knows where
@@ -127,6 +127,8 @@ Everything else is under **Settings → AddOns → Ka0s Quick Comms**, and `/qc 
 - If the debug window isn't open, open it with `/qc debug`. Press **Copy**, copy the entire output, and include it with your bug report.
 - On WoW Forever, if a dungeon, raid or battleground shows the wrong callouts, type `/qc probe` while
   you are inside it and include the four lines it prints.
+- On WoW Forever, if a dungeon or raid is missing from Preview as... or carries the wrong name, type
+  `/qc probe ids` anywhere, out of combat, and include the four lines it prints.
 
 The report is added after the debug trace in the same window, so one copy carries both.
 
