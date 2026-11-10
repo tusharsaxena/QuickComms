@@ -29,6 +29,15 @@
 --   playerGUID     UnitGUID("player")
 --   playerMap      C_Map.GetBestMapForUnit("player")'s map id (nil: no map, as in an instance)
 --   playerPos      { x, y } (fractions 0-1): C_Map.GetPlayerMapPosition's GetXY on playerMap (nil: none)
+--   pingEnabled    C_Ping.IsPingSystemEnabled()'s answer (true); the enablePings cvar defaults on
+--   pingCooldownEndMs  C_Ping.GetCooldownInfo().endTimeMs (0: no cooldown), on GetTime()*1000's base
+--   raidTargetable CanBeRaidTarget(unit)'s answer (true)
+--   isLeader, isAssist  UnitIsGroupLeader/UnitIsGroupAssistant("player") (false); IsInRaid reads the
+--                  base's __context.inRaid
+--   everyoneAssist IsEveryoneAssistant()'s answer (false)
+--   __unitExists   (the base's) [unit] = UnitExists's answer; a T.secret answer is handed back as is
+--   SLASH_PING1, SLASH_TARGET_MARKER1  "/ping" and "/tm"; a case sets either nil to drop the command
+--   sentLines(i)   the lines of sentMacros[i] (default the newest), split on "\n"; {} when none
 --   __click(b[, mouseButton])  a full press: the registered down edge, then the up edge; each edge
 --                  runs the button's PreClick script before its OnClick, as the client does
 --   __setCombat(on)            sets inCombat and re-evaluates every visibility driver
@@ -227,6 +236,37 @@ local function build()
             return { GetXY = function() return pos[1], pos[2] end }
         end,
     }
+
+    -- Pings, raid target markers and the target (CA-M1-1): the ping system's answers, the slash
+    -- commands the client registers (localized there; English here), and the player's marking rights.
+    M.cvars.enablePings = "1"
+    M.pingEnabled       = true
+    M.pingCooldownEndMs = 0
+    M.C_Ping = {
+        IsPingSystemEnabled = function() return M.pingEnabled end,
+        GetCooldownInfo = function() return { startTimeMs = 0, endTimeMs = M.pingCooldownEndMs } end,
+    }
+    M.SLASH_PING1          = "/ping"
+    M.SLASH_TARGET_MARKER1 = "/tm"
+    M.raidTargetable = true
+    M.CanBeRaidTarget = function() return M.raidTargetable end
+    M.isLeader, M.isAssist, M.everyoneAssist = false, false, false
+    M.UnitIsGroupLeader    = function(unit) return unit == "player" and M.isLeader or false end
+    M.UnitIsGroupAssistant = function(unit) return unit == "player" and M.isAssist or false end
+    M.IsEveryoneAssistant  = function() return M.everyoneAssist end
+    -- A secret (a kit wrapper, a table) is handed back as is, so a reader's IsSecret arm is reachable.
+    M.UnitExists = function(unit)
+        local v = M.__unitExists[unit]
+        if type(v) == "table" then return v end
+        return v == true
+    end
+    M.sentLines = function(i)
+        local sent = M.sentMacros[i or #M.sentMacros]
+        local lines = {}
+        if not sent then return lines end
+        for line in (sent.text .. "\n"):gmatch("(.-)\n") do lines[#lines + 1] = line end
+        return lines
+    end
 
     M.GetCVarBool = function(name) return M.cvars[name] == "1" end
     M.C_CVar      = { GetCVarBool = function(name) return M.cvars[name] == "1" end }

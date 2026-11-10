@@ -36,7 +36,7 @@ Total.
 - locale: every enUS_Settings.lua key is read only under settings/
 - locale: every enUS.lua key has a reader outside settings/
 
-### test_mock_secure.lua (28)
+### test_mock_secure.lua (34)
 
 - mock: a secure button keeps its attributes and answers its name
 - mock: SetAttribute in combat is refused and recorded, never applied
@@ -66,6 +66,12 @@ Total.
 - mock secure: type click forwards to clickbutton-<button>
 - mock secure: a held modifier reads <mod>- and * attributes, never the plain button form
 - mock secure: a header with its mouse off still runs its _onclick from a binding and from Click
+- mock: C_Ping answers enabled with no cooldown by default, and each answer is settable
+- mock: CanBeRaidTarget answers true by default, and is settable
+- mock: IsInRaid, leadership, assist and everyone-assistant answer false by default, and are settable
+- mock: UnitExists("target") is settable and hands a secret back as is
+- mock: the ping and marker slash globals are set, and removable per case
+- mock: sentLines splits a sent macro on newlines, the newest by default
 
 ### test_bus.lua (2)
 
@@ -2067,7 +2073,7 @@ Total.
 |-------|------:|
 | test_harness.lua | 11 |
 | test_locale.lua | 11 |
-| test_mock_secure.lua | 28 |
+| test_mock_secure.lua | 34 |
 | test_bus.lua | 2 |
 | test_surface_parity.lua | 18 |
 | test_setup.lua | 26 |
@@ -2153,4 +2159,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1791** |
+| **Total** | **1797** |
