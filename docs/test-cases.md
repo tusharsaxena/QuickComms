@@ -336,7 +336,7 @@ Total.
 - tokens: a mock fills a baked value missing here, and only when given (the preview echo, QC-07)
 - tokens: [QF-03] {coordinates} and {coords} bake from ctx.coordinates; missing is dropped and listed, or mocked
 
-### test_channels.lua (13)
+### test_channels.lua (18)
 
 - channels: smartGroup prefers instance, then raid, then party
 - channels: smartGroup solo follows the fallback
@@ -351,6 +351,11 @@ Total.
 - channels: [QF-04] a general callout bakes /1 with channel 1 joined and /s without
 - channels: [QF-04] the channel row offers General with its label; the seam accepts it
 - channels: [QF-04] a Groups row names General in channel 1's color
+- channels: [QFE-E1] emote is a fixed kind: /e, chat type EMOTE, the client's EMOTE color
+- channels: [QFE-E1] emote locks as Say does
+- channels: [QFE-E1] an emote callout bakes /e and its text
+- channels: [QFE-E1] the channel row offers Emote; the seam accepts it
+- channels: [QFE-E1] a Groups row names Emote in the emote color; a tooltip names its channel
 
 ### test_bake.lua (12)
 
@@ -803,7 +808,7 @@ Total.
 - queue: a key replaces its earlier entry and keeps its place
 - echo: [QF-04] only channel 1 is the General echo; an unreadable index is left to the sender rule
 
-### test_sendengine.lua (32)
+### test_sendengine.lua (33)
 
 - sendengine: a send button is a named secure button registered for both edges
 - sendengine: Arm sends exactly the line; Disarm clears both attributes and sends nothing
@@ -829,6 +834,7 @@ Total.
 - send: [QF-04] the player's own line on channel 1 is the General echo; on channel 2 it is not
 - send: [QF-04] an unreadable channel index falls to the sender rule
 - send: a disarmed button reports nothing and tracks nothing
+- send: [QFE-E1] the player's CHAT_MSG_EMOTE is an emote press's echo; another player's is not
 - send: a solo self-fallback prints locally and sends nothing
 - send: onPress hears the verdict and the window
 - send: every echo event is a declared feature event
@@ -861,7 +867,7 @@ Total.
 - dial secure: [QF-01] a live dial (no preview, or false) closes on a pick, in and out of combat
 - dial secure: [QF-01] a reload from preview to live clears the flag
 
-### test_preview.lua (35)
+### test_preview.lua (36)
 
 - preview: test mode turns on and off, announcing each edge once
 - preview: a start in combat is refused with one line
@@ -883,6 +889,7 @@ Total.
 - preview: [final 13] `/qc preview` reads the situation's name without regard to case
 - preview: [final 10] a dungeon preview fills {dungeon}, and the header names the preview as its menu does
 - preview: [echo] a previewed button prints [QC] /<slash> <resolved text>, and still sends nothing
+- preview: [QFE-E1] a previewed emote button prints [QC] /e <resolved text>
 - preview: [echo] the slash follows the channel the previewed situation resolves
 - preview: [echo review 3] a padlocked previewed button echoes its line, naming no lock
 - preview: [echo] a live button prints nothing extra
@@ -2022,7 +2029,7 @@ Total.
 | test_restrictions.lua | 20 |
 | test_situation.lua | 20 |
 | test_tokens.lua | 11 |
-| test_channels.lua | 13 |
+| test_channels.lua | 18 |
 | test_bake.lua | 12 |
 | test_resolver.lua | 13 |
 | test_builtins.lua | 26 |
@@ -2041,9 +2048,9 @@ Total.
 | test_page_dials.lua | 28 |
 | test_check.lua | 6 |
 | test_send_guard.lua | 11 |
-| test_sendengine.lua | 32 |
+| test_sendengine.lua | 33 |
 | test_dial_secure.lua | 20 |
-| test_preview.lua | 35 |
+| test_preview.lua | 36 |
 | test_edit_preview.lua | 17 |
 | test_preview_window.lua | 25 |
 | test_coordinates.lua | 8 |
@@ -2091,4 +2098,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1737** |
+| **Total** | **1744** |

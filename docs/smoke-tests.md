@@ -2403,6 +2403,28 @@ The probe (QFE-F5; **code:** `settings/SlashVerbs.lua` `ProbeLines`, `core/Compa
   *Probes cleared: N removed.*, N being the probes taken on this client; after a /reload the
   file has no `probes` table. `/qc help` lists `probe`. Result: owed
 
+## Emotes
+
+**Client: Retail, then WoW Forever**, every check here (QuickComms#15, Ka0sAddonsCommonTasks
+`docs/2026-11-10-QUICKCOMMS_FOREVER_EMOTES/`). **Code:** `modules/Channels.lua` (the `emote` kind),
+`modules/SendEngine_Guard.lua` (the `CHAT_MSG_EMOTE` echo row), `settings/SchemaMembers.lua`,
+`settings/Groups.lua` and `modules/Pad_Render.lua` (its labels).
+
+- **EMOTE-1. A custom emote callout sends /e (QFE-E1).** Out of combat in the open world, solo, edit a
+  callout in a group on your pad → the **Channel** dropdown lists **Emote** last, after General. Pick it
+  and set the text to `waves at {me}` → its Groups row reads `Emote` in the emote color (orange, as an
+  emote line shows in chat). Hover its button → `Channel: Emote` in the same color. Click it → chat
+  shows `<your name> waves at <your name>` as an emote, once, with no "interface action blocked" and,
+  with *Note dropped callouts in chat* on, no drop note (the `CHAT_MSG_EMOTE` echo is matched; `/qc
+  debug on` shows an `Echo` line ending `sent`). Grouped, it still goes out as an emote (no party
+  line). Turn on **Preview as... → World** and click it → one `[QC] /e waves at <your name>` line and
+  nothing in chat. Repeat on WoW Forever, where `{me}` is your first name and surname. Result: owed
+- **EMOTE-2. An emote locks as Say does (QFE-E1, Retail).** On a raid boss, with the emote callout on
+  the pad → its button carries the padlock and its tooltip ends *Locked: Say, Yell and Emote are blocked
+  during this encounter.*; the lockdown chip shows as for a Say callout (SEND-7). Kill the boss or wipe
+  → the padlock clears. Record whether the game actually refuses the emote during the encounter.
+  Result: owed
+
 ## Pending sign-off
 
 The owner ran every check above on 2026-10-21 and reported all of them passed (the client build was
@@ -2474,4 +2496,4 @@ Owed from the owner's sixth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-
 
 Owed from the WoW Forever port (QFE-F2, Ka0sAddonsCommonTasks `docs/2026-11-10-QUICKCOMMS_FOREVER_EMOTES/`): FOREVER-1 to
 FOREVER-11, new, each with its `Result:` line reading `owed`. From QFE-F3: FOREVER-12 to FOREVER-17, new, each owed. From QFE-F4: ROLE-1 to ROLE-3 (Retail) and
-FOREVER-18 to FOREVER-21, new, each owed.
+FOREVER-18 to FOREVER-21, new, each owed. From QFE-E1: EMOTE-1 and EMOTE-2, new, each owed.

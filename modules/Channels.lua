@@ -5,19 +5,22 @@ local _, NS = ...
 -- `/1`, resolved the same way: General when the snapshot says channel 1 is the zone's General (the
 -- client's own General id, never the channel's localized name: Compat.GeneralJoined), else Say. Its
 -- echo is a CHAT_MSG_CHANNEL (chat type CHANNEL); its color is the client's CHANNEL1 (ColorType).
+-- `emote` (QFE-E1, QuickComms#15) is a custom emote, `/e`: chat type EMOTE, echoed by CHAT_MSG_EMOTE, and
+-- locked as Say is. It sends the same on Retail and WoW Forever, solo or grouped.
 
 NS.Channels = NS.Channels or {}
 local Ch = NS.Channels
 
-Ch.KINDS = { "smartGroup", "smartLead", "party", "raid", "instance", "raidWarning", "say", "yell", "general" }
+Ch.KINDS = { "smartGroup", "smartLead", "party", "raid", "instance", "raidWarning", "say", "yell", "general",
+    "emote" }
 
 local PREFIX = {
     say = "/s", yell = "/y", party = "/p", raid = "/raid", instance = "/i", raidWarning = "/rw",
-    general = "/1",
+    general = "/1", emote = "/e",
 }
 local CHAT_TYPE = {
     say = "SAY", yell = "YELL", party = "PARTY", raid = "RAID", instance = "INSTANCE_CHAT",
-    raidWarning = "RAID_WARNING", general = "CHANNEL",
+    raidWarning = "RAID_WARNING", general = "CHANNEL", emote = "EMOTE",
 }
 -- The chat color a concrete channel shows in (ChatTypeInfo's key): its chat type, except General,
 -- whose CHANNEL type has no color of its own; the client colors channel 1 as CHANNEL1.
@@ -86,6 +89,7 @@ local LOCKS = {
 }
 LOCKS.yell = LOCKS.say
 LOCKS.general = LOCKS.say
+LOCKS.emote = LOCKS.say
 
 --- Why a concrete channel can't send right now, or nil (spec §8.4). The slot stays visible.
 function Ch.LockState(concrete, s)

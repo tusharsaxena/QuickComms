@@ -43,7 +43,7 @@ return {
     ["skin.pickerSeen"] = "bool|false|nil|nil|nil|nil|false",
     ["callout.name"] = "string|nil|nil|nil|nil|nil|false",
     ["callout.text"] = "string|nil|nil|nil|nil|nil|false",
-    ["callout.channel"] = "string|\"smartGroup\"|nil|nil|nil|[\"smartGroup\",\"smartLead\",\"party\",\"raid\",\"instance\",\"raidWarning\",\"say\",\"yell\",\"general\"]|false",
+    ["callout.channel"] = "string|\"smartGroup\"|nil|nil|nil|[\"smartGroup\",\"smartLead\",\"party\",\"raid\",\"instance\",\"raidWarning\",\"say\",\"yell\",\"general\",\"emote\"]|false",
     ["callout.icon"] = "string|false|nil|nil|nil|nil|false",
     ["callout.iconColor"] = "string|false|nil|nil|nil|nil|false",
     ["group.name"] = "string|nil|nil|nil|nil|nil|false",

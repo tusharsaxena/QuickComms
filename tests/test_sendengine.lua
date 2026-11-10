@@ -391,6 +391,24 @@ test("send: a disarmed button reports nothing and tracks nothing", function()
     assertEqual(NS.SendEngine.EchoState().pending, 0)
 end)
 
+-- QFE-E1: an emote callout's echo is the player's CHAT_MSG_EMOTE (text, sender, ..., GUID as the 12th).
+test("send: [QFE-E1] the player's CHAT_MSG_EMOTE is an emote press's echo; another player's is not", function()
+    local NS, m = T.enableAddon()
+    local out = results(NS)
+    local b = NS.SendEngine.NewButton(m.UIParent)
+    NS.SendEngine.Arm(b, "/e waves", { calloutId = "c1", surfaceId = "p1", chatType = "EMOTE", name = "Wave" })
+    m.__now = 100
+    m.__click(b)
+    echo(m, "CHAT_MSG_SAY")
+    assertEqual(NS.SendEngine.EchoState().pending, 1, "a Say line is not the echo")
+    echo(m, "CHAT_MSG_EMOTE", "Other-Testrealm", "Player-1-99999999")
+    assertEqual(NS.SendEngine.EchoState().pending, 1, "another player's emote is not the echo")
+    -- red under: no CHAT_MSG_EMOTE row in SendGuard.CHAT_TYPE_BY_EVENT
+    echo(m, "CHAT_MSG_EMOTE")
+    assertEqual(table.concat(out, ","), "c1@p1=sent")
+    assertEqual(NS.SendEngine.EchoState().pending, 0)
+end)
+
 test("send: a solo self-fallback prints locally and sends nothing", function()
     local NS, m = T.enableAddon()
     local b = NS.SendEngine.NewButton(m.UIParent)

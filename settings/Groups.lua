@@ -223,7 +223,7 @@ local PREVIEW_CHARS = 40
 local SHORT_CHANNEL = {
     smartGroup = L["Smart group"], smartLead = L["Smart lead"], party = L["Party"], raid = L["Raid"],
     instance = L["Instance"], raidWarning = L["Raid warning"], say = L["Say"], yell = L["Yell"],
-    general = L["General"],
+    general = L["General"], emote = L["Emote"],
 }
 
 local function hex(r, g, b)

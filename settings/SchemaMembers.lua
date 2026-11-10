@@ -127,6 +127,7 @@ local CHANNEL_LABEL = {
     smartLead = L["Smart lead (raid warning when you can)"],
     party = L["Party"], raid = L["Raid"], instance = L["Instance"], raidWarning = L["Raid warning"],
     say = L["Say"], yell = L["Yell"], general = L["General (/1; Say when not joined)"],
+    emote = L["Emote"],
 }
 local CHANNELS = {}
 for i, kind in ipairs(NS.Channels.KINDS) do CHANNELS[i] = { value = kind, text = CHANNEL_LABEL[kind] or kind } end

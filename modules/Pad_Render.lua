@@ -151,7 +151,7 @@ R.LOCK_TEXT = {
     notLeader = L["Locked: needs raid leader or assist."],
     notInGroup = L["Locked: you are not in a group."],
     notInInstanceGroup = L["Locked: you are not in an instance group."],
-    lockdown = L["Locked: Say and Yell are blocked during this encounter."],
+    lockdown = L["Locked: Say, Yell and Emote are blocked during this encounter."],
 }
 
 R.CONTENT = {
@@ -174,7 +174,7 @@ end
 -- The channel a button's line goes to, by name (the button shows no channel letter; its tooltip does).
 local CHANNEL_NAME = {
     party = L["Party"], raid = L["Raid"], instance = L["Instance"], raidWarning = L["Raid warning"],
-    say = L["Say"], yell = L["Yell"], general = L["General"],
+    say = L["Say"], yell = L["Yell"], general = L["General"], emote = L["Emote"],
 }
 
 local function channelLine(concrete)
