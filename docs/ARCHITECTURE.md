@@ -118,9 +118,11 @@ the tracked source against both clients' API sets.
 | Place lists (Preview as..., the Instance row) | the season's dungeons and raids, every journal instance, every arena | the classic-era dungeons and a Forever raid list (Molten Core, Onyxia's Lair, Blackwing Lair, both Ahn'Qiraj, Naxxramas) by their Retail map ids, MATCHED, NOT CONFIRMED IN GAME; no arena list | `BY_CLIENT`, `defaults/GameIds_Clients.lua` |
 | Built-in sets seeded and restored | every set | no Arena set; of the battlegrounds Warsong Gulch, Arathi Basin and Alterac Valley, with Retail's ids and objective callouts, then the generic Battleground set | `SKIP_BUILTINS`, `BATTLEGROUND_SETS`, `BuiltIns.Seeded()`, `modules/Library.lua` |
 | The Dungeon set's When as seeded and restored | content Dungeon and Mythic+ | content Dungeon alone: no Mythic+ and no key level (the lead's call C7). A copy already stored keeps its When | `BUILTIN_WHEN`, `BuiltIns.WhenOf`, `seedGroup` in `modules/Library.lua` |
-
-The spec and role reads, the probe and the emote callouts land per client with their items of the Forever port (Ka0sAddonsCommonTasks
-`docs/2026-11-10-QUICKCOMMS_FOREVER_EMOTES/00_DESIGN.md`), each adding its row here.
+| The character key (the Character row, `{me}`, the chat-sender test) | `Name-Realm` | `First Surname`, no realm (names are unique per region) | `Compat.CharacterKey`, `core/Compat.lua` (LibKa0s Compat) |
+| The Specialization row's list | read from the client (`Role.SpecsForClass`), Retail's shipped `GameIds.SPECS` as the fallback | read from the client the same way, so Forever needs no seed (C2) | `LibKa0s-Role-1.0`, `settings/Groups_When.lua` |
+| The role (the Role condition, `{role}`, `/qc why`) | the player's pick, then the group's assigned role, then the spec's | the pick, the assigned role, then the talent tree with the most points spent, then the spec's (C1) | `Role.Resolve` over `db.char.role`, `core/Compat.lua` `PlayerRole`; the Role row on General → Behavior |
+| `/qc probe`, `/qc probe clear` | yes, records under `global.probes.retail` | yes, records under `global.probes.forever`, with the talent groups | `settings/SlashVerbs.lua`, `Compat.ProbeInstance` / `TalentGroups` / `EmoteTokens` |
+| Emote callouts (`emote`, a custom `/e`; `gameEmote`, the client's own emote) and the Emotes set | yes | yes, the same (the emote lists are byte-identical, C5) | `modules/Channels.lua`, `modules/Emotes.lua`, `defaults/BuiltIns_Emotes.lua` |
 
 ## Settings Schema
 

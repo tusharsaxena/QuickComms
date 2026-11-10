@@ -13,13 +13,17 @@ v1.0.0's design carries the callout library (each callout owned by one group, a 
 the 2026-10-17 amendment, which retired callouts shared between groups by reference), the
 situation engine and the resolver, the secure send engine with a soft spam guard (dimming and
 drop notes; no hard guard in combat, spec §9.2), any number of pads and dials, built-in sets for
-Mythic+, raid, arena, battlegrounds and the solo open world (seeded into each profile as ordinary, editable groups; the
+dungeons and Mythic+, raid, arena, battlegrounds, the solo open world and game emotes (seeded into each profile as ordinary, editable groups; the
 2026-10-18 amendment, which retired the read-only built-ins and their Customize), groups nested one
 level, the settings panel with *Preview as…* and *Why is this showing?*. Export and import strings were built in phase 5 and
 removed on 2026-10-25, before release, to be rebuilt later (tracked in the GitHub issues).
 
 It serves **Retail Midnight and WoW Forever** (Interface 120105, 16001) from one codebase
-([`ARCHITECTURE.md`](ARCHITECTURE.md) → *Per-client features*).
+([`ARCHITECTURE.md`](ARCHITECTURE.md) → *Per-client features*). On WoW Forever the content kinds are
+the open world, dungeons, raids and battlegrounds: Mythic+, arenas, delves, scenarios and housing are
+Retail only. Forever seeds no Arena set and only three battlegrounds, and its Dungeon set matches
+dungeons alone. The role comes from the talent tree with the most points spent, the character is
+named without a realm, and emote callouts and `/qc probe` work the same on both clients.
 
 ## What exists at the end of phase 5
 

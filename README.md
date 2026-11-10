@@ -8,13 +8,15 @@
 
 Supports Retail and WoW Forever. Quick Comms puts your group callouts one click or one keypress away. "Kick on me", "Lust now",
 "INC Lumber Mill": they sit on a Comms Pad, or open from a ping-wheel style Comms Dial. It knows where
-you are (a Mythic+ key, a raid, an arena, a battleground or the open world) and shows the callouts
-that fit. Every message goes out through a button you press, the one way Midnight still lets an addon
-send chat in keys and on bosses.
+you are (a dungeon or Mythic+ key, a raid, an arena, a battleground or the open world) and shows the
+callouts that fit. Mythic+ and arenas are Retail only; on WoW Forever it knows dungeons, raids,
+battlegrounds and the open world. Every message goes out through a button you press, the one way
+Midnight still lets an addon send chat in keys and on bosses.
 
 It comes with callouts for all of those, including a group for every battleground objective, colored
-Alliance blue or Horde red where a location belongs to one side. Change any of them, or write your
-own.
+Alliance blue or Horde red where a location belongs to one side. On WoW Forever you get the dungeon,
+raid, open-world and emote groups, plus Warsong Gulch, Arathi Basin and Alterac Valley. Change any of
+them, or write your own.
 
 ## Screenshots
 
@@ -40,7 +42,7 @@ own.
 
 ## Usage
 
-Step into a key, a raid, an arena or a battleground and the Comms Pad shows the callouts for it.
+Step into a dungeon, a key, a raid, an arena or a battleground and the Comms Pad shows the callouts for it.
 Click one to send it. To move the pad, type `/qc unlock`, drag it, then `/qc lock`; `/qc test` fills it
 with placeholder buttons first if you want to place it before your next run. `/qc toggle`, or the
 Toggle Comms Pads key, hides every pad until you bring them back.
@@ -123,6 +125,8 @@ Everything else is under **Settings → AddOns → Ka0s Quick Comms**, and `/qc 
 - Type `/qc debug on` and reproduce the bug.
 - Type `/qc diagnostics`.
 - If the debug window isn't open, open it with `/qc debug`. Press **Copy**, copy the entire output, and include it with your bug report.
+- On WoW Forever, if a dungeon, raid or battleground shows the wrong callouts, type `/qc probe` while
+  you are inside it and include the four lines it prints.
 
 The report is added after the debug trace in the same window, so one copy carries both.
 
