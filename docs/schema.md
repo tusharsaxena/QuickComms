@@ -294,6 +294,12 @@ Step 18 (R3-FRIZ, `perProfile`, `NS.RetireFonts`): LibKa0s v1.85.0 deleted `Ka0s
 face, at any depth (a pad's or dial's font, the skin's Font override), becomes `Ka0s Ubuntu`. Blizzard's
 own `Friz Quadrata TT`, the pads' default pick, stays. Idempotent.
 
+Step 19 (QFE-E3, `perProfile`, `Library.MigrateEmotesSet`): the Emotes set (QuickComms#15) comes to every
+stored profile that Prepare has run on (`seeded`) and that was never given it (`seededSets`), as ordinary
+seeded groups and callouts (`Library.SeedNewSets`), placed on each pad and dial right after the Solo set's
+copy, or at the end where a surface does not list it. A profile given it already, or whose player deleted
+it, gains nothing, and nothing stored is changed. Idempotent.
+
 A color, Font shadow, the button's texture and the shine each have a `<key>FromSkin` companion, default
 true (`fontColorFromSkin`, `fontShadowFromSkin`, `backgroundFromSkin`, `borderColorFromSkin`,
 `textureFromSkin`, `glowColorFromSkin`, `shineFromSkin`, and a dial's `highlightFromSkin`,

@@ -5,19 +5,34 @@ local test, assertEqual, assertTrue, assertNil = T.test, T.assertEqual, T.assert
 
 local function bi() local NS = T.newAddon() return NS, NS.BuiltIns end
 
+-- The Emotes set's fixture (tests/emote_tokens.lua) and the client this kit profile runs.
+local EMOTES = dofile("tests/emote_tokens.lua")
+local CLIENT = dofile("tests/_kit/mock_client.lua").current() == "forever" and "forever" or "retail"
+
+-- The client's EMOTEn_TOKEN and EMOTEn_CMD1 globals for the seeded tokens, from the fixture.
+local function plantEmotes(NS, env)
+    env.MAXEMOTEINDEX = 628
+    for token, i in pairs(EMOTES[CLIENT]) do
+        env["EMOTE" .. i .. "_TOKEN"], env["EMOTE" .. i .. "_CMD1"] = token, EMOTES.commands[i]
+    end
+    NS.Emotes.Reset()
+end
+
 test("builtins: the expected top-level sets exist in order", function()
     local _, BI = bi()
     assertEqual(BI.order[1], "bi.mplus")
     assertEqual(BI.order[2], "bi.raid")
     assertEqual(BI.order[3], "bi.arena")
     assertEqual(BI.order[4], "bi.world")
+    -- red under: no defaults/BuiltIns_Emotes.lua after BuiltIns_World.lua in the TOC (QFE-E3)
+    assertEqual(BI.order[5], "bi.emotes", "Emotes after the World set")
     -- A battleground's own set comes before the generic one, so the dial opens into it (D9, phase 4).
-    assertEqual(BI.order[5], "bi.bg.ab")
+    assertEqual(BI.order[6], "bi.bg.ab")
     -- the generic battleground set after every battleground's own, and In Group after it (bg
     -- buttons): in a battleground the map's own set is the first active group (D9)
     assertEqual(BI.order[#BI.order - 1], "bi.bg")
     assertEqual(BI.order[#BI.order], "bi.group")
-    for i = 5, #BI.order - 2 do assertTrue(BI.order[i]:match("^bi%.bg%.") ~= nil, BI.order[i]) end
+    for i = 6, #BI.order - 2 do assertTrue(BI.order[i]:match("^bi%.bg%.") ~= nil, BI.order[i]) end
     assertTrue(#BI.order >= 20, "generic sets plus one per battleground")
 end)
 
@@ -57,7 +72,9 @@ test("builtins: node sets nest one level", function()
 end)
 
 test("builtins: bake audit, every callout bakes under its set's snapshot", function()
-    local NS, BI = bi()
+    local NS, env = T.newAddon()
+    local BI = NS.BuiltIns
+    plantEmotes(NS, env)
     local function topOf(id) local g = BI.groups[id] while g.parent do id = g.parent g = BI.groups[id] end return id end
     for gid, g in pairs(BI.groups) do
         local snap = BI.SNAPSHOTS[topOf(gid)]
@@ -176,8 +193,9 @@ test("builtins: [QF-05] the owner's edits are the shipped look, with no schema s
     assertEqual(BI.groups["bi.group"].callouts[2], "bi.group.stone", "2nd in In Group")
     -- red under: a migration step added for the prebuilts (D4c: no migration). Step 10 is QC-03's
     -- reset onto the skin and step 11 the Font flags' move to From skin (LibKa0s v1.82.0); neither
-    -- touches a prebuilt, nor does step 18, the Friz move (R3-FRIZ).
-    assertEqual(NS.MIGRATIONS[#NS.MIGRATIONS].to, 18)
+    -- touches a prebuilt, nor does step 18, the Friz move (R3-FRIZ), nor step 19, which only adds the
+    -- new Emotes set (QFE-E3).
+    assertEqual(NS.MIGRATIONS[#NS.MIGRATIONS].to, 19)
 end)
 
 test("builtins: [polish] every battleground node set has map-wide callouts of its own", function()
@@ -458,4 +476,79 @@ test("builtins: a neutral battleground's locations take a color for what they ar
     for id, c in pairs(BI.callouts) do
         if id:match("^bi%.bg%.") then assertTrue(c.iconColor ~= C.white, id) end
     end
+end)
+
+-- ── the Emotes set (QFE-E3, QuickComms#15, design 5.3) ──────────────────────────────────────
+
+-- The seed, voice then social (design 5.3), by token.
+local VOICE = { "INCOMING", "CHARGE", "ATTACKMYTARGET", "OPENFIRE", "OOM", "HEALME", "HELPME", "FLEE", "WAIT",
+    "FOLLOW" }
+local SOCIAL = { "WAVE", "HELLO", "THANK", "CHEER", "BOW", "POINT", "DANCE", "READY", "LAUGH", "BYE" }
+
+test("builtins: [QFE-E3] Emotes is an open-world set of game emotes, voice then social, no text", function()
+    local _, BI = bi()
+    local g = BI.groups["bi.emotes"]
+    -- red under: no defaults/BuiltIns_Emotes.lua
+    assertTrue(g ~= nil, "the set exists")
+    assertEqual(g.name, "Emotes")
+    assertTrue(g.when.content.openWorld, "the open world")
+    assertNil(g.when.group, "in any group size")
+    assertEqual(#g.callouts, #VOICE + #SOCIAL)
+    for n, cid in ipairs(g.callouts) do
+        local c = BI.callouts[cid]
+        assertEqual(c.emote, n <= #VOICE and VOICE[n] or SOCIAL[n - #VOICE], cid)
+        assertEqual(c.channel, "gameEmote", cid)
+        assertEqual(c.text, "", cid .. ": one action, no text (R7)")
+    end
+end)
+
+test("builtins: [QFE-E3] every seeded emote token exists on both clients; the voice ones are speech emotes", function()
+    local _, BI = bi()
+    local speech = {}
+    for _, token in ipairs(EMOTES.speech) do speech[token] = true end
+    for n, cid in ipairs(BI.groups["bi.emotes"].callouts) do
+        local token = BI.callouts[cid].emote
+        -- red under: a token only one client's ChatEmoteConstants.lua has (ATTACKTARGET, LOL)
+        assertTrue(EMOTES.retail[token] ~= nil, token .. " on Retail")
+        assertTrue(EMOTES.forever[token] ~= nil, token .. " on WoW Forever")
+        assertEqual(EMOTES.retail[token], EMOTES.forever[token], token .. " at the same index")
+        if n <= #VOICE then assertTrue(speech[token], token .. " plays a voice line") end
+    end
+end)
+
+test("builtins: [QFE-E3] each seeded emote bakes to the client's own command", function()
+    local NS, env = T.newAddon()
+    plantEmotes(NS, env)
+    local BI, snap = NS.BuiltIns, NS.BuiltIns.SNAPSHOTS["bi.emotes"]
+    for _, cid in ipairs(BI.groups["bi.emotes"].callouts) do
+        local c = BI.callouts[cid]
+        local line = NS.Bake.Bake(c, snap, { ctx = {} })
+        assertEqual(line, EMOTES.commands[EMOTES[CLIENT][c.emote]], cid)
+    end
+    assertEqual(NS.Bake.Bake(BI.callouts["bi.emotes.oom"], snap, { ctx = {} }), "/oom")
+    assertEqual(NS.Bake.Bake(BI.callouts["bi.emotes.follow"], snap, { ctx = {} }), "/followme", "FOLLOW's own first command")
+end)
+
+test("builtins: [QFE-E3] a fresh profile seeds Emotes after Solo; Restore built-in groups brings it back", function()
+    local NS = T.enableAddon()
+    local p, Lib = NS.db.profile, NS.Library
+    local id, world = T.seeded(NS, "bi.emotes"), T.seeded(NS, "bi.world")
+    assertTrue(id ~= nil, "seeded")
+    local list = p.pads[p.padOrder[1]].groups
+    local at, worldAt
+    for i, gid in ipairs(list) do
+        if gid == id then at = i elseif gid == world then worldAt = i end
+    end
+    assertEqual(at, worldAt + 1, "right after the World set on the pad")
+    assertEqual(p.callouts[p.groups[id].callouts[1]].emote, "INCOMING", "the callout keeps its token")
+    assertTrue(Lib.DeleteGroup(id))
+    Lib.Prepare()
+    assertNil(T.seeded(NS, "bi.emotes"), "deleted stays deleted")
+    local n = Lib.RestoreBuiltins()
+    -- red under: Restore walking a list that leaves bi.emotes out
+    assertEqual(n.groups, 1, "the one set back")
+    local back = T.seeded(NS, "bi.emotes")
+    assertTrue(back ~= nil, "back")
+    assertEqual(#p.groups[back].callouts, #VOICE + #SOCIAL, "with every callout")
+    assertEqual(p.callouts[p.groups[back].callouts[#VOICE + #SOCIAL]].emote, "BYE")
 end)

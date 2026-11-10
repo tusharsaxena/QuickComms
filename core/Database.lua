@@ -77,6 +77,9 @@ NS.MIGRATIONS = {
     -- Ka0s Ubuntu (R3-L6). A stored pick of the deleted face, a pad's or dial's font or the skin's Font
     -- override, moves to Ka0s Ubuntu; Blizzard's own "Friz Quadrata TT" stays.
     { to = 18, perProfile = true, run = function(_, profile) NS.RetireFonts(profile) end },
+    -- 18 -> 19 (QFE-E3, QuickComms#15): the Emotes set comes to every stored profile once, after the
+    -- World set on each pad and dial; a profile given it already, or whose player deleted it, gains nothing.
+    { to = 19, perProfile = true, run = function(_, profile) NS.Library.MigrateEmotesSet(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.

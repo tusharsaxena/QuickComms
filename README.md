@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1765410)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1759%2F1759_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1764%2F1764_passing-green)
 
 Supports Retail and WoW Forever. Quick Comms puts your group callouts one click or one keypress away. "Kick on me", "Lust now",
 "INC Lumber Mill": they sit on a Comms Pad, or open from a ping-wheel style Comms Dial. It knows where
@@ -91,7 +91,9 @@ Everything else is under **Settings → AddOns → Ka0s Quick Comms**, and `/qc 
   General falls back to say when you haven't joined it. An emote callout sends its text as a custom
   emote (`/e`), on Retail and WoW Forever alike. A game emote callout performs one of the game's own
   emotes (`/point`, `/oom`, `/incoming`...) on your target, picked from a searchable list in the
-  callout editor; voice emotes play their sound.
+  callout editor; voice emotes play their sound. The built-in Emotes group, shown in the open world
+  whatever your group, carries twenty of them: the voice calls first (`/incoming`, `/oom`,
+  `/healme`...), then the social ones (`/wave`, `/thank`, `/dance`...).
 - After a press every button dims for about a second. On a boss the game quietly drops lines sent
   faster than that, so if one never arrives you get a note in chat.
 - Text that starts with a slash command is refused. A callout only ever sends chat.

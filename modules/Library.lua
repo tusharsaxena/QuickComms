@@ -818,6 +818,25 @@ function Lib.SeedNewNodes(profile)
     return seedNewNodes(profile)
 end
 
+--- A schema step's seeding (QFE-E3) for one stored profile already given its sets (seededSets): each
+--- set this client ships that it was never given is seeded, as Prepare's seedNew would, its id counter
+--- lifted first. Placing it on the surfaces is the caller's. A profile never prepared is left to
+--- Prepare, and a set the player deleted after it was given stays deleted.
+--- @return table[] { origin = shipped id, id = the new group's id }, in shipped order
+function Lib.SeedNewSets(profile)
+    -- `seeded`: Prepare has run on it (a fresh profile's seededSets is the defaults' empty table)
+    if type(profile) ~= "table" or profile.seeded ~= true or type(profile.seededSets) ~= "table" then return {} end
+    for _, key in ipairs({ "callouts", "groups", "pads", "dials" }) do
+        if type(profile[key]) ~= "table" then return {} end
+    end
+    liftNextId(profile)
+    local out = {}
+    for _, top in ipairs(NS.BuiltIns.Seeded()) do
+        if not profile.seededSets[top] then out[#out + 1] = { origin = top, id = seedSet(profile, top) } end
+    end
+    return out
+end
+
 -- Prepare's seeding: each shipped set the profile was never given (seededSets) is seeded and put at
 -- the end of every pad and dial, and each node shipped after its set was given goes inside it
 -- (seedNewNodes). A seeded member the player deleted is not seeded again: that is Restore's. Only the

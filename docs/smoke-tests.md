@@ -2454,6 +2454,20 @@ The probe (QFE-F5; **code:** `settings/SlashVerbs.lua` `ProbeLines`, `core/Compa
   button carries the padlock as a Say callout does (EMOTE-2). Record whether the game would refuse
   `/point` typed by hand during the encounter: if it does not, the lock is stricter than it needs to be
   and is a follow-up. Result: owed
+- **EMOTE-7. The Emotes set in the open world (QFE-E3).** On a fresh profile (or after **Restore
+  built-in groups**), out of combat in the open world, solo → the pad shows an **Emotes** section right
+  after Solo: twenty buttons, the voice ones first (Incoming, Charge, Attack target, Open fire, Out of
+  mana, Heal me, Help me, Flee, Wait, Follow me), then Wave, Hello, Thank you, Cheer, Bow, Point, Dance,
+  Ready, Laugh and Bye, each with its own tinted icon; the dial offers the same group. Join a party
+  in the open world → Emotes still shows (any group size). Enter a dungeon → it is gone. Click **Out
+  of mana** → your character says the out-of-mana voice line and chat shows the game's own line, once,
+  no drop note; **Point** with a target → you point at it. Delete the Emotes group, `/reload` → it
+  stays gone; **Restore built-in groups** → it is back with all twenty. Repeat on WoW Forever.
+  Result: owed
+- **EMOTE-8. An existing profile gains Emotes once (QFE-E3, step 19).** On a profile saved before this
+  build (Solo on the pad) → after the update the pad lists Emotes right after Solo and nothing else
+  moved; an edited Solo callout keeps its text. Delete Emotes and `/reload` → it does not come back.
+  Result: owed
 
 ## Pending sign-off
 
@@ -2526,4 +2540,4 @@ Owed from the owner's sixth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-
 
 Owed from the WoW Forever port (QFE-F2, Ka0sAddonsCommonTasks `docs/2026-11-10-QUICKCOMMS_FOREVER_EMOTES/`): FOREVER-1 to
 FOREVER-11, new, each with its `Result:` line reading `owed`. From QFE-F3: FOREVER-12 to FOREVER-17, new, each owed. From QFE-F4: ROLE-1 to ROLE-3 (Retail) and
-FOREVER-18 to FOREVER-21, new, each owed. From QFE-E1: EMOTE-1 and EMOTE-2, new, each owed. From QFE-E2: EMOTE-3 to EMOTE-6, new, each owed.
+FOREVER-18 to FOREVER-21, new, each owed. From QFE-E1: EMOTE-1 and EMOTE-2, new, each owed. From QFE-E2: EMOTE-3 to EMOTE-6, new, each owed. From QFE-E3: EMOTE-7 and EMOTE-8, new, each owed.

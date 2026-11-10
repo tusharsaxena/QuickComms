@@ -90,15 +90,16 @@ core\LauncherSetup.lua
 # Defaults
 # LOAD-BEARING: publishes NS.C, which settings\Schema.lua and settings\Panel.lua take at load.
 defaults\Profile.lua
-# LOAD-BEARING: NS.BuiltIns and its helpers, used by the next six files
+# LOAD-BEARING: NS.BuiltIns and its helpers, used by the next seven files
 defaults\BuiltIns.lua
 # LOAD-BEARING (b): each BuiltIns_* file appends its sets to NS.BuiltIns.order, the order every new
 # pad and dial is seeded in (modules\Library.lua seededTops); tests\test_builtins.lua pins it. Keep
-# M+, raid, arena, world, then the battleground sets.
+# M+, raid, arena, world, emotes, then the battleground sets.
 defaults\BuiltIns_MythicPlus.lua
 defaults\BuiltIns_Raid.lua
 defaults\BuiltIns_Arena.lua
 defaults\BuiltIns_World.lua
+defaults\BuiltIns_Emotes.lua
 defaults\BuiltIns_Battlegrounds.lua
 # LOAD-BEARING (b): In Group last, after the generic battleground set, so a content set stays the
 # first active group on the pad and the dial (D9).

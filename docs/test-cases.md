@@ -108,7 +108,7 @@ Total.
 - perf: [review] a refresh whose signature moves notes situationRefresh before the rebuild it publishes
 - perf: [phase 5] the Comms Dial page's Preview notes neither bakeSurface nor resolverResolve
 
-### test_database.lua (20)
+### test_database.lua (21)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the target is the last step's `to`, and the steps climb in order
@@ -130,6 +130,7 @@ Total.
 - database: [bg subgroups] step 7 seeds the new objective nodes by origin, once; step 8 drops the retired dial fields
 - database: [polish] migrate: step 9 drops the retired slice border
 - database: [bg subgroups] a fresh profile seeds every objective node once, and step 7 leaves it as it is
+- database: [QFE-E3] step 19 adds the Emotes set to a stored profile once, after Solo, touching nothing else
 
 ### test_profile.lua (10)
 
@@ -406,7 +407,7 @@ Total.
 - resolver: [all] All battlegrounds and All dungeons and raids match the whole kind, the listed ids aside
 - resolver: [arena] the arena row matches only in an arena: its listed ids, or all of them
 
-### test_builtins.lua (26)
+### test_builtins.lua (30)
 
 - builtins: the expected top-level sets exist in order
 - builtins: ids are unique, referenced and well formed
@@ -434,6 +435,10 @@ Total.
 - builtins: [bg buttons] In Group is a party, raid and instance group set of short smart-group lines
 - builtins: a faction-themed battleground's locations take the faction's color, neutral ones gold
 - builtins: a neutral battleground's locations take a color for what they are, never white
+- builtins: [QFE-E3] Emotes is an open-world set of game emotes, voice then social, no text
+- builtins: [QFE-E3] every seeded emote token exists on both clients; the voice ones are speech emotes
+- builtins: [QFE-E3] each seeded emote bakes to the client's own command
+- builtins: [QFE-E3] a fresh profile seeds Emotes after Solo; Restore built-in groups brings it back
 
 ### test_gameids.lua (5)
 
@@ -2035,7 +2040,7 @@ Total.
 | test_bus.lua | 2 |
 | test_surface_parity.lua | 18 |
 | test_setup.lua | 26 |
-| test_database.lua | 20 |
+| test_database.lua | 21 |
 | test_profile.lua | 10 |
 | test_schema.lua | 20 |
 | test_slash.lua | 22 |
@@ -2051,7 +2056,7 @@ Total.
 | test_emotes.lua | 15 |
 | test_bake.lua | 12 |
 | test_resolver.lua | 13 |
-| test_builtins.lua | 26 |
+| test_builtins.lua | 30 |
 | test_gameids.lua | 5 |
 | test_client_data.lua | 8 |
 | test_library.lua | 67 |
@@ -2117,4 +2122,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1759** |
+| **Total** | **1764** |

@@ -299,12 +299,14 @@ end)
 
 test("dial: [review 1] the key opens nothing where no group is active, and is the game's again while disabled", function()
     local NS, m = live({})
-    -- the World (solo) set is the one active solo in the open world (groups polish): without it, none is
+    -- the World (solo) and Emotes (QFE-E3) sets are the ones active solo in the open world: without
+    -- them, none is
     assertTrue(NS.Library.DeleteGroup(T.seeded(NS, "bi.world")))
+    assertTrue(NS.Library.DeleteGroup(T.seeded(NS, "bi.emotes")))
     NS.Situation.RefreshNow("test")
     bindG(NS, m)
     m.__pressKey("G")
-    assertFalse(NS.Dial.IsOpen("d2"), "solo in the open world with no World set: no ring to show")
+    assertFalse(NS.Dial.IsOpen("d2"), "solo in the open world with no World or Emotes set: no ring to show")
     NS.SchemaRuntime.Set("enabled", false)
     -- red under: drop NS.Dial.HideAll() from the stand-down's Teardown in modules/Surfaces.lua
     m.__pressKey("G")
