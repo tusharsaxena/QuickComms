@@ -42,7 +42,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | PLOOK-1..11 | [The pad's look per skin](#the-pads-look-per-skin) | The pad in each skin: edges, buttons and shine (the owner's findings of 2026-11-01) |
 | FSKIN-1..13 | [The full skin](#the-full-skin) | Every pad and dial color, the shadow, texture and shine on the skin, Ka0s Default unmoved, the companions off, an existing profile, meaning colors, the ghost, a stored pick of the deleted Friz |
 | ROLE-1..3 | [Role and character](#role-and-character) | The Role row on General → Behavior and its Automatic phrase, the group's assigned role winning over the spec, the Character and Specialization rows of the When editor (Retail; FOREVER-18 to FOREVER-21 re-run them on Forever) |
-| FOREVER-1..24 | [WoW Forever](#wow-forever) | The core re-run on a live WoW Forever client: the AddOns list, a clean load, the settings panel and the launcher, the default skin per client, a pad's secure send in the open world, a dial's open, send and animations (the strata guard), a lifted confirm, the key bindings, profiles across a full restart, diagnostics, enable and disable; the content kinds and drawers the When editor offers, Preview as..., the sets a fresh profile seeds, the token help, the classic-era place ids in game and a profile copied from Retail; Automatic role from the talent tree, the Role pick, the long character name and your own lines; `/qc probe` on both clients and `probe clear`; the Dungeon set matching dungeons alone |
+| FOREVER-1..25 | [WoW Forever](#wow-forever) | The core re-run on a live WoW Forever client: the AddOns list, a clean load, the settings panel and the launcher, the default skin per client, a pad's secure send in the open world, a dial's open, send and animations (the strata guard), a lifted confirm, the key bindings, profiles across a full restart, diagnostics, enable and disable; the content kinds and drawers the When editor offers, Preview as..., the sets a fresh profile seeds, the token help, Forever's place ids against the client's own names and a profile copied from Retail; Automatic role from the talent tree, the Role pick, the long character name and your own lines; `/qc probe` on both clients and `probe clear`; the Dungeon set matching dungeons alone; `/qc probe ids`, the no-travel sweep of the client's map, dungeon finder and battleground names |
 | EMOTE-1..8 | [Emotes](#emotes) | Retail, then Forever: a custom emote callout (`/e`) and its lock, a game emote callout, the emote picker's order and voice marks, preview, throttle and an unknown token, a game emote during an encounter, the Emotes set in the open world and an existing profile gaining it once |
 | SKIN-1..31 | [Skins](#skins) | The skinning rollout: the one-time reset under Ka0s Default, a new pad, dial or profile on the skin, Ka0s Default elsewhere unchanged, the Skin tab, every skin on the pads and dials, the *Use the skin's ...* boxes, the Preview as window, the callout popup and the icon browser, the settings pages, the tool windows, the Font and texture overrides, Ignore fonts, EllesmereUI on and off and the reload back, profiles and combat, the first-run skin picker (its eye, Apply, close, gear, the switch and a profile event, one picker across Ka0s addons), the CLI and the degraded install; LibKa0s v1.82.0: the Font outline, From skin font flags, `/qc skin`, the HUD size scale and the windows' width parity; the skin on the only media picker; no line under any window title |
 
@@ -2353,13 +2353,13 @@ Forever's SavedVariables are `_forever_/WTF/Account/<ACCOUNT>/SavedVariables/Qui
 - **FOREVER-10. Diagnostics.** `/qc diagnostics` → the console opens with the sections DIAG-1 names and no Lua error, and the report's `client:` line reads `version=1.60.1` and `interface=16001`. Result: owed
 - **FOREVER-11. Enable and disable.** `/qc disable` → every pad and dial stands down and `/qc help`, `/qc version` and `/qc diagnostics` still answer; `/qc enable` → they return, as on Retail (STATE-1). Result: owed
 
-The content kinds, place lists and seeds (QFE-F3; **code:** `defaults/GameIds_Clients.lua`, `defaults/BuiltIns.lua` `Ships`/`Seeded`, `settings/Groups_When.lua`, `modules/Preview.lua`, `settings/Callouts.lua`). Forever's ids are derived from Forever's own Map and LFGDungeons tables (build 1.60.1.70862; `tools/derive-gameids.py --forever`); FOREVER-16 confirms them in game.
+The content kinds, place lists and seeds (QFE-F3; **code:** `defaults/GameIds_Clients.lua`, `defaults/BuiltIns.lua` `Ships`/`Seeded`, `settings/Groups_When.lua`, `modules/Preview.lua`, `settings/Callouts.lua`). Forever's ids are derived from Forever's own Map and LFGDungeons tables (build 1.60.1.70862; `tools/derive-gameids.py --forever`); FOREVER-16 confirms them in game with `/qc probe ids` (FOREVER-25), which needs no travel.
 
 - **FOREVER-12. The When editor offers Forever's kinds.** Groups → pick any group → When → open **Content** → it lists exactly Open world, Dungeon, Raid and Battleground (no Mythic+, Delve, Scenario, Arena or Housing); **Select all** ticks those four only. The drawers listed are Content, Instance, Group, Leader or assist, Class, Specialization, Role, Character and Battleground: no **Difficulty**, **Key level** or **Arena** drawer. Open **Instance** and type `Molten` → Molten Core is suggested; type `Algeth` → nothing is suggested. On Retail the same group shows all nine kinds and every drawer (unchanged). Result: owed
-- **FOREVER-13. Preview as... lists Forever's places.** Settings → General → **Preview as...** → the menu reads Current, then the 28 dungeons the dungeon finder queues (the classic ones with Scarlet Monastery and Scholomance, and Forever's own nine, such as City of Dalaran and The Hall of Thanes) as `Dungeon · <name>`, A-Z, then the seven raids (Molten Core, Onyxia's Lair, Blackwing Lair, Zul'Gurub, both Ahn'Qiraj raids, Naxxramas) as `Raid · <name>`, A-Z and with no difficulty named, then `BG - Arathi Basin`, `BG - Warsong Gulch`, `BG - Alterac Valley` and Solo. There is no `M+` entry and no Arena. Pick `Dungeon · Deadmines` → the pads show the groups whose Content ticks Dungeon; pick `BG - Warsong Gulch` → the Warsong Gulch set shows; then turn the preview off. Every name reads as the client names it, not `Instance <number>`. Result: owed
+- **FOREVER-13. Preview as... lists Forever's places.** Settings → General → **Preview as...** → the menu reads Current, then the 28 dungeons the dungeon finder queues (the classic ones with Scarlet Monastery and Scholomance, and Forever's own nine, such as City of Dalaran and The Hall of Thanes) as `Dungeon · <name>`, A-Z, then the seven raids (Molten Core, Onyxia's Lair, Blackwing Lair, Zul'Gurub, both Ahn'Qiraj raids, Naxxramas) as `Raid · <name>`, A-Z and with no difficulty named, then `BG - Arathi Basin`, `BG - Warsong Gulch`, `BG - Alterac Valley` and Solo. There is no `M+` entry and no Arena. No raid or party map the dungeon finder does not queue is listed (The Tainted Scar, Storm Cliffs, The Crystal Vale, Nightmare Grove, Scarlet Enclave, Demon Fall Canyon or Karazhan Crypts: D3). Pick `Dungeon · Deadmines` → the pads show the groups whose Content ticks Dungeon; pick `BG - Warsong Gulch` → the Warsong Gulch set shows; then turn the preview off. Every name reads as the client names it, not `Instance <number>`, and is the name FOREVER-25's `/qc probe ids` record holds for that id in `maps`. Result: owed
 - **FOREVER-14. A fresh profile seeds Forever's sets.** Profiles → create `SmokeSeeds` → Groups lists Dungeon, Raid, Solo, Emotes, Arathi Basin, Warsong Gulch, Alterac Valley (each opening into its objectives, as on Retail), Battleground and In Group, and **no** Arena set or any other battleground (Eye of the Storm, Twin Peaks and the rest are absent). **Restore built-in groups** → `0` groups come back. Delete Warsong Gulch, then **Restore built-in groups** → it comes back with its nodes, and the Arena set still does not. Switch back and delete `SmokeSeeds` afterwards. Result: owed
 - **FOREVER-15. The token help leaves out {dungeon} and {key}.** Edit any callout and hover the info glyph beside **Text** → the token list has `{spec}` and `{role}` but no `{dungeon}` and no `{key}`. On Retail it lists both (unchanged). Result: owed
-- **FOREVER-16. The classic-era ids match in game (confirms the MATCHED ids).** Zone into each place you can reach, then `/qc why`: in any listed dungeon → the snapshot's content reads `dungeon` and its instance id is the one `defaults/GameIds_Clients.lua` lists for it; in Molten Core, Onyxia's Lair or another listed raid → `raid` and its listed id; in Warsong Gulch, Arathi Basin and Alterac Valley → `battleground`, and that battleground's own set shows on the pad and opens on the dial (its id is 489, 529 or 30, or the newer map id its set also lists). Record any id that differs. Result: owed
+- **FOREVER-16. Forever's ids match the client's own names, with no travel (confirms the derived ids).** Run FOREVER-25's `/qc probe ids` → its third line reads *shipped ids the client does not name: none*; an id it lists (`dungeon <id>`, `raid <id>` or `battleground set <key> (<ids>)`) is one the client does not know, so record it. Log out and send Claude `_forever_/WTF/Account/<ACCOUNT>/SavedVariables/QuickComms.lua`: in the ids record's `maps`, each of the 28 dungeons and seven raids `defaults/GameIds_Clients.lua` lists carries the name its comment gives, and 489, 529 and 30 name Warsong Gulch, Arathi Basin and Alterac Valley; Claude compares them with `tests/test_gameids.lua`'s `FOREVER_MAPS` and records any difference. If you are in a listed place anyway, `/qc why` there → its content reads `dungeon`, `raid` or `battleground` and its instance id is the listed one, and a battleground's own set shows on the pad and opens on the dial; no visit is owed for this check. Result: owed
 - **FOREVER-17. A profile copied from Retail still works.** Copy a Retail `QuickComms.lua` (with its Dungeon and Arena sets) into Forever's SavedVariables while the client is closed, then log in → zero Lua errors; the Dungeon and Arena groups are still on the Groups page and editable, and their When still shows its other rows; **Restore built-in groups** adds nothing for them. Put the original file back afterwards. Result: owed
 
 The role and the long character names (QFE-F4; **code:** as **Role and character** above). Forever's
@@ -2388,18 +2388,19 @@ talent-tree-to-role map is MATCHED, NOT CONFIRMED until FOREVER-18 passes for a 
   Result: owed
 
 The probe (QFE-F5; **code:** `settings/SlashVerbs.lua` `ProbeLines`, `core/Compat.lua` `ProbeInstance`,
-`TalentGroups`, `EmoteTokens`). Both clients; the records confirm the MATCHED ids above.
+`TalentGroups`, `EmoteTokens`). Both clients. A place record confirms the content kind and instance id of a place you happen to be in; Forever's ids are confirmed without travel by FOREVER-25's ids record.
 
-- **FOREVER-22. `/qc probe` in every Forever instance visited.** Out of combat, in each Forever
-  dungeon, raid and battleground you enter (and once in the open world), type `/qc probe` → four chat
-  lines: *Probe N saved for forever (...)*, then the place (its name, type, difficulty id and name,
+- **FOREVER-22. `/qc probe` where you are, beside the ids record.** Out of combat, once in the open
+  world and in any Forever dungeon, raid or battleground you happen to enter (no visit is owed: the ids
+  are FOREVER-16's and FOREVER-25's), type `/qc probe` → four chat lines: *Probe N saved for forever (...)*, then the place (its name, type, difficulty id and name,
   max players and instance id), then the content kind, group and role, then the spec, the talent
   groups with their points and the emote count (a few hundred). In combat → one line, *The probe is
-  not available in combat.*, and nothing is recorded. Log out, then send Claude
-  `_forever_/WTF/Account/<ACCOUNT>/SavedVariables/QuickComms.lua`: its `global.probes.forever` holds one
-  record per probe, each with every `GetInstanceInfo` value, the situation, the role and source, the
-  spec and the emote tokens. Record any place whose content kind or instance id differs from
-  `defaults/GameIds_Clients.lua`. Result: owed
+  not available in combat.*, and nothing is recorded. Then `/qc probe ids` (FOREVER-25). Log out, then
+  send Claude `_forever_/WTF/Account/<ACCOUNT>/SavedVariables/QuickComms.lua`: its
+  `global.probes.forever` holds one record per probe, oldest first, the place records (no `kind`, each
+  with every `GetInstanceInfo` value, the situation, the role and source, the spec and the emote
+  tokens) and the ids record (`kind = "ids"`) in one list. Record any place whose content kind or
+  instance id differs from `defaults/GameIds_Clients.lua`. Result: owed
 - **FOREVER-23. `/qc probe` on Retail, and `probe clear`.** On Retail, type `/qc probe` in the open world
   → the same four lines, *saved for retail*, with no talent groups (*none*). Then `/qc probe clear` →
   *Probes cleared: N removed.*, N being the probes taken on this client; after a /reload the
@@ -2415,6 +2416,27 @@ The Dungeon set on Forever (QFE-C7, the lead's call; **code:** `defaults/GameIds
   shown. Delete it, then **Restore built-in groups** → it comes back with its seven callouts and the
   same dungeon-only When. On Retail a fresh profile's Dungeon set still ticks Dungeon and Mythic+
   (unchanged). Result: owed
+
+The ids sweep (QuickComms#21, the forever-ids design; **code:** `settings/SlashVerbs.lua` `ProbeLines`,
+`ProbeIdsRecord`, `ProbeIdsSummary`, `core/Compat.lua` `ProbeMapNames`, `ProbeDungeonFinder`,
+`ProbeBattlegrounds`). Anywhere on Forever; no travel.
+
+- **FOREVER-25. `/qc probe ids` sweeps the client's names with no travel.** Out of combat, anywhere on
+  Forever, type `/qc probe ids` → no Lua error, and four chat lines: *Ids probe N saved for forever
+  (...)*; *map names read: M of ids 0 to 4000; dungeon finder: L entries; battlegrounds: B*, with M at
+  least 38 (the ids Forever ships), L the entries the dungeon finder lists (28 dungeons on build
+  1.60.1.70862, then its random entries) and B at least 3; *shipped ids the client does not name: none* (FOREVER-16); and *dungeon finder names no
+  shipped id carries:* followed by *none* or by names. A listed name may be the dungeon finder's own
+  spelling of a shipped place (Stormwind Stockades, Zul'Farak, Lower or Upper Blackrock Spire, Dire Maul -
+  East, West or North, Hall of Thanes); record any other, which is a dungeon the finder queues that the
+  lists miss. In combat → one line, *The probe is not available in combat.*, and nothing is recorded.
+  `/qc disable`, then `/qc probe ids` → the one disabled line, and nothing is recorded; `/qc enable`.
+  `/qc probe ids2` → one line naming `/qc probe`, `/qc probe ids` and `/qc probe clear`. On Retail,
+  `/qc probe ids` → the same four lines, *saved for retail*. Log out and send Claude Forever's
+  `QuickComms.lua`: the ids record holds `kind = "ids"`, `client = "forever"`, `time`, `maps`, `lfg` (each
+  entry with its `id`, `name`, `typeID`, `subtypeID` and `mapID`, a random one with `random`) and
+  `battlegrounds` (each with its `name`, `battlegroundID` and `mapID`); Darkspear Islands and Battle for
+  Gilneas are among them if the client lists them (they get no set of their own, D3). Result: owed
 
 ## Emotes
 
@@ -2554,3 +2576,5 @@ Owed from the owner's sixth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-
 Owed from the WoW Forever port (QFE-F2, Ka0sAddonsCommonTasks `docs/2026-11-10-QUICKCOMMS_FOREVER_EMOTES/`): FOREVER-1 to
 FOREVER-11, new, each with its `Result:` line reading `owed`. From QFE-F3: FOREVER-12 to FOREVER-17, new, each owed. From QFE-F4: ROLE-1 to ROLE-3 (Retail) and
 FOREVER-18 to FOREVER-21, new, each owed. From QFE-F5: FOREVER-22 and FOREVER-23, new, each owed. From QFE-E1: EMOTE-1 and EMOTE-2, new, each owed. From QFE-E2: EMOTE-3 to EMOTE-6, new, each owed. From QFE-E3: EMOTE-7 and EMOTE-8, new, each owed. From QFE-C7 (QFE-REV): FOREVER-24, new, owed; FOREVER-14 and FOREVER-15 have a changed expected result and stay owed.
+
+Owed from the Forever ids run (QuickComms#21, FID-1 to FID-3, `docs/superpowers/specs/2026-11-10-forever-ids-design.md`): FOREVER-25, new, owed; FOREVER-13 (the derived lists, by name against the ids record), FOREVER-16 (now `/qc probe ids`, with no travel) and FOREVER-22 (the place probe where you happen to be, beside the ids record), rewritten, each owed.

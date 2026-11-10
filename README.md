@@ -127,6 +127,8 @@ Everything else is under **Settings → AddOns → Ka0s Quick Comms**, and `/qc 
 - If the debug window isn't open, open it with `/qc debug`. Press **Copy**, copy the entire output, and include it with your bug report.
 - On WoW Forever, if a dungeon, raid or battleground shows the wrong callouts, type `/qc probe` while
   you are inside it and include the four lines it prints.
+- On WoW Forever, if a dungeon or raid is missing from Preview as... or carries the wrong name, type
+  `/qc probe ids` anywhere, out of combat, and include the four lines it prints.
 
 The report is added after the debug trace in the same window, so one copy carries both.
 
