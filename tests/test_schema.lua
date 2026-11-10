@@ -290,3 +290,103 @@ test("schema: [layout guard] every stored path, default, range and choice set is
     end
     assertEqual(count, want, "the set of settings is unchanged")
 end)
+
+-- ── the ping and marker member rows (CA-M1-5, spec §2) ────────────────────────────────────────
+
+-- A user callout whose only action is `fields`' (no Line), for a case about the action rows.
+local function actionOnly(NS, fields)
+    fields.name, fields.text, fields.channel = fields.name or "Act", "", "gameEmote"
+    return NS.Library.CreateCallout(fields)
+end
+
+test("schema: [CA-M1-5] callout.ping is a string row, none by default, with none and the four types", function()
+    local NS = T.bootAddon()
+    local row = NS.SchemaRuntime.FindRow("callout.ping")
+    -- red under: no callout.ping row in settings/SchemaMembers.lua
+    assertTrue(row ~= nil, "the row")
+    assertEqual(row.type, "string")
+    assertTrue(row.default == false, "none by default")
+    assertEqual(row.instance, "callout")
+    local vals = {}
+    for i, v in ipairs(row.values) do vals[i] = tostring(v.value) .. "=" .. v.text end
+    assertEqual(table.concat(vals, ","), "none=None,attack=Attack,warning=Warning,onmyway=On my way,assist=Assist")
+    assertTrue(type(row.normalize) == "function" and type(row.validate) == "function")
+    assertTrue(row.normalize("") == false and row.normalize("none") == false and row.normalize("None") == false)
+    assertEqual(row.normalize("attack"), "attack")
+    assertFalse((row.validate("threat")), "a type /ping does not take")
+end)
+
+test("schema: [CA-M1-5] callout.marker is a number row, none by default, with none and 1 to 8 drawn as their icons", function()
+    local NS = T.bootAddon()
+    local row = NS.SchemaRuntime.FindRow("callout.marker")
+    -- red under: no callout.marker row in settings/SchemaMembers.lua
+    assertTrue(row ~= nil, "the row")
+    assertEqual(row.type, "number")
+    assertTrue(row.default == false, "none by default")
+    assertEqual(#row.values, 9)
+    assertEqual(row.values[1].value, 0)
+    assertEqual(row.values[1].text, "None")
+    for n = 1, 8 do
+        assertEqual(row.values[n + 1].value, n)
+        assertEqual(row.values[n + 1].text, "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_" .. n .. ":0|t")
+    end
+    assertTrue(row.normalize(0) == false, "0 is none")
+    assertEqual(row.normalize(8), 8)
+    assertFalse((row.validate(9)))
+    assertFalse((row.validate(1.5)))
+end)
+
+test("schema: [CA-M1-5] the seam sets and clears a ping and a marker, and neither row is reset-exempt", function()
+    local NS = T.bootAddon()
+    local S, p = NS.SchemaRuntime, NS.db.profile
+    local cid = actionOnly(NS, { ping = "attack" })
+    assertTrue((S.Set("callout.ping", "warning", cid)))
+    assertEqual(p.callouts[cid].ping, "warning")
+    local ok, _, why = S.Set("callout.ping", "threat", cid)
+    assertFalse(ok)
+    assertEqual(why, "A ping is attack, warning, onmyway or assist, or none.")
+    assertFalse((S.Set("callout.ping", "none", cid)), "the ping is its only action (CA-M1-3)")
+    local mid = actionOnly(NS, { marker = 8 })
+    assertTrue((S.Set("callout.marker", 3, mid)))
+    assertEqual(p.callouts[mid].marker, 3)
+    ok, _, why = S.Set("callout.marker", 9, mid)
+    assertFalse(ok)
+    assertEqual(why, "A marker is a number from 1 (star) to 8 (skull), or 0 for none.")
+    -- a Line beside it: then none clears the ping (the one-action rule of M1 is kept by the Line alone)
+    local line = NS.Library.CreateCallout({ name = "Line", text = "Kick", channel = "party" })
+    assertTrue((S.Set("callout.ping", "none", line)))
+    assertTrue(p.callouts[line].ping == false)
+    assertTrue((S.Set("callout.marker", 0, line)))
+    assertTrue(p.callouts[line].marker == false)
+    -- the CLI
+    NS.addon:OnSlashCommand("set callout.marker " .. line .. " 8")
+    assertTrue(p.callouts[line].marker == false, "a second action is refused in M1")
+    local blank = actionOnly(NS, { emote = "POINT" })
+    p.callouts[blank].emote = false
+    NS.addon:OnSlashCommand("set callout.marker " .. blank .. " 8")
+    assertEqual(p.callouts[blank].marker, 8, "/qc set callout.marker <id> 8")
+    p.callouts[blank].marker = false
+    NS.addon:OnSlashCommand("set callout.ping " .. blank .. " attack")
+    assertEqual(p.callouts[blank].ping, "attack", "/qc set callout.ping <id> attack")
+    -- D11: an action field is no more reset-exempt than the emote is: a sweep resets it
+    p.callouts[line].ping = "assist"
+    S.BulkBegin()
+    local swept = S.ApplyDefault(S.FindRow("callout.ping"), line)
+    S.BulkEnd()
+    assertTrue(swept, "a sweep reaches callout.ping")
+    assertTrue(p.callouts[line].ping == false)
+    p.callouts[line].marker = 5
+    S.BulkBegin()
+    swept = S.ApplyDefault(S.FindRow("callout.marker"), line)
+    S.BulkEnd()
+    assertTrue(swept, "a sweep reaches callout.marker")
+    assertTrue(p.callouts[line].marker == false)
+end)
+
+test("schema: [CA-M1-5] callout.emote is reworded: an emote is one of a callout's actions", function()
+    local NS = T.bootAddon()
+    local row = NS.SchemaRuntime.FindRow("callout.emote")
+    assertEqual(row.label, "Game emote")
+    -- red under: the old desc ("a Game emote callout performs")
+    assertEqual(row.desc, "The game emote this callout performs, by its token (POINT) or command (/point), after its chat line if it has one. It acts on your target, as the game's own emote does.")
+end)

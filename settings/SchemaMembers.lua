@@ -27,6 +27,8 @@ local WHY = {
     badText   = L["Callout text must be text."],
     badChannel = L["That is not a channel Quick Comms sends on."],
     badEmote  = L["An emote is the game's emote token, such as POINT, or empty for none."],
+    badPing   = L["A ping is attack, warning, onmyway or assist, or none."],
+    badMarker = L["A marker is a number from 1 (star) to 8 (skull), or 0 for none."],
     badIcon   = L["An icon is a texture id or a texture path."],
     badIconColor = L["An icon color is six hex digits (rrggbb), or empty for none."],
     notGlyph  = L["Only a LibKa0s glyph takes a color: choose one as the icon first."],
@@ -98,6 +100,32 @@ local function emoteValue(v)
     local trimmed = v:match("^%s*(.-)%s*$")
     if trimmed == "" or trimmed:lower() == "none" then return false end
     return NS.Emotes.Find(trimmed) or NS.Emotes.Normalize(trimmed) or trimmed
+end
+
+-- A ping typed on the command line or picked (spec §5): its type as given, or nothing or "none" (any
+-- case) for none (false, a value the seam stores).
+local function pingValue(v)
+    if type(v) ~= "string" then return v end
+    local trimmed = v:match("^%s*(.-)%s*$")
+    if trimmed == "" or trimmed:lower() == "none" then return false end
+    return trimmed
+end
+
+-- A raid target marker (spec §6): 1 (star) to 8 (skull), and 0, the none choice, for none (false).
+local function markerValue(v)
+    if v == 0 then return false end
+    return v
+end
+
+-- callout.ping's choices: none, then /ping's four types (Library.PING_TYPES).
+local PING_LABEL = { attack = L["Attack"], warning = L["Warning"], onmyway = L["On my way"], assist = L["Assist"] }
+local PINGS = { { value = "none", text = L["None"] } }
+for _, v in ipairs(Lib.PING_TYPES) do PINGS[#PINGS + 1] = { value = v, text = PING_LABEL[v] } end
+
+-- callout.marker's choices: none (0), then 1 to 8, each drawn as its raid target icon.
+local MARKERS = { { value = 0, text = L["None"] } }
+for n = 1, 8 do
+    MARKERS[#MARKERS + 1] = { value = n, text = "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_" .. n .. ":0|t" }
 end
 
 -- A parent group typed on the command line: empty text and "none" (any case) are no parent (false,
@@ -192,15 +220,30 @@ local ROWS = {
       values = CHANNELS, page = "callouts", group = GENERAL, label = L["Channel"],
       desc = L["Where it is sent. Smart group picks instance, raid or party chat for the group you are in when the pad is built."],
       validate = check(keepsAction("channel", function(v) return NS.Channels.IsKind(v), "badChannel" end)) },
-    -- A game emote's token (QFE-E2, channel Game emote): the client's command for it is the line. Its
-    -- default is false, none. The popup draws it as the emote picker, never a row.
+    -- A game emote's token (QFE-E2): one of a callout's four actions (#16), performed after its Line.
+    -- Its default is false, none. The popup draws it as the emote picker, never a row.
     { path = "callout.emote", instance = "callout", type = "string", default = false,
       page = "callouts", group = GENERAL, label = L["Game emote"],
-      desc = L["The game emote a Game emote callout performs, by its token (POINT) or command (/point). It acts on your target, as the game's own emote does."],
+      desc = L["The game emote this callout performs, by its token (POINT) or command (/point), after its chat line if it has one. It acts on your target, as the game's own emote does."],
       -- The seam checks the value as given, so the check reads it through emoteValue too.
       normalize = emoteValue,
       validate = check(keepsAction("emote", function(v) v = emoteValue(v) return v ~= nil and Lib.ValidEmote(v), "badEmote" end,
           emoteValue)) },
+    -- A ping on the target (#17, spec §5), one of a callout's actions. Its default is false, none; the
+    -- none choice is "none", read as false. Not reset-exempt, as callout.emote is not (D11).
+    { path = "callout.ping", instance = "callout", type = "string", default = false, values = PINGS,
+      page = "callouts", group = GENERAL, label = L["Ping"],
+      desc = L["The ping this callout places on your target: Attack, Warning, On my way or Assist. None places no ping."],
+      normalize = pingValue,
+      validate = check(keepsAction("ping", function(v) return Lib.ValidPing(pingValue(v)), "badPing" end, pingValue)) },
+    -- A raid target marker on the target (#18, spec §6), one of a callout's actions: 1 (star) to 8
+    -- (skull). Its default is false, none; the none choice is 0, read as false. Not reset-exempt (D11).
+    { path = "callout.marker", instance = "callout", type = "number", default = false, values = MARKERS,
+      page = "callouts", group = GENERAL, label = L["Raid marker"],
+      desc = L["The raid target marker this callout puts on your target, from star to skull. None marks nothing."],
+      normalize = markerValue,
+      validate = check(keepsAction("marker", function(v) return Lib.ValidMarker(markerValue(v)), "badMarker" end,
+          markerValue)) },
     -- Icon's default is false, "no icon", so `/qc reset callout.icon` clears it; the page's Defaults
     -- keeps it (settings/Schema.lua resetExempt), as its tooltip says.
     { path = "callout.icon", instance = "callout", type = "string", dialogControl = "EditBox", default = false,

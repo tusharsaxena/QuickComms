@@ -166,7 +166,7 @@ Total.
 - prepare: is idempotent after a split
 - profile: step 18 moves a stored Ka0s Friz Quadrata TT to Ka0s Ubuntu in every profile, Blizzard's Friz kept
 
-### test_schema.lua (20)
+### test_schema.lua (24)
 
 - schema: every row validates against the defaults
 - schema: a stored row whose path has no default is counted, not passed vacuously
@@ -188,6 +188,10 @@ Total.
 - schema: a callout write that names no id is refused, even with callouts present
 - schema: [phase 3] a fresh profile has no row off its default; the member rows are not counted
 - schema: [layout guard] every stored path, default, range and choice set is as item 020 found it
+- schema: [CA-M1-5] callout.ping is a string row, none by default, with none and the four types
+- schema: [CA-M1-5] callout.marker is a number row, none by default, with none and 1 to 8 drawn as their icons
+- schema: [CA-M1-5] the seam sets and clears a ping and a marker, and neither row is reset-exempt
+- schema: [CA-M1-5] callout.emote is reworded: an emote is one of a callout's actions
 
 ### test_slash.lua (22)
 
@@ -2100,7 +2104,7 @@ Total.
 | test_setup.lua | 26 |
 | test_database.lua | 22 |
 | test_profile.lua | 10 |
-| test_schema.lua | 20 |
+| test_schema.lua | 24 |
 | test_slash.lua | 22 |
 | test_disabled.lua | 26 |
 | test_diagnostics.lua | 13 |
@@ -2180,4 +2184,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1818** |
+| **Total** | **1822** |
