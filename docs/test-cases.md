@@ -362,7 +362,7 @@ Total.
 
 ### test_emotes.lua (16)
 
-- emotes: [QFE-E2] the map is EMOTEn_TOKEN to EMOTEn_CMD1 over the client's indices, first index wins
+- emotes: [QFE-E2] the map is EMOTEn_TOKEN to its first free EMOTEn_CMDj over the client's indices, first index wins
 - emotes: [QFE-REV] a command the chat parser runs before an emote is skipped for the token's next one
 - emotes: [QFE-E2] the picker lists speech emotes first, marked as voice, then the animated, then the rest
 - emotes: [QFE-E2] Find takes a command or a token; Search matches either, in the picker's order

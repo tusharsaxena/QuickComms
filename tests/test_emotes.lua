@@ -50,7 +50,7 @@ end
 
 -- ── the map ──────────────────────────────────────────────────────────────────────────────────
 
-test("emotes: [QFE-E2] the map is EMOTEn_TOKEN to EMOTEn_CMD1 over the client's indices, first index wins", function()
+test("emotes: [QFE-E2] the map is EMOTEn_TOKEN to its first free EMOTEn_CMDj over the client's indices, first index wins", function()
     local NS = addon()
     local map, order = NS.Compat.EmoteCommands()
     -- red under: a scan that stops at the first gap (EMOTE2_TOKEN), or lets a later duplicate win
