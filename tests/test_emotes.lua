@@ -62,6 +62,32 @@ test("emotes: [QFE-E2] the map is EMOTEn_TOKEN to EMOTEn_CMD1 over the client's 
     assertEqual(order[1], "AGREE")
 end)
 
+test("emotes: [QFE-REV] a command the chat parser runs before an emote is skipped for the token's next one", function()
+    local NS, env = addon()
+    -- Every locale's SHOUT is /shout, which is Yell (SLASH_YELL4); koKR's LOST is /포기, the secure
+    -- /abandon; frFR's /silence is the chat mute; a fourth sits in the parser's own hash only.
+    env.EMOTE83_TOKEN, env.EMOTE83_CMD1, env.EMOTE83_CMD2 = "SHOUT", "/shout", "/holler"
+    env.EMOTE119_TOKEN, env.EMOTE119_CMD1, env.EMOTE119_CMD2 = "LOST", "/포기", "/lost"
+    env.EMOTE120_TOKEN, env.EMOTE120_CMD1 = "SHH", "/silence"
+    env.EMOTE121_TOKEN, env.EMOTE121_CMD1, env.EMOTE121_CMD2 = "HUSH", "/hush", "/quiet"
+    env.SLASH_YELL1, env.SLASH_YELL2, env.SLASH_YELL3, env.SLASH_YELL4 = "/yell", "/y", "/yell", "/Shout"
+    env.SLASH_CHAT_MUTE1 = "/silence"
+    -- ChatTypeInfo as the parser leaves it after its first import: the entries moved to the proxy.
+    env.ChatTypeInfo = setmetatable({}, { __index = { YELL = {} } })
+    env.SlashCmdList = type(env.SlashCmdList) == "table" and env.SlashCmdList or {}
+    env.SlashCmdList.CHAT_MUTE = function() end
+    env.hash_ChatTypeInfoList = { ["/HUSH"] = "WHISPER" }
+    env.IsSecureCmd = function(cmd) return cmd:upper() == "/포기" or nil end
+    local map, order = NS.Compat.EmoteCommands()
+    -- red under: a filter on the command's shape alone (/shout, /포기, /silence and /hush kept)
+    assertEqual(map.SHOUT, "/holler", "Yell's /shout is never an emote")
+    assertEqual(map.LOST, "/lost", "the secure /abandon is never an emote")
+    assertNil(map.SHH, "a token with no free command is left out")
+    assertEqual(map.HUSH, "/quiet")
+    assertEqual(map.POINT, "/point", "a free CMD1 is still the command")
+    assertEqual(#order, 12)
+end)
+
 test("emotes: [QFE-E2] the picker lists speech emotes first, marked as voice, then the animated, then the rest", function()
     local NS = addon()
     local list = NS.Emotes.List()

@@ -256,7 +256,7 @@ Total.
 - compat: [QF-03] Coordinates reads the map position as x, y in percent, one decimal, or nil
 - compat: [QF-04] GeneralJoined is true only when the client names channel 1 as General
 
-### test_identity.lua (10)
+### test_identity.lua (11)
 
 - identity: without regional names the character is Name-Realm and the names carry no realm
 - identity: with regional names the character, {me} and a unit are First Surname, never a realm
@@ -265,17 +265,19 @@ Total.
 - identity: the role is LibKa0s Role's answer over db.char.role; an override wins and is saved
 - identity: the snapshot carries the role's source and detail; the signature does not
 - identity: without LibKa0s Role the role still reads: the pick, the group's, then the spec's
+- identity: a talent-group swap re-reads the role (Forever's dual spec keeps the one spec)
 - identity: the General page's Role row writes this character's pick and refreshes the situation
 - identity: /qc why opens with the role and where it came from; the diagnostics print both
 - identity: the spec row lists the client's specs through LibKa0s Role, else the shipped seed
 
-### test_probe.lua (5)
+### test_probe.lua (6)
 
 - probe: records the place, the situation, the role, the spec, the talent groups and the emotes
 - probe: probes append in order, keep the newest PROBE_KEEP, and clear empties every client
 - probe: refused in combat with one line, recording nothing; an unknown word names the forms
 - probe: never a new SavedVariables global, and the TOC lists none for it
-- probe: secret or missing client answers are stored as nil, never as the value
+- probe: missing client APIs are stored as nil
+- probe: [QFE-REV] secret client answers are stored as nil, never as the value; plain ones are kept
 
 ### test_restrictions.lua (20)
 
@@ -358,9 +360,10 @@ Total.
 - channels: [QFE-E1] the channel row offers Emote; the seam accepts it
 - channels: [QFE-E1] a Groups row names Emote in the emote color; a tooltip names its channel
 
-### test_emotes.lua (15)
+### test_emotes.lua (16)
 
 - emotes: [QFE-E2] the map is EMOTEn_TOKEN to EMOTEn_CMD1 over the client's indices, first index wins
+- emotes: [QFE-REV] a command the chat parser runs before an emote is skipped for the token's next one
 - emotes: [QFE-E2] the picker lists speech emotes first, marked as voice, then the animated, then the rest
 - emotes: [QFE-E2] Find takes a command or a token; Search matches either, in the picker's order
 - emotes: [QFE-E2] the map is built once, on the first read
@@ -2048,13 +2051,13 @@ Total.
 | test_disabled.lua | 26 |
 | test_diagnostics.lua | 13 |
 | test_compat.lua | 15 |
-| test_identity.lua | 10 |
-| test_probe.lua | 5 |
+| test_identity.lua | 11 |
+| test_probe.lua | 6 |
 | test_restrictions.lua | 20 |
 | test_situation.lua | 20 |
 | test_tokens.lua | 11 |
 | test_channels.lua | 18 |
-| test_emotes.lua | 15 |
+| test_emotes.lua | 16 |
 | test_bake.lua | 12 |
 | test_resolver.lua | 13 |
 | test_builtins.lua | 30 |
@@ -2123,4 +2126,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1765** |
+| **Total** | **1768** |

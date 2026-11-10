@@ -153,6 +153,24 @@ test("identity: without LibKa0s Role the role still reads: the pick, the group's
     assertEqual(source, "override")
 end)
 
+test("identity: a talent-group swap re-reads the role (Forever's dual spec keeps the one spec)", function()
+    local NS, _, m = T.enableAddon()
+    local declared = {}
+    for _, row in ipairs(NS.FEATURE_EVENTS) do declared[row[1]] = row[2] end
+    -- red under: only TRAIT_CONFIG_UPDATED and PLAYER_SPECIALIZATION_CHANGED for talents
+    for _, event in ipairs({ "ACTIVE_TALENT_GROUP_CHANGED", "ACTIVE_COMBAT_CONFIG_CHANGED", "PLAYER_TALENT_UPDATE" }) do
+        assertEqual(declared[event], "OnSituationEvent", event)
+    end
+    roleLib(m).Resolve = function() return "TANK", "talents", "Protection" end
+    NS.Situation.RefreshNow("test")
+    assertEqual(NS.Situation.Current().role, "TANK")
+    roleLib(m).Resolve = function() return "DAMAGER", "talents", "Arms" end
+    m.__fire("ACTIVE_TALENT_GROUP_CHANGED", 2, 1)
+    m.__fireTimers()
+    assertEqual(NS.Situation.Current().role, "DAMAGER")
+    assertEqual(NS.Situation.Current().roleDetail, "Arms")
+end)
+
 -- ── the Role row ────────────────────────────────────────────────────────────────────────────
 
 test("identity: the General page's Role row writes this character's pick and refreshes the situation", function()

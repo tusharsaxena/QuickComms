@@ -348,21 +348,84 @@ function Compat.EmoteTokens()
     return out
 end
 
---- The client's own slash command for each emote token (QFE-E2): EMOTEn_TOKEN to EMOTEn_CMD1, the
---- client's localized first command, read over the same indices as EmoteTokens. A token listed twice
---- (INCOMING at 157 and 304, FLEE at 160 and 306) keeps its FIRST index's command, so FLEE is /flee,
---- not the later /retreat. A token with no plain command, or one that is not one "/word", is left
---- out. Answers the map and its tokens in index order.
+-- How many EMOTEn_CMDj a token's commands are read to (the client's longest list is under ten).
+local EMOTE_CMD_MAX = 20
+
+-- Every SLASH_<key>j a command list names, upper cased, into `into`. Reads the list and the proxy
+-- the chat parser moves its entries to on its first import (ChatFrameUtil's ImportListToHash).
+local function addSlashNames(list, into)
+    if type(list) ~= "table" then return end
+    local meta = getmetatable(list)
+    local proxy = type(meta) == "table" and type(meta.__index) == "table" and meta.__index or nil
+    for _, t in ipairs({ list, proxy or {} }) do
+        for key in pairs(t) do
+            if type(key) == "string" then
+                for j = 1, EMOTE_CMD_MAX do
+                    local s = PlainString(_G["SLASH_" .. key .. j])
+                    if not s then break end
+                    into[s:upper()] = true
+                end
+            end
+        end
+    end
+end
+
+-- The commands the chat parser runs before it looks for an emote (QFE-REV, ChatFrameEditBox's
+-- ParseText): the chat types (ChatTypeInfo) and the slash commands (SlashCmdList), with the
+-- parser's own hash of both. The secure commands are asked one by one (IsSecureCmd).
+local function claimedCommands()
+    local claimed = {}
+    addSlashNames(_G.ChatTypeInfo, claimed)
+    addSlashNames(_G.SlashCmdList, claimed)
+    if type(_G.hash_ChatTypeInfoList) == "table" then
+        for cmd in pairs(_G.hash_ChatTypeInfoList) do
+            if type(cmd) == "string" then claimed[cmd:upper()] = true end
+        end
+    end
+    return claimed
+end
+
+local function freeCommand(cmd, claimed)
+    if not (cmd and cmd:find("^/[^%s/|]+$")) or claimed[cmd:upper()] then return false end
+    local isSecure = _G.IsSecureCmd
+    if type(isSecure) == "function" then
+        local ok, secure = pcall(isSecure, cmd)
+        if not ok or secure then return false end
+    end
+    return true
+end
+
+-- An emote index's first command that is one "/word" and that nothing before the emotes claims.
+local function emoteCommand(i, claimed)
+    for j = 1, EMOTE_CMD_MAX do
+        local raw = _G["EMOTE" .. i .. "_CMD" .. j]
+        if raw == nil then return nil end
+        local cmd = PlainString(raw)
+        if freeCommand(cmd, claimed) then return cmd end
+    end
+    return nil
+end
+
+--- The client's own slash command for each emote token (QFE-E2): EMOTEn_TOKEN to its first free
+--- EMOTEn_CMDj, the client's localized commands, read over the same indices as EmoteTokens. A token
+--- listed twice (INCOMING at 157 and 304, FLEE at 160 and 306) keeps its FIRST index's command, so
+--- FLEE is /flee, not the later /retreat. A command that is not one "/word", or that the chat parser
+--- runs as something else first (QFE-REV: a secure command, a chat type or a slash command, as /shout
+--- is Yell and koKR's /포기 is the secure /abandon), is passed over for the index's next; a token
+--- with none left is left out. Answers the map and its tokens in index order.
 --- @return table<string,string> commands, string[] order
 function Compat.EmoteCommands()
     local max = PlainNumber(_G.MAXEMOTEINDEX) or EMOTE_SCAN_MAX
+    local claimed = claimedCommands()
     local map, order = {}, {}
     for i = 1, max do
         local token = PlainString(_G["EMOTE" .. i .. "_TOKEN"])
-        local cmd = PlainString(_G["EMOTE" .. i .. "_CMD1"])
-        if token and token ~= "" and not map[token] and cmd and cmd:find("^/[^%s/|]+$") then
-            map[token] = cmd
-            order[#order + 1] = token
+        if token and token ~= "" and not map[token] then
+            local cmd = emoteCommand(i, claimed)
+            if cmd then
+                map[token] = cmd
+                order[#order + 1] = token
+            end
         end
     end
     return map, order

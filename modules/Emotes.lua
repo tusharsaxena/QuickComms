@@ -1,8 +1,9 @@
 local _, NS = ...
 -- modules/Emotes.lua — the game emotes a callout can perform (QFE-E2, QuickComms#15, design §5.1, §5.2).
 -- A game-emote callout stores a token (`emote = "POINT"`) and no text; its line is the client's own
--- localized command for that token ("/point"), from the EMOTEn_TOKEN to EMOTEn_CMD1 map
--- (Compat.EmoteCommands), never from user text, so the bake's "text may not start with /" rule stays
+-- localized command for that token ("/point"), from the EMOTEn_TOKEN to EMOTEn_CMDj map
+-- (Compat.EmoteCommands: the first command the chat parser does not run as something else first,
+-- so never /shout, which is Yell), never from user text, so the bake's "text may not start with /" rule stays
 -- whole. The map is built once, on the first read, and kept: the client defines the globals before
 -- any addon loads. A token the client lacks has no command: the callout bakes nothing and says why.
 --

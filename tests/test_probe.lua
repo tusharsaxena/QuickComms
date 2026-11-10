@@ -114,7 +114,7 @@ test("probe: never a new SavedVariables global, and the TOC lists none for it", 
     assertEqual(sv, "QuickCommsDB, QuickCommsPerfDB")
 end)
 
-test("probe: secret or missing client answers are stored as nil, never as the value", function()
+test("probe: missing client APIs are stored as nil", function()
     local NS, env = T.enableAddon()
     env.IsInInstance = nil
     env.GetInstanceInfo = nil
@@ -127,4 +127,27 @@ test("probe: secret or missing client answers are stored as nil, never as the va
     assertNil(rec.instance.inInstance)
     assertEqual(rec.emotes.count, 0)
     assertEqual(rec.content, "openWorld")
+end)
+
+test("probe: [QFE-REV] secret client answers are stored as nil, never as the value; plain ones are kept", function()
+    local NS, env = T.enableAddon()
+    place(env)
+    env.issecretvalue = T.isSecret   -- nothing installs the global by default (kit secrets.lua)
+    env.IsInInstance = function() return T.secret(true), "raid" end
+    env.GetInstanceInfo = function()
+        return T.secret("Molten Core"), "raid", T.secret(9), "40 Player", T.secret(40), 0, T.secret(false), 409,
+            40, nil
+    end
+    env.GetServerTime = function() return T.secret(1762790400) end
+    NS.addon:OnSlashCommand("probe")
+    local rec = NS.db.global.probes[NS.Compat.ClientKey()][1]
+    local i = rec.instance
+    -- red under: a probe that stores GetInstanceInfo's or GetServerTime's values without the plain readers
+    assertNil(rec.time)
+    assertNil(i.inInstance); assertNil(i.name); assertNil(i.difficultyID); assertNil(i.maxPlayers); assertNil(i.isDynamic)
+    assertEqual(i.inInstanceType, "raid")
+    assertEqual(i.instanceType, "raid")
+    assertEqual(i.difficultyName, "40 Player")
+    assertEqual(i.instanceID, 409)
+    for k, v in pairs(i) do assertTrue(not T.isSecret(v), "no secret under " .. k) end
 end)

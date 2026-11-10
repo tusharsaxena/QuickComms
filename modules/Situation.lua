@@ -196,6 +196,9 @@ local EVENTS = {
     -- Talents committed (QFE-F4): on WoW Forever the role Automatic reads is the talent tree with the
     -- most points (LibKa0s Role), and a respec there changes no specialization. Both clients have it.
     "TRAIT_CONFIG_UPDATED",
+    -- A talent-group swap (QFE-REV): Forever's dual spec keeps the one spec, so the swap moves no
+    -- specialization and commits no config; Blizzard's own talent frame listens for these. Both clients.
+    "ACTIVE_TALENT_GROUP_CHANGED", "ACTIVE_COMBAT_CONFIG_CHANGED", "PLAYER_TALENT_UPDATE",
     -- General joined, left or moved off channel 1 (QF-04): the notice also covers the automatic joins after login and
     -- the zone's channel swap, should CHANNEL_UI_UPDATE not fire for them. A notice for any other
     -- channel leaves the signature, so it rebuilds nothing.
