@@ -654,7 +654,7 @@ Total.
 - editors: [preview table] TableRows draws a header, then a boxed row per entry: its name in one cell, its text in the other
 - editors: [preview table] a table row gives its text the width the name leaves, and grows with the text
 
-### test_callout_popup.lua (38)
+### test_callout_popup.lua (42)
 
 - popup: Add opens blank with Smart group
 - popup: edit opens filled in
@@ -694,6 +694,10 @@ Total.
 - popup: Name and Channel share a line, Text spans both, the icon has no box and sits under an Icon label
 - popup: every field's label and control share a left edge; Preview's rule and the buttons the columns' edges
 - popup: [icons] an icon that is no texture stays open and names the icon chooser
+- popup: [CA-M1-11] the draft carries emote, ping and marker, after the emote and before the icon
+- popup: [CA-M1-11] a callout set to a ping by /qc set opens with it, and Save keeps it
+- popup: [CA-M1-11] a marker-only callout saves with its marker; an emote keeps its emote
+- popup: [CA-M1-11] one action in M1: a Line or an emote picked for a ping callout replaces the ping
 
 ### test_icon_browser.lua (14)
 
@@ -2148,7 +2152,7 @@ Total.
 | test_library.lua | 82 |
 | test_members.lua | 28 |
 | test_editors.lua | 19 |
-| test_callout_popup.lua | 38 |
+| test_callout_popup.lua | 42 |
 | test_icon_browser.lua | 14 |
 | test_window_icons.lua | 5 |
 | test_groups_when.lua | 21 |
@@ -2208,4 +2212,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1846** |
+| **Total** | **1850** |

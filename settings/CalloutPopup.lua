@@ -16,9 +16,11 @@ local addonName, NS = ...
 -- emotes in Emotes.List's order (speech first, marked as voice, then the animated ones, then the
 -- rest). A pick, or Enter on a typed command or token, sets the draft's `emote`; a name that is empty
 -- or still the last pick's command takes the new command. Save keeps the field the channel uses and
--- clears the other: a game emote never carries text, and a chat callout no token.
+-- clears the other: a game emote never carries text, and a chat callout no token. Until callouts
+-- combine actions (CA-M2-1), a ping or a marker set by /qc set is kept by a Save that keeps the
+-- callout what it was, and replaced by a Line or an emote the draft picks (one action, CA-M1-11).
 --
--- THE DRAFT is a plain copy of the callout's four fields and its icon's glyph color (blank for Add:
+-- THE DRAFT is a plain copy of the callout's fields (its emote, ping and marker among them) and its icon's glyph color (blank for Add:
 -- an empty name and text, Smart group, no icon, no color), and every control writes it, never the
 -- profile. An icon that is no glyph drops the draft's color, as the stored callout would. The
 -- preview bakes the draft, and the token tooltip reads its channel when it shows, so both follow
@@ -55,7 +57,10 @@ local Pop = Settings.CalloutPopup
 -- The member rows the popup draws, in order, and every field the draft carries (the icon and its
 -- color are drawn by the icon chooser, not as rows: the callout.icon row stays, for /qc).
 local FIELDS = { "name", "channel", "text" }
-local DRAFT = { "name", "text", "channel", "emote", "icon", "iconColor" }
+local DRAFT = { "name", "text", "channel", "emote", "ping", "marker", "icon", "iconColor" }
+Pop.DRAFT = DRAFT
+-- The draft fields whose none is nil in the draft and false in the profile.
+local NONE_NIL = { icon = true, iconColor = true, emote = true, ping = true, marker = true }
 -- The emote picker's suggestion list: rows shown at once, and rows the search answers.
 local EMOTE_ROWS, EMOTE_MATCHES = 10, 60
 local WIDTH, HEIGHT = 560, 640   -- HEIGHT until the first fit
@@ -103,10 +108,10 @@ local function H() return Settings.Helpers end
 
 local function copyFields(c)
     local out = {}
-    for _, f in ipairs(DRAFT) do out[f] = c[f] end
-    if out.icon == false then out.icon = nil end
-    if out.iconColor == false then out.iconColor = nil end
-    if out.emote == false then out.emote = nil end
+    for _, f in ipairs(DRAFT) do
+        out[f] = c[f]
+        if NONE_NIL[f] and out[f] == false then out[f] = nil end
+    end
     return out
 end
 
@@ -123,7 +128,7 @@ end
 
 local function put(field, value, row)
     if row and type(row.normalize) == "function" then value = row.normalize(value) end
-    if (field == "icon" or field == "iconColor" or field == "emote") and value == false then value = nil end
+    if NONE_NIL[field] and value == false then value = nil end
     draft[field] = value
     if field == "icon" and not NS.Library.IsGlyph(value) then draft.iconColor = nil end
 end
@@ -182,8 +187,9 @@ local function check(d)
     local ok, why = name.validate(d.name)
     if not ok then return "name", name.label, why end
     if isGameEmote(d) then
-        if not d.emote then return "emote", L["Game emote"], L["Pick an emote from the list."] end
-        ok, why = Ed.Row("callout.emote").validate(d.emote)
+        -- a ping or a marker stands in for the emote (one action in M1)
+        if not (d.emote or d.ping or d.marker) then return "emote", L["Game emote"], L["Pick an emote from the list."] end
+        if d.emote then ok, why = Ed.Row("callout.emote").validate(d.emote) end
         if not ok then return "emote", L["Game emote"], why end
     else
         local text = Ed.Row("callout.text")
@@ -591,8 +597,9 @@ end
 -- The value the seam row takes for a draft field: an icon as text (the row's normalize turns a
 -- texture id back into a number), and an icon or its color false for none.
 local function seamValue(field, value)
-    if field ~= "icon" and field ~= "iconColor" and field ~= "emote" then return value end
+    if not NONE_NIL[field] then return value end
     if value == nil then return false end
+    if field == "marker" then return value end
     return tostring(value)
 end
 
@@ -607,8 +614,10 @@ function Pop.Save()
         return false, "noCallout"
     end
     flush()
-    -- One action per callout (R7): a game emote keeps its token and no text, a chat callout no token.
+    -- One action per callout (R7; CA-M2-1 lifts it): a game emote keeps its token and no text, a chat
+    -- callout no token; a Line or an emote the draft carries replaces a ping or a marker.
     if isGameEmote(draft) then draft.text = "" else draft.emote = nil end
+    if draft.emote or not isGameEmote(draft) then draft.ping, draft.marker = nil, nil end
     local field, label, why = check(draft)
     if field then
         showError(L["%s: %s"]:format(label, tostring(why)))

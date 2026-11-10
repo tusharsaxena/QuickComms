@@ -976,3 +976,70 @@ test("popup: [icons] an icon that is no texture stays open and names the icon ch
     assertTrue(labelWith(P, w, "Icon: That is not a texture. Click Choose icon… and pick another.") ~= nil)
     assertNil(NS.db.profile.callouts[cid].icon, "nothing written")
 end)
+
+-- ── the action fields (CA-M1-11, combined actions §7) ──────────────────────────────────────────
+
+test("popup: [CA-M1-11] the draft carries emote, ping and marker, after the emote and before the icon", function()
+    local _, _, _, Pop = open()
+    -- red under: DRAFT without ping and marker (a Save would never see them)
+    assertEqual(table.concat(Pop.DRAFT, ","), "name,text,channel,emote,ping,marker,icon,iconColor")
+end)
+
+test("popup: [CA-M1-11] a callout set to a ping by /qc set opens with it, and Save keeps it", function()
+    local NS, _, P, Pop = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    local cid = NS.Library.CreateCalloutIn(gid, { name = "Ping", text = "", channel = "gameEmote", ping = "attack" })
+    assertTrue((NS.SchemaRuntime.Set("callout.ping", "warning", cid)))
+    local w = P.during(function() Pop.Open(gid, cid) end)
+    -- red under: copyFields leaving ping out of the draft
+    assertEqual(Pop.Draft().ping, "warning")
+    assertNil(Pop.Draft().marker, "a marker that is not set is nil in the draft")
+    -- no new control in M1: the ping and marker rows are drawn by CA-M2-7
+    assertNil(P.find(w, "Dropdown", NS.L["Ping"]))
+    assertNil(P.find(w, "Dropdown", NS.L["Raid marker"]))
+    P.find(w, "EditBox", "Name"):__fire("OnEnterPressed", "Warn")
+    -- red under: check() asking a game-emote channel for an emote the ping stands in for
+    assertTrue(Pop.Save())
+    local c = NS.db.profile.callouts[cid]
+    assertEqual(c.name, "Warn")
+    assertEqual(c.ping, "warning")
+    assertTrue(not c.emote)
+end)
+
+test("popup: [CA-M1-11] a marker-only callout saves with its marker; an emote keeps its emote", function()
+    local NS, _, P, Pop = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    local cid = NS.Library.CreateCalloutIn(gid, { name = "Skull", text = "", channel = "gameEmote", marker = 8 })
+    P.during(function() Pop.Open(gid, cid) end)
+    assertEqual(Pop.Draft().marker, 8)
+    Pop.Draft().name = "Kill"
+    assertTrue(Pop.Save())
+    assertEqual(NS.db.profile.callouts[cid].marker, 8)
+    assertEqual(NS.db.profile.callouts[cid].name, "Kill")
+    local wave = NS.Library.CreateCalloutIn(gid, { name = "Wave", text = "", channel = "gameEmote", emote = "WAVE" })
+    P.during(function() Pop.Open(gid, wave) end)
+    Pop.Draft().name = "Hi"
+    assertTrue(Pop.Save())
+    assertEqual(NS.db.profile.callouts[wave].emote, "WAVE")
+    assertTrue(not NS.db.profile.callouts[wave].ping)
+end)
+
+test("popup: [CA-M1-11] one action in M1: a Line or an emote picked for a ping callout replaces the ping", function()
+    local NS, _, P, Pop = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    local cid = NS.Library.CreateCalloutIn(gid, { name = "Ping", text = "", channel = "gameEmote", ping = "attack" })
+    local w = P.during(function() Pop.Open(gid, cid) end)
+    P.find(w, "Dropdown", "Channel"):__fire("OnValueChanged", "party")
+    Pop.Draft().text = "On me"
+    -- red under: the ping kept beside the Line (the M1 one-action rule refuses the Save)
+    assertTrue(Pop.Save())
+    local c = NS.db.profile.callouts[cid]
+    assertEqual(c.text, "On me")
+    assertTrue(not c.ping)
+    local m8 = NS.Library.CreateCalloutIn(gid, { name = "Skull", text = "", channel = "gameEmote", marker = 8 })
+    P.during(function() Pop.Open(gid, m8) end)
+    Pop.Draft().emote = "POINT"
+    assertTrue(Pop.Save())
+    assertEqual(NS.db.profile.callouts[m8].emote, "POINT")
+    assertTrue(not NS.db.profile.callouts[m8].marker)
+end)
