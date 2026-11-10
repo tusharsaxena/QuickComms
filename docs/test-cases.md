@@ -421,11 +421,11 @@ Total.
 - emotes: [QFE-E2] a user name is kept, and leaving Game emote drops the token on Save
 - emotes: [QFE-E2] the popup's preview names the emote, and an unknown token's reason
 
-### test_bake.lua (12)
+### test_bake.lua (19)
 
 - bake: a plain callout bakes to prefix + text
 - bake: [review 1] a leading slash is refused, even after whitespace
-- bake: [review 1] newlines and control characters flatten to one line
+- bake: [review 1] newlines and control characters in data flatten: the Line is one line
 - bake: pipes are escaped, spell links are not
 - bake: [final minor 5] the 255-byte boundary counts the whole line: prefix, space, text, live tokens
 - bake: empty or whitespace-only text is refused
@@ -435,6 +435,13 @@ Total.
 - bake: baked token values are sanitized; spell links are not
 - bake: a typed %t counts as live
 - bake: [phase 5] CleanText is the sanitizer short of the escape; Sanitize is CleanText, then the escape
+- bake: [CA-M1-7] BakeActions bakes a Line-only callout to today's Bake line
+- bake: [CA-M1-7] a Line that does not bake keeps today's reason, and the macro is nil
+- bake: [CA-M1-7] the emote line is the client's command, on the TEXT_EMOTE chat type and the gameEmote lock
+- bake: [CA-M1-7] a ping bakes /ping [@target,exists] with its numeric keyword, no chat type and no lock
+- bake: [CA-M1-7] a marker bakes /tm [@target,exists] !N, which never toggles a mark off
+- bake: [CA-M1-7] a localized client's commands bake; an absent one gives noPing or noMarker and drops only that action
+- bake: [CA-M1-7] no action is noAction; a non-table is badCallout; Bake's contract is unchanged
 
 ### test_resolver.lua (13)
 
@@ -2120,7 +2127,7 @@ Total.
 | test_tokens.lua | 11 |
 | test_channels.lua | 18 |
 | test_emotes.lua | 16 |
-| test_bake.lua | 12 |
+| test_bake.lua | 19 |
 | test_resolver.lua | 13 |
 | test_builtins.lua | 34 |
 | test_gameids.lua | 5 |
@@ -2188,4 +2195,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1826** |
+| **Total** | **1833** |

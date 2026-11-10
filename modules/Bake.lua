@@ -1,8 +1,10 @@
 local _, NS = ...
--- modules/Bake.lua — a callout + a snapshot -> exactly one macro line of at most 255 bytes,
--- prefix included (spec §8.3). PURE. A game emote (QFE-E2) is the client's own command, BakeEmote.
+-- modules/Bake.lua — a callout + a snapshot -> its macro: one line of at most 255 bytes per set
+-- action (spec §8.3; combined actions §3). PURE. B.Bake bakes the Line action (prefix included), a
+-- game emote (QFE-E2) is the client's own command (BakeEmote), and a ping or a marker is the
+-- client's own command on the target. B.BakeActions bakes every set action and joins the lines.
 -- Anti-pattern #20: callout text is chat text, never a command. The sanitizer flattens control
--- characters (so there is never a second macro line), refuses a leading "/", and escapes "|"
+-- characters (so data never makes a second macro line; only code joins lines), refuses a leading "/", and escapes "|"
 -- before tokens expand, and Tokens does the same to every baked value ({me}, {spec}, ...), so only
 -- game-made spell links carry escape sequences.
 
@@ -94,4 +96,78 @@ function B.Bake(callout, s, opts)
     if info.length > B.MAX_BYTES then return nil, "tooLong", info end
     info.lock = NS.Channels.LockState(concrete, s)
     return prefix .. " " .. text, nil, info
+end
+
+-- ── The four actions (combined actions §3): line, emote, ping, marker, in that fixed order (D1) ──
+
+-- The ping's numeric keyword: the same in every locale (D12, pingNameToTypeTable).
+local PING_NUM = { attack = "1", warning = "2", onmyway = "3", assist = "4" }
+
+local function lineEntry(callout, s, opts)
+    local line, reason, info = B.Bake(callout, s, opts)
+    return { kind = "line", line = line, reason = reason, concrete = info.concrete,
+        chatType = info.concrete and NS.Channels.ChatType(info.concrete) or nil, lock = info.lock,
+        length = info.length, unknown = info.unknown, missing = info.missing, selfPrint = info.selfPrint,
+        text = info.text }
+end
+
+local function emoteEntry(callout, s)
+    local line, reason, info = B.BakeEmote(callout, s)
+    return { kind = "emote", line = line, reason = reason, concrete = "gameEmote",
+        chatType = NS.Channels.ChatType("gameEmote"), lock = info.lock, length = info.length,
+        unknown = info.unknown, missing = info.missing, value = callout.emote }
+end
+
+-- A ping or a marker: the client's command, "[@target,exists]" (so no target parses to nothing),
+-- then the argument. No chat type and no lock (D25). An absent command drops only this action.
+local function targetEntry(kind, cmd, arg, missingReason, value)
+    if not cmd then return { kind = kind, reason = missingReason, value = value } end
+    if not arg then return { kind = kind, reason = kind == "ping" and "badPing" or "badMarker", value = value } end
+    local line = cmd .. " [@target,exists] " .. arg
+    return { kind = kind, line = line, length = #line, value = value }
+end
+
+local function markerArg(n)
+    if type(n) == "number" and n >= 1 and n <= 8 and n % 1 == 0 then return "!" .. n end
+    return nil
+end
+
+--- Is the callout's Line set? Not the game-emote kind ("no line", D10) and some text.
+local function hasLine(callout)
+    return not NS.Channels.IsGameEmote(callout.channel) and type(callout.text) == "string" and callout.text ~= ""
+end
+
+--- Bake every set action of one callout (combined actions §3).
+--- info.actions lists every set action, baked or not, as { kind, line, reason, concrete, chatType,
+--- lock, length, unknown, missing, selfPrint }; info.baked only those that baked (line ~= nil), in
+--- the same order; info.total the macro's budgeted length (each baked length plus one per "\n").
+--- `reason` is set only when nothing baked: the Line's if there was one, else the first action's,
+--- else "noAction".
+--- @param callout table
+--- @param s table snapshot
+--- @param opts table|nil as B.Bake's
+--- @return string|nil macro, string|nil reason, table info
+function B.BakeActions(callout, s, opts)
+    local info = { actions = {}, baked = {}, total = 0 }
+    if type(callout) ~= "table" then return nil, "badCallout", info end
+    local list = info.actions
+    if hasLine(callout) then list[#list + 1] = lineEntry(callout, s, opts) end
+    if callout.emote then list[#list + 1] = emoteEntry(callout, s) end
+    if callout.ping then
+        list[#list + 1] = targetEntry("ping", NS.Compat.PingCommand(), PING_NUM[callout.ping], "noPing", callout.ping)
+    end
+    if callout.marker then
+        list[#list + 1] = targetEntry("marker", NS.Compat.MarkerCommand(), markerArg(callout.marker), "noMarker",
+            callout.marker)
+    end
+    local lines = {}
+    for _, a in ipairs(list) do
+        if a.line then
+            info.baked[#info.baked + 1] = a
+            lines[#lines + 1] = a.line
+            info.total = info.total + a.length + (#lines > 1 and 1 or 0)
+        end
+    end
+    if #lines == 0 then return nil, list[1] and list[1].reason or "noAction", info end
+    return table.concat(lines, "\n"), nil, info
 end

@@ -1,4 +1,5 @@
--- tests/test_bake.lua — modules/Bake.lua (spec §8.3): one macro line, never a command, <= 255 bytes.
+-- tests/test_bake.lua — modules/Bake.lua (spec §8.3; combined actions §3): one macro line per action,
+-- never a command, <= 255 bytes each, and never a newline from data: only code joins the action lines.
 
 local T = _G.QUICKCOMMS_TEST
 local test, assertEqual, assertNil, assertTrue = T.test, T.assertEqual, T.assertNil, T.assertTrue
@@ -23,7 +24,7 @@ test("bake: [review 1] a leading slash is refused, even after whitespace", funct
     end
 end)
 
-test("bake: [review 1] newlines and control characters flatten to one line", function()
+test("bake: [review 1] newlines and control characters in data flatten: the Line is one line", function()
     local line = bake().Bake(callout("hi\n/script y\r\nok\tthere"), PARTY)
     assertEqual(line, "/p hi /script y ok there")
     assertTrue(not line:find("\n"), "no newline")
@@ -114,4 +115,111 @@ test("bake: [phase 5] CleanText is the sanitizer short of the escape; Sanitize i
     assertEqual(select(2, B.CleanText("  ")), "empty")
     assertEqual(select(2, B.CleanText(42)), "empty")
     assertEqual(B.Sanitize("  a|b\n c  "), "a||b c")
+end)
+
+-- ── B.BakeActions (CA-M1-7, combined actions §3): one line per set action, joined by code ──────
+
+local function actions(plantEmotes)
+    local NS, env, m = T.newAddon()
+    if plantEmotes ~= false then
+        env.MAXEMOTEINDEX = 80
+        env.EMOTE73_TOKEN, env.EMOTE73_CMD1 = "POINT", "/point"
+        NS.Emotes.Reset()
+    end
+    return NS.Bake, m
+end
+local function none(over)
+    local c = { name = "x", text = "", channel = "gameEmote", emote = false, ping = false, marker = false }
+    for k, v in pairs(over or {}) do c[k] = v end
+    return c
+end
+
+test("bake: [CA-M1-7] BakeActions bakes a Line-only callout to today's Bake line", function()
+    local B = actions()
+    local c = callout("Lust on this pack {rt8}")
+    -- red under: no B.BakeActions
+    local macro, reason, info = B.BakeActions(c, PARTY)
+    local line, _, linfo = B.Bake(c, PARTY)
+    assertEqual(macro, line)
+    assertNil(reason)
+    assertEqual(#info.actions, 1) assertEqual(#info.baked, 1)
+    local a = info.actions[1]
+    assertEqual(a.kind, "line") assertEqual(a.line, line) assertNil(a.reason)
+    assertEqual(a.concrete, "party") assertEqual(a.chatType, "PARTY")
+    assertEqual(a.length, linfo.length) assertEqual(info.total, linfo.length)
+    assertEqual(a.lock, linfo.lock)
+end)
+
+test("bake: [CA-M1-7] a Line that does not bake keeps today's reason, and the macro is nil", function()
+    local B = actions()
+    local macro, reason, info = B.BakeActions(callout("/run x()"), PARTY)
+    assertNil(macro) assertEqual(reason, "startsWithSlash")
+    assertEqual(#info.actions, 1) assertEqual(#info.baked, 0)
+    assertEqual(info.actions[1].reason, "startsWithSlash")
+    local SOLO = { group = "solo", lockdown = {} }
+    macro, reason, info = B.BakeActions(callout("hi"), SOLO, { soloFallback = "self" })
+    assertNil(macro) assertEqual(reason, "solo") assertTrue(info.actions[1].selfPrint)
+end)
+
+test("bake: [CA-M1-7] the emote line is the client's command, on the TEXT_EMOTE chat type and the gameEmote lock", function()
+    local B = actions()
+    local macro, reason, info = B.BakeActions(none{ emote = "POINT" }, { group = "party", lockdown = { encounter = true } })
+    assertEqual(macro, "/point") assertNil(reason)
+    local a = info.baked[1]
+    assertEqual(a.kind, "emote") assertEqual(a.chatType, "TEXT_EMOTE")
+    assertEqual(a.lock, "lockdown") assertEqual(a.length, #"/point")
+    -- an emote this client lacks drops only that action
+    macro, reason, info = B.BakeActions(none{ emote = "FROMRETAIL" }, PARTY)
+    assertNil(macro) assertEqual(reason, "unknownEmote") assertEqual(info.actions[1].reason, "unknownEmote")
+end)
+
+test("bake: [CA-M1-7] a ping bakes /ping [@target,exists] with its numeric keyword, no chat type and no lock", function()
+    local B = actions()
+    local want = { attack = "1", warning = "2", onmyway = "3", assist = "4" }
+    for ping, n in pairs(want) do
+        local macro, reason, info = B.BakeActions(none{ ping = ping }, { group = "party", lockdown = { encounter = true } })
+        assertEqual(macro, "/ping [@target,exists] " .. n, ping) assertNil(reason)
+        local a = info.baked[1]
+        assertEqual(a.kind, "ping") assertNil(a.chatType) assertNil(a.lock)
+        assertEqual(a.length, #macro) assertEqual(info.total, #macro)
+    end
+end)
+
+test("bake: [CA-M1-7] a marker bakes /tm [@target,exists] !N, which never toggles a mark off", function()
+    local B = actions()
+    for n = 1, 8 do
+        local macro, reason, info = B.BakeActions(none{ marker = n }, PARTY)
+        assertEqual(macro, "/tm [@target,exists] !" .. n) assertNil(reason)
+        assertEqual(info.baked[1].kind, "marker") assertNil(info.baked[1].chatType) assertNil(info.baked[1].lock)
+    end
+end)
+
+test("bake: [CA-M1-7] a localized client's commands bake; an absent one gives noPing or noMarker and drops only that action", function()
+    local B, m = actions()
+    m.SLASH_PING1, m.SLASH_TARGET_MARKER1 = "/aviso", "/mo"
+    assertEqual((B.BakeActions(none{ ping = "attack" }, PARTY)), "/aviso [@target,exists] 1")
+    assertEqual((B.BakeActions(none{ marker = 8 }, PARTY)), "/mo [@target,exists] !8")
+    m.SLASH_PING1, m.SLASH_TARGET_MARKER1 = nil, nil
+    local macro, reason, info = B.BakeActions(none{ ping = "attack" }, PARTY)
+    assertNil(macro) assertEqual(reason, "noPing")
+    assertEqual(#info.actions, 1) assertEqual(#info.baked, 0) assertEqual(info.actions[1].kind, "ping")
+    macro, reason = B.BakeActions(none{ marker = 8 }, PARTY)
+    assertNil(macro) assertEqual(reason, "noMarker")
+    -- a Line beside the dropped ping still bakes (the join and the budget are CA-M2-2's)
+    macro, reason = B.BakeActions(callout("go"), PARTY)
+    assertEqual(macro, "/p go") assertNil(reason)
+    m.C_Ping = nil
+    m.SLASH_PING1 = "/ping"
+    assertEqual(select(2, B.BakeActions(none{ ping = "attack" }, PARTY)), "noPing", "no ping system")
+end)
+
+test("bake: [CA-M1-7] no action is noAction; a non-table is badCallout; Bake's contract is unchanged", function()
+    local B = actions()
+    local macro, reason, info = B.BakeActions(none(), PARTY)
+    assertNil(macro) assertEqual(reason, "noAction") assertEqual(#info.actions, 0) assertEqual(info.total, 0)
+    macro, reason = B.BakeActions(nil, PARTY)
+    assertNil(macro) assertEqual(reason, "badCallout")
+    -- the game-emote kind with no emote, as Bake has always answered it
+    assertEqual(select(2, B.Bake(none(), PARTY)), "noEmote")
+    assertEqual((B.Bake(none{ emote = "POINT" }, PARTY)), "/point")
 end)
