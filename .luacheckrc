@@ -82,7 +82,7 @@ files["core/Compat.lua"] = {
   read_globals = { "C_XMLUtil",
     -- the ids probe's readers (QuickComms#21, /qc probe ids), each guarded for absence at call time
     "GetLFDChoiceOrder", "GetLFGDungeonInfo", "GetNumRandomDungeons", "GetLFGRandomDungeonInfo",
-    "GetNumBattlegroundTypes", "C_PvP" },
+    "GetNumBattlegroundTypes", "C_PvP", "C_LFGList" },
 }
 
 -- QC:SlashEnabled and QC:OnSlashCommand are methods on the addon object by calling convention;

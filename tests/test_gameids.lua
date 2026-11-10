@@ -285,6 +285,8 @@ local FOREVER_MAPS = {
     [3001] = { type = 1, name = "The Shaper's Terrace" },
     [3039] = { type = 1, name = "Krol'dok Stronghold" },
     [3065] = { type = 1, name = "The Hall of Thanes" },
+    [2784] = { type = 1, name = "Demon Fall Canyon" },
+    [2875] = { type = 1, name = "Karazhan Crypts" },
     [409] = { type = 2, name = "Molten Core" },
     [249] = { type = 2, name = "Onyxia's Lair" },
     [469] = { type = 2, name = "Blackwing Lair" },
@@ -292,6 +294,11 @@ local FOREVER_MAPS = {
     [509] = { type = 2, name = "Ruins of Ahn'Qiraj" },
     [531] = { type = 2, name = "Ahn'Qiraj Temple" },
     [533] = { type = 2, name = "Naxxramas" },
+    [2791] = { type = 2, name = "Storm Cliffs" },
+    [2789] = { type = 2, name = "The Tainted Scar" },
+    [2804] = { type = 2, name = "The Crystal Vale" },
+    [2832] = { type = 2, name = "Nightmare Grove" },
+    [2856] = { type = 2, name = "Scarlet Enclave" },
     [489] = { type = 3, name = "Warsong Gulch" },
     [529] = { type = 3, name = "Arathi Basin" },
     [30] = { type = 3, name = "Alterac Valley" },
@@ -387,7 +394,7 @@ test("game ids: [QFE-F3] every WoW Forever id has its FOREVER_MAPS row, of its k
     local NS = T.newAddon()
     local F = NS.GameIds.BY_CLIENT.forever
     local shipped = {}
-    -- derived from Forever's own Map and LFGDungeons tables (build 1.60.1.70862)
+    -- derived from Forever's own GroupFinderActivity and Map tables (build 1.60.1.70862), joined on map id
     for _, id in ipairs(F.DUNGEONS) do
         local row = FOREVER_MAPS[id]
         -- red under: a Forever dungeon id Forever's Map does not hold as a party map
@@ -417,6 +424,6 @@ test("game ids: [QFE-F3] every WoW Forever id has its FOREVER_MAPS row, of its k
         assertTrue(own > 0, key .. " carries a Forever map id")
     end
     for id in pairs(FOREVER_MAPS) do assertTrue(shipped[id], id .. "'s FOREVER_MAPS row is for a shipped id") end
-    assertEqual(#F.DUNGEONS, 28, "the dungeons Forever's dungeon finder queues (D1, D2)")
-    assertEqual(#F.RAIDS, 7, "the six raids of ruling R1, and Zul'Gurub (D1)")
+    assertEqual(#F.DUNGEONS, 30, "the dungeons Forever's group finder lists (D1, D2, D3-R)")
+    assertEqual(#F.RAIDS, 12, "the six raids of ruling R1, Zul'Gurub (D1) and the group finder's five (D3-R)")
 end)

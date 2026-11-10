@@ -1468,3 +1468,7 @@ L["not checked, the dungeon finder listed no entries"] = "not checked, the dunge
 L["dungeon %d"] = "dungeon %d"
 L["raid %d"] = "raid %d"
 L["battleground set %s (%s)"] = "battleground set %s (%s)"
+L["  group finder: %d activities; shipped ids it does not list: %s; maps it lists that no shipped id carries: %s"] =
+    "  group finder: %d activities; shipped ids it does not list: %s; maps it lists that no shipped id carries: %s"
+L["  group finder: not checked, the group finder listed no activities"] =
+    "  group finder: not checked, the group finder listed no activities"

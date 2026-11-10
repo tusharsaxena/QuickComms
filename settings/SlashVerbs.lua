@@ -287,9 +287,10 @@ end
 --
 -- The client's own names, read with no travel, for checking the shipped ids (defaults/GameIds_Clients.lua
 -- and the battleground sets) off a saved file: every map id 0..PROBE_MAP_MAX GetRealZoneText names, the
--- dungeon finder's list and the battlegrounds. One `kind = "ids"` record in the same store, under the
--- same PROBE_KEEP cap. The chat gets how many maps were named, each shipped id the client does not
--- name, and each dungeon finder name no shipped id carries.
+-- dungeon finder's list, the battlegrounds and the group finder's activities. One `kind = "ids"` record
+-- in the same store, under the same PROBE_KEEP cap. The chat gets how many maps were named, each shipped
+-- id the client does not name, each dungeon finder name no shipped id carries, and the group finder
+-- check (the forever-ids design's D5).
 
 -- The last map id the sweep reads (the highest Forever or Retail id is under it today).
 V.PROBE_MAP_MAX = 4000
@@ -305,6 +306,7 @@ function V.ProbeIdsRecord()
         maps = C.ProbeMapNames(V.PROBE_MAP_MAX),
         lfg = C.ProbeDungeonFinder(),
         battlegrounds = C.ProbeBattlegrounds(),
+        groupFinder = C.ProbeGroupFinder(),
     }
 end
 
@@ -369,6 +371,40 @@ local function listOrNone(list)
     return table.concat(list, ", ")
 end
 
+-- The group finder line (D5): the shipped ids its activities do not list (a battleground set counts
+-- as listed when any of its ids is), and the maps it lists that no shipped id carries, "Name (id)",
+-- each once in the order read. Zone activities (maxNumPlayers 0) are not places; a nil count is kept.
+-- An empty list reads as not checked, never as "none".
+local function groupFinderLine(acts)
+    if #acts == 0 then return L["  group finder: not checked, the group finder listed no activities"] end
+    local G, listed, shipped, missing, extra, seen = NS.GameIds, {}, {}, {}, {}, {}
+    for _, a in ipairs(acts) do
+        if a.mapID then listed[a.mapID] = true end
+    end
+    for _, kind in ipairs({ { G.DUNGEONS, L["dungeon %d"] }, { G.RAIDS, L["raid %d"] } }) do
+        for _, id in ipairs(kind[1] or {}) do
+            shipped[id] = true
+            if not listed[id] then missing[#missing + 1] = kind[2]:format(id) end
+        end
+    end
+    for _, s in ipairs(shippedBattlegroundSets()) do
+        local any = false
+        for _, id in ipairs(s.ids) do
+            shipped[id], any = true, any or listed[id] == true
+        end
+        if not any then missing[#missing + 1] = L["battleground set %s (%s)"]:format(s.key, table.concat(s.ids, ", ")) end
+    end
+    for _, a in ipairs(acts) do
+        local id = a.mapID
+        if id and a.maxNumPlayers ~= 0 and not shipped[id] and not seen[id] then
+            seen[id] = true
+            extra[#extra + 1] = L["%s (%d)"]:format(orDash(a.name), id)
+        end
+    end
+    return L["  group finder: %d activities; shipped ids it does not list: %s; maps it lists that no shipped id carries: %s"]
+        :format(#acts, listOrNone(missing), listOrNone(extra))
+end
+
 --- The lines `/qc probe ids` prints for a stored ids record and its place in the list.
 --- @return string[]
 function V.ProbeIdsSummary(rec, n)
@@ -383,6 +419,7 @@ function V.ProbeIdsSummary(rec, n)
         L["  dungeon finder names no shipped id carries: %s"]:format(#rec.lfg == 0
             and L["not checked, the dungeon finder listed no entries"]
             or listOrNone(uncarriedFinderNames(rec.lfg, names))),
+        groupFinderLine(rec.groupFinder or {}),
     }
 end
 

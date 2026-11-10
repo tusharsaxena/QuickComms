@@ -18,14 +18,13 @@ local _, NS = ...
 --                       id, in place of the one it declares (BuiltIns.WhenOf). Seeds only: a copy
 --                       already stored keeps the When it has.
 --   BATTLEGROUND_SETS   the battleground sets seeded, by key (bi.bg.<key>); nil seeds every one.
--- WoW Forever's ids are derived from Forever's own Map and LFGDungeons tables (build 1.60.1.70862):
--- each is a Map row of its kind (its FOREVER_MAPS row in tests/test_gameids.lua), and the dungeons
--- are exactly the party maps the dungeon finder queues (LFGDungeons TypeID 0, joined to Map by name,
--- since its MapID is 0 on every Forever row). tools/derive-gameids.py --forever re-derives and checks
--- them (docs/common-tasks.md). The in-game check is `/qc probe ids`. Left out (the lead's call D3,
--- QuickComms#21): the raid and party maps the dungeon finder does not queue, which the generator
--- prints as NOT SHIPPED for the owner's ruling, and Darkspear Islands and Battle for Gilneas, which
--- get no built-in set. Forever has no arena map, so no arena list (D4).
+-- WoW Forever's ids are derived from Forever's own GroupFinderActivity and Map tables (build
+-- 1.60.1.70862), joined on map id (the forever-ids design, D3-R and D5, QuickComms#21): each is a Map
+-- row of its kind (its FOREVER_MAPS row in tests/test_gameids.lua), the dungeons are exactly the party
+-- maps the group finder lists and the raids exactly its raid maps. tools/derive-gameids.py --forever
+-- re-derives and checks them (docs/common-tasks.md). The in-game check is `/qc probe ids`. Darkspear
+-- Islands, a battleground the group finder lists, gets no built-in set (the battleground kind still
+-- matches it). Forever has no arena map, so no arena list (D4).
 
 NS.GameIds = NS.GameIds or {}
 local G = NS.GameIds
@@ -46,11 +45,11 @@ local FOREVER_DUNGEONS = {
     349,  -- Maraudon
     109,  -- Sunken Temple
     230,  -- Blackrock Depths
-    229,  -- Blackrock Spire (the dungeon finder's Lower and Upper Blackrock Spire)
-    429,  -- Dire Maul (the dungeon finder's East, West and North)
+    229,  -- Blackrock Spire (the group finder's Lower and Upper Blackrock Spire)
+    429,  -- Dire Maul (the group finder's East, West and North)
     289,  -- Scholomance (D1)
     329,  -- Stratholme
-    -- Forever's own dungeons, which its dungeon finder queues (D2), by map id
+    -- Forever's own dungeons, which its group finder lists (D2), by map id
     2959, -- City of Dalaran
     2970, -- The Drowned City
     2974, -- Blackmaw Hold
@@ -60,6 +59,9 @@ local FOREVER_DUNGEONS = {
     3001, -- The Shaper's Terrace
     3039, -- Krol'dok Stronghold
     3065, -- The Hall of Thanes
+    -- the other party maps the group finder lists (D3-R), in its order
+    2784, -- Demon Fall Canyon
+    2875, -- Karazhan Crypts
 }
 
 -- A new list of raids for Forever (owner ruling R1), by Forever's map ids.
@@ -71,6 +73,12 @@ local FOREVER_RAIDS = {
     509,  -- Ruins of Ahn'Qiraj
     531,  -- Temple of Ahn'Qiraj
     533,  -- Naxxramas
+    -- the other raid maps the group finder lists (D3-R), in its order
+    2791, -- Storm Cliffs
+    2789, -- The Tainted Scar
+    2804, -- The Crystal Vale
+    2832, -- Nightmare Grove
+    2856, -- Scarlet Enclave
 }
 
 local function concat(a, b)

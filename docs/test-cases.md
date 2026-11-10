@@ -270,7 +270,7 @@ Total.
 - identity: /qc why opens with the role and where it came from; the diagnostics print both
 - identity: the spec row lists the client's specs through LibKa0s Role, else the shipped seed
 
-### test_probe.lua (14)
+### test_probe.lua (18)
 
 - probe: records the place, the situation, the role, the spec, the talent groups and the emotes
 - probe: probes append in order, keep the newest PROBE_KEEP, and clear empties every client
@@ -279,6 +279,10 @@ Total.
 - probe: missing client APIs are stored as nil
 - probe: [QFE-REV] secret client answers are stored as nil, never as the value; plain ones are kept
 - probe ids: sweeps map names 0..4000, the dungeon finder and the battlegrounds into one ids record
+- probe ids: [FID-4] records the group finder's activities, each once, with the fields the check reads
+- probe ids: [FID-4] the group finder line names shipped ids it does not list, and reads none when all match
+- probe ids: [FID-4] an empty, missing, throwing, wrong-shape or secret group finder reads as no activities
+- probe ids: [FID-4] the group finder walk stops at GROUP_FINDER_MAX activities
 - probe ids: the summary names each shipped id the client does not name, and a set none of whose ids it names
 - probe ids: a dungeon finder entry whose lfgMapID is a shipped id is carried, whatever its name
 - probe ids: missing or failing client APIs leave empty lists, and the record is still stored
@@ -2060,7 +2064,7 @@ Total.
 | test_diagnostics.lua | 13 |
 | test_compat.lua | 15 |
 | test_identity.lua | 11 |
-| test_probe.lua | 14 |
+| test_probe.lua | 18 |
 | test_restrictions.lua | 20 |
 | test_situation.lua | 20 |
 | test_tokens.lua | 11 |
@@ -2134,4 +2138,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1776** |
+| **Total** | **1780** |

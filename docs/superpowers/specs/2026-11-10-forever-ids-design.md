@@ -75,3 +75,46 @@ wago.tools exports product `wowf`, and its build_config `5ada9542…` matches th
   docs/common-tasks.md (how to run the Forever derivation), and test-cases regenerated.
 - FOREVER-16 and FOREVER-22 are rewritten around `/qc probe ids`, plus a new check for the sweep itself.
   All are owed.
+
+## Revision 2026-11-10 (group finder)
+
+New evidence, verified by the lead: WoW Forever (game type camelot) loads neither Blizzard_GroupFinder
+nor Blizzard_PVPUI. Its group finder is Blizzard_GroupFinder_VanillaStyle, which walks
+`C_LFGList.GetAvailableCategories()`, then `C_LFGList.GetAvailableActivities(categoryID, groupID)`,
+then `C_LFGList.GetActivityInfoTable(activityID)` (its `GroupFinderActivityInfo` has `fullName`,
+`maxNumPlayers`, `isPvpActivity` and `mapID`). The dungeon finder that LFGDungeons describes is not
+the one Forever's players see.
+
+Forever's GroupFinderActivity table (build 1.60.1.70862, 114 rows) has a populated MapID column. Joined
+to Map on it, with Map.InstanceType classifying each map (1 party, 2 raid, 3 pvp, 0 world), it lists
+every shipped id, and also these, as live group finder activities:
+
+- party: 2784 Demon Fall Canyon, 2875 Karazhan Crypts;
+- raid: 2789 The Tainted Scar, 2791 Storm Cliffs, 2804 The Crystal Vale, 2832 Nightmare Grove,
+  2856 Scarlet Enclave;
+- pvp: 2997 Darkspear Islands.
+
+Battle for Gilneas (3005) is not in the group finder. Some activities are raid-sized versions on party
+maps (Blackfathom Deeps, Gnomeregan and Sunken Temple in the Raids category); those maps stay dungeons,
+because classification is by Map.InstanceType. World and zone activities have InstanceType 0 and
+`maxNumPlayers` 0.
+
+- **D3-R (the lead's call; D3 is reversed).** A place Forever's own group finder lists is live
+  content. `FOREVER_DUNGEONS` gains 2784 and 2875, and `FOREVER_RAIDS` gains 2791, 2789, 2804, 2832 and
+  2856, each in its own commented block in the group finder's order (order index, then name). That is
+  30 dungeons and 12 raids. Darkspear Islands gets no built-in set: the battleground content kind
+  already matches it.
+- **D5 (the lead's call).** The id source is GroupFinderActivity joined to Map on MapID, with no name
+  join. `FOREVER_DUNGEONS` must equal the distinct InstanceType 1 maps the group finder lists, and
+  `FOREVER_RAIDS` the distinct InstanceType 2 maps. Every pvp map it lists must be carried by a
+  battleground set, except those `tools/derive-gameids.py` names as not shipped (`NOT_SHIPPED_PVP`:
+  2997). The generator's Forever mode reads GroupFinderActivity in place of LFGDungeons, drops the name
+  join (`LFG_NAMES`), fails on any difference, and prints the party, raid and pvp maps that Map holds
+  and the group finder does not list as `NOT SHIPPED:`, for information only.
+- **In game.** `/qc probe ids` also reads the group finder (`Compat.ProbeGroupFinder`: each category,
+  each activity once, at most 2000, each `{ id, name, categoryID, mapID, maxNumPlayers, isPvp }`) and
+  stores it as `groupFinder` in the ids record. It prints a fifth line: how many activities, the shipped
+  ids it does not list, and the maps it lists (zones left out) that no shipped id carries. Expected on
+  build 1.60.1.70862: about 114 activities; shipped ids it does not list: none; maps it lists that no
+  shipped id carries: Darkspear Islands (2997). An empty list reads *not checked*. The dungeon finder
+  line may read *not checked* on Forever.

@@ -29,15 +29,20 @@
 # fetched at FOREVER_BUILD (wago.tools product wowf), each a loud failure:
 #   - every FOREVER_MAPS row in tests/test_gameids.lua equals Map's InstanceType and name for its id,
 #     and every row is for a shipped id
-#   - FOREVER_DUNGEONS are party maps and are exactly the party maps the dungeon finder queues
-#     (LFGDungeons TypeID 0, whose MapID is 0 on Forever, joined to Map by name through LFG_NAMES)
-#   - FOREVER_RAIDS are raid maps, and every raid the dungeon finder queues is one of them
+#   - the id source is the group finder (the forever-ids design's D5): GroupFinderActivity joined to
+#     Map on MapID, no name join. FOREVER_DUNGEONS are exactly the distinct party maps (Map
+#     InstanceType 1) it lists and FOREVER_RAIDS exactly its raid maps (2); a raid-sized activity on a
+#     party map stays a dungeon, since the map's instance type classifies it. Every map it lists must
+#     be a Map row
+#   - every battleground map (3) it lists is carried by a battleground set Forever seeds, except those
+#     NOT_SHIPPED_PVP names, each of which must still be listed and carried by no set
 #   - each battleground set Forever seeds (BATTLEGROUND_SETS) carries at least one Forever
 #     battleground map, and every id it carries that Forever's Map holds is one (an id Map does not
 #     hold is the newer map id the set carries for Retail, printed as RETAIL ONLY)
 #   - Forever has no arena map (the lead's call D4: no arena list)
-# Every party, raid or battleground map not shipped is printed as NOT SHIPPED (an owner ruling
-# decides it, never this script), and BattlemasterList's arena entries are printed for D4.
+# It prints NOT SHIPPED for the battleground maps NOT_SHIPPED_PVP names, and, for information only,
+# for every party, raid or battleground map Map holds that is not shipped and the group finder does
+# not list. BattlemasterList's arena entries are printed for D4.
 import os
 import re
 import sys
@@ -58,23 +63,13 @@ PARTY, RAID, ARENA = 1, 2, 4   # Map.InstanceType
 DROPPED_ARENAS = {559: "Nagrand Arena (old)", 562: "zzOldBlade's Edge Arena"}
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-FOREVER_TABLES = ["Map", "LFGDungeons", "BattlemasterList"]
+FOREVER_TABLES = ["Map", "GroupFinderActivity", "BattlemasterList"]
 FOREVER_BUILD = "1.60.1.70862"   # the WoW Forever build the extraction is from (product wowf)
 PVP = 3                          # Map.InstanceType: a battleground
-LFG_DUNGEON = 0                  # LFGDungeons.TypeID of a queued dungeon or raid
-# The dungeon finder's names that are not their Map row's name: LFGDungeons name -> Map name. Each
-# must be used, so a renamed entry fails rather than lingers.
-LFG_NAMES = {
-    "Stormwind Stockades": "Stormwind Stockade",
-    "Zul'Farak": "Zul'Farrak",
-    "Lower Blackrock Spire": "Blackrock Spire",
-    "Upper Blackrock Spire": "Blackrock Spire",
-    "Dire Maul - East": "Dire Maul",
-    "Dire Maul - West": "Dire Maul",
-    "Dire Maul - North": "Dire Maul",
-    "Hall of Thanes": "The Hall of Thanes",
-    "Onyxia": "Onyxia's Lair",
-}
+# Battleground maps the group finder lists that no built-in set carries, by the lead's call (D3-R:
+# the battleground content kind already matches them). Each must still be listed and carried by no
+# set, so a stale entry fails rather than lingers.
+NOT_SHIPPED_PVP = {2997: "Darkspear Islands"}
 
 
 def block(path, start):
@@ -208,33 +203,37 @@ def forever(d):
     for i in sorted(set(fixture) - shipped):
         bad.append("FOREVER_MAPS[{}] is for an id Forever does not ship".format(i))
 
-    queued, used = {PARTY: set(), RAID: set()}, set()
-    for r in ct.read(d, "LFGDungeons"):
-        if int(r["TypeID"]) != LFG_DUNGEON:
+    listed = {}
+    for r in ct.read(d, "GroupFinderActivity"):
+        listed.setdefault(int(r["MapID"]), r["FullName_lang"])
+    for i in sorted(listed):
+        if i not in maps:
+            bad.append("the group finder's '{}' is on map {}, which Forever's Map does not hold".format(listed[i], i))
+    gf = {t: {i for i in listed if kind(i) == t} for t in (PARTY, RAID, PVP)}
+    if not gf[PARTY] or not gf[RAID]:
+        ct.fail("the group finder lists no dungeon or no raid")
+    for what, ids, t in (("FOREVER_DUNGEONS", dungeons, PARTY), ("FOREVER_RAIDS", raids, RAID)):
+        if set(ids) != gf[t]:
+            bad.append("{} differ from the group finder's {} maps of instance type {}: extra {}, missing {}".format(
+                what, len(gf[t]), t, sorted(set(ids) - gf[t]), sorted(gf[t] - set(ids))))
+    for i in sorted(gf[PVP]):
+        if i in NOT_SHIPPED_PVP:
             continue
-        name = LFG_NAMES.get(r["Name_lang"], r["Name_lang"])
-        if name != r["Name_lang"]:
-            used.add(r["Name_lang"])
-        hits = [i for i, m in maps.items() if m["MapName_lang"] == name and int(m["InstanceType"]) in (PARTY, RAID)]
-        if len(hits) != 1:
-            bad.append("the dungeon finder's '{}' names {} dungeon or raid maps, not one: {}".format(
-                r["Name_lang"], len(hits), sorted(hits)))
-            continue
-        queued[kind(hits[0])].add(hits[0])
-    for n in sorted(set(LFG_NAMES) - used):
-        bad.append("LFG_NAMES entry '{}' names no dungeon finder entry".format(n))
-    if not queued[PARTY]:
-        ct.fail("the dungeon finder queues no dungeon")
-    if set(dungeons) != queued[PARTY]:
-        bad.append("FOREVER_DUNGEONS differ from the dungeon finder's {} dungeons: extra {}, missing {}".format(
-            len(queued[PARTY]), sorted(set(dungeons) - queued[PARTY]), sorted(queued[PARTY] - set(dungeons))))
-    for i in sorted(queued[RAID] - set(raids)):
-        bad.append("the dungeon finder queues raid {} {}, which FOREVER_RAIDS does not list".format(
-            i, maps[i]["MapName_lang"]))
+        if i not in shipped:
+            bad.append("the group finder lists battleground map {} {}, which no battleground set carries "
+                       "and NOT_SHIPPED_PVP does not name".format(i, maps[i]["MapName_lang"]))
+    for i, name in sorted(NOT_SHIPPED_PVP.items()):
+        if i not in gf[PVP] or maps[i]["MapName_lang"] != name or i in shipped:
+            bad.append("NOT_SHIPPED_PVP {} '{}' is not a battleground map the group finder lists and no set "
+                       "carries".format(i, name))
+        else:
+            print("NOT SHIPPED: battleground map {} {} (the group finder lists it; no built-in set, D3-R)".format(
+                i, name))
 
     for t, what in ((PARTY, "dungeon"), (RAID, "raid"), (PVP, "battleground")):
-        for i in sorted(i for i in maps if kind(i) == t and i not in shipped):
-            print("NOT SHIPPED: {} map {} {} (an owner ruling decides it)".format(what, i, maps[i]["MapName_lang"]))
+        for i in sorted(i for i in maps if kind(i) == t and i not in shipped and i not in listed):
+            print("NOT SHIPPED: {} map {} {} (the group finder does not list it; information only)".format(
+                what, i, maps[i]["MapName_lang"]))
     arenas = sorted(i for i in maps if kind(i) == ARENA)
     if arenas:
         bad.append("Forever's Map has arena maps {}: D4 (no arena list) needs a new ruling".format(arenas))
@@ -246,8 +245,9 @@ def forever(d):
         print("MISMATCH: " + b, file=sys.stderr)
     if bad:
         sys.exit(1)
-    print("OK: Forever, {} map rows, {} dungeons, {} raids, {} battleground sets".format(
-        len(fixture), len(dungeons), len(raids), len(bgs)))
+    print("OK: Forever, {} map rows, {} dungeons, {} raids, {} battleground sets; the group finder lists {} "
+          "activities on {} maps".format(len(fixture), len(dungeons), len(raids), len(bgs),
+                                         len(ct.read(d, "GroupFinderActivity")), len(listed)))
 
 
 def main(argv):

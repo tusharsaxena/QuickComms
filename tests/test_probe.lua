@@ -174,9 +174,40 @@ local function shippedSets(NS)
     return out
 end
 
+-- The group finder's two categories, as fake C_LFGList answers them: { [categoryID] = { activity ids } }
+-- and { [activityID] = GroupFinderActivityInfo }. Category 2 lists an activity for every shipped
+-- dungeon, then a zone (maxNumPlayers 0, mapID 0) and the first raid's activity again; category 114 an
+-- activity for every shipped raid, one for each battleground set's first id and one for a raid map no
+-- shipped id carries (Sky Vault, 3500).
+local function groupFinder(NS)
+    local G = NS.GameIds
+    local cats, acts = { [2] = {}, [114] = {} }, {}
+    local function add(cat, id, name, mapID, players, pvp)
+        acts[id] = { fullName = name, shortName = name, categoryID = cat, mapID = mapID, maxNumPlayers = players,
+            isPvpActivity = pvp or false, orderIndex = 0 }
+        table.insert(cats[cat], id)
+    end
+    for i, id in ipairs(G.DUNGEONS) do add(2, 1000 + i, "Map " .. id, id, 5) end
+    for i, id in ipairs(G.RAIDS) do add(114, 2000 + i, "Map " .. id, id, 40) end
+    for i, s in ipairs(shippedSets(NS)) do add(114, 3000 + i, s.key, s.ids[1], 10, true) end
+    add(2, 4001, "Elwynn Forest", 0, 0)
+    table.insert(cats[2], 2001)
+    add(114, 4002, "Sky Vault", 3500, 40)
+    return cats, acts
+end
+
+local function fakeLFGList(cats, acts)
+    return {
+        GetAvailableCategories = function() return { 2, 114 } end,
+        GetAvailableActivities = function(cat) return cats[cat] end,
+        GetActivityInfoTable = function(id) return acts[id] end,
+    }
+end
+
 -- A client that names every id this client ships ("Map <id>"), plus two maps it does not ship, and
--- lists three dungeon finder entries (one a shipped dungeon's name, one no shipped id's, one random)
--- and two battlegrounds. Answers the names table and the GetRealZoneText call log.
+-- lists three dungeon finder entries (one a shipped dungeon's name, one no shipped id's, one random),
+-- two battlegrounds and the group finder's activities (groupFinder). Answers the names table, the
+-- GetRealZoneText call log and the group finder's categories and activities.
 local function idsClient(NS, env)
     local G = NS.GameIds
     local zones = { [0] = "Eastern Kingdoms", [4000] = "The Last Map" }
@@ -210,7 +241,9 @@ local function idsClient(NS, env)
         if i == 2 then return { name = "Random Battleground", battlegroundID = 32, isRandom = true } end
     end }
     env.GetServerTime = function() return 1762790400 end
-    return zones, calls
+    local cats, acts = groupFinder(NS)
+    env.C_LFGList = fakeLFGList(cats, acts)
+    return zones, calls, cats, acts
 end
 
 local function idsRecord(NS)
@@ -258,7 +291,131 @@ test("probe ids: sweeps map names 0..4000, the dungeon finder and the battlegrou
     assertTrue(text:find("shipped ids the client does not name: none", 1, true) ~= nil, text)
     -- red under: a comparison that lists the random entry, or the name a shipped dungeon carries
     assertTrue(text:find("dungeon finder names no shipped id carries: Nowhere Keep", 1, true) ~= nil, text)
-    assertEqual(#m.prints, 4, "a short summary, not the record")
+    assertEqual(#m.prints, 5, "a short summary, not the record")
+end)
+
+test("probe ids: [FID-4] records the group finder's activities, each once, with the fields the check reads", function()
+    local NS, env, m = T.enableAddon()
+    local G = NS.GameIds
+    local _, _, cats = idsClient(NS, env)
+    m.prints = {}
+    NS.addon:OnSlashCommand("probe ids")
+    local gf = idsRecord(NS).groupFinder
+    -- red under: no groupFinder reader (the record has no list)
+    assertTrue(type(gf) == "table", "a groupFinder list")
+    -- red under: a walk that stores the duplicated activity 2001 twice
+    assertEqual(#gf, #cats[2] - 1 + #cats[114], "every activity once")
+    local byId, seen = {}, 0
+    for _, a in ipairs(gf) do
+        assertNil(byId[a.id], "activity " .. a.id .. " once")
+        byId[a.id], seen = a, seen + 1
+    end
+    assertEqual(gf[1].id, 1001, "in category order")
+    local d = byId[1001]
+    assertEqual(d.name, "Map " .. G.DUNGEONS[1]); assertEqual(d.categoryID, 2); assertEqual(d.mapID, G.DUNGEONS[1])
+    assertEqual(d.maxNumPlayers, 5); assertEqual(d.isPvp, false)
+    assertEqual(byId[2001].categoryID, 114, "the category the activity's info names")
+    assertEqual(byId[3001].isPvp, true)
+    assertEqual(byId[4001].maxNumPlayers, 0); assertEqual(byId[4001].mapID, 0)
+    local text = table.concat(m.prints, "\n")
+    -- red under: a comparison that counts the zone (maxNumPlayers 0) or a shipped id as uncarried
+    assertTrue(text:find(("group finder: %d activities; shipped ids it does not list: none; maps it lists that no "
+        .. "shipped id carries: Sky Vault (3500)"):format(seen), 1, true) ~= nil, text)
+end)
+
+test("probe ids: [FID-4] the group finder line names shipped ids it does not list, and reads none when all match", function()
+    local NS, env, m = T.enableAddon()
+    local G = NS.GameIds
+    local _, _, cats, acts = idsClient(NS, env)
+    local sets = shippedSets(NS)
+    -- the last dungeon, the second raid and the first battleground set are not listed
+    table.remove(cats[2], #G.DUNGEONS)
+    acts[2002] = nil
+    acts[3001] = nil
+    -- a non-shipped map with no player count (nil) is still listed; a second activity on it adds no name
+    acts[4003] = { fullName = "Odd Hollow", categoryID = 2, mapID = 3600 }
+    acts[4004] = { fullName = "Odd Hollow (Heroic)", categoryID = 2, mapID = 3600, maxNumPlayers = 5 }
+    table.insert(cats[2], 4003); table.insert(cats[2], 4004)
+    m.prints = {}
+    NS.addon:OnSlashCommand("probe ids")
+    local text = table.concat(m.prints, "\n")
+    local want = ("shipped ids it does not list: dungeon %d, raid %d, battleground set %s (%s); maps it lists that no "
+        .. "shipped id carries: Odd Hollow (3600), Sky Vault (3500)"):format(G.DUNGEONS[#G.DUNGEONS], G.RAIDS[2],
+        sets[1].key, table.concat(sets[1].ids, ", "))
+    -- red under: no shipped-id check against the group finder, or one that drops a nil player count
+    assertTrue(text:find(want, 1, true) ~= nil, text)
+    -- everything listed, the extra raid gone: none and none
+    table.insert(cats[2], 1000 + #G.DUNGEONS)
+    acts[2002] = { fullName = "Map " .. G.RAIDS[2], categoryID = 114, mapID = G.RAIDS[2], maxNumPlayers = 40 }
+    acts[3001] = { fullName = sets[1].key, categoryID = 114, mapID = sets[1].ids[#sets[1].ids], maxNumPlayers = 10 }
+    acts[4002], acts[4003], acts[4004] = nil, nil, nil
+    m.prints = {}
+    NS.addon:OnSlashCommand("probe ids")
+    text = table.concat(m.prints, "\n")
+    assertTrue(text:find("shipped ids it does not list: none; maps it lists that no shipped id carries: none", 1, true)
+        ~= nil, text)
+end)
+
+test("probe ids: [FID-4] an empty, missing, throwing, wrong-shape or secret group finder reads as no activities", function()
+    local NS, env, m = T.enableAddon()
+    idsClient(NS, env)
+    local function line()
+        m.prints = {}
+        NS.addon:OnSlashCommand("probe ids")
+        return table.concat(m.prints, "\n")
+    end
+    local notChecked = "  group finder: not checked, the group finder listed no activities"
+    local cases = {
+        { "missing", nil },
+        { "empty", { GetAvailableCategories = function() return {} end } },
+        { "throwing", { GetAvailableCategories = function() error("no finder") end } },
+        { "wrong shape", { GetAvailableCategories = function() return "2,114" end,
+            GetAvailableActivities = function() return 7 end } },
+        { "a secret table", T.secret({}) },
+        { "secret answers", { GetAvailableCategories = function() return { T.secret(2) } end } },
+        { "a secret activity list", { GetAvailableCategories = function() return { 2 } end,
+            GetAvailableActivities = function() return T.secret({ 1 }) end } },
+        { "a secret info table", { GetAvailableCategories = function() return { 2 } end,
+            GetAvailableActivities = function() return { 1 } end,
+            GetActivityInfoTable = function() return T.secret({ fullName = "X" }) end } },
+        { "a throwing info read", { GetAvailableCategories = function() return { 2 } end,
+            GetAvailableActivities = function() return { 1 } end,
+            GetActivityInfoTable = function() error("no activity") end } },
+    }
+    env.issecretvalue = T.isSecret
+    for _, c in ipairs(cases) do
+        env.C_LFGList = c[2]
+        local text = line()
+        -- red under: an unguarded reader (the verb errors), or an empty list reading as "none"
+        assertEqual(#idsRecord(NS).groupFinder, 0, c[1])
+        assertTrue(text:find(notChecked, 1, true) ~= nil, c[1] .. ": " .. text)
+    end
+    -- secret fields are stored as nil, never as the value
+    env.C_LFGList = { GetAvailableCategories = function() return { 2 } end,
+        GetAvailableActivities = function() return { 1, T.secret(5) } end,
+        GetActivityInfoTable = function() return { fullName = T.secret("Hidden"), mapID = 36, maxNumPlayers = T.secret(5),
+            categoryID = 2, isPvpActivity = T.secret(true) } end }
+    line()
+    local gf = idsRecord(NS).groupFinder
+    assertEqual(#gf, 1, "the secret activity id is skipped")
+    assertEqual(gf[1].id, 1); assertEqual(gf[1].mapID, 36); assertEqual(gf[1].categoryID, 2)
+    assertNil(gf[1].name); assertNil(gf[1].maxNumPlayers); assertNil(gf[1].isPvp)
+end)
+
+test("probe ids: [FID-4] the group finder walk stops at GROUP_FINDER_MAX activities", function()
+    local NS, env = T.enableAddon()
+    idsClient(NS, env)
+    local function many(cat)
+        local out = {}
+        for i = 1, 1500 do out[i] = cat * 10000 + i end
+        return out
+    end
+    env.C_LFGList = { GetAvailableCategories = function() return { 2, 114 } end,
+        GetAvailableActivities = many,
+        GetActivityInfoTable = function(id) return { fullName = "A" .. id, mapID = 0, maxNumPlayers = 0 } end }
+    NS.addon:OnSlashCommand("probe ids")
+    -- red under: no cap (3000 distinct activities), or one per category
+    assertEqual(#idsRecord(NS).groupFinder, 2000)
 end)
 
 test("probe ids: the summary names each shipped id the client does not name, and a set none of whose ids it names", function()

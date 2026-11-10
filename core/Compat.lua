@@ -408,6 +408,42 @@ function Compat.ProbeBattlegrounds()
     return out
 end
 
+-- How many group finder activities are read at most, over every category.
+local GROUP_FINDER_MAX = 2000
+
+-- A guarded call's first answer (r[2]) when it is a plain table, or an empty list.
+local function answeredTable(r)
+    return r and plainTable(r[2]) or {}
+end
+
+--- The group finder's activities (QuickComms#21, the forever-ids design's D5): every activity of
+--- C_LFGList.GetAvailableActivities(categoryID) over each id of GetAvailableCategories, as WoW
+--- Forever's Blizzard_GroupFinder_VanillaStyle walks them, each read with GetActivityInfoTable into
+--- `{ id, name, categoryID, mapID, maxNumPlayers, isPvp }` (plain or nil), each id once, in the order
+--- read, at most GROUP_FINDER_MAX.
+--- @return table[]
+function Compat.ProbeGroupFinder()
+    local out, seen = {}, {}
+    local lfg = plainTable(C_LFGList)
+    if not lfg then return out end
+    for _, cat in ipairs(answeredTable(guarded(lfg.GetAvailableCategories))) do
+        cat = PlainNumber(cat)
+        for _, id in ipairs(cat and answeredTable(guarded(lfg.GetAvailableActivities, cat)) or {}) do
+            id = PlainNumber(id)
+            if #out >= GROUP_FINDER_MAX then return out end
+            local r = id and not seen[id] and guarded(lfg.GetActivityInfoTable, id)
+            local info = r and plainTable(r[2])
+            if info then
+                seen[id] = true
+                out[#out + 1] = { id = id, name = PlainString(info.fullName), categoryID = PlainNumber(info.categoryID),
+                    mapID = PlainNumber(info.mapID), maxNumPlayers = PlainNumber(info.maxNumPlayers),
+                    isPvp = plainBool(info.isPvpActivity) }
+            end
+        end
+    end
+    return out
+end
+
 --- The active spec's id and name, each plain or nil (the situation's spec ladder).
 function Compat.ActiveSpec()
     return activeSpec()
