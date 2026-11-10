@@ -552,6 +552,12 @@ local function validCallout(f)
     return true
 end
 
+--- Whether callout fields `f` pass the check every created callout passes (its name, text, channel,
+--- emote, ping, marker, icon and color), and the reason when not. Seeded data skips it, so the
+--- shipped sets' integrity test (tests/test_builtins.lua) reads it here.
+--- @return boolean ok, string|nil reason
+Lib.ValidCallout = validCallout
+
 -- The first `n` UTF-8 characters of `s`.
 local function firstChars(s, n)
     local out, count = {}, 0

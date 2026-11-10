@@ -452,7 +452,7 @@ Total.
 - resolver: [all] All battlegrounds and All dungeons and raids match the whole kind, the listed ids aside
 - resolver: [arena] the arena row matches only in an arena: its listed ids, or all of them
 
-### test_builtins.lua (30)
+### test_builtins.lua (34)
 
 - builtins: the expected top-level sets exist in order
 - builtins: ids are unique, referenced and well formed
@@ -484,6 +484,10 @@ Total.
 - builtins: [QFE-E3] every seeded emote token exists on both clients; the voice ones are speech emotes
 - builtins: [QFE-E3] each seeded emote bakes to the client's own command
 - builtins: [QFE-E3] a fresh profile seeds Emotes after Solo; Restore built-in groups brings it back
+- builtins: [CA-M1-6] BI.Callout takes extra action fields, and BI.Callouts rows take them as r[6]
+- builtins: [CA-M1-6] the Emotes set's data is as it shipped
+- builtins: [CA-M1-6] every shipped callout passes the callout check and holds an action
+- builtins: [CA-M1-6] no seeded callout keeps the catalog glyph name
 
 ### test_gameids.lua (5)
 
@@ -2118,7 +2122,7 @@ Total.
 | test_emotes.lua | 16 |
 | test_bake.lua | 12 |
 | test_resolver.lua | 13 |
-| test_builtins.lua | 30 |
+| test_builtins.lua | 34 |
 | test_gameids.lua | 5 |
 | test_client_data.lua | 9 |
 | test_library.lua | 82 |
@@ -2184,4 +2188,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1822** |
+| **Total** | **1826** |

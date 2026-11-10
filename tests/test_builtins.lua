@@ -552,3 +552,63 @@ test("builtins: [QFE-E3] a fresh profile seeds Emotes after Solo; Restore built-
     assertEqual(#p.groups[back].callouts, #VOICE + #SOCIAL, "with every callout")
     assertEqual(p.callouts[p.groups[back].callouts[#VOICE + #SOCIAL]].emote, "BYE")
 end)
+
+-- ── extra action fields and the integrity row (CA-M1-6, spec §2) ──────────────────────────────
+
+-- One line per shipped callout of `prefix`, every field in key order, for a byte-for-byte pin.
+local function fingerprint(BI, prefix)
+    local ids = {}
+    for id in pairs(BI.callouts) do if id:sub(1, #prefix) == prefix then ids[#ids + 1] = id end end
+    table.sort(ids)
+    local lines = {}
+    for _, id in ipairs(ids) do
+        local c, keys = BI.callouts[id], {}
+        for k in pairs(c) do keys[#keys + 1] = k end
+        table.sort(keys)
+        local parts = { id }
+        for _, k in ipairs(keys) do parts[#parts + 1] = k .. "=" .. tostring(c[k]) end
+        lines[#lines + 1] = table.concat(parts, ";")
+    end
+    local text = table.concat(lines, "\n")
+    local a, b = 1, 0
+    for i = 1, #text do a = (a + text:byte(i)) % 65521; b = (b + a) % 65521 end
+    return #ids, #text, b * 65536 + a
+end
+
+test("builtins: [CA-M1-6] BI.Callout takes extra action fields, and BI.Callouts rows take them as r[6]", function()
+    local _, BI = bi()
+    -- red under: BI.Callout without its `extra` argument
+    local id = BI.Callout("bi.test", "ping", "Ping", "", "gameEmote", nil, nil, { ping = "attack", marker = 8 })
+    assertEqual(BI.callouts[id].ping, "attack")
+    assertEqual(BI.callouts[id].marker, 8)
+    local ids = BI.Callouts("bi.test", "gameEmote", { { "wave", "Wave", "", nil, nil, { emote = "WAVE" } } })
+    assertEqual(BI.callouts[ids[1]].emote, "WAVE")
+    assertNil(BI.callouts[ids[1]].extra, "the fields, not the table")
+    BI.callouts[id], BI.callouts[ids[1]] = nil, nil
+end)
+
+test("builtins: [CA-M1-6] the Emotes set's data is as it shipped", function()
+    local _, BI = bi()
+    local n, len, sum = fingerprint(BI, "bi.emotes.")
+    -- red under: any change to a shipped emote callout's fields (the move to `extra` changes none)
+    -- Taken before the move, on both kit profiles (the icon paths are one catalog's).
+    assertEqual(n .. "/" .. len .. "/" .. sum, "20/3604/676677894")
+end)
+
+test("builtins: [CA-M1-6] every shipped callout passes the callout check and holds an action", function()
+    local NS, BI = bi()
+    for id, c in pairs(BI.callouts) do
+        -- red under: a shipped callout with no Line, emote, ping or marker, or a bad ping or marker
+        local ok, why = NS.Library.ValidCallout(c)
+        assertTrue(ok, id .. ": " .. tostring(why))
+        assertTrue(NS.Library.HasAction(c), id .. " holds an action")
+        assertTrue(NS.Library.ValidPing(c.ping) and NS.Library.ValidMarker(c.marker), id)
+    end
+end)
+
+test("builtins: [CA-M1-6] no seeded callout keeps the catalog glyph name", function()
+    local NS = T.bootAddon()
+    for id, c in pairs(NS.db.profile.callouts) do
+        assertNil(c.glyph, id)
+    end
+end)
