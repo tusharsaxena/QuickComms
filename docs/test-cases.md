@@ -903,7 +903,7 @@ Total.
 - queue: a key replaces its earlier entry and keeps its place
 - echo: [QF-04] only channel 1 is the General echo; an unreadable index is left to the sender rule
 
-### test_sendengine.lua (39)
+### test_sendengine.lua (43)
 
 - sendengine: a send button is a named secure button registered for both edges
 - sendengine: Arm sends exactly the line; Disarm clears both attributes and sends nothing
@@ -944,6 +944,10 @@ Total.
 - send: [CA-M1-9] the echo prints before the self line; the self line returns only with no action left
 - send: [CA-M1-9] no file names C_Ping.SendMacroPing: a ping runs from the secure macro only
 - send: [CA-M1-9] the tooltip's reasons name a callout with no action and a missing ping or marker command
+- send: [CA-M1-10] no target: a ping and a mark each say so once, named, in and out of combat
+- send: [CA-M1-10] a target that cannot be marked, and a raid member without rights, are named
+- send: [CA-M1-10] pings off and a running cooldown print; the press's own ping never reads as cooldown
+- send: [CA-M1-10] a secret target prints nothing, and PreClick writes no attribute
 
 ### test_dial_secure.lua (20)
 
@@ -2154,7 +2158,7 @@ Total.
 | test_page_dials.lua | 28 |
 | test_check.lua | 6 |
 | test_send_guard.lua | 11 |
-| test_sendengine.lua | 39 |
+| test_sendengine.lua | 43 |
 | test_dial_secure.lua | 20 |
 | test_preview.lua | 36 |
 | test_edit_preview.lua | 17 |
@@ -2204,4 +2208,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1842** |
+| **Total** | **1846** |

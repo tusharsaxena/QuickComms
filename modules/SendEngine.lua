@@ -47,7 +47,9 @@ local _, NS = ...
 -- RESTRICTION_CHANGED edge into combat (still writable at PLAYER_REGEN_DISABLED) re-arms every such
 -- button once (RefreshRebakes), so a press in combat sends the position at the pull. PreClick is the
 -- client's place to adjust a secure action button's attributes before it acts; the line is written
--- by addon code exactly as Arm writes it at a rebuild, only later.
+-- by addon code exactly as Arm writes it at a rebuild, only later. The same hook, in and out of combat,
+-- reads the press-time notes (SE.PressNotes: no target, no marking rights, pings off or cooling down)
+-- before the macro runs; it only reads, and press() prints them once.
 
 NS.SendEngine = NS.SendEngine or {}
 local SE = NS.SendEngine
@@ -440,7 +442,8 @@ end
 -- however many actions it has (D7). Each chat action awaits its echo; a press with no chat action
 -- has nothing to echo, so it reports "sent" at once (D16: the flash is not a confirmation).
 local function press(b)
-    local meta = b.qcMeta
+    local meta, notes = b.qcMeta, b.qcPressNotes
+    b.qcPressNotes = nil
     if not meta or NS.IsStoodDown() then return end
     NS.Debug(TAG_S, "press %s on %s -> %s%s", tostring(meta.calloutId), tostring(meta.surfaceId),
         tostring(meta.chatType or "none"), b.qcArmed and "" or " (disarmed)")
@@ -460,6 +463,8 @@ local function press(b)
         if not hasActions(meta) then return end
     end
     if not (b.qcArmed and hasActions(meta)) then return end
+    -- Why a ping or a mark cannot land (D15): read in PreClick, before the macro ran, printed once.
+    for _, note in ipairs(notes or {}) do NS.Print(note) end
     -- A padlocked button stays armed (spec §8.4), but the game is expected to refuse it: no echo is
     -- awaited and no guard stamped, so a refusal is never blamed on the spam guard.
     local lockText = meta.lockText and meta.lockText()
@@ -500,11 +505,49 @@ function SE.OnClick(b, mouseButton, down)
     if t0 then Perf.Note("sendClick", debugprofilestop() - t0) end
 end
 
---- The PreClick hook every send button carries: a re-baking button's line, re-armed with where you
---- are at the press, on the edge the secure template acts on. In combat it returns at once.
+local PING_NOTE = { off = L["%s: pings are turned off."], cooldown = L["%s: your ping is on cooldown."] }
+
+local function markerNotes(out, name, C)
+    local target = C.TargetExists()
+    if target == false then
+        out[#out + 1] = L["%s: no target to mark."]:format(name)
+    elseif target and C.CanMark("target") == false then
+        out[#out + 1] = L["%s: that target cannot be marked."]:format(name)
+    end
+    if C.MarkerRights() == "noRights" then
+        out[#out + 1] = L["%s: you need leader or assist to mark in a raid."]:format(name)
+    end
+end
+
+local function pingNotes(out, name, C)
+    if C.TargetExists() == false then out[#out + 1] = L["%s: no target to ping."]:format(name) end
+    local note = PING_NOTE[C.PingState()]
+    if note then out[#out + 1] = note:format(name) end
+end
+
+--- Why a press's baked pings and marks cannot land (D15): no target, a target that cannot be marked,
+--- no marking rights in a raid, pings off or cooling down. Plain Compat reads only, safe in combat;
+--- an unknown (secret) answer gives no note. Reads, never writes an attribute.
+--- @param meta table the button's meta (actions, name)
+--- @return table|nil notes, each text named with meta.name; nil when there is nothing to say
+function SE.PressNotes(meta)
+    if not (meta and hasActions(meta)) then return nil end
+    local C, name, out = NS.Compat, tostring(meta.name), {}
+    for _, a in ipairs(meta.actions) do
+        if a.kind == "ping" then pingNotes(out, name, C)
+        elseif a.kind == "marker" then markerNotes(out, name, C) end
+    end
+    return out[1] and out or nil
+end
+
+--- The PreClick hook every send button carries, on the edge the secure template acts on. In and out
+--- of combat it reads the press-time notes (before the macro runs, so a press's own ping never reads
+--- as a cooldown); out of combat only, a re-baking button's line is re-armed with where you are.
 function SE.PreClick(b, mouseButton, down)
-    if inCombat() or not (b.qcMeta and b.qcMeta.rebake) then return end
-    if actingPress(b, mouseButton, down) then rebake(b) end
+    if not (b.qcMeta and actingPress(b, mouseButton, down)) then return end
+    b.qcPressNotes = b.qcArmed and SE.PressNotes(b.qcMeta) or nil
+    if inCombat() or not b.qcMeta.rebake then return end
+    rebake(b)
 end
 
 function SE.GuardState()

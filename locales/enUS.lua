@@ -390,6 +390,13 @@ L["A deferred update failed (%s): %s"] = "A deferred update failed (%s): %s"
 L["%s may have been dropped by the game (sent too soon after another message)."] =
     "%s may have been dropped by the game (sent too soon after another message)."
 L["%s may not have been sent. %s"] = "%s may not have been sent. %s"
+-- Press-time reasons: why a ping or a mark cannot land, read in PreClick before the macro runs
+L["%s: no target to ping."] = "%s: no target to ping."
+L["%s: no target to mark."] = "%s: no target to mark."
+L["%s: that target cannot be marked."] = "%s: that target cannot be marked."
+L["%s: you need leader or assist to mark in a raid."] = "%s: you need leader or assist to mark in a raid."
+L["%s: pings are turned off."] = "%s: pings are turned off."
+L["%s: your ping is on cooldown."] = "%s: your ping is on cooldown."
 
 -- Test mode (modules/Preview.lua)
 L["Test mode is not available in combat."] = "Test mode is not available in combat."

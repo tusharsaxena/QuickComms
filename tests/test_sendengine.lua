@@ -572,6 +572,7 @@ test("send: [CA-M1-9] the echo prints before the self line; the self line return
     assertEqual(#m.prints, 1)
     assertTrue(m.prints[1]:find("would send", 1, true) ~= nil, m.prints[1])
     -- a solo Line beside a ping: the self line prints, and the ping still goes
+    m.__unitExists.target = true   -- no press-time note (CA-M1-10) beside the self line
     local out = results(NS)
     local a = NS.SendEngine.NewButton(m.UIParent)
     NS.SendEngine.Arm(a, "/ping [@target,exists] 1", { calloutId = "c6", surfaceId = "p1", name = "Both",
@@ -596,4 +597,109 @@ test("send: [CA-M1-9] the tooltip's reasons name a callout with no action and a 
     assertEqual(R.noAction, NS.L["This callout has no action."])
     assertEqual(R.noPing, NS.L["Pings are not on this client."])
     assertEqual(R.noMarker, NS.L["Raid markers are not on this client."])
+end)
+
+-- ── press-time reasons (CA-M1-10, combined actions §4 step 5, D15) ─────────────────────────────
+
+local MARK_META = { calloutId = "c7", surfaceId = "p1", name = "Skull", chatTypes = {},
+    actions = { { kind = "marker", line = "/tm [@target,exists] !8" } } }
+
+local function armedAs(NS, m, meta)
+    local b = NS.SendEngine.NewButton(m.UIParent)
+    NS.SendEngine.Arm(b, meta.actions[1].line, meta)
+    return b
+end
+
+local function printed(m, text)
+    local n = 0
+    for _, p in ipairs(m.prints) do
+        if p:find(text, 1, true) then n = n + 1 end
+    end
+    return n
+end
+
+test("send: [CA-M1-10] no target: a ping and a mark each say so once, named, in and out of combat", function()
+    local NS, m = T.enableAddon()
+    local L = NS.L
+    local p, k = armedAs(NS, m, PING_META), armedAs(NS, m, MARK_META)
+    m.prints = {}
+    m.__click(p)
+    m.__click(k)
+    -- red under: no press-time reasons (the press acts and says nothing)
+    assertEqual(printed(m, L["%s: no target to ping."]:format("Ping")), 1)
+    assertEqual(printed(m, L["%s: no target to mark."]:format("Skull")), 1)
+    assertEqual(printed(m, L["%s: that target cannot be marked."]:format("Skull")), 0, "no target: no unit to test")
+    combat(m, true)
+    m.prints = {}
+    m.__click(p)
+    -- red under: PreClick returning at once in combat before it reads the notes
+    assertEqual(printed(m, L["%s: no target to ping."]:format("Ping")), 1)
+    m.__click(p)
+    assertEqual(printed(m, L["%s: no target to ping."]:format("Ping")), 2, "once per press, cleared after")
+end)
+
+test("send: [CA-M1-10] a target that cannot be marked, and a raid member without rights, are named", function()
+    local NS, m = T.enableAddon()
+    local L = NS.L
+    m.__unitExists.target = true
+    local k = armedAs(NS, m, MARK_META)
+    m.prints = {}
+    m.__click(k)
+    assertEqual(#m.prints, 0, "a target that can be marked, solo: nothing to say")
+    m.raidTargetable = false
+    m.__click(k)
+    assertEqual(printed(m, L["%s: that target cannot be marked."]:format("Skull")), 1)
+    m.raidTargetable = true
+    m.__context.inGroup, m.__context.inRaid = true, true
+    m.prints = {}
+    m.__click(k)
+    assertEqual(printed(m, L["%s: you need leader or assist to mark in a raid."]:format("Skull")), 1)
+    m.isAssist = true
+    m.prints = {}
+    m.__click(k)
+    assertEqual(#m.prints, 0, "an assistant may mark")
+end)
+
+test("send: [CA-M1-10] pings off and a running cooldown print; the press's own ping never reads as cooldown", function()
+    local NS, m = T.enableAddon()
+    local L = NS.L
+    m.__unitExists.target = true
+    local p = armedAs(NS, m, PING_META)
+    m.prints = {}
+    m.__click(p)
+    assertEqual(#m.prints, 0, "a target and pings on: nothing to say")
+    m.pingEnabled = false
+    m.__click(p)
+    assertEqual(printed(m, L["%s: pings are turned off."]:format("Ping")), 1)
+    m.pingEnabled = true
+    m.__now = 100
+    m.pingCooldownEndMs = 101000
+    m.prints = {}
+    m.__click(p)
+    assertEqual(printed(m, L["%s: your ping is on cooldown."]:format("Ping")), 1)
+    -- the macro's own ping starts the cooldown: read in PreClick, before the macro, it is not seen
+    m.pingCooldownEndMs = 0
+    setmetatable(m.sentMacros, { __newindex = function(t, i, v) rawset(t, i, v) m.pingCooldownEndMs = 1e12 end })
+    m.prints = {}
+    m.__click(p)
+    -- red under: the notes read in the OnClick hook, after the secure macro ran
+    assertEqual(#m.prints, 0)
+end)
+
+test("send: [CA-M1-10] a secret target prints nothing, and PreClick writes no attribute", function()
+    local NS, m = T.enableAddon()
+    m.issecretvalue = T.isSecret
+    m.__unitExists.target = T.secret(false)
+    local p, k = armedAs(NS, m, PING_META), armedAs(NS, m, MARK_META)
+    local writes = 0
+    for _, b in ipairs({ p, k }) do
+        local set = b.SetAttribute
+        b.SetAttribute = function(...) writes = writes + 1 return set(...) end
+    end
+    m.prints = {}
+    m.__click(p)
+    m.__click(k)
+    assertEqual(#m.prints, 0, "an unknown answer is no reason")
+    assertEqual(writes, 0)
+    assertEqual(#m.blocked, 0)
 end)
