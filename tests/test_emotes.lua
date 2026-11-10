@@ -178,6 +178,11 @@ test("emotes: [QFE-E2] the library stores the token, copies keep it, and the sea
     local ok1, e1, w1 = NS.SchemaRuntime.Set("callout.emote", "/wave", cid)
     assertTrue(ok1, tostring(e1) .. tostring(w1))
     assertEqual(NS.db.profile.callouts[cid].emote, "WAVE", "a command typed reads through the map")
+    -- Nothing is none, but here the emote is the callout's only action (CA-M1-3): refused.
+    assertFalse((NS.SchemaRuntime.Set("callout.emote", "", cid)))
+    assertEqual(NS.db.profile.callouts[cid].emote, "WAVE", "its last action stays")
+    NS.db.profile.callouts[cid].channel, NS.db.profile.callouts[cid].text = "say", "hi"
+    NS.db.profile.callouts[cid].emote = false
     local ok2, e2, w2 = NS.SchemaRuntime.Set("callout.emote", "", cid)
     assertTrue(ok2, tostring(e2) .. tostring(w2))
     assertEqual(NS.db.profile.callouts[cid].emote, false, "nothing is none")

@@ -1055,3 +1055,132 @@ test("library: [arena] ValidWhen takes arena ids and all on the arena row", func
     local _, _, why = NS.SchemaRuntime.Set("group.when", { arena = { nope = true } }, NS.Library.CreateGroup({ name = "Mine" }))
     assertTrue(tostring(why):find("an instance id", 1, true) ~= nil, tostring(why))
 end)
+
+-- ── actions: pings, markers and the at-least-one rule (CA-M1-3, spec §2) ──────────────────────
+
+test("library: [CA-M1-3] ValidPing takes the four types and none", function()
+    local _, Lib = boot()
+    for _, v in ipairs({ "attack", "warning", "onmyway", "assist", false }) do
+        assertTrue(Lib.ValidPing(v), tostring(v))
+    end
+    assertTrue(Lib.ValidPing(nil))
+    for _, v in ipairs({ "Attack", "threat", "", 1, true }) do assertFalse(Lib.ValidPing(v), tostring(v)) end
+end)
+
+test("library: [CA-M1-3] ValidMarker takes a whole 1 to 8 and none", function()
+    local _, Lib = boot()
+    for n = 1, 8 do assertTrue(Lib.ValidMarker(n), tostring(n)) end
+    assertTrue(Lib.ValidMarker(false))
+    assertTrue(Lib.ValidMarker(nil))
+    for _, v in ipairs({ 0, 9, 1.5, "8", true, 0 / 0 }) do assertFalse(Lib.ValidMarker(v), tostring(v)) end
+end)
+
+test("library: [CA-M1-3] a bad ping or marker is refused on create", function()
+    local _, Lib = boot()
+    local id, why = Lib.CreateCallout({ name = "P", text = "", channel = "gameEmote", ping = "threat" })
+    assertNil(id) assertEqual(why, "badPing")
+    id, why = Lib.CreateCallout({ name = "M", text = "", channel = "gameEmote", marker = 9 })
+    assertNil(id) assertEqual(why, "badMarker")
+end)
+
+test("library: [CA-M1-3] HasAction counts a line, an emote, a ping and a marker", function()
+    local _, Lib = boot()
+    local function n(f) return Lib.HasAction(f) end
+    assertFalse((n({ channel = "party", text = "" })), "an empty line is no action")
+    assertFalse((n({ channel = "party", text = "   " })), "nor is a blank one")
+    assertFalse((n({ channel = "gameEmote", text = "words" })), "the no-line channel carries no line")
+    local has, k = n({ channel = "party", text = "Kick" })
+    assertTrue(has) assertEqual(k, 1)
+    has, k = n({ channel = "gameEmote", text = "", emote = "POINT" })
+    assertTrue(has) assertEqual(k, 1, "a legacy game emote callout holds one action")
+    has, k = n({ channel = "gameEmote", text = "", ping = "attack" })
+    assertTrue(has) assertEqual(k, 1)
+    has, k = n({ channel = "gameEmote", text = "", marker = 8 })
+    assertTrue(has) assertEqual(k, 1)
+    has, k = n({ channel = "party", text = "Kick", emote = "POINT", ping = "attack", marker = 8 })
+    assertTrue(has) assertEqual(k, 4)
+    assertFalse((n({ channel = "gameEmote", text = "", emote = false, ping = false, marker = false })))
+end)
+
+test("library: [CA-M1-3] CreateCallout refuses a callout with no action", function()
+    local _, Lib = boot()
+    local id, why = Lib.CreateCallout({ name = "Empty", text = "", channel = "party" })
+    -- red under: no Lib.HasAction check in CreateCallout (validCallout takes any string text)
+    assertNil(id) assertEqual(why, "noAction")
+    id, why = Lib.CreateCallout({ name = "Nothing", text = "", channel = "gameEmote" })
+    assertNil(id) assertEqual(why, "noAction")
+    assertTrue(Lib.CreateCallout({ name = "Ping", text = "", channel = "gameEmote", ping = "attack" }) ~= nil)
+    assertTrue(Lib.CreateCallout({ name = "Mark", text = "", channel = "gameEmote", marker = 8 }) ~= nil)
+end)
+
+test("library: [CA-M1-3] M1 holds one action per callout: two are refused with oneAction", function()
+    local _, Lib = boot()
+    -- CA-M2-1 inverts this case: combining (#16) lifts the one-action rule.
+    local id, why = Lib.CreateCallout({ name = "Two", text = "Kick", channel = "party", emote = "POINT" })
+    assertNil(id) assertEqual(why, "oneAction")
+    id, why = Lib.CreateCallout({ name = "Two", text = "", channel = "gameEmote", ping = "attack", marker = 8 })
+    assertNil(id) assertEqual(why, "oneAction")
+end)
+
+test("library: [CA-M1-3] a legacy callout with no action stays editable through the seam", function()
+    local NS, Lib, p = bare()
+    p.callouts.c900 = { name = "Old", text = "", channel = "party" }
+    NS.addon:OnSlashCommand("set callout.name c900 Renamed")
+    -- red under: the at-least-one rule put into validCallout (every later write would fail)
+    assertEqual(p.callouts.c900.name, "Renamed")
+    assertTrue((NS.SchemaRuntime.Set("callout.channel", "say", "c900")), "a write that leaves it as it was")
+    assertTrue(Lib.HasAction(p.callouts.c900) == false)
+end)
+
+test("library: [CA-M1-3] a seam write that takes away a callout's last action is refused", function()
+    local NS, Lib, p = bare()
+    local line = Lib.CreateCallout({ name = "Line", text = "Kick", channel = "party" })
+    local ok, _, why = NS.SchemaRuntime.Set("callout.text", "", line)
+    assertFalse(ok)
+    assertEqual(why, "Set at least one action: a line, an emote, a ping or a marker.")
+    assertEqual(p.callouts[line].text, "Kick", "nothing written")
+    assertFalse((NS.SchemaRuntime.Set("callout.channel", "gameEmote", line)), "no line channel, no emote")
+    assertTrue((NS.SchemaRuntime.Set("callout.text", "Kick now", line)), "a line that stays a line")
+    local emote = Lib.CreateCallout({ name = "Point", text = "", channel = "gameEmote", emote = "POINT" })
+    assertFalse((NS.SchemaRuntime.Set("callout.emote", "", emote)), "the emote is its only action")
+    assertEqual(p.callouts[emote].emote, "POINT")
+end)
+
+test("library: [CA-M1-3] a seam write that adds a second action is refused in M1", function()
+    local NS, Lib, p = bare()
+    -- CA-M2-1 inverts this case.
+    local line = Lib.CreateCallout({ name = "Line", text = "Kick", channel = "party" })
+    local ok, _, why = NS.SchemaRuntime.Set("callout.emote", "POINT", line)
+    assertFalse(ok)
+    assertEqual(why, "A callout holds one action for now: a line, an emote, a ping or a marker.")
+    assertEqual(p.callouts[line].emote, nil)
+end)
+
+test("library: [CA-M1-3] a legacy game emote callout still validates and edits", function()
+    local NS, Lib, p = bare()
+    p.callouts.c901 = { name = "Wave", text = "", channel = "gameEmote", emote = "WAVE" }
+    assertTrue((NS.SchemaRuntime.Set("callout.emote", "POINT", "c901")))
+    assertEqual(p.callouts.c901.emote, "POINT")
+    assertTrue(Lib.CreateCallout({ name = "Wave", text = "", channel = "gameEmote", emote = "WAVE" }) ~= nil)
+end)
+
+test("library: [CA-M1-3] WriteActions judges a several-field edit as a whole", function()
+    local NS, Lib, p = bare()
+    local S = NS.SchemaRuntime
+    local cid = Lib.CreateCallout({ name = "Line", text = "Kick", channel = "party" })
+    -- a Line swapped for an Emote: each write on its own would break the rule, the whole does not
+    local final = { name = "Line", text = "", channel = "gameEmote", emote = "POINT" }
+    assertTrue(Lib.WriteActions(cid, final, function()
+        assertTrue((S.Set("callout.emote", "POINT", cid)))
+        assertTrue((S.Set("callout.channel", "gameEmote", cid)))
+        assertTrue((S.Set("callout.text", "", cid)))
+        return true
+    end))
+    assertEqual(p.callouts[cid].emote, "POINT")
+    local ran = false
+    local ok, why = Lib.WriteActions(cid, { name = "Line", text = "", channel = "gameEmote" },
+        function() ran = true return true end)
+    assertFalse(ok) assertEqual(why, "noAction")
+    assertFalse(ran, "a refused edit runs nothing")
+    assertFalse((S.Set("callout.emote", "", cid)), "the field check is back after the edit")
+end)

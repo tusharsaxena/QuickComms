@@ -836,6 +836,8 @@ test("popup: [icons] Add saves a glyph with its color; a malformed color stays o
     local w = P.during(function() Pop.Open(gid) end)
     assertNil(Pop.Draft().iconColor)
     P.find(w, "EditBox", "Name"):__fire("OnEnterPressed", "Mark")
+    -- a callout sets at least one action (CA-M1-3): its Line
+    P.find(w, "EditBox", "Text"):__fire("OnEnterPressed", "Marked")
     Pop.Draft().icon, Pop.Draft().iconColor = NS.Icon("star"), "zz"
     local before = count(p.callouts)
     local ok, why = Pop.Save()

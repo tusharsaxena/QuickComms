@@ -40,6 +40,8 @@ local WHY = {
     hasChildren = L["This group holds groups of its own, so it cannot go inside another: groups go one level deep."],
     badChoice = L["That is not one of the choices."],
     badColor  = L["A color is red, green and blue, and optionally alpha, each from 0 to 1."],
+    noAction  = Lib.ACTION_WHY.noAction,
+    oneAction = Lib.ACTION_WHY.oneAction,
 }
 
 local function check(fn)
@@ -76,6 +78,18 @@ local function iconValue(v)
 end
 
 local function isText(v) return type(v) == "string", "badText" end
+
+-- A row that is part of a callout's actions (spec §2): its own check, then Library.KeepsAction, so a
+-- write never takes away a callout's last action (nor, in M1, adds a second). `value` reads the
+-- typed value as the row's normalize would.
+local function keepsAction(field, fn, value)
+    return function(v, id)
+        local ok, code = fn(v, id)
+        if not ok then return false, code end
+        if value then v = value(v) end
+        return Lib.KeepsAction(id, field, v)
+    end
+end
 
 -- A game emote typed on the command line (QFE-E2): a token in any case ("point" is POINT), a command
 -- ("/point", read through the client's map), or nothing for none (false, a value the seam stores).
@@ -173,11 +187,11 @@ local ROWS = {
     { path = "callout.text", instance = "callout", type = "string", dialogControl = "EditBox",
       maxLetters = 255, page = "callouts", group = GENERAL, label = L["Text"],
       desc = L["What is sent. Tokens in braces are filled in: {target}, {focus}, {skull}, {me}, {spec}, {key}, {dungeon}, {coordinates}, {spell:ID}; in a raid, {group1} to {group8}. Press Enter to apply."],
-      validate = check(isText) },
+      validate = check(keepsAction("text", isText)) },
     { path = "callout.channel", instance = "callout", type = "string", default = T.callout.channel,
       values = CHANNELS, page = "callouts", group = GENERAL, label = L["Channel"],
       desc = L["Where it is sent. Smart group picks instance, raid or party chat for the group you are in when the pad is built."],
-      validate = check(function(v) return NS.Channels.IsKind(v), "badChannel" end) },
+      validate = check(keepsAction("channel", function(v) return NS.Channels.IsKind(v), "badChannel" end)) },
     -- A game emote's token (QFE-E2, channel Game emote): the client's command for it is the line. Its
     -- default is false, none. The popup draws it as the emote picker, never a row.
     { path = "callout.emote", instance = "callout", type = "string", default = false,
@@ -185,7 +199,8 @@ local ROWS = {
       desc = L["The game emote a Game emote callout performs, by its token (POINT) or command (/point). It acts on your target, as the game's own emote does."],
       -- The seam checks the value as given, so the check reads it through emoteValue too.
       normalize = emoteValue,
-      validate = check(function(v) v = emoteValue(v) return v ~= nil and Lib.ValidEmote(v), "badEmote" end) },
+      validate = check(keepsAction("emote", function(v) v = emoteValue(v) return v ~= nil and Lib.ValidEmote(v), "badEmote" end,
+          emoteValue)) },
     -- Icon's default is false, "no icon", so `/qc reset callout.icon` clears it; the page's Defaults
     -- keeps it (settings/Schema.lua resetExempt), as its tooltip says.
     { path = "callout.icon", instance = "callout", type = "string", dialogControl = "EditBox", default = false,

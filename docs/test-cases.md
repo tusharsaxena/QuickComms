@@ -500,7 +500,7 @@ Total.
 - client data: [QFE-F3] the battleground row suggests the seeded sets' maps
 - client data: [QFE-F3] the token help leaves {dungeon} and {key} out on Forever
 
-### test_library.lua (67)
+### test_library.lua (78)
 
 - library: Prepare seeds every shipped set as a group, on one pad and one dial, once
 - library: a seeded group is an ordinary group: its fields, When, callouts and origin
@@ -569,6 +569,17 @@ Total.
 - library: [inherit] a new or seeded group inherits its parent's When; Duplicate and an untick keep false
 - library: [all] ValidWhen takes all on the instance and battleground rows, and on no other
 - library: [arena] ValidWhen takes arena ids and all on the arena row
+- library: [CA-M1-3] ValidPing takes the four types and none
+- library: [CA-M1-3] ValidMarker takes a whole 1 to 8 and none
+- library: [CA-M1-3] a bad ping or marker is refused on create
+- library: [CA-M1-3] HasAction counts a line, an emote, a ping and a marker
+- library: [CA-M1-3] CreateCallout refuses a callout with no action
+- library: [CA-M1-3] M1 holds one action per callout: two are refused with oneAction
+- library: [CA-M1-3] a legacy callout with no action stays editable through the seam
+- library: [CA-M1-3] a seam write that takes away a callout's last action is refused
+- library: [CA-M1-3] a seam write that adds a second action is refused in M1
+- library: [CA-M1-3] a legacy game emote callout still validates and edits
+- library: [CA-M1-3] WriteActions judges a several-field edit as a whole
 
 ### test_members.lua (28)
 
@@ -2101,7 +2112,7 @@ Total.
 | test_builtins.lua | 30 |
 | test_gameids.lua | 5 |
 | test_client_data.lua | 9 |
-| test_library.lua | 67 |
+| test_library.lua | 78 |
 | test_members.lua | 28 |
 | test_editors.lua | 19 |
 | test_callout_popup.lua | 38 |
@@ -2164,4 +2175,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1802** |
+| **Total** | **1813** |

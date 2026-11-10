@@ -617,7 +617,12 @@ function Pop.Save()
     local ok, reason
     if cid then
         local S, id, d, base = NS.SchemaRuntime, cid, draft, baseline
-        ok, reason = NS.Library.Batch(function()
+        -- The edit as a whole keeps the action rule (spec §2), so a Line swapped for an Emote is not
+        -- refused field by field on the way.
+        local final = {}
+        for k, v in pairs(p.callouts[id]) do final[k] = v end
+        for _, f in ipairs(DRAFT) do final[f] = d[f] end
+        ok, reason = NS.Library.WriteActions(id, final, function() return NS.Library.Batch(function()
             -- DRAFT's order: the icon lands before its color, which the color row checks against.
             for _, f in ipairs(DRAFT) do
                 if d[f] ~= base[f] then
@@ -626,13 +631,13 @@ function Pop.Save()
                 end
             end
             return true
-        end)
+        end) end)
     else
         ok, reason = NS.Library.CreateCalloutIn(gid, draft)
         ok = ok ~= nil
     end
     if not ok then
-        showError(tostring(reason or ""))
+        showError(NS.Library.ACTION_WHY[reason] or tostring(reason or ""))
         return false, reason
     end
     close()

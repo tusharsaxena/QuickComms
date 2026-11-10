@@ -439,12 +439,114 @@ function Lib.ValidEmote(v)
     return type(v) == "string" and v:find("^[%u%d_]+$") ~= nil
 end
 
+--- The ping types a callout may carry (spec §5): /ping's keywords 1 to 4.
+Lib.PING_TYPES = { "attack", "warning", "onmyway", "assist" }
+local PING_TYPE = {}
+for _, v in ipairs(Lib.PING_TYPES) do PING_TYPE[v] = true end
+
+--- Whether `v` is a ping as stored: none (nil or false), or one of Lib.PING_TYPES.
+function Lib.ValidPing(v)
+    if v == nil or v == false then return true end
+    return PING_TYPE[v] == true
+end
+
+--- Whether `v` is a raid target marker as stored: none (nil or false), or a whole number from 1 (star)
+--- to 8 (skull).
+function Lib.ValidMarker(v)
+    if v == nil or v == false then return true end
+    return type(v) == "number" and v >= 1 and v <= 8 and v == math.floor(v)
+end
+
+-- Whether `f` carries a Line: a channel other than the no-line gameEmote, and text that is not empty
+-- after Bake.CleanText (a leading "/" is still a line: its bake refuses it and says why).
+local function hasLine(f)
+    if f.channel == "gameEmote" or type(f.text) ~= "string" then return false end
+    local clean, why = NS.Bake.CleanText(f.text)
+    return clean ~= nil or why == "startsWithSlash"
+end
+
+--- Whether callout fields `f` carry at least one action (spec §2: a Line, an Emote, a Ping, a
+--- Marker), and how many. Not part of validCallout: a legacy callout with none stays editable.
+--- @return boolean has, number count
+function Lib.HasAction(f)
+    if type(f) ~= "table" then return false, 0 end
+    local n = 0
+    if hasLine(f) then n = n + 1 end
+    if f.emote then n = n + 1 end
+    if f.ping then n = n + 1 end
+    if f.marker then n = n + 1 end
+    return n > 0, n
+end
+
+--- The lines a refused action rule reads as (a /qc set error, the popup's check).
+Lib.ACTION_WHY = {
+    noAction = L["Set at least one action: a line, an emote, a ping or a marker."],
+    -- M1 only: CA-M2-1 removes this rule when callouts combine actions (#16).
+    oneAction = L["A callout holds one action for now: a line, an emote, a ping or a marker."],
+}
+
+-- The action rule for a whole callout: at least one, and (M1 only) at most one.
+local function actionRule(f)
+    local has, n = Lib.HasAction(f)
+    if not has then return false, "noAction" end
+    -- M1 only: CA-M2-1 lifts this (and inverts its test) when callouts combine actions (#16).
+    if n > 1 then return false, "oneAction" end
+    return true
+end
+
+-- Whether callout `m` may become `after` under the action rule (Lib.KeepsAction).
+local function keepsActions(m, after)
+    local _, before = Lib.HasAction(m)
+    local has, n = Lib.HasAction(after)
+    if not has and before > 0 then return false, "noAction" end
+    -- M1 only: CA-M2-1 lifts this when callouts combine actions (#16).
+    if n > 1 and n > before then return false, "oneAction" end
+    return true
+end
+
+-- True while Lib.WriteActions runs: the whole edit was checked, so its field writes are not.
+local wholeEdit = false
+
+--- Whether writing `value` into user callout `id`'s `field` keeps the action rule: a write that would
+--- take away the last action of a callout that had one is refused ("noAction"), and (M1 only) so is a
+--- write that adds a second action ("oneAction"). A legacy callout with no action, written as it is,
+--- passes, and so does a write with no such callout (the seam's own refusal names that).
+--- @return boolean ok, string|nil reason
+function Lib.KeepsAction(id, field, value)
+    local m = id ~= nil and P().callouts[id]
+    if wholeEdit or type(m) ~= "table" then return true end
+    local after = copyTable(m)
+    after[field] = value
+    return keepsActions(m, after)
+end
+
+--- Run `fn`, an edit that writes several of user callout `id`'s fields one by one through the seam,
+--- checked as one: `final` is the callout as the edit leaves it, judged by the action rule against
+--- the stored callout, so a field write on the way (a Line swapped for an Emote) is not refused on
+--- its own. A refused edit runs nothing.
+--- @return any fn's returns, or false and the reason ("noAction" | "oneAction")
+function Lib.WriteActions(id, final, fn)
+    local m = P().callouts[id]
+    if type(m) == "table" then
+        local ok, why = keepsActions(m, final)
+        if not ok then return false, why end
+    end
+    if wholeEdit then return fn() end
+    wholeEdit = true
+    local r = pack(pcall(fn))
+    wholeEdit = false
+    if not r[1] then error(r[2], 0) end
+    return unpack(r, 2, r.n)
+end
+
 local function validCallout(f)
     if type(f) ~= "table" then return false, "badCallout" end
     if not Lib.ValidName(f.name) then return false, "badName" end
     if type(f.text) ~= "string" then return false, "badText" end
     if not NS.Channels.IsKind(f.channel) then return false, "badChannel" end
     if not Lib.ValidEmote(f.emote) then return false, "badEmote" end
+    if not Lib.ValidPing(f.ping) then return false, "badPing" end
+    if not Lib.ValidMarker(f.marker) then return false, "badMarker" end
     if not Lib.ValidIcon(f.icon) then return false, "badIcon" end
     if not Lib.ValidIconColor(f.iconColor) then return false, "badIconColor" end
     return true
@@ -473,6 +575,8 @@ end
 --- @return string|nil id, string|nil reason
 function Lib.CreateCallout(fields)
     local ok, why = validCallout(fields)
+    if not ok then return nil, why end
+    ok, why = actionRule(fields)
     if not ok then return nil, why end
     local id = Lib.NewId("c")
     P().callouts[id] = { name = fields.name, text = fields.text, channel = fields.channel, icon = fields.icon,
@@ -641,6 +745,8 @@ function Lib.CreateCalloutIn(groupId, fields, index)
     local g = P().groups[groupId]
     if not g then return nil, "noGroup" end
     local ok, why = validCallout(fields)
+    if not ok then return nil, why end
+    ok, why = actionRule(fields)
     if not ok then return nil, why end
     return Lib.Batch(function() return insertAt(g, groupId, Lib.CreateCallout(fields), index) end)
 end
