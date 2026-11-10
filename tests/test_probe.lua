@@ -323,6 +323,9 @@ test("probe ids: missing or failing client APIs leave empty lists, and the recor
     assertNil(next(rec.maps)); assertEqual(#rec.lfg, 0); assertEqual(#rec.battlegrounds, 0)
     local text = table.concat(m.prints, "\n")
     assertTrue(text:find("map names read: 0 of ids 0 to 4000; dungeon finder: 0 entries; battlegrounds: 0", 1, true) ~= nil, text)
+    -- red under: an empty finder list passing the name check as "none" (WoW Forever's UI never calls these APIs)
+    assertTrue(text:find("dungeon finder names no shipped id carries: not checked, the dungeon finder listed no entries", 1, true)
+        ~= nil, text)
     -- an API that is there but throws, or answers the wrong shape, is the same as absent
     env.GetRealZoneText = function(id) if id == 5 then return "Five" end error("no map") end
     env.GetLFDChoiceOrder = function() return "not a list" end

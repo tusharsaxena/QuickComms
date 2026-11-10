@@ -2424,11 +2424,15 @@ The ids sweep (QuickComms#21, the forever-ids design; **code:** `settings/SlashV
 - **FOREVER-25. `/qc probe ids` sweeps the client's names with no travel.** Out of combat, anywhere on
   Forever, type `/qc probe ids` → no Lua error, and four chat lines: *Ids probe N saved for forever
   (...)*; *map names read: M of ids 0 to 4000; dungeon finder: L entries; battlegrounds: B*, with M at
-  least 38 (the ids Forever ships), L the entries the dungeon finder lists (28 dungeons on build
-  1.60.1.70862, then its random entries) and B at least 3; *shipped ids the client does not name: none* (FOREVER-16); and *dungeon finder names no
-  shipped id carries:* followed by *none* or by names. A listed name may be the dungeon finder's own
-  spelling of a shipped place (Stormwind Stockades, Zul'Farak, Lower or Upper Blackrock Spire, Dire Maul -
-  East, West or North, Hall of Thanes); record any other, which is a dungeon the finder queues that the
+  least 38 (the ids Forever ships); *shipped ids the client does not name: none* (FOREVER-16); and
+  *dungeon finder names no shipped id carries:* followed by *none*, by names, or by *not checked, the
+  dungeon finder listed no entries*. Record L and B as the client gives them: Forever's own UI never calls
+  the dungeon finder or battleground list APIs, so L = 0 and B = 0, with the *not checked* line, is a
+  possible answer and not a failure. Where L is not 0, expect about 35 specific entries (LFGDungeons
+  TypeID 0 on build 1.60.1.70862: 31 dungeon entries, the Blackrock Spire halves and Dire Maul's three
+  wings apart, and 4 raids), then any random ones. A listed name may be the dungeon finder's own spelling
+  of a shipped place (Stormwind Stockades, Zul'Farak, Lower or Upper Blackrock Spire, Dire Maul - East,
+  West or North, Onyxia, Hall of Thanes); record any other, which is a dungeon the finder queues that the
   lists miss. In combat → one line, *The probe is not available in combat.*, and nothing is recorded.
   `/qc disable`, then `/qc probe ids` → the one disabled line, and nothing is recorded; `/qc enable`.
   `/qc probe ids2` → one line naming `/qc probe`, `/qc probe ids` and `/qc probe clear`. On Retail,

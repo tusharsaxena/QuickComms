@@ -358,7 +358,9 @@ end
 
 --- The dungeon finder's list as the client gives it: every id of GetLFDChoiceOrder (the specific
 --- dungeons, a negative id being no dungeon), then each random entry (GetNumRandomDungeons and
---- GetLFGRandomDungeonInfo, marked `random`), each `{ id, name, typeID, subtypeID, mapID }`.
+--- GetLFGRandomDungeonInfo, marked `random`), each `{ id, name, typeID, subtypeID, mapID }`. Only
+--- Mainline's LFDFrame.lua walks them so; WoW Forever (game type camelot) loads no file that calls
+--- these, its group finder being the Vanilla-style C_LFGList listing, so the list may be empty there.
 --- @return table[]
 function Compat.ProbeDungeonFinder()
     local out, seen = {}, {}
@@ -385,7 +387,8 @@ end
 local BATTLEGROUND_MAX = 100
 
 --- The battlegrounds the client lists: C_PvP.GetBattlegroundInfo over 1..GetNumBattlegroundTypes
---- (Mainline's PVPUI walks them so; both clients have no global GetBattlegroundInfo), each
+--- (Mainline's PVPUI walks them so, and WoW Forever loads neither it nor Cata's PVPFrame, so the
+--- list may be empty there; both clients have no global GetBattlegroundInfo), each
 --- `{ index, name, battlegroundID, mapID, isRandom }`, plain or nil.
 --- @return table[]
 function Compat.ProbeBattlegrounds()

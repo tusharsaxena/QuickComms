@@ -1464,6 +1464,7 @@ L["  map names read: %d of ids 0 to %d; dungeon finder: %d entries; battleground
     "  map names read: %d of ids 0 to %d; dungeon finder: %d entries; battlegrounds: %d"
 L["  shipped ids the client does not name: %s"] = "  shipped ids the client does not name: %s"
 L["  dungeon finder names no shipped id carries: %s"] = "  dungeon finder names no shipped id carries: %s"
+L["not checked, the dungeon finder listed no entries"] = "not checked, the dungeon finder listed no entries"
 L["dungeon %d"] = "dungeon %d"
 L["raid %d"] = "raid %d"
 L["battleground set %s (%s)"] = "battleground set %s (%s)"

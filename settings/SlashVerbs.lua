@@ -343,7 +343,9 @@ local function unnamedShipped(maps)
 end
 
 -- The dungeon finder's names (random entries left out) that no shipped id carries: neither a name
--- the client gives a shipped id, nor an entry whose lfgMapID is one.
+-- the client gives a shipped id, nor an entry whose lfgMapID is one. The summary reports an empty list
+-- as not checked, never as "none": WoW Forever's own UI never calls the dungeon finder APIs, so they
+-- may answer nothing there.
 local function uncarriedFinderNames(lfg, names)
     local G, shipped, out, seen = NS.GameIds, {}, {}, {}
     for _, list in ipairs({ G.DUNGEONS or {}, G.RAIDS or {} }) do
@@ -378,7 +380,9 @@ function V.ProbeIdsSummary(rec, n)
         L["  map names read: %d of ids 0 to %d; dungeon finder: %d entries; battlegrounds: %d"]:format(count,
             V.PROBE_MAP_MAX, #rec.lfg, #rec.battlegrounds),
         L["  shipped ids the client does not name: %s"]:format(listOrNone(missing)),
-        L["  dungeon finder names no shipped id carries: %s"]:format(listOrNone(uncarriedFinderNames(rec.lfg, names))),
+        L["  dungeon finder names no shipped id carries: %s"]:format(#rec.lfg == 0
+            and L["not checked, the dungeon finder listed no entries"]
+            or listOrNone(uncarriedFinderNames(rec.lfg, names))),
     }
 end
 
