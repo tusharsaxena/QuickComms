@@ -28,7 +28,8 @@
 --   5. `store.last`, the last role this resolved to, so a read at login before the client answers
 --      still has one.
 --
--- Every answer from rungs 1 to 4 is written to `store.last` with the spec id it was read under.
+-- Every answer from rungs 2 to 4 is written to `store.last` with the spec id it was read under. An
+-- override is never written there, so clearing it cannot bring the manual pick back as `"saved"`.
 -- The store is the host's per-character table: this module owns no SavedVariables.
 --
 -- -- THE RULES EVERY MEMBER OBEYS --------------------------------------------------------------
@@ -372,7 +373,8 @@ end
 --- group's name for `"talents"` ("Protection"), the spec's name for `"spec"`, else nil.
 ---
 --- `store` is the host's per-character table (nil is accepted: no override, no saved answer, no
---- write). Every answer but `"saved"` is written to `store.last` as `{ role = role, specID = id }`.
+--- write). Every answer from rungs 2 to 4 is written to `store.last` as `{ role = role, specID = id }`;
+--- an override and a `"saved"` answer write nothing.
 ---
 --- @param store table|nil
 --- @return string|nil role, string|nil source, string|nil detail
@@ -396,7 +398,7 @@ function lib.Resolve(store)
     end
   end
   if role then
-    remember(store, role, specID)
+    if source ~= "override" then remember(store, role, specID) end
     return role, source, detail
   end
   local last = store and type(store.last) == "table" and validRole(store.last.role)
