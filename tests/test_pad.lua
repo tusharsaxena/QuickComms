@@ -1017,6 +1017,8 @@ end)
 test("pad: [F-006] after a rebuild, every button outside the active set carries no type and is not armed", function()
     local inputs = MPLUS
     local NS, m = T.enableAddon()
+    -- the Emotes set (QFE-E3) is open-world too; without it the solo pad is Solo's seven alone
+    assertTrue(NS.Library.DeleteGroup(T.seeded(NS, "bi.emotes")))
     NS.Situation.ReadInputs = function() return inputs end
     NS.Situation.RefreshNow("test")
     local inst = NS.Pad.Instance("p1")

@@ -53,6 +53,8 @@ read_globals = {
   "GetCursorPosition",
   -- core/Compat.lua: the editors' display names (shown, never matched).
   "GetRealZoneText", "GetSpecializationInfoByID", "LOCALIZED_CLASS_NAMES_MALE",
+  -- settings/SlashVerbs.lua: the probe's timestamp (QFE-F5).
+  "GetServerTime",
   -- core/Compat.lua: a dial's key is WoW's own binding of its Open Comms Dial entry, read only
   -- (Compat.BindingKey). The General page's Keybindings tab is the library's, which does its own writes.
   "GetBindingKey",

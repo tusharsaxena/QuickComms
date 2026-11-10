@@ -24,10 +24,14 @@ C.TOKENS = { "{target}", "{focus}", "{skull}", "{cross}", "{square}", "{moon}", 
 local RAID_CAPABLE = { raid = true, raidWarning = true, smartGroup = true, smartLead = true }
 
 --- The tokens offered for a channel: C.TOKENS, plus {group1} to {group8} only when the channel can
---- resolve to Raid (spec §8.1).
+--- resolve to Raid (spec §8.1). A token this client does not offer (NS.GameIds.HIDDEN_TOKENS: {dungeon}
+--- and {key} on WoW Forever, which has no Mythic+, QFE-F3 and QFE-C7) is left out; typed, it still
+--- bakes as anywhere.
 function C.TokensFor(channel)
-    local out = {}
-    for i, token in ipairs(C.TOKENS) do out[i] = token end
+    local out, hiddenTokens = {}, NS.GameIds.HIDDEN_TOKENS or {}
+    for _, token in ipairs(C.TOKENS) do
+        if not hiddenTokens[token] then out[#out + 1] = token end
+    end
     if RAID_CAPABLE[channel] then
         for n = 1, 8 do out[#out + 1] = "{group" .. n .. "}" end
     end
@@ -84,13 +88,18 @@ function C.PreviewLines(callout)
         { soloFallback = NS.Setting("behavior.soloFallback"), ctx = NS.Surfaces.BakeContext(snap) })
     local R = NS.PadRender
     local out = {}
-    if line then
+    if line and info.concrete == "gameEmote" then
+        -- A game emote (QFE-E2): the client's command, on your target as the game does it.
+        out[1] = L["Emotes: %s"]:format(line)
+        if NS.Emotes.IsVoice(info.emote) then out[2] = L["A voice emote: it also plays its sound."] end
+    elseif line then
         out[1] = L["Sends: %s"]:format(line)
         out[2] = L["%d of 255 bytes"]:format(info.length)
     elseif reason == "solo" and info.selfPrint then
         out[1] = L["Solo: prints to you, sends nothing."]
     else
         out[1] = L["Sends nothing here: %s"]:format(R.REASON_TEXT[reason] or tostring(reason))
+        if reason == "unknownEmote" then out[#out + 1] = L["Emote token: %s"]:format(tostring(info.emote)) end
         if info.length then out[2] = L["%d of 255 bytes"]:format(info.length) end
     end
     if info.lock then out[#out + 1] = R.LOCK_TEXT[info.lock] or tostring(info.lock) end

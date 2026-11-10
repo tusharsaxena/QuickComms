@@ -1,4 +1,4 @@
-## Interface: 120105
+## Interface: 120105, 16001
 ## Title: Ka0s Quick Comms
 ## Notes: Context-aware quick callouts on a Comms Pad and a ping-wheel-style Comms Dial, sent through secure buttons so they work in M+ keys and boss pulls
 ## Author: add1kted2ka0s
@@ -90,15 +90,16 @@ core\LauncherSetup.lua
 # Defaults
 # LOAD-BEARING: publishes NS.C, which settings\Schema.lua and settings\Panel.lua take at load.
 defaults\Profile.lua
-# LOAD-BEARING: NS.BuiltIns and its helpers, used by the next six files
+# LOAD-BEARING: NS.BuiltIns and its helpers, used by the next seven files
 defaults\BuiltIns.lua
 # LOAD-BEARING (b): each BuiltIns_* file appends its sets to NS.BuiltIns.order, the order every new
 # pad and dial is seeded in (modules\Library.lua seededTops); tests\test_builtins.lua pins it. Keep
-# M+, raid, arena, world, then the battleground sets.
+# M+, raid, arena, world, emotes, then the battleground sets.
 defaults\BuiltIns_MythicPlus.lua
 defaults\BuiltIns_Raid.lua
 defaults\BuiltIns_Arena.lua
 defaults\BuiltIns_World.lua
+defaults\BuiltIns_Emotes.lua
 defaults\BuiltIns_Battlegrounds.lua
 # LOAD-BEARING (b): In Group last, after the generic battleground set, so a content set stays the
 # first active group on the pad and the dial (D9).
@@ -111,6 +112,7 @@ defaults\PadStyle.lua
 defaults\GameIds.lua
 # Conventional: data (the When editor's instance and arena lists), read at call time
 defaults\GameIds_Instances.lua
+defaults\GameIds_Clients.lua
 
 # Modules
 # Conventional: read by Situation at call time; appends to NS.FEATURE_EVENTS / STAND_DOWN / STAND_UP
@@ -121,7 +123,9 @@ modules\Situation.lua
 modules\Tokens.lua
 # Conventional: pure
 modules\Channels.lua
-# Conventional: pure; calls Tokens and Channels at call time
+# Conventional: pure apart from one read of the client's emote globals, through Compat, at the first call
+modules\Emotes.lua
+# Conventional: pure; calls Tokens, Channels and Emotes at call time
 modules\Bake.lua
 # Conventional: pure
 modules\Resolver.lua

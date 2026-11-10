@@ -11,13 +11,14 @@ local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.asse
 
 -- The game events the addon owns today, pinned as literals (sorted).
 local PINNED = {
-    "ADDON_RESTRICTION_STATE_CHANGED", "CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_RESET", "CHALLENGE_MODE_START",
-    "CHANNEL_UI_UPDATE", "CHAT_MSG_CHANNEL", "CHAT_MSG_CHANNEL_NOTICE",
+    "ACTIVE_COMBAT_CONFIG_CHANGED", "ACTIVE_TALENT_GROUP_CHANGED", "ADDON_RESTRICTION_STATE_CHANGED", "CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_RESET", "CHALLENGE_MODE_START",
+    "CHANNEL_UI_UPDATE", "CHAT_MSG_CHANNEL", "CHAT_MSG_CHANNEL_NOTICE", "CHAT_MSG_EMOTE",
     "CHAT_MSG_INSTANCE_CHAT", "CHAT_MSG_INSTANCE_CHAT_LEADER", "CHAT_MSG_PARTY", "CHAT_MSG_PARTY_LEADER",
-    "CHAT_MSG_RAID", "CHAT_MSG_RAID_LEADER", "CHAT_MSG_RAID_WARNING", "CHAT_MSG_SAY", "CHAT_MSG_YELL",
+    "CHAT_MSG_RAID", "CHAT_MSG_RAID_LEADER", "CHAT_MSG_RAID_WARNING", "CHAT_MSG_SAY", "CHAT_MSG_TEXT_EMOTE",
+    "CHAT_MSG_YELL",
     "ENCOUNTER_END", "GROUP_ROSTER_UPDATE", "PARTY_LEADER_CHANGED", "PLAYER_DIFFICULTY_CHANGED", "PLAYER_ENTERING_WORLD",
     "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED", "PLAYER_ROLES_ASSIGNED", "PLAYER_SPECIALIZATION_CHANGED",
-    "ZONE_CHANGED_NEW_AREA",
+    "PLAYER_TALENT_UPDATE", "TRAIT_CONFIG_UPDATED", "ZONE_CHANGED_NEW_AREA",
 }
 
 local PROBE_EVENT = "PLAYER_LEAVING_WORLD"
@@ -321,7 +322,7 @@ end)
 -- The verbs that act on a running addon (slash-commands-§2's feature-verb SHOULD, taken), and the
 -- reserved `skin` (LibKa0s v1.82.0, D-16), which is refused while disabled too.
 local FEATURE_VERBS = { lock = true, unlock = true, check = true, test = true, preview = true, why = true,
-    toggle = true, skin = true }
+    toggle = true, skin = true, probe = true }
 
 test("disabled [§7 step 7]: every NS.COMMANDS entry and the bare /qc: reserved verbs answer, feature verbs refuse once and write nothing", function()
     local NS, m = baseline()

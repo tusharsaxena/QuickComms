@@ -314,7 +314,8 @@ function G.Capture(ghost, src, roots, size, shape)
     if not cx then return false end
     ghost.scale = tonumber(src:GetScale()) or 1
     for _, layer in ipairs({ ghost.stage, ghost.text }) do
-        layer:SetFrameStrata(src:GetFrameStrata())
+        -- A secret strata (WoW Forever) takes the dial's own band instead (QFE-F1).
+        layer:SetFrameStrata(NS.Compat.FrameStrata(src, NS.Constants.LAYERS.STRATA.HUD_POPUP))
         layer:SetFrameLevel(src:GetFrameLevel())
         layer:SetAlpha(1)
         layer:ClearAllPoints()

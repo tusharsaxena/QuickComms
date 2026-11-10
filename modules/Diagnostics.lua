@@ -66,6 +66,9 @@ local function situation(out)
         s.content, s.instanceID, s.difficulty, s.keyLevel, s.group, s.instanceGroup)
     out:add("Situation", "leader=%s assist=%s class=%s spec=%s role=%s combat=%s",
         s.leader, s.assist, s.classFile, s.specID, s.role, s.inCombat)
+    -- Where the role came from (LibKa0s Role.Resolve, QFE-F4) and this character's own pick.
+    out:add("Situation", "roleSource=%s roleDetail=%s override=%s", s.roleSource, s.roleDetail,
+        NS.Compat.RoleOverride() or "auto")
     local lock = {}
     for k, v in pairs(s.lockdown or {}) do if v then lock[#lock + 1] = k end end
     table.sort(lock)

@@ -2,7 +2,7 @@
 --
 -- What this addon owes the skin engine, and nothing the library pins itself: the owner is
 -- registered under the folder name with this addon's read and write seams and its own tokens; the
--- seven skin.* keys default to Ka0s Default and are skip-render schema rows on the Skin tab; the
+-- seven skin.* keys default to the client's default skin and are skip-render schema rows on the Skin tab; the
 -- tab is the library's, after Behavior and before Keybindings; the profile's skin is applied right
 -- after AceDB exists and on every profile event; one pick from the tab, or from another addon's
 -- copy, is ONE effective SetChoice (one OnLooksChanged, no reload request); every library factory
@@ -18,9 +18,13 @@ local test, assertEqual, assertTrue = T.test, T.assertEqual, T.assertTrue
 local OWNER = "QuickComms"
 local BRAND = "Ka0s Quick Comms"
 local NO_LIBKA0S = T.loadAddon.libFiles
+-- The client's default skin under the active kit profile (LibKa0s v1.94.0, Skin minor 18; skinning-§2):
+-- WoW Forever on forever, Ka0s Default on retail. Pinned from the profile, never read back from the addon.
+-- The cases that pin it boot with `clientSkin = true`; the rest wear the harness's Ka0s Default pin.
+local CLIENT_SKIN = dofile("tests/_kit/mock_client.lua").current() == "forever" and "forever" or "ka0s"
 
 local KEYS = {
-    { "source", "ka0s" }, { "skin", "ka0s" }, { "ignorePanel", true }, { "ignoreFonts", false },
+    { "source", "ka0s" }, { "skin", CLIENT_SKIN }, { "ignorePanel", true }, { "ignoreFonts", false },
     { "font", "" }, { "texture", "" }, { "outline", "hud" }, { "pickerSeen", false },
 }
 
@@ -109,16 +113,26 @@ test("skin seam: the owner is registered at file load, before the profile store 
     assertTrue(m.LibStub("LibKa0s-Skin-1.0"):IsOwner(OWNER), "not registered at file load")
 end)
 
-test("skin seam: the read answers Ka0s Default before the profile store exists", function()
+test("skin seam: the read answers the client's default skin before the profile store exists", function()
     -- RegisterOwner calls `get` at FILE LOAD; a getter that raised there would be a Lua error on
-    -- every login.
-    local NS = T.newAddon()
+    -- every login. The client's own default, not the harness's Ka0s Default pin (tests/run.lua).
+    local NS = T.newAddon({ clientSkin = true })
     local ok, source, skin = pcall(NS.SkinChoice)
     assertTrue(ok, "NS.SkinChoice raised without a store: " .. tostring(source))
     assertEqual(source, "ka0s")
-    assertEqual(skin, "ka0s")
+    assertEqual(skin, CLIENT_SKIN, "WoW Forever on Forever, Ka0s Default on Retail")
     local font, texture = NS.SkinOverride()
     assertEqual(font, false); assertEqual(texture, false)
+end)
+
+test("skin seam: NS.DEFAULT_SKIN is the client's default skin, Ka0s Default without the library", function()
+    -- QFE-F1: WoW Forever on forever, Ka0s Default on retail; the harness pins Ka0s Default unless a
+    -- case asks for the client's own (tests/run.lua), and a degraded install draws Ka0s Default.
+    assertEqual(T.newAddon({ clientSkin = true }).DEFAULT_SKIN, CLIENT_SKIN, "the client's own default")
+    assertEqual(T.newAddon().DEFAULT_SKIN, "ka0s", "the harness pins Ka0s Default on every profile")
+    local degraded = T.newAddon{ skip = NO_LIBKA0S }
+    assertEqual(degraded.DEFAULT_SKIN, "ka0s", "without the library")
+    assertEqual(select(2, degraded.SkinChoice()), "ka0s")
 end)
 
 test("skin seam: EllesmereUI hears of this addon once, from the library alone", function()
@@ -233,10 +247,10 @@ end)
 
 -- ── the keys and the rows ────────────────────────────────────────────────────────────────────────
 
-test("skin seam: the eight skin keys default to Ka0s Default, the picker unseen", function()
+test("skin seam: the eight skin keys default to the client's default skin, the picker unseen", function()
     -- red under: a default other than today's look, or pickerSeen true (owner ruling O3: every
     -- profile, old and new, gets the first-run picker).
-    local NS = T.bootAddon()
+    local NS = T.bootAddon({ clientSkin = true })
     local p = NS.addon.db.profile.skin
     for _, kv in ipairs(KEYS) do assertEqual(p[kv[1]], kv[2], "skin." .. kv[1]) end
 end)
@@ -244,7 +258,7 @@ end)
 test("skin seam: every skin key is a skip-render schema row on the Skin tab", function()
     -- red under: a row that renders itself on top of the library's controls, or one outside the
     -- tab's group (the host tab keyed "Appearance" takes that group's place in the strip).
-    local NS = T.newAddon()
+    local NS = T.newAddon({ clientSkin = true })
     local H = NS.addon.Settings.Helpers
     for _, kv in ipairs(KEYS) do
         local path = "skin." .. kv[1]
@@ -267,9 +281,9 @@ test("skin seam: the skin row's values are every registered skin, in the library
 end)
 
 test("skin seam: /qc set refuses a skin that is not registered and applies one that is", function()
-    local NS, _, Skin, counts = setup()
+    local NS, _, Skin, counts = setup({ clientSkin = true })
     slash(NS, "set skin.skin no-such-skin")
-    assertEqual(NS.addon.db.profile.skin.skin, "ka0s", "an unknown skin was stored")
+    assertEqual(NS.addon.db.profile.skin.skin, CLIENT_SKIN, "an unknown skin was stored")
     assertEqual(counts.looks, 0, "a refused set repainted")
     slash(NS, "set skin.skin obsidian")
     assertEqual(NS.addon.db.profile.skin.skin, "obsidian", "a registered skin was refused")

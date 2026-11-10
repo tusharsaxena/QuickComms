@@ -250,7 +250,8 @@ local confirmStrata = setmetatable({}, { __mode = "k" })
 function MW.LiftConfirm(def)
     def.OnShow = function(dialog)
         if not (dialog and dialog.SetFrameStrata) then return end
-        confirmStrata[dialog] = dialog.GetFrameStrata and dialog:GetFrameStrata() or LAYERS.STRATA.STATIC_POPUP
+        -- A secret strata (WoW Forever) is never kept: the dialog goes back in Blizzard's (QFE-F1).
+        confirmStrata[dialog] = NS.Compat.FrameStrata(dialog, LAYERS.STRATA.STATIC_POPUP)
         dialog:SetFrameStrata(MW.CONFIRM_STRATA)
     end
     def.OnHide = function(dialog)

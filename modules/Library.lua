@@ -431,11 +431,20 @@ function Lib.ValidParent(parent, id)
     return true
 end
 
+--- Whether `v` is a game emote's token as stored (QFE-E2): none (nil or false), or one word of capitals,
+--- digits and underscores. A token this client lacks still passes (a profile copied from the other
+--- client keeps it): its callout bakes nothing and says why.
+function Lib.ValidEmote(v)
+    if v == nil or v == false then return true end
+    return type(v) == "string" and v:find("^[%u%d_]+$") ~= nil
+end
+
 local function validCallout(f)
     if type(f) ~= "table" then return false, "badCallout" end
     if not Lib.ValidName(f.name) then return false, "badName" end
     if type(f.text) ~= "string" then return false, "badText" end
     if not NS.Channels.IsKind(f.channel) then return false, "badChannel" end
+    if not Lib.ValidEmote(f.emote) then return false, "badEmote" end
     if not Lib.ValidIcon(f.icon) then return false, "badIcon" end
     if not Lib.ValidIconColor(f.iconColor) then return false, "badIconColor" end
     return true
@@ -467,7 +476,7 @@ function Lib.CreateCallout(fields)
     if not ok then return nil, why end
     local id = Lib.NewId("c")
     P().callouts[id] = { name = fields.name, text = fields.text, channel = fields.channel, icon = fields.icon,
-        iconColor = glyphColor(fields.icon, fields.iconColor) }
+        iconColor = glyphColor(fields.icon, fields.iconColor), emote = fields.emote or nil }
     announce("callout", id)
     return id
 end
@@ -478,7 +487,7 @@ end
 -- lives in another group, or the player renames it), checked as any new callout is.
 local function copyCallout(src)
     return Lib.CreateCallout({ name = src.name, text = src.text, channel = src.channel, icon = src.icon,
-        iconColor = src.iconColor })
+        iconColor = src.iconColor, emote = src.emote })
 end
 
 -- Whether a new group's fields pass: its name, When, glyph color and parent.
@@ -711,7 +720,7 @@ local function seedCallout(p, cid)
     local c = NS.BuiltIns.callouts[cid]
     local id = takeId(p, "c")
     p.callouts[id] = { name = c.name, text = c.text, channel = c.channel, icon = c.icon, iconColor = c.iconColor,
-        origin = cid }
+        emote = c.emote, origin = cid }
     return id
 end
 
@@ -726,7 +735,7 @@ local function seedGroup(p, gid, parent, hidden)
     end
     local id = takeId(p, "g")
     p.groups[id] = { name = def.name, icon = def.icon, iconColor = def.iconColor, callouts = callouts,
-        when = copyTable(def.when) or {},
+        when = copyTable(NS.BuiltIns.WhenOf(gid)) or {},
         enabled = true, parent = parent,
         inheritWhen = true, origin = gid }
     p.seededSets[gid] = true
@@ -762,11 +771,11 @@ local function placeEverywhere(p, ids, notify)
     return n
 end
 
--- The seeded sets a new pad or dial holds: each shipped set's group while it is a top-level group,
--- in shipped order.
+-- The seeded sets a new pad or dial holds: each set this client ships (BuiltIns.Seeded, QFE-F3) whose
+-- group is a top-level group, in shipped order.
 local function seededTops(p)
     local out = {}
-    for _, top in ipairs(NS.BuiltIns.order) do
+    for _, top in ipairs(NS.BuiltIns.Seeded()) do
         local id = byOrigin(p.groups, top)
         if id and not isChild(id) then out[#out + 1] = id end
     end
@@ -809,13 +818,33 @@ function Lib.SeedNewNodes(profile)
     return seedNewNodes(profile)
 end
 
+--- A schema step's seeding (QFE-E3) for one stored profile already given its sets (seededSets): each
+--- set this client ships that it was never given is seeded, as Prepare's seedNew would, its id counter
+--- lifted first. Placing it on the surfaces is the caller's. A profile never prepared is left to
+--- Prepare, and a set the player deleted after it was given stays deleted.
+--- @return table[] { origin = shipped id, id = the new group's id }, in shipped order
+function Lib.SeedNewSets(profile)
+    -- `seeded`: Prepare has run on it (a fresh profile's seededSets is the defaults' empty table)
+    if type(profile) ~= "table" or profile.seeded ~= true or type(profile.seededSets) ~= "table" then return {} end
+    for _, key in ipairs({ "callouts", "groups", "pads", "dials" }) do
+        if type(profile[key]) ~= "table" then return {} end
+    end
+    liftNextId(profile)
+    local out = {}
+    for _, top in ipairs(NS.BuiltIns.Seeded()) do
+        if not profile.seededSets[top] then out[#out + 1] = { origin = top, id = seedSet(profile, top) } end
+    end
+    return out
+end
+
 -- Prepare's seeding: each shipped set the profile was never given (seededSets) is seeded and put at
 -- the end of every pad and dial, and each node shipped after its set was given goes inside it
--- (seedNewNodes). A seeded member the player deleted is not seeded again: that is Restore's.
--- `appended` counts the surfaces a set was put on.
+-- (seedNewNodes). A seeded member the player deleted is not seeded again: that is Restore's. Only the
+-- sets this client ships (BuiltIns.Seeded): WoW Forever seeds no Arena set and only its battlegrounds
+-- (QFE-F3), and its Dungeon set matches dungeons alone (BuiltIns.WhenOf, QFE-C7). `appended` counts the surfaces a set was put on.
 local function seedNew(p, result)
     local placed = {}
-    for _, top in ipairs(NS.BuiltIns.order) do
+    for _, top in ipairs(NS.BuiltIns.Seeded()) do
         if not p.seededSets[top] then placed[#placed + 1] = seedSet(p, top) end
     end
     seedNewNodes(p)
@@ -845,7 +874,9 @@ end
 --- longer has (no member keeps its origin) comes back as a fresh ordinary member: a set as a
 --- top-level group at the end of every pad and dial, a node inside its set's group while that is a
 --- top-level group, a callout at the end of its seeded group. What the player still has is never
---- changed, moved or overwritten, so a second run adds nothing. One act (Batch).
+--- changed, moved or overwritten, so a second run adds nothing. One act (Batch). Only the sets this
+--- client ships come back (BuiltIns.Seeded, QFE-F3); one it does not ship that the profile holds keeps
+--- its callouts restored.
 --- @return table { groups = n, callouts = n }: what came back
 function Lib.RestoreBuiltins()
     local p = P()
@@ -859,18 +890,21 @@ function Lib.RestoreBuiltins()
         end
         for _, top in ipairs(NS.BuiltIns.order) do
             local set = byOrigin(p.groups, top)
-            if set then
-                n.callouts = n.callouts + restoreCallouts(p, set, top)
-            else
-                set = seed(top)
-                placed[#placed + 1] = set
-            end
-            for _, child in ipairs(NS.BuiltIns.groups[top].children or {}) do
-                local node = byOrigin(p.groups, child)
-                if node then
-                    n.callouts = n.callouts + restoreCallouts(p, node, child)
-                elseif Lib.ValidParent(set) then
-                    seed(child, set)
+            -- a set this client does not ship and the profile lacks stays gone, nodes and all (QFE-F3)
+            if set or NS.BuiltIns.Ships(top) then
+                if set then
+                    n.callouts = n.callouts + restoreCallouts(p, set, top)
+                else
+                    set = seed(top)
+                    placed[#placed + 1] = set
+                end
+                for _, child in ipairs(NS.BuiltIns.groups[top].children or {}) do
+                    local node = byOrigin(p.groups, child)
+                    if node then
+                        n.callouts = n.callouts + restoreCallouts(p, node, child)
+                    elseif Lib.ValidParent(set) then
+                        seed(child, set)
+                    end
                 end
             end
         end
@@ -916,7 +950,7 @@ local SURFACE_DEFAULTS = {
 --- architecture-§5 boot check) and what a member row resets to. `icon`, `iconColor` and `point` are
 --- false, not nil, so the boot check can see the key: false is "none" and "the default place".
 Lib.TEMPLATES = {
-    callout = { name = "", text = "", channel = "smartGroup", icon = false, iconColor = false },
+    callout = { name = "", text = "", channel = "smartGroup", icon = false, iconColor = false, emote = false },
     group = { name = "", icon = false, iconColor = false, enabled = true, when = {},
         parent = false, inheritWhen = true },
     pad = { name = "", enabled = true, groupsAs = SURFACE_DEFAULTS.pad.groupsAs, point = false,

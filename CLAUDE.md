@@ -35,11 +35,12 @@ Start here, then read the docs:
 - The v1.0.0 design spec and its implementation plan live in `docs/superpowers/`; the brainstorm,
   the research and the in-game go/no-go record live in `docs/brainstorm/` as history.
 
-Green gate before every commit: `lua tests/run.lua` and
+Green gate before every commit: `lua tests/run.lua`, `KA0S_KIT_CLIENT=forever lua tests/run.lua` (the
+addon serves Retail and WoW Forever, so the suite runs under both kit profiles, clients-§6) and
 `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .` (0/0; the kit bounds the suite on load, and
 `luacheck` loads no kit, so it runs through the bounded runner, testing-§15). Never edit `libs/` or
 `tests/_kit/` (vendored; re-vendor instead). Never auto-stage/commit/push and never bump the version
 without an explicit instruction.
 
-Bundles [LibKa0s](https://github.com/tusharsaxena/LibKa0s) v1.93.0 (MIT).
+Bundles [LibKa0s](https://github.com/tusharsaxena/LibKa0s) v1.95.0 (MIT).
 LibKa0s icons: all (icon browser).

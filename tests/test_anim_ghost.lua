@@ -67,7 +67,7 @@ end
 local function ghostOn()
     local NS, m = T.enableAddon()
     m.CreateFrame = function(_, _, parent) return recFrame(parent) end
-    return NS.AnimGhost, NS.AnimGhost.New(), NS
+    return NS.AnimGhost, NS.AnimGhost.New(), NS, m
 end
 
 local function get(v) return function() return v end end
@@ -125,6 +125,16 @@ test("anim ghost: the stage takes the source's strata and level, and sub-frames 
     assertEqual(ghost.used, 2)
     assertEqual(ghost.subs[1].calls.SetFrameLevel[1], 10, "the root's own level")
     assertEqual(ghost.subs[2].calls.SetFrameLevel[1], 16, "three source levels over it")
+end)
+
+test("anim ghost: [QFE-F1] a secret source strata never reaches the stage; it takes the dial's", function()
+    local G, ghost, NS, m = ghostOn()
+    m.issecretvalue = T.isSecret
+    local src = frame({ level = 10, strata = T.secret("DIALOG"), regions = { region("Texture", FILE) } })
+    assertTrue(G.Capture(ghost, src, { src }))
+    -- red under: layer:SetFrameStrata(src:GetFrameStrata()) unguarded
+    assertEqual(ghost.stage.calls.SetFrameStrata[1], NS.Constants.LAYERS.STRATA.HUD_POPUP)
+    assertEqual(ghost.text.calls.SetFrameStrata[1], NS.Constants.LAYERS.STRATA.HUD_POPUP)
 end)
 
 test("anim ghost: a level is held to the room above the stage, and never under it", function()

@@ -7,7 +7,9 @@ local addonName, NS = ...
 --                           (Shell, Button, Text, ...) and Token / Color / Resolve / OnLooksChanged.
 --                           Every surface that draws reads its colors here.
 --   NS.SkinChoice()         the stored (source, skin) pair, read through NS.SchemaRuntime.Get;
---                           "ka0s", "ka0s" before OnInitialize has built the profile store.
+--                           "ka0s" and NS.DEFAULT_SKIN before OnInitialize has built the profile store.
+--   NS.DEFAULT_SKIN         the client's default skin, Skin:DefaultSkin(): "forever" on WoW Forever,
+--                           "ka0s" on Retail and without the library.
 --   NS.WriteSkinChoice(s,k,i,m) the write seam: every half through NS.SchemaRuntime.Set, the one
 --                           seam `/qc set` and the settings panel already write through
 --                           (architecture-§5); `i`, the Scope's `{ panel, fonts }`, writes the two
@@ -115,6 +117,9 @@ local PANEL_PATH, FONTS_PATH = "skin.ignorePanel", "skin.ignoreFonts"
 local FONT_PATH, TEXTURE_PATH = "skin.font", "skin.texture"
 local OUTLINE_PATH, OUTLINE_DEFAULT = "skin.outline", "hud"
 local DEFAULT = "ka0s"
+-- The client's default skin (LibKa0s v1.94.0, Skin minor 18; skinning-§2): WoW Forever on the Forever
+-- client, Ka0s Default on Retail. defaults/Profile.lua stores it, and a profile with no skin reads it.
+NS.DEFAULT_SKIN = (Skin and type(Skin.DefaultSkin) == "function") and Skin:DefaultSkin() or DEFAULT
 
 local function byte(n) return n / 255 end
 -- WoW Default's own grays (its tooltip edge, its divider), for an edge drawn flat.
@@ -340,11 +345,11 @@ local function schema()
     return S
 end
 
---- The stored pair, lazily and nil-safely: Ka0s Default until the profile store exists.
+--- The stored pair, lazily and nil-safely: the client's default skin until the profile store exists.
 function NS.SkinChoice()
     local S = schema()
-    if not S then return DEFAULT, DEFAULT end
-    return S.Get(SOURCE_PATH) or DEFAULT, S.Get(SKIN_PATH) or DEFAULT
+    if not S then return DEFAULT, NS.DEFAULT_SKIN end
+    return S.Get(SOURCE_PATH) or DEFAULT, S.Get(SKIN_PATH) or NS.DEFAULT_SKIN
 end
 
 --- A stored override as the profile keeps it: the LSM key, or "" for the skin's own (false, nil, "").

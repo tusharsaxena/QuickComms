@@ -1,20 +1,22 @@
 # Quick Comms
 
-![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5-purple)
+![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5_and_Forever_1.60.1-purple)
 ![CurseForge Version](https://img.shields.io/curseforge/v/1765410)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1706%2F1706_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1768%2F1768_passing-green)
 
-Retail only for now; WoW Forever support is planned. Quick Comms puts your group callouts one click or one keypress away. "Kick on me", "Lust now",
+Supports Retail and WoW Forever. Quick Comms puts your group callouts one click or one keypress away. "Kick on me", "Lust now",
 "INC Lumber Mill": they sit on a Comms Pad, or open from a ping-wheel style Comms Dial. It knows where
-you are (a Mythic+ key, a raid, an arena, a battleground or the open world) and shows the callouts
-that fit. Every message goes out through a button you press, the one way Midnight still lets an addon
-send chat in keys and on bosses.
+you are (a dungeon or Mythic+ key, a raid, an arena, a battleground or the open world) and shows the
+callouts that fit. Mythic+ and arenas are Retail only; on WoW Forever it knows dungeons, raids,
+battlegrounds and the open world. Every message goes out through a button you press, the one way
+Midnight still lets an addon send chat in keys and on bosses.
 
 It comes with callouts for all of those, including a group for every battleground objective, colored
-Alliance blue or Horde red where a location belongs to one side. Change any of them, or write your
-own.
+Alliance blue or Horde red where a location belongs to one side. On WoW Forever you get the dungeon,
+raid, open-world and emote groups, plus Warsong Gulch, Arathi Basin and Alterac Valley. Change any of
+them, or write your own.
 
 ## Screenshots
 
@@ -40,7 +42,7 @@ own.
 
 ## Usage
 
-Step into a key, a raid, an arena or a battleground and the Comms Pad shows the callouts for it.
+Step into a dungeon, a key, a raid, an arena or a battleground and the Comms Pad shows the callouts for it.
 Click one to send it. To move the pad, type `/qc unlock`, drag it, then `/qc lock`; `/qc test` fills it
 with placeholder buttons first if you want to place it before your next run. `/qc toggle`, or the
 Toggle Comms Pads key, hides every pad until you bring them back.
@@ -54,7 +56,9 @@ next press opens it where you left off.
 
 Your own callouts live on the Groups page. Add callout opens a small editor for the name, the text,
 the channel and an icon, and the text can carry tokens such as `{target}` or `{coordinates}` (the
-"i" beside it lists them all). A group's When tab says where it shows. The built-in groups are
+"i" beside it lists them all). A group's When tab says where it shows. Its Role condition follows
+the role you play, read from the game (on WoW Forever, from the talent tree you spent most in); pick
+your own on General → Behavior → Role, saved per character. The built-in groups are
 ordinary groups too, so change or delete whatever you like; Restore built-in groups puts back
 anything you deleted. How the pad and the dial look is up to you, on the Pad and Dial pages.
 
@@ -85,8 +89,13 @@ Everything else is under **Settings → AddOns → Ka0s Quick Comms**, and `/qc 
 - Each group has conditions for when it applies, such as "in a Mythic+ key" or "I'm the tank". Quick
   Comms checks them against where you are and shows the groups that match, in the order you set.
 - The text is prepared out of combat and loaded onto secure buttons, so a press sends it to the right
-  channel (say, yell, party, instance, raid, raid warning or General) even during a boss. General
-  falls back to say when you haven't joined it.
+  channel (say, yell, party, instance, raid, raid warning, General or emote) even during a boss.
+  General falls back to say when you haven't joined it. An emote callout sends its text as a custom
+  emote (`/e`), on Retail and WoW Forever alike. A game emote callout performs one of the game's own
+  emotes (`/point`, `/oom`, `/incoming`...) on your target, picked from a searchable list in the
+  callout editor; voice emotes play their sound. The built-in Emotes group, shown in the open world
+  whatever your group, carries twenty of them: the voice calls first (`/incoming`, `/oom`,
+  `/healme`...), then the social ones (`/wave`, `/thank`, `/dance`...).
 - After a press every button dims for about a second. On a boss the game quietly drops lines sent
   faster than that, so if one never arrives you get a note in chat.
 - Text that starts with a slash command is refused. A callout only ever sends chat.
@@ -116,6 +125,8 @@ Everything else is under **Settings → AddOns → Ka0s Quick Comms**, and `/qc 
 - Type `/qc debug on` and reproduce the bug.
 - Type `/qc diagnostics`.
 - If the debug window isn't open, open it with `/qc debug`. Press **Copy**, copy the entire output, and include it with your bug report.
+- On WoW Forever, if a dungeon, raid or battleground shows the wrong callouts, type `/qc probe` while
+  you are inside it and include the four lines it prints.
 
 The report is added after the debug trace in the same window, so one copy carries both.
 

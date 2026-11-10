@@ -239,7 +239,7 @@ local function build()
         PARTY = { r = 0.67, g = 0.67, b = 1.0 }, RAID = { r = 1.0, g = 0.5, b = 0.0 },
         INSTANCE_CHAT = { r = 1.0, g = 0.5, b = 0.0 }, RAID_WARNING = { r = 1.0, g = 0.28, b = 0.0 },
         SAY = { r = 1.0, g = 1.0, b = 1.0 }, YELL = { r = 1.0, g = 0.25, b = 0.25 },
-        CHANNEL1 = { r = 1.0, g = 0.75, b = 0.75 },
+        CHANNEL1 = { r = 1.0, g = 0.75, b = 0.75 }, EMOTE = { r = 1.0, g = 0.5, b = 0.25 },
     }
 
     local function refuse(frame, call)

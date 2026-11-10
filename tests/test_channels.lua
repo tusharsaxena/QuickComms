@@ -96,7 +96,9 @@ test("channels: [QF-04] general resolves to General when channel 1 is joined, el
     assertEqual(c, "say", "not joined: the Say fallback, whatever the solo fallback")
     assertNil(reason) assertFalse(selfPrint)
     assertEqual((Ch.Resolve("general", snap({ general = false, group = "party" }))), "say")
-    assertEqual(Ch.KINDS[#Ch.KINDS], "general", "listed after yell")
+    local at = {}
+    for i, k in ipairs(Ch.KINDS) do at[k] = i end
+    assertEqual(at.general, at.yell + 1, "listed after yell")
 end)
 
 test("channels: [QF-04] general's prefix, chat type, color type and locks are Say's", function()
@@ -152,4 +154,69 @@ test("channels: [QF-04] a Groups row names General in channel 1's color", functi
     end
     -- red under: no SHORT_CHANNEL.general, or the row's color asked by ChatType
     assertTrue(found, "the General row")
+end)
+
+-- ── Emote (/e), QFE-E1 (QuickComms#15, design §5.1) ──────────────────────────────────────────
+
+test("channels: [QFE-E1] emote is a fixed kind: /e, chat type EMOTE, the client's EMOTE color", function()
+    local Ch = ch()
+    -- red under: no emote kind (Resolve answers badChannel)
+    assertTrue(Ch.IsKind("emote"))
+    assertEqual((Ch.Resolve("emote", snap(), "none")), "emote", "solo still emotes")
+    assertEqual((Ch.Resolve("emote", snap({ group = "raid", instanceGroup = true }))), "emote")
+    assertEqual(Ch.Prefix("emote"), "/e")
+    assertEqual(Ch.ChatType("emote"), "EMOTE")
+    assertEqual(Ch.ColorType("emote"), "EMOTE")
+    local at = {}
+    for i, k in ipairs(Ch.KINDS) do at[k] = i end
+    assertEqual(at.emote, at.general + 1, "listed after general")
+end)
+
+test("channels: [QFE-E1] emote locks as Say does", function()
+    local Ch = ch()
+    assertEqual(Ch.LockState("emote", snap({ lockdown = { encounter = true } })), "lockdown")
+    assertEqual(Ch.LockState("emote", snap({ lockdown = { pvpMatch = true } })), "lockdown")
+    assertNil(Ch.LockState("emote", snap({ lockdown = { challengeMode = true } })))
+    assertNil(Ch.LockState("emote", snap()), "solo is not locked")
+end)
+
+test("channels: [QFE-E1] an emote callout bakes /e and its text", function()
+    local NS = T.newAddon()
+    local line, reason, info = NS.Bake.Bake({ name = "Wave", text = "waves at {me}", channel = "emote" }, snap(),
+        { ctx = { me = "Testchar" } })
+    assertEqual(line, "/e waves at Testchar")
+    assertNil(reason)
+    assertEqual(info.concrete, "emote")
+end)
+
+test("channels: [QFE-E1] the channel row offers Emote; the seam accepts it", function()
+    local NS = T.bootAddon()
+    local found
+    for _, v in ipairs(NS.SchemaRuntime.FindRow("callout.channel").values) do
+        if v.value == "emote" then found = v.text end
+    end
+    -- red under: no CHANNEL_LABEL.emote (the row shows the raw id)
+    assertEqual(found, "Emote")
+    local cid = NS.Library.CreateCallout({ name = "Hi", text = "waves", channel = "say" })
+    assertTrue((NS.SchemaRuntime.Set("callout.channel", "emote", cid)))
+    assertEqual(NS.db.profile.callouts[cid].channel, "emote")
+end)
+
+test("channels: [QFE-E1] a Groups row names Emote in the emote color; a tooltip names its channel", function()
+    local NS, m = T.enableAddon()
+    local P = dofile("tests/page_helpers.lua")(NS, m)
+    P.show("Groups")
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    NS.Library.CreateCalloutIn(gid, { name = "Wave", text = "waves", channel = "emote" })
+    NS.addon.Settings.Editors.Select("group", gid)
+    local want = "|cffffd100Wave|r  |cffff8040Emote|r  |cffb3b3b3waves|r"
+    local found
+    for _, label in ipairs(P.all(P.tab("groups", "callouts"), "Label")) do
+        if label.text == want then found = true end
+    end
+    -- red under: no SHORT_CHANNEL.emote, or no EMOTE color
+    assertTrue(found, "the Emote row")
+    local lines = NS.PadRender.TooltipLines({ calloutId = "c", name = "Wave", line = "/e waves", concrete = "emote",
+        chatType = "EMOTE" })
+    assertEqual(lines[3], "Channel: |cffff8040Emote|r")
 end)

@@ -42,7 +42,7 @@ R.ALL = "all"
 local DUNGEON_OR_RAID = { dungeon = true, mythicPlus = true, raid = true }
 
 -- A character matches its Name-Realm without regard to case: a name typed in lower case still
--- names the character UnitFullName reports.
+-- names the character Compat.CharacterKey reports (Name-Realm, or "First Surname" on WoW Forever).
 local function characterMatches(v, character)
     if type(character) ~= "string" then return false end
     if v[character] == true then return true end

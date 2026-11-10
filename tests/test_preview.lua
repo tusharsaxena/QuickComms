@@ -396,6 +396,15 @@ test("preview: [echo] a previewed button prints [QC] /<slash> <resolved text>, a
     assertTrue(button:GetAttribute("macrotext") == nil, "still disarmed")
 end)
 
+test("preview: [QFE-E1] a previewed emote button prints [QC] /e <resolved text>", function()
+    local NS, m = live()
+    local cid = echoGroup(NS, "waves at {me}", "emote")
+    assertTrue(NS.Preview.SetPreviewAs("world"))
+    m.prints = {}
+    m.__click(NS.Pad.ButtonsFor("p1", cid)[1])
+    assertEqual(m.prints[1], NS.PREFIX .. " /e waves at " .. NS.Compat.PlayerName())
+end)
+
 test("preview: [echo] the slash follows the channel the previewed situation resolves", function()
     local NS, m = live()
     local cid = echoGroup(NS, "Incoming", "smartGroup")

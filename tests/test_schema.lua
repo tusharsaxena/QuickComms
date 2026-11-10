@@ -272,7 +272,8 @@ local function pinLine(row)
 end
 
 test("schema: [layout guard] every stored path, default, range and choice set is as item 020 found it", function()
-    local NS = T.newAddon()
+    -- The client's own default skin (tests/schema_pins.lua pins skin.skin per kit profile).
+    local NS = T.newAddon({ clientSkin = true })
     local pins = dofile("tests/schema_pins.lua")
     local seen, count = {}, 0
     for _, row in ipairs(NS.addon.Settings.Schema) do

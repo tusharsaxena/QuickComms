@@ -48,6 +48,41 @@ function BI.Group(id, def)
     return def
 end
 
+--- Whether this client seeds (and restores) shipped top-level set `id` (QFE-F3): not one of
+--- NS.GameIds.SKIP_BUILTINS, and a battleground set only when NS.GameIds.BATTLEGROUND_SETS lists its
+--- key (nil lists every one). Read at call time, since defaults/GameIds_Clients.lua loads after
+--- these files. BI.order itself stays every set, so a profile copied from the other client keeps
+--- each one it holds.
+function BI.Ships(id)
+    local G = NS.GameIds or {}
+    if G.SKIP_BUILTINS and G.SKIP_BUILTINS[id] then return false end
+    local bg = type(id) == "string" and id:match("^bi%.bg%.([^%.]+)$")
+    if bg and G.BATTLEGROUND_SETS and not G.BATTLEGROUND_SETS[bg] then return false end
+    return true
+end
+
+--- The When shipped group `id` is seeded and restored with on this client (QFE-C7): its entry in
+--- NS.GameIds.BUILTIN_WHEN (WoW Forever's Dungeon set matches dungeons alone), else the one it
+--- declares. Read at call time, as BI.Ships is. The caller copies it; the declaration never changes.
+--- @return table|nil
+function BI.WhenOf(id)
+    local G = NS.GameIds or {}
+    local override = G.BUILTIN_WHEN and G.BUILTIN_WHEN[id]
+    if override then return override end
+    local def = BI.groups[id]
+    return def and def.when
+end
+
+--- The top-level sets this client seeds, in BI.order's order (BI.Ships).
+--- @return string[]
+function BI.Seeded()
+    local out = {}
+    for _, id in ipairs(BI.order) do
+        if BI.Ships(id) then out[#out + 1] = id end
+    end
+    return out
+end
+
 --- Callouts from a list of { short, name, text, glyph[, color] } rows, all on `channel`.
 function BI.Callouts(groupId, channel, rows)
     local ids = {}

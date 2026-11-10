@@ -505,8 +505,8 @@ L["Locked: you are not in a raid."] = "Locked: you are not in a raid."
 L["Locked: needs raid leader or assist."] = "Locked: needs raid leader or assist."
 L["Locked: you are not in a group."] = "Locked: you are not in a group."
 L["Locked: you are not in an instance group."] = "Locked: you are not in an instance group."
-L["Locked: Say and Yell are blocked during this encounter."] =
-    "Locked: Say and Yell are blocked during this encounter."
+L["Locked: Say, Yell and Emote are blocked during this encounter."] =
+    "Locked: Say, Yell and Emote are blocked during this encounter."
 L["Solo: prints to you, sends nothing."] = "Solo: prints to you, sends nothing."
 L["Not available here."] = "Not available here."
 L["%s (%d of %d)"] = "%s (%d of %d)"
@@ -571,6 +571,22 @@ L["Raid warning"] = "Raid warning"
 L["Say"] = "Say"
 L["Yell"] = "Yell"
 L["General (/1; Say when not joined)"] = "General (/1; Say when not joined)"
+L["Emote"] = "Emote"
+-- Game emotes (QFE-E2, QuickComms#15).
+L["Game emote"] = "Game emote"
+L["An emote is the game's emote token, such as POINT, or empty for none."] = "An emote is the game's emote token, such as POINT, or empty for none."
+L["The game emote a Game emote callout performs, by its token (POINT) or command (/point). It acts on your target, as the game's own emote does."] = "The game emote a Game emote callout performs, by its token (POINT) or command (/point). It acts on your target, as the game's own emote does."
+L["This callout has no game emote."] = "This callout has no game emote."
+L["This game emote is not on this client."] = "This game emote is not on this client."
+L["(no emote)"] = "(no emote)"
+L["%s (not on this client)"] = "%s (not on this client)"
+L["would emote %s"] = "would emote %s"
+L["Emote token: %s"] = "Emote token: %s"
+L["Emotes: %s"] = "Emotes: %s"
+L["A voice emote: it also plays its sound."] = "A voice emote: it also plays its sound."
+L["Pick an emote from the list."] = "Pick an emote from the list."
+L["%s (voice)"] = "%s (voice)"
+L["Type to search the game's emotes, then pick one. Voice emotes play their sound."] = "Type to search the game's emotes, then pick one. Voice emotes play their sound."
 L["Sections"] = "Sections"
 L["One list"] = "One list"
 L["Tabs (the mouse wheel switches)"] = "Tabs (the mouse wheel switches)"
@@ -1324,6 +1340,27 @@ L["Ready"] = "Ready"
 L["Summon"] = "Summon"
 L["Summon please!"] = "Summon please!"
 
+-- defaults/BuiltIns_Emotes.lua: the Emotes set (QFE-E3); Hello and Ready are the In Group set's
+L["Emotes"] = "Emotes"
+L["Incoming"] = "Incoming"
+L["Charge"] = "Charge"
+L["Attack target"] = "Attack target"
+L["Open fire"] = "Open fire"
+L["Out of mana"] = "Out of mana"
+L["Heal me"] = "Heal me"
+L["Help me"] = "Help me"
+L["Flee"] = "Flee"
+L["Wait"] = "Wait"
+L["Follow me"] = "Follow me"
+L["Wave"] = "Wave"
+L["Thank you"] = "Thank you"
+L["Cheer"] = "Cheer"
+L["Bow"] = "Bow"
+L["Point"] = "Point"
+L["Dance"] = "Dance"
+L["Laugh"] = "Laugh"
+L["Bye"] = "Bye"
+
 -- Settings layout (item 020): headings, labels and lines the move, regroup and relabel added
 L["Background color"] = "Background color"
 L["Button glow"] = "Button glow"
@@ -1381,3 +1418,42 @@ L["How this leaves when it closes. None hides it at once."] =
     "How this leaves when it closes. None hides it at once."
 L["How long the close takes. A send never waits for it."] =
     "How long the close takes. A send never waits for it."
+
+-- The role and the long character names (QFE-F4: modules/Situation.lua DescribeRole, settings/SchemaRows.lua
+-- the Role row, settings/Groups_When.lua and settings/SchemaMembers.lua on WoW Forever)
+L["%s, from your specialization"] = "%s, from your specialization"
+L["%s, from your specialization: %s"] = "%s, from your specialization: %s"
+L["%s, from your talents"] = "%s, from your talents"
+L["%s, from your talents: %s"] = "%s, from your talents: %s"
+L["%s, the last role read on this character"] = "%s, the last role read on this character"
+L["%s, the role your group gave you"] = "%s, the role your group gave you"
+L["%s, your choice on the General page"] = "%s, your choice on the General page"
+L["not known yet"] = "not known yet"
+L["Your role: %s."] = "Your role: %s."
+L["Your role"] = "Your role"
+L["Automatic (%s)"] = "Automatic (%s)"
+L["Automatic now: %s."] = "Automatic now: %s."
+L["The role the Role condition matches on this character. Automatic reads it from the game."] =
+    "The role the Role condition matches on this character. Automatic reads it from the game."
+L["Specific characters, by first name and surname."] = "Specific characters, by first name and surname."
+L["Type a first name and surname, then press Enter or Add."] =
+    "Type a first name and surname, then press Enter or Add."
+L["A character is a first name and surname."] = "A character is a first name and surname."
+L["a first name and surname"] = "a first name and surname"
+
+-- The probe (QFE-F5: settings/SlashVerbs.lua ProbeLines, the `probe` row in settings/Slash.lua)
+L["Record where you are, your role and the client's emotes in the saved settings — `/qc probe`, or `/qc probe clear`"] =
+    "Record where you are, your role and the client's emotes in the saved settings — `/qc probe`, or `/qc probe clear`"
+L["Probe %d saved for %s (QuickCommsDB.global.probes; /qc probe clear empties it)."] =
+    "Probe %d saved for %s (QuickCommsDB.global.probes; /qc probe clear empties it)."
+L["  place: %s, type %s, difficulty %s (%s), %s players, instance %s"] =
+    "  place: %s, type %s, difficulty %s (%s), %s players, instance %s"
+L["  content: %s; group: %s; role: %s"] = "  content: %s; group: %s; role: %s"
+L["  spec: %s (%s); talent groups: %s; emotes: %d"] = "  spec: %s (%s); talent groups: %s; emotes: %d"
+L["none"] = "none"
+L["Probes cleared: %d removed."] = "Probes cleared: %d removed."
+L["/qc probe records where you are; /qc probe clear empties the records."] =
+    "/qc probe records where you are; /qc probe clear empties the records."
+L["The probe is not available in combat."] = "The probe is not available in combat."
+L["The probe is not available before the saved settings load."] =
+    "The probe is not available before the saved settings load."

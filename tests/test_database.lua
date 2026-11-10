@@ -576,3 +576,66 @@ test("database: [bg subgroups] a fresh profile seeds every objective node once, 
     for _ in pairs(p.groups) do again = again + 1 end
     assertEqual(again, groups, "nothing seeded twice")
 end)
+
+-- ── step 19 (QFE-E3, the Emotes set) ──────────────────────────────────────────────────────────
+
+-- A profile as builds before step 19 stored it: every set given but Emotes, the Solo set's copy with
+-- an edited callout, a group of the player's own, a pad listing Solo, a dial that does not, and two
+-- damaged surfaces.
+local function preEmotesProfile(BI)
+    local seeded = {}
+    for _, top in ipairs(BI.order) do seeded[top] = true end
+    seeded["bi.emotes"] = nil
+    return { nextId = 10, seeded = true, seededSets = seeded,
+        groups = { g1 = { name = "Solo", origin = "bi.world", callouts = { "c1" }, when = {}, enabled = true },
+            g2 = { name = "Mine", callouts = {}, when = {}, enabled = true } },
+        callouts = { c1 = { name = "Thanks", text = "Cheers all!", channel = "general", origin = "bi.world.thanks" } },
+        pads = { p1 = { groups = { "g1", "g2" } }, p2 = "damaged" }, dials = { d1 = { groups = { "g2" } },
+            d2 = { groups = "damaged" } } }
+end
+
+test("database: [QFE-E3] step 19 adds the Emotes set to a stored profile once, after Solo, touching nothing else", function()
+    local NS = T.bootAddon()
+    local db, BI = NS.addon.db, NS.BuiltIns
+    db.sv.profiles.Old = preEmotesProfile(BI)
+    db.sv.profiles.Never = { pads = {}, dials = {}, groups = {}, callouts = {}, seededSets = {} }
+    db.global.schemaVersion = 18
+    NS.addon:RunMigrations()
+    local p = db.sv.profiles.Old
+    -- red under: no step 19 in core/Database.lua
+    assertTrue(db.global.schemaVersion >= 19, "stamped")
+    assertEqual(originCount(p, "bi.emotes"), 1, "the set, once")
+    local id = p.pads.p1.groups[2]
+    local g = p.groups[id]
+    -- red under: the set put at the pad's end, as Prepare puts a newly shipped set
+    assertEqual(g.origin, "bi.emotes", "right after the Solo set on the pad")
+    assertEqual(p.pads.p1.groups[3], "g2", "the player's own group after it")
+    assertTrue(tonumber(id:sub(2)) >= 10, "a fresh id above the stored counter: " .. id)
+    assertEqual(g.name, "Emotes")
+    assertTrue(g.when.content.openWorld)
+    assertEqual(#g.callouts, #BI.groups["bi.emotes"].callouts, "every callout")
+    local first = p.callouts[g.callouts[1]]
+    assertEqual(first.emote, "INCOMING")
+    assertEqual(first.channel, "gameEmote")
+    assertEqual(first.origin, "bi.emotes.incoming")
+    assertEqual(p.dials.d1.groups[1] .. "," .. p.dials.d1.groups[2], "g2," .. id, "at the end of a dial without Solo")
+    assertEqual(p.pads.p2, "damaged")
+    assertEqual(p.dials.d2.groups, "damaged")
+    assertEqual(p.callouts.c1.text, "Cheers all!", "an edited callout is the player's")
+    assertEqual(#p.groups.g1.callouts, 1, "Solo's own list is left as it is")
+    assertTrue(p.seededSets["bi.emotes"], "given, so Prepare adds none later")
+    assertNil(next(db.sv.profiles.Never.groups), "a profile never prepared is left to Prepare")
+    -- a second run adds nothing; nor does one after the player deleted the set
+    db.global.schemaVersion = 18
+    NS.addon:RunMigrations()
+    assertEqual(originCount(p, "bi.emotes"), 1, "idempotent")
+    assertEqual(#p.pads.p1.groups, 3)
+    p.groups[id] = nil
+    p.pads.p1.groups = { "g1", "g2" }
+    db.global.schemaVersion = 18
+    NS.addon:RunMigrations()
+    assertEqual(originCount(p, "bi.emotes"), 0, "a deleted set stays deleted")
+    NS.Library.MigrateEmotesSet(nil)
+    NS.Library.MigrateEmotesSet({})
+    NS.Library.MigrateEmotesSet({ seeded = true, seededSets = {}, groups = "damaged" })
+end)

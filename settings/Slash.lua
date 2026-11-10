@@ -70,6 +70,8 @@ local COMMANDS = {
         function(rest) NS.SlashVerbs.Preview(rest) end},
     {"why",      L["Say why each pad and dial shows the groups it shows"],
         function() NS.SlashVerbs.Why() end},
+    {"probe",    L["Record where you are, your role and the client's emotes in the saved settings — `/qc probe`, or `/qc probe clear`"],
+        function(rest) NS.SlashVerbs.Probe(rest) end},
 }
 NS.COMMANDS = COMMANDS
 

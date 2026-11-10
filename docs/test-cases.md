@@ -13,7 +13,7 @@ Total.
 - harness: the addon's file list is the TOC's, Namespace first and Profiles last
 - harness: every LibKa0s file comes from LibKa0s.xml, in its order
 - harness: every adopted LibKa0s module is the live library, not its stub
-- toc: the fixed field order, a single Retail Interface line, the X-Standard field and the CurseForge id
+- toc: the fixed field order, the Retail and WoW Forever Interface line, the X-Standard field and the CurseForge id
 - toc: the icon is the 128x128 logo, and the file exists
 - toc: OptionalDeps names only vendored libraries and the optional suites, and no hard Dependencies
 - toc: the landing-page logo exists beside the launcher icon (layout-§4)
@@ -108,7 +108,7 @@ Total.
 - perf: [review] a refresh whose signature moves notes situationRefresh before the rebuild it publishes
 - perf: [phase 5] the Comms Dial page's Preview notes neither bakeSurface nor resolverResolve
 
-### test_database.lua (20)
+### test_database.lua (21)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the target is the last step's `to`, and the steps climb in order
@@ -130,6 +130,7 @@ Total.
 - database: [bg subgroups] step 7 seeds the new objective nodes by origin, once; step 8 drops the retired dial fields
 - database: [polish] migrate: step 9 drops the retired slice border
 - database: [bg subgroups] a fresh profile seeds every objective node once, and step 7 leaves it as it is
+- database: [QFE-E3] step 19 adds the Emotes set to a stored profile once, after Solo, touching nothing else
 
 ### test_profile.lua (10)
 
@@ -237,7 +238,7 @@ Total.
 - diagnostics: [debug] the log follows a dial open, a ring shown, a press and a close, once each
 - diagnostics: [shine] the pad's button line and the dial's slices line print the look and strength
 
-### test_compat.lua (14)
+### test_compat.lua (15)
 
 - compat: plain readers pass plain values and drop secrets
 - compat: InstanceInfo with a secret instanceID reads nil, never raises
@@ -251,8 +252,32 @@ Total.
 - compat: [phase 3] InstanceName reads the client's name; a secret, empty or missing one is nil
 - compat: [phase 3] SpecInfoByID and ClassName read display names; secret or missing ones are nil
 - compat: [final 8] BindingKey reads a command's key; a secret or a missing API is nil
+- compat: [QFE-F1] FrameStrata answers a plain strata, else the fallback (a secret on WoW Forever)
 - compat: [QF-03] Coordinates reads the map position as x, y in percent, one decimal, or nil
 - compat: [QF-04] GeneralJoined is true only when the client names channel 1 as General
+
+### test_identity.lua (11)
+
+- identity: without regional names the character is Name-Realm and the names carry no realm
+- identity: with regional names the character, {me} and a unit are First Surname, never a realm
+- identity: with regional names a chat sender is the player by the long form alone
+- identity: the When editor takes and shows the long form where names are regional
+- identity: the role is LibKa0s Role's answer over db.char.role; an override wins and is saved
+- identity: the snapshot carries the role's source and detail; the signature does not
+- identity: without LibKa0s Role the role still reads: the pick, the group's, then the spec's
+- identity: a talent-group swap re-reads the role (Forever's dual spec keeps the one spec)
+- identity: the General page's Role row writes this character's pick and refreshes the situation
+- identity: /qc why opens with the role and where it came from; the diagnostics print both
+- identity: the spec row lists the client's specs through LibKa0s Role, else the shipped seed
+
+### test_probe.lua (6)
+
+- probe: records the place, the situation, the role, the spec, the talent groups and the emotes
+- probe: probes append in order, keep the newest PROBE_KEEP, and clear empties every client
+- probe: refused in combat with one line, recording nothing; an unknown word names the forms
+- probe: never a new SavedVariables global, and the TOC lists none for it
+- probe: missing client APIs are stored as nil
+- probe: [QFE-REV] secret client answers are stored as nil, never as the value; plain ones are kept
 
 ### test_restrictions.lua (20)
 
@@ -314,7 +339,7 @@ Total.
 - tokens: a mock fills a baked value missing here, and only when given (the preview echo, QC-07)
 - tokens: [QF-03] {coordinates} and {coords} bake from ctx.coordinates; missing is dropped and listed, or mocked
 
-### test_channels.lua (13)
+### test_channels.lua (18)
 
 - channels: smartGroup prefers instance, then raid, then party
 - channels: smartGroup solo follows the fallback
@@ -329,6 +354,30 @@ Total.
 - channels: [QF-04] a general callout bakes /1 with channel 1 joined and /s without
 - channels: [QF-04] the channel row offers General with its label; the seam accepts it
 - channels: [QF-04] a Groups row names General in channel 1's color
+- channels: [QFE-E1] emote is a fixed kind: /e, chat type EMOTE, the client's EMOTE color
+- channels: [QFE-E1] emote locks as Say does
+- channels: [QFE-E1] an emote callout bakes /e and its text
+- channels: [QFE-E1] the channel row offers Emote; the seam accepts it
+- channels: [QFE-E1] a Groups row names Emote in the emote color; a tooltip names its channel
+
+### test_emotes.lua (16)
+
+- emotes: [QFE-E2] the map is EMOTEn_TOKEN to its first free EMOTEn_CMDj over the client's indices, first index wins
+- emotes: [QFE-REV] a command the chat parser runs before an emote is skipped for the token's next one
+- emotes: [QFE-E2] the picker lists speech emotes first, marked as voice, then the animated, then the rest
+- emotes: [QFE-E2] Find takes a command or a token; Search matches either, in the picker's order
+- emotes: [QFE-E2] the map is built once, on the first read
+- emotes: [QFE-E2] a game emote bakes the client's command, never the text
+- emotes: [QFE-E2] an unknown or missing token bakes nothing and says why
+- emotes: [QFE-E2] a game emote locks as Say does
+- emotes: [QFE-E2] the library stores the token, copies keep it, and the seam writes it
+- emotes: [QFE-E2] the channel row offers Game emote; a Groups row previews the command
+- emotes: [QFE-E2] a pad button arms the command, and its echo is the player's CHAT_MSG_TEXT_EMOTE
+- emotes: [QFE-E2] a previewed game emote prints would emote /point and sends nothing
+- emotes: [QFE-E2] picking Game emote swaps the Text box for the emote picker; a pick names the callout
+- emotes: [QFE-E2] Save with Game emote and no pick stays open and names the picker
+- emotes: [QFE-E2] a user name is kept, and leaving Game emote drops the token on Save
+- emotes: [QFE-E2] the popup's preview names the emote, and an unknown token's reason
 
 ### test_bake.lua (12)
 
@@ -361,7 +410,7 @@ Total.
 - resolver: [all] All battlegrounds and All dungeons and raids match the whole kind, the listed ids aside
 - resolver: [arena] the arena row matches only in an arena: its listed ids, or all of them
 
-### test_builtins.lua (26)
+### test_builtins.lua (30)
 
 - builtins: the expected top-level sets exist in order
 - builtins: ids are unique, referenced and well formed
@@ -389,13 +438,30 @@ Total.
 - builtins: [bg buttons] In Group is a party, raid and instance group set of short smart-group lines
 - builtins: a faction-themed battleground's locations take the faction's color, neutral ones gold
 - builtins: a neutral battleground's locations take a color for what they are, never white
+- builtins: [QFE-E3] Emotes is an open-world set of game emotes, voice then social, no text
+- builtins: [QFE-E3] every seeded emote token exists on both clients; the voice ones are speech emotes
+- builtins: [QFE-E3] each seeded emote bakes to the client's own command
+- builtins: [QFE-E3] a fresh profile seeds Emotes after Solo; Restore built-in groups brings it back
 
-### test_gameids.lua (4)
+### test_gameids.lua (5)
 
 - game ids: every battleground set matches only battleground maps, and no map is two sets'
 - game ids: the shipped dungeons are Mythic+ dungeons and the shipped raids are raids
 - game ids: [instances] INSTANCES are dungeons and raids, cover the season's, and reach past it
 - game ids: [arena] ARENAS are arena maps, one per arena
+- game ids: [QFE-F3] every WoW Forever id has its Retail CLIENT_MAPS row, of its kind
+
+### test_client_data.lua (9)
+
+- client data: [QFE-F3] the lists are the client's, picked once by ClientKey
+- client data: [QFE-F3] UseClient replaces the whole pick, BATTLEGROUND_SETS included
+- client data: [QFE-F3] the When editor's content kinds and drawers are the client's
+- client data: [QFE-F3] Preview as... offers the client's dungeons, raids and battlegrounds
+- client data: [QFE-F3] a fresh profile seeds the client's sets: no Arena set on Forever
+- client data: [QFE-C7] the Dungeon set seeds on both clients, dungeon only on Forever
+- client data: [QFE-F3] a set held from Retail still loads, matches and keeps its callouts on Forever
+- client data: [QFE-F3] the battleground row suggests the seeded sets' maps
+- client data: [QFE-F3] the token help leaves {dungeon} and {key} out on Forever
 
 ### test_library.lua (67)
 
@@ -498,7 +564,7 @@ Total.
 - members: [inherit] the Enabled tooltip names whose When a sub-group is shown by
 - members: [arena] the CLI sets the arena row by id, name or all, and prints it back
 
-### test_editors.lua (18)
+### test_editors.lua (19)
 
 - editors: [review 2] Select keeps the selection, and nothing else; Heal keeps a member that exists
 - editors: every membership change asks for one structural repaint, on the next frame
@@ -509,6 +575,7 @@ Total.
 - editors: the stand-down cancels a pending repaint
 - editors: ConfirmDelete asks first, and only the accepted popup runs the act, once
 - editors: [QC-06] the delete confirm lifts its dialog over the dial and the modals, then hands it back
+- editors: [QFE-F1] a confirm whose dialog strata reads secret is handed back in Blizzard's DIALOG
 - editors: Scalar keeps the rows the flow engine draws, and CancelReorder cancels once
 - editors: a row's remove is a glyph, not a button
 - editors: a row with edit shows the edit glyph and fires it
@@ -768,7 +835,7 @@ Total.
 - queue: a key replaces its earlier entry and keeps its place
 - echo: [QF-04] only channel 1 is the General echo; an unreadable index is left to the sender rule
 
-### test_sendengine.lua (32)
+### test_sendengine.lua (33)
 
 - sendengine: a send button is a named secure button registered for both edges
 - sendengine: Arm sends exactly the line; Disarm clears both attributes and sends nothing
@@ -794,6 +861,7 @@ Total.
 - send: [QF-04] the player's own line on channel 1 is the General echo; on channel 2 it is not
 - send: [QF-04] an unreadable channel index falls to the sender rule
 - send: a disarmed button reports nothing and tracks nothing
+- send: [QFE-E1] the player's CHAT_MSG_EMOTE is an emote press's echo; another player's is not
 - send: a solo self-fallback prints locally and sends nothing
 - send: onPress hears the verdict and the window
 - send: every echo event is a declared feature event
@@ -826,7 +894,7 @@ Total.
 - dial secure: [QF-01] a live dial (no preview, or false) closes on a pick, in and out of combat
 - dial secure: [QF-01] a reload from preview to live clears the flag
 
-### test_preview.lua (35)
+### test_preview.lua (36)
 
 - preview: test mode turns on and off, announcing each edge once
 - preview: a start in combat is refused with one line
@@ -848,6 +916,7 @@ Total.
 - preview: [final 13] `/qc preview` reads the situation's name without regard to case
 - preview: [final 10] a dungeon preview fills {dungeon}, and the header names the preview as its menu does
 - preview: [echo] a previewed button prints [QC] /<slash> <resolved text>, and still sends nothing
+- preview: [QFE-E1] a previewed emote button prints [QC] /e <resolved text>
 - preview: [echo] the slash follows the channel the previewed situation resolves
 - preview: [echo review 3] a padlocked previewed button echoes its line, naming no lock
 - preview: [echo] a live button prints nothing extra
@@ -1449,9 +1518,10 @@ Total.
 - anim surfaces: a track rests at the dial's alpha, the master opacity included
 - anim surfaces: the dial's ghost mirrors the hub and pointer, and each slice's fill by its place
 
-### test_anim_ghost.lua (48)
+### test_anim_ghost.lua (49)
 
 - anim ghost: the stage takes the source's strata and level, and sub-frames keep their stacking
+- anim ghost: [QFE-F1] a secret source strata never reaches the stage; it takes the dial's
 - anim ghost: a level is held to the room above the stage, and never under it
 - anim ghost: one sub-frame per level and place, so a place stays addressable and a level whole
 - anim ghost: a child takes its place from itself, then its parent, and a root's tag counts
@@ -1609,18 +1679,19 @@ Total.
 - layout: [position] the box follows the stored point on a refresh
 - layout: [position] both blocks come from the library's composer
 
-### test_skinsetup.lua (24)
+### test_skinsetup.lua (25)
 
 - skin seam: the owner is the folder name, and NS.Skin is its facade
 - skin seam: the owner is registered at file load, before the profile store exists
-- skin seam: the read answers Ka0s Default before the profile store exists
+- skin seam: the read answers the client's default skin before the profile store exists
+- skin seam: NS.DEFAULT_SKIN is the client's default skin, Ka0s Default without the library
 - skin seam: EllesmereUI hears of this addon once, from the library alone
 - skin seam: every owner token is in the qc namespace and answers today's pixels on Ka0s Default
 - skin seam: under another skin an owner token takes its follow token's value
 - skin seam: an owner token reaches a markup escape byte for byte
 - skin seam: Core's window edge is handed the owner
 - skin seam: the drag strip, the Preview dropdown and the reorder list are handed the owner
-- skin seam: the eight skin keys default to Ka0s Default, the picker unseen
+- skin seam: the eight skin keys default to the client's default skin, the picker unseen
 - skin seam: every skin key is a skip-render schema row on the Skin tab
 - skin seam: the skin row's values are every registered skin, in the library's order
 - skin seam: /qc set refuses a skin that is not registered and applies one that is
@@ -1958,6 +2029,12 @@ Total.
 - skin switch: a cell's hover art changes
 - skin switch: a settings row's remove mark changes
 
+### test_client_globals.lua (3)
+
+- client globals: no call of a global a client lacks
+- client globals: every allowlist row has a reason and a finding to excuse
+- client globals: the check is falsifiable, a planted bare call is flagged for both clients
+
 ## Totals
 
 | Suite | Cases |
@@ -1967,24 +2044,28 @@ Total.
 | test_bus.lua | 2 |
 | test_surface_parity.lua | 18 |
 | test_setup.lua | 26 |
-| test_database.lua | 20 |
+| test_database.lua | 21 |
 | test_profile.lua | 10 |
 | test_schema.lua | 20 |
 | test_slash.lua | 22 |
 | test_disabled.lua | 26 |
 | test_diagnostics.lua | 13 |
-| test_compat.lua | 14 |
+| test_compat.lua | 15 |
+| test_identity.lua | 11 |
+| test_probe.lua | 6 |
 | test_restrictions.lua | 20 |
 | test_situation.lua | 20 |
 | test_tokens.lua | 11 |
-| test_channels.lua | 13 |
+| test_channels.lua | 18 |
+| test_emotes.lua | 16 |
 | test_bake.lua | 12 |
 | test_resolver.lua | 13 |
-| test_builtins.lua | 26 |
-| test_gameids.lua | 4 |
+| test_builtins.lua | 30 |
+| test_gameids.lua | 5 |
+| test_client_data.lua | 9 |
 | test_library.lua | 67 |
 | test_members.lua | 28 |
-| test_editors.lua | 18 |
+| test_editors.lua | 19 |
 | test_callout_popup.lua | 38 |
 | test_icon_browser.lua | 14 |
 | test_window_icons.lua | 5 |
@@ -1995,9 +2076,9 @@ Total.
 | test_page_dials.lua | 28 |
 | test_check.lua | 6 |
 | test_send_guard.lua | 11 |
-| test_sendengine.lua | 32 |
+| test_sendengine.lua | 33 |
 | test_dial_secure.lua | 20 |
-| test_preview.lua | 35 |
+| test_preview.lua | 36 |
 | test_edit_preview.lua | 17 |
 | test_preview_window.lua | 25 |
 | test_coordinates.lua | 8 |
@@ -2015,7 +2096,7 @@ Total.
 | test_anim.lua | 46 |
 | test_anim_styles.lua | 140 |
 | test_anim_surfaces.lua | 42 |
-| test_anim_ghost.lua | 48 |
+| test_anim_ghost.lua | 49 |
 | test_keybinds.lua | 6 |
 | test_dial_shine.lua | 8 |
 | test_icon_style.lua | 13 |
@@ -2023,7 +2104,7 @@ Total.
 | test_shine.lua | 8 |
 | test_layers.lua | 14 |
 | test_layout.lua | 28 |
-| test_skinsetup.lua | 24 |
+| test_skinsetup.lua | 25 |
 | test_launcher_skin_entry.lua | 1 |
 | test_skin_windows.lua | 24 |
 | test_skin_hud.lua | 20 |
@@ -2043,5 +2124,6 @@ Total.
 | test_lizard_sighted.lua | 8 |
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 26 |
+| test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1706** |
+| **Total** | **1768** |

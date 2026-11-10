@@ -26,9 +26,36 @@ local loadAddon = dofile("tests/loader.lua")(root, mock)
 local currentMock
 local mockView = setmetatable({}, { __index = function(_, k) return currentMock and currentMock[k] end })
 
+-- THE DEFAULT SKIN EVERY CASE BOOTS ON. Since LibKa0s v1.94.0 (Skin minor 18) the default skin is the
+-- client's: WoW Forever under the kit's forever profile, Ka0s Default under retail (core/SkinSetup.lua's
+-- NS.DEFAULT_SKIN). Most suites pin Ka0s Default's pixels, so the factories choose Ka0s Default by name
+-- on both profiles: the Skin major's per-client table answers "ka0s" for every client before the
+-- addon's first file reads it. A case that pins the client's own default passes `opts.clientSkin = true`
+-- and boots on what the profile's client really answers (tests/test_skinsetup.lua, tests/test_schema.lua).
+local function pinKa0sDefault(m)
+    local skinLib = m.LibStub and m.LibStub("LibKa0s-Skin-1.0", true)
+    if skinLib and type(skinLib.CLIENT_DEFAULTS) == "table" then
+        local pinned = {}
+        for client in pairs(skinLib.CLIENT_DEFAULTS) do pinned[client] = skinLib.DEFAULT end
+        skinLib.CLIENT_DEFAULTS = pinned
+    end
+end
+
 -- Every file loaded; nothing run.
 local function newAddon(opts)
+    if not (opts and opts.clientSkin) then
+        local given = opts or {}
+        opts = setmetatable({ afterLibs = function(m)
+            pinKa0sDefault(m)
+            if type(given.afterLibs) == "function" then given.afterLibs(m) end
+        end }, { __index = given })
+    end
     local NS, env, m = loadAddon(opts)
+    -- THE GAME DATA EVERY CASE BOOTS ON (QFE-F3): Retail's lists and seeds, on both kit profiles, as
+    -- with the skin above: most suites pin Retail's built-in sets (the Dungeon set, the arena, every
+    -- battleground). A case that pins the client's own (WoW Forever's lists, hidden kinds and seeds)
+    -- passes `opts.clientData = true` (tests/test_client_data.lua).
+    if not (opts and opts.clientData) and NS.GameIds and NS.GameIds.UseClient then NS.GameIds.UseClient("retail") end
     currentMock = m
     return NS, env, m
 end
@@ -199,13 +226,17 @@ Kit.run{
         "test_disabled",
         "test_diagnostics",
         "test_compat",
+        "test_identity",
+        "test_probe",
         "test_restrictions", "test_situation",
         "test_tokens",
         "test_channels",
+        "test_emotes",
         "test_bake",
         "test_resolver",
         "test_builtins",
         "test_gameids",
+        "test_client_data",
         "test_library",
         "test_members",
         "test_editors",

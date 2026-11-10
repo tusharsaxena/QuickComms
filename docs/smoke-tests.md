@@ -41,10 +41,16 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | ANIM-1..20 | [Animations](#animations) | The dial's open and close, every style by family, Slide's Direction, a send, combat, the stand-down, Alt-Z, a pad having none, text that neither shimmers nor truncates, the old defaults moved |
 | PLOOK-1..11 | [The pad's look per skin](#the-pads-look-per-skin) | The pad in each skin: edges, buttons and shine (the owner's findings of 2026-11-01) |
 | FSKIN-1..13 | [The full skin](#the-full-skin) | Every pad and dial color, the shadow, texture and shine on the skin, Ka0s Default unmoved, the companions off, an existing profile, meaning colors, the ghost, a stored pick of the deleted Friz |
+| ROLE-1..3 | [Role and character](#role-and-character) | The Role row on General → Behavior and its Automatic phrase, the group's assigned role winning over the spec, the Character and Specialization rows of the When editor (Retail; FOREVER-18 to FOREVER-21 re-run them on Forever) |
+| FOREVER-1..24 | [WoW Forever](#wow-forever) | The core re-run on a live WoW Forever client: the AddOns list, a clean load, the settings panel and the launcher, the default skin per client, a pad's secure send in the open world, a dial's open, send and animations (the strata guard), a lifted confirm, the key bindings, profiles across a full restart, diagnostics, enable and disable; the content kinds and drawers the When editor offers, Preview as..., the sets a fresh profile seeds, the token help, the classic-era place ids in game and a profile copied from Retail; Automatic role from the talent tree, the Role pick, the long character name and your own lines; `/qc probe` on both clients and `probe clear`; the Dungeon set matching dungeons alone |
+| EMOTE-1..8 | [Emotes](#emotes) | Retail, then Forever: a custom emote callout (`/e`) and its lock, a game emote callout, the emote picker's order and voice marks, preview, throttle and an unknown token, a game emote during an encounter, the Emotes set in the open world and an existing profile gaining it once |
 | SKIN-1..31 | [Skins](#skins) | The skinning rollout: the one-time reset under Ka0s Default, a new pad, dial or profile on the skin, Ka0s Default elsewhere unchanged, the Skin tab, every skin on the pads and dials, the *Use the skin's ...* boxes, the Preview as window, the callout popup and the icon browser, the settings pages, the tool windows, the Font and texture overrides, Ignore fonts, EllesmereUI on and off and the reload back, profiles and combat, the first-run skin picker (its eye, Apply, close, gear, the switch and a profile event, one picker across Ka0s addons), the CLI and the degraded install; LibKa0s v1.82.0: the Font outline, From skin font flags, `/qc skin`, the HUD size scale and the windows' width parity; the skin on the only media picker; no line under any window title |
 
 ## Before you start
 
+- **Clients (clients-§6).** The addon serves Retail and WoW Forever. Every check outside the
+  [WoW Forever](#wow-forever) section runs on **Retail**, where its recorded result was taken. That
+  section names the checks to run on a live **Forever** client.
 - Install the addon folder as `Interface\AddOns\QuickComms` and `/reload`.
 - Keep the debug console closed unless a check opens it; `/qc debug` opens it.
 
@@ -2303,6 +2309,179 @@ Default → every icon's border is a flat 1-pixel edge in each, never 2 pixels a
 edge WoW Default drew before. Untick the box → your own style and thickness come back. Fail: a 2-pixel or
 tooltip edge under any skin. Result: not run
 
+## Role and character
+
+**Client: Retail** unless the check says otherwise; FOREVER-18 to FOREVER-21 re-run these on WoW
+Forever. **Code:** `core/Compat.lua` (`CharacterKey`, `PlayerRole`, `SetRoleOverride`,
+`SpecsForClass`), `libs/LibKa0s/Role.lua` (vendored), `settings/Schema.lua` and
+`settings/SchemaRows.lua` (the Role row), `settings/Groups_When.lua` (the Character and Specialization
+rows), `modules/Situation.lua` (`DescribeRole`), `settings/SlashVerbs.lua` (`/qc why`).
+
+- **ROLE-1. The Role row (Retail).** General → Behavior → **Your role** → the **Role** dropdown reads
+  *Automatic (Tank, from your specialization: Protection)*, or your own spec and role; its tooltip
+  ends *Automatic now: ...* with the same phrase. Pick **Healer** → a group whose When ticks only Role
+  Healer shows on the pad at once, with no /reload; `/qc why` opens with *Your role: Healer, your
+  choice on the General page.* Switch to another profile → the Role row still reads Healer (it is per
+  character). Pick **Automatic** → the pad goes back, and `/qc why` names the spec again. Result: owed
+- **ROLE-2. The group's role wins over the spec (Retail).** Join a dungeon finder group as a role
+  other than your spec's → `/qc why` reads *Your role: <that role>, the role your group gave you.*;
+  `/qc diagnostics` shows `roleSource=assigned`. Result: owed
+- **ROLE-3. The Character and Specialization rows (Retail).** Groups → any group → When → **Character**
+  → **Add this character** → your `Name-Realm` is listed, as before. **Specialization** → your class's
+  specs are listed by name. A group saved before this change with a Character entry still matches.
+  Result: owed
+
+## WoW Forever
+
+**Client: WoW Forever** (1.60.1, interface 16001), every check here. The rest of this file is Retail's; these checks re-run its core on Forever, where the client draws its own frames and keeps its own `WTF`. Every Retail rule above holds: zero Lua errors, no taint warning, nothing sent that you did not press. The content kinds, place lists, role, probe and emote checks join this section with their items of the port (Ka0sAddonsCommonTasks `docs/2026-11-10-QUICKCOMMS_FOREVER_EMOTES/`).
+
+**Code:** `QuickComms.toc` (the two-number `## Interface:` line), `core/SkinSetup.lua` (`NS.DEFAULT_SKIN`), `core/Compat.lua` (`Compat.FrameStrata`, the strata guard), `modules/Anim_Ghost.lua` and `settings/ModalWindow.lua` (its two readers), `modules/SendEngine.lua` (the secure send path, unchanged on Forever).
+
+**Setup.** Link the checkout into the Forever client once, from an elevated Windows prompt, then fully restart the client:
+`mklink /d "G:\Games\Blizzard\World of Warcraft\_forever_\Interface\AddOns\QuickComms" "D:\Profile\Users\Tushar\Documents\GIT\QuickComms"`.
+Forever's SavedVariables are `_forever_/WTF/Account/<ACCOUNT>/SavedVariables/QuickComms.lua`. Props: a second character or a friend to group with, for FOREVER-5.
+
+- **FOREVER-1. The AddOns list.** At character select → **Ka0s Quick Comms** is listed with its logo and is **not** marked *Out of date*, and "Load out of date AddOns" does not need to be ticked for it to load. Result: owed
+- **FOREVER-2. A fresh install loads clean.** With no `QuickComms.lua` in Forever's SavedVariables, log in → zero Lua errors and no chat line at login (INSTALL-1); `/qc version` prints the version. Result: owed
+- **FOREVER-3. The settings panel and the launcher.** `/qc config` → the settings open on the landing page, and General, Groups, Comms Pad, Comms Dial and Profiles each draw with no error. The minimap button shows the speech-bubble logo; left-click → the settings open; right-click → the four entries Enabled, Locked, Test mode and Show window, each ticking its state (STATE-2). Result: owed
+- **FOREVER-4. The default skin per client.** On a fresh Forever profile (create one on the Profiles page) → `/qc get skin.skin` reads `forever`, and General → Skin shows **WoW Forever** selected. On Retail, a fresh profile reads `ka0s` (Ka0s Default). Then pick Obsidian, then Ka0s Default, then WoW Forever on Forever → the pads, the dial and the settings windows repaint each time, with no error. Result: owed
+- **FOREVER-5. A pad sends through its secure button.** In the open world, grouped with a second character → the pad shows its open-world set. Click a button → its line goes to the channel it names, once, and the spam guard dims every button for about a second as on Retail (SEND-3). Out of the group, solo → the solo set shows and a click follows Behavior's solo fallback. Result: owed
+- **FOREVER-6. A dial opens, sends and animates (the strata guard).** Bind Open Comms Dial 1 (Options → Keybindings → Ka0s Quick Comms), press it → the dial opens with its open animation and no Lua error mentioning a secret value or a strata; pick a wedge → its line is sent and the dial closes with its close animation; open it in combat on a training dummy and pick a wedge → it sends (DIAL-1, ANIM-1). Result: owed
+- **FOREVER-7. A lifted confirm (the strata guard).** With a dial bound, open **Groups**, pick a group and click **Delete group…** → the confirm draws over the settings window and over the dial if it is open, and **No** takes the click. Then open the game menu and **Log Out**, and cancel it → Blizzard's own popup draws where it always does, under nothing of this addon's. Result: owed
+- **FOREVER-8. The key bindings.** Options → Keybindings → the **Ka0s Quick Comms** section lists Open Comms Dial 1 and Toggle Comms Pads, and General → Keybindings shows the same keys (KEY-3, KEY-4, KEY-5). Result: owed
+- **FOREVER-9. Profiles across a full restart.** Create profile `SmokeTest` on the Profiles page, move a pad there, then **exit the client completely** and start it again → the same profile is active and the pad is where you left it. Switch back and delete `SmokeTest` afterwards. Result: owed
+- **FOREVER-10. Diagnostics.** `/qc diagnostics` → the console opens with the sections DIAG-1 names and no Lua error, and the report's `client:` line reads `version=1.60.1` and `interface=16001`. Result: owed
+- **FOREVER-11. Enable and disable.** `/qc disable` → every pad and dial stands down and `/qc help`, `/qc version` and `/qc diagnostics` still answer; `/qc enable` → they return, as on Retail (STATE-1). Result: owed
+
+The content kinds, place lists and seeds (QFE-F3; **code:** `defaults/GameIds_Clients.lua`, `defaults/BuiltIns.lua` `Ships`/`Seeded`, `settings/Groups_When.lua`, `modules/Preview.lua`, `settings/Callouts.lua`). Forever's ids are MATCHED, NOT CONFIRMED IN GAME until FOREVER-16 passes.
+
+- **FOREVER-12. The When editor offers Forever's kinds.** Groups → pick any group → When → open **Content** → it lists exactly Open world, Dungeon, Raid and Battleground (no Mythic+, Delve, Scenario, Arena or Housing); **Select all** ticks those four only. The drawers listed are Content, Instance, Group, Leader or assist, Class, Specialization, Role, Character and Battleground: no **Difficulty**, **Key level** or **Arena** drawer. Open **Instance** and type `Molten` → Molten Core is suggested; type `Algeth` → nothing is suggested. On Retail the same group shows all nine kinds and every drawer (unchanged). Result: owed
+- **FOREVER-13. Preview as... lists Forever's places.** Settings → General → **Preview as...** → the menu reads Current, then the 17 classic dungeons as `Dungeon · <name>`, A-Z, then the six raids (Molten Core, Onyxia's Lair, Blackwing Lair, both Ahn'Qiraj raids, Naxxramas) as `Raid · <name>`, A-Z and with no difficulty named, then `BG - Arathi Basin`, `BG - Warsong Gulch`, `BG - Alterac Valley` and Solo. There is no `M+` entry and no Arena. Pick `Dungeon · Deadmines` → the pads show the groups whose Content ticks Dungeon; pick `BG - Warsong Gulch` → the Warsong Gulch set shows; then turn the preview off. Every name reads as the client names it, not `Instance <number>`. Result: owed
+- **FOREVER-14. A fresh profile seeds Forever's sets.** Profiles → create `SmokeSeeds` → Groups lists Dungeon, Raid, Solo, Emotes, Arathi Basin, Warsong Gulch, Alterac Valley (each opening into its objectives, as on Retail), Battleground and In Group, and **no** Arena set or any other battleground (Eye of the Storm, Twin Peaks and the rest are absent). **Restore built-in groups** → `0` groups come back. Delete Warsong Gulch, then **Restore built-in groups** → it comes back with its nodes, and the Arena set still does not. Switch back and delete `SmokeSeeds` afterwards. Result: owed
+- **FOREVER-15. The token help leaves out {dungeon} and {key}.** Edit any callout and hover the info glyph beside **Text** → the token list has `{spec}` and `{role}` but no `{dungeon}` and no `{key}`. On Retail it lists both (unchanged). Result: owed
+- **FOREVER-16. The classic-era ids match in game (confirms the MATCHED ids).** Zone into each place you can reach, then `/qc why`: in any listed dungeon → the snapshot's content reads `dungeon` and its instance id is the one `defaults/GameIds_Clients.lua` lists for it; in Molten Core, Onyxia's Lair or another listed raid → `raid` and its listed id; in Warsong Gulch, Arathi Basin and Alterac Valley → `battleground`, and that battleground's own set shows on the pad and opens on the dial (its id is 489, 529 or 30, or the newer map id its set also lists). Record any id that differs, and the ids of Scarlet Monastery, Scholomance and Zul'Gurub, which are not listed yet. Result: owed
+- **FOREVER-17. A profile copied from Retail still works.** Copy a Retail `QuickComms.lua` (with its Dungeon and Arena sets) into Forever's SavedVariables while the client is closed, then log in → zero Lua errors; the Dungeon and Arena groups are still on the Groups page and editable, and their When still shows its other rows; **Restore built-in groups** adds nothing for them. Put the original file back afterwards. Result: owed
+
+The role and the long character names (QFE-F4; **code:** as **Role and character** above). Forever's
+talent-tree-to-role map is MATCHED, NOT CONFIRMED until FOREVER-18 passes for a hybrid class.
+
+- **FOREVER-18. Automatic reads the talent tree.** On a hybrid (a warrior, paladin or druid), with
+  most points in the tank tree and no group role assigned → General → Behavior → **Role** reads
+  *Automatic (Tank, from your talents: Protection)*, or the tree's own name; respec most points into a
+  damage tree → after the respec it reads Damage with that tree's name, and a group whose When ticks
+  only Role Tank stops showing. Record the tree names shown and any class whose answer is wrong.
+  Result: owed
+- **FOREVER-19. The Role pick (Forever).** Pick **Healer** → `/qc why` opens with *Your role: Healer,
+  your choice on the General page.*; `/qc diagnostics` shows `role=HEALER` and
+  `roleSource=override ... override=HEALER`; log out and back in → still Healer. Pick **Automatic** →
+  the talent answer comes back. Result: owed
+- **FOREVER-20. The character row and {me} use the long form.** Groups → any group → When →
+  **Character** → **Add this character** → your first name and surname are listed (`First Surname`, no
+  realm, no hyphen); the drawer's tooltip says *by first name and surname*. Type a friend's
+  `first surname` in lower case and press Enter → it is listed as `First Surname`. A group whose
+  Character lists only you shows; one listing only the friend does not. A callout whose text holds
+  `{me}` sends your first name and surname. Result: owed
+- **FOREVER-21. Your own lines count as yours.** With Behavior's *Note dropped callouts in chat* on,
+  send ten callouts a little over a second apart in a group → no *dropped* note appears for any of
+  them (the echo of your own line, sent as `First Surname`, is matched). `/qc diagnostics` → the Echo
+  line's `unknownSender` stays 0. The Specialization row lists your class's one Forever spec by name.
+  Result: owed
+
+The probe (QFE-F5; **code:** `settings/SlashVerbs.lua` `ProbeLines`, `core/Compat.lua` `ProbeInstance`,
+`TalentGroups`, `EmoteTokens`). Both clients; the records confirm the MATCHED ids above.
+
+- **FOREVER-22. `/qc probe` in every Forever instance visited.** Out of combat, in each Forever
+  dungeon, raid and battleground you enter (and once in the open world), type `/qc probe` → four chat
+  lines: *Probe N saved for forever (...)*, then the place (its name, type, difficulty id and name,
+  max players and instance id), then the content kind, group and role, then the spec, the talent
+  groups with their points and the emote count (a few hundred). In combat → one line, *The probe is
+  not available in combat.*, and nothing is recorded. Log out, then send Claude
+  `_forever_/WTF/Account/<ACCOUNT>/SavedVariables/QuickComms.lua`: its `global.probes.forever` holds one
+  record per probe, each with every `GetInstanceInfo` value, the situation, the role and source, the
+  spec and the emote tokens. Record any place whose content kind or instance id differs from
+  `defaults/GameIds_Clients.lua`. Result: owed
+- **FOREVER-23. `/qc probe` on Retail, and `probe clear`.** On Retail, type `/qc probe` in the open world
+  → the same four lines, *saved for retail*, with no talent groups (*none*). Then `/qc probe clear` →
+  *Probes cleared: N removed.*, N being the probes taken on this client; after a /reload the
+  file has no `probes` table. `/qc help` lists `probe`. Result: owed
+
+The Dungeon set on Forever (QFE-C7, the lead's call; **code:** `defaults/GameIds_Clients.lua`
+`BUILTIN_WHEN`, `defaults/BuiltIns.lua` `WhenOf`, `modules/Library.lua` `seedGroup`).
+
+- **FOREVER-24. The Dungeon set matches dungeons alone.** On a fresh Forever profile (FOREVER-14's
+  `SmokeSeeds`), Groups → **Dungeon** → When → **Content** has Dungeon ticked and nothing else, and
+  there is no Key level drawer. Zone into any listed dungeon, grouped or solo → the pad shows the
+  Dungeon set and the dial opens on it, and `/qc why` names it active. In the open world it is not
+  shown. Delete it, then **Restore built-in groups** → it comes back with its seven callouts and the
+  same dungeon-only When. On Retail a fresh profile's Dungeon set still ticks Dungeon and Mythic+
+  (unchanged). Result: owed
+
+## Emotes
+
+**Client: Retail, then WoW Forever**, every check here (QuickComms#15, Ka0sAddonsCommonTasks
+`docs/2026-11-10-QUICKCOMMS_FOREVER_EMOTES/`). **Code:** `modules/Channels.lua` (the `emote` kind),
+`modules/SendEngine_Guard.lua` (the `CHAT_MSG_EMOTE` echo row), `settings/SchemaMembers.lua`,
+`settings/Groups.lua` and `modules/Pad_Render.lua` (its labels); for the game emotes
+`modules/Emotes.lua`, `modules/Bake.lua` (`BakeEmote`) and `settings/CalloutPopup.lua` (the picker).
+
+- **EMOTE-1. A custom emote callout sends /e (QFE-E1).** Out of combat in the open world, solo, edit a
+  callout in a group on your pad → the **Channel** dropdown lists **Emote** last, after General. Pick it
+  and set the text to `waves at {me}` → its Groups row reads `Emote` in the emote color (orange, as an
+  emote line shows in chat). Hover its button → `Channel: Emote` in the same color. Click it → chat
+  shows `<your name> waves at <your name>` as an emote, once, with no "interface action blocked" and,
+  with *Note dropped callouts in chat* on, no drop note (the `CHAT_MSG_EMOTE` echo is matched; `/qc
+  debug on` shows an `Echo` line ending `sent`). Grouped, it still goes out as an emote (no party
+  line). Turn on **Preview as... → World** and click it → one `[QC] /e waves at <your name>` line and
+  nothing in chat. Repeat on WoW Forever, where `{me}` is your first name and surname. Result: owed
+- **EMOTE-2. An emote locks as Say does (QFE-E1, Retail).** On a raid boss, with the emote callout on
+  the pad → its button carries the padlock and its tooltip ends *Locked: Say, Yell and Emote are blocked
+  during this encounter.*; the lockdown chip shows as for a Say callout (SEND-7). Kill the boss or wipe
+  → the padlock clears. Record whether the game actually refuses the emote during the encounter.
+  Result: owed
+
+- **EMOTE-3. A game emote callout performs the game's emote (QFE-E2).** Out of combat in the open
+  world, target a nearby player or NPC, and edit a callout in a group on your pad → the **Channel**
+  dropdown lists **Game emote** last. Pick it → the Text box gives way to a **Game emote** box. Type
+  `po` → a list hangs under the box with `/point` among its rows; pick it → the Name, if empty, becomes
+  `/point`, and What it sends reads `Emotes: /point`. Save → its Groups row reads `/point  Game emote
+  /point` with the channel in the emote color. Click its button → your character points at your
+  target and chat shows the game's own line (`You point at <target>.`), once, with no "interface action
+  blocked" and no drop note (`/qc debug on` shows an `Echo` line ending `sent`: the
+  `CHAT_MSG_TEXT_EMOTE` echo is matched). With no target it points ahead as `/point` typed does.
+  Repeat on WoW Forever. Result: owed
+- **EMOTE-4. The picker's order, its voice marks and the name rule (QFE-E2).** In the Game emote box
+  type `o` → the first rows are speech emotes (`/incoming (voice)`, `/oom (voice)`...), then the
+  animated ones (`/bow`, `/point`...), then the rest; the arrow keys and Enter pick from the
+  list. Rename the callout `Look`, then pick `/wave` → the name stays `Look`. Pick `/oom` on a new
+  callout → What it sends adds *A voice emote: it also plays its sound.*; its button plays the voice
+  line. Typing `/wave` and pressing Enter without picking a row also picks it. Switch the channel back
+  to Say → the Text box returns; Save → the callout sends its text and keeps no emote
+  (`/qc get callout.emote <id>` prints false). Result: owed
+- **EMOTE-5. Preview, throttle and an unknown token (QFE-E2).** Turn on **Preview as... → World** and
+  click the `/point` button → one `[QC] would emote /point` line and no emote. Turn preview off and
+  press it twice quickly → the second press is dimmed by the guard as for chat. Then run
+  `/qc set callout.emote <id> NOTANEMOTE` → the button shows as unavailable and its tooltip reads
+  *This game emote is not on this client.*; the callout editor's What it sends adds *Emote token:
+  NOTANEMOTE*; its Groups row reads `NOTANEMOTE (not on this client)`. Result: owed
+- **EMOTE-6. A game emote during an encounter (QFE-E2, Retail).** On a raid boss → the `/point`
+  button carries the padlock as a Say callout does (EMOTE-2). Record whether the game would refuse
+  `/point` typed by hand during the encounter: if it does not, the lock is stricter than it needs to be
+  and is a follow-up. Result: owed
+- **EMOTE-7. The Emotes set in the open world (QFE-E3).** On a fresh profile (or after **Restore
+  built-in groups**), out of combat in the open world, solo → the pad shows an **Emotes** section right
+  after Solo: twenty buttons, the voice ones first (Incoming, Charge, Attack target, Open fire, Out of
+  mana, Heal me, Help me, Flee, Wait, Follow me), then Wave, Hello, Thank you, Cheer, Bow, Point, Dance,
+  Ready, Laugh and Bye, each with its own tinted icon; the dial offers the same group. Join a party
+  in the open world → Emotes still shows (any group size). Enter a dungeon → it is gone. Click **Out
+  of mana** → your character says the out-of-mana voice line and chat shows the game's own line, once,
+  no drop note; **Point** with a target → you point at it. Delete the Emotes group, `/reload` → it
+  stays gone; **Restore built-in groups** → it is back with all twenty. Repeat on WoW Forever.
+  Result: owed
+- **EMOTE-8. An existing profile gains Emotes once (QFE-E3, step 19).** On a profile saved before this
+  build (Solo on the pad) → after the update the pad lists Emotes right after Solo and nothing else
+  moved; an edited Solo callout keeps its text. Delete Emotes and `/reload` → it does not come back.
+  Result: owed
+
 ## Pending sign-off
 
 The owner ran every check above on 2026-10-21 and reported all of them passed (the client build was
@@ -2371,3 +2550,7 @@ On 2026-11-02 the owner reported that every check on the smoke lists of the full
 Owed from the owner's fifth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND5/`): SKIN-32 (new, R5-RV); SKIN-33 (new, R5-WIN); PLOOK-12 (new, R5-QC1); ICONS-7 (new, R5-ICON); PLOOK-1 to PLOOK-9, ANIM-22 and FSKIN-12 (R5-QC1 changed their expected result, so each lost its pass mark); LOOK-3, FSKIN-1 and FSKIN-2 (the R5-QC1 review found their expected result stale against the header's band, so each lost its pass mark).
 
 Owed from the owner's sixth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND6/`): SKIN-34 (new, R6-RV); SKIN-35 (new, R6-PV); PANEL-4 (new, R6-RV2).
+
+Owed from the WoW Forever port (QFE-F2, Ka0sAddonsCommonTasks `docs/2026-11-10-QUICKCOMMS_FOREVER_EMOTES/`): FOREVER-1 to
+FOREVER-11, new, each with its `Result:` line reading `owed`. From QFE-F3: FOREVER-12 to FOREVER-17, new, each owed. From QFE-F4: ROLE-1 to ROLE-3 (Retail) and
+FOREVER-18 to FOREVER-21, new, each owed. From QFE-F5: FOREVER-22 and FOREVER-23, new, each owed. From QFE-E1: EMOTE-1 and EMOTE-2, new, each owed. From QFE-E2: EMOTE-3 to EMOTE-6, new, each owed. From QFE-E3: EMOTE-7 and EMOTE-8, new, each owed. From QFE-C7 (QFE-REV): FOREVER-24, new, owed; FOREVER-14 and FOREVER-15 have a changed expected result and stay owed.

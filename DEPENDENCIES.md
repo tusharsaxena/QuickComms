@@ -9,8 +9,9 @@ marked as such rather than listed as a requirement.
 
 ## Runtime (in-game) — what a player needs
 
-- **World of Warcraft (Retail).** Single `## Interface: 120105` line in `QuickComms.toc` — Retail
-  only.
+- **World of Warcraft, Retail or WoW Forever.** The TOC declares the interface for each client:
+  `## Interface: 120105, 16001`, Retail's number first and Forever's second (`QuickComms.toc`, its
+  `## Interface:` line; toc-file-§3). One codebase serves both clients.
 - **Nothing else.** Every library is vendored under `libs/` and committed (library-stack), so the
   player installs no separate library addon. `## OptionalDeps:` names the vendored libs for load
   ordering, not as things to download.

@@ -149,7 +149,7 @@ local function addOwnCallouts(profile)
                 if not have[origin] then
                     local c, id = NS.BuiltIns.callouts[origin], takeCalloutId(profile)
                     profile.callouts[id] = { name = c.name, text = c.text, channel = c.channel, icon = c.icon,
-                        iconColor = c.iconColor, origin = origin }
+                        iconColor = c.iconColor, emote = c.emote, origin = origin }
                     g.callouts[#g.callouts + 1] = id
                 end
             end
@@ -446,5 +446,46 @@ function Lib.MigrateFullSkin(profile)
         Skin.FollowOnce(profile, paths)
     else
         followByHand(profile, paths)
+    end
+end
+
+-- The set a newly shipped set goes after on a stored surface: the one shipped before it in
+-- BuiltIns.order (the World set for Emotes).
+local function shippedBefore(origin)
+    local order = NS.BuiltIns.order
+    for i, id in ipairs(order) do
+        if id == origin then return order[i - 1] end
+    end
+end
+
+-- `gid` on one surface's list, right after the group whose origin is `after` where the list holds
+-- one, else at its end; a list that holds it already is left as it is.
+local function placeAfter(profile, list, gid, after)
+    for _, id in ipairs(list) do
+        if id == gid then return end
+    end
+    for i, id in ipairs(list) do
+        local g = profile.groups[id]
+        if after and type(g) == "table" and g.origin == after then
+            table.insert(list, i + 1, gid)
+            return
+        end
+    end
+    list[#list + 1] = gid
+end
+
+--- Step 19 (QFE-E3, QuickComms#15, design 5.3): the Emotes set comes to every stored profile once, as
+--- an ordinary seeded group (Library.SeedNewSets, by seededSets: a profile given it already, or one
+--- whose player deleted it, gains nothing), placed on every pad and dial right after the World set's
+--- copy, or at the end where the surface does not list that. Nothing the player has is changed, and
+--- a profile never prepared is left to Prepare, which seeds it in shipped order.
+function Lib.MigrateEmotesSet(profile)
+    for _, new in ipairs(Lib.SeedNewSets(profile)) do
+        local after = shippedBefore(new.origin)
+        for _, kind in ipairs({ "pads", "dials" }) do
+            for _, s in pairs(profile[kind]) do
+                if type(s) == "table" and type(s.groups) == "table" then placeAfter(profile, s.groups, new.id, after) end
+            end
+        end
     end
 end

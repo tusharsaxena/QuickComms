@@ -29,7 +29,7 @@ this page describes what exists.
 
 ## Overview
 
-A Retail addon that puts context-aware group callouts on a Comms Pad and a Comms Dial and sends them
+A Retail and WoW Forever addon that puts context-aware group callouts on a Comms Pad and a Comms Dial and sends them
 through secure buttons, so they work during chat lockdown in Mythic+ keys, boss pulls and PvP
 matches ([`scope.md`](scope.md)). At the end of phase 5 the data layer feeds the secure send engine, the
 Comms Pads and the Comms Dials, and the player edits groups (with their When, their callouts, each group owning its own, and an
@@ -48,7 +48,7 @@ Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBO
 LibSharedMedia, LibDataBroker, LibDBIcon
 and LibCustomGlow-1.0 (the Icons tab's glows, resolved at call time by LibKa0s-Glow-1.0 and optional; versions and
 licenses in `DEPENDENCIES.md`) are vendored under `libs/`, and so is the whole
-LibKa0s v1.91.0 payload, of which sixteen majors are wired, one setup file each (`DEPENDENCIES.md`
+LibKa0s v1.95.0 payload, of which sixteen majors are wired, one setup file each (`DEPENDENCIES.md`
 lists the toolchain):
 
 | Major | Setup file | Gives |
@@ -71,7 +71,7 @@ lists the toolchain):
 | Slash | `settings/Slash.lua` | the `/qc` dispatcher |
 
 `LibKa0s-Compat-1.0` is wired for its two secret guards only (`IsSecret`, `IsSafeKey`, assigned in
-`core/Compat.lua` with a library-absent body); `LibKa0s-Item-1.0` is vendored and not wired; and of the Widgets major
+`core/Compat.lua` with a library-absent body); `LibKa0s-Role-1.0` is wired in `core/Compat.lua` too (the role and the class's specializations, QFE-F4, each with a library-absent fallback); `LibKa0s-Item-1.0` is vendored and not wired; and of the Widgets major
 `DragHandle`, `ReorderList` and `CopyWindow` are used. Each
 setup file holds a descriptor and a degradation stub, and `tests/test_surface_parity.lua` holds every
 stub to the live surface.
@@ -97,6 +97,32 @@ every write. The render modules (`Pad_Render`, `Dial_Render`, `Dial_Slices`, `Ic
 `Shine`) paint insecure visuals, and the frame modules (`Pad`, `Dial`, `PreviewWindow`) own the
 frames and pools. `Preview` holds test mode and the two previews as session state, and the settings
 files build the panel pages, the callout popup and the icon browser.
+
+### Per-client features
+
+The addon serves Retail and WoW Forever from one codebase (clients-§1; the roster's Clients value is
+`Retail · Forever`; `## Interface: 120105, 16001`). Every difference is gated through
+`LibKa0s-Compat-1.0`'s `IsForever()` / `ClientKey()` and per-client seed lists (clients-§5), never an interface number.
+The headless suite runs under both kit profiles (clients-§6), and the kit's missing-globals suite checks
+the tracked source against both clients' API sets.
+
+| Feature | Retail | WoW Forever | Where |
+|---|---|---|---|
+| Comms Pads, Comms Dials, the secure send path, the throttle and the dropped-line note | yes | yes, the same path (the owner's ruling R4) | `modules/SendEngine.lua`, `modules/Pad.lua`, `modules/Dial.lua` |
+| Settings panel, slash verbs, launcher, diagnostics, profiles | yes | yes | `settings/`, `core/LauncherSetup.lua` |
+| The default skin | Ka0s Default | WoW Forever | `NS.DEFAULT_SKIN = Skin:DefaultSkin()`, `core/SkinSetup.lua` |
+| A strata read handed back to the client | plain | a secret read takes a fallback: the ghost the dial's `HUD_POPUP`, a lifted confirm Blizzard's `DIALOG` | `Compat.FrameStrata`, `core/Compat.lua` |
+| Content kinds offered (the When editor's Content row, Preview as...) | all nine | open world, dungeon, raid and battleground; Mythic+, delve, scenario, arena and housing are hidden. The classify step is the same, and a stored When that names a hidden kind still loads and matches (UI and seeds only, rulings R1, C3) | `HIDDEN_CONTENT`, `defaults/GameIds_Clients.lua`; `settings/Groups_When.lua`, `modules/Preview.lua` |
+| The When editor's drawers | every row | no Difficulty, Key level or Arena drawer | `HIDDEN_ROWS`, `W.Rows()` |
+| The callout text's token help | every token | no `{dungeon}` or `{key}`, both Mythic+ only (typed, they still bake) | `HIDDEN_TOKENS`, `Callouts.TokensFor` |
+| Place lists (Preview as..., the Instance row) | the season's dungeons and raids, every journal instance, every arena | the classic-era dungeons and a Forever raid list (Molten Core, Onyxia's Lair, Blackwing Lair, both Ahn'Qiraj, Naxxramas) by their Retail map ids, MATCHED, NOT CONFIRMED IN GAME; no arena list | `BY_CLIENT`, `defaults/GameIds_Clients.lua` |
+| Built-in sets seeded and restored | every set | no Arena set; of the battlegrounds Warsong Gulch, Arathi Basin and Alterac Valley, with Retail's ids and objective callouts, then the generic Battleground set | `SKIP_BUILTINS`, `BATTLEGROUND_SETS`, `BuiltIns.Seeded()`, `modules/Library.lua` |
+| The Dungeon set's When as seeded and restored | content Dungeon and Mythic+ | content Dungeon alone: no Mythic+ and no key level (the lead's call C7). A copy already stored keeps its When | `BUILTIN_WHEN`, `BuiltIns.WhenOf`, `seedGroup` in `modules/Library.lua` |
+| The character key (the Character row, `{me}`, the chat-sender test) | `Name-Realm` | `First Surname`, no realm (names are unique per region) | `Compat.CharacterKey`, `core/Compat.lua` (LibKa0s Compat) |
+| The Specialization row's list | read from the client (`Role.SpecsForClass`), Retail's shipped `GameIds.SPECS` as the fallback | read from the client the same way, so Forever needs no seed (C2) | `LibKa0s-Role-1.0`, `settings/Groups_When.lua` |
+| The role (the Role condition, `{role}`, `/qc why`) | the player's pick, then the group's assigned role, then the spec's | the pick, the assigned role, then the talent tree with the most points spent, then the spec's (C1) | `Role.Resolve` over `db.char.role`, `core/Compat.lua` `PlayerRole`; the Role row on General → Behavior |
+| `/qc probe`, `/qc probe clear` | yes, records under `global.probes.retail` | yes, records under `global.probes.forever`, with the talent groups | `settings/SlashVerbs.lua`, `Compat.ProbeInstance` / `TalentGroups` / `EmoteTokens` |
+| Emote callouts (`emote`, a custom `/e`; `gameEmote`, the client's own emote) and the Emotes set | yes | yes, the same (the emote lists are byte-identical, C5) | `modules/Channels.lua`, `modules/Emotes.lua`, `defaults/BuiltIns_Emotes.lua` |
 
 ## Settings Schema
 
@@ -144,7 +170,7 @@ tracked registration down and replay it.
 `/qc`, alias `/quickcomms`. The reserved verbs (`help config skin enable disable lock unlock version list
 get set reset resetall profile debug diagnostics perf`; `lock` and `unlock` are slash-commands-§8's,
 the Lock frame row's path through the seam) and the feature verbs `check <id>`, which prints the
-line a callout would send under the current situation and never sends, `test` (test mode), `toggle` (hide or show every Comms Pad, remembered per character in `db.char.padsHidden`, also the launcher's Show window entry), `preview` ("Preview as…": bare opens the preview window on where you are, or keeps the preview on; a name switches it, `off` ends it and `list` prints the menu) and `why` ("Why is this showing?", for every built pad and dial). The full table, the live-while-disabled set
+line a callout would send under the current situation and never sends, `test` (test mode), `toggle` (hide or show every Comms Pad, remembered per character in `db.char.padsHidden`, also the launcher's Show window entry), `preview` ("Preview as…": bare opens the preview window on where you are, or keeps the preview on; a name switches it, `off` ends it and `list` prints the menu) `why` ("Why is this showing?", for every built pad and dial) and `probe` (QFE-F5: records the place, the situation, the role, the talent groups and the client's emote tokens in `global.probes`, out of combat; `probe clear` empties it). The full table, the live-while-disabled set
 and the handlers are in [`slash-dispatch.md`](slash-dispatch.md). `enable` and `disable` call the
 same handler as the Master controls row and the launcher entry.
 
@@ -154,8 +180,8 @@ Every game event is declared in `NS.FEATURE_EVENTS` and registered through `NS.S
 so `OnEnable` and the stand-up register exactly that list and the stand-down unregisters it. The list
 holds the situation and restriction edges' rows (zone, key, group, spec and restriction events, and
 the two combat edges, which `Restrictions` owns; `CHANNEL_UI_UPDATE` and `CHAT_MSG_CHANNEL_NOTICE`
-refresh the snapshot's `general`, QF-04), and the send engine's ten `CHAT_MSG_*` rows (say, yell,
-party and its leader, raid and its leader, raid warning, instance and its leader, and channel), whose
+refresh the snapshot's `general`, QF-04), and the send engine's twelve `CHAT_MSG_*` rows (say, yell,
+party and its leader, raid and its leader, raid warning, instance and its leader, channel, emote, and text emote for a game emote), whose
 handler matches an echo to a press without reading the text. `CHAT_MSG_CHANNEL` fires for every
 channel the player is in, so the handler drops a line whose channel index (the 8th payload field) is
 readable and not 1 (`SendGuard.IsGeneralEcho`) before matching. The one registration outside
@@ -297,7 +323,8 @@ the settings pages and the library's own windows.
 
 ## Known Limitations
 
-The spam guard is soft and an echo can be masked; a rebuild waits for combat, so a button keeps the
+The addon serves Retail and WoW Forever (Interface 120105, 16001), one codebase and no Classic
+flavor ([Per-client features](#per-client-features)). The spam guard is soft and an echo can be masked; a rebuild waits for combat, so a button keeps the
 line it last held; General is sent only when the client confirms channel 1 is General, else Say; a
 lockdown that clears late can keep its padlock until the next event; the dial is Relaxed only and its
 key belongs to its place in the dial order; a few battleground and instance names are ours or
@@ -394,7 +421,9 @@ Nothing is over the cap today. `tests/test_page_groups.lua` reached it exactly a
 own section headings (`80a0fbb`, 2026-10-25): 1131 lines now, beside `tests/test_page_groups_nesting.lua`
 at 418. `tests/test_dial.lua` was split the same way at 1471 lines (2026-10-31): 764 now, beside
 `tests/test_dial_catcher.lua` at 288 and `tests/test_dial_look.lua` at 388, with their shared helpers in
-`tests/dial_helpers.lua`. Seven files sit in the 1000-1500 band (`locales/enUS.lua` 1383,
-`modules/Library.lua` 1324, `tests/test_page_groups.lua` 1131, `tests/test_library.lua` 1057,
-`tests/test_pad.lua` 1047, `tests/wow_mock.lua` 1084, `tests/test_skin_flip.lua` 1064; counted at the LibKa0s v1.86.0 re-vendor); the automated-test record's watch list gives
-each its disposition.
+`tests/dial_helpers.lua`. Seven files sit in the 1000-1500 band (`locales/enUS.lua` 1459,
+`modules/Library.lua` 1358, `tests/test_page_groups.lua` 1131, `tests/test_library.lua` 1057,
+`tests/test_pad.lua` 1049, `tests/wow_mock.lua` 1084, `tests/test_skin_flip.lua` 1064; recounted on the
+Forever port and emotes branch, 2026-11-10); the automated-test record's watch list gives each its
+disposition. `locales/enUS.lua` is 41 lines under the cap and on notice: a batch of strings that
+would cross 1500 splits or trims it first.

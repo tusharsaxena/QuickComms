@@ -79,12 +79,28 @@ local GLOBAL = {
     },
 }
 
+-- This character's rows (savedvariables-§1's `char`): stored under db.char, never a profile path, so
+-- a profile switch, copy or reset leaves them. The Role row (QFE-F4, design §4.4): LibKa0s Role's
+-- override in db.char.role, "auto" while there is none. A pick refreshes the situation at once, so
+-- the Role condition and every pad follow it (stood down, the stand-up's refresh reads it).
+Settings.ROLE_PATH = "role"
+local CHAR = {
+    [Settings.ROLE_PATH] = {
+        get = function() return NS.Compat.RoleOverride() or "auto" end,
+        set = function(v)
+            if not NS.Compat.SetRoleOverride(v ~= "auto" and v or nil) then return end
+            if NS.IsStoodDown and NS.IsStoodDown() then return end
+            if NS.Situation and NS.Situation.RefreshNow then NS.Situation.RefreshNow("role") end
+        end,
+    },
+}
+
 --- Bind get/set closures onto the rows whose storage is not a profile path.
 --- @param rows table
 function Settings.StampClosureRows(rows)
     for _, row in ipairs(rows or {}) do
         local path = type(row) == "table" and row.path or nil
-        local spec = SESSION[path] or GLOBAL[path]
+        local spec = SESSION[path] or GLOBAL[path] or CHAR[path]
         if spec then
             row.get = spec.get
             row.set = spec.set
@@ -284,7 +300,7 @@ function Settings.BuildDefaults()
         char    = deepcopy(C.CHAR_DEFAULTS),
     }
     for _, def in ipairs(Schema) do
-        if def.path and not def.sessionOnly and not GLOBAL[def.path] and not def.instance then
+        if def.path and not def.sessionOnly and not GLOBAL[def.path] and not CHAR[def.path] and not def.instance then
             local segs = {}
             for part in string.gmatch(def.path, "[^.]+") do segs[#segs + 1] = part end
             local parent = out.profile
@@ -298,9 +314,10 @@ function Settings.BuildDefaults()
     return out
 end
 
--- The rows a profile reset counts (debug-logging-§10's N): not a global row, and not a member row,
--- which addresses whichever member is selected and has no profile default of its own.
-local function notGlobal(row) return not GLOBAL[row.path] and not row.instance end
+-- The rows a profile reset counts (debug-logging-§10's N): not a global row, not a character row
+-- (a profile reset never reaches db.char), and not a member row, which addresses whichever member is
+-- selected and has no profile default of its own.
+local function notGlobal(row) return not GLOBAL[row.path] and not CHAR[row.path] and not row.instance end
 Settings.CountedByProfileReset = notGlobal
 
 --- The global reset IS a profile reset (options-ui-§12); the walk keeps only session rows.

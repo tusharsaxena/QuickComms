@@ -1,6 +1,6 @@
 local _, NS = ...
 -- modules/Bake.lua — a callout + a snapshot -> exactly one macro line of at most 255 bytes,
--- prefix included (spec §8.3). PURE.
+-- prefix included (spec §8.3). PURE. A game emote (QFE-E2) is the client's own command, BakeEmote.
 -- Anti-pattern #20: callout text is chat text, never a command. The sanitizer flattens control
 -- characters (so there is never a second macro line), refuses a leading "/", and escapes "|"
 -- before tokens expand, and Tokens does the same to every baked value ({me}, {spec}, ...), so only
@@ -50,6 +50,25 @@ function B.Length(text, live, prefix)
     return head + #text + (live or 0) * NS.Tokens.LIVE_NOMINAL
 end
 
+--- Bake a game-emote callout (QFE-E2): its line is the client's own command for its token
+--- ("/point"), from Emotes' map and never from user text, so no typed "/" ever reaches the line. Its
+--- text is ignored. A token this client lacks bakes nothing: "noEmote" with none set, else
+--- "unknownEmote" (info.emote names it).
+--- @return string|nil line, string|nil reason, table info
+function B.BakeEmote(callout, s, info)
+    info = info or {}
+    info.unknown, info.missing, info.emote = {}, {}, callout.emote
+    local token = NS.Emotes.Normalize(callout.emote)
+    if not token then return nil, "noEmote", info end
+    local cmd = NS.Emotes.Command(token)
+    if not cmd then return nil, "unknownEmote", info end
+    info.concrete, info.text, info.command = "gameEmote", cmd, cmd
+    info.length = #cmd
+    if info.length > B.MAX_BYTES then return nil, "tooLong", info end
+    info.lock = NS.Channels.LockState("gameEmote", s)
+    return cmd, nil, info
+end
+
 --- Bake one callout.
 --- @param callout table { text, channel, ... }
 --- @param s table snapshot
@@ -59,6 +78,7 @@ function B.Bake(callout, s, opts)
     opts = type(opts) == "table" and opts or {}
     local info = {}
     if type(callout) ~= "table" then return nil, "badCallout", info end
+    if NS.Channels.IsGameEmote(callout.channel) then return B.BakeEmote(callout, s, info) end
     local clean, why = B.Sanitize(callout.text)
     if not clean then return nil, why, info end
     local concrete, reason, selfPrint = NS.Channels.Resolve(callout.channel, s, opts.soloFallback)

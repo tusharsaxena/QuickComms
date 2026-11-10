@@ -89,7 +89,7 @@ test("render: a locked button shows the padlock and names the lock; RefreshLock 
     local lines = NS.PadRender.TooltipLines(slot)
     assertEqual(lines[2], "/s Go")
     assertTrue(lines[3]:find("Say", 1, true) ~= nil, "the channel")
-    assertEqual(lines[4], "Locked: Say and Yell are blocked during this encounter.")
+    assertEqual(lines[4], "Locked: Say, Yell and Emote are blocked during this encounter.")
     slot.lock = nil
     NS.PadRender.RefreshLock(b)
     assertFalse(b.qcLock:IsShown())

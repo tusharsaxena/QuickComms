@@ -2,10 +2,11 @@
 
 ## The green commit gate
 
-Both MUST pass before every commit (testing-§4):
+All three MUST pass before every commit (testing-§4):
 
 ```sh
 lua tests/run.lua      # the headless suite, Lua 5.1
+KA0S_KIT_CLIENT=forever lua tests/run.lua   # the same under the kit's forever profile (clients-§6)
 ~/.claude/dev-copilot/bin/ka0s-bounded luacheck .   # 0 warnings / 0 errors; loads no kit, so it runs through the bounded runner (testing-§15)
 ```
 
@@ -97,10 +98,19 @@ the change that moves the count (testing-§5).
 
 ## The four suites, and which checkpoint each gates
 
+The runner (`tests/_kit/run-automated-tests.sh`) passes the environment through, so
+`KA0S_KIT_CLIENT=forever` picks the kit profile for its `tests` suite. The addon serves Retail and WoW
+Forever, so the `tests` suite gates under **both** profiles (clients-§6). The harness boots every case
+on Ka0s Default by name under both profiles, because most suites pin its pixels; a case that pins the
+client's own default skin passes `clientSkin = true` (`tests/run.lua`). In the same way it boots every
+case on Retail's game data (`NS.GameIds.UseClient("retail")` after the load), because most suites pin
+Retail's built-in sets and lists; a case that pins the client's own (WoW Forever's lists, hidden kinds
+and seeds, `defaults/GameIds_Clients.lua`) passes `clientData = true`, as `test_client_data` does.
+
 | Suite | Command | Commit / run | Release (the tag) |
 |---|---|---|---|
 | `lint` | `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .` | **gates** | gates |
-| `tests` | `lua tests/run.lua` | **gates** | gates |
+| `tests` | `lua tests/run.lua`, then `KA0S_KIT_CLIENT=forever lua tests/run.lua` | **gates**, both profiles | gates, both profiles |
 | `perf` | `lua tests/perf.lua` (offline scenarios; see [`performance.md`](performance.md)) | recorded, never fails a run or blocks a commit | gates |
 | `complexity` | `bash tests/_kit/run-automated-tests.sh --suite complexity` (the sighted shadow) | recorded, never fails a run or blocks a commit | gates, with zero functions above CCN 15 and `blindFiles` 0; a lizard run that crashed or hit its bound is a complexity fail, never a pass (the crashed files are listed apart, `crashedFiles` 0 at release; automated-tests-§3) |
 

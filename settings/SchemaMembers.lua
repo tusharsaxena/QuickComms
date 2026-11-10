@@ -26,6 +26,7 @@ local WHY = {
     badName   = L["A name is 1 to 32 characters."],
     badText   = L["Callout text must be text."],
     badChannel = L["That is not a channel Quick Comms sends on."],
+    badEmote  = L["An emote is the game's emote token, such as POINT, or empty for none."],
     badIcon   = L["An icon is a texture id or a texture path."],
     badIconColor = L["An icon color is six hex digits (rrggbb), or empty for none."],
     notGlyph  = L["Only a LibKa0s glyph takes a color: choose one as the icon first."],
@@ -76,6 +77,15 @@ end
 
 local function isText(v) return type(v) == "string", "badText" end
 
+-- A game emote typed on the command line (QFE-E2): a token in any case ("point" is POINT), a command
+-- ("/point", read through the client's map), or nothing for none (false, a value the seam stores).
+local function emoteValue(v)
+    if type(v) ~= "string" then return v end
+    local trimmed = v:match("^%s*(.-)%s*$")
+    if trimmed == "" or trimmed:lower() == "none" then return false end
+    return NS.Emotes.Find(trimmed) or NS.Emotes.Normalize(trimmed) or trimmed
+end
+
 -- A parent group typed on the command line: empty text and "none" (any case) are no parent (false,
 -- a value the seam stores), anything else the group id as typed, for Library.ValidParent to judge.
 -- The seam checks the value as given, so the check reads it through this too.
@@ -104,7 +114,9 @@ end
 local function whenTakes(row)
     if NS.Resolver.ID_ROWS[row] then return L["an instance id (a whole number)"] end
     if row == "spec" then return L["a specialization id (a whole number)"] end
-    if row == "characters" then return L["Name-Realm"] end
+    if row == "characters" then
+        return NS.Compat.RegionalNames() and L["a first name and surname"] or L["Name-Realm"]
+    end
     local list = row == "class" and NS.GameIds.CLASSES or NS.Resolver.TOKENS[row] or {}
     return table.concat(list, ", ")
 end
@@ -125,6 +137,7 @@ local CHANNEL_LABEL = {
     smartLead = L["Smart lead (raid warning when you can)"],
     party = L["Party"], raid = L["Raid"], instance = L["Instance"], raidWarning = L["Raid warning"],
     say = L["Say"], yell = L["Yell"], general = L["General (/1; Say when not joined)"],
+    emote = L["Emote"], gameEmote = L["Game emote"],
 }
 local CHANNELS = {}
 for i, kind in ipairs(NS.Channels.KINDS) do CHANNELS[i] = { value = kind, text = CHANNEL_LABEL[kind] or kind } end
@@ -165,6 +178,14 @@ local ROWS = {
       values = CHANNELS, page = "callouts", group = GENERAL, label = L["Channel"],
       desc = L["Where it is sent. Smart group picks instance, raid or party chat for the group you are in when the pad is built."],
       validate = check(function(v) return NS.Channels.IsKind(v), "badChannel" end) },
+    -- A game emote's token (QFE-E2, channel Game emote): the client's command for it is the line. Its
+    -- default is false, none. The popup draws it as the emote picker, never a row.
+    { path = "callout.emote", instance = "callout", type = "string", default = false,
+      page = "callouts", group = GENERAL, label = L["Game emote"],
+      desc = L["The game emote a Game emote callout performs, by its token (POINT) or command (/point). It acts on your target, as the game's own emote does."],
+      -- The seam checks the value as given, so the check reads it through emoteValue too.
+      normalize = emoteValue,
+      validate = check(function(v) v = emoteValue(v) return v ~= nil and Lib.ValidEmote(v), "badEmote" end) },
     -- Icon's default is false, "no icon", so `/qc reset callout.icon` clears it; the page's Defaults
     -- keeps it (settings/Schema.lua resetExempt), as its tooltip says.
     { path = "callout.icon", instance = "callout", type = "string", dialogControl = "EditBox", default = false,

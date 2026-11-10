@@ -132,10 +132,30 @@ local function mplus(instanceID, name)
         previewDungeon = name })
 end
 
--- One entry per battleground set: its key ("bi.bg.ab" -> "bg:ab"), its name, its lowest instanceID.
+-- A content kind this client does not offer (NS.GameIds.HIDDEN_CONTENT, QFE-F3): WoW Forever has no
+-- Mythic+ and no arena, so its menu previews each dungeon as a plain dungeon, each raid at no named
+-- difficulty, and no arena.
+local function hidden(kind)
+    local h = NS.GameIds.HIDDEN_CONTENT
+    return h ~= nil and h[kind] == true
+end
+
+-- The menu key's prefix for a dungeon: "mplus:" where Mythic+ is offered, else "dungeon:".
+local function dungeonPrefix()
+    return hidden("mythicPlus") and "dungeon:" or "mplus:"
+end
+
+-- A dungeon entry where Mythic+ is not offered: the dungeon at Normal, in a party.
+local function dungeon(instanceID)
+    return base({ content = "dungeon", instanceID = instanceID, difficultyID = 1, difficulty = "normal",
+        group = "party", instanceGroup = false })
+end
+
+-- One entry per battleground set this client ships (BuiltIns.Seeded): its key ("bi.bg.ab" ->
+-- "bg:ab"), its name, its lowest instanceID.
 local function battlegrounds()
     local out = {}
-    for _, gid in ipairs(NS.BuiltIns.order) do
+    for _, gid in ipairs(NS.BuiltIns.Seeded()) do
         local def = NS.BuiltIns.groups[gid]
         local ids = def.when and def.when.battleground
         local short = gid:match("^bi%.bg%.(.+)$")
@@ -155,19 +175,25 @@ end
 function P.Presets()
     local out = { { key = P.CURRENT, label = L["Current"] } }
     local spec = NS.Compat.SpecName()
-    -- Each current-season dungeon as M+, labeled as spec §13.3 lists it.
+    -- Each current-season dungeon as M+, labeled as spec §13.3 lists it; where Mythic+ is not offered
+    -- (WoW Forever), each dungeon as a dungeon.
+    local plain = hidden("mythicPlus")
     for _, d in ipairs(season(NS.GameIds.DUNGEONS)) do
-        local label = L["M+"] .. DOT .. d.label .. (spec and DOT .. spec or "")
-        out[#out + 1] = { key = "mplus:" .. d.id, label = label, snapshot = mplus(d.id, d.name), instanceID = d.id }
+        local label = (plain and L["Dungeon"] or L["M+"]) .. DOT .. d.label .. (spec and DOT .. spec or "")
+        out[#out + 1] = { key = dungeonPrefix() .. d.id, label = label, instanceID = d.id,
+            snapshot = plain and dungeon(d.id) or mplus(d.id, d.name) }
     end
-    -- Each current-season raid at Mythic.
-    local r = RAID_DIFFICULTY
+    -- Each current-season raid at Mythic; on WoW Forever, whose raid difficulties are unknown until
+    -- probed (the When editor has no Difficulty row there), at Normal and with no difficulty named.
+    local r = plain and RAID[2] or RAID_DIFFICULTY
     for _, d in ipairs(season(NS.GameIds.RAIDS)) do
-        out[#out + 1] = { key = "raid:" .. d.id, label = L["Raid"] .. DOT .. r[3] .. DOT .. d.label,
-            snapshot = raidSnapshot(d.id, r), instanceID = d.id }
+        local label = plain and (L["Raid"] .. DOT .. d.label) or (L["Raid"] .. DOT .. r[3] .. DOT .. d.label)
+        out[#out + 1] = { key = "raid:" .. d.id, label = label, snapshot = raidSnapshot(d.id, r), instanceID = d.id }
     end
-    out[#out + 1] = { key = "arena", label = L["Arena"], snapshot = base({ content = "arena", group = "party",
-        instanceGroup = false, lockdown = { pvpMatch = true } }) }
+    if not hidden("arena") then
+        out[#out + 1] = { key = "arena", label = L["Arena"], snapshot = base({ content = "arena", group = "party",
+            instanceGroup = false, lockdown = { pvpMatch = true } }) }
+    end
     for _, bg in ipairs(battlegrounds()) do
         out[#out + 1] = { key = bg.key, label = L["BG - %s"]:format(bg.label), snapshot = base({ content = "battleground",
             instanceID = bg.instanceID, group = "raid", instanceGroup = true, lockdown = { pvpMatch = true } }) }
@@ -315,7 +341,7 @@ end
 local EDIT_KINDS = {
     { content = { "battleground" }, row = "battleground",
         key = function(when) return battlegroundKey(when.battleground) end },
-    { content = { "mythicPlus", "dungeon" }, key = function(when) return seasonKey("mplus:", when.instances) end },
+    { content = { "mythicPlus", "dungeon" }, key = function(when) return seasonKey(dungeonPrefix(), when.instances) end },
     { content = { "raid" }, key = function(when) return seasonKey("raid:", when.instances) end },
     { content = { "arena" }, row = "arena", key = function() return known("arena") end },
     { content = { "openWorld" }, key = function() return known("world") end },
@@ -456,6 +482,9 @@ end
 --- @param callout table|nil the slot's callout (Library.Callout)
 --- @param snap table the previewed snapshot the plan baked against
 function P.SlotEcho(slot, callout, snap)
+    -- A game emote (QFE-E2) names what it would do: "would emote /point". Its line is the client's
+    -- command, so there is nothing to re-bake.
+    if slot.line and slot.concrete == "gameEmote" then return L["would emote %s"]:format(slot.line) end
     if slot.line then
         -- Never the plan-time position: the live snapshot (Current, the edit preview of a group with no
         -- content, known by identity as Surfaces.BakeContext knows it) keeps the literal for the click; a synthetic preset,

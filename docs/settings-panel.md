@@ -65,8 +65,8 @@ are not changed.* (`O.KEYBINDS_UNCHANGED`, options-ui-§12, §20; item 020, QUI-
 
 ## General → Behavior
 
-`settings/SchemaRows.lua`, under two headings (item 020, QUI-L01, L02; options-ui-§7), the rows in
-this order, which `/qc list` follows:
+`settings/SchemaRows.lua`, under three headings (item 020, QUI-L01, L02; options-ui-§7; Your role from
+QFE-F4), the rows in this order, which `/qc list` follows:
 
 | Heading | Left | Right |
 |---|---|---|
@@ -74,6 +74,14 @@ this order, which `/qc list` follows:
 | | Play a sound on send (`behavior.sounds`) | Note dropped callouts in chat (`behavior.dropNotes`) |
 | Pads and dials | Put instance-specific groups first (`behavior.autoPromote`) | Show the LOCKDOWN tag (`behavior.lockdownChip`) |
 | | Explain why groups show (tooltips) (`behavior.whyTooltips`) | |
+| Your role | Role (`role`) | |
+
+**Role** (QFE-F4, the Forever port design §4.4) is the role the When editor's Role condition matches,
+for this character: it is stored in `db.char.role`, not the profile, so a profile switch leaves it.
+Its choices are *Automatic (…)*, *Tank*, *Healer* and *Damage*. Automatic is LibKa0s Role's answer
+(the group's assignment, then on WoW Forever the talent tree with the most points, then the spec's
+role), and its entry and the row's tooltip (*Automatic now: …*) name what Automatic finds and where,
+read when the row is drawn. A pick takes effect at once: the situation is read again.
 
 Put instance-specific groups first was *Promote specific groups*, Explain why groups show (tooltips)
 was *Explain why groups show*, and Show the LOCKDOWN tag was *Show the lockdown tag*; the tooltips
@@ -403,6 +411,7 @@ window   the settings template's window, in the skin, titled Ka0s Quick Comms  (
 header   New callout / Edit callout, the gold rule under it
 body     [Name          ] [Channel       ]   the callout.* member rows' labels and help
          [Text  (i)                       ]   across both columns; (i) is the token glyph
+                                              (Game emote: the emote picker in its place)
          Icon                                 the chooser's label
          [icon] [Choose icon…] [x] Icon color the icon as drawn, the button, the color swatch
          ------- What it sends -------         the baked line and its bytes, or why it sends
@@ -428,6 +437,19 @@ body     [Name          ] [Channel       ]   the callout.* member rows' labels a
   What it sends heading (*Preview* until item 020, QUI-L08: the Groups page's term for the same
   line) keeps a section's gap above it (`O.Section`'s 10 px): the popup sets
   `ctx.lastGroup` to the fields' group after drawing them, as `RenderRows` would.
+- **The emote channels** (QuickComms#15). The Channel dropdown lists **Emote** (`emote`, a custom
+  `/e` line from the Text box, locked as Say is) and **Game emote** (`gameEmote`,
+  one of the game's own emotes). One action per callout: a callout either sends a chat line or
+  performs one emote, never both.
+- **The emote picker.** With Game emote picked, the Text box gives way to a **Game emote** box under
+  the library's autocomplete (`W.Autocomplete`): typing searches the client's emotes by command or
+  token, the speech emotes first, each marked *(voice)* since it also plays a sound, then the animated
+  ones, then the rest (`modules/Emotes.lua`). A pick, or Enter on a typed command or token, sets the
+  draft's `emote`; a Name that is empty, or still the previous pick's command, takes the new command.
+  The line it sends is the client's own localized command for the token, never typed text, and a
+  command the chat parser runs as something else first (`/shout`, which is Yell) is never offered.
+  Save keeps the field the channel uses and clears the other: a game emote carries no text, a chat
+  callout no token. A stored token this client lacks shows as the token and bakes nothing, saying why.
 - **No Icon box.** The icon is chosen only with the chooser; the draft still carries it as a
   texture path or id, Save writes it to `callout.icon`, and that row still answers `/qc`.
 

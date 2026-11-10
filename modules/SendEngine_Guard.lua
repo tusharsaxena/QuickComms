@@ -21,7 +21,9 @@ G.ECHO_WINDOW = 1.5
 
 -- The player's own channels, by the event that echoes them. Never a guild, community or custom
 -- channel; General (/1) is the one numbered channel (2026-10-23, QF-04). CHAT_MSG_CHANNEL fires for
--- every channel the player is in, so the edge also asks IsGeneralEcho of its channel index.
+-- every channel the player is in, so the edge also asks IsGeneralEcho of its channel index. A custom
+-- emote (/e, QFE-E1) echoes as CHAT_MSG_EMOTE, with the same payload layout as Say's; a game emote
+-- (/point, QFE-E2) as CHAT_MSG_TEXT_EMOTE, the client's own line ("You point at X."), laid out the same.
 G.CHAT_TYPE_BY_EVENT = {
     CHAT_MSG_SAY = "SAY",
     CHAT_MSG_YELL = "YELL",
@@ -33,6 +35,8 @@ G.CHAT_TYPE_BY_EVENT = {
     CHAT_MSG_INSTANCE_CHAT = "INSTANCE_CHAT",
     CHAT_MSG_INSTANCE_CHAT_LEADER = "INSTANCE_CHAT",
     CHAT_MSG_CHANNEL = "CHANNEL",
+    CHAT_MSG_EMOTE = "EMOTE",
+    CHAT_MSG_TEXT_EMOTE = "TEXT_EMOTE",
 }
 
 G.ECHO_EVENTS = {}

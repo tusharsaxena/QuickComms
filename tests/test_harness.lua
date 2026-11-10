@@ -57,13 +57,14 @@ end)
 
 -- ── the TOC ─────────────────────────────────────────────────────────────────────────────────
 
-test("toc: the fixed field order, a single Retail Interface line, the X-Standard field and the CurseForge id", function()
+test("toc: the fixed field order, the Retail and WoW Forever Interface line, the X-Standard field and the CurseForge id", function()
     local fields, lines = tocFields()
     local order = {}
     for i, kv in ipairs(fields) do order[i] = kv[1] end
     assertEqual(table.concat(order, ","), "Interface,Title,Notes,Author,Version,IconTexture,"
         .. "SavedVariables,OptionalDeps,DefaultState,Category-enUS,X-License,X-Standard,X-Curse-Project-ID")
-    assertEqual(field(fields, "Interface"), "120105")
+    -- Retail first, WoW Forever second (toc-file-§3, QFE-F2): one codebase serves both clients.
+    assertEqual(field(fields, "Interface"), "120105, 16001")
     assertEqual(field(fields, "Title"), "Ka0s Quick Comms")
     assertEqual(field(fields, "X-Standard"), "https://github.com/tusharsaxena/WowAddonStandards")
     assertEqual(field(fields, "SavedVariables"), "QuickCommsDB, QuickCommsPerfDB")
