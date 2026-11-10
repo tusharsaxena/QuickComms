@@ -149,7 +149,8 @@ local function addOwnCallouts(profile)
                 if not have[origin] then
                     local c, id = NS.BuiltIns.callouts[origin], takeCalloutId(profile)
                     profile.callouts[id] = { name = c.name, text = c.text, channel = c.channel, icon = c.icon,
-                        iconColor = c.iconColor, emote = c.emote, origin = origin }
+                        iconColor = c.iconColor, emote = c.emote, ping = c.ping, marker = c.marker,
+                        origin = origin }
                     g.callouts[#g.callouts + 1] = id
                 end
             end

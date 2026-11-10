@@ -639,3 +639,23 @@ test("database: [QFE-E3] step 19 adds the Emotes set to a stored profile once, a
     NS.Library.MigrateEmotesSet({})
     NS.Library.MigrateEmotesSet({ seeded = true, seededSets = {}, groups = "damaged" })
 end)
+
+-- ── step 6 carries ping and marker (CA-M1-4) ──────────────────────────────────────────────────
+
+test("database: [CA-M1-4] step 6's raw copy keeps a shipped callout's ping and marker", function()
+    local NS = T.bootAddon()
+    local db, BI = NS.addon.db, NS.BuiltIns
+    local first = BI.groups["bi.bg.ab"].callouts[1]
+    local c = BI.callouts[first]
+    c.ping, c.marker = "attack", 2
+    db.sv.profiles.Old = prePolishProfile(BI)
+    db.global.schemaVersion = 5
+    NS.addon:RunMigrations()
+    c.ping, c.marker = nil, nil
+    local p = db.sv.profiles.Old
+    local copy = p.callouts[p.groups.g3.callouts[1]]
+    assertEqual(copy.origin, first)
+    -- red under: addOwnCallouts' field list without ping and marker
+    assertEqual(copy.ping, "attack")
+    assertEqual(copy.marker, 2)
+end)

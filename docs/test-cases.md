@@ -128,7 +128,7 @@ Total.
 - perf: [review] a refresh whose signature moves notes situationRefresh before the rebuild it publishes
 - perf: [phase 5] the Comms Dial page's Preview notes neither bakeSurface nor resolverResolve
 
-### test_database.lua (21)
+### test_database.lua (22)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the target is the last step's `to`, and the steps climb in order
@@ -151,6 +151,7 @@ Total.
 - database: [polish] migrate: step 9 drops the retired slice border
 - database: [bg subgroups] a fresh profile seeds every objective node once, and step 7 leaves it as it is
 - database: [QFE-E3] step 19 adds the Emotes set to a stored profile once, after Solo, touching nothing else
+- database: [CA-M1-4] step 6's raw copy keeps a shipped callout's ping and marker
 
 ### test_profile.lua (10)
 
@@ -500,7 +501,7 @@ Total.
 - client data: [QFE-F3] the battleground row suggests the seeded sets' maps
 - client data: [QFE-F3] the token help leaves {dungeon} and {key} out on Forever
 
-### test_library.lua (78)
+### test_library.lua (82)
 
 - library: Prepare seeds every shipped set as a group, on one pad and one dial, once
 - library: a seeded group is an ordinary group: its fields, When, callouts and origin
@@ -580,6 +581,10 @@ Total.
 - library: [CA-M1-3] a seam write that adds a second action is refused in M1
 - library: [CA-M1-3] a legacy game emote callout still validates and edits
 - library: [CA-M1-3] WriteActions judges a several-field edit as a whole
+- library: [CA-M1-4] the callout template carries ping and marker, as none
+- library: [CA-M1-4] CreateCallout keeps a ping and a marker
+- library: [CA-M1-4] a copied callout keeps its ping and its marker
+- library: [CA-M1-4] a seeded callout keeps its shipped ping and marker
 
 ### test_members.lua (28)
 
@@ -2093,7 +2098,7 @@ Total.
 | test_bus.lua | 2 |
 | test_surface_parity.lua | 18 |
 | test_setup.lua | 26 |
-| test_database.lua | 21 |
+| test_database.lua | 22 |
 | test_profile.lua | 10 |
 | test_schema.lua | 20 |
 | test_slash.lua | 22 |
@@ -2112,7 +2117,7 @@ Total.
 | test_builtins.lua | 30 |
 | test_gameids.lua | 5 |
 | test_client_data.lua | 9 |
-| test_library.lua | 78 |
+| test_library.lua | 82 |
 | test_members.lua | 28 |
 | test_editors.lua | 19 |
 | test_callout_popup.lua | 38 |
@@ -2175,4 +2180,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1813** |
+| **Total** | **1818** |

@@ -580,7 +580,8 @@ function Lib.CreateCallout(fields)
     if not ok then return nil, why end
     local id = Lib.NewId("c")
     P().callouts[id] = { name = fields.name, text = fields.text, channel = fields.channel, icon = fields.icon,
-        iconColor = glyphColor(fields.icon, fields.iconColor), emote = fields.emote or nil }
+        iconColor = glyphColor(fields.icon, fields.iconColor), emote = fields.emote or nil,
+        ping = fields.ping or nil, marker = fields.marker or nil }
     announce("callout", id)
     return id
 end
@@ -591,7 +592,7 @@ end
 -- lives in another group, or the player renames it), checked as any new callout is.
 local function copyCallout(src)
     return Lib.CreateCallout({ name = src.name, text = src.text, channel = src.channel, icon = src.icon,
-        iconColor = src.iconColor, emote = src.emote })
+        iconColor = src.iconColor, emote = src.emote, ping = src.ping, marker = src.marker })
 end
 
 -- Whether a new group's fields pass: its name, When, glyph color and parent.
@@ -826,7 +827,7 @@ local function seedCallout(p, cid)
     local c = NS.BuiltIns.callouts[cid]
     local id = takeId(p, "c")
     p.callouts[id] = { name = c.name, text = c.text, channel = c.channel, icon = c.icon, iconColor = c.iconColor,
-        emote = c.emote, origin = cid }
+        emote = c.emote, ping = c.ping, marker = c.marker, origin = cid }
     return id
 end
 
@@ -1056,7 +1057,8 @@ local SURFACE_DEFAULTS = {
 --- architecture-§5 boot check) and what a member row resets to. `icon`, `iconColor` and `point` are
 --- false, not nil, so the boot check can see the key: false is "none" and "the default place".
 Lib.TEMPLATES = {
-    callout = { name = "", text = "", channel = "smartGroup", icon = false, iconColor = false, emote = false },
+    callout = { name = "", text = "", channel = "smartGroup", icon = false, iconColor = false, emote = false,
+        ping = false, marker = false },
     group = { name = "", icon = false, iconColor = false, enabled = true, when = {},
         parent = false, inheritWhen = true },
     pad = { name = "", enabled = true, groupsAs = SURFACE_DEFAULTS.pad.groupsAs, point = false,

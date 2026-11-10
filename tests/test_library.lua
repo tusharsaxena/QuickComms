@@ -1184,3 +1184,54 @@ test("library: [CA-M1-3] WriteActions judges a several-field edit as a whole", f
     assertFalse(ran, "a refused edit runs nothing")
     assertFalse((S.Set("callout.emote", "", cid)), "the field check is back after the edit")
 end)
+
+-- ── the field lists carry ping and marker (CA-M1-4) ───────────────────────────────────────────
+
+test("library: [CA-M1-4] the callout template carries ping and marker, as none", function()
+    local _, Lib = boot()
+    -- red under: TEMPLATES.callout without ping and marker (the boot check has no key to resolve)
+    assertTrue(Lib.TEMPLATES.callout.ping == false, "ping")
+    assertTrue(Lib.TEMPLATES.callout.marker == false, "marker")
+end)
+
+test("library: [CA-M1-4] CreateCallout keeps a ping and a marker", function()
+    local _, Lib, p = bare()
+    local ping = Lib.CreateCallout({ name = "Ping", text = "", channel = "gameEmote", ping = "onmyway" })
+    -- red under: CreateCallout's stored table lists no ping
+    assertEqual(p.callouts[ping].ping, "onmyway")
+    local mark = Lib.CreateCallout({ name = "Mark", text = "", channel = "gameEmote", marker = 8 })
+    assertEqual(p.callouts[mark].marker, 8)
+    local line = Lib.CreateCallout({ name = "Line", text = "Kick", channel = "party", ping = false, marker = false })
+    assertNil(p.callouts[line].ping, "none stores nothing, as emote does")
+    assertNil(p.callouts[line].marker)
+end)
+
+test("library: [CA-M1-4] a copied callout keeps its ping and its marker", function()
+    local _, Lib, p = bare()
+    local ping = Lib.CreateCallout({ name = "Ping", text = "", channel = "gameEmote", ping = "assist" })
+    local mark = Lib.CreateCallout({ name = "Mark", text = "", channel = "gameEmote", marker = 3 })
+    local gid = Lib.CreateGroup({ name = "Mine" })
+    -- red under: copyCallout's field list without ping and marker
+    local copy = Lib.AddToGroup(gid, ping)
+    assertTrue(copy ~= nil and copy ~= ping, "a copy")
+    assertEqual(p.callouts[copy].ping, "assist")
+    local copy2 = Lib.AddToGroup(gid, mark)
+    assertEqual(p.callouts[copy2].marker, 3)
+end)
+
+test("library: [CA-M1-4] a seeded callout keeps its shipped ping and marker", function()
+    local NS, Lib, p = boot()
+    local gid, lust = T.seeded(NS, "bi.mplus"), T.seeded(NS, "bi.mplus.lust")
+    local g = p.groups[gid]
+    for i, cid in ipairs(g.callouts) do if cid == lust then table.remove(g.callouts, i) break end end
+    p.callouts[lust] = nil
+    local c = NS.BuiltIns.callouts["bi.mplus.lust"]
+    c.ping, c.marker = "warning", 8
+    Lib.RestoreBuiltins()
+    c.ping, c.marker = nil, nil
+    local id = T.seeded(NS, "bi.mplus.lust")
+    assertTrue(id ~= nil and id ~= lust, "seeded again")
+    -- red under: seedCallout's raw copy without ping and marker
+    assertEqual(p.callouts[id].ping, "warning")
+    assertEqual(p.callouts[id].marker, 8)
+end)
