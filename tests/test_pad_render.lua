@@ -513,3 +513,51 @@ test("render: [CA-M1-12] a ping-only button's tooltip shows its line and no chan
     lines = NS.PadRender.TooltipLines(slot)
     assertEqual(lines[2], "Pings are not on this client.")
 end)
+
+-- ── one row per action (CA-M2-10, combined actions §7) ─────────────────────────────────────────
+
+-- The client's /point, as ChatEmoteConstants.lua defines it (tests/test_emotes.lua plants more).
+local function comboSlot(NS, m, callout, snap)
+    m.MAXEMOTEINDEX, m.EMOTE73_TOKEN, m.EMOTE73_CMD1 = 80, "POINT", "/point"
+    NS.Emotes.Reset()
+    local cid = NS.Library.CreateCallout(callout)
+    return NS.Surfaces.Slot(cid, NS.Library.Callout(cid), snap or { group = "party", lockdown = {} })
+end
+
+test("render: [CA-M2-10] a combined button's tooltip lists each action, the channel under the Line only", function()
+    local NS, m = T.enableAddon()
+    local slot = comboSlot(NS, m, { name = "Kick", text = "Kick on me", channel = "party", emote = "POINT",
+        ping = "attack", marker = 8 })
+    local lines = NS.PadRender.TooltipLines(slot)
+    -- red under: the joined macro as one row ("/p Kick on me\n/point\n...")
+    assertEqual(lines[1], "Kick")
+    assertEqual(lines[2], "/p Kick on me")
+    assertEqual(lines[3], "Channel: |cffababffParty|r")
+    assertEqual(lines[4], "/point")
+    assertEqual(lines[5], "/ping [@target,exists] 1")
+    assertEqual(lines[6], "/tm [@target,exists] !8")
+    assertNil(lines[7])
+end)
+
+test("render: [CA-M2-10] a skipped action shows its reason in its place; a lock row per lock", function()
+    local NS, m = T.enableAddon()
+    local slot = comboSlot(NS, m, { name = "Long", text = ("x"):rep(250), channel = "party", ping = "attack" })
+    local lines = NS.PadRender.TooltipLines(slot)
+    -- red under: the skipped Line left out (only the ping's row)
+    assertEqual(lines[2], "No line: Too long: a chat line holds 255 bytes.")
+    assertEqual(lines[3], "/ping [@target,exists] 1")
+    assertNil(lines[4])
+    slot = comboSlot(NS, m, { name = "Stack", text = "Stack", channel = "raid", emote = "POINT" },
+        { group = "party", lockdown = {} })
+    lines = NS.PadRender.TooltipLines(slot)
+    assertEqual(lines[2], "/raid Stack")
+    assertEqual(lines[4], "/point")
+    assertEqual(lines[5], NS.PadRender.LOCK_TEXT.notInRaid)
+    assertNil(lines[6])
+    -- nothing bakes, two actions set: each says why
+    m.SLASH_PING1 = nil
+    slot = comboSlot(NS, m, { name = "Bad", text = "/run x", channel = "party", ping = "attack" })
+    lines = NS.PadRender.TooltipLines(slot)
+    assertEqual(lines[2], "No line: Callout text cannot start with /.")
+    assertEqual(lines[3], "No ping: Pings are not on this client.")
+end)

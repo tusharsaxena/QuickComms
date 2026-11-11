@@ -916,7 +916,7 @@ Total.
 - page dials: [polish] the page is titled Dial
 - page dials: [shine] the Slices tab has a Shine heading
 
-### test_check.lua (7)
+### test_check.lua (9)
 
 - check: a seeded callout prints its line and channel
 - check: a refused callout prints the reason
@@ -925,6 +925,8 @@ Total.
 - check: [final minor 4] unknown and send-time tokens are listed
 - check: [final minor 4] solo with soloFallback=self says it would print locally
 - check: [CA-M1-12] a ping-only or marker-only callout prints its line and bytes
+- check: [CA-M2-10] a combined callout prints each action with its bytes, then the macro total
+- check: [CA-M2-10] a skipped action says why; a locked Line names its lock
 
 ### test_send_guard.lua (13)
 
@@ -1224,7 +1226,7 @@ Total.
 - surfaces: [CA-M1-8] RefreshLocks relocks each action and lights the chip when any is lockdown
 - surfaces: [CA-M1-R4] the chip lights when a later action is lockdown and the first lock is not
 
-### test_pad_render.lua (26)
+### test_pad_render.lua (28)
 
 - render: Dress builds a button's regions once, each its own object
 - render: [audit QC-07] the button's padlock is the catalog's lock mark, tinted gold; the Blizzard art is the nil fallback
@@ -1252,6 +1254,8 @@ Total.
 - pad render: [shine] the pad's look leaves the dial alone
 - render: [QF-04] a General slot's tooltip names General in channel 1's color
 - render: [CA-M1-12] a ping-only button's tooltip shows its line and no channel; a skipped one its reason
+- render: [CA-M2-10] a combined button's tooltip lists each action, the channel under the Line only
+- render: [CA-M2-10] a skipped action shows its reason in its place; a lock row per lock
 
 ### test_pad_looks.lua (21)
 
@@ -2209,7 +2213,7 @@ Total.
 | test_page_groups_nesting.lua | 19 |
 | test_page_pads.lua | 28 |
 | test_page_dials.lua | 28 |
-| test_check.lua | 7 |
+| test_check.lua | 9 |
 | test_send_guard.lua | 13 |
 | test_sendengine.lua | 48 |
 | test_dial_secure.lua | 20 |
@@ -2221,7 +2225,7 @@ Total.
 | test_pad_layout.lua | 21 |
 | test_dial_layout.lua | 31 |
 | test_surfaces.lua | 34 |
-| test_pad_render.lua | 26 |
+| test_pad_render.lua | 28 |
 | test_pad_looks.lua | 21 |
 | test_pad_header.lua | 9 |
 | test_pad.lua | 47 |
@@ -2261,4 +2265,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1899** |
+| **Total** | **1903** |

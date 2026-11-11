@@ -110,9 +110,6 @@ local function head(a)
     return L["Marks: %s"]:format(markerName(a.value))
 end
 
--- A skipped action's row, by its kind, with why.
-local SKIPPED = { line = L["No line: %s"], emote = L["No emote: %s"], ping = L["No ping: %s"], marker = L["No mark: %s"] }
-
 local function why(reason)
     return NS.PadRender.REASON_TEXT[reason] or tostring(reason)
 end
@@ -129,7 +126,7 @@ local function actionRows(out, a, alone)
     elseif a.reason == "solo" and a.selfPrint then
         out[#out + 1] = L["Solo: prints to you, sends nothing."]
     else
-        out[#out + 1] = (alone and L["Sends nothing here: %s"] or SKIPPED[a.kind]):format(why(a.reason))
+        out[#out + 1] = (alone and L["Sends nothing here: %s"] or NS.PadRender.SKIPPED_TEXT[a.kind]):format(why(a.reason))
         if a.reason == "unknownEmote" then out[#out + 1] = L["Emote token: %s"]:format(tostring(a.value)) end
         if a.length then out[#out + 1] = L["%d of 255 bytes"]:format(a.length) end
     end

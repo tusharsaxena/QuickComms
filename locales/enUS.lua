@@ -496,6 +496,13 @@ L["This callout has no action."] = "This callout has no action."
 L["Pings are not on this client."] = "Pings are not on this client."
 L["Raid markers are not on this client."] = "Raid markers are not on this client."
 
+-- A skipped action's row, by its kind, with why (modules/Pad_Render.lua TooltipLines, settings/Callouts.lua
+-- PreviewLines; CA-M2-10).
+L["No line: %s"] = "No line: %s"
+L["No emote: %s"] = "No emote: %s"
+L["No ping: %s"] = "No ping: %s"
+L["No mark: %s"] = "No mark: %s"
+
 -- Preview as… (modules/Preview.lua, modules/Pad.lua, modules/Pad_Render.lua)
 L["Current"] = "Current"
 L["Off"] = "Off"

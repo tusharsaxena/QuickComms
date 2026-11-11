@@ -21,19 +21,46 @@ local function targetActionLines(id, a)
     return { ("%s -> %s"):format(id, a.line), L["  action: %s, %d of 255 bytes"]:format(a.kind, a.length) }
 end
 
--- The callout's ping or marker action, when it has one and neither a Line nor an emote (M1: one
--- action per callout; CA-M2-10 prints one row per action).
-local function targetAction(callout, snap)
-    local _, _, info = NS.Bake.BakeActions(callout, snap)
-    local a = info.actions[1]
-    if a and (a.kind == "ping" or a.kind == "marker") then return a end
-    return nil
+-- The Line's notes: its lock, the tokens filled at send time and the unknown tokens.
+local function lineNotes(out, lock, missing, unknown)
+    if lock then out[#out + 1] = L["  locked: %s"]:format(lock) end
+    if missing and #missing > 0 then out[#out + 1] = L["  baked at send time: %s"]:format(braced(missing)) end
+    if unknown and #unknown > 0 then out[#out + 1] = L["  unknown tokens: %s"]:format(braced(unknown)) end
+end
+
+-- One action of a combined callout (combined actions §7): "<kind>: <line>, N of 255 bytes", the
+-- Line's channel and notes under it; or why it does not bake.
+local function actionLines(out, a)
+    if not a.line then
+        if a.kind == "line" and a.reason == "solo" and a.selfPrint then
+            out[#out + 1] = L["  %s: would print locally, not sent (solo fallback: self)"]:format(a.kind)
+        else
+            out[#out + 1] = L["  %s: not sent here (%s)"]:format(a.kind, tostring(a.reason))
+        end
+        return
+    end
+    out[#out + 1] = L["  %s: %s, %d of 255 bytes"]:format(a.kind, a.line, a.length)
+    if a.kind == "line" then
+        out[#out + 1] = L["  channel: %s"]:format(tostring(a.concrete))
+        lineNotes(out, a.lock, a.missing, a.unknown)
+    elseif a.lock then
+        out[#out + 1] = L["  locked: %s"]:format(a.lock)
+    end
+end
+
+-- `/qc check` for a callout with several actions: one row per action, then the macro's total.
+local function combinedLines(id, info)
+    local out = { L["%s -> %d actions"]:format(id, #info.actions) }
+    for _, a in ipairs(info.actions) do actionLines(out, a) end
+    if #info.baked > 0 then out[#out + 1] = L["  macro: %d of 255 bytes"]:format(info.total) end
+    return out
 end
 
 --- The lines `/qc check <id>` prints: the baked line under the current situation, the channel,
---- any lock, and the tokens the line leaves out (a ping or a marker: its line and bytes). Pure
---- formatting, never sends (spec P8, D12). No ctx is passed, so the baked tokens ({me}, {spec},
---- {role}, {key}, {dungeon}, {spell:ID}) are listed as filled at send time rather than guessed here.
+--- any lock, and the tokens the line leaves out (a ping or a marker: its line and bytes; a callout
+--- with several actions: one row per action, then the macro's bytes). Pure formatting, never sends
+--- (spec P8, D12). No ctx is passed, so the baked tokens ({me}, {spec}, {role}, {key}, {dungeon},
+--- {spell:ID}) are listed as filled at send time rather than guessed here.
 --- @param id string
 --- @return string[]
 function V.CheckLines(id)
@@ -41,9 +68,12 @@ function V.CheckLines(id)
     local callout = NS.Library.Callout(id)
     if not callout then return { L["No callout with id %s."]:format(id) } end
     local snap = NS.Situation.Current()
-    local target = targetAction(callout, snap)
-    if target then return targetActionLines(id, target) end
-    local line, reason, info = NS.Bake.Bake(callout, snap, { soloFallback = NS.Setting("behavior.soloFallback") })
+    local soloFallback = NS.Setting("behavior.soloFallback")
+    local _, _, actions = NS.Bake.BakeActions(callout, snap, { soloFallback = soloFallback })
+    if #actions.actions > 1 then return combinedLines(id, actions) end
+    local first = actions.actions[1]
+    if first and (first.kind == "ping" or first.kind == "marker") then return targetActionLines(id, first) end
+    local line, reason, info = NS.Bake.Bake(callout, snap, { soloFallback = soloFallback })
     if not line then
         if reason == "solo" and info.selfPrint then
             return { L["%s -> would print locally, not sent (solo fallback: self)"]:format(id) }
@@ -52,13 +82,7 @@ function V.CheckLines(id)
     end
     local out = { ("%s -> %s"):format(id, line),
         L["  channel: %s, %d of 255 bytes"]:format(tostring(info.concrete), info.length) }
-    if info.lock then out[#out + 1] = L["  locked: %s"]:format(info.lock) end
-    if #info.missing > 0 then
-        out[#out + 1] = L["  baked at send time: %s"]:format(braced(info.missing))
-    end
-    if #info.unknown > 0 then
-        out[#out + 1] = L["  unknown tokens: %s"]:format(braced(info.unknown))
-    end
+    lineNotes(out, info.lock, info.missing, info.unknown)
     return out
 end
 
