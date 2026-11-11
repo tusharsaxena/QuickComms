@@ -200,7 +200,7 @@ end
 
 -- Armed when the slot baked; otherwise disarmed, keeping only what a click may still do (a solo
 -- self-print). A refused or placeholder button carries no chat type, so its click reports nothing.
--- lockText names an action's live lock (RefreshLocks keeps each baked action's lock current in combat),
+-- lockText names an action's live lock (the press reads it from the current snapshot, CA-M2-R1),
 -- so a padlocked action in a press is explained by its lock, never tracked as a send.
 -- A previewed button (spec §13.3) keeps its line for the tooltip and is disarmed, and carries neither
 -- the solo self-line nor the lock text: a previewed button sends and reports nothing. It carries an

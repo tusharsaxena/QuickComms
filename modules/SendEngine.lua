@@ -466,11 +466,20 @@ end
 
 -- A press's baked chat actions, split by their live lock (combined actions §4 step 6): the open ones
 -- await an echo, each locked one prints its note ("may not have been sent", with why) and awaits none.
+-- The lock is read at the press from the current snapshot (CA-M2-R1), never the bake's copy: a
+-- press-time or combat-edge re-bake gives the meta its own action tables, which S.RefreshLocks never
+-- reaches, so a lockdown that came on after it would otherwise be tracked as a send. An action with no
+-- concrete channel (a test's hand-built meta) keeps the lock it carries. Safe in combat: plain reads.
 local function chatActions(meta)
-    local open, locked = {}, {}
+    local open, locked, snap = {}, {}, nil
     for _, a in ipairs(meta.actions) do
         if a.chatType then
-            if a.lock then locked[#locked + 1] = a else open[#open + 1] = a end
+            local lock = a.lock
+            if a.concrete then
+                snap = snap or NS.Situation.Current()
+                lock = NS.Channels.LockState(a.concrete, snap)
+            end
+            if lock then locked[#locked + 1] = lock else open[#open + 1] = a end
         end
     end
     return open, locked
@@ -478,8 +487,8 @@ end
 
 local function lockNotes(meta, locked)
     if not NS.Setting("behavior.dropNotes") then return end
-    for _, a in ipairs(locked) do
-        local why = meta.lockText and meta.lockText(a.lock) or tostring(a.lock)
+    for _, lock in ipairs(locked) do
+        local why = meta.lockText and meta.lockText(lock) or tostring(lock)
         NS.Print(L["%s may not have been sent. %s"]:format(tostring(meta.name), why))
     end
 end

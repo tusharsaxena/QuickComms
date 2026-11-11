@@ -215,3 +215,30 @@ test("coordinates: [CA-M2-3] a re-bake where nothing bakes keeps the old macro a
     assertTrue(b.qcMeta == meta, "and the old meta")
     assertEqual(#meta.actions, 1) assertEqual(meta.chatTypes[1], "SAY")
 end)
+
+test("coordinates: [CA-M2-R1] a lockdown that comes on after a re-bake reaches the press", function()
+    local NS, m, rare = live()
+    local b = button(NS, rare)
+    m.playerPos = { 0.5, 0.25 }
+    m.__click(b)   -- the PreClick re-bake swaps the meta's actions
+    assertEqual(b:GetAttribute("macrotext"), "/s %t @ 50.0, 25.0")
+    local snap = {}
+    for k, v in pairs(NS.Situation.Current()) do snap[k] = v end
+    snap.lockdown = { encounter = true }
+    NS.Situation.Current = function() return snap end
+    NS.Situation.Restamp = function() end
+    m.__setCombat(true)
+    NS.Surfaces.RefreshLocks()
+    assertEqual(NS.Pad.ButtonsFor("p1", rare)[1].qcSlot.lock, "lockdown", "the padlock shows")
+    local pending = NS.SendEngine.EchoState().pending
+    m.prints = {}
+    m.__click(b)
+    local said = false
+    for _, p in ipairs(m.prints) do
+        if p:find("Rare may not have been sent.", 1, true) then said = true end
+    end
+    -- red under: press() reading the re-bake's cached lock instead of the live one
+    assertTrue(said, "the press prints the lock note")
+    assertEqual(NS.SendEngine.EchoState().pending, pending, "and awaits no echo")
+    m.__setCombat(false)
+end)

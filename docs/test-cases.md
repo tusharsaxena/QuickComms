@@ -1110,7 +1110,7 @@ Total.
 - preview window: [QF-02] the settings window closing hides it; a hidden UIParent ends nothing
 - preview window: [QF-02] `/qc preview off` ends the edit preview too; with nothing on it writes nothing
 
-### test_coordinates.lua (10)
+### test_coordinates.lua (11)
 
 - coordinates: a live button bakes your position, and only a button that uses it re-bakes
 - coordinates: a press after you moved re-arms through PreClick and sends where you are now
@@ -1122,6 +1122,7 @@ Total.
 - coordinates: a previewed place that is not where you are prints <coordinates>
 - coordinates: [CA-M2-3] a re-bake that pushes the Line over budget refreshes the press meta
 - coordinates: [CA-M2-3] a re-bake where nothing bakes keeps the old macro and meta
+- coordinates: [CA-M2-R1] a lockdown that comes on after a re-bake reaches the press
 
 ### test_master.lua (5)
 
@@ -2222,7 +2223,7 @@ Total.
 | test_preview.lua | 41 |
 | test_edit_preview.lua | 17 |
 | test_preview_window.lua | 25 |
-| test_coordinates.lua | 10 |
+| test_coordinates.lua | 11 |
 | test_master.lua | 5 |
 | test_pad_layout.lua | 21 |
 | test_dial_layout.lua | 31 |
@@ -2267,4 +2268,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1905** |
+| **Total** | **1906** |
