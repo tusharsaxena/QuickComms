@@ -57,16 +57,32 @@ local ROWS = {
 
 -- Where: one check box per content kind, in NS.Resolver.TOKENS.content's order, labeled as the pad's
 -- situation chip. Every kind has a row on every client, so the stored set and `/qc set` are one shape;
--- the page leaves out the kinds this client does not offer (NS.GameIds.HIDDEN_CONTENT).
+-- the page draws only the kinds Settings.GroupsWhen.ContentValues offers on this client (the When
+-- editor's own list), read when the page draws (`skipRender` below), never at load.
 for _, kind in ipairs(NS.Resolver.TOKENS.content) do
     ROWS[#ROWS + 1] = { path = "thank.content." .. kind, type = "bool", default = D.content[kind],
         group = WHERE, label = NS.PadRender.CONTENT[kind] or kind,
-        desc = L["Show thank toasts here."] }
+        desc = L["Show thank toasts here."], qcKind = kind }
 end
 
 ROWS[#ROWS + 1] = { path = "thank.raidBuffsOnly", type = "bool", default = D.raidBuffsOnly, group = FILTER,
     label = L["Raid buffs only"],
     desc = L["Auto-thank guesses at a buff: one of a minute or more that another player cast on you. With this on, only the raid buffs a stranger can give you show a toast."] }
+
+-- What a row's `skipRender` answers when the page draws: a content kind this client does not offer, and
+-- the raid-buffs-only toggle on a client whose NS.GameIds.THANK_RAID_BUFFS is empty (FRB: it would
+-- toast nothing there; WoW Forever's ids are derived, so today both clients draw it).
+local function offered(kind)
+    for _, v in ipairs(NS.addon.Settings.GroupsWhen.ContentValues()) do
+        if v.value == kind then return true end
+    end
+    return false
+end
+local function hiddenNow(row)
+    if row.qcKind then return not offered(row.qcKind) end
+    if row.path == "thank.raidBuffsOnly" then return next(NS.GameIds.THANK_RAID_BUFFS or {}) == nil end
+    return nil
+end
 
 -- On a load where the Options composers are hollow (LibKa0s absent) no page draws these rows, so,
 -- as settings/SchemaRows.lua, none is added; modules/AutoThank.lua reads the profile's `thank` itself.
@@ -76,5 +92,29 @@ for _, row in ipairs(ROWS) do
     row.page = PAGE
     row.group = row.group or GENERAL
     row.onChange = rewire
+    if row.qcKind or row.path == "thank.raidBuffsOnly" then
+        setmetatable(row, { __index = function(r, key)
+            if key == "skipRender" then return hiddenNow(r) end
+            return nil
+        end })
+    end
 end
 NS.SchemaRuntime.AddRows(ROWS)
+
+-- ── the page (D21: its own sidebar page, after Comms Dial and before Profiles) ──────────────────
+-- Through the editor pages' registration (settings/Editors.lua Ed.RegisterPage, the canvas and the
+-- Defaults button of Panel.lua's buildGeneralPage), whose RegisterOptionsPage the degraded load
+-- stubs (settings/OptionsSetup.lua). The tabs are the rows' groups; a tab whose every row is hidden
+-- draws no tab (untabbedSkipRender). Defaults resets every row the page draws but the toast's
+-- position (settings/Schema.lua resetExempt).
+local Ed = NS.addon.Settings.Editors
+local function H() return NS.addon.Settings.Helpers end
+
+local function render(ctx)
+    H().RenderTabbedSchema(ctx, PAGE, nil, nil, { rerender = Ed.redraw[PAGE], untabbedSkipRender = true })
+end
+
+Ed.RegisterPage(PAGE, L["Auto-thank"], "AutoThankPanel", render, {
+    tooltip = L["Put auto-thank's settings back to their defaults. The toast's position is kept."],
+    onClick = function(ctx) H().RestoreDefaults(PAGE, ctx) end,
+})

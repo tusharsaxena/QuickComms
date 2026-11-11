@@ -882,3 +882,8 @@ L["Show thank toasts here."] = "Show thank toasts here."
 L["Raid buffs only"] = "Raid buffs only"
 L["Auto-thank guesses at a buff: one of a minute or more that another player cast on you. With this on, only the raid buffs a stranger can give you show a toast."] =
     "Auto-thank guesses at a buff: one of a minute or more that another player cast on you. With this on, only the raid buffs a stranger can give you show a toast."
+
+-- The Auto-thank page (settings/AutoThank.lua)
+L["Auto-thank"] = "Auto-thank"
+L["Put auto-thank's settings back to their defaults. The toast's position is kept."] =
+    "Put auto-thank's settings back to their defaults. The toast's position is kept."

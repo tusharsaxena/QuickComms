@@ -796,7 +796,7 @@ Total.
 - window icons: an AceGUI image of a game icon is cropped through SetImage and edged on a frame of the addon's own
 - window icons: the callout popup's icon chooser frames a game icon
 
-### test_groups_when.lua (21)
+### test_groups_when.lua (22)
 
 - when: Toggle adds and removes one value, drops an emptied row, and never mutates its input
 - when: [review 5] the key-level range refuses lowest above highest; clearing both drops the row
@@ -819,6 +819,7 @@ Total.
 - when: [instances] a typed name finds any journal dungeon or raid, not the season's only
 - when: [arena] the arena row: names, Summary, All arenas, the CLI value, and its tooltip
 - when: [arena] Add the arena you are in reads the live snapshot, and refuses outside an arena
+- when: [CA-M4-14] ContentValues is public, and the content row offers exactly its values
 
 ### test_page_groups.lua (52)
 
@@ -1894,7 +1895,7 @@ Total.
 - layers: [audit QC-21] a modal window is clamped, never toplevel, never raised
 - layers: [QUI-Z06] the icon link window is lifted to POPUP
 
-### test_layout.lua (28)
+### test_layout.lua (31)
 
 - layout: [general] Behavior reads Sending, then Pads and dials, with the new labels (QUI-L01, L02)
 - layout: [general] the header Defaults carries the library's Reset all settings tooltip (QUI-L-new2)
@@ -1924,6 +1925,9 @@ Total.
 - layout: [position] the dial's block holds Open at, then the boxes, with their tooltip and Reset
 - layout: [position] the box follows the stored point on a refresh
 - layout: [position] both blocks come from the library's composer
+- layout: [autothank] the page's tabs are General, Where and Filter, with a Defaults that keeps the position
+- layout: [autothank] Where draws one check box per content kind this client offers
+- layout: [autothank] Filter's raid-buffs-only toggle is hidden on a client with no raid-buff ids (FRB)
 
 ### test_skinsetup.lua (25)
 
@@ -2318,7 +2322,7 @@ Total.
 | test_callout_popup.lua | 56 |
 | test_icon_browser.lua | 14 |
 | test_window_icons.lua | 5 |
-| test_groups_when.lua | 21 |
+| test_groups_when.lua | 22 |
 | test_page_groups.lua | 52 |
 | test_page_groups_nesting.lua | 19 |
 | test_page_pads.lua | 28 |
@@ -2353,7 +2357,7 @@ Total.
 | test_glow.lua | 11 |
 | test_shine.lua | 8 |
 | test_layers.lua | 14 |
-| test_layout.lua | 28 |
+| test_layout.lua | 31 |
 | test_skinsetup.lua | 25 |
 | test_launcher_skin_entry.lua | 1 |
 | test_skin_windows.lua | 24 |
@@ -2376,4 +2380,4 @@ Total.
 | test_skin_switch.lua | 28 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2010** |
+| **Total** | **2014** |
