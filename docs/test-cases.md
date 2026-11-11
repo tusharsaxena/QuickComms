@@ -274,7 +274,7 @@ Total.
 - diagnostics: [shine] the pad's button line and the dial's slices line print the look and strength
 - diagnostics: [CA-M2-5] a combined macro shows each newline as \n, on one Send row
 
-### test_compat.lua (25)
+### test_compat.lua (32)
 
 - compat: plain readers pass plain values and drop secrets
 - compat: InstanceInfo with a secret instanceID reads nil, never raises
@@ -301,6 +301,13 @@ Total.
 - mock: [CA-M4-1] auraUpdate builds a UNIT_AURA payload, and secretAuraUpdate wraps it
 - mock: [CA-M4-1] GUIDs, player info, group, friend and guild answers are settable
 - mock: [CA-M4-1] every frame answers its alpha and whether the cursor is over it
+- compat: [CA-M4-2] AuraCaster reads the caster's GUID first, then the aura's sourceUnit, and drops when neither reads
+- compat: [CA-M4-2] AuraCaster rejects an NPC, a pet, the player and a group member (a secret answer reads as in group)
+- compat: [CA-M4-2] AuraCaster drops an unreadable name, and marks a friend or a guildmate known
+- compat: [CA-M4-2] AuraByInstance answers the player's plain aura, nil when secret or gone
+- compat: [CA-M4-2] HelpfulAuraIds lists the player's helpful aura ids, nil when any is secret
+- compat: [CA-M4-2] WhisperName is Name-Realm with the realm normalized, the name alone on the same realm
+- compat: [CA-M4-2] WhisperName with regional names is First-Surname, whatever the realm
 
 ### test_identity.lua (11)
 
@@ -2215,7 +2222,7 @@ Total.
 | test_slash.lua | 22 |
 | test_disabled.lua | 26 |
 | test_diagnostics.lua | 14 |
-| test_compat.lua | 25 |
+| test_compat.lua | 32 |
 | test_identity.lua | 11 |
 | test_probe.lua | 18 |
 | test_restrictions.lua | 20 |
@@ -2291,4 +2298,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1929** |
+| **Total** | **1936** |

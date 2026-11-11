@@ -760,6 +760,86 @@ function Compat.SenderIsPlayer(sender, guid)
     return realm == myRealm
 end
 
+-- ── Auto-thank (spec §9): an aura's caster, the player's helpful auras and a whisper name ────────
+
+--- The name a whisper reaches `name` by: "First-Surname" where names are unique per region
+--- (Compat.RegionalNames: the client's tell parser takes the hyphen form for a stranger, the space
+--- form only for a name AutoComplete knows), else "Name-Realm" with spaces and hyphens stripped from
+--- the realm (the normalized form; a space would end the tell target), or the name alone when the
+--- realm is "" (the player's own). Nil when the name, or a needed realm, is unreadable.
+function Compat.WhisperName(name, realm)
+    name = PlainString(name)
+    if not name or name == "" then return nil end
+    if Compat.RegionalNames() then return (name:gsub("%s+", "-")) end
+    realm = PlainString(realm)
+    if not realm then return nil end
+    realm = realm:gsub("[%s%-]", "")
+    if realm == "" then return name end
+    return name .. "-" .. realm
+end
+
+-- The caster's GUID: C_UnitAuras.GetAuraCasterGUID first (no unit token needed), else the aura's
+-- sourceUnit read through UnitGUID. Nil when neither reads plain.
+local function casterGUID(auraInstanceID, aura)
+    local ua = C_UnitAuras
+    local guid = ua and ua.GetAuraCasterGUID and PlainString(ua.GetAuraCasterGUID("player", auraInstanceID)) or nil
+    if guid or not UnitGUID or type(aura) ~= "table" or Compat.IsSecret(aura) then return guid end
+    local unit = PlainString(aura.sourceUnit)
+    return unit and PlainString(UnitGUID(unit)) or nil
+end
+
+-- True only when the GUID is plainly not in the player's group; a secret answer, or no API, reads
+-- as in the group (the safe side: a group member is never thanked).
+local function outsideGroup(guid)
+    local party = C_PartyInfo
+    if not (party and party.IsGUIDInGroup) then return false end
+    local inGroup = party.IsGUIDInGroup(guid)
+    return not Compat.IsSecret(inGroup) and inGroup ~= true
+end
+
+--- Who cast the player's aura `auraInstanceID`, as { guid, name, whisperName, known }, or nil when
+--- it is not another player outside the group, or any needed read is nil or secret. NPCs, pets and
+--- vehicles fail the "Player-" GUID test; `known` is a friend or a guildmate (a secret reads not known).
+function Compat.AuraCaster(auraInstanceID, aura)
+    local guid = casterGUID(auraInstanceID, aura)
+    if not guid or not guid:find("^Player%-") then return nil end
+    local me = UnitGUID and PlainString(UnitGUID("player")) or nil
+    if not me or guid == me or not outsideGroup(guid) then return nil end
+    if not GetPlayerInfoByGUID then return nil end
+    local _, _, _, _, _, name, realm = GetPlayerInfoByGUID(guid)
+    local whisperName = Compat.WhisperName(name, realm)
+    if not whisperName then return nil end
+    local friends = C_FriendList
+    local known = (friends ~= nil and friends.IsFriend ~= nil and plainTrue(friends.IsFriend(guid)))
+        or (IsGuildMember ~= nil and plainTrue(IsGuildMember(guid)))
+    return { guid = guid, name = PlainString(name), whisperName = whisperName, known = known == true }
+end
+
+--- The player's aura `auraInstanceID` as a plain table, or nil when it is gone, secret or unreadable.
+function Compat.AuraByInstance(auraInstanceID)
+    local ua = C_UnitAuras
+    if not (ua and ua.GetAuraDataByAuraInstanceID) then return nil end
+    local aura = ua.GetAuraDataByAuraInstanceID("player", auraInstanceID)
+    if Compat.IsSecret(aura) or type(aura) ~= "table" then return nil end
+    return aura
+end
+
+--- The player's helpful aura instance ids, a plain list in the client's order, or nil when the list
+--- or any element is secret (still restricted: a partial snapshot would toast a known aura later).
+function Compat.HelpfulAuraIds()
+    local ua = C_UnitAuras
+    if not (ua and ua.GetUnitAuraInstanceIDs) then return nil end
+    local ids = ua.GetUnitAuraInstanceIDs("player", "HELPFUL")
+    if Compat.IsSecret(ids) or type(ids) ~= "table" then return nil end
+    local out = {}
+    for i = 1, #ids do
+        local id = PlainNumber(ids[i])
+        if id == nil then return nil end
+        out[i] = id
+    end
+    return out
+end
+
 -- ── The bake context (spec §8.1): the values {me}, {spec}, {dungeon}, {coordinates} and {spell:ID} bake from ──
 
 --- The player's name, without the realm: "First Surname" with regional names (WoW Forever), the

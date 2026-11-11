@@ -409,3 +409,131 @@ test("mock: [CA-M4-1] every frame answers its alpha and whether the cursor is ov
     f.__mouseOver = true
     assertTrue(f:IsMouseOver())
 end)
+
+-- ── an aura's caster, the player's helpful auras and a whisper name (CA-M4-2, spec §9) ──────────
+
+local STRANGER = "Player-2-0000000B"
+
+local function stranger(m, fields)
+    m.players[STRANGER] = { name = "Bob", realm = "Argent Dawn" }
+    return m.addAura(fields or { casterGUID = STRANGER })
+end
+
+test("compat: [CA-M4-2] AuraCaster reads the caster's GUID first, then the aura's sourceUnit, and drops when neither reads", function()
+    local NS, m = T.newAddon()
+    m.issecretvalue = T.isSecret
+    local C = NS.Compat
+    local a = stranger(m)
+    local c = C.AuraCaster(a.auraInstanceID, a)
+    assertEqual(c.guid, STRANGER)
+    assertEqual(c.name, "Bob")
+    assertEqual(c.whisperName, "Bob-ArgentDawn")
+    assertFalse(c.known)
+    local b = m.addAura{ sourceUnit = "target" }
+    m.unitGUIDs.target = STRANGER
+    -- red under: reading only GetAuraCasterGUID
+    assertEqual(C.AuraCaster(b.auraInstanceID, b).guid, STRANGER, "the sourceUnit fallback")
+    m.auraCasters[a.auraInstanceID] = T.secret(STRANGER)
+    a.sourceUnit = nil
+    assertNil(C.AuraCaster(a.auraInstanceID, a), "a secret GUID and no sourceUnit")
+    m.unitGUIDs.target = nil
+    assertNil(C.AuraCaster(b.auraInstanceID, b), "a sourceUnit with no GUID")
+    assertNil(C.AuraCaster(b.auraInstanceID, T.secret(b)), "a secret aura is never indexed")
+end)
+
+test("compat: [CA-M4-2] AuraCaster rejects an NPC, a pet, the player and a group member (a secret answer reads as in group)", function()
+    local NS, m = T.newAddon()
+    m.issecretvalue = T.isSecret
+    local C = NS.Compat
+    local a = stranger(m)
+    m.auraCasters[a.auraInstanceID] = "Creature-0-1-2-3-4-5"
+    assertNil(C.AuraCaster(a.auraInstanceID, a), "an NPC")
+    m.auraCasters[a.auraInstanceID] = "Pet-0-1-2-3-4-5"
+    assertNil(C.AuraCaster(a.auraInstanceID, a), "a pet")
+    m.auraCasters[a.auraInstanceID] = m.playerGUID
+    m.players[m.playerGUID] = { name = "Testchar", realm = "" }
+    assertNil(C.AuraCaster(a.auraInstanceID, a), "the player")
+    m.auraCasters[a.auraInstanceID] = STRANGER
+    m.groupGUIDs[STRANGER] = true
+    assertNil(C.AuraCaster(a.auraInstanceID, a), "a group member")
+    m.groupGUIDs[STRANGER] = T.secret(false)
+    -- red under: plainTrue(IsGUIDInGroup) (a secret reads as not in group)
+    assertNil(C.AuraCaster(a.auraInstanceID, a), "a secret group answer is the safe side")
+    m.groupGUIDs[STRANGER] = nil
+    assertEqual(C.AuraCaster(a.auraInstanceID, a).guid, STRANGER)
+end)
+
+test("compat: [CA-M4-2] AuraCaster drops an unreadable name, and marks a friend or a guildmate known", function()
+    local NS, m = T.newAddon()
+    m.issecretvalue = T.isSecret
+    local C = NS.Compat
+    local a = stranger(m)
+    m.players[STRANGER].name = T.secret("Bob")
+    assertNil(C.AuraCaster(a.auraInstanceID, a), "a secret name")
+    m.players[STRANGER] = nil
+    assertNil(C.AuraCaster(a.auraInstanceID, a), "no player info")
+    m.players[STRANGER] = { name = "Bob", realm = "" }
+    assertEqual(C.AuraCaster(a.auraInstanceID, a).whisperName, "Bob", "a same-realm stranger")
+    m.friendGUIDs[STRANGER] = true
+    assertTrue(C.AuraCaster(a.auraInstanceID, a).known, "a friend")
+    m.friendGUIDs[STRANGER] = nil
+    m.guildGUIDs[STRANGER] = true
+    assertTrue(C.AuraCaster(a.auraInstanceID, a).known, "a guildmate")
+    m.guildGUIDs[STRANGER] = T.secret(true)
+    assertFalse(C.AuraCaster(a.auraInstanceID, a).known, "a secret guild answer is not known")
+end)
+
+test("compat: [CA-M4-2] AuraByInstance answers the player's plain aura, nil when secret or gone", function()
+    local NS, m = T.newAddon()
+    m.issecretvalue = T.isSecret
+    local C = NS.Compat
+    local a = m.addAura{}
+    assertEqual(C.AuraByInstance(a.auraInstanceID), a)
+    assertNil(C.AuraByInstance(99), "an expired aura")
+    m.auras[a.auraInstanceID] = T.secret(a)
+    assertNil(C.AuraByInstance(a.auraInstanceID), "a secret aura")
+    m.C_UnitAuras = nil
+    assertNil(C.AuraByInstance(a.auraInstanceID), "no API")
+end)
+
+test("compat: [CA-M4-2] HelpfulAuraIds lists the player's helpful aura ids, nil when any is secret", function()
+    local NS, m = T.newAddon()
+    m.issecretvalue = T.isSecret
+    local C = NS.Compat
+    assertEqual(#C.HelpfulAuraIds(), 0)
+    m.addAura{}
+    m.addAura{}
+    local ids = C.HelpfulAuraIds()
+    assertEqual(#ids, 2)
+    assertEqual(ids[1], 1)
+    assertEqual(ids[2], 2)
+    m.auraInstanceIDs = { 1, T.secret(2) }
+    -- red under: skipping a secret element (the snapshot would miss an aura and toast it later)
+    assertNil(C.HelpfulAuraIds(), "a secret element")
+    m.auraInstanceIDs = T.secret({ 1 })
+    assertNil(C.HelpfulAuraIds(), "a secret list")
+    m.C_UnitAuras = nil
+    assertNil(C.HelpfulAuraIds(), "no API")
+end)
+
+test("compat: [CA-M4-2] WhisperName is Name-Realm with the realm normalized, the name alone on the same realm", function()
+    local NS = T.newAddon()
+    local C = NS.Compat
+    assertFalse(C.RegionalNames())
+    assertEqual(C.WhisperName("Bob", "Argent Dawn"), "Bob-ArgentDawn")
+    assertEqual(C.WhisperName("Bob", "Azjol-Nerub"), "Bob-AzjolNerub")
+    assertEqual(C.WhisperName("Bob", ""), "Bob")
+    assertNil(C.WhisperName("Bob", nil), "an unreadable realm")
+    assertNil(C.WhisperName(T.secret("Bob"), ""), "a secret name")
+    assertNil(C.WhisperName("", ""), "an empty name")
+end)
+
+test("compat: [CA-M4-2] WhisperName with regional names is First-Surname, whatever the realm", function()
+    local NS, m = T.newAddon()
+    m.RegionalUniqueNamesEnabled = function() return true end
+    local C = NS.Compat
+    assertTrue(C.RegionalNames())
+    -- red under: choosing the form by the client rather than by Compat.RegionalNames()
+    assertEqual(C.WhisperName("Traxex Silentshot", "Anything"), "Traxex-Silentshot")
+    assertEqual(C.WhisperName("Solo", nil), "Solo", "a name with no surname")
+end)

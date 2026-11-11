@@ -85,7 +85,10 @@ files["core/Compat.lua"] = {
     "GetNumBattlegroundTypes", "C_PvP", "C_LFGList",
     -- pings and raid target markers (CA-M1-2): the localized commands, the ping state and marking
     -- rights, each guarded for absence at call time
-    "C_Ping", "CanBeRaidTarget", "IsEveryoneAssistant", "SLASH_PING1", "SLASH_TARGET_MARKER1" },
+    "C_Ping", "CanBeRaidTarget", "IsEveryoneAssistant", "SLASH_PING1", "SLASH_TARGET_MARKER1",
+    -- auto-thank (CA-M4-2): an aura's caster, the player's helpful auras, the caster's name and
+    -- whether a friend or guildmate cast it, each guarded for absence at call time
+    "C_UnitAuras", "C_PartyInfo", "C_FriendList", "GetPlayerInfoByGUID", "IsGuildMember" },
 }
 
 -- QC:SlashEnabled and QC:OnSlashCommand are methods on the addon object by calling convention;
