@@ -793,3 +793,154 @@ test("autothank: [CA-M4-11] the library hides the toast at DURATION", function()
     assertFalse(f:IsShown(), "hidden at DURATION")
     assertEqual(TH.toast:Stats().visible, 0)
 end)
+
+-- ── the Thank button and its press (CA-M4-12, D4, spec §9 The Thank button) ─────────────────────
+
+-- hosting(), with the client's THANK emote known, `send` set, and one stranger's toast up: its key,
+-- its frame and the frame's Thank button.
+local function thanking(send, over)
+    local NS, m, TH, shows = hosting()
+    m.EMOTE98_TOKEN, m.EMOTE98_CMD1 = "THANK", "/thank"
+    NS.Emotes.Reset()
+    NS.db.profile.thank.send = send or "emote"
+    for k, v in pairs(over or {}) do NS.db.profile.thank[k] = v end
+    local key = offer(NS, m, 1)
+    local f = TH.toast:FrameFor(key)
+    return NS, m, TH, key, f, f and f.qcThank, shows
+end
+
+local function results(NS)
+    local got = {}
+    NS.Bus:NewTarget():RegisterMessage(NS.MSG.SEND_RESULT, function(_, id, surface, what)
+        got[#got + 1] = { id = id, surface = surface, what = what }
+    end)
+    return got
+end
+
+-- A CHAT_MSG_* as the client sends it: text, sender, then nine fields, then the sender's GUID.
+local function echo(m, event, sender, guid)
+    m.__fire(event, "never read", sender or "Testchar-Testrealm", "", "", "", "", 0, 0, "", 0, 1, guid or m.playerGUID)
+end
+
+local function whisperName(NS) return NS.Compat.WhisperName("Caster1", "Argent Dawn") end
+
+test("autothank: [CA-M4-12] the Thank click runs the macro of each mode", function()
+    for _, send in ipairs({ "emote", "line", "both" }) do
+        local NS, m, _, _, _, b = thanking(send)
+        assertTrue(b ~= nil, send .. ": the toast carries a Thank button")
+        m.__click(b)
+        assertEqual(#m.sentMacros, 1, send)
+        local lines = m.sentLines()
+        local emote = "/thank " .. whisperName(NS)
+        local whisper = "/w " .. whisperName(NS) .. " Thanks for the Arcane Intellect, Caster1!"
+        if send == "emote" then assertEqual(table.concat(lines, "|"), emote) end
+        if send == "line" then assertEqual(table.concat(lines, "|"), whisper) end
+        if send == "both" then assertEqual(table.concat(lines, "|"), emote .. "|" .. whisper) end
+    end
+end)
+
+test("autothank: [CA-M4-12] a right-click never runs the macro", function()
+    local _, m, _, _, _, b = thanking("emote")
+    assertTrue(b.qcLeftOnly)
+    m.__click(b, "RightButton")
+    assertEqual(#m.sentMacros, 0)
+end)
+
+test("autothank: [CA-M4-12] a Thank click stamps no guard, so the next pad press is not guarded", function()
+    local NS, m, _, _, _, b = thanking("emote")
+    local got = results(NS)
+    m.__click(b)
+    assertNil(NS.State.lastSendAt, "red under: a Thank press through G.Decide")
+    for _, r in ipairs(got) do assertTrue(r.what ~= "guarded") end
+end)
+
+test("autothank: [CA-M4-12] its result carries the toast key on the thank surface and touches no pad or dial", function()
+    local NS, m, _, key, _, b = thanking("emote")
+    local got = results(NS)
+    m.__click(b)
+    echo(m, "CHAT_MSG_TEXT_EMOTE")
+    assertEqual(#got, 1)
+    assertEqual(got[1].id, key)
+    assertEqual(got[1].surface, "thank")
+    assertEqual(got[1].what, "sent")
+    assertNil(next(NS.State.padFlashTimers or {}), "no pad button flashed")
+    assertNil(next(NS.State.dialFlashTimers or {}), "no dial wedge flashed")
+end)
+
+test("autothank: [CA-M4-12] the whisper under chat lockdown prints its note and awaits no echo", function()
+    local NS, m, _, _, _, b = thanking("line")
+    m.chatLockdown = true
+    local lines = {}
+    local print0 = NS.Print
+    NS.Print = function(s) lines[#lines + 1] = s end
+    m.__click(b)
+    NS.Print = print0
+    assertEqual(#m.sentMacros, 1, "the click is never canceled")
+    assertEqual(NS.SendEngine.EchoState().pending, 0, "no echo awaited")
+    assertEqual(#lines, 1)
+    assertTrue(lines[1]:find(NS.L["Thank"], 1, true) == 1, "named the Thank press")
+end)
+
+test("autothank: [CA-M4-12] both records two pending entries and gives one result", function()
+    local NS, m, _, _, _, b = thanking("both")
+    local got = results(NS)
+    m.__click(b)
+    assertEqual(NS.SendEngine.EchoState().pending, 2)
+    echo(m, "CHAT_MSG_TEXT_EMOTE")
+    assertEqual(#got, 0, "one of two")
+    -- the whisper's echo names the recipient as its sender: it is ours all the same
+    echo(m, "CHAT_MSG_WHISPER_INFORM", "Caster1-ArgentDawn", "Player-2-00000101")
+    assertEqual(#got, 1, "red under: no CHAT_MSG_WHISPER_INFORM echo, or one read as someone else's")
+    assertEqual(got[1].what, "sent")
+end)
+
+test("autothank: [CA-M4-12] an empty thank-you text leaves the whisper unarmed, and the toast says why", function()
+    local NS, m, _, _, f, b = thanking("line", { text = "   " })
+    assertFalse(b.qcArmed, "nothing to send")
+    assertEqual(f.qcNote:GetText(), NS.L["Nothing to whisper: the thank-you text is empty."])
+    m.__click(b)
+    assertEqual(#m.sentMacros, 0)
+    local NS2, m2, _, _, f2, b2 = thanking("both", { text = "" })
+    assertTrue(b2.qcArmed, "both keeps the emote")
+    m2.__click(b2)
+    assertEqual(table.concat(m2.sentLines(), "|"), "/thank " .. whisperName(NS2))
+    assertEqual(f2.qcNote:GetText() or "", "")
+end)
+
+test("autothank: [CA-M4-12] Attach is called once per pool frame across reuses", function()
+    local NS, m, TH = hosting()
+    local attached = {}
+    local attach = TH.toast.Attach
+    TH.toast.Attach = function(self, w) attached[#attached + 1] = w; return attach(self, w) end
+    local key = offer(NS, m, 1)
+    local f = TH.toast:FrameFor(key)
+    local b = f.qcThank
+    TH.toast:Dismiss()
+    m.__now = m.__now + 10
+    local key2 = offer(NS, m, 2)
+    assertTrue(TH.toast:FrameFor(key2) == f, "the pool frame is re-used")
+    assertTrue(f.qcThank == b, "its button is made once")
+    assertEqual(#attached, 1, "red under: Attach on every draw")
+end)
+
+test("autothank: [CA-M4-12] a click removes its toast through SE.RunOrQueue", function()
+    local NS, m, TH, key, _, b = thanking("emote")
+    local queued = {}
+    local roq = NS.SendEngine.RunOrQueue
+    NS.SendEngine.RunOrQueue = function(k, fn) queued[#queued + 1] = k; return roq(k, fn) end
+    m.__click(b)
+    assertEqual(#queued, 1, "through SE.RunOrQueue")
+    assertNil(TH.toast:FrameFor(key), "the toast is gone")
+end)
+
+test("autothank: [CA-M4-12] #19: a stranger's UNIT_AURA gives exactly one toast, naming the caster and the buff", function()
+    local NS, m, TH, shows = hosting()
+    local guid = stranger(m, 1)
+    local a = m.addAura{ casterGUID = guid, spellId = 1459 }
+    TH.toast:Clear()
+    NS.AutoThank.frame:GetScript("OnEvent")(NS.AutoThank.frame, "UNIT_AURA", "player",
+        m.auraUpdate{ addedAuras = { a } })
+    assertEqual(#shows, 1)
+    local f = TH.toast:FrameFor(guid .. ":1459")
+    assertEqual(f.qcText:GetText(), NS.L["%s buffed you with %s"]:format("Caster1", "Arcane Intellect"))
+end)

@@ -5,10 +5,10 @@ local _, NS = ...
 --
 -- The throttle: a cooldown per caster and spell (AT.Stamp, at the offer), at least C.THANK.GAP
 -- between two Show calls through the host's own pump, at most C.THANK.STACK on screen and the
--- library's maxQueue dropping the oldest waiting toast. The toast's frame will carry the Thank
--- button, a secure child (CA-M4-12), so no toast may be on screen in combat: every host Show and
--- every step of the pump is gated on lockdown, and a payload offered in combat waits in the host's
--- own list; the toast itself is held through combat and released after it. The strata is the
+-- library's maxQueue dropping the oldest waiting toast. The toast's frame carries the Thank
+-- button, a secure child (SendEngine's, D4), so no toast may be on screen in combat: every host
+-- Show and every step of the pump is gated on lockdown, and a payload offered in combat waits in
+-- the host's own list; the toast itself is held through combat and released after it. The strata is the
 -- library's HIGH (core/Constants.lua C.LAYERS); none is set here.
 
 NS.AutoThankToast = NS.AutoThankToast or {}
@@ -35,8 +35,10 @@ end
 
 local ICON = 32
 local INSET = 12
+local BUTTON_W, BUTTON_H = 64, 22
 
--- The icon and the line, made once per pool frame and re-used on every draw.
+-- The icon, the line and the note under it (why the Thank button is not armed), made once per pool
+-- frame and re-used on every draw.
 local function regions(frame)
     if frame.qcText then return end
     frame.qcIcon = frame:CreateTexture(nil, "ARTWORK")
@@ -44,8 +46,74 @@ local function regions(frame)
     frame.qcIcon:SetPoint("LEFT", frame, "LEFT", INSET, 0)
     frame.qcText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     frame.qcText:SetPoint("LEFT", frame.qcIcon, "RIGHT", INSET / 2, 0)
-    frame.qcText:SetPoint("RIGHT", frame, "RIGHT", -INSET * 2, 0)
+    frame.qcText:SetPoint("RIGHT", frame, "RIGHT", -(INSET * 2 + BUTTON_W), 0)
     frame.qcText:SetJustifyH("LEFT")
+    frame.qcNote = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    frame.qcNote:SetPoint("TOPLEFT", frame.qcText, "BOTTOMLEFT", 0, -2)
+    frame.qcNote:SetPoint("RIGHT", frame.qcText, "RIGHT", 0, 0)
+    frame.qcNote:SetJustifyH("LEFT")
+end
+
+-- ── the Thank button (D4) ───────────────────────────────────────────────────────────────────────
+-- SendEngine's secure button, made once per pool frame on its first draw and attached to the toast
+-- once (Attach hooks the button, so attaching it on every reuse would pile hooks up). Each draw
+-- arms it with AT.Macro's macro for the payload's caster and buff, or disarms it and says why.
+
+TH.LOCK_TEXT = { whisperLockdown = L["Locked: whispers are blocked right now."] }
+
+local function lockText(lock)
+    return lock and (TH.LOCK_TEXT[lock] or NS.PadRender.LOCK_TEXT[lock] or tostring(lock))
+end
+
+-- A click that sent something: its toast goes, when the toast may be touched.
+local function onThank(b)
+    local key = b.qcMeta and b.qcMeta.calloutId
+    if key == nil then return end
+    NS.SendEngine.RunOrQueue("thank.remove", function() TH.toast:Remove(key) end)
+end
+
+local function thankButton(frame)
+    if frame.qcThank then return frame.qcThank end
+    local b = NS.SendEngine.NewThankButton(frame, onThank)
+    if not b then return nil end
+    b:SetSize(BUTTON_W, BUTTON_H)
+    b:SetPoint("RIGHT", frame, "RIGHT", -INSET, 0)
+    b.qcLabel = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    b.qcLabel:SetPoint("CENTER", b, "CENTER", 0, 0)
+    b.qcLabel:SetText(L["Thank"])
+    frame.qcThank = b
+    TH.toast:Attach(b)
+    return b
+end
+
+-- The actions a Thank macro carries, for the press's echo and lock reads.
+local function actionsOf(send, macro)
+    local actions = {}
+    if send ~= "line" then actions[#actions + 1] = { kind = "emote", chatType = "TEXT_EMOTE" } end
+    if send == "line" or (send == "both" and macro:find("\n", 1, true)) then
+        actions[#actions + 1] = { kind = "whisper", chatType = "WHISPER" }
+    end
+    return actions
+end
+
+-- Arm the frame's Thank button for `payload`, or disarm it with the reason on the toast.
+local function armThank(frame, payload)
+    local b = thankButton(frame)
+    local settings = thankSettings() or {}
+    local macro, why = AT.Macro(payload.caster, payload.buff, settings)
+    frame.qcNote:SetText(macro and "" or (AT.REASON[why] or ""))
+    if not b then return end
+    if not macro then
+        NS.SendEngine.Disarm(b)
+        return
+    end
+    local actions = actionsOf(settings.send or "emote", macro)
+    local chatTypes = {}
+    for i, a in ipairs(actions) do chatTypes[i] = a.chatType end
+    NS.SendEngine.Arm(b, macro, {
+        kind = "thank", name = L["Thank"], calloutId = payload.key, surfaceId = "thank",
+        actions = actions, chatTypes = chatTypes, lockText = lockText,
+    })
 end
 
 -- ── the fade (D26) ──────────────────────────────────────────────────────────────────────────────
@@ -84,13 +152,14 @@ local function startFade(frame)
     frame:SetAlpha(1)
 end
 
---- Draw `payload` ({ key, name, buff, icon }) on the toast's `frame`: the aura's icon and
---- L["%s buffed you with %s"], at full alpha with its fade's clock started. Runs only from the
---- library's present, so only out of combat. The Thank button is CA-M4-12's. Keeps the library's
---- size.
+--- Draw `payload` ({ key, caster, name, buff, icon }) on the toast's `frame`: the aura's icon,
+--- L["%s buffed you with %s"] and the Thank button armed for the caster, at full alpha with its
+--- fade's clock started. Runs only from the library's present, so only out of combat. Keeps the
+--- library's size.
 function TH.Build(frame, payload)
     regions(frame)
     startFade(frame)
+    armThank(frame, payload)
     frame.qcIcon:SetTexture(payload.icon)
     frame.qcText:SetText(L["%s buffed you with %s"]:format(payload.name or "", payload.buff or ""))
     return nil, nil

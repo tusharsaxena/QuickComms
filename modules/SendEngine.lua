@@ -102,6 +102,19 @@ function SE.NewButton(parent, onPress, wrap)
     return b
 end
 
+--- Auto-thank's Thank button (#19, D4): a send button that acts on a left click alone, so a
+--- right-click (the toast's dismiss) never runs its macro. Its press is pressThank's. Nil in combat.
+--- @param parent table the toast frame it sits in
+--- @param onPress function|nil onPress(button), called after a press that sent something
+--- @return table|nil
+function SE.NewThankButton(parent, onPress)
+    local b = SE.NewButton(parent, onPress)
+    if not b then return nil end
+    b:RegisterForClicks("LeftButtonUp", "LeftButtonDown")
+    b.qcLeftOnly = true
+    return b
+end
+
 function SE.ButtonCount()
     return #buttons
 end
@@ -505,12 +518,39 @@ local function track(meta, open, now)
     scheduleExpiry()
 end
 
+-- Why a Thank action is locked now, or nil: the whisper under the chat lockdown, the emote by the
+-- game emote's own lock. Plain reads, safe in combat.
+local function thankLock(a)
+    if a.kind == "whisper" then
+        return NS.Compat.InChatMessagingLockdown() and "whisperLockdown" or nil
+    end
+    return NS.Channels.LockState("gameEmote", NS.Situation.Current())
+end
+
+-- A Thank press (#19, spec §9 The Thank button): its own path, with no G.Decide and no lastSendAt
+-- stamp, so a Thank click never marks the next pad press as guarded. Each locked action prints its
+-- note and awaits no echo; each open one is one pending entry of the press, which reports one
+-- result under the toast's key on the "thank" surface, a surface no pad or dial owns.
+local function pressThank(b, meta)
+    if not (b.qcArmed and hasActions(meta)) then return end
+    local open, locked = {}, {}
+    for _, a in ipairs(meta.actions) do
+        local lock = thankLock(a)
+        if lock then locked[#locked + 1] = lock else open[#open + 1] = a end
+    end
+    lockNotes(meta, locked)
+    if #locked == #meta.actions then return end
+    track(meta, open, GetTime())
+    if b.qcOnPress then b.qcOnPress(b) end
+end
+
 -- The press (combined actions §4). One G.Decide, one lastSendAt stamp and one qcOnPress per press,
 -- however many actions it has (D7).
 local function press(b)
     local meta, notes = b.qcMeta, b.qcPressNotes
     b.qcPressNotes = nil
     if not meta or NS.IsStoodDown() then return end
+    if meta.kind == "thank" then return pressThank(b, meta) end
     NS.Debug(TAG_S, "press %s on %s -> %s%s", tostring(meta.calloutId), tostring(meta.surfaceId),
         table.concat(meta.chatTypes or {}, "+"), b.qcArmed and "" or " (disarmed)")
     -- A previewed button or wedge (disarmed, spec §13.3) or a test placeholder: the line it would have
@@ -632,9 +672,10 @@ function NS.addon.OnSendEcho(_, event, ...)
         return
     end
     local t0 = Perf.on and debugprofilestop()
-    local sender = select(2, ...)
-    local guid = select(12, ...)
-    local hit = G.Match(e, G.CHAT_TYPE_BY_EVENT[event], GetTime(), NS.Compat.SenderIsPlayer(sender, guid))
+    -- A whisper's echo names the recipient as its sender: it is the player's own (D4).
+    local fromMe = true
+    if event ~= "CHAT_MSG_WHISPER_INFORM" then fromMe = NS.Compat.SenderIsPlayer(select(2, ...), select(12, ...)) end
+    local hit = G.Match(e, G.CHAT_TYPE_BY_EVENT[event], GetTime(), fromMe)
     if hit and G.Settle(hit) then result(hit.meta, "sent") end
     if t0 then Perf.Note("echoMatch", debugprofilestop() - t0) end
 end

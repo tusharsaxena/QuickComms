@@ -116,6 +116,9 @@ test("library: callouts validate on create", function()
     assertTrue(id:match("^c%d+$") ~= nil)
 end)
 
+-- A whisper stays refused as a callout channel (the owner's ruling on issue #7). Auto-thank's whisper to
+-- the player who buffed you (#19) is D4, the owner's separate ruling and the one exception: it is the
+-- toast's Thank button (modules/SendEngine.lua SE.NewThankButton), never a callout.
 test("library: whisper channels are refused (owner, issue #7)", function()
     local _, Lib = boot()
     local id, err = Lib.CreateCallout({ name = "W", text = "x", channel = "whisperTarget" })

@@ -35,8 +35,10 @@ end)
 
 test("guard: every echo event maps to one chat type", function()
     local g = G()
-    -- red under: no CHAT_MSG_CHANNEL (QF-04), no CHAT_MSG_EMOTE (QFE-E1), or no CHAT_MSG_TEXT_EMOTE (QFE-E2)
-    assertEqual(#g.ECHO_EVENTS, 12)
+    -- red under: no CHAT_MSG_CHANNEL (QF-04), no CHAT_MSG_EMOTE (QFE-E1), no CHAT_MSG_TEXT_EMOTE (QFE-E2), or
+    -- no CHAT_MSG_WHISPER_INFORM (CA-M4-12: auto-thank's whisper)
+    assertEqual(#g.ECHO_EVENTS, 13)
+    assertEqual(g.CHAT_TYPE_BY_EVENT.CHAT_MSG_WHISPER_INFORM, "WHISPER")
     assertEqual(g.CHAT_TYPE_BY_EVENT.CHAT_MSG_TEXT_EMOTE, "TEXT_EMOTE")
     assertEqual(g.CHAT_TYPE_BY_EVENT.CHAT_MSG_CHANNEL, "CHANNEL")
     assertEqual(g.CHAT_TYPE_BY_EVENT.CHAT_MSG_EMOTE, "EMOTE")

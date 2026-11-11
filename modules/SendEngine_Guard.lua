@@ -24,6 +24,8 @@ G.ECHO_WINDOW = 1.5
 -- every channel the player is in, so the edge also asks IsGeneralEcho of its channel index. A custom
 -- emote (/e, QFE-E1) echoes as CHAT_MSG_EMOTE, with the same payload layout as Say's; a game emote
 -- (/point, QFE-E2) as CHAT_MSG_TEXT_EMOTE, the client's own line ("You point at X."), laid out the same.
+-- Auto-thank's whisper (#19, D4: the Thank button, never a callout) echoes as CHAT_MSG_WHISPER_INFORM,
+-- whose sender is the recipient: the edge reads it as the player's own.
 G.CHAT_TYPE_BY_EVENT = {
     CHAT_MSG_SAY = "SAY",
     CHAT_MSG_YELL = "YELL",
@@ -37,6 +39,7 @@ G.CHAT_TYPE_BY_EVENT = {
     CHAT_MSG_CHANNEL = "CHANNEL",
     CHAT_MSG_EMOTE = "EMOTE",
     CHAT_MSG_TEXT_EMOTE = "TEXT_EMOTE",
+    CHAT_MSG_WHISPER_INFORM = "WHISPER",
 }
 
 G.ECHO_EVENTS = {}

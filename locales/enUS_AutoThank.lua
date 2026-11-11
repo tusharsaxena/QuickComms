@@ -14,3 +14,8 @@ L["The thank-you text cannot start with /."] = "The thank-you text cannot start 
 
 -- The thank toast's line: the caster's name, then the buff (modules/AutoThank_Toast.lua TH.Build)
 L["%s buffed you with %s"] = "%s buffed you with %s"
+
+-- The toast's Thank button, its press's name in a lock or drop note, and why its whisper is locked
+-- (modules/AutoThank_Toast.lua)
+L["Thank"] = "Thank"
+L["Locked: whispers are blocked right now."] = "Locked: whispers are blocked right now."
