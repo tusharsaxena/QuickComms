@@ -389,7 +389,10 @@ listed task if the owner rules otherwise:
 
 ### CA-M1-14: M1 checkpoint
 
-- Gate, push, Checkpoints row, ledger. The report names D10 and D16 for the owner.
+- Gate, push, Checkpoints row, ledger. The report names D10 and D16 for the owner, and says that on the
+  M1 build a player cannot set up a ping-only or marker-only callout (spec §2 M1 rule, corrected by
+  CA-M1-R5): only a legacy callout with no action takes one through `/qc set`, so #17 and #18 are
+  reachable, and PING-1..5 and MARK-1..7 runnable, from CA-M2-1 on.
 - Commit: `CA-M1-14: M1 checkpoint`, then push.
 
 ---

@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1765410)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1859%2F1859_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1860%2F1860_passing-green)
 
 Supports Retail and WoW Forever. Quick Comms puts your group callouts one click or one keypress away. "Kick on me", "Lust now",
 "INC Lumber Mill": they sit on a Comms Pad, or open from a ping-wheel style Comms Dial. It knows where
@@ -98,11 +98,12 @@ Everything else is under **Settings → AddOns → Ka0s Quick Comms**, and `/qc 
   `/healme`...), then the social ones (`/wave`, `/thank`, `/dance`...).
 - A callout can also ping your target (Attack, Warning, On my way or Assist) or put a raid marker on it,
   from star to skull. Both go through the game's own `/ping` and `/tm` commands on the same secure
-  button, so they work in combat too. With no target nothing is pinged or marked and the press tells you
+  button, and are meant to work in combat too (pending in-game checks). With no target nothing is pinged or marked and the press tells you
   why; in a raid, marking needs leader or assist.
 - After a press every button dims for about a second. On a boss the game quietly drops lines sent
   faster than that, so if one never arrives you get a note in chat.
-- Text that starts with a slash command is refused. A callout only ever sends chat.
+- Text that starts with a slash command is refused. A callout's text is only ever chat; its ping and
+  marker are the game's own `/ping` and `/tm`.
 
 ## FAQ
 

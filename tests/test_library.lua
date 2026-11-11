@@ -1156,6 +1156,23 @@ test("library: [CA-M1-3] a seam write that adds a second action is refused in M1
     assertEqual(p.callouts[line].emote, nil)
 end)
 
+test("library: [CA-M1-R5] in M1 a ping or a marker is set by /qc set only on a callout with no action", function()
+    local NS, Lib, p = bare()
+    -- CA-M2-1 inverts the emote half: combining (#16) lets the emote callout take a ping beside it.
+    local emote = Lib.CreateCallout({ name = "Point", text = "", channel = "gameEmote", emote = "POINT" })
+    NS.addon:OnSlashCommand("set callout.ping " .. emote .. " attack")
+    -- red under: a ping set beside the emote (two actions on the M1 build)
+    assertTrue(not p.callouts[emote].ping, "an emote callout refuses a ping (oneAction)")
+    NS.addon:OnSlashCommand("set callout.emote " .. emote .. " none")
+    assertEqual(p.callouts[emote].emote, "POINT", "and refuses losing its emote first (noAction)")
+    p.callouts.c900 = { name = "Old", text = "", channel = "party" }
+    NS.addon:OnSlashCommand("set callout.ping c900 attack")
+    assertEqual(p.callouts.c900.ping, "attack", "a legacy callout with no action takes a ping")
+    p.callouts.c901 = { name = "Old", text = "", channel = "gameEmote" }
+    NS.addon:OnSlashCommand("set callout.marker c901 8")
+    assertEqual(p.callouts.c901.marker, 8, "and a marker")
+end)
+
 test("library: [CA-M1-3] a legacy game emote callout still validates and edits", function()
     local NS, Lib, p = bare()
     p.callouts.c901 = { name = "Wave", text = "", channel = "gameEmote", emote = "WAVE" }

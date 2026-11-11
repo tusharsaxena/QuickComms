@@ -518,7 +518,7 @@ Total.
 - client data: [QFE-F3] the battleground row suggests the seeded sets' maps
 - client data: [QFE-F3] the token help leaves {dungeon} and {key} out on Forever
 
-### test_library.lua (82)
+### test_library.lua (83)
 
 - library: Prepare seeds every shipped set as a group, on one pad and one dial, once
 - library: a seeded group is an ordinary group: its fields, When, callouts and origin
@@ -596,6 +596,7 @@ Total.
 - library: [CA-M1-3] a legacy callout with no action stays editable through the seam
 - library: [CA-M1-3] a seam write that takes away a callout's last action is refused
 - library: [CA-M1-3] a seam write that adds a second action is refused in M1
+- library: [CA-M1-R5] in M1 a ping or a marker is set by /qc set only on a callout with no action
 - library: [CA-M1-3] a legacy game emote callout still validates and edits
 - library: [CA-M1-3] WriteActions judges a several-field edit as a whole
 - library: [CA-M1-4] the callout template carries ping and marker, as none
@@ -2158,7 +2159,7 @@ Total.
 | test_builtins.lua | 34 |
 | test_gameids.lua | 5 |
 | test_client_data.lua | 9 |
-| test_library.lua | 82 |
+| test_library.lua | 83 |
 | test_members.lua | 28 |
 | test_editors.lua | 19 |
 | test_callout_popup.lua | 43 |
@@ -2221,4 +2222,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1859** |
+| **Total** | **1860** |

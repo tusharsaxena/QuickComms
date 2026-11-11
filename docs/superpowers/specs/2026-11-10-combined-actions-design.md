@@ -217,8 +217,15 @@ M1 ships the slot model and the two new actions without combining them:
   reason `"oneAction"`. This rule lives on the branch only, and M2's first commit removes it, with its test
   inverted.
 - Legacy callouts already hold one action, either a Line or an Emote.
-- A ping-only or marker-only callout is made through `/qc set callout.ping <id> attack` or
-  `/qc set callout.marker <id> 8` on a callout whose Line is None.
+- On the M1 build a player cannot set up a ping-only or marker-only callout. Every callout a player can
+  make already holds one action (a Line or an emote), so `/qc set callout.ping <id> attack` or
+  `/qc set callout.marker <id> 8` on it is refused with `"oneAction"`, and clearing that action first is
+  refused with `"noAction"`. In M1 only a legacy callout that holds no action (empty text, no emote) takes
+  a ping or a marker through `/qc set`, and code and tests make one directly through
+  `Lib.CreateCallout`. A player sets one up from CA-M2-1 on: `/qc set callout.ping <id> attack` on a Game
+  emote callout, then `/qc set callout.emote <id> none`. The PING and MARK smoke checks therefore run on
+  the M2 build. (Corrected by review fix CA-M1-R5: this line used to say M1 made one through `/qc set`
+  on a callout whose Line is None, which the one-action rule refuses.)
 - M1 adds `ping` and `marker` to `DRAFT`, `copyFields`, `put` and `seamValue`, so an editor Save keeps them,
   although the editor draws no control for them until M2.
 
