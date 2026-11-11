@@ -223,7 +223,8 @@ local PREVIEW_CHARS = 40
 local SHORT_CHANNEL = {
     smartGroup = L["Smart group"], smartLead = L["Smart lead"], party = L["Party"], raid = L["Raid"],
     instance = L["Instance"], raidWarning = L["Raid warning"], say = L["Say"], yell = L["Yell"],
-    general = L["General"], emote = L["Emote"], gameEmote = L["Game emote"],
+    -- the no-Line kind (D10), as the Channel list calls it
+    general = L["General"], emote = L["Emote"], gameEmote = L["None (no chat line)"],
 }
 
 local function hex(r, g, b)
@@ -267,6 +268,7 @@ local function calloutLabel(c, cid)
         channelColor(c.channel), SHORT_CHANNEL[c.channel] or tostring(c.channel),
         NS.SkinMarkup("gtip.subtle", preview(G.CalloutSummary(c))))
 end
+G.CalloutLabel = calloutLabel
 
 -- The group part of a Reuse entry ("<group>:", a set's "<set>: <child>:") is drawn in the muted
 -- gold LibKa0s gives a debug line's tag (the skin's log.tag, c9a66b under Ka0s Default), the

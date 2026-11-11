@@ -6,19 +6,22 @@ local addonName, NS = ...
 --     header   New callout / Edit callout, the gold rule under it
 --     body     Name and Channel side by side, then Text across both columns (the member rows'
 --              labels, read and written on the draft), with an info glyph beside the Text label
---              whose tooltip lists the tokens; then the icon under its "Icon" label (the icon as
+--              whose tooltip lists the tokens; then the emote picker across both columns, then
+--              Ping and Raid marker side by side (combined actions §7, CA-M2-7: a callout's
+--              four action slots); then the icon under its "Icon" label (the icon as
 --              drawn, Choose icon…, which opens the icon browser over the popup, and a glyph's color
 --              swatch: there is no Icon text box), What it sends (the baked line), then Save and Cancel, and under them the
 --              line that names a field Save refused
 --
--- THE GAME EMOTE (QFE-E2): with Game emote picked as the channel, the Text box gives way to the emote
--- picker, an EditBox under a LibKa0s autocomplete (WidgetsAutocomplete) that searches the client's
--- emotes in Emotes.List's order (speech first, marked as voice, then the animated ones, then the
--- rest). A pick, or Enter on a typed command or token, sets the draft's `emote`; a name that is empty
--- or still the last pick's command takes the new command. Save keeps the field the channel uses and
--- clears the other: a game emote never carries text, and a chat callout no token. Until the editor
--- draws its four action slots (CA-M2-7), a ping or a marker set by /qc set is kept by a Save that keeps
--- the callout what it was, and replaced by a Line or an emote the draft picks (CA-M1-11).
+-- THE ACTIONS (combined actions §7, CA-M2-7): a callout sends a Line, an emote, a ping and a marker
+-- on one press, each optional. The Line is Channel and Text; Channel None (the gameEmote kind,
+-- renamed by D10) is no Line, and the Text box is not drawn, so Save writes `text = ""` (a hidden
+-- box keeps nothing). The emote picker (QFE-E2) is always drawn: an EditBox under a LibKa0s
+-- autocomplete (WidgetsAutocomplete) that searches the client's emotes in Emotes.List's order (speech
+-- first, marked as voice, then the animated ones, then the rest). A pick, or Enter on a typed command
+-- or token, sets the draft's `emote`; Enter on an empty box clears it; a name that is empty or still
+-- the last pick's command takes the new command. Ping and Raid marker are the member rows' own
+-- dropdowns, None first.
 --
 -- THE DRAFT is a plain copy of the callout's fields (its emote, ping and marker among them) and its icon's glyph color (blank for Add:
 -- an empty name and text, Smart group, no icon, no color), and every control writes it, never the
@@ -56,7 +59,8 @@ local Pop = Settings.CalloutPopup
 
 -- The member rows the popup draws, in order, and every field the draft carries (the icon and its
 -- color are drawn by the icon chooser, not as rows: the callout.icon row stays, for /qc).
-local FIELDS = { "name", "channel", "text" }
+local FIELDS = { "name", "channel", "text", "ping", "marker" }
+Pop.FIELDS = FIELDS
 local DRAFT = { "name", "text", "channel", "emote", "ping", "marker", "icon", "iconColor" }
 Pop.DRAFT = DRAFT
 -- The draft fields whose none is nil in the draft and false in the profile.
@@ -173,6 +177,8 @@ local function draftRows()
         copy.path, copy.validate, copy.onChange = nil, nil, nil
         copy.get = function()
             shown[field] = draft and draft[field]
+            -- A dropdown's none (nil in the draft) is its first choice: Ping's "none", Marker's 0.
+            if shown[field] == nil and copy.values then return copy.values[1].value end
             return shown[field]
         end
         copy.set = function(value) setField(field, value, row) end
@@ -186,12 +192,10 @@ local function check(d)
     local name = Ed.Row("callout.name")
     local ok, why = name.validate(d.name)
     if not ok then return "name", name.label, why end
-    if isGameEmote(d) then
-        -- a ping or a marker stands in for the emote (one action in M1)
-        if not (d.emote or d.ping or d.marker) then return "emote", L["Game emote"], L["Pick an emote from the list."] end
-        if d.emote then ok, why = Ed.Row("callout.emote").validate(d.emote) end
-        if not ok then return "emote", L["Game emote"], why end
-    else
+    if d.emote and not Ed.Row("callout.emote").validate(d.emote) then
+        return "emote", L["Game emote"], L["Pick an emote from the list."]
+    end
+    if not isGameEmote(d) then
         local text = Ed.Row("callout.text")
         ok, why = text.validate(d.text)
         if ok and chars(d.text) > text.maxLetters then
@@ -365,13 +369,22 @@ local function renderFields(h, rows)
     if out.name and out.channel then split(first, out.channel) end
     ctx.scroll:AddChild(first)
     h.AddSpacer(ctx.scroll, h.ROW_VSPACER)
-    local second = line(h)
-    if isGameEmote(draft) then
-        out.emote = Pop.EmotePicker(h, second)
-    else
+    -- Channel None is no Line: no Text box.
+    if not isGameEmote(draft) then
+        local second = line(h)
         out.text = h.RenderField(ctx, rows.text, second)
+        ctx.scroll:AddChild(second)
+        h.AddSpacer(ctx.scroll, h.ROW_VSPACER)
     end
-    ctx.scroll:AddChild(second)
+    local third = line(h)
+    out.emote = Pop.EmotePicker(h, third)
+    ctx.scroll:AddChild(third)
+    h.AddSpacer(ctx.scroll, h.ROW_VSPACER)
+    local fourth = line(h)
+    out.ping = h.RenderField(ctx, rows.ping, fourth, h.BUTTON_PAIR_REL)
+    out.marker = h.RenderField(ctx, rows.marker, fourth, h.BUTTON_PAIR_REL)
+    if out.ping and out.marker then split(fourth, out.marker) end
+    ctx.scroll:AddChild(fourth)
     h.AddSpacer(ctx.scroll, h.ROW_VSPACER)
     for _, field in ipairs(FIELDS) do alignField(out[field]) end
     alignField(out.emote)
@@ -426,18 +439,27 @@ function Pop.EmoteSuggestions(text)
     return out
 end
 
--- The emote picker (THE GAME EMOTE): a path-less EditBox row bound to the draft's emote, showing its
+--- Clear the draft's emote (Enter on the emptied picker).
+function Pop.ClearEmote()
+    if not draft then return end
+    flush()
+    draft.emote = nil
+    refresh()
+end
+
+-- The emote picker (THE ACTIONS): a path-less EditBox row bound to the draft's emote, showing its
 -- command (or the stored token this client lacks), with the library's autocomplete under its box,
 -- released with the widget so a frame AceGUI hands on carries no list.
 function Pop.EmotePicker(h, lineWidget)
     local row = {
-        type = "string", dialogControl = "EditBox", label = L["Game emote"], group = L["General"],
+        type = "string", dialogControl = "EditBox", label = L["Emote (optional)"], group = L["General"],
         desc = L["Type to search the game's emotes, then pick one. Voice emotes play their sound."],
         get = function()
             if not draft then return "" end
             return NS.Emotes.Command(draft.emote) or draft.emote or ""
         end,
         set = function(v)
+            if v == nil or tostring(v):match("^%s*$") then return Pop.ClearEmote() end
             local token = NS.Emotes.Find(v)
             if not (token and Pop.PickEmote(token)) then refresh() end
         end,
@@ -582,7 +604,8 @@ function Pop.Open(groupId, calloutId)
         draft = copyFields(baseline)
     else
         baseline = nil
-        draft = { name = "", text = "", channel = "smartGroup", icon = nil, iconColor = nil }
+        draft = { name = "", text = "", channel = "smartGroup", emote = nil, ping = nil, marker = nil,
+            icon = nil, iconColor = nil }
     end
     local title = calloutId and L["Edit callout"] or L["New callout"]
     ctx.panel.title:SetText(title)
@@ -614,11 +637,9 @@ function Pop.Save()
         return false, "noCallout"
     end
     flush()
-    -- One action per editor Save (R7; CA-M2-7's four slots lift it): a game emote keeps its token and no text, a chat
-    -- callout no token; a Line (Bake.HasLine: text that cleans to something) or an emote the draft
-    -- carries replaces a ping or a marker, and a chat callout with no Line keeps its ping or marker.
-    if isGameEmote(draft) then draft.text = "" else draft.emote = nil end
-    if draft.emote or NS.Bake.HasLine(draft) then draft.ping, draft.marker = nil, nil end
+    -- Channel None is no Line: the Text box is not drawn, and a hidden box keeps nothing. Every
+    -- other action the draft carries is kept beside it (#16).
+    if isGameEmote(draft) then draft.text = "" end
     local field, label, why = check(draft)
     if field then
         showError(L["%s: %s"]:format(label, tostring(why)))

@@ -178,7 +178,8 @@ local CHANNEL_LABEL = {
     smartLead = L["Smart lead (raid warning when you can)"],
     party = L["Party"], raid = L["Raid"], instance = L["Instance"], raidWarning = L["Raid warning"],
     say = L["Say"], yell = L["Yell"], general = L["General (/1; Say when not joined)"],
-    emote = L["Emote"], gameEmote = L["Game emote"],
+    -- gameEmote is the no-Line kind (D10, combined actions §2): kept in the data, called None.
+    emote = L["Emote"], gameEmote = L["None (no chat line)"],
 }
 local CHANNELS = {}
 for i, kind in ipairs(NS.Channels.KINDS) do CHANNELS[i] = { value = kind, text = CHANNEL_LABEL[kind] or kind } end

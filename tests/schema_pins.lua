@@ -10,6 +10,8 @@
 -- client's default skin, Ka0s Default on Retail and WoW Forever on Forever, read from the kit profile.
 -- QFE-F4 adds the Role row. CA-M1-5 (combined actions, #17 and #18) adds callout.ping and
 -- callout.marker, a callout's ping and raid target marker actions, beside callout.emote.
+-- CA-M2-7 relabels the callout.channel gameEmote choice None (no chat line), D10: a pin holds a
+-- choice's value, not its label, so no pin moves.
 local CLIENT_SKIN = dofile("tests/_kit/mock_client.lua").current() == "forever" and "forever" or "ka0s"
 return {
     ["enabled"] = "bool|true|nil|nil|nil|nil|false",

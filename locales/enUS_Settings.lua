@@ -145,6 +145,10 @@ L["Emotes: %s"] = "Emotes: %s"
 L["A voice emote: it also plays its sound."] = "A voice emote: it also plays its sound."
 L["Pick an emote from the list."] = "Pick an emote from the list."
 
+-- The callout editor's four action slots (#16, CA-M2-7); None is the gameEmote kind (D10).
+L["None (no chat line)"] = "None (no chat line)"
+L["Emote (optional)"] = "Emote (optional)"
+
 -- Pings and raid target markers (#17, #18; CA-M1-5).
 L["Ping"] = "Ping"
 L["Raid marker"] = "Raid marker"

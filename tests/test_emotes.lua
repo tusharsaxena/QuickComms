@@ -189,13 +189,13 @@ test("emotes: [QFE-E2] the library stores the token, copies keep it, and the sea
     assertFalse((NS.SchemaRuntime.Set("callout.emote", "two words", cid)))
 end)
 
-test("emotes: [QFE-E2] the channel row offers Game emote; a Groups row previews the command", function()
+test("emotes: [QFE-E2] the channel row offers None (no chat line, D10); a Groups row previews the command", function()
     local NS = live()
     local found
     for _, v in ipairs(NS.SchemaRuntime.FindRow("callout.channel").values) do
         if v.value == "gameEmote" then found = v.text end
     end
-    assertEqual(found, "Game emote")
+    assertEqual(found, "None (no chat line)")
     local G = NS.addon.Settings.Groups
     assertEqual(G.CalloutSummary({ channel = "gameEmote", emote = "POINT", text = "" }), "/point")
     assertEqual(G.CalloutSummary({ channel = "gameEmote", emote = "NOPE", text = "" }), "NOPE (not on this client)")
@@ -326,18 +326,19 @@ local function popup()
     return NS, env, m, P, NS.addon.Settings.CalloutPopup
 end
 
-test("emotes: [QFE-E2] picking Game emote swaps the Text box for the emote picker; a pick names the callout", function()
+test("emotes: [QFE-E2] channel None hides the Text box beside the emote picker; a pick names the callout", function()
     local NS, _, _, P, Pop = popup()
     local gid = NS.Library.CreateGroup({ name = "Mine" })
     local w = P.during(function() Pop.Open(gid) end)
     assertTrue(P.find(w, "EditBox", "Text") ~= nil)
+    assertTrue(P.find(w, "EditBox", "Emote (optional)") ~= nil, "the emote picker beside a Line (CA-M2-7)")
     w = P.during(function() P.find(w, "Dropdown", "Channel"):__fire("OnValueChanged", "gameEmote") end)
-    -- red under: the body is not drawn again for Game emote
+    -- red under: the body is not drawn again for None
     assertNil(P.find(w, "EditBox", "Text"), "no text box")
-    assertTrue(P.find(w, "EditBox", "Game emote") ~= nil, "the emote picker")
+    assertTrue(P.find(w, "EditBox", "Emote (optional)") ~= nil, "the emote picker")
     -- The kit's AceGUI EditBox has no inner .editbox, so the autocomplete is attached only in the client
     -- (smoke EMOTE-4); here the picker is the box, its search and its pick.
-    if P.find(w, "EditBox", "Game emote").editbox then assertTrue(Pop.emoteSuggest ~= nil) end
+    if P.find(w, "EditBox", "Emote (optional)").editbox then assertTrue(Pop.emoteSuggest ~= nil) end
     local rows = Pop.EmoteSuggestions("o")
     assertEqual(rows[1].token, "INCOMING", "speech first")
     assertEqual(rows[1].text, "/incoming (voice)")
@@ -355,7 +356,7 @@ test("emotes: [QFE-E2] picking Game emote swaps the Text box for the emote picke
     assertEqual(c.text, "")
 end)
 
-test("emotes: [QFE-E2] Save with Game emote and no pick stays open and names the picker", function()
+test("emotes: [QFE-E2] Save with None and no other action stays open: noAction (CA-M2-7)", function()
     local NS, _, _, P, Pop = popup()
     local gid = NS.Library.CreateGroup({ name = "Mine" })
     local w = P.during(function() Pop.Open(gid) end)
@@ -363,11 +364,11 @@ test("emotes: [QFE-E2] Save with Game emote and no pick stays open and names the
     P.find(w, "Dropdown", "Channel"):__fire("OnValueChanged", "gameEmote")
     local ok, field = Pop.Save()
     assertFalse(ok)
-    assertEqual(field, "emote")
+    assertEqual(field, "noAction")
     assertTrue(Pop.IsOpen())
 end)
 
-test("emotes: [QFE-E2] a user name is kept, and leaving Game emote drops the token on Save", function()
+test("emotes: [QFE-E2] a user name is kept, and leaving None keeps the emote beside the Line (CA-M2-7)", function()
     local NS, _, _, P, Pop = popup()
     local gid = NS.Library.CreateGroup({ name = "Mine" })
     local cid = NS.Library.CreateCalloutIn(gid, { name = "Look", text = "", channel = "gameEmote", emote = "POINT" })
@@ -381,7 +382,7 @@ test("emotes: [QFE-E2] a user name is kept, and leaving Game emote drops the tok
     local c = NS.db.profile.callouts[cid]
     assertEqual(c.channel, "say")
     assertEqual(c.text, "hello")
-    assertEqual(c.emote, false, "one action per callout")
+    assertEqual(c.emote, "WAVE", "the emote sits beside the Line")
 end)
 
 test("emotes: [QFE-E2] the popup's preview names the emote, and an unknown token's reason", function()

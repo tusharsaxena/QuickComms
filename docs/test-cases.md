@@ -415,15 +415,15 @@ Total.
 - emotes: [QFE-E2] an unknown or missing token bakes nothing and says why
 - emotes: [QFE-E2] a game emote locks as Say does
 - emotes: [QFE-E2] the library stores the token, copies keep it, and the seam writes it
-- emotes: [QFE-E2] the channel row offers Game emote; a Groups row previews the command
+- emotes: [QFE-E2] the channel row offers None (no chat line, D10); a Groups row previews the command
 - emotes: [QFE-E2] a pad button arms the command, and its echo is the player's CHAT_MSG_TEXT_EMOTE
 - emotes: [QFE-E2] a previewed game emote prints would emote /point and sends nothing
 - emotes: [CA-M2-4] an emote beside a Line: its echo is the TEXT_EMOTE, the Line's the PARTY
 - emotes: [CA-M2-4] #16: Kick on me in Party with /point, ping Attack and Skull, out of combat
 - emotes: [CA-M2-4] #16: Kick on me in Party with /point, ping Attack and Skull, in combat
-- emotes: [QFE-E2] picking Game emote swaps the Text box for the emote picker; a pick names the callout
-- emotes: [QFE-E2] Save with Game emote and no pick stays open and names the picker
-- emotes: [QFE-E2] a user name is kept, and leaving Game emote drops the token on Save
+- emotes: [QFE-E2] channel None hides the Text box beside the emote picker; a pick names the callout
+- emotes: [QFE-E2] Save with None and no other action stays open: noAction (CA-M2-7)
+- emotes: [QFE-E2] a user name is kept, and leaving None keeps the emote beside the Line (CA-M2-7)
 - emotes: [QFE-E2] the popup's preview names the emote, and an unknown token's reason
 
 ### test_bake.lua (25)
@@ -666,7 +666,7 @@ Total.
 - editors: [preview table] TableRows draws a header, then a boxed row per entry: its name in one cell, its text in the other
 - editors: [preview table] a table row gives its text the width the name leaves, and grows with the text
 
-### test_callout_popup.lua (43)
+### test_callout_popup.lua (51)
 
 - popup: Add opens blank with Smart group
 - popup: edit opens filled in
@@ -710,7 +710,15 @@ Total.
 - popup: [CA-M1-11] a callout set to a ping by /qc set opens with it, and Save keeps it
 - popup: [CA-M1-11] a marker-only callout saves with its marker; an emote keeps its emote
 - popup: [CA-M1-R2] a ping-only chat callout (empty text on party) saves a rename and keeps its ping
-- popup: [CA-M1-11] one action in M1: a Line or an emote picked for a ping callout replaces the ping
+- popup: [CA-M2-7] a Line or an emote picked for a ping callout sits beside the ping
+- popup: [CA-M2-7] the member rows the popup binds: name, channel, text, ping, marker
+- popup: [CA-M2-7] four slots: Name | Channel, Text, the emote, Ping | Marker, then the icon
+- popup: [CA-M2-7] picking a ping and a marker writes the draft; Save keeps them beside the Line
+- popup: [CA-M2-7] channel None hides Text, keeps the emote and the slots, and Save writes no text
+- popup: [CA-M2-7] emptying the emote box clears the draft's emote, and Save takes it off
+- popup: [CA-M2-7] Add opens with no emote, ping or marker
+- popup: [CA-M2-7] D10: the Channel list and the Groups rows call gameEmote None (no chat line)
+- popup: [CA-M2-7] the window is measured again when the channel swaps the Text line in or out
 
 ### test_icon_browser.lua (14)
 
@@ -2182,7 +2190,7 @@ Total.
 | test_library.lua | 83 |
 | test_members.lua | 28 |
 | test_editors.lua | 19 |
-| test_callout_popup.lua | 43 |
+| test_callout_popup.lua | 51 |
 | test_icon_browser.lua | 14 |
 | test_window_icons.lua | 5 |
 | test_groups_when.lua | 21 |
@@ -2242,4 +2250,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1880** |
+| **Total** | **1888** |
