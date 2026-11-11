@@ -117,13 +117,13 @@ listed task if the owner rules otherwise:
 | CA-M2-10 | Module and slash readers: `Pad_Render.TooltipLines`, `V.CheckLines` | done | 617dc1a |
 | CA-M2-11 | Retire `slot.chatType` | done | 9e8f327 |
 | CA-M2-12 | M2 docs and smoke checks | done | b7cd978 |
-| CA-M2-13 | M2 checkpoint | done | (this commit) |
-| CA-M3-1 | BuiltIns: 12 shipped callouts gain an emote | todo | |
-| CA-M3-2 | BuiltIns: the two `healme` rows | todo | |
-| CA-M3-3 | Step 20 part 1: emotes on unedited shipped callouts | todo | |
-| CA-M3-4 | Step 20 part 2: the two new rows | todo | |
-| CA-M3-5 | Register step 20; schema version 20 and its pins | todo | |
-| CA-M3-6 | M3 docs and smoke checks | todo | |
+| CA-M2-13 | M2 checkpoint | done | c78116e |
+| CA-M3-1 | BuiltIns: 12 shipped callouts gain an emote | done | bdbbb30 |
+| CA-M3-2 | BuiltIns: the two `healme` rows | done | 944ec35 |
+| CA-M3-3 | Step 20 part 1: emotes on unedited shipped callouts | done | 5f2b13c |
+| CA-M3-4 | Step 20 part 2: the two new rows | done | a68c987 |
+| CA-M3-5 | Register step 20; schema version 20 and its pins | done | a396673 |
+| CA-M3-6 | M3 docs and smoke checks | done | (this commit) |
 | CA-M3-7 | M3 checkpoint | todo | |
 | CA-M4-1 | Mock: aura, GUID, friend and guild surfaces | todo | |
 | CA-M4-2 | Compat: `AuraCaster`, `AuraByInstance`, `HelpfulAuraIds`, `WhisperName` | todo | |

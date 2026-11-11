@@ -302,6 +302,24 @@ seeded groups and callouts (`Library.SeedNewSets`), placed on each pad and dial 
 copy, or at the end where a surface does not list it. A profile given it already, or whose player deleted
 it, gains nothing, and nothing stored is changed. Idempotent.
 
+Step 20 (combined actions §8, QuickComms#20, `perProfile`, `Library.MigrateComboCallouts`): on a
+profile Prepare has run on (`seeded`, with well-typed `groups`, `callouts` and `nextId`; any other is
+left to Prepare, which seeds from the updated shipped data), two parts, each read from a frozen table in
+`modules/Library_Migrate.lua` and never from `NS.BuiltIns` at run time. Part 1 (`COMBO_EMOTES`, 12 rows):
+a stored callout whose `origin` names a listed shipped callout and that is **unedited** gains that row's
+`emote`, and nothing else is written. Unedited means its `channel` is the shipped channel, its `text`
+equals the shipped localized string (text seeded under another client language reads as edited, the
+safe side), and its `emote`, `ping` and `marker` are all unset; `name`, `icon` and `iconColor` are not
+compared, since they do not change what the callout sends (F4a). Part 2 (`COMBO_NEW`): the stored group
+whose `origin` is `bi.mplus` (Dungeon) gains `bi.mplus.healme` after the callout with origin
+`bi.mplus.kicks`, and the one whose `origin` is `bi.raid` gains `bi.raid.healme` after `bi.raid.stones`
+(else each is appended), through a fresh id and `seedCallout`'s field list with no `glyph`. A copy
+carries no origin and a deleted set has no group, so neither gains a row; a group already holding the
+row's origin, or with a damaged `callouts`, gains nothing; a deleted callout is never brought back.
+Idempotent: an emoted callout is no longer unedited, and part 2 is guarded by the origin. A re-stamp
+could re-add a Heal me row the player deleted (D20, accepted while no import path exists; re-check when
+Share returns, #12).
+
 A color, Font shadow, the button's texture and the shine each have a `<key>FromSkin` companion, default
 true (`fontColorFromSkin`, `fontShadowFromSkin`, `backgroundFromSkin`, `borderColorFromSkin`,
 `textureFromSkin`, `glowColorFromSkin`, `shineFromSkin`, and a dial's `highlightFromSkin`,

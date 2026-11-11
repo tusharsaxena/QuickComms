@@ -147,7 +147,9 @@ lands on a load where the composers are hollow (options-ui-§1 route (a)).
 The structural registry (membership and order of the callouts, groups, pads and dials, `nextId`, the
 seeding records) has one writer, `modules/Library.lua`, with its schemaVersion steps in
 `modules/Library_Migrate.lua`; each user callout sits in exactly one user group. The shipped sets are
-seed data, given to each profile once as ordinary groups. `Library.Prepare` is the load pass after the
+seed data, given to each profile once as ordinary groups; schema step 20 (`Library.MigrateComboCallouts`)
+gives a stored profile's unedited shipped callouts their new emote and the Dungeon and Raid sets their
+Heal me callout, from frozen tables, never from the shipped data at run time. `Library.Prepare` is the load pass after the
 migrations: it seeds, normalizes, drops dangling ids and keeps the ownership rule. The rows, every
 default, the member rows' addressing, the migrations and the one list of named non-setting state
 (each key's owner module and every writer) are in [`schema.md`](schema.md); the panel is in
@@ -346,7 +348,9 @@ key belongs to its place in the dial order; a few battleground and instance name
 ambiguous; the 255-byte cap covers a callout's whole macro, so a Line beside other actions has less
 room and is refused alone when it does not fit; a ping or a marker needs a target, a raid mark needs leader or assist, macros mark at
 most three units in a short time, and a ping-only or marker-only press flashes with no confirmation;
-and another Ka0s addon carrying a newer LibKa0s runs its newer modules inside this one.
+the shipped In Group emotes are padlocked in arenas and battlegrounds (`pvpMatch`), so no arena or
+battleground callout ships one, and an existing profile gains a shipped emote only on callouts left as
+shipped; and another Ka0s addon carrying a newer LibKa0s runs its newer modules inside this one.
 Each, with why: [`known-limitations.md`](known-limitations.md).
 
 ## Documentation map

@@ -101,6 +101,12 @@ Everything else is under **Settings → AddOns → Ka0s Quick Comms**, and `/qc 
   The built-in Emotes group, shown in the open world whatever your group, carries twenty of them: the
   voice calls first (`/incoming`, `/oom`, `/healme`...), then the social ones (`/wave`, `/thank`,
   `/dance`...).
+- Twelve of the built-in callouts perform a fitting emote with their line: Hello waves, Ready readies,
+  GLHF cheers, the thanks callouts `/thank`, Rare spotted points at the rare, Pulling charges, Need
+  mana says you are out of mana and Wipe flees. Dungeon and Raid each gain a Heal me callout ("Need
+  heals!") with the `/healme` voice emote. An existing profile gets the emote only on the callouts you
+  left as shipped, and the Heal me callout once; arena and battleground callouts gain none, since the
+  game locks emotes in a PvP match.
 - The ping is Attack, Warning, On my way or Assist, and the raid marker anything from star to skull.
   Both go through the game's own `/ping` and `/tm` commands on the same secure button, and are meant to
   work in combat too (pending in-game checks). With no target nothing is pinged or marked and the press

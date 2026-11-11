@@ -200,6 +200,17 @@ What the addon cannot do, or does only under a condition, and why. The hub,
 - Midnight's Slayer's Rise (map 2799) has no battleground set of its own; the generic set covers it.
 - The shipped raids are the current tier's three; a later tier joins `defaults/GameIds.lua` when it is
   current (the When editor adds the instance you are in meanwhile).
+- In Group's shipped emotes (Hello waves, Ready, GLHF cheers, the thanks) are padlocked in arenas and
+  battlegrounds: their snapshots carry `lockdown.pvpMatch`, and a game emote locks as Say does
+  (`LOCKS.gameEmote = LOCKS.say`), so In Group, active there beside the content's set, prints the
+  emote's lock note on every press of those callouts. The arena and battleground sets themselves ship
+  no emote for that reason (combined actions §8, F4b). In a key the Dungeon emotes are
+  not padlocked outside a boss; during an encounter they are, as any Say line is (smoke check EMOTE-9).
+- Schema step 20 gives an existing profile a shipped emote only on callouts left as shipped (the same
+  channel and text, no emote, ping or marker; a rename or a new icon does not count as an edit). A
+  callout whose text you changed, or whose text was seeded under another client language, keeps what
+  it had. The two Heal me callouts are added once to the Dungeon and Raid sets you kept; a copied set
+  gains nothing. A re-run of the step (a schema re-stamp) could add back a Heal me callout you deleted.
 
 ## The editors and their windows
 

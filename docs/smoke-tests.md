@@ -43,7 +43,7 @@ the check when it lands. These checks are the owner's to run; an agent never mar
 | FSKIN-1..13 | [The full skin](#the-full-skin) | Every pad and dial color, the shadow, texture and shine on the skin, Ka0s Default unmoved, the companions off, an existing profile, meaning colors, the ghost, a stored pick of the deleted Friz |
 | ROLE-1..3 | [Role and character](#role-and-character) | The Role row on General → Behavior and its Automatic phrase, the group's assigned role winning over the spec, the Character and Specialization rows of the When editor (Retail; FOREVER-18 to FOREVER-21 re-run them on Forever) |
 | FOREVER-1..25 | [WoW Forever](#wow-forever) | The core re-run on a live WoW Forever client: the AddOns list, a clean load, the settings panel and the launcher, the default skin per client, a pad's secure send in the open world, a dial's open, send and animations (the strata guard), a lifted confirm, the key bindings, profiles across a full restart, diagnostics, enable and disable; the content kinds and drawers the When editor offers, Preview as..., the sets a fresh profile seeds, the token help, Forever's place ids against the client's own names and a profile copied from Retail; Automatic role from the talent tree, the Role pick, the long character name and your own lines; `/qc probe` on both clients and `probe clear`; the Dungeon set matching dungeons alone; `/qc probe ids`, the no-travel sweep of the client's map, dungeon finder and battleground names |
-| EMOTE-1..8 | [Emotes](#emotes) | Retail, then Forever: a custom emote callout (`/e`) and its lock, a game emote callout, the emote picker's order and voice marks, preview, throttle and an unknown token, a game emote during an encounter, the Emotes set in the open world and an existing profile gaining it once |
+| EMOTE-1..10 | [Emotes](#emotes) | Retail, then Forever: a custom emote callout (`/e`) and its lock, a game emote callout, the emote picker's order and voice marks, preview, throttle and an unknown token, a game emote during an encounter, the Emotes set in the open world and an existing profile gaining it once, the shipped callouts that emote with their line and the two Heal me callouts, and an existing profile gaining them (step 20) |
 | ACTION-1..8 | [Combined actions](#combined-actions) | Retail, then Forever: one press that sends a line, an emote, a ping and a marker (#16), in combat, with no target, the 255-byte macro cap, Say and an emote outdoors, a boss encounter, a locked Line beside a marker, a legacy game-emote callout |
 | PING-1..5 | [Pings](#pings) | Retail, then Forever: a callout's ping on the target (#17), solo and grouped, in combat, Forever's server delivery, an encounter lockdown, pings off and on cooldown |
 | MARK-1..7 | [Raid markers](#raid-markers) | Retail, then Forever: a callout's raid target marker on the target (#18), solo, in a party and in a raid with and without assist, a second press, no target and an unmarkable one, Forever's `/tm`, marking in combat and during an encounter |
@@ -2518,6 +2518,22 @@ The ids sweep (QuickComms#21, the forever-ids design; **code:** `settings/SlashV
   build (Solo on the pad) → after the update the pad lists Emotes right after Solo and nothing else
   moved; an edited Solo callout keeps its text. Delete Emotes and `/reload` → it does not come back.
   Result: passed (owner, 2026-11-10)
+- **EMOTE-9. Shipped callouts emote with their line (QuickComms#20, combined actions §8).** On a fresh
+  profile (or after **Restore built-in groups**) → in the callout editor, each of these carries its
+  emote: Solo's Rare spotted (POINT), Elite help (HELPME) and Thanks (THANK); In Group's Hello (WAVE), Ready
+  (READY), GLHF (CHEER), tyff and ggty (THANK) and ggnt (BYE); Dungeon's Pulling (CHARGE) and Need mana
+  (OOM); Raid's Wipe (FLEE). Dungeon lists **Heal me** (*Need heals!*, Smart group) last, and Raid
+  lists **Heal me** (*Need heals on me!*, Raid) right after Healthstones, before Pull in 10; both with
+  the green heart-plus icon and the HEALME emote. Each sends its line and then its emote on one press,
+  once each, with no drop note. In a key, outside a boss, Pulling and Heal me show no padlock and both
+  actions go; during a boss, the emote's lock note prints. Note any token that gives no emote line in
+  chat without a target. Repeat on WoW Forever (no listed set is skipped there). Result: owed
+- **EMOTE-10. An existing profile gains them once (step 20).** On a profile saved before this build,
+  with In Group's Ready text edited, Hello renamed, the Raid set deleted and Solo's Thanks deleted →
+  after the update and a `/reload`: every unedited listed callout carries its emote, once; the edited
+  Ready does not; the renamed Hello does; the Raid set stays deleted; Thanks does not come back; Dungeon
+  gains **Heal me** once, after Kick order. A second `/reload` changes nothing. Repeat on WoW Forever.
+  Result: owed
 
 ## Combined actions
 
@@ -2718,3 +2734,5 @@ On 2026-11-10 the owner reported that every check owed from the WoW Forever port
 Owed from combined actions M1 (QuickComms#17 and #18, CA-M1-1 to CA-M1-12, `docs/superpowers/specs/2026-11-10-combined-actions-design.md` §5, §6 and §13): PING-1 to PING-5 and MARK-1 to MARK-7, new, each owed. Each runs on the build where callouts combine actions (CA-M2-1 and later), since the M1 build's one-action rule refuses the set-up's first command.
 
 Owed from combined actions M2 (QuickComms#16, CA-M2-1 to CA-M2-11, the same design §2 to §4 and §7): ACTION-1 to ACTION-8, new, each owed; EMOTE-3 and EMOTE-4 (the callout editor's four action slots and Channel None changed their expected result, so each lost its pass mark). PING-1 to PING-5 and MARK-1 to MARK-7 are runnable from this build on.
+
+Owed from combined actions M3 (QuickComms#20, CA-M3-1 to CA-M3-5, the same design §8 and §10): EMOTE-9 and EMOTE-10, new, each owed.
