@@ -140,11 +140,11 @@ listed task if the owner rules otherwise:
 | CA-M4-13 | Schema rows `thank.*` | done | 4c97843 |
 | CA-M4-14 | The Auto-thank settings page | done | 536f82e |
 | CA-M4-15 | M4 docs and smoke checks | done | 684722e |
-| CA-M4-16 | M4 checkpoint | done | (this commit) |
-| CA-M5-1 | Whole-branch review | todo | |
-| CA-M5-2 | Review fixes | todo | |
-| CA-M5-3 | Complexity and file-cap pass | todo | |
-| CA-M5-4 | Docs sync | todo | |
+| CA-M4-16 | M4 checkpoint | done | 116d2ff |
+| CA-M5-1 | Whole-branch review | done | d72901c |
+| CA-M5-2 | Review fixes | done | 415a4d1, c32aeda, e739d7d, 0655f99 (R1 to R5; none skipped) |
+| CA-M5-3 | Complexity and file-cap pass | done | a3544cd (0 warnings, max CCN 15, blindFiles 0, crashedFiles 0) |
+| CA-M5-4 | Docs sync | done | (this commit) |
 | CA-M5-5 | Final checkpoint and PR open | todo | |
 | CA-M5-6 | Owner smoke checklist handover | todo | (no commit) |
 
