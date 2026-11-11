@@ -457,21 +457,13 @@ function Lib.ValidMarker(v)
     return type(v) == "number" and v >= 1 and v <= 8 and v == math.floor(v)
 end
 
--- Whether `f` carries a Line: a channel other than the no-line gameEmote, and text that is not empty
--- after Bake.CleanText (a leading "/" is still a line: its bake refuses it and says why).
-local function hasLine(f)
-    if f.channel == "gameEmote" or type(f.text) ~= "string" then return false end
-    local clean, why = NS.Bake.CleanText(f.text)
-    return clean ~= nil or why == "startsWithSlash"
-end
-
 --- Whether callout fields `f` carry at least one action (spec §2: a Line, an Emote, a Ping, a
 --- Marker), and how many. Not part of validCallout: a legacy callout with none stays editable.
 --- @return boolean has, number count
 function Lib.HasAction(f)
     if type(f) ~= "table" then return false, 0 end
     local n = 0
-    if hasLine(f) then n = n + 1 end
+    if NS.Bake.HasLine(f) then n = n + 1 end
     if f.emote then n = n + 1 end
     if f.ping then n = n + 1 end
     if f.marker then n = n + 1 end

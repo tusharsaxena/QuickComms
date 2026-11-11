@@ -2,7 +2,8 @@
 -- never a command, <= 255 bytes each, and never a newline from data: only code joins the action lines.
 
 local T = _G.QUICKCOMMS_TEST
-local test, assertEqual, assertNil, assertTrue = T.test, T.assertEqual, T.assertNil, T.assertTrue
+local test, assertEqual, assertNil, assertTrue, assertFalse =
+    T.test, T.assertEqual, T.assertNil, T.assertTrue, T.assertFalse
 
 local function bake() return T.newAddon().Bake end
 local PARTY = { group = "party", instanceGroup = false, lockdown = {} }
@@ -159,6 +160,19 @@ test("bake: [CA-M1-7] a Line that does not bake keeps today's reason, and the ma
     local SOLO = { group = "solo", lockdown = {} }
     macro, reason, info = B.BakeActions(callout("hi"), SOLO, { soloFallback = "self" })
     assertNil(macro) assertEqual(reason, "solo") assertTrue(info.actions[1].selfPrint)
+end)
+
+test("bake: [CA-M1-R1] HasLine is the Library's rule: whitespace or control-only text is no Line", function()
+    local B = actions()
+    assertFalse(B.HasLine({ text = "  ", channel = "party" }))
+    assertFalse(B.HasLine({ text = "\t\n", channel = "party" }))
+    assertFalse(B.HasLine({ text = "go", channel = "gameEmote" }))
+    assertTrue(B.HasLine({ text = "go", channel = "party" }))
+    assertTrue(B.HasLine({ text = "/run x()", channel = "party" }), "a slash line is a Line its bake refuses")
+    -- red under: Bake's hasLine reading `text ~= ""` (a phantom Line ahead of the ping)
+    local macro, reason, info = B.BakeActions({ name = "x", text = "   ", channel = "party", ping = "attack" }, PARTY)
+    assertEqual(macro, "/ping [@target,exists] 1") assertNil(reason)
+    assertEqual(#info.actions, 1) assertEqual(info.actions[1].kind, "ping")
 end)
 
 test("bake: [CA-M1-7] the emote line is the client's command, on the TEXT_EMOTE chat type and the gameEmote lock", function()

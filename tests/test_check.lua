@@ -73,6 +73,10 @@ test("check: [CA-M1-12] a ping-only or marker-only callout prints its line and b
     lines = NS.SlashVerbs.CheckLines(mark)
     assertEqual(lines[1], mark .. " -> /tm [@target,exists] !8")
     assertEqual(lines[2], "  action: marker, 23 of 255 bytes")
+    -- red under: a whitespace-only text read as a Line ahead of the ping ("not sent here (empty)")
+    local blank = NS.Library.CreateCallout({ name = "Blank", text = "   ", channel = "party", ping = "attack" })
+    lines = NS.SlashVerbs.CheckLines(blank)
+    assertEqual(lines[1], blank .. " -> /ping [@target,exists] 1")
     env.SLASH_TARGET_MARKER1 = nil
     lines = NS.SlashVerbs.CheckLines(mark)
     assertEqual(#lines, 1)

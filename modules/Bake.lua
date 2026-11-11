@@ -132,9 +132,13 @@ local function markerArg(n)
     return nil
 end
 
---- Is the callout's Line set? Not the game-emote kind ("no line", D10) and some text.
-local function hasLine(callout)
-    return not NS.Channels.IsGameEmote(callout.channel) and type(callout.text) == "string" and callout.text ~= ""
+--- Whether callout fields `f` carry a Line (the one rule Bake and Library share): a channel other
+--- than the no-line gameEmote (D10), and text that is not empty after B.CleanText (whitespace or
+--- control characters alone are no Line; a leading "/" still is: its bake refuses it and says why).
+function B.HasLine(f)
+    if type(f) ~= "table" or NS.Channels.IsGameEmote(f.channel) or type(f.text) ~= "string" then return false end
+    local clean, why = B.CleanText(f.text)
+    return clean ~= nil or why == "startsWithSlash"
 end
 
 --- Bake every set action of one callout (combined actions §3).
@@ -151,7 +155,7 @@ function B.BakeActions(callout, s, opts)
     local info = { actions = {}, baked = {}, total = 0 }
     if type(callout) ~= "table" then return nil, "badCallout", info end
     local list = info.actions
-    if hasLine(callout) then list[#list + 1] = lineEntry(callout, s, opts) end
+    if B.HasLine(callout) then list[#list + 1] = lineEntry(callout, s, opts) end
     if callout.emote then list[#list + 1] = emoteEntry(callout, s) end
     if callout.ping then
         list[#list + 1] = targetEntry("ping", NS.Compat.PingCommand(), PING_NUM[callout.ping], "noPing", callout.ping)
