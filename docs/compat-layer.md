@@ -71,7 +71,7 @@ with a library-absent body and not counted; their contract is LibKa0s
 | `CanMark(unit)` | `CanBeRaidTarget` | a secret answer is `nil` | `nil` | `SendEngine` (`SE.PressNotes`: "that target cannot be marked") |
 | `InRaid()` | `IsInRaid` | a secret answer is `false` | `false` | `MarkerRights` |
 | `EveryoneAssistant()` | `IsEveryoneAssistant` | a secret answer is `false` | `false` | `MarkerRights` |
-| `MarkerRights()` | `Leadership()` (both returns), `InRaid()`, `EveryoneAssistant()` | as its readers | `"ok"`: a party or solo, where every member may mark; `"noRights"` only in a raid with no leader, assist or everyone-assistant | `SendEngine` (`SE.PressNotes`: "you need leader or assist to mark in a raid") |
+| `MarkerRights()` | `InRaid()`, then `UnitIsGroupLeader`, `UnitIsGroupAssistant` and `IsEveryoneAssistant` each read plain or nil | a secret leader, assist or everyone-assistant answer, with none of the three plainly true, is `nil` (unknown: no note); a secret raid answer reads as no raid | `"ok"`: a party or solo, where every member may mark, or any of the three plainly true; `"noRights"` only in a raid where all three read plainly false | `SendEngine` (`SE.PressNotes`: "you need leader or assist to mark in a raid") |
 
 The restriction shims are copied from DropWatcher's `core/Compat.lua`. LibKa0s#49 deferred them;
 see `ARCHITECTURE.md` -> `## Documented deviations`. `tests/test_compat.lua` drives the plain

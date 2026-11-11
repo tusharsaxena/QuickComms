@@ -263,7 +263,7 @@ Total.
 - diagnostics: [debug] the log follows a dial open, a ring shown, a press and a close, once each
 - diagnostics: [shine] the pad's button line and the dial's slices line print the look and strength
 
-### test_compat.lua (20)
+### test_compat.lua (21)
 
 - compat: plain readers pass plain values and drop secrets
 - compat: InstanceInfo with a secret instanceID reads nil, never raises
@@ -285,6 +285,7 @@ Total.
 - compat: [CA-M1-2] TargetExists and CanMark are plain booleans, nil on a secret or a missing API
 - compat: [CA-M1-2] InRaid and EveryoneAssistant are plain, a secret reads false
 - compat: [CA-M1-2] MarkerRights: a raid needs leader, assist or everyone-assistant; a party may mark
+- compat: [CA-M1-R3] MarkerRights: a secret leader, assist or everyone-assistant answer is unknown, never noRights
 
 ### test_identity.lua (11)
 
@@ -2143,7 +2144,7 @@ Total.
 | test_slash.lua | 22 |
 | test_disabled.lua | 26 |
 | test_diagnostics.lua | 13 |
-| test_compat.lua | 20 |
+| test_compat.lua | 21 |
 | test_identity.lua | 11 |
 | test_probe.lua | 18 |
 | test_restrictions.lua | 20 |
@@ -2219,4 +2220,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1857** |
+| **Total** | **1858** |

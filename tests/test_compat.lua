@@ -322,3 +322,21 @@ test("compat: [CA-M1-2] MarkerRights: a raid needs leader, assist or everyone-as
     m.isLeader, m.everyoneAssist = false, true
     assertEqual(C.MarkerRights(), "ok", "everyone is an assistant")
 end)
+
+test("compat: [CA-M1-R3] MarkerRights: a secret leader, assist or everyone-assistant answer is unknown, never noRights", function()
+    local NS, m = T.newAddon()
+    m.issecretvalue = T.isSecret
+    local C = NS.Compat
+    m.__context.inGroup, m.__context.inRaid = true, true
+    m.isLeader = T.secret(true)
+    -- red under: MarkerRights reading Leadership's plainTrue (a secret leader reads as no rights)
+    assertNil(C.MarkerRights(), "a secret leader answer")
+    m.isLeader, m.isAssist = false, T.secret(true)
+    assertNil(C.MarkerRights(), "a secret assist answer")
+    m.isAssist, m.everyoneAssist = false, T.secret(true)
+    assertNil(C.MarkerRights(), "a secret everyone-assistant answer")
+    m.isAssist = true
+    assertEqual(C.MarkerRights(), "ok", "a plain assist answers ok whatever else is secret")
+    m.isAssist, m.everyoneAssist = false, false
+    assertEqual(C.MarkerRights(), "noRights", "every answer plainly false")
+end)

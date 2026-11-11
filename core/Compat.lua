@@ -714,12 +714,24 @@ function Compat.EveryoneAssistant()
     return IsEveryoneAssistant ~= nil and plainTrue(IsEveryoneAssistant())
 end
 
---- "noRights" in a raid without leader, assist or everyone-assistant; "ok" otherwise (a party, or
---- solo: every member may mark). Both of Leadership's returns are read.
+-- A rights answer read plain: true, false, or nil when secret; a missing API reads false.
+local function rightsRead(fn, ...)
+    if not fn then return false end
+    return plainBool(fn(...))
+end
+
+--- "noRights" in a raid where leader, assist and everyone-assistant all read plainly false; "ok"
+--- outside a raid (a party, or solo: every member may mark; a secret raid answer reads as none, so
+--- no note) or when any of the three is plainly true; nil (unknown, no note) when none is true and one of them is secret.
+--- @return string|nil "ok" | "noRights"
 function Compat.MarkerRights()
-    local leader, assist = Compat.Leadership()
-    if Compat.InRaid() and not (leader or assist) and not Compat.EveryoneAssistant() then return "noRights" end
-    return "ok"
+    if not Compat.InRaid() then return "ok" end
+    local leader = rightsRead(UnitIsGroupLeader, "player")
+    local assist = rightsRead(UnitIsGroupAssistant, "player")
+    local everyone = rightsRead(IsEveryoneAssistant)
+    if leader or assist or everyone then return "ok" end
+    if leader == nil or assist == nil or everyone == nil then return nil end
+    return "noRights"
 end
 
 --- Whether a chat line came from the player: true, false, or nil when neither the GUID nor the
