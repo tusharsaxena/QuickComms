@@ -123,8 +123,8 @@ listed task if the owner rules otherwise:
 | CA-M3-3 | Step 20 part 1: emotes on unedited shipped callouts | done | 5f2b13c |
 | CA-M3-4 | Step 20 part 2: the two new rows | done | a68c987 |
 | CA-M3-5 | Register step 20; schema version 20 and its pins | done | a396673 |
-| CA-M3-6 | M3 docs and smoke checks | done | (this commit) |
-| CA-M3-7 | M3 checkpoint | todo | |
+| CA-M3-6 | M3 docs and smoke checks | done | 3cec8ab |
+| CA-M3-7 | M3 checkpoint | done | (this commit) |
 | CA-M4-1 | Mock: aura, GUID, friend and guild surfaces | todo | |
 | CA-M4-2 | Compat: `AuraCaster`, `AuraByInstance`, `HelpfulAuraIds`, `WhisperName` | todo | |
 | CA-M4-3 | Constants, `thank` defaults, raid-buff ids, `enUS_AutoThank.lua` | todo | |
@@ -156,6 +156,7 @@ listed task if the owner rules otherwise:
 | M0 | 2026-11-11 | 1791/0/1 skip; 1791/0/1 skip; 0/0 (174 files) | a84354d | yes (no R fix commits in M0; no owner ruling asks at M0) |
 | M1 | 2026-11-11 | 1860/0/1 skip; 1860/0/1 skip; 0/0 (174 files) | 9891167 | yes (review fix commits CA-M1-R1 a75b0c9, R2 364bc97, R3 00b2182, R4 2f24385, R5 9891167; owner asks D10 and D16; on the M1 build a ping-only or marker-only callout cannot be set up, only a legacy callout with no action takes one through `/qc set`, so #17/#18 and PING-1..5, MARK-1..7 are reachable from CA-M2-1 on) |
 | M2 | 2026-11-11 | 1909/0/1 skip; 1909/0/1 skip; 0/0 (174 files) | c7da096 | yes (review fix commits CA-M2-R1 e494d99, R2 7a15467, R3 c7da096; owner asks F4a and F4b, built in M3 to the spec's reading: step 20's "unedited" ignores name, icon and icon color (CA-M3-3), and the arena and battleground sets gain no emotes under the pvpMatch padlock (CA-M3-1); #16's AC passes headless on both kit profiles, ACTION-1..8 pending sign-off) |
+| M3 | 2026-11-11 | 1925/0/1 skip; 1925/0/1 skip; 0/0 (174 files) | 99f6b3b | yes (review fix commits CA-M3-R1 93df4b2, R2 99f6b3b; owner asks F2, F3, F4c and FRB, with F2, F3 and FRB asked before M4 starts; if no answer arrives M4 builds R-B and D4 as given: F2 rewrites `docs/scope.md` to allow reading your own helpful auras (CA-M4-15), F3 the auto-thank whisper as the one exception to #7 (CA-M4-12), F4c the after-combat diff with the toast's own Hold and Release (CA-M4-7, CA-M4-10), FRB Forever's `THANK_RAID_BUFFS` through `tools/client_tables.py` or the raid-buffs-only toggle hidden or disabled on Forever (CA-M4-3, CA-M4-14); #20's AC passes headless on both kit profiles, EMOTE-9 and EMOTE-10 pending sign-off) |
 
 ---
 
