@@ -284,3 +284,18 @@ test("locale: every enUS.lua key has a reader outside settings/", function()
     end
     assertEqual(#wrong, 0, "read only under settings/, so they belong in enUS_Settings.lua:\n" .. table.concat(wrong, "\n"))
 end)
+
+test("locale: [CA-M4-4] every enUS_AutoThank.lua key is read only from modules/AutoThank*", function()
+    local found = false
+    for _, rel in ipairs(localeFiles()) do if rel == "locales/enUS_AutoThank.lua" then found = true end end
+    assertTrue(found, "the TOC loads locales/enUS_AutoThank.lua")
+    local reads, wrong = readers(), {}
+    for _, key in ipairs(definedIn("locales/enUS_AutoThank.lua")) do
+        for _, rel in ipairs(sorted(reads[key] or {})) do
+            if not rel:match("^modules/AutoThank[%w_]*%.lua$") then
+                wrong[#wrong + 1] = ("%s:%d %q"):format(rel, reads[key][rel], key)
+            end
+        end
+    end
+    assertEqual(#wrong, 0, "read outside modules/AutoThank*, so they belong in another enUS file:\n" .. table.concat(wrong, "\n"))
+end)

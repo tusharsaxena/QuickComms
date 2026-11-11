@@ -39,6 +39,8 @@ libs\LibKa0s\LibKa0s.xml
 locales\enUS.lua
 # LOAD-BEARING: fills NS.L, which locales\enUS.lua creates, at file load.
 locales\enUS_Settings.lua
+# LOAD-BEARING: fills NS.L, which locales\enUS.lua creates, at file load.
+locales\enUS_AutoThank.lua
 
 # Core -- dependency-correct order (layout-§1)
 # LOAD-BEARING: publishes NS.name, NS.BRAND, NS.PREFIX and NS.SLASH, read at load below.
@@ -139,6 +141,8 @@ modules\Library_Migrate.lua
 modules\SendEngine_Guard.lua
 # LOAD-BEARING: the only secure writer; publishes NS.SendEngine, which modules\Dial_Secure.lua takes as a load-time upvalue; appends to NS.STAND_DOWN / NS.STAND_UP (and, Task 4, NS.FEATURE_EVENTS)
 modules\SendEngine.lua
+# Conventional: auto-thank (#19): pure decisions read at call time; reads NS.L and NS.State at load
+modules\AutoThank.lua
 # Conventional: test mode, TEST_MODE_CHANGED's sender; appends to NS.STAND_DOWN / NS.STAND_UP
 modules\Preview.lua
 # Conventional: the Preview as selector window; modules\Preview.lua calls NS.PreviewWindow.Sync at run time only.

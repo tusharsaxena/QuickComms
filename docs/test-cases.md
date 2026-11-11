@@ -22,7 +22,7 @@ Total.
 - repo: every authored file opens with the bootstrap and a comment naming its path
 - repo: the .pkgmeta has no externals and ignores the dev-only entries
 
-### test_locale.lua (11)
+### test_locale.lua (12)
 
 - locale: the scan reads literal L reads, field reads and definitions, and skips comments and strings
 - locale: the enUS files come from the TOC, enUS.lua first and the topic files contiguous after it
@@ -35,6 +35,7 @@ Total.
 - locale: the TOC loads locales/enUS_Settings.lua
 - locale: every enUS_Settings.lua key is read only under settings/
 - locale: every enUS.lua key has a reader outside settings/
+- locale: [CA-M4-4] every enUS_AutoThank.lua key is read only from modules/AutoThank*
 
 ### test_mock_secure.lua (34)
 
@@ -1027,6 +1028,22 @@ Total.
 - send: [CA-M2-4] a locked Line beside an emote prints its note and awaits only the emote
 - send: [CA-M2-4] every action a locked chat action: print each, then no tick and no echo
 - send: [CA-M2-4] a locked Line beside a ping ticks and reports sent at once
+
+### test_autothank.lua (13)
+
+- autothank: [CA-M4-4] Accept takes a stranger's helpful buff (isFromPlayerOrPlayerPet is any player's)
+- autothank: [CA-M4-4] Accept rejects a harmful aura, an NPC's, no caster, and anything not plainly true
+- autothank: [CA-M4-4] Accept needs a duration of at least 60 s: 59 and 0 (no expiry) are refused
+- autothank: [CA-M4-4] Accept keeps a cooldown per caster and spell
+- autothank: [CA-M4-4] Accept with raid-buffs-only takes only THANK_RAID_BUFFS
+- autothank: [CA-M4-4] Accept's two mutes: strangers and known (friends and guild)
+- autothank: [CA-M4-4] Fill fills {name} and {buff}, flattens control bytes and doubles pipes
+- autothank: [CA-M4-4] Fill cuts at the budget on a UTF-8 boundary and never inside a doubled pipe
+- autothank: [CA-M4-4] Fill refuses a text that starts with / and an empty text
+- autothank: [CA-M4-4] Macro per mode: the THANK emote on the caster, a whisper, or both on two lines
+- autothank: [CA-M4-4] Macro holds the whole macro to 255 bytes, the whisper's text cut to fit
+- autothank: [CA-M4-4] Macro refuses a / text and an empty one; both keeps the emote
+- autothank: [CA-M4-4] Macro reads the client's own /w through Compat: none refuses the whisper
 
 ### test_dial_secure.lua (20)
 
@@ -2214,7 +2231,7 @@ Total.
 | Suite | Cases |
 |-------|------:|
 | test_harness.lua | 11 |
-| test_locale.lua | 11 |
+| test_locale.lua | 12 |
 | test_mock_secure.lua | 34 |
 | test_bus.lua | 2 |
 | test_surface_parity.lua | 18 |
@@ -2252,6 +2269,7 @@ Total.
 | test_check.lua | 9 |
 | test_send_guard.lua | 13 |
 | test_sendengine.lua | 48 |
+| test_autothank.lua | 13 |
 | test_dial_secure.lua | 20 |
 | test_preview.lua | 41 |
 | test_edit_preview.lua | 17 |
@@ -2301,4 +2319,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1939** |
+| **Total** | **1953** |

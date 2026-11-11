@@ -661,6 +661,11 @@ function Compat.MarkerCommand()
     return PlainString(_G.SLASH_TARGET_MARKER1)
 end
 
+--- The client's localized /w command (SLASH_WHISPER1), or nil: the auto-thank whisper's (spec §9 D4).
+function Compat.WhisperCommand()
+    return PlainString(_G.SLASH_WHISPER1)
+end
+
 local function pingsEnabled(ping)
     if not ping.IsPingSystemEnabled then return nil end
     local on = plainBool(ping.IsPingSystemEnabled())
