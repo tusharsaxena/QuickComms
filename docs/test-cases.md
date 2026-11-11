@@ -1033,7 +1033,7 @@ Total.
 - send: [CA-M2-4] every action a locked chat action: print each, then no tick and no echo
 - send: [CA-M2-4] a locked Line beside a ping ticks and reports sent at once
 
-### test_autothank.lua (37)
+### test_autothank.lua (43)
 
 - autothank: [CA-M4-4] Accept takes a stranger's helpful buff (isFromPlayerOrPlayerPet is any player's)
 - autothank: [CA-M4-4] Accept rejects a harmful aura, an NPC's, no caster, and anything not plainly true
@@ -1072,6 +1072,12 @@ Total.
 - autothank: [CA-M4-9] maxQueue drops the oldest waiting toast
 - autothank: [CA-M4-9] no Show in lockdown: the host holds the payload and the pump waits
 - autothank: [CA-M4-9] the stand-down clears the toast, the host's list and its pump
+- autothank: [CA-M4-10] the combat edge holds the toast with no keepShown, while lockdown still reads false
+- autothank: [CA-M4-10] nothing releases the toast at the start of combat
+- autothank: [CA-M4-10] the end of combat releases the toast before the diff's own shows
+- autothank: [CA-M4-10] a /reload in combat with no RESTRICTION_CHANGED is released by the combat-end hook
+- autothank: [CA-M4-10] what the host held through combat is pumped after the release
+- autothank: [CA-M4-10] Hold(true) and Pause() are never called through a fight
 
 ### test_dial_secure.lua (20)
 
@@ -2299,7 +2305,7 @@ Total.
 | test_check.lua | 9 |
 | test_send_guard.lua | 13 |
 | test_sendengine.lua | 48 |
-| test_autothank.lua | 37 |
+| test_autothank.lua | 43 |
 | test_dial_secure.lua | 20 |
 | test_preview.lua | 41 |
 | test_edit_preview.lua | 17 |
@@ -2349,4 +2355,4 @@ Total.
 | test_skin_switch.lua | 28 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1983** |
+| **Total** | **1989** |

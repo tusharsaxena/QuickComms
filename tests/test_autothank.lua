@@ -583,3 +583,109 @@ test("autothank: [CA-M4-9] the stand-down clears the toast, the host's list and 
     TH.Offer({ key = "k", caster = { guid = "Player-2-1", name = "A" }, aura = { spellId = 1, name = "x" } })
     assertEqual(#shows, 1, "stood down, nothing more is shown")
 end)
+
+-- ── the toast's combat Hold and Release (CA-M4-10, spec §9 The toast, F4c) ──────────────────────
+
+-- hosting(), with every Hold, Release, Pause and Show the toast is asked for logged in order.
+local function holding()
+    local NS, m, TH, shows = hosting()
+    local log = {}
+    for _, name in ipairs({ "Hold", "Release", "Pause", "Show" }) do
+        local real = TH.toast[name]
+        TH.toast[name] = function(self, a, ...)
+            log[#log + 1] = { name, a }
+            return real(self, a, ...)
+        end
+    end
+    local function calls(name)
+        local n = {}
+        for _, e in ipairs(log) do if e[1] == name then n[#n + 1] = e end end
+        return n
+    end
+    return NS, m, TH, shows, log, calls
+end
+
+local function firstOf(log, name)
+    for i, e in ipairs(log) do if e[1] == name then return i end end
+    return nil
+end
+
+test("autothank: [CA-M4-10] the combat edge holds the toast with no keepShown, while lockdown still reads false", function()
+    local NS, m, TH, _, _, calls = holding()
+    offer(NS, m, 1)
+    assertEqual(TH.toast:Stats().visible, 1, "one up before the fight")
+    edgeOn(m)
+    assertFalse(m.InCombatLockdown(), "the edge is still writable")
+    -- red under: no RESTRICTION_CHANGED receiver in the host
+    assertEqual(#calls("Hold"), 1)
+    assertNil(calls("Hold")[1][2], "no keepShown: every toast on screen goes back to the queue")
+    local st = TH.toast:Stats()
+    assertEqual(st.visible, 0, "nothing on screen in combat")
+    assertTrue(st.held)
+    assertEqual(st.waiting, 1, "it waits with its full time")
+end)
+
+test("autothank: [CA-M4-10] nothing releases the toast at the start of combat", function()
+    local NS, m, TH, _, _, calls = holding()
+    edgeOn(m)
+    NS.SendEngine.Drain("test")                         -- the edge's own drain
+    m.__setCombat(true)
+    NS.addon:SendMessage(NS.MSG.RESTRICTION_CHANGED, "combat", true)
+    assertEqual(#calls("Release"), 0)
+    assertTrue(TH.toast:Stats().held)
+end)
+
+test("autothank: [CA-M4-10] the end of combat releases the toast before the diff's own shows", function()
+    local NS, m, TH, _, log, calls = holding()
+    edgeOn(m)
+    m.__setCombat(true)
+    local guid = stranger(m, 1)
+    NS.AutoThank.OnAura("player", m.secretAuraUpdate{ addedAuras = { m.addAura{ casterGUID = guid, spellId = 1459 } } })
+    assertEqual(#calls("Show"), 0, "nothing shows in combat")
+    fightOver(m)
+    local released, shown = firstOf(log, "Release"), firstOf(log, "Show")
+    assertTrue(released ~= nil, "released at the end of combat")
+    assertTrue(shown ~= nil, "the diff's toast shows")
+    assertTrue(released < shown, "Release before the diff's Show")
+    assertFalse(TH.toast:Stats().held)
+    assertEqual(TH.toast:Stats().visible, 1, "on screen after the fight")
+end)
+
+test("autothank: [CA-M4-10] a /reload in combat with no RESTRICTION_CHANGED is released by the combat-end hook", function()
+    local NS, m, TH, _, log = holding()
+    TH.toast:Hold()                                     -- held, as the edge before the reload left it
+    NS.State.combatEdge = nil
+    m.__setCombat(true)
+    local guid = stranger(m, 1)
+    NS.AutoThank.OnAura("player", m.auraUpdate{ addedAuras = { m.addAura{ casterGUID = guid, spellId = 1459 } } })
+    NS.Restrictions.Refresh = function() return false end   -- the edge announces nothing
+    fightOver(m)
+    local released, shown
+    for i, e in ipairs(log) do
+        if e[1] == "Release" and not released then released = i end
+        if e[1] == "Show" and not shown then shown = i end
+    end
+    -- red under: AT.OnCombatEnd that diffs without releasing
+    assertTrue(released ~= nil and shown ~= nil and released < shown, "Release, then the diff's Show")
+    assertEqual(TH.toast:Stats().visible, 1)
+end)
+
+test("autothank: [CA-M4-10] what the host held through combat is pumped after the release", function()
+    local _, m, TH, shows = holding()
+    m.inCombat = true
+    TH.Offer({ key = "k1", caster = { guid = "Player-2-1", name = "A" }, aura = { spellId = 1, name = "x" } })
+    assertEqual(#shows, 0)
+    fightOver(m)
+    assertEqual(#shows, 1, "the held payload shows once the fight is over")
+end)
+
+test("autothank: [CA-M4-10] Hold(true) and Pause() are never called through a fight", function()
+    local NS, m, _, _, _, calls = holding()
+    offer(NS, m, 1)
+    edgeOn(m)
+    m.__setCombat(true)
+    NS.addon:SendMessage(NS.MSG.RESTRICTION_CHANGED, "combat", true)
+    fightOver(m)
+    for _, h in ipairs(calls("Hold")) do assertTrue(h[2] ~= true, "never Hold(true)") end
+    assertEqual(#calls("Pause"), 0, "never Pause()")
+end)

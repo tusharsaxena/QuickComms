@@ -8,7 +8,8 @@ local _, NS = ...
 -- library's maxQueue dropping the oldest waiting toast. The toast's frame will carry the Thank
 -- button, a secure child (CA-M4-12), so no toast may be on screen in combat: every host Show and
 -- every step of the pump is gated on lockdown, and a payload offered in combat waits in the host's
--- own list. The strata is the library's HIGH (core/Constants.lua C.LAYERS); none is set here.
+-- own list; the toast itself is held through combat and released after it. The strata is the
+-- library's HIGH (core/Constants.lua C.LAYERS); none is set here.
 
 NS.AutoThankToast = NS.AutoThankToast or {}
 local TH = NS.AutoThankToast
@@ -126,6 +127,49 @@ end
 
 AT.Offer = function(candidate) TH.Offer(candidate) end
 
+-- ── combat: Hold and Release (spec §9 The toast, F4c) ──────────────────────────────────────────
+-- The Thank button is a secure child of the toast's frame, and the library hides, moves and drags
+-- that frame on its own, so no toast is on screen in combat. At the PLAYER_REGEN_DISABLED edge,
+-- still writable, the toast is held with no keepShown: every toast on screen goes back to the queue
+-- with its full time. Hold(true) and Pause() are never used. After the fight the toast is released
+-- before the after-combat diff's own shows, from this receiver or from R.OnCombatEdge(false)'s hook
+-- (AT.OnCombatEnd), since a login or /reload in combat may never send RESTRICTION_CHANGED.
+
+--- Release the toast and pump what the host held through the fight. Nothing while fighting: in
+--- lockdown, or on the combat edge before lockdown reads true.
+function TH.Release()
+    if NS.Restrictions.InCombat() or NS.Compat.InCombat() then return end
+    TH.toast:Release()
+    TH.Pump()
+end
+
+AT.ReleaseToast = function() TH.Release() end
+
+-- RESTRICTION_CHANGED (reason, canSendChat): fighting holds the toast; with the fight over and
+-- lockdown false it is released, then a dirty known set is diffed, which also covers a restriction
+-- that lifts outside combat.
+local function onRestrictionChanged()
+    if NS.Restrictions.InCombat() then
+        TH.toast:Hold()
+    elseif not NS.Compat.InCombat() then
+        TH.Release()
+        if NS.State.thankDirty then AT.Diff() end
+    end
+end
+
+-- Its own target (core/Bus.lua): on the tracked bus the stand-down and stand-up take it down and
+-- replay it, on the degraded bus this module does both itself.
+local receiver
+local function listen()
+    receiver = receiver or NS.Bus:NewTarget()
+    if receiver then receiver:RegisterMessage(NS.MSG.RESTRICTION_CHANGED, onRestrictionChanged) end
+end
+listen()
+
+NS.STAND_UP[#NS.STAND_UP + 1] = function()
+    if not NS.Bus.tracked then listen() end
+end
+
 -- ── the stand-down ──────────────────────────────────────────────────────────────────────────────
 
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
@@ -136,4 +180,5 @@ NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
     TH.pending = {}
     lastShowAt = nil
     TH.toast:Clear()
+    if receiver and not NS.Bus.tracked then receiver:UnregisterMessage(NS.MSG.RESTRICTION_CHANGED) end
 end

@@ -228,9 +228,17 @@ function AT.Diff()
     return true
 end
 
---- The end of combat, from R.OnCombatEdge(false) after State.combatEdge is cleared: the diff does not
---- wait on RESTRICTION_CHANGED, which a login or /reload in combat may never send.
+--- The toast host's release at the end of combat, before the diff's own shows. The toast host
+--- (modules/AutoThank_Toast.lua, CA-M4-10) replaces this.
+function AT.ReleaseToast()
+end
+
+--- The end of combat, from R.OnCombatEdge(false) after State.combatEdge is cleared, and from the
+--- "thank.diff" entry SE drains: the toast is released before the diff's own shows, and neither
+--- waits on RESTRICTION_CHANGED, which a login or /reload in combat may never send. Both refuse
+--- while fighting, so an entry drained at the combat edge does nothing.
 function AT.OnCombatEnd()
+    AT.ReleaseToast()
     AT.Diff()
 end
 
@@ -242,7 +250,7 @@ function AT.OnAura(unit, info) -- luacheck: ignore 212
     if not wanted() then return end
     if fighting() then
         State.thankDirty = true
-        NS.SendEngine.Queue("thank.diff", function() AT.Diff() end)
+        NS.SendEngine.Queue("thank.diff", function() AT.OnCombatEnd() end)
         return
     end
     if NS.Compat.IsSecret(info) or type(info) ~= "table" then
@@ -281,17 +289,11 @@ function AT.Rewire()
 end
 
 -- Its own target (core/Bus.lua); on the tracked bus the stand-down and stand-up take it down and
--- replay it, on the degraded bus this module does both itself.
--- RESTRICTION_CHANGED (reason, canSendChat): with nothing restricted and lockdown false, a dirty set
--- is diffed, which also covers a restriction that lifts outside combat.
-local function onRestrictionChanged(_, reason)
-    if reason == nil and not NS.Compat.InCombat() then AT.Diff() end
-end
-
+-- replay it, on the degraded bus this module does both itself. RESTRICTION_CHANGED is the toast
+-- host's (modules/AutoThank_Toast.lua): it releases the toast before it runs the diff.
 local HANDLERS = {
     { NS.MSG.SITUATION_CHANGED, function() AT.Rewire() end },
     { NS.MSG.PROFILE_CHANGED, function() AT.Rewire() end },
-    { NS.MSG.RESTRICTION_CHANGED, onRestrictionChanged },
 }
 local receiver
 local function listen()
