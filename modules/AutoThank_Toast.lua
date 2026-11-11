@@ -86,8 +86,8 @@ local function thankButton(frame)
     return b
 end
 
--- The actions a Thank macro carries, for the press's echo and lock reads (the emote's aim lines
--- echo nothing, so a newline never means a whisper: AT.Macro says whether one is in).
+-- The actions a Thank macro carries, for the press's echo and lock reads (AT.Macro says whether a
+-- whisper line is in, so no newline is read as one).
 local function actionsOf(send, whisper)
     local actions = {}
     if send ~= "line" then actions[#actions + 1] = { kind = "emote", chatType = "TEXT_EMOTE" } end
@@ -95,20 +95,13 @@ local function actionsOf(send, whisper)
     return actions
 end
 
--- The macro for `payload`, aimed as things stand now (Compat.ThankAim).
-local function thankMacro(payload, settings)
-    local caster = payload.caster
-    local aim = NS.Compat.ThankAim(type(caster) == "table" and caster.guid or nil)
-    return AT.Macro(caster, payload.buff, settings, aim)
-end
-
--- Arm the frame's Thank button for `payload`, or disarm it with the reason on the toast. The meta's
--- `retarget` re-aims at the press (SendEngine's PreClick, out of combat): the player's target, and
--- the caster's unit, may have changed since the toast was drawn.
+-- Arm the frame's Thank button for `payload`, or disarm it with the reason on the toast.
 local function armThank(frame, payload)
     local b = thankButton(frame)
     local settings = thankSettings() or {}
-    local macro, why, whisper = thankMacro(payload, settings)
+    local macro, why, whisper = AT.Macro(payload.caster, payload.buff, settings)
+    NS.Debug("Thank", "arm %s: send=%s button=%s macro=[%s] why=%s", tostring(payload.key),
+        tostring(settings.send), tostring(b ~= nil), NS.SendEngine.DebugMacro(macro), tostring(why))
     frame.qcNote:SetText(macro and "" or (AT.REASON[why] or ""))
     if not b then return end
     if not macro then
@@ -121,7 +114,6 @@ local function armThank(frame, payload)
     NS.SendEngine.Arm(b, macro, {
         kind = "thank", name = L["Thank"], calloutId = payload.key, surfaceId = "thank",
         actions = actions, chatTypes = chatTypes, lockText = lockText,
-        retarget = function() return (thankMacro(payload, thankSettings() or {})) end,
     })
 end
 

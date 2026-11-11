@@ -175,15 +175,6 @@ local function rebake(b)
     return changed
 end
 
--- Re-aim an armed Thank button at the press (auto-thank's emote targets the caster, then restores
--- the player's target, as things stand now). Out of combat only; nothing new writes nothing.
-local function retarget(b)
-    if not b.qcArmed then return false end
-    local macro = b.qcMeta.retarget()
-    if type(macro) ~= "string" or macro == b:GetAttribute("macrotext") then return false end
-    return SE.Arm(b, macro, b.qcMeta)
-end
-
 --- Re-arm every re-baking button once (the combat edge). Out of combat only.
 --- @return number re-armed
 function SE.RefreshRebakes()
@@ -617,9 +608,26 @@ local function actingPress(b, mouseButton, down)
     return G.IsActingEdge(down, useKeyDown(b))
 end
 
+--- A macro on one line for the debug log: each newline shown as " \\n ", nil as "nil".
+function SE.DebugMacro(macro)
+    if type(macro) ~= "string" then return "nil" end
+    return (macro:gsub("\n", " \\n "))
+end
+
+-- The Thank click's debug trail (owner, 2026-11-11): each edge, whether it acts, and what the secure
+-- template is about to run (its type and macrotext as set on the button now).
+local function debugThank(b, hook, mouseButton, down)
+    if not (b.qcMeta and b.qcMeta.kind == "thank") then return end
+    NS.Debug("Thank", "%s %s: button=%s down=%s acting=%s armed=%s combat=%s type=%s macro=[%s]", hook,
+        tostring(b.qcMeta.calloutId), tostring(mouseButton), tostring(down),
+        tostring(actingPress(b, mouseButton, down)), tostring(b.qcArmed), tostring(inCombat()),
+        tostring(b:GetAttribute("type")), SE.DebugMacro(b:GetAttribute("macrotext")))
+end
+
 --- The OnClick hook every send button carries. Acts once per press, on the edge the secure
 --- template acts on.
 function SE.OnClick(b, mouseButton, down)
+    debugThank(b, "click", mouseButton, down)
     if not actingPress(b, mouseButton, down) then return end
     local t0 = Perf.on and debugprofilestop()
     press(b)
@@ -667,9 +675,8 @@ end
 function SE.PreClick(b, mouseButton, down)
     if not (b.qcMeta and actingPress(b, mouseButton, down)) then return end
     b.qcPressNotes = b.qcArmed and SE.PressNotes(b.qcMeta) or nil
-    if inCombat() then return end
-    if b.qcMeta.retarget then return retarget(b) end
-    if b.qcMeta.rebake then rebake(b) end
+    if inCombat() or not b.qcMeta.rebake then return end
+    rebake(b)
 end
 
 function SE.GuardState()

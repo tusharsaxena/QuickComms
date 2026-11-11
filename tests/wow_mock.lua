@@ -52,9 +52,6 @@
 --   groupGUIDs, friendGUIDs, guildGUIDs  [guid] = C_PartyInfo.IsGUIDInGroup, C_FriendList.IsFriend
 --                  and IsGuildMember's answers (false when absent)
 --   SLASH_WHISPER1 "/w"
---   SLASH_TARGET_EXACT1, SLASH_TARGET_LAST_TARGET1, SLASH_CLEARTARGET1  "/targetexact", "/targetlasttarget"
---                  and "/cleartarget" (the Thank emote's aim); a case sets one nil to drop it
---   UnitTokenFromGUID(guid)  the first unit in unitGUIDs (then "player") whose GUID is guid, else nil
 --   every frame    SetAlpha/GetAlpha (when the frame has none) and IsMouseOver (`__mouseOver`)
 --   __click(b[, mouseButton])  a full press: the registered down edge, then the up edge; each edge
 --                  runs the button's PreClick script before its OnClick, as the client does
@@ -342,18 +339,6 @@ local function build()
     M.C_FriendList = { IsFriend = function(guid) return M.friendGUIDs[guid] or false end }
     M.IsGuildMember = function(guid) return M.guildGUIDs[guid] or false end
     M.SLASH_WHISPER1 = "/w"
-    M.SLASH_TARGET_EXACT1, M.SLASH_TARGET_LAST_TARGET1, M.SLASH_CLEARTARGET1 =
-        "/targetexact", "/targetlasttarget", "/cleartarget"
-    M.UnitTokenFromGUID = function(guid)
-        local units = {}
-        for unit in pairs(M.unitGUIDs) do units[#units + 1] = unit end
-        table.sort(units)
-        for _, unit in ipairs(units) do
-            if M.unitGUIDs[unit] == guid then return unit end
-        end
-        if guid == M.playerGUID then return "player" end
-        return nil
-    end
 
     M.GetCVarBool = function(name) return M.cvars[name] == "1" end
     M.C_CVar      = { GetCVarBool = function(name) return M.cvars[name] == "1" end }

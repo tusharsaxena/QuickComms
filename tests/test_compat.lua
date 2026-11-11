@@ -428,6 +428,7 @@ test("compat: [CA-M4-2] AuraCaster reads the caster's GUID first, then the aura'
     assertEqual(c.guid, STRANGER)
     assertEqual(c.name, "Bob")
     assertEqual(c.whisperName, "Bob-ArgentDawn")
+    assertEqual(c.emoteName, "Bob", "the emote names the bare name (CA-THX-2)")
     assertFalse(c.known)
     local b = m.addAura{ sourceUnit = "target" }
     m.unitGUIDs.target = STRANGER
@@ -439,29 +440,6 @@ test("compat: [CA-M4-2] AuraCaster reads the caster's GUID first, then the aura'
     m.unitGUIDs.target = nil
     assertNil(C.AuraCaster(b.auraInstanceID, b), "a sourceUnit with no GUID")
     assertNil(C.AuraCaster(b.auraInstanceID, T.secret(b)), "a secret aura is never indexed")
-end)
-
-test("compat: [CA-THX-1] TargetCommands and ThankAim: the emote's aim at the caster", function()
-    local NS, m = T.newAddon()
-    m.issecretvalue = T.isSecret
-    local C = NS.Compat
-    local exact, last, clear = C.TargetCommands()
-    assertEqual(exact, "/targetexact") assertEqual(last, "/targetlasttarget") assertEqual(clear, "/cleartarget")
-    m.SLASH_CLEARTARGET1 = nil
-    assertNil(C.TargetCommands(), "any missing drops all three")
-    local aim = C.ThankAim(STRANGER)
-    assertFalse(aim.onCaster) assertFalse(aim.hadTarget) assertNil(aim.token)
-    m.unitGUIDs.target = "Player-2-0000FFFF"
-    m.unitGUIDs.nameplate4 = STRANGER
-    aim = C.ThankAim(STRANGER)
-    assertFalse(aim.onCaster) assertTrue(aim.hadTarget) assertEqual(aim.token, "nameplate4")
-    m.unitGUIDs.target = STRANGER
-    assertTrue(C.ThankAim(STRANGER).onCaster)
-    m.unitGUIDs.target = T.secret(STRANGER)
-    assertFalse(C.ThankAim(STRANGER).hadTarget, "a secret target reads as none")
-    local a = stranger(m)
-    m.unitGUIDs.nameplate4, m.unitGUIDs.target = nil, nil
-    assertEqual(C.AuraCaster(a.auraInstanceID, a).targetName, "Bob-ArgentDawn", "the whisper form off regional names")
 end)
 
 test("compat: [CA-M4-2] AuraCaster rejects an NPC, a pet, the player and a group member (a secret answer reads as in group)", function()
