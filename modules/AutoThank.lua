@@ -118,14 +118,6 @@ end
 -- open world alone, R-B) costs nothing in an instance. AceAddon's UnregisterAllEvents never reaches
 -- it, so the stand-down below takes it down itself.
 
---- The UNIT_AURA handler (CA-M4-6 fills it): `unit` is "player" (the frame's filter), `info` the
---- client's updateInfo, possibly secret.
-function AT.OnAura(unit, info) -- luacheck: ignore 212
-end
-
-AT.frame = AT.frame or CreateFrame("Frame")
-AT.frame:SetScript("OnEvent", function(_, _, unit, info) AT.OnAura(unit, info) end)
-
 local function thankSettings()
     local db = NS.db
     return db and db.profile and db.profile.thank
@@ -140,6 +132,92 @@ local function wanted()
     return type(t.content) == "table" and t.content[content] == true
 end
 
+-- ── detection (spec §9 Detection, D3) ───────────────────────────────────────────────────────────
+-- State.thankKnown is the plain set of the player's helpful auraInstanceIDs, so a buff is offered
+-- once, when it is new. State.thankDirty says a change went unread (in combat, or a secret payload):
+-- the after-combat diff (CA-M4-7) catches it up.
+
+State.thankKnown = State.thankKnown or {}
+
+--- Where a candidate goes: { aura, caster, key = guid .. ":" .. spellId }. The toast host
+--- (modules/AutoThank_Toast.lua, CA-M4-9) replaces this.
+function AT.Offer(candidate) -- luacheck: ignore 212
+end
+
+--- Re-read the known set from the player's helpful auras, quietly. A restricted read (nil) leaves
+--- the set as it is and marks it dirty.
+function AT.Snapshot()
+    local ids = NS.Compat.HelpfulAuraIds()
+    if not ids then
+        State.thankDirty = true
+        return false
+    end
+    local known = {}
+    for _, id in ipairs(ids) do known[id] = true end
+    State.thankKnown = known
+    return true
+end
+
+-- Offer `aura` (a plain table, its id already plain) when it is one to thank.
+local function consider(aura, id, settings)
+    local caster = NS.Compat.AuraCaster(id, aura)
+    if not AT.Accept(aura, caster, settings, GetTime()) then return end
+    AT.Offer({ aura = aura, caster = caster, key = caster.guid .. ":" .. aura.spellId })
+end
+
+local function removeIds(ids)
+    if type(ids) ~= "table" or NS.Compat.IsSecret(ids) then return end
+    for _, id in ipairs(ids) do
+        id = NS.Compat.PlainNumber(id)
+        if id then State.thankKnown[id] = nil end
+    end
+end
+
+local function addAuras(list, settings)
+    if list == nil then return end
+    if type(list) ~= "table" or NS.Compat.IsSecret(list) then
+        State.thankDirty = true
+        return
+    end
+    for _, aura in ipairs(list) do
+        local id = type(aura) == "table" and not NS.Compat.IsSecret(aura) and NS.Compat.PlainNumber(aura.auraInstanceID)
+        if not id then
+            State.thankDirty = true
+        elseif not State.thankKnown[id] then
+            State.thankKnown[id] = true
+            consider(aura, id, settings)
+        end
+    end
+end
+
+--- The UNIT_AURA handler: `unit` is "player" (the frame's filter, never compared), `info` the
+--- client's updateInfo, which is secret while auras are restricted. In combat, or on the combat edge
+--- before lockdown reads true, it only marks the set dirty. Nothing is indexed before the secret test.
+function AT.OnAura(unit, info) -- luacheck: ignore 212
+    if not wanted() then return end
+    if NS.Compat.InCombat() or State.combatEdge == true then
+        State.thankDirty = true
+        return
+    end
+    if NS.Compat.IsSecret(info) or type(info) ~= "table" then
+        State.thankDirty = true
+        return
+    end
+    if NS.Compat.IsSecret(info.isFullUpdate) then
+        State.thankDirty = true
+        return
+    end
+    if info.isFullUpdate == true then
+        AT.Snapshot()
+        return
+    end
+    removeIds(info.removedAuraInstanceIDs)
+    addAuras(info.addedAuras, thankSettings())
+end
+
+AT.frame = AT.frame or CreateFrame("Frame")
+AT.frame:SetScript("OnEvent", function(_, _, unit, info) AT.OnAura(unit, info) end)
+
 --- Register the frame's UNIT_AURA when auto-thank is on, the addon is up and the current content kind
 --- is switched on; otherwise unregister it. Runs on SITUATION_CHANGED, PROFILE_CHANGED, a thank.*
 --- setting change (the rows' onChange) and the stand-up.
@@ -148,6 +226,7 @@ function AT.Rewire()
     if wanted() then
         if not frame.qcAuraOn then
             frame.qcAuraOn = NS.SafeRegisterUnitEvent(frame, "UNIT_AURA", NS.rejectedEvents, "player") or nil
+            if frame.qcAuraOn then AT.Snapshot() end
         end
     else
         frame:UnregisterAllEvents()

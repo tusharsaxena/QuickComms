@@ -252,3 +252,108 @@ test("autothank: [CA-M4-5] the frame's UNIT_AURA reaches AT.OnAura with its payl
     assertEqual(got[1], "player")
     assertTrue(got[2] == info)
 end)
+
+-- ── AT.OnAura: detection and the known-aura set (CA-M4-6, spec §9 Detection) ─────────────────────
+
+-- An enabled addon in the open world whose candidates are caught, with a stranger who can buff.
+local function detecting()
+    local NS, m = live()
+    m.players[STRANGER] = { name = "Bob", realm = "Argent Dawn" }
+    m.__now = 1000
+    local got = {}
+    NS.AutoThank.Offer = function(c) got[#got + 1] = c end
+    return NS, m, got
+end
+
+local function buff(m, fields)
+    local f = { casterGUID = STRANGER }
+    for k, v in pairs(fields or {}) do f[k] = v end
+    return m.addAura(f)
+end
+
+test("autothank: [CA-M4-6] an added plain aura that passes Accept becomes a candidate, and is known", function()
+    local NS, m, got = detecting()
+    local a = buff(m)
+    NS.AutoThank.OnAura("player", m.auraUpdate{ addedAuras = { a } })
+    assertEqual(#got, 1)
+    assertTrue(got[1].aura == a)
+    assertEqual(got[1].caster.guid, STRANGER)
+    assertEqual(got[1].key, STRANGER .. ":1459")
+    assertTrue(NS.State.thankKnown[a.auraInstanceID], "the new aura joins the known set")
+    local short = buff(m, { duration = 30 })
+    NS.AutoThank.OnAura("player", m.auraUpdate{ addedAuras = { short } })
+    assertEqual(#got, 1, "a refused aura is no candidate")
+    assertTrue(NS.State.thankKnown[short.auraInstanceID], "but it is known")
+end)
+
+test("autothank: [CA-M4-6] a full update re-snapshots the known set silently", function()
+    local NS, m, got = detecting()
+    local a, b = buff(m), buff(m, { spellId = 21562 })
+    NS.State.thankKnown = { [99] = true }
+    NS.AutoThank.OnAura("player", m.auraUpdate{ isFullUpdate = true, addedAuras = { a, b } })
+    assertEqual(#got, 0, "a login, zoning or reload never bursts")
+    assertTrue(NS.State.thankKnown[a.auraInstanceID] and NS.State.thankKnown[b.auraInstanceID])
+    assertNil(NS.State.thankKnown[99], "the old set is replaced")
+end)
+
+test("autothank: [CA-M4-6] removed ids leave the known set", function()
+    local NS, m = detecting()
+    local a = buff(m)
+    NS.AutoThank.OnAura("player", m.auraUpdate{ addedAuras = { a } })
+    NS.AutoThank.OnAura("player", m.auraUpdate{ removedAuraInstanceIDs = { a.auraInstanceID } })
+    assertNil(NS.State.thankKnown[a.auraInstanceID])
+end)
+
+test("autothank: [CA-M4-6] a secret or non-table payload sets dirty and indexes nothing", function()
+    local NS, m, got = detecting()
+    NS.State.thankDirty = false
+    -- red under: indexing the payload before the secret test (the kit's secret raises on index)
+    NS.AutoThank.OnAura("player", m.secretAuraUpdate{ addedAuras = { buff(m) } })
+    assertTrue(NS.State.thankDirty, "secret")
+    NS.State.thankDirty = false
+    NS.AutoThank.OnAura("player", nil)
+    assertTrue(NS.State.thankDirty, "not a table")
+    NS.State.thankDirty = false
+    NS.AutoThank.OnAura("player", m.auraUpdate{ addedAuras = { T.secret(buff(m)) } })
+    assertTrue(NS.State.thankDirty, "a secret entry")
+    assertEqual(#got, 0)
+end)
+
+test("autothank: [CA-M4-6] in combat, or on the combat edge, it only marks dirty", function()
+    local NS, m, got = detecting()
+    NS.State.thankDirty = false
+    m.inCombat = true
+    NS.AutoThank.OnAura("player", m.auraUpdate{ addedAuras = { buff(m) } })
+    assertTrue(NS.State.thankDirty, "in combat")
+    m.inCombat = false
+    NS.State.thankDirty = false
+    NS.State.combatEdge = true
+    NS.AutoThank.OnAura("player", m.auraUpdate{ addedAuras = { buff(m) } })
+    assertTrue(NS.State.thankDirty, "on the edge, before lockdown reads true")
+    assertEqual(#got, 0)
+    NS.State.combatEdge = false
+    NS.AutoThank.OnAura("player", m.auraUpdate{ addedAuras = { buff(m) } })
+    assertEqual(#got, 1, "after the fight's edge it detects again")
+end)
+
+test("autothank: [CA-M4-6] stood down, or the content kind off, gives nothing", function()
+    local NS, m, got = detecting()
+    NS.db.profile.thank.content.openWorld = false
+    NS.AutoThank.OnAura("player", m.auraUpdate{ addedAuras = { buff(m) } })
+    assertEqual(#got, 0, "the open world switched off")
+    NS.db.profile.thank.content.openWorld = true
+    NS.addon:OnSlashCommand("disable")
+    NS.AutoThank.OnAura("player", m.auraUpdate{ addedAuras = { buff(m) } })
+    assertEqual(#got, 0, "stood down")
+end)
+
+test("autothank: [CA-M4-6] registering the frame snapshots the player's helpful auras silently", function()
+    local NS, m, got = detecting()
+    NS.db.profile.thank.enabled = false
+    NS.AutoThank.Rewire()
+    local a = buff(m)
+    NS.db.profile.thank.enabled = true
+    NS.AutoThank.Rewire()
+    assertTrue(NS.State.thankKnown[a.auraInstanceID], "a buff held when it switched on is known")
+    assertEqual(#got, 0)
+end)
