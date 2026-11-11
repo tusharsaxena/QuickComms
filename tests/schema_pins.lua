@@ -12,6 +12,7 @@
 -- callout.marker, a callout's ping and raid target marker actions, beside callout.emote.
 -- CA-M2-7 relabels the callout.channel gameEmote choice None (no chat line), D10: a pin holds a
 -- choice's value, not its label, so no pin moves.
+-- CA-M4-13 (auto-thank, #19) adds the thank.* rows, a content kind's row on both clients.
 local CLIENT_SKIN = dofile("tests/_kit/mock_client.lua").current() == "forever" and "forever" or "ka0s"
 return {
     ["enabled"] = "bool|true|nil|nil|nil|nil|false",
@@ -322,4 +323,19 @@ return {
     ["dial.page.dotColorFromSkin"] = "bool|true|nil|nil|nil|nil|false",
     ["dial.page.dotBackColorFromSkin"] = "bool|true|nil|nil|nil|nil|false",
     ["dial.page.dotBorderColorFromSkin"] = "bool|true|nil|nil|nil|nil|false",
+    ["thank.enabled"] = "bool|true|nil|nil|nil|nil|false",
+    ["thank.send"] = "string|\"emote\"|nil|nil|nil|[\"emote\",\"line\",\"both\"]|false",
+    ["thank.text"] = "string|\"Thanks for the {buff}, {name}!\"|nil|nil|nil|nil|false",
+    ["thank.mute"] = "string|\"none\"|nil|nil|nil|[\"none\",\"strangers\",\"known\"]|false",
+    ["thank.position"] = "point|false|nil|nil|nil|nil|false",
+    ["thank.raidBuffsOnly"] = "bool|false|nil|nil|nil|nil|false",
+    ["thank.content.openWorld"] = "bool|true|nil|nil|nil|nil|false",
+    ["thank.content.dungeon"] = "bool|false|nil|nil|nil|nil|false",
+    ["thank.content.raid"] = "bool|false|nil|nil|nil|nil|false",
+    ["thank.content.battleground"] = "bool|false|nil|nil|nil|nil|false",
+    ["thank.content.mythicPlus"] = "bool|false|nil|nil|nil|nil|false",
+    ["thank.content.delve"] = "bool|false|nil|nil|nil|nil|false",
+    ["thank.content.scenario"] = "bool|false|nil|nil|nil|nil|false",
+    ["thank.content.arena"] = "bool|false|nil|nil|nil|nil|false",
+    ["thank.content.housing"] = "bool|false|nil|nil|nil|nil|false",
 }

@@ -204,10 +204,10 @@ local S = Settings.SchemaLib:New{
     -- The minimap button is a per-installation display preference: neither reset may touch it. A
     -- member's icon and its glyph color, a group's parent and a pad's or dial's position have a
     -- default only so a named `/qc reset` restores them; a page's Defaults (a bracketed sweep) keeps
-    -- them.
+    -- them. So is the thank toast's dragged spot (settings/AutoThank.lua).
     resetExempt  = { [MINIMAP_PATH] = true, ["callout.icon"] = true, ["callout.iconColor"] = true,
         ["group.icon"] = true, ["group.iconColor"] = true, ["group.parent"] = true, ["pad.point"] = true,
-        ["dial.point"] = true },
+        ["dial.point"] = true, ["thank.position"] = true },
 }
 NS.SchemaRuntime = S
 

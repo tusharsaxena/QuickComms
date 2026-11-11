@@ -182,7 +182,7 @@ Total.
 - profile: [CA-M4-3] the thank defaults: on in the open world alone (R-B), an emote, no mute
 - profile: [CA-M4-3] the auto-thank constants (spec §9)
 
-### test_schema.lua (24)
+### test_schema.lua (29)
 
 - schema: every row validates against the defaults
 - schema: a stored row whose path has no default is counted, not passed vacuously
@@ -208,6 +208,11 @@ Total.
 - schema: [CA-M1-5] callout.marker is a number row, none by default, with none and 1 to 8 drawn as their icons
 - schema: [CA-M1-5] the seam sets and clears a ping and a marker, and neither row is reset-exempt
 - schema: [CA-M1-5] callout.emote is reworded: an emote is one of a callout's actions
+- schema: [CA-M4-13] every thank.* row's default is NS.C.PROFILE.thank's, on the Auto-thank page
+- schema: [CA-M4-13] /qc set thank.send line works, and a send kind it does not know is refused
+- schema: [CA-M4-13] the toast's position is reset-exempt: a page's Defaults keeps it, a named reset clears it
+- schema: [CA-M4-13] every thank.* write re-runs AT.Rewire, the only wire
+- schema: [CA-M4-13] switching auto-thank off through the seam takes the frame's UNIT_AURA down
 
 ### test_slash.lua (22)
 
@@ -2290,7 +2295,7 @@ Total.
 | test_setup.lua | 26 |
 | test_database.lua | 32 |
 | test_profile.lua | 12 |
-| test_schema.lua | 24 |
+| test_schema.lua | 29 |
 | test_slash.lua | 22 |
 | test_disabled.lua | 27 |
 | test_diagnostics.lua | 14 |
@@ -2371,4 +2376,4 @@ Total.
 | test_skin_switch.lua | 28 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2005** |
+| **Total** | **2010** |

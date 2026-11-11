@@ -855,3 +855,30 @@ L["  group finder: %d activities; shipped ids it does not list: %s; maps it list
     "  group finder: %d activities; shipped ids it does not list: %s; maps it lists that no shipped id carries: %s"
 L["  group finder: not checked, the group finder listed no activities"] =
     "  group finder: not checked, the group finder listed no activities"
+
+-- Auto-thank's rows (#19, settings/AutoThank.lua): General, Where and Filter
+L["Where"] = "Where"
+L["Filter"] = "Filter"
+L["Whisper"] = "Whisper"
+L["Both"] = "Both"
+L["No one"] = "No one"
+L["Strangers"] = "Strangers"
+L["Friends and guild"] = "Friends and guild"
+L["Enable auto-thank"] = "Enable auto-thank"
+L["When another player buffs you, show a toast with a Thank button."] =
+    "When another player buffs you, show a toast with a Thank button."
+L["Thank button sends"] = "Thank button sends"
+L["What the Thank button does: the game's /thank emote at the caster, a whisper of your text, or both."] =
+    "What the Thank button does: the game's /thank emote at the caster, a whisper of your text, or both."
+L["Whisper text"] = "Whisper text"
+L["The whisper the Thank button sends. {name} is the caster, {buff} the buff."] =
+    "The whisper the Thank button sends. {name} is the caster, {buff} the buff."
+L["Mute"] = "Mute"
+L["Whose buffs show no toast: no one's, strangers', or your friends' and guildmates'."] =
+    "Whose buffs show no toast: no one's, strangers', or your friends' and guildmates'."
+L["Toast position"] = "Toast position"
+L["Where the thank toast sits. Drag the toast to move it."] = "Where the thank toast sits. Drag the toast to move it."
+L["Show thank toasts here."] = "Show thank toasts here."
+L["Raid buffs only"] = "Raid buffs only"
+L["Auto-thank guesses at a buff: one of a minute or more that another player cast on you. With this on, only the raid buffs a stranger can give you show a toast."] =
+    "Auto-thank guesses at a buff: one of a minute or more that another player cast on you. With this on, only the raid buffs a stranger can give you show a toast."

@@ -390,3 +390,109 @@ test("schema: [CA-M1-5] callout.emote is reworded: an emote is one of a callout'
     -- red under: the old desc ("a Game emote callout performs")
     assertEqual(row.desc, "The game emote this callout performs, by its token (POINT) or command (/point), after its chat line if it has one. It acts on your target, as the game's own emote does.")
 end)
+
+-- ── the auto-thank rows (CA-M4-13, spec §9 Settings page, §10) ────────────────────────────────
+
+-- Every thank.* row, by path.
+local function thankRows(NS)
+    local out = {}
+    for _, row in ipairs(NS.addon.Settings.Schema) do
+        if row.path:find("^thank%.") then out[row.path] = row end
+    end
+    return out
+end
+
+test("schema: [CA-M4-13] every thank.* row's default is NS.C.PROFILE.thank's, on the Auto-thank page", function()
+    local NS = T.bootAddon()
+    local D = NS.C.PROFILE.thank
+    local rows = thankRows(NS)
+    -- red under: no settings/AutoThank.lua rows
+    for _, leaf in ipairs({ "enabled", "send", "text", "mute", "raidBuffsOnly", "position" }) do
+        local row = rows["thank." .. leaf]
+        assertTrue(row ~= nil, "a row for thank." .. leaf)
+        assertEqual(row.default, D[leaf], "thank." .. leaf)
+    end
+    -- every kind on every client: the page, not the schema, leaves out the ones a client lacks
+    for _, kind in ipairs(NS.Resolver.TOKENS.content) do
+        local row = rows["thank.content." .. kind]
+        assertTrue(row ~= nil, "a row for thank.content." .. kind)
+        assertEqual(row.default, D.content[kind], kind)
+        assertEqual(row.label, NS.PadRender.CONTENT[kind], kind)
+    end
+    for path, row in pairs(rows) do assertEqual(row.page, "autothank", path) end
+    assertEqual(NS.addon.Settings.Helpers.ValidateSchema(), 0)
+end)
+
+test("schema: [CA-M4-13] /qc set thank.send line works, and a send kind it does not know is refused", function()
+    local NS = T.bootAddon()
+    local p = NS.db.profile
+    NS.addon:OnSlashCommand("set thank.send line")
+    -- red under: no thank.send row
+    assertEqual(p.thank.send, "line")
+    assertFalse((NS.SchemaRuntime.Set("thank.send", "shout")))
+    assertEqual(p.thank.send, "line")
+    assertFalse((NS.SchemaRuntime.Set("thank.mute", "everyone")))
+    assertTrue((NS.SchemaRuntime.Set("thank.mute", "known")))
+    assertEqual(p.thank.mute, "known")
+    assertTrue((NS.SchemaRuntime.Set("thank.text", "Ty {name}")))
+    assertEqual(p.thank.text, "Ty {name}")
+    assertTrue((NS.SchemaRuntime.Set("thank.content.dungeon", true)))
+    assertTrue(p.thank.content.dungeon == true)
+    assertTrue(p.thank.content.openWorld == true, "a sibling kind is kept")
+end)
+
+test("schema: [CA-M4-13] the toast's position is reset-exempt: a page's Defaults keeps it, a named reset clears it", function()
+    local NS = T.bootAddon()
+    local S, p = NS.SchemaRuntime, NS.db.profile
+    p.thank.position = { "TOP", "TOP", 10, -200 }
+    S.BulkBegin()
+    local swept = S.ApplyDefault(S.FindRow("thank.position"))
+    S.BulkEnd()
+    -- red under: no thank.position in settings/Schema.lua resetExempt
+    assertFalse(swept, "a sweep keeps it")
+    assertEqual(p.thank.position[3], 10)
+    p.thank.send = "both"
+    S.BulkBegin()
+    S.ApplyDefault(S.FindRow("thank.send"))
+    S.BulkEnd()
+    assertEqual(p.thank.send, "emote", "the sweep resets the rest")
+    NS.addon:OnSlashCommand("reset thank.position")
+    assertTrue(p.thank.position == false, "a named reset reaches it")
+end)
+
+test("schema: [CA-M4-13] every thank.* write re-runs AT.Rewire, the only wire", function()
+    local NS = T.bootAddon()
+    local calls = 0
+    local real = NS.AutoThank.Rewire
+    NS.AutoThank.Rewire = function() calls = calls + 1 end
+    local S = NS.SchemaRuntime
+    S.Set("thank.enabled", false)
+    -- red under: a thank.* row with no onChange
+    assertEqual(calls, 1, "thank.enabled")
+    S.Set("thank.content.dungeon", true)
+    assertEqual(calls, 2, "a content kind")
+    S.Set("thank.send", "both")
+    S.Set("thank.mute", "strangers")
+    S.Set("thank.raidBuffsOnly", true)
+    S.Set("thank.text", "Thanks!")
+    assertEqual(calls, 6, "the rest")
+    NS.AutoThank.Rewire = real
+end)
+
+test("schema: [CA-M4-13] switching auto-thank off through the seam takes the frame's UNIT_AURA down", function()
+    local NS = T.enableAddon()
+    NS.Situation.ReadInputs = function() return {} end
+    NS.Situation.RefreshNow("test")
+    local units = function()
+        local u = NS.AutoThank.frame.__unitEvents.UNIT_AURA
+        return u and table.concat(u, ",") or ""
+    end
+    assertEqual(units(), "player")
+    NS.addon:OnSlashCommand("set thank.enabled false")
+    assertEqual(units(), "", "off")
+    NS.addon:OnSlashCommand("set thank.content.openWorld false")
+    NS.addon:OnSlashCommand("set thank.enabled true")
+    assertEqual(units(), "", "on, but not in the open world")
+    NS.addon:OnSlashCommand("set thank.content.openWorld true")
+    assertEqual(units(), "player")
+end)
