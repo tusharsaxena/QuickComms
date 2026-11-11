@@ -623,6 +623,14 @@ test("database: [QFE-E3] step 19 adds the Emotes set to a stored profile once, a
     assertEqual(p.dials.d2.groups, "damaged")
     assertEqual(p.callouts.c1.text, "Cheers all!", "an edited callout is the player's")
     assertEqual(#p.groups.g1.callouts, 1, "Solo's own list is left as it is")
+    -- the replay from 18 runs step 20 too: the edited Solo callout gains no emote, and this profile
+    -- holds no Dungeon or Raid set, so no Heal me row is added anywhere
+    assertNil(p.callouts.c1.emote, "an edited Solo callout is the player's")
+    local heal = 0
+    for _, c in pairs(p.callouts) do
+        if c.origin == "bi.mplus.healme" or c.origin == "bi.raid.healme" then heal = heal + 1 end
+    end
+    assertEqual(heal, 0, "no Dungeon or Raid set: no Heal me row")
     assertTrue(p.seededSets["bi.emotes"], "given, so Prepare adds none later")
     assertNil(next(db.sv.profiles.Never.groups), "a profile never prepared is left to Prepare")
     -- a second run adds nothing; nor does one after the player deleted the set
@@ -859,4 +867,26 @@ test("database: [CA-M3-4] step 20 part 2 skips a damaged group and a dangling or
     assertEqual(#d, 4)
     assertEqual(d[1] .. "," .. d[2] .. "," .. d[3], "c9,c1,c2")
     assertEqual(p.callouts[d[4]].origin, "bi.mplus.healme", "after Kick order, past the dangling and damaged ids")
+end)
+
+-- ── step 20 registered (CA-M3-5) ─────────────────────────────────────────────────────────────
+
+test("database: [CA-M3-5] the runner from 19 runs step 20 on every stored profile once", function()
+    local NS = T.bootAddon()
+    local db = NS.addon.db
+    db.sv.profiles.Old = preComboProfile()
+    db.sv.profiles.Heal = preHealProfile()
+    db.global.schemaVersion = 19
+    NS.addon:RunMigrations()
+    -- red under: no step 20 in core/Database.lua NS.MIGRATIONS
+    assertEqual(db.global.schemaVersion, 20)
+    local old, heal = db.sv.profiles.Old, db.sv.profiles.Heal
+    assertEqual(old.callouts.c1.emote, "WAVE", "part 1 on a stored profile")
+    assertEqual(heal.callouts.c1.emote, "CHARGE", "Pulling next pack gains CHARGE")
+    assertEqual(#heal.groups.g1.callouts, 3, "part 2: Dungeon's Heal me")
+    assertEqual(#heal.groups.g2.callouts, 4, "part 2: Raid's Heal me")
+    db.global.schemaVersion = 19
+    NS.addon:RunMigrations()
+    assertEqual(#heal.groups.g1.callouts, 3, "a re-stamp adds nothing twice")
+    assertEqual(#heal.groups.g2.callouts, 4)
 end)

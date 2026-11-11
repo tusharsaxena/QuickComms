@@ -199,11 +199,12 @@ test("builtins: [QF-05] the owner's edits are the shipped look, with no schema s
     assertEqual(stone.glyph, "gi:tombstone-sbed")
     assertEqual(stone.iconColor, "b07cff")
     assertEqual(BI.groups["bi.group"].callouts[2], "bi.group.stone", "2nd in In Group")
-    -- red under: a migration step added for the prebuilts (D4c: no migration). Step 10 is QC-03's
-    -- reset onto the skin and step 11 the Font flags' move to From skin (LibKa0s v1.82.0); neither
-    -- touches a prebuilt, nor does step 18, the Friz move (R3-FRIZ), nor step 19, which only adds the
-    -- new Emotes set (QFE-E3).
-    assertEqual(NS.MIGRATIONS[#NS.MIGRATIONS].to, 19)
+    -- red under: a migration step added for these prebuilt changes (D4c: no migration). Step 10 is
+    -- QC-03's reset onto the skin and step 11 the Font flags' move to From skin (LibKa0s v1.82.0);
+    -- neither touches a prebuilt, nor does step 18, the Friz move (R3-FRIZ), nor step 19, which only
+    -- adds the new Emotes set (QFE-E3). Step 20 does touch prebuilts (combined actions §8): it gives
+    -- unedited shipped callouts their emote and adds the two Heal me rows, not these colors or At Stone.
+    assertEqual(NS.MIGRATIONS[#NS.MIGRATIONS].to, 20)
 end)
 
 test("builtins: [polish] every battleground node set has map-wide callouts of its own", function()
