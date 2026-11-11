@@ -689,3 +689,107 @@ test("autothank: [CA-M4-10] Hold(true) and Pause() are never called through a fi
     for _, h in ipairs(calls("Hold")) do assertTrue(h[2] ~= true, "never Hold(true)") end
     assertEqual(#calls("Pause"), 0, "never Pause()")
 end)
+
+-- ── the fade (CA-M4-11, D26) ────────────────────────────────────────────────────────────────────
+
+-- One toast up at m.__now = 1000, its frame, and a way to run its OnUpdate at `at`, `elapsed` after
+-- the last run.
+local function fading()
+    local NS, m, TH = hosting()
+    local key = offer(NS, m, 1)
+    local f = TH.toast:FrameFor(key)
+    local function tick(at, elapsed)
+        m.__now = at
+        f:__fire("OnUpdate", elapsed or 0)
+    end
+    return NS, m, TH, f, tick, key
+end
+
+local function near(a, b) return math.abs(a - b) < 1e-6 end
+
+test("autothank: [CA-M4-11] alpha is 1 until the last FADE seconds, then falls to 0", function()
+    local NS, _, _, f, tick = fading()
+    local due = 1000 + NS.Constants.THANK.DURATION
+    local FADE = NS.Constants.THANK.FADE
+    -- red under: no OnUpdate hooked on the frame
+    assertTrue(f:GetScript("OnUpdate") ~= nil, "the fade is hooked")
+    assertEqual(f:GetAlpha(), 1, "drawn at full alpha")
+    tick(1003, 3)
+    assertEqual(f:GetAlpha(), 1)
+    tick(due - FADE, 1)
+    assertEqual(f:GetAlpha(), 1, "the fade starts FADE seconds before the end")
+    tick(due - FADE / 2, FADE / 2)
+    assertTrue(near(f:GetAlpha(), 0.5), "half way through the fade")
+    tick(due, FADE / 2)
+    assertEqual(f:GetAlpha(), 0)
+    tick(due + 1, 1)
+    assertEqual(f:GetAlpha(), 0, "never below 0")
+end)
+
+test("autothank: [CA-M4-11] hover holds alpha at 1 and pushes the due time by what it held", function()
+    local NS, _, _, f, tick = fading()
+    local due = 1000 + NS.Constants.THANK.DURATION
+    tick(due - 1.5, due - 1.5 - 1000)
+    assertTrue(f:GetAlpha() < 1, "fading")
+    f.__mouseOver = true
+    tick(due - 1.5, 0)
+    assertEqual(f:GetAlpha(), 1, "the pointer holds it")
+    tick(due + 2.5, 4)                                  -- 4 s under the pointer
+    assertEqual(f:GetAlpha(), 1)
+    f.__mouseOver = false
+    tick(due + 2.5, 0)
+    assertTrue(near(f:GetAlpha(), 0.75), "1.5 s left of the pushed due time")
+end)
+
+test("autothank: [CA-M4-11] leaving with under a second left gives one second", function()
+    local NS, _, _, f, tick = fading()
+    local due = 1000 + NS.Constants.THANK.DURATION
+    f.__mouseOver = true
+    tick(due - 0.2, 0)
+    f.__mouseOver = false
+    tick(due - 0.2, 0)
+    -- red under: a resume that keeps the 0.2 s left (alpha 0.1)
+    assertTrue(near(f:GetAlpha(), 0.5), "one second of FADE's two")
+    tick(due + 0.8, 1)
+    assertEqual(f:GetAlpha(), 0)
+end)
+
+test("autothank: [CA-M4-11] OnUpdate is hooked once per frame, and a new draw starts at full alpha", function()
+    local NS, m, TH, f, tick = fading()
+    local hook = f:GetScript("OnUpdate")
+    tick(1000 + NS.Constants.THANK.DURATION, 10)
+    assertEqual(f:GetAlpha(), 0)
+    TH.toast:Dismiss()
+    m.__now = 2000
+    local key = offer(NS, m, 2)
+    local g = TH.toast:FrameFor(key)
+    assertTrue(g == f, "the pool frame is re-used")
+    assertTrue(g:GetScript("OnUpdate") == hook, "red under: a hook added on every draw")
+    assertEqual(g:GetAlpha(), 1, "the new draw is at full alpha")
+    tick(2005, 5)
+    assertEqual(g:GetAlpha(), 1, "and its due time is its own")
+end)
+
+test("autothank: [CA-M4-11] the fade does nothing in combat", function()
+    local NS, m, _, f, tick = fading()
+    m.inCombat = true
+    tick(1000 + NS.Constants.THANK.DURATION, 10)
+    assertEqual(f:GetAlpha(), 1, "untouched in lockdown")
+end)
+
+test("autothank: [CA-M4-11] the library hides the toast at DURATION", function()
+    local NS, m, TH, f = fading()
+    local fired = false
+    for i, t in ipairs(m.__timers) do
+        if t.delay == NS.Constants.THANK.DURATION then
+            table.remove(m.__timers, i)
+            m.__now = 1000 + NS.Constants.THANK.DURATION
+            t.fn()
+            fired = true
+            break
+        end
+    end
+    assertTrue(fired, "the library's own countdown")
+    assertFalse(f:IsShown(), "hidden at DURATION")
+    assertEqual(TH.toast:Stats().visible, 0)
+end)

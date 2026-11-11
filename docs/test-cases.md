@@ -1033,7 +1033,7 @@ Total.
 - send: [CA-M2-4] every action a locked chat action: print each, then no tick and no echo
 - send: [CA-M2-4] a locked Line beside a ping ticks and reports sent at once
 
-### test_autothank.lua (43)
+### test_autothank.lua (49)
 
 - autothank: [CA-M4-4] Accept takes a stranger's helpful buff (isFromPlayerOrPlayerPet is any player's)
 - autothank: [CA-M4-4] Accept rejects a harmful aura, an NPC's, no caster, and anything not plainly true
@@ -1078,6 +1078,12 @@ Total.
 - autothank: [CA-M4-10] a /reload in combat with no RESTRICTION_CHANGED is released by the combat-end hook
 - autothank: [CA-M4-10] what the host held through combat is pumped after the release
 - autothank: [CA-M4-10] Hold(true) and Pause() are never called through a fight
+- autothank: [CA-M4-11] alpha is 1 until the last FADE seconds, then falls to 0
+- autothank: [CA-M4-11] hover holds alpha at 1 and pushes the due time by what it held
+- autothank: [CA-M4-11] leaving with under a second left gives one second
+- autothank: [CA-M4-11] OnUpdate is hooked once per frame, and a new draw starts at full alpha
+- autothank: [CA-M4-11] the fade does nothing in combat
+- autothank: [CA-M4-11] the library hides the toast at DURATION
 
 ### test_dial_secure.lua (20)
 
@@ -2305,7 +2311,7 @@ Total.
 | test_check.lua | 9 |
 | test_send_guard.lua | 13 |
 | test_sendengine.lua | 48 |
-| test_autothank.lua | 43 |
+| test_autothank.lua | 49 |
 | test_dial_secure.lua | 20 |
 | test_preview.lua | 41 |
 | test_edit_preview.lua | 17 |
@@ -2355,4 +2361,4 @@ Total.
 | test_skin_switch.lua | 28 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1989** |
+| **Total** | **1995** |

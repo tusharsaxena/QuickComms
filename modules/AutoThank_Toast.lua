@@ -48,11 +48,49 @@ local function regions(frame)
     frame.qcText:SetJustifyH("LEFT")
 end
 
+-- ── the fade (D26) ──────────────────────────────────────────────────────────────────────────────
+-- The library has no fade, so an unclicked toast fades here over its last C.THANK.FADE seconds and
+-- the library's own timer hides it at the same moment. The pointer holds it as the library's hover
+-- pause does (the button sits inside the frame, so IsMouseOver covers it), pushing the due time by
+-- what it held; leaving with under a second left gives one second, the library's MIN_RESUME.
+-- OnUpdate runs only while the frame is shown, and does nothing in combat.
+
+local MIN_LEFT = 1
+
+local function fade(frame, elapsed)
+    if NS.Compat.InCombat() or not frame.qcDue then return end
+    local now = GetTime()
+    if frame:IsMouseOver() then
+        frame.qcDue = frame.qcDue + (elapsed or 0)
+        frame.qcHovered = true
+        frame:SetAlpha(1)
+        return
+    end
+    if frame.qcHovered then
+        frame.qcHovered = nil
+        if frame.qcDue - now < MIN_LEFT then frame.qcDue = now + MIN_LEFT end
+    end
+    frame:SetAlpha(math.max(0, math.min(1, (frame.qcDue - now) / C.THANK.FADE)))
+end
+
+-- Hooked once per pool frame, on its first draw; every draw starts the fade's clock again.
+local function startFade(frame)
+    if not frame.qcFadeHooked then
+        frame.qcFadeHooked = true
+        frame:HookScript("OnUpdate", fade)
+    end
+    frame.qcDue = GetTime() + C.THANK.DURATION
+    frame.qcHovered = nil
+    frame:SetAlpha(1)
+end
+
 --- Draw `payload` ({ key, name, buff, icon }) on the toast's `frame`: the aura's icon and
---- L["%s buffed you with %s"]. Runs only from the library's present, so only out of combat. The
---- Thank button is CA-M4-12's. Keeps the library's size.
+--- L["%s buffed you with %s"], at full alpha with its fade's clock started. Runs only from the
+--- library's present, so only out of combat. The Thank button is CA-M4-12's. Keeps the library's
+--- size.
 function TH.Build(frame, payload)
     regions(frame)
+    startFade(frame)
     frame.qcIcon:SetTexture(payload.icon)
     frame.qcText:SetText(L["%s buffed you with %s"]:format(payload.name or "", payload.buff or ""))
     return nil, nil
