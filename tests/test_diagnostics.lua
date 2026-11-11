@@ -184,3 +184,23 @@ test("diagnostics: [shine] the pad's button line and the dial's slices line prin
     assertTrue(text:find("p1 button shine=orb 40", 1, true) ~= nil, text)
     assertTrue(text:find("tooltip=top/8 shine=bevel 85", 1, true) ~= nil, text)
 end)
+
+test("diagnostics: [CA-M2-5] a combined macro shows each newline as \\n, on one Send row", function()
+    local NS, m = T.enableAddon()
+    local SE = NS.SendEngine
+    local b = SE.NewButton(m.UIParent)
+    SE.Arm(b, "/p Kick |cffon|r me\n/point\n/tm [@target,exists] !8", { calloutId = "cK", surfaceId = "pK",
+        name = "Kick", chatTypes = { "PARTY", "TEXT_EMOTE" }, actions = { { kind = "line" } } })
+    -- red under: SE.Escaped doubling pipes alone (the raw newline splits the row)
+    assertEqual(SE.Escaped(b), "/p Kick ||cffon||r me \\n /point \\n /tm [@target,exists] !8")
+    report(NS)
+    local rows = 0
+    for _, line in ipairs(NS.DebugLog.buffer) do
+        assertTrue(not line:find("\n", 1, true), line)
+        if line:find("pK:cK", 1, true) then
+            rows = rows + 1
+            assertTrue(line:find("/p Kick ||cffon||r me \\n /point \\n /tm", 1, true) ~= nil, line)
+        end
+    end
+    assertEqual(rows, 1, "one Send row")
+end)

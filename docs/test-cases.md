@@ -247,7 +247,7 @@ Total.
 - disabled [by hold]: under the perf hold alone, test mode and Preview as refuse with the capture line
 - disabled [by hold]: with both holds the disabled line wins
 
-### test_diagnostics.lua (13)
+### test_diagnostics.lua (14)
 
 - diagnostics: the sections are the addon's, in report order
 - diagnostics: the report names the schema, the profile, the holds and the launcher
@@ -262,6 +262,7 @@ Total.
 - diagnostics: [dial rework] the report names the pads' hidden state, each dial's look, the ring shown and every ring
 - diagnostics: [debug] the log follows a dial open, a ring shown, a press and a close, once each
 - diagnostics: [shine] the pad's button line and the dial's slices line print the look and strength
+- diagnostics: [CA-M2-5] a combined macro shows each newline as \n, on one Send row
 
 ### test_compat.lua (21)
 
@@ -2162,7 +2163,7 @@ Total.
 | test_schema.lua | 24 |
 | test_slash.lua | 22 |
 | test_disabled.lua | 26 |
-| test_diagnostics.lua | 13 |
+| test_diagnostics.lua | 14 |
 | test_compat.lua | 21 |
 | test_identity.lua | 11 |
 | test_probe.lua | 18 |
@@ -2239,4 +2240,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1877** |
+| **Total** | **1878** |

@@ -181,11 +181,12 @@ function SE.ArmedButtons()
     return out
 end
 
---- A button's baked line with its pipes doubled, for display (spec §16: shown escaped).
+--- A button's baked macro with its pipes doubled, for display (spec §16: shown escaped), and each
+--- "\n" between its actions shown as " \n " (combined actions §3), so a combined macro stays one row.
 function SE.Escaped(b)
     local text = b:GetAttribute("macrotext")
     if type(text) ~= "string" then return "" end
-    return (text:gsub("|", "||"))
+    return (text:gsub("|", "||"):gsub("\n", " \\n "))
 end
 
 -- ── visibility (spec §10.3): a state driver, never an insecure Show/Hide in combat ─────────
