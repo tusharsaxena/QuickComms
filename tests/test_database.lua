@@ -788,11 +788,14 @@ test("database: [CA-M3-4] step 20 inserts each Heal me row once, after its prede
     local BI = NS.BuiltIns
     -- a later change to BuiltIns must not change what step 20 writes
     local shipped = BI.callouts["bi.mplus.healme"]
-    local saved = shipped.text
-    shipped.text = "changed after load"
+    local fields = { "text", "channel", "emote", "icon", "iconColor" }
+    local saved = {}
+    for _, f in ipairs(fields) do saved[f] = shipped[f] end
+    shipped.text, shipped.channel, shipped.emote = "changed after load", "party", "WAVE"
+    shipped.icon, shipped.iconColor = "changed icon", "ff0000"
     local p = preHealProfile()
     NS.Library.MigrateComboCallouts(p)
-    shipped.text = saved
+    for _, f in ipairs(fields) do shipped[f] = saved[f] end
     -- red under: no part 2 in Lib.MigrateComboCallouts
     local d = p.groups.g1.callouts
     assertEqual(#d, 3, "Dungeon gains one")
@@ -800,10 +803,10 @@ test("database: [CA-M3-4] step 20 inserts each Heal me row once, after its prede
     assertEqual(heal.origin, "bi.mplus.healme")
     assertEqual(heal.name, "Heal me")
     assertEqual(heal.text, "Need heals!", "the frozen row, not BI at run time")
-    assertEqual(heal.channel, "smartGroup")
-    assertEqual(heal.emote, "HEALME")
-    assertEqual(heal.icon, NS.Icon("gi:heart-plus"))
-    assertEqual(heal.iconColor, BI.COLOR.green)
+    assertEqual(heal.channel, "smartGroup", "the frozen channel")
+    assertEqual(heal.emote, "HEALME", "the frozen emote")
+    assertEqual(heal.icon, NS.Icon("gi:heart-plus"), "the frozen glyph")
+    assertEqual(heal.iconColor, "40d040", "the frozen color")
     assertNil(heal.glyph, "glyph is not a stored field")
     assertNil(heal.ping) assertNil(heal.marker)
     local r = p.groups.g2.callouts
@@ -853,6 +856,21 @@ test("database: [CA-M3-4] step 20 part 2: a deleted or duplicated set gains noth
     local raid = 0
     for _, c in pairs(p.callouts) do if c.origin == "bi.raid.healme" then raid = raid + 1 end end
     assertEqual(raid, 0, "a deleted set stays deleted")
+end)
+
+test("database: [CA-M3-4] step 20 part 2: a stale counter whose fresh id the list holds already adds it once", function()
+    local NS = T.newAddon()
+    local p = preHealProfile()
+    -- nextId 20 is stale: Dungeon's list holds a dangling "c20", and no callout c20 is stored, so the
+    -- id step 20 takes for Heal me is one the list holds already
+    p.groups.g1.callouts[#p.groups.g1.callouts + 1] = "c20"
+    NS.Library.MigrateComboCallouts(p)
+    -- red under: placeCalloutAfter without its held-already return
+    local n = 0
+    for _, cid in ipairs(p.groups.g1.callouts) do if cid == "c20" then n = n + 1 end end
+    assertEqual(n, 1, "the list does not gain a second c20")
+    assertEqual(#p.groups.g1.callouts, 3)
+    assertEqual(p.callouts.c20.origin, "bi.mplus.healme", "the held entry now names the new callout")
 end)
 
 test("database: [CA-M3-4] step 20 part 2 skips a damaged group and a dangling or damaged list entry", function()
