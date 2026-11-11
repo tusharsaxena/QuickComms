@@ -1113,13 +1113,19 @@ test("library: [CA-M1-3] CreateCallout refuses a callout with no action", functi
     assertTrue(Lib.CreateCallout({ name = "Mark", text = "", channel = "gameEmote", marker = 8 }) ~= nil)
 end)
 
-test("library: [CA-M1-3] M1 holds one action per callout: two are refused with oneAction", function()
+test("library: [CA-M2-1] a callout may hold two, three or four actions", function()
     local _, Lib = boot()
-    -- CA-M2-1 inverts this case: combining (#16) lifts the one-action rule.
-    local id, why = Lib.CreateCallout({ name = "Two", text = "Kick", channel = "party", emote = "POINT" })
-    assertNil(id) assertEqual(why, "oneAction")
-    id, why = Lib.CreateCallout({ name = "Two", text = "", channel = "gameEmote", ping = "attack", marker = 8 })
-    assertNil(id) assertEqual(why, "oneAction")
+    -- red under: the M1 one-action rule (CA-M1-3) refusing a second action with oneAction
+    local two = Lib.CreateCallout({ name = "Two", text = "Kick", channel = "party", emote = "POINT" })
+    assertTrue(two ~= nil, "a Line and an emote")
+    assertTrue(Lib.CreateCallout({ name = "Two", text = "", channel = "gameEmote", ping = "attack",
+        marker = 8 }) ~= nil, "a ping and a marker")
+    assertTrue(Lib.CreateCallout({ name = "Three", text = "Kick", channel = "party", emote = "POINT",
+        ping = "attack" }) ~= nil, "three")
+    local four = Lib.CreateCallout({ name = "Kick on me", text = "Kick on me", channel = "party",
+        emote = "POINT", ping = "attack", marker = 8 })
+    assertTrue(four ~= nil, "all four")
+    assertNil(Lib.ACTION_WHY.oneAction, "the one-action reason is gone")
 end)
 
 test("library: [CA-M1-3] a legacy callout with no action stays editable through the seam", function()
@@ -1146,25 +1152,33 @@ test("library: [CA-M1-3] a seam write that takes away a callout's last action is
     assertEqual(p.callouts[emote].emote, "POINT")
 end)
 
-test("library: [CA-M1-3] a seam write that adds a second action is refused in M1", function()
+test("library: [CA-M2-1] a seam write that adds a second, third or fourth action is accepted", function()
     local NS, Lib, p = bare()
-    -- CA-M2-1 inverts this case.
+    local S = NS.SchemaRuntime
     local line = Lib.CreateCallout({ name = "Line", text = "Kick", channel = "party" })
-    local ok, _, why = NS.SchemaRuntime.Set("callout.emote", "POINT", line)
-    assertFalse(ok)
-    assertEqual(why, "A callout holds one action for now: a line, an emote, a ping or a marker.")
-    assertEqual(p.callouts[line].emote, nil)
+    -- red under: the M1 one-action rule refusing the emote beside the Line
+    assertTrue((S.Set("callout.emote", "POINT", line)), "an emote beside the Line")
+    assertTrue((S.Set("callout.ping", "attack", line)), "a ping")
+    assertTrue((S.Set("callout.marker", 8, line)), "a marker")
+    local c = p.callouts[line]
+    assertEqual(c.text, "Kick") assertEqual(c.emote, "POINT") assertEqual(c.ping, "attack")
+    assertEqual(c.marker, 8)
+    assertTrue((S.Set("callout.emote", "", line)), "dropping one of several actions is not the last")
+    assertTrue(not c.emote)
 end)
 
-test("library: [CA-M1-R5] in M1 a ping or a marker is set by /qc set only on a callout with no action", function()
+test("library: [CA-M2-1] /qc set makes a ping-only callout from a Game emote one", function()
     local NS, Lib, p = bare()
-    -- CA-M2-1 inverts the emote half: combining (#16) lets the emote callout take a ping beside it.
+    -- inverted from CA-M1-R5: combining (#16) lets the emote callout take a ping beside it
     local emote = Lib.CreateCallout({ name = "Point", text = "", channel = "gameEmote", emote = "POINT" })
     NS.addon:OnSlashCommand("set callout.ping " .. emote .. " attack")
-    -- red under: a ping set beside the emote (two actions on the M1 build)
-    assertTrue(not p.callouts[emote].ping, "an emote callout refuses a ping (oneAction)")
+    -- red under: the M1 one-action rule refusing a ping beside the emote
+    assertEqual(p.callouts[emote].ping, "attack", "an emote callout takes a ping beside it")
     NS.addon:OnSlashCommand("set callout.emote " .. emote .. " none")
-    assertEqual(p.callouts[emote].emote, "POINT", "and refuses losing its emote first (noAction)")
+    assertTrue(not p.callouts[emote].emote, "then drops its emote, the ping being left")
+    assertEqual(p.callouts[emote].ping, "attack")
+    NS.addon:OnSlashCommand("set callout.ping " .. emote .. " none")
+    assertEqual(p.callouts[emote].ping, "attack", "the ping is its last action now (noAction)")
     p.callouts.c900 = { name = "Old", text = "", channel = "party" }
     NS.addon:OnSlashCommand("set callout.ping c900 attack")
     assertEqual(p.callouts.c900.ping, "attack", "a legacy callout with no action takes a ping")

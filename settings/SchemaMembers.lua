@@ -43,7 +43,6 @@ local WHY = {
     badChoice = L["That is not one of the choices."],
     badColor  = L["A color is red, green and blue, and optionally alpha, each from 0 to 1."],
     noAction  = Lib.ACTION_WHY.noAction,
-    oneAction = Lib.ACTION_WHY.oneAction,
 }
 
 local function check(fn)

@@ -16,9 +16,9 @@ local addonName, NS = ...
 -- emotes in Emotes.List's order (speech first, marked as voice, then the animated ones, then the
 -- rest). A pick, or Enter on a typed command or token, sets the draft's `emote`; a name that is empty
 -- or still the last pick's command takes the new command. Save keeps the field the channel uses and
--- clears the other: a game emote never carries text, and a chat callout no token. Until callouts
--- combine actions (CA-M2-1), a ping or a marker set by /qc set is kept by a Save that keeps the
--- callout what it was, and replaced by a Line or an emote the draft picks (one action, CA-M1-11).
+-- clears the other: a game emote never carries text, and a chat callout no token. Until the editor
+-- draws its four action slots (CA-M2-7), a ping or a marker set by /qc set is kept by a Save that keeps
+-- the callout what it was, and replaced by a Line or an emote the draft picks (CA-M1-11).
 --
 -- THE DRAFT is a plain copy of the callout's fields (its emote, ping and marker among them) and its icon's glyph color (blank for Add:
 -- an empty name and text, Smart group, no icon, no color), and every control writes it, never the
@@ -614,7 +614,7 @@ function Pop.Save()
         return false, "noCallout"
     end
     flush()
-    -- One action per callout (R7; CA-M2-1 lifts it): a game emote keeps its token and no text, a chat
+    -- One action per editor Save (R7; CA-M2-7's four slots lift it): a game emote keeps its token and no text, a chat
     -- callout no token; a Line (Bake.HasLine: text that cleans to something) or an emote the draft
     -- carries replaces a ping or a marker, and a chat callout with no Line keeps its ping or marker.
     if isGameEmote(draft) then draft.text = "" else draft.emote = nil end

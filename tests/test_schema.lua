@@ -352,7 +352,7 @@ test("schema: [CA-M1-5] the seam sets and clears a ping and a marker, and neithe
     ok, _, why = S.Set("callout.marker", 9, mid)
     assertFalse(ok)
     assertEqual(why, "A marker is a number from 1 (star) to 8 (skull), or 0 for none.")
-    -- a Line beside it: then none clears the ping (the one-action rule of M1 is kept by the Line alone)
+    -- a Line beside it: then none clears the ping (the Line keeps the callout's action)
     local line = NS.Library.CreateCallout({ name = "Line", text = "Kick", channel = "party" })
     assertTrue((S.Set("callout.ping", "none", line)))
     assertTrue(p.callouts[line].ping == false)
@@ -360,7 +360,7 @@ test("schema: [CA-M1-5] the seam sets and clears a ping and a marker, and neithe
     assertTrue(p.callouts[line].marker == false)
     -- the CLI
     NS.addon:OnSlashCommand("set callout.marker " .. line .. " 8")
-    assertTrue(p.callouts[line].marker == false, "a second action is refused in M1")
+    assertEqual(p.callouts[line].marker, 8, "a marker beside the Line (CA-M2-1: actions combine)")
     local blank = actionOnly(NS, { emote = "POINT" })
     p.callouts[blank].emote = false
     NS.addon:OnSlashCommand("set callout.marker " .. blank .. " 8")

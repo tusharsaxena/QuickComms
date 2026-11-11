@@ -592,11 +592,11 @@ Total.
 - library: [CA-M1-3] a bad ping or marker is refused on create
 - library: [CA-M1-3] HasAction counts a line, an emote, a ping and a marker
 - library: [CA-M1-3] CreateCallout refuses a callout with no action
-- library: [CA-M1-3] M1 holds one action per callout: two are refused with oneAction
+- library: [CA-M2-1] a callout may hold two, three or four actions
 - library: [CA-M1-3] a legacy callout with no action stays editable through the seam
 - library: [CA-M1-3] a seam write that takes away a callout's last action is refused
-- library: [CA-M1-3] a seam write that adds a second action is refused in M1
-- library: [CA-M1-R5] in M1 a ping or a marker is set by /qc set only on a callout with no action
+- library: [CA-M2-1] a seam write that adds a second, third or fourth action is accepted
+- library: [CA-M2-1] /qc set makes a ping-only callout from a Game emote one
 - library: [CA-M1-3] a legacy game emote callout still validates and edits
 - library: [CA-M1-3] WriteActions judges a several-field edit as a whole
 - library: [CA-M1-4] the callout template carries ping and marker, as none

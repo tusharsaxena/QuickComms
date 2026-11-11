@@ -464,11 +464,9 @@ L["Quick Comms: %s"] = "Quick Comms: %s"
 
 -- Library (modules/Library.lua)
 L[" (copy)"] = " (copy)"
--- the action rule (spec §2): a callout sets at least one action; M1 holds one (CA-M2-1 drops it)
+-- the action rule (spec §2): a callout sets at least one action, and up to four (#16)
 L["Set at least one action: a line, an emote, a ping or a marker."] =
     "Set at least one action: a line, an emote, a ping or a marker."
-L["A callout holds one action for now: a line, an emote, a ping or a marker."] =
-    "A callout holds one action for now: a line, an emote, a ping or a marker."
 
 -- Member rows (settings/SchemaMembers.lua, settings/Schema.lua)
 L["Party"] = "Party"

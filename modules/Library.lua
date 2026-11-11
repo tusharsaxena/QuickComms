@@ -473,26 +473,18 @@ end
 --- The lines a refused action rule reads as (a /qc set error, the popup's check).
 Lib.ACTION_WHY = {
     noAction = L["Set at least one action: a line, an emote, a ping or a marker."],
-    -- M1 only: CA-M2-1 removes this rule when callouts combine actions (#16).
-    oneAction = L["A callout holds one action for now: a line, an emote, a ping or a marker."],
 }
 
--- The action rule for a whole callout: at least one, and (M1 only) at most one.
+-- The action rule for a whole callout: at least one (up to four, one per slot, by construction).
 local function actionRule(f)
-    local has, n = Lib.HasAction(f)
-    if not has then return false, "noAction" end
-    -- M1 only: CA-M2-1 lifts this (and inverts its test) when callouts combine actions (#16).
-    if n > 1 then return false, "oneAction" end
+    if not Lib.HasAction(f) then return false, "noAction" end
     return true
 end
 
 -- Whether callout `m` may become `after` under the action rule (Lib.KeepsAction).
 local function keepsActions(m, after)
     local _, before = Lib.HasAction(m)
-    local has, n = Lib.HasAction(after)
-    if not has and before > 0 then return false, "noAction" end
-    -- M1 only: CA-M2-1 lifts this when callouts combine actions (#16).
-    if n > 1 and n > before then return false, "oneAction" end
+    if not Lib.HasAction(after) and before > 0 then return false, "noAction" end
     return true
 end
 
@@ -500,8 +492,7 @@ end
 local wholeEdit = false
 
 --- Whether writing `value` into user callout `id`'s `field` keeps the action rule: a write that would
---- take away the last action of a callout that had one is refused ("noAction"), and (M1 only) so is a
---- write that adds a second action ("oneAction"). A legacy callout with no action, written as it is,
+--- take away the last action of a callout that had one is refused ("noAction"). A legacy callout with no action, written as it is,
 --- passes, and so does a write with no such callout (the seam's own refusal names that).
 --- @return boolean ok, string|nil reason
 function Lib.KeepsAction(id, field, value)
@@ -516,7 +507,7 @@ end
 --- checked as one: `final` is the callout as the edit leaves it, judged by the action rule against
 --- the stored callout, so a field write on the way (a Line swapped for an Emote) is not refused on
 --- its own. A refused edit runs nothing.
---- @return any fn's returns, or false and the reason ("noAction" | "oneAction")
+--- @return any fn's returns, or false and the reason ("noAction")
 function Lib.WriteActions(id, final, fn)
     local m = P().callouts[id]
     if type(m) == "table" then

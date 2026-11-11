@@ -139,8 +139,7 @@ Master controls rows (`enabled`, `visibility`, `scale`, `alpha` and `locked`, de
 Line (`callout.channel` and `callout.text`), `callout.emote` (the game emote it performs, after its line
 if it has one), `callout.ping` (none, attack, warning, onmyway or assist) and `callout.marker` (none,
 or 1 star to 8 skull); a write that would take away a callout's last action is refused (`noAction`,
-`Library.KeepsAction`), and until callouts combine actions (CA-M2-1) so is one that adds a second
-(`oneAction`). Every module reads a setting
+`Library.KeepsAction`); a callout holds up to four, one per kind (#16). Every module reads a setting
 through `NS.Setting(path)`, which answers the row's default before the database exists; the shared
 reactions are `Settings.REACTIONS`, and `enabled` is `writeThrough` so `/qc enable|disable` still
 lands on a load where the composers are hollow (options-ui-§1 route (a)).
