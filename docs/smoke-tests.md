@@ -2685,8 +2685,10 @@ character or a stranger who can cast a long buff on you.
 - **THANK-4. The whisper and the emote reach a cross-realm caster.** Set Thank button sends to Whisper →
   a click whispers *Thanks for the Arcane Intellect, <name>!*, the whisper reaches the caster and no drop
   note prints (the echo is matched). On Retail use a cross-realm caster whose realm name has a space; on
-  Forever a "First Surname" caster. Then Emote: `/thank Name-Realm` lands on the cross-realm caster on
-  Retail, and `/thank First-Surname` on Forever. Then Both: one click sends the emote, then the whisper.
+  Forever a "First Surname" caster (whispered as `First-Surname`). Then Emote: the emote names the bare
+  name (`/thank Name`, `/thank First Surname`; CA-THX-2: the whisper form thanked everyone) → record
+  whether it lands on the cross-realm caster on Retail (UNVERIFIED); on Forever it did (owner, 2026-11-11).
+  Then Both: one click sends the emote, then the whisper.
   Result: owed
 - **THANK-5. A buff mid-fight.** Get buffed by a stranger while in combat → no toast in combat; one after
   it. Repeat after a `/reload` in combat (the toast still comes after the fight). Result: owed
