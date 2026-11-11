@@ -369,6 +369,13 @@ function SE.Drop(reason, keys)
     return n
 end
 
+--- Whether an entry is waiting under `key`, so a caller on a hot path files it once.
+--- @return boolean
+function SE.Queued(key)
+    local q = State.sendQueue
+    return q ~= nil and q.fns[key] ~= nil
+end
+
 --- The pending keys, for diagnostics.
 function SE.Snapshot()
     local q = State.sendQueue

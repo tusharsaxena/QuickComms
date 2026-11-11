@@ -250,15 +250,20 @@ function AT.OnCombatEnd()
     AT.Diff()
 end
 
+-- SE's combat-end entry for the diff: one function for the session, filed once per fight.
+local DIFF_KEY = "thank.diff"
+local function diffAfterCombat() AT.OnCombatEnd() end
+
 --- The UNIT_AURA handler: `unit` is "player" (the frame's filter, never compared), `info` the
 --- client's updateInfo, which is secret while auras are restricted. In combat, or on the combat edge
 --- before lockdown reads true, it only marks the set dirty and files the diff on SE's combat-end
---- queue. Nothing is indexed before the secret test.
+--- queue, once a fight: the player's auras change often in combat, so a later change makes nothing
+--- and files nothing. Nothing is indexed before the secret test.
 function AT.OnAura(unit, info) -- luacheck: ignore 212
     if not wanted() then return end
     if fighting() then
         State.thankDirty = true
-        NS.SendEngine.Queue("thank.diff", function() AT.OnCombatEnd() end)
+        if not NS.SendEngine.Queued(DIFF_KEY) then NS.SendEngine.Queue(DIFF_KEY, diffAfterCombat) end
         return
     end
     if NS.Compat.IsSecret(info) or type(info) ~= "table" then

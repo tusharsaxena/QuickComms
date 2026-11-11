@@ -988,13 +988,14 @@ Total.
 - echo: [CA-M2-4] a press's entries settle once, when every one has echoed
 - echo: [CA-M2-4] Expire reports one drop per press: the first of its entries to expire
 
-### test_sendengine.lua (48)
+### test_sendengine.lua (49)
 
 - sendengine: a send button is a named secure button registered for both edges
 - sendengine: Arm sends exactly the line; Disarm clears both attributes and sends nothing
 - sendengine: in combat, building, arming and disarming are declined, so nothing is blocked
 - sendengine: RunOrQueue runs now out of combat
 - sendengine: in combat the queue keeps the last write per key and drains once at combat end
+- sendengine: [CA-M5-2] Queued says whether a key waits, until it drains or drops
 - sendengine: Drop empties the queue and nothing runs at combat end
 - sendengine: a failing queued entry is reported and the others still run
 - sendengine: Teardown in combat holds one PLAYER_REGEN_ENABLED and releases it when it fires
@@ -1039,7 +1040,7 @@ Total.
 - send: [CA-M2-4] every action a locked chat action: print each, then no tick and no echo
 - send: [CA-M2-4] a locked Line beside a ping ticks and reports sent at once
 
-### test_autothank.lua (59)
+### test_autothank.lua (64)
 
 - autothank: [CA-M4-4] Accept takes a stranger's helpful buff (isFromPlayerOrPlayerPet is any player's)
 - autothank: [CA-M4-4] Accept rejects a harmful aura, an NPC's, no caster, and anything not plainly true
@@ -1068,11 +1069,14 @@ Total.
 - autothank: [CA-M4-6] registering the frame snapshots the player's helpful auras silently
 - autothank: [CA-M4-7] a buff in the edge window is not diffed at the edge, and is thanked after the fight
 - autothank: [CA-M4-7] a secret payload in combat gives the new aura once at the end of combat
+- autothank: [CA-M5-2] auras in combat file the after-combat diff once, with no function made per event
 - autothank: [CA-M4-7] a /reload in combat with no RESTRICTION_CHANGED still diffs at PLAYER_REGEN_ENABLED
 - autothank: [CA-M4-7] a still restricted read stays dirty and toasts nothing
 - autothank: [CA-M4-7] the diff takes at most COMBAT_QUEUE candidates, newest first
 - autothank: [CA-M4-7] expired or unreadable auras drop quietly
 - autothank: [CA-M4-7] the diff waits while in combat or on the edge, and does nothing when clean
+- autothank: [CA-M4-R2] buffs held before a /reload in combat are not thanked after the fight
+- autothank: [CA-M4-R2] a known set kept across the fight still thanks the buff gained in it
 - autothank: [CA-M4-9] five strangers give 3 toasts on screen and 2 queued, shown GAP apart
 - autothank: [CA-M4-9] a toast names the caster and the buff, and starts the caster's cooldown
 - autothank: [CA-M4-9] maxQueue drops the oldest waiting toast
@@ -1090,6 +1094,8 @@ Total.
 - autothank: [CA-M4-11] OnUpdate is hooked once per frame, and a new draw starts at full alpha
 - autothank: [CA-M4-11] the fade does nothing in combat
 - autothank: [CA-M4-11] the library hides the toast at DURATION
+- autothank: [CA-M4-R1] a drag holds every toast's fade as the library holds its countdown
+- autothank: [CA-M4-R1] the stand-down forgets a drag in progress
 - autothank: [CA-M4-12] the Thank click runs the macro of each mode
 - autothank: [CA-M4-12] a right-click never runs the macro
 - autothank: [CA-M4-12] a Thank click stamps no guard, so the next pad press is not guarded
@@ -2329,8 +2335,8 @@ Total.
 | test_page_dials.lua | 28 |
 | test_check.lua | 9 |
 | test_send_guard.lua | 13 |
-| test_sendengine.lua | 48 |
-| test_autothank.lua | 59 |
+| test_sendengine.lua | 49 |
+| test_autothank.lua | 64 |
 | test_dial_secure.lua | 20 |
 | test_preview.lua | 41 |
 | test_edit_preview.lua | 17 |
@@ -2380,4 +2386,4 @@ Total.
 | test_skin_switch.lua | 28 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2014** |
+| **Total** | **2020** |

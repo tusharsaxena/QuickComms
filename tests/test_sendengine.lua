@@ -90,6 +90,22 @@ test("sendengine: in combat the queue keeps the last write per key and drains on
     assertEqual(#NS.SendEngine.Snapshot(), 0)
 end)
 
+test("sendengine: [CA-M5-2] Queued says whether a key waits, until it drains or drops", function()
+    local NS, m = T.enableAddon()
+    local SE = NS.SendEngine
+    assertFalse(SE.Queued("k"), "nothing queued yet")
+    combat(m, true)
+    SE.RunOrQueue("k", function() end)
+    assertTrue(SE.Queued("k"))
+    assertFalse(SE.Queued("other"))
+    combat(m, false)
+    assertFalse(SE.Queued("k"), "drained at combat end")
+    combat(m, true)
+    SE.RunOrQueue("k", function() end)
+    SE.Drop("test")
+    assertFalse(SE.Queued("k"), "dropped")
+end)
+
 test("sendengine: Drop empties the queue and nothing runs at combat end", function()
     local NS, m = T.enableAddon()
     local ran = 0

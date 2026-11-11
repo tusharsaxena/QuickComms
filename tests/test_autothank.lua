@@ -405,6 +405,29 @@ test("autothank: [CA-M4-7] a secret payload in combat gives the new aura once at
     assertEqual(#got, 1, "once")
 end)
 
+test("autothank: [CA-M5-2] auras in combat file the after-combat diff once, with no function made per event", function()
+    local NS, m, got = detecting()
+    edgeOn(m)
+    m.__setCombat(true)
+    local SE, filed = NS.SendEngine, {}
+    local realQueue = SE.Queue
+    SE.Queue = function(key, fn)
+        filed[#filed + 1] = fn
+        return realQueue(key, fn)
+    end
+    for _ = 1, 3 do NS.AutoThank.OnAura("player", m.auraUpdate{ addedAuras = { buff(m) } }) end
+    -- red under: SE.Queue("thank.diff", function() ... end) on every in-combat UNIT_AURA
+    assertEqual(#filed, 1, "one entry for the fight, however many auras change in it")
+    assertEqual(#SE.Snapshot(), 1)
+    fightOver(m)
+    assertEqual(#got, 3, "every buff of the fight is thanked after it")
+    edgeOn(m)
+    m.__setCombat(true)
+    NS.AutoThank.OnAura("player", m.auraUpdate{ addedAuras = { buff(m) } })
+    assertEqual(#filed, 2, "the next fight files its own entry")
+    assertTrue(filed[1] == filed[2], "the same function, not a new one per fight")
+end)
+
 test("autothank: [CA-M4-7] a /reload in combat with no RESTRICTION_CHANGED still diffs at PLAYER_REGEN_ENABLED", function()
     local NS, m, got = detecting()
     NS.State.combatEdge = nil              -- a login or /reload in combat: no edge seen
