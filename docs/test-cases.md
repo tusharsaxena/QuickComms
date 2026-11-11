@@ -128,7 +128,7 @@ Total.
 - perf: [review] a refresh whose signature moves notes situationRefresh before the rebuild it publishes
 - perf: [phase 5] the Comms Dial page's Preview notes neither bakeSurface nor resolverResolve
 
-### test_database.lua (26)
+### test_database.lua (30)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the target is the last step's `to`, and the steps climb in order
@@ -156,6 +156,10 @@ Total.
 - database: [CA-M3-3] step 20 leaves an edited callout alone: text, channel, emote, ping or marker
 - database: [CA-M3-3] step 20: renamed or recolored still gains (F4a); no origin gains nothing
 - database: [CA-M3-3] step 20 is safe on nil, empty, unseeded and damaged profiles
+- database: [CA-M3-4] step 20 inserts each Heal me row once, after its predecessor, from the frozen row
+- database: [CA-M3-4] step 20 part 2: appended without a predecessor; a renamed or reordered set still gains
+- database: [CA-M3-4] step 20 part 2: a deleted or duplicated set gains nothing; a held row is not added twice
+- database: [CA-M3-4] step 20 part 2 skips a damaged group and a dangling or damaged list entry
 
 ### test_profile.lua (10)
 
@@ -2199,7 +2203,7 @@ Total.
 | test_bus.lua | 2 |
 | test_surface_parity.lua | 18 |
 | test_setup.lua | 26 |
-| test_database.lua | 26 |
+| test_database.lua | 30 |
 | test_profile.lua | 10 |
 | test_schema.lua | 24 |
 | test_slash.lua | 22 |
@@ -2281,4 +2285,4 @@ Total.
 | test_skin_switch.lua | 26 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1919** |
+| **Total** | **1923** |

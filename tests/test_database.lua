@@ -745,3 +745,118 @@ test("database: [CA-M3-3] step 20 is safe on nil, empty, unseeded and damaged pr
         if field ~= "callouts" then assertNil(p.callouts.c1.emote, field .. " damaged: nothing written") end
     end
 end)
+
+-- ── step 20 part 2: the two Heal me rows (CA-M3-4, combined actions §8) ──────────────────────
+
+-- A stored profile as builds before step 20 seeded the Dungeon and Raid sets: Dungeon ending on
+-- Kick order, Raid's raid list ending on Healthstones before its lead list.
+local function preHealProfile()
+    return { seeded = true, nextId = 20,
+        groups = {
+            g1 = { name = "Dungeon", origin = "bi.mplus", callouts = { "c1", "c2" }, when = {} },
+            g2 = { name = "Raid", origin = "bi.raid", callouts = { "c3", "c4", "c5" }, when = {} },
+        },
+        callouts = {
+            c1 = { name = "Pulling", text = "Pulling next pack", channel = "smartGroup", origin = "bi.mplus.pull" },
+            c2 = { name = "Kick order", text = "Kick order: {rt1} {rt2} {rt3}", channel = "smartGroup",
+                origin = "bi.mplus.kicks" },
+            c3 = { name = "Healthstones", text = "Healthstones/cauldron down", channel = "raid", origin = "bi.raid.stones" },
+            c4 = { name = "Pull in 10", text = "Pull in 10", channel = "smartLead", origin = "bi.raid.pull10" },
+            c5 = { name = "Wipe", text = "Wipe it, run back", channel = "smartLead", origin = "bi.raid.wipe" },
+        } }
+end
+
+local function heldOrigin(p, gid, origin)
+    local n = 0
+    for _, cid in ipairs(p.groups[gid].callouts) do
+        local c = p.callouts[cid]
+        if type(c) == "table" and c.origin == origin then n = n + 1 end
+    end
+    return n
+end
+
+test("database: [CA-M3-4] step 20 inserts each Heal me row once, after its predecessor, from the frozen row", function()
+    local NS = T.newAddon()
+    local BI = NS.BuiltIns
+    -- a later change to BuiltIns must not change what step 20 writes
+    local shipped = BI.callouts["bi.mplus.healme"]
+    local saved = shipped.text
+    shipped.text = "changed after load"
+    local p = preHealProfile()
+    NS.Library.MigrateComboCallouts(p)
+    shipped.text = saved
+    -- red under: no part 2 in Lib.MigrateComboCallouts
+    local d = p.groups.g1.callouts
+    assertEqual(#d, 3, "Dungeon gains one")
+    local heal = p.callouts[d[3]]
+    assertEqual(heal.origin, "bi.mplus.healme")
+    assertEqual(heal.name, "Heal me")
+    assertEqual(heal.text, "Need heals!", "the frozen row, not BI at run time")
+    assertEqual(heal.channel, "smartGroup")
+    assertEqual(heal.emote, "HEALME")
+    assertEqual(heal.icon, NS.Icon("gi:heart-plus"))
+    assertEqual(heal.iconColor, BI.COLOR.green)
+    assertNil(heal.glyph, "glyph is not a stored field")
+    assertNil(heal.ping) assertNil(heal.marker)
+    local r = p.groups.g2.callouts
+    assertEqual(#r, 4, "Raid gains one")
+    local rheal = p.callouts[r[2]]
+    assertEqual(rheal.origin, "bi.raid.healme", "after Healthstones, before the lead list")
+    assertEqual(rheal.text, "Need heals on me!")
+    assertEqual(rheal.channel, "raid")
+    assertEqual(rheal.emote, "HEALME")
+    assertTrue(tonumber(d[3]:sub(2)) >= 20 and tonumber(r[2]:sub(2)) >= 20, "fresh ids above the counter")
+    assertTrue(tonumber(d[3]:sub(2)) < tonumber(r[2]:sub(2)), "shipped order: Dungeon first")
+    assertTrue(p.nextId > tonumber(r[2]:sub(2)), "the counter moves past both")
+    -- idempotent
+    NS.Library.MigrateComboCallouts(p)
+    assertEqual(#p.groups.g1.callouts, 3)
+    assertEqual(#p.groups.g2.callouts, 4)
+end)
+
+test("database: [CA-M3-4] step 20 part 2: appended without a predecessor; a renamed or reordered set still gains", function()
+    local NS = T.newAddon()
+    local p = preHealProfile()
+    p.groups.g1.name = "My dungeon"
+    p.groups.g1.callouts = { "c2", "c1" }        -- reordered
+    p.groups.g2.callouts = { "c4", "c5" }        -- Healthstones removed from the list
+    p.callouts.c3 = nil                          -- and deleted
+    NS.Library.MigrateComboCallouts(p)
+    assertEqual(p.callouts[p.groups.g1.callouts[2]].origin, "bi.mplus.healme", "right after Kick order")
+    assertEqual(p.callouts[p.groups.g1.callouts[3]].origin, "bi.mplus.pull")
+    assertEqual(#p.groups.g2.callouts, 3)
+    assertEqual(p.callouts[p.groups.g2.callouts[3]].origin, "bi.raid.healme", "no predecessor: appended")
+    assertNil(p.callouts.c3, "a deleted callout is not brought back")
+    assertEqual(heldOrigin(p, "g2", "bi.raid.stones"), 0)
+end)
+
+test("database: [CA-M3-4] step 20 part 2: a deleted or duplicated set gains nothing; a held row is not added twice", function()
+    local NS = T.newAddon()
+    local p = preHealProfile()
+    p.groups.g2 = nil                                                -- Raid deleted
+    p.groups.g3 = { name = "Dungeon copy", callouts = { "c6" }, when = {} }  -- a copy: no origin
+    p.callouts.c6 = { name = "Kick order", text = "x", channel = "smartGroup" }
+    p.callouts.c7 = { name = "Heal me", text = "mine", channel = "party", origin = "bi.mplus.healme" }
+    p.groups.g1.callouts[#p.groups.g1.callouts + 1] = "c7"          -- the row is held already
+    NS.Library.MigrateComboCallouts(p)
+    assertEqual(#p.groups.g1.callouts, 3, "held already: nothing added")
+    assertEqual(p.callouts.c7.text, "mine")
+    assertEqual(#p.groups.g3.callouts, 1, "a copy gains nothing")
+    local raid = 0
+    for _, c in pairs(p.callouts) do if c.origin == "bi.raid.healme" then raid = raid + 1 end end
+    assertEqual(raid, 0, "a deleted set stays deleted")
+end)
+
+test("database: [CA-M3-4] step 20 part 2 skips a damaged group and a dangling or damaged list entry", function()
+    local NS = T.newAddon()
+    local p = preHealProfile()
+    p.groups.g2.callouts = "damaged"
+    p.groups.g1.callouts = { "c9", "c1", "c2" }   -- c9 is not stored
+    p.callouts.c1 = "damaged"
+    NS.Library.MigrateComboCallouts(p)
+    assertEqual(p.groups.g2.callouts, "damaged", "a damaged group is skipped")
+    local d = p.groups.g1.callouts
+    assertEqual(#d, 4)
+    assertEqual(d[1] .. "," .. d[2] .. "," .. d[3], "c9,c1,c2")
+    assertEqual(p.callouts[d[4]].origin, "bi.mplus.healme", "after Kick order, past the dangling and damaged ids")
+end)
