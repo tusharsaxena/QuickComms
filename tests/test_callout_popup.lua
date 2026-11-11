@@ -1024,6 +1024,24 @@ test("popup: [CA-M1-11] a marker-only callout saves with its marker; an emote ke
     assertTrue(not NS.db.profile.callouts[wave].ping)
 end)
 
+test("popup: [CA-M1-R2] a ping-only chat callout (empty text on party) saves a rename and keeps its ping", function()
+    local NS, _, P, Pop = open()
+    local gid = NS.Library.CreateGroup({ name = "Mine" })
+    local cid = NS.Library.CreateCalloutIn(gid, { name = "Ping", text = "", channel = "party", ping = "attack" })
+    P.during(function() Pop.Open(gid, cid) end)
+    Pop.Draft().name = "Go"
+    -- red under: Save clearing the ping on any channel that is not gameEmote (noAction refuses it)
+    assertTrue(Pop.Save())
+    local c = NS.db.profile.callouts[cid]
+    assertEqual(c.name, "Go")
+    assertEqual(c.ping, "attack")
+    local blank = NS.Library.CreateCalloutIn(gid, { name = "Mark", text = "  ", channel = "party", marker = 8 })
+    P.during(function() Pop.Open(gid, blank) end)
+    Pop.Draft().name = "Skull"
+    assertTrue(Pop.Save(), "whitespace text is no Line, so the marker stays")
+    assertEqual(NS.db.profile.callouts[blank].marker, 8)
+end)
+
 test("popup: [CA-M1-11] one action in M1: a Line or an emote picked for a ping callout replaces the ping", function()
     local NS, _, P, Pop = open()
     local gid = NS.Library.CreateGroup({ name = "Mine" })

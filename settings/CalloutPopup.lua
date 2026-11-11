@@ -615,9 +615,10 @@ function Pop.Save()
     end
     flush()
     -- One action per callout (R7; CA-M2-1 lifts it): a game emote keeps its token and no text, a chat
-    -- callout no token; a Line or an emote the draft carries replaces a ping or a marker.
+    -- callout no token; a Line (Bake.HasLine: text that cleans to something) or an emote the draft
+    -- carries replaces a ping or a marker, and a chat callout with no Line keeps its ping or marker.
     if isGameEmote(draft) then draft.text = "" else draft.emote = nil end
-    if draft.emote or not isGameEmote(draft) then draft.ping, draft.marker = nil, nil end
+    if draft.emote or NS.Bake.HasLine(draft) then draft.ping, draft.marker = nil, nil end
     local field, label, why = check(draft)
     if field then
         showError(L["%s: %s"]:format(label, tostring(why)))
