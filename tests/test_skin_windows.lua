@@ -37,6 +37,8 @@ local FILES = {
     "modules/Dial_Slices.lua",
     "modules/IconStyle.lua",
     "modules/Glow.lua",
+    -- #19's toast seam: the library paints the toast in this addon's skin (d.owner)
+    "core/ToastSetup.lua",
     -- QC-04: the settings pages QuickComms draws rows on itself (tests/test_skin_tools.lua holds
     -- their AceGUI widgets; the schema files are data and carry no color)
     "settings/Panel.lua",

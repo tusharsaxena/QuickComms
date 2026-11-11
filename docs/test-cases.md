@@ -79,7 +79,7 @@ Total.
 - bus: every spec §17 message is declared with its exact name
 - bus: no two constants share a name
 
-### test_surface_parity.lua (18)
+### test_surface_parity.lua (21)
 
 - parity: the degraded load really is library-absent, and the live one is not
 - parity: the Core seam's namespace surface survives the library's absence
@@ -97,6 +97,9 @@ Total.
 - parity: the Env seam publishes the same NS members on both paths
 - parity: the Media seam publishes the same NS members on both paths
 - parity: the Glow seam's stub carries the LibKa0s-Glow-1.0 surface
+- parity: the Toast seam's stub carries every member of a live LibKa0s-Toast-1.0 toast
+- parity: the Toast seam publishes the same NS members on both paths
+- toast: the seam owns the toast and answers the library's instance, or the stub when it is absent
 - glow: modules/Glow.lua names no LibCustomGlow-1.0 member; the driver is the one mapping
 - glow: with LibKa0s absent the seam answers false and the button still records its style
 
@@ -2211,7 +2214,7 @@ Total.
 - skin values: no typed value outside the kit's categories and the host's rows
 - skin values: the check is falsifiable, a planted value of each shape is reported
 
-### test_skin_switch.lua (26)
+### test_skin_switch.lua (28)
 
 - skin switch: the check is falsifiable, a surface that redraws a literal is reported
 - skin switch: a pad's window changes
@@ -2238,6 +2241,8 @@ Total.
 - skin switch: the icon browser's selected cell changes
 - skin switch: the icon browser's selected cell changes with the Scope ignored
 - skin switch: a cell's hover art changes
+- skin switch: the thank toast's frame changes
+- skin switch: the thank toast's frame changes with the Scope ignored
 - skin switch: a settings row's remove mark changes
 
 ### test_client_globals.lua (3)
@@ -2254,7 +2259,7 @@ Total.
 | test_locale.lua | 12 |
 | test_mock_secure.lua | 34 |
 | test_bus.lua | 2 |
-| test_surface_parity.lua | 18 |
+| test_surface_parity.lua | 21 |
 | test_setup.lua | 26 |
 | test_database.lua | 32 |
 | test_profile.lua | 12 |
@@ -2336,7 +2341,7 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | test_skin_values.lua | 3 |
-| test_skin_switch.lua | 26 |
+| test_skin_switch.lua | 28 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1973** |
+| **Total** | **1978** |

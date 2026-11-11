@@ -51,6 +51,8 @@ test("harness: every adopted LibKa0s module is the live library, not its stub", 
     assertTrue(NS.Pool == ls("LibKa0s-Pool-1.0", true), "Pool")
     assertTrue(NS.addon.Settings.SchemaLib == ls("LibKa0s-Schema-1.0", true), "Schema")
     assertTrue(NS.GlowLib == ls("LibKa0s-Glow-1.0", true), "Glow")
+    assertTrue(NS.NewToast{ build = function() end } ~= NS.ToastStub and ls("LibKa0s-Toast-1.0", true) ~= nil,
+        "Toast")
     assertTrue(NS.SafeToString == ls("LibKa0s-Core-1.0", true).SafeToString, "Core")
     assertTrue(type(NS.Perf.Note) == "function" and NS.Perf.OnCommand ~= nil and NS.Perf.BuildRecord ~= nil,
         "Perf is the live instance")

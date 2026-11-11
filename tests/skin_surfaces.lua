@@ -139,6 +139,14 @@ return function(enableAddon)
         return tex
     end }
 
+    -- #19's toast (core/ToastSetup.lua): the library paints its frame in this addon's skin.
+    surfaces[#surfaces + 1] = { name = "the thank toast's frame", build = function()
+        host()
+        local toast = NS.NewToast{ build = function() return 200, 40 end }
+        toast:Show({})
+        return toast:Frame()
+    end }
+
     surfaces[#surfaces + 1] = { name = "a settings row's remove mark", scope = "panel", build = function()
         host()
         local ace = mock.LibStub("AceGUI-3.0")

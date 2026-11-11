@@ -72,6 +72,9 @@ core\PoolSetup.lua
 core\WidgetsSetup.lua
 # Conventional: NS.GlowLib (the LibKa0s-Glow-1.0 seam) is read inside functions only (modules\Glow.lua).
 core\GlowSetup.lua
+# Conventional: NS.NewToast (the LibKa0s-Toast-1.0 seam) is read inside functions only
+# (modules\AutoThank_Toast.lua).
+core\ToastSetup.lua
 # LOAD-BEARING: publishes NS.MSG (the message catalog) and NS.Bus; every file that names a message
 # takes NS.MSG at load.
 core\Bus.lua

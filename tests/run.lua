@@ -128,6 +128,8 @@ Kit.setSurfaceSource{
     ["LibKa0s-Schema-1.0"]    = surfaceMock.LibStub("LibKa0s-Schema-1.0", true),
     ["LibKa0s-Pool-1.0"]      = surfaceMock.LibStub("LibKa0s-Pool-1.0", true),
     ["LibKa0s-Glow-1.0"]      = surfaceMock.LibStub("LibKa0s-Glow-1.0", true),
+    -- An instance: the stub mirrors what Toast:New(d) answers, not the library table.
+    ["LibKa0s-Toast-1.0"]     = surfaceMock.LibStub("LibKa0s-Toast-1.0", true):New{ build = function() end },
 }
 
 -- The table every suite reaches as `local T = _G.QUICKCOMMS_TEST`. Kit.expose merges `test` and the
